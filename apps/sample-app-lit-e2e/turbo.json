@@ -38,7 +38,7 @@
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/www/lit-ui-router.dev/wrangler.jsonc",
         "$TURBO_ROOT$/www/lit-ui-router.dev/dev-port.ts",
-        "$TURBO_ROOT$/www/lit-ui-router.dev/scripts/wrangler-dev.ts"
+        "$TURBO_ROOT$/www/lit-ui-router.dev/bin/wrangler-dev.ts"
       ],
       "env": ["CI"],
       "passThroughEnv": ["WRANGLER_LOG", "CYPRESS_*", "WWW_DEV_PORT"],
@@ -50,7 +50,7 @@
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/www/lit-ui-router.dev/wrangler.jsonc",
         "$TURBO_ROOT$/www/lit-ui-router.dev/dev-port.ts",
-        "$TURBO_ROOT$/www/lit-ui-router.dev/scripts/wrangler-dev.ts"
+        "$TURBO_ROOT$/www/lit-ui-router.dev/bin/wrangler-dev.ts"
       ],
       "env": ["CI"],
       "passThroughEnv": ["WRANGLER_LOG", "CYPRESS_*", "WWW_DEV_PORT"],
@@ -62,7 +62,7 @@
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/www/lit-ui-router.dev/wrangler.jsonc",
         "$TURBO_ROOT$/www/lit-ui-router.dev/dev-port.ts",
-        "$TURBO_ROOT$/www/lit-ui-router.dev/scripts/wrangler-dev.ts"
+        "$TURBO_ROOT$/www/lit-ui-router.dev/bin/wrangler-dev.ts"
       ],
       "env": ["CI"],
       "passThroughEnv": ["WRANGLER_LOG", "CYPRESS_*", "WWW_DEV_PORT"],
@@ -74,7 +74,7 @@
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/www/lit-ui-router.dev/wrangler.jsonc",
         "$TURBO_ROOT$/www/lit-ui-router.dev/dev-port.ts",
-        "$TURBO_ROOT$/www/lit-ui-router.dev/scripts/wrangler-dev.ts"
+        "$TURBO_ROOT$/www/lit-ui-router.dev/bin/wrangler-dev.ts"
       ],
       "env": ["CI"],
       "passThroughEnv": ["WRANGLER_LOG", "CYPRESS_*", "WWW_DEV_PORT"],
@@ -86,7 +86,7 @@
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/www/lit-ui-router.dev/wrangler.jsonc",
         "$TURBO_ROOT$/www/lit-ui-router.dev/dev-port.ts",
-        "$TURBO_ROOT$/www/lit-ui-router.dev/scripts/wrangler-dev.ts"
+        "$TURBO_ROOT$/www/lit-ui-router.dev/bin/wrangler-dev.ts"
       ],
       "env": ["CI"],
       "passThroughEnv": ["WRANGLER_LOG", "CYPRESS_*", "WWW_DEV_PORT"],
@@ -98,7 +98,7 @@
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/www/lit-ui-router.dev/wrangler.jsonc",
         "$TURBO_ROOT$/www/lit-ui-router.dev/dev-port.ts",
-        "$TURBO_ROOT$/www/lit-ui-router.dev/scripts/wrangler-dev.ts"
+        "$TURBO_ROOT$/www/lit-ui-router.dev/bin/wrangler-dev.ts"
       ],
       "env": ["CI"],
       "passThroughEnv": ["WRANGLER_LOG", "CYPRESS_*", "WWW_DEV_PORT"],
