@@ -18,7 +18,8 @@ The package-level asks in §5 are filed on `simshanith/lit-ui-router`:
   and `_redirects`. See §5.6.
 - **7** "the view has re-rendered" has no documented signal — `onSuccess`
   settles before `<ui-view>` swaps; the recipe is `transition.promise` then
-  `updateComplete` on every view and its element — #812. Open.
+  `updateComplete` on every view and its element — #812 (the docs line, on #978); the
+  package helper is #982, `lit-ui-router@1.17`. Open.
 - **9** the Navigation API plugin's interception hazard — #750 (pre-existing).
   **Shipped in `ui-router-navigation-location-plugin@1.0.0` (#946, closing
   #945)**; #750 stays open as the docs example ask. See §5.9.
@@ -452,6 +453,10 @@ Ordered by how much each would have saved me.
    atlas's own `src/experimental/view-rendered.ts` already encodes the
    recipe; the same await is the one the hydration seam's boot-transition
    contract will need (see §7).
+
+   **Status, 2026-09-27.** Split: #812 is the docs line alone, delivered by
+   #978 on `lit-ui-router@1.16`; the `viewRendered()` helper is #982 on
+   `lit-ui-router@1.17`.
 8. **Types: `LitStateDeclaration<T>`'s resolves generic is hard to use.** A view
    typed `RoutedLitTemplate<{ manifest: Manifest }>` is not assignable to
    `LitStateDeclaration`'s default `Record<string, any>` — parameter
