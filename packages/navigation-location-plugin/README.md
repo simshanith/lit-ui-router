@@ -60,8 +60,6 @@ router.plugin(navigationLocationPlugin, {
 } satisfies NavigationLocationPluginOptions);
 ```
 
-`router.plugin()` types its options as `any`, so `satisfies` is what gives `event` its type under `strict`.
-
 Without the option, the plugin intercepts with a handler that resolves immediately.
 
 Listeners that only observe navigations can tell router-driven ones apart with `isUIRouterNavigateEvent`, which also narrows `event.info` to carry the router.
