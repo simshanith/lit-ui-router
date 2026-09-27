@@ -1,3 +1,5 @@
+import { fileURLToPath } from 'node:url';
+
 import manifest from '../package.json' with { type: 'json' };
 
 import { serveAndTest } from './serve-and-test.ts';
@@ -36,8 +38,13 @@ const test = [
   '--continue=dependencies-successful --ui=stream --log-order=stream --summarize',
 ].join(' ');
 
-// not the serve mise task: its build_www depends would re-run under nested mise
-const server = 'pnpm --filter @www/lit-ui-router.dev run wrangler:dev';
+// not the serve mise task: its build_www depends would re-run under nested mise.
+// Not `pnpm --filter … run` either: start-server-and-test stops the server with
+// SIGINT, which pnpm reports as a failed recursive run on every clean teardown.
+const www = fileURLToPath(
+  new URL('.', import.meta.resolve('@www/lit-ui-router.dev/dev-port.ts')),
+);
+const server = `cd ${JSON.stringify(www)} && exec node --run wrangler:dev`;
 
 // every app is mounted whichever suites run
 serveAndTest(server, test, ['app/', 'app-mobx/', 'app-effect/']);
