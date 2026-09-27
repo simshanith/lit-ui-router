@@ -17,6 +17,14 @@
   },
   "issueLog": [
     {
+      "date": "2026-09-27",
+      "num": "2",
+      "head": "SHEET 2",
+      "title": "THE BRICK ASSEMBLY",
+      "rev": "E",
+      "desc": "all six runtime companions stand on the plate"
+    },
+    {
       "date": "2026-09-13",
       "num": "7B",
       "head": "SHEET 7B",
@@ -832,17 +840,17 @@
       "id": "2",
       "num": "2",
       "title": "THE BRICK ASSEMBLY",
-      "sub": "ALTITUDE 2 — one baseplate, four bricks, 37 authored files · an exploded LEGO assembly with every coupling named to the API call that makes it, brick and stud faces drawn opaque so nothing reads through a mass in front of it · source counted at origin/main @ fe44598e (2026-09-26)",
-      "caption": "Every companion drawn here enters through a published stud on @uirouter/core, and no two of them touch. Drawn exploded, the sheet answers the only question that matters about a plugin architecture: pull any brick off and what breaks? Nothing — the studs stay where they are.",
+      "sub": "ALTITUDE 2 — one baseplate, six bricks, 51 authored files · an exploded LEGO assembly with every coupling named to the API call that makes it, brick and stud faces drawn opaque so nothing reads through a mass in front of it · REV E 2026-09-27: all six runtime companions stand on the plate — brick 1 lies long side to the rail’s far seats, bricks 3, 5 and 6 step up over its cap, and brick 6 bridges to brick 4, whose plate comes in beside the client plate so one brick can reach both · source counted at origin/main @ fe44598e (2026-09-26)",
+      "caption": "Every companion drawn here enters through a published stud — on @uirouter/core, or on a brick that publishes one of its own. Drawn exploded, the sheet answers the only question that matters about a plugin architecture: pull any brick off and what breaks? Only what stands on it — three bricks seat on lit-ui-router, one of them on the server too — and the plate’s studs stay where they are.",
       "scale": "COMPANIONS",
-      "verdict": "exploded: every coupling is a published stud on core — and the server takes none",
+      "verdict": "exploded: every coupling is a published stud, on core or on the brick below — and the server takes none of core’s",
       "form": "BRICK ASSEMBLY",
       "labels": {
         "subject": "coupling",
         "projection": "isometric",
         "mode": "static"
       },
-      "rev": "D",
+      "rev": "E",
       "file": "sheets/2.html",
       "standalone": "sheet-2-the-brick-assembly.html",
       "interactive": false,
@@ -863,10 +871,10 @@
       "id": "2a",
       "num": "2A",
       "title": "THE COUPLING PLAN",
-      "sub": "ALTITUDE 2 — ALTERNATE PLATE: the four companions sheet 2 seats and the two it only schedules, laid out for reading — core central as a socket wall, companions at its right, the server below the no-DOM line — with every coupling drawn disengaged and lettered to its API call · rows read census-bricks.json @ fe44598e",
+      "sub": "ALTITUDE 2 — ALTERNATE PLATE: the six companions sheet 2 seats, laid out for reading — core central as a socket wall, companions at its right, the server below the no-DOM line — with every coupling drawn disengaged and lettered to its API call · rows read census-bricks.json @ fe44598e",
       "caption": "The brick assembly, uncoupled and brought down to one elevation: core as a socket wall, companions as shallow blocks drawn just short of seated, and each of the six connection points on the wall — five published studs and one keyed red seat — large enough to letter its API call on the joint itself. Three more joints are companion-to-companion, and one of those spans both halves of the plate.",
       "scale": "COMPANIONS",
-      "verdict": "alternate plate — the same joints at reading size, plus the two companions sheet 2 only schedules: one hangs off the flagship, one bridges the flagship and the server across the no-DOM line",
+      "verdict": "alternate plate — the same joints at reading size, sheet 2’s two newest companions included: one hangs off the flagship, one bridges the flagship and the server across the no-DOM line",
       "form": "COUPLING PLAN",
       "labels": {
         "subject": "coupling",

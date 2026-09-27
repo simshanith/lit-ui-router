@@ -253,7 +253,7 @@ ${ssrBlock}
 export const sheet2a = {
   num: '2A', id: 'companions-couplings', rev: 'E',
   title: 'THE COUPLING PLAN',
-  sub: `ALTITUDE 2 — ALTERNATE PLATE: the four companions sheet 2 seats and the two it only schedules, laid out for reading — core central as a socket wall, companions at its right, the server below the no-DOM line — with every coupling drawn disengaged and lettered to its API call · rows read census-bricks.json @ ${B.sha}`,
+  sub: `ALTITUDE 2 — ALTERNATE PLATE: the six companions sheet 2 seats, laid out for reading — core central as a socket wall, companions at its right, the server below the no-DOM line — with every coupling drawn disengaged and lettered to its API call · rows read census-bricks.json @ ${B.sha}`,
   scale: 'SIX PACKAGES',
   form: 'COUPLING PLAN',
   svg,

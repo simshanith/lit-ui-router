@@ -131,10 +131,10 @@ _No REV clauses, historical paragraphs or rev-bearing callouts: this plate has o
 
 ## Sheet 2 — THE BRICK ASSEMBLY
 
-- **file** `diagrams/generator/sheet2.mjs` · **id** `companions` · **current rev** D
+- **file** `diagrams/generator/sheet2.mjs` · **id** `companions` · **current rev** E
 - **subject line / lead** (resolved, present-state — not history):
 
-> ALTITUDE 2 — one baseplate, four bricks, 27 authored files
+> ALTITUDE 2 — one baseplate, six bricks, 51 authored files
 
 ### REV A — undated in the copy
 
@@ -158,8 +158,19 @@ resolved →
 
 > REV C 2026-09-05: hidden line — every brick, plate and stud face is drawn OPAQUE now (a stroke class’s fill:none was outranking the fill attribute, so the flanks were see-through: brick 1’s top edge and studs read straight through brick 3, and the second plate’s studs through brick 4), and the two masses that fault had hidden are recomposed for air — brick 3 lifts clear of the seat ring it drops onto, and brick 4 moves onto its own plate’s iso axis, its left face standing over the plate’s left edge
 
+### REV E — 2026-09-27
+
+**`sub` clause** (verbatim source):
+
+> REV E 2026-09-27: all ${WORD[BRICKS.length]} runtime companions stand on the plate — brick 1 lies long side to the rail’s far seats, bricks ${listOf(ON1)} step up over its cap, and brick ${BRIDGE} bridges to brick 4, whose plate comes in beside the client plate so one brick can reach both
+
+resolved →
+
+> REV E 2026-09-27: all six runtime companions stand on the plate — brick 1 lies long side to the rail’s far seats, bricks 3, 5 and 6 step up over its cap, and brick 6 bridges to brick 4, whose plate comes in beside the client plate so one brick can reach both
+
 **Record notes**
 
+- 2026-09-27, REV E at origin/main @ fe44598e (census unmoved): the two bricks rev D scheduled as rows 5 and 6, `A BRICK, NOT DRAWN IN THIS REV`, are drawn — `lit-ui-router-effect` 0.1.1 (5 files / 211 sloc, 1×2 over 2 courses) and `lit-ui-router-ssr` 0.1.0-rc.2 (9 / 796, 2×3 over 3). `OFF_PLATE` is gone: both come through `BRICKS`, which now throws if a census row moulds a different shape than the sheet's rule or if a published package is neither a brick nor the lint plugin; a `COUPLES` table of brick-to-brick joints throws unless it equals the brick-to-brick peer rows in `census-couplings.json`. The TOTAL reads 6 bricks drawn · 51 authored files · 5,131 sloc (was 4 drawn of the 6 moulded, 37 / 4,124); the altitude reads SIX PACKAGES; the parts box PARTS — 6 BRICKS, 2 PLATES. What moved: brick 1 turns long side to the rail over seats 4–7 (drawn 4×2 from its census 2×4) so the rail stays in view and its cap reaches the plate's right corner; the location seat moves to the rail's first stud and brick 2 with it; the second plate comes in from x 1130 to beside the client plate's right corner, its origin solved from the one screen column the bridge falls through; the parts box moves to the upper left at six rows, the stud schedule to the upper right with three brick seams (F `seekRouter`, G `lit-ui-router/context`, H `createServerRouter`) under a rule of their own, the spare parts to the lower left, and the named-stud labels into one band under the plate. Drop lines: 1 → rail stud A seat 7; 2 → the red LOCATION SEAT; 3 → F on brick 1's cap; 5 → F on brick 1's cap; 6 → G on brick 1's cap AND H on brick 4's cap; 4 → A′ and D′ on its own plate. Heights step so no brick hides another's fall — the bridge lowest (z 340) over brick 1's far end, brick 5 (z 330) overhanging its front edge, brick 3 (z 432) over both. The source read corrected rev D's schedule guess: effect seats through `UIRouterLitElement.seekRouter(host)` (the same seam as mobx, `router-ref-controller.ts:60`), not `lit-ui-router/context`, and hooks `transitionService.onSuccess` (`route-ref.ts:89`) and reads `globals` like brick 3; ssr uses `provideRouter`/`withRouterSync` (`prerender.ts:352`, `:336`), `getScopedRouter` (`ui-view-renderer.ts:186`), `requestContext` (`served-view.ts:200`), `provideContext` (`client.ts:384`), `withServedRender(UiView)` (`register.ts:17`) and `createServerRouter` (`prerender.ts:309`); it imports neither `memoryLocationPlugin` nor `installServerLocation`, so its second drop lands on brick 4, not the second plate. Frame audit before (rev D) and after: escapes 0 · hits>1px 0 · text-on-text 0 on both. Build, sheet 2A's sub (“the six companions sheet 2 seats”) and the 2 / 2A verdict lines re-worded to match.
 - 2026-09-26, cabinet refresh at origin/main @ fe44598e: `ui-router-navigation-location-plugin` 1.0.0 is 2 files / 141 sloc, up from 1 / 105 — #965 moved `composeNavigateUrl` into a file of its own — and still moulds a 1×1 of one course, so brick 2 keeps its shape and its seat. The TOTAL reads 37 authored files · 4,124 sloc (was 36 / 4,088), and the massing note's tile pair reads “141 and 176 lines”. No brick joined or left the schedule.
 - 2026-09-23, cabinet refresh at origin/main @ 38c9fa1c: `lit-ui-router` 1.16.0-rc.1 is 21 files / 2,596 sloc, up from 20 / 2,384 — 18 studs, from 16. `lit-ui-router-ssr` 0.1.0-rc.2 is 9 files / 796 sloc, up from 2 / 253, and moulds 2×3 over 3 courses where it moulded 1×2 over one. That row threw nothing and would have printed wrong: both scheduled rows carried a hand-typed `course` / `courses`, so ssr would have read “3 course”; the plural derives from the count now. No brick joined or left the schedule — four drawn, two scheduled `A BRICK, NOT DRAWN IN THIS REV`.
 - 2026-09-14, REV D (no clause in the copy): the effect bindings and the new `lit-ui-router-ssr` are both published at this ref, so the plate moulds EIGHT bricks and still draws four — the two newcomers are scheduled as rows 5 and 6, `A BRICK, NOT DRAWN IN THIS REV`, and the schedule's total says four drawn of the six moulded. `lit-ui-router` is 20 files / 2,384 sloc, up from 18 / 2,214; `ui-router-server` 9 / 1,211, up from 1,157; `lit-ui-router-ssr` is 2 files / 253 sloc and `lit-ui-router-effect` 5 / 211. Core 5,272, the eslint plugin 12 / 1,317, the mobx companion 176 and the navigation plugin 105 are unmoved, and the drawn four carry 35 authored files between them. After the record, the frame audit: bricks 1 and 3's label blocks lay across the tall brick's cap and studs — 11 hits at depths 6–32 — so both blocks move out to x 560, each aligned with the height of its own badge.

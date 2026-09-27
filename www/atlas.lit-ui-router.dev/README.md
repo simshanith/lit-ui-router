@@ -12,7 +12,7 @@ each sheet argue where that form fits and where it lies.
 | --- | --- | --- |
 | [1](sheet-1-the-render-loop.html) | ONE PACKAGE | ISO CIRCUIT |
 | [1i](sheet-1i-the-render-loop-walked.html) | ONE PACKAGE | INTERACTIVE CIRCUIT |
-| [2](sheet-2-the-brick-assembly.html) | FOUR PACKAGES | BRICK ASSEMBLY |
+| [2](sheet-2-the-brick-assembly.html) | SIX PACKAGES | BRICK ASSEMBLY |
 | [2A](sheet-2A-the-coupling-plan.html) | SIX PACKAGES | COUPLING PLAN |
 | [2B](sheet-2B-the-coupling-bench.html) | 9 NODES · 14 DRAWN CONTRACTS | INTERACTIVE COUPLING GRAPH |
 | [3](sheet-3-the-instrument-yard.html) | THE MONOREPO | ISOMETRIC CITY |
