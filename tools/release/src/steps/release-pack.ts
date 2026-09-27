@@ -14,12 +14,12 @@
 import { join } from 'node:path';
 
 import {
-  packStagingParent,
+  packScratchParent,
   publishTarballPath,
 } from '../checks/cache-paths.ts';
 import { group, runMain, setOutput } from '@tools/shared/gha.ts';
 import { requireEnv } from '../lib/env.core.ts';
-import { packPublishTarball } from './pack-staged.ts';
+import { packPublishTarball } from './pack-publish.ts';
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
 
 runMain(async () => {
@@ -32,7 +32,7 @@ runMain(async () => {
       packageName,
       join(workspaceRoot, packageDir),
       tarball,
-      packStagingParent,
+      packScratchParent,
     );
   });
 

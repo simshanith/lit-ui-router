@@ -13,10 +13,10 @@ import { join } from 'node:path';
 
 import {
   packDir,
-  packStagingParent,
+  packScratchParent,
   packTarballPath,
 } from '../checks/cache-paths.ts';
-import { packPublishTarball } from './pack-staged.ts';
+import { packPublishTarball } from './pack-publish.ts';
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
 import { isPublishable, loadWorkspace } from '@tools/shared/workspace.ts';
 
@@ -34,12 +34,12 @@ async function main() {
       name,
       join(workspaceRoot, dir),
       packTarballPath(name),
-      packStagingParent,
+      packScratchParent,
     );
     console.log(`packed ${name} → ${packTarballPath(name)}`);
   }
 
-  await rm(packStagingParent, { recursive: true, force: true });
+  await rm(packScratchParent, { recursive: true, force: true });
 }
 
 main().catch((error: unknown) => {
