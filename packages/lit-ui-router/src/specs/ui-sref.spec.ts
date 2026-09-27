@@ -977,6 +977,7 @@ describe('uiSref directive', () => {
       const anchor = wrapper.querySelector('a')!;
       expect(anchor.hasAttribute('href')).toBe(false);
 
+      router!.stateService.defaultErrorHandler(() => {});
       const goSpy = vi.spyOn(router!.stateService, 'go');
       await clickLocatedElement(anchor, { modifiers: ['Shift'] });
       await tick();

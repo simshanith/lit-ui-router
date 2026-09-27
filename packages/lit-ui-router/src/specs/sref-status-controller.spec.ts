@@ -273,6 +273,7 @@ describe('SrefStatusController', () => {
       const controller = host.controller!;
       await goTo('users');
 
+      router.stateService.defaultErrorHandler(() => {});
       await router.stateService.go('broken').catch(() => {});
       await tick(20);
       expect(controller.active).toBe(true);

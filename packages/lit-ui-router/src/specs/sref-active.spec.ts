@@ -453,6 +453,7 @@ describe('attribute-part active directives', () => {
       await goTo('users');
       expect(anchor.classList.contains('active')).toBe(true);
 
+      router.stateService.defaultErrorHandler(() => {});
       await router.stateService.go('broken').catch(() => {});
       await tick(20);
       expect(anchor.classList.contains('active')).toBe(true);
