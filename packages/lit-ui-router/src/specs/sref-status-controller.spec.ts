@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { RejectType } from '@uirouter/core';
 import { html, LitElement, nothing, ReactiveController, render } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { cache } from 'lit/directives/cache.js';
@@ -273,9 +274,13 @@ describe('SrefStatusController', () => {
       const controller = host.controller!;
       await goTo('users');
 
-      router.stateService.defaultErrorHandler(() => {});
+      const errors: unknown[] = [];
+      router.stateService.defaultErrorHandler((error) => errors.push(error));
       await router.stateService.go('broken').catch(() => {});
       await tick(20);
+      expect(errors).toEqual([
+        expect.objectContaining({ type: RejectType.ERROR }),
+      ]);
       expect(controller.active).toBe(true);
       expect(controller.entering).toBe(false);
       expect(controller.exiting).toBe(false);

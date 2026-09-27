@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { RejectType } from '@uirouter/core';
 import { html, nothing, render, TemplateResult } from 'lit';
 import { cache } from 'lit/directives/cache.js';
 import { AttributePartInfo, PartInfo, PartType } from 'lit/directive.js';
@@ -453,9 +454,13 @@ describe('attribute-part active directives', () => {
       await goTo('users');
       expect(anchor.classList.contains('active')).toBe(true);
 
-      router.stateService.defaultErrorHandler(() => {});
+      const errors: unknown[] = [];
+      router.stateService.defaultErrorHandler((error) => errors.push(error));
       await router.stateService.go('broken').catch(() => {});
       await tick(20);
+      expect(errors).toEqual([
+        expect.objectContaining({ type: RejectType.ERROR }),
+      ]);
       expect(anchor.classList.contains('active')).toBe(true);
     });
 

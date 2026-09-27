@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { html, render, TemplateResult } from 'lit';
-import { TargetState } from '@uirouter/core';
+import { RejectType, TargetState } from '@uirouter/core';
 
 import {
   uiSref,
@@ -977,12 +977,24 @@ describe('uiSref directive', () => {
       const anchor = wrapper.querySelector('a')!;
       expect(anchor.hasAttribute('href')).toBe(false);
 
-      router!.stateService.defaultErrorHandler(() => {});
+      // core rejects a transition to an abstract state; any other error still fails the test
+      const errors: unknown[] = [];
+      router!.stateService.defaultErrorHandler((error) => errors.push(error));
       const goSpy = vi.spyOn(router!.stateService, 'go');
       await clickLocatedElement(anchor, { modifiers: ['Shift'] });
       await tick();
 
       expect(goSpy).toHaveBeenCalledWith('abstract', {}, expect.any(Object));
+      expect(errors).toEqual([
+        expect.objectContaining({
+          type: RejectType.ERROR,
+          detail: expect.objectContaining({
+            message: expect.stringContaining(
+              "Cannot transition to abstract state 'abstract'",
+            ),
+          }),
+        }),
+      ]);
     });
 
     it('should navigate on a plain click on an href-less anchor with target="_blank"', async () => {
