@@ -207,13 +207,23 @@ const dropServedRender = (view: Element): void => {
   for (const child of children.slice(from)) child.remove();
 };
 
-/** Drops the server's nodes from between the pair, which the element renders after. */
+/** How far `node` moves the part depth: 1 opens, -1 closes, 0 is anything else. */
+const partStep = (node: Node): number => {
+  if (isPart(node, 'lit-part')) return 1;
+  return isPart(node, '/lit-part') ? -1 : 0;
+};
+
+/**
+ * Drops the server's nodes from between the pair, which the element renders
+ * after: everything up to the close matching `open`, nested parts included.
+ * The reveal ran before the hydrate threw, so every marker here is plain.
+ */
 const clearInterior = (open: Comment): void => {
-  for (
-    let node = open.nextSibling;
-    node && !isPart(node, '/lit-part');
-    node = open.nextSibling
-  ) {
+  let depth = 0;
+  for (let node = open.nextSibling; node; node = open.nextSibling) {
+    const step = partStep(node);
+    if (step < 0 && depth === 0) return;
+    depth += step;
     node.remove();
   }
 };

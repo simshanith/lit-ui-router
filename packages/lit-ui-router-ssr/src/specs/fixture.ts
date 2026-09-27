@@ -22,6 +22,11 @@ export const ShellView: RoutedLitTemplate = (props) => html`
 export const OtherView: RoutedLitTemplate = () =>
   html`<p class="other">other</p>`;
 
+/** A leaf whose template opens on a part, so its served interior starts with a nested pair. */
+export const LeadView: RoutedLitTemplate = () =>
+  html`${'lead'}
+    <p class="plate" id="plate">plate</p>`;
+
 /** A routed view whose one node is a shadow-DOM element, so the reveal has to reach into its shadow root. */
 export const BadgeView: RoutedLitTemplate = () =>
   html`<shadow-badge></shadow-badge>`;
@@ -119,6 +124,7 @@ export const makeRouter = (): Router => {
       url: '/other',
       component: OtherView,
     },
+    { name: 'shell.lead', url: '/lead', component: LeadView },
     { name: 'badge', url: '/badge', component: BadgeView },
     { name: 'bare', url: '/bare' },
   ];
