@@ -15,7 +15,28 @@ export const PEER_FLOOR_SCRIPT = 'typecheck:peer-floor';
 export type PeerFloorResult = {
   name: string;
   ok: boolean;
+  /** catalog the `lit-ui-router` peer names, e.g. `publishedPeerEffect` */
+  peerCatalog?: string;
+  /** catalog pinning the `lit-ui-router-floor` alias, e.g. `peerFloorEffect` */
+  floorCatalog?: string;
 };
+
+const catalogName = (spec: string | undefined): string | undefined =>
+  spec?.match(/^catalog:(\w+)$/)?.[1];
+
+/** The two catalogs a stale floor bump edits, read from the member's manifest. */
+export function peerFloorCatalogs(
+  member: Member,
+): Pick<PeerFloorResult, 'peerCatalog' | 'floorCatalog'> {
+  return {
+    peerCatalog: catalogName(
+      member.manifest?.peerDependencies?.['lit-ui-router'],
+    ),
+    floorCatalog: catalogName(
+      member.manifest?.devDependencies?.['lit-ui-router-floor'],
+    ),
+  };
+}
 
 /** The exact run name a badge nameFilter would match. */
 export function peerFloorCheckRunName(packageName: string): string {
@@ -52,17 +73,21 @@ export function toPeerFloorCheckRun(
         'against the pinned floor of its published peer range.',
     };
   }
+  const peerCatalog = result.peerCatalog ?? 'peer catalog';
+  const floorPin = result.floorCatalog
+    ? `the ${result.floorCatalog} pin`
+    : 'its matching peerFloor pin';
   return {
     name,
     conclusion: 'action_required',
-    title: 'floor stale: release the peer, then bump the publishedPeer floor',
+    title: `floor stale: release the peer, then bump the ${peerCatalog} floor`,
     summary: [
       `\`${PEER_FLOOR_SCRIPT}\` failed: ${result.name}'s src uses API absent`,
       'from the pinned floor of its declared peer range — consumers installed',
       'at the floor would break.',
       '',
       `To resolve: [release the peer package via the bump-version workflow](${releaseWorkflowUrl(repo)}),`,
-      'then raise the catalog:publishedPeer floor and the peerFloor pin in',
+      `then raise the ${peerCatalog} floor and ${floorPin} in`,
       'pnpm-workspace.yaml. This run re-checks and flips green on the floor',
       'bump commit.',
     ].join('\n'),

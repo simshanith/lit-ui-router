@@ -104,8 +104,11 @@ catalogs:
     lit-2: npm:lit@^2.8.0
   mobx6-compat:
     mobx-6: npm:mobx@^6.16.1
-  peerFloor:
+  peerFloorEffect:
+    lit-ui-router-floor: npm:lit-ui-router@1.15.0
+  peerFloorEslintPlugin:
     eslint: 9.0.0
+  peerFloorMobx:
     lit-ui-router-floor: npm:lit-ui-router@1.7.0
   publishedDependencies:
     '@oxc-project/runtime': '>=0.50.0'
@@ -118,10 +121,12 @@ catalogs:
     eslint: '^9.0.0 || ^10.0.0'
     hono: ^4.0.0
     lit: '^2.0.0 || ^3.0.0'
-    lit-ui-router: ^1.7.0
     mobx: '^6.0.0 || ^7.0.0'
-    typedoc: ^0.28.0
-  publishedPeerServer:
+  publishedPeerEffect:
+    lit-ui-router: ^1.15.0
+  publishedPeerMobx:
+    lit-ui-router: ^1.7.0
+  publishedPeerSsr:
     lit-ui-router: ^1.16.0-rc.1
     ui-router-server: ^0.2.0
   typescript6-compat:

@@ -14,6 +14,7 @@ import { workspaceRoot } from '@tools/bootstrap/root.ts';
 import { loadWorkspace } from '@tools/shared/workspace.ts';
 
 import {
+  peerFloorCatalogs,
   peerFloorMembers,
   peerFloorTurboArgs,
   toPeerFloorCheckRun,
@@ -41,7 +42,7 @@ async function main() {
       ok = false;
     }
     console.log(`${member.name}: ${ok ? 'floor honest' : 'floor stale'}`);
-    results.push({ name: member.name, ok });
+    results.push({ name: member.name, ok, ...peerFloorCatalogs(member) });
   }
 
   const payloads = results.map((result) => toPeerFloorCheckRun(result, repo));

@@ -69,7 +69,9 @@ class AppNav extends LitElement {
 
 No router configuration is required: the controller discovers the router from
 the enclosing `<ui-router>` element when the host connects, and the route ref
-lazily attaches its single transition hook on first use.
+lazily attaches its single transition hook on first use. On the server, where
+there is no element to seek, it reads the router
+[`withRouterSync`](/api/reference/core/withRouterSync) scoped at construction.
 
 ## The pieces
 

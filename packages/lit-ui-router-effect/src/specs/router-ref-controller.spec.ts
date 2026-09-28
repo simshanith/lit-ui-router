@@ -12,6 +12,7 @@ import {
   ManagedRuntime,
 } from 'effect';
 import { UIRouterLit, UIRouterLitElement } from 'lit-ui-router';
+import { withRouterSync } from 'lit-ui-router/context';
 
 import { RouterRefController } from '../router-ref-controller.js';
 import { appendParentFirst } from '@tools/happy-dom/append.ts';
@@ -98,6 +99,49 @@ describe('RouterRefController', () => {
     await waitForUpdate(host);
 
     expect(controller.value).toBe('a');
+  });
+
+  it('reads the router withRouterSync scoped at construction', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    cleanups.push(() => warn.mockRestore());
+    const router = createTestRouter(testStates);
+    await routerGo(router, 'a');
+
+    const host = createHost();
+    const controller = withRouterSync(
+      router,
+      () =>
+        new RouterRefController(host, (route) => route.current?.name, {
+          initialValue: 'INIT',
+        }),
+    );
+
+    expect(controller.value).toBe('a');
+
+    document.body.appendChild(host);
+    cleanups.push(() => host.remove());
+    await waitForUpdate(host);
+    await routerGo(router, 'b', { id: '1' });
+
+    expect(controller.value).toBe('b');
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it('prefers an explicit router over the scoped one', async () => {
+    const scoped = createTestRouter(testStates);
+    await routerGo(scoped, 'a');
+    const explicit = createTestRouter(testStates);
+    await routerGo(explicit, 'b', { id: '1' });
+
+    const controller = withRouterSync(
+      scoped,
+      () =>
+        new RouterRefController(createHost(), (route) => route.current?.name, {
+          router: explicit,
+        }),
+    );
+
+    expect(controller.value).toBe('b');
   });
 
   it('warns once per host and no-ops without a router context', async () => {

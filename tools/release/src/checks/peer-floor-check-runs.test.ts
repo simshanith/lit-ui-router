@@ -4,6 +4,7 @@ import { describe, it } from 'node:test';
 import type { Member } from '@tools/shared/workspace.ts';
 
 import {
+  peerFloorCatalogs,
   peerFloorCheckRunName,
   peerFloorMembers,
   peerFloorTurboArgs,
@@ -81,23 +82,69 @@ describe('toPeerFloorCheckRun', () => {
 
   it('maps a stale floor to action_required, never failure', () => {
     const payload = toPeerFloorCheckRun(
-      { name: 'lit-ui-router-mobx', ok: false },
+      {
+        name: 'lit-ui-router-effect',
+        ok: false,
+        peerCatalog: 'publishedPeerEffect',
+        floorCatalog: 'peerFloorEffect',
+      },
       REPO,
     );
     assert.equal(payload.conclusion, 'action_required');
     assert.equal(
       payload.title,
-      'floor stale: release the peer, then bump the publishedPeer floor',
+      'floor stale: release the peer, then bump the publishedPeerEffect floor',
     );
   });
 
   it('names the remedy path in a stale summary', () => {
     const { summary } = toPeerFloorCheckRun(
-      { name: 'lit-ui-router-mobx', ok: false },
+      {
+        name: 'lit-ui-router-mobx',
+        ok: false,
+        peerCatalog: 'publishedPeerMobx',
+        floorCatalog: 'peerFloorMobx',
+      },
       REPO,
     );
     assert.match(summary, new RegExp(`\\(${RELEASE_URL}\\)`));
-    assert.match(summary, /catalog:publishedPeer floor and the peerFloor pin/);
+    assert.match(summary, /publishedPeerMobx floor and the peerFloorMobx pin/);
     assert.match(summary, /flips green on the floor/);
+  });
+
+  it('words the remedy generically without catalog names', () => {
+    const { title, summary } = toPeerFloorCheckRun(
+      { name: 'lit-ui-router-mobx', ok: false },
+      REPO,
+    );
+    assert.match(title, /bump the peer catalog floor/);
+    assert.match(summary, /peer catalog floor and its matching peerFloor pin/);
+  });
+});
+
+describe('peerFloorCatalogs', () => {
+  it('reads both catalog names from the manifest', () => {
+    assert.deepEqual(
+      peerFloorCatalogs({
+        name: 'lit-ui-router-effect',
+        dir: 'packages/lit-ui-router-effect',
+        manifest: {
+          peerDependencies: { 'lit-ui-router': 'catalog:publishedPeerEffect' },
+          devDependencies: { 'lit-ui-router-floor': 'catalog:peerFloorEffect' },
+        },
+      }),
+      { peerCatalog: 'publishedPeerEffect', floorCatalog: 'peerFloorEffect' },
+    );
+  });
+
+  it('leaves a literal range unnamed', () => {
+    assert.deepEqual(
+      peerFloorCatalogs({
+        name: 'x',
+        dir: 'x',
+        manifest: { peerDependencies: { 'lit-ui-router': '^1.7.0' } },
+      }),
+      { peerCatalog: undefined, floorCatalog: undefined },
+    );
   });
 });

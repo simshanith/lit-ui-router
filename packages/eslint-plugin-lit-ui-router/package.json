@@ -65,7 +65,7 @@
     "@tools/oxc-emit": "catalog:workspace",
     "@tools/release-config": "catalog:workspace",
     "@types/node": "catalog:",
-    "eslint": "catalog:peerFloor",
+    "eslint": "catalog:peerFloorEslintPlugin",
     "eslint-doc-generator": "catalog:",
     "eslint-plugin-eslint-plugin": "catalog:",
     "oxfmt": "catalog:",

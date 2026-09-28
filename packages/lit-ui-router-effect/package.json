@@ -68,7 +68,7 @@
     "lit": "catalog:",
     "lit-2": "catalog:lit2-compat",
     "lit-ui-router": "catalog:workspace",
-    "lit-ui-router-floor": "catalog:peerFloor",
+    "lit-ui-router-floor": "catalog:peerFloorEffect",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
     "release-it": "catalog:",
@@ -84,6 +84,6 @@
     "@uirouter/core": "catalog:publishedPeer",
     "effect": "catalog:publishedPeer",
     "lit": "catalog:publishedPeer",
-    "lit-ui-router": "catalog:publishedPeer"
+    "lit-ui-router": "catalog:publishedPeerEffect"
   }
 }

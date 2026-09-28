@@ -170,6 +170,10 @@ Non-gating per-package check runs on main's head — `published-diff (<pkg>)`
 next publish would write?) and `peer-floor (<pkg>)` (is an adapter's published
 peer floor stale?). The README badges read these check runs; `action_required`
 renders orange, meaning a release or floor bump is owed — never a CI failure.
+A floor bump raises the catalog the adapter's `lit-ui-router` peer names and
+the matching `peerFloor*` pin in `pnpm-workspace.yaml`: `publishedPeerMobx`
+and `peerFloorMobx` for mobx, `publishedPeerEffect` and `peerFloorEffect` for
+effect.
 
 `published-diff` picks that tag from the workspace version by the same rule
 release-it publishes under: a prerelease answers to its own channel tag,
