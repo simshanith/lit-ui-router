@@ -442,14 +442,14 @@ catalogs:
     mobx-6:
       specifier: npm:mobx@^6.16.1
       version: 6.16.1
-  peerFloor:
-    eslint:
-      specifier: 9.0.0
-      version: 9.0.0
   peerFloorEffect:
     lit-ui-router-floor:
       specifier: npm:lit-ui-router@1.15.0
       version: 1.15.0
+  peerFloorEslintPlugin:
+    eslint:
+      specifier: 9.0.0
+      version: 9.0.0
   peerFloorMobx:
     lit-ui-router-floor:
       specifier: npm:lit-ui-router@1.7.0
@@ -893,7 +893,7 @@ importers:
         specifier: 'catalog:'
         version: 24.13.6
       eslint:
-        specifier: catalog:peerFloor
+        specifier: catalog:peerFloorEslintPlugin
         version: 9.0.0(supports-color@10.2.2)
       eslint-doc-generator:
         specifier: 'catalog:'
