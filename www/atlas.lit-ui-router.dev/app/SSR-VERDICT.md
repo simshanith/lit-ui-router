@@ -613,7 +613,9 @@ Findings:
   peers on `lit-ui-router ^1.7.0`, and a caret range admits no prerelease, so
   npm refuses the atlas's `^1.16.0-rc.1` with ERESOLVE. The atlas's answer is
   a scoped `overrides` entry that hands the package the app's own range
-  (`"$lit-ui-router"`).
+  (`"$lit-ui-router"`). Released packages keep release-only peers;
+  `lit-ui-router-ssr`'s peer admits the rc line because that package is an rc
+  itself.
 - **F2 — a seek-path controller has no scoped-router fallback.** With no
   `router` option, `RouterRefController` finds its router from the enclosing
   `<ui-router>` on connect. Under `prerender()` nothing connects, so it renders
