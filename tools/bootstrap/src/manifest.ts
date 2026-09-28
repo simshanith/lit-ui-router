@@ -19,9 +19,9 @@
 //   (`createRequire(<cwd>/package.json)`) plus a bare `<pkg>/package.json`
 //   specifier then dies with ERR_PACKAGE_PATH_NOT_EXPORTED on `lit-2`: lit's
 //   exports map doesn't expose './package.json'. Verified, not theorized.
-// - `@pnpm/workspace.project-manifest-reader` is the read-modify-WRITE half of
-//   pack-staged.ts. It costs ~2.5-3x a compat guard's whole runtime to import
-//   and drags a `@pnpm/logger` peer along for a read we never write back.
+// - `@pnpm/workspace.project-manifest-reader` is a read-modify-WRITE API. It
+//   costs ~2.5-3x a compat guard's whole runtime to import and drags a
+//   `@pnpm/logger` peer along for a read we never write back.
 // - `pacote` is a registry client (~169ms just to import) for local bytes.
 // - The YAML-fragility argument that earns the SDK its keep in ./workspace.ts
 //   has no analogue here: JSON.parse over a package.json is exact and total.

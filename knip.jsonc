@@ -80,6 +80,10 @@
       // reached via createRequire(), which knip does not follow
       "ignoreDependencies": ["@ampproject/remapping"],
     },
+    "tools/release": {
+      // handed to pnpm by path as PNPM_CONFIG_PNPMFILE, never imported
+      "entry": ["src/steps/*.pnpmfile.mjs"],
+    },
     "tools/shared": { "entry": ["src/**/*.test-d.ts"] },
     "www/lit-ui-router.dev": {
       "entry": [".vitepress/vite.config.ts"],

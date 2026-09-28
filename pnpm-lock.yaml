@@ -203,9 +203,6 @@ catalogs:
     '@pnpm/types':
       specifier: 1102.1.0
       version: 1102.1.0
-    '@pnpm/workspace.project-manifest-reader':
-      specifier: 1100.0.29
-      version: 1100.0.29
     '@pnpm/workspace.projects-reader':
       specifier: 1101.0.28
       version: 1101.0.28
@@ -1869,15 +1866,9 @@ importers:
       '@arethetypeswrong/core':
         specifier: 'catalog:'
         version: 0.18.5
-      '@pnpm/logger':
-        specifier: 'catalog:'
-        version: 1100.0.0
       '@pnpm/types':
         specifier: 'catalog:'
         version: 1102.1.0
-      '@pnpm/workspace.project-manifest-reader':
-        specifier: 'catalog:'
-        version: 1100.0.29(@pnpm/logger@1100.0.0)
       '@tools/bootstrap':
         specifier: catalog:workspace
         version: link:../bootstrap
