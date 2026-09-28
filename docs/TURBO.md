@@ -111,6 +111,8 @@ That host-dependence is also why the task is uncached: the Chromium build and th
 
 `typecheck:peer-floor` typechecks an adapter against its published peer-floor version. The floor pin can only reference published versions, so putting it in the ci graph would break atomic core-API + adapter-adoption PRs. It runs as a non-gating per-package check run on main pushes (the Release signals workflow) and as a hard gate at bump time.
 
+`test:peer-floor` (eslint-plugin-lit-ui-router only) runs the rule suite with every `eslint` import resolved to the `eslint-floor` alias. That floor is a published eslint, never a workspace peer, so the lane gates PRs via `test`'s `with`. It is a test rather than a typecheck because eslint 9.0.0 ships no types.
+
 ### Workspace Extensions
 
 Workspaces extend the root configuration using `"extends": ["//"]`:
@@ -250,6 +252,7 @@ TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }
 | `@tools/dts-backtest#test:matrix`      | `ci:main` only; PRs run the current-TS `#test` leg                                                                                                                                                                 |
 | `@www/lit-ui-router.dev#check:embeds`  | Neither ci graph — manual and uncached: measures the examples' embed heights (host-dependent font metrics)                                                                                                         |
 | `typecheck:peer-floor`                 | Neither ci graph — Release signals check runs + bump gate                                                                                                                                                          |
+| `test:peer-floor`                      | `ci:pull_request` — eslint-plugin-lit-ui-router's rule suite on the eslint-floor alias, via `test`'s `with`                                                                                                        |
 
 ## Remote Caching
 

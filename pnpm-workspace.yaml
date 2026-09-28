@@ -108,7 +108,7 @@ catalogs:
   peerFloorEffect:
     lit-ui-router-floor: npm:lit-ui-router@1.15.0
   peerFloorEslintPlugin:
-    eslint: 9.0.0
+    eslint-floor: npm:eslint@9.0.0
   peerFloorMobx:
     lit-ui-router-floor: npm:lit-ui-router@1.7.0
   publishedDependencies:

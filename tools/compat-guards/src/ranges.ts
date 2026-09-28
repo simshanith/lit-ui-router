@@ -22,16 +22,6 @@ export function isBoundedRange(range: string): boolean {
   return bounded(range) !== undefined;
 }
 
-/**
- * How many `||`-separated legs a range has; 0 when it names no bound. A guard
- * that can only prove one leg must refuse the rest rather than prove the
- * lowest and report success.
- */
-export function rangeLegs(range: string): number {
-  if (bounded(range) === undefined) return 0;
-  return new semver.Range(range).set.length;
-}
-
 /** Whether a peer range admits some lit 2.x. */
 export function coversMajor2(range: string): boolean {
   const normalized = bounded(range);
@@ -44,4 +34,20 @@ export function rangeFloor(range: string): string | undefined {
   const normalized = bounded(range);
   if (normalized === undefined) return undefined;
   return semver.minVersion(normalized)?.version;
+}
+
+/**
+ * Every leg but the lowest, each as its own range; empty for a single-leg or
+ * unbounded range. The floor alias proves the lowest leg; these need another proof.
+ */
+export function upperLegs(range: string): string[] {
+  const floor = rangeFloor(range);
+  if (floor === undefined) return [];
+  const legs = new semver.Range(range).set.map((leg) =>
+    leg.map((comparator) => comparator.value).join(' '),
+  );
+  const lowest = legs.findIndex(
+    (leg) => semver.minVersion(leg)?.version === floor,
+  );
+  return legs.filter((_, index) => index !== lowest);
 }
