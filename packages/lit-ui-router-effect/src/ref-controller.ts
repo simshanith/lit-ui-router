@@ -86,9 +86,11 @@ export type RefSource<Refs extends SubscriptionRefs> =
  * The subscription is a single fiber — `Stream.runForEach` over the refs'
  * `changes` — forked in `hostConnected` and interrupted in
  * `hostDisconnected`, so it lives exactly as long as the host is in the
- * document. `changes` replays the current value, and the controller also
- * seeds `.value` synchronously on connect, so a reconnected host (a sticky
- * routed component) renders current state, never stale state.
+ * document. The interrupt goes to the fiber directly, so it does not depend
+ * on the runtime still being alive. `changes` replays the current value, and
+ * the controller also seeds `.value` synchronously on connect, so a
+ * reconnected host (a sticky routed component) renders current state, never
+ * stale state.
  *
  * Refs given directly are read once more at construction, so `.value` is
  * live before the host ever connects — a host rendered on the server sees
@@ -138,7 +140,7 @@ export class RefController<
   }
 
   hostDisconnected(): void {
-    if (this.fiber) this.runtime.runFork(Fiber.interrupt(this.fiber));
+    this.fiber?.unsafeInterruptAsFork(this.fiber.id());
     this.fiber = undefined;
     // Reconnecting re-fires onChange, as a fresh subscription would.
     this.initialized = false;

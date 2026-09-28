@@ -1,7 +1,16 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import { Context, Data, Equal, Layer, ManagedRuntime } from 'effect';
+import {
+  Context,
+  Data,
+  Effect,
+  Equal,
+  Exit,
+  Fiber,
+  Layer,
+  ManagedRuntime,
+} from 'effect';
 import { UIRouterLit, UIRouterLitElement } from 'lit-ui-router';
 
 import { RouterRefController } from '../router-ref-controller.js';
@@ -241,6 +250,10 @@ describe('RouterRefController', () => {
     expect(runFork).toHaveBeenCalledTimes(1);
 
     host.remove();
-    expect(runFork).toHaveBeenCalledTimes(2);
+    expect(runFork).toHaveBeenCalledTimes(1);
+    const fiber = runFork.mock.results[0].value;
+    expect(
+      Exit.isInterrupted(await Effect.runPromise(Fiber.await(fiber))),
+    ).toBe(true);
   });
 });
