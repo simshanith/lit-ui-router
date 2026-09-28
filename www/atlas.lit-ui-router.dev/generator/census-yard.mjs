@@ -32,7 +32,7 @@ const POOL = snap.members
 const INSTRUMENTS = [
   ['src (7 published packages)', [/^packages\//]],
   ['build — @tools/oxc-emit', [/^tools\/oxc-emit\//]],
-  ['pack — packPublishTarball', [/^tools\/release\/src\/checks\/(check-pack|check-packed-manifest|tarball|cache-paths)/, /^tools\/release\/src\/steps\/(pack-all|pack-staged|release-pack)/]],
+  ['pack — packPublishTarball', [/^tools\/release\/src\/checks\/(check-pack|check-packed-manifest|tarball|cache-paths)/, /^tools\/release\/src\/steps\/(pack-all|pack-publish|strip-manifest|release-pack)/]],
   ['published-diff', [/^tools\/release\/src\/checks\/(check-published-diff|published-versions|resolve-published)/]],
   ['check:exports', [/^tools\/release\/src\/checks\/check-exports/]],
   ['peer-floor tier-1', [/^tools\/release\/src\/checks\/peer-floor-check-runs/]],

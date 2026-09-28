@@ -1,10 +1,10 @@
 {
   "ref": "origin/main",
-  "sha": "fe44598e",
-  "commitDate": "2026-09-25T21:07:00-07:00",
-  "generatedAtTime": "2026-09-26T04:51:44.902Z",
+  "sha": "9b1b1bf3",
+  "commitDate": "2026-09-28T13:59:02-07:00",
+  "generatedAtTime": "2026-09-28T21:00:31.944Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-handoff.mjs",
-  "used": "git archive origin/main @ fe44598e",
+  "used": "git archive origin/main @ 9b1b1bf3",
   "wasAssociatedWith": [
     "git"
   ],
@@ -23,10 +23,10 @@
   },
   "turbo": {
     "files": 22,
-    "distinctNames": 77,
-    "definitions": 112,
+    "distinctNames": 78,
+    "definitions": 113,
     "rootDefinitions": 44,
-    "memberDefinitions": 68,
+    "memberDefinitions": 69,
     "cacheFalse": 13,
     "rootCacheFalse": 7,
     "memberCacheFalse": 6
@@ -88,7 +88,7 @@
     {"file":"apps/sample-app-lit-vanilla/turbo.json","root":false,"definitions":3,"cacheFalse":0},
     {"file":"apps/sample-app-routes/turbo.json","root":false,"definitions":1,"cacheFalse":0},
     {"file":"examples/turbo.json","root":false,"definitions":1,"cacheFalse":0},
-    {"file":"packages/eslint-plugin-lit-ui-router/turbo.json","root":false,"definitions":5,"cacheFalse":0},
+    {"file":"packages/eslint-plugin-lit-ui-router/turbo.json","root":false,"definitions":6,"cacheFalse":0},
     {"file":"packages/lit-ui-router-effect/turbo.json","root":false,"definitions":1,"cacheFalse":0},
     {"file":"packages/lit-ui-router-mobx/turbo.json","root":false,"definitions":1,"cacheFalse":0},
     {"file":"packages/lit-ui-router-ssr/turbo.json","root":false,"definitions":1,"cacheFalse":0},

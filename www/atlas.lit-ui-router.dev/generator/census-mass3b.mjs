@@ -52,6 +52,8 @@ const CITES = {
   '@tools/release#pack:all': { files: ['tools/release/src/steps/pack-all.ts'] },
   '@www/lit-ui-router.dev#typecheck:vue': { files: ['tools/vue-check/bin.ts'] },
   'lit-ui-router#check:dev-split': { files: ['tools/oxc-emit/src/check-dev-split.ts'] },
+  // #1002: the eslint 9.0.0 floor lane runs the guard ahead of node --test
+  'eslint-plugin-lit-ui-router#test:peer-floor': { files: ['tools/compat-guards/src/peer-floor-guard.ts'] },
   'ui-router-server#test:coverage': { files: ['tools/lcov-rebase/src/rebase-lcov.ts'] },
   'examples#build:embeds': { files: ['examples/build-embeds.ts'] },
 };

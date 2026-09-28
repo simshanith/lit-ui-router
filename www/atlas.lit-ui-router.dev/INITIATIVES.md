@@ -390,6 +390,41 @@ sitting); order is dependency order.
   41,637 d.ts; mass3b 11,718 task-file hashes over the same 225 real tasks; turbo, mise and the ci
   graph unmoved (716 / 1,897 / 225); steam 552 commits; weather 424 dated files; 7A 10,363 of 17,496
   metered sloc lit, the plugin 2 of 2 files at 100% on all three meters; 7B's plugin rust R2 → 0.
+- 2026-09-28 — THE TENTH REFRESH, at `origin/main` @ 9b1b1bf3 (commit 2026-09-28), all 17 plates
+  re-run at the one ref: `lit-ui-router` 1.16.0, on npm 2026-09-28 under `latest` (#1005) with
+  `rc` left at 1.16.0-rc.3 behind it, and the ref two commits past the release (#974 bumps the
+  examples, #1006 peers ssr on `^1.16.0`). Since fe44598e main also cut 1.16.0-rc.2 and rc.3,
+  ssr 0.1.0-rc.3, effect 0.1.2 and 0.1.3 and the plugin 1.0.1; `<ui-view>` adopts a late
+  provider's router in `willUpdate` (#990); effect reads the scoped router and the peer catalogs
+  split per package (#994); the release tool packs in place with a `beforePacking` hook (#995);
+  the eslint plugin proves its 9.0.0 floor in its own lane (#1002). NO member born or renamed —
+  38 members, seven published. The general survey reads 820 tracked paths, 785 classified,
+  67,260 sloc (was 819 / 784 / 66,533). The cover's version guard passes on `latest`, so LATEST
+  SHIPPED reads `1.16.0 · 2026-09-28` and prints no `main at` clause.
+  THE LOOP THREW AND RELOCATED SIX LINES. #990 put twelve lines into `ui-view.ts` above
+  `render()`; the six of its 52 cited lines below them moved by that uniform +12 (670 → 682,
+  678 → 690, 682 → 694, 684 → 696, 689 → 701 twice), the other 46 held. `census-mass3b.mjs` printed a
+  fourth DRIFT line for the new `eslint-plugin-lit-ui-router#test:peer-floor`, and CITES now
+  files `peer-floor-guard.ts` for it; the three `check:dev-split` lines remain. `census-yard.mjs`
+  follows #995's rename: the pack rule names `pack-publish` and `strip-manifest` where it named
+  `pack-staged`.
+  FIVE SENTENCES WENT FALSE, ONE OF THEM BEFORE THIS REFRESH. Sheet 4's rc paragraph and sheet
+  11's ssr paragraph both typed "and so does the flagship" — false once 1.16.0 took `latest`;
+  both now read the registry plate (sheet 4 collects the rows it quotes under `rc`, sheet 11
+  reads `census-npm.json` and throws if ssr stops leading with one). Sheet 3B's "the
+  eslint-plugin quarter is flat throughout … all but its two `oxc-emit` build lanes" went false
+  with the new cite; it now names the quarter's lanes above one line off the plate. Sheet 7B's
+  "Six plants steam at three puffs" was a hand list that carried `docs` at 10 commits (two puffs)
+  at the ninth refresh too; it now lists the top band off the plate — five plants — and its
+  caption's "1 plants stand clean … carry the deepest rust" picks its verbs. The audit read 0
+  escapes and 0 hits above 1 px before and after; on 7B the lint plugin's piece is 0.89 px and
+  the typedoc-plugin callout touches a grown block by 0.73 px.
+  THE NUMBERS: city 280 src files / 22,476 sloc and 145 spec / 24,213 (was 279 / 22,360 and
+  145 / 23,874); yard 248 / 18,126 massed; doors 167,944 min / 59,915 gz (was 166,649 / 59,435),
+  the flagship's `.` 8,719 → 8,837 gz; the bundle 122,215 gz in 17 chunks; the deploy 860 files /
+  4,853,751 gz; nm 179,302 lines / 41,652 d.ts; mass3b 11,770 task-file hashes over 226 real
+  tasks and 2,718 command sloc; the ci graph 717 / 226 / 1,920 edges; steam 580 commits; weather
+  425 dated files; 7A 10,382 of 17,529 metered sloc lit.
 - A PLATE'S `ref` IS THE ARGV STRING. `basis.mjs` resolves the sha to archive the tree, but the
   plate files the ref as it was typed, and every title block prints that field — pass the full
   sha and 20 title blocks print forty characters. Run the chain with `--ref origin/main` and keep
@@ -414,6 +449,13 @@ sitting); order is dependency order.
   block total interpolated into a one-file sentence, reads true only while the member has one file;
   a typed superlative reads true only while nothing overtakes it. Derive the count and its plural,
   name the file by path, compute the rank — or assert the superlative and let the build throw.
+- `orphans 0` PROVES COVERAGE, NOT PLACEMENT. The yard's rules are first-match-wins, so a renamed
+  file that a named rule no longer matches falls through to the next, broader rule and stays
+  counted: #995's `pack-publish.ts` — `packPublishTarball` itself — landed in `publish —
+  release-it` while `pack — packPublishTarball` shrank, and the orphan line read 0. After a
+  rename in a probe's pool, diff the per-instrument rows, not just the orphan count. A cite is
+  the same kind of judgement: filing the one a DRIFT line asks for can make a sentence about its
+  quarter false, so re-read the prose after every judgement-table change.
 - A plate's two dates are read from two clocks and can disagree by a day. `commitDate` is
   `git show -s --format=%cI`, the committer's LOCAL time, and `chrome.mjs::DATE` takes its first
   ten characters; `generatedAtTime` is a UTC ISO string, and sheet 7's `BASIS` line takes ITS
