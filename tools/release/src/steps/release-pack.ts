@@ -13,10 +13,7 @@
 
 import { join } from 'node:path';
 
-import {
-  packScratchParent,
-  publishTarballPath,
-} from '../checks/cache-paths.ts';
+import { publishTarballPath } from '../checks/cache-paths.ts';
 import { group, runMain, setOutput } from '@tools/shared/gha.ts';
 import { requireEnv } from '../lib/env.core.ts';
 import { packPublishTarball } from './pack-publish.ts';
@@ -28,12 +25,7 @@ runMain(async () => {
   const tarball = publishTarballPath(packageName);
 
   await group(`pack ${packageName} with stripped manifest`, async () => {
-    await packPublishTarball(
-      packageName,
-      join(workspaceRoot, packageDir),
-      tarball,
-      packScratchParent,
-    );
+    await packPublishTarball(join(workspaceRoot, packageDir), tarball);
   });
 
   console.log(tarball);

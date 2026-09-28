@@ -128,7 +128,7 @@
       "dependsOn": ["^build:types"],
       // explicit globs hash gitignored files too, and oxlint reads none of
       // these: dist/, .cache/ and .probe-scratch/ mutate mid-graph (build:js,
-      // pack:all scratch, dts-backtest#test writing and deleting a probe under
+      // pack:all tarballs, dts-backtest#test writing and deleting a probe under
       // its own package while this lane hashes), coverage/ and .turbo/ are
       // written by sibling lanes, and examples/* carry their own un-hoisted
       // npm installs

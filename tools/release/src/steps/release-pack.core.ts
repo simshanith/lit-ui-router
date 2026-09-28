@@ -1,6 +1,6 @@
 // Pure logic for the publish Pack step: which manifest fields are stripped
-// from the packed manifest, and which file in the pack destination is THE
-// tarball. The IO (pnpm pack, the beforePacking hook) lives in pack-publish.ts.
+// from the packed manifest. The IO (pnpm pack, the beforePacking hook) lives
+// in pack-publish.ts.
 
 import type { ProjectManifest } from '@pnpm/types';
 
@@ -23,20 +23,4 @@ export function strippedManifest(manifest: ProjectManifest): ProjectManifest {
     delete stripped[field];
   }
   return stripped;
-}
-
-/**
- * The single packed tarball among a directory's entries — anything other than
- * exactly one is a broken pack worth naming rather than silently mishandling.
- */
-export function pickTarball(entries: readonly string[]): string {
-  const tarballs = entries.filter((entry) => entry.endsWith('.tgz'));
-  const [tarball] = tarballs;
-  if (tarball === undefined || tarballs.length > 1) {
-    throw new Error(
-      `expected exactly one packed .tgz, found ${tarballs.length}` +
-        (tarballs.length > 0 ? `: ${tarballs.join(', ')}` : ''),
-    );
-  }
-  return tarball;
 }
