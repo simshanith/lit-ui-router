@@ -639,9 +639,21 @@ export class UiView extends LitElement {
     return (this.viewContext as StateObject).self;
   }
 
-  /** @internal */
+  /**
+   * Adopts a late provider's router ahead of the first render, then places the
+   * fallback set.
+   *
+   * Inside `willUpdate` the registration's sync folds into this update, so the
+   * first render already shows the routed component instead of scheduling a
+   * second update from `firstUpdated`.
+   *
+   * @internal
+   */
   protected willUpdate(changed: PropertyValues<this>): void {
     super.willUpdate(changed);
+    if (!this.hasUpdated) {
+      this.adoptProvidedRouter();
+    }
     this.placeFallback();
   }
 
@@ -651,13 +663,13 @@ export class UiView extends LitElement {
    * Deliberately here rather than at the failed seek in `setupUiView`: the seek
    * runs in `connectedCallback`, and custom-element upgrade order is not
    * guaranteed, so a correct app can connect a `<ui-view>` before `<ui-router>`
-   * upgrades. By the first completed update the no-op is observable.
+   * upgrades. The first update's `willUpdate` re-seeks, so by the first
+   * completed update the no-op is observable.
    *
    * @internal
    */
   protected firstUpdated(changed: PropertyValues): void {
     super.firstUpdated(changed);
-    this.adoptProvidedRouter();
     if (!this.uiRouter) {
       warnMissingRouter(this, '<ui-view>', 'will never render a routed view');
     }
