@@ -103,12 +103,12 @@ describe('toPeerFloorCheckRun', () => {
         name: 'lit-ui-router-mobx',
         ok: false,
         peerCatalog: 'publishedPeerMobx',
-        floorCatalog: 'peerFloor',
+        floorCatalog: 'peerFloorMobx',
       },
       REPO,
     );
     assert.match(summary, new RegExp(`\\(${RELEASE_URL}\\)`));
-    assert.match(summary, /publishedPeerMobx floor and the peerFloor pin/);
+    assert.match(summary, /publishedPeerMobx floor and the peerFloorMobx pin/);
     assert.match(summary, /flips green on the floor/);
   });
 

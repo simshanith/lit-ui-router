@@ -107,9 +107,10 @@ catalogs:
     mobx-6: npm:mobx@^6.16.1
   peerFloor:
     eslint: 9.0.0
-    lit-ui-router-floor: npm:lit-ui-router@1.7.0
   peerFloorEffect:
     lit-ui-router-floor: npm:lit-ui-router@1.15.0
+  peerFloorMobx:
+    lit-ui-router-floor: npm:lit-ui-router@1.7.0
   publishedDependencies:
     '@oxc-project/runtime': '>=0.50.0'
     eslint-plugin-lit: ^2.0.0

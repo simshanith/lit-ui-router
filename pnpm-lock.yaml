@@ -446,13 +446,14 @@ catalogs:
     eslint:
       specifier: 9.0.0
       version: 9.0.0
-    lit-ui-router-floor:
-      specifier: npm:lit-ui-router@1.7.0
-      version: 1.7.0
   peerFloorEffect:
     lit-ui-router-floor:
       specifier: npm:lit-ui-router@1.15.0
       version: 1.15.0
+  peerFloorMobx:
+    lit-ui-router-floor:
+      specifier: npm:lit-ui-router@1.7.0
+      version: 1.7.0
   publishedDependencies:
     '@oxc-project/runtime':
       specifier: '>=0.50.0'
@@ -1145,7 +1146,7 @@ importers:
         specifier: catalog:workspace
         version: link:../lit-ui-router
       lit-ui-router-floor:
-        specifier: catalog:peerFloor
+        specifier: catalog:peerFloorMobx
         version: lit-ui-router@1.7.0
       mobx:
         specifier: 'catalog:'
