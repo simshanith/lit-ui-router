@@ -18,15 +18,15 @@
     "cytoscape": "^3.34.3",
     "effect": "^3.22.2",
     "lit": "^3.3.3",
-    "lit-ui-router": "^1.16.0-rc.1",
-    "lit-ui-router-effect": "^0.1.1",
+    "lit-ui-router": "^1.16.0-rc.3",
+    "lit-ui-router-effect": "^0.1.2",
     "three": "^0.186.0",
     "ui-router-navigation-location-plugin": "^1.0.0",
     "ui-router-server": "^0.2.0"
   },
   "devDependencies": {
     "@lit-labs/ssr": "^4.1.0",
-    "lit-ui-router-ssr": "^0.1.0-rc.2",
+    "lit-ui-router-ssr": "^0.1.0-rc.3",
     "typescript": "^7.0.2",
     "vite": "^8.3.0",
     "vite-plugin-singlefile": "^2.3.3"
