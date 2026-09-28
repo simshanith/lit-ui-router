@@ -121,12 +121,13 @@ catalogs:
     eslint: '^9.0.0 || ^10.0.0'
     hono: ^4.0.0
     lit: '^2.0.0 || ^3.0.0'
-    lit-ui-router: ^1.7.0
     mobx: '^6.0.0 || ^7.0.0'
     typedoc: ^0.28.0
   publishedPeerEffect:
     lit-ui-router: ^1.15.0
-  publishedPeerServer:
+  publishedPeerMobx:
+    lit-ui-router: ^1.7.0
+  publishedPeerSsr:
     lit-ui-router: ^1.16.0-rc.1
     ui-router-server: ^0.2.0
   typescript6-compat:

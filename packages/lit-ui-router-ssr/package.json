@@ -93,8 +93,8 @@
     "@lit-labs/ssr-client": "catalog:publishedPeer",
     "@uirouter/core": "catalog:publishedPeer",
     "lit": "catalog:publishedPeer",
-    "lit-ui-router": "catalog:publishedPeerServer",
-    "ui-router-server": "catalog:publishedPeerServer"
+    "lit-ui-router": "catalog:publishedPeerSsr",
+    "ui-router-server": "catalog:publishedPeerSsr"
   },
   "engines": {
     "node": ">=22.12"
