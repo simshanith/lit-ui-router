@@ -132,9 +132,9 @@ nothing interactive is nested inside a link. One finding from that: `rules.initi
 erases a first-load query; the function form hands `url.search` through (`router.ts`). The boot
 awaits the first settled snapshot of `lit-ui-router-effect`'s `routeRef(router)` (`main.ts`), and the
 gallery reads its filter from `snapshotRoute(router)`, so the server and the browser read the same
-settled route. `package.json` carries a scoped `overrides` entry, which hands
-`lit-ui-router-effect` the app's own `lit-ui-router` range: the package's `^1.7.0` peer does not
-admit a `1.16.0-rc` release. Nothing in `src/*.ts` imports anything from `src/experimental/`. This
+settled route. The prerender's route-ref guard hands `RouterRefController` no router and reads the one
+`withRouterSync` scopes, so a served render exercises the same scoped-router path the sref directives
+take. Nothing in `src/*.ts` imports anything from `src/experimental/`. This
 layer is meant to be liftable into `examples/` as-is.
 
 Three base-layer details a Playwright pass against the deployed site taught, each with a comment at

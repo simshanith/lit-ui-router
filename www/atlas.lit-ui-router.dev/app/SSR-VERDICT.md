@@ -74,7 +74,7 @@ components and its own disk-backed resolves on the same route table, so
 DOM between the part markers the element hydrates against. `src/main.ts` starts
 the router, awaits its first successful transition and calls `hydrateRoot()`;
 a cold container returns `false` and the same template is rendered instead. The
-atlas is on `lit-ui-router@1.16.0-rc.1` / `lit-ui-router-ssr@0.1.0-rc.2`, with
+atlas is on `lit-ui-router@1.16.0` / `lit-ui-router-ssr@0.1.0-rc.3`, with
 `@lit-labs/ssr-client@1.1.8` as the client half's peer.
 
 One thing that cutover measured:
@@ -609,21 +609,18 @@ bytes.
 
 Findings:
 
-- **F1 — the peer range excludes the rc line.** `lit-ui-router-effect@0.1.1`
-  peers on `lit-ui-router ^1.7.0`, and a caret range admits no prerelease, so
-  npm refuses the atlas's `^1.16.0-rc.1` with ERESOLVE. The atlas's answer is
-  a scoped `overrides` entry that hands the package the app's own range
-  (`"$lit-ui-router"`). Released packages keep release-only peers;
-  `lit-ui-router-ssr`'s peer admits the rc line because that package is an rc
-  itself.
-- **F2 — a seek-path controller has no scoped-router fallback.** With no
-  `router` option, `RouterRefController` finds its router from the enclosing
-  `<ui-router>` on connect. Under `prerender()` nothing connects, so it renders
-  `initialValue`, where `srefHref` and `srefActiveClass` fall back to
-  `getScopedRouter()`. Probed on a router settled on `/sheet/7B`: with
-  `router: getScopedRouter()` the controller renders `7B`, without it `INIT`.
-  The fix is `options.router ?? getScopedRouter()`, which raises the
-  `lit-ui-router` peer floor to `^1.15.0`. Filed: #993 (draft PR #994).
+- **F1 — released packages keep release-only peers.** `lit-ui-router-effect@0.1.3`
+  peers on `lit-ui-router ^1.15.0`, a caret range that admits no prerelease,
+  and the atlas takes it directly against `lit-ui-router@1.16.0`. Only a
+  package that is itself an rc (`lit-ui-router-ssr`) carries an rc peer line;
+  a consumer on a prerelease bridges with a scoped npm `overrides` entry.
+- **F2 — a seek-path controller reads the scoped router first.** With no
+  `router` option, `RouterRefController@0.1.3` takes `getScopedRouter()` at
+  construction and seeks the enclosing `<ui-router>` on connect only after,
+  as `srefHref` and `srefActiveClass` do; its `lit-ui-router` peer floor is
+  `^1.15.0`, where `getScopedRouter` ships. Under `prerender()` nothing
+  connects, and the prerender's guard reads every page's settled route through
+  that path inside `withRouterSync`.
 - **F3 — the ref has no failure channel.** `routeRef` is fed by `onSuccess`
   alone, so every value it holds is settled and a failed transition never
   reaches it. `goTo` keeps its `onError`, so a page that fails to settle fails
@@ -638,6 +635,5 @@ Findings:
 - **F5 — routed views have no host.** Every routed component is a
   `RoutedLitTemplate` function, so no element exists for `RefController` or
   `RouterRefController` to attach to: the atlas's route reads are snapshot
-  reads, and no controller runs in the browser. The guard's stub host is the
-  only construction, and it is given its ref directly. No seek-path controller
-  renders on the server, where it would draw `initialValue` (F2).
+  reads, and no controller runs in the browser. The prerender's guard is the
+  only construction, and it reads the scoped router (F2).

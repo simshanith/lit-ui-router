@@ -62,7 +62,8 @@ await import('lit-ui-router-ssr/register');
 const { UIRouterLit } = await import('lit-ui-router/pure');
 const { installServerLocation } = await import('ui-router-server/location');
 const { prerender } = await import('lit-ui-router-ssr');
-const { RefController, routeRef } = await import('lit-ui-router-effect');
+const { RouterRefController } = await import('lit-ui-router-effect');
+const { withRouterSync } = await import('lit-ui-router/context');
 const views = await import('./src/views.ts');
 
 /**
@@ -193,17 +194,18 @@ let routeRefSheets = 0;
 
 /**
  * The route ref's construction-time read, against the router the page was
- * rendered from: a `RefController` on a host that never connects reads a
- * directly-given ref once, and `.value` must be the settled route.
+ * rendered from: a `RouterRefController` on a host that never connects takes
+ * the router `withRouterSync` scopes, reads its ref once, and `.value` must
+ * be the settled route.
  */
 const checkRouteRef = (path: string): void => {
-  const host = {
+  const host = Object.assign(document.createElement('div'), {
     addController() {},
     removeController() {},
     requestUpdate() {},
     updateComplete: Promise.resolve(true),
-  };
-  const { value } = new RefController(host, [routeRef(router)], (route) => route);
+  });
+  const { value } = withRouterSync(router, () => new RouterRefController(host, (route) => route));
   const { current, params } = router.globals;
   const sheet = sheetOf.get(path);
   const misses = [
@@ -293,7 +295,7 @@ if (routeRefSheets !== PLATES.length)
   throw new Error(`prerender: routeRef read ${String(routeRefSheets)} of ${String(PLATES.length)} sheets`);
 for (const failure of routeRefFailures) console.error(`prerender: ${failure}`);
 console.log(
-  `routeRef at construction: ${String(routeRefReads - routeRefMisses)}/` +
+  `scoped router at construction: ${String(routeRefReads - routeRefMisses)}/` +
     `${String(routeRefReads)} renders match router.globals (${String(routeRefSheets)} sheets by num)`,
 );
 if (routeRefFailures.length > 0) process.exitCode = 1;
