@@ -36,6 +36,5 @@ move in a minor. The [package page](/packages/server), the
 [Server-Side Routing guide](/guides/server-route-matching), and the
 [sample app](/sample-app) cover what it answers.
 
-`lit-ui-router-ssr` builds on those verdicts: it publishes on a `0.1.0-rc`
-line under the `rc` dist-tag, and renders each shell verdict into a static
-html file with the router handed to `@lit-labs/ssr`.
+`lit-ui-router-ssr` builds on those verdicts: it renders each shell verdict
+into a static html file with the router handed to `@lit-labs/ssr`.

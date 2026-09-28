@@ -23,19 +23,12 @@ around the render — so a consumer never imports the pre-1.0 renderer or
 re-derives the incantation, and a template's `<ui-router>` descendants and its
 `srefHref` attribute directives both read the same router.
 
-::: warning Release candidate
-The package publishes on a `0.1.0-rc` line, under the `rc` dist-tag, while
-[the atlas](https://atlas.lit-ui-router.dev) adopts it as its first consumer.
-The API below is live and covered by tests; the surface freezes at `0.1.0`
-once that adoption has exercised it.
-:::
-
 ## Installation
 
 ```bash
-npm install lit-ui-router-ssr@rc
+npm install lit-ui-router-ssr
 # or
-pnpm add lit-ui-router-ssr@rc
+pnpm add lit-ui-router-ssr
 ```
 
 `lit-ui-router`, `ui-router-server`, `@lit-labs/ssr`, `lit`, and
