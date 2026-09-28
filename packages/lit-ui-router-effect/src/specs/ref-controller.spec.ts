@@ -2,6 +2,7 @@ import { describe, it, expect, afterEach, vi } from 'vitest';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import {
+  Context,
   Data,
   Effect,
   Equal,
@@ -34,6 +35,16 @@ const cleanups: (() => void)[] = [];
 afterEach(() => {
   while (cleanups.length) cleanups.shift()?.();
 });
+
+class Counter extends Context.Tag('Counter')<
+  Counter,
+  { readonly count: SubscriptionRef.SubscriptionRef<number> }
+>() {}
+
+const CounterLive = Layer.effect(
+  Counter,
+  Effect.map(SubscriptionRef.make(1), (count) => ({ count })),
+);
 
 const makeRef = <T>(value: T) => Effect.runSync(SubscriptionRef.make(value));
 const set = <T>(ref: SubscriptionRef.SubscriptionRef<T>, value: T) =>
@@ -214,5 +225,28 @@ describe('RefController', () => {
     host.remove();
     // the interrupt is forked on the same runtime
     expect(runFork).toHaveBeenCalledTimes(2);
+  });
+
+  it('reads and follows a service ref on a runtime built over a layer', async () => {
+    const runtime = ManagedRuntime.make(CounterLive);
+    cleanups.push(() => void runtime.dispose());
+    const { count } = runtime.runSync(Counter);
+    const runSync = vi.spyOn(runtime, 'runSync');
+    const host = createHost();
+    const controller = new RefController(host, [count], (n) => n, { runtime });
+
+    expect(controller.value).toBe(1);
+    expect(runSync).toHaveBeenCalledTimes(1);
+
+    await mount(host);
+    expect(runSync).toHaveBeenCalledTimes(2);
+    const rendersBefore = host.renderCount;
+
+    set(count, 2);
+    await waitForUpdate(host);
+
+    expect(controller.value).toBe(2);
+    expect(host.renderCount).toBeGreaterThan(rendersBefore);
+    expect(runSync).toHaveBeenCalledTimes(2);
   });
 });
