@@ -54,6 +54,7 @@
     "lint:rules": "eslint --config eslint.rules.config.js .",
     "test": "node --test \"src/**/*.spec.ts\"",
     "test:oxlint": "node --test \"test/oxlint/*.spec.ts\"",
+    "test:peer-floor": "peer-floor-guard && node --import ./test/eslint-floor.ts --test \"src/**/*.spec.ts\"",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
@@ -61,12 +62,14 @@
   },
   "devDependencies": {
     "@release-it/conventional-changelog": "catalog:",
-    "@tools/eslint-ts-parser": "workspace:*",
-    "@tools/oxc-emit": "workspace:*",
-    "@tools/release-config": "workspace:*",
+    "@tools/compat-guards": "catalog:workspace",
+    "@tools/eslint-ts-parser": "catalog:workspace",
+    "@tools/oxc-emit": "catalog:workspace",
+    "@tools/release-config": "catalog:workspace",
     "@types/node": "catalog:",
-    "eslint": "catalog:peerFloor",
+    "eslint": "catalog:",
     "eslint-doc-generator": "catalog:",
+    "eslint-floor": "catalog:peerFloorEslintPlugin",
     "eslint-plugin-eslint-plugin": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",

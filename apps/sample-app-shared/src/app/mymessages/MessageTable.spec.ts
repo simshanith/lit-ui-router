@@ -26,6 +26,7 @@ const unreadRows = (table: MessageTable) =>
   ).length;
 
 describe('message table read column', () => {
+  let uiRouter: HTMLElement;
   let table: MessageTable;
   let rows: Message[];
 
@@ -34,12 +35,15 @@ describe('message table read column', () => {
     table = new MessageTable();
     table.columns = ['read', 'from', 'subject', 'date'];
     table.messages = snapshot(rows);
-    document.body.append(table);
+    // the row links look for a router to mark active
+    uiRouter = document.createElement('ui-router');
+    uiRouter.append(table);
+    document.body.append(uiRouter);
     await table.updateComplete;
   });
 
   afterEach(() => {
-    table.remove();
+    uiRouter.remove();
   });
 
   it('renders a dot for every unread message', () => {

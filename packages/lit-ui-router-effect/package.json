@@ -1,6 +1,6 @@
 {
   "name": "lit-ui-router-effect",
-  "version": "0.1.1",
+  "version": "0.1.3",
   "description": "Effect bindings for lit-ui-router: a SubscriptionRef of the route and ref-following Lit ReactiveControllers",
   "homepage": "https://lit-ui-router.dev/packages/effect",
   "bugs": {
@@ -53,13 +53,13 @@
   },
   "devDependencies": {
     "@release-it/conventional-changelog": "catalog:",
-    "@tools/bundle-probe": "workspace:*",
-    "@tools/compat-guards": "workspace:*",
-    "@tools/happy-dom": "workspace:*",
-    "@tools/lit-test-env": "workspace:*",
-    "@tools/oxc-emit": "workspace:*",
-    "@tools/release-config": "workspace:*",
-    "@tools/typedoc-plugin-lit-ui-router": "workspace:*",
+    "@tools/bundle-probe": "catalog:workspace",
+    "@tools/compat-guards": "catalog:workspace",
+    "@tools/happy-dom": "catalog:workspace",
+    "@tools/lit-test-env": "catalog:workspace",
+    "@tools/oxc-emit": "catalog:workspace",
+    "@tools/release-config": "catalog:workspace",
+    "@tools/typedoc-plugin-lit-ui-router": "catalog:workspace",
     "@types/node": "catalog:",
     "@uirouter/core": "catalog:",
     "@vitest/coverage-v8": "catalog:",
@@ -67,8 +67,8 @@
     "happy-dom": "catalog:",
     "lit": "catalog:",
     "lit-2": "catalog:lit2-compat",
-    "lit-ui-router": "workspace:*",
-    "lit-ui-router-floor": "catalog:peerFloor",
+    "lit-ui-router": "catalog:workspace",
+    "lit-ui-router-floor": "catalog:peerFloorEffect",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
     "release-it": "catalog:",
@@ -84,6 +84,6 @@
     "@uirouter/core": "catalog:publishedPeer",
     "effect": "catalog:publishedPeer",
     "lit": "catalog:publishedPeer",
-    "lit-ui-router": "catalog:publishedPeer"
+    "lit-ui-router": "catalog:publishedPeerEffect"
   }
 }

@@ -75,7 +75,7 @@ idiomatic_version_file_enable_tools = ["node"]
 # optional platform dep, which mise's aube installer does not run.
 # Held equal to `packageManager`, so the bootstrap is already the version that
 # runs and the self-swap is a no-op.
-"aqua:pnpm/pnpm" = "12.5.1"
+"aqua:pnpm/pnpm" = "12.7.0"
 # shadows node's bundled npm; OIDC trusted publishing needs npm >= 11.5.1
 "npm:npm" = "12.0.2"
 # TOML formatter; oxfmt handles everything but .toml, so this owns the mise
@@ -254,7 +254,7 @@ run = [
 # apps/sample-app-lit-e2e/README.md.
 #
 # build_www here, not via //www/lit-ui-router.dev:serve: run-e2e.ts hands
-# start-server-and-test `pnpm --filter @www/lit-ui-router.dev run wrangler:dev`,
+# start-server-and-test the www launcher, `scripts/wrangler-dev.ts`,
 # so the serve task's build edge is off this path (a nested `mise run` would run
 # build_www twice), and a cold build stays out of the wait-on budget.
 #

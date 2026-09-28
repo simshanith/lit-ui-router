@@ -36,8 +36,9 @@ flag "--ref <ref>" help="Tag ref refs/tags/<package>@<version> (tag-push fallbac
 run = 'PACKAGE_INPUT="${usage_package_input:-}" GITHUB_REF="${usage_ref:-}" node src/steps/release-package-info.ts'
 
 [tasks.pack]
-# outputs: tarball. Re-packs from source (restore-free staging copy), NOT the
-# @tools/release#pack:all turbo cache — that artifact stays off the publish path.
+# outputs: tarball. Re-packs from source (in place, beforePacking hook strips
+# the manifest), NOT the @tools/release#pack:all turbo cache — that artifact
+# stays off the publish path.
 description = "Pack the publish tarball with a dev-stripped manifest"
 usage = '''
 flag "--package-name <package_name>" help="Package to pack" required=#true env="PACKAGE_NAME"
@@ -149,7 +150,7 @@ description = "Compute the bumped version, branch, commit, push, and open the re
 usage = '''
 flag "--package <package>" help="Package to bump" required=#true env="PACKAGE"
 flag "--increment <increment>" help="Version increment (other/none pair with --other-increment)" required=#true env="INCREMENT" {
-  choices "major" "minor" "patch" "other" "none"
+  choices "major" "minor" "patch" "prerelease" "other" "none"
 }
 flag "--other-increment <other_increment>" help="Custom version for --increment other (e.g. a prerelease)" env="OTHER_INCREMENT"
 flag "--pr-base <pr_base>" help="GitHub PR base branch" required=#true env="PR_BASE"

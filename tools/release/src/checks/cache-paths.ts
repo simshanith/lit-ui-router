@@ -34,9 +34,6 @@ export const packDir = join(cacheDir, 'pack');
 export const packTarballPath = (name: string): string =>
   join(packDir, `${name}.tgz`);
 
-/** Scratch copies live here; kept out of the `*.tgz` output glob. */
-export const packStagingParent = join(packDir, 'staging');
-
 // The DEBIT ledger of the publish-path reconciliation: the publish job
 // re-bakes here (cold, off-cache) and Reconcile balances it against the
 // CI-verified CREDIT tarball under packDir. Kept OUT of packDir so it can

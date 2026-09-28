@@ -115,6 +115,11 @@ describe('the served <ui-view>', () => {
   });
 
   describe('sleeping under defer-hydration', () => {
+    // Nothing wakes these views, so each warns that it is still asleep.
+    beforeEach(() => {
+      vi.spyOn(console, 'warn').mockImplementation(() => {});
+    });
+
     it('should capture authored hold content when the attribute is absent', async () => {
       const { uiView } = await setupRouter([], {
         configure: (el) => {
@@ -183,6 +188,7 @@ describe('the served <ui-view>', () => {
     it('should re-register on the provided router when the attribute is removed', async () => {
       // No router on <ui-router>, so it provides a placeholder of its own and
       // the view registers against that — the prerendered upgrade order.
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
       const uiRouterEl = document.createElement('ui-router');
       const uiView = makeView();
       uiView.setAttribute('defer-hydration', '');
@@ -212,9 +218,16 @@ describe('the served <ui-view>', () => {
       await waitForUpdate(uiView);
 
       expect(uiView.querySelector('.home-content')).not.toBeNull();
+      expect(warn).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'nothing answered its adoptUiViewContext request',
+        ),
+        uiView,
+      );
     });
 
     it('should re-seek before a first update, where lit records no old value', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
       const uiRouterEl = document.createElement('ui-router');
       const uiView = makeView();
       uiView.setAttribute('defer-hydration', '');
@@ -235,6 +248,12 @@ describe('the served <ui-view>', () => {
 
       expect(uiView.deferHydration).toBe(false);
       expect(uiView.uiRouter).toBe(router);
+      expect(warn).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'nothing answered its adoptUiViewContext request',
+        ),
+        uiView,
+      );
     });
 
     it('should leave a view already registered on the real router alone', async () => {
@@ -254,6 +273,8 @@ describe('the served <ui-view>', () => {
     });
 
     it('should hand the woken view to an adopter, re-sought and unrendered', async () => {
+      // The nested view in heldMarkup is never woken, so it warns that it is still asleep.
+      vi.spyOn(console, 'warn').mockImplementation(() => {});
       // No router on <ui-router>, so it provides a placeholder of its own and
       // the view registers against that — the prerendered upgrade order.
       const uiRouterEl = document.createElement('ui-router');
@@ -293,6 +314,8 @@ describe('the served <ui-view>', () => {
     });
 
     it('should keep its held nodes for the adopter when it reconnects after the wake is queued', async () => {
+      // The nested view in heldMarkup is never woken, so it warns that it is still asleep.
+      vi.spyOn(console, 'warn').mockImplementation(() => {});
       const uiRouterEl = document.createElement('ui-router');
       container.appendChild(uiRouterEl);
       uiRouterEl.innerHTML = `<ui-view defer-hydration>${heldMarkup}</ui-view>`;
@@ -376,6 +399,8 @@ describe('the served <ui-view>', () => {
     });
 
     it('should not request an adopter again on a later update', async () => {
+      // The nested view in heldMarkup is never woken, so it warns that it is still asleep.
+      vi.spyOn(console, 'warn').mockImplementation(() => {});
       router = createTestRouter(homeStates);
       const uiView = mountHeld();
       const adopt = vi.fn();
@@ -644,6 +669,11 @@ describe('the served <ui-view>', () => {
       ...homeStates,
       { name: 'blank', url: '/blank' },
     ];
+
+    // The nested view in heldMarkup is never woken, so it warns that it is still asleep.
+    beforeEach(() => {
+      vi.spyOn(console, 'warn').mockImplementation(() => {});
+    });
 
     it('should capture a deferred view’s authored content without parking it', async () => {
       router = createTestRouter(holdStates);

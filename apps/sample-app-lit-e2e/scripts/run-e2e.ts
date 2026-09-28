@@ -1,3 +1,8 @@
+import { join } from 'node:path';
+
+import { workspaceRoot } from '@tools/bootstrap/root.ts';
+import { loadWorkspace } from '@tools/shared/workspace.ts';
+
 import manifest from '../package.json' with { type: 'json' };
 
 import { serveAndTest } from './serve-and-test.ts';
@@ -36,8 +41,17 @@ const test = [
   '--continue=dependencies-successful --ui=stream --log-order=stream --summarize',
 ].join(' ');
 
-// not the serve mise task: its build_www depends would re-run under nested mise
-const server = 'pnpm --filter @www/lit-ui-router.dev run wrangler:dev';
+// not the serve mise task: its build_www depends would re-run under nested mise.
+// Not `pnpm --filter … run` either: start-server-and-test stops the server with
+// SIGINT, which pnpm reports as a failed recursive run on every clean teardown.
+const WWW = '@www/lit-ui-router.dev';
+const { members } = await loadWorkspace(workspaceRoot);
+const www = members.find((member) => member.name === WWW);
+if (!www) {
+  console.error(`run-e2e: no workspace member ${WWW}`);
+  process.exit(1);
+}
+const server = `node ${JSON.stringify(join(workspaceRoot, www.dir, 'scripts/wrangler-dev.ts'))}`;
 
 // every app is mounted whichever suites run
 serveAndTest(server, test, ['app/', 'app-mobx/', 'app-effect/']);

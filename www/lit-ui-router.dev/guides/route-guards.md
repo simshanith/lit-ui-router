@@ -79,7 +79,7 @@ offers the full lifecycle — `onBefore`, `onStart`, `onEnter`, `onRetain`,
 `onExit`, `onFinish`, `onSuccess`, `onError` — and all of them accept the
 same criteria/callback shape.
 
-<svg viewBox="0 0 720 256" width="100%" style="max-width: 720px" role="img" aria-label="The transition lifecycle: onBefore, onStart, onExit/onRetain/onEnter, onFinish, then onSuccess or onError. A route guard is an onBefore hook: returning a TargetState redirects, false cancels, nothing proceeds. Resolves fetch during the transition." xmlns="http://www.w3.org/2000/svg">
+<svg viewBox="0 0 720 256" width="100%" style="max-width: 720px" role="img" aria-label="The transition lifecycle: onBefore, onStart, onExit/onRetain/onEnter, onFinish, then onSuccess or onError. After onSuccess, the views render on the next Lit update. A route guard is an onBefore hook: returning a TargetState redirects, false cancels, nothing proceeds. Resolves fetch during the transition." xmlns="http://www.w3.org/2000/svg">
   <title>The transition lifecycle and where guards run</title>
   <defs>
     <marker id="arr-lifecycle" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
@@ -102,14 +102,19 @@ same criteria/callback shape.
     <!-- fork -->
     <line x1="502" y1="64" x2="540" y2="42" stroke="var(--vp-c-text-3, #929295)" stroke-width="1.25" marker-end="url(#arr-lifecycle)" />
     <line x1="502" y1="76" x2="540" y2="98" stroke="var(--vp-c-text-3, #929295)" stroke-width="1.25" marker-end="url(#arr-lifecycle)" />
-    <rect x="546" y="20" width="112" height="36" rx="8" fill="var(--vp-c-green-soft, rgba(16,185,129,0.14))" />
-    <text x="602" y="42" font-size="12" font-weight="600" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-green-1, #18794e)" text-anchor="middle">onSuccess</text>
-    <rect x="546" y="84" width="112" height="36" rx="8" fill="var(--vp-c-red-soft, rgba(244,63,94,0.14))" />
-    <text x="602" y="106" font-size="12" font-weight="600" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-red-1, #b8272c)" text-anchor="middle">onError</text>
-    <text x="666" y="42" font-size="10" fill="var(--vp-c-text-3, #929295)">views</text>
-    <text x="666" y="54" font-size="10" fill="var(--vp-c-text-3, #929295)">render</text>
-    <text x="666" y="106" font-size="10" fill="var(--vp-c-text-3, #929295)">cancelled</text>
-    <text x="666" y="118" font-size="10" fill="var(--vp-c-text-3, #929295)">or failed</text>
+    <rect x="546" y="20" width="90" height="36" rx="8" fill="var(--vp-c-green-soft, rgba(16,185,129,0.14))" />
+    <text x="591" y="42" font-size="12" font-weight="600" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-green-1, #18794e)" text-anchor="middle">onSuccess</text>
+    <rect x="546" y="84" width="90" height="36" rx="8" fill="var(--vp-c-red-soft, rgba(244,63,94,0.14))" />
+    <text x="591" y="106" font-size="12" font-weight="600" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-red-1, #b8272c)" text-anchor="middle">onError</text>
+    <!-- views render after onSuccess -->
+    <line x1="636" y1="38" x2="650" y2="38" stroke="var(--vp-c-text-3, #929295)" stroke-width="1.25" marker-end="url(#arr-lifecycle)" />
+    <rect x="654" y="20" width="62" height="36" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="685" y="36" font-size="11" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">views</text>
+    <text x="685" y="49" font-size="11" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">render</text>
+    <text x="654" y="70" font-size="10" fill="var(--vp-c-text-3, #929295)">on the next</text>
+    <text x="654" y="82" font-size="10" fill="var(--vp-c-text-3, #929295)">Lit update</text>
+    <text x="642" y="106" font-size="10" fill="var(--vp-c-text-3, #929295)">cancelled</text>
+    <text x="642" y="118" font-size="10" fill="var(--vp-c-text-3, #929295)">or failed</text>
     <!-- resolves bracket -->
     <line x1="122" y1="112" x2="122" y2="106" stroke="var(--vp-c-divider, #e2e2e3)" />
     <line x1="122" y1="112" x2="502" y2="112" stroke="var(--vp-c-divider, #e2e2e3)" />

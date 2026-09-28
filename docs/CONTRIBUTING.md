@@ -75,6 +75,41 @@ git clean -Xdf -- packages/*/dist tools/*/dist
 
 `-X` removes only ignored files, so untracked work survives.
 
+### Reproducing a Codecov failure
+
+The Codecov PR comment names the file with missing lines, not the line. Patch
+status is `target: auto` with no threshold, so one uncovered changed line fails
+it when base coverage is near 100%. The `codecov/project/<pkg>` checks are
+`component_management` components, not flags; see
+[`.github/codecov.yml`](../.github/codecov.yml).
+
+The line comes from the local run CI uploads:
+
+```bash
+turbo run test:coverage --filter=lit-ui-router
+```
+
+vitest's text reporter prints an `Uncovered Line #s` column, and the package's
+`coverage/` holds `lcov.info` (`DA:<line>,0` is an unhit line) and
+`coverage-final.json` (v8 statement and branch maps — a branch miss on a line
+that did run shows there, not in the line column). `ui-router-server` runs
+`node --test` instead, which prints an `uncovered lines` column and writes
+`coverage/lcov.info` rewritten to repo-relative paths by `rebase-lcov`.
+
+To list only the files the branch touched (per file, not per line):
+
+```bash
+turbo run test:coverage --filter=lit-ui-router -- --coverage.reporter=text --coverage.changed=origin/main
+```
+
+The narrowed run prints the table only and drops the package's `coverage/` files;
+run the full command again to write them back. Do not pass the test-level
+`--changed`: it drops specs that don't import the changed files, so coverage
+reads lower than CI's. An uncovered line is often an unreachable branch rather
+than a missing test, and the fix can be deleting it.
+`CODECOV_TOKEN` is an upload-only CI secret; it cannot read reports and is not
+needed locally.
+
 ## TypeScript authoring
 
 The published packages support consumers on **TypeScript 5.0+**, while the

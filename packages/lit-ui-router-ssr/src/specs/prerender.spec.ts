@@ -266,6 +266,8 @@ describe('the rules file', () => {
 
 describe('dryRun', () => {
   it('writes nothing and still tallies and sizes every page', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
     const { files, result } = await run({
       paths: ['/', '/app/legacy', '/app/missing'],
       dryRun: true,
@@ -280,6 +282,11 @@ describe('dryRun', () => {
     });
     expect(result.rules).toHaveLength(2);
     expect(result.pages.every((page) => page.bytes > 0)).toBe(true);
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining('no otherwise projection'),
+      '/app/missing',
+    );
+    warn.mockRestore();
   });
 });
 

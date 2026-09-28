@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { pickTarball, strippedManifest } from './release-pack.core.ts';
+import { strippedManifest } from './release-pack.core.ts';
 
 describe('strippedManifest', () => {
   const manifest = {
@@ -41,22 +41,5 @@ describe('strippedManifest', () => {
     const source = { ...manifest };
     strippedManifest(source);
     assert.deepEqual(source, manifest);
-  });
-});
-
-describe('pickTarball', () => {
-  it('finds the single .tgz among package files', () => {
-    assert.equal(
-      pickTarball(['dist', 'package.json', 'lit-ui-router-1.8.0.tgz']),
-      'lit-ui-router-1.8.0.tgz',
-    );
-  });
-
-  it('names the failure on zero or multiple tarballs', () => {
-    assert.throws(() => pickTarball(['dist', 'package.json']), /found 0/);
-    assert.throws(
-      () => pickTarball(['a-1.0.0.tgz', 'a-0.9.0.tgz']),
-      /found 2: a-1\.0\.0\.tgz, a-0\.9\.0\.tgz/,
-    );
   });
 });

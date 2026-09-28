@@ -15,9 +15,19 @@
     "lint:rules": {
       "inputs": ["$TURBO_DEFAULT$"]
     },
-    // the RuleTester suite carries the eslint side; test:oxlint rides alongside
+    // the RuleTester suite carries the eslint side; test:oxlint and the floor
+    // lane ride alongside
     "test": {
-      "with": ["test:oxlint"]
+      "with": ["test:oxlint", "test:peer-floor"]
+    },
+    // the same suite on the eslint-floor alias. Gated, unlike the adapters'
+    // typecheck:peer-floor: the floor is a published eslint, never a workspace peer
+    "test:peer-floor": {
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/pnpm-workspace.yaml",
+        "$TURBO_ROOT$/pnpm-lock.yaml"
+      ]
     },
     // oxlint `jsPlugins` over the fixture dir, gating at the exact catalog pin
     "test:oxlint": {

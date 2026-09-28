@@ -21,7 +21,6 @@ catalog:
   '@lit/context': ^1.1.6
   '@pnpm/logger': 1100.0.0
   '@pnpm/types': 1102.1.0
-  '@pnpm/workspace.project-manifest-reader': 1100.0.29
   '@pnpm/workspace.projects-reader': 1101.0.28
   '@pnpm/workspace.workspace-manifest-reader': 1100.1.9
   '@release-it/conventional-changelog': ^12.0.2
@@ -105,8 +104,11 @@ catalogs:
     lit-2: npm:lit@^2.8.0
   mobx6-compat:
     mobx-6: npm:mobx@^6.16.1
-  peerFloor:
-    eslint: 9.0.0
+  peerFloorEffect:
+    lit-ui-router-floor: npm:lit-ui-router@1.15.0
+  peerFloorEslintPlugin:
+    eslint-floor: npm:eslint@9.0.0
+  peerFloorMobx:
     lit-ui-router-floor: npm:lit-ui-router@1.7.0
   publishedDependencies:
     '@oxc-project/runtime': '>=0.50.0'
@@ -119,10 +121,12 @@ catalogs:
     eslint: '^9.0.0 || ^10.0.0'
     hono: ^4.0.0
     lit: '^2.0.0 || ^3.0.0'
-    lit-ui-router: ^1.7.0
     mobx: '^6.0.0 || ^7.0.0'
-    typedoc: ^0.28.0
-  publishedPeerServer:
+  publishedPeerEffect:
+    lit-ui-router: ^1.15.0
+  publishedPeerMobx:
+    lit-ui-router: ^1.7.0
+  publishedPeerSsr:
     lit-ui-router: ^1.16.0-rc.1
     ui-router-server: ^0.2.0
   typescript6-compat:
@@ -130,6 +134,41 @@ catalogs:
   typescript6:
     typescript: ^6.0.3
     typescript-6: npm:typescript@^6.0.3
+  workspace:
+    '@tools/bootstrap': workspace:*
+    '@tools/build_and_test': workspace:*
+    '@tools/bundle-probe': workspace:*
+    '@tools/compat-guards': workspace:*
+    '@tools/embed-heights': workspace:*
+    '@tools/eslint': workspace:*
+    '@tools/eslint-ts-parser': workspace:*
+    '@tools/happy-dom': workspace:*
+    '@tools/lcov-rebase': workspace:*
+    '@tools/lint-elements': workspace:*
+    '@tools/lit-template-lint': workspace:*
+    '@tools/lit-test-env': workspace:*
+    '@tools/oxc-emit': workspace:*
+    '@tools/release-config': workspace:*
+    '@tools/shared': workspace:*
+    '@tools/typedoc-plugin-lit-ui-router': workspace:*
+    '@tools/vue-check': workspace:*
+    '@tools/warn-lanes': workspace:*
+    '@tools/wintercg-globals': workspace:*
+    '@tools/workers-builds': workspace:*
+    '@www/lit-ui-router.dev': workspace:*
+    eslint-plugin-lit-ui-router: workspace:*
+    examples: workspace:*
+    lit-ui-router: workspace:*
+    lit-ui-router-effect: workspace:*
+    lit-ui-router-mobx: workspace:*
+    lit-ui-router-ssr: workspace:*
+    sample-app-lit-effect: workspace:*
+    sample-app-lit-mobx: workspace:*
+    sample-app-lit-vanilla: workspace:*
+    sample-app-routes: workspace:*
+    sample-app-shared: workspace:*
+    ui-router-navigation-location-plugin: workspace:*
+    ui-router-server: workspace:*
 
 allowBuilds:
   cypress: true
@@ -174,6 +213,21 @@ patchedDependencies:
   lit-dialog: patches/lit-dialog.patch
 
 minimumReleaseAgeExclude:
+  - '@pnpm/exe.android-arm64@12.7.0'
+  - '@pnpm/exe.android-x64@12.7.0'
+  - '@pnpm/exe.darwin-arm64@12.7.0'
+  - '@pnpm/exe.darwin-x64@12.7.0'
+  - '@pnpm/exe.freebsd-x64@12.7.0'
+  - '@pnpm/exe.linux-arm64-musl@12.7.0'
+  - '@pnpm/exe.linux-arm64@12.7.0'
+  - '@pnpm/exe.linux-ppc64@12.7.0'
+  - '@pnpm/exe.linux-riscv64@12.7.0'
+  - '@pnpm/exe.linux-s390x@12.7.0'
+  - '@pnpm/exe.linux-x64-musl@12.7.0'
+  - '@pnpm/exe.linux-x64@12.7.0'
+  - '@pnpm/exe.win32-arm64@12.7.0'
+  - '@pnpm/exe.win32-x64@12.7.0'
   - eslint-plugin-oxlint@1.85.0
+  - pnpm@12.7.0
 
 minimumReleaseAgeStrict: true

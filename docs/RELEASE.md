@@ -170,6 +170,16 @@ Non-gating per-package check runs on main's head — `published-diff (<pkg>)`
 next publish would write?) and `peer-floor (<pkg>)` (is an adapter's published
 peer floor stale?). The README badges read these check runs; `action_required`
 renders orange, meaning a release or floor bump is owed — never a CI failure.
+A floor bump raises the catalog the adapter's `lit-ui-router` peer names and
+the matching `peerFloor*` pin in `pnpm-workspace.yaml`: `publishedPeerMobx`
+and `peerFloorMobx` for mobx, `publishedPeerEffect` and `peerFloorEffect` for
+effect.
+
+`eslint-plugin-lit-ui-router` has no check run: its floor is a published eslint,
+so `test:peer-floor` runs its rule suite on the `eslint-floor` alias in every PR.
+An eslint floor bump raises `publishedPeer.eslint` and the `peerFloorEslintPlugin`
+pin. The range's upper `||` leg is exercised by the plugin's own `eslint`
+devDependency, which `peer-floor-guard` requires to sit in it.
 
 `published-diff` picks that tag from the workspace version by the same rule
 release-it publishes under: a prerelease answers to its own channel tag,

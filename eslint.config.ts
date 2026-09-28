@@ -14,6 +14,15 @@ import oxlint from 'eslint-plugin-oxlint';
 import packageJson from 'eslint-plugin-package-json';
 import { configs as pnpmConfigs } from 'eslint-plugin-pnpm';
 
+// Every non-root manifest carries this; a later block that sets
+// no-restricted-syntax for the same file replaces it, so such blocks re-list it.
+const crossPackageScripts = {
+  selector:
+    'JSONProperty[key.value="scripts"] > JSONObjectExpression > JSONProperty > JSONLiteral[value=/\\b(?:node|tsx) +\\.\\.\\u002F/]',
+  message:
+    'Cross-package execution: scripts must not run files outside their own package with node/tsx. Depend on the owning package (its bin, as a workspace dep) or delegate via `turbo run <task>` / `pnpm --filter <pkg> run <script>`.',
+};
+
 export default defineConfig(
   globalIgnores([
     // build outputs (every output lives under a dist/ dir): parallel tasks
@@ -50,8 +59,8 @@ export default defineConfig(
       'pnpm/json-enforce-catalog': [
         'error',
         {
-          // non-registry specs stay inline; npm: aliases belong in the catalog
-          allowedProtocols: ['workspace', 'link', 'file', 'portal'],
+          // every spec goes through a catalog, workspace deps included
+          allowedProtocols: [],
           // report catalog-version conflicts instead of auto-creating a new catalog
           conflicts: 'error',
           fields: [
@@ -86,38 +95,25 @@ export default defineConfig(
   {
     // The same boundary for every other package: scripts must not reach into
     // a sibling (or the root) by relative parent path. Own files run
-    // directly; another package's entry points come through a workspace:*
+    // directly; another package's entry points come through a workspace
     // dep's bin or a turbo/pnpm delegation.
     files: ['**/package.json'],
     ignores: ['package.json'],
     rules: {
-      'no-restricted-syntax': [
-        'error',
-        {
-          selector:
-            'JSONProperty[key.value="scripts"] > JSONObjectExpression > JSONProperty > JSONLiteral[value=/\\b(?:node|tsx) +\\.\\.\\u002F/]',
-          message:
-            'Cross-package execution: scripts must not run files outside their own package with node/tsx. Depend on the owning package (workspace:* bin) or delegate via `turbo run <task>` / `pnpm --filter <pkg> run <script>`.',
-        },
-      ],
+      'no-restricted-syntax': ['error', crossPackageScripts],
     },
   },
   {
-    // Shipped dep fields of publishable packages must not use workspace: refs:
-    // pnpm's pack-substitution re-appends the substituted entry, breaking the
-    // sorted published manifest. devDependencies is exempt (stripped at pack;
-    // workspace:* is correct there), as are private manifests (never packed).
-    files: ['packages/*/package.json'],
+    // published* catalogs feed only the shipped fields of published packages,
+    // and those fields take nothing else; peerFloor* catalogs feed only
+    // devDependencies. Also keeps workspace: and catalog:workspace out of
+    // shipped fields, where pack substitution breaks published-manifest sorting.
+    files: ['**/package.json'],
+    // standalone npm projects with inline versions
+    ignores: ['examples/*/package.json'],
+    plugins: { repo: repoRules },
     rules: {
-      'no-restricted-syntax': [
-        'error',
-        {
-          selector:
-            'JSONObjectExpression:not(:has(> JSONProperty[key.value="private"][value.value=true])) > JSONProperty:matches([key.value="dependencies"], [key.value="peerDependencies"], [key.value="optionalDependencies"]) > JSONObjectExpression > JSONProperty > JSONLiteral[value=/^workspace:/]',
-          message:
-            'workspace: refs in shipped fields get pack-substituted with re-appended key order, breaking published-manifest sorting — use catalog:publishedPeer (or a version range) instead.',
-        },
-      ],
+      'repo/catalog-fields': 'error',
     },
   },
   {
@@ -133,6 +129,7 @@ export default defineConfig(
     rules: {
       'no-restricted-syntax': [
         'error',
+        crossPackageScripts,
         {
           selector:
             'JSONProperty:matches([key.value="dependencies"], [key.value="peerDependencies"], [key.value="optionalDependencies"])',
@@ -175,7 +172,7 @@ export default defineConfig(
   {
     files: ['pnpm-workspace.yaml'],
     rules: {
-      // name-only would flag the intentional publishedPeer/typescript6-compat/vitepress1 pins.
+      // name-only would flag the intentional publishedPeer/typescript6-compat pins.
       'pnpm/yaml-no-duplicate-catalog-item': [
         'error',
         { checkDuplicates: 'exact-version' },

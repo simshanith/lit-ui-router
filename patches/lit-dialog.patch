@@ -1,5 +1,5 @@
 diff --git a/LitDialog.js b/LitDialog.js
-index f1e613363bff17d230928d0bdd86425750e1305a..c8657528ee17f786cbaf428525ded57b39cfaa44 100644
+index f1e613363bff17d230928d0bdd86425750e1305a..862a089294058cfdd1b23338cb9b06bb8505fff0 100644
 --- a/LitDialog.js
 +++ b/LitDialog.js
 @@ -1,4 +1,4 @@
@@ -8,3 +8,11 @@ index f1e613363bff17d230928d0bdd86425750e1305a..c8657528ee17f786cbaf428525ded57b
  import { classMap } from 'lit/directives/class-map.js';
  
  /**
+@@ -161,7 +161,6 @@ export class LitDialog extends HTMLElement {
+      * @param {MouseEvent} e 
+      */
+     _onModalClicked(e) {
+-        console.log('Click target is #modal', e.target == this.modal);
+         if (e.target==this.modal) {
+             this.onCancel(e);
+         }

@@ -265,7 +265,7 @@ function run(specifier: string, configFile: string) {
 // this fails loudly — pick a newer-syntax probe.
 //
 // Probes live in a scratch dir, never in packages/*/dist — concurrent tasks
-// in the same graph (test × test:matrix, pack:all staging) race any mutation
+// in the same graph (test × test:matrix, pack:all packing dist) race any mutation
 // of shared build outputs.
 const PROBE = 'export type __dtsBacktestProbe = NoInfer<string>;\n';
 

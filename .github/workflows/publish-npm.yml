@@ -86,8 +86,9 @@ jobs:
         env:
           PACKAGE_NAME: ${{ steps.info.outputs.package_name }}
       - name: Pack
-        # Restore-free staging copy; the source tree is never touched. The
-        # DEBIT: these are the bytes we attest and publish.
+        # Packs in place; a beforePacking hook strips the packed manifest and
+        # the source tree is never written. The DEBIT: these are the bytes we
+        # attest and publish.
         id: pack
         run: mise run //tools/release:pack
         env:

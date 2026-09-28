@@ -60,6 +60,10 @@ router.start();
 </ui-router>
 ```
 
+`rules.initial({ state: 'home' })` lands on the state with no params; a landing
+state that reads the query needs the function form — see
+[Unmatched URLs](/guides/unmatched-urls#a-landing-state-that-reads-the-query).
+
 ## Core Concepts
 
 ### Router
@@ -253,6 +257,31 @@ lit-ui-router supports multiple ways to define route components:
 | `` (props) => html`...` `` | Views needing params or resolves               |
 | `MyElement`                | Complex views with lifecycle, state, or styles |
 
+#### Typing Resolves
+
+`LitStateDeclaration<T>` takes the resolves type as a generic, defaulting to
+`Record<string, any>`. A view receives `T` as an argument, so the check runs in
+reverse: a view that requires a resolve does not fit the default, and TypeScript
+reports the error at `component:` rather than at the generic.
+
+```ts
+const GalleryView: RoutedLitTemplate<{ manifest: Manifest }> = (props) =>
+  html`<p>${props.resolves.manifest.sheets.length}</p>`;
+
+const states: LitStateDeclaration[] = [
+  { name: 'gallery', url: '/', component: GalleryView }, // TS2322 at component:
+];
+```
+
+Two shapes type-check:
+
+- **Thread the generic** onto the declaration: `LitStateDeclaration<{ manifest: Manifest }>[]`.
+  A bare `RoutedLitTemplate` view still fits beside the typed one.
+- **A table mixing resolve shapes** threads one type alias that covers every view,
+  such as `GalleryResolves & SheetResolves`. Each view keeps its own required
+  members. An alias with every member optional also fits, at the cost of `?.` at
+  each use inside the views.
+
 ### Lifecycle Hooks
 
 Components can implement these interfaces to respond to routing events:
@@ -301,10 +330,10 @@ a router from.
 - `withRouterSync(router, run)` - scopes a router to one synchronous call
 - `getScopedRouter()` - reads the router that call scoped
 
-`srefHref`, `srefActiveClass` and `srefAriaCurrent` read the `withRouterSync`
-slot and nothing else, so a nav rendered inside it carries real hrefs and active
-markup; `provideRouter` serves elements that ask by protocol, not attribute
-parts.
+`srefHref`, `srefActiveClass`, `srefAriaCurrent` and `lit-ui-router-effect`'s
+`RouterRefController` read the `withRouterSync` slot and nothing else, so a nav
+rendered inside it carries real hrefs and active markup; `provideRouter` serves
+elements that ask by protocol, not attribute parts.
 
 See [Server-Side Routing](/guides/server-route-matching#the-router-on-the-server).
 

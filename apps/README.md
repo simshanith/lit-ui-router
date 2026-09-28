@@ -69,7 +69,7 @@ shared `router.config.ts`:
 
 **Default**: with no preference set, the app selects the best available plugin:
 
-1. Navigation API when supported, via the 🧑‍🔬 _experimental_
+1. Navigation API when supported, via the
    [navigation plugin](../packages/navigation-location-plugin/)
 2. Push State as fallback for unsupported browsers
 

@@ -52,11 +52,28 @@ describe('lit-ui-router-ssr/register', () => {
     const defined = stubRegistry();
     await load();
     const first = defined.get('ui-view');
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
     vi.resetModules();
     await expect(load()).resolves.toBeUndefined();
 
     expect(defined.get('ui-view')).toBe(first);
+    // The second copy's core entry still reports the <ui-router> it found.
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining('<ui-router> is already defined'),
+    );
+  });
+
+  it("keeps core's root entry silent when it runs after the served register", async () => {
+    const defined = stubRegistry();
+    await load();
+    const served = defined.get('ui-view');
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    await import('lit-ui-router');
+
+    expect(defined.get('ui-view')).toBe(served);
+    expect(warn).not.toHaveBeenCalled();
   });
 
   it('defines a class that answers the slot the enclosing render reaches with noChange', () => {
