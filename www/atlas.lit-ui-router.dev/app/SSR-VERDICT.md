@@ -628,10 +628,13 @@ Findings:
   alone, so every value it holds is settled and a failed transition never
   reaches it. `goTo` keeps its `onError`, so a page that fails to settle fails
   the build.
-- **F4 — `options.runtime` with real layers has no consumer.** The atlas has no
-  Effect services and no layers, and every call runs on Effect's default
-  runtime. A `ManagedRuntime` satisfies `RefRuntime` under the atlas's
-  TypeScript 7 config; that is a typecheck result only.
+- **F4 — `options.runtime` with real layers has no consumer in the atlas.** The
+  atlas has no Effect services and no layers, and every call runs on Effect's
+  default runtime. `RefRuntime` is `runFork` and `runSync` over effects that
+  require no service, so a layer's services never reach the controller; the
+  package's specs fork the subscription and its interrupt on a
+  `ManagedRuntime`. That a `ManagedRuntime` satisfies `RefRuntime` under the
+  atlas's TypeScript 7 config is the atlas's only evidence, a typecheck.
 - **F5 — routed views have no host.** Every routed component is a
   `RoutedLitTemplate` function, so no element exists for `RefController` or
   `RouterRefController` to attach to: the atlas's route reads are snapshot
