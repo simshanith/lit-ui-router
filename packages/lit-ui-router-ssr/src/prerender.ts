@@ -260,7 +260,9 @@ const warnUnclaimed = (path: string): void => {
  *
  * Pages are rendered with `deferHydration`, so every custom element one holds
  * carries `defer-hydration` and renders nothing until `hydrateRoot()`'s walk
- * reaches it on the client.
+ * reaches it on the client. A property binding emits only its part marker:
+ * the property is set when the page hydrates, so what an element must show on
+ * the served page arrives as an attribute or as children.
  *
  * @param options - the mount table, the router, the paths, and the hooks
  * @returns what was emitted, planned or written

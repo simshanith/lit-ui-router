@@ -99,6 +99,34 @@ const page = (router: UIRouterLit) => html`
 One template set, both sides: the server fills the hole through the renderer, the client renders the
 same strings with the hole empty and each `<ui-view>` fills itself.
 
+### A property binding emits nothing on the server
+
+`@lit-labs/ssr` writes a `.prop=${…}` binding as its part marker and nothing else — no attribute, no
+child, no value. Hydration sets the property on the client. A routed template that feeds a child
+element by property serves that element empty:
+
+```text
+<!--lit-part z+EcqXO4WYo=--><!--lit-node 0--><x-plate ></x-plate><!--/lit-part-->
+```
+
+Write what the page has to carry as the element's children, in the same template, with the
+properties bound over it. The server emits the children, `hydrateRoot()` adopts them as the same
+child part, and the element renders nothing of its own:
+
+```typescript
+import { html } from 'lit';
+import { unsafeHTML } from 'lit/directives/unsafe-html.js';
+
+const plate = (fragment: string) =>
+  html`<x-plate .fragment=${fragment}>${unsafeHTML(fragment)}</x-plate>`;
+```
+
+A branch on `isServer` that writes the children on the server only draws a different template on
+each side: the enclosing view cannot adopt it, drops what the server drew and renders over it. The
+other answer is a renderer of the element's own, passed in `elementRenderers` alongside
+`UiViewRenderer`, that draws the property on the server. The atlas's plates are the worked example:
+<https://github.com/simshanith/lit-ui-router/blob/worktree-altitude-atlas/www/atlas.lit-ui-router.dev/app/src/views.ts>
+
 ## Registering the elements
 
 A prerendered page needs the served `<ui-view>`, and `lit-ui-router-ssr/register` is the one import
