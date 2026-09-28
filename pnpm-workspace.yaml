@@ -127,7 +127,7 @@ catalogs:
   publishedPeerMobx:
     lit-ui-router: ^1.7.0
   publishedPeerSsr:
-    lit-ui-router: ^1.16.0-rc.1
+    lit-ui-router: ^1.16.0
     ui-router-server: ^0.2.0
   typescript6-compat:
     typescript: npm:@typescript/typescript6@^6.0.2
