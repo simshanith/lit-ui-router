@@ -123,7 +123,6 @@ catalogs:
     hono: ^4.0.0
     lit: '^2.0.0 || ^3.0.0'
     mobx: '^6.0.0 || ^7.0.0'
-    typedoc: ^0.28.0
   publishedPeerEffect:
     lit-ui-router: ^1.15.0
   publishedPeerMobx:
