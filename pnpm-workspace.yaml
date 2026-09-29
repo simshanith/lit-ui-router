@@ -178,20 +178,29 @@ allowBuilds:
   sharp: true
   workerd: true
 
+audit:
+  ignorePrune: true
+  level: low
+
 overrides:
   '@api-viewer/common>lit': ^3.3.3
   '@api-viewer/docs>lit': ^3.3.3
-  'brace-expansion@5': 5.0.9
-  d3-color: 3.1.0
-  dompurify: 3.4.13
-  fast-uri: 3.1.5
+  'brace-expansion@>=5 <5.0.9': ^5.0.9
+  'd3-color@<3.1.0': ^3.1.0
+  'dompurify@<3.4.13': ^3.4.13
+  'fast-uri@<3.1.7': ^3.1.7
+  'ip-address@<10.5.1': ^10.5.1
+  'joi@>=18 <18.2.5': ^18.2.5
+  'js-yaml@>=4 <4.3.2': ^4.3.2
   'lit-dialog>lit': ^3.3.3
-  postcss: 8.5.26
-  sharp: 0.35.0
-  shell-quote: 1.9.0
-  tar: 7.5.22
-  'undici@6': 6.28.0
-  'undici@7': 7.29.0
+  'postcss@<8.5.26': ^8.5.26
+  'qs@<6.16.0': ^6.16.0
+  'sharp@<0.35.4': ^0.35.4
+  'shell-quote@<1.9.0': ^1.9.0
+  'tar@<7.5.22': ^7.5.22
+  'undici@>=6 <6.28.1': ^6.28.1
+  'undici@>=7 <7.29.1': ^7.29.1
+  'undici@>=8 <8.10.2': ^8.10.2
 
 packageExtensions:
   conventional-changelog-preset-loader:
