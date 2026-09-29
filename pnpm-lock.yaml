@@ -1142,6 +1142,10 @@ importers:
         version: 5.0.1(@types/node@24.13.6)(@vitest/browser-playwright@5.0.1)(@vitest/coverage-v8@5.0.1)(@vitest/ui@5.0.1)(happy-dom@20.14.5)(vite@8.3.0(@types/node@24.13.6)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.0))
 
   packages/lit-ui-router-ssr:
+    dependencies:
+      '@oxc-project/runtime':
+        specifier: catalog:publishedDependencies
+        version: 0.151.0
     devDependencies:
       '@lit-labs/ssr':
         specifier: 'catalog:'

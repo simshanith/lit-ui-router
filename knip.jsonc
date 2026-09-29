@@ -54,7 +54,11 @@
       ],
     },
     "packages/lit-ui-router-ssr": {
-      "ignoreDependencies": ["@release-it/conventional-changelog"],
+      "ignoreDependencies": [
+        // imported by the emitted dist, not by src
+        "@oxc-project/runtime",
+        "@release-it/conventional-changelog",
+      ],
     },
     "packages/navigation-location-plugin": {
       "ignoreDependencies": ["@release-it/conventional-changelog"],
