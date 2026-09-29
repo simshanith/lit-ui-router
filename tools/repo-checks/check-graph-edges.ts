@@ -1,5 +1,6 @@
 // Each rule's consumer task must order on `<member>#<producerTask>` for every
 // member the selector picks, or a new member silently falls out of the graph.
+// `with` is held to persistent tasks: a finite parent's sidecars die with it.
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
@@ -10,6 +11,7 @@ import {
 } from './graph-edges.core.ts';
 import {
   declaredLanes,
+  nonPersistentWith,
   planFailure,
   plannedLanes,
   resolvedTaskDeps,
@@ -29,7 +31,7 @@ const hasScript = (task: string) => (member: Member) =>
 const RULES: (EdgeRule & { select: (member: Member) => boolean })[] = [
   ...[
     '@www/lit-ui-router.dev#build',
-    '@www/lit-ui-router.dev#typecheck',
+    '@www/lit-ui-router.dev#typecheck:tsc',
     '@www/lit-ui-router.dev#docs',
   ].map((consumer) => ({
     consumer,
@@ -73,17 +75,30 @@ const { members } = await loadWorkspace(workspaceRoot);
 // name that is not a task fails the dry run instead of shrinking the set.
 const CI_LANES = ['ci', 'ci:main'];
 
-const configs = await Promise.all(
-  ['<root>', ...members.map((member) => member.dir)]
-    .filter((dir, at, dirs) => dirs.indexOf(dir) === at)
-    .map((dir) =>
-      readFile(
-        join(workspaceRoot, dir === '<root>' ? '.' : dir, 'turbo.json'),
-        'utf8',
-      ).catch(() => undefined),
-    ),
-);
-const declared = declaredLanes(configs.filter((text) => text !== undefined));
+const configs = (
+  await Promise.all(
+    ['.', ...members.map((member) => member.dir)]
+      .filter((dir, at, dirs) => dirs.indexOf(dir) === at)
+      .map(async (dir) => {
+        const path = join(dir, 'turbo.json');
+        const text = await readFile(join(workspaceRoot, path), 'utf8').catch(
+          () => undefined,
+        );
+        return text === undefined ? undefined : { path, text };
+      }),
+  )
+).filter((config) => config !== undefined);
+
+const sidecars = nonPersistentWith(configs);
+if (sidecars.length > 0) {
+  console.error(
+    `${CHECK}: \`with\` on a non-persistent task; turbo kills the sidecar when the task exits, uncounted as a failure. Make the task an umbrella with dependsOn instead:\n  ${sidecars.join('\n  ')}`,
+  );
+  process.exit(1);
+}
+console.log(`${CHECK}: \`with\` appears on persistent tasks only`);
+
+const declared = declaredLanes(configs.map(({ text }) => text));
 const covered = await plannedLanes(CI_LANES);
 const unrun = [...declared].filter((lane) => !covered.has(lane)).sort();
 if (unrun.length === 0) {

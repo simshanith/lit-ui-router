@@ -17,7 +17,7 @@
       // than the package root, which would hash its node_modules.
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tools/bootstrap/src/**"]
     },
-    "typecheck": {
+    "typecheck:tsc": {
       // same relative reach as `test` above
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tools/bootstrap/src/**"]
     }

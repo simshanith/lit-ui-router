@@ -39,23 +39,36 @@ ci:pull_request
 ├── test:coverage
 ├── test:lit2-compat
 ├── test:mobx6-compat
-├── lint
-│   ├── //#lint:root           (with)
-│   ├── //#lint:package-json   (with)
-│   ├── //#lint:workflows      (with)
-│   │   ├── //#lint:actionlint (with)
-│   │   ├── //#lint:zizmor     (with)
-│   │   ├── //#lint:toml       (with)
-│   │   └── //#lint:shellcheck (with)
-│   ├── @tools/repo-checks#check:patches (with)
-│   └── @tools/repo-checks#check:dedupe  (with)
-├── typecheck
-│   ├── //#typecheck:root      (with)
-│   ├── typecheck:src          (with)
-│   ├── typecheck:lit2         (with)
-│   └── typecheck:mobx6        (with)
-├── format:check
-│   └── //#format:check:root   (with)
+├── lint                                  (umbrella)
+│   ├── lint:oxlint
+│   │   └── ^build:types
+│   ├── //#lint:root
+│   ├── //#lint:package-json
+│   ├── //#lint:elements
+│   ├── //#lint:markdown
+│   ├── //#lint:templates
+│   ├── //#lint:workflows                 (umbrella)
+│   │   ├── //#lint:actionlint
+│   │   ├── //#lint:zizmor
+│   │   ├── //#lint:toml
+│   │   └── //#lint:shellcheck
+│   ├── @tools/repo-checks#check:patches
+│   ├── @tools/repo-checks#check:dedupe
+│   ├── @tools/repo-checks#check:graph-edges
+│   ├── @tools/repo-checks#check:task-inputs
+│   ├── @tools/repo-checks#check:knip
+│   └── @tools/release#check:release-closure
+├── typecheck                             (umbrella)
+│   ├── typecheck:tsc
+│   │   └── ^build:types
+│   ├── //#typecheck:root
+│   ├── typecheck:src
+│   ├── typecheck:lit2
+│   └── typecheck:mobx6
+├── format:check                          (umbrella)
+│   ├── format:check:oxfmt
+│   ├── //#format:check:root
+│   └── //#format:check:toml
 ├── check:bundle
 └── codecov:bundle
 
@@ -87,8 +100,8 @@ docs
 **Key concepts:**
 
 - `^task` means "run this task on dependencies first"
-- `dependsOn` defines execution order (unmarked edges above)
-- `with` runs root-level tasks alongside workspace tasks (marked edges above)
+- `dependsOn` defines execution order (every edge above)
+- An umbrella has no script: turbo runs nothing for it, only its `dependsOn` (see [Umbrella and Leaf Tasks](#umbrella-and-leaf-tasks))
 - `outputs` defines cacheable artifacts
 - `inputs` scopes cache invalidation
 - Every build output lives under a `dist/` dir, so every traversal ignore is one `**/dist/**` glob (no sibling `dist-*` patterns): single-output packages use plain `dist/`; multi-output packages namespace each variant as `dist/<variant>/` (disjoint outputs globs, each vite build empties only its own subdir)
@@ -112,7 +125,41 @@ That host-dependence is also why the task is uncached: the Chromium build and th
 
 `typecheck:peer-floor` typechecks an adapter against its published peer-floor version. The floor pin can only reference published versions, so putting it in the ci graph would break atomic core-API + adapter-adoption PRs. It runs as a non-gating per-package check run on main pushes (the Release signals workflow) and as a hard gate at bump time.
 
-`test:peer-floor` (eslint-plugin-lit-ui-router only) runs the rule suite with every `eslint` import resolved to the `eslint-floor` alias. That floor is a published eslint, never a workspace peer, so the lane gates PRs via `test`'s `with`. It is a test rather than a typecheck because eslint 9.0.0 ships no types.
+`test:peer-floor` (eslint-plugin-lit-ui-router only) runs the rule suite with every `eslint` import resolved to the `eslint-floor` alias. That floor is a published eslint, never a workspace peer, so the lane gates PRs as a leaf of that package's `test` umbrella. It is a test rather than a typecheck because eslint 9.0.0 ships no types.
+
+### Umbrella and Leaf Tasks
+
+`lint`, `typecheck`, `format` and `format:check` are umbrellas: no package
+defines a script by those names, so turbo runs nothing for them and only
+schedules their `dependsOn`. The scripts live on leaves, each with its own cache
+key and its own upstream edges (`^build:types` sits on `lint:oxlint` and
+`typecheck:tsc`, not on the umbrella). Siblings under one umbrella run in
+parallel, and a leaf's failure fails the run.
+
+| Umbrella       | Per-package leaf     | Other leaves                                                                                |
+| -------------- | -------------------- | ------------------------------------------------------------------------------------------- |
+| `lint`         | `lint:oxlint`        | the `//#lint:*` lanes, `@tools/repo-checks#check:*`, `@tools/release#check:release-closure` |
+| `typecheck`    | `typecheck:tsc`      | `//#typecheck:root`, `typecheck:src`, `typecheck:lit2`, `typecheck:mobx6`                   |
+| `format`       | `format:oxfmt`       | `//#format:root`, `//#format:toml`                                                          |
+| `format:check` | `format:check:oxfmt` | `//#format:check:root`, `//#format:check:toml`                                              |
+
+Packages add their own leaves by overriding the umbrella: eslint-plugin-lit-ui-router
+(`lint:docs`, `lint:rules`; its `test` umbrella over `test:unit`, `test:oxlint`,
+`test:peer-floor`), `examples` (`lint:examples`), `ui-router-server`
+(`typecheck:tests`, `typecheck:runtime-globals`) and `@www/lit-ui-router.dev`
+(`typecheck:vue`, `typecheck:worker`, `typecheck:worker:tests`). A package
+override **replaces** the root's `dependsOn`, so each one restates the root
+umbrella's list before its own leaves.
+
+`with` is only for persistent sidecars: `e2e` keeps `wrangler:dev` running
+beside `cypress open`. turbo 2.11.3+ stops a `with` sidecar when its parent
+exits and does not count that as a failure, so on a finite task a sidecar that
+outlives its parent is cut short and the run still reports green.
+`check:graph-edges` fails on `with` under any non-persistent task.
+
+Umbrellas are never root `package.json` scripts: the root's `lint`,
+`typecheck`, `format` and `format:check` scripts call `turbo run <umbrella>`,
+and turbo only runs a root script when a `//#`-qualified task names it.
 
 ### Workspace Extensions
 
@@ -123,8 +170,8 @@ Workspaces extend the root configuration using `"extends": ["//"]`:
 | `packages/lit-ui-router`                                  | Runs `build:custom-elements` with build, configures `docs:api` outputs                                                                                                                                                              |
 | `packages/lit-ui-router-mobx`                             | Configures `docs:api` outputs                                                                                                                                                                                                       |
 | `packages/navigation-location-plugin`                     | Configures `docs:api` outputs                                                                                                                                                                                                       |
-| `packages/ui-router-server`                               | `test` rides the `transit` chain (no build needed); adds `typecheck:tests`                                                                                                                                                          |
-| `apps/sample-app-lit-vanilla`                             | Adds env vars for build (VITE\_\*), runs `build:hash` with build                                                                                                                                                                    |
+| `packages/ui-router-server`                               | `test` rides the `transit` chain (no build needed); adds `typecheck:tests`, `typecheck:runtime-globals`                                                                                                                             |
+| `apps/sample-app-lit-vanilla`                             | `build` is an umbrella over `build:vanilla` and `build:hash` (VITE\_\* env on each)                                                                                                                                                 |
 | `apps/sample-app-lit-mobx`                                | Adds env vars for build (VITE\_\*)                                                                                                                                                                                                  |
 | `apps/sample-app-lit-effect`                              | Adds env vars for build (VITE\_\*)                                                                                                                                                                                                  |
 | `apps/sample-app-lit-e2e`                                 | One cached `test:e2e:*` task per Cypress suite, reached via the `//:test_e2e` umbrella (which owns the dev server); CYPRESS\_\* passes through un-hashed                                                                            |
@@ -237,23 +284,23 @@ TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }
 
 ### Task-to-CI Mapping
 
-| Turbo Task                             | CI Placement                                                                                                                                                                                                       |
-| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `build`                                | `ci:pull_request` (every PR and push)                                                                                                                                                                              |
-| `test`                                 | `ci:pull_request`                                                                                                                                                                                                  |
-| `test:coverage`                        | `ci:pull_request`, feeds coverage reports                                                                                                                                                                          |
-| `lint`                                 | `ci:pull_request`                                                                                                                                                                                                  |
-| `typecheck`                            | `ci:pull_request`                                                                                                                                                                                                  |
-| `test:lit2-compat`, `typecheck:lit2`   | `ci:pull_request` — unit suites and types against the lit-2 alias, separate tasks so a runtime failure never masks the typecheck; `typecheck:lit2` arrives via `typecheck`'s `with`, not its own `dependsOn` entry |
-| `test:mobx6-compat`, `typecheck:mobx6` | `ci:pull_request` — same split against the mobx-6 alias (lit-ui-router-mobx only); `typecheck:mobx6` likewise arrives via `typecheck`'s `with`                                                                     |
-| `format:check`                         | `ci:pull_request`                                                                                                                                                                                                  |
-| `check:bundle`, `codecov:bundle`       | `ci:pull_request`                                                                                                                                                                                                  |
-| `test:engines`                         | `ci:main` only — Firefox + WebKit vitest pass (lit-ui-router, navigation-location-plugin)                                                                                                                          |
-| `@tools/release#check:pack`            | `ci:main` only                                                                                                                                                                                                     |
-| `@tools/dts-backtest#test:matrix`      | `ci:main` only; PRs run the current-TS `#test` leg                                                                                                                                                                 |
-| `@www/lit-ui-router.dev#check:embeds`  | Neither ci graph — manual and uncached: measures the examples' embed heights (host-dependent font metrics)                                                                                                         |
-| `typecheck:peer-floor`                 | Neither ci graph — Release signals check runs + bump gate                                                                                                                                                          |
-| `test:peer-floor`                      | `ci:pull_request` — eslint-plugin-lit-ui-router's rule suite on the eslint-floor alias, via `test`'s `with`                                                                                                        |
+| Turbo Task                             | CI Placement                                                                                                                                                                             |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `build`                                | `ci:pull_request` (every PR and push)                                                                                                                                                    |
+| `test`                                 | `ci:pull_request`                                                                                                                                                                        |
+| `test:coverage`                        | `ci:pull_request`, feeds coverage reports                                                                                                                                                |
+| `lint`                                 | `ci:pull_request`                                                                                                                                                                        |
+| `typecheck`                            | `ci:pull_request`                                                                                                                                                                        |
+| `test:lit2-compat`, `typecheck:lit2`   | `ci:pull_request` — unit suites and types against the lit-2 alias, separate tasks so a runtime failure never masks the typecheck; `typecheck:lit2` is a leaf of the `typecheck` umbrella |
+| `test:mobx6-compat`, `typecheck:mobx6` | `ci:pull_request` — same split against the mobx-6 alias (lit-ui-router-mobx only); `typecheck:mobx6` is likewise a leaf of `typecheck`                                                   |
+| `format:check`                         | `ci:pull_request`                                                                                                                                                                        |
+| `check:bundle`, `codecov:bundle`       | `ci:pull_request`                                                                                                                                                                        |
+| `test:engines`                         | `ci:main` only — Firefox + WebKit vitest pass (lit-ui-router, navigation-location-plugin)                                                                                                |
+| `@tools/release#check:pack`            | `ci:main` only                                                                                                                                                                           |
+| `@tools/dts-backtest#test:matrix`      | `ci:main` only; PRs run the current-TS `#test` leg                                                                                                                                       |
+| `@www/lit-ui-router.dev#check:embeds`  | Neither ci graph — manual and uncached: measures the examples' embed heights (host-dependent font metrics)                                                                               |
+| `typecheck:peer-floor`                 | Neither ci graph — Release signals check runs + bump gate                                                                                                                                |
+| `test:peer-floor`                      | `ci:pull_request` — eslint-plugin-lit-ui-router's rule suite on the eslint-floor alias, a leaf of that package's `test` umbrella                                                         |
 
 ## Remote Caching
 
@@ -356,13 +403,13 @@ persistent task.
 ### Root-Level Tasks Not Running
 
 Root tasks use `//#` prefix and back onto scripts in root `package.json` —
-except a virtual node with no script, which turbo runs nothing for and just
-fans out via `with`:
+except an umbrella with no script, which turbo runs nothing for and just
+fans out via `dependsOn`:
 
 - `//#lint:root` - lints root-level files (workspace directories excluded)
 - `//#lint:package-json` - lints every `package.json` and `pnpm-workspace.yaml`
 - `//#lint:elements` - eslint (lit, wc, lit-a11y) over `{packages,apps,examples}/*/src/**/*.ts`, plus the warning ratchet (see below)
-- `//#lint:workflows` - virtual node (no script); fans out via `with` to the four per-tool tasks below
+- `//#lint:workflows` - umbrella (no script) over the four per-tool tasks below
 - `//#lint:actionlint` - actionlint over GitHub Actions workflows
 - `//#lint:zizmor` - zizmor security audit over GitHub Actions workflows
 - `//#lint:toml` - taplo lint over every tracked `.toml`
@@ -371,7 +418,7 @@ fans out via `with`:
 - `//#format:root` - formats root-level files
 - `//#format:check:root` - checks root-level formatting
 
-These run alongside workspace tasks via `with` configuration.
+These are leaves of the `lint`, `typecheck`, `format` and `format:check` umbrellas.
 
 ### Choosing an ESLint Formatter
 

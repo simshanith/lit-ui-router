@@ -9,12 +9,12 @@
     "./tooling/*.js": "./tooling/*.ts"
   },
   "scripts": {
-    "format": "oxfmt \"**/*.{js,ts,json,md,css}\"",
-    "format:check": "oxfmt --check \"**/*.{js,ts,json,md,css}\"",
-    "lint": "oxlint .",
+    "format:check:oxfmt": "oxfmt --check \"**/*.{js,ts,json,md,css}\"",
+    "format:oxfmt": "oxfmt \"**/*.{js,ts,json,md,css}\"",
+    "lint:oxlint": "oxlint .",
     "test": "VITEST_BROWSER_API_PORT=63350 vitest run --project=chrome",
     "test:engines": "VITEST_BROWSER_API_PORT=63351 vitest run --project=firefox --project=safari",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck:tsc": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
     "@api-viewer/docs": "catalog:",

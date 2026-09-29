@@ -73,16 +73,16 @@
     "check:dev-split": "oxc-emit-check-dev-split",
     "codecov:bundle": "upload-entry-bundles",
     "docs:api": "rimraf ../../www/lit-ui-router.dev/api/reference && typedoc --defaultCategory other",
-    "format": "oxfmt \"**/*.{ts,js,json,md}\"",
-    "format:check": "oxfmt --check \"**/*.{ts,js,json,md}\"",
-    "lint": "oxlint .",
+    "format:check:oxfmt": "oxfmt --check \"**/*.{ts,js,json,md}\"",
+    "format:oxfmt": "oxfmt \"**/*.{ts,js,json,md}\"",
+    "lint:oxlint": "oxlint .",
     "test": "VITEST_BROWSER_API_PORT=63320 vitest run --project=happy-dom --project=node --project=chrome",
     "test:coverage": "VITEST_BROWSER_API_PORT=63325 vitest run --coverage --project=happy-dom --project=node --project=chrome",
     "test:engines": "VITEST_BROWSER_API_PORT=63321 vitest run --project=firefox --project=safari",
     "test:lit2-compat": "lit2-compat-guard && VITE_EXPECT_LIT_MAJOR=2 VITEST_BROWSER_API_PORT=63322 vitest run --project=happy-dom --project=chrome",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
     "typecheck:lit2": "lit2-compat-guard && tsc -p tsconfig.lit2-compat.json --noEmit",
-    "typecheck:src": "tsc -p tsconfig.src.json --noEmit"
+    "typecheck:src": "tsc -p tsconfig.src.json --noEmit",
+    "typecheck:tsc": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
     "@oxc-project/runtime": "catalog:publishedDependencies"

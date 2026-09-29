@@ -18,9 +18,9 @@ declare function accepts<T>(value: T): T;
 type Script = keyof typeof pkg.scripts;
 
 declare const declaredInstall: Extract<Script, `example:install:${string}`>;
-declare const declaredTypecheck: Extract<Script, `typecheck:${string}`>;
+declare const declaredTypecheck: Extract<Script, `typecheck:example:${string}`>;
 declare const requiredInstall: `example:install:${ExampleName}`;
-declare const requiredTypecheck: `typecheck:${ExampleName}`;
+declare const requiredTypecheck: `typecheck:example:${ExampleName}`;
 
 // -- every example has both scripts -------------------------------------------
 
@@ -30,4 +30,4 @@ accepts<typeof declaredTypecheck>(requiredTypecheck);
 // -- and neither script outlives its example ----------------------------------
 
 accepts<`example:install:${ExampleName}`>(declaredInstall);
-accepts<`typecheck:${ExampleName}`>(declaredTypecheck);
+accepts<`typecheck:example:${ExampleName}`>(declaredTypecheck);

@@ -40,16 +40,16 @@
     "check:dev-split": "oxc-emit-check-dev-split",
     "codecov:bundle": "upload-entry-bundles",
     "docs:api": "rimraf ../../www/lit-ui-router.dev/api/lit-ui-router-effect && typedoc",
-    "format": "oxfmt \"**/*.{ts,js,json,md}\"",
-    "format:check": "oxfmt --check \"**/*.{ts,js,json,md}\"",
-    "lint": "oxlint .",
+    "format:check:oxfmt": "oxfmt --check \"**/*.{ts,js,json,md}\"",
+    "format:oxfmt": "oxfmt \"**/*.{ts,js,json,md}\"",
+    "lint:oxlint": "oxlint .",
     "test": "VITEST_BROWSER_API_PORT=63350 vitest run",
     "test:coverage": "VITEST_BROWSER_API_PORT=63355 vitest run --coverage",
     "test:lit2-compat": "lit2-compat-guard && VITE_EXPECT_LIT_MAJOR=2 VITEST_BROWSER_API_PORT=63351 vitest run",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
     "typecheck:lit2": "lit2-compat-guard && tsc -p tsconfig.lit2-compat.json --noEmit",
     "typecheck:peer-floor": "peer-floor-guard && tsc -p tsconfig.peer-floor.json --noEmit",
-    "typecheck:src": "tsc -p tsconfig.src.json --noEmit"
+    "typecheck:src": "tsc -p tsconfig.src.json --noEmit",
+    "typecheck:tsc": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
     "@release-it/conventional-changelog": "catalog:",

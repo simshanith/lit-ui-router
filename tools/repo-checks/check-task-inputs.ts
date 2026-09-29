@@ -27,7 +27,7 @@ const CHECK = 'check-task-inputs';
 // Lanes whose read-set genuinely is one file type, so the glob is the key.
 const EXEMPT: InputsExemption[] = [
   {
-    task: 'format:check',
+    task: 'format:check:oxfmt',
     why: 'oxfmt formats one glob of source extensions; LICENSE, .env and binary assets are not in it',
   },
   { task: 'format:check:toml', why: 'taplo runs over tracked *.toml only' },

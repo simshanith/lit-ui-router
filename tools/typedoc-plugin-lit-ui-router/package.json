@@ -18,11 +18,11 @@
   "scripts": {
     "build:js": "oxc-emit-js",
     "build:types": "oxc-emit-dts",
-    "format": "oxfmt \"**/*.{ts,js,json,md}\"",
-    "format:check": "oxfmt --check \"**/*.{ts,js,json,md}\"",
-    "lint": "oxlint .",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
-    "typecheck:src": "tsc -p tsconfig.src.json --noEmit"
+    "format:check:oxfmt": "oxfmt --check \"**/*.{ts,js,json,md}\"",
+    "format:oxfmt": "oxfmt \"**/*.{ts,js,json,md}\"",
+    "lint:oxlint": "oxlint .",
+    "typecheck:src": "tsc -p tsconfig.src.json --noEmit",
+    "typecheck:tsc": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
     "@tools/oxc-emit": "catalog:workspace",
