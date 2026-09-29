@@ -239,6 +239,14 @@ Honest limits of this setup:
   merge adds `Merge branch 'main' into …` noise bullets to the squash body —
   prefer rebase to refresh.
 
+## Dependency audit
+
+[`dependency-audit.yml`](../.github/workflows/dependency-audit.yml) runs
+`pnpm audit --audit-level high` on every lockfile or workspace-config change to
+`main`, weekly, and on dispatch. It runs outside turbo, so a cached result never
+hides a newly published advisory. Accepted advisories go in the `audit:` section
+of `pnpm-workspace.yaml`.
+
 ## Releases
 
 Releases are handled by maintainers using GitHub Actions. See [RELEASE.md](./RELEASE.md) for the complete release workflow documentation.
