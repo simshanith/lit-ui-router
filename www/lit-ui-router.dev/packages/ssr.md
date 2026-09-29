@@ -121,22 +121,54 @@ before the call. It comes back on the result either way.
 
 ## Property bindings on the server
 
-`@lit-labs/ssr` writes a `.prop=${…}` binding as its part marker and nothing
-else — no attribute, no child, no value. The property is set on the client,
-when the template hydrates. A routed template that feeds a child element by
-property therefore serves that element empty:
-
-```text
-<!--lit-part vYJeArn6Pos=--><!--lit-node 0--><x-card ></x-card><!--/lit-part-->
-```
-
-Anything the served page has to show arrives as an attribute, as children, or
-through a renderer of the element's own. The shape that keeps one template on
-both sides writes the content as the element's children and binds the
-properties over it:
+Take a card that receives a post by property and draws it in its own
+`render()`:
 
 ```ts
-import { html } from 'lit';
+import { html, LitElement } from 'lit';
+
+type Post = { title: string; summary: string };
+
+class XCard extends LitElement {
+  static properties = { post: { attribute: false } };
+  declare post: Post;
+  render() {
+    return html`<h2>${this.post.title}</h2>
+      <p>${this.post.summary}</p>`;
+  }
+}
+customElements.define('x-card', XCard);
+```
+
+A routed template that feeds it by property,
+`html\`<x-card .post=${post}></x-card>\``, serves the card empty:
+
+```text
+<!--lit-part vYJeArn6Pos=--><!--lit-node 0--><x-card  defer-hydration></x-card><!--/lit-part-->
+```
+
+`@lit-labs/ssr` writes a `.prop=${…}` binding as its part marker and nothing
+else — no attribute, no child, no value. Setting the property is an element
+renderer's job, and
+[`elementRenderers`](/api/lit-ui-router-ssr/interfaces/PrerenderOptions#elementrenderers)
+defaults to `[UiViewRenderer]`, which answers for `ui-view` alone. The card has
+no renderer, so nothing on the server sets `post` or runs its `render()`: the
+card first draws on the client, once hydration sets the property, and the
+served page shows an empty tag where it stands.
+
+Anything the served page has to show arrives as an attribute, as children, or
+through a renderer for the element. The shape that keeps one template on both
+sides writes the content as the card's children, binds the property over it,
+and lets the card project them through a `<slot>`:
+
+```ts
+class XCard extends LitElement {
+  static properties = { post: { attribute: false } };
+  declare post: Post;
+  render() {
+    return html`<slot></slot>`;
+  }
+}
 
 const card = (post: Post) =>
   html`<x-card .post=${post}>
@@ -147,13 +179,16 @@ const card = (post: Post) =>
 
 The server emits the children, the `hydrate()` walk described under
 [The hydration model](#the-hydration-model) adopts them as the same child part
-and commits the properties, and the element renders nothing of its own. An
-`isServer` branch that writes the children on the server only draws a
-different template on each side, which the enclosing view cannot adopt: it
-drops what the server drew and renders over it. The other answer is a renderer
-for the element, passed in
-[`elementRenderers`](/api/lit-ui-router-ssr/interfaces/PrerenderOptions#elementrenderers)
-alongside `UiViewRenderer`, that draws the property on the server.
+and sets `post`, and the card keeps the data for its behaviour while the
+template owns what shows. An `isServer` branch that writes the children on the
+server only draws a different template on each side, which the enclosing view
+cannot adopt: it drops what the server drew and renders over it.
+
+The other answer is a renderer for the card. `LitElementRenderer` from
+`@lit-labs/ssr`, passed beside `UiViewRenderer`, sets the property on the
+server and draws the card's `render()` into a declarative shadow root, and
+does the same for every `LitElement` on the page, which is the cost the
+default avoids.
 
 ## Development and production builds
 

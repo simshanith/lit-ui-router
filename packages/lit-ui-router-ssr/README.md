@@ -101,20 +101,48 @@ same strings with the hole empty and each `<ui-view>` fills itself.
 
 ### A property binding emits nothing on the server
 
-`@lit-labs/ssr` writes a `.prop=${…}` binding as its part marker and nothing else — no attribute, no
-child, no value. Hydration sets the property on the client. A routed template that feeds a child
-element by property serves that element empty:
-
-```text
-<!--lit-part vYJeArn6Pos=--><!--lit-node 0--><x-card ></x-card><!--/lit-part-->
-```
-
-Write what the page has to carry as the element's children, in the same template, with the
-properties bound over it. The server emits the children, `hydrateRoot()` adopts them as the same
-child part, and the element renders nothing of its own:
+Take a card that receives a post by property and draws it in its own `render()`:
 
 ```typescript
-import { html } from 'lit';
+import { html, LitElement } from 'lit';
+
+type Post = { title: string; summary: string };
+
+class XCard extends LitElement {
+  static properties = { post: { attribute: false } };
+  declare post: Post;
+  render() {
+    return html`<h2>${this.post.title}</h2>
+      <p>${this.post.summary}</p>`;
+  }
+}
+customElements.define('x-card', XCard);
+```
+
+A routed template that feeds it by property, `html\`<x-card .post=${post}></x-card>\``, serves the
+card empty:
+
+```text
+<!--lit-part vYJeArn6Pos=--><!--lit-node 0--><x-card  defer-hydration></x-card><!--/lit-part-->
+```
+
+`@lit-labs/ssr` writes a `.prop=${…}` binding as its part marker and nothing else — no attribute, no
+child, no value. Setting the property is an element renderer's job, and `elementRenderers` defaults
+to `[UiViewRenderer]`, which answers for `ui-view` alone. The card has no renderer, so nothing on
+the server sets `post` or runs its `render()`: the card first draws on the client, once hydration
+sets the property, and the served page shows an empty tag where it stands.
+
+Write what the served page has to carry as the card's children, in the same template, with the
+property bound over it, and let the card project them through a `<slot>`:
+
+```typescript
+class XCard extends LitElement {
+  static properties = { post: { attribute: false } };
+  declare post: Post;
+  render() {
+    return html`<slot></slot>`;
+  }
+}
 
 const card = (post: Post) =>
   html`<x-card .post=${post}>
@@ -123,10 +151,15 @@ const card = (post: Post) =>
   </x-card>`;
 ```
 
-A branch on `isServer` that writes the children on the server only draws a different template on
-each side: the enclosing view cannot adopt it, drops what the server drew and renders over it. The
-other answer is a renderer of the element's own, passed in `elementRenderers` alongside
-`UiViewRenderer`, that draws the property on the server.
+The server emits the children, `hydrateRoot()` adopts them as the same child part and sets `post`,
+and the card keeps the data for its behaviour while the template owns what shows. A branch on
+`isServer` that writes the children on the server only draws a different template on each side: the
+enclosing view cannot adopt it, drops what the server drew and renders over it.
+
+The other answer is a renderer for the card. `LitElementRenderer` from `@lit-labs/ssr`, passed beside
+`UiViewRenderer`, sets the property on the server and draws the card's `render()` into a declarative
+shadow root — and does the same for every `LitElement` on the page, which is the cost the default
+avoids.
 
 ## Registering the elements
 
