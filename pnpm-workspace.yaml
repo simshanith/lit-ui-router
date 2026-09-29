@@ -94,7 +94,7 @@ catalog:
   vitest: ^5.0.1
   vue: ^3.5.43
   vue-tsc: ^3.3.11
-  wrangler: ^4.142.0
+  wrangler: ^4.136.1
   yaml: ^2.9.0
 
 catalogMode: prefer
@@ -111,7 +111,7 @@ catalogs:
   peerFloorMobx:
     lit-ui-router-floor: npm:lit-ui-router@1.7.0
   publishedDependencies:
-    '@oxc-project/runtime': '>=0.152.0'
+    '@oxc-project/runtime': '>=0.50.0'
     eslint-plugin-lit: ^2.0.0
   publishedPeer:
     '@lit-labs/ssr': ^4.0.0
@@ -185,6 +185,7 @@ audit:
 overrides:
   '@api-viewer/common>lit': ^3.3.3
   '@api-viewer/docs>lit': ^3.3.3
+  '@oxc-project/types': 0.151.0
   'brace-expansion@>=5 <5.0.9': ^5.0.9
   'd3-color@<3.1.0': ^3.1.0
   'dompurify@<3.4.13': ^3.4.13
