@@ -6,6 +6,8 @@ import {
   filterArgs,
   formatMissing,
   missingFromClosure,
+  plannedScriptPackages,
+  publishNpmDryRunArgs,
   selectedNames,
   unselectedWorkspaceEdges,
 } from './check-release-closure.core.ts';
@@ -111,5 +113,48 @@ describe('unselectedWorkspaceEdges', () => {
 
   it('ignores npm dependencies and unselected dependents', () => {
     assert.deepEqual(unselectedWorkspaceEdges(members, ['@tools/shared']), []);
+  });
+});
+
+describe('publishNpmDryRunArgs', () => {
+  it('plans pack:all and every publishable build in one dry run', () => {
+    assert.deepEqual(
+      publishNpmDryRunArgs(['lit-ui-router', 'ui-router-server']),
+      [
+        'run',
+        '@tools/release#pack:all',
+        'lit-ui-router#build',
+        'ui-router-server#build',
+        '--dry-run=json',
+      ],
+    );
+  });
+});
+
+describe('plannedScriptPackages', () => {
+  it('keeps packages with a script to spawn, deduplicated and sorted', () => {
+    const json = JSON.stringify({
+      tasks: [
+        { package: 'lit-ui-router', command: 'tsdown' },
+        { package: 'lit-ui-router', command: 'tsc -b' },
+        { package: '@tools/typedoc-plugin-lit-ui-router', command: 'tsdown' },
+        { package: '@tools/shared', command: '<NONEXISTENT>' },
+      ],
+    });
+    assert.deepEqual(plannedScriptPackages(json), [
+      '@tools/typedoc-plugin-lit-ui-router',
+      'lit-ui-router',
+    ]);
+  });
+
+  it('rejects output that is not a turbo plan', () => {
+    assert.throws(
+      () => plannedScriptPackages('{}'),
+      /did not return a task list/u,
+    );
+    assert.throws(
+      () => plannedScriptPackages('{"tasks":[{"command":"tsc"}]}'),
+      /task without a package/u,
+    );
   });
 });

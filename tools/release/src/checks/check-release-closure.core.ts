@@ -87,3 +87,37 @@ export function unselectedWorkspaceEdges(
   }
   return [...edges].sort();
 }
+
+/** The task reconcile restores; its graph folds in every publishable build. */
+const PACK_ALL_TASK = '@tools/release#pack:all';
+
+/** turbo argv planning publish-npm's builds plus reconcile's pack:all, without running them. */
+export function publishNpmDryRunArgs(publishable: readonly string[]): string[] {
+  return [
+    'run',
+    PACK_ALL_TASK,
+    ...publishable.map((name) => `${name}#build`),
+    '--dry-run=json',
+  ];
+}
+
+/** turbo's `command` for a task no package script backs. */
+const NO_SCRIPT = '<NONEXISTENT>';
+
+type DryRunPlan = { tasks?: { package?: string; command?: string }[] };
+
+/** Packages whose scripts a `turbo run --dry-run=json` plan would spawn, sorted. */
+export function plannedScriptPackages(json: string): string[] {
+  const { tasks } = JSON.parse(json) as DryRunPlan;
+  if (!Array.isArray(tasks)) {
+    throw new Error('turbo --dry-run=json did not return a task list');
+  }
+  const packages = new Set<string>();
+  for (const { package: name, command } of tasks) {
+    if (typeof name !== 'string') {
+      throw new Error('turbo --dry-run=json task without a package');
+    }
+    if (command !== NO_SCRIPT) packages.add(name);
+  }
+  return [...packages].sort();
+}
