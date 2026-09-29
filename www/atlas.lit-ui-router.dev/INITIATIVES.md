@@ -425,6 +425,38 @@ sitting); order is dependency order.
   4,853,751 gz; nm 179,302 lines / 41,652 d.ts; mass3b 11,770 task-file hashes over 226 real
   tasks and 2,718 command sloc; the ci graph 717 / 226 / 1,920 edges; steam 580 commits; weather
   425 dated files; 7A 10,382 of 17,529 metered sloc lit.
+- 2026-09-29 — THE ELEVENTH REFRESH, at `origin/main` @ 63c0b823 (commit 2026-09-28 PDT), all 17
+  plates re-run at the one ref: `lit-ui-router-ssr` 0.1.0, on npm 2026-09-29 under `latest`
+  (#1026) with its `rc` tag gone, and the flagship's `rc` tag gone too, so every published package
+  is served under `latest` alone. Since 9b1b1bf3 main cut ssr 0.1.0-rc.4 and 0.1.0, added
+  `settle()` (#1010) and a hydration outcome value (#1020) to ssr, declared ssr's
+  `@oxc-project/runtime` dependency (#1024), added the weekly `dependency-audit` workflow (#1015)
+  and a `check:dedupe` lint lane (#1016). NO member born or renamed — 38 members, seven published.
+  The general survey reads 823 tracked paths, 788 classified, 68,351 sloc (was 820 / 785 /
+  67,260). basis.mjs installed with the worktree's pnpm 12.3.4, which warns that it ignores the
+  ref's new `autoDedupe` and `trustPolicyExcludePrune`; the frozen install succeeded.
+  THE LOOP HELD: no commit touched `packages/lit-ui-router/src`, and all 52 cites read true.
+  `census-mass3b.mjs` printed a DRIFT line for `check:dedupe` (`pnpm` unrecognised); `pnpm`
+  joins EXTERNAL, and the three `check:dev-split` lines remain.
+  THREE GUARDS THREW, AS DESIGNED. Sheet 11's rc guard (ssr no longer leads with an `rc`): the
+  paragraph now says npm serves ssr under `latest` at the version the ref carries, and throws if
+  either half stops holding. Sheet 2's massing guard (ssr quantized to a 2×4): the note names three
+  2×4s. Sheet 13's `assertPlots` (ssr's annex grew into the plugin's lot): the plugin moves east.
+  SIX SENTENCES WENT FALSE OR HAD BEEN FALSE. Sheet 2B's "neither of the two shipped dependencies"
+  (three now); sheet 3B's "four of its 8 tasks" in `lint`'s `with` list (five now, a guarded hand
+  list); sheet 11's "not much dearer" for ssr's index door at 3,084 gz; sheet 9's "a race close
+  enough that … one more demo decide it" with the runner-up 711,550 bytes behind; and sheet 3A's
+  and 3's aria-labels, which typed "eleven workflows" (twelve before, thirteen now) and "thirty-seven
+  … eight". Each now derives from its plate or throws. Sheet 3A's typed `file:line` cites and its
+  `turbo_link_worktree` had drifted before this refresh; they are relocated by content at the ref.
+  The audit read 0 escapes and 0 hits above 1 px before; after the plates moved it read one hit
+  (sheet 9's SCALE line under the grown html-pages cap, 12.7 px), recomposed to 0; sheet 2's ssr
+  brick touched its label stack by 0.67 px and the stack rises 3 px.
+  THE NUMBERS: city 281 src files / 22,725 sloc and 146 spec / 24,662; yard 249 / 18,375 massed;
+  doors 169,798 min / 60,661 gz, ssr's `.` 2,273 → 3,084 gz; the bundle 122,732 gz in 17 chunks;
+  the deploy 884 files / 4,952,920 gz; nm 179,513 lines / 41,639 d.ts; mass3b 11,899 task-file
+  hashes over 227 real tasks and 2,828 command sloc; the ci graph 718 / 227 / 1,932 edges; steam
+  597 commits; weather 427 dated files; 7A 10,591 of 17,778 metered sloc lit.
 - A PLATE'S `ref` IS THE ARGV STRING. `basis.mjs` resolves the sha to archive the tree, but the
   plate files the ref as it was typed, and every title block prints that field — pass the full
   sha and 20 title blocks print forty characters. Run the chain with `--ref origin/main` and keep
@@ -456,6 +488,12 @@ sitting); order is dependency order.
   rename in a probe's pool, diff the per-instrument rows, not just the orphan count. A cite is
   the same kind of judgement: filing the one a DRIFT line asks for can make a sentence about its
   quarter false, so re-read the prose after every judgement-table change.
+- A CITE NO PROBE CHECKS IS A GUESS. `census-loop.mjs` throws when a cited line moves, so its 52
+  cites stay true; sheet 3A's `config.toml:139-143`-style cites are typed into the generator and
+  nothing reads them back, so they had drifted by several lines — one pointed at `lint_markdown`
+  while claiming `lint_workflows` — without any refresh noticing. After a refresh, diff every
+  typed `file:line` against the ref's file (`git show <ref>:<path>`), not just the ones a probe
+  owns; the same goes for hand lists a plate cannot see, like `lint`'s `with` list on sheet 3B.
 - A plate's two dates are read from two clocks and can disagree by a day. `commitDate` is
   `git show -s --format=%cI`, the committer's LOCAL time, and `chrome.mjs::DATE` takes its first
   ten characters; `generatedAtTime` is a UTC ISO string, and sheet 7's `BASIS` line takes ITS

@@ -1,10 +1,10 @@
 {
   "ref": "origin/main",
-  "sha": "9b1b1bf3",
-  "commitDate": "2026-09-28T13:59:02-07:00",
-  "generatedAtTime": "2026-09-28T21:00:31.207Z",
+  "sha": "63c0b823",
+  "commitDate": "2026-09-28T23:32:37-07:00",
+  "generatedAtTime": "2026-09-29T06:58:48.423Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-bricks.mjs",
-  "used": "www/atlas.lit-ui-router.dev/data/census-files.json @ 9b1b1bf3",
+  "used": "www/atlas.lit-ui-router.dev/data/census-files.json @ 63c0b823",
   "wasAssociatedWith": [
     "scc 4.0.0 (mise x aqua:boyter/scc)",
     "codeload.github.com ui-router/core@6.1.2 source tarball"
@@ -14,7 +14,7 @@
     {"name":"lit-ui-router","version":"1.16.0","files":21,"sloc":2605,"studs":18,"shape":"2x4","courses":7},
     {"name":"eslint-plugin-lit-ui-router","version":"1.1.0","files":12,"sloc":1317,"studs":9,"shape":"2x4","courses":4},
     {"name":"ui-router-server","version":"0.2.0","files":9,"sloc":1211,"studs":9,"shape":"2x4","courses":3},
-    {"name":"lit-ui-router-ssr","version":"0.1.0-rc.3","files":9,"sloc":800,"studs":6,"shape":"2x3","courses":3},
+    {"name":"lit-ui-router-ssr","version":"0.1.0","files":10,"sloc":985,"studs":7,"shape":"2x4","courses":4},
     {"name":"lit-ui-router-effect","version":"0.1.3","files":5,"sloc":213,"studs":2,"shape":"1x2","courses":2},
     {"name":"lit-ui-router-mobx","version":"1.0.2","files":5,"sloc":176,"studs":2,"shape":"1x2","courses":2},
     {"name":"ui-router-navigation-location-plugin","version":"1.0.1","files":2,"sloc":141,"studs":1,"shape":"1x1","courses":1}

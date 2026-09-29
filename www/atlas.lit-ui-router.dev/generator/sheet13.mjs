@@ -70,10 +70,11 @@ const PLACED = [
   // 31, 37 and 38 land under the reading box or on each other once the flagship's
   // annex reaches 233.9 × 132.0. Row one: 2 on sheet 7's lot, 3 and 37 in the strip
   // under its annex, which ends 5.4 short of the box. Row two, west to east: 31, 38,
-  // 4 — the plugin last, so its callout's leader drops straight to the lettering
+  // 4 — the plugin last, so its callout's leader drops straight to the lettering;
+  // nudged east off ssr's annex when #1010/#1020 grew it to 2,578 spec sloc
   [2, 'ui-router-server', 'packages/ui-router-server', 'pkg', 240, 20],
   [3, 'lit-ui-router-mobx', 'packages/lit-ui-router-mobx', 'pkg', 240, 104],
-  [4, 'navigation-location-plugin', 'packages/navigation-location-plugin', 'pkg', 303, 150],
+  [4, 'navigation-location-plugin', 'packages/navigation-location-plugin', 'pkg', 310, 150],
   [5, 'sample-app-shared', 'apps/sample-app-shared', 'app', 570, 10],
   [6, 'sample-app-lit-vanilla', 'apps/sample-app-lit-vanilla', 'app', 720, 10],
   [7, 'sample-app-lit-mobx', 'apps/sample-app-lit-mobx', 'app', 720, 90],

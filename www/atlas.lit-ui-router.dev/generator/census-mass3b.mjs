@@ -112,7 +112,7 @@ const EXTERNAL = new Set([
   'oxfmt', 'oxlint', 'tsc', 'eslint', 'vitest', 'node', 'vitepress', 'wrangler', 'typedoc',
   'concurrently', 'cypress', 'vite', 'turbo', 'rimraf', 'cem', 'mkdir', 'mise',
   'start-server-and-test', 'api-extractor', 'taplo', 'rumdl', 'shellcheck', 'knip',
-  'eslint-doc-generator',
+  'eslint-doc-generator', 'pnpm',
 ]);
 const MISE_TOML = readFileSync(ROOT + '.config/mise/config.toml', 'utf8');
 const miseRunLine = (name) =>

@@ -1,15 +1,15 @@
 {
   "ref": "origin/main",
-  "sha": "9b1b1bf3",
-  "commitDate": "2026-09-28T13:59:02-07:00",
-  "generatedAtTime": "2026-09-28T21:00:31.944Z",
+  "sha": "63c0b823",
+  "commitDate": "2026-09-28T23:32:37-07:00",
+  "generatedAtTime": "2026-09-29T06:58:49.179Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-handoff.mjs",
-  "used": "git archive origin/main @ 9b1b1bf3",
+  "used": "git archive origin/main @ 63c0b823",
   "wasAssociatedWith": [
     "git"
   ],
   "workflows": {
-    "files": 12,
+    "files": 13,
     "calling": 8,
     "callSites": 37,
     "targets": 28
@@ -23,10 +23,10 @@
   },
   "turbo": {
     "files": 22,
-    "distinctNames": 78,
-    "definitions": 113,
+    "distinctNames": 79,
+    "definitions": 114,
     "rootDefinitions": 44,
-    "memberDefinitions": 69,
+    "memberDefinitions": 70,
     "cacheFalse": 13,
     "rootCacheFalse": 7,
     "memberCacheFalse": 6
@@ -39,6 +39,7 @@
     {"file":"coderabbit-oneshot.yml","name":"coderabbit-oneshot","callSites":0},
     {"file":"commitlint.yml","name":"commitlint","callSites":0},
     {"file":"deflake-e2e.yml","name":"deflake-e2e","callSites":4},
+    {"file":"dependency-audit.yml","name":"dependency-audit","callSites":0},
     {"file":"lint-workflows.yml","name":"lint-workflows","callSites":1},
     {"file":"publish-gh.yml","name":"publish-gh","callSites":4},
     {"file":"publish-npm.yml","name":"publish-npm","callSites":7},
@@ -99,7 +100,7 @@
     {"file":"tools/build_and_test/turbo.json","root":false,"definitions":1,"cacheFalse":0},
     {"file":"tools/happy-dom/turbo.json","root":false,"definitions":1,"cacheFalse":0},
     {"file":"tools/release/turbo.json","root":false,"definitions":7,"cacheFalse":1},
-    {"file":"tools/repo-checks/turbo.json","root":false,"definitions":5,"cacheFalse":0},
+    {"file":"tools/repo-checks/turbo.json","root":false,"definitions":6,"cacheFalse":0},
     {"file":"tools/shared/turbo.json","root":false,"definitions":1,"cacheFalse":0},
     {"file":"tools/workers-builds/turbo.json","root":false,"definitions":3,"cacheFalse":1},
     {"file":"turbo.json","root":true,"definitions":44,"cacheFalse":7},
