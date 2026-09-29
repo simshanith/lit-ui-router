@@ -588,7 +588,7 @@ overrides:
   undici@6: 6.28.0
   undici@7: 7.29.0
 
-packageExtensionsChecksum: sha256-Y0sNu5qFH/iCIiJT3szVOHXtBEeSAPVXpkAqOsflEOY=
+packageExtensionsChecksum: sha256-8F/PUxRGPfzeR7JNosA48W0ZCgKrtYLtVZi24XY7zcw=
 
 patchedDependencies:
   '@api-viewer/docs': 6cfa0893375a4ba334488a5b9e4a56178c62231d864b5271bf4c7a25a0e4f9ac
@@ -14015,7 +14015,9 @@ snapshots:
     dependencies:
       typescript: '@typescript/typescript6@6.0.2'
 
-  ts-simple-type@2.0.0-next.0: {}
+  ts-simple-type@2.0.0-next.0:
+    dependencies:
+      typescript: '@typescript/typescript6@6.0.2'
 
   tslib@2.8.1: {}
 

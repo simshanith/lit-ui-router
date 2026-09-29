@@ -2,7 +2,7 @@
   "name": "@tools/compat-guards",
   "version": "0.0.1",
   "private": true,
-  "description": "Guards for specs pnpm can't keep in sync itself: the lit-2, mobx-6 and peer-floor aliases against their published peer ranges, and lit-analyzer's packageExtensions TypeScript against the typescript6-compat catalog",
+  "description": "Guards for specs pnpm can't keep in sync itself: the lit-2, mobx-6 and peer-floor aliases against their published peer ranges, and the packageExtensions TypeScript of lit-analyzer and ts-simple-type against the typescript6-compat catalog",
   "bin": {
     "lit-analyzer-ts-guard": "./src/lit-analyzer-ts-guard.ts",
     "lit2-compat-guard": "./src/lit2-compat-guard.ts",

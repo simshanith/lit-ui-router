@@ -203,6 +203,9 @@ packageExtensions:
   lit-analyzer:
     dependencies:
       typescript: npm:@typescript/typescript6@^6.0.2
+  ts-simple-type:
+    dependencies:
+      typescript: npm:@typescript/typescript6@^6.0.2
 
 verifyDepsBeforeRun: false
 
