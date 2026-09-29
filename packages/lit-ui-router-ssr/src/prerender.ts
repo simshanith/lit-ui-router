@@ -264,6 +264,16 @@ const warnStrictSlash = async (
   );
 };
 
+const warnUnregistered = (): void => {
+  // DEV folds away in dist/*.js; see check:dev-split and dev-warnings.json.
+  if (!import.meta.env.DEV) return;
+  if (globalThis.customElements?.get('ui-view')) return;
+  console.warn(
+    'lit-ui-router-ssr: <ui-view> is not defined on the current customElements registry, so every <ui-view> on these pages renders empty. ' +
+      'The DOM shim replaces the registry when it finishes installing: load lit-ui-router-ssr/register by dynamic import after the shim, or preload the shim with node --import.',
+  );
+};
+
 /**
  * Emits a static site from a mount table's verdicts: a shell verdict becomes
  * `<subpath>/index.html`, a redirect becomes a rules line and no page, and the
@@ -326,6 +336,7 @@ export async function prerender(
   }
   const resolver: ServerRouter =
     options.resolver ?? createServerRouter({ mounts: mounts! });
+  warnUnregistered();
 
   const root = options.root ?? new EventTarget();
   const tally: PrerenderTally = {

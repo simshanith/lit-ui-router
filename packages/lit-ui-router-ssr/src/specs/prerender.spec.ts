@@ -201,6 +201,35 @@ describe('a mount that rejects the trailing slash', () => {
   });
 });
 
+describe('an unregistered <ui-view>', () => {
+  it('warns once per call when the current registry has no <ui-view>', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    // The registry the DOM shim installs when it finishes, after lit-ui-router defined into lit's own.
+    vi.stubGlobal('customElements', new CustomElementRegistry());
+
+    await run({ paths: ['/', '/sheet/7B'] });
+
+    const unregistered = warn.mock.calls.filter(([message]) =>
+      String(message).includes('<ui-view> is not defined'),
+    );
+    expect(unregistered).toEqual([
+      [expect.stringContaining('dynamic import after the shim')],
+    ]);
+    vi.unstubAllGlobals();
+    warn.mockRestore();
+  });
+
+  it('stays quiet when <ui-view> is defined', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    await run();
+
+    expect(customElements.get('ui-view')).toBeDefined();
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
+  });
+});
+
 describe('the 404 document', () => {
   it('writes 404.html once, from the probe, at status 404', async () => {
     const seen: { path: string; status?: number }[] = [];
