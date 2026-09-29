@@ -17,7 +17,7 @@ import type { FileWriter, RedirectLine } from '../prerender.js';
 
 // --- fixtures ------------------------------------------------------------
 
-// The root mount projects an otherwise rule (unmatched paths become 404 shells); the /app mount has none (unmatched paths verdict notFound, nothing emitted).
+// The root mount projects an otherwise rule (unmatched paths become 404 shells); the /app mount has none (unmatched paths verdict notFound, nothing emitted). Both admit the trailing slash, as sheetRouter's strictMode(false) does.
 const rootMount: MountConfig = {
   routes: [
     { name: 'home', url: '/' },
@@ -25,6 +25,7 @@ const rootMount: MountConfig = {
     { name: 'notFound' },
   ],
   otherwise: { state: 'notFound' },
+  config: { strict: false },
 };
 
 const appMount: MountConfig = {
@@ -32,6 +33,7 @@ const appMount: MountConfig = {
     { name: 'welcome', url: '/welcome' },
     { name: 'legacy', url: '/legacy', redirectTo: 'welcome' },
   ],
+  config: { strict: false },
 };
 
 const mounts: Record<string, MountConfig> = {
@@ -164,6 +166,37 @@ describe('unclaimed paths', () => {
       expect.stringContaining('no otherwise projection'),
       '/app/missing',
     );
+    warn.mockRestore();
+  });
+});
+
+describe('a mount that rejects the trailing slash', () => {
+  const strict = { ...mounts, '/': { ...rootMount, config: {} } };
+
+  it('warns once, naming the first page a static host would redirect', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    const { result } = await run({
+      mounts: strict,
+      paths: ['/', '/sheet/7B', '/sheet/12'],
+      notFound: false,
+    });
+
+    expect(result.tally.shell).toBe(3);
+    expect(warn).toHaveBeenCalledOnce();
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining('strict: false'),
+      '/sheet/7B',
+    );
+    warn.mockRestore();
+  });
+
+  it('stays silent when the mount admits it', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    await run({ paths: ['/', '/sheet/7B', '/app/welcome'], notFound: false });
+
+    expect(warn).not.toHaveBeenCalled();
     warn.mockRestore();
   });
 });

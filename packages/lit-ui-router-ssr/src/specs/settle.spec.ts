@@ -189,6 +189,7 @@ describe('settle', () => {
             { name: 'home', url: '/' },
             { name: 'sheet', url: '/sheet/:num' },
           ],
+          config: { strict: false },
         },
       },
       router,

@@ -349,7 +349,10 @@ re-runs the URL with its full configuration. The simulate tier applies the
 same rule to itself, degrading failed or timed-out simulations to the shell
 rather than a wrong redirect or a spurious 404. Trailing slashes are strict
 on both sides; if your client relaxes `strictMode`, pass the same relaxation
-as the mount's `config`. Nor does it see which ids exist: a `:id` param
+as the mount's `config`. A static host that serves `<subpath>/index.html` by
+redirecting onto the slashed url makes that relaxation mandatory
+([static hosts add a trailing slash](/packages/ssr#static-hosts-add-a-trailing-slash)).
+Nor does it see which ids exist: a `:id` param
 matches any value, so narrow it to the known ids when the build can list them
 ([parameterized routes and soft 404s](/guides/server-route-matching#parameterized-routes-and-soft-404s)).
 
