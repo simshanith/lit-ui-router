@@ -119,6 +119,115 @@ const page = (router: UIRouterLit) => html`
 One template set, both sides: the server fills the hole through the renderer, the client renders the
 same strings with the hole empty and each `<ui-view>` fills itself.
 
+### A property binding emits nothing on the server
+
+Take a card that receives a post by property and draws it in its own `render()`:
+
+```typescript
+import { html, LitElement } from 'lit';
+
+type Post = { title: string; summary: string };
+
+class XCard extends LitElement {
+  static properties = { post: { attribute: false } };
+  declare post: Post;
+  render() {
+    return html`<h2>${this.post.title}</h2>
+      <p>${this.post.summary}</p>`;
+  }
+}
+customElements.define('x-card', XCard);
+```
+
+A routed template that feeds it by property, `` html`<x-card .post=${post}></x-card>` ``, serves the
+card empty:
+
+```text
+<!--lit-part vYJeArn6Pos=--><!--lit-node 0--><x-card  defer-hydration></x-card><!--/lit-part-->
+```
+
+`@lit-labs/ssr` writes a `.prop=${…}` binding as its part marker and nothing else — no attribute, no
+child, no value. Setting the property is an element renderer's job, and `elementRenderers` defaults
+to `[UiViewRenderer]`, which answers for `ui-view` alone. The card has no renderer, so nothing on
+the server sets `post` or runs its `render()`: the card first draws on the client, once hydration
+sets the property, and the served page shows an empty tag where it stands.
+
+Write what the served page has to carry as the card's children, in the same template, with the
+property bound over it, and let the card project them through a `<slot>`:
+
+```typescript
+class XCard extends LitElement {
+  static properties = { post: { attribute: false } };
+  declare post: Post;
+  render() {
+    return html`<slot></slot>`;
+  }
+}
+
+const card = (post: Post) =>
+  html`<x-card .post=${post}>
+    <h2>${post.title}</h2>
+    <p>${post.summary}</p>
+  </x-card>`;
+```
+
+The server emits the children, `hydrateRoot()` adopts them as the same child part and sets `post`,
+and the card keeps the data for its behaviour while the template owns what shows.
+
+Write the children on both sides. A branch on `isServer` that writes them on the server alone looks
+like a way to serve the content without drawing it twice:
+
+```typescript
+import { html, isServer } from 'lit';
+
+// ❌ two templates: the client cannot adopt what the server drew
+const card = (post: Post) =>
+  isServer
+    ? html`<x-card .post=${post}>
+        <h2>${post.title}</h2>
+        <p>${post.summary}</p>
+      </x-card>`
+    : html`<x-card .post=${post}></x-card>`;
+```
+
+The served page carries the children, under a part marker that names the template that drew them:
+
+```text
+<!--lit-part EdxohtX2HMw=--><!--lit-node 0--><x-card  defer-hydration><h2><!--lit-part-->Hello<!--/lit-part--></h2><p><!--lit-part-->A first post.<!--/lit-part--></p></x-card><!--/lit-part-->
+```
+
+On the client `isServer` is false, so the enclosing `ui-view` hydrates the second template, whose
+own marker would read `vYJeArn6Pos=`, against that one. The digests differ, `hydrate()` throws on
+the mismatch, and the view drops everything the server drew inside it and renders cold. The served
+card and its children go, the client draws the empty card in their place, and in development the
+console warns that the element could not adopt the server render.
+
+The other answer is a renderer for the card. `LitElementRenderer` from `@lit-labs/ssr`, passed beside
+`UiViewRenderer`, sets the property on the server and draws the card's `render()` into a declarative
+shadow root:
+
+```typescript
+import { LitElementRenderer } from '@lit-labs/ssr';
+import { prerender, UiViewRenderer } from 'lit-ui-router-ssr';
+
+await prerender({
+  // …
+  elementRenderers: [UiViewRenderer, LitElementRenderer],
+});
+```
+
+With the first card, the one that draws `post` in its own `render()`, the same property binding now
+serves the card filled:
+
+```text
+<!--lit-part vYJeArn6Pos=--><!--lit-node 0--><x-card  defer-hydration><template shadowroot="open" shadowrootmode="open"><!--lit-part HdSxZ92CImA=--><h2><!--lit-part-->Hello<!--/lit-part--></h2><p><!--lit-part-->A first post.<!--/lit-part--></p><!--/lit-part--></template></x-card><!--/lit-part-->
+```
+
+The children stay where the card's `render()` put them, in a shadow root the browser attaches as it
+parses, and hydration adopts them there. `LitElementRenderer` does the same for every `LitElement`
+on the page, whether or not it has anything to show on the server, which is the cost the default
+avoids.
+
 ## Registering the elements
 
 A prerendered page needs the served `<ui-view>`, and `lit-ui-router-ssr/register` is the one import
