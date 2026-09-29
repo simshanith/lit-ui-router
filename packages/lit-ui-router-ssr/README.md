@@ -45,7 +45,8 @@ yarn add lit-ui-router-ssr
 
 `lit-ui-router`, `ui-router-server`, `@lit-labs/ssr`, `@lit-labs/ssr-client`, `lit`, and
 `@uirouter/core` are peer dependencies. `@lit-labs/ssr` is the server half and `@lit-labs/ssr-client`
-the client half, so a bundle takes one or the other, never both.
+the client half, so a bundle takes one or the other, never both. `@lit-labs/ssr-client` is optional:
+install it when you import `lit-ui-router-ssr/client`.
 
 ## Quick Start
 
