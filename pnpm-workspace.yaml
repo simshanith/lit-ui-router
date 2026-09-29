@@ -231,3 +231,9 @@ minimumReleaseAgeExclude:
   - pnpm@12.7.0
 
 minimumReleaseAgeStrict: true
+
+trustPolicy: no-downgrade
+
+trustPolicyExcludePrune: true
+
+trustPolicyIgnoreAfter: 43200
