@@ -92,8 +92,8 @@ closure is 89 tasks, 21 of which run a command, and every one of those is a pack
 Workers Builds check red on the branch that introduces it, before any merge.
 
 The script **derives the pnpm to bootstrap from `packageManager`** rather than restating it.
-A second pin can only ever be wrong, and wrong silently — pnpm >=11.10 self-swaps to
-`packageManager`, so a stale bootstrap still deploys green. Deriving is also what makes the
+A second pin could drift from `packageManager` with nothing to catch it, and a build on a
+stale pnpm can still deploy green. Deriving is also what makes the
 per-branch divergence above free: a branch that changes the package manager gets the right
 bootstrap with no edit to this file.
 
@@ -118,15 +118,14 @@ The build script owns the dependency install because Workers Builds provisions p
 corepack, which cannot install a pnpm-12 `packageManager` pin at all — the npm package is
 a wrapper whose real binary is materialized by a `preinstall` hook out of an optional
 platform dependency, and corepack runs neither lifecycle scripts nor optional
-dependencies. So `SKIP_DEPENDENCY_INSTALL=1` turns off Cloudflare's install step and npx
-bootstraps the last pnpm 11 instead — no preinstall hook, so npx handles it — which then
-reads `packageManager` and self-swaps to whatever the branch pins. `npx pnpm@11.21.0` is a
-**bootstrap floor**, not the version that runs: it needs to be at or above 11.20.0 to read
-a pnpm-12 lockfile, and `packageManager` decides the rest.
+dependencies. So `SKIP_DEPENDENCY_INSTALL=1` turns off Cloudflare's install step and the
+script runs `npm install --global --allow-scripts=pnpm` with the exact `pnpm@<version>`
+from `packageManager`, which lets the `preinstall` hook unpack the real binary. pnpm does
+not swap versions itself (`pmOnFail: ignore`), so that install is the version that runs.
 
-npx covers only the commands the script names. Anything turbo spawns resolves `pnpm` from
-`PATH`, where the unusable corepack shim still sits — which is why a pnpm-12 branch fails
-in turbo even with the install fixed, and why that branch needs its own bootstrap here.
+The global install replaces the corepack shim rather than sitting beside it: anything turbo
+spawns resolves `pnpm` from `PATH`, so a pnpm reachable only through the commands the script
+names would leave turbo on the unusable shim.
 
 `build_command` and `SKIP_DEPENDENCY_INSTALL` are one state. Apply and verify preview
 before production.

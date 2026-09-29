@@ -1,8 +1,12 @@
-// package.json's `packageManager` is the pnpm authority; the mise config, the
-// mise lockfile and pnpm-lock.yaml restate the same version with nothing else
-// checking them against it. Assert they agree.
+// package.json's `packageManager` is the pnpm authority; the mise config and
+// the mise lockfile restate the same version with nothing else checking them
+// against it. Assert they agree.
 //
-// The Workers Builds bootstrap is deliberately not a fourth pin: it derives the
+// pnpm never swaps to `packageManager` (`pmOnFail: ignore`), so pnpm-lock.yaml
+// records no pnpm version: it stays one document, which is what GitHub's
+// dependency graph and pnpm's prune settings read.
+//
+// The Workers Builds bootstrap is deliberately not a third pin: it derives the
 // version from `packageManager` rather than restating it, so there is nothing
 // here to compare (tools/workers-builds/cloudflare-build.ts).
 import assert from 'node:assert/strict';
@@ -61,16 +65,15 @@ describe('pnpm version pins', () => {
     }
   });
 
-  // The one file read as text: pnpm-lock.yaml is YAML, and node has no parser
-  // for it that does not cost an install. The block is four lines and pnpm
-  // writes it, so scope the scan and match within it.
-  it('pnpm-lock.yaml resolves it', () => {
+  // Read as text: node has no YAML parser that does not cost an install, and a
+  // document separator is a line of its own.
+  it('pnpm-lock.yaml is a single document', () => {
     const lock = readFileSync(join(workspaceRoot, 'pnpm-lock.yaml'), 'utf8');
-    const block = /^ {6}pnpm:$\n((?: {8}.*\n)+)/m.exec(lock)?.[1];
-    assert.ok(block, 'no packageManagerDependencies.pnpm block');
-    const found = [...block.matchAll(/^\s+(?:specifier|version): (.+)$/gm)].map(
-      ([, version]) => version,
+    assert.match(
+      lock,
+      /^lockfileVersion: /,
+      'starts with a document ahead of the lockfile',
     );
-    assert.deepEqual(found, [pinned, pinned]);
+    assert.doesNotMatch(lock, /^---$/m, 'holds more than one YAML document');
   });
 });
