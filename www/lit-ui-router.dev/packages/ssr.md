@@ -394,6 +394,26 @@ view with no provider above it does — are in the
 [API reference](/api/lit-ui-router-ssr/) and in
 [the package README](https://github.com/simshanith/lit-ui-router/blob/main/packages/lit-ui-router-ssr/README.md#the-client-half).
 
+Each served view reports what its wake came to, once, parent first, in
+production as in development. The view dispatches a bubbling, composed
+[`ui-view:adopt`](/api/lit-ui-router-ssr/variables/uiViewAdoptEventName) event
+whose [`detail`](/api/lit-ui-router-ssr/interfaces/UiViewAdoptDetail) carries
+an [`AdoptOutcome`](/api/lit-ui-router-ssr/type-aliases/AdoptOutcome):
+`adopted` when its served nodes are the live ones, `fell-back` when a mismatch
+or a lost pair dropped them for a cold render, with the cause in `error`, and
+`none` when there was nothing to adopt. `hydrateRoot`'s
+[`onAdopt`](/api/lit-ui-router-ssr/interfaces/HydrateRootOptions) option
+receives the same reports for every view its walk reaches, so a consumer that
+only calls `hydrateRoot` needs no listener:
+
+```ts
+hydrateRoot(root, page(router), {
+  onAdopt: (view, outcome, error) => {
+    if (outcome === 'fell-back') report(view, error);
+  },
+});
+```
+
 ## How this compares
 
 Two axes separate the hydration models in circulation: where the code that

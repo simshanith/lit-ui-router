@@ -34,6 +34,80 @@ export {
 /** The attribute `@lit-labs/ssr` writes on a server-rendered custom element. */
 const DEFER = 'defer-hydration';
 
+/**
+ * What a served `<ui-view>`'s wake came to.
+ *
+ * - `adopted`: the element hydrated its served nodes, and they are the live ones.
+ * - `fell-back`: the served pair did not match the render the client booted
+ *   into, or was lost; the view dropped the served interior and rendered cold.
+ * - `none`: nothing to adopt — an empty served pair, the address no state
+ *   routed, or a view the document served no markers for.
+ *
+ * @category client
+ */
+export type AdoptOutcome = 'adopted' | 'fell-back' | 'none';
+
+/**
+ * The name of the event a served `<ui-view>` dispatches once its wake's
+ * outcome is known, in the `ui-view:` house style of the served markers.
+ *
+ * @category client
+ */
+export const uiViewAdoptEventName = 'ui-view:adopt' as const;
+
+/**
+ * The detail of {@link UiViewAdoptEvent}.
+ *
+ * @category client
+ */
+export interface UiViewAdoptDetail {
+  /** What the wake came to. */
+  readonly outcome: AdoptOutcome;
+  /** What `hydrate()` threw, or why the pair was lost; present only on `fell-back`. */
+  readonly error?: unknown;
+}
+
+/**
+ * Dispatched from a served `<ui-view>` at its wake, once per view, bubbling and
+ * composed, in production as in development.
+ *
+ * @category client
+ */
+export type UiViewAdoptEvent = CustomEvent<UiViewAdoptDetail>;
+
+/**
+ * Receives each served view's outcome, as {@link HydrateRootOptions.onAdopt}.
+ *
+ * @category client
+ */
+export type AdoptReporter = (
+  view: Element,
+  outcome: AdoptOutcome,
+  error?: unknown,
+) => void;
+
+/**
+ * {@link hydrateRoot}'s options: lit's render options, plus the outcome
+ * callback.
+ *
+ * @category client
+ */
+export interface HydrateRootOptions extends RenderOptions {
+  /**
+   * Called with each served view's outcome, at the same moment as its
+   * {@link UiViewAdoptEvent}, for every view this call's walk reaches —
+   * including one the pin adopts after the provider is released.
+   */
+  onAdopt?: AdoptReporter;
+}
+
+declare global {
+  interface HTMLElementEventMap {
+    /** A served `<ui-view>`'s hydration outcome; see {@link UiViewAdoptEvent}. */
+    'ui-view:adopt': UiViewAdoptEvent;
+  }
+}
+
 // The class `@lit-labs/ssr` routes to `renderLight()` is not exported; its directive function is, and lit's helper reads the class back off a call.
 const RenderLightDirective = getDirectiveClass(renderLight())!;
 
@@ -53,7 +127,7 @@ class UiViewSlotDirective extends RenderLightDirective {
     const view = (part as ChildPart).parentNode;
     if (!(view instanceof Element)) return;
     // The pin keys off the served pair, not the wake below: where that marker is there, lit's own walk cleared the attribute before this part was reached.
-    if (servedPair(view)) pinAdopter(view);
+    if (servedPair(view)) pinAdopter(view, walkReporter);
     if (view.hasAttribute(DEFER)) view.removeAttribute(DEFER);
   }
 
@@ -94,6 +168,48 @@ class UiViewSlotDirective extends RenderLightDirective {
  * @category client
  */
 export const uiViewSlot: typeof renderLight = directive(UiViewSlotDirective);
+
+/** The `onAdopt` of the walk in progress, which the pins it sets carry. */
+let walkReporter: AdoptReporter | undefined;
+
+/** Runs `walk` with `reporter` as the one the pins it sets carry. */
+const walkWith = (
+  reporter: AdoptReporter | undefined,
+  walk: () => void,
+): void => {
+  const outer = walkReporter;
+  walkReporter = reporter;
+  try {
+    walk();
+  } finally {
+    walkReporter = outer;
+  }
+};
+
+/** Reports one view's outcome: the event from the view, then the root's callback. A callback that throws does so on its own microtask, after the view's update. */
+const report = (
+  view: Element,
+  reporter: AdoptReporter | undefined,
+  outcome: AdoptOutcome,
+  error?: unknown,
+): void => {
+  const detail: UiViewAdoptDetail =
+    outcome === 'fell-back' ? { outcome, error } : { outcome };
+  view.dispatchEvent(
+    new CustomEvent(uiViewAdoptEventName, {
+      bubbles: true,
+      composed: true,
+      detail,
+    }),
+  );
+  try {
+    reporter?.(view, outcome, error);
+  } catch (thrown) {
+    queueMicrotask(() => {
+      throw thrown;
+    });
+  }
+};
 
 const warnMismatch = (view: AdoptableView, error: unknown): void => {
   // DEV folds away in dist/*.js; see check:dev-split and dev-warnings.json.
@@ -260,25 +376,37 @@ const clearInterior = (open: Comment): void => {
  * inside its own `willUpdate`, so every throw path stays inside the mismatch
  * guard: the reveal and the hydrate sit in the fallback together, and nothing
  * escapes into the view's update.
+ *
+ * Every exit reports the outcome once, from the view and to `reporter`, after
+ * the view's nodes are settled: `adopted` once hydrated, `fell-back` with the
+ * cause once the served render is dropped, `none` when there was nothing to
+ * adopt.
  */
-const adopt = (view: AdoptableView): void => {
+const adopt = (
+  view: AdoptableView,
+  reporter: AdoptReporter | undefined,
+): void => {
   const open = servedPair(view);
   if (!open) {
-    if (hasServedMarkers(view)) {
-      warnMismatch(view, 'the served part pair is gone');
-      dropServedRender(view);
-    }
-    return;
+    if (!hasServedMarkers(view)) return report(view, reporter, 'none');
+    const error = 'the served part pair is gone';
+    warnMismatch(view, error);
+    dropServedRender(view);
+    return report(view, reporter, 'fell-back', error);
   }
   // The address no state routed: nothing between the pair to adopt, and the element renders after it.
-  if (isPart(open.nextSibling, '/lit-part')) return;
+  if (isPart(open.nextSibling, '/lit-part')) {
+    return report(view, reporter, 'none');
+  }
   try {
     revealServedMarkers(view);
-    hydrate(view.render(), view, view.renderOptions);
+    walkWith(reporter, () => hydrate(view.render(), view, view.renderOptions));
   } catch (error) {
     warnMismatch(view, error);
     clearInterior(open);
+    return report(view, reporter, 'fell-back', error);
   }
+  report(view, reporter, 'adopted');
 };
 
 /** The views this walk, or an earlier one, already pinned. */
@@ -298,15 +426,20 @@ const pinned = new WeakSet<Element>();
  * element adds nothing; an element that never wakes carries its listener to the
  * garbage collector. A descendant view whose request passes through on its way
  * out is adopted too, and leaves the pin armed for the view it belongs to.
+ * The pin carries the `onAdopt` of the walk that set it, so the view reports to
+ * it wherever and whenever it wakes.
  */
-const pinAdopter = (view: Element): void => {
+const pinAdopter = (
+  view: Element,
+  reporter: AdoptReporter | undefined,
+): void => {
   if (pinned.has(view)) return;
   pinned.add(view);
   let release = (): void => {};
   release = provideContext(view, adoptUiViewContext, (woken) => {
     // A descendant's request passes through this element and is answered; only this view's own spends the pin.
     if (woken === view) release();
-    adopt(woken);
+    adopt(woken, reporter);
   });
 };
 
@@ -358,6 +491,11 @@ const makeCold = (container: HTMLElement): void => {
  * and releases its own provider before rethrowing, so the live one keeps
  * answering.
  *
+ * Each served view that wakes under the walk reports what its wake came to — an
+ * {@link AdoptOutcome} — once, as a {@link UiViewAdoptEvent} dispatched from
+ * the view, and to `options.onAdopt` when given. The pin carries that callback,
+ * so a view adopted after the release still reaches it.
+ *
  * A `hydrate()` that throws is rethrown, over a container left cold-renderable:
  * nothing asleep behind `defer-hydration`, no marker still hidden. The caller
  * renders over it.
@@ -380,7 +518,7 @@ const makeCold = (container: HTMLElement): void => {
  *
  * @param container - the element the server's markup was written into
  * @param value - the same template the server rendered, with every `<ui-view>` hole empty
- * @param options - lit render options, passed on to `hydrate()`
+ * @param options - lit render options, passed on to `hydrate()`, and `onAdopt`
  * @returns the function that releases the provider, or `false` when the container holds nothing to adopt — a cold client render, a dev server
  *
  * @category client
@@ -388,12 +526,15 @@ const makeCold = (container: HTMLElement): void => {
 export function hydrateRoot(
   container: HTMLElement,
   value: unknown,
-  options: RenderOptions = {},
+  options: HydrateRootOptions = {},
 ): false | (() => void) {
   if (!isServed(container)) return false;
-  const release = provideContext(container, adoptUiViewContext, adopt);
+  const { onAdopt, ...renderOptions } = options;
+  const release = provideContext(container, adoptUiViewContext, (view) =>
+    adopt(view, onAdopt),
+  );
   try {
-    hydrate(value, container, options);
+    walkWith(onAdopt, () => hydrate(value, container, renderOptions));
   } catch (error) {
     release();
     makeCold(container);
