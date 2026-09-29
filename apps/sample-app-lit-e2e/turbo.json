@@ -11,7 +11,7 @@
     //
     // They all assume a dev server is already up. It is: the //:test_e2e mise
     // task starts one around this whole set, deliberately OUTSIDE the graph —
-    // turbo has no server lifecycle, and a `with:` sidecar is never reaped.
+    // a `with:` sidecar belongs to one parent task, not to a set of tasks.
     // That is also why these tasks are in no ci:* graph; //:test_e2e is the
     // only caller, and check:graph-edges plan-checks them precisely because CI
     // never reaches them. (Not the root `e2e` turbo task, which is a different
