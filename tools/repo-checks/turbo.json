@@ -46,6 +46,10 @@
         "$TURBO_ROOT$/pnpm-lock.yaml"
       ]
     },
+    "check:single-version": {
+      // the lock records catalogs, overrides and importers alongside resolutions
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/pnpm-lock.yaml"]
+    },
     "check:graph-edges": {
       // any manifest can gain or lose a lane, any turbo.json an edge that
       // selects differently — or stops planning at all

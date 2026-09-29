@@ -15,6 +15,7 @@
         "//#lint:templates",
         "@tools/repo-checks#check:patches",
         "@tools/repo-checks#check:dedupe",
+        "@tools/repo-checks#check:single-version",
         "@tools/repo-checks#check:graph-edges",
         "@tools/repo-checks#check:task-inputs",
         "@tools/repo-checks#check:knip",
