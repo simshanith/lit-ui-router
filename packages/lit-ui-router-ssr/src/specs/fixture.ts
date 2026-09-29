@@ -131,27 +131,3 @@ export const makeRouter = (): Router => {
   for (const state of states) router.stateRegistry.register(state);
   return router;
 };
-
-/** Settles `router` on `path`; `start()` syncs the first url itself. */
-export const goTo = async (router: Router, path: string): Promise<void> => {
-  const settled = new Promise<void>((resolve, reject) => {
-    const offSuccess = router.transitionService.onSuccess({}, () => {
-      offSuccess();
-      offError();
-      resolve();
-    }) as () => void;
-    const offError = router.transitionService.onError({}, (transition) => {
-      offSuccess();
-      offError();
-      reject(new Error(String(transition.error())));
-    }) as () => void;
-  });
-  router.urlService.url(path);
-  if (!started.has(router)) {
-    started.add(router);
-    router.start();
-  }
-  await settled;
-};
-
-const started = new WeakSet<Router>();

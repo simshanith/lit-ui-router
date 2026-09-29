@@ -274,7 +274,7 @@ const warnUnclaimed = (path: string): void => {
  *   outDir: 'dist',
  *   paths: ['/', '/sheet/7B', '/legacy'],
  *   renderShell: async (verdict, { path }) => {
- *     await goTo(router, path);
+ *     await settle(router, path);
  *     return page();
  *   },
  *   document: (body, { path }) => fillShell(titles.get(path), body),

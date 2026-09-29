@@ -6,11 +6,11 @@ import { adoptUiViewContext } from '../adopt-context.js';
 import '../register.js';
 
 import { hydrateRoot } from '../client.js';
+import { settle } from '../settle.js';
 import { UiViewRenderer } from '../ui-view-renderer.js';
 import {
   DetailView,
   fallbackRootTemplate,
-  goTo,
   makeRouter,
   plainRootTemplate,
   rootTemplate,
@@ -25,7 +25,7 @@ import {
   dropViewNodeMarkers,
   hydrateInto,
   serve,
-  settle,
+  drain,
 } from './round-trip.js';
 
 /** A `<ui-view>`, as the assertions read it. */
@@ -230,7 +230,7 @@ describe('the adopter hydrateRoot provides', () => {
   beforeEach(async () => {
     ({ container } = serve(await drawShell('/shell/detail')));
     ({ release } = await hydrateInto(container, rootTemplate, '/shell/detail'));
-    await settle(container);
+    await drain(container);
   });
 
   afterEach(() => {
@@ -405,7 +405,7 @@ describe('a view detached before its update flushes', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const { container, served } = serve(await drawShell('/shell'));
     const router = makeRouter();
-    await goTo(router, '/shell');
+    await settle(router, '/shell');
     const shell = container.querySelector('h1');
 
     const release = hydrateRoot(container, rootTemplate(router));
@@ -476,12 +476,12 @@ describe('a view the document drew with authored fallback content', () => {
     expect(container.querySelector('.loading')).toBe(loading);
 
     await router.stateService.go('shell');
-    await settle(container);
+    await drain(container);
     expect(container.querySelector('.loading')).toBeNull();
     expect(container.querySelector('h1')?.textContent).toContain('shell hello');
 
     await router.stateService.go('bare');
-    await settle(container);
+    await drain(container);
     expect(container.querySelector('.loading')).toBe(loading);
     expect(warn).not.toHaveBeenCalled();
   });
@@ -505,7 +505,7 @@ describe('a view the document drew with authored fallback content', () => {
     expect(container.querySelector('.loading')).toBeNull();
 
     await router.stateService.go('bare');
-    await settle(container);
+    await drain(container);
     expect(container.querySelector('.loading')).toBe(loading);
     expect(warn).not.toHaveBeenCalled();
   });
@@ -563,7 +563,7 @@ describe('the pin the walk leaves on a served view', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const { container: first } = serve(await drawShell('/shell'));
     const firstRouter = makeRouter();
-    await goTo(firstRouter, '/shell');
+    await settle(firstRouter, '/shell');
     const release = hydrateRoot(first, rootTemplate(firstRouter)) as () => void;
     // Detached before its update: the view sleeps, holding its nodes and its pin.
     const app = first.querySelector('ui-router')!;
@@ -573,13 +573,13 @@ describe('the pin the walk leaves on a served view', () => {
 
     const { container: second } = serve(await drawShell('/shell'));
     const secondRouter = makeRouter();
-    await goTo(secondRouter, '/shell');
+    await settle(secondRouter, '/shell');
     second.querySelector('ui-router')!.replaceWith(app);
     const releaseSecond = hydrateRoot(
       second,
       rootTemplate(secondRouter),
     ) as () => void;
-    await settle(second);
+    await drain(second);
     releaseSecond();
 
     expect(view.querySelector('h1')?.textContent).toContain('shell hello');
@@ -599,7 +599,7 @@ describe('the pin the walk leaves on a served view', () => {
     const { container } = serve(await drawShell('/shell/detail'));
     const shell = container.querySelector('h1');
     const router = makeRouter();
-    await goTo(router, '/shell/detail');
+    await settle(router, '/shell/detail');
 
     // Drawn before the walk: everything from here to the guest's request is one task.
     const markup = await servedDetail();
@@ -628,7 +628,7 @@ describe('the pin the walk leaves on a served view', () => {
 
     guest.remove();
     release();
-    await settle(container);
+    await drain(container);
 
     // Only the pin is left to answer, and it still belongs to its own view.
     expect(container.querySelector('h1')).toBe(shell);
@@ -662,7 +662,7 @@ describe('the guard on what there is to adopt', () => {
     vi.spyOn(console, 'warn').mockImplementation(() => {});
     const { container } = serve(await drawShell('/shell/detail'));
     const router = makeRouter();
-    await goTo(router, '/shell/detail');
+    await settle(router, '/shell/detail');
 
     expect(() =>
       hydrateRoot(container, tailRootTemplate(router, 'first')),

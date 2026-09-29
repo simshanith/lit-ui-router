@@ -9,7 +9,8 @@ import { installServerLocation } from 'ui-router-server/location';
 import { describe, expect, it, vi } from 'vitest';
 
 import { UiViewRenderer } from '../ui-view-renderer.js';
-import { goTo, makeRouter, rootTemplate } from './fixture.js';
+import { settle } from '../settle.js';
+import { makeRouter, rootTemplate } from './fixture.js';
 
 const draw = (router: UIRouterLit): string =>
   withRouterSync(router, () =>
@@ -22,7 +23,7 @@ const draw = (router: UIRouterLit): string =>
 
 const at = async (path: string): Promise<string> => {
   const router = makeRouter();
-  await goTo(router, path);
+  await settle(router, path);
   return draw(router);
 };
 
@@ -119,7 +120,7 @@ describe('UiViewRenderer', () => {
 
   it('leaves the view service as it found it', async () => {
     const router = makeRouter();
-    await goTo(router, '/shell/detail');
+    await settle(router, '/shell/detail');
     draw(router);
     draw(router);
 
@@ -143,7 +144,7 @@ describe('UiViewRenderer', () => {
   it('leaves a RoutedLitElement view empty and warns once', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const router = boxedRouter();
-    await goTo(router, '/boxed');
+    await settle(router, '/boxed');
 
     const markup = draw(router);
 

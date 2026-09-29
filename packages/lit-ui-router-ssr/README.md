@@ -29,8 +29,9 @@ imports the pre-1.0 renderer or re-derives the incantation.
 - **`<ui-view>` on both sides.** `UiViewRenderer` fills the element's light DOM on the server;
   `lit-ui-router-ssr/client` adopts what it drew.
 
-Path enumeration, the html document, `<title>`, and driving the router to each path stay with the
-caller — `paths`, `document()`, and an async `renderShell()` are the seams for them.
+Path enumeration, the html document, and `<title>` stay with the caller — `paths`, `document()`,
+and an async `renderShell()` are the seams for them. `settle()` drives the router to each path
+inside `renderShell()`.
 
 ## Installation
 
@@ -49,7 +50,7 @@ the client half, so a bundle takes one or the other, never both.
 ## Quick Start
 
 ```typescript
-import { prerender } from 'lit-ui-router-ssr';
+import { prerender, settle } from 'lit-ui-router-ssr';
 
 const result = await prerender({
   mounts,
@@ -58,7 +59,7 @@ const result = await prerender({
   paths: ['/', '/sheet/7B', '/legacy'],
   extraRules: [{ from: '/megacanvas', to: '/megacanvas.html', status: 301 }],
   renderShell: async (_verdict, { path }) => {
-    await goTo(router, path);
+    await settle(router, path);
     return page();
   },
   document: (body, { path }) => fillShell(titles.get(path), body),
@@ -73,6 +74,25 @@ on. `dryRun: true` plans all of it and writes nothing.
 
 Files land through `node:fs`, imported lazily on first write; pass `write` to emit into memory or a
 virtual fs instead.
+
+## Settling the router on each path
+
+A server render reads the router only once its transition has landed, resolves included.
+`settle(router, path)` sets the url, syncs the router to it, and resolves with the transition that
+landed, so the synchronous render after it reads every resolve. A `redirectTo` chain settles on its
+final state, and a path the router already stands on resolves at once.
+
+A page fails to land in three ways, and each rejects rather than hangs:
+
+- **No rule matches.** A url no state claims, on a router with no `otherwise` rule, rejects with an
+  `Error` naming it. An `otherwise` rule is itself a match and settles on its state.
+- **A resolve fails.** The promise rejects with an `Error` whose `cause` is the transition's
+  `Rejection`, the resolve's error in its `detail`. Core's `defaultErrorHandler` still logs it.
+- **Nothing lands in time.** `{ timeout }` bounds the wait, `10_000` ms by default; `0` waits without
+  a limit.
+
+`settle()` never calls `router.start()`, which runs once per router: it drives `urlService`
+directly, so a page loop calls it once per path on the same router, started or not.
 
 ## The routed view, drawn on the server
 
