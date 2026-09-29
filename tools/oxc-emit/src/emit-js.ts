@@ -13,6 +13,8 @@ import { basename, dirname, join, relative } from 'node:path';
 import { minifySync } from 'oxc-minify';
 import { transformSync } from 'oxc-transform';
 
+import { requireManifest } from '@tools/bootstrap/manifest.ts';
+
 import {
   DEV_DEFINE_KEY,
   DEV_OUT,
@@ -36,11 +38,7 @@ const passes = dual
 
 // a decorator lowers to an import of this package, so the emitting one must declare it
 const RUNTIME = '@oxc-project/runtime';
-const { dependencies = {} } = JSON.parse(
-  readFileSync('package.json', 'utf8'),
-) as {
-  dependencies?: Record<string, string>;
-};
+const { dependencies = {} } = requireManifest(process.cwd());
 const undeclaredRuntime = new Set<string>();
 
 for (const file of publishableSources()) {
