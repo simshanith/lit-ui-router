@@ -26,7 +26,7 @@
   },
   "devDependencies": {
     "@lit-labs/ssr": "^4.1.0",
-    "lit-ui-router-ssr": "^0.1.0-rc.4",
+    "lit-ui-router-ssr": "^0.1.0",
     "typescript": "^7.0.2",
     "vite": "^8.3.0",
     "vite-plugin-singlefile": "^2.3.3"

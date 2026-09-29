@@ -74,7 +74,7 @@ components and its own disk-backed resolves on the same route table, so
 DOM between the part markers the element hydrates against. `src/main.ts` starts
 the router, awaits its first successful transition and calls `hydrateRoot()`;
 a cold container returns `false` and the same template is rendered instead. The
-atlas is on `lit-ui-router@1.16.0` / `lit-ui-router-ssr@0.1.0-rc.3`, with
+atlas is on `lit-ui-router@1.16.0` / `lit-ui-router-ssr@0.1.0`, with
 `@lit-labs/ssr-client@1.1.8` as the client half's peer.
 
 One thing that cutover measured:
@@ -611,9 +611,9 @@ Findings:
 
 - **F1 — released packages keep release-only peers.** `lit-ui-router-effect@0.1.3`
   peers on `lit-ui-router ^1.15.0`, a caret range that admits no prerelease,
-  and the atlas takes it directly against `lit-ui-router@1.16.0`. Only a
-  package that is itself an rc (`lit-ui-router-ssr`) carries an rc peer line;
-  a consumer on a prerelease bridges with a scoped npm `overrides` entry.
+  and the atlas takes it directly against `lit-ui-router@1.16.0`. Every
+  package the atlas takes is a release, so no peer line names a prerelease; a
+  consumer on a prerelease bridges with a scoped npm `overrides` entry.
 - **F2 — a seek-path controller reads the scoped router first.** With no
   `router` option, `RouterRefController@0.1.3` takes `getScopedRouter()` at
   construction and seeks the enclosing `<ui-router>` on connect only after,
