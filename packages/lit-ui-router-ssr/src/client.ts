@@ -186,7 +186,7 @@ const walkWith = (
   }
 };
 
-/** Reports one view's outcome: the event from the view, then the root's callback. */
+/** Reports one view's outcome: the event from the view, then the root's callback. A callback that throws does so on its own microtask, after the view's update. */
 const report = (
   view: Element,
   reporter: AdoptReporter | undefined,
@@ -202,7 +202,13 @@ const report = (
       detail,
     }),
   );
-  reporter?.(view, outcome, error);
+  try {
+    reporter?.(view, outcome, error);
+  } catch (thrown) {
+    queueMicrotask(() => {
+      throw thrown;
+    });
+  }
 };
 
 const warnMismatch = (view: AdoptableView, error: unknown): void => {

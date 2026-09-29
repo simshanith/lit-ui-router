@@ -858,6 +858,31 @@ describe('the hydration outcome', () => {
     ]);
   });
 
+  it('keeps a throwing onAdopt out of the adoption, rethrown on a microtask', async () => {
+    const { container } = serve(await drawShell('/shell'));
+    const router = makeRouter();
+    await settle(router, '/shell');
+    const reports = listen(container);
+    const microtasks = vi.fn<(callback: () => void) => void>();
+    vi.stubGlobal('queueMicrotask', microtasks);
+    const failure = new Error('reporter failed');
+
+    const release = hydrateRoot(container, rootTemplate(router), {
+      onAdopt: () => {
+        throw failure;
+      },
+    });
+    await drain(container);
+    (release as () => void)();
+    vi.unstubAllGlobals();
+
+    const view = container.querySelector('ui-view')!;
+    expect(reports.map(([, outcome]) => outcome)).toEqual(['adopted', 'none']);
+    expect(view.querySelector('h1')?.textContent).toContain('shell');
+    expect(microtasks).toHaveBeenCalledTimes(2);
+    expect(() => microtasks.mock.calls[0][0]()).toThrow(failure);
+  });
+
   describe('from the adopter a view requests', () => {
     let container: HTMLElement;
     let release: () => void;
