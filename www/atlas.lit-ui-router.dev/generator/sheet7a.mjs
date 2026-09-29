@@ -151,7 +151,8 @@ function furniture(n) {
 ${txt(bx.toFixed(1), (by + 3.2).toFixed(1), String(n), t.num, 'middle')}`;
 }
 const BADGE_LIFT = {};
-const BADGE_DX = {};
+// 16 stands under the release tower's south-west corner: its badge steps west of it
+const BADGE_DX = { 16: -9 };
 
 // ---- districts, same bounds rule as sheet 7 (over footprint + annex) ------------
 const DIST = [['pkg', 24], ['app', 24], ['site', 24], ['tool', 26]];
@@ -371,11 +372,11 @@ ${txt(863, 748, '№12 @tools/release — the yard in one building:', 'lblr')}
 ${txt(863, 761, `${g(12).r[10]} files lit at ${pctS(g(12).r[13])} bright; ${g(12).r[6] - g(12).r[10]} in shadow, ${fmt(g(12).r[7] - g(12).r[11])} sloc —`, 'lblf')}
 ${txt(863, 773, 'the publish halt is lit at its core', 'lblf')}
 ${txt(863, 785, 'and dark at its process edge', 'lblf')}
-<line x1="857" y1="766" x2="240" y2="700" class="skf"/>
+<line x1="857" y1="766" x2="217" y2="712" class="skf"/>
 
 ${txt(700, 852, `№16 @tools/shared — the palest light thrown: ${pctS(g(16).r[13])} line, ${pctS(g(16).r[15])} function`, 'lblr')}
 ${txt(700, 865, 'exec.ts and workspace.ts are the worst-lit things that are lit at all', 'lblf')}
-<line x1="694" y1="850" x2="166" y2="772" class="skf"/>
+<line x1="694" y1="850" x2="125" y2="772" class="skf"/>
 
 <!-- verdict -->
 <rect x="1128" y="382" width="392" height="118" class="sk fp"/>

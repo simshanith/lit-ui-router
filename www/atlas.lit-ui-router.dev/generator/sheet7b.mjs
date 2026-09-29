@@ -253,7 +253,7 @@ function badge(n) {
 ${txt(bx.toFixed(1), (by - lift + 3.4).toFixed(1), String(n), t.num, 'middle')}`;
 }
 // badges lifted clear of roofs AND of their own steam plumes
-const BADGE_LIFT = { 1: 46, 2: 34, 5: 40, 6: 35, 7: 52, 9: 28, 10: 44, 11: 18, 12: 26, 16: 30, 20: 26, 21: 34, 23: 34, 26: 13, 27: 34 };
+const BADGE_LIFT = { 1: 46, 2: 34, 5: 40, 6: 35, 7: 52, 9: 28, 10: 44, 11: 18, 12: 20, 16: 30, 20: 26, 21: 34, 23: 34, 26: 13, 27: 34 };
 
 // ---- districts (sheet 7's) --------------------------------------------------------
 const DIST = [['pkg', 24], ['app', 24], ['site', 24], ['tool', 26]];

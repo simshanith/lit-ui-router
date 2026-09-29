@@ -69,11 +69,14 @@ export const PLACED = [
   [10, 'docs',                     'www/lit-ui-router.dev',              'site', 'line',   660, 340, 'vitepress + the worker that serves it'],
   [11, 'examples',                 'examples',                           'site', 'line',   660, 430, 'stackblitz-ready copies, own lockfiles'],
   // --- tools/ — the instrument yard --------------------------------------------
-  [12, '@tools/release',           'tools/release',                      'tool', 'halt',    20, 430, 'hosts published-diff — the one publish halt'],
+  // south-west off 20, 430, where the 150 px tower stands in front of dts-backtest,
+  // eslint-ts-parser and lit-test-env on the 350 row; from here it hides none of them
+  [12, '@tools/release',           'tools/release',                      'tool', 'halt',     0, 455, 'hosts published-diff — the one publish halt'],
   [13, '@tools/typedoc-plugin',    'tools/typedoc-plugin-lit-ui-router', 'tool', 'report', 230, 430, 'builds the API pages, gates nothing'],
   [14, '@tools/dts-backtest',      'tools/dts-backtest',                 'tool', 'pr',       8, 350, 'one 291-line run.ts holds the TS 5.0 floor'],
   [15, '@tools/build_and_test',    'tools/build_and_test',               'tool', 'report', 300, 430, 'the CI graph helper — and its error summary'],
-  [16, '@tools/shared',            'tools/shared',                       'tool', 'report',  20, 550, 'the library under the instruments'],
+  // west off 20 with the release tower, so its badge rides clear of the tower's face
+  [16, '@tools/shared',            'tools/shared',                       'tool', 'report', -16, 550, 'the library under the instruments'],
   [17, '@tools/workers-builds',    'tools/workers-builds',               'tool', 'late',   220, 550, 'the docs deploy watch'],
   [18, '@tools/bundle-probe',      'tools/bundle-probe',                 'tool', 'report', 330, 550, 'size probe, advisory'],
   [19, '@tools/compat-guards',     'tools/compat-guards',                'tool', 'pr',     130, 550, 'the lit 2 / mobx 6 / peer-floor lanes'],
@@ -82,7 +85,8 @@ export const PLACED = [
   [22, '@tools/lit-template-lint', 'tools/lit-template-lint',            'tool', 'report', 325, 350, 'the lit-analyzer wrapper'],
   [23, '@tools/lit-test-env',      'tools/lit-test-env',                 'tool', 'pr',      85, 350, 'the browser harness every suite loads'],
   [24, '@tools/vue-check',         'tools/vue-check',                    'tool', 'report', 370, 350, 'vue-tsc over the docs components'],
-  [25, '@tools/lcov-rebase',       'tools/lcov-rebase',                  'tool', 'report', 415, 350, 'coverage path rewriting'],
+  // off the 350 row's east end, where repo-checks' roof and badge stand over it
+  [25, '@tools/lcov-rebase',       'tools/lcov-rebase',                  'tool', 'report', 180, 395, 'coverage path rewriting'],
   [26, '@tools/happy-dom',         'tools/happy-dom',                    'tool', 'pr',     125, 350, 'the node-side DOM the unit suites run in'],
   [27, '@tools/wintercg-globals',  'tools/wintercg-globals',             'tool', 'off',    185, 350, 'ambient types only — nothing to mass'],
   // --- born 2026-08-31 (#639) and 2026-08-16 (#557) --------------------------------
@@ -233,8 +237,9 @@ const roads = [
   // 7 · the docs build is what cypress drives: sample-app-lit-e2e depends on docs;
   //    turbo e2e dependsOn ^build, with @www/lit-ui-router.dev#wrangler:dev.
   road([[g(10).x, 352], [606, 352], [606, g(9).y2]], { ...TESTS, t0: 9, to: 9, toAnnex: true }),
-  // 8 · @tools/shared is imported by five instruments; the road to the largest.
-  road([[14, 563], [-106, 563], [-106, 430], [14, 430]], { ...LIB, t0: 9, t1: 66 }),
+  // 8 · @tools/shared is imported by five instruments; the road to the largest,
+  //    ending where the tower's west edge takes it out of sight.
+  road([[g(16).x - 6, 563], [-106, 563], [-106, 475], [g(12).x, 475]], { ...LIB, t0: 9, t1: 61 }),
 ];
 
 // ---- districts, derived from what was actually placed ----------------------------
@@ -372,7 +377,7 @@ ${txt(60, 156, 'the biggest thing this district ever built is a test', 'lblf')}
 ${txt(20, 502, `@tools/release — ${g(12).sf}f · ${fmt(g(12).sl)} sloc`, 'lblr')}
 ${txt(20, 515, 'the tallest block on the sheet,', 'lblf')}
 ${txt(20, 527, 'and the only publish halt', 'lblf')}
-<line x1="160" y1="496" x2="215" y2="362" class="skf"/>
+<line x1="160" y1="496" x2="176" y2="365" class="skf"/>
 
 <!-- road register: every road on this sheet, and the edge in the repo it stands for -->
 <rect x="40" y="646" width="700" height="162" class="skf fnone"/>
