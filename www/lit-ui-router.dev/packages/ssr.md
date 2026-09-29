@@ -54,14 +54,15 @@ pnpm add lit-ui-router-ssr@rc
   paired with and without a trailing slash. No SPA catch-all is ever written:
   one turns every 404 into a 200.
 
-Path enumeration, the html document, `<title>`, and driving the router to each
-path stay with the caller — `paths`, `document()`, and an async
-`renderShell()` are the seams for them.
+Path enumeration, the html document, and `<title>` stay with the caller —
+`paths`, `document()`, and an async `renderShell()` are the seams for them.
+[`settle()`](#settling-the-router-on-each-path) drives the router to each path
+inside `renderShell()`.
 
 ## Quick start
 
 ```ts
-import { prerender } from 'lit-ui-router-ssr';
+import { prerender, settle } from 'lit-ui-router-ssr';
 
 const result = await prerender({
   mounts,
@@ -70,7 +71,7 @@ const result = await prerender({
   paths: ['/', '/sheet/7B', '/legacy'],
   extraRules: [{ from: '/megacanvas', to: '/megacanvas.html', status: 301 }],
   renderShell: async (_verdict, { path }) => {
-    await goTo(router, path);
+    await settle(router, path);
     return page();
   },
   document: (body, { path }) => fillShell(titles.get(path), body),
@@ -81,6 +82,32 @@ console.log(result.tally); // { shell: 2, redirect: 1, notFound: 0, document: 1 
 
 `renderShell` returns a template and this package renders it; return a string
 and it is written as-is. `dryRun: true` plans everything and writes nothing.
+
+## Settling the router on each path
+
+A server render reads the router only once its transition has landed,
+resolves included.
+[`settle(router, path)`](/api/lit-ui-router-ssr/functions/settle) sets the
+url, syncs the router to it, and resolves with the transition that landed, so
+the synchronous render after it reads every resolve. A `redirectTo` chain
+settles on its final state, and a path the router already stands on resolves
+at once.
+
+A page fails to land in three ways, and each rejects rather than hangs:
+
+- **No rule matches.** A url no state claims, on a router with no `otherwise`
+  rule, rejects with an `Error` naming it. An `otherwise` rule is itself a
+  match and settles on its state.
+- **A resolve fails.** The promise rejects with the transition's `Rejection`,
+  the resolve's error in its `detail`. Core's `defaultErrorHandler` still
+  logs it.
+- **Nothing lands in time.**
+  [`timeout`](/api/lit-ui-router-ssr/interfaces/SettleOptions) bounds the
+  wait, `10_000` ms by default; `0` waits without a limit.
+
+`settle()` never calls `router.start()`, which runs once per router: it drives
+`urlService` directly, so a page loop calls it once per path on the same
+router, started or not.
 
 ## Verdict to artefact
 

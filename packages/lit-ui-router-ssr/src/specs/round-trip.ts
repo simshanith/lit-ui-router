@@ -7,7 +7,8 @@ import type { TemplateResult } from 'lit';
 import { withRouterSync } from 'lit-ui-router/context';
 import type { UIRouterLit } from 'lit-ui-router/pure';
 import { hydrateRoot } from '../client.js';
-import { goTo, makeRouter } from './fixture.js';
+import { settle } from '../settle.js';
+import { makeRouter } from './fixture.js';
 
 /** A page template, drawn by the server and re-rendered by the client. */
 export type Page = (router: UIRouterLit) => TemplateResult;
@@ -19,7 +20,7 @@ export const draw = async (
   path: string,
 ): Promise<string> => {
   const router = makeRouter();
-  await goTo(router, path);
+  await settle(router, path);
   return withRouterSync(router, () =>
     collectResultSync(
       render(page(router), {
@@ -66,7 +67,7 @@ const tick = (): Promise<void> =>
   });
 
 /** Flushes the wakes the root walk starts: each level's update wakes the next. */
-export const settle = async (container: HTMLElement): Promise<void> => {
+export const drain = async (container: HTMLElement): Promise<void> => {
   for (let pass = 0; pass < 10; pass += 1) {
     await tick();
     if (!container.querySelector('[defer-hydration]')) break;
@@ -114,7 +115,7 @@ export const hydrateInto = async (
   path: string,
 ): Promise<{ router: UIRouterLit; release: () => void }> => {
   const router = makeRouter();
-  await goTo(router, path);
+  await settle(router, path);
   const release = hydrateRoot(container, page(router));
   expect(release).toBeTypeOf('function');
   return { router, release: release as () => void };
@@ -130,7 +131,7 @@ export const boot = async (
   path: string,
 ): Promise<UIRouterLit> => {
   const { router, release } = await hydrateInto(container, page, path);
-  await settle(container);
+  await drain(container);
   release();
   return router;
 };

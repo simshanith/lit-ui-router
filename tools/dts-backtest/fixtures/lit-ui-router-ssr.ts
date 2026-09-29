@@ -9,6 +9,8 @@ import {
   type PrerenderTally,
   type RedirectLine,
   type RenderContext,
+  settle,
+  type SettleOptions,
 } from 'lit-ui-router-ssr';
 import type { MountConfig } from 'ui-router-server';
 
@@ -34,12 +36,20 @@ const extraRules: RedirectLine[] = [
   { from: '/megacanvas', to: '/megacanvas.html', status: 301 },
 ];
 
+const router = new UIRouterLit();
+
+const settleOptions: SettleOptions = { timeout: 5_000 };
+
 const options: PrerenderOptions = {
   mounts,
-  router: new UIRouterLit(),
+  router,
   outDir: 'dist',
   paths: ['/', '/sheet/7B'],
-  renderShell: (_verdict, context) => page(context),
+  renderShell: async (_verdict, context) => {
+    const transition = await settle(router, context.path, settleOptions);
+    void transition.to().name;
+    return page(context);
+  },
   document: (body, context) => `<title>${context.file}</title>${body}`,
   extraRules,
   trailingSlash: 'both',

@@ -12,4 +12,5 @@ export {
   type RedirectLine,
   type RenderContext,
 } from './prerender.js';
+export { settle, type SettleOptions } from './settle.js';
 export { UiViewRenderer } from './ui-view-renderer.js';
