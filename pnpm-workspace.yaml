@@ -202,6 +202,7 @@ overrides:
   'undici@>=6 <6.28.1': ^6.28.1
   'undici@>=7 <7.29.1': ^7.29.1
   'undici@>=8 <8.10.2': ^8.10.2
+  'wrangler>esbuild': 0.28.2
 
 packageExtensions:
   conventional-changelog-preset-loader:
