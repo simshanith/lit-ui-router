@@ -1,11 +1,13 @@
 // Every member a release lane runs in must be inside the closure `setup --release` installs.
 import { requireEnv } from '../lib/env.core.ts';
-import { defaultExec } from '@tools/shared/exec.ts';
+import { defaultCapture, defaultExec } from '@tools/shared/exec.ts';
 import {
   type ClosureRule,
   filterArgs,
   formatMissing,
   missingFromClosure,
+  plannedScriptPackages,
+  publishNpmDryRunArgs,
   selectedNames,
   unselectedWorkspaceEdges,
 } from './check-release-closure.core.ts';
@@ -47,6 +49,11 @@ const RULES: (ClosureRule & { select: (member: Member) => boolean })[] = [
   },
 ];
 
+const PUBLISH_NPM: ClosureRule = {
+  need: 'the publish-npm turbo graph',
+  why: `publish-npm runs \`turbo run <pkg>#build\` and reconcile's @tools/release#pack:all, and package-qualified edges reach members no manifest names; ${FIX}`,
+};
+
 const closure = requireEnv(process.env, 'RELEASE_CLOSURE');
 const [{ members }, { stdout }] = await Promise.all([
   loadWorkspace(workspaceRoot),
@@ -57,6 +64,11 @@ const [{ members }, { stdout }] = await Promise.all([
   ),
 ]);
 const selected = selectedNames(stdout);
+const publishable = members.filter(isPublishable).map((member) => member.name);
+// root-anchored: turbo narrows a run to the package it is invoked from
+const plan = await defaultCapture('turbo', publishNpmDryRunArgs(publishable), {
+  cwd: workspaceRoot,
+});
 
 let failed = false;
 for (const rule of RULES) {
@@ -74,6 +86,18 @@ for (const rule of RULES) {
     continue;
   }
   console.log(`${CHECK}: ${rule.need}: ${required.length} selected`);
+}
+
+const planned = plannedScriptPackages(plan.stdout);
+const unplanned = missingFromClosure(planned, selected);
+if (planned.length === 0) {
+  console.error(`${CHECK}: turbo planned no script for ${PUBLISH_NPM.need}`);
+  failed = true;
+} else if (unplanned.length > 0) {
+  console.error(`${CHECK}: ${formatMissing(PUBLISH_NPM, unplanned)}`);
+  failed = true;
+} else {
+  console.log(`${CHECK}: ${PUBLISH_NPM.need}: ${planned.length} selected`);
 }
 
 const edges = unselectedWorkspaceEdges(members, selected);

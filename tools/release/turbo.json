@@ -39,9 +39,9 @@
       "dependsOn": ["pack:all"]
     },
     "check:release-closure": {
-      // Reads manifests only, never node_modules, so the verdict is honest
-      // before any release lane installs. The closure value lives in the mise
-      // config, so a change to it must re-run this.
+      // Reads manifests and turbo's plan only, never node_modules, so the
+      // verdict is honest before any release lane installs. The closure value
+      // lives in the mise config, so a change to it must re-run this.
       "inputs": [
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/**/package.json",
@@ -50,6 +50,7 @@
         "!$TURBO_ROOT$/**/node_modules/**",
         "!$TURBO_ROOT$/.claude/**",
         "$TURBO_ROOT$/pnpm-workspace.yaml",
+        "$TURBO_ROOT$/**/turbo.json",
         "$TURBO_ROOT$/.config/mise/config.toml",
         "$TURBO_ROOT$/tools/shared/src/**"
       ]

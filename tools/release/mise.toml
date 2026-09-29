@@ -161,8 +161,8 @@ run = 'PACKAGE="${usage_package?}" INCREMENT="${usage_increment?}" OTHER_INCREME
 
 [tasks.check_release_closure]
 # turbo runs this as @tools/release#check:release-closure; a mise task so
-# RELEASE_CLOSURE needs no shell activation. Reads manifests only, so it is
-# honest before any release lane installs.
+# RELEASE_CLOSURE needs no shell activation. Reads manifests and a turbo dry
+# run, so it is honest before any release lane installs.
 description = "Assert RELEASE_CLOSURE covers every member the release lanes run in"
 run = "node src/checks/check-release-closure.ts"
 
