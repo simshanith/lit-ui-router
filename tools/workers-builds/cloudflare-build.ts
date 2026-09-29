@@ -30,10 +30,10 @@ requireManifest satisfies (dir: string) => PackageManifest;
 export type Step = readonly [command: string, args: readonly string[]];
 
 /**
- * The pnpm to bootstrap, derived from `packageManager` rather than pinned
- * again: pnpm >=11.10 self-swaps to that value anyway, so a second pin can
- * only ever be wrong, and it is wrong silently — a stale bootstrap still
- * deploys green. Deriving is also what makes this file's per-branch
+ * The pnpm to install, derived from `packageManager` rather than pinned
+ * again: pnpm does not swap versions itself (`pmOnFail: ignore`), so this is
+ * the version that runs, and a second pin could drift silently — a stale
+ * pnpm still deploys green. Deriving is also what makes this file's per-branch
  * divergence free: a branch that changes the package manager gets the right
  * bootstrap with no edit here.
  */
