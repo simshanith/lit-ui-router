@@ -152,7 +152,7 @@ override **replaces** the root's `dependsOn`, so each one restates the root
 umbrella's list before its own leaves.
 
 `with` is only for persistent sidecars: `e2e` keeps `wrangler:dev` running
-beside `cypress open`. turbo 2.11.3+ stops a `with` sidecar when its parent
+beside `cypress open`. turbo stops a `with` sidecar when its parent
 exits and does not count that as a failure, so on a finite task a sidecar that
 outlives its parent is cut short and the run still reports green.
 `check:graph-edges` fails on `with` under any non-persistent task.
