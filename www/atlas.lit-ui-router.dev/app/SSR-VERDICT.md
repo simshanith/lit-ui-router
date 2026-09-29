@@ -575,9 +575,9 @@ package answers these route reads:
 The router's own hooks stay where the package has no answer: `onSuccess` for
 the document title and the scroll, which reads the `sheet` resolve; the
 Navigation API plugin's `intercept`, which reads the tail of `successfulTransitions`;
-the slideshow's `onBefore`, which must run before resolves start; the analytics
-`page_view`, a side effect; and `goTo`'s paired `onSuccess`/`onError` in
-`prerender.ts` (F3).
+the slideshow's `onBefore`, which must run before resolves start; and the analytics
+`page_view`, a side effect. `prerender.ts` drives the router with `settle()`
+from `lit-ui-router-ssr` (F3).
 
 **The guard.** Once the router settles on each page, `prerender.ts` builds a
 `RefController` over `routeRef(router)` on a host that never connects and
@@ -623,8 +623,8 @@ Findings:
   that path inside `withRouterSync`.
 - **F3 — the ref has no failure channel.** `routeRef` is fed by `onSuccess`
   alone, so every value it holds is settled and a failed transition never
-  reaches it. `goTo` keeps its `onError`, so a page that fails to settle fails
-  the build.
+  reaches it. `settle()` rejects on a failed transition, so a page that fails
+  to settle fails the build.
 - **F4 — `options.runtime` with real layers has no consumer in the atlas.** The
   atlas has no Effect services and no layers, and every call runs on Effect's
   default runtime. `RefRuntime` is `runFork` and `runSync` over effects that

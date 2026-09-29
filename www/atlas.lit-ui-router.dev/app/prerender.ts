@@ -61,7 +61,7 @@ const PLATES = allSheets(manifest);
 await import('lit-ui-router-ssr/register');
 const { UIRouterLit } = await import('lit-ui-router/pure');
 const { installServerLocation } = await import('ui-router-server/location');
-const { prerender } = await import('lit-ui-router-ssr');
+const { prerender, settle } = await import('lit-ui-router-ssr');
 const { RouterRefController } = await import('lit-ui-router-effect');
 const { withRouterSync } = await import('lit-ui-router/context');
 const views = await import('./src/views.ts');
@@ -161,30 +161,6 @@ router.urlService.rules.initial((_match, parsed) => ({
 }));
 router.urlService.rules.otherwise({ state: 'atlas.notFound' });
 
-let started = false;
-
-/** Settles the one router on `path`; `start()` syncs the first url itself. */
-const goTo = async (path: string): Promise<void> => {
-  const settled = new Promise<void>((resolve, reject) => {
-    const offSuccess = router.transitionService.onSuccess({}, () => {
-      offSuccess();
-      offError();
-      resolve();
-    });
-    const offError = router.transitionService.onError({}, (transition) => {
-      offSuccess();
-      offError();
-      reject(new Error(`prerender: ${path} — ${String(transition.error())}`));
-    });
-  });
-  router.urlService.url(path);
-  if (!started) {
-    started = true;
-    router.start();
-  }
-  await settled;
-};
-
 /** The sheet each `/sheet/*` page is, by path. */
 const sheetOf = new Map(PLATES.map((row): [string, string] => [href.sheet(row.num), row.num]));
 const routeRefFailures: string[] = [];
@@ -262,8 +238,10 @@ const result = await prerender({
   extraRules: megacanvas,
   // The default `[UiViewRenderer]` answers for `<ui-view>` alone; the atlas's
   // own light-DOM elements each fall back to a plain tag around their children.
+  // `settle()` drives the url directly and never calls `router.start()`; a
+  // page that fails to land rejects, which fails the build.
   renderShell: async (_verdict, { path }) => {
-    await goTo(path);
+    await settle(router, path);
     checkRouteRef(path);
     return views.page(router);
   },

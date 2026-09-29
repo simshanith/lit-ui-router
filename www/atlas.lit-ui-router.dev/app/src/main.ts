@@ -54,7 +54,13 @@ const pageSettled = async (): Promise<void> => {
 
 let release: false | (() => void) = false;
 try {
-  release = hydrateRoot(root, page(router));
+  release = hydrateRoot(root, page(router), {
+    // Every served view reports its wake; anything but an adoption is a finding.
+    onAdopt: (view, outcome, error) => {
+      if (import.meta.env.DEV && outcome !== 'adopted')
+        console.warn(`atlas: a served <ui-view> ${outcome}`, view, error);
+    },
+  });
 } catch (error) {
   // A mutated document: the container comes back cold-renderable.
   if (import.meta.env.DEV) console.warn('atlas: the served page was not adopted', error);
