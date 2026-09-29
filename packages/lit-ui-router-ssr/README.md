@@ -106,7 +106,7 @@ child, no value. Hydration sets the property on the client. A routed template th
 element by property serves that element empty:
 
 ```text
-<!--lit-part z+EcqXO4WYo=--><!--lit-node 0--><x-plate ></x-plate><!--/lit-part-->
+<!--lit-part vYJeArn6Pos=--><!--lit-node 0--><x-card ></x-card><!--/lit-part-->
 ```
 
 Write what the page has to carry as the element's children, in the same template, with the
@@ -115,17 +115,18 @@ child part, and the element renders nothing of its own:
 
 ```typescript
 import { html } from 'lit';
-import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 
-const plate = (fragment: string) =>
-  html`<x-plate .fragment=${fragment}>${unsafeHTML(fragment)}</x-plate>`;
+const card = (post: Post) =>
+  html`<x-card .post=${post}>
+    <h2>${post.title}</h2>
+    <p>${post.summary}</p>
+  </x-card>`;
 ```
 
 A branch on `isServer` that writes the children on the server only draws a different template on
 each side: the enclosing view cannot adopt it, drops what the server drew and renders over it. The
 other answer is a renderer of the element's own, passed in `elementRenderers` alongside
-`UiViewRenderer`, that draws the property on the server. The atlas's plates are the worked example:
-<https://github.com/simshanith/lit-ui-router/blob/worktree-altitude-atlas/www/atlas.lit-ui-router.dev/app/src/views.ts>
+`UiViewRenderer`, that draws the property on the server.
 
 ## Registering the elements
 

@@ -127,7 +127,7 @@ when the template hydrates. A routed template that feeds a child element by
 property therefore serves that element empty:
 
 ```text
-<!--lit-part z+EcqXO4WYo=--><!--lit-node 0--><x-plate ></x-plate><!--/lit-part-->
+<!--lit-part vYJeArn6Pos=--><!--lit-node 0--><x-card ></x-card><!--/lit-part-->
 ```
 
 Anything the served page has to show arrives as an attribute, as children, or
@@ -137,10 +137,12 @@ properties over it:
 
 ```ts
 import { html } from 'lit';
-import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 
-const plate = (fragment: string) =>
-  html`<x-plate .fragment=${fragment}>${unsafeHTML(fragment)}</x-plate>`;
+const card = (post: Post) =>
+  html`<x-card .post=${post}>
+    <h2>${post.title}</h2>
+    <p>${post.summary}</p>
+  </x-card>`;
 ```
 
 The server emits the children, the `hydrate()` walk described under
@@ -151,9 +153,7 @@ different template on each side, which the enclosing view cannot adopt: it
 drops what the server drew and renders over it. The other answer is a renderer
 for the element, passed in
 [`elementRenderers`](/api/lit-ui-router-ssr/interfaces/PrerenderOptions#elementrenderers)
-alongside `UiViewRenderer`, that draws the property on the server. The atlas's
-plates are a worked example:
-<https://github.com/simshanith/lit-ui-router/blob/worktree-altitude-atlas/www/atlas.lit-ui-router.dev/app/src/views.ts>
+alongside `UiViewRenderer`, that draws the property on the server.
 
 ## Development and production builds
 
