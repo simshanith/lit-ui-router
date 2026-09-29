@@ -180,9 +180,38 @@ const card = (post: Post) =>
 The server emits the children, the `hydrate()` walk described under
 [The hydration model](#the-hydration-model) adopts them as the same child part
 and sets `post`, and the card keeps the data for its behaviour while the
-template owns what shows. An `isServer` branch that writes the children on the
-server only draws a different template on each side, which the enclosing view
-cannot adopt: it drops what the server drew and renders over it.
+template owns what shows.
+
+Write the children on both sides. A branch on `isServer` that writes them on
+the server alone looks like a way to serve the content without drawing it
+twice:
+
+```ts
+import { html, isServer } from 'lit';
+
+// ❌ two templates: the client cannot adopt what the server drew
+const card = (post: Post) =>
+  isServer
+    ? html`<x-card .post=${post}>
+        <h2>${post.title}</h2>
+        <p>${post.summary}</p>
+      </x-card>`
+    : html`<x-card .post=${post}></x-card>`;
+```
+
+The served page carries the children, under a part marker that names the
+template that drew them:
+
+```text
+<!--lit-part EdxohtX2HMw=--><!--lit-node 0--><x-card  defer-hydration><h2><!--lit-part-->Hello<!--/lit-part--></h2><p><!--lit-part-->A first post.<!--/lit-part--></p></x-card><!--/lit-part-->
+```
+
+On the client `isServer` is false, so the enclosing `ui-view` hydrates the
+second template, whose own marker would read `vYJeArn6Pos=`, against that one.
+The digests differ, `hydrate()` throws on the mismatch, and the view drops
+everything the server drew inside it and renders cold. The served card and its
+children go, the client draws the empty card in their place, and in development
+the console warns that the element could not adopt the server render.
 
 The other answer is a renderer for the card. `LitElementRenderer` from
 `@lit-labs/ssr`, passed beside `UiViewRenderer`, sets the property on the
