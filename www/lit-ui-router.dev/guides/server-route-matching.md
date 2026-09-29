@@ -1120,7 +1120,10 @@ spurious 404.
 **Trailing slashes are strict on both sides.** `/app/welcome/` 404s just as
 the client would refuse to match it. If your client relaxes
 [`strictMode`](https://ui-router.github.io/core/docs/latest/interfaces/_url_interface_.urlmatcherconfig.html),
-pass the same relaxation as the mount's `config`.
+pass the same relaxation as the mount's `config`. A static host that serves
+`<subpath>/index.html` by redirecting onto the slashed url makes that
+relaxation mandatory — see
+[static hosts add a trailing slash](/packages/ssr#static-hosts-add-a-trailing-slash).
 
 **The 404 UX is asymmetric — by design.** With the flagship pattern,
 client-side navigation to an unknown URL still renders the in-router

@@ -115,8 +115,11 @@ export interface PrerenderOptions {
   /**
    * `'both'` (default) emits every generated redirect line twice, with and
    * without the trailing slash: a static host that appends one would otherwise
-   * miss the rule. Shell verdicts need no pairing — they are written as
-   * `<subpath>/index.html`, which both spellings reach.
+   * miss the rule. Shell verdicts need no rules line — they are written as
+   * `<subpath>/index.html`, which both spellings reach — but a host that
+   * reaches it by redirecting `<subpath>` to `<subpath>/` boots the client at
+   * the slashed url, so the client's `strictMode(false)` and the mount's
+   * `config: { strict: false }` must both admit it.
    */
   trailingSlash?: 'both' | 'exact';
   /**
@@ -247,6 +250,20 @@ const warnUnclaimed = (path: string): void => {
   );
 };
 
+const warnStrictSlash = async (
+  resolver: ServerRouter,
+  path: string,
+): Promise<void> => {
+  // DEV folds away in dist/*.js; see check:dev-split and dev-warnings.json.
+  if (!import.meta.env.DEV) return;
+  const slashed = await resolver.resolve(`${path}/`);
+  if (slashed.kind === 'shell' && slashed.status === undefined) return;
+  console.warn(
+    'lit-ui-router-ssr: this page is written as <subpath>/index.html, which static hosts serve by redirecting <subpath> to <subpath>/, and its mount rejects the trailing slash. Pass `config: { strict: false }` on the mount and call `router.urlService.config.strictMode(false)` on the client:',
+    path,
+  );
+};
+
 /**
  * Emits a static site from a mount table's verdicts: a shell verdict becomes
  * `<subpath>/index.html`, a redirect becomes a rules line and no page, and the
@@ -351,6 +368,7 @@ export async function prerender(
     pages.push({ path, file, verdict, bytes: encoder.encode(html).length });
   };
 
+  let slashProbed = false;
   const uninstall = provideRouter(root, router);
   try {
     for await (const path of paths) {
@@ -358,6 +376,16 @@ export async function prerender(
       if (verdict.kind === 'shell') {
         const subpath = subpathIn(verdict.mount, path);
         tally.shell += 1;
+        if (
+          import.meta.env.DEV &&
+          !slashProbed &&
+          subpath !== '' &&
+          verdict.status === undefined &&
+          !path.endsWith('/')
+        ) {
+          slashProbed = true;
+          await warnStrictSlash(resolver, path);
+        }
         await emit(verdict, path, subpath, fileFor(subpath));
         continue;
       }

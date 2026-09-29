@@ -75,6 +75,27 @@ on. `dryRun: true` plans all of it and writes nothing.
 Files land through `node:fs`, imported lazily on first write; pass `write` to emit into memory or a
 virtual fs instead.
 
+## Static hosts add a trailing slash
+
+A shell page lands at `<subpath>/index.html`. Cloudflare Pages, Netlify, and S3-style hosts serve
+that file for `/sheet/7B` by answering 308 onto `/sheet/7B/`, so the client boots at the slashed url.
+`@uirouter/core`'s default `strictMode` refuses the trailing slash, and the app boots into its
+not-found state over the correct prerendered page. A host with directory-index redirects makes the
+pairing mandatory — relax both sides:
+
+```typescript
+// the browser router
+router.urlService.config.strictMode(false);
+
+// the mount prerender() resolves against
+const mounts = { '/': { routes, config: { strict: false } } };
+```
+
+The mount half holds at build time too: `prerender()` takes every verdict from it, and the live
+server answers from the same table. A preview server such as `vite preview` serves the file without
+the redirect, so only the deployed site shows the failure. The development build warns once when the
+first page's slashed spelling does not resolve to the same shell.
+
 ## Settling the router on each path
 
 A server render reads the router only once its transition has landed, resolves included.

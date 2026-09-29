@@ -136,6 +136,31 @@ writes the Cloudflare Pages / Netlify file, `'none'` writes nothing and leaves
 `result.rules` to you, and a function receives the lines and writes whatever
 your host reads.
 
+## Static hosts add a trailing slash
+
+A shell page lands at `<subpath>/index.html`. Cloudflare Pages, Netlify, and
+S3-style hosts serve that file for `/sheet/7B` by answering 308 onto
+`/sheet/7B/`, so the client boots at the slashed url. `@uirouter/core`'s
+default
+[`strictMode`](https://ui-router.github.io/core/docs/latest/interfaces/_url_interface_.urlmatcherconfig.html)
+refuses the trailing slash, and the app boots into its not-found state over
+the correct prerendered page. A host with directory-index redirects makes the
+pairing mandatory — relax both sides:
+
+```ts
+// the browser router
+router.urlService.config.strictMode(false);
+
+// the mount prerender() resolves against
+const mounts = { '/': { routes, config: { strict: false } } };
+```
+
+The mount half holds at build time too: `prerender()` takes every verdict
+from it, and the live server answers from the same table. A preview server
+such as `vite preview` serves the file without the redirect, so only the
+deployed site shows the failure. The development build warns once when the
+first page's slashed spelling does not resolve to the same shell.
+
 ## One render at a time
 
 `withRouterSync` is a module slot, so renders run sequentially — there is
@@ -274,10 +299,12 @@ them through the `development` export condition — see
 [Development & Production Builds](/guides/development-builds) for the
 mechanism.
 
-One warning exists here: a path that verdicts `notFound` with no `otherwise`
-projection to fall back on logs a console warning naming that path, because
-nothing was emitted for it. `result.warnings` carries the same list in both
-builds.
+Two warnings come from `prerender()`. A path that verdicts `notFound` with no
+`otherwise` projection to fall back on logs a console warning naming that
+path, because nothing was emitted for it; `result.warnings` carries the same
+list in both builds. A mount that refuses the first page's trailing-slash
+spelling logs one warning naming that page — see
+[Static hosts add a trailing slash](#static-hosts-add-a-trailing-slash).
 
 ## Registering the elements
 
