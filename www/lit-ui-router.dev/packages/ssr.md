@@ -141,7 +141,7 @@ customElements.define('x-card', XCard);
 ```
 
 A routed template that feeds it by property,
-`html\`<x-card .post=${post}></x-card>\``, serves the card empty:
+`` html`<x-card .post=${post}></x-card>` ``, serves the card empty:
 
 ```text
 <!--lit-part vYJeArn6Pos=--><!--lit-node 0--><x-card  defer-hydration></x-card><!--/lit-part-->

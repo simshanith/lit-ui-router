@@ -119,7 +119,7 @@ class XCard extends LitElement {
 customElements.define('x-card', XCard);
 ```
 
-A routed template that feeds it by property, `html\`<x-card .post=${post}></x-card>\``, serves the
+A routed template that feeds it by property, `` html`<x-card .post=${post}></x-card>` ``, serves the
 card empty:
 
 ```text
