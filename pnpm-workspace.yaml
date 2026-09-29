@@ -206,7 +206,8 @@ packageExtensions:
 
 verifyDepsBeforeRun: false
 
-# Keeps pnpm-lock.yaml one document; mise owns the pnpm version.
+# GitHub's dependency graph and the exclude prune read only the first lockfile document
+# (dependabot-core#15904), so pnpm records no env document; mise owns the pnpm version.
 pmOnFail: ignore
 
 linkWorkspacePackages: true
