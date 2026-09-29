@@ -2,8 +2,6 @@
 version: 2
 updates:
   # root pnpm workspace — npm ecosystem covers pnpm + catalogs
-  # updater lacks pnpm 11 (workspace updates blocked; alerts unaffected):
-  # https://github.com/dependabot/dependabot-core/issues/14794
   - package-ecosystem: 'npm'
     directory: '/'
     schedule:
@@ -16,14 +14,14 @@ updates:
       # node is pinned via mise; keep @types/node on the matching major
       - dependency-name: '@types/node'
         update-types: ['version-update:semver-major']
-      # vite majors change lockfile peer-keys, which the updater corrupts (#14794) — bump manually
+      # vite majors change lockfile peer-keys, which the updater corrupts (dependabot-core#14794) — bump manually
       - dependency-name: 'vite'
         update-types: ['version-update:semver-major']
     commit-message:
       prefix: 'chore'
       include: 'scope'
     groups:
-      # regenerate patches/@vitest__browser.patch on every vitest bump (content-hashed target)
+      # vitest and @vitest/* release in lockstep
       vitest:
         patterns:
           - 'vitest'
