@@ -24,3 +24,7 @@ front_matter_title = ""
 
 [MD041]
 front_matter_title = ""
+
+# CLAUDE.md is a one-line `@AGENTS.md` import with no heading.
+[per-file-ignores]
+"CLAUDE.md" = ["MD041"]

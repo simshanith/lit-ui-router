@@ -39,7 +39,9 @@ Thumbs.db
 certs/
 
 .turbo
-.claude
+.claude/*
+!.claude/settings.json
+!.claude/skills/
 
 # mise local overrides (machine-local env, e.g. TURBO_TOKEN); load after the
 # checked-in config and win, so they stay untracked. *.local.env covers the

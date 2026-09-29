@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm view:*)",
+      "Bash(turbo run lint:*)",
+      "Bash(turbo run typecheck:*)",
+      "Bash(turbo run format:check:*)",
+      "Bash(turbo run check:*)",
+      "Bash(turbo query:*)",
+      "Bash(mise run lint_:*)",
+      "Bash(mise tasks:*)",
+      "Bash(mise ls:*)",
+      "Bash(oxlint:*)",
+      "Bash(oxfmt --check:*)",
+      "Bash(pnpm exec oxlint:*)",
+      "Bash(pnpm exec commitlint:*)",
+      "Bash(pnpm peers check:*)",
+      "Bash(pnpm run typecheck:*)",
+      "Bash(pnpm typecheck:*)",
+      "Bash(pnpm config get:*)",
+      "Bash(pnpm --version)",
+      "Bash(npm ls:*)",
+      "Bash(npm pack --dry-run:*)"
+    ]
+  }
+}
