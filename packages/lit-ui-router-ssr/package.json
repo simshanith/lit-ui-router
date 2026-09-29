@@ -99,6 +99,11 @@
     "lit-ui-router": "catalog:publishedPeerSsr",
     "ui-router-server": "catalog:publishedPeerSsr"
   },
+  "peerDependenciesMeta": {
+    "@lit-labs/ssr-client": {
+      "optional": true
+    }
+  },
   "engines": {
     "node": ">=22.12"
   },
