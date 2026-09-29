@@ -31,8 +31,10 @@ npm install lit-ui-router-ssr
 pnpm add lit-ui-router-ssr
 ```
 
-`lit-ui-router`, `ui-router-server`, `@lit-labs/ssr`, `lit`, and
-`@uirouter/core` are peer dependencies.
+`lit-ui-router`, `ui-router-server`, `@lit-labs/ssr`, `@lit-labs/ssr-client`, `lit`,
+and `@uirouter/core` are peer dependencies. `@lit-labs/ssr` is the server half
+and `@lit-labs/ssr-client` the client half, so a bundle takes one or the other,
+never both.
 
 ## What this package owns
 
