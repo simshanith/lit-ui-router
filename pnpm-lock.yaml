@@ -88,7 +88,7 @@ catalogs:
       specifier: ^7.2.1
       version: 7.2.1
     '@vitest/browser':
-      specifier: ^5.0.1
+      specifier: ^5.0.2
       version: 5.0.2
     '@vitest/browser-playwright':
       specifier: ^5.0.2
