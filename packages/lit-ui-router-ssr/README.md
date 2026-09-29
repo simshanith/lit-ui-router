@@ -338,6 +338,12 @@ if (!release) render(page(router), root);
   theirs. Either way the drop starts at the render: what the author wrote ahead of it stays, and the
   view takes it as its fallback set. A view carrying no served marker at all holds no render of ours:
   the adopter leaves it alone, and all of it is that view's fallback content.
+- **Each view reports its outcome.** At its wake, every served view dispatches `ui-view:adopt`
+  (`uiViewAdoptEventName`), bubbling and composed, with `detail.outcome` one of `adopted` — its
+  served nodes are the live ones — `fell-back` — a mismatch or a lost pair, with `detail.error`
+  carrying the cause — or `none`, nothing to adopt. It fires once per view, parent first, in
+  production as in development. `hydrateRoot()`'s `onAdopt(view, outcome, error)` option receives
+  the same reports for every view its walk reaches, a view the pin adopts after the release included.
 - **A mutated document throws.** `hydrateRoot()` rethrows what `hydrate()` threw, over a container it
   first leaves cold-renderable: no element still asleep behind `defer-hydration`, no marker still
   hidden behind the prefix. The caller renders over the container.

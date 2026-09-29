@@ -5,7 +5,8 @@ import { UiView } from 'lit-ui-router/pure';
 import { adoptUiViewContext } from '../adopt-context.js';
 import '../register.js';
 
-import { hydrateRoot } from '../client.js';
+import { hydrateRoot, uiViewAdoptEventName } from '../client.js';
+import type { AdoptOutcome, UiViewAdoptEvent } from '../client.js';
 import { settle } from '../settle.js';
 import { UiViewRenderer } from '../ui-view-renderer.js';
 import {
@@ -711,5 +712,209 @@ describe('the mismatch warning', () => {
     expect(warnedText(warn)).toContain('could not adopt the server render');
     expect(warnedText(warn)).not.toContain('router.start()');
     expect(container.querySelector('.other')?.textContent).toBe('other');
+  });
+});
+
+/** One report, as both the event and `onAdopt` carry it. */
+type Report = [view: Element, outcome: AdoptOutcome, error?: unknown];
+
+/** Every `ui-view:adopt` that reaches `target`, in dispatch order. */
+const listen = (target: EventTarget): Report[] => {
+  const reports: Report[] = [];
+  target.addEventListener(uiViewAdoptEventName, (event) => {
+    const { detail, target: view } = event as UiViewAdoptEvent;
+    reports.push(
+      'error' in detail
+        ? [view as Element, detail.outcome, detail.error]
+        : [view as Element, detail.outcome],
+    );
+  });
+  return reports;
+};
+
+/** The round trip with `onAdopt` wired, returning what the callback received. */
+const bootReporting = async (
+  container: HTMLElement,
+  path: string,
+): Promise<Report[]> => {
+  const received: Report[] = [];
+  const router = makeRouter();
+  await settle(router, path);
+  const release = hydrateRoot(container, rootTemplate(router), {
+    onAdopt: (view, outcome, error) => {
+      received.push(
+        outcome === 'fell-back' ? [view, outcome, error] : [view, outcome],
+      );
+    },
+  });
+  expect(release).toBeTypeOf('function');
+  await drain(container);
+  (release as () => void)();
+  return received;
+};
+
+describe('the hydration outcome', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it('reports adopted once per view, parent first, with no error', async () => {
+    const { container } = serve(await drawShell('/shell/detail'));
+    const reports = listen(document);
+
+    const received = await bootReporting(container, '/shell/detail');
+
+    const [outer, nested] = views(container);
+    expect(reports).toEqual([
+      [outer, 'adopted'],
+      [nested, 'adopted'],
+    ]);
+    expect(received).toEqual(reports);
+  });
+
+  it('reports fell-back with the error for the view drawn for another state', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const { container } = serve(await drawShell('/shell/detail'));
+    const reports = listen(container);
+
+    const received = await bootReporting(container, '/shell/other');
+
+    const [outer, nested] = views(container);
+    expect(reports).toHaveLength(2);
+    expect(reports[0]).toEqual([outer, 'adopted']);
+    expect(reports[1][0]).toBe(nested);
+    expect(reports[1][1]).toBe('fell-back');
+    expect(reports[1][2]).toBeInstanceOf(Error);
+    expect(received).toEqual(reports);
+  });
+
+  it('reports none for a view the document drew empty', async () => {
+    const { container } = serve(await drawShell('/shell'));
+    const reports = listen(container);
+
+    const received = await bootReporting(container, '/shell/detail');
+
+    const [outer, nested] = views(container);
+    expect(reports).toEqual([
+      [outer, 'adopted'],
+      [nested, 'none'],
+    ]);
+    expect(received).toEqual(reports);
+  });
+
+  it('bubbles out of a shadow root', async () => {
+    const { container } = serve(await drawShell('/shell/detail'));
+    const host = document.createElement('div');
+    document.body.append(host);
+    host.attachShadow({ mode: 'open' }).append(container);
+    const reports = listen(document);
+
+    await boot(container, rootTemplate, '/shell/detail');
+
+    expect(reports.map(([, outcome]) => outcome)).toEqual([
+      'adopted',
+      'adopted',
+    ]);
+  });
+
+  it('reports in production, where the warning is folded away', async () => {
+    vi.stubEnv('DEV', false);
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const { container } = serve(await drawShell('/shell/detail'));
+    const reports = listen(container);
+
+    await boot(container, rootTemplate, '/shell/other');
+
+    expect(warn).not.toHaveBeenCalled();
+    expect(reports.map(([, outcome]) => outcome)).toEqual([
+      'adopted',
+      'fell-back',
+    ]);
+  });
+
+  it('reaches onAdopt through the pin after the release', async () => {
+    const { container } = serve(await drawShell('/shell'));
+    const router = makeRouter();
+    await settle(router, '/shell');
+    const received: Report[] = [];
+
+    const release = hydrateRoot(container, rootTemplate(router), {
+      onAdopt: (view, outcome) => received.push([view, outcome]),
+    });
+    const app = container.querySelector('ui-router')!;
+    const view = app.querySelector<UiView>('ui-view')!;
+    app.remove();
+    (release as () => void)();
+    await view.updateComplete;
+    expect(received).toEqual([]);
+
+    container.append(app);
+    await drain(container);
+
+    const nested = view.querySelector('ui-view');
+    expect(received).toEqual([
+      [view, 'adopted'],
+      [nested, 'none'],
+    ]);
+  });
+
+  describe('from the adopter a view requests', () => {
+    let container: HTMLElement;
+    let release: () => void;
+
+    beforeEach(async () => {
+      ({ container } = serve(await drawShell('/shell/detail')));
+      ({ release } = await hydrateInto(
+        container,
+        rootTemplate,
+        '/shell/detail',
+      ));
+      await drain(container);
+    });
+
+    afterEach(() => {
+      release();
+    });
+
+    it('reports none for a view the document served no markers for', () => {
+      const view = servedView('<p class="cold">cold</p>', container);
+      const reports = listen(view);
+
+      wake(view);
+
+      expect(reports).toEqual([[view, 'none']]);
+    });
+
+    it('reports fell-back with the cause for a view whose pair is gone', () => {
+      vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const view = servedView(
+        '<!--ui-view:lit-part--><p class="detail">leaf</p><!--ui-view:/lit-part-->',
+        container,
+      );
+      const reports = listen(view);
+
+      wake(view);
+
+      expect(reports).toEqual([
+        [view, 'fell-back', 'the served part pair is gone'],
+      ]);
+    });
+
+    it('reports fell-back with what hydrate threw', () => {
+      vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const view = servedView(
+        '<!--lit-part VIEW--><p>plate</p><!--/lit-part-->',
+        container,
+      );
+      const thrown = new Error('drawn for another state');
+      view.render = () => {
+        throw thrown;
+      };
+      const reports = listen(view);
+
+      wake(view);
+
+      expect(reports).toEqual([[view, 'fell-back', thrown]]);
+    });
   });
 });
