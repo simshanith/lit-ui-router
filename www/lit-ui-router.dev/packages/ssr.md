@@ -215,8 +215,29 @@ the console warns that the element could not adopt the server render.
 
 The other answer is a renderer for the card. `LitElementRenderer` from
 `@lit-labs/ssr`, passed beside `UiViewRenderer`, sets the property on the
-server and draws the card's `render()` into a declarative shadow root, and
-does the same for every `LitElement` on the page, which is the cost the
+server and draws the card's `render()` into a declarative shadow root:
+
+```ts
+import { LitElementRenderer } from '@lit-labs/ssr';
+import { prerender, UiViewRenderer } from 'lit-ui-router-ssr';
+
+await prerender({
+  // …
+  elementRenderers: [UiViewRenderer, LitElementRenderer],
+});
+```
+
+With the first card, the one that draws `post` in its own `render()`, the
+same property binding now serves the card filled:
+
+```text
+<!--lit-part vYJeArn6Pos=--><!--lit-node 0--><x-card  defer-hydration><template shadowroot="open" shadowrootmode="open"><!--lit-part HdSxZ92CImA=--><h2><!--lit-part-->Hello<!--/lit-part--></h2><p><!--lit-part-->A first post.<!--/lit-part--></p><!--/lit-part--></template></x-card><!--/lit-part-->
+```
+
+The children stay where the card's `render()` put them, in a shadow root the
+browser attaches as it parses, and hydration adopts them there.
+`LitElementRenderer` does the same for every `LitElement` on the page,
+whether or not it has anything to show on the server, which is the cost the
 default avoids.
 
 ## Development and production builds
