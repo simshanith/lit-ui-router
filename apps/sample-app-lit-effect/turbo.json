@@ -10,7 +10,7 @@
       ],
       "dependsOn": ["^build", "^transit"]
     },
-    "typecheck": {
+    "typecheck:tsc": {
       // tsc follows imports and the tsconfig extends chain into the buildless
       // app-layer packages' raw .ts; ^transit hashes them, ^build:types can't
       "dependsOn": ["^build:types", "^transit"]

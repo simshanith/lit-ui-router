@@ -71,15 +71,15 @@
     "check:bundle": "check-bundle-inputs",
     "codecov:bundle": "upload-entry-bundles",
     "docs:api": "rimraf ../../www/lit-ui-router.dev/api/ui-router-server && typedoc",
-    "format": "oxfmt \"**/*.{ts,js,json,md}\"",
-    "format:check": "oxfmt --check \"**/*.{ts,js,json,md}\"",
-    "lint": "oxlint .",
+    "format:check:oxfmt": "oxfmt --check \"**/*.{ts,js,json,md}\"",
+    "format:oxfmt": "oxfmt \"**/*.{ts,js,json,md}\"",
+    "lint:oxlint": "oxlint .",
     "test": "node --test \"test/**/*.test.ts\"",
     "test:coverage": "mkdir -p coverage && node --test --experimental-test-coverage --test-coverage-include=\"src/**\" --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=coverage/lcov.info \"test/**/*.test.ts\" && rebase-lcov coverage/lcov.info",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
     "typecheck:runtime-globals": "tsc -p tsconfig.runtime-globals.json --noEmit",
     "typecheck:src": "tsc -p tsconfig.src.json --noEmit",
-    "typecheck:tests": "tsc -p test/tsconfig.json --noEmit"
+    "typecheck:tests": "tsc -p test/tsconfig.json --noEmit",
+    "typecheck:tsc": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
     "@release-it/conventional-changelog": "catalog:",

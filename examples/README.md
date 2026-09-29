@@ -125,7 +125,7 @@ pnpm --filter examples postinstall
 pnpm --filter examples example:install:<example-name>
 ```
 
-`pnpm --filter examples lint` fans out over each example's own `lint` script plus one `oxlint` pass against the repo's root config, which covers every example with the same plugin rule.
+`pnpm --filter examples lint:examples` fans out over each example's own `lint` script; `lint:oxlint` is one `oxlint` pass against the repo's root config, which covers every example with the same plugin rule. `turbo run lint` runs both.
 
 ## Docs Embeds
 

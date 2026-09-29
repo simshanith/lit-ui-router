@@ -8,11 +8,11 @@
     "./shell-mounts": "./src/shellMounts.ts"
   },
   "scripts": {
-    "format": "oxfmt \"**/*.{ts,json,md}\"",
-    "format:check": "oxfmt --check \"**/*.{ts,json,md}\"",
-    "lint": "oxlint .",
+    "format:check:oxfmt": "oxfmt --check \"**/*.{ts,json,md}\"",
+    "format:oxfmt": "oxfmt \"**/*.{ts,json,md}\"",
+    "lint:oxlint": "oxlint .",
     "test": "node --test \"test/**/*.test.ts\"",
-    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p test/tsconfig.json --noEmit"
+    "typecheck:tsc": "tsc -p tsconfig.json --noEmit && tsc -p test/tsconfig.json --noEmit"
   },
   "dependencies": {
     "ui-router-server": "catalog:workspace"

@@ -7,10 +7,10 @@
     "build": "vite build",
     "codecov:bundle": "upload-bundle-stats sample-app-lit-effect-esm",
     "dev": "vite",
-    "format": "oxfmt \"**/*.{js,ts,json,md,html}\"",
-    "format:check": "oxfmt --check \"**/*.{js,ts,json,md,html}\"",
-    "lint": "oxlint .",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "format:check:oxfmt": "oxfmt --check \"**/*.{js,ts,json,md,html}\"",
+    "format:oxfmt": "oxfmt \"**/*.{js,ts,json,md,html}\"",
+    "lint:oxlint": "oxlint .",
+    "typecheck:tsc": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
     "@uirouter/core": "catalog:",
