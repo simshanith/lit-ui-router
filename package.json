@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "build": "turbo run build",
+    "check:dedupe": "turbo run @tools/repo-checks#check:dedupe",
     "check:graph-edges": "turbo run @tools/repo-checks#check:graph-edges",
     "check:knip": "turbo run @tools/repo-checks#check:knip",
     "check:pack": "turbo run check:pack",

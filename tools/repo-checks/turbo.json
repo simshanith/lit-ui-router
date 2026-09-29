@@ -34,6 +34,17 @@
         "$TURBO_ROOT$/tools/shared/src/**"
       ]
     },
+    "check:dedupe": {
+      // pnpm re-resolves the whole workspace graph from its manifests and lock
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/**/package.json",
+        "!$TURBO_ROOT$/**/node_modules/**",
+        "!$TURBO_ROOT$/.claude/**",
+        "$TURBO_ROOT$/pnpm-workspace.yaml",
+        "$TURBO_ROOT$/pnpm-lock.yaml"
+      ]
+    },
     "check:graph-edges": {
       // any manifest can gain or lose a lane, any turbo.json an edge that
       // selects differently — or stops planning at all
