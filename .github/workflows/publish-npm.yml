@@ -72,7 +72,7 @@ jobs:
           # tools install fresh, checksum-verified against mise.lock
           cache: false
       - name: Install dependencies
-        run: mise run setup
+        run: mise run setup --release
       - name: Resolve package
         # tag → package name (hostile-refname safe) → workspace directory
         id: info
