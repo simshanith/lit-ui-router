@@ -98,9 +98,9 @@ A page fails to land in three ways, and each rejects rather than hangs:
 - **No rule matches.** A url no state claims, on a router with no `otherwise`
   rule, rejects with an `Error` naming it. An `otherwise` rule is itself a
   match and settles on its state.
-- **A resolve fails.** The promise rejects with the transition's `Rejection`,
-  the resolve's error in its `detail`. Core's `defaultErrorHandler` still
-  logs it.
+- **A resolve fails.** The promise rejects with an `Error` whose `cause` is
+  the transition's `Rejection`, the resolve's error in its `detail`. Core's
+  `defaultErrorHandler` still logs it.
 - **Nothing lands in time.**
   [`timeout`](/api/lit-ui-router-ssr/interfaces/SettleOptions) bounds the
   wait, `10_000` ms by default; `0` waits without a limit.

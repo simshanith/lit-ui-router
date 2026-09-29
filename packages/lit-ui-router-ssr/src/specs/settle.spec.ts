@@ -100,12 +100,14 @@ describe('settle', () => {
     expect(router.urlService.url()).toBe('/b');
   });
 
-  it('rejects with the transition’s rejection when a resolve fails', async () => {
+  it('rejects with an error whose cause is the transition’s rejection when a resolve fails', async () => {
     const router = makeRouter();
     const error = await settle(router, '/broken').catch((e: unknown) => e);
-    expect(error).toBeInstanceOf(Rejection);
-    expect((error as Rejection).type).toBe(RejectType.ERROR);
-    expect((error as Rejection).detail).toEqual(new Error('no sheet'));
+    expect(error).toBeInstanceOf(Error);
+    const cause = (error as Error).cause;
+    expect(cause).toBeInstanceOf(Rejection);
+    expect((cause as Rejection).type).toBe(RejectType.ERROR);
+    expect((cause as Rejection).detail).toEqual(new Error('no sheet'));
   });
 
   it('rejects an unknown url when the router declares no otherwise', async () => {

@@ -2,7 +2,6 @@
 import { RejectType } from '@uirouter/core';
 import type {
   RawParams,
-  Rejection,
   StateRule,
   Transition,
   UIRouter,
@@ -39,7 +38,7 @@ const maxRewrites = 10;
  * @param options - how long to wait
  * @returns the transition that landed
  * @throws an `Error` when no url rule matches `path` and the router declares no `otherwise`
- * @throws the transition's `Rejection` when it fails, a failed resolve's error in its `detail`
+ * @throws an `Error` whose `cause` is the transition's `Rejection` when it fails, a failed resolve's error in that rejection's `detail`
  * @throws an `Error` when nothing lands within {@link SettleOptions.timeout | `timeout`}
  *
  * @example
@@ -76,9 +75,8 @@ export const settle = (
       done();
       resolve(transition);
     };
-    const fail = (reason: Error | Rejection): void => {
+    const fail = (reason: Error): void => {
       done();
-      // eslint-disable-next-line typescript/prefer-promise-reject-errors -- a failed transition rejects with core's Rejection, as transitionTo() does
       reject(reason);
     };
     const offSuccess = transitionService.onSuccess({}, land) as () => void;
@@ -91,7 +89,7 @@ export const settle = (
           land(globals.successfulTransitions.peekTail());
         return;
       }
-      fail(rejection);
+      fail(new Error(rejection.message, { cause: rejection }));
     }) as () => void;
     if (timeout > 0 && timeout !== Infinity)
       timer = setTimeout(
