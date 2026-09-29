@@ -47,7 +47,8 @@ ci:pull_request
 │   │   ├── //#lint:zizmor     (with)
 │   │   ├── //#lint:toml       (with)
 │   │   └── //#lint:shellcheck (with)
-│   └── @tools/repo-checks#check:patches (with)
+│   ├── @tools/repo-checks#check:patches (with)
+│   └── @tools/repo-checks#check:dedupe  (with)
 ├── typecheck
 │   ├── //#typecheck:root      (with)
 │   ├── typecheck:src          (with)
@@ -132,7 +133,7 @@ Workspaces extend the root configuration using `"extends": ["//"]`:
 | `examples`                                                | Adds `build:embeds` (tutorial apps built as docs embeds)                                                                                                                                                                            |
 | `tools/release`                                           | Adds `check:pack`, `resolve:published` (uncached registry read), `check:published-diff`                                                                                                                                             |
 | `tools/workers-builds`                                    | Adds `check` (live Cloudflare API diff; uncached); over-approximated `test` inputs                                                                                                                                                  |
-| `tools/repo-checks`                                       | Adds `check:patches`, `check:graph-edges`, `check:task-inputs`, `check:knip` (config in root `knip.jsonc`), each keyed on repo-wide `$TURBO_ROOT$` globs; over-approximated `test` inputs                                           |
+| `tools/repo-checks`                                       | Adds `check:patches`, `check:dedupe`, `check:graph-edges`, `check:task-inputs`, `check:knip` (config in root `knip.jsonc`), each keyed on repo-wide `$TURBO_ROOT$` globs; over-approximated `test` inputs                           |
 | `tools/build_and_test`, `tools/shared`, `tools/happy-dom` | Over-approximated `test` inputs (`$TURBO_DEFAULT$`)                                                                                                                                                                                 |
 
 ## Common Commands
