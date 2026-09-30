@@ -111,11 +111,12 @@ Ask before running `mise run ci`, `mise run ci_main`, or anything that starts a 
 - Docs describe the present state and point at config files and schemas rather than restating them.
 - Match existing conventions and their vocabulary. Check `git log`/`git blame` before reversing a pattern.
 - No `isRecord`-style shape guards: validate with valibot, or cast honestly and fail loudly.
-- Reproduce a CI failure locally before speculating about it.
+- Reproduce a CI failure locally before speculating about it ([CONTRIBUTING: Reproducing a CI failure](docs/CONTRIBUTING.md#reproducing-a-ci-failure)).
 - Upstream issues, PRs and comments written by an agent carry a footer naming the agent and model.
 
 ## Skills
 
 Skills live in `.agents/skills/<name>/SKILL.md`. Claude Code reads only `.claude/skills/`, so each skill also gets a relative symlink there (`.claude/skills/<name> -> ../../.agents/skills/<name>`).
 
+- `ci-failure-repro`: reproduce a red GitHub Actions run locally from its `repro:` line.
 - `cypress-sample-app`: run a sample app on a vite dev server and drive it with one Cypress spec.
