@@ -218,7 +218,12 @@ The badge for it sits at the top of this file and in the README header. It diffs
 | ![passing](https://img.shields.io/badge/workers--builds-passing-orange)      | The dashboard drifted — a manual `--apply` is owed                        |
 | ![neutral](https://img.shields.io/badge/workers--builds-neutral-lightgrey)   | Could not verify (no/expired token, API outage) — not a claim about drift |
 
-One ordering trap. When the value being applied names a file in the repo — as `build_command` and
+The order of `--apply` and merge depends on the value. A self-contained one — an environment
+variable, or a command that names no repo file — is applied _before_ the merge: a trigger
+snapshots its environment when a build is enqueued, so pushing first spends one build on the
+old config.
+
+The trap is the other case. When the value being applied names a file in the repo — as `build_command` and
 `deploy_command` both do, pointing at [`cloudflare-build.sh`](../tools/workers-builds/cloudflare-build.sh)
 and [`cloudflare-deploy.ts`](../tools/workers-builds/cloudflare-deploy.ts) — the apply has to
 _follow_ the merge, or it breaks the preview build of every branch that does not have the file yet.
@@ -230,6 +235,8 @@ converged dashboard:
 ```sh
 gh workflow run release-signals.yml --ref main
 ```
+
+After a merge-first apply, an open PR's preview build passes only once it is rebased onto `main`.
 
 Two repository secrets drive it. Both are optional — absent, the signal reports gray rather than failing:
 
