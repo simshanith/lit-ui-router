@@ -101,13 +101,22 @@ lines with the report near the end. Save it to a file and search for `repro:`.
 Run the `repro:` line: `--force` re-runs that task while its dependencies stay
 cached. `exact:` is the command turbo ran, from the directory it ran in.
 
-A pull-request run checks out `refs/pull/<n>/merge`, the branch merged into
-`main`, not the branch head. When `main` has moved, reproduce on that commit:
+A pull-request run tests the branch merged into `main`, not the branch head.
+`refs/pull/<n>/merge` moves with `main` and disappears once the PR merges, so
+take the commit from the top of the run's log instead:
+
+```text
+Uses: simshanith/lit-ui-router/.github/workflows/build-test-run.yml@refs/pull/1036/merge (b6d39e4ad2d99bafb05ed84c4a16c916d44ee4ad)
+```
 
 ```bash
-git fetch origin pull/<n>/merge
+git fetch origin b6d39e4ad2d99bafb05ed84c4a16c916d44ee4ad
 git switch --detach FETCH_HEAD
 ```
+
+A push run tests its `headSha` (`gh run view <run-id> --json headSha`).
+`build-test.yml` is the pull-request and `main` workflow;
+`build-test-branch.yml` runs the same job on branch pushes.
 
 Where the `repro:` line isn't enough:
 
