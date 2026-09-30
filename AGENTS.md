@@ -50,7 +50,7 @@ This file is an index. The details live in [docs/CONTRIBUTING.md](docs/CONTRIBUT
 - Keep `pnpm-workspace.yaml` bare: no comments, no YAML anchors. Rationale goes in the commit or PR.
 - Overrides name their parent (`parent>child`), never a blanket range. Exact override pins can turn from floors into vulnerable ceilings; test one by deleting it.
 - Peer floors live in the `peerFloor*` and `publishedPeer*` catalogs. A released package's peer ranges admit no prerelease line.
-- Dependabot edits to reject: narrowing the `@oxc-project/runtime` floor in `publishedDependencies`, `rolldown` without `vite`, `wrangler` inside a group, and `oxlint` without `eslint-plugin-oxlint`.
+- Dependabot edits to reject: narrowing the `@oxc-project/runtime` floor in `publishedDependencies`, `rolldown` without `vite`, and `oxlint` without `eslint-plugin-oxlint`.
 - Accepted audit advisories go under `audit:` ([CONTRIBUTING: Dependency audit](docs/CONTRIBUTING.md#dependency-audit)).
 
 ## Lint and format
