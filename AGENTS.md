@@ -31,7 +31,7 @@ This file is an index. The details live in [docs/CONTRIBUTING.md](docs/CONTRIBUT
 
 ## Turbo
 
-- Read [docs/TURBO.md](docs/TURBO.md) before editing `turbo.json`.
+- Read [docs/TURBO.md](docs/TURBO.md) before editing `turbo.json`. turbo ships version-matched docs in `node_modules/turbo/docs/`: `README.md` maps tasks to pages, `reference/configuration.mdx` covers `turbo.json` fields. Check them before relying on a flag.
 - `^task` reaches direct dependencies only; a task that must order across the whole graph self-chains (see `build:types`).
 - `with:` is a co-scheduling hint, not an edge: it is unordered and gives the sidecar no dependents.
 - A task that rewrites its own inputs (`format`) or measures the host (browser, fonts) is `cache: false`.
