@@ -553,6 +553,12 @@ export interface OverviewContext {
    */
   fileNames?: readonly string[];
   /**
+   * The uploaded vitest `.vitest/` dirs: failure screenshots and `annotate`
+   * attachments. Uploaded only by a failed job that wrote some, so a URL here
+   * always has something behind it.
+   */
+  attachmentsUrl?: string;
+  /**
    * Warn-only lanes and the state each asserted. Not derivable from `summary`:
    * these lanes exit 0, so the artifact cannot tell one carrying warnings from
    * a clean one. Empty renders nothing.
@@ -569,12 +575,9 @@ export interface OverviewContext {
 export function artifactLink(
   context: OverviewContext,
 ): { markdown: string; line: string } | undefined {
-  const { artifactUrl, fileNames } = context;
-  if (artifactUrl === undefined || !artifactUrl.startsWith('https://')) {
-    return undefined;
-  }
-  if (/[\s<>]/.test(artifactUrl)) return undefined;
-  const names = fileNames ?? [];
+  const artifactUrl = safeArtifactUrl(context.artifactUrl);
+  if (artifactUrl === undefined) return undefined;
+  const names = context.fileNames ?? [];
   const which =
     names.length === 0
       ? ''
@@ -585,6 +588,28 @@ export function artifactLink(
     markdown: `[Full \`--summarize\` JSON](<${artifactUrl}>)${which} — ${what}, downloadable from this run's artifacts.`,
     line: `   run summary json: ${artifactUrl}`,
   };
+}
+
+/**
+ * Link to the vitest attachments the failing specs wrote. A browser spec saves
+ * a screenshot of the page as it failed, which no log excerpt can carry.
+ */
+export function attachmentsLink(
+  context: OverviewContext,
+): { markdown: string; line: string } | undefined {
+  const url = safeArtifactUrl(context.attachmentsUrl);
+  if (url === undefined) return undefined;
+  return {
+    markdown: `[Vitest attachments](<${url}>) — failure screenshots and \`annotate\` attachments from the failing specs, downloadable from this run's artifacts.`,
+    line: `   vitest attachments: ${url}`,
+  };
+}
+
+/** Plain https only, and nothing that could end an angle-bracket destination. */
+function safeArtifactUrl(url: string | undefined): string | undefined {
+  if (url === undefined || !url.startsWith('https://')) return undefined;
+  if (/[\s<>]/.test(url)) return undefined;
+  return url;
 }
 
 /** One run's notes: things that are wrong but not red. */
@@ -706,8 +731,9 @@ function footerMarkdown(context: OverviewContext): string[] {
       '',
     );
   }
-  const link = artifactLink(context);
-  if (link !== undefined) out.push(link.markdown, '');
+  for (const link of [attachmentsLink(context), artifactLink(context)]) {
+    if (link !== undefined) out.push(link.markdown, '');
+  }
   return out;
 }
 
@@ -831,8 +857,10 @@ function footerLines(context: OverviewContext): string[] {
 
   // Blank line first: the link is a footer for the whole block, and set flush
   // against the facts it reads as a continuation of whichever one ran last.
-  const link = artifactLink(context);
-  if (link !== undefined) lines.push('', link.line);
+  const links = [attachmentsLink(context), artifactLink(context)].filter(
+    (link) => link !== undefined,
+  );
+  if (links.length > 0) lines.push('', ...links.map((link) => link.line));
   return lines;
 }
 

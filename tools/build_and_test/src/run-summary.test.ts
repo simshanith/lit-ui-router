@@ -7,6 +7,7 @@ import {
   MISS_LIST_LIMIT,
   SLOWEST_LIMIT,
   artifactLink,
+  attachmentsLink,
   buildReports,
   cacheTally,
   cell,
@@ -796,6 +797,66 @@ describe('the artifact link in the overview', () => {
   it('is absent from both lanes without a URL', () => {
     assert.ok(!overviewMarkdown(run()).includes('--summarize'));
     assert.ok(!overviewLines(run()).some((l) => l.includes('summary json')));
+  });
+});
+
+describe('attachmentsLink', () => {
+  const URL = 'https://github.com/o/r/actions/runs/1/artifacts/3';
+
+  it('links the vitest attachments on both lanes', () => {
+    const link = attachmentsLink({ attachmentsUrl: URL });
+    assert.ok(link?.markdown.includes(`(<${URL}>)`));
+    assert.ok(link?.markdown.includes('failure screenshots'));
+    assert.equal(link?.line, `   vitest attachments: ${URL}`);
+  });
+
+  it('stays absent when nothing was uploaded', () => {
+    assert.equal(attachmentsLink({}), undefined);
+    assert.equal(attachmentsLink({ attachmentsUrl: '' }), undefined);
+  });
+
+  it('refuses anything but a plain https URL', () => {
+    assert.equal(
+      attachmentsLink({ attachmentsUrl: 'javascript:alert(1)' }),
+      undefined,
+    );
+    assert.equal(
+      attachmentsLink({ attachmentsUrl: 'https://x/a>b' }),
+      undefined,
+    );
+  });
+});
+
+describe('the attachments link in the overview', () => {
+  const SUMMARY_URL = 'https://github.com/o/r/actions/runs/1/artifacts/2';
+  const URL = 'https://github.com/o/r/actions/runs/1/artifacts/3';
+  const run = () => summary([hit(), ran('a', 100)], 0, { attempted: 2 });
+
+  // Screenshots are what a reader of a red run came for; the summary JSON is
+  // the uncapped backup of lists they have already read.
+  it('leads the summary JSON link in the markdown footer', () => {
+    const md = overviewMarkdown(run(), {
+      artifactUrl: SUMMARY_URL,
+      attachmentsUrl: URL,
+    });
+    assert.ok(md.indexOf(URL) < md.indexOf(SUMMARY_URL));
+  });
+
+  it('shares one footer block with the summary JSON on stdout', () => {
+    const lines = overviewLines(run(), {
+      artifactUrl: SUMMARY_URL,
+      attachmentsUrl: URL,
+    });
+    assert.deepEqual(lines.slice(-3), [
+      '',
+      `   vitest attachments: ${URL}`,
+      `   run summary json: ${SUMMARY_URL}`,
+    ]);
+  });
+
+  it('stands alone as the stdout footer without a summary URL', () => {
+    const lines = overviewLines(run(), { attachmentsUrl: URL });
+    assert.deepEqual(lines.slice(-2), ['', `   vitest attachments: ${URL}`]);
   });
 });
 
