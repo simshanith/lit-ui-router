@@ -117,3 +117,5 @@ Ask before running `mise run ci`, `mise run ci_main`, or anything that starts a 
 ## Skills
 
 Skills live in `.agents/skills/<name>/SKILL.md`. Claude Code reads only `.claude/skills/`, so each skill also gets a relative symlink there (`.claude/skills/<name> -> ../../.agents/skills/<name>`).
+
+- `cypress-sample-app`: run a sample app on a vite dev server and drive it with one Cypress spec.

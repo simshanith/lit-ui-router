@@ -176,11 +176,27 @@ attempt, so a handful of attempts is enough to see it, and a single green
 
 ## Iterating against a dev server
 
-```bash
-# in one terminal
-pnpm --filter sample-app-lit-vanilla dev
+Start one app's dev server (default ports and base paths are in
+[apps/README.md](../README.md#local-development); `--port` overrides):
 
-# in another (adjust port/base to the dev server)
-cd apps/sample-app-lit-e2e
-pnpm exec cypress run --config baseUrl=http://localhost:5173/app/
+```bash
+pnpm --filter sample-app-lit-vanilla dev
 ```
+
+Then run one spec against it. Vanilla's config reads `WWW_DEV_PORT`, so the
+package script works:
+
+```bash
+pnpm --dir apps/sample-app-lit-e2e test:e2e:vanilla --spec src/integration/dialog.cy.js
+```
+
+`test:e2e:mobx` and `test:e2e:effect` don't forward `--spec`; pass the config
+[`scripts/cypress-suite.ts`](scripts/cypress-suite.ts) builds instead:
+
+```bash
+pnpm --dir apps/sample-app-lit-e2e exec cypress run --config baseUrl=http://localhost:5175/app-effect/,videosFolder=cypress/videos-effect,screenshotsFolder=cypress/screenshots-effect --spec src/integration/dialog.cy.js
+```
+
+Videos land in `cypress/videos*/`; screenshots only on failure or an explicit
+`cy.screenshot()`. The specs in `src/integration/` are the reference for each
+flow (login, dialogs, location plugins); read the one nearest your change.
