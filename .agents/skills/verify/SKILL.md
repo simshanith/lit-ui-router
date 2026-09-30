@@ -40,10 +40,10 @@ fails loudly and no browser opens. Wait for readiness:
 curl -sf --retry 30 --retry-connrefused --retry-delay 1 -o /dev/null http://localhost:5273/app/
 ```
 
-vite-plugin-checker typechecks in-app; a TS error renders a full-screen
-overlay that blocks Cypress clicks. Check the vite log for `ERROR(TypeScript)`
-when clicks fail mysteriously. If the log instead says the checker's `tsc`
-is missing, no overlay can appear; run `pnpm --filter <app> typecheck` instead.
+vite-plugin-checker runs `tsc --watch` in-app; a TS error renders a
+full-screen overlay that blocks Cypress clicks. Check the vite log for
+`ERROR(TypeScript)` when clicks fail mysteriously; a clean pass logs
+`[TypeScript] No errors`.
 
 ## 3. Run one Cypress spec
 
