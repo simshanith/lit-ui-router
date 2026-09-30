@@ -1,5 +1,5 @@
 ---
-name: verify
+name: cypress-sample-app
 description: Run a sample app on a vite dev server and drive it with one Cypress spec to verify changes end-to-end. Use when a change to apps/sample-app-lit-vanilla, apps/sample-app-lit-mobx, apps/sample-app-lit-effect, or the packages they consume needs runtime verification.
 ---
 
