@@ -41,7 +41,7 @@
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/**/package.json",
         "!$TURBO_ROOT$/**/node_modules/**",
-        "!$TURBO_ROOT$/.claude/**",
+        "!$TURBO_ROOT$/.claude/worktrees/**",
         "$TURBO_ROOT$/pnpm-workspace.yaml",
         "$TURBO_ROOT$/pnpm-lock.yaml"
       ]
@@ -58,7 +58,7 @@
         "$TURBO_ROOT$/**/turbo.json",
         "$TURBO_ROOT$/**/package.json",
         "!$TURBO_ROOT$/**/node_modules/**",
-        "!$TURBO_ROOT$/.claude/**",
+        "!$TURBO_ROOT$/.claude/worktrees/**",
         "$TURBO_ROOT$/pnpm-workspace.yaml",
         "$TURBO_ROOT$/tools/shared/src/**"
       ]
@@ -81,7 +81,7 @@
         "!$TURBO_ROOT$/**/.rumdl_cache/**",
         "!$TURBO_ROOT$/www/lit-ui-router.dev/api/**",
         "!$TURBO_ROOT$/**/.cache/**",
-        "!$TURBO_ROOT$/.claude/**",
+        "!$TURBO_ROOT$/.claude/worktrees/**",
         "!$TURBO_ROOT$/.config/mise/**/*.local.toml",
         // ignored by knip.jsonc as standalone installs
         "!$TURBO_ROOT$/examples/*/**",
@@ -96,7 +96,7 @@
         "$TURBO_ROOT$/**/turbo.json",
         "$TURBO_ROOT$/**/package.json",
         "!$TURBO_ROOT$/**/node_modules/**",
-        "!$TURBO_ROOT$/.claude/**",
+        "!$TURBO_ROOT$/.claude/worktrees/**",
         "$TURBO_ROOT$/tools/shared/src/**"
       ]
     }
