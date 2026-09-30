@@ -228,7 +228,7 @@
         "$TURBO_DEFAULT$",
         "**/package.json",
         "!**/node_modules/**",
-        "!.claude/**",
+        "!.claude/worktrees/**",
         "eslint.config.ts",
         "tools/eslint/**",
         "!**/.turbo/**",
