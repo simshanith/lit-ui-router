@@ -168,8 +168,6 @@ jobs:
           retention-days: 30
           if-no-files-found: warn
       - name: Upload vitest attachments
-        # Before the report, which links it: failure screenshots are the one
-        # piece of a red browser spec a log excerpt cannot carry.
         id: vitest_attachments
         if: ${{ failure() }}
         uses: actions/upload-artifact@v7
