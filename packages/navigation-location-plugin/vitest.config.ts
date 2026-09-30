@@ -14,7 +14,6 @@ const nodeSpecs = ['src/specs/compose-navigate-url.spec.ts'];
 const browserOnlySpecs = [
   'src/specs/index.spec.ts',
   'src/specs/url-shape.spec.ts',
-  'src/specs/ci-screenshot-probe.spec.ts',
 ];
 
 // Key caches by the API port so the concurrently running `test` and
