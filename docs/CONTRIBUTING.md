@@ -101,22 +101,32 @@ lines with the report near the end. Save it to a file and search for `repro:`.
 Run the `repro:` line: `--force` re-runs that task while its dependencies stay
 cached. `exact:` is the command turbo ran, from the directory it ran in.
 
-A pull-request run tests the branch merged into `main`, not the branch head.
-`refs/pull/<n>/merge` moves with `main` and disappears once the PR merges, so
-take the commit from the top of the run's log instead:
+Two workflows run the same job:
+
+- `build-test.yml` (`build_and_test / run`) runs on pull requests and pushes to
+  `main`. A pull-request run tests the branch merged into `main`, not the
+  branch head.
+- `build-test-branch.yml` (`build_and_test (branch) / run`) runs on pushes that
+  no pull-request run covers: a branch with no PR, a PR with conflicts (it has
+  no merge ref), and `ci-main/` branches, which build the `ci:main` graph. It
+  tests the branch head. Its signal gate skips it when a PR run covers the
+  push, so a skipped branch job is not a missing run. `gh run list --branch <branch>`
+  lists both workflows' runs.
+
+The line at the top of the run's log names the commit it tested, for every
+trigger:
 
 ```text
 Uses: simshanith/lit-ui-router/.github/workflows/build-test-run.yml@refs/pull/1036/merge (b6d39e4ad2d99bafb05ed84c4a16c916d44ee4ad)
 ```
 
+Check out that SHA. `refs/pull/<n>/merge` moves with `main` and disappears
+once the PR merges, but the SHA still fetches:
+
 ```bash
 git fetch origin b6d39e4ad2d99bafb05ed84c4a16c916d44ee4ad
 git switch --detach FETCH_HEAD
 ```
-
-A push run tests its `headSha` (`gh run view <run-id> --json headSha`).
-`build-test.yml` is the pull-request and `main` workflow;
-`build-test-branch.yml` runs the same job on branch pushes.
 
 Where the `repro:` line isn't enough:
 

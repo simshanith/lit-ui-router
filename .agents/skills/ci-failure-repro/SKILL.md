@@ -11,16 +11,18 @@ Codecov checks have
 [their own section](../../../docs/CONTRIBUTING.md#reproducing-a-codecov-failure).
 This skill adds only what an unattended run needs.
 
-1. Find the run and its failing-task headline: `gh run view <run-id>`, or
-   `gh pr checks <pr>` first when you start from a PR.
+1. Find the run and its failing-task headline: `gh run view <run-id>`. From a
+   PR, start at `gh pr checks <pr>`; from a branch with no PR, or a PR with
+   conflicts, `gh run list --branch <branch>` (the `Build and Test (branch)`
+   workflow).
 2. Save `gh run view <run-id> --log-failed` to a file under `$CLAUDE_JOB_DIR/tmp`
    and search it for `repro:`. Never pipe it through `head` or `tail`; the
    report sits near the end of thousands of lines.
 3. Check whether it's already fixed before setting anything up: a later green
    run on the same branch (`gh run list --branch <branch>`), a merged PR, or
    `git log <sha>..origin/main -- <package dir>`.
-4. Check out the commit the run tested: the merge SHA from the log's `Uses:`
-   line for a PR run, `headSha` for a push. Bootstrap per
+4. Check out the commit the run tested: the SHA on the log's `Uses:` line (a
+   merge commit for a PR run, the branch head otherwise). Bootstrap per
    [AGENTS.md: Setup and commands](../../../AGENTS.md#setup-and-commands).
 5. Reproduce before explaining. Run the `repro:` line in the foreground, then
    on `origin/main` too when the run is old. Until it fails locally, say so
