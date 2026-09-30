@@ -75,6 +75,52 @@ git clean -Xdf -- packages/*/dist tools/*/dist
 
 `-X` removes only ignored files, so untracked work survives.
 
+### Reproducing a CI failure
+
+A `Build and Test` job ends with the `Turbo run summary` step. It reads every
+`--summarize` JSON the job wrote (the ci graph, the docs build, the e2e suites)
+and reports only the tasks that failed; turbo's stream also prints `ELIFECYCLE`
+for every task it cancelled. Its headline is a run annotation, so
+`gh run view <run-id>` shows it:
+
+```text
+X 1 failing task: @tools/repo-checks#check:task-inputs — 10 succeeded, 217 cached, 229 attempted
+```
+
+Each failing task gets a log excerpt and two commands, in the step summary and
+in the job log:
+
+```text
+── @tools/repo-checks#check:task-inputs (exit 1)
+   repro: turbo run check:task-inputs --filter=@tools/repo-checks --force
+   exact: cd tools/repo-checks && node check-task-inputs.ts
+```
+
+`gh run view <run-id> --log-failed` returns the whole failed job, thousands of
+lines with the report near the end. Save it to a file and search for `repro:`.
+Run the `repro:` line: `--force` re-runs that task while its dependencies stay
+cached. `exact:` is the command turbo ran, from the directory it ran in.
+
+A pull-request run checks out `refs/pull/<n>/merge`, the branch merged into
+`main`, not the branch head. When `main` has moved, reproduce on that commit:
+
+```bash
+git fetch origin pull/<n>/merge
+git switch --detach FETCH_HEAD
+```
+
+Where the `repro:` line isn't enough:
+
+- A headline of `no task reported a non-zero exit` means the run died outside
+  a task (a turbo error, a runner timeout, a cancellation). The full step log
+  is the only source.
+- `test:e2e:*` tasks need a server. Reproduce one with `mise run test_e2e <suite>`
+  ([the suite README](../apps/sample-app-lit-e2e/README.md)). The
+  `cypress-videos` and `wrangler-logs` artifacts hold the run's videos and
+  server logs.
+- The uncapped summaries are the `turbo-run-summaries` artifact:
+  `gh run download <run-id> -n turbo-run-summaries`.
+
 ### Reproducing a Codecov failure
 
 The Codecov PR comment names the file with missing lines, not the line. Patch
