@@ -200,3 +200,17 @@ pnpm --dir apps/sample-app-lit-e2e exec cypress run --config baseUrl=http://loca
 Videos land in `cypress/videos*/`; screenshots only on failure or an explicit
 `cy.screenshot()`. The specs in `src/integration/` are the reference for each
 flow (login, dialogs, location plugins); read the one nearest your change.
+
+Load the app once before the first spec. A cold vite server transforms the
+whole module graph on the first hit, and the transition that is still running
+can leave the visualizer `<svg>` covering a `cy.click()` target — `sample_app.cy.js`
+("prompts to save a message being composed") is the usual casualty. A rerun
+against the warm server passes.
+
+Don't verify `prefers-color-scheme` behavior with Cypress. Emulating it over CDP
+(`Emulation.setEmulatedMedia`) holds only before the first page load and sticks
+across specs and separate `cypress run` invocations, so flipping back silently
+fails. Use Playwright: `browser.newContext({ colorScheme })` for load time and
+`page.emulateMedia({ colorScheme })` for live flips. Its contexts emulate `light`
+by default and pin the scheme inside iframes too, so pass `colorScheme: null`
+when the OS setting or propagation into an embed is what's under test.

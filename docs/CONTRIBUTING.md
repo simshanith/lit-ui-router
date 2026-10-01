@@ -27,6 +27,25 @@ The mise pin is **the version that runs**. `pnpm-workspace.yaml` sets `pmOnFail:
 
 pnpm's isolated `node_modules` means a workspace member's devDep binaries (`vitest`, `typedoc`, `vitepress`, …) live in that member's own `node_modules/.bin`, not the root one. When your shell is cd'd into a member directory, mise also puts that member's `.bin` first on `PATH`, so bare invocations resolve exactly as the member's own pnpm scripts would — including a member-local version shadowing the root one (e.g. `tools/vue-check`'s TypeScript 6 `tsc`). This only applies at the member's root directory, not its subdirectories; `pnpm run` inside the member works everywhere regardless. See [TURBO.md](./TURBO.md) for detailed turbo commands and workflows.
 
+### mise environment
+
+Only an activated shell, `mise run` and `mise exec` apply the `[env]` block in
+[`.config/mise/config.toml`](../.config/mise/config.toml). A shell that reaches
+tools through mise shims resolves `pnpm` but not that environment; if
+`mise env | grep VAR` shows a variable that `echo $VAR` doesn't, run the command
+through `mise exec --`. CI is unaffected: `jdx/mise-action` exports `[env]` to
+every later step.
+
+An `[env]` assignment overrides the inherited value, and the checked-in config
+evaluates before `config.local.toml`, so a default declared there defeats a
+per-checkout override. A value meant to be overridable keeps its default in code
+(`WWW_DEV_PORT` in `www/lit-ui-router.dev/dev-port.ts`).
+
+Tools installed globally through mise sit on `PATH` behind `node_modules/.bin`.
+When you remove a dependency, a script that still calls its binary can resolve
+the global copy locally and pass, then fail in CI with `not found`; hide the
+global binary before trusting a local run.
+
 ## Running Tests
 
 ```bash
@@ -74,6 +93,19 @@ git clean -Xdf -- packages/*/dist tools/*/dist
 ```
 
 `-X` removes only ignored files, so untracked work survives.
+
+Pull requests run the vitest browser specs in Chrome only; `test:engines`
+(the `firefox` and `safari` projects) runs on `main`. A PR that adds or edits a
+spec in a package's `browserOnlySpecs` should run it in those engines first:
+
+```bash
+VITEST_BROWSER_API_PORT=63399 pnpm -C packages/lit-ui-router exec vitest run --project=firefox --project=safari src/specs/<spec>.spec.ts
+```
+
+Each package script sets its own `VITEST_BROWSER_API_PORT`, and the vitest
+config keys its Vite cache directory by it; pick a port no script uses so the
+run can't collide with a turbo task. Install the browsers with
+`mise run '//tools/build_and_test:playwright'` if they are missing.
 
 ### Reproducing a CI failure
 
@@ -303,6 +335,95 @@ Honest limits of this setup:
 - Merge commits are exempt from the commit lint, so refreshing a branch via
   merge adds `Merge branch 'main' into …` noise bullets to the squash body —
   prefer rebase to refresh.
+- Dependabot's commits carry the whole PR body (update table and metadata
+  YAML), which fails `lint_pr_commits` on line length even though the subject
+  is conventional. No exemption exists; the redo described under
+  [Dependabot PRs](#dependabot-prs) sidesteps it.
+- GitHub counts a skipped required check as passing, so a required check name
+  must be one that a skipped job never emits (see the header of
+  [`commitlint.yml`](../.github/workflows/commitlint.yml)).
+
+## Updating dependencies
+
+The ground rules (bump the catalog entry, then `mise run setup`; no routine
+`pnpm update`; `parent>child` overrides; scoped `mise lock`) and the Dependabot
+edits to reject are in
+[AGENTS.md: pnpm and dependencies](../AGENTS.md#pnpm-and-dependencies).
+
+### Dependabot PRs
+
+Treat a Dependabot PR as a notification, not a merge candidate. Never push to a
+`dependabot/*` branch: Dependabot rebases, closes or reopens its PRs and takes
+your commits with it. Redo the bump on your own branch off `main`, hand-applying
+the good catalog edits from the PR's `pnpm-workspace.yaml` hunk, and open a PR
+that references it. Then comment `@dependabot close` on the superseded PR. Never
+`@dependabot ignore this major version` there: it suppresses every future major
+of that dependency, and nothing on the PR shows it later. If the bot doesn't act
+on the comment, close the PR by hand.
+
+Dependabot's pnpm updater can also rewrite a `catalog:` specifier in
+`pnpm-lock.yaml` to a literal version. Every frozen install then fails with
+`ERR_PNPM_OUTDATED_LOCKFILE` at setup, before any test runs; regenerating the
+lock from `main`'s on your own branch fixes it.
+
+### Hand-authored bumps
+
+`pnpm outdated -r` lists the candidates. Edit the catalog entries, then
+`mise run setup`. `autoDedupe` collapses compatible duplicates as the install
+resolves, and `lint` runs `check:dedupe` and `check:single-version` over the
+result. Neither catches everything:
+
+- An exact pin beside a newer range (a dependency's own `esbuild` pin against
+  the catalog's caret) has no common version. Pin it up with a scoped override
+  rather than lowering the catalog range, and drop the override once the
+  dependency catches up.
+- A locked resolution whose range already admits the new version stays where
+  it is. Add a temporary exact override, install, delete it and install again:
+  the lock keeps the new version and no override is committed.
+- `check:single-version` covers catalog, direct and override names only; a
+  split in a transitive exact pin passes it.
+
+Every package that runs vitest declares the same set of vitest's optional peers
+(`@types/node` and `happy-dom`, `catalog:`), even a browser-only package that
+never touches `happy-dom`. An undeclared peer is auto-installed at its latest
+version, which gives that package's vitest a second peer key and surfaces
+elsewhere as `TS2769` in a `vitest.config.ts`. `pnpm-lock.yaml` should hold one
+peer-keyed `vitest@<version>(...)` entry.
+
+`minimumReleaseAge` (with `minimumReleaseAgeStrict`) in
+[`pnpm-workspace.yaml`](../pnpm-workspace.yaml) refuses versions younger than
+a day. To take one early, add exact `name@version` entries to
+`minimumReleaseAgeExclude`: excluding a package does not exclude its
+per-platform binaries or the rest of its release family, so harvest the full
+list from the install error. Say in the PR that the exclusion
+is temporary, and remove it once the versions age past the window; deleting an
+aged exclusion leaves `pnpm-lock.yaml` byte-identical.
+
+### Bumping pnpm
+
+`packageManager` in [`package.json`](../package.json) carries the version and
+the hex sha512 of the npm tarball; convert the registry's base64 `dist.integrity`
+rather than downloading it. Move the `aqua:pnpm/pnpm` pin in
+[`.config/mise/config.toml`](../.config/mise/config.toml) and its version in
+`.config/mise/mise.lock` to match, then `mise lock aqua:pnpm/pnpm`.
+[`pnpm-pin.test.ts`](../tools/repo-checks/pnpm-pin.test.ts) fails the PR if any
+of them disagree. Read the release notes for changes to the executable before
+picking a version: 12.2.0 broke the upgrade path this repo takes out of 12.1 on
+POSIX.
+
+### Patched dependencies
+
+`patchedDependencies` in [`pnpm-workspace.yaml`](../pnpm-workspace.yaml) maps
+each package to a file in [`patches/`](../patches), and `check:patches` fails
+when a hunk no longer lands in the installed package. To extend a patch:
+
+- `pnpm patch <pkg>@<version>` extracts the pristine package. Re-apply every
+  existing hunk in the edit directory, or the new patch drops them.
+- `pnpm patch-commit` writes a version-keyed patch file and manifest entry
+  beside the existing ones. Move the new file over the existing path, revert
+  the manifest change, and run `pnpm install` to refresh the lock's patch hash.
+- If the package ships `dist/*.d.ts` and its `types` points there, a JSDoc
+  change to the `.js` doesn't reach consumers; patch the declaration too.
 
 ## Dependency audit
 

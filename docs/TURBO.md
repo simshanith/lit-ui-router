@@ -6,6 +6,8 @@ This monorepo uses [Turborepo](https://turbo.build/) for orchestrating builds, t
 
 Turbo is the workspace devDependency (pinned in the pnpm catalog), resolved from `node_modules/.bin`, which [mise](https://mise.jdx.dev) puts on `PATH` (see [`.config/mise/config.toml`](../.config/mise/config.toml) and [CONTRIBUTING.md](./CONTRIBUTING.md#development) for setup). After `mise install` and `mise run setup`, bare `turbo` runs the workspace-pinned version — no separate global install needed.
 
+The installed package bundles version-matched docs in `node_modules/turbo/docs/`: `README.md` maps tasks to pages, and `reference/configuration.mdx` covers `turbo.json` fields. `"agentGuidance": false` in `turbo.json` stops turbo from writing its own managed block into the root `AGENTS.md` when it detects an agent, since that file already points at those docs. The flag does not remove a block that is already there, so a Turborepo block in an `AGENTS.md` diff came from turbo and can be deleted.
+
 ## Workspace Structure
 
 Turbo manages these workspaces (defined in `pnpm-workspace.yaml`):
@@ -379,6 +381,24 @@ then remove them:
 ```bash
 git clean -Xdf -- packages/*/dist tools/*/dist
 ```
+
+### `check:graph-edges` Exceeds maxBuffer
+
+`check:graph-edges` and `check:task-inputs` read a `--dry-run=json` plan through
+`defaultExec` in `tools/shared/src/exec.ts`, which caps stdout at 16 MiB. The
+plan lists every hashed input file, and explicit root globs such as
+`//#lint:markdown`'s `**/*.md` are not gitignore-pruned, so agent worktrees under
+`.claude/worktrees/` land in it. A local `ERR_CHILD_PROCESS_STDIO_MAXBUFFER` from
+either check means the checkout, not the repo: a clean tree plans at about 4 MB.
+Measure with `turbo run ci ci:main --dry-run=json | wc -c` before blaming `main`.
+
+### Comparing CI Timings
+
+Job wall time is not a measure of what a PR costs CI. The remote cache keys on
+content, so a squash-merge to `main` replays artifacts its PR run uploaded;
+`main` runs the larger `ci:main` graph; and runner noise between identical runs
+outweighs most real changes. Compare the `Tasks:` count in the turbo summary, the
+`cache bypass` lines in the log, and turbo's own `Time:` line instead.
 
 ### E2E Tests Timing Out
 

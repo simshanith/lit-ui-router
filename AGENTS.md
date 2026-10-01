@@ -20,6 +20,9 @@ This file is an index. The details live in [docs/CONTRIBUTING.md](docs/CONTRIBUT
 - A new docs example is one entry in `examples/embeds.ts`.
 - `www/lit-ui-router.dev` is the production docs site, deployed by Cloudflare Workers Builds ([www/DEPLOY.md](www/DEPLOY.md)).
 - CLI scripts under `tools/` use a flat `main` with early exits and a one-line `import.meta.main` guard; see `tools/workers-builds/cloudflare-build.ts`.
+- A module goes in `@tools/shared` only when two or more packages import it; with one consumer it lives in that package.
+- pnpm links a package's `bin` into its dependents only, never its own `.bin`. A package's own task execs the file directly (0755 plus shebang), as `tools/build_and_test/mise.toml` does.
+- `.config/` holds config only for tools that search it natively (mise, rumdl, taplo). Others keep their conventional location.
 
 ## mise
 
@@ -101,6 +104,9 @@ Agents never:
 - mark PRs ready for review;
 - dispatch release workflows;
 - make Cloudflare account or dashboard changes;
+- push to `dependabot/*` branches; redo the bump on their own branch instead;
+- edit or delete GitHub releases, or unpublish npm versions. Releases are immutable, and canary releases stay as evidence;
+- create labels. Label PRs by subject from the existing set;
 - force-push, except `--force-with-lease` on their own branch.
 
 Ask before running `mise run ci`, `mise run ci_main`, or anything that starts a browser, Cypress, or e2e.
@@ -113,10 +119,19 @@ Ask before running `mise run ci`, `mise run ci_main`, or anything that starts a 
 - No `isRecord`-style shape guards: validate with valibot, or cast honestly and fail loudly.
 - Reproduce a CI failure locally before speculating about it ([CONTRIBUTING: Reproducing a CI failure](docs/CONTRIBUTING.md#reproducing-a-ci-failure)).
 - Upstream issues, PRs and comments written by an agent carry a footer naming the agent and model.
+- Save long command output to a file, check the exit code, and search the file. Never re-run a command to `head` or `tail` it differently, and never truncate a state-changing command such as `git push`.
+- Answer questions about repo state from a freshly fetched `origin/main`, not the working tree.
+- Titles and commit subjects use a plain verb (restore, fix, re-enable), never a borrowed slogan.
+- Prefer the ecosystem-standard action or tool over custom CI code. When custom code is unavoidable, name the standard alternative in the PR.
+- Read manifests and registry data with node tooling (`npm pkg get`, a narrowed `npm view`) before reaching for another language.
+- Judge a tool by its maintenance cost, not its language; a mise-installed binary is cheap.
+- Open-PR triage looks for interactions git won't flag: one PR's new code referencing what another PR renames or removes.
 
 ## Skills
 
 Skills live in `.agents/skills/<name>/SKILL.md`. Claude Code reads only `.claude/skills/`, so each skill also gets a relative symlink there (`.claude/skills/<name> -> ../../.agents/skills/<name>`).
+
+A skill stays thin: when to use it and what an unattended run needs, linking the doc or package README that owns the recipe.
 
 - `ci-failure-repro`: reproduce a red GitHub Actions run locally from its `repro:` line.
 - `cypress-sample-app`: run a sample app on a vite dev server and drive it with one Cypress spec.
