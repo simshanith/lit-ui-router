@@ -41,8 +41,8 @@ export const laneCss = (p, wrap = 'break-word') => `
   color: var(--ink-soft); max-width: 66ch; margin: 0; }
 .${p}-basis { font-family: var(--prose); font-size: 15px; letter-spacing: 0; line-height: 1.8; color: var(--ink-soft);
   border: 1.5px solid var(--ink); border-top: none; background: var(--paper-2); padding: 20px 22px 24px; margin: 0 0 22px; }
-.${p} figcaption { font-size: 16px; line-height: 1.6; margin: 0 0 26px; }
-.${p}-basis > span { max-width: 80ch; display: block; }
+.${p} figcaption { font-size: 16px; line-height: 1.6; max-width: 100ch; margin: 0 0 26px; padding: 2px 22px 4px; border-left: 1.5px solid var(--ink); }
+.${p}-basis > span { max-width: 100ch; display: block; }
 .${p}-basis .k { display: block; font-family: var(--data); font-size: 11px; font-weight: 600; letter-spacing: 0.16em;
   line-height: 1; color: var(--accent); margin: 0 0 10px; }
 .${p}-basis code { font-family: var(--code); font-size: 0.9em; color: var(--ink); white-space: nowrap; }

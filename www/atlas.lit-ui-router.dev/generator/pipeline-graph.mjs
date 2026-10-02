@@ -181,7 +181,9 @@ $$FOCUS  // The cytoscape tag above is deferred; deferred scripts run before
   function pal() {
     return { ink: tok('--ink'), soft: tok('--ink-soft'), faint: tok('--ink-faint'), accent: tok('--accent'),
       paper: tok('--paper'), paper2: tok('--paper-2'), line: tok('--edge'), red: tok('--red'),
-      data: tok('--data') || '"Barlow Semi Condensed", sans-serif' };
+      data: tok('--data') || '"Barlow Semi Condensed", sans-serif',
+      // cytoscape weighs min-zoomed-font-size in device pixels, so 9 css px scales by the ratio
+      minFont: 9 * (window.devicePixelRatio || 1) };
   }
   var sprites = function () { return L.sprites[dark() ? 'dark' : 'light']; };
 
@@ -218,7 +220,7 @@ $$FOCUS  // The cytoscape tag above is deferred; deferred scripts run before
         'background-fit': 'contain', 'background-clip': 'none', 'border-width': 1.1, 'border-color': c.line,
         shape: 'round-rectangle', width: 'data(w)', height: 'data(h)', label: 'data(label)',
         'text-valign': 'bottom', 'text-margin-y': 5, 'text-wrap': 'none',
-        'font-family': c.data, 'font-size': 13, color: c.ink,
+        'font-family': c.data, 'font-size': 13, 'min-zoomed-font-size': c.minFont, color: c.ink,
         'text-halign': 'center', 'overlay-opacity': 0, 'transition-property': 'opacity', 'transition-duration': '110ms' } },
       { selector: 'node.hero', style: { 'border-width': 2.2, 'border-color': c.accent, color: c.accent,
         'font-size': 14.5, 'font-weight': 'bold' } },
@@ -275,13 +277,12 @@ $$FOCUS  // The cytoscape tag above is deferred; deferred scripts run before
     if (n.tier) h += field('TIER', n.tier);
     if (n.basis) h += field('BASIS', n.basis);
     if (n.title) h += field('DRAWING', (n.num ? 'sheet ' + n.num + ' — ' : '') + n.title);
-    if (n.importedBy) h += field('IMPORTED BY', n.importedBy + ' stations');
     h += list(L.glyphs.in + 'WRITTEN BY', ins.filter(function (e) { return e.rel === 'writes'; }).map(function (e) { return nameOf(e.from); }));
     h += list(L.glyphs.out + 'WRITES', outs.filter(function (e) { return e.rel === 'writes'; }).map(function (e) { return nameOf(e.to); }));
     h += list(L.glyphs.in + 'READS', ins.filter(function (e) { return e.rel === 'reads'; }).map(function (e) { return nameOf(e.from); }));
     h += list(L.glyphs.out + 'READ BY', outs.filter(function (e) { return e.rel === 'reads'; }).map(function (e) { return nameOf(e.to); }));
     h += list(L.glyphs.out + 'IMPORTS', outs.filter(function (e) { return e.rel === 'imports'; }).map(function (e) { return nameOf(e.to); }));
-    h += list(L.glyphs.in + 'IMPORTED BY', ins.filter(function (e) { return e.rel === 'imports'; }).map(function (e) { return nameOf(e.from); }));
+    h += list(L.glyphs.in + 'IMPORTED BY' + (n.importedBy ? ' · ' + n.importedBy + ' stations' : ''), ins.filter(function (e) { return e.rel === 'imports'; }).map(function (e) { return nameOf(e.from); }));
     return h;
   }
 
@@ -308,6 +309,22 @@ $$FOCUS  // The cytoscape tag above is deferred; deferred scripts run before
     show(pinned);
     atlasFocusPush(stage, pinned ? pinned.data('key') : null);
   }
+  // a url or keyboard pin brings its neighbourhood in, held between 0.7 and 1.2; a clear returns to the whole survey
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function frame(node) {
+    var ms = reduced ? 0 : 260;
+    cy.stop(true);
+    if (!node) { cy.animate({ fit: { eles: cy.elements(':visible'), padding: 34 }, duration: ms }); return; }
+    var hood = node.closedNeighborhood().filter(':visible'), bb = hood.boundingBox();
+    var z = Math.min((cy.width() - 96) / bb.w, (cy.height() - 96) / bb.h);
+    if (z > 1.2 || z < 0.7) cy.animate({ zoom: z > 1.2 ? 1.2 : 0.7, center: { eles: node }, duration: ms });
+    else cy.animate({ fit: { eles: hood, padding: 48 }, duration: ms });
+  }
+  function steer(node) {
+    var was = pinned;
+    tap(node);
+    if (pinned !== was) frame(pinned);
+  }
   var tools = document.getElementById('pg-tools');
   function apply(key) {
     var id = key ? pinIds[key] : null;
@@ -317,11 +334,12 @@ $$FOCUS  // The cytoscape tag above is deferred; deferred scripts run before
     // a pinned tool opens the ledger it stands in
     if (pinned && pinned.hasClass('tool') && !tools.checked) { tools.checked = true; showTools(true); }
     show(pinned);
+    frame(pinned);
   }
   cy.on('mouseover', 'node', function (e) { if (!e.target.hasClass('band')) focus(e.target); });
   cy.on('mouseout', 'node', function () { show(pinned); });
   cy.on('tap', function (e) {
-    if (e.target === cy) tap(null);
+    if (e.target === cy) { if (pinned) steer(null); }
     else if (e.target.isNode() && !e.target.hasClass('band')) tap(e.target);
   });
   clear();
@@ -329,7 +347,7 @@ $$FOCUS  // The cytoscape tag above is deferred; deferred scripts run before
   document.getElementById('pg-fit').addEventListener('click', function () { cy.fit(cy.elements(':visible'), 34); });
   tools.addEventListener('change', function (e) { showTools(e.target.checked); show(pinned); });
   apply(atlasFocusHost(stage, apply));
-  atlasLaneKeys(stage, function () { return cy.nodes('[key]:visible'); }, function () { return pinned; }, tap);
+  atlasLaneKeys(stage, function () { return cy.nodes('[key]:visible'); }, function () { return pinned; }, steer);
 
   function repaint() {
     var s = sprites();

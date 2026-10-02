@@ -174,7 +174,9 @@ $$FOCUS  // The cytoscape tag above is deferred; deferred scripts run before
   function pal() {
     return { ink: tok('--ink'), soft: tok('--ink-soft'), faint: tok('--ink-faint'), accent: tok('--accent'),
       paper: tok('--paper'), paper2: tok('--paper-2'), line: tok('--edge'), red: tok('--red'),
-      data: tok('--data') || '"Barlow Semi Condensed", sans-serif' };
+      data: tok('--data') || '"Barlow Semi Condensed", sans-serif',
+      // cytoscape weighs min-zoomed-font-size in device pixels, so 9 css px scales by the ratio
+      minFont: 9 * (window.devicePixelRatio || 1) };
   }
   var sprites = function () { return L.sprites[dark() ? 'dark' : 'light']; };
   var idOf = function (key) { return 'n' + key.replace(/[^a-zA-Z0-9]/g, '_'); };
@@ -207,7 +209,7 @@ $$FOCUS  // The cytoscape tag above is deferred; deferred scripts run before
         'text-valign': 'bottom', 'text-margin-y': 5, 'text-wrap': 'none',
         // a name lettered over a tie knocks the tie out, the way a plan label does
         'text-background-color': c.paper, 'text-background-opacity': 0.92, 'text-background-padding': 2,
-        'font-family': c.data, 'font-size': 13, color: c.ink,
+        'font-family': c.data, 'font-size': 13, 'min-zoomed-font-size': c.minFont, color: c.ink,
         'text-halign': 'center', 'overlay-opacity': 0, 'transition-property': 'opacity', 'transition-duration': '110ms' } },
       { selector: 'node.k-external', style: { 'border-width': 2.2, 'border-color': c.accent, color: c.accent } },
       { selector: 'node.band', style: { 'background-opacity': 0, 'background-image': 'none', 'border-width': 0,
@@ -215,7 +217,7 @@ $$FOCUS  // The cytoscape tag above is deferred; deferred scripts run before
         'text-wrap': 'none', 'font-size': 12, color: c.soft, events: 'no' } },
       { selector: 'edge', style: { 'curve-style': 'bezier', 'target-arrow-shape': 'triangle',
         'arrow-scale': 0.75, 'line-color': c.soft, 'target-arrow-color': c.soft, width: 1.6,
-        label: 'data(label)', 'font-family': c.data, 'font-size': 11,
+        label: 'data(label)', 'font-family': c.data, 'font-size': 11, 'min-zoomed-font-size': c.minFont,
         color: c.faint, 'text-rotation': 'autorotate', 'text-background-color': c.paper,
         'text-background-opacity': 0.9, 'text-background-padding': 2,
         'transition-property': 'opacity', 'transition-duration': '110ms' } },
@@ -328,21 +330,38 @@ $$FOCUS  // The cytoscape tag above is deferred; deferred scripts run before
     show(pinned);
     atlasFocusPush(stage, pinned ? pinned.data('key') : null);
   }
+  // a url or keyboard pin brings its neighbourhood in, held between 0.7 and 1.2; a clear returns to the whole bench
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function frame(el) {
+    var ms = reduced ? 0 : 260;
+    cy.stop(true);
+    if (!el) { cy.animate({ fit: { eles: cy.elements(), padding: 40 }, duration: ms }); return; }
+    var hood = el.isNode() ? el.closedNeighborhood() : el.union(el.connectedNodes()), bb = hood.boundingBox();
+    var z = Math.min((cy.width() - 96) / bb.w, (cy.height() - 96) / bb.h);
+    if (z > 1.2 || z < 0.7) cy.animate({ zoom: z > 1.2 ? 1.2 : 0.7, center: { eles: el }, duration: ms });
+    else cy.animate({ fit: { eles: hood, padding: 48 }, duration: ms });
+  }
+  function steer(el) {
+    var was = pinned;
+    tap(el);
+    if (pinned !== was) frame(pinned);
+  }
   function apply(key) {
     var el = find(key);
     if (el === pinned || (el && pinned && el.same(pinned))) return;
     pinned = el;
     show(pinned);
+    frame(pinned);
   }
   cy.on('mouseover', 'node, edge', function (e) { if (!e.target.hasClass('band')) show(e.target); });
   cy.on('mouseout', 'node, edge', function () { show(pinned); });
   cy.on('tap', function (e) {
-    if (e.target === cy) tap(null);
+    if (e.target === cy) { if (pinned) steer(null); }
     else if (!e.target.hasClass('band')) tap(e.target);
   });
   clear();
   apply(atlasFocusHost(stage, apply));
-  atlasLaneKeys(stage, function () { return cy.nodes('[key]'); }, function () { return pinned; }, tap);
+  atlasLaneKeys(stage, function () { return cy.nodes('[key]'); }, function () { return pinned; }, steer);
 
   document.getElementById('cb-fit').addEventListener('click', function () { cy.fit(cy.elements(), 40); });
 

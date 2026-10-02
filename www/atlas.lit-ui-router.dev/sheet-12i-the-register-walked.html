@@ -525,8 +525,8 @@ a { color: var(--accent); }
   color: var(--ink-soft); max-width: 66ch; margin: 0; }
 .rg-basis { font-family: var(--prose); font-size: 15px; letter-spacing: 0; line-height: 1.8; color: var(--ink-soft);
   border: 1.5px solid var(--ink); border-top: none; background: var(--paper-2); padding: 20px 22px 24px; margin: 0 0 22px; }
-.rg figcaption { font-size: 16px; line-height: 1.6; margin: 0 0 26px; }
-.rg-basis > span { max-width: 80ch; display: block; }
+.rg figcaption { font-size: 16px; line-height: 1.6; max-width: 100ch; margin: 0 0 26px; padding: 2px 22px 4px; border-left: 1.5px solid var(--ink); }
+.rg-basis > span { max-width: 100ch; display: block; }
 .rg-basis .k { display: block; font-family: var(--data); font-size: 11px; font-weight: 600; letter-spacing: 0.16em;
   line-height: 1; color: var(--accent); margin: 0 0 10px; }
 .rg-basis code { font-family: var(--code); font-size: 0.9em; color: var(--ink); white-space: nowrap; }
@@ -622,7 +622,9 @@ a { color: var(--accent); }
   function pal() {
     return { ink: tok('--ink'), soft: tok('--ink-soft'), faint: tok('--ink-faint'), accent: tok('--accent'),
       paper: tok('--paper'), paper2: tok('--paper-2'), line: tok('--edge'), red: tok('--red'),
-      data: tok('--data') || '"Barlow Semi Condensed", sans-serif' };
+      data: tok('--data') || '"Barlow Semi Condensed", sans-serif',
+      // cytoscape weighs min-zoomed-font-size in device pixels, so 9 css px scales by the ratio
+      minFont: 9 * (window.devicePixelRatio || 1) };
   }
   var skins = function () { return L.skins[dark() ? 'dark' : 'light']; };
 
@@ -662,16 +664,16 @@ a { color: var(--accent); }
       { selector: 'node.cell.phantom', style: { 'background-color': c.paper2, 'border-color': c.faint, opacity: 0.4 } },
       { selector: 'node.head', style: { 'background-opacity': 0, 'border-width': 0, label: 'data(label)',
         'text-valign': 'center', 'text-halign': 'center', 'text-rotation': -Math.PI / 2, 'text-margin-y': 0,
-        'font-family': c.data, 'font-size': 13, color: c.ink,
+        'font-family': c.data, 'font-size': 13, 'min-zoomed-font-size': c.minFont, color: c.ink,
         width: 1, height: 1, events: 'no' } },
       { selector: 'node.head.phantom', style: { color: c.red } },
       { selector: 'node.rowlabel', style: { 'background-opacity': 0, 'border-width': 0, label: 'data(label)',
         'text-valign': 'center', 'text-halign': 'left', 'text-margin-x': -4,
-        'font-family': c.data, 'font-size': 13, color: c.soft,
+        'font-family': c.data, 'font-size': 13, 'min-zoomed-font-size': c.minFont, color: c.soft,
         width: 1, height: 1, events: 'no' } },
       { selector: 'node.band', style: { 'background-opacity': 0, 'border-width': 0, label: 'data(label)',
         'text-valign': 'center', 'text-halign': 'left', 'text-margin-x': -4,
-        'font-family': c.data, 'font-size': 13.5, color: c.accent,
+        'font-family': c.data, 'font-size': 13.5, 'min-zoomed-font-size': c.minFont, color: c.accent,
         width: 1, height: 1, events: 'no' } },
       { selector: 'node.foot', style: { 'text-halign': 'center', 'text-margin-x': 0, color: c.soft, 'font-size': 14 } },
       { selector: 'edge', style: { 'curve-style': 'straight', 'target-arrow-shape': 'triangle',
@@ -753,6 +755,22 @@ a { color: var(--accent); }
     show(pinned);
     atlasFocusPush(stage, pinned ? pinned.data('key') : null);
   }
+  // a url or keyboard pin brings its neighbourhood in, held between 0.7 and 1.2; a clear returns to the whole register
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function frame(node) {
+    var ms = reduced ? 0 : 260;
+    cy.stop(true);
+    if (!node) { cy.animate({ fit: { eles: cy.elements(':visible'), padding: 26 }, duration: ms }); return; }
+    var hood = node.closedNeighborhood().filter(':visible'), bb = hood.boundingBox();
+    var z = Math.min((cy.width() - 96) / bb.w, (cy.height() - 96) / bb.h);
+    if (z > 1.2 || z < 0.7) cy.animate({ zoom: z > 1.2 ? 1.2 : 0.7, center: { eles: node }, duration: ms });
+    else cy.animate({ fit: { eles: hood, padding: 48 }, duration: ms });
+  }
+  function steer(node) {
+    var was = pinned;
+    tap(node);
+    if (pinned !== was) frame(pinned);
+  }
   function apply(key) {
     var id = key ? pinIds[key] : null;
     var node = id ? cy.getElementById(id) : null;
@@ -761,11 +779,12 @@ a { color: var(--accent); }
     // a pinned placeholder floods the shroud in
     if (pinned && pinned.hasClass('phantom') && !shroud) setShroud(true);
     else show(pinned);
+    frame(pinned);
   }
   cy.on('mouseover', 'node', function (e) { if (e.target.hasClass('cell')) focus(e.target); });
   cy.on('mouseout', 'node', function () { show(pinned); });
   cy.on('tap', function (e) {
-    if (e.target === cy) tap(null);
+    if (e.target === cy) { if (pinned) steer(null); }
     else if (e.target.hasClass('cell')) tap(e.target);
   });
   clear();
@@ -781,7 +800,7 @@ a { color: var(--accent); }
   }
   box.addEventListener('change', function (e) { setShroud(e.target.checked); });
   apply(atlasFocusHost(stage, apply));
-  atlasLaneKeys(stage, function () { return cy.nodes('.cell:visible'); }, function () { return pinned; }, tap);
+  atlasLaneKeys(stage, function () { return cy.nodes('.cell:visible'); }, function () { return pinned; }, steer);
 
   function repaint() {
     var s = skins();
