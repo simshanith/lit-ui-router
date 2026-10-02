@@ -81,22 +81,33 @@ export function lockVersions(lock: Lock): Map<string, string[]> {
  * the package it installs.
  */
 export function controlledNames(lock: Lock): Set<string> {
-  const names = new Set<string>();
+  return new Set([
+    ...catalogNames(lock),
+    ...overrideTargets(lock),
+    ...importerNames(lock),
+  ]);
+}
+
+function* catalogNames(lock: Lock): Generator<string> {
   for (const catalog of Object.values(lock.catalogs ?? {})) {
     for (const [name, { specifier }] of Object.entries(catalog)) {
-      names.add(
-        specifier.startsWith('npm:')
-          ? (splitAt(specifier.slice(4))?.[0] ?? name)
-          : name,
-      );
+      yield specifier.startsWith('npm:')
+        ? (splitAt(specifier.slice(4))?.[0] ?? name)
+        : name;
     }
   }
+}
+
+function* overrideTargets(lock: Lock): Generator<string> {
   for (const selector of Object.keys(lock.overrides ?? {})) {
     // a `>` inside a range follows `@`, a space or `<`; the parent separator does not
     const target = selector.split(/(?<![@\s<])>(?!=)/).at(-1) ?? selector;
     // a ranged target only lifts a floor within that range
-    if (!splitAt(target)) names.add(target);
+    if (!splitAt(target)) yield target;
   }
+}
+
+function* importerNames(lock: Lock): Generator<string> {
   for (const importer of Object.values(lock.importers ?? {})) {
     for (const deps of [
       importer.dependencies,
@@ -105,11 +116,10 @@ export function controlledNames(lock: Lock): Set<string> {
     ]) {
       for (const [name, { version }] of Object.entries(deps ?? {})) {
         if (LOCAL.test(version)) continue;
-        names.add(parsePackageKey(version)?.name ?? name);
+        yield parsePackageKey(version)?.name ?? name;
       }
     }
   }
-  return names;
 }
 
 const byVersion = (a: string, b: string) =>

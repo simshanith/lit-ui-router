@@ -236,22 +236,12 @@ function describeEnvironment(
   return { lines, patch, conflicts };
 }
 
-function describeTrigger(
+function describePinnedFields(
   trigger: Trigger,
-  kind: TriggerKind,
   desired: DesiredTrigger,
-): {
-  lines: string[];
-  patch: Drift['patch'];
-  environmentPatch: EnvironmentPatch;
-  drift: boolean;
-} {
-  const patch: Drift['patch'] = {};
-  const lines = [
-    `${kind} trigger ${trigger.trigger_uuid}` +
-      (trigger.trigger_name ? ` (${trigger.trigger_name})` : ''),
-    `    branches           include=${JSON.stringify(trigger.branch_includes ?? [])} exclude=${JSON.stringify(trigger.branch_excludes ?? [])}`,
-  ];
+  patch: Drift['patch'],
+): string[] {
+  const lines: string[] = [];
   for (const field of PINNABLE_FIELDS) {
     const current = trigger[field] ?? '';
     const wanted = desired[field];
@@ -267,8 +257,17 @@ function describeTrigger(
       lines.push(`    ${' '.repeat(18)} wanted: ${wanted}`);
     }
   }
-  // Watch paths are only worth a line when pinned or actually set: every
-  // trigger defaults to include-everything, and printing that twice is noise.
+  return lines;
+}
+
+// Watch paths are only worth a line when pinned or actually set: every
+// trigger defaults to include-everything, and printing that twice is noise.
+function describeWatchPaths(
+  trigger: Trigger,
+  desired: DesiredTrigger,
+  patch: Drift['patch'],
+): string[] {
+  const lines: string[] = [];
   for (const field of PINNABLE_LIST_FIELDS) {
     const current = trigger[field] ?? [];
     const wanted = desired[field];
@@ -287,6 +286,27 @@ function describeTrigger(
       );
     }
   }
+  return lines;
+}
+
+function describeTrigger(
+  trigger: Trigger,
+  kind: TriggerKind,
+  desired: DesiredTrigger,
+): {
+  lines: string[];
+  patch: Drift['patch'];
+  environmentPatch: EnvironmentPatch;
+  drift: boolean;
+} {
+  const patch: Drift['patch'] = {};
+  const lines = [
+    `${kind} trigger ${trigger.trigger_uuid}` +
+      (trigger.trigger_name ? ` (${trigger.trigger_name})` : ''),
+    `    branches           include=${JSON.stringify(trigger.branch_includes ?? [])} exclude=${JSON.stringify(trigger.branch_excludes ?? [])}`,
+    ...describePinnedFields(trigger, desired, patch),
+    ...describeWatchPaths(trigger, desired, patch),
+  ];
   const environment = describeEnvironment(
     trigger.environment_variables ?? {},
     desired.environment_variables ?? {},

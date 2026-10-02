@@ -436,33 +436,35 @@ export async function prerender(
   };
 
   let slashProbed = false;
+  const visit = async (path: string): Promise<void> => {
+    const verdict = await resolver.resolve(path);
+    if (verdict.kind === 'shell') {
+      const subpath = subpathIn(verdict.mount, path);
+      tally.shell += 1;
+      if (
+        import.meta.env.DEV &&
+        !slashProbed &&
+        wantsSlashProbe(verdict, path, subpath)
+      ) {
+        slashProbed = true;
+        await warnStrictSlash(resolver, path);
+      }
+      await emit(verdict, path, subpath, fileFor(subpath));
+      return;
+    }
+    if (verdict.kind === 'redirect') {
+      tally.redirect += 1;
+      generated.push(...redirectLines(path, verdict, trailingSlash));
+      return;
+    }
+    tally.notFound += 1;
+    warnings.push(path);
+    warnUnclaimed(path);
+  };
+
   const uninstall = provideRouter(root, router);
   try {
-    for await (const path of paths) {
-      const verdict = await resolver.resolve(path);
-      if (verdict.kind === 'shell') {
-        const subpath = subpathIn(verdict.mount, path);
-        tally.shell += 1;
-        if (
-          import.meta.env.DEV &&
-          !slashProbed &&
-          wantsSlashProbe(verdict, path, subpath)
-        ) {
-          slashProbed = true;
-          await warnStrictSlash(resolver, path);
-        }
-        await emit(verdict, path, subpath, fileFor(subpath));
-        continue;
-      }
-      if (verdict.kind === 'redirect') {
-        tally.redirect += 1;
-        generated.push(...redirectLines(path, verdict, trailingSlash));
-        continue;
-      }
-      tally.notFound += 1;
-      warnings.push(path);
-      warnUnclaimed(path);
-    }
+    for await (const path of paths) await visit(path);
 
     const page = await notFoundPage(notFound, mounts, resolver);
     if (page) {

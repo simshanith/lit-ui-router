@@ -66,6 +66,7 @@ const srefAssignHref: RuleFor<typeof RULE_NAME> = {
         const analyzer = TemplateAnalyzer.create(node);
 
         analyzer.traverse({
+          // eslint-disable-next-line complexity -- a guard-clause table over uiSref's argument shapes; one fix per row
           enterElement(rawElement) {
             const element = rawElement as unknown as Parse5Element;
             // probably a tree correction node

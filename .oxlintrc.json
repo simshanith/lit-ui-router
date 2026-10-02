@@ -18,7 +18,7 @@
     "**/.vitepress/cache/**"
   ],
   "rules": {
-    "complexity": "error",
+    "complexity": ["error", { "max": 15 }],
     "constructor-super": "error",
     "for-direction": "error",
     "getter-return": "error",
