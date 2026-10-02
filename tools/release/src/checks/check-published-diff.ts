@@ -42,10 +42,8 @@ import {
   classifyFiles,
   type DiffResult,
   formatReport,
-  hasFileSetChange,
   isCleanDiff,
-  isManifestDriftInert,
-  manifestDriftFields,
+  reclassifyManifest,
   renderSummary,
   scopePackages,
   selectTarget,
@@ -113,38 +111,6 @@ function summaryPathArg(): string {
     throw new Error('--json requires a file path argument');
   }
   return jsonOverride;
-}
-
-// Moves package.json to ship-inert when only inert manifest fields drifted.
-function reclassifyManifest(
-  files: { shipAffecting: string[]; shipInert: string[] },
-  diff: string,
-  localManifest: Record<string, unknown> | undefined,
-  publishedManifest: Record<string, unknown> | undefined,
-): { shipAffecting: string[]; shipInert: string[] } {
-  if (
-    !files.shipAffecting.includes('package.json') ||
-    localManifest === undefined ||
-    publishedManifest === undefined
-  ) {
-    return files;
-  }
-  let manifestInert = false;
-  try {
-    manifestInert = isManifestDriftInert({
-      fileSetChanged: hasFileSetChange(diff),
-      driftFields: manifestDriftFields(publishedManifest, localManifest),
-    });
-  } catch {
-    // Unparsable manifest bytes stay ship-affecting.
-  }
-  if (!manifestInert) return files;
-  return {
-    shipAffecting: files.shipAffecting.filter(
-      (file) => file !== 'package.json',
-    ),
-    shipInert: [...files.shipInert, 'package.json'].sort(),
-  };
 }
 
 async function main() {

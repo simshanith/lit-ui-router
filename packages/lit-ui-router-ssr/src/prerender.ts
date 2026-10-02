@@ -269,10 +269,7 @@ const wantsSlashProbe = (
   path: string,
   subpath: string,
 ): boolean =>
-  import.meta.env.DEV &&
-  subpath !== '' &&
-  verdict.status === undefined &&
-  !path.endsWith('/');
+  subpath !== '' && verdict.status === undefined && !path.endsWith('/');
 
 const redirectLines = (
   path: string,
@@ -446,7 +443,11 @@ export async function prerender(
       if (verdict.kind === 'shell') {
         const subpath = subpathIn(verdict.mount, path);
         tally.shell += 1;
-        if (!slashProbed && wantsSlashProbe(verdict, path, subpath)) {
+        if (
+          import.meta.env.DEV &&
+          !slashProbed &&
+          wantsSlashProbe(verdict, path, subpath)
+        ) {
           slashProbed = true;
           await warnStrictSlash(resolver, path);
         }

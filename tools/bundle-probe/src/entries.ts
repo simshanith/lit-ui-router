@@ -26,39 +26,7 @@ export type PackageProbe = {
 // The optional `bundleProbe` manifest field carries the per-entry boundary
 // claims, keyed by the same subpath the exports map uses:
 //   "bundleProbe": { "./context": { "free": ["lit"] } }
-// The export's source file, or undefined for an export the probe skips.
-const sourceFileOf = (
-  name: string,
-  packageDir: string,
-  subpath: string,
-  value: unknown,
-): string | undefined => {
-  if (subpath === './package.json' || subpath.includes('*')) return undefined;
-  const target =
-    typeof value === 'string'
-      ? value
-      : (value as Record<string, unknown>).default;
-  if (typeof target !== 'string') {
-    throw new Error(`${name}: export '${subpath}' has no default target`);
-  }
-  if (!/\.(js|ts)$/.test(target)) return undefined;
-  const source = target.startsWith('./src/')
-    ? target
-    : target.replace(/^\.\/dist\/(.+)\.js$/, './src/$1.ts');
-  if (!source.startsWith('./src/')) {
-    throw new Error(
-      `${name}: cannot map export '${subpath}' target '${target}' to a source file`,
-    );
-  }
-  const file = path.join(packageDir, source);
-  if (!existsSync(file)) {
-    throw new Error(
-      `${name}: export '${subpath}' resolves to missing ${source}`,
-    );
-  }
-  return file;
-};
-
+// eslint-disable-next-line complexity -- one linear pass over the exports map; splitting it scatters the mapping rules above
 export const readPackageProbe = (packageDir: string): PackageProbe => {
   const manifest = requireManifest(packageDir);
   const name = manifest.name;
@@ -74,8 +42,29 @@ export const readPackageProbe = (packageDir: string): PackageProbe => {
   const entries: PackageEntry[] = [];
   const bundled = new Set<string>();
   for (const [subpath, value] of Object.entries(manifest.exports ?? {})) {
-    const file = sourceFileOf(name, packageDir, subpath, value);
-    if (file === undefined) continue;
+    if (subpath === './package.json' || subpath.includes('*')) continue;
+    const target =
+      typeof value === 'string'
+        ? value
+        : (value as Record<string, unknown>).default;
+    if (typeof target !== 'string') {
+      throw new Error(`${name}: export '${subpath}' has no default target`);
+    }
+    if (!/\.(js|ts)$/.test(target)) continue;
+    const source = target.startsWith('./src/')
+      ? target
+      : target.replace(/^\.\/dist\/(.+)\.js$/, './src/$1.ts');
+    if (!source.startsWith('./src/')) {
+      throw new Error(
+        `${name}: cannot map export '${subpath}' target '${target}' to a source file`,
+      );
+    }
+    const file = path.join(packageDir, source);
+    if (!existsSync(file)) {
+      throw new Error(
+        `${name}: export '${subpath}' resolves to missing ${source}`,
+      );
+    }
     const free = (claims?.[subpath] as { free?: string[] } | undefined)?.free;
     bundled.add(subpath);
     entries.push({
