@@ -30,7 +30,7 @@
 import type { Transition } from '@uirouter/core';
 import type { UIRouterLit } from 'lit-ui-router';
 import { loadManifest } from '../manifest.ts';
-import { isIndexFilterChange } from '../router.ts';
+import { isInPlaceChange } from '../router.ts';
 import { viewRendered } from './view-rendered.ts';
 
 /**
@@ -102,10 +102,10 @@ const clearDirection = (): void => {
 export function installSlideshow(router: UIRouterLit): void {
   router.transitionService.onBefore({}, (transition) => {
     clearDirection();
-    // A filter change re-renders the index in place — a slide would read as a
-    // page change it is not. Criteria can match a pair but not exclude one,
+    // An in-place change re-renders the page it is on — a slide would read as
+    // a page change it is not. Criteria can match a pair but not exclude one,
     // so the predicate is tested here.
-    if (isIndexFilterChange(transition)) return true;
+    if (isInPlaceChange(transition)) return true;
     if (reducedMotion()) return true;
     stampDirection(directionOf(transition));
 
@@ -140,7 +140,7 @@ export function installSlideshow(router: UIRouterLit): void {
   // The fallback for engines without the API: animate the arriving content.
   if (supportsViewTransitions()) return;
   router.transitionService.onSuccess({}, (transition) => {
-    if (isIndexFilterChange(transition)) return;
+    if (isInPlaceChange(transition)) return;
     if (reducedMotion()) return;
     const content = document.querySelector('.content');
     if (!(content instanceof HTMLElement)) return;

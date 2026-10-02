@@ -18,7 +18,7 @@
  * router's own onSuccess, which has already set document.title.
  */
 import type { UIRouterLit } from 'lit-ui-router';
-import { NAVIGATION_API } from '../router.ts';
+import { NAVIGATION_API, isParamOnlyChange } from '../router.ts';
 
 type Gtag = (command: 'event', name: 'page_view', params: Record<string, string>) => void;
 
@@ -35,10 +35,11 @@ export function installAnalytics(router: UIRouterLit): void {
     kind = event.navigationType;
   });
 
-  router.transitionService.onSuccess({}, () => {
+  router.transitionService.onSuccess({}, (transition) => {
     const seen = kind;
     kind = '';
-    if (!OURS.has(seen)) return;
+    // a `focus` pick moves the query string, not the page
+    if (!OURS.has(seen) || isParamOnlyChange(transition)) return;
     const gtag = (window as Window & { gtag?: Gtag }).gtag;
     if (!gtag) return;
     gtag('event', 'page_view', {

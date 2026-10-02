@@ -56,6 +56,11 @@ export const FILTER_PARAMS: Record<string, unknown> = Object.fromEntries(
   FILTER_KEYS.map((key) => [key, { value: null }]),
 );
 
+/** An interactive page's selection, `?focus=12`: dynamic, never inherited, null when absent. */
+export const FOCUS_PARAMS: Record<string, unknown> = {
+  focus: { value: null, dynamic: true, inherit: false },
+};
+
 export const routes: RouteDeclaration[] = [
   // Abstract shell: the rail and the content ui-view. Url-less, so it
   // contributes no segment; its children's urls are the whole url.
@@ -69,10 +74,10 @@ export const routes: RouteDeclaration[] = [
     url: '/?subject&projection&mode&basis&kv',
     params: FILTER_PARAMS,
   },
-  { name: 'atlas.sheet', url: '/sheet/:num' },
+  { name: 'atlas.sheet', url: '/sheet/:num?focus', params: FOCUS_PARAMS },
   // The 3D city: a plate the flat set only publishes inside its gallery, and
   // the one state whose view loads a library on demand (three, resolved).
-  { name: 'atlas.city', url: '/city' },
+  { name: 'atlas.city', url: '/city?focus', params: FOCUS_PARAMS },
   // The type specimen: a design bench, not a plate. It is the one state whose
   // view pulls a webfont — and it pulls it on entry, so no other page's
   // payload knows the faces exist.
@@ -119,7 +124,7 @@ export function mountsFor(sheetNums?: readonly string[]): Record<string, MountCo
   const nums = [...new Set(sheetNums ?? [])].sort();
   const narrowed = routes.map((route) => {
     if (route.name !== 'atlas.sheet' || nums.length === 0) return route;
-    return { ...route, url: `/sheet/{num:(?:${nums.join('|')})}` };
+    return { ...route, url: `/sheet/{num:(?:${nums.join('|')})}?focus` };
   });
   const lowercased: RedirectRule[] = nums
     .filter((num) => num !== num.toLowerCase())

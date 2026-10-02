@@ -44,6 +44,7 @@ import {
 import { loadCytoscape, runScripts } from './fragment.ts';
 import { ICON_SPRITE, iconId } from './generated/icons.js';
 import { initCity } from './generated/city-init.js';
+import type { CityScene } from './generated/city-init.js';
 import { ARTIFACT } from './mode.ts';
 import { href } from './routes.ts';
 import type { ThemeChoice } from './theme.ts';
@@ -172,23 +173,27 @@ customElements.define('atlas-plate', AtlasPlate);
  * `disconnectedCallback` is the hook. `updated` waits on the plate's own
  * `updateComplete` for "the fragment is in the DOM" — the same promise
  * `experimental/view-rendered.ts` chains, owned locally so `src/*.ts` stays
- * free of that directory.
+ * free of that directory. `pin` is the url's `focus` (an element's `focus` is
+ * the focus() method), handed to the scene on boot and on every change after it.
  */
 export class AtlasCity extends ReactiveElement {
   static override properties = {
     fragment: { attribute: false },
     three: { attribute: false },
+    pin: { attribute: false },
   };
 
   declare fragment: string;
   declare three: unknown;
-  #dispose: (() => void) | null = null;
+  declare pin: string | null;
+  #scene: CityScene | null = null;
   #seq = 0;
 
   constructor() {
     super();
     this.fragment = '';
     this.three = undefined;
+    this.pin = null;
   }
 
   override createRenderRoot(): HTMLElement {
@@ -196,8 +201,8 @@ export class AtlasCity extends ReactiveElement {
   }
 
   override updated(changed: Map<PropertyKey, unknown>): void {
-    if (!changed.has('fragment') && !changed.has('three')) return;
-    void this.#boot();
+    if (changed.has('fragment') || changed.has('three')) void this.#boot();
+    else if (changed.has('pin')) this.#select();
   }
 
   override disconnectedCallback(): void {
@@ -212,15 +217,23 @@ export class AtlasCity extends ReactiveElement {
     await plate.updateComplete; // the fragment (and its JSON island) is in the DOM
     if (seq !== this.#seq || !this.isConnected) return;
     this.#teardown();
-    const dispose = await initCity(this, this.three);
+    const scene = await initCity(this, this.three, this.pin);
     // undefined = nothing was raised (no WebGL); a superseded boot disposes at once
-    if (seq === this.#seq && this.isConnected) this.#dispose = dispose ?? null;
-    else dispose?.();
+    if (seq !== this.#seq || !this.isConnected) {
+      scene?.dispose();
+      return;
+    }
+    this.#scene = scene ?? null;
+    this.#select(); // the url may have moved while the scene was raised
+  }
+
+  #select(): void {
+    this.#scene?.select(this.pin === null ? null : Number(this.pin));
   }
 
   #teardown(): void {
-    this.#dispose?.();
-    this.#dispose = null;
+    this.#scene?.dispose();
+    this.#scene = null;
   }
 }
 customElements.define('atlas-city', AtlasCity);
@@ -934,6 +947,9 @@ export const CityView: RoutedLitTemplate<CityResolves> = (props) => {
   const resolves = props?.resolves;
   const extra = resolves?.extra;
   if (!extra || !resolves.fragment) return html`<p class="loading">RAISING THE CITY…</p>`;
+  // the settled route, as the gallery reads it: the view's own transition is the one that entered it
+  const params = props?.router ? snapshotRoute(props.router).params : props?.transition?.params();
+  const focus = typeof params?.focus === 'string' ? params.focus : null;
   return html`
     ${utilBar(html`
       ${indexCrumb()}
@@ -945,7 +961,7 @@ export const CityView: RoutedLitTemplate<CityResolves> = (props) => {
       ${seeAlso(extra.refs)} ${keyBlock(extra.labels)}
     </div>
     ${verdictLine(extra.verdict)}
-    <atlas-city .fragment=${resolves.fragment} .three=${resolves.three}
+    <atlas-city .fragment=${resolves.fragment} .three=${resolves.three} .pin=${focus}
       >${plate(resolves.fragment, false)}</atlas-city
     >
   `;

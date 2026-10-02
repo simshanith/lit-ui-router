@@ -9,7 +9,7 @@ import type { LitStateDeclaration } from 'lit-ui-router';
 import { navigationLocationPlugin } from 'ui-router-navigation-location-plugin';
 import type { UIRouterNavigateEvent } from 'ui-router-navigation-location-plugin';
 import { ARTIFACT } from './mode.ts';
-import { FILTER_PARAMS, SHEET_ALIASES, urlOf } from './routes.ts';
+import { FILTER_PARAMS, FOCUS_PARAMS, SHEET_ALIASES, urlOf } from './routes.ts';
 import type { ExtraRow, Manifest, SheetRow } from './manifest.ts';
 import { findExtra, findSheet, loadFragment, loadManifest } from './manifest.ts';
 import { titleFor } from './titles.ts';
@@ -43,6 +43,7 @@ export const states: LitStateDeclaration[] = [
   {
     name: 'atlas.sheet',
     url: urlOf('atlas.sheet'),
+    params: FOCUS_PARAMS,
     component: SheetView,
     resolve: [
       {
@@ -66,6 +67,7 @@ export const states: LitStateDeclaration[] = [
   {
     name: 'atlas.city',
     url: urlOf('atlas.city'),
+    params: FOCUS_PARAMS,
     component: CityView,
     // DEPENDENCIES ON DEMAND: three.js is a resolve, so the router fetches the
     // library's own chunk while it enters the state — and no other route in
@@ -129,14 +131,20 @@ export const states: LitStateDeclaration[] = [
 export const NAVIGATION_API =
   !ARTIFACT && typeof window !== 'undefined' && 'navigation' in window;
 
+/** A dynamic param change such as `focus`: no state entered or exited. */
+export function isParamOnlyChange(transition: Transition): boolean {
+  return transition.entering().length === 0 && transition.exiting().length === 0;
+}
+
 /**
- * A filter change inside the key index: the same state in and out. The
- * gallery is deliberately not dynamic (routes.ts), so a chip re-enters it —
- * a re-render, not a page change. Stated once here because ui-router's hook
- * criteria have no "every pair but this one" form, so the slideshow tests the
- * inverse of this same predicate.
+ * A change that keeps the reader on the page: a dynamic param, or a filter
+ * change inside the key index — the gallery is deliberately not dynamic
+ * (routes.ts), so a chip re-enters it, a re-render rather than a page change.
+ * Stated once here because ui-router's hook criteria have no "every pair but
+ * this one" form, so the scroll and the slideshow test this same predicate.
  */
-export function isIndexFilterChange(transition: Transition): boolean {
+export function isInPlaceChange(transition: Transition): boolean {
+  if (isParamOnlyChange(transition)) return true;
   return transition.from().name === 'atlas.gallery' && transition.to().name === 'atlas.gallery';
 }
 
@@ -147,11 +155,11 @@ export function createRouter(): UIRouterLit {
   else {
     // The plugin intercepts its own navigate() calls and asks for the options
     // once the transition has committed, so the tail of successfulTransitions
-    // is this navigation's; an index filter change keeps the reader's scroll.
+    // is this navigation's; an in-place change keeps the reader's scroll.
     router.plugin(navigationLocationPlugin, {
       intercept: (event: UIRouterNavigateEvent): NavigationInterceptOptions => {
         const committed = event.info.uiRouter.globals.successfulTransitions.peekTail();
-        return { scroll: committed && isIndexFilterChange(committed) ? 'manual' : 'after-transition' };
+        return { scroll: committed && isInPlaceChange(committed) ? 'manual' : 'after-transition' };
       },
     });
   }
@@ -189,9 +197,9 @@ export function createRouter(): UIRouterLit {
   });
 
   router.transitionService.onSuccess({}, (transition) => {
-    // An index filter change stays on the page it re-renders; everything else
-    // is a new page and starts at the top.
-    if (!isIndexFilterChange(transition)) window.scrollTo({ top: 0 });
+    // An in-place change stays on the page it re-renders; everything else is a
+    // new page and starts at the top.
+    if (!isInPlaceChange(transition)) window.scrollTo({ top: 0 });
     // The prerendered pages carry these titles; the SPA keeps them current.
     const to = transition.to().name;
     const sheet =

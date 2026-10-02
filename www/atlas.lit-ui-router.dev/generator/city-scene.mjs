@@ -10,6 +10,7 @@
 // everywhere, which is what patternUnits="userSpaceOnUse" means on sheet 7.
 import { readFileSync } from 'node:fs';
 import { PROJECT_MARK, articleTitle } from './chrome.mjs';
+import { FOCUS_JS } from './focus.mjs';
 import { CITY, PLACED } from './sheet7.mjs';
 import { SURVEY, SURVEY_META } from './sheet7a.mjs';
 
@@ -202,7 +203,7 @@ const CSS = `
 // ES module handed a bundled THREE.  Every `$$NAME` is a host slot.
 // Written without template placeholders on purpose: it is emitted inside one, and
 // every number it draws arrives through the JSON island.
-const BODY = `  var stage = document.getElementById('cs-canvas');
+const BODY = `$$FOCUS  var stage = document.getElementById('cs-canvas');
   var island = document.getElementById('cs-city');
   if (!stage || !island) return;
   var D = JSON.parse(island.textContent);
@@ -709,7 +710,8 @@ const BODY = `  var stage = document.getElementById('cs-canvas');
     var byN = {};
     rows.forEach(function (b) { byN[b.n] = b; });
     var IDLE = '<p class="hint">Hover or tap any mass to read its member: district, gate tier, '
-      + "authored source and the spec annex beside it. Each chip carries the member's number on sheet 7.</p>";
+      + "authored source and the spec annex beside it. Each chip carries the member's number on sheet 7. "
+      + 'A tap pins the member and the link in the address bar carries the pin; tap it again or the ground to clear it.</p>';
     function fmt(v) { return String(v).replace(/\\B(?=(\\d{3})+(?!\\d))/g, ','); }
     function plural(n) { return n === 1 ? ' file' : ' files'; }
     // the light lane's sentence — sheet 7A's own numbers, unrounded
@@ -733,7 +735,8 @@ const BODY = `  var stage = document.getElementById('cs-canvas');
       return '<h3>' + b.n + ' · ' + b.name + '</h3><p>' + line + '</p><p>'
         + (D.notes[b.n] || '') + '</p>' + tail;
     }
-    var litN = null;
+    var litN = null;                // the member drawn hot: the hover over the pin, else the pin
+    var pinN = null;
     function light(n, on) {
       var r = parts[n];
       if (!r) return;
@@ -757,13 +760,22 @@ const BODY = `  var stage = document.getElementById('cs-canvas');
       if (lg) lg.innerHTML = D.legend[k === 'light' ? 'light' : 'tier'];
       ask();
     }
-    function select(n) {
+    function show(n) {
       if (n === litN) return false;
       if (litN !== null) light(litN, false);
       litN = n;
       if (litN !== null) light(litN, true);
       info.innerHTML = litN === null ? IDLE : describe(byN[litN]);
       return true;
+    }
+    // a member number, or null for anything that names none
+    function member(v) {
+      var n = v === null || v === undefined || v === '' ? NaN : Number(v);
+      return byN[n] ? n : null;
+    }
+    function pin(n) {
+      pinN = n;
+      if (show(n)) ask();
     }
     function hit(e) {
       var r = stage.getBoundingClientRect();
@@ -794,14 +806,22 @@ const BODY = `  var stage = document.getElementById('cs-canvas');
       if (tween || e.pointerType === 'touch') return;
       var n = hit(e);
       stage.classList.toggle('over', n !== null);
-      if (select(n)) ask();
+      if (show(n !== null ? n : pinN)) ask();
     });
+    // a tap pins; the pinned member or the ground clears it, and the url follows
+    function tap(n, mouse) {
+      var next = n === pinN ? null : n;
+      if (next === pinN) return;
+      pinN = next;
+      if (show(next !== null || !mouse ? next : n)) ask();
+      atlasFocusPush(stage, next === null ? null : String(next));
+    }
     function release(e) {
       if (!dragging) return;
       dragging = false;
       stage.classList.remove('grabbing');
       if (stage.hasPointerCapture(e.pointerId)) stage.releasePointerCapture(e.pointerId);
-      if (moved < 4 && select(hit(e))) ask();   // a tap reads; a tap on ground clears
+      if (moved < 4) tap(hit(e), e.pointerType === 'mouse');
       snap();
     }
     stage.addEventListener('pointerup', release);
@@ -809,7 +829,7 @@ const BODY = `  var stage = document.getElementById('cs-canvas');
     stage.addEventListener('pointerleave', function () {
       engaged = false;
       stage.classList.remove('over');
-      if (!dragging && select(null)) ask();
+      if (!dragging && show(pinN)) ask();
     });
     // a plain scroll over the plate still scrolls the page: the wheel only zooms
     // once the plate has been touched, or when it is a trackpad pinch (ctrlKey)
@@ -831,7 +851,8 @@ const BODY = `  var stage = document.getElementById('cs-canvas');
     else window.addEventListener('resize', $$RZ_Afunction () { resize(); ask(); }$$RZ_B);
     $$MQ_Awindow.matchMedia('(prefers-color-scheme: dark)')$$MQ_B.addEventListener('change', paint);
     $$MO_Anew MutationObserver(paint)$$MO_B.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-    if (hint) hint.textContent = 'DRAG TO ORBIT · RELEASE SNAPS · HOVER TO READ A MEMBER · SCROLL TO ZOOM · DOUBLE-CLICK RESETS';
+    if (hint) hint.textContent = 'DRAG TO ORBIT · RELEASE SNAPS · HOVER TO READ · TAP TO PIN · SCROLL TO ZOOM · DOUBLE-CLICK RESETS';
+    pin(member(atlasFocusRead($$OPEN_PIN)));
 
     // verification hook: azimuth in degrees, live zoom, the initial pose
     window.__cityScene = {
@@ -840,6 +861,7 @@ const BODY = `  var stage = document.getElementById('cs-canvas');
       tweening: function () { return tween !== null; },
       reset: function () { glide(AZ0, 1); },
       hovered: function () { return litN; },
+      pinned: function () { return pinN; },
       lane: function () { return lane; },
       walls: function (n) { return parts[n] ? parts[n][lane].meshes.length : -1; },
       panel: function () { return info.textContent; },
@@ -870,24 +892,26 @@ const PAGE_TAIL = `
 `;
 
 // The gallery captures nothing and tears nothing down: the page owns the scene
-// for as long as it is open.  Every slot is the empty string, so the emitted
-// module is byte-for-byte the one this file has always written.
-const GALLERY = { CATCH: '(err) ', TAIL: PAGE_TAIL };
+// for as long as it is open, and its pin opens on the page's own query string.
+const GALLERY = { FOCUS: FOCUS_JS, CATCH: '(err) ', TAIL: PAGE_TAIL };
 
 // The app unmounts the routed view, so every handle the scene keeps is captured
 // on the way in and released by the dispose the module returns.
 const APP = {
+  FOCUS: FOCUS_JS,
+  OPEN_PIN: 'focus',
   RO_A: '(_ro = ', RO_B: ')',
   RZ_A: '_rz = ',
   MQ_A: '(_mq = ', MQ_B: ')',
   MO_A: '(_mo = ', MO_B: ')',
   RAF: '_raf = ', RAFT: '_rafT = ',
   CATCH: '', // the binding is unused, and this copy is linted
-  TAIL: '  return boot(THREE) || function () {};\n',
+  TAIL: '  return boot(THREE);\n',
   TEARDOWN: `
     // var hoists, so the captures above are legal before this declaration runs
     var _raf = 0, _rafT = 0, _ro = null, _rz = null, _mq = null, _mo = null;
-    return function dispose() {
+    var handle = { select: function (n) { if (member(n) !== pinN) pin(member(n)); } };
+    handle.dispose = function dispose() {
       if (_raf) cancelAnimationFrame(_raf);
       if (_rafT) cancelAnimationFrame(_rafT);
       tween = null;
@@ -902,6 +926,7 @@ const APP = {
       if (renderer.forceContextLoss) renderer.forceContextLoss();
       renderer.domElement.remove();
     };
+    return handle;
 `,
 };
 
@@ -912,17 +937,18 @@ const INIT = `\n(function () {\n${fill(GALLERY)}})();\n`;
 
 /**
  * The same scene as an ES module for www/atlas.lit-ui-router.dev/app, where three is BUNDLED: it
- * is handed in rather than imported, and the teardown the body registers is
- * returned so the routed view can dispose the scene on the way out.
+ * is handed in rather than imported, with the pin the url opens on, and the
+ * scene returns its teardown and its `select` so the routed view can dispose it
+ * on the way out and move the pin when the url does.
  * emit-app.mjs writes this to app/src/generated/city-init.js.
  */
 export function cityInitModule() {
   return `// GENERATED by www/atlas.lit-ui-router.dev/generator/city-scene.mjs — do not edit.
 // The isometric city as a module: the same scene body the flat gallery runs
-// inline, handed a bundled THREE, returning a dispose function.
-export async function initCity(root, THREE) {
+// inline, handed a bundled THREE and the opening pin, returning { dispose, select }.
+export async function initCity(root, THREE, focus) {
   // the plate renders into the LIGHT DOM, so the lookups below are document-wide
-  if (!root.querySelector('#cs-canvas')) return function () {};
+  if (!root.querySelector('#cs-canvas')) return undefined;
 ${fill(APP)}}
 `;
 }

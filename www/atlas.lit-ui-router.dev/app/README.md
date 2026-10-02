@@ -29,8 +29,8 @@ rows (A1, A2, A2i) and one `extras` row, the 3D city.
 | ---------------- | -------------- | --------------- | --------------------------------- |
 | `atlas`          | — (abstract)   | `ShellView`     | `manifest`                        |
 | `atlas.gallery`  | `/?subject&projection&mode&basis&kv` | `GalleryView` | — (the key index's filter, five nullable params) |
-| `atlas.sheet`    | `/sheet/:num`  | `SheetView`     | `sheet`, `fragment`               |
-| `atlas.city`     | `/city`        | `CityView`      | `extra`, `fragment`, **`three`**  |
+| `atlas.sheet`    | `/sheet/:num?focus` | `SheetView` | `sheet`, `fragment` (`focus`: the plate's pick, dynamic) |
+| `atlas.city`     | `/city?focus`  | `CityView`      | `extra`, `fragment`, **`three`** (`focus`: the pinned member) |
 | `atlas.specimen` | `/specimen`    | `SpecimenView`  | **`specimen`** (its own element)  |
 | `atlas.log`      | `/log`         | `LogView`       | `manifest` (its `issueLog`)       |
 | `atlas.office`   | `/office`      | — `redirectTo`  | — (302 to `atlas.sheet` A2)       |
@@ -146,8 +146,8 @@ the line:
   with the same `strict: false`.
 - The Navigation API plugin's `intercept` option (`router.ts`). The plugin intercepts the
   `navigation.navigate()` calls it makes, so every click is a same-document navigation; the app's
-  option returns `scroll: 'manual'` for a key-index filter change, so a chip keeps the reader's
-  place while every other navigation lands at the top.
+  option returns `scroll: 'manual'` for an in-place change — a key-index filter, or a `focus`
+  pick — so a chip or a pin keeps the reader's place while every other navigation lands at the top.
 - Cased ids are canonical (`/sheet/2A`). `/sheet/2a` redirects to it on both sides: an `onBefore`
   guard in the browser, a redirect rule in the mount, and therefore a `_redirects` line from the
   prerender.

@@ -27,6 +27,11 @@ export interface XrefDetail {
   num: string;
 }
 
+/** Detail of the `atlas-focus` event an interactive plate raises when its selection changes. */
+export interface FocusDetail {
+  focus: string | null;
+}
+
 let cytoscapeLoaded: Promise<unknown> | null = null;
 
 /**

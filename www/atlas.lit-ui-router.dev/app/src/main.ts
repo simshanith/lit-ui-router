@@ -4,7 +4,7 @@ import 'lit-ui-router-ssr/register';
 import { hydrateRoot } from 'lit-ui-router-ssr/client';
 import { routeRef } from 'lit-ui-router-effect';
 import { onXrefClick } from './fragment.ts';
-import type { XrefDetail } from './fragment.ts';
+import type { FocusDetail, XrefDetail } from './fragment.ts';
 import { installLattice } from './lattice.ts';
 import { createRouter } from './router.ts';
 import { applyTheme, readTheme } from './theme.ts';
@@ -26,6 +26,15 @@ document.addEventListener('click', onXrefClick);
 document.addEventListener('atlas-xref', (event) => {
   const { num } = (event as CustomEvent<XrefDetail>).detail;
   void router.stateService.go('atlas.sheet', { num });
+});
+// A plate's pick is the url's `focus`; taking the event stops its own history write.
+document.addEventListener('atlas-focus', (event) => {
+  event.preventDefault();
+  const { focus } = (event as CustomEvent<FocusDetail>).detail;
+  router.stateService.go('.', { focus }, { location: 'replace' }).then(
+    () => {},
+    () => {}, // an ignored or superseded pick is not an error here
+  );
 });
 
 // EXPERIMENTAL: hooks are registered before start() so the very first
