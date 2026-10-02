@@ -429,7 +429,7 @@ export function pipelineSection() {
     </div>
   </div>
   <div class="pg-stage">
-    <div class="pg-cy" id="pg-cy" role="img" tabindex="0" aria-label="Interactive flow graph of the census pipeline: archive basis, ${A.stats.probes} probe stations, ${A.stats.plates} filed plates and ${A.stats.drawings} drawings. With the graph focused, the arrow keys step the pin through the buildings and Escape clears it."></div>
+    <div class="pg-cy" id="pg-cy" role="application" tabindex="0" aria-label="Interactive flow graph of the census pipeline: archive basis, ${A.stats.probes} probe stations, ${A.stats.plates} filed plates and ${A.stats.drawings} drawings. With the graph focused, the arrow keys step the pin through the buildings and Escape clears it."></div>
     <aside class="pg-info" id="pg-info"></aside>
   </div>
   <p class="pg-basis">BASIS — all ${A.stats.plates} plates pinned to ${A.ref} @ ${A.sha} · commit ${A.commitDate} · ${A.stats.nodes} nodes and ${A.stats.edges} edges introspected from <code>www/atlas.lit-ui-router.dev/generator/</code> and <code>www/atlas.lit-ui-router.dev/data/</code> by <code>generator/census-atlas.mjs</code> and embedded here verbatim; layout ranked from those edges, drawn with cytoscape <code>preset</code> — no physics. The archive basis is the one node the census does not contain: it is drawn from the plates' own shared pin.</p>
