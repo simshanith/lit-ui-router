@@ -22,12 +22,33 @@
 .cs-canvas canvas { display: block; }
 .cs-canvas .cs-note { position: absolute; inset: 0; display: grid; place-items: center; text-align: center;
   font-family: var(--data); font-size: 10.5px; letter-spacing: 0.08em; color: var(--ink-soft); padding: 20px; }
-.cs-info { border-top: 1.5px solid var(--ink); background: var(--paper-2); padding: 9px 14px 10px;
-  font-family: var(--data); font-size: 10.5px; letter-spacing: 0.04em; color: var(--ink); min-height: 52px; }
-/* the mass name is a bare identifier — the one place the code face earns its keep */
-.cs-info h3 { font-family: var(--code); font-size: 13px; letter-spacing: 0.08em; margin: 0 0 3px; word-break: break-all; }
-.cs-info p { margin: 0; color: var(--ink-soft); word-break: break-word; }
-.cs-info .hint { color: var(--ink-soft); }
+/* THE CAPTION STRIP. Three kinds of text, each in its own role: the member's identity
+   (its chip number as the cards set theirs, its name in the code face — a bare identifier
+   is the one place that face earns its keep), a ledger line in the data face at the key
+   block's size, and sentences in the prose face at the running text's. Two columns once
+   the strip is wide enough to carry them: identity left, sentences right. */
+.cs-info { border-top: 1.5px solid var(--ink); background: var(--paper-2); padding: 14px 18px 16px;
+  display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px 36px; align-items: start;
+  min-height: 92px; color: var(--ink); }
+.cs-info h3 { font-family: var(--code); font-size: 16px; font-weight: 600; letter-spacing: 0.04em;
+  line-height: 1.3; margin: 0; word-break: break-all; }
+.cs-info h3 .n { font-family: var(--data); font-size: 11px; font-weight: 600; letter-spacing: 0.16em;
+  color: var(--accent); margin-right: 10px; vertical-align: 0.12em; white-space: nowrap; }
+.cs-info .ledger { font-family: var(--data); font-size: 12px; letter-spacing: 0.08em; line-height: 1.5;
+  color: var(--ink-soft); margin: 3px 0 0; word-break: break-word; }
+.cs-info .txt { display: grid; gap: 4px; }
+.cs-info .note, .cs-info .lamp, .cs-info .hint { font-family: var(--prose); font-size: 16px; line-height: 1.5;
+  color: var(--ink); max-width: 66ch; margin: 0; }
+.cs-info .lamp, .cs-info .hint { color: var(--ink-soft); }
+@media (min-width: 900px) {
+  .cs-info { grid-template-columns: 300px minmax(0, 1fr); }
+  .cs-info > .hint { grid-column: 1 / -1; }
+}
+@media (max-width: 560px) {
+  .cs-info { padding: 12px 14px 14px; }
+  .cs-info h3 { font-size: 15px; }
+  .cs-info .note, .cs-info .lamp, .cs-info .hint { font-size: 15px; }
+}
 /* the plate's general notes, set to the flat set's notes measure: 18/1.8 prose in columns
    no narrower than 24em (48ch) and, because the next column lands first, never past 74ch */
 .cs-basis { font-family: var(--prose); font-size: 18px; line-height: 1.8; color: var(--ink);

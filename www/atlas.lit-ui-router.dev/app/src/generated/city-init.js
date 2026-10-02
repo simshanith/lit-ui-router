@@ -556,9 +556,10 @@ export async function initCity(root, THREE, focus) {
       var line = D.distText[b.dist] + ' · ' + D.tierText[b.tier] + ' — '
         + (b.sf ? fmt(b.sl) + ' src sloc in ' + b.sf + plural(b.sf) : 'no authored source');
       if (b.pf) line += ' · spec annex ' + fmt(b.pl) + ' sloc in ' + b.pf + plural(b.pf);
-      var tail = lane === 'light' ? '<p>' + survey(b) + '</p>' : '';
-      return '<h3>' + b.n + ' · ' + b.name + '</h3><p>' + line + '</p><p>'
-        + (D.notes[b.n] || '') + '</p>' + tail;
+      var tail = lane === 'light' ? '<p class="lamp">' + survey(b) + '</p>' : '';
+      return '<div class="id"><h3><span class="n">' + b.n + '</span>' + b.name + '</h3>'
+        + '<p class="ledger">' + line + '</p></div><div class="txt"><p class="note">'
+        + (D.notes[b.n] || '') + '</p>' + tail + '</div>';
     }
     var litN = null;                // the member drawn hot: the hover over the pin, else the pin
     var pinN = null;
