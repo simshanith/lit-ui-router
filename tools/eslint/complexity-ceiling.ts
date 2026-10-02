@@ -24,6 +24,11 @@ export default defineConfig(
       noInlineConfig: true,
       reportUnusedDisableDirectives: 'off',
     },
+    rules: { complexity: ['error', { max: 25 }] },
+  },
+  {
+    // Vendored from lit-a11y; kept in upstream's shape so re-syncs stay a diff.
+    files: ['packages/eslint-plugin-lit-ui-router/src/anchor-is-valid.ts'],
     rules: { complexity: ['error', { max: 35 }] },
   },
 );
