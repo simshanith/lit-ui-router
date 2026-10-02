@@ -14,6 +14,7 @@ import { installServerLocation } from 'ui-router-server/location';
 
 import { prerender } from '../prerender.js';
 import type { FileWriter, RedirectLine } from '../prerender.js';
+import { settle } from '../settle.js';
 
 // --- fixtures ------------------------------------------------------------
 
@@ -73,6 +74,16 @@ const run = async (
   });
   return { files, result };
 };
+
+/** The leading signature comment, as the client's parser would split it off. */
+const SIGNATURE = /^<!--lit-ui-router-ssr (.*?)-->/s;
+
+/** A page with its signature comment dropped. */
+const withoutSignature = (page: string): string => page.replace(SIGNATURE, '');
+
+/** The signature a page opens on, parsed. */
+const signatureIn = (page: string): unknown =>
+  JSON.parse(SIGNATURE.exec(page)![1]);
 
 // --- verdict → artefact --------------------------------------------------
 
@@ -485,7 +496,7 @@ describe('the render composition', () => {
       renderShell: (): TemplateResult => html`<router-probe></router-probe>`,
     });
 
-    expect(files.get('dist/index.html')).toBe(
+    expect(withoutSignature(files.get('dist/index.html')!)).toBe(
       '<!--lit-part l2LFYrjnTDM=--><router-probe defer-hydration></router-probe><!--/lit-part-->',
     );
   });
@@ -498,6 +509,61 @@ describe('the render composition', () => {
     });
 
     expect(files.get('dist/index.html')).toContain('<ui-view defer-hydration>');
+  });
+});
+
+describe('the hydration signature', () => {
+  const version = import.meta.env.PACKAGE_VERSION;
+
+  /** Prerenders `paths` with a renderShell that settles the router on each one first. */
+  const settled = (paths: string[]) => {
+    const router = sheetRouter();
+    return run({
+      router,
+      paths,
+      notFound: false,
+      renderShell: async (_verdict, { path }): Promise<TemplateResult> => {
+        await settle(router, path);
+        return html`<p>page</p>`;
+      },
+    });
+  };
+
+  it('opens a rendered page on the version, the state and its params', async () => {
+    const { files } = await settled(['/sheet/7B']);
+    const page = files.get('dist/sheet/7B/index.html')!;
+
+    expect(signatureIn(page)).toEqual({
+      version,
+      state: 'sheet',
+      params: { '#': null, num: '7B' },
+    });
+    expect(withoutSignature(page)).toMatch(/^<!--lit-part /);
+  });
+
+  it('reads the version from the manifest', async () => {
+    const manifest = JSON.parse(
+      await readFile(new URL('../../package.json', import.meta.url), 'utf8'),
+    ) as { version: string };
+
+    expect(version).toBe(manifest.version);
+  });
+
+  it('keeps a param value that spells a comment close inside the comment', async () => {
+    const awkward = `--><script>alert("x")</script><!--&'`;
+    const { files } = await settled([`/sheet/${encodeURIComponent(awkward)}`]);
+    const [page] = files.values();
+
+    // one comment, closed where the signature ends, with no raw angle bracket inside
+    const comment = SIGNATURE.exec(page)![1];
+    expect(comment).not.toMatch(/[<>]/);
+    expect(signatureIn(page)).toMatchObject({ params: { num: awkward } });
+  });
+
+  it('writes none ahead of a string renderShell returns', async () => {
+    const { files } = await run({ paths: ['/'], notFound: false });
+
+    expect(files.get('dist/index.html')).toBe('<p>page</p>');
   });
 });
 

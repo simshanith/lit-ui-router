@@ -16,6 +16,8 @@ import { UiView } from 'lit-ui-router/pure';
 import { adoptUiViewContext } from './adopt-context.js';
 import type { AdoptableView } from './adopt-context.js';
 import { servedMarkerPrefix } from './served-markers.js';
+import { packageVersion, signaturePrefix } from './signature.js';
+import type { HydrationSignature } from './signature.js';
 
 export {
   adoptUiViewContext,
@@ -30,6 +32,7 @@ export {
   servedViewBrand,
   withServedRender,
 } from './served-view.js';
+export type { HydrationSignature } from './signature.js';
 
 /** The attribute `@lit-labs/ssr` writes on a server-rendered custom element. */
 const DEFER = 'defer-hydration';
@@ -443,16 +446,70 @@ const pinAdopter = (
   });
 };
 
-/** Whether the container's leading nodes open a render `hydrate()` can read. */
-const isServed = (container: HTMLElement): boolean => {
-  for (const child of container.childNodes) {
-    if (isPart(child, 'lit-part')) return true;
-    if (child.nodeType === Node.COMMENT_NODE) continue;
-    if (child.nodeType === Node.TEXT_NODE && !(child as Text).data.trim()) {
-      continue;
-    }
-    return false;
+/** The JSON a signature comment carries, or null when it does not parse to one with a version. */
+const parseSignature = (json: string): HydrationSignature | null => {
+  try {
+    const signature = JSON.parse(json) as Partial<HydrationSignature> | null;
+    return typeof signature?.version === 'string'
+      ? (signature as HydrationSignature)
+      : null;
+  } catch {
+    return null;
   }
+};
+
+/**
+ * Reads the hydration signature `prerender()` wrote ahead of the render a
+ * container holds: the version of this package that drew the document, and
+ * the state and parameter values it was drawn for.
+ *
+ * The signature is a comment among the container's own children, so this reads
+ * no deeper than they are. It reads the same before and after
+ * {@link hydrateRoot}, which leaves the comment in place.
+ *
+ * @param container - the element the server's markup was written into
+ * @returns the signature, or `null` when the container holds none, or one that
+ * does not parse
+ *
+ * @category client
+ */
+export function readHydrationSignature(
+  container: ParentNode,
+): HydrationSignature | null {
+  for (const child of container.childNodes) {
+    if (isPart(child, signaturePrefix)) {
+      return parseSignature(
+        (child as Comment).data.slice(signaturePrefix.length),
+      );
+    }
+  }
+  return null;
+}
+
+/** The release line a version belongs to: `0.<minor>` below 1.0, where a minor breaks, and the major above it. */
+const releaseLine = (version: string): string => {
+  const [major = '', minor = ''] = version.split('.');
+  return major === '0' ? `0.${minor}` : major;
+};
+
+const warnVersionSkew = (served: string): void => {
+  // DEV folds away in dist/*.js; see check:dev-split and dev-warnings.json.
+  if (!import.meta.env.DEV) return;
+  console.warn(
+    'lit-ui-router-ssr: this document was prerendered by a release line this client does not adopt, so hydrateRoot() left it to a cold render. Prerender it again with the version the client ships. Prerendered by, then client:',
+    served,
+    packageVersion,
+  );
+};
+
+/** Whether the container carries a signature this build adopts; a version on another release line warns in development. */
+const isAdoptable = (container: HTMLElement): boolean => {
+  const signature = readHydrationSignature(container);
+  if (!signature) return false;
+  if (releaseLine(signature.version) === releaseLine(packageVersion)) {
+    return true;
+  }
+  warnVersionSkew(signature.version);
   return false;
 };
 
@@ -466,6 +523,14 @@ const makeCold = (container: HTMLElement): void => {
 
 /**
  * Adopts a server-rendered container, and the `<ui-view>`s that wake under it.
+ *
+ * The container's {@link readHydrationSignature | hydration signature} is read
+ * first, and decides whether there is anything to adopt. A container with no
+ * signature renders cold, and so does one whose signature names another release
+ * line of this package — another minor below 1.0, another major from 1.0 — with
+ * a development warning naming both versions. Either way the container is left
+ * cold-renderable, as below, and this returns `false` without touching the
+ * render.
  *
  * {@link adoptUiViewContext} is provided on `container` with core's
  * `provideContext()` first, so a view woken by the walk finds it; `hydrate()`
@@ -519,7 +584,7 @@ const makeCold = (container: HTMLElement): void => {
  * @param container - the element the server's markup was written into
  * @param value - the same template the server rendered, with every `<ui-view>` hole empty
  * @param options - lit render options, passed on to `hydrate()`, and `onAdopt`
- * @returns the function that releases the provider, or `false` when the container holds nothing to adopt — a cold client render, a dev server
+ * @returns the function that releases the provider, or `false` when the container holds nothing to adopt — no signature, as on a cold client render or a dev server, or one from another release line
  *
  * @category client
  */
@@ -528,7 +593,10 @@ export function hydrateRoot(
   value: unknown,
   options: HydrateRootOptions = {},
 ): false | (() => void) {
-  if (!isServed(container)) return false;
+  if (!isAdoptable(container)) {
+    makeCold(container);
+    return false;
+  }
   const { onAdopt, ...renderOptions } = options;
   const release = provideContext(container, adoptUiViewContext, (view) =>
     adopt(view, onAdopt),

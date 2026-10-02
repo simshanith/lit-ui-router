@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { configDefaults, defineConfig } from 'vitest/config';
 
@@ -63,10 +64,16 @@ const renderLightProd = {
 
 const cacheKey = process.env.VITEST_BROWSER_API_PORT ?? 'default';
 
+// What oxc-emit-js defines as `import.meta.env.PACKAGE_VERSION` in dist/.
+const { version } = JSON.parse(
+  readFileSync(source('./package.json'), 'utf8'),
+) as { version: string };
+
 export default defineConfig({
   cacheDir: `node_modules/.vite-${cacheKey}`,
   resolve: { alias: peerAliases },
   test: {
+    env: { PACKAGE_VERSION: version },
     // hanging-process logs the open handles in CI
     reporters: process.env.CI ? ['default', 'hanging-process'] : ['default'],
     coverage: {

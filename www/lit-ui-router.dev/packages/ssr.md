@@ -403,6 +403,29 @@ import { hydrateRoot } from 'lit-ui-router-ssr/client';
 const release = hydrateRoot(root, page(router));
 ```
 
+`prerender()` opens every page it renders from a template on a hydration
+signature: one comment ahead of the render, carrying this package's version
+and the name and parameter values of the state the router stood on.
+
+```text
+<!--lit-ui-router-ssr {"version":"0.2.0","state":"sheet","params":{"#":null,"num":"7B"}}-->
+```
+
+`hydrateRoot` reads it before it touches the document, and returns `false`,
+leaving the container for a cold render, when it finds nothing to adopt:
+
+- **No signature.** A cold client render, a dev server, or a page whose
+  `renderShell` returned a string.
+- **A signature from another release line.** Below 1.0 a minor breaks, so a
+  document adopts only on the client's own minor; from 1.0, its own major.
+  The development build warns, naming both versions.
+
+[`readHydrationSignature`](/api/lit-ui-router-ssr/functions/readHydrationSignature)
+returns the parsed
+[`HydrationSignature`](/api/lit-ui-router-ssr/interfaces/HydrationSignature),
+or `null` when the container holds none or one that does not parse, so a boot
+can compare the state the document was drawn for with the one it booted into.
+
 Every [`uiViewSlot`](/api/lit-ui-router-ssr/variables/uiViewSlot) that walk
 reaches wakes the `<ui-view>` it sits in, and the waking view requests
 [`adoptUiViewContext`](/api/lit-ui-router-ssr/variables/adoptUiViewContext)

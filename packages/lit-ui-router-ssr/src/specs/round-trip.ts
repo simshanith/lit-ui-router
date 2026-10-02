@@ -8,12 +8,13 @@ import { withRouterSync } from 'lit-ui-router/context';
 import type { UIRouterLit } from 'lit-ui-router/pure';
 import { hydrateRoot } from '../client.js';
 import { settle } from '../settle.js';
+import { signatureComment, signatureOf } from '../signature.js';
 import { makeRouter } from './fixture.js';
 
 /** A page template, drawn by the server and re-rendered by the client. */
 export type Page = (router: UIRouterLit) => TemplateResult;
 
-/** The document a build would have emitted for `path`, with `prerender()`'s own render options. */
+/** The document a build would have emitted for `path`, with `prerender()`'s own render options and signature. */
 export const draw = async (
   page: Page,
   renderers: RenderInfo['elementRenderers'],
@@ -21,13 +22,16 @@ export const draw = async (
 ): Promise<string> => {
   const router = makeRouter();
   await settle(router, path);
-  return withRouterSync(router, () =>
-    collectResultSync(
-      render(page(router), {
-        elementRenderers: renderers,
-        deferHydration: true,
-      }),
-    ),
+  return (
+    signatureComment(signatureOf(router)) +
+    withRouterSync(router, () =>
+      collectResultSync(
+        render(page(router), {
+          elementRenderers: renderers,
+          deferHydration: true,
+        }),
+      ),
+    )
   );
 };
 
