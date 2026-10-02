@@ -17,7 +17,7 @@
 // physics, so the picture is the same on every load.
 import { readFileSync } from 'node:fs';
 import { PROJECT_MARK, articleTitle } from './chrome.mjs';
-import { PLATE_FOCUS_JS } from './focus.mjs';
+import { LANE_KEYS_JS, PLATE_FOCUS_JS } from './focus.mjs';
 import { glyph } from './icons.mjs';
 import { CYTOSCAPE_URL } from './pipeline-graph.mjs';
 import { SPRITES, spriteSvg } from './sprites.mjs';
@@ -170,6 +170,7 @@ const CSS = `
 .cb-stage { display: grid; grid-template-columns: minmax(0, 1fr) 268px; border: 1.5px solid var(--ink);
   background: var(--paper); }
 .cb-cy { height: 620px; min-width: 0; }
+.cb-cy:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .cb-info { border-left: 1.5px solid var(--ink); background: var(--paper-2); padding: 12px 14px;
   font-family: var(--data); font-size: 10.5px; letter-spacing: 0.04em; color: var(--ink); overflow-y: auto;
   max-height: 620px; }
@@ -378,6 +379,7 @@ $$FOCUS  // The cytoscape tag above is deferred; deferred scripts run before
   });
   clear();
   apply(atlasFocusHost(stage, apply));
+  atlasLaneKeys(stage, function () { return cy.nodes('[key]'); }, function () { return pinned; }, tap);
 
   document.getElementById('cb-fit').addEventListener('click', function () { cy.fit(cy.elements(), 40); });
 
@@ -418,14 +420,14 @@ export function couplingBenchSection() {
     </div>
   </div>
   <div class="cb-stage">
-    <div class="cb-cy" id="cb-cy" role="img" aria-label="Interactive coupling graph: the ${C.totals.published} published packages, @uirouter/core and lit, with one edge per declared dependency or peer dependency, each labelled with its published range. lit-ui-router-ssr is the one node with a tie to two siblings — the flagship and the server."></div>
+    <div class="cb-cy" id="cb-cy" role="img" tabindex="0" aria-label="Interactive coupling graph: the ${C.totals.published} published packages, @uirouter/core and lit, with one edge per declared dependency or peer dependency, each labelled with its published range. lit-ui-router-ssr is the one node with a tie to two siblings — the flagship and the server. With the graph focused, the arrow keys step the pin through the buildings and Escape clears it."></div>
     <aside class="cb-info" id="cb-info"></aside>
   </div>
   <p class="cb-basis">BASIS — ${C.totals.contracts} contracts read from <code>packages/*/package.json</code> at ${C.ref} @ ${C.sha} · commit ${C.commitDate} · every <code>catalog:</code> spec resolved through the archive's own <code>pnpm-workspace.yaml</code> to the range that ships, and <code>@uirouter/core</code> and <code>lit</code> versions taken from <code>pnpm-lock.yaml</code>, by <code>generator/census-couplings.mjs</code> · massing and storeys from <code>census-bricks.json</code> · layout is sheet 2A's arrangement in five columns — the lit companions, the navigation plugin alone, the two externals, effect and ssr, the eslint bay — computed at build and drawn with cytoscape <code>preset</code> — no physics, and no bowed ties.</p>
 </section>
 <script type="application/json" id="cb-layout">${json(LAYOUT)}</script>
 <script defer src="${CYTOSCAPE_URL}"></script>
-<script>${INIT.replace('$$FOCUS', () => PLATE_FOCUS_JS)}</script>`;
+<script>${INIT.replace('$$FOCUS', () => PLATE_FOCUS_JS + LANE_KEYS_JS)}</script>`;
 }
 
 // sheet 2B's prose reads the same figures the bench does

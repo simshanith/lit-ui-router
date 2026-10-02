@@ -507,6 +507,7 @@ a { color: var(--accent); }
 .pg-stage { display: grid; grid-template-columns: minmax(0, 1fr) 240px; border: 1.5px solid var(--ink);
   background: var(--paper); }
 .pg-cy { height: 700px; min-width: 0; }
+.pg-cy:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .pg-info { border-left: 1.5px solid var(--ink); background: var(--paper-2); padding: 12px 14px;
   font-family: var(--data); font-size: 10.5px; letter-spacing: 0.04em; color: var(--ink); overflow-y: auto;
   max-height: 700px; }
@@ -545,7 +546,7 @@ a { color: var(--accent); }
     </div>
   </div>
   <div class="pg-stage">
-    <div class="pg-cy" id="pg-cy" role="img" aria-label="Interactive flow graph of the census pipeline: archive basis, 17 probe stations, 17 filed plates and 20 drawings."></div>
+    <div class="pg-cy" id="pg-cy" role="img" tabindex="0" aria-label="Interactive flow graph of the census pipeline: archive basis, 17 probe stations, 17 filed plates and 20 drawings. With the graph focused, the arrow keys step the pin through the buildings and Escape clears it."></div>
     <aside class="pg-info" id="pg-info"></aside>
   </div>
   <p class="pg-basis">BASIS — all 17 plates pinned to origin/main @ 63c0b823 · commit 2026-09-28 · 69 nodes and 101 edges introspected from <code>www/<wbr>atlas.lit-ui-router.dev/<wbr>generator/<wbr></code> and <code>www/<wbr>atlas.lit-ui-router.dev/<wbr>data/<wbr></code> by <code>generator/<wbr>census-atlas.mjs</code> and embedded here verbatim; layout ranked from those edges, drawn with cytoscape <code>preset</code> — no physics. The archive basis is the one node the census does not contain: it is drawn from the plates' own shared pin.</p>
@@ -570,6 +571,21 @@ a { color: var(--accent); }
     var host = from.closest('atlas-plate');
     if (host) host.addEventListener('atlas-focus-set', function (e) { apply(e.detail.focus); });
     return atlasFocusRead(host ? host.getAttribute('data-focus') || null : undefined);
+  }
+  function atlasLaneKeys(stage, order, pinned, tap) {
+    stage.addEventListener('keydown', function (e) {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      var d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+      if (d) {
+        var list = order().toArray(), p = pinned(), at = -1;
+        for (var i = 0; i < list.length; i++) if (p && list[i].same(p)) at = i;
+        var next = list[at < 0 ? (d > 0 ? 0 : list.length - 1) : (at + d + list.length) % list.length];
+        if (next && !(p && next.same(p))) tap(next);
+      } else if (e.key === 'Escape') tap(null);
+      else return;
+      e.preventDefault();
+      e.stopPropagation();
+    });
   }
   // The cytoscape tag above is deferred; deferred scripts run before
   // DOMContentLoaded, so boot there rather than probing during parse.
@@ -738,6 +754,7 @@ a { color: var(--accent); }
   document.getElementById('pg-fit').addEventListener('click', function () { cy.fit(cy.elements(':visible'), 34); });
   tools.addEventListener('change', function (e) { showTools(e.target.checked); show(pinned); });
   apply(atlasFocusHost(stage, apply));
+  atlasLaneKeys(stage, function () { return cy.nodes('[key]:visible'); }, function () { return pinned; }, tap);
 
   function repaint() {
     var s = sprites();

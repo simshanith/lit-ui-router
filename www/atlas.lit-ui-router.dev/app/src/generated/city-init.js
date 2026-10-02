@@ -498,23 +498,36 @@ export async function initCity(root, THREE, focus) {
     var tween = null;
     function step(now) {
       if (!tween) return;
-      var k = Math.min(1, (now - tween.t0) / tween.d);
+      // a frame stamp can precede the glide that queued it
+      var k = Math.max(0, Math.min(1, (now - tween.t0) / tween.d));
       var e = 1 - Math.pow(1 - k, 3);
       az = tween.a0 + (tween.a1 - tween.a0) * e;
       camera.zoom = tween.z0 + (tween.z1 - tween.z0) * e;
+      target.lerpVectors(tween.p0, tween.p1, e);
       camera.updateProjectionMatrix();
       draw();
       if (k < 1) { _rafT = requestAnimationFrame(step); } else { az = tween.a1; tween = null; }
     }
-    function glide(a1, z1) {
+    // the orbit target eases with the pose; left out, it stays where it is
+    function glide(a1, z1, p1) {
+      p1 = (p1 || target).clone();
       if (reduce.matches) {
-        az = a1; camera.zoom = z1; camera.updateProjectionMatrix(); tween = null; draw();
+        az = a1; camera.zoom = z1; target.copy(p1); camera.updateProjectionMatrix(); tween = null; draw();
         return;
       }
-      tween = { a0: az, a1: a1, z0: camera.zoom, z1: z1, t0: performance.now(), d: D.snapMs };
+      tween = { a0: az, a1: a1, z0: camera.zoom, z1: z1, p0: target.clone(), p1: p1, t0: performance.now(), d: D.snapMs };
       _rafT = requestAnimationFrame(step);
     }
-    function snap() { glide(Math.round((az - AZ0) / STEP) * STEP + AZ0, camera.zoom); }
+    function snapped() { return Math.round((az - AZ0) / STEP) * STEP + AZ0; }
+    function snap() { glide(snapped(), camera.zoom); }
+    var HOME = target.clone();
+    function home() { glide(AZ0, 1, HOME); }
+    // a pin from the url or the keyboard brings its member in; a clear eases home, the azimuth held
+    function frame(n) {
+      var b = n === null ? null : byN[n];
+      if (!b) { glide(snapped(), 1, HOME); return; }
+      glide(snapped(), Math.max(camera.zoom, D.pinZoom), new THREE.Vector3(b.x + b.s / 2 - cx, b.h / 2, b.y + b.s / 2 - cz));
+    }
 
     // ---- picking: the canvas is flat and untransformed, so a raycast is honest --
     var ray = new THREE.Raycaster();
@@ -653,8 +666,27 @@ export async function initCity(root, THREE, focus) {
       camera.updateProjectionMatrix();
       ask();
     }, { passive: false });
-    stage.addEventListener('dblclick', function () { engaged = true; glide(AZ0, 1); });
-    document.getElementById('cs-reset').addEventListener('click', function () { glide(AZ0, 1); });
+    stage.addEventListener('dblclick', function () { engaged = true; home(); });
+    document.getElementById('cs-reset').addEventListener('click', home);
+    // with the stage focused, arrows step the pin through the members in schedule order
+    var order = rows.filter(function (b) { return b.tier !== 'off'; })
+      .map(function (b) { return b.n; }).sort(function (a, b) { return a - b; });
+    function key(n) {
+      var was = pinN;
+      tap(n, false);
+      if (pinN !== was) frame(pinN);
+    }
+    stage.addEventListener('keydown', function (e) {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      var d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+      var at = order.indexOf(pinN);
+      if (d) key(order[at < 0 ? (d > 0 ? 0 : order.length - 1) : (at + d + order.length) % order.length]);
+      else if (e.key === 'Enter' || e.key === ' ') key(litN !== null ? litN : pinN !== null ? pinN : order[0]);
+      else if (e.key === 'Escape') key(pinN);
+      else return;
+      e.preventDefault();
+      e.stopPropagation();
+    });
     document.getElementById('cs-lane').addEventListener('change', function (e) {
       setLane(e.target.checked ? 'light' : 'tier');
     });
@@ -665,13 +697,15 @@ export async function initCity(root, THREE, focus) {
     (_mo = new MutationObserver(paint)).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
     if (hint) hint.textContent = 'DRAG TO ORBIT · RELEASE SNAPS · HOVER TO READ · TAP TO PIN · SCROLL TO ZOOM · DOUBLE-CLICK RESETS';
     pin(member(atlasFocusRead(focus)));
+    if (pinN !== null) frame(pinN);
 
     // verification hook: azimuth in degrees, live zoom, the initial pose
     window.__cityScene = {
       az: function () { return ((az * 180 / Math.PI) % 360 + 360) % 360; },
       zoom: function () { return camera.zoom; },
       tweening: function () { return tween !== null; },
-      reset: function () { glide(AZ0, 1); },
+      reset: home,
+      target: function () { return { x: target.x, y: target.y, z: target.z }; },
       hovered: function () { return litN; },
       pinned: function () { return pinN; },
       lane: function () { return lane; },
@@ -689,7 +723,7 @@ export async function initCity(root, THREE, focus) {
 
     // var hoists, so the captures above are legal before this declaration runs
     var _raf = 0, _rafT = 0, _ro = null, _rz = null, _mq = null, _mo = null;
-    var handle = { select: function (n) { if (member(n) !== pinN) pin(member(n)); } };
+    var handle = { select: function (n) { if (member(n) !== pinN) { pin(member(n)); frame(pinN); } } };
     handle.dispose = function dispose() {
       if (_raf) cancelAnimationFrame(_raf);
       if (_rafT) cancelAnimationFrame(_rafT);

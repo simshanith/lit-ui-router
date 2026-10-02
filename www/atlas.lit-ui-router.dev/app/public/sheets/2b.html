@@ -22,6 +22,7 @@
 .cb-stage { display: grid; grid-template-columns: minmax(0, 1fr) 268px; border: 1.5px solid var(--ink);
   background: var(--paper); }
 .cb-cy { height: 620px; min-width: 0; }
+.cb-cy:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .cb-info { border-left: 1.5px solid var(--ink); background: var(--paper-2); padding: 12px 14px;
   font-family: var(--data); font-size: 10.5px; letter-spacing: 0.04em; color: var(--ink); overflow-y: auto;
   max-height: 620px; }
@@ -58,7 +59,7 @@
     </div>
   </div>
   <div class="cb-stage">
-    <div class="cb-cy" id="cb-cy" role="img" aria-label="Interactive coupling graph: the 7 published packages, @uirouter/core and lit, with one edge per declared dependency or peer dependency, each labelled with its published range. lit-ui-router-ssr is the one node with a tie to two siblings — the flagship and the server."></div>
+    <div class="cb-cy" id="cb-cy" role="img" tabindex="0" aria-label="Interactive coupling graph: the 7 published packages, @uirouter/core and lit, with one edge per declared dependency or peer dependency, each labelled with its published range. lit-ui-router-ssr is the one node with a tie to two siblings — the flagship and the server. With the graph focused, the arrow keys step the pin through the buildings and Escape clears it."></div>
     <aside class="cb-info" id="cb-info"></aside>
   </div>
   <p class="cb-basis">BASIS — 23 contracts read from <code>packages/<wbr>*/<wbr>package.json</code> at origin/main @ 63c0b823 · commit 2026-09-28T23:32:37-07:00 · every <code>catalog:</code> spec resolved through the archive's own <code>pnpm-workspace.yaml</code> to the range that ships, and <code>@uirouter/<wbr>core</code> and <code>lit</code> versions taken from <code>pnpm-lock.yaml</code>, by <code>generator/<wbr>census-couplings.mjs</code> · massing and storeys from <code>census-bricks.json</code> · layout is <a class="xref" data-sheet="2A" href="/sheet/2A">sheet 2A</a>'s arrangement in five columns — the lit companions, the navigation plugin alone, the two externals, effect and ssr, the eslint bay — computed at build and drawn with cytoscape <code>preset</code> — no physics, and no bowed ties.</p>
@@ -81,6 +82,21 @@
     var host = from.closest('atlas-plate');
     if (host) host.addEventListener('atlas-focus-set', function (e) { apply(e.detail.focus); });
     return atlasFocusRead(host ? host.getAttribute('data-focus') || null : undefined);
+  }
+  function atlasLaneKeys(stage, order, pinned, tap) {
+    stage.addEventListener('keydown', function (e) {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      var d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+      if (d) {
+        var list = order().toArray(), p = pinned(), at = -1;
+        for (var i = 0; i < list.length; i++) if (p && list[i].same(p)) at = i;
+        var next = list[at < 0 ? (d > 0 ? 0 : list.length - 1) : (at + d + list.length) % list.length];
+        if (next && !(p && next.same(p))) tap(next);
+      } else if (e.key === 'Escape') tap(null);
+      else return;
+      e.preventDefault();
+      e.stopPropagation();
+    });
   }
   // The cytoscape tag above is deferred; deferred scripts run before
   // DOMContentLoaded, so boot there rather than probing during parse.
@@ -268,6 +284,7 @@
   });
   clear();
   apply(atlasFocusHost(stage, apply));
+  atlasLaneKeys(stage, function () { return cy.nodes('[key]'); }, function () { return pinned; }, tap);
 
   document.getElementById('cb-fit').addEventListener('click', function () { cy.fit(cy.elements(), 40); });
 

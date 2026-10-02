@@ -155,11 +155,15 @@ export function createRouter(): UIRouterLit {
   else {
     // The plugin intercepts its own navigate() calls and asks for the options
     // once the transition has committed, so the tail of successfulTransitions
-    // is this navigation's; an in-place change keeps the reader's scroll.
+    // is this navigation's; an in-place change keeps the reader's scroll and focus.
     router.plugin(navigationLocationPlugin, {
       intercept: (event: UIRouterNavigateEvent): NavigationInterceptOptions => {
         const committed = event.info.uiRouter.globals.successfulTransitions.peekTail();
-        return { scroll: committed && isInPlaceChange(committed) ? 'manual' : 'after-transition' };
+        const inPlace = committed && isInPlaceChange(committed);
+        return {
+          scroll: inPlace ? 'manual' : 'after-transition',
+          focusReset: inPlace ? 'manual' : 'after-transition',
+        };
       },
     });
   }

@@ -13,7 +13,7 @@
 // them.  Tick the box and the placeholders flood in faint — the 70% of this
 // graph that runs nothing, drawn rather than asserted.
 import { readFileSync } from 'node:fs';
-import { PLATE_FOCUS_JS } from './focus.mjs';
+import { LANE_KEYS_JS, PLATE_FOCUS_JS } from './focus.mjs';
 import { glyph } from './icons.mjs';
 import { PALETTES } from './sprites.mjs';
 import { CYTOSCAPE_URL } from './pipeline-graph.mjs';
@@ -194,6 +194,7 @@ const CSS = `
 .rg-stage { display: grid; grid-template-columns: minmax(0, 1fr) 250px; border: 1.5px solid var(--ink);
   background: var(--paper); }
 .rg-cy { height: 720px; min-width: 0; }
+.rg-cy:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .rg-info { border-left: 1.5px solid var(--ink); background: var(--paper-2); padding: 12px 14px;
   font-family: var(--data); font-size: 10.5px; letter-spacing: 0.04em; color: var(--ink); overflow-y: auto;
   max-height: 720px; }
@@ -405,6 +406,7 @@ $$FOCUS  // The cytoscape tag is deferred; deferred scripts run BEFORE DOMConten
   }
   box.addEventListener('change', function (e) { setShroud(e.target.checked); });
   apply(atlasFocusHost(stage, apply));
+  atlasLaneKeys(stage, function () { return cy.nodes('.cell:visible'); }, function () { return pinned; }, tap);
 
   function repaint() {
     var s = skins();
@@ -486,12 +488,12 @@ export function registerLane() {
   </div>
 </div>
 <div class="rg-stage">
-  <div class="rg-cy" id="rg-cy" role="img" aria-label="An interactive register of the pull-request CI task graph: ${PKGS.length} packages as rows against ${COLS.length} task names as columns, ordered by dependency depth. By default only the ${REAL_N} command-bearing tasks and the ${REAL_E} edges joining two of them are drawn; the phantom shroud floods in the remaining ${NODES.length - REAL_N} placeholder nodes and ${fmt(EDGES.length - REAL_E)} edges."></div>
+  <div class="rg-cy" id="rg-cy" role="img" tabindex="0" aria-label="An interactive register of the pull-request CI task graph: ${PKGS.length} packages as rows against ${COLS.length} task names as columns, ordered by dependency depth. By default only the ${REAL_N} command-bearing tasks and the ${REAL_E} edges joining two of them are drawn; the phantom shroud floods in the remaining ${NODES.length - REAL_N} placeholder nodes and ${fmt(EDGES.length - REAL_E)} edges. With the graph focused, the arrow keys step the pin through the buildings and Escape clears it."></div>
   <aside class="rg-info" id="rg-info"></aside>
 </div>
 <p class="rg-basis">BASIS — <code>turbo run ${PIPE} --dry=json</code> against a materialized, installed archive of ${PLATE.ref} @ ${PLATE.sha} (commit ${PLATE.commitDate.slice(0, 10)}) · ${TURBO} · all ${fmt(NODES.length)} nodes and ${fmt(EDGES.length)} edges read verbatim from <code>www/atlas.lit-ui-router.dev/data/census-plate.json</code>'s <code>graphNodes</code> / <code>graphEdges</code> and embedded here unaggregated; columns ranked from those edges at build time and drawn with cytoscape <code>preset</code> — no physics, so the picture is the same on every load.</p>
 <script type="application/json" id="rg-graph">${json({ nodes: NODES, edges: EDGES })}</script>
 <script type="application/json" id="rg-layout">${json(island)}</script>
 <script defer src="${CYTOSCAPE_URL}"></script>
-<script>${INIT.replace('$$FOCUS', () => PLATE_FOCUS_JS)}</script>`;
+<script>${INIT.replace('$$FOCUS', () => PLATE_FOCUS_JS + LANE_KEYS_JS)}</script>`;
 }

@@ -10,7 +10,7 @@
 // no physics, so the picture is the same on every load.
 import { ATLAS } from './census-atlas.mjs';
 import { PROJECT_MARK, articleTitle } from './chrome.mjs';
-import { PLATE_FOCUS_JS } from './focus.mjs';
+import { LANE_KEYS_JS, PLATE_FOCUS_JS } from './focus.mjs';
 import { glyph } from './icons.mjs';
 import { SPRITES, spriteSvg } from './sprites.mjs';
 
@@ -180,6 +180,7 @@ const CSS = `
 .pg-stage { display: grid; grid-template-columns: minmax(0, 1fr) 240px; border: 1.5px solid var(--ink);
   background: var(--paper); }
 .pg-cy { height: 700px; min-width: 0; }
+.pg-cy:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .pg-info { border-left: 1.5px solid var(--ink); background: var(--paper-2); padding: 12px 14px;
   font-family: var(--data); font-size: 10.5px; letter-spacing: 0.04em; color: var(--ink); overflow-y: auto;
   max-height: 700px; }
@@ -367,6 +368,7 @@ $$FOCUS  // The cytoscape tag above is deferred; deferred scripts run before
   document.getElementById('pg-fit').addEventListener('click', function () { cy.fit(cy.elements(':visible'), 34); });
   tools.addEventListener('change', function (e) { showTools(e.target.checked); show(pinned); });
   apply(atlasFocusHost(stage, apply));
+  atlasLaneKeys(stage, function () { return cy.nodes('[key]:visible'); }, function () { return pinned; }, tap);
 
   function repaint() {
     var s = sprites();
@@ -427,7 +429,7 @@ export function pipelineSection() {
     </div>
   </div>
   <div class="pg-stage">
-    <div class="pg-cy" id="pg-cy" role="img" aria-label="Interactive flow graph of the census pipeline: archive basis, ${A.stats.probes} probe stations, ${A.stats.plates} filed plates and ${A.stats.drawings} drawings."></div>
+    <div class="pg-cy" id="pg-cy" role="img" tabindex="0" aria-label="Interactive flow graph of the census pipeline: archive basis, ${A.stats.probes} probe stations, ${A.stats.plates} filed plates and ${A.stats.drawings} drawings. With the graph focused, the arrow keys step the pin through the buildings and Escape clears it."></div>
     <aside class="pg-info" id="pg-info"></aside>
   </div>
   <p class="pg-basis">BASIS — all ${A.stats.plates} plates pinned to ${A.ref} @ ${A.sha} · commit ${A.commitDate} · ${A.stats.nodes} nodes and ${A.stats.edges} edges introspected from <code>www/atlas.lit-ui-router.dev/generator/</code> and <code>www/atlas.lit-ui-router.dev/data/</code> by <code>generator/census-atlas.mjs</code> and embedded here verbatim; layout ranked from those edges, drawn with cytoscape <code>preset</code> — no physics. The archive basis is the one node the census does not contain: it is drawn from the plates' own shared pin.</p>
@@ -435,5 +437,5 @@ export function pipelineSection() {
 <script type="application/json" id="pg-atlas">${json({ nodes: A.nodes, edges: A.edges })}</script>
 <script type="application/json" id="pg-layout">${json(LAYOUT)}</script>
 <script defer src="${CYTOSCAPE_URL}"></script>
-<script>${INIT.replace('$$FOCUS', () => PLATE_FOCUS_JS)}</script>`;
+<script>${INIT.replace('$$FOCUS', () => PLATE_FOCUS_JS + LANE_KEYS_JS)}</script>`;
 }

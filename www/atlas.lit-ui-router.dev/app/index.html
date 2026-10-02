@@ -355,7 +355,8 @@
         padding-left: 14px;
         border-left: 1px solid var(--edge);
       }
-      .themer button {
+      .themer button,
+      .util-copy {
         font-family: var(--data);
         font-size: 10px;
         letter-spacing: 0.14em;
@@ -366,8 +367,17 @@
         padding: 2px 0 1px;
         cursor: pointer;
       }
-      .themer button:hover {
+      .themer button:hover,
+      .util-copy:hover {
         color: var(--ink);
+      }
+      /* invisible, never display:none: the copy fallback selects it */
+      .util-copy-src {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        opacity: 0;
+        pointer-events: none;
       }
       .themer button[aria-pressed='true'] {
         color: var(--ink);

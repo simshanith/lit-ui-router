@@ -293,9 +293,76 @@ export class AtlasThemer extends LitElement {
 }
 customElements.define('atlas-themer', AtlasThemer);
 
+// --- <atlas-copy-link> — the page's own url, pin and all, onto the clipboard -
+
+// The router writes the href, so the artifact build copies its `#/…` url.
+export class AtlasCopyLink extends LitElement {
+  static override properties = { router: { attribute: false }, copied: { state: true } };
+
+  declare router: UIRouter | undefined;
+  declare copied: boolean;
+  #timer: ReturnType<typeof setTimeout> | undefined;
+
+  constructor() {
+    super();
+    this.router = undefined;
+    this.copied = false;
+  }
+
+  override createRenderRoot(): HTMLElement {
+    return this;
+  }
+
+  override disconnectedCallback(): void {
+    clearTimeout(this.#timer);
+    super.disconnectedCallback();
+  }
+
+  async #copy(): Promise<void> {
+    const router = this.router;
+    if (!router) return;
+    const url = router.stateService.href('.', snapshotRoute(router).params, { absolute: true });
+    if (!url) return;
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch {
+      // no clipboard, or no permission for it: select the url and copy the selection
+      const input = this.querySelector('input');
+      if (!input) return;
+      input.value = url;
+      input.select();
+      // oxlint-disable-next-line typescript/no-deprecated
+      const copied = document.execCommand('copy');
+      this.querySelector('button')?.focus();
+      if (!copied) return;
+    }
+    this.copied = true;
+    clearTimeout(this.#timer);
+    this.#timer = setTimeout(() => {
+      this.copied = false;
+    }, 1500);
+  }
+
+  override render(): TemplateResult {
+    return html`
+      <button type="button" class="util-copy" @click=${() => void this.#copy()}>
+        <span aria-live="polite">${this.copied ? 'COPIED' : 'COPY LINK'}</span>
+      </button>
+      <input class="util-copy-src" type="text" readonly tabindex="-1" aria-hidden="true" />
+    `;
+  }
+}
+customElements.define('atlas-copy-link', AtlasCopyLink);
+
+const copyLink = (router: UIRouter | undefined): TemplateResult =>
+  html`<atlas-copy-link .router=${router}></atlas-copy-link>`;
+
 // --- the utility bar: crumb left, utilities right, on every page ------------
 
-function utilBar(crumb: TemplateResult): TemplateResult {
+function utilBar(
+  crumb: TemplateResult,
+  copy: TemplateResult | typeof nothing = nothing,
+): TemplateResult {
   return html`
     <div class="util">
       <div class="crumb">${crumb}</div>
@@ -306,6 +373,7 @@ function utilBar(crumb: TemplateResult): TemplateResult {
         <a class="util-github" href="${GITHUB}" target="_blank" rel="noopener">GITHUB ↗</a>
         <!-- The flat set is plain pages beside the app, not a state: a real link. -->
         <a class="util-set" href="${out(href.set)}" target=${outTarget}>THE FLAT SET ↗</a>
+        ${copy}
         <atlas-themer></atlas-themer>
       </nav>
     </div>
@@ -949,7 +1017,9 @@ export const SheetView: RoutedLitTemplate<SheetResolves> = (props) => {
         ? html`<a href=${srefHref('atlas.sheet', { num: next.num })}>NEXT · ${next.num}</a>`
         : nothing}
       <a href="${out(href.plate(sheet.standalone))}" target=${outTarget}>STANDALONE PLATE ↗</a>
-    `)}
+    `,
+      sheet.needsCytoscape ? copyLink(props?.router) : nothing,
+    )}
     <div class="plate-data">
       <span>ALTITUDE · ${sheet.scale}</span>
       <span
@@ -977,7 +1047,9 @@ export const CityView: RoutedLitTemplate<CityResolves> = (props) => {
       ${indexCrumb()}
       <span class="sh">${extra.shno}</span>
       <a href="${out(href.plate(extra.standalone))}" target=${outTarget}>STANDALONE PLATE ↗</a>
-    `)}
+    `,
+      copyLink(props?.router),
+    )}
     <div class="plate-data">
       <span>ALTITUDE · ${extra.scale}</span>
       ${seeAlso(extra.refs)} ${keyBlock(extra.labels)}
@@ -1142,5 +1214,6 @@ declare global {
     'atlas-city': AtlasCity;
     'atlas-plate': AtlasPlate;
     'atlas-themer': AtlasThemer;
+    'atlas-copy-link': AtlasCopyLink;
   }
 }

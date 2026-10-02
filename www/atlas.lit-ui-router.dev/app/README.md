@@ -146,8 +146,9 @@ the line:
   with the same `strict: false`.
 - The Navigation API plugin's `intercept` option (`router.ts`). The plugin intercepts the
   `navigation.navigate()` calls it makes, so every click is a same-document navigation; the app's
-  option returns `scroll: 'manual'` for an in-place change — a key-index filter, or a `focus`
-  pick — so a chip or a pin keeps the reader's place while every other navigation lands at the top.
+  option returns `scroll: 'manual'` and `focusReset: 'manual'` for an in-place change — a key-index
+  filter, or a `focus` pick — so a chip or a pin keeps the reader's place and a focused plate keeps
+  its keys, while every other navigation lands at the top.
 - Cased ids are canonical (`/sheet/2A`). `/sheet/2a` redirects to it on both sides: an `onBefore`
   guard in the browser, a redirect rule in the mount, and therefore a `_redirects` line from the
   prerender.
