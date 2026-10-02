@@ -162,14 +162,14 @@ Optionally, exempt test fixtures, whose elements exist to be driven rather than 
 ✅ Set in the `recommended` configuration.\
 🔧 Automatically fixable by the [`--fix` CLI option](https://eslint.org/docs/user-guide/command-line-interface#--fix).
 
-| Name                                                                           | Description                                                                                             | 💼 | 🔧 |
-| :----------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------ | :- | :- |
-| [anchor-is-valid](docs/rules/anchor-is-valid.md)                               | anchor-is-valid for lit templates, where a uiSref element part counts as the href it assigns at runtime | ✅  | 🔧 |
-| [directive-position](docs/rules/directive-position.md)                         | require each lit-ui-router directive to sit in the template position its part type allows               | ✅  |    |
-| [sref-active-aria-current](docs/rules/sref-active-aria-current.md)             | disallow an authored aria-current on an element a uiSrefActive element part manages                     | ✅  | 🔧 |
-| [sref-active-class-aria-current](docs/rules/sref-active-class-aria-current.md) | require an aria-current binding beside a srefActiveClass binding on a link element                      | ✅  | 🔧 |
-| [sref-assign-href](docs/rules/sref-assign-href.md)                             | require assignHref: 'auto' when a uiSref element part rides a native element with no href               | ✅  | 🔧 |
-| [sref-status-aria-current](docs/rules/sref-status-aria-current.md)             | require an aria-current binding on a link element whose classes read a SrefStatusController             | ✅  | 🔧 |
+| Name                                                                           | Description                                                                                                                                             | 💼 | 🔧 |
+| :----------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------ | :- | :- |
+| [anchor-is-valid](docs/rules/anchor-is-valid.md)                               | anchor-is-valid for lit templates, where a uiSref element part counts as its runtime href unless allowElementParts is false, which fixes it to srefHref | ✅  | 🔧 |
+| [directive-position](docs/rules/directive-position.md)                         | require each lit-ui-router directive to sit in the template position its part type allows                                                               | ✅  |    |
+| [sref-active-aria-current](docs/rules/sref-active-aria-current.md)             | disallow an authored aria-current on an element a uiSrefActive element part manages                                                                     | ✅  | 🔧 |
+| [sref-active-class-aria-current](docs/rules/sref-active-class-aria-current.md) | require an aria-current binding beside a srefActiveClass binding on a link element, or a uiSrefActive element part when allowElementParts is false      | ✅  | 🔧 |
+| [sref-assign-href](docs/rules/sref-assign-href.md)                             | require assignHref: 'auto' when a uiSref element part rides a native element with no href                                                               | ✅  | 🔧 |
+| [sref-status-aria-current](docs/rules/sref-status-aria-current.md)             | require an aria-current binding on a link element whose classes read a SrefStatusController                                                             | ✅  | 🔧 |
 
 <!-- end auto-generated rules list -->
 

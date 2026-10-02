@@ -44,7 +44,7 @@ const srefActiveClassAriaCurrent: RuleFor<typeof RULE_NAME> = {
     fixable: 'code',
     docs: {
       description:
-        'require an aria-current binding beside a srefActiveClass binding on a link element',
+        'require an aria-current binding beside a srefActiveClass binding on a link element, or a uiSrefActive element part when allowElementParts is false',
     },
     messages: {
       missingAriaCurrent:

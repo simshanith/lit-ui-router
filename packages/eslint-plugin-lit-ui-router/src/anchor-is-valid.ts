@@ -137,7 +137,7 @@ const anchorIsValid: RuleFor<typeof RULE_NAME> = {
     type: 'suggestion',
     docs: {
       description:
-        'anchor-is-valid for lit templates, where a uiSref element part counts as the href it assigns at runtime',
+        'anchor-is-valid for lit templates, where a uiSref element part counts as its runtime href unless allowElementParts is false, which fixes it to srefHref',
     },
     fixable: 'code',
     messages: {

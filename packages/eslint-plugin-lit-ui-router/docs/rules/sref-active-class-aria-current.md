@@ -1,6 +1,6 @@
 # lit-ui-router/sref-active-class-aria-current
 
-📝 Require an aria-current binding beside a srefActiveClass binding on a link element.
+📝 Require an aria-current binding beside a srefActiveClass binding on a link element, or a uiSrefActive element part when allowElementParts is false.
 
 💼 This rule is enabled in the ✅ `recommended` config.
 
@@ -10,7 +10,7 @@
 
 [`uiSrefActive`](https://lit-ui-router.dev/api/reference/directives/uiSrefActive) is an element part, and it writes `aria-current` itself: a link it marks active is active for CSS **and** for assistive technology. [`srefActiveClass`](https://lit-ui-router.dev/api/reference/directives/srefActiveClass) is the attribute-part sibling, and it only writes classes. A link styled active by it says nothing to a screen reader unless the author also binds `aria-current=${srefAriaCurrent(...)}` — a regression nobody sees, because the page still looks right.
 
-This rule is the mirror of [`sref-active-aria-current`](./sref-active-aria-current.md): that one protects an authored `aria-current` from the element part's takeover, this one asks for the attribute the attribute part never writes. [`sref-status-aria-current`](./sref-status-aria-current.md) is the third, for a host that reads the status itself; the three together cover the element part, the attribute part and the controller.
+This rule is the mirror of [`sref-active-aria-current`](./sref-active-aria-current.md): that one protects an authored `aria-current` from the element part's takeover, this one asks for the attribute the attribute part never writes, and, under [`allowElementParts: false`](#prerendered-templates), the one a server render of `uiSrefActive` never writes. [`sref-status-aria-current`](./sref-status-aria-current.md) is the third, for a host that reads the status itself; the three together cover the element part, the attribute part and the controller.
 
 The report names the call the fix would write — `bind aria-current=${srefAriaCurrent({ state: 'home' })} beside it` — so the remedy is the message, not an exercise. When the params cannot be read, it asks for the same `state`, `params` and `options` instead.
 
