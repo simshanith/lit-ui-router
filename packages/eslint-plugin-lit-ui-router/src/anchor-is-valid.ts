@@ -167,6 +167,7 @@ const anchorIsValid: RuleFor<typeof RULE_NAME> = {
         const analyzer = TemplateAnalyzer.create(node);
 
         analyzer.traverse({
+          // eslint-disable-next-line complexity -- kept in lit-a11y's shape so upstream re-syncs stay a diff
           enterElement(rawElement) {
             const element = rawElement as unknown as Parse5Element;
             const startTag = element.sourceCodeLocation?.startTag;
