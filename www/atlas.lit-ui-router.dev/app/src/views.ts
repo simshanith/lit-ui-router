@@ -42,6 +42,7 @@ import {
   without,
 } from './manifest.ts';
 import { loadCytoscape, runScripts } from './fragment.ts';
+import type { FocusDetail } from './fragment.ts';
 import { ICON_SPRITE, iconId } from './generated/icons.js';
 import { initCity } from './generated/city-init.js';
 import type { CityScene } from './generated/city-init.js';
@@ -101,21 +102,25 @@ const outTarget = ARTIFACT ? '_blank' : nothing;
 // --- <atlas-plate> — a generated fragment, inserted and brought to life ----
 
 // The view template writes the fragment as the element's children, so the
-// element renders nothing of its own: it runs the fragment's scripts.
+// element renders nothing of its own: it runs the fragment's scripts. `pin` is
+// the url's `focus`; generator/focus.mjs holds the contract the scripts read it by.
 export class AtlasPlate extends ReactiveElement {
   static override properties = {
     fragment: { attribute: false },
     needsCytoscape: { attribute: false },
+    pin: { attribute: false },
   };
 
   declare fragment: string;
   declare needsCytoscape: boolean;
+  declare pin: string | null;
   #seq = 0;
 
   constructor() {
     super();
     this.fragment = '';
     this.needsCytoscape = false;
+    this.pin = null;
   }
 
   // Light DOM: the plates' scripts find their JSON islands with
@@ -147,10 +152,20 @@ export class AtlasPlate extends ReactiveElement {
   };
 
   override updated(changed: Map<PropertyKey, unknown>): void {
-    if (!changed.has('fragment') || !this.fragment) return;
+    if (!changed.has('fragment')) {
+      if (changed.has('pin')) {
+        const detail: FocusDetail = { focus: this.pin };
+        this.dispatchEvent(new CustomEvent('atlas-focus-set', { detail }));
+      }
+      return;
+    }
+    if (!this.fragment) return;
     const seq = (this.#seq += 1);
     const boot = (): void => {
-      if (seq === this.#seq) runScripts(this);
+      if (seq !== this.#seq) return;
+      // always set, so a plate never falls back to the address bar (the artifact routes by hash)
+      this.dataset.focus = this.pin ?? '';
+      runScripts(this);
     };
     if (this.needsCytoscape) void loadCytoscape().then(boot);
     else boot();
@@ -895,8 +910,12 @@ const seeAlso = (refs: string[]): TemplateResult | typeof nothing =>
  * `<atlas-plate>` runs the adopted fragment's scripts exactly as it runs a
  * cold render's.
  */
-const plate = (fragment: string, needsCytoscape: boolean): TemplateResult =>
-  html`<atlas-plate .fragment=${fragment} .needsCytoscape=${needsCytoscape}
+const plate = (
+  fragment: string,
+  needsCytoscape: boolean,
+  pin: string | null = null,
+): TemplateResult =>
+  html`<atlas-plate .fragment=${fragment} .needsCytoscape=${needsCytoscape} .pin=${pin}
     >${unsafeHTML(fragment)}</atlas-plate
   >`;
 
@@ -911,6 +930,9 @@ export const SheetView: RoutedLitTemplate<SheetResolves> = (props) => {
   const manifest = resolves?.manifest;
   if (!sheet || !manifest) return html`<p class="loading">LOADING PLATE…</p>`;
   const [prev, next] = neighbours(manifest, sheet);
+  // the settled route, as the city reads it
+  const params = props?.router ? snapshotRoute(props.router).params : props?.transition?.params();
+  const focus = typeof params?.focus === 'string' ? params.focus : null;
   return html`
     ${utilBar(html`
       ${indexCrumb()}
@@ -937,7 +959,7 @@ export const SheetView: RoutedLitTemplate<SheetResolves> = (props) => {
       ${seeAlso(sheet.refs)} ${keyBlock(sheet.labels)}
     </div>
     ${verdictLine(sheet.verdict)}
-    ${plate(resolves.fragment ?? '', sheet.needsCytoscape)}
+    ${plate(resolves.fragment ?? '', sheet.needsCytoscape, focus)}
   `;
 };
 

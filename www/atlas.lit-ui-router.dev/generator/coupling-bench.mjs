@@ -17,6 +17,7 @@
 // physics, so the picture is the same on every load.
 import { readFileSync } from 'node:fs';
 import { PROJECT_MARK, articleTitle } from './chrome.mjs';
+import { PLATE_FOCUS_JS } from './focus.mjs';
 import { glyph } from './icons.mjs';
 import { CYTOSCAPE_URL } from './pipeline-graph.mjs';
 import { SPRITES, spriteSvg } from './sprites.mjs';
@@ -191,7 +192,7 @@ const CSS = `
 // inside one, and every figure it draws arrives through the JSON island.
 const INIT = `
 (function () {
-  // The cytoscape tag above is deferred; deferred scripts run before
+$$FOCUS  // The cytoscape tag above is deferred; deferred scripts run before
   // DOMContentLoaded, so boot there rather than probing during parse.
   if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', boot); } else { boot(); }
   function boot() {
@@ -214,8 +215,11 @@ const INIT = `
   var sprites = function () { return L.sprites[dark() ? 'dark' : 'light']; };
   var idOf = function (key) { return 'n' + key.replace(/[^a-zA-Z0-9]/g, '_'); };
 
+  // the url names a building by its npm name and an edge as from>to, never by position
+  var pinIds = {};
   var els = [];
   L.nodes.forEach(function (n) {
+    pinIds[n.key] = idOf(n.key);
     els.push({ data: { id: idOf(n.key), key: n.key, label: n.label, w: n.w, h: n.h,
       sprite: sprites()[n.sprite], skey: n.sprite }, position: { x: n.x, y: n.y },
       classes: 'k-' + n.kind });
@@ -226,7 +230,8 @@ const INIT = `
   });
   L.edges.forEach(function (e, i) {
     var brick = byKey[e.to] && byKey[e.to].kind === 'published';
-    els.push({ data: { id: 'e' + i, idx: i, source: idOf(e.from), target: idOf(e.to), label: e.range },
+    if (!pinIds[e.from + '>' + e.to]) pinIds[e.from + '>' + e.to] = 'e' + i;
+    els.push({ data: { id: 'e' + i, idx: i, key: e.from + '>' + e.to, source: idOf(e.from), target: idOf(e.to), label: e.range },
       classes: 'r-' + e.kind + (e.optional ? ' opt' : '') + (brick ? ' brick' : '') });
   });
 
@@ -276,7 +281,8 @@ const INIT = `
     + 'published contract. Hover or tap an EDGE for the range it declares and the section it lives in; hover a '
     + 'BUILDING for its version, what it declares, and what declares it. '
     + L.totals.drawnContracts + ' contracts are drawn; ' + (L.totals.contracts - L.totals.drawnContracts)
-    + ' more bind targets that are not on this bench.\\u003c/p\\u003e';
+    + ' more bind targets that are not on this bench. A tap pins a building or an edge and the link in the '
+    + 'address bar carries the pin; tap it again or the ground to clear it.\\u003c/p\\u003e';
   function esc(s) {
     return String(s).replace(/&/g, '&amp;').replace(/\\u003c/g, '&lt;').replace(/>/g, '&gt;');
   }
@@ -340,13 +346,38 @@ const INIT = `
     edge.connectedNodes().removeClass('dim').addClass('lit');
     info.innerHTML = describeEdge(edge.data('idx'));
   }
-  cy.on('mouseover', 'node', function (e) { focusNode(e.target); });
-  cy.on('tap', 'node', function (e) { focusNode(e.target); });
-  cy.on('mouseover', 'edge', function (e) { focusEdge(e.target); });
-  cy.on('tap', 'edge', function (e) { focusEdge(e.target); });
-  cy.on('mouseout', 'node, edge', clear);
-  cy.on('tap', function (e) { if (e.target === cy) clear(); });
+  // hover previews over the pin; a tap pins, and the pinned element or the ground clears it
+  var pinned = null;
+  function show(el) {
+    if (!el) clear();
+    else if (el.isNode()) focusNode(el);
+    else focusEdge(el);
+  }
+  function find(key) {
+    var id = key ? pinIds[key] : null;
+    return id ? cy.getElementById(id) : null;
+  }
+  function tap(el) {
+    var next = el && pinned && el.same(pinned) ? null : el;
+    if (next === pinned) return;
+    pinned = next;
+    show(pinned);
+    atlasFocusPush(stage, pinned ? pinned.data('key') : null);
+  }
+  function apply(key) {
+    var el = find(key);
+    if (el === pinned || (el && pinned && el.same(pinned))) return;
+    pinned = el;
+    show(pinned);
+  }
+  cy.on('mouseover', 'node, edge', function (e) { if (!e.target.hasClass('band')) show(e.target); });
+  cy.on('mouseout', 'node, edge', function () { show(pinned); });
+  cy.on('tap', function (e) {
+    if (e.target === cy) tap(null);
+    else if (!e.target.hasClass('band')) tap(e.target);
+  });
   clear();
+  apply(atlasFocusHost(stage, apply));
 
   document.getElementById('cb-fit').addEventListener('click', function () { cy.fit(cy.elements(), 40); });
 
@@ -394,7 +425,7 @@ export function couplingBenchSection() {
 </section>
 <script type="application/json" id="cb-layout">${json(LAYOUT)}</script>
 <script defer src="${CYTOSCAPE_URL}"></script>
-<script>${INIT}</script>`;
+<script>${INIT.replace('$$FOCUS', () => PLATE_FOCUS_JS)}</script>`;
 }
 
 // sheet 2B's prose reads the same figures the bench does

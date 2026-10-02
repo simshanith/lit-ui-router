@@ -555,6 +555,22 @@ a { color: var(--accent); }
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.31.0/cytoscape.min.js"></script>
 <script>
 (function () {
+  function atlasFocusPush(from, focus) {
+    var ev = new CustomEvent('atlas-focus', { detail: { focus: focus }, bubbles: true, composed: true, cancelable: true });
+    if (!from.dispatchEvent(ev)) return;
+    var url = new URL(location.href);
+    if (focus === null) url.searchParams.delete('focus');
+    else url.searchParams.set('focus', focus);
+    history.replaceState(history.state, '', url.pathname + url.search + url.hash);
+  }
+  function atlasFocusRead(initial) {
+    return initial !== undefined ? initial : new URLSearchParams(location.search).get('focus');
+  }
+  function atlasFocusHost(from, apply) {
+    var host = from.closest('atlas-plate');
+    if (host) host.addEventListener('atlas-focus-set', function (e) { apply(e.detail.focus); });
+    return atlasFocusRead(host ? host.getAttribute('data-focus') || null : undefined);
+  }
   // The cytoscape tag above is deferred; deferred scripts run before
   // DOMContentLoaded, so boot there rather than probing during parse.
   if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', boot); } else { boot(); }
@@ -578,13 +594,17 @@ a { color: var(--accent); }
   }
   var sprites = function () { return L.sprites[dark() ? 'dark' : 'light']; };
 
+  // the url names a building by the census label it stands for (a file name), never by its id
+  var pinIds = {};
   var els = [];
   A.nodes.forEach(function (n) {
     var p = L.nodes[n.id];
-    els.push({ data: { id: 'n' + n.id, nid: n.id, label: p.label, kind: n.kind, w: p.w, h: p.h,
+    pinIds[n.label] = 'n' + n.id;
+    els.push({ data: { id: 'n' + n.id, nid: n.id, key: n.label, label: p.label, kind: n.kind, w: p.w, h: p.h,
       sprite: sprites()[p.sprite], skey: p.sprite }, position: { x: p.x, y: p.y }, classes: p.classes });
   });
-  els.push({ data: { id: L.basis.id, label: L.basis.label, kind: 'basis', w: L.basis.w, h: L.basis.h,
+  if (!pinIds[L.basis.label]) pinIds[L.basis.label] = L.basis.id;
+  els.push({ data: { id: L.basis.id, key: L.basis.label, label: L.basis.label, kind: 'basis', w: L.basis.w, h: L.basis.h,
     sprite: sprites()[L.basis.sprite], skey: L.basis.sprite }, position: { x: L.basis.x, y: L.basis.y },
     classes: 'k-basis' });
   L.bands.forEach(function (b) {
@@ -647,7 +667,8 @@ a { color: var(--accent); }
   var info = document.getElementById('pg-info');
   var IDLE = '<h4>' + L.glyphs.rest + 'THE SURVEY OFFICE</h4><p class="hint">Hover or tap any building to light its neighbourhood: '
     + 'what wrote it, what reads it, what it imports. The wide accent fan leaving the master plate is the '
-    + 'one-measurement-many-views claim, drawn.</p>';
+    + 'one-measurement-many-views claim, drawn. A tap pins a building and the link in the address bar carries '
+    + 'the pin; tap it again or the ground to clear it.</p>';
   function field(k, v) { return '<span class="f">' + k + '</span>' + v; }
   function list(k, arr) {
     if (!arr.length) return '';
@@ -686,14 +707,37 @@ a { color: var(--accent); }
       : '<h4>' + node.data('label') + '</h4>' + field('KIND', 'the archive basis') + field('BASIS', L.basis.sub)
         + field('OPENS', L.basis.ties.length + ' stations materialize this ref');
   }
-  cy.on('mouseover', 'node', function (e) { focus(e.target); });
-  cy.on('tap', 'node', function (e) { focus(e.target); });
-  cy.on('mouseout', 'node', clear);
-  cy.on('tap', function (e) { if (e.target === cy) clear(); });
+  // hover previews over the pin; a tap pins, and the pinned building or the ground clears it
+  var pinned = null;
+  function show(node) { if (node) focus(node); else clear(); }
+  function tap(node) {
+    var next = node && pinned && node.same(pinned) ? null : node;
+    if (next === pinned) return;
+    pinned = next;
+    show(pinned);
+    atlasFocusPush(stage, pinned ? pinned.data('key') : null);
+  }
+  var tools = document.getElementById('pg-tools');
+  function apply(key) {
+    var id = key ? pinIds[key] : null;
+    var node = id ? cy.getElementById(id) : null;
+    if (node === pinned || (node && pinned && node.same(pinned))) return;
+    pinned = node;
+    // a pinned tool opens the ledger it stands in
+    if (pinned && pinned.hasClass('tool') && !tools.checked) { tools.checked = true; showTools(true); }
+    show(pinned);
+  }
+  cy.on('mouseover', 'node', function (e) { if (!e.target.hasClass('band')) focus(e.target); });
+  cy.on('mouseout', 'node', function () { show(pinned); });
+  cy.on('tap', function (e) {
+    if (e.target === cy) tap(null);
+    else if (e.target.isNode() && !e.target.hasClass('band')) tap(e.target);
+  });
   clear();
 
   document.getElementById('pg-fit').addEventListener('click', function () { cy.fit(cy.elements(':visible'), 34); });
-  document.getElementById('pg-tools').addEventListener('change', function (e) { clear(); showTools(e.target.checked); });
+  tools.addEventListener('change', function (e) { showTools(e.target.checked); show(pinned); });
+  apply(atlasFocusHost(stage, apply));
 
   function repaint() {
     var s = sprites();

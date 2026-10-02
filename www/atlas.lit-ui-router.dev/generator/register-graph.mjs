@@ -13,6 +13,7 @@
 // them.  Tick the box and the placeholders flood in faint — the 70% of this
 // graph that runs nothing, drawn rather than asserted.
 import { readFileSync } from 'node:fs';
+import { PLATE_FOCUS_JS } from './focus.mjs';
 import { glyph } from './icons.mjs';
 import { PALETTES } from './sprites.mjs';
 import { CYTOSCAPE_URL } from './pipeline-graph.mjs';
@@ -214,7 +215,7 @@ const CSS = `
 // and every byte of data reaches it through the JSON islands.
 const INIT = `
 (function () {
-  // The cytoscape tag is deferred; deferred scripts run BEFORE DOMContentLoaded,
+$$FOCUS  // The cytoscape tag is deferred; deferred scripts run BEFORE DOMContentLoaded,
   // so boot there rather than probing the global during parse.
   if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', boot); } else { boot(); }
   function boot() {
@@ -249,10 +250,13 @@ const INIT = `
   }
   var skins = function () { return L.skins[dark() ? 'dark' : 'light']; };
 
+  // the url names a cell as pkg#task, never by its index
+  var pinIds = {};
   var els = [];
   N.forEach(function (n, i) {
     var key = n.real ? 'task-real' : 'task-phantom';
-    els.push({ data: { id: 'n' + i, i: i, kind: n.real ? 'real' : 'phantom', sprite: skins()[key], skey: key },
+    pinIds[nid(i)] = 'n' + i;
+    els.push({ data: { id: 'n' + i, i: i, key: nid(i), kind: n.real ? 'real' : 'phantom', sprite: skins()[key], skey: key },
       position: { x: L.xy[i * 2], y: L.xy[i * 2 + 1] },
       classes: n.real ? 'cell real' : 'cell phantom' });
   });
@@ -363,21 +367,44 @@ const INIT = `
     node.removeClass('lit').addClass('pick');
     info.innerHTML = describe(node.data('i'));
   }
-  cy.on('mouseover', 'node', function (e) { focus(e.target); });
-  cy.on('tap', 'node', function (e) { focus(e.target); });
-  cy.on('mouseout', 'node', clear);
-  cy.on('tap', function (e) { if (e.target === cy) clear(); });
+  // hover previews over the pin; a tap pins, and the pinned cell or the ground clears it
+  var pinned = null;
+  function show(node) { if (node) focus(node); else clear(); }
+  function tap(node) {
+    var next = node && pinned && node.same(pinned) ? null : node;
+    if (next === pinned) return;
+    pinned = next;
+    show(pinned);
+    atlasFocusPush(stage, pinned ? pinned.data('key') : null);
+  }
+  function apply(key) {
+    var id = key ? pinIds[key] : null;
+    var node = id ? cy.getElementById(id) : null;
+    if (node === pinned || (node && pinned && node.same(pinned))) return;
+    pinned = node;
+    // a pinned placeholder floods the shroud in
+    if (pinned && pinned.hasClass('phantom') && !shroud) setShroud(true);
+    else show(pinned);
+  }
+  cy.on('mouseover', 'node', function (e) { if (e.target.hasClass('cell')) focus(e.target); });
+  cy.on('mouseout', 'node', function () { show(pinned); });
+  cy.on('tap', function (e) {
+    if (e.target === cy) tap(null);
+    else if (e.target.hasClass('cell')) tap(e.target);
+  });
   clear();
 
   document.getElementById('rg-fit').addEventListener('click', function () { cy.fit(cy.elements(':visible'), 26); });
   var box = document.getElementById('rg-shroud');
-  box.addEventListener('change', function (e) {
-    shroud = e.target.checked;
-    clear();
+  function setShroud(on) {
+    shroud = box.checked = on;
     applyShroud();
+    show(pinned);
     box.parentNode.classList.toggle('on', shroud);
     document.getElementById('rg-hint').innerHTML = shroud ? L.hintShroud : L.hintReal;
-  });
+  }
+  box.addEventListener('change', function (e) { setShroud(e.target.checked); });
+  apply(atlasFocusHost(stage, apply));
 
   function repaint() {
     var s = skins();
@@ -432,7 +459,8 @@ export function registerLane() {
     idle: 'Hover or tap any building for its package, its task, whether it runs anything, and everything it '
       + 'waits on. What you are looking at is the REAL subgraph alone — the '
       + `${REAL_N} tasks that run a command and the ${REAL_E} edges that join two of them. Tick PHANTOM `
-      + `SHROUD to flood the other ${NODES.length - REAL_N} in.`,
+      + `SHROUD to flood the other ${NODES.length - REAL_N} in. A tap pins a building and the link in the address `
+      + 'bar carries the pin; tap it again or the ground to clear it.',
     hintReal: HINT_REAL,
     hintShroud: `PHANTOM SHROUD — ALL ${fmt(NODES.length)} NODES · ${PHANTOM_PCT.toFixed(1)}% RUN NOTHING`,
   };
@@ -465,5 +493,5 @@ export function registerLane() {
 <script type="application/json" id="rg-graph">${json({ nodes: NODES, edges: EDGES })}</script>
 <script type="application/json" id="rg-layout">${json(island)}</script>
 <script defer src="${CYTOSCAPE_URL}"></script>
-<script>${INIT}</script>`;
+<script>${INIT.replace('$$FOCUS', () => PLATE_FOCUS_JS)}</script>`;
 }

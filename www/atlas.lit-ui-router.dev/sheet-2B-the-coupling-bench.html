@@ -551,6 +551,22 @@ a { color: var(--accent); }
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.31.0/cytoscape.min.js"></script>
 <script>
 (function () {
+  function atlasFocusPush(from, focus) {
+    var ev = new CustomEvent('atlas-focus', { detail: { focus: focus }, bubbles: true, composed: true, cancelable: true });
+    if (!from.dispatchEvent(ev)) return;
+    var url = new URL(location.href);
+    if (focus === null) url.searchParams.delete('focus');
+    else url.searchParams.set('focus', focus);
+    history.replaceState(history.state, '', url.pathname + url.search + url.hash);
+  }
+  function atlasFocusRead(initial) {
+    return initial !== undefined ? initial : new URLSearchParams(location.search).get('focus');
+  }
+  function atlasFocusHost(from, apply) {
+    var host = from.closest('atlas-plate');
+    if (host) host.addEventListener('atlas-focus-set', function (e) { apply(e.detail.focus); });
+    return atlasFocusRead(host ? host.getAttribute('data-focus') || null : undefined);
+  }
   // The cytoscape tag above is deferred; deferred scripts run before
   // DOMContentLoaded, so boot there rather than probing during parse.
   if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', boot); } else { boot(); }
@@ -574,8 +590,11 @@ a { color: var(--accent); }
   var sprites = function () { return L.sprites[dark() ? 'dark' : 'light']; };
   var idOf = function (key) { return 'n' + key.replace(/[^a-zA-Z0-9]/g, '_'); };
 
+  // the url names a building by its npm name and an edge as from>to, never by position
+  var pinIds = {};
   var els = [];
   L.nodes.forEach(function (n) {
+    pinIds[n.key] = idOf(n.key);
     els.push({ data: { id: idOf(n.key), key: n.key, label: n.label, w: n.w, h: n.h,
       sprite: sprites()[n.sprite], skey: n.sprite }, position: { x: n.x, y: n.y },
       classes: 'k-' + n.kind });
@@ -586,7 +605,8 @@ a { color: var(--accent); }
   });
   L.edges.forEach(function (e, i) {
     var brick = byKey[e.to] && byKey[e.to].kind === 'published';
-    els.push({ data: { id: 'e' + i, idx: i, source: idOf(e.from), target: idOf(e.to), label: e.range },
+    if (!pinIds[e.from + '>' + e.to]) pinIds[e.from + '>' + e.to] = 'e' + i;
+    els.push({ data: { id: 'e' + i, idx: i, key: e.from + '>' + e.to, source: idOf(e.from), target: idOf(e.to), label: e.range },
       classes: 'r-' + e.kind + (e.optional ? ' opt' : '') + (brick ? ' brick' : '') });
   });
 
@@ -636,7 +656,8 @@ a { color: var(--accent); }
     + 'published contract. Hover or tap an EDGE for the range it declares and the section it lives in; hover a '
     + 'BUILDING for its version, what it declares, and what declares it. '
     + L.totals.drawnContracts + ' contracts are drawn; ' + (L.totals.contracts - L.totals.drawnContracts)
-    + ' more bind targets that are not on this bench.\u003c/p\u003e';
+    + ' more bind targets that are not on this bench. A tap pins a building or an edge and the link in the '
+    + 'address bar carries the pin; tap it again or the ground to clear it.\u003c/p\u003e';
   function esc(s) {
     return String(s).replace(/&/g, '&amp;').replace(/\u003c/g, '&lt;').replace(/>/g, '&gt;');
   }
@@ -700,13 +721,38 @@ a { color: var(--accent); }
     edge.connectedNodes().removeClass('dim').addClass('lit');
     info.innerHTML = describeEdge(edge.data('idx'));
   }
-  cy.on('mouseover', 'node', function (e) { focusNode(e.target); });
-  cy.on('tap', 'node', function (e) { focusNode(e.target); });
-  cy.on('mouseover', 'edge', function (e) { focusEdge(e.target); });
-  cy.on('tap', 'edge', function (e) { focusEdge(e.target); });
-  cy.on('mouseout', 'node, edge', clear);
-  cy.on('tap', function (e) { if (e.target === cy) clear(); });
+  // hover previews over the pin; a tap pins, and the pinned element or the ground clears it
+  var pinned = null;
+  function show(el) {
+    if (!el) clear();
+    else if (el.isNode()) focusNode(el);
+    else focusEdge(el);
+  }
+  function find(key) {
+    var id = key ? pinIds[key] : null;
+    return id ? cy.getElementById(id) : null;
+  }
+  function tap(el) {
+    var next = el && pinned && el.same(pinned) ? null : el;
+    if (next === pinned) return;
+    pinned = next;
+    show(pinned);
+    atlasFocusPush(stage, pinned ? pinned.data('key') : null);
+  }
+  function apply(key) {
+    var el = find(key);
+    if (el === pinned || (el && pinned && el.same(pinned))) return;
+    pinned = el;
+    show(pinned);
+  }
+  cy.on('mouseover', 'node, edge', function (e) { if (!e.target.hasClass('band')) show(e.target); });
+  cy.on('mouseout', 'node, edge', function () { show(pinned); });
+  cy.on('tap', function (e) {
+    if (e.target === cy) tap(null);
+    else if (!e.target.hasClass('band')) tap(e.target);
+  });
   clear();
+  apply(atlasFocusHost(stage, apply));
 
   document.getElementById('cb-fit').addEventListener('click', function () { cy.fit(cy.elements(), 40); });
 

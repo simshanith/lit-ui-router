@@ -14,6 +14,7 @@
 // burn in accent, the legs already walked stay in ink, the rest wait faint,
 // and the panel reads the narration and the evidence out of the plate.
 import { readFileSync } from 'node:fs';
+import { PLATE_FOCUS_JS } from './focus.mjs';
 import { glyph } from './icons.mjs';
 import { PALETTES } from './sprites.mjs';
 import { CYTOSCAPE_URL } from './pipeline-graph.mjs';
@@ -244,7 +245,7 @@ const CSS = `
 // and every byte of data reaches it through the JSON islands.
 const INIT = `
 (function () {
-  // The cytoscape tag is deferred; deferred scripts run BEFORE DOMContentLoaded,
+$$FOCUS  // The cytoscape tag is deferred; deferred scripts run BEFORE DOMContentLoaded,
   // so boot there rather than probing the global during parse.
   if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', boot); } else { boot(); }
   function boot() {
@@ -377,7 +378,18 @@ const INIT = `
     next.disabled = step === W.length;
     info.innerHTML = describeStep();
   }
-  function go(n) { step = Math.max(0, Math.min(W.length, n)); paint(); }
+  // the step is the link: ?focus=7 opens on step 7, and each step taken replaces it
+  function walkTo(n) { step = Math.max(0, Math.min(W.length, n)); callout = null; paint(); }
+  function go(n) {
+    var was = step;
+    walkTo(n);
+    if (step !== was) atlasFocusPush(stage, step ? String(step) : null);
+  }
+  function stepOf(v) {
+    var n = Number(v);
+    return String(n) === v && n % 1 === 0 && n >= 1 && n <= W.length ? n : 0;
+  }
+  function apply(v) { if (stepOf(v) !== step) walkTo(stepOf(v)); }
   prev.addEventListener('click', function () { go(step - 1); });
   next.addEventListener('click', function () { go(step + 1); });
   document.getElementById('lw-reset').addEventListener('click', function () { go(0); cy.fit(cy.elements(), 42); });
@@ -411,24 +423,31 @@ const INIT = `
     h += field('EVIDENCE', evidence([e]));
     return h;
   }
-  cy.on('mouseover', 'node.station', function (ev) {
-    var node = ev.target;
+  // a tapped building or leg holds the panel in the page; hover reads over it, the ground clears it
+  var callout = null;
+  function show(el) {
+    paint();
+    if (!el) return;
     cy.elements().addClass('dim');
-    node.closedNeighborhood().removeClass('dim');
-    node.addClass('pick');
-    info.innerHTML = describeStation(node.data('sid'));
+    if (el.isNode()) {
+      el.closedNeighborhood().removeClass('dim');
+      el.addClass('pick');
+      info.innerHTML = describeStation(el.data('sid'));
+    } else {
+      el.removeClass('dim').addClass('hover');
+      el.connectedNodes().removeClass('dim');
+      info.innerHTML = describeLeg(el.data('lid'));
+    }
+  }
+  cy.on('mouseover', 'node.station, edge.leg', function (ev) { show(ev.target); });
+  cy.on('mouseout', 'node, edge', function () { show(callout); });
+  cy.on('tap', function (ev) {
+    var el = ev.target === cy ? null : ev.target;
+    if (el && !el.is('node.station, edge.leg')) return;
+    callout = el && callout && el.same(callout) ? null : el;
+    show(callout);
   });
-  cy.on('mouseover', 'edge.leg', function (ev) {
-    var edge = ev.target;
-    cy.elements().addClass('dim');
-    edge.removeClass('dim').addClass('hover');
-    edge.connectedNodes().removeClass('dim');
-    info.innerHTML = describeLeg(edge.data('lid'));
-  });
-  cy.on('mouseout', 'node, edge', function () { paint(); });
-  cy.on('tap', 'node.station', function (ev) { info.innerHTML = describeStation(ev.target.data('sid')); });
-  cy.on('tap', 'edge.leg', function (ev) { info.innerHTML = describeLeg(ev.target.data('lid')); });
-  paint();
+  walkTo(stepOf(atlasFocusHost(stage, apply)));
 
   function repaint() {
     var s = skins();
@@ -488,7 +507,7 @@ export function loopWalkLane() {
       out: glyph('arrow-up-from-line'),
       in: glyph('arrow-down-to-line'),
     },
-    idle: `Sheet 1's circuit, stood up: ${T.stations} stations and the ${T.legs} legs between them, every leg carrying the call or event that moves it. Press NEXT (or → with the lane focused) to walk one navigation — ${PLATE.walkOf} — ${T.steps} steps, each one standing on the source lines it cites. Hover any building for its file and anchor line, any leg for what carries it.`,
+    idle: `Sheet 1's circuit, stood up: ${T.stations} stations and the ${T.legs} legs between them, every leg carrying the call or event that moves it. Press NEXT (or → with the lane focused) to walk one navigation — ${PLATE.walkOf} — ${T.steps} steps, each one standing on the source lines it cites. Hover any building for its file and anchor line, any leg for what carries it. The link in the address bar carries the step; a tap pins a building or a leg, and tapping it again or the ground clears it.`,
   };
   const swatch = (k) => `<span class="sw sw-light">${skinSvg(k, 'light')}</span><span class="sw sw-dark">${skinSvg(k, 'dark')}</span>`;
   const legend = [
@@ -522,5 +541,5 @@ export function loopWalkLane() {
 <script type="application/json" id="lw-plate">${json({ ref: PLATE.ref, sha: PLATE.sha, walkOf: PLATE.walkOf, walk: WALK })}</script>
 <script type="application/json" id="lw-layout">${json(island)}</script>
 <script defer src="${CYTOSCAPE_URL}"></script>
-<script>${INIT}</script>`;
+<script>${INIT.replace('$$FOCUS', () => PLATE_FOCUS_JS)}</script>`;
 }

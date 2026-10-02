@@ -10,6 +10,7 @@
 // no physics, so the picture is the same on every load.
 import { ATLAS } from './census-atlas.mjs';
 import { PROJECT_MARK, articleTitle } from './chrome.mjs';
+import { PLATE_FOCUS_JS } from './focus.mjs';
 import { glyph } from './icons.mjs';
 import { SPRITES, spriteSvg } from './sprites.mjs';
 
@@ -199,7 +200,7 @@ const CSS = `
 // emitted inside one, and all of its data arrives through the JSON islands.
 const INIT = `
 (function () {
-  // The cytoscape tag above is deferred; deferred scripts run before
+$$FOCUS  // The cytoscape tag above is deferred; deferred scripts run before
   // DOMContentLoaded, so boot there rather than probing during parse.
   if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', boot); } else { boot(); }
   function boot() {
@@ -222,13 +223,17 @@ const INIT = `
   }
   var sprites = function () { return L.sprites[dark() ? 'dark' : 'light']; };
 
+  // the url names a building by the census label it stands for (a file name), never by its id
+  var pinIds = {};
   var els = [];
   A.nodes.forEach(function (n) {
     var p = L.nodes[n.id];
-    els.push({ data: { id: 'n' + n.id, nid: n.id, label: p.label, kind: n.kind, w: p.w, h: p.h,
+    pinIds[n.label] = 'n' + n.id;
+    els.push({ data: { id: 'n' + n.id, nid: n.id, key: n.label, label: p.label, kind: n.kind, w: p.w, h: p.h,
       sprite: sprites()[p.sprite], skey: p.sprite }, position: { x: p.x, y: p.y }, classes: p.classes });
   });
-  els.push({ data: { id: L.basis.id, label: L.basis.label, kind: 'basis', w: L.basis.w, h: L.basis.h,
+  if (!pinIds[L.basis.label]) pinIds[L.basis.label] = L.basis.id;
+  els.push({ data: { id: L.basis.id, key: L.basis.label, label: L.basis.label, kind: 'basis', w: L.basis.w, h: L.basis.h,
     sprite: sprites()[L.basis.sprite], skey: L.basis.sprite }, position: { x: L.basis.x, y: L.basis.y },
     classes: 'k-basis' });
   L.bands.forEach(function (b) {
@@ -291,7 +296,8 @@ const INIT = `
   var info = document.getElementById('pg-info');
   var IDLE = '<h4>' + L.glyphs.rest + 'THE SURVEY OFFICE</h4><p class="hint">Hover or tap any building to light its neighbourhood: '
     + 'what wrote it, what reads it, what it imports. The wide accent fan leaving the master plate is the '
-    + 'one-measurement-many-views claim, drawn.</p>';
+    + 'one-measurement-many-views claim, drawn. A tap pins a building and the link in the address bar carries '
+    + 'the pin; tap it again or the ground to clear it.</p>';
   function field(k, v) { return '<span class="f">' + k + '</span>' + v; }
   function list(k, arr) {
     if (!arr.length) return '';
@@ -330,14 +336,37 @@ const INIT = `
       : '<h4>' + node.data('label') + '</h4>' + field('KIND', 'the archive basis') + field('BASIS', L.basis.sub)
         + field('OPENS', L.basis.ties.length + ' stations materialize this ref');
   }
-  cy.on('mouseover', 'node', function (e) { focus(e.target); });
-  cy.on('tap', 'node', function (e) { focus(e.target); });
-  cy.on('mouseout', 'node', clear);
-  cy.on('tap', function (e) { if (e.target === cy) clear(); });
+  // hover previews over the pin; a tap pins, and the pinned building or the ground clears it
+  var pinned = null;
+  function show(node) { if (node) focus(node); else clear(); }
+  function tap(node) {
+    var next = node && pinned && node.same(pinned) ? null : node;
+    if (next === pinned) return;
+    pinned = next;
+    show(pinned);
+    atlasFocusPush(stage, pinned ? pinned.data('key') : null);
+  }
+  var tools = document.getElementById('pg-tools');
+  function apply(key) {
+    var id = key ? pinIds[key] : null;
+    var node = id ? cy.getElementById(id) : null;
+    if (node === pinned || (node && pinned && node.same(pinned))) return;
+    pinned = node;
+    // a pinned tool opens the ledger it stands in
+    if (pinned && pinned.hasClass('tool') && !tools.checked) { tools.checked = true; showTools(true); }
+    show(pinned);
+  }
+  cy.on('mouseover', 'node', function (e) { if (!e.target.hasClass('band')) focus(e.target); });
+  cy.on('mouseout', 'node', function () { show(pinned); });
+  cy.on('tap', function (e) {
+    if (e.target === cy) tap(null);
+    else if (e.target.isNode() && !e.target.hasClass('band')) tap(e.target);
+  });
   clear();
 
   document.getElementById('pg-fit').addEventListener('click', function () { cy.fit(cy.elements(':visible'), 34); });
-  document.getElementById('pg-tools').addEventListener('change', function (e) { clear(); showTools(e.target.checked); });
+  tools.addEventListener('change', function (e) { showTools(e.target.checked); show(pinned); });
+  apply(atlasFocusHost(stage, apply));
 
   function repaint() {
     var s = sprites();
@@ -406,5 +435,5 @@ export function pipelineSection() {
 <script type="application/json" id="pg-atlas">${json({ nodes: A.nodes, edges: A.edges })}</script>
 <script type="application/json" id="pg-layout">${json(LAYOUT)}</script>
 <script defer src="${CYTOSCAPE_URL}"></script>
-<script>${INIT}</script>`;
+<script>${INIT.replace('$$FOCUS', () => PLATE_FOCUS_JS)}</script>`;
 }
