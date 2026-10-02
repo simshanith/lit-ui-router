@@ -1,6 +1,6 @@
 ---
 title: ESLint Plugin
-description: Directive-aware linting with eslint-plugin-lit-ui-router — rules covering hrefless anchors, inert hrefs, aria-current conflicts and misplaced directives, where a uiSref element part counts as its runtime href unless allowElementParts is false for prerendered templates
+description: Directive-aware linting with eslint-plugin-lit-ui-router — rules covering hrefless anchors, inert hrefs, aria-current conflicts and misplaced directives
 ---
 
 # eslint-plugin-lit-ui-router
