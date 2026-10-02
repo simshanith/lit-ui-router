@@ -22,6 +22,10 @@ import { SrefStatusController } from 'lit-ui-router';
 const host = (body: string, field = 'users') =>
   `${IMPORTS}class Nav {\n  ${field} = new SrefStatusController(this, { state: 'users' });\n  render() {\n    return ${body};\n  }\n}\n`;
 
+/** A host whose constructor runs `statements`, with an unfixed render reading `this.users`. */
+const constructed = (statements: string) =>
+  `${IMPORTS}class Nav {\n  constructor(host) {\n    ${statements}\n  }\n  render() {\n    return html\`<a href="/users" class=\${classMap({ active: this.users.active })}>Users</a>\`;\n  }\n}\n`;
+
 ruleTester.run('sref-status-aria-current', srefStatusAriaCurrent, {
   valid: [
     {
@@ -97,6 +101,30 @@ ruleTester.run('sref-status-aria-current', srefStatusAriaCurrent, {
     {
       name: 'a static field is the class’s, not the instance’s this',
       code: `${IMPORTS}class Nav {\n  static users = new SrefStatusController(this, {});\n  render() {\n    return html\`<a href="/users" class=\${classMap({ active: this.users.active })}>Users</a>\`;\n  }\n}\n`,
+    },
+    {
+      name: 'a constructor assignment inside a branch is not held',
+      code: constructed(
+        `if (host) {\n      this.users = new SrefStatusController(host, { state: 'users' });\n    }`,
+      ),
+    },
+    {
+      name: 'a constructor assignment inside a callback is not held',
+      code: constructed(
+        `queueMicrotask(() => {\n      this.users = new SrefStatusController(host, { state: 'users' });\n    });`,
+      ),
+    },
+    {
+      name: 'a logical assignment in the constructor is not held',
+      code: constructed(
+        `this.users ??= new SrefStatusController(host, { state: 'users' });`,
+      ),
+    },
+    {
+      name: 'a computed key in the constructor is not held',
+      code: constructed(
+        `this['users'] = new SrefStatusController(host, { state: 'users' });`,
+      ),
     },
   ],
   invalid: [
