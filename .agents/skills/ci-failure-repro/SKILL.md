@@ -30,7 +30,7 @@ This skill adds only what an unattended run needs.
 6. Skip `ELIFECYCLE` lines in the raw stream; cancelled tasks print them too.
 7. A failure in a package the diff doesn't touch gets a `--force` rerun before
    anyone believes it.
-8. Ask before running e2e, Cypress, or a browser task. A `wrangler dev` crash is
+8. Ask before running e2e or Cypress; headless browser test tasks need no ask. A `wrangler dev` crash is
    a known flake; suggest a rerun first.
 9. If the repro passes, look for what CI has that the checkout lacks: a fresh
    checkout with no stale `dist/`, `main`'s newer commits, `CI=true`. A timeout

@@ -109,7 +109,7 @@ Agents never:
 - create labels. Label PRs by subject from the existing set;
 - force-push, except `--force-with-lease` on their own branch.
 
-Ask before running `mise run ci`, `mise run ci_main`, or anything that starts a browser, Cypress, or e2e.
+Ask before running `mise run ci`, `mise run ci_main`, or e2e (Cypress, the wrangler server). Headless browser specs that turbo test tasks run need no ask.
 
 ## Conventions
 
