@@ -356,6 +356,7 @@
         "tools/build_and_test/**/*.test.ts",
         "tools/bundle-probe/**/*.test.ts",
         "tools/compat-guards/**/*.test.ts",
+        "tools/crap/**/*.test.ts",
         "tools/embed-heights/**/*.test.ts",
         "tools/lcov-rebase/**/*.test.ts",
         "tools/lit-template-lint/**/*.test.ts",

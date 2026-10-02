@@ -72,6 +72,12 @@
       "passThroughEnv": ["CI"],
       "outputs": ["coverage/**"]
     },
+    // Report-only CRAP hotspots from this package's coverage-final.json; in no
+    // ci:* graph.
+    "crap": {
+      "dependsOn": ["test:coverage"],
+      "inputs": ["$TURBO_DEFAULT$"]
+    },
     // Firefox+WebKit full-suite pass for the vitest packages; chromium
     // correctness rides test:coverage on PRs. Runs on main push, not the
     // PR graph.
