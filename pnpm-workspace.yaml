@@ -11,7 +11,7 @@ catalog:
   '@arethetypeswrong/core': ^0.18.5
   '@codecov/bundle-analyzer': ^2.0.1
 
-  oxc-project-runtime: 'npm:@oxc-project/runtime@0.151.0'
+  oxc-project-runtime: 'npm:@oxc-project/runtime@0.152.0'
   '@commitlint/cli': ^21.2.3
   '@commitlint/config-conventional': ^21.2.3
   '@commitlint/types': ^21.2.3
@@ -65,8 +65,8 @@ catalog:
   lit-dialog: ^2.0.1
   lodash-es: ^4.18.1
   mobx: ^7.0.5
-  oxc-minify: 0.151.0
-  oxc-transform: 0.151.0
+  oxc-minify: 0.152.0
+  oxc-transform: 0.152.0
   oxfmt: 0.71.0
   oxlint: 1.86.0
   oxlint-tsgolint: 7.0.2003
@@ -75,7 +75,7 @@ catalog:
   publint: ^0.3.24
   release-it: ^21.1.0
   rimraf: ^6.1.3
-  rolldown: ^1.2.11
+  rolldown: ^1.2.12
   screenfull: ^6.0.2
   semver: ^7.8.5
   start-server-and-test: ^3.0.12
@@ -88,7 +88,7 @@ catalog:
   typescript-5.9: npm:typescript@^5.9.3
   typescript-7: npm:typescript@^7.0.2
   valibot: ^1.5.0
-  vite: ^8.3.0
+  vite: ^8.3.2
   vite-plugin-checker: ^0.14.5
   vite-plugin-static-copy: ^4.1.1
   vitepress: ^2.0.0-alpha.20
@@ -187,7 +187,6 @@ audit:
 overrides:
   '@api-viewer/common>lit': ^3.3.3
   '@api-viewer/docs>lit': ^3.3.3
-  '@oxc-project/types': 0.151.0
   'brace-expansion@>=5 <5.0.9': ^5.0.9
   'd3-color@<3.1.0': ^3.1.0
   'dompurify@<3.4.13': ^3.4.13
