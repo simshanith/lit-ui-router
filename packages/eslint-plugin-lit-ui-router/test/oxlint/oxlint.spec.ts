@@ -68,6 +68,24 @@ void describe('oxlint jsPlugins', () => {
   });
 });
 
+void describe('oxlint jsPlugins: allowElementParts through an override', () => {
+  const diagnostics = run('prerendered/served.js');
+
+  void it('reports both element parts, and leaves the served form alone', () => {
+    assert.deepEqual(
+      diagnostics.map((diagnostic) => [
+        diagnostic.code,
+        (diagnostic as unknown as { labels: { span: { line: number } }[] })
+          .labels[0]?.span.line,
+      ]),
+      [
+        ['lit-ui-router(anchor-is-valid)', 12],
+        ['lit-ui-router(sref-active-class-aria-current)', 13],
+      ],
+    );
+  });
+});
+
 void describe('oxlint jsPlugins: the option-aware rules', () => {
   const diagnostics = run('directives.js');
 

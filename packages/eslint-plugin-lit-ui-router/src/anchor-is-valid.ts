@@ -3,7 +3,7 @@
 // MIT per the open-wc repo LICENSE, ISC per the package manifest.
 // Extended so a uiSref element part, and a srefHref bound in `href`, count as
 // the href they assign (#659, #676).
-import type { SourceCode } from 'eslint';
+import type { Rule, SourceCode } from 'eslint';
 import type { RuleFor } from './rule-shape.ts';
 // Deep path (no `exports` map guards it), but lit-a11y's own rules import the
 // same one — a break here breaks lit-a11y first.
@@ -14,12 +14,15 @@ import {
   type CallNode,
   createDirectiveTracker,
   elementPartIndex,
+  hasSpread,
   LINK_ELEMENTS_SCHEMA,
   linkElementsOf,
   type Node,
   type ObjectNode,
   type Parse5Element,
   propertyNamed,
+  type Ranged,
+  siblingBinding,
 } from './directives.ts';
 
 const ALL_ASPECTS = ['noHref', 'invalidHref', 'preferButton'];
@@ -27,6 +30,7 @@ const ALL_ASPECTS = ['noHref', 'invalidHref', 'preferButton'];
 interface RuleOptions {
   aspects?: string[];
   allowHash?: boolean;
+  allowElementParts?: boolean;
   linkElements?: string[];
 }
 
@@ -46,6 +50,58 @@ const assignsHref = (call: CallNode, nativeLink: boolean): boolean => {
   if (property.value.type !== 'Literal') return true;
   const { value } = property.value;
   return !(value === false || (value === 'auto' && !nativeLink));
+};
+
+/**
+ * The ranges to remove to turn `uiSref`'s options into `srefHref`'s: an
+ * `assignHref` of literal `true` or `'auto'` is dropped, and with it an options
+ * object it leaves empty. `undefined` when the arguments are not certain.
+ */
+const srefHrefRemovals = (
+  call: CallNode,
+  nativeLink: boolean,
+): [number, number][] | undefined => {
+  const [state, params, options] = call.arguments as (Node & Ranged)[];
+  if (state === undefined || call.arguments.length > 3) return undefined;
+  if (call.arguments.some((argument) => argument.type === 'SpreadElement')) {
+    return undefined;
+  }
+  if (options === undefined) return [];
+  if (options.type !== 'ObjectExpression') return undefined;
+  const object = options as ObjectNode;
+  if (hasSpread(object)) return undefined;
+  if (object.properties.some((property) => property.computed === true)) {
+    return undefined;
+  }
+  const property = propertyNamed(object, 'assignHref');
+  if (property === undefined) return [];
+  if (property.value.type !== 'Literal') return undefined;
+  const { value } = property.value;
+  if (!(value === true || (value === 'auto' && nativeLink))) return undefined;
+
+  if (object.properties.length === 1) {
+    // An `undefined` params placeholder only held the options' position.
+    const keep =
+      params?.type === 'Identifier' &&
+      (params as { name?: string }).name === 'undefined'
+        ? state
+        : params;
+    const from = keep?.range?.[1];
+    const to = options.range?.[1];
+    if (from === undefined || to === undefined) return undefined;
+    return [[from, to]];
+  }
+  const properties = object.properties as (Node & Ranged)[];
+  const at = properties.indexOf(property);
+  const next = properties[at + 1];
+  const previous = properties[at - 1];
+  const range =
+    next === undefined
+      ? [previous?.range?.[1], (property as Ranged).range?.[1]]
+      : [(property as Ranged).range?.[0], next.range?.[0]];
+  const [start, end] = range;
+  if (start === undefined || end === undefined) return undefined;
+  return [[start, end]];
 };
 
 /** Literal-or-undefined over the analyzer's attribute value (lit-a11y util). */
@@ -83,6 +139,7 @@ const anchorIsValid: RuleFor<typeof RULE_NAME> = {
       description:
         'anchor-is-valid for lit templates, where a uiSref element part counts as the href it assigns at runtime',
     },
+    fixable: 'code',
     messages: {
       preferButtonErrorMessage:
         'Anchor used as a button. Anchors are primarily expected to navigate. Use the button element instead.',
@@ -110,12 +167,17 @@ const anchorIsValid: RuleFor<typeof RULE_NAME> = {
             description: 'Whether a bare `#` counts as a valid href.',
             type: 'boolean',
           },
-          // ours (#676): upstream has no equivalent, so no parity to keep.
+          // ours (#676, #1065): upstream has neither, so no parity to keep.
+          allowElementParts: {
+            description:
+              'Whether a uiSref element part counts as the href it assigns at runtime.',
+            type: 'boolean',
+          },
           linkElements: LINK_ELEMENTS_SCHEMA,
         },
       },
     ],
-    defaultOptions: [{ allowHash: true }],
+    defaultOptions: [{ allowHash: true, allowElementParts: true }],
   },
 
   create(context) {
@@ -123,21 +185,34 @@ const anchorIsValid: RuleFor<typeof RULE_NAME> = {
     const ruleOptions: RuleOptions =
       (context.options[0] as RuleOptions | undefined) ?? {};
     const linkElements = linkElementsOf(context, ruleOptions.linkElements);
+    const allowElementParts = ruleOptions.allowElementParts !== false;
+
+    /** The uiSref element parts on an element. */
+    const uiSrefsOf = (
+      element: Parse5Element,
+      expressions: Node[],
+    ): CallNode[] => {
+      const calls: CallNode[] = [];
+      for (const attribute of Object.keys(element.attribs)) {
+        const index = elementPartIndex(attribute);
+        if (index === undefined) continue;
+        const expression = expressions[index];
+        if (expression === undefined) continue;
+        if (tracker.directiveOf(expression) === 'uiSref') {
+          calls.push(expression as CallNode);
+        }
+      }
+      return calls;
+    };
 
     const isNavigable = (
       element: Parse5Element,
       expressions: Node[],
     ): boolean =>
-      Object.keys(element.attribs).some((attribute) => {
-        const index = elementPartIndex(attribute);
-        if (index === undefined) return false;
-        const expression = expressions[index];
-        if (expression === undefined) return false;
-        return (
-          tracker.directiveOf(expression) === 'uiSref' &&
-          assignsHref(expression as CallNode, element.name === 'a')
-        );
-      });
+      allowElementParts &&
+      uiSrefsOf(element, expressions).some((call) =>
+        assignsHref(call, element.name === 'a'),
+      );
 
     // ours: the binding is the href, so there is no `assignHref` to opt out of.
     const bindsHref = (
@@ -151,6 +226,44 @@ const anchorIsValid: RuleFor<typeof RULE_NAME> = {
         if (tracker.directiveOf(expression) === 'srefHref') return true;
       }
       return false;
+    };
+
+    /**
+     * `<a ${uiSref(...)}>` rewritten as `<a href=${srefHref(...)}>`, the form a
+     * server render writes. Only a lone uiSref whose href is certain is fixed.
+     */
+    const toSrefHref = (
+      element: Parse5Element,
+      expressions: Node[],
+    ): Rule.ReportFixer | undefined => {
+      const calls = uiSrefsOf(element, expressions);
+      const [call] = calls;
+      if (call === undefined || calls.length > 1) return undefined;
+      if (!assignsHref(call, element.name === 'a')) return undefined;
+      const callee = call.callee as Node & Ranged;
+      const start = (call as Ranged).range?.[0];
+      const end = (call as Ranged).range?.[1];
+      if (start === undefined || end === undefined) return undefined;
+      const text = context.sourceCode.getText();
+      const open = /\$\{\s*$/.exec(text.slice(0, start));
+      if (open === null || !/^\s*\}/.test(text.slice(end))) return undefined;
+      const removals = srefHrefRemovals(call, element.name === 'a');
+      if (removals === undefined) return undefined;
+      return (fixer) => {
+        const sibling = siblingBinding(
+          fixer,
+          context.sourceCode,
+          callee,
+          'srefHref',
+        );
+        if (sibling === undefined) return null;
+        return [
+          ...sibling.edits,
+          fixer.insertTextBeforeRange([open.index, open.index], 'href='),
+          fixer.replaceText(callee, sibling.binding),
+          ...removals.map((range) => fixer.removeRange(range)),
+        ];
+      };
     };
 
     return {
@@ -206,14 +319,18 @@ const anchorIsValid: RuleFor<typeof RULE_NAME> = {
 
             // When there is no href at all, specific scenarios apply:
             if (!hasAnyHref) {
+              const fix = allowElementParts
+                ? undefined
+                : toSrefHref(element, expressions);
               if (
                 activeAspects.noHref &&
                 (!hasClickListener ||
                   (hasClickListener && !activeAspects.preferButton))
               ) {
                 const loc = reportLoc();
-                if (loc)
-                  context.report({ loc, messageId: 'noHrefErrorMessage' });
+                if (loc) {
+                  context.report({ loc, messageId: 'noHrefErrorMessage', fix });
+                }
               }
 
               if (hasClickListener && activeAspects.preferButton) {
@@ -222,6 +339,7 @@ const anchorIsValid: RuleFor<typeof RULE_NAME> = {
                   context.report({
                     loc,
                     messageId: 'preferButtonErrorMessage',
+                    fix,
                   });
                 }
               }

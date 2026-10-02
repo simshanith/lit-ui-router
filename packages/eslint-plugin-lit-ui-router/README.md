@@ -164,7 +164,7 @@ Optionally, exempt test fixtures, whose elements exist to be driven rather than 
 
 | Name                                                                           | Description                                                                                             | 💼 | 🔧 |
 | :----------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------ | :- | :- |
-| [anchor-is-valid](docs/rules/anchor-is-valid.md)                               | anchor-is-valid for lit templates, where a uiSref element part counts as the href it assigns at runtime | ✅  |    |
+| [anchor-is-valid](docs/rules/anchor-is-valid.md)                               | anchor-is-valid for lit templates, where a uiSref element part counts as the href it assigns at runtime | ✅  | 🔧 |
 | [directive-position](docs/rules/directive-position.md)                         | require each lit-ui-router directive to sit in the template position its part type allows               | ✅  |    |
 | [sref-active-aria-current](docs/rules/sref-active-aria-current.md)             | disallow an authored aria-current on an element a uiSrefActive element part manages                     | ✅  | 🔧 |
 | [sref-active-class-aria-current](docs/rules/sref-active-class-aria-current.md) | require an aria-current binding beside a srefActiveClass binding on a link element                      | ✅  | 🔧 |

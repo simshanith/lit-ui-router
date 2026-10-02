@@ -69,7 +69,7 @@
     "packages/eslint-plugin-lit-ui-router": {
       "ignoreDependencies": ["@release-it/conventional-changelog"],
       // oxlint fixture inputs, never imported
-      "ignore": ["test/oxlint/*.js"],
+      "ignore": ["test/oxlint/**/*.js"],
     },
     "tools/bundle-probe": {
       // bundled by path in free-of.test.ts, never imported

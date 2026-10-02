@@ -1,5 +1,5 @@
 // Syntax-only, so the rules also load into oxlint jsPlugins (#676).
-import type { Rule } from 'eslint';
+import type { Rule, SourceCode } from 'eslint';
 
 /** The node type eslint hands a listener, without naming `estree` directly. */
 type ListenerNode<K extends keyof Rule.NodeListener> = Parameters<
@@ -281,6 +281,68 @@ export const propertyNamed = (
     if ((candidate.key.name ?? candidate.key.value) === name) return candidate;
   }
   return undefined;
+};
+
+/** A named import specifier, structurally. */
+interface SpecifierNode extends Node {
+  imported: Node & { name?: string };
+  local: Node & { name?: string };
+}
+
+/** Named specifiers of every lit-ui-router import in this file. */
+const ourSpecifiers = (source: SourceCode): SpecifierNode[] => {
+  const found: SpecifierNode[] = [];
+  for (const statement of source.ast.body) {
+    if (statement.type !== 'ImportDeclaration') continue;
+    const from = statement.source.value;
+    if (typeof from !== 'string' || !isOurPackage(from)) continue;
+    for (const specifier of statement.specifiers) {
+      if (specifier.type !== 'ImportSpecifier') continue;
+      found.push(specifier as unknown as SpecifierNode);
+    }
+  }
+  return found;
+};
+
+/** How a fix spells a lit-ui-router export, and the import edits it needs. */
+export interface SiblingBinding {
+  binding: string;
+  edits: Rule.Fix[];
+}
+
+/**
+ * Spell `name` the way `callee` reaches lit-ui-router: through the same
+ * namespace, an existing specifier, or a specifier added after `callee`'s own.
+ * `undefined` when `callee`'s import cannot be found to extend.
+ */
+export const siblingBinding = (
+  fixer: Rule.RuleFixer,
+  source: SourceCode,
+  callee: Node,
+  name: string,
+): SiblingBinding | undefined => {
+  if (callee.type === 'MemberExpression') {
+    // The same namespace already carries it, so no import to add.
+    return {
+      binding: `${source.getText(callee.object as never)}.${name}`,
+      edits: [],
+    };
+  }
+  const specifiers = ourSpecifiers(source);
+  const existing = specifiers.find(
+    (specifier) => specifier.imported.name === name,
+  );
+  if (existing !== undefined) {
+    return { binding: existing.local.name ?? name, edits: [] };
+  }
+  const anchor = specifiers.find(
+    (specifier) => specifier.local.name === (callee as { name?: string }).name,
+  );
+  if (anchor === undefined) return undefined;
+  return {
+    binding: name,
+    edits: [fixer.insertTextAfter(anchor as never, `, ${name}`)],
+  };
 };
 
 /** A spread could carry any key, so the whole literal is unknowable. */

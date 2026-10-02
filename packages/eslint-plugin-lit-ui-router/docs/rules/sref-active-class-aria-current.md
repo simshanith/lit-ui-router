@@ -24,9 +24,55 @@ A link element is `<a>`, `<area>`, an element whose literal `role` carries the `
 
 `srefActiveClass` in container mode — no `state`, matching whatever the enclosing `uiSref` names — still reports on a link, because a link painted active is a link owed the signal. `exactClasses` alone is the same case.
 
+## Prerendered templates
+
+`@lit-labs/ssr` never runs an element part, so a template a server prerenders serves `<a ${uiSrefActive(...)}>` with neither its active class nor `aria-current` until the client hydrates. `allowElementParts: false` lints those templates as the server renders them: a link element carrying a `uiSrefActive` element part is held to the same bar as a `srefActiveClass` binding, and with no `aria-current` beside it, it reports and names `class=${srefActiveClass(...)}` with `aria-current=${srefAriaCurrent(...)}` as the form the server writes. The exemptions above still apply.
+
+The rule cannot tell which templates a prerender draws, so scope the option with a `files` glob:
+
+```js
+export default [
+  ...litUiRouter.configs.recommended,
+  {
+    files: ['src/prerendered/**'],
+    rules: {
+      'lit-ui-router/sref-active-class-aria-current': [
+        'error',
+        { allowElementParts: false },
+      ],
+    },
+  },
+];
+```
+
+```js
+// reported under allowElementParts: false
+html`<a href=${srefHref('home')} ${uiSrefActive({ activeClasses: ['on'] })}
+  >Home</a
+>`;
+// served as written
+html`<a
+  href=${srefHref('home')}
+  class=${srefActiveClass({ state: 'home', activeClasses: ['on'] })}
+  aria-current=${srefAriaCurrent({ state: 'home' })}
+  >Home</a
+>`;
+```
+
+This report carries no fix: `ariaCurrentValue` splits into its own binding, a `class` binding already on the element has to merge with the new one, and in container mode the links inside have to move to `srefHref` too.
+
 ## Options
 
-`linkElements` replaces `settings.linkElements` for this rule, wholesale; `[]` means "declare nothing here".
+`allowElementParts` (default `true`) counts a `uiSrefActive` element part as the `aria-current` it writes at runtime; `false` holds it to the served bar above. `linkElements` replaces `settings.linkElements` for this rule, wholesale; `[]` means "declare nothing here".
+
+<!-- begin auto-generated rule options list -->
+
+| Name                | Description                                                                              | Type     | Default |
+| :------------------ | :--------------------------------------------------------------------------------------- | :------- | :------ |
+| `allowElementParts` | Whether a uiSrefActive element part counts as the aria-current it writes at runtime.     | Boolean  | `true`  |
+| `linkElements`      | Element tags to treat as link elements, replacing `settings.linkElements` for this rule. | String[] |         |
+
+<!-- end auto-generated rule options list -->
 
 ## Examples
 
