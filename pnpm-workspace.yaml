@@ -192,6 +192,7 @@ overrides:
   'd3-color@<3.1.0': ^3.1.0
   'dompurify@<3.4.13': ^3.4.13
   'fast-uri@<3.1.7': ^3.1.7
+  'get-uri>basic-ftp': ^6.2.1
   'ip-address@<10.5.1': ^10.5.1
   'joi@>=18 <18.2.5': ^18.2.5
   'js-yaml@>=4 <4.3.2': ^4.3.2
