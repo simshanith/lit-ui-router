@@ -192,6 +192,12 @@
       }
     },
     {
+      "files": ["packages/**"],
+      "rules": {
+        "complexity": "error"
+      }
+    },
+    {
       "files": ["**/*.vue"],
       "rules": {
         "turbo/no-undeclared-env-vars": [

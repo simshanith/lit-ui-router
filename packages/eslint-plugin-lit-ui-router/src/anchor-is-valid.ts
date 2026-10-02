@@ -65,6 +65,20 @@ const getLiteralAttributeValue = (
   return attributePartIndex(expr) === undefined ? expr : undefined;
 };
 
+const isInvalidHref = (
+  value: string | undefined,
+  allowHash: boolean | undefined,
+): boolean =>
+  typeof value === 'string' &&
+  (!value.length ||
+    (allowHash === false && value === '#') ||
+    /^\W*?javascript:/.test(value));
+
+type MessageId =
+  | 'preferButtonErrorMessage'
+  | 'noHrefErrorMessage'
+  | 'invalidHrefErrorMessage';
+
 export const RULE_NAME = 'anchor-is-valid';
 
 /**
@@ -123,6 +137,14 @@ const anchorIsValid: RuleFor<typeof RULE_NAME> = {
     const ruleOptions: RuleOptions =
       (context.options[0] as RuleOptions | undefined) ?? {};
     const linkElements = linkElementsOf(context, ruleOptions.linkElements);
+    const { aspects } = ruleOptions;
+    const isActive = (aspect: string) =>
+      !Array.isArray(aspects) || aspects.includes(aspect);
+    const activeAspects = {
+      noHref: isActive('noHref'),
+      invalidHref: isActive('invalidHref'),
+      preferButton: isActive('preferButton'),
+    };
 
     const isNavigable = (
       element: Parse5Element,
@@ -153,6 +175,17 @@ const anchorIsValid: RuleFor<typeof RULE_NAME> = {
       return false;
     };
 
+    const hasHref = (element: Parse5Element, expressions: Node[]): boolean => {
+      const attributes = Object.keys(element.attribs);
+      return (
+        attributes.includes('href') ||
+        attributes.includes('.href') ||
+        // ours: the element part assigns one at runtime
+        isNavigable(element, expressions) ||
+        bindsHref(element, expressions)
+      );
+    };
+
     return {
       ImportDeclaration(node) {
         tracker.onImport(node);
@@ -175,56 +208,26 @@ const anchorIsValid: RuleFor<typeof RULE_NAME> = {
             // A declared link element is checked as an <a> is (#676).
             if (element.name !== 'a' && !linkElements.has(element.name)) return;
 
-            const hasAspectsOption = Array.isArray(ruleOptions.aspects);
-            const activeAspects = {
-              noHref: hasAspectsOption
-                ? ruleOptions.aspects?.includes('noHref') === true
-                : true,
-              invalidHref: hasAspectsOption
-                ? ruleOptions.aspects?.includes('invalidHref') === true
-                : true,
-              preferButton: hasAspectsOption
-                ? ruleOptions.aspects?.includes('preferButton') === true
-                : true,
+            const report = (messageId: MessageId) => {
+              const loc =
+                (startTag === undefined
+                  ? null
+                  : analyzer.resolveLocation(startTag, source)) ??
+                node.loc ??
+                null;
+              if (loc) context.report({ loc, messageId });
             };
 
-            const attributes = Object.keys(element.attribs);
-            const hasAnyHref =
-              attributes.includes('href') ||
-              attributes.includes('.href') ||
-              // ours: the element part assigns one at runtime
-              isNavigable(element, expressions) ||
-              bindsHref(element, expressions);
-            const hasClickListener = attributes.includes('@click');
-
-            const reportLoc = () =>
-              (startTag === undefined
-                ? null
-                : analyzer.resolveLocation(startTag, source)) ??
-              node.loc ??
-              null;
+            const prefersButton =
+              Object.keys(element.attribs).includes('@click') &&
+              activeAspects.preferButton;
 
             // When there is no href at all, specific scenarios apply:
-            if (!hasAnyHref) {
-              if (
-                activeAspects.noHref &&
-                (!hasClickListener ||
-                  (hasClickListener && !activeAspects.preferButton))
-              ) {
-                const loc = reportLoc();
-                if (loc)
-                  context.report({ loc, messageId: 'noHrefErrorMessage' });
+            if (!hasHref(element, expressions)) {
+              if (activeAspects.noHref && !prefersButton) {
+                report('noHrefErrorMessage');
               }
-
-              if (hasClickListener && activeAspects.preferButton) {
-                const loc = reportLoc();
-                if (loc) {
-                  context.report({
-                    loc,
-                    messageId: 'preferButtonErrorMessage',
-                  });
-                }
-              }
+              if (prefersButton) report('preferButtonErrorMessage');
               return;
             }
 
@@ -232,25 +235,11 @@ const anchorIsValid: RuleFor<typeof RULE_NAME> = {
             const value =
               getLiteralAttributeValue(analyzer, element, 'href', source) ??
               getLiteralAttributeValue(analyzer, element, '.href', source);
+            if (!isInvalidHref(value, ruleOptions.allowHash)) return;
 
-            const invalidHrefValue =
-              typeof value === 'string' &&
-              (!value.length ||
-                (ruleOptions.allowHash === false && value === '#') ||
-                /^\W*?javascript:/.test(value));
-
-            if (!invalidHrefValue) return;
-
-            if (hasClickListener && activeAspects.preferButton) {
-              const loc = reportLoc();
-              if (loc) {
-                context.report({ loc, messageId: 'preferButtonErrorMessage' });
-              }
-            } else if (activeAspects.invalidHref) {
-              const loc = reportLoc();
-              if (loc) {
-                context.report({ loc, messageId: 'invalidHrefErrorMessage' });
-              }
+            if (prefersButton) report('preferButtonErrorMessage');
+            else if (activeAspects.invalidHref) {
+              report('invalidHrefErrorMessage');
             }
           },
         });

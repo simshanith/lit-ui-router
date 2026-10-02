@@ -264,6 +264,71 @@ const warnStrictSlash = async (
   );
 };
 
+const wantsSlashProbe = (
+  verdict: Extract<Verdict, { kind: 'shell' }>,
+  path: string,
+  subpath: string,
+): boolean =>
+  import.meta.env.DEV &&
+  subpath !== '' &&
+  verdict.status === undefined &&
+  !path.endsWith('/');
+
+const redirectLines = (
+  path: string,
+  verdict: Extract<Verdict, { kind: 'redirect' }>,
+  trailingSlash: PrerenderOptions['trailingSlash'],
+): RedirectLine[] => {
+  const line: RedirectLine = {
+    from: path,
+    to: verdict.location,
+    status: verdict.status,
+  };
+  const paired = trailingSlash === 'both' ? otherSpelling(path) : undefined;
+  return paired === undefined ? [line] : [line, { ...line, from: paired }];
+};
+
+// The otherwise projection's 404 shell, or undefined when there is none to emit.
+const notFoundPage = async (
+  notFound: PrerenderOptions['notFound'],
+  mounts: PrerenderOptions['mounts'],
+  resolver: ServerRouter,
+) => {
+  if (notFound === false) return undefined;
+  const probe = notFound?.probe ?? defaultProbe(mounts);
+  const verdict = await resolver.resolve(probe);
+  if (verdict.kind !== 'shell' || verdict.status !== 404) return undefined;
+  return { verdict, probe, file: notFound?.file ?? DEFAULT_NOT_FOUND_FILE };
+};
+
+const writeRules = async (
+  lines: RedirectLine[],
+  rules: NonNullable<PrerenderOptions['rules']>,
+  write: FileWriter,
+  outDir: string,
+): Promise<void> => {
+  if (rules === 'none') return;
+  if (typeof rules === 'function') {
+    await rules(lines);
+    return;
+  }
+  if (lines.length === 0) return;
+  const body = lines
+    .map((line) => `${line.from} ${line.to} ${line.status}`)
+    .join('\n');
+  await write(joinPath(outDir, '_redirects'), `${body}\n`);
+};
+
+const resolverOf = (options: PrerenderOptions): ServerRouter => {
+  if (options.resolver) return options.resolver;
+  if (!options.mounts) {
+    throw new Error(
+      'prerender() needs a mount table: pass `mounts`, or a `resolver` from createServerRouter().',
+    );
+  }
+  return createServerRouter({ mounts: options.mounts });
+};
+
 const warnUnregistered = (): void => {
   // DEV folds away in dist/*.js; see check:dev-split and dev-warnings.json.
   if (!import.meta.env.DEV) return;
@@ -329,13 +394,7 @@ export async function prerender(
     dryRun = false,
   } = options;
 
-  if (!options.resolver && !mounts) {
-    throw new Error(
-      'prerender() needs a mount table: pass `mounts`, or a `resolver` from createServerRouter().',
-    );
-  }
-  const resolver: ServerRouter =
-    options.resolver ?? createServerRouter({ mounts: mounts! });
+  const resolver = resolverOf(options);
   warnUnregistered();
 
   const root = options.root ?? new EventTarget();
@@ -387,13 +446,7 @@ export async function prerender(
       if (verdict.kind === 'shell') {
         const subpath = subpathIn(verdict.mount, path);
         tally.shell += 1;
-        if (
-          import.meta.env.DEV &&
-          !slashProbed &&
-          subpath !== '' &&
-          verdict.status === undefined &&
-          !path.endsWith('/')
-        ) {
+        if (!slashProbed && wantsSlashProbe(verdict, path, subpath)) {
           slashProbed = true;
           await warnStrictSlash(resolver, path);
         }
@@ -402,15 +455,7 @@ export async function prerender(
       }
       if (verdict.kind === 'redirect') {
         tally.redirect += 1;
-        const line: RedirectLine = {
-          from: path,
-          to: verdict.location,
-          status: verdict.status,
-        };
-        generated.push(line);
-        const paired =
-          trailingSlash === 'both' ? otherSpelling(path) : undefined;
-        if (paired !== undefined) generated.push({ ...line, from: paired });
+        generated.push(...redirectLines(path, verdict, trailingSlash));
         continue;
       }
       tally.notFound += 1;
@@ -418,34 +463,18 @@ export async function prerender(
       warnUnclaimed(path);
     }
 
-    if (notFound !== false) {
-      const probe = notFound?.probe ?? defaultProbe(mounts);
-      const verdict = await resolver.resolve(probe);
-      if (verdict.kind === 'shell' && verdict.status === 404) {
-        tally.document += 1;
-        await emit(
-          verdict,
-          probe,
-          subpathIn(verdict.mount, probe),
-          notFound?.file ?? DEFAULT_NOT_FOUND_FILE,
-        );
-      }
+    const page = await notFoundPage(notFound, mounts, resolver);
+    if (page) {
+      tally.document += 1;
+      const { verdict, probe, file } = page;
+      await emit(verdict, probe, subpathIn(verdict.mount, probe), file);
     }
   } finally {
     uninstall();
   }
 
   const lines = [...extraRules, ...generated];
-  if (!dryRun && rules !== 'none') {
-    if (typeof rules === 'function') {
-      await rules(lines);
-    } else if (lines.length > 0) {
-      const body = lines
-        .map((line) => `${line.from} ${line.to} ${line.status}`)
-        .join('\n');
-      await write(joinPath(outDir, '_redirects'), `${body}\n`);
-    }
-  }
+  if (!dryRun) await writeRules(lines, rules, write, outDir);
 
   return { tally, pages, rules: lines, warnings, root };
 }
