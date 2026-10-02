@@ -5,14 +5,23 @@ import tsParser from '@tools/eslint-ts-parser';
 import { defineConfig, globalIgnores } from 'eslint/config';
 
 export default defineConfig(
+  // .gitignore's JS/TS entries; sibling lanes write and delete these mid-graph.
   globalIgnores([
     '**/dist/**',
-    'www/lit-ui-router.dev/api/**',
-    'tools/release/.cache/**',
-    '**/coverage/**',
+    '**/tmp/**',
     '**/node_modules/**',
-    '**/.vitepress/cache/**',
+    '**/coverage/**',
+    '**/.turbo/**',
+    '**/.cache/**',
+    '**/.vitest/**',
+    '**/.wrangler/**',
     '**/.claude/**',
+    'tools/dts-backtest/.probe-scratch/**',
+    'apps/sample-app-lit-e2e/cypress/**',
+    'www/lit-ui-router.dev/.vitepress/cache/**',
+    'www/lit-ui-router.dev/.vitepress/.temp/**',
+    'www/lit-ui-router.dev/api/**',
+    'www/lit-ui-router.dev/worker/worker-configuration.d.ts',
   ]),
   {
     files: ['**/*.{ts,mts,cts,tsx}'],
@@ -29,6 +38,6 @@ export default defineConfig(
   {
     // Vendored from lit-a11y; kept in upstream's shape so re-syncs stay a diff.
     files: ['packages/eslint-plugin-lit-ui-router/src/anchor-is-valid.ts'],
-    rules: { complexity: ['error', { max: 35 }] },
+    rules: { complexity: ['error', { max: 34 }] },
   },
 );

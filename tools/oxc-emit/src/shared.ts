@@ -11,8 +11,22 @@ export const DEV_OUT = 'dist/development';
 // The build-time constant the guarded warning sites read. Vite/vitest supply it
 // unconfigured, so specs exercise the development branch as-is.
 export const DEV_DEFINE_KEY = 'import.meta.env.DEV';
-// The manifest version, defined on every pass; a vitest config supplies it via `test.env`.
+// The manifest version, defined only for sources that read it.
 export const VERSION_DEFINE_KEY = 'import.meta.env.PACKAGE_VERSION';
+
+// Undefined when empty: any define turns on oxc's define plugin, which rewrites unrelated code.
+export function passDefine(
+  source: string,
+  version: string | undefined,
+  dev: string | undefined,
+): Record<string, string> | undefined {
+  const define: Record<string, string> = {};
+  if (version !== undefined && source.includes(VERSION_DEFINE_KEY)) {
+    define[VERSION_DEFINE_KEY] = JSON.stringify(version);
+  }
+  if (dev !== undefined) define[DEV_DEFINE_KEY] = dev;
+  return Object.keys(define).length > 0 ? define : undefined;
+}
 
 export const fail = (file: string, errors: { message: string }[]): never => {
   throw new Error(
