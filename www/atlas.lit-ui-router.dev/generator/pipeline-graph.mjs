@@ -12,6 +12,7 @@ import { ATLAS } from './census-atlas.mjs';
 import { PROJECT_MARK, articleTitle } from './chrome.mjs';
 import { LANE_KEYS_JS, PLATE_FOCUS_JS } from './focus.mjs';
 import { glyph } from './icons.mjs';
+import { laneCss } from './lane-chrome.mjs';
 import { SPRITES, spriteSvg } from './sprites.mjs';
 
 export const CYTOSCAPE_URL = 'https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.31.0/cytoscape.min.js';
@@ -155,47 +156,7 @@ const LEGEND_NODES = [
   ['basis', 'the archive basis'],
 ];
 
-const CSS = `
-.pg { max-width: 1300px; margin: 0 auto 40px; }
-.pg-bar { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; justify-content: space-between;
-  border: 1.5px solid var(--ink); border-bottom: none; background: var(--paper-2); padding: 8px 14px; }
-.pg-bar .pg-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: center; }
-.pg-bar .lg { display: inline-flex; align-items: center; gap: 8px; font-family: var(--data); font-size: 9.5px;
-  letter-spacing: 0.06em; color: var(--ink-soft); }
-.pg-bar .lg svg { display: block; }
-.pg-bar .lg .sw-dark { display: none; }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .pg-bar .lg .sw-light { display: none; }
-  :root:not([data-theme="light"]) .pg-bar .lg .sw-dark { display: block; }
-}
-:root[data-theme="dark"] .pg-bar .lg .sw-light { display: none; }
-:root[data-theme="dark"] .pg-bar .lg .sw-dark { display: block; }
-.pg-bar .lg i { display: block; width: 26px; height: 0; border-top-width: 2px; border-top-style: solid; }
-.pg-ctl { display: flex; gap: 12px; align-items: center; font-family: var(--data); font-size: 9.5px;
-  letter-spacing: 0.1em; color: var(--ink-soft); }
-.pg-ctl button { font: inherit; letter-spacing: inherit; color: var(--ink); background: var(--paper);
-  border: 1px solid var(--ink); padding: 4px 9px; cursor: pointer; }
-.pg-ctl button:hover { background: var(--paper-2); }
-.pg-ctl label { display: inline-flex; gap: 5px; align-items: center; cursor: pointer; }
-.pg-stage { display: grid; grid-template-columns: minmax(0, 1fr) 240px; border: 1.5px solid var(--ink);
-  background: var(--paper); }
-.pg-cy { height: 700px; min-width: 0; }
-.pg-cy:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
-.pg-info { border-left: 1.5px solid var(--ink); background: var(--paper-2); padding: 12px 14px;
-  font-family: var(--data); font-size: 10.5px; letter-spacing: 0.04em; color: var(--ink); overflow-y: auto;
-  max-height: 700px; }
-/* a station id is a bare identifier: the code face, not the data face */
-.pg-info h4 { font-family: var(--code); font-size: 11.5px; letter-spacing: 0.08em; margin-bottom: 8px; word-break: break-all; }
-.pg-info .f { display: block; font-size: 8.5px; letter-spacing: 0.16em; color: var(--ink-soft); margin: 9px 0 2px; }
-.pg-info ul { list-style: none; padding: 0; }
-.pg-info li { padding: 1px 0; color: var(--ink-soft); word-break: break-all; }
-.pg-info .hint { color: var(--ink-faint); font-style: normal; }
-.pg-basis { font-family: var(--data); font-size: 9.5px; letter-spacing: 0.06em; color: var(--ink-faint);
-  border: 1.5px solid var(--ink); border-top: none; background: var(--paper-2); padding: 8px 14px 9px; }
-@media (max-width: 860px) {
-  .pg-stage { grid-template-columns: 1fr; }
-  .pg-info { border-left: none; border-top: 1.5px solid var(--ink); max-height: none; }
-}`;
+const CSS = laneCss('pg', 'break-all');
 
 // The init script is written without template placeholders on purpose: it is
 // emitted inside one, and all of its data arrives through the JSON islands.
@@ -257,14 +218,14 @@ $$FOCUS  // The cytoscape tag above is deferred; deferred scripts run before
         'background-fit': 'contain', 'background-clip': 'none', 'border-width': 1.1, 'border-color': c.line,
         shape: 'round-rectangle', width: 'data(w)', height: 'data(h)', label: 'data(label)',
         'text-valign': 'bottom', 'text-margin-y': 5, 'text-wrap': 'none',
-        'font-family': c.data, 'font-size': 12, color: c.ink,
+        'font-family': c.data, 'font-size': 13, color: c.ink,
         'text-halign': 'center', 'overlay-opacity': 0, 'transition-property': 'opacity', 'transition-duration': '110ms' } },
       { selector: 'node.hero', style: { 'border-width': 2.2, 'border-color': c.accent, color: c.accent,
-        'font-size': 13.5, 'font-weight': 'bold' } },
+        'font-size': 14.5, 'font-weight': 'bold' } },
       { selector: 'node.k-basis', style: { 'border-width': 1.6, 'border-color': c.ink } },
       { selector: 'node.band', style: { 'background-opacity': 0, 'background-image': 'none', 'border-width': 0,
         label: 'data(label)', 'text-valign': 'center', 'text-halign': 'right', 'text-margin-x': 2,
-        'text-wrap': 'none', 'font-size': 12, color: c.soft, events: 'no' } },
+        'text-wrap': 'none', 'font-size': 13, color: c.soft, events: 'no' } },
       { selector: 'edge', style: { 'curve-style': 'bezier', 'target-arrow-shape': 'triangle',
         'arrow-scale': 0.75, 'line-color': c.soft, 'target-arrow-color': c.soft, width: 1,
         'transition-property': 'opacity', 'transition-duration': '110ms' } },

@@ -16,6 +16,7 @@
 import { readFileSync } from 'node:fs';
 import { PLATE_FOCUS_JS } from './focus.mjs';
 import { glyph } from './icons.mjs';
+import { laneCss } from './lane-chrome.mjs';
 import { PALETTES } from './sprites.mjs';
 import { CYTOSCAPE_URL } from './pipeline-graph.mjs';
 
@@ -190,56 +191,20 @@ const json = (v) => JSON.stringify(v).replace(/</g, '\\u003c');
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
 // ---------------------------------------------------------------------------
-const CSS = `
-.lw { max-width: 1300px; margin: 0 auto 40px; }
-.lw-bar { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; justify-content: space-between;
-  border: 1.5px solid var(--ink); border-bottom: none; background: var(--paper-2); padding: 8px 14px; }
-.lw-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: center; }
-.lw-legend .lg { display: inline-flex; align-items: center; gap: 7px; font-family: var(--data); font-size: 9.5px;
-  letter-spacing: 0.06em; color: var(--ink-soft); }
-.lw-legend .lg svg { display: block; }
-.lw-legend .lg .sw-dark { display: none; }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .lw-legend .lg .sw-light { display: none; }
-  :root:not([data-theme="light"]) .lw-legend .lg .sw-dark { display: block; }
-}
-:root[data-theme="dark"] .lw-legend .lg .sw-light { display: none; }
-:root[data-theme="dark"] .lw-legend .lg .sw-dark { display: block; }
-.lw-legend .lg i { display: block; width: 24px; height: 0; border-top-width: 2px; border-top-style: solid; }
-.lw-ctl { display: flex; gap: 10px; align-items: center; font-family: var(--data); font-size: 9.5px;
-  letter-spacing: 0.1em; color: var(--ink-soft); }
-.lw-ctl button { font: inherit; letter-spacing: inherit; color: var(--ink); background: var(--paper);
-  border: 1px solid var(--ink); padding: 4px 9px; cursor: pointer; }
-.lw-ctl button:hover { background: var(--paper-2); }
+const CSS = laneCss('lw') + `
 .lw-ctl button:disabled { color: var(--ink-faint); border-color: var(--line); cursor: default; background: var(--paper); }
-.lw-ctl .lw-step { color: var(--accent); font-weight: 600; min-width: 9ch; text-align: center;
+.lw-ctl .lw-step { font-size: 11px; color: var(--accent); font-weight: 600; min-width: 10ch; text-align: center;
   font-variant-numeric: tabular-nums; }
-.lw-stage { display: grid; grid-template-columns: minmax(0, 1fr) 300px; border: 1.5px solid var(--ink);
-  background: var(--paper); }
-.lw-stage:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
-.lw-cy { height: 600px; min-width: 0; }
-.lw-info { border-left: 1.5px solid var(--ink); background: var(--paper-2); padding: 12px 14px;
-  font-family: var(--data); font-size: 10.5px; letter-spacing: 0.04em; color: var(--ink); overflow-y: auto;
-  max-height: 600px; }
-.lw-info h4 { font-size: 11.5px; letter-spacing: 0.06em; margin-bottom: 8px; word-break: break-word; }
-.lw-info h4 .n { color: var(--accent); }
-.lw-info .f { display: block; font-size: 8.5px; letter-spacing: 0.16em; color: var(--ink-soft); margin: 9px 0 2px; }
-.lw-info p { font-family: var(--serif); font-size: 13px; letter-spacing: 0; line-height: 1.45; color: var(--ink); }
-.lw-info ul { list-style: none; padding: 0; }
-.lw-info li { padding: 1px 0; color: var(--ink-soft); word-break: break-word; }
-.lw-info li .now { color: var(--accent); }
-.lw-info .ev { margin: 4px 0 8px; }
-.lw-info .ev .at { display: block; font-size: 9.5px; color: var(--accent); letter-spacing: 0.04em; margin-bottom: 2px; }
-.lw-info .ev pre { font-family: var(--code); font-size: 9.5px; letter-spacing: 0; line-height: 1.35;
-  color: var(--ink); background: var(--paper); border: 1px solid var(--line); padding: 4px 6px; margin: 0;
+.lw-info h4 .n { font-family: var(--data); font-size: 11px; font-weight: 600; letter-spacing: 0.16em; color: var(--accent);
+  vertical-align: 0.12em; white-space: nowrap; }
+.lw-info p { font-family: var(--serif); font-size: 16px; letter-spacing: 0; line-height: 1.5; color: var(--ink); max-width: 66ch; }
+.lw-info li .now { font-size: 12.5px; color: var(--accent); }
+.lw-info .ev { margin: 6px 0 10px; }
+.lw-info .ev .at { display: block; font-size: 11px; color: var(--accent); letter-spacing: 0.04em; margin-bottom: 3px; }
+.lw-info .ev pre { font-family: var(--code); font-size: 11.5px; letter-spacing: 0; line-height: 1.4;
+  color: var(--ink); background: var(--paper); border: 1px solid var(--line); padding: 6px 8px; margin: 0;
   overflow-x: auto; white-space: pre; }
-.lw-info .hint { color: var(--ink-faint); }
-.lw-basis { font-family: var(--data); font-size: 9.5px; letter-spacing: 0.06em; color: var(--ink-faint);
-  border: 1.5px solid var(--ink); border-top: none; background: var(--paper-2); padding: 8px 14px 9px; }
-@media (max-width: 860px) {
-  .lw-stage { grid-template-columns: 1fr; }
-  .lw-info { border-left: none; border-top: 1.5px solid var(--ink); max-height: none; }
-}`;
+`;
 
 // Written without template placeholders on purpose: this is emitted inside one,
 // and every byte of data reaches it through the JSON islands.
@@ -295,12 +260,12 @@ $$FOCUS  // The cytoscape tag is deferred; deferred scripts run BEFORE DOMConten
       { selector: 'node.station', style: { 'background-color': c.paper, 'background-image': 'data(sprite)',
         'background-fit': 'contain', 'background-clip': 'none', 'border-width': 1.1, 'border-color': c.line,
         shape: 'round-rectangle', width: 'data(w)', height: 'data(h)', label: 'data(label)',
-        'text-valign': 'data(lpos)', 'text-margin-y': 'data(lgap)', 'text-wrap': 'none', 'font-family': face, 'font-size': 12,
+        'text-valign': 'data(lpos)', 'text-margin-y': 'data(lgap)', 'text-wrap': 'none', 'font-family': face, 'font-size': 13,
         'font-weight': 600, color: c.ink, 'text-halign': 'center', 'overlay-opacity': 0,
         'transition-property': 'opacity, border-color', 'transition-duration': reduced.matches ? '0ms' : '140ms' } },
       { selector: 'edge.leg', style: { 'curve-style': 'straight', 'target-arrow-shape': 'triangle', 'arrow-scale': 0.8,
         'line-color': c.faint, 'target-arrow-color': c.faint, width: 1.2, opacity: 0.55, label: 'data(label)',
-        'font-family': face, 'font-size': 9.5, color: c.faint, 'text-rotation': 'autorotate',
+        'font-family': face, 'font-size': 11, color: c.faint, 'text-rotation': 'autorotate',
         'text-background-color': c.paper, 'text-background-opacity': 0.92, 'text-background-padding': 2,
         'transition-property': 'line-color, opacity, width', 'transition-duration': reduced.matches ? '0ms' : '140ms' } },
       { selector: 'edge.bow', style: { 'curve-style': 'unbundled-bezier', 'control-point-distances': 'data(bow)',
@@ -349,7 +314,7 @@ $$FOCUS  // The cytoscape tag is deferred; deferred scripts run BEFORE DOMConten
   }
   function describeStep() {
     if (!step) {
-      return '\\u003ch4\\u003e' + L.glyphs.rest + 'THE RENDER LOOP \\u00b7 AT REST\\u003c/h4\\u003e\\u003cp\\u003e' + esc(L.idle) + '\\u003c/p\\u003e'
+      return '\\u003ch4\\u003e' + L.glyphs.rest + 'THE RENDER LOOP \\u00b7 AT REST\\u003c/h4\\u003e\\u003cp class="hint"\\u003e' + esc(L.idle) + '\\u003c/p\\u003e'
         + field(L.glyphs.walk + 'THE WALK', esc(P.walkOf) + ' \\u00b7 ' + W.length + ' steps');
     }
     var s = W[step - 1];

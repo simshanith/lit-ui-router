@@ -15,6 +15,7 @@
 import { readFileSync } from 'node:fs';
 import { LANE_KEYS_JS, PLATE_FOCUS_JS } from './focus.mjs';
 import { glyph } from './icons.mjs';
+import { laneCss } from './lane-chrome.mjs';
 import { PALETTES } from './sprites.mjs';
 import { CYTOSCAPE_URL } from './pipeline-graph.mjs';
 
@@ -105,7 +106,7 @@ const BANDS = [];
 {
   let y = 0;
   for (const g of GROUPS) {
-    BANDS.push({ label: `${g.label} ×${g.members.length}`, y: y - 15 });
+    BANDS.push({ label: `${g.label} ×${g.members.length}`, y: y - 17 });
     for (const p of g.members) { rowY.set(p, y); y += RP; }
     y += GAP;
   }
@@ -168,49 +169,10 @@ const skinSvg = (k, theme) => `<svg viewBox="0 0 48 48" width="24" height="24" a
 const json = (v) => JSON.stringify(v).replace(/</g, '\\u003c');
 
 // ---------------------------------------------------------------------------
-const CSS = `
-.rg { max-width: 1300px; margin: 0 auto 40px; }
-.rg-bar { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; justify-content: space-between;
-  border: 1.5px solid var(--ink); border-bottom: none; background: var(--paper-2); padding: 8px 14px; }
-.rg-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: center; }
-.rg-legend .lg { display: inline-flex; align-items: center; gap: 7px; font-family: var(--data); font-size: 9.5px;
-  letter-spacing: 0.06em; color: var(--ink-soft); }
-.rg-legend .lg svg { display: block; }
-.rg-legend .lg .sw-dark { display: none; }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .rg-legend .lg .sw-light { display: none; }
-  :root:not([data-theme="light"]) .rg-legend .lg .sw-dark { display: block; }
-}
-:root[data-theme="dark"] .rg-legend .lg .sw-light { display: none; }
-:root[data-theme="dark"] .rg-legend .lg .sw-dark { display: block; }
-.rg-legend .lg i { display: block; width: 24px; height: 0; border-top-width: 2px; border-top-style: solid; }
-.rg-ctl { display: flex; gap: 12px; align-items: center; font-family: var(--data); font-size: 9.5px;
-  letter-spacing: 0.1em; color: var(--ink-soft); }
-.rg-ctl button { font: inherit; letter-spacing: inherit; color: var(--ink); background: var(--paper);
-  border: 1px solid var(--ink); padding: 4px 9px; cursor: pointer; }
-.rg-ctl button:hover { background: var(--paper-2); }
-.rg-ctl label { display: inline-flex; gap: 5px; align-items: center; cursor: pointer; }
+const CSS = laneCss('rg', 'break-all') + `
 .rg-ctl label.on { color: var(--accent); }
-.rg-stage { display: grid; grid-template-columns: minmax(0, 1fr) 250px; border: 1.5px solid var(--ink);
-  background: var(--paper); }
-.rg-cy { height: 720px; min-width: 0; }
-.rg-cy:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
-.rg-info { border-left: 1.5px solid var(--ink); background: var(--paper-2); padding: 12px 14px;
-  font-family: var(--data); font-size: 10.5px; letter-spacing: 0.04em; color: var(--ink); overflow-y: auto;
-  max-height: 720px; }
-/* a register entry names a file: the code face, not the data face */
-.rg-info h4 { font-family: var(--code); font-size: 11.5px; letter-spacing: 0.06em; margin-bottom: 8px; word-break: break-all; }
-.rg-info .f { display: block; font-size: 8.5px; letter-spacing: 0.16em; color: var(--ink-soft); margin: 9px 0 2px; }
-.rg-info ul { list-style: none; padding: 0; }
-.rg-info li { padding: 1px 0; color: var(--ink-soft); word-break: break-all; }
-.rg-info .hint { color: var(--ink-faint); }
 .rg-info .red { color: var(--red); }
-.rg-basis { font-family: var(--data); font-size: 9.5px; letter-spacing: 0.06em; color: var(--ink-faint);
-  border: 1.5px solid var(--ink); border-top: none; background: var(--paper-2); padding: 8px 14px 9px; }
-@media (max-width: 860px) {
-  .rg-stage { grid-template-columns: 1fr; }
-  .rg-info { border-left: none; border-top: 1.5px solid var(--ink); max-height: none; }
-}`;
+`;
 
 // Written without template placeholders on purpose: this is emitted inside one,
 // and every byte of data reaches it through the JSON islands.
@@ -287,18 +249,18 @@ $$FOCUS  // The cytoscape tag is deferred; deferred scripts run BEFORE DOMConten
       { selector: 'node.cell.phantom', style: { 'background-color': c.paper2, 'border-color': c.faint, opacity: 0.4 } },
       { selector: 'node.head', style: { 'background-opacity': 0, 'border-width': 0, label: 'data(label)',
         'text-valign': 'center', 'text-halign': 'center', 'text-rotation': -Math.PI / 2, 'text-margin-y': 0,
-        'font-family': c.data, 'font-size': 12, color: c.ink,
+        'font-family': c.data, 'font-size': 13, color: c.ink,
         width: 1, height: 1, events: 'no' } },
       { selector: 'node.head.phantom', style: { color: c.red } },
       { selector: 'node.rowlabel', style: { 'background-opacity': 0, 'border-width': 0, label: 'data(label)',
         'text-valign': 'center', 'text-halign': 'left', 'text-margin-x': -4,
-        'font-family': c.data, 'font-size': 12, color: c.soft,
+        'font-family': c.data, 'font-size': 13, color: c.soft,
         width: 1, height: 1, events: 'no' } },
       { selector: 'node.band', style: { 'background-opacity': 0, 'border-width': 0, label: 'data(label)',
         'text-valign': 'center', 'text-halign': 'left', 'text-margin-x': -4,
-        'font-family': c.data, 'font-size': 12.5, color: c.accent,
+        'font-family': c.data, 'font-size': 13.5, color: c.accent,
         width: 1, height: 1, events: 'no' } },
-      { selector: 'node.foot', style: { 'text-halign': 'center', 'text-margin-x': 0, color: c.soft, 'font-size': 13 } },
+      { selector: 'node.foot', style: { 'text-halign': 'center', 'text-margin-x': 0, color: c.soft, 'font-size': 14 } },
       { selector: 'edge', style: { 'curve-style': 'straight', 'target-arrow-shape': 'triangle',
         'arrow-scale': 0.5, width: 1, 'line-color': c.soft, 'target-arrow-color': c.soft, opacity: 0.55,
         'transition-property': 'opacity', 'transition-duration': '120ms' } },
