@@ -8,7 +8,7 @@ import { withRouterSync } from 'lit-ui-router/context';
 import type { UIRouterLit } from 'lit-ui-router/pure';
 import { hydrateRoot } from '../client.js';
 import { settle } from '../settle.js';
-import { signatureComment, signatureOf } from '../signature.js';
+import { signatureBlock, signatureOf } from '../signature.js';
 import { makeRouter } from './fixture.js';
 
 /** A page template, drawn by the server and re-rendered by the client. */
@@ -23,7 +23,7 @@ export const draw = async (
   const router = makeRouter();
   await settle(router, path);
   return (
-    signatureComment(signatureOf(router)) +
+    signatureBlock(signatureOf(router)) +
     withRouterSync(router, () =>
       collectResultSync(
         render(page(router), {

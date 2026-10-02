@@ -75,8 +75,9 @@ const run = async (
   return { files, result };
 };
 
-/** The leading signature comment, as the client's parser would split it off. */
-const SIGNATURE = /^<!--lit-ui-router-ssr (.*?)-->/s;
+/** The leading signature block, ending where an html parser would end it. */
+const SIGNATURE =
+  /^<script type="application\/json" data-lit-ui-router-ssr>(.*?)<\/script>/is;
 
 /** A page with its signature comment dropped. */
 const withoutSignature = (page: string): string => page.replace(SIGNATURE, '');
@@ -549,14 +550,14 @@ describe('the hydration signature', () => {
     expect(version).toBe(manifest.version);
   });
 
-  it('keeps a param value that spells a comment close inside the comment', async () => {
+  it('keeps a param value that spells a script close inside the block', async () => {
     const awkward = `--><script>alert("x")</script><!--&'`;
     const { files } = await settled([`/sheet/${encodeURIComponent(awkward)}`]);
     const [page] = files.values();
 
-    // one comment, closed where the signature ends, with no raw angle bracket inside
-    const comment = SIGNATURE.exec(page)![1];
-    expect(comment).not.toMatch(/[<>]/);
+    // one block, closed where the signature ends, with no raw angle bracket inside
+    const json = SIGNATURE.exec(page)![1];
+    expect(json).not.toMatch(/[<>]/);
     expect(signatureIn(page)).toMatchObject({ params: { num: awkward } });
   });
 

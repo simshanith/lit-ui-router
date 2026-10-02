@@ -17,13 +17,19 @@ export interface HydrationSignature {
 }
 
 /**
- * Opens the comment that carries the signature, ahead of the rendered body.
- * `hydrate()` reads past it: it acts only on `lit-part`, `/lit-part` and
- * `lit-node` comments.
+ * Marks the JSON data block that carries the signature, ahead of the rendered
+ * body. `hydrate()` walks comments only, so the element is invisible to it.
  *
  * @internal
  */
-export const signaturePrefix = 'lit-ui-router-ssr ';
+export const signatureAttribute = 'data-lit-ui-router-ssr';
+
+/**
+ * Matches the signature's data block.
+ *
+ * @internal
+ */
+export const signatureSelector: string = `script[type="application/json"][${signatureAttribute}]`;
 
 /**
  * This build's version.
@@ -47,13 +53,13 @@ export const signatureOf = (router: UIRouterLit): HydrationSignature => {
 };
 
 /**
- * The signature as one comment. `<` and `>` only ever stand inside a JSON
- * string, where `<` and `>` spell them, so no value can close the
- * comment early.
+ * The signature as one JSON data block. `<` and `>` only ever stand inside a
+ * JSON string, where `<` and `>` spell them, so no value can spell
+ * `</script` or `<!--` and end the block early.
  */
-export const signatureComment = (signature: HydrationSignature): string => {
+export const signatureBlock = (signature: HydrationSignature): string => {
   const json = JSON.stringify(signature)
     .replaceAll('<', '\\u003c')
     .replaceAll('>', '\\u003e');
-  return `<!--${signaturePrefix}${json}-->`;
+  return `<script type="application/json" ${signatureAttribute}>${json}</script>`;
 };

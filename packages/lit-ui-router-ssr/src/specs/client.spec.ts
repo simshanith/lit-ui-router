@@ -12,7 +12,7 @@ import {
 } from '../client.js';
 import type { AdoptOutcome, UiViewAdoptEvent } from '../client.js';
 import { settle } from '../settle.js';
-import { signatureComment } from '../signature.js';
+import { signatureBlock, signatureSelector } from '../signature.js';
 import { UiViewRenderer } from '../ui-view-renderer.js';
 import {
   DetailView,
@@ -645,15 +645,21 @@ describe('the pin the walk leaves on a served view', () => {
 
 describe('the guard on what there is to adopt', () => {
   it('reports nothing to adopt when the comments were stripped', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const markup = (await drawShell('/shell/detail')).replaceAll(
       /<!--[\s\S]*?-->/g,
       '',
     );
     const { container } = serve(markup);
-    // The attributes survived the strip; nothing the walk reads did.
+    // The attributes and the signature survived the strip; nothing the walk reads did.
     expect(container.querySelector('[defer-hydration]')).not.toBeNull();
+    expect(readHydrationSignature(container)).not.toBeNull();
 
     expect(hydrateRoot(container, rootTemplate(makeRouter()))).toBe(false);
+
+    expect(container.querySelector('[defer-hydration]')).toBeNull();
+    expect(readHydrationSignature(container)).toBeNull();
+    expect(warnedText(warn)).toContain('no lit-part marker follows it');
   });
 
   it('hydrates a document whose root marker stands behind whitespace', async () => {
@@ -960,10 +966,15 @@ describe('the hydration signature', () => {
       `"version":"${served}"`,
     );
 
-  /** Whether the container is left as a cold render finds it: nothing asleep, nothing hidden. */
+  /** Whether the container is left as a cold render finds it: nothing asleep, nothing hidden, no signature. */
   const isCold = (container: HTMLElement): boolean =>
     container.querySelector('[defer-hydration]') === null &&
-    !comments(container).some((data) => data.startsWith('ui-view:'));
+    !comments(container).some((data) => data.startsWith('ui-view:')) &&
+    container.querySelector(signatureSelector) === null;
+
+  /** A data block as `prerender()` spells it, around arbitrary text. */
+  const block = (text: string): string =>
+    `<script type="application/json" data-lit-ui-router-ssr>${text}</script>`;
 
   afterEach(() => {
     vi.unstubAllEnvs();
@@ -979,18 +990,34 @@ describe('the hydration signature', () => {
     });
   });
 
-  it('reads the same after the boot, which leaves it in place', async () => {
-    const { container } = serve(await drawShell('/shell/detail'));
+  it('adopts with the block in place ahead of the render, and keeps it', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const { container, served } = serve(await drawShell('/shell/detail'));
+    const signature = container.firstElementChild;
+    expect(signature?.matches(signatureSelector)).toBe(true);
 
     await boot(container, rootTemplate, '/shell/detail');
 
+    expect(
+      served.filter((element) => container.contains(element)),
+    ).toHaveLength(served.length);
+    expect(container.querySelector('.detail')?.textContent).toBe('leaf');
+    expect(container.firstElementChild).toBe(signature);
     expect(readHydrationSignature(container)?.state).toBe('shell.detail');
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it('reads only the container’s own children', () => {
+    const signature = { version, state: 's', params: {} };
+    const { container } = serve(`<div>${signatureBlock(signature)}</div>`);
+
+    expect(readHydrationSignature(container)).toBeNull();
   });
 
   it('brings an awkward param value back through the parser', () => {
     const awkward = `--><script>alert("x")</script><!--&'`;
     const signature = { version, state: 's', params: { q: awkward } };
-    const { container } = serve(`${signatureComment(signature)}<p>page</p>`);
+    const { container } = serve(`${signatureBlock(signature)}<p>page</p>`);
 
     expect(container.childNodes).toHaveLength(2);
     expect(readHydrationSignature(container)).toEqual(signature);
@@ -998,9 +1025,13 @@ describe('the hydration signature', () => {
 
   it.each([
     ['no signature', '<p>page</p>'],
-    ['one that does not parse', '<!--lit-ui-router-ssr {"version":-->'],
-    ['one with no version', '<!--lit-ui-router-ssr {"state":"s"}-->'],
-    ['one that is not an object', '<!--lit-ui-router-ssr null-->'],
+    ['one that does not parse', block('{"version":')],
+    ['one with no version', block('{"state":"s"}')],
+    ['one that is not an object', block('null')],
+    [
+      'a JSON block without the marker',
+      `<script type="application/json">{"version":"${version}"}</script>`,
+    ],
   ])('reads null off a container holding %s', (_shape, markup) => {
     const { container } = serve(markup);
 
@@ -1010,7 +1041,7 @@ describe('the hydration signature', () => {
   it('leaves a document without one to a cold render, silently', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const markup = (await drawShell('/shell/detail')).replace(
-      /^<!--lit-ui-router-ssr .*?-->/,
+      /^<script [^>]*data-lit-ui-router-ssr>.*?<\/script>/,
       '',
     );
     const { container } = serve(markup);
@@ -1053,6 +1084,19 @@ describe('the hydration signature', () => {
       expect(text).toContain(version);
     },
   );
+
+  it('removes the block when the walk throws', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const { container } = serve(await drawShell('/shell/detail'));
+    const router = makeRouter();
+    await settle(router, '/shell/detail');
+
+    expect(() =>
+      hydrateRoot(container, tailRootTemplate(router, 'first')),
+    ).toThrow();
+
+    expect(isCold(container)).toBe(true);
+  });
 
   it('leaves a skewed document cold in production without a word', async () => {
     vi.stubEnv('DEV', false);

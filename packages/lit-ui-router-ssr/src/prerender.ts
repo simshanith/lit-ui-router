@@ -8,7 +8,7 @@ import { provideRouter, withRouterSync } from 'lit-ui-router/context';
 import { createServerRouter } from 'ui-router-server';
 import type { MountConfig, ServerRouter, Verdict } from 'ui-router-server';
 
-import { signatureComment, signatureOf } from './signature.js';
+import { signatureBlock, signatureOf } from './signature.js';
 import { UiViewRenderer } from './ui-view-renderer.js';
 
 /** One emitted artefact, as {@link prerender} planned it. */
@@ -249,7 +249,7 @@ const renderPage = (
   root: EventTarget,
   elementRenderers: RenderInfo['elementRenderers'],
 ): string =>
-  signatureComment(signatureOf(router)) +
+  signatureBlock(signatureOf(router)) +
   withRouterSync(router, () =>
     collectResultSync(
       render(body, {
@@ -368,7 +368,8 @@ const warnUnregistered = (): void => {
  * run one at a time: the scope is a module slot, so there is nothing to
  * parallelise.
  *
- * A rendered page opens on its hydration signature: a comment naming this
+ * A rendered page opens on its hydration signature: a JSON data block,
+ * `<script type="application/json" data-lit-ui-router-ssr>`, naming this
  * package's version and the state and parameter values the router stood on,
  * which `hydrateRoot()` reads before it touches the document. A `renderShell`
  * that returns a string is written as-is, with no signature, so the client

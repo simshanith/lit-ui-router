@@ -22,9 +22,10 @@ imports the pre-1.0 renderer or re-derives the incantation.
   per page — so a template's `<ui-router>` descendants answer `context-request` and its `srefHref`
   attribute directives emit real hrefs. The render passes `deferHydration`, so every custom element
   on the page carries `defer-hydration` and renders nothing until the client's walk reaches it.
-- **The hydration signature.** A page rendered from a template opens on one comment naming this
-  package's version and the state and parameter values the router stood on. A page `renderShell`
-  returns as a string is written as-is, without one.
+- **The hydration signature.** A page rendered from a template opens on a JSON data block,
+  `<script type="application/json" data-lit-ui-router-ssr>`, naming this package's version and the
+  state and parameter values the router stood on. A page `renderShell` returns as a string is
+  written as-is, without one.
 - **The emit loop.** Verdict to file name, redirect to rules line, tally, warnings for paths that
   matched nothing.
 - **The host rules file.** `_redirects` by default, every generated line paired with and without a
@@ -349,11 +350,12 @@ if (!release) render(page(router), root);
   router before its own first render, so every view finds the settled router rather than the
   placeholder it registered against. Nothing constrains when `lit-ui-router-ssr/register` is imported.
 - **The signature decides first.** `hydrateRoot()` reads the container's hydration signature before
-  it touches the document, and returns `false`, leaving the container cold-renderable, when there is
-  none — a cold client render, a dev server, a string `renderShell` — or when it names another
-  release line: below 1.0 a document adopts only on the client's own minor, from 1.0 its own major.
-  The development build warns on that skew, naming both versions.
-  `readHydrationSignature(container)` returns the parsed `HydrationSignature` — `version`, `state`,
+  it touches the document, and returns `false`, leaving the container cold-renderable and the block
+  removed, when there is none — a cold client render, a dev server, a string `renderShell` — or when
+  it names another release line: below 1.0 a document adopts only on the client's own minor, from
+  1.0 its own major. The development build warns on that skew, naming both versions, and on a block
+  no `lit-part` marker follows, which is what a comment-stripping minifier leaves. A container it
+  adopts keeps the block. `readHydrationSignature(container)` returns the parsed `HydrationSignature` — `version`, `state`,
   and `params`, each encoded by its type as the url spells it — or `null` when there is none or it
   does not parse.
 - **`hydrateRoot(container, value, options?)`** provides `adoptUiViewContext` under `container` with

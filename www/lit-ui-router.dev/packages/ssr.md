@@ -404,21 +404,29 @@ const release = hydrateRoot(root, page(router));
 ```
 
 `prerender()` opens every page it renders from a template on a hydration
-signature: one comment ahead of the render, carrying this package's version
-and the name and parameter values of the state the router stood on.
+signature: a JSON data block ahead of the render, carrying this package's
+version and the name and parameter values of the state the router stood on.
+It never executes, `hydrate()` walks comments only and reads past it, and every
+`<` and `>` in it is written `\u003c` and `\u003e`, so no value can close it.
 
 ```text
-<!--lit-ui-router-ssr {"version":"0.2.0","state":"sheet","params":{"#":null,"num":"7B"}}-->
+<script type="application/json" data-lit-ui-router-ssr>{"version":"0.2.0","state":"sheet","params":{"#":null,"num":"7B"}}</script>
 ```
 
 `hydrateRoot` reads it before it touches the document, and returns `false`,
-leaving the container for a cold render, when it finds nothing to adopt:
+leaving the container for a cold render with the block removed, when it finds
+nothing to adopt:
 
 - **No signature.** A cold client render, a dev server, or a page whose
   `renderShell` returned a string.
 - **A signature from another release line.** Below 1.0 a minor breaks, so a
   document adopts only on the client's own minor; from 1.0, its own major.
   The development build warns, naming both versions.
+- **A signature with no render marker after it.** A minifier that strips html
+  comments keeps the block and drops the markers `hydrate()` reads. The
+  development build warns.
+
+A container `hydrateRoot` adopts keeps its block.
 
 [`readHydrationSignature`](/api/lit-ui-router-ssr/functions/readHydrationSignature)
 returns the parsed
