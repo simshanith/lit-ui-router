@@ -99,6 +99,9 @@ catalogs:
     concurrently:
       specifier: ^10.0.5
       version: 10.0.5
+    crap4ts:
+      specifier: 2.0.0-rc.5
+      version: 2.0.0-rc.5
     cypress:
       specifier: ^16.1.0
       version: 16.1.0
@@ -322,6 +325,9 @@ catalogs:
       specifier: workspace:*
       version: workspace:*
     '@tools/compat-guards':
+      specifier: workspace:*
+      version: workspace:*
+    '@tools/crap':
       specifier: workspace:*
       version: workspace:*
     '@tools/embed-heights':
@@ -896,6 +902,9 @@ importers:
       '@tools/compat-guards':
         specifier: catalog:workspace
         version: link:../../tools/compat-guards
+      '@tools/crap':
+        specifier: catalog:workspace
+        version: link:../../tools/crap
       '@tools/happy-dom':
         specifier: catalog:workspace
         version: link:../../tools/happy-dom
@@ -983,6 +992,9 @@ importers:
       '@tools/compat-guards':
         specifier: catalog:workspace
         version: link:../../tools/compat-guards
+      '@tools/crap':
+        specifier: catalog:workspace
+        version: link:../../tools/crap
       '@tools/happy-dom':
         specifier: catalog:workspace
         version: link:../../tools/happy-dom
@@ -1067,6 +1079,9 @@ importers:
       '@tools/compat-guards':
         specifier: catalog:workspace
         version: link:../../tools/compat-guards
+      '@tools/crap':
+        specifier: catalog:workspace
+        version: link:../../tools/crap
       '@tools/happy-dom':
         specifier: catalog:workspace
         version: link:../../tools/happy-dom
@@ -1161,6 +1176,9 @@ importers:
       '@tools/bundle-probe':
         specifier: catalog:workspace
         version: link:../../tools/bundle-probe
+      '@tools/crap':
+        specifier: catalog:workspace
+        version: link:../../tools/crap
       '@tools/lit-test-env':
         specifier: catalog:workspace
         version: link:../../tools/lit-test-env
@@ -1233,6 +1251,9 @@ importers:
       '@tools/bundle-probe':
         specifier: catalog:workspace
         version: link:../../tools/bundle-probe
+      '@tools/crap':
+        specifier: catalog:workspace
+        version: link:../../tools/crap
       '@tools/oxc-emit':
         specifier: catalog:workspace
         version: link:../../tools/oxc-emit
@@ -1461,6 +1482,28 @@ importers:
       semver:
         specifier: 'catalog:'
         version: 7.8.5
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+
+  tools/crap:
+    dependencies:
+      crap4ts:
+        specifier: 'catalog:'
+        version: 2.0.0-rc.5
+      valibot:
+        specifier: 'catalog:'
+        version: 1.5.0(typescript@7.0.2)
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.19.0
+      oxfmt:
+        specifier: 'catalog:'
+        version: 0.71.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.86.0(oxlint-tsgolint@7.0.2003)
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
@@ -5148,6 +5191,12 @@ packages:
     peerDependenciesMeta:
       typescript:
         optional: true
+
+  crap4ts@2.0.0-rc.5:
+    resolution: {integrity: sha512-SUfpWGXCTxC+oQGvqpbIW6cQdtP2YgwUCsn5Lb5BC0qGQbKnaYfIRYeIueVpAu3lpsQKfO8lmntdvmE+dd5rUw==}
+    engines: {node: '>=18'}
+    cpu: [x64, arm64]
+    os: [darwin, linux]
 
   cross-spawn@7.0.6:
     resolution: {integrity: sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==}
@@ -10822,6 +10871,8 @@ snapshots:
       parse-json: 5.2.0
     optionalDependencies:
       typescript: 7.0.2
+
+  crap4ts@2.0.0-rc.5: {}
 
   cross-spawn@7.0.6:
     dependencies:

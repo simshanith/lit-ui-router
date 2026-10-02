@@ -1,0 +1,30 @@
+{
+  "name": "@tools/crap",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Report-only CRAP hotspots (complexity x coverage) from a package's istanbul coverage via crap4ts",
+  "bin": {
+    "crap-report": "./src/crap-report.ts"
+  },
+  "type": "module",
+  "exports": {
+    ".": "./src/report.ts"
+  },
+  "scripts": {
+    "format:check:oxfmt": "oxfmt --check \"**/*.{ts,json,md}\"",
+    "format:oxfmt": "oxfmt \"**/*.{ts,json,md}\"",
+    "lint:oxlint": "oxlint .",
+    "test": "node --test \"src/**/*.test.ts\"",
+    "typecheck:tsc": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "crap4ts": "catalog:",
+    "valibot": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "oxfmt": "catalog:",
+    "oxlint": "catalog:",
+    "typescript": "catalog:"
+  }
+}

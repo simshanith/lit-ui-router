@@ -198,6 +198,9 @@ turbo test
 # Run tests with coverage
 turbo test:coverage
 
+# CRAP hotspots from that coverage (report-only, in no ci:* graph)
+turbo crap
+
 # Lint all packages
 turbo lint
 
