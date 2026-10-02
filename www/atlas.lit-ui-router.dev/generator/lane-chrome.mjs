@@ -37,8 +37,12 @@ export const laneCss = (p, wrap = 'break-word') => `
 .${p}-info li { padding: 2px 0; line-height: 1.45; color: var(--ink-soft); word-break: ${wrap}; }
 .${p}-info .hint { font-family: var(--prose); font-size: 16px; font-style: normal; letter-spacing: 0; line-height: 1.5;
   color: var(--ink-soft); max-width: 66ch; margin: 0; }
-.${p}-basis { font-family: var(--data); font-size: 11px; letter-spacing: 0.06em; line-height: 1.6; color: var(--ink-soft);
-  border: 1.5px solid var(--ink); border-top: none; background: var(--paper-2); padding: 10px 16px 11px; }
+.${p}-basis { font-family: var(--prose); font-size: 15px; letter-spacing: 0; line-height: 1.65; color: var(--ink-soft);
+  border: 1.5px solid var(--ink); border-top: none; background: var(--paper-2); padding: 16px 20px 18px; margin: 0; }
+.${p}-basis > span { max-width: 90ch; display: block; }
+.${p}-basis .k { font-family: var(--data); font-size: 11px; font-weight: 600; letter-spacing: 0.16em; color: var(--accent);
+  margin-right: 10px; vertical-align: 0.1em; }
+.${p}-basis code { font-family: var(--code); font-size: 0.9em; color: var(--ink); }
 @media (max-width: 860px) {
   .${p}-stage { grid-template-columns: 1fr; }
   .${p}-info { border-left: none; border-top: 1.5px solid var(--ink); max-height: 50vh; }

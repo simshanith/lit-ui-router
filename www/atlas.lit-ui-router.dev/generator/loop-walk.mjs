@@ -502,7 +502,7 @@ export function loopWalkLane() {
   <div class="lw-cy" id="lw-cy" role="img" aria-label="An interactive circuit of the lit-ui-router render loop: ${T.stations} stations — ${esc(STATIONS.map((s) => s.label).join(', '))} — joined by ${T.legs} legs, with one navigation (${esc(PLATE.walkOf)}) walked in ${T.steps} steps."></div>
   <aside class="lw-info" id="lw-info"></aside>
 </div>
-<p class="lw-basis">BASIS — <code>${esc(PLATE.used)}</code> by <code>generator/census-loop.mjs</code> · commit ${PLATE.commitDate.slice(0, 10)} · ${T.stations} stations, ${T.legs} legs, ${T.steps} steps and ${T.evidence} evidence lines read verbatim from <code>www/atlas.lit-ui-router.dev/data/census-loop.json</code>; the ring is sheet 1's own order, computed at build time and drawn with cytoscape <code>preset</code> — no physics, so the picture is the same on every load.</p>
+<p class="lw-basis"><span><b class="k">BASIS</b><code>${esc(PLATE.used)}</code> by <code>generator/census-loop.mjs</code> · commit ${PLATE.commitDate.slice(0, 10)} · ${T.stations} stations, ${T.legs} legs, ${T.steps} steps and ${T.evidence} evidence lines read verbatim from <code>www/atlas.lit-ui-router.dev/data/census-loop.json</code>; the ring is sheet 1's own order, computed at build time and drawn with cytoscape <code>preset</code> — no physics, so the picture is the same on every load.</span></p>
 <script type="application/json" id="lw-plate">${json({ ref: PLATE.ref, sha: PLATE.sha, walkOf: PLATE.walkOf, walk: WALK })}</script>
 <script type="application/json" id="lw-layout">${json(island)}</script>
 <script defer src="${CYTOSCAPE_URL}"></script>
