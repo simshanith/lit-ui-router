@@ -133,6 +133,27 @@ const srefActiveClassAriaCurrent: RuleFor<typeof RULE_NAME> = {
           return edits;
         };
 
+        /** Under allowElementParts false, each uiSrefActive part a server drops. */
+        const reportElementParts = (element: Parse5Element, tag: string) => {
+          if (allowElementParts) return;
+          for (const attribute of Object.keys(element.attribs)) {
+            const index = elementPartIndex(attribute);
+            if (index === undefined) continue;
+            const expression = expressions[index];
+            if (
+              expression === undefined ||
+              tracker.directiveOf(expression) !== 'uiSrefActive'
+            ) {
+              continue;
+            }
+            context.report({
+              node: expression,
+              messageId: 'elementPartNotServed',
+              data: { tag },
+            });
+          }
+        };
+
         analyzer.traverse({
           enterElement(rawElement) {
             const element = rawElement as unknown as Parse5Element;
@@ -145,24 +166,7 @@ const srefActiveClassAriaCurrent: RuleFor<typeof RULE_NAME> = {
             // right is not this rule's business.
             if (hasAriaCurrent(element)) return;
 
-            if (!allowElementParts) {
-              for (const attribute of Object.keys(element.attribs)) {
-                const index = elementPartIndex(attribute);
-                if (index === undefined) continue;
-                const expression = expressions[index];
-                if (
-                  expression === undefined ||
-                  tracker.directiveOf(expression) !== 'uiSrefActive'
-                ) {
-                  continue;
-                }
-                context.report({
-                  node: expression,
-                  messageId: 'elementPartNotServed',
-                  data: { tag },
-                });
-              }
-            }
+            reportElementParts(element, tag);
 
             for (const [index, part] of parts) {
               if (part.name !== 'class') continue;

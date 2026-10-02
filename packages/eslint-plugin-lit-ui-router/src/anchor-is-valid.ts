@@ -15,13 +15,13 @@ import {
   allowElementPartsOf,
   createDirectiveTracker,
   elementPartIndex,
-  hasSpread,
   LINK_ELEMENTS_SCHEMA,
   linkElementsOf,
   type Node,
   type ObjectNode,
   type Parse5Element,
   propertyNamed,
+  type PropertyNode,
   type Ranged,
   siblingBinding,
 } from './directives.ts';
@@ -53,6 +53,59 @@ const assignsHref = (call: CallNode, nativeLink: boolean): boolean => {
   return !(value === false || (value === 'auto' && !nativeLink));
 };
 
+/** The arguments a fix can rewrite with certainty: one to three, no spread. */
+const plainArguments = (call: CallNode): (Node & Ranged)[] | undefined => {
+  const args = call.arguments as (Node & Ranged)[];
+  if (args.length === 0 || args.length > 3) return undefined;
+  return args.some((argument) => argument.type === 'SpreadElement')
+    ? undefined
+    : args;
+};
+
+/** An object literal a fix can read in full: no spread, no computed key. */
+const plainObject = (node: Node): ObjectNode | undefined => {
+  if (node.type !== 'ObjectExpression') return undefined;
+  const object = node as ObjectNode;
+  const unknowable = object.properties.some(
+    (property) => property.type !== 'Property' || property.computed === true,
+  );
+  return unknowable ? undefined : object;
+};
+
+/** Whether an `assignHref` value is one that writes the href anyway. */
+const writesHref = (property: PropertyNode, nativeLink: boolean): boolean => {
+  if (property.value.type !== 'Literal') return false;
+  const { value } = property.value;
+  return value === true || (value === 'auto' && nativeLink);
+};
+
+/** The options argument, and an `undefined` params placeholder before it. */
+const optionsRange = (
+  args: (Node & Ranged)[],
+): [number, number] | undefined => {
+  const [state, params, options] = args;
+  const placeholder =
+    params?.type === 'Identifier' &&
+    (params as { name?: string }).name === 'undefined';
+  const from = (placeholder ? state : params)?.range?.[1];
+  const to = options?.range?.[1];
+  return from === undefined || to === undefined ? undefined : [from, to];
+};
+
+/** One property, with the separator that joins it to a neighbour. */
+const propertyRange = (
+  properties: (Node & Ranged)[],
+  property: Node & Ranged,
+): [number, number] | undefined => {
+  const at = properties.indexOf(property);
+  const next = properties[at + 1];
+  const [start, end] =
+    next === undefined
+      ? [properties[at - 1]?.range?.[1], property.range?.[1]]
+      : [property.range?.[0], next.range?.[0]];
+  return start === undefined || end === undefined ? undefined : [start, end];
+};
+
 /**
  * The ranges to remove to turn `uiSref`'s options into `srefHref`'s: an
  * `assignHref` of literal `true` or `'auto'` is dropped, and with it an options
@@ -62,47 +115,20 @@ const srefHrefRemovals = (
   call: CallNode,
   nativeLink: boolean,
 ): [number, number][] | undefined => {
-  const [state, params, options] = call.arguments as (Node & Ranged)[];
-  if (state === undefined || call.arguments.length > 3) return undefined;
-  if (call.arguments.some((argument) => argument.type === 'SpreadElement')) {
-    return undefined;
-  }
+  const args = plainArguments(call);
+  if (args === undefined) return undefined;
+  const options = args[2];
   if (options === undefined) return [];
-  if (options.type !== 'ObjectExpression') return undefined;
-  const object = options as ObjectNode;
-  if (hasSpread(object)) return undefined;
-  if (object.properties.some((property) => property.computed === true)) {
-    return undefined;
-  }
+  const object = plainObject(options);
+  if (object === undefined) return undefined;
   const property = propertyNamed(object, 'assignHref');
   if (property === undefined) return [];
-  if (property.value.type !== 'Literal') return undefined;
-  const { value } = property.value;
-  if (!(value === true || (value === 'auto' && nativeLink))) return undefined;
-
-  if (object.properties.length === 1) {
-    // An `undefined` params placeholder only held the options' position.
-    const keep =
-      params?.type === 'Identifier' &&
-      (params as { name?: string }).name === 'undefined'
-        ? state
-        : params;
-    const from = keep?.range?.[1];
-    const to = options.range?.[1];
-    if (from === undefined || to === undefined) return undefined;
-    return [[from, to]];
-  }
-  const properties = object.properties as (Node & Ranged)[];
-  const at = properties.indexOf(property);
-  const next = properties[at + 1];
-  const previous = properties[at - 1];
+  if (!writesHref(property, nativeLink)) return undefined;
   const range =
-    next === undefined
-      ? [previous?.range?.[1], (property as Ranged).range?.[1]]
-      : [(property as Ranged).range?.[0], next.range?.[0]];
-  const [start, end] = range;
-  if (start === undefined || end === undefined) return undefined;
-  return [[start, end]];
+    object.properties.length === 1
+      ? optionsRange(args)
+      : propertyRange(object.properties, property);
+  return range === undefined ? undefined : [range];
 };
 
 /** Literal-or-undefined over the analyzer's attribute value (lit-a11y util). */
@@ -241,6 +267,7 @@ const anchorIsValid: RuleFor<typeof RULE_NAME> = {
       element: Parse5Element,
       expressions: Node[],
     ): Rule.ReportFixer | undefined => {
+      if (allowElementParts) return undefined;
       const calls = uiSrefsOf(element, expressions);
       const [call] = calls;
       if (call === undefined || calls.length > 1) return undefined;
@@ -324,9 +351,7 @@ const anchorIsValid: RuleFor<typeof RULE_NAME> = {
 
             // When there is no href at all, specific scenarios apply:
             if (!hasAnyHref) {
-              const fix = allowElementParts
-                ? undefined
-                : toSrefHref(element, expressions);
+              const fix = toSrefHref(element, expressions);
               if (
                 activeAspects.noHref &&
                 (!hasClickListener ||
