@@ -1,0 +1,14 @@
+{
+  // Node runs these files directly via type stripping — same constraints as
+  // the root scripts tsconfig: .ts import extensions, nothing emitted.
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true,
+    "types": ["node"],
+    "lib": ["ES2022"]
+  },
+  "include": ["**/*.ts"]
+}

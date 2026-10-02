@@ -17,6 +17,7 @@
     "check:task-inputs": "turbo run @tools/repo-checks#check:task-inputs",
     "check:workers-builds": "turbo run @tools/workers-builds#check",
     "ci": "turbo run ci",
+    "crap": "turbo run crap",
     "dev": "turbo run dev",
     "format": "turbo run format",
     "format:check": "turbo run format:check",

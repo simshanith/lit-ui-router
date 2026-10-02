@@ -71,6 +71,12 @@ turbo run test:e2e:hash
 See [the suite README](../apps/sample-app-lit-e2e/README.md) for suite
 selection, and for serving an already-built site without mise.
 
+`pnpm run crap` ranks each vitest package's functions by CRAP score
+(complexity against coverage) from the coverage `test:coverage` writes,
+flagging those over crap4ts' default threshold. It never fails and no CI
+lane runs it. With coverage already on disk, `pnpm --filter lit-ui-router
+run crap 25` prints a longer list for one package.
+
 `mise run ci` and `mise run ci_main` are the same invocations CI uses. `pnpm run ci` remains as an alias for the PR pipeline.
 
 They are the same invocations, not the same room: CI builds from a fresh
