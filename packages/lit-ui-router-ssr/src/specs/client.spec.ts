@@ -662,8 +662,13 @@ describe('the guard on what there is to adopt', () => {
     expect(warnedText(warn)).toContain('no lit-part marker follows it');
   });
 
-  it('hydrates a document whose root marker stands behind whitespace', async () => {
-    const { container } = serve(`\n  ${await drawShell('/shell/detail')}`);
+  it('hydrates a document whose signature and root marker stand behind whitespace', async () => {
+    // What a formatter that indents the served page leaves around the block.
+    const markup = (await drawShell('/shell/detail')).replace(
+      '</script>',
+      '</script>\n  ',
+    );
+    const { container } = serve(`\n  ${markup}`);
 
     await boot(container, rootTemplate, '/shell/detail');
 
@@ -1096,6 +1101,21 @@ describe('the hydration signature', () => {
     ).toThrow();
 
     expect(isCold(container)).toBe(true);
+  });
+
+  it('leaves a stripped document cold in production without a word', async () => {
+    vi.stubEnv('DEV', false);
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const markup = (await drawShell('/shell/detail')).replaceAll(
+      /<!--[\s\S]*?-->/g,
+      '',
+    );
+    const { container } = serve(markup);
+
+    expect(hydrateRoot(container, rootTemplate(makeRouter()))).toBe(false);
+
+    expect(isCold(container)).toBe(true);
+    expect(warn).not.toHaveBeenCalled();
   });
 
   it('leaves a skewed document cold in production without a word', async () => {

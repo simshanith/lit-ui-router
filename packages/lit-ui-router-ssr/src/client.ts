@@ -478,12 +478,16 @@ export function readHydrationSignature(
   container: ParentNode,
 ): HydrationSignature | null {
   const block = signatureBlockIn(container);
-  return block ? parseSignature(block.textContent ?? '') : null;
+  return block ? parseSignature(block.text) : null;
 }
 
 /** The container's own signature block, if it holds one. */
-const signatureBlockIn = (container: ParentNode): Element | undefined =>
-  [...container.children].find((child) => child.matches(signatureSelector));
+const signatureBlockIn = (
+  container: ParentNode,
+): HTMLScriptElement | undefined =>
+  [...container.children].find((child): child is HTMLScriptElement =>
+    child.matches(signatureSelector),
+  );
 
 /** Whether the block is followed, past whitespace, by the opening marker of the render it precedes. */
 const precedesRender = (block: Element): boolean => {
@@ -521,7 +525,7 @@ const warnMarkersStripped = (): void => {
 /** Whether the container carries a signature this build adopts, ahead of a render with its markers; either miss warns in development. */
 const isAdoptable = (container: HTMLElement): boolean => {
   const block = signatureBlockIn(container);
-  const signature = block && parseSignature(block.textContent ?? '');
+  const signature = block && parseSignature(block.text);
   if (!signature) return false;
   if (releaseLine(signature.version) !== releaseLine(packageVersion)) {
     warnVersionSkew(signature.version);
