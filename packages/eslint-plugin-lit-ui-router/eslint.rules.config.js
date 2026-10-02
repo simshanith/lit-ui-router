@@ -17,4 +17,9 @@ export default [
       parserOptions: { ecmaVersion: 'latest', sourceType: 'module' },
     },
   },
+  {
+    files: ['src/**/*.ts'],
+    // Mirrors .oxlintrc.json so its `complexity` disable comments count as used here.
+    rules: { complexity: ['error', { max: 15 }] },
+  },
 ];
