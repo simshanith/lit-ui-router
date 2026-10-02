@@ -311,7 +311,7 @@ $$FOCUS  // The cytoscape tag is deferred; deferred scripts run BEFORE DOMConten
     h += field('PACKAGE', n.pkg);
     h += field('TASK', n.task);
     h += field('KIND', n.real ? 'command-bearing — this runs'
-      : '\\u003cspan class="red"\\u003ephantom placeholder — command "&lt;NONEXISTENT&gt;"\\u003c/span\\u003e');
+      : '\\u003cspan class="red"\\u003ephantom placeholder — command \\u003cspan class="nw"\\u003e"&lt;NONEXISTENT&gt;"\\u003c/span\\u003e\\u003c/span\\u003e');
     h += field('CACHE', n.cacheFalse ? 'cache: false — a hit would be wrong' : 'cacheable');
     h += field(L.glyphs.degree + 'DEGREE', 'in ' + deps[i].length + ' · out ' + uses[i].length
       + '  (real: in ' + inR.length + ' · out ' + outR.length + ')');
@@ -445,7 +445,7 @@ export function registerLane() {
       + `SHROUD to flood the other ${NODES.length - REAL_N} in. A tap pins a building and the link in the address `
       + 'bar carries the pin; tap it again or the ground to clear it.',
     hintReal: HINT_REAL,
-    hintShroud: `PHANTOM SHROUD — ALL ${fmt(NODES.length)} NODES · ${PHANTOM_PCT.toFixed(1)}% RUN NOTHING`,
+    hintShroud: `ALL ${fmt(NODES.length)} NODES · ${PHANTOM_PCT.toFixed(1)}% RUN NOTHING`,
   };
   const swatch = (k) => `<span class="sw sw-light">${skinSvg(k, 'light')}</span><span class="sw sw-dark">${skinSvg(k, 'dark')}</span>`;
   const legend = [
@@ -472,7 +472,7 @@ export function registerLane() {
   <div class="rg-cy" id="rg-cy" role="application" tabindex="0" aria-label="An interactive register of the pull-request CI task graph: ${PKGS.length} packages as rows against ${COLS.length} task names as columns, ordered by dependency depth. By default only the ${REAL_N} command-bearing tasks and the ${REAL_E} edges joining two of them are drawn; the phantom shroud floods in the remaining ${NODES.length - REAL_N} placeholder nodes and ${fmt(EDGES.length - REAL_E)} edges. With the graph focused, the arrow keys step the pin through the buildings and Escape clears it."></div>
   <aside class="rg-info" id="rg-info"></aside>
 </div>
-${basisStrip('rg', `<code>turbo run ${PIPE} --dry=json</code> against a materialized, installed archive of ${PLATE.ref} @ ${PLATE.sha} (commit ${PLATE.commitDate.slice(0, 10)}) · ${TURBO} · all ${fmt(NODES.length)} nodes and ${fmt(EDGES.length)} edges read verbatim from <code>www/atlas.lit-ui-router.dev/data/census-plate.json</code>'s <code>graphNodes</code> / <code>graphEdges</code> and embedded here unaggregated; columns ranked from those edges at build time and drawn with cytoscape <code>preset</code> — no physics, so the picture is the same on every load.`)}
+${basisStrip('rg', `<code>turbo run ${PIPE} --dry=json</code> against a materialized, installed archive of ${PLATE.ref} @ ${PLATE.sha} (commit <span class="nw">${PLATE.commitDate.slice(0, 10)}</span>) · ${TURBO} · all ${fmt(NODES.length)} nodes and ${fmt(EDGES.length)} edges read verbatim from <code>www/atlas.lit-ui-router.dev/data/census-plate.json</code>'s <code>graphNodes</code> / <code>graphEdges</code> and embedded here unaggregated; columns ranked from those edges at build time and drawn with cytoscape <code>preset</code> — no physics, so the picture is the same on every load.`)}
 <script type="application/json" id="rg-graph">${json({ nodes: NODES, edges: EDGES })}</script>
 <script type="application/json" id="rg-layout">${json(island)}</script>
 <script defer src="${CYTOSCAPE_URL}"></script>

@@ -480,12 +480,14 @@ export function loopWalkLane() {
     ['active', 'an overlay — inside the ring, never on it'],
   ].map(([k, d]) => `<span class="lg">${swatch(k)}${d}</span>`).join('\n    ')
     + '\n    ' + [
-      ['loop leg', 'var(--ink)', 'solid'],
-      ['the click', 'var(--accent)', 'solid'],
-      ['event / hook tap', 'var(--ink-soft)', 'dashed'],
-      ['the leg lit now', 'var(--accent)', 'solid'],
-    ].map(([rel, col, st]) => `<span class="lg"><i style="border-top-color:${col};border-top-style:${st}"></i>${rel}</span>`).join('\n    ');
+      ['loop leg', 'var(--ink)', 'solid', 2],
+      ['the click', 'var(--accent)', 'solid', 1.5],
+      ['event / hook tap', 'var(--ink-soft)', 'dashed', 2],
+      ['the leg lit now', 'var(--accent)', 'solid', 3.5],
+    ].map(([rel, col, st, w]) => `<span class="lg"><i style="border-top-color:${col};border-top-style:${st};border-top-width:${w}px"></i>${rel}</span>`).join('\n    ');
 
+  const [cmd, paths, tail] = PLATE.used.split(/ — | read line by line; /);
+  const used = tail ? `<code>${esc(cmd)}</code> — <code>${esc(paths)}</code> read line by line; ${esc(tail)}` : `<code>${esc(PLATE.used)}</code>`;
   return `<style>${CSS}</style>
 <div class="lw-bar">
   <div class="lw-legend">
@@ -502,7 +504,7 @@ export function loopWalkLane() {
   <div class="lw-cy" id="lw-cy" role="img" aria-label="An interactive circuit of the lit-ui-router render loop: ${T.stations} stations — ${esc(STATIONS.map((s) => s.label).join(', '))} — joined by ${T.legs} legs, with one navigation (${esc(PLATE.walkOf)}) walked in ${T.steps} steps."></div>
   <aside class="lw-info" id="lw-info"></aside>
 </div>
-${basisStrip('lw', `<code>${esc(PLATE.used)}</code> by <code>generator/census-loop.mjs</code> · commit ${PLATE.commitDate.slice(0, 10)} · ${T.stations} stations, ${T.legs} legs, ${T.steps} steps and ${T.evidence} evidence lines read verbatim from <code>www/atlas.lit-ui-router.dev/data/census-loop.json</code>; the ring is sheet 1's own order, computed at build time and drawn with cytoscape <code>preset</code> — no physics, so the picture is the same on every load.`)}
+${basisStrip('lw', `${used} by <code>generator/census-loop.mjs</code> · commit <span class="nw">${PLATE.commitDate.slice(0, 10)}</span> · ${T.stations} stations, ${T.legs} legs, ${T.steps} steps and ${T.evidence} evidence lines read verbatim from <code>www/atlas.lit-ui-router.dev/data/census-loop.json</code>; the ring is sheet 1's own order, computed at build time and drawn with cytoscape <code>preset</code> — no physics, so the picture is the same on every load.`)}
 <script type="application/json" id="lw-plate">${json({ ref: PLATE.ref, sha: PLATE.sha, walkOf: PLATE.walkOf, walk: WALK })}</script>
 <script type="application/json" id="lw-layout">${json(island)}</script>
 <script defer src="${CYTOSCAPE_URL}"></script>

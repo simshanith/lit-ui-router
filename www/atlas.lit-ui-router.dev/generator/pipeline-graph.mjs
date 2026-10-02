@@ -402,7 +402,7 @@ export function pipelineSection() {
     ${legend}
     </div>
     <div class="pg-ctl">
-      <span id="pg-hint"><span class="nw">${glyph('move')}DRAG TO PAN</span> · <span class="nw">${glyph('mouse')}SCROLL TO ZOOM</span></span>
+      <span id="pg-hint" class="hints"><span class="nw">${glyph('move')}DRAG TO PAN</span><span class="nw">${glyph('mouse')}SCROLL TO ZOOM</span></span>
       <label><input type="checkbox" id="pg-tools"> <span>${glyph('wrench')}TOOLS LEDGER</span></label>
       <button type="button" id="pg-fit">${glyph('scan')}FIT</button>
     </div>
@@ -411,7 +411,7 @@ export function pipelineSection() {
     <div class="pg-cy" id="pg-cy" role="application" tabindex="0" aria-label="Interactive flow graph of the census pipeline: archive basis, ${A.stats.probes} probe stations, ${A.stats.plates} filed plates and ${A.stats.drawings} drawings. With the graph focused, the arrow keys step the pin through the buildings and Escape clears it."></div>
     <aside class="pg-info" id="pg-info"></aside>
   </div>
-  ${basisStrip('pg', `all ${A.stats.plates} plates pinned to ${A.ref} @ ${A.sha} · commit ${A.commitDate} · ${A.stats.nodes} nodes and ${A.stats.edges} edges introspected from <code>www/atlas.lit-ui-router.dev/generator/</code> and <code>www/atlas.lit-ui-router.dev/data/</code> by <code>generator/census-atlas.mjs</code> and embedded here verbatim; layout ranked from those edges, drawn with cytoscape <code>preset</code> — no physics. The archive basis is the one node the census does not contain: it is drawn from the plates' own shared pin.`)}
+  ${basisStrip('pg', `all ${A.stats.plates} plates pinned to ${A.ref} @ ${A.sha} · commit <span class="nw">${A.commitDate}</span> · ${A.stats.nodes} nodes and ${A.stats.edges} edges introspected from <code>www/atlas.lit-ui-router.dev/generator/</code> and <code>www/atlas.lit-ui-router.dev/data/</code> by <code>generator/census-atlas.mjs</code> and embedded here verbatim; layout ranked from those edges, drawn with cytoscape <code>preset</code> — no physics. The archive basis is the one node the census does not contain: it is drawn from the plates' own shared pin.`)}
 </section>
 <script type="application/json" id="pg-atlas">${json({ nodes: A.nodes, edges: A.edges })}</script>
 <script type="application/json" id="pg-layout">${json(LAYOUT)}</script>
