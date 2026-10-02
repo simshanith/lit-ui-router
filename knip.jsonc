@@ -40,12 +40,26 @@
         "lit-2",
       ],
     },
+    "packages/lit-ui-router-effect": {
+      "ignoreDependencies": [
+        "@release-it/conventional-changelog",
+        "lit-2",
+        "lit-ui-router-floor",
+      ],
+    },
     "packages/lit-ui-router-mobx": {
       "ignoreDependencies": [
         "@release-it/conventional-changelog",
         "lit-2",
         "mobx-6",
         "lit-ui-router-floor",
+      ],
+    },
+    "packages/lit-ui-router-ssr": {
+      "ignoreDependencies": [
+        // imported by the emitted dist, not by src
+        "@oxc-project/runtime",
+        "@release-it/conventional-changelog",
       ],
     },
     "packages/navigation-location-plugin": {
@@ -59,6 +73,10 @@
       // oxlint fixture inputs, never imported
       "ignore": ["test/oxlint/*.js"],
     },
+    "tools/bundle-probe": {
+      // bundled by path in free-of.test.ts, never imported
+      "entry": ["fixtures/*.ts"],
+    },
     "tools/dts-backtest": {
       "entry": ["fixtures/*.ts"],
       // the TS version matrix is imported by computed specifier
@@ -68,11 +86,19 @@
       // reached via createRequire(), which knip does not follow
       "ignoreDependencies": ["@ampproject/remapping"],
     },
+    "tools/release": {
+      // handed to pnpm by path as PNPM_CONFIG_PNPMFILE, never imported
+      "entry": ["src/steps/*.pnpmfile.mjs"],
+    },
     "tools/shared": { "entry": ["src/**/*.test-d.ts"] },
     "www/lit-ui-router.dev": {
       "entry": [".vitepress/vite.config.ts"],
       // copied out of node_modules/<name>/dist by path in the vite config
-      "ignoreDependencies": ["sample-app-lit-vanilla", "sample-app-lit-mobx"],
+      "ignoreDependencies": [
+        "sample-app-lit-vanilla",
+        "sample-app-lit-mobx",
+        "sample-app-lit-effect",
+      ],
     },
   },
 }

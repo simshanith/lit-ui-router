@@ -1,0 +1,140 @@
+{
+  "name": "lit-ui-router-ssr",
+  "version": "0.1.1",
+  "description": "Static prerendering for lit-ui-router: mount verdicts in, an emitted site out",
+  "homepage": "https://lit-ui-router.dev/packages/ssr",
+  "bugs": {
+    "url": "https://github.com/simshanith/lit-ui-router/issues"
+  },
+  "license": "MIT",
+  "author": "Shane Daniel",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/simshanith/lit-ui-router.git",
+    "directory": "packages/lit-ui-router-ssr"
+  },
+  "files": [
+    "dist/**",
+    "!dist/.*/**",
+    "src/*.ts"
+  ],
+  "type": "module",
+  "sideEffects": [
+    "./dist/register.js",
+    "./dist/development/register.js"
+  ],
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "development": "./dist/development/index.js",
+      "default": "./dist/index.js"
+    },
+    "./client": {
+      "types": "./dist/client.d.ts",
+      "development": "./dist/development/client.js",
+      "default": "./dist/client.js"
+    },
+    "./dist/*": "./dist/*",
+    "./package.json": "./package.json",
+    "./register": {
+      "types": "./dist/register.d.ts",
+      "development": "./dist/development/register.js",
+      "default": "./dist/register.js"
+    }
+  },
+  "scripts": {
+    "build:js": "oxc-emit-js --development",
+    "build:types": "oxc-emit-dts",
+    "changelog": "release-it --changelog --git.tagMatch=\"lit-ui-router-ssr@[0-9]*.[0-9]*.[0-9]*\"",
+    "check:bundle": "check-bundle-inputs",
+    "check:dev-split": "oxc-emit-check-dev-split",
+    "codecov:bundle": "upload-entry-bundles",
+    "crap": "crap-report",
+    "docs:api": "rimraf ../../www/lit-ui-router.dev/api/lit-ui-router-ssr && typedoc",
+    "format:check:oxfmt": "oxfmt --check \"**/*.{ts,js,json,md}\"",
+    "format:oxfmt": "oxfmt \"**/*.{ts,js,json,md}\"",
+    "lint:oxlint": "oxlint .",
+    "test": "VITEST_BROWSER_API_PORT=63360 vitest run",
+    "test:coverage": "VITEST_BROWSER_API_PORT=63365 vitest run --coverage",
+    "typecheck:src": "tsc -p tsconfig.src.json --noEmit",
+    "typecheck:tsc": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@oxc-project/runtime": "catalog:publishedDependencies"
+  },
+  "devDependencies": {
+    "@lit-labs/ssr": "catalog:",
+    "@lit-labs/ssr-client": "catalog:",
+    "@release-it/conventional-changelog": "catalog:",
+    "@tools/bundle-probe": "catalog:workspace",
+    "@tools/crap": "catalog:workspace",
+    "@tools/lit-test-env": "catalog:workspace",
+    "@tools/oxc-emit": "catalog:workspace",
+    "@tools/release-config": "catalog:workspace",
+    "@tools/typedoc-plugin-lit-ui-router": "catalog:workspace",
+    "@types/node": "catalog:",
+    "@uirouter/core": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
+    "happy-dom": "catalog:",
+    "lit": "catalog:",
+    "lit-ui-router": "catalog:workspace",
+    "oxfmt": "catalog:",
+    "oxlint": "catalog:",
+    "release-it": "catalog:",
+    "rimraf": "catalog:",
+    "typedoc": "catalog:",
+    "typedoc-plugin-markdown": "catalog:",
+    "typedoc-vitepress-theme": "catalog:",
+    "typescript": "catalog:typescript6-compat",
+    "typescript-7": "catalog:",
+    "ui-router-server": "catalog:workspace",
+    "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "@lit-labs/ssr": "catalog:publishedPeer",
+    "@lit-labs/ssr-client": "catalog:publishedPeer",
+    "@uirouter/core": "catalog:publishedPeer",
+    "lit": "catalog:publishedPeer",
+    "lit-ui-router": "catalog:publishedPeerSsr",
+    "ui-router-server": "catalog:publishedPeerSsr"
+  },
+  "peerDependenciesMeta": {
+    "@lit-labs/ssr-client": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": ">=22.12"
+  },
+  "bundleProbe": {
+    ".": {
+      "free": [
+        "hono",
+        "vite",
+        "node:fs",
+        "node:path"
+      ]
+    },
+    "./client": {
+      "free": [
+        "@lit-labs/ssr",
+        "hono",
+        "vite",
+        "node:fs",
+        "node:path"
+      ]
+    },
+    "./register": {
+      "free": [
+        "@lit-labs/ssr",
+        "hono",
+        "vite",
+        "node:fs",
+        "node:path"
+      ]
+    }
+  }
+}

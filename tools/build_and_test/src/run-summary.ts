@@ -24,7 +24,9 @@
 //      TURBO_RUNS_DIR (override for tests and local reproduction),
 //      TURBO_SUMMARY_SESSION (the session marker; same override reasons),
 //      TURBO_SUMMARY_ARTIFACT_URL (the uploaded `--summarize` JSON, linked as
-//      the uncapped copy of the capped lists this prints).
+//      the uncapped copy of the capped lists this prints),
+//      VITEST_ATTACHMENTS_ARTIFACT_URL (the uploaded `.vitest/` dirs, linked
+//      when a failing spec wrote a screenshot or attachment).
 
 import { randomUUID } from 'node:crypto';
 import { appendFile, readdir, readFile, stat } from 'node:fs/promises';
@@ -237,6 +239,7 @@ async function main(): Promise<void> {
     // per-file link to hand out instead.
     artifactUrl: process.env.TURBO_SUMMARY_ARTIFACT_URL,
     fileNames: runs.map((run) => run.fileName ?? ''),
+    attachmentsUrl: process.env.VITEST_ATTACHMENTS_ARTIFACT_URL,
   });
 }
 

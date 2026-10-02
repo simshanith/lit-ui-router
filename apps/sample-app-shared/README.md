@@ -5,14 +5,15 @@ have in common: the contacts/mymessages/prefs feature modules, router
 configuration, data sources, styles, and the simulated REST fixtures in
 `public/`.
 
-The apps — `sample-app-lit-vanilla` and `sample-app-lit-mobx` — differ only in their
-reactivity idiom, so each app keeps just the handful of modules that express
-that idiom:
+The apps — `sample-app-lit-vanilla`, `sample-app-lit-mobx` and
+`sample-app-lit-effect` — differ only in their reactivity idiom, so each app
+keeps just the handful of modules that express that idiom:
 
 - `src/app/global/appConfig.ts` and `authService.ts` — plain singletons vs
-  MobX observables
+  MobX observables vs Effect `SubscriptionRef`s
 - `src/app/main/App.ts` and `NavHeader.ts` — `TransitionController` vs
-  `ReactionController` / `RouterReactionController`
+  `ReactionController` / `RouterReactionController` vs `RefController` /
+  `RouterRefController`
 - `src/app/mymessages/Compose.ts` and `MessageList.ts` — plus each app's
   store helper (`storeCommitController.ts` / `messagesStore.ts`)
 

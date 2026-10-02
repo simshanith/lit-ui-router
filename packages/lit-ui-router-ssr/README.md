@@ -1,0 +1,418 @@
+# lit-ui-router-ssr
+
+[![npm version](https://img.shields.io/npm/v/lit-ui-router-ssr.svg)](https://npmx.dev/package/lit-ui-router-ssr)
+[![GitHub Release](https://img.shields.io/github/v/release/simshanith/lit-ui-router?filter=lit-ui-router-ssr@*)](https://github.com/simshanith/lit-ui-router/releases/?q=lit-ui-router-ssr)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Website](https://img.shields.io/website?url=https%3A%2F%2Flit-ui-router.dev)](https://lit-ui-router.dev/packages/ssr)
+[![codecov](https://codecov.io/gh/simshanith/lit-ui-router/graph/badge.svg?component=lit-ui-router-ssr)](https://app.codecov.io/gh/simshanith/lit-ui-router?components%5B0%5D=lit-ui-router-ssr)
+
+Static prerendering for [lit-ui-router](https://lit-ui-router.dev): a
+[`ui-router-server`](https://lit-ui-router.dev/packages/server) mount table in, an emitted site out.
+
+`prerender()` asks the mount table for a verdict per path and turns each one into an artefact: a
+shell verdict becomes `<subpath>/index.html`, a redirect becomes a host rules line and no page, and
+the mount's `otherwise` projection becomes the 404 document. The render itself is the reason the
+package exists — it owns the `@lit-labs/ssr` call and the router hand-off, so a consumer never
+imports the pre-1.0 renderer or re-derives the incantation.
+
+## What this package owns
+
+- **The render call.** `provideRouter(root, router)` once, then
+  `withRouterSync(router, () => collectResultSync(render(template, { eventTargetStack: [root] })))`
+  per page — so a template's `<ui-router>` descendants answer `context-request` and its `srefHref`
+  attribute directives emit real hrefs. The render passes `deferHydration`, so every custom element
+  on the page carries `defer-hydration` and renders nothing until the client's walk reaches it.
+- **The emit loop.** Verdict to file name, redirect to rules line, tally, warnings for paths that
+  matched nothing.
+- **The host rules file.** `_redirects` by default, every generated line paired with and without a
+  trailing slash. No SPA catch-all is ever written: one turns every 404 into a 200.
+- **`<ui-view>` on both sides.** `UiViewRenderer` fills the element's light DOM on the server;
+  `lit-ui-router-ssr/client` adopts what it drew.
+
+Path enumeration, the html document, and `<title>` stay with the caller — `paths`, `document()`,
+and an async `renderShell()` are the seams for them. `settle()` drives the router to each path
+inside `renderShell()`.
+
+## Installation
+
+```bash
+npm install lit-ui-router-ssr
+# or
+pnpm add lit-ui-router-ssr
+# or
+yarn add lit-ui-router-ssr
+```
+
+`lit-ui-router`, `ui-router-server`, `@lit-labs/ssr`, `@lit-labs/ssr-client`, `lit`, and
+`@uirouter/core` are peer dependencies. `@lit-labs/ssr` is the server half and `@lit-labs/ssr-client`
+the client half, so a bundle takes one or the other, never both. `@lit-labs/ssr-client` is optional:
+install it when you import `lit-ui-router-ssr/client`.
+
+## Quick Start
+
+```typescript
+import { prerender, settle } from 'lit-ui-router-ssr';
+
+const result = await prerender({
+  mounts,
+  router,
+  outDir: 'dist',
+  paths: ['/', '/sheet/7B', '/legacy'],
+  extraRules: [{ from: '/megacanvas', to: '/megacanvas.html', status: 301 }],
+  renderShell: async (_verdict, { path }) => {
+    await settle(router, path);
+    return page();
+  },
+  document: (body, { path }) => fillShell(titles.get(path), body),
+});
+
+console.log(result.tally); // { shell: 2, redirect: 1, notFound: 0, document: 1 }
+```
+
+`result.pages` lists every artefact in enumeration order, `result.rules` every line the host file
+carries, and `result.warnings` the paths that matched no route and had no projection to fall back
+on. `dryRun: true` plans all of it and writes nothing.
+
+Files land through `node:fs`, imported lazily on first write; pass `write` to emit into memory or a
+virtual fs instead.
+
+## Static hosts add a trailing slash
+
+A shell page lands at `<subpath>/index.html`. Cloudflare Pages, Netlify, and S3-style hosts serve
+that file for `/sheet/7B` by answering 308 onto `/sheet/7B/`, so the client boots at the slashed url.
+`@uirouter/core`'s default `strictMode` refuses the trailing slash, and the app boots into its
+not-found state over the correct prerendered page. A host with directory-index redirects makes the
+pairing mandatory — relax both sides:
+
+```typescript
+// the browser router
+router.urlService.config.strictMode(false);
+
+// the mount prerender() resolves against
+const mounts = { '/': { routes, config: { strict: false } } };
+```
+
+The mount half holds at build time too: `prerender()` takes every verdict from it, and the live
+server answers from the same table. A preview server such as `vite preview` serves the file without
+the redirect, so only the deployed site shows the failure. The development build warns once when the
+first page's slashed spelling does not resolve to the same shell.
+
+## Settling the router on each path
+
+A server render reads the router only once its transition has landed, resolves included.
+`settle(router, path)` sets the url, syncs the router to it, and resolves with the transition that
+landed, so the synchronous render after it reads every resolve. A `redirectTo` chain settles on its
+final state, and a path the router already stands on resolves at once.
+
+A page fails to land in three ways, and each rejects rather than hangs:
+
+- **No rule matches.** A url no state claims, on a router with no `otherwise` rule, rejects with an
+  `Error` naming it. An `otherwise` rule is itself a match and settles on its state.
+- **A resolve fails.** The promise rejects with an `Error` whose `cause` is the transition's
+  `Rejection`, the resolve's error in its `detail`. Core's `defaultErrorHandler` still logs it.
+- **Nothing lands in time.** `{ timeout }` bounds the wait, `10_000` ms by default; `0` waits without
+  a limit.
+
+`settle()` never calls `router.start()`, which runs once per router: it drives `urlService`
+directly, so a page loop calls it once per path on the same router, started or not.
+
+## The routed view, drawn on the server
+
+`elementRenderers` defaults to `[UiViewRenderer]` — not `@lit-labs/ssr`'s `[LitElementRenderer]`,
+which wraps every custom element in a declarative shadow root it never asked for. `UiViewRenderer`
+answers for `ui-view`: it registers the view at the address its `name` attribute and enclosing
+`<ui-view>`s spell, takes the `ViewConfig` the registration syncs back, and writes the routed
+component into the element's light DOM between the part markers the element's own `render()`
+hydrates against. An address no state routes gets empty markers. That pair stays plain, so the walk
+hydrating the view's surroundings reads it as the `uiViewSlot()` part and stops there; every marker
+between it carries a prefix, so the same walk reads past the view's interior.
+
+The use site opts in with `uiViewSlot()`, which is what reaches the renderer's light-DOM render and
+commits nothing on the client:
+
+```typescript
+import { uiViewSlot } from 'lit-ui-router-ssr/client';
+
+const page = (router: UIRouterLit) => html`
+  <ui-router .uiRouter=${router}><ui-view>${uiViewSlot()}</ui-view></ui-router>
+`;
+```
+
+One template set, both sides: the server fills the hole through the renderer, the client renders the
+same strings with the hole empty and each `<ui-view>` fills itself.
+
+### A property binding emits nothing on the server
+
+Take a card that receives a post by property and draws it in its own `render()`:
+
+```typescript
+import { html, LitElement } from 'lit';
+
+type Post = { title: string; summary: string };
+
+class XCard extends LitElement {
+  static properties = { post: { attribute: false } };
+  declare post: Post;
+  render() {
+    return html`<h2>${this.post.title}</h2>
+      <p>${this.post.summary}</p>`;
+  }
+}
+customElements.define('x-card', XCard);
+```
+
+A routed template that feeds it by property, `` html`<x-card .post=${post}></x-card>` ``, serves the
+card empty:
+
+```text
+<!--lit-part vYJeArn6Pos=--><!--lit-node 0--><x-card  defer-hydration></x-card><!--/lit-part-->
+```
+
+`@lit-labs/ssr` writes a `.prop=${…}` binding as its part marker and nothing else — no attribute, no
+child, no value. Setting the property is an element renderer's job, and `elementRenderers` defaults
+to `[UiViewRenderer]`, which answers for `ui-view` alone. The card has no renderer, so nothing on
+the server sets `post` or runs its `render()`: the card first draws on the client, once hydration
+sets the property, and the served page shows an empty tag where it stands.
+
+Write what the served page has to carry as the card's children, in the same template, with the
+property bound over it, and let the card project them through a `<slot>`:
+
+```typescript
+class XCard extends LitElement {
+  static properties = { post: { attribute: false } };
+  declare post: Post;
+  render() {
+    return html`<slot></slot>`;
+  }
+}
+
+const card = (post: Post) =>
+  html`<x-card .post=${post}>
+    <h2>${post.title}</h2>
+    <p>${post.summary}</p>
+  </x-card>`;
+```
+
+The server emits the children, `hydrateRoot()` adopts them as the same child part and sets `post`,
+and the card keeps the data for its behaviour while the template owns what shows.
+
+Write the children on both sides. A branch on `isServer` that writes them on the server alone looks
+like a way to serve the content without drawing it twice:
+
+```typescript
+import { html, isServer } from 'lit';
+
+// ❌ two templates: the client cannot adopt what the server drew
+const card = (post: Post) =>
+  isServer
+    ? html`<x-card .post=${post}>
+        <h2>${post.title}</h2>
+        <p>${post.summary}</p>
+      </x-card>`
+    : html`<x-card .post=${post}></x-card>`;
+```
+
+The served page carries the children, under a part marker that names the template that drew them:
+
+```text
+<!--lit-part EdxohtX2HMw=--><!--lit-node 0--><x-card  defer-hydration><h2><!--lit-part-->Hello<!--/lit-part--></h2><p><!--lit-part-->A first post.<!--/lit-part--></p></x-card><!--/lit-part-->
+```
+
+On the client `isServer` is false, so the enclosing `ui-view` hydrates the second template, whose
+own marker would read `vYJeArn6Pos=`, against that one. The digests differ, `hydrate()` throws on
+the mismatch, and the view drops everything the server drew inside it and renders cold. The served
+card and its children go, the client draws the empty card in their place, and in development the
+console warns that the element could not adopt the server render.
+
+The other answer is a renderer for the card. `LitElementRenderer` from `@lit-labs/ssr`, passed beside
+`UiViewRenderer`, sets the property on the server and draws the card's `render()` into a declarative
+shadow root:
+
+```typescript
+import { LitElementRenderer } from '@lit-labs/ssr';
+import { prerender, UiViewRenderer } from 'lit-ui-router-ssr';
+
+await prerender({
+  // …
+  elementRenderers: [UiViewRenderer, LitElementRenderer],
+});
+```
+
+With the first card, the one that draws `post` in its own `render()`, the same property binding now
+serves the card filled:
+
+```text
+<!--lit-part vYJeArn6Pos=--><!--lit-node 0--><x-card  defer-hydration><template shadowroot="open" shadowrootmode="open"><!--lit-part HdSxZ92CImA=--><h2><!--lit-part-->Hello<!--/lit-part--></h2><p><!--lit-part-->A first post.<!--/lit-part--></p><!--/lit-part--></template></x-card><!--/lit-part-->
+```
+
+The children stay where the card's `render()` put them, in a shadow root the browser attaches as it
+parses, and hydration adopts them there. `LitElementRenderer` does the same for every `LitElement`
+on the page, whether or not it has anything to show on the server, which is the cost the default
+avoids.
+
+## Registering the elements
+
+A prerendered page needs the served `<ui-view>`, and `lit-ui-router-ssr/register` is the one import
+that defines it. Three shapes cover every app.
+
+### A cold app
+
+It imports `lit-ui-router`, or `lit-ui-router/register`, and changes nothing. It never draws a
+document on the server, so it never needs this package on the client.
+
+### A prerendered app
+
+It imports `lit-ui-router-ssr/register` in place of `lit-ui-router`, ahead of anything else that
+registers `<ui-view>`. That entry defines `<ui-router>` from core and `<ui-view>` with
+`withServedRender(UiView)`. Every value the app takes from the router — `UIRouterLit`, `srefHref`,
+`srefActiveClass`, `srefAriaCurrent` — comes from `lit-ui-router/pure`, which registers nothing;
+the root entry registers the plain `<ui-view>` as a side effect, and imported after this one it
+warns that the tag is already defined. Then the router boots and one call adopts the page:
+
+```typescript
+import 'lit-ui-router-ssr/register';
+import { UIRouterLit, srefHref } from 'lit-ui-router/pure';
+import { hydrateRoot } from 'lit-ui-router-ssr/client';
+
+router.start();
+await booted; // the first successful transition
+const release = hydrateRoot(root, page(router));
+```
+
+A `<ui-view>` another class already defined throws, naming both ways out.
+
+The build-time entry that calls `prerender()` imports `lit-ui-router-ssr/register` too, once the
+DOM shim has finished installing. The shim module awaits at its top level, so a static import beside
+it evaluates first: lit's Node build installs a registry of its own, the elements are defined there,
+and the shim then replaces `globalThis.customElements` with an empty one. Import the shim
+statically and everything that defines or reaches an element by dynamic import:
+
+```typescript
+import '@lit-labs/ssr/lib/install-global-dom-shim.js';
+
+await import('lit-ui-router-ssr/register');
+const { UIRouterLit } = await import('lit-ui-router/pure');
+const { prerender, settle } = await import('lit-ui-router-ssr');
+const { page } = await import('./views.js');
+```
+
+Preloading the shim with `node --import @lit-labs/ssr/lib/install-global-dom-shim.js` finishes it
+before the entry's graph starts, so static imports hold there too. `UiViewRenderer` draws the served
+class, and a `<ui-view>` nothing defined on the server renders as an inert element with an empty
+part pair — no error, and every page's body missing. In development `prerender()` warns when the
+registry holds no `<ui-view>`.
+
+### An app with its own registry
+
+It imports `lit-ui-router/pure`, which registers nothing, and defines the served class under a tag
+of its own:
+
+```typescript
+import { UiView } from 'lit-ui-router/pure';
+import { withServedRender } from 'lit-ui-router-ssr/client';
+
+customElements.define('app-view', withServedRender(UiView));
+```
+
+The result still extends core's `UiView`, so an enclosing view adopts it as a parent.
+`UiViewRenderer` answers for the `ui-view` tag, so a tag of your own needs a renderer of your own.
+
+`lit-ui-router-effect` from 0.1.1 and `lit-ui-router-mobx` from 1.0.2 import
+`lit-ui-router/pure`, so they register nothing and compose with any of the three.
+
+## The client half
+
+`lit-ui-router-ssr/client` is the adopt side — no import side effects. The router boots
+first, and one call adopts the page:
+
+```typescript
+import { hydrateRoot, uiViewSlot } from 'lit-ui-router-ssr/client';
+
+const booted = new Promise<void>((resolve) => {
+  const off = router.transitionService.onSuccess({}, () => {
+    off();
+    resolve();
+  });
+});
+router.start();
+await booted;
+
+const release = hydrateRoot(root, page(router));
+if (!release) render(page(router), root);
+```
+
+- **The sequence is the contract.** `router.start()`, await its first successful transition, then
+  `hydrateRoot()`. The walk commits `.uiRouter` onto `<ui-router>` and each `<ui-view>` re-seeks the
+  router before its own first render, so every view finds the settled router rather than the
+  placeholder it registered against. Nothing constrains when `lit-ui-router-ssr/register` is imported.
+- **`hydrateRoot(container, value, options?)`** provides `adoptUiViewContext` under `container` with
+  core's `provideContext()` and runs one `hydrate()` over `container`. It returns that provider's
+  release function, or `false` when there is nothing to adopt — a cold client render, a dev server.
+  Release it once the page has settled; a nested view wakes on its parent's own update, after this
+  call returns.
+- **One walk wakes the page.** A served `<ui-view>` sleeps under `defer-hydration` and renders
+  nothing. Removing the attribute wakes it: it re-seeks its router, requests `adoptUiViewContext`
+  and calls the adopter it gets, which adopts the nodes the view holds. A view the app detaches
+  before that update stays asleep, holding its nodes, until it is attached again. The walk pins the
+  adopter to every served view it passes, so that view is adopted on its return even once the root
+  provider is released. A view the walk never reached drops those nodes, renders cold, and warns in
+  development.
+- **The prefix is the protocol, and both halves are here.** `UiViewRenderer` writes a plain outer
+  part pair around each view's routed markup and prefixes every marker between them; `hydrate()`
+  reads past a prefixed comment, so the walk hydrating a view's surroundings stops at that pair. The
+  adopter renames one view's markers back at that view's wake and hydrates the element's own
+  `render()` against them, which leaves a nested view's interior hidden until its own wake.
+- **`uiViewSlot()`** is the hole, on both halves: the server reaches the renderer's `renderLight()`
+  only through it, and on the client it wakes the `<ui-view>` it sits in, whenever the enclosing
+  template hydrates, then resolves to `noChange` — so the walk reads that element as a leaf and a
+  later render of the template leaves the view's own nodes alone. On a cold render there is no
+  attribute to remove.
+- **An empty pair is nothing to adopt.** A view the server drew at an address no state routed holds
+  only its two markers. They stay — they are the enclosing template's own part markers — and the
+  element renders after them, cold and silent.
+- **A mismatch falls back.** One static document answers a whole family of urls, so a client can boot
+  into a state the document was not drawn for. `hydrate()` throws on that; the client warns in
+  development, drops that one view's server nodes, and the view renders cold — its ancestors keep
+  theirs. Either way the drop starts at the render: what the author wrote ahead of it stays, and the
+  view takes it as its fallback set. A view carrying no served marker at all holds no render of ours:
+  the adopter leaves it alone, and all of it is that view's fallback content.
+- **Each view reports its outcome.** At its wake, every served view dispatches `ui-view:adopt`
+  (`uiViewAdoptEventName`), bubbling and composed, with `detail.outcome` one of `adopted` — its
+  served nodes are the live ones — `fell-back` — a mismatch or a lost pair, with `detail.error`
+  carrying the cause — or `none`, nothing to adopt. It fires once per view, parent first, in
+  production as in development. `hydrateRoot()`'s `onAdopt(view, outcome, error)` option receives
+  the same reports for every view its walk reaches, a view the pin adopts after the release included.
+- **A mutated document throws.** `hydrateRoot()` rethrows what `hydrate()` threw, over a container it
+  first leaves cold-renderable: no element still asleep behind `defer-hydration`, no marker still
+  hidden behind the prefix. The caller renders over the container.
+
+### How this compares
+
+Two axes separate the hydration models in circulation: where the code that wakes the markup comes
+from — imported from the renderer, or provided from outside it — and how much it wakes at once, the
+whole tree or one boundary on demand.
+
+| Model                     | Where the wake code comes from                                                                         | Scope        | Shipped by the framework |
+| ------------------------- | ------------------------------------------------------------------------------------------------------ | ------------ | ------------------------ |
+| Whole tree, in-renderer   | imported from the renderer — React `hydrateRoot()`, Vue `createSSRApp().mount()`, Solid `hydrate()`    | the page     | yes                      |
+| Whole tree, provided      | a provider or a global patch — Angular `provideClientHydration()`, Lit's `lit-element-hydrate-support` | the page     | opt-in                   |
+| Per boundary, in-renderer | the renderer schedules it — React Suspense selective hydration, Nuxt `<NuxtIsland>`                    | one boundary | yes                      |
+| Per boundary, provided    | a directive or a context provider — Astro `client:*`, Angular `@defer (hydrate on …)`, this package    | one boundary | opt-in                   |
+
+This package sits in the per-boundary, provided cell. Each `<ui-view>` is an island whose trigger is
+a route match rather than viewport or idle, and the adopter is provided over `context-request`, so
+any provider can scope or replace it. The element side reuses Lit's `defer-hydration` contract
+unchanged, and it lives here: `lit-ui-router-ssr/register` defines `<ui-view>` with the served class,
+so an app that never prerenders carries none of it — Qwik, which resumes rather than hydrates, is off
+the grid entirely.
+
+The [guide](https://lit-ui-router.dev/packages/ssr#how-this-compares) carries the longer discussion.
+
+## Documentation
+
+- [Guide](https://lit-ui-router.dev/packages/ssr)
+- [API reference](https://lit-ui-router.dev/api/lit-ui-router-ssr/)
+
+## License
+
+MIT

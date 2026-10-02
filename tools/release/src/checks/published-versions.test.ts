@@ -6,17 +6,17 @@ import { parseManifest, renderManifest } from './published-versions.core.ts';
 describe('renderManifest', () => {
   it('renders bytewise-sorted keys with a trailing newline', () => {
     const text = renderManifest({
-      'ui-router-navigation-location-plugin': '0.2.2',
-      'lit-ui-router': '1.7.0',
-      'lit-ui-router-mobx': '0.3.3',
+      'ui-router-navigation-location-plugin': { latest: '0.2.2' },
+      'lit-ui-router': { latest: '1.7.0' },
+      'lit-ui-router-mobx': { latest: '0.3.3' },
     });
     assert.equal(
       text,
       `${JSON.stringify(
         {
-          'lit-ui-router': '1.7.0',
-          'lit-ui-router-mobx': '0.3.3',
-          'ui-router-navigation-location-plugin': '0.2.2',
+          'lit-ui-router': { latest: '1.7.0' },
+          'lit-ui-router-mobx': { latest: '0.3.3' },
+          'ui-router-navigation-location-plugin': { latest: '0.2.2' },
         },
         null,
         2,
@@ -25,13 +25,23 @@ describe('renderManifest', () => {
   });
 
   it('is canonical: key insertion order never changes the bytes', () => {
-    const a = renderManifest({ b: '1.0.0', a: null });
-    const b = renderManifest({ a: null, b: '1.0.0' });
+    const a = renderManifest({ b: { latest: '1.0.0' }, a: {} });
+    const b = renderManifest({ a: {}, b: { latest: '1.0.0' } });
     assert.equal(a, b);
   });
 
+  it('sorts dist-tag keys too — registry order is nondeterministic', () => {
+    const a = renderManifest({ a: { rc: '1.1.0-rc.0', latest: '1.0.0' } });
+    const b = renderManifest({ a: { latest: '1.0.0', rc: '1.1.0-rc.0' } });
+    assert.equal(a, b);
+    assert.match(a, /"latest"[\s\S]*"rc"/);
+  });
+
   it('round-trips through parseManifest', () => {
-    const versions = { 'lit-ui-router': '1.7.0', 'never-published': null };
+    const versions = {
+      'lit-ui-router': { latest: '1.7.0' },
+      'never-published': {},
+    };
     assert.deepEqual(parseManifest(renderManifest(versions)), versions);
   });
 });
@@ -49,10 +59,21 @@ describe('parseManifest', () => {
     assert.throws(() => parseManifest('null'), /must be an object/);
   });
 
-  it('rejects non-string, non-null versions', () => {
+  it('rejects a package that does not map to a dist-tag object', () => {
     assert.throws(
-      () => parseManifest('{"lit-ui-router": 1.7}'),
-      /version string or null/,
+      () => parseManifest('{"lit-ui-router": "1.7.0"}'),
+      /must map to a dist-tag object/,
+    );
+    assert.throws(
+      () => parseManifest('{"lit-ui-router": null}'),
+      /must map to a dist-tag object/,
+    );
+  });
+
+  it('rejects non-string dist-tag versions', () => {
+    assert.throws(
+      () => parseManifest('{"lit-ui-router": {"latest": 1.7}}'),
+      /dist-tag "latest" must map to a version string/,
     );
   });
 });

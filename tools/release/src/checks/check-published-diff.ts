@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 // Report whether a publish from the working tree would ship different bytes
-// than each package's `latest` on npm. This mechanizes release triage: a
-// devDependency- or script-only change is provably a no-op (the publish
-// workflow strips those fields before packing), while dist drift from a
-// "cosmetic" refactor is caught even when the git log looks harmless.
+// than each package's published tarball on the dist-tag its next publish would
+// write. This mechanizes release triage: a devDependency- or script-only
+// change is provably a no-op (the publish workflow strips those fields before
+// packing), while dist drift from a "cosmetic" refactor is caught even when
+// the git log looks harmless.
 //
 // Method (validated against the 1.7.0 release, whose local rebuild reproduces
 // the registry tarball byte-for-byte): read the publish-shape tarball the
@@ -47,6 +48,7 @@ import {
   manifestDriftFields,
   renderSummary,
   scopePackages,
+  selectTarget,
   summarizeResults,
 } from './check-published-diff.core.ts';
 import { fetchTarball, tarballManifest } from './tarball.ts';
@@ -144,15 +146,16 @@ async function main() {
         `${name} missing from published-versions.json — stale manifest; re-run the resolve:published task.`,
       );
     }
-    const latest = published[name];
-    if (!latest) {
+    const target = selectTarget(name, localVersion, published[name] ?? {});
+    if (!target) {
       results.push({ name, dir, localVersion, status: 'unpublished' });
       continue;
     }
+    const { tag, version } = target;
     const { diff, localManifest, publishedManifest } =
-      await diffAgainstPublished(name, `${name}@${latest}`);
+      await diffAgainstPublished(name, `${name}@${version}`);
     if (isCleanDiff(diff)) {
-      results.push({ name, dir, latest, localVersion, status: 'clean' });
+      results.push({ name, dir, tag, version, localVersion, status: 'clean' });
       continue;
     }
     let { shipAffecting, shipInert } = classifyFiles(changedFiles(diff));
@@ -178,7 +181,8 @@ async function main() {
     results.push({
       name,
       dir,
-      latest,
+      tag,
+      version,
       localVersion,
       status: shipAffecting.length > 0 ? 'drift' : 'ship-inert',
       files: shipAffecting,

@@ -4,6 +4,7 @@ import { html } from 'lit';
 import '../ui-view.register.js';
 import '../ui-router.register.js';
 import { UIRouterLit } from '../core.js';
+import { UIRouterLitElement } from '../ui-router.js';
 import { LitStateDeclaration } from '../interface.js';
 import {
   createTestRouter,
@@ -72,5 +73,38 @@ describe('<ui-view> server-rendered shape', () => {
     expect(routed.assignedSlot).toBe(slot);
     expect(isLaidOut(routed)).toBe(true);
     expect(uiView.querySelector('p.fallback')).toBeNull();
+  });
+
+  it('should re-register when <ui-router> upgrades after its router is set', async () => {
+    const states: LitStateDeclaration[] = [
+      {
+        name: 'home',
+        url: '/home',
+        component: () => html`<div class="home-content">Home Content</div>`,
+      },
+    ];
+    router = createTestRouter(states);
+
+    // An inert document never upgrades custom elements, so `uiRouter` lands as a
+    // plain own property that lit replays only in the first update — the shape a
+    // detached parse produces in Firefox, deterministic in every engine.
+    const inert = document.implementation.createHTMLDocument();
+    inert.body.innerHTML = '<ui-router><ui-view></ui-view></ui-router>';
+    const routerElement = inert.body.firstElementChild as UIRouterLitElement;
+    routerElement.uiRouter = router;
+
+    container = document.createElement('div');
+    document.body.append(container);
+    container.append(document.adoptNode(routerElement));
+
+    const uiView = container.querySelector('ui-view')!;
+    await waitForUpdate(uiView);
+    router.start();
+    await tick();
+
+    await routerGo(router, 'home');
+    await waitForUpdate(uiView);
+
+    expect(uiView.querySelector('.home-content')).not.toBeNull();
   });
 });

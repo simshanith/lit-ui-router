@@ -14,7 +14,7 @@ const ruleTester = new RuleTester({
 
 const IMPORTS = `
 import { html } from 'lit';
-import { uiSref } from 'lit-ui-router';
+import { srefHref, uiSref } from 'lit-ui-router';
 `;
 
 ruleTester.run('anchor-is-valid', anchorIsValid, {
@@ -22,6 +22,14 @@ ruleTester.run('anchor-is-valid', anchorIsValid, {
     {
       name: 'uiSref part assigns an href at runtime',
       code: `${IMPORTS}html\`<a \${uiSref('home')}>Home</a>\`;`,
+    },
+    {
+      name: 'srefHref binds the href itself, so the anchor is navigable',
+      code: `${IMPORTS}html\`<a href=\${srefHref('users')}>Users</a>\`;`,
+    },
+    {
+      name: 'srefHref beside a uiSref element part is still navigable',
+      code: `${IMPORTS}html\`<a href=\${srefHref('users')} \${uiSref('users')}>Users</a>\`;`,
     },
     {
       name: "assignHref: 'auto' assigns on a native <a>",
@@ -62,6 +70,12 @@ ruleTester.run('anchor-is-valid', anchorIsValid, {
       name: 'a dead anchor still reports',
       code: `${IMPORTS}html\`<a>Home</a>\`;`,
       errors: [{ messageId: 'noHrefErrorMessage' }],
+    },
+    {
+      name: 'a bare hash is still an invalid href, placeholder guard or not',
+      code: `${IMPORTS}html\`<a href="#">Home</a>\`;`,
+      options: [{ allowHash: false }],
+      errors: [{ messageId: 'invalidHrefErrorMessage' }],
     },
     {
       name: 'a click-handler anchor without href still reports',

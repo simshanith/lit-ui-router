@@ -26,6 +26,8 @@ export type Trigger = {
   root_directory?: string;
   branch_includes?: string[];
   branch_excludes?: string[];
+  path_includes?: string[];
+  path_excludes?: string[];
   environment_variables?: Record<string, TriggerEnvironmentVariable>;
 };
 
@@ -39,6 +41,11 @@ export const PINNABLE_FIELDS = [
 ] as const;
 export type PinnableField = (typeof PINNABLE_FIELDS)[number];
 
+// Build watch paths: array-valued, so pinned and patched whole-list rather than
+// per-entry (https://developers.cloudflare.com/workers/ci-cd/builds/build-watch-paths/).
+export const PINNABLE_LIST_FIELDS = ['path_includes', 'path_excludes'] as const;
+export type PinnableListField = (typeof PINNABLE_LIST_FIELDS)[number];
+
 const nonEmptyString = v.pipe(v.string(), v.nonEmpty());
 
 // Shell-legal variable names only, so a typoed key is a config error too.
@@ -50,18 +57,31 @@ const DesiredTriggerSchema = v.strictObject({
   build_command: v.optional(nonEmptyString),
   deploy_command: v.optional(nonEmptyString),
   root_directory: v.optional(nonEmptyString),
+  path_includes: v.optional(v.array(nonEmptyString)),
+  path_excludes: v.optional(v.array(nonEmptyString)),
   // Declared keys are plaintext by construction; secrets stay dashboard-only.
   environment_variables: v.optional(v.record(environmentKey, nonEmptyString)),
-} satisfies Record<PinnableField | 'environment_variables', unknown>);
+} satisfies Record<
+  PinnableField | PinnableListField | 'environment_variables',
+  unknown
+>);
 
+// One worker: the wrangler config that names it, plus its two triggers.
 const DesiredStateSchema = v.strictObject({
+  wranglerConfig: nonEmptyString,
   productionBranch: nonEmptyString,
   production: DesiredTriggerSchema,
   preview: DesiredTriggerSchema,
 });
 
+// Keyed by site, so the config reads as the list of sites this repo deploys.
+const DesiredWorkersSchema = v.strictObject({
+  workers: v.record(nonEmptyString, DesiredStateSchema),
+});
+
 export type DesiredTrigger = v.InferOutput<typeof DesiredTriggerSchema>;
 export type DesiredState = v.InferOutput<typeof DesiredStateSchema>;
+export type DesiredWorker = DesiredState & { site: string };
 
 export type TriggerKind = 'production' | 'preview';
 
@@ -79,10 +99,13 @@ export function parseJsonc(text: string): unknown {
   return result;
 }
 
-// Strict validation of workers-builds-triggers.config.jsonc; every issue is
-// reported, prefixed with its dot path into the config.
-export function desiredStateFromConfig(config: unknown): DesiredState {
-  const result = v.safeParse(DesiredStateSchema, config);
+// Strict validation; every issue is reported, prefixed with its dot path into
+// the config.
+function validate<Schema extends v.GenericSchema>(
+  schema: Schema,
+  config: unknown,
+): v.InferOutput<Schema> {
+  const result = v.safeParse(schema, config);
   if (!result.success) {
     const details = result.issues.map((issue) => {
       const path = v.getDotPath(issue);
@@ -91,6 +114,37 @@ export function desiredStateFromConfig(config: unknown): DesiredState {
     throw new Error(['invalid config:', ...details].join('\n'));
   }
   return result.output;
+}
+
+/** One worker's desired state, the unit workers-builds-triggers.config.jsonc repeats. */
+export function desiredStateFromConfig(config: unknown): DesiredState {
+  return validate(DesiredStateSchema, config);
+}
+
+/** Every worker in workers-builds-triggers.config.jsonc, tagged with its site key. */
+export function desiredWorkersFromConfig(config: unknown): DesiredWorker[] {
+  const { workers } = validate(DesiredWorkersSchema, config);
+  return Object.entries(workers).map(([site, worker]) => ({ site, ...worker }));
+}
+
+/**
+ * The workers a `--site` selection names, in config order; no selection means
+ * every worker. An unknown name throws rather than selecting nothing, since a
+ * typo under --apply would otherwise read as "in sync".
+ */
+export function selectWorkers(
+  workers: DesiredWorker[],
+  sites: readonly string[],
+): DesiredWorker[] {
+  if (sites.length === 0) return workers;
+  const known = workers.map((worker) => worker.site);
+  const unknown = sites.filter((site) => !known.includes(site));
+  if (unknown.length > 0) {
+    throw new Error(
+      `unknown site(s): ${unknown.join(', ')} — configured: ${known.join(', ')}`,
+    );
+  }
+  return workers.filter((worker) => sites.includes(worker.site));
 }
 
 // looseObject: wrangler.jsonc has many fields; only `name` matters here.
@@ -131,7 +185,9 @@ export type Drift = {
   trigger_uuid: string;
   kind: TriggerKind;
   // Exactly the body to PATCH /builds/triggers/{uuid} with.
-  patch: Partial<Record<PinnableField, string>>;
+  patch: Partial<
+    Record<PinnableField, string> & Record<PinnableListField, string[]>
+  >;
   environmentPatch: EnvironmentPatch;
 };
 
@@ -209,6 +265,26 @@ function describeTrigger(
       patch[field] = wanted;
       lines.push(`  ✗ ${field.padEnd(18)} ${current || '(empty)'}`);
       lines.push(`    ${' '.repeat(18)} wanted: ${wanted}`);
+    }
+  }
+  // Watch paths are only worth a line when pinned or actually set: every
+  // trigger defaults to include-everything, and printing that twice is noise.
+  for (const field of PINNABLE_LIST_FIELDS) {
+    const current = trigger[field] ?? [];
+    const wanted = desired[field];
+    const shown = JSON.stringify(current);
+    if (wanted === undefined) {
+      if (current.length > 0) {
+        lines.push(`    ${field.padEnd(18)} ${shown} (not pinned)`);
+      }
+    } else if (shown === JSON.stringify(wanted)) {
+      lines.push(`  ✓ ${field.padEnd(18)} ${shown}`);
+    } else {
+      patch[field] = wanted;
+      lines.push(
+        `  ✗ ${field.padEnd(18)} ${shown}`,
+        `    ${' '.repeat(18)} wanted: ${JSON.stringify(wanted)}`,
+      );
     }
   }
   const environment = describeEnvironment(

@@ -28,15 +28,15 @@ import { TemplateResult, LitElement } from 'lit';
  * }
  * ```
  *
- * @see [[TransitionOptions]]
+ * @see {@link "@uirouter/core"!TransitionOptions | TransitionOptions}
  *
  * @category hooks
  */
 export interface UiOnParamsChanged {
   /**
-   * A UI-Router view has a Lit `Component` (see [[NormalizedLitViewDeclaration.component]]).
+   * A UI-Router view has a Lit `Component` (see {@link NormalizedLitViewDeclaration.component}).
    * The `Component` may define component-level hooks which UI-Router will call at the appropriate times.
-   * These callbacks are similar to Transition Hooks ([[IHookRegistry]]), but are only called if the view/component is currently active.
+   * These callbacks are similar to Transition Hooks ({@link "@uirouter/core"!IHookRegistry | IHookRegistry}), but are only called if the view/component is currently active.
    *
    * The uiOnParamsChanged callback is called when parameter values change.
    *
@@ -48,7 +48,7 @@ export interface UiOnParamsChanged {
    *
    * - An object with (only) changed parameter values.
    *   The keys are the parameter names and the values are the new parameter values.
-   * - The [[Transition]] which changed the parameter values.
+   * - The {@link Transition} which changed the parameter values.
    *
    */
   uiOnParamsChanged(newParams: RawParams, trans?: Transition): void;
@@ -75,22 +75,22 @@ export interface UiOnParamsChanged {
  * }
  * ```
  *
- * @see [[HookResult]]
- * @see [[Transition]]
+ * @see {@link HookResult}
+ * @see {@link Transition}
  *
  * @category hooks
  */
 export interface UiOnExit {
   /**
-   * A UI-Router view has a Lit `Component` (see [[NormalizedLitViewDeclaration.component]]).
+   * A UI-Router view has a Lit `Component` (see {@link NormalizedLitViewDeclaration.component}).
    * The `Component` may define component-level hooks which UI-Router will call at the appropriate times.
-   * These callbacks are similar to Transition Hooks ([[IHookRegistry]]), but are only called if the view/component is currently active.
+   * These callbacks are similar to Transition Hooks ({@link "@uirouter/core"!IHookRegistry | IHookRegistry}), but are only called if the view/component is currently active.
    *
    * The uiCanExit callback is called when the routed component's state is about to be exited.
    *
-   * The callback can be used to cancel or alter the new [[Transition]] that would otherwise exit the component's state.
+   * The callback can be used to cancel or alter the new {@link Transition} that would otherwise exit the component's state.
    *
-   * This callback is used to inform a view that it is about to be exited, due to a new [[Transition]].
+   * This callback is used to inform a view that it is about to be exited, due to a new {@link Transition}.
    * The callback can ask for user confirmation, and cancel or alter the new Transition. The callback should
    * return a value, or a promise for a value. If a promise is returned, the new Transition waits until the
    * promise settles.
@@ -101,16 +101,16 @@ export interface UiOnExit {
    * - The new Transition will exit the view's state
    *
    * Called with:
-   * - The [[Transition]] that is about to exit the component's state
+   * - The {@link Transition} that is about to exit the component's state
    *
-   * @returns a hook result which may cancel or alter the pending Transition (see [[HookResult]])
+   * @returns a hook result which may cancel or alter the pending Transition (see {@link HookResult})
    */
   uiCanExit(newTransition?: Transition): HookResult;
 }
 
 /**
  * Default Resolves Types when not provided to Generic UIViewResolves
- * @see [[UIViewResolves]]
+ * @see {@link UIViewResolves}
  * @category types
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- backwards compatible default
@@ -121,9 +121,9 @@ export type DefaultResolvesType = Record<string, any>;
  *
  * @template T - The shape of the resolved values object
  *
- * @see [[UIViewInjectedProps]]
- * @see [[DefaultResolvesType]]
- * @see [[StateDeclaration.resolve]]
+ * @see {@link UIViewInjectedProps}
+ * @see {@link DefaultResolvesType}
+ * @see {@link StateDeclaration.resolve}
  *
  * @category types
  */
@@ -165,8 +165,8 @@ export type UIViewResolves<
  * }
  * ```
  *
- * @see [[UIRouter]]
- * @see [[Transition]]
+ * @see {@link UIRouter}
+ * @see {@link Transition}
  *
  * @category types
  */
@@ -185,7 +185,7 @@ export interface UIViewInjectedProps<
  * A function that returns a Lit TemplateResult for rendering in a `<ui-view>`.
  *
  * This is the **simplest way** to define route components - no LitElement class needed.
- * The function optionally receives [[UIViewInjectedProps]] as its argument.
+ * The function optionally receives {@link UIViewInjectedProps} as its argument.
  *
  * @example Simple template (no props needed)
  * ```ts
@@ -222,6 +222,8 @@ export type RoutedLitTemplate<
  *
  * A {@link RoutedLitTemplate} intersected with the core view declaration
  * metadata (all optional, so plain template functions remain assignable).
+ *
+ * @category types
  */
 export type LitViewDeclarationTemplate<
   T extends DefaultResolvesType = DefaultResolvesType,
@@ -282,6 +284,7 @@ export interface RoutedLitElement<
    * the parameter required, optional, or not at all.
    */
   new (props: UIViewInjectedProps<T>): LitElement & {
+    /** assigned on every render; declare it reactive to re-render when reused */
     _uiViewProps?: UIViewInjectedProps<T>;
   };
 
@@ -304,6 +307,8 @@ export type RoutedLitComponent<
 
 /**
  * A LitElement class used directly as a view declaration.
+ *
+ * @category types
  */
 export interface LitViewDeclarationElement<
   T extends DefaultResolvesType = DefaultResolvesType,
@@ -312,10 +317,13 @@ export interface LitViewDeclarationElement<
 
 /**
  * A view declaration object with an explicit component property.
+ *
+ * @category types
  */
 export interface LitViewDeclarationObject<
   T extends DefaultResolvesType = DefaultResolvesType,
 > extends _ViewDeclaration {
+  /** the routed component: a LitElement class or a template function */
   component: RoutedLitComponent<T>;
 }
 
@@ -326,6 +334,8 @@ export interface LitViewDeclarationObject<
  * - An object with a `component` property ({@link LitViewDeclarationObject})
  * - A LitElement class directly ({@link LitViewDeclarationElement})
  * - A template function directly ({@link LitViewDeclarationTemplate})
+ *
+ * @category types
  */
 export type LitViewDeclaration<
   T extends DefaultResolvesType = DefaultResolvesType,
@@ -337,7 +347,7 @@ export type LitViewDeclaration<
 /**
  * State declaration interface for Lit applications.
  *
- * Extends the core [[StateDeclaration]] with Lit-specific component support.
+ * Extends the core {@link StateDeclaration} with Lit-specific component support.
  * The `component` property accepts template functions, LitElement classes, or both.
  *
  * @example Simplest: inline template function
@@ -380,7 +390,7 @@ export type LitViewDeclaration<
  * ];
  * ```
  *
- * @see [[StateDeclaration]]
+ * @see {@link StateDeclaration}
  * @see {@link RoutedLitTemplate}
  * @see {@link RoutedLitElement}
  *
@@ -389,13 +399,18 @@ export type LitViewDeclaration<
 export interface LitStateDeclaration<
   T extends DefaultResolvesType = DefaultResolvesType,
 > extends StateDeclaration {
-  /** The Lit component to render for this state */
+  /**
+   * The Lit component to render for this state.
+   *
+   * A view typed with required resolves is rejected here unless `T` is
+   * threaded onto the declaration, as in `LitStateDeclaration<T>[]`.
+   */
   component?: LitViewDeclaration<T>;
 
   /**
    * An optional object used to define multiple named views.
    *
-   * Overrides the core [[StateDeclaration.views]] property so each named view
+   * Overrides the core {@link StateDeclaration.views} property so each named view
    * accepts any {@link LitViewDeclaration} format — a bare component or an
    * object with a `component` property — threading the resolves generic.
    *
@@ -405,7 +420,7 @@ export interface LitStateDeclaration<
 }
 
 /**
- * The `litViewsBuilder` registered in [[UIRouterLit.constructor]] normalizes config to this internal interface.
+ * The `litViewsBuilder` registered by the {@link !UIRouterLit | UIRouterLit} constructor normalizes config to this internal interface.
  *
  * @category types
  */

@@ -1,13 +1,16 @@
 // Vendored from eslint-plugin-lit-a11y 5.1.1 (lib/rules/anchor-is-valid.js plus
 // its lit-html import gating), Copyright (c) 2018 open-wc.
 // MIT per the open-wc repo LICENSE, ISC per the package manifest.
-// Extended so a uiSref element part counts as the href it assigns (#659, #676).
+// Extended so a uiSref element part, and a srefHref bound in `href`, count as
+// the href they assign (#659, #676).
 import type { SourceCode } from 'eslint';
 import type { RuleFor } from './rule-shape.ts';
 // Deep path (no `exports` map guards it), but lit-a11y's own rules import the
 // same one — a break here breaks lit-a11y first.
 import { TemplateAnalyzer } from 'eslint-plugin-lit/lib/template-analyzer.js';
 import {
+  attributePartIndex,
+  attributePartsOf,
   type CallNode,
   createDirectiveTracker,
   elementPartIndex,
@@ -58,7 +61,8 @@ const getLiteralAttributeValue = (
     if (expr.type === 'Literal') return expr.value as string | undefined;
     return undefined;
   }
-  return expr;
+  // The analyzer returns an unresolved binding as a placeholder, not an href.
+  return attributePartIndex(expr) === undefined ? expr : undefined;
 };
 
 export const RULE_NAME = 'anchor-is-valid';
@@ -135,6 +139,20 @@ const anchorIsValid: RuleFor<typeof RULE_NAME> = {
         );
       });
 
+    // ours: the binding is the href, so there is no `assignHref` to opt out of.
+    const bindsHref = (
+      element: Parse5Element,
+      expressions: Node[],
+    ): boolean => {
+      for (const [index, part] of attributePartsOf(element)) {
+        if (part.name !== 'href') continue;
+        const expression = expressions[index];
+        if (expression === undefined) continue;
+        if (tracker.directiveOf(expression) === 'srefHref') return true;
+      }
+      return false;
+    };
+
     return {
       ImportDeclaration(node) {
         tracker.onImport(node);
@@ -175,7 +193,8 @@ const anchorIsValid: RuleFor<typeof RULE_NAME> = {
               attributes.includes('href') ||
               attributes.includes('.href') ||
               // ours: the element part assigns one at runtime
-              isNavigable(element, expressions);
+              isNavigable(element, expressions) ||
+              bindsHref(element, expressions);
             const hasClickListener = attributes.includes('@click');
 
             const reportLoc = () =>

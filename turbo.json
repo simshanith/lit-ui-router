@@ -2,6 +2,7 @@
   "$schema": "https://turborepo.com/schema.json",
   "ui": "tui",
   "remoteCache": { "signature": true },
+  "agentGuidance": false,
   "tasks": {
     "transit": {
       "dependsOn": ["^transit"]
@@ -32,10 +33,12 @@
         "vitest.setup.ts",
         "cypress.config.ts"
       ],
-      "env": ["VITEST_BROWSER_API_PORT", "VITE_EXPECT_LIT_MAJOR", "CI"],
+      "env": ["VITEST_BROWSER_API_PORT", "VITE_EXPECT_LIT_MAJOR"],
       // CYPRESS_video: CI disables Cypress recording (build-test.yml);
       // strict env mode would scrub the override before it reaches Cypress.
-      "passThroughEnv": ["WRANGLER_LOG", "CYPRESS_video"]
+      // CI: the vitest configs only pick a reporter from it, so the artifact is
+      // identical either way — hashing it would wall laptops off from CI's cache.
+      "passThroughEnv": ["WRANGLER_LOG", "CYPRESS_video", "CI"]
     },
     "@tools/dts-backtest#test": {
       "dependsOn": ["^build"],
@@ -65,8 +68,15 @@
         "vitest.config.ts",
         "vitest.setup.ts"
       ],
-      "env": ["VITEST_BROWSER_API_PORT", "VITE_EXPECT_LIT_MAJOR", "CI"],
+      "env": ["VITEST_BROWSER_API_PORT", "VITE_EXPECT_LIT_MAJOR"],
+      "passThroughEnv": ["CI"],
       "outputs": ["coverage/**"]
+    },
+    // Report-only CRAP hotspots from this package's coverage-final.json; in no
+    // ci:* graph.
+    "crap": {
+      "dependsOn": ["test:coverage"],
+      "inputs": ["$TURBO_DEFAULT$"]
     },
     // Firefox+WebKit full-suite pass for the vitest packages; chromium
     // correctness rides test:coverage on PRs. Runs on main push, not the
@@ -79,7 +89,8 @@
         "vitest.config.ts",
         "vitest.setup.ts"
       ],
-      "env": ["VITEST_BROWSER_API_PORT", "VITE_EXPECT_LIT_MAJOR", "CI"]
+      "env": ["VITEST_BROWSER_API_PORT", "VITE_EXPECT_LIT_MAJOR"],
+      "passThroughEnv": ["CI"]
     },
     // Same unit suites resolved against the lit-2 alias (the 2.x line the
     // published lit peer range covers); cheap enough for the PR graph — no
@@ -91,7 +102,8 @@
     "test:lit2-compat": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/pnpm-workspace.yaml"],
-      "env": ["VITEST_BROWSER_API_PORT", "VITE_EXPECT_LIT_MAJOR", "CI"]
+      "env": ["VITEST_BROWSER_API_PORT", "VITE_EXPECT_LIT_MAJOR"],
+      "passThroughEnv": ["CI"]
     },
     // Same unit suites resolved against the mobx-6 alias (the 6.x line the
     // widened mobx peer range still covers). Mirrors test:lit2-compat: no
@@ -102,10 +114,15 @@
     "test:mobx6-compat": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/pnpm-workspace.yaml"],
-      "env": ["VITEST_BROWSER_API_PORT", "VITE_EXPECT_MOBX_MAJOR", "CI"]
+      "env": ["VITEST_BROWSER_API_PORT", "VITE_EXPECT_MOBX_MAJOR"],
+      "passThroughEnv": ["CI"]
     },
+    // Umbrellas (no script) fan out via dependsOn to the leaves that carry the
+    // scripts and cache keys; `with` is only for persistent sidecars. A package
+    // override replaces dependsOn wholesale, so it restates these lists.
     "lint": {
-      "with": [
+      "dependsOn": [
+        "lint:oxlint",
         "//#lint:root",
         "//#lint:package-json",
         "//#lint:elements",
@@ -113,16 +130,20 @@
         "//#lint:workflows",
         "//#lint:templates",
         "@tools/repo-checks#check:patches",
+        "@tools/repo-checks#check:dedupe",
+        "@tools/repo-checks#check:single-version",
         "@tools/repo-checks#check:graph-edges",
         "@tools/repo-checks#check:task-inputs",
         "@tools/repo-checks#check:knip",
         "@tools/release#check:release-closure"
-      ],
+      ]
+    },
+    "lint:oxlint": {
       // type-aware oxlint resolves cross-package imports to dist d.ts only
       "dependsOn": ["^build:types"],
       // explicit globs hash gitignored files too, and oxlint reads none of
       // these: dist/, .cache/ and .probe-scratch/ mutate mid-graph (build:js,
-      // pack:all staging, dts-backtest#test writing and deleting a probe under
+      // pack:all tarballs, dts-backtest#test writing and deleting a probe under
       // its own package while this lane hashes), coverage/ and .turbo/ are
       // written by sibling lanes, and examples/* carry their own un-hoisted
       // npm installs
@@ -156,7 +177,9 @@
       "dependsOn": [
         "eslint-plugin-lit-ui-router#build:types",
         "lit-ui-router#build:types",
+        "lit-ui-router-effect#build:types",
         "lit-ui-router-mobx#build:types",
+        "lit-ui-router-ssr#build:types",
         "ui-router-navigation-location-plugin#build:types",
         "ui-router-server#build:types"
       ],
@@ -211,7 +234,7 @@
         "$TURBO_DEFAULT$",
         "**/package.json",
         "!**/node_modules/**",
-        "!.claude/**",
+        "!.claude/worktrees/**",
         "eslint.config.ts",
         "tools/eslint/**",
         "!**/.turbo/**",
@@ -237,14 +260,12 @@
       ]
     },
     // Config-plumbing lint: one //# cache group per tool, aggregated by the
-    // virtual //#lint:workflows node (which the lint task pulls in). The
+    // //#lint:workflows umbrella (which the lint task pulls in). The
     // lint_workflows mise umbrella covers the same set for the standalone
     // lint-workflows.yml job.
     "//#lint:workflows": {
-      // Virtual node: no package.json script, so turbo runs nothing for it — it
-      // just fans out (via `with`) to the per-tool tasks, which carry their own
-      // cache keys.
-      "with": [
+      // no package.json script: turbo runs nothing for it, only its dependsOn
+      "dependsOn": [
         "//#lint:actionlint",
         "//#lint:zizmor",
         "//#lint:toml",
@@ -271,6 +292,8 @@
       "inputs": [
         "**/*.toml",
         "!**/node_modules/**",
+        // gitignored mise overrides (setup writes one per worktree)
+        "!$TURBO_ROOT$/.config/mise/**/*.local.toml",
         "$TURBO_ROOT$/.config/taplo.toml",
         "$TURBO_ROOT$/.config/mise/tasks/taplo",
         "$TURBO_ROOT$/.config/mise/mise.lock"
@@ -287,18 +310,21 @@
         "$TURBO_ROOT$/.config/mise/mise.lock"
       ]
     },
+    // `turbo run typecheck` is the one command that answers "do the types
+    // hold", so the compat typechecks are leaves of the same umbrella
     "typecheck": {
-      // types come from build:types alone; JS emit stays off the typecheck path
-      "dependsOn": ["^build:types"],
-      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tsconfig.base.json"],
-      // compat typechecks ride along: `turbo run typecheck` is the one command
-      // that answers "do the types hold", and `with` propagates their failure
-      "with": [
+      "dependsOn": [
+        "typecheck:tsc",
         "//#typecheck:root",
         "typecheck:src",
         "typecheck:lit2",
         "typecheck:mobx6"
       ]
+    },
+    "typecheck:tsc": {
+      // types come from build:types alone; JS emit stays off the typecheck path
+      "dependsOn": ["^build:types"],
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tsconfig.base.json"]
     },
     "typecheck:src": {
       "dependsOn": ["^build:types"],
@@ -385,20 +411,28 @@
       "cache": false,
       "passThroughEnv": ["CODECOV_TOKEN", "CI", "GITHUB_*"]
     },
+    // Not in any ci:* graph — the gate is format:check. Run it ALONE: oxfmt
+    // truncates in place, so any reader co-scheduled with it (lint:templates,
+    // test, format:check) can observe a 0-byte source file.
+    "format": {
+      "dependsOn": ["format:oxfmt", "//#format:root", "//#format:toml"]
+    },
     // WRITER. Rewrites its own inputs in place and declares no outputs, so a
     // cache hit restores nothing and silently leaves the tree unformatted;
-    // uncacheable is the only correct setting. Not in any ci:* graph — the
-    // gate is format:check. Run it ALONE: oxfmt truncates in place, so any
-    // reader co-scheduled with it (lint:templates, test, format:check) can
-    // observe a 0-byte source file.
-    "format": {
-      "with": ["//#format:root", "//#format:toml"],
+    // uncacheable is the only correct setting.
+    "format:oxfmt": {
       "cache": false
     },
     "format:check": {
-      "with": ["//#format:check:root", "//#format:check:toml"],
+      "dependsOn": [
+        "format:check:oxfmt",
+        "//#format:check:root",
+        "//#format:check:toml"
+      ]
+    },
+    "format:check:oxfmt": {
       // oxfmt skips gitignored files but this glob does not, so the generated
-      // trees have to come off by hand (same set as `lint` above)
+      // trees have to come off by hand (same set as `lint:oxlint` above)
       "inputs": [
         "**/*.{ts,js,mjs,cjs,json,jsonc,md,yml,yaml,html,vue}",
         "!**/node_modules/**",
@@ -411,7 +445,7 @@
         "$TURBO_ROOT$/.oxfmtrc.json"
       ]
     },
-    // WRITER, uncacheable for the same reason as `format` above.
+    // WRITER, uncacheable for the same reason as `format:oxfmt` above.
     "//#format:root": {
       "cache": false
     },
@@ -419,7 +453,7 @@
       "inputs": ["$TURBO_DEFAULT$"]
     },
     // taplo owns .toml, disjoint from the oxfmt writers above. WRITER,
-    // uncacheable for the same reason as `format`. //#format:check:toml keeps
+    // uncacheable for the same reason as `format:oxfmt`. //#format:check:toml keeps
     // the .toml-scoped cache key.
     "//#format:toml": {
       "cache": false
@@ -428,6 +462,8 @@
       "inputs": [
         "**/*.toml",
         "!**/node_modules/**",
+        // gitignored mise overrides (setup writes one per worktree)
+        "!$TURBO_ROOT$/.config/mise/**/*.local.toml",
         "$TURBO_ROOT$/.config/taplo.toml",
         "$TURBO_ROOT$/.config/mise/tasks/taplo",
         "$TURBO_ROOT$/.config/mise/mise.lock"

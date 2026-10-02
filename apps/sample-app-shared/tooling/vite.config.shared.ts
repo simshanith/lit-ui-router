@@ -47,7 +47,10 @@ export const sampleAppViteConfig = ({
       manifest: true,
     },
     plugins: [
-      checker({ typescript: true }),
+      // The apps alias `typescript` to typescript6, which ships no bin/tsc.
+      checker({
+        typescript: { typescriptPath: sharedRequire.resolve('typescript') },
+      }),
       viteStaticCopy({
         targets: [
           {

@@ -17,6 +17,8 @@ on:
       - 'ui-router-navigation-location-plugin@*'
       - 'ui-router-server@*'
       - 'eslint-plugin-lit-ui-router@*'
+      - 'lit-ui-router-effect@*'
+      - 'lit-ui-router-ssr@*'
   workflow_dispatch:
     inputs:
       package:
@@ -29,6 +31,8 @@ on:
           - ui-router-navigation-location-plugin
           - ui-router-server
           - eslint-plugin-lit-ui-router
+          - lit-ui-router-effect
+          - lit-ui-router-ssr
       dryRun:
         description: 'Dry run: log the publish/release/attestation release-it would perform without doing it'
         required: false
@@ -41,7 +45,7 @@ env:
 
 jobs:
   publish_npm:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     # Ref restriction, not an approval gate: the deployment branch policy
     # admits only main and the release tag globs.
     environment: publish
@@ -52,7 +56,7 @@ jobs:
       artifact-metadata: write
     steps:
       - name: 'Checkout code'
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           fetch-tags: true
@@ -60,15 +64,15 @@ jobs:
           # git commit/tag/push off, so no credentials need to persist.
           persist-credentials: false
       - name: Setup mise
-        uses: jdx/mise-action@e6a8b3978addb5a52f2b4cd9d91eafa7f0ab959d # v4.2.0
+        uses: jdx/mise-action@9149ea85001c7435d5a66bb127d6a1b6227cb0a5 # v5.0.0
         with:
           # task-env handling regressed before in unpinned mise; pin the version
-          version: 2026.6.14
+          version: 2026.9.12
           # no restored tool cache on the publish path (zizmor cache-poisoning):
           # tools install fresh, checksum-verified against mise.lock
           cache: false
       - name: Install dependencies
-        run: mise run setup
+        run: mise run setup --release
       - name: Resolve package
         # tag → package name (hostile-refname safe) → workspace directory
         id: info
@@ -82,8 +86,9 @@ jobs:
         env:
           PACKAGE_NAME: ${{ steps.info.outputs.package_name }}
       - name: Pack
-        # Restore-free staging copy; the source tree is never touched. The
-        # DEBIT: these are the bytes we attest and publish.
+        # Packs in place; a beforePacking hook strips the packed manifest and
+        # the source tree is never written. The DEBIT: these are the bytes we
+        # attest and publish.
         id: pack
         run: mise run //tools/release:pack
         env:

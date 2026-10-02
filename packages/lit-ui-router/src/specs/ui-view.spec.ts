@@ -1,11 +1,21 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { html, LitElement } from 'lit';
+import { html, LitElement, nothing } from 'lit';
+import type { PropertyValues } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { Transition } from '@uirouter/core';
+import { ActiveUIView, Transition } from '@uirouter/core';
 
 import { UiView } from '../ui-view.js';
+import {
+  ContextRequestEvent,
+  parentUiViewContext,
+  provideRouter,
+  requestContext,
+  routerContext,
+} from '../context.js';
+import type { ParentUiView } from '../context.js';
 import '../ui-view.register.js';
 import { UIRouterLitElement } from '../ui-router.js';
+import type { UiViewContextEvent } from '../events.js';
 import { UIRouterLit } from '../core.js';
 import {
   UIViewInjectedProps,
@@ -107,7 +117,7 @@ class TestRetainedShell extends CountedElement {
 @customElement('test-retained-leaf')
 class TestRetainedLeaf extends CountedElement implements UiOnParamsChanged {
   static tag = 'test-retained-leaf';
-  @state() accessor starId = '';
+  @state() starId = '';
   readonly propsSeen: (UIViewInjectedProps | undefined)[] = [];
 
   uiOnParamsChanged(params: { [key: string]: unknown }) {
@@ -154,8 +164,37 @@ class TestParamsReceiveComponent
   }
 }
 
+/** Authors the fallback from an enclosing lit template, so the nodes are a TemplateInstance's own: a `<slot>` plus a live binding. */
+@customElement('test-fallback-host')
+class TestFallbackHost extends LitElement {
+  @state() label = 'first';
+  render() {
+    return html`<ui-view
+      ><slot></slot>
+      <p class="fallback">${this.label}</p></ui-view
+    >`;
+  }
+}
+
+/**
+ * The hooks a subclass that fills the element itself overrides: no capture at
+ * connect, and the capture taken in place on the first update instead.
+ */
+class TestInPlaceView extends UiView {
+  protected override captureContent(): void {}
+
+  protected override willUpdate(changed: PropertyValues<this>): void {
+    this.captureContentInPlace();
+    super.willUpdate(changed);
+  }
+}
+
+customElements.define('test-in-place-view', TestInPlaceView);
+
 declare global {
   interface HTMLElementTagNameMap {
+    'test-in-place-view': TestInPlaceView;
+    'test-fallback-host': TestFallbackHost;
     'test-exit-component': TestExitComponent;
     'test-block-exit-component': TestBlockExitComponent;
     'test-params-component': TestParamsComponent;
@@ -184,6 +223,21 @@ describe('UiView', () => {
   afterEach(() => {
     container.remove();
   });
+
+  // A render's nodes between the part markers that render wrote, opaque to core.
+  const heldMarkup =
+    '<!--lit-part vXOrb1NPBFc=-->' +
+    '<div class="wrap"><p class="held">held</p></div>' +
+    '<ui-view><p class="nested">nested</p></ui-view>' +
+    '<!--/lit-part-->';
+
+  const homeStates: LitStateDeclaration[] = [
+    {
+      name: 'home',
+      url: '/home',
+      component: () => html`<div class="home-content">Home</div>`,
+    },
+  ];
 
   async function setupRouter(
     states: LitStateDeclaration[],
@@ -463,6 +517,21 @@ describe('UiView', () => {
 
       expect(uiView.innerHTML).toContain('fallback');
     });
+
+    it('should capture authored hold content when the attribute is absent', async () => {
+      const { uiView } = await setupRouter([], {
+        configure: (el) => {
+          el.innerHTML = '<p class="hold">hold</p>';
+        },
+        start: false,
+      });
+
+      // Taken as the fallback set: the authored <p> stands in the light DOM as
+      // itself, ahead of lit's marker, and the hold render adds nothing over it.
+      expect(uiView.render()).toBe(nothing);
+      expect(uiView.querySelectorAll('p.hold')).toHaveLength(1);
+      expect(uiView.firstElementChild!.className).toBe('hold');
+    });
   });
 
   describe('uiCanExit hook', () => {
@@ -620,6 +689,66 @@ describe('UiView', () => {
     });
   });
 
+  // A re-attached ancestor runs `connectedCallback` again on views that have
+  // already rendered: lit's own nodes and part markers are not hold content.
+  describe('reconnecting a rendered view', () => {
+    const reconnectStates: LitStateDeclaration[] = [
+      {
+        name: 'home',
+        url: '/home',
+        component: () => html`<div class="home">Home</div>`,
+      },
+      {
+        name: 'about',
+        url: '/about',
+        component: () => html`<div class="about">About</div>`,
+      },
+      { name: 'blank', url: '/blank' },
+    ];
+
+    it('should keep rendering its state after its router is re-attached', async () => {
+      const { uiRouter, uiView } = await setupRouter(reconnectStates);
+
+      await routerGo(router, 'home');
+      await waitForUpdate(uiView);
+      expect(uiView.innerHTML).toContain('class="home"');
+
+      uiRouter.remove();
+      await tick();
+      container.appendChild(uiRouter);
+      await waitForUpdate(uiView);
+
+      expect(uiView.innerHTML).toContain('class="home"');
+
+      await routerGo(router, 'about');
+      await waitForUpdate(uiView);
+      expect(uiView.innerHTML).toContain('class="about"');
+    });
+
+    it('should replay the hold content captured at first connect after a reconnect', async () => {
+      const { uiRouter, uiView } = await setupRouter(reconnectStates, {
+        configure: (el) => {
+          el.innerHTML = '<p class="hold">hold</p>';
+        },
+      });
+
+      await routerGo(router, 'home');
+      await waitForUpdate(uiView);
+      expect(uiView.querySelector('p.hold')).toBeNull();
+
+      uiRouter.remove();
+      await tick();
+      container.appendChild(uiRouter);
+      await waitForUpdate(uiView);
+
+      await routerGo(router, 'blank');
+      await waitForUpdate(uiView);
+
+      expect(uiView.querySelectorAll('p.hold')).toHaveLength(1);
+      expect(uiView.innerHTML).not.toContain('class="home"');
+    });
+  });
+
   describe('seekParentView static method', () => {
     it('should find parent ui-view', async () => {
       const states: LitStateDeclaration[] = [
@@ -657,6 +786,83 @@ describe('UiView', () => {
 
       const parentView = UiView.seekParentView(orphan);
       expect(parentView).toBeNull();
+    });
+  });
+  describe('re-registration while detached', () => {
+    const detachedStates: LitStateDeclaration[] = [
+      {
+        name: 'galaxy',
+        url: '/galaxy',
+        component: () => html`<div class="shell"><ui-view></ui-view></div>`,
+      },
+      {
+        name: 'galaxy.star',
+        url: '/star',
+        component: () => html`<div class="star">Star</div>`,
+      },
+    ];
+
+    /** An outer view rendering a state whose component nests a second `<ui-view>`. */
+    async function mountNested() {
+      const { uiRouter, uiView } = await setupRouter(detachedStates);
+      await routerGo(router, 'galaxy.star');
+      await tick(50);
+
+      const nested = uiView.querySelector('ui-view')!;
+      expect(nested).toBeTruthy();
+      expect(nested['_uiViewData'].fqn).toBe('$default.$default');
+      return { uiRouter, uiView, nested };
+    }
+
+    function registeredIds(target: UIRouterLit) {
+      return target.viewService['_uiViews'].map(
+        (view: ActiveUIView) => view.id,
+      );
+    }
+
+    /** The re-seek hook's own path: a real router the app assigned replaces the one the view sought. */
+    function adoptUpgraded(view: UiView, upgraded: UIRouterLit) {
+      view.uiRouter = upgraded;
+      (
+        view as unknown as { adoptProvidedRouter(): void }
+      ).adoptProvidedRouter();
+    }
+
+    it('should not re-register a detached nested view at the root context', async () => {
+      const { uiRouter, uiView, nested } = await mountNested();
+      const upgraded = createTestRouter(detachedStates);
+
+      uiRouter.remove();
+      await tick();
+      adoptUpgraded(nested, upgraded);
+
+      expect(nested['_uiViewData'].fqn).toBe('$default.$default');
+      expect(nested['parentView']).toBe(uiView);
+      expect(registeredIds(upgraded)).not.toContain(nested['viewId']);
+    });
+
+    it('should re-register with the parent found once the subtree re-attaches', async () => {
+      const { uiView, nested } = await mountNested();
+      const shell = uiView.querySelector('.shell')!;
+      const upgraded = createTestRouter(detachedStates);
+
+      shell.remove();
+      await tick();
+      expect(registeredIds(router)).not.toContain(nested['viewId']);
+
+      uiView.appendChild(shell);
+      await tick();
+
+      expect(nested['_uiViewData'].fqn).toBe('$default.$default');
+      expect(nested['parentView']).toBe(uiView);
+      expect(registeredIds(router)).toContain(nested['viewId']);
+
+      // Connected, the upgraded router is adopted: same parent, same fqn, registered on the new router.
+      adoptUpgraded(nested, upgraded);
+
+      expect(nested['_uiViewData'].fqn).toBe('$default.$default');
+      expect(nested['parentView']).toBe(uiView);
+      expect(registeredIds(upgraded)).toContain(nested['viewId']);
     });
   });
   describe('missing <ui-router> ancestor', () => {
@@ -855,6 +1061,401 @@ describe('UiView', () => {
 
       expect(uiView.firstElementChild).toBe(first);
       expect(countsFor('test-sticky-component').constructed).toBe(1);
+    });
+  });
+
+  // Which router a view holds is provenance, not a value: one a seek produced
+  // can be superseded by a provider that upgraded late or by the
+  // `<ui-router>` the view has just been attached under, while one the app
+  // assigned is final.
+  describe('router provenance', () => {
+    function registeredCount(target: UIRouterLit) {
+      return target.viewService['_uiViews'].length;
+    }
+
+    it('should register once a provider answers after it connected', async () => {
+      router = createTestRouter(homeStates);
+      // Connected with nothing to answer the seek: the upgrade-order case.
+      const uiView = document.createElement('ui-view');
+      container.appendChild(uiView);
+      // Installed in the same task, so the provider is there by the first update.
+      const uninstall = provideRouter(container, router);
+      try {
+        await waitForUpdate(uiView);
+
+        expect(uiView.uiRouter).toBe(router);
+        expect(router.viewService.available()).toContain('$default');
+
+        router.start();
+        await routerGo(router, 'home');
+        await waitForUpdate(uiView);
+
+        expect(uiView.querySelector('.home-content')).not.toBeNull();
+      } finally {
+        uninstall();
+      }
+    });
+
+    it('should render a late provider’s state in its first update, without a change-in-update warning', async () => {
+      router = createTestRouter(homeStates);
+      router.start();
+      await routerGo(router, 'home');
+      // lit issues each warning once per realm; forget any earlier one so a repeat here is seen.
+      const issued = (globalThis as { litIssuedWarnings?: Set<string> })
+        .litIssuedWarnings;
+      for (const entry of issued ?? []) {
+        if (entry.includes('change-in-update')) issued!.delete(entry);
+      }
+      const warn = vi.spyOn(console, 'warn');
+      const uiView = document.createElement('ui-view');
+      container.appendChild(uiView);
+      const uninstall = provideRouter(container, router);
+      try {
+        expect(await uiView.updateComplete).toBe(true);
+        expect(uiView.querySelector('.home-content')).not.toBeNull();
+        expect(warn).not.toHaveBeenCalledWith(
+          expect.stringContaining('change-in-update'),
+        );
+      } finally {
+        warn.mockRestore();
+        uninstall();
+      }
+    });
+
+    it('should re-register with the <ui-router> it is moved under', async () => {
+      // Its own declarations per router: registering one twice rebinds it to the later registry.
+      const ownHomeStates = (): LitStateDeclaration[] => [
+        {
+          name: 'home',
+          url: '/home',
+          component: () => html`<div class="home-content">Home</div>`,
+        },
+      ];
+      const routerA = createTestRouter(ownHomeStates());
+      const routerB = createTestRouter(ownHomeStates());
+      const elementA = document.createElement('ui-router');
+      elementA.uiRouter = routerA;
+      const elementB = document.createElement('ui-router');
+      elementB.uiRouter = routerB;
+      container.append(elementA, elementB);
+
+      const uiView = document.createElement('ui-view');
+      elementA.appendChild(uiView);
+      routerA.start();
+      routerB.start();
+      await routerGo(routerA, 'home');
+      await waitForUpdate(uiView);
+      expect(uiView.querySelector('.home-content')).not.toBeNull();
+
+      elementB.appendChild(uiView);
+      await waitForUpdate(uiView);
+
+      expect(uiView.uiRouter).toBe(routerB);
+      expect(registeredCount(routerA)).toBe(0);
+      expect(registeredCount(routerB)).toBe(1);
+
+      // Views below ask this one for the router, so they must be told the same.
+      const nested = document.createElement('div');
+      uiView.appendChild(nested);
+      expect(UIRouterLitElement.seekRouter(nested)).toBe(routerB);
+    });
+  });
+
+  describe('parent-view seek across a shadow boundary', () => {
+    /** A `ui-view-context` event as a listener outside the source's shadow root sees it: `target` retargeted to the host. */
+    function retargeted(host: UiView, source: Node): UiViewContextEvent {
+      const event = new CustomEvent(UIRouterLitElement.uiViewContextEventName, {
+        bubbles: true,
+        composed: true,
+        detail: { parentView: null },
+      }) as UiViewContextEvent;
+      Object.defineProperty(event, 'target', { value: host });
+      Object.defineProperty(event, 'composedPath', {
+        value: () => [source, host],
+      });
+      return event;
+    }
+
+    it('should answer for a view inside its own shadow root', async () => {
+      const { uiView } = await setupRouter(homeStates);
+      const inner = document.createElement('ui-view');
+
+      const event = retargeted(uiView, inner);
+      uiView['onUiViewContextEvent'](event);
+
+      expect(event.detail.parentView).toBe(uiView);
+    });
+
+    it('should still decline the seek it dispatched itself', async () => {
+      const { uiView } = await setupRouter(homeStates);
+
+      const event = retargeted(uiView, uiView);
+      uiView['onUiViewContextEvent'](event);
+
+      expect(event.detail.parentView).toBeNull();
+    });
+
+    /** A `context-request` for {@link parentUiViewContext} as a listener outside the source's shadow root sees it: `target` retargeted to the host. */
+    function retargetedRequest(
+      host: UiView,
+      source: Node,
+      callback: (value: ParentUiView | undefined) => void,
+    ): Event {
+      const event = new ContextRequestEvent(parentUiViewContext, callback);
+      Object.defineProperty(event, 'target', { value: host });
+      Object.defineProperty(event, 'composedPath', {
+        value: () => [source, host],
+      });
+      return event;
+    }
+
+    it('should answer a request from a view inside its own shadow root', async () => {
+      const { uiView } = await setupRouter(homeStates);
+      const inner = document.createElement('ui-view');
+      const callback = vi.fn();
+
+      const event = retargetedRequest(uiView, inner, callback);
+      uiView['onParentViewContextRequest'](event);
+
+      expect(callback).toHaveBeenCalledWith(uiView, undefined);
+    });
+
+    it('should still decline the request it dispatched itself', async () => {
+      const { uiView } = await setupRouter(homeStates);
+      const callback = vi.fn();
+
+      const event = retargetedRequest(uiView, uiView, callback);
+      uiView['onParentViewContextRequest'](event);
+
+      expect(callback).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('capturing hold content', () => {
+    const holdStates: LitStateDeclaration[] = [
+      ...homeStates,
+      { name: 'blank', url: '/blank' },
+    ];
+
+    it('should not capture a rendered view’s own nodes from a clone', async () => {
+      const { uiRouter, uiView } = await setupRouter(holdStates);
+      await routerGo(router, 'home');
+      await waitForUpdate(uiView);
+      expect(uiView.querySelector('.home-content')).not.toBeNull();
+
+      // A clone carries lit's nodes and part markers with `hasUpdated` false.
+      const clone = uiView.cloneNode(true) as UiView;
+      uiRouter.appendChild(clone);
+      await waitForUpdate(clone);
+
+      expect(clone['fallback']).toBeUndefined();
+
+      await routerGo(router, 'blank');
+      await waitForUpdate(clone);
+
+      // Nothing was captured, so the hold render is the bare slot template
+      // rather than a replay of the routed markup the clone carried.
+      expect(clone.render()).toMatchObject({ strings: ['<slot></slot>'] });
+    });
+
+    it('should capture at most once across a re-attach before its first update', async () => {
+      router = createTestRouter(holdStates);
+      const uiRouterEl = document.createElement('ui-router');
+      uiRouterEl.uiRouter = router;
+      container.appendChild(uiRouterEl);
+
+      const uiView = document.createElement('ui-view');
+      uiView.innerHTML = '<p class="hold">hold</p>';
+      uiRouterEl.appendChild(uiView);
+      // Detached and re-attached in the same task, with content arriving in between.
+      uiView.remove();
+      uiView.innerHTML = '<p class="late">late</p>';
+      uiRouterEl.appendChild(uiView);
+      await waitForUpdate(uiView);
+
+      // One capture: the fallback set is the first attach's node, taken once,
+      // and `<p class="late">` arrived too late to join it.
+      const fallbackNodes = uiView['fallbackNodes'] as Element[];
+      expect(fallbackNodes.map((node) => node.className)).toEqual(['hold']);
+      expect(uiView.querySelectorAll('p.hold')).toHaveLength(1);
+    });
+
+    it('should capture only what stands ahead of a render it connects with', async () => {
+      router = createTestRouter(holdStates);
+      const uiRouterEl = document.createElement('ui-router');
+      uiRouterEl.uiRouter = router;
+      container.appendChild(uiRouterEl);
+
+      const uiView = document.createElement('ui-view');
+      uiView.innerHTML = `<p class="hold">hold</p>${heldMarkup}`;
+      uiRouterEl.appendChild(uiView);
+      await waitForUpdate(uiView);
+
+      // Never deferred, so the capture is the connect's: the render's nodes and
+      // markers behind the authored <p> are no part of the fallback set.
+      const fallbackNodes = uiView['fallbackNodes'] as Element[];
+      expect(fallbackNodes).toHaveLength(1);
+      expect(fallbackNodes[0]).toBe(uiView.querySelector('p.hold'));
+      expect(uiView.querySelector('p.held')).not.toBeNull();
+    });
+  });
+
+  // The fallback set is moved, never copied, so the nodes on screen are the
+  // authored ones and any binding inside them stays live.
+  describe('fallback content identity', () => {
+    const fallbackStates: LitStateDeclaration[] = [
+      ...homeStates,
+      { name: 'blank', url: '/blank' },
+    ];
+
+    /** Mounts a host whose shadow template authors the fallback, so the nodes are lit's own. */
+    async function mountFallbackHost() {
+      router = createTestRouter(fallbackStates);
+      const host = document.createElement('test-fallback-host');
+      await mountElementInRouter(host, router, container);
+      router.start();
+      await tick();
+      const uiView = host.shadowRoot!.querySelector('ui-view')!;
+      await waitForUpdate(uiView);
+      return { host, uiView };
+    }
+
+    /** Mounts static fallback markup, present on the element before it connects. */
+    async function mountAuthoredFallback() {
+      const { uiView } = await setupRouter(fallbackStates, {
+        configure: (el) => {
+          el.innerHTML = '<p class="hold">hold</p>';
+        },
+      });
+      await waitForUpdate(uiView);
+      return uiView;
+    }
+
+    async function cycle(uiView: UiView) {
+      await routerGo(router, 'home');
+      await waitForUpdate(uiView);
+      await routerGo(router, 'blank');
+      await waitForUpdate(uiView);
+    }
+
+    it('should keep the same authored <slot> across component transitions', async () => {
+      const { uiView } = await mountFallbackHost();
+      const slot = uiView.querySelector('slot');
+      expect(slot).not.toBeNull();
+
+      await cycle(uiView);
+      expect(uiView.querySelector('slot')).toBe(slot);
+
+      await cycle(uiView);
+      expect(uiView.querySelector('slot')).toBe(slot);
+    });
+
+    it('should keep a binding inside the fallback live', async () => {
+      const { host, uiView } = await mountFallbackHost();
+      expect(uiView.querySelector('p.fallback')!.textContent).toBe('first');
+
+      host.label = 'second';
+      await waitForUpdate(host);
+      expect(uiView.querySelector('p.fallback')!.textContent).toBe('second');
+
+      await cycle(uiView);
+
+      host.label = 'third';
+      await waitForUpdate(host);
+      expect(uiView.querySelector('p.fallback')!.textContent).toBe('third');
+    });
+
+    it('should show the same static nodes again after a component comes and goes', async () => {
+      const uiView = await mountAuthoredFallback();
+      const hold = uiView.querySelector('p.hold');
+      expect(hold).not.toBeNull();
+
+      await routerGo(router, 'home');
+      await waitForUpdate(uiView);
+      expect(uiView.querySelector('p.hold')).toBeNull();
+
+      await routerGo(router, 'blank');
+      await waitForUpdate(uiView);
+      expect(uiView.querySelector('p.hold')).toBe(hold);
+    });
+
+    it('should stand ahead of lit’s marker without doubling', async () => {
+      const uiView = await mountAuthoredFallback();
+      const markerAt = () =>
+        [...uiView.childNodes].findIndex((node) => node.nodeType === 8);
+      const holdAt = () =>
+        [...uiView.childNodes].indexOf(uiView.querySelector('p.hold')!);
+
+      expect(markerAt()).toBeGreaterThan(-1);
+      expect(holdAt()).toBeLessThan(markerAt());
+
+      await cycle(uiView);
+      await cycle(uiView);
+
+      expect(uiView.querySelectorAll('p.hold')).toHaveLength(1);
+      expect(holdAt()).toBeLessThan(markerAt());
+    });
+  });
+
+  // The two protected hooks a subclass renders its own content through.
+  describe('capturing content in place', () => {
+    /** Mounts the subclass with `markup` already in it, the way a filled element arrives. */
+    async function mountInPlace(markup: string): Promise<TestInPlaceView> {
+      const uiRouterEl = document.createElement('ui-router');
+      uiRouterEl.uiRouter = router;
+      container.appendChild(uiRouterEl);
+      uiRouterEl.innerHTML = `<test-in-place-view>${markup}</test-in-place-view>`;
+      const view = uiRouterEl.querySelector('test-in-place-view')!;
+      await waitForUpdate(view);
+      return view;
+    }
+
+    beforeEach(() => {
+      router = createTestRouter(homeStates);
+    });
+
+    it('should take what stands ahead of a render, and leave it standing', async () => {
+      const view = await mountInPlace(`<p class="hold">hold</p>${heldMarkup}`);
+
+      const fallbackNodes = view['fallbackNodes'] as Element[];
+      expect(fallbackNodes.map((node) => node.className)).toEqual(['hold']);
+      // Not parked: the nodes were already in the document when they were taken.
+      expect(view['fallbackParked']).toBe(false);
+      expect(view.querySelector('p.hold')).toBe(fallbackNodes[0]);
+    });
+
+    it('should take nothing from an element holding a render from its first child', async () => {
+      const view = await mountInPlace(heldMarkup);
+
+      expect(view['fallback']).toBeUndefined();
+      expect(view['fallbackNodes']).toHaveLength(0);
+    });
+
+    it('should keep the set it took when content arrives in front of it', async () => {
+      const view = await mountInPlace('<p class="hold">hold</p>');
+      const hold = view.querySelector('p.hold')!;
+
+      view.insertAdjacentHTML('afterbegin', '<p class="late">late</p>');
+      view.requestUpdate();
+      await waitForUpdate(view);
+
+      const fallbackNodes = view['fallbackNodes'] as Element[];
+      expect(fallbackNodes).toEqual([hold]);
+    });
+  });
+
+  describe('context-request for the router', () => {
+    it('should answer a descendant of a view fed by .uiRouter alone', async () => {
+      router = createTestRouter(homeStates);
+      const uiView = document.createElement('ui-view');
+      uiView.uiRouter = router;
+      container.appendChild(uiView);
+      await waitForUpdate(uiView);
+
+      const child = document.createElement('div');
+      uiView.appendChild(child);
+
+      expect(requestContext(child, routerContext)).toBe(router);
     });
   });
 });

@@ -1,9 +1,14 @@
 import { html, LitElement, css, TemplateResult } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import {
+  bootedLocationPlugin,
+  canUseNavigationAPI,
+  describeLocationPlugin,
   featureFlags,
   FeatureFlagDefinitions,
-  canUseNavigationAPI,
+  LocationPluginFeatureSymbol,
+  LocationPluginSource,
+  ResolvedLocationPlugin,
 } from '../util/featureDetection.js';
 
 /** Flag keys whose declared value type is assignable to `T`. */
@@ -16,6 +21,8 @@ type FlagKeysOfType<T> = {
 interface FlagConfigBase {
   label: string;
   description: string;
+  /** Re-read on every render, so it tracks a pending selection. */
+  status?: () => TemplateResult;
 }
 
 interface BooleanFlagConfig extends FlagConfigBase {
@@ -36,11 +43,54 @@ const navigationApiLabel = canUseNavigationAPI()
   ? 'Navigation API (Available)'
   : 'Navigation API (Not supported)';
 
+const PLUGIN_LABELS: Record<LocationPluginFeatureSymbol, string> = {
+  hash: 'Hash',
+  pushState: 'Push State',
+  navigation: 'Navigation API',
+};
+
+const SOURCE_LABELS: Record<LocationPluginSource, string> = {
+  url: 'from the URL param',
+  session: 'from this session',
+  env: 'from VITE_SAMPLE_APP_LOCATION_PLUGIN',
+  auto: 'auto-detected',
+};
+
+function describeResolution(resolved: ResolvedLocationPlugin): string {
+  const why = resolved.downgraded
+    ? `${SOURCE_LABELS[resolved.source]}, downgraded: no Navigation API`
+    : SOURCE_LABELS[resolved.source];
+  return `${PLUGIN_LABELS[resolved.plugin]} (${why})`;
+}
+
+/** The select shows the preference; this shows what the router resolved it to. */
+function renderLocationPluginStatus(): TemplateResult {
+  const pending = describeLocationPlugin();
+  const booted = bootedLocationPlugin();
+  if (!booted) {
+    return html`<div class="flag-resolved">
+      Resolves to: ${describeResolution(pending)}
+    </div>`;
+  }
+
+  return html`
+    <div class="flag-resolved">In use: ${describeResolution(booted)}</div>
+    ${
+      pending.plugin === booted.plugin
+        ? ''
+        : html`<div class="flag-pending">
+            Reload to use ${describeResolution(pending)}
+          </div>`
+    }
+  `;
+}
+
 const FLAG_CONFIGS: FlagConfig[] = [
   {
     key: 'location-plugin',
     label: 'Location Plugin',
     description: 'Router location strategy (requires page reload)',
+    status: renderLocationPluginStatus,
     type: 'select',
     options: [
       { value: undefined, label: 'Auto-detect' },
@@ -115,6 +165,16 @@ export class FeatureFlagsPanel extends LitElement {
       display: flex;
       align-items: center;
       gap: 0.5rem;
+    }
+
+    .flag-resolved {
+      font-size: 0.85em;
+      color: #333;
+    }
+
+    .flag-pending {
+      font-size: 0.85em;
+      color: #f0ad4e;
     }
 
     .url-override {
@@ -214,6 +274,7 @@ export class FeatureFlagsPanel extends LitElement {
                 }
               </div>
               <div class="flag-description">${config.description}</div>
+              ${config.status?.() ?? ''}
             </div>
             <div class="flag-control">
               ${this._renderFlagControl(config)}

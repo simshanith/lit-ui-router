@@ -41,6 +41,55 @@ from the nearest `<ui-router>` (or `<ui-view>`) ancestor via the
 them all on `hostDisconnected` — nothing leaks when elements come and go
 from the DOM.
 
+## Router discovery
+
+Controllers find the router. Anything else — a store, an element
+that is not a Lit host, a third-party component — asks the same provider
+directly, and `<ui-router>` answers both ways in from one listener:
+
+- The house event, `ui-router-context`, dispatched by
+  [`UIRouterLitElement.seekRouter(element)`](/api/reference/components/UIRouterLitElement).
+  Every controller and directive in this package calls it.
+- The community
+  [`context-request` protocol](https://github.com/webcomponents-cg/community-protocols/blob/main/proposals/context.md),
+  from the `lit-ui-router/context` entry.
+  [`requestRouter(target)`](/api/reference/core/requestRouter) returns the
+  router a provider answered with synchronously, or `undefined`, and takes any
+  `EventTarget`. [`routerContext`](/api/reference/core/routerContext) is the
+  key, in the protocol's branded shape, so `@lit/context` consumes it with
+  nothing in between:
+
+```ts
+import { consume } from '@lit/context';
+import { routerContext } from 'lit-ui-router/context';
+import type { UIRouterLit } from 'lit-ui-router';
+
+class UserMenu extends LitElement {
+  @consume({ context: routerContext })
+  router!: UIRouterLit;
+}
+```
+
+It reads both ways: a `ContextProvider` of `routerContext` on any ancestor
+satisfies `seekRouter` too. `subscribe` gets one call and a no-op unsubscribe —
+`<ui-router>` takes its router on connect and does not swap it.
+
+`<ui-view>` answers the same way for its own key,
+[`parentUiViewContext`](/api/reference/core/parentUiViewContext): a
+`@consume({ context: parentUiViewContext })` or
+`requestContext(element, parentUiViewContext)` gets the nearest enclosing
+`<ui-view>` as a [`ParentUiView`](/api/reference/types/ParentUiView) — the
+element itself, with the view name it fills and the router it renders for. A
+nested view gets the view above it rather than itself; an element that needs
+more than that surface narrows with `instanceof UiView`.
+
+When there is no tree at all to bubble through — a server render, a test — the
+same entry publishes a router directly: `withRouterSync(router, run)` scopes it
+to one synchronous call, and anything that call reaches asks `getScopedRouter()`
+for it. `provideRouter(root, router)` is the event-target side of the same
+hand-off, answering `context-request` on a plain `EventTarget`; see
+[Server-Side Routing](./server-route-matching#the-router-on-the-server).
+
 ## Reading router state
 
 The controller exposes the essentials directly:
@@ -89,6 +138,59 @@ current state before any new transition fires. Components that enter the DOM
 _after_ navigation completed — or that are detached and re-attached, as with
 [sticky states](https://github.com/ui-router/sticky-states) — render fresh
 values immediately instead of waiting for the next transition.
+
+## Active-link status
+
+A nav link needs more than "the router moved": it needs to know whether _its_
+state is the current one.
+[`SrefStatusController`](/api/reference/controllers/SrefStatusController)
+exposes exactly that — `active`, `exact`, `entering`, `exiting` — and leaves
+the rendering to you:
+
+```ts
+import { html, LitElement } from 'lit';
+import { classMap } from 'lit/directives/class-map.js';
+import { srefHref, SrefStatusController } from 'lit-ui-router';
+
+class NavLink extends LitElement {
+  private users = new SrefStatusController(this, { state: 'users' });
+
+  render() {
+    return html`<a
+      href=${srefHref('users')}
+      class=${classMap({ 'nav-link': true, active: this.users.active, disabled: this.locked })}
+      aria-current=${this.users.ariaCurrent()}
+      >Users</a
+    >`;
+  }
+}
+```
+
+This is the composition path [`srefActiveClass`](/api/reference/directives/srefActiveClass)
+cannot offer: a `class` attribute holds one toggling directive, so the
+directive and `classMap` cannot share it. Reach for the directive when the
+link's classes are all the component needs; reach for the controller when the
+status is one input among several.
+
+The controller takes the same target as the directives — `state`, `params`,
+`options`, or no `state` at all to watch the `srefHref` links the host
+renders — plus:
+
+- `retarget({ state, params, options })` — point it at another state, for a
+  host that takes the state as a property
+- `ariaCurrent(value?)` — the `aria-current` token for the current status, or
+  `nothing`; `value` accepts a token or `{ exact, active }`
+- `router` — an explicit router instance, skipping context discovery. Passing
+  it also computes the status in the constructor, so it is there for the very
+  first render and needs no DOM at all.
+
+Only a change in one of the four flags requests a host update, so transitions
+that leave the link alone cost nothing.
+
+The directives themselves are compared with `uiSref`/`uiSrefActive` in
+[Design System Links](./design-system-links#element-part-or-attribute-part),
+and their server-side story is in
+[Server-Side Routing](./server-route-matching#links-a-server-renderer-can-read).
 
 ## See it live
 

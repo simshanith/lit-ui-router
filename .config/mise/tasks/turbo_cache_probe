@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+#MISE description="HEAD the remote cache for the artifact hashes on stdin; succeed as soon as one is present"
+# Why the sample is small, and who calls it: docs/REMOTE_CACHE.md.
+set -eu
+
+: "${TURBO_API:?turbo_cache_probe: TURBO_API is unset}"
+: "${TURBO_TOKEN:?turbo_cache_probe: TURBO_TOKEN is unset}"
+: "${TURBO_TEAM:?turbo_cache_probe: TURBO_TEAM is unset}"
+
+api="${TURBO_API%/}"
+checked=0
+present=0
+
+while IFS= read -r hash; do
+  [ -n "$hash" ] || continue
+  checked=$((checked + 1))
+  # -K -: the worker domain and the bearer arrive on stdin, so neither ever
+  # lands in this process's argv, where `ps` would read them.
+  status="$(
+    printf 'url = "%s/v8/artifacts/%s?slug=%s"\nheader = "Authorization: Bearer %s"\n' \
+      "$api" "$hash" "$TURBO_TEAM" "$TURBO_TOKEN" |
+      curl -s -I -o /dev/null -w '%{http_code}' -K -
+  )" || status=000
+  case "$status" in
+  200)
+    present=1
+    break
+    ;;
+  404) ;;
+  # Name the status only: the message must not carry the URL.
+  *)
+    echo "turbo_cache_probe: remote cache answered $status" >&2
+    exit 2
+    ;;
+  esac
+done
+
+echo "turbo_cache_probe: $present/$checked present" >&2
+[ "$present" -eq 1 ] || exit 1

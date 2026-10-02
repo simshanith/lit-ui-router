@@ -52,16 +52,17 @@ export function toCheckRun(
       name,
       conclusion: 'success',
       title: 'never published — nothing to diff',
-      summary: `${summary.name} has no published \`latest\` to compare against.`,
+      summary: `${summary.name} has no published dist-tag to compare against.`,
     };
   }
   const spec = `${summary.name}@${summary.version}`;
+  const target = `${summary.tag} ${summary.version}`;
   if (summary.shipAffecting > 0) {
     const releaseUrl = releaseWorkflowUrl(repo);
     return {
       name,
       conclusion: 'action_required',
-      title: `unreleased changes vs ${summary.version} (${summary.shipAffecting} shipped files differ)`,
+      title: `unreleased changes vs ${target} (${summary.shipAffecting} shipped files differ)`,
       summary: [
         // workflow_dispatch inputs can't be URL-prefilled; the user picks the package there.
         `To resolve: [release ${summary.name} via the bump-version workflow](${releaseUrl}) — select the package in its Run workflow menu.`,
@@ -77,7 +78,7 @@ export function toCheckRun(
   return {
     name,
     conclusion: 'success',
-    title: `up to date with ${summary.version}`,
+    title: `up to date with ${target}`,
     summary: [
       `Packed bytes match ${spec} — no ship-affecting drift.`,
       ...inertDetails(summary),

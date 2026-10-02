@@ -36,8 +36,9 @@ flag "--ref <ref>" help="Tag ref refs/tags/<package>@<version> (tag-push fallbac
 run = 'PACKAGE_INPUT="${usage_package_input:-}" GITHUB_REF="${usage_ref:-}" node src/steps/release-package-info.ts'
 
 [tasks.pack]
-# outputs: tarball. Re-packs from source (restore-free staging copy), NOT the
-# @tools/release#pack:all turbo cache — that artifact stays off the publish path.
+# outputs: tarball. Re-packs from source (in place, beforePacking hook strips
+# the manifest), NOT the @tools/release#pack:all turbo cache — that artifact
+# stays off the publish path.
 description = "Pack the publish tarball with a dev-stripped manifest"
 usage = '''
 flag "--package-name <package_name>" help="Package to pack" required=#true env="PACKAGE_NAME"
@@ -93,10 +94,13 @@ run = 'PACKAGE_NAME="${usage_package_name?}" TARBALL="${usage_tarball?}" DRY_RUN
 [tasks.check_pack]
 # Ad-hoc alias for @tools/release#check:pack; CI runs it via ci_main.
 # publish's check_tarball is the last-line gate.
+# Cheap, unlike the //:setup edge above: a few milliseconds of env checking.
+depends = ["//:turbo_force_guard"]
 description = "Run the pack-surface manifest check via turbo"
 run = "turbo run check:pack"
 
 [tasks.published_diff]
+depends = ["//:turbo_force_guard"]
 description = "Resolve published versions, then run the published-diff check (two turbo invocations: turbo hashes inputs at run startup, so resolve must write before the check's hash computes)"
 usage = '''
 flag "--packages <names>" env="PUBLISHED_DIFF_PACKAGES" help="Comma-separated published package names to scope the check; empty = all"
@@ -146,7 +150,7 @@ description = "Compute the bumped version, branch, commit, push, and open the re
 usage = '''
 flag "--package <package>" help="Package to bump" required=#true env="PACKAGE"
 flag "--increment <increment>" help="Version increment (other/none pair with --other-increment)" required=#true env="INCREMENT" {
-  choices "major" "minor" "patch" "other" "none"
+  choices "major" "minor" "patch" "prerelease" "other" "none"
 }
 flag "--other-increment <other_increment>" help="Custom version for --increment other (e.g. a prerelease)" env="OTHER_INCREMENT"
 flag "--pr-base <pr_base>" help="GitHub PR base branch" required=#true env="PR_BASE"
@@ -157,8 +161,8 @@ run = 'PACKAGE="${usage_package?}" INCREMENT="${usage_increment?}" OTHER_INCREME
 
 [tasks.check_release_closure]
 # turbo runs this as @tools/release#check:release-closure; a mise task so
-# RELEASE_CLOSURE needs no shell activation. Reads manifests only, so it is
-# honest before any release lane installs.
+# RELEASE_CLOSURE needs no shell activation. Reads manifests and a turbo dry
+# run, so it is honest before any release lane installs.
 description = "Assert RELEASE_CLOSURE covers every member the release lanes run in"
 run = "node src/checks/check-release-closure.ts"
 

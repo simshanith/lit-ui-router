@@ -1,0 +1,49 @@
+# pnpm's own advisory check over the lockfile, outside turbo so a cache hit can
+# never replay a clean result after a new advisory lands.
+name: Dependency audit
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - pnpm-lock.yaml
+      - pnpm-workspace.yaml
+      - .github/workflows/dependency-audit.yml
+  # Weekly re-check for advisories published against an unchanged lockfile.
+  # Off-peak and off the hour, beside release-signals' sweep.
+  schedule:
+    - cron: '19 7 * * 0'
+  workflow_dispatch:
+
+permissions: {}
+
+# Standard husky CI setup: skip the prepare-script git-hook install on CI installs.
+env:
+  HUSKY: 0
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: 'Checkout code'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Setup mise
+        uses: jdx/mise-action@9149ea85001c7435d5a66bb127d6a1b6227cb0a5 # v5.0.0
+        with:
+          version: 2026.9.12
+          # pnpm only: audit reads the lockfile, no install
+          install_args: aqua:pnpm/pnpm
+          cache: false
+      - name: Audit
+        # the audit: section in pnpm-workspace.yaml holds accepted advisories
+        run: pnpm audit --audit-level high

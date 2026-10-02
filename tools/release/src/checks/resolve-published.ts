@@ -1,11 +1,11 @@
 #!/usr/bin/env node
-// Resolve each publishable package's `latest` dist-tag into
-// published-versions.json — the registry-reading half of check:published-diff,
-// split out so the diff itself can be a cached turbo task. npm enforces
-// per-version tarball immutability (and we practice it as publishers: a
-// published version is never mutated), so the only registry state that can
-// move is the dist-tag pointer captured here; with this file in the check
-// task's inputs, its cache key is sound.
+// Resolve each publishable package's dist-tags into published-versions.json —
+// the registry-reading half of check:published-diff, split out so the diff
+// itself can be a cached turbo task. npm enforces per-version tarball
+// immutability (and we practice it as publishers: a published version is never
+// mutated), so the only registry state that can move is the dist-tag pointers
+// captured here; with this file in the check task's inputs, its cache key is
+// sound.
 
 import pacote from 'pacote';
 
@@ -14,15 +14,15 @@ import { writePublishedVersions } from './published-versions.ts';
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
 import { isPublishable, loadWorkspace } from '@tools/shared/workspace.ts';
 
-/** The `latest` dist-tag for `name`, or null when never published. */
-async function publishedLatest(name: string): Promise<string | null> {
+/** `name`'s dist-tags, or `{}` when never published. */
+async function publishedTags(name: string): Promise<Record<string, string>> {
   try {
     const packument = await pacote.packument(name);
-    return packument['dist-tags'].latest ?? null;
+    return { ...packument['dist-tags'] };
   } catch (error) {
     // An unpublished package is a real answer here; anything else (network,
     // 5xx, auth) must throw rather than silently report "unpublished".
-    if ((error as { code?: string }).code === 'E404') return null;
+    if ((error as { code?: string }).code === 'E404') return {};
     throw error;
   }
 }
@@ -31,15 +31,20 @@ async function main() {
   const { members } = await loadWorkspace(workspaceRoot);
   const publishable = members.filter(isPublishable);
   const versions: PublishedVersions = {};
+  const summary: string[] = [];
   for (const { name } of publishable) {
-    versions[name] = await publishedLatest(name);
+    const tags = await publishedTags(name);
+    versions[name] = tags;
+    const specs = Object.entries(tags)
+      .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+      .map(([tag, version]) => `${tag}@${version}`);
+    summary.push(
+      `${name}: ${specs.length === 0 ? 'unpublished' : specs.join(' ')}`,
+    );
   }
   await writePublishedVersions(versions);
-  const summary = publishable
-    .map(({ name }) => `${name}@${versions[name] ?? 'unpublished'}`)
-    .join(', ');
   console.log(
-    `resolved latest dist-tags → published-versions.json: ${summary}`,
+    `resolved dist-tags → published-versions.json: ${summary.join(', ')}`,
   );
 }
 

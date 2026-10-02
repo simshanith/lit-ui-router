@@ -5,6 +5,7 @@
     "src/url-matcher.ts",
     "src/redirects.ts",
     "src/simulate.ts",
+    "src/location.ts",
     "src/connect.ts",
     "src/fetch.ts",
     "src/hono.ts",
@@ -30,6 +31,10 @@
   "enumMembersFormat": "table",
   "typeDeclarationFormat": "table",
   "sort": ["alphabetical", "source-order"],
+  "treatWarningsAsErrors": true,
+  "validation": {
+    "notDocumented": true
+  },
   "externalSymbolLinkMappings": {
     "ui-router-server": {
       "Request": "https://developer.mozilla.org/en-US/docs/Web/API/Request",

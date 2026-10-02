@@ -13,6 +13,8 @@ import { basename, dirname, join, relative } from 'node:path';
 import { minifySync } from 'oxc-minify';
 import { transformSync } from 'oxc-transform';
 
+import { requireManifest } from '@tools/bootstrap/manifest.ts';
+
 import {
   DEV_DEFINE_KEY,
   DEV_OUT,
@@ -33,6 +35,11 @@ const passes = dual
       { out: DEV_OUT, dev: 'true' },
     ]
   : [{ out: OUT, dev: undefined }];
+
+// a decorator lowers to an import of this package, so the emitting one must declare it
+const RUNTIME = '@oxc-project/runtime';
+const { dependencies = {} } = requireManifest(process.cwd());
+const undeclaredRuntime = new Set<string>();
 
 for (const file of publishableSources()) {
   const source = readFileSync(file, 'utf8');
@@ -59,6 +66,9 @@ for (const file of publishableSources()) {
       sourcemap: true,
     });
     if (printed.errors.length) fail(file, printed.errors);
+    if (!(RUNTIME in dependencies) && printed.code.includes(`"${RUNTIME}/`)) {
+      undeclaredRuntime.add(file);
+    }
     const out = join(outDir, relative(SRC, file)).replace(/\.ts$/, '.js');
     mkdirSync(dirname(out), { recursive: true });
     writeFileSync(
@@ -70,4 +80,11 @@ for (const file of publishableSources()) {
       shippedMap(file, out, printed.map!, transformed.map),
     );
   }
+}
+
+if (undeclaredRuntime.size > 0) {
+  console.error(
+    `✗ ${[...undeclaredRuntime].join(', ')} emit imports of ${RUNTIME}, which package.json does not list in dependencies.`,
+  );
+  process.exit(1);
 }

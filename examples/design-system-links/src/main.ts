@@ -6,6 +6,9 @@ import {
   UIRouterLit,
   uiSref,
   uiSrefActive,
+  srefHref,
+  srefActiveClass,
+  srefAriaCurrent,
   LitStateDeclaration,
 } from 'lit-ui-router';
 import { ColorSchemeController } from './color-scheme.js';
@@ -66,12 +69,13 @@ export class AppRoot extends LitElement {
   `;
 
   private readonly rows: Record<
-    'assignTrue' | 'assignAuto' | 'anchorAuto',
+    'assignTrue' | 'assignAuto' | 'anchorAuto' | 'srefHref',
     HrefRow
   > = {
     assignTrue: createRef(),
     assignAuto: createRef(),
     anchorAuto: createRef(),
+    srefHref: createRef(),
   };
 
   /** bumped whenever an observed href changes, to re-render the readouts */
@@ -109,15 +113,23 @@ export class AppRoot extends LitElement {
   }
 
   render() {
-    const { assignTrue, assignAuto, anchorAuto } = this.rows;
+    const {
+      assignTrue,
+      assignAuto,
+      anchorAuto,
+      srefHref: srefHrefRow,
+    } = this.rows;
     return html`
       <h3>uiSref and a design-system link element</h3>
       <p>
         <code>&lt;sp-link&gt;</code> declares its own <code>href</code>, but its
         tag name is not <code>a</code> — so
         <code>assignHref: 'auto'</code> refuses it and
-        <code>assignHref: true</code> is what makes uiSref drive it. Every link
-        below navigates; only the href differs.
+        <code>assignHref: true</code> is what makes uiSref drive it. The last
+        row binds <code>srefHref</code> instead — the attribute-part form, where
+        the binding <em>is</em> the href, so there is no
+        <code>assignHref</code> to pick. Every link below navigates; only the
+        href differs.
       </p>
 
       <div class="row">
@@ -153,6 +165,21 @@ export class AppRoot extends LitElement {
         ${this.readout(anchorAuto)}
       </div>
 
+      <div class="row">
+        <sp-link
+          ${ref(srefHrefRow)}
+          href=${srefHref('components')}
+          class=${srefActiveClass({
+            state: 'components',
+            activeClasses: ['active'],
+          })}
+          aria-current=${srefAriaCurrent({ state: 'components' })}
+          >Components (sp-link)</sp-link
+        >
+        <span class="opt">${'href=${srefHref()}'}</span>
+        ${this.readout(srefHrefRow)}
+      </div>
+
       <ui-view></ui-view>
     `;
   }
@@ -164,8 +191,9 @@ const componentsState: LitStateDeclaration = {
   component: () =>
     html`<h4>Components</h4>
       <p>
-        The first link carried a real href here, so hovering it showed the URL
-        and a middle-click would have opened it in a new tab.
+        The first, third and last links carried a real href here, so hovering
+        any of them showed the URL and a middle-click would have opened it in a
+        new tab.
       </p>`,
 };
 

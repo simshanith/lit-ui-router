@@ -270,8 +270,9 @@ min+gzip by its own esbuild probe:
 | `ui-router-server/redirects` | no                                    | ~8.7 KiB min / ~3.6 KiB gzip        | given routes and a redirect table, where does this pathname go                         |
 | `ui-router-server` (root)    | only when a `simulate` mount resolves | ~11.5 KiB min / ~4.7 KiB gzip       | mounts in, verdict out                                                                 |
 | `ui-router-server/simulate`  | yes (optional peer)                   | +~92 KiB min / ~27.4 KiB gzip, lazy | what would the real router do                                                          |
+| `ui-router-server/location`  | yes (optional peer)                   | ~0.5 KiB min / ~0.3 KiB gzip        | a path-shaped in-memory location for a server-side router                              |
 
-<svg viewBox="0 0 720 248" width="100%" style="max-width: 720px" role="img" aria-label="Package tiers by size: matcher 2.9 KiB, redirects 3.6 KiB, root 4.7 KiB - all dependency-free - and simulate, which adds a lazy 27.4 KiB chunk carrying @uirouter/core" xmlns="http://www.w3.org/2000/svg">
+<svg viewBox="0 0 720 300" width="100%" style="max-width: 720px" role="img" aria-label="Package tiers by size: matcher 2.9 KiB, redirects 3.6 KiB, root 4.7 KiB - all dependency-free - simulate, which adds a lazy 27.4 KiB chunk carrying @uirouter/core, and location, a 0.3 KiB eager import of the same core" xmlns="http://www.w3.org/2000/svg">
   <title>The package tiers, to scale</title>
   <g font-family="var(--vp-font-family-base, ui-sans-serif, system-ui, sans-serif)">
     <!-- dependency-free group -->
@@ -287,16 +288,20 @@ min+gzip by its own esbuild probe:
     <text x="20" y="124" font-size="12" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-1, #3c3c43)">ui-router-server</text>
     <rect x="230" y="114" width="68" height="16" rx="4" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" stroke="var(--vp-c-brand-1, #3451b2)" stroke-width="0.75" />
     <text x="306" y="127" font-size="11" fill="var(--vp-c-text-2, #67676c)"><tspan font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">4.7 KiB</tspan> &#183; mounts in, verdicts out &#8212; the default</text>
-    <!-- simulate group -->
-    <rect x="8" y="158" width="704" height="74" rx="8" fill="none" stroke="var(--vp-c-divider, #e2e2e3)" />
-    <text x="700" y="171" font-size="11" font-weight="600" fill="var(--vp-c-purple-1, #8e18aa)" text-anchor="end">needs @uirouter/core &#8212; optional peer</text>
-    <text x="20" y="196" font-size="12" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-1, #3c3c43)">ui-router-server/simulate</text>
-    <rect x="230" y="186" width="68" height="16" rx="4" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" stroke="var(--vp-c-brand-1, #3451b2)" stroke-width="0.75" />
-    <rect x="300" y="186" width="397" height="16" rx="4" fill="var(--vp-c-purple-soft, rgba(159,122,234,0.14))" stroke="var(--vp-c-purple-1, #8e18aa)" stroke-width="0.75" stroke-dasharray="5 3" />
-    <text x="498" y="199" font-size="11" font-weight="600" fill="var(--vp-c-purple-1, #8e18aa)" text-anchor="middle">+27.4 KiB &#183; lazy chunk &#8212; core, whole</text>
-    <text x="230" y="222" font-size="10" fill="var(--vp-c-text-3, #929295)">loads only when a simulate mount resolves &#8212; a matcher-only configuration never fetches it</text>
+    <!-- needs-core group: simulate (lazy) and location (eager) -->
+    <rect x="8" y="158" width="704" height="118" rx="8" fill="none" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="700" y="174" font-size="11" font-weight="600" fill="var(--vp-c-purple-1, #8e18aa)" text-anchor="end">needs @uirouter/core &#8212; optional peer</text>
+    <text x="700" y="187" font-size="10" fill="var(--vp-c-text-3, #929295)" text-anchor="end">a lazy chunk, or your own eager import</text>
+    <text x="20" y="206" font-size="12" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-1, #3c3c43)">ui-router-server/simulate</text>
+    <rect x="230" y="196" width="68" height="16" rx="4" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" stroke="var(--vp-c-brand-1, #3451b2)" stroke-width="0.75" />
+    <rect x="300" y="196" width="397" height="16" rx="4" fill="var(--vp-c-purple-soft, rgba(159,122,234,0.14))" stroke="var(--vp-c-purple-1, #8e18aa)" stroke-width="0.75" stroke-dasharray="5 3" />
+    <text x="498" y="209" font-size="11" font-weight="600" fill="var(--vp-c-purple-1, #8e18aa)" text-anchor="middle">+27.4 KiB &#183; lazy chunk &#8212; core, whole</text>
+    <text x="230" y="226" font-size="10" fill="var(--vp-c-text-3, #929295)">loads only when a simulate mount resolves &#8212; a matcher-only configuration never fetches it</text>
+    <text x="20" y="252" font-size="12" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-1, #3c3c43)">ui-router-server/location</text>
+    <rect x="230" y="242" width="10" height="16" rx="4" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" stroke="var(--vp-c-brand-1, #3451b2)" stroke-width="0.75" />
+    <text x="250" y="255" font-size="11" fill="var(--vp-c-text-2, #67676c)"><tspan font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">0.3 KiB</tspan> own code &#183; eager import, for a server that already runs a real router</text>
     <!-- scale note -->
-    <text x="712" y="244" font-size="10" fill="var(--vp-c-text-3, #929295)" text-anchor="end">min+gzip, measured by the package's own esbuild probe &#183; linear scale</text>
+    <text x="712" y="292" font-size="10" fill="var(--vp-c-text-3, #929295)" text-anchor="end">min+gzip, measured by the package's own esbuild probe &#183; linear scale</text>
   </g>
 </svg>
 
@@ -334,6 +339,11 @@ Picking a tier:
   produce identical verdicts (the package tests assert parity), so
   `strategy` stays a pure cost knob until routing that data cannot express —
   hooks, resolves, `redirectTo` functions — arrives with a wider config.
+- **`/location`** — you drive a real `@uirouter/core` router yourself, on the
+  server, and want its `href()`s to be paths rather than `#` fragments, so a
+  server render's links match what a
+  [pushState](./location-plugins#html5-pushstate) client writes.
+  `installServerLocation(router, { url, baseHref, strictMode })`.
 
 ## The projection: routes as data
 
@@ -906,6 +916,193 @@ the path, so the worker can serve that app's own 404 page —
 user a way back into the app they were deep-linked into, instead of the
 site-wide page. Everything the worker needs is already in the verdict.
 
+## Parameterized routes and soft 404s
+
+The projection carries url **patterns**, not the records behind them. A
+route like `{ name: 'sheet', url: '/sheet/:num' }` accepts any segment, so
+`/sheet/99` earns a `shell` verdict and a 200 whether or not sheet 99
+exists. The client boots, finds nothing, and renders its in-router
+[404 state](./unmatched-urls) under a URL the server vouched for: the
+[level-2 soft 404](#the-server-support-spectrum), reintroduced by the shape
+of the app's own url. Every `:id` route ships it by default.
+
+When the ids are known at build time, narrow the param to them. An inline
+`{name:regexp}` placeholder replaces the default segment pattern:
+
+```ts
+const ids = ['1', '2A', '12i']; // build-time data: the sheets that exist
+
+const routes: RouteDeclaration[] = [
+  { name: 'sheet', url: `/sheet/{num:(?:${ids.join('|')})}` },
+];
+```
+
+Now `/sheet/99` matches nothing and verdicts `notFound`, a real 404, while
+`/sheet/2A` stays a shell. Keep the group non-capturing: the matcher wraps
+each param's pattern in its own capture group. If ids can contain regex
+metacharacters, escape each one before joining.
+
+Matching is case-sensitive by default, so with cased ids `/sheet/2a` is now
+a 404 too. When the lowercase form should reach the canonical url, add a
+case-insensitive redirect rule per id:
+
+```ts
+const redirects: RedirectRule[] = ids.map((num) => ({
+  pattern: new RegExp(`^/sheet/${num}$`, 'i'),
+  to: { state: 'sheet', params: { num } },
+}));
+```
+
+Rules run before route matching, so `/sheet/2a` 302s to `/sheet/2A`; the
+canonical url matches its own rule too, but a redirect that lands where it
+started is a no-op, and it stays a shell.
+
+This only works for an id set the build can enumerate, and the narrowed
+pattern is as current as the build that produced it. Ids that live in a
+database or API stay `:num`: the shell verdict and the client's 404 state
+are the correct degrade for what the server can't know.
+
+## Links a server renderer can read
+
+Everything above is the verdict for one URL. The links the page ships are the
+other half, and the two directive forms differ there.
+[`uiSref`](/api/reference/directives/uiSref) and
+[`uiSrefActive`](/api/reference/directives/uiSrefActive) are element parts:
+they sit on the element and write to it from the outside, which only a live
+browser does. A server renderer runs `render()` and never `update()`, so what
+it emits is an `<a>` with no `href` — and a static analyser reading the
+template sees the same thing.
+
+[`srefHref`](/api/reference/directives/srefHref),
+[`srefAriaCurrent`](/api/reference/directives/srefAriaCurrent) and
+[`srefActiveClass`](/api/reference/directives/srefActiveClass) bind from
+inside the attribute they affect, so the `href` is a real attribute in the
+template. A whole nav:
+
+```ts
+import { html, LitElement } from 'lit';
+import { srefActiveClass, srefAriaCurrent, srefHref } from 'lit-ui-router';
+
+class AppNav extends LitElement {
+  render() {
+    return html`<nav>
+      ${['home', 'users', 'about'].map(
+        (state) =>
+          html`<a
+            href=${srefHref(state)}
+            class="nav-link ${srefActiveClass({ state, activeClasses: ['active'] })}"
+            aria-current=${srefAriaCurrent({ state })}
+            >${state}</a
+          >`,
+      )}
+    </nav>`;
+  }
+}
+```
+
+While the router sits at `users`, that link is
+`<a href="/users" class="nav-link active" aria-current="page">`; at
+`users.detail` the `active` class stays and `aria-current` is gone, because
+the token is exact-match only. The three are covered in
+[Attribute-part forms](/api/#attribute-part-forms).
+
+`srefHref`'s `render()` is a function of the router and its arguments alone —
+it returns the `href` string, or `nothing` for a state with no url — and it
+touches no DOM. It finds the router from its element in a browser and from the
+render-scoped router described in
+[The router on the server](#the-router-on-the-server) under `@lit-labs/ssr`.
+What is left in `update()` is what genuinely needs the element: the click
+handler and announcing the target to an enclosing container.
+
+**With no router in reach all three return `noChange`**, which leaves the
+attribute exactly as authored rather than clearing it: an `href` a server wrote
+by another route survives hydration untouched, and the client takes over on the
+first update that finds a router. Container mode — `srefActiveClass` with no
+`state` — is the one shape that always lands there on the server, since the
+enclosed links announce themselves through element events a server render has
+no element to fire.
+
+For the flip side — composing the active flag with `classMap` instead of
+letting a directive own the `class` attribute — see
+[`SrefStatusController`](./reactive-components#active-link-status).
+
+## The router on the server
+
+A router is easy to build on the server; handing it to the code that renders is
+the hard part. In a browser every binding finds the router by asking its own
+element — `<ui-router>` answers a `ui-router-context` event, or the
+[`context-request`](/guides/reactive-components#router-discovery)
+protocol, on the way up the tree. A server render has no tree to walk: the
+renderer calls a directive's `render()` with no element behind it, so there is
+nothing to dispatch from and nothing to listen on.
+
+`lit-ui-router/context` answers that with two tree-less providers, and
+[`ui-router-server/location`](/packages/server) supplies the location half — a
+memory plugin in html5 mode, so `stateService.href()` builds the same path the
+pushState client writes rather than the `#/…` form `memoryLocationPlugin`
+returns.
+
+```ts
+import '@lit-labs/ssr/lib/install-global-dom-shim.js';
+import { render } from '@lit-labs/ssr';
+import { collectResultSync } from '@lit-labs/ssr/lib/render-result.js';
+import { installServerLocation } from 'ui-router-server/location';
+
+const { UIRouterLit } = await import('lit-ui-router/pure');
+const { provideRouter, withRouterSync } = await import('lit-ui-router/context');
+
+// one router per request, at the url the request asked for, query included
+const { pathname, search } = new URL(request.url);
+const router = new UIRouterLit();
+installServerLocation(router, { url: pathname + search, strictMode: false });
+states.forEach((state) => router.stateRegistry.register(state));
+router.start();
+
+const uninstall = provideRouter(globalThis.litServerRoot, router);
+let markup: string;
+try {
+  markup = withRouterSync(router, () => collectResultSync(render(page())));
+} finally {
+  uninstall();
+}
+```
+
+`withRouterSync(router, run)` is a synchronous slot, not an async context: it
+sets a module-level variable, runs `run`, and restores the previous value in a
+`finally`. That is enough because `render()` from `@lit-labs/ssr` is a _sync
+generator_ — consume it inside `run` with `collectResultSync` and every
+directive's `render()` has already happened by the time `withRouterSync`
+returns, `getScopedRouter()` reading the router each time. Return a promise from
+`run` instead and you get a `TypeError` rather than a router that silently went
+missing; the `Sync` suffix names the constraint the guard enforces. An async
+variant is a separate export.
+
+`provideRouter(root, router)` is the other half: it answers the
+`context-request` protocol on any `EventTarget`, which on the server means
+`globalThis.litServerRoot`, the bottom of the renderer's event-target stack. Use
+it for elements that ask for their router by protocol — the same code path
+`<ui-router>` serves in a browser — and pair it with `withRouterSync` when the
+same render also contains attribute bindings. It returns its own uninstall
+function; call it in a `finally` once the render is done, or a throwing render
+leaves the listener behind for the next request.
+
+`serverLocationPlugin` from the same `ui-router-server/location` entry is the
+plugin `installServerLocation` installs, for a render that wires the rest by
+hand.
+
+[`lit-ui-router-ssr`](/packages/ssr) packages this hand-off: it owns the
+`@lit-labs/ssr` call, the `provideRouter`/`withRouterSync` pairing, and the
+`finally` — so a build that prerenders a whole mount table writes none of the
+above by hand.
+
+**The attribute directives read the slot.** `srefHref`, `srefActiveClass` and
+`srefAriaCurrent` have no element to seek from, so they take the router
+`withRouterSync` scoped and nothing else: a `provideRouter` on the render root
+serves elements, not attribute parts. A nav rendered inside `withRouterSync`
+ships the real `href`, the `active` and exact classes, and `aria-current` for
+the state the request settled on — the markup the client would paint first, so
+hydration has nothing to correct.
+
 ## What the server can't see
 
 **The fragment.** The server never sees it — which is exactly why a
@@ -923,7 +1120,10 @@ spurious 404.
 **Trailing slashes are strict on both sides.** `/app/welcome/` 404s just as
 the client would refuse to match it. If your client relaxes
 [`strictMode`](https://ui-router.github.io/core/docs/latest/interfaces/_url_interface_.urlmatcherconfig.html),
-pass the same relaxation as the mount's `config`.
+pass the same relaxation as the mount's `config`. A static host that serves
+`<subpath>/index.html` by redirecting onto the slashed url makes that
+relaxation mandatory — see
+[static hosts add a trailing slash](/packages/ssr#static-hosts-add-a-trailing-slash).
 
 **The 404 UX is asymmetric — by design.** With the flagship pattern,
 client-side navigation to an unknown URL still renders the in-router
@@ -936,13 +1136,12 @@ and HTTP stays honest either way.
 
 **The rendered content.** Everything above is the routing verdict — the
 status, redirect, and 404 a URL earns from the same route table the client
-runs — and deliberately not the page body. A crawler that loads a real route
-gets a correct 200, but what comes back is still the empty client shell. That
-is the line between HTTP-semantics SEO, which this guide delivers, and content
-SEO: a rendered body a crawler can read. Rendering is a second, orthogonal
-axis, and today this package sits at its first setting: **client-rendered** —
-the shell hydrates in the browser. Build-time pre-rendering and request-time
-[server-rendering](https://lit.dev/docs/ssr/overview/) are on the roadmap — a
-per-route dial that would ride this same routing spine, which returns the
-identical verdict at every setting. The honest HTTP status is here today;
-content rendering is the next axis to build on top of it.
+runs — and deliberately not the page body. That is the line between
+HTTP-semantics SEO, which this guide delivers, and content SEO: a rendered
+body a crawler can read. Rendering is a second, orthogonal axis on the same
+routing spine, which returns the identical verdict at every setting. Left
+alone, `ui-router-server` sits at that axis's first setting —
+**client-rendered**, the shell hydrating in the browser, so a crawler loading
+a real route gets a correct 200 over an empty shell.
+[`lit-ui-router-ssr`](/packages/ssr) is the next setting: it consumes these
+same verdicts and renders each one to a static html file at build time.

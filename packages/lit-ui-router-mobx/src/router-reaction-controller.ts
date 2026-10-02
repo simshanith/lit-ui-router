@@ -1,12 +1,13 @@
 import { ReactiveController, ReactiveControllerHost } from 'lit';
 import { IReactionDisposer, reaction } from 'mobx';
 import { UIRouter } from '@uirouter/core';
-import { UIRouterLitElement } from 'lit-ui-router';
+import { UIRouterLitElement } from 'lit-ui-router/pure';
 
 import { warnMissingRouter } from './dev-warn.js';
 import { RouterStore } from './router-store.js';
 import { ReactionControllerOptions } from './reaction-controller.js';
 
+/** Options for {@link RouterReactionController}. */
 export interface RouterReactionControllerOptions<
   T,
 > extends ReactionControllerOptions<T> {

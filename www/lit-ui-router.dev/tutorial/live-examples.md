@@ -43,3 +43,14 @@ inheritance, and a lazily loaded 3D astronaut. Walkthrough:
 [Hello Galaxy tutorial](./hellogalaxy).
 
 <LiveExample name="hellogalaxy" />
+
+## Hello Galaxy (Effect)
+
+The same states, URLs and views as above, rebuilt on
+[Effect](https://effect.website) and the [Effect bindings](/packages/effect):
+resolves still arrive on view props, `RouterRefController` keeps the un-routed
+shell's marker lit from the route ref, and an inlined plugin spike turns
+resolves, hooks and state lifetimes into effects, fibers and scopes. The fiber
+log at the foot shows them run.
+
+<LiveExample name="hellogalaxy-effect" />

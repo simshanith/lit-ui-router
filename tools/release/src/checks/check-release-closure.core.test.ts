@@ -2,10 +2,14 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import {
+  type EdgeMember,
   filterArgs,
   formatMissing,
   missingFromClosure,
+  plannedScriptPackages,
+  publishNpmDryRunArgs,
   selectedNames,
+  unselectedWorkspaceEdges,
 } from './check-release-closure.core.ts';
 
 describe('filterArgs', () => {
@@ -62,6 +66,95 @@ describe('formatMissing', () => {
     assert.equal(
       text,
       'release-it devDependencies outside RELEASE_CLOSURE: a-new-pkg: because',
+    );
+  });
+});
+
+describe('unselectedWorkspaceEdges', () => {
+  const members: EdgeMember[] = [
+    {
+      name: '@tools/release',
+      manifest: { devDependencies: { '@tools/shared': 'catalog:workspace' } },
+    },
+    {
+      name: 'lit-ui-router',
+      manifest: {
+        dependencies: { '@uirouter/core': 'catalog:' },
+        devDependencies: { '@tools/happy-dom': 'workspace:*' },
+      },
+    },
+    { name: '@tools/shared', manifest: {} },
+    { name: '@tools/happy-dom' },
+    {
+      name: 'sample-app',
+      manifest: { dependencies: { '@tools/vue-check': 'catalog:workspace' } },
+    },
+    { name: '@tools/vue-check' },
+  ];
+
+  it('passes when every workspace dependency of the selection is selected', () => {
+    assert.deepEqual(
+      unselectedWorkspaceEdges(members, [
+        '@tools/release',
+        '@tools/shared',
+        'lit-ui-router',
+        '@tools/happy-dom',
+      ]),
+      [],
+    );
+  });
+
+  it('reports edges out of the selection whatever the protocol, sorted', () => {
+    assert.deepEqual(
+      unselectedWorkspaceEdges(members, ['lit-ui-router', '@tools/release']),
+      ['@tools/release -> @tools/shared', 'lit-ui-router -> @tools/happy-dom'],
+    );
+  });
+
+  it('ignores npm dependencies and unselected dependents', () => {
+    assert.deepEqual(unselectedWorkspaceEdges(members, ['@tools/shared']), []);
+  });
+});
+
+describe('publishNpmDryRunArgs', () => {
+  it('plans pack:all and every publishable build in one dry run', () => {
+    assert.deepEqual(
+      publishNpmDryRunArgs(['lit-ui-router', 'ui-router-server']),
+      [
+        'run',
+        '@tools/release#pack:all',
+        'lit-ui-router#build',
+        'ui-router-server#build',
+        '--dry-run=json',
+      ],
+    );
+  });
+});
+
+describe('plannedScriptPackages', () => {
+  it('keeps packages with a script to spawn, deduplicated and sorted', () => {
+    const json = JSON.stringify({
+      tasks: [
+        { package: 'lit-ui-router', command: 'tsdown' },
+        { package: 'lit-ui-router', command: 'tsc -b' },
+        { package: '@tools/typedoc-plugin-lit-ui-router', command: 'tsdown' },
+        { package: '@tools/shared', command: '<NONEXISTENT>' },
+      ],
+    });
+    assert.deepEqual(plannedScriptPackages(json), [
+      '@tools/typedoc-plugin-lit-ui-router',
+      'lit-ui-router',
+    ]);
+  });
+
+  it('rejects output that is not a turbo plan', () => {
+    assert.throws(
+      () => plannedScriptPackages('{}'),
+      /did not return a task list/u,
+    );
+    assert.throws(
+      () => plannedScriptPackages('{"tasks":[{"command":"tsc"}]}'),
+      /task without a package/u,
     );
   });
 });

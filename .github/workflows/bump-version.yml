@@ -20,6 +20,8 @@ on:
           - ui-router-navigation-location-plugin
           - ui-router-server
           - eslint-plugin-lit-ui-router
+          - lit-ui-router-effect
+          - lit-ui-router-ssr
         default: 'lit-ui-router'
       increment:
         description: 'Increment'
@@ -30,7 +32,8 @@ on:
           - major
           - minor
           - patch
-          - other # Use with 'other' input for custom versions (e.g., prereleases)
+          - prerelease # Advance the current prerelease line (1.2.0-rc.0 → 1.2.0-rc.1)
+          - other # Use with 'other' input for custom versions (e.g., a new prerelease line)
           - none # No increment - use current version. No-op unless `other` provided
       other:
         description: 'Other increment'
@@ -63,12 +66,12 @@ permissions:
 
 jobs:
   bump_version:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     # Protected environment adds approval gate before version bumps
     environment: bump-version
     steps:
       - name: 'Checkout code'
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           fetch-tags: true
@@ -77,10 +80,10 @@ jobs:
           # don't trigger downstream workflows. persist-credentials must stay on.
           token: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
       - name: Setup mise
-        uses: jdx/mise-action@e6a8b3978addb5a52f2b4cd9d91eafa7f0ab959d # v4.2.0
+        uses: jdx/mise-action@9149ea85001c7435d5a66bb127d6a1b6227cb0a5 # v5.0.0
         with:
           # task-env handling regressed before in unpinned mise; pin the version
-          version: 2026.6.14
+          version: 2026.9.12
           # no restored tool cache (zizmor cache-poisoning): this job checks out
           # with a persisted PAT, so a poisoned cache would run adjacent to live
           # push credentials. Tools install fresh, checksum-verified against mise.lock.

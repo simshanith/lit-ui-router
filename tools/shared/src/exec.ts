@@ -6,7 +6,7 @@
 import { execFile, spawn } from 'node:child_process';
 import { promisify } from 'node:util';
 
-export type ExecOptions = { cwd?: string };
+export type ExecOptions = { cwd?: string; env?: NodeJS.ProcessEnv };
 export type ExecResult = { stdout: string; stderr: string };
 
 /** Captured-output run for commands whose stdout the caller consumes. */

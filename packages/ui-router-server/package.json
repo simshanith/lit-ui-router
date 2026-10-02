@@ -1,6 +1,6 @@
 {
   "name": "ui-router-server",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Server-side UI-Router state matching for Connect, Vite, Hono, and fetch handlers",
   "homepage": "https://lit-ui-router.dev/packages/server",
   "bugs": {
@@ -42,6 +42,10 @@
       "types": "./dist/hono.d.ts",
       "default": "./dist/hono.js"
     },
+    "./location": {
+      "types": "./dist/location.d.ts",
+      "default": "./dist/location.js"
+    },
     "./matcher": {
       "types": "./dist/url-matcher.d.ts",
       "default": "./dist/url-matcher.js"
@@ -67,24 +71,24 @@
     "check:bundle": "check-bundle-inputs",
     "codecov:bundle": "upload-entry-bundles",
     "docs:api": "rimraf ../../www/lit-ui-router.dev/api/ui-router-server && typedoc",
-    "format": "oxfmt \"**/*.{ts,js,json,md}\"",
-    "format:check": "oxfmt --check \"**/*.{ts,js,json,md}\"",
-    "lint": "oxlint .",
+    "format:check:oxfmt": "oxfmt --check \"**/*.{ts,js,json,md}\"",
+    "format:oxfmt": "oxfmt \"**/*.{ts,js,json,md}\"",
+    "lint:oxlint": "oxlint .",
     "test": "node --test \"test/**/*.test.ts\"",
     "test:coverage": "mkdir -p coverage && node --test --experimental-test-coverage --test-coverage-include=\"src/**\" --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=coverage/lcov.info \"test/**/*.test.ts\" && rebase-lcov coverage/lcov.info",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
     "typecheck:runtime-globals": "tsc -p tsconfig.runtime-globals.json --noEmit",
     "typecheck:src": "tsc -p tsconfig.src.json --noEmit",
-    "typecheck:tests": "tsc -p test/tsconfig.json --noEmit"
+    "typecheck:tests": "tsc -p test/tsconfig.json --noEmit",
+    "typecheck:tsc": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
     "@release-it/conventional-changelog": "catalog:",
-    "@tools/bundle-probe": "workspace:*",
-    "@tools/lcov-rebase": "workspace:*",
-    "@tools/oxc-emit": "workspace:*",
-    "@tools/release-config": "workspace:*",
-    "@tools/typedoc-plugin-lit-ui-router": "workspace:*",
-    "@tools/wintercg-globals": "workspace:*",
+    "@tools/bundle-probe": "catalog:workspace",
+    "@tools/lcov-rebase": "catalog:workspace",
+    "@tools/oxc-emit": "catalog:workspace",
+    "@tools/release-config": "catalog:workspace",
+    "@tools/typedoc-plugin-lit-ui-router": "catalog:workspace",
+    "@tools/wintercg-globals": "catalog:workspace",
     "@types/node": "catalog:",
     "@uirouter/core": "catalog:",
     "hono": "catalog:",
@@ -113,5 +117,46 @@
   },
   "engines": {
     "node": ">=22.12"
+  },
+  "bundleProbe": {
+    ".": {
+      "free": [
+        "@uirouter/core",
+        "lit",
+        "@lit-labs/ssr",
+        "lit-ui-router"
+      ]
+    },
+    "./connect": {
+      "free": [
+        "@uirouter/core"
+      ]
+    },
+    "./fetch": {
+      "free": [
+        "@uirouter/core"
+      ]
+    },
+    "./hono": {
+      "free": [
+        "@uirouter/core",
+        "hono"
+      ]
+    },
+    "./matcher": {
+      "free": [
+        "@uirouter/core"
+      ]
+    },
+    "./redirects": {
+      "free": [
+        "@uirouter/core"
+      ]
+    },
+    "./vite": {
+      "free": [
+        "@uirouter/core"
+      ]
+    }
   }
 }

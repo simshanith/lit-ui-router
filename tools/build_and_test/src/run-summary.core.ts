@@ -299,24 +299,33 @@ export function cacheTally(summary: RunSummary): CacheTally {
 }
 
 /**
- * The remote cache did nothing, on a run where something hit.
+ * The remote cache did nothing, across every run of the job.
  *
- * Only meaningful on Actions: CI restores no `.turbo` directory — the workflow
- * caches the browser binaries and nothing else — so every hit there has to
- * come from the remote, and a LOCAL one means the run found a cache it should
- * not have. On a developer's machine local hits are the whole point, which is
- * why this is gated rather than merely worded for CI.
+ * A job fact, not a run fact: turbo serves local before remote and the job's
+ * first run fills `.turbo`, so later runs in the same job legitimately hit
+ * local only. Only meaningful on Actions, where no `.turbo` is restored — the
+ * workflow caches browser binaries and nothing else — so the job's first hit
+ * has to come from the remote. On a developer's machine local hits are the
+ * whole point, which is why this is gated rather than merely worded for CI.
  *
  * Silent when nothing hit at all: a change that invalidates the whole graph is
  * the ordinary reason for that, and a note that fires on legitimate runs is a
  * note people learn to skip.
  */
 export function remoteCacheAnomaly(
-  tally: CacheTally,
+  runs: readonly RunSummary[],
   onActions: boolean,
 ): string | undefined {
-  if (!onActions || tally.hit === 0 || tally.remote > 0) return undefined;
-  return `${tally.hit} cache hit${tally.hit === 1 ? '' : 's'}, none from the remote cache — CI restores no local .turbo, so the remote cache is likely misconfigured (check TURBO_TOKEN, TURBO_API, TURBO_TEAM and the signature key)`;
+  let hit = 0;
+  let remote = 0;
+  for (const run of runs) {
+    const tally = cacheTally(run);
+    hit += tally.hit;
+    remote += tally.remote;
+  }
+  if (!onActions || hit === 0 || remote > 0) return undefined;
+  const across = runs.length === 1 ? '' : ` across ${runs.length} turbo runs`;
+  return `${hit} cache hit${hit === 1 ? '' : 's'}${across}, none from the remote cache — CI restores no local .turbo, so the remote cache is likely misconfigured (check TURBO_TOKEN, TURBO_API, TURBO_TEAM and the signature key)`;
 }
 
 /** Tasks that had to run, slowest first. Hits are excluded — they took no time. */
@@ -544,6 +553,12 @@ export interface OverviewContext {
    */
   fileNames?: readonly string[];
   /**
+   * The uploaded vitest `.vitest/` dirs: failure screenshots and `annotate`
+   * attachments. Uploaded only by a failed job that wrote some, so a URL here
+   * always has something behind it.
+   */
+  attachmentsUrl?: string;
+  /**
    * Warn-only lanes and the state each asserted. Not derivable from `summary`:
    * these lanes exit 0, so the artifact cannot tell one carrying warnings from
    * a clean one. Empty renders nothing.
@@ -560,12 +575,9 @@ export interface OverviewContext {
 export function artifactLink(
   context: OverviewContext,
 ): { markdown: string; line: string } | undefined {
-  const { artifactUrl, fileNames } = context;
-  if (artifactUrl === undefined || !artifactUrl.startsWith('https://')) {
-    return undefined;
-  }
-  if (/[\s<>]/.test(artifactUrl)) return undefined;
-  const names = fileNames ?? [];
+  const artifactUrl = safeArtifactUrl(context.artifactUrl);
+  if (artifactUrl === undefined) return undefined;
+  const names = context.fileNames ?? [];
   const which =
     names.length === 0
       ? ''
@@ -578,12 +590,30 @@ export function artifactLink(
   };
 }
 
-/** The overview lane's notes: things that are wrong but not red. */
-function overviewNotes(
-  summary: RunSummary,
-  tally: CacheTally,
-  onActions: boolean,
-): string[] {
+/**
+ * Link to the vitest attachments the failing specs wrote. A browser spec saves
+ * a screenshot of the page as it failed, which no log excerpt can carry.
+ */
+export function attachmentsLink(
+  context: OverviewContext,
+): { markdown: string; line: string } | undefined {
+  const url = safeArtifactUrl(context.attachmentsUrl);
+  if (url === undefined) return undefined;
+  return {
+    markdown: `[Vitest attachments](<${url}>) — failure screenshots and \`annotate\` attachments from the failing specs, downloadable from this run's artifacts.`,
+    line: `   vitest attachments: ${url}`,
+  };
+}
+
+/** Plain https only, and nothing that could end an angle-bracket destination. */
+function safeArtifactUrl(url: string | undefined): string | undefined {
+  if (url === undefined || !url.startsWith('https://')) return undefined;
+  if (/[\s<>]/.test(url)) return undefined;
+  return url;
+}
+
+/** One run's notes: things that are wrong but not red. */
+function overviewNotes(summary: RunSummary): string[] {
   const notes: string[] = [];
   const omitted = omittedTaskCount(summary);
   if (omitted > 0) {
@@ -591,9 +621,16 @@ function overviewNotes(
       `${omitted} task${omitted === 1 ? '' : 's'} cancelled — turbo killed them as it tore the run down and left them out of the summary. They are not failures.`,
     );
   }
-  const anomaly = remoteCacheAnomaly(tally, onActions);
-  if (anomaly !== undefined) notes.push(anomaly);
   return notes;
+}
+
+/** The job's own notes, rendered once by both session lanes so they cannot drift. */
+function jobNotes(runs: readonly SessionRun[], onActions: boolean): string[] {
+  const anomaly = remoteCacheAnomaly(
+    runs.map(({ summary }) => summary),
+    onActions,
+  );
+  return anomaly === undefined ? [] : [anomaly];
 }
 
 /**
@@ -617,12 +654,7 @@ export function overviewMarkdown(
   summary: RunSummary,
   context: OverviewContext = {},
 ): string {
-  return `${[
-    SESSION_HEADING,
-    '',
-    ...runBlockMarkdown(summary, context.onActions ?? false),
-    ...footerMarkdown(context),
-  ].join('\n')}\n`;
+  return sessionMarkdown([{ summary }], context);
 }
 
 /**
@@ -630,11 +662,11 @@ export function overviewMarkdown(
  * cannot drift. The job-level parts — warn lanes, the artifact link — describe
  * the job rather than any one run and stay with the caller.
  */
-function runBlockMarkdown(summary: RunSummary, onActions: boolean): string[] {
+function runBlockMarkdown(summary: RunSummary): string[] {
   const tally = cacheTally(summary);
   const out: string[] = [overviewHeadline(summary), ''];
 
-  for (const note of overviewNotes(summary, tally, onActions)) {
+  for (const note of overviewNotes(summary)) {
     out.push('> [!WARNING]', `> ${note}`, '');
   }
 
@@ -699,8 +731,9 @@ function footerMarkdown(context: OverviewContext): string[] {
       '',
     );
   }
-  const link = artifactLink(context);
-  if (link !== undefined) out.push(link.markdown, '');
+  for (const link of [attachmentsLink(context), artifactLink(context)]) {
+    if (link !== undefined) out.push(link.markdown, '');
+  }
   return out;
 }
 
@@ -715,17 +748,17 @@ export function sessionMarkdown(
   runs: readonly SessionRun[],
   context: OverviewContext = {},
 ): string {
-  const onActions = context.onActions ?? false;
   const out: string[] = [SESSION_HEADING, ''];
   if (runs.length > 1) out.push(...pipelineIndex(runs));
   // A rule between blocks: three runs of tables and lists run together
   // otherwise, and the reader is scanning for which one is theirs.
-  const blocks = runs.map(({ summary }) =>
-    runBlockMarkdown(summary, onActions),
-  );
+  const blocks = runs.map(({ summary }) => runBlockMarkdown(summary));
   for (const [at, block] of blocks.entries()) {
     if (at > 0) out.push('---', '');
     out.push(...block);
+  }
+  for (const note of jobNotes(runs, context.onActions ?? false)) {
+    out.push('> [!WARNING]', `> ${note}`, '');
   }
   out.push(...footerMarkdown(context));
   return `${out.join('\n')}\n`;
@@ -782,14 +815,11 @@ export function overviewLines(
   summary: RunSummary,
   context: OverviewContext = {},
 ): string[] {
-  return [
-    ...runBlockLines(summary, context.onActions ?? false),
-    ...footerLines(context),
-  ];
+  return sessionLines([{ summary }], context);
 }
 
 /** The stdout twin of `runBlockMarkdown`. */
-function runBlockLines(summary: RunSummary, onActions: boolean): string[] {
+function runBlockLines(summary: RunSummary): string[] {
   const tally = cacheTally(summary);
   const { attempted, cached, success, failed, startTime, endTime } =
     summary.execution;
@@ -812,8 +842,7 @@ function runBlockLines(summary: RunSummary, onActions: boolean): string[] {
     );
   }
 
-  for (const note of overviewNotes(summary, tally, onActions))
-    lines.push(`   note: ${note}`);
+  for (const note of overviewNotes(summary)) lines.push(`   note: ${note}`);
 
   return lines;
 }
@@ -828,8 +857,10 @@ function footerLines(context: OverviewContext): string[] {
 
   // Blank line first: the link is a footer for the whole block, and set flush
   // against the facts it reads as a continuation of whichever one ran last.
-  const link = artifactLink(context);
-  if (link !== undefined) lines.push('', link.line);
+  const links = [attachmentsLink(context), artifactLink(context)].filter(
+    (link) => link !== undefined,
+  );
+  if (links.length > 0) lines.push('', ...links.map((link) => link.line));
   return lines;
 }
 
@@ -838,14 +869,15 @@ export function sessionLines(
   runs: readonly SessionRun[],
   context: OverviewContext = {},
 ): string[] {
-  const onActions = context.onActions ?? false;
   const lines: string[] = [];
   for (const [at, { summary }] of runs.entries()) {
     // One blank line between runs: the per-run lines are indented under their
     // headline, and without a gap three runs read as one long block.
     if (at > 0) lines.push('');
-    lines.push(...runBlockLines(summary, onActions));
+    lines.push(...runBlockLines(summary));
   }
+  for (const note of jobNotes(runs, context.onActions ?? false))
+    lines.push(`   note: ${note}`);
   lines.push(...footerLines(context));
   return lines;
 }

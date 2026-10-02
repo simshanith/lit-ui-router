@@ -179,7 +179,7 @@ const viewConfigFactory = (path: PathNode[], config: _ViewDeclaration) =>
 /**
  * The main router class for Lit applications.
  *
- * UIRouterLit extends the core {@link https://ui-router.github.io/core/docs/latest/classes/_router_.uirouter.html | UIRouter}
+ * UIRouterLit extends the core {@link UIRouter}
  * class from @uirouter/core, adding Lit-specific view handling and component integration.
  *
  * @example Basic usage
@@ -219,7 +219,7 @@ const viewConfigFactory = (path: PathNode[], config: _ViewDeclaration) =>
  * ```
  *
  * @see {@link https://ui-router.github.io/core/docs/latest/ | UI-Router Core Documentation}
- * @see {@link https://ui-router.github.io/core/docs/latest/classes/_router_.uirouter.html | UIRouter API Reference}
+ * @see {@link UIRouter | UIRouter API Reference}
  *
  * @category core
  */

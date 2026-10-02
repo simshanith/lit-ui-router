@@ -51,7 +51,7 @@ jobs:
   # Named for what it does, not for the role one of its callers plays: the
   # UI's own "Required" badge already says which composite gates merging.
   run:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 30
     permissions:
       contents: read
@@ -62,7 +62,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Setup mise
-        uses: jdx/mise-action@v4
+        uses: jdx/mise-action@v5
       - name: Install dependencies
         run: mise run setup
       - name: Resolve Playwright version
@@ -75,11 +75,12 @@ jobs:
         id: cypress-version
         run: mise run //tools/build_and_test:cypress_version
       - name: Cache Playwright browsers
+        # The runner image is in the key: browser builds are per-Ubuntu-release.
         id: playwright-cache
         uses: actions/cache@v6
         with:
           path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.playwright }}
+          key: ${{ runner.os }}-${{ steps.playwright-version.outputs.image }}-playwright-${{ steps.playwright-version.outputs.playwright }}
       - name: Cache Cypress binary
         uses: actions/cache@v6
         with:
@@ -166,6 +167,22 @@ jobs:
           path: .turbo/runs/
           retention-days: 30
           if-no-files-found: warn
+      - name: Upload vitest attachments
+        id: vitest_attachments
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v7
+        continue-on-error: true
+        with:
+          name: vitest-attachments
+          path: |
+            apps/*/.vitest/
+            packages/*/.vitest/
+            tools/*/.vitest/
+          # `.vitest` is below the search root here, so the hidden-basename
+          # check drops it without this.
+          include-hidden-files: true
+          retention-days: 5
+          if-no-files-found: ignore
       - name: Turbo run summary
         # Reads every `--summarize` artifact the ci/ci_main step wrote — the
         # graph, the docs build, the e2e suites are three turbo runs — and
@@ -186,6 +203,8 @@ jobs:
         env:
           # Empty when the upload found nothing; the report then omits the link.
           TURBO_SUMMARY_ARTIFACT_URL: ${{ steps.run_summaries.outputs.artifact-url }}
+          # Empty on a green run or when no spec wrote an attachment.
+          VITEST_ATTACHMENTS_ARTIFACT_URL: ${{ steps.vitest_attachments.outputs.artifact-url }}
       - name: Upload Codecov bundle stats
         run: mise run codecov_bundle
         env:
@@ -206,20 +225,6 @@ jobs:
           path: apps/sample-app-lit-e2e/cypress/videos*/
           retention-days: 5
           if-no-files-found: warn
-      - name: Upload vitest attachments
-        if: ${{ failure() }}
-        uses: actions/upload-artifact@v7
-        with:
-          name: vitest-attachments
-          path: |
-            apps/*/.vitest/
-            packages/*/.vitest/
-            tools/*/.vitest/
-          # `.vitest` is below the search root here, so the hidden-basename
-          # check drops it without this.
-          include-hidden-files: true
-          retention-days: 5
-          if-no-files-found: ignore
       - name: Upload wrangler logs
         # The e2e dev server (wrangler dev) intermittently crashes mid-suite
         # with an empty error; its crash log lands only in the runner's
@@ -237,7 +242,7 @@ jobs:
         if: ${{ github.event_name != 'push' || github.ref == 'refs/heads/main' }}
         uses: codecov/codecov-action@v7
         with:
-          files: packages/lit-ui-router/coverage/lcov.info,packages/lit-ui-router/coverage/coverage-final.json,packages/lit-ui-router-mobx/coverage/lcov.info,packages/lit-ui-router-mobx/coverage/coverage-final.json,packages/navigation-location-plugin/coverage/lcov.info,packages/navigation-location-plugin/coverage/coverage-final.json,packages/ui-router-server/coverage/lcov.info
+          files: packages/lit-ui-router/coverage/lcov.info,packages/lit-ui-router/coverage/coverage-final.json,packages/lit-ui-router-effect/coverage/lcov.info,packages/lit-ui-router-effect/coverage/coverage-final.json,packages/lit-ui-router-mobx/coverage/lcov.info,packages/lit-ui-router-mobx/coverage/coverage-final.json,packages/lit-ui-router-ssr/coverage/lcov.info,packages/lit-ui-router-ssr/coverage/coverage-final.json,packages/navigation-location-plugin/coverage/lcov.info,packages/navigation-location-plugin/coverage/coverage-final.json,packages/ui-router-server/coverage/lcov.info
           disable_search: true
           plugins: noop
           fail_ci_if_error: false

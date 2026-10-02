@@ -1,0 +1,83 @@
+#!/usr/bin/env bash
+#MISE description="Pull this branch's CI artifacts from the remote cache into the shared local one"
+# Why, and when to reach for it: docs/REMOTE_CACHE.md.
+set -eu
+
+# CI hashed a committed tree, so anything uncommitted changes every hash below it.
+if [ -n "$(git status --porcelain)" ]; then
+  echo "turbo_backfill: working tree is dirty; CI hashed a committed tree, commit or stash first" >&2
+  exit 1
+fi
+
+common_dir="$(git rev-parse --path-format=absolute --git-common-dir)"
+owner="$(dirname "$common_dir")"
+env_file="$owner/.config/mise/turbo.local.env"
+
+# Unlike the pin, this task is an explicit request: say so instead of no-opping.
+if [ ! -f "$env_file" ]; then
+  echo "turbo_backfill: no remote-cache credentials to read with — run \`mise run turbo_login\` in $owner" >&2
+  exit 1
+fi
+
+# The dotenv holds raw unquoted values; let mise render it rather than sourcing.
+eval "$(mise -C "$owner" env -s bash)"
+
+# After the load, not before: a laptop never writes the shared cache, whatever
+# the dotenv says.
+export TURBO_CACHE="remote:r,local:rw"
+
+# TURBO_FORCE is `--cache=local:w,remote:w`: it outranks the line above.
+unset TURBO_FORCE
+
+# Probe before the run: turbo hashes the tree as it stands, so a tree CI never
+# saw misses every lookup and quietly rebuilds the world into the local cache.
+# The plan comes from a remote-off dry run (zero requests, ~1s); only the sample
+# reaches the network, which keeps a failed guess at five HEADs rather than ~700.
+hashes="$(
+  TURBO_TOKEN='' TURBO_CACHE=local:r turbo run "${@:-ci}" --dry-run=json |
+    node -e '
+let raw = "";
+process.stdin.on("data", (c) => (raw += c)).on("end", () => {
+  const hashes = new Set();
+  for (const task of JSON.parse(raw).tasks
+    .filter(
+      (t) =>
+        t.resolvedTaskDefinition?.cache &&
+        t.cache?.status === "MISS" &&
+        // test* tasks hash CI, so no laptop can ever hit them.
+        !t.task.startsWith("test"),
+    )
+    // Deepest first: their hashes fold in everything underneath.
+    .sort((a, b) => (b.dependencies?.length ?? 0) - (a.dependencies?.length ?? 0))) {
+    if (hashes.size >= 5) break;
+    hashes.add(task.hash);
+  }
+  process.stdout.write([...hashes].join("\n"));
+});'
+)"
+
+# Empty means the local cache already holds this tree: nothing to ask for.
+if [ -n "$hashes" ]; then
+  probe=0
+  printf '%s\n' "$hashes" | "$(dirname "$0")/turbo_cache_probe" || probe=$?
+
+  # 2 is a broken probe (bad status, no answer), not a verdict — propagate it.
+  [ "$probe" -ne 2 ] || exit 2
+
+  if [ "$probe" -ne 0 ]; then
+    git fetch --quiet origin main || true
+    if [ -z "$(git branch -r --contains HEAD)" ]; then
+      hint="HEAD is not pushed"
+    elif ! git merge-base --is-ancestor origin/main HEAD; then
+      hint="branch is behind origin/main; PR CI hashes the merge, pull main first"
+    else
+      hint="CI may still be running"
+    fi
+    echo "turbo_backfill: the remote cache has no artifacts for this tree — $hint" >&2
+    exit 1
+  fi
+fi
+
+# Direct binary, not `mise run`/`mise exec`: a nested mise re-applies [env] and
+# clobbers the export above.
+exec turbo run "${@:-ci}" --ui=stream --log-order=stream

@@ -12,13 +12,14 @@ pnpm add lit-ui-router
 
 ## Entry Points
 
-| Import                                     | Effect                                                                                                      |
-| ------------------------------------------ | ----------------------------------------------------------------------------------------------------------- |
-| `import { ... } from 'lit-ui-router'`      | Full API. Any value import registers the `<ui-router>`/`<ui-view>` custom elements as a side effect.        |
-| `import { ... } from 'lit-ui-router/pure'` | The same full API — element classes included — with no registration and no `HTMLElementTagNameMap` globals. |
-| `import 'lit-ui-router/register'`          | Registration only: defines `<ui-router>`/`<ui-view>` and carries their `HTMLElementTagNameMap` entries.     |
-| `import 'lit-ui-router/ui-view.register'`  | Single-element registration: defines just that element with its tag-map entry (`ui-router.register` ditto). |
-| `import type { ... } from 'lit-ui-router'` | Types are erased at compile time — always free, from any entry.                                             |
+| Import                                        | Effect                                                                                                                                                                                                     |
+| --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `import { ... } from 'lit-ui-router'`         | The router, the elements, the directives and the controllers. Any value import registers the `<ui-router>`/`<ui-view>` custom elements as a side effect.                                                   |
+| `import { ... } from 'lit-ui-router/pure'`    | The same API — element classes included — with no registration and no `HTMLElementTagNameMap` globals.                                                                                                     |
+| `import 'lit-ui-router/register'`             | Registration only: defines `<ui-router>`/`<ui-view>` and carries their `HTMLElementTagNameMap` entries.                                                                                                    |
+| `import 'lit-ui-router/ui-view.register'`     | Single-element registration: defines just that element with its tag-map entry (`ui-router.register` ditto).                                                                                                |
+| `import { ... } from 'lit-ui-router/context'` | The only home of the `context-request` key, event and request helper, and of the tree-less router hand-off — nothing from `lit` — see [Reactive Components](/guides/reactive-components#router-discovery). |
+| `import type { ... } from 'lit-ui-router'`    | Types are erased at compile time — always free, from any entry.                                                                                                                                            |
 
 ## Quick Start
 
@@ -59,6 +60,10 @@ router.start();
 </ui-router>
 ```
 
+`rules.initial({ state: 'home' })` lands on the state with no params; a landing
+state that reads the query needs the function form — see
+[Unmatched URLs](/guides/unmatched-urls#a-landing-state-that-reads-the-query).
+
 ## Core Concepts
 
 ### Router
@@ -74,6 +79,61 @@ router.start();
 
 - **[`uiSref`](./reference/directives/uiSref)** - Creates navigation links to states
 - **[`uiSrefActive`](./reference/directives/uiSrefActive)** - Adds CSS classes when linked state is active, and sets `aria-current` on active links
+- **[`srefHref`](./reference/directives/srefHref)** - `uiSref` bound in the `href` attribute
+- **[`srefActiveClass`](./reference/directives/srefActiveClass)** - `uiSrefActive`'s classes, bound in the `class` attribute
+- **[`srefAriaCurrent`](./reference/directives/srefAriaCurrent)** - `uiSrefActive`'s `aria-current`, bound in the attribute
+
+#### Attribute-part forms
+
+`uiSref` and `uiSrefActive` are element parts: they sit on the element and
+write to it from the outside, so a reader that is not a live browser — a
+server renderer, an accessibility linter — sees an `<a>` with no `href`.
+The `sref*` directives do the same jobs from inside the attribute they
+affect, so the template says what the browser will show. A linter reads that,
+and so does a server render given a router — see
+[Server Rendering](#server-rendering):
+
+```html
+<a href=${srefHref('users')}
+   class="nav-link ${srefActiveClass({ state: 'users', activeClasses: ['active'] })}"
+   aria-current=${srefAriaCurrent({ state: 'users' })}>Users</a>
+<!-- while at `users`:        <a href="/users" class="nav-link active" aria-current="page"> -->
+<!-- while at `users.detail`: <a href="/users" class="nav-link active"> -->
+```
+
+- `srefHref` takes `uiSref`'s arguments and does everything `uiSref` does —
+  the click navigates, and an enclosing `uiSrefActive` still tracks it. There
+  is no `assignHref`: the attribute is the binding. Use one form or the other
+  on an element, not both.
+- `srefActiveClass` follows lit's
+  [`classMap`](https://lit.dev/docs/templates/directives/#classmap): bind it in
+  `class`, alone or beside static classes, and it toggles only the classes it
+  names. It cannot share the attribute with `classMap` itself, so pass those
+  classes as `classes: { 'nav-link': true, disabled: locked }`. Leave
+  `state` out on a wrapper to watch the `srefHref` links inside it, as
+  `uiSrefActive` does.
+- `srefAriaCurrent` is the one piece a `class` binding cannot reach, so it is
+  its own directive. Binding the attribute is the opt-in: it writes `'page'`
+  while the exact state is active and removes the attribute otherwise, on any
+  element, with none of `uiSrefActive`'s link detection or takeover rules.
+  `value` picks another token or `{ exact, active }` for ancestors.
+
+#### Composing with `classMap`
+
+A `class` attribute holds one toggling directive, so `srefActiveClass` and
+`classMap` cannot share it. When a component wants both — the active flag
+next to its own bindings —
+[`SrefStatusController`](./reference/controllers/SrefStatusController) hands
+the status to the host instead of writing an attribute, and the template
+composes it freely:
+
+```ts
+private users = new SrefStatusController(this, { state: 'users' });
+// class=${classMap({ 'nav-link': true, active: this.users.active, disabled: this.locked })}
+// aria-current=${this.users.ariaCurrent()}
+```
+
+See [Reactive Components](../guides/reactive-components#active-link-status).
 
 #### Accessible active links
 
@@ -197,6 +257,31 @@ lit-ui-router supports multiple ways to define route components:
 | `` (props) => html`...` `` | Views needing params or resolves               |
 | `MyElement`                | Complex views with lifecycle, state, or styles |
 
+#### Typing Resolves
+
+`LitStateDeclaration<T>` takes the resolves type as a generic, defaulting to
+`Record<string, any>`. A view receives `T` as an argument, so the check runs in
+reverse: a view that requires a resolve does not fit the default, and TypeScript
+reports the error at `component:` rather than at the generic.
+
+```ts
+const GalleryView: RoutedLitTemplate<{ manifest: Manifest }> = (props) =>
+  html`<p>${props.resolves.manifest.sheets.length}</p>`;
+
+const states: LitStateDeclaration[] = [
+  { name: 'gallery', url: '/', component: GalleryView }, // TS2322 at component:
+];
+```
+
+Two shapes type-check:
+
+- **Thread the generic** onto the declaration: `LitStateDeclaration<{ manifest: Manifest }>[]`.
+  A bare `RoutedLitTemplate` view still fits beside the typed one.
+- **A table mixing resolve shapes** threads one type alias that covers every view,
+  such as `GalleryResolves & SheetResolves`. Each view keeps its own required
+  members. An alias with every member optional also fits, at the cost of `?.` at
+  each use inside the views.
+
 ### Lifecycle Hooks
 
 Components can implement these interfaces to respond to routing events:
@@ -230,6 +315,27 @@ See the [@uirouter/core location plugins documentation](https://ui-router.github
 
 - [PushStateLocationService](https://ui-router.github.io/core/docs/latest/classes/_vanilla_pushstatelocationservice_.pushstatelocationservice.html) - HTML5 history API
 - [HashLocationService](https://ui-router.github.io/core/docs/latest/classes/_vanilla_hashlocationservice_.hashlocationservice.html) - Hash-based URLs
+
+On the server, `serverLocationPlugin` from
+[`ui-router-server/location`](/packages/server) is the in-memory plugin whose
+hrefs are paths, so a prerendered link matches what the pushState client writes.
+
+## Server Rendering
+
+`lit-ui-router/context` carries the router hand-off a server render needs and an
+element cannot supply, because on the server a directive has no element to seek
+a router from.
+
+- `provideRouter(root, router)` - answers `context-request` on any event target, `globalThis.litServerRoot` included
+- `withRouterSync(router, run)` - scopes a router to one synchronous call
+- `getScopedRouter()` - reads the router that call scoped
+
+`srefHref`, `srefActiveClass`, `srefAriaCurrent` and `lit-ui-router-effect`'s
+`RouterRefController` read the `withRouterSync` slot and nothing else, so a nav
+rendered inside it carries real hrefs and active markup; `provideRouter` serves
+elements that ask by protocol, not attribute parts.
+
+See [Server-Side Routing](/guides/server-route-matching#the-router-on-the-server).
 
 ## Companion Packages
 

@@ -15,8 +15,17 @@
       "inputs": ["$TURBO_DEFAULT$"],
       "outputs": ["coverage/**"]
     },
+    // restates the root umbrella's list, plus this package's own leaves
     "typecheck": {
-      "with": ["typecheck:tests", "typecheck:src", "typecheck:runtime-globals"]
+      "dependsOn": [
+        "typecheck:tsc",
+        "//#typecheck:root",
+        "typecheck:src",
+        "typecheck:lit2",
+        "typecheck:mobx6",
+        "typecheck:tests",
+        "typecheck:runtime-globals"
+      ]
     },
     "typecheck:tests": {
       "dependsOn": ["^build:types"],

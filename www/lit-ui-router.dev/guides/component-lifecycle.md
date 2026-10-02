@@ -89,6 +89,52 @@ it — sort order, filters, pagination, a selected tab — where a full
 destroy/recreate cycle would throw away scroll position, focus, and fetched
 data.
 
+## After the transition: waiting for the view to render
+
+A transition settling is not the view rendering. `onSuccess` hooks run and
+`transition.promise` resolves when the transition has succeeded; `<ui-view>`
+swaps in the new component in a Lit update scheduled after that. Code that
+needs the new DOM — a View Transition, a scroll restore, a focus move, a
+measurement — and reads it on the promise alone finds the outgoing view.
+
+`<ui-view>` is a `LitElement`, so its `updateComplete` is the promise for the
+update that does the swap. Await `transition.promise`, then `updateComplete` on
+every `<ui-view>` (nested views each swap in their own update), then on any
+element the new view rendered, whose own update lands one step later.
+
+Do not wait for a frame instead. `requestAnimationFrame` does not fire while a
+View Transition snapshot is held, so a release that waits a frame hangs until
+the browser's own timeout ends the transition.
+
+```ts
+import type { ReactiveElement } from 'lit';
+
+const settle = (selector: string) =>
+  Promise.all(
+    [...document.querySelectorAll<ReactiveElement>(selector)].map(
+      (element) => element.updateComplete,
+    ),
+  );
+
+async function viewRendered(): Promise<void> {
+  await Promise.resolve(); // lets the swap's update queue
+  await settle('ui-view');
+  await settle('contact-detail'); // the element the new view rendered
+}
+
+router.transitionService.onStart({}, (trans) => {
+  if (!document.startViewTransition) return;
+  let captured!: () => void;
+  const oldViewCaptured = new Promise<void>((resolve) => (captured = resolve));
+  document.startViewTransition(async () => {
+    captured();
+    await trans.promise;
+    await viewRendered();
+  });
+  return oldViewCaptured; // the transition waits for the old snapshot
+});
+```
+
 ## Where these fit among the other hooks
 
 - **Global concerns** (auth, analytics, error handling) belong in

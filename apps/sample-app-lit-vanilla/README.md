@@ -4,8 +4,9 @@
 
 This is the zero-dependency variant of the sample app, using `lit-ui-router`'s
 `TransitionController` for reactivity. See [`apps/README.md`](../README.md) for the
-side-by-side comparison with the [MobX variant](../sample-app-lit-mobx/), and
-[`sample-app-shared`](../sample-app-shared/) for everything the two apps have in common.
+side-by-side comparison with the [MobX](../sample-app-lit-mobx/) and
+[Effect](../sample-app-lit-effect/) variants, and
+[`sample-app-shared`](../sample-app-shared/) for everything the three apps have in common.
 
 This sample app is intended to demonstrate a non-trivial ui-router lit application.
 

@@ -32,7 +32,9 @@ export default {
         // only hidden types renders empty and release-it silently falls back to
         // a flat repo-wide git log (#423). `refactor` is listed because a
         // package's whole release can be one — #530 added exported API under
-        // that type, and hiding it re-triggered the #423 fallback.
+        // that type, and hiding it re-triggered the #423 fallback. `docs` is
+        // listed for the same reason: it edits shipped .d.ts comments, so a
+        // patch range can be nothing but docs commits (#834).
         types: [
           { type: 'feat', section: 'Features' },
           { type: 'fix', section: 'Bug Fixes' },
@@ -40,6 +42,7 @@ export default {
           { type: 'perf', section: 'Performance Improvements' },
           { type: 'revert', section: 'Reverts' },
           { type: 'build', section: 'Build System' },
+          { type: 'docs', section: 'Documentation' },
         ],
       },
       // Relative to cwd, so each package's notes stay scoped to its own dir.

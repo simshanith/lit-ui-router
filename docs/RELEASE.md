@@ -125,7 +125,7 @@ Creates a release PR by:
 
 **Inputs:**
 
-- `increment` - Version bump type: `major`, `minor`, `patch`, `other`, `none`
+- `increment` - Version bump type: `major`, `minor`, `patch`, `prerelease`, `other`, `none`
 - `other` - Custom version string (when using `other`)
 - `prBase` - Target branch (default: `main`)
 - `branchPrefix` - Branch prefix (default: `release/lit-ui-router/v`)
@@ -159,6 +159,11 @@ The final release stage:
 5. Creates a draft GitHub Release with the tarball
 6. Marks the GitHub Release as final
 
+The repository has GitHub immutable releases enabled: a published release, its
+assets and the tag it points at can never be edited or deleted, and npm
+versions are equally permanent. A bad release body or a missing asset ships
+for good, and test or canary publishes stay as evidence rather than cleanup.
+
 ### 5. Release signals (`release-signals.yml`)
 
 **Triggers:** Pushes to `main`; called by Publish to NPM after a publish; manual dispatch
@@ -166,16 +171,35 @@ The final release stage:
 [Actions ▸ Release signals ▸ **Run workflow**](https://github.com/simshanith/lit-ui-router/actions/workflows/release-signals.yml)
 
 Non-gating per-package check runs on main's head — `published-diff (<pkg>)`
-(does the pack surface differ from the published `latest`?) and
-`peer-floor (<pkg>)` (is an adapter's published peer floor stale?). The
-README badges read these check runs; `action_required` renders orange,
-meaning a release or floor bump is owed — never a CI failure.
+(does the pack surface differ from the published tarball on the dist-tag the
+next publish would write?) and `peer-floor (<pkg>)` (is an adapter's published
+peer floor stale?). The README badges read these check runs; `action_required`
+renders orange, meaning a release or floor bump is owed — never a CI failure.
+A floor bump raises the catalog the adapter's `lit-ui-router` peer names and
+the matching `peerFloor*` pin in `pnpm-workspace.yaml`: `publishedPeerMobx`
+and `peerFloorMobx` for mobx, `publishedPeerEffect` and `peerFloorEffect` for
+effect.
+
+`eslint-plugin-lit-ui-router` has no check run: its floor is a published eslint,
+so `test:peer-floor` runs its rule suite on the `eslint-floor` alias in every PR.
+An eslint floor bump raises `publishedPeer.eslint` and the `peerFloorEslintPlugin`
+pin. The range's upper `||` leg is exercised by the plugin's own `eslint`
+devDependency, which `peer-floor-guard` requires to sit in it.
+
+`published-diff` picks that tag from the workspace version by the same rule
+release-it publishes under: a prerelease answers to its own channel tag,
+everything else to `latest`. A channel the registry does not carry yet falls
+back to `latest`, and the run names the missing tag.
 
 ## Step-by-Step Release Process
 
 ### Standard Release
 
 1. **Start the version bump:**
+   - Preview the release notes first: `pnpm --silent changelog` in the
+     package directory runs the real release-it config, so its output is what
+     ships (see [Release Configuration](#release-configuration)); dispatching
+     with `dryRun` shows the same
    - Go to Actions → "Bump version"
    - Click "Run workflow"
    - Select increment type (`patch`, `minor`, or `major`)
@@ -202,7 +226,10 @@ meaning a release or floor bump is owed — never a CI failure.
 
 ### Prerelease / Custom Version
 
-For prereleases like `1.2.3-beta.0`:
+To advance an existing prerelease line (`1.2.3-beta.0` → `1.2.3-beta.1`),
+run "Bump version" with `increment`: `prerelease`.
+
+To start a new line like `1.2.3-beta.0`:
 
 1. Run "Bump version" workflow with:
    - `increment`: `other`
@@ -252,8 +279,10 @@ Break the cycle by hand, once, before adding the package to any workflow list:
    at `1.0.0-rc.0`, say), step 5 does not supersede the seed: release-it
    publishes that version under its own channel tag, so the seed keeps `latest`
    until the first stable release. The channel tag is current for as long as
-   that prerelease line lives, not a fossil. A maintainer who wants `latest` off
-   the stub sooner can move it by hand with
+   that prerelease line lives, not a fossil. `published-diff` compares against
+   that channel tag, so the signal is green against the live prerelease while
+   `latest` still points at the stub. A maintainer who wants `latest` off the
+   stub sooner can move it by hand with
    `npm dist-tag add <package>@<version> latest`.
 
 2. **Configure the trusted publisher** on npmjs.com for the new package,
@@ -270,10 +299,16 @@ Break the cycle by hand, once, before adding the package to any workflow list:
    ```
 
 4. **Add the package** to the `bump-version.yml`, `publish-gh.yml`, and
-   `publish-npm.yml` package lists, and to `tools/release`'s
-   devDependencies (the self-dependency guard). This lands last:
+   `publish-npm.yml` package lists, and give it the release-it
+   devDependencies and `.release-it.js` the other packages carry;
+   `check:release-closure` in `tools/release` derives the publishable set
+   from `packages/*` and fails on a package missing them. This lands last:
    `publish-gh.yml` tags the current version on the very next push to
    `main`.
+
+   The manifest carries no `keywords` unless the package's ecosystem keys
+   discovery on them, as eslint plugins do: `eslint-plugin-lit-ui-router`
+   ships the `eslint` and `eslintplugin` pair.
 
 5. **Cut the real release** through the standard process.
 
@@ -301,6 +336,12 @@ version itself (`lib/plugin/npm/npm.js`, `resolveTag`): a non-prerelease gets
 `latest`, and a prerelease gets its own identifier — `1.8.0-canary.0` publishes
 to `canary`, `0.2.0-beta.1` to `beta`. A prerelease with no identifier falls
 back to any existing non-`latest` tag on the package, then to `next`.
+
+Because the identifier becomes the tag, the channels this repo publishes under
+are an allowlist — `alpha`, `beta`, `rc` (`PRERELEASE_CHANNELS` in
+`tools/release/src/steps/release-prev-tag.core.ts`). A bump-version `other`
+input and the `published-diff` check both reject anything else, so a typo fails
+loudly instead of manufacturing a dist-tag.
 
 Two consequences:
 
@@ -335,6 +376,38 @@ Check the current state of every package with:
 ```bash
 npm view <package> dist-tags
 ```
+
+### Release-Machinery Changes
+
+A PR that touches release machinery (release-it config, the bump, tag or
+publish workflows, pack and publish paths) can change no shipped code and
+still only be verifiable by a release. The maintainer verifies it in order:
+merge it to `main`, dispatch the affected workflow with `dryRun` on `main`,
+then let the next owed release exercise it for real. Dispatching from the PR
+branch verifies a tip that will never ship, so it is not part of the
+procedure. Merging such PRs ahead of an already-owed release makes that
+release their end-to-end check.
+
+## Milestones
+
+A milestone gates one package's release train and is named for it:
+`<package>@<minor>` (`lit-ui-router@1.17`, `ui-router-server@0.3`), never a
+bare version, since the packages version independently. Continuously deployed
+surfaces such as `www/` get no milestone.
+
+The description says what kind of release the train is, not which issues are
+on it: a new minor copies the previous minor's wording with the version
+changed. Per-issue detail belongs on the issue.
+
+Work that can only happen after publish still rides the train's milestone.
+`examples/*` pin the published `lit-ui-router` range rather than
+`workspace:*`, so bumping them to the new version is the train's last item
+and the milestone closes only after that PR merges; `apps/sample-app-*` use
+`workspace:*` and are not release-gated. List the pinned examples with
+`grep -rln '"lit-ui-router"' examples --include=package.json`, then
+regenerate each lock with `npm install --prefix examples/<name>`.
+`mise run setup` only verifies afterwards: its examples `postinstall` runs `npm ci`,
+which refuses a manifest that disagrees with its lock.
 
 ## Troubleshooting
 
@@ -399,6 +472,12 @@ export { default } from '@tools/release-config';
 ```
 
 The config defaults most options to `false` so workflows can enable them explicitly via CLI flags.
+
+The changelog lists its commit types explicitly, with the `conventionalcommits`
+preset's section names. A package range made only of unlisted types renders
+empty, and release-it silently falls back to a flat repo-wide git log; a range
+mixing listed and unlisted types silently omits the unlisted commits. Preview
+with `pnpm --silent changelog` before a bump.
 
 It is plain JS rather than JSON because `conventional-changelog-writer` 9 takes
 template partials as functions.

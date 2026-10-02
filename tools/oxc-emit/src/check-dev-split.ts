@@ -6,6 +6,8 @@
 import { existsSync, globSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
+import { requireManifest } from '@tools/bootstrap/manifest.ts';
+
 import {
   findDevSplitViolations,
   formatDevSplitReport,
@@ -46,9 +48,8 @@ if (!production) {
 }
 // The undeclared-message scan keys off the package's own name, so a sibling
 // package's prefix (lit-ui-router-mobx:) is never read as lit-ui-router:.
-const { name } = JSON.parse(readFileSync('package.json', 'utf8')) as {
-  name: string;
-};
+const { name } = requireManifest(process.cwd());
+if (!name) throw new Error('package.json has no name');
 const report = formatDevSplitReport(
   findDevSplitViolations({
     prefix: messagePrefix(name),

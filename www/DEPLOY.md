@@ -92,8 +92,8 @@ closure is 89 tasks, 21 of which run a command, and every one of those is a pack
 Workers Builds check red on the branch that introduces it, before any merge.
 
 The script **derives the pnpm to bootstrap from `packageManager`** rather than restating it.
-A second pin can only ever be wrong, and wrong silently — pnpm >=11.10 self-swaps to
-`packageManager`, so a stale bootstrap still deploys green. Deriving is also what makes the
+A second pin could drift from `packageManager` with nothing to catch it, and a build on a
+stale pnpm can still deploy green. Deriving is also what makes the
 per-branch divergence above free: a branch that changes the package manager gets the right
 bootstrap with no edit to this file.
 
@@ -118,15 +118,14 @@ The build script owns the dependency install because Workers Builds provisions p
 corepack, which cannot install a pnpm-12 `packageManager` pin at all — the npm package is
 a wrapper whose real binary is materialized by a `preinstall` hook out of an optional
 platform dependency, and corepack runs neither lifecycle scripts nor optional
-dependencies. So `SKIP_DEPENDENCY_INSTALL=1` turns off Cloudflare's install step and npx
-bootstraps the last pnpm 11 instead — no preinstall hook, so npx handles it — which then
-reads `packageManager` and self-swaps to whatever the branch pins. `npx pnpm@11.21.0` is a
-**bootstrap floor**, not the version that runs: it needs to be at or above 11.20.0 to read
-a pnpm-12 lockfile, and `packageManager` decides the rest.
+dependencies. So `SKIP_DEPENDENCY_INSTALL=1` turns off Cloudflare's install step and the
+script runs `npm install --global --allow-scripts=pnpm` with the exact `pnpm@<version>`
+from `packageManager`, which lets the `preinstall` hook unpack the real binary. pnpm does
+not swap versions itself (`pmOnFail: ignore`), so that install is the version that runs.
 
-npx covers only the commands the script names. Anything turbo spawns resolves `pnpm` from
-`PATH`, where the unusable corepack shim still sits — which is why a pnpm-12 branch fails
-in turbo even with the install fixed, and why that branch needs its own bootstrap here.
+The global install replaces the corepack shim rather than sitting beside it: anything turbo
+spawns resolves `pnpm` from `PATH`, so a pnpm reachable only through the commands the script
+names would leave turbo on the unusable shim.
 
 `build_command` and `SKIP_DEPENDENCY_INSTALL` are one state. Apply and verify preview
 before production.
@@ -137,7 +136,19 @@ The private [`tools/workers-builds`](../tools/workers-builds) package owns
 [`workers-builds-triggers.config.jsonc`](../tools/workers-builds/workers-builds-triggers.config.jsonc), which mirrors
 the dashboard values above plus the declared [build environment variables](#build-environment-variables),
 and diffs it against the live triggers: `pnpm check:workers-builds` is read-only
-(exit 1 on drift); `pnpm check:workers-builds -- --apply` updates.
+(exit 1 on drift); `pnpm check:workers-builds -- --apply` updates. Both walk every entry by
+default; `--site <key>` (repeatable, or one comma-separated value) limits the diff and the apply to
+the named entries, and an unknown key is a usage error (exit 2) rather than an empty selection.
+
+The config is keyed by site, one entry per Worker the repo deploys, each naming the `wrangler.jsonc`
+the worker is named in and pinning what it pins, the
+[build watch paths](https://developers.cloudflare.com/workers/ci-cd/builds/build-watch-paths/)
+among them, which are what let two sites share one repo. Its shape is documented where it is enforced — the
+file's own comments and the schema in
+[`workers-builds-triggers.core.ts`](../tools/workers-builds/workers-builds-triggers.core.ts) — and
+not repeated here. A `wranglerConfig` that names no file is a hard error (exit 2), never a skipped
+entry, so a moved file cannot turn the check green.
+
 Requires `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`. The token must be **user-scoped** — account-owned
 tokens do not cover the Workers Builds API — and carry two permissions: **Workers Scripts: Read**, which
 resolves the worker name to the tag the triggers endpoint is keyed by, and **Workers Builds Configuration:
@@ -156,11 +167,11 @@ From 1Password, two mise tasks wrap `op` over gitignored files that hold `op://`
 of values (no secrets, but the vault layout they encode is personal rather than repo config, so they
 stay untracked). A third task creates both files and the item they point at:
 
-| Task                                      | Reads / writes                                                                      | Reference form | Token at rest               |
-| ----------------------------------------- | ----------------------------------------------------------------------------------- | -------------- | --------------------------- |
-| `mise run cloudflare_item_create`         | writes `.config/mise/cloudflare.local.env.tmpl` + `.config/mise/cloudflare.op.env`  | both           | no                          |
-| `mise run cloudflare_login`               | reads `.config/mise/cloudflare.local.env.tmpl`                                      | `{{ op://… }}` | yes, `chmod 600`            |
-| `mise run check_workers_builds [--apply]` | reads whichever exists: the dotenv (via mise) else `.config/mise/cloudflare.op.env` | bare `op://…`  | only if it found the dotenv |
+| Task                                                      | Reads / writes                                                                      | Reference form | Token at rest               |
+| --------------------------------------------------------- | ----------------------------------------------------------------------------------- | -------------- | --------------------------- |
+| `mise run cloudflare_item_create`                         | writes `.config/mise/cloudflare.local.env.tmpl` + `.config/mise/cloudflare.op.env`  | both           | no                          |
+| `mise run cloudflare_login`                               | reads `.config/mise/cloudflare.local.env.tmpl`                                      | `{{ op://… }}` | yes, `chmod 600`            |
+| `mise run check_workers_builds [--site <keys>] [--apply]` | reads whichever exists: the dotenv (via mise) else `.config/mise/cloudflare.op.env` | bare `op://…`  | only if it found the dotenv |
 
 `cloudflare_item_create` is the one-time bootstrap: it creates a Secure Note (`--vault Private`,
 `--title lit-ui-router-workers-builds`) whose two fields are named after the variables and left
@@ -207,7 +218,12 @@ The badge for it sits at the top of this file and in the README header. It diffs
 | ![passing](https://img.shields.io/badge/workers--builds-passing-orange)      | The dashboard drifted — a manual `--apply` is owed                        |
 | ![neutral](https://img.shields.io/badge/workers--builds-neutral-lightgrey)   | Could not verify (no/expired token, API outage) — not a claim about drift |
 
-One ordering trap. When the value being applied names a file in the repo — as `build_command` and
+The order of `--apply` and merge depends on the value. A self-contained one — an environment
+variable, or a command that names no repo file — is applied _before_ the merge: a trigger
+snapshots its environment when a build is enqueued, so pushing first spends one build on the
+old config.
+
+The trap is the other case. When the value being applied names a file in the repo — as `build_command` and
 `deploy_command` both do, pointing at [`cloudflare-build.sh`](../tools/workers-builds/cloudflare-build.sh)
 and [`cloudflare-deploy.ts`](../tools/workers-builds/cloudflare-deploy.ts) — the apply has to
 _follow_ the merge, or it breaks the preview build of every branch that does not have the file yet.
@@ -219,6 +235,8 @@ converged dashboard:
 ```sh
 gh workflow run release-signals.yml --ref main
 ```
+
+After a merge-first apply, an open PR's preview build passes only once it is rebased onto `main`.
 
 Two repository secrets drive it. Both are optional — absent, the signal reports gray rather than failing:
 

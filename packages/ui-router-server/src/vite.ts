@@ -19,13 +19,20 @@ import type { ServerRouter } from './index.ts';
 
 /** The sliver of Vite's dev/preview server the plugin uses: the Connect stack. */
 export interface ViteMiddlewareServer {
-  middlewares: { use(middleware: ConnectMiddleware): unknown };
+  /** Vite's Connect stack; the plugin `use`s the adapter into it. */
+  middlewares: {
+    /** Appends middleware to the stack, in call order. */
+    use(middleware: ConnectMiddleware): unknown;
+  };
 }
 
 /** A structural subset of Vite's `Plugin` — assignable into `plugins: [...]`. */
 export interface ServerRouterPlugin {
+  /** The plugin name Vite reports in errors and logs. */
   name: string;
+  /** Installs the middleware into `vite dev`, synchronously so it lands in the PRE position. */
   configureServer(server: ViteMiddlewareServer): void;
+  /** Installs the same middleware into `vite preview`. */
   configurePreviewServer(server: ViteMiddlewareServer): void;
 }
 

@@ -4,6 +4,7 @@ import { appModulesRegistered } from 'sample-app-shared/app/global/appModules.js
 import { MessagesStorage } from 'sample-app-shared/app/global/dataSources.js';
 import AppConfig from '../global/appConfig.js';
 import { Message } from 'sample-app-shared/app/mymessages/interface.js';
+import { snapshot } from 'sample-app-shared/app/mymessages/snapshot.js';
 
 /**
  * An observable cache of the fake REST MessagesStorage.
@@ -15,7 +16,7 @@ import { Message } from 'sample-app-shared/app/mymessages/interface.js';
  * transitions and would otherwise go stale.
  */
 export class MessagesStore {
-  messages: Message[] = [];
+  messages: readonly Message[] = [];
 
   /** False until the first fetch resolves; callers may fall back to resolves. */
   loaded = false;
@@ -38,7 +39,7 @@ export class MessagesStore {
   refresh() {
     void MessagesStorage.all((messages: Message[]) =>
       runInAction(() => {
-        this.messages = [...messages];
+        this.messages = snapshot(messages);
         this.loaded = true;
       }),
     );

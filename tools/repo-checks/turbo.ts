@@ -2,6 +2,8 @@
 // guards assert against what turbo will actually run, so package-qualified
 // edges in any turbo.json count without anyone parsing JSONC or manifests.
 
+import { stripVTControlCharacters } from 'node:util';
+
 import { type ParseError, parse, printParseErrorCode } from 'jsonc-parser';
 
 import { defaultCapture, type Exec } from '@tools/shared/exec.ts';
@@ -64,10 +66,11 @@ function isUndeclared(name: string, error: unknown): boolean {
     typeof error === 'object' && error !== null && 'stderr' in error
       ? String(error.stderr)
       : '';
-  // turbo wraps the message across lines at terminal width
-  return stderr
-    .replaceAll(/\s+/g, ' ')
-    .includes(`Could not find task \`${name}\``);
+  // turbo colors the message and wraps it at terminal width, inside a long
+  // task name too, behind a `│` gutter; task names carry no whitespace
+  const flat = (text: string) =>
+    stripVTControlCharacters(text).replaceAll(/│|\s+/g, '');
+  return flat(stderr).includes(flat(`Could not find task \`${name}\``));
 }
 
 /**
@@ -80,22 +83,55 @@ function isUndeclared(name: string, error: unknown): boolean {
 export function declaredLanes(configs: readonly string[]): Set<string> {
   const lanes = new Set<string>();
   for (const text of configs) {
-    const errors: ParseError[] = [];
-    // turbo.json carries comments, so JSON.parse alone won't do
-    const config = parse(text, errors, { allowTrailingComma: true }) as {
-      tasks?: Record<string, unknown>;
-    } | null;
-    const [first] = errors;
-    if (first) {
-      throw new Error(
-        `invalid turbo.json at offset ${first.offset}: ${printParseErrorCode(first.error)}`,
-      );
-    }
-    for (const id of Object.keys(config?.tasks ?? {})) {
+    for (const id of Object.keys(parseTasks(text))) {
       lanes.add(id.slice(id.lastIndexOf('#') + 1));
     }
   }
   return lanes;
+}
+
+type TaskConfig = { with?: unknown; persistent?: unknown };
+
+function parseTasks(text: string): Record<string, TaskConfig> {
+  const errors: ParseError[] = [];
+  // turbo.json carries comments, so JSON.parse alone won't do
+  const config = parse(text, errors, { allowTrailingComma: true }) as {
+    tasks?: Record<string, TaskConfig>;
+  } | null;
+  const [first] = errors;
+  if (first) {
+    throw new Error(
+      `invalid turbo.json at offset ${first.offset}: ${printParseErrorCode(first.error)}`,
+    );
+  }
+  return config?.tasks ?? {};
+}
+
+/**
+ * `<path>: <task>` for every task that declares `with` but is not persistent.
+ * turbo 2.11.3+ stops a `with` sidecar the moment its parent exits and does
+ * not count that as a failure, so a finite parent silently cuts its sidecars
+ * short. A package task inherits `persistent` from the root (`turbo.json`)
+ * task of the same name.
+ */
+export function nonPersistentWith(
+  configs: readonly { path: string; text: string }[],
+): string[] {
+  const parsed = configs.map(({ path, text }) => ({
+    path,
+    tasks: parseTasks(text),
+  }));
+  const root = parsed.find(({ path }) => path === 'turbo.json')?.tasks ?? {};
+  const found: string[] = [];
+  for (const { path, tasks } of parsed) {
+    for (const [id, task] of Object.entries(tasks)) {
+      if (task.with === undefined || task.with === null) continue;
+      if ((task.persistent ?? root[id]?.persistent) !== true) {
+        found.push(`${path}: ${id}`);
+      }
+    }
+  }
+  return found.sort();
 }
 
 /** Unqualified task names turbo plans when it runs `lanes`. */

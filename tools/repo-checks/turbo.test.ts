@@ -4,6 +4,7 @@ import { describe, it } from 'node:test';
 import type { Exec } from '@tools/shared/exec.ts';
 import {
   declaredLanes,
+  nonPersistentWith,
   planFailure,
   plannedLanes,
   plannedTasks,
@@ -125,6 +126,23 @@ describe('plannedTasks', () => {
     assert.deepEqual([...planned.keys()], ['@www/lit-ui-router.dev#test']);
   });
 
+  it('skips a long name turbo wraps mid-name, in color', async () => {
+    const name = 'typecheck:example:hellosolarsystem-mobx';
+    const exec: Exec = (_command, args) =>
+      args[1] === name
+        ? Promise.reject(
+            Object.assign(new Error('turbo failed'), {
+              stderr:
+                '  \x1B[31m×\x1B[0m Missing tasks in project\n' +
+                '\x1B[31m  ╰─▶ \x1B[0m  \x1B[31m×\x1B[0m Could not find task `typecheck:example:hellosolarsystem-\n' +
+                '\x1B[31m      \x1B[0m  \x1B[31m│\x1B[0m mobx` in project\n',
+            }),
+          )
+        : Promise.resolve({ stdout: planFor(args[1] ?? ''), stderr: '' });
+    const planned = await plannedTasks([name, 'test'], exec, 1);
+    assert.deepEqual([...planned.keys()], ['@www/lit-ui-router.dev#test']);
+  });
+
   it('rethrows any other turbo failure', async () => {
     const exec: Exec = () =>
       Promise.reject(
@@ -184,6 +202,68 @@ describe('declaredLanes', () => {
 
   it('tolerates a config with no tasks at all', () => {
     assert.deepEqual([...declaredLanes(['{ "extends": ["//"] }'])], []);
+  });
+});
+
+describe('nonPersistentWith', () => {
+  const root = `{
+    // turbo.json carries comments
+    "tasks": {
+      "e2e": { "with": ["docs#serve"], "persistent": true },
+      "lint": { "dependsOn": ["lint:oxlint"] }
+    }
+  }`;
+
+  it('passes `with` on a persistent task', () => {
+    assert.deepEqual(
+      nonPersistentWith([{ path: 'turbo.json', text: root }]),
+      [],
+    );
+  });
+
+  it('reports `with` on finite tasks, root and package, sorted', () => {
+    const rootWith = `{ "tasks": {
+      "typecheck": { "with": ["typecheck:src"] },
+      "e2e": { "with": ["docs#serve"], "persistent": true }
+    } }`;
+    const pkg = '{ "tasks": { "build": { "with": ["build:hash"] } } }';
+    assert.deepEqual(
+      nonPersistentWith([
+        { path: 'turbo.json', text: rootWith },
+        { path: 'apps/a/turbo.json', text: pkg },
+      ]),
+      ['apps/a/turbo.json: build', 'turbo.json: typecheck'],
+    );
+  });
+
+  it('inherits persistent from the root task of the same name', () => {
+    const pkg = '{ "tasks": { "e2e": { "with": ["wrangler:dev"] } } }';
+    assert.deepEqual(
+      nonPersistentWith([
+        { path: 'turbo.json', text: root },
+        { path: 'www/turbo.json', text: pkg },
+      ]),
+      [],
+    );
+  });
+
+  it('lets a package override opt out of persistence', () => {
+    const pkg =
+      '{ "tasks": { "e2e": { "with": ["serve"], "persistent": false } } }';
+    assert.deepEqual(
+      nonPersistentWith([
+        { path: 'turbo.json', text: root },
+        { path: 'www/turbo.json', text: pkg },
+      ]),
+      ['www/turbo.json: e2e'],
+    );
+  });
+
+  it('counts an empty `with` list, which still names the key', () => {
+    const pkg = '{ "tasks": { "lint": { "with": [] } } }';
+    assert.deepEqual(nonPersistentWith([{ path: 'a/turbo.json', text: pkg }]), [
+      'a/turbo.json: lint',
+    ]);
   });
 });
 

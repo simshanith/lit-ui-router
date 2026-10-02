@@ -8,9 +8,19 @@ const allSpecs = ['src/specs/**/*.spec.ts'];
 const browserOnlySpecs = [
   'src/specs/ui-sref.spec.ts',
   'src/specs/ui-view-ssr.spec.ts',
+  // composed-event retargeting at nested shadow roots, which happy-dom skips
+  'src/specs/context.browser.spec.ts',
+  'src/specs/sref-active.browser.spec.ts',
+  'src/specs/sref-status-controller.browser.spec.ts',
+  // real custom-element connect ordering, which happy-dom gets wrong for innerHTML
+  'src/specs/parser-connect.browser.spec.ts',
 ];
 // Plain node under the @lit-labs/ssr DOM shim; happy-dom would mask the shim's gaps.
-const nodeOnlySpecs = ['src/specs/ssr-emit.spec.ts'];
+const nodeOnlySpecs = [
+  'src/specs/context-ssr.spec.ts',
+  'src/specs/sref-ssr.spec.ts',
+  'src/specs/ssr-emit.spec.ts',
+];
 
 // Key caches by the API port so the concurrently running `test` and
 // `test:coverage` turbo tasks never share a Vite dep-optimizer dir.

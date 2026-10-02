@@ -1,16 +1,26 @@
 // Pure logic for the published-versions manifest — the file that carries the
-// resolved `latest` dist-tags from resolve-published.ts (registry IO) to
+// resolved dist-tag maps from resolve-published.ts (registry IO) to
 // check-published-diff.ts (cached turbo task). Rendering is canonical
-// (bytewise-sorted keys, fixed indentation, trailing newline) so identical
-// registry state always produces identical bytes — the file is a cache key.
+// (bytewise-sorted keys at both levels, fixed indentation, trailing newline) so
+// identical registry state always produces identical bytes — the file is a
+// cache key, and the registry's own key order is nondeterministic.
 
-/** Package name → `latest` version, or null when never published. */
-export type PublishedVersions = Record<string, string | null>;
+/** Package name → its dist-tags (`{}` when never published). */
+export type PublishedVersions = Record<string, Record<string, string>>;
+
+function sortKeys<T>(entries: Record<string, T>): Record<string, T> {
+  return Object.fromEntries(
+    Object.entries(entries).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)),
+  );
+}
 
 /** Canonical manifest text: bytewise-sorted keys, 2-space indent, final newline. */
 export function renderManifest(versions: PublishedVersions): string {
   const sorted = Object.fromEntries(
-    Object.entries(versions).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)),
+    Object.entries(sortKeys(versions)).map(([name, tags]) => [
+      name,
+      sortKeys(tags),
+    ]),
   );
   return `${JSON.stringify(sorted, null, 2)}\n`;
 }
@@ -25,14 +35,25 @@ export function parseManifest(text: string): PublishedVersions {
   }
   if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
     throw new Error(
-      'published-versions.json must be an object of package name → version',
+      'published-versions.json must be an object of package name → dist-tags',
     );
   }
-  for (const [name, version] of Object.entries(parsed)) {
-    if (version !== null && typeof version !== 'string') {
+  for (const [name, tags] of Object.entries(
+    parsed as Record<string, unknown>,
+  )) {
+    if (typeof tags !== 'object' || tags === null || Array.isArray(tags)) {
       throw new Error(
-        `published-versions.json: "${name}" must map to a version string or null`,
+        `published-versions.json: "${name}" must map to a dist-tag object`,
       );
+    }
+    for (const [tag, version] of Object.entries(
+      tags as Record<string, unknown>,
+    )) {
+      if (typeof version !== 'string') {
+        throw new Error(
+          `published-versions.json: "${name}" dist-tag "${tag}" must map to a version string`,
+        );
+      }
     }
   }
   return parsed as PublishedVersions;

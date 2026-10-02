@@ -1,6 +1,6 @@
 /// <reference types="vitest/globals" />
 
-import { composeNavigateUrl } from '../index.js';
+import { composeNavigateUrl } from '../compose-navigate-url.js';
 
 // Pure string math over (url, baseHref): no DOM, no Navigation API, so this
 // runs in the plain node project rather than paying for happy-dom or a browser.

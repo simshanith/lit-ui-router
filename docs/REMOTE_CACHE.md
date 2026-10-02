@@ -54,7 +54,8 @@ store, so keeping it out of the write path means a compromised machine cannot
 inject artifacts a later CI run would trust and serve. Because this lives in the
 gitignored local file, CI is unaffected and keeps writing. Pass `--local-writes`
 to opt in to pushing from this machine (rarely wanted; it trades that guarantee
-for warming CI's cache from local builds).
+for warming CI's cache from local builds). That posture covers this checkout
+only; worktrees get their own (see below).
 
 Prefer a `*-file` source over a `--token`/`--signature-key` literal: a literal
 lands in shell history and is visible in `ps` while the command runs. Process
@@ -76,23 +77,98 @@ failures, not cache misses.
 
 Never commit a blank placeholder for these: an empty value in a mise config
 wins over an ambient `export`, silently disabling the remote cache for anyone
-who already has a token.
+who already has a token. The worktree pin below spends that same behaviour
+deliberately, from a gitignored file that reaches one worktree.
 
 ### Worktrees
 
-`_.file` is scoped to the config root, and the dotenv is gitignored, so a fresh
-`git worktree add` starts with no credentials — turbo warns
-`Remote caching disabled (TURBO_TOKEN set without TURBO_TEAM)` and quietly falls
-back to local-only. `mise run setup` fixes that: the `turbo_link_worktree` leg
-symlinks the worktree's `.config/mise/turbo.local.env` at the owning checkout's
-file, found via `git rev-parse --git-common-dir` (the same absolute path from
-either side).
+`_.file` is config-root scoped and the dotenv is gitignored, so a worktree
+outside the owning checkout has no credentials; one nested under it inherits
+every `TURBO_*`, because mise reads a config from every ancestor directory.
 
-A symlink and not a copy, so rotating creds in the main checkout reaches every
-worktree at once. The task never overwrites: run `turbo_login` inside a worktree
-and that real file wins, which is how a worktree under test can override
-`TURBO_API` while inheriting the rest. Worktrees created before the main
-checkout had credentials just need `mise run setup` again.
+Either way `mise run setup` pins the worktree to the local cache through its
+`turbo_pin_worktree` leg, which no-ops in the owning checkout and wherever there
+are no credentials to begin with, CI included.
+
+To opt one worktree back into remote reads, delete its
+`.config/mise/conf.d/turbo-worktree.local.toml`. A nested worktree then has its
+credentials already; one outside the owner tree needs
+`<owner>/.config/mise/turbo.local.env` symlinked into its own `.config/mise/` by
+hand.
+
+### Local cache posture
+
+The owning checkout runs `remote:r,local:rw`. Every worktree runs `local:rw`
+with a blank `TURBO_TOKEN` — no remote reads, no remote writes, no request of
+any kind, and the inherited `TURBO_API`/`TURBO_TEAM`/signature key go unread.
+Turbo keys its filesystem cache off the git common dir, so the worktrees and the
+owner all read and write one `<owner>/.turbo/cache`; a worktree's own `.turbo/`
+holds task logs only.
+
+`turbo_pin_worktree` copies `.config/mise/templates/turbo-worktree.toml` into
+the worktree's gitignored `.config/mise/conf.d/turbo-worktree.local.toml` and
+trusts it. The location matters: a `conf.d` entry is beaten by an `_.file` in
+the same config root, so the pin holds because the only `TURBO_*` dotenv belongs
+to the owning checkout, a root farther out. That leaves `config.local.toml` free
+as the maintainer's own override slot.
+
+The blank token is load-bearing on its own: empty reads as unset, so turbo
+builds no analytics sender, where `local:rw` alone still POSTs
+`/v8/artifacts/events` once per run.
+
+The workflow that pairs with it:
+
+- CI writes every pushed branch, not just main: no workflow sets `TURBO_CACHE`,
+  so turbo's default `remote:rw,local:rw` applies on branch pushes and on
+  pull-request merge-head runs alike. Once a branch's CI has finished, its
+  build, lint and typecheck artifacts are in the remote cache.
+- From any worktree, `mise run turbo_backfill` makes one deliberate
+  `remote:r,local:rw` pass — about one request per task hash — that lands those
+  artifacts in the shared `<owner>/.turbo/cache`. The task never touches the
+  pin, so every later run in that worktree is back on `local:rw`. It also
+  unsets `TURBO_FORCE`. Reach for it after a push whose CI has finished, or
+  after pulling `main` into the branch.
+- Owning checkout: after pulling `main`, `mise run ci` still does the job, since
+  that checkout is already `remote:r`; `turbo_backfill` from there is
+  equivalent. Either way the run is all hits except the test tasks.
+
+`turbo_backfill` inspects the tree before it spends that pass. Turbo hashes the
+working tree exactly as it stands, so a tree CI never saw — uncommitted edits, an
+unpushed commit, a branch that drifted from `main`, since PR CI hashes the merge
+and not the branch head — misses every lookup, and turbo then rebuilds everything
+into the local cache without saying so:
+
+- A dirty tree is refused outright: _working tree is dirty; CI hashed a
+  committed tree, commit or stash first_.
+- Otherwise a remote-off dry run (`TURBO_CACHE=local:r`, blank token: about a
+  second, zero requests) yields the plan. The five cacheable misses with the
+  longest dependency lists — their hashes fold in everything underneath — go to
+  `turbo_cache_probe`, which `HEAD`s `/v8/artifacts/:id` for each and stops at
+  the first `200`. A hit costs one request, a miss five, against the ~700 the
+  full pass would spend. An empty list means the shared local cache already
+  holds this tree, and the probe is skipped.
+- All five absent, and the task refuses with one diagnostic: _HEAD is not
+  pushed_ when no remote branch contains it, _branch is behind origin/main; PR
+  CI hashes the merge, pull main first_ when `origin/main` is not an ancestor of
+  `HEAD`, and _CI may still be running_ otherwise. Any other status, or a curl
+  failure, propagates instead as a failure naming the status code.
+
+The `test`, `test:coverage`, `test:engines`, `test:lit2-compat` and
+`test:mobx6-compat` tasks hash `CI` in `turbo.json`, so their artifacts carry a
+key no laptop can produce: those always run locally, backfill or not.
+
+Without the backfill, a worktree computes everything its branch changed and
+hits the shared cache for the rest, never re-probing the remote.
+
+`TURBO_FORCE` outranks all of this: turbo reads it as `--force`, which means
+`--cache=local:w,remote:w` and _replaces_ `TURBO_CACHE` rather than narrowing
+it, so even `local:rw` uploads once a token is in the environment. Only the
+literal values `true` and `1` turn it on. Every mise task that runs turbo
+depends on `turbo_force_guard`, which fails the run before turbo starts when
+that combination would push from a checkout meant to read — it passes in CI,
+where `TURBO_CACHE` is unset and the write is the point, and in a worktree,
+whose blank token keeps turbo off the network. A bare `turbo` call goes around
+the guard, since mise only wraps its own tasks.
 
 ### Rotation
 

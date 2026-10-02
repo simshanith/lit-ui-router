@@ -1,11 +1,4 @@
-import {
-  equals,
-  extend,
-  RawParams,
-  TransitionOptions,
-  isNumber,
-  TargetState,
-} from '@uirouter/core';
+import { RawParams, TransitionOptions, TargetState } from '@uirouter/core';
 import { noChange, ElementPart } from 'lit';
 import { directive, PartInfo, PartType } from 'lit/directive.js';
 import type { DirectiveResult } from 'lit/directive.js';
@@ -14,69 +7,64 @@ import { AsyncDirective } from 'lit/async-directive.js';
 import { UIRouterLit } from './core.js';
 import { inLitDevMode, warnMissingRouter } from './dev-warn.js';
 import { UIRouterLitElement } from './ui-router.js';
+import type { ParentView } from './events.js';
 import { UiView } from './ui-view.js';
+
+import {
+  clickBelongsToBrowser,
+  isNativeLink,
+  sameTarget,
+  srefTransitionOptions,
+  uiSrefTargetEvent,
+  uiSrefTargetRemovedEvent,
+} from './sref-internals.js';
+import type { UiSrefElement } from './sref-internals.js';
 
 // re-export: `inLitDevMode` ships in the public d.ts (#541)
 export { inLitDevMode };
+export {
+  UI_SREF_TARGET_EVENT,
+  UI_SREF_TARGET_REMOVED_EVENT,
+} from './sref-internals.js';
+export type { UiSrefElement, UiSrefTargetEvent } from './sref-internals.js';
 
-/**
- * Event name dispatched when a uiSref target state changes.
- * @internal
- */
-export const UI_SREF_TARGET_EVENT = 'uiSrefTarget';
-
-/**
- * Interface for elements that have been enhanced with uiSref.
- * @internal
- */
-export interface UiSrefElement extends Element {
-  /** The href attribute value for the link */
-  href: string;
-  /** The target state for the link */
-  targetState: TargetState;
-}
-
-/**
- * Custom event dispatched when a uiSref target state changes.
- * Used internally by uiSrefActive to track which states are being linked to.
- * @internal
- */
-export interface UiSrefTargetEvent extends CustomEvent<{
-  targetState: TargetState;
-}> {
-  target: UiSrefElement;
-}
-
-/**
- * Create a uiSrefTarget event with the given target state.
- * @param targetState - The target state for the event
- * @returns A custom event with the target state in the detail
- * @internal
- */
-export function uiSrefTargetEvent(targetState: TargetState): UiSrefTargetEvent {
-  return new CustomEvent(UI_SREF_TARGET_EVENT, {
-    bubbles: true,
-    composed: true,
-    detail: { targetState },
-  }) as UiSrefTargetEvent;
-}
-
-/**
- * `@uirouter/core` types `equals` as `any` because it resolves to
- * `angular.equals || _equals` at load time. The implementation is a deep
- * structural compare (arrays, Date by `getTime`, RegExp by source, NaN).
- * @internal
- */
-const paramsEqual = equals as (a: RawParams, b: RawParams) => boolean;
-
-/**
- * Whether two target states name the same state with the same params.
- * `$state.target()` returns a fresh object every render, so identity is useless.
- * @internal
- */
-function sameTarget(a: TargetState | null, b: TargetState): boolean {
-  return !!a && a.name() === b.name() && paramsEqual(a.params(), b.params());
-}
+export {
+  /**
+   * @internal
+   * @deprecated Directive plumbing, not a supported import.
+   */
+  clickBelongsToBrowser,
+  /**
+   * @internal
+   * @deprecated Directive plumbing, not a supported import.
+   */
+  isNativeLink,
+  /**
+   * @internal
+   * @deprecated Directive plumbing, not a supported import.
+   */
+  sameTarget,
+  /**
+   * @internal
+   * @deprecated Directive plumbing, not a supported import.
+   */
+  srefEventLink,
+  /**
+   * @internal
+   * @deprecated Directive plumbing, not a supported import.
+   */
+  srefTransitionOptions,
+  /**
+   * @internal
+   * @deprecated Directive plumbing, not a supported import.
+   */
+  uiSrefTargetEvent,
+  /**
+   * @internal
+   * @deprecated Directive plumbing, not a supported import.
+   */
+  uiSrefTargetRemovedEvent,
+} from './sref-internals.js';
 
 /**
  * Directive options for {@link uiSref}, passed alongside the transition
@@ -101,7 +89,7 @@ export interface UiSrefOptions {
    *
    * This option governs the `href` attribute **only**. Whether the click
    * handler defers to native browser behaviour is decided by the element
-   * itself, never by this setting — see {@link isNativeLink}.
+   * itself, never by this setting — see `isNativeLink`.
    */
   assignHref?: boolean | 'auto';
 }
@@ -118,53 +106,6 @@ export type UiSrefTransitionOptions = TransitionOptions & UiSrefOptions;
 const warnedAssignHref = new WeakSet<Element>();
 
 /**
- * Whether the element navigates on its own. `localName` is lowercase for HTML
- * and SVG alike, so SVG `<a>` needs no namespace check.
- *
- * **Tag-based on purpose.** This decides where an `href` may be written, and
- * `href` is a property of the tag, not of the role: `<div role="link" href="…">`
- * is inert noise. `uiSrefActive`'s `isLinkElement` asks the neighbouring
- * *role*-based question for `aria-current`, which `<div role="link">`
- * legitimately takes. The two overlap on `<a>`/`<area>` and nowhere else — do
- * not unify them.
- *
- * @internal
- */
-export function isNativeLink(element: Element): boolean {
-  const tag = element.localName;
-  return tag === 'a' || tag === 'area';
-}
-
-/**
- * Whether the click asked the browser for something other than a plain
- * in-place navigation: a new tab/window, a download, or a non-primary button.
- * @internal
- */
-function isModifiedClick(event: MouseEvent): boolean {
-  const { button, ctrlKey, metaKey, shiftKey, altKey } = event;
-  return (
-    !isNumber(button) || !!button || ctrlKey || metaKey || shiftKey || altKey
-  );
-}
-
-/**
- * Whether the element declares that its href leaves this browsing context: a
- * `target` other than `_self`, or a `rel` token list containing `external`.
- * @internal
- */
-function opensOffApp(element: Element): boolean {
-  const target = element.getAttribute('target');
-  // browsing-context keywords are ASCII case-insensitive; a name we do not
-  // recognise is a frame, which is equally not ours. untrimmed on purpose —
-  // the browser does not trim either, so `" _blank"` really is a frame name
-  if (target && target.toLowerCase() !== '_self') {
-    return true;
-  }
-  // rel is a token list: `rel="external noopener"` is still external
-  return (element.getAttribute('rel') ?? '').split(/\s+/).includes('external');
-}
-
-/**
  * Directive class that creates state-based navigation links.
  *
  * This directive is used internally by the {@link uiSref} directive function.
@@ -172,25 +113,33 @@ function opensOffApp(element: Element): boolean {
  * by setting the `href` attribute and handling click events.
  *
  * @see {@link uiSref} for the public API
- * @see [[AsyncDirective]]
- * @see [[StateService.go]]
+ * @see {@link AsyncDirective}
+ * @see {@link "@uirouter/core"!StateService.go | StateService.go}
  *
  * @category directives
  */
 export class UiSrefDirective extends AsyncDirective {
+  /** the target state name from the last render */
   state: string | null = null;
+  /** the target state params from the last render */
   params: RawParams = {};
+  /** the transition options from the last render */
   options: TransitionOptions = {};
 
+  /** @internal */
   element: UiSrefElement | null = null;
 
+  /** @internal */
   uiRouter: UIRouterLit | undefined;
-  parentView: UiView | null = null;
+  /** @internal */
+  parentView: ParentView | null = null;
 
   /** this directive's own options, stripped from the transition options */
   uiSrefOptions: UiSrefOptions = {};
 
+  /** the href computed for the target, or null when there is none */
   href: string | null = null;
+  /** the resolved target, or null until the router is found */
   targetState: TargetState | null = null;
 
   /** whether the href currently on the element was written by us */
@@ -223,15 +172,12 @@ export class UiSrefDirective extends AsyncDirective {
     }
   }
 
+  /** the transition options with `relative` defaulted to the enclosing view */
   getOptions(opts: TransitionOptions = this.options): TransitionOptions {
-    const defaultOpts: TransitionOptions = {
-      relative: this.parentView?.viewContext?.name,
-      inherit: true,
-      source: 'sref',
-    };
-    return extend(defaultOpts, opts || {}) as TransitionOptions;
+    return srefTransitionOptions(this.parentView, opts);
   }
 
+  /** @internal */
   render(
     state: string,
     params?: RawParams,
@@ -344,6 +290,8 @@ export class UiSrefDirective extends AsyncDirective {
   /** @internal */
   disconnected(): void {
     this.element?.removeEventListener('click', this.onClick as EventListener);
+    // lit notifies before it removes the nodes: the container still hears this
+    this.element?.dispatchEvent(uiSrefTargetRemovedEvent());
     this.element = null;
     this.targetState = null;
     this.href = null;
@@ -365,6 +313,7 @@ export class UiSrefDirective extends AsyncDirective {
     }
   }
 
+  /** @internal */
   onClick = (event: MouseEvent): void => {
     const { uiRouter: router, state, params } = this;
     const options = this.getOptions();
@@ -376,20 +325,7 @@ export class UiSrefDirective extends AsyncDirective {
       return;
     }
 
-    const element = event.currentTarget as Element;
-
-    // author signals, so unscoped: they apply whatever the element is
-    if (event.defaultPrevented || element.hasAttribute('download')) {
-      return;
-    }
-
-    // scoped to links with an href: these guards hand the click back to the
-    // browser, and without one it has nothing to act on
-    if (
-      isNativeLink(element) &&
-      element.hasAttribute('href') &&
-      (isModifiedClick(event) || opensOffApp(element))
-    ) {
+    if (clickBelongsToBrowser(event, event.currentTarget as Element)) {
       return;
     }
 
@@ -398,6 +334,7 @@ export class UiSrefDirective extends AsyncDirective {
     event.preventDefault();
   };
 
+  /** @internal */
   update(
     part: ElementPart,
     [state, params = {}, options = {}]: [
@@ -425,6 +362,7 @@ export class UiSrefDirective extends AsyncDirective {
     return this.doRender();
   }
 
+  /** @internal */
   doRender = (): typeof noChange => {
     return this.render(this.state!, this.params, this.options);
   };
@@ -462,8 +400,8 @@ export class UiSrefDirective extends AsyncDirective {
  *
  * **Arguments:**
  * - `state` - The target state name (can be relative like `.child` or `^.sibling`)
- * - `params` - Optional state parameters (see [[RawParams]])
- * - `options` - Optional transition options (see [[TransitionOptions]]), plus
+ * - `params` - Optional state parameters (see {@link RawParams})
+ * - `options` - Optional transition options (see {@link TransitionOptions}), plus
  *   this directive's own (see {@link UiSrefOptions})
  *
  * @example Basic usage
@@ -500,10 +438,10 @@ export class UiSrefDirective extends AsyncDirective {
  * html`<button ${uiSref('.new', {}, { assignHref: 'auto' })}>New</button>`
  * ```
  *
- * @see [[RawParams]]
- * @see [[TransitionOptions]]
+ * @see {@link RawParams}
+ * @see {@link TransitionOptions}
  * @see {@link UiSrefOptions}
- * @see [[DirectiveResult]]
+ * @see {@link DirectiveResult}
  *
  * @category directives
  */

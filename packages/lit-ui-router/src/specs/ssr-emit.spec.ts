@@ -5,12 +5,26 @@ import { html } from 'lit';
 import type { TemplateResult } from 'lit';
 
 import '../register.js';
+import { srefActiveClass, srefAriaCurrent } from '../sref-active.js';
 
 const emit = (template: TemplateResult) => collectResultSync(render(template));
 
 const shadowRoot = '<template shadowroot="open" shadowrootmode="open">';
 
 describe('@lit-labs/ssr emit', () => {
+  it('leaves the sref status attributes as authored without a router', () => {
+    const out = emit(
+      html`<a
+        class="nav ${srefActiveClass({ state: 'users', activeClasses: ['active'] })}"
+        aria-current=${srefAriaCurrent({ state: 'users' })}
+        >Users</a
+      >`,
+    );
+
+    expect(out).toContain('class="nav "');
+    expect(out).not.toContain('aria-current');
+  });
+
   it('should render <ui-router> as a slotted declarative shadow root', () => {
     const out = emit(html`<ui-router><p>light</p></ui-router>`);
 

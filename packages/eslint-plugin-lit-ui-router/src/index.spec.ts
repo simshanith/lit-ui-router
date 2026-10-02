@@ -6,7 +6,14 @@ import plugin from './index.ts';
 
 const IMPORTS = `
 import { html } from 'lit';
-import { uiSref, uiSrefActive } from 'lit-ui-router';
+import {
+  srefActiveClass,
+  srefAriaCurrent,
+  srefHref,
+  SrefStatusController,
+  uiSref,
+  uiSrefActive,
+} from 'lit-ui-router';
 `;
 
 // No lit-a11y registered: the `off` line for it is inert, which is the whole
@@ -73,6 +80,26 @@ void describe('plugin', () => {
     );
   });
 
+  void it('recommended reports a link painted active but silent', () => {
+    const messages = lint(
+      `${IMPORTS}html\`<a href=\${srefHref('home')} class=\${srefActiveClass({ state: 'home' })}>Home</a>\`;`,
+    );
+    assert.deepEqual(
+      messages.map((message) => message.ruleId),
+      ['lit-ui-router/sref-active-class-aria-current'],
+    );
+  });
+
+  void it('recommended reports a link painted from controller status', () => {
+    const messages = lint(
+      `${IMPORTS}class Nav {\n  users = new SrefStatusController(this, { state: 'users' });\n  render() {\n    return html\`<a href=\${srefHref('users')} class="nav \${this.users.active ? 'on' : ''}">Users</a>\`;\n  }\n}`,
+    );
+    assert.deepEqual(
+      messages.map((message) => message.ruleId),
+      ['lit-ui-router/sref-status-aria-current'],
+    );
+  });
+
   void it('recommended reports a directive outside an element part', () => {
     const messages = lint(
       `${IMPORTS}html\`<a href=\${uiSref('home')}>Home</a>\`;`,
@@ -80,6 +107,25 @@ void describe('plugin', () => {
     assert.deepEqual(
       messages.map((message) => message.ruleId),
       ['lit-ui-router/directive-position'],
+    );
+  });
+
+  void it('recommended reports an attribute directive as an element part', () => {
+    const messages = lint(
+      `${IMPORTS}html\`<a \${srefHref('home')}>Home</a>\`;`,
+    );
+    assert.deepEqual(
+      messages.map((message) => message.ruleId),
+      ['lit-ui-router/anchor-is-valid', 'lit-ui-router/directive-position'],
+    );
+  });
+
+  void it('recommended stays quiet on a srefHref anchor', () => {
+    assert.deepEqual(
+      lint(
+        `${IMPORTS}html\`<a href=\${srefHref('home')} class="nav \${srefActiveClass({ state: 'home' })}" aria-current=\${srefAriaCurrent({ state: 'home' })}>Home</a>\`;`,
+      ),
+      [],
     );
   });
 

@@ -35,7 +35,7 @@ jobs:
     # `mise run setup` step: paying for an install here would cost more than it
     # saves on the pushes it can't skip. gh is preinstalled on the runner image.
     name: build_and_test (signal gate)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 5
     permissions:
       contents: read
@@ -51,7 +51,7 @@ jobs:
           # git merge-tree needs real merge bases; a shallow clone has none.
           fetch-depth: 0
       - name: Setup mise
-        uses: jdx/mise-action@v4
+        uses: jdx/mise-action@v5
       - name: Decide whether this push needs its own run
         id: gate
         run: mise run //tools/build_and_test:branch_ci_gate

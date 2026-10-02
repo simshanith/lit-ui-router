@@ -16,10 +16,10 @@ import { UIRouterLitElement } from './ui-router.js';
 type DeregisterFn = () => void;
 
 /**
- * Transition lifecycle events that a [[TransitionController]] can observe.
+ * Transition lifecycle events that a {@link TransitionController} can observe.
  *
  * Each value corresponds to a
- * {@link https://ui-router.github.io/core/docs/latest/interfaces/_transition_interface_.ihookregistry.html | TransitionService hook registry}
+ * {@link "@uirouter/core"!IHookRegistry | TransitionService hook registry}
  * method of the same name.
  *
  * @category controllers
@@ -31,9 +31,9 @@ export type TransitionEventType =
   | 'onError';
 
 /**
- * The reason a [[TransitionController]] invoked its callback.
+ * The reason a {@link TransitionController} invoked its callback.
  *
- * Either one of the observed [[TransitionEventType]] hooks fired, or the
+ * Either one of the observed {@link TransitionEventType} hooks fired, or the
  * host element (re)connected to the DOM and the controller synchronized
  * with the router's current state (`'hostConnected'`).
  *
@@ -42,18 +42,18 @@ export type TransitionEventType =
 export type TransitionCallbackReason = TransitionEventType | 'hostConnected';
 
 /**
- * A callback invoked by [[TransitionController]] whenever the host is
+ * A callback invoked by {@link TransitionController} whenever the host is
  * synchronized with the router.
  *
  * For `'onBefore'` and `'onStart'` reasons, the returned value is passed
  * back to UI-Router as a
- * {@link https://ui-router.github.io/core/docs/latest/modules/_transition_interface_.html#hookresult | HookResult},
+ * {@link HookResult},
  * so the callback may cancel or redirect the pending transition.
  *
- * @param transition - The [[Transition]] which triggered the callback.
+ * @param transition - The {@link Transition} which triggered the callback.
  *   For the `'hostConnected'` reason this is the most recent successful
  *   transition, or `undefined` when no transition has succeeded yet.
- * @param reason - Why the callback was invoked (see [[TransitionCallbackReason]]).
+ * @param reason - Why the callback was invoked (see {@link TransitionCallbackReason}).
  *
  * @category controllers
  */
@@ -63,13 +63,13 @@ export type TransitionCallback = (
 ) => unknown;
 
 /**
- * Options for [[TransitionController]].
+ * Options for {@link TransitionController}.
  *
  * @category controllers
  */
 export interface TransitionControllerOptions {
   /**
-   * The [[UIRouter]] instance to observe.
+   * The {@link UIRouter} instance to observe.
    *
    * When omitted, the controller discovers the router from an ancestor
    * <code>&lt;ui-router&gt;</code> (or <code>&lt;ui-view&gt;</code>) via the
@@ -78,7 +78,7 @@ export interface TransitionControllerOptions {
   router?: UIRouter;
 
   /**
-   * {@link https://ui-router.github.io/core/docs/latest/interfaces/_transition_interface_.hookmatchcriteria.html | HookMatchCriteria}
+   * {@link HookMatchCriteria}
    * limiting which transitions notify the host.
    *
    * Defaults to `{}` (all transitions).
@@ -94,7 +94,7 @@ export interface TransitionControllerOptions {
 
   /**
    * Invoked before `host.requestUpdate()` whenever an observed event fires,
-   * and once each time the host connects (see [[TransitionCallbackReason]]).
+   * and once each time the host connects (see {@link TransitionCallbackReason}).
    */
   callback?: TransitionCallback;
 }
@@ -104,7 +104,7 @@ export interface TransitionControllerOptions {
  * {@link https://lit.dev/docs/composition/controllers/ | ReactiveController}
  * that keeps its host element synchronized with UI-Router transitions.
  *
- * The controller registers [[TransitionService]] hooks (by default
+ * The controller registers {@link "@uirouter/core"!TransitionService | TransitionService} hooks (by default
  * `onSuccess`) when the host connects and calls `host.requestUpdate()`
  * whenever a matching transition event fires — no manual `requestUpdate()`
  * plumbing, no leaked hooks. All registered hooks are deregistered in
@@ -167,16 +167,16 @@ export class TransitionController implements ReactiveController {
   }
 
   /**
-   * The observed [[UIRouter]] instance.
+   * The observed {@link UIRouter} instance.
    *
-   * `undefined` until provided via [[TransitionControllerOptions.router]] or
+   * `undefined` until provided via {@link TransitionControllerOptions.router} or
    * discovered from an ancestor <code>&lt;ui-router&gt;</code> on connect.
    */
   get router(): UIRouter | undefined {
     return this._router;
   }
 
-  /** The router's [[UIRouterGlobals]], if a router has been discovered. */
+  /** The router's {@link UIRouterGlobals}, if a router has been discovered. */
   get globals(): UIRouterGlobals | undefined {
     return this._router?.globals;
   }
@@ -186,13 +186,13 @@ export class TransitionController implements ReactiveController {
     return this.globals?.params ?? {};
   }
 
-  /** The current [[StateDeclaration]] (`globals.current`). */
+  /** The current {@link StateDeclaration} (`globals.current`). */
   get current(): StateDeclaration | undefined {
     return this.globals?.current;
   }
 
   /**
-   * The most recent [[Transition]] observed by this controller
+   * The most recent {@link Transition} observed by this controller
    * (set by observed events and on host connect).
    */
   get transition(): Transition | undefined {
@@ -200,7 +200,7 @@ export class TransitionController implements ReactiveController {
   }
 
   /**
-   * Delegates to [[StateService.includes]]: is the state (or glob pattern,
+   * Delegates to {@link "@uirouter/core"!StateService.includes | StateService.includes}: is the state (or glob pattern,
    * e.g. `'admin.**'`) included in the current active state?
    *
    * Returns `false` when no router has been discovered.

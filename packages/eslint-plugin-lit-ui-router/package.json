@@ -1,6 +1,6 @@
 {
   "name": "eslint-plugin-lit-ui-router",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "private": false,
   "description": "ESLint rules that understand lit-ui-router directives: hrefless anchors, inert hrefs, aria-current conflicts and misplaced directives, where a uiSref element part counts as the href it assigns at runtime",
   "keywords": [
@@ -47,26 +47,29 @@
     "build:types": "oxc-emit-dts",
     "changelog": "release-it --changelog --git.tagMatch=\"eslint-plugin-lit-ui-router@[0-9]*.[0-9]*.[0-9]*\"",
     "docs:rules": "eslint-doc-generator",
-    "format": "oxfmt \"**/*.{ts,js,json,jsonc}\"",
-    "format:check": "oxfmt --check \"**/*.{ts,js,json,jsonc}\"",
-    "lint": "oxlint --ignore-pattern test/oxlint .",
+    "format:check:oxfmt": "oxfmt --check \"**/*.{ts,js,json,jsonc}\"",
+    "format:oxfmt": "oxfmt \"**/*.{ts,js,json,jsonc}\"",
     "lint:docs": "eslint-doc-generator --check",
+    "lint:oxlint": "oxlint --ignore-pattern test/oxlint .",
     "lint:rules": "eslint --config eslint.rules.config.js .",
-    "test": "node --test \"src/**/*.spec.ts\"",
     "test:oxlint": "node --test \"test/oxlint/*.spec.ts\"",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "test:peer-floor": "peer-floor-guard && node --import ./test/eslint-floor.ts --test \"src/**/*.spec.ts\"",
+    "test:unit": "node --test \"src/**/*.spec.ts\"",
+    "typecheck:tsc": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
     "eslint-plugin-lit": "catalog:publishedDependencies"
   },
   "devDependencies": {
     "@release-it/conventional-changelog": "catalog:",
-    "@tools/eslint-ts-parser": "workspace:*",
-    "@tools/oxc-emit": "workspace:*",
-    "@tools/release-config": "workspace:*",
+    "@tools/compat-guards": "catalog:workspace",
+    "@tools/eslint-ts-parser": "catalog:workspace",
+    "@tools/oxc-emit": "catalog:workspace",
+    "@tools/release-config": "catalog:workspace",
     "@types/node": "catalog:",
-    "eslint": "catalog:peerFloor",
+    "eslint": "catalog:",
     "eslint-doc-generator": "catalog:",
+    "eslint-floor": "catalog:peerFloorEslintPlugin",
     "eslint-plugin-eslint-plugin": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",

@@ -44,6 +44,7 @@ export interface ParamType
   extends
     Readonly<Pick<ParamTypeDefinition, 'is' | 'decode' | 'raw'>>,
     Readonly<Required<Pick<ParamTypeDefinition, 'pattern'>>> {
+  /** The type's name — a built-in (`int`, `bool`, …) or a custom one. */
   readonly name: string;
   /** Relaxation vs core: may return null/undefined, which format() renders as an absent value (core's built-ins do the same at runtime). */
   readonly encode?: (val: unknown) => string | string[] | null | undefined;
@@ -222,7 +223,9 @@ const getSquashPolicy = (
 
 /** An input rewrite applied before typing (absent/empty/squash handling). */
 export interface Replace {
+  /** The raw input value to rewrite. */
   from: unknown;
+  /** What it becomes (`undefined` triggers the param's default). */
   to: unknown;
 }
 
@@ -243,11 +246,17 @@ const getReplace = (
 
 /** A compiled parameter: inert data for one placeholder of a pattern. */
 export interface CompiledParam {
+  /** The placeholder's name, as written in the pattern. */
   readonly id: string;
+  /** The {@link ParamType} that decodes, encodes and validates its values. */
   readonly type: ParamType;
+  /** Whether the placeholder came from the pattern's search part (`?flag`). */
   readonly isSearch: boolean;
+  /** Whether the param may be absent — it has a static default, or it is a search param. */
   readonly isOptional: boolean;
+  /** The url squash policy: false, true, or the placeholder string. */
   readonly squash: boolean | string;
+  /** Input rewrites applied before typing (see {@link Replace}). */
   readonly replace: readonly Replace[];
   /** The static default value, applied directly (see the module docblock). */
   readonly defaultValue: unknown;
@@ -357,6 +366,7 @@ const quoteRegExp = (segment: string, param?: CompiledParam): string => {
   return result + surround[0] + param.type.pattern.source + surround[1];
 };
 
+/** Per-pattern options for a compiler's `compile` (see {@link urlMatcherFactory}). */
 export interface UrlMatcherCompileOptions<M = undefined> extends Pick<
   UrlMatcherCompileConfig,
   'strict' | 'caseInsensitive'
@@ -367,6 +377,7 @@ export interface UrlMatcherCompileOptions<M = undefined> extends Pick<
   meta?: M;
 }
 
+/** Compiler-wide defaults for {@link urlMatcherFactory}, shared by every pattern it compiles. */
 export interface UrlMatcherCompilerConfig extends Pick<
   UrlMatcherCompileConfig,
   'strict' | 'caseInsensitive' | 'decodeParams'
@@ -397,7 +408,9 @@ export interface CompiledMatcher<M = undefined> {
   readonly regexp: RegExp;
   /** The raw static segments between path params (length: path params + 1). */
   readonly segments: readonly string[];
+  /** The path placeholders, in pattern order — what {@link exec} reads out of the regexp captures. */
   readonly pathParams: readonly CompiledParam[];
+  /** The search placeholders; they never affect path matching, and {@link exec} resolves them to their defaults. */
   readonly searchParams: readonly CompiledParam[];
   /** Whether {@link exec} percent-decodes captured values (the factory's decodeParams). */
   readonly decodeParams: boolean;
@@ -646,6 +659,7 @@ export function format(
  * percent-decoding on, and a default squash policy of false.
  */
 export function urlMatcherFactory(config: UrlMatcherCompilerConfig = {}): {
+  /** Compiles one pattern into a {@link CompiledMatcher}, with per-pattern {@link UrlMatcherCompileOptions}. */
   compile: <M = undefined>(
     pattern: string,
     options?: UrlMatcherCompileOptions<M>,

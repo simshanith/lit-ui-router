@@ -1,17 +1,9 @@
 import {
-  anyTrueR,
   extend,
-  Param,
-  PathNode,
-  PathUtils,
-  Predicate,
   RawParams,
-  StateObject,
-  tail,
   TargetState,
   Transition,
   TransitionOptions,
-  unnestR,
 } from '@uirouter/core';
 import { noChange, ElementPart } from 'lit';
 import { directive, PartInfo, PartType } from 'lit/directive.js';
@@ -23,14 +15,30 @@ import { UIRouterLitElement } from './ui-router.js';
 import { inLitDevMode, warnMissingRouter } from './dev-warn.js';
 import {
   isNativeLink,
+  mergeSrefStatus,
+  srefStatus,
   UiSrefElement,
   UiSrefTargetEvent,
   UI_SREF_TARGET_EVENT,
-} from './ui-sref.js';
+} from './sref-internals.js';
+import type { ParentView } from './events.js';
 import { UiView } from './ui-view.js';
 
+export {
+  /**
+   * @internal
+   * @deprecated Directive plumbing, not a supported import.
+   */
+  mergeSrefStatus,
+  /**
+   * @internal
+   * @deprecated Directive plumbing, not a supported import.
+   */
+  srefStatus,
+} from './sref-internals.js';
+
 /** @internal */
-interface TransEvt {
+export interface TransEvt {
   evt: string;
   trans: Transition;
   status?: SrefStatus;
@@ -62,7 +70,7 @@ export enum TransitionStateChange {
  * with links) and the current router state.
  *
  * @see {@link uiSrefActive}
- * @see [[TargetState]]
+ * @see {@link TargetState}
  *
  * @category types
  */
@@ -77,65 +85,6 @@ export interface SrefStatus {
   exiting: boolean;
   /** The enclosed sref(s) target state(s) */
   targetStates: TargetState[];
-}
-
-/**
- * Returns a Predicate<PathNode[]>
- *
- * The predicate returns true when the target state (and param values)
- * match the (tail of) the path, and the path's param values
- *
- * @internal
- */
-const pathMatches = (target: TargetState): Predicate<PathNode[]> => {
-  if (!target.exists()) return () => false;
-  const state: StateObject = target.$state();
-  const targetParamVals = target.params();
-  const targetPath: PathNode[] = PathUtils.buildPath(target);
-  const paramSchema: Param[] = targetPath
-    .map((node) => node.paramSchema)
-    .reduce<Param[]>(unnestR, [])
-    .filter((param: Param) =>
-      Object.prototype.hasOwnProperty.call(targetParamVals, param.id),
-    );
-  return (path: PathNode[] = []) => {
-    const tailNode = tail(path);
-    if (!tailNode || tailNode.state !== state) return false;
-    const paramValues = PathUtils.paramValues(path) as RawParams;
-    return Param.equals(paramSchema, paramValues, targetParamVals);
-  };
-};
-
-/**
- * Given basePath: [a, b], appendPath: [c, d]),
- * Expands the path to [c], [c, d]
- * Then appends each to [a,b,] and returns: [a, b, c], [a, b, c, d]
- *
- * @internal
- */
-function spreadToSubPaths(
-  basePath: PathNode[],
-  appendPath: PathNode[],
-): PathNode[][] {
-  return appendPath.map((node) =>
-    basePath.concat(
-      PathUtils.subPath(appendPath, (n) => n!.state === node.state),
-    ),
-  );
-}
-
-/** @internal */
-export function mergeSrefStatus(
-  left: SrefStatus,
-  right: SrefStatus,
-): SrefStatus {
-  return {
-    active: left.active || right.active,
-    exact: left.exact || right.exact,
-    entering: left.entering || right.entering,
-    exiting: left.exiting || right.exiting,
-    targetStates: [...left.targetStates, ...right.targetStates],
-  };
 }
 
 /**
@@ -184,7 +133,7 @@ export interface AriaCurrentValues {
  * This is `uiSref`'s tag check widened by role. `aria-current` is a property of
  * the role, so `<div role="link">` takes it; `href` is a property of the tag,
  * so the same element must never take one. Sharing the tag half keeps the
- * overlap exact — see {@link isNativeLink} for the other side.
+ * overlap exact — see `isNativeLink` for the other side.
  *
  * @internal
  */
@@ -261,27 +210,32 @@ type deregisterFn = () => void;
  * 2. **Container mode**: Automatically watch nested uiSref directives
  *
  * @see {@link uiSrefActive} for the public API
- * @see [[AsyncDirective]]
+ * @see {@link AsyncDirective}
  * @see {@link SrefStatus}
  *
  * @category directives
  */
 export class UiSrefActiveDirective extends AsyncDirective {
+  /** @internal */
   element: Element | null = null;
 
+  /** @internal */
   uiRouter: UIRouterLit | undefined;
   /** @internal */
   seekRouter(): void {
     this.uiRouter = UIRouterLitElement.seekRouter(this.element!);
   }
 
-  parentView: UiView | null = null;
+  /** @internal */
+  parentView: ParentView | null = null;
   /** @internal */
   seekParentView(): void {
     this.parentView = UiView.seekParentView(this.element!);
   }
 
+  /** classes applied while any target is active */
   activeClasses: string[] = [];
+  /** classes applied while any target is exactly active */
   exactClasses: string[] = [];
   /** undefined = default (on for link elements) */
   ariaCurrentValue: AriaCurrentValue | false | AriaCurrentValues | undefined;
@@ -301,20 +255,35 @@ export class UiSrefActiveDirective extends AsyncDirective {
    */
   private warnedAriaCurrentTakeover = false;
 
+  /** the explicit target state name, or undefined in container mode */
   state: string | undefined;
+  /** the explicit target state params */
   params: RawParams = {};
+  /** the explicit target transition options */
   options: TransitionOptions = {};
 
+  /** whether any target is active, or undefined before the first status */
   active: boolean | undefined;
+  /** whether any target is exactly active, or undefined before the first status */
   exact: boolean | undefined;
+  /** whether a running transition enters a target */
   entering: boolean | undefined;
+  /** whether a running transition exits a target */
   exiting: boolean | undefined;
 
+  /** every target this directive watches: the explicit one, or the enclosed links' */
   targetStates: Set<TargetState> = new Set<TargetState>();
+  /** @internal */
   uiSrefs: WeakMap<TargetState, UiSrefElement> = new WeakMap<
     TargetState,
     UiSrefElement
   >();
+
+  /**
+   * The reverse of {@link uiSrefs}, so a re-targeting link retires its old one.
+   * @internal
+   */
+  private readonly _linkTargets = new WeakMap<UiSrefElement, TargetState>();
 
   /** @internal */
   _deregisterOnStart: deregisterFn | undefined;
@@ -481,51 +450,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
     event: TransEvt | undefined,
     srefTarget: TargetState,
   ): SrefStatus {
-    const pathMatchesTarget = pathMatches(srefTarget);
-    const tc = event?.trans.treeChanges();
-
-    const isStartEvent = event?.evt === 'start';
-    const isSuccessEvent = event?.evt === 'success';
-    const activePath: PathNode[] | undefined = isSuccessEvent
-      ? tc?.to
-      : tc?.from;
-
-    const isActive = () =>
-      activePath
-        ? spreadToSubPaths([], activePath)
-            .map(pathMatchesTarget)
-            .reduce(anyTrueR, false)
-        : this.uiRouter!.stateService.includes(
-            srefTarget.name(),
-            srefTarget.params(),
-          );
-
-    const isExact = () =>
-      activePath
-        ? pathMatchesTarget(activePath)
-        : this.uiRouter!.stateService.is(
-            srefTarget.name(),
-            srefTarget.params(),
-          );
-
-    const isEntering = () =>
-      spreadToSubPaths(tc!.retained, tc!.entering)
-        .map(pathMatchesTarget)
-        .reduce(anyTrueR, false);
-
-    const isExiting = () =>
-      spreadToSubPaths(tc!.retained, tc!.exiting)
-        .map(pathMatchesTarget)
-        .reduce(anyTrueR, false);
-
-    const result: SrefStatus = {
-      active: isActive(),
-      exact: isExact(),
-      entering: isStartEvent ? isEntering() : false,
-      exiting: isStartEvent ? isExiting() : false,
-      targetStates: [srefTarget],
-    };
-    return result;
+    return srefStatus(this.uiRouter!, event, srefTarget);
   }
 
   /** @internal */
@@ -707,8 +632,17 @@ export class UiSrefActiveDirective extends AsyncDirective {
   /** @internal */
   onUiSrefTargetEvent = (event: UiSrefTargetEvent): void => {
     const { targetState } = event.detail;
+    const previous = this._linkTargets.get(event.target);
+    if (previous) {
+      this.targetStates.delete(previous);
+      this.uiSrefs.delete(previous);
+    }
     this.targetStates.add(targetState);
     this.uiSrefs.set(targetState, event.target);
+    this._linkTargets.set(event.target, targetState);
+    if (this._firstUpdated) {
+      this.onStatesChanged();
+    }
   };
 
   /** @internal */
@@ -782,7 +716,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
  * `ariaCurrentValue` explicitly.
  *
  * **Arguments:**
- * - `params` - Configuration object (see [[UiSrefActiveParams]]) with activeClasses, exactClasses, ariaCurrentValue, and optional state/params
+ * - `params` - Configuration object (see {@link UiSrefActiveParams}) with activeClasses, exactClasses, ariaCurrentValue, and optional state/params
  *
  * @example Basic usage with nested uiSref
  * ```ts
@@ -820,7 +754,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
  * `
  * ```
  *
- * @example Customizing or disabling `aria-current`
+ * @example Customizing or disabling aria-current
  * ```ts
  * html`
  *   <!-- a step in a multi-step flow -->
@@ -883,7 +817,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
  *
  * @see {@link SrefStatus}
  * @see {@link UiSrefActiveParams}
- * @see [[DirectiveResult]]
+ * @see {@link DirectiveResult}
  *
  * @category directives
  */

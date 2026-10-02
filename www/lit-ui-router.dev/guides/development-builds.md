@@ -22,7 +22,9 @@ message strings included. A production bundle cannot be made to print them.
 | Package                       | Two builds | Why                                              |
 | ----------------------------- | ---------- | ------------------------------------------------ |
 | `lit-ui-router`               | yes        | three development warnings                       |
+| `lit-ui-router-effect`        | yes        | one development warning                          |
 | `lit-ui-router-mobx`          | yes        | one development warning                          |
+| `lit-ui-router-ssr`           | yes        | one development warning                          |
 | `navigation-location-plugin`  | no         | no runtime warnings to fold out                  |
 | `ui-router-server`            | no         | no runtime warnings to fold out                  |
 | `eslint-plugin-lit-ui-router` | no         | a lint plugin — it never runs in your app bundle |
@@ -31,8 +33,8 @@ The split exists where there is something to strip. A package with a single
 build is not missing a feature.
 
 Every entry point of `lit-ui-router` is covered, not just the root: `pure`,
-`register`, `ui-router.register`, and `ui-view.register` each carry their own
-`development` condition.
+`register`, `ui-router.register`, `ui-view.register`, and `context` each carry
+their own `development` condition.
 
 ## The second gate: lit's own build
 
@@ -75,11 +77,13 @@ that renders once with its initial value and never again.
 ## What still warns in production
 
 Two warnings are not part of the split and ship in both builds: `<ui-router>`
-and `<ui-view>` each warn if their tag name is already defined, then skip
-registration. That is a first-definition-wins degradation rather than a
-`define()` throw, and it usually means two copies of the package are loaded —
-worth saying in production, because it is a packaging fault rather than an
-authoring mistake.
+and `<ui-view>` each warn if another class already holds their tag name, name
+that class, then skip registration. That is a first-definition-wins degradation
+rather than a `define()` throw. A subclass of their own element passes silently:
+it is a deliberate extension, and it is how `lit-ui-router-ssr/register` takes
+`<ui-view>`. A foreign class usually means two copies of the package are
+loaded — worth saying in production, because it is a packaging fault rather
+than an authoring mistake.
 
 ## Catching the same problems at author time
 

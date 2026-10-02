@@ -2,6 +2,30 @@
   "$schema": "https://turborepo.com/schema.json",
   "extends": ["//"],
   "tasks": {
+    // restates the root umbrella's list, plus each example's own eslint pass
+    "lint": {
+      "dependsOn": [
+        "lint:oxlint",
+        "lint:examples",
+        "//#lint:root",
+        "//#lint:package-json",
+        "//#lint:elements",
+        "//#lint:markdown",
+        "//#lint:workflows",
+        "//#lint:templates",
+        "@tools/repo-checks#check:patches",
+        "@tools/repo-checks#check:dedupe",
+        "@tools/repo-checks#check:single-version",
+        "@tools/repo-checks#check:graph-edges",
+        "@tools/repo-checks#check:task-inputs",
+        "@tools/repo-checks#check:knip",
+        "@tools/release#check:release-closure"
+      ]
+    },
+    // each example lints against its own npm install of the published packages
+    "lint:examples": {
+      "inputs": ["$TURBO_DEFAULT$"]
+    },
     "build:embeds": {
       "inputs": [
         "$TURBO_DEFAULT$",

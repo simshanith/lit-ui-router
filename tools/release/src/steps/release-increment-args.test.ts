@@ -8,11 +8,29 @@ import { incrementArgs } from './release-increment-args.core.ts';
 // produced for the same inputs (captured before the extraction).
 
 describe('incrementArgs', () => {
+  it('rejects a version literal whose prerelease channel is off the allowlist', () => {
+    assert.throws(
+      () => incrementArgs('other', '1.16.0-bettra.0'),
+      /unknown prerelease channel "bettra" \(allowed: alpha, beta, rc\)/,
+    );
+  });
+
+  it('accepts an allowlisted channel literal', () => {
+    assert.deepEqual(incrementArgs('other', '2.0.0-beta.1'), [
+      '--increment',
+      '2.0.0-beta.1',
+    ]);
+  });
+
   it('maps each standard choice-list increment to an --increment flag', () => {
     // every non-custom value bump-version.yml's `options` list offers
     assert.deepEqual(incrementArgs('major', ''), ['--increment', 'major']);
     assert.deepEqual(incrementArgs('minor', ''), ['--increment', 'minor']);
     assert.deepEqual(incrementArgs('patch', ''), ['--increment', 'patch']);
+    assert.deepEqual(incrementArgs('prerelease', ''), [
+      '--increment',
+      'prerelease',
+    ]);
   });
 
   it('ignores a stray `other` value alongside a standard increment', () => {

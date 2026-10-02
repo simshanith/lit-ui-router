@@ -12,16 +12,49 @@ type ListenerNode<K extends keyof Rule.NodeListener> = Parameters<
 // the index, which addresses the tagged template's own expressions.
 const ELEMENT_PART = /^\{\{__q:(\d+)__\}\}$/i;
 
+// The same placeholder in an attribute *value* (`href=${srefHref('x')}`), which
+// is where an attribute part lands. Global, so a value that mixes text and
+// expressions is counted rather than only matched.
+const ATTRIBUTE_PART = /\{\{__q:(\d+)__\}\}/gi;
+
+// lit's other bindings reach parse5 as attributes too, but a property, event or
+// boolean part is not an attribute part and throws the same way.
+const BINDING_PREFIX = /^[.?@]/;
+
 /** The lit-html packages the base rule's gating accepts before settings. */
 const DEFAULT_LIT_HTML_SOURCES = ['lit-html', 'lit-element', 'lit'];
 
 /** The directives these rules understand. */
-export type DirectiveName = 'uiSref' | 'uiSrefActive';
+export type DirectiveName =
+  | 'uiSref'
+  | 'uiSrefActive'
+  | 'srefHref'
+  | 'srefActiveClass'
+  | 'srefAriaCurrent';
 
-const DIRECTIVE_NAMES: DirectiveName[] = ['uiSref', 'uiSrefActive'];
+const DIRECTIVE_NAMES: DirectiveName[] = [
+  'uiSref',
+  'uiSrefActive',
+  'srefHref',
+  'srefActiveClass',
+  'srefAriaCurrent',
+];
+
+/** The reactive controller that hands a host the same status the directives read. */
+const STATUS_CONTROLLER = 'SrefStatusController';
+
+/** The elements HTML gives link semantics with no role of their own. */
+const NATIVE_LINKS = new Set(['a', 'area']);
+
+/** Every `aria-current` spelling lit binds, as parse5 lowercases attribute keys. */
+const ARIA_CURRENT = new Set(['aria-current', '.aria-current', '.ariacurrent']);
 
 /** The import is what makes a `uiSref` call *ours*. */
 const LIT_UI_ROUTER = /^lit-ui-router(\/|$)/;
+
+/** Whether an import source is this library's, subpaths included. */
+export const isOurPackage = (source: string): boolean =>
+  LIT_UI_ROUTER.test(source);
 
 // Minimal views of the two ASTs these rules cross; eslint speaks ESTree and
 // parse5 nodes arrive untyped through the analyzer's visitor.
@@ -54,6 +87,10 @@ export interface Parse5Element {
   name: string;
   attribs: Record<string, string>;
   sourceCodeLocation?: { startTag?: Parse5Location };
+}
+/** A node as eslint ranges it; parse5's side of these rules carries no range. */
+export interface Ranged {
+  range?: [number, number];
 }
 
 /** Given `lit-html/lit-html.js`, the package name `lit-html`. */
@@ -137,6 +174,102 @@ export const elementPartIndex = (attribute: string): number | undefined => {
   return match === null ? undefined : Number(match[1]);
 };
 
+/** The expression index an attribute value addresses, when it is the whole value. */
+export const attributePartIndex = (value: string): number | undefined =>
+  elementPartIndex(value);
+
+/** Where an attribute-part expression sits, as lit's part constructors see it. */
+export interface AttributePart {
+  /** The attribute name, as parse5 reports it (lowercased). */
+  name: string;
+  /** Whether it is the only expression in the attribute (`strings.length <= 2`). */
+  only: boolean;
+  /** Whether it is the whole value, with no static text (`strings === undefined`). */
+  whole: boolean;
+}
+
+/**
+ * Every attribute-part expression of an element, keyed by expression index.
+ * Element parts are attribute *keys*, and `.prop` / `?bool` / `@event` bindings
+ * are their own part types, so neither joins this map.
+ */
+export const attributePartsOf = (
+  element: Parse5Element,
+): Map<number, AttributePart> => {
+  const parts = new Map<number, AttributePart>();
+  for (const [name, value] of Object.entries(element.attribs)) {
+    if (elementPartIndex(name) !== undefined) continue;
+    if (BINDING_PREFIX.test(name)) continue;
+    const indices = [...value.matchAll(ATTRIBUTE_PART)].map((match) =>
+      Number(match[1]),
+    );
+    for (const index of indices) {
+      parts.set(index, {
+        name,
+        only: indices.length === 1,
+        whole: attributePartIndex(value) !== undefined,
+      });
+    }
+  }
+  return parts;
+};
+
+/**
+ * Where an attribute's value ends in the raw source, as a fixer range point:
+ * past the closing `}` of its **last** expression, past whatever static text
+ * follows, and past the closing quote when the value carries one.
+ *
+ * The last expression, never the matched one, so `class="nav ${a} ${b}"` lands
+ * after the quote rather than inside the value.
+ */
+export const attributeEnd = (
+  text: string,
+  element: Parse5Element,
+  attribute: string,
+  expressions: Node[],
+): number | undefined => {
+  const value = element.attribs[attribute];
+  if (value === undefined) return undefined;
+  const last = [...value.matchAll(ATTRIBUTE_PART)].at(-1);
+  if (last?.index === undefined) return undefined;
+  const range = (expressions[Number(last[1])] as Ranged | undefined)?.range;
+  if (range === undefined) return undefined;
+  // The expression's own text stops short of the template's `}`.
+  const close = text.indexOf('}', range[1]);
+  if (close === -1) return undefined;
+  // parse5 keeps the static text around the placeholder, so the raw source
+  // resumes with it, and the value's quote (if any) follows.
+  let end = close + 1 + (value.length - last.index - last[0].length);
+  if (text[end] === '"' || text[end] === "'") end += 1;
+  return end;
+};
+
+/**
+ * Whether an element carries link semantics: `<a>`, `<area>`, a literal `role`
+ * with the `link` token, or a tag the host declared. A bound `role` is
+ * unknowable, so it declares nothing.
+ */
+export const isLinkElement = (
+  element: Parse5Element,
+  parts: Map<number, AttributePart>,
+  linkElements: ReadonlySet<string>,
+): boolean => {
+  const bound = [...parts.values()].some((part) => part.name === 'role');
+  const role = bound ? undefined : element.attribs.role;
+  return (
+    NATIVE_LINKS.has(element.name) ||
+    linkElements.has(element.name) ||
+    role?.split(/\s+/).includes('link') === true
+  );
+};
+
+/**
+ * Whether an `aria-current` is authored at all — literal, bound, or bound to
+ * something else entirely. Whether its value is right is nobody's business here.
+ */
+export const hasAriaCurrent = (element: Parse5Element): boolean =>
+  Object.keys(element.attribs).some((key) => ARIA_CURRENT.has(key));
+
 /** Own (non-computed) `Property` nodes of an object literal, keyed by name. */
 export const propertyNamed = (
   object: ObjectNode,
@@ -195,6 +328,10 @@ export interface DirectiveTracker {
   isLitTemplate(tag: Node): boolean;
   /** Which lit-ui-router directive this expression calls, if any. */
   directiveOf(expression: Node): DirectiveName | undefined;
+  /** Whether this expression is `new SrefStatusController(...)`, ours. */
+  isControllerNew(expression: Node | null | undefined): boolean;
+  /** Whether this identifier's scope definition binds it to such a `new`. */
+  isControllerBinding(node: Node): boolean;
 }
 
 /**
@@ -214,9 +351,18 @@ export const createDirectiveTracker = (
     ...(Array.isArray(litHtmlSources) ? litHtmlSources : []),
   ]);
   const isLitSource = (source: string) => sources.has(packageOf(source));
-  const isOurs = (source: string) => LIT_UI_ROUTER.test(source);
+  const isOurs = isOurPackage;
   // Falsy `litHtmlSources` means analyse every bare `html` tag, imported or not.
   let analyse = !litHtmlSources;
+
+  const isControllerNew = (expression: Node | null | undefined): boolean =>
+    expression?.type === 'NewExpression' &&
+    importedAs(
+      context,
+      (expression as CallNode).callee,
+      STATUS_CONTROLLER,
+      isOurs,
+    );
 
   return {
     onImport(node) {
@@ -256,6 +402,18 @@ export const createDirectiveTracker = (
       const { callee } = expression as CallNode;
       return DIRECTIVE_NAMES.find((name) =>
         importedAs(context, callee, name, isOurs),
+      );
+    },
+
+    isControllerNew,
+
+    isControllerBinding(node) {
+      const definition = definitionOf(context, node);
+      if (definition?.type !== 'Variable') return false;
+      const declarator = definition.node;
+      return (
+        declarator.type === 'VariableDeclarator' &&
+        isControllerNew(declarator.init as Node | null | undefined)
       );
     },
   };

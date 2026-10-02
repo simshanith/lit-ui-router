@@ -2,10 +2,26 @@
   "$schema": "https://turborepo.com/schema.json",
   "extends": ["//"],
   "tasks": {
+    // restates the root umbrella's list, plus this package's own leaves
     "lint": {
-      // `with` here replaces the root //# lane list for this package only;
-      // those lanes still ride every other package's lint in a full sweep
-      "with": ["lint:docs", "lint:rules"]
+      "dependsOn": [
+        "lint:oxlint",
+        "lint:docs",
+        "lint:rules",
+        "//#lint:root",
+        "//#lint:package-json",
+        "//#lint:elements",
+        "//#lint:markdown",
+        "//#lint:workflows",
+        "//#lint:templates",
+        "@tools/repo-checks#check:patches",
+        "@tools/repo-checks#check:dedupe",
+        "@tools/repo-checks#check:single-version",
+        "@tools/repo-checks#check:graph-edges",
+        "@tools/repo-checks#check:task-inputs",
+        "@tools/repo-checks#check:knip",
+        "@tools/release#check:release-closure"
+      ]
     },
     // eslint-doc-generator --check: generated rule docs cannot drift from meta
     "lint:docs": {
@@ -15,9 +31,24 @@
     "lint:rules": {
       "inputs": ["$TURBO_DEFAULT$"]
     },
-    // the RuleTester suite carries the eslint side; test:oxlint rides alongside
+    // the RuleTester suite, its oxlint `jsPlugins` twin and the floor lane
     "test": {
-      "with": ["test:oxlint"]
+      "dependsOn": ["test:unit", "test:oxlint", "test:peer-floor"]
+    },
+    // the RuleTester suite carries the eslint side
+    "test:unit": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$"],
+      "passThroughEnv": ["CI"]
+    },
+    // the same suite on the eslint-floor alias. Gated, unlike the adapters'
+    // typecheck:peer-floor: the floor is a published eslint, never a workspace peer
+    "test:peer-floor": {
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/pnpm-workspace.yaml",
+        "$TURBO_ROOT$/pnpm-lock.yaml"
+      ]
     },
     // oxlint `jsPlugins` over the fixture dir, gating at the exact catalog pin
     "test:oxlint": {

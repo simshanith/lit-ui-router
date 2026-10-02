@@ -1,3 +1,4 @@
+// oxlint-disable typescript/no-deprecated -- backtests the published surface, deprecated plumbing included
 import { html, LitElement, type TemplateResult } from 'lit';
 import {
   pushStateLocationPlugin,
@@ -6,17 +7,22 @@ import {
   type Transition,
 } from '@uirouter/core';
 import {
+  SrefStatusController,
   TransitionController,
   UIRouterLit,
   UIRouterLitElement,
   UiView,
   mergeSrefStatus,
+  srefActiveClass,
+  srefAriaCurrent,
+  srefHref,
   uiSref,
   uiSrefActive,
   uiSrefTargetEvent,
   type LitStateDeclaration,
   type RoutedLitTemplate,
   type SrefStatus,
+  type SrefStatusControllerOptions,
   type TransitionCallback,
   type UIViewInjectedProps,
   type UiOnExit,
@@ -27,10 +33,22 @@ import 'lit-ui-router/register';
 import 'lit-ui-router/ui-router.register';
 import 'lit-ui-router/ui-view.register';
 import {
+  provideRouter,
+  requestRouter,
+  routerContext,
+  RouterContextRequestEvent,
+  getScopedRouter,
+  withRouterSync,
+  type ContextType,
+  type RouterContext,
+} from 'lit-ui-router/context';
+import {
+  SrefStatusController as PureSrefStatusController,
   TransitionController as PureTransitionController,
   UIRouterLitElement as PureUIRouterLitElement,
   type UIRouterLit as PureUIRouterLit,
 } from 'lit-ui-router/pure';
+import { classMap } from 'lit/directives/class-map.js';
 
 interface UserResolves {
   user: { name: string };
@@ -42,6 +60,12 @@ export const userTemplate = (props?: UIViewInjectedProps<UserResolves>) => html`
   <nav ${uiSrefActive({ activeClasses: ['active'], exactClasses: ['exact'] })}>
     <a ${uiSref('user.detail')}>detail</a>
   </nav>
+  <a
+    href=${srefHref('user.detail', { id: 1 }, { reload: true })}
+    class="nav-link ${srefActiveClass({ state: 'user.detail', activeClasses: ['active'] })}"
+    aria-current=${srefAriaCurrent({ state: 'user.detail', value: { exact: 'page', active: 'location' } })}
+    >detail</a
+  >
 `;
 
 const onTransition: TransitionCallback = (transition, reason) => {
@@ -114,12 +138,57 @@ export function merge(a: SrefStatus, b: SrefStatus): SrefStatus {
   return mergeSrefStatus(a, b);
 }
 
+export class NavLinkElement extends LitElement {
+  private readonly status = new SrefStatusController(this, {
+    state: 'user.detail',
+    params: { id: 1 },
+  } satisfies SrefStatusControllerOptions);
+
+  render(): TemplateResult {
+    return html`<a
+      href=${srefHref('user.detail', { id: 1 })}
+      class=${classMap({ 'nav-link': true, active: this.status.active })}
+      aria-current=${this.status.ariaCurrent({
+        exact: 'page',
+        active: 'location',
+      })}
+      >detail</a
+    >`;
+  }
+}
+
 // Both entries must expose the same declarations.
 TransitionController satisfies typeof PureTransitionController;
+SrefStatusController satisfies typeof PureSrefStatusController;
 
 export function pureEntry(host: LitElement): PureUIRouterLit | undefined {
   void new PureTransitionController(host);
+  void new PureSrefStatusController(host, { state: 'home' });
   return PureUIRouterLitElement.seekRouter(host);
+}
+
+// The context entry: the key carries the router type, the helper takes any
+// EventTarget, and the hand-off works with no element and no DOM.
+export function contextEntry(target: EventTarget): UIRouterLit | undefined {
+  const key: RouterContext = routerContext;
+  void key;
+  void new RouterContextRequestEvent(() => {}, true);
+  const value: ContextType<RouterContext> | undefined = requestRouter(target, {
+    subscribe: true,
+    callback: (router) => void router,
+  });
+  return value;
+}
+
+export function handOff(root: EventTarget): string {
+  const router = setupRouter();
+  const uninstall = provideRouter(root, router);
+  const href = withRouterSync(
+    router,
+    () => getScopedRouter()?.stateService.href('user', { id: 1 }) ?? '',
+  );
+  uninstall();
+  return href;
 }
 
 // The register import above puts the tag-map augmentation in scope.

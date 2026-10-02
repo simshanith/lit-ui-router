@@ -1,11 +1,12 @@
 import { resolveWwwDevPort } from '@www/lit-ui-router.dev/dev-port.ts';
 import { spawn } from 'node:child_process';
 
-// The two Cypress suites whose baseUrl carries the dev-server port. The others
+// The three Cypress suites whose baseUrl carries the dev-server port. The others
 // (vanilla, docs, pushState) keep the base config's baseUrl and stay plain
 // package.json scripts; these needed a launcher because shell can fail on an
 // unset var but cannot supply one (#697).
 const suites = {
+  effect: { path: 'app-effect/', expose: undefined },
   mobx: { path: 'app-mobx/', expose: undefined },
   hash: { path: 'app-hash/', expose: 'LOCATION_PLUGIN=hash' },
 } as const;

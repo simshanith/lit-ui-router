@@ -8,15 +8,11 @@
 // it re-bakes cold with the same packPublishTarball and cross-checks this
 // tarball read-only as the CREDIT ledger — see release-reconcile.ts.
 
-import { mkdir, readdir, rm, unlink } from 'node:fs/promises';
+import { mkdir, readdir, unlink } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import {
-  packDir,
-  packStagingParent,
-  packTarballPath,
-} from '../checks/cache-paths.ts';
-import { packPublishTarball } from './pack-staged.ts';
+import { packDir, packTarballPath } from '../checks/cache-paths.ts';
+import { packPublishTarball } from './pack-publish.ts';
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
 import { isPublishable, loadWorkspace } from '@tools/shared/workspace.ts';
 
@@ -30,16 +26,9 @@ async function main() {
   }
 
   for (const { name, dir } of publishable) {
-    await packPublishTarball(
-      name,
-      join(workspaceRoot, dir),
-      packTarballPath(name),
-      packStagingParent,
-    );
+    await packPublishTarball(join(workspaceRoot, dir), packTarballPath(name));
     console.log(`packed ${name} → ${packTarballPath(name)}`);
   }
-
-  await rm(packStagingParent, { recursive: true, force: true });
 }
 
 main().catch((error: unknown) => {

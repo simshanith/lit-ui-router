@@ -14,7 +14,7 @@ const ruleTester = new RuleTester({
 
 const IMPORTS = `
 import { html } from 'lit';
-import { uiSrefActive } from 'lit-ui-router';
+import { srefAriaCurrent, uiSrefActive } from 'lit-ui-router';
 `;
 
 ruleTester.run('sref-active-aria-current', srefActiveAriaCurrent, {
@@ -22,6 +22,10 @@ ruleTester.run('sref-active-aria-current', srefActiveAriaCurrent, {
     {
       name: 'no authored aria-current, so nothing is taken over',
       code: `${IMPORTS}html\`<a href="/home" \${uiSrefActive({})}>Home</a>\`;`,
+    },
+    {
+      name: 'srefAriaCurrent with no uiSrefActive beside it is nobody to take over',
+      code: `${IMPORTS}html\`<a href="/home" aria-current=\${srefAriaCurrent({ state: 'home' })}>Home</a>\`;`,
     },
     {
       name: 'ariaCurrentValue: false hands the attribute back',
@@ -78,6 +82,12 @@ ruleTester.run('sref-active-aria-current', srefActiveAriaCurrent, {
       code: `${IMPORTS}html\`<a href="/home" aria-current=\${current} \${uiSrefActive({})}>Home</a>\`;`,
       errors: [{ messageId: 'ariaCurrentTakeover' }],
       output: `${IMPORTS}html\`<a href="/home" aria-current=\${current} \${uiSrefActive({ ariaCurrentValue: false })}>Home</a>\`;`,
+    },
+    {
+      name: 'a srefAriaCurrent binding is an authored aria-current like any other',
+      code: `${IMPORTS}html\`<a href="/home" aria-current=\${srefAriaCurrent({ state: 'home' })} \${uiSrefActive({})}>Home</a>\`;`,
+      errors: [{ messageId: 'ariaCurrentTakeover' }],
+      output: `${IMPORTS}html\`<a href="/home" aria-current=\${srefAriaCurrent({ state: 'home' })} \${uiSrefActive({ ariaCurrentValue: false })}>Home</a>\`;`,
     },
     {
       name: 'an aliased uiSrefActive import still counts',

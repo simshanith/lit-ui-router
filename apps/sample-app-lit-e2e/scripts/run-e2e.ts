@@ -1,6 +1,9 @@
-import { requireManifest } from '@tools/bootstrap/manifest.ts';
-import { dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
+
+import { workspaceRoot } from '@tools/bootstrap/root.ts';
+import { loadWorkspace } from '@tools/shared/workspace.ts';
+
+import manifest from '../package.json' with { type: 'json' };
 
 import { serveAndTest } from './serve-and-test.ts';
 
@@ -11,8 +14,7 @@ import { serveAndTest } from './serve-and-test.ts';
 
 const PREFIX = 'test:e2e:';
 // the suite set is this package's own `test:e2e:*` scripts, never a list
-const packageDir = dirname(dirname(fileURLToPath(import.meta.url)));
-const scripts = requireManifest(packageDir).scripts ?? {};
+const scripts = manifest.scripts;
 // sorted to keep the command string stable: it is the run's identity in the
 // summary, and an unstable one reads as a different run each time
 const suites = Object.keys(scripts)
@@ -39,8 +41,17 @@ const test = [
   '--continue=dependencies-successful --ui=stream --log-order=stream --summarize',
 ].join(' ');
 
-// both apps are mounted whichever suites run
-serveAndTest('mise run //www/lit-ui-router.dev:serve', test, [
-  'app/',
-  'app-mobx/',
-]);
+// not the serve mise task: its build_www depends would re-run under nested mise.
+// Not `pnpm --filter … run` either: start-server-and-test stops the server with
+// SIGINT, which pnpm reports as a failed recursive run on every clean teardown.
+const WWW = '@www/lit-ui-router.dev';
+const { members } = await loadWorkspace(workspaceRoot);
+const www = members.find((member) => member.name === WWW);
+if (!www) {
+  console.error(`run-e2e: no workspace member ${WWW}`);
+  process.exit(1);
+}
+const server = `node ${JSON.stringify(join(workspaceRoot, www.dir, 'scripts/wrangler-dev.ts'))}`;
+
+// every app is mounted whichever suites run
+serveAndTest(server, test, ['app/', 'app-mobx/', 'app-effect/']);

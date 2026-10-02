@@ -1,0 +1,13 @@
+{
+  "$comment": "Message prefixes that must ship in dist/development/*.js and never in dist/*.js. Gate: check:dev-split (@tools/oxc-emit). Add an entry whenever a warning goes behind the import.meta.env.DEV guard; the gate fails on an undeclared one.",
+  "devOnly": [
+    "lit-ui-router-ssr: no route matched this path and its mount declares no otherwise projection, so no page was emitted for it:",
+    "lit-ui-router-ssr: this view is a RoutedLitElement class, which has no server render, so the part was left empty for the client to fill:",
+    "lit-ui-router-ssr: this element could not adopt the server render, so it rendered over it instead. One static document answers a whole family of urls, so a client that boots into another state reaches this legitimately.",
+    "lit-ui-router-ssr: this view had no routed component to adopt against, which is also what a router that never started, or whose first transition was not awaited, looks like: call router.start(), await its first successful transition, then hydrateRoot().",
+    "lit-ui-router-ssr: this <ui-view> woke from defer-hydration and nothing answered its adoptUiViewContext request, so its held nodes were dropped and it rendered cold. Provide an adopter before the wake.",
+    "lit-ui-router-ssr: this <ui-view> is still asleep after the task it connected in, because nothing removed defer-hydration. ",
+    "lit-ui-router-ssr: this page is written as <subpath>/index.html, which static hosts serve by redirecting <subpath> to <subpath>/, and its mount rejects the trailing slash.",
+    "lit-ui-router-ssr: <ui-view> is not defined on the current customElements registry, so every <ui-view> on these pages renders empty. "
+  ]
+}

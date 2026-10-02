@@ -33,7 +33,7 @@ env:
 
 jobs:
   publish_gh:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     # Serialize per package across runs (call path and dispatch path share
     # these groups): a run that checks out before a sibling run pushes its tag
     # will re-create that tag, get its push rejected, and release-it's
@@ -60,9 +60,11 @@ jobs:
           - ui-router-navigation-location-plugin
           - ui-router-server
           - eslint-plugin-lit-ui-router
+          - lit-ui-router-effect
+          - lit-ui-router-ssr
     steps:
       - name: 'Checkout code'
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # Called runs inherit the caller's github.sha — the commit CI
           # validated; dispatch runs check out the main tip.
@@ -73,10 +75,10 @@ jobs:
           # //tools/release:tag_push rides these persisted credentials.
           token: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
       - name: Setup mise
-        uses: jdx/mise-action@e6a8b3978addb5a52f2b4cd9d91eafa7f0ab959d # v4.2.0
+        uses: jdx/mise-action@9149ea85001c7435d5a66bb127d6a1b6227cb0a5 # v5.0.0
         with:
           # task-env handling regressed before in unpinned mise; pin the version
-          version: 2026.6.14
+          version: 2026.9.12
           # no restored tool cache (zizmor cache-poisoning): this job checks out
           # with a persisted PAT, so a poisoned cache would run adjacent to live
           # push credentials. Tools install fresh, checksum-verified against mise.lock.

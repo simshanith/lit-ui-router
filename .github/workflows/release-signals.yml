@@ -76,7 +76,7 @@ concurrency:
 
 jobs:
   published_diff:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 15
     permissions:
       checks: write
@@ -91,7 +91,7 @@ jobs:
           ref: main
           persist-credentials: false
       - name: Setup mise
-        uses: jdx/mise-action@v4
+        uses: jdx/mise-action@v5
       - name: Install dependencies
         run: mise run setup --release
       - name: Published diff

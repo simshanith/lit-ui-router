@@ -27,7 +27,7 @@ import {
   effectPlugin,
   provide,
 } from './effect-plugin.js';
-import { RouterRefController } from './router-ref-controller.js';
+import { RefController, RouterRefController } from 'lit-ui-router-effect';
 
 // Data Service
 interface Star {
@@ -489,10 +489,11 @@ class StarDetailComponent extends LitElement {
 
   // Written by the ticker forked into this state's scope, not by a resolve:
   // it keeps changing after the transition is over.
-  private readonly observing = new RouterRefController<string, string>(
+  private readonly observing = new RefController(
     this,
+    [observingRef],
     (line) => line,
-    { ref: () => observingRef },
+    { runtime },
   );
 
   get star(): Star {
@@ -659,10 +660,12 @@ export class FiberLogComponent extends LitElement {
     }
   `;
 
-  private readonly lines = new RouterRefController<
-    readonly string[],
-    readonly string[]
-  >(this, (value) => value, { ref: (plugin) => plugin.log });
+  private readonly lines = new RefController(
+    this,
+    [effect.log],
+    (lines) => lines,
+    { runtime },
+  );
 
   updated() {
     const list = this.renderRoot.querySelector('ol');
@@ -674,7 +677,7 @@ export class FiberLogComponent extends LitElement {
       <section>
         <h3>Fibers</h3>
         <ol>
-          ${(this.lines.value ?? []).map((line) => html`<li>${line}</li>`)}
+          ${this.lines.value.map((line) => html`<li>${line}</li>`)}
         </ol>
       </section>
     `;
@@ -716,11 +719,10 @@ export class AppRoot extends LitElement {
 
   // <app-root> is not routed, so it never gets fresh view props and cannot use
   // uiSrefActive's includes. The controller answers "am I under galaxy.stars"
-  // from the plugin's route ref, which keeps the marker lit on the detail
+  // from the package's route ref, which keeps the marker lit on the detail
   // state the same way the shell's nav stays lit.
-  private readonly onStars = new RouterRefController(
-    this,
-    (route) => route.current?.name?.startsWith('galaxy.stars') ?? false,
+  private readonly onStars = new RouterRefController(this, (route) =>
+    route.includes('galaxy.stars'),
   );
 
   render() {

@@ -4,7 +4,33 @@
 // the publish workflow's manifest strip, running `npm diff`) lives in
 // check-published-diff.ts.
 
+import {
+  assertKnownChannel,
+  prereleaseChannel,
+} from '../steps/release-prev-tag.core.ts';
 import type { Report } from './types.ts';
+
+/**
+ * The dist-tag a publish of `localVersion` would write, resolved against the
+ * tags the registry carries: a prerelease answers to its channel, everything
+ * else to `latest`; a channel the registry lacks falls back to `latest`. Null
+ * when the package carries neither target; throws on an unknown channel.
+ */
+export function selectTarget(
+  packageName: string,
+  localVersion: string | undefined,
+  distTags: Record<string, string>,
+): { tag: string; version: string } | null {
+  const channel = assertKnownChannel(
+    localVersion ?? '',
+    `${packageName}@${localVersion}`,
+  );
+  const preferred = channel ?? 'latest';
+  const version = distTags[preferred];
+  if (version !== undefined) return { tag: preferred, version };
+  const latest = distTags.latest;
+  return latest === undefined ? null : { tag: 'latest', version: latest };
+}
 
 // `npm diff` exits 0 whether or not the tarballs differ, so the verdict must
 // come from its output: an empty diff is the only "nothing would ship" signal.
@@ -96,12 +122,14 @@ export function classifyFiles(files: string[]): {
   return { shipAffecting, shipInert };
 }
 
-// One package's comparison against its published `latest`.
+// One package's comparison against the dist-tag its next publish would write.
 export type DiffResult = {
   name: string;
   dir: string;
-  /** Version currently on the `latest` dist-tag; absent when unpublished. */
-  latest?: string;
+  /** The dist-tag compared against; absent when unpublished. */
+  tag?: string;
+  /** Version currently on that dist-tag; absent when unpublished. */
+  version?: string;
   /** Version in the working tree's manifest. */
   localVersion?: string;
   /** `ship-inert` = only src/maps/inert-manifest drift; release not owed. */
@@ -131,10 +159,11 @@ export function scopePackages(
   return publishable.filter((name) => requested.includes(name));
 }
 
-/** Per-package machine verdict; `version` is the published latest (null when unpublished). */
+/** Per-package machine verdict; `tag`/`version` name the compared dist-tag (null when unpublished). */
 export type PackageSummary = {
   name: string;
   dir: string;
+  tag: string | null;
   version: string | null;
   shipAffecting: number;
   shipInert: number;
@@ -145,25 +174,42 @@ export type PackageSummary = {
 
 /** Shape results for the --json output; `clean` = no ship-affecting drift. */
 export function summarizeResults(results: DiffResult[]): PackageSummary[] {
-  return results.map(({ name, dir, latest, status, files, shipInertFiles }) => {
-    const shipAffectingFiles = status === 'drift' ? (files ?? []) : [];
-    const inert = shipInertFiles ?? [];
-    return {
-      name,
-      dir,
-      version: latest ?? null,
-      shipAffecting: shipAffectingFiles.length,
-      shipInert: inert.length,
-      clean: status !== 'drift',
-      shipAffectingFiles,
-      shipInertFiles: inert,
-    };
-  });
+  return results.map(
+    ({ name, dir, tag, version, status, files, shipInertFiles }) => {
+      const shipAffectingFiles = status === 'drift' ? (files ?? []) : [];
+      const inert = shipInertFiles ?? [];
+      return {
+        name,
+        dir,
+        tag: tag ?? null,
+        version: version ?? null,
+        shipAffecting: shipAffectingFiles.length,
+        shipInert: inert.length,
+        clean: status !== 'drift',
+        shipAffectingFiles,
+        shipInertFiles: inert,
+      };
+    },
+  );
 }
 
 /** Canonical --json bytes: 2-space indent, trailing newline. */
 export function renderSummary(summaries: PackageSummary[]): string {
   return `${JSON.stringify(summaries, null, 2)}\n`;
+}
+
+/** The parenthetical when the local version is not the compared one. */
+function aheadNote(
+  localVersion: string | undefined,
+  tag: string | undefined,
+  version: string | undefined,
+): string {
+  if (!localVersion || !tag || !version || localVersion === version) return '';
+  const channel = prereleaseChannel(localVersion);
+  if (channel !== undefined && tag === 'latest') {
+    return ` (local ${localVersion} has no ${channel} tag yet — compared against latest ${version})`;
+  }
+  return ` (local ${localVersion} ahead of published — release in flight?)`;
 }
 
 export type ReportOptions = {
@@ -186,28 +232,26 @@ export function formatReport(
   const drifted = results.filter((result) => result.status === 'drift');
   const lines: string[] = [];
   for (const result of results) {
-    const { name, latest, localVersion, status, files, shipInertFiles } =
+    const { name, tag, version, localVersion, status, files, shipInertFiles } =
       result;
     if (status === 'unpublished') {
       lines.push(`  ${name}: never published — skipped`);
       continue;
     }
-    const ahead =
-      localVersion && latest && localVersion !== latest
-        ? ` (local ${localVersion} ahead of published — release in flight?)`
-        : '';
+    const target = `${tag} ${version}`;
+    const ahead = aheadNote(localVersion, tag, version);
     if (status === 'clean') {
-      lines.push(`  ${name}: clean vs ${latest}${ahead}`);
+      lines.push(`  ${name}: clean vs ${target}${ahead}`);
     } else if (status === 'ship-inert') {
       const count = shipInertFiles?.length ?? 0;
       lines.push(
-        `  ${name}: ship-inert drift vs ${latest}${ahead} — ${count} ship-inert file(s):`,
+        `  ${name}: ship-inert drift vs ${target}${ahead} — ${count} ship-inert file(s):`,
       );
       for (const file of shipInertFiles ?? []) lines.push(`      ◦ ${file}`);
     } else {
       const count = files?.length ?? 0;
       lines.push(
-        `  ${name}: SHIPS CHANGES vs ${latest}${ahead} — ${count} ship-affecting file(s):`,
+        `  ${name}: SHIPS CHANGES vs ${target}${ahead} — ${count} ship-affecting file(s):`,
       );
       for (const file of files ?? []) lines.push(`      • ${file}`);
       for (const file of shipInertFiles ?? [])

@@ -48,6 +48,12 @@
           display: none !important;
         }
       }
+      /* The visualizer's popover and modal are light panels, but it never sets
+         a base text color, so they inherit the page's light body color. */
+      #uirTransitionVisualizer,
+      #uirTranVis_modal {
+        color: #1f2328;
+      }
     </style>
   </head>
   <body>

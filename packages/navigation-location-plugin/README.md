@@ -7,8 +7,6 @@
 [![codecov](https://codecov.io/gh/simshanith/lit-ui-router/graph/badge.svg?component=navigation-location-plugin)](https://app.codecov.io/gh/simshanith/lit-ui-router?components%5B0%5D=navigation-location-plugin)
 [![Can I Use Navigation API](https://img.shields.io/badge/caniuse-Navigation%20API-orange)](https://caniuse.com/mdn-api_navigation)
 
-> **Experimental**: this plugin is a new implementation without the production mileage of the battle-tested `pushState`/`hash` location services. The underlying [Navigation API](https://developer.mozilla.org/en-US/docs/Web/API/Navigation_API) is also only recently cross-engine (Firefox 147+, Safari 26.2+), so non-Chromium behavior is lightly exercised.
-
 A UI-Router location plugin that uses the modern browser Navigation API for URL management.
 
 ## Features
@@ -28,30 +26,43 @@ pnpm add ui-router-navigation-location-plugin
 yarn add ui-router-navigation-location-plugin
 ```
 
+The type declarations reference the global `Navigation`, `NavigateEvent` and `NavigationInterceptOptions` types, which TypeScript ships from 6.0. On TypeScript 5.x, also install `@types/dom-navigation` and add `"dom-navigation"` to `compilerOptions.types`.
+
 ## Quick Start
 
+Framework bindings (`UIRouterLit`, and likewise the React and Angular bindings) set up the router's services for you. A plain `@uirouter/core` `UIRouter` needs `servicesPlugin` registered before the location plugin:
+
 ```typescript
-import { UIRouter } from '@uirouter/core';
+import { UIRouter, servicesPlugin } from '@uirouter/core';
 import { navigationLocationPlugin } from 'ui-router-navigation-location-plugin';
 
 const router = new UIRouter();
+router.plugin(servicesPlugin);
 router.plugin(navigationLocationPlugin);
 ```
 
 ## Navigation Event Interception
 
-A key feature of this plugin is exposing the UIRouter instance in navigation events, enabling interception:
+The plugin intercepts the navigations it starts, so a router transition commits as a same-document navigation. The `intercept` option returns the [`NavigationInterceptOptions`](https://developer.mozilla.org/en-US/docs/Web/API/NavigateEvent/intercept#options) for each of those navigations, with the router available as `event.info.uiRouter` — it is where the app's extra work goes: view transitions, analytics, progress UI. The function runs after the router transition has committed, so `handler` governs when `navigation.transition.finished` settles and when the browser resets focus and restores scroll, not the transition itself. `focusReset` and `scroll` pass through.
 
 ```typescript
-import { isUIRouterNavigateEvent } from 'ui-router-navigation-location-plugin';
+import {
+  navigationLocationPlugin,
+  type NavigationLocationPluginOptions,
+} from 'ui-router-navigation-location-plugin';
 
-window.navigation.addEventListener('navigate', (event) => {
-  if (isUIRouterNavigateEvent(event)) {
-    // Access UIRouter during navigation
-    const { uiRouter } = event.info;
-  }
-});
+router.plugin(navigationLocationPlugin, {
+  intercept: (event) => ({
+    async handler() {
+      // the app's extra work: view transitions, analytics, progress UI…
+    },
+  }),
+} satisfies NavigationLocationPluginOptions);
 ```
+
+Without the option, the plugin intercepts with a handler that resolves immediately.
+
+Listeners that only observe navigations can tell router-driven ones apart with `isUIRouterNavigateEvent`, which also narrows `event.info` to carry the router.
 
 ## What Else Observes Navigation
 
@@ -94,15 +105,33 @@ See [What else observes navigation](https://lit-ui-router.dev/packages/navigatio
 
 ### `navigationLocationPlugin`
 
-Factory function that creates a `LocationPlugin` for use with UIRouter.
+Factory function that creates a `LocationPlugin` for use with UIRouter. Options passed to `router.plugin()` reach the location service.
 
 ```typescript
 router.plugin(navigationLocationPlugin);
+router.plugin(navigationLocationPlugin, options);
 ```
+
+```typescript
+function navigationLocationPlugin(
+  router: UIRouter,
+  options?: NavigationLocationPluginOptions,
+): LocationPlugin;
+```
+
+### `NavigationLocationPluginOptions`
+
+```typescript
+interface NavigationLocationPluginOptions {
+  intercept?: (event: UIRouterNavigateEvent) => NavigationInterceptOptions;
+}
+```
+
+- `intercept` — called for each navigation the service starts, after the router transition has committed; its return value is handed to `event.intercept()`. See [Navigation Event Interception](#navigation-event-interception).
 
 ### `NavigationLocationService`
 
-The location service class that extends `BaseLocationServices` from `@uirouter/core`. Handles URL reading and writing using the Navigation API.
+The location service class that extends `BaseLocationServices` from `@uirouter/core`. Handles URL reading and writing using the Navigation API. Its constructor takes the router and `NavigationLocationPluginOptions`.
 
 #### `protected _navigation(): Navigation`
 
@@ -132,7 +161,7 @@ class StubbedNavigationLocationService extends NavigationLocationService {
 
 ### `isUIRouterNavigateEvent(event)`
 
-Type guard function to check if a `NavigateEvent` was triggered by UIRouter.
+Type guard function to check if a `NavigateEvent` was triggered by UIRouter. Use it in a `navigate` listener that observes navigations to read the router off `event.info`; the plugin intercepts its own navigations, and extra work on them goes through the `intercept` option.
 
 ```typescript
 function isUIRouterNavigateEvent(
@@ -167,6 +196,8 @@ The Navigation API is supported in all modern engines:
 
 Check [caniuse.com](https://caniuse.com/mdn-api_navigation) for current support status.
 
+The real round-trip specs — `index.spec.ts` and `url-shape.spec.ts`, where navigations actually commit and events actually fire — run on Chromium on every pull request via `test`/`test:coverage`, and on Firefox and WebKit on every push to `main` via `test:engines` (on demand through a `ci-main/` branch or the `mainGraph` dispatch). The Cypress end-to-end suite runs in Electron only.
+
 For older browsers, consider using:
 
 - `pushStateLocationPlugin` - History API based (wide support)
@@ -179,7 +210,6 @@ For older browsers, consider using:
 | Modern standard    | Yes            | No        | No        |
 | Event interception | Yes            | No        | No        |
 | Browser support    | Modern engines | Wide      | Universal |
-| Production mileage | New            | Wide      | Wide      |
 | SEO friendly       | Yes            | Yes       | No        |
 | Clean URLs         | Yes            | Yes       | No        |
 

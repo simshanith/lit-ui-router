@@ -1,6 +1,6 @@
 # sample-app-lit-e2e
 
-One Cypress spec suite, run against both sample apps and the docs site —
+One Cypress spec suite, run against all three sample apps and the docs site —
 this is what enforces the apps' behavioral identity and keeps every
 published location strategy exercised.
 
@@ -10,17 +10,18 @@ published location strategy exercised.
 mise run test_e2e
 ```
 
-That production-like flow builds the docs site (which embeds both apps'
-builds), serves it with wrangler on port 8787, and runs every Cypress suite in
+That production-like flow builds the docs site (which embeds every app's
+build), serves it with wrangler on port 8787, and runs every Cypress suite in
 parallel:
 
-| Suite       | Target        | Covers                                                                                                              |
-| ----------- | ------------- | ------------------------------------------------------------------------------------------------------------------- |
-| `vanilla`   | `/app/`       | vanilla app, default routing — the Navigation API plugin                                                            |
-| `mobx`      | `/app-mobx/`  | MobX app, default routing — the Navigation API plugin                                                               |
-| `docs`      | site + mounts | docs pages plus the mount matrix — flagships, hash demo, and the server-support exhibits (`cypress.docs.config.ts`) |
-| `hash`      | `/app/`       | vanilla app under the `hash` location plugin                                                                        |
-| `pushState` | `/app/`       | vanilla app under the `pushState` fallback                                                                          |
+| Suite       | Target         | Covers                                                                                                              |
+| ----------- | -------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `vanilla`   | `/app/`        | vanilla app, default routing — the Navigation API plugin                                                            |
+| `mobx`      | `/app-mobx/`   | MobX app, default routing — the Navigation API plugin                                                               |
+| `effect`    | `/app-effect/` | Effect app, default routing — the Navigation API plugin                                                             |
+| `docs`      | site + mounts  | docs pages plus the mount matrix — flagships, hash demo, and the server-support exhibits (`cypress.docs.config.ts`) |
+| `hash`      | `/app/`        | vanilla app under the `hash` location plugin                                                                        |
+| `pushState` | `/app/`        | vanilla app under the `pushState` fallback                                                                          |
 
 Each suite is its own turbo task (`test:e2e:<suite>`) with its own cache key,
 so rerunning one after a flake costs that suite alone rather than the whole
@@ -47,8 +48,11 @@ mise run //www/lit-ui-router.dev:serve   # builds the site first, then serves it
 mise run build_www   # just the build
 ```
 
-That task is also what the umbrella hands to `start-server-and-test`, so the
-build edge lives on the server rather than on the suites. Without mise,
+The umbrella builds through the same `build_www` and then hands
+`start-server-and-test` the www launcher, `www/lit-ui-router.dev/scripts/wrangler-dev.ts`,
+by path — not the serve task, so the build runs once per `mise run test_e2e`. Nor the `pnpm`
+form below: `start-server-and-test` stops the server with SIGINT, and a
+`pnpm --filter` run reports that as a failed recursive run. Without mise,
 `turbo run wrangler:dev --filter=@www/lit-ui-router.dev` builds and serves the
 same way — `wrangler:dev` declares `dependsOn: ["build"]` — reaching the server
 through a `pnpm run` hop the mise task does not have. Bare
@@ -115,72 +119,98 @@ mise run test_e2e hash
 mise run test_e2e pushstate
 ```
 
-## Measuring the wrangler crash rate
+## The wrangler dev server, and its crash history
 
-The CI dev server (`wrangler dev`) has a history of mid-suite crashes on
-Linux runners (cloudflare/workers-sdk#14926 — fatal non-recovery from a
-workerd restart, introduced in wrangler 4.114.0 and the reason the
-catalog pins 4.113.0). `scripts/measure-deflake.ts` turns "is it still
-happening?" into a number:
+`wrangler dev` serves the docs worker on :8787 for every suite. It has a history
+of mid-suite fatal crashes on Linux runners (cloudflare/workers-sdk#14926 —
+`wrangler dev` exits instead of recovering when Miniflare auto-restarts
+workerd). The class arrived in wrangler 4.114.0, ran at ~40% of attempts on
+4.118.0, and forced an exact catalog pin to 4.113.0.
 
-```bash
-mise run measure_deflake                            # crash rate over the last 7 days
-mise run measure_deflake --days 2 --branch my-branch  # one branch's runs only
+wrangler 4.129.1 ships workers-sdk#15252, which replays a transiently-failed
+GET/HEAD request instead of fatal-exiting the dev server. That is a mitigation,
+not the missing `unsafeHandleRuntimeRestart` hook — but `cy.visit()` traffic is
+exactly the retryable class, and the sampler measured 20 clean attempts out of
+20 against it. The catalog now carries a caret range and wrangler rides routine
+dependency bumps like any other package.
+
+### `Broken pipe` in the logs is expected
+
+Passing runs carry one or two of these apiece:
+
+```text
+✘ [ERROR] kj::getCaughtExceptionAsKj() = kj/async-io-unix.c++:186: disconnected: ::write(...): Broken pipe
 ```
 
-The mise task (`.config/mise/tasks/measure_deflake`) carries the
-repo-specific config as flags with defaults — `mise run measure_deflake
---help` prints the spec:
+That is workerd reporting that the _client_ hung up before a response finished.
+The 404 and back-navigation specs abort in-flight requests by design, and six
+suites share one worker. Nothing crashes and nothing recovers; it reads as an
+ERROR only because workerd's own stderr is not gagged by `WRANGLER_LOG`. Do not
+triage on this string — measured over eight consecutive green runs it appeared
+in seven of them.
 
-| Flag           | Default                    | What it moves                                         |
-| -------------- | -------------------------- | ----------------------------------------------------- |
-| `--days`       | `7`                        | Window size                                           |
-| `--branch`     | _(all branches)_           | Restrict to one branch's runs                         |
-| `--repo`       | `simshanith/lit-ui-router` | `owner/name` to scan                                  |
-| `--workflow`   | `build-test.yml`           | Workflow whose runs carry the e2e task                |
-| `--max-log-mb` | `512`                      | Per-attempt log buffer; an over-cap log aborts loudly |
-| `--run-limit`  | `1000`                     | `gh run list` cap; a hit clips the window's old end   |
-| `--port`       | `WWW_DEV_PORT`, then 8787  | e2e dev-server port the crash signature keys on       |
+The signals that do mean the crash class is back:
 
-That spec is the only place defaults live, save the port — its default lives in
-code (see [The port](#the-port)) so the script works outside mise too. The task
-passes `--days` (and `--branch`, when given) as positionals and the rest as
-`MEASURE_DEFLAKE_*` env vars; the script requires all but the port and exits
-pointing back at `mise run measure_deflake` if any is missing. Direct exec works — the file
-is `0755` with a `#!/usr/bin/env node` shebang — but you own the contract:
+| Signal                         | Healthy value |
+| ------------------------------ | ------------- |
+| `ECONNREFUSED 127.0.0.1:8787`  | absent        |
+| empty `✘ [ERROR]` line         | absent        |
+| `wrangler dev` starts, per run | exactly 1     |
 
-```bash
-MEASURE_DEFLAKE_REPO=simshanith/lit-ui-router \
-  MEASURE_DEFLAKE_WORKFLOW=build-test.yml \
-  MEASURE_DEFLAKE_MAX_LOG_MB=512 \
-  MEASURE_DEFLAKE_RUN_LIMIT=1000 \
-  ./scripts/measure-deflake.ts 2 my-branch
-```
+### Sampling the crash rate
 
-The branch filter is how an upgrade gets trialed without merging anything:
-push a bump branch, force real e2e executions against it
-(`gh workflow run build-test.yml --ref <branch> -f force=true`, repeated —
-cache-hit runs don't count), then compare its rate to main's.
+`deflake-e2e.yml` runs the suites N times serially, outside turbo, sweeping
+workerd between attempts, and reports each attempt plus any near miss (a pass
+that still logged the crash signature). It is informational, never required.
 
-It scans every attempt of the window's `build-test` runs via `gh` (crashed
-runs get rerun, so latest-attempt logs undercount) and reports crashes per
-e2e execution — only attempts whose e2e task shows `cache miss/bypass`
-count, since turbo cache-hit replays re-print old logs verbatim. On the
-pinned wrangler it should read ~0%; a sustained non-zero rate means the
-crash class is back (or was never the only one), and the fallbacks are
-reviving the pm2 supervisor from PR #486 or capping suite concurrency.
-Needs an authenticated `gh`. Anything that makes the sample incomplete —
-unavailable attempt logs, an over-`maxBuffer` log, or a window large enough
-to hit the run-list cap — is reported loudly and exits non-zero, so a
-printed rate is only trustworthy on a clean exit.
+Two ways in:
+
+- Apply the `deflake` label to a PR. The run removes the label when it
+  finishes, so re-applying it is the re-run gesture.
+- `workflow_dispatch` against any ref, with a `runs` count of 1–10.
+
+Reach for it when a wrangler bump looks suspicious or the crash signature
+reappears — not on every bump. A bad release runs this class at ~40% per
+attempt, so a handful of attempts is enough to see it, and a single green
+`build_and_test` run is not evidence of a fix.
 
 ## Iterating against a dev server
 
-```bash
-# in one terminal
-pnpm --filter sample-app-lit-vanilla dev
+Start one app's dev server (default ports and base paths are in
+[apps/README.md](../README.md#local-development); `--port` overrides):
 
-# in another (adjust port/base to the dev server)
-cd apps/sample-app-lit-e2e
-pnpm exec cypress run --config baseUrl=http://localhost:5173/app/
+```bash
+pnpm --filter sample-app-lit-vanilla dev
 ```
+
+Then run one spec against it. Vanilla's config reads `WWW_DEV_PORT`, so the
+package script works:
+
+```bash
+pnpm --dir apps/sample-app-lit-e2e test:e2e:vanilla --spec src/integration/dialog.cy.js
+```
+
+`test:e2e:mobx` and `test:e2e:effect` don't forward `--spec`; pass the config
+[`scripts/cypress-suite.ts`](scripts/cypress-suite.ts) builds instead:
+
+```bash
+pnpm --dir apps/sample-app-lit-e2e exec cypress run --config baseUrl=http://localhost:5175/app-effect/,videosFolder=cypress/videos-effect,screenshotsFolder=cypress/screenshots-effect --spec src/integration/dialog.cy.js
+```
+
+Videos land in `cypress/videos*/`; screenshots only on failure or an explicit
+`cy.screenshot()`. The specs in `src/integration/` are the reference for each
+flow (login, dialogs, location plugins); read the one nearest your change.
+
+Load the app once before the first spec. A cold vite server transforms the
+whole module graph on the first hit, and the transition that is still running
+can leave the visualizer `<svg>` covering a `cy.click()` target — `sample_app.cy.js`
+("prompts to save a message being composed") is the usual casualty. A rerun
+against the warm server passes.
+
+Don't verify `prefers-color-scheme` behavior with Cypress. Emulating it over CDP
+(`Emulation.setEmulatedMedia`) holds only before the first page load and sticks
+across specs and separate `cypress run` invocations, so flipping back silently
+fails. Use Playwright: `browser.newContext({ colorScheme })` for load time and
+`page.emulateMedia({ colorScheme })` for live flips. Its contexts emulate `light`
+by default and pin the scheme inside iframes too, so pass `colorScheme: null`
+when the OS setting or propagation into an embed is what's under test.

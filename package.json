@@ -6,15 +6,18 @@
   "type": "module",
   "scripts": {
     "build": "turbo run build",
+    "check:dedupe": "turbo run @tools/repo-checks#check:dedupe",
     "check:graph-edges": "turbo run @tools/repo-checks#check:graph-edges",
     "check:knip": "turbo run @tools/repo-checks#check:knip",
     "check:pack": "turbo run check:pack",
     "check:patches": "turbo run @tools/repo-checks#check:patches",
     "check:published-diff": "turbo run resolve:published && turbo run check:published-diff",
     "check:release-closure": "turbo run @tools/release#check:release-closure",
+    "check:single-version": "turbo run @tools/repo-checks#check:single-version",
     "check:task-inputs": "turbo run @tools/repo-checks#check:task-inputs",
     "check:workers-builds": "turbo run @tools/workers-builds#check",
     "ci": "turbo run ci",
+    "crap": "turbo run crap",
     "dev": "turbo run dev",
     "format": "turbo run format",
     "format:check": "turbo run format:check",
@@ -42,14 +45,14 @@
     "@commitlint/cli": "catalog:",
     "@commitlint/config-conventional": "catalog:",
     "@commitlint/types": "catalog:",
-    "@tools/compat-guards": "workspace:*",
-    "@tools/eslint": "workspace:*",
-    "@tools/lint-elements": "workspace:*",
-    "@tools/lit-template-lint": "workspace:*",
+    "@tools/compat-guards": "catalog:workspace",
+    "@tools/eslint": "catalog:workspace",
+    "@tools/lint-elements": "catalog:workspace",
+    "@tools/lit-template-lint": "catalog:workspace",
     "@types/node": "catalog:",
     "eslint": "catalog:",
     "eslint-formatter-tap": "catalog:",
-    "eslint-plugin-lit-ui-router": "workspace:*",
+    "eslint-plugin-lit-ui-router": "catalog:workspace",
     "eslint-plugin-oxlint": "catalog:",
     "eslint-plugin-package-json": "catalog:",
     "eslint-plugin-pnpm": "catalog:",
@@ -65,7 +68,7 @@
     "wrangler": "catalog:"
   },
   "engines": {
-    "node": ">=24.18.0"
+    "node": ">=24.21.0"
   },
-  "packageManager": "pnpm@12.3.4+sha512.961aa41fb077da3a04a441d9f8e15ebc0c96da8ef710b2eb67bf9ee7cb0610eabd48f1fd85f51cffe73846785fa0f87c56a3a872a1d893f8446741b5cce45457"
+  "packageManager": "pnpm@12.8.1+sha512.f64ba907507f5ceafe06c8d38e6052d0179444580ec1279ddd5bfc11cb48aa8a2644b66598e07e761da84872a9fc57d5f902b87fa49d024198d558612aabbe45"
 }

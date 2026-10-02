@@ -8,7 +8,7 @@ import {
   coversMajor2,
   isBoundedRange,
   rangeFloor,
-  rangeLegs,
+  upperLegs,
 } from './ranges.ts';
 
 // Everything semver normalizes to `*`. Spelled out because the family is wider
@@ -57,23 +57,6 @@ describe('isBoundedRange', () => {
     // coversMajor2, come back false, and advise dropping the lit2 compat lane
     for (const range of ['not-a-range', '^1.7.0 || garbage', '^^1.0.0']) {
       assert.equal(isBoundedRange(range), false, range);
-    }
-  });
-});
-
-describe('rangeLegs', () => {
-  it('counts the `||`-separated legs', () => {
-    assert.equal(rangeLegs('^1.7.0'), 1);
-    assert.equal(rangeLegs('>=1.7.0 <3'), 1);
-    assert.equal(rangeLegs('^1.7.0 || ^2.0.0'), 2);
-    assert.equal(rangeLegs('^1.0.0 || ^2.0.0 || ^3.0.0'), 3);
-  });
-
-  it('reports 0 for ranges that name no bound', () => {
-    // 0 rather than 1: peer-floor-guard refuses anything but exactly 1, so an
-    // unreadable range must not look like the single-leg case
-    for (const range of [...UNBOUNDED, 'not-a-range']) {
-      assert.equal(rangeLegs(range), 0, range);
     }
   });
 });
@@ -129,8 +112,8 @@ describe('rangeFloor', () => {
   });
 
   it('names only the lowest leg of a multi-leg range', () => {
-    // true but not the whole truth, which is why peer-floor-guard refuses a
-    // multi-leg range outright instead of typechecking against this
+    // true but not the whole truth, which is why peer-floor-guard proves the
+    // upperLegs separately
     assert.equal(rangeFloor('^1.7.0 || ^2.0.0'), '1.7.0');
   });
 
@@ -143,6 +126,27 @@ describe('rangeFloor', () => {
   it('fails closed on unbounded and malformed ranges', () => {
     for (const range of [...UNBOUNDED, 'not a range', '^^1.7.0']) {
       assert.equal(rangeFloor(range), undefined, range);
+    }
+  });
+});
+
+describe('upperLegs', () => {
+  it('names every leg but the lowest, as ranges', () => {
+    assert.deepEqual(upperLegs('^9.0.0 || ^10.0.0'), ['>=10.0.0 <11.0.0-0']);
+    assert.deepEqual(upperLegs('^10.0.0 || ^9.0.0'), ['>=10.0.0 <11.0.0-0']);
+    assert.deepEqual(upperLegs('^1.0.0 || ^2.0.0 || ^3.0.0'), [
+      '>=2.0.0 <3.0.0-0',
+      '>=3.0.0 <4.0.0-0',
+    ]);
+  });
+
+  it('is empty for a single leg', () => {
+    assert.deepEqual(upperLegs('^1.7.0'), []);
+  });
+
+  it('fails closed on unbounded and malformed ranges', () => {
+    for (const range of [...UNBOUNDED, 'not a range']) {
+      assert.deepEqual(upperLegs(range), [], range);
     }
   });
 });

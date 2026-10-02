@@ -4,7 +4,6 @@ import { defineConfig } from 'cypress';
 const port = resolveWwwDevPort();
 
 export default defineConfig({
-  allowCypressEnv: false,
   fileServerFolder: '.',
   fixturesFolder: './src/fixtures',
   modifyObstructiveCode: false,
