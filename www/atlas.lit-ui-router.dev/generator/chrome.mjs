@@ -235,7 +235,7 @@ sup.art {
    one screen. An inline SVG letterboxes under max-height instead of shrinking,
    so the cap reaches it through max-width times the plate's own viewBox ratio
    (--plate-ar, written per sheet). */
-.plate { position: relative; container-type: inline-size; margin: 20px 0 14px; --plate-cap: min(84vh, 1400px); }
+.plate { position: relative; container-type: inline-size; margin: 20px 0 22px; --plate-cap: min(84vh, 1400px); }
 .figure-wrap { overflow-x: auto; }
 .figure-wrap svg { display: block; width: 100%; max-width: min(100%, calc(var(--plate-cap) * var(--plate-ar, 1.4))); height: auto; min-width: 1000px; margin: 0 auto; }
 .plate::after {
@@ -260,12 +260,16 @@ sup.art {
 /* at the end of the scroll the affordance steps aside — the plate's right edge is the point */
 .plate[data-end]::after { opacity: 0; }
 figure { margin: 0; }
+/* the caption is a margin note: a rule on the sheet's edge, its text inset to the plate's column */
 figcaption {
   font-family: var(--prose);
-  font-size: 14.5px;
+  font-size: 16px;
+  line-height: 1.6;
   color: var(--ink-soft);
-  max-width: 66ch;
-  margin: 0;
+  max-width: calc(750px + 45.5px);
+  margin: 0 0 26px;
+  padding: 2px 22px 4px;
+  border-left: 1.5px solid var(--ink);
   font-style: italic;
 }
 figcaption .figno {

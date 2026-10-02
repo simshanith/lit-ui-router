@@ -226,7 +226,7 @@ sup.art {
    one screen. An inline SVG letterboxes under max-height instead of shrinking,
    so the cap reaches it through max-width times the plate's own viewBox ratio
    (--plate-ar, written per sheet). */
-.plate { position: relative; container-type: inline-size; margin: 20px 0 14px; --plate-cap: min(84vh, 1400px); }
+.plate { position: relative; container-type: inline-size; margin: 20px 0 22px; --plate-cap: min(84vh, 1400px); }
 .figure-wrap { overflow-x: auto; }
 .figure-wrap svg { display: block; width: 100%; max-width: min(100%, calc(var(--plate-cap) * var(--plate-ar, 1.4))); height: auto; min-width: 1000px; margin: 0 auto; }
 .plate::after {
@@ -251,12 +251,16 @@ sup.art {
 /* at the end of the scroll the affordance steps aside — the plate's right edge is the point */
 .plate[data-end]::after { opacity: 0; }
 figure { margin: 0; }
+/* the caption is a margin note: a rule on the sheet's edge, its text inset to the plate's column */
 figcaption {
   font-family: var(--prose);
-  font-size: 14.5px;
+  font-size: 16px;
+  line-height: 1.6;
   color: var(--ink-soft);
-  max-width: 66ch;
-  margin: 0;
+  max-width: calc(750px + 45.5px);
+  margin: 0 0 26px;
+  padding: 2px 22px 4px;
+  border-left: 1.5px solid var(--ink);
   font-style: italic;
 }
 figcaption .figno {
@@ -531,8 +535,6 @@ a { color: var(--accent); }
   color: var(--ink-soft); max-width: 66ch; margin: 0; }
 .lw-basis { font-family: var(--prose); font-size: 15px; letter-spacing: 0; line-height: 1.8; color: var(--ink-soft);
   border: 1.5px solid var(--ink); border-top: none; background: var(--paper-2); padding: 20px 22px 24px; margin: 0 0 22px; }
-.lw figcaption { font-size: 16px; line-height: 1.6; max-width: calc(var(--lane-measure) + 45.5px); margin: 0 0 26px;
-  padding: 2px 22px 4px; border-left: 1.5px solid var(--ink); }
 .lw-basis > span { max-width: var(--lane-measure); display: block; }
 .lw-basis .k { display: block; font-family: var(--data); font-size: 11px; font-weight: 600; letter-spacing: 0.16em;
   line-height: 1; color: var(--accent); margin: 0 0 10px; }
