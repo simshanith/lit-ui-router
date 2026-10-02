@@ -140,8 +140,7 @@ const srefStatusAriaCurrent: RuleFor<typeof RULE_NAME> = {
     // belongs to the class it is written in, never to the one around it.
     const fields: Set<string>[] = [];
 
-    // Only the constructor's own statements: an assignment buried in a
-    // branch or a callback is not a field this rule can vouch for.
+    // Top-level constructor statements only; branches and callbacks don't count.
     const constructorFields = (member: MemberNode): string[] => {
       const keys: string[] = [];
       const body = (member.value as { body?: { body?: Node[] } } | null)?.body

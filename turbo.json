@@ -164,8 +164,9 @@
     "//#lint:root": {
       "inputs": [".oxlintrc.json", "$TURBO_DEFAULT$"]
     },
-    // Hard complexity ceiling over every tracked JS/TS file; disable comments
-    // don't apply (tools/eslint/complexity-ceiling.ts).
+    // Hard complexity ceiling over JS/TS outside gitignored paths (.vue files
+    // aren't linted); disable comments don't apply
+    // (tools/eslint/complexity-ceiling.ts mirrors the ignores).
     "//#lint:complexity": {
       "inputs": ["$TURBO_DEFAULT$"]
     },
