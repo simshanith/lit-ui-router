@@ -134,9 +134,7 @@
   function pal() {
     return { ink: tok('--ink'), soft: tok('--ink-soft'), faint: tok('--ink-faint'), accent: tok('--accent'),
       paper: tok('--paper'), paper2: tok('--paper-2'), line: tok('--edge'), red: tok('--red'),
-      data: tok('--data') || '"Barlow Semi Condensed", sans-serif',
-      // cytoscape weighs min-zoomed-font-size in device pixels, so 9 css px scales by the ratio
-      minFont: 9 * (window.devicePixelRatio || 1) };
+      data: tok('--data') || '"Barlow Semi Condensed", sans-serif' };
   }
   var sprites = function () { return L.sprites[dark() ? 'dark' : 'light']; };
   var idOf = function (key) { return 'n' + key.replace(/[^a-zA-Z0-9]/g, '_'); };
@@ -169,7 +167,7 @@
         'text-valign': 'bottom', 'text-margin-y': 5, 'text-wrap': 'none',
         // a name lettered over a tie knocks the tie out, the way a plan label does
         'text-background-color': c.paper, 'text-background-opacity': 0.92, 'text-background-padding': 2,
-        'font-family': c.data, 'font-size': 13, 'min-zoomed-font-size': c.minFont, color: c.ink,
+        'font-family': c.data, 'font-size': 13, color: c.ink,
         'text-halign': 'center', 'overlay-opacity': 0, 'transition-property': 'opacity', 'transition-duration': '110ms' } },
       { selector: 'node.k-external', style: { 'border-width': 2.2, 'border-color': c.accent, color: c.accent } },
       { selector: 'node.band', style: { 'background-opacity': 0, 'background-image': 'none', 'border-width': 0,
@@ -177,7 +175,7 @@
         'text-wrap': 'none', 'font-size': 12, color: c.soft, events: 'no' } },
       { selector: 'edge', style: { 'curve-style': 'bezier', 'target-arrow-shape': 'triangle',
         'arrow-scale': 0.75, 'line-color': c.soft, 'target-arrow-color': c.soft, width: 1.6,
-        label: 'data(label)', 'font-family': c.data, 'font-size': 11, 'min-zoomed-font-size': c.minFont,
+        label: 'data(label)', 'font-family': c.data, 'font-size': 11,
         color: c.faint, 'text-rotation': 'autorotate', 'text-background-color': c.paper,
         'text-background-opacity': 0.9, 'text-background-padding': 2,
         'transition-property': 'opacity', 'transition-duration': '110ms' } },
@@ -189,8 +187,10 @@
       { selector: 'edge.brick', style: { 'line-style': 'solid', width: 2.6 } },
       { selector: '.dim', style: { opacity: 0.1 } },
       { selector: 'node.lit', style: { 'border-width': 2.6, 'border-color': c.accent } },
+      { selector: 'node.pick', style: { 'border-width': 3, 'border-color': c.ink, opacity: 1 } },
       { selector: 'edge.lit', style: { opacity: 1, width: 3, 'line-color': c.accent,
-        'target-arrow-color': c.accent, color: c.accent } }
+        'target-arrow-color': c.accent, color: c.accent } },
+      { selector: '.small', style: { label: '' } }
     ];
   }
 
@@ -200,7 +200,19 @@
   // generator/thumbs.mjs does, to re-lay this lane into the portrait window of
   // a cover card before photographing it — a landscape slice read as a corner.
   stage.__cy = cy;
+
+  // a range label under 7.5 css px on screen is dropped, any other label under 6.5
+  var sizing = 0;
+  function floorLabels() {
+    sizing = 0;
+    var z = cy.zoom();
+    cy.batch(function () {
+      cy.elements().forEach(function (el) { el.toggleClass('small', el.numericStyle('font-size') * z < (el.isEdge() ? 7.5 : 6.5)); });
+    });
+  }
+  cy.on('zoom', function () { if (!sizing) sizing = requestAnimationFrame(floorLabels); });
   cy.fit(cy.elements(), 40);
+  floorLabels();
 
   var info = document.getElementById('cb-info');
   var IDLE = '\u003ch4\u003e' + L.glyphs.rest + 'THE COUPLING BENCH\u003c/h4\u003e\u003cp class="hint"\u003eEvery line on this bench is a '
@@ -256,18 +268,18 @@
     return h;
   }
 
-  function clear() { cy.elements().removeClass('dim lit'); info.innerHTML = IDLE; }
+  function clear() { cy.elements().removeClass('dim lit pick'); info.innerHTML = IDLE; }
   function focusNode(node) {
     if (node.hasClass('band')) return;
     var hood = node.closedNeighborhood();
-    cy.elements().addClass('dim');
+    cy.elements().removeClass('lit pick').addClass('dim');
     hood.removeClass('dim');
     hood.addClass('lit');
-    node.removeClass('lit');
+    node.removeClass('lit').addClass('pick');
     info.innerHTML = describeNode(node.data('key'));
   }
   function focusEdge(edge) {
-    cy.elements().addClass('dim');
+    cy.elements().removeClass('lit pick').addClass('dim');
     edge.removeClass('dim').addClass('lit');
     edge.connectedNodes().removeClass('dim').addClass('lit');
     info.innerHTML = describeEdge(edge.data('idx'));
@@ -292,14 +304,26 @@
   }
   // a url or keyboard pin brings its neighbourhood in, held between 0.7 and 1.2; a clear returns to the whole bench
   var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // centre the hood at a zoom it fits, keep the pin 64px inside, and never show more than 48px of paper past the graph
+  function frameOn(pin, hood, all, floor) {
+    var W = cy.width(), H = cy.height(), bb = hood.boundingBox(), g = all.boundingBox();
+    var p = pin.isNode() ? pin.position() : pin.midpoint();
+    var z = Math.max(floor, Math.min(1.2, (W - 96) / bb.w, (H - 96) / bb.h));
+    var x = W / 2 - z * (bb.x1 + bb.w / 2), y = H / 2 - z * (bb.y1 + bb.h / 2);
+    var px = x + z * p.x, py = y + z * p.y;
+    x += Math.max(0, 64 - px) - Math.max(0, px - (W - 64));
+    y += Math.max(0, 64 - py) - Math.max(0, py - (H - 64));
+    if (z * g.w > W - 96) x = Math.min(48 - z * g.x1, Math.max(W - 48 - z * g.x2, x));
+    if (z * g.h > H - 96) y = Math.min(48 - z * g.y1, Math.max(H - 48 - z * g.y2, y));
+    return { zoom: z, pan: { x: x, y: y } };
+  }
   function frame(el) {
     var ms = reduced ? 0 : 260;
     cy.stop(true);
     if (!el) { cy.animate({ fit: { eles: cy.elements(), padding: 40 }, duration: ms }); return; }
-    var hood = el.isNode() ? el.closedNeighborhood() : el.union(el.connectedNodes()), bb = hood.boundingBox();
-    var z = Math.min((cy.width() - 96) / bb.w, (cy.height() - 96) / bb.h);
-    if (z > 1.2 || z < 0.7) cy.animate({ zoom: z > 1.2 ? 1.2 : 0.7, center: { eles: el }, duration: ms });
-    else cy.animate({ fit: { eles: hood, padding: 48 }, duration: ms });
+    var hood = el.isNode() ? el.closedNeighborhood() : el.union(el.connectedNodes());
+    // under 480px the floor drops to 0.55: the rail names every neighbour anyway
+    cy.animate(Object.assign(frameOn(el, hood, cy.elements(), cy.width() < 480 ? 0.55 : 0.7), { duration: ms }));
   }
   function steer(el) {
     var was = pinned;
@@ -343,14 +367,14 @@
     <div class="notes">
       <h3>GENERAL NOTES</h3>
       
-<p><strong>This plate is <a class="xref" data-sheet="2A" href="/sheet/2A">sheet 2A</a> with the joints made live.</strong> <a class="xref" data-sheet="2" href="/sheet/2">Sheet 2</a> explodes the assembly and <a class="xref" data-sheet="2A" href="/sheet/2A">sheet 2A</a> draws each coupling at reading size; both letter the API call that makes the joint. This one drops the API entirely and draws the other contract — the one <code>npm install</code> reads. Its arrangement is deliberately 2A’s: <code>@uirouter/<wbr>core</code> as the socket wall at the left with <code>lit</code> above it, the lit companions in a column at the right in 2A’s order, the server below them with the coupling that exists only to be crossed out, and beyond that column the two companions that tie the flagship from outside it.</p>
+<p><strong>This plate is sheet 2A with the joints made live.</strong> Sheet 2 explodes the assembly and sheet 2A draws each coupling at reading size; both letter the API call that makes the joint. This one drops the API entirely and draws the other contract — the one <code>npm install</code> reads. Its arrangement is deliberately 2A’s: <code>@uirouter/<wbr>core</code> as the socket wall at the left with <code>lit</code> above it, the lit companions in a column at the right in 2A’s order, the server below them with the coupling that exists only to be crossed out, and beyond that column the two companions that tie the flagship from outside it.</p>
 <p><strong>The middle column is an argument, not a spacer.</strong> 4 of the 7 published packages declare <code>lit</code> outright; <code>ui-router-navigation-location-plugin</code> needs neither it nor anything that does, and the bench says so by standing it in a column of its own between the wall and the lit column, on the wall’s own baseline. Every other building on this bench reaches left across two column gaps; this one reaches across one, along a straight horizontal run, and that run is the whole of its coupling. With that column standing clear, nothing sits between <code>lit-ui-router-mobx</code> and <code>lit-ui-router</code> either, so their tie is a plain vertical. Every line on the plate is straight by construction: the generator <em>throws</em> if a same-column tie is laid through a third building, so a curve drawn around a neighbour is a build error rather than a layout choice.</p>
 <p><strong>An edge is one declaration, not a relationship.</strong> Every line is a single entry in a published <code>package.json</code> — its section (<code>peerDependencies</code> or <code>dependencies</code>), its declared range, and whether <code>peerDependenciesMeta</code> marks it optional. <code>devDependencies</code> are not drawn: they bind this workspace and never reach a consumer’s install. Of 23 contracts the 7 published packages declare, 14 land on a node that is on this bench; the other 9 are filed on the plate and read out in the panel under OFF THE BENCH — <code>effect</code>, <code>@lit-labs/<wbr>ssr</code>, <code>eslint</code> and the rest, contracts on things this repo neither publishes nor draws.</p>
 <p><strong>One node ties two siblings, and it is the reason the bench grew a column.</strong> <code>lit-ui-router-ssr</code> declares <code>lit-ui-router ^1.16.0</code> <em>and</em> <code>ui-router-server ^0.2.0</code> — the only building here whose ties reach two of its own siblings. It cannot stand in the companions column: a tie laid down that column to the flagship would run straight through <code>lit-ui-router-mobx</code>, and the generator throws on exactly that rather than bowing the line around it. So it stands one column further out with <code>lit-ui-router-effect</code>, whose single sibling tie — <code>lit-ui-router ^1.15.0</code> — has the same shape as mobx’s and the same problem.</p>
 <p><strong>The ranges are the ranges that ship, not the ones written in the file.</strong> Every spec in this repo is a catalog reference — <code>catalog:publishedPeer</code>, not <code>^6.0.8</code> — which pnpm rewrites at pack time. <code>census-couplings.mjs</code> resolves each one against the archive’s own <code>pnpm-workspace.yaml</code> and the plate carries both, so the panel can show you what is written and what a consumer would see. <code>@uirouter/<wbr>core</code> and <code>lit</code> carry no range of their own on this bench: their versions (6.1.2 and 2.8.0 · 3.3.3) come from the lockfile, which is the only honest source for a resolution.</p>
 <p><strong>The whole deps-to-peers decision is legible in one column.</strong> 20 of the 23 contracts are peers and only 3 are dependencies — and none of the 3 shipped dependencies is a router. <code>lit-ui-router</code> declares <code>@uirouter/<wbr>core</code> at <code>^6.0.8</code> and <code>lit</code> at <code>^2.0.0 || ^3.0.0</code> as <em>peers</em>, and keeps exactly one thing in its tarball’s dependency list: <code>@oxc-project/<wbr>runtime</code> at <code>>=0.50.0</code>, a runtime helper deliberately declared as wide as it can honestly be; <code>lit-ui-router-ssr</code> ships the same helper at the same range. <code>lit-ui-router-mobx</code> goes further and declares no dependency at all: all 4 of its contracts are peers, including the one brick-to-brick joint on the bench — <code>lit-ui-router ^1.7.0</code>, a floor the flagship sits above at 1.16.0.</p>
 <p><strong>The lit range is a lane, and it is drawn as one.</strong> <code>^2.0.0 || ^3.0.0</code> is not a loose bound; it is a supported compatibility lane, and the same range appears on both packages that touch lit. The bench shows the consequence: the lockfile resolves <em>two</em> lit majors (2.8.0 · 3.3.3), because the compat lane is tested, not merely permitted.</p>
-<p><strong>Two contracts are drawn in red, and they are the interesting ones.</strong> <code>ui-router-server</code>’s <code>@uirouter/<wbr>core</code> is an <em>optional</em> peer at <code>^6.0.8</code> — <a class="xref" data-sheet="2A" href="/sheet/2A">sheet 2A</a> draws that same tie crossed out, because the default matcher tier never loads the wall. And <code>eslint-plugin-lit-ui-router</code> stands in a bay of its own: it declares 2 contracts, <code>eslint ^9.0.0 || ^10.0.0</code> and a shipped <code>eslint-plugin-lit</code>, and not one of them touches anything else on this bench. It is a published package of this repo that couples to none of its siblings — which is exactly why it is drawn here rather than left out.</p>
+<p><strong>Two contracts are drawn in red, and they are the interesting ones.</strong> <code>ui-router-server</code>’s <code>@uirouter/<wbr>core</code> is an <em>optional</em> peer at <code>^6.0.8</code> — sheet 2A draws that same tie crossed out, because the default matcher tier never loads the wall. And <code>eslint-plugin-lit-ui-router</code> stands in a bay of its own: it declares 2 contracts, <code>eslint ^9.0.0 || ^10.0.0</code> and a shipped <code>eslint-plugin-lit</code>, and not one of them touches anything else on this bench. It is a published package of this repo that couples to none of its siblings — which is exactly why it is drawn here rather than left out.</p>
 <p><strong>Counting rules.</strong> 6 of the 7 published packages name <code>@uirouter/<wbr>core</code>; 1 of those name it optionally. <code>ui-router-navigation-location-plugin</code> declares exactly one contract in the world — <code>@uirouter/<wbr>core ^6.0.8</code> — which is the plate’s own way of saying it has never heard of Lit. Massing and storeys are the brick schedule’s: front-face area tracks sloc, the smallest companions are clamped up to a legible minimum, and a building’s storeys are its <code>courses</code> band from <code>census-bricks.json</code>, never a pipeline tier.</p>
     </div>
     <div class="keyblock">

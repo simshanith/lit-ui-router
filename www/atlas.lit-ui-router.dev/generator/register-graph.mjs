@@ -209,9 +209,7 @@ $$FOCUS  // The cytoscape tag is deferred; deferred scripts run BEFORE DOMConten
   function pal() {
     return { ink: tok('--ink'), soft: tok('--ink-soft'), faint: tok('--ink-faint'), accent: tok('--accent'),
       paper: tok('--paper'), paper2: tok('--paper-2'), line: tok('--edge'), red: tok('--red'),
-      data: tok('--data') || '"Barlow Semi Condensed", sans-serif',
-      // cytoscape weighs min-zoomed-font-size in device pixels, so 9 css px scales by the ratio
-      minFont: 9 * (window.devicePixelRatio || 1) };
+      data: tok('--data') || '"Barlow Semi Condensed", sans-serif' };
   }
   var skins = function () { return L.skins[dark() ? 'dark' : 'light']; };
 
@@ -251,18 +249,22 @@ $$FOCUS  // The cytoscape tag is deferred; deferred scripts run BEFORE DOMConten
       { selector: 'node.cell.phantom', style: { 'background-color': c.paper2, 'border-color': c.faint, opacity: 0.4 } },
       { selector: 'node.head', style: { 'background-opacity': 0, 'border-width': 0, label: 'data(label)',
         'text-valign': 'center', 'text-halign': 'center', 'text-rotation': -Math.PI / 2, 'text-margin-y': 0,
-        'font-family': c.data, 'font-size': 13, 'min-zoomed-font-size': c.minFont, color: c.ink,
+        'font-family': c.data, 'font-size': 13, color: c.ink,
         width: 1, height: 1, events: 'no' } },
       { selector: 'node.head.phantom', style: { color: c.red } },
       { selector: 'node.rowlabel', style: { 'background-opacity': 0, 'border-width': 0, label: 'data(label)',
         'text-valign': 'center', 'text-halign': 'left', 'text-margin-x': -4,
-        'font-family': c.data, 'font-size': 13, 'min-zoomed-font-size': c.minFont, color: c.soft,
+        'font-family': c.data, 'font-size': 13, color: c.soft,
         width: 1, height: 1, events: 'no' } },
       { selector: 'node.band', style: { 'background-opacity': 0, 'border-width': 0, label: 'data(label)',
         'text-valign': 'center', 'text-halign': 'left', 'text-margin-x': -4,
-        'font-family': c.data, 'font-size': 13.5, 'min-zoomed-font-size': c.minFont, color: c.accent,
+        'font-family': c.data, 'font-size': 13.5, color: c.accent,
         width: 1, height: 1, events: 'no' } },
       { selector: 'node.foot', style: { 'text-halign': 'center', 'text-margin-x': 0, color: c.soft, 'font-size': 14 } },
+      { selector: 'node.rowtag', style: { 'background-opacity': 0, 'border-width': 0, label: 'data(label)',
+        'text-valign': 'center', 'text-halign': 'right', 'font-family': c.data, 'font-size': 12, color: c.accent,
+        'text-background-color': c.paper, 'text-background-opacity': 0.92, 'text-background-padding': 2,
+        width: 1, height: 1, events: 'no' } },
       { selector: 'edge', style: { 'curve-style': 'straight', 'target-arrow-shape': 'triangle',
         'arrow-scale': 0.5, width: 1, 'line-color': c.soft, 'target-arrow-color': c.soft, opacity: 0.55,
         'transition-property': 'opacity', 'transition-duration': '120ms' } },
@@ -272,7 +274,8 @@ $$FOCUS  // The cytoscape tag is deferred; deferred scripts run BEFORE DOMConten
       { selector: 'node.lit', style: { 'border-width': 2.4, 'border-color': c.accent, opacity: 1 } },
       { selector: 'node.pick', style: { 'border-width': 3, 'border-color': c.red, opacity: 1 } },
       { selector: 'edge.lit', style: { opacity: 1, width: 2.2, 'line-color': c.accent,
-        'target-arrow-color': c.accent, 'target-arrow-shape': 'triangle' } }
+        'target-arrow-color': c.accent, 'target-arrow-shape': 'triangle' } },
+      { selector: '.small', style: { label: '' } }
     ];
   }
 
@@ -283,12 +286,24 @@ $$FOCUS  // The cytoscape tag is deferred; deferred scripts run BEFORE DOMConten
   // a cover card before photographing it — a landscape slice read as a corner.
   stage.__cy = cy;
 
+  // a label under 6.5 css px on screen is dropped rather than drawn as fuzz
+  var sizing = 0;
+  function floorLabels() {
+    sizing = 0;
+    var z = cy.zoom();
+    cy.batch(function () {
+      cy.nodes('.head, .rowlabel, .band').forEach(function (n) { n.toggleClass('small', n.numericStyle('font-size') * z < 6.5); });
+    });
+  }
+  cy.on('zoom', function () { if (!sizing) sizing = requestAnimationFrame(floorLabels); });
+  floorLabels();
+
   var shroud = false;
   function applyShroud() {
     cy.batch(function () {
       cy.elements('.phantom').style('display', shroud ? 'element' : 'none');
     });
-    cy.fit(cy.elements(':visible'), 26);
+    cy.fit(cy.elements(':visible').not('.rowtag'), 26);
   }
   applyShroud();
 
@@ -326,7 +341,7 @@ $$FOCUS  // The cytoscape tag is deferred; deferred scripts run BEFORE DOMConten
     var hood = node.closedNeighborhood().filter(':visible');
     // the lettering never dims: with 600-odd cells you must still be able to read
     // which package and which task column the lit neighbourhood is standing in
-    cy.elements().not('.head, .rowlabel, .band').addClass('dim');
+    cy.elements().removeClass('lit pick').not('.head, .rowlabel, .band, .rowtag').addClass('dim');
     hood.removeClass('dim');
     hood.addClass('lit');
     node.removeClass('lit').addClass('pick');
@@ -334,7 +349,27 @@ $$FOCUS  // The cytoscape tag is deferred; deferred scripts run BEFORE DOMConten
   }
   // hover previews over the pin; a tap pins, and the pinned cell or the ground clears it
   var pinned = null;
-  function show(node) { if (node) focus(node); else clear(); }
+  function show(node) { if (node) focus(node); else clear(); setTag(node); }
+  // the pinned row's name rides the canvas's left edge, however far its row label lies
+  var rowOf = {}, rowY = {}, colOf = {};
+  L.rows.forEach(function (r, i) { rowOf[r.pkg] = 'r' + i; rowY[r.pkg] = r.y; });
+  L.cols.forEach(function (c, i) { colOf[c.name] = 'c' + i; });
+  function placeTag() {
+    var t = cy.getElementById('rowtag');
+    if (!t.length) return;
+    var z = cy.zoom();
+    t.position({ x: (-cy.pan().x + 8) / z, y: t.data('y') });
+    t.style('font-size', 12 / z);
+  }
+  function setTag(node) {
+    var t = cy.getElementById('rowtag'), pkg = node ? N[node.data('i')].pkg : null;
+    if (t.length && t.data('label') === pkg) return;
+    cy.remove(t);
+    if (!pkg) return;
+    cy.add({ data: { id: 'rowtag', label: pkg, y: rowY[pkg] }, position: { x: 0, y: rowY[pkg] }, classes: 'rowtag' });
+    placeTag();
+  }
+  cy.on('viewport', placeTag);
   function tap(node) {
     var next = node && pinned && node.same(pinned) ? null : node;
     if (next === pinned) return;
@@ -344,14 +379,27 @@ $$FOCUS  // The cytoscape tag is deferred; deferred scripts run BEFORE DOMConten
   }
   // a url or keyboard pin brings its neighbourhood in, held between 0.7 and 1.2; a clear returns to the whole register
   var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // centre the hood at a zoom it fits, keep the pin 64px inside, and never show more than 48px of paper past the graph
+  function frameOn(pin, hood, all, floor) {
+    var W = cy.width(), H = cy.height(), bb = hood.boundingBox(), g = all.boundingBox();
+    var p = pin.isNode() ? pin.position() : pin.midpoint();
+    var z = Math.max(floor, Math.min(1.2, (W - 96) / bb.w, (H - 96) / bb.h));
+    var x = W / 2 - z * (bb.x1 + bb.w / 2), y = H / 2 - z * (bb.y1 + bb.h / 2);
+    var px = x + z * p.x, py = y + z * p.y;
+    x += Math.max(0, 64 - px) - Math.max(0, px - (W - 64));
+    y += Math.max(0, 64 - py) - Math.max(0, py - (H - 64));
+    if (z * g.w > W - 96) x = Math.min(48 - z * g.x1, Math.max(W - 48 - z * g.x2, x));
+    if (z * g.h > H - 96) y = Math.min(48 - z * g.y1, Math.max(H - 48 - z * g.y2, y));
+    return { zoom: z, pan: { x: x, y: y } };
+  }
   function frame(node) {
-    var ms = reduced ? 0 : 260;
+    var ms = reduced ? 0 : 260, all = cy.elements(':visible').not('.rowtag');
     cy.stop(true);
-    if (!node) { cy.animate({ fit: { eles: cy.elements(':visible'), padding: 26 }, duration: ms }); return; }
-    var hood = node.closedNeighborhood().filter(':visible'), bb = hood.boundingBox();
-    var z = Math.min((cy.width() - 96) / bb.w, (cy.height() - 96) / bb.h);
-    if (z > 1.2 || z < 0.7) cy.animate({ zoom: z > 1.2 ? 1.2 : 0.7, center: { eles: node }, duration: ms });
-    else cy.animate({ fit: { eles: hood, padding: 48 }, duration: ms });
+    if (!node) { cy.animate({ fit: { eles: all, padding: 26 }, duration: ms }); return; }
+    var n = N[node.data('i')];
+    var hood = node.closedNeighborhood().filter(':visible')
+      .union(cy.getElementById(rowOf[n.pkg])).union(cy.getElementById(colOf[n.task]));
+    cy.animate(Object.assign(frameOn(node, hood, all, 0.7), { duration: ms }));
   }
   function steer(node) {
     var was = pinned;
@@ -376,7 +424,7 @@ $$FOCUS  // The cytoscape tag is deferred; deferred scripts run BEFORE DOMConten
   });
   clear();
 
-  document.getElementById('rg-fit').addEventListener('click', function () { cy.fit(cy.elements(':visible'), 26); });
+  document.getElementById('rg-fit').addEventListener('click', function () { cy.fit(cy.elements(':visible').not('.rowtag'), 26); });
   var box = document.getElementById('rg-shroud');
   function setShroud(on) {
     shroud = box.checked = on;
