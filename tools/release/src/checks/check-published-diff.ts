@@ -103,17 +103,54 @@ async function diffAgainstPublished(
   }
 }
 
+// The summary always lands at the canonical .cache path (the turbo task's
+// declared output); --json is an ad-hoc override only.
+function summaryPathArg(): string {
+  const jsonFlag = process.argv.indexOf('--json');
+  if (jsonFlag === -1) return publishedDiffSummaryPath;
+  const jsonOverride = process.argv[jsonFlag + 1];
+  if (!jsonOverride || jsonOverride.startsWith('--')) {
+    throw new Error('--json requires a file path argument');
+  }
+  return jsonOverride;
+}
+
+// Moves package.json to ship-inert when only inert manifest fields drifted.
+function reclassifyManifest(
+  files: { shipAffecting: string[]; shipInert: string[] },
+  diff: string,
+  localManifest: Record<string, unknown> | undefined,
+  publishedManifest: Record<string, unknown> | undefined,
+): { shipAffecting: string[]; shipInert: string[] } {
+  if (
+    !files.shipAffecting.includes('package.json') ||
+    localManifest === undefined ||
+    publishedManifest === undefined
+  ) {
+    return files;
+  }
+  let manifestInert = false;
+  try {
+    manifestInert = isManifestDriftInert({
+      fileSetChanged: hasFileSetChange(diff),
+      driftFields: manifestDriftFields(publishedManifest, localManifest),
+    });
+  } catch {
+    // Unparsable manifest bytes stay ship-affecting.
+  }
+  if (!manifestInert) return files;
+  return {
+    shipAffecting: files.shipAffecting.filter(
+      (file) => file !== 'package.json',
+    ),
+    shipInert: [...files.shipInert, 'package.json'].sort(),
+  };
+}
+
 async function main() {
   const strict = process.argv.includes('--strict');
   const skipBuild = process.argv.includes('--no-build');
-  // The summary always lands at the canonical .cache path (the turbo task's
-  // declared output); --json is an ad-hoc override only.
-  const jsonFlag = process.argv.indexOf('--json');
-  const jsonOverride = jsonFlag === -1 ? undefined : process.argv[jsonFlag + 1];
-  if (jsonFlag !== -1 && (!jsonOverride || jsonOverride.startsWith('--'))) {
-    throw new Error('--json requires a file path argument');
-  }
-  const jsonPath = jsonOverride ?? publishedDiffSummaryPath;
+  const jsonPath = summaryPathArg();
 
   const published = await readPublishedVersions();
   const { members } = await loadWorkspace(workspaceRoot);
@@ -158,26 +195,12 @@ async function main() {
       results.push({ name, dir, tag, version, localVersion, status: 'clean' });
       continue;
     }
-    let { shipAffecting, shipInert } = classifyFiles(changedFiles(diff));
-    if (
-      shipAffecting.includes('package.json') &&
-      localManifest !== undefined &&
-      publishedManifest !== undefined
-    ) {
-      let manifestInert = false;
-      try {
-        manifestInert = isManifestDriftInert({
-          fileSetChanged: hasFileSetChange(diff),
-          driftFields: manifestDriftFields(publishedManifest, localManifest),
-        });
-      } catch {
-        // Unparsable manifest bytes stay ship-affecting.
-      }
-      if (manifestInert) {
-        shipAffecting = shipAffecting.filter((file) => file !== 'package.json');
-        shipInert = [...shipInert, 'package.json'].sort();
-      }
-    }
+    const { shipAffecting, shipInert } = reclassifyManifest(
+      classifyFiles(changedFiles(diff)),
+      diff,
+      localManifest,
+      publishedManifest,
+    );
     results.push({
       name,
       dir,

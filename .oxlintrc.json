@@ -18,6 +18,7 @@
     "**/.vitepress/cache/**"
   ],
   "rules": {
+    "complexity": "error",
     "constructor-super": "error",
     "for-direction": "error",
     "getter-return": "error",
@@ -189,12 +190,6 @@
         "prefer-const": "error",
         "prefer-rest-params": "error",
         "prefer-spread": "error"
-      }
-    },
-    {
-      "files": ["packages/**"],
-      "rules": {
-        "complexity": "error"
       }
     },
     {
