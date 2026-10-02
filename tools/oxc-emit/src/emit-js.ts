@@ -7,6 +7,9 @@
 // the `define` of `import.meta.env.DEV`; oxc's define plugin constant-folds the
 // guarded branches away, so the production emit carries none of the dev-only
 // literals. See check-dev-split.ts for the gate that keeps that true.
+//
+// Every pass also defines `import.meta.env.PACKAGE_VERSION` as the manifest's
+// version, so a package can name its own release without importing package.json.
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, relative } from 'node:path';
 
@@ -18,6 +21,7 @@ import { requireManifest } from '@tools/bootstrap/manifest.ts';
 import {
   DEV_DEFINE_KEY,
   DEV_OUT,
+  VERSION_DEFINE_KEY,
   fail,
   OUT,
   publishableSources,
@@ -38,7 +42,11 @@ const passes = dual
 
 // a decorator lowers to an import of this package, so the emitting one must declare it
 const RUNTIME = '@oxc-project/runtime';
-const { dependencies = {} } = requireManifest(process.cwd());
+const { dependencies = {}, version } = requireManifest(process.cwd());
+const versionDefine: Record<string, string> =
+  version === undefined
+    ? {}
+    : { [VERSION_DEFINE_KEY]: JSON.stringify(version) };
 const undeclaredRuntime = new Set<string>();
 
 for (const file of publishableSources()) {
@@ -56,7 +64,10 @@ for (const file of publishableSources()) {
         // can type-strip them directly; no-op for extensionless imports
         rewriteImportExtensions: 'rewrite',
       },
-      ...(dev === undefined ? {} : { define: { [DEV_DEFINE_KEY]: dev } }),
+      define:
+        dev === undefined
+          ? versionDefine
+          : { ...versionDefine, [DEV_DEFINE_KEY]: dev },
     });
     if (transformed.errors.length) fail(file, transformed.errors);
     const printed = minifySync(file, transformed.code, {

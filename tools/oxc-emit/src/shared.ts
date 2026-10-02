@@ -11,6 +11,8 @@ export const DEV_OUT = 'dist/development';
 // The build-time constant the guarded warning sites read. Vite/vitest supply it
 // unconfigured, so specs exercise the development branch as-is.
 export const DEV_DEFINE_KEY = 'import.meta.env.DEV';
+// The manifest version, defined on every pass; a vitest config supplies it via `test.env`.
+export const VERSION_DEFINE_KEY = 'import.meta.env.PACKAGE_VERSION';
 
 export const fail = (file: string, errors: { message: string }[]): never => {
   throw new Error(
