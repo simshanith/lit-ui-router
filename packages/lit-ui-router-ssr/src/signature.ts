@@ -54,7 +54,7 @@ export const signatureOf = (router: UIRouterLit): HydrationSignature => {
 
 /**
  * The signature as one JSON data block. `<` and `>` only ever stand inside a
- * JSON string, where `<` and `>` spell them, so no value can spell
+ * JSON string, where `\u003c` and `\u003e` spell them, so no value can spell
  * `</script` or `<!--` and end the block early.
  */
 export const signatureBlock = (signature: HydrationSignature): string => {
