@@ -19,7 +19,7 @@ import { readFileSync } from 'node:fs';
 import { PROJECT_MARK, articleTitle } from './chrome.mjs';
 import { LANE_KEYS_JS, PLATE_FOCUS_JS } from './focus.mjs';
 import { glyph } from './icons.mjs';
-import { laneCss } from './lane-chrome.mjs';
+import { basisStrip, laneCss } from './lane-chrome.mjs';
 import { CYTOSCAPE_URL } from './pipeline-graph.mjs';
 import { SPRITES, spriteSvg } from './sprites.mjs';
 
@@ -359,7 +359,7 @@ $$FOCUS  // The cytoscape tag above is deferred; deferred scripts run before
 })();
 `;
 
-export function couplingBenchSection() {
+export function couplingBenchSection({ caption = '' } = {}) {
   const swatch = (k) => `<span class="sw sw-light">${spriteSvg(k, 'light')}</span><span class="sw sw-dark">${spriteSvg(k, 'dark')}</span>`;
   const legend = LEGEND_NODES.map(([k, d]) => `<span class="lg">${swatch(k)}${d}</span>`).join('\n    ')
     + '\n    ' + [
@@ -378,7 +378,7 @@ export function couplingBenchSection() {
     ${legend}
     </div>
     <div class="cb-ctl">
-      <span>HOVER AN EDGE FOR ITS RANGE · ${glyph('move')}DRAG TO PAN</span>
+      <span><span class="nw">HOVER AN EDGE FOR ITS RANGE</span> · <span class="nw">${glyph('move')}DRAG TO PAN</span></span>
       <button type="button" id="cb-fit">${glyph('scan')}FIT</button>
     </div>
   </div>
@@ -386,7 +386,8 @@ export function couplingBenchSection() {
     <div class="cb-cy" id="cb-cy" role="application" tabindex="0" aria-label="Interactive coupling graph: the ${C.totals.published} published packages, @uirouter/core and lit, with one edge per declared dependency or peer dependency, each labelled with its published range. lit-ui-router-ssr is the one node with a tie to two siblings — the flagship and the server. With the graph focused, the arrow keys step the pin through the buildings and Escape clears it."></div>
     <aside class="cb-info" id="cb-info"></aside>
   </div>
-  <p class="cb-basis"><span><b class="k">BASIS</b>${C.totals.contracts} contracts read from <code>packages/*/package.json</code> at ${C.ref} @ ${C.sha} · commit ${C.commitDate} · every <code>catalog:</code> spec resolved through the archive's own <code>pnpm-workspace.yaml</code> to the range that ships, and <code>@uirouter/core</code> and <code>lit</code> versions taken from <code>pnpm-lock.yaml</code>, by <code>generator/census-couplings.mjs</code> · massing and storeys from <code>census-bricks.json</code> · layout is sheet 2A's arrangement in five columns — the lit companions, the navigation plugin alone, the two externals, effect and ssr, the eslint bay — computed at build and drawn with cytoscape <code>preset</code> — no physics, and no bowed ties.</span></p>
+  ${basisStrip('cb', `${C.totals.contracts} contracts read from <code>packages/*/package.json</code> at ${C.ref} @ ${C.sha} · commit ${C.commitDate.slice(0, 10)} · every <code>catalog:</code> spec resolved through the archive's own <code>pnpm-workspace.yaml</code> to the range that ships, and <code>@uirouter/core</code> and <code>lit</code> versions taken from <code>pnpm-lock.yaml</code>, by <code>generator/census-couplings.mjs</code> · massing and storeys from <code>census-bricks.json</code> · layout is sheet 2A's arrangement in five columns — the lit companions, the navigation plugin alone, the two externals, effect and ssr, the eslint bay — computed at build and drawn with cytoscape <code>preset</code> — no physics, and no bowed ties.`)}
+  ${caption ? `<figure><figcaption><span class="figno">FIG. 2B</span>${caption}</figcaption></figure>` : ''}
 </section>
 <script type="application/json" id="cb-layout">${json(LAYOUT)}</script>
 <script defer src="${CYTOSCAPE_URL}"></script>

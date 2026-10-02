@@ -487,9 +487,8 @@ a { color: var(--accent); }
   <h2 class="sheet-title"><sup class="art">the&nbsp;</sup>REGISTER, WALKED</h2>
   <p class="sheet-sub">ALTITUDE 3¼ — sheet 12's plate, live under the pointer · the whole ci graph carried node by node · 718 NODES · 227 RUN A COMMAND · 1,932 EDGES · 111 JOIN TWO REAL TASKS · surveyed at origin/main @ 63c0b823 (commit 2026-09-28) · turbo 2.11.2</p>
   <style>
-.rg { max-width: 1300px; margin: 0 auto 40px; }
 .rg-bar { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; justify-content: space-between;
-  border: 1.5px solid var(--ink); border-bottom: none; background: var(--paper-2); padding: 10px 16px; }
+  border: 1.5px solid var(--ink); border-bottom: none; background: var(--paper-2); padding: 12px 22px; }
 .rg-legend { display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: center; }
 .rg-bar .lg { display: inline-flex; align-items: center; gap: 8px; font-family: var(--data); font-size: 11.5px;
   letter-spacing: 0.06em; color: var(--ink-soft); }
@@ -502,6 +501,7 @@ a { color: var(--accent); }
 :root[data-theme="dark"] .rg-bar .lg .sw-light { display: none; }
 :root[data-theme="dark"] .rg-bar .lg .sw-dark { display: block; }
 .rg-bar .lg i { display: block; width: 26px; height: 0; border-top-width: 2px; border-top-style: solid; }
+.rg-ctl .nw { white-space: nowrap; }
 .rg-ctl { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; font-family: var(--data); font-size: 11px;
   letter-spacing: 0.12em; color: var(--ink-soft); }
 .rg-ctl button { font: inherit; letter-spacing: inherit; color: var(--ink); background: var(--paper);
@@ -512,12 +512,12 @@ a { color: var(--accent); }
   background: var(--paper); }
 .rg-stage:focus-visible, .rg-cy:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .rg-cy { height: clamp(560px, 70vh, 960px); min-width: 0; }
-.rg-info { border-left: 1.5px solid var(--ink); background: var(--paper-2); padding: 18px 20px 20px;
+.rg-info { border-left: 1.5px solid var(--ink); background: var(--paper-2); padding: 20px 22px 22px;
   font-family: var(--data); font-size: 12.5px; letter-spacing: 0.04em; line-height: 1.5; color: var(--ink);
   overflow-y: auto; max-height: clamp(560px, 70vh, 960px); }
 .rg-info h4 { font-family: var(--code); font-size: 16px; font-weight: 600; letter-spacing: 0.04em; line-height: 1.3;
   margin: 0 0 10px; word-break: break-all; }
-.rg-info .f { display: block; font-size: 10px; letter-spacing: 0.16em; color: var(--ink-soft); margin: 14px 0 4px; }
+.rg-info .f { display: block; font-size: 11px; letter-spacing: 0.14em; color: var(--ink-soft); margin: 16px 0 6px; }
 .rg-info h4 + .f { margin-top: 0; }
 .rg-info ul { list-style: none; padding: 0; margin: 0; }
 .rg-info li { padding: 2px 0; line-height: 1.45; color: var(--ink-soft); word-break: break-all; }
@@ -526,10 +526,10 @@ a { color: var(--accent); }
 .rg-basis { font-family: var(--prose); font-size: 15px; letter-spacing: 0; line-height: 1.8; color: var(--ink-soft);
   border: 1.5px solid var(--ink); border-top: none; background: var(--paper-2); padding: 20px 22px 24px; margin: 0 0 22px; }
 .rg figcaption { font-size: 16px; line-height: 1.6; margin: 0 0 26px; }
-.rg-basis > span { max-width: 90ch; display: block; }
+.rg-basis > span { max-width: 80ch; display: block; }
 .rg-basis .k { display: block; font-family: var(--data); font-size: 11px; font-weight: 600; letter-spacing: 0.16em;
   line-height: 1; color: var(--accent); margin: 0 0 10px; }
-.rg-basis code { font-family: var(--code); font-size: 0.9em; color: var(--ink); }
+.rg-basis code { font-family: var(--code); font-size: 0.9em; color: var(--ink); white-space: nowrap; }
 @media (max-width: 860px) {
   .rg-stage { grid-template-columns: 1fr; }
   .rg-info { border-left: none; border-top: 1.5px solid var(--ink); max-height: 50vh; }
@@ -795,7 +795,7 @@ a { color: var(--accent); }
   }
 })();
 </script>
-  <figure><figcaption>The punchcard, stood up. Default view is the real subgraph alone — 227 tasks that run a command over 111 edges that join two of them. PHANTOM SHROUD floods in the other 491 nodes and 1,821 edges, and 68.4% of the graph stops being a statistic.</figcaption></figure>
+  <figure><figcaption><span class="figno">FIG. 12i</span>The punchcard, stood up. Default view is the real subgraph alone — 227 tasks that run a command over 111 edges that join two of them. PHANTOM SHROUD floods in the other 491 nodes and 1,821 edges, and 68.4% of the graph stops being a statistic.</figcaption></figure>
   <div class="notes-grid">
     <div class="notes">
       <h3>GENERAL NOTES</h3>

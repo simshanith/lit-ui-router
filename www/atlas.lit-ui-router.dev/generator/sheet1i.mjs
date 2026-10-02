@@ -96,7 +96,7 @@ export function loopWalkedSection() {
   <h2 class="sheet-title">${articleTitle(sheet1i.title)}</h2>
   <p class="sheet-sub">${sheet1i.sub}</p>
   ${loopWalkLane()}
-  <figure><figcaption>${sheet1i.caption}</figcaption></figure>
+  <figure><figcaption><span class="figno">FIG. ${sheet1i.num}</span>${sheet1i.caption}</figcaption></figure>
   <div class="notes-grid">
     <div class="notes">
       <h3>GENERAL NOTES</h3>

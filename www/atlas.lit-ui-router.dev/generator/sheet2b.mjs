@@ -78,7 +78,7 @@ const key = [
 ].join('\n');
 
 export function sheet2bPage() {
-  return `${couplingBenchSection()}
+  return `${couplingBenchSection({ caption: sheet2b.caption })}
 <section class="sheet" id="sheet-2B" aria-label="Sheet 2B notes: ${sheet2b.title}">
   <div class="sheet-head"><span class="proj">${PROJECT_MARK} — DRAWING SET</span><span class="shno">SHEET 2B · METHOD &amp; BASIS</span></div>
   <div class="notes-grid">

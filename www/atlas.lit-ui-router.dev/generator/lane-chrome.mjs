@@ -1,9 +1,10 @@
+import { chipBreaks } from './chrome.mjs';
+
 // The chrome every cytoscape lane shares — key bar, stage with its rail, basis strip — under the lane's class prefix.
 // `wrap` is how the rail breaks its names: package names break at words, file and task ids anywhere.
 export const laneCss = (p, wrap = 'break-word') => `
-.${p} { max-width: 1300px; margin: 0 auto 40px; }
 .${p}-bar { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; justify-content: space-between;
-  border: 1.5px solid var(--ink); border-bottom: none; background: var(--paper-2); padding: 10px 16px; }
+  border: 1.5px solid var(--ink); border-bottom: none; background: var(--paper-2); padding: 12px 22px; }
 .${p}-legend { display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: center; }
 .${p}-bar .lg { display: inline-flex; align-items: center; gap: 8px; font-family: var(--data); font-size: 11.5px;
   letter-spacing: 0.06em; color: var(--ink-soft); }
@@ -16,6 +17,7 @@ export const laneCss = (p, wrap = 'break-word') => `
 :root[data-theme="dark"] .${p}-bar .lg .sw-light { display: none; }
 :root[data-theme="dark"] .${p}-bar .lg .sw-dark { display: block; }
 .${p}-bar .lg i { display: block; width: 26px; height: 0; border-top-width: 2px; border-top-style: solid; }
+.${p}-ctl .nw { white-space: nowrap; }
 .${p}-ctl { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; font-family: var(--data); font-size: 11px;
   letter-spacing: 0.12em; color: var(--ink-soft); }
 .${p}-ctl button { font: inherit; letter-spacing: inherit; color: var(--ink); background: var(--paper);
@@ -26,12 +28,12 @@ export const laneCss = (p, wrap = 'break-word') => `
   background: var(--paper); }
 .${p}-stage:focus-visible, .${p}-cy:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .${p}-cy { height: clamp(560px, 70vh, 960px); min-width: 0; }
-.${p}-info { border-left: 1.5px solid var(--ink); background: var(--paper-2); padding: 18px 20px 20px;
+.${p}-info { border-left: 1.5px solid var(--ink); background: var(--paper-2); padding: 20px 22px 22px;
   font-family: var(--data); font-size: 12.5px; letter-spacing: 0.04em; line-height: 1.5; color: var(--ink);
   overflow-y: auto; max-height: clamp(560px, 70vh, 960px); }
 .${p}-info h4 { font-family: var(--code); font-size: 16px; font-weight: 600; letter-spacing: 0.04em; line-height: 1.3;
   margin: 0 0 10px; word-break: ${wrap}; }
-.${p}-info .f { display: block; font-size: 10px; letter-spacing: 0.16em; color: var(--ink-soft); margin: 14px 0 4px; }
+.${p}-info .f { display: block; font-size: 11px; letter-spacing: 0.14em; color: var(--ink-soft); margin: 16px 0 6px; }
 .${p}-info h4 + .f { margin-top: 0; }
 .${p}-info ul { list-style: none; padding: 0; margin: 0; }
 .${p}-info li { padding: 2px 0; line-height: 1.45; color: var(--ink-soft); word-break: ${wrap}; }
@@ -40,11 +42,14 @@ export const laneCss = (p, wrap = 'break-word') => `
 .${p}-basis { font-family: var(--prose); font-size: 15px; letter-spacing: 0; line-height: 1.8; color: var(--ink-soft);
   border: 1.5px solid var(--ink); border-top: none; background: var(--paper-2); padding: 20px 22px 24px; margin: 0 0 22px; }
 .${p} figcaption { font-size: 16px; line-height: 1.6; margin: 0 0 26px; }
-.${p}-basis > span { max-width: 90ch; display: block; }
+.${p}-basis > span { max-width: 80ch; display: block; }
 .${p}-basis .k { display: block; font-family: var(--data); font-size: 11px; font-weight: 600; letter-spacing: 0.16em;
   line-height: 1; color: var(--accent); margin: 0 0 10px; }
-.${p}-basis code { font-family: var(--code); font-size: 0.9em; color: var(--ink); }
+.${p}-basis code { font-family: var(--code); font-size: 0.9em; color: var(--ink); white-space: nowrap; }
 @media (max-width: 860px) {
   .${p}-stage { grid-template-columns: 1fr; }
   .${p}-info { border-left: none; border-top: 1.5px solid var(--ink); max-height: 50vh; }
 }`;
+
+// The provenance strip under a lane's stage; a path-shaped chip breaks after its slash, never mid-name.
+export const basisStrip = (p, html) => `<p class="${p}-basis"><span><b class="k">BASIS</b>${chipBreaks(html)}</span></p>`;

@@ -487,9 +487,8 @@ a { color: var(--accent); }
   <h2 class="sheet-title"><sup class="art">the&nbsp;</sup>RENDER LOOP, WALKED</h2>
   <p class="sheet-sub">ALTITUDE 1 — sheet 1's circuit, stepped · one navigation walked leg by leg · 10 STATIONS · 12 LEGS · 12 STEPS · surveyed at origin/main @ 63c0b823 (commit 2026-09-28)</p>
   <style>
-.lw { max-width: 1300px; margin: 0 auto 40px; }
 .lw-bar { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; justify-content: space-between;
-  border: 1.5px solid var(--ink); border-bottom: none; background: var(--paper-2); padding: 10px 16px; }
+  border: 1.5px solid var(--ink); border-bottom: none; background: var(--paper-2); padding: 12px 22px; }
 .lw-legend { display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: center; }
 .lw-bar .lg { display: inline-flex; align-items: center; gap: 8px; font-family: var(--data); font-size: 11.5px;
   letter-spacing: 0.06em; color: var(--ink-soft); }
@@ -502,6 +501,7 @@ a { color: var(--accent); }
 :root[data-theme="dark"] .lw-bar .lg .sw-light { display: none; }
 :root[data-theme="dark"] .lw-bar .lg .sw-dark { display: block; }
 .lw-bar .lg i { display: block; width: 26px; height: 0; border-top-width: 2px; border-top-style: solid; }
+.lw-ctl .nw { white-space: nowrap; }
 .lw-ctl { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; font-family: var(--data); font-size: 11px;
   letter-spacing: 0.12em; color: var(--ink-soft); }
 .lw-ctl button { font: inherit; letter-spacing: inherit; color: var(--ink); background: var(--paper);
@@ -512,12 +512,12 @@ a { color: var(--accent); }
   background: var(--paper); }
 .lw-stage:focus-visible, .lw-cy:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .lw-cy { height: clamp(560px, 70vh, 960px); min-width: 0; }
-.lw-info { border-left: 1.5px solid var(--ink); background: var(--paper-2); padding: 18px 20px 20px;
+.lw-info { border-left: 1.5px solid var(--ink); background: var(--paper-2); padding: 20px 22px 22px;
   font-family: var(--data); font-size: 12.5px; letter-spacing: 0.04em; line-height: 1.5; color: var(--ink);
   overflow-y: auto; max-height: clamp(560px, 70vh, 960px); }
 .lw-info h4 { font-family: var(--code); font-size: 16px; font-weight: 600; letter-spacing: 0.04em; line-height: 1.3;
   margin: 0 0 10px; word-break: break-word; }
-.lw-info .f { display: block; font-size: 10px; letter-spacing: 0.16em; color: var(--ink-soft); margin: 14px 0 4px; }
+.lw-info .f { display: block; font-size: 11px; letter-spacing: 0.14em; color: var(--ink-soft); margin: 16px 0 6px; }
 .lw-info h4 + .f { margin-top: 0; }
 .lw-info ul { list-style: none; padding: 0; margin: 0; }
 .lw-info li { padding: 2px 0; line-height: 1.45; color: var(--ink-soft); word-break: break-word; }
@@ -526,10 +526,10 @@ a { color: var(--accent); }
 .lw-basis { font-family: var(--prose); font-size: 15px; letter-spacing: 0; line-height: 1.8; color: var(--ink-soft);
   border: 1.5px solid var(--ink); border-top: none; background: var(--paper-2); padding: 20px 22px 24px; margin: 0 0 22px; }
 .lw figcaption { font-size: 16px; line-height: 1.6; margin: 0 0 26px; }
-.lw-basis > span { max-width: 90ch; display: block; }
+.lw-basis > span { max-width: 80ch; display: block; }
 .lw-basis .k { display: block; font-family: var(--data); font-size: 11px; font-weight: 600; letter-spacing: 0.16em;
   line-height: 1; color: var(--accent); margin: 0 0 10px; }
-.lw-basis code { font-family: var(--code); font-size: 0.9em; color: var(--ink); }
+.lw-basis code { font-family: var(--code); font-size: 0.9em; color: var(--ink); white-space: nowrap; }
 @media (max-width: 860px) {
   .lw-stage { grid-template-columns: 1fr; }
   .lw-info { border-left: none; border-top: 1.5px solid var(--ink); max-height: 50vh; }
@@ -806,7 +806,7 @@ a { color: var(--accent); }
   }
 })();
 </script>
-  <figure><figcaption>The circuit, stood up and stepped. 10 stations and 12 legs, then one click — a click on &lt;a uiSref&gt; from /people to /people/32 — walked in 12 steps under the pointer, every step standing on the 30 source lines the plate cites verbatim.</figcaption></figure>
+  <figure><figcaption><span class="figno">FIG. 1i</span>The circuit, stood up and stepped. 10 stations and 12 legs, then one click — a click on &lt;a uiSref&gt; from /people to /people/32 — walked in 12 steps under the pointer, every step standing on the 30 source lines the plate cites verbatim.</figcaption></figure>
   <div class="notes-grid">
     <div class="notes">
       <h3>GENERAL NOTES</h3>

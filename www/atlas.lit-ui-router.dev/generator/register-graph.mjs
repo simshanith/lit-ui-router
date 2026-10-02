@@ -15,7 +15,7 @@
 import { readFileSync } from 'node:fs';
 import { LANE_KEYS_JS, PLATE_FOCUS_JS } from './focus.mjs';
 import { glyph } from './icons.mjs';
-import { laneCss } from './lane-chrome.mjs';
+import { basisStrip, laneCss } from './lane-chrome.mjs';
 import { PALETTES } from './sprites.mjs';
 import { CYTOSCAPE_URL } from './pipeline-graph.mjs';
 
@@ -453,7 +453,7 @@ export function registerLane() {
   <div class="rg-cy" id="rg-cy" role="application" tabindex="0" aria-label="An interactive register of the pull-request CI task graph: ${PKGS.length} packages as rows against ${COLS.length} task names as columns, ordered by dependency depth. By default only the ${REAL_N} command-bearing tasks and the ${REAL_E} edges joining two of them are drawn; the phantom shroud floods in the remaining ${NODES.length - REAL_N} placeholder nodes and ${fmt(EDGES.length - REAL_E)} edges. With the graph focused, the arrow keys step the pin through the buildings and Escape clears it."></div>
   <aside class="rg-info" id="rg-info"></aside>
 </div>
-<p class="rg-basis"><span><b class="k">BASIS</b><code>turbo run ${PIPE} --dry=json</code> against a materialized, installed archive of ${PLATE.ref} @ ${PLATE.sha} (commit ${PLATE.commitDate.slice(0, 10)}) · ${TURBO} · all ${fmt(NODES.length)} nodes and ${fmt(EDGES.length)} edges read verbatim from <code>www/atlas.lit-ui-router.dev/data/census-plate.json</code>'s <code>graphNodes</code> / <code>graphEdges</code> and embedded here unaggregated; columns ranked from those edges at build time and drawn with cytoscape <code>preset</code> — no physics, so the picture is the same on every load.</span></p>
+${basisStrip('rg', `<code>turbo run ${PIPE} --dry=json</code> against a materialized, installed archive of ${PLATE.ref} @ ${PLATE.sha} (commit ${PLATE.commitDate.slice(0, 10)}) · ${TURBO} · all ${fmt(NODES.length)} nodes and ${fmt(EDGES.length)} edges read verbatim from <code>www/atlas.lit-ui-router.dev/data/census-plate.json</code>'s <code>graphNodes</code> / <code>graphEdges</code> and embedded here unaggregated; columns ranked from those edges at build time and drawn with cytoscape <code>preset</code> — no physics, so the picture is the same on every load.`)}
 <script type="application/json" id="rg-graph">${json({ nodes: NODES, edges: EDGES })}</script>
 <script type="application/json" id="rg-layout">${json(island)}</script>
 <script defer src="${CYTOSCAPE_URL}"></script>

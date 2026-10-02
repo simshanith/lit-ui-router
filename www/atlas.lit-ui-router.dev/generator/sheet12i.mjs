@@ -96,7 +96,7 @@ export function register12iSection() {
   <h2 class="sheet-title">${articleTitle(sheet12i.title)}</h2>
   <p class="sheet-sub">${sheet12i.sub}</p>
   ${registerLane()}
-  <figure><figcaption>${sheet12i.caption}</figcaption></figure>
+  <figure><figcaption><span class="figno">FIG. ${sheet12i.num}</span>${sheet12i.caption}</figcaption></figure>
   <div class="notes-grid">
     <div class="notes">
       <h3>GENERAL NOTES</h3>
