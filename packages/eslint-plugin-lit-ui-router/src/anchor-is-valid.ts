@@ -12,6 +12,7 @@ import {
   attributePartIndex,
   attributePartsOf,
   type CallNode,
+  allowElementPartsOf,
   createDirectiveTracker,
   elementPartIndex,
   hasSpread,
@@ -170,14 +171,15 @@ const anchorIsValid: RuleFor<typeof RULE_NAME> = {
           // ours (#676, #1065): upstream has neither, so no parity to keep.
           allowElementParts: {
             description:
-              'Whether a uiSref element part counts as the href it assigns at runtime.',
+              'Whether a uiSref element part counts as the href it assigns at runtime (default `true`), replacing `settings.allowElementParts` for this rule.',
             type: 'boolean',
           },
           linkElements: LINK_ELEMENTS_SCHEMA,
         },
       },
     ],
-    defaultOptions: [{ allowHash: true, allowElementParts: true }],
+    // allowElementParts stays out: a merged default would shadow the setting.
+    defaultOptions: [{ allowHash: true }],
   },
 
   create(context) {
@@ -185,7 +187,10 @@ const anchorIsValid: RuleFor<typeof RULE_NAME> = {
     const ruleOptions: RuleOptions =
       (context.options[0] as RuleOptions | undefined) ?? {};
     const linkElements = linkElementsOf(context, ruleOptions.linkElements);
-    const allowElementParts = ruleOptions.allowElementParts !== false;
+    const allowElementParts = allowElementPartsOf(
+      context,
+      ruleOptions.allowElementParts,
+    );
 
     /** The uiSref element parts on an element. */
     const uiSrefsOf = (

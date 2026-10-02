@@ -7,6 +7,7 @@ import type { RuleFor } from './rule-shape.ts';
 import { TemplateAnalyzer } from 'eslint-plugin-lit/lib/template-analyzer.js';
 import {
   attributeEnd,
+  allowElementPartsOf,
   attributePartsOf,
   type CallNode,
   createDirectiveTracker,
@@ -60,23 +61,25 @@ const srefActiveClassAriaCurrent: RuleFor<typeof RULE_NAME> = {
         properties: {
           allowElementParts: {
             description:
-              'Whether a uiSrefActive element part counts as the aria-current it writes at runtime.',
+              'Whether a uiSrefActive element part counts as the aria-current it writes at runtime (default `true`), replacing `settings.allowElementParts` for this rule.',
             type: 'boolean',
           },
           linkElements: LINK_ELEMENTS_SCHEMA,
         },
       },
     ],
-    defaultOptions: [{ allowElementParts: true }],
+    // allowElementParts stays out: a merged default would shadow the setting.
+    defaultOptions: [{}],
   },
 
   create(context) {
     const tracker = createDirectiveTracker(context);
-    const { allowElementParts, linkElements: option } =
+    const { allowElementParts: allowOption, linkElements: option } =
       (context.options[0] as
         | { allowElementParts?: boolean; linkElements?: string[] }
         | undefined) ?? {};
     const linkElements = linkElementsOf(context, option);
+    const allowElementParts = allowElementPartsOf(context, allowOption);
 
     return {
       ImportDeclaration(node) {
@@ -142,7 +145,7 @@ const srefActiveClassAriaCurrent: RuleFor<typeof RULE_NAME> = {
             // right is not this rule's business.
             if (hasAriaCurrent(element)) return;
 
-            if (allowElementParts === false) {
+            if (!allowElementParts) {
               for (const attribute of Object.keys(element.attribs)) {
                 const index = elementPartIndex(attribute);
                 if (index === undefined) continue;

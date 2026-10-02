@@ -372,6 +372,22 @@ export const linkElementsOf = (
   );
 };
 
+/**
+ * Whether an element part counts as the work it does at runtime:
+ * `settings.allowElementParts`, or a rule's own `allowElementParts` option,
+ * which replaces it. Undeclared is `true`, as a live document renders it.
+ */
+export const allowElementPartsOf = (
+  context: Rule.RuleContext,
+  option?: unknown,
+): boolean => {
+  if (typeof option === 'boolean') return option;
+  const { allowElementParts } = context.settings as {
+    allowElementParts?: unknown;
+  };
+  return typeof allowElementParts === 'boolean' ? allowElementParts : true;
+};
+
 /** The shared `linkElements` option, identical in every rule that reads it. */
 export const LINK_ELEMENTS_SCHEMA = {
   description:

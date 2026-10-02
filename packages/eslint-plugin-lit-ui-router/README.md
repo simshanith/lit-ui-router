@@ -76,6 +76,56 @@ export default [
 
 Undeclared tags are unchanged in every rule, so this is purely additive: with no `linkElements`, each behaves exactly as it did. Each also takes a `linkElements` option of its own, which replaces the setting for that rule.
 
+`settings.allowElementParts` says whether an element part counts as the work it does at runtime. `@lit-labs/ssr` never runs an element part, so a template a server prerenders serves `<a ${uiSref('home')}>` with no `href`, and `<a ${uiSrefActive(...)}>` with neither its active class nor `aria-current`, until the client hydrates. With `false`, two rules lint a template as the server renders it:
+
+- [`anchor-is-valid`](./docs/rules/anchor-is-valid.md#prerendered-templates) stops counting a `uiSref` element part as the `href`, and fixes it to `href=${srefHref(...)}`.
+- [`sref-active-class-aria-current`](./docs/rules/sref-active-class-aria-current.md#prerendered-templates) asks a link carrying a `uiSrefActive` element part for `class=${srefActiveClass(...)}` with `aria-current=${srefAriaCurrent(...)}`.
+
+Unset is `true`, so with no `allowElementParts` each behaves exactly as it did. Each also takes an `allowElementParts` option of its own, which replaces the setting for that rule.
+
+### Prerendered templates
+
+The rules cannot tell which templates a server renders, so the setting is scoped with `files`. A mostly-client app turns it off for its prerendered templates:
+
+```js
+export default [
+  ...litUiRouter.configs.recommended,
+  { files: ['src/prerendered/**'], settings: { allowElementParts: false } },
+];
+```
+
+A fully isomorphic app turns it off everywhere and back on for its client-only files:
+
+```js
+export default [
+  ...litUiRouter.configs.recommended,
+  { settings: { allowElementParts: false } },
+  { files: ['src/client-only/**'], settings: { allowElementParts: true } },
+];
+```
+
+oxlint's `overrides` take no `settings`, so in `.oxlintrc.json` the setting is top-level and an override scopes the rule option, which replaces it:
+
+```json
+{
+  "settings": { "allowElementParts": false },
+  "overrides": [
+    {
+      "files": ["src/client-only/**"],
+      "rules": {
+        "lit-ui-router/anchor-is-valid": ["error", { "allowElementParts": true }],
+        "lit-ui-router/sref-active-class-aria-current": [
+          "error",
+          { "allowElementParts": true }
+        ]
+      }
+    }
+  ]
+}
+```
+
+A mostly-client app leaves the top-level setting out and sets `false` in the override for its prerendered templates.
+
 ## oxlint (alpha)
 
 The rules also load into [oxlint](https://oxc.rs) as JS plugins — every one is syntax-only, with no type information. oxlint does not consume `configs.recommended`, so list them explicitly in `.oxlintrc.json`:

@@ -276,6 +276,70 @@ ruleTester.run(
   },
 );
 
+// `settings.allowElementParts`, which an `allowElementParts` option replaces.
+const servedTester = new RuleTester({
+  settings: { allowElementParts: false },
+  languageOptions: { ecmaVersion: 'latest', sourceType: 'module' },
+});
+
+servedTester.run(
+  'sref-active-class-aria-current (settings.allowElementParts: false)',
+  srefActiveClassAriaCurrent,
+  {
+    valid: [
+      {
+        name: 'the option replaces the setting for this rule',
+        code: `${ACTIVE}html\`<a href="/home" \${uiSrefActive({})}>Home</a>\`;`,
+        options: [{ allowElementParts: true }],
+      },
+    ],
+    invalid: [
+      {
+        name: 'the setting alone reports as the option does',
+        code: `${ACTIVE}html\`<a href="/home" \${uiSrefActive({})}>Home</a>\`;`,
+        errors: [{ messageId: 'elementPartNotServed', data: { tag: 'a' } }],
+        output: null,
+      },
+      {
+        name: 'the setting holds beside other options',
+        code: `${ACTIVE}html\`<sp-link \${uiSrefActive({})}>Home</sp-link>\`;`,
+        options: [{ linkElements: ['sp-link'] }],
+        errors: [
+          { messageId: 'elementPartNotServed', data: { tag: 'sp-link' } },
+        ],
+        output: null,
+      },
+    ],
+  },
+);
+
+const clientTester = new RuleTester({
+  settings: { allowElementParts: true },
+  languageOptions: { ecmaVersion: 'latest', sourceType: 'module' },
+});
+
+clientTester.run(
+  'sref-active-class-aria-current (settings.allowElementParts: true)',
+  srefActiveClassAriaCurrent,
+  {
+    valid: [
+      {
+        name: 'the setting credits the element part',
+        code: `${ACTIVE}html\`<a href="/home" \${uiSrefActive({})}>Home</a>\`;`,
+      },
+    ],
+    invalid: [
+      {
+        name: 'the option replaces the setting for this rule',
+        code: `${ACTIVE}html\`<a href="/home" \${uiSrefActive({})}>Home</a>\`;`,
+        options: SERVED,
+        errors: [{ messageId: 'elementPartNotServed' }],
+        output: null,
+      },
+    ],
+  },
+);
+
 void describe('sref-active-class-aria-current meta', () => {
   void it('is fixable and takes the shared linkElements option', () => {
     assert.equal(srefActiveClassAriaCurrent.meta?.fixable, 'code');
@@ -288,10 +352,8 @@ void describe('sref-active-class-aria-current meta', () => {
     );
   });
 
-  void it('takes allowElementParts, on by default', () => {
-    assert.deepEqual(srefActiveClassAriaCurrent.meta?.defaultOptions, [
-      { allowElementParts: true },
-    ]);
+  void it('leaves allowElementParts out of defaultOptions, so the setting reaches it', () => {
+    assert.deepEqual(srefActiveClassAriaCurrent.meta?.defaultOptions, [{}]);
   });
 
   void it('names the served form for an element part', () => {

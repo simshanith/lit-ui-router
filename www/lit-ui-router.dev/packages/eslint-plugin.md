@@ -131,11 +131,13 @@ unknowable, so both stay suppressed rather than guessed. The base rule's
 options (`allowHash`, `aspects`) are carried over untouched.
 
 `@lit-labs/ssr` never runs an element part, so a prerendered `uiSref` anchor
-is served with no `href`. Set `allowElementParts: false` on `anchor-is-valid`
-and `sref-active-class-aria-current` with a `files` glob over the prerendered
-templates, and both rules lint them as served: the fix rewrites a lone
-`uiSref` as `href=${srefHref(...)}`, and a `uiSrefActive` link reports until
-it binds `srefActiveClass` and `srefAriaCurrent`.
+is served with no `href`. With `settings.allowElementParts` false,
+`anchor-is-valid` and `sref-active-class-aria-current` lint a template as
+served: the fix rewrites a lone `uiSref` as `href=${srefHref(...)}`, and a
+`uiSrefActive` link reports until it binds `srefActiveClass` and
+`srefAriaCurrent`. The
+[prerendered templates recipe](https://github.com/simshanith/lit-ui-router/blob/main/packages/eslint-plugin-lit-ui-router/README.md#prerendered-templates)
+scopes it with `files`, for a mostly-client app and a fully isomorphic one.
 
 The generated
 [rule documentation](https://github.com/simshanith/lit-ui-router/blob/main/packages/eslint-plugin-lit-ui-router/docs/rules/anchor-is-valid.md)

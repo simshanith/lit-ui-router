@@ -270,6 +270,93 @@ html\`<a href=\${srefHref('home')}>Home</a>\`;`,
   ],
 });
 
+// `settings.allowElementParts`: shared by both element-part rules, and an
+// `allowElementParts` option on the rule replaces it.
+const servedTester = new RuleTester({
+  settings: { allowElementParts: false },
+  languageOptions: { ecmaVersion: 'latest', sourceType: 'module' },
+});
+
+servedTester.run(
+  'anchor-is-valid (settings.allowElementParts: false)',
+  anchorIsValid,
+  {
+    valid: [
+      {
+        name: 'the option replaces the setting for this rule',
+        code: `${IMPORTS}html\`<a \${uiSref('home')}>Home</a>\`;`,
+        options: [{ allowElementParts: true }],
+      },
+      {
+        name: 'other options leave the setting in force, and srefHref still counts',
+        code: `${IMPORTS}html\`<a href=\${srefHref('home')}>Home</a>\`;`,
+        options: [{ allowHash: false }],
+      },
+    ],
+    invalid: [
+      {
+        name: 'the setting alone reports and fixes as the option does',
+        code: `${IMPORTS}html\`<a \${uiSref('home')}>Home</a>\`;`,
+        errors: [{ messageId: 'noHrefErrorMessage' }],
+        output: `${IMPORTS}html\`<a href=\${srefHref('home')}>Home</a>\`;`,
+      },
+      {
+        name: 'the setting holds beside other options',
+        code: `${IMPORTS}html\`<a \${uiSref('home')}>Home</a>\`;`,
+        options: [{ linkElements: ['sp-link'] }],
+        errors: [{ messageId: 'noHrefErrorMessage' }],
+        output: `${IMPORTS}html\`<a href=\${srefHref('home')}>Home</a>\`;`,
+      },
+    ],
+  },
+);
+
+const clientTester = new RuleTester({
+  settings: { allowElementParts: true },
+  languageOptions: { ecmaVersion: 'latest', sourceType: 'module' },
+});
+
+clientTester.run(
+  'anchor-is-valid (settings.allowElementParts: true)',
+  anchorIsValid,
+  {
+    valid: [
+      {
+        name: 'the setting credits the element part',
+        code: `${IMPORTS}html\`<a \${uiSref('home')}>Home</a>\`;`,
+      },
+    ],
+    invalid: [
+      {
+        name: 'the option replaces the setting for this rule',
+        code: `${IMPORTS}html\`<a \${uiSref('home')}>Home</a>\`;`,
+        options: SERVED,
+        errors: [{ messageId: 'noHrefErrorMessage' }],
+        output: `${IMPORTS}html\`<a href=\${srefHref('home')}>Home</a>\`;`,
+      },
+    ],
+  },
+);
+
+const malformedTester = new RuleTester({
+  settings: { allowElementParts: 'false' },
+  languageOptions: { ecmaVersion: 'latest', sourceType: 'module' },
+});
+
+malformedTester.run(
+  'anchor-is-valid (settings.allowElementParts malformed)',
+  anchorIsValid,
+  {
+    valid: [
+      {
+        name: 'a non-boolean setting is no declaration, so the default holds',
+        code: `${IMPORTS}html\`<a \${uiSref('home')}>Home</a>\`;`,
+      },
+    ],
+    invalid: [],
+  },
+);
+
 // `linkElements` (#676): declaring a tag is what makes it visible to this rule.
 ruleTester.run('anchor-is-valid (linkElements undeclared)', anchorIsValid, {
   valid: [
@@ -804,7 +891,7 @@ void describe('anchor-is-valid meta', () => {
           },
           allowElementParts: {
             description:
-              'Whether a uiSref element part counts as the href it assigns at runtime.',
+              'Whether a uiSref element part counts as the href it assigns at runtime (default `true`), replacing `settings.allowElementParts` for this rule.',
             type: 'boolean',
           },
           linkElements: {
@@ -819,10 +906,8 @@ void describe('anchor-is-valid meta', () => {
     ]);
   });
 
-  void it('defaults allowHash on, as upstream does, and allowElementParts on', () => {
-    assert.deepEqual(anchorIsValid.meta?.defaultOptions, [
-      { allowHash: true, allowElementParts: true },
-    ]);
+  void it('defaults allowHash on, as upstream does, and leaves allowElementParts to the setting', () => {
+    assert.deepEqual(anchorIsValid.meta?.defaultOptions, [{ allowHash: true }]);
   });
 
   void it('is fixable, for the uiSref-to-srefHref rewrite', () => {

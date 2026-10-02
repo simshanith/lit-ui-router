@@ -26,24 +26,9 @@ A link element is `<a>`, `<area>`, an element whose literal `role` carries the `
 
 ## Prerendered templates
 
-`@lit-labs/ssr` never runs an element part, so a template a server prerenders serves `<a ${uiSrefActive(...)}>` with neither its active class nor `aria-current` until the client hydrates. `allowElementParts: false` lints those templates as the server renders them: a link element carrying a `uiSrefActive` element part is held to the same bar as a `srefActiveClass` binding, and with no `aria-current` beside it, it reports and names `class=${srefActiveClass(...)}` with `aria-current=${srefAriaCurrent(...)}` as the form the server writes. The exemptions above still apply.
+`@lit-labs/ssr` never runs an element part, so a template a server prerenders serves `<a ${uiSrefActive(...)}>` with neither its active class nor `aria-current` until the client hydrates. With `allowElementParts` false, the rule lints those templates as the server renders them: a link element carrying a `uiSrefActive` element part is held to the same bar as a `srefActiveClass` binding, and with no `aria-current` beside it, it reports and names `class=${srefActiveClass(...)}` with `aria-current=${srefAriaCurrent(...)}` as the form the server writes. The exemptions above still apply.
 
-The rule cannot tell which templates a prerender draws, so scope the option with a `files` glob:
-
-```js
-export default [
-  ...litUiRouter.configs.recommended,
-  {
-    files: ['src/prerendered/**'],
-    rules: {
-      'lit-ui-router/sref-active-class-aria-current': [
-        'error',
-        { allowElementParts: false },
-      ],
-    },
-  },
-];
-```
+Which templates get `false` is set with [`settings.allowElementParts`](../../README.md#settings), or this rule's own `allowElementParts` option, which replaces it; [the recipe](../../README.md#prerendered-templates) scopes either with `files`, for a mostly-client app and a fully isomorphic one.
 
 ```js
 // reported under allowElementParts: false
@@ -63,14 +48,14 @@ This report carries no fix: `ariaCurrentValue` splits into its own binding, a `c
 
 ## Options
 
-`allowElementParts` (default `true`) counts a `uiSrefActive` element part as the `aria-current` it writes at runtime; `false` holds it to the served bar above. `linkElements` replaces `settings.linkElements` for this rule, wholesale; `[]` means "declare nothing here".
+`allowElementParts` (default `true`) counts a `uiSrefActive` element part as the `aria-current` it writes at runtime; `false` holds it to the served bar above. It replaces `settings.allowElementParts` for this rule. `linkElements` replaces `settings.linkElements` for this rule, wholesale; `[]` means "declare nothing here".
 
 <!-- begin auto-generated rule options list -->
 
-| Name                | Description                                                                              | Type     | Default |
-| :------------------ | :--------------------------------------------------------------------------------------- | :------- | :------ |
-| `allowElementParts` | Whether a uiSrefActive element part counts as the aria-current it writes at runtime.     | Boolean  | `true`  |
-| `linkElements`      | Element tags to treat as link elements, replacing `settings.linkElements` for this rule. | String[] |         |
+| Name                | Description                                                                                                                                                 | Type     |
+| :------------------ | :---------------------------------------------------------------------------------------------------------------------------------------------------------- | :------- |
+| `allowElementParts` | Whether a uiSrefActive element part counts as the aria-current it writes at runtime (default `true`), replacing `settings.allowElementParts` for this rule. | Boolean  |
+| `linkElements`      | Element tags to treat as link elements, replacing `settings.linkElements` for this rule.                                                                    | String[] |
 
 <!-- end auto-generated rule options list -->
 

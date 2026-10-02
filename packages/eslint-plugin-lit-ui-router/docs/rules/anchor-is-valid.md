@@ -68,21 +68,9 @@ html`<sp-link ${uiSref('home', undefined, { assignHref: 'auto' })}>Home</sp-link
 
 ## Prerendered templates
 
-`@lit-labs/ssr` never runs an element part, so a template a server prerenders serves `<a ${uiSref('home')}>` as `<a>`, with no `href` until the client hydrates. `allowElementParts: false` lints those templates as the server renders them: a `uiSref` element part no longer counts as an `href`, and the anchor reports `noHref`. `href=${srefHref('home')}` is written into the served markup, so it still counts.
+`@lit-labs/ssr` never runs an element part, so a template a server prerenders serves `<a ${uiSref('home')}>` as `<a>`, with no `href` until the client hydrates. With `allowElementParts` false, the rule lints those templates as the server renders them: a `uiSref` element part no longer counts as an `href`, and the anchor reports `noHref`. `href=${srefHref('home')}` is written into the served markup, so it still counts.
 
-The rule cannot tell which templates a prerender draws, so scope the option with a `files` glob:
-
-```js
-export default [
-  ...litUiRouter.configs.recommended,
-  {
-    files: ['src/prerendered/**'],
-    rules: {
-      'lit-ui-router/anchor-is-valid': ['error', { allowElementParts: false }],
-    },
-  },
-];
-```
+Which templates get `false` is set with [`settings.allowElementParts`](../../README.md#settings), or this rule's own `allowElementParts` option, which replaces it; [the recipe](../../README.md#prerendered-templates) scopes either with `files`, for a mostly-client app and a fully isomorphic one.
 
 The fix rewrites a lone `uiSref` element part as the `srefHref` attribute part, which navigates on click the same way once hydrated. It adds `srefHref` to the `lit-ui-router` import, or reuses the namespace the call came through, and drops an `assignHref` of `true` or `'auto'`, along with an options object that leaves empty:
 
@@ -98,15 +86,15 @@ The report stands without a fix when the rewrite is not certain: an options argu
 
 ## Options
 
-The base rule's options, unchanged, plus `allowElementParts` and `linkElements`.
+The base rule's options, unchanged, plus `allowElementParts` and `linkElements`, each of which replaces the setting of the same name for this rule.
 
 <!-- begin auto-generated rule options list -->
 
-| Name                | Description                                                                              | Type     | Default |
-| :------------------ | :--------------------------------------------------------------------------------------- | :------- | :------ |
-| `allowElementParts` | Whether a uiSref element part counts as the href it assigns at runtime.                  | Boolean  | `true`  |
-| `allowHash`         | Whether a bare `#` counts as a valid href.                                               | Boolean  | `true`  |
-| `aspects`           | Which anchor checks are active.                                                          | String[] |         |
-| `linkElements`      | Element tags to treat as link elements, replacing `settings.linkElements` for this rule. | String[] |         |
+| Name                | Description                                                                                                                                    | Type     | Default |
+| :------------------ | :--------------------------------------------------------------------------------------------------------------------------------------------- | :------- | :------ |
+| `allowElementParts` | Whether a uiSref element part counts as the href it assigns at runtime (default `true`), replacing `settings.allowElementParts` for this rule. | Boolean  |         |
+| `allowHash`         | Whether a bare `#` counts as a valid href.                                                                                                     | Boolean  | `true`  |
+| `aspects`           | Which anchor checks are active.                                                                                                                | String[] |         |
+| `linkElements`      | Element tags to treat as link elements, replacing `settings.linkElements` for this rule.                                                       | String[] |         |
 
 <!-- end auto-generated rule options list -->
