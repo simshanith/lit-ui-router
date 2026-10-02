@@ -22,6 +22,7 @@
     "valibot": "catalog:"
   },
   "devDependencies": {
+    "@tools/bootstrap": "catalog:workspace",
     "@types/node": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",

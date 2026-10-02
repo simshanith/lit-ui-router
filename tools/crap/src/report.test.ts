@@ -1,7 +1,27 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { formatReport, rank } from './report.ts';
+import { formatReport, packageRelative, rank } from './report.ts';
+
+test('relativizes coverage keys from any checkout, local or CI', () => {
+  for (const root of [
+    '/Users/me/lit-ui-router',
+    '/Users/me/lit-ui-router/.claude/worktrees/x',
+    '/home/runner/work/lit-ui-router/lit-ui-router',
+  ]) {
+    assert.equal(
+      packageRelative(
+        `${root}/packages/lit-ui-router/src/core.ts`,
+        'packages/lit-ui-router',
+      ),
+      'src/core.ts',
+    );
+  }
+  assert.equal(
+    packageRelative('/ci/packages/lit-ui-router', 'packages/lit-ui-router'),
+    undefined,
+  );
+});
 
 const fn = (
   file_path: string,

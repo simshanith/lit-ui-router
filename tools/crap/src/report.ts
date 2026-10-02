@@ -37,6 +37,17 @@ export interface Report {
 }
 
 /**
+ * Package-relative form of a coverage-final.json key. Keys are absolute on
+ * the machine that ran the tests, which differs on a remote cache hit.
+ */
+export function packageRelative(coverageKey: string, packageDir: string) {
+  const key = coverageKey.replaceAll('\\', '/');
+  const marker = `/${packageDir}/`;
+  const at = key.lastIndexOf(marker);
+  return at === -1 ? undefined : key.slice(at + marker.length);
+}
+
+/**
  * Rank crap4ts' scorecard, keeping only functions in files the coverage run
  * instrumented; crap4ts scores every file under `sourceRoot`, specs included.
  */

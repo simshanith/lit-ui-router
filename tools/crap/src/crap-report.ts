@@ -5,9 +5,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
+import { workspaceRoot } from '@tools/bootstrap/root.ts';
 import { analyze } from 'crap4ts';
 
-import { formatReport, rank } from './report.ts';
+import { formatReport, packageRelative, rank } from './report.ts';
 
 const sourceRoot = 'src';
 const coveragePath = 'coverage/coverage-final.json';
@@ -27,9 +28,13 @@ const coverage = JSON.parse(fs.readFileSync(coveragePath, 'utf8')) as Record<
   string,
   unknown
 >;
+const packageDir = path
+  .relative(workspaceRoot, process.cwd())
+  .split(path.sep)
+  .join('/');
 const coveredFiles = new Set(
-  Object.keys(coverage).map((file) =>
-    path.relative(process.cwd(), file).split(path.sep).join('/'),
+  Object.keys(coverage).flatMap(
+    (key) => packageRelative(key, packageDir) ?? [],
   ),
 );
 

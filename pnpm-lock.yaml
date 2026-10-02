@@ -1495,6 +1495,9 @@ importers:
         specifier: 'catalog:'
         version: 1.5.0(typescript@7.0.2)
     devDependencies:
+      '@tools/bootstrap':
+        specifier: catalog:workspace
+        version: link:../bootstrap
       '@types/node':
         specifier: 'catalog:'
         version: 24.19.0
