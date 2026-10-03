@@ -5,7 +5,7 @@
   "description": "Repo-wide invariant checks: turbo graph edges and dry-run plumbing, turbo task input keys, dependency use (knip), lockfile dedupe, single-version controlled dependencies, and pnpm patch application",
   "type": "module",
   "scripts": {
-    "check:dedupe": "pnpm dedupe --check",
+    "check:dedupe": "pnpm dedupe --check --loglevel=error",
     "check:graph-edges": "node check-graph-edges.ts",
     "check:knip": "knip --directory ../..",
     "check:patches": "node check-patches.ts",

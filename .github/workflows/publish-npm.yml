@@ -66,8 +66,7 @@ jobs:
       - name: Setup mise
         uses: jdx/mise-action@9149ea85001c7435d5a66bb127d6a1b6227cb0a5 # v5.0.0
         with:
-          # task-env handling regressed before in unpinned mise; pin the version
-          version: 2026.9.12
+          version: 2026.10.1
           # no restored tool cache on the publish path (zizmor cache-poisoning):
           # tools install fresh, checksum-verified against mise.lock
           cache: false
