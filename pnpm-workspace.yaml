@@ -230,6 +230,7 @@ autoDedupe: true
 
 patchedDependencies:
   '@api-viewer/docs': patches/@api-viewer__docs.patch
+  braces: patches/braces.patch
   lit-dialog: patches/lit-dialog.patch
 
 minimumReleaseAge: 1440
