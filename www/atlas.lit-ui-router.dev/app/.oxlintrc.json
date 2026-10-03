@@ -1,0 +1,21 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "jsPlugins": [
+    "eslint-plugin-lit-ui-router"
+  ],
+  "ignorePatterns": [
+    "dist/**",
+    "dist-artifact/**",
+    "node_modules/**",
+    "public/**",
+    "src/generated/**"
+  ],
+  "rules": {
+    "lit-ui-router/anchor-is-valid": "error",
+    "lit-ui-router/directive-position": "error",
+    "lit-ui-router/sref-active-aria-current": "error",
+    "lit-ui-router/sref-active-class-aria-current": "error",
+    "lit-ui-router/sref-assign-href": "error",
+    "lit-ui-router/sref-status-aria-current": "error"
+  }
+}

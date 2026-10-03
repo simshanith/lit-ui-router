@@ -12,15 +12,15 @@ npm run build:spa      # vite build alone, no prerender
 npm run build:artifact # vite build --mode artifact + node artifact.ts
 npm run preview
 npm run typecheck
-npm run lint           # eslint-plugin-lit-ui-router over every template
+npm run lint           # oxlint, then eslint
 ```
 
-`eslint.config.js` runs `eslint-plugin-lit-ui-router`'s recommended rules, the published package, over
-the app's `html` templates. The parser is `lint/ts-parser`, a standalone npm project with its own
-lock that the root `postinstall` installs: `@typescript-eslint/parser` resolves TypeScript 6 from
-there, while the app typechecks on TypeScript 7. The two never share a `node_modules`, which is why
-the shim is not a `file:` dependency (npm would hoist the parser's helpers to the root, where they
-find TypeScript 7).
+Lint is the split `eslint-plugin-lit-ui-router`'s README recommends for running both linters:
+`.oxlintrc.json` loads the published plugin as an oxlint JS plugin and owns its six rules, and
+`eslint.config.js` runs `eslint-plugin-lit-a11y`'s recommended set with `lit-a11y/anchor-is-valid`
+turned off by hand, behind `eslint-plugin-oxlint`'s de-duplication of the native rules. The ESLint
+parser is `@typescript-eslint/parser`, so `typescript` is the `@typescript/typescript6` alias: the
+parser calls the TypeScript 6 API, and `tsc --noEmit` runs on the same install.
 
 The content is generated, never transcribed. `node generator/build.mjs .` from `www/atlas.lit-ui-router.dev/` — the
 seam is `generator/emit-app.mjs` — writes `public/sheets/<id>.html` (one chrome-less fragment per

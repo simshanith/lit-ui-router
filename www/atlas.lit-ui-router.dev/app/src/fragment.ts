@@ -54,8 +54,7 @@ const executable = (script: HTMLScriptElement): boolean => {
 
 /** Re-create every executable script inside `host` so the browser runs it. */
 export function runScripts(host: HTMLElement): void {
-  // Snapshot first: replaceWith mutates a live NodeList underneath us.
-  for (const old of [...host.querySelectorAll('script')]) {
+  for (const old of host.querySelectorAll('script')) {
     if (!executable(old)) continue; // the JSON islands stay exactly where they are
     const fresh = document.createElement('script');
     for (const attr of old.attributes) fresh.setAttribute(attr.name, attr.value);

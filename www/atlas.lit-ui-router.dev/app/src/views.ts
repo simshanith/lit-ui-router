@@ -414,6 +414,7 @@ const closeRail = (): void => {
 const sheetEntry = (sheet: SheetRow): TemplateResult => html`
   <a
     href=${srefHref('atlas.sheet', { num: sheet.num })}
+    @click=${closeRail}
     class=${srefActiveClass({
       state: 'atlas.sheet',
       params: { num: sheet.num },
@@ -431,6 +432,7 @@ const railEntry = (entry: AscentRow): TemplateResult =>
     : html`
         <a
           href=${srefHref('atlas.city')}
+          @click=${closeRail}
           class=${srefActiveClass({ state: 'atlas.city', activeClasses: ACTIVE_CLASSES })}
           aria-current=${srefAriaCurrent({ state: 'atlas.city' })}
         >
@@ -451,16 +453,18 @@ function rail(manifest: Manifest | undefined): TemplateResult {
         </div>
         <label class="rail-toggle" for="rail-open">SHEETS ▾</label>
       </div>
-      <div class="rail-body" @click=${closeRail}>
+      <div class="rail-body">
         <div class="rail-top">
           <a
             href=${srefHref('atlas.gallery')}
+            @click=${closeRail}
             class=${srefActiveClass({ state: 'atlas.gallery', activeClasses: ACTIVE_CLASSES })}
             aria-current=${srefAriaCurrent({ state: 'atlas.gallery' })}
             >INDEX</a
           >
           <a
             href=${srefHref('atlas.about')}
+            @click=${closeRail}
             class=${srefActiveClass({ state: 'atlas.about', activeClasses: ACTIVE_CLASSES })}
             aria-current=${srefAriaCurrent({ state: 'atlas.about' })}
             >ABOUT</a
