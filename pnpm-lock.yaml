@@ -447,6 +447,7 @@ packageExtensionsChecksum: sha256-8F/PUxRGPfzeR7JNosA48W0ZCgKrtYLtVZi24XY7zcw=
 
 patchedDependencies:
   '@api-viewer/docs': 6cfa0893375a4ba334488a5b9e4a56178c62231d864b5271bf4c7a25a0e4f9ac
+  braces: bfdb0c171556074c2785f98d0a7355209223df8e29dbc2ff489240c16a47da97
   lit-dialog: 37ea59e3d9469863602cc50f6df73c8ed55814caae1f875ac8f0fa9e45d65a37
 
 importers:
@@ -10542,7 +10543,7 @@ snapshots:
     dependencies:
       balanced-match: 4.0.4
 
-  braces@3.0.3:
+  braces@3.0.3(patch_hash=bfdb0c171556074c2785f98d0a7355209223df8e29dbc2ff489240c16a47da97):
     dependencies:
       fill-range: 7.1.1
 
@@ -10666,7 +10667,7 @@ snapshots:
   chokidar@3.5.2:
     dependencies:
       anymatch: 3.1.3
-      braces: 3.0.3
+      braces: 3.0.3(patch_hash=bfdb0c171556074c2785f98d0a7355209223df8e29dbc2ff489240c16a47da97)
       glob-parent: 5.1.2
       is-binary-path: 2.1.0
       is-glob: 4.0.3
@@ -10678,7 +10679,7 @@ snapshots:
   chokidar@3.6.0:
     dependencies:
       anymatch: 3.1.3
-      braces: 3.0.3
+      braces: 3.0.3(patch_hash=bfdb0c171556074c2785f98d0a7355209223df8e29dbc2ff489240c16a47da97)
       glob-parent: 5.1.2
       is-binary-path: 2.1.0
       is-glob: 4.0.3
@@ -12376,7 +12377,7 @@ snapshots:
 
   micromatch@4.0.8:
     dependencies:
-      braces: 3.0.3
+      braces: 3.0.3(patch_hash=bfdb0c171556074c2785f98d0a7355209223df8e29dbc2ff489240c16a47da97)
       picomatch: 2.3.2
 
   mime-db@1.52.0: {}
