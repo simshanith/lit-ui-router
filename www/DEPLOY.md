@@ -301,3 +301,22 @@ move it — for a second worktree, put it in a gitignored
 contended.
 
 See Cloudflare Workers Testing Docs: [Local Development](https://developers.cloudflare.com/workers/testing/local-development/)
+
+## [Cloudflare Pages](https://developers.cloudflare.com/pages/): The Altitude Atlas
+
+[![www/atlas branch lane](https://img.shields.io/github/check-runs/simshanith/lit-ui-router/www%2Fatlas?nameFilter=build_and_test%20%28branch%29%20%2F%20run&label=www%2Fatlas)](https://github.com/simshanith/lit-ui-router/actions/workflows/build-test-branch.yml?query=branch%3Awww%2Fatlas)
+[![Website](https://img.shields.io/website?url=https%3A%2F%2Fatlas.lit-ui-router.dev)](https://atlas.lit-ui-router.dev)
+
+The Altitude Atlas is a drawing set of this repository and a consumer app served by
+`lit-ui-router-ssr`. It lives in `www/atlas.lit-ui-router.dev/` on the `www/atlas` branch and
+never on `main`: `main` merges into `www/atlas`, nothing merges back, and the app pins the
+published packages it draws, so every sheet measures a release. The tree's own README holds
+the build and deploy recipe.
+
+- **Branch.** `www/atlas` runs the same [`build-test-branch.yml`](../.github/workflows/build-test-branch.yml)
+  lane every branch gets, with the atlas tree inside the graph, so the root lint lanes cover
+  the app too. It has no PR lane: the branch takes direct pushes.
+- **Site.** [atlas.lit-ui-router.dev](https://atlas.lit-ui-router.dev) is the Cloudflare Pages
+  project `altitude-atlas`, production branch `www/atlas`. A deploy is a `wrangler pages deploy`
+  direct upload from a checkout of the branch, so no GitHub check reports it; the website badge
+  is the signal.
