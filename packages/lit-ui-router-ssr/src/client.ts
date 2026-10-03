@@ -459,7 +459,18 @@ const parseSignature = (json: string): HydrationSignature | null => {
  * returns `false` clears the container.
  *
  * Only `version` is checked. `state` and `params` are whatever the block
- * carries, so narrow them before use.
+ * carries, so narrow them before use. Read it before {@link hydrateRoot}, which
+ * clears a container it does not adopt.
+ *
+ * @example
+ * ```ts
+ * import { hydrateRoot, readHydrationSignature } from 'lit-ui-router-ssr/client';
+ *
+ * await booted;
+ * const { state } = readHydrationSignature(root) ?? {};
+ * const drawnForBoot = state === router.globals.current.name;
+ * const release = hydrateRoot(root, page(router));
+ * ```
  *
  * @param container - the element the server's markup was written into
  * @returns the signature, or `null` when the container holds none, or one that
@@ -576,8 +587,7 @@ const makeCold = (container: HTMLElement): void => {
  * so a view adopted after the release still reaches it.
  *
  * A `hydrate()` that throws is rethrown, over a container emptied the same
- * way. The caller
- * renders over it.
+ * way. The caller renders into it.
  *
  * The boot is the router first: `router.start()`, await its first successful
  * transition, then this call. The walk commits `.uiRouter` onto `<ui-router>`

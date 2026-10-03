@@ -71,8 +71,9 @@ export interface PrerenderOptions {
   outDir: string;
   /**
    * Renders one shell verdict. Return a template and this package renders it,
-   * behind the hydration signature; return a string and it is written as-is. Async, so a hook may drive
-   * {@link PrerenderOptions.router | router} to the path before it returns.
+   * behind the hydration signature; return a string and it is written as-is.
+   * Async, so a hook may drive {@link PrerenderOptions.router | router} to the
+   * path before it returns.
    */
   renderShell: (
     verdict: Extract<Verdict, { kind: 'shell' }>,

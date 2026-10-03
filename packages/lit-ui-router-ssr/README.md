@@ -24,8 +24,8 @@ imports the pre-1.0 renderer or re-derives the incantation.
   on the page carries `defer-hydration` and renders nothing until the client's walk reaches it.
 - **The hydration signature.** A page rendered from a template opens on a JSON data block,
   `<script type="application/json" data-lit-ui-router-ssr>`, naming this package's version, the
-  state the router stood on, and that state's url parameter values. A page `renderShell` returns as a string is
-  written as-is, without one.
+  state the router stood on, and that state's url parameter values. A page `renderShell` returns
+  as a string is written as-is, without one.
 - **The emit loop.** Verdict to file name, redirect to rules line, tally, warnings for paths that
   matched nothing.
 - **The host rules file.** `_redirects` by default, every generated line paired with and without a
@@ -396,7 +396,7 @@ if (!release) render(page(router), root);
   production as in development. `hydrateRoot()`'s `onAdopt(view, outcome, error)` option receives
   the same reports for every view its walk reaches, a view the pin adopts after the release included.
 - **A mutated document throws.** `hydrateRoot()` rethrows what `hydrate()` threw, over a container it
-  first empties. The caller renders into the container.
+  first empties. The caller renders into it.
 
 ### How this compares
 
