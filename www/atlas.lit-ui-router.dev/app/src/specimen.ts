@@ -1752,39 +1752,53 @@ export class AtlasSpecimen extends LitElement {
     ].join(';');
   }
 
+  // the note under the switcher: what each pick means
+  #note(): TemplateResult {
+    const pairing = this.#current;
+    return html`
+      <p class="sp-note">
+        <b>${pairing.label}</b> — ${pairing.note}<br />
+        <b>SHEET TITLE · ${SHEET_TITLES[this.sheetTitle]?.label ?? ''}</b> —
+        ${SHEET_TITLES[this.sheetTitle]?.note ?? ''}; the rail head keeps the pairing's
+        display face either way. Rail titles:
+        ${this.railMatch ? 'MATCHED to the sheet title' : 'the data face'}.<br />
+        <b>PROSE · ${PROSE_FACES[this.prose]?.label ?? ''}</b> —
+        ${PROSE_FACES[this.prose]?.note ?? ''}. The three webfont options load their
+        family only when picked, so the default page pulls none of them.<br />
+        <b>CODE · ${CODE_FACES[this.code]?.label ?? ''}</b> —
+        ${CODE_FACES[this.code]?.note ?? ''}. Neither option fetches anything: both
+        faces are on whichever host the page already carries, and the GLYPH SIZE table
+        below prices the swap the plates were protected from at a fraction of a
+        percent.<br />
+        <b>HAND · ${HANDS[this.hand]?.label ?? 'NONE'}</b> — ${HANDS[this.hand]?.note ?? ''}.
+        The hand is limited to the DRAWN BY value and one callout second line, never
+        the REV descriptions, the figcaption or the rest of the callouts — and it is
+        set MIXED CASE, never tracked caps.<br />
+        ${this.#articleNote()}
+      </p>
+    `;
+  }
+
+  #articleNote(): TemplateResult {
+    return html`
+      <b>TITLE ARTICLE · ${this.#article.label}</b> — ${this.#article.note}. Applied to
+      the rail entries, the sheet head, the title block and the cover card at once;
+      head ${this.articleStack && this.#article.key ? 'STACKED' : 'INLINE'}, rail
+      ${this.articleRail ? 'SAME' : 'OFF (the article dropped there)'}${this.#article.key
+        ? `, catchword at ×${this.articleMul.toFixed(2)} of the cap-matched scale (${(this.#article.scale * this.articleMul).toFixed(2)}em)`
+        : ''}.
+      ${this.kitCatchwords
+        ? 'hwt-catchwords is declared on this page.'
+        : 'The CATCHWORD rows are SITE ONLY: hwt-catchwords is kit-only, with no Google stand-in, and this page does not carry the kit.'}
+    `;
+  }
+
   override render(): TemplateResult {
     const pairing = this.#current;
     return html`
       <div class="specimen">
         ${this.#switcher()}
-        <p class="sp-note">
-          <b>${pairing.label}</b> — ${pairing.note}<br />
-          <b>SHEET TITLE · ${SHEET_TITLES[this.sheetTitle]?.label ?? ''}</b> —
-          ${SHEET_TITLES[this.sheetTitle]?.note ?? ''}; the rail head keeps the pairing's
-          display face either way. Rail titles:
-          ${this.railMatch ? 'MATCHED to the sheet title' : 'the data face'}.<br />
-          <b>PROSE · ${PROSE_FACES[this.prose]?.label ?? ''}</b> —
-          ${PROSE_FACES[this.prose]?.note ?? ''}. The three webfont options load their
-          family only when picked, so the default page pulls none of them.<br />
-          <b>CODE · ${CODE_FACES[this.code]?.label ?? ''}</b> —
-          ${CODE_FACES[this.code]?.note ?? ''}. Neither option fetches anything: both
-          faces are on whichever host the page already carries, and the GLYPH SIZE table
-          below prices the swap the plates were protected from at a fraction of a
-          percent.<br />
-          <b>HAND · ${HANDS[this.hand]?.label ?? 'NONE'}</b> — ${HANDS[this.hand]?.note ?? ''}.
-          The hand is limited to the DRAWN BY value and one callout second line, never
-          the REV descriptions, the figcaption or the rest of the callouts — and it is
-          set MIXED CASE, never tracked caps.<br />
-          <b>TITLE ARTICLE · ${this.#article.label}</b> — ${this.#article.note}. Applied to
-          the rail entries, the sheet head, the title block and the cover card at once;
-          head ${this.articleStack && this.#article.key ? 'STACKED' : 'INLINE'}, rail
-          ${this.articleRail ? 'SAME' : 'OFF (the article dropped there)'}${this.#article.key
-            ? `, catchword at ×${this.articleMul.toFixed(2)} of the cap-matched scale (${(this.#article.scale * this.articleMul).toFixed(2)}em)`
-            : ''}.
-          ${this.kitCatchwords
-            ? 'hwt-catchwords is declared on this page.'
-            : 'The CATCHWORD rows are SITE ONLY: hwt-catchwords is kit-only, with no Google stand-in, and this page does not carry the kit.'}
-        </p>
+        ${this.#note()}
         <div
           class="mock"
           data-pairing=${pairing.id}
