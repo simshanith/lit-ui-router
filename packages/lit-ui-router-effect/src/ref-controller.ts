@@ -4,9 +4,9 @@ import { ReactiveController, ReactiveControllerHost } from 'lit';
 /**
  * The slice of a runtime the controllers need. `Effect.runFork` /
  * `Effect.runSync` on the default runtime unless one is given; a
- * [`ManagedRuntime`](https://effect.website/docs/runtime/#managedruntime)
- * satisfies it directly, so an app with real layers keeps its fibers on the
- * runtime it already owns.
+ * [`ManagedRuntime<R>`](https://effect.website/docs/runtime/#managedruntime)
+ * satisfies it because the controllers' effects require nothing from `R`. It runs the controllers' own fibers; it does not provide
+ * services to a selector, which stays a plain function over the values.
  */
 export interface RefRuntime {
   /** starts an effect on a fiber the controller interrupts on disconnect */
@@ -51,7 +51,7 @@ export interface RefControllerOptions<T> {
   /**
    * The runtime the subscription fiber is forked on, and refs are read with.
    * Defaults to Effect's default runtime; pass the app's `ManagedRuntime` to
-   * keep everything on one.
+   * keep the fibers on one. The selector gets no services from it.
    */
   runtime?: RefRuntime;
 }

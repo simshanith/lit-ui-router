@@ -89,7 +89,7 @@ new RouterRefController(host, selector, options?)
 - `options.onChange` — effect invoked when the selected value changes (and once on every (re)connect); useful for resetting component state from route params
 - `options.equals` — comparer for precise, value-based change detection (`Equal.equals` for `Data` values, or any `(a, b) => boolean`); defaults to `Object.is`
 - `options.initialValue` — the value `.value` carries before the router is discovered: before `hostConnected`, and while a host has no router context
-- `options.runtime` — the runtime the subscription fiber is forked on; defaults to Effect's default runtime, and a `ManagedRuntime` satisfies it directly
+- `options.runtime` — the runtime the subscription fiber is forked on; defaults to Effect's default runtime. It runs the controller's own fibers and provides no services: the selector stays a plain function over the snapshot. An app's `ManagedRuntime<R>` satisfies it because the controller requires nothing from `R`
 
 ### `RefController`
 
