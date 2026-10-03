@@ -1121,9 +1121,26 @@
           margin-bottom: 0;
         }
       }
+      /* THE COLOPHON reads at one measure, flush with its head like the cover's
+         reading column; over 1800 it runs in columns of that measure, so the
+         width is read instead of left as a canyon beside one column. */
       .prose {
         max-width: 72ch;
-        margin: 0 auto;
+      }
+      @media (min-width: 1800px) {
+        .prose {
+          max-width: none;
+          column-width: 60ch;
+          column-gap: 48px;
+          orphans: 3;
+          widows: 3;
+        }
+        .prose h2 {
+          column-span: all;
+        }
+        .prose h3 {
+          break-after: avoid;
+        }
       }
       .prose h2 {
         font-family: var(--title);

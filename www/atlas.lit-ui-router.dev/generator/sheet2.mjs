@@ -188,7 +188,7 @@ const BRICK_JOINTS = COUPLES.map(([a, b]) => `${a} → ${b}`);
 // Brick 1 lies long side to the rail, over its far four seats, so the rail stays in
 // view and the three bricks that seat on it stand over the plate's right corner —
 // where the prerender bridge can reach across to the second plate.
-const OX = 440, OY = 420;                 // @uirouter/core baseplate, 8 x 6 studs
+const OX = 440, OY = 468;                 // @uirouter/core baseplate, 8 x 6 studs
 const RING = { edge: 'ska', cap: 'fp', ring: 'ska' };
 const NAMED = new Map([
   // the plugin rail — the whole back row is router.plugin(); two seats are taken
@@ -203,8 +203,10 @@ const NAMED = new Map([
 // [plan x, plan y, hover z] of each brick; plan and courses come from the census.
 // Heights step so no brick hides another's drop line: the bridge lowest, over brick
 // 1's far end; brick 5 just clear of brick 1's front edge; brick 3 over both.
-const LIT = [160, 0, 96];      // 1 — its drop is the one at the back-right seat, clear of its own face
-const NAV = [0, 0, 80];        // 2 — over the LOCATION SEAT
+// Brick 1 hovers six courses: its underside clears the plate's back edge by two
+// courses on screen, or the tower reads as standing on the ground behind the plate.
+const LIT = [160, 0, 144];     // 1 — its drop is the one at the back-right seat, clear of its own face
+const NAV = [0, 0, 128];       // 2 — over the LOCATION SEAT
 const MBX = [240, 0, 432];     // 3 — highest: clear of the bridge's cap where it stands behind it
 const EFF = [160, 40, 330];    // 5 — overhangs brick 1's front edge by one stud
 const SSR = [280, -40, 340];   // 6 — its near end over brick 1, its far end over brick 4
@@ -293,7 +295,7 @@ ${txt(120, oy + 6, `x1 · ${shapeName(b.shape)} · ${b.courses} course${b.course
 
 // ---- spare parts: the same stud, not in this set --------------------------------------
 const SPARE = ['@uirouter/visualizer 7.2.1', '@uirouter/sticky-states 1.5.1', '@uirouter/dsr 1.2.0', '@uirouter/rx 1.0.0'];
-const SPY = 624;
+const SPY = 672;
 const spareBox = `<rect x="30" y="${SPY}" width="286" height="142" class="skf fnone" stroke-dasharray="5 4"/>
 ${txt(44, SPY + 22, 'SPARE PARTS — STUD A, NOT IN THIS SET', 'lbls')}
 ${[70, 130, 190, 250].map((x) => miniBrick(x, SPY + 52, 1, 1, 1, '3 2')).join('\n')}
@@ -374,64 +376,64 @@ ${txt(696, 75, 'SEATS ON BRICK 1 — G · context-request', 'lbla')}
 ${txt(696, 87, 'AND ON BRICK 4 — H · createServerRouter()', 'lbla')}
 ${txt(696, 99, 'the bridge — a drop line onto each assembly', 'lblf')}
 
-${badge(974, 404, 4, 'ska fp', 'lbla')}
-${txt(990, 408, `${B(4).name} ${B(4).ver}`, 'lblb')}
-${txt(990, 420, stats(B(4)), 'lblf')}
-${txt(990, 432, 'STUDS A′ · D′ — on a plate of its own', 'lbla')}
-${txt(990, 444, 'carries H — createServerRouter()', 'lbla')}
+${badge(974, 452, 4, 'ska fp', 'lbla')}
+${txt(990, 456, `${B(4).name} ${B(4).ver}`, 'lblb')}
+${txt(990, 468, stats(B(4)), 'lblf')}
+${txt(990, 480, 'STUDS A′ · D′ — on a plate of its own', 'lbla')}
+${txt(990, 492, 'carries H — createServerRouter()', 'lbla')}
 
 <!-- the plate itself -->
-${txt(40, 466, `${CORE[0]} ${CORE[1]} — THE BASEPLATE`, 'lblb')}
-${txt(40, 478, `${CORE[2]} files · ${fmt(CORE[3])} sloc · not massed`, 'lblf')}
-${txt(40, 490, 'a plate is ground: every brick peers it,', 'lblf')}
-${txt(40, 502, 'and no brick may replace it', 'lblf')}
-${leader(236, 484, 330, 524)}
+${txt(40, 514, `${CORE[0]} ${CORE[1]} — THE BASEPLATE`, 'lblb')}
+${txt(40, 526, `${CORE[2]} files · ${fmt(CORE[3])} sloc · not massed`, 'lblf')}
+${txt(40, 538, 'a plate is ground: every brick peers it,', 'lblf')}
+${txt(40, 550, 'and no brick may replace it', 'lblf')}
+${leader(236, 532, 330, 572)}
 
 <!-- named studs, labelled off the plate -->
-${txt(40, 528, 'A   router.plugin(factory)', 'lbla')}
-${txt(40, 540, 'one method, not eight slots:', 'lblf')}
-${txt(40, 552, 'bricks queue on it', 'lblf')}
-${leader(206, 526, 505, 466)}
+${txt(40, 576, 'A   router.plugin(factory)', 'lbla')}
+${txt(40, 588, 'one method, not eight slots:', 'lblf')}
+${txt(40, 600, 'bricks queue on it', 'lblf')}
+${leader(206, 574, 505, 514)}
 
-${txt(340, 740, 'D   urlService', 'lbla')}
-${txt(340, 752, '.listen() · .sync() · .rules — brick 1', 'lblf')}
-${txt(340, 764, 'starts and syncs the client router', 'lblf')}
-${leader(346, 730, 303, 552)}
+${txt(340, 788, 'D   urlService', 'lbla')}
+${txt(340, 800, '.listen() · .sync() · .rules — brick 1', 'lblf')}
+${txt(340, 812, 'starts and syncs the client router', 'lblf')}
+${leader(346, 778, 303, 600)}
 
-${txt(540, 740, 'C   transitionService', 'lbla')}
-${txt(540, 752, '.onSuccess({}, …) — one hook per router', 'lblf')}
-${txt(540, 764, 'from each of bricks 3 and 5', 'lblf')}
-${leader(546, 730, 372, 592)}
+${txt(540, 788, 'C   transitionService', 'lbla')}
+${txt(540, 800, '.onSuccess({}, …) — one hook per router', 'lblf')}
+${txt(540, 812, 'from each of bricks 3 and 5', 'lblf')}
+${leader(546, 778, 372, 640)}
 
-${txt(760, 740, 'E   globals', 'lbla')}
-${txt(760, 752, '.current · .params · the last transition', 'lblf')}
-${txt(760, 764, 'bricks 3 and 5 mirror them, never write', 'lblf')}
-${leader(766, 730, 581, 632)}
+${txt(760, 788, 'E   globals', 'lbla')}
+${txt(760, 800, '.current · .params · the last transition', 'lblf')}
+${txt(760, 812, 'bricks 3 and 5 mirror them, never write', 'lblf')}
+${leader(766, 778, 581, 680)}
 
-${txt(780, 686, 'B   stateRegistry', 'lbla')}
-${txt(780, 698, '.decorator(‘views’, litViewsBuilder)', 'lblf')}
-${txt(780, 710, 'the one graft that renders Lit', 'lblf')}
-${leader(776, 682, 650, 592)}
+${txt(780, 734, 'B   stateRegistry', 'lbla')}
+${txt(780, 746, '.decorator(‘views’, litViewsBuilder)', 'lblf')}
+${txt(780, 758, 'the one graft that renders Lit', 'lblf')}
+${leader(776, 730, 650, 640)}
 
 <!-- the absent coupling -->
-<line x1="682.5" y1="588" x2="786.4" y2="528" class="skf" stroke-dasharray="5 4"/>
-<circle cx="734.4" cy="558" r="9" class="skr fp"/>
-<line x1="728" y1="564.4" x2="740.8" y2="551.6" class="skr"/>
-${txt(920, 646, 'ui-router-server takes NO stud on this plate —', 'lblr')}
-${txt(920, 658, '@uirouter/core is an OPTIONAL peer for it', 'lblr')}
+<line x1="682.5" y1="636" x2="786.4" y2="576" class="skf" stroke-dasharray="5 4"/>
+<circle cx="734.4" cy="606" r="9" class="skr fp"/>
+<line x1="728" y1="612.4" x2="740.8" y2="599.6" class="skr"/>
+${txt(920, 694, 'ui-router-server takes NO stud on this plate —', 'lblr')}
+${txt(920, 706, '@uirouter/core is an OPTIONAL peer for it', 'lblr')}
 
-${txt(1044, 496, 'THE SECOND PLATE — the same core, headless', 'lbls')}
-${txt(1044, 508, 'peerDependenciesMeta marks core optional;', 'lblf')}
-${txt(1044, 520, 'simulate.ts does new UIRouter() + plugin(', 'lblf')}
-${txt(1044, 532, 'servicesPlugin) + plugin(memoryLocationPlugin),', 'lblf')}
-${txt(1044, 544, 'reached only through a lazy import — so the', 'lblf')}
-${txt(1044, 556, 'default ‘matcher’ tier, the one brick 6 drives', 'lblf')}
-${txt(1044, 568, 'by default, ships with no plate at all', 'lblf')}
+${txt(1044, 544, 'THE SECOND PLATE — the same core, headless', 'lbls')}
+${txt(1044, 556, 'peerDependenciesMeta marks core optional;', 'lblf')}
+${txt(1044, 568, 'simulate.ts does new UIRouter() + plugin(', 'lblf')}
+${txt(1044, 580, 'servicesPlugin) + plugin(memoryLocationPlugin),', 'lblf')}
+${txt(1044, 592, 'reached only through a lazy import — so the', 'lblf')}
+${txt(1044, 604, 'default ‘matcher’ tier, the one brick 6 drives', 'lblf')}
+${txt(1044, 616, 'by default, ships with no plate at all', 'lblf')}
 
-${txt(700, 800, `bricks ${listOf(ON1)} seat on brick 1 and ${listOf(ON4)} on brick 4 too — every brick-to-brick joint is a seam the lower brick publishes`, 'lbla', 'middle')}`;
+${txt(700, 848, `bricks ${listOf(ON1)} seat on brick 1 and ${listOf(ON4)} on brick 4 too — every brick-to-brick joint is a seam the lower brick publishes`, 'lbla', 'middle')}`;
 
 // ---- structure schedule ------------------------------------------------------------------
-const ART_H = 814;
+const ART_H = 862;
 const row5 = B(5), row6 = B(6);
 const SCHED = [
   [
