@@ -18,6 +18,7 @@ else
     *.*) continue ;;
     *) ;;
     esac
+    [ -f "$f" ] || continue # skip non-files, e.g. the .claude/skills dir symlinks
     IFS= read -r line <"$f" || continue
     case "$line" in
     '#!'*/sh | '#!'*/sh\ * | '#!'*/bash | '#!'*/bash\ * | '#!'*env\ sh* | '#!'*env\ bash*)
