@@ -58,6 +58,7 @@ ci:pull_request
 │   ├── @tools/repo-checks#check:patches
 │   ├── @tools/repo-checks#check:dedupe
 │   ├── @tools/repo-checks#check:single-version
+│   ├── @tools/repo-checks#check:package-coverage
 │   ├── @tools/repo-checks#check:graph-edges
 │   ├── @tools/repo-checks#check:task-inputs
 │   ├── @tools/repo-checks#check:knip
@@ -169,23 +170,23 @@ and turbo only runs a root script when a `//#`-qualified task names it.
 
 Workspaces extend the root configuration using `"extends": ["//"]`:
 
-| Workspace                                                 | Custom Configuration                                                                                                                                                                                                                |
-| --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `packages/lit-ui-router`                                  | Runs `build:custom-elements` with build, configures `docs:api` outputs                                                                                                                                                              |
-| `packages/lit-ui-router-mobx`                             | Configures `docs:api` outputs                                                                                                                                                                                                       |
-| `packages/navigation-location-plugin`                     | Configures `docs:api` outputs                                                                                                                                                                                                       |
-| `packages/ui-router-server`                               | `test` rides the `transit` chain (no build needed); adds `typecheck:tests`, `typecheck:runtime-globals`                                                                                                                             |
-| `apps/sample-app-lit-vanilla`                             | `build` is an umbrella over `build:vanilla` and `build:hash` (VITE\_\* env on each)                                                                                                                                                 |
-| `apps/sample-app-lit-mobx`                                | Adds env vars for build (VITE\_\*)                                                                                                                                                                                                  |
-| `apps/sample-app-lit-effect`                              | Adds env vars for build (VITE\_\*)                                                                                                                                                                                                  |
-| `apps/sample-app-lit-e2e`                                 | One cached `test:e2e:*` task per Cypress suite, reached via the `//:test_e2e` umbrella (which owns the dev server); CYPRESS\_\* passes through un-hashed                                                                            |
-| `apps/sample-app-routes`, `apps/sample-app-shared`        | Widens `test` inputs beyond the root's `src/**/*.ts` (non-TS/config surface)                                                                                                                                                        |
-| `@www/lit-ui-router.dev`                                  | Adds `check:embeds`, `docs:preview`, `wrangler:dev`, worker tasks (`types:worker`, `typecheck:worker`, `typecheck:worker:tests`, `bundle:worker`); `test` runs the worker contract tests in node; requires `^docs:api` before build |
-| `examples`                                                | Adds `build:embeds` (tutorial apps built as docs embeds)                                                                                                                                                                            |
-| `tools/release`                                           | Adds `check:pack`, `resolve:published` (uncached registry read), `check:published-diff`                                                                                                                                             |
-| `tools/workers-builds`                                    | Adds `check` (live Cloudflare API diff; uncached); over-approximated `test` inputs                                                                                                                                                  |
-| `tools/repo-checks`                                       | Adds `check:patches`, `check:dedupe`, `check:single-version`, `check:graph-edges`, `check:task-inputs`, `check:knip` (config in root `knip.jsonc`), each keyed on repo-wide `$TURBO_ROOT$` globs; over-approximated `test` inputs   |
-| `tools/build_and_test`, `tools/shared`, `tools/happy-dom` | Over-approximated `test` inputs (`$TURBO_DEFAULT$`)                                                                                                                                                                                 |
+| Workspace                                                 | Custom Configuration                                                                                                                                                                                                                                        |
+| --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `packages/lit-ui-router`                                  | Runs `build:custom-elements` with build, configures `docs:api` outputs                                                                                                                                                                                      |
+| `packages/lit-ui-router-mobx`                             | Configures `docs:api` outputs                                                                                                                                                                                                                               |
+| `packages/navigation-location-plugin`                     | Configures `docs:api` outputs                                                                                                                                                                                                                               |
+| `packages/ui-router-server`                               | `test` rides the `transit` chain (no build needed); adds `typecheck:tests`, `typecheck:runtime-globals`                                                                                                                                                     |
+| `apps/sample-app-lit-vanilla`                             | `build` is an umbrella over `build:vanilla` and `build:hash` (VITE\_\* env on each)                                                                                                                                                                         |
+| `apps/sample-app-lit-mobx`                                | Adds env vars for build (VITE\_\*)                                                                                                                                                                                                                          |
+| `apps/sample-app-lit-effect`                              | Adds env vars for build (VITE\_\*)                                                                                                                                                                                                                          |
+| `apps/sample-app-lit-e2e`                                 | One cached `test:e2e:*` task per Cypress suite, reached via the `//:test_e2e` umbrella (which owns the dev server); CYPRESS\_\* passes through un-hashed                                                                                                    |
+| `apps/sample-app-routes`, `apps/sample-app-shared`        | Widens `test` inputs beyond the root's `src/**/*.ts` (non-TS/config surface)                                                                                                                                                                                |
+| `@www/lit-ui-router.dev`                                  | Adds `check:embeds`, `docs:preview`, `wrangler:dev`, worker tasks (`types:worker`, `typecheck:worker`, `typecheck:worker:tests`, `bundle:worker`); `test` runs the worker contract tests in node; requires `^docs:api` before build                         |
+| `examples`                                                | Adds `build:embeds` (tutorial apps built as docs embeds)                                                                                                                                                                                                    |
+| `tools/release`                                           | Adds `check:pack`, `resolve:published` (uncached registry read), `check:published-diff`                                                                                                                                                                     |
+| `tools/workers-builds`                                    | Adds `check` (live Cloudflare API diff; uncached); over-approximated `test` inputs                                                                                                                                                                          |
+| `tools/repo-checks`                                       | Adds `check:patches`, `check:dedupe`, `check:single-version`, `check:package-coverage`, `check:graph-edges`, `check:task-inputs`, `check:knip` (config in root `knip.jsonc`), each keyed on repo-wide `$TURBO_ROOT$` globs; over-approximated `test` inputs |
+| `tools/build_and_test`, `tools/shared`, `tools/happy-dom` | Over-approximated `test` inputs (`$TURBO_DEFAULT$`)                                                                                                                                                                                                         |
 
 ## Common Commands
 
@@ -447,18 +448,22 @@ These are leaves of the `lint`, `typecheck`, `format` and `format:check` umbrell
 
 ### Choosing an ESLint Formatter
 
-The two eslint-backed root tasks read eslint's report differently, because the
-per-file list is worth different things to each:
+Both eslint-backed root tasks print findings only:
 
-- `lint:package-json` keeps `--format tap` — the list _is_ the output, naming
-  every package it linted. Any flag appended to the script reaches eslint, and
-  the **last** `--format` wins, so reach for another one directly:
+- `lint:package-json` uses eslint's default formatter. Which manifests it
+  covers is `check:package-coverage`'s job
+  ([`check-package-coverage.ts`](../tools/repo-checks/check-package-coverage.ts)):
+  it fails when a tracked manifest drops out of the lint outside its named
+  exclusions, and prints one row per manifest showing what lints it, workspace
+  membership, `catalogs.workspace` entry, and the turbo umbrellas its scripts
+  join. For a per-file list, append a formatter; any flag appended to the
+  script reaches eslint:
 
   ```bash
-  pnpm lint:package-json --format stylish
+  pnpm lint:package-json --format tap
   ```
 
-  Append it directly — **not** `pnpm lint:package-json -- --format stylish`.
+  Append it directly — **not** `pnpm lint:package-json -- --format tap`.
   pnpm forwards the `--` itself, and eslint reads everything after it as a file
   pattern (`No files matching the pattern "--format"`).
 

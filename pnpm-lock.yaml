@@ -1842,6 +1842,9 @@ importers:
       diff:
         specifier: 'catalog:'
         version: 9.0.0
+      eslint:
+        specifier: 'catalog:'
+        version: 10.11.0(jiti@2.7.0)(supports-color@10.2.2)
       jsonc-parser:
         specifier: 'catalog:'
         version: 3.3.1

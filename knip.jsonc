@@ -14,8 +14,12 @@
   "treatConfigHintsAsErrors": true,
   "workspaces": {
     ".": {
-      // nothing scripts it; kept so `pnpm wrangler` works at the repo root
-      "ignoreDependencies": ["wrangler"],
+      "ignoreDependencies": [
+        // nothing scripts it; kept so `pnpm wrangler` works at the repo root
+        "wrangler",
+        // ad-hoc `pnpm lint:package-json --format tap` (docs/TURBO.md)
+        "eslint-formatter-tap",
+      ],
     },
     "examples": {
       "entry": ["*.test-d.ts"],
