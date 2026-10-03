@@ -10,9 +10,9 @@
 // no physics, so the picture is the same on every load.
 import { ATLAS } from './census-atlas.mjs';
 import { PROJECT_MARK, articleTitle } from './chrome.mjs';
-import { LANE_KEYS_JS, PLATE_FOCUS_JS } from './focus.mjs';
+import { LANE_KEYS_JS, LANE_TOUCH_JS, PLATE_FOCUS_JS } from './focus.mjs';
 import { glyph } from './icons.mjs';
-import { basisStrip, laneCss } from './lane-chrome.mjs';
+import { basisStrip, laneCss, laneHints } from './lane-chrome.mjs';
 import { SPRITES, spriteSvg } from './sprites.mjs';
 
 export const CYTOSCAPE_URL = 'https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.31.0/cytoscape.min.js';
@@ -371,6 +371,7 @@ $$FOCUS  // The cytoscape tag above is deferred; deferred scripts run before
   tools.addEventListener('change', function (e) { showTools(e.target.checked); show(pinned); });
   apply(atlasFocusHost(stage, apply));
   atlasLaneKeys(stage, function () { return cy.nodes('[key]:visible'); }, function () { return pinned; }, steer);
+  atlasLaneTouch(stage, cy, function () { cy.fit(cy.elements(':visible'), 34); });
 
   function repaint() {
     var s = sprites();
@@ -425,7 +426,7 @@ export function pipelineSection() {
     ${legend}
     </div>
     <div class="pg-ctl">
-      <span id="pg-hint" class="hints"><span class="nw">${glyph('move')}DRAG TO PAN</span><span class="nw">${glyph('mouse')}SCROLL TO ZOOM</span></span>
+      <span id="pg-hint" class="hints">${laneHints(`<span class="nw">${glyph('move')}DRAG TO PAN</span> <span class="nw">${glyph('mouse')}SCROLL TO ZOOM</span>`)}</span>
       <label><input type="checkbox" id="pg-tools"> <span>${glyph('wrench')}TOOLS LEDGER</span></label>
       <button type="button" id="pg-fit">${glyph('scan')}FIT</button>
     </div>
@@ -439,5 +440,5 @@ export function pipelineSection() {
 <script type="application/json" id="pg-atlas">${json({ nodes: A.nodes, edges: A.edges })}</script>
 <script type="application/json" id="pg-layout">${json(LAYOUT)}</script>
 <script defer src="${CYTOSCAPE_URL}"></script>
-<script>${INIT.replace('$$FOCUS', () => PLATE_FOCUS_JS + LANE_KEYS_JS)}</script>`;
+<script>${INIT.replace('$$FOCUS', () => PLATE_FOCUS_JS + LANE_KEYS_JS + LANE_TOUCH_JS)}</script>`;
 }

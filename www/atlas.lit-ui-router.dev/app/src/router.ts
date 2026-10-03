@@ -203,7 +203,11 @@ export function createRouter(): UIRouterLit {
   router.transitionService.onSuccess({}, (transition) => {
     // An in-place change stays on the page it re-renders; everything else is a
     // new page and starts at the top.
-    if (!isInPlaceChange(transition)) window.scrollTo({ top: 0 });
+    if (!isInPlaceChange(transition)) {
+      window.scrollTo({ top: 0 });
+      // once more after the view swaps: a scroll still settling on a phone is clamped to the new page
+      void document.querySelector('ui-view')?.updateComplete.then(() => window.scrollTo({ top: 0 }));
+    }
     // The prerendered pages carry these titles; the SPA keeps them current.
     const to = transition.to().name;
     const sheet =

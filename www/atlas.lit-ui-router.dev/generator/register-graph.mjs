@@ -13,9 +13,9 @@
 // them.  Tick the box and the placeholders flood in faint — the 70% of this
 // graph that runs nothing, drawn rather than asserted.
 import { readFileSync } from 'node:fs';
-import { LANE_KEYS_JS, PLATE_FOCUS_JS } from './focus.mjs';
+import { LANE_KEYS_JS, LANE_TOUCH_JS, PLATE_FOCUS_JS } from './focus.mjs';
 import { glyph } from './icons.mjs';
-import { basisStrip, laneCss } from './lane-chrome.mjs';
+import { basisStrip, laneCss, laneHints } from './lane-chrome.mjs';
 import { PALETTES } from './sprites.mjs';
 import { CYTOSCAPE_URL } from './pipeline-graph.mjs';
 
@@ -436,6 +436,7 @@ $$FOCUS  // The cytoscape tag is deferred; deferred scripts run BEFORE DOMConten
   box.addEventListener('change', function (e) { setShroud(e.target.checked); });
   apply(atlasFocusHost(stage, apply));
   atlasLaneKeys(stage, function () { return cy.nodes('.cell:visible'); }, function () { return pinned; }, steer);
+  atlasLaneTouch(stage, cy, function () { cy.fit(cy.elements(':visible').not('.rowtag'), 26); });
 
   function repaint() {
     var s = skins();
@@ -473,7 +474,7 @@ export const REGISTER = {
 // ---------------------------------------------------------------------------
 export function registerLane() {
   // Lucide: move on DRAG TO PAN, mouse on SCROLL TO ZOOM
-  const HINT_REAL = `REAL SUBGRAPH · ${glyph('move')}DRAG TO PAN · ${glyph('mouse')}SCROLL TO ZOOM`;
+  const HINT_REAL = `REAL SUBGRAPH · ${laneHints(`${glyph('move')}DRAG TO PAN · ${glyph('mouse')}SCROLL TO ZOOM`)}`;
   const island = {
     ...LAYOUT,
     skins: SKINS,
@@ -524,5 +525,5 @@ ${basisStrip('rg', `<code>turbo run ${PIPE} --dry=json</code> against a material
 <script type="application/json" id="rg-graph">${json({ nodes: NODES, edges: EDGES })}</script>
 <script type="application/json" id="rg-layout">${json(island)}</script>
 <script defer src="${CYTOSCAPE_URL}"></script>
-<script>${INIT.replace('$$FOCUS', () => PLATE_FOCUS_JS + LANE_KEYS_JS)}</script>`;
+<script>${INIT.replace('$$FOCUS', () => PLATE_FOCUS_JS + LANE_KEYS_JS + LANE_TOUCH_JS)}</script>`;
 }

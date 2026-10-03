@@ -509,6 +509,8 @@ a { color: var(--accent); }
 :root[data-theme="dark"] .cb-bar .lg .sw-dark { display: block; }
 .cb-bar .lg i { display: block; width: 26px; height: 0; border-top-width: 2px; border-top-style: solid; }
 .cb-ctl .hints { display: inline-flex; flex-wrap: wrap; gap: 8px 12px; }
+.cb-ctl .touch { display: none; }
+@media (pointer: coarse) { .cb-ctl .mouse { display: none; } .cb-ctl .touch { display: inline; } }
 .cb-ctl { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; font-family: var(--data); font-size: 11px;
   letter-spacing: 0.12em; color: var(--ink-soft); }
 .cb-ctl button { font: inherit; letter-spacing: inherit; color: var(--ink); background: var(--paper);
@@ -522,7 +524,7 @@ a { color: var(--accent); }
 .cb-stage { display: grid; grid-template-columns: minmax(0, 1fr) clamp(300px, 26vw, 400px); border: 1.5px solid var(--ink);
   background: var(--paper); }
 .cb-stage:focus-visible, .cb-cy:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
-.cb-cy { height: clamp(560px, 70vh, 960px); min-width: 0; }
+.cb-cy { height: clamp(560px, 70vh, 960px); min-width: 0; touch-action: pan-y; }
 .cb-info { border-left: 1.5px solid var(--ink); background: var(--paper-2); padding: 20px 22px 22px;
   font-family: var(--data); font-size: 12.5px; letter-spacing: 0.04em; line-height: 1.5; color: var(--ink);
   overflow-y: auto; max-height: clamp(560px, 70vh, 960px); }
@@ -562,7 +564,7 @@ a { color: var(--accent); }
     <span class="lg"><i style="border-top-color:var(--red);border-top-style:dashed"></i>optional peer</span>
     </div>
     <div class="cb-ctl">
-      <span class="hints"><span class="nw">HOVER AN EDGE FOR ITS RANGE</span><span class="nw"><svg class="gl lane" aria-hidden="true" focusable="false"><use href="#gl-move"/></svg>DRAG TO PAN</span></span>
+      <span class="hints"><span class="mouse"><span class="nw">HOVER AN EDGE FOR ITS RANGE</span> <span class="nw"><svg class="gl lane" aria-hidden="true" focusable="false"><use href="#gl-move"/></svg>DRAG TO PAN</span></span><span class="nw touch">PINCH TO ZOOM · ZOOMED, A FINGER PANS · DOUBLE-TAP FITS</span></span>
       <button type="button" id="cb-fit"><svg class="gl lane" aria-hidden="true" focusable="false"><use href="#gl-scan"/></svg>FIT</button>
     </div>
   </div>
@@ -607,6 +609,27 @@ a { color: var(--accent); }
       e.preventDefault();
       e.stopPropagation();
     });
+  }
+  function atlasLaneTouch(stage, cy, fit) {
+    var holding = false, overflow = false;
+    cy.nodes().panify();
+    cy.on('add', 'node', function (e) { e.target.panify(); });
+    cy.on('viewport', function () {
+      if (holding) return;
+      var b = cy.elements(':visible').renderedBoundingBox(), w = cy.width(), h = cy.height(), m = 72;
+      overflow = b.w > w || b.h > h;
+      var dx = b.x2 < m ? m - b.x2 : b.x1 > w - m ? w - m - b.x1 : 0;
+      var dy = b.y2 < m ? m - b.y2 : b.y1 > h - m ? h - m - b.y1 : 0;
+      if (!dx && !dy) return;
+      holding = true;
+      cy.panBy({ x: dx, y: dy });
+      holding = false;
+    });
+    cy.on('dbltap', function (e) { if (e.target === cy) fit(); });
+    if (!window.matchMedia('(pointer: coarse)').matches) return;
+    stage.addEventListener('touchstart', function (e) {
+      if (!overflow && e.touches.length === 1) e.stopImmediatePropagation();
+    }, { capture: true, passive: true });
   }
   // The cytoscape tag above is deferred; deferred scripts run before
   // DOMContentLoaded, so boot there rather than probing during parse.
@@ -838,6 +861,7 @@ a { color: var(--accent); }
   clear();
   apply(atlasFocusHost(stage, apply));
   atlasLaneKeys(stage, function () { return cy.nodes('[key]'); }, function () { return pinned; }, steer);
+  atlasLaneTouch(stage, cy, function () { cy.fit(cy.elements(), 40); });
 
   document.getElementById('cb-fit').addEventListener('click', function () { cy.fit(cy.elements(), 40); });
 

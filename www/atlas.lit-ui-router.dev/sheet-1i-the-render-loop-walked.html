@@ -513,6 +513,8 @@ a { color: var(--accent); }
 :root[data-theme="dark"] .lw-bar .lg .sw-dark { display: block; }
 .lw-bar .lg i { display: block; width: 26px; height: 0; border-top-width: 2px; border-top-style: solid; }
 .lw-ctl .hints { display: inline-flex; flex-wrap: wrap; gap: 8px 12px; }
+.lw-ctl .touch { display: none; }
+@media (pointer: coarse) { .lw-ctl .mouse { display: none; } .lw-ctl .touch { display: inline; } }
 .lw-ctl { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; font-family: var(--data); font-size: 11px;
   letter-spacing: 0.12em; color: var(--ink-soft); }
 .lw-ctl button { font: inherit; letter-spacing: inherit; color: var(--ink); background: var(--paper);
@@ -526,7 +528,7 @@ a { color: var(--accent); }
 .lw-stage { display: grid; grid-template-columns: minmax(0, 1fr) clamp(300px, 26vw, 400px); border: 1.5px solid var(--ink);
   background: var(--paper); }
 .lw-stage:focus-visible, .lw-cy:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
-.lw-cy { height: clamp(560px, 70vh, 960px); min-width: 0; }
+.lw-cy { height: clamp(560px, 70vh, 960px); min-width: 0; touch-action: pan-y; }
 .lw-info { border-left: 1.5px solid var(--ink); background: var(--paper-2); padding: 20px 22px 22px;
   font-family: var(--data); font-size: 12.5px; letter-spacing: 0.04em; line-height: 1.5; color: var(--ink);
   overflow-y: auto; max-height: clamp(560px, 70vh, 960px); }
@@ -603,6 +605,27 @@ a { color: var(--accent); }
     var host = from.closest('atlas-plate');
     if (host) host.addEventListener('atlas-focus-set', function (e) { apply(e.detail.focus); });
     return atlasFocusRead(host ? host.getAttribute('data-focus') || null : undefined);
+  }
+  function atlasLaneTouch(stage, cy, fit) {
+    var holding = false, overflow = false;
+    cy.nodes().panify();
+    cy.on('add', 'node', function (e) { e.target.panify(); });
+    cy.on('viewport', function () {
+      if (holding) return;
+      var b = cy.elements(':visible').renderedBoundingBox(), w = cy.width(), h = cy.height(), m = 72;
+      overflow = b.w > w || b.h > h;
+      var dx = b.x2 < m ? m - b.x2 : b.x1 > w - m ? w - m - b.x1 : 0;
+      var dy = b.y2 < m ? m - b.y2 : b.y1 > h - m ? h - m - b.y1 : 0;
+      if (!dx && !dy) return;
+      holding = true;
+      cy.panBy({ x: dx, y: dy });
+      holding = false;
+    });
+    cy.on('dbltap', function (e) { if (e.target === cy) fit(); });
+    if (!window.matchMedia('(pointer: coarse)').matches) return;
+    stage.addEventListener('touchstart', function (e) {
+      if (!overflow && e.touches.length === 1) e.stopImmediatePropagation();
+    }, { capture: true, passive: true });
   }
   // The cytoscape tag is deferred; deferred scripts run BEFORE DOMContentLoaded,
   // so boot there rather than probing the global during parse.
@@ -687,6 +710,7 @@ a { color: var(--accent); }
   // a cover card before photographing it — a landscape slice read as a corner.
   stage.__cy = cy;
   cy.fit(cy.elements(), 42);
+  atlasLaneTouch(stage, cy, function () { cy.fit(cy.elements(), 42); });
 
   // ---- the walk ------------------------------------------------------------
   var step = 0;                                    // 0 = the circuit at rest

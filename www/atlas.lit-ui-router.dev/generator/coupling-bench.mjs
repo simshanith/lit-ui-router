@@ -17,9 +17,9 @@
 // physics, so the picture is the same on every load.
 import { readFileSync } from 'node:fs';
 import { PROJECT_MARK, articleTitle } from './chrome.mjs';
-import { LANE_KEYS_JS, PLATE_FOCUS_JS } from './focus.mjs';
+import { LANE_KEYS_JS, LANE_TOUCH_JS, PLATE_FOCUS_JS } from './focus.mjs';
 import { glyph } from './icons.mjs';
-import { basisStrip, laneCss } from './lane-chrome.mjs';
+import { basisStrip, laneCss, laneHints } from './lane-chrome.mjs';
 import { CYTOSCAPE_URL } from './pipeline-graph.mjs';
 import { SPRITES, spriteSvg } from './sprites.mjs';
 
@@ -386,6 +386,7 @@ $$FOCUS  // The cytoscape tag above is deferred; deferred scripts run before
   clear();
   apply(atlasFocusHost(stage, apply));
   atlasLaneKeys(stage, function () { return cy.nodes('[key]'); }, function () { return pinned; }, steer);
+  atlasLaneTouch(stage, cy, function () { cy.fit(cy.elements(), 40); });
 
   document.getElementById('cb-fit').addEventListener('click', function () { cy.fit(cy.elements(), 40); });
 
@@ -421,7 +422,7 @@ export function couplingBenchSection({ caption = '' } = {}) {
     ${legend}
     </div>
     <div class="cb-ctl">
-      <span class="hints"><span class="nw">HOVER AN EDGE FOR ITS RANGE</span><span class="nw">${glyph('move')}DRAG TO PAN</span></span>
+      <span class="hints">${laneHints(`<span class="nw">HOVER AN EDGE FOR ITS RANGE</span> <span class="nw">${glyph('move')}DRAG TO PAN</span>`)}</span>
       <button type="button" id="cb-fit">${glyph('scan')}FIT</button>
     </div>
   </div>
@@ -434,7 +435,7 @@ export function couplingBenchSection({ caption = '' } = {}) {
 </section>
 <script type="application/json" id="cb-layout">${json(LAYOUT)}</script>
 <script defer src="${CYTOSCAPE_URL}"></script>
-<script>${INIT.replace('$$FOCUS', () => PLATE_FOCUS_JS + LANE_KEYS_JS)}</script>`;
+<script>${INIT.replace('$$FOCUS', () => PLATE_FOCUS_JS + LANE_KEYS_JS + LANE_TOUCH_JS)}</script>`;
 }
 
 // sheet 2B's prose reads the same figures the bench does

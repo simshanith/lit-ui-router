@@ -14,7 +14,7 @@
 // burn in accent, the legs already walked stay in ink, the rest wait faint,
 // and the panel reads the narration and the evidence out of the plate.
 import { readFileSync } from 'node:fs';
-import { PLATE_FOCUS_JS } from './focus.mjs';
+import { LANE_TOUCH_JS, PLATE_FOCUS_JS } from './focus.mjs';
 import { glyph } from './icons.mjs';
 import { basisStrip, laneCss } from './lane-chrome.mjs';
 import { PALETTES } from './sprites.mjs';
@@ -293,6 +293,7 @@ $$FOCUS  // The cytoscape tag is deferred; deferred scripts run BEFORE DOMConten
   // a cover card before photographing it — a landscape slice read as a corner.
   stage.__cy = cy;
   cy.fit(cy.elements(), 42);
+  atlasLaneTouch(stage, cy, function () { cy.fit(cy.elements(), 42); });
 
   // ---- the walk ------------------------------------------------------------
   var step = 0;                                    // 0 = the circuit at rest
@@ -508,5 +509,5 @@ ${basisStrip('lw', `${used} by <code>generator/census-loop.mjs</code> · commit 
 <script type="application/json" id="lw-plate">${json({ ref: PLATE.ref, sha: PLATE.sha, walkOf: PLATE.walkOf, walk: WALK })}</script>
 <script type="application/json" id="lw-layout">${json(island)}</script>
 <script defer src="${CYTOSCAPE_URL}"></script>
-<script>${INIT.replace('$$FOCUS', () => PLATE_FOCUS_JS)}</script>`;
+<script>${INIT.replace('$$FOCUS', () => PLATE_FOCUS_JS + LANE_TOUCH_JS)}</script>`;
 }

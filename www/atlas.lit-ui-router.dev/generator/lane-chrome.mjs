@@ -20,6 +20,8 @@ export const laneCss = (p, wrap = 'break-word') => `
 :root[data-theme="dark"] .${p}-bar .lg .sw-dark { display: block; }
 .${p}-bar .lg i { display: block; width: 26px; height: 0; border-top-width: 2px; border-top-style: solid; }
 .${p}-ctl .hints { display: inline-flex; flex-wrap: wrap; gap: 8px 12px; }
+.${p}-ctl .touch { display: none; }
+@media (pointer: coarse) { .${p}-ctl .mouse { display: none; } .${p}-ctl .touch { display: inline; } }
 .${p}-ctl { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; font-family: var(--data); font-size: 11px;
   letter-spacing: 0.12em; color: var(--ink-soft); }
 .${p}-ctl button { font: inherit; letter-spacing: inherit; color: var(--ink); background: var(--paper);
@@ -33,7 +35,7 @@ export const laneCss = (p, wrap = 'break-word') => `
 .${p}-stage { display: grid; grid-template-columns: minmax(0, 1fr) clamp(300px, 26vw, 400px); border: 1.5px solid var(--ink);
   background: var(--paper); }
 .${p}-stage:focus-visible, .${p}-cy:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
-.${p}-cy { height: clamp(560px, 70vh, 960px); min-width: 0; }
+.${p}-cy { height: clamp(560px, 70vh, 960px); min-width: 0; touch-action: pan-y; }
 .${p}-info { border-left: 1.5px solid var(--ink); background: var(--paper-2); padding: 20px 22px 22px;
   font-family: var(--data); font-size: 12.5px; letter-spacing: 0.04em; line-height: 1.5; color: var(--ink);
   overflow-y: auto; max-height: clamp(560px, 70vh, 960px); }
@@ -56,6 +58,9 @@ export const laneCss = (p, wrap = 'break-word') => `
   .${p}-info { border-left: none; border-top: 1.5px solid var(--ink); max-height: 50vh;
     mask-image: linear-gradient(to bottom, #000 calc(100% - 28px), transparent); }
 }`;
+
+// The hint pair a lane's bar shows: the mouse's under a fine pointer, the finger's under a coarse one.
+export const laneHints = (mouse) => `<span class="mouse">${mouse}</span><span class="nw touch">PINCH TO ZOOM · ZOOMED, A FINGER PANS · DOUBLE-TAP FITS</span>`;
 
 // The provenance strip under a lane's stage; a path-shaped chip breaks after its slash, never mid-name.
 export const basisStrip = (p, html) => `<p class="${p}-basis"><span><b class="k">BASIS</b>${chipBreaks(html)}</span></p>`;
