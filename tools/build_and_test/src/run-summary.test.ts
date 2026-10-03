@@ -1317,6 +1317,22 @@ describe('tool annotations', () => {
     assert.equal(parsed?.properties.line, 146);
   });
 
+  it('parses the lint_actionlint template, snippet and all', () => {
+    const parsed = parseAnnotation(
+      '::error file=.github/workflows/lint-workflows.yml,line=19,col=5,endColumn=20,title=syntax-check::key "timeout-minutes" is duplicated%0A```%0A    timeout-minutes: 11%0A    ^~~~%0A```',
+      '',
+    );
+    assert.equal(
+      parsed?.properties.file,
+      '.github/workflows/lint-workflows.yml',
+    );
+    assert.equal(parsed?.properties.title, 'syntax-check');
+    assert.equal(
+      parsed?.message,
+      'key "timeout-minutes" is duplicated\n```\n    timeout-minutes: 11\n    ^~~~\n```',
+    );
+  });
+
   it('strips ANSI and a trailing CR before matching', () => {
     const parsed = parseAnnotation(`${ESC}[0m${oxlintWarning}\r`, ssrDir);
     assert.equal(parsed?.properties.line, 43);

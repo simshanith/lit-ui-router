@@ -159,10 +159,13 @@
         "!.cache/**",
         "$TURBO_ROOT$/.oxlintrc.json",
         "$TURBO_DEFAULT$"
-      ]
+      ],
+      // selects github output, which the turbo_summary step re-emits
+      "passThroughEnv": ["GITHUB_ACTIONS"]
     },
     "//#lint:root": {
-      "inputs": [".oxlintrc.json", "$TURBO_DEFAULT$"]
+      "inputs": [".oxlintrc.json", "$TURBO_DEFAULT$"],
+      "passThroughEnv": ["GITHUB_ACTIONS"]
     },
     // Hard complexity ceiling over JS/TS outside gitignored paths (.vue files
     // aren't linted); disable comments don't apply
@@ -264,7 +267,8 @@
         "$TURBO_ROOT$/.config/rumdl.toml",
         "$TURBO_ROOT$/.config/mise/tasks/rumdl",
         "$TURBO_ROOT$/.config/mise/mise.lock"
-      ]
+      ],
+      "passThroughEnv": ["GITHUB_ACTIONS"]
     },
     // Config-plumbing lint: one //# cache group per tool, aggregated by the
     // //#lint:workflows umbrella (which the lint task pulls in). The
@@ -285,7 +289,8 @@
         ".github/**",
         "$TURBO_ROOT$/.config/mise/config.toml",
         "$TURBO_ROOT$/.config/mise/mise.lock"
-      ]
+      ],
+      "passThroughEnv": ["GITHUB_ACTIONS"]
     },
     "//#lint:zizmor": {
       "inputs": [
