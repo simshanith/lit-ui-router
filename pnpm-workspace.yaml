@@ -183,6 +183,7 @@ allowBuilds:
 audit:
   ignore:
     - GHSA-ch52-4w7c-c8xp
+    - GHSA-f27v-pv5m-c5g6
     - GHSA-vfj7-8cjw-p6xm
   ignorePrune: true
   level: low
