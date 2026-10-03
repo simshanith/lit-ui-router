@@ -25,6 +25,8 @@ jobs:
           persist-credentials: false
       - name: Setup mise
         uses: jdx/mise-action@v5
+        with:
+          version: 2026.10.1
       - name: Lint workflows
         # actionlint + zizmor in parallel via the mise task graph
         run: mise run lint_workflows

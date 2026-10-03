@@ -55,6 +55,8 @@ jobs:
           persist-credentials: false
       - name: Setup mise
         uses: jdx/mise-action@v5
+        with:
+          version: 2026.10.1
       - name: Install dependencies
         run: mise run setup
       - name: Resolve Cypress version
