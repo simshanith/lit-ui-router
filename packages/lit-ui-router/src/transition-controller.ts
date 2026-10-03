@@ -221,7 +221,8 @@ export class TransitionController implements ReactiveController {
         this.host,
         this.onRouterReplaced,
       );
-      this._router = router;
+      // A reconnect outside any provider keeps the router it had.
+      this._router = router ?? this._router;
       this.unsubscribe = unsubscribe;
     }
     this.watch();

@@ -2,16 +2,12 @@ import { html, LitElement } from 'lit';
 import type { PropertyValues, TemplateResult } from 'lit';
 import { property } from 'lit/decorators.js';
 
-import {
-  contextRequestEventName,
-  isRouterContextRequest,
-  requestRouter,
-} from './context.js';
+import { contextRequestEventName, requestRouter } from './context.js';
 import { UIRouterLit } from './core.js';
 import { warnRouterSwapped } from './dev-warn.js';
 import { uiRouterContextEventName, uiViewContextEventName } from './events.js';
 import type { UiRouterContextEvent, UiViewContextEvent } from './events.js';
-import { noUnsubscribe, RouterSubscribers } from './router-subscription.js';
+import { RouterSubscribers } from './router-subscription.js';
 
 export type { UiRouterContextEvent, UiViewContextEvent } from './events.js';
 
@@ -103,23 +99,6 @@ export class UIRouterLitElement extends LitElement {
   private readonly onUiRouterContextEvent = (event: UiRouterContextEvent) => {
     this.constructor.onUiRouterContextEvent(this.uiRouter)(event);
   };
-
-  /**
-   * Answers a `context-request` for the router context with a router that is
-   * final: `subscribe` gets one call and a no-op unsubscribe.
-   *
-   * @internal
-   */
-  static onContextRequest(uiRouter?: UIRouterLit): (event: Event) => void {
-    return (event: Event) => {
-      if (!uiRouter || !isRouterContextRequest(event)) {
-        return;
-      }
-      // stopped first: a throwing consumer must not leak the request outward
-      event.stopImmediatePropagation();
-      event.callback(uiRouter, event.subscribe ? noUnsubscribe : undefined);
-    };
-  }
 
   /** Subscribers that took the placeholder, owed the app's router. */
   private readonly routerSubscribers = new RouterSubscribers();
