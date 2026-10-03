@@ -214,7 +214,7 @@
         "turbo/no-undeclared-env-vars": [
           "warn",
           {
-            "allowList": ["^DEV$"]
+            "allowList": ["^(DEV|PACKAGE_VERSION)$"]
           }
         ]
       }
