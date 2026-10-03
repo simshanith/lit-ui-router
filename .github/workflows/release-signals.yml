@@ -93,8 +93,8 @@ jobs:
       - name: Setup mise
         uses: jdx/mise-action@v5
         with:
-          # the cache key carries the mise version only when pinned
-          version: 2026.9.12
+          # the cache key carries the mise version only when it is pinned
+          version: 2026.10.0
       - name: Install dependencies
         run: mise run setup --release
       - name: Published diff
