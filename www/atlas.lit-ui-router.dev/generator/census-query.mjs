@@ -54,7 +54,7 @@ export const CITY_DIRS = new Map([
   ['packages/ui-router-server', ['src', 'test']],
   ['packages/eslint-plugin-lit-ui-router', ['src', 'test']],
   ['apps/sample-app-routes', ['src', 'test']],
-  ['apps/sample-app-lit-e2e', ['src', 'cypress']],
+  ['apps/sample-app-lit-e2e', ['src', 'scripts']],
   // #717 moved the docs site docs/ -> www/lit-ui-router.dev/ (package name still `docs`).
   ['www/lit-ui-router.dev', ['.vitepress', 'worker', 'src']],
 ]);

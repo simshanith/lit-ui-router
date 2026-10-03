@@ -2,7 +2,7 @@
   "ref": "origin/main",
   "sha": "63c0b823",
   "commitDate": "2026-09-28T23:32:37-07:00",
-  "generatedAtTime": "2026-09-29T06:58:48.633Z",
+  "generatedAtTime": "2026-10-03T02:06:11.833Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-steam.mjs",
   "used": "www/atlas.lit-ui-router.dev/data/census-files.json @ 63c0b823",
   "wasAssociatedWith": [
@@ -21,7 +21,7 @@
     {"member":"packages/lit-ui-router-ssr","commits":13},
     {"member":"packages/navigation-location-plugin","commits":12},
     {"member":"packages/ui-router-server","commits":11},
-    {"member":"apps/sample-app-lit-e2e","commits":25},
+    {"member":"apps/sample-app-lit-e2e","commits":38},
     {"member":"apps/sample-app-lit-effect","commits":2},
     {"member":"apps/sample-app-lit-mobx","commits":14},
     {"member":"apps/sample-app-lit-vanilla","commits":11},

@@ -2,7 +2,7 @@
   "ref": "origin/main",
   "sha": "63c0b823",
   "commitDate": "2026-09-28T23:32:37-07:00",
-  "generatedAtTime": "2026-09-29T06:58:48.845Z",
+  "generatedAtTime": "2026-10-03T02:06:12.052Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-weather.mjs",
   "used": "www/atlas.lit-ui-router.dev/data/census-files.json @ 63c0b823",
   "wasAssociatedWith": [
@@ -17,7 +17,7 @@
     {"member":"packages/lit-ui-router-ssr","files":20,"medAge":10,"medIdle":2,"touches":54,"perFile":2.7,"oldestFirst":"2026-09-14","newestFirst":"2026-09-28","idlestFile":"packages/lit-ui-router-ssr/src/served-markers.ts","idlestDays":10,"hotFile":"packages/lit-ui-router-ssr/src/specs/client.spec.ts","hotTouches":7},
     {"member":"packages/navigation-location-plugin","files":9,"medAge":51,"medIdle":6,"touches":29,"perFile":3.2,"oldestFirst":"2026-01-11","newestFirst":"2026-09-23","idlestFile":"packages/navigation-location-plugin/src/specs/is-ui-router-navigate-event.spec.ts","idlestDays":51,"hotFile":"packages/navigation-location-plugin/src/index.ts","hotTouches":14},
     {"member":"packages/ui-router-server","files":21,"medAge":77,"medIdle":46,"touches":54,"perFile":2.6,"oldestFirst":"2026-07-14","newestFirst":"2026-09-14","idlestFile":"packages/ui-router-server/test/connect.test.ts","idlestDays":77,"hotFile":"packages/ui-router-server/src/index.ts","hotTouches":5},
-    {"member":"apps/sample-app-lit-e2e","files":10,"medAge":82,"medIdle":22,"touches":42,"perFile":4.2,"oldestFirst":"2025-07-21","newestFirst":"2026-09-11","idlestFile":"apps/sample-app-lit-e2e/src/integration/dialog.cy.js","idlestDays":44,"hotFile":"apps/sample-app-lit-e2e/src/integration/sample_app.cy.js","hotTouches":11},
+    {"member":"apps/sample-app-lit-e2e","files":14,"medAge":44,"medIdle":21,"touches":60,"perFile":4.3,"oldestFirst":"2025-07-21","newestFirst":"2026-09-11","idlestFile":"apps/sample-app-lit-e2e/src/integration/dialog.cy.js","idlestDays":44,"hotFile":"apps/sample-app-lit-e2e/src/integration/sample_app.cy.js","hotTouches":11},
     {"member":"apps/sample-app-lit-effect","files":9,"medAge":18,"medIdle":17,"touches":14,"perFile":1.6,"oldestFirst":"2026-09-11","newestFirst":"2026-09-11","idlestFile":"apps/sample-app-lit-effect/src/app/effect/runtime.ts","idlestDays":18,"hotFile":"apps/sample-app-lit-effect/src/app/main/App.ts","hotTouches":2},
     {"member":"apps/sample-app-lit-mobx","files":8,"medAge":87,"medIdle":81,"touches":36,"perFile":4.5,"oldestFirst":"2026-07-04","newestFirst":"2026-07-04","idlestFile":"apps/sample-app-lit-mobx/src/main.ts","idlestDays":85,"hotFile":"apps/sample-app-lit-mobx/src/app/main/NavHeader.ts","hotTouches":7},
     {"member":"apps/sample-app-lit-vanilla","files":8,"medAge":435,"medIdle":49,"touches":53,"perFile":6.6,"oldestFirst":"2025-07-21","newestFirst":"2026-07-06","idlestFile":"apps/sample-app-lit-vanilla/src/main.ts","idlestDays":85,"hotFile":"apps/sample-app-lit-vanilla/src/app/mymessages/Compose.ts","hotTouches":11},
@@ -52,13 +52,13 @@
   "months": {
     "2026-09": {
       "pkg": 294,
-      "app": 62,
+      "app": 78,
       "site": 61,
       "tool": 266
     },
     "2026-08": {
       "pkg": 48,
-      "app": 44,
+      "app": 46,
       "site": 19,
       "tool": 64
     },
@@ -225,6 +225,10 @@
     {"path":"packages/ui-router-server/test/url-matcher.differential.test.ts","member":"packages/ui-router-server","spec":true,"first":"2026-07-14","last":"2026-07-18","touches":3},
     {"path":"packages/ui-router-server/test/url-matcher.test.ts","member":"packages/ui-router-server","spec":true,"first":"2026-07-14","last":"2026-07-18","touches":2},
     {"path":"packages/ui-router-server/test/vite.test.ts","member":"packages/ui-router-server","spec":true,"first":"2026-07-14","last":"2026-07-14","touches":1},
+    {"path":"apps/sample-app-lit-e2e/scripts/cypress-suite.ts","member":"apps/sample-app-lit-e2e","spec":false,"first":"2026-09-09","last":"2026-09-11","touches":2},
+    {"path":"apps/sample-app-lit-e2e/scripts/deflake-e2e.ts","member":"apps/sample-app-lit-e2e","spec":false,"first":"2026-08-01","last":"2026-09-15","touches":8},
+    {"path":"apps/sample-app-lit-e2e/scripts/run-e2e.ts","member":"apps/sample-app-lit-e2e","spec":false,"first":"2026-09-10","last":"2026-09-27","touches":5},
+    {"path":"apps/sample-app-lit-e2e/scripts/serve-and-test.ts","member":"apps/sample-app-lit-e2e","spec":false,"first":"2026-09-09","last":"2026-09-11","touches":3},
     {"path":"apps/sample-app-lit-e2e/src/docs/docs_site.cy.js","member":"apps/sample-app-lit-e2e","spec":true,"first":"2026-07-09","last":"2026-09-07","touches":8},
     {"path":"apps/sample-app-lit-e2e/src/integration/analytics.cy.js","member":"apps/sample-app-lit-e2e","spec":true,"first":"2026-09-07","last":"2026-09-08","touches":2},
     {"path":"apps/sample-app-lit-e2e/src/integration/api_docs.cy.js","member":"apps/sample-app-lit-e2e","spec":true,"first":"2026-08-17","last":"2026-08-17","touches":1},
