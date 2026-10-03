@@ -194,7 +194,6 @@ const anchorIsValid: RuleFor<typeof RULE_NAME> = {
             description: 'Whether a bare `#` counts as a valid href.',
             type: 'boolean',
           },
-          // ours (#676, #1065): upstream has neither, so no parity to keep.
           allowElementParts: {
             description:
               'Whether a uiSref element part counts as the href it assigns at runtime (default `true`), replacing `settings.allowElementParts` for this rule.',
