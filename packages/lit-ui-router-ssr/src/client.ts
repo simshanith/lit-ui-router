@@ -296,18 +296,6 @@ const revealServedMarkers = (node: Node): void => {
   }
 };
 
-/** Renames every marker under `node`, closed views included, so nothing is left hidden. */
-const revealEveryMarker = (node: Node): void => {
-  for (const child of node.childNodes) {
-    if (child.nodeType === Node.COMMENT_NODE) {
-      revealMarker(child);
-    } else if (child instanceof Element) {
-      if (child.shadowRoot) revealEveryMarker(child.shadowRoot);
-      revealEveryMarker(child);
-    }
-  }
-};
-
 /**
  * Drops a served render standing under no pair: every child from the first one
  * that is, or holds, a served marker, down to the end.
@@ -449,7 +437,8 @@ const pinAdopter = (
 /** The JSON a signature block carries, or null when it does not parse to one with a version. */
 const parseSignature = (json: string): HydrationSignature | null => {
   try {
-    const signature = JSON.parse(json) as Partial<HydrationSignature> | null;
+    const signature = JSON.parse(json) as { version?: unknown } | null;
+    // Only `version` is checked, and HydrationSignature claims nothing more.
     return typeof signature?.version === 'string'
       ? (signature as HydrationSignature)
       : null;
@@ -465,12 +454,16 @@ const parseSignature = (json: string): HydrationSignature | null => {
  *
  * The signature is a `<script type="application/json" data-lit-ui-router-ssr>`
  * data block among the container's own children, so this reads no deeper than
- * they are. It reads the same before and after a {@link hydrateRoot} that
- * adopts, which leaves the block in place; one that returns `false` removes it.
+ * they are; the first one wins. It reads the same before and after a
+ * {@link hydrateRoot} that adopts, which leaves the block in place; one that
+ * returns `false` clears the container.
+ *
+ * Only `version` is checked. `state` and `params` are whatever the block
+ * carries, so narrow them before use.
  *
  * @param container - the element the server's markup was written into
  * @returns the signature, or `null` when the container holds none, or one that
- * does not parse
+ * does not parse to an object with a string `version`
  *
  * @category client
  */
@@ -536,13 +529,9 @@ const isAdoptable = (container: HTMLElement): boolean => {
   return false;
 };
 
-/** Leaves the container as a cold render finds it: nothing asleep, nothing hidden, no signature for the render to land after. */
+/** Empties the container, so a cold render draws the page once and no served view wakes without an adopter. */
 const makeCold = (container: HTMLElement): void => {
-  signatureBlockIn(container)?.remove();
-  for (const element of container.querySelectorAll(`[${DEFER}]`)) {
-    element.removeAttribute(DEFER);
-  }
-  revealEveryMarker(container);
+  container.replaceChildren();
 };
 
 /**
@@ -552,9 +541,10 @@ const makeCold = (container: HTMLElement): void => {
  * first, and decides whether there is anything to adopt. A container with no
  * signature renders cold, and so does one whose signature names another release
  * line of this package — another minor below 1.0, another major from 1.0 — with
- * a development warning naming both versions. Either way the container is left
- * cold-renderable, as below, its signature removed, and this returns `false`
- * without touching the render. A container this adopts keeps its signature.
+ * a development warning naming both versions, and so does one whose signature
+ * no `lit-part` marker follows, as a comment-stripping minifier leaves it. Each
+ * time the container is emptied and this returns `false`, so the caller's
+ * `render()` draws the page once. A container this adopts keeps its signature.
  *
  * {@link adoptUiViewContext} is provided on `container` with core's
  * `provideContext()` first, so a view woken by the walk finds it; `hydrate()`
@@ -585,9 +575,8 @@ const makeCold = (container: HTMLElement): void => {
  * the view, and to `options.onAdopt` when given. The pin carries that callback,
  * so a view adopted after the release still reaches it.
  *
- * A `hydrate()` that throws is rethrown, over a container left cold-renderable:
- * nothing asleep behind `defer-hydration`, no marker still hidden, no
- * signature. The caller
+ * A `hydrate()` that throws is rethrown, over a container emptied the same
+ * way. The caller
  * renders over it.
  *
  * The boot is the router first: `router.start()`, await its first successful
@@ -609,7 +598,7 @@ const makeCold = (container: HTMLElement): void => {
  * @param container - the element the server's markup was written into
  * @param value - the same template the server rendered, with every `<ui-view>` hole empty
  * @param options - lit render options, passed on to `hydrate()`, and `onAdopt`
- * @returns the function that releases the provider, or `false` when the container holds nothing to adopt — no signature, as on a cold client render or a dev server, or one from another release line
+ * @returns the function that releases the provider, or `false`, over an emptied container, when there is nothing to adopt — no signature, as on a cold client render or a dev server, one from another release line, or one no render marker follows
  *
  * @category client
  */

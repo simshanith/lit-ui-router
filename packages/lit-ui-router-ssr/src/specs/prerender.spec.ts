@@ -537,7 +537,7 @@ describe('the hydration signature', () => {
     expect(signatureIn(page)).toEqual({
       version,
       state: 'sheet',
-      params: { '#': null, num: '7B' },
+      params: { num: '7B' },
     });
     expect(withoutSignature(page)).toMatch(/^<!--lit-part /);
   });
@@ -559,6 +559,40 @@ describe('the hydration signature', () => {
     const json = SIGNATURE.exec(page)![1];
     expect(json).not.toMatch(/[<>]/);
     expect(signatureIn(page)).toMatchObject({ params: { num: awkward } });
+  });
+
+  it('keeps the url params only, so a config param that cannot serialise stays out', async () => {
+    const cyclic: Record<string, unknown> = {};
+    cyclic.self = cyclic;
+    const router = sheetRouter();
+    router.stateRegistry.register({
+      name: 'configured',
+      url: '/configured?q',
+      params: { blob: { value: () => cyclic }, big: { value: () => 1n } },
+    });
+
+    const { files } = await run({
+      router,
+      paths: ['/configured?q=1'],
+      notFound: false,
+      mounts: {
+        '/': {
+          routes: [{ name: 'configured', url: '/configured?q' }],
+          config: { strict: false },
+        },
+      },
+      renderShell: async (_verdict, { path }): Promise<TemplateResult> => {
+        await settle(router, path);
+        return html`<p>page</p>`;
+      },
+    });
+    const [page] = files.values();
+
+    expect(signatureIn(page)).toEqual({
+      version,
+      state: 'configured',
+      params: { q: '1' },
+    });
   });
 
   it('writes none ahead of a string renderShell returns', async () => {

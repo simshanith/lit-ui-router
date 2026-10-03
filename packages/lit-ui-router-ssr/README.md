@@ -23,8 +23,8 @@ imports the pre-1.0 renderer or re-derives the incantation.
   attribute directives emit real hrefs. The render passes `deferHydration`, so every custom element
   on the page carries `defer-hydration` and renders nothing until the client's walk reaches it.
 - **The hydration signature.** A page rendered from a template opens on a JSON data block,
-  `<script type="application/json" data-lit-ui-router-ssr>`, naming this package's version and the
-  state and parameter values the router stood on. A page `renderShell` returns as a string is
+  `<script type="application/json" data-lit-ui-router-ssr>`, naming this package's version, the
+  state the router stood on, and that state's url parameter values. A page `renderShell` returns as a string is
   written as-is, without one.
 - **The emit loop.** Verdict to file name, redirect to rules line, tally, warnings for paths that
   matched nothing.
@@ -350,14 +350,15 @@ if (!release) render(page(router), root);
   router before its own first render, so every view finds the settled router rather than the
   placeholder it registered against. Nothing constrains when `lit-ui-router-ssr/register` is imported.
 - **The signature decides first.** `hydrateRoot()` reads the container's hydration signature before
-  it touches the document, and returns `false`, leaving the container cold-renderable and the block
-  removed, when there is none — a cold client render, a dev server, a string `renderShell` — or when
-  it names another release line: below 1.0 a document adopts only on the client's own minor, from
-  1.0 its own major. The development build warns on that skew, naming both versions, and on a block
-  no `lit-part` marker follows, which is what a comment-stripping minifier leaves. A container it
-  adopts keeps the block. `readHydrationSignature(container)` returns the parsed `HydrationSignature` — `version`, `state`,
-  and `params`, each encoded by its type as the url spells it — or `null` when there is none or it
-  does not parse.
+  it touches the document, and returns `false` over an emptied container when there is none — a
+  cold client render, a dev server, a page from an earlier `prerender()`, a string `renderShell` —
+  or when it names another release line: below 1.0 a document adopts only on the client's own minor,
+  from 1.0 its own major. The development build warns on that skew, naming both versions, and on a
+  block no `lit-part` marker follows, which is what a comment-stripping minifier leaves. The emptied
+  container is what lets `render(page(router), root)` draw the page once. A container it adopts
+  keeps the block. `readHydrationSignature(container)` returns the parsed `HydrationSignature`, or
+  `null` when there is none or it does not parse to an object with a string `version`; only
+  `version` is typed, so narrow `state` and `params` before use.
 - **`hydrateRoot(container, value, options?)`** provides `adoptUiViewContext` under `container` with
   core's `provideContext()` and runs one `hydrate()` over `container`. It returns that provider's
   release function, or `false` when there is nothing to adopt. Release it once the page has settled;
@@ -395,8 +396,7 @@ if (!release) render(page(router), root);
   production as in development. `hydrateRoot()`'s `onAdopt(view, outcome, error)` option receives
   the same reports for every view its walk reaches, a view the pin adopts after the release included.
 - **A mutated document throws.** `hydrateRoot()` rethrows what `hydrate()` threw, over a container it
-  first leaves cold-renderable: no element still asleep behind `defer-hydration`, no marker still
-  hidden behind the prefix. The caller renders over the container.
+  first empties. The caller renders into the container.
 
 ### How this compares
 

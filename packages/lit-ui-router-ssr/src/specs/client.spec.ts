@@ -991,7 +991,7 @@ describe('the hydration signature', () => {
     expect(readHydrationSignature(container)).toEqual({
       version,
       state: 'shell.detail',
-      params: { '#': null },
+      params: {},
     });
   });
 
@@ -1116,6 +1116,78 @@ describe('the hydration signature', () => {
 
     expect(isCold(container)).toBe(true);
     expect(warn).not.toHaveBeenCalled();
+  });
+
+  /** Each document hydrateRoot leaves to a cold render, as served. */
+  const coldDocuments: [string, () => Promise<string>][] = [
+    [
+      'no signature',
+      async () =>
+        (await drawShell('/shell/detail')).replace(
+          /^<script [^>]*data-lit-ui-router-ssr>.*?<\/script>/,
+          '',
+        ),
+    ],
+    ['another release line', () => drawnBy('99.0.0')],
+    [
+      'stripped markers',
+      async () =>
+        (await drawShell('/shell/detail')).replaceAll(/<!--[\s\S]*?-->/g, ''),
+    ],
+  ];
+
+  it.each(coldDocuments)(
+    'clears a document with %s, so the cold render draws the page once, silently',
+    async (_shape, markup) => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const { container } = serve(await markup());
+      const router = makeRouter();
+      await settle(router, '/shell/detail');
+
+      expect(hydrateRoot(container, rootTemplate(router))).toBe(false);
+      expect(container.childNodes).toHaveLength(0);
+      render(rootTemplate(router), container);
+      await drain(container);
+
+      expect(container.querySelectorAll('ui-router')).toHaveLength(1);
+      expect(container.querySelectorAll('.detail')).toHaveLength(1);
+      expect(dropped(warn)).toBe(false);
+    },
+  );
+
+  it.each(coldDocuments)(
+    'wakes no served view without an adopter for a document with %s',
+    async (_shape, markup) => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const { container } = serve(await markup());
+      const served = views(container);
+
+      expect(hydrateRoot(container, rootTemplate(makeRouter()))).toBe(false);
+      await Promise.all(
+        served.map((view) => (view as unknown as UiView).updateComplete),
+      );
+      await drain(container);
+
+      expect(dropped(warn)).toBe(false);
+    },
+  );
+
+  it('clears a document whose walk throws, so the cold render draws the page once, silently', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const { container } = serve(await drawShell('/shell/detail'));
+    const router = makeRouter();
+    await settle(router, '/shell/detail');
+
+    expect(() =>
+      hydrateRoot(container, tailRootTemplate(router, 'first')),
+    ).toThrow();
+    expect(container.childNodes).toHaveLength(0);
+    render(tailRootTemplate(router, 'first'), container);
+    await drain(container);
+
+    expect(container.querySelectorAll('ui-router')).toHaveLength(1);
+    expect(container.querySelectorAll('.detail')).toHaveLength(1);
+    expect(dropped(warn)).toBe(false);
   });
 
   it('leaves a skewed document cold in production without a word', async () => {
