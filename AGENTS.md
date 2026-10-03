@@ -64,6 +64,7 @@ This file is an index. The details live in [docs/CONTRIBUTING.md](docs/CONTRIBUT
 - lit-analyzer runs through `tools/lit-template-lint` (`//#lint:templates`). Its only suppression is `@ts-ignore` in a template HTML comment. It rejects `@focusout` (bind it imperatively) and `color-scheme` inside `css` blocks (declare it at `:root`).
 - oxfmt formats `.md`, YAML and `package.json` too, and owns top-level key order. rumdl lints Markdown (`mise run lint_markdown`); taplo owns TOML.
 - Suppressions are fine when justified; prefer clean code when possible.
+- Complexity has two levels. oxlint's `complexity` (max 15) gates every workspace package, `examples/` and `.vue` included; by convention a waiver is `eslint-disable-next-line complexity -- <reason>` where a split would read worse, and a split lands well under 15. `//#lint:complexity` (`tools/eslint/complexity-ceiling.ts`, max 25; vendored code gets a per-file limit there) ignores disable comments and covers JS/TS outside gitignored paths; `.vue` files are outside it.
 
 ## Testing and e2e
 

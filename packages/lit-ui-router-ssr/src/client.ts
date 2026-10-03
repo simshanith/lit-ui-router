@@ -16,6 +16,8 @@ import { UiView } from 'lit-ui-router/pure';
 import { adoptUiViewContext } from './adopt-context.js';
 import type { AdoptableView } from './adopt-context.js';
 import { servedMarkerPrefix } from './served-markers.js';
+import { packageVersion, signatureSelector } from './signature.js';
+import type { HydrationSignature } from './signature.js';
 
 export {
   adoptUiViewContext,
@@ -30,6 +32,7 @@ export {
   servedViewBrand,
   withServedRender,
 } from './served-view.js';
+export type { HydrationSignature } from './signature.js';
 
 /** The attribute `@lit-labs/ssr` writes on a server-rendered custom element. */
 const DEFER = 'defer-hydration';
@@ -293,18 +296,6 @@ const revealServedMarkers = (node: Node): void => {
   }
 };
 
-/** Renames every marker under `node`, closed views included, so nothing is left hidden. */
-const revealEveryMarker = (node: Node): void => {
-  for (const child of node.childNodes) {
-    if (child.nodeType === Node.COMMENT_NODE) {
-      revealMarker(child);
-    } else if (child instanceof Element) {
-      if (child.shadowRoot) revealEveryMarker(child.shadowRoot);
-      revealEveryMarker(child);
-    }
-  }
-};
-
 /**
  * Drops a served render standing under no pair: every child from the first one
  * that is, or holds, a served marker, down to the end.
@@ -443,29 +434,128 @@ const pinAdopter = (
   });
 };
 
-/** Whether the container's leading nodes open a render `hydrate()` can read. */
-const isServed = (container: HTMLElement): boolean => {
-  for (const child of container.childNodes) {
-    if (isPart(child, 'lit-part')) return true;
-    if (child.nodeType === Node.COMMENT_NODE) continue;
-    if (child.nodeType === Node.TEXT_NODE && !(child as Text).data.trim()) {
-      continue;
-    }
+/** The JSON a signature block carries, or null when it does not parse to one with a version. */
+const parseSignature = (json: string): HydrationSignature | null => {
+  try {
+    const signature = JSON.parse(json) as { version?: unknown } | null;
+    // Only `version` is checked, and HydrationSignature claims nothing more.
+    return typeof signature?.version === 'string'
+      ? (signature as HydrationSignature)
+      : null;
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * Reads the hydration signature `prerender()` wrote ahead of the render a
+ * container holds: the version of this package that drew the document, and
+ * the state and parameter values it was drawn for.
+ *
+ * The signature is a `<script type="application/json" data-lit-ui-router-ssr>`
+ * data block among the container's own children, so this reads no deeper than
+ * they are; the first one wins. It reads the same before and after a
+ * {@link hydrateRoot} that adopts, which leaves the block in place; one that
+ * returns `false` clears the container.
+ *
+ * Only `version` is checked. `state` and `params` are whatever the block
+ * carries, so narrow them before use. Read it before {@link hydrateRoot}, which
+ * clears a container it does not adopt.
+ *
+ * @example
+ * ```ts
+ * import { hydrateRoot, readHydrationSignature } from 'lit-ui-router-ssr/client';
+ *
+ * await booted;
+ * const { state } = readHydrationSignature(root) ?? {};
+ * const drawnForBoot = state === router.globals.current.name;
+ * const release = hydrateRoot(root, page(router));
+ * ```
+ *
+ * @param container - the element the server's markup was written into
+ * @returns the signature, or `null` when the container holds none, or one that
+ * does not parse to an object with a string `version`
+ *
+ * @category client
+ */
+export function readHydrationSignature(
+  container: ParentNode,
+): HydrationSignature | null {
+  const block = signatureBlockIn(container);
+  return block ? parseSignature(block.text) : null;
+}
+
+/** The container's own signature block, if it holds one. */
+const signatureBlockIn = (
+  container: ParentNode,
+): HTMLScriptElement | undefined =>
+  [...container.children].find((child): child is HTMLScriptElement =>
+    child.matches(signatureSelector),
+  );
+
+/** Whether the block is followed, past whitespace, by the opening marker of the render it precedes. */
+const precedesRender = (block: Element): boolean => {
+  let node = block.nextSibling;
+  while (node?.nodeType === Node.TEXT_NODE && !(node as Text).data.trim()) {
+    node = node.nextSibling;
+  }
+  return isPart(node, 'lit-part');
+};
+
+/** The release line a version belongs to: `0.<minor>` below 1.0, where a minor breaks, and the major above it. */
+const releaseLine = (version: string): string => {
+  const [major = '', minor = ''] = version.split('.');
+  return major === '0' ? `0.${minor}` : major;
+};
+
+const warnVersionSkew = (served: string): void => {
+  // DEV folds away in dist/*.js; see check:dev-split and dev-warnings.json.
+  if (!import.meta.env.DEV) return;
+  console.warn(
+    'lit-ui-router-ssr: this document was prerendered by a release line this client does not adopt, so hydrateRoot() left it to a cold render. Prerender it again with the version the client ships. Prerendered by, then client:',
+    served,
+    packageVersion,
+  );
+};
+
+const warnMarkersStripped = (): void => {
+  // DEV folds away in dist/*.js; see check:dev-split and dev-warnings.json.
+  if (!import.meta.env.DEV) return;
+  console.warn(
+    'lit-ui-router-ssr: this document carries a hydration signature but no lit-part marker follows it, so hydrateRoot() left it to a cold render. hydrate() reads html comments: serve prerendered pages without stripping them.',
+  );
+};
+
+/** Whether the container carries a signature this build adopts, ahead of a render with its markers; either miss warns in development. */
+const isAdoptable = (container: HTMLElement): boolean => {
+  const block = signatureBlockIn(container);
+  const signature = block && parseSignature(block.text);
+  if (!signature) return false;
+  if (releaseLine(signature.version) !== releaseLine(packageVersion)) {
+    warnVersionSkew(signature.version);
     return false;
   }
+  if (precedesRender(block)) return true;
+  warnMarkersStripped();
   return false;
 };
 
-/** Leaves the container as a cold render finds it: nothing asleep, nothing hidden. */
+/** Empties the container, so a cold render draws the page once and no served view wakes without an adopter. */
 const makeCold = (container: HTMLElement): void => {
-  for (const element of container.querySelectorAll(`[${DEFER}]`)) {
-    element.removeAttribute(DEFER);
-  }
-  revealEveryMarker(container);
+  container.replaceChildren();
 };
 
 /**
  * Adopts a server-rendered container, and the `<ui-view>`s that wake under it.
+ *
+ * The container's {@link readHydrationSignature | hydration signature} is read
+ * first, and decides whether there is anything to adopt. A container with no
+ * signature renders cold, and so does one whose signature names another release
+ * line of this package — another minor below 1.0, another major from 1.0 — with
+ * a development warning naming both versions, and so does one whose signature
+ * no `lit-part` marker follows, as a comment-stripping minifier leaves it. Each
+ * time the container is emptied and this returns `false`, so the caller's
+ * `render()` draws the page once. A container this adopts keeps its signature.
  *
  * {@link adoptUiViewContext} is provided on `container` with core's
  * `provideContext()` first, so a view woken by the walk finds it; `hydrate()`
@@ -496,9 +586,8 @@ const makeCold = (container: HTMLElement): void => {
  * the view, and to `options.onAdopt` when given. The pin carries that callback,
  * so a view adopted after the release still reaches it.
  *
- * A `hydrate()` that throws is rethrown, over a container left cold-renderable:
- * nothing asleep behind `defer-hydration`, no marker still hidden. The caller
- * renders over it.
+ * A `hydrate()` that throws is rethrown, over a container emptied the same
+ * way. The caller renders into it.
  *
  * The boot is the router first: `router.start()`, await its first successful
  * transition, then this call. The walk commits `.uiRouter` onto `<ui-router>`
@@ -519,7 +608,7 @@ const makeCold = (container: HTMLElement): void => {
  * @param container - the element the server's markup was written into
  * @param value - the same template the server rendered, with every `<ui-view>` hole empty
  * @param options - lit render options, passed on to `hydrate()`, and `onAdopt`
- * @returns the function that releases the provider, or `false` when the container holds nothing to adopt — a cold client render, a dev server
+ * @returns the function that releases the provider, or `false`, over an emptied container, when there is nothing to adopt — no signature, as on a cold client render or a dev server, one from another release line, or one no render marker follows
  *
  * @category client
  */
@@ -528,7 +617,10 @@ export function hydrateRoot(
   value: unknown,
   options: HydrateRootOptions = {},
 ): false | (() => void) {
-  if (!isServed(container)) return false;
+  if (!isAdoptable(container)) {
+    makeCold(container);
+    return false;
+  }
   const { onAdopt, ...renderOptions } = options;
   const release = provideContext(container, adoptUiViewContext, (view) =>
     adopt(view, onAdopt),

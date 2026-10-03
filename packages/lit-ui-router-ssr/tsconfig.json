@@ -8,6 +8,9 @@
     "allowImportingTsExtensions": true,
     // specs are exempt; typecheck:src enforces conformance
     "isolatedDeclarations": false,
+    // Import attributes, for the manifest's JSON import.
+    "module": "esnext",
+    "resolveJsonModule": true,
     "types": ["node", "vitest/globals"]
   },
   "include": [

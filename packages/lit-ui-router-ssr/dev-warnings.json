@@ -8,6 +8,8 @@
     "lit-ui-router-ssr: this <ui-view> woke from defer-hydration and nothing answered its adoptUiViewContext request, so its held nodes were dropped and it rendered cold. Provide an adopter before the wake.",
     "lit-ui-router-ssr: this <ui-view> is still asleep after the task it connected in, because nothing removed defer-hydration. ",
     "lit-ui-router-ssr: this page is written as <subpath>/index.html, which static hosts serve by redirecting <subpath> to <subpath>/, and its mount rejects the trailing slash.",
-    "lit-ui-router-ssr: <ui-view> is not defined on the current customElements registry, so every <ui-view> on these pages renders empty. "
+    "lit-ui-router-ssr: <ui-view> is not defined on the current customElements registry, so every <ui-view> on these pages renders empty. ",
+    "lit-ui-router-ssr: this document was prerendered by a release line this client does not adopt, so hydrateRoot() left it to a cold render.",
+    "lit-ui-router-ssr: this document carries a hydration signature but no lit-part marker follows it, so hydrateRoot() left it to a cold render."
   ]
 }

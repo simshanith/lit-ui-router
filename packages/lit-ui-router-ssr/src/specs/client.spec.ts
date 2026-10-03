@@ -5,9 +5,15 @@ import { UiView } from 'lit-ui-router/pure';
 import { adoptUiViewContext } from '../adopt-context.js';
 import '../register.js';
 
-import { hydrateRoot, uiViewAdoptEventName } from '../client.js';
+import {
+  hydrateRoot,
+  readHydrationSignature,
+  uiViewAdoptEventName,
+} from '../client.js';
 import type { AdoptOutcome, UiViewAdoptEvent } from '../client.js';
 import { settle } from '../settle.js';
+import { signatureBlock } from '../prerender.js';
+import { signatureAttribute, signatureSelector } from '../signature.js';
 import { UiViewRenderer } from '../ui-view-renderer.js';
 import {
   DetailView,
@@ -27,6 +33,8 @@ import {
   hydrateInto,
   serve,
   drain,
+  stripComments,
+  withoutSignature,
 } from './round-trip.js';
 
 /** A `<ui-view>`, as the assertions read it. */
@@ -640,39 +648,30 @@ describe('the pin the walk leaves on a served view', () => {
 
 describe('the guard on what there is to adopt', () => {
   it('reports nothing to adopt when the comments were stripped', async () => {
-    const markup = (await drawShell('/shell/detail')).replaceAll(
-      /<!--[\s\S]*?-->/g,
-      '',
-    );
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const markup = stripComments(await drawShell('/shell/detail'));
     const { container } = serve(markup);
-    // The attributes survived the strip; nothing the walk reads did.
+    // The attributes and the signature survived the strip; nothing the walk reads did.
     expect(container.querySelector('[defer-hydration]')).not.toBeNull();
+    expect(readHydrationSignature(container)).not.toBeNull();
 
     expect(hydrateRoot(container, rootTemplate(makeRouter()))).toBe(false);
+
+    expect(container.childNodes).toHaveLength(0);
+    expect(warnedText(warn)).toContain('no lit-part marker follows it');
   });
 
-  it('hydrates a document whose root marker stands behind whitespace', async () => {
-    const { container } = serve(`\n  ${await drawShell('/shell/detail')}`);
+  it('hydrates a document whose signature and root marker stand behind whitespace', async () => {
+    // What a formatter that indents the served page leaves around the block.
+    const markup = (await drawShell('/shell/detail')).replace(
+      '</script>',
+      '</script>\n  ',
+    );
+    const { container } = serve(`\n  ${markup}`);
 
     await boot(container, rootTemplate, '/shell/detail');
 
     expect(container.querySelector('.detail')?.textContent).toBe('leaf');
-  });
-
-  it('leaves the container cold-renderable when the walk throws', async () => {
-    vi.spyOn(console, 'warn').mockImplementation(() => {});
-    const { container } = serve(await drawShell('/shell/detail'));
-    const router = makeRouter();
-    await settle(router, '/shell/detail');
-
-    expect(() =>
-      hydrateRoot(container, tailRootTemplate(router, 'first')),
-    ).toThrow();
-
-    expect(container.querySelectorAll('[defer-hydration]')).toHaveLength(0);
-    expect(
-      comments(container).filter((data) => data.startsWith('ui-view:')),
-    ).toEqual([]);
   });
 
   it('wakes a custom element the render wrote no marker for', async () => {
@@ -941,5 +940,216 @@ describe('the hydration outcome', () => {
 
       expect(reports).toEqual([[view, 'fell-back', thrown]]);
     });
+  });
+});
+
+describe('the hydration signature', () => {
+  const version = import.meta.env.PACKAGE_VERSION;
+  const [major, minor] = version.split('.');
+
+  /** The drawn document with its signature's version swapped for `served`. */
+  const drawnBy = async (served: string): Promise<string> =>
+    (await drawShell('/shell/detail')).replace(
+      `"version":"${version}"`,
+      `"version":"${served}"`,
+    );
+
+  /** A data block as `prerender()` spells it, around arbitrary text. */
+  const block = (text: string): string =>
+    `<script type="application/json" ${signatureAttribute}>${text}</script>`;
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it('reads the version, the state and its params off the drawn document', async () => {
+    const { container } = serve(await drawShell('/shell/detail'));
+
+    expect(readHydrationSignature(container)).toEqual({
+      version,
+      state: 'shell.detail',
+      params: {},
+    });
+  });
+
+  it('adopts with the block in place ahead of the render, and keeps it', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const { container, served } = serve(await drawShell('/shell/detail'));
+    const signature = container.firstElementChild;
+    expect(signature?.matches(signatureSelector)).toBe(true);
+
+    await boot(container, rootTemplate, '/shell/detail');
+
+    expect(
+      served.filter((element) => container.contains(element)),
+    ).toHaveLength(served.length);
+    expect(container.querySelector('.detail')?.textContent).toBe('leaf');
+    expect(container.firstElementChild).toBe(signature);
+    expect(readHydrationSignature(container)?.state).toBe('shell.detail');
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it('reads only the container’s own children', () => {
+    const signature = { version, state: 's', params: {} };
+    const { container } = serve(`<div>${signatureBlock(signature)}</div>`);
+
+    expect(readHydrationSignature(container)).toBeNull();
+  });
+
+  it('brings an awkward param value back through the parser', () => {
+    const awkward = `--><script>alert("x")</script><!--&'`;
+    const signature = { version, state: 's', params: { q: awkward } };
+    const { container } = serve(`${signatureBlock(signature)}<p>page</p>`);
+
+    expect(container.childNodes).toHaveLength(2);
+    expect(readHydrationSignature(container)).toEqual(signature);
+  });
+
+  it.each([
+    ['no signature', '<p>page</p>'],
+    ['one that does not parse', block('{"version":')],
+    ['one with no version', block('{"state":"s"}')],
+    ['one that is not an object', block('null')],
+    [
+      'a JSON block without the marker',
+      `<script type="application/json">{"version":"${version}"}</script>`,
+    ],
+  ])('reads null off a container holding %s', (_shape, markup) => {
+    const { container } = serve(markup);
+
+    expect(readHydrationSignature(container)).toBeNull();
+  });
+
+  it('leaves a document without one to a cold render, silently', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const markup = withoutSignature(await drawShell('/shell/detail'));
+    const { container } = serve(markup);
+    expect(container.querySelector('[defer-hydration]')).not.toBeNull();
+
+    expect(hydrateRoot(container, rootTemplate(makeRouter()))).toBe(false);
+
+    expect(container.childNodes).toHaveLength(0);
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it('adopts a document from another patch on the same release line', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const { container, served } = serve(await drawnBy(`${major}.${minor}.999`));
+
+    await boot(container, rootTemplate, '/shell/detail');
+
+    expect(
+      served.filter((element) => container.contains(element)),
+    ).toHaveLength(served.length);
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['another minor', `${major}.${Number(minor) + 1}.0`],
+    ['another major', `${Number(major) + 1}.${minor}.0`],
+  ])(
+    'leaves a document from %s to a cold render, naming both versions',
+    async (_skew, served) => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const { container } = serve(await drawnBy(served));
+
+      expect(hydrateRoot(container, rootTemplate(makeRouter()))).toBe(false);
+
+      expect(container.childNodes).toHaveLength(0);
+      expect(warn).toHaveBeenCalledOnce();
+      const text = warnedText(warn);
+      expect(text).toContain('does not adopt');
+      expect(text).toContain(served);
+      expect(text).toContain(version);
+    },
+  );
+
+  it('leaves a stripped document cold in production without a word', async () => {
+    vi.stubEnv('DEV', false);
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const markup = stripComments(await drawShell('/shell/detail'));
+    const { container } = serve(markup);
+
+    expect(hydrateRoot(container, rootTemplate(makeRouter()))).toBe(false);
+
+    expect(container.childNodes).toHaveLength(0);
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  /** Each document hydrateRoot leaves to a cold render, as served. */
+  const coldDocuments: [string, () => Promise<string>][] = [
+    [
+      'no signature',
+      async () => withoutSignature(await drawShell('/shell/detail')),
+    ],
+    ['another release line', () => drawnBy('99.0.0')],
+    [
+      'stripped markers',
+      async () => stripComments(await drawShell('/shell/detail')),
+    ],
+  ];
+
+  it.each(coldDocuments)(
+    'clears a document with %s, so the cold render draws the page once, silently',
+    async (_shape, markup) => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const { container } = serve(await markup());
+      const router = makeRouter();
+      await settle(router, '/shell/detail');
+
+      expect(hydrateRoot(container, rootTemplate(router))).toBe(false);
+      expect(container.childNodes).toHaveLength(0);
+      render(rootTemplate(router), container);
+      await drain(container);
+
+      expect(container.querySelectorAll('ui-router')).toHaveLength(1);
+      expect(container.querySelectorAll('.detail')).toHaveLength(1);
+      expect(dropped(warn)).toBe(false);
+    },
+  );
+
+  it.each(coldDocuments)(
+    'wakes no served view without an adopter for a document with %s',
+    async (_shape, markup) => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const { container } = serve(await markup());
+      const served = views(container);
+
+      expect(hydrateRoot(container, rootTemplate(makeRouter()))).toBe(false);
+      await Promise.all(
+        served.map((view) => (view as unknown as UiView).updateComplete),
+      );
+      await drain(container);
+
+      expect(dropped(warn)).toBe(false);
+    },
+  );
+
+  it('clears a document whose walk throws, so the cold render draws the page once, silently', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const { container } = serve(await drawShell('/shell/detail'));
+    const router = makeRouter();
+    await settle(router, '/shell/detail');
+
+    expect(() =>
+      hydrateRoot(container, tailRootTemplate(router, 'first')),
+    ).toThrow();
+    expect(container.childNodes).toHaveLength(0);
+    render(tailRootTemplate(router, 'first'), container);
+    await drain(container);
+
+    expect(container.querySelectorAll('ui-router')).toHaveLength(1);
+    expect(container.querySelectorAll('.detail')).toHaveLength(1);
+    expect(dropped(warn)).toBe(false);
+  });
+
+  it('leaves a skewed document cold in production without a word', async () => {
+    vi.stubEnv('DEV', false);
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const { container } = serve(await drawnBy('99.0.0'));
+
+    expect(hydrateRoot(container, rootTemplate(makeRouter()))).toBe(false);
+
+    expect(warn).not.toHaveBeenCalled();
   });
 });

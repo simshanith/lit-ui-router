@@ -122,6 +122,41 @@ export function classifyFiles(files: string[]): {
   return { shipAffecting, shipInert };
 }
 
+/**
+ * Moves package.json to ship-inert when only inert manifest fields drifted.
+ * Missing or unparsable manifests leave it ship-affecting (fail safe).
+ */
+export function reclassifyManifest(
+  files: { shipAffecting: string[]; shipInert: string[] },
+  diff: string,
+  localManifest: Record<string, unknown> | undefined,
+  publishedManifest: Record<string, unknown> | undefined,
+): { shipAffecting: string[]; shipInert: string[] } {
+  if (
+    !files.shipAffecting.includes('package.json') ||
+    localManifest === undefined ||
+    publishedManifest === undefined
+  ) {
+    return files;
+  }
+  let manifestInert = false;
+  try {
+    manifestInert = isManifestDriftInert({
+      fileSetChanged: hasFileSetChange(diff),
+      driftFields: manifestDriftFields(publishedManifest, localManifest),
+    });
+  } catch {
+    // Unparsable manifest bytes stay ship-affecting.
+  }
+  if (!manifestInert) return files;
+  return {
+    shipAffecting: files.shipAffecting.filter(
+      (file) => file !== 'package.json',
+    ),
+    shipInert: [...files.shipInert, 'package.json'].sort(),
+  };
+}
+
 // One package's comparison against the dist-tag its next publish would write.
 export type DiffResult = {
   name: string;
@@ -230,35 +265,6 @@ export function formatReport(
   }
 
   const drifted = results.filter((result) => result.status === 'drift');
-  const lines: string[] = [];
-  for (const result of results) {
-    const { name, tag, version, localVersion, status, files, shipInertFiles } =
-      result;
-    if (status === 'unpublished') {
-      lines.push(`  ${name}: never published — skipped`);
-      continue;
-    }
-    const target = `${tag} ${version}`;
-    const ahead = aheadNote(localVersion, tag, version);
-    if (status === 'clean') {
-      lines.push(`  ${name}: clean vs ${target}${ahead}`);
-    } else if (status === 'ship-inert') {
-      const count = shipInertFiles?.length ?? 0;
-      lines.push(
-        `  ${name}: ship-inert drift vs ${target}${ahead} — ${count} ship-inert file(s):`,
-      );
-      for (const file of shipInertFiles ?? []) lines.push(`      ◦ ${file}`);
-    } else {
-      const count = files?.length ?? 0;
-      lines.push(
-        `  ${name}: SHIPS CHANGES vs ${target}${ahead} — ${count} ship-affecting file(s):`,
-      );
-      for (const file of files ?? []) lines.push(`      • ${file}`);
-      for (const file of shipInertFiles ?? [])
-        lines.push(`      ◦ ${file} (ship-inert)`);
-    }
-  }
-
   const shipInertOnly = results.filter(
     (result) => result.status === 'ship-inert',
   );
@@ -270,5 +276,30 @@ export function formatReport(
       ? `✓ published-diff check passed — ${results.length} packages, no ship-affecting drift${shipInertNote}.`
       : `published-diff report — ${drifted.length} of ${results.length} packages would ship changes if released${shipInertNote}:`
     : `✗ published-diff check failed — ${drifted.length} of ${results.length} packages drift from their published tarballs${shipInertNote}:`;
-  return { ok, text: [headline, ...lines].join('\n') };
+  return {
+    ok,
+    text: [headline, ...results.flatMap(resultLines)].join('\n'),
+  };
+}
+
+function resultLines(result: DiffResult): string[] {
+  const { name, tag, version, localVersion, status, files, shipInertFiles } =
+    result;
+  if (status === 'unpublished') return [`  ${name}: never published — skipped`];
+  const target = `${tag} ${version}`;
+  const ahead = aheadNote(localVersion, tag, version);
+  const inert = shipInertFiles ?? [];
+  if (status === 'clean') return [`  ${name}: clean vs ${target}${ahead}`];
+  if (status === 'ship-inert') {
+    return [
+      `  ${name}: ship-inert drift vs ${target}${ahead} — ${inert.length} ship-inert file(s):`,
+      ...inert.map((file) => `      ◦ ${file}`),
+    ];
+  }
+  const affecting = files ?? [];
+  return [
+    `  ${name}: SHIPS CHANGES vs ${target}${ahead} — ${affecting.length} ship-affecting file(s):`,
+    ...affecting.map((file) => `      • ${file}`),
+    ...inert.map((file) => `      ◦ ${file} (ship-inert)`),
+  ];
 }

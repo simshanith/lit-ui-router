@@ -1,12 +1,14 @@
 # lit-ui-router/anchor-is-valid
 
-📝 Anchor-is-valid for lit templates, where a uiSref element part counts as the href it assigns at runtime.
+📝 Anchor-is-valid for lit templates, where a uiSref element part counts as its runtime href unless allowElementParts is false, which fixes it to srefHref.
 
 💼 This rule is enabled in the ✅ `recommended` config.
 
+🔧 This rule is automatically fixable by the [`--fix` CLI option](https://eslint.org/docs/latest/user-guide/command-line-interface#--fix).
+
 <!-- end auto-generated rule header -->
 
-`<a ${uiSref('state')}>` carries no static `href` — the element-part directive assigns one at runtime — so the stock [lit-a11y rule](https://github.com/open-wc/open-wc/blob/master/packages/eslint-plugin-lit-a11y/docs/rules/anchor-is-valid.md) reports every correct call site. This rule is that one, vendored from `eslint-plugin-lit-a11y@5.1.1` and extended: an element-part `uiSref` counts as the `href` it assigns. Nothing else changes — an anchor with neither an `href` nor a directive still reports, and so does `assignHref: false`, where the base rule is right for the right reason. The `noHref` / `invalidHref` / `preferButton` aspects, the `allowHash` option and the three message ids are all the upstream ones, so a host moving off lit-a11y's rule changes nothing but the rule name. The [`settings.litHtmlSources` gating](../../README.md#settings) is upstream's too, with one stricter edge: an `html` alias or namespace only counts when imported from a listed source, where lit-a11y accepts one from any import once the file is gated in.
+`<a ${uiSref('state')}>` carries no static `href` — the element-part directive assigns one at runtime — so the stock [lit-a11y rule](https://github.com/open-wc/open-wc/blob/master/packages/eslint-plugin-lit-a11y/docs/rules/anchor-is-valid.md) reports every correct call site. This rule is that one, vendored from `eslint-plugin-lit-a11y@5.1.1` and extended: an element-part `uiSref` counts as the `href` it assigns, unless [`allowElementParts: false`](#prerendered-templates) lints the template as a server renders it. Nothing else changes — an anchor with neither an `href` nor a directive still reports, and so does `assignHref: false`, where the base rule is right for the right reason. The `noHref` / `invalidHref` / `preferButton` aspects, the `allowHash` option and the three message ids are all the upstream ones, so a host moving off lit-a11y's rule changes nothing but the rule name. The [`settings.litHtmlSources` gating](../../README.md#settings) is upstream's too, with one stricter edge: an `html` alias or namespace only counts when imported from a listed source, where lit-a11y accepts one from any import once the file is gated in.
 
 An anchor counts as navigable through `href=${srefHref('state')}` too — the attribute-part sibling binds the `href` itself, so there is no `assignHref` to opt out of — and the directive placeholder is never read as a literal `href` value by the `invalidHref` check.
 
@@ -64,16 +66,35 @@ html`<sp-link>Home</sp-link>`; // noHref
 html`<sp-link ${uiSref('home', undefined, { assignHref: 'auto' })}>Home</sp-link>`; // noHref
 ```
 
+## Prerendered templates
+
+`@lit-labs/ssr` never runs an element part, so a template a server prerenders serves `<a ${uiSref('home')}>` as `<a>`, with no `href` until the client hydrates. With `allowElementParts` false, the rule lints those templates as the server renders them: a `uiSref` element part no longer counts as an `href`, and the anchor reports `noHref`. `href=${srefHref('home')}` is written into the served markup, so it still counts.
+
+Which templates get `false` is set with [`settings.allowElementParts`](../../README.md#settings), or this rule's own `allowElementParts` option, which replaces it; [the recipe](../../README.md#prerendered-templates) scopes either with `files`, for a mostly-client app and a fully isomorphic one.
+
+The fix rewrites a lone `uiSref` element part as the `srefHref` attribute part, which navigates on click the same way once hydrated. It adds `srefHref` to the `lit-ui-router` import, or reuses the namespace the call came through, and drops an `assignHref` of `true` or `'auto'`, along with an options object that leaves empty:
+
+```diff
+-import { uiSref } from 'lit-ui-router';
++import { uiSref, srefHref } from 'lit-ui-router';
+
+-html`<a ${uiSref('home', undefined, { assignHref: 'auto' })}>Home</a>`;
++html`<a href=${srefHref('home')}>Home</a>`;
+```
+
+The report stands without a fix when the rewrite is not certain: an options argument that is not an object literal, a spread, a non-literal `assignHref`, more than one `uiSref` on the element, and `assignHref: false` or `'auto'` on a declared link element, neither of which wrote an `href`.
+
 ## Options
 
-The base rule's options, unchanged, plus `linkElements`.
+The base rule's options, unchanged, plus `allowElementParts` and `linkElements`, each of which replaces the setting of the same name for this rule.
 
 <!-- begin auto-generated rule options list -->
 
-| Name           | Description                                                                              | Type     | Default |
-| :------------- | :--------------------------------------------------------------------------------------- | :------- | :------ |
-| `allowHash`    | Whether a bare `#` counts as a valid href.                                               | Boolean  | `true`  |
-| `aspects`      | Which anchor checks are active.                                                          | String[] |         |
-| `linkElements` | Element tags to treat as link elements, replacing `settings.linkElements` for this rule. | String[] |         |
+| Name                | Description                                                                                                                                    | Type     | Default |
+| :------------------ | :--------------------------------------------------------------------------------------------------------------------------------------------- | :------- | :------ |
+| `allowElementParts` | Whether a uiSref element part counts as the href it assigns at runtime (default `true`), replacing `settings.allowElementParts` for this rule. | Boolean  |         |
+| `allowHash`         | Whether a bare `#` counts as a valid href.                                                                                                     | Boolean  | `true`  |
+| `aspects`           | Which anchor checks are active.                                                                                                                | String[] |         |
+| `linkElements`      | Element tags to treat as link elements, replacing `settings.linkElements` for this rule.                                                       | String[] |         |
 
 <!-- end auto-generated rule options list -->

@@ -9,6 +9,7 @@ import {
   isCleanDiff,
   isManifestDriftInert,
   manifestDriftFields,
+  reclassifyManifest,
   renderSummary,
   scopePackages,
   selectTarget,
@@ -198,6 +199,50 @@ describe('classifyFiles (manifest rule interplay)', () => {
       shipAffecting: ['package.json'],
       shipInert: ['src/core.ts'],
     });
+  });
+});
+
+describe('reclassifyManifest', () => {
+  const files = {
+    shipAffecting: ['dist/index.js', 'package.json'],
+    shipInert: ['src/core.ts'],
+  };
+
+  it('moves package.json to ship-inert when only inert fields drifted', () => {
+    assert.deepEqual(
+      reclassifyManifest(
+        files,
+        MANIFEST_ONLY_DIFF,
+        LOCAL_MANIFEST_417,
+        PUBLISHED_MANIFEST,
+      ),
+      {
+        shipAffecting: ['dist/index.js'],
+        shipInert: ['package.json', 'src/core.ts'],
+      },
+    );
+  });
+
+  it('leaves package.json ship-affecting when a manifest is missing', () => {
+    assert.equal(
+      reclassifyManifest(
+        files,
+        MANIFEST_ONLY_DIFF,
+        undefined,
+        PUBLISHED_MANIFEST,
+      ),
+      files,
+    );
+  });
+
+  it('leaves package.json ship-affecting when a field drifts that matters', () => {
+    assert.equal(
+      reclassifyManifest(files, MANIFEST_ONLY_DIFF, PUBLISHED_MANIFEST, {
+        ...PUBLISHED_MANIFEST,
+        types: 'other.d.ts',
+      }),
+      files,
+    );
   });
 });
 

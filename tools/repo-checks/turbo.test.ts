@@ -63,6 +63,17 @@ describe('resolvedTaskDeps', () => {
     ]);
   });
 
+  it('keeps the dry run off the remote cache', async () => {
+    let env: NodeJS.ProcessEnv | undefined;
+    const exec: Exec = (_command, _args, options) => {
+      env = options?.env;
+      return Promise.resolve({ stdout: plan, stderr: '' });
+    };
+    await resolvedTaskDeps('@www/lit-ui-router.dev#build', exec);
+    assert.equal(env?.TURBO_CACHE, 'local:r');
+    assert.equal(env?.TURBO_TOKEN, '');
+  });
+
   it('throws when the plan lacks the task', async () => {
     const exec: Exec = () => Promise.resolve({ stdout: plan, stderr: '' });
     await assert.rejects(

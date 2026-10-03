@@ -7,6 +7,10 @@
 // the `define` of `import.meta.env.DEV`; oxc's define plugin constant-folds the
 // guarded branches away, so the production emit carries none of the dev-only
 // literals. See check-dev-split.ts for the gate that keeps that true.
+//
+// A source that reads `import.meta.env.PACKAGE_VERSION` gets the manifest's version
+// defined, so a package can name its own release without importing package.json.
+// A pass with nothing to define passes no `define`, keeping its emit unchanged.
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, relative } from 'node:path';
 
@@ -16,10 +20,10 @@ import { transformSync } from 'oxc-transform';
 import { requireManifest } from '@tools/bootstrap/manifest.ts';
 
 import {
-  DEV_DEFINE_KEY,
   DEV_OUT,
   fail,
   OUT,
+  passDefine,
   publishableSources,
   shippedMap,
   SRC,
@@ -38,12 +42,13 @@ const passes = dual
 
 // a decorator lowers to an import of this package, so the emitting one must declare it
 const RUNTIME = '@oxc-project/runtime';
-const { dependencies = {} } = requireManifest(process.cwd());
+const { dependencies = {}, version } = requireManifest(process.cwd());
 const undeclaredRuntime = new Set<string>();
 
 for (const file of publishableSources()) {
   const source = readFileSync(file, 'utf8');
   for (const { out: outDir, dev } of passes) {
+    const define = passDefine(source, version, dev);
     const transformed = transformSync(file, source, {
       target: 'es2022',
       sourcemap: true,
@@ -56,7 +61,7 @@ for (const file of publishableSources()) {
         // can type-strip them directly; no-op for extensionless imports
         rewriteImportExtensions: 'rewrite',
       },
-      ...(dev === undefined ? {} : { define: { [DEV_DEFINE_KEY]: dev } }),
+      ...(define === undefined ? {} : { define }),
     });
     if (transformed.errors.length) fail(file, transformed.errors);
     const printed = minifySync(file, transformed.code, {

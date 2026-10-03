@@ -124,6 +124,7 @@
       "dependsOn": [
         "lint:oxlint",
         "//#lint:root",
+        "//#lint:complexity",
         "//#lint:package-json",
         "//#lint:elements",
         "//#lint:markdown",
@@ -162,6 +163,12 @@
     },
     "//#lint:root": {
       "inputs": [".oxlintrc.json", "$TURBO_DEFAULT$"]
+    },
+    // Hard complexity ceiling over JS/TS outside gitignored paths (.vue files
+    // aren't linted); disable comments don't apply
+    // (tools/eslint/complexity-ceiling.ts mirrors the ignores).
+    "//#lint:complexity": {
+      "inputs": ["$TURBO_DEFAULT$"]
     },
     // lit-analyzer over every tracked src .ts, as ONE program-wide pass (the
     // tag registry is global to the run, so cross-package `<ui-view>` usage

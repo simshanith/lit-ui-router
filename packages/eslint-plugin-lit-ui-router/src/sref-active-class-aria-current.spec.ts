@@ -193,6 +193,153 @@ html\`<a href="/home" class=\${srefActiveClass({ state: 'home' })} aria-current=
   ],
 });
 
+// `allowElementParts: false`: a server render never runs uiSrefActive, so a
+// link carrying it is held to the attribute-part bar, and reports unfixed.
+const SERVED = [{ allowElementParts: false }];
+const ACTIVE = `
+import { html } from 'lit';
+import { uiSref, uiSrefActive } from 'lit-ui-router';
+`;
+
+ruleTester.run(
+  'sref-active-class-aria-current (allowElementParts: false)',
+  srefActiveClassAriaCurrent,
+  {
+    valid: [
+      {
+        name: 'by default the element part writes aria-current itself',
+        code: `${ACTIVE}html\`<a \${uiSref('home')} \${uiSrefActive({ activeClasses: ['on'] })}>Home</a>\`;`,
+      },
+      {
+        name: 'allowElementParts: true is the default behaviour',
+        code: `${ACTIVE}html\`<a \${uiSref('home')} \${uiSrefActive({ activeClasses: ['on'] })}>Home</a>\`;`,
+        options: [{ allowElementParts: true }],
+      },
+      {
+        name: 'any authored aria-current is still the author’s',
+        code: `${ACTIVE}html\`<a href="/home" aria-current=\${current} \${uiSrefActive({})}>Home</a>\`;`,
+        options: SERVED,
+      },
+      {
+        name: 'a wrapper is not a link, so nothing is owed',
+        code: `${ACTIVE}html\`<li \${uiSrefActive({ activeClasses: ['on'] })}><a \${uiSref('home')}>Home</a></li>\`;`,
+        options: SERVED,
+      },
+      {
+        name: 'a bound role still declares nothing',
+        code: `${ACTIVE}html\`<div role=\${role} \${uiSrefActive({})}></div>\`;`,
+        options: SERVED,
+      },
+      {
+        name: 'the served form passes',
+        code: `${IMPORTS}html\`<a href="/home" class=\${srefActiveClass({ state: 'home' })} aria-current=\${srefAriaCurrent({ state: 'home' })}>Home</a>\`;`,
+        options: SERVED,
+      },
+      {
+        name: "a foreign package's uiSrefActive is not ours",
+        code: `import { html } from 'lit';\nimport { uiSrefActive } from 'other-router';\nhtml\`<a href="/home" \${uiSrefActive({})}>Home</a>\`;`,
+        options: SERVED,
+      },
+    ],
+    invalid: [
+      {
+        name: 'a uiSrefActive part on a link is served with no aria-current',
+        code: `${ACTIVE}html\`<a href="/home" \${uiSrefActive({ activeClasses: ['on'] })}>Home</a>\`;`,
+        options: SERVED,
+        errors: [{ messageId: 'elementPartNotServed', data: { tag: 'a' } }],
+        output: null,
+      },
+      {
+        name: 'role="link" makes a <div> a link here too',
+        code: `${ACTIVE}html\`<div role="link" \${uiSrefActive({})}>Home</div>\`;`,
+        options: SERVED,
+        errors: [{ messageId: 'elementPartNotServed', data: { tag: 'div' } }],
+        output: null,
+      },
+      {
+        name: 'a declared link element reports the way an <a> does',
+        code: `${ACTIVE}html\`<sp-link \${uiSref('home')} \${uiSrefActive({})}>Home</sp-link>\`;`,
+        options: [{ allowElementParts: false, linkElements: ['sp-link'] }],
+        errors: [
+          { messageId: 'elementPartNotServed', data: { tag: 'sp-link' } },
+        ],
+        output: null,
+      },
+      {
+        name: 'a namespace import is still ours',
+        code: `import * as lit from 'lit';\nimport * as lur from 'lit-ui-router';\nlit.html\`<a href="/home" \${lur.uiSrefActive({})}>Home</a>\`;`,
+        options: SERVED,
+        errors: [{ messageId: 'elementPartNotServed' }],
+        output: null,
+      },
+    ],
+  },
+);
+
+// `settings.allowElementParts`, which an `allowElementParts` option replaces.
+const servedTester = new RuleTester({
+  settings: { allowElementParts: false },
+  languageOptions: { ecmaVersion: 'latest', sourceType: 'module' },
+});
+
+servedTester.run(
+  'sref-active-class-aria-current (settings.allowElementParts: false)',
+  srefActiveClassAriaCurrent,
+  {
+    valid: [
+      {
+        name: 'the option replaces the setting for this rule',
+        code: `${ACTIVE}html\`<a href="/home" \${uiSrefActive({})}>Home</a>\`;`,
+        options: [{ allowElementParts: true }],
+      },
+    ],
+    invalid: [
+      {
+        name: 'the setting alone reports as the option does',
+        code: `${ACTIVE}html\`<a href="/home" \${uiSrefActive({})}>Home</a>\`;`,
+        errors: [{ messageId: 'elementPartNotServed', data: { tag: 'a' } }],
+        output: null,
+      },
+      {
+        name: 'the setting holds beside other options',
+        code: `${ACTIVE}html\`<sp-link \${uiSrefActive({})}>Home</sp-link>\`;`,
+        options: [{ linkElements: ['sp-link'] }],
+        errors: [
+          { messageId: 'elementPartNotServed', data: { tag: 'sp-link' } },
+        ],
+        output: null,
+      },
+    ],
+  },
+);
+
+const clientTester = new RuleTester({
+  settings: { allowElementParts: true },
+  languageOptions: { ecmaVersion: 'latest', sourceType: 'module' },
+});
+
+clientTester.run(
+  'sref-active-class-aria-current (settings.allowElementParts: true)',
+  srefActiveClassAriaCurrent,
+  {
+    valid: [
+      {
+        name: 'the setting credits the element part',
+        code: `${ACTIVE}html\`<a href="/home" \${uiSrefActive({})}>Home</a>\`;`,
+      },
+    ],
+    invalid: [
+      {
+        name: 'the option replaces the setting for this rule',
+        code: `${ACTIVE}html\`<a href="/home" \${uiSrefActive({})}>Home</a>\`;`,
+        options: SERVED,
+        errors: [{ messageId: 'elementPartNotServed' }],
+        output: null,
+      },
+    ],
+  },
+);
+
 void describe('sref-active-class-aria-current meta', () => {
   void it('is fixable and takes the shared linkElements option', () => {
     assert.equal(srefActiveClassAriaCurrent.meta?.fixable, 'code');
@@ -202,6 +349,17 @@ void describe('sref-active-class-aria-current meta', () => {
           | { properties?: Record<string, unknown> }[]
           | undefined
       )?.[0]?.properties?.linkElements,
+    );
+  });
+
+  void it('leaves allowElementParts out of defaultOptions, so the setting reaches it', () => {
+    assert.deepEqual(srefActiveClassAriaCurrent.meta?.defaultOptions, [{}]);
+  });
+
+  void it('names the served form for an element part', () => {
+    assert.match(
+      srefActiveClassAriaCurrent.meta?.messages?.elementPartNotServed ?? '',
+      /class=\$\{srefActiveClass\(\.\.\.\)\} and aria-current=\$\{srefAriaCurrent\(\.\.\.\)\}/,
     );
   });
 

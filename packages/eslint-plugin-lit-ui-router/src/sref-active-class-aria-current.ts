@@ -7,31 +7,27 @@ import type { RuleFor } from './rule-shape.ts';
 import { TemplateAnalyzer } from 'eslint-plugin-lit/lib/template-analyzer.js';
 import {
   attributeEnd,
+  allowElementPartsOf,
   attributePartsOf,
   type CallNode,
   createDirectiveTracker,
+  elementPartIndex,
   hasAriaCurrent,
   hasSpread,
   isLinkElement,
-  isOurPackage,
   LINK_ELEMENTS_SCHEMA,
   linkElementsOf,
   type Node,
   type ObjectNode,
   type Parse5Element,
   propertyNamed,
+  siblingBinding,
 } from './directives.ts';
 
 /** The params srefAriaCurrent shares with srefActiveClass; the classes are its own. */
 const SHARED_PARAMS = ['state', 'params', 'options'];
 
 const DIRECTIVE = 'srefAriaCurrent';
-
-/** A named import specifier, structurally. */
-interface SpecifierNode extends Node {
-  imported: Node & { name?: string };
-  local: Node & { name?: string };
-}
 
 export const RULE_NAME = 'sref-active-class-aria-current';
 
@@ -49,28 +45,41 @@ const srefActiveClassAriaCurrent: RuleFor<typeof RULE_NAME> = {
     fixable: 'code',
     docs: {
       description:
-        'require an aria-current binding beside a srefActiveClass binding on a link element',
+        'require an aria-current binding beside a srefActiveClass binding on a link element, or a uiSrefActive element part when allowElementParts is false',
     },
     messages: {
       missingAriaCurrent:
         'srefActiveClass marks this <{{tag}}> active for CSS only; bind aria-current=${srefAriaCurrent({{params}})} beside it so assistive technology gets the same signal.',
       unknownAriaCurrent:
         'srefActiveClass marks this <{{tag}}> active for CSS only; bind aria-current=${srefAriaCurrent(...)} with the same state, params and options beside it so assistive technology gets the same signal.',
+      elementPartNotServed:
+        'uiSrefActive is an element part, which a server render never runs, so this <{{tag}}> is served with neither its active class nor aria-current; bind class=${srefActiveClass(...)} and aria-current=${srefAriaCurrent(...)} instead.',
     },
     schema: [
       {
         type: 'object',
-        properties: { linkElements: LINK_ELEMENTS_SCHEMA },
+        properties: {
+          allowElementParts: {
+            description:
+              'Whether a uiSrefActive element part counts as the aria-current it writes at runtime (default `true`), replacing `settings.allowElementParts` for this rule.',
+            type: 'boolean',
+          },
+          linkElements: LINK_ELEMENTS_SCHEMA,
+        },
       },
     ],
+    // allowElementParts stays out: a merged default would shadow the setting.
     defaultOptions: [{}],
   },
 
   create(context) {
     const tracker = createDirectiveTracker(context);
-    const { linkElements: option } =
-      (context.options[0] as { linkElements?: string[] } | undefined) ?? {};
+    const { allowElementParts: allowOption, linkElements: option } =
+      (context.options[0] as
+        | { allowElementParts?: boolean; linkElements?: string[] }
+        | undefined) ?? {};
     const linkElements = linkElementsOf(context, option);
+    const allowElementParts = allowElementPartsOf(context, allowOption);
 
     return {
       ImportDeclaration(node) {
@@ -84,21 +93,6 @@ const srefActiveClassAriaCurrent: RuleFor<typeof RULE_NAME> = {
         const source = context.sourceCode;
         const expressions = node.quasi.expressions as unknown as Node[];
         const analyzer = TemplateAnalyzer.create(node);
-
-        /** Named specifiers of every lit-ui-router import in this file. */
-        const ourSpecifiers = (): SpecifierNode[] => {
-          const found: SpecifierNode[] = [];
-          for (const statement of source.ast.body) {
-            if (statement.type !== 'ImportDeclaration') continue;
-            const from = statement.source.value;
-            if (typeof from !== 'string' || !isOurPackage(from)) continue;
-            for (const specifier of statement.specifiers) {
-              if (specifier.type !== 'ImportSpecifier') continue;
-              found.push(specifier as unknown as SpecifierNode);
-            }
-          }
-          return found;
-        };
 
         /** The `state`, `params` and `options` the fix copies, as written. */
         const paramsLiteral = (object: ObjectNode): string => {
@@ -127,32 +121,9 @@ const srefActiveClassAriaCurrent: RuleFor<typeof RULE_NAME> = {
           );
           if (insert === undefined) return null;
 
-          const { callee } = call;
-          const edits: Rule.Fix[] = [];
-          let binding: string;
-          if (callee.type === 'MemberExpression') {
-            // The same namespace already carries it, so no import to add.
-            binding = `${source.getText(callee.object as never)}.${DIRECTIVE}`;
-          } else {
-            const specifiers = ourSpecifiers();
-            const existing = specifiers.find(
-              (specifier) => specifier.imported.name === DIRECTIVE,
-            );
-            if (existing !== undefined) {
-              binding = existing.local.name ?? DIRECTIVE;
-            } else {
-              const anchor = specifiers.find(
-                (specifier) =>
-                  specifier.local.name === (callee as { name?: string }).name,
-              );
-              if (anchor === undefined) return null;
-              binding = DIRECTIVE;
-              edits.push(
-                fixer.insertTextAfter(anchor as never, `, ${DIRECTIVE}`),
-              );
-            }
-          }
-
+          const sibling = siblingBinding(fixer, source, call.callee, DIRECTIVE);
+          if (sibling === undefined) return null;
+          const { binding, edits } = sibling;
           edits.push(
             fixer.insertTextAfterRange(
               [insert, insert],
@@ -160,6 +131,27 @@ const srefActiveClassAriaCurrent: RuleFor<typeof RULE_NAME> = {
             ),
           );
           return edits;
+        };
+
+        /** Under allowElementParts false, each uiSrefActive part a server drops. */
+        const reportElementParts = (element: Parse5Element, tag: string) => {
+          if (allowElementParts) return;
+          for (const attribute of Object.keys(element.attribs)) {
+            const index = elementPartIndex(attribute);
+            if (index === undefined) continue;
+            const expression = expressions[index];
+            if (
+              expression === undefined ||
+              tracker.directiveOf(expression) !== 'uiSrefActive'
+            ) {
+              continue;
+            }
+            context.report({
+              node: expression,
+              messageId: 'elementPartNotServed',
+              data: { tag },
+            });
+          }
         };
 
         analyzer.traverse({
@@ -173,6 +165,8 @@ const srefActiveClassAriaCurrent: RuleFor<typeof RULE_NAME> = {
             // Any aria-current at all is the author's, and whether its value is
             // right is not this rule's business.
             if (hasAriaCurrent(element)) return;
+
+            reportElementParts(element, tag);
 
             for (const [index, part] of parts) {
               if (part.name !== 'class') continue;

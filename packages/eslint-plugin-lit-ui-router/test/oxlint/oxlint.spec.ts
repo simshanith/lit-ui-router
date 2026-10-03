@@ -24,12 +24,15 @@ interface Diagnostic {
   filename: string;
 }
 
-const run = (fixture = 'anchors.js'): Diagnostic[] => {
+const run = (
+  fixture = 'anchors.js',
+  config = '.oxlintrc.json',
+): Diagnostic[] => {
   let stdout: string;
   try {
     stdout = execFileSync(
       process.execPath,
-      [oxlintBin, '--config', '.oxlintrc.json', '-f', 'json', fixture],
+      [oxlintBin, '--config', config, '-f', 'json', fixture],
       { cwd: here, encoding: 'utf8' },
     );
   } catch (error) {
@@ -65,6 +68,51 @@ void describe('oxlint jsPlugins', () => {
           .labels[0]?.span.line,
     );
     assert.deepEqual(lines, [6, 7]);
+  });
+});
+
+void describe('oxlint jsPlugins: allowElementParts through an override', () => {
+  const diagnostics = run('prerendered/served.js');
+
+  void it('reports both element parts, and leaves the served form alone', () => {
+    assert.deepEqual(
+      diagnostics.map((diagnostic) => [
+        diagnostic.code,
+        (diagnostic as unknown as { labels: { span: { line: number } }[] })
+          .labels[0]?.span.line,
+      ]),
+      [
+        ['lit-ui-router(anchor-is-valid)', 12],
+        ['lit-ui-router(sref-active-class-aria-current)', 13],
+      ],
+    );
+  });
+});
+
+// oxlint overrides take no `settings`, so the setting is top-level only.
+void describe('oxlint jsPlugins: settings.allowElementParts', () => {
+  const lines = (diagnostics: Diagnostic[]) =>
+    diagnostics.map((diagnostic) => [
+      diagnostic.code,
+      (diagnostic as unknown as { labels: { span: { line: number } }[] })
+        .labels[0]?.span.line,
+    ]);
+
+  void it('reaches both rules from the top-level settings', () => {
+    assert.deepEqual(
+      lines(run('prerendered/served.js', 'settings.oxlintrc.json')),
+      [
+        ['lit-ui-router(anchor-is-valid)', 12],
+        ['lit-ui-router(sref-active-class-aria-current)', 13],
+      ],
+    );
+  });
+
+  void it('yields to the rule option an override sets', () => {
+    assert.deepEqual(lines(run('anchors.js', 'settings.oxlintrc.json')), [
+      ['lit-ui-router(anchor-is-valid)', 6],
+      ['lit-ui-router(anchor-is-valid)', 7],
+    ]);
   });
 });
 
