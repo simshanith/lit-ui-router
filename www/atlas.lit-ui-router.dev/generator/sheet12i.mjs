@@ -6,7 +6,7 @@
 import { readFileSync } from 'node:fs';
 import { PROJECT_MARK, TOTAL, articleTitle, titleBlock } from './chrome.mjs';
 import { keyRow } from './helpers.mjs';
-import { REGISTER as R, registerLane } from './register-graph.mjs';
+import { REAL_RUN, REGISTER as R, registerLane } from './register-graph.mjs';
 
 const PLATE = JSON.parse(readFileSync(new URL('../data/census-plate.json', import.meta.url), 'utf8'));
 const BASIS = `surveyed at ${PLATE.ref} @ ${PLATE.sha} (commit ${PLATE.commitDate.slice(0, 10)}) · ${R.turbo}`;
@@ -67,8 +67,8 @@ roof — it cannot be mistaken for work at any zoom. Both palettes are baked at 
 page's theme, the survey office's pattern exactly.</p>
 <p><strong>What this shows that the plate cannot.</strong> Sheet 12 proves the phantom share as a ratio; here it
 is a shape. With the shroud off, the ${R.real} real tasks fall into a handful of dense columns and the
-${R.realEdges} real edges are sparse enough to trace one by one — the deepest all-real run is ${R.realChain}
-<code>test</code> tasks, serialized by <code>^test</code> and consuming nothing from each other. With the shroud
+${R.realEdges} real edges are sparse enough to trace one by one — the deepest run counted in real nodes is ${R.realChain}
+build steps, from <code>${REAL_RUN.first}</code> to <code>${REAL_RUN.last}</code>. With the shroud
 on, the same picture disappears into ${fmt(R.nodes)} nodes and ${fmt(R.edges)} edges of scaffolding. Hover any
 building for its package, its task, whether it runs, whether a cache hit would be wrong (${R.cacheFalse} nodes in
 this graph are <code>cache:false</code> — the repo's uncacheable tier is outside every <code>ci:*</code> graph by

@@ -32,6 +32,7 @@ const CITES = {
   '@tools/repo-checks#check:graph-edges': { files: ['tools/repo-checks/check-graph-edges.ts'] },
   '@tools/repo-checks#check:task-inputs': { files: ['tools/repo-checks/check-task-inputs.ts'] },
   '@tools/repo-checks#check:patches': { files: ['tools/repo-checks/check-patches.ts'] },
+  '@tools/repo-checks#check:single-version': { files: ['tools/repo-checks/check-single-version.ts'] },
   '//#format:check:toml': { mise: true, files: ['.config/mise/tasks/taplo'] },
   '//#lint:actionlint': { mise: true, files: [] },
   '//#lint:elements': {

@@ -94,6 +94,9 @@ const geom = new Map(M.map((r) => {
   return [n, { n, name, dist, cat, x, y, s, sa, ax, ay, ext, r }];
 }));
 const g = (n) => geom.get(n);
+// №16's callout ranks its line coverage among the metered members, off the plate
+const PALE = M.filter((r) => r[3] === 'm' && r[13] !== null).sort((a, b) => a[13] - b[13]).map((r) => r[0]);
+const PALE_W = ['the palest', 'the second-palest', 'the third-palest'][PALE.indexOf(16)] ?? 'a pale';
 // the same plots as sheet 7, drawn in plan: assert them here too, under this plate's name
 assertPlots('plate 7A', [...geom.values()].flatMap(plotsOf));
 
@@ -214,12 +217,12 @@ const NOTE = {
   8: 'route table lit (no functions to meter)',
   9: 'the rig itself — its sloc are support code',
   10: 'worker lit · the site sees only e2e light',
-  11: 'stackblitz copies — never lit',
+  11: 'the stackblitz copies stay dark',
   12: 'cores lit, CLI wrappers in shadow',
   13: 'builds the API pages, tests nothing',
   14: 'no self-suite — it IS the d.ts test',
   15: '3 wrappers in shadow, the cores lit',
-  16: 'palest: exec.ts and workspace.ts',
+  16: 'pale: exec.ts and workspace.ts',
   17: 'trigger wrapper in shadow',
   18: 'size probe, advisory, unlit',
   19: 'ranges.ts lit; six CI lanes unmetered',
@@ -242,6 +245,7 @@ const NOTE = {
   36: 'the effect demo — e2e light only',
   37: 'the bindings lit; the barrel in shadow',
   38: 'the bridge lit, its own barrel dark',
+  39: 'report.ts lit, the crap-report CLI in shadow',
 };
 const ART_H = 866;
 const SY = ART_H + 16;
@@ -250,6 +254,7 @@ const schedRow = ([n, name, , cat, , , sf, sl, , , lf, ls, ext, line, br, fn]) =
   const meat = cat === 'm'
     ? `${lf}/${sf}f · ${fmt(ls)}/${fmt(sl)} (${pctS(ext)}) · L ${pctS(line)} B ${pctS(br)} F ${pctS(fn)}`
     : CAT_TEXT[cat];
+  if (!NOTE[n]) throw new Error(`sheet 7A: member ${n} has no NOTE row`);
   return [n, `${name} — ${meat} · ${NOTE[n]}`];
 };
 const half = Math.ceil(M.length / 2);
@@ -343,7 +348,7 @@ ${txt(1096, 397, 'live on e2e light alone · №5 tests pass with no meter', 'lb
 
 ${txt(1146, 560, 'www/ + examples/ — THE SHOPFRONT', 'lblb')}
 ${txt(1146, 573, `the worker: fully lit — a ${fmt(g(10).r[11])}-sloc sliver of ${fmt(g(10).r[7])}`, 'lblf')}
-${txt(1146, 585, `examples: ${fmt(g(11).r[7])} sloc, never lit`, 'lblf')}
+${txt(1146, 585, `examples: ${fmt(g(11).r[11] ?? 0)} of ${fmt(g(11).r[7])} sloc lit, the copies dark`, 'lblf')}
 <line x1="1140" y1="569" x2="1064" y2="560" class="skf"/>
 
 ${txt(96, 852, 'tools/ — THE INSTRUMENT YARD', 'lblb')}
@@ -374,7 +379,7 @@ ${txt(863, 773, 'the publish halt is lit at its core', 'lblf')}
 ${txt(863, 785, 'and dark at its process edge', 'lblf')}
 <line x1="857" y1="766" x2="217" y2="712" class="skf"/>
 
-${txt(700, 852, `№16 @tools/shared — the palest light thrown: ${pctS(g(16).r[13])} line, ${pctS(g(16).r[15])} function`, 'lblr')}
+${txt(700, 852, `№16 @tools/shared — ${PALE_W} light thrown: ${pctS(g(16).r[13])} line, ${pctS(g(16).r[15])} function`, 'lblr')}
 ${txt(700, 865, 'exec.ts and workspace.ts are the worst-lit things that are lit at all', 'lblf')}
 <line x1="694" y1="850" x2="125" y2="772" class="skf"/>
 

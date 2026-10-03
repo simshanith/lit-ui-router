@@ -211,7 +211,8 @@ for (const m of members) {
     specSloc,
   };
   const scripts = pkgJson(m.dir).scripts ?? {};
-  const suite = scripts['test:coverage'] ? 'test:coverage' : scripts.test ? 'test' : null;
+  // a member whose `test` is a turbo umbrella (#1038) carries its own suite as `test:unit`
+  const suite = scripts['test:coverage'] ? 'test:coverage' : scripts.test ? 'test' : scripts['test:unit'] ? 'test:unit' : null;
   const cmd = suite ? scripts[suite] : null;
   const runner = cmd ? RUNNER(cmd) : null;
 

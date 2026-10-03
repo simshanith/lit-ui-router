@@ -457,6 +457,40 @@ sitting); order is dependency order.
   the deploy 884 files / 4,952,920 gz; nm 179,513 lines / 41,639 d.ts; mass3b 11,899 task-file
   hashes over 227 real tasks and 2,828 command sloc; the ci graph 718 / 227 / 1,932 edges; steam
   597 commits; weather 427 dated files; 7A 10,591 of 17,778 metered sloc lit.
+- 2026-10-03 — THE TWELFTH REFRESH, at `origin/main` @ 6d41d21e (commit 2026-10-03), all 17
+  plates re-run at the one ref: `lit-ui-router-ssr` 0.1.1 (#1037) and 31 commits behind it — turbo's
+  `with` sidecars replaced by umbrella tasks (#1038), `check:single-version` (#1036), a root
+  `//#lint:complexity` ceiling (#1058), the report-only `@tools/crap` (#1056), the ssr hydration
+  signature (#1070). ONE member was born, №39 `@tools/crap` (tools/, private): sheet 7's `PLACED`
+  (560,430, report), sheet 13's (the same), 3B's `TERRACE`, 7A's `NOTE` (which now throws on a
+  missing row) and `INSTRUMENTS`' `lint & probe fleet` rule — the yard printed `orphans 2` until it
+  did. `APPS`, `APP_ORDER`, sheet 9's PLAN and `labels.mjs` took nothing. The general survey reads
+  845 tracked paths, 810 classified, 71,286 sloc (was 823 / 788 / 68,351). The T3 chain ran 3 min 54 s
+  warm; the loop's 52 cites held.
+  A RENAMED TASK IS A REKEY OF EVERY PLATE THAT NAMES IT. #1038 turned `lint`, `typecheck` and
+  `format:check` into script-less umbrellas over `lint:oxlint`, `typecheck:tsc` and
+  `format:check:oxfmt` in every package, and the eslint plugin's `test` became `test:unit`. Sheet 3B
+  threw on `examples#format:check`, sheet 12 on an unplaced fanned name, and 3B again on the new
+  `//#lint:complexity` (structure 28). The quiet one was `census-shadow.mjs`: it picks a member's
+  suite by script name, so the plugin fell to `n` (no test script) while crap's new meter held the
+  metered count at 24, and nothing printed — it now falls back to `test:unit`. `census-mass3b.mjs` printed no DRIFT
+  for `check:single-version` because `node` is EXTERNAL; its CITES row was added by hand.
+  THE HONESTY SWEEP FOUND CLAIMS THAT HAD BEEN FALSE FOR WEEKS. Sheet 12 and 12i said the longest
+  all-real chain was "6 test tasks … serialized by ^test" and listed `test` and `test:coverage` as
+  ^self chains — false since #780 put `test` on `^build`; the run is now read off the edge list and
+  asserted to be build steps. 7A's examples "never lit" (35 sloc are), 7B's "0 lamps" and docs'
+  "second-hottest steam / dimmest metered light", 7B's "cracked flanks stand unworn" once R4 opened,
+  7A's "palest light" (oxc-emit is paler), and the "291-line run.ts" (293) on sheets 7 and 3B each now
+  derive or throw. Sheet 3A's typed cites relocated by content.
+  THE NUMBERS: city 291 src files / 23,832 sloc and 151 spec / 25,850; yard 253 / 19,006 massed;
+  doors 174,062 min / 62,120 gz, ssr's `.` 3,084 → 3,384; the bundle 122,792 gz in 17 chunks; the
+  deploy 890 files / 4,980,372 gz; nm 173,596 lines / 41,079 d.ts; mass3b 13,064 hashes over 234 real
+  tasks and 2,921 command sloc; the ci graph 863 / 234 / 2,985 edges (umbrellas are phantoms: 629 of
+  863 run nothing); couplings 23 contracts, 3 optional; steam 619 commits; weather 442 dated files;
+  7A 11,343 of 18,590 metered sloc lit over 25 members.
+- A SUITE PICKED BY SCRIPT NAME IS A HAND TABLE. A probe that keys on `test`, `lint` or `build` reads
+  the repo's naming, not its behaviour; when a name becomes an umbrella the probe goes quiet rather than
+  wrong-loud. Diff each T3 plate's categories (`m`/`n`/`u`), not only its totals.
 - A PLATE'S `ref` IS THE ARGV STRING. `basis.mjs` resolves the sha to archive the tree, but the
   plate files the ref as it was typed, and every title block prints that field — pass the full
   sha and 20 title blocks print forty characters. Run the chain with `--ref origin/main` and keep

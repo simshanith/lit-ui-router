@@ -22,6 +22,7 @@ const row = (dir) => {
   if (!r) throw new Error(`sheet 7: member ${dir} is missing from www/atlas.lit-ui-router.dev/data/census-city.json`);
   return r;
 };
+if (row('tools/dts-backtest').srcFiles !== 1) throw new Error('sheet 7: №14\'s note says one file, the plate says otherwise');
 const ratio = (dir) => (row(dir).specSloc / row(dir).srcSloc).toFixed(1);
 const BASIS = `counted at ${PLATE.ref} @ ${PLATE.sha} (${PLATE.generatedAtTime.slice(0, 10)})`;
 
@@ -73,7 +74,7 @@ export const PLACED = [
   // eslint-ts-parser and lit-test-env on the 350 row; from here it hides none of them
   [12, '@tools/release',           'tools/release',                      'tool', 'halt',     0, 455, 'hosts published-diff — the one publish halt'],
   [13, '@tools/typedoc-plugin',    'tools/typedoc-plugin-lit-ui-router', 'tool', 'report', 230, 430, 'builds the API pages, gates nothing'],
-  [14, '@tools/dts-backtest',      'tools/dts-backtest',                 'tool', 'pr',       8, 350, 'one 291-line run.ts holds the TS 5.0 floor'],
+  [14, '@tools/dts-backtest',      'tools/dts-backtest',                 'tool', 'pr',       8, 350, `one ${row('tools/dts-backtest').srcSloc}-line run.ts holds the TS 5.0 floor`],
   [15, '@tools/build_and_test',    'tools/build_and_test',               'tool', 'report', 300, 430, 'the CI graph helper — and its error summary'],
   // west off 20 with the release tower, so its badge rides clear of the tower's face
   [16, '@tools/shared',            'tools/shared',                       'tool', 'report', -16, 550, 'the library under the instruments'],
@@ -81,7 +82,8 @@ export const PLACED = [
   [18, '@tools/bundle-probe',      'tools/bundle-probe',                 'tool', 'report', 330, 550, 'size probe, advisory'],
   [19, '@tools/compat-guards',     'tools/compat-guards',                'tool', 'pr',     130, 550, 'the lit 2 / mobx 6 / peer-floor lanes'],
   [20, '@tools/oxc-emit',          'tools/oxc-emit',                     'tool', 'line',   230, 350, 'both build passes, one emitter'],
-  [21, '@tools/release-config',    'tools/release-config',               'tool', 'line',   280, 350, 'the shared release-it config'],
+  // east off 280 when oxc-emit's annex grew to 283.5 at the 6d41d21e refresh
+  [21, '@tools/release-config',    'tools/release-config',               'tool', 'line',   288, 350, 'the shared release-it config'],
   [22, '@tools/lit-template-lint', 'tools/lit-template-lint',            'tool', 'report', 325, 350, 'the lit-analyzer wrapper'],
   [23, '@tools/lit-test-env',      'tools/lit-test-env',                 'tool', 'pr',      85, 350, 'the browser harness every suite loads'],
   [24, '@tools/vue-check',         'tools/vue-check',                    'tool', 'report', 370, 350, 'vue-tsc over the docs components'],
@@ -90,8 +92,8 @@ export const PLACED = [
   [26, '@tools/happy-dom',         'tools/happy-dom',                    'tool', 'pr',     125, 350, 'the node-side DOM the unit suites run in'],
   [27, '@tools/wintercg-globals',  'tools/wintercg-globals',             'tool', 'off',    185, 350, 'ambient types only — nothing to mass'],
   // --- born 2026-08-31 (#639) and 2026-08-16 (#557) --------------------------------
-  // nudged east off 380 when bundle-probe's annex grew to 383.7 at this ref
-  [28, '@tools/lint-elements',     'tools/lint-elements',                'tool', 'pr',     388, 550, 'the shared custom-element lint lane (#655)'],
+  // east off 380, then 388, so bundle-probe's annex (to 383.7) keeps paper before its roof
+  [28, '@tools/lint-elements',     'tools/lint-elements',                'tool', 'pr',     394, 550, 'the shared custom-element lint lane (#655)'],
   [29, '@tools/warn-lanes',        'tools/warn-lanes',                   'tool', 'report', 430, 530, 'the warning ratchet — reports a floor, never gates'],
   [30, '@tools/eslint-ts-parser',  'tools/eslint-ts-parser',             'tool', 'report',  54, 350, 'a one-line parser shim — the smallest thing in the yard'],
   // --- the fifth published package (#676) — first drawn here --------------------
@@ -113,6 +115,8 @@ export const PLACED = [
   // the district's south row, east of the effect bindings: a lot with nothing tall
   // in front of it; its annex spans x 215–288, so the oxc-emit lane ends here
   [38, 'lit-ui-router-ssr',        'packages/lit-ui-router-ssr',         'pkg',  'line',   160, 210, `the prerender bridge · verdicts in, @lit-labs/ssr pages out · annex ${ratio('packages/lit-ui-router-ssr')}×`],
+  // --- born 2026-10-01 (#1056) -----------------------------------------------------
+  [39, '@tools/crap',              'tools/crap',                         'tool', 'report', 560, 430, 'CRAP hotspots from coverage — reports, gates nothing'],
 ];
 
 // [n, name, district, tier, x, y, srcFiles, srcSloc, specFiles, specSloc, note]
@@ -174,13 +178,16 @@ const annexMass = (n) => {
 function badge(n) {
   const b = g(n);
   const t = TIER[b.tier];
-  const [bx, by] = pt(b.x + b.s / 2, b.y, b.h);
-  const lift = BADGE_LIFT[n] ?? 15;
+  const onRoof = BADGE_ON_ROOF.has(n);
+  const [bx, by] = pt(b.x + b.s / 2, b.y + (onRoof ? b.s / 2 : 0), b.h);
+  const lift = onRoof ? 0 : BADGE_LIFT[n] ?? 15;
   return `<circle cx="${bx.toFixed(1)}" cy="${(by - lift).toFixed(1)}" r="9" class="${t.badge}"/>
 ${txt(bx.toFixed(1), (by - lift + 3.4).toFixed(1), String(n), t.num, 'middle')}`;
 }
 // badges that would land on a neighbouring roof edge get lifted into clear air
 const BADGE_LIFT = { 1: 20, 2: 30, 6: 35, 10: 28, 16: 30, 20: 26, 21: 34, 23: 34, 27: 34 };
+// badges whose air above is a neighbour's mass sit centred on their own roof instead
+const BADGE_ON_ROOF = new Set([19, 32]);
 
 // ---- roads ----------------------------------------------------------------------
 // Routed on the iso grid and trimmed in SCREEN space at both ends.  A block's roof

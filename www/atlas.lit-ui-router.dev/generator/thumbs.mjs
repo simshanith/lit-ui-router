@@ -144,6 +144,7 @@ const TUNING = {
     stage: [900, 1200],
     hide: 'node.band',
     turn: 'quarter',
+    labelTop: 'node[key = "lit-ui-router-mobx"]',
     padding: 40,
     font: 26,
     anchor: 'top',
@@ -263,10 +264,10 @@ const fitCss = (widthPx) => `
 async function relayLane(
   page,
   selector,
-  { stage, layout, padding = 24, font, anchor, hide, turn, fitTo, share = 1 },
+  { stage, layout, padding = 24, font, anchor, hide, turn, labelTop, fitTo, share = 1 },
 ) {
   await page.evaluate(
-    ([sel, w, h, lay, pad, fontSize, top, hidden, quarter, kept, part]) => {
+    ([sel, w, h, lay, pad, fontSize, top, hidden, quarter, raised, kept, part]) => {
       const el = document.querySelector(sel);
       const parent = el.parentElement;
       // the stage is a two-column grid — the info rail steps aside
@@ -293,6 +294,8 @@ async function relayLane(
       // A quarter turn stands a wide arrangement up: the flow that ran left to
       // right runs top to bottom, which is the shape a card has room for.
       if (quarter) cy.nodes().positions((node) => ({ x: -node.position('y'), y: node.position('x') }));
+      // a label the turn lands on a neighbour's reads above its own node instead
+      if (raised) cy.nodes(raised).style({ 'text-valign': 'top', 'text-margin-y': -5 });
       // `fitTo` fits the part of the lane that IS the picture; anything else
       // still visible is allowed to run off the card behind the text panel.
       const shown = (kept ? cy.elements(kept) : cy.elements()).filter(':visible');
@@ -323,6 +326,7 @@ async function relayLane(
       anchor === 'top',
       hide ?? '',
       turn === 'quarter',
+      labelTop ?? '',
       fitTo ?? '',
       share,
     ],

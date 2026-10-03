@@ -41,6 +41,24 @@ for (const [what, got, want] of [
   if (got !== want) throw new Error(`register-graph: the ${PIPE} node/edge list has ${got} ${what}, the ${PIPE} tally says ${want} — re-run generator/census-plate.mjs`);
 }
 
+// the deepest run counted in real nodes (census-plate's realChain), read back off the edge list
+const DEPS = NODES.map(() => []);
+for (const [a, b] of EDGES) DEPS[b].push(a);
+const RUN_MEMO = new Map();
+const realRun = (i) => {
+  if (RUN_MEMO.has(i)) return RUN_MEMO.get(i);
+  let best = [];
+  for (const d of DEPS[i]) { const r = realRun(d); if (r.length > best.length) best = r; }
+  const out = NODES[i].real ? [...best, i] : best;
+  RUN_MEMO.set(i, out);
+  return out;
+};
+const RUN = NODES.map((_, i) => realRun(i)).reduce((a, r) => (r.length > a.length ? r : a), []);
+if (RUN.length !== CI.realChain) throw new Error(`register-graph: the deepest real run reads ${RUN.length}, the plate's realChain says ${CI.realChain}`);
+if (!RUN.every((i) => /^build(:types)?$/.test(NODES[i].task))) throw new Error('register-graph: the deepest real run is no longer build steps alone — re-word sheets 12 and 12i');
+const runId = (i) => `${NODES[i].pkg}#${NODES[i].task}`;
+export const REAL_RUN = { length: RUN.length, first: runId(RUN[0]), last: runId(RUN.at(-1)) };
+
 const TURBO = PLATE.wasAssociatedWith?.find((a) => a.startsWith('turbo '));
 if (!TURBO) throw new Error('register-graph: www/atlas.lit-ui-router.dev/data/census-plate.json carries no turbo version in wasAssociatedWith');
 

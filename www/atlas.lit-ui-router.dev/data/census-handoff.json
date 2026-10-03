@@ -1,10 +1,10 @@
 {
   "ref": "origin/main",
-  "sha": "63c0b823",
-  "commitDate": "2026-09-28T23:32:37-07:00",
-  "generatedAtTime": "2026-09-29T06:58:49.179Z",
+  "sha": "6d41d21e",
+  "commitDate": "2026-10-03T09:37:00-07:00",
+  "generatedAtTime": "2026-10-03T17:02:21.917Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-handoff.mjs",
-  "used": "git archive origin/main @ 63c0b823",
+  "used": "git archive origin/main @ 6d41d21e",
   "wasAssociatedWith": [
     "git"
   ],
@@ -23,10 +23,10 @@
   },
   "turbo": {
     "files": 22,
-    "distinctNames": 79,
-    "definitions": 114,
-    "rootDefinitions": 44,
-    "memberDefinitions": 70,
+    "distinctNames": 89,
+    "definitions": 126,
+    "rootDefinitions": 50,
+    "memberDefinitions": 76,
     "cacheFalse": 13,
     "rootCacheFalse": 7,
     "memberCacheFalse": 6
@@ -86,10 +86,10 @@
     {"file":"apps/sample-app-lit-e2e/turbo.json","root":false,"definitions":7,"cacheFalse":0},
     {"file":"apps/sample-app-lit-effect/turbo.json","root":false,"definitions":2,"cacheFalse":0},
     {"file":"apps/sample-app-lit-mobx/turbo.json","root":false,"definitions":2,"cacheFalse":0},
-    {"file":"apps/sample-app-lit-vanilla/turbo.json","root":false,"definitions":3,"cacheFalse":0},
+    {"file":"apps/sample-app-lit-vanilla/turbo.json","root":false,"definitions":4,"cacheFalse":0},
     {"file":"apps/sample-app-routes/turbo.json","root":false,"definitions":1,"cacheFalse":0},
-    {"file":"examples/turbo.json","root":false,"definitions":1,"cacheFalse":0},
-    {"file":"packages/eslint-plugin-lit-ui-router/turbo.json","root":false,"definitions":6,"cacheFalse":0},
+    {"file":"examples/turbo.json","root":false,"definitions":3,"cacheFalse":0},
+    {"file":"packages/eslint-plugin-lit-ui-router/turbo.json","root":false,"definitions":7,"cacheFalse":0},
     {"file":"packages/lit-ui-router-effect/turbo.json","root":false,"definitions":1,"cacheFalse":0},
     {"file":"packages/lit-ui-router-mobx/turbo.json","root":false,"definitions":1,"cacheFalse":0},
     {"file":"packages/lit-ui-router-ssr/turbo.json","root":false,"definitions":1,"cacheFalse":0},
@@ -100,10 +100,10 @@
     {"file":"tools/build_and_test/turbo.json","root":false,"definitions":1,"cacheFalse":0},
     {"file":"tools/happy-dom/turbo.json","root":false,"definitions":1,"cacheFalse":0},
     {"file":"tools/release/turbo.json","root":false,"definitions":7,"cacheFalse":1},
-    {"file":"tools/repo-checks/turbo.json","root":false,"definitions":6,"cacheFalse":0},
+    {"file":"tools/repo-checks/turbo.json","root":false,"definitions":7,"cacheFalse":0},
     {"file":"tools/shared/turbo.json","root":false,"definitions":1,"cacheFalse":0},
     {"file":"tools/workers-builds/turbo.json","root":false,"definitions":3,"cacheFalse":1},
-    {"file":"turbo.json","root":true,"definitions":44,"cacheFalse":7},
-    {"file":"www/lit-ui-router.dev/turbo.json","root":false,"definitions":15,"cacheFalse":4}
+    {"file":"turbo.json","root":true,"definitions":50,"cacheFalse":7},
+    {"file":"www/lit-ui-router.dev/turbo.json","root":false,"definitions":16,"cacheFalse":4}
   ]
 }

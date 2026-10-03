@@ -1,10 +1,10 @@
 {
   "ref": "origin/main",
-  "sha": "63c0b823",
-  "commitDate": "2026-09-28T23:32:37-07:00",
-  "generatedAtTime": "2026-09-29T06:58:49.599Z",
+  "sha": "6d41d21e",
+  "commitDate": "2026-10-03T09:37:00-07:00",
+  "generatedAtTime": "2026-10-03T17:02:21.399Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-couplings.mjs",
-  "used": "git archive origin/main @ 63c0b823 — packages/*/package.json ranges resolved through pnpm-workspace.yaml catalogs; core and lit versions from pnpm-lock.yaml",
+  "used": "git archive origin/main @ 6d41d21e — packages/*/package.json ranges resolved through pnpm-workspace.yaml catalogs; core and lit versions from pnpm-lock.yaml",
   "wasAssociatedWith": [
     "git"
   ],
@@ -16,7 +16,7 @@
     "drawnContracts": 14,
     "peers": 20,
     "deps": 3,
-    "optional": 2,
+    "optional": 3,
     "uncoupled": 1
   },
   "nodes": [
@@ -24,7 +24,7 @@
     {"key":"lit-ui-router","dir":"packages/lit-ui-router","version":"1.16.0","kind":"published","versionFrom":"packages/lit-ui-router/package.json"},
     {"key":"lit-ui-router-effect","dir":"packages/lit-ui-router-effect","version":"0.1.3","kind":"published","versionFrom":"packages/lit-ui-router-effect/package.json"},
     {"key":"lit-ui-router-mobx","dir":"packages/lit-ui-router-mobx","version":"1.0.2","kind":"published","versionFrom":"packages/lit-ui-router-mobx/package.json"},
-    {"key":"lit-ui-router-ssr","dir":"packages/lit-ui-router-ssr","version":"0.1.0","kind":"published","versionFrom":"packages/lit-ui-router-ssr/package.json"},
+    {"key":"lit-ui-router-ssr","dir":"packages/lit-ui-router-ssr","version":"0.1.1","kind":"published","versionFrom":"packages/lit-ui-router-ssr/package.json"},
     {"key":"ui-router-navigation-location-plugin","dir":"packages/navigation-location-plugin","version":"1.0.1","kind":"published","versionFrom":"packages/navigation-location-plugin/package.json"},
     {"key":"ui-router-server","dir":"packages/ui-router-server","version":"0.2.0","kind":"published","versionFrom":"packages/ui-router-server/package.json"},
     {"key":"@uirouter/core","dir":null,"version":"6.1.2","kind":"external","versionFrom":"pnpm-lock.yaml"},
@@ -49,7 +49,7 @@
     {"from":"lit-ui-router-ssr","to":"lit-ui-router","section":"peerDependencies","kind":"peer","optional":false,"range":"^1.16.0","spec":"catalog:publishedPeerSsr","catalog":"publishedPeerSsr","drawn":true},
     {"from":"lit-ui-router-ssr","to":"ui-router-server","section":"peerDependencies","kind":"peer","optional":false,"range":"^0.2.0","spec":"catalog:publishedPeerSsr","catalog":"publishedPeerSsr","drawn":true},
     {"from":"lit-ui-router-ssr","to":"@lit-labs/ssr","section":"peerDependencies","kind":"peer","optional":false,"range":"^4.0.0","spec":"catalog:publishedPeer","catalog":"publishedPeer","drawn":false},
-    {"from":"lit-ui-router-ssr","to":"@lit-labs/ssr-client","section":"peerDependencies","kind":"peer","optional":false,"range":"^1.1.0","spec":"catalog:publishedPeer","catalog":"publishedPeer","drawn":false},
+    {"from":"lit-ui-router-ssr","to":"@lit-labs/ssr-client","section":"peerDependencies","kind":"peer","optional":true,"range":"^1.1.0","spec":"catalog:publishedPeer","catalog":"publishedPeer","drawn":false},
     {"from":"lit-ui-router-ssr","to":"@oxc-project/runtime","section":"dependencies","kind":"dep","optional":false,"range":">=0.50.0","spec":"catalog:publishedDependencies","catalog":"publishedDependencies","drawn":false},
     {"from":"ui-router-navigation-location-plugin","to":"@uirouter/core","section":"peerDependencies","kind":"peer","optional":false,"range":"^6.0.8","spec":"catalog:publishedPeer","catalog":"publishedPeer","drawn":true},
     {"from":"ui-router-server","to":"@uirouter/core","section":"peerDependencies","kind":"peer","optional":true,"range":"^6.0.8","spec":"catalog:publishedPeer","catalog":"publishedPeer","drawn":true},

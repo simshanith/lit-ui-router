@@ -130,7 +130,7 @@ const verdicts = [
   ['12', 'PR CI GRAPH', 'REGISTER PLATE', `the punched inventory — ${PHANTOM_PCT}% of the graph runs nothing, and the real→real edges that remain are a thin core inside a large node count`],
   ['13', 'WORKSPACE × TIME', 'WEATHERING MAP', SHEET13_VERDICT],
   ['12i', 'PR CI GRAPH', 'INTERACTIVE REGISTER', `sheet 12's punchcard with a pointer in it — the whole ci graph carried node by node, real subgraph by default, and one checkbox that floods the ${PHANTOM_PCT}% that runs nothing`],
-  ['city', 'MONOREPO, IN THE ROUND', 'REAL 3D ISOMETRIC CITY', "sheet 7's city rebuilt in three.js from the plate's own computed geometry — paper walls hatched in the tier's own rake over a girding frame, and a camera that orbits free and lands on a true diagonal", '#city-scene', 'S7·3D'],
+  ['city', 'MONOREPO, IN THE ROUND', 'REAL 3D ISOMETRIC CITY', "sheet 7's city rebuilt in three.js from the plate's own computed geometry — translucent paper walls hatched in the tier's own rake over a girding frame, each crowned by a working plant sized from its own census, and a camera that orbits free and lands on a true diagonal", '#city-scene', 'S7·3D'],
 ];
 // THE APPENDIX INDEX — same four columns, filed under its own heading. These
 // rows are NOT in the ascent: `appendixIdx` is concatenated for the lookup the

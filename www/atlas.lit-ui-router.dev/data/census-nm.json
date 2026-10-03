@@ -1,10 +1,10 @@
 {
   "ref": "origin/main",
-  "sha": "63c0b823",
-  "commitDate": "2026-09-28T23:32:37-07:00",
-  "generatedAtTime": "2026-09-29T07:00:13.358Z",
+  "sha": "6d41d21e",
+  "commitDate": "2026-10-03T09:37:00-07:00",
+  "generatedAtTime": "2026-10-03T17:03:59.783Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-nm.mjs",
-  "used": "git archive origin/main @ 63c0b823 + pnpm install --frozen-lockfile --silent (mise-provisioned pnpm) + turbo run build",
+  "used": "git archive origin/main @ 6d41d21e + pnpm install --frozen-lockfile --silent (mise-provisioned pnpm) + turbo run build",
   "wasAssociatedWith": [
     "pnpm (mise-provisioned)",
     "turbo"
@@ -12,14 +12,14 @@
   "app": "apps/sample-app-lit-vanilla",
   "rows": [
     {"name":"dompurify","version":"3.4.16","ws":false,"measured":"pkg","f":12,"l":38755,"df":2,"dl":888},
-    {"name":"hono","version":"4.13.8","ws":false,"measured":"pkg","f":376,"l":30848,"df":187,"dl":8070},
     {"name":"@uirouter/core","version":"6.1.2","ws":false,"measured":"pkg","f":162,"l":26255,"df":160,"dl":15854},
+    {"name":"hono","version":"4.13.10","ws":false,"measured":"pkg","f":378,"l":24928,"df":188,"dl":7510},
     {"name":"lodash-es","version":"4.18.1","ws":false,"measured":"pkg","f":644,"l":22193,"df":0,"dl":0},
     {"name":"marked","version":"4.3.0","ws":false,"measured":"pkg","f":16,"l":11676,"df":0,"dl":0},
     {"name":"lit-html","version":"3.3.3","ws":false,"measured":"pkg","f":120,"l":8701,"df":60,"dl":4002},
     {"name":"@uirouter/visualizer","version":"7.2.1","ws":false,"measured":"pkg","f":3,"l":6048,"df":1,"dl":241},
-    {"name":"@oxc-project/runtime","version":"0.151.0","ws":false,"measured":"pkg","f":232,"l":5198,"df":0,"dl":0},
-    {"name":"sample-app-shared","version":"0.0.0","ws":true,"measured":"dist/","f":49,"l":4525,"df":2,"dl":16},
+    {"name":"@oxc-project/runtime","version":"0.152.0","ws":false,"measured":"pkg","f":232,"l":5198,"df":0,"dl":0},
+    {"name":"sample-app-shared","version":"0.0.0","ws":true,"measured":"dist/","f":49,"l":4528,"df":2,"dl":16},
     {"name":"@lit/reactive-element","version":"2.1.2","ws":false,"measured":"pkg","f":58,"l":4084,"df":30,"dl":2682},
     {"name":"preact","version":"10.4.8","ws":false,"measured":"pkg","f":61,"l":3786,"df":11,"dl":1832},
     {"name":"lit-ui-router","version":"1.16.0","ws":true,"measured":"dist/","f":42,"l":2928,"df":21,"dl":2963},

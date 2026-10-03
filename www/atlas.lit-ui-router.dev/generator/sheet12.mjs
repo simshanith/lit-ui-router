@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { defs } from './chrome.mjs';
 import { txt, lines, keyRow } from './helpers.mjs';
+import { REAL_RUN } from './register-graph.mjs';
 
 const P = 's12';
 
@@ -42,7 +43,8 @@ const phantomPct = (p) => Math.round(((p.nodes - p.real) / p.nodes) * 100);
 // column order = pipeline stage, not fan; every fanned name in the plate must be placed here
 const COLS = [
   'transit', 'build:types', 'build:js', 'build', 'docs:api',
-  'typecheck', 'typecheck:src', 'typecheck:lit2', 'typecheck:mobx6', 'lint', 'format:check',
+  'typecheck', 'typecheck:tsc', 'typecheck:src', 'typecheck:lit2', 'typecheck:mobx6',
+  'lint', 'lint:oxlint', 'format:check', 'format:check:oxfmt',
   'test', 'test:coverage', 'test:lit2-compat', 'test:mobx6-compat', 'check:bundle', 'check:dev-split',
   'ci:pull_request', 'ci',
 ];
@@ -52,10 +54,13 @@ for (const n of FANNED) {
 }
 COLS.forEach(nm);
 
-const SELF = new Set(['transit', 'build:types', 'build', 'test', 'test:coverage']); // ^self chains, from turbo.json
+const SELF = new Set(['transit', 'build:types', 'build']); // ^self chains, from turbo.json
 const ALLP = new Set(COLS.filter((n) => nm(n).real === 0));                          // 100% phantom by design
+// umbrellas: no script, only a dependsOn fanning out to the leaf beside them
+const UMBRELLAS = ['typecheck', 'lint', 'format:check'];
+if ([...ALLP].sort().join() !== ['transit', ...UMBRELLAS, 'ci:pull_request', 'ci'].sort().join()) throw new Error(`sheet 12: the all-placeholder columns are ${[...ALLP].join(', ')} — re-word the notes`);
 
-const STAGES = [[0, 0, 'GATHER'], [1, 4, 'EMIT'], [5, 10, 'CHECK'], [11, 16, 'PROVE'], [17, 18, 'ROLL-UP']];
+const STAGES = [[0, 0, 'GATHER'], [1, 4, 'EMIT'], [5, 13, 'CHECK'], [14, 19, 'PROVE'], [20, 21, 'ROLL-UP']];
 
 // row grouping: a rule per block, so a new member lands in its own block
 const APP_ORDER = ['sample-app-shared', 'sample-app-routes', 'sample-app-lit-vanilla', 'sample-app-lit-mobx', 'sample-app-lit-effect', 'sample-app-lit-e2e'];
@@ -115,12 +120,12 @@ const TAIL_ROOT = TAIL.filter(([id]) => id.startsWith('//#')).length;
 // the deepest chain in the ci graph — hand-traced path; its length and every
 // rung's fill are checked against the plate.
 const CHAIN = [
-  '@tools/warn-lanes#build:types',
+  '@tools/bootstrap#build:types', '@tools/shared#build:types',
   '@tools/build_and_test#build:types', '@tools/bundle-probe#build:types',
   'ui-router-server#build:types', 'sample-app-routes#build:types',
   'sample-app-routes#build', 'sample-app-shared#build',
-  'sample-app-lit-mobx#build', '@www/lit-ui-router.dev#build',
-  'sample-app-lit-e2e#build', 'sample-app-lit-e2e#test',
+  'sample-app-lit-vanilla#build:hash', 'sample-app-lit-vanilla#build',
+  '@www/lit-ui-router.dev#build', 'sample-app-lit-e2e#build',
   'sample-app-lit-e2e#ci:pull_request', 'sample-app-lit-e2e#ci',
 ].map((id) => {
   const [pkg, task] = [id.slice(0, id.indexOf('#')), id.slice(id.indexOf('#') + 1)];
@@ -161,7 +166,7 @@ const LEDGER = [
 // GEOMETRY
 // ---------------------------------------------------------------------------
 const LX = 252;              // right edge of the row-label gutter
-const CX0 = 268, CP = 23;    // first column centre, column pitch
+const CX0 = 268, CP = 20;    // first column centre, column pitch
 const RP = 16;               // row pitch
 const CW = 15, CH = 10;      // card-hole size
 const RX = 810;              // right annotation column
@@ -277,9 +282,9 @@ ${CHAIN.map(([n, r], i) => {
 ${lines(RX, CLY + CN * CRP + 26, [
   `${CHAIN_REAL} of those ${CHAIN.length} run a command.`,
   `The longest all-real chain is ${CI.realChain}`,
-  `— and it is ${CI.realChain} «test» tasks in a`,
-  'row, ordered by ^test alone. Nothing',
-  'in it consumes anything above it.',
+  `— ${REAL_RUN.length} build steps, ${REAL_RUN.first}`,
+  `to ${REAL_RUN.last},`,
+  'with placeholder hops between the rungs.',
 ], 'lbls', 'start', 13)}`;
 
 // clears the plate's own tally row: the right column and the plate both grew
@@ -350,11 +355,11 @@ ${txt(LX, TOTY + 14, 'nodes minted  →', 'lbls', 'end')}
 
 ${txt(30, 238, `${WORD[ALLP.size] ?? ALLP.size} COLUMNS RUN NOTHING`, 'lblr')}
 ${lines(30, 256, [
-  [...ALLP].join(' · '),
-  'have no implementation in any of',
-  `the ${PKGS} packages. They exist only`,
-  'so the other columns can depend',
-  'on something — pure graph edge.',
+  [...ALLP].slice(0, Math.ceil(ALLP.size / 2)).join(' · '),
+  [...ALLP].slice(Math.ceil(ALLP.size / 2)).join(' · '),
+  `have no script in any of the ${PKGS}`,
+  'packages — they exist only so other',
+  'tasks can depend on them.',
 ], 'lbls', 'start', 14)}
 
 ${stat}
@@ -371,12 +376,12 @@ export const sheet12 = {
   scale: 'PR CI GRAPH',
   form: 'REGISTER PLATE',
   svg,
-  caption: `The pull-request graph is a near-rectangle: ${PKGS} packages against ${COLS.length} fanned task names, plus a ragged tail of ${TAIL.length} one-offs. ${phantomPct(CI)}% of the holes are unpunched — placeholder nodes that run nothing, minted so a ^self chain has somewhere to land an edge.`,
+  caption: `The pull-request graph is a near-rectangle: ${PKGS} packages against ${COLS.length} fanned task names, plus a ragged tail of ${TAIL.length} one-offs. ${phantomPct(CI)}% of the holes are unpunched — placeholder nodes that run nothing, minted so a ^self chain has somewhere to land an edge or an umbrella something to fan out from.`,
   notes: `
 <p><strong>Method.</strong> <code>turbo run ci --dry=json</code> and <code>turbo run ci:main --dry=json</code> against a materialized, installed archive of the ref — ${BASIS} — and the same for <code>build</code>, <code>lint</code> and <code>pack:all</code> in the schedule. Every number on the plate is read from <code>www/atlas.lit-ui-router.dev/data/census-plate.json</code>, the checked-in snapshot <code>census-plate.mjs</code> writes; this sheet holds placement and prose only. A node is one <code>(package, task)</code> pair turbo placed in the graph. A node is <em>command-bearing</em> when its resolved command is not the literal <code>&lt;NONEXISTENT&gt;</code> — turbo's marker for a task it had to invent because something depends on it in that package. An edge is <em>real</em> only when both of its ends are. No duration is drawn anywhere: wall-clock comparisons here are confounded by cache state and by the task counts themselves, so this plate measures shape and nothing else.</p>
 <p><strong>Why an inventory and not a city.</strong> Sheet 3 argues that a task manager is not a place; drawing this graph in isometric would smuggle back the geography that sheet's note denies. What a CI graph actually is, is a register: a fixed set of names crossed against a fixed set of packages, with most of the intersections empty. The honest form is the plate that shape already implies — a punchcard, read by column.</p>
-<p><strong>The finding.</strong> ${CI.nodes} nodes; ${CI.real} run a command. ${fmt(CI.edges)} dependency edges; ${CI.realEdges} join two real tasks. Of the ${COLS.length} fanned names, ${SELF.size} carry a <code>^self</code> chain — <code>build</code>, <code>build:types</code>, <code>test</code>, <code>test:coverage</code>, <code>transit</code> — and a self-chain is what mints placeholders: turbo needs a node in <em>every</em> package to hang the chain on, whether or not that package has such a script. ${ALLP.size} names are 100% placeholder in all ${PKGS} packages: <code>transit</code> (which has no implementation anywhere in the repo — it exists purely as an edge), and the two roll-ups <code>ci:pull_request</code> and <code>ci</code>. The plate's rightmost columns and its leftmost are, in the strictest sense, empty.</p>
-<p><strong>Depth is mostly scaffolding too.</strong> The deepest chain is ${CI.chain} nodes and ${CHAIN_REAL} of them run anything. The longest chain of consecutive real nodes is ${CI.realChain} — and it is ${CI.realChain} <code>test</code> tasks in a row, serialized by <code>^test</code> and nothing else: no task in that chain consumes an artifact from the one above it. That is the price of a self-chain used for ordering rather than for data flow, and it is what a plate makes visible that a node-and-arrow render never does.</p>
+<p><strong>The finding.</strong> ${CI.nodes} nodes; ${CI.real} run a command. ${fmt(CI.edges)} dependency edges; ${CI.realEdges} join two real tasks. Of the ${COLS.length} fanned names, ${SELF.size} carry a <code>^self</code> chain — ${[...SELF].map((s) => `<code>${s}</code>`).join(', ')} — and a self-chain is what mints placeholders: turbo needs a node in <em>every</em> package to hang the chain on, whether or not that package has such a script. ${ALLP.size} names are 100% placeholder in all ${PKGS} packages: <code>transit</code> (which has no implementation anywhere in the repo — it exists purely as an edge), the ${WORD[UMBRELLAS.length].toLowerCase()} umbrellas ${UMBRELLAS.map((u) => `<code>${u}</code>`).join(', ').replace(/, ([^,]*)$/, ' and $1')}, which carry no script and only fan out to the leaf beside them, and the two roll-ups <code>ci:pull_request</code> and <code>ci</code>. The plate's rightmost columns and its leftmost are, in the strictest sense, empty, and so are ${WORD[UMBRELLAS.length].toLowerCase()} columns in its check stage.</p>
+<p><strong>Depth is mostly scaffolding too.</strong> The deepest chain is ${CI.chain} nodes and ${CHAIN_REAL} of them run anything. The longest chain counted in real nodes alone is ${CI.realChain} — ${REAL_RUN.length} build steps, from <code>${REAL_RUN.first}</code> to <code>${REAL_RUN.last}</code> — and even it climbs through placeholder hops between its real rungs, which is what a plate makes visible that a node-and-arrow render never does.</p>
 <p><strong>What the plate is not evidence for.</strong> Placeholders are cheap — turbo schedules and skips them, and the phantom share is not a runtime cost. The argument is about legibility: ${phantomPct(CI)}% of what a maintainer sees in <code>--graph</code> output is scaffolding, and the two ratios worth watching are the real-node share per column and the real-edge count. Note also the one tier that never appears here at all: the repo's ${UNCACHED.length} <code>cache:false</code> definitions — four writers, six persistent servers, two live-network readers and one host-bound measurement (<code>@www/lit-ui-router.dev#check:embeds</code>, #703) — are all outside every <code>ci:*</code> graph by design. A cache hit on any of them would be wrong, and the gate depends on their read-only twins instead (<code>format:check</code> for <code>format</code>).</p>
 <p><strong>The overlay.</strong> <code>ci:main</code> is not a different pipeline; it swallows <code>ci:pull_request</code> whole and adds ${ODN} nodes across ${OCOLS.length} names — <code>ci:main</code>, <code>test:engines</code>, <code>test:matrix</code>, <code>check:pack</code> — of which ${ODR} are command-bearing. The main-branch graph is ${OPCT}% larger and buys ${obuy('test:engines', 'engine test')}, ${obuy('test:matrix', 'd.ts back-test')} and ${obuy('check:pack', 'pack check')}.</p>
 <p><strong>Where the real edges are, and are not.</strong> The <code>docs:api</code> column is punched in every package it stands in: <code>@www/lit-ui-router.dev#build</code> names its four producers directly rather than walking <code>^docs:api</code> through devDependencies it never imports (#693). That is this plate's thesis arriving from the other side — scaffolding leaves the graph and the real work stays. It is also why real→real edges are a small fraction of ${fmt(CI.edges)}: most edges land on a node that runs nothing.</p>`,

@@ -74,7 +74,7 @@ const PLACED = [
   // nudged east off ssr's annex when #1010/#1020 grew it to 2,578 spec sloc
   [2, 'ui-router-server', 'packages/ui-router-server', 'pkg', 240, 20],
   [3, 'lit-ui-router-mobx', 'packages/lit-ui-router-mobx', 'pkg', 240, 104],
-  [4, 'navigation-location-plugin', 'packages/navigation-location-plugin', 'pkg', 310, 150],
+  [4, 'navigation-location-plugin', 'packages/navigation-location-plugin', 'pkg', 330, 150],
   [5, 'sample-app-shared', 'apps/sample-app-shared', 'app', 570, 10],
   [6, 'sample-app-lit-vanilla', 'apps/sample-app-lit-vanilla', 'app', 720, 10],
   [7, 'sample-app-lit-mobx', 'apps/sample-app-lit-mobx', 'app', 720, 90],
@@ -91,7 +91,7 @@ const PLACED = [
   [18, '@tools/bundle-probe', 'tools/bundle-probe', 'tool', 330, 550],
   [19, '@tools/compat-guards', 'tools/compat-guards', 'tool', 130, 550],
   [20, '@tools/oxc-emit', 'tools/oxc-emit', 'tool', 230, 350],
-  [21, '@tools/release-config', 'tools/release-config', 'tool', 280, 350],
+  [21, '@tools/release-config', 'tools/release-config', 'tool', 288, 350],
   [22, '@tools/lit-template-lint', 'tools/lit-template-lint', 'tool', 325, 350],
   [23, '@tools/lit-test-env', 'tools/lit-test-env', 'tool', 85, 350],
   [24, '@tools/vue-check', 'tools/vue-check', 'tool', 370, 350],
@@ -99,7 +99,7 @@ const PLACED = [
   [26, '@tools/happy-dom', 'tools/happy-dom', 'tool', 125, 350],
   [27, '@tools/wintercg-globals', 'tools/wintercg-globals', 'tool', 185, 350],
   // nudged east with sheet 7, off bundle-probe's grown annex
-  [28, '@tools/lint-elements', 'tools/lint-elements', 'tool', 388, 550],
+  [28, '@tools/lint-elements', 'tools/lint-elements', 'tool', 394, 550],
   [29, '@tools/warn-lanes', 'tools/warn-lanes', 'tool', 430, 530],
   [30, '@tools/eslint-ts-parser', 'tools/eslint-ts-parser', 'tool', 54, 350],
   // --- the fifth published package (#676): row two's west lot ---------------------
@@ -115,7 +115,9 @@ const PLACED = [
   [36, 'sample-app-lit-effect', 'apps/sample-app-lit-effect', 'app', 660, 100],
   [37, 'lit-ui-router-effect', 'packages/lit-ui-router-effect', 'pkg', 316, 104],
   // --- the prerender package, born 2026-09-14 (#806): row two, between 31 and 4 ---
-  [38, 'lit-ui-router-ssr', 'packages/lit-ui-router-ssr', 'pkg', 165, 156],
+  [38, 'lit-ui-router-ssr', 'packages/lit-ui-router-ssr', 'pkg', 172, 156],
+  // --- born 2026-10-01 (#1056): sheet 7's lot -----------------------------------
+  [39, '@tools/crap', 'tools/crap', 'tool', 560, 430],
 ];
 
 // [n, name, dist, x, y, srcSloc, specSloc,
@@ -363,6 +365,9 @@ const ORD = ['', 'the highest', 'the second-highest', 'the third-highest', 'the 
 const NAV_RANK_TXT = ORD[NAV_RANK] ?? `number ${NAV_RANK}`;
 const SMALLEST_PKG = D.filter((r) => r[2] === 'pkg').sort((a, b) => a[5] - b[5])[0][0];
 if (SMALLEST_PKG !== 4) throw new Error('sheet 13: the notes call navigation-location-plugin the smallest package, and the plate says otherwise');
+const HOTTEST_MULTI = D.filter((r) => r[7] && r[7][0] > 1).sort((a, b) => b[7][2] / b[7][0] - a[7][2] / a[7][0])[0][0];
+if (HOTTEST_MULTI !== 10) throw new Error('sheet 13: the notes call docs the hottest multi-file block-average, and the plate says otherwise');
+if (['pkg', 'app', 'site'].some((d) => distSloc(d) > distSloc('tool'))) throw new Error('sheet 13: the notes call the instrument yard the largest district by mass, and the plate says otherwise');
 const callouts = `
 ${txt(60, 500, 'lit-ui-router — THE ORIGINAL MASONRY', 'lbla')}
 ${txt(60, 514, `${PORT_LUR.length} of ${g(1).src[0]} src walls laid ${SREF.first}, the first day —`, 'lblf')}
