@@ -12,7 +12,12 @@ import { workspaceRoot } from '@tools/bootstrap/root.ts';
 // turbo scopes a run to the package it is invoked from, so every dry run here
 // is anchored at the root: these guards ask about the whole graph, and a caller
 // that happens to live in a package must not silently narrow the answer.
-const AT_ROOT = { cwd: workspaceRoot };
+// Remote-off, as in turbo_backfill: a dry run otherwise looks up every planned
+// task in the remote cache, and these guards read only the plan.
+const AT_ROOT = {
+  cwd: workspaceRoot,
+  env: { ...process.env, TURBO_CACHE: 'local:r', TURBO_TOKEN: '' },
+};
 
 type DryRun = { tasks?: { taskId?: string; dependencies?: string[] }[] };
 

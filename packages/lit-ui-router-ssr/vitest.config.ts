@@ -1,5 +1,6 @@
 import { fileURLToPath } from 'node:url';
 import { configDefaults, defineConfig } from 'vitest/config';
+import packageJson from './package.json' with { type: 'json' };
 
 // Two lanes: the server half runs in plain node under the @lit-labs/ssr DOM
 // shim, where a prerender actually runs and happy-dom would mask the shim's
@@ -67,6 +68,8 @@ export default defineConfig({
   cacheDir: `node_modules/.vite-${cacheKey}`,
   resolve: { alias: peerAliases },
   test: {
+    // What oxc-emit-js defines as `import.meta.env.PACKAGE_VERSION` in dist/.
+    env: { PACKAGE_VERSION: packageJson.version },
     // hanging-process logs the open handles in CI
     reporters: process.env.CI ? ['default', 'hanging-process'] : ['default'],
     coverage: {

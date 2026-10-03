@@ -5,9 +5,11 @@ import { collectResultSync } from '@lit-labs/ssr/lib/render-result.js';
 import type { TemplateResult } from 'lit';
 import type { UIRouterLit } from 'lit-ui-router';
 import { provideRouter, withRouterSync } from 'lit-ui-router/context';
+import { DefType } from '@uirouter/core';
 import { createServerRouter } from 'ui-router-server';
 import type { MountConfig, ServerRouter, Verdict } from 'ui-router-server';
 
+import { packageVersion, signatureAttribute } from './signature.js';
 import { UiViewRenderer } from './ui-view-renderer.js';
 
 /** One emitted artefact, as {@link prerender} planned it. */
@@ -68,9 +70,10 @@ export interface PrerenderOptions {
   /** Directory the files are written under. */
   outDir: string;
   /**
-   * Renders one shell verdict. Return a template and this package renders it;
-   * return a string and it is written as-is. Async, so a hook may drive
-   * {@link PrerenderOptions.router | router} to the path before it returns.
+   * Renders one shell verdict. Return a template and this package renders it,
+   * behind the hydration signature; return a string and it is written as-is.
+   * Async, so a hook may drive {@link PrerenderOptions.router | router} to the
+   * path before it returns.
    */
   renderShell: (
     verdict: Extract<Verdict, { kind: 'shell' }>,
@@ -241,6 +244,65 @@ const rootedStack = (root: EventTarget): EventTarget[] => {
     : [root];
 };
 
+/** The signature as `prerender()` writes it. */
+interface WrittenSignature {
+  readonly version: string;
+  readonly state: string;
+  readonly params: Readonly<Record<string, unknown>>;
+}
+
+/** The signature of the page `router` currently stands on; config params never reach the url, so they stay out. */
+export const signatureOf = (router: UIRouterLit): WrittenSignature => {
+  const { $current, params } = router.globals;
+  return {
+    version: packageVersion,
+    state: $current.name,
+    params: Object.fromEntries(
+      $current
+        .parameters()
+        .filter((param) => param.location !== DefType.CONFIG)
+        .map((param) => [param.id, param.type.encode(params[param.id])]),
+    ),
+  };
+};
+
+/**
+ * The signature as one JSON data block. `<` and `>` only ever stand inside a
+ * JSON string, where `\u003c` and `\u003e` spell them, so no value can spell
+ * `</script` or `<!--` and end the block early.
+ */
+export const signatureBlock = (signature: WrittenSignature): string => {
+  const json = JSON.stringify(signature)
+    .replaceAll('<', '\\u003c')
+    .replaceAll('>', '\\u003e');
+  return `<script type="application/json" ${signatureAttribute}>${json}</script>`;
+};
+
+/**
+ * Renders one page: the signature first, then the render, so the client reads
+ * the one before it hydrates the other.
+ *
+ * @internal
+ */
+export const renderPage = (
+  body: TemplateResult,
+  router: UIRouterLit,
+  root: EventTarget,
+  elementRenderers: RenderInfo['elementRenderers'],
+): string =>
+  signatureBlock(signatureOf(router)) +
+  withRouterSync(router, () =>
+    collectResultSync(
+      render(body, {
+        // a fresh array per render: @lit-labs/ssr mutates the stack
+        eventTargetStack: rootedStack(root),
+        elementRenderers,
+        // every custom element the page holds sleeps until the client's walk reaches it, top-level ones included
+        deferHydration: true,
+      }),
+    ),
+  );
+
 const warnUnclaimed = (path: string): void => {
   // DEV folds away in dist/*.js; see check:dev-split and dev-warnings.json.
   if (!import.meta.env.DEV) return;
@@ -264,6 +326,68 @@ const warnStrictSlash = async (
   );
 };
 
+const wantsSlashProbe = (
+  verdict: Extract<Verdict, { kind: 'shell' }>,
+  path: string,
+  subpath: string,
+): boolean =>
+  subpath !== '' && verdict.status === undefined && !path.endsWith('/');
+
+const redirectLines = (
+  path: string,
+  verdict: Extract<Verdict, { kind: 'redirect' }>,
+  trailingSlash: PrerenderOptions['trailingSlash'],
+): RedirectLine[] => {
+  const line: RedirectLine = {
+    from: path,
+    to: verdict.location,
+    status: verdict.status,
+  };
+  const paired = trailingSlash === 'both' ? otherSpelling(path) : undefined;
+  return paired === undefined ? [line] : [line, { ...line, from: paired }];
+};
+
+// The otherwise projection's 404 shell, or undefined when there is none to emit.
+const notFoundPage = async (
+  notFound: PrerenderOptions['notFound'],
+  mounts: PrerenderOptions['mounts'],
+  resolver: ServerRouter,
+) => {
+  if (notFound === false) return undefined;
+  const probe = notFound?.probe ?? defaultProbe(mounts);
+  const verdict = await resolver.resolve(probe);
+  if (verdict.kind !== 'shell' || verdict.status !== 404) return undefined;
+  return { verdict, probe, file: notFound?.file ?? DEFAULT_NOT_FOUND_FILE };
+};
+
+const writeRules = async (
+  lines: RedirectLine[],
+  rules: NonNullable<PrerenderOptions['rules']>,
+  write: FileWriter,
+  outDir: string,
+): Promise<void> => {
+  if (rules === 'none') return;
+  if (typeof rules === 'function') {
+    await rules(lines);
+    return;
+  }
+  if (lines.length === 0) return;
+  const body = lines
+    .map((line) => `${line.from} ${line.to} ${line.status}`)
+    .join('\n');
+  await write(joinPath(outDir, '_redirects'), `${body}\n`);
+};
+
+const resolverOf = (options: PrerenderOptions): ServerRouter => {
+  if (options.resolver) return options.resolver;
+  if (!options.mounts) {
+    throw new Error(
+      'prerender() needs a mount table: pass `mounts`, or a `resolver` from createServerRouter().',
+    );
+  }
+  return createServerRouter({ mounts: options.mounts });
+};
+
 const warnUnregistered = (): void => {
   // DEV folds away in dist/*.js; see check:dev-split and dev-warnings.json.
   if (!import.meta.env.DEV) return;
@@ -284,6 +408,13 @@ const warnUnregistered = (): void => {
  * descendants and its sref attribute directives read the same router. Renders
  * run one at a time: the scope is a module slot, so there is nothing to
  * parallelise.
+ *
+ * A rendered page opens on its hydration signature: a JSON data block,
+ * `<script type="application/json" data-lit-ui-router-ssr>`, naming this
+ * package's version and the state and parameter values the router stood on,
+ * which `hydrateRoot()` reads before it touches the document. A `renderShell`
+ * that returns a string is written as-is, with no signature, so the client
+ * renders it cold.
  *
  * Pages are rendered with `deferHydration`, so every custom element one holds
  * carries `defer-hydration` and renders nothing until `hydrateRoot()`'s walk
@@ -329,13 +460,7 @@ export async function prerender(
     dryRun = false,
   } = options;
 
-  if (!options.resolver && !mounts) {
-    throw new Error(
-      'prerender() needs a mount table: pass `mounts`, or a `resolver` from createServerRouter().',
-    );
-  }
-  const resolver: ServerRouter =
-    options.resolver ?? createServerRouter({ mounts: mounts! });
+  const resolver = resolverOf(options);
   warnUnregistered();
 
   const root = options.root ?? new EventTarget();
@@ -363,89 +488,55 @@ export async function prerender(
     const markup =
       typeof body === 'string'
         ? body
-        : withRouterSync(router, () =>
-            collectResultSync(
-              render(body, {
-                // a fresh array per render: @lit-labs/ssr mutates the stack
-                eventTargetStack: rootedStack(root),
-                elementRenderers,
-                // every custom element the page holds sleeps until the client's walk reaches it, top-level ones included
-                deferHydration: true,
-              }),
-            ),
-          );
+        : renderPage(body, router, root, elementRenderers);
     const html = document ? await document(markup, context) : markup;
     if (!dryRun) await write(joinPath(outDir, file), html);
     pages.push({ path, file, verdict, bytes: encoder.encode(html).length });
   };
 
   let slashProbed = false;
+  const visit = async (path: string): Promise<void> => {
+    const verdict = await resolver.resolve(path);
+    if (verdict.kind === 'shell') {
+      const subpath = subpathIn(verdict.mount, path);
+      tally.shell += 1;
+      if (
+        import.meta.env.DEV &&
+        !slashProbed &&
+        wantsSlashProbe(verdict, path, subpath)
+      ) {
+        slashProbed = true;
+        await warnStrictSlash(resolver, path);
+      }
+      await emit(verdict, path, subpath, fileFor(subpath));
+      return;
+    }
+    if (verdict.kind === 'redirect') {
+      tally.redirect += 1;
+      generated.push(...redirectLines(path, verdict, trailingSlash));
+      return;
+    }
+    tally.notFound += 1;
+    warnings.push(path);
+    warnUnclaimed(path);
+  };
+
   const uninstall = provideRouter(root, router);
   try {
-    for await (const path of paths) {
-      const verdict = await resolver.resolve(path);
-      if (verdict.kind === 'shell') {
-        const subpath = subpathIn(verdict.mount, path);
-        tally.shell += 1;
-        if (
-          import.meta.env.DEV &&
-          !slashProbed &&
-          subpath !== '' &&
-          verdict.status === undefined &&
-          !path.endsWith('/')
-        ) {
-          slashProbed = true;
-          await warnStrictSlash(resolver, path);
-        }
-        await emit(verdict, path, subpath, fileFor(subpath));
-        continue;
-      }
-      if (verdict.kind === 'redirect') {
-        tally.redirect += 1;
-        const line: RedirectLine = {
-          from: path,
-          to: verdict.location,
-          status: verdict.status,
-        };
-        generated.push(line);
-        const paired =
-          trailingSlash === 'both' ? otherSpelling(path) : undefined;
-        if (paired !== undefined) generated.push({ ...line, from: paired });
-        continue;
-      }
-      tally.notFound += 1;
-      warnings.push(path);
-      warnUnclaimed(path);
-    }
+    for await (const path of paths) await visit(path);
 
-    if (notFound !== false) {
-      const probe = notFound?.probe ?? defaultProbe(mounts);
-      const verdict = await resolver.resolve(probe);
-      if (verdict.kind === 'shell' && verdict.status === 404) {
-        tally.document += 1;
-        await emit(
-          verdict,
-          probe,
-          subpathIn(verdict.mount, probe),
-          notFound?.file ?? DEFAULT_NOT_FOUND_FILE,
-        );
-      }
+    const page = await notFoundPage(notFound, mounts, resolver);
+    if (page) {
+      tally.document += 1;
+      const { verdict, probe, file } = page;
+      await emit(verdict, probe, subpathIn(verdict.mount, probe), file);
     }
   } finally {
     uninstall();
   }
 
   const lines = [...extraRules, ...generated];
-  if (!dryRun && rules !== 'none') {
-    if (typeof rules === 'function') {
-      await rules(lines);
-    } else if (lines.length > 0) {
-      const body = lines
-        .map((line) => `${line.from} ${line.to} ${line.status}`)
-        .join('\n');
-      await write(joinPath(outDir, '_redirects'), `${body}\n`);
-    }
-  }
+  if (!dryRun) await writeRules(lines, rules, write, outDir);
 
   return { tally, pages, rules: lines, warnings, root };
 }

@@ -12,8 +12,12 @@ import { createServerRouter } from 'ui-router-server';
 import type { MountConfig } from 'ui-router-server';
 import { installServerLocation } from 'ui-router-server/location';
 
+import packageJson from '../../package.json' with { type: 'json' };
+
 import { prerender } from '../prerender.js';
 import type { FileWriter, RedirectLine } from '../prerender.js';
+import { settle } from '../settle.js';
+import { signatureText, withoutSignature } from './markup.js';
 
 // --- fixtures ------------------------------------------------------------
 
@@ -73,6 +77,9 @@ const run = async (
   });
   return { files, result };
 };
+
+/** The signature block a page opens on, parsed. */
+const signatureIn = (page: string): unknown => JSON.parse(signatureText(page));
 
 // --- verdict → artefact --------------------------------------------------
 
@@ -485,7 +492,7 @@ describe('the render composition', () => {
       renderShell: (): TemplateResult => html`<router-probe></router-probe>`,
     });
 
-    expect(files.get('dist/index.html')).toBe(
+    expect(withoutSignature(files.get('dist/index.html')!)).toBe(
       '<!--lit-part l2LFYrjnTDM=--><router-probe defer-hydration></router-probe><!--/lit-part-->',
     );
   });
@@ -498,6 +505,91 @@ describe('the render composition', () => {
     });
 
     expect(files.get('dist/index.html')).toContain('<ui-view defer-hydration>');
+  });
+});
+
+describe('the hydration signature', () => {
+  const version = import.meta.env.PACKAGE_VERSION;
+
+  /** Prerenders `paths` with a renderShell that settles the router on each one first. */
+  const settled = (paths: string[]) => {
+    const router = sheetRouter();
+    return run({
+      router,
+      paths,
+      notFound: false,
+      renderShell: async (_verdict, { path }): Promise<TemplateResult> => {
+        await settle(router, path);
+        return html`<p>page</p>`;
+      },
+    });
+  };
+
+  it('opens a rendered page on the version, the state and its params', async () => {
+    const { files } = await settled(['/sheet/7B']);
+    const page = files.get('dist/sheet/7B/index.html')!;
+
+    expect(signatureIn(page)).toEqual({
+      version,
+      state: 'sheet',
+      params: { num: '7B' },
+    });
+    expect(withoutSignature(page)).toMatch(/^<!--lit-part /);
+  });
+
+  it('reads the version from the manifest', () => {
+    expect(version).toBe(packageJson.version);
+  });
+
+  it('keeps a param value that spells a script close inside the block', async () => {
+    const awkward = `--><script>alert("x")</script><!--&'`;
+    const { files } = await settled([`/sheet/${encodeURIComponent(awkward)}`]);
+    const [page] = files.values();
+
+    // one block, closed where the signature ends, with no raw angle bracket inside
+    const json = signatureText(page);
+    expect(json).not.toMatch(/[<>]/);
+    expect(signatureIn(page)).toMatchObject({ params: { num: awkward } });
+  });
+
+  it('keeps the url params only, so a config param that cannot serialise stays out', async () => {
+    const cyclic: Record<string, unknown> = {};
+    cyclic.self = cyclic;
+    const router = sheetRouter();
+    router.stateRegistry.register({
+      name: 'configured',
+      url: '/configured?q',
+      params: { blob: { value: () => cyclic }, big: { value: () => 1n } },
+    });
+
+    const { files } = await run({
+      router,
+      paths: ['/configured?q=1'],
+      notFound: false,
+      mounts: {
+        '/': {
+          routes: [{ name: 'configured', url: '/configured?q' }],
+          config: { strict: false },
+        },
+      },
+      renderShell: async (_verdict, { path }): Promise<TemplateResult> => {
+        await settle(router, path);
+        return html`<p>page</p>`;
+      },
+    });
+    const [page] = files.values();
+
+    expect(signatureIn(page)).toEqual({
+      version,
+      state: 'configured',
+      params: { q: '1' },
+    });
+  });
+
+  it('writes none ahead of a string renderShell returns', async () => {
+    const { files } = await run({ paths: ['/'], notFound: false });
+
+    expect(files.get('dist/index.html')).toBe('<p>page</p>');
   });
 });
 

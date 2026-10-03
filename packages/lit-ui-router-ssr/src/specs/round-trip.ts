@@ -1,19 +1,19 @@
 // The round trip both client lanes run: draw a document on the server, serve it into a live container, boot a client into it.
-import { render } from '@lit-labs/ssr';
-import { collectResultSync } from '@lit-labs/ssr/lib/render-result.js';
 import { expect } from 'vitest';
 import type { RenderInfo } from '@lit-labs/ssr';
 import type { TemplateResult } from 'lit';
-import { withRouterSync } from 'lit-ui-router/context';
 import type { UIRouterLit } from 'lit-ui-router/pure';
 import { hydrateRoot } from '../client.js';
+import { renderPage } from '../prerender.js';
 import { settle } from '../settle.js';
 import { makeRouter } from './fixture.js';
+
+export { stripComments, withoutSignature } from './markup.js';
 
 /** A page template, drawn by the server and re-rendered by the client. */
 export type Page = (router: UIRouterLit) => TemplateResult;
 
-/** The document a build would have emitted for `path`, with `prerender()`'s own render options. */
+/** The document a build would have emitted for `path`: `prerender()`'s own page render, signature included. */
 export const draw = async (
   page: Page,
   renderers: RenderInfo['elementRenderers'],
@@ -21,14 +21,7 @@ export const draw = async (
 ): Promise<string> => {
   const router = makeRouter();
   await settle(router, path);
-  return withRouterSync(router, () =>
-    collectResultSync(
-      render(page(router), {
-        elementRenderers: renderers,
-        deferHydration: true,
-      }),
-    ),
-  );
+  return renderPage(page(router), router, new EventTarget(), renderers);
 };
 
 // happy-dom parses `<template shadowrootmode>` as a plain template, where a browser's parser would attach a shadow root; lit's own hydrate support arms on `shadowRoot` being there.

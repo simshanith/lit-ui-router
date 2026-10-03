@@ -27,6 +27,7 @@
     "format:toml": "mise run format_toml",
     "lint": "turbo run lint",
     "lint:actionlint": "mise run lint_actionlint",
+    "lint:complexity": "eslint --config tools/eslint/complexity-ceiling.ts --quiet .",
     "lint:elements": "lint-elements",
     "lint:elements:snapshot": "lint-elements --update",
     "lint:markdown": "mise run lint_markdown",

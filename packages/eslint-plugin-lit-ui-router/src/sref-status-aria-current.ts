@@ -140,6 +140,28 @@ const srefStatusAriaCurrent: RuleFor<typeof RULE_NAME> = {
     // belongs to the class it is written in, never to the one around it.
     const fields: Set<string>[] = [];
 
+    // Top-level constructor statements only; branches and callbacks don't count.
+    const constructorFields = (member: MemberNode): string[] => {
+      const keys: string[] = [];
+      const body = (member.value as { body?: { body?: Node[] } } | null)?.body
+        ?.body;
+      for (const statement of body ?? []) {
+        if (statement.type !== 'ExpressionStatement') continue;
+        const assignment = statement.expression as
+          | (Node & { operator?: string; left?: Node; right?: Node })
+          | undefined;
+        if (assignment?.type !== 'AssignmentExpression') continue;
+        if (assignment.operator !== '=') continue;
+        if (!tracker.isControllerNew(assignment.right)) continue;
+        const key =
+          assignment.left === undefined
+            ? undefined
+            : thisKeyOf(assignment.left);
+        if (key !== undefined) keys.push(key);
+      }
+      return keys;
+    };
+
     return {
       ImportDeclaration(node) {
         tracker.onImport(node);
@@ -158,24 +180,7 @@ const srefStatusAriaCurrent: RuleFor<typeof RULE_NAME> = {
           }
           if (member.type !== 'MethodDefinition') continue;
           if (member.kind !== 'constructor') continue;
-          // Only the constructor's own statements: an assignment buried in a
-          // branch or a callback is not a field this rule can vouch for.
-          const body = (member.value as { body?: { body?: Node[] } } | null)
-            ?.body?.body;
-          for (const statement of body ?? []) {
-            if (statement.type !== 'ExpressionStatement') continue;
-            const assignment = statement.expression as
-              | (Node & { operator?: string; left?: Node; right?: Node })
-              | undefined;
-            if (assignment?.type !== 'AssignmentExpression') continue;
-            if (assignment.operator !== '=') continue;
-            if (!tracker.isControllerNew(assignment.right)) continue;
-            const key =
-              assignment.left === undefined
-                ? undefined
-                : thisKeyOf(assignment.left);
-            if (key !== undefined) held.add(key);
-          }
+          for (const key of constructorFields(member)) held.add(key);
         }
         fields.push(held);
       },
