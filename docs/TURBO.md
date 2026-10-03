@@ -45,6 +45,7 @@ ci:pull_request
 │   ├── lint:oxlint
 │   │   └── ^build:types
 │   ├── //#lint:root
+│   ├── //#lint:complexity
 │   ├── //#lint:package-json
 │   ├── //#lint:elements
 │   ├── //#lint:markdown

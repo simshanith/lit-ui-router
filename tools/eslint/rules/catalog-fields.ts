@@ -36,6 +36,22 @@ const isPrivate = (root: JSONNode | undefined): boolean =>
 const catalogName = (spec: unknown): string | undefined =>
   typeof spec === 'string' ? /^catalog:(.*)$/.exec(spec)?.[1] : undefined;
 
+const messageFor = (
+  catalog: string | undefined,
+  shipped: boolean,
+  published: boolean,
+) => {
+  const publishedCatalog = catalog?.startsWith('published') === true;
+  if (shipped && published && !publishedCatalog) return 'shippedNotPublished';
+  if (publishedCatalog && !(shipped && published)) {
+    return 'publishedOutsideShipped';
+  }
+  if (catalog?.startsWith('peerFloor') && shipped) {
+    return 'floorOutsideDevDependencies';
+  }
+  return undefined;
+};
+
 const catalogFields: Rule.RuleModule = {
   meta: {
     type: 'problem',
@@ -63,26 +79,13 @@ const catalogFields: Rule.RuleModule = {
           for (const entry of findProperty(root, field)?.value.properties ??
             []) {
             const catalog = catalogName(entry.value.value);
-            const node = entry.value as unknown as Rule.Node;
-            const data = { field, catalog: catalog ?? '' };
-            if (shipped && published && !catalog?.startsWith('published')) {
-              context.report({ node, messageId: 'shippedNotPublished', data });
-            } else if (
-              catalog?.startsWith('published') &&
-              !(shipped && published)
-            ) {
-              context.report({
-                node,
-                messageId: 'publishedOutsideShipped',
-                data,
-              });
-            } else if (catalog?.startsWith('peerFloor') && shipped) {
-              context.report({
-                node,
-                messageId: 'floorOutsideDevDependencies',
-                data,
-              });
-            }
+            const messageId = messageFor(catalog, shipped, published);
+            if (messageId === undefined) continue;
+            context.report({
+              node: entry.value as unknown as Rule.Node,
+              messageId,
+              data: { field, catalog: catalog ?? '' },
+            });
           }
         }
       },

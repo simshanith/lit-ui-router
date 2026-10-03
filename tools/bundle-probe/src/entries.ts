@@ -26,6 +26,7 @@ export type PackageProbe = {
 // The optional `bundleProbe` manifest field carries the per-entry boundary
 // claims, keyed by the same subpath the exports map uses:
 //   "bundleProbe": { "./context": { "free": ["lit"] } }
+// eslint-disable-next-line complexity -- one linear pass over the exports map; splitting it scatters the mapping rules above
 export const readPackageProbe = (packageDir: string): PackageProbe => {
   const manifest = requireManifest(packageDir);
   const name = manifest.name;
