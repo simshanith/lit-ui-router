@@ -145,10 +145,25 @@ if (NAVIGATION_API) {
   );
 }
 
-/** A new page starts at the top. Called at every moment a phone can lose the scroll. */
+/** A new page starts at the top. */
 export function scrollToTop(): void {
   if (traversing) return;
   window.scrollTo({ top: 0 });
+}
+
+/**
+ * Holds the top through the frames after a view swap: Mobile Safari's scrolling
+ * thread puts the offset it last knew back, clamped to the new page, over a
+ * scroll made before the swap committed. Under a held view-transition snapshot
+ * the frames run once it is released, which is when that happens.
+ */
+export function holdTop(): void {
+  let frames = 12;
+  const tick = (): void => {
+    scrollToTop();
+    if (--frames > 0) requestAnimationFrame(tick);
+  };
+  tick();
 }
 
 /** A dynamic param change such as `focus`: no state entered or exited. */
@@ -225,8 +240,7 @@ export function createRouter(): UIRouterLit {
     // new page and starts at the top.
     if (!isInPlaceChange(transition)) {
       scrollToTop();
-      // once more after the view swaps: a scroll still settling on a phone is clamped to the new page
-      void document.querySelector('ui-view')?.updateComplete.then(scrollToTop);
+      void document.querySelector('ui-view')?.updateComplete.then(holdTop);
     }
     // The prerendered pages carry these titles; the SPA keeps them current.
     const to = transition.to().name;

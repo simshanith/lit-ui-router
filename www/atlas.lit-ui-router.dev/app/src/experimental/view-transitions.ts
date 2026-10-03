@@ -118,17 +118,8 @@ export function installSlideshow(router: UIRouterLit): void {
     });
     const handle = doc.startViewTransition?.(() => domUpdated);
     // (a) every one of these rejects on a skip; unattached, they are page errors
-    // the top is asserted again for the frames after the snapshot is released, and once
-    // the animation ends: when rendering resumes, Mobile Safari's scrolling thread puts
-    // the offset it last knew back and clamps it to the new page, over every earlier reset
-    handle?.ready?.then(() => {
-      let frames = 3;
-      const tick = (): void => {
-        scrollToTop();
-        if (--frames > 0) requestAnimationFrame(tick);
-      };
-      tick();
-    }, () => {});
+    // the router holds the top through the frames after release; this is the last word
+    handle?.ready?.catch(() => {});
     handle?.updateCallbackDone?.catch(() => {});
     handle?.finished?.then(() => {
       clearDirection();
