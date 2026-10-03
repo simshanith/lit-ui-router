@@ -5,17 +5,19 @@
 // Nothing is re-derived: sheet7.mjs exports its COMPUTED geometry (CITY) and this
 // module ships those rows verbatim as a JSON island, so a mass in the scene can
 // never drift from the mass on the plate.  Treatment is the PLATES' OWN, in three
-// dimensions: opaque paper faces over a girding frame, the tier's hatch raked
+// dimensions: translucent paper faces over a girding frame, the tier's hatch raked
 // across the right wall in SCREEN space — the same rake and the same spacing
-// everywhere, which is what patternUnits="userSpaceOnUse" means on sheet 7.
+// everywhere, which is what patternUnits="userSpaceOnUse" means on sheet 7.  Each
+// mass is crowned by a working plant whose plan city-plant.mjs draws from its row.
 import { readFileSync } from 'node:fs';
 import { PROJECT_MARK, articleTitle } from './chrome.mjs';
 import { FOCUS_JS } from './focus.mjs';
 import { CITY, PLACED } from './sheet7.mjs';
 import { SURVEY, SURVEY_META } from './sheet7a.mjs';
+import { PLANT_RULES, plantPlan } from './city-plant.mjs';
 
 export const THREE_URL = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/0.169.0/three.module.min.js';
-export const REV = 'F';
+export const REV = 'G';
 
 const PLATE = JSON.parse(readFileSync(new URL('../data/census-city.json', import.meta.url), 'utf8'));
 const BASIS = `${PLATE.ref} @ ${PLATE.sha} (${PLATE.generatedAtTime.slice(0, 10)})`;
@@ -120,6 +122,9 @@ const DATA = {
   zoom: [0.45, 4],
   pinZoom: 1.8,           // a pin from the url or the keyboard zooms in at least this far
   op: { cap: 0.88, side: 0.8 },
+  // the working plant: a plan of primitives per massed member, seeded on its name
+  plant: plantPlan(CITY, SURVEY_BY_N),
+  ghost: 0.3,              // the girding frame's alpha where it shows through a wall
   legend: { tier: lgHtml(LEGEND), light: lgHtml(LIGHT_LEGEND) },
 };
 
@@ -243,6 +248,7 @@ const BODY = `$$FOCUS  var stage = document.getElementById('cs-canvas');
     return { ink: tok('--ink'), soft: tok('--ink-soft'), faint: tok('--ink-faint'),
       accent: tok('--accent'), halo: bare(tok('--halo'), tok('--accent')), red: tok('--red'),
       paper: tok('--paper'), paper2: tok('--paper-2'), black: '#000000',
+      green: tok('--green') || tok('--accent'),
       // the two stroke tokens the plate's pattern defs use and nothing else does
       line: tok('--line'), redHatch: tok('--red-hatch') || tok('--red'),
       // the ground lettering and the number chips are plate labels, so they take
@@ -274,7 +280,7 @@ const BODY = `$$FOCUS  var stage = document.getElementById('cs-canvas');
     rows.forEach(function (b) {
       minX = Math.min(minX, b.x); maxX = Math.max(maxX, b.x + b.s);
       minZ = Math.min(minZ, b.y); maxZ = Math.max(maxZ, b.y + b.s);
-      maxY = Math.max(maxY, b.h, b.ha);
+      maxY = Math.max(maxY, b.h, b.ha, D.plant[b.n] ? D.plant[b.n].top : 0);
       if (b.sa) {
         minX = Math.min(minX, b.ax); maxX = Math.max(maxX, b.ax + b.sa);
         minZ = Math.min(minZ, b.ay); maxZ = Math.max(maxZ, b.ay + b.sa);
@@ -326,9 +332,9 @@ const BODY = `$$FOCUS  var stage = document.getElementById('cs-canvas');
     }
 
     // ---- materials: one set per tier, redressed with the theme -----------------
-    // The tier lane is OPAQUE — the plate removes hidden lines, and so does this;
-    // the faces are pushed back a hair so the girding frame is not fought for the
-    // same depth.  The light lane stays translucent: its slabs split a footprint.
+    // Walls are never opaque: they write depth, so the city still sorts, but let
+    // the plant and the frame behind them through; the faces are pushed back a hair
+    // so the girding frame is not fought for the same depth.
     var mats = {}, hot = {}, lines = {};
     var make = function (lift) {
       return ['cap', 'a', 'b'].map(function (k) {
@@ -337,8 +343,9 @@ const BODY = `$$FOCUS  var stage = document.getElementById('cs-canvas');
       });
     };
     var solid = function () {
-      return ['cap', 'a', 'b'].map(function () {
-        return hatched(new THREE.MeshBasicMaterial({ polygonOffset: true,
+      return ['cap', 'a', 'b'].map(function (k) {
+        return hatched(new THREE.MeshBasicMaterial({ transparent: true,
+          opacity: k === 'cap' ? D.op.cap : D.op.side, polygonOffset: true,
           polygonOffsetFactor: 1, polygonOffsetUnits: 1 }));
       });
     };
@@ -367,10 +374,23 @@ const BODY = `$$FOCUS  var stage = document.getElementById('cs-canvas');
     lines.hot = new THREE.LineBasicMaterial({ transparent: true, opacity: 1, depthWrite: false });
     lines.hotDash = new THREE.LineDashedMaterial({ transparent: true, opacity: 1, depthWrite: false,
       dashSize: 5, gapSize: 4 });
+    // the frame's hidden half: drawn only where a wall stands in front of it
+    var ghostOf = function (m) {
+      var g = m.clone();
+      g.opacity = D.ghost;
+      g.depthFunc = THREE.GreaterDepth;
+      return g;
+    };
     var plateMat = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.62, depthWrite: false });
     // never rendered: the picking proxies live outside the scene graph
     var pickMat = new THREE.MeshBasicMaterial();
 
+    // one ghost per frame material, cloned once and recoloured with it
+    var ghostMats = [];
+    function ghosts(m) {
+      if (!m.userData.ghost) { m.userData.ghost = ghostOf(m); ghostMats.push(m); }
+      return m.userData.ghost;
+    }
     var parts = {};                 // n -> { tier: {meshes, frames}, light: {…} } — both lanes
     var picks = [];                 // raycast proxies, each tagged with its member
     var lane = 'tier';
@@ -406,6 +426,16 @@ const BODY = `$$FOCUS  var stage = document.getElementById('cs-canvas');
       frame.visible = vis;
       scene.add(frame);
       r.frames.push(frame);
+      if (lk === 'tier' && wall) {
+        var ghost = new THREE.LineSegments(frame.geometry, ghosts(lineMat));
+        ghost.userData.base = ghost.material;
+        ghost.userData.hot = ghosts(dashed ? lines.hotDash : lines.hot);
+        ghost.position.copy(frame.position);
+        ghost.renderOrder = 3;
+        ghost.visible = vis;
+        scene.add(ghost);
+        r.frames.push(ghost);
+      }
       if (pick) {
         var proxy = new THREE.Mesh(geo, pickMat);
         proxy.position.set(px, h / 2, pz);
@@ -450,13 +480,135 @@ const BODY = `$$FOCUS  var stage = document.getElementById('cs-canvas');
       if (b.sa) wash(b.n, b.ax, b.ay, b.sa, b.sa, b.ha, sv.cat === 'n' ? 'bare' : 'lamp', lines.annex, true);
     }
 
-    var tops = {};                  // n -> [x, y, z] of the src mass's cap centre
+    var tops = {};                  // n -> [x, y, z] over the src mass: its cap, or its plant's crown
     rows.forEach(function (b) {
       var p = mass(b.n, b.x, b.y, b.s, b.h, b.tier, lines.tier[b.tier], false);
-      tops[b.n] = [p[0], b.h, p[1]];
+      tops[b.n] = [p[0], D.plant[b.n] ? D.plant[b.n].top : b.h, p[1]];
       if (b.sa) mass(b.n, b.ax, b.ay, b.sa, b.ha, 'annex', lines.annex, true);
       relight(b);
     });
+
+    // ---- the working plant: every member's plan, merged into one mesh ----------
+    // Unlit, so the shading is baked: each vertex takes its role's tone, turned
+    // toward the paper on the top and toward black on the east, from its normal.
+    // One mesh and one line set for the whole city; hover recolours a member's
+    // vertex range, and the plan's solids join the picking proxies.
+    var ROLE = { m: 0, p: 1, g: 2, k: 3, L: 4, u: 5 };
+    var unit = {
+      b: new THREE.BoxGeometry(1, 1, 1),
+      c: new THREE.CylinderGeometry(1, 1, 1, 12, 1, false),
+      d: new THREE.SphereGeometry(1, 12, 3, 0, Math.PI * 2, 0, Math.PI / 2),
+    };
+    // edges fixed per unit solid: a scale never adds or removes a crease here
+    var unitEdge = {};
+    Object.keys(unit).forEach(function (k) { unitEdge[k] = new THREE.EdgesGeometry(unit[k], 35); });
+    var onX = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), -Math.PI / 2);
+    var onZ = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI / 2);
+    var still = new THREE.Quaternion();
+    var pPos = [], pNrm = [], pIdx = [], pRole = [], pEdge = [], pRange = {}, pTier = [];
+    var mtx = new THREE.Matrix4(), nmx = new THREE.Matrix3(), tv = new THREE.Vector3();
+    var unitBox = unit.b;
+    function solidAt(kind, pos, q, sc, role, n, tierIx) {
+      var g = unit[kind];
+      mtx.compose(pos, q, sc);
+      nmx.getNormalMatrix(mtx);
+      var P = g.attributes.position, N = g.attributes.normal, base = pPos.length / 3;
+      for (var i = 0; i < P.count; i++) {
+        tv.fromBufferAttribute(P, i).applyMatrix4(mtx);
+        pPos.push(tv.x, tv.y, tv.z);
+        tv.fromBufferAttribute(N, i).applyMatrix3(nmx).normalize();
+        pNrm.push(tv.x, tv.y, tv.z);
+        pRole.push(role);
+        pTier.push(tierIx);
+      }
+      var I = g.index.array;
+      for (var j = 0; j < I.length; j++) pIdx.push(base + I[j]);
+      var E = unitEdge[kind].attributes.position;
+      for (var e = 0; e < E.count; e++) {
+        tv.fromBufferAttribute(E, e).applyMatrix4(mtx);
+        pEdge.push(tv.x, tv.y, tv.z);
+      }
+      // the solid's own box, as a proxy: hovering a stack reads its member
+      var bb = new THREE.Box3().setFromBufferAttribute(P).applyMatrix4(mtx);
+      var proxy = new THREE.Mesh(unitBox, pickMat);
+      bb.getCenter(proxy.position);
+      bb.getSize(proxy.scale);
+      proxy.userData.n = n;
+      proxy.updateMatrixWorld(true);
+      picks.push(proxy);
+    }
+    var tierKeys = Object.keys(D.tiers);
+    rows.forEach(function (b) {
+      var plan = D.plant[b.n];
+      if (!plan) return;
+      var from = pPos.length / 3, tierIx = tierKeys.indexOf(b.tier);
+      plan.p.forEach(function (q) {
+        var k = q[0], role = ROLE[q[q.length - 1]];
+        if (k === 'b') {
+          solidAt('b', new THREE.Vector3(q[1] - cx, q[2] + q[5] / 2, q[3] - cz), still,
+            new THREE.Vector3(q[4], q[5], q[6]), role, b.n, tierIx);
+        } else if (k === 'c') {
+          solidAt('c', new THREE.Vector3(q[1] - cx, q[2] + q[5] / 2, q[3] - cz), still,
+            new THREE.Vector3(q[4], q[5], q[4]), role, b.n, tierIx);
+        } else if (k === 'x') {
+          solidAt('c', new THREE.Vector3(q[1] + q[5] / 2 - cx, q[2], q[3] - cz), onX,
+            new THREE.Vector3(q[4], q[5], q[4]), role, b.n, tierIx);
+        } else if (k === 'z') {
+          solidAt('c', new THREE.Vector3(q[1] - cx, q[2], q[3] + q[5] / 2 - cz), onZ,
+            new THREE.Vector3(q[4], q[5], q[4]), role, b.n, tierIx);
+        } else if (k === 'd') {
+          solidAt('d', new THREE.Vector3(q[1] - cx, q[2], q[3] - cz), still,
+            new THREE.Vector3(q[4], q[4] * 0.5, q[4]), role, b.n, tierIx);
+        }
+      });
+      for (var i = 0; i < plan.l.length; i += 3) pEdge.push(plan.l[i] - cx, plan.l[i + 1], plan.l[i + 2] - cz);
+      pRange[b.n] = [from, pPos.length / 3];
+    });
+    var plantGeo = new THREE.BufferGeometry();
+    plantGeo.setAttribute('position', new THREE.Float32BufferAttribute(pPos, 3));
+    plantGeo.setAttribute('normal', new THREE.Float32BufferAttribute(pNrm, 3));
+    plantGeo.setAttribute('color', new THREE.Float32BufferAttribute(new Float32Array(pPos.length), 3));
+    plantGeo.setIndex(pIdx);
+    var plantMat = new THREE.MeshBasicMaterial({ vertexColors: true });
+    var plant = new THREE.Mesh(plantGeo, plantMat);
+    scene.add(plant);
+    var plantEdgeGeo = new THREE.BufferGeometry();
+    plantEdgeGeo.setAttribute('position', new THREE.Float32BufferAttribute(pEdge, 3));
+    lines.plant = new THREE.LineBasicMaterial({ transparent: true, opacity: 0.85, depthWrite: false });
+    var plantEdges = new THREE.LineSegments(plantEdgeGeo, lines.plant);
+    plantEdges.renderOrder = 2;
+    scene.add(plantEdges);
+    var plantTone = null;           // per-role [top, lit side, east side], set by paint()
+    var plantHotN = null;
+    function plantColour(from, to) {
+      if (!plantTone) return;
+      var col = plantGeo.attributes.color, nrm = plantGeo.attributes.normal;
+      var hotFrom = plantHotN !== null && pRange[plantHotN] ? pRange[plantHotN] : [0, 0];
+      var cc = new THREE.Color();
+      for (var i = from; i < to; i++) {
+        var role = pRole[i], t = plantTone[role];
+        if (role === ROLE.k) t = plantTone.band[pTier[i]];
+        var ny = nrm.getY(i);
+        if (ny > 0.6) cc.copy(t[0]);
+        else if (ny < -0.6) cc.copy(t[2]);
+        else {
+          // +x is the hatched east wall's side, +z the plain one: the plate's two tones
+          var e = Math.max(0, Math.min(1, 0.5 + (nrm.getX(i) - nrm.getZ(i)) * 0.5));
+          cc.copy(t[1]).lerp(t[2], e);
+          if (ny > 0.2) cc.lerp(t[0], (ny - 0.2) / 0.4);
+        }
+        if (i >= hotFrom[0] && i < hotFrom[1]) cc.lerp(plantTone.hot, 0.35);
+        col.setXYZ(i, cc.r, cc.g, cc.b);
+      }
+      col.needsUpdate = true;
+    }
+    function plantLight(n, on) {
+      var was = plantHotN;
+      plantHotN = on ? n : (plantHotN === n ? null : plantHotN);
+      [was, plantHotN].forEach(function (k) {
+        if (k !== null && pRange[k]) plantColour(pRange[k][0], pRange[k][1]);
+      });
+    }
 
     // ---- the quiet ground: one plate per district, plus a faint grid ----------
     // Lettering is drawn ON the ground, foreshortened with it — a site plan, not a
@@ -684,6 +836,30 @@ const BODY = `$$FOCUS  var stage = document.getElementById('cs-canvas');
       lines.district.color = new THREE.Color(c.faint);
       lines.hot.color = new THREE.Color(c.accent);
       lines.hotDash.color = new THREE.Color(c.accent);
+      ghostMats.forEach(function (m) { m.userData.ghost.color.copy(m.color); });
+      // the plant's tones: machine, pipe and gantry steel each a step further from
+      // the paper toward the soft ink; a band takes its tier's edge; a lamp burns green
+      var black = new THREE.Color(0, 0, 0), white = new THREE.Color(c.paper);
+      var tone = function (base, flat) {
+        if (flat) return [base.clone(), base.clone(), base.clone()];
+        return [base.clone().lerp(white, 0.45), base.clone(), base.clone().lerp(black, 0.24)];
+      };
+      var p2 = new THREE.Color(c.paper2), sft = new THREE.Color(c.soft);
+      plantTone = [
+        tone(p2.clone().lerp(sft, 0.3)),
+        tone(p2.clone().lerp(sft, 0.58)),
+        tone(sft.clone().lerp(new THREE.Color(c.ink), 0.22)),
+        null,
+        tone(new THREE.Color(c.green), true),
+        tone(new THREE.Color(c.faint).lerp(p2, 0.35)),
+      ];
+      plantTone.band = tierKeys.map(function (t) {
+        var e = D.tiers[t].edge;
+        return tone(new THREE.Color(c[e === 'line' ? 'soft' : e]));
+      });
+      plantTone.hot = new THREE.Color(c.accent);
+      plantColour(0, pRole.length);
+      lines.plant.color = new THREE.Color(c.ink);
       plateMat.color = new THREE.Color(c.paper2).lerp(new THREE.Color(c.faint), 0.3);
       grid.material.color = new THREE.Color(c.faint);
       // canvas-drawn ink has to be redrawn when the ink changes
@@ -779,6 +955,7 @@ const BODY = `$$FOCUS  var stage = document.getElementById('cs-canvas');
       if (!r) return;
       r[lane].meshes.forEach(function (m) { m.material = on ? m.userData.hot : m.userData.base; });
       r[lane].frames.forEach(function (f) { f.material = on ? f.userData.hot : f.userData.base; });
+      plantLight(n, on);
     }
     function setLane(k) {
       if (k === lane) return;
@@ -924,6 +1101,11 @@ const BODY = `$$FOCUS  var stage = document.getElementById('cs-canvas');
       walls: function (n) { return parts[n] ? parts[n][lane].meshes.length : -1; },
       panel: function () { return info.textContent; },
       chipsShown: function () { return chips.filter(function (c) { return c.sp.visible; }).length; },
+      drawn: function () {                     // the last frame's renderer.info, for budgets
+        var i = renderer.info;
+        return { calls: i.render.calls, triangles: i.render.triangles, lines: i.render.lines,
+          geometries: i.memory.geometries, plantTriangles: pIdx.length / 3, plantVertices: pRole.length };
+      },
       at: function (n) {                       // a member's screen point, for probes
         place();
         var b = byN[n];
@@ -1014,8 +1196,9 @@ ${fill(APP)}}
 // The basis notes: running prose under the stage, present state only, one note per concern.
 const BASIS_NOTES = [
   ['BASIS', `The model masses sheet 7's own geometry: every footprint, height and position is <code>generator/sheet7.mjs</code>'s computed <code>CITY</code> export, embedded verbatim as JSON and massed from <code>data/census-city.json</code>, ${BASIS}. Nothing is re-derived, so a mass in the model cannot drift from the mass on the plate. three.js ${THREE_URL.match(/three\.js\/([\d.]+)\//)[1]} is imported only once the plate scrolls into view, and the scene renders on demand: nothing runs while you read.`],
-  ['PAPER', `The masses are drawn the way the flat plates draw them. Faces are opaque and remove what stands behind them. The cap takes the tier's own fill; each right-hand wall takes the tier's hatch over a <code>--paper-2</code> stone, the tier's hue pulled ${Math.round(TINT * 100)}% of the way in so the tiers still part at a glance. Each frame strokes the tier's edge colour from the ladder the plates use (red, accent, <code>--line</code>, soft, ink). Only the colour travels; a WebGL line carries no width.`],
+  ['PAPER', `The masses are drawn the way the flat plates draw them, on paper that is never quite opaque: the cap at ${Math.round(DATA.op.cap * 100)}% and the walls at ${Math.round(DATA.op.side * 100)}%, so the girding frame and the plant behind a wall show through it, the frame at ${Math.round(DATA.ghost * 100)}% of its stroke. The cap takes the tier's own fill; each right-hand wall takes the tier's hatch over a <code>--paper-2</code> stone, the tier's hue pulled ${Math.round(TINT * 100)}% of the way in so the tiers still part at a glance. Each frame strokes the tier's edge colour from the ladder the plates use (red, accent, <code>--line</code>, soft, ink). Only the colour travels; a WebGL line carries no width.`],
   ['HATCH', `Laid in screen space: one rake, one spacing, on every wall at every angle, which is what <code>patternUnits="userSpaceOnUse"</code> means on the flat set. It is a stripe mixed into the fragment colour off <code>gl_FragCoord</code>, so it costs no texture and no dependency. Gate severity is the rake: the halt and PR hatch runs opposite to the neutral one, and the halt cap is filled red. The <code>pr</code> and <code>late</code> tiers carry sheet 7's roof wash, the cap taking the side's hatch. The <code>off</code> tier is drawn frame-only, because there is nothing to mass.`],
+  ['PLANT', `Every massed member is drawn as a working plant, after the sprite study's Factorio-leaning treatment, and every piece of it reads a field the census row already carries. The plant keeps to the roof's corners, clear of the number chip over its centre. Stacks stand in a row up the west edge, one per ten authored files up to four, their height set by the footprint and banded in the tier's edge colour. Tanks line the north edge from the north-east corner, one at 150 sloc, two at 600, three at 1,800, as many as the roof holds. A header pipe joins them, and the field left over carries one vent per five files, up to six. A footprint of 45 units or more takes a portal gantry along its east edge, and one of 28 or more a catwalk rail. A wall of 20 units or more runs a riser up its east face, two from 60, and a mass of 40 or more is ringed by a deck every ${PLANT_RULES.deckEvery} units. A spec annex is joined by a pipe rack across the gap and carries three module lamps, lit green by sheet 7A's line coverage: three at 95 and over, two at 85, one below or unmetered, none when no suite loads the member. Where a choice is left, such as which roof cells the vents take, a generator seeded on the member's name makes it, so the same census always builds the same plant. The plant is one merged mesh, shaded per vertex and edged in ink.`],
   ['CAMERA', `Orthographic, at the true isometric elevation, atan(1/\u221a2) \u2248 35.264\u00b0. The azimuth is free under the pointer and eases onto the nearest diagonal on release, instantly under <code>prefers-reduced-motion</code>.`],
   ['LETTERING', `Each src mass carries a billboarded chip with sheet 7's own number, drawn at runtime into a canvas in the page's mono stack and redrawn when the theme turns. Chips drop out below zoom ${DATA.chip.min}, so a pulled-back plan stays a plan. District names lie flat on their ground plates, turned onto the opening diagonal: level at rest, foreshortened with the ground as a site plan's lettering is. The reading panel prints the same row the schedule does.`],
   ['TEST LIGHT', `A second material lane over the same geometry: the city relit from <code>data/census-shadow.json</code>, ${SURVEY_META.basis}, the ref the geometry is massed at, with ${SURVEY_META.metered} members read under their own suites' meters. The model and the flat shadow plate cannot drift either. Every mass in the model has a survey row; one without is a build error.`],
@@ -1067,7 +1250,7 @@ ${swatchCss}</style>
     </div>
   </div>
   <div class="cs-stage">
-    <div class="cs-canvas" id="cs-canvas" role="application" tabindex="0" aria-label="A real three-dimensional isometric model of the census city: ${MASSED} massed workspace members, each an opaque paper box inside its girding frame, its right-hand wall hatched in the rake its gate tier is hatched in on the flat plate, footprint proportional to the square root of its authored lines and height three units per authored file, with ${ANNEXES} dashed spec annexes beside them and four district plates on the ground. The camera orbits and lands on one of the four isometric diagonals. Each mass carries a numbered chip matching sheet 7's schedule, and each district plate carries its name lettered flat on the ground. A TEST LIGHT switch relights the same city from sheet 7A's shadow survey: each metered member's mass splits along its footprint, the share its own suite loads glowing from the annex side and the rest washed toward black, with the spec annexes burning as the lamps that throw the light. With the stage focused, the arrow keys step the pin through the members, Enter or Space pins or clears the one in hand, and Escape clears it."></div>
+    <div class="cs-canvas" id="cs-canvas" role="application" tabindex="0" aria-label="A real three-dimensional isometric model of the census city: ${MASSED} massed workspace members, each a translucent paper box inside its girding frame and crowned by a working plant of stacks, tanks, vents and pipes sized from its own census, its right-hand wall hatched in the rake its gate tier is hatched in on the flat plate, footprint proportional to the square root of its authored lines and height three units per authored file, with ${ANNEXES} dashed spec annexes beside them and four district plates on the ground. The camera orbits and lands on one of the four isometric diagonals. Each mass carries a numbered chip matching sheet 7's schedule, and each district plate carries its name lettered flat on the ground. A TEST LIGHT switch relights the same city from sheet 7A's shadow survey: each metered member's mass splits along its footprint, the share its own suite loads glowing from the annex side and the rest washed toward black, with the spec annexes burning as the lamps that throw the light. With the stage focused, the arrow keys step the pin through the members, Enter or Space pins or clears the one in hand, and Escape clears it."></div>
     <aside class="cs-info" id="cs-info"></aside>
   </div>
   <div class="cs-basis">
