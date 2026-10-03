@@ -106,6 +106,257 @@ ruleTester.run('anchor-is-valid', anchorIsValid, {
   ],
 });
 
+// `allowElementParts: false`: a server render never runs an element part, so
+// only an href in the markup counts, and a lone uiSref is fixed to srefHref.
+const SERVED = [{ allowElementParts: false }];
+const SREF_ONLY = `
+import { html } from 'lit';
+import { uiSref } from 'lit-ui-router';
+`;
+
+ruleTester.run('anchor-is-valid (allowElementParts: false)', anchorIsValid, {
+  valid: [
+    {
+      name: 'srefHref binds the href in the markup, so it is served',
+      code: `${IMPORTS}html\`<a href=\${srefHref('users')}>Users</a>\`;`,
+      options: SERVED,
+    },
+    {
+      name: 'a static href is served as written',
+      code: `${IMPORTS}html\`<a href="/home" \${uiSref('home')}>Home</a>\`;`,
+      options: SERVED,
+    },
+    {
+      name: 'allowElementParts: true is the default behaviour',
+      code: `${IMPORTS}html\`<a \${uiSref('home')}>Home</a>\`;`,
+      options: [{ allowElementParts: true }],
+    },
+    {
+      name: 'an undeclared custom element is still not checked',
+      code: `${IMPORTS}html\`<sp-link \${uiSref('home')}>Home</sp-link>\`;`,
+      options: SERVED,
+    },
+  ],
+  invalid: [
+    {
+      name: 'a uiSref element part is no href, and the fix binds srefHref',
+      code: `${IMPORTS}html\`<a \${uiSref('home')}>Home</a>\`;`,
+      options: SERVED,
+      errors: [{ messageId: 'noHrefErrorMessage' }],
+      output: `${IMPORTS}html\`<a href=\${srefHref('home')}>Home</a>\`;`,
+    },
+    {
+      name: 'the fix adds srefHref to the import that has uiSref',
+      code: `${SREF_ONLY}html\`<a \${uiSref('home')}>Home</a>\`;`,
+      options: SERVED,
+      errors: [{ messageId: 'noHrefErrorMessage' }],
+      output: `
+import { html } from 'lit';
+import { uiSref, srefHref } from 'lit-ui-router';
+html\`<a href=\${srefHref('home')}>Home</a>\`;`,
+    },
+    {
+      name: 'an aliased srefHref import is reused under its own name',
+      code: `import { html } from 'lit';\nimport { uiSref, srefHref as href } from 'lit-ui-router';\nhtml\`<a \${uiSref('home')}>Home</a>\`;`,
+      options: SERVED,
+      errors: [{ messageId: 'noHrefErrorMessage' }],
+      output: `import { html } from 'lit';\nimport { uiSref, srefHref as href } from 'lit-ui-router';\nhtml\`<a href=\${href('home')}>Home</a>\`;`,
+    },
+    {
+      name: 'a namespace import stays in its namespace',
+      code: `import * as lit from 'lit';\nimport * as lur from 'lit-ui-router';\nlit.html\`<a \${lur.uiSref('home')}>Home</a>\`;`,
+      options: SERVED,
+      errors: [{ messageId: 'noHrefErrorMessage' }],
+      output: `import * as lit from 'lit';\nimport * as lur from 'lit-ui-router';\nlit.html\`<a href=\${lur.srefHref('home')}>Home</a>\`;`,
+    },
+    {
+      name: 'params and transition options carry over as written',
+      code: `${IMPORTS}html\`<a class="nav" \${uiSref('users.detail', { id: 1 }, { inherit: false })}>User</a>\`;`,
+      options: SERVED,
+      errors: [{ messageId: 'noHrefErrorMessage' }],
+      output: `${IMPORTS}html\`<a class="nav" href=\${srefHref('users.detail', { id: 1 }, { inherit: false })}>User</a>\`;`,
+    },
+    {
+      name: 'assignHref: true is dropped, and the options object with it',
+      code: `${IMPORTS}html\`<a \${uiSref('home', { id: 1 }, { assignHref: true })}>Home</a>\`;`,
+      options: SERVED,
+      errors: [{ messageId: 'noHrefErrorMessage' }],
+      output: `${IMPORTS}html\`<a href=\${srefHref('home', { id: 1 })}>Home</a>\`;`,
+    },
+    {
+      name: "assignHref: 'auto' is dropped, and an undefined params placeholder with it",
+      code: `${IMPORTS}html\`<a \${uiSref('home', undefined, { assignHref: 'auto' })}>Home</a>\`;`,
+      options: SERVED,
+      errors: [{ messageId: 'noHrefErrorMessage' }],
+      output: `${IMPORTS}html\`<a href=\${srefHref('home')}>Home</a>\`;`,
+    },
+    {
+      name: 'assignHref is dropped from among other options',
+      code: `${IMPORTS}html\`<a \${uiSref('home', {}, { assignHref: true, inherit: false })}>Home</a>\`;`,
+      options: SERVED,
+      errors: [{ messageId: 'noHrefErrorMessage' }],
+      output: `${IMPORTS}html\`<a href=\${srefHref('home', {}, { inherit: false })}>Home</a>\`;`,
+    },
+    {
+      name: 'assignHref is dropped as the last option too',
+      code: `${IMPORTS}html\`<a \${uiSref('home', {}, { inherit: false, assignHref: 'auto' })}>Home</a>\`;`,
+      options: SERVED,
+      errors: [{ messageId: 'noHrefErrorMessage' }],
+      output: `${IMPORTS}html\`<a href=\${srefHref('home', {}, { inherit: false })}>Home</a>\`;`,
+    },
+    {
+      name: 'a click listener reports preferButton, with the same fix',
+      code: `${IMPORTS}html\`<a @click=\${track} \${uiSref('home')}>Home</a>\`;`,
+      options: SERVED,
+      errors: [{ messageId: 'preferButtonErrorMessage' }],
+      output: `${IMPORTS}html\`<a @click=\${track} href=\${srefHref('home')}>Home</a>\`;`,
+    },
+    {
+      name: 'a non-literal options argument is unknowable, so it reports unfixed',
+      code: `${IMPORTS}const opt = {};\nhtml\`<a \${uiSref('home', undefined, opt)}>Home</a>\`;`,
+      options: SERVED,
+      errors: [{ messageId: 'noHrefErrorMessage' }],
+      output: null,
+    },
+    {
+      name: 'a spread in the options reports unfixed',
+      code: `${IMPORTS}html\`<a \${uiSref('home', undefined, { ...opt })}>Home</a>\`;`,
+      options: SERVED,
+      errors: [{ messageId: 'noHrefErrorMessage' }],
+      output: null,
+    },
+    {
+      name: 'a spread argument reports unfixed',
+      code: `${IMPORTS}html\`<a \${uiSref(...args)}>Home</a>\`;`,
+      options: SERVED,
+      errors: [{ messageId: 'noHrefErrorMessage' }],
+      output: null,
+    },
+    {
+      name: 'a non-literal assignHref reports unfixed',
+      code: `${IMPORTS}html\`<a \${uiSref('home', undefined, { assignHref: mode })}>Home</a>\`;`,
+      options: SERVED,
+      errors: [{ messageId: 'noHrefErrorMessage' }],
+      output: null,
+    },
+    {
+      name: 'assignHref: false wrote no href before, so it reports unfixed',
+      code: `${IMPORTS}html\`<a \${uiSref('home', undefined, { assignHref: false })}>Home</a>\`;`,
+      options: SERVED,
+      errors: [{ messageId: 'noHrefErrorMessage' }],
+      output: null,
+    },
+    {
+      name: 'two uiSref parts on one anchor report unfixed',
+      code: `${IMPORTS}html\`<a \${uiSref('home')} \${uiSref('users')}>Home</a>\`;`,
+      options: SERVED,
+      errors: [{ messageId: 'noHrefErrorMessage' }],
+      output: null,
+    },
+    {
+      name: 'a declared link element is fixed the way an <a> is',
+      code: `${IMPORTS}html\`<sp-link \${uiSref('home')}>Home</sp-link>\`;`,
+      options: [{ allowElementParts: false, linkElements: ['sp-link'] }],
+      errors: [{ messageId: 'noHrefErrorMessage' }],
+      output: `${IMPORTS}html\`<sp-link href=\${srefHref('home')}>Home</sp-link>\`;`,
+    },
+    {
+      name: "'auto' writes no href to a declared link element, so it reports unfixed",
+      code: `${IMPORTS}html\`<sp-link \${uiSref('home', undefined, { assignHref: 'auto' })}>Home</sp-link>\`;`,
+      options: [{ allowElementParts: false, linkElements: ['sp-link'] }],
+      errors: [{ messageId: 'noHrefErrorMessage' }],
+      output: null,
+    },
+  ],
+});
+
+// `settings.allowElementParts`: shared by both element-part rules, and an
+// `allowElementParts` option on the rule replaces it.
+const servedTester = new RuleTester({
+  settings: { allowElementParts: false },
+  languageOptions: { ecmaVersion: 'latest', sourceType: 'module' },
+});
+
+servedTester.run(
+  'anchor-is-valid (settings.allowElementParts: false)',
+  anchorIsValid,
+  {
+    valid: [
+      {
+        name: 'the option replaces the setting for this rule',
+        code: `${IMPORTS}html\`<a \${uiSref('home')}>Home</a>\`;`,
+        options: [{ allowElementParts: true }],
+      },
+      {
+        name: 'other options leave the setting in force, and srefHref still counts',
+        code: `${IMPORTS}html\`<a href=\${srefHref('home')}>Home</a>\`;`,
+        options: [{ allowHash: false }],
+      },
+    ],
+    invalid: [
+      {
+        name: 'the setting alone reports and fixes as the option does',
+        code: `${IMPORTS}html\`<a \${uiSref('home')}>Home</a>\`;`,
+        errors: [{ messageId: 'noHrefErrorMessage' }],
+        output: `${IMPORTS}html\`<a href=\${srefHref('home')}>Home</a>\`;`,
+      },
+      {
+        name: 'the setting holds beside other options',
+        code: `${IMPORTS}html\`<a \${uiSref('home')}>Home</a>\`;`,
+        options: [{ linkElements: ['sp-link'] }],
+        errors: [{ messageId: 'noHrefErrorMessage' }],
+        output: `${IMPORTS}html\`<a href=\${srefHref('home')}>Home</a>\`;`,
+      },
+    ],
+  },
+);
+
+const clientTester = new RuleTester({
+  settings: { allowElementParts: true },
+  languageOptions: { ecmaVersion: 'latest', sourceType: 'module' },
+});
+
+clientTester.run(
+  'anchor-is-valid (settings.allowElementParts: true)',
+  anchorIsValid,
+  {
+    valid: [
+      {
+        name: 'the setting credits the element part',
+        code: `${IMPORTS}html\`<a \${uiSref('home')}>Home</a>\`;`,
+      },
+    ],
+    invalid: [
+      {
+        name: 'the option replaces the setting for this rule',
+        code: `${IMPORTS}html\`<a \${uiSref('home')}>Home</a>\`;`,
+        options: SERVED,
+        errors: [{ messageId: 'noHrefErrorMessage' }],
+        output: `${IMPORTS}html\`<a href=\${srefHref('home')}>Home</a>\`;`,
+      },
+    ],
+  },
+);
+
+const malformedTester = new RuleTester({
+  settings: { allowElementParts: 'false' },
+  languageOptions: { ecmaVersion: 'latest', sourceType: 'module' },
+});
+
+malformedTester.run(
+  'anchor-is-valid (settings.allowElementParts malformed)',
+  anchorIsValid,
+  {
+    valid: [
+      {
+        name: 'a non-boolean setting is no declaration, so the default holds',
+        code: `${IMPORTS}html\`<a \${uiSref('home')}>Home</a>\`;`,
+      },
+    ],
+    invalid: [],
+  },
+);
+
 // `linkElements` (#676): declaring a tag is what makes it visible to this rule.
 ruleTester.run('anchor-is-valid (linkElements undeclared)', anchorIsValid, {
   valid: [
@@ -618,7 +869,7 @@ void describe('anchor-is-valid meta', () => {
     ]);
   });
 
-  void it('carries the base schema — aspects, allowHash — plus our linkElements', () => {
+  void it('carries the base schema — aspects, allowHash — plus our allowElementParts and linkElements', () => {
     assert.deepEqual(anchorIsValid.meta?.schema, [
       {
         type: 'object',
@@ -638,6 +889,11 @@ void describe('anchor-is-valid meta', () => {
             description: 'Whether a bare `#` counts as a valid href.',
             type: 'boolean',
           },
+          allowElementParts: {
+            description:
+              'Whether a uiSref element part counts as the href it assigns at runtime (default `true`), replacing `settings.allowElementParts` for this rule.',
+            type: 'boolean',
+          },
           linkElements: {
             description:
               'Element tags to treat as link elements, replacing `settings.linkElements` for this rule.',
@@ -650,8 +906,12 @@ void describe('anchor-is-valid meta', () => {
     ]);
   });
 
-  void it('defaults allowHash on, as upstream does', () => {
+  void it('defaults allowHash on, as upstream does, and leaves allowElementParts to the setting', () => {
     assert.deepEqual(anchorIsValid.meta?.defaultOptions, [{ allowHash: true }]);
+  });
+
+  void it('is fixable, for the uiSref-to-srefHref rewrite', () => {
+    assert.equal(anchorIsValid.meta?.fixable, 'code');
   });
 
   // The docs url is attached where the rule registers, so it is not on the

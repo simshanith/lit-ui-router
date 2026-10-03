@@ -1,6 +1,6 @@
 # lit-ui-router/sref-active-class-aria-current
 
-📝 Require an aria-current binding beside a srefActiveClass binding on a link element.
+📝 Require an aria-current binding beside a srefActiveClass binding on a link element, or a uiSrefActive element part when allowElementParts is false.
 
 💼 This rule is enabled in the ✅ `recommended` config.
 
@@ -10,7 +10,7 @@
 
 [`uiSrefActive`](https://lit-ui-router.dev/api/reference/directives/uiSrefActive) is an element part, and it writes `aria-current` itself: a link it marks active is active for CSS **and** for assistive technology. [`srefActiveClass`](https://lit-ui-router.dev/api/reference/directives/srefActiveClass) is the attribute-part sibling, and it only writes classes. A link styled active by it says nothing to a screen reader unless the author also binds `aria-current=${srefAriaCurrent(...)}` — a regression nobody sees, because the page still looks right.
 
-This rule is the mirror of [`sref-active-aria-current`](./sref-active-aria-current.md): that one protects an authored `aria-current` from the element part's takeover, this one asks for the attribute the attribute part never writes. [`sref-status-aria-current`](./sref-status-aria-current.md) is the third, for a host that reads the status itself; the three together cover the element part, the attribute part and the controller.
+This rule is the mirror of [`sref-active-aria-current`](./sref-active-aria-current.md): that one protects an authored `aria-current` from the element part's takeover, this one asks for the attribute the attribute part never writes, and, under [`allowElementParts: false`](#prerendered-templates), the one a server render of `uiSrefActive` never writes. [`sref-status-aria-current`](./sref-status-aria-current.md) is the third, for a host that reads the status itself; the three together cover the element part, the attribute part and the controller.
 
 The report names the call the fix would write — `bind aria-current=${srefAriaCurrent({ state: 'home' })} beside it` — so the remedy is the message, not an exercise. When the params cannot be read, it asks for the same `state`, `params` and `options` instead.
 
@@ -24,9 +24,40 @@ A link element is `<a>`, `<area>`, an element whose literal `role` carries the `
 
 `srefActiveClass` in container mode — no `state`, matching whatever the enclosing `uiSref` names — still reports on a link, because a link painted active is a link owed the signal. `exactClasses` alone is the same case.
 
+## Prerendered templates
+
+`@lit-labs/ssr` never runs an element part, so a template a server prerenders serves `<a ${uiSrefActive(...)}>` with neither its active class nor `aria-current` until the client hydrates. With `allowElementParts` false, the rule lints those templates as the server renders them: a link element carrying a `uiSrefActive` element part is held to the same bar as a `srefActiveClass` binding, and with no `aria-current` beside it, it reports and names `class=${srefActiveClass(...)}` with `aria-current=${srefAriaCurrent(...)}` as the form the server writes. The exemptions above still apply.
+
+Which templates get `false` is set with [`settings.allowElementParts`](../../README.md#settings), or this rule's own `allowElementParts` option, which replaces it; [the recipe](../../README.md#prerendered-templates) scopes either with `files`, for a mostly-client app and a fully isomorphic one.
+
+```js
+// reported under allowElementParts: false
+html`<a href=${srefHref('home')} ${uiSrefActive({ activeClasses: ['on'] })}
+  >Home</a
+>`;
+// served as written
+html`<a
+  href=${srefHref('home')}
+  class=${srefActiveClass({ state: 'home', activeClasses: ['on'] })}
+  aria-current=${srefAriaCurrent({ state: 'home' })}
+  >Home</a
+>`;
+```
+
+This report carries no fix: `ariaCurrentValue` splits into its own binding, a `class` binding already on the element has to merge with the new one, and in container mode the links inside have to move to `srefHref` too.
+
 ## Options
 
-`linkElements` replaces `settings.linkElements` for this rule, wholesale; `[]` means "declare nothing here".
+`allowElementParts` (default `true`) counts a `uiSrefActive` element part as the `aria-current` it writes at runtime; `false` holds it to the served bar above. It replaces `settings.allowElementParts` for this rule. `linkElements` replaces `settings.linkElements` for this rule, wholesale; `[]` means "declare nothing here".
+
+<!-- begin auto-generated rule options list -->
+
+| Name                | Description                                                                                                                                                 | Type     |
+| :------------------ | :---------------------------------------------------------------------------------------------------------------------------------------------------------- | :------- |
+| `allowElementParts` | Whether a uiSrefActive element part counts as the aria-current it writes at runtime (default `true`), replacing `settings.allowElementParts` for this rule. | Boolean  |
+| `linkElements`      | Element tags to treat as link elements, replacing `settings.linkElements` for this rule.                                                                    | String[] |
+
+<!-- end auto-generated rule options list -->
 
 ## Examples
 

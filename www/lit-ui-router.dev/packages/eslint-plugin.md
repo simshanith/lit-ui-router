@@ -1,6 +1,6 @@
 ---
 title: ESLint Plugin
-description: Directive-aware linting with eslint-plugin-lit-ui-router — rules covering hrefless anchors, inert hrefs, aria-current conflicts and misplaced directives, where a uiSref element part counts as the href it assigns at runtime
+description: Directive-aware linting with eslint-plugin-lit-ui-router — rules covering hrefless anchors, inert hrefs, aria-current conflicts and misplaced directives
 ---
 
 # eslint-plugin-lit-ui-router
@@ -129,6 +129,15 @@ doesn't opt out of href assignment. Only a literal `assignHref: false` is a
 definite no: `'auto'` assigns on a native `<a>`, and a non-literal option is
 unknowable, so both stay suppressed rather than guessed. The base rule's
 options (`allowHash`, `aspects`) are carried over untouched.
+
+`@lit-labs/ssr` never runs an element part, so a prerendered `uiSref` anchor
+is served with no `href`. With `settings.allowElementParts` false,
+`anchor-is-valid` and `sref-active-class-aria-current` lint a template as
+served: the fix rewrites a lone `uiSref` as `href=${srefHref(...)}`, and a
+`uiSrefActive` link reports until it binds `srefActiveClass` and
+`srefAriaCurrent`. The
+[prerendered templates recipe](https://github.com/simshanith/lit-ui-router/blob/main/packages/eslint-plugin-lit-ui-router/README.md#prerendered-templates)
+scopes it with `files`, for a mostly-client app and a fully isomorphic one.
 
 The generated
 [rule documentation](https://github.com/simshanith/lit-ui-router/blob/main/packages/eslint-plugin-lit-ui-router/docs/rules/anchor-is-valid.md)
