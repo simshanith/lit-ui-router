@@ -11,11 +11,9 @@ import { UIRouterLit } from './core.js';
 import { warnRouterSwapped } from './dev-warn.js';
 import { uiRouterContextEventName, uiViewContextEventName } from './events.js';
 import type { UiRouterContextEvent, UiViewContextEvent } from './events.js';
+import { noUnsubscribe, RouterSubscribers } from './router-subscription.js';
 
 export type { UiRouterContextEvent, UiViewContextEvent } from './events.js';
-
-/** The router never changes under a subscriber, so there is nothing to undo. */
-const noUnsubscribe = () => {};
 
 /**
  * @hideconstructor
@@ -107,10 +105,8 @@ export class UIRouterLitElement extends LitElement {
   };
 
   /**
-   * Answers a `context-request` for the router context.
-   *
-   * `subscribe` gets one call and a no-op unsubscribe: the element takes its
-   * router on connect and does not swap it afterwards.
+   * Answers a `context-request` for the router context with a router that is
+   * final: `subscribe` gets one call and a no-op unsubscribe.
    *
    * @internal
    */
@@ -125,8 +121,23 @@ export class UIRouterLitElement extends LitElement {
     };
   }
 
+  /** Subscribers that took the placeholder, owed the app's router. */
+  private readonly routerSubscribers = new RouterSubscribers();
+
+  /**
+   * Answers a `context-request` for the router context.
+   *
+   * While the placeholder minted on connect stands, a `subscribe` request is
+   * kept and called once more with the router that replaces it, and gets an
+   * unsubscribe that drops it. Any other answer is final: one call and a no-op
+   * unsubscribe, since a later swap is unsupported and only warns.
+   */
   private readonly onContextRequest = (event: Event) => {
-    this.constructor.onContextRequest(this.uiRouter)(event);
+    this.routerSubscribers.answer(
+      event,
+      this.uiRouter,
+      !!this.ownRouter && this.uiRouter === this.ownRouter,
+    );
   };
 
   /**
@@ -177,6 +188,10 @@ export class UIRouterLitElement extends LitElement {
       changed.get('uiRouter') !== this.ownRouter
     ) {
       warnRouterSwapped(this);
+    }
+    // Only a placeholder's answers are kept, so this reaches subscribers on the upgrade alone.
+    if (this.uiRouter && this.uiRouter !== this.ownRouter) {
+      this.routerSubscribers.deliver(this.uiRouter);
     }
   }
 
