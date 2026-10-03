@@ -2,9 +2,9 @@ import { TargetState, Transition, UIRouter } from '@uirouter/core';
 import { nothing, ReactiveController, ReactiveControllerHost } from 'lit';
 
 import { warnMissingRouter } from './dev-warn.js';
+import { subscribeRouter } from './router-subscription.js';
 import type { SrefTargetParams } from './sref-active.js';
 import { resolveAriaCurrent, SrefTargets } from './sref-status.js';
-import { UIRouterLitElement } from './ui-router.js';
 import {
   UI_SREF_TARGET_EVENT,
   UI_SREF_TARGET_REMOVED_EVENT,
@@ -32,8 +32,9 @@ export interface SrefStatusControllerOptions extends SrefTargetParams {
    * The {@link UIRouter} instance to observe.
    *
    * When omitted, the controller discovers the router from an ancestor
-   * <code>&lt;ui-router&gt;</code> (or <code>&lt;ui-view&gt;</code>) via the
-   * `ui-router-context` event when the host connects.
+   * <code>&lt;ui-router&gt;</code> (or <code>&lt;ui-view&gt;</code>) when the
+   * host connects, and follows the placeholder router a
+   * <code>&lt;ui-router&gt;</code> mints for itself to the one that replaces it.
    *
    * Passing it explicitly also moves the first status computation into the
    * constructor, so the status is there for the very first render and needs
@@ -147,6 +148,9 @@ export class SrefStatusController implements ReactiveController {
 
   private readonly deregisterFns: DeregisterFn[] = [];
 
+  /** the hooks on the router itself, which a replacement router moves */
+  private readonly routerDeregisterFns: DeregisterFn[] = [];
+
   private _status: SrefStatus | undefined;
 
   /** whether a status has ever been computed, so the first one always renders */
@@ -245,8 +249,16 @@ export class SrefStatusController implements ReactiveController {
   /** @internal */
   hostConnected(): void {
     const { host } = this;
-    this.targets.router ??=
-      this.options.router ?? UIRouterLitElement.seekRouter(host);
+    if (!this.options.router) {
+      const { router, unsubscribe } = subscribeRouter(
+        host,
+        this.onRouterReplaced,
+      );
+      this.targets.router = router;
+      if (unsubscribe) {
+        this.deregisterFns.push(unsubscribe);
+      }
+    }
     this.targets.relative = UiView.seekParentView(host)?.viewContext?.name;
     this.targets.setExplicit();
 
@@ -275,12 +287,7 @@ export class SrefStatusController implements ReactiveController {
 
     const router = this.targets.router;
     if (router) {
-      this.deregisterFns.push(
-        router.transitionService.onStart({}, this.onTransitionStart, {
-          priority: -Infinity,
-        }) as DeregisterFn,
-        router.stateRegistry.onStatesChanged(this.onStatesChanged),
-      );
+      this.watch(router);
     } else {
       warnMissingRouter(
         host,
@@ -294,7 +301,7 @@ export class SrefStatusController implements ReactiveController {
 
   /** @internal */
   hostDisconnected(): void {
-    this._connection++;
+    this.unwatch();
     while (this.deregisterFns.length) {
       this.deregisterFns.shift()?.();
     }
@@ -303,6 +310,32 @@ export class SrefStatusController implements ReactiveController {
       this.targets.router = undefined;
     }
   }
+
+  private watch(router: UIRouter): void {
+    this.routerDeregisterFns.push(
+      router.transitionService.onStart({}, this.onTransitionStart, {
+        priority: -Infinity,
+      }) as DeregisterFn,
+      router.stateRegistry.onStatesChanged(this.onStatesChanged),
+    );
+  }
+
+  private unwatch(): void {
+    this._connection++;
+    while (this.routerDeregisterFns.length) {
+      this.routerDeregisterFns.shift()?.();
+    }
+  }
+
+  /** What a disconnect and reconnect would do, for the router that replaced the one found. */
+  private readonly onRouterReplaced = (router: UIRouter): void => {
+    this.unwatch();
+    this.targets.router = router;
+    this.targets.relative = UiView.seekParentView(this.host)?.viewContext?.name;
+    this.targets.rebuild();
+    this.watch(router);
+    this.refresh();
+  };
 
   /**
    * Recomputes the status and re-renders the host, but only if a flag or a

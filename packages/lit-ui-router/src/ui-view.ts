@@ -41,6 +41,7 @@ import {
   isContextRequest,
   parentUiViewContext,
 } from './context.js';
+import { RouterSubscribers, subscribeRouter } from './router-subscription.js';
 
 /** @internal */
 let viewIdCounter = 0;
@@ -281,17 +282,31 @@ export class UiView extends LitElement {
     UIRouterLitElement.onUiRouterContextEvent(this.uiRouter)(event);
   };
 
-  /** Answers `context-request` for the router, so a `@lit/context` consumer under this view is served too. */
+  /** Subscribers that took a router this view may still supersede. */
+  private readonly routerSubscribers = new RouterSubscribers();
+
+  /**
+   * Answers `context-request` for the router, so a `@lit/context` consumer
+   * under this view is served too.
+   *
+   * While the router this view holds is a sought one its provider may still
+   * replace, a `subscribe` request is kept and called once more with the router
+   * this view adopts.
+   */
   private readonly onContextRequest = (event: Event) => {
     if (this.seekingProvidedRouter) {
       return;
     }
-    UIRouterLitElement.onContextRequest(this.uiRouter)(event);
+    this.routerSubscribers.answer(
+      event,
+      this.uiRouter,
+      !!this.providerSubscription && this.uiRouter === this.soughtRouter,
+    );
   };
 
   private seekRouter() {
     if (!this.uiRouter) {
-      this.soughtRouter = UIRouterLitElement.seekRouter(this);
+      this.soughtRouter = this.seekProvidedRouter();
       this.uiRouter = this.soughtRouter!;
     }
     this.addEventListener(
@@ -317,6 +332,15 @@ export class UiView extends LitElement {
   /** Set only for the synchronous span of our own re-seek. */
   private seekingProvidedRouter = false;
 
+  /** Drops this view's subscription to its provider; set while the provider may still replace its router. */
+  private providerSubscription?: () => void;
+
+  /** The provider replaced the router this view sought: adopt it, and pass it on. */
+  private readonly onProvidedRouterReplaced = () => {
+    this.providerSubscription = undefined;
+    this.adoptProvidedRouter();
+  };
+
   /**
    * Seeks the provider's router, past our own answer.
    *
@@ -325,9 +349,15 @@ export class UiView extends LitElement {
    * dispatch keeps the guarantee intact for everyone else.
    */
   private seekProvidedRouter(): UIRouterLit | undefined {
+    this.providerSubscription?.();
     this.seekingProvidedRouter = true;
     try {
-      return UIRouterLitElement.seekRouter(this);
+      const { router, unsubscribe } = subscribeRouter(
+        this,
+        this.onProvidedRouterReplaced,
+      );
+      this.providerSubscription = unsubscribe;
+      return router;
     } finally {
       this.seekingProvidedRouter = false;
     }
@@ -372,6 +402,7 @@ export class UiView extends LitElement {
     this.deregisterAll();
     this.uiRouter = router;
     this.setupUiView();
+    this.routerSubscribers.deliver(router);
   }
 
   private deregisterAll(): void {
@@ -529,6 +560,8 @@ export class UiView extends LitElement {
       this.onParentViewContextRequest,
     );
 
+    this.providerSubscription?.();
+    this.providerSubscription = undefined;
     this.deregisterAll();
   }
 

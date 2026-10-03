@@ -225,6 +225,21 @@ describe('TransitionController', () => {
       await routerGo(router, 'b', { id: '7' });
       expect(callback).toHaveBeenCalledTimes(1);
     });
+
+    it('should keep its router when it reconnects outside any provider', async () => {
+      const callback = vi.fn();
+      const host = await mountHost({ callback });
+
+      host.remove();
+      await tick();
+      container.appendChild(host);
+      await waitForUpdate(host);
+
+      expect(host.controller!.router).toBe(router);
+      callback.mockClear();
+      await routerGo(router, 'a');
+      expect(callback).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe('accessors', () => {
