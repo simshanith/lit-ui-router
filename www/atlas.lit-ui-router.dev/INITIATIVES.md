@@ -631,7 +631,7 @@ sitting); order is dependency order.
 **The site, the app and the artifact**
 
 - The atlas is LIVE at <https://atlas.lit-ui-router.dev/> — a Cloudflare Pages project
-  (`altitude-atlas`, production branch `worktree-altitude-atlas`, direct upload). Refresh
+  (`altitude-atlas`, production branch `www/atlas`, direct upload). Refresh
   cycle from `www/atlas.lit-ui-router.dev/`: `node generator/build.mjs .` → `npm --prefix app run build` →
   `node generator/stage-site.mjs` → `wrangler pages deploy dist --project-name
   altitude-atlas`. The atlas is promoted into `www/` as an example that became a site, and it

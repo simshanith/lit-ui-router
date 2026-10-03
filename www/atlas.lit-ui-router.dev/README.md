@@ -50,7 +50,7 @@ node www/atlas.lit-ui-router.dev/generator/build.mjs www/atlas.lit-ui-router.dev
 npm --prefix www/atlas.lit-ui-router.dev/app run build               # the routed app, prerendered
 npm --prefix www/atlas.lit-ui-router.dev/app run build:artifact      # the single-file build published as a claude.ai Artifact
 cd www/atlas.lit-ui-router.dev && mise exec -- node generator/stage-site.mjs   # dist/: app at /, this set at /set/, vendored libs
-mise exec -- pnpm exec wrangler pages deploy dist --project-name altitude-atlas --branch worktree-altitude-atlas --commit-dirty=true
+mise exec -- pnpm exec wrangler pages deploy dist --project-name altitude-atlas --branch www/atlas --commit-dirty=true
 ```
 
 **The card pictures.** Every card on the cover carries a 300 x 400 picture of its own
