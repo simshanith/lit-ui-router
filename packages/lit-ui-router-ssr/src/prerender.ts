@@ -277,8 +277,13 @@ export const signatureBlock = (signature: WrittenSignature): string => {
   return `<script type="application/json" ${signatureAttribute}>${json}</script>`;
 };
 
-// The signature first, then the render: the client reads the one before it hydrates the other.
-const renderPage = (
+/**
+ * Renders one page: the signature first, then the render, so the client reads
+ * the one before it hydrates the other.
+ *
+ * @internal
+ */
+export const renderPage = (
   body: TemplateResult,
   router: UIRouterLit,
   root: EventTarget,
