@@ -38,6 +38,9 @@ export default defineConfig(
     // of this one for every file beneath it — including package.json, which
     // would otherwise drop out of //#lint:package-json unannounced
     'examples/lint-eslint/**',
+    // same shape: an npm-managed app with its own eslint.config.js, whose
+    // parser is never installed by the workspace
+    'www/atlas.lit-ui-router.dev/app/**',
   ]),
   {
     extends: [packageJson.configs.recommended],
