@@ -8,6 +8,8 @@ import { renderPage } from '../prerender.js';
 import { settle } from '../settle.js';
 import { makeRouter } from './fixture.js';
 
+export { stripComments, withoutSignature } from './markup.js';
+
 /** A page template, drawn by the server and re-rendered by the client. */
 export type Page = (router: UIRouterLit) => TemplateResult;
 

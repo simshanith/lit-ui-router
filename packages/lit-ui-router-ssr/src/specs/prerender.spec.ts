@@ -12,11 +12,12 @@ import { createServerRouter } from 'ui-router-server';
 import type { MountConfig } from 'ui-router-server';
 import { installServerLocation } from 'ui-router-server/location';
 
-import manifest from '../../package.json' with { type: 'json' };
+import packageJson from '../../package.json' with { type: 'json' };
 
 import { prerender } from '../prerender.js';
 import type { FileWriter, RedirectLine } from '../prerender.js';
 import { settle } from '../settle.js';
+import { signatureText, withoutSignature } from './markup.js';
 
 // --- fixtures ------------------------------------------------------------
 
@@ -77,16 +78,8 @@ const run = async (
   return { files, result };
 };
 
-/** The leading signature block, ending where an html parser would end it. */
-const SIGNATURE =
-  /^<script type="application\/json" data-lit-ui-router-ssr>(.*?)<\/script>/is;
-
-/** A page with its signature comment dropped. */
-const withoutSignature = (page: string): string => page.replace(SIGNATURE, '');
-
-/** The signature a page opens on, parsed. */
-const signatureIn = (page: string): unknown =>
-  JSON.parse(SIGNATURE.exec(page)![1]);
+/** The signature block a page opens on, parsed. */
+const signatureIn = (page: string): unknown => JSON.parse(signatureText(page));
 
 // --- verdict → artefact --------------------------------------------------
 
@@ -545,7 +538,7 @@ describe('the hydration signature', () => {
   });
 
   it('reads the version from the manifest', () => {
-    expect(version).toBe(manifest.version);
+    expect(version).toBe(packageJson.version);
   });
 
   it('keeps a param value that spells a script close inside the block', async () => {
@@ -554,7 +547,7 @@ describe('the hydration signature', () => {
     const [page] = files.values();
 
     // one block, closed where the signature ends, with no raw angle bracket inside
-    const json = SIGNATURE.exec(page)![1];
+    const json = signatureText(page);
     expect(json).not.toMatch(/[<>]/);
     expect(signatureIn(page)).toMatchObject({ params: { num: awkward } });
   });
