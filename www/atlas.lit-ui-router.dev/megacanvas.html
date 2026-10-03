@@ -226,7 +226,7 @@ sup.art {
    one screen. An inline SVG letterboxes under max-height instead of shrinking,
    so the cap reaches it through max-width times the plate's own viewBox ratio
    (--plate-ar, written per sheet). */
-.plate { position: relative; container-type: inline-size; margin: 20px 0 22px; --plate-cap: min(84vh, 1400px); }
+.plate { position: relative; container-type: inline-size; margin: 20px 0 8px; --plate-cap: min(84vh, 1400px); }
 .figure-wrap { overflow-x: auto; }
 .figure-wrap svg { display: block; width: 100%; max-width: min(100%, calc(var(--plate-cap) * var(--plate-ar, 1.4))); height: auto; min-width: 1000px; margin: 0 auto; }
 .plate::after {
@@ -258,11 +258,16 @@ figcaption {
   line-height: 1.6;
   color: var(--ink-soft);
   max-width: calc(750px + 45.5px);
-  margin: 0 0 26px;
+  margin: 0 0 40px;
   padding: 2px 22px 4px;
   border-left: 1.5px solid var(--ink);
   font-style: italic;
+  text-wrap: pretty;
 }
+figcaption code { font-family: var(--code); font-size: 0.86em; font-style: normal; color: var(--ink); }
+/* beside a fixed key column the caption stops where the notes column does */
+@media (min-width: 1181px) { figcaption { max-width: min(calc(750px + 45.5px), calc(100% - 352px - 24px)); } }
+@media (max-width: 720px) { figcaption { padding: 0 0 2px 14px; font-size: 15px; line-height: 1.55; } }
 figcaption .figno {
   font-family: var(--data);
   font-style: normal;
@@ -287,7 +292,7 @@ figcaption .figno {
   align-items: start;
 }
 @media (max-width: 1180px) { .notes-grid { grid-template-columns: minmax(0, 3fr) minmax(260px, 2fr); } }
-@media (max-width: 720px) { .notes-grid { grid-template-columns: 1fr; } }
+@media (max-width: 720px) { .notes-grid { grid-template-columns: minmax(0, 1fr); } }
 .keyblock { position: sticky; top: var(--sticky-top); }
 @media (max-width: 720px) { .keyblock { position: static; } }
 /* COLUMNS AT THE WIDTH THE PAPER GIVES. The count is an integer read off the
@@ -2803,7 +2808,7 @@ a { color: var(--accent); }
 <text x="58" y="1080" class="lblf" text-anchor="start" >ROADS — five district arteries drawn, the graph's heaviest degrees: @www/lit-ui-router.dev#build waits on 18 nodes · typedoc-plugin#build:types unblocks 36 · lit-ui-router#build:types 50 · release#check:exports 38;</text>
 <text x="58" y="1094" class="lblf" text-anchor="start" >111 of the graph's 1,932 edges join two real tasks, the rest are local streets itemised in the dry-run JSON</text>
 </svg></div></div>
-    <figcaption><span class="figno">FIG. 3B</span>The pull-request graph that plate 3A traced as plumbing, surveyed here as ground: every real task massed by what it watches (footprint) and what it actually executes (height). The survey’s verdict is flatness — 178 of 227 blocks are a single script line riding an external binary — which makes the exceptions legible at a glance: a 293-line test tower on a 38-file lot, a 124-line task-inputs guard on an 91-file lot, a 303-file plain patrolled by 19 lines of command, and a 401-sloc spire over the root lint lane that runs this repo's own bin instead of an external one.</figcaption>
+    <figcaption><span class="figno">FIG. 3B</span>The pull-request graph that plate 3A traced as plumbing, surveyed here as ground: every real task massed by what it watches (footprint) and what it actually executes (height). The survey’s verdict is flatness — 178 of 227 blocks are a single script line riding an external binary — which makes the exceptions legible at a glance: a 293-line test tower on a 38-file lot, a 124-line task-inputs guard on an 91-file lot, a 303-file plain patrolled by 19 lines of command, and a 401-sloc spire over the root lint lane that runs this repo’s own bin instead of an external one.</figcaption>
   </figure>
   <div class="notes-grid">
     <div class="notes">
@@ -5665,7 +5670,7 @@ a { color: var(--accent); }
 <text x="58" y="1209" class="lbls" text-anchor="start" >TOTAL — 37 plants running, 0 seized · steam 400 member-touches from 597 window commits (2026-07-01..2026-09-28) · 24 metered-lamp plants + 4 accent · rust 5/24/5/2/1 across 0–R4, idle at origin/main @ 63c0b823</text>
 <text x="58" y="1226" class="lbls" text-anchor="start" >steam counted at origin/main @ 63c0b823 (2026-09-29); lamps carry 7A's own base</text>
 </svg></div></div>
-    <figcaption><span class="figno">FIG. 7B</span>Sheet 7 counted the city, sheet 13 dated its stone, plate 7A metered its test light. This plate turns the same city on: every member becomes a Working Plant sprite in the Factorio sense — a machine whose state is broadcast, not implied. Rust speckle for idleness, steam for the last ninety days of commits, module lamps for test light, pipes for the build. The rust ladder is not written down: it is re-cut from the idle distribution every cabinet, so a step means only what this plate's own key says it means. The channels are independent on purpose, and the city proves they must be: the flagship stands at rust R1 under full steam and every lamp, and the deepest rust in the city, R4, stands on <code>sample-app-lit-mobx</code> — where <code>sample-app-lit-mobx</code> is still steaming. The alert channel is drawn and empty: no gate in the city is red at HEAD.</figcaption>
+    <figcaption><span class="figno">FIG. 7B</span>Sheet 7 counted the city, sheet 13 dated its stone, plate 7A metered its test light. This plate turns the same city on: every member becomes a Working Plant sprite in the Factorio sense — a machine whose state is broadcast, not implied. Rust speckle for idleness, steam for the last ninety days of commits, module lamps for test light, pipes for the build. The rust ladder is not written down: it is re-cut from the idle distribution every cabinet, so a step means only what this plate’s own key says it means. The channels are independent on purpose, and the city proves they must be: the flagship stands at rust R1 under full steam and every lamp, and the deepest rust in the city, R4, stands on <code>sample-app-lit-mobx</code> — where <code>sample-app-lit-mobx</code> is still steaming. The alert channel is drawn and empty: no gate in the city is red at HEAD.</figcaption>
   </figure>
   <div class="notes-grid">
     <div class="notes">

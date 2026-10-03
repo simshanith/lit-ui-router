@@ -235,7 +235,7 @@ sup.art {
    one screen. An inline SVG letterboxes under max-height instead of shrinking,
    so the cap reaches it through max-width times the plate's own viewBox ratio
    (--plate-ar, written per sheet). */
-.plate { position: relative; container-type: inline-size; margin: 20px 0 22px; --plate-cap: min(84vh, 1400px); }
+.plate { position: relative; container-type: inline-size; margin: 20px 0 8px; --plate-cap: min(84vh, 1400px); }
 .figure-wrap { overflow-x: auto; }
 .figure-wrap svg { display: block; width: 100%; max-width: min(100%, calc(var(--plate-cap) * var(--plate-ar, 1.4))); height: auto; min-width: 1000px; margin: 0 auto; }
 .plate::after {
@@ -267,11 +267,16 @@ figcaption {
   line-height: 1.6;
   color: var(--ink-soft);
   max-width: calc(750px + 45.5px);
-  margin: 0 0 26px;
+  margin: 0 0 40px;
   padding: 2px 22px 4px;
   border-left: 1.5px solid var(--ink);
   font-style: italic;
+  text-wrap: pretty;
 }
+figcaption code { font-family: var(--code); font-size: 0.86em; font-style: normal; color: var(--ink); }
+/* beside a fixed key column the caption stops where the notes column does */
+@media (min-width: 1181px) { figcaption { max-width: min(calc(750px + 45.5px), calc(100% - 352px - 24px)); } }
+@media (max-width: 720px) { figcaption { padding: 0 0 2px 14px; font-size: 15px; line-height: 1.55; } }
 figcaption .figno {
   font-family: var(--data);
   font-style: normal;
@@ -296,7 +301,7 @@ figcaption .figno {
   align-items: start;
 }
 @media (max-width: 1180px) { .notes-grid { grid-template-columns: minmax(0, 3fr) minmax(260px, 2fr); } }
-@media (max-width: 720px) { .notes-grid { grid-template-columns: 1fr; } }
+@media (max-width: 720px) { .notes-grid { grid-template-columns: minmax(0, 1fr); } }
 .keyblock { position: sticky; top: var(--sticky-top); }
 @media (max-width: 720px) { .keyblock { position: static; } }
 /* COLUMNS AT THE WIDTH THE PAPER GIVES. The count is an integer read off the
