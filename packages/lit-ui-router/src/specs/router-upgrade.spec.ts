@@ -89,6 +89,39 @@ describe('placeholder router upgrade', () => {
       expect(callback.mock.calls[1]?.[0]).toBe(router);
     });
 
+    it('keeps a throwing subscriber from the others, rethrown on a microtask', async () => {
+      const child = uiRouter.appendChild(document.createElement('div'));
+      const failure = new Error('subscriber failed');
+      requestRouter(child, {
+        subscribe: true,
+        callback: (value) => {
+          if (value === router) throw failure;
+        },
+      });
+      const callback = vi.fn();
+      requestRouter(child, { subscribe: true, callback });
+      const microtasks = vi.fn<(callback: () => void) => void>();
+      vi.stubGlobal('queueMicrotask', microtasks);
+
+      try {
+        uiRouter.uiRouter = router;
+        await waitForUpdate(uiRouter);
+      } finally {
+        vi.unstubAllGlobals();
+      }
+
+      expect(callback.mock.calls[1]?.[0]).toBe(router);
+      const rethrows = microtasks.mock.calls.filter(([task]) => {
+        try {
+          task();
+        } catch (thrown) {
+          return thrown === failure;
+        }
+        return false;
+      });
+      expect(rethrows).toHaveLength(1);
+    });
+
     it('delivers the upgrade once, and never a later swap', async () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
       try {
