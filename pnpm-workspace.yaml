@@ -181,6 +181,9 @@ allowBuilds:
   workerd: true
 
 audit:
+  ignore:
+    - GHSA-ch52-4w7c-c8xp
+    - GHSA-vfj7-8cjw-p6xm
   ignorePrune: true
   level: low
 
