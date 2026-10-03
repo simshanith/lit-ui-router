@@ -51,6 +51,25 @@
       // the lock records catalogs, overrides and importers alongside resolutions
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/pnpm-lock.yaml"]
     },
+    "check:package-coverage": {
+      // //#lint:package-json's read-set (eslint resolves the config per file),
+      // plus the workspace enumeration
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/**/package.json",
+        "!$TURBO_ROOT$/**/node_modules/**",
+        "!$TURBO_ROOT$/**/dist/**",
+        "!$TURBO_ROOT$/**/.turbo/**",
+        "!$TURBO_ROOT$/.claude/**",
+        "$TURBO_ROOT$/**/eslint.config.*",
+        "$TURBO_ROOT$/pnpm-workspace.yaml",
+        "$TURBO_ROOT$/.oxlintrc.json",
+        "$TURBO_ROOT$/tools/eslint/**",
+        "$TURBO_ROOT$/tools/eslint-ts-parser/src/**",
+        "$TURBO_ROOT$/packages/eslint-plugin-lit-ui-router/src/**",
+        "$TURBO_ROOT$/tools/shared/src/**"
+      ]
+    },
     "check:graph-edges": {
       // any manifest can gain or lose a lane, any turbo.json an edge that
       // selects differently — or stops planning at all
