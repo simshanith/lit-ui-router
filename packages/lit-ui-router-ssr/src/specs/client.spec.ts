@@ -12,7 +12,8 @@ import {
 } from '../client.js';
 import type { AdoptOutcome, UiViewAdoptEvent } from '../client.js';
 import { settle } from '../settle.js';
-import { signatureBlock, signatureSelector } from '../signature.js';
+import { signatureBlock } from '../prerender.js';
+import { signatureSelector } from '../signature.js';
 import { UiViewRenderer } from '../ui-view-renderer.js';
 import {
   DetailView,

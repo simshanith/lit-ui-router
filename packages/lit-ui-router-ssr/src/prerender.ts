@@ -5,10 +5,11 @@ import { collectResultSync } from '@lit-labs/ssr/lib/render-result.js';
 import type { TemplateResult } from 'lit';
 import type { UIRouterLit } from 'lit-ui-router';
 import { provideRouter, withRouterSync } from 'lit-ui-router/context';
+import { DefType } from '@uirouter/core';
 import { createServerRouter } from 'ui-router-server';
 import type { MountConfig, ServerRouter, Verdict } from 'ui-router-server';
 
-import { signatureBlock, signatureOf } from './signature.js';
+import { packageVersion, signatureAttribute } from './signature.js';
 import { UiViewRenderer } from './ui-view-renderer.js';
 
 /** One emitted artefact, as {@link prerender} planned it. */
@@ -240,6 +241,40 @@ const rootedStack = (root: EventTarget): EventTarget[] => {
   return litServerRoot && litServerRoot !== root
     ? [litServerRoot, root]
     : [root];
+};
+
+/** The signature as `prerender()` writes it. */
+interface WrittenSignature {
+  readonly version: string;
+  readonly state: string;
+  readonly params: Readonly<Record<string, unknown>>;
+}
+
+/** The signature of the page `router` currently stands on; config params never reach the url, so they stay out. */
+export const signatureOf = (router: UIRouterLit): WrittenSignature => {
+  const { $current, params } = router.globals;
+  return {
+    version: packageVersion,
+    state: $current.name,
+    params: Object.fromEntries(
+      $current
+        .parameters()
+        .filter((param) => param.location !== DefType.CONFIG)
+        .map((param) => [param.id, param.type.encode(params[param.id])]),
+    ),
+  };
+};
+
+/**
+ * The signature as one JSON data block. `<` and `>` only ever stand inside a
+ * JSON string, where `\u003c` and `\u003e` spell them, so no value can spell
+ * `</script` or `<!--` and end the block early.
+ */
+export const signatureBlock = (signature: WrittenSignature): string => {
+  const json = JSON.stringify(signature)
+    .replaceAll('<', '\\u003c')
+    .replaceAll('>', '\\u003e');
+  return `<script type="application/json" ${signatureAttribute}>${json}</script>`;
 };
 
 // The signature first, then the render: the client reads the one before it hydrates the other.

@@ -8,7 +8,7 @@ import { withRouterSync } from 'lit-ui-router/context';
 import type { UIRouterLit } from 'lit-ui-router/pure';
 import { hydrateRoot } from '../client.js';
 import { settle } from '../settle.js';
-import { signatureBlock, signatureOf } from '../signature.js';
+import { signatureBlock, signatureOf } from '../prerender.js';
 import { makeRouter } from './fixture.js';
 
 /** A page template, drawn by the server and re-rendered by the client. */
