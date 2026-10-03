@@ -108,11 +108,12 @@ export class RefController<
 
   private fiber?: Fiber.RuntimeFiber<unknown, unknown>;
   private initialized = false;
+  private connected = false;
   private readonly runtime: RefRuntime;
 
   constructor(
     private readonly host: ReactiveControllerHost,
-    private readonly refs: RefSource<Refs>,
+    private refs: RefSource<Refs>,
     private readonly selector: (...values: RefValues<Refs>) => T,
     private readonly options: RefControllerOptions<T> = {},
   ) {
@@ -127,6 +128,28 @@ export class RefController<
   }
 
   hostConnected(): void {
+    this.connected = true;
+    this.fork();
+  }
+
+  hostDisconnected(): void {
+    this.connected = false;
+    this.interrupt();
+  }
+
+  /**
+   * Replaces the refs. A connected controller interrupts its fiber and
+   * re-seeds and re-forks on the new refs, as a reconnect does; a
+   * disconnected one only records them for its next `hostConnected`.
+   */
+  protected setRefs(refs: RefSource<Refs>): void {
+    this.refs = refs;
+    if (!this.connected) return;
+    this.interrupt();
+    this.fork();
+  }
+
+  private fork(): void {
     const refs = typeof this.refs === 'function' ? this.refs() : this.refs;
     if (!refs) return;
     // Seed before forking: a fiber's first emission is not guaranteed to land
@@ -139,7 +162,7 @@ export class RefController<
     );
   }
 
-  hostDisconnected(): void {
+  private interrupt(): void {
     this.fiber?.unsafeInterruptAsFork(this.fiber.id());
     this.fiber = undefined;
     // Reconnecting re-fires onChange, as a fresh subscription would.

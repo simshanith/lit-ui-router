@@ -107,7 +107,12 @@ new RouterRefController(host, selector, options?)
   result is exposed as `.value`
 - `options.router` — explicit router instance, skipping context discovery;
   the route is then read at construction, so `.value` is live before the host
-  connects
+  connects. A thunk (`() => UIRouter | undefined`) is resolved at construction
+  and again on every `hostConnected`; when it returns `undefined`, the
+  controller discovers the router as if the option were omitted. A host on a
+  page served by [`lit-ui-router-ssr`](/packages/ssr) must be handed its
+  router, here or through `setRouter()`: discovery binds the placeholder
+  router `<ui-router>` holds until `hydrateRoot()` sets the app's
 - `options.onChange` — effect invoked when the selected value changes (and
   once on every (re)connect); useful for resetting component state from route
   params
@@ -119,6 +124,12 @@ new RouterRefController(host, selector, options?)
 - `options.runtime` — the runtime the subscription fiber is forked on;
   defaults to Effect's default runtime, and a `ManagedRuntime` satisfies it
   directly
+
+[`controller.setRouter(router)`](/api/lit-ui-router-effect/classes/RouterRefController#setrouter)
+hands the controller a router after construction, such as one that arrives as
+a host property. A connected host interrupts its fiber, re-seeds `.value` from
+the new router, re-forks, and updates; a disconnected one takes the router on
+its next `hostConnected`. Passing the router already followed does nothing.
 
 ### RefController
 
@@ -175,8 +186,8 @@ One warning exists here. A `RouterRefController` whose host has no
 `<ui-router>` ancestor logs a one-time console warning naming that host, and
 then follows nothing: `.value` stays at `options.initialValue` and the host is
 never asked to update, so the component renders once with its initial value and
-never again. Wrap the subtree in `<ui-router>`, or pass the router yourself with
-`options.router` for a host that lives outside the router's DOM.
+never again. Wrap the subtree in `<ui-router>`, or hand a host that lives
+outside the router's DOM its router with `options.router` or `setRouter()`.
 
 ## Why selectors instead of render auto-tracking?
 

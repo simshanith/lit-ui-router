@@ -11,7 +11,8 @@ export function createTestRouter(
 ): UIRouterLit {
   const router = new UIRouterLit();
   router.plugin(memoryLocationPlugin);
-  states.forEach((state) => router.stateRegistry.register(state));
+  // Copies: registration binds a declaration to one router, and specs share testStates.
+  states.forEach((state) => router.stateRegistry.register({ ...state }));
   return router;
 }
 
