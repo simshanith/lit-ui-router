@@ -131,6 +131,26 @@ export const states: LitStateDeclaration[] = [
 export const NAVIGATION_API =
   !ARTIFACT && typeof window !== 'undefined' && 'navigation' in window;
 
+/**
+ * Whether the navigation under way is a traverse. The browser restores a
+ * traverse's own scroll position; every other new page starts at the top.
+ */
+let traversing = false;
+if (NAVIGATION_API) {
+  (window as Window & { navigation: Navigation }).navigation.addEventListener(
+    'navigate',
+    (event) => {
+      traversing = event.navigationType === 'traverse';
+    },
+  );
+}
+
+/** A new page starts at the top. Called at every moment a phone can lose the scroll. */
+export function scrollToTop(): void {
+  if (traversing) return;
+  window.scrollTo({ top: 0 });
+}
+
 /** A dynamic param change such as `focus`: no state entered or exited. */
 export function isParamOnlyChange(transition: Transition): boolean {
   return transition.entering().length === 0 && transition.exiting().length === 0;
@@ -204,9 +224,9 @@ export function createRouter(): UIRouterLit {
     // An in-place change stays on the page it re-renders; everything else is a
     // new page and starts at the top.
     if (!isInPlaceChange(transition)) {
-      window.scrollTo({ top: 0 });
+      scrollToTop();
       // once more after the view swaps: a scroll still settling on a phone is clamped to the new page
-      void document.querySelector('ui-view')?.updateComplete.then(() => window.scrollTo({ top: 0 }));
+      void document.querySelector('ui-view')?.updateComplete.then(scrollToTop);
     }
     // The prerendered pages carry these titles; the SPA keeps them current.
     const to = transition.to().name;

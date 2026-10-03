@@ -30,7 +30,7 @@
 import type { Transition } from '@uirouter/core';
 import type { UIRouterLit } from 'lit-ui-router';
 import { loadManifest } from '../manifest.ts';
-import { isInPlaceChange } from '../router.ts';
+import { isInPlaceChange, scrollToTop } from '../router.ts';
 import { viewRendered } from './view-rendered.ts';
 
 /**
@@ -118,9 +118,14 @@ export function installSlideshow(router: UIRouterLit): void {
     });
     const handle = doc.startViewTransition?.(() => domUpdated);
     // (a) every one of these rejects on a skip; unattached, they are page errors
-    handle?.ready?.catch(() => {});
+    // the top is asserted again once the snapshot is released and once the
+    // animation ends: Mobile Safari drops a scroll made under the held snapshot
+    handle?.ready?.then(scrollToTop, () => {});
     handle?.updateCallbackDone?.catch(() => {});
-    handle?.finished?.then(clearDirection, clearDirection);
+    handle?.finished?.then(() => {
+      clearDirection();
+      scrollToTop();
+    }, clearDirection);
 
     // (b) release on the rendered view OR failure OR the cap — an aborted
     // transition must never leave the document frozen under a snapshot.
