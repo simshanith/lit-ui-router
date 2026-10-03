@@ -14,6 +14,13 @@
 // cache did anything at all. Those are silent failure modes — nothing is red,
 // so nothing prompts anyone to look.
 
+import { posix } from 'node:path';
+
+import {
+  type AnnotationLevel,
+  type AnnotationProperties,
+  annotationCommand,
+} from '@tools/shared/gha.core.ts';
 import {
   type WarnLaneLineOptions,
   type WarnLaneState,
@@ -469,6 +476,195 @@ export function guardCommands(chunks: string[], token?: string): string[] {
   return [`::stop-commands::${token}`, ...chunks, `::${token}::`];
 }
 
+// ── Tool annotations ─────────────────────────────────────────────────────────
+// oxlint (and any tool given a github output format) writes `::warning file=…`
+// into its task log, but turbo's stream prefixes every line with
+// `<pkg>:<task>: `, so the runner never parses it, and `file=` is relative to
+// the package, not the repo. These are lifted out of the logs, validated, and
+// rebuilt from parsed fields — never echoed — so a log can place an annotation
+// and nothing else.
+
+export interface ToolAnnotation {
+  level: AnnotationLevel;
+  message: string;
+  properties: AnnotationProperties & { file: string };
+}
+
+const ANNOTATION_LINE = /^::(error|warning|notice) ([^:]*)::(.*)$/;
+const POSITION_KEYS = new Set(['line', 'endLine', 'col', 'endColumn']);
+const POSITIVE_INT = /^[1-9]\d{0,6}$/;
+
+function hasControl(value: string): boolean {
+  for (let at = 0; at < value.length; at += 1) {
+    const code = value.charCodeAt(at);
+    if (code < 0x20 || code === 0x7f) return true;
+  }
+  return false;
+}
+
+// The inverse of the runner's escaping; anything else stays literal.
+function unescapeCommand(value: string): string {
+  return value.replaceAll(/%(25|0D|0A|3A|2C)/gi, (_, code: string) =>
+    String.fromCharCode(Number.parseInt(code, 16)),
+  );
+}
+
+/**
+ * `file` resolved against the task's package directory, repo-root-relative.
+ * An absolute path is accepted only under `root`; anything that escapes the
+ * repo, or carries a control character or backslash, is refused.
+ */
+export function repoRelativeFile(
+  file: string,
+  directory: string,
+  root?: string,
+): string | undefined {
+  if (file === '' || hasControl(file) || file.includes('\\')) return undefined;
+  let resolved: string;
+  if (posix.isAbsolute(file)) {
+    const base = root === undefined ? undefined : posix.normalize(`${root}/`);
+    if (base === undefined || !file.startsWith(base)) return undefined;
+    resolved = posix.normalize(file.slice(base.length));
+  } else {
+    resolved = posix.normalize(posix.join(directory || '.', file));
+  }
+  if (resolved === '..' || resolved.startsWith('../')) return undefined;
+  if (posix.isAbsolute(resolved) || resolved === '.') return undefined;
+  return resolved;
+}
+
+/**
+ * One log line as an annotation, or undefined. Only the three annotation
+ * levels, only the known properties, each at most once, positions as positive
+ * integers, and a `file` that resolves inside the repo.
+ */
+export function parseAnnotation(
+  rawLine: string,
+  directory: string,
+  root?: string,
+): ToolAnnotation | undefined {
+  const match = ANNOTATION_LINE.exec(stripAnsi(rawLine).replace(/\r$/, ''));
+  if (match === null) return undefined;
+  const [, level, rawProps, rawMessage] = match;
+  const message = unescapeCommand(rawMessage ?? '');
+  if (message.trim() === '') return undefined;
+
+  const properties: AnnotationProperties = {};
+  const seen = new Set<string>();
+  for (const pair of (rawProps ?? '').split(',')) {
+    const at = pair.indexOf('=');
+    if (at <= 0) return undefined;
+    const key = pair.slice(0, at);
+    const value = unescapeCommand(pair.slice(at + 1));
+    if (seen.has(key)) return undefined;
+    seen.add(key);
+    if (POSITION_KEYS.has(key)) {
+      if (!POSITIVE_INT.test(value)) return undefined;
+      properties[key as 'line' | 'endLine' | 'col' | 'endColumn'] =
+        Number(value);
+    } else if (key === 'title') {
+      properties.title = value;
+    } else if (key === 'file') {
+      properties.file = repoRelativeFile(value, directory, root);
+      if (properties.file === undefined) return undefined;
+    } else {
+      return undefined;
+    }
+  }
+  const { file } = properties;
+  if (file === undefined) return undefined;
+  return {
+    level: level as AnnotationLevel,
+    message,
+    properties: { ...properties, file },
+  };
+}
+
+/** Every annotation in every task log the run wrote, in task order. */
+export function extractAnnotations(
+  summary: RunSummary,
+  logs: Map<string, string>,
+  root?: string,
+): ToolAnnotation[] {
+  const found: ToolAnnotation[] = [];
+  for (const task of summary.tasks) {
+    const log = logs.get(task.taskId);
+    if (log === undefined) continue;
+    for (const line of log.split('\n')) {
+      const annotation = parseAnnotation(line, task.directory, root);
+      if (annotation !== undefined) found.push(annotation);
+    }
+  }
+  return found;
+}
+
+/** GitHub keeps at most this many annotations of each level per step. */
+export const ANNOTATION_LIMIT = 10;
+
+const LEVELS: readonly AnnotationLevel[] = ['error', 'warning', 'notice'];
+
+export interface AnnotationPlan {
+  /** The rebuilt commands to print, deduplicated and capped. */
+  commands: string[];
+  /** Distinct annotations found, per level. */
+  found: Record<AnnotationLevel, number>;
+  /** Of those, how many fit under the cap, per level. */
+  emitted: Record<AnnotationLevel, number>;
+}
+
+/**
+ * Deduplicated and capped per level. `reserved` holds slots back for the
+ * step's own annotations — the failure headline takes one error.
+ */
+export function planAnnotations(
+  annotations: readonly ToolAnnotation[],
+  reserved: Partial<Record<AnnotationLevel, number>> = {},
+): AnnotationPlan {
+  const found = { error: 0, warning: 0, notice: 0 };
+  const emitted = { error: 0, warning: 0, notice: 0 };
+  const commands: string[] = [];
+  const seen = new Set<string>();
+  for (const level of LEVELS) {
+    const cap = Math.max(0, ANNOTATION_LIMIT - (reserved[level] ?? 0));
+    for (const annotation of annotations) {
+      if (annotation.level !== level) continue;
+      const command = annotationCommand(
+        level,
+        annotation.message,
+        annotation.properties,
+      );
+      if (seen.has(command)) continue;
+      seen.add(command);
+      found[level] += 1;
+      if (emitted[level] < cap) {
+        emitted[level] += 1;
+        commands.push(command);
+      }
+    }
+  }
+  return { commands, found, emitted };
+}
+
+/** The tally line both lanes print; undefined when no log carried any. */
+export function annotationNote(plan: AnnotationPlan): string | undefined {
+  const parts = LEVELS.filter((level) => plan.found[level] > 0).map((level) => {
+    const found = plan.found[level];
+    const shown = plan.emitted[level];
+    const noun = `${level}${found === 1 ? '' : 's'}`;
+    return shown === found
+      ? `${found} ${noun}`
+      : `${found} ${noun} (${shown} annotated)`;
+  });
+  if (parts.length === 0) return undefined;
+  const capped = LEVELS.some(
+    (level) => plan.emitted[level] < plan.found[level],
+  );
+  const tail = capped
+    ? ` GitHub keeps ${ANNOTATION_LIMIT} per level per step; the rest are in the task logs.`
+    : '';
+  return `${parts.join(', ')} from task logs, re-emitted as annotations.${tail}`;
+}
+
 /** Slowest-task rows. Ten fits on screen; the tail is never the problem. */
 export const SLOWEST_LIMIT = 10;
 
@@ -564,6 +760,8 @@ export interface OverviewContext {
    * a clean one. Empty renders nothing.
    */
   warnLanes?: readonly WarnLaneEntry[];
+  /** `annotationNote` for the tool annotations this step re-emitted. */
+  annotations?: string;
 }
 
 /**
@@ -731,6 +929,9 @@ function footerMarkdown(context: OverviewContext): string[] {
       '',
     );
   }
+  if (context.annotations !== undefined) {
+    out.push(`**Tool annotations** — ${context.annotations}`, '');
+  }
   for (const link of [attachmentsLink(context), artifactLink(context)]) {
     if (link !== undefined) out.push(link.markdown, '');
   }
@@ -854,6 +1055,8 @@ function footerLines(context: OverviewContext): string[] {
   // for one terminal row with the thing a reader actually needs off this line.
   for (const line of warnLaneReport(context.warnLanes ?? [], { rules: false }))
     lines.push(`   warn-lane: ${line}`);
+  if (context.annotations !== undefined)
+    lines.push(`   annotations: ${context.annotations}`);
 
   // Blank line first: the link is a footer for the whole block, and set flush
   // against the facts it reads as a continuation of whichever one ran last.

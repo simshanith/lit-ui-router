@@ -4,8 +4,10 @@ import { describe, it } from 'node:test';
 import {
   type RunSummary,
   type SummaryTask,
+  ANNOTATION_LIMIT,
   MISS_LIST_LIMIT,
   SLOWEST_LIMIT,
+  annotationNote,
   artifactLink,
   attachmentsLink,
   buildReports,
@@ -14,6 +16,7 @@ import {
   criticalPath,
   directReproduction,
   excerptLog,
+  extractAnnotations,
   failedTasks,
   fenceFor,
   guardCommands,
@@ -23,8 +26,11 @@ import {
   omittedTaskCount,
   overviewLines,
   overviewMarkdown,
+  parseAnnotation,
   parseRunSummary,
+  planAnnotations,
   remoteCacheAnomaly,
+  repoRelativeFile,
   savedClause,
   sessionFailureMarkdown,
   sessionHeadline,
@@ -1269,5 +1275,188 @@ describe('sessionFailureMarkdown', () => {
     const lines = sessionStdoutReport(failures, [red]);
     assert.match(lines[0] ?? '', /^── lit-ui-router#typecheck:src/);
     assert.match(lines.at(-1) ?? '', /^1 failing task:/);
+  });
+});
+
+describe('tool annotations', () => {
+  const ssrDir = 'packages/lit-ui-router-ssr';
+  // oxlint's github format, as the task log holds it: no turbo prefix.
+  const oxlintWarning =
+    '::warning file=src/signature.ts,line=43,endLine=43,col=39,endColumn=70,title=turbo(no-undeclared-env-vars)::src/signature.ts:43:39: PACKAGE_VERSION is not listed';
+  const oxlintError =
+    '::error file=src/core.ts,line=273,endLine=273,col=3,endColumn=12,title=eslint(no-debugger)::src/core.ts:273:3: `debugger` statement is not allowed';
+
+  it('rewrites an oxlint warning to a repo-relative file', () => {
+    assert.deepEqual(parseAnnotation(oxlintWarning, ssrDir), {
+      level: 'warning',
+      message: 'src/signature.ts:43:39: PACKAGE_VERSION is not listed',
+      properties: {
+        file: 'packages/lit-ui-router-ssr/src/signature.ts',
+        line: 43,
+        endLine: 43,
+        col: 39,
+        endColumn: 70,
+        title: 'turbo(no-undeclared-env-vars)',
+      },
+    });
+  });
+
+  it('parses an error, and leaves a root task path as is', () => {
+    const parsed = parseAnnotation(oxlintError, '');
+    assert.equal(parsed?.level, 'error');
+    assert.equal(parsed?.properties.file, 'src/core.ts');
+    assert.equal(parsed?.properties.title, 'eslint(no-debugger)');
+  });
+
+  it('parses rumdl github output, which orders the properties differently', () => {
+    const parsed = parseAnnotation(
+      '::error file=docs/CONTRIBUTING.md,line=146,col=1,endLine=146,endColumn=10,title=MD001::Expected heading level 3',
+      '',
+    );
+    assert.equal(parsed?.properties.file, 'docs/CONTRIBUTING.md');
+    assert.equal(parsed?.properties.line, 146);
+  });
+
+  it('strips ANSI and a trailing CR before matching', () => {
+    const parsed = parseAnnotation(`${ESC}[0m${oxlintWarning}\r`, ssrDir);
+    assert.equal(parsed?.properties.line, 43);
+  });
+
+  it('ignores a turbo-prefixed line: its package directory is unknown', () => {
+    assert.equal(
+      parseAnnotation(
+        `lit-ui-router-ssr:lint:oxlint: ${oxlintWarning}`,
+        ssrDir,
+      ),
+      undefined,
+    );
+  });
+
+  it('never re-emits anything but a well-formed file annotation', () => {
+    for (const line of [
+      '::add-mask::secret',
+      '::stop-commands::token',
+      '::set-output name=a::b',
+      '::debug::x',
+      '::group::x',
+      '::warning::no file, no place',
+      '::warning file=src/a.ts::',
+      '::warning file=src/a.ts,foo=bar::unknown property',
+      '::warning file=src/a.ts,file=src/b.ts::duplicate property',
+      '::warning file=src/a.ts,line=0::zero line',
+      '::warning file=src/a.ts,line=1;rm::non-numeric line',
+      '::warning file=src/a.ts,=1::empty key',
+      '::warning file=src/a.ts%0A::add-mask::x::newline in file',
+      '::warning file=../../../outside.ts::escapes the repo',
+      '::warning file=/outside/a.ts::absolute outside the root',
+      '::warning file=src\\a.ts::backslash',
+      '::warning  file=src/a.ts::double space',
+      'warning file=src/a.ts::no leading colons',
+    ]) {
+      assert.equal(parseAnnotation(line, ssrDir), undefined, line);
+    }
+  });
+
+  it('keeps an escaped command in the message as data', () => {
+    const parsed = parseAnnotation(
+      '::warning file=src/a.ts::x%0A::add-mask::secret',
+      '',
+    );
+    assert.equal(parsed?.message, 'x\n::add-mask::secret');
+    const plan = planAnnotations(parsed === undefined ? [] : [parsed]);
+    assert.deepEqual(plan.commands, [
+      '::warning file=src/a.ts::x%0A::add-mask::secret',
+    ]);
+  });
+
+  it('repoRelativeFile resolves inside the package and refuses escapes', () => {
+    assert.equal(repoRelativeFile('./src/a.ts', 'tools/x'), 'tools/x/src/a.ts');
+    assert.equal(repoRelativeFile('../y/a.ts', 'tools/x'), 'tools/y/a.ts');
+    assert.equal(repoRelativeFile('../../../a.ts', 'tools/x'), undefined);
+    assert.equal(repoRelativeFile('', 'tools/x'), undefined);
+    assert.equal(repoRelativeFile('.', ''), undefined);
+    assert.equal(
+      repoRelativeFile('/repo/tools/x/a.ts', 'tools/x', '/repo'),
+      'tools/x/a.ts',
+    );
+    assert.equal(repoRelativeFile('/repository/a.ts', '', '/repo'), undefined);
+    assert.equal(repoRelativeFile('/repo/a.ts', ''), undefined);
+  });
+
+  it('extracts per task, rewriting against each task directory', () => {
+    const run = summary([
+      ran('lit-ui-router-ssr#lint:oxlint', 10, { directory: ssrDir }),
+      ran('//#lint:markdown', 10, { directory: '' }),
+      ran('lit-ui-router#test', 10),
+    ]);
+    const logs = new Map([
+      [
+        'lit-ui-router-ssr#lint:oxlint',
+        `$ oxlint .\n${oxlintWarning}\n\nFound 1 warning.`,
+      ],
+      ['//#lint:markdown', oxlintError],
+    ]);
+    assert.deepEqual(
+      extractAnnotations(run, logs).map((a) => a.properties.file),
+      ['packages/lit-ui-router-ssr/src/signature.ts', 'src/core.ts'],
+    );
+  });
+
+  function warningAt(line: number) {
+    const parsed = parseAnnotation(
+      `::warning file=src/a.ts,line=${line}::w${line}`,
+      '',
+    );
+    assert.ok(parsed);
+    return parsed;
+  }
+
+  it('caps each level, deduplicates, and says so', () => {
+    const many = Array.from({ length: ANNOTATION_LIMIT + 3 }, (_, i) =>
+      warningAt(i + 1),
+    );
+    const plan = planAnnotations([...many, warningAt(1)]);
+    assert.equal(plan.commands.length, ANNOTATION_LIMIT);
+    assert.equal(plan.found.warning, ANNOTATION_LIMIT + 3);
+    assert.equal(plan.emitted.warning, ANNOTATION_LIMIT);
+    assert.match(
+      annotationNote(plan) ?? '',
+      /^13 warnings \(10 annotated\) from task logs, re-emitted as annotations\. GitHub keeps 10 per level per step/,
+    );
+  });
+
+  it('holds a slot back for the failure headline, and orders errors first', () => {
+    const error = parseAnnotation(oxlintError, '');
+    assert.ok(error);
+    const errors = Array.from({ length: ANNOTATION_LIMIT }, (_, i) => ({
+      ...error,
+      message: `${error.message} ${i}`,
+    }));
+    const plan = planAnnotations([warningAt(1), ...errors], { error: 1 });
+    assert.equal(plan.emitted.error, ANNOTATION_LIMIT - 1);
+    assert.match(plan.commands[0] ?? '', /^::error /);
+    assert.match(plan.commands.at(-1) ?? '', /^::warning /);
+  });
+
+  it('notes nothing when no log carried an annotation', () => {
+    assert.equal(annotationNote(planAnnotations([])), undefined);
+    assert.equal(
+      annotationNote(planAnnotations([warningAt(1)])),
+      '1 warning from task logs, re-emitted as annotations.',
+    );
+  });
+
+  it('puts the note in both overview lanes', () => {
+    const run = summary([ran('a#b', 10)], 0);
+    const note = '1 warning from task logs, re-emitted as annotations.';
+    assert.match(
+      overviewMarkdown(run, { annotations: note }),
+      /\*\*Tool annotations\*\* — 1 warning from task logs/,
+    );
+    assert.ok(
+      overviewLines(run, { annotations: note }).includes(
+        `   annotations: ${note}`,
+      ),
+    );
   });
 });
