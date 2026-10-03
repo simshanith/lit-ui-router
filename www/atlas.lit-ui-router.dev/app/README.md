@@ -129,12 +129,16 @@ badges in twenty-five is noise) and `basis` holds its slot with an em dash off t
 The card is therefore an `<article>`, not an `<a>`: the `h3`'s link is the one primary link and
 stretches over the card through a `::after`, and the key block sits above it on `z-index`, so
 nothing interactive is nested inside a link. One finding from that: `rules.initial({ state })` targets the state with no params and
-erases a first-load query; the function form hands `url.search` through (`router.ts`). The boot
-awaits the first settled snapshot of `lit-ui-router-effect`'s `routeRef(router)` (`main.ts`), and the
+erases a first-load query; the function form hands `url.search` through (`router.ts`). The page
+owns one Effect `ManagedRuntime` (`runtime.ts`) over one layer, the `DrawingSet` service: the
+manifest, read once per runtime, and any plate's fragment. Every `manifest` and `fragment` resolve,
+the notFound guard and the experimental layer read through it. The boot awaits the first settled
+snapshot of `lit-ui-router-effect`'s `routeRef(router)` on that runtime (`main.ts`), and the
 gallery reads its filter from `snapshotRoute(router)`, so the server and the browser read the same
-settled route. The prerender's route-ref guard hands `RouterRefController` no router and reads the one
-`withRouterSync` scopes, so a served render exercises the same scoped-router path the sref directives
-take. Nothing in `src/*.ts` imports anything from `src/experimental/`. This
+settled route. `<atlas-city>` holds the one controller in the browser: a `RouterRefController`
+that reads the city's `focus` and forks its subscription on the page's runtime. The prerender's
+route-ref guard hands `RouterRefController` no router and reads the one `withRouterSync` scopes,
+so a served render exercises the same scoped-router path the sref directives take. Nothing in `src/*.ts` imports anything from `src/experimental/`. This
 layer is meant to be liftable into `examples/` as-is.
 
 Three base-layer details a Playwright pass against the deployed site taught, each with a comment at
@@ -209,7 +213,7 @@ is strict in four ways, and each one is a line in the build:
   all twenty-five fragments into a `<script type="application/json" id="atlas-data">` island (every
   `<` escaped, so a fragment's own `</script>` cannot close it) and inlines `atlas.css` as a
   `<style>`; `src/manifest.ts` reads the island when present and falls back to the fetches the site
-  uses. The cytoscape and three dynamic imports are folded into the single chunk by
+  uses, and the `DrawingSet` layer in `src/runtime.ts` serves both. The cytoscape and three dynamic imports are folded into the single chunk by
   `vite-plugin-singlefile` (`useRecommendedBuildConfig`, which sets `output.codeSplitting = false`
   on vite 8), so `#/city` raises the scene with the network entirely blocked.
 - **The host owns the document skeleton.** The published file must carry no
@@ -249,7 +253,7 @@ and is used twice:
   as `router.globals`, or the build exits 1 (`SSR-VERDICT.md` §8).
 
 **The boot (`src/main.ts`).** Seat `routeRef(router)`, `router.start()`, await the ref's first
-settled snapshot, then `hydrateRoot(root, page(router))` from `lit-ui-router-ssr/client`: the walk
+settled snapshot on the page's runtime (`src/runtime.ts`), then `hydrateRoot(root, page(router))` from `lit-ui-router-ssr/client`: the walk
 wakes every served `<ui-view>`, which adopts the nodes it already holds. A cold container — the dev server, the
 artifact build — returns `false` and the same template is rendered instead.
 

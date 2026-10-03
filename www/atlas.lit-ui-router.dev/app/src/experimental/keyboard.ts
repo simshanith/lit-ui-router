@@ -14,7 +14,7 @@
  */
 import type { UIRouterLit } from 'lit-ui-router';
 import { snapshotRoute } from 'lit-ui-router-effect';
-import { loadManifest } from '../manifest.ts';
+import { loadManifest } from '../runtime.ts';
 import { viewRendered } from './view-rendered.ts';
 
 const TYPING = new Set(['INPUT', 'TEXTAREA', 'SELECT']);

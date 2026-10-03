@@ -557,13 +557,29 @@ useful once it lands, and needs to ship alongside it.
 
 ## 8. `lit-ui-router-effect`
 
-The atlas takes `lit-ui-router-effect@0.1.1` and `effect@3.22.2` from npm. The
-package answers these route reads:
+The atlas takes `lit-ui-router-effect@0.1.3` and `effect@3.22.2` from npm.
+
+**The runtime** (`src/runtime.ts`) is one `ManagedRuntime` over one `Layer`:
+the `DrawingSet` service, whose `manifest` is an `Effect.cached` read built
+with the layer (the island in the artifact, `manifest.json` on the site) and
+whose `fragment` reads a plate. The state resolves, the `atlas.sheet` notFound
+guard and the experimental layer call `loadManifest()` and `loadFragment()`,
+which run on it. It lives as long as the page, so nothing disposes it, and the
+prerender never builds it: the build reads off disk.
+
+The package answers these route reads:
 
 - **The boot** (`src/main.ts`) seats `routeRef(router)` before `router.start()`
   and awaits the first snapshot that carries a transition, `Stream.runHead`
-  over the ref's `changes`. `changes` replays the latest value, so the boot
-  cannot miss the tick it waits for.
+  over the ref's `changes`, with `runtime.runPromise`. `changes` replays the
+  latest value, so the boot cannot miss the tick it waits for.
+- **The city's pin** (`<atlas-city>`, `src/views.ts`) is a
+  `RouterRefController` whose selector reads `focus` on `atlas.city` and null
+  on any other state, with the page's runtime as `options.runtime`: the
+  subscription fiber forks on that runtime, and each change hands the scene
+  `select()`. The controller takes the router the view hands the element as
+  `.router`, and is constructed in the element's first `willUpdate` with it
+  (F5).
 - **The index filter** (`GalleryView`, `src/views.ts`) reads
   `snapshotRoute(router).params`: the same settled values on the server and in
   the browser. With no router, the transition's params answer.
@@ -572,11 +588,13 @@ package answers these route reads:
   transition that lands in between cannot move the sheet the step is taken
   from.
 
-The router's own hooks stay where the package has no answer: `onSuccess` for
-the document title and the scroll, which reads the `sheet` resolve; the
-Navigation API plugin's `intercept`, which reads the tail of `successfulTransitions`;
-the slideshow's `onBefore`, which must run before resolves start; and the analytics
-`page_view`, a side effect. `prerender.ts` drives the router with `settle()`
+The router's own hooks stay where the package has no answer, five of them: the
+`atlas.sheet` `onBefore` that redirects an unknown or miscased number before
+resolves start; `onSuccess` for the document title and the scroll, which reads
+the `sheet` resolve; the slideshow's `onBefore`, which must run before resolves
+start, and its `onSuccess` fallback animation; and the analytics `page_view`, a
+side effect. The Navigation API plugin's `intercept` reads the tail of
+`successfulTransitions`. `prerender.ts` drives the router with `settle()`
 from `lit-ui-router-ssr` (F3).
 
 **The guard.** Once the router settles on each page, `prerender.ts` builds a
@@ -588,7 +606,7 @@ manifest by a throw. The build prints:
 
 ```text
 prerendered 29 pages + 1 × 404.html · 26 redirects → _redirects
-routeRef at construction: 30/30 renders match router.globals (24 sheets by num)
+scoped router at construction: 30/30 renders match router.globals (24 sheets by num)
 ```
 
 Against a build without the package, every prerendered page and `_redirects`
@@ -605,7 +623,10 @@ gallery url drops its inner view's and renders that view cold.
 | artifact `index.html` | 7,584,364  | 7,765,964 | —           | —          | —       |
 
 Every other chunk is byte-identical, and the artifact file grows by 181,600
-bytes.
+bytes. The runtime and the city's controller add 5,936 raw and 2,065 gzip
+bytes to the main chunk, which is 377,970 raw and 116,499 gzip with them; the
+prerendered pages are byte-identical apart from `/city/`'s view template
+digest.
 
 Findings:
 
@@ -625,15 +646,19 @@ Findings:
   alone, so every value it holds is settled and a failed transition never
   reaches it. `settle()` rejects on a failed transition, so a page that fails
   to settle fails the build.
-- **F4 — `options.runtime` with real layers has no consumer in the atlas.** The
-  atlas has no Effect services and no layers, and every call runs on Effect's
-  default runtime. `RefRuntime` is `runFork` and `runSync` over effects that
-  require no service, so a layer's services never reach the controller; the
-  package's specs fork the subscription and its interrupt on a
-  `ManagedRuntime`. That a `ManagedRuntime` satisfies `RefRuntime` under the
-  atlas's TypeScript 7 config is the atlas's only evidence, a typecheck.
-- **F5 — routed views have no host.** Every routed component is a
-  `RoutedLitTemplate` function, so no element exists for `RefController` or
-  `RouterRefController` to attach to: the atlas's route reads are snapshot
-  reads, and no controller runs in the browser. The prerender's guard is the
-  only construction, and it reads the scoped router (F2).
+- **F4 — a `ManagedRuntime` is a `RefRuntime`, and gives the controller no
+  services.** The page's `ManagedRuntime<DrawingSet>` passes as
+  `options.runtime` with no cast under TypeScript 7. `RefRuntime` runs
+  `Effect<void>` and `Effect<A>` with no requirements, so the subscription
+  fiber runs on the runtime while the selector stays a plain function over the
+  snapshot: `DrawingSet` cannot reach it.
+- **F5 — a served host must be handed its router.** Every routed component is
+  a `RoutedLitTemplate` function, so the controller sits on `<atlas-city>`,
+  an element inside the city's view. On a served `/city/`, `<ui-router>`
+  upgrades at the register import and makes its own router in
+  `connectedCallback`; `<atlas-city>` upgrades when `src/views.ts` defines it,
+  before `hydrateRoot` commits the app's router, and hydration never
+  reconnects it. A seek-path controller there binds `<ui-router>`'s own
+  router: the served page opens unpinned and no focus move reaches the scene,
+  while a client-rendered city works. The explicit `router` option, taken
+  from the view, binds the app's router on both paths.

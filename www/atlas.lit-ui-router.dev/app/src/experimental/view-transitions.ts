@@ -29,7 +29,7 @@
  */
 import type { Transition } from '@uirouter/core';
 import type { UIRouterLit } from 'lit-ui-router';
-import { loadManifest } from '../manifest.ts';
+import { loadManifest } from '../runtime.ts';
 import { isInPlaceChange, scrollToTop } from '../router.ts';
 import { viewRendered } from './view-rendered.ts';
 

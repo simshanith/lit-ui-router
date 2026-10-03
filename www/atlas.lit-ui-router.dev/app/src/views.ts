@@ -11,7 +11,8 @@ import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { srefActiveClass, srefAriaCurrent, srefHref } from 'lit-ui-router/pure';
 import type { RoutedLitTemplate, UIRouterLit } from 'lit-ui-router';
 import { uiViewSlot } from 'lit-ui-router-ssr/client';
-import { snapshotRoute } from 'lit-ui-router-effect';
+import { RouterRefController, snapshotRoute } from 'lit-ui-router-effect';
+import type { RouteSnapshot } from 'lit-ui-router-effect';
 import type {
   AscentRow,
   ExtraRow,
@@ -48,6 +49,7 @@ import { initCity } from './generated/city-init.js';
 import type { CityScene } from './generated/city-init.js';
 import { ARTIFACT } from './mode.ts';
 import { href } from './routes.ts';
+import { runtime } from './runtime.ts';
 import type { ThemeChoice } from './theme.ts';
 import { applyTheme, readTheme } from './theme.ts';
 
@@ -175,6 +177,12 @@ customElements.define('atlas-plate', AtlasPlate);
 
 // --- <atlas-city> — the 3D plate, and the layer that tears it down --------
 
+// The city's own `focus`: every other state reads none.
+const cityPin = (route: RouteSnapshot): string | null =>
+  route.current?.name === 'atlas.city' && typeof route.params.focus === 'string'
+    ? route.params.focus
+    : null;
+
 /**
  * The isometric city: a generated fragment plus a WebGL scene over it.
  *
@@ -188,27 +196,39 @@ customElements.define('atlas-plate', AtlasPlate);
  * `disconnectedCallback` is the hook. `updated` waits on the plate's own
  * `updateComplete` for "the fragment is in the DOM" — the same promise
  * `experimental/view-rendered.ts` chains, owned locally so `src/*.ts` stays
- * free of that directory. `pin` is the url's `focus` (an element's `focus` is
- * the focus() method), handed to the scene on boot and on every change after it.
+ * free of that directory. The pin is the url's `focus`, read by a
+ * `RouterRefController` on the page's runtime and handed to the scene on boot
+ * and on every change after it.
  */
 export class AtlasCity extends ReactiveElement {
   static override properties = {
     fragment: { attribute: false },
     three: { attribute: false },
-    pin: { attribute: false },
+    router: { attribute: false },
   };
 
   declare fragment: string;
   declare three: unknown;
-  declare pin: string | null;
+  declare router: UIRouter | undefined;
   #scene: CityScene | null = null;
   #seq = 0;
+  #pin: RouterRefController<string | null> | undefined;
 
   constructor() {
     super();
     this.fragment = '';
     this.three = undefined;
-    this.pin = null;
+    this.router = undefined;
+  }
+
+  override willUpdate(): void {
+    // Served, the city upgrades before hydration hands <ui-router> the app's router, and never reconnects.
+    if (!this.router || this.#pin) return;
+    this.#pin = new RouterRefController(this, cityPin, {
+      router: this.router,
+      runtime,
+      onChange: () => this.#select(),
+    });
   }
 
   override createRenderRoot(): HTMLElement {
@@ -217,7 +237,6 @@ export class AtlasCity extends ReactiveElement {
 
   override updated(changed: Map<PropertyKey, unknown>): void {
     if (changed.has('fragment') || changed.has('three')) void this.#boot();
-    else if (changed.has('pin')) this.#select();
   }
 
   override disconnectedCallback(): void {
@@ -232,7 +251,7 @@ export class AtlasCity extends ReactiveElement {
     await plate.updateComplete; // the fragment (and its JSON island) is in the DOM
     if (seq !== this.#seq || !this.isConnected) return;
     this.#teardown();
-    const scene = await initCity(this, this.three, this.pin);
+    const scene = await initCity(this, this.three, this.#pin?.value ?? null);
     // undefined = nothing was raised (no WebGL); a superseded boot disposes at once
     if (seq !== this.#seq || !this.isConnected) {
       scene?.dispose();
@@ -243,7 +262,8 @@ export class AtlasCity extends ReactiveElement {
   }
 
   #select(): void {
-    this.#scene?.select(this.pin === null ? null : Number(this.pin));
+    const pin = this.#pin?.value ?? null;
+    this.#scene?.select(pin === null ? null : Number(pin));
   }
 
   #teardown(): void {
@@ -1039,9 +1059,6 @@ export const CityView: RoutedLitTemplate<CityResolves> = (props) => {
   const resolves = props?.resolves;
   const extra = resolves?.extra;
   if (!extra || !resolves.fragment) return html`<p class="loading">RAISING THE CITY…</p>`;
-  // the settled route, as the gallery reads it: the view's own transition is the one that entered it
-  const params = props?.router ? snapshotRoute(props.router).params : props?.transition?.params();
-  const focus = typeof params?.focus === 'string' ? params.focus : null;
   return html`
     ${utilBar(html`
       ${indexCrumb()}
@@ -1055,7 +1072,7 @@ export const CityView: RoutedLitTemplate<CityResolves> = (props) => {
       ${seeAlso(extra.refs)} ${keyBlock(extra.labels)}
     </div>
     ${verdictLine(extra.verdict)}
-    <atlas-city .fragment=${resolves.fragment} .three=${resolves.three} .pin=${focus}
+    <atlas-city .fragment=${resolves.fragment} .three=${resolves.three} .router=${props?.router}
       >${plate(resolves.fragment, false)}</atlas-city
     >
   `;

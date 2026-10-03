@@ -11,7 +11,8 @@ import type { UIRouterNavigateEvent } from 'ui-router-navigation-location-plugin
 import { ARTIFACT } from './mode.ts';
 import { FILTER_PARAMS, FOCUS_PARAMS, SHEET_ALIASES, urlOf } from './routes.ts';
 import type { ExtraRow, Manifest, SheetRow } from './manifest.ts';
-import { findExtra, findSheet, loadFragment, loadManifest } from './manifest.ts';
+import { findExtra, findSheet } from './manifest.ts';
+import { loadFragment, loadManifest } from './runtime.ts';
 import { titleFor } from './titles.ts';
 import {
   AboutView,
@@ -30,7 +31,7 @@ export const states: LitStateDeclaration[] = [
     abstract: true,
     component: ShellView,
     // Resolved once for the whole shell; children read it through their own
-    // deps, and loadManifest() memoizes, so the rail costs one fetch.
+    // deps, and the runtime's DrawingSet reads it once, so the rail costs one fetch.
     resolve: [{ token: 'manifest', resolveFn: loadManifest }],
   },
   // The key index's filter rides the url: same params as the server half.

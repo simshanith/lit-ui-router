@@ -150,17 +150,14 @@ function readIsland(): Island | null {
   return island;
 }
 
-let pending: Promise<Manifest> | null = null;
-
-/** Memoized: several states resolve `manifest`, and one fetch answers them all. */
-export function loadManifest(): Promise<Manifest> {
+/** One read of the index: the baked island in the artifact, `manifest.json` on the site. */
+export function requestManifest(): Promise<Manifest> {
   const baked = readIsland();
-  if (baked) pending ??= Promise.resolve(baked.manifest);
-  pending ??= fetch(`${BASE}manifest.json`).then((res) => {
+  if (baked) return Promise.resolve(baked.manifest);
+  return fetch(`${BASE}manifest.json`).then((res) => {
     if (!res.ok) throw new Error(`manifest.json: ${res.status}`);
     return res.json() as Promise<Manifest>;
   });
-  return pending;
 }
 
 /**
@@ -176,11 +173,6 @@ export function thumbSrc(path: string): string {
 /** The one extra, by id — `undefined` if an older manifest predates it. */
 export function findExtra(manifest: Manifest, id: string): ExtraRow | undefined {
   return manifest.extras?.find((row) => row.id === id);
-}
-
-/** Seed the cache from a prerendered payload (or a test). */
-export function primeManifest(manifest: Manifest): void {
-  pending = Promise.resolve(manifest);
 }
 
 /** Every plate a `/sheet/:num` url can reach — the ascent, then the appendix. */
@@ -331,7 +323,7 @@ export function labelledRows(manifest: Manifest): Array<{ labels: SheetLabels }>
 }
 
 /** Either kind of row carries the two fields a fragment fetch needs. */
-export function loadFragment(sheet: { id: string; file: string }): Promise<string> {
+export function requestFragment(sheet: { id: string; file: string }): Promise<string> {
   const baked = readIsland()?.fragments[sheet.id];
   if (baked !== undefined) return Promise.resolve(baked);
   return fetch(`${BASE}${sheet.file}`).then((res) => {
