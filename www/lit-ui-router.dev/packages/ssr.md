@@ -403,6 +403,40 @@ import { hydrateRoot } from 'lit-ui-router-ssr/client';
 const release = hydrateRoot(root, page(router));
 ```
 
+`prerender()` opens every page it renders from a template on a hydration
+signature: a JSON data block ahead of the render, carrying this package's
+version, the name of the state the router stood on, and that state's url
+parameter values.
+It never executes, `hydrate()` walks comments only and reads past it, and every
+`<` and `>` in it is written `\u003c` and `\u003e`, so no value can close it.
+
+```text
+<script type="application/json" data-lit-ui-router-ssr>{"version":"0.2.0","state":"sheet","params":{"num":"7B"}}</script>
+```
+
+`hydrateRoot` reads it before it touches the document, and returns `false`
+over an emptied container when it finds nothing to adopt, so the caller's
+`render()` draws the page once:
+
+- **No signature.** A cold client render, a dev server, a page from an earlier
+  `prerender()`, or a page whose `renderShell` returned a string.
+- **A signature from another release line.** Below 1.0 a minor breaks, so a
+  document adopts only on the client's own minor; from 1.0, its own major.
+  The development build warns, naming both versions.
+- **A signature with no render marker after it.** A minifier that strips html
+  comments keeps the block and drops the markers `hydrate()` reads. The
+  development build warns.
+
+A container `hydrateRoot` adopts keeps its block.
+
+[`readHydrationSignature`](/api/lit-ui-router-ssr/functions/readHydrationSignature)
+returns the parsed
+[`HydrationSignature`](/api/lit-ui-router-ssr/interfaces/HydrationSignature),
+or `null` when the container holds none or one that does not parse to an
+object with a string `version`. Only `version` is typed, so a boot that compares
+the state the document was drawn for with the one it booted into narrows
+`state` and `params` first.
+
 Every [`uiViewSlot`](/api/lit-ui-router-ssr/variables/uiViewSlot) that walk
 reaches wakes the `<ui-view>` it sits in, and the waking view requests
 [`adoptUiViewContext`](/api/lit-ui-router-ssr/variables/adoptUiViewContext)

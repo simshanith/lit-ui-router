@@ -5,9 +5,11 @@ import { collectResultSync } from '@lit-labs/ssr/lib/render-result.js';
 import type { TemplateResult } from 'lit';
 import type { UIRouterLit } from 'lit-ui-router';
 import { provideRouter, withRouterSync } from 'lit-ui-router/context';
+import { DefType } from '@uirouter/core';
 import { createServerRouter } from 'ui-router-server';
 import type { MountConfig, ServerRouter, Verdict } from 'ui-router-server';
 
+import { packageVersion, signatureAttribute } from './signature.js';
 import { UiViewRenderer } from './ui-view-renderer.js';
 
 /** One emitted artefact, as {@link prerender} planned it. */
@@ -68,9 +70,10 @@ export interface PrerenderOptions {
   /** Directory the files are written under. */
   outDir: string;
   /**
-   * Renders one shell verdict. Return a template and this package renders it;
-   * return a string and it is written as-is. Async, so a hook may drive
-   * {@link PrerenderOptions.router | router} to the path before it returns.
+   * Renders one shell verdict. Return a template and this package renders it,
+   * behind the hydration signature; return a string and it is written as-is.
+   * Async, so a hook may drive {@link PrerenderOptions.router | router} to the
+   * path before it returns.
    */
   renderShell: (
     verdict: Extract<Verdict, { kind: 'shell' }>,
@@ -241,6 +244,65 @@ const rootedStack = (root: EventTarget): EventTarget[] => {
     : [root];
 };
 
+/** The signature as `prerender()` writes it. */
+interface WrittenSignature {
+  readonly version: string;
+  readonly state: string;
+  readonly params: Readonly<Record<string, unknown>>;
+}
+
+/** The signature of the page `router` currently stands on; config params never reach the url, so they stay out. */
+export const signatureOf = (router: UIRouterLit): WrittenSignature => {
+  const { $current, params } = router.globals;
+  return {
+    version: packageVersion,
+    state: $current.name,
+    params: Object.fromEntries(
+      $current
+        .parameters()
+        .filter((param) => param.location !== DefType.CONFIG)
+        .map((param) => [param.id, param.type.encode(params[param.id])]),
+    ),
+  };
+};
+
+/**
+ * The signature as one JSON data block. `<` and `>` only ever stand inside a
+ * JSON string, where `\u003c` and `\u003e` spell them, so no value can spell
+ * `</script` or `<!--` and end the block early.
+ */
+export const signatureBlock = (signature: WrittenSignature): string => {
+  const json = JSON.stringify(signature)
+    .replaceAll('<', '\\u003c')
+    .replaceAll('>', '\\u003e');
+  return `<script type="application/json" ${signatureAttribute}>${json}</script>`;
+};
+
+/**
+ * Renders one page: the signature first, then the render, so the client reads
+ * the one before it hydrates the other.
+ *
+ * @internal
+ */
+export const renderPage = (
+  body: TemplateResult,
+  router: UIRouterLit,
+  root: EventTarget,
+  elementRenderers: RenderInfo['elementRenderers'],
+): string =>
+  signatureBlock(signatureOf(router)) +
+  withRouterSync(router, () =>
+    collectResultSync(
+      render(body, {
+        // a fresh array per render: @lit-labs/ssr mutates the stack
+        eventTargetStack: rootedStack(root),
+        elementRenderers,
+        // every custom element the page holds sleeps until the client's walk reaches it, top-level ones included
+        deferHydration: true,
+      }),
+    ),
+  );
+
 const warnUnclaimed = (path: string): void => {
   // DEV folds away in dist/*.js; see check:dev-split and dev-warnings.json.
   if (!import.meta.env.DEV) return;
@@ -347,6 +409,13 @@ const warnUnregistered = (): void => {
  * run one at a time: the scope is a module slot, so there is nothing to
  * parallelise.
  *
+ * A rendered page opens on its hydration signature: a JSON data block,
+ * `<script type="application/json" data-lit-ui-router-ssr>`, naming this
+ * package's version and the state and parameter values the router stood on,
+ * which `hydrateRoot()` reads before it touches the document. A `renderShell`
+ * that returns a string is written as-is, with no signature, so the client
+ * renders it cold.
+ *
  * Pages are rendered with `deferHydration`, so every custom element one holds
  * carries `defer-hydration` and renders nothing until `hydrateRoot()`'s walk
  * reaches it on the client. A property binding emits only its part marker:
@@ -419,17 +488,7 @@ export async function prerender(
     const markup =
       typeof body === 'string'
         ? body
-        : withRouterSync(router, () =>
-            collectResultSync(
-              render(body, {
-                // a fresh array per render: @lit-labs/ssr mutates the stack
-                eventTargetStack: rootedStack(root),
-                elementRenderers,
-                // every custom element the page holds sleeps until the client's walk reaches it, top-level ones included
-                deferHydration: true,
-              }),
-            ),
-          );
+        : renderPage(body, router, root, elementRenderers);
     const html = document ? await document(markup, context) : markup;
     if (!dryRun) await write(joinPath(outDir, file), html);
     pages.push({ path, file, verdict, bytes: encoder.encode(html).length });
