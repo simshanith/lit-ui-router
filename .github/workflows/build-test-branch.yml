@@ -54,7 +54,7 @@ jobs:
         uses: jdx/mise-action@v5
         with:
           # the cache key carries the mise version only when it is pinned
-          version: 2026.10.0
+          version: 2026.10.1
       - name: Decide whether this push needs its own run
         id: gate
         run: mise run //tools/build_and_test:branch_ci_gate

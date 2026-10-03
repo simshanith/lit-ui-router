@@ -27,7 +27,7 @@ jobs:
         uses: jdx/mise-action@v5
         with:
           # the cache key carries the mise version only when it is pinned
-          version: 2026.10.0
+          version: 2026.10.1
       - name: Lint workflows
         # actionlint + zizmor in parallel via the mise task graph
         run: mise run lint_workflows
