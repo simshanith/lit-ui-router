@@ -1,6 +1,6 @@
-import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { configDefaults, defineConfig } from 'vitest/config';
+import manifest from './package.json' with { type: 'json' };
 
 // Two lanes: the server half runs in plain node under the @lit-labs/ssr DOM
 // shim, where a prerender actually runs and happy-dom would mask the shim's
@@ -64,16 +64,12 @@ const renderLightProd = {
 
 const cacheKey = process.env.VITEST_BROWSER_API_PORT ?? 'default';
 
-// What oxc-emit-js defines as `import.meta.env.PACKAGE_VERSION` in dist/.
-const { version } = JSON.parse(
-  readFileSync(source('./package.json'), 'utf8'),
-) as { version: string };
-
 export default defineConfig({
   cacheDir: `node_modules/.vite-${cacheKey}`,
   resolve: { alias: peerAliases },
   test: {
-    env: { PACKAGE_VERSION: version },
+    // What oxc-emit-js defines as `import.meta.env.PACKAGE_VERSION` in dist/.
+    env: { PACKAGE_VERSION: manifest.version },
     // hanging-process logs the open handles in CI
     reporters: process.env.CI ? ['default', 'hanging-process'] : ['default'],
     coverage: {

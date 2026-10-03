@@ -12,6 +12,8 @@ import { createServerRouter } from 'ui-router-server';
 import type { MountConfig } from 'ui-router-server';
 import { installServerLocation } from 'ui-router-server/location';
 
+import manifest from '../../package.json' with { type: 'json' };
+
 import { prerender } from '../prerender.js';
 import type { FileWriter, RedirectLine } from '../prerender.js';
 import { settle } from '../settle.js';
@@ -542,11 +544,7 @@ describe('the hydration signature', () => {
     expect(withoutSignature(page)).toMatch(/^<!--lit-part /);
   });
 
-  it('reads the version from the manifest', async () => {
-    const manifest = JSON.parse(
-      await readFile(new URL('../../package.json', import.meta.url), 'utf8'),
-    ) as { version: string };
-
+  it('reads the version from the manifest', () => {
     expect(version).toBe(manifest.version);
   });
 
