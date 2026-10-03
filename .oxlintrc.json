@@ -585,6 +585,22 @@
           }
         ]
       }
+    },
+    {
+      "files": [
+        "tools/build_and_test/src/mark-summary-session.ts",
+        "tools/build_and_test/src/run-summary.ts"
+      ],
+      "rules": {
+        "turbo/no-undeclared-env-vars": [
+          "warn",
+          {
+            "allowList": [
+              "^(TURBO_RUNS_DIR|TURBO_SUMMARY_SESSION|TURBO_SUMMARY_ARTIFACT_URL)$"
+            ]
+          }
+        ]
+      }
     }
   ]
 }
