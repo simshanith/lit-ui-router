@@ -79,7 +79,8 @@ const CSS = `
 .bk-frame { border: 1.5px solid var(--ink); border-bottom: none; }
 .bk-frame:focus-within { outline: 2px solid var(--accent); outline-offset: -2px; }
 .bk-frame:fullscreen .bk-view, .bk-frame.is-filled .bk-view { height: 100vh; }
-.bk-view { display: block; width: 100%; height: clamp(460px, 64vh, 920px); background: transparent;
+.bk-view { display: block; width: 100%; height: clamp(460px, 64vh, 920px);
+  background: radial-gradient(ellipse 70% 60% at 50% 42%, var(--paper) 0%, var(--paper-2) 58%, var(--ground) 100%);
   --poster-color: transparent; --progress-bar-color: var(--accent); }
 .bk .bk-bar { border-bottom: 1.5px solid var(--ink); }
 .bk-bar .lg i.sw { display: block; width: 20px; height: 12px; border: 1.2px solid var(--ink); }
@@ -117,7 +118,7 @@ const LEGEND = [
   ['ground', 'ground — the browser, and the server shelf'],
 ];
 
-const BASIS = `The model is <code>generator/sheet2.mjs</code>'s own <code>MODEL</code>, the parts its finished-model band seats, written into one glTF binary by <code>generator/brick-glb.mjs</code>: every ground, plate and brick a cuboid edged in ink, each face graded a little — the cap from its near corner across, the flanks from the top edge down, every stud a 24-sided cylinder on its part's cap, one node per part named by its id; each brick wears its own colour, cap and plain studs in the hue and flanks a step darker, while the plates and ground stay paper. One stud pitch is one unit. Each brick's lift in the <code>assemble</code> clip is the hover the sheet's exploded view draws it at, measured from its plate (${[...EXPLODE].map(([n, z]) => `brick ${n} ${z}`).join(', ')} plan units), so the explosion is the sheet's own. The numbered badges ride the bricks through the clip. Counted at ${COUNTED}; <code>@google/model-viewer</code> ${MV_VERSION} is fetched only when this page is entered, and the clip jumps to its end under <code>prefers-reduced-motion</code>.`;
+const BASIS = `The model is <code>generator/sheet2.mjs</code>'s own <code>MODEL</code>, the parts its finished-model band seats, written into one glTF binary by <code>generator/brick-glb.mjs</code>: every ground, plate and brick a cuboid edged in ink, each face graded a little — the cap from its near corner across, the flanks from the top edge down, every stud a 24-sided cylinder on its part's cap, one node per part named by its id; each brick wears its own colour, cap and plain studs in the hue and flanks a step darker, while the plates and ground wear the page's paper and every edge its ink, retinted from the theme's tokens on each turn. One stud pitch is one unit. Each brick's lift in the <code>assemble</code> clip is the hover the sheet's exploded view draws it at, measured from its plate (${[...EXPLODE].map(([n, z]) => `brick ${n} ${z}`).join(', ')} plan units), so the explosion is the sheet's own. The numbered badges ride the bricks through the clip. Counted at ${COUNTED}; <code>@google/model-viewer</code> ${MV_VERSION} is fetched only when this page is entered, and the clip jumps to its end under <code>prefers-reduced-motion</code>.`;
 
 /** The plate: style, section and the JSON island — no init script. */
 export function bricksMarkup() {
@@ -255,9 +256,28 @@ const BODY = `${FOCUS_JS}  var mv = root.querySelector('#bk-viewer');
     e.stopPropagation();
   }, true);
 
+  // the plates and ground wear the page's paper and the edges its ink, in either theme
+  var TINT = [['cap', '--paper'], ['flank', '--paper-2'], ['edge', '--ink'], ['ghost-cap', '--paper', 0.45], ['ghost-flank', '--paper-2', 0.45], ['ghost-edge', '--ink', 0.45]];
+  function tint() {
+    if (!mv.model) return;
+    var cs = getComputedStyle(document.documentElement);
+    TINT.forEach(function (row) {
+      var m = mv.model.getMaterialByName(row[0]);
+      var hex = cs.getPropertyValue(row[1]).trim();
+      if (!m || hex.length !== 7) return;
+      var c = [1, 3, 5].map(function (i) { return parseInt(hex.slice(i, i + 2), 16) / 255; });
+      // a material only the edge lines use is loaded lazily
+      m.ensureLoaded().then(function () { m.pbrMetallicRoughness.setBaseColorFactor([c[0], c[1], c[2], row[2] === undefined ? 1 : row[2]]); });
+    });
+  }
+  var themeMO = new MutationObserver(tint);
+  themeMO.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  on(window.matchMedia('(prefers-color-scheme: dark)'), 'change', tint);
+
   var ready = new Promise(function (resolve) {
     function boot() {
       loaded = true;
+      tint();
       // LoopOnce, so the clip's last frame is the seat rather than a wrap to frame 0
       mv.play({ repetitions: 1 });
       mv.pause();
@@ -289,6 +309,7 @@ const BODY = `${FOCUS_JS}  var mv = root.querySelector('#bk-viewer');
     select: function (n) { pin(member(n)); },
     dispose: function () {
       stop();
+      themeMO.disconnect();
       ac.abort();
       delete window.__bricksScene;
     },
