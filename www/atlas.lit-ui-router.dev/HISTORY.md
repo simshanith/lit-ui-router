@@ -113,6 +113,7 @@ The cover carries no `sub` line and no REV of its own. Its history lives in two 
 - Basis: none stated; the altitude line reads `diagrams/data/census-files.json` for the version.
 
 ## Sheet 1i — THE RENDER LOOP, WALKED
+- 2026-10-03, no rev clause: the link carries the pin as well as the step. A tapped station writes its id (`?focus=core`), a tapped leg its ends (`?focus=core>hall`), and a pin held while walking rides with the step (`?focus=3:core>hall`); opening any of those links restores step and pin, and Escape clears the pin while the lane has focus. The other three cytoscape lanes and the city link their pins the same way.
 
 - **file** `diagrams/generator/sheet1i.mjs` · **id** `loop-walked` · **current rev** A
 - **basis** (source): `const BASIS = `surveyed at ${PLATE.ref} @ ${PLATE.sha} (commit ${PLATE.commitDate.slice(0, 10)})`;`

@@ -39,6 +39,7 @@ for (const [what, got, want] of [
 }
 const sid = new Set(STATIONS.map((s) => s.id));
 const lid = new Map(LEGS.map((l) => [l.id, l]));
+if (new Set(LEGS.map((l) => `${l.from}>${l.to}`)).size !== LEGS.length) throw new Error('loop-walk: two legs share a from>to pair, so a leg link is ambiguous');
 for (const l of LEGS) {
   if (!sid.has(l.from) || !sid.has(l.to)) throw new Error(`loop-walk: leg ${l.id} joins ${l.from} → ${l.to}, and one of those is not a station`);
 }
@@ -344,18 +345,45 @@ $$FOCUS  // The cytoscape tag is deferred; deferred scripts run BEFORE DOMConten
     next.disabled = step === W.length;
     info.innerHTML = describeStep();
   }
-  // the step is the link: ?focus=7 opens on step 7, and each step taken replaces it
+  // the step and the pin are the link: ?focus=7 opens on step 7, ?focus=core pins the core station,
+  // ?focus=7:core>hall opens on step 7 with the core-to-hall leg pinned; each move replaces it
   function walkTo(n) { step = Math.max(0, Math.min(W.length, n)); callout = null; paint(); }
+  function pinKey(el) {
+    if (el.isNode()) return el.data('sid');
+    var e = legById[el.data('lid')];
+    return e.from + '>' + e.to;
+  }
+  function pinOf(k) {
+    if (!k) return null;
+    var at = k.indexOf('>');
+    if (at < 0) return cy.$id('s-' + k).first();
+    var from = k.slice(0, at), to = k.slice(at + 1);
+    return cy.edges().filter(function (el) { var e = legById[el.data('lid')]; return e.from === from && e.to === to; }).first();
+  }
+  function key() {
+    var k = step ? String(step) : '';
+    if (callout) k += (k ? ':' : '') + pinKey(callout);
+    return k || null;
+  }
+  function push() { atlasFocusPush(stage, key()); }
   function go(n) {
-    var was = step;
+    var was = key();
     walkTo(n);
-    if (step !== was) atlasFocusPush(stage, step ? String(step) : null);
+    if (key() !== was) push();
   }
   function stepOf(v) {
     var n = Number(v);
     return String(n) === v && n % 1 === 0 && n >= 1 && n <= W.length ? n : 0;
   }
-  function apply(v) { if (stepOf(v) !== step) walkTo(stepOf(v)); }
+  function apply(v) {
+    if ((v || null) === key()) return;
+    var parts = (v || '').split(':'), n = stepOf(parts[0]);
+    var pin = n ? parts[1] : parts[0];
+    walkTo(n);
+    var el = pinOf(pin);
+    callout = el && el.length ? el : null;
+    show(callout);
+  }
   prev.addEventListener('click', function () { go(step - 1); });
   next.addEventListener('click', function () { go(step + 1); });
   document.getElementById('lw-reset').addEventListener('click', function () { go(0); cy.fit(cy.elements(), 42); });
@@ -365,6 +393,7 @@ $$FOCUS  // The cytoscape tag is deferred; deferred scripts run BEFORE DOMConten
     else if (e.key === 'ArrowLeft') { e.preventDefault(); e.stopPropagation(); go(step - 1); }
     else if (e.key === 'Home') { e.preventDefault(); go(0); }
     else if (e.key === 'End') { e.preventDefault(); go(W.length); }
+    else if (e.key === 'Escape' && callout) { e.preventDefault(); callout = null; show(null); push(); }
   });
   stage.addEventListener('pointerdown', function () { wrap.focus({ preventScroll: true }); });
 
@@ -412,8 +441,9 @@ $$FOCUS  // The cytoscape tag is deferred; deferred scripts run BEFORE DOMConten
     if (el && !el.is('node.station, edge.leg')) return;
     callout = el && callout && el.same(callout) ? null : el;
     show(callout);
+    push();
   });
-  walkTo(stepOf(atlasFocusHost(stage, apply)));
+  apply(atlasFocusHost(stage, apply));
 
   function repaint() {
     var s = skins();
@@ -473,7 +503,7 @@ export function loopWalkLane() {
       out: glyph('arrow-up-from-line'),
       in: glyph('arrow-down-to-line'),
     },
-    idle: `Sheet 1's circuit, stood up: ${T.stations} stations and the ${T.legs} legs between them, every leg carrying the call or event that moves it. Press NEXT (or → with the lane focused) to walk one navigation — ${PLATE.walkOf} — ${T.steps} steps, each one standing on the source lines it cites. Hover any building for its file and anchor line, any leg for what carries it. The link in the address bar carries the step; a tap pins a building or a leg, and tapping it again or the ground clears it.`,
+    idle: `Sheet 1's circuit, stood up: ${T.stations} stations and the ${T.legs} legs between them, every leg carrying the call or event that moves it. Press NEXT (or → with the lane focused) to walk one navigation — ${PLATE.walkOf} — ${T.steps} steps, each one standing on the source lines it cites. Hover any building for its file and anchor line, any leg for what carries it. A tap pins a building or a leg, and tapping it again, the ground or Escape clears it; the link in the address bar carries the step and the pin.`,
   };
   const swatch = (k) => `<span class="sw sw-light">${skinSvg(k, 'light')}</span><span class="sw sw-dark">${skinSvg(k, 'dark')}</span>`;
   const legend = [
