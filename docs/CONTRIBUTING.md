@@ -140,8 +140,8 @@ report. The build step prints output only for failing tasks; the
 it. Locally, `mise run ci` prints everything unless `TURBO_OUTPUT_LOGS` says
 otherwise.
 
-`gh run view <run-id> --log-failed` returns the failed steps' logs. Save it to a
-file and search for `repro:`. Run the `repro:` line: `--force` re-runs that task while its dependencies stay
+`gh run view <run-id> --log-failed` returns the whole failed job, with the
+report near the end. Save it to a file and search for `repro:`. Run the `repro:` line: `--force` re-runs that task while its dependencies stay
 cached. `exact:` is the command turbo ran, from the directory it ran in.
 
 Two workflows run the same job:
