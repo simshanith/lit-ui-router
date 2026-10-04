@@ -73,8 +73,8 @@ npm --prefix www/atlas.lit-ui-router.dev/app run build                          
 ```
 
 The picture is the card's BACKDROP, not a strip across its head: the whole plate laid at
-the card's width, top-anchored, transparent everywhere the ink is not, so the lattice runs
-through it and the head window and the text panel lie over it. Where the default reads as
+the card's width, top-anchored, transparent everywhere the ink is not, so the card's gradient
+ground shows through it under the head window, with the opaque text panel over the rest. Where the default reads as
 grey at card width, the plate gets a row in `thumbs.mjs`'s one `TUNING` table (`zoom` to
 enlarge it into a detail, `x`/`focus` to place the card box, `fit: 'contain'` to letterbox
 the whole drawing instead, `crop` to fit the drawing band alone, `target` for a lane's

@@ -743,12 +743,11 @@ const keyIndex = (manifest: Manifest, filter: Filter, router?: UIRouter): Templa
 /**
  * THE CARD'S BACKDROP (T16) — the whole card's box, holding the whole plate
  * drawn at build time by generator/thumbs.mjs: transparent outside the ink, so
- * it lies BEHIND the head window and the text panel with the lattice still
- * running through it. One WebP per theme, and only the one the theme asks for
- * is ever fetched: `display: none` suppresses a lazy image's request, so the
- * pair costs a single file. At rest the image is invisible; hover or focus
- * fades the plate in, and nothing in the card moves. Decorative either way —
- * the card's title says what it is.
+ * it lies over the card's gradient ground and behind the head window and the
+ * text panel. One WebP per theme, and only the one the theme asks for is ever
+ * fetched: `display: none` suppresses a lazy image's request, so the pair
+ * costs a single file. On at rest, and nothing in the card moves. Decorative
+ * either way — the card's title says what it is.
  */
 const cardPic = (thumb: Thumb): TemplateResult => html`
   <div class="card-pic">
@@ -773,8 +772,8 @@ const cardPic = (thumb: Thumb): TemplateResult => html`
   </div>
 `;
 
-/** The pane across the head of the card: paper, thinner than the body's, over
- *  the backdrop. It holds the card's one fixed proportion and no content. */
+/** The clear pane across the head of the card, over the backdrop. It holds
+ *  the card's one fixed proportion and no content. */
 const cardWindow = (): TemplateResult => html`<div class="card-window"></div>`;
 
 /**
@@ -782,11 +781,9 @@ const cardWindow = (): TemplateResult => html`<div class="card-window"></div>`;
  * primary `srefHref` and stretches over the whole card through a `::after`
  * (the Inclusive Components card pattern), so the key block's own filter links
  * are valid interactive content rather than links nested inside a link. Tab
- * order is title, then keys. Three layers, back to front: the plate's picture
- * over the whole box, the head window's thinner paper, and `.card-body`, which
- * carries the card's paper translucent — so the lattice and the drawing both
- * read behind the writing, and the window is only the plainest pane of the
- * same panel.
+ * order is title, then keys. Four layers, back to front: the card's gradient
+ * ground, the plate's picture over the whole box, the clear head window, and
+ * `.card-body` in opaque paper.
  */
 const sheetCard = (sheet: SheetRow): TemplateResult => html`
   <article class="card">
@@ -900,12 +897,7 @@ export const GalleryView: RoutedLitTemplate<ManifestResolves> = (props) => {
     <h2 class="set-sec">SHEET INDEX — ASCENT ORDER</h2>
     ${keyIndex(manifest, filter, props?.router)}
     ${shownAscent.length > 0
-      ? html`<div class="cards-field">
-          <!-- THE FIELD: one turning cube lattice behind the grid, seen only
-               through the cards' windows. src/lattice.ts defines the tag on
-               the client; prerendered, it is an empty element. -->
-          <atlas-lattice aria-hidden="true"></atlas-lattice>
-          <div class="cards">
+      ? html`<div class="cards">
             <!-- Unkeyed since 1.14. A filter changes the list and an unkeyed
                  map re-uses a card's DOM for a different plate; that used to
                  leave each key cell's uiSrefActive holding the target it first
@@ -917,17 +909,13 @@ export const GalleryView: RoutedLitTemplate<ManifestResolves> = (props) => {
                 ? sheetCard(entry.row)
                 : cityCard(entry.row),
             )}
-          </div>
-        </div>`
+          </div>`
       : html`<p class="kempty">NO PLATE IN THE ASCENT CARRIES THAT KEY SET.</p>`}
     ${shownAppendix.length > 0
       ? html`
           <h2 class="set-sec">APPENDIX — PLATES ABOUT THE ATLAS, NOT THE CODEBASE</h2>
-          <div class="cards-field">
-            <atlas-lattice aria-hidden="true"></atlas-lattice>
-            <div class="cards">
-              ${shownAppendix.map(sheetCard)}
-            </div>
+          <div class="cards">
+            ${shownAppendix.map(sheetCard)}
           </div>
         `
       : nothing}

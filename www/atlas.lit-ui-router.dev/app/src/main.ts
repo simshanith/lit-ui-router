@@ -5,7 +5,6 @@ import { hydrateRoot } from 'lit-ui-router-ssr/client';
 import { routeRef } from 'lit-ui-router-effect';
 import { onXrefClick } from './fragment.ts';
 import type { FocusDetail, XrefDetail } from './fragment.ts';
-import { installLattice } from './lattice.ts';
 import { createRouter } from './router.ts';
 import { runtime } from './runtime.ts';
 import { applyTheme, readTheme } from './theme.ts';
@@ -16,9 +15,6 @@ import { page } from './views.ts';
 import { installExperimental } from './experimental/index.ts';
 
 applyTheme(readTheme());
-// The cover's field: `<atlas-lattice>` is inert markup until this defines it.
-installLattice();
-
 const router = createRouter();
 
 // The generated cross-references are plain <a href> (a lit directive cannot

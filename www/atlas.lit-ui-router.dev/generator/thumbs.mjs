@@ -4,10 +4,10 @@
 // which made the index a wall of type. This step gives each one a 300 × 400
 // picture of its own plate — the card's whole box, not a strip across its head
 // — rendered at build time and checked in beside `app/public/sheets/*.html` as
-// a tracked generated file. The app lays it as the card's BACKDROP: the head
-// window and the translucent text panel sit over it, and everything the
-// drawing does not cover stays transparent, so the lattice behind the grid
-// keeps running through the picture. Hence the capture is transparent too —
+// a tracked generated file. The app lays it as the card's BACKDROP: the clear
+// head window and the text panel sit over it, and everything the drawing does
+// not cover stays transparent, so the card's gradient ground shows through
+// the picture. Hence the capture is transparent too —
 // no paper, no ground, no sheet: the plate's own ink and its own `var(--paper-2)`
 // block faces (the fills that hide an isometric's hidden lines) and nothing else.
 //
@@ -364,7 +364,7 @@ async function stripPaper(page, selector) {
  * Chromium resizes and encodes the WebP itself — the build needs no image
  * library. The capture is only the part of the 300 × 400 box the drawing
  * actually reaches; it is laid on a 600 × 800 canvas that is never filled, so
- * the rest of the card stays transparent and the lattice runs through it.
+ * the rest of the card stays transparent and the card's ground shows through it.
  */
 async function toWebp(page, { png, dx, dy, dw, dh }) {
   return Buffer.from(

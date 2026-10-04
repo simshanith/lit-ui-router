@@ -649,53 +649,15 @@
           gap: 16px;
         }
       }
-      /* THE FIELD — one wrapper per card grid. The lattice lies inside it at
-         inset 0, behind the cards; the grid itself is lifted one layer. */
-      .cards-field {
-        position: relative;
-      }
-      .cards-field .cards {
-        position: relative;
-        z-index: 1;
-      }
-      /* THE GEOMETRY BEHIND THE GRID — a wireframe cube lattice of dotted
-         lines, turning once about the vertical axis every 240 s, drawn by
-         src/lattice.ts on a canvas. `color` is what the script reads for the
-         line's ink, at draw time and again on every theme change. The canvas
-         is ONE VIEWPORT tall and sticky inside the field, so a grid four
-         screens long still costs a screen of pixels.
-         CARD-ONLY, and this is the whole trick: the script clips each frame to
-         the union of the whole `.card` rects, so the lattice paints under the
-         cards — window AND text, since the body's paper is translucent — and
-         NOWHERE else: not in the grid's gaps, not in the empty tracks of a
-         short last row. One field, one set of world coordinates, so a line
-         leaving one card enters the next on its true path. Without the script
-         the card is just its two tints. */
-      atlas-lattice {
-        position: absolute;
-        inset: 0;
-        z-index: 0;
-        display: block;
-        pointer-events: none;
-        color: var(--ink);
-      }
-      atlas-lattice canvas {
-        display: block;
-        position: sticky;
-        top: 0;
-        width: 100%;
-        height: min(100%, 100vh);
-      }
       /* THE CARD is a container, not a link: `.card-go` (the title) is the one
          primary link and stretches over the card through a ::after, so the key
          block's filter links are not nested inside a link. */
       .card {
         position: relative;
         border: 1.5px solid var(--ink);
-        /* TRANSPARENT, with the paper carried by `.card-body` and carried
-           TRANSLUCENT: the whole card is a panel laid on the field, the window
-           the thinner pane in it. */
-        background: transparent;
+        /* the card's ground is one of six gradients, cycling down the grid; the
+           picture lies over it and the body's paper over the picture */
+        background: var(--card-grad, var(--paper));
         color: inherit;
         display: block;
         /* the backdrop sits at z-index -1: isolate so it stays inside THIS card,
@@ -724,49 +686,45 @@
       .card:has(.card-go.is-active) {
         border-color: var(--accent);
       }
+      /* THE SIX GROUNDS — gradients of the paper tinted by the page's own
+         tokens, so each follows the theme; the grid cycles them by position. */
+      .cards > .card:nth-child(6n + 1) {
+        --card-grad: linear-gradient(160deg, color-mix(in oklab, var(--accent) 18%, var(--paper)), var(--paper-2));
+      }
+      .cards > .card:nth-child(6n + 2) {
+        --card-grad: linear-gradient(20deg, color-mix(in oklab, var(--red) 14%, var(--paper)), var(--paper));
+      }
+      .cards > .card:nth-child(6n + 3) {
+        --card-grad: radial-gradient(120% 90% at 20% 0%, color-mix(in oklab, var(--ink) 12%, var(--paper)), var(--paper-2));
+      }
+      .cards > .card:nth-child(6n + 4) {
+        --card-grad: linear-gradient(90deg, var(--paper-2), color-mix(in oklab, var(--accent) 10%, var(--paper)));
+      }
+      .cards > .card:nth-child(6n + 5) {
+        --card-grad: linear-gradient(200deg, color-mix(in oklab, var(--red) 8%, var(--paper-2)), color-mix(in oklab, var(--accent) 8%, var(--paper)));
+      }
+      .cards > .card:nth-child(6n + 6) {
+        --card-grad: radial-gradient(100% 100% at 80% 100%, color-mix(in oklab, var(--accent) 14%, var(--paper-2)), var(--paper));
+      }
       /* THE BACKDROP (T16) — the plate's picture, laid over the WHOLE card and
          behind everything written on it. `z-index: -1` inside the card's own
-         stacking context is what puts it there: a negative layer paints under
-         the in-flow backgrounds of the window and the body, both of which are
-         translucent paper, so the drawing ghosts through the writing and the
-         lattice keeps running through everything the drawing does not cover
-         (the picture is transparent outside the ink — see generator/thumbs.mjs).
-         Top-anchored, so the head window always holds the drawing's top. At
-         rest it is invisible; hover or focus fades it in. Nothing moves. */
+         stacking context paints it under the window and the body yet over the
+         card's own ground, so the gradient shows through everything the drawing
+         does not cover (the picture is transparent outside the ink — see
+         generator/thumbs.mjs). Top-anchored, so the head window always holds
+         the drawing's top. On at rest; nothing moves. */
       .card-pic {
         display: block;
         position: absolute;
         inset: 0;
         z-index: -1;
       }
-      /* THE WINDOW — a pane across the head of the card, 259 x 150 in ratio,
-         above the backdrop and never moving. Its tint is the LIGHTER of the
-         card's two — 28% paper against the body's 76% — so it reads as a
-         window within the panel: the lattice and the plate are plainest here. */
+      /* THE WINDOW — a clear pane across the head of the card, 259 x 150 in
+         ratio: the picture and the ground show through it as they are. */
       .card-window {
         width: 100%;
         aspect-ratio: 259 / 150;
         border-bottom: 1px solid var(--line);
-        background: color-mix(in oklab, var(--paper) 28%, transparent);
-      }
-      .card-pic > img {
-        opacity: 0;
-      }
-      .card:hover .card-pic > img,
-      .card:focus-within .card-pic > img {
-        opacity: 1;
-      }
-      @media (prefers-reduced-motion: no-preference) {
-        .card-pic > img {
-          transition: opacity 160ms ease;
-        }
-      }
-      /* NO POINTER, NO REVEAL: there is no hover to answer, so the plate
-         stands in its window at rest. The field still runs behind it. */
-      @media (hover: none) {
-        .card-pic > img {
-          opacity: 1;
-        }
       }
       .card-pic img {
         display: block;
@@ -798,18 +756,15 @@
       :root[data-theme='dark'] .card-pic .d {
         display: block;
       }
-      /* THE BODY — the card's paper, carried TRANSLUCENT so the lattice reads
-         behind the writing as well as through the window. 76% over `--ground`
-         leaves the caption at `--ink-soft` at 5.36:1 light and 6.24:1 dark
-         (5.07 / 6.91 hovered, 5.03 / 5.64 where a lattice line runs under the
-         letters), so the writing keeps its contrast either theme. */
+      /* THE BODY — the card's paper, opaque, so the writing sits on plain
+         ground whatever runs under the window. */
       .card-body {
-        background: color-mix(in oklab, var(--paper) 76%, transparent);
+        background: var(--paper);
         padding: 14px 16px 15px;
       }
       .card:hover .card-body,
       .card:has(.card-go.is-active) .card-body {
-        background: color-mix(in oklab, var(--paper-2) 76%, transparent);
+        background: var(--paper-2);
       }
       .card .n {
         font-family: var(--data);
