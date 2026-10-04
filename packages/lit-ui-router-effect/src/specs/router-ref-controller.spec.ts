@@ -779,4 +779,108 @@ describe('RouterRefController', () => {
       expect(controller.value).toBe('b');
     });
   });
+
+  /** The served-page window: `<ui-router>` mints its placeholder, a host binds to it, then the app's router arrives. */
+  describe('placeholder router upgrade', () => {
+    async function mountPlaceholder(): Promise<{
+      uiRouterEl: UIRouterLitElement;
+      placeholder: UIRouterLit;
+    }> {
+      const uiRouterEl = document.createElement('ui-router');
+      document.body.appendChild(uiRouterEl);
+      cleanups.push(() => uiRouterEl.remove());
+      await waitForUpdate(uiRouterEl);
+      const placeholder = uiRouterEl.uiRouter!;
+      cleanups.push(() => placeholder.dispose());
+      return { uiRouterEl, placeholder };
+    }
+
+    function createAppRouter(): UIRouterLit {
+      const router = createTestRouter(testStates);
+      cleanups.push(() => router.dispose());
+      return router;
+    }
+
+    async function upgrade(
+      uiRouterEl: UIRouterLitElement,
+      router: UIRouterLit,
+    ): Promise<void> {
+      uiRouterEl.uiRouter = router;
+      await waitForUpdate(uiRouterEl);
+    }
+
+    it('follows the upgrade on a host under <ui-router>', async () => {
+      const { uiRouterEl } = await mountPlaceholder();
+      const router = createAppRouter();
+      const runtime = recordingRuntime();
+      const host = createHost();
+      const controller = new RouterRefController(
+        host,
+        (route) => route.current?.name,
+        { runtime },
+      );
+      uiRouterEl.appendChild(host);
+      await waitForUpdate(host);
+      expect(runtime.fibers).toHaveLength(1);
+
+      await upgrade(uiRouterEl, router);
+      expect(runtime.fibers).toHaveLength(2);
+      expect(await interrupted(runtime.fibers[0])).toBe(true);
+      const rendersBefore = host.renderCount;
+
+      await routerGo(router, 'b', { id: '1' });
+      await waitForUpdate(host);
+      expect(controller.value).toBe('b');
+      expect(host.renderCount).toBeGreaterThan(rendersBefore);
+    });
+
+    it('follows the upgrade on a host under a <ui-view>', async () => {
+      const { uiRouterEl } = await mountPlaceholder();
+      const router = createAppRouter();
+      const view = uiRouterEl.appendChild(document.createElement('ui-view'));
+      await waitForUpdate(view);
+      const runtime = recordingRuntime();
+      const host = createHost();
+      const controller = new RouterRefController(
+        host,
+        (route) => route.current?.name,
+        { runtime },
+      );
+      view.appendChild(host);
+      await waitForUpdate(host);
+      expect(runtime.fibers).toHaveLength(1);
+
+      await upgrade(uiRouterEl, router);
+      expect(runtime.fibers).toHaveLength(2);
+      const rendersBefore = host.renderCount;
+
+      await routerGo(router, 'a');
+      await waitForUpdate(host);
+      expect(controller.value).toBe('a');
+      expect(host.renderCount).toBeGreaterThan(rendersBefore);
+    });
+
+    it('keeps the placeholder once the host disconnects', async () => {
+      const { uiRouterEl } = await mountPlaceholder();
+      const router = createAppRouter();
+      await routerGo(router, 'a');
+      const runtime = recordingRuntime();
+      const host = createHost();
+      const controller = new RouterRefController(
+        host,
+        (route) => route.current?.name,
+        { runtime },
+      );
+      uiRouterEl.appendChild(host);
+      await waitForUpdate(host);
+      const placeholderValue = controller.value;
+      host.remove();
+
+      await upgrade(uiRouterEl, router);
+
+      expect(runtime.fibers).toHaveLength(1);
+      expect(controller.value).toBe(placeholderValue);
+      expect(placeholderValue).not.toBe('a');
+    });
+  });
 });
