@@ -5,23 +5,18 @@
 // every verdict, including the CLI's exit 2 and a missing credential, so the
 // signal can never fail CI.
 //
-// The CLI is spawned directly rather than through turbo on purpose: turbo
-// collapses any task failure to its own exit 1, which would erase the 1-vs-2
-// distinction the conclusion mapping is built on. Shaping is pure and
+// The CLI runs through ../lib/run-cli.ts, never turbo. Shaping is pure and
 // unit-tested in ./workers-builds-check-runs.core.ts.
 
 import { fileURLToPath } from 'node:url';
 
 import { defaultExec } from '@tools/shared/exec.ts';
 import { ensureGh } from '../lib/gh.ts';
+import { runCli } from '../lib/run-cli.ts';
 import { logWarning } from '@tools/shared/gha.ts';
-import { workspaceRoot } from '@tools/bootstrap/root.ts';
 
 import { checkRunApiArgs } from './publish-check-runs.core.ts';
-import {
-  toWorkersBuildsCheckRun,
-  type TriggerCheckResult,
-} from './workers-builds-check-runs.core.ts';
+import { toWorkersBuildsCheckRun } from './workers-builds-check-runs.core.ts';
 
 // Resolved through node so the @tools/workers-builds devDependency (declared
 // for exactly this, and to pull the package into `setup --release`'s install
@@ -30,33 +25,6 @@ const CLI = fileURLToPath(
   import.meta.resolve('@tools/workers-builds/workers-builds-triggers.ts'),
 );
 
-/** Run the CLI without letting a non-zero exit escape as a rejection. */
-async function runTriggerCheck(): Promise<TriggerCheckResult> {
-  try {
-    const { stdout, stderr } = await defaultExec('node', [CLI], {
-      cwd: workspaceRoot,
-    });
-    return { exitCode: 0, output: `${stdout}${stderr}` };
-  } catch (error: unknown) {
-    // execFile rejects with the child's code/stdout/stderr attached; anything
-    // else (spawn failure) is an observer error too, so it lands on 2.
-    const failure = error as {
-      code?: unknown;
-      stdout?: unknown;
-      stderr?: unknown;
-    };
-    const exitCode = typeof failure.code === 'number' ? failure.code : 2;
-    const stdout = typeof failure.stdout === 'string' ? failure.stdout : '';
-    const stderr =
-      typeof failure.stderr === 'string'
-        ? failure.stderr
-        : error instanceof Error
-          ? error.message
-          : String(error);
-    return { exitCode, output: `${stdout}${stderr}` };
-  }
-}
-
 async function main() {
   const dryRun = process.argv.includes('--dry-run');
   const repo = process.env.GITHUB_REPOSITORY ?? 'simshanith/lit-ui-router';
@@ -64,7 +32,7 @@ async function main() {
     throw new Error('GITHUB_REPOSITORY must be set (or pass --dry-run)');
   }
 
-  const result = await runTriggerCheck();
+  const result = await runCli(CLI);
   console.log(`workers-builds-triggers exited ${result.exitCode}`);
   console.log(result.output);
 

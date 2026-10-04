@@ -1,0 +1,67 @@
+{
+  "$comment": "Fixtures for pages-deploy.test.ts. `deployments` documents the shape GET /pages/projects/altitude-atlas/deployments?env=production returns for direct uploads (trimmed to the fields the check reads plus a few it ignores), deliberately out of date order and including a newer failed upload; `liveCommit` is the commit the newest successful production deployment records. `forbidden` is the envelope a token without Pages read scope gets.",
+  "liveCommit": "7c893cda19015bdc5e50629e13808e89d7c5da34",
+  "branchAhead": "aab08d5900000000000000000000000000000000",
+  "deployments": [
+    {
+      "id": "0b1c2d3e-older",
+      "short_id": "0b1c2d3e",
+      "project_name": "altitude-atlas",
+      "environment": "production",
+      "url": "https://0b1c2d3e.altitude-atlas.pages.dev",
+      "created_on": "2026-09-30T18:02:11.123456Z",
+      "latest_stage": { "name": "deploy", "status": "success" },
+      "deployment_trigger": {
+        "type": "ad_hoc",
+        "metadata": {
+          "branch": "www/atlas",
+          "commit_hash": "8086afee00000000000000000000000000000000",
+          "commit_message": "build(atlas): an older deploy",
+          "commit_dirty": false
+        }
+      }
+    },
+    {
+      "id": "9f8e7d6c-failed",
+      "short_id": "9f8e7d6c",
+      "project_name": "altitude-atlas",
+      "environment": "production",
+      "url": "https://9f8e7d6c.altitude-atlas.pages.dev",
+      "created_on": "2026-10-03T09:30:00.000000Z",
+      "latest_stage": { "name": "deploy", "status": "failure" },
+      "deployment_trigger": {
+        "type": "ad_hoc",
+        "metadata": {
+          "branch": "www/atlas",
+          "commit_hash": "aab08d5900000000000000000000000000000000",
+          "commit_message": "fix(atlas): a failed upload",
+          "commit_dirty": false
+        }
+      }
+    },
+    {
+      "id": "4a5b6c7d-live",
+      "short_id": "4a5b6c7d",
+      "project_name": "altitude-atlas",
+      "environment": "production",
+      "url": "https://4a5b6c7d.altitude-atlas.pages.dev",
+      "created_on": "2026-10-02T21:14:05.654321Z",
+      "latest_stage": { "name": "deploy", "status": "success" },
+      "deployment_trigger": {
+        "type": "ad_hoc",
+        "metadata": {
+          "branch": "www/atlas",
+          "commit_hash": "7c893cda19015bdc5e50629e13808e89d7c5da34",
+          "commit_message": "fix(atlas): the live deploy",
+          "commit_dirty": false
+        }
+      }
+    }
+  ],
+  "forbidden": {
+    "success": false,
+    "errors": [{ "code": 10000, "message": "Authentication error" }],
+    "messages": [],
+    "result": null
+  }
+}
