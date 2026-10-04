@@ -399,7 +399,7 @@ async function toWebp(page, { png, dx, dy, dw, dh }) {
 
 /**
  * A 3D plate's model, settled: model-viewer arrives on demand, so the plate's
- * hook is the signal, and its `ready` holds until the theme's colours are on the
+ * hook is the signal, and its `ready` resolves once the theme's colours are on the
  * model; then the pins step aside and the loading bar has faded.
  */
 async function settleScene(page) {
