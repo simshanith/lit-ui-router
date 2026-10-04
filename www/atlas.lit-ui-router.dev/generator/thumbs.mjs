@@ -22,8 +22,8 @@
 //   app/public/thumbs/<id>-dark.webp   the same crop in cyanotype
 //
 // It photographs two things build.mjs's output feeds: the flat set build.mjs
-// writes, and — for the two 3D plates, which only the app raises — the BUILT
-// app's prerendered `/city/` and `/plant/` pages. So it runs after build.mjs
+// writes, and — for the 3D plates, which only the app raises — the BUILT
+// app's prerendered `/city/`, `/plant/` and `/bricks/` pages. So it runs after build.mjs
 // and the app build, and build.mjs runs again so the manifest can assert every
 // card has its picture:
 //
@@ -186,6 +186,8 @@ const TUNING = {
   // the box takes that width and the crop drops the empty sky above it.
   city: { target: '#cs-canvas canvas', zoom: 1.08, crop: { top: 0.24, bottom: 1 } },
   plant: { target: '#cs-canvas canvas', zoom: 1.08, crop: { top: 0.24, bottom: 1 } },
+  // sheet 2's model is a <model-viewer> on a transparent clear, its badges hidden for the shot
+  bricks: { target: '#bk-viewer', zoom: 1.12, crop: { top: 0.2, bottom: 0.9 } },
   // plates whose whole figure reads as grey at card width, enlarged into a detail
   '3a': { zoom: 1.3, x: 0.1 },
   4: { zoom: 1.2, x: 0.45 },
@@ -212,6 +214,7 @@ const DEFAULT_TARGET = '.plate .figure-wrap svg';
 
 const TYPES = {
   '.css': 'text/css',
+  '.glb': 'model/gltf-binary',
   '.html': 'text/html',
   '.js': 'text/javascript',
   '.json': 'application/json',
@@ -401,7 +404,15 @@ async function toWebp(page, { png, dx, dy, dw, dh }) {
  * `clear(0)` comes after the theme is set.
  */
 async function settleScene(page) {
-  await page.waitForFunction(() => window.__cityScene, null, { timeout: 30000 });
+  await page.waitForFunction(() => window.__cityScene || window.__bricksScene, null, { timeout: 30000 });
+  if (await page.evaluate(() => Boolean(window.__bricksScene))) {
+    await page.evaluate(async () => {
+      await window.__bricksScene.ready;
+      window.__bricksScene.photo();
+      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    });
+    return;
+  }
   await page.waitForFunction(() => window.__cityScene.tweening() === false, null, { timeout: 30000 });
   await page.evaluate(
     () =>

@@ -48,6 +48,7 @@ import type { FocusDetail } from './fragment.ts';
 import { ICON_SPRITE, iconId } from './generated/icons.js';
 import { initCity } from './generated/city-init.js';
 import type { CityScene } from './generated/city-init.js';
+import { initBricks } from './generated/bricks-init.js';
 import { ARTIFACT } from './mode.ts';
 import { href } from './routes.ts';
 import { runtime } from './runtime.ts';
@@ -179,7 +180,11 @@ customElements.define('atlas-plate', AtlasPlate);
 // --- <atlas-city> — the 3D plate, and the layer that tears it down --------
 
 // The 3D plates read their own `focus`: every other state reads none.
-const SCENE_STATES: ReadonlySet<string | undefined> = new Set(['atlas.city', 'atlas.plant']);
+const SCENE_STATES: ReadonlySet<string | undefined> = new Set([
+  'atlas.city',
+  'atlas.plant',
+  'atlas.bricks',
+]);
 const cityPin = (route: RouteSnapshot): string | null =>
   SCENE_STATES.has(route.current?.name) && typeof route.params.focus === 'string'
     ? route.params.focus
@@ -205,12 +210,13 @@ const cityPin = (route: RouteSnapshot): string | null =>
 export class AtlasCity extends ReactiveElement {
   static override properties = {
     fragment: { attribute: false },
-    three: { attribute: false },
+    lib: { attribute: false },
     router: { attribute: false },
   };
 
   declare fragment: string;
-  declare three: unknown;
+  /** The scene's library, resolved on entry: three for the city, model-viewer for the bricks. */
+  declare lib: unknown;
   declare router: UIRouter | undefined;
   #scene: CityScene | null = null;
   #seq = 0;
@@ -219,7 +225,7 @@ export class AtlasCity extends ReactiveElement {
   constructor() {
     super();
     this.fragment = '';
-    this.three = undefined;
+    this.lib = undefined;
     this.router = undefined;
   }
 
@@ -238,7 +244,7 @@ export class AtlasCity extends ReactiveElement {
   }
 
   override updated(changed: Map<PropertyKey, unknown>): void {
-    if (changed.has('fragment') || changed.has('three')) void this.#boot();
+    if (changed.has('fragment') || changed.has('lib')) void this.#boot();
   }
 
   override disconnectedCallback(): void {
@@ -249,11 +255,11 @@ export class AtlasCity extends ReactiveElement {
   async #boot(): Promise<void> {
     const seq = (this.#seq += 1);
     const plate = this.querySelector('atlas-plate');
-    if (!plate || !this.fragment || !this.three) return;
+    if (!plate || !this.fragment || !this.lib) return;
     await plate.updateComplete; // the fragment (and its JSON island) is in the DOM
     if (seq !== this.#seq || !this.isConnected) return;
     this.#teardown();
-    const scene = await initCity(this, this.three, this.#pin?.value ?? null);
+    const scene = await this.raise(this.#pin?.value ?? null);
     // undefined = nothing was raised (no WebGL); a superseded boot disposes at once
     if (seq !== this.#seq || !this.isConnected) {
       scene?.dispose();
@@ -261,6 +267,11 @@ export class AtlasCity extends ReactiveElement {
     }
     this.#scene = scene ?? null;
     this.#select(); // the url may have moved while the scene was raised
+  }
+
+  /** Raises the scene over the adopted fragment, opening on `focus`. */
+  protected raise(focus: string | null): Promise<CityScene | undefined> {
+    return initCity(this, this.lib, focus);
   }
 
   #select(): void {
@@ -274,6 +285,14 @@ export class AtlasCity extends ReactiveElement {
   }
 }
 customElements.define('atlas-city', AtlasCity);
+
+/** Sheet 2's model in the round: the same seam, wiring a <model-viewer> instead of raising a scene. */
+export class AtlasBricks extends AtlasCity {
+  protected override raise(focus: string | null): Promise<CityScene | undefined> {
+    return initBricks(this, this.lib, focus);
+  }
+}
+customElements.define('atlas-bricks', AtlasBricks);
 
 // --- <atlas-themer> — the sheets' three-state theme control ----------------
 
@@ -529,7 +548,7 @@ export const page = (router: UIRouterLit): TemplateResult =>
 // --- gallery: the title sheet — key image, issue log, index ----------------
 
 const logLink = (entry: IssueEntry): TemplateResult =>
-  entry.num === 'city' || entry.num === 'plant'
+  SCENE_STATES.has(`atlas.${entry.num}`)
     ? html`<a class="s" href=${srefHref(`atlas.${entry.num}`)}
         >${entry.head} · REV ${entry.rev}</a
       >`
@@ -975,6 +994,7 @@ export const LogView: RoutedLitTemplate<ManifestResolves> = (props) => {
 type ManifestResolves = { manifest?: Manifest };
 type SheetResolves = { manifest?: Manifest; sheet?: SheetRow; fragment?: string };
 type CityResolves = { extra?: ExtraRow; fragment?: string; three?: unknown };
+type BricksResolves = { extra?: ExtraRow; fragment?: string; viewer?: unknown };
 type SpecimenResolves = { specimen?: unknown };
 
 const neighbours = (manifest: Manifest, sheet: SheetRow): [SheetRow?, SheetRow?] => {
@@ -1083,8 +1103,32 @@ export const CityView: RoutedLitTemplate<CityResolves> = (props) => {
       ${seeAlso(extra.refs)} ${keyBlock(extra.labels)}
     </div>
     ${verdictLine(extra.verdict)}
-    <atlas-city .fragment=${resolves.fragment} .three=${resolves.three} .router=${props?.router}
+    <atlas-city .fragment=${resolves.fragment} .lib=${resolves.three} .router=${props?.router}
       >${plate(resolves.fragment, false)}</atlas-city
+    >
+  `;
+};
+
+// --- the bricks: sheet 2's finished model, with model-viewer loaded on demand ---
+
+export const BricksView: RoutedLitTemplate<BricksResolves> = (props) => {
+  const resolves = props?.resolves;
+  const extra = resolves?.extra;
+  if (!extra || !resolves.fragment) return html`<p class="loading">SEATING THE BRICKS…</p>`;
+  return html`
+    ${utilBar(html`
+      ${indexCrumb()}
+      <span class="sh">${extra.shno}</span>
+    `,
+      copyLink(props?.router),
+    )}
+    <div class="plate-data">
+      <span>ALTITUDE · ${extra.scale}</span>
+      ${seeAlso(extra.refs)} ${keyBlock(extra.labels)}
+    </div>
+    ${verdictLine(extra.verdict)}
+    <atlas-bricks .fragment=${resolves.fragment} .lib=${resolves.viewer} .router=${props?.router}
+      >${plate(resolves.fragment, false)}</atlas-bricks
     >
   `;
 };
@@ -1241,6 +1285,7 @@ export const NotFoundView: RoutedLitTemplate = () => html`
 declare global {
   interface HTMLElementTagNameMap {
     'atlas-city': AtlasCity;
+    'atlas-bricks': AtlasBricks;
     'atlas-plate': AtlasPlate;
     'atlas-themer': AtlasThemer;
     'atlas-copy-link': AtlasCopyLink;

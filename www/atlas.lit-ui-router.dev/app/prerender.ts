@@ -89,11 +89,16 @@ const router: LitRouter = installServerLocation(new UIRouterLit(), {
 });
 const cityRow = findExtra(manifest, 'city');
 const plantRow = findExtra(manifest, 'plant');
+const bricksRow = findExtra(manifest, 'bricks');
 
 const fragmentOf = (row: { file: string }): string => readFileSync(join(PUBLIC, row.file), 'utf8');
 
-/** A 3D plate's resolves: its row and fragment, read from disk. */
-const sceneResolves = (id: string, row: ExtraRow | undefined): LitStateDeclaration['resolve'] => [
+/** A 3D plate's resolves: its row and fragment, read from disk; `lib` is the client's library token. */
+const sceneResolves = (
+  id: string,
+  row: ExtraRow | undefined,
+  lib = 'three',
+): LitStateDeclaration['resolve'] => [
   {
     token: 'extra',
     resolveFn: (): ExtraRow => {
@@ -103,7 +108,7 @@ const sceneResolves = (id: string, row: ExtraRow | undefined): LitStateDeclarati
   },
   { token: 'fragment', deps: ['extra'], resolveFn: fragmentOf },
   // A client resolve: the scene is raised on boot, so the served page has none.
-  { token: 'three', resolveFn: (): undefined => undefined },
+  { token: lib, resolveFn: (): undefined => undefined },
 ];
 
 /** The routed component per state name — the client's own, from src/views.ts. */
@@ -113,6 +118,7 @@ const components: Record<string, LitStateDeclaration['component']> = {
   'atlas.sheet': views.SheetView,
   'atlas.city': views.CityView,
   'atlas.plant': views.CityView,
+  'atlas.bricks': views.BricksView,
   'atlas.specimen': views.SpecimenView,
   'atlas.about': views.AboutView,
   'atlas.log': views.LogView,
@@ -143,6 +149,7 @@ const serverResolves: Record<string, LitStateDeclaration['resolve']> = {
   ],
   'atlas.city': sceneResolves('city', cityRow),
   'atlas.plant': sceneResolves('plant', plantRow),
+  'atlas.bricks': sceneResolves('bricks', bricksRow, 'viewer'),
   // The bench's element IS the resolve on the client (src/router.ts). The
   // server has no bench to draw — every reading on it is a measurement of a
   // live document — so a truthy token stands in and the view emits its head
@@ -215,6 +222,7 @@ const titles = new Map<string, string>([
   [href.log, TITLES.log],
   ...(cityRow ? ([[href.city, TITLES.city]] as [string, string][]) : []),
   ...(plantRow ? ([[href.plant, TITLES.plant]] as [string, string][]) : []),
+  ...(bricksRow ? ([[href.bricks, TITLES.bricks]] as [string, string][]) : []),
   [href.specimen, TITLES.specimen],
   ...PLATES.map((row: SheetRow): [string, string] => [href.sheet(row.num), sheetTitle(row)]),
 ]);

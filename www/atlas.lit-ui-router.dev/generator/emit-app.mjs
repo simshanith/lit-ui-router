@@ -10,17 +10,20 @@
 // Written, relative to build.mjs's OUT argument (the repo's www/atlas.lit-ui-router.dev/):
 //   app/public/sheets/<id>.html   one fragment per sheet
 //   app/public/sheets/city.html   the gallery-only 3D plate, same treatment
+//   app/public/models/bricks.glb  sheet 2's seated model, the app-only bricks plate's glTF binary
 //   app/public/sheets/atlas.css   the shared sheet chrome, lifted from chrome.mjs
 //   app/public/manifest.json      one row per sheet + the `extras` rows + the cover
 // Read, not written: app/public/thumbs/<id>.webp — generator/thumbs.mjs draws
 // those (the 3D cards' from the built app), and a card with no picture stops
 // the build here.
 //   app/src/generated/city-init.js  the 3D scene as a module (three is bundled)
+//   app/src/generated/bricks-init.js  the bricks plate's wiring around <model-viewer>
 //   app/src/generated/icons.js      the icon sprite and key-id table (icons.mjs)
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { CSS, DATE, TOTAL, chipBreaks, plateRatio, sheetSection } from './chrome.mjs';
 import { CITY_META, PLANT_META, cityInitModule, cityMarkup, plantMarkup } from './city-scene.mjs';
+import { BRICKS_GLB, BRICKS_INIT_DTS, BRICKS_META, bricksGlb, bricksInitModule, bricksMarkup } from './brick-scene.mjs';
 import { ICONS_DTS, iconsModule } from './icons.mjs';
 import { assertLabels, labelsFor } from './labels.mjs';
 import { cityHero } from './sheet7.mjs';
@@ -206,8 +209,8 @@ function issueLogOf(rows) {
         title: row.title, rev: head[1], desc: firstClause(desc) });
     }
   }
-  // the two 3D plates seat right after 7B, the city first
-  const SEAT = { city: '7B·', plant: '7B··' };
+  // the 3D plates seat right after 7B, in the manifest's order
+  const SEAT = { city: '7B·', plant: '7B··', bricks: '7B···' };
   const order = (a, b) => bySheet(SEAT[a.num] ?? a.num, SEAT[b.num] ?? b.num);
   const dated = entries.filter((e) => e.date)
     .sort((a, b) => b.date.localeCompare(a.date) || order(a, b) || b.rev.localeCompare(a.rev));
@@ -319,13 +322,13 @@ export function emitApp({ sheets, appendix = [], interactive, appendixInteractiv
   const appManifest = appRows.map(rowFor);
 
   // EXTRAS — the 3D plates: the city, which the flat set publishes only inside
-  // its gallery, and its working twin, which the flat set does not draw. Neither
-  // has a sheet number, so both are kept OUT of `sheets`: the reel walk, the
+  // its gallery, and its working twin and sheet 2's model, which the flat set does
+  // not draw. None has a sheet number, so all are kept OUT of `sheets`: the reel walk, the
   // ascent order and the sheet mount all read that array and must not see them.
   // The scene is an ES module rather than an inline script: the app's
   // runScripts() cannot run a <script type="module"> it inserts, and the
   // import must be bundled, not a cdnjs url.
-  const scenes = [[CITY_META, cityMarkup()], [PLANT_META, plantMarkup()]].map(([meta, markup]) => {
+  const scenes = [[CITY_META, cityMarkup()], [PLANT_META, plantMarkup()], [BRICKS_META, bricksMarkup()]].map(([meta, markup]) => {
     const linked = linkRefs(markup, '', byUpper);
     writeFileSync(join(sheetsDir, `${meta.id}.html`), `${linked.html.trim()}\n`);
     return [meta, linked.refs];
@@ -351,6 +354,10 @@ export function emitApp({ sheets, appendix = [], interactive, appendixInteractiv
       '  focus: string | null,\n' +
       '): Promise<CityScene | undefined>;\n',
   );
+  writeFileSync(join(generatedDir, 'bricks-init.js'), bricksInitModule());
+  writeFileSync(join(generatedDir, 'bricks-init.d.ts'), BRICKS_INIT_DTS);
+  mkdirSync(join(publicDir, 'models'), { recursive: true });
+  writeFileSync(join(publicDir, BRICKS_GLB), bricksGlb());
   writeFileSync(join(generatedDir, 'icons.js'), iconsModule());
   writeFileSync(join(generatedDir, 'icons.d.ts'), ICONS_DTS);
   const extras = scenes.map(([meta, refs]) => ({

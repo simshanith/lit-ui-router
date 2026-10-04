@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { defs } from './chrome.mjs';
 import { txt, lines, isoPt, keyRow } from './helpers.mjs';
 import { brickKit, seated } from './brick-iso.mjs';
+import { seatedBoxes } from './brick-glb.mjs';
 
 const P = 's2';
 
@@ -381,6 +382,19 @@ const MODEL = [
   { id: 4, kind: 'brick', x: P2[0], y: P2[1], ws: B(4).shape[0], ds: B(4).shape[1], courses: B(4).courses, on: 'P2', rings: ['0,3'] },
   { id: 6, kind: 'brick', x: SSR[0], y: SSR[1], ws: B(6).shape[1], ds: B(6).shape[0], courses: B(6).courses, on: 1 },
 ];
+// The model in the round reads the same parts, and its explosion is this sheet's own:
+// each brick lifts from its seat to its exploded hover, both measured from its plate.
+export const BRICK_MODEL = MODEL;
+export const BRICK_ROWS = BRICKS;
+export const BRICK_COUPLES = COUPLES;
+const HOVER = new Map([[1, LIT[2]], [2, NAV[2]], [3, MBX[2]], [4, srvZ0], [5, EFF[2]], [6, SSR[2]]]);
+const SEATED = new Map(seatedBoxes(MODEL).map((b) => [b.m.id, b]));
+const plateOf = (m) => (m.kind === 'plate' ? m : plateOf(MODEL.find((o) => o.id === m.on)));
+export const EXPLODE = new Map([...HOVER].map(([n, z]) => {
+  const b = SEATED.get(n), lift = z - (b.z0 - SEATED.get(plateOf(b.m).id).z0);
+  if (!(lift > 0)) throw new Error(`sheet2: brick ${n} hovers at ${z} but seats at ${b.z0} — the explosion would sink it`);
+  return [n, lift];
+}));
 const pick = (ids) => MODEL.filter((m) => ids.includes(m.id));
 const STEPS = [
   [pick(['G1', 'P1', 1, 2]), ['STEP 1 — brick 1 takes the rail,', 'brick 2 the location seat']],

@@ -29,6 +29,7 @@ export const href = {
   about: `${BASE}about`,
   city: `${BASE}city`,
   plant: `${BASE}plant`,
+  bricks: `${BASE}bricks`,
   specimen: `${BASE}specimen`,
   log: `${BASE}log`,
   sheet: (num: string): string => `${BASE}sheet/${num}`,
@@ -81,6 +82,9 @@ export const routes: RouteDeclaration[] = [
   // (three, resolved). The twin is the same scene with its plants raised.
   { name: 'atlas.city', url: '/city?focus', params: FOCUS_PARAMS },
   { name: 'atlas.plant', url: '/plant?focus', params: FOCUS_PARAMS },
+  // Sheet 2's finished model in the round: its view loads @google/model-viewer
+  // on entry, as the city's loads three.
+  { name: 'atlas.bricks', url: '/bricks?focus', params: FOCUS_PARAMS },
   // The type specimen: a design bench, not a plate. It is the one state whose
   // view pulls a webfont — and it pulls it on entry, so no other page's
   // payload knows the faces exist.

@@ -16,6 +16,7 @@ import { loadFragment, loadManifest } from './runtime.ts';
 import { titleFor } from './titles.ts';
 import {
   AboutView,
+  BricksView,
   CityView,
   GalleryView,
   LogView,
@@ -102,6 +103,32 @@ export const states: LitStateDeclaration[] = [
   },
   sceneState('city'),
   sceneState('plant'),
+  {
+    name: 'atlas.bricks',
+    url: urlOf('atlas.bricks'),
+    params: FOCUS_PARAMS,
+    component: BricksView,
+    // DEPENDENCIES ON DEMAND: the <model-viewer> element is a resolve, so its
+    // module (and the three.js it carries) is fetched by this state and no other;
+    // the wiring is a generated module (src/generated/bricks-init.js).
+    resolve: [
+      {
+        token: 'extra',
+        deps: ['manifest'],
+        resolveFn: (manifest: Manifest): ExtraRow => {
+          const row = findExtra(manifest, 'bricks');
+          if (!row) throw new Error('no bricks row in the manifest');
+          return row;
+        },
+      },
+      {
+        token: 'fragment',
+        deps: ['extra'],
+        resolveFn: (extra: ExtraRow): Promise<string> => loadFragment(extra),
+      },
+      { token: 'viewer', resolveFn: (): Promise<unknown> => import('@google/model-viewer') },
+    ],
+  },
   {
     name: 'atlas.specimen',
     url: urlOf('atlas.specimen'),

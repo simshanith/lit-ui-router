@@ -24,12 +24,14 @@ parser calls the TypeScript 6 API, and `tsc --noEmit` runs on the same install.
 
 The content is generated, never transcribed. `node generator/build.mjs .` from `www/atlas.lit-ui-router.dev/` — the
 seam is `generator/emit-app.mjs` — writes `public/sheets/<id>.html` (one chrome-less fragment per
-plate), `public/sheets/atlas.css`, `src/generated/city-init.js`, and `public/manifest.json`: one row
+plate), `public/sheets/atlas.css`, `src/generated/city-init.js`, `src/generated/bricks-init.js`,
+`public/models/bricks.glb` (sheet 2's seated model as a glTF binary), and `public/manifest.json`: one row
 per plate (title, rev, ALTITUDE wording, FIT VERDICT line, census plates read, cross-sheet
 references, standalone filename in the flat set), an `issueLog` array, and a `cover` object carrying
 the flat gallery's stat bar, survey, prose column and colophon as rendered HTML, so the routed index
-draws the same bytes the flat one does. Twenty-five fragments: twenty-one sheets, three `appendix`
-rows (A1, A2, A2i) and one `extras` row, the 3D city.
+draws the same bytes the flat one does. Twenty-seven fragments: twenty-one sheets, three `appendix`
+rows (A1, A2, A2i) and three `extras` rows: the 3D city, its working twin and sheet 2's model in
+the round.
 
 ## The routes
 
@@ -40,6 +42,7 @@ rows (A1, A2, A2i) and one `extras` row, the 3D city.
 | `atlas.sheet`    | `/sheet/:num?focus` | `SheetView` | `sheet`, `fragment` (`focus`: the plate's pick, dynamic) |
 | `atlas.city`     | `/city?focus`  | `CityView`      | `extra`, `fragment`, **`three`** (`focus`: the pinned member) |
 | `atlas.plant`    | `/plant?focus` | `CityView`      | the same as `atlas.city`, on the `plant` row |
+| `atlas.bricks`   | `/bricks?focus` | `BricksView`   | `extra`, `fragment`, **`viewer`** (`focus`: the pinned brick, 1–6) |
 | `atlas.specimen` | `/specimen`    | `SpecimenView`  | **`specimen`** (its own element)  |
 | `atlas.log`      | `/log`         | `LogView`       | `manifest` (its `issueLog`)       |
 | `atlas.office`   | `/office`      | — `redirectTo`  | — (302 to `atlas.sheet` A2)       |
@@ -66,6 +69,12 @@ mass crowned by a working plant), one of the two states that load a library on e
 **Dependencies on demand**). Neither is a sheet: no sheet number, in the manifest's `extras` rather than
 its `sheets`, and so invisible to the ascent order, the ← / → walk and the server's narrowed
 `/sheet/{num:…}` — a rail entry and a cover card, nothing more.
+
+`atlas.bricks` is the third `extras` row, filed after the plant: sheet 2's finished model in the
+round, a `<model-viewer>` loading `public/models/bricks.glb`, with the sheet's exploded view as its
+one clip (`assemble`), three corner buttons and a numbered badge per brick. `<atlas-bricks>`
+extends `<atlas-city>` and keeps its pin seam and teardown; only the generated module it calls
+differs. The flat set draws no copy of it.
 
 `atlas.specimen` is a **bench, not a plate**: a type specimen that draws ONE mock sheet from the
 set's own chrome and swaps every role token (`--display`, `--title`, `--rail-title`, `--data`,
@@ -107,7 +116,7 @@ and every aria name keep the same plain `THE ALTITUDE ATLAS`.
 
 ## Where it lives
 
-The app owns the site root of atlas.lit-ui-router.dev: `/`, `/sheet/7`, `/city`, `/specimen`,
+The app owns the site root of atlas.lit-ui-router.dev: `/`, `/sheet/7`, `/city`, `/bricks`, `/specimen`,
 `/log`, `/about`, `/office`. The flat drawing set — the pages this app was cut from — is staged
 beside it under `/set/` as the version to compare against, and the two link to each other: the
 rail's THE FLAT SET entry and each sheet's STANDALONE PLATE crumb go out, the flat gallery's cover
@@ -197,7 +206,10 @@ the generator emits the identical scene body as an ES module `initCity(root, THR
 teardown. **`<atlas-city>` (`views.ts`) owns that teardown**, not a router hook: the scene holds a
 WebGL context, two observers, a media listener and pending frames, the experimental layer is
 deletable by design and this is not optional, and the element that created the scene is the one
-thing whose lifetime matches it.
+thing whose lifetime matches it. `atlas.bricks` takes the same route with
+`{ token: 'viewer', resolveFn: () => import('@google/model-viewer') }`: the element's chunk is
+fetched on entry, the prerender stands `undefined` in for it, and `src/generated/bricks-init.js`
+wires the fragment's controls once the element has loaded the model.
 
 Why `onBefore` for the slideshow: `document.startViewTransition()` snapshots the document at the
 moment it is called, so it must run **before** any resolve starts — `onStart` fires after resolves
@@ -216,11 +228,12 @@ checks `matchMedia('(prefers-reduced-motion: reduce)')` before doing any work.
 ## Artifact build
 
 `npm run build:artifact` emits `dist-artifact/index.html` — the whole atlas as ONE self-contained
-file (~7.8 MB) that can be published as a claude.ai Artifact. That host
+file (~12 MB) that can be published as a claude.ai Artifact. That host
 is strict in four ways, and each one is a line in the build:
 
 - **One file, no fetches — not even same-origin.** `artifact.ts` bakes `public/manifest.json` and
-  all twenty-five fragments into a `<script type="application/json" id="atlas-data">` island (every
+  all twenty-seven fragments (the bricks plate's GLB inlined as a `data:` url) into a
+  `<script type="application/json" id="atlas-data">` island (every
   `<` escaped, so a fragment's own `</script>` cannot close it) and inlines `atlas.css` as a
   `<style>`; `src/manifest.ts` reads the island when present and falls back to the fetches the site
   uses, and the `DrawingSet` layer in `src/runtime.ts` serves both. The cytoscape and three dynamic imports are folded into the single chunk by
@@ -239,7 +252,7 @@ is strict in four ways, and each one is a line in the build:
   point at `https://atlas.lit-ui-router.dev/set/…` in a new tab.
 
 `src/mode.ts` is the one flag (`import.meta.env.MODE === 'artifact'`) the readers share; analytics
-is skipped in this mode. Nothing above changes the site build, which prerenders 30 pages +
+is skipped in this mode. Nothing above changes the site build, which prerenders 31 pages +
 `404.html` and 26 redirects.
 
 ## Server side

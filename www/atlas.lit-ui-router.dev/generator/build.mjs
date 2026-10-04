@@ -136,6 +136,7 @@ const verdicts = [
 // read into INDEX_BY_NUM and never into the gallery's table.
 const appIdx = [
   ['plant', 'THE WORKING CITY, IN THE ROUND', 'REAL 3D ISOMETRIC CITY', "sheet 7's city rebuilt in three.js from the plate's own computed geometry — translucent paper walls hatched in the tier's own rake over a girding frame, each crowned by a working plant sized from its own census, and a camera that orbits free and lands on a true diagonal", '#plant-scene', 'S7B·3D'],
+  ['bricks', 'COMPANIONS, IN THE ROUND', 'REAL 3D BRICK ASSEMBLY', "sheet 2's finished model as one glTF binary in Google's model-viewer — the same parts on the same two levels of ground, turned to the sheet's three drawn corners, with the sheet's own explosion as a clip that lifts every brick off its seat and drops it back", '#bricks-scene', 'S2·3D'],
 ];
 // THE APPENDIX INDEX — same four columns, filed under its own heading. These
 // rows are NOT in the ascent: `appendixIdx` is concatenated for the lookup the
@@ -386,9 +387,11 @@ plate — \`app/public/thumbs/<id>.webp\` and \`<id>-dark.webp\`, one per theme,
 generated files like the fragments beside them. \`generator/thumbs.mjs\` draws them by
 photographing the flat set above in headless Chromium (playwright, reached through
 \`tools/embed-heights\`; the lanes' cytoscape is served from \`app/node_modules\`), and the
-two 3D cards (\`city\`, \`plant\`) from the BUILT app's prerendered \`/city/\` and \`/plant/\`
-pages, their WebGL stage cleared to transparent for the shot. \`build.mjs\` REFUSES to emit
-a manifest whose card has no picture, so a new plate takes the full order:
+three 3D cards (\`city\`, \`plant\`, \`bricks\`) from the BUILT app's prerendered \`/city/\`, \`/plant/\`
+and \`/bricks/\` pages, their WebGL stage cleared to transparent for the shot. The bricks plate's
+model, \`app/public/models/bricks.glb\`, is a tracked generated file \`build.mjs\` writes beside
+the fragments. \`build.mjs\` REFUSES to emit a manifest whose card has no picture, so a new
+plate takes the full order:
 
 \`\`\`bash
 node www/atlas.lit-ui-router.dev/generator/build.mjs www/atlas.lit-ui-router.dev   # writes the flat set, then stops on the missing picture
@@ -408,9 +411,9 @@ canvas) and nothing else changes. To try a row without touching
 the tracked pictures: \`thumbs.mjs <outdir> --only <ids> --out <dir> --tuning <file.json>\`.
 
 Live at <https://atlas.lit-ui-router.dev/> — the app owns the root (\`/\`, \`/sheet/7/\`, \`/city/\`,
-\`/plant/\`, \`/log\`) and the flat set sits beside it under \`/set/\`; the two link to each other. The SVG
+\`/plant/\`, \`/bricks/\`, \`/log\`) and the flat set sits beside it under \`/set/\`; the two link to each other. The SVG
 sheets need nothing; the interactive plates (1i, 2B, 12i, 7·3D, 7B·3D, A2i) load cytoscape 3.31.0 and
-three.js 0.169.0, which the stage step vendors. \`app/\` is the same set as a prerendered
+three.js 0.169.0, which the stage step vendors, and the app-only 2·3D bundles \`@google/model-viewer\`. \`app/\` is the same set as a prerendered
 lit-ui-router app (see \`app/README.md\`); \`HISTORY.md\` is the verbatim revision record, parsed
 into the app's \`/log\` at build time. This file is written by \`build.mjs\`; edit the emitter, not the output.
 
