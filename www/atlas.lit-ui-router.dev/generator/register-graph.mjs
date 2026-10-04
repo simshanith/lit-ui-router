@@ -492,7 +492,7 @@ export const REGISTER = {
 // ---------------------------------------------------------------------------
 export function registerLane() {
   // Lucide: move on DRAG TO PAN, mouse on SCROLL TO ZOOM
-  const HINT_REAL = `REAL SUBGRAPH · ${laneHints(`${glyph('move')}DRAG TO PAN · ${glyph('mouse')}SCROLL TO ZOOM`)}`;
+  const HINT_REAL = `REAL SUBGRAPH · ${laneHints(`<span class="nw">${glyph('move')}DRAG TO PAN</span> <span class="nw">${glyph('mouse')}SCROLL TO ZOOM</span>`)}`;
   const island = {
     ...LAYOUT,
     skins: SKINS,

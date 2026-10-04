@@ -868,7 +868,7 @@ export async function initCity(root, THREE, focus) {
     else window.addEventListener('resize', _rz = function () { resize(); ask(); });
     (_mq = window.matchMedia('(prefers-color-scheme: dark)')).addEventListener('change', paint);
     (_mo = new MutationObserver(paint)).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-    if (hint) hint.textContent = 'DRAG TO ORBIT · RELEASE SNAPS · HOVER TO READ · TAP TO PIN · SCROLL TO ZOOM · DOUBLE-CLICK RESETS';
+    if (hint) hint.textContent = 'DRAG TO ORBIT · RELEASE SNAPS · HOVER TO READ · TAP TO PIN · SCROLL TO ZOOM · DOUBLE-CLICK RESETS · ← → STEP · ENTER PINS · ESC CLEARS';
     pin(member(atlasFocusRead(focus)));
     if (pinN !== null) frame(pinN);
 

@@ -1084,7 +1084,7 @@ const BODY = `$$FOCUS  var stage = document.getElementById('cs-canvas');
     else window.addEventListener('resize', $$RZ_Afunction () { resize(); ask(); }$$RZ_B);
     $$MQ_Awindow.matchMedia('(prefers-color-scheme: dark)')$$MQ_B.addEventListener('change', paint);
     $$MO_Anew MutationObserver(paint)$$MO_B.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-    if (hint) hint.textContent = 'DRAG TO ORBIT · RELEASE SNAPS · HOVER TO READ · TAP TO PIN · SCROLL TO ZOOM · DOUBLE-CLICK RESETS';
+    if (hint) hint.textContent = 'DRAG TO ORBIT · RELEASE SNAPS · HOVER TO READ · TAP TO PIN · SCROLL TO ZOOM · DOUBLE-CLICK RESETS · ← → STEP · ENTER PINS · ESC CLEARS';
     pin(member(atlasFocusRead($$OPEN_PIN)));
     if (pinN !== null) frame(pinN);
 

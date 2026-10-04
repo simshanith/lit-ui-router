@@ -20,6 +20,7 @@ export const laneCss = (p, wrap = 'break-word') => `
 :root[data-theme="dark"] .${p}-bar .lg .sw-dark { display: block; }
 .${p}-bar .lg i { display: block; width: 26px; height: 0; border-top-width: 2px; border-top-style: solid; }
 .${p}-ctl .hints { display: inline-flex; flex-wrap: wrap; gap: 8px 12px; }
+.${p}-ctl .mouse { display: inline-flex; flex-wrap: wrap; gap: 8px 12px; }
 .${p}-ctl .touch { display: none; }
 @media (pointer: coarse) { .${p}-ctl .mouse { display: none; } .${p}-ctl .touch { display: inline; } }
 .${p}-ctl { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; font-family: var(--data); font-size: 11px;
@@ -59,8 +60,8 @@ export const laneCss = (p, wrap = 'break-word') => `
     mask-image: linear-gradient(to bottom, #000 calc(100% - 28px), transparent); }
 }`;
 
-// The hint pair a lane's bar shows: the mouse's under a fine pointer, the finger's under a coarse one.
-export const laneHints = (mouse) => `<span class="mouse">${mouse}</span><span class="nw touch">PINCH TO ZOOM · ZOOMED, A FINGER PANS · DOUBLE-TAP FITS</span>`;
+// The hint pair a lane's bar shows: the mouse's and the keys' under a fine pointer, the finger's under a coarse one.
+export const laneHints = (mouse) => `<span class="mouse">${mouse} <span class="nw">← → STEP THE PIN</span> <span class="nw">ESC CLEARS</span></span><span class="nw touch">PINCH TO ZOOM · ZOOMED, A FINGER PANS · DOUBLE-TAP FITS</span>`;
 
 // The provenance strip under a lane's stage; a path-shaped chip breaks after its slash, never mid-name.
 export const basisStrip = (p, html) => `<p class="${p}-basis"><span><b class="k">BASIS</b>${chipBreaks(html)}</span></p>`;

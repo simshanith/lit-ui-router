@@ -509,6 +509,7 @@ a { color: var(--accent); }
 :root[data-theme="dark"] .cb-bar .lg .sw-dark { display: block; }
 .cb-bar .lg i { display: block; width: 26px; height: 0; border-top-width: 2px; border-top-style: solid; }
 .cb-ctl .hints { display: inline-flex; flex-wrap: wrap; gap: 8px 12px; }
+.cb-ctl .mouse { display: inline-flex; flex-wrap: wrap; gap: 8px 12px; }
 .cb-ctl .touch { display: none; }
 @media (pointer: coarse) { .cb-ctl .mouse { display: none; } .cb-ctl .touch { display: inline; } }
 .cb-ctl { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; font-family: var(--data); font-size: 11px;
@@ -564,7 +565,7 @@ a { color: var(--accent); }
     <span class="lg"><i style="border-top-color:var(--red);border-top-style:dashed"></i>optional peer</span>
     </div>
     <div class="cb-ctl">
-      <span class="hints"><span class="mouse"><span class="nw">HOVER AN EDGE FOR ITS RANGE</span> <span class="nw"><svg class="gl lane" aria-hidden="true" focusable="false"><use href="#gl-move"/></svg>DRAG TO PAN</span></span><span class="nw touch">PINCH TO ZOOM · ZOOMED, A FINGER PANS · DOUBLE-TAP FITS</span></span>
+      <span class="hints"><span class="mouse"><span class="nw">HOVER AN EDGE FOR ITS RANGE</span> <span class="nw"><svg class="gl lane" aria-hidden="true" focusable="false"><use href="#gl-move"/></svg>DRAG TO PAN</span> <span class="nw">← → STEP THE PIN</span> <span class="nw">ESC CLEARS</span></span><span class="nw touch">PINCH TO ZOOM · ZOOMED, A FINGER PANS · DOUBLE-TAP FITS</span></span>
       <button type="button" id="cb-fit"><svg class="gl lane" aria-hidden="true" focusable="false"><use href="#gl-scan"/></svg>FIT</button>
     </div>
   </div>

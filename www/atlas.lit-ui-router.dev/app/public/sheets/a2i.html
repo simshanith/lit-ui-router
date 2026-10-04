@@ -16,6 +16,7 @@
 :root[data-theme="dark"] .pg-bar .lg .sw-dark { display: block; }
 .pg-bar .lg i { display: block; width: 26px; height: 0; border-top-width: 2px; border-top-style: solid; }
 .pg-ctl .hints { display: inline-flex; flex-wrap: wrap; gap: 8px 12px; }
+.pg-ctl .mouse { display: inline-flex; flex-wrap: wrap; gap: 8px 12px; }
 .pg-ctl .touch { display: none; }
 @media (pointer: coarse) { .pg-ctl .mouse { display: none; } .pg-ctl .touch { display: inline; } }
 .pg-ctl { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; font-family: var(--data); font-size: 11px;
@@ -71,7 +72,7 @@
     <span class="lg"><i style="border-top-color:var(--ink-faint);border-top-style:dashed"></i>imports</span>
     </div>
     <div class="pg-ctl">
-      <span id="pg-hint" class="hints"><span class="mouse"><span class="nw"><svg class="gl lane" aria-hidden="true" focusable="false"><use href="#gl-move"/></svg>DRAG TO PAN</span> <span class="nw"><svg class="gl lane" aria-hidden="true" focusable="false"><use href="#gl-mouse"/></svg>SCROLL TO ZOOM</span></span><span class="nw touch">PINCH TO ZOOM · ZOOMED, A FINGER PANS · DOUBLE-TAP FITS</span></span>
+      <span id="pg-hint" class="hints"><span class="mouse"><span class="nw"><svg class="gl lane" aria-hidden="true" focusable="false"><use href="#gl-move"/></svg>DRAG TO PAN</span> <span class="nw"><svg class="gl lane" aria-hidden="true" focusable="false"><use href="#gl-mouse"/></svg>SCROLL TO ZOOM</span> <span class="nw">← → STEP THE PIN</span> <span class="nw">ESC CLEARS</span></span><span class="nw touch">PINCH TO ZOOM · ZOOMED, A FINGER PANS · DOUBLE-TAP FITS</span></span>
       <label><input type="checkbox" id="pg-tools"> <span><svg class="gl lane" aria-hidden="true" focusable="false"><use href="#gl-wrench"/></svg>TOOLS LEDGER</span></label>
       <button type="button" id="pg-fit"><svg class="gl lane" aria-hidden="true" focusable="false"><use href="#gl-scan"/></svg>FIT</button>
     </div>
