@@ -47,6 +47,17 @@ namespaced comparers with named exports, so the `equals` option in the examples
 below is spelled `compareStructural` on 7 and `comparer.structural` on 6 —
 `equals` accepts any `(a, b) => boolean`, so either works.
 
+### lit-ui-router 1.x
+
+The peer range is `lit-ui-router@^1.15.0`, the first release with the
+`lit-ui-router/context` entry, and it excludes 2.x. `RouterReactionController`
+finds its router through core's two
+[discovery protocols](/guides/reactive-components#router-discovery),
+`context-request` and the `ui-router-context` event. That pair is the seam
+`lit-ui-router@2.0` revisits
+([#874](https://github.com/simshanith/lit-ui-router/issues/874) keeps only
+`context-request`), so a `lit-ui-router` 2.0 carries a `lit-ui-router-mobx` 2.0.
+
 ## Quick start
 
 ```ts
@@ -67,10 +78,13 @@ class AppNav extends LitElement {
 }
 ```
 
-No router configuration is required: the controller requests the router from
-the enclosing `<ui-router>` element when the host connects and rebinds whenever
-that provider hands it a new one, and the store lazily attaches its single
-transition hook on first use.
+No router configuration is required: when the host connects, the controller
+requests the router from the nearest provider — `<ui-router>`, `<ui-view>`, a
+`ContextProvider` of `routerContext`, or `provideRouter(target, router)` — and
+rebinds whenever that provider hands it a new one, and the store lazily
+attaches its single transition hook on first use.
+[Router discovery](/guides/reactive-components#router-discovery) covers both
+protocols.
 
 ## The pieces
 
@@ -92,7 +106,7 @@ mirror of a router's current state, updated by one
 ### RouterReactionController
 
 [`RouterReactionController`](/api/lit-ui-router-mobx/classes/RouterReactionController)
-observes the `RouterStore` of the host's `<ui-router>` context:
+observes the `RouterStore` of the router the host's nearest provider supplies:
 
 ```ts
 new RouterReactionController(host, selector, options?)
@@ -150,8 +164,8 @@ them through the `development` export condition — see
 [Development & Production Builds](/guides/development-builds) for the mechanism
 and the full warning inventory across packages.
 
-One warning exists here. A `RouterReactionController` whose host has no
-`<ui-router>` ancestor logs a one-time console warning naming that host, and
+One warning exists here. A `RouterReactionController` whose host finds no
+router provider logs a one-time console warning naming that host, and
 then observes nothing: `.value` stays at `options.initialValue` and the host is
 never asked to update, so the component renders once with its initial value and
 never again. Wrap the subtree in `<ui-router>`, or pass the router yourself with

@@ -13,11 +13,12 @@ export interface RouterReactionControllerOptions<
   T,
 > extends ReactionControllerOptions<T> {
   /**
-   * Explicit router instance. When omitted, the controller requests the
-   * router from the nearest enclosing `<ui-router>` on `hostConnected`
-   * (via
+   * Explicit router instance. When omitted, the controller asks the nearest
+   * router provider on `hostConnected`: over `context-request` first (via
    * [requestRouter](https://lit-ui-router.dev/api/reference/core/requestRouter)
-   * with `subscribe: true`), and rebinds when that provider hands it the
+   * with `subscribe: true`), then over the `ui-router-context` event (via
+   * [UIRouterLitElement.seekRouter](https://lit-ui-router.dev/api/reference/components/UIRouterLitElement))
+   * when nobody answers. It rebinds when a subscribed provider hands it the
    * router that replaces its placeholder.
    */
   router?: UIRouter;
@@ -25,13 +26,16 @@ export interface RouterReactionControllerOptions<
 
 /**
  * A {@link ReactionController} preselected on the router: observes the
- * {@link RouterStore} of the host's `<ui-router>` context.
+ * {@link RouterStore} of the router the host's nearest provider supplies.
  *
  * On `hostConnected` it requests the router over the `context-request`
- * protocol (no prop drilling, no store wiring in router configuration —
- * {@link RouterStore.for} attaches lazily on first use), then runs a MobX
- * `reaction` over the selector while the host is connected. When the provider
- * hands it a new router, it rebinds to that router's store:
+ * protocol, falling back to the `ui-router-context` event, so `<ui-router>`,
+ * `<ui-view>`, a `@lit/context` `ContextProvider` of `routerContext` and
+ * `provideRouter` all answer. There is no prop drilling and no store wiring in
+ * router configuration: {@link RouterStore.for} attaches lazily on first use.
+ * It then runs a MobX `reaction` over the selector while the host is
+ * connected. When the provider hands it a new router, it rebinds to that
+ * router's store:
  *
  * ```ts
  * class App extends LitElement {
@@ -48,9 +52,8 @@ export interface RouterReactionControllerOptions<
  *
  * The reaction fires immediately on every (re)connect, so sticky routed
  * components resynchronize with the current route instead of rendering
- * stale values. If the host is not inside a `<ui-router>` (and no explicit
- * `router` option is given), the controller is a no-op until reconnected
- * under one.
+ * stale values. If no provider answers (and no explicit `router` option is
+ * given), the controller is a no-op until reconnected under one.
  */
 export class RouterReactionController<T> implements ReactiveController {
   /** The selected value, for use in `render()`. */
