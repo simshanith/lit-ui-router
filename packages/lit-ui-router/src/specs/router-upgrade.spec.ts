@@ -5,6 +5,7 @@ import { customElement } from 'lit/decorators.js';
 import { requestRouter } from '../context.js';
 import { UIRouterLit } from '../core.js';
 import { LitStateDeclaration } from '../interface.js';
+import { RouterSubscribers } from '../router-subscription.js';
 import { SrefStatusController } from '../sref-status-controller.js';
 import { TransitionController } from '../transition-controller.js';
 import { UIRouterLitElement } from '../ui-router.js';
@@ -89,7 +90,7 @@ describe('placeholder router upgrade', () => {
       expect(callback.mock.calls[1]?.[0]).toBe(router);
     });
 
-    it('keeps a throwing subscriber from the others, rethrown on a microtask', async () => {
+    it('keeps a throwing subscriber from the others, through reportError', async () => {
       const child = uiRouter.appendChild(document.createElement('div'));
       const failure = new Error('subscriber failed');
       requestRouter(child, {
@@ -100,8 +101,8 @@ describe('placeholder router upgrade', () => {
       });
       const callback = vi.fn();
       requestRouter(child, { subscribe: true, callback });
-      const microtasks = vi.fn<(callback: () => void) => void>();
-      vi.stubGlobal('queueMicrotask', microtasks);
+      const reportError = vi.fn<(error: unknown) => void>();
+      vi.stubGlobal('reportError', reportError);
 
       try {
         uiRouter.uiRouter = router;
@@ -111,15 +112,7 @@ describe('placeholder router upgrade', () => {
       }
 
       expect(callback.mock.calls[1]?.[0]).toBe(router);
-      const rethrows = microtasks.mock.calls.filter(([task]) => {
-        try {
-          task();
-        } catch (thrown) {
-          return thrown === failure;
-        }
-        return false;
-      });
-      expect(rethrows).toHaveLength(1);
+      expect(reportError.mock.calls).toEqual([[failure]]);
     });
 
     it('skips a subscriber that an earlier one unsubscribed during the upgrade', async () => {
@@ -252,5 +245,63 @@ describe('placeholder router upgrade', () => {
 
       expect(host.transitions.router).toBe(placeholder);
     });
+  });
+});
+
+describe('RouterSubscribers without reportError', () => {
+  let provisional: UIRouterLit;
+  let upgraded: UIRouterLit;
+  let provider: HTMLElement;
+  let subscribers: RouterSubscribers;
+
+  beforeEach(() => {
+    provisional = createTestRouter();
+    upgraded = createTestRouter();
+    subscribers = new RouterSubscribers();
+    provider = document.createElement('div');
+    provider.addEventListener('context-request', (event) =>
+      subscribers.answer(event, provisional, true),
+    );
+    vi.stubGlobal('reportError', undefined);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    provisional.dispose();
+    upgraded.dispose();
+  });
+
+  function subscribe(callback: (value: UIRouterLit) => void): void {
+    requestRouter(provider, { subscribe: true, callback });
+  }
+
+  function failOnUpgrade(failure: Error): void {
+    subscribe((value) => {
+      if (value === upgraded) throw failure;
+    });
+  }
+
+  it('throws the one failure once every subscriber has the router', () => {
+    const failure = new Error('subscriber failed');
+    failOnUpgrade(failure);
+    const callback = vi.fn();
+    subscribe(callback);
+
+    expect(() => subscribers.deliver(upgraded)).toThrow(failure);
+    expect(callback.mock.calls[1]?.[0]).toBe(upgraded);
+  });
+
+  it('throws an AggregateError of several failures', () => {
+    const first = new Error('first');
+    const second = new Error('second');
+    failOnUpgrade(first);
+    failOnUpgrade(second);
+
+    expect(() => subscribers.deliver(upgraded)).toThrow(
+      expect.objectContaining({
+        constructor: AggregateError,
+        errors: [first, second],
+      }),
+    );
   });
 });
