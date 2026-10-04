@@ -31,7 +31,7 @@
     "@typescript-eslint/parser": "^8.71.0",
     "eslint": "^10.11.0",
     "eslint-plugin-lit-a11y": "^5.1.1",
-    "eslint-plugin-lit-ui-router": "^1.1.0",
+    "eslint-plugin-lit-ui-router": "^1.2.0",
     "eslint-plugin-oxlint": "1.86.0",
     "lit-ui-router-ssr": "^0.2.0",
     "oxlint": "1.86.0",
