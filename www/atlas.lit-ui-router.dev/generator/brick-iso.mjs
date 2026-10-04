@@ -71,7 +71,15 @@ ${face(right, edge, `url(#${p}-hx)`, { under: 'var(--paper)', extra: da })}
 ${studs.join('\n')}`;
   }
 
-  return { U, CRS, PT, SH, RX, RY, pt, p2, face, stud, brick, plate };
+  // A plain block with no studs: ground.
+  function block(ox, oy, x, y, w, d, z0, h, { edge = 'sk', side } = {}) {
+    const q = (px, py, pz) => p2(ox, oy, px, py, pz), t = z0 + h;
+    return `${face([q(x, y + d, t), q(x + w, y + d, t), q(x + w, y + d, z0), q(x, y + d, z0)].join(' '), edge, 'var(--paper-2)')}
+${face([q(x + w, y, t), q(x + w, y + d, t), q(x + w, y + d, z0), q(x + w, y, z0)].join(' '), edge, side ?? `url(#${p}-hx)`, { under: 'var(--paper)' })}
+<polygon points="${[q(x, y, t), q(x + w, y, t), q(x + w, y + d, t), q(x, y + d, t)].join(' ')}" class="${edge} fp"/>`;
+  }
+
+  return { U, CRS, PT, SH, RX, RY, pt, p2, face, stud, brick, plate, block };
 }
 
 // Rotate a plan rect a quarter turn counter-clockwise, `turn` times: the same
@@ -115,16 +123,17 @@ export function paintOrder(boxes) {
   return order;
 }
 
-// A seated assembly: parts are {id, kind:'plate'|'brick', x, y, ws, ds, courses|z0,
-// on, rings, named, dash, edge} in U-40 plan units, a brick seated on the cap of
-// `on`. Returns the drawing's extent and a placer; a hovering plate drops masts.
+// A seated assembly: parts are {id, kind:'ground'|'plate'|'brick', x, y, ws, ds,
+// h|courses, z0, on, rings, named, dash, edge} in U-40 plan units; a part with `on`
+// stands on that part's top. Returns the drawing's extent and a placer; a plate
+// standing on nothing drops masts.
 export function seated(parts, { U = 40, turn = 0, p = 's2', pad = 12 } = {}) {
   const kit = brickKit({ U, p });
   const K = U / 40;
   const byId = new Map(parts.map((m) => [m.id, m]));
-  const topOf = (m) => z0Of(m) + (m.kind === 'plate' ? 12 : m.courses * 24);
-  const z0Of = (m) => (m.kind === 'plate' ? m.z0 : topOf(byId.get(m.on)));
-  const boxes = parts.map((m) => ({ ...turnRect({ x: m.x, y: m.y, w: m.ws * 40, d: m.ds * 40 }, turn), z0: z0Of(m), h: m.kind === 'plate' ? 12 : m.courses * 24, m }));
+  const hOf = (m) => (m.kind === 'ground' ? m.h : m.kind === 'plate' ? 12 : m.courses * 24);
+  const z0Of = (m) => (m.on ? z0Of(byId.get(m.on)) + hOf(byId.get(m.on)) : m.z0 ?? 0);
+  const boxes = parts.map((m) => ({ ...turnRect({ x: m.x, y: m.y, w: m.ws * 40, d: m.ds * 40 }, turn), z0: z0Of(m), h: hOf(m), m }));
   let minx = Infinity, miny = Infinity, maxx = -Infinity, maxy = -Infinity;
   const see = (x, y, z) => {
     const [sx, sy] = kit.pt(0, 0, x * K, y * K, z * K);
@@ -132,21 +141,23 @@ export function seated(parts, { U = 40, turn = 0, p = 's2', pad = 12 } = {}) {
   };
   for (const b of boxes) {
     for (const [x, y] of [[b.x, b.y], [b.x + b.w, b.y], [b.x, b.y + b.d], [b.x + b.w, b.y + b.d]]) { see(x, y, b.z0); see(x, y, b.z0 + b.h); }
-    if (b.m.kind === 'plate' && b.z0 > 0) see(b.x + b.w, b.y + b.d, 0);
+    if (b.m.kind === 'plate' && b.z0 > 0 && !b.m.on) see(b.x + b.w, b.y + b.d, 0);
   }
   const ox = pad - minx, oy = pad - miny;
   const out = [];
   for (const i of paintOrder(boxes)) {
     const b = boxes[i], m = b.m, shape = [m.ws, m.ds];
     const turnKey = (k) => turnStud(k.split(',').map(Number), shape, turn).join(',');
-    if (m.kind === 'plate') {
+    if (m.kind === 'ground') {
+      out.push(kit.block(ox, oy, b.x * K, b.y * K, b.w * K, b.d * K, b.z0 * K, b.h * K, { edge: m.edge ?? 'sk', side: m.side }));
+    } else if (m.kind === 'plate') {
       const named = new Map([...(m.named ?? new Map())].map(([k, v]) => [turnKey(k), v]));
       const on = boxes.filter((o) => o.m.kind === 'brick' && o.m.on === m.id);
       const covered = (i2, j2) => {
         const cx = b.x + (i2 + 0.5) * 40, cy = b.y + (j2 + 0.5) * 40;
         return on.some((o) => cx > o.x && cx < o.x + o.w && cy > o.y && cy < o.y + o.d);
       };
-      if (b.z0 > 0)
+      if (b.z0 > 0 && !m.on)
         for (const [cx, cy] of [[b.x + b.w, b.y + b.d], [b.x + b.w, b.y], [b.x, b.y + b.d]]) {
           const [x1, y1] = kit.pt(ox, oy, cx * K, cy * K, b.z0 * K), [x2, y2] = kit.pt(ox, oy, cx * K, cy * K, 0);
           out.push(`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="sks" stroke-dasharray="2 3"/>`);
