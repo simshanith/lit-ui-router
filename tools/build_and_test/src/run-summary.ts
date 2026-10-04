@@ -162,11 +162,11 @@ async function publish(
       summary.execution.exitCode !== 0 || reports.length > 0,
   );
   const failed = failures.length > 0;
-  // The overview leads on both lanes: the counts are the context for whichever
-  // task broke, and on a green run they are the whole report.
+  // The failure leads on both lanes: a red build opens this step, and the
+  // reader came for what broke. The overview follows as context.
   const overview = sessionMarkdown(runs, context);
   const markdown = failed
-    ? `${overview}\n${sessionFailureMarkdown(failures)}`
+    ? `${sessionFailureMarkdown(failures)}\n${overview}`
     : overview;
   const file = process.env.GITHUB_STEP_SUMMARY;
   const toFile = file !== undefined && file !== '';
@@ -175,8 +175,14 @@ async function publish(
   // gets the excerpts inline, and a human scanning the step sees the headline
   // without expanding anything. Grouping is deliberately NOT used — a
   // collapsed group is exactly the problem this step exists to solve.
-  const chunks = [...sessionLines(runs, context), ''];
-  if (failed) chunks.push(...sessionStdoutReport(failures, summaries));
+  const chunks = failed
+    ? [
+        ...sessionStdoutReport(failures, summaries),
+        '',
+        ...sessionLines(runs, context),
+        '',
+      ]
+    : [...sessionLines(runs, context), ''];
   // The fallback prints the same untrusted excerpts, so it goes inside the guard.
   if (!toFile) chunks.push(`\n${markdown}`);
   for (const chunk of guardCommands(chunks, commandToken())) console.log(chunk);

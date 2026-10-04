@@ -648,9 +648,8 @@ function jobNotes(runs: readonly SessionRun[], onActions: boolean): string[] {
 }
 
 /**
- * The always-on half of the report. Runs green or red; on a red run it sits
- * above the failure detail, because "16 of 158 ran" is the context for
- * whichever one of them broke.
+ * The always-on half of the report. Runs green or red; on a red run it follows
+ * the failure detail as context: "16 of 158 ran" around whichever one broke.
  */
 /**
  * The step-summary section heading. Plural: the section covers the pipeline —
