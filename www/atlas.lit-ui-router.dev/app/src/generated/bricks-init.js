@@ -142,8 +142,8 @@ export async function initBricks(root, viewer, focus) {
       play.disabled = false;
       slider.disabled = false;
       pose(t);
-      // ready once the theme's colours are on the model, so a photograph never shows the baked ones
-      tint().then(resolve);
+      // revealed once the theme's colours are on the model, so neither a reader nor a photograph sees the baked ones
+      tint().then(function () { mv.dismissPoster(); resolve(); });
     }
     if (mv.loaded) boot();
     else on(mv, 'load', boot);
