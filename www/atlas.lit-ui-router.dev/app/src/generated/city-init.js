@@ -310,8 +310,7 @@ export async function initCity(root, viewer, focus) {
 
   // ---- picking: model-viewer's own hit test, against the island's boxes ----
   function pick(e) {
-    var r = mv.getBoundingClientRect();
-    var hit = mv.positionAndNormalFromPoint(e.clientX - r.left, e.clientY - r.top);
+    var hit = mv.positionAndNormalFromPoint(e.clientX, e.clientY);
     if (!hit) return null;
     var p = hit.position;
     for (var i = 0; i < D.rows.length; i++) {

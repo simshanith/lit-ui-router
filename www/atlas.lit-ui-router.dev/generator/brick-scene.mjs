@@ -126,7 +126,7 @@ export function bricksMarkup() {
   <div class="sheet-head"><span class="proj">${PROJECT_MARK} — INTERACTIVE PLATE</span><span class="shno">${meta.head} · REV ${meta.rev}</span></div>
   <h2 class="sheet-title">${articleTitle(meta.title)}</h2>
   <p class="sheet-sub">${meta.sub}</p>
-  <div class="bk-frame fillable" id="bk-frame"><button type="button" class="fill" data-fill aria-label="Fill the window with this figure, or leave it"></button>
+  <div class="bk-frame fillable" id="bk-frame"><button type="button" class="fill" data-fill aria-label="Enlarge this figure, or leave it"></button>
     <model-viewer id="bk-viewer" class="bk-view" src="${BASE}${BRICKS_GLB}" loading="eager" reveal="manual" camera-controls touch-action="pan-y" interaction-prompt="none" camera-orbit="${CORNERS[0].orbit}" max-camera-orbit="Infinity 88deg auto" field-of-view="14deg" min-field-of-view="5deg" max-field-of-view="18deg" exposure="1" shadow-intensity="0" animation-name="assemble" alt="Sheet 2's finished LEGO model in three dimensions: a low slab of browser ground carries the @uirouter/core baseplate, its back rail of studs ringed in the accent colour and one red location seat; lit-ui-router stands on it as a tall two-by-four, the one-stud navigation location plugin on the location seat, lit-ui-router-mobx and lit-ui-router-effect on lit-ui-router's cap; a raised server shelf carries a translucent headless plate with ui-router-server on it, and lit-ui-router-ssr bridges from lit-ui-router's cap to ui-router-server's. The explode control lifts every brick to the height the sheet's exploded view draws it at.">
 ${pins}
     </model-viewer>

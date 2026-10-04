@@ -336,7 +336,8 @@ const GEN_NOTES = `Static HTML pages, written by \`node generator/build.mjs .\` 
 the interactive lanes (1i, 2B, 12i and appendix A2i) load cytoscape 3.31.0 from cdnjs, which
 \`generator/stage-site.mjs\` vendors for hosting. \`app/\` is the same set as a prerendered lit-ui-router
 app; \`build.mjs\` emits its fragments and manifest, and the glTF binaries of its three plates in the round
-(\`city\`, \`plant\`, \`bricks\`), which only the app draws, in Google's model-viewer. On the published site the app owns the root
+(\`city\`, \`plant\`, \`bricks\`), which only the app draws, in Google's model-viewer. \`generator/check-scenes.mjs\` checks
+the three models and drives the built app's 3D plates in headless Chromium. On the published site the app owns the root
 (\`/\`, \`/sheet/7\`, \`/city\`) and this flat set is staged beside it under \`/set/\` as the version to
 compare against; the two link to each other (the app's rail and crumbs, the gallery's cover).
 Light theme is graphite-on-vellum; dark is cyanotype.
@@ -380,6 +381,7 @@ ${[...appendix, ...appendixLanes].map((s) => `| [${s.num}](${fname(s)}) | ${s.sc
 node www/atlas.lit-ui-router.dev/generator/build.mjs www/atlas.lit-ui-router.dev  # the flat set + the app's fragments and manifest
 npm --prefix www/atlas.lit-ui-router.dev/app run build               # the routed app, prerendered
 npm --prefix www/atlas.lit-ui-router.dev/app run build:artifact      # the single-file build published as a claude.ai Artifact
+node www/atlas.lit-ui-router.dev/generator/check-scenes.mjs www/atlas.lit-ui-router.dev  # checks the three models, drives the built app's 3D plates in headless Chromium
 cd www/atlas.lit-ui-router.dev && mise exec -- node generator/stage-site.mjs   # dist/: app at /, this set at /set/, vendored libs
 mise exec -- pnpm exec wrangler pages deploy dist --project-name altitude-atlas --branch www/atlas --commit-dirty=true
 \`\`\`

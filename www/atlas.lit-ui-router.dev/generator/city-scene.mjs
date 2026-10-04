@@ -427,8 +427,7 @@ const BODY = `${FOCUS_JS}${MV_JS}  ${DRESS_JS}
 
   // ---- picking: model-viewer's own hit test, against the island's boxes ----
   function pick(e) {
-    var r = mv.getBoundingClientRect();
-    var hit = mv.positionAndNormalFromPoint(e.clientX - r.left, e.clientY - r.top);
+    var hit = mv.positionAndNormalFromPoint(e.clientX, e.clientY);
     if (!hit) return null;
     var p = hit.position;
     for (var i = 0; i < D.rows.length; i++) {
@@ -657,7 +656,7 @@ ${CORNERS.map((az, i) => `        <button type="button" data-az="${az}" aria-pre
       <button type="button" id="cs-reset">RESET</button>
     </div>
   </div>
-  <div class="cs-stage fillable" id="cs-stage"><button type="button" class="fill" data-fill aria-label="Fill the window with this figure, or leave it"></button>
+  <div class="cs-stage fillable" id="cs-stage"><button type="button" class="fill" data-fill aria-label="Enlarge this figure, or leave it"></button>
     <model-viewer id="cs-viewer" class="cs-view" src="${BASE}${plant ? PLANT_GLB : CITY_GLB}" loading="eager" reveal="manual" camera-controls disable-tap touch-action="pan-y" interaction-prompt="none" camera-orbit="${orbitAt(CORNERS[0])}" camera-target="${HOME_TARGET}" max-camera-orbit="Infinity 88deg 160%" field-of-view="${HOME_FOV}deg" min-field-of-view="4deg" max-field-of-view="20deg" tone-mapping="none" exposure="1" shadow-intensity="0" animation-name="rise" alt="${alt}">
 ${pins}
 ${labels}

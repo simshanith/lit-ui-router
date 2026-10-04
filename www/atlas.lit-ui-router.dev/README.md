@@ -50,6 +50,7 @@ each sheet argue where that form fits and where it lies.
 node www/atlas.lit-ui-router.dev/generator/build.mjs www/atlas.lit-ui-router.dev  # the flat set + the app's fragments and manifest
 npm --prefix www/atlas.lit-ui-router.dev/app run build               # the routed app, prerendered
 npm --prefix www/atlas.lit-ui-router.dev/app run build:artifact      # the single-file build published as a claude.ai Artifact
+node www/atlas.lit-ui-router.dev/generator/check-scenes.mjs www/atlas.lit-ui-router.dev  # checks the three models, drives the built app's 3D plates in headless Chromium
 cd www/atlas.lit-ui-router.dev && mise exec -- node generator/stage-site.mjs   # dist/: app at /, this set at /set/, vendored libs
 mise exec -- pnpm exec wrangler pages deploy dist --project-name altitude-atlas --branch www/atlas --commit-dirty=true
 ```

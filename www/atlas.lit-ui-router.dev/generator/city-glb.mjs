@@ -81,7 +81,8 @@ export const RISE_SECONDS = 2.4;
 const RISE_EACH = 0.6, CROWNS_AT = 2.0, FLAT = 0.001;
 const STROKE = 1.0 * PX, HAIR = 0.8 * PX, PROUD = 0.22, HATCH_PROUD = 0.12;
 const DASH = [5 * PX, 4 * PX], DISTRICT_DASH = [7 * PX, 6 * PX];
-const WALL_FOOT = 0.9, CROWN_FOOT = 0.78;
+const WALL_FOOT = 0.9;
+export const CROWN_FOOT = 0.78;
 const PAD = 30, GRID_STEP = 50;
 export const BUDGET = { city: 200 * 1024, plant: 350 * 1024 };
 
