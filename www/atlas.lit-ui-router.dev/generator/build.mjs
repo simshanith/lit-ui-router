@@ -29,7 +29,6 @@ import { sheetA3, SHEETA3_VERDICT } from './sheetA3.mjs';
 import { PIPELINE_VERDICT, pipelineSection, sheetA2i } from './pipeline-graph.mjs';
 import { ATLAS } from './census-atlas.mjs';
 import { LOOP } from './loop-walk.mjs';
-import { citySection } from './city-scene.mjs';
 import { emitApp } from './emit-app.mjs';
 import { KEYS, labelsFor } from './labels.mjs';
 
@@ -131,12 +130,12 @@ const verdicts = [
   ['12', 'PR CI GRAPH', 'REGISTER PLATE', `the punched inventory — ${PHANTOM_PCT}% of the graph runs nothing, and the real→real edges that remain are a thin core inside a large node count`],
   ['13', 'WORKSPACE × TIME', 'WEATHERING MAP', SHEET13_VERDICT],
   ['12i', 'PR CI GRAPH', 'INTERACTIVE REGISTER', `sheet 12's punchcard with a pointer in it — the whole ci graph carried node by node, real subgraph by default, and one checkbox that floods the ${PHANTOM_PCT}% that runs nothing`],
-  ['city', 'MONOREPO, IN THE ROUND', 'REAL 3D ISOMETRIC CITY', "sheet 7's city rebuilt in three.js from the plate's own computed geometry — opaque paper walls hatched in the tier's own rake over a girding frame, and a camera that orbits free and lands on a true diagonal", '#city-scene', 'S7·3D'],
+  ['city', 'MONOREPO, IN THE ROUND', 'REAL 3D CITY IN THE ROUND', "sheet 7's city as one glTF binary in Google's model-viewer, written from the plate's own computed geometry — opaque paper walls hatched in the tier's own rake inside a girding frame, sheet 7A's test light as a second material lane, a rise from the ground as its one clip, and a camera that orbits free and turns to the four true diagonals", '/city', 'S7·3D'],
 ];
 // The rows the routed app files and the flat set does not draw: same columns,
 // read into INDEX_BY_NUM and never into the gallery's table.
 const appIdx = [
-  ['plant', 'THE WORKING CITY, IN THE ROUND', 'REAL 3D ISOMETRIC CITY', "sheet 7's city rebuilt in three.js from the plate's own computed geometry — translucent paper walls hatched in the tier's own rake over a girding frame, each crowned by a working plant sized from its own census, and a camera that orbits free and lands on a true diagonal", '#plant-scene', 'S7B·3D'],
+  ['plant', 'THE WORKING CITY, IN THE ROUND', 'REAL 3D CITY IN THE ROUND', "sheet 7's city as one glTF binary in Google's model-viewer, each mass crowned by a working plant sized from its own census — opaque paper walls hatched in the tier's own rake inside a girding frame, sheet 7A's test light as a second material lane, and a camera that orbits free and turns to the four true diagonals", '/plant', 'S7B·3D'],
   ['bricks', 'COMPANIONS, IN THE ROUND', 'REAL 3D BRICK ASSEMBLY', "sheet 2's finished model as one glTF binary in Google's model-viewer — the same parts on the same two levels of ground, turned to the sheet's three drawn corners, with the sheet's own explosion as a clip that lifts every brick off its seat and drops it back", '#bricks-scene', 'S2·3D'],
 ];
 // THE APPENDIX INDEX — same four columns, filed under its own heading. These
@@ -293,7 +292,7 @@ const statBar = `<div class="stat-bar" role="group" aria-label="set statistics">
 const galBody = `<div class="gal-body">
     <p>The source image — an isometric block city over a strategy-breeding harness — works because of three quiet decisions, and only one of them is the city: it maps <em>roles in a mechanism</em> rather than files; it spends its one visual scalar (height) on a true quantity; and it keeps a CONDITION field that says what is currently wrong. This set keeps those three decisions and lets everything else change with altitude.</p>
     <p>The result is an argument about form: a loop where there is a genuine cycle (sheet 1), panels where packages are too small to be cities (sheet 2), the full city where the measurement thesis is actually true (sheet 3), a massed spine where the family shares one core but the limbs never touch (sheet 4), a chart where edges would be fiction (sheet 5), and mostly prose where only a definition survives (sheet 6). Fitness peaks in the middle altitudes and collapses at both ends.</p>
-    <p>Above the sixth altitude the set stops arguing about form and starts measuring. Sheets 7–10 are a survey quartet, each counting the same subject at a different boundary: what the repository holds (the monorepo by mass), what npm delivers (the sample app's <code>node_modules</code>, ${SHEET8_TIMES}× the app it serves), what the browser downloads (the docs deploy on the wire, where the prerendered prose tops the skyline and the lettering alone outweighs every routed app the site demonstrates), and who occupies the bytes after tree-shaking (the machine the router wraps is ${SHEET10_CORE_SHARE} of the bundle; the router itself, ${SHEET10_ROUTER_SHARE}). Sheet 11 cuts the same wire the other way, pricing ${DOOR_PKGS} package quarters and ${DOOR_N} doors one at a time. Sheet 12 leaves the wire and draws the monorepo as its own CI reads it, the pull-request task graph punched onto a register plate. Sheet 13 ages the city by commit date. Interactive lanes (1i, 2B, 12i and the three.js city) walk the plates they sit beside. The appendix files plates whose subject is the atlas rather than the codebase: the sprite study behind the building sprites (appendix A1), and the survey office that turns the instrument on itself (appendix A2) — the census pipeline behind almost every number here, drawn as archive → probe stations → filed plates → drawings, introspected from the generator at build time, and walked live in its lane A2i. Appendix A3 turns sheet 7's ruler on the atlas itself: its drawing office, survey office, routed site and site build, massed beside the codebase they draw.</p>
+    <p>Above the sixth altitude the set stops arguing about form and starts measuring. Sheets 7–10 are a survey quartet, each counting the same subject at a different boundary: what the repository holds (the monorepo by mass), what npm delivers (the sample app's <code>node_modules</code>, ${SHEET8_TIMES}× the app it serves), what the browser downloads (the docs deploy on the wire, where the prerendered prose tops the skyline and the lettering alone outweighs every routed app the site demonstrates), and who occupies the bytes after tree-shaking (the machine the router wraps is ${SHEET10_CORE_SHARE} of the bundle; the router itself, ${SHEET10_ROUTER_SHARE}). Sheet 11 cuts the same wire the other way, pricing ${DOOR_PKGS} package quarters and ${DOOR_N} doors one at a time. Sheet 12 leaves the wire and draws the monorepo as its own CI reads it, the pull-request task graph punched onto a register plate. Sheet 13 ages the city by commit date. Interactive lanes (1i, 2B and 12i) walk the plates they sit beside, and the routed set stands sheets 2 and 7 in the round. The appendix files plates whose subject is the atlas rather than the codebase: the sprite study behind the building sprites (appendix A1), and the survey office that turns the instrument on itself (appendix A2) — the census pipeline behind almost every number here, drawn as archive → probe stations → filed plates → drawings, introspected from the generator at build time, and walked live in its lane A2i. Appendix A3 turns sheet 7's ruler on the atlas itself: its drawing office, survey office, routed site and site build, massed beside the codebase they draw.</p>
   </div>`;
 
 const cover = `<header class="cover">
@@ -322,7 +321,6 @@ ${sheets.map((s) => (s.num === '2A'
   : s.num === 1 ? `${sheetSection(s)}\n${loopWalkedSection()}`
   : sheetSection(s))).join('\n')}
 ${register12iSection()}
-${citySection()}
 <h2 class="set-sec" id="appendix">APPENDIX — PLATES ABOUT THE ATLAS, NOT THE CODEBASE</h2>
 ${appendix.map((s) => sheetSection(s)).join('\n')}
 ${pipelineSection()}

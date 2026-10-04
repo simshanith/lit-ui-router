@@ -1,87 +1,31 @@
-// THE CITY, ISOMETRIC: sheet 7's census city as a real 3D scene, with an
-// isometric SNAP — the camera orbits freely under the pointer and lands on one
-// of the four true diagonals on release.
+// THE CITY, IN THE ROUND: sheet 7's census city as a glTF binary in Google's
+// <model-viewer>, and its working twin with every mass crowned by its plant.
 //
-// Nothing is re-derived: sheet7.mjs exports its COMPUTED geometry (CITY) and this
-// module ships those rows verbatim as a JSON island, so a mass in the scene can
-// never drift from the mass on the plate.  Treatment is the PLATES' OWN, in three
-// dimensions: opaque paper faces over a girding frame, the tier's hatch raked
-// across the right wall in SCREEN space — the same rake and the same spacing
-// everywhere, which is what patternUnits="userSpaceOnUse" means on sheet 7.  The
-// same scene stands twice: `city` as measured, and `plant`, whose walls let the
-// frame through and whose every mass is crowned by a working plant that
-// city-plant.mjs plans from its row.  One body draws both; the island's `plant`
-// field is the switch.
+// Nothing is re-derived: city-glb.mjs writes sheet7.mjs's computed CITY into
+// city.glb and plant.glb and hands back the layout beside them (pins, pick boxes,
+// district labels, the rise schedule), which this module ships as a JSON island.
+// One body wires both plates; the island's `plant` field is the switch. The plates
+// are app-only: the flat set draws no copy.
 import { readFileSync } from 'node:fs';
 import { PROJECT_MARK, articleTitle } from './chrome.mjs';
 import { FOCUS_JS } from './focus.mjs';
 import { CITY, PLACED } from './sheet7.mjs';
 import { SURVEY, SURVEY_META } from './sheet7a.mjs';
-import { PLANT_RULES, plantPlan } from './city-plant.mjs';
+import { PLANT_RULES } from './city-plant.mjs';
+import {
+  CITY_GLB, DRESS_JS, FACES, HATCH, LIT, PLANT_GLB, PX, TIERS, TINT, cityModel, materialPlan,
+} from './city-glb.mjs';
+import { ISO_POLAR, MV_JS, orbitAt, pinCss } from './mv-kit.mjs';
+import { BASE } from '../app/src/routes.ts';
 
-export const THREE_URL = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/0.169.0/three.module.min.js';
-export const REV = 'G';
+export const REV = 'H';
+export const PLANT_REV = 'B';
 
 const PLATE = JSON.parse(readFileSync(new URL('../data/census-city.json', import.meta.url), 'utf8'));
 const BASIS = `${PLATE.ref} @ ${PLATE.sha} (${PLATE.generatedAtTime.slice(0, 10)})`;
+const APP_PKG = JSON.parse(readFileSync(new URL('../app/package.json', import.meta.url), 'utf8'));
+const MV_VERSION = APP_PKG.dependencies['@google/model-viewer'].replace(/^[^\d]*/, '');
 
-// Tier -> the plate's own treatment: sheet 7's edge class as a stroke token, the
-// hue the paper is pulled a breath towards (TINT below, so the tiers still part at
-// a glance in the round) and the tier's label.  Severity is the HATCH and its rake,
-// exactly as on the plate; height stays the file count.
-const TIERS = {
-  halt: { hue: 'red', f: 0.62, edge: 'red', label: 'halts a publish' },
-  pr: { hue: 'red', f: 0.34, edge: 'red', label: 'stops the PR line' },
-  late: { hue: 'accent', f: 0.34, edge: 'accent', label: 'gates a later stage' },
-  report: { hue: 'soft', f: 0.13, edge: 'line', label: 'never gates' },
-  line: { hue: 'ink', f: 0.24, edge: 'ink', label: 'the material' },
-  off: { hue: 'faint', f: 0, edge: 'soft', label: 'types only — frame, no mass' },
-  annex: { hue: 'accent', f: 0.16, edge: 'soft', label: 'spec annex — the test mass' },
-};
-// How far a tier's hue may pull the paper now that the hatch carries the severity:
-// a quarter of what the tinted walls used, so a wall reads as paper with a hatch
-// on it and not as a colour.
-const TINT = 0.22;
-// chrome.mjs's pattern defs, in three dimensions — stroke token, alpha, spacing in
-// CSS px and the rake as the SVG draws it (+1 = rotate(45), the neutral/accent/annex
-// rake; -1 = rotate(-45), which is what makes severity read as the OPPOSITE rake
-// rather than a redder tint).  `sh` is sheet 7A's shadow stripe.
-const HATCH = {
-  hx: { tok: 'line', a: 1, sp: 6, rake: 1 },
-  hd: { tok: 'soft', a: 1, sp: 5, rake: 1 },
-  hr: { tok: 'redHatch', a: 0.55, sp: 6, rake: -1 },
-  ha: { tok: 'accent', a: 0.5, sp: 6, rake: 1 },
-  sh: { tok: 'ink', a: 0.30, sp: 4, rake: 1 },
-};
-// helpers.mjs's isoBlock, face by face: [stone, hatch].  cap = the plate's capCls
-// (fp -> paper, fp2 -> paper-2, fr -> red); b = the -x/+z wall, the SVG's LEFT face,
-// flat paper-2; a = the +x/-z wall, the SVG's RIGHT face, paper-2 stone under the
-// tier's side hatch.  pr and late carry sheet 7's ROOF WASH — the cap takes the
-// side's own hatch — and halt's red cap takes none, as the plate draws it.
-const FACES = {
-  halt: { cap: ['red', null], a: ['paper2', 'hr'], b: ['paper2', null] },
-  pr: { cap: ['paper', 'hr'], a: ['paper2', 'hr'], b: ['paper2', null] },
-  late: { cap: ['paper', 'ha'], a: ['paper2', 'ha'], b: ['paper2', null] },
-  report: { cap: ['paper2', null], a: ['paper2', 'hx'], b: ['paper2', null] },
-  line: { cap: ['paper', null], a: ['paper2', 'hx'], b: ['paper2', null] },
-  off: { cap: ['paper2', null], a: ['paper2', 'hd'], b: ['paper2', null] },
-  annex: { cap: ['paper2', null], a: ['paper2', 'hd'], b: ['paper2', null] },
-};
-// The SECOND lane — sheet 7A's polarity in three dimensions: covered source is
-// LIT, untested source is SHADOW, and the spec annex is the lamp that throws it.
-// Shadow lerps toward BLACK, never ink: ink is light in the cyanotype theme, and
-// a shadow that brightens in the dark is not a shadow.  The flat plate's own rule.
-const LIT = {
-  b1: { hue: 'halo', f: 0.46, label: 'LIT ≥95' },
-  b2: { hue: 'halo', f: 0.34, label: 'lit 85–95' },
-  b3: { hue: 'red', f: 0.38, label: 'lit <85' },
-  b4: { hue: 'red', f: 0.58, label: 'lit <85' },
-  sh: { hue: 'black', f: 0.38, hatch: 'sh', label: 'SHADOW — never loaded' },
-  e2e: { hue: 'accent', f: 0.24, label: 'e2e light (accent)' },
-  bare: { hue: 'ink', f: 0.05, label: 'no meter attaches' },
-  lamp: { hue: 'halo', f: 0.60, label: 'lamp = spec annex' },
-};
-const DISTRICTS = { pkg: 24, app: 24, site: 24, tool: 26 };
 // sheet 7's own vocabulary, verbatim: the panel must read like the flat schedule
 const TIER_TEXT = {
   halt: 'HALTS A PUBLISH', pr: 'STOPS THE PR LINE', late: 'gates a later stage',
@@ -95,66 +39,90 @@ const LIGHT_LEGEND = ['b1', 'b2', 'b3', 'sh', 'e2e', 'lamp'].map((k) => [k, LIT[
 const lgHtml = (rows) => rows
   .map(([k, d]) => `<span class="lg"><i class="sw sw-${k}"></i>${d}</span>`).join('\n      ');
 
-// Every mass must have a survey row — sheet 7A now numbers from sheet 7's own
-// PLACED table, so a mass without light is a build error, not a blank building.
+// Every mass must have a survey row: sheet 7A numbers from sheet 7's own PLACED table.
 const SURVEY_BY_N = Object.fromEntries(SURVEY.map((r) => [r.n, r]));
 for (const b of CITY) {
   if (!SURVEY_BY_N[b.n]) throw new Error(`city-scene: member ${b.n} has no row in sheet 7A's SURVEY`);
 }
 
-const DATA = {
-  three: THREE_URL,
-  rows: CITY,
-  tiers: TIERS,
-  hatch: HATCH,
-  faces: FACES,
-  tint: TINT,
-  districts: DISTRICTS,
-  // the schedule's own note line, keyed by member number — the plate's prose, not new prose
-  notes: Object.fromEntries(PLACED.map(([n, , , , , , , note]) => [n, note])),
-  lit: LIT,
-  survey: SURVEY_BY_N,
-  tierText: TIER_TEXT,
-  distText: DIST_TEXT,
-  distLabel: DIST_LABEL,
-  chip: { h: 21, lift: 9, min: 0.62 },   // world units; min = zoom below which chips fade out
-  az0: 45,                 // the initial diagonal; the snap targets are 45/135/225/315
-  snaps: [45, 135, 225, 315],
-  snapMs: 380,
-  margin: 1.06,
-  zoom: [0.45, 4],
-  pinZoom: 1.8,           // a pin from the url or the keyboard zooms in at least this far
-  op: { cap: 0.88, side: 0.8 },
-  legend: { tier: lgHtml(LEGEND), light: lgHtml(LIGHT_LEGEND) },
+/** The camera: the four diagonals at the iso polar, the home field of view, and how far a pin frames. */
+const HOME_FOV = 14;
+const CORNERS = [45, 135, 225, 315];
+// the home pose aims at the ground's centre; its radius is set on load to the stage's aspect
+const HOME_TARGET = 'auto 0m auto';
+const ISO_RAD = (ISO_POLAR * Math.PI) / 180;
+// The plan seen down each diagonal, orthographically: the padded ground's corners and
+// every member's box, as a half width across the screen and a half height up it, each
+// over the share of the stage the home pose gives it.
+const homeSpan = ({ extent: [hx, hz], members }) => {
+  const points = [[-hx, 0, -hz], [hx, 0, -hz], [hx, 0, hz], [-hx, 0, hz]];
+  for (const m of members) for (const [x0, y0, z0, x1, y1, z1] of m.boxes)
+    for (const x of [x0, x1]) for (const y of [Math.max(0, y0), y1]) for (const z of [z0, z1]) points.push([x, y, z]);
+  let right = 0, up = 0;
+  for (const az of CORNERS) {
+    const t = (az * Math.PI) / 180;
+    for (const [x, y, z] of points) {
+      right = Math.max(right, Math.abs(x * Math.cos(t) - z * Math.sin(t)));
+      up = Math.max(up, Math.abs(y * Math.sin(ISO_RAD) - (x * Math.sin(t) + z * Math.cos(t)) * Math.cos(ISO_RAD)));
+    }
+  }
+  return [+(right / 0.94).toFixed(2), +(up / 0.92).toFixed(2)];
 };
-// The plant sheet's island: the city's, plus a plan of primitives per massed
-// member, seeded on its name, and the frame's alpha where it shows through a wall.
-const PLANT_DATA = { ...DATA, plant: plantPlan(CITY, SURVEY_BY_N), ghost: 0.3 };
+const PIN_FOV = HOME_FOV / 1.8;
+// below this share of the plan's home scale on a desktop stage, the unpinned pins fold to dots
+const DOTS = 0.62;
+
+const island = (plant) => {
+  const { layout } = cityModel({ plant });
+  const byN = new Map(layout.members.map((m) => [m.n, m]));
+  return {
+    plant,
+    end: layout.end,
+    crowns: layout.crowns,
+    lift: layout.lift,
+    home: { fov: HOME_FOV, pin: +PIN_FOV.toFixed(3), dots: +(DOTS / PX).toFixed(4), corners: CORNERS, span: homeSpan(layout) },
+    rows: CITY.map((b) => {
+      const m = byN.get(b.n);
+      return {
+        n: b.n, name: b.name, dist: b.dist, tier: b.tier, sf: b.sf, sl: b.sl, pf: b.pf, pl: b.pl,
+        h: m.h, top: m.top, cap: m.cap, centre: m.centre, boxes: m.boxes, rise: m.rise,
+      };
+    }),
+    districts: layout.districts,
+    // the schedule's own note line, keyed by member number: the plate's prose, not new prose
+    notes: Object.fromEntries(PLACED.map(([n, , , , , , , note]) => [n, note])),
+    survey: SURVEY_BY_N,
+    tierText: TIER_TEXT,
+    distText: DIST_TEXT,
+    M: materialPlan(plant),
+    legend: { tier: lgHtml(LEGEND), light: lgHtml(LIGHT_LEGEND) },
+  };
+};
 
 const json = (v) => JSON.stringify(v).replace(/</g, '\\u003c');
 
 const MASSED = CITY.filter((b) => b.tier !== 'off').length;
 const ANNEXES = CITY.filter((b) => b.sa).length;
 
-// The plate's own identity, shared: the gallery letters it and emit-app.mjs
-// files it in the app's manifest, so the routed card cannot drift from the page.
+// The plates' own identity, shared: the gallery letters them and emit-app.mjs
+// files them in the app's manifest, so the routed card cannot drift from the page.
 export const CITY_META = {
   id: 'city',
   head: 'SHEET 7 · 3D',
   rev: REV,
-  title: 'THE CITY — ISOMETRIC',
-  sub: `SHEET 7'S CENSUS CITY IN THE ROUND · ${CITY.length} MEMBERS · ${MASSED} MASSED · ${ANNEXES} SPEC ANNEXES · 4 DISTRICTS · ORBIT SNAPS TO THE FOUR TRUE DIAGONALS · A SECOND LANE RELIGHTS THE CITY FROM SHEET 7A'S FILED SHADOW PLATE · THE STAGE IS VIEWPORT-RELATIVE, 80VH BETWEEN 520 AND 1400PX`,
-  /** The flat set's copy — an anchor in the gallery, never a page of its own. */
-  standalone: 'gallery.html#city-scene',
+  title: 'THE CITY, IN THE ROUND',
+  sub: `SHEET 7'S CENSUS CITY IN THE ROUND · ${CITY.length} MEMBERS · ${MASSED} MASSED · ${ANNEXES} SPEC ANNEXES · 4 DISTRICTS · ONE GLTF BINARY · THE CAMERA ORBITS FREE AND TURNS TO THE FOUR TRUE DIAGONALS · A SECOND LANE RELIGHTS THE CITY FROM SHEET 7A'S FILED SHADOW PLATE`,
+  /** The flat set draws no copy of it. */
+  standalone: '',
 };
 
-// The same city at work: sheet 7B's twin in the round, filed only in the app.
+// The same city at work: sheet 7B's twin in the round.
 export const PLANT_META = {
   id: 'plant',
   head: 'SHEET 7B · 3D',
-  rev: 'A',
-  title: 'THE WORKING CITY — ISOMETRIC',
-  sub: `SHEET 7'S CENSUS CITY IN THE ROUND, AT WORK · ${CITY.length} MEMBERS · ${MASSED} MASSED · EACH CROWNED BY A WORKING PLANT SIZED FROM ITS OWN CENSUS · ${ANNEXES} SPEC ANNEXES · 4 DISTRICTS · ORBIT SNAPS TO THE FOUR TRUE DIAGONALS · A SECOND LANE RELIGHTS THE CITY FROM SHEET 7A'S FILED SHADOW PLATE · THE STAGE IS VIEWPORT-RELATIVE, 80VH BETWEEN 520 AND 1400PX`,
+  rev: PLANT_REV,
+  title: 'THE WORKING CITY, IN THE ROUND',
+  sub: `SHEET 7'S CENSUS CITY IN THE ROUND, AT WORK · ${CITY.length} MEMBERS · ${MASSED} MASSED · EACH CROWNED BY A WORKING PLANT SIZED FROM ITS OWN CENSUS · ${ANNEXES} SPEC ANNEXES · 4 DISTRICTS · ONE GLTF BINARY · THE CAMERA ORBITS FREE AND TURNS TO THE FOUR TRUE DIAGONALS · A SECOND LANE RELIGHTS THE CITY FROM SHEET 7A'S FILED SHADOW PLATE`,
   /** The flat set draws no copy of it. */
   standalone: '',
 };
@@ -168,24 +136,30 @@ const CSS = `
   letter-spacing: 0.06em; color: var(--ink-soft); }
 .cs-legend .sw { display: block; width: 20px; height: 12px; border: 1.2px solid var(--ink); }
 .cs-legend .sw-annex, .cs-legend .sw-lamp { border-color: var(--ink-soft); border-style: dashed; }
-.cs-ctl { display: flex; gap: 12px; align-items: center; font-family: var(--data); font-size: 10.5px;
+.cs-ctl { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; font-family: var(--data); font-size: 10.5px;
   letter-spacing: 0.1em; color: var(--ink-soft); }
+.cs-ctl .grp { display: inline-flex; gap: 6px; }
 .cs-ctl button { font: inherit; letter-spacing: inherit; color: var(--ink); background: var(--paper);
   border: 1px solid var(--ink); padding: 4px 9px; cursor: pointer; }
 .cs-ctl button:hover { background: var(--paper-2); }
+.cs-ctl button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
 .cs-ctl label { display: inline-flex; gap: 5px; align-items: center; cursor: pointer; }
-.cs-stage { border: 1.5px solid var(--ink); background: var(--paper); }
-/* pan-y keeps the page scrollable under a touch; a horizontal drag orbits */
-.cs-canvas { height: clamp(520px, 80vh, 1400px); touch-action: pan-y; cursor: grab; position: relative; overflow: hidden; }
-.cs-stage:fullscreen .cs-canvas, .cs-stage.is-filled .cs-canvas { height: calc(100vh - 92px); }
-.cs-canvas.over { cursor: pointer; }
-.cs-canvas.grabbing { cursor: grabbing; }
-.cs-canvas:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
-.cs-canvas canvas { display: block; }
-.cs-canvas .cs-note { position: absolute; inset: 0; display: grid; place-items: center; text-align: center;
-  font-family: var(--data); font-size: 10.5px; letter-spacing: 0.08em; color: var(--ink-soft); padding: 20px; }
+.cs-ctl .touch { display: none; }
+@media (pointer: coarse) { .cs-ctl .mouse { display: none; } .cs-ctl .touch { display: inline; } }
+.cs-stage { position: relative; border: 1.5px solid var(--ink); background: var(--paper); }
+.cs-stage:focus-within { outline: 2px solid var(--accent); outline-offset: -2px; }
+.cs-view { display: block; width: 100%; height: clamp(520px, 80vh, 1400px); background: var(--paper);
+  --poster-color: transparent; --progress-bar-color: var(--accent); }
+.cs-stage:fullscreen .cs-view, .cs-stage.is-filled .cs-view { height: calc(100vh - 92px); }
+.cs-stage.over .cs-view { cursor: pointer; }
+${pinCss('cs-pin', 22, 11)}
+.cs-pin { --hue: var(--ink-soft); transition: width 0.15s, height 0.15s; }
+.cs-pin.on { background: var(--accent); border-color: var(--accent); color: var(--paper); }
+.cs-stage.far .cs-pin:not(.on) { width: 9px; height: 9px; font-size: 0; border-width: 1.5px; }
+.cs-dist { font-family: var(--data); font-size: 11px; font-weight: 600; letter-spacing: 0.16em; color: var(--ink-soft);
+  white-space: nowrap; pointer-events: none; }
 /* THE CAPTION STRIP. Three kinds of text, each in its own role: the member's identity
-   (its chip number as the cards set theirs, its name in the code face — a bare identifier
+   (its pin number as the cards set theirs, its name in the code face — a bare identifier
    is the one place that face earns its keep), a ledger line in the data face at the key
    block's size, and sentences in the prose face at the running text's. Two columns once
    the strip is wide enough to carry them: identity left, sentences right. */
@@ -236,1008 +210,357 @@ const CSS = `
 /* below 1100 the legend and the controls each take a row: one bar, two lines */
 @media (max-width: 1100px) {
   .cs-bar { flex-direction: column; align-items: stretch; gap: 8px; }
-  .cs-ctl { flex-wrap: wrap; justify-content: flex-start; }
-  .cs-ctl #cs-hint { flex: 1 1 240px; min-width: 0; }
+  .cs-ctl { justify-content: flex-start; }
 }
-@media (max-width: 860px) { .cs-canvas { height: clamp(420px, 62vh, 620px); } }`;
+@media (max-width: 860px) { .cs-view { height: clamp(420px, 62vh, 620px); } }`;
 
-// THE SCENE, HOSTLESS.  Two hosts fill the same body: the flat gallery wraps it
-// in an IIFE that lazy-imports three from cdnjs, and www/atlas.lit-ui-router.dev/app emits it as an
-// ES module handed a bundled THREE.  Every `$$NAME` is a host slot.
-// Written without template placeholders on purpose: it is emitted inside one, and
-// every number it draws arrives through the JSON island.
-const BODY = `$$FOCUS  var stage = document.getElementById('cs-canvas');
-  var island = document.getElementById('cs-city');
-  if (!stage || !island) return;
+// The scene, as a module for the app: handed the resolved <model-viewer> module
+// and the opening pin, it returns { dispose, select }.
+const BODY = `${FOCUS_JS}${MV_JS}  ${DRESS_JS}
+  var mv = root.querySelector('#cs-viewer');
+  var island = root.querySelector('#cs-city');
+  if (!mv || !island || !viewer) return undefined;
   var D = JSON.parse(island.textContent);
-  var hint = document.getElementById('cs-hint');
-  var info = document.getElementById('cs-info');
+  var stage = root.querySelector('#cs-stage');
+  var info = root.querySelector('#cs-info');
+  var laneBox = root.querySelector('#cs-lane');
+  var legend = root.querySelector('.cs-legend');
+  var corners = Array.prototype.slice.call(root.querySelectorAll('[data-az]'));
+  var reset = root.querySelector('#cs-reset');
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+  var ac = new AbortController();
+  var on = function (el, type, fn, capture) { el.addEventListener(type, fn, { signal: ac.signal, capture: Boolean(capture) }); };
+  var END = D.end, loaded = false, lane = 'tier', litN = null, pinN = null, pal = null, homeR = 0, homeFov = D.home.fov, raf = 0;
+  var byN = {}, pins = {};
+  D.rows.forEach(function (b) {
+    byN[b.n] = b;
+    pins[b.n] = mv.querySelector('[slot="hotspot-' + b.n + '"]');
+  });
+  var order = D.rows.filter(function (b) { return b.tier !== 'off'; })
+    .map(function (b) { return b.n; }).sort(function (a, b) { return a - b; });
+  var IDLE = '<p class="hint">Hover or tap any mass to read its member: district, gate tier, '
+    + "authored source and the spec annex beside it. Each pin carries the member's number on sheet 7. "
+    + 'A tap pins the member and the link in the address bar carries the pin; tap it again or the ground to clear it.</p>';
 
-  function tok(n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
-  // --halo is an rgba and a wall carries no alpha: the hue rides alone, and the
-  // depth comes from D.lit's own factors.  black is not a token — shadow must
-  // darken in BOTH themes, and --ink is light in the cyanotype one.
-  function bare(v, fb) { return /^rgba\\(/.test(v) ? v.replace(/,[^,)]*\\)$/, ')').replace('rgba', 'rgb') : (v || fb); }
-  function pal() {
-    return { ink: tok('--ink'), soft: tok('--ink-soft'), faint: tok('--ink-faint'),
-      accent: tok('--accent'), halo: bare(tok('--halo'), tok('--accent')), red: tok('--red'),
-      paper: tok('--paper'), paper2: tok('--paper-2'), black: '#000000',
-      green: tok('--green') || tok('--accent'),
-      // the two stroke tokens the plate's pattern defs use and nothing else does
-      line: tok('--line'), redHatch: tok('--red-hatch') || tok('--red'),
-      // the ground lettering and the number chips are plate labels, so they take
-      // the data face the plates take; mono is reserved for code
-      data: tok('--data') || '"Barlow Semi Condensed", sans-serif' };
+  // ---- the dress: every material recomputed from the page's tokens, in linear light ----
+  var TOK = { paper: '--paper', paper2: '--paper-2', ink: '--ink', soft: '--ink-soft', faint: '--ink-faint',
+    line: '--line', accent: '--accent', red: '--red', redHatch: '--red-hatch', green: '--green', halo: '--halo' };
+  function palette() {
+    var cs = getComputedStyle(document.documentElement), c = { black: [0, 0, 0] };
+    Object.keys(TOK).forEach(function (k) { c[k] = tokenRgb(cs.getPropertyValue(TOK[k])); });
+    c.redHatch = c.redHatch || c.red;
+    c.green = c.green || c.accent;
+    // --halo is an rgba: its colour rides alone, the depth comes from D.M.lit's own factors
+    c.halo = c.halo || c.accent;
+    return c;
   }
-  function note(msg) {
-    var el = document.createElement('p');
-    el.className = 'cs-note';
-    el.textContent = msg;
-    stage.appendChild(el);
+  function frameOf(n) {
+    var r = D.M.frames.filter(function (f) { return f[0] === n; })[0];
+    return r ? pal[lane === 'light' ? r[2] : r[1]] : pal.ink;
+  }
+  function retint() {
+    pal = palette();
+    var rows = cityDress(pal, D.M, lane).map(function (row) {
+      return litN !== null && row[0] === 'frame-' + litN ? [row[0], pal.accent, 1] : row;
+    });
+    return paint(mv, rows);
+  }
+  // a member drawn hot: its frame takes the accent
+  function light(n, hot) {
+    if (n === null || !pal) return;
+    void paint(mv, [['frame-' + n, hot ? pal.accent : frameOf(n), 1]]);
   }
 
-  function boot(THREE) {
-    var renderer;
-    try {
-      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    } catch $$CATCH{
-      note('THIS PLATE NEEDS WEBGL — SHEET 7 DRAWS THE SAME CITY FLAT');
+  // ---- reading ----
+  function fmt(v) { return String(v).replace(/\\B(?=(\\d{3})+(?!\\d))/g, ','); }
+  function plural(n) { return n === 1 ? ' file' : ' files'; }
+  // the light lane's sentence: sheet 7A's own numbers, unrounded
+  function survey(b) {
+    var sv = D.survey[b.n];
+    if (sv.cat === 'z') return 'no mass — nothing to light';
+    if (sv.cat === 'n') return 'FULL SHADOW — no suite';
+    if (sv.cat === 'e') return 'e2e light only — no meter reads it';
+    if (sv.cat === 'u') return 'tests run — no meter attaches';
+    var s = 'suite lights ' + sv.ext + '% of the source';
+    if (sv.line != null) s += ' · line ' + sv.line;
+    if (sv.branch != null) s += ' · branch ' + sv.branch;
+    if (sv.func != null) s += ' · func ' + sv.func;
+    return sv.ext ? s : s + ' — the lamp is lit, pointed elsewhere';
+  }
+  function describe(b) {
+    var line = D.distText[b.dist] + ' · ' + D.tierText[b.tier] + ' — '
+      + (b.sf ? fmt(b.sl) + ' src sloc in ' + b.sf + plural(b.sf) : 'no authored source');
+    if (b.pf) line += ' · spec annex ' + fmt(b.pl) + ' sloc in ' + b.pf + plural(b.pf);
+    var tail = lane === 'light' ? '<p class="lamp">' + survey(b) + '</p>' : '';
+    return '<div class="id"><h3><span class="n">' + b.n + '</span>' + b.name + '</h3>'
+      + '<p class="ledger">' + line + '</p></div><div class="txt"><p class="note">'
+      + (D.notes[b.n] || '') + '</p>' + tail + '</div>';
+  }
+  function show(n) {
+    if (n === litN) return;
+    if (litN !== null) light(litN, false);
+    litN = n;
+    if (litN !== null) light(litN, true);
+    info.innerHTML = litN === null ? IDLE : describe(byN[litN]);
+  }
+  // a member number, or null for anything that names none
+  function member(v) {
+    var n = v === null || v === undefined || v === '' ? NaN : Number(v);
+    return byN[n] ? n : null;
+  }
+
+  // ---- the camera ----
+  function vec(p) { return p[0] + 'm ' + p[1] + 'm ' + p[2] + 'm'; }
+  function settle() { if (reduce.matches) mv.jumpCameraToGoal(); }
+  // a pin from the url or the keyboard brings its member in; a clear goes back to the home target and field
+  function frame(n) {
+    if (n === null) {
+      mv.cameraTarget = ${JSON.stringify(HOME_TARGET)};
+      mv.fieldOfView = D.home.fov + 'deg';
+    } else {
+      mv.cameraTarget = vec(byN[n].centre);
+      mv.fieldOfView = Math.min(mv.getFieldOfView(), D.home.pin) + 'deg';
+    }
+    settle();
+  }
+  function turnTo(az) {
+    var o = mv.getCameraOrbit();
+    mv.cameraOrbit = az + 'deg ${ISO_POLAR}deg ' + o.radius + 'm';
+    settle();
+  }
+  // the home radius frames the plan's diagonal at this stage's aspect; the viewer widens a narrow stage's field itself
+  function home() {
+    var r = mv.getBoundingClientRect(), tv = Math.tan(homeFov * Math.PI / 360);
+    homeR = Math.max(D.home.span[0] / ((r.width / r.height) * tv), D.home.span[1] / tv);
+    mv.cameraOrbit = ${JSON.stringify(`${CORNERS[0]}deg ${ISO_POLAR}deg `)} + homeR + 'm';
+    settle();
+  }
+  // how large the city stands against its home pose: the radius and the field of view both zoom
+  function scale() {
+    var o = mv.getCameraOrbit();
+    if (!homeR || !o.radius) return 1;
+    return (homeR * Math.tan(homeFov * Math.PI / 360)) / (o.radius * Math.tan(mv.getFieldOfView() * Math.PI / 360));
+  }
+  // css px per model unit on screen: the hatch and the strokes are drawn for PX of them at home
+  function density() {
+    var o = mv.getCameraOrbit();
+    if (!o.radius) return 1;
+    return (mv.getBoundingClientRect().height / 2) / (o.radius * Math.tan(mv.getFieldOfView() * Math.PI / 360));
+  }
+  function onCamera() {
+    stage.classList.toggle('far', density() < D.home.dots);
+    var o = mv.getCameraOrbit(), az = ((o.theta * 180 / Math.PI) % 360 + 360) % 360;
+    corners.forEach(function (c) {
+      var d = Math.abs(az - Number(c.getAttribute('data-az')));
+      c.setAttribute('aria-pressed', String(Math.min(d, 360 - d) < 0.5));
+    });
+  }
+
+  // ---- pins: one tab stop, on the pinned member or the first ----
+  function rove() {
+    var stop = pinN !== null ? pinN : order[0];
+    order.forEach(function (k) { pins[k].tabIndex = k === stop ? 0 : -1; });
+  }
+  // idempotent, so the url's echo of a pick lands on a no-op
+  function pin(n) {
+    if (n === pinN) return false;
+    pinN = n;
+    D.rows.forEach(function (b) {
+      pins[b.n].classList.toggle('on', b.n === n);
+      pins[b.n].setAttribute('aria-pressed', String(b.n === n));
+    });
+    rove();
+    show(n);
+    return true;
+  }
+  // a tap pins; the pinned member or the ground clears it, and the url follows
+  function tap(n) {
+    var next = n === pinN ? null : n;
+    if (!pin(next)) return;
+    atlasFocusPush(mv, next === null ? null : String(next));
+  }
+  // the keyboard's pin also frames, and carries the focus along the pins
+  function key(n) {
+    var was = pinN, focused = document.activeElement && document.activeElement.classList.contains('cs-pin');
+    tap(n);
+    if (pinN === was) return;
+    frame(pinN);
+    if (focused && pinN !== null) pins[pinN].focus();
+  }
+
+  // ---- picking: model-viewer's own hit test, against the island's boxes ----
+  function pick(e) {
+    var r = mv.getBoundingClientRect();
+    var hit = mv.positionAndNormalFromPoint(e.clientX - r.left, e.clientY - r.top);
+    if (!hit) return null;
+    var p = hit.position;
+    for (var i = 0; i < D.rows.length; i++) {
+      var bx = D.rows[i].boxes;
+      for (var j = 0; j < bx.length; j++) {
+        var q = bx[j];
+        if (p.x >= q[0] && p.x <= q[3] && p.y >= q[1] && p.y <= q[4] && p.z >= q[2] && p.z <= q[5]) return D.rows[i].n;
+      }
+    }
+    return null;
+  }
+  var down = null;
+  on(mv, 'pointerdown', function (e) { down = { x: e.clientX, y: e.clientY, moved: 0 }; });
+  on(mv, 'pointermove', function (e) {
+    if (down && e.buttons) {
+      down.moved = Math.max(down.moved, Math.hypot(e.clientX - down.x, e.clientY - down.y));
       return;
     }
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-    stage.appendChild(renderer.domElement);
-    var scene = new THREE.Scene();
-
-    // ---- the plate's own plan bounds, centred on the origin ------------------
-    var rows = D.rows;
-    // the plant sheet carries a plan per member; the city carries none
-    var plans = D.plant || {};
-    var minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity, maxY = 0;
-    rows.forEach(function (b) {
-      minX = Math.min(minX, b.x); maxX = Math.max(maxX, b.x + b.s);
-      minZ = Math.min(minZ, b.y); maxZ = Math.max(maxZ, b.y + b.s);
-      maxY = Math.max(maxY, b.h, b.ha, plans[b.n] ? plans[b.n].top : 0);
-      if (b.sa) {
-        minX = Math.min(minX, b.ax); maxX = Math.max(maxX, b.ax + b.sa);
-        minZ = Math.min(minZ, b.ay); maxZ = Math.max(maxZ, b.ay + b.sa);
-      }
-    });
-    var PAD = 30;
-    minX -= PAD; maxX += PAD; minZ -= PAD; maxZ += PAD;
-    var cx = (minX + maxX) / 2, cz = (minZ + maxZ) / 2;
-    var target = new THREE.Vector3(0, maxY / 2, 0);
-
-    // ---- the hatch: the plate's pattern defs, in the frame buffer --------------
-    // patternUnits="userSpaceOnUse" means the stripes belong to the PAGE, not to
-    // the face they fill: same rake, same spacing on every wall.  The honest way
-    // to say that in three dimensions is gl_FragCoord — device pixels on the
-    // buffer — so the hatch is laid in screen space and nothing is unwrapped, no
-    // texture is allocated and no dependency is added.  Stroke colour, alpha,
-    // rake and spacing all ride UNIFORMS, so one compiled program serves every
-    // hooked material and the theme turn is four numbers, not a recompile.
-    var DPR = renderer.getPixelRatio();
-    var HATCH_PARS = 'uniform vec4 uHatch;\\nuniform float uRake;\\nuniform float uSpacing;\\nuniform float uWidth;\\n';
-    var HATCH_MIX = [
-      '#include <color_fragment>',
-      'if (uHatch.a > 0.0) {',
-      // distance across the rake, in device px: the lines are x + rake*y = const
-      '  float p = (gl_FragCoord.x + uRake * gl_FragCoord.y) * 0.70710678;',
-      '  float f = fract(p / uSpacing) * uSpacing;',
-      '  float d = min(f, uSpacing - f);',
-      '  float aa = max(0.5 * fwidth(p), 0.0001);',
-      '  float cov = 1.0 - smoothstep(uWidth * 0.5 - aa, uWidth * 0.5 + aa, d);',
-      '  diffuseColor.rgb = mix(diffuseColor.rgb, uHatch.rgb, cov * uHatch.a);',
-      '}',
-    ].join('\\n');
-    function hatched(mat) {
-      var u = { uHatch: { value: new THREE.Vector4(0, 0, 0, 0) }, uRake: { value: 1 },
-        uSpacing: { value: 6 * DPR }, uWidth: { value: Math.max(1, DPR) } };
-      mat.userData.uni = u;
-      mat.onBeforeCompile = function (shader) {
-        shader.uniforms.uHatch = u.uHatch;
-        shader.uniforms.uRake = u.uRake;
-        shader.uniforms.uSpacing = u.uSpacing;
-        shader.uniforms.uWidth = u.uWidth;
-        shader.fragmentShader = HATCH_PARS
-          + shader.fragmentShader.replace('#include <color_fragment>', HATCH_MIX);
-      };
-      // the hooked family gets its OWN cache key, so a hatched material can never
-      // be handed the stock MeshBasic program (or the stock one ours)
-      mat.customProgramCacheKey = function () { return 'cs-hatch-1'; };
-      return mat;
-    }
-
-    // ---- materials: one set per tier, redressed with the theme -----------------
-    // On the city the tier lane is OPAQUE — the plate removes hidden lines, and so
-    // does this.  On the plant sheet the walls still write depth but let the plant
-    // and the frame behind them through.  Either way the faces are pushed back a
-    // hair so the girding frame is not fought for the same depth; the light lane
-    // stays translucent, because its slabs split a footprint.
-    var mats = {}, hot = {}, lines = {};
-    var make = function (lift) {
-      return ['cap', 'a', 'b'].map(function (k) {
-        return hatched(new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false,
-          opacity: Math.min(1, (k === 'cap' ? D.op.cap : D.op.side) + lift) }));
-      });
-    };
-    var solid = function () {
-      return ['cap', 'a', 'b'].map(function (k) {
-        if (!D.plant) {
-          return hatched(new THREE.MeshBasicMaterial({ polygonOffset: true,
-            polygonOffsetFactor: 1, polygonOffsetUnits: 1 }));
-        }
-        return hatched(new THREE.MeshBasicMaterial({ transparent: true,
-          opacity: k === 'cap' ? D.op.cap : D.op.side, polygonOffset: true,
-          polygonOffsetFactor: 1, polygonOffsetUnits: 1 }));
-      });
-    };
-    Object.keys(D.tiers).forEach(function (t) {
-      mats[t] = solid();
-      hot[t] = solid();             // the hover twin: same paper and hatch, tint pulled on
-    });
-    // the second lane's own materials — same treatment, sheet 7A's polarity
-    var lmats = {}, lhot = {};
-    Object.keys(D.lit).forEach(function (k) { lmats[k] = make(0); lhot[k] = make(0.1); });
-    lines.src = new THREE.LineBasicMaterial({ transparent: true, opacity: 0.92, depthWrite: false });
-    lines.off = new THREE.LineBasicMaterial({ transparent: true, opacity: 0.75, depthWrite: false });
-    // sheet 7's edge ladder, by tier: skr red, ska accent, skf --line, sks soft, sk
-    // ink.  Only the COLOUR travels — a LineBasicMaterial carries no width, so the
-    // weight half of the ladder (1.3 / 1.6 / 1.4 / 1.1 / 1) is a known gap here.
-    lines.tier = {};
-    Object.keys(D.tiers).forEach(function (t) {
-      lines.tier[t] = new THREE.LineBasicMaterial({ transparent: true, depthWrite: false,
-        opacity: t === 'off' ? 0.75 : 0.92 });
-    });
-    lines.annex = new THREE.LineDashedMaterial({ transparent: true, opacity: 0.9, depthWrite: false,
-      dashSize: 5, gapSize: 4 });
-    lines.district = new THREE.LineDashedMaterial({ transparent: true, opacity: 0.95, depthWrite: false,
-      dashSize: 7, gapSize: 6 });
-    lines.e2e = new THREE.LineBasicMaterial({ transparent: true, opacity: 0.92, depthWrite: false });
-    lines.hot = new THREE.LineBasicMaterial({ transparent: true, opacity: 1, depthWrite: false });
-    lines.hotDash = new THREE.LineDashedMaterial({ transparent: true, opacity: 1, depthWrite: false,
-      dashSize: 5, gapSize: 4 });
-    // the frame's hidden half: drawn only where a wall stands in front of it
-    var ghostOf = function (m) {
-      var g = m.clone();
-      g.opacity = D.ghost;
-      g.depthFunc = THREE.GreaterDepth;
-      return g;
-    };
-    var plateMat = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.62, depthWrite: false });
-    // never rendered: the picking proxies live outside the scene graph
-    var pickMat = new THREE.MeshBasicMaterial();
-
-    // one ghost per frame material, cloned once and recoloured with it
-    var ghostMats = [];
-    function ghosts(m) {
-      if (!m.userData.ghost) { m.userData.ghost = ghostOf(m); ghostMats.push(m); }
-      return m.userData.ghost;
-    }
-    var parts = {};                 // n -> { tier: {meshes, frames}, light: {…} } — both lanes
-    var picks = [];                 // raycast proxies, each tagged with its member
-    var lane = 'tier';
-    function rec(n) {
-      if (!parts[n]) parts[n] = { tier: { meshes: [], frames: [] }, light: { meshes: [], frames: [] } };
-      return parts[n];
-    }
-
-    // One solid, in one lane.  The picking proxies belong to the TIER pass only:
-    // the two lanes stand on the same footprints, so the raycast never changes.
-    function box(lk, n, x, z, sx, sz, h, wall, hotWall, lineMat, dashed, pick) {
-      var geo = new THREE.BoxGeometry(sx, h, sz);
-      var px = x + sx / 2 - cx, pz = z + sz / 2 - cz;
-      var r = rec(n)[lk];
-      var vis = lk === lane;
-      if (wall) {
-        var faces = function (q) { return [q[1], q[2], q[0], q[0], q[2], q[1]]; };
-        var mesh = new THREE.Mesh(geo, faces(wall));
-        mesh.userData.base = mesh.material;
-        mesh.userData.hot = faces(hotWall);
-        mesh.position.set(px, h / 2, pz);
-        mesh.renderOrder = 1;
-        mesh.visible = vis;
-        scene.add(mesh);
-        r.meshes.push(mesh);
-      }
-      var frame = new THREE.LineSegments(new THREE.EdgesGeometry(geo), lineMat);
-      frame.userData.base = lineMat;
-      frame.userData.hot = dashed ? lines.hotDash : lines.hot;
-      frame.position.set(px, h / 2, pz);
-      frame.computeLineDistances();
-      frame.renderOrder = 2;
-      frame.visible = vis;
-      scene.add(frame);
-      r.frames.push(frame);
-      if (D.plant && lk === 'tier' && wall) {
-        var ghost = new THREE.LineSegments(frame.geometry, ghosts(lineMat));
-        ghost.userData.base = ghost.material;
-        ghost.userData.hot = ghosts(dashed ? lines.hotDash : lines.hot);
-        ghost.position.copy(frame.position);
-        ghost.renderOrder = 3;
-        ghost.visible = vis;
-        scene.add(ghost);
-        r.frames.push(ghost);
-      }
-      if (pick) {
-        var proxy = new THREE.Mesh(geo, pickMat);
-        proxy.position.set(px, h / 2, pz);
-        proxy.userData.n = n;
-        proxy.updateMatrixWorld(true);
-        picks.push(proxy);
-      }
-      return [px, pz];
-    }
-
-    function mass(n, x, z, s, h, tier, lineMat, dashed) {
-      // the off tier is frame-only: types alone, so there is nothing to mass
-      return box('tier', n, x, z, s, s, h, tier === 'off' ? null : mats[tier], hot[tier],
-        lineMat, dashed, true);
-    }
-    // sheet 7A's brightness ladder, its own thresholds
-    function band(line) {
-      return line == null ? 'b1' : line >= 95 ? 'b1' : line >= 85 ? 'b2' : line >= 70 ? 'b3' : 'b4';
-    }
-    function wash(n, x, z, sx, sz, h, k, lineMat, dashed) {
-      box('light', n, x, z, sx, sz, h, lmats[k], lhot[k], lineMat, dashed, false);
-    }
-    // The light lane, built ONCE at init and toggled by visibility: covered source
-    // is lit from the annex (east) side, what no suite loads stays in shadow.
-    function relight(b) {
-      var sv = D.survey[b.n];
-      if (b.tier === 'off' || sv.cat === 'z') {                 // no mass in either lane
-        box('light', b.n, b.x, b.y, b.s, b.s, b.h, null, null, lines.off, false, false);
-      } else if (sv.cat === 'n') {
-        wash(b.n, b.x, b.y, b.s, b.s, b.h, 'sh', lines.src, false);
-      } else if (sv.cat === 'e') {
-        wash(b.n, b.x, b.y, b.s, b.s, b.h, 'e2e', lines.e2e, false);
-      } else if (sv.cat === 'u') {
-        wash(b.n, b.x, b.y, b.s, b.s, b.h, 'bare', lines.src, false);
-      } else {
-        var e = Math.max(0, Math.min(100, sv.ext || 0)) / 100;
-        var litW = b.s * e, shW = b.s - litW;
-        if (shW > 0.01) wash(b.n, b.x, b.y, shW, b.s, b.h, 'sh', lines.src, false);
-        if (litW > 0.01) wash(b.n, b.x + shW, b.y, litW, b.s, b.h, band(sv.line), lines.src, false);
-      }
-      // every lamp that is lit at all — an annex glows brighter than any wall
-      if (b.sa) wash(b.n, b.ax, b.ay, b.sa, b.sa, b.ha, sv.cat === 'n' ? 'bare' : 'lamp', lines.annex, true);
-    }
-
-    var tops = {};                  // n -> [x, y, z] over the src mass: its cap, or its plant's crown
-    rows.forEach(function (b) {
-      var p = mass(b.n, b.x, b.y, b.s, b.h, b.tier, lines.tier[b.tier], false);
-      tops[b.n] = [p[0], plans[b.n] ? plans[b.n].top : b.h, p[1]];
-      if (b.sa) mass(b.n, b.ax, b.ay, b.sa, b.ha, 'annex', lines.annex, true);
-      relight(b);
-    });
-
-    // ---- the working plant: every member's plan, merged into one mesh ----------
-    // Unlit, so the shading is baked: each vertex takes its role's tone, turned
-    // toward the paper on the top and toward black on the east, from its normal.
-    // One mesh and one line set for the whole city; hover recolours a member's
-    // vertex range, and the plan's solids join the picking proxies.
-    var ROLE = { m: 0, p: 1, g: 2, k: 3, L: 4, u: 5 };
-    var unit = {
-      b: new THREE.BoxGeometry(1, 1, 1),
-      c: new THREE.CylinderGeometry(1, 1, 1, 12, 1, false),
-      d: new THREE.SphereGeometry(1, 12, 3, 0, Math.PI * 2, 0, Math.PI / 2),
-    };
-    // edges fixed per unit solid: a scale never adds or removes a crease here
-    var unitEdge = {};
-    Object.keys(unit).forEach(function (k) { unitEdge[k] = new THREE.EdgesGeometry(unit[k], 35); });
-    var onX = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), -Math.PI / 2);
-    var onZ = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI / 2);
-    var still = new THREE.Quaternion();
-    var pPos = [], pNrm = [], pIdx = [], pRole = [], pEdge = [], pRange = {}, pTier = [];
-    var mtx = new THREE.Matrix4(), nmx = new THREE.Matrix3(), tv = new THREE.Vector3();
-    var unitBox = unit.b;
-    function solidAt(kind, pos, q, sc, role, n, tierIx) {
-      var g = unit[kind];
-      mtx.compose(pos, q, sc);
-      nmx.getNormalMatrix(mtx);
-      var P = g.attributes.position, N = g.attributes.normal, base = pPos.length / 3;
-      for (var i = 0; i < P.count; i++) {
-        tv.fromBufferAttribute(P, i).applyMatrix4(mtx);
-        pPos.push(tv.x, tv.y, tv.z);
-        tv.fromBufferAttribute(N, i).applyMatrix3(nmx).normalize();
-        pNrm.push(tv.x, tv.y, tv.z);
-        pRole.push(role);
-        pTier.push(tierIx);
-      }
-      var I = g.index.array;
-      for (var j = 0; j < I.length; j++) pIdx.push(base + I[j]);
-      var E = unitEdge[kind].attributes.position;
-      for (var e = 0; e < E.count; e++) {
-        tv.fromBufferAttribute(E, e).applyMatrix4(mtx);
-        pEdge.push(tv.x, tv.y, tv.z);
-      }
-      // the solid's own box, as a proxy: hovering a stack reads its member
-      var bb = new THREE.Box3().setFromBufferAttribute(P).applyMatrix4(mtx);
-      var proxy = new THREE.Mesh(unitBox, pickMat);
-      bb.getCenter(proxy.position);
-      bb.getSize(proxy.scale);
-      proxy.userData.n = n;
-      proxy.updateMatrixWorld(true);
-      picks.push(proxy);
-    }
-    var tierKeys = Object.keys(D.tiers);
-    rows.forEach(function (b) {
-      var plan = plans[b.n];
-      if (!plan) return;
-      var from = pPos.length / 3, tierIx = tierKeys.indexOf(b.tier);
-      plan.p.forEach(function (q) {
-        var k = q[0], role = ROLE[q[q.length - 1]];
-        if (k === 'b') {
-          solidAt('b', new THREE.Vector3(q[1] - cx, q[2] + q[5] / 2, q[3] - cz), still,
-            new THREE.Vector3(q[4], q[5], q[6]), role, b.n, tierIx);
-        } else if (k === 'c') {
-          solidAt('c', new THREE.Vector3(q[1] - cx, q[2] + q[5] / 2, q[3] - cz), still,
-            new THREE.Vector3(q[4], q[5], q[4]), role, b.n, tierIx);
-        } else if (k === 'x') {
-          solidAt('c', new THREE.Vector3(q[1] + q[5] / 2 - cx, q[2], q[3] - cz), onX,
-            new THREE.Vector3(q[4], q[5], q[4]), role, b.n, tierIx);
-        } else if (k === 'z') {
-          solidAt('c', new THREE.Vector3(q[1] - cx, q[2], q[3] + q[5] / 2 - cz), onZ,
-            new THREE.Vector3(q[4], q[5], q[4]), role, b.n, tierIx);
-        } else if (k === 'd') {
-          solidAt('d', new THREE.Vector3(q[1] - cx, q[2], q[3] - cz), still,
-            new THREE.Vector3(q[4], q[4] * 0.5, q[4]), role, b.n, tierIx);
-        }
-      });
-      for (var i = 0; i < plan.l.length; i += 3) pEdge.push(plan.l[i] - cx, plan.l[i + 1], plan.l[i + 2] - cz);
-      pRange[b.n] = [from, pPos.length / 3];
-    });
-    var plantGeo = new THREE.BufferGeometry();
-    plantGeo.setAttribute('position', new THREE.Float32BufferAttribute(pPos, 3));
-    plantGeo.setAttribute('normal', new THREE.Float32BufferAttribute(pNrm, 3));
-    plantGeo.setAttribute('color', new THREE.Float32BufferAttribute(new Float32Array(pPos.length), 3));
-    plantGeo.setIndex(pIdx);
-    var plantMat = new THREE.MeshBasicMaterial({ vertexColors: true });
-    var plant = new THREE.Mesh(plantGeo, plantMat);
-    if (D.plant) scene.add(plant);
-    var plantEdgeGeo = new THREE.BufferGeometry();
-    plantEdgeGeo.setAttribute('position', new THREE.Float32BufferAttribute(pEdge, 3));
-    lines.plant = new THREE.LineBasicMaterial({ transparent: true, opacity: 0.85, depthWrite: false });
-    var plantEdges = new THREE.LineSegments(plantEdgeGeo, lines.plant);
-    plantEdges.renderOrder = 2;
-    if (D.plant) scene.add(plantEdges);
-    var plantTone = null;           // per-role [top, lit side, east side], set by paint()
-    var plantHotN = null;
-    function plantColour(from, to) {
-      if (!plantTone) return;
-      var col = plantGeo.attributes.color, nrm = plantGeo.attributes.normal;
-      var hotFrom = plantHotN !== null && pRange[plantHotN] ? pRange[plantHotN] : [0, 0];
-      var cc = new THREE.Color();
-      for (var i = from; i < to; i++) {
-        var role = pRole[i], t = plantTone[role];
-        if (role === ROLE.k) t = plantTone.band[pTier[i]];
-        var ny = nrm.getY(i);
-        if (ny > 0.6) cc.copy(t[0]);
-        else if (ny < -0.6) cc.copy(t[2]);
-        else {
-          // +x is the hatched east wall's side, +z the plain one: the plate's two tones
-          var e = Math.max(0, Math.min(1, 0.5 + (nrm.getX(i) - nrm.getZ(i)) * 0.5));
-          cc.copy(t[1]).lerp(t[2], e);
-          if (ny > 0.2) cc.lerp(t[0], (ny - 0.2) / 0.4);
-        }
-        if (i >= hotFrom[0] && i < hotFrom[1]) cc.lerp(plantTone.hot, 0.35);
-        col.setXYZ(i, cc.r, cc.g, cc.b);
-      }
-      col.needsUpdate = true;
-    }
-    function plantLight(n, on) {
-      var was = plantHotN;
-      plantHotN = on ? n : (plantHotN === n ? null : plantHotN);
-      [was, plantHotN].forEach(function (k) {
-        if (k !== null && pRange[k]) plantColour(pRange[k][0], pRange[k][1]);
-      });
-    }
-
-    // ---- the quiet ground: one plate per district, plus a faint grid ----------
-    // Lettering is drawn ON the ground, foreshortened with it — a site plan, not a
-    // billboard.  It is turned onto the default diagonal so it reads level at the
-    // opening pose; the other three snaps show it turned, exactly as a plan would.
-    var letters = [];
-    function letterTex(label, wpx, hpx, c) {
-      var cv = document.createElement('canvas');
-      cv.width = Math.max(2, Math.round(wpx)); cv.height = Math.max(2, Math.round(hpx));
-      var g2 = cv.getContext('2d');
-      g2.font = '600 ' + Math.round(hpx * 0.6) + 'px ' + c.data;
-      if ('letterSpacing' in g2) g2.letterSpacing = Math.round(hpx * 0.09) + 'px';
-      g2.textAlign = 'center'; g2.textBaseline = 'middle';
-      g2.globalAlpha = 0.85;
-      g2.fillStyle = c.soft;
-      g2.fillText(label, wpx / 2, hpx / 2);
-      var tex = new THREE.CanvasTexture(cv);
-      tex.anisotropy = renderer.capabilities.getMaxAnisotropy ? renderer.capabilities.getMaxAnisotropy() : 1;
-      return tex;
-    }
-    function letter(label, px, pz, W, H) {
-      var h = Math.max(20, Math.min(42, Math.min(W, H) * 0.2));
-      var w = h * (label.length * 0.78 + 0.6);
-      var fit = Math.min(1, (W + H) * 0.62 / w);   // the label stays inside its plate
-      h *= fit; w *= fit;
-      var geo = new THREE.PlaneGeometry(w, h);
-      geo.rotateX(-Math.PI / 2);
-      var mat = new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false });
-      var mesh = new THREE.Mesh(geo, mat);
-      mesh.position.set(px, 0.45, pz);
-      mesh.rotation.y = D.az0 * Math.PI / 180;   // level at the opening diagonal
-      mesh.renderOrder = 0;
-      scene.add(mesh);
-      letters.push({ label: label, mat: mat, w: w, h: h });
-    }
-
-    Object.keys(D.districts).forEach(function (d) {
-      var members = rows.filter(function (b) { return b.dist === d; });
-      if (!members.length) return;
-      var pad = D.districts[d];
-      var x1 = Infinity, x2 = -Infinity, z1 = Infinity, z2 = -Infinity;
-      members.forEach(function (b) {
-        x1 = Math.min(x1, b.x); z1 = Math.min(z1, b.sa ? Math.min(b.y, b.ay) : b.y);
-        x2 = Math.max(x2, b.sa ? b.ax + b.sa : b.x + b.s);
-        z2 = Math.max(z2, b.y + b.s, b.sa ? b.ay + b.sa : 0);
-      });
-      x1 -= pad; z1 -= pad; x2 += pad; z2 += pad;
-      var geo = new THREE.PlaneGeometry(x2 - x1, z2 - z1);
-      geo.rotateX(-Math.PI / 2);
-      var px = (x1 + x2) / 2 - cx, pz = (z1 + z2) / 2 - cz;
-      var plate = new THREE.Mesh(geo, plateMat);
-      plate.position.set(px, 0.4, pz);
-      scene.add(plate);
-      var edge = new THREE.LineSegments(new THREE.EdgesGeometry(geo), lines.district);
-      edge.position.set(px, 0.5, pz);
-      edge.computeLineDistances();
-      scene.add(edge);
-      // set toward the plate's near corner, where the ground is clear of massing
-      letter(D.distLabel[d], px + (x2 - x1) * 0.35, pz + (z2 - z1) * 0.35, x2 - x1, z2 - z1);
-    });
-    var span = Math.max(maxX - minX, maxZ - minZ);
-    var grid = new THREE.GridHelper(span, Math.round(span / 50));
-    grid.material.transparent = true;
-    grid.material.opacity = 0.3;
-    grid.material.depthWrite = false;
-    grid.position.set((minX + maxX) / 2 - cx, 0, (minZ + maxZ) / 2 - cz);
-    scene.add(grid);
-
-    // ---- number chips: sheet 7's own numbering, billboarded over each src mass --
-    // A drafting callout, not a HUD: ink on paper, drawn on top, and dropped when
-    // the camera pulls back far enough that 31 of them would silt up the plan.
-    var chips = [];
-    function chipTex(text, c) {
-      var K = Math.min(window.devicePixelRatio || 1, 2) * 3;
-      var fs = 30, pad = 11, h = 46;
-      var probe = document.createElement('canvas').getContext('2d');
-      probe.font = '600 ' + fs + 'px ' + c.data;
-      var w = Math.ceil(probe.measureText(text).width) + pad * 2;
-      var cv = document.createElement('canvas');
-      cv.width = Math.round(w * K); cv.height = Math.round(h * K);
-      var g2 = cv.getContext('2d');
-      g2.scale(K, K);
-      g2.fillStyle = c.paper; g2.globalAlpha = 0.9;
-      g2.fillRect(1, 1, w - 2, h - 2);
-      g2.globalAlpha = 1;
-      g2.strokeStyle = c.soft; g2.lineWidth = 1.6;
-      g2.strokeRect(0.8, 0.8, w - 1.6, h - 1.6);
-      g2.font = '600 ' + fs + 'px ' + c.data;
-      g2.fillStyle = c.ink; g2.textAlign = 'center'; g2.textBaseline = 'middle';
-      g2.fillText(text, w / 2, h / 2 + 1);
-      var tex = new THREE.CanvasTexture(cv);
-      return { tex: tex, ar: w / h };
-    }
-    rows.forEach(function (b) {
-      var t = tops[b.n];
-      var mat = new THREE.SpriteMaterial({ transparent: true, depthTest: false, depthWrite: false });
-      var sp = new THREE.Sprite(mat);
-      sp.position.set(t[0], t[1] + D.chip.lift + D.chip.h / 2, t[2]);
-      sp.renderOrder = 5;
-      scene.add(sp);
-      chips.push({ n: b.n, sp: sp, mat: mat });
-    });
-
-    // ---- the isometric camera: elevation fixed at atan(1/sqrt2) ---------------
-    var EL = Math.atan(1 / Math.SQRT2);
-    var STEP = Math.PI / 2;
-    var AZ0 = D.az0 * Math.PI / 180;
-    var az = AZ0;
-    var R = 4000;
-    var camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 1, 12000);
-    function place() {
-      camera.position.set(target.x + R * Math.sin(az) * Math.cos(EL), target.y + R * Math.sin(EL),
-        target.z + R * Math.cos(az) * Math.cos(EL));
-      camera.lookAt(target);
-      camera.updateMatrixWorld(true);
-    }
-    var corners = [];
-    [minX - cx, maxX - cx].forEach(function (x) {
-      [0, maxY].forEach(function (y) {
-        [minZ - cz, maxZ - cz].forEach(function (z) { corners.push(new THREE.Vector3(x, y, z)); });
-      });
-    });
-    // fit over ALL four diagonals, so a snap can never clip the city.  The vertical
-    // fit takes the SPAN, not the largest |y|: a model that sits above the ground
-    // centre would otherwise be paid for twice and leave empty paper under it.
-    var baseW = 0, loY = Infinity, hiY = -Infinity, keep = az;
-    D.snaps.forEach(function (deg) {
-      az = deg * Math.PI / 180;
-      place();
-      corners.forEach(function (v) {
-        var p = v.clone().applyMatrix4(camera.matrixWorldInverse);
-        baseW = Math.max(baseW, Math.abs(p.x));
-        loY = Math.min(loY, p.y);
-        hiY = Math.max(hiY, p.y);
-      });
-    });
-    az = keep;
-    var baseH = (hiY - loY) / 2, midY = (hiY + loY) / 2;
-
-    function resize() {
-      var w = stage.clientWidth, h = stage.clientHeight;
-      if (!w || !h) return;
-      // updateStyle must stay ON: without a CSS size the canvas displays at its
-      // backing-store size, w × devicePixelRatio — a 2× flood on retina screens
-      renderer.setSize(w, h);
-      var aspect = w / h;
-      var half = Math.max(baseH, baseW / aspect) * D.margin;
-      camera.left = -half * aspect; camera.right = half * aspect;
-      camera.top = midY + half; camera.bottom = midY - half;
-      camera.updateProjectionMatrix();
-    }
-
-    // ---- render on demand: this is a document, not a game loop ----------------
-    var pending = false;
-    function draw() {
-      pending = false;
-      var show = camera.zoom >= D.chip.min;
-      chips.forEach(function (c) { c.sp.visible = show; });
-      place();
-      renderer.render(scene, camera);
-    }
-    function ask() { if (!pending) { pending = true; $$RAFrequestAnimationFrame(draw); } }
-
-    function paint() {
-      var c = pal();
-      renderer.setClearColor(new THREE.Color(c.paper), 1);
-      var paper = new THREE.Color(c.paper);
-      // both lanes are recoloured on every theme turn, whichever one is showing
-      var tint = function (m, hm, spec) {
-        var hue = new THREE.Color(c[spec.hue]);
-        m[0].color = paper.clone().lerp(hue, spec.f * 0.72);
-        m[1].color = paper.clone().lerp(hue, spec.f * 1.15);
-        m[2].color = paper.clone().lerp(hue, spec.f);
-        hm[0].color = paper.clone().lerp(hue, Math.min(1, spec.f * 1.05));
-        hm[1].color = paper.clone().lerp(hue, Math.min(1, spec.f * 1.5));
-        hm[2].color = paper.clone().lerp(hue, Math.min(1, spec.f * 1.32));
-      };
-      // the pattern def, onto one material's uniforms.  The SVG's rake is read in
-      // a y-DOWN space and gl_FragCoord's runs UP, so the sign turns over on the
-      // way in and rotate(45) stays the same stripe it is on the plate.
-      var stroke = function (m, key) {
-        var u = m.userData.uni;
-        if (!u) return;
-        if (!key) { u.uHatch.value.set(0, 0, 0, 0); return; }
-        var h = D.hatch[key];
-        var col = new THREE.Color(c[h.tok]);
-        u.uHatch.value.set(col.r, col.g, col.b, h.a);
-        u.uRake.value = -h.rake;
-        u.uSpacing.value = h.sp * DPR;
-      };
-      var STONE = { paper: paper, paper2: new THREE.Color(c.paper2), red: new THREE.Color(c.red) };
-      // A tier's wall is the plate's: the stone its capCls or its face names, a
-      // breath of the tier's hue so the tiers still part in the round, and the
-      // tier's own hatch over it.  Hover pushes the TINT and nothing else — the
-      // paper and the hatch are what the member IS.
-      var accent = new THREE.Color(c.accent);
-      var dress = function (m, hm, spec, fs) {
-        var hue = new THREE.Color(c[spec.hue]);
-        ['cap', 'a', 'b'].forEach(function (k, i) {
-          var f = fs[k];
-          var stone = STONE[f[0]] || paper;
-          var pull = f[0] === 'red' ? 0 : spec.f * D.tint;
-          m[i].color = stone.clone().lerp(hue, pull);
-          hm[i].color = stone.clone().lerp(hue, Math.min(1, pull * 2.4)).lerp(accent, 0.12);
-          stroke(m[i], f[1]);
-          stroke(hm[i], f[1]);
-        });
-      };
-      Object.keys(D.tiers).forEach(function (t) { dress(mats[t], hot[t], D.tiers[t], D.faces[t]); });
-      Object.keys(D.lit).forEach(function (k) {
-        tint(lmats[k], lhot[k], D.lit[k]);
-        // sheet 7A's shadow is a black wash AND a faint ink stripe laid over it
-        [0, 1, 2].forEach(function (i) {
-          stroke(lmats[k][i], D.lit[k].hatch || null);
-          stroke(lhot[k][i], D.lit[k].hatch || null);
-        });
-      });
-      Object.keys(D.tiers).forEach(function (t) {
-        lines.tier[t].color = new THREE.Color(c[D.tiers[t].edge]);
-      });
-      lines.src.color = new THREE.Color(c.ink);
-      lines.e2e.color = new THREE.Color(c.accent);
-      lines.off.color = new THREE.Color(c.faint);
-      lines.annex.color = new THREE.Color(c.soft);
-      lines.district.color = new THREE.Color(c.faint);
-      lines.hot.color = new THREE.Color(c.accent);
-      lines.hotDash.color = new THREE.Color(c.accent);
-      ghostMats.forEach(function (m) { m.userData.ghost.color.copy(m.color); });
-      if (D.plant) {
-        // the plant's tones: machine, pipe and gantry steel each a step further from
-        // the paper toward the soft ink; a band takes its tier's edge; a lamp burns green
-        var black = new THREE.Color(0, 0, 0), white = new THREE.Color(c.paper);
-        var tone = function (base, flat) {
-          if (flat) return [base.clone(), base.clone(), base.clone()];
-          return [base.clone().lerp(white, 0.45), base.clone(), base.clone().lerp(black, 0.24)];
-        };
-        var p2 = new THREE.Color(c.paper2), sft = new THREE.Color(c.soft);
-        plantTone = [
-          tone(p2.clone().lerp(sft, 0.3)),
-          tone(p2.clone().lerp(sft, 0.58)),
-          tone(sft.clone().lerp(new THREE.Color(c.ink), 0.22)),
-          null,
-          tone(new THREE.Color(c.green), true),
-          tone(new THREE.Color(c.faint).lerp(p2, 0.35)),
-        ];
-        plantTone.band = tierKeys.map(function (t) {
-          var e = D.tiers[t].edge;
-          return tone(new THREE.Color(c[e === 'line' ? 'soft' : e]));
-        });
-        plantTone.hot = new THREE.Color(c.accent);
-        plantColour(0, pRole.length);
-        lines.plant.color = new THREE.Color(c.ink);
-      }
-      plateMat.color = new THREE.Color(c.paper2).lerp(new THREE.Color(c.faint), 0.3);
-      grid.material.color = new THREE.Color(c.faint);
-      // canvas-drawn ink has to be redrawn when the ink changes
-      chips.forEach(function (ch) {
-        var t = chipTex(String(ch.n), c);
-        if (ch.mat.map) ch.mat.map.dispose();
-        ch.mat.map = t.tex;
-        ch.mat.needsUpdate = true;
-        ch.sp.scale.set(D.chip.h * t.ar, D.chip.h, 1);
-      });
-      letters.forEach(function (L) {
-        if (L.mat.map) L.mat.map.dispose();
-        L.mat.map = letterTex(L.label, L.w * 8, L.h * 8, c);
-        L.mat.needsUpdate = true;
-      });
-      ask();
-    }
-    paint();
-    resize();
-    ask();
-
-    // ---- the feature: free orbit, isometric snap on release -------------------
-    var tween = null;
-    function step(now) {
-      if (!tween) return;
-      // a frame stamp can precede the glide that queued it
-      var k = Math.max(0, Math.min(1, (now - tween.t0) / tween.d));
-      var e = 1 - Math.pow(1 - k, 3);
-      az = tween.a0 + (tween.a1 - tween.a0) * e;
-      camera.zoom = tween.z0 + (tween.z1 - tween.z0) * e;
-      target.lerpVectors(tween.p0, tween.p1, e);
-      camera.updateProjectionMatrix();
-      draw();
-      if (k < 1) { $$RAFTrequestAnimationFrame(step); } else { az = tween.a1; tween = null; }
-    }
-    // the orbit target eases with the pose; left out, it stays where it is
-    function glide(a1, z1, p1) {
-      p1 = (p1 || target).clone();
-      if (reduce.matches) {
-        az = a1; camera.zoom = z1; target.copy(p1); camera.updateProjectionMatrix(); tween = null; draw();
-        return;
-      }
-      tween = { a0: az, a1: a1, z0: camera.zoom, z1: z1, p0: target.clone(), p1: p1, t0: performance.now(), d: D.snapMs };
-      $$RAFTrequestAnimationFrame(step);
-    }
-    function snapped() { return Math.round((az - AZ0) / STEP) * STEP + AZ0; }
-    function snap() { glide(snapped(), camera.zoom); }
-    var HOME = target.clone();
-    function home() { glide(AZ0, 1, HOME); }
-    // a pin from the url or the keyboard brings its member in; a clear eases home, the azimuth held
-    function frame(n) {
-      var b = n === null ? null : byN[n];
-      if (!b) { glide(snapped(), 1, HOME); return; }
-      glide(snapped(), Math.max(camera.zoom, D.pinZoom), new THREE.Vector3(b.x + b.s / 2 - cx, b.h / 2, b.y + b.s / 2 - cz));
-    }
-
-    // ---- picking: the canvas is flat and untransformed, so a raycast is honest --
-    var ray = new THREE.Raycaster();
-    var ndc = new THREE.Vector2();
-    var byN = {};
-    rows.forEach(function (b) { byN[b.n] = b; });
-    var IDLE = '<p class="hint">Hover or tap any mass to read its member: district, gate tier, '
-      + "authored source and the spec annex beside it. Each chip carries the member's number on sheet 7. "
-      + 'A tap pins the member and the link in the address bar carries the pin; tap it again or the ground to clear it.</p>';
-    function fmt(v) { return String(v).replace(/\\B(?=(\\d{3})+(?!\\d))/g, ','); }
-    function plural(n) { return n === 1 ? ' file' : ' files'; }
-    // the light lane's sentence — sheet 7A's own numbers, unrounded
-    function survey(b) {
-      var sv = D.survey[b.n];
-      if (sv.cat === 'z') return 'no mass — nothing to light';
-      if (sv.cat === 'n') return 'FULL SHADOW — no suite';
-      if (sv.cat === 'e') return 'e2e light only — no meter reads it';
-      if (sv.cat === 'u') return 'tests run — no meter attaches';
-      var s = 'suite lights ' + sv.ext + '% of the source';
-      if (sv.line != null) s += ' · line ' + sv.line;
-      if (sv.branch != null) s += ' · branch ' + sv.branch;
-      if (sv.func != null) s += ' · func ' + sv.func;
-      return sv.ext ? s : s + ' — the lamp is lit, pointed elsewhere';
-    }
-    function describe(b) {
-      var line = D.distText[b.dist] + ' · ' + D.tierText[b.tier] + ' — '
-        + (b.sf ? fmt(b.sl) + ' src sloc in ' + b.sf + plural(b.sf) : 'no authored source');
-      if (b.pf) line += ' · spec annex ' + fmt(b.pl) + ' sloc in ' + b.pf + plural(b.pf);
-      var tail = lane === 'light' ? '<p class="lamp">' + survey(b) + '</p>' : '';
-      return '<div class="id"><h3><span class="n">' + b.n + '</span>' + b.name + '</h3>'
-        + '<p class="ledger">' + line + '</p></div><div class="txt"><p class="note">'
-        + (D.notes[b.n] || '') + '</p>' + tail + '</div>';
-    }
-    var litN = null;                // the member drawn hot: the hover over the pin, else the pin
-    var pinN = null;
-    function light(n, on) {
-      var r = parts[n];
-      if (!r) return;
-      r[lane].meshes.forEach(function (m) { m.material = on ? m.userData.hot : m.userData.base; });
-      r[lane].frames.forEach(function (f) { f.material = on ? f.userData.hot : f.userData.base; });
-      if (D.plant) plantLight(n, on);
-    }
-    function setLane(k) {
-      if (k === lane) return;
-      if (litN !== null) light(litN, false);
-      lane = k;
-      Object.keys(parts).forEach(function (n) {
-        ['tier', 'light'].forEach(function (L) {
-          var on = L === k;
-          parts[n][L].meshes.forEach(function (m) { m.visible = on; });
-          parts[n][L].frames.forEach(function (f) { f.visible = on; });
-        });
-      });
-      if (litN !== null) light(litN, true);
-      info.innerHTML = litN === null ? IDLE : describe(byN[litN]);
-      var lg = stage.closest('.cs').querySelector('.cs-legend');
-      if (lg) lg.innerHTML = D.legend[k === 'light' ? 'light' : 'tier'];
-      ask();
-    }
-    function show(n) {
-      if (n === litN) return false;
-      if (litN !== null) light(litN, false);
-      litN = n;
-      if (litN !== null) light(litN, true);
-      info.innerHTML = litN === null ? IDLE : describe(byN[litN]);
-      return true;
-    }
-    // a member number, or null for anything that names none
-    function member(v) {
-      var n = v === null || v === undefined || v === '' ? NaN : Number(v);
-      return byN[n] ? n : null;
-    }
-    function pin(n) {
-      pinN = n;
-      if (show(n)) ask();
-    }
-    function hit(e) {
-      var r = stage.getBoundingClientRect();
-      ndc.x = ((e.clientX - r.left) / r.width) * 2 - 1;
-      ndc.y = -((e.clientY - r.top) / r.height) * 2 + 1;
-      place();
-      ray.setFromCamera(ndc, camera);
-      var xs = ray.intersectObjects(picks, false);
-      return xs.length ? xs[0].object.userData.n : null;
-    }
-    info.innerHTML = IDLE;
-
-    var dragging = false, engaged = false, lastX = 0, moved = 0;
-    stage.addEventListener('pointerdown', function (e) {
-      tween = null; dragging = true; engaged = true; lastX = e.clientX; moved = 0;
-      stage.classList.add('grabbing');
-      stage.setPointerCapture(e.pointerId);
-    });
-    stage.addEventListener('pointermove', function (e) {
-      if (dragging) {
-        moved += Math.abs(e.clientX - lastX);
-        az -= (e.clientX - lastX) * 0.0075;
-        lastX = e.clientX;
-        ask();
-        return;
-      }
-      // hover is a reading aid, not a fight with the camera: not while it moves
-      if (tween || e.pointerType === 'touch') return;
-      var n = hit(e);
+    // hover is a reading aid, not a fight with the camera: not mid-drag, not under a finger
+    if (e.pointerType === 'touch' || !loaded || raf) return;
+    var cx = e.clientX, cy = e.clientY;
+    raf = requestAnimationFrame(function () {
+      raf = 0;
+      var n = pick({ clientX: cx, clientY: cy });
       stage.classList.toggle('over', n !== null);
-      if (show(n !== null ? n : pinN)) ask();
+      show(n !== null ? n : pinN);
     });
-    // a tap pins; the pinned member or the ground clears it, and the url follows
-    function tap(n, mouse) {
-      var next = n === pinN ? null : n;
-      if (next === pinN) return;
-      pinN = next;
-      if (show(next !== null || !mouse ? next : n)) ask();
-      atlasFocusPush(stage, next === null ? null : String(next));
-    }
-    function release(e) {
-      if (!dragging) return;
-      dragging = false;
-      stage.classList.remove('grabbing');
-      if (stage.hasPointerCapture(e.pointerId)) stage.releasePointerCapture(e.pointerId);
-      if (moved < 4) tap(hit(e), e.pointerType === 'mouse');
-      snap();
-    }
-    stage.addEventListener('pointerup', release);
-    stage.addEventListener('pointercancel', release);
-    stage.addEventListener('pointerleave', function () {
-      engaged = false;
-      stage.classList.remove('over');
-      if (!dragging && show(pinN)) ask();
+  });
+  on(mv, 'pointerup', function (e) {
+    var d = down;
+    down = null;
+    if (!d || d.moved >= 4 || !loaded || e.target !== mv) return;
+    tap(pick(e));
+  });
+  on(mv, 'pointerleave', function () {
+    stage.classList.remove('over');
+    show(pinN);
+  });
+  D.rows.forEach(function (b) {
+    var n = b.n;
+    on(pins[n], 'click', function (e) {
+      tap(n);
+      // a pin pressed from the keyboard frames its member, as the arrows do
+      if (e.detail === 0 && pinN !== null) frame(pinN);
     });
-    // a plain scroll over the plate still scrolls the page: the wheel only zooms
-    // once the plate has been touched, or when it is a trackpad pinch (ctrlKey)
-    stage.addEventListener('wheel', function (e) {
-      if (!engaged && !e.ctrlKey) return;
-      e.preventDefault();
-      var z = camera.zoom * Math.exp(-e.deltaY * 0.0015);
-      camera.zoom = Math.min(D.zoom[1], Math.max(D.zoom[0], z));
-      camera.updateProjectionMatrix();
-      ask();
-    }, { passive: false });
-    stage.addEventListener('dblclick', function () { engaged = true; home(); });
-    document.getElementById('cs-reset').addEventListener('click', home);
-    // with the stage focused, arrows step the pin through the members in schedule order
-    var order = rows.filter(function (b) { return b.tier !== 'off'; })
-      .map(function (b) { return b.n; }).sort(function (a, b) { return a - b; });
-    function key(n) {
-      var was = pinN;
-      tap(n, false);
-      if (pinN !== was) frame(pinN);
-    }
-    stage.addEventListener('keydown', function (e) {
-      if (e.metaKey || e.ctrlKey || e.altKey) return;
-      var d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
-      var at = order.indexOf(pinN);
-      if (d) key(order[at < 0 ? (d > 0 ? 0 : order.length - 1) : (at + d + order.length) % order.length]);
-      else if (e.key === 'Enter' || e.key === ' ') key(litN !== null ? litN : pinN !== null ? pinN : order[0]);
-      else if (e.key === 'Escape') key(pinN);
-      else return;
-      e.preventDefault();
-      e.stopPropagation();
-    });
-    document.getElementById('cs-lane').addEventListener('change', function (e) {
-      setLane(e.target.checked ? 'light' : 'tier');
-    });
+    on(pins[n], 'pointerenter', function () { show(n); });
+  });
+  pinKeys(stage, on, {
+    step: function (d) { key(walk(order, pinN, d)); },
+    enter: function (e) {
+      if (e.target && e.target.classList && e.target.classList.contains('cs-pin')) return false;
+      key(litN !== null ? litN : pinN !== null ? pinN : order[0]);
+      return true;
+    },
+    escape: function () { if (pinN === null) return false; key(pinN); return true; },
+  });
+  wheelGate(stage, on);
+  corners.forEach(function (c) { on(c, 'click', function () { turnTo(Number(c.getAttribute('data-az'))); }); });
+  on(reset, 'click', function () {
+    home();
+    frame(null);
+  });
+  on(laneBox, 'change', function () {
+    lane = laneBox.checked ? 'light' : 'tier';
+    mv.variantName = lane === 'light' ? 'test-light' : null;
+    legend.innerHTML = D.legend[lane];
+    info.innerHTML = litN === null ? IDLE : describe(byN[litN]);
+    void retint();
+  });
+  on(mv, 'camera-change', onCamera);
+  on(window, 'resize', onCamera);
+  var themeOff = onTheme(retint, on);
 
-    if (window.ResizeObserver) $$RO_Anew ResizeObserver(function () { resize(); ask(); })$$RO_B.observe(stage);
-    else window.addEventListener('resize', $$RZ_Afunction () { resize(); ask(); }$$RZ_B);
-    $$MQ_Awindow.matchMedia('(prefers-color-scheme: dark)')$$MQ_B.addEventListener('change', paint);
-    $$MO_Anew MutationObserver(paint)$$MO_B.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-    if (hint) hint.textContent = 'DRAG TO ORBIT · RELEASE SNAPS · HOVER TO READ · TAP TO PIN · SCROLL TO ZOOM · DOUBLE-CLICK RESETS · ← → STEP · ENTER PINS · ESC CLEARS';
-    pin(member(atlasFocusRead($$OPEN_PIN)));
-    if (pinN !== null) frame(pinN);
+  var ready = new Promise(function (resolve) {
+    function boot() {
+      loaded = true;
+      homeFov = mv.getFieldOfView();
+      home();
+      mv.jumpCameraToGoal();
+      // LoopOnce, held a hair short of the end: three clamps a LoopOnce action that reaches it
+      mv.play({ repetitions: 1 });
+      mv.pause();
+      mv.currentTime = END - 1e-4;
+      onCamera();
+      revealPainted(mv, retint).then(resolve);
+    }
+    if (mv.loaded) boot();
+    else on(mv, 'load', boot);
+  });
+  info.innerHTML = IDLE;
+  rove();
+  pin(member(atlasFocusRead(focus)));
+  if (pinN !== null) frame(pinN);
 
-    // verification hook: azimuth in degrees, live zoom, the initial pose
-    window.__cityScene = {
-      az: function () { return ((az * 180 / Math.PI) % 360 + 360) % 360; },
-      zoom: function () { return camera.zoom; },
-      tweening: function () { return tween !== null; },
-      reset: home,
-      // the card photograph clears to alpha 0; a theme turn's paint() restores 1
-      clear: function (alpha) { renderer.setClearColor(new THREE.Color(pal().paper), alpha); draw(); },
-      target: function () { return { x: target.x, y: target.y, z: target.z }; },
-      hovered: function () { return litN; },
-      pinned: function () { return pinN; },
-      lane: function () { return lane; },
-      walls: function (n) { return parts[n] ? parts[n][lane].meshes.length : -1; },
-      panel: function () { return info.textContent; },
-      chipsShown: function () { return chips.filter(function (c) { return c.sp.visible; }).length; },
-      drawn: function () {                     // the last frame's renderer.info, for budgets
-        var i = renderer.info;
-        return { calls: i.render.calls, triangles: i.render.triangles, lines: i.render.lines,
-          geometries: i.memory.geometries, plantTriangles: pIdx.length / 3, plantVertices: pRole.length };
-      },
-      at: function (n) {                       // a member's screen point, for probes
-        place();
-        var b = byN[n];
-        var v = new THREE.Vector3(b.x + b.s / 2 - cx, b.h / 2, b.y + b.s / 2 - cz).project(camera);
-        var r = stage.getBoundingClientRect();
-        return { x: r.left + (v.x + 1) / 2 * r.width, y: r.top + (1 - v.y) / 2 * r.height };
-      },
-    };
-$$TEARDOWN  }
-$$TAIL`;
+  // verification hook: the pose, the pin, the lane, and a clean frame for the card photograph
+  window.__cityScene = {
+    ready: ready,
+    plant: D.plant,
+    pinned: function () { return pinN; },
+    hovered: function () { return litN; },
+    lane: function () { return lane; },
+    orbit: function () { return mv.getCameraOrbit().toString(); },
+    fov: function () { return mv.getFieldOfView(); },
+    scale: scale,
+    density: density,
+    target: function () { return mv.getCameraTarget().toString(); },
+    panel: function () { return info.textContent; },
+    pick: function (x, y) { return pick({ clientX: x, clientY: y }); },
+    photo: function () {
+      Array.prototype.forEach.call(mv.querySelectorAll('[slot^="hotspot-"]'), function (el) { el.style.visibility = 'hidden'; });
+    },
+  };
 
-// The gallery's tail: the page does not pay for three until the plate scrolls
-// into view.  The app never runs this — its THREE arrives already resolved.
-const PAGE_TAIL = `
-  // lazy: the gallery does not pay for three until the plate is on screen
-  var io = new IntersectionObserver(function (entries) {
-    if (!entries.some(function (en) { return en.isIntersecting; })) return;
-    io.disconnect();
-    import(D.three).then(boot, function () {
-      note('THREE.JS COULD NOT BE LOADED — SHEET 7 DRAWS THE SAME CITY FLAT');
-    });
-  }, { rootMargin: '300px' });
-  io.observe(stage);
+  return {
+    select: function (n) { if (pin(member(n))) frame(pinN); },
+    dispose: function () {
+      if (raf) cancelAnimationFrame(raf);
+      themeOff();
+      ac.abort();
+      delete window.__cityScene;
+    },
+  };
 `;
 
-// The gallery captures nothing and tears nothing down: the page owns the scene
-// for as long as it is open, and its pin opens on the page's own query string.
-const GALLERY = { FOCUS: FOCUS_JS, CATCH: '(err) ', TAIL: PAGE_TAIL };
-
-// The app unmounts the routed view, so every handle the scene keeps is captured
-// on the way in and released by the dispose the module returns.
-const APP = {
-  FOCUS: FOCUS_JS,
-  OPEN_PIN: 'focus',
-  RO_A: '(_ro = ', RO_B: ')',
-  RZ_A: '_rz = ',
-  MQ_A: '(_mq = ', MQ_B: ')',
-  MO_A: '(_mo = ', MO_B: ')',
-  RAF: '_raf = ', RAFT: '_rafT = ',
-  CATCH: '', // the binding is unused, and this copy is linted
-  TAIL: '  return boot(THREE);\n',
-  TEARDOWN: `
-    // var hoists, so the captures above are legal before this declaration runs
-    var _raf = 0, _rafT = 0, _ro = null, _rz = null, _mq = null, _mo = null;
-    var handle = { select: function (n) { if (member(n) !== pinN) { pin(member(n)); frame(pinN); } } };
-    handle.dispose = function dispose() {
-      if (_raf) cancelAnimationFrame(_raf);
-      if (_rafT) cancelAnimationFrame(_rafT);
-      tween = null;
-      if (_ro) _ro.disconnect();
-      if (_rz) window.removeEventListener('resize', _rz);
-      if (_mq) _mq.removeEventListener('change', paint);
-      if (_mo) _mo.disconnect();
-      delete window.__cityScene;
-      // the context goes with the renderer: a WebGL context per visit would hit
-      // the browser's cap in a dozen moves, and it takes the textures with it
-      renderer.dispose();
-      if (renderer.forceContextLoss) renderer.forceContextLoss();
-      renderer.domElement.remove();
-    };
-    return handle;
-`,
-};
-
-const fill = (host) => BODY.replace(/\$\$([A-Z_]+)/g, (_, k) => host[k] ?? '');
-
-/** The gallery's inline module: the body in an IIFE, three fetched from cdnjs. */
-const INIT = `\n(function () {\n${fill(GALLERY)}})();\n`;
-
-/**
- * The same scene as an ES module for www/atlas.lit-ui-router.dev/app, where three is BUNDLED: it
- * is handed in rather than imported, with the pin the url opens on, and the
- * scene returns its teardown and its `select` so the routed view can dispose it
- * on the way out and move the pin when the url does.
- * emit-app.mjs writes this to app/src/generated/city-init.js.
- */
+/** emit-app.mjs writes this to app/src/generated/city-init.js. */
 export function cityInitModule() {
   return `// GENERATED by www/atlas.lit-ui-router.dev/generator/city-scene.mjs — do not edit.
-// The isometric city as a module: the same scene body the flat gallery runs
-// inline, handed a bundled THREE and the opening pin, returning { dispose, select }.
-export async function initCity(root, THREE, focus) {
-  // the plate renders into the LIGHT DOM, so the lookups below are document-wide
-  if (!root.querySelector('#cs-canvas')) return undefined;
-${fill(APP)}}
+// Sheet 7's city in the round: wires the fragment's <model-viewer> to its lane, corners
+// and pins once the routed state has loaded the element; returns { dispose, select }.
+export async function initCity(root, viewer, focus) {
+${BODY}}
 `;
 }
 
+export const CITY_INIT_DTS = `// GENERATED by www/atlas.lit-ui-router.dev/generator/emit-app.mjs — do not edit.
+/** The wired model: its teardown, and the pin the url carries as \`focus\`. */
+export interface CityScene {
+  dispose(): void;
+  /** Pins member \`n\`; null, or a number no member carries, clears the pin. */
+  select(n: number | null): void;
+}
+/** Wires the model inside \`root\`, opening on the \`focus\` pin.
+ *  Undefined when there was nothing to wire — no plate, or no viewer. */
+export declare function initCity(
+  root: Element,
+  viewer: unknown,
+  focus: string | null,
+): Promise<CityScene | undefined>;
+`;
+
+const pct = (v) => Math.round(v * 100);
 // The basis notes: running prose under the stage, present state only, one note per concern.
-// The plant sheet trades the PAPER note for its own and adds PLANT after HATCH.
+// The plant sheet adds PLANT after HATCH.
 const BASIS_NOTES = (plant) => [
-  ['BASIS', `The model masses sheet 7's own geometry: every footprint, height and position is <code>generator/sheet7.mjs</code>'s computed <code>CITY</code> export, embedded verbatim as JSON and massed from <code>data/census-city.json</code>, ${BASIS}. Nothing is re-derived, so a mass in the model cannot drift from the mass on the plate. three.js ${THREE_URL.match(/three\.js\/([\d.]+)\//)[1]} is imported only once the plate scrolls into view, and the scene renders on demand: nothing runs while you read.`],
-  plant ? ['PAPER', `The masses are drawn the way the flat plates draw them, on paper that is never quite opaque: the cap at ${Math.round(DATA.op.cap * 100)}% and the walls at ${Math.round(DATA.op.side * 100)}%, so the girding frame and the plant behind a wall show through it, the frame at ${Math.round(PLANT_DATA.ghost * 100)}% of its stroke. The cap takes the tier's own fill; each right-hand wall takes the tier's hatch over a <code>--paper-2</code> stone, the tier's hue pulled ${Math.round(TINT * 100)}% of the way in so the tiers still part at a glance. Each frame strokes the tier's edge colour from the ladder the plates use (red, accent, <code>--line</code>, soft, ink). Only the colour travels; a WebGL line carries no width.`]
-    : ['PAPER', `The masses are drawn the way the flat plates draw them. Faces are opaque and remove what stands behind them. The cap takes the tier's own fill; each right-hand wall takes the tier's hatch over a <code>--paper-2</code> stone, the tier's hue pulled ${Math.round(TINT * 100)}% of the way in so the tiers still part at a glance. Each frame strokes the tier's edge colour from the ladder the plates use (red, accent, <code>--line</code>, soft, ink). Only the colour travels; a WebGL line carries no width.`],
-  ['HATCH', `Laid in screen space: one rake, one spacing, on every wall at every angle, which is what <code>patternUnits="userSpaceOnUse"</code> means on the flat set. It is a stripe mixed into the fragment colour off <code>gl_FragCoord</code>, so it costs no texture and no dependency. Gate severity is the rake: the halt and PR hatch runs opposite to the neutral one, and the halt cap is filled red. The <code>pr</code> and <code>late</code> tiers carry sheet 7's roof wash, the cap taking the side's hatch. The <code>off</code> tier is drawn frame-only, because there is nothing to mass.`],
-  ...(plant ? [['PLANT', `Every massed member is drawn as a working plant, after the sprite study's Factorio-leaning treatment, and every piece of it reads a field the census row already carries. The plant keeps to the roof's corners, clear of the number chip over its centre. Stacks stand in a row up the west edge, one per ten authored files up to four, their height set by the footprint and banded in the tier's edge colour. Tanks line the north edge from the north-east corner, one at 150 sloc, two at 600, three at 1,800, as many as the roof holds. A header pipe joins them, and the field left over carries one vent per five files, up to six. A footprint of 45 units or more takes a portal gantry along its east edge, and one of 28 or more a catwalk rail. A wall of 20 units or more runs a riser up its east face, two from 60, and a mass of 40 or more is ringed by a deck every ${PLANT_RULES.deckEvery} units. A spec annex is joined by a pipe rack across the gap and carries three module lamps, lit green by sheet 7A's line coverage: three at 95 and over, two at 85, one below or unmetered, none when no suite loads the member. Where a choice is left, such as which roof cells the vents take, a generator seeded on the member's name makes it, so the same census always builds the same plant. The plant is one merged mesh, shaded per vertex and edged in ink.`]] : []),
-  ['CAMERA', `Orthographic, at the true isometric elevation, atan(1/\u221a2) \u2248 35.264\u00b0. The azimuth is free under the pointer and eases onto the nearest diagonal on release, instantly under <code>prefers-reduced-motion</code>.`],
-  ['LETTERING', `Each src mass carries a billboarded chip with sheet 7's own number, drawn at runtime into a canvas in the page's mono stack and redrawn when the theme turns. Chips drop out below zoom ${DATA.chip.min}, so a pulled-back plan stays a plan. District names lie flat on their ground plates, turned onto the opening diagonal: level at rest, foreshortened with the ground as a site plan's lettering is. The reading panel prints the same row the schedule does.`],
-  ['TEST LIGHT', `A second material lane over the same geometry: the city relit from <code>data/census-shadow.json</code>, ${SURVEY_META.basis}, the ref the geometry is massed at, with ${SURVEY_META.metered} members read under their own suites' meters. The model and the flat shadow plate cannot drift either. Every mass in the model has a survey row; one without is a build error.`],
-  ['POLARITY', `Sheet 7A's: covered source is LIT, source no suite loads is SHADOW, and the spec annex is the LAMP that throws the light. A metered member's mass splits along its footprint. The lit slab is side \u00d7 the extent the meter records, taken from the annex (east) side, its tint stepping down through the line-coverage bands. The shadow slab is sheet 7A's own black wash with a faint ink stripe, lerped toward black rather than the ink, because <code>--ink</code> is light in the cyanotype theme and a shadow that brightens in the dark is not a shadow.`],
+  ['BASIS', `The model masses sheet 7's own geometry: every footprint, height and position is <code>generator/sheet7.mjs</code>'s computed <code>CITY</code> export, massed from <code>data/census-city.json</code>, ${BASIS}. <code>generator/city-glb.mjs</code> writes it into one glTF binary, <code>${plant ? PLANT_GLB : CITY_GLB}</code>, at one plan unit to the model unit, with a node per mass and per annex${plant ? ' and per plant' : ''}; nothing is re-derived, so a mass in the model cannot drift from the mass on the plate. <code>@google/model-viewer</code> ${MV_VERSION} and the model are fetched only when this page is entered, and the viewer draws only while something moves.`],
+  ['PAPER', `The masses are drawn the way the flat plates draw them. Faces are opaque and remove what stands behind them. The cap takes the tier's own fill; the walls take a <code>--paper-2</code> stone, the tier's hue pulled ${pct(TINT)}% of the way in so the tiers still part at a glance, each wall graded a breath darker toward its foot. Every material is unlit and baked in the vellum palette, and the page recomputes each one from its own tokens on load and on every theme turn, so the cyanotype theme stands the city on navy paper. Each frame strokes the tier's edge colour from the ladder the plates use (red, accent, <code>--line</code>, soft, ink) as a strip on the faces either side of the edge.`],
+  ['HATCH', `Laid in world space: a pattern tile repeated over the +x and −z walls, ${HATCH.hx.sp} CSS px apart across the rake at the home pose, so the stripes keep their spacing on the model and grow with it as the camera closes in. Gate severity is the rake: the halt and PR hatch runs opposite to the neutral one, and the halt cap is filled red. The <code>pr</code> and <code>late</code> tiers carry sheet 7's roof wash, the cap taking the side's hatch. The <code>off</code> tier is drawn frame-only, because there is nothing to mass.`],
+  ...(plant ? [['PLANT', `Every massed member is drawn as a working plant, after the sprite study's Factorio-leaning treatment, and every piece of it reads a field the census row already carries. The plant keeps to the roof's corners, clear of the pin over its centre. Stacks stand in a row up the west edge, one per ten authored files up to four, their height set by the footprint and banded in the tier's edge colour. Tanks line the north edge from the north-east corner, one at 150 sloc, two at 600, three at 1,800, as many as the roof holds. A header pipe joins them, and the field left over carries one vent per five files, up to six. A footprint of 45 units or more takes a portal gantry along its east edge, and one of 28 or more a catwalk rail. A wall of 20 units or more runs a riser up its east face, two from 60, and a mass of 40 or more is ringed by a deck every ${PLANT_RULES.deckEvery} units. A spec annex is joined by a pipe rack across the gap and carries three module lamps, lit green by sheet 7A's line coverage: three at 95 and over, two at 85, one below or unmetered, none when no suite loads the member. Where a choice is left, such as which roof cells the vents take, a generator seeded on the member's name makes it, so the same census always builds the same plant. Each solid is a box or two turned boxes, stacks and tanks as octagons, merged per material on its member's roof and shaded top to foot.`]] : []),
+  ['CAMERA', `Perspective, at a ${HOME_FOV}° field of view, so the city reads close to the plates' isometric. The camera orbits free under the pointer with the viewer's own damping, and four buttons turn it to the true diagonals, ${CORNERS.join('°, ')}° at the isometric polar angle of 54.736°, instantly under <code>prefers-reduced-motion</code>. A plain scroll over the plate scrolls the page; the wheel zooms once the plate has been touched.`],
+  ['LETTERING', `Each member carries a numbered pin with sheet 7's own number, standing over its ${plant ? 'plant' : 'cap'}, in the page's data face and its colours. Once the plan stands smaller than ${pct(DOTS)}% of its size at home on a desktop stage, the unpinned pins fold to dots, so a distant or a phone-sized plan stays a plan. District names stand on their ground plates as labels of their own. The reading panel prints the same row the schedule does.`],
+  ['TEST LIGHT', `A second material lane over the same geometry, the model's <code>test-light</code> variant: the city relit from <code>data/census-shadow.json</code>, ${SURVEY_META.basis}, the ref the geometry is massed at, with ${SURVEY_META.metered} members read under their own suites' meters. The model and the flat shadow plate cannot drift either. Every mass in the model has a survey row; one without is a build error.`],
+  ['POLARITY', `Sheet 7A's: covered source is LIT, source no suite loads is SHADOW, and the spec annex is the LAMP that throws the light. A metered member's mass splits along its footprint. The lit slab is side × the extent the meter records, taken from the annex (east) side, its tint stepping down through the line-coverage bands. The shadow slab is sheet 7A's own black wash with a faint stripe, lerped toward black rather than the ink, because <code>--ink</code> is light in the cyanotype theme and a shadow that brightens in the dark is not a shadow.`],
 ];
 
 /** A plate: style, section and the JSON island — no init script. */
 function markup(plant) {
   const meta = plant ? PLANT_META : CITY_META;
-  // swatch fills follow the same tints the scene uses, in page tokens
+  const data = island(plant);
+  // swatch fills follow the same tints the model uses, in page tokens
   const HUE = { red: '--red', accent: '--accent', halo: '--accent', soft: '--ink-soft',
     ink: '--ink', faint: '--ink-faint', black: '#000' };
   const swatch = (k, t) => {
@@ -1245,10 +568,8 @@ function markup(plant) {
     const paint = hue.startsWith('--') ? `var(${hue})` : hue;
     return `.cs-legend .sw-${k} { background: color-mix(in srgb, ${paint} ${Math.round(t.f * 100)}%, var(--paper)); }`;
   };
-  // A tier key draws what a tier's wall draws: the cap's stone with the tier's hue
-  // a breath in, and the side's hatch over it at the side's own rake.  45deg in CSS
-  // rakes the stripes the other way from the SVG's rotate(45), so the sign turns
-  // over here exactly as it does in the shader.
+  // A tier key draws what a tier's wall draws: the cap's stone with the tier's hue a breath
+  // in, and the side's hatch over it at the side's own rake.
   const STROKE = { line: '--line', soft: '--ink-soft', redHatch: '--red-hatch', accent: '--accent', ink: '--ink' };
   const tierSwatch = (k) => {
     const f = FACES[k];
@@ -1262,42 +583,48 @@ function markup(plant) {
   };
   const swatchCss = LEGEND.map(([k]) => tierSwatch(k))
     .concat(LIGHT_LEGEND.map(([k]) => swatch(k, LIT[k]))).join('\n');
+  const r4 = (p) => p.map((v) => `${v}m`).join(' ');
+  const pins = data.rows.map((b) =>
+    `      <button type="button" class="cs-pin" slot="hotspot-${b.n}" data-position="${r4(b.cap)}" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member ${b.n}, ${b.name}">${b.n}</button>`).join('\n');
+  const labels = data.districts.map((d) =>
+    `      <span class="cs-dist" slot="hotspot-district-${d.d}" data-position="${r4(d.at)}" data-normal="0m 1m 0m" aria-hidden="true">${DIST_LABEL[d.d]}</span>`).join('\n');
+  const alt = `Sheet 7's census city in three dimensions: ${MASSED} massed workspace members in four districts, ${plant ? 'each crowned by a working plant of stacks, tanks, vents and pipes sized from its own census, and ' : ''}each an opaque paper box inside its girding frame, its right-hand wall hatched in the rake its gate tier is hatched in on the flat plate, footprint proportional to the square root of its authored lines and height three units per authored file, with ${ANNEXES} dashed spec annexes beside them. Each member carries a numbered pin matching sheet 7's schedule. A TEST LIGHT switch relights the same city from sheet 7A's shadow survey: each metered member's mass splits along its footprint, the share its own suite loads lit from the annex side and the rest washed toward black, with the spec annexes burning as the lamps that throw the light.`;
 
   return `<style>${CSS}
 ${swatchCss}</style>
-<section class="sheet cs" id="${meta.id}-scene" aria-label="${plant ? 'The Working City, isometric — sheet 7 in the round, each mass crowned by a working plant' : 'The City, isometric — sheet 7 in the round'}, with a second material lane that relights it from sheet 7A's shadow survey">
+<section class="sheet cs" id="${meta.id}-scene" aria-label="${plant ? 'The Working City in the round — sheet 7 in three dimensions, each mass crowned by a working plant' : 'The City in the round — sheet 7 in three dimensions'}, with a second material lane that relights it from sheet 7A's shadow survey">
   <div class="sheet-head"><span class="proj">${PROJECT_MARK} — INTERACTIVE PLATE</span><span class="shno">${meta.head} · REV ${meta.rev}</span></div>
   <h2 class="sheet-title">${articleTitle(meta.title)}</h2>
   <p class="sheet-sub">${meta.sub}</p>
   <div class="cs-bar">
     <div class="cs-legend">
-      ${DATA.legend.tier}
+      ${data.legend.tier}
     </div>
     <div class="cs-ctl">
-      <span id="cs-hint">DRAG TO ORBIT · RELEASE SNAPS TO THE NEAREST DIAGONAL</span>
+      <span class="mouse">DRAG TO ORBIT · HOVER TO READ · TAP TO PIN · ← → STEP · ENTER PINS · ESC CLEARS</span><span class="touch">A FINGER ACROSS ORBITS · PINCH TO ZOOM · TAP TO PIN</span>
+      <span class="grp" role="group" aria-label="Camera corner">
+${CORNERS.map((az, i) => `        <button type="button" data-az="${az}" aria-pressed="${i === 0}">${az}°</button>`).join('\n')}
+      </span>
       <label><input type="checkbox" id="cs-lane"> TEST LIGHT</label>
       <button type="button" id="cs-reset">RESET</button>
     </div>
   </div>
-  <div class="cs-stage fillable"><button type="button" class="fill" data-fill aria-label="Fill the window with this figure, or leave it"></button>
-    <div class="cs-canvas" id="cs-canvas" role="application" tabindex="0" aria-label="A real three-dimensional isometric model of the census city: ${MASSED} massed workspace members, ${plant ? 'each a translucent paper box inside its girding frame and crowned by a working plant of stacks, tanks, vents and pipes sized from its own census' : 'each an opaque paper box inside its girding frame'}, its right-hand wall hatched in the rake its gate tier is hatched in on the flat plate, footprint proportional to the square root of its authored lines and height three units per authored file, with ${ANNEXES} dashed spec annexes beside them and four district plates on the ground. The camera orbits and lands on one of the four isometric diagonals. Each mass carries a numbered chip matching sheet 7's schedule, and each district plate carries its name lettered flat on the ground. A TEST LIGHT switch relights the same city from sheet 7A's shadow survey: each metered member's mass splits along its footprint, the share its own suite loads glowing from the annex side and the rest washed toward black, with the spec annexes burning as the lamps that throw the light. With the stage focused, the arrow keys step the pin through the members, Enter or Space pins or clears the one in hand, and Escape clears it."></div>
-    <aside class="cs-info" id="cs-info"></aside>
+  <div class="cs-stage fillable" id="cs-stage"><button type="button" class="fill" data-fill aria-label="Fill the window with this figure, or leave it"></button>
+    <model-viewer id="cs-viewer" class="cs-view" src="${BASE}${plant ? PLANT_GLB : CITY_GLB}" loading="eager" reveal="manual" camera-controls disable-tap touch-action="pan-y" interaction-prompt="none" camera-orbit="${orbitAt(CORNERS[0])}" camera-target="${HOME_TARGET}" max-camera-orbit="Infinity 88deg 160%" field-of-view="${HOME_FOV}deg" min-field-of-view="4deg" max-field-of-view="20deg" tone-mapping="none" exposure="1" shadow-intensity="0" animation-name="rise" alt="${alt}">
+${pins}
+${labels}
+    </model-viewer>
+    <aside class="cs-info" id="cs-info" aria-live="polite"></aside>
   </div>
   <div class="cs-basis">
 ${BASIS_NOTES(plant).map(([k, v]) => `    <p><strong>${k}</strong> ${v}</p>`).join('\n')}
   </div>
 </section>
-<script type="application/json" id="cs-city">${json(plant ? PLANT_DATA : DATA)}</script>`;
+<script type="application/json" id="cs-city">${json(data)}</script>`;
 }
 
 /** The measured city's plate. */
 export const cityMarkup = () => markup(false);
 
-/** The working city's plate: the same scene with its plants raised. */
+/** The working city's plate: the same plate with its plants raised. */
 export const plantMarkup = () => markup(true);
-
-/** The gallery's copy: the plate with its own inline module after it. */
-export function citySection() {
-  return `${cityMarkup()}
-<script type="module">${INIT}</script>`;
-}

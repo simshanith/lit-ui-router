@@ -64,14 +64,16 @@ export const MV_JS = `  // setBaseColorFactor takes linear values, so a token's 
     var i = order.indexOf(at);
     return order[i < 0 ? (d > 0 ? 0 : order.length - 1) : (i + d + order.length) % order.length];
   }
-  // captured on the way down, so the viewer's own arrow-key orbit never sees ← →; ↑ ↓ stay the viewer's
+  // captured on the way down, so the viewer's own arrow-key orbit never sees ← →; ↑ ↓ stay the viewer's;
+  // escape and enter answer whether they acted, so an unanswered key goes on to the page
   function pinKeys(stage, on, act) {
     on(stage, 'keydown', function (e) {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
       var d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
-      if (d) act.step(d);
-      else if (act.enter && (e.key === 'Enter' || e.key === ' ')) act.enter();
-      else if (e.key !== 'Escape' || !act.escape()) return;
+      var done = d ? act.step(d) !== false
+        : e.key === 'Escape' ? act.escape()
+          : (e.key === 'Enter' || e.key === ' ') && act.enter ? act.enter(e) : false;
+      if (!done) return;
       e.preventDefault();
       e.stopPropagation();
     }, true);

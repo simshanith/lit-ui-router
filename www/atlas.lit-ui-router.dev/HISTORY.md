@@ -1482,11 +1482,11 @@ _No REV clauses, historical paragraphs or rev-bearing callouts: this plate has o
 
 ## City — SHEET 7’S CENSUS CITY IN THE ROUND (city-scene.mjs)
 
-- **file** `diagrams/generator/city-scene.mjs` · **id** `city` · **current rev** F
+- **file** `generator/city-scene.mjs` (model `generator/city-glb.mjs`) · **id** `city` · **current rev** H
 - **basis** (source): `const BASIS = `${PLATE.ref} @ ${PLATE.sha} (${PLATE.generatedAtTime.slice(0, 10)})`;`
 - **subject line / lead** (resolved, present-state — not history):
 
-> SHEET 7'S CENSUS CITY IN THE ROUND · 32 MEMBERS · 31 MASSED · 19 SPEC ANNEXES · 4 DISTRICTS · ORBIT SNAPS TO THE FOUR TRUE DIAGONALS
+> SHEET 7'S CENSUS CITY IN THE ROUND · 39 MEMBERS · 38 MASSED · 27 SPEC ANNEXES · 4 DISTRICTS · ONE GLTF BINARY · THE CAMERA ORBITS FREE AND TURNS TO THE FOUR TRUE DIAGONALS · A SECOND LANE RELIGHTS THE CITY FROM SHEET 7A'S FILED SHADOW PLATE
 
 ### REV C — undated in the copy; first in git 2026-09-03
 
@@ -1516,12 +1516,26 @@ _No REV clauses, historical paragraphs or rev-bearing callouts: this plate has o
 
 > The masses are drawn on PAPER, the way the flat plates draw them: faces are opaque and remove what stands behind them, the cap takes the tier's own fill and each right-hand wall takes the tier's hatch over a <code>--paper-2</code> stone, with the tier's hue pulled 22% of the way in so the tiers still part at a glance.
 
+### REV G — 2026-10-03
+
+**commit subject** (b62fe922, where `city-scene.mjs` exports `REV = 'G'`; the `sub` carries no rev clause):
+
+> every city building is crowned by a working plant
+
+### REV H — 2026-10-04
+
+**`sub` clause** (the record's own, the `sub` carrying no rev clause):
+
+> REV H 2026-10-04: the city in the round as one glTF binary in Google's model-viewer, at the maintainer's ask: "i think reworking the 3d working city as model viewer like this would be better than another forced isometric experience"
+
 ### REV (unattributed) — undated in the copy
 
 Two source comments in `city-scene.mjs` describe how `revBlock` files a rev's basis note under its headline. No drawing revision; carried here because the subhead is part of the record.
 
 **Record notes**
 
+- 2026-10-04, REV H: the city in the round is one glTF binary in `@google/model-viewer` 4.3.1, on the bricks plate's pattern, and the plate is app-only: the flat gallery draws no copy, and its index row links to the routed `/city`. `generator/city-glb.mjs` writes `app/public/models/city.glb` (195,436 bytes, 3,428 triangles, 70 materials) and the working twin's `plant.glb` on `generator/glb.mjs`, the container lifted out of `brick-glb.mjs` (bricks.glb byte-identical); `generator/mv-kit.mjs` carries the script both model-viewer plates share — the linear retint, the iso corners, the wheel gate, the pin walk and the reveal hold. One plan unit is one model unit. Per member a `mass-<n>` node with its origin at the footprint's ground corner, `annex-<n>` beside it; every mass written as its TEST LIGHT slabs from the start (the shadow slab west at side × (1 − extent), the lit slab east, one slab for the n, e, u and z categories), each slab a cap and a wall primitive graded by COLOR_0 (cap 1.0, walls 1.0 → 0.9 top to foot). Materials are unlit and baked in the vellum palette: tier faces `cap-`/`wall-<tier>`, hatch `hatch-<def>`, light faces `L-<band>-cap`/`-wall`, one `frame-<n>` per member, `edge-annex`, `edge-district`, `plate`, `grid`, and `void` at alpha 0; a band no member reaches at the census is left out. The page recomputes every one from its tokens in linear light with `DRESS_JS`, the same function the bake runs, on load and on every theme turn, and holds the model behind its poster (`reveal="manual"`, `loading="eager"`) until that first retint lands, so the cyanotype theme never shows the baked vellum. The second lane is the KHR_materials_variants variant `test-light`; a primitive that belongs to one lane only maps to `void` in the other. Hover and pin recolour the member's `frame-<n>` to the accent. Picking is model-viewer's own `positionAndNormalFromPoint` against per-member boxes in the island; pins are 39 hotspots and the four district names four more. The camera is perspective at 14° (4°–20°, the viewer widening a narrow stage's field itself), opening at the 45° diagonal on the iso polar 54.736°, aimed at the ground's centre, at the radius that frames the plan's diagonal at 94% of the stage's width, set on load from the stage's own aspect; four corner buttons, free orbit under the viewer's damping, and `disable-tap`. The unpinned pins fold to 9 px dots once the plan stands below 62% of its desktop home size on screen, a phone's stage included. The model carries one clip, `rise`, held at its end. Known changes against REV G: no snap (the orbit is free and the corners are buttons); no flat lettering (district names are hotspot labels); the hatch is a pattern tile in world space, not a screen-space stripe; every stroke is a strip of triangles on its faces, because model-viewer neither retints nor remaps a line primitive (GLTFLoader gives a line its own material copy, which model-viewer files under `Default`, and its scene graph wraps meshes only), so the edges carry no 1 px weight; the shadow stripe is a tile multiplied into the shadow slab's own material. To hold the budgets (city 200 KiB, plant 350 KiB, asserted at build), positions are int16 under KHR_mesh_quantization, and index runs, vertex grading and the clip's keys are shared across primitives. The flat gallery's `citySection()`, three.js 0.169.0 off cdnjs, the screen-space hatch shader, the orthographic camera and its snap, the sprites, the raycaster and the forced context loss are retired with it; model-viewer keeps one renderer for every viewer on the page.
+- 2026-10-03, REV G: every massed member is crowned by a working plant that `generator/city-plant.mjs` plans from its census row (b62fe922): stacks up the west edge (one per 10 src files, up to four, banded in the tier's edge colour), tanks along the north edge by sloc (150 / 600 / 1,800) joined to the stacks by a header pipe on sleepers, vents on the leftover roof cells from a PRNG seeded on the member's name, a portal gantry at footprint ≥45 and a catwalk at ≥28, risers and deck rings by wall height, and on annexes a two-pipe rack with three module lamps lit by sheet 7A's line coverage. Walls translucent (caps 88%, walls 80%) with the frame drawn at 30% through them; the plant one merged mesh with baked vertex shading. Draw calls 493 → 558, triangles 848 → 30,740. The same day the plant moved to a sheet of its own (see Plant).
 - 2026-10-03, no rev clause: the city stands as two sheets. `/city` (`atlas.city`, id `city`) is the measured city: opaque paper walls inside their girding frames, the TEST LIGHT lane, and no plant. `/plant` (`atlas.plant`, id `plant`, SHEET 7B · 3D, REV A, THE WORKING CITY — ISOMETRIC) is the same scene with every massed member crowned by a working plant that `generator/city-plant.mjs` plans from its census row, walls at 80% and caps at 88%, and the girding frame drawn at 30% where a wall stands in front of it. One body in `city-scene.mjs` draws both; the JSON island's `plant` field is the switch. The plant sheet is filed only in the app, seated right after the city, and the flat gallery carries the city alone.
 - 2026-09-12, REV F: the model takes the plates' own materials. A wall is paper, not a tint — `--paper` (or `--paper-2` where sheet 7's `capCls` is `fp2`) with the tier's hue pulled only `TINT` [0.22] of its old factor, so the tiers still part in the round without the model reading as colour. The right-hand wall (+x/−z, the SVG's right face) carries the tier's hatch over a `--paper-2` stone, the left wall is flat `--paper-2`, and `pr` and `late` take sheet 7's ROOF WASH — the cap hatched like the side; `halt`'s cap stays the red fill and takes none. The hatch is chrome.mjs's four pattern defs in three dimensions (`hx` 6px `--line`, `hd` 5px `--ink-soft`, `hr` 6px `--red-hatch` at .55, `ha` 6px `--accent` at .5) laid in SCREEN space off `gl_FragCoord` through an `onBeforeCompile` hook on the stock `MeshBasicMaterial` — stroke, alpha, rake and spacing all uniforms, one program for the hooked family under a `customProgramCacheKey`, no texture and no new dependency. That is what `patternUnits="userSpaceOnUse"` means: one rake and one spacing on every wall at every azimuth. Severity is the RAKE, `hr` running against the other three, exactly as on the plate; measured on the shot, 5.98 device px across the rake against the defs' 6. Faces are OPAQUE now (`depthWrite`, a hair of polygon offset under the frame), so the model removes hidden surfaces as `iso-hidden.mjs` does flat; only the light lane's slabs and the district plates stay translucent. Frames take sheet 7's edge ladder by COLOUR — `skr` red for halt and pr, `ska` accent for late, `skf` `--line` for report, `sks` soft for off and the annexes, `sk` ink for line — and the shadow slab is 7A's `-sh`: the black wash at .38 with a `--ink` stripe at .30 over it, replacing the old .74 lerp. **Known gap:** the weight half of that ladder (1.3 / 2 / 1 / 1.1 / 1.6 / 1.4) does not travel. A `LineBasicMaterial` carries no width on any desktop GL, and `Line2` would mean a fat-line dependency and a second geometry per frame; the colour alone is the ladder here until that trade is worth taking.
 - 2026-09-29, cabinet refresh at origin/main @ 63c0b823: the city re-massed off sheet 7's shared universe at the new ref — 38 members, none born; `lit-ui-router-ssr` stands a file taller with a grown annex and no lot moved.
@@ -1536,6 +1550,30 @@ Two source comments in `city-scene.mjs` describe how `revBlock` files a rev's ba
 - Rev E made the stage viewport-relative — `clamp(520px, 80vh, 1400px)` — retiring a fixed 620px band. Rev D's light is `SURVEY_META.basis` [metered at origin/main @ 185d414 (2026-09-07)] over `SURVEY_META.metered` [17] members, and a mass without a survey row is a build error.
 - The REV C and REV D prose above survives only here: `city-scene.mjs` exports `REV = 'E'` and its `sub` carries no REV clause at all since the 2026-09-07 present-state copy pass, so the exported letter and the sub no longer disagree.
 - Basis: `${PLATE.ref} @ ${PLATE.sha}` from `census-city.json` [origin/main @ 185d414, 2026-09-07]; the TEST LIGHT lane cites `census-shadow.json` at the same ref.
+
+## Plant — SHEET 7B'S WORKING CITY IN THE ROUND (city-scene.mjs)
+
+- **file** `generator/city-scene.mjs` (model `generator/city-glb.mjs`, plan `generator/city-plant.mjs`) · **id** `plant` · **current rev** B
+- **subject line / lead** (resolved, present-state — not history):
+
+> SHEET 7'S CENSUS CITY IN THE ROUND, AT WORK · 39 MEMBERS · 38 MASSED · EACH CROWNED BY A WORKING PLANT SIZED FROM ITS OWN CENSUS · 27 SPEC ANNEXES · 4 DISTRICTS · ONE GLTF BINARY · THE CAMERA ORBITS FREE AND TURNS TO THE FOUR TRUE DIAGONALS · A SECOND LANE RELIGHTS THE CITY FROM SHEET 7A'S FILED SHADOW PLATE
+
+### REV A — 2026-10-03
+
+**commit subject** (06431ae8):
+
+> the city stands twice, measured and working
+
+### REV B — 2026-10-04
+
+**`sub` clause** (the record's own, the `sub` carrying no rev clause):
+
+> REV B 2026-10-04: the working city in the round as one glTF binary in Google's model-viewer, every plant merged per material on its member's roof, at the maintainer's ask: "i think reworking the 3d working city as model viewer like this would be better than another forced isometric experience"
+
+**Record notes**
+
+- 2026-10-04, REV B: the working city is `app/public/models/plant.glb` (352,896 bytes, 17,310 triangles, 81 materials), the city's model with a `crown-<n>` node on every massed member's roof. `city-plant.mjs`'s `plantPlan()` is unchanged; `city-glb.mjs` lays each plan out as hexahedra — a box as itself, a pipe under radius 1.5 as a square bar, a stack or tank as two squares turned an eighth apart (an octagon), a dome as two turned frustums — merged into one primitive per material per crown (`plant-m`, `plant-p`, `plant-g`, `band-<tier>`, `lamp-on`, `lamp-off`) and shaded 0.78 → 1.0 foot to head by COLOR_0, the rails strips of `edge-plant`. The walls are opaque, like the city's. The EXT_mesh_gpu_instancing spike failed: three's GLTFLoader builds an InstancedMesh for which model-viewer 4.3.1's scene graph finds no primitive association, its variant bookkeeping throws, and the model never reveals; so the plant is merged, not instanced. Hover tints the member's frame, not its plant.
+- 2026-10-03, REV A (06431ae8): `/plant` (`atlas.plant`, SHEET 7B · 3D) is the city with every massed member crowned by its working plant, the walls at 80% and caps at 88% with the frame drawn through them at 30%; one body in `city-scene.mjs` drew both sheets, the island's `plant` field the switch. Draw calls 575, 31,486 triangles.
 
 ## Notes on this record
 

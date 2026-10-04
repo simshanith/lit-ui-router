@@ -191,15 +191,15 @@ const cityPin = (route: RouteSnapshot): string | null =>
     : null;
 
 /**
- * The isometric city: a generated fragment plus a WebGL scene over it.
+ * The city in the round: a generated fragment around a <model-viewer>, wired by
+ * a generated module.
  *
- * WHY THE ELEMENT OWNS THE TEARDOWN. The scene holds a WebGL context, a
- * ResizeObserver, a MutationObserver on <html>, a colour-scheme media listener
- * and pending animation frames — none of which the DOM reclaims when the
- * routed view is swapped, and a context per visit hits the browser's cap in a
- * dozen moves. A router hook could dispose it, but the experimental layer is
- * deletable by design and this is not optional; the element that CREATED the
- * scene is the one thing whose lifetime already matches it, so
+ * WHY THE ELEMENT OWNS THE TEARDOWN. The wiring holds a MutationObserver on
+ * <html>, a colour-scheme media listener, listeners and pending animation
+ * frames, and a window hook — none of which the DOM reclaims when the routed
+ * view is swapped. A router hook could dispose them, but the experimental layer
+ * is deletable by design and this is not optional; the element that CREATED the
+ * wiring is the one thing whose lifetime already matches it, so
  * `disconnectedCallback` is the hook. `updated` waits on the plate's own
  * `updateComplete` for "the fragment is in the DOM" — the same promise
  * `experimental/view-rendered.ts` chains, owned locally so `src/*.ts` stays
@@ -215,7 +215,7 @@ export class AtlasCity extends ReactiveElement {
   };
 
   declare fragment: string;
-  /** The scene's library, resolved on entry: three for the city, model-viewer for the bricks. */
+  /** The plate's library, resolved on entry: the <model-viewer> module. */
   declare lib: unknown;
   declare router: UIRouter | undefined;
   #scene: CityScene | null = null;
@@ -260,7 +260,7 @@ export class AtlasCity extends ReactiveElement {
     if (seq !== this.#seq || !this.isConnected) return;
     this.#teardown();
     const scene = await this.raise(this.#pin?.value ?? null);
-    // undefined = nothing was raised (no WebGL); a superseded boot disposes at once
+    // undefined = nothing was wired (no plate); a superseded boot disposes at once
     if (seq !== this.#seq || !this.isConnected) {
       scene?.dispose();
       return;
@@ -269,7 +269,7 @@ export class AtlasCity extends ReactiveElement {
     this.#select(); // the url may have moved while the scene was raised
   }
 
-  /** Raises the scene over the adopted fragment, opening on `focus`. */
+  /** Wires the plate over the adopted fragment, opening on `focus`. */
   protected raise(focus: string | null): Promise<CityScene | undefined> {
     return initCity(this, this.lib, focus);
   }
@@ -286,7 +286,7 @@ export class AtlasCity extends ReactiveElement {
 }
 customElements.define('atlas-city', AtlasCity);
 
-/** Sheet 2's model in the round: the same seam, wiring a <model-viewer> instead of raising a scene. */
+/** Sheet 2's model in the round: the same seam, wiring its own <model-viewer>. */
 export class AtlasBricks extends AtlasCity {
   protected override raise(focus: string | null): Promise<CityScene | undefined> {
     return initBricks(this, this.lib, focus);
@@ -870,7 +870,7 @@ export const GalleryView: RoutedLitTemplate<ManifestResolves> = (props) => {
         <span class="stamp">CLIENT ${manifest.client} · PLATES COUNTED ${manifest.date}</span>
       </p>
       <div class="hero">
-        <!-- The key image: sheet 7's city, drawn at build time. three.js loads on /city and nowhere else. -->
+        <!-- The key image: sheet 7's city, drawn at build time. model-viewer loads on the 3D plates and nowhere else. -->
         ${city
           ? html`
               <a class="hero-plate" href=${srefHref('atlas.city')}>
@@ -981,8 +981,7 @@ export const LogView: RoutedLitTemplate<ManifestResolves> = (props) => {
 // see README/SSR-VERDICT for the write-up.
 type ManifestResolves = { manifest?: Manifest };
 type SheetResolves = { manifest?: Manifest; sheet?: SheetRow; fragment?: string };
-type CityResolves = { extra?: ExtraRow; fragment?: string; three?: unknown };
-type BricksResolves = { extra?: ExtraRow; fragment?: string; viewer?: unknown };
+type SceneResolves = { extra?: ExtraRow; fragment?: string; viewer?: unknown };
 type SpecimenResolves = { specimen?: unknown };
 
 const neighbours = (manifest: Manifest, sheet: SheetRow): [SheetRow?, SheetRow?] => {
@@ -1068,9 +1067,9 @@ export const SheetView: RoutedLitTemplate<SheetResolves> = (props) => {
   `;
 };
 
-// --- the city: sheet 7 in the round, with three loaded on demand -----------
+// --- the city: sheet 7 in the round, with model-viewer loaded on demand ----
 
-export const CityView: RoutedLitTemplate<CityResolves> = (props) => {
+export const CityView: RoutedLitTemplate<SceneResolves> = (props) => {
   const resolves = props?.resolves;
   const extra = resolves?.extra;
   if (!extra || !resolves.fragment) return html`<p class="loading">RAISING THE CITY…</p>`;
@@ -1091,7 +1090,7 @@ export const CityView: RoutedLitTemplate<CityResolves> = (props) => {
       ${seeAlso(extra.refs)} ${keyBlock(extra.labels)}
     </div>
     ${verdictLine(extra.verdict)}
-    <atlas-city .fragment=${resolves.fragment} .lib=${resolves.three} .router=${props?.router}
+    <atlas-city .fragment=${resolves.fragment} .lib=${resolves.viewer} .router=${props?.router}
       >${plate(resolves.fragment, false)}</atlas-city
     >
   `;
@@ -1099,7 +1098,7 @@ export const CityView: RoutedLitTemplate<CityResolves> = (props) => {
 
 // --- the bricks: sheet 2's finished model, with model-viewer loaded on demand ---
 
-export const BricksView: RoutedLitTemplate<BricksResolves> = (props) => {
+export const BricksView: RoutedLitTemplate<SceneResolves> = (props) => {
   const resolves = props?.resolves;
   const extra = resolves?.extra;
   if (!extra || !resolves.fragment) return html`<p class="loading">SEATING THE BRICKS…</p>`;

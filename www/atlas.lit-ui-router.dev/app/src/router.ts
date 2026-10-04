@@ -28,7 +28,7 @@ import {
 
 /**
  * A 3D plate's state, `atlas.<id>`: the city and its working twin share the
- * view, the element and the generated scene, and differ only in their row.
+ * view, the element and the generated wiring, and differ only in their row.
  */
 function sceneState(id: string): LitStateDeclaration {
   const name = `atlas.${id}`;
@@ -37,10 +37,10 @@ function sceneState(id: string): LitStateDeclaration {
     url: urlOf(name),
     params: FOCUS_PARAMS,
     component: CityView,
-    // DEPENDENCIES ON DEMAND: three.js is a resolve, so the router fetches the
-    // library's own chunk while it enters the state — and no route without a
-    // scene ever pays for it. The scene itself is a generated module
-    // (src/generated/city-init.js) that takes the namespace resolved here.
+    // DEPENDENCIES ON DEMAND: the <model-viewer> element is a resolve, so the
+    // router fetches its chunk (and the three.js it carries) while it enters the
+    // state, and no route without a model ever pays for it. The wiring is a
+    // generated module (src/generated/city-init.js) handed the module resolved here.
     resolve: [
       {
         token: 'extra',
@@ -56,7 +56,7 @@ function sceneState(id: string): LitStateDeclaration {
         deps: ['extra'],
         resolveFn: (extra: ExtraRow): Promise<string> => loadFragment(extra),
       },
-      { token: 'three', resolveFn: (): Promise<unknown> => import('three') },
+      { token: 'viewer', resolveFn: (): Promise<unknown> => import('@google/model-viewer') },
     ],
   };
 }

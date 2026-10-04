@@ -10,8 +10,8 @@ const SET = 'The Altitude Atlas';
 export const TITLES = {
   gallery: `${SET} — Drawing Set`,
   about: `About — ${SET}`,
-  city: `The City, Isometric — ${SET}`,
-  plant: `The Working City, Isometric — ${SET}`,
+  city: `The City, in the Round — ${SET}`,
+  plant: `The Working City, in the Round — ${SET}`,
   bricks: `The Brick Assembly, in the Round — ${SET}`,
   specimen: `The Type Specimen — ${SET}`,
   log: `Issue Log — ${SET}`,
