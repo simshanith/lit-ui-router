@@ -182,8 +182,6 @@ allowBuilds:
 
 audit:
   ignore:
-    - GHSA-ch52-4w7c-c8xp
-    - GHSA-f27v-pv5m-c5g6
     - GHSA-vfj7-8cjw-p6xm
   ignorePrune: true
   level: low
@@ -200,6 +198,7 @@ overrides:
   'joi@>=18 <18.2.5': ^18.2.5
   'js-yaml@>=4 <4.3.2': ^4.3.2
   'lit-dialog>lit': ^3.3.3
+  'make-fetch-happen>http-cache-semantics': ^4.3.0
   'postcss@<8.5.26': ^8.5.26
   'qs@<6.16.0': ^6.16.0
   'sharp@<0.35.4': ^0.35.4
@@ -238,6 +237,9 @@ patchedDependencies:
   lit-dialog: patches/lit-dialog.patch
 
 minimumReleaseAge: 1440
+
+minimumReleaseAgeExclude:
+  - http-cache-semantics@4.3.0
 
 minimumReleaseAgeExcludePrune: true
 
