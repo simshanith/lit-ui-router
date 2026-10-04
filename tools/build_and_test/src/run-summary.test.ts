@@ -864,10 +864,6 @@ describe('the attachments link in the overview', () => {
 describe('logsLink', () => {
   const URL = 'https://github.com/o/r/actions/runs/1/artifacts/4';
 
-  it('fails on purpose to prove the red-run UX', () => {
-    assert.equal(1, 2);
-  });
-
   it('links the task logs on both lanes', () => {
     const link = logsLink({ logsUrl: URL });
     assert.ok(link?.markdown.includes(`(<${URL}>)`));
