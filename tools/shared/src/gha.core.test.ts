@@ -26,7 +26,7 @@ describe('workflow commands', () => {
   it('escapes %, CR, and LF so multi-line data stays one command line', () => {
     assert.equal(
       errorCommand('50% done\r\nnext'),
-      '::error::50%25 done%0D%0Amutant',
+      '::error::50%25 done%0D%0Anext',
     );
     assert.equal(
       warningCommand('50% done\r\nnext'),
