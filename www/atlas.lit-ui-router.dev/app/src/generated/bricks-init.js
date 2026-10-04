@@ -13,6 +13,66 @@ export async function initBricks(root, viewer, focus) {
   function atlasFocusRead(initial) {
     return initial !== undefined ? initial : new URLSearchParams(location.search).get('focus');
   }
+  // setBaseColorFactor takes linear values, so a token's sRGB bytes are linearised first
+  function lin(v) { return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }
+  // a colour token as linear rgb: #rrggbb, or rgb() and rgba() with the alpha dropped; null for anything else
+  function tokenRgb(value) {
+    var v = String(value).trim(), m = /^rgba?\(\s*([\d.]+)[\s,]+([\d.]+)[\s,]+([\d.]+)/.exec(v);
+    if (m) return [m[1], m[2], m[3]].map(function (c) { return lin(Number(c) / 255); });
+    if (!/^#[0-9a-fA-F]{6}$/.test(v)) return null;
+    return [1, 3, 5].map(function (i) { return lin(parseInt(v.slice(i, i + 2), 16) / 255); });
+  }
+  // rows of [material, linear rgb, alpha]; a material only an inactive variant or a line wears loads lazily
+  function paint(mv, rows) {
+    if (!mv.model) return Promise.resolve();
+    return Promise.all(rows.map(function (row) {
+      var m = mv.model.getMaterialByName(row[0]);
+      if (!m || !row[1]) return undefined;
+      return m.ensureLoaded().then(function () {
+        m.pbrMetallicRoughness.setBaseColorFactor([row[1][0], row[1][1], row[1][2], row[2] === undefined ? 1 : row[2]]);
+      });
+    })).then(function () { return undefined; });
+  }
+  // calls fn on every theme turn, the attribute's or the colour scheme's; returns the disconnect
+  function onTheme(fn, on) {
+    var mo = new MutationObserver(function () { fn(); });
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    on(window.matchMedia('(prefers-color-scheme: dark)'), 'change', function () { fn(); });
+    return function () { mo.disconnect(); };
+  }
+  function nextFrames(n) {
+    return new Promise(function (resolve) {
+      (function tick(k) { if (k <= 0) resolve(); else requestAnimationFrame(function () { tick(k - 1); }); })(n);
+    });
+  }
+  // the model stays behind its poster until the theme's colours are on it, so nobody sees the baked ones
+  function revealPainted(mv, painted) {
+    return painted().then(function () { mv.dismissPoster(); return nextFrames(2); });
+  }
+  // model-viewer takes every wheel over it: the page scrolls on until a pointer engages the stage, or on a pinch
+  function wheelGate(stage, on) {
+    var engaged = false;
+    on(stage, 'pointerdown', function () { engaged = true; }, true);
+    on(stage, 'pointerleave', function () { engaged = false; });
+    on(stage, 'wheel', function (e) { if (!engaged && !e.ctrlKey) e.stopPropagation(); }, true);
+  }
+  // the next member along `order` from `at` in direction d, wrapping; from nothing, the first or the last
+  function walk(order, at, d) {
+    var i = order.indexOf(at);
+    return order[i < 0 ? (d > 0 ? 0 : order.length - 1) : (i + d + order.length) % order.length];
+  }
+  // captured on the way down, so the viewer's own arrow-key orbit never sees ← →; ↑ ↓ stay the viewer's
+  function pinKeys(stage, on, act) {
+    on(stage, 'keydown', function (e) {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      var d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+      if (d) act.step(d);
+      else if (act.enter && (e.key === 'Enter' || e.key === ' ')) act.enter();
+      else if (e.key !== 'Escape' || !act.escape()) return;
+      e.preventDefault();
+      e.stopPropagation();
+    }, true);
+  }
   var mv = root.querySelector('#bk-viewer');
   var island = root.querySelector('#bk-model');
   if (!mv || !island || !viewer) return undefined;
@@ -101,37 +161,19 @@ export async function initBricks(root, viewer, focus) {
       if (reduce.matches) mv.jumpCameraToGoal();
     });
   });
-  // captured on the way down, so the viewer's own arrow-key orbit never sees ← →
-  on(stage, 'keydown', function (e) {
-    if (e.metaKey || e.ctrlKey || e.altKey) return;
-    var d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
-    var at = order.indexOf(pinN);
-    if (d) tap(order[at < 0 ? (d > 0 ? 0 : order.length - 1) : (at + d + order.length) % order.length]);
-    else if (e.key === 'Escape' && pinN !== null) tap(pinN);
-    else return;
-    e.preventDefault();
-    e.stopPropagation();
-  }, true);
+  pinKeys(stage, on, {
+    step: function (d) { tap(walk(order, pinN, d)); },
+    escape: function () { if (pinN === null) return false; tap(pinN); return true; },
+  });
+  wheelGate(stage, on);
 
   // the plates and ground wear the page's paper and the edges its ink, in either theme
   var TINT = [['cap', '--paper'], ['flank', '--paper-2'], ['edge', '--ink'], ['ghost-cap', '--paper', 0.45], ['ghost-flank', '--paper-2', 0.45], ['ghost-edge', '--ink', 0.45]];
-  // setBaseColorFactor takes linear values, so the token's sRGB bytes are linearised first
-  function lin(v) { return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }
   function tint() {
-    if (!mv.model) return Promise.resolve();
     var cs = getComputedStyle(document.documentElement);
-    return Promise.all(TINT.map(function (row) {
-      var m = mv.model.getMaterialByName(row[0]);
-      var hex = cs.getPropertyValue(row[1]).trim();
-      if (!m || hex.length !== 7) return undefined;
-      var c = [1, 3, 5].map(function (i) { return lin(parseInt(hex.slice(i, i + 2), 16) / 255); });
-      // a material only the edge lines use is loaded lazily
-      return m.ensureLoaded().then(function () { m.pbrMetallicRoughness.setBaseColorFactor([c[0], c[1], c[2], row[2] === undefined ? 1 : row[2]]); });
-    }));
+    return paint(mv, TINT.map(function (row) { return [row[0], tokenRgb(cs.getPropertyValue(row[1])), row[2]]; }));
   }
-  var themeMO = new MutationObserver(tint);
-  themeMO.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-  on(window.matchMedia('(prefers-color-scheme: dark)'), 'change', tint);
+  var themeOff = onTheme(tint, on);
 
   var ready = new Promise(function (resolve) {
     function boot() {
@@ -142,8 +184,7 @@ export async function initBricks(root, viewer, focus) {
       play.disabled = false;
       slider.disabled = false;
       pose(t);
-      // revealed once the theme's colours are on the model, so neither a reader nor a photograph sees the baked ones
-      tint().then(function () { mv.dismissPoster(); resolve(); });
+      revealPainted(mv, tint).then(resolve);
     }
     if (mv.loaded) boot();
     else on(mv, 'load', boot);
@@ -153,9 +194,7 @@ export async function initBricks(root, viewer, focus) {
 
   // verification hook: the clip's clock, the pin, and a clean frame for the card photograph
   window.__bricksScene = {
-    ready: ready.then(function () {
-      return new Promise(function (resolve) { requestAnimationFrame(function () { requestAnimationFrame(resolve); }); });
-    }),
+    ready: ready,
     animations: function () { return mv.availableAnimations; },
     time: function () { return t; },
     pose: function (v) { stop(); pose(v); },
@@ -168,7 +207,7 @@ export async function initBricks(root, viewer, focus) {
     select: function (n) { pin(member(n)); },
     dispose: function () {
       stop();
-      themeMO.disconnect();
+      themeOff();
       ac.abort();
       delete window.__bricksScene;
     },

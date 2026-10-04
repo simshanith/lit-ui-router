@@ -10,6 +10,7 @@ import { PROJECT_MARK, articleTitle } from './chrome.mjs';
 import { FOCUS_JS } from './focus.mjs';
 import { basisStrip, laneCss } from './lane-chrome.mjs';
 import { ASSEMBLE_SECONDS, brickGlb, seatedBoxes, toModel } from './brick-glb.mjs';
+import { MV_JS, orbitAt, pinCss } from './mv-kit.mjs';
 import { BRICK_COUPLES, BRICK_MODEL, BRICK_ROWS, EXPLODE } from './sheet2.mjs';
 import { BASE } from '../app/src/routes.ts';
 
@@ -25,14 +26,13 @@ export const BRICKS_GLB = 'models/bricks.glb';
 export const bricksGlb = () => brickGlb(BRICK_MODEL, { explode: EXPLODE });
 
 const fmt = (v) => v.toLocaleString('en-US');
-const ISO_POLAR = +(90 - (Math.atan(1 / Math.SQRT2) * 180) / Math.PI).toFixed(3);
 // The sheet's three drawn corners: its own (the +x and +y faces in view), the
 // opposite one, and the server side, brick-iso's turn 1.
 const CORNERS = [
   ['drawn', 'DRAWING’S CORNER', 45],
   ['opposite', 'OPPOSITE CORNER', 225],
   ['server', 'SERVER SIDE', 135],
-].map(([id, label, az]) => ({ id, label, orbit: `${az}deg ${ISO_POLAR}deg 88%` }));
+].map(([id, label, az]) => ({ id, label, orbit: orbitAt(az, '88%') }));
 
 const PLATE_NAME = { P1: 'the @uirouter/core plate', P2: 'the headless plate, on the server shelf' };
 const seatsOf = (n, on) => {
@@ -92,11 +92,7 @@ const CSS = `
 .bk-ctl .grp { display: inline-flex; gap: 6px; }
 .bk-ctl button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
 .bk-ctl input[type=range] { width: 150px; accent-color: var(--accent); }
-.bk-pin { width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--hue, var(--ink)); background: var(--paper);
-  color: var(--ink); font-family: var(--data); font-size: 12px; font-weight: 600; padding: 0; cursor: pointer;
-  display: grid; place-items: center; }
-.bk-pin.on { background: var(--hue, var(--accent)); color: #F1F0E7; }
-.bk-pin:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+${pinCss('bk-pin', 26, 12)}
 .bk-read { border: 1.5px solid var(--ink); border-top: none; background: var(--paper-2); padding: 14px 22px 16px;
   min-height: 72px; color: var(--ink); }
 .bk-read h3 { font-family: var(--code); font-size: 16px; font-weight: 600; letter-spacing: 0.04em; line-height: 1.3;
@@ -156,7 +152,7 @@ ${CORNERS.map((c, i) => `        <button type="button" data-orbit="${c.orbit}" a
 
 // The scene, as a module for the app: handed the resolved <model-viewer> module
 // and the opening pin, it returns { dispose, select }.
-const BODY = `${FOCUS_JS}  var mv = root.querySelector('#bk-viewer');
+const BODY = `${FOCUS_JS}${MV_JS}  var mv = root.querySelector('#bk-viewer');
   var island = root.querySelector('#bk-model');
   if (!mv || !island || !viewer) return undefined;
   var D = JSON.parse(island.textContent);
@@ -244,37 +240,19 @@ const BODY = `${FOCUS_JS}  var mv = root.querySelector('#bk-viewer');
       if (reduce.matches) mv.jumpCameraToGoal();
     });
   });
-  // captured on the way down, so the viewer's own arrow-key orbit never sees ← →
-  on(stage, 'keydown', function (e) {
-    if (e.metaKey || e.ctrlKey || e.altKey) return;
-    var d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
-    var at = order.indexOf(pinN);
-    if (d) tap(order[at < 0 ? (d > 0 ? 0 : order.length - 1) : (at + d + order.length) % order.length]);
-    else if (e.key === 'Escape' && pinN !== null) tap(pinN);
-    else return;
-    e.preventDefault();
-    e.stopPropagation();
-  }, true);
+  pinKeys(stage, on, {
+    step: function (d) { tap(walk(order, pinN, d)); },
+    escape: function () { if (pinN === null) return false; tap(pinN); return true; },
+  });
+  wheelGate(stage, on);
 
   // the plates and ground wear the page's paper and the edges its ink, in either theme
   var TINT = [['cap', '--paper'], ['flank', '--paper-2'], ['edge', '--ink'], ['ghost-cap', '--paper', 0.45], ['ghost-flank', '--paper-2', 0.45], ['ghost-edge', '--ink', 0.45]];
-  // setBaseColorFactor takes linear values, so the token's sRGB bytes are linearised first
-  function lin(v) { return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }
   function tint() {
-    if (!mv.model) return Promise.resolve();
     var cs = getComputedStyle(document.documentElement);
-    return Promise.all(TINT.map(function (row) {
-      var m = mv.model.getMaterialByName(row[0]);
-      var hex = cs.getPropertyValue(row[1]).trim();
-      if (!m || hex.length !== 7) return undefined;
-      var c = [1, 3, 5].map(function (i) { return lin(parseInt(hex.slice(i, i + 2), 16) / 255); });
-      // a material only the edge lines use is loaded lazily
-      return m.ensureLoaded().then(function () { m.pbrMetallicRoughness.setBaseColorFactor([c[0], c[1], c[2], row[2] === undefined ? 1 : row[2]]); });
-    }));
+    return paint(mv, TINT.map(function (row) { return [row[0], tokenRgb(cs.getPropertyValue(row[1])), row[2]]; }));
   }
-  var themeMO = new MutationObserver(tint);
-  themeMO.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-  on(window.matchMedia('(prefers-color-scheme: dark)'), 'change', tint);
+  var themeOff = onTheme(tint, on);
 
   var ready = new Promise(function (resolve) {
     function boot() {
@@ -285,8 +263,7 @@ const BODY = `${FOCUS_JS}  var mv = root.querySelector('#bk-viewer');
       play.disabled = false;
       slider.disabled = false;
       pose(t);
-      // revealed once the theme's colours are on the model, so neither a reader nor a photograph sees the baked ones
-      tint().then(function () { mv.dismissPoster(); resolve(); });
+      revealPainted(mv, tint).then(resolve);
     }
     if (mv.loaded) boot();
     else on(mv, 'load', boot);
@@ -296,9 +273,7 @@ const BODY = `${FOCUS_JS}  var mv = root.querySelector('#bk-viewer');
 
   // verification hook: the clip's clock, the pin, and a clean frame for the card photograph
   window.__bricksScene = {
-    ready: ready.then(function () {
-      return new Promise(function (resolve) { requestAnimationFrame(function () { requestAnimationFrame(resolve); }); });
-    }),
+    ready: ready,
     animations: function () { return mv.availableAnimations; },
     time: function () { return t; },
     pose: function (v) { stop(); pose(v); },
@@ -311,7 +286,7 @@ const BODY = `${FOCUS_JS}  var mv = root.querySelector('#bk-viewer');
     select: function (n) { pin(member(n)); },
     dispose: function () {
       stop();
-      themeMO.disconnect();
+      themeOff();
       ac.abort();
       delete window.__bricksScene;
     },
