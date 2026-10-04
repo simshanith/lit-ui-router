@@ -42,13 +42,14 @@ export const EXAMPLES = {
   },
   'lint-eslint': {
     title: 'ESLint Plugin',
-    // Reserves the open report, the tallest state the embed reaches: 1127px
-    // at the 686px column, which `check:embeds` turns into 1170px with the
-    // frame's border and wrap slack. Seven warnings now, not five — the
-    // reservation moves with the plugin's recommended ruleset. The report
-    // rewraps taller as the column narrows, so a column much under the doc
-    // default scrolls instead of being reserved for.
-    height: '1170px',
+    // Reserves the open report, the tallest state the embed reaches: 1549px
+    // at the 686px column, which `check:embeds` turns into 1600px with the
+    // frame's border and wrap slack. Ten warnings in two files — the
+    // reservation moves with the plugin's recommended ruleset and the
+    // prerendered gallery. The report rewraps taller as the column narrows,
+    // so a column much under the doc default scrolls instead of being
+    // reserved for.
+    height: '1600px',
     file: 'src/main.ts',
   },
 } as const;

@@ -155,8 +155,10 @@ panel and an iframe of ESLint's own `html` formatter, over the same results.
 
 `src/violations.ts` is a gallery with one deliberate violation per
 `recommended` rule, so the report is not empty: the embed below is that built
-page, and its report is static (`7 problems` — one per rule, plus the
-`settings.linkElements` pair on `<sp-link>`, each rule id linked to its docs).
+page, and its report is static (`10 problems` — one per rule, the
+`settings.linkElements` pair on `<sp-link>`, and three from prerendered
+templates linted with `settings.allowElementParts` false, each rule id linked
+to its docs).
 Open it on StackBlitz to edit the sources and watch the report re-run.
 
 <LiveExample name="lint-eslint" />
