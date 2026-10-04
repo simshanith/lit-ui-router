@@ -13,7 +13,7 @@ A thin wrapper on top of `lit-ui-router` — it registers no custom elements and
 ## Features
 
 - **`RouterStore`** — an observable mirror of the current state, params, and transition; one store (and one transition hook) per router via `RouterStore.for(router)`
-- **`RouterReactionController`** — observes the store of the nearest `<ui-router>` context, requested automatically over the `context-request` protocol; no prop drilling and no store wiring in router configuration
+- **`RouterReactionController`** — observes the store of the router its nearest provider supplies, requested automatically over the `context-request` protocol with the `ui-router-context` event as fallback; no prop drilling and no store wiring in router configuration
 - **`ReactionController`** — the generic primitive: runs a MobX `reaction` over an explicit selector while the host is connected; works with any MobX observables, not just the router
 - **Lifecycle-safe** — reactions are created in `hostConnected` and disposed in `hostDisconnected`; they fire immediately on (re)connect so components that re-enter the DOM (e.g. sticky states) never render stale values
 
@@ -37,6 +37,14 @@ namespaced comparers with named exports, so the `equals` option in the examples
 below is spelled `compareStructural` on 7 and `comparer.structural` on 6 —
 `equals` accepts any `(a, b) => boolean`, so either works.
 
+### lit-ui-router 1.x
+
+The peer range is `lit-ui-router@^1.15.0`, the first release with the `lit-ui-router/context` entry,
+and it excludes 2.x. `RouterReactionController` finds its router through core's two discovery
+protocols, `context-request` and the `ui-router-context` event. That pair is the seam
+`lit-ui-router@2.0` revisits ([#874](https://github.com/simshanith/lit-ui-router/issues/874) keeps
+only `context-request`), so a `lit-ui-router` 2.0 carries a `lit-ui-router-mobx` 2.0.
+
 ## Quick Start
 
 ```typescript
@@ -57,7 +65,7 @@ class AppNav extends LitElement {
 }
 ```
 
-No router configuration is required: the controller requests the router from the enclosing `<ui-router>` element on `hostConnected` and rebinds whenever that provider hands it a new one, and `RouterStore.for(router)` lazily attaches the store's single transition hook on first use.
+No router configuration is required: on `hostConnected` the controller requests the router from the nearest provider — `<ui-router>`, `<ui-view>`, a `ContextProvider` of `routerContext`, or `provideRouter(target, router)` — and rebinds whenever that provider hands it a new one, and `RouterStore.for(router)` lazily attaches the store's single transition hook on first use. [Router discovery](https://lit-ui-router.dev/guides/reactive-components#router-discovery) covers both protocols.
 
 ## API
 
@@ -76,7 +84,7 @@ An observable mirror of a router's current state, updated by one `transitionServ
 
 ### `RouterReactionController`
 
-A ReactiveController that observes the `RouterStore` of the host's `<ui-router>` context:
+A ReactiveController that observes the `RouterStore` of the router the host's nearest provider supplies:
 
 ```typescript
 new RouterReactionController(host, selector, options?)
@@ -114,7 +122,7 @@ class NavHeader extends LitElement {
 
 `dist/development/index.js` is published alongside `dist/index.js` and picked by the `development` export condition, which bundlers resolve automatically in development; production builds get the default. Nothing to configure. `lit-ui-router` ships the same split — see the [Development & Production Builds guide](https://lit-ui-router.dev/guides/development-builds) for the mechanism and the warnings both packages carry.
 
-The development build adds one console warning here: a `RouterReactionController` whose host has no `<ui-router>` ancestor warns once, naming that host, and observes nothing — `.value` stays at `options.initialValue`, so the host renders once and never again. Wrap the subtree in `<ui-router>`, or pass `options.router` for a host outside the router's DOM. Production builds drop the warning and its message text, and lit's own production build silences it as well.
+The development build adds one console warning here: a `RouterReactionController` whose host finds no router provider warns once, naming that host, and observes nothing — `.value` stays at `options.initialValue`, so the host renders once and never again. Wrap the subtree in `<ui-router>`, or pass `options.router` for a host outside the router's DOM. Production builds drop the warning and its message text, and lit's own production build silences it as well.
 
 ## Why selectors instead of render auto-tracking?
 
