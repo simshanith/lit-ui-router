@@ -25,6 +25,7 @@ import { register12iSection, sheet12i } from './sheet12i.mjs';
 import { sheet13, SHEET13_VERDICT } from './sheet13.mjs';
 import { sheetA1 } from './sheetA1.mjs';
 import { sheetA2 } from './sheetA2.mjs';
+import { sheetA3, SHEETA3_VERDICT } from './sheetA3.mjs';
 import { PIPELINE_VERDICT, pipelineSection, sheetA2i } from './pipeline-graph.mjs';
 import { ATLAS } from './census-atlas.mjs';
 import { LOOP } from './loop-walk.mjs';
@@ -44,7 +45,7 @@ const lanes = [sheet1i, sheet2b, sheet12i];
 // codebase. Letter-prefixed ids, deliberately OUTSIDE `sheets`: the ascent
 // order, the megacanvas reel, the cover's plate count and the ← / → walk all
 // read that array, and an appendix stands at no altitude.
-const appendix = [sheetA1, sheetA2];
+const appendix = [sheetA1, sheetA2, sheetA3];
 // The appendix's interactive lane: a standalone page, and a row in `manifest.appendix`.
 const appendixLanes = [sheetA2i];
 const PLATES = sheets.length + lanes.length;
@@ -145,6 +146,7 @@ const appendixIdx = [
   ['A1', 'THE ATLAS ITSELF', 'SPRITE STUDIES', 'meta — the research behind the building sprites, argued on one demo member in fifteen blocks: the working plant wins on cost and independence and shipped as sheet 7B, the vines are its second layer, and the ledger roof stays parked until a sheet wants per-file stories', '#sheet-A1', 'A1'],
   ['A2', 'THE CENSUS PIPELINE', 'FLOW GRAPH', `meta — the atlas measuring itself: one archive, ${ATLAS.stats.probes} probe stations, ${ATLAS.stats.plates} filed plates, and every station, plate and edge introspected from the generator at build time`, '#sheet-A2', 'A2'],
   ['A2i', 'THE CENSUS PIPELINE', 'INTERACTIVE GRAPH', PIPELINE_VERDICT, '#pipeline-graph', 'A2i'],
+  ['A3', 'THE ATLAS ITSELF', 'ISOMETRIC CITY', SHEETA3_VERDICT, '#sheet-A3', 'A3'],
 ];
 // FORM's keys under the phrase — the vocabulary's first home is this table
 const keyLine = (n) => {
@@ -290,7 +292,7 @@ const statBar = `<div class="stat-bar" role="group" aria-label="set statistics">
 const galBody = `<div class="gal-body">
     <p>The source image — an isometric block city over a strategy-breeding harness — works because of three quiet decisions, and only one of them is the city: it maps <em>roles in a mechanism</em> rather than files; it spends its one visual scalar (height) on a true quantity; and it keeps a CONDITION field that says what is currently wrong. This set keeps those three decisions and lets everything else change with altitude.</p>
     <p>The result is an argument about form: a loop where there is a genuine cycle (sheet 1), panels where packages are too small to be cities (sheet 2), the full city where the measurement thesis is actually true (sheet 3), a massed spine where the family shares one core but the limbs never touch (sheet 4), a chart where edges would be fiction (sheet 5), and mostly prose where only a definition survives (sheet 6). Fitness peaks in the middle altitudes and collapses at both ends.</p>
-    <p>Above the sixth altitude the set stops arguing about form and starts measuring. Sheets 7–10 are a survey quartet, each counting the same subject at a different boundary: what the repository holds (the monorepo by mass), what npm delivers (the sample app's <code>node_modules</code>, ${SHEET8_TIMES}× the app it serves), what the browser downloads (the docs deploy on the wire, where the prerendered prose tops the skyline and the lettering alone outweighs every routed app the site demonstrates), and who occupies the bytes after tree-shaking (the machine the router wraps is ${SHEET10_CORE_SHARE} of the bundle; the router itself, ${SHEET10_ROUTER_SHARE}). Sheet 11 cuts the same wire the other way, pricing ${DOOR_PKGS} package quarters and ${DOOR_N} doors one at a time. Sheet 12 leaves the wire and draws the monorepo as its own CI reads it, the pull-request task graph punched onto a register plate. Sheet 13 ages the city by commit date. Interactive lanes (1i, 2B, 12i and the three.js city) walk the plates they sit beside. The appendix files plates whose subject is the atlas rather than the codebase: the sprite study behind the building sprites (appendix A1), and the survey office that turns the instrument on itself (appendix A2) — the census pipeline behind almost every number here, drawn as archive → probe stations → filed plates → drawings, introspected from the generator at build time, and walked live in its lane A2i.</p>
+    <p>Above the sixth altitude the set stops arguing about form and starts measuring. Sheets 7–10 are a survey quartet, each counting the same subject at a different boundary: what the repository holds (the monorepo by mass), what npm delivers (the sample app's <code>node_modules</code>, ${SHEET8_TIMES}× the app it serves), what the browser downloads (the docs deploy on the wire, where the prerendered prose tops the skyline and the lettering alone outweighs every routed app the site demonstrates), and who occupies the bytes after tree-shaking (the machine the router wraps is ${SHEET10_CORE_SHARE} of the bundle; the router itself, ${SHEET10_ROUTER_SHARE}). Sheet 11 cuts the same wire the other way, pricing ${DOOR_PKGS} package quarters and ${DOOR_N} doors one at a time. Sheet 12 leaves the wire and draws the monorepo as its own CI reads it, the pull-request task graph punched onto a register plate. Sheet 13 ages the city by commit date. Interactive lanes (1i, 2B, 12i and the three.js city) walk the plates they sit beside. The appendix files plates whose subject is the atlas rather than the codebase: the sprite study behind the building sprites (appendix A1), and the survey office that turns the instrument on itself (appendix A2) — the census pipeline behind almost every number here, drawn as archive → probe stations → filed plates → drawings, introspected from the generator at build time, and walked live in its lane A2i. Appendix A3 turns sheet 7's ruler on the atlas itself: its drawing office, survey office, routed site and site build, massed beside the codebase they draw.</p>
   </div>`;
 
 const cover = `<header class="cover">
@@ -355,7 +357,7 @@ altitudes on ${PLATES} plates — the numbered sheets, their A/B alternates, thr
 3D city — each in the form that altitude earns, and an appendix of ${appendix.length + appendixLanes.length} more about the atlas itself. Sheets 7–10 are a survey
 quartet (the workspace by mass, a consumer's node_modules, a deploy on the wire, the inside of
 one bundle); 11 prices every published entry alone; appendix A2 draws the census pipeline that
-measured the rest. The form riffs on an isometric codebase visualization seen in the wild; the notes on
+measured the rest, and A3 masses the atlas itself on sheet 7's ruler beside the codebase. The form riffs on an isometric codebase visualization seen in the wild; the notes on
 each sheet argue where that form fits and where it lies.
 
 | Sheet | Altitude | Form |
@@ -419,7 +421,9 @@ into the app's \`/log\` at build time. This file is written by \`build.mjs\`; ed
 
 **The cabinet.** Every figure on every plate is read from \`data/*.json\`, written by the
 \`generator/census-*.mjs\` probes at one ref — currently ${COUNTED_AT} — on the scc 4.0.0
-\`Code\` basis. Lookups throw on a missing row; nothing is hand-pasted. \`INITIATIVES.md\` records
+\`Code\` basis. Lookups throw on a missing row; nothing is hand-pasted. One plate stands outside the
+cabinet: \`data/survey-self.json\`, which \`generator/survey-self.mjs\` measures from an archive of the
+atlas's own branch for appendix A3, because main does not hold the atlas. \`INITIATIVES.md\` records
 the pipeline's design and the traps of refreshing it.
 
 **Type and theme.** Plates letter in the data face (DIN 2014 on the site's kit, Barlow Semi

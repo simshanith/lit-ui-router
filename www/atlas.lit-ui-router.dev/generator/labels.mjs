@@ -66,6 +66,7 @@ export const LABELS = {
   A1: S('sprite', 'isometric', 'static'),
   A2: S('pipeline', 'graph', 'static'),
   A2i: S('pipeline', 'graph', 'interactive'),
+  A3: S('city', 'isometric', 'static', 'measured'),
   city: S('city', 'isometric', 'interactive', 'real 3d isometric'),
   plant: S('city', 'isometric', 'interactive', 'real 3d isometric'),
   bricks: S('coupling', 'isometric', 'interactive'),

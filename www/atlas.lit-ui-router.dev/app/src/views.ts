@@ -805,9 +805,9 @@ const sheetCard = (sheet: SheetRow): TemplateResult => html`
       <span class="alt">${sheet.scale}</span>
       <p>${unsafeHTML(sheet.caption)}</p>
       <span class="meta">
-        ${isAppendix(sheet.num)
+        ${isAppendix(sheet.num) && sheet.plates.length === 0
           ? `${sheet.form} · NO CENSUS PLATE — META`
-          : `${sheet.form} · ${String(sheet.plates.length)} PLATE${sheet.plates.length === 1 ? '' : 'S'}`}
+          : `${sheet.form} · ${String(sheet.plates.length)} PLATE${sheet.plates.length === 1 ? '' : 'S'}${isAppendix(sheet.num) ? ' — META' : ''}`}
       </span>
       ${keyBlock(sheet.labels)}
     </div>

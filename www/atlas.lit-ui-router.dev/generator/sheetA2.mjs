@@ -154,7 +154,7 @@ const rack = SHEETS.map((d, i) => {
   const y = TABY(i);
   return `${box(RX, y - 11, RW, RH, 'sk fp')}
 ${box(RX, y - 11, 40, RH, 'sk fp2')}
-${txt(RX + 20, y + 4, `S${d.num}`, 'lbl', 'middle')}
+${txt(RX + 20, y + 4, `${/^[A-Z]/.test(d.num) ? '' : 'S'}${d.num}`, 'lbl', 'middle')}
 ${txt(RX + 50, y + 4, d.title, 'lbl')}
 ${txt(RX + RW - 10, y + 4, `×${d.reads.length}`, 'lblf', 'end')}`;
 }).join('\n');

@@ -44,14 +44,14 @@ const MODULE = {
   '7B': 'sheet7b.mjs', '8': 'sheet8.mjs', '9': 'sheet9.mjs', '10': 'sheet10.mjs',
   '11': 'sheet11.mjs', '12': 'sheet12.mjs', '12i': 'sheet12i.mjs',
   '13': 'sheet13.mjs',
-  A1: 'sheetA1.mjs', A2: 'sheetA2.mjs', A2i: 'pipeline-graph.mjs',
+  A1: 'sheetA1.mjs', A2: 'sheetA2.mjs', A2i: 'pipeline-graph.mjs', A3: 'sheetA3.mjs',
 };
 
 // chrome.mjs is read by every sheet (the title block dates itself off
 // census-files.json); listing it 21 times would say nothing, so it is cut.
 const NOT_A_PLATE_SOURCE = new Set(['chrome.mjs']);
 
-const PLATE_RE = /\.\.\/data\/(census-[a-z0-9-]+\.json)/g;
+const PLATE_RE = /\.\.\/data\/((?:census|survey)-[a-z0-9-]+\.json)/g;
 const IMPORT_RE = /from '\.\/([a-z0-9-]+\.mjs)'/g;
 
 function platesOf(entry) {

@@ -86,7 +86,8 @@ for (const file of GEN_FILES) {
   drawings.push({ file, reads, num: numOf(s), title: titleOf(s) ?? 'GALLERY COVER SURVEY' });
 }
 // rack order = the atlas's own numbering; the cover, which is not a sheet, leads
-const rank = (d) => (d.num === null ? [-1, ''] : [parseInt(d.num, 10), String(d.num).replace(/\d+/, '')]);
+// an appendix plate (letter-first) racks after every numbered sheet
+const rank = (d) => (d.num === null ? [-1, ''] : /^[A-Z]/.test(d.num) ? [1e9, d.num] : [parseInt(d.num, 10), String(d.num).replace(/\d+/, '')]);
 drawings.sort((a, b) => rank(a)[0] - rank(b)[0] || rank(a)[1].localeCompare(rank(b)[1]));
 
 // the atlas's own sheets that no plate stands behind — arguments, mechanisms

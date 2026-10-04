@@ -1,0 +1,42 @@
+{
+  "ref": "www/atlas",
+  "sha": "bed7a858",
+  "commitDate": "2026-10-04T11:44:54-07:00",
+  "generatedAtTime": "2026-10-04T18:50:01.234Z",
+  "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/survey-self.mjs",
+  "used": "git archive www/atlas @ bed7a858",
+  "wasAssociatedWith": [
+    "scc 4.0.0 (mise x aqua:boyter/scc)",
+    "git"
+  ],
+  "scope": "www/atlas.lit-ui-router.dev/",
+  "tracked": 241,
+  "rows": [
+    {"member":"survey","name":"the survey office","ground":"generator/census*.mjs · basis.mjs · survey-*.mjs","srcFiles":22,"srcSloc":2166,"specFiles":0,"specSloc":0},
+    {"member":"drawing","name":"the drawing office","ground":"generator/ — every other module","srcFiles":46,"srcSloc":11739,"specFiles":0,"specSloc":0},
+    {"member":"site","name":"the routed site","ground":"app/src/ — not app/src/generated/","srcFiles":17,"srcSloc":3596,"specFiles":0,"specSloc":0},
+    {"member":"build","name":"the site build","ground":"app/* — prerender, vite, artifact, lint config","srcFiles":4,"srcSloc":334,"specFiles":0,"specSloc":0}
+  ],
+  "excluded": [
+    {"rule":"data/ — the filed plates","files":17,"sloc":9984},
+    {"rule":"app/src/generated/ — written by build.mjs","files":6,"sloc":978},
+    {"rule":"app/public/ — fragments, pictures, model, manifest","files":84,"sloc":13309},
+    {"rule":"sheet-*.html · gallery · megacanvas — the flat set","files":26,"sloc":44025},
+    {"rule":"*.md — README (generated), HISTORY and the other prose","files":6,"sloc":2838}
+  ],
+  "offRuler": [
+    {"path":"app/.oxlintrc.json","member":"build","lang":"JSON","code":21},
+    {"path":"app/index.html","member":"build","lang":"HTML","code":1106},
+    {"path":"app/package-lock.json","member":"build","lang":null,"code":0},
+    {"path":"app/package.json","member":"build","lang":"JSON","code":56},
+    {"path":"app/src/experimental/experimental.css","member":"site","lang":"CSS","code":91},
+    {"path":"app/src/three.d.ts","member":"site","lang":"TypeScript Typings","code":1},
+    {"path":"app/tsconfig.json","member":"build","lang":"JSON","code":16},
+    {"path":"generator/assets/a1/fff-228-turrets.jpg","member":"drawing","lang":null,"code":0},
+    {"path":"generator/assets/a1/fff-355-remnants.jpg","member":"drawing","lang":null,"code":0},
+    {"path":"generator/assets/a1/hzd-machines.jpg","member":"drawing","lang":null,"code":0},
+    {"path":"generator/assets/a1/sc2k.jpg","member":"drawing","lang":null,"code":0},
+    {"path":"generator/assets/a1/scurk.jpg","member":"drawing","lang":null,"code":0},
+    {"path":"generator/assets/a1/ta-prohm.jpg","member":"drawing","lang":null,"code":0}
+  ]
+}

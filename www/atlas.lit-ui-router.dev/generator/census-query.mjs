@@ -58,6 +58,13 @@ export const CITY_DIRS = new Map([
   // #717 moved the docs site docs/ -> www/lit-ui-router.dev/ (package name still `docs`).
   ['www/lit-ui-router.dev', ['.vitepress', 'worker', 'src']],
 ]);
+// a member-relative path -> { spec } when the city ruler counts it, else null
+export const onCityRuler = (rel) => {
+  if (!EXT.test(rel) || SKIP_FILE(basename(rel))) return null;
+  if (rel.split('/').slice(0, -1).some((seg) => SKIP_SEG.has(seg))) return null;
+  return { spec: IS_SPEC(rel) };
+};
+
 const RANK = ['packages/', 'apps/', 'www/', 'examples', 'tools/'];
 const DISTRICT = (dir) =>
   dir.startsWith('packages/') ? 'pkg' : dir.startsWith('apps/') ? 'app' : dir.startsWith('tools/') ? 'tool' : 'site';
@@ -77,9 +84,9 @@ export const cityUniverse = (snap) => {
     for (const r of snap.rows) {
       if (!prefixes.some((p) => r.path.startsWith(p))) continue;
       const rel = r.path.slice(m.dir.length + 1);
-      if (!EXT.test(rel) || SKIP_FILE(basename(rel))) continue;
-      if (rel.split('/').slice(0, -1).some((seg) => SKIP_SEG.has(seg))) continue;
-      files.push({ path: r.path, member: m.dir, district: DISTRICT(m.dir), spec: IS_SPEC(rel), code: r.code });
+      const ruled = onCityRuler(rel);
+      if (!ruled) continue;
+      files.push({ path: r.path, member: m.dir, district: DISTRICT(m.dir), spec: ruled.spec, code: r.code });
     }
   }
   return { members, files };
