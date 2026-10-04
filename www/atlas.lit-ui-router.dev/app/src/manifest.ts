@@ -205,6 +205,53 @@ export function ascent(manifest: Manifest): AscentRow[] {
 /** A 3D plate's state name: the manifest id under the shell. */
 export const sceneState = (row: ExtraRow): string => `atlas.${row.id}`;
 
+/**
+ * THE RAIL'S BANDS — the ascent cut by altitude. A band opens at `from` and
+ * runs to the next band's first altitude, so a plate files by its number and
+ * no sheet is listed here. The labels are the index's ALTITUDE wording, save
+ * sheets 7–10, which the cover calls a survey quartet.
+ */
+export const BANDS = [
+  { from: 1, label: 'ONE PACKAGE' },
+  { from: 2, label: 'COMPANIONS' },
+  { from: 3, label: 'MONOREPO' },
+  { from: 4, label: 'ECOSYSTEM' },
+  { from: 7, label: 'SURVEY QUARTET' },
+  { from: 11, label: 'SEVEN PACKAGES' },
+  { from: 12, label: 'PR CI GRAPH' },
+  { from: 13, label: 'WORKSPACE × TIME' },
+] as const;
+
+/** One band as the rail draws it: its key, its altitudes ('7–10'), its label and its plates. */
+export interface Band {
+  key: string;
+  n: string;
+  label: string;
+  rows: AscentRow[];
+}
+
+const altitudeOf = (entry: AscentRow): number =>
+  entry.kind === 'sheet' ? group(entry.row.num) : groupOf(entry.row);
+
+/** The ascent in BANDS, then the appendix as one band more; a band with no plates is dropped. */
+export function bands(manifest: Manifest): Band[] {
+  const cut = BANDS.map(({ from, label }) => ({ from, label, rows: [] as AscentRow[] }));
+  for (const entry of ascent(manifest)) {
+    const altitude = altitudeOf(entry);
+    cut.filter((band) => band.from <= altitude).at(-1)?.rows.push(entry);
+  }
+  const ascentBands = cut
+    .filter((band) => band.rows.length > 0)
+    .map(({ from, label, rows }): Band => {
+      const top = Math.max(...rows.map(altitudeOf));
+      return { key: `alt-${String(from)}`, n: top > from ? `${String(from)}–${String(top)}` : String(from), label, rows };
+    });
+  const appendix = (manifest.appendix ?? []).map((row): AscentRow => ({ kind: 'sheet', row }));
+  return appendix.length > 0
+    ? [...ascentBands, { key: 'appendix', n: 'A', label: 'APPENDIX', rows: appendix }]
+    : ascentBands;
+}
+
 /** The leading article of a title. The manifest strings themselves stay frozen. */
 export const ARTICLE = /^THE\s+/;
 

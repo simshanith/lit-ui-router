@@ -5,8 +5,10 @@
  * standalone pages.
  */
 import type { UIRouter } from '@uirouter/core';
-import { LitElement, ReactiveElement, html, nothing } from 'lit';
+import { LitElement, ReactiveElement, html, noChange, nothing } from 'lit';
 import type { TemplateResult } from 'lit';
+import { live } from 'lit/directives/live.js';
+import { ref } from 'lit/directives/ref.js';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { srefActiveClass, srefAriaCurrent, srefHref } from 'lit-ui-router/pure';
 import type { RoutedLitTemplate, UIRouterLit } from 'lit-ui-router';
@@ -15,6 +17,7 @@ import { RouterRefController, snapshotRoute } from 'lit-ui-router-effect';
 import type { RouteSnapshot } from 'lit-ui-router-effect';
 import type {
   AscentRow,
+  Band,
   ExtraRow,
   Filter,
   IssueEntry,
@@ -30,6 +33,7 @@ import {
   EMPTY_FILTER,
   LABEL_KEYS,
   ascent,
+  bands,
   entryTitle,
   facet,
   findExtra,
@@ -464,9 +468,67 @@ const railEntry = (entry: AscentRow): TemplateResult =>
         </a>
       `;
 
-function rail(manifest: Manifest | undefined): TemplateResult {
-  const rows = manifest ? ascent(manifest) : [];
-  const appendixRows = manifest?.appendix ?? [];
+/** Whether a rail entry is the page on screen. */
+type Here = (entry: AscentRow) => boolean;
+
+const OPEN_BANDS = 'atlas-rail-open';
+
+/** The bands this viewer opened by hand, as space-separated keys. */
+function readOpenBands(): Set<string> {
+  try {
+    return new Set(localStorage.getItem(OPEN_BANDS)?.split(' ').filter(Boolean));
+  } catch {
+    // private windows and blocked site data both throw here; every band starts shut
+    return new Set();
+  }
+}
+
+// The click lands before the details flips, so `open` is still the old state.
+const rememberBand = (event: Event): void => {
+  const band = (event.currentTarget as HTMLElement).parentElement as HTMLDetailsElement;
+  const key = band.dataset.band;
+  if (!key) return;
+  const open = readOpenBands();
+  if (band.open) open.delete(key);
+  else open.add(key);
+  try {
+    localStorage.setItem(OPEN_BANDS, [...open].join(' '));
+  } catch {
+    // a remembered band is a convenience, never a requirement
+  }
+};
+
+// Element parts never run on the server, so a remembered band opens after hydration.
+const restoreBand = (element?: Element): void => {
+  if (!(element instanceof HTMLDetailsElement)) return;
+  const key = element.dataset.band;
+  if (key && readOpenBands().has(key)) element.open = true;
+};
+
+/**
+ * One altitude band as a native disclosure. The band holding the page on
+ * screen is opened by `live(true)`, so arriving in a band the viewer shut
+ * reopens it; every other band is left as the viewer set it. A band of one
+ * plate is no band: its entry stands in the list on its own.
+ */
+const railBand = (band: Band, here: Here): TemplateResult => {
+  const [only, ...rest] = band.rows;
+  if (only && rest.length === 0) return html`<div class="rail-links">${railEntry(only)}</div>`;
+  return html`
+    <details
+      class="rail-band"
+      data-band=${band.key}
+      ?open=${band.rows.some(here) ? live(true) : noChange}
+      ${ref(restoreBand)}
+    >
+      <summary @click=${rememberBand}><span class="n">${band.n}</span><span class="t">${band.label}</span></summary>
+      <div class="rail-links">${band.rows.map(railEntry)}</div>
+    </details>
+  `;
+};
+
+function rail(manifest: Manifest | undefined, here: Here): TemplateResult {
+  const railBands = manifest ? bands(manifest) : [];
   return html`
     <nav class="rail" aria-label="drawing set">
       <input type="checkbox" id="rail-open" class="rail-open" aria-label="show the sheets" />
@@ -495,16 +557,8 @@ function rail(manifest: Manifest | undefined): TemplateResult {
           >
         </div>
         <p class="rail-sec">SHEETS — ASCENT ORDER</p>
-        <div class="rail-links">${rows.map(railEntry)}</div>
+        ${railBands.map((band) => railBand(band, here))}
         <!-- The type specimen is a bench, not a plate: reachable at /specimen, off the rail. -->
-        ${appendixRows.length > 0
-          ? html`
-              <!-- Letter-prefixed ids, no altitude: the appendix rides AFTER the
-                   ascent, under its own section label. -->
-              <p class="rail-sec">APPENDIX — ABOUT THE ATLAS</p>
-              <div class="rail-links">${appendixRows.map(sheetEntry)}</div>
-            `
-          : nothing}
       </div>
     </nav>
   `;
@@ -521,19 +575,26 @@ function rail(manifest: Manifest | undefined): TemplateResult {
  * element's light DOM; on the client the same directive wakes the view. Same
  * rail, same sprite, same cover CSS either way: ONE template set, one hole.
  */
-export const shell = (manifest: Manifest | undefined, content: unknown): TemplateResult => html`
+export const shell = (manifest: Manifest | undefined, content: unknown, here: Here): TemplateResult => html`
   <!-- lit cannot bind inside <style>, so the whole tag rides unsafeHTML. -->
   ${manifest ? unsafeHTML(`<style>${manifest.cover.css}</style>`) : nothing}
   <!-- The icon table, once a page (generator/icons.mjs): every card cell, index chip and lane glyph is a <use>. -->
   ${unsafeHTML(ICON_SPRITE)}
   <div class="app">
-    ${rail(manifest)}
+    ${rail(manifest, here)}
     <main class="content">${content}</main>
   </div>
 `;
 
-export const ShellView: RoutedLitTemplate<ManifestResolves> = (props) =>
-  shell(props?.resolves?.manifest, html`<ui-view>${uiViewSlot()}</ui-view>`);
+// Every ui-view re-renders on each successful transition, so the shell reads the settled state.
+export const ShellView: RoutedLitTemplate<ManifestResolves> = (props) => {
+  const route = props?.router ? snapshotRoute(props.router) : undefined;
+  const name = route?.current ? route.current.name : props?.transition?.to().name;
+  const params = route?.current ? route.params : (props?.transition?.params() ?? {});
+  const here: Here = (entry) =>
+    entry.kind === 'sheet' ? name === 'atlas.sheet' && params.num === entry.row.num : name === sceneState(entry.row);
+  return shell(props?.resolves?.manifest, html`<ui-view>${uiViewSlot()}</ui-view>`, here);
+};
 
 /**
  * THE PAGE — the one root template, prerendered and hydrated.

@@ -176,6 +176,72 @@
       .rail-top a.is-active {
         font-weight: 600;
       }
+      /* ---- the rail's altitude bands: one native disclosure each ---- */
+      .rail-band > summary {
+        display: flex;
+        gap: 9px;
+        align-items: baseline;
+        list-style: none;
+        cursor: pointer;
+        user-select: none;
+        font-family: var(--data);
+        font-size: 10px;
+        letter-spacing: 0.14em;
+        color: var(--ink-soft);
+        padding: 8px 16px 7px;
+        border-left: 3px solid transparent;
+      }
+      .rail-band > summary::-webkit-details-marker {
+        display: none;
+      }
+      .rail-band > summary:hover {
+        background: var(--paper-2);
+        color: var(--ink);
+      }
+      .rail-band > summary:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: -2px;
+      }
+      .rail-band > summary .n {
+        min-width: 34px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        font-variant-numeric: tabular-nums;
+      }
+      .rail-band > summary .t {
+        flex: 1;
+      }
+      /* the caret: a drawn chevron, right when shut, down when open */
+      .rail-band > summary::after {
+        content: '';
+        flex: none;
+        align-self: center;
+        width: 5px;
+        height: 5px;
+        border-right: 1.5px solid currentColor;
+        border-bottom: 1.5px solid currentColor;
+        transform: rotate(-45deg);
+      }
+      .rail-band[open] > summary {
+        color: var(--ink);
+      }
+      .rail-band[open] > summary::after {
+        transform: translateY(-2px) rotate(45deg);
+      }
+      /* a band's plates sit one step in, on a hairline the active bar overprints */
+      .rail-band > .rail-links {
+        margin: 0 0 6px 19px;
+        border-left: 1px solid var(--line);
+      }
+      .rail-band > .rail-links a {
+        margin-left: -2px;
+        padding-left: 12px;
+      }
+      @media (prefers-reduced-motion: no-preference) {
+        .rail-band > summary::after {
+          transition: transform 120ms ease;
+        }
+      }
       @media (max-width: 900px) {
         .rail {
           z-index: 8;
@@ -255,8 +321,17 @@
         .rail-head,
         .rail-top,
         .rail-sec,
-        .rail-links .t {
+        .rail-links .t,
+        .rail-band > summary .t,
+        .rail-band > summary::after {
           opacity: 0;
+        }
+        /* a band steps in less here, so its widest number (7B·3D) clears the clip */
+        .rail-band > .rail-links {
+          margin-left: 8px;
+        }
+        .rail-band > .rail-links a {
+          padding-left: 8px;
         }
         .rail:hover,
         .rail:focus-within {
@@ -269,7 +344,11 @@
         .rail:focus-within .rail-head,
         .rail:focus-within .rail-top,
         .rail:focus-within .rail-sec,
-        .rail:focus-within .rail-links .t {
+        .rail:focus-within .rail-links .t,
+        .rail:hover .rail-band > summary .t,
+        .rail:hover .rail-band > summary::after,
+        .rail:focus-within .rail-band > summary .t,
+        .rail:focus-within .rail-band > summary::after {
           opacity: 1;
         }
         @media (prefers-reduced-motion: no-preference) {
@@ -279,7 +358,8 @@
           .rail-head,
           .rail-top,
           .rail-sec,
-          .rail-links .t {
+          .rail-links .t,
+          .rail-band > summary .t {
             transition: opacity 120ms ease;
           }
         }
