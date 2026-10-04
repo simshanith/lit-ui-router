@@ -71,8 +71,10 @@ class UserMenu extends LitElement {
 ```
 
 It reads both ways: a `ContextProvider` of `routerContext` on any ancestor
-satisfies `seekRouter` too. `subscribe` gets one call and a no-op unsubscribe —
-`<ui-router>` takes its router on connect and does not swap it.
+satisfies `seekRouter` too. A `subscribe` request answered with the placeholder
+router `<ui-router>` creates on connect is called again when the app replaces
+it, and `<ui-view>` passes that on to its own subscribers; any other answer is
+one call and a no-op unsubscribe.
 
 `<ui-view>` answers the same way for its own key,
 [`parentUiViewContext`](/api/reference/core/parentUiViewContext): a
