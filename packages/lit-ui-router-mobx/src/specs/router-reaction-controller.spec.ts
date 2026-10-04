@@ -2,8 +2,10 @@ import { describe, it, expect, afterEach, vi } from 'vitest';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { UIRouterLit, UIRouterLitElement } from 'lit-ui-router';
+import { isRouterContextRequest } from 'lit-ui-router/context';
 
 import { RouterReactionController } from '../router-reaction-controller.js';
+import { RouterStore } from '../router-store.js';
 import { appendParentFirst } from '@tools/happy-dom/append.ts';
 import {
   createTestRouter,
@@ -215,5 +217,218 @@ describe('RouterReactionController', () => {
     uiRouterEl.appendChild(host);
     await waitForUpdate(host);
     expect(controller.value).toBe('b');
+  });
+});
+
+/**
+ * A provider holding a provisional router, as `<ui-router>` holds its
+ * placeholder on a served page: a subscriber gets an unsubscribe that drops
+ * it, then at most one more call with the replacement and a no-op.
+ */
+class StubRouterProvider extends HTMLElement {
+  readonly subscribers = new Set<(router: UIRouterLit) => void>();
+
+  /** Keeps subscribers past their unsubscribe, as a careless provider might. */
+  ignoreUnsubscribe = false;
+
+  router?: UIRouterLit;
+
+  constructor() {
+    super();
+    this.addEventListener('context-request', (event) => {
+      if (!this.router || !isRouterContextRequest(event)) return;
+      event.stopImmediatePropagation();
+      const { callback, subscribe } = event;
+      if (!subscribe) {
+        callback(this.router);
+        return;
+      }
+      const deliver = (next: UIRouterLit) => callback(next, () => {});
+      this.subscribers.add(deliver);
+      callback(this.router, () => {
+        if (!this.ignoreUnsubscribe) this.subscribers.delete(deliver);
+      });
+    });
+  }
+
+  upgrade(router: UIRouterLit): void {
+    this.router = router;
+    const subscribers = [...this.subscribers];
+    this.subscribers.clear();
+    for (const deliver of subscribers) deliver(router);
+  }
+}
+customElements.define('stub-router-provider', StubRouterProvider);
+
+/** Answers only the house `ui-router-context` event, which cannot subscribe. */
+class HouseEventProvider extends HTMLElement {
+  constructor(router: UIRouterLit) {
+    super();
+    this.addEventListener(
+      UIRouterLitElement.uiRouterContextEventName,
+      UIRouterLitElement.onUiRouterContextEvent(router) as EventListener,
+    );
+  }
+}
+customElements.define('house-event-provider', HouseEventProvider);
+
+describe('RouterReactionController router upgrade', () => {
+  // core links each declaration to its registry, so every router needs its own copies
+  const createOwnRouter = () =>
+    createTestRouter(testStates.map((state) => ({ ...state })));
+
+  async function mountInStub(
+    host: RouterReactionHost,
+    router: UIRouterLit,
+  ): Promise<StubRouterProvider> {
+    const provider = new StubRouterProvider();
+    provider.router = router;
+    appendParentFirst(document.body, provider, host);
+    cleanups.push(() => provider.remove());
+    await waitForUpdate(host);
+    return provider;
+  }
+
+  it('rebinds to the router the provider hands it next', async () => {
+    const placeholder = createOwnRouter();
+    const router = createOwnRouter();
+    await routerGo(placeholder, 'a');
+    await routerGo(router, 'b', { id: '1' });
+
+    const host = createHost();
+    const onChange = vi.fn();
+    const controller = new RouterReactionController(
+      host,
+      (route) => route.current?.name,
+      { onChange },
+    );
+    const provider = await mountInStub(host, placeholder);
+    expect(controller.value).toBe('a');
+    expect(controller.store).toBe(RouterStore.for(placeholder));
+    const rendersBefore = host.renderCount;
+    onChange.mockClear();
+
+    provider.upgrade(router);
+    await waitForUpdate(host);
+
+    expect(controller.store).toBe(RouterStore.for(router));
+    expect(controller.value).toBe('b');
+    expect(onChange).toHaveBeenCalledExactlyOnceWith('b');
+    expect(host.renderCount).toBeGreaterThan(rendersBefore);
+
+    // the placeholder's reaction is gone
+    onChange.mockClear();
+    await routerGo(placeholder, 'b.child', { id: '2' });
+    expect(onChange).not.toHaveBeenCalled();
+    expect(controller.value).toBe('b');
+
+    await routerGo(router, 'a');
+    await waitForUpdate(host);
+    expect(controller.value).toBe('a');
+    expect(onChange).toHaveBeenCalledExactlyOnceWith('a');
+  });
+
+  it('unsubscribes on disconnect', async () => {
+    const placeholder = createOwnRouter();
+    const router = createOwnRouter();
+    await routerGo(placeholder, 'a');
+    await routerGo(router, 'b', { id: '1' });
+
+    const host = createHost();
+    const controller = new RouterReactionController(
+      host,
+      (route) => route.current?.name,
+    );
+    const provider = await mountInStub(host, placeholder);
+    expect(provider.subscribers.size).toBe(1);
+
+    host.remove();
+    expect(provider.subscribers.size).toBe(0);
+
+    provider.upgrade(router);
+    expect(controller.store).toBe(RouterStore.for(placeholder));
+    expect(controller.value).toBe('a');
+  });
+
+  it('ignores a delivery that reaches a disconnected host', async () => {
+    const placeholder = createOwnRouter();
+    const router = createOwnRouter();
+    await routerGo(placeholder, 'a');
+    await routerGo(router, 'b', { id: '1' });
+
+    const host = createHost();
+    const controller = new RouterReactionController(
+      host,
+      (route) => route.current?.name,
+    );
+    const provider = await mountInStub(host, placeholder);
+    provider.ignoreUnsubscribe = true;
+
+    host.remove();
+    provider.upgrade(router);
+
+    expect(controller.store).toBe(RouterStore.for(placeholder));
+    expect(controller.value).toBe('a');
+  });
+
+  it('subscribes afresh on reconnect and follows that upgrade', async () => {
+    const placeholder = createOwnRouter();
+    const router = createOwnRouter();
+    await routerGo(placeholder, 'a');
+    await routerGo(router, 'b', { id: '1' });
+
+    const host = createHost();
+    const controller = new RouterReactionController(
+      host,
+      (route) => route.current?.name,
+    );
+    const provider = await mountInStub(host, placeholder);
+    host.remove();
+    provider.appendChild(host);
+    await waitForUpdate(host);
+    expect(provider.subscribers.size).toBe(1);
+
+    provider.upgrade(router);
+    await waitForUpdate(host);
+    expect(controller.value).toBe('b');
+  });
+
+  it('leaves an explicit router alone', async () => {
+    const placeholder = createOwnRouter();
+    const router = createOwnRouter();
+    const other = createOwnRouter();
+    await routerGo(router, 'a');
+    await routerGo(other, 'b', { id: '1' });
+
+    const host = createHost();
+    const controller = new RouterReactionController(
+      host,
+      (route) => route.current?.name,
+      { router },
+    );
+    const provider = await mountInStub(host, placeholder);
+    expect(provider.subscribers.size).toBe(0);
+
+    provider.upgrade(other);
+    expect(controller.store).toBe(RouterStore.for(router));
+    expect(controller.value).toBe('a');
+  });
+
+  it('falls back to the house ui-router-context event', async () => {
+    const router = createOwnRouter();
+    await routerGo(router, 'a');
+
+    const host = createHost();
+    const controller = new RouterReactionController(
+      host,
+      (route) => route.current?.name,
+    );
+    const provider = new HouseEventProvider(router);
+    appendParentFirst(document.body, provider, host);
+    cleanups.push(() => provider.remove());
+    await waitForUpdate(host);
+
+    expect(controller.store).toBe(RouterStore.for(router));
+    expect(controller.value).toBe('a');
   });
 });

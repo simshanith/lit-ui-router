@@ -67,9 +67,10 @@ class AppNav extends LitElement {
 }
 ```
 
-No router configuration is required: the controller discovers the router from
-the enclosing `<ui-router>` element when the host connects, and the store
-lazily attaches its single transition hook on first use.
+No router configuration is required: the controller requests the router from
+the enclosing `<ui-router>` element when the host connects and rebinds whenever
+that provider hands it a new one, and the store lazily attaches its single
+transition hook on first use.
 
 ## The pieces
 
