@@ -189,7 +189,12 @@ const walkWith = (
   }
 };
 
-/** Reports one view's outcome: the event from the view, then the root's callback. A callback that throws does so on its own microtask, after the view's update. */
+/**
+ * Reports one view's outcome: the event from the view, then the root's
+ * callback. A callback that throws goes to `reportError`, as the platform
+ * reports a throwing event listener; without it (Node, DOM emulators) the
+ * error escapes into the view's update, after its nodes are settled.
+ */
 const report = (
   view: Element,
   reporter: AdoptReporter | undefined,
@@ -208,9 +213,10 @@ const report = (
   try {
     reporter?.(view, outcome, error);
   } catch (thrown) {
-    queueMicrotask(() => {
+    if (typeof globalThis.reportError !== 'function') {
       throw thrown;
-    });
+    }
+    globalThis.reportError(thrown);
   }
 };
 

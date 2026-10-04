@@ -857,13 +857,13 @@ describe('the hydration outcome', () => {
     ]);
   });
 
-  it('keeps a throwing onAdopt out of the adoption, rethrown on a microtask', async () => {
+  it('keeps a throwing onAdopt out of the adoption, through reportError', async () => {
     const { container } = serve(await drawShell('/shell'));
     const router = makeRouter();
     await settle(router, '/shell');
     const reports = listen(container);
-    const microtasks = vi.fn<(callback: () => void) => void>();
-    vi.stubGlobal('queueMicrotask', microtasks);
+    const reportError = vi.fn<(error: unknown) => void>();
+    vi.stubGlobal('reportError', reportError);
     const failure = new Error('reporter failed');
 
     const release = hydrateRoot(container, rootTemplate(router), {
@@ -878,8 +878,38 @@ describe('the hydration outcome', () => {
     const view = container.querySelector('ui-view')!;
     expect(reports.map(([, outcome]) => outcome)).toEqual(['adopted', 'none']);
     expect(view.querySelector('h1')?.textContent).toContain('shell');
-    expect(microtasks).toHaveBeenCalledTimes(2);
-    expect(() => microtasks.mock.calls[0][0]()).toThrow(failure);
+    expect(reportError.mock.calls).toEqual([[failure], [failure]]);
+  });
+
+  it('throws a failing onAdopt into the view update without reportError, after adopting', async () => {
+    const { container } = serve(await drawShell('/shell'));
+    const router = makeRouter();
+    await settle(router, '/shell');
+    const reports = listen(container);
+    vi.stubGlobal('reportError', undefined);
+    const failure = new Error('reporter failed');
+    let thrown: Promise<unknown> | undefined;
+
+    const release = hydrateRoot(container, rootTemplate(router), {
+      onAdopt: (view) => {
+        if (thrown) return;
+        thrown = (
+          view as View & { updateComplete: Promise<boolean> }
+        ).updateComplete.then(
+          () => undefined,
+          (error: unknown) => error,
+        );
+        throw failure;
+      },
+    });
+    await drain(container);
+    (release as () => void)();
+    vi.unstubAllGlobals();
+
+    expect(await thrown).toBe(failure);
+    const view = container.querySelector('ui-view')!;
+    expect(reports[0]?.[1]).toBe('adopted');
+    expect(view.querySelector('h1')?.textContent).toContain('shell');
   });
 
   describe('from the adopter a view requests', () => {
