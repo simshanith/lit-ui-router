@@ -222,7 +222,7 @@ sup.art {
    one screen. An inline SVG letterboxes under max-height instead of shrinking,
    so the cap reaches it through max-width times the plate's own viewBox ratio
    (--plate-ar, written per sheet). */
-.plate { position: relative; container-type: inline-size; margin: 20px 0 8px; --plate-cap: min(84vh, 1400px); }
+.plate { position: relative; container-type: inline-size; margin: 36px 0 8px; --plate-cap: min(84vh, 1400px); }
 .figure-wrap { overflow-x: auto; }
 .figure-wrap svg { display: block; width: 100%; max-width: min(100%, calc(var(--plate-cap) * var(--plate-ar, 1.4))); height: auto; min-width: 1000px; margin: 0 auto; }
 .plate::after {
@@ -246,6 +246,27 @@ sup.art {
 @container (width < 1000px) { .plate::after { display: block; } }
 /* at the end of the scroll the affordance steps aside — the plate's right edge is the point */
 .plate[data-end]::after { opacity: 0; }
+/* a fillable figure carries a .fill button: fullscreen where the browser grants it, the is-filled overlay where it does not */
+.fillable { position: relative; }
+.fill { position: absolute; top: 8px; right: 8px; z-index: 3; font-family: var(--data); font-size: 9.5px;
+  font-weight: 600; letter-spacing: 0.16em; line-height: 1; color: var(--ink); background: var(--paper);
+  border: 1px solid var(--ink); padding: 6px 8px; cursor: pointer; opacity: 0.72; }
+.fill:hover, .fill:focus-visible { opacity: 1; background: var(--paper-2); }
+.fill:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.fill::before { content: "FILL WINDOW ⤢"; }
+.fillable:fullscreen .fill::before, .fillable.is-filled .fill::before { content: "LEAVE ⤡"; }
+.fillable:fullscreen, .fillable.is-filled { background: var(--paper); margin: 0; }
+.fillable.is-filled { position: fixed; inset: 0; z-index: 60; overflow: auto; }
+html.has-filled { overflow: hidden; }
+/* a plate fills by its own ratio: as wide as the window allows under its height */
+.plate:fullscreen, .plate.is-filled { display: grid; place-items: center; padding: 16px; box-sizing: border-box; overflow: auto; }
+.plate:fullscreen .figure-wrap, .plate.is-filled .figure-wrap { width: 100%; }
+.plate:fullscreen .figure-wrap svg, .plate.is-filled .figure-wrap svg {
+  max-width: min(100%, calc((100vh - 32px) * var(--plate-ar, 1.4))); min-width: 0; }
+.plate:fullscreen::after, .plate.is-filled::after { display: none; }
+/* a plate's lettering reaches its corners, so its button hangs in the margin above; the filled plate takes it back into the corner */
+.plate > .fill { top: auto; bottom: calc(100% + 4px); right: 0; }
+.plate:fullscreen > .fill, .plate.is-filled > .fill { top: 8px; bottom: auto; right: 8px; }
 figure { margin: 0; }
 /* the caption is a margin note: a rule on the sheet's edge, its text inset to the plate's column */
 figcaption {

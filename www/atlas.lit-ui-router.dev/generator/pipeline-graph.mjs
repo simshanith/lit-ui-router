@@ -109,7 +109,7 @@ const spriteOf = (nd) => {
 };
 // a rack tab reads by its drawing, a ledger entry by its instrument's first word
 const labelOf = (nd) => {
-  if (nd.kind === 'sheet') return nd.num === null ? nd.title : `S${nd.num} ${nd.title}`;
+  if (nd.kind === 'sheet') return nd.num === null ? nd.title : `${/^[A-Z]/.test(nd.num) ? '' : 'S'}${nd.num} ${nd.title}`;
   if (nd.kind === 'tool') return nd.role === 'instrument' ? nd.label : nd.label.split(/[\s(]/)[0];
   return nd.label;
 };
@@ -431,7 +431,7 @@ export function pipelineSection() {
       <button type="button" id="pg-fit">${glyph('scan')}FIT</button>
     </div>
   </div>
-  <div class="pg-stage">
+  <div class="pg-stage fillable"><button type="button" class="fill" data-fill aria-label="Fill the window with this figure, or leave it"></button>
     <div class="pg-cy" id="pg-cy" role="application" tabindex="0" aria-label="Interactive flow graph of the census pipeline: archive basis, ${A.stats.probes} probe stations, ${A.stats.plates} filed plates and ${A.stats.drawings} drawings. With the graph focused, the arrow keys step the pin through the buildings and Escape clears it."></div>
     <aside class="pg-info" id="pg-info"></aside>
   </div>

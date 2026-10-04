@@ -33,6 +33,8 @@
   background: var(--paper); }
 .cb-stage:focus-visible, .cb-cy:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .cb-cy { height: clamp(560px, 70vh, 960px); min-width: 0; touch-action: pan-y; }
+.cb-stage:fullscreen .cb-cy, .cb-stage.is-filled .cb-cy { height: 100vh; }
+.cb-stage:fullscreen .cb-info, .cb-stage.is-filled .cb-info { max-height: 100vh; }
 .cb-info { border-left: 1.5px solid var(--ink); background: var(--paper-2); padding: 20px 22px 22px;
   font-family: var(--data); font-size: 12.5px; letter-spacing: 0.04em; line-height: 1.5; color: var(--ink);
   overflow-y: auto; max-height: clamp(560px, 70vh, 960px); }
@@ -76,7 +78,7 @@
       <button type="button" id="cb-fit"><svg class="gl lane" aria-hidden="true" focusable="false"><use href="#gl-scan"/></svg>FIT</button>
     </div>
   </div>
-  <div class="cb-stage">
+  <div class="cb-stage fillable"><button type="button" class="fill" data-fill aria-label="Fill the window with this figure, or leave it"></button>
     <div class="cb-cy" id="cb-cy" role="application" tabindex="0" aria-label="Interactive coupling graph: the 7 published packages, @uirouter/core and lit, with one edge per declared dependency or peer dependency, each labelled with its published range. lit-ui-router-ssr is the one node with a tie to two siblings — the flagship and the server. With the graph focused, the arrow keys step the pin through the buildings and Escape clears it."></div>
     <aside class="cb-info" id="cb-info"></aside>
   </div>
@@ -133,6 +135,7 @@
       holding = false;
     });
     cy.on('dbltap', function (e) { if (e.target === cy) fit(); });
+    stage.parentElement.addEventListener('atlas-fill', function () { setTimeout(function () { cy.resize(); fit(); }, 80); });
     if (!window.matchMedia('(pointer: coarse)').matches) return;
     stage.addEventListener('touchstart', function (e) {
       if (!overflow && e.touches.length === 1) e.stopImmediatePropagation();

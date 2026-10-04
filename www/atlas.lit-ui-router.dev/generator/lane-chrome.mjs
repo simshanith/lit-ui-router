@@ -37,6 +37,8 @@ export const laneCss = (p, wrap = 'break-word') => `
   background: var(--paper); }
 .${p}-stage:focus-visible, .${p}-cy:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .${p}-cy { height: clamp(560px, 70vh, 960px); min-width: 0; touch-action: pan-y; }
+.${p}-stage:fullscreen .${p}-cy, .${p}-stage.is-filled .${p}-cy { height: 100vh; }
+.${p}-stage:fullscreen .${p}-info, .${p}-stage.is-filled .${p}-info { max-height: 100vh; }
 .${p}-info { border-left: 1.5px solid var(--ink); background: var(--paper-2); padding: 20px 22px 22px;
   font-family: var(--data); font-size: 12.5px; letter-spacing: 0.04em; line-height: 1.5; color: var(--ink);
   overflow-y: auto; max-height: clamp(560px, 70vh, 960px); }

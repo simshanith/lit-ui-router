@@ -226,7 +226,7 @@ sup.art {
    one screen. An inline SVG letterboxes under max-height instead of shrinking,
    so the cap reaches it through max-width times the plate's own viewBox ratio
    (--plate-ar, written per sheet). */
-.plate { position: relative; container-type: inline-size; margin: 20px 0 8px; --plate-cap: min(84vh, 1400px); }
+.plate { position: relative; container-type: inline-size; margin: 36px 0 8px; --plate-cap: min(84vh, 1400px); }
 .figure-wrap { overflow-x: auto; }
 .figure-wrap svg { display: block; width: 100%; max-width: min(100%, calc(var(--plate-cap) * var(--plate-ar, 1.4))); height: auto; min-width: 1000px; margin: 0 auto; }
 .plate::after {
@@ -250,6 +250,27 @@ sup.art {
 @container (width < 1000px) { .plate::after { display: block; } }
 /* at the end of the scroll the affordance steps aside — the plate's right edge is the point */
 .plate[data-end]::after { opacity: 0; }
+/* a fillable figure carries a .fill button: fullscreen where the browser grants it, the is-filled overlay where it does not */
+.fillable { position: relative; }
+.fill { position: absolute; top: 8px; right: 8px; z-index: 3; font-family: var(--data); font-size: 9.5px;
+  font-weight: 600; letter-spacing: 0.16em; line-height: 1; color: var(--ink); background: var(--paper);
+  border: 1px solid var(--ink); padding: 6px 8px; cursor: pointer; opacity: 0.72; }
+.fill:hover, .fill:focus-visible { opacity: 1; background: var(--paper-2); }
+.fill:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.fill::before { content: "FILL WINDOW ⤢"; }
+.fillable:fullscreen .fill::before, .fillable.is-filled .fill::before { content: "LEAVE ⤡"; }
+.fillable:fullscreen, .fillable.is-filled { background: var(--paper); margin: 0; }
+.fillable.is-filled { position: fixed; inset: 0; z-index: 60; overflow: auto; }
+html.has-filled { overflow: hidden; }
+/* a plate fills by its own ratio: as wide as the window allows under its height */
+.plate:fullscreen, .plate.is-filled { display: grid; place-items: center; padding: 16px; box-sizing: border-box; overflow: auto; }
+.plate:fullscreen .figure-wrap, .plate.is-filled .figure-wrap { width: 100%; }
+.plate:fullscreen .figure-wrap svg, .plate.is-filled .figure-wrap svg {
+  max-width: min(100%, calc((100vh - 32px) * var(--plate-ar, 1.4))); min-width: 0; }
+.plate:fullscreen::after, .plate.is-filled::after { display: none; }
+/* a plate's lettering reaches its corners, so its button hangs in the margin above; the filled plate takes it back into the corner */
+.plate > .fill { top: auto; bottom: calc(100% + 4px); right: 0; }
+.plate:fullscreen > .fill, .plate.is-filled > .fill { top: 8px; bottom: auto; right: 8px; }
 figure { margin: 0; }
 /* the caption is a margin note: a rule on the sheet's edge, its text inset to the plate's column */
 figcaption {
@@ -495,7 +516,7 @@ a { color: var(--accent); }
   <h2 class="sheet-title"><sup class="art">the&nbsp;</sup>MEASURED CITY</h2>
   <p class="sheet-sub">ALTITUDE 3½ — the same city as sheet 3, surveyed by mass · 39 members in 4 districts, footprint ∝ √sloc, height ∝ authored files, spec mass drawn as an annex, gate severity in colour · counted at origin/main @ 6d41d21e (2026-10-03)</p>
   <figure>
-    <div class="plate" style="--plate-ar:1.2264"><div class="figure-wrap"><svg viewBox="0 0 1560 1272" role="img" aria-label="An isometric census city of the whole lit-ui-router workspace, drawn in four dashed districts. Every workspace member is a block massed by its own measured source — footprint side proportional to the square root of its authored lines, height three pixels per authored file — and every member that has tests carries a hatched annex beside it, massed the same way from its spec files. Upper left is the packages district, the product: lit-ui-router and ui-router-server each stand beside an annex with a larger footprint than the building it guards, the eslint plugin stands below them at the district's near corner, and the effect bindings and the prerender bridge take the two lots along the district's south row. To the right is the apps district, where sample-app-shared stands at 39 files and 2,354 lines. Below it sits the shopfront of docs and examples — examples the broadest source block on the sheet at 3,647 lines — and lower left the instrument yard of 24 tools, dominated by the tall red release block — 50 files and 2,427 lines, the only structure that can halt a publish. Gate severity is carried in colour, never in height: solid red halts a publish, red hatch stops the pull request line, accent hatch gates a later stage, faint blocks never gate at all. Roads run between the districts and carry real edges from the repository: solid roads where one member builds into another, dashed soft roads where tests exercise the code they cover, and an accent road that leaves both the source block and its spec annex together, because typecheck reads both. A structure schedule below lists all 39 members with exact file and line counts, their annex, and their gate tier.">
+    <div class="plate fillable" style="--plate-ar:1.2264"><button type="button" class="fill" data-fill aria-label="Fill the window with this figure, or leave it"></button><div class="figure-wrap"><svg viewBox="0 0 1560 1272" role="img" aria-label="An isometric census city of the whole lit-ui-router workspace, drawn in four dashed districts. Every workspace member is a block massed by its own measured source — footprint side proportional to the square root of its authored lines, height three pixels per authored file — and every member that has tests carries a hatched annex beside it, massed the same way from its spec files. Upper left is the packages district, the product: lit-ui-router and ui-router-server each stand beside an annex with a larger footprint than the building it guards, the eslint plugin stands below them at the district's near corner, and the effect bindings and the prerender bridge take the two lots along the district's south row. To the right is the apps district, where sample-app-shared stands at 39 files and 2,354 lines. Below it sits the shopfront of docs and examples — examples the broadest source block on the sheet at 3,647 lines — and lower left the instrument yard of 24 tools, dominated by the tall red release block — 50 files and 2,427 lines, the only structure that can halt a publish. Gate severity is carried in colour, never in height: solid red halts a publish, red hatch stops the pull request line, accent hatch gates a later stage, faint blocks never gate at all. Roads run between the districts and carry real edges from the repository: solid roads where one member builds into another, dashed soft roads where tests exercise the code they cover, and an accent road that leaves both the source block and its spec annex together, because typecheck reads both. A structure schedule below lists all 39 members with exact file and line counts, their annex, and their gate tier.">
 <defs>
   <marker id="s7-ai" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
     <path d="M0,0 L10,4 L0,8 z" class="fi"/>
@@ -1230,7 +1251,7 @@ a { color: var(--accent); }
 <text x="58" y="707" class="lbl" text-anchor="start" >B</text><text x="78" y="707" class="lbls" text-anchor="start" >builds into</text><text x="190" y="707" class="lblf" text-anchor="start" >@tools/oxc-emit → all seven packages · devDep of each · runs build:js + build:types</text>
 <text x="58" y="722" class="lbl" text-anchor="start" >C</text><text x="78" y="722" class="lbls" text-anchor="start" >tests exercise</text><text x="190" y="722" class="lblf" text-anchor="start" >@tools/dts-backtest → the runtime packages it deps on · #test dependsOn ^build</text>
 <text x="58" y="737" class="lbl" text-anchor="start" >D</text><text x="78" y="737" class="lbls" text-anchor="start" >tests exercise</text><text x="190" y="737" class="lblf" text-anchor="start" >@tools/lit-test-env + @tools/happy-dom → the annex · devDep of lit-ui-router + -mobx</text>
-<text x="58" y="752" class="lbl" text-anchor="start" >E</text><text x="78" y="752" class="lbls" text-anchor="start" >tests exercise</text><text x="190" y="752" class="lblf" text-anchor="start" >sample-app-lit-e2e → docs · workspace dep · turbo e2e dependsOn ^build, with @www/lit-ui-router.dev#wrangler:dev</text>
+<text x="58" y="752" class="lbl" text-anchor="start" >E</text><text x="78" y="752" class="lbls" text-anchor="start" >tests exercise</text><text x="190" y="752" class="lblf" text-anchor="start" >sample-app-lit-e2e → docs · workspace dep · e2e dependsOn ^build, with @www/lit-ui-router.dev#wrangler:dev</text>
 <text x="58" y="767" class="lbl" text-anchor="start" >F</text><text x="78" y="767" class="lbls" text-anchor="start" >typecheck reads</text><text x="190" y="767" class="lblf" text-anchor="start" >lit-ui-router src AND specs → docs · tsconfig include src/** · turbo dependsOn ^build:types</text>
 <text x="58" y="782" class="lbl" text-anchor="start" >G</text><text x="78" y="782" class="lbls" text-anchor="start" >library under</text><text x="190" y="782" class="lblf" text-anchor="start" >@tools/shared → @tools/release · one of eight importers; only this road is drawn</text>
 <text x="58" y="798" class="lblf" text-anchor="start" >apps → docs is road A continued: docs depends on three sample apps and on ui-router-server</text>
@@ -1307,7 +1328,7 @@ a { color: var(--accent); }
 <text x="814" y="1101" class="lbls" text-anchor="end" >34</text>
 <text x="825" y="1101" class="lbls" text-anchor="start" >@tools/eslint — 6f · 301 · never gates · the repo rule plugin, the oxlint stubs and the element lane root eslint.config.ts composes</text>
 <text x="814" y="1118" class="lbls" text-anchor="end" >35</text>
-<text x="825" y="1118" class="lbls" text-anchor="start" >@tools/repo-checks — 9f · 827 · annex 6f · 896 · STOPS THE PR LINE · graph edges, task inputs, single version, patches, knip, dedupe — the lint lane waits</text>
+<text x="825" y="1118" class="lbls" text-anchor="start" >@tools/repo-checks — 9f · 827 · annex 6f · 896 · STOPS THE PR LINE · graph edges, inputs, single version, patches, knip, dedupe · lint lane</text>
 <text x="814" y="1135" class="lbls" text-anchor="end" >36</text>
 <text x="825" y="1135" class="lbls" text-anchor="start" >sample-app-lit-effect — 9f · 476 · the material · the effect demo — the fourth app shell the docs site serves</text>
 <text x="814" y="1152" class="lbls" text-anchor="end" >37</text>
@@ -1361,4 +1382,21 @@ a { color: var(--accent); }
   const w = e.target;
   if (!(w instanceof Element) || !w.classList.contains('figure-wrap')) return;
   w.parentElement?.toggleAttribute('data-end', w.scrollLeft + w.clientWidth >= w.scrollWidth - 1);
-}, true);</script>
+}, true);
+(() => {
+  const filled = () => document.querySelector('.fillable.is-filled');
+  const tell = (box) => { box.dispatchEvent(new CustomEvent('atlas-fill', { bubbles: true })); window.dispatchEvent(new Event('resize')); };
+  const leave = () => { const box = filled(); if (!box) return; box.classList.remove('is-filled'); document.documentElement.classList.remove('has-filled'); tell(box); };
+  document.addEventListener('click', (e) => {
+    const b = e.target instanceof Element ? e.target.closest('.fill') : null;
+    if (!b) return;
+    const box = b.closest('.fillable');
+    if (!box) return;
+    if (document.fullscreenElement === box) { void document.exitFullscreen(); return; }
+    if (box.classList.contains('is-filled')) { leave(); return; }
+    const ask = box.requestFullscreen ? box.requestFullscreen() : Promise.reject(new Error('no fullscreen'));
+    ask.catch(() => { box.classList.add('is-filled'); document.documentElement.classList.add('has-filled'); tell(box); });
+  });
+  document.addEventListener('fullscreenchange', () => { const box = document.fullscreenElement; tell(box && box.classList.contains('fillable') ? box : document.body); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && filled()) leave(); });
+})();</script>

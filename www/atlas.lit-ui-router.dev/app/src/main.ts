@@ -3,6 +3,7 @@ import { render } from 'lit';
 import 'lit-ui-router-ssr/register';
 import { hydrateRoot } from 'lit-ui-router-ssr/client';
 import { routeRef } from 'lit-ui-router-effect';
+import { installFill } from './fill.ts';
 import { onXrefClick } from './fragment.ts';
 import type { FocusDetail, XrefDetail } from './fragment.ts';
 import { createRouter } from './router.ts';
@@ -15,6 +16,9 @@ import { page } from './views.ts';
 import { installExperimental } from './experimental/index.ts';
 
 applyTheme(readTheme());
+// every figure's FILL WINDOW button, answered once for the whole document
+installFill();
+
 const router = createRouter();
 
 // The generated cross-references are plain <a href> (a lit directive cannot

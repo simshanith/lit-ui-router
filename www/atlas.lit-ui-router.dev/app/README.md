@@ -29,8 +29,8 @@ plate), `public/sheets/atlas.css`, `src/generated/city-init.js`, `src/generated/
 per plate (title, rev, ALTITUDE wording, FIT VERDICT line, census plates read, cross-sheet
 references, standalone filename in the flat set), an `issueLog` array, and a `cover` object carrying
 the flat gallery's stat bar, survey, prose column and colophon as rendered HTML, so the routed index
-draws the same bytes the flat one does. Twenty-seven fragments: twenty-one sheets, three `appendix`
-rows (A1, A2, A2i) and three `extras` rows: the 3D city, its working twin and sheet 2's model in
+draws the same bytes the flat one does. Twenty-eight fragments: twenty-one sheets, four `appendix`
+rows (A1, A2, A2i, A3) and three `extras` rows: the 3D city, its working twin and sheet 2's model in
 the round.
 
 ## The routes
@@ -50,15 +50,15 @@ the round.
 | `atlas.notFound` | — (url-less)   | `NotFoundView`  | — (the `otherwise` projection)    |
 
 The twenty-one sheets are the eighteen SVG plates and three interactive lanes (1i, 2B, 12i) of the
-ascent; the appendix files A1, A2 and A2i, the survey office's own lane, under the same `/sheet/:num`
+ascent; the appendix files A1, A2, A2i (the survey office's own lane) and A3 under the same `/sheet/:num`
 state, and `/sheet/14` and `/sheet/14i` redirect to A2 and A2i.
 `atlas.log` is the set's issue record — every REV across every plate, latest first — read from the
 manifest. The megacanvas is not a state: the flat set publishes the whole reel as one page, so the
 prerender writes `/megacanvas` and `/megacanvas/` → `/set/megacanvas.html` 301 into `_redirects`.
 
 The manifest's **`appendix`** array is the third list, beside `sheets` and `extras`: a plate whose
-subject is the atlas itself, at no altitude and with no census plate — today **A1 THE SPRITE
-STUDY**. Its id is letter-FIRST, which is what marks it, and it is deliberately out of `sheets`, so
+subject is the atlas itself, at no altitude — **A1 THE SPRITE STUDY**, **A2 THE SURVEY OFFICE**
+and **A3 THE ATLAS, MEASURED**. Its id is letter-FIRST, which is what marks it, and it is deliberately out of `sheets`, so
 the rail's ascent block, the ← / → walk and the gallery's main card grid never pick it up; it rides
 its own `APPENDIX` section and card grid. `mountsFor()` is fed BOTH lists, so `/sheet/A1` narrows
 into the server's `/sheet/{num:…}` alternation and `/sheet/a1` 302s to the cased id exactly as
@@ -232,7 +232,7 @@ file (~12 MB) that can be published as a claude.ai Artifact. That host
 is strict in four ways, and each one is a line in the build:
 
 - **One file, no fetches — not even same-origin.** `artifact.ts` bakes `public/manifest.json` and
-  all twenty-seven fragments (the bricks plate's GLB inlined as a `data:` url) into a
+  all twenty-eight fragments (the bricks plate's GLB inlined as a `data:` url) into a
   `<script type="application/json" id="atlas-data">` island (every
   `<` escaped, so a fragment's own `</script>` cannot close it) and inlines `atlas.css` as a
   `<style>`; `src/manifest.ts` reads the island when present and falls back to the fetches the site
@@ -252,8 +252,8 @@ is strict in four ways, and each one is a line in the build:
   point at `https://atlas.lit-ui-router.dev/set/…` in a new tab.
 
 `src/mode.ts` is the one flag (`import.meta.env.MODE === 'artifact'`) the readers share; analytics
-is skipped in this mode. Nothing above changes the site build, which prerenders 31 pages +
-`404.html` and 26 redirects.
+is skipped in this mode. Nothing above changes the site build, which prerenders 32 pages +
+`404.html` and 28 redirects.
 
 ## Server side
 
@@ -279,6 +279,14 @@ and is used twice:
 settled snapshot on the page's runtime (`src/runtime.ts`), then `hydrateRoot(root, page(router))` from `lit-ui-router-ssr/client`: the walk
 wakes every served `<ui-view>`, which adopts the nodes it already holds. A cold container — the dev server, the
 artifact build — returns `false` and the same template is rendered instead.
+
+**Fill the window (`src/fill.ts`).** Every figure — a plate, a lane's stage, the city and plant
+stages, the bricks frame — is a `.fillable` box with one `.fill` button, and `installFill()` answers
+them all with one delegated click: fullscreen on the box where the browser grants it, the
+`.is-filled` overlay (fixed, under `html.has-filled`) where it does not; the same button or Escape
+leaves. The box hears `atlas-fill` either way and the window a `resize`, which is how a cytoscape
+lane refits and a canvas resizes. The flat set carries the same rule as `FILL_SCRIPT` in
+`generator/chrome.mjs`, beside the plate-end script; the CSS is shared through `atlas.css`.
 
 What rendered, what did not, and what the package would need to close the gap is in
 [`SSR-VERDICT.md`](./SSR-VERDICT.md).

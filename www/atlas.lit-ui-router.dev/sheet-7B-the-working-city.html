@@ -226,7 +226,7 @@ sup.art {
    one screen. An inline SVG letterboxes under max-height instead of shrinking,
    so the cap reaches it through max-width times the plate's own viewBox ratio
    (--plate-ar, written per sheet). */
-.plate { position: relative; container-type: inline-size; margin: 20px 0 8px; --plate-cap: min(84vh, 1400px); }
+.plate { position: relative; container-type: inline-size; margin: 36px 0 8px; --plate-cap: min(84vh, 1400px); }
 .figure-wrap { overflow-x: auto; }
 .figure-wrap svg { display: block; width: 100%; max-width: min(100%, calc(var(--plate-cap) * var(--plate-ar, 1.4))); height: auto; min-width: 1000px; margin: 0 auto; }
 .plate::after {
@@ -250,6 +250,27 @@ sup.art {
 @container (width < 1000px) { .plate::after { display: block; } }
 /* at the end of the scroll the affordance steps aside — the plate's right edge is the point */
 .plate[data-end]::after { opacity: 0; }
+/* a fillable figure carries a .fill button: fullscreen where the browser grants it, the is-filled overlay where it does not */
+.fillable { position: relative; }
+.fill { position: absolute; top: 8px; right: 8px; z-index: 3; font-family: var(--data); font-size: 9.5px;
+  font-weight: 600; letter-spacing: 0.16em; line-height: 1; color: var(--ink); background: var(--paper);
+  border: 1px solid var(--ink); padding: 6px 8px; cursor: pointer; opacity: 0.72; }
+.fill:hover, .fill:focus-visible { opacity: 1; background: var(--paper-2); }
+.fill:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.fill::before { content: "FILL WINDOW ⤢"; }
+.fillable:fullscreen .fill::before, .fillable.is-filled .fill::before { content: "LEAVE ⤡"; }
+.fillable:fullscreen, .fillable.is-filled { background: var(--paper); margin: 0; }
+.fillable.is-filled { position: fixed; inset: 0; z-index: 60; overflow: auto; }
+html.has-filled { overflow: hidden; }
+/* a plate fills by its own ratio: as wide as the window allows under its height */
+.plate:fullscreen, .plate.is-filled { display: grid; place-items: center; padding: 16px; box-sizing: border-box; overflow: auto; }
+.plate:fullscreen .figure-wrap, .plate.is-filled .figure-wrap { width: 100%; }
+.plate:fullscreen .figure-wrap svg, .plate.is-filled .figure-wrap svg {
+  max-width: min(100%, calc((100vh - 32px) * var(--plate-ar, 1.4))); min-width: 0; }
+.plate:fullscreen::after, .plate.is-filled::after { display: none; }
+/* a plate's lettering reaches its corners, so its button hangs in the margin above; the filled plate takes it back into the corner */
+.plate > .fill { top: auto; bottom: calc(100% + 4px); right: 0; }
+.plate:fullscreen > .fill, .plate.is-filled > .fill { top: 8px; bottom: auto; right: 8px; }
 figure { margin: 0; }
 /* the caption is a margin note: a rule on the sheet's edge, its text inset to the plate's column */
 figcaption {
@@ -495,7 +516,7 @@ a { color: var(--accent); }
   <h2 class="sheet-title"><sup class="art">the&nbsp;</sup>WORKING CITY</h2>
   <p class="sheet-sub">ALTITUDE 3½ — SYNTHESIS PLATE TO SHEET 7: the census city as a working plant · weathering (13) × test light (7A) × gates (7) × live build, one sprite per member · steam window 2026-07-05..2026-10-03 · counted at origin/main @ 6d41d21e (2026-10-03)</p>
   <figure>
-    <div class="plate" style="--plate-ar:1.2102"><div class="figure-wrap"><svg viewBox="0 0 1560 1289" role="img" aria-label="Sheet 7's isometric census city redrawn as a working industrial plant, every workspace member a machine on the line. Massing is unchanged — footprint proportional to the square root of source lines, height three pixels per authored file, the same four dashed districts. Each machine broadcasts its state the way a Factorio building does: red rust speckle on the flanks where a member has gone untouched, on a five-step ladder the plate cuts from its own idle distribution at build time — 5 plants stand clean, sample-app-lit-mobx carries the deepest rust in the city at R4, and the top step stands empty so no flank on the plate is cracked; steam puffs rising from roof vents where commits touched the member in the last ninety days, six accent puffs over lit-ui-router, sample-app-shared, the Cypress host, docs, examples and the release tool; up to three green module lamps low on each front face showing how much of the member its own test suite lights, read straight from plate 7A's own filed snapshot, with accent lamps on the sample apps whose only light is the unmetered end-to-end rig; and outlet pipes that all connect, because the build graph's 31 real tasks last ran green. No alert triangle stands over the city at all: the alert register records that no gate task in the workspace is failing at HEAD, and the struck triangle beside the register is the channel's legend rather than an alarm. A plant schedule lists every member's channel values.">
+    <div class="plate fillable" style="--plate-ar:1.2102"><button type="button" class="fill" data-fill aria-label="Fill the window with this figure, or leave it"></button><div class="figure-wrap"><svg viewBox="0 0 1560 1289" role="img" aria-label="Sheet 7's isometric census city redrawn as a working industrial plant, every workspace member a machine on the line. Massing is unchanged — footprint proportional to the square root of source lines, height three pixels per authored file, the same four dashed districts. Each machine broadcasts its state the way a Factorio building does: red rust speckle on the flanks where a member has gone untouched, on a five-step ladder the plate cuts from its own idle distribution at build time — 5 plants stand clean, sample-app-lit-mobx carries the deepest rust in the city at R4, and the top step stands empty so no flank on the plate is cracked; steam puffs rising from roof vents where commits touched the member in the last ninety days, six accent puffs over lit-ui-router, sample-app-shared, the Cypress host, docs, examples and the release tool; up to three green module lamps low on each front face showing how much of the member its own test suite lights, read straight from plate 7A's own filed snapshot, with accent lamps on the sample apps whose only light is the unmetered end-to-end rig; and outlet pipes that all connect, because the build graph's 31 real tasks last ran green. No alert triangle stands over the city at all: the alert register records that no gate task in the workspace is failing at HEAD, and the struck triangle beside the register is the channel's legend rather than an alarm. A plant schedule lists every member's channel values.">
 <defs>
   <marker id="s7b-ai" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
     <path d="M0,0 L10,4 L0,8 z" class="fi"/>
@@ -1628,4 +1649,21 @@ a { color: var(--accent); }
   const w = e.target;
   if (!(w instanceof Element) || !w.classList.contains('figure-wrap')) return;
   w.parentElement?.toggleAttribute('data-end', w.scrollLeft + w.clientWidth >= w.scrollWidth - 1);
-}, true);</script>
+}, true);
+(() => {
+  const filled = () => document.querySelector('.fillable.is-filled');
+  const tell = (box) => { box.dispatchEvent(new CustomEvent('atlas-fill', { bubbles: true })); window.dispatchEvent(new Event('resize')); };
+  const leave = () => { const box = filled(); if (!box) return; box.classList.remove('is-filled'); document.documentElement.classList.remove('has-filled'); tell(box); };
+  document.addEventListener('click', (e) => {
+    const b = e.target instanceof Element ? e.target.closest('.fill') : null;
+    if (!b) return;
+    const box = b.closest('.fillable');
+    if (!box) return;
+    if (document.fullscreenElement === box) { void document.exitFullscreen(); return; }
+    if (box.classList.contains('is-filled')) { leave(); return; }
+    const ask = box.requestFullscreen ? box.requestFullscreen() : Promise.reject(new Error('no fullscreen'));
+    ask.catch(() => { box.classList.add('is-filled'); document.documentElement.classList.add('has-filled'); tell(box); });
+  });
+  document.addEventListener('fullscreenchange', () => { const box = document.fullscreenElement; tell(box && box.classList.contains('fillable') ? box : document.body); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && filled()) leave(); });
+})();</script>

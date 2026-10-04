@@ -2,10 +2,10 @@
 
 A drawing set: one subject, the lit-ui-router monorepo, surveyed at every altitude. Thirteen
 altitudes on 21 plates — the numbered sheets, their A/B alternates, three interactive lanes and a
-3D city — each in the form that altitude earns, and an appendix of 3 more about the atlas itself. Sheets 7–10 are a survey
+3D city — each in the form that altitude earns, and an appendix of 4 more about the atlas itself. Sheets 7–10 are a survey
 quartet (the workspace by mass, a consumer's node_modules, a deploy on the wire, the inside of
 one bundle); 11 prices every published entry alone; appendix A2 draws the census pipeline that
-measured the rest. The form riffs on an isometric codebase visualization seen in the wild; the notes on
+measured the rest, and A3 masses the atlas itself on sheet 7's ruler beside the codebase. The form riffs on an isometric codebase visualization seen in the wild; the notes on
 each sheet argue where that form fits and where it lies.
 
 | Sheet | Altitude | Form |
@@ -38,6 +38,7 @@ each sheet argue where that form fits and where it lies.
 | --- | --- | --- |
 | [A1](sheet-A1-the-sprite-study.html) | THE ATLAS ITSELF | SPRITE STUDIES |
 | [A2](sheet-A2-the-survey-office.html) | THE CENSUS PIPELINE | FLOW GRAPH |
+| [A3](sheet-A3-the-atlas-measured.html) | THE ATLAS ITSELF | ISOMETRIC CITY |
 | [A2i](sheet-A2i-the-survey-office-interactive.html) | THE CENSUS PIPELINE | INTERACTIVE GRAPH |
 
 - `megacanvas.html` — the 18 SVG plates on one page, ascent order.
@@ -90,7 +91,9 @@ into the app's `/log` at build time. This file is written by `build.mjs`; edit t
 
 **The cabinet.** Every figure on every plate is read from `data/*.json`, written by the
 `generator/census-*.mjs` probes at one ref — currently origin/main @ 6d41d21e — on the scc 4.0.0
-`Code` basis. Lookups throw on a missing row; nothing is hand-pasted. `INITIATIVES.md` records
+`Code` basis. Lookups throw on a missing row; nothing is hand-pasted. One plate stands outside the
+cabinet: `data/survey-self.json`, which `generator/survey-self.mjs` measures from an archive of the
+atlas's own branch for appendix A3, because main does not hold the atlas. `INITIATIVES.md` records
 the pipeline's design and the traps of refreshing it.
 
 **Type and theme.** Plates letter in the data face (DIN 2014 on the site's kit, Barlow Semi

@@ -235,7 +235,7 @@ sup.art {
    one screen. An inline SVG letterboxes under max-height instead of shrinking,
    so the cap reaches it through max-width times the plate's own viewBox ratio
    (--plate-ar, written per sheet). */
-.plate { position: relative; container-type: inline-size; margin: 20px 0 8px; --plate-cap: min(84vh, 1400px); }
+.plate { position: relative; container-type: inline-size; margin: 36px 0 8px; --plate-cap: min(84vh, 1400px); }
 .figure-wrap { overflow-x: auto; }
 .figure-wrap svg { display: block; width: 100%; max-width: min(100%, calc(var(--plate-cap) * var(--plate-ar, 1.4))); height: auto; min-width: 1000px; margin: 0 auto; }
 .plate::after {
@@ -259,6 +259,27 @@ sup.art {
 @container (width < 1000px) { .plate::after { display: block; } }
 /* at the end of the scroll the affordance steps aside — the plate's right edge is the point */
 .plate[data-end]::after { opacity: 0; }
+/* a fillable figure carries a .fill button: fullscreen where the browser grants it, the is-filled overlay where it does not */
+.fillable { position: relative; }
+.fill { position: absolute; top: 8px; right: 8px; z-index: 3; font-family: var(--data); font-size: 9.5px;
+  font-weight: 600; letter-spacing: 0.16em; line-height: 1; color: var(--ink); background: var(--paper);
+  border: 1px solid var(--ink); padding: 6px 8px; cursor: pointer; opacity: 0.72; }
+.fill:hover, .fill:focus-visible { opacity: 1; background: var(--paper-2); }
+.fill:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.fill::before { content: "FILL WINDOW ⤢"; }
+.fillable:fullscreen .fill::before, .fillable.is-filled .fill::before { content: "LEAVE ⤡"; }
+.fillable:fullscreen, .fillable.is-filled { background: var(--paper); margin: 0; }
+.fillable.is-filled { position: fixed; inset: 0; z-index: 60; overflow: auto; }
+html.has-filled { overflow: hidden; }
+/* a plate fills by its own ratio: as wide as the window allows under its height */
+.plate:fullscreen, .plate.is-filled { display: grid; place-items: center; padding: 16px; box-sizing: border-box; overflow: auto; }
+.plate:fullscreen .figure-wrap, .plate.is-filled .figure-wrap { width: 100%; }
+.plate:fullscreen .figure-wrap svg, .plate.is-filled .figure-wrap svg {
+  max-width: min(100%, calc((100vh - 32px) * var(--plate-ar, 1.4))); min-width: 0; }
+.plate:fullscreen::after, .plate.is-filled::after { display: none; }
+/* a plate's lettering reaches its corners, so its button hangs in the margin above; the filled plate takes it back into the corner */
+.plate > .fill { top: auto; bottom: calc(100% + 4px); right: 0; }
+.plate:fullscreen > .fill, .plate.is-filled > .fill { top: 8px; bottom: auto; right: 8px; }
 figure { margin: 0; }
 /* the caption is a margin note: a rule on the sheet's edge, its text inset to the plate's column */
 figcaption {
@@ -580,7 +601,7 @@ export function sheetSection(sheet, { headline = true } = {}) {
   <div class="sheet-head"><span class="proj">${PROJECT_MARK} — DRAWING SET</span><span class="shno">${sheet.head ?? `SHEET ${sheet.num} / ${TOTAL}`}</span></div>
   ${headline ? `<h2 class="sheet-title">${articleTitle(sheet.title)}</h2>\n  <p class="sheet-sub">${sheet.sub}</p>` : ''}
   <figure>
-    <div class="plate"${ar ? ` style="--plate-ar:${ar}"` : ''}><div class="figure-wrap">${sheet.svg}</div></div>
+    <div class="plate fillable"${ar ? ` style="--plate-ar:${ar}"` : ''}>${fillButton()}<div class="figure-wrap">${sheet.svg}</div></div>
     <figcaption><span class="figno">FIG. ${sheet.num}</span>${sheet.caption}</figcaption>
   </figure>
   <div class="notes-grid">
@@ -605,6 +626,31 @@ export const PLATE_END_SCRIPT = `document.addEventListener('scroll', (e) => {
   w.parentElement?.toggleAttribute('data-end', w.scrollLeft + w.clientWidth >= w.scrollWidth - 1);
 }, true);`;
 
+/** The `.fill` button a fillable figure carries; the page's script answers it. */
+export const fillButton = () => `<button type="button" class="fill" data-fill aria-label="Fill the window with this figure, or leave it"></button>`;
+
+// FILL THE WINDOW: one delegated click for every `.fill` button. Fullscreen when the
+// browser grants it, the `is-filled` overlay when it does not; a figure that fills or
+// leaves hears `atlas-fill` so a canvas or a graph can refit. The app keeps the same
+// rule in src/fill.ts.
+export const FILL_SCRIPT = `(() => {
+  const filled = () => document.querySelector('.fillable.is-filled');
+  const tell = (box) => { box.dispatchEvent(new CustomEvent('atlas-fill', { bubbles: true })); window.dispatchEvent(new Event('resize')); };
+  const leave = () => { const box = filled(); if (!box) return; box.classList.remove('is-filled'); document.documentElement.classList.remove('has-filled'); tell(box); };
+  document.addEventListener('click', (e) => {
+    const b = e.target instanceof Element ? e.target.closest('.fill') : null;
+    if (!b) return;
+    const box = b.closest('.fillable');
+    if (!box) return;
+    if (document.fullscreenElement === box) { void document.exitFullscreen(); return; }
+    if (box.classList.contains('is-filled')) { leave(); return; }
+    const ask = box.requestFullscreen ? box.requestFullscreen() : Promise.reject(new Error('no fullscreen'));
+    ask.catch(() => { box.classList.add('is-filled'); document.documentElement.classList.add('has-filled'); tell(box); });
+  });
+  document.addEventListener('fullscreenchange', () => { const box = document.fullscreenElement; tell(box && box.classList.contains('fillable') ? box : document.body); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && filled()) leave(); });
+})();`;
+
 // HTML only — `<wbr>` is not an SVG element, so this runs over rendered pages
 // and fragments, never over a plate's `<text>`. A path-shaped chip breaks after
 // its slash or comma rather than mid-identifier; the chip's own text is untouched.
@@ -621,5 +667,6 @@ export function page(title, body, { desc = '' } = {}) {
 ${desc ? `<meta name="description" content="${desc}">` : ''}
 <style>${CSS}</style>
 ${sprite && `${sprite}\n`}${chipBreaks(body)}
-<script>${PLATE_END_SCRIPT}</script>`;
+<script>${PLATE_END_SCRIPT}
+${FILL_SCRIPT}</script>`;
 }

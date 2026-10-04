@@ -535,7 +535,7 @@ export function registerLane() {
     <button type="button" id="rg-fit">${glyph('scan')}FIT</button>
   </div>
 </div>
-<div class="rg-stage">
+<div class="rg-stage fillable"><button type="button" class="fill" data-fill aria-label="Fill the window with this figure, or leave it"></button>
   <div class="rg-cy" id="rg-cy" role="application" tabindex="0" aria-label="An interactive register of the pull-request CI task graph: ${PKGS.length} packages as rows against ${COLS.length} task names as columns, ordered by dependency depth. By default only the ${REAL_N} command-bearing tasks and the ${REAL_E} edges joining two of them are drawn; the phantom shroud floods in the remaining ${NODES.length - REAL_N} placeholder nodes and ${fmt(EDGES.length - REAL_E)} edges. With the graph focused, the arrow keys step the pin through the buildings and Escape clears it."></div>
   <aside class="rg-info" id="rg-info"></aside>
 </div>

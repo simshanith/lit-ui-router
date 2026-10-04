@@ -177,6 +177,7 @@ const CSS = `
 .cs-stage { border: 1.5px solid var(--ink); background: var(--paper); }
 /* pan-y keeps the page scrollable under a touch; a horizontal drag orbits */
 .cs-canvas { height: clamp(520px, 80vh, 1400px); touch-action: pan-y; cursor: grab; position: relative; overflow: hidden; }
+.cs-stage:fullscreen .cs-canvas, .cs-stage.is-filled .cs-canvas { height: calc(100vh - 92px); }
 .cs-canvas.over { cursor: pointer; }
 .cs-canvas.grabbing { cursor: grabbing; }
 .cs-canvas:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
@@ -1278,7 +1279,7 @@ ${swatchCss}</style>
       <button type="button" id="cs-reset">RESET</button>
     </div>
   </div>
-  <div class="cs-stage">
+  <div class="cs-stage fillable"><button type="button" class="fill" data-fill aria-label="Fill the window with this figure, or leave it"></button>
     <div class="cs-canvas" id="cs-canvas" role="application" tabindex="0" aria-label="A real three-dimensional isometric model of the census city: ${MASSED} massed workspace members, ${plant ? 'each a translucent paper box inside its girding frame and crowned by a working plant of stacks, tanks, vents and pipes sized from its own census' : 'each an opaque paper box inside its girding frame'}, its right-hand wall hatched in the rake its gate tier is hatched in on the flat plate, footprint proportional to the square root of its authored lines and height three units per authored file, with ${ANNEXES} dashed spec annexes beside them and four district plates on the ground. The camera orbits and lands on one of the four isometric diagonals. Each mass carries a numbered chip matching sheet 7's schedule, and each district plate carries its name lettered flat on the ground. A TEST LIGHT switch relights the same city from sheet 7A's shadow survey: each metered member's mass splits along its footprint, the share its own suite loads glowing from the annex side and the rest washed toward black, with the spec annexes burning as the lamps that throw the light. With the stage focused, the arrow keys step the pin through the members, Enter or Space pins or clears the one in hand, and Escape clears it."></div>
     <aside class="cs-info" id="cs-info"></aside>
   </div>

@@ -37,6 +37,8 @@
   background: var(--paper); }
 .lw-stage:focus-visible, .lw-cy:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .lw-cy { height: clamp(560px, 70vh, 960px); min-width: 0; touch-action: pan-y; }
+.lw-stage:fullscreen .lw-cy, .lw-stage.is-filled .lw-cy { height: 100vh; }
+.lw-stage:fullscreen .lw-info, .lw-stage.is-filled .lw-info { max-height: 100vh; }
 .lw-info { border-left: 1.5px solid var(--ink); background: var(--paper-2); padding: 20px 22px 22px;
   font-family: var(--data); font-size: 12.5px; letter-spacing: 0.04em; line-height: 1.5; color: var(--ink);
   overflow-y: auto; max-height: clamp(560px, 70vh, 960px); }
@@ -88,7 +90,7 @@
     <button type="button" id="lw-reset"><svg class="gl lane" aria-hidden="true" focusable="false"><use href="#gl-rotate-ccw"/></svg>RESET</button>
   </div>
 </div>
-<div class="lw-stage" id="lw-stage" tabindex="0" aria-label="the render loop, walkable — arrow keys step the walk while this lane has focus">
+<div class="lw-stage fillable" id="lw-stage" tabindex="0" aria-label="the render loop, walkable — arrow keys step the walk while this lane has focus"><button type="button" class="fill" data-fill aria-label="Fill the window with this figure, or leave it"></button>
   <div class="lw-cy" id="lw-cy" role="img" aria-label="An interactive circuit of the lit-ui-router render loop: 10 stations — LOCATION, @uirouter/core, TRANSITION HALL, &lt;ui-view&gt;, &lt;ui-view name='detail'&gt;, LIT RENDER, THE DOCUMENT, &lt;a uiSref&gt;, uiSrefActive, TransitionController — joined by 12 legs, with one navigation (a click on &lt;a uiSref&gt; from /people to /people/32) walked in 12 steps."></div>
   <aside class="lw-info" id="lw-info"></aside>
 </div>
@@ -129,6 +131,7 @@
       holding = false;
     });
     cy.on('dbltap', function (e) { if (e.target === cy) fit(); });
+    stage.parentElement.addEventListener('atlas-fill', function () { setTimeout(function () { cy.resize(); fit(); }, 80); });
     if (!window.matchMedia('(pointer: coarse)').matches) return;
     stage.addEventListener('touchstart', function (e) {
       if (!overflow && e.touches.length === 1) e.stopImmediatePropagation();

@@ -62,6 +62,7 @@ export const LANE_TOUCH_JS = `  function atlasLaneTouch(stage, cy, fit) {
       holding = false;
     });
     cy.on('dbltap', function (e) { if (e.target === cy) fit(); });
+    stage.parentElement.addEventListener('atlas-fill', function () { setTimeout(function () { cy.resize(); fit(); }, 80); });
     if (!window.matchMedia('(pointer: coarse)').matches) return;
     stage.addEventListener('touchstart', function (e) {
       if (!overflow && e.touches.length === 1) e.stopImmediatePropagation();
