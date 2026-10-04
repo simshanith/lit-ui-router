@@ -134,9 +134,14 @@ in the job log:
    exact: cd tools/repo-checks && node check-task-inputs.ts
 ```
 
-`gh run view <run-id> --log-failed` returns the whole failed job, thousands of
-lines with the report near the end. Save it to a file and search for `repro:`.
-Run the `repro:` line: `--force` re-runs that task while its dependencies stay
+A red build fails the summary step, not the build step, so the job opens on the
+report. The build step prints output only for failing tasks; the
+`turbo-task-logs` artifact holds every task's full log, and the summary links
+it. Locally, `mise run ci` prints everything unless `TURBO_OUTPUT_LOGS` says
+otherwise.
+
+`gh run view <run-id> --log-failed` returns the failed steps' logs. Save it to a
+file and search for `repro:`. Run the `repro:` line: `--force` re-runs that task while its dependencies stay
 cached. `exact:` is the command turbo ran, from the directory it ran in.
 
 Two workflows run the same job:

@@ -26,7 +26,8 @@
 //      TURBO_SUMMARY_ARTIFACT_URL (the uploaded `--summarize` JSON, linked as
 //      the uncapped copy of the capped lists this prints),
 //      VITEST_ATTACHMENTS_ARTIFACT_URL (the uploaded `.vitest/` dirs, linked
-//      when a failing spec wrote a screenshot or attachment).
+//      when a failing spec wrote a screenshot or attachment),
+//      TURBO_LOGS_ARTIFACT_URL (the uploaded per-task turbo logs).
 
 import { randomUUID } from 'node:crypto';
 import { appendFile, readdir, readFile, stat } from 'node:fs/promises';
@@ -240,6 +241,7 @@ async function main(): Promise<void> {
     artifactUrl: process.env.TURBO_SUMMARY_ARTIFACT_URL,
     fileNames: runs.map((run) => run.fileName ?? ''),
     attachmentsUrl: process.env.VITEST_ATTACHMENTS_ARTIFACT_URL,
+    logsUrl: process.env.TURBO_LOGS_ARTIFACT_URL,
   });
 }
 

@@ -39,6 +39,7 @@ const test = [
   'turbo run',
   ...selected.map((suite) => `${PREFIX}${suite}`),
   '--continue=dependencies-successful --ui=stream --log-order=stream --summarize',
+  `--output-logs=${process.env.TURBO_OUTPUT_LOGS ?? 'full'}`,
 ].join(' ');
 
 // not the serve mise task: its build_www depends would re-run under nested mise.

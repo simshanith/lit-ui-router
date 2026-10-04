@@ -114,9 +114,15 @@ jobs:
         # TURBO_FORCE carries the deflake input through env (never `${{ }}`
         # in run lines); turbo parses ""/"false" as cache-respecting.
         # Exact complement of the ci_main step below: one of the two runs.
+        # continue-on-error: the Turbo run summary step fails in its place, so
+        # a red job opens on the report rather than this stream.
+        id: build
         if: ${{ !inputs.mainGraph }}
+        continue-on-error: true
         run: mise run ci
         env:
+          # Only failing tasks print; every task's full log is uploaded below.
+          TURBO_OUTPUT_LOGS: errors-only
           TURBO_FORCE: ${{ inputs.force }}
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
@@ -134,9 +140,13 @@ jobs:
         # Future main-only guards join ci:main's dependsOn, not new steps.
         # Main pushes, mainGraph dispatches and ci-main/ branches all land here;
         # tag_push stays push-only, so none of the others can tag.
+        # Same continue-on-error hand-off to the summary step as above.
+        id: build_main
         if: ${{ inputs.mainGraph }}
+        continue-on-error: true
         run: mise run ci_main
         env:
+          TURBO_OUTPUT_LOGS: errors-only
           TURBO_FORCE: ${{ inputs.force }}
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
@@ -169,9 +179,31 @@ jobs:
           path: .turbo/runs/
           retention-days: 30
           if-no-files-found: warn
+      - name: Upload turbo task logs
+        # The full output the errors-only stream hid, one file per task.
+        # `always()`: a timed-out job is when the stream says least.
+        id: task_logs
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7
+        continue-on-error: true
+        with:
+          name: turbo-task-logs
+          # The workspace globs, not `**`: that would walk node_modules.
+          path: |
+            .turbo/turbo-*.log
+            apps/*/.turbo/turbo-*.log
+            examples/.turbo/turbo-*.log
+            packages/*/.turbo/turbo-*.log
+            tools/*/.turbo/turbo-*.log
+            www/*/.turbo/turbo-*.log
+          # `.turbo` is below the search root for every pattern but the first.
+          include-hidden-files: true
+          retention-days: 5
+          if-no-files-found: warn
       - name: Upload vitest attachments
+        # The build steps continue on error, so `failure()` is false here.
         id: vitest_attachments
-        if: ${{ failure() }}
+        if: ${{ !cancelled() && (steps.build.outcome == 'failure' || steps.build_main.outcome == 'failure') }}
         uses: actions/upload-artifact@v7
         continue-on-error: true
         with:
@@ -200,14 +232,20 @@ jobs:
         # start, not its end, so a later `turbo run` would join it. It fails
         # open, as before: a broken reporter
         # warns, never adds a red step of its own.
+        #
+        # BUILD_OUTCOME: this step goes red after a failed build, so a red job
+        # opens here and the steps below see `failure()` as before.
         if: ${{ !cancelled() }}
         run: mise run //tools/build_and_test:turbo_summary
         env:
+          BUILD_OUTCOME: ${{ inputs.mainGraph && steps.build_main.outcome || steps.build.outcome }}
           # Empty when the upload found nothing; the report then omits the link.
           TURBO_SUMMARY_ARTIFACT_URL: ${{ steps.run_summaries.outputs.artifact-url }}
+          TURBO_LOGS_ARTIFACT_URL: ${{ steps.task_logs.outputs.artifact-url }}
           # Empty on a green run or when no spec wrote an attachment.
           VITEST_ATTACHMENTS_ARTIFACT_URL: ${{ steps.vitest_attachments.outputs.artifact-url }}
       - name: Upload Codecov bundle stats
+        # Implicit success(): the summary step above is red after a red build.
         run: mise run codecov_bundle
         env:
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}

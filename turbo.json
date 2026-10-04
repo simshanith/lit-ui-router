@@ -3,6 +3,8 @@
   "ui": "tui",
   "remoteCache": { "signature": true },
   "agentGuidance": false,
+  // errors-only output still prints a start and finish line per task
+  "futureFlags": { "errorsOnlyShowHash": true },
   "tasks": {
     "transit": {
       "dependsOn": ["^transit"]

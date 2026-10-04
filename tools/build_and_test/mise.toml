@@ -51,7 +51,8 @@ run = 'TURBO_SUMMARY_SESSION="${usage_session_file?}" ./tools/build_and_test/src
 # env: GITHUB_STEP_SUMMARY (runner output file; prints to stdout when unset) —
 # an output target, so it stays a comment like the GITHUB_OUTPUT tasks below.
 # Runs on every turbo run, green or red: the overview always, the failing-task
-# detail only when something failed. Runs from the repo root, not this
+# detail only when something failed. The report itself fails open; only
+# --build-outcome=failure makes the task exit non-zero. Runs from the repo root, not this
 # directory: the summary's `logFile` paths are repo-root-relative, and so is
 # the --runs-dir default. Same direct-exec reason as `xvfb` above.
 description = "Report this session's turbo runs — cache, timings, and any failing tasks — to the step summary and stdout"
@@ -60,8 +61,13 @@ usage = '''
 flag "--runs-dir <runs_dir>" help="Where `turbo --summarize` writes run summaries; every one this session wrote is an input" default=".turbo/runs" env="TURBO_RUNS_DIR"
 flag "--session-file <session_file>" help="The mark_session stamp that bounds the session; without it only the newest run is reported" default=".turbo/summary-session" env="TURBO_SUMMARY_SESSION"
 flag "--artifact-url <artifact_url>" help="Uploaded copy of that JSON, linked from the report as the uncapped view; the workflow passes the upload step's artifact-url" env="TURBO_SUMMARY_ARTIFACT_URL"
+flag "--logs-url <logs_url>" help="Uploaded per-task turbo logs, linked from the report; the workflow passes the logs upload step's artifact-url" env="TURBO_LOGS_ARTIFACT_URL"
+flag "--build-outcome <build_outcome>" help="The build step's outcome; `failure` exits 1 after the report, so a red job opens on this step" env="BUILD_OUTCOME"
 '''
-run = 'TURBO_RUNS_DIR="${usage_runs_dir?}" TURBO_SUMMARY_SESSION="${usage_session_file?}" TURBO_SUMMARY_ARTIFACT_URL="${usage_artifact_url:-}" ./tools/build_and_test/src/run-summary.ts'
+run = [
+  'TURBO_RUNS_DIR="${usage_runs_dir?}" TURBO_SUMMARY_SESSION="${usage_session_file?}" TURBO_SUMMARY_ARTIFACT_URL="${usage_artifact_url:-}" TURBO_LOGS_ARTIFACT_URL="${usage_logs_url:-}" ./tools/build_and_test/src/run-summary.ts',
+  'if [ "${usage_build_outcome:-}" = failure ]; then echo "turbo_summary: the build step failed; its failing tasks are reported above" >&2; exit 1; fi',
+]
 
 [tasks.playwright_version]
 # env: GITHUB_OUTPUT (step-output target). One task per browser tool so each

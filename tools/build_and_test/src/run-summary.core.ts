@@ -558,6 +558,8 @@ export interface OverviewContext {
    * always has something behind it.
    */
   attachmentsUrl?: string;
+  /** The uploaded per-task `.turbo/turbo-*.log` files, whatever the stream hid. */
+  logsUrl?: string;
   /**
    * Warn-only lanes and the state each asserted. Not derivable from `summary`:
    * these lanes exit 0, so the artifact cannot tell one carrying warnings from
@@ -602,6 +604,18 @@ export function attachmentsLink(
   return {
     markdown: `[Vitest attachments](<${url}>) — failure screenshots and \`annotate\` attachments from the failing specs, downloadable from this run's artifacts.`,
     line: `   vitest attachments: ${url}`,
+  };
+}
+
+/** Link to every task's full log; CI streams only failing tasks' output. */
+export function logsLink(
+  context: OverviewContext,
+): { markdown: string; line: string } | undefined {
+  const url = safeArtifactUrl(context.logsUrl);
+  if (url === undefined) return undefined;
+  return {
+    markdown: `[Full task logs](<${url}>) — every task's complete output, downloadable from this run's artifacts.`,
+    line: `   task logs: ${url}`,
   };
 }
 
@@ -731,7 +745,11 @@ function footerMarkdown(context: OverviewContext): string[] {
       '',
     );
   }
-  for (const link of [attachmentsLink(context), artifactLink(context)]) {
+  for (const link of [
+    attachmentsLink(context),
+    logsLink(context),
+    artifactLink(context),
+  ]) {
     if (link !== undefined) out.push(link.markdown, '');
   }
   return out;
@@ -857,9 +875,11 @@ function footerLines(context: OverviewContext): string[] {
 
   // Blank line first: the link is a footer for the whole block, and set flush
   // against the facts it reads as a continuation of whichever one ran last.
-  const links = [attachmentsLink(context), artifactLink(context)].filter(
-    (link) => link !== undefined,
-  );
+  const links = [
+    attachmentsLink(context),
+    logsLink(context),
+    artifactLink(context),
+  ].filter((link) => link !== undefined);
   if (links.length > 0) lines.push('', ...links.map((link) => link.line));
   return lines;
 }
