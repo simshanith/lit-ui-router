@@ -45,9 +45,11 @@ export class RouterSubscribers {
 
   /** Hands every kept subscriber `router`, once, and forgets them. */
   deliver(router: UIRouterLit): void {
-    const pending = [...this.pending];
-    this.pending.clear();
-    for (const deliver of pending) {
+    for (const deliver of [...this.pending]) {
+      // An earlier subscriber may have disconnected this one, unsubscribing it.
+      if (!this.pending.delete(deliver)) {
+        continue;
+      }
       try {
         deliver(router);
       } catch (thrown) {

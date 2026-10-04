@@ -122,6 +122,23 @@ describe('placeholder router upgrade', () => {
       expect(rethrows).toHaveLength(1);
     });
 
+    it('skips a subscriber that an earlier one unsubscribed during the upgrade', async () => {
+      const child = uiRouter.appendChild(document.createElement('div'));
+      const later =
+        vi.fn<(value: UIRouterLit, unsubscribe?: () => void) => void>();
+      requestRouter(child, {
+        subscribe: true,
+        callback: (value) => {
+          if (value === router) later.mock.calls[0]?.[1]?.();
+        },
+      });
+      requestRouter(child, { subscribe: true, callback: later });
+
+      await upgrade();
+
+      expect(later).toHaveBeenCalledTimes(1);
+    });
+
     it('delivers the upgrade once, and never a later swap', async () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
       try {
