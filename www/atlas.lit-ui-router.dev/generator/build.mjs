@@ -233,7 +233,8 @@ ${provenanceCss}
 // The plate is the checked-in master per-file snapshot census-scc.mjs writes at a named
 // ref; the rollup below is census-overview.mjs's group-by-language query, recomputed here.
 // Deliberately wider than any sheet (JSON, Markdown, config all count) and deliberately
-// main, not this branch: the atlas's own drawings would be a 29k-sloc self-portrait.
+// main, not this branch: the atlas's own drawings are a self-portrait, and appendix A3
+// measures that on sheet 7's ruler from data/survey-self.json.
 const PLATE = JSON.parse(readFileSync(new URL('../data/census-files.json', import.meta.url), 'utf8'));
 const byLang = new Map();
 for (const r of PLATE.rows) {

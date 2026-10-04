@@ -2,8 +2,9 @@
 // here — this is a group-by-language QUERY over the master per-file snapshot
 // www/atlas.lit-ui-router.dev/data/census-files.json (written by census-scc.mjs, default ref
 // origin/main).  Deliberately main and not this atlas branch: surveying the
-// branch counts the atlas's own drawings (a ~29k-sloc self-portrait), which
-// the cover should not do.  The measurement ledger — what scc skips, the wc
+// branch counts the atlas's own drawings, which the cover should not do;
+// appendix A3 measures that self-portrait on sheet 7's ruler from
+// data/survey-self.json.  The measurement ledger — what scc skips, the wc
 // cross-check discipline — lives with the measurement in census-scc.mjs.
 // Refresh flow: `node census-scc.mjs [--ref <ref>]` then re-run this.
 import { readFileSync } from 'node:fs';
