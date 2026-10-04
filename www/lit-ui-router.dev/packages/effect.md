@@ -109,10 +109,12 @@ new RouterRefController(host, selector, options?)
   the route is then read at construction, so `.value` is live before the host
   connects. A thunk (`() => UIRouter | undefined`) is resolved at construction
   and again on every `hostConnected`; when it returns `undefined`, the
-  controller discovers the router as if the option were omitted. A host on a
-  page served by [`lit-ui-router-ssr`](/packages/ssr) must be handed its
-  router, here or through `setRouter()`: discovery binds the placeholder
-  router `<ui-router>` holds until `hydrateRoot()` sets the app's
+  controller discovers the router as if the option were omitted. Discovery
+  subscribes, so on a page served by [`lit-ui-router-ssr`](/packages/ssr) the
+  host follows `<ui-router>` from its placeholder router to the app's when
+  `hydrateRoot()` sets it. A `lit-ui-router` that does not hand that router to
+  subscribers leaves the host on the placeholder; hand such a host its router
+  here or through `setRouter()`
 - `options.onChange` — effect invoked when the selected value changes (and
   once on every (re)connect); useful for resetting component state from route
   params
