@@ -58,9 +58,14 @@ export const FILTER_PARAMS: Record<string, unknown> = Object.fromEntries(
   FILTER_KEYS.map((key) => [key, { value: null }]),
 );
 
-/** An interactive page's selection, `?focus=12`: dynamic, never inherited, null when absent. */
+/**
+ * A figure page's in-place params, dynamic, never inherited, null when absent:
+ * an interactive page's selection, `?focus=12`, and the enlarged figure,
+ * `?enlarge=sheet-7` (src/lightbox.ts).
+ */
 export const FOCUS_PARAMS: Record<string, unknown> = {
   focus: { value: null, dynamic: true, inherit: false },
+  enlarge: { value: null, dynamic: true, inherit: false },
 };
 
 export const routes: RouteDeclaration[] = [
@@ -76,14 +81,14 @@ export const routes: RouteDeclaration[] = [
     url: '/?subject&projection&mode&basis&kv',
     params: FILTER_PARAMS,
   },
-  { name: 'atlas.sheet', url: '/sheet/:num?focus', params: FOCUS_PARAMS },
+  { name: 'atlas.sheet', url: '/sheet/:num?focus&enlarge', params: FOCUS_PARAMS },
   // The city in the round and its working twin: app-only plates whose view loads
   // @google/model-viewer on entry, resolved. The twin is the same city with its plants raised.
-  { name: 'atlas.city', url: '/city?focus', params: FOCUS_PARAMS },
-  { name: 'atlas.plant', url: '/plant?focus', params: FOCUS_PARAMS },
+  { name: 'atlas.city', url: '/city?focus&enlarge', params: FOCUS_PARAMS },
+  { name: 'atlas.plant', url: '/plant?focus&enlarge', params: FOCUS_PARAMS },
   // Sheet 2's finished model in the round: its view loads @google/model-viewer
   // on entry, as the city's does.
-  { name: 'atlas.bricks', url: '/bricks?focus', params: FOCUS_PARAMS },
+  { name: 'atlas.bricks', url: '/bricks?focus&enlarge', params: FOCUS_PARAMS },
   // The type specimen: a design bench, not a plate. It is the one state whose
   // view pulls a webfont — and it pulls it on entry, so no other page's
   // payload knows the faces exist.
@@ -130,7 +135,7 @@ export function mountsFor(sheetNums?: readonly string[]): Record<string, MountCo
   const nums = [...new Set(sheetNums ?? [])].sort();
   const narrowed = routes.map((route) => {
     if (route.name !== 'atlas.sheet' || nums.length === 0) return route;
-    return { ...route, url: `/sheet/{num:(?:${nums.join('|')})}?focus` };
+    return { ...route, url: `/sheet/{num:(?:${nums.join('|')})}?focus&enlarge` };
   });
   const lowercased: RedirectRule[] = nums
     .filter((num) => num !== num.toLowerCase())

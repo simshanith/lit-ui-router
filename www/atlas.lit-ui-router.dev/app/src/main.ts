@@ -3,9 +3,9 @@ import { render } from 'lit';
 import 'lit-ui-router-ssr/register';
 import { hydrateRoot } from 'lit-ui-router-ssr/client';
 import { routeRef } from 'lit-ui-router-effect';
-import { installFill } from './fill.ts';
 import { onXrefClick } from './fragment.ts';
 import type { FocusDetail, XrefDetail } from './fragment.ts';
+import { installLightbox } from './lightbox.ts';
 import { createRouter } from './router.ts';
 import { runtime } from './runtime.ts';
 import { applyTheme, readTheme } from './theme.ts';
@@ -16,8 +16,6 @@ import { page } from './views.ts';
 import { installExperimental } from './experimental/index.ts';
 
 applyTheme(readTheme());
-// every figure's FILL WINDOW button, answered once for the whole document
-installFill();
 
 const router = createRouter();
 
@@ -32,7 +30,9 @@ document.addEventListener('atlas-xref', (event) => {
 document.addEventListener('atlas-focus', (event) => {
   event.preventDefault();
   const { focus } = (event as CustomEvent<FocusDetail>).detail;
-  router.stateService.go('.', { focus }, { location: 'replace' }).then(
+  // `enlarge` is not inherited either: a pick inside an enlarged figure keeps it open
+  const { enlarge } = router.globals.params;
+  router.stateService.go('.', { focus, enlarge }, { location: 'replace' }).then(
     () => {},
     () => {}, // an ignored or superseded pick is not an error here
   );
@@ -77,3 +77,6 @@ try {
 }
 if (release) void pageSettled().then(release);
 else render(page(router), root);
+
+// every figure's ENLARGE button and the url's `?enlarge=`, answered by the document's one lightbox
+void pageSettled().then(() => installLightbox(router));

@@ -257,7 +257,7 @@ sup.art {
   border: 1px solid var(--ink); padding: 6px 8px; cursor: pointer; opacity: 0.72; }
 .fill:hover, .fill:focus-visible { opacity: 1; background: var(--paper-2); }
 .fill:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.fill::before { content: "FILL WINDOW ⤢"; }
+.fill::before { content: "ENLARGE ⤢"; }
 .fillable:fullscreen .fill::before, .fillable.is-filled .fill::before { content: "LEAVE ⤡"; }
 .fillable:fullscreen, .fillable.is-filled { background: var(--paper); margin: 0; }
 .fillable.is-filled { position: fixed; inset: 0; z-index: 60; overflow: auto; }
@@ -516,7 +516,7 @@ a { color: var(--accent); }
   <h2 class="sheet-title"><sup class="art">the&nbsp;</sup>INSTRUMENT YARD</h2>
   <p class="sheet-sub">ALTITUDE 3 — 7 publishable packages · 24 tools · 90 turbo task names · one packer, many readers · every mass counted at origin/main @ 4dc0cbb7 (2026-10-04) from www/atlas.lit-ui-router.dev/data/census-yard.json on scc Code lines — 254 authored files and 19,521 sloc across 17 massed structures, with the task-manager inset reading the same two plates sheet 3A draws</p>
   <figure>
-    <div class="plate fillable" style="--plate-ar:1.1532"><button type="button" class="fill" data-fill aria-label="Fill the window with this figure, or leave it"></button><div class="figure-wrap"><svg viewBox="0 0 1400 1214" role="img" aria-label="Isometric map of the lit-ui-router monorepo as an industrial site, re-massed from measured source. A build conveyor runs along one straight isometric lane from upper left to lower right: the packages source slab, the oxc-emit build shed, the packer, a green crate that is the one tarball, the publish hall, and the npm registry beyond a dashed boundary. Below and to the left stands the instrument yard in two rows, and below that a proving ground of sample apps, end to end tests and the docs deploy watch. Every structure is massed by its own census — footprint side proportional to the square root of its authored source lines, height one and a half pixels per authored file — so the two heaviest masses on the sheet are material rather than instruments: the sample apps tower at 66 files, 3,763 lines, and the source slab at 66 files, 7,191 lines. Gate severity is carried entirely in colour, never in height: five small red hatched pads stop the pull request line — the vitest harness, compat-guards, dts-backtest, check exports, and Cypress end to end — one solid red block, published-diff, halts publishing outright; two accent hatched blocks gate a later stage, the version bump and the docs deploy; and the faint unhatched blocks never gate at all. A dashed trunk carries the one cached tarball from the green crate to the three checks that read it, and a long accent return runs from the registry around the front of the whole site back into published-diff, closing the loop. A structure schedule lists all 19 structures with exact file and line counts and their gate tier. In the upper left corner, set apart from the isometric site, a small flat schematic shows the two task managers as a loop rather than a stack: GitHub Actions enters mise at 37 call sites across 8 workflows, mise holds 54 tasks with only 11 of them declaring dependencies, seven of those tasks shell turbo whose continuous-integration graph expands to 864 task nodes, and an accent arrow returns from turbo back into mise, where seven root scripts shell mise again for the aqua-provisioned linters — rumdl, taplo, shellcheck, actionlint and zizmor — that node never installs.">
+    <div class="plate fillable" style="--plate-ar:1.1532"><button type="button" class="fill" data-fill aria-label="Enlarge this figure, or leave it"></button><div class="figure-wrap"><svg viewBox="0 0 1400 1214" role="img" aria-label="Isometric map of the lit-ui-router monorepo as an industrial site, re-massed from measured source. A build conveyor runs along one straight isometric lane from upper left to lower right: the packages source slab, the oxc-emit build shed, the packer, a green crate that is the one tarball, the publish hall, and the npm registry beyond a dashed boundary. Below and to the left stands the instrument yard in two rows, and below that a proving ground of sample apps, end to end tests and the docs deploy watch. Every structure is massed by its own census — footprint side proportional to the square root of its authored source lines, height one and a half pixels per authored file — so the two heaviest masses on the sheet are material rather than instruments: the sample apps tower at 66 files, 3,763 lines, and the source slab at 66 files, 7,191 lines. Gate severity is carried entirely in colour, never in height: five small red hatched pads stop the pull request line — the vitest harness, compat-guards, dts-backtest, check exports, and Cypress end to end — one solid red block, published-diff, halts publishing outright; two accent hatched blocks gate a later stage, the version bump and the docs deploy; and the faint unhatched blocks never gate at all. A dashed trunk carries the one cached tarball from the green crate to the three checks that read it, and a long accent return runs from the registry around the front of the whole site back into published-diff, closing the loop. A structure schedule lists all 19 structures with exact file and line counts and their gate tier. In the upper left corner, set apart from the isometric site, a small flat schematic shows the two task managers as a loop rather than a stack: GitHub Actions enters mise at 37 call sites across 8 workflows, mise holds 54 tasks with only 11 of them declaring dependencies, seven of those tasks shell turbo whose continuous-integration graph expands to 864 task nodes, and an accent arrow returns from turbo back into mise, where seven root scripts shell mise again for the aqua-provisioned linters — rumdl, taplo, shellcheck, actionlint and zizmor — that node never installs.">
 <defs>
   <marker id="s3-ai" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
     <path d="M0,0 L10,4 L0,8 z" class="fi"/>
@@ -924,19 +924,45 @@ a { color: var(--accent); }
   w.parentElement?.toggleAttribute('data-end', w.scrollLeft + w.clientWidth >= w.scrollWidth - 1);
 }, true);
 (() => {
-  const filled = () => document.querySelector('.fillable.is-filled');
+  const key = (box) => box.id || (box.closest('section[id]') || {}).id || '';
+  const find = (id) => Array.from(document.querySelectorAll('.fillable')).find((box) => key(box) === id) || null;
+  const param = () => new URLSearchParams(location.search).get('enlarge');
+  const current = () => { const f = document.fullscreenElement; return f && f.classList.contains('fillable') ? f : document.querySelector('.fillable.is-filled'); };
   const tell = (box) => { box.dispatchEvent(new CustomEvent('atlas-fill', { bubbles: true })); window.dispatchEvent(new Event('resize')); };
-  const leave = () => { const box = filled(); if (!box) return; box.classList.remove('is-filled'); document.documentElement.classList.remove('has-filled'); tell(box); };
-  document.addEventListener('click', (e) => {
-    const b = e.target instanceof Element ? e.target.closest('.fill') : null;
-    if (!b) return;
-    const box = b.closest('.fillable');
-    if (!box) return;
-    if (document.fullscreenElement === box) { void document.exitFullscreen(); return; }
-    if (box.classList.contains('is-filled')) { leave(); return; }
+  const write = (id, push) => { const url = new URL(location.href); if (id) url.searchParams.set('enlarge', id); else url.searchParams.delete('enlarge'); history[push ? 'pushState' : 'replaceState'](history.state, '', url); };
+  let ours = false;
+  const fill = (box) => {
     const ask = box.requestFullscreen ? box.requestFullscreen() : Promise.reject(new Error('no fullscreen'));
     ask.catch(() => { box.classList.add('is-filled'); document.documentElement.classList.add('has-filled'); tell(box); });
+  };
+  const unfill = () => {
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    const box = document.querySelector('.fillable.is-filled');
+    if (!box) return;
+    box.classList.remove('is-filled'); document.documentElement.classList.remove('has-filled'); tell(box);
+  };
+  const leave = () => { if (ours) { ours = false; history.back(); } else { write(null, false); unfill(); } };
+  const sync = () => {
+    const id = param(); const box = id ? find(id) : null; const open = current();
+    if (open && open !== box) unfill();
+    if (box && box !== open) fill(box);
+    if (id && !box) write(null, false);
+  };
+  document.addEventListener('click', (e) => {
+    const b = e.target instanceof Element ? e.target.closest('.fill') : null;
+    const box = b && b.closest('.fillable');
+    if (!box) return;
+    if (current() === box) { leave(); return; }
+    const push = !param();
+    if (push) ours = true;
+    write(key(box), push); fill(box);
   });
-  document.addEventListener('fullscreenchange', () => { const box = document.fullscreenElement; tell(box && box.classList.contains('fillable') ? box : document.body); });
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && filled()) leave(); });
+  addEventListener('popstate', () => { ours = param() !== null; sync(); });
+  document.addEventListener('fullscreenchange', () => {
+    const box = document.fullscreenElement;
+    tell(box && box.classList.contains('fillable') ? box : document.body);
+    if (!box && param() && !document.querySelector('.fillable.is-filled')) leave();
+  });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && document.querySelector('.fillable.is-filled')) leave(); });
+  sync();
 })();</script>

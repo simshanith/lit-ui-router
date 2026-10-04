@@ -426,7 +426,7 @@ export function couplingBenchSection({ caption = '' } = {}) {
       <button type="button" id="cb-fit">${glyph('scan')}FIT</button>
     </div>
   </div>
-  <div class="cb-stage fillable"><button type="button" class="fill" data-fill aria-label="Fill the window with this figure, or leave it"></button>
+  <div class="cb-stage fillable"><button type="button" class="fill" data-fill aria-label="Enlarge this figure, or leave it"></button>
     <div class="cb-cy" id="cb-cy" role="application" tabindex="0" aria-label="Interactive coupling graph: the ${C.totals.published} published packages, @uirouter/core and lit, with one edge per declared dependency or peer dependency, each labelled with its published range. lit-ui-router-ssr is the one node with a tie to two siblings — the flagship and the server. With the graph focused, the arrow keys step the pin through the buildings and Escape clears it."></div>
     <aside class="cb-info" id="cb-info"></aside>
   </div>

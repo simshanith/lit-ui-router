@@ -257,7 +257,7 @@ sup.art {
   border: 1px solid var(--ink); padding: 6px 8px; cursor: pointer; opacity: 0.72; }
 .fill:hover, .fill:focus-visible { opacity: 1; background: var(--paper-2); }
 .fill:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.fill::before { content: "FILL WINDOW ⤢"; }
+.fill::before { content: "ENLARGE ⤢"; }
 .fillable:fullscreen .fill::before, .fillable.is-filled .fill::before { content: "LEAVE ⤡"; }
 .fillable:fullscreen, .fillable.is-filled { background: var(--paper); margin: 0; }
 .fillable.is-filled { position: fixed; inset: 0; z-index: 60; overflow: auto; }
@@ -516,7 +516,7 @@ a { color: var(--accent); }
   <h2 class="sheet-title"><sup class="art">the&nbsp;</sup>REGISTER PLATE</h2>
   <p class="sheet-sub">ALTITUDE 3¼ — the monorepo as its CI reads it · every task node punched · surveyed at origin/main @ 4dc0cbb7 (2026-10-04) · turbo 2.11.5</p>
   <figure>
-    <div class="plate fillable" style="--plate-ar:0.6690"><button type="button" class="fill" data-fill aria-label="Fill the window with this figure, or leave it"></button><div class="figure-wrap"><svg viewBox="0 78 1160 1734" role="img" aria-label="A punchcard register plate of the pull-request CI task graph. Rows are the 39 workspace packages plus the root, grouped into publishable packages, sample apps, the docs site and examples, tools, and root. Columns are the 22 task names that fan across packages, ordered by pipeline stage: gather, emit, check, prove, roll-up. A filled accent card-hole marks a command-bearing task node; a faintly hatched hole marks a placeholder node that runs nothing; a red crossed hole marks the 6 task names that are one hundred percent placeholder by design — transit, typecheck, lint, format:check, ci:pull_request, ci. Of 864 nodes only 235 run a command and only 109 of 3024 dependency edges connect two real tasks. A ghosted 4-column overlay to the right shows the 41 extra nodes the ci:main pipeline adds. Beside the plate, the deepest chain in the graph is drawn as a 14-rung ladder of which 4 rungs are real, and the 13 uncacheable task definitions in the repository are listed as a tier that never appears in this graph. Below, 40 singleton tasks form a ragged tail, and a structure schedule totals 5 pipelines.">
+    <div class="plate fillable" style="--plate-ar:0.6690"><button type="button" class="fill" data-fill aria-label="Enlarge this figure, or leave it"></button><div class="figure-wrap"><svg viewBox="0 78 1160 1734" role="img" aria-label="A punchcard register plate of the pull-request CI task graph. Rows are the 39 workspace packages plus the root, grouped into publishable packages, sample apps, the docs site and examples, tools, and root. Columns are the 22 task names that fan across packages, ordered by pipeline stage: gather, emit, check, prove, roll-up. A filled accent card-hole marks a command-bearing task node; a faintly hatched hole marks a placeholder node that runs nothing; a red crossed hole marks the 6 task names that are one hundred percent placeholder by design — transit, typecheck, lint, format:check, ci:pull_request, ci. Of 864 nodes only 235 run a command and only 109 of 3024 dependency edges connect two real tasks. A ghosted 4-column overlay to the right shows the 41 extra nodes the ci:main pipeline adds. Beside the plate, the deepest chain in the graph is drawn as a 14-rung ladder of which 4 rungs are real, and the 13 uncacheable task definitions in the repository are listed as a tier that never appears in this graph. Below, 40 singleton tasks form a ragged tail, and a structure schedule totals 5 pipelines.">
 <defs>
   <marker id="s12-ai" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
     <path d="M0,0 L10,4 L0,8 z" class="fi"/>
@@ -876,19 +876,45 @@ a { color: var(--accent); }
   w.parentElement?.toggleAttribute('data-end', w.scrollLeft + w.clientWidth >= w.scrollWidth - 1);
 }, true);
 (() => {
-  const filled = () => document.querySelector('.fillable.is-filled');
+  const key = (box) => box.id || (box.closest('section[id]') || {}).id || '';
+  const find = (id) => Array.from(document.querySelectorAll('.fillable')).find((box) => key(box) === id) || null;
+  const param = () => new URLSearchParams(location.search).get('enlarge');
+  const current = () => { const f = document.fullscreenElement; return f && f.classList.contains('fillable') ? f : document.querySelector('.fillable.is-filled'); };
   const tell = (box) => { box.dispatchEvent(new CustomEvent('atlas-fill', { bubbles: true })); window.dispatchEvent(new Event('resize')); };
-  const leave = () => { const box = filled(); if (!box) return; box.classList.remove('is-filled'); document.documentElement.classList.remove('has-filled'); tell(box); };
-  document.addEventListener('click', (e) => {
-    const b = e.target instanceof Element ? e.target.closest('.fill') : null;
-    if (!b) return;
-    const box = b.closest('.fillable');
-    if (!box) return;
-    if (document.fullscreenElement === box) { void document.exitFullscreen(); return; }
-    if (box.classList.contains('is-filled')) { leave(); return; }
+  const write = (id, push) => { const url = new URL(location.href); if (id) url.searchParams.set('enlarge', id); else url.searchParams.delete('enlarge'); history[push ? 'pushState' : 'replaceState'](history.state, '', url); };
+  let ours = false;
+  const fill = (box) => {
     const ask = box.requestFullscreen ? box.requestFullscreen() : Promise.reject(new Error('no fullscreen'));
     ask.catch(() => { box.classList.add('is-filled'); document.documentElement.classList.add('has-filled'); tell(box); });
+  };
+  const unfill = () => {
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    const box = document.querySelector('.fillable.is-filled');
+    if (!box) return;
+    box.classList.remove('is-filled'); document.documentElement.classList.remove('has-filled'); tell(box);
+  };
+  const leave = () => { if (ours) { ours = false; history.back(); } else { write(null, false); unfill(); } };
+  const sync = () => {
+    const id = param(); const box = id ? find(id) : null; const open = current();
+    if (open && open !== box) unfill();
+    if (box && box !== open) fill(box);
+    if (id && !box) write(null, false);
+  };
+  document.addEventListener('click', (e) => {
+    const b = e.target instanceof Element ? e.target.closest('.fill') : null;
+    const box = b && b.closest('.fillable');
+    if (!box) return;
+    if (current() === box) { leave(); return; }
+    const push = !param();
+    if (push) ours = true;
+    write(key(box), push); fill(box);
   });
-  document.addEventListener('fullscreenchange', () => { const box = document.fullscreenElement; tell(box && box.classList.contains('fillable') ? box : document.body); });
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && filled()) leave(); });
+  addEventListener('popstate', () => { ours = param() !== null; sync(); });
+  document.addEventListener('fullscreenchange', () => {
+    const box = document.fullscreenElement;
+    tell(box && box.classList.contains('fillable') ? box : document.body);
+    if (!box && param() && !document.querySelector('.fillable.is-filled')) leave();
+  });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && document.querySelector('.fillable.is-filled')) leave(); });
+  sync();
 })();</script>

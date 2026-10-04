@@ -266,7 +266,7 @@ sup.art {
   border: 1px solid var(--ink); padding: 6px 8px; cursor: pointer; opacity: 0.72; }
 .fill:hover, .fill:focus-visible { opacity: 1; background: var(--paper-2); }
 .fill:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.fill::before { content: "FILL WINDOW ⤢"; }
+.fill::before { content: "ENLARGE ⤢"; }
 .fillable:fullscreen .fill::before, .fillable.is-filled .fill::before { content: "LEAVE ⤡"; }
 .fillable:fullscreen, .fillable.is-filled { background: var(--paper); margin: 0; }
 .fillable.is-filled { position: fixed; inset: 0; z-index: 60; overflow: auto; }
@@ -627,28 +627,56 @@ export const PLATE_END_SCRIPT = `document.addEventListener('scroll', (e) => {
 }, true);`;
 
 /** The `.fill` button a fillable figure carries; the page's script answers it. */
-export const fillButton = () => `<button type="button" class="fill" data-fill aria-label="Fill the window with this figure, or leave it"></button>`;
+export const fillButton = () => `<button type="button" class="fill" data-fill aria-label="Enlarge this figure, or leave it"></button>`;
 
-// FILL THE WINDOW: one delegated click for every `.fill` button. Fullscreen when the
+// ENLARGE: one delegated click for every `.fill` button. Fullscreen when the
 // browser grants it, the `is-filled` overlay when it does not; a figure that fills or
-// leaves hears `atlas-fill` so a canvas or a graph can refit. The app keeps the same
-// rule in src/fill.ts.
+// leaves hears `atlas-fill` so a canvas or a graph can refit. The enlarged figure is the
+// url's `?enlarge=` (its id, else its sheet section's): opening pushes it, leaving takes
+// the entry back, Back leaves, and a page loaded with it opens the overlay. The app
+// answers the same buttons and the same param with its own lightbox, src/lightbox.ts.
 export const FILL_SCRIPT = `(() => {
-  const filled = () => document.querySelector('.fillable.is-filled');
+  const key = (box) => box.id || (box.closest('section[id]') || {}).id || '';
+  const find = (id) => Array.from(document.querySelectorAll('.fillable')).find((box) => key(box) === id) || null;
+  const param = () => new URLSearchParams(location.search).get('enlarge');
+  const current = () => { const f = document.fullscreenElement; return f && f.classList.contains('fillable') ? f : document.querySelector('.fillable.is-filled'); };
   const tell = (box) => { box.dispatchEvent(new CustomEvent('atlas-fill', { bubbles: true })); window.dispatchEvent(new Event('resize')); };
-  const leave = () => { const box = filled(); if (!box) return; box.classList.remove('is-filled'); document.documentElement.classList.remove('has-filled'); tell(box); };
-  document.addEventListener('click', (e) => {
-    const b = e.target instanceof Element ? e.target.closest('.fill') : null;
-    if (!b) return;
-    const box = b.closest('.fillable');
-    if (!box) return;
-    if (document.fullscreenElement === box) { void document.exitFullscreen(); return; }
-    if (box.classList.contains('is-filled')) { leave(); return; }
+  const write = (id, push) => { const url = new URL(location.href); if (id) url.searchParams.set('enlarge', id); else url.searchParams.delete('enlarge'); history[push ? 'pushState' : 'replaceState'](history.state, '', url); };
+  let ours = false;
+  const fill = (box) => {
     const ask = box.requestFullscreen ? box.requestFullscreen() : Promise.reject(new Error('no fullscreen'));
     ask.catch(() => { box.classList.add('is-filled'); document.documentElement.classList.add('has-filled'); tell(box); });
+  };
+  const unfill = () => {
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    const box = document.querySelector('.fillable.is-filled');
+    if (!box) return;
+    box.classList.remove('is-filled'); document.documentElement.classList.remove('has-filled'); tell(box);
+  };
+  const leave = () => { if (ours) { ours = false; history.back(); } else { write(null, false); unfill(); } };
+  const sync = () => {
+    const id = param(); const box = id ? find(id) : null; const open = current();
+    if (open && open !== box) unfill();
+    if (box && box !== open) fill(box);
+    if (id && !box) write(null, false);
+  };
+  document.addEventListener('click', (e) => {
+    const b = e.target instanceof Element ? e.target.closest('.fill') : null;
+    const box = b && b.closest('.fillable');
+    if (!box) return;
+    if (current() === box) { leave(); return; }
+    const push = !param();
+    if (push) ours = true;
+    write(key(box), push); fill(box);
   });
-  document.addEventListener('fullscreenchange', () => { const box = document.fullscreenElement; tell(box && box.classList.contains('fillable') ? box : document.body); });
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && filled()) leave(); });
+  addEventListener('popstate', () => { ours = param() !== null; sync(); });
+  document.addEventListener('fullscreenchange', () => {
+    const box = document.fullscreenElement;
+    tell(box && box.classList.contains('fillable') ? box : document.body);
+    if (!box && param() && !document.querySelector('.fillable.is-filled')) leave();
+  });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && document.querySelector('.fillable.is-filled')) leave(); });
+  sync();
 })();`;
 
 // HTML only — `<wbr>` is not an SVG element, so this runs over rendered pages

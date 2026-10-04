@@ -257,7 +257,7 @@ sup.art {
   border: 1px solid var(--ink); padding: 6px 8px; cursor: pointer; opacity: 0.72; }
 .fill:hover, .fill:focus-visible { opacity: 1; background: var(--paper-2); }
 .fill:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.fill::before { content: "FILL WINDOW ⤢"; }
+.fill::before { content: "ENLARGE ⤢"; }
 .fillable:fullscreen .fill::before, .fillable.is-filled .fill::before { content: "LEAVE ⤡"; }
 .fillable:fullscreen, .fillable.is-filled { background: var(--paper); margin: 0; }
 .fillable.is-filled { position: fixed; inset: 0; z-index: 60; overflow: auto; }
@@ -516,7 +516,7 @@ a { color: var(--accent); }
   <h2 class="sheet-title"><sup class="art">the&nbsp;</sup>SURVEY OFFICE</h2>
   <p class="sheet-sub">APPENDIX · META — the atlas measuring itself · 17 probes, 17 plates, 21 drawings · every station, plate and edge on this plate introspected from www/atlas.lit-ui-router.dev/generator/ at build time · all plates pinned to origin/main @ 4dc0cbb7 · commit 2026-10-04</p>
   <figure>
-    <div class="plate fillable" style="--plate-ar:0.7077"><button type="button" class="fill" data-fill aria-label="Fill the window with this figure, or leave it"></button><div class="figure-wrap"><svg viewBox="0 20 1160 1639" role="img" aria-label="The census pipeline drawn as a left-to-right flow of dataflow, not containment. At far left one basis station: git archive origin/main at 4dc0cbb7 extracted to a temporary directory, 853 tracked paths, with a dashed rail down the margin marking that every station re-materializes this same ref. Next to it the master station census-scc.mjs runs one scc pass and files census-files.json, 818 rows — the one measurement. An accent bus carries that plate back down the left margin into twelve stations that are group-by queries over it, and straight right into the gallery cover: the fan-out is the hero of the drawing. Below, 16 further probe stations are grouped into three tiers — 8 pure-tree, 2 history, 7 execution, the last fed by an install harness running mise-provisioned pnpm with a frozen lockfile and the tree's own turbo binary. Each station writes exactly one drawer of the plate cabinet in the middle column, so every writes edge is horizontal and none of them cross. From the cabinet, 40 thin read curves fan into a rack of 20 numbered atlas sheets at the right. Two stations file nothing: the overview query, which only prints, and census.mjs, drawn struck through — a working-tree walker imported by nothing, the old regime's last instrument. A plate schedule below lists all 17 plates with writer, tier, basis and readers.">
+    <div class="plate fillable" style="--plate-ar:0.7077"><button type="button" class="fill" data-fill aria-label="Enlarge this figure, or leave it"></button><div class="figure-wrap"><svg viewBox="0 20 1160 1639" role="img" aria-label="The census pipeline drawn as a left-to-right flow of dataflow, not containment. At far left one basis station: git archive origin/main at 4dc0cbb7 extracted to a temporary directory, 853 tracked paths, with a dashed rail down the margin marking that every station re-materializes this same ref. Next to it the master station census-scc.mjs runs one scc pass and files census-files.json, 818 rows — the one measurement. An accent bus carries that plate back down the left margin into twelve stations that are group-by queries over it, and straight right into the gallery cover: the fan-out is the hero of the drawing. Below, 16 further probe stations are grouped into three tiers — 8 pure-tree, 2 history, 7 execution, the last fed by an install harness running mise-provisioned pnpm with a frozen lockfile and the tree's own turbo binary. Each station writes exactly one drawer of the plate cabinet in the middle column, so every writes edge is horizontal and none of them cross. From the cabinet, 40 thin read curves fan into a rack of 20 numbered atlas sheets at the right. Two stations file nothing: the overview query, which only prints, and census.mjs, drawn struck through — a working-tree walker imported by nothing, the old regime's last instrument. A plate schedule below lists all 17 plates with writer, tier, basis and readers.">
 <defs>
   <marker id="sA2-ai" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
     <path d="M0,0 L10,4 L0,8 z" class="fi"/>
@@ -968,19 +968,45 @@ a { color: var(--accent); }
   w.parentElement?.toggleAttribute('data-end', w.scrollLeft + w.clientWidth >= w.scrollWidth - 1);
 }, true);
 (() => {
-  const filled = () => document.querySelector('.fillable.is-filled');
+  const key = (box) => box.id || (box.closest('section[id]') || {}).id || '';
+  const find = (id) => Array.from(document.querySelectorAll('.fillable')).find((box) => key(box) === id) || null;
+  const param = () => new URLSearchParams(location.search).get('enlarge');
+  const current = () => { const f = document.fullscreenElement; return f && f.classList.contains('fillable') ? f : document.querySelector('.fillable.is-filled'); };
   const tell = (box) => { box.dispatchEvent(new CustomEvent('atlas-fill', { bubbles: true })); window.dispatchEvent(new Event('resize')); };
-  const leave = () => { const box = filled(); if (!box) return; box.classList.remove('is-filled'); document.documentElement.classList.remove('has-filled'); tell(box); };
-  document.addEventListener('click', (e) => {
-    const b = e.target instanceof Element ? e.target.closest('.fill') : null;
-    if (!b) return;
-    const box = b.closest('.fillable');
-    if (!box) return;
-    if (document.fullscreenElement === box) { void document.exitFullscreen(); return; }
-    if (box.classList.contains('is-filled')) { leave(); return; }
+  const write = (id, push) => { const url = new URL(location.href); if (id) url.searchParams.set('enlarge', id); else url.searchParams.delete('enlarge'); history[push ? 'pushState' : 'replaceState'](history.state, '', url); };
+  let ours = false;
+  const fill = (box) => {
     const ask = box.requestFullscreen ? box.requestFullscreen() : Promise.reject(new Error('no fullscreen'));
     ask.catch(() => { box.classList.add('is-filled'); document.documentElement.classList.add('has-filled'); tell(box); });
+  };
+  const unfill = () => {
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    const box = document.querySelector('.fillable.is-filled');
+    if (!box) return;
+    box.classList.remove('is-filled'); document.documentElement.classList.remove('has-filled'); tell(box);
+  };
+  const leave = () => { if (ours) { ours = false; history.back(); } else { write(null, false); unfill(); } };
+  const sync = () => {
+    const id = param(); const box = id ? find(id) : null; const open = current();
+    if (open && open !== box) unfill();
+    if (box && box !== open) fill(box);
+    if (id && !box) write(null, false);
+  };
+  document.addEventListener('click', (e) => {
+    const b = e.target instanceof Element ? e.target.closest('.fill') : null;
+    const box = b && b.closest('.fillable');
+    if (!box) return;
+    if (current() === box) { leave(); return; }
+    const push = !param();
+    if (push) ours = true;
+    write(key(box), push); fill(box);
   });
-  document.addEventListener('fullscreenchange', () => { const box = document.fullscreenElement; tell(box && box.classList.contains('fillable') ? box : document.body); });
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && filled()) leave(); });
+  addEventListener('popstate', () => { ours = param() !== null; sync(); });
+  document.addEventListener('fullscreenchange', () => {
+    const box = document.fullscreenElement;
+    tell(box && box.classList.contains('fillable') ? box : document.body);
+    if (!box && param() && !document.querySelector('.fillable.is-filled')) leave();
+  });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && document.querySelector('.fillable.is-filled')) leave(); });
+  sync();
 })();</script>

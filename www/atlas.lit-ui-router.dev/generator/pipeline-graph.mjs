@@ -431,7 +431,7 @@ export function pipelineSection() {
       <button type="button" id="pg-fit">${glyph('scan')}FIT</button>
     </div>
   </div>
-  <div class="pg-stage fillable"><button type="button" class="fill" data-fill aria-label="Fill the window with this figure, or leave it"></button>
+  <div class="pg-stage fillable"><button type="button" class="fill" data-fill aria-label="Enlarge this figure, or leave it"></button>
     <div class="pg-cy" id="pg-cy" role="application" tabindex="0" aria-label="Interactive flow graph of the census pipeline: archive basis, ${A.stats.probes} probe stations, ${A.stats.plates} filed plates and ${A.stats.drawings} drawings. With the graph focused, the arrow keys step the pin through the buildings and Escape clears it."></div>
     <aside class="pg-info" id="pg-info"></aside>
   </div>

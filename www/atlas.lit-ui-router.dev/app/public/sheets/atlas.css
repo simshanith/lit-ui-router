@@ -253,7 +253,7 @@ sup.art {
   border: 1px solid var(--ink); padding: 6px 8px; cursor: pointer; opacity: 0.72; }
 .fill:hover, .fill:focus-visible { opacity: 1; background: var(--paper-2); }
 .fill:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.fill::before { content: "FILL WINDOW ⤢"; }
+.fill::before { content: "ENLARGE ⤢"; }
 .fillable:fullscreen .fill::before, .fillable.is-filled .fill::before { content: "LEAVE ⤡"; }
 .fillable:fullscreen, .fillable.is-filled { background: var(--paper); margin: 0; }
 .fillable.is-filled { position: fixed; inset: 0; z-index: 60; overflow: auto; }

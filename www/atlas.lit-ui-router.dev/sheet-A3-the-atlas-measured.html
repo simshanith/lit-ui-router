@@ -257,7 +257,7 @@ sup.art {
   border: 1px solid var(--ink); padding: 6px 8px; cursor: pointer; opacity: 0.72; }
 .fill:hover, .fill:focus-visible { opacity: 1; background: var(--paper-2); }
 .fill:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.fill::before { content: "FILL WINDOW ⤢"; }
+.fill::before { content: "ENLARGE ⤢"; }
 .fillable:fullscreen .fill::before, .fillable.is-filled .fill::before { content: "LEAVE ⤡"; }
 .fillable:fullscreen, .fillable.is-filled { background: var(--paper); margin: 0; }
 .fillable.is-filled { position: fixed; inset: 0; z-index: 60; overflow: auto; }
@@ -516,7 +516,7 @@ a { color: var(--accent); }
   <h2 class="sheet-title"><sup class="art">the&nbsp;</sup>ATLAS, MEASURED</h2>
   <p class="sheet-sub">APPENDIX · META — the atlas as a census city on sheet 7's ruler, standing beside the codebase it draws · four members, 18,243 sloc · measured at www/atlas @ e1fbec96, outside the cabinet, which is main's (origin/main @ 4dc0cbb7)</p>
   <figure>
-    <div class="plate fillable" style="--plate-ar:0.9794"><button type="button" class="fill" data-fill aria-label="Fill the window with this figure, or leave it"></button><div class="figure-wrap"><svg viewBox="0 0 1560 1592.828281481108" role="img" aria-label="An isometric census of the atlas itself, standing beside the codebase it draws, on sheet 7's ruler: footprint side 1.6 times the square root of source lines, height 3 pixels per authored file. Along the top, on main's ground at origin/main @ 4dc0cbb7, sheet 7's four districts each stand as one summed block with its spec annex beside it: packages/, 66 files · 7,191 sloc, annex 82 files · 18,219 sloc; apps/, 71 files · 4,083 sloc, annex 16 files · 1,526 sloc; www/ + examples/, 31 files · 4,386 sloc, annex 3 files · 267 sloc; tools/, 126 files · 8,890 sloc, annex 53 files · 7,301 sloc. Below a dotted seam, on the atlas's own branch at www/atlas @ e1fbec96, the atlas stands as a fifth district of four accent-edged members: the drawing office, 47 files · 12,025 sloc; the survey office, 23 files · 2,242 sloc; the routed site, 18 files · 3,642 sloc; the site build, 4 files · 334 sloc. 2.5× the product it draws: 18,243 sloc against 7,191 in packages/; the drawing office alone, 12,025 sloc, outbuilds the product; the product outweighs it only with its tests counted — 25,410 sloc, annex and all; and it carries no annex: not one spec file. A structure schedule lists every block, and beside it every path the survey excludes.">
+    <div class="plate fillable" style="--plate-ar:0.9794"><button type="button" class="fill" data-fill aria-label="Enlarge this figure, or leave it"></button><div class="figure-wrap"><svg viewBox="0 0 1560 1592.828281481108" role="img" aria-label="An isometric census of the atlas itself, standing beside the codebase it draws, on sheet 7's ruler: footprint side 1.6 times the square root of source lines, height 3 pixels per authored file. Along the top, on main's ground at origin/main @ 4dc0cbb7, sheet 7's four districts each stand as one summed block with its spec annex beside it: packages/, 66 files · 7,191 sloc, annex 82 files · 18,219 sloc; apps/, 71 files · 4,083 sloc, annex 16 files · 1,526 sloc; www/ + examples/, 31 files · 4,386 sloc, annex 3 files · 267 sloc; tools/, 126 files · 8,890 sloc, annex 53 files · 7,301 sloc. Below a dotted seam, on the atlas's own branch at www/atlas @ e1fbec96, the atlas stands as a fifth district of four accent-edged members: the drawing office, 47 files · 12,025 sloc; the survey office, 23 files · 2,242 sloc; the routed site, 18 files · 3,642 sloc; the site build, 4 files · 334 sloc. 2.5× the product it draws: 18,243 sloc against 7,191 in packages/; the drawing office alone, 12,025 sloc, outbuilds the product; the product outweighs it only with its tests counted — 25,410 sloc, annex and all; and it carries no annex: not one spec file. A structure schedule lists every block, and beside it every path the survey excludes.">
 <defs>
   <marker id="sA3-ai" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
     <path d="M0,0 L10,4 L0,8 z" class="fi"/>
@@ -770,19 +770,45 @@ a { color: var(--accent); }
   w.parentElement?.toggleAttribute('data-end', w.scrollLeft + w.clientWidth >= w.scrollWidth - 1);
 }, true);
 (() => {
-  const filled = () => document.querySelector('.fillable.is-filled');
+  const key = (box) => box.id || (box.closest('section[id]') || {}).id || '';
+  const find = (id) => Array.from(document.querySelectorAll('.fillable')).find((box) => key(box) === id) || null;
+  const param = () => new URLSearchParams(location.search).get('enlarge');
+  const current = () => { const f = document.fullscreenElement; return f && f.classList.contains('fillable') ? f : document.querySelector('.fillable.is-filled'); };
   const tell = (box) => { box.dispatchEvent(new CustomEvent('atlas-fill', { bubbles: true })); window.dispatchEvent(new Event('resize')); };
-  const leave = () => { const box = filled(); if (!box) return; box.classList.remove('is-filled'); document.documentElement.classList.remove('has-filled'); tell(box); };
-  document.addEventListener('click', (e) => {
-    const b = e.target instanceof Element ? e.target.closest('.fill') : null;
-    if (!b) return;
-    const box = b.closest('.fillable');
-    if (!box) return;
-    if (document.fullscreenElement === box) { void document.exitFullscreen(); return; }
-    if (box.classList.contains('is-filled')) { leave(); return; }
+  const write = (id, push) => { const url = new URL(location.href); if (id) url.searchParams.set('enlarge', id); else url.searchParams.delete('enlarge'); history[push ? 'pushState' : 'replaceState'](history.state, '', url); };
+  let ours = false;
+  const fill = (box) => {
     const ask = box.requestFullscreen ? box.requestFullscreen() : Promise.reject(new Error('no fullscreen'));
     ask.catch(() => { box.classList.add('is-filled'); document.documentElement.classList.add('has-filled'); tell(box); });
+  };
+  const unfill = () => {
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    const box = document.querySelector('.fillable.is-filled');
+    if (!box) return;
+    box.classList.remove('is-filled'); document.documentElement.classList.remove('has-filled'); tell(box);
+  };
+  const leave = () => { if (ours) { ours = false; history.back(); } else { write(null, false); unfill(); } };
+  const sync = () => {
+    const id = param(); const box = id ? find(id) : null; const open = current();
+    if (open && open !== box) unfill();
+    if (box && box !== open) fill(box);
+    if (id && !box) write(null, false);
+  };
+  document.addEventListener('click', (e) => {
+    const b = e.target instanceof Element ? e.target.closest('.fill') : null;
+    const box = b && b.closest('.fillable');
+    if (!box) return;
+    if (current() === box) { leave(); return; }
+    const push = !param();
+    if (push) ours = true;
+    write(key(box), push); fill(box);
   });
-  document.addEventListener('fullscreenchange', () => { const box = document.fullscreenElement; tell(box && box.classList.contains('fillable') ? box : document.body); });
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && filled()) leave(); });
+  addEventListener('popstate', () => { ours = param() !== null; sync(); });
+  document.addEventListener('fullscreenchange', () => {
+    const box = document.fullscreenElement;
+    tell(box && box.classList.contains('fillable') ? box : document.body);
+    if (!box && param() && !document.querySelector('.fillable.is-filled')) leave();
+  });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && document.querySelector('.fillable.is-filled')) leave(); });
+  sync();
 })();</script>

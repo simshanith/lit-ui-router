@@ -531,7 +531,7 @@ export function loopWalkLane() {
     <button type="button" id="lw-reset">${glyph('rotate-ccw')}RESET</button>
   </div>
 </div>
-<div class="lw-stage fillable" id="lw-stage" tabindex="0" aria-label="the render loop, walkable — arrow keys step the walk while this lane has focus"><button type="button" class="fill" data-fill aria-label="Fill the window with this figure, or leave it"></button>
+<div class="lw-stage fillable" id="lw-stage" tabindex="0" aria-label="the render loop, walkable — arrow keys step the walk while this lane has focus"><button type="button" class="fill" data-fill aria-label="Enlarge this figure, or leave it"></button>
   <div class="lw-cy" id="lw-cy" role="img" aria-label="An interactive circuit of the lit-ui-router render loop: ${T.stations} stations — ${esc(STATIONS.map((s) => s.label).join(', '))} — joined by ${T.legs} legs, with one navigation (${esc(PLATE.walkOf)}) walked in ${T.steps} steps."></div>
   <aside class="lw-info" id="lw-info"></aside>
 </div>
