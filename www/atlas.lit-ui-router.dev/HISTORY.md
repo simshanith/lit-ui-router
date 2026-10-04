@@ -139,7 +139,7 @@ _No REV clauses, historical paragraphs or rev-bearing callouts: this plate has o
 
 ## Sheet 2 — THE BRICK ASSEMBLY
 
-- **file** `diagrams/generator/sheet2.mjs` · **id** `companions` · **current rev** E
+- **file** `diagrams/generator/sheet2.mjs` · **id** `companions` · **current rev** F
 - **subject line / lead** (resolved, present-state — not history):
 
 > ALTITUDE 2 — one baseplate, six bricks, 51 authored files
@@ -166,6 +166,12 @@ resolved →
 
 > REV C 2026-09-05: hidden line — every brick, plate and stud face is drawn OPAQUE now (a stroke class’s fill:none was outranking the fill attribute, so the flanks were see-through: brick 1’s top edge and studs read straight through brick 3, and the second plate’s studs through brick 4), and the two masses that fault had hidden are recomposed for air — brick 3 lifts clear of the seat ring it drops onto, and brick 4 moves onto its own plate’s iso axis, its left face standing over the plate’s left edge
 
+### REV F — 2026-10-04
+
+**`sub` clause** (verbatim source):
+
+> REV F 2026-10-04: the finished model joins the exploded view — the same parts seated in three steps at the drawing’s own corner, then the whole from the opposite corner, where the bridge reads and the second plate hangs level with brick 1’s cap
+
 ### REV E — 2026-09-27
 
 **`sub` clause** (verbatim source):
@@ -178,6 +184,7 @@ resolved →
 
 **Record notes**
 
+- 2026-10-04, REV F (census unmoved): a band under the exploded view draws the same parts seated — THE FINISHED MODEL. Three steps at the drawing's own corner (U 14): bricks 1 and 2 on the plate; bricks 3 and 5 on brick 1's cap; brick 6 bridging G to H with the second plate and brick 4. Then the whole from the opposite corner (turn 2, U 22), where brick 6 reads as a bridge and the free rail seats stay ringed. The seated geometry is derived, not drawn: brick 6 seats on brick 1's cap AND brick 4's, so brick 4's cap must meet brick 1's, which puts the headless plate four courses up (`P2_UP = courses(1) − courses(4)`) on dashed masts, its origin solved from the one plan point that puts stud H under the bridge (`SSR_REACH − B4_SEAT`); the band letters that the lazy import is its only ground, and the key gains the masts. The brick, plate and stud builders move to `brick-iso.mjs` as a kit at any pitch, with `seated()` (painter's order by axis separation, topologically sorted; covered plate studs not drawn; stud rings turn with the model) and `turnRect`/`turnStud` for the four iso corners; the exploded view draws through the same kit at U 40, unchanged but for the second plate’s studs, which take the plate’s dash as its faces always did. The sheet grows by the band (ART_H from 862 to the band's bottom + 56); the rev E clause is replaced by rev F's; the "Why bricks" paragraph says the exploded view seats nothing and the finished model is drawn seated; the index row reads "exploded, then seated". Thumb 2 re-photographed.
 - 2026-10-03, geometry (census unmoved): brick 1 hovers at z 144, from 96. At 96 its underside sat 4 px above the plate's back edge on screen, so the seven-course tower read as standing on the ground behind the plate rather than over the rail; at 144 two courses of plate show under it. The plate drops 48 (OY 420 → 468) with brick 4, the second plate and every label under the tower, so bricks 1, 3, 5 and 6 and their lettering keep their screen positions; brick 2 keeps its position too and its fall onto the LOCATION SEAT lengthens to match. The spare-parts box and ART_H move with the plate, so the sheet grows 48 tall.
 - 2026-10-03, cabinet refresh at origin/main @ 6d41d21e: `lit-ui-router-ssr` re-letters 0.1.1 at 11 files / 1,093 sloc (was 0.1.0, 10 / 985), still a 2×4 of 4 courses. The TOTAL reads 6 bricks · 53 authored files · 5,439 sloc.
 - 2026-09-29, cabinet refresh at origin/main @ 63c0b823: `lit-ui-router-ssr` re-letters 0.1.0 at 10 files / 985 sloc (was 0.1.0-rc.3, 9 / 800), which quantizes to 7 studs: a 2×4 of 4 courses, where it stood a 2×3 of 3. The massing note's guard threw — it named 1 and 4 as the 2×4s and 6 as the 2×3 — and the note now reads “the three bricks that carry a renderer, a server and the prerender bridge between them are all 2×4s”, the count from the plate and the guard holding 1, 4 and 6; “A companion that needed to be a 2×4” reads “A plug that needed to be a 2×4”, since the bridge is a companion that is one. The taller brick crowded brick 6's label stack by 0.67 px, so the five lines rise 3 px. The TOTAL reads 6 bricks · 52 authored files · 5,331 sloc.
