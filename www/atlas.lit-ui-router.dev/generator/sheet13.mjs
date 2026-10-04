@@ -71,10 +71,11 @@ const PLACED = [
   // annex reaches 233.9 × 132.0. Row one: 2 on sheet 7's lot, 3 and 37 in the strip
   // under its annex, which ends 5.4 short of the box. Row two, west to east: 31, 38,
   // 4 — the plugin last, so its callout's leader drops straight to the lettering;
-  // nudged east off ssr's annex when #1010/#1020 grew it to 2,578 spec sloc
+  // nudged east off ssr's annex when #1010/#1020 grew it to 2,578 spec sloc, and
+  // south off the effect bindings' annex when it reached 340.4 at the 4dc0cbb7 refresh
   [2, 'ui-router-server', 'packages/ui-router-server', 'pkg', 240, 20],
   [3, 'lit-ui-router-mobx', 'packages/lit-ui-router-mobx', 'pkg', 240, 104],
-  [4, 'navigation-location-plugin', 'packages/navigation-location-plugin', 'pkg', 330, 150],
+  [4, 'navigation-location-plugin', 'packages/navigation-location-plugin', 'pkg', 330, 158],
   [5, 'sample-app-shared', 'apps/sample-app-shared', 'app', 570, 10],
   [6, 'sample-app-lit-vanilla', 'apps/sample-app-lit-vanilla', 'app', 720, 10],
   [7, 'sample-app-lit-mobx', 'apps/sample-app-lit-mobx', 'app', 720, 90],
@@ -113,11 +114,12 @@ const PLACED = [
   // --- the effect pair, born 2026-09-11/12 (#721, #833): the app on sheet 7's slot,
   //     the bindings in row one east of the mobx quarter ----------------------------
   [36, 'sample-app-lit-effect', 'apps/sample-app-lit-effect', 'app', 660, 100],
-  [37, 'lit-ui-router-effect', 'packages/lit-ui-router-effect', 'pkg', 316, 104],
+  // north off the CHURN key when its annex reached 340.4 at the 4dc0cbb7 refresh
+  [37, 'lit-ui-router-effect', 'packages/lit-ui-router-effect', 'pkg', 316, 101],
   // --- the prerender package, born 2026-09-14 (#806): row two, between 31 and 4 ---
   [38, 'lit-ui-router-ssr', 'packages/lit-ui-router-ssr', 'pkg', 172, 156],
   // --- born 2026-10-01 (#1056): sheet 7's lot -----------------------------------
-  [39, '@tools/crap', 'tools/crap', 'tool', 560, 430],
+  [39, '@tools/crap', 'tools/crap', 'tool', 570, 430],
 ];
 
 // [n, name, dist, x, y, srcSloc, specSloc,

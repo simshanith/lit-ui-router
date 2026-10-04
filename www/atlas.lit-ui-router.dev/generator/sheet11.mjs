@@ -76,15 +76,16 @@ if (ORDER.length !== DOOR_N) {
 
 // Manual plan: one quarter per package, tall doors in back. [pkg + door → x, y]
 const PLAN = {
-  // set back from the plate's top edge: the bare door stands 218 px tall at this
-  // ref and its badge left the viewBox from [30, 15]
-  'lit-ui-router|.': [26, 46],
+  // set back from the plate's top edge: the bare door stands 234 px tall at this
+  // ref and its badge left the viewBox from [30, 15], then from [26, 46]
+  'lit-ui-router|.': [26, 74],
   'lit-ui-router|./pure': [98, 45],
   'lit-ui-router|./register': [185, 60],
   'lit-ui-router|./ui-router.register': [252, 92],
   'lit-ui-router|./ui-view.register': [180, 140],
   'lit-ui-router|./context': [305, 105],
-  'lit-ui-router-effect|.': [40, 365],
+  // to the quarter's south edge: at [40, 365] its badge stood in the register note
+  'lit-ui-router-effect|.': [46, 385],
   'lit-ui-router-mobx|.': [155, 310],
   // three doors in the bridge quarter: the prerender index and client in back, the
   // served <ui-view> registration in front

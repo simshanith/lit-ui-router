@@ -179,7 +179,7 @@ const run = (label, file, args, opts = {}) => {
   } catch (e) {
     ok = false;
     // the tmpdir is per-run: a plate that carried it would never diff clean
-    err = String(e.message).split('\n')[0].replaceAll(basis.dir, '<archive>');
+    err = String(e.message).split('\n')[0].replaceAll(basis.dir, '<archive>').replaceAll(LOGS, '<logs>');
     writeFileSync(log, `${err}\n\n--- stdout ---\n${e.stdout ?? ''}\n--- stderr ---\n${e.stderr ?? ''}`);
   }
   console.log(`  ${ok ? 'ok  ' : 'FAIL'} ${label} (${((Date.now() - t0) / 1000).toFixed(0)}s) -> ${log}`);

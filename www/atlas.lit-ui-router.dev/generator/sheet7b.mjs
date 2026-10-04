@@ -362,10 +362,11 @@ ${bodies}
 ${AR}
 
 <!-- district lettering -->
-${txt(772, 74, 'packages/ — THE PRODUCT LINE', 'lblb')}
-${txt(772, 87, `all metered lamps lit (90–100% light) · ${dsteam('pkg')} commits/90d`, 'lblf')}
-${txt(772, 99, `the lint plugin stands at rust ${RUST_T[g(31).rust]}, fully metered — ${g(31).lamps} lamps (${g(31).eff}% lit)`, 'lblf')}
-<line x1="766" y1="90" x2="742" y2="168" class="skf"/>
+<!-- east off 772: the flagship's roof reaches x 780 at the third line -->
+${txt(786, 74, 'packages/ — THE PRODUCT LINE', 'lblb')}
+${txt(786, 87, `all metered lamps lit (90–100% light) · ${dsteam('pkg')} commits/90d`, 'lblf')}
+${txt(786, 99, `the lint plugin stands at rust ${RUST_T[g(31).rust]}, fully metered — ${g(31).lamps} lamps (${g(31).eff}% lit)`, 'lblf')}
+<line x1="780" y1="90" x2="742" y2="168" class="skf"/>
 
 ${txt(1540, 388, 'apps/ — THE PROVING GROUND', 'lblb', 'end')}
 ${txt(1540, 401, `${dsteam('app')} commits/90d · accent lamps: real e2e light,`, 'lblf', 'end')}
@@ -389,9 +390,10 @@ ${txt(60, 144, `the port’s masonry, idle ${idleOf('packages/lit-ui-router')}d 
 ${txt(60, 156, 'old AND running, which one axis could never draw', 'lblf')}
 <line x1="388" y1="127" x2="526" y2="132" class="skf"/>
 
-${txt(440, 652, `@tools/typedoc-plugin — rust ${RUST_T[g(13).rust]}, ${PUFFS(g(13).steam)} puffs:`, 'lblr')}
-${txt(440, 664, `${TDP.files} files: index.ts live, ${TDP.idlestFile.split('/').pop()} idle ${TDP.idlestDays}d`, 'lblf')}
-<line x1="448" y1="638" x2="440" y2="492" class="skf"/>
+<!-- west of the plant row the caption passes under, whose bases reach y 646 -->
+${txt(356, 652, `@tools/typedoc-plugin — rust ${RUST_T[g(13).rust]}, ${PUFFS(g(13).steam)} puffs:`, 'lblr')}
+${txt(356, 664, `${TDP.files} files: index.ts live, ${TDP.idlestFile.split('/').pop()} idle ${TDP.idlestDays}d`, 'lblf')}
+<line x1="372" y1="638" x2="440" y2="492" class="skf"/>
 
 ${txt(20, 620, '@tools/happy-dom — a spec annex lit by its own canary:', 'lblr')}
 ${txt(20, 633, `it lights the workaround it guards, ${g(26).eff}% of its ${g(26).sl} lines`, 'lblf')}

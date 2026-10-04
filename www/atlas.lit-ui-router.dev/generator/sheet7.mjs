@@ -106,7 +106,7 @@ export const PLACED = [
   // --- the hygiene block, born 2026-09-07/08 (#738, #741, #771) --------------------
   [33, '@tools/bootstrap',         'tools/bootstrap',                    'tool', 'report', 490, 350, 'zero-dep manifest reads — the one thing that runs before pnpm install'],
   [34, '@tools/eslint',            'tools/eslint',                       'tool', 'report', 514, 530, 'the repo rule plugin, the oxlint stubs and the element lane root eslint.config.ts composes'],
-  [35, '@tools/repo-checks',       'tools/repo-checks',                  'tool', 'pr',     449, 385, 'graph edges, inputs, single version, patches, knip, dedupe · lint lane'],
+  [35, '@tools/repo-checks',       'tools/repo-checks',                  'tool', 'pr',     449, 385, 'graph edges, inputs, versions, coverage, patches, deps'],
   // --- the effect pair, born 2026-09-11/12 (#721, #833) ----------------------------
   [36, 'sample-app-lit-effect',    'apps/sample-app-lit-effect',         'app',  'line',   660, 100, 'the effect demo — the fourth app shell the docs site serves'],
   // south of the district: the only lot clear of both the x=105 harness road and
@@ -117,7 +117,8 @@ export const PLACED = [
   // in front of it; its annex spans x 215–288, so the oxc-emit lane ends here
   [38, 'lit-ui-router-ssr',        'packages/lit-ui-router-ssr',         'pkg',  'line',   160, 210, `the prerender bridge · verdicts in, @lit-labs/ssr pages out · annex ${ratio('packages/lit-ui-router-ssr')}×`],
   // --- born 2026-10-01 (#1056) -----------------------------------------------------
-  [39, '@tools/crap',              'tools/crap',                         'tool', 'report', 560, 430, 'CRAP hotspots from coverage — reports, gates nothing'],
+  // east off 560 when repo-checks' annex grew to 562.2 at the 4dc0cbb7 refresh
+  [39, '@tools/crap',              'tools/crap',                         'tool', 'report', 570, 430, 'CRAP hotspots from coverage — reports, gates nothing'],
 ];
 
 // [n, name, district, tier, x, y, srcFiles, srcSloc, specFiles, specSloc, note]
@@ -350,11 +351,11 @@ ${[['A', 900, 300], ['B', 566, 366], ['C', 470, 195], ['D', 522, 262], ['E', 902
   .map(([k, x, y]) => txt(x, y, k, 'lbl')).join('\n')}
 
 <!-- district lettering, off the geometry, leaders where the gap is wide -->
-<!-- moved east off 772: the flagship's annex now reaches x 801 at this height -->
-${txt(815, 110, 'packages/ — THE PRODUCT', 'lblb')}
-${txt(815, 123, `${DP.n} members, ${PUBLISHED_PKGS} published · ${DP.f} files · ${fmt(DP.sl)} sloc`, 'lblf')}
-${txt(815, 135, 'every one carries a bigger annex than itself', 'lblf')}
-<line x1="809" y1="126" x2="780" y2="158" class="skf"/>
+<!-- moved east off 772, then 815: the flagship's roof reaches x 817 at this height -->
+${txt(824, 110, 'packages/ — THE PRODUCT', 'lblb')}
+${txt(824, 123, `${DP.n} members, ${PUBLISHED_PKGS} published · ${DP.f} files · ${fmt(DP.sl)} sloc`, 'lblf')}
+${txt(824, 135, 'every one carries a bigger annex than itself', 'lblf')}
+<line x1="818" y1="126" x2="780" y2="158" class="skf"/>
 
 ${txt(1540, 300, `sample-app-shared — ${g(5).sf}f · ${fmt(g(5).sl)} sloc`, 'lblb', 'end')}
 ${txt(1540, 313, 'the proving ground’s broadest block —', 'lblf', 'end')}

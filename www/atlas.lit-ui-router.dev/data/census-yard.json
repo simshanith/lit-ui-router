@@ -1,16 +1,16 @@
 {
   "ref": "origin/main",
-  "sha": "6d41d21e",
-  "commitDate": "2026-10-03T09:37:00-07:00",
-  "generatedAtTime": "2026-10-03T17:03:37.671Z",
+  "sha": "4dc0cbb7",
+  "commitDate": "2026-10-04T14:10:24-07:00",
+  "generatedAtTime": "2026-10-04T21:14:41.821Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-yard.mjs",
-  "used": "www/atlas.lit-ui-router.dev/data/census-files.json @ 6d41d21e",
+  "used": "www/atlas.lit-ui-router.dev/data/census-files.json @ 4dc0cbb7",
   "wasAssociatedWith": [],
   "orphans": [
 
   ],
   "rows": [
-    {"instrument":"src (7 published packages)","files":65,"sloc":6940},
+    {"instrument":"src (7 published packages)","files":66,"sloc":7191},
     {"instrument":"build — @tools/oxc-emit","files":5,"sloc":255},
     {"instrument":"pack — packPublishTarball","files":12,"sloc":301},
     {"instrument":"published-diff","files":5,"sloc":470},
@@ -22,10 +22,10 @@
     {"instrument":"compat-guards","files":6,"sloc":172},
     {"instrument":"dts-backtest","files":1,"sloc":293},
     {"instrument":"tests — vitest harness","files":3,"sloc":38},
-    {"instrument":"lint & probe fleet","files":33,"sloc":3128},
-    {"instrument":"repo checks — graph edges, task inputs, knip, patches","files":9,"sloc":827},
+    {"instrument":"lint & probe fleet","files":33,"sloc":3369},
+    {"instrument":"repo checks — graph edges, task inputs, knip, patches","files":11,"sloc":1029},
     {"instrument":"bootstrap — pre-install manifest reads","files":3,"sloc":47},
-    {"instrument":"@tools/shared","files":6,"sloc":244},
+    {"instrument":"@tools/shared","files":6,"sloc":267},
     {"instrument":"typedoc plugin","files":2,"sloc":343},
     {"instrument":"e2e — cypress","files":10,"sloc":753},
     {"instrument":"sample apps","files":66,"sloc":3763}

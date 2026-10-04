@@ -33,6 +33,7 @@ const CITES = {
   '@tools/repo-checks#check:task-inputs': { files: ['tools/repo-checks/check-task-inputs.ts'] },
   '@tools/repo-checks#check:patches': { files: ['tools/repo-checks/check-patches.ts'] },
   '@tools/repo-checks#check:single-version': { files: ['tools/repo-checks/check-single-version.ts'] },
+  '@tools/repo-checks#check:package-coverage': { files: ['tools/repo-checks/check-package-coverage.ts'] },
   '//#format:check:toml': { mise: true, files: ['.config/mise/tasks/taplo'] },
   '//#lint:actionlint': { mise: true, files: [] },
   '//#lint:elements': {
@@ -118,7 +119,7 @@ const EXTERNAL = new Set([
 const MISE_TOML = readFileSync(ROOT + '.config/mise/config.toml', 'utf8');
 const miseRunLine = (name) =>
   MISE_TOML.split(new RegExp(`^\\[tasks\\.${name}\\]$`, 'm'))[1]?.split(/^\[/m)[0]
-    ?.match(/^run = "(.*)"$/m)?.[1] ?? '';
+    ?.match(/^run = (?:"(.*)"|'''\n([\s\S]*?)\n''')$/m)?.slice(1).find((x) => x !== undefined) ?? '';
 
 // bin name -> owning workspace dir (so `oxc-emit-js` resolves to tools/oxc-emit),
 // plus that dir's one-hop workspace deps: a bin may cite a library it pulls in.

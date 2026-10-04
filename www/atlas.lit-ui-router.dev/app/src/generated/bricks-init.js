@@ -113,6 +113,26 @@ export async function initBricks(root, viewer, focus) {
     e.stopPropagation();
   }, true);
 
+  // the plates and ground wear the page's paper and the edges its ink, in either theme
+  var TINT = [['cap', '--paper'], ['flank', '--paper-2'], ['edge', '--ink'], ['ghost-cap', '--paper', 0.45], ['ghost-flank', '--paper-2', 0.45], ['ghost-edge', '--ink', 0.45]];
+  // setBaseColorFactor takes linear values, so the token's sRGB bytes are linearised first
+  function lin(v) { return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }
+  function tint() {
+    if (!mv.model) return Promise.resolve();
+    var cs = getComputedStyle(document.documentElement);
+    return Promise.all(TINT.map(function (row) {
+      var m = mv.model.getMaterialByName(row[0]);
+      var hex = cs.getPropertyValue(row[1]).trim();
+      if (!m || hex.length !== 7) return undefined;
+      var c = [1, 3, 5].map(function (i) { return lin(parseInt(hex.slice(i, i + 2), 16) / 255); });
+      // a material only the edge lines use is loaded lazily
+      return m.ensureLoaded().then(function () { m.pbrMetallicRoughness.setBaseColorFactor([c[0], c[1], c[2], row[2] === undefined ? 1 : row[2]]); });
+    }));
+  }
+  var themeMO = new MutationObserver(tint);
+  themeMO.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  on(window.matchMedia('(prefers-color-scheme: dark)'), 'change', tint);
+
   var ready = new Promise(function (resolve) {
     function boot() {
       loaded = true;
@@ -122,7 +142,8 @@ export async function initBricks(root, viewer, focus) {
       play.disabled = false;
       slider.disabled = false;
       pose(t);
-      resolve();
+      // ready once the theme's colours are on the model, so a photograph never shows the baked ones
+      tint().then(resolve);
     }
     if (mv.loaded) boot();
     else on(mv, 'load', boot);
@@ -147,6 +168,7 @@ export async function initBricks(root, viewer, focus) {
     select: function (n) { pin(member(n)); },
     dispose: function () {
       stop();
+      themeMO.disconnect();
       ac.abort();
       delete window.__bricksScene;
     },

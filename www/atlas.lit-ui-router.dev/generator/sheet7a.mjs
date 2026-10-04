@@ -336,11 +336,12 @@ ${bodies}
 ${furn}
 
 <!-- district lettering + aggregates -->
-${txt(140, 316, 'packages/ — THE PRODUCT', 'lblb')}
-<!-- the second line stops short of member 3's halo, which reaches y 328 at this ref -->
-${txt(140, 328, `lit ${pct1(DP.litSloc, DP.meteredSloc)}% of metered district sloc`, 'lblf')}
-${txt(140, 340, `${pct1(DP.linesHit, DP.lines)}% of ${fmt(DP.lines)} lines · branches ${pct1(DP.branchesHit, DP.branches)}% — bought by sheet 7's ${ANNEX_RANGE} annexes`, 'lblf')}
-<line x1="150" y1="304" x2="160" y2="294" class="skf"/>
+<!-- every line stops short of member 3, whose block and halo reach x 327 and y 334 at this ref -->
+${txt(140, 304, 'packages/ — THE PRODUCT', 'lblb')}
+${txt(140, 316, `lit ${pct1(DP.litSloc, DP.meteredSloc)}% of metered district sloc`, 'lblf')}
+${txt(140, 328, `${pct1(DP.linesHit, DP.lines)}% of ${fmt(DP.lines)} lines, branches ${pct1(DP.branchesHit, DP.branches)}%`, 'lblf')}
+${txt(140, 340, `bought by sheet 7's ${ANNEX_RANGE} annexes`, 'lblf')}
+<line x1="150" y1="292" x2="160" y2="282" class="skf"/>
 
 ${txt(1096, 372, 'apps/ — THE PROVING GROUND', 'lblb', 'end')}
 ${txt(1096, 385, `${DA.metered} metered member${DA.metered === 1 ? '' : 's'} · two demos + the rig`, 'lblf', 'end')}

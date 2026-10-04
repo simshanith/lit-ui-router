@@ -1,28 +1,28 @@
 {
   "ref": "www/atlas",
-  "sha": "bed7a858",
-  "commitDate": "2026-10-04T11:44:54-07:00",
-  "generatedAtTime": "2026-10-04T18:50:01.234Z",
+  "sha": "e1fbec96",
+  "commitDate": "2026-10-04T14:38:01-07:00",
+  "generatedAtTime": "2026-10-04T21:41:40.047Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/survey-self.mjs",
-  "used": "git archive www/atlas @ bed7a858",
+  "used": "git archive www/atlas @ e1fbec96",
   "wasAssociatedWith": [
     "scc 4.0.0 (mise x aqua:boyter/scc)",
     "git"
   ],
   "scope": "www/atlas.lit-ui-router.dev/",
-  "tracked": 241,
+  "tracked": 249,
   "rows": [
-    {"member":"survey","name":"the survey office","ground":"generator/census*.mjs · basis.mjs · survey-*.mjs","srcFiles":22,"srcSloc":2166,"specFiles":0,"specSloc":0},
-    {"member":"drawing","name":"the drawing office","ground":"generator/ — every other module","srcFiles":46,"srcSloc":11739,"specFiles":0,"specSloc":0},
-    {"member":"site","name":"the routed site","ground":"app/src/ — not app/src/generated/","srcFiles":17,"srcSloc":3596,"specFiles":0,"specSloc":0},
+    {"member":"survey","name":"the survey office","ground":"generator/census*.mjs · basis.mjs · survey-*.mjs","srcFiles":23,"srcSloc":2242,"specFiles":0,"specSloc":0},
+    {"member":"drawing","name":"the drawing office","ground":"generator/ — every other module","srcFiles":47,"srcSloc":12025,"specFiles":0,"specSloc":0},
+    {"member":"site","name":"the routed site","ground":"app/src/ — not app/src/generated/","srcFiles":18,"srcSloc":3642,"specFiles":0,"specSloc":0},
     {"member":"build","name":"the site build","ground":"app/* — prerender, vite, artifact, lint config","srcFiles":4,"srcSloc":334,"specFiles":0,"specSloc":0}
   ],
   "excluded": [
-    {"rule":"data/ — the filed plates","files":17,"sloc":9984},
+    {"rule":"data/ — the filed plates","files":18,"sloc":10026},
     {"rule":"app/src/generated/ — written by build.mjs","files":6,"sloc":978},
-    {"rule":"app/public/ — fragments, pictures, model, manifest","files":84,"sloc":13309},
-    {"rule":"sheet-*.html · gallery · megacanvas — the flat set","files":26,"sloc":44025},
-    {"rule":"*.md — README (generated), HISTORY and the other prose","files":6,"sloc":2838}
+    {"rule":"app/public/ — fragments, pictures, model, manifest","files":87,"sloc":13639},
+    {"rule":"sheet-*.html · gallery · megacanvas — the flat set","files":27,"sloc":46071},
+    {"rule":"*.md — README (generated), HISTORY and the other prose","files":6,"sloc":2863}
   ],
   "offRuler": [
     {"path":"app/.oxlintrc.json","member":"build","lang":"JSON","code":21},

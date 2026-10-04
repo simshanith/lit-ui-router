@@ -488,6 +488,28 @@ sitting); order is dependency order.
   tasks and 2,921 command sloc; the ci graph 863 / 234 / 2,985 edges (umbrellas are phantoms: 629 of
   863 run nothing); couplings 23 contracts, 3 optional; steam 619 commits; weather 442 dated files;
   7A 11,343 of 18,590 metered sloc lit over 25 members.
+- 2026-10-04 — THE THIRTEENTH REFRESH, at `origin/main` @ 4dc0cbb7 (commit 2026-10-04), all 17
+  plates re-run at the one ref: `lit-ui-router` 1.16.1 and 1.16.2, `lit-ui-router-ssr` and
+  `lit-ui-router-effect` 0.2.0, `lit-ui-router-mobx` 1.1.0 and `eslint-plugin-lit-ui-router` 1.2.0
+  (#1103, #1116–#1120), the placeholder router's upgrade delivered to subscribers (#1082, #1099,
+  #1100, #1113) and `check:package-coverage` (#1090). NO member was born, so the hand tables took no
+  row. The registry served all five releases under `latest` by the time `census-npm.mjs` was re-run.
+  THREE PROBES NEEDED A HAND. `census-loop.mjs` stopped on `ui-view.ts:503`: 31 cites relocated and
+  one re-texted. `census-mass3b.mjs` printed DRIFT for `//#lint:actionlint`, whose run became a
+  `'''` block that `miseRunLine` could not read, and nothing for `check:package-coverage` (`node` is
+  EXTERNAL): the reader takes the block form and the guard its CITES row. `census-shadow.mjs` filed
+  the logs tmpdir inside repo-checks' error note; it is stripped to `<logs>`.
+  THE FRAME AUDIT FOUND EIGHT HITS AT THE OLD REF and 37 hits and 4 escapes after the re-run: the
+  guard house's roof in 3B's title block, sheet 11's flagship door over the viewBox top, brick 1's
+  parts icon in sheet 2's heading, and lettering on 3, 7, 7A, 7B and 13. Lots and lettering moved
+  with air; the audit reads 0 and 0. A SUPERLATIVE ABOUT A TASK IS NOT ONE ABOUT A BUILDING: 3B's
+  spire caption said "the city's tallest" while the guard house, eleven tasks drawn whole, rose past
+  it; the caption names the tallest command and the build asserts it.
+  THE NUMBERS: city 294 src files / 24,550 sloc and 154 spec / 27,313; yard 254 / 19,521 massed;
+  doors 182,451 min / 64,574 gz; the bundle 123,271 gz in 17 chunks; the deploy 890 files / 4,987,887
+  gz; nm 173,820 lines / 41,155 d.ts; mass3b 13,307 hashes over 235 real tasks and 3,029 command
+  sloc; the ci graph 864 / 235 / 3,024 edges; steam 643 commits; weather 448 dated files; 7A 11,937
+  of 19,307 metered sloc lit over 25 members.
 - A SUITE PICKED BY SCRIPT NAME IS A HAND TABLE. A probe that keys on `test`, `lint` or `build` reads
   the repo's naming, not its behaviour; when a name becomes an umbrella the probe goes quiet rather than
   wrong-loud. Diff each T3 plate's categories (`m`/`n`/`u`), not only its totals.

@@ -56,7 +56,7 @@ const TIER_TEXT = {
 // [n, name, tier, x, y, files, sloc, fixed side, fixed height, schedule note]
 const M = [
   // --- the conveyor (packages/), one straight lane at y = 71 --------------------
-  [1,  'src — packages/*/src',      'line',    20,    30.45, ...C('src (7 published packages)'), null, null, 'seven published packages — the material'],
+  [1,  'src — packages/*/src',      'line',    25,    30.45, ...C('src (7 published packages)'), null, null, 'seven published packages — the material'],
   [2,  'build — @tools/oxc-emit',   'line',   201.1,  63,    ...C('build — @tools/oxc-emit'), null, null, 'JS pass + d.ts pass, one emitter'],
   [3,  'pack — packPublishTarball', 'line',   296.1,  55.9,  ...C('pack — packPublishTarball'), null, null, 'the one packer (#449), cached'],
   [4,  'THE TARBALL',               'art',    426.8,  53,     0,    0,   36,   26, 'the one artifact every check reads'],
