@@ -10,7 +10,7 @@ import {
 } from '@uirouter/core';
 import { ReactiveController, ReactiveControllerHost } from 'lit';
 
-import { UIRouterLitElement } from './ui-router.js';
+import { subscribeRouter } from './router-subscription.js';
 
 /** @internal */
 type DeregisterFn = () => void;
@@ -72,8 +72,10 @@ export interface TransitionControllerOptions {
    * The {@link UIRouter} instance to observe.
    *
    * When omitted, the controller discovers the router from an ancestor
-   * <code>&lt;ui-router&gt;</code> (or <code>&lt;ui-view&gt;</code>) via the
-   * `ui-router-context` event when the host connects.
+   * <code>&lt;ui-router&gt;</code> (or <code>&lt;ui-view&gt;</code>) each time
+   * the host connects, and follows the placeholder router a
+   * <code>&lt;ui-router&gt;</code> mints for itself to the one that replaces
+   * it, synchronizing again with the `'hostConnected'` reason.
    */
   router?: UIRouter;
 
@@ -152,6 +154,9 @@ export class TransitionController implements ReactiveController {
 
   private readonly deregisterFns: DeregisterFn[] = [];
 
+  /** drops the subscription to a provider that may still replace its router */
+  private unsubscribe?: DeregisterFn;
+
   private _router?: UIRouter;
 
   private _transition?: Transition;
@@ -211,9 +216,26 @@ export class TransitionController implements ReactiveController {
 
   /** @internal */
   hostConnected(): void {
-    this._router ??=
-      this.options.router ?? UIRouterLitElement.seekRouter(this.host);
+    if (!this.options.router) {
+      const { router, unsubscribe } = subscribeRouter(
+        this.host,
+        this.onRouterReplaced,
+      );
+      // A reconnect outside any provider keeps the router it had.
+      this._router = router ?? this._router;
+      this.unsubscribe = unsubscribe;
+    }
+    this.watch();
+  }
 
+  /** @internal */
+  hostDisconnected(): void {
+    this.unsubscribe?.();
+    this.unsubscribe = undefined;
+    this.unwatch();
+  }
+
+  private watch(): void {
     const router = this._router;
     if (!router) {
       return;
@@ -239,12 +261,20 @@ export class TransitionController implements ReactiveController {
     );
   }
 
-  /** @internal */
-  hostDisconnected(): void {
+  private unwatch(): void {
     while (this.deregisterFns.length) {
       this.deregisterFns.shift()?.();
     }
   }
+
+  /** What a disconnect and reconnect would do, for the router that replaced the one found. */
+  private readonly onRouterReplaced = (router: UIRouter): void => {
+    this.unsubscribe = undefined;
+    this.unwatch();
+    this._router = router;
+    this._transition = undefined;
+    this.watch();
+  };
 
   private notify(
     transition: Transition | undefined,
