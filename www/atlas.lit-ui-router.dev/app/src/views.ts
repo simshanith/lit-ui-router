@@ -39,6 +39,7 @@ import {
   labelledRows,
   matchesFilter,
   readFilter,
+  sceneState,
   thumbSrc,
   without,
 } from './manifest.ts';
@@ -177,9 +178,10 @@ customElements.define('atlas-plate', AtlasPlate);
 
 // --- <atlas-city> — the 3D plate, and the layer that tears it down --------
 
-// The city's own `focus`: every other state reads none.
+// The 3D plates read their own `focus`: every other state reads none.
+const SCENE_STATES: ReadonlySet<string | undefined> = new Set(['atlas.city', 'atlas.plant']);
 const cityPin = (route: RouteSnapshot): string | null =>
-  route.current?.name === 'atlas.city' && typeof route.params.focus === 'string'
+  SCENE_STATES.has(route.current?.name) && typeof route.params.focus === 'string'
     ? route.params.focus
     : null;
 
@@ -426,17 +428,20 @@ const sheetEntry = (sheet: SheetRow): TemplateResult => html`
   </a>
 `;
 
+// 'SHEET 7B · 3D' → '7B·3D': a 3D plate's number is its sheet head's
+const railNum = (row: ExtraRow): string => row.shno.replace(/^SHEET /, '').replace(' · ', '·');
+
 const railEntry = (entry: AscentRow): TemplateResult =>
   entry.kind === 'sheet'
     ? sheetEntry(entry.row)
     : html`
         <a
-          href=${srefHref('atlas.city')}
+          href=${srefHref(sceneState(entry.row))}
           @click=${closeRail}
-          class=${srefActiveClass({ state: 'atlas.city', activeClasses: ACTIVE_CLASSES })}
-          aria-current=${srefAriaCurrent({ state: 'atlas.city' })}
+          class=${srefActiveClass({ state: sceneState(entry.row), activeClasses: ACTIVE_CLASSES })}
+          aria-current=${srefAriaCurrent({ state: sceneState(entry.row) })}
         >
-          <span class="n">7·3D</span><span class="t">${entryTitle(entry.row.title)}</span>
+          <span class="n">${railNum(entry.row)}</span><span class="t">${entryTitle(entry.row.title)}</span>
         </a>
       `;
 
@@ -524,8 +529,8 @@ export const page = (router: UIRouterLit): TemplateResult =>
 // --- gallery: the title sheet — key image, issue log, index ----------------
 
 const logLink = (entry: IssueEntry): TemplateResult =>
-  entry.num === 'city'
-    ? html`<a class="s" href=${srefHref('atlas.city')}
+  entry.num === 'city' || entry.num === 'plant'
+    ? html`<a class="s" href=${srefHref(`atlas.${entry.num}`)}
         >${entry.head} · REV ${entry.rev}</a
       >`
     : html`<a class="s" href=${srefHref('atlas.sheet', { num: entry.num })}
@@ -793,7 +798,7 @@ const sheetCard = (sheet: SheetRow): TemplateResult => html`
   </article>
 `;
 
-// The city has no raster: `cover.hero` is already a build-time SVG in the
+// The 3D plates have no raster: `cover.hero` is already a build-time SVG in the
 // manifest, and drawing it again costs the cover nothing but DOM.
 const cityCard = (extra: ExtraRow, hero: string): TemplateResult => html`
   <article class="card">
@@ -803,9 +808,9 @@ const cityCard = (extra: ExtraRow, hero: string): TemplateResult => html`
       <span class="n">${extra.shno} · REV ${extra.rev}</span>
       <h3>
         <a
-          href=${srefHref('atlas.city')}
-          class="card-go ${srefActiveClass({ state: 'atlas.city', activeClasses: ACTIVE_CLASSES })}"
-          aria-current=${srefAriaCurrent({ state: 'atlas.city' })}
+          href=${srefHref(sceneState(extra))}
+          class="card-go ${srefActiveClass({ state: sceneState(extra), activeClasses: ACTIVE_CLASSES })}"
+          aria-current=${srefAriaCurrent({ state: sceneState(extra) })}
           >${articleTitle(extra.title)}</a
         >
       </h3>
@@ -1067,7 +1072,11 @@ export const CityView: RoutedLitTemplate<CityResolves> = (props) => {
     ${utilBar(html`
       ${indexCrumb()}
       <span class="sh">${extra.shno}</span>
-      <a href="${out(href.plate(extra.standalone))}" target=${outTarget}>STANDALONE PLATE ↗</a>
+      ${extra.standalone
+        ? html`<a href="${out(href.plate(extra.standalone))}" target=${outTarget}
+            >STANDALONE PLATE ↗</a
+          >`
+        : nothing}
     `,
       copyLink(props?.router),
     )}
@@ -1143,8 +1152,8 @@ export const AboutView: RoutedLitTemplate<ManifestResolves> = (props) => {
           <code>href</code> in the source is the <code>href</code> in the DOM — on every
           rail link, cover card and key chip;
           <code>resolve</code> for the manifest, the plate, and — on
-          <code>atlas.city</code> — three.js itself, so a 600 KB library is
-          fetched by the state that needs it and by no other;
+          <code>atlas.city</code> and <code>atlas.plant</code> — three.js itself, so a
+          600 KB library is fetched by the states that need it and by no other;
           <code>redirectTo</code> for <code>/office</code> → appendix A2; a url-less
           <code>atlas.notFound</code> as the <code>otherwise</code> target, so an unknown
           sheet keeps its own url in the address bar; nested
@@ -1189,7 +1198,8 @@ export const AboutView: RoutedLitTemplate<ManifestResolves> = (props) => {
           <code>lit-ui-router-effect</code> and <code>effect</code> (the boot's
           settled route, the index filter and the arrow-key walk),
           <code>cytoscape</code> (the four interactive plates) and <code>three</code>
-          (the isometric city, imported only by <code>atlas.city</code>); at build
+          (the isometric city, imported only by <code>atlas.city</code> and
+          <code>atlas.plant</code>); at build
           time, <code>lit-ui-router-ssr</code> and <code>@lit-labs/ssr</code>. All from
           npm; no workspace links.
         </p>

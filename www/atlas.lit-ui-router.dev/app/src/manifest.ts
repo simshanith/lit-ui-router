@@ -67,7 +67,7 @@ export interface ExtraRow {
   verdict: string;
   labels: SheetLabels;
   file: string;
-  /** Where the flat set draws it — a gallery anchor, not a page. */
+  /** Where the flat set draws it — a gallery anchor, not a page; '' where it draws none. */
   standalone: string;
   refs: string[];
 }
@@ -182,16 +182,20 @@ export function allSheets(manifest: Manifest): SheetRow[] {
 
 /**
  * The ascent as the rail and the index file it: the numbered sheets with the
- * 3D city seated right after 7B — it is sheet 7's third plate, so that is
- * where it belongs, not at the end of the list.
+ * 3D plates seated right after 7B — the city, then its working twin. They are
+ * sheet 7's own plates in the round, so that is where they belong, not at the
+ * end of the list.
  */
 export type AscentRow = { kind: 'sheet'; row: SheetRow } | { kind: 'city'; row: ExtraRow };
 export function ascent(manifest: Manifest): AscentRow[] {
-  const city = findExtra(manifest, 'city');
+  const scenes = (manifest.extras ?? []).map((row): AscentRow => ({ kind: 'city', row }));
   return manifest.sheets.flatMap((row): AscentRow[] =>
-    row.num === '7B' && city ? [{ kind: 'sheet', row }, { kind: 'city', row: city }] : [{ kind: 'sheet', row }],
+    row.num === '7B' ? [{ kind: 'sheet', row }, ...scenes] : [{ kind: 'sheet', row }],
   );
 }
+
+/** A 3D plate's state name: the manifest id under the shell. */
+export const sceneState = (row: ExtraRow): string => `atlas.${row.id}`;
 
 /** The leading article of a title. The manifest strings themselves stay frozen. */
 export const ARTICLE = /^THE\s+/;
@@ -316,10 +320,9 @@ export function kvVocabulary(rows: readonly { labels: SheetLabels }[]): string[]
   return [...out].sort();
 }
 
-/** Every plate the index can show: the ascent, the city, then the appendix. */
+/** Every plate the index can show: the ascent, the 3D plates, then the appendix. */
 export function labelledRows(manifest: Manifest): Array<{ labels: SheetLabels }> {
-  const city = findExtra(manifest, 'city');
-  return [...manifest.sheets, ...(city ? [city] : []), ...(manifest.appendix ?? [])];
+  return [...manifest.sheets, ...(manifest.extras ?? []), ...(manifest.appendix ?? [])];
 }
 
 /** Either kind of row carries the two fields a fragment fetch needs. */

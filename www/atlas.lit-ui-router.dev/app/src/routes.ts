@@ -28,6 +28,7 @@ export const href = {
   gallery: BASE,
   about: `${BASE}about`,
   city: `${BASE}city`,
+  plant: `${BASE}plant`,
   specimen: `${BASE}specimen`,
   log: `${BASE}log`,
   sheet: (num: string): string => `${BASE}sheet/${num}`,
@@ -76,8 +77,10 @@ export const routes: RouteDeclaration[] = [
   },
   { name: 'atlas.sheet', url: '/sheet/:num?focus', params: FOCUS_PARAMS },
   // The 3D city: a plate the flat set only publishes inside its gallery, and
-  // the one state whose view loads a library on demand (three, resolved).
+  // with its working twin the only states whose view loads a library on demand
+  // (three, resolved). The twin is the same scene with its plants raised.
   { name: 'atlas.city', url: '/city?focus', params: FOCUS_PARAMS },
+  { name: 'atlas.plant', url: '/plant?focus', params: FOCUS_PARAMS },
   // The type specimen: a design bench, not a plate. It is the one state whose
   // view pulls a webfont — and it pulls it on entry, so no other page's
   // payload knows the faces exist.

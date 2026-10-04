@@ -39,6 +39,7 @@ rows (A1, A2, A2i) and one `extras` row, the 3D city.
 | `atlas.gallery`  | `/?subject&projection&mode&basis&kv` | `GalleryView` | — (the key index's filter, five nullable params) |
 | `atlas.sheet`    | `/sheet/:num?focus` | `SheetView` | `sheet`, `fragment` (`focus`: the plate's pick, dynamic) |
 | `atlas.city`     | `/city?focus`  | `CityView`      | `extra`, `fragment`, **`three`** (`focus`: the pinned member) |
+| `atlas.plant`    | `/plant?focus` | `CityView`      | the same as `atlas.city`, on the `plant` row |
 | `atlas.specimen` | `/specimen`    | `SpecimenView`  | **`specimen`** (its own element)  |
 | `atlas.log`      | `/log`         | `LogView`       | `manifest` (its `issueLog`)       |
 | `atlas.office`   | `/office`      | — `redirectTo`  | — (302 to `atlas.sheet` A2)       |
@@ -60,8 +61,9 @@ its own `APPENDIX` section and card grid. `mountsFor()` is fed BOTH lists, so `/
 into the server's `/sheet/{num:…}` alternation and `/sheet/a1` 302s to the cased id exactly as
 `/sheet/2a` does. `allSheets()`, `findSheet()` and `isAppendix()` in `src/manifest.ts` own it.
 
-`atlas.city` is the 3D plate and the only state that loads a library on entry (see **Dependencies on
-demand**). It is deliberately not a sheet: no sheet number, in the manifest's `extras` rather than
+`atlas.city` is the 3D plate and, with `atlas.plant`, its working twin (the same scene with every
+mass crowned by a working plant), one of the two states that load a library on entry (see
+**Dependencies on demand**). Neither is a sheet: no sheet number, in the manifest's `extras` rather than
 its `sheets`, and so invisible to the ascent order, the ← / → walk and the server's narrowed
 `/sheet/{num:…}` — a rail entry and a cover card, nothing more.
 
@@ -237,7 +239,7 @@ is strict in four ways, and each one is a line in the build:
   point at `https://atlas.lit-ui-router.dev/set/…` in a new tab.
 
 `src/mode.ts` is the one flag (`import.meta.env.MODE === 'artifact'`) the readers share; analytics
-is skipped in this mode. Nothing above changes the site build, which prerenders 29 pages +
+is skipped in this mode. Nothing above changes the site build, which prerenders 30 pages +
 `404.html` and 26 redirects.
 
 ## Server side

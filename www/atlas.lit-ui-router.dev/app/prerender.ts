@@ -88,8 +88,23 @@ const router: LitRouter = installServerLocation(new UIRouterLit(), {
   strictMode: false,
 });
 const cityRow = findExtra(manifest, 'city');
+const plantRow = findExtra(manifest, 'plant');
 
 const fragmentOf = (row: { file: string }): string => readFileSync(join(PUBLIC, row.file), 'utf8');
+
+/** A 3D plate's resolves: its row and fragment, read from disk. */
+const sceneResolves = (id: string, row: ExtraRow | undefined): LitStateDeclaration['resolve'] => [
+  {
+    token: 'extra',
+    resolveFn: (): ExtraRow => {
+      if (!row) throw new Error(`prerender: no ${id} row in the manifest`);
+      return row;
+    },
+  },
+  { token: 'fragment', deps: ['extra'], resolveFn: fragmentOf },
+  // A client resolve: the scene is raised on boot, so the served page has none.
+  { token: 'three', resolveFn: (): undefined => undefined },
+];
 
 /** The routed component per state name — the client's own, from src/views.ts. */
 const components: Record<string, LitStateDeclaration['component']> = {
@@ -97,6 +112,7 @@ const components: Record<string, LitStateDeclaration['component']> = {
   'atlas.gallery': views.GalleryView,
   'atlas.sheet': views.SheetView,
   'atlas.city': views.CityView,
+  'atlas.plant': views.CityView,
   'atlas.specimen': views.SpecimenView,
   'atlas.about': views.AboutView,
   'atlas.log': views.LogView,
@@ -125,18 +141,8 @@ const serverResolves: Record<string, LitStateDeclaration['resolve']> = {
     },
     { token: 'fragment', deps: ['sheet'], resolveFn: fragmentOf },
   ],
-  'atlas.city': [
-    {
-      token: 'extra',
-      resolveFn: (): ExtraRow => {
-        if (!cityRow) throw new Error('prerender: no city row in the manifest');
-        return cityRow;
-      },
-    },
-    { token: 'fragment', deps: ['extra'], resolveFn: fragmentOf },
-    // A client resolve: the scene is raised on boot, so the served page has none.
-    { token: 'three', resolveFn: (): undefined => undefined },
-  ],
+  'atlas.city': sceneResolves('city', cityRow),
+  'atlas.plant': sceneResolves('plant', plantRow),
   // The bench's element IS the resolve on the client (src/router.ts). The
   // server has no bench to draw — every reading on it is a measurement of a
   // live document — so a truthy token stands in and the view emits its head
@@ -208,6 +214,7 @@ const titles = new Map<string, string>([
   [href.about, TITLES.about],
   [href.log, TITLES.log],
   ...(cityRow ? ([[href.city, TITLES.city]] as [string, string][]) : []),
+  ...(plantRow ? ([[href.plant, TITLES.plant]] as [string, string][]) : []),
   [href.specimen, TITLES.specimen],
   ...PLATES.map((row: SheetRow): [string, string] => [href.sheet(row.num), sheetTitle(row)]),
 ]);

@@ -67,6 +67,7 @@ export const LABELS = {
   A2: S('pipeline', 'graph', 'static'),
   A2i: S('pipeline', 'graph', 'interactive'),
   city: S('city', 'isometric', 'interactive', 'real 3d isometric'),
+  plant: S('city', 'isometric', 'interactive', 'real 3d isometric'),
 };
 
 /** The keys for a plate — throws rather than labelling a plate by guess. */

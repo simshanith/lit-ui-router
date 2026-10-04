@@ -60,11 +60,13 @@ export async function initCity(root, THREE, focus) {
 
     // ---- the plate's own plan bounds, centred on the origin ------------------
     var rows = D.rows;
+    // the plant sheet carries a plan per member; the city carries none
+    var plans = D.plant || {};
     var minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity, maxY = 0;
     rows.forEach(function (b) {
       minX = Math.min(minX, b.x); maxX = Math.max(maxX, b.x + b.s);
       minZ = Math.min(minZ, b.y); maxZ = Math.max(maxZ, b.y + b.s);
-      maxY = Math.max(maxY, b.h, b.ha, D.plant[b.n] ? D.plant[b.n].top : 0);
+      maxY = Math.max(maxY, b.h, b.ha, plans[b.n] ? plans[b.n].top : 0);
       if (b.sa) {
         minX = Math.min(minX, b.ax); maxX = Math.max(maxX, b.ax + b.sa);
         minZ = Math.min(minZ, b.ay); maxZ = Math.max(maxZ, b.ay + b.sa);
@@ -116,9 +118,11 @@ export async function initCity(root, THREE, focus) {
     }
 
     // ---- materials: one set per tier, redressed with the theme -----------------
-    // Walls are never opaque: they write depth, so the city still sorts, but let
-    // the plant and the frame behind them through; the faces are pushed back a hair
-    // so the girding frame is not fought for the same depth.
+    // On the city the tier lane is OPAQUE — the plate removes hidden lines, and so
+    // does this.  On the plant sheet the walls still write depth but let the plant
+    // and the frame behind them through.  Either way the faces are pushed back a
+    // hair so the girding frame is not fought for the same depth; the light lane
+    // stays translucent, because its slabs split a footprint.
     var mats = {}, hot = {}, lines = {};
     var make = function (lift) {
       return ['cap', 'a', 'b'].map(function (k) {
@@ -128,6 +132,10 @@ export async function initCity(root, THREE, focus) {
     };
     var solid = function () {
       return ['cap', 'a', 'b'].map(function (k) {
+        if (!D.plant) {
+          return hatched(new THREE.MeshBasicMaterial({ polygonOffset: true,
+            polygonOffsetFactor: 1, polygonOffsetUnits: 1 }));
+        }
         return hatched(new THREE.MeshBasicMaterial({ transparent: true,
           opacity: k === 'cap' ? D.op.cap : D.op.side, polygonOffset: true,
           polygonOffsetFactor: 1, polygonOffsetUnits: 1 }));
@@ -210,7 +218,7 @@ export async function initCity(root, THREE, focus) {
       frame.visible = vis;
       scene.add(frame);
       r.frames.push(frame);
-      if (lk === 'tier' && wall) {
+      if (D.plant && lk === 'tier' && wall) {
         var ghost = new THREE.LineSegments(frame.geometry, ghosts(lineMat));
         ghost.userData.base = ghost.material;
         ghost.userData.hot = ghosts(dashed ? lines.hotDash : lines.hot);
@@ -267,7 +275,7 @@ export async function initCity(root, THREE, focus) {
     var tops = {};                  // n -> [x, y, z] over the src mass: its cap, or its plant's crown
     rows.forEach(function (b) {
       var p = mass(b.n, b.x, b.y, b.s, b.h, b.tier, lines.tier[b.tier], false);
-      tops[b.n] = [p[0], D.plant[b.n] ? D.plant[b.n].top : b.h, p[1]];
+      tops[b.n] = [p[0], plans[b.n] ? plans[b.n].top : b.h, p[1]];
       if (b.sa) mass(b.n, b.ax, b.ay, b.sa, b.ha, 'annex', lines.annex, true);
       relight(b);
     });
@@ -323,7 +331,7 @@ export async function initCity(root, THREE, focus) {
     }
     var tierKeys = Object.keys(D.tiers);
     rows.forEach(function (b) {
-      var plan = D.plant[b.n];
+      var plan = plans[b.n];
       if (!plan) return;
       var from = pPos.length / 3, tierIx = tierKeys.indexOf(b.tier);
       plan.p.forEach(function (q) {
@@ -355,13 +363,13 @@ export async function initCity(root, THREE, focus) {
     plantGeo.setIndex(pIdx);
     var plantMat = new THREE.MeshBasicMaterial({ vertexColors: true });
     var plant = new THREE.Mesh(plantGeo, plantMat);
-    scene.add(plant);
+    if (D.plant) scene.add(plant);
     var plantEdgeGeo = new THREE.BufferGeometry();
     plantEdgeGeo.setAttribute('position', new THREE.Float32BufferAttribute(pEdge, 3));
     lines.plant = new THREE.LineBasicMaterial({ transparent: true, opacity: 0.85, depthWrite: false });
     var plantEdges = new THREE.LineSegments(plantEdgeGeo, lines.plant);
     plantEdges.renderOrder = 2;
-    scene.add(plantEdges);
+    if (D.plant) scene.add(plantEdges);
     var plantTone = null;           // per-role [top, lit side, east side], set by paint()
     var plantHotN = null;
     function plantColour(from, to) {
@@ -621,29 +629,31 @@ export async function initCity(root, THREE, focus) {
       lines.hot.color = new THREE.Color(c.accent);
       lines.hotDash.color = new THREE.Color(c.accent);
       ghostMats.forEach(function (m) { m.userData.ghost.color.copy(m.color); });
-      // the plant's tones: machine, pipe and gantry steel each a step further from
-      // the paper toward the soft ink; a band takes its tier's edge; a lamp burns green
-      var black = new THREE.Color(0, 0, 0), white = new THREE.Color(c.paper);
-      var tone = function (base, flat) {
-        if (flat) return [base.clone(), base.clone(), base.clone()];
-        return [base.clone().lerp(white, 0.45), base.clone(), base.clone().lerp(black, 0.24)];
-      };
-      var p2 = new THREE.Color(c.paper2), sft = new THREE.Color(c.soft);
-      plantTone = [
-        tone(p2.clone().lerp(sft, 0.3)),
-        tone(p2.clone().lerp(sft, 0.58)),
-        tone(sft.clone().lerp(new THREE.Color(c.ink), 0.22)),
-        null,
-        tone(new THREE.Color(c.green), true),
-        tone(new THREE.Color(c.faint).lerp(p2, 0.35)),
-      ];
-      plantTone.band = tierKeys.map(function (t) {
-        var e = D.tiers[t].edge;
-        return tone(new THREE.Color(c[e === 'line' ? 'soft' : e]));
-      });
-      plantTone.hot = new THREE.Color(c.accent);
-      plantColour(0, pRole.length);
-      lines.plant.color = new THREE.Color(c.ink);
+      if (D.plant) {
+        // the plant's tones: machine, pipe and gantry steel each a step further from
+        // the paper toward the soft ink; a band takes its tier's edge; a lamp burns green
+        var black = new THREE.Color(0, 0, 0), white = new THREE.Color(c.paper);
+        var tone = function (base, flat) {
+          if (flat) return [base.clone(), base.clone(), base.clone()];
+          return [base.clone().lerp(white, 0.45), base.clone(), base.clone().lerp(black, 0.24)];
+        };
+        var p2 = new THREE.Color(c.paper2), sft = new THREE.Color(c.soft);
+        plantTone = [
+          tone(p2.clone().lerp(sft, 0.3)),
+          tone(p2.clone().lerp(sft, 0.58)),
+          tone(sft.clone().lerp(new THREE.Color(c.ink), 0.22)),
+          null,
+          tone(new THREE.Color(c.green), true),
+          tone(new THREE.Color(c.faint).lerp(p2, 0.35)),
+        ];
+        plantTone.band = tierKeys.map(function (t) {
+          var e = D.tiers[t].edge;
+          return tone(new THREE.Color(c[e === 'line' ? 'soft' : e]));
+        });
+        plantTone.hot = new THREE.Color(c.accent);
+        plantColour(0, pRole.length);
+        lines.plant.color = new THREE.Color(c.ink);
+      }
       plateMat.color = new THREE.Color(c.paper2).lerp(new THREE.Color(c.faint), 0.3);
       grid.material.color = new THREE.Color(c.faint);
       // canvas-drawn ink has to be redrawn when the ink changes
@@ -739,7 +749,7 @@ export async function initCity(root, THREE, focus) {
       if (!r) return;
       r[lane].meshes.forEach(function (m) { m.material = on ? m.userData.hot : m.userData.base; });
       r[lane].frames.forEach(function (f) { f.material = on ? f.userData.hot : f.userData.base; });
-      plantLight(n, on);
+      if (D.plant) plantLight(n, on);
     }
     function setLane(k) {
       if (k === lane) return;

@@ -130,7 +130,12 @@ const verdicts = [
   ['12', 'PR CI GRAPH', 'REGISTER PLATE', `the punched inventory — ${PHANTOM_PCT}% of the graph runs nothing, and the real→real edges that remain are a thin core inside a large node count`],
   ['13', 'WORKSPACE × TIME', 'WEATHERING MAP', SHEET13_VERDICT],
   ['12i', 'PR CI GRAPH', 'INTERACTIVE REGISTER', `sheet 12's punchcard with a pointer in it — the whole ci graph carried node by node, real subgraph by default, and one checkbox that floods the ${PHANTOM_PCT}% that runs nothing`],
-  ['city', 'MONOREPO, IN THE ROUND', 'REAL 3D ISOMETRIC CITY', "sheet 7's city rebuilt in three.js from the plate's own computed geometry — translucent paper walls hatched in the tier's own rake over a girding frame, each crowned by a working plant sized from its own census, and a camera that orbits free and lands on a true diagonal", '#city-scene', 'S7·3D'],
+  ['city', 'MONOREPO, IN THE ROUND', 'REAL 3D ISOMETRIC CITY', "sheet 7's city rebuilt in three.js from the plate's own computed geometry — opaque paper walls hatched in the tier's own rake over a girding frame, and a camera that orbits free and lands on a true diagonal", '#city-scene', 'S7·3D'],
+];
+// The rows the routed app files and the flat set does not draw: same columns,
+// read into INDEX_BY_NUM and never into the gallery's table.
+const appIdx = [
+  ['plant', 'THE WORKING CITY, IN THE ROUND', 'REAL 3D ISOMETRIC CITY', "sheet 7's city rebuilt in three.js from the plate's own computed geometry — translucent paper walls hatched in the tier's own rake over a girding frame, each crowned by a working plant sized from its own census, and a camera that orbits free and lands on a true diagonal", '#plant-scene', 'S7B·3D'],
 ];
 // THE APPENDIX INDEX — same four columns, filed under its own heading. These
 // rows are NOT in the ascent: `appendixIdx` is concatenated for the lookup the
@@ -148,7 +153,7 @@ const keyLine = (n) => {
 const idxRow = ([n, a, f, v, anchor, label]) =>
   `<tr><td><a href="${anchor ?? `#sheet-${n}`}">${label ?? `S${n}`}</a></td><td>${a}</td><td>${f}<span class="kvs">${keyLine(n)}</span></td><td>${v}</td></tr>`;
 /** The row for a sheet number — the app reads its altitude and verdict here. */
-const INDEX_BY_NUM = Object.fromEntries([...verdicts, ...appendixIdx].map((row) => [row[0], { scale: row[1], verdict: row[3] }]));
+const INDEX_BY_NUM = Object.fromEntries([...verdicts, ...appIdx, ...appendixIdx].map((row) => [row[0], { scale: row[1], verdict: row[3] }]));
 // The cover's own CSS, split so the routed app can reuse the half it draws.
 // The stat bar, the general survey, the prose column and the colophon line
 // ride the manifest as `cover.css`; .cover and .idx are gallery-only. The two
@@ -400,8 +405,8 @@ canvas) and nothing else changes. To try a row without touching
 the tracked pictures: \`thumbs.mjs <outdir> --only <ids> --out <dir> --tuning <file.json>\`.
 
 Live at <https://atlas.lit-ui-router.dev/> — the app owns the root (\`/\`, \`/sheet/7/\`, \`/city/\`,
-\`/log\`) and the flat set sits beside it under \`/set/\`; the two link to each other. The SVG
-sheets need nothing; the interactive plates (1i, 2B, 12i, 7·3D, A2i) load cytoscape 3.31.0 and
+\`/plant/\`, \`/log\`) and the flat set sits beside it under \`/set/\`; the two link to each other. The SVG
+sheets need nothing; the interactive plates (1i, 2B, 12i, 7·3D, 7B·3D, A2i) load cytoscape 3.31.0 and
 three.js 0.169.0, which the stage step vendors. \`app/\` is the same set as a prerendered
 lit-ui-router app (see \`app/README.md\`); \`HISTORY.md\` is the verbatim revision record, parsed
 into the app's \`/log\` at build time. This file is written by \`build.mjs\`; edit the emitter, not the output.

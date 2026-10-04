@@ -19,7 +19,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { CSS, DATE, TOTAL, chipBreaks, plateRatio, sheetSection } from './chrome.mjs';
-import { CITY_META, cityInitModule, cityMarkup } from './city-scene.mjs';
+import { CITY_META, PLANT_META, cityInitModule, cityMarkup, plantMarkup } from './city-scene.mjs';
 import { ICONS_DTS, iconsModule } from './icons.mjs';
 import { assertLabels, labelsFor } from './labels.mjs';
 import { cityHero } from './sheet7.mjs';
@@ -205,7 +205,9 @@ function issueLogOf(rows) {
         title: row.title, rev: head[1], desc: firstClause(desc) });
     }
   }
-  const order = (a, b) => bySheet(a.num === 'city' ? '7B·' : a.num, b.num === 'city' ? '7B·' : b.num);
+  // the two 3D plates seat right after 7B, the city first
+  const SEAT = { city: '7B·', plant: '7B··' };
+  const order = (a, b) => bySheet(SEAT[a.num] ?? a.num, SEAT[b.num] ?? b.num);
   const dated = entries.filter((e) => e.date)
     .sort((a, b) => b.date.localeCompare(a.date) || order(a, b) || b.rev.localeCompare(a.rev));
   const undated = entries.filter((e) => !e.date).sort((a, b) => order(a, b) || a.rev.localeCompare(b.rev));
@@ -314,16 +316,21 @@ export function emitApp({ sheets, appendix = [], interactive, appendixInteractiv
   const manifest = rows.map(rowFor);
   const appManifest = appRows.map(rowFor);
 
-  // EXTRAS — a plate the flat set only ever published inside the gallery. It
-  // has no sheet number, so it is kept OUT of `sheets`: the reel walk, the
-  // ascent order and the sheet mount all read that array and must not see it.
-  // Its scene is an ES module rather than an inline script: the app's
+  // EXTRAS — the 3D plates: the city, which the flat set publishes only inside
+  // its gallery, and its working twin, which the flat set does not draw. Neither
+  // has a sheet number, so both are kept OUT of `sheets`: the reel walk, the
+  // ascent order and the sheet mount all read that array and must not see them.
+  // The scene is an ES module rather than an inline script: the app's
   // runScripts() cannot run a <script type="module"> it inserts, and the
   // import must be bundled, not a cdnjs url.
-  const cityHtml = linkRefs(cityMarkup(), '', byUpper);
-  writeFileSync(join(sheetsDir, `${CITY_META.id}.html`), `${cityHtml.html.trim()}\n`);
+  const scenes = [[CITY_META, cityMarkup()], [PLANT_META, plantMarkup()]].map(([meta, markup]) => {
+    const linked = linkRefs(markup, '', byUpper);
+    writeFileSync(join(sheetsDir, `${meta.id}.html`), `${linked.html.trim()}\n`);
+    return [meta, linked.refs];
+  });
   const generatedDir = join(outDir, 'app', 'src', 'generated');
   mkdirSync(generatedDir, { recursive: true });
+  // one init module raises both scenes: each fragment's island carries its own data
   writeFileSync(join(generatedDir, 'city-init.js'), cityInitModule());
   writeFileSync(
     join(generatedDir, 'city-init.d.ts'),
@@ -344,27 +351,25 @@ export function emitApp({ sheets, appendix = [], interactive, appendixInteractiv
   );
   writeFileSync(join(generatedDir, 'icons.js'), iconsModule());
   writeFileSync(join(generatedDir, 'icons.d.ts'), ICONS_DTS);
-  const extras = [
-    {
-      id: CITY_META.id,
-      title: CITY_META.title,
-      sub: CITY_META.sub,
-      rev: CITY_META.rev,
-      shno: CITY_META.head,
-      file: `sheets/${CITY_META.id}.html`,
-      standalone: CITY_META.standalone,
-      scale: index.city?.scale ?? '',
-      verdict: index.city?.verdict ?? '',
-      labels: labelsFor(CITY_META.id),
-      refs: cityHtml.refs,
-    },
-  ];
+  const extras = scenes.map(([meta, refs]) => ({
+    id: meta.id,
+    title: meta.title,
+    sub: meta.sub,
+    rev: meta.rev,
+    shno: meta.head,
+    file: `sheets/${meta.id}.html`,
+    standalone: meta.standalone,
+    scale: index[meta.id]?.scale ?? '',
+    verdict: index[meta.id]?.verdict ?? '',
+    labels: labelsFor(meta.id),
+    refs,
+  }));
 
   // every plate labelled, every label in the vocabulary, or the build stops
   assertLabels([
     ...rows.map(([sheet, render]) => [String(sheet.num), Boolean(render)]),
     ...appRows.map(([sheet, render]) => [String(sheet.num), Boolean(render)]),
-    [CITY_META.id, true],
+    ...extras.map((row) => [row.id, true]),
   ]);
 
   // the fragments get their chip breaks inside linkRefs; the cover bypasses it

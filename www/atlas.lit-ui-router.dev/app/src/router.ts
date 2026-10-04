@@ -25,6 +25,41 @@ import {
   SpecimenView,
 } from './views.ts';
 
+/**
+ * A 3D plate's state, `atlas.<id>`: the city and its working twin share the
+ * view, the element and the generated scene, and differ only in their row.
+ */
+function sceneState(id: string): LitStateDeclaration {
+  const name = `atlas.${id}`;
+  return {
+    name,
+    url: urlOf(name),
+    params: FOCUS_PARAMS,
+    component: CityView,
+    // DEPENDENCIES ON DEMAND: three.js is a resolve, so the router fetches the
+    // library's own chunk while it enters the state — and no route without a
+    // scene ever pays for it. The scene itself is a generated module
+    // (src/generated/city-init.js) that takes the namespace resolved here.
+    resolve: [
+      {
+        token: 'extra',
+        deps: ['manifest'],
+        resolveFn: (manifest: Manifest): ExtraRow => {
+          const row = findExtra(manifest, id);
+          if (!row) throw new Error(`no ${id} row in the manifest`);
+          return row;
+        },
+      },
+      {
+        token: 'fragment',
+        deps: ['extra'],
+        resolveFn: (extra: ExtraRow): Promise<string> => loadFragment(extra),
+      },
+      { token: 'three', resolveFn: (): Promise<unknown> => import('three') },
+    ],
+  };
+}
+
 export const states: LitStateDeclaration[] = [
   {
     name: 'atlas',
@@ -65,33 +100,8 @@ export const states: LitStateDeclaration[] = [
       },
     ],
   },
-  {
-    name: 'atlas.city',
-    url: urlOf('atlas.city'),
-    params: FOCUS_PARAMS,
-    component: CityView,
-    // DEPENDENCIES ON DEMAND: three.js is a resolve, so the router fetches the
-    // library's own chunk while it enters the state — and no other route in
-    // the app ever pays for it. The scene itself is a generated module
-    // (src/generated/city-init.js) that takes the namespace resolved here.
-    resolve: [
-      {
-        token: 'extra',
-        deps: ['manifest'],
-        resolveFn: (manifest: Manifest): ExtraRow => {
-          const row = findExtra(manifest, 'city');
-          if (!row) throw new Error('no city row in the manifest');
-          return row;
-        },
-      },
-      {
-        token: 'fragment',
-        deps: ['extra'],
-        resolveFn: (extra: ExtraRow): Promise<string> => loadFragment(extra),
-      },
-      { token: 'three', resolveFn: (): Promise<unknown> => import('three') },
-    ],
-  },
+  sceneState('city'),
+  sceneState('plant'),
   {
     name: 'atlas.specimen',
     url: urlOf('atlas.specimen'),

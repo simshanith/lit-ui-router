@@ -5,10 +5,13 @@
 // Nothing is re-derived: sheet7.mjs exports its COMPUTED geometry (CITY) and this
 // module ships those rows verbatim as a JSON island, so a mass in the scene can
 // never drift from the mass on the plate.  Treatment is the PLATES' OWN, in three
-// dimensions: translucent paper faces over a girding frame, the tier's hatch raked
+// dimensions: opaque paper faces over a girding frame, the tier's hatch raked
 // across the right wall in SCREEN space — the same rake and the same spacing
-// everywhere, which is what patternUnits="userSpaceOnUse" means on sheet 7.  Each
-// mass is crowned by a working plant whose plan city-plant.mjs draws from its row.
+// everywhere, which is what patternUnits="userSpaceOnUse" means on sheet 7.  The
+// same scene stands twice: `city` as measured, and `plant`, whose walls let the
+// frame through and whose every mass is crowned by a working plant that
+// city-plant.mjs plans from its row.  One body draws both; the island's `plant`
+// field is the switch.
 import { readFileSync } from 'node:fs';
 import { PROJECT_MARK, articleTitle } from './chrome.mjs';
 import { FOCUS_JS } from './focus.mjs';
@@ -122,11 +125,11 @@ const DATA = {
   zoom: [0.45, 4],
   pinZoom: 1.8,           // a pin from the url or the keyboard zooms in at least this far
   op: { cap: 0.88, side: 0.8 },
-  // the working plant: a plan of primitives per massed member, seeded on its name
-  plant: plantPlan(CITY, SURVEY_BY_N),
-  ghost: 0.3,              // the girding frame's alpha where it shows through a wall
   legend: { tier: lgHtml(LEGEND), light: lgHtml(LIGHT_LEGEND) },
 };
+// The plant sheet's island: the city's, plus a plan of primitives per massed
+// member, seeded on its name, and the frame's alpha where it shows through a wall.
+const PLANT_DATA = { ...DATA, plant: plantPlan(CITY, SURVEY_BY_N), ghost: 0.3 };
 
 const json = (v) => JSON.stringify(v).replace(/</g, '\\u003c');
 
@@ -143,6 +146,17 @@ export const CITY_META = {
   sub: `SHEET 7'S CENSUS CITY IN THE ROUND · ${CITY.length} MEMBERS · ${MASSED} MASSED · ${ANNEXES} SPEC ANNEXES · 4 DISTRICTS · ORBIT SNAPS TO THE FOUR TRUE DIAGONALS · A SECOND LANE RELIGHTS THE CITY FROM SHEET 7A'S FILED SHADOW PLATE · THE STAGE IS VIEWPORT-RELATIVE, 80VH BETWEEN 520 AND 1400PX`,
   /** The flat set's copy — an anchor in the gallery, never a page of its own. */
   standalone: 'gallery.html#city-scene',
+};
+
+// The same city at work: sheet 7B's twin in the round, filed only in the app.
+export const PLANT_META = {
+  id: 'plant',
+  head: 'SHEET 7B · 3D',
+  rev: 'A',
+  title: 'THE WORKING CITY — ISOMETRIC',
+  sub: `SHEET 7'S CENSUS CITY IN THE ROUND, AT WORK · ${CITY.length} MEMBERS · ${MASSED} MASSED · EACH CROWNED BY A WORKING PLANT SIZED FROM ITS OWN CENSUS · ${ANNEXES} SPEC ANNEXES · 4 DISTRICTS · ORBIT SNAPS TO THE FOUR TRUE DIAGONALS · A SECOND LANE RELIGHTS THE CITY FROM SHEET 7A'S FILED SHADOW PLATE · THE STAGE IS VIEWPORT-RELATIVE, 80VH BETWEEN 520 AND 1400PX`,
+  /** The flat set draws no copy of it. */
+  standalone: '',
 };
 
 const CSS = `
@@ -276,11 +290,13 @@ const BODY = `$$FOCUS  var stage = document.getElementById('cs-canvas');
 
     // ---- the plate's own plan bounds, centred on the origin ------------------
     var rows = D.rows;
+    // the plant sheet carries a plan per member; the city carries none
+    var plans = D.plant || {};
     var minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity, maxY = 0;
     rows.forEach(function (b) {
       minX = Math.min(minX, b.x); maxX = Math.max(maxX, b.x + b.s);
       minZ = Math.min(minZ, b.y); maxZ = Math.max(maxZ, b.y + b.s);
-      maxY = Math.max(maxY, b.h, b.ha, D.plant[b.n] ? D.plant[b.n].top : 0);
+      maxY = Math.max(maxY, b.h, b.ha, plans[b.n] ? plans[b.n].top : 0);
       if (b.sa) {
         minX = Math.min(minX, b.ax); maxX = Math.max(maxX, b.ax + b.sa);
         minZ = Math.min(minZ, b.ay); maxZ = Math.max(maxZ, b.ay + b.sa);
@@ -332,9 +348,11 @@ const BODY = `$$FOCUS  var stage = document.getElementById('cs-canvas');
     }
 
     // ---- materials: one set per tier, redressed with the theme -----------------
-    // Walls are never opaque: they write depth, so the city still sorts, but let
-    // the plant and the frame behind them through; the faces are pushed back a hair
-    // so the girding frame is not fought for the same depth.
+    // On the city the tier lane is OPAQUE — the plate removes hidden lines, and so
+    // does this.  On the plant sheet the walls still write depth but let the plant
+    // and the frame behind them through.  Either way the faces are pushed back a
+    // hair so the girding frame is not fought for the same depth; the light lane
+    // stays translucent, because its slabs split a footprint.
     var mats = {}, hot = {}, lines = {};
     var make = function (lift) {
       return ['cap', 'a', 'b'].map(function (k) {
@@ -344,6 +362,10 @@ const BODY = `$$FOCUS  var stage = document.getElementById('cs-canvas');
     };
     var solid = function () {
       return ['cap', 'a', 'b'].map(function (k) {
+        if (!D.plant) {
+          return hatched(new THREE.MeshBasicMaterial({ polygonOffset: true,
+            polygonOffsetFactor: 1, polygonOffsetUnits: 1 }));
+        }
         return hatched(new THREE.MeshBasicMaterial({ transparent: true,
           opacity: k === 'cap' ? D.op.cap : D.op.side, polygonOffset: true,
           polygonOffsetFactor: 1, polygonOffsetUnits: 1 }));
@@ -426,7 +448,7 @@ const BODY = `$$FOCUS  var stage = document.getElementById('cs-canvas');
       frame.visible = vis;
       scene.add(frame);
       r.frames.push(frame);
-      if (lk === 'tier' && wall) {
+      if (D.plant && lk === 'tier' && wall) {
         var ghost = new THREE.LineSegments(frame.geometry, ghosts(lineMat));
         ghost.userData.base = ghost.material;
         ghost.userData.hot = ghosts(dashed ? lines.hotDash : lines.hot);
@@ -483,7 +505,7 @@ const BODY = `$$FOCUS  var stage = document.getElementById('cs-canvas');
     var tops = {};                  // n -> [x, y, z] over the src mass: its cap, or its plant's crown
     rows.forEach(function (b) {
       var p = mass(b.n, b.x, b.y, b.s, b.h, b.tier, lines.tier[b.tier], false);
-      tops[b.n] = [p[0], D.plant[b.n] ? D.plant[b.n].top : b.h, p[1]];
+      tops[b.n] = [p[0], plans[b.n] ? plans[b.n].top : b.h, p[1]];
       if (b.sa) mass(b.n, b.ax, b.ay, b.sa, b.ha, 'annex', lines.annex, true);
       relight(b);
     });
@@ -539,7 +561,7 @@ const BODY = `$$FOCUS  var stage = document.getElementById('cs-canvas');
     }
     var tierKeys = Object.keys(D.tiers);
     rows.forEach(function (b) {
-      var plan = D.plant[b.n];
+      var plan = plans[b.n];
       if (!plan) return;
       var from = pPos.length / 3, tierIx = tierKeys.indexOf(b.tier);
       plan.p.forEach(function (q) {
@@ -571,13 +593,13 @@ const BODY = `$$FOCUS  var stage = document.getElementById('cs-canvas');
     plantGeo.setIndex(pIdx);
     var plantMat = new THREE.MeshBasicMaterial({ vertexColors: true });
     var plant = new THREE.Mesh(plantGeo, plantMat);
-    scene.add(plant);
+    if (D.plant) scene.add(plant);
     var plantEdgeGeo = new THREE.BufferGeometry();
     plantEdgeGeo.setAttribute('position', new THREE.Float32BufferAttribute(pEdge, 3));
     lines.plant = new THREE.LineBasicMaterial({ transparent: true, opacity: 0.85, depthWrite: false });
     var plantEdges = new THREE.LineSegments(plantEdgeGeo, lines.plant);
     plantEdges.renderOrder = 2;
-    scene.add(plantEdges);
+    if (D.plant) scene.add(plantEdges);
     var plantTone = null;           // per-role [top, lit side, east side], set by paint()
     var plantHotN = null;
     function plantColour(from, to) {
@@ -837,29 +859,31 @@ const BODY = `$$FOCUS  var stage = document.getElementById('cs-canvas');
       lines.hot.color = new THREE.Color(c.accent);
       lines.hotDash.color = new THREE.Color(c.accent);
       ghostMats.forEach(function (m) { m.userData.ghost.color.copy(m.color); });
-      // the plant's tones: machine, pipe and gantry steel each a step further from
-      // the paper toward the soft ink; a band takes its tier's edge; a lamp burns green
-      var black = new THREE.Color(0, 0, 0), white = new THREE.Color(c.paper);
-      var tone = function (base, flat) {
-        if (flat) return [base.clone(), base.clone(), base.clone()];
-        return [base.clone().lerp(white, 0.45), base.clone(), base.clone().lerp(black, 0.24)];
-      };
-      var p2 = new THREE.Color(c.paper2), sft = new THREE.Color(c.soft);
-      plantTone = [
-        tone(p2.clone().lerp(sft, 0.3)),
-        tone(p2.clone().lerp(sft, 0.58)),
-        tone(sft.clone().lerp(new THREE.Color(c.ink), 0.22)),
-        null,
-        tone(new THREE.Color(c.green), true),
-        tone(new THREE.Color(c.faint).lerp(p2, 0.35)),
-      ];
-      plantTone.band = tierKeys.map(function (t) {
-        var e = D.tiers[t].edge;
-        return tone(new THREE.Color(c[e === 'line' ? 'soft' : e]));
-      });
-      plantTone.hot = new THREE.Color(c.accent);
-      plantColour(0, pRole.length);
-      lines.plant.color = new THREE.Color(c.ink);
+      if (D.plant) {
+        // the plant's tones: machine, pipe and gantry steel each a step further from
+        // the paper toward the soft ink; a band takes its tier's edge; a lamp burns green
+        var black = new THREE.Color(0, 0, 0), white = new THREE.Color(c.paper);
+        var tone = function (base, flat) {
+          if (flat) return [base.clone(), base.clone(), base.clone()];
+          return [base.clone().lerp(white, 0.45), base.clone(), base.clone().lerp(black, 0.24)];
+        };
+        var p2 = new THREE.Color(c.paper2), sft = new THREE.Color(c.soft);
+        plantTone = [
+          tone(p2.clone().lerp(sft, 0.3)),
+          tone(p2.clone().lerp(sft, 0.58)),
+          tone(sft.clone().lerp(new THREE.Color(c.ink), 0.22)),
+          null,
+          tone(new THREE.Color(c.green), true),
+          tone(new THREE.Color(c.faint).lerp(p2, 0.35)),
+        ];
+        plantTone.band = tierKeys.map(function (t) {
+          var e = D.tiers[t].edge;
+          return tone(new THREE.Color(c[e === 'line' ? 'soft' : e]));
+        });
+        plantTone.hot = new THREE.Color(c.accent);
+        plantColour(0, pRole.length);
+        lines.plant.color = new THREE.Color(c.ink);
+      }
       plateMat.color = new THREE.Color(c.paper2).lerp(new THREE.Color(c.faint), 0.3);
       grid.material.color = new THREE.Color(c.faint);
       // canvas-drawn ink has to be redrawn when the ink changes
@@ -955,7 +979,7 @@ const BODY = `$$FOCUS  var stage = document.getElementById('cs-canvas');
       if (!r) return;
       r[lane].meshes.forEach(function (m) { m.material = on ? m.userData.hot : m.userData.base; });
       r[lane].frames.forEach(function (f) { f.material = on ? f.userData.hot : f.userData.base; });
-      plantLight(n, on);
+      if (D.plant) plantLight(n, on);
     }
     function setLane(k) {
       if (k === lane) return;
@@ -1194,19 +1218,22 @@ ${fill(APP)}}
 }
 
 // The basis notes: running prose under the stage, present state only, one note per concern.
-const BASIS_NOTES = [
+// The plant sheet trades the PAPER note for its own and adds PLANT after HATCH.
+const BASIS_NOTES = (plant) => [
   ['BASIS', `The model masses sheet 7's own geometry: every footprint, height and position is <code>generator/sheet7.mjs</code>'s computed <code>CITY</code> export, embedded verbatim as JSON and massed from <code>data/census-city.json</code>, ${BASIS}. Nothing is re-derived, so a mass in the model cannot drift from the mass on the plate. three.js ${THREE_URL.match(/three\.js\/([\d.]+)\//)[1]} is imported only once the plate scrolls into view, and the scene renders on demand: nothing runs while you read.`],
-  ['PAPER', `The masses are drawn the way the flat plates draw them, on paper that is never quite opaque: the cap at ${Math.round(DATA.op.cap * 100)}% and the walls at ${Math.round(DATA.op.side * 100)}%, so the girding frame and the plant behind a wall show through it, the frame at ${Math.round(DATA.ghost * 100)}% of its stroke. The cap takes the tier's own fill; each right-hand wall takes the tier's hatch over a <code>--paper-2</code> stone, the tier's hue pulled ${Math.round(TINT * 100)}% of the way in so the tiers still part at a glance. Each frame strokes the tier's edge colour from the ladder the plates use (red, accent, <code>--line</code>, soft, ink). Only the colour travels; a WebGL line carries no width.`],
+  plant ? ['PAPER', `The masses are drawn the way the flat plates draw them, on paper that is never quite opaque: the cap at ${Math.round(DATA.op.cap * 100)}% and the walls at ${Math.round(DATA.op.side * 100)}%, so the girding frame and the plant behind a wall show through it, the frame at ${Math.round(PLANT_DATA.ghost * 100)}% of its stroke. The cap takes the tier's own fill; each right-hand wall takes the tier's hatch over a <code>--paper-2</code> stone, the tier's hue pulled ${Math.round(TINT * 100)}% of the way in so the tiers still part at a glance. Each frame strokes the tier's edge colour from the ladder the plates use (red, accent, <code>--line</code>, soft, ink). Only the colour travels; a WebGL line carries no width.`]
+    : ['PAPER', `The masses are drawn the way the flat plates draw them. Faces are opaque and remove what stands behind them. The cap takes the tier's own fill; each right-hand wall takes the tier's hatch over a <code>--paper-2</code> stone, the tier's hue pulled ${Math.round(TINT * 100)}% of the way in so the tiers still part at a glance. Each frame strokes the tier's edge colour from the ladder the plates use (red, accent, <code>--line</code>, soft, ink). Only the colour travels; a WebGL line carries no width.`],
   ['HATCH', `Laid in screen space: one rake, one spacing, on every wall at every angle, which is what <code>patternUnits="userSpaceOnUse"</code> means on the flat set. It is a stripe mixed into the fragment colour off <code>gl_FragCoord</code>, so it costs no texture and no dependency. Gate severity is the rake: the halt and PR hatch runs opposite to the neutral one, and the halt cap is filled red. The <code>pr</code> and <code>late</code> tiers carry sheet 7's roof wash, the cap taking the side's hatch. The <code>off</code> tier is drawn frame-only, because there is nothing to mass.`],
-  ['PLANT', `Every massed member is drawn as a working plant, after the sprite study's Factorio-leaning treatment, and every piece of it reads a field the census row already carries. The plant keeps to the roof's corners, clear of the number chip over its centre. Stacks stand in a row up the west edge, one per ten authored files up to four, their height set by the footprint and banded in the tier's edge colour. Tanks line the north edge from the north-east corner, one at 150 sloc, two at 600, three at 1,800, as many as the roof holds. A header pipe joins them, and the field left over carries one vent per five files, up to six. A footprint of 45 units or more takes a portal gantry along its east edge, and one of 28 or more a catwalk rail. A wall of 20 units or more runs a riser up its east face, two from 60, and a mass of 40 or more is ringed by a deck every ${PLANT_RULES.deckEvery} units. A spec annex is joined by a pipe rack across the gap and carries three module lamps, lit green by sheet 7A's line coverage: three at 95 and over, two at 85, one below or unmetered, none when no suite loads the member. Where a choice is left, such as which roof cells the vents take, a generator seeded on the member's name makes it, so the same census always builds the same plant. The plant is one merged mesh, shaded per vertex and edged in ink.`],
+  ...(plant ? [['PLANT', `Every massed member is drawn as a working plant, after the sprite study's Factorio-leaning treatment, and every piece of it reads a field the census row already carries. The plant keeps to the roof's corners, clear of the number chip over its centre. Stacks stand in a row up the west edge, one per ten authored files up to four, their height set by the footprint and banded in the tier's edge colour. Tanks line the north edge from the north-east corner, one at 150 sloc, two at 600, three at 1,800, as many as the roof holds. A header pipe joins them, and the field left over carries one vent per five files, up to six. A footprint of 45 units or more takes a portal gantry along its east edge, and one of 28 or more a catwalk rail. A wall of 20 units or more runs a riser up its east face, two from 60, and a mass of 40 or more is ringed by a deck every ${PLANT_RULES.deckEvery} units. A spec annex is joined by a pipe rack across the gap and carries three module lamps, lit green by sheet 7A's line coverage: three at 95 and over, two at 85, one below or unmetered, none when no suite loads the member. Where a choice is left, such as which roof cells the vents take, a generator seeded on the member's name makes it, so the same census always builds the same plant. The plant is one merged mesh, shaded per vertex and edged in ink.`]] : []),
   ['CAMERA', `Orthographic, at the true isometric elevation, atan(1/\u221a2) \u2248 35.264\u00b0. The azimuth is free under the pointer and eases onto the nearest diagonal on release, instantly under <code>prefers-reduced-motion</code>.`],
   ['LETTERING', `Each src mass carries a billboarded chip with sheet 7's own number, drawn at runtime into a canvas in the page's mono stack and redrawn when the theme turns. Chips drop out below zoom ${DATA.chip.min}, so a pulled-back plan stays a plan. District names lie flat on their ground plates, turned onto the opening diagonal: level at rest, foreshortened with the ground as a site plan's lettering is. The reading panel prints the same row the schedule does.`],
   ['TEST LIGHT', `A second material lane over the same geometry: the city relit from <code>data/census-shadow.json</code>, ${SURVEY_META.basis}, the ref the geometry is massed at, with ${SURVEY_META.metered} members read under their own suites' meters. The model and the flat shadow plate cannot drift either. Every mass in the model has a survey row; one without is a build error.`],
   ['POLARITY', `Sheet 7A's: covered source is LIT, source no suite loads is SHADOW, and the spec annex is the LAMP that throws the light. A metered member's mass splits along its footprint. The lit slab is side \u00d7 the extent the meter records, taken from the annex (east) side, its tint stepping down through the line-coverage bands. The shadow slab is sheet 7A's own black wash with a faint ink stripe, lerped toward black rather than the ink, because <code>--ink</code> is light in the cyanotype theme and a shadow that brightens in the dark is not a shadow.`],
 ];
 
-/** The plate: style, section and the JSON island — no init script. */
-export function cityMarkup() {
+/** A plate: style, section and the JSON island — no init script. */
+function markup(plant) {
+  const meta = plant ? PLANT_META : CITY_META;
   // swatch fills follow the same tints the scene uses, in page tokens
   const HUE = { red: '--red', accent: '--accent', halo: '--accent', soft: '--ink-soft',
     ink: '--ink', faint: '--ink-faint', black: '#000' };
@@ -1235,10 +1262,10 @@ export function cityMarkup() {
 
   return `<style>${CSS}
 ${swatchCss}</style>
-<section class="sheet cs" id="city-scene" aria-label="The City, isometric — sheet 7 in the round, with a second material lane that relights it from sheet 7A's shadow survey">
-  <div class="sheet-head"><span class="proj">${PROJECT_MARK} — INTERACTIVE PLATE</span><span class="shno">${CITY_META.head} · REV ${CITY_META.rev}</span></div>
-  <h2 class="sheet-title">${articleTitle(CITY_META.title)}</h2>
-  <p class="sheet-sub">${CITY_META.sub}</p>
+<section class="sheet cs" id="${meta.id}-scene" aria-label="${plant ? 'The Working City, isometric — sheet 7 in the round, each mass crowned by a working plant' : 'The City, isometric — sheet 7 in the round'}, with a second material lane that relights it from sheet 7A's shadow survey">
+  <div class="sheet-head"><span class="proj">${PROJECT_MARK} — INTERACTIVE PLATE</span><span class="shno">${meta.head} · REV ${meta.rev}</span></div>
+  <h2 class="sheet-title">${articleTitle(meta.title)}</h2>
+  <p class="sheet-sub">${meta.sub}</p>
   <div class="cs-bar">
     <div class="cs-legend">
       ${DATA.legend.tier}
@@ -1250,15 +1277,21 @@ ${swatchCss}</style>
     </div>
   </div>
   <div class="cs-stage">
-    <div class="cs-canvas" id="cs-canvas" role="application" tabindex="0" aria-label="A real three-dimensional isometric model of the census city: ${MASSED} massed workspace members, each a translucent paper box inside its girding frame and crowned by a working plant of stacks, tanks, vents and pipes sized from its own census, its right-hand wall hatched in the rake its gate tier is hatched in on the flat plate, footprint proportional to the square root of its authored lines and height three units per authored file, with ${ANNEXES} dashed spec annexes beside them and four district plates on the ground. The camera orbits and lands on one of the four isometric diagonals. Each mass carries a numbered chip matching sheet 7's schedule, and each district plate carries its name lettered flat on the ground. A TEST LIGHT switch relights the same city from sheet 7A's shadow survey: each metered member's mass splits along its footprint, the share its own suite loads glowing from the annex side and the rest washed toward black, with the spec annexes burning as the lamps that throw the light. With the stage focused, the arrow keys step the pin through the members, Enter or Space pins or clears the one in hand, and Escape clears it."></div>
+    <div class="cs-canvas" id="cs-canvas" role="application" tabindex="0" aria-label="A real three-dimensional isometric model of the census city: ${MASSED} massed workspace members, ${plant ? 'each a translucent paper box inside its girding frame and crowned by a working plant of stacks, tanks, vents and pipes sized from its own census' : 'each an opaque paper box inside its girding frame'}, its right-hand wall hatched in the rake its gate tier is hatched in on the flat plate, footprint proportional to the square root of its authored lines and height three units per authored file, with ${ANNEXES} dashed spec annexes beside them and four district plates on the ground. The camera orbits and lands on one of the four isometric diagonals. Each mass carries a numbered chip matching sheet 7's schedule, and each district plate carries its name lettered flat on the ground. A TEST LIGHT switch relights the same city from sheet 7A's shadow survey: each metered member's mass splits along its footprint, the share its own suite loads glowing from the annex side and the rest washed toward black, with the spec annexes burning as the lamps that throw the light. With the stage focused, the arrow keys step the pin through the members, Enter or Space pins or clears the one in hand, and Escape clears it."></div>
     <aside class="cs-info" id="cs-info"></aside>
   </div>
   <div class="cs-basis">
-${BASIS_NOTES.map(([k, v]) => `    <p><strong>${k}</strong> ${v}</p>`).join('\n')}
+${BASIS_NOTES(plant).map(([k, v]) => `    <p><strong>${k}</strong> ${v}</p>`).join('\n')}
   </div>
 </section>
-<script type="application/json" id="cs-city">${json(DATA)}</script>`;
+<script type="application/json" id="cs-city">${json(plant ? PLANT_DATA : DATA)}</script>`;
 }
+
+/** The measured city's plate. */
+export const cityMarkup = () => markup(false);
+
+/** The working city's plate: the same scene with its plants raised. */
+export const plantMarkup = () => markup(true);
 
 /** The gallery's copy: the plate with its own inline module after it. */
 export function citySection() {
