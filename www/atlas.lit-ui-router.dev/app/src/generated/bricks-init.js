@@ -83,6 +83,7 @@ export async function initBricks(root, viewer, focus) {
   var info = root.querySelector('#bk-info');
   var play = root.querySelector('#bk-play');
   var slider = root.querySelector('#bk-t');
+  var turnBtn = root.querySelector('#bk-turn');
   var corners = Array.prototype.slice.call(root.querySelectorAll('[data-orbit]'));
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
   var ac = new AbortController();
@@ -94,20 +95,67 @@ export async function initBricks(root, viewer, focus) {
     pins[b.n] = mv.querySelector('[slot="hotspot-' + b.n + '"]');
   });
   var order = D.bricks.map(function (b) { return b.n; }).sort(function (a, b) { return a - b; });
-  var IDLE = '<p class="hint">' + D.bricks.length + ' bricks on two plates. Tap a number to read its brick and turn the camera on it; EXPLODE lifts every brick to the height sheet 2 draws it at.</p>';
+  var IDLE = '<p class="hint">' + D.bricks.length + ' bricks on two plates. Tap a number to read its brick and turn the camera on it; EXPLODE lifts the stacked bricks first, every brick to at least half again the height sheet 2 draws it at, each hanging on a leader over its stud.</p>';
 
-  function rise(b) { return b.lift * (1 - t / END); }
+  // the clip's own LINEAR interpolation, so a badge rides its brick exactly
+  function rise(b) {
+    var u = t / END, k = 0;
+    while (k < D.us.length - 2 && u > D.us[k + 1]) k++;
+    var s = Math.min(1, Math.max(0, (u - D.us[k]) / (D.us[k + 1] - D.us[k])));
+    return b.rise[k] + (b.rise[k + 1] - b.rise[k]) * s;
+  }
+  // the camera rides the clip: the target rises with the stack and the radius dollies out by the explode fraction, so the exploded model fits the stage
+  var TOP = D.bricks.reduce(function (m, b) { return Math.max(m, b.rise[0]); }, 0);
+  function exploded() { return D.bricks.reduce(function (m, b) { return Math.max(m, rise(b)); }, 0) / TOP; }
+  // TURN: the azimuth leaves the corner on the clip's cubic, so the camera lands on the corner as the bricks seat
+  var turning = false, moved = false, corner = corners[0].getAttribute('data-orbit'), base = null;
+  function swept(at) { var u = at / END; return turning ? 30 * (1 - u * u * u) : 0; }
+  function rebase(orbit) {
+    var p = orbit.split(' ');
+    base = { orbit: orbit, az: parseFloat(p[0]), polar: p[1], r: parseFloat(p[2]), unit: p[2].replace(/^[\d.]+/, '') };
+    moved = false;
+  }
+  // a user's orbit becomes the base at the next pose, so a drag or a zoom never fights the clip
+  function adopt() {
+    var o = mv.getCameraOrbit();
+    base = { orbit: null, az: o.theta * 180 / Math.PI - swept(t), polar: (o.phi * 180 / Math.PI).toFixed(3) + 'deg', r: o.radius / (1 + 0.5 * exploded()), unit: 'm' };
+    moved = false;
+  }
+  function camera(jump) {
+    var e = exploded(), sweep = swept(t);
+    mv.maxCameraOrbit = e ? 'Infinity 88deg 132%' : 'Infinity 88deg auto';
+    // seated on a corner, the orbit is the corner's own string, so the framing is the one the sheet ships
+    mv.cameraOrbit = base.orbit && !e && !sweep ? base.orbit
+      : (base.az + sweep).toFixed(3) + 'deg ' + base.polar + ' ' + (base.r * (1 + 0.5 * e)).toFixed(4) + base.unit;
+    aim();
+    if (jump) mv.jumpCameraToGoal();
+  }
+  function turn(v) {
+    turning = Boolean(v);
+    turnBtn.setAttribute('aria-pressed', String(turning));
+    rebase(corner);
+    camera(reduce.matches);
+  }
+  rebase(corner);
   function vec(p, k) { return p[0] + 'm ' + (p[1] + k).toFixed(4) + 'm ' + p[2] + 'm'; }
-  function aim() { mv.cameraTarget = pinN === null ? 'auto auto auto' : vec(byN[pinN].centre, rise(byN[pinN])); }
+  function aim() {
+    if (pinN !== null) { mv.cameraTarget = vec(byN[pinN].centre, rise(byN[pinN])); return; }
+    var e = exploded();
+    mv.cameraTarget = e ? 'auto ' + (mv.getBoundingBoxCenter().y + e * TOP / 2).toFixed(4) + 'm auto' : 'auto auto auto';
+  }
   // the clip's one clock: the pose, the badges riding with it, and the controls that read it
   function pose(next) {
+    if (moved) adopt();
+    var was = exploded();
     t = Math.min(END, Math.max(0, next));
     // a hair short of the end: three clamps a LoopOnce action that reaches it, and a clamped action ignores later seeks
     if (loaded) mv.currentTime = Math.min(t, END - 1e-4);
     slider.value = String(t);
     play.textContent = t >= END ? 'EXPLODE' : 'ASSEMBLE';
     D.bricks.forEach(function (b) { mv.updateHotspot({ name: 'hotspot-' + b.n, position: vec(b.cap, rise(b)) }); });
-    if (pinN !== null) aim();
+    // off the seat, the camera is on the clip's clock; seated and still, it is left alone
+    if (loaded && (was || exploded() || turning)) camera(true);
+    else if (pinN !== null) aim();
   }
   function stop() {
     if (raf) cancelAnimationFrame(raf);
@@ -159,10 +207,13 @@ export async function initBricks(root, viewer, focus) {
   corners.forEach(function (c) {
     on(c, 'click', function () {
       corners.forEach(function (o) { o.setAttribute('aria-pressed', String(o === c)); });
-      mv.cameraOrbit = c.getAttribute('data-orbit');
-      if (reduce.matches) mv.jumpCameraToGoal();
+      corner = c.getAttribute('data-orbit');
+      rebase(corner);
+      camera(reduce.matches);
     });
   });
+  on(turnBtn, 'click', function () { turn(!turning); });
+  on(mv, 'camera-change', function (e) { if (e.detail && e.detail.source === 'user-interaction') moved = true; });
   pinKeys(stage, on, {
     step: function (d) { tap(walk(order, pinN, d)); },
     escape: function () { if (pinN === null) return false; tap(pinN); return true; },
@@ -202,6 +253,8 @@ export async function initBricks(root, viewer, focus) {
     pose: function (v) { stop(); pose(v); },
     pinned: function () { return pinN; },
     orbit: function () { return mv.getCameraOrbit().toString(); },
+    turn: function (v) { turn(v); },
+    turning: function () { return turning; },
     photo: function () { order.forEach(function (n) { pins[n].style.visibility = 'hidden'; }); },
   };
 

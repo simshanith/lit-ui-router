@@ -1,7 +1,8 @@
 // A dependency-free glTF 2.0 binary writer for sheet 2's seated model: every
 // ground, plate and brick a flat-shaded cuboid, every stud a 24-sided cylinder
 // on its part's cap, one node per part named by its id, and one clip, `assemble`,
-// that drops each lifted part from its exploded height onto its seat.
+// that drops each lifted part from its exploded height onto its seat, a dashed
+// leader running from its underside down to the stud it seats on.
 //
 // Axes: plan x → X, plan y → Z, height → Y (up), in stud pitches (40 plan units
 // = 1), centred on the origin in plan with Y = 0 at the foot of the ground.
@@ -11,7 +12,25 @@
 import { bounds, box, glbWriter, packGlb, quad, rgb, segment, soup } from './glb.mjs';
 
 const PITCH = 40, CRS = 24, PT = 12, SH = 7, SR = 12, SEG = 24;
-export const ASSEMBLE_SECONDS = 1.5;
+export const ASSEMBLE_SECONDS = 1.2;
+// the sheet's lifts × SCALE, a stacked brick at least CLEAR above the brick it stands on; plate-seated bricks move in WINDOW[0], stacked ones in WINDOW[1]
+const SCALE = 1.5, CLEAR = 40, KEYS = 24, WINDOW = [[0, 0.75], [0.3, 1]];
+
+/** Each lifted part's rise above its seat in plan units at clip fraction u (0 exploded, 1 seated), and the fractions `us` the clip keys it at. */
+export function assembleMotion(parts, explode) {
+  const byId = new Map(parts.map((m) => [m.id, m]));
+  const under = (m) => (m.on !== undefined && explode.get(m.on) ? byId.get(m.on) : undefined);
+  const lift = (m) => (under(m) ? Math.max(explode.get(m.id), lift(under(m)) + CLEAR) : explode.get(m.id));
+  const rise = (id, u) => {
+    const m = byId.get(id);
+    if (!explode.get(id)) return 0;
+    const [a, b] = WINDOW[under(m) ? 1 : 0];
+    // cubic ease-in toward the seat: the drop lands hard, and the explode, played backward, launches fast
+    return lift(m) * SCALE * (1 - Math.min(1, Math.max(0, (u - a) / (b - a))) ** 3);
+  };
+  const us = [...new Set([...Array.from({ length: KEYS + 1 }, (_, i) => i / KEYS), ...WINDOW.flat()])].sort((a, b) => a - b);
+  return { us, rise };
+}
 
 // the atlas light palette; glTF colour factors are linear, so each is decoded from sRGB
 const HEX = { paper: '#F1F0E7', paper2: '#E9E8DD', accent: '#2E5077', red: '#A63D2F', ink: '#2B302C' };
@@ -114,9 +133,27 @@ function partMesh(part, ghost, MAT) {
   return [...prims].map(([mat, s]) => ({ mat: MAT[mat], ...s }));
 }
 
+// The support's stud a leader lands on: under the part, a ringed or named stud first, then the one nearest the overlap's middle.
+function leaderStud(b, under) {
+  const x0 = Math.max(b.x, under.x), x1 = Math.min(b.x + b.w, under.x + under.w);
+  const y0 = Math.max(b.y, under.y), y1 = Math.min(b.y + b.d, under.y + under.d);
+  const marked = new Set([...(under.m.rings ?? []), ...(under.m.named?.keys() ?? [])]);
+  const studs = [];
+  for (let i = 0; i < under.m.ws; i++)
+    for (let j = 0; j < under.m.ds; j++) {
+      const sx = under.x + (i + 0.5) * PITCH, sy = under.y + (j + 0.5) * PITCH;
+      if (sx > x0 && sx < x1 && sy > y0 && sy < y1)
+        studs.push({ ij: [i, j], marked: marked.has(`${i},${j}`), d: Math.hypot(sx - (x0 + x1) / 2, sy - (y0 + y1) / 2) });
+    }
+  if (!studs.length) throw new Error(`brick-glb: ${b.m.kind}-${b.m.id} covers no stud of ${under.m.kind}-${under.m.id}`);
+  studs.sort((s, t) => Number(t.marked) - Number(s.marked) || s.d - t.d);
+  return studs[0].ij;
+}
+
 /**
- * The seated model as a GLB. `explode` maps a part id to its lift in plan units;
- * each lifted part's node is animated by `assemble` from seated + lift to seated.
+ * The seated model as a GLB. `explode` maps a part id to the sheet's lift in plan
+ * units; `assemble` drops each lifted part's node along `assembleMotion` onto its
+ * seat, and scales the part's leader with its gap to the part below.
  * @returns {Buffer}
  */
 export function brickGlb(parts, { explode = new Map() } = {}) {
@@ -127,7 +164,8 @@ export function brickGlb(parts, { explode = new Map() } = {}) {
   const meshes = [], nodes = [], channels = [], samplers = [];
   const { materials, index } = materialsFor(parts);
   let triangles = 0;
-  const times = accessor(new Float32Array([0, ASSEMBLE_SECONDS]), 'SCALAR', 5126, undefined, { min: [0], max: [ASSEMBLE_SECONDS] });
+  const motion = assembleMotion(parts, explode);
+  const times = accessor(new Float32Array(motion.us.map((u) => u * ASSEMBLE_SECONDS)), 'SCALAR', 5126, undefined, { min: [0], max: [ASSEMBLE_SECONDS] });
   for (const b of boxes) {
     const part = b.m;
     const primitives = partMesh(part, Boolean(part.dash), index).map((p) => {
@@ -144,15 +182,35 @@ export function brickGlb(parts, { explode = new Map() } = {}) {
     meshes.push({ name, primitives });
     const seat = [(b.x - ccx) / PITCH, b.z0 / PITCH, (b.y - ccy) / PITCH];
     nodes.push({ name, mesh: meshes.length - 1, translation: seat });
-    const lift = explode.get(part.id);
-    if (lift) {
-      const from = [seat[0], seat[1] + lift / PITCH, seat[2]];
-      samplers.push({ input: times, output: accessor(new Float32Array([...from, ...seat]), 'VEC3', 5126), interpolation: 'LINEAR' });
+    if (explode.get(part.id)) {
+      const keys = motion.us.flatMap((u) => [seat[0], seat[1] + motion.rise(part.id, u) / PITCH, seat[2]]);
+      samplers.push({ input: times, output: accessor(new Float32Array(keys), 'VEC3', 5126), interpolation: 'LINEAR' });
       channels.push({ sampler: samplers.length - 1, target: { node: nodes.length - 1, path: 'translation' } });
     }
   }
   for (const id of explode.keys())
     if (!boxes.some((b) => b.m.id === id)) throw new Error(`brick-glb: explode names part ${id}, which the model does not carry`);
+  // a leader: a unit dashed plumb line, a dash per half stud at full lift, scaled to the gap and riding the part below
+  const boxOf = new Map(boxes.map((b) => [b.m.id, b]));
+  for (const [id, lift] of explode) {
+    if (!lift) continue;
+    const b = boxOf.get(id), under = boxOf.get(b.m.on), [i, j] = leaderStud(b, under);
+    const foot = [(under.x + (i + 0.5) * PITCH - ccx) / PITCH, b.z0 / PITCH, (under.y + (j + 0.5) * PITCH - ccy) / PITCH];
+    const floor = motion.us.map((u) => motion.rise(under.m.id, u) / PITCH);
+    // a zero scale is singular, so a seated leader keeps a hair of length
+    const gap = motion.us.map((u, k) => Math.max(motion.rise(id, u) / PITCH - floor[k], 1e-4));
+    const dashes = Math.max(2, Math.round(Math.max(...gap) * 2)), p = 1 / (dashes - 0.5), e = soup();
+    for (let k = 0; k < dashes; k++) segment(e, [0, k * p, 0], [0, k * p + p / 2, 0]);
+    const position = accessor(new Float32Array(e.pos), 'VEC3', 5126, 34962, bounds(e.pos));
+    meshes.push({ name: `leader-${id}`, primitives: [{ attributes: { POSITION: position }, indices: indexed(e.idx, e.pos.length / 3), material: index.edge, mode: 1 }] });
+    nodes.push({ name: `leader-${id}`, mesh: meshes.length - 1, translation: [foot[0], foot[1] + floor.at(-1), foot[2]], scale: [1, gap.at(-1), 1] });
+    samplers.push({ input: times, output: accessor(new Float32Array(gap.flatMap((g) => [1, g, 1])), 'VEC3', 5126), interpolation: 'LINEAR' });
+    channels.push({ sampler: samplers.length - 1, target: { node: nodes.length - 1, path: 'scale' } });
+    if (floor.some(Boolean)) {
+      samplers.push({ input: times, output: accessor(new Float32Array(floor.flatMap((y) => [foot[0], foot[1] + y, foot[2]])), 'VEC3', 5126), interpolation: 'LINEAR' });
+      channels.push({ sampler: samplers.length - 1, target: { node: nodes.length - 1, path: 'translation' } });
+    }
+  }
   nodes.push({ name: 'model', children: nodes.map((_, i) => i) });
 
   const bin = packed();

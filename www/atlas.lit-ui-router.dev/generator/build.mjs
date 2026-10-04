@@ -136,7 +136,7 @@ const verdicts = [
 // read into INDEX_BY_NUM and never into the gallery's table.
 const appIdx = [
   ['plant', 'THE WORKING CITY, IN THE ROUND', 'REAL 3D CITY IN THE ROUND', "sheet 7's city as one glTF binary in Google's model-viewer, each mass crowned by a working plant sized from its own census — opaque paper walls hatched in the tier's own rake inside a girding frame, sheet 7A's test light as a second material lane, and a camera that orbits free and turns to the four true diagonals", '/plant', 'S7B·3D'],
-  ['bricks', 'COMPANIONS, IN THE ROUND', 'REAL 3D BRICK ASSEMBLY', "sheet 2's finished model as one glTF binary in Google's model-viewer — the same parts on the same two levels of ground, turned to the sheet's three drawn corners, with the sheet's own explosion as a clip that lifts every brick off its seat and drops it back", '#bricks-scene', 'S2·3D'],
+  ['bricks', 'COMPANIONS, IN THE ROUND', 'REAL 3D BRICK ASSEMBLY', "sheet 2's finished model as one glTF binary in Google's model-viewer — the same parts on the same two levels of ground, turned to the sheet's three drawn corners, with the sheet's explosion, half again as high, as a clip that lifts the stacked bricks off their seats first and drops every brick back down a dashed leader to its stud", '#bricks-scene', 'S2·3D'],
 ];
 // THE APPENDIX INDEX — same four columns, filed under its own heading. These
 // rows are NOT in the ascent: `appendixIdx` is concatenated for the lookup the

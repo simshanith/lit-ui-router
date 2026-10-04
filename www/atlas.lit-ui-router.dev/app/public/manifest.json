@@ -1673,13 +1673,13 @@
     {
       "id": "bricks",
       "title": "THE BRICK ASSEMBLY, IN THE ROUND",
-      "sub": "SHEET 2'S FINISHED MODEL IN THE ROUND · 6 BRICKS · 2 PLATES · 2 LEVELS OF GROUND · ONE GLTF BINARY · THE SHEET'S OWN EXPLOSION AS ITS ONE CLIP, ASSEMBLE ⇄ EXPLODE · THE CAMERA TURNS TO THE SHEET'S THREE DRAWN CORNERS",
+      "sub": "SHEET 2'S FINISHED MODEL IN THE ROUND · 6 BRICKS · 2 PLATES · 2 LEVELS OF GROUND · ONE GLTF BINARY · THE SHEET'S EXPLOSION HALF AGAIN AS HIGH AS ITS ONE CLIP, ASSEMBLE ⇄ EXPLODE · THE CAMERA TURNS TO THE SHEET'S THREE DRAWN CORNERS",
       "rev": "A",
       "shno": "SHEET 2 · 3D",
       "file": "sheets/bricks.html",
       "standalone": "",
       "scale": "COMPANIONS, IN THE ROUND",
-      "verdict": "sheet 2's finished model as one glTF binary in Google's model-viewer — the same parts on the same two levels of ground, turned to the sheet's three drawn corners, with the sheet's own explosion as a clip that lifts every brick off its seat and drops it back",
+      "verdict": "sheet 2's finished model as one glTF binary in Google's model-viewer — the same parts on the same two levels of ground, turned to the sheet's three drawn corners, with the sheet's explosion, half again as high, as a clip that lifts the stacked bricks off their seats first and drops every brick back down a dashed leader to its stud",
       "labels": {
         "subject": "coupling",
         "projection": "isometric",

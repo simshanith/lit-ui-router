@@ -1,15 +1,15 @@
 // THE BRICK ASSEMBLY, IN THE ROUND: sheet 2's seated model as a glTF binary in
-// Google's <model-viewer>, with the sheet's own explosion as its one clip.
+// Google's <model-viewer>, with the sheet's explosion, scaled, as its one clip.
 //
 // Nothing is re-derived: sheet2.mjs exports the MODEL its finished-model band
 // draws and the EXPLODE lifts its exploded view hovers at, brick-glb.mjs writes
-// them into one GLB, and this module ships the bricks' rows and seats as a JSON
-// island beside the viewer. The plate is app-only: the flat set draws no copy.
+// them into one GLB along assembleMotion's keys, and this module ships the
+// bricks' rows, seats and keyed rises as a JSON island beside the viewer. The plate is app-only: the flat set draws no copy.
 import { readFileSync } from 'node:fs';
 import { PROJECT_MARK, articleTitle } from './chrome.mjs';
 import { FOCUS_JS } from './focus.mjs';
 import { basisStrip, laneCss } from './lane-chrome.mjs';
-import { ASSEMBLE_SECONDS, brickGlb, seatedBoxes, toModel } from './brick-glb.mjs';
+import { ASSEMBLE_SECONDS, assembleMotion, brickGlb, seatedBoxes, toModel } from './brick-glb.mjs';
 import { MV_JS, orbitAt, pinCss } from './mv-kit.mjs';
 import { BRICK_COUPLES, BRICK_MODEL, BRICK_ROWS, EXPLODE } from './sheet2.mjs';
 import { BASE } from '../app/src/routes.ts';
@@ -26,13 +26,22 @@ export const BRICKS_GLB = 'models/bricks.glb';
 export const bricksGlb = () => brickGlb(BRICK_MODEL, { explode: EXPLODE });
 
 const fmt = (v) => v.toLocaleString('en-US');
+// the corners' radius, as a percentage of model-viewer's framing radius
+const RADIUS = 88;
 // The sheet's three drawn corners: its own (the +x and +y faces in view), the
 // opposite one, and the server side, brick-iso's turn 1.
 const CORNERS = [
   ['drawn', 'DRAWING’S CORNER', 45],
   ['opposite', 'OPPOSITE CORNER', 225],
   ['server', 'SERVER SIDE', 135],
-].map(([id, label, az]) => ({ id, label, orbit: orbitAt(az, '88%') }));
+].map(([id, label, az]) => ({ id, label, orbit: orbitAt(az, `${RADIUS}%`) }));
+// degrees TURN swings the camera off its corner at the exploded end
+const SWEEP = 30;
+// how far the radius dollies out at the full explosion, as a fraction of the corner's radius
+const DOLLY = 0.5;
+// the zoom-out limit widens only off the seat: model-viewer sets its depth range from it, so the seated limit keeps the seated render
+const SEATED_MAX = 'Infinity 88deg auto';
+const EXPLODED_MAX = `Infinity 88deg ${+(RADIUS * (1 + DOLLY)).toFixed(2)}%`;
 
 const PLATE_NAME = { P1: 'the @uirouter/core plate', P2: 'the headless plate, on the server shelf' };
 const seatsOf = (n, on) => {
@@ -43,8 +52,11 @@ const seatsOf = (n, on) => {
 
 const SEATED = new Map(seatedBoxes(BRICK_MODEL).map((b) => [b.m.id, b]));
 const r4 = (v) => +v.toFixed(4);
+const MOTION = assembleMotion(BRICK_MODEL, EXPLODE);
 const DATA = {
   end: ASSEMBLE_SECONDS,
+  // the clip's key times as fractions of it; each brick's rise is keyed at the same fractions
+  us: MOTION.us.map(r4),
   bricks: BRICK_ROWS.map((row) => {
     const b = SEATED.get(row.n);
     if (!b) throw new Error(`brick-scene: brick ${row.n} has no part in sheet 2's model`);
@@ -59,7 +71,7 @@ const DATA = {
       // a stud's height clear of the cap, so the badge stands over the studs, not among them
       cap: toModel(BRICK_MODEL, ...mid, b.z0 + b.h + 14).map(r4),
       centre: toModel(BRICK_MODEL, ...mid, b.z0 + b.h / 2).map(r4),
-      lift: r4(EXPLODE.get(row.n) / 40),
+      rise: MOTION.us.map((u) => r4(MOTION.rise(row.n, u) / 40)),
     };
   }),
 };
@@ -70,7 +82,7 @@ export const BRICKS_META = {
   head: 'SHEET 2 · 3D',
   rev: 'A',
   title: 'THE BRICK ASSEMBLY, IN THE ROUND',
-  sub: `SHEET 2'S FINISHED MODEL IN THE ROUND · ${BRICK_ROWS.length} BRICKS · 2 PLATES · 2 LEVELS OF GROUND · ONE GLTF BINARY · THE SHEET'S OWN EXPLOSION AS ITS ONE CLIP, ASSEMBLE ⇄ EXPLODE · THE CAMERA TURNS TO THE SHEET'S THREE DRAWN CORNERS`,
+  sub: `SHEET 2'S FINISHED MODEL IN THE ROUND · ${BRICK_ROWS.length} BRICKS · 2 PLATES · 2 LEVELS OF GROUND · ONE GLTF BINARY · THE SHEET'S EXPLOSION HALF AGAIN AS HIGH AS ITS ONE CLIP, ASSEMBLE ⇄ EXPLODE · THE CAMERA TURNS TO THE SHEET'S THREE DRAWN CORNERS`,
   /** The flat set draws no copy of it. */
   standalone: '',
 };
@@ -114,7 +126,7 @@ const LEGEND = [
   ['ground', 'ground — the browser, and the server shelf'],
 ];
 
-const BASIS = `The model is <code>generator/sheet2.mjs</code>'s own <code>MODEL</code>, the parts its finished-model band seats, written into one glTF binary by <code>generator/brick-glb.mjs</code>: every ground, plate and brick a cuboid edged in ink, each face graded a little — the cap from its near corner across, the flanks from the top edge down, every stud a 24-sided cylinder on its part's cap, one node per part named by its id; each brick wears its own colour, cap and plain studs in the hue and flanks a step darker, while the plates and ground wear the page's paper and every edge its ink, retinted from the theme's tokens on each turn. One stud pitch is one unit. Each brick's lift in the <code>assemble</code> clip is the hover the sheet's exploded view draws it at, measured from its plate (${[...EXPLODE].map(([n, z]) => `brick ${n} ${z}`).join(', ')} plan units), so the explosion is the sheet's own. The numbered badges ride the bricks through the clip. Counted at ${COUNTED}; <code>@google/model-viewer</code> ${MV_VERSION} is fetched only when this page is entered, and the clip jumps to its end under <code>prefers-reduced-motion</code>.`;
+const BASIS = `The model is <code>generator/sheet2.mjs</code>'s own <code>MODEL</code>, the parts its finished-model band seats, written into one glTF binary by <code>generator/brick-glb.mjs</code>: every ground, plate and brick a cuboid edged in ink, each face graded a little — the cap from its near corner across, the flanks from the top edge down, every stud a 24-sided cylinder on its part's cap, one node per part named by its id; each brick wears its own colour, cap and plain studs in the hue and flanks a step darker, while the plates and ground wear the page's paper and every edge its ink, retinted from the theme's tokens on each turn. One stud pitch is one unit. Each brick's lift in the <code>assemble</code> clip is the hover the sheet's exploded view draws it at, measured from its plate (${[...EXPLODE].map(([n, z]) => `brick ${n} ${z}`).join(', ')} plan units), scaled ×1.5, and a brick stacked on another hovers at least a stud's pitch clear of it; the stacked bricks leave first and land last, each easing in to a hard landing, and every hovering brick hangs plumb over the stud it seats on by a dashed leader. The numbered badges ride the bricks through the clip, the camera rises and draws back with the explosion so the lifted stack stays in frame, and TURN couples the camera to it, swung ${SWEEP}° off the chosen corner when exploded and landing on that corner as the bricks seat. Counted at ${COUNTED}; <code>@google/model-viewer</code> ${MV_VERSION} is fetched only when this page is entered, and the clip jumps to its end under <code>prefers-reduced-motion</code>.`;
 
 /** The plate: style, section and the JSON island — no init script. */
 export function bricksMarkup() {
@@ -127,7 +139,7 @@ export function bricksMarkup() {
   <h2 class="sheet-title">${articleTitle(meta.title)}</h2>
   <p class="sheet-sub">${meta.sub}</p>
   <div class="bk-frame fillable" id="bk-frame"><button type="button" class="fill" data-fill aria-label="Enlarge this figure, or leave it"></button>
-    <model-viewer id="bk-viewer" class="bk-view" src="${BASE}${BRICKS_GLB}" loading="eager" reveal="manual" camera-controls touch-action="pan-y" interaction-prompt="none" camera-orbit="${CORNERS[0].orbit}" max-camera-orbit="Infinity 88deg auto" field-of-view="14deg" min-field-of-view="5deg" max-field-of-view="18deg" exposure="1" shadow-intensity="0" animation-name="assemble" alt="Sheet 2's finished LEGO model in three dimensions: a low slab of browser ground carries the @uirouter/core baseplate, its back rail of studs ringed in the accent colour and one red location seat; lit-ui-router stands on it as a tall two-by-four, the one-stud navigation location plugin on the location seat, lit-ui-router-mobx and lit-ui-router-effect on lit-ui-router's cap; a raised server shelf carries a translucent headless plate with ui-router-server on it, and lit-ui-router-ssr bridges from lit-ui-router's cap to ui-router-server's. The explode control lifts every brick to the height the sheet's exploded view draws it at.">
+    <model-viewer id="bk-viewer" class="bk-view" src="${BASE}${BRICKS_GLB}" loading="eager" reveal="manual" camera-controls touch-action="pan-y" interaction-prompt="none" camera-orbit="${CORNERS[0].orbit}" max-camera-orbit="${SEATED_MAX}" field-of-view="14deg" min-field-of-view="5deg" max-field-of-view="18deg" exposure="1" shadow-intensity="0" animation-name="assemble" alt="Sheet 2's finished LEGO model in three dimensions: a low slab of browser ground carries the @uirouter/core baseplate, its back rail of studs ringed in the accent colour and one red location seat; lit-ui-router stands on it as a tall two-by-four, the one-stud navigation location plugin on the location seat, lit-ui-router-mobx and lit-ui-router-effect on lit-ui-router's cap; a raised server shelf carries a translucent headless plate with ui-router-server on it, and lit-ui-router-ssr bridges from lit-ui-router's cap to ui-router-server's. The explode control lifts the stacked bricks first, then the rest, each to at least half again the height the sheet's exploded view draws it at, with a dashed leader dropping from each to the stud it seats on.">
 ${pins}
     </model-viewer>
   </div>
@@ -140,6 +152,7 @@ ${LEGEND.map(([k, t]) => `      <span class="lg"><i class="sw sw-${k}"></i>${t}<
       <span class="grp" role="group" aria-label="Camera corner">
 ${CORNERS.map((c, i) => `        <button type="button" data-orbit="${c.orbit}" aria-pressed="${i === 0}">${c.label}</button>`).join('\n')}
       </span>
+      <button type="button" id="bk-turn" aria-pressed="false" aria-label="Turn the camera with the clip">TURN</button>
       <button type="button" id="bk-play" disabled>EXPLODE</button>
       <label>EXPLODED <input type="range" id="bk-t" min="0" max="${ASSEMBLE_SECONDS}" step="0.01" value="${ASSEMBLE_SECONDS}" disabled aria-label="Assembly, from exploded to seated"> SEATED</label>
     </div>
@@ -160,6 +173,7 @@ const BODY = `${FOCUS_JS}${MV_JS}  var mv = root.querySelector('#bk-viewer');
   var info = root.querySelector('#bk-info');
   var play = root.querySelector('#bk-play');
   var slider = root.querySelector('#bk-t');
+  var turnBtn = root.querySelector('#bk-turn');
   var corners = Array.prototype.slice.call(root.querySelectorAll('[data-orbit]'));
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
   var ac = new AbortController();
@@ -171,20 +185,67 @@ const BODY = `${FOCUS_JS}${MV_JS}  var mv = root.querySelector('#bk-viewer');
     pins[b.n] = mv.querySelector('[slot="hotspot-' + b.n + '"]');
   });
   var order = D.bricks.map(function (b) { return b.n; }).sort(function (a, b) { return a - b; });
-  var IDLE = '<p class="hint">' + D.bricks.length + ' bricks on two plates. Tap a number to read its brick and turn the camera on it; EXPLODE lifts every brick to the height sheet 2 draws it at.</p>';
+  var IDLE = '<p class="hint">' + D.bricks.length + ' bricks on two plates. Tap a number to read its brick and turn the camera on it; EXPLODE lifts the stacked bricks first, every brick to at least half again the height sheet 2 draws it at, each hanging on a leader over its stud.</p>';
 
-  function rise(b) { return b.lift * (1 - t / END); }
+  // the clip's own LINEAR interpolation, so a badge rides its brick exactly
+  function rise(b) {
+    var u = t / END, k = 0;
+    while (k < D.us.length - 2 && u > D.us[k + 1]) k++;
+    var s = Math.min(1, Math.max(0, (u - D.us[k]) / (D.us[k + 1] - D.us[k])));
+    return b.rise[k] + (b.rise[k + 1] - b.rise[k]) * s;
+  }
+  // the camera rides the clip: the target rises with the stack and the radius dollies out by the explode fraction, so the exploded model fits the stage
+  var TOP = D.bricks.reduce(function (m, b) { return Math.max(m, b.rise[0]); }, 0);
+  function exploded() { return D.bricks.reduce(function (m, b) { return Math.max(m, rise(b)); }, 0) / TOP; }
+  // TURN: the azimuth leaves the corner on the clip's cubic, so the camera lands on the corner as the bricks seat
+  var turning = false, moved = false, corner = corners[0].getAttribute('data-orbit'), base = null;
+  function swept(at) { var u = at / END; return turning ? ${SWEEP} * (1 - u * u * u) : 0; }
+  function rebase(orbit) {
+    var p = orbit.split(' ');
+    base = { orbit: orbit, az: parseFloat(p[0]), polar: p[1], r: parseFloat(p[2]), unit: p[2].replace(/^[\\d.]+/, '') };
+    moved = false;
+  }
+  // a user's orbit becomes the base at the next pose, so a drag or a zoom never fights the clip
+  function adopt() {
+    var o = mv.getCameraOrbit();
+    base = { orbit: null, az: o.theta * 180 / Math.PI - swept(t), polar: (o.phi * 180 / Math.PI).toFixed(3) + 'deg', r: o.radius / (1 + ${DOLLY} * exploded()), unit: 'm' };
+    moved = false;
+  }
+  function camera(jump) {
+    var e = exploded(), sweep = swept(t);
+    mv.maxCameraOrbit = e ? '${EXPLODED_MAX}' : '${SEATED_MAX}';
+    // seated on a corner, the orbit is the corner's own string, so the framing is the one the sheet ships
+    mv.cameraOrbit = base.orbit && !e && !sweep ? base.orbit
+      : (base.az + sweep).toFixed(3) + 'deg ' + base.polar + ' ' + (base.r * (1 + ${DOLLY} * e)).toFixed(4) + base.unit;
+    aim();
+    if (jump) mv.jumpCameraToGoal();
+  }
+  function turn(v) {
+    turning = Boolean(v);
+    turnBtn.setAttribute('aria-pressed', String(turning));
+    rebase(corner);
+    camera(reduce.matches);
+  }
+  rebase(corner);
   function vec(p, k) { return p[0] + 'm ' + (p[1] + k).toFixed(4) + 'm ' + p[2] + 'm'; }
-  function aim() { mv.cameraTarget = pinN === null ? 'auto auto auto' : vec(byN[pinN].centre, rise(byN[pinN])); }
+  function aim() {
+    if (pinN !== null) { mv.cameraTarget = vec(byN[pinN].centre, rise(byN[pinN])); return; }
+    var e = exploded();
+    mv.cameraTarget = e ? 'auto ' + (mv.getBoundingBoxCenter().y + e * TOP / 2).toFixed(4) + 'm auto' : 'auto auto auto';
+  }
   // the clip's one clock: the pose, the badges riding with it, and the controls that read it
   function pose(next) {
+    if (moved) adopt();
+    var was = exploded();
     t = Math.min(END, Math.max(0, next));
     // a hair short of the end: three clamps a LoopOnce action that reaches it, and a clamped action ignores later seeks
     if (loaded) mv.currentTime = Math.min(t, END - 1e-4);
     slider.value = String(t);
     play.textContent = t >= END ? 'EXPLODE' : 'ASSEMBLE';
     D.bricks.forEach(function (b) { mv.updateHotspot({ name: 'hotspot-' + b.n, position: vec(b.cap, rise(b)) }); });
-    if (pinN !== null) aim();
+    // off the seat, the camera is on the clip's clock; seated and still, it is left alone
+    if (loaded && (was || exploded() || turning)) camera(true);
+    else if (pinN !== null) aim();
   }
   function stop() {
     if (raf) cancelAnimationFrame(raf);
@@ -236,10 +297,13 @@ const BODY = `${FOCUS_JS}${MV_JS}  var mv = root.querySelector('#bk-viewer');
   corners.forEach(function (c) {
     on(c, 'click', function () {
       corners.forEach(function (o) { o.setAttribute('aria-pressed', String(o === c)); });
-      mv.cameraOrbit = c.getAttribute('data-orbit');
-      if (reduce.matches) mv.jumpCameraToGoal();
+      corner = c.getAttribute('data-orbit');
+      rebase(corner);
+      camera(reduce.matches);
     });
   });
+  on(turnBtn, 'click', function () { turn(!turning); });
+  on(mv, 'camera-change', function (e) { if (e.detail && e.detail.source === 'user-interaction') moved = true; });
   pinKeys(stage, on, {
     step: function (d) { tap(walk(order, pinN, d)); },
     escape: function () { if (pinN === null) return false; tap(pinN); return true; },
@@ -279,6 +343,8 @@ const BODY = `${FOCUS_JS}${MV_JS}  var mv = root.querySelector('#bk-viewer');
     pose: function (v) { stop(); pose(v); },
     pinned: function () { return pinN; },
     orbit: function () { return mv.getCameraOrbit().toString(); },
+    turn: function (v) { turn(v); },
+    turning: function () { return turning; },
     photo: function () { order.forEach(function (n) { pins[n].style.visibility = 'hidden'; }); },
   };
 
