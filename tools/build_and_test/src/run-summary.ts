@@ -7,6 +7,8 @@
 // longest dependency chain — because a green run still hides things worth
 // knowing. The failure detail is appended only when a task actually failed,
 // and is empty rather than absent on a green run: `failedTasks()` returns [].
+// On Actions, annotation commands the tools wrote into their task logs are
+// re-emitted too, since turbo's line prefix keeps the runner from seeing them.
 //
 // Input is every `.turbo/runs/*.json` this session wrote, in the order they
 // ran — `mise run ci` invokes turbo three times (the graph, the docs build,
@@ -32,20 +34,22 @@ import { randomUUID } from 'node:crypto';
 import { appendFile, readdir, readFile, stat } from 'node:fs/promises';
 import { basename, join } from 'node:path';
 
-import { WARN_WATCHED_LANES } from '@tools/warn-lanes/warn-lanes.core.ts';
-
 import {
   type OverviewContext,
   type RunReport,
   type RunSummary,
+  annotationNote,
   buildReports,
+  extractAnnotations,
   guardCommands,
   parseRunSummary,
+  planAnnotations,
   sessionFailureMarkdown,
   sessionHeadline,
   sessionLines,
   sessionMarkdown,
   sessionStdoutReport,
+  type ToolAnnotation,
   warnLaneEntries,
 } from './run-summary.core.ts';
 import { errorCommand, warningCommand } from '@tools/shared/gha.core.ts';
@@ -127,16 +131,13 @@ async function sessionSummaries(): Promise<string[]> {
 }
 
 /**
- * Logs for the tasks the report reads: every failing task, plus every
- * warn-watched lane whatever its exit code — those pass by design, and their
- * state lives only in the log they printed (which turbo replays on a cache hit).
+ * Every task's log: failing tasks for the excerpts, warn-watched lanes for
+ * their state, and all of them for tool annotations — a green lint task's
+ * warnings live only in the log it printed (which turbo replays on a cache hit).
  */
 async function readLogs(summary: RunSummary): Promise<Map<string, string>> {
   const logs = new Map<string, string>();
   for (const task of summary.tasks) {
-    const code = task.execution?.exitCode;
-    const watched = WARN_WATCHED_LANES.includes(task.taskId);
-    if (!watched && (typeof code !== 'number' || code === 0)) continue;
     try {
       logs.set(task.taskId, await readFile(task.logFile, 'utf8'));
     } catch {
@@ -149,6 +150,7 @@ async function readLogs(summary: RunSummary): Promise<Map<string, string>> {
 async function publish(
   runs: RunReport[],
   context: OverviewContext,
+  annotations: readonly ToolAnnotation[],
 ): Promise<void> {
   const summaries = runs.map(({ summary }) => summary);
   const allReports = runs.flatMap(({ reports }) => reports);
@@ -161,6 +163,11 @@ async function publish(
       summary.execution.exitCode !== 0 || reports.length > 0,
   );
   const failed = failures.length > 0;
+  // Off Actions nothing parses them, and the note would describe nothing.
+  const plan = onActions()
+    ? planAnnotations(annotations, { error: failed ? 1 : 0 })
+    : undefined;
+  if (plan !== undefined) context.annotations = annotationNote(plan);
   // The overview leads on both lanes: the counts are the context for whichever
   // task broke, and on a green run they are the whole report.
   const overview = sessionMarkdown(runs, context);
@@ -183,6 +190,10 @@ async function publish(
   // After the guard resumed: our own annotation has to be parsed. The step
   // summary file is markdown, never scanned for commands, so it needs none.
   if (toFile) await appendFile(file, markdown);
+
+  // Rebuilt from validated fields, so these are the only commands a log can
+  // cause; on green runs too, where a lint warning is the whole finding.
+  for (const command of plan?.commands ?? []) console.log(command);
 
   // The annotation is the top-of-page pointer; the summary is the detail. Only
   // on a failure: a green run has nothing that warrants an annotation.
@@ -207,6 +218,7 @@ async function main(): Promise<void> {
   // One map across the session: warn-lane state and failing-task logs are
   // looked up by taskId, and no task appears in two runs of one session.
   const logs = new Map<string, string>();
+  const annotations: ToolAnnotation[] = [];
   for (const path of paths) {
     let summary: RunSummary;
     try {
@@ -219,7 +231,9 @@ async function main(): Promise<void> {
       );
       continue;
     }
-    for (const [taskId, log] of await readLogs(summary)) logs.set(taskId, log);
+    const runLogs = await readLogs(summary);
+    for (const [taskId, log] of runLogs) logs.set(taskId, log);
+    annotations.push(...extractAnnotations(summary, runLogs, process.cwd()));
     runs.push({ summary, fileName: basename(path), reports: [] });
   }
   if (runs.length === 0) {
@@ -230,17 +244,21 @@ async function main(): Promise<void> {
   // whichever run of the session wrote it.
   for (const run of runs) run.reports = buildReports(run.summary, logs);
 
-  await publish(runs, {
-    onActions: onActions(),
-    warnLanes: warnLaneEntries(logs),
-    // Set by the workflow from the upload step's `artifact-url` output; absent
-    // locally, where the files this read are already on disk. Every file is
-    // named: the artifact holds them all under one URL, and GitHub gives no
-    // per-file link to hand out instead.
-    artifactUrl: process.env.TURBO_SUMMARY_ARTIFACT_URL,
-    fileNames: runs.map((run) => run.fileName ?? ''),
-    attachmentsUrl: process.env.VITEST_ATTACHMENTS_ARTIFACT_URL,
-  });
+  await publish(
+    runs,
+    {
+      onActions: onActions(),
+      warnLanes: warnLaneEntries(logs),
+      // Set by the workflow from the upload step's `artifact-url` output; absent
+      // locally, where the files this read are already on disk. Every file is
+      // named: the artifact holds them all under one URL, and GitHub gives no
+      // per-file link to hand out instead.
+      artifactUrl: process.env.TURBO_SUMMARY_ARTIFACT_URL,
+      fileNames: runs.map((run) => run.fileName ?? ''),
+      attachmentsUrl: process.env.VITEST_ATTACHMENTS_ARTIFACT_URL,
+    },
+    annotations,
+  );
 }
 
 main().catch((error: unknown) => {

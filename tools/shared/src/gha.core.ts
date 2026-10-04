@@ -14,6 +14,36 @@ function escapeData(value: string): string {
     .replaceAll('\n', '%0A');
 }
 
+// Property values also escape the `:` and `,` that delimit them.
+function escapeProperty(value: string): string {
+  return escapeData(value).replaceAll(':', '%3A').replaceAll(',', '%2C');
+}
+
+export type AnnotationLevel = 'error' | 'warning' | 'notice';
+
+/** Where an annotation lands. `file` is repo-root-relative. */
+export interface AnnotationProperties {
+  file?: string;
+  line?: number;
+  endLine?: number;
+  col?: number;
+  endColumn?: number;
+  title?: string;
+}
+
+/** `::<level> file=…,line=…::<message>` — an annotation placed on a file. */
+export function annotationCommand(
+  level: AnnotationLevel,
+  message: string,
+  properties: AnnotationProperties = {},
+): string {
+  const props = Object.entries(properties)
+    .filter(([, value]) => value !== undefined)
+    .map(([key, value]) => `${key}=${escapeProperty(String(value))}`)
+    .join(',');
+  return `::${level}${props === '' ? '' : ` ${props}`}::${escapeData(message)}`;
+}
+
 /** `::group::<title>` — opens a collapsible log section. */
 export function groupCommand(title: string): string {
   return `::group::${escapeData(title)}`;
