@@ -13,7 +13,7 @@ A thin wrapper on top of `lit-ui-router` — it registers no custom elements and
 ## Features
 
 - **`RouterStore`** — an observable mirror of the current state, params, and transition; one store (and one transition hook) per router via `RouterStore.for(router)`
-- **`RouterReactionController`** — observes the store of the nearest `<ui-router>` context, discovered automatically through the `ui-router-context` event; no prop drilling and no store wiring in router configuration
+- **`RouterReactionController`** — observes the store of the nearest `<ui-router>` context, requested automatically over the `context-request` protocol; no prop drilling and no store wiring in router configuration
 - **`ReactionController`** — the generic primitive: runs a MobX `reaction` over an explicit selector while the host is connected; works with any MobX observables, not just the router
 - **Lifecycle-safe** — reactions are created in `hostConnected` and disposed in `hostDisconnected`; they fire immediately on (re)connect so components that re-enter the DOM (e.g. sticky states) never render stale values
 
@@ -57,7 +57,7 @@ class AppNav extends LitElement {
 }
 ```
 
-No router configuration is required: the controller discovers the router from the enclosing `<ui-router>` element on `hostConnected`, and `RouterStore.for(router)` lazily attaches the store's single transition hook on first use.
+No router configuration is required: the controller requests the router from the enclosing `<ui-router>` element on `hostConnected` and rebinds whenever that provider hands it a new one, and `RouterStore.for(router)` lazily attaches the store's single transition hook on first use.
 
 ## API
 

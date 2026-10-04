@@ -28,10 +28,6 @@ const ALLOWED: SplitAllowance[] = [
     why: 'the lit-2 alias (catalogs.lit2-compat) runs test:lit2-compat beside the lit 3 line',
   },
   {
-    name: 'lit-ui-router',
-    why: 'catalogs.peerFloorMobx and peerFloorEffect pin lit-ui-router-floor to each adapter peer floor',
-  },
-  {
     name: 'mobx',
     why: 'the mobx-6 alias (catalogs.mobx6-compat) runs test:mobx6-compat beside the mobx 7 line',
   },
