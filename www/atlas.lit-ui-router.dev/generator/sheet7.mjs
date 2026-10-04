@@ -30,9 +30,10 @@ const BASIS = `counted at ${PLATE.ref} @ ${PLATE.sha} (${PLATE.generatedAtTime.s
 const KS = 1.6;   // footprint SIDE = 1.6 · √sloc  (plan area ∝ sloc)
 const KH = 3.0;   // block HEIGHT   = 3.0 px per authored file
 const MIN = 12;   // footprint floor, so the smallest instruments stay visible
-const S = (sloc) => Math.max(MIN, KS * Math.sqrt(sloc));
-const H = (files) => Math.max(4, KH * files);
-const AG = 10;    // gap between a src block and its annex
+// exported: appendix A3 masses the atlas on this ruler, so the two plates cannot disagree
+export const S = (sloc) => Math.max(MIN, KS * Math.sqrt(sloc));
+export const H = (files) => Math.max(4, KH * files);
+export const AG = 10;    // gap between a src block and its annex
 const fmt = (v) => v.toLocaleString('en-US');
 
 // ---- gate severity lives in COLOUR, never in height (shared with sheet 3) -------
@@ -105,7 +106,7 @@ export const PLACED = [
   // --- the hygiene block, born 2026-09-07/08 (#738, #741, #771) --------------------
   [33, '@tools/bootstrap',         'tools/bootstrap',                    'tool', 'report', 490, 350, 'zero-dep manifest reads — the one thing that runs before pnpm install'],
   [34, '@tools/eslint',            'tools/eslint',                       'tool', 'report', 514, 530, 'the repo rule plugin, the oxlint stubs and the element lane root eslint.config.ts composes'],
-  [35, '@tools/repo-checks',       'tools/repo-checks',                  'tool', 'pr',     449, 385, 'graph edges, task inputs, single version, patches, knip, dedupe — the lint lane waits'],
+  [35, '@tools/repo-checks',       'tools/repo-checks',                  'tool', 'pr',     449, 385, 'graph edges, inputs, single version, patches, knip, dedupe · lint lane'],
   // --- the effect pair, born 2026-09-11/12 (#721, #833) ----------------------------
   [36, 'sample-app-lit-effect',    'apps/sample-app-lit-effect',         'app',  'line',   660, 100, 'the effect demo — the fourth app shell the docs site serves'],
   // south of the district: the only lot clear of both the x=105 harness road and
@@ -395,7 +396,7 @@ ${[
   ['B', 'builds into', `@tools/oxc-emit → all ${WORDN[PKG_N]} packages · devDep of each · runs build:js + build:types`],
   ['C', 'tests exercise', '@tools/dts-backtest → the runtime packages it deps on · #test dependsOn ^build'],
   ['D', 'tests exercise', '@tools/lit-test-env + @tools/happy-dom → the annex · devDep of lit-ui-router + -mobx'],
-  ['E', 'tests exercise', 'sample-app-lit-e2e → docs · workspace dep · turbo e2e dependsOn ^build, with @www/lit-ui-router.dev#wrangler:dev'],
+  ['E', 'tests exercise', 'sample-app-lit-e2e → docs · workspace dep · e2e dependsOn ^build, with @www/lit-ui-router.dev#wrangler:dev'],
   ['F', 'typecheck reads', 'lit-ui-router src AND specs → docs · tsconfig include src/** · turbo dependsOn ^build:types'],
   ['G', 'library under', '@tools/shared → @tools/release · one of eight importers; only this road is drawn'],
 ].map(([k, cls, ev], i) => {
