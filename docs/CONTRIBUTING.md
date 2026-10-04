@@ -134,6 +134,13 @@ in the job log:
    exact: cd tools/repo-checks && node check-task-inputs.ts
 ```
 
+A test task's excerpt starts at the runner's failure report: `✖ failing tests:`
+for `node --test`, the `Failed Tests` banner for vitest. On Actions each failing
+test is also an `::error` annotation on its assertion line, written by vitest's
+`github-actions` reporter or by `@tools/shared/test-reporter.ts`, the spec
+reporter wrapper every `node --test` script uses except the dependency-free
+`@tools/bootstrap`'s.
+
 A red build fails the summary step, not the build step, so the job opens on the
 report. The build step prints output only for failing tasks; the
 `turbo-task-logs` artifact holds every task's full log, and the summary links

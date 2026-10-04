@@ -21,7 +21,7 @@
     "lint:example:lint-eslint": "npm run lint --prefix lint-eslint",
     "lint:examples": "concurrently --prefix-colors auto \"npm:lint:example:*\"",
     "lint:oxlint": "oxlint .",
-    "test": "node --test \"*.test.ts\"",
+    "test": "node --test --test-reporter=@tools/shared/test-reporter.ts \"*.test.ts\"",
     "typecheck:example:design-system-links": "tsc -p design-system-links",
     "typecheck:example:hellogalaxy": "tsc -p hellogalaxy",
     "typecheck:example:hellogalaxy-effect": "tsc -p hellogalaxy-effect",
@@ -32,6 +32,7 @@
     "typecheck:tsc": "concurrently --prefix-colors auto \"npm:typecheck:example:*\""
   },
   "devDependencies": {
+    "@tools/shared": "catalog:workspace",
     "concurrently": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",

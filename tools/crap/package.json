@@ -14,7 +14,7 @@
     "format:check:oxfmt": "oxfmt --check \"**/*.{ts,json,md}\"",
     "format:oxfmt": "oxfmt \"**/*.{ts,json,md}\"",
     "lint:oxlint": "oxlint .",
-    "test": "node --test \"src/**/*.test.ts\"",
+    "test": "node --test --test-reporter=@tools/shared/test-reporter.ts \"src/**/*.test.ts\"",
     "typecheck:tsc": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
@@ -23,6 +23,7 @@
   },
   "devDependencies": {
     "@tools/bootstrap": "catalog:workspace",
+    "@tools/shared": "catalog:workspace",
     "@types/node": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",

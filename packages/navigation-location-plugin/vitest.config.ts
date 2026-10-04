@@ -1,4 +1,5 @@
 import { configDefaults, defineConfig } from 'vitest/config';
+import { GithubActionsReporter } from 'vitest/node';
 import { playwright } from '@vitest/browser-playwright';
 
 // partition: every spec runs in exactly one project
@@ -23,8 +24,14 @@ const cacheKey = process.env.VITEST_BROWSER_API_PORT ?? 'default';
 export default defineConfig({
   cacheDir: `node_modules/.vite-${cacheKey}`,
   test: {
-    // hanging-process logs the open handles in CI
-    reporters: process.env.CI ? ['default', 'hanging-process'] : ['default'],
+    // github-actions precedes the failure banner; hanging-process logs open handles in CI
+    reporters: [
+      ...(process.env.GITHUB_ACTIONS === 'true'
+        ? [new GithubActionsReporter({ jobSummary: { enabled: false } })]
+        : []),
+      'default',
+      ...(process.env.CI ? (['hanging-process'] as const) : []),
+    ],
     coverage: {
       reporter: ['text', 'json', 'lcov'],
       reportsDirectory: './coverage',

@@ -14,7 +14,7 @@
     "lint:oxlint": "oxlint .",
     "pack:all": "node src/steps/pack-all.ts",
     "resolve:published": "node src/checks/resolve-published.ts",
-    "test": "node --test \"src/**/*.test.ts\"",
+    "test": "node --test --test-reporter=@tools/shared/test-reporter.ts \"src/**/*.test.ts\"",
     "typecheck:tsc": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {

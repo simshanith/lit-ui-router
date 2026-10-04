@@ -158,6 +158,10 @@ export const DEFAULT_BUDGET: ExcerptBudget = {
   maxBytes: 16 * 1024,
 };
 
+// node:test's spec reporter, then vitest's banners
+const FAILURE_REPORT =
+  /^(?:✖ failing tests:|\s*⎯+ (?:Failed (?:Suites|Tests) \d+|Unhandled Errors?) ⎯+)\s*$/;
+
 export function excerptLog(raw: string, budget = DEFAULT_BUDGET): Excerpt {
   const lines = stripAnsi(raw)
     .split('\n')
@@ -175,14 +179,23 @@ export function excerptLog(raw: string, budget = DEFAULT_BUDGET): Excerpt {
     lines.pop();
   }
 
+  // A test runner's failure report repeats each failure; above it is progress.
+  const report = Math.max(
+    lines.findIndex((line) => FAILURE_REPORT.test(line)),
+    0,
+  );
+  if (report > 0) {
+    lines.splice(0, report, `… ${report} lines before the failure report …`);
+  }
+
   const keep = budget.headLines + budget.tailLines;
-  let omitted = 0;
+  let omitted = report;
   let kept = lines;
   if (lines.length > keep) {
-    omitted = lines.length - keep;
+    omitted += lines.length - keep;
     kept = [
       ...lines.slice(0, budget.headLines),
-      `… ${omitted} lines omitted …`,
+      `… ${lines.length - keep} lines omitted …`,
       ...lines.slice(-budget.tailLines),
     ];
   }
@@ -554,7 +567,9 @@ export function parseAnnotation(
   for (const pair of (rawProps ?? '').split(',')) {
     const at = pair.indexOf('=');
     if (at <= 0) return undefined;
-    const key = pair.slice(0, at);
+    const named = pair.slice(0, at);
+    // vitest's github-actions reporter spells `col` as `column`
+    const key = named === 'column' ? 'col' : named;
     const value = unescapeCommand(pair.slice(at + 1));
     if (seen.has(key)) return undefined;
     seen.add(key);
