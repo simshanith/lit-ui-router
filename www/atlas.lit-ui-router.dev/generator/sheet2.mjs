@@ -44,12 +44,12 @@ const shapeName = ([w, d]) => `${w}×${d}`;
 // the runtime companions this assembly seats, in drawing order — every published
 // package on the plate but the lint plugin, which takes no router stud
 const BRICKS = [
-  { n: 1, name: 'lit-ui-router' },
-  { n: 2, name: 'ui-router-navigation-location-plugin', disp: 'navigation-location-plugin' },
-  { n: 3, name: 'lit-ui-router-mobx' },
-  { n: 4, name: 'ui-router-server' },
-  { n: 5, name: 'lit-ui-router-effect' },
-  { n: 6, name: 'lit-ui-router-ssr' },
+  { n: 1, name: 'lit-ui-router', hue: '#D8A33A' },
+  { n: 2, name: 'ui-router-navigation-location-plugin', disp: 'navigation-location-plugin', hue: '#5B8E4B' },
+  { n: 3, name: 'lit-ui-router-mobx', hue: '#D26E2C' },
+  { n: 4, name: 'ui-router-server', hue: '#3E8A8B' },
+  { n: 5, name: 'lit-ui-router-effect', hue: '#7B5B9F' },
+  { n: 6, name: 'lit-ui-router-ssr', hue: '#4C86C6' },
 ].map((b) => {
   const r = row(b.name);
   const shape = SHAPE(STUDS(r.sloc)), courses = COURSES(r.files);
@@ -373,14 +373,14 @@ const GROUND = CRS;   // the browser ground, one course of landscape under the c
 const MODEL = [
   { id: 'G1', kind: 'ground', x: -20, y: -20, ws: 9, ds: 7, h: GROUND },
   { id: 'P1', kind: 'plate', x: 0, y: 0, ws: 8, ds: 6, on: 'G1', named: NAMED },
-  { id: 1, kind: 'brick', x: LIT[0], y: LIT[1], ws: B(1).shape[1], ds: B(1).shape[0], courses: B(1).courses, on: 'P1', rings: ['0,1', '2,1', '3,0'] },
-  { id: 2, kind: 'brick', x: NAV[0], y: NAV[1], ws: B(2).shape[0], ds: B(2).shape[1], courses: B(2).courses, on: 'P1' },
-  { id: 3, kind: 'brick', x: MBX[0], y: MBX[1], ws: B(3).shape[0], ds: B(3).shape[1], courses: B(3).courses, on: 1 },
-  { id: 5, kind: 'brick', x: EFF[0], y: EFF[1], ws: B(5).shape[0], ds: B(5).shape[1], courses: B(5).courses, on: 1 },
+  { id: 1, kind: 'brick', x: LIT[0], y: LIT[1], ws: B(1).shape[1], ds: B(1).shape[0], courses: B(1).courses, hue: B(1).hue, on: 'P1', rings: ['0,1', '2,1', '3,0'] },
+  { id: 2, kind: 'brick', x: NAV[0], y: NAV[1], ws: B(2).shape[0], ds: B(2).shape[1], courses: B(2).courses, hue: B(2).hue, on: 'P1' },
+  { id: 3, kind: 'brick', x: MBX[0], y: MBX[1], ws: B(3).shape[0], ds: B(3).shape[1], courses: B(3).courses, hue: B(3).hue, on: 1 },
+  { id: 5, kind: 'brick', x: EFF[0], y: EFF[1], ws: B(5).shape[0], ds: B(5).shape[1], courses: B(5).courses, hue: B(5).hue, on: 1 },
   { id: 'G2', kind: 'ground', x: P2[0] - 20, y: P2[1] - 20, ws: 5, ds: 5, h: GROUND + P2_UP * CRS },
   { id: 'P2', kind: 'plate', x: P2[0], y: P2[1], ws: 4, ds: 4, on: 'G2', dash: '6 4', edge: 'sks', named: SRV_NAMED },
-  { id: 4, kind: 'brick', x: P2[0], y: P2[1], ws: B(4).shape[0], ds: B(4).shape[1], courses: B(4).courses, on: 'P2', rings: ['0,3'] },
-  { id: 6, kind: 'brick', x: SSR[0], y: SSR[1], ws: B(6).shape[1], ds: B(6).shape[0], courses: B(6).courses, on: 1 },
+  { id: 4, kind: 'brick', x: P2[0], y: P2[1], ws: B(4).shape[0], ds: B(4).shape[1], courses: B(4).courses, hue: B(4).hue, on: 'P2', rings: ['0,3'] },
+  { id: 6, kind: 'brick', x: SSR[0], y: SSR[1], ws: B(6).shape[1], ds: B(6).shape[0], courses: B(6).courses, hue: B(6).hue, on: 1 },
 ];
 // The model in the round reads the same parts, and its explosion is this sheet's own:
 // each brick lifts from its seat to its exploded hover, both measured from its plate.

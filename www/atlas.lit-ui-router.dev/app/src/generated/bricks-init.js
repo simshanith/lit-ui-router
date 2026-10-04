@@ -70,7 +70,7 @@ export async function initBricks(root, viewer, focus) {
   function show(n) {
     if (n === null) { info.innerHTML = IDLE; return; }
     var b = byN[n];
-    info.innerHTML = '<h3><span class="n">BRICK ' + b.n + '</span>' + b.name + ' ' + b.ver + '</h3>'
+    info.innerHTML = '<h3><i class="sw" style="background:' + b.hue + '"></i><span class="n">BRICK ' + b.n + '</span>' + b.name + ' ' + b.ver + '</h3>'
       + '<p class="ledger">' + b.ledger + '</p><p class="note">Seats on ' + b.seats + '.</p>';
   }
   function member(v) { return v !== null && v !== undefined && byN[v] ? Number(v) : null; }

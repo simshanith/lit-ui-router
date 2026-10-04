@@ -61,7 +61,7 @@
   --poster-color: transparent; --progress-bar-color: var(--accent); }
 .bk .bk-bar { border-bottom: 1.5px solid var(--ink); }
 .bk-bar .lg i.sw { display: block; width: 20px; height: 12px; border: 1.2px solid var(--ink); }
-.bk-bar .lg i.sw-brick { background: #F1F0E7; }
+.bk-bar .lg i.sw-brick { background: linear-gradient(90deg, #D8A33A, #D8A33A 33%, #5B8E4B 33%, #5B8E4B 66%, #4C86C6 66%); }
 .bk-bar .lg i.sw-stud { background: #2E5077; border-radius: 50%; width: 14px; }
 .bk-bar .lg i.sw-seat { background: #A63D2F; border-radius: 50%; width: 14px; }
 .bk-bar .lg i.sw-ghost { background: rgba(241, 240, 231, 0.45); border-style: dashed; }
@@ -69,15 +69,16 @@
 .bk-ctl .grp { display: inline-flex; gap: 6px; }
 .bk-ctl button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
 .bk-ctl input[type=range] { width: 150px; accent-color: var(--accent); }
-.bk-pin { width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid var(--ink); background: var(--paper);
+.bk-pin { width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--hue, var(--ink)); background: var(--paper);
   color: var(--ink); font-family: var(--data); font-size: 12px; font-weight: 600; padding: 0; cursor: pointer;
   display: grid; place-items: center; }
-.bk-pin.on { background: var(--accent); border-color: var(--accent); color: var(--paper); }
+.bk-pin.on { background: var(--hue, var(--accent)); color: #F1F0E7; }
 .bk-pin:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .bk-read { border: 1.5px solid var(--ink); border-top: none; background: var(--paper-2); padding: 14px 22px 16px;
   min-height: 72px; color: var(--ink); }
 .bk-read h3 { font-family: var(--code); font-size: 16px; font-weight: 600; letter-spacing: 0.04em; line-height: 1.3;
   margin: 0; word-break: break-word; }
+.bk-read h3 i.sw { display: inline-block; width: 18px; height: 11px; margin-right: 8px; border: 1.2px solid var(--ink); vertical-align: baseline; }
 .bk-read h3 .n { font-family: var(--data); font-size: 11px; letter-spacing: 0.16em; color: var(--accent);
   margin-right: 10px; vertical-align: 0.12em; white-space: nowrap; }
 .bk-read .ledger { font-family: var(--data); font-size: 12px; letter-spacing: 0.08em; line-height: 1.5;
@@ -91,17 +92,17 @@
   <p class="sheet-sub"><a class="xref" data-sheet="2" href="/sheet/2">SHEET 2</a>'S FINISHED MODEL IN THE ROUND · 6 BRICKS · 2 PLATES · 2 LEVELS OF GROUND · ONE GLTF BINARY · THE SHEET'S OWN EXPLOSION AS ITS ONE CLIP, ASSEMBLE ⇄ EXPLODE · THE CAMERA TURNS TO THE SHEET'S THREE DRAWN CORNERS</p>
   <div class="bk-frame" id="bk-frame">
     <model-viewer id="bk-viewer" class="bk-view" src="/models/bricks.glb" camera-controls touch-action="pan-y" interaction-prompt="none" camera-orbit="45deg 54.736deg 88%" max-camera-orbit="Infinity 88deg auto" field-of-view="14deg" min-field-of-view="5deg" max-field-of-view="18deg" exposure="1" shadow-intensity="0" animation-name="assemble" alt="Sheet 2's finished LEGO model in three dimensions: a low slab of browser ground carries the @uirouter/core baseplate, its back rail of studs ringed in the accent colour and one red location seat; lit-ui-router stands on it as a tall two-by-four, the one-stud navigation location plugin on the location seat, lit-ui-router-mobx and lit-ui-router-effect on lit-ui-router's cap; a raised server shelf carries a translucent headless plate with ui-router-server on it, and lit-ui-router-ssr bridges from lit-ui-router's cap to ui-router-server's. The explode control lifts every brick to the height the sheet's exploded view draws it at.">
-      <button type="button" class="bk-pin" slot="hotspot-1" data-position="-0.5m 5.45m 0m" data-normal="0m 1m 0m" aria-pressed="false" aria-label="Brick 1, lit-ui-router">1</button>
-      <button type="button" class="bk-pin" slot="hotspot-2" data-position="-6m 1.85m -0.5m" data-normal="0m 1m 0m" aria-pressed="false" aria-label="Brick 2, ui-router-navigation-location-plugin">2</button>
-      <button type="button" class="bk-pin" slot="hotspot-3" data-position="0m 6.65m 0m" data-normal="0m 1m 0m" aria-pressed="false" aria-label="Brick 3, lit-ui-router-mobx">3</button>
-      <button type="button" class="bk-pin" slot="hotspot-4" data-position="3.5m 5.45m -3m" data-normal="0m 1m 0m" aria-pressed="false" aria-label="Brick 4, ui-router-server">4</button>
-      <button type="button" class="bk-pin" slot="hotspot-5" data-position="-2m 6.65m 1m" data-normal="0m 1m 0m" aria-pressed="false" aria-label="Brick 5, lit-ui-router-effect">5</button>
-      <button type="button" class="bk-pin" slot="hotspot-6" data-position="2.5m 7.85m -1m" data-normal="0m 1m 0m" aria-pressed="false" aria-label="Brick 6, lit-ui-router-ssr">6</button>
+      <button type="button" class="bk-pin" slot="hotspot-1" style="--hue:#D8A33A" data-position="-0.5m 5.45m 0m" data-normal="0m 1m 0m" aria-pressed="false" aria-label="Brick 1, lit-ui-router">1</button>
+      <button type="button" class="bk-pin" slot="hotspot-2" style="--hue:#5B8E4B" data-position="-6m 1.85m -0.5m" data-normal="0m 1m 0m" aria-pressed="false" aria-label="Brick 2, ui-router-navigation-location-plugin">2</button>
+      <button type="button" class="bk-pin" slot="hotspot-3" style="--hue:#D26E2C" data-position="0m 6.65m 0m" data-normal="0m 1m 0m" aria-pressed="false" aria-label="Brick 3, lit-ui-router-mobx">3</button>
+      <button type="button" class="bk-pin" slot="hotspot-4" style="--hue:#3E8A8B" data-position="3.5m 5.45m -3m" data-normal="0m 1m 0m" aria-pressed="false" aria-label="Brick 4, ui-router-server">4</button>
+      <button type="button" class="bk-pin" slot="hotspot-5" style="--hue:#7B5B9F" data-position="-2m 6.65m 1m" data-normal="0m 1m 0m" aria-pressed="false" aria-label="Brick 5, lit-ui-router-effect">5</button>
+      <button type="button" class="bk-pin" slot="hotspot-6" style="--hue:#4C86C6" data-position="2.5m 7.85m -1m" data-normal="0m 1m 0m" aria-pressed="false" aria-label="Brick 6, lit-ui-router-ssr">6</button>
     </model-viewer>
   </div>
   <div class="bk-bar">
     <div class="bk-legend">
-      <span class="lg"><i class="sw sw-brick"></i>a published package, as a quantized brick</span>
+      <span class="lg"><i class="sw sw-brick"></i>a published package, as a quantized brick in its own colour</span>
       <span class="lg"><i class="sw sw-stud"></i>a published extension point</span>
       <span class="lg"><i class="sw sw-seat"></i>the location seat</span>
       <span class="lg"><i class="sw sw-ghost"></i>the headless plate — an optional peer</span>
@@ -119,6 +120,6 @@
     </div>
   </div>
   <aside class="bk-read" id="bk-info" aria-live="polite"></aside>
-  <p class="bk-basis"><span><b class="k">BASIS</b>The model is <code>generator/<wbr>sheet2.mjs</code>'s own <code>MODEL</code>, the parts its finished-model band seats, written into one glTF binary by <code>generator/<wbr>brick-glb.mjs</code>: every ground, plate and brick a flat-shaded cuboid edged in ink, every stud a 24-sided cylinder on its part's cap, one node per part named by its id. One stud pitch is one unit. Each brick's lift in the <code>assemble</code> clip is the hover the sheet's exploded view draws it at, measured from its plate (brick 1 132, brick 2 116, brick 3 252, brick 4 88, brick 5 150, brick 6 160 plan units), so the explosion is the sheet's own. The numbered badges ride the bricks through the clip. Counted at origin/main @ 6d41d21e (2026-10-03); <code>@google/<wbr>model-viewer</code> 4.3.1 is fetched only when this page is entered, and the clip jumps to its end under <code>prefers-reduced-motion</code>.</span></p>
+  <p class="bk-basis"><span><b class="k">BASIS</b>The model is <code>generator/<wbr>sheet2.mjs</code>'s own <code>MODEL</code>, the parts its finished-model band seats, written into one glTF binary by <code>generator/<wbr>brick-glb.mjs</code>: every ground, plate and brick a flat-shaded cuboid edged in ink, every stud a 24-sided cylinder on its part's cap, one node per part named by its id; each brick wears its own colour, cap and plain studs in the hue and flanks a step darker, while the plates and ground stay paper. One stud pitch is one unit. Each brick's lift in the <code>assemble</code> clip is the hover the sheet's exploded view draws it at, measured from its plate (brick 1 132, brick 2 116, brick 3 252, brick 4 88, brick 5 150, brick 6 160 plan units), so the explosion is the sheet's own. The numbered badges ride the bricks through the clip. Counted at origin/main @ 6d41d21e (2026-10-03); <code>@google/<wbr>model-viewer</code> 4.3.1 is fetched only when this page is entered, and the clip jumps to its end under <code>prefers-reduced-motion</code>.</span></p>
 </section>
-<script type="application/json" id="bk-model">{"end":1.5,"bricks":[{"n":1,"name":"lit-ui-router","ver":"1.16.0","ledger":"21f · 2,605 sloc · 2×4 · 7 courses","seats":"the @uirouter/core plate","cap":[-0.5,5.45,0],"centre":[-0.5,3,0],"lift":3.3},{"n":2,"name":"ui-router-navigation-location-plugin","ver":"1.0.1","ledger":"2f · 141 sloc · 1×1 · 1 course","seats":"the @uirouter/core plate","cap":[-6,1.85,-0.5],"centre":[-6,1.2,-0.5],"lift":2.9},{"n":3,"name":"lit-ui-router-mobx","ver":"1.0.2","ledger":"5f · 176 sloc · 1×2 · 2 courses","seats":"brick 1, stud F","cap":[0,6.65,0],"centre":[0,5.7,0],"lift":6.3},{"n":4,"name":"ui-router-server","ver":"0.2.0","ledger":"9f · 1,211 sloc · 2×4 · 3 courses","seats":"the headless plate, on the server shelf","cap":[3.5,5.45,-3],"centre":[3.5,4.2,-3],"lift":2.2},{"n":5,"name":"lit-ui-router-effect","ver":"0.1.3","ledger":"5f · 213 sloc · 1×2 · 2 courses","seats":"brick 1, stud F","cap":[-2,6.65,1],"centre":[-2,5.7,1],"lift":3.75},{"n":6,"name":"lit-ui-router-ssr","ver":"0.1.1","ledger":"11f · 1,093 sloc · 2×4 · 4 courses","seats":"brick 1, stud G and brick 4, stud H","cap":[2.5,7.85,-1],"centre":[2.5,6.3,-1],"lift":4}]}</script>
+<script type="application/json" id="bk-model">{"end":1.5,"bricks":[{"n":1,"name":"lit-ui-router","ver":"1.16.0","hue":"#D8A33A","ledger":"21f · 2,605 sloc · 2×4 · 7 courses","seats":"the @uirouter/core plate","cap":[-0.5,5.45,0],"centre":[-0.5,3,0],"lift":3.3},{"n":2,"name":"ui-router-navigation-location-plugin","ver":"1.0.1","hue":"#5B8E4B","ledger":"2f · 141 sloc · 1×1 · 1 course","seats":"the @uirouter/core plate","cap":[-6,1.85,-0.5],"centre":[-6,1.2,-0.5],"lift":2.9},{"n":3,"name":"lit-ui-router-mobx","ver":"1.0.2","hue":"#D26E2C","ledger":"5f · 176 sloc · 1×2 · 2 courses","seats":"brick 1, stud F","cap":[0,6.65,0],"centre":[0,5.7,0],"lift":6.3},{"n":4,"name":"ui-router-server","ver":"0.2.0","hue":"#3E8A8B","ledger":"9f · 1,211 sloc · 2×4 · 3 courses","seats":"the headless plate, on the server shelf","cap":[3.5,5.45,-3],"centre":[3.5,4.2,-3],"lift":2.2},{"n":5,"name":"lit-ui-router-effect","ver":"0.1.3","hue":"#7B5B9F","ledger":"5f · 213 sloc · 1×2 · 2 courses","seats":"brick 1, stud F","cap":[-2,6.65,1],"centre":[-2,5.7,1],"lift":3.75},{"n":6,"name":"lit-ui-router-ssr","ver":"0.1.1","hue":"#4C86C6","ledger":"11f · 1,093 sloc · 2×4 · 4 courses","seats":"brick 1, stud G and brick 4, stud H","cap":[2.5,7.85,-1],"centre":[2.5,6.3,-1],"lift":4}]}</script>

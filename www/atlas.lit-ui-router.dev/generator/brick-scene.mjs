@@ -53,6 +53,7 @@ const DATA = {
       n: row.n,
       name: row.name,
       ver: row.ver,
+      hue: row.hue,
       ledger: `${row.files}f · ${fmt(row.sloc)} sloc · ${row.shape[0]}×${row.shape[1]} · ${row.courses} course${row.courses > 1 ? 's' : ''}`,
       seats: seatsOf(row.n, b.m.on),
       // a stud's height clear of the cap, so the badge stands over the studs, not among them
@@ -81,7 +82,7 @@ const CSS = `
   --poster-color: transparent; --progress-bar-color: var(--accent); }
 .bk .bk-bar { border-bottom: 1.5px solid var(--ink); }
 .bk-bar .lg i.sw { display: block; width: 20px; height: 12px; border: 1.2px solid var(--ink); }
-.bk-bar .lg i.sw-brick { background: #F1F0E7; }
+.bk-bar .lg i.sw-brick { background: linear-gradient(90deg, #D8A33A, #D8A33A 33%, #5B8E4B 33%, #5B8E4B 66%, #4C86C6 66%); }
 .bk-bar .lg i.sw-stud { background: #2E5077; border-radius: 50%; width: 14px; }
 .bk-bar .lg i.sw-seat { background: #A63D2F; border-radius: 50%; width: 14px; }
 .bk-bar .lg i.sw-ghost { background: rgba(241, 240, 231, 0.45); border-style: dashed; }
@@ -89,15 +90,16 @@ const CSS = `
 .bk-ctl .grp { display: inline-flex; gap: 6px; }
 .bk-ctl button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
 .bk-ctl input[type=range] { width: 150px; accent-color: var(--accent); }
-.bk-pin { width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid var(--ink); background: var(--paper);
+.bk-pin { width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--hue, var(--ink)); background: var(--paper);
   color: var(--ink); font-family: var(--data); font-size: 12px; font-weight: 600; padding: 0; cursor: pointer;
   display: grid; place-items: center; }
-.bk-pin.on { background: var(--accent); border-color: var(--accent); color: var(--paper); }
+.bk-pin.on { background: var(--hue, var(--accent)); color: #F1F0E7; }
 .bk-pin:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .bk-read { border: 1.5px solid var(--ink); border-top: none; background: var(--paper-2); padding: 14px 22px 16px;
   min-height: 72px; color: var(--ink); }
 .bk-read h3 { font-family: var(--code); font-size: 16px; font-weight: 600; letter-spacing: 0.04em; line-height: 1.3;
   margin: 0; word-break: break-word; }
+.bk-read h3 i.sw { display: inline-block; width: 18px; height: 11px; margin-right: 8px; border: 1.2px solid var(--ink); vertical-align: baseline; }
 .bk-read h3 .n { font-family: var(--data); font-size: 11px; letter-spacing: 0.16em; color: var(--accent);
   margin-right: 10px; vertical-align: 0.12em; white-space: nowrap; }
 .bk-read .ledger { font-family: var(--data); font-size: 12px; letter-spacing: 0.08em; line-height: 1.5;
@@ -107,20 +109,20 @@ const CSS = `
 @media (max-width: 860px) { .bk-view { height: clamp(420px, 62vh, 620px); } }`;
 
 const LEGEND = [
-  ['brick', 'a published package, as a quantized brick'],
+  ['brick', 'a published package, as a quantized brick in its own colour'],
   ['stud', 'a published extension point'],
   ['seat', 'the location seat'],
   ['ghost', 'the headless plate — an optional peer'],
   ['ground', 'ground — the browser, and the server shelf'],
 ];
 
-const BASIS = `The model is <code>generator/sheet2.mjs</code>'s own <code>MODEL</code>, the parts its finished-model band seats, written into one glTF binary by <code>generator/brick-glb.mjs</code>: every ground, plate and brick a flat-shaded cuboid edged in ink, every stud a 24-sided cylinder on its part's cap, one node per part named by its id. One stud pitch is one unit. Each brick's lift in the <code>assemble</code> clip is the hover the sheet's exploded view draws it at, measured from its plate (${[...EXPLODE].map(([n, z]) => `brick ${n} ${z}`).join(', ')} plan units), so the explosion is the sheet's own. The numbered badges ride the bricks through the clip. Counted at ${COUNTED}; <code>@google/model-viewer</code> ${MV_VERSION} is fetched only when this page is entered, and the clip jumps to its end under <code>prefers-reduced-motion</code>.`;
+const BASIS = `The model is <code>generator/sheet2.mjs</code>'s own <code>MODEL</code>, the parts its finished-model band seats, written into one glTF binary by <code>generator/brick-glb.mjs</code>: every ground, plate and brick a flat-shaded cuboid edged in ink, every stud a 24-sided cylinder on its part's cap, one node per part named by its id; each brick wears its own colour, cap and plain studs in the hue and flanks a step darker, while the plates and ground stay paper. One stud pitch is one unit. Each brick's lift in the <code>assemble</code> clip is the hover the sheet's exploded view draws it at, measured from its plate (${[...EXPLODE].map(([n, z]) => `brick ${n} ${z}`).join(', ')} plan units), so the explosion is the sheet's own. The numbered badges ride the bricks through the clip. Counted at ${COUNTED}; <code>@google/model-viewer</code> ${MV_VERSION} is fetched only when this page is entered, and the clip jumps to its end under <code>prefers-reduced-motion</code>.`;
 
 /** The plate: style, section and the JSON island — no init script. */
 export function bricksMarkup() {
   const meta = BRICKS_META;
   const pins = DATA.bricks.map((b) =>
-    `      <button type="button" class="bk-pin" slot="hotspot-${b.n}" data-position="${b.cap.map((v) => `${v}m`).join(' ')}" data-normal="0m 1m 0m" aria-pressed="false" aria-label="Brick ${b.n}, ${b.name}">${b.n}</button>`).join('\n');
+    `      <button type="button" class="bk-pin" slot="hotspot-${b.n}" style="--hue:${b.hue}" data-position="${b.cap.map((v) => `${v}m`).join(' ')}" data-normal="0m 1m 0m" aria-pressed="false" aria-label="Brick ${b.n}, ${b.name}">${b.n}</button>`).join('\n');
   return `<style>${laneCss('bk')}${CSS}</style>
 <section class="sheet bk" id="${meta.id}-scene" aria-label="The Brick Assembly in the round — sheet 2's finished model as a three-dimensional model that explodes and reassembles">
   <div class="sheet-head"><span class="proj">${PROJECT_MARK} — INTERACTIVE PLATE</span><span class="shno">${meta.head} · REV ${meta.rev}</span></div>
@@ -209,7 +211,7 @@ const BODY = `${FOCUS_JS}  var mv = root.querySelector('#bk-viewer');
   function show(n) {
     if (n === null) { info.innerHTML = IDLE; return; }
     var b = byN[n];
-    info.innerHTML = '<h3><span class="n">BRICK ' + b.n + '</span>' + b.name + ' ' + b.ver + '</h3>'
+    info.innerHTML = '<h3><i class="sw" style="background:' + b.hue + '"></i><span class="n">BRICK ' + b.n + '</span>' + b.name + ' ' + b.ver + '</h3>'
       + '<p class="ledger">' + b.ledger + '</p><p class="note">Seats on ' + b.seats + '.</p>';
   }
   function member(v) { return v !== null && v !== undefined && byN[v] ? Number(v) : null; }

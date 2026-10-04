@@ -16,15 +16,23 @@ const HEX = { paper: '#F1F0E7', paper2: '#E9E8DD', accent: '#2E5077', red: '#A63
 const lin = (c) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
 const rgb = (hex) => [1, 3, 5].map((i) => +lin(parseInt(hex.slice(i, i + 2), 16) / 255).toFixed(5));
 const GHOST = 0.45;
-const MATERIALS = [
-  ['cap', HEX.paper], ['flank', HEX.paper2], ['ring', HEX.accent], ['seat', HEX.red], ['edge', HEX.ink],
-  ['ghost-cap', HEX.paper, GHOST], ['ghost-flank', HEX.paper2, GHOST], ['ghost-edge', HEX.ink, GHOST],
-].map(([name, hex, alpha]) => ({
+// a hued part's flank is its cap stepped down in sRGB, the same drop paper-2 makes from paper
+const FLANK = 0.8;
+const shade = (hex) => `#${[1, 3, 5].map((i) => Math.round(parseInt(hex.slice(i, i + 2), 16) * FLANK).toString(16).padStart(2, '0')).join('')}`;
+const material = ([name, hex, alpha]) => ({
   name,
   pbrMetallicRoughness: { baseColorFactor: [...rgb(hex), alpha ?? 1], metallicFactor: 0, roughnessFactor: 1 },
   ...(alpha ? { alphaMode: 'BLEND', doubleSided: true } : {}),
-}));
-const MAT = Object.fromEntries(MATERIALS.map((m, i) => [m.name, i]));
+});
+const BASE = [
+  ['cap', HEX.paper], ['flank', HEX.paper2], ['ring', HEX.accent], ['seat', HEX.red], ['edge', HEX.ink],
+  ['ghost-cap', HEX.paper, GHOST], ['ghost-flank', HEX.paper2, GHOST], ['ghost-edge', HEX.ink, GHOST],
+];
+function materialsFor(parts) {
+  const list = parts.filter((m) => m.hue).flatMap((m) => [[`cap-${m.id}`, m.hue], [`flank-${m.id}`, shade(m.hue)]]);
+  const materials = [...BASE, ...list].map(material);
+  return { materials, index: Object.fromEntries(materials.map((m, i) => [m.name, i])) };
+}
 
 const heightOf = (m) => (m.kind === 'ground' ? m.h : m.kind === 'plate' ? PT : m.courses * CRS);
 
@@ -111,8 +119,8 @@ function stud(cap, side, edge, cx, cz, y0) {
 }
 
 // A part's mesh, in node-local units with its plan min corner at the origin.
-function partMesh(part, ghost) {
-  const g = (k) => (ghost ? `ghost-${k}` : k);
+function partMesh(part, ghost, MAT) {
+  const g = (k) => (ghost ? `ghost-${k}` : part.hue ? `${k}-${part.id}` : k);
   const prims = new Map();
   const at = (mat, lines = false) => {
     if (!prims.has(mat)) prims.set(mat, { ...soup(), lines });
@@ -120,7 +128,7 @@ function partMesh(part, ghost) {
   };
   const w = part.ws, d = part.ds, h = heightOf(part) / PITCH;
   box(at(g('cap')), at(g('flank')), w, h, d);
-  boxEdges(at(g('edge'), true), w, h, d);
+  boxEdges(at(ghost ? 'ghost-edge' : 'edge', true), w, h, d);
   if (part.kind !== 'ground') {
     const rings = new Set(part.rings ?? []);
     for (let i = 0; i < part.ws; i++)
@@ -128,7 +136,7 @@ function partMesh(part, ghost) {
         const key = `${i},${j}`;
         const named = part.named?.get(key);
         const capMat = named?.edge === 'skr' ? 'seat' : named || rings.has(key) ? 'ring' : g('cap');
-        stud(at(capMat), at(g('flank')), at(g('edge'), true), i + 0.5, j + 0.5, h);
+        stud(at(capMat), at(g('flank')), at(ghost ? 'ghost-edge' : 'edge', true), i + 0.5, j + 0.5, h);
       }
   }
   return [...prims].map(([mat, s]) => ({ mat: MAT[mat], ...s }));
@@ -166,11 +174,12 @@ export function brickGlb(parts, { explode = new Map() } = {}) {
   };
 
   const meshes = [], nodes = [], channels = [], samplers = [];
+  const { materials, index } = materialsFor(parts);
   let triangles = 0;
   const times = accessor(new Float32Array([0, ASSEMBLE_SECONDS]), 'SCALAR', 5126, undefined, { min: [0], max: [ASSEMBLE_SECONDS] });
   for (const b of boxes) {
     const part = b.m;
-    const primitives = partMesh(part, Boolean(part.dash)).map((p) => {
+    const primitives = partMesh(part, Boolean(part.dash), index).map((p) => {
       const position = accessor(new Float32Array(p.pos), 'VEC3', 5126, 34962, bounds(p.pos));
       const big = p.pos.length / 3 > 65535;
       const indices = accessor(big ? new Uint32Array(p.idx) : new Uint16Array(p.idx), 'SCALAR', big ? 5125 : 5123, 34963);
@@ -201,7 +210,7 @@ export function brickGlb(parts, { explode = new Map() } = {}) {
     scenes: [{ name: 'the brick assembly', nodes: [nodes.length - 1] }],
     nodes,
     meshes,
-    materials: MATERIALS,
+    materials,
     accessors,
     bufferViews: views,
     buffers: [{ byteLength: bin.length }],
