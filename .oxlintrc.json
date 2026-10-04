@@ -225,7 +225,7 @@
         "turbo/no-undeclared-env-vars": [
           "warn",
           {
-            "allowList": ["^DEFLAKE_"]
+            "allowList": ["^DEFLAKE_", "^TURBO_OUTPUT_LOGS$"]
           }
         ]
       }
@@ -597,7 +597,7 @@
           "warn",
           {
             "allowList": [
-              "^(TURBO_RUNS_DIR|TURBO_SUMMARY_SESSION|TURBO_SUMMARY_ARTIFACT_URL)$"
+              "^(TURBO_RUNS_DIR|TURBO_SUMMARY_SESSION|TURBO_SUMMARY_ARTIFACT_URL|TURBO_LOGS_ARTIFACT_URL)$"
             ]
           }
         ]

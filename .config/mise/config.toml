@@ -218,7 +218,10 @@ run = 'turbo run "${usage_package_name?}#build"'
 depends = ["turbo_force_guard"]
 dir = "{{config_root}}"
 description = "Build the @www sites"
-run = "turbo run build --filter='@www/*' --ui=stream --log-order=stream --summarize"
+usage = '''
+flag "--output-logs <mode>" help="turbo task output: full | errors-only | new-only | hash-only | none; CI sets errors-only" default="full" env="TURBO_OUTPUT_LOGS"
+'''
+run = "turbo run build --filter='@www/*' --ui=stream --log-order=stream --summarize --output-logs=\"${usage_output_logs?}\""
 
 [tasks.ci]
 # turbo's `ci` is the back-compat alias of `ci:pull_request`.
@@ -238,10 +241,13 @@ run = "turbo run build --filter='@www/*' --ui=stream --log-order=stream --summar
 # typecheck failure short-circuits the expensive lane.
 depends = ["turbo_force_guard"]
 description = "Run the pull-request CI pipeline via turbo"
+usage = '''
+flag "--output-logs <mode>" help="turbo task output: full | errors-only | new-only | hash-only | none; CI sets errors-only" default="full" env="TURBO_OUTPUT_LOGS"
+'''
 run = [
   "mise run //tools/build_and_test:mark_session",
-  "turbo run ci --ui=stream --log-order=stream --summarize",
-  "mise run test_e2e",
+  "turbo run ci --ui=stream --log-order=stream --summarize --output-logs=\"${usage_output_logs?}\"",
+  "TURBO_OUTPUT_LOGS=\"${usage_output_logs?}\" mise run test_e2e",
 ]
 
 [tasks.ci_main]
@@ -249,10 +255,13 @@ run = [
 # (@tools/release#check:pack, @tools/dts-backtest#test:matrix) to the graph.
 depends = ["turbo_force_guard"]
 description = "Run the main-push CI pipeline via turbo"
+usage = '''
+flag "--output-logs <mode>" help="turbo task output: full | errors-only | new-only | hash-only | none; CI sets errors-only" default="full" env="TURBO_OUTPUT_LOGS"
+'''
 run = [
   "mise run //tools/build_and_test:mark_session",
-  "turbo run ci:main --ui=stream --log-order=stream --summarize",
-  "mise run test_e2e",
+  "turbo run ci:main --ui=stream --log-order=stream --summarize --output-logs=\"${usage_output_logs?}\"",
+  "TURBO_OUTPUT_LOGS=\"${usage_output_logs?}\" mise run test_e2e",
 ]
 
 [tasks.test_e2e]
@@ -280,9 +289,10 @@ dir = "{{config_root}}"
 description = "Run the Cypress e2e suites via turbo, around one shared dev server"
 usage = '''
 arg "[suite]" var=#true help="Suites to run (e.g. hash mobx); none runs them all"
+flag "--output-logs <mode>" help="turbo task output: full | errors-only | new-only | hash-only | none; CI sets errors-only" default="full" env="TURBO_OUTPUT_LOGS"
 '''
 # unquoted: a var arg arrives as one string and must word-split back into argv
-run = 'node ./apps/sample-app-lit-e2e/scripts/run-e2e.ts ${usage_suite:-}'
+run = 'TURBO_OUTPUT_LOGS="${usage_output_logs?}" node ./apps/sample-app-lit-e2e/scripts/run-e2e.ts ${usage_suite:-}'
 
 [tasks.codecov_bundle]
 # env: CODECOV_TOKEN plus the ambient TURBO_* remote-cache config.

@@ -23,6 +23,7 @@ import {
   headline,
   humanDuration,
   inlineCode,
+  logsLink,
   omittedTaskCount,
   overviewLines,
   overviewMarkdown,
@@ -863,6 +864,38 @@ describe('the attachments link in the overview', () => {
   it('stands alone as the stdout footer without a summary URL', () => {
     const lines = overviewLines(run(), { attachmentsUrl: URL });
     assert.deepEqual(lines.slice(-2), ['', `   vitest attachments: ${URL}`]);
+  });
+});
+
+describe('logsLink', () => {
+  const URL = 'https://github.com/o/r/actions/runs/1/artifacts/4';
+
+  it('links the task logs on both lanes', () => {
+    const link = logsLink({ logsUrl: URL });
+    assert.ok(link?.markdown.includes(`(<${URL}>)`));
+    assert.equal(link?.line, `   task logs: ${URL}`);
+  });
+
+  it('stays absent when nothing was uploaded', () => {
+    assert.equal(logsLink({}), undefined);
+    assert.equal(logsLink({ logsUrl: 'javascript:alert(1)' }), undefined);
+  });
+
+  it('sits between the attachments and the summary JSON', () => {
+    const lines = overviewLines(
+      summary([hit(), ran('a', 100)], 0, { attempted: 2 }),
+      {
+        artifactUrl: 'https://x/2',
+        attachmentsUrl: 'https://x/3',
+        logsUrl: URL,
+      },
+    );
+    assert.deepEqual(lines.slice(-4), [
+      '',
+      '   vitest attachments: https://x/3',
+      `   task logs: ${URL}`,
+      '   run summary json: https://x/2',
+    ]);
   });
 });
 

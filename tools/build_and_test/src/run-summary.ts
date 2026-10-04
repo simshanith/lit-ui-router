@@ -28,7 +28,8 @@
 //      TURBO_SUMMARY_ARTIFACT_URL (the uploaded `--summarize` JSON, linked as
 //      the uncapped copy of the capped lists this prints),
 //      VITEST_ATTACHMENTS_ARTIFACT_URL (the uploaded `.vitest/` dirs, linked
-//      when a failing spec wrote a screenshot or attachment).
+//      when a failing spec wrote a screenshot or attachment),
+//      TURBO_LOGS_ARTIFACT_URL (the uploaded per-task turbo logs).
 
 import { randomUUID } from 'node:crypto';
 import { appendFile, readdir, readFile, stat } from 'node:fs/promises';
@@ -168,11 +169,11 @@ async function publish(
     ? planAnnotations(annotations, { error: failed ? 1 : 0 })
     : undefined;
   if (plan !== undefined) context.annotations = annotationNote(plan);
-  // The overview leads on both lanes: the counts are the context for whichever
-  // task broke, and on a green run they are the whole report.
+  // The failure leads on both lanes: a red build opens this step, and the
+  // reader came for what broke. The overview follows as context.
   const overview = sessionMarkdown(runs, context);
   const markdown = failed
-    ? `${overview}\n${sessionFailureMarkdown(failures)}`
+    ? `${sessionFailureMarkdown(failures)}\n${overview}`
     : overview;
   const file = process.env.GITHUB_STEP_SUMMARY;
   const toFile = file !== undefined && file !== '';
@@ -181,8 +182,14 @@ async function publish(
   // gets the excerpts inline, and a human scanning the step sees the headline
   // without expanding anything. Grouping is deliberately NOT used — a
   // collapsed group is exactly the problem this step exists to solve.
-  const chunks = [...sessionLines(runs, context), ''];
-  if (failed) chunks.push(...sessionStdoutReport(failures, summaries));
+  const chunks = failed
+    ? [
+        ...sessionStdoutReport(failures, summaries),
+        '',
+        ...sessionLines(runs, context),
+        '',
+      ]
+    : [...sessionLines(runs, context), ''];
   // The fallback prints the same untrusted excerpts, so it goes inside the guard.
   if (!toFile) chunks.push(`\n${markdown}`);
   for (const chunk of guardCommands(chunks, commandToken())) console.log(chunk);
@@ -256,6 +263,7 @@ async function main(): Promise<void> {
       artifactUrl: process.env.TURBO_SUMMARY_ARTIFACT_URL,
       fileNames: runs.map((run) => run.fileName ?? ''),
       attachmentsUrl: process.env.VITEST_ATTACHMENTS_ARTIFACT_URL,
+      logsUrl: process.env.TURBO_LOGS_ARTIFACT_URL,
     },
     annotations,
   );

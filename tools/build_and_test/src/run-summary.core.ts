@@ -754,6 +754,8 @@ export interface OverviewContext {
    * always has something behind it.
    */
   attachmentsUrl?: string;
+  /** The uploaded per-task `.turbo/turbo-*.log` files, whatever the stream hid. */
+  logsUrl?: string;
   /**
    * Warn-only lanes and the state each asserted. Not derivable from `summary`:
    * these lanes exit 0, so the artifact cannot tell one carrying warnings from
@@ -803,6 +805,18 @@ export function attachmentsLink(
   };
 }
 
+/** Link to every task's full log; CI streams only failing tasks' output. */
+export function logsLink(
+  context: OverviewContext,
+): { markdown: string; line: string } | undefined {
+  const url = safeArtifactUrl(context.logsUrl);
+  if (url === undefined) return undefined;
+  return {
+    markdown: `[Full task logs](<${url}>) — every task's complete output, downloadable from this run's artifacts.`,
+    line: `   task logs: ${url}`,
+  };
+}
+
 /** Plain https only, and nothing that could end an angle-bracket destination. */
 function safeArtifactUrl(url: string | undefined): string | undefined {
   if (url === undefined || !url.startsWith('https://')) return undefined;
@@ -832,9 +846,8 @@ function jobNotes(runs: readonly SessionRun[], onActions: boolean): string[] {
 }
 
 /**
- * The always-on half of the report. Runs green or red; on a red run it sits
- * above the failure detail, because "16 of 158 ran" is the context for
- * whichever one of them broke.
+ * The always-on half of the report. Runs green or red; on a red run it follows
+ * the failure detail as context: "16 of 158 ran" around whichever one broke.
  */
 /**
  * The step-summary section heading. Plural: the section covers the pipeline —
@@ -932,7 +945,11 @@ function footerMarkdown(context: OverviewContext): string[] {
   if (context.annotations !== undefined) {
     out.push(`**Tool annotations** — ${context.annotations}`, '');
   }
-  for (const link of [attachmentsLink(context), artifactLink(context)]) {
+  for (const link of [
+    attachmentsLink(context),
+    logsLink(context),
+    artifactLink(context),
+  ]) {
     if (link !== undefined) out.push(link.markdown, '');
   }
   return out;
@@ -1060,9 +1077,11 @@ function footerLines(context: OverviewContext): string[] {
 
   // Blank line first: the link is a footer for the whole block, and set flush
   // against the facts it reads as a continuation of whichever one ran last.
-  const links = [attachmentsLink(context), artifactLink(context)].filter(
-    (link) => link !== undefined,
-  );
+  const links = [
+    attachmentsLink(context),
+    logsLink(context),
+    artifactLink(context),
+  ].filter((link) => link !== undefined);
   if (links.length > 0) lines.push('', ...links.map((link) => link.line));
   return lines;
 }
