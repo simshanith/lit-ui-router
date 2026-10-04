@@ -14,6 +14,7 @@ import {
 import { UIRouterLit, UIRouterLitElement } from 'lit-ui-router';
 import { withRouterSync } from 'lit-ui-router/context';
 
+import { RefRuntime } from '../ref-controller.js';
 import { RouterRefController } from '../router-ref-controller.js';
 import { appendParentFirst } from '@tools/happy-dom/append.ts';
 import {
@@ -52,6 +53,28 @@ function createHost(): RouterRefHost {
 }
 
 /** Mounts the host inside a <ui-router> providing the given router. */
+/** A default runtime that keeps every fiber it forks. */
+function recordingRuntime(): RefRuntime & {
+  readonly fibers: Fiber.RuntimeFiber<unknown, unknown>[];
+} {
+  const fibers: Fiber.RuntimeFiber<unknown, unknown>[] = [];
+  return {
+    fibers,
+    runFork: (effect) => {
+      const fiber = Effect.runFork(effect);
+      fibers.push(fiber);
+      return fiber;
+    },
+    runSync: (effect) => Effect.runSync(effect),
+  };
+}
+
+async function interrupted(
+  fiber: Fiber.RuntimeFiber<unknown, unknown>,
+): Promise<boolean> {
+  return Exit.isInterrupted(await Effect.runPromise(Fiber.await(fiber)));
+}
+
 async function mountInRouter(
   host: RouterRefHost,
   router: UIRouterLit,
@@ -299,5 +322,223 @@ describe('RouterRefController', () => {
     expect(
       Exit.isInterrupted(await Effect.runPromise(Fiber.await(fiber))),
     ).toBe(true);
+  });
+
+  describe('setRouter', () => {
+    it('re-forks on the new router while connected and updates the host', async () => {
+      const first = createTestRouter(testStates);
+      await routerGo(first, 'a');
+      const second = createTestRouter(testStates);
+      await routerGo(second, 'b', { id: '1' });
+      const runtime = recordingRuntime();
+      const onChange = vi.fn();
+      const host = createHost();
+      const controller = new RouterRefController(
+        host,
+        (route) => route.current?.name,
+        { runtime, onChange },
+      );
+      await mountInRouter(host, first);
+      expect(runtime.fibers).toHaveLength(1);
+      const rendersBefore = host.renderCount;
+
+      controller.setRouter(second);
+      expect(controller.value).toBe('b');
+      expect(onChange).toHaveBeenLastCalledWith('b');
+      expect(runtime.fibers).toHaveLength(2);
+      expect(await interrupted(runtime.fibers[0])).toBe(true);
+      await waitForUpdate(host);
+      expect(host.renderCount).toBeGreaterThan(rendersBefore);
+
+      await routerGo(first, 'b', { id: '2' });
+      await routerGo(second, 'b.child', { id: '1' });
+      expect(controller.value).toBe('b.child');
+      await routerGo(second, 'a');
+      expect(controller.value).toBe('a');
+    });
+
+    it('starts following after a failed seek while connected', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      cleanups.push(() => warn.mockRestore());
+      const router = createTestRouter(testStates);
+      await routerGo(router, 'a');
+      const host = createHost();
+      const controller = new RouterRefController(
+        host,
+        (route) => route.current?.name,
+        { initialValue: 'none' },
+      );
+      document.body.appendChild(host);
+      cleanups.push(() => host.remove());
+      await waitForUpdate(host);
+      expect(controller.value).toBe('none');
+
+      controller.setRouter(router);
+      expect(controller.value).toBe('a');
+      await routerGo(router, 'b', { id: '1' });
+      expect(controller.value).toBe('b');
+    });
+
+    it('records the router for the next hostConnected while disconnected', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      cleanups.push(() => warn.mockRestore());
+      const router = createTestRouter(testStates);
+      await routerGo(router, 'a');
+      const runtime = recordingRuntime();
+      const host = createHost();
+      const controller = new RouterRefController(
+        host,
+        (route) => route.current?.name,
+        { initialValue: 'none', runtime },
+      );
+
+      controller.setRouter(router);
+      expect(controller.value).toBe('none');
+      expect(runtime.fibers).toHaveLength(0);
+
+      document.body.appendChild(host);
+      cleanups.push(() => host.remove());
+      await waitForUpdate(host);
+      expect(controller.value).toBe('a');
+      expect(runtime.fibers).toHaveLength(1);
+      expect(warn).not.toHaveBeenCalled();
+
+      await routerGo(router, 'b', { id: '1' });
+      expect(controller.value).toBe('b');
+    });
+
+    it('is a no-op for the router it already follows', async () => {
+      const router = createTestRouter(testStates);
+      await routerGo(router, 'a');
+      const runtime = recordingRuntime();
+      const onChange = vi.fn();
+      const explicitHost = createHost();
+      const explicit = new RouterRefController(
+        explicitHost,
+        (route) => route.current?.name,
+        { router, runtime, onChange },
+      );
+      const soughtHost = createHost();
+      const sought = new RouterRefController(
+        soughtHost,
+        (route) => route.current?.name,
+        { runtime, onChange },
+      );
+      await mountInRouter(explicitHost, router);
+      await mountInRouter(soughtHost, router);
+      expect(runtime.fibers).toHaveLength(2);
+      expect(onChange).toHaveBeenCalledTimes(2);
+
+      explicit.setRouter(router);
+      sought.setRouter(router);
+
+      expect(runtime.fibers).toHaveLength(2);
+      expect(onChange).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe('router thunk', () => {
+    it('resolves at construction, before connect', async () => {
+      const router = createTestRouter(testStates);
+      await routerGo(router, 'a');
+
+      const controller = new RouterRefController(
+        createHost(),
+        (route) => route.current?.name,
+        { router: () => router },
+      );
+
+      expect(controller.value).toBe('a');
+    });
+
+    it('resolves again on each hostConnected', async () => {
+      const first = createTestRouter(testStates);
+      await routerGo(first, 'a');
+      const second = createTestRouter(testStates);
+      await routerGo(second, 'b', { id: '1' });
+      let current: UIRouterLit | undefined;
+      const runtime = recordingRuntime();
+      const host = createHost();
+      const controller = new RouterRefController(
+        host,
+        (route) => route.current?.name,
+        { router: () => current, initialValue: 'none', runtime },
+      );
+      expect(controller.value).toBe('none');
+
+      current = first;
+      document.body.appendChild(host);
+      cleanups.push(() => host.remove());
+      await waitForUpdate(host);
+      expect(controller.value).toBe('a');
+
+      host.remove();
+      current = second;
+      document.body.appendChild(host);
+      await waitForUpdate(host);
+      expect(controller.value).toBe('b');
+      expect(runtime.fibers).toHaveLength(2);
+      expect(await interrupted(runtime.fibers[0])).toBe(true);
+
+      await routerGo(second, 'a');
+      expect(controller.value).toBe('a');
+    });
+
+    it('keeps the router it follows when a later resolution is undefined', async () => {
+      const router = createTestRouter(testStates);
+      await routerGo(router, 'a');
+      let current: UIRouterLit | undefined = router;
+      const host = createHost();
+      const controller = new RouterRefController(
+        host,
+        (route) => route.current?.name,
+        { router: () => current },
+      );
+      document.body.appendChild(host);
+      cleanups.push(() => host.remove());
+      await waitForUpdate(host);
+
+      host.remove();
+      current = undefined;
+      document.body.appendChild(host);
+      await waitForUpdate(host);
+      await routerGo(router, 'b', { id: '1' });
+
+      expect(controller.value).toBe('b');
+    });
+
+    it('falls back to the <ui-router> context when it returns undefined', async () => {
+      const router = createTestRouter(testStates);
+      await routerGo(router, 'a');
+      const host = createHost();
+      const controller = new RouterRefController(
+        host,
+        (route) => route.current?.name,
+        { router: () => undefined },
+      );
+      expect(controller.value).toBeUndefined();
+
+      await mountInRouter(host, router);
+
+      expect(controller.value).toBe('a');
+    });
+
+    it('warns and no-ops when it returns undefined without a context', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      cleanups.push(() => warn.mockRestore());
+      const host = createHost();
+      const controller = new RouterRefController(
+        host,
+        (route) => route.current?.name,
+        { router: () => undefined, initialValue: 'none' },
+      );
+      document.body.appendChild(host);
+      cleanups.push(() => host.remove());
+      await waitForUpdate(host);
+
+      expect(controller.value).toBe('none');
+      expect(warn).toHaveBeenCalledTimes(1);
+      expect(warn.mock.calls[0]?.[1]).toBe(host);
+    });
   });
 });

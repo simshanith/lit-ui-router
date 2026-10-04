@@ -85,11 +85,13 @@ new RouterRefController(host, selector, options?)
 ```
 
 - `selector: (route: RouteSnapshot) => T` — the selected expression; the result is exposed as `.value`
-- `options.router` — explicit router instance, skipping context discovery; the route is then read at construction, so `.value` is live before the host connects
+- `options.router` — explicit router instance, skipping context discovery; the route is then read at construction, so `.value` is live before the host connects. A thunk (`() => UIRouter | undefined`) is resolved at construction and again on every `hostConnected`; when it returns `undefined`, the controller discovers the router as if the option were omitted. A host on a page served by `lit-ui-router-ssr` must be handed its router, here or through `setRouter()`: discovery binds the placeholder router `<ui-router>` holds until `hydrateRoot()` sets the app's
 - `options.onChange` — effect invoked when the selected value changes (and once on every (re)connect); useful for resetting component state from route params
 - `options.equals` — comparer for precise, value-based change detection (`Equal.equals` for `Data` values, or any `(a, b) => boolean`); defaults to `Object.is`
 - `options.initialValue` — the value `.value` carries before the router is discovered: before `hostConnected`, and while a host has no router context
 - `options.runtime` — the runtime the subscription fiber is forked on; defaults to Effect's default runtime. It runs the controller's own fibers and provides no services: the selector stays a plain function over the snapshot. An app's `ManagedRuntime<R>` satisfies it because the controller requires nothing from `R`
+
+`controller.setRouter(router)` hands the controller a router after construction, such as one that arrives as a host property. A connected host interrupts its fiber, re-seeds `.value` from the new router, re-forks, and updates; a disconnected one takes the router on its next `hostConnected`. Passing the router already followed does nothing.
 
 ### `RefController`
 
@@ -120,7 +122,7 @@ The refs are a tuple, and the selector receives their values positionally. Pass 
 
 `dist/development/index.js` is published alongside `dist/index.js` and picked by the `development` export condition, which bundlers resolve automatically in development; production builds get the default. Nothing to configure. `lit-ui-router` ships the same split — see the [Development & Production Builds guide](https://lit-ui-router.dev/guides/development-builds) for the mechanism and the warnings both packages carry.
 
-The development build adds one console warning here: a `RouterRefController` whose host has no `<ui-router>` ancestor warns once, naming that host, and follows nothing — `.value` stays at `options.initialValue`, so the host renders once and never again. Wrap the subtree in `<ui-router>`, or pass `options.router` for a host outside the router's DOM. Production builds drop the warning and its message text, and lit's own production build silences it as well.
+The development build adds one console warning here: a `RouterRefController` whose host has no `<ui-router>` ancestor warns once, naming that host, and follows nothing — `.value` stays at `options.initialValue`, so the host renders once and never again. Wrap the subtree in `<ui-router>`, or hand a host outside the router's DOM its router with `options.router` or `setRouter()`. Production builds drop the warning and its message text, and lit's own production build silences it as well.
 
 ## Links
 
