@@ -73,7 +73,7 @@ describe.skipIf(!hasNavigationAPI)('NavigationLocationService', () => {
     await vi.waitFor(() => {
       expect(window.location.pathname).toBe('/read-back');
     });
-    expect(service!.url()).toBe('/read-back?q=1#frag');
+    expect(service!.url()).toBe('/read-back?q=2#mutant');
   });
 
   it('reads the current URL relative to a non-root baseHref', async () => {
