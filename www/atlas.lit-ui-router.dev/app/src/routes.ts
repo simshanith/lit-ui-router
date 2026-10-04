@@ -77,13 +77,12 @@ export const routes: RouteDeclaration[] = [
     params: FILTER_PARAMS,
   },
   { name: 'atlas.sheet', url: '/sheet/:num?focus', params: FOCUS_PARAMS },
-  // The 3D city: a plate the flat set only publishes inside its gallery, and
-  // with its working twin the only states whose view loads a library on demand
-  // (three, resolved). The twin is the same scene with its plants raised.
+  // The city in the round and its working twin: app-only plates whose view loads
+  // @google/model-viewer on entry, resolved. The twin is the same city with its plants raised.
   { name: 'atlas.city', url: '/city?focus', params: FOCUS_PARAMS },
   { name: 'atlas.plant', url: '/plant?focus', params: FOCUS_PARAMS },
   // Sheet 2's finished model in the round: its view loads @google/model-viewer
-  // on entry, as the city's loads three.
+  // on entry, as the city's does.
   { name: 'atlas.bricks', url: '/bricks?focus', params: FOCUS_PARAMS },
   // The type specimen: a design bench, not a plate. It is the one state whose
   // view pulls a webfont — and it pulls it on entry, so no other page's

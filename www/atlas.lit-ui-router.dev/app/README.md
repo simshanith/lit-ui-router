@@ -25,7 +25,8 @@ parser calls the TypeScript 6 API, and `tsc --noEmit` runs on the same install.
 The content is generated, never transcribed. `node generator/build.mjs .` from `www/atlas.lit-ui-router.dev/` — the
 seam is `generator/emit-app.mjs` — writes `public/sheets/<id>.html` (one chrome-less fragment per
 plate), `public/sheets/atlas.css`, `src/generated/city-init.js`, `src/generated/bricks-init.js`,
-`public/models/bricks.glb` (sheet 2's seated model as a glTF binary), and `public/manifest.json`: one row
+`public/models/bricks.glb`, `city.glb` and `plant.glb` (sheet 2's seated model and sheet 7's city,
+measured and at work, as glTF binaries), and `public/manifest.json`: one row
 per plate (title, rev, ALTITUDE wording, FIT VERDICT line, census plates read, cross-sheet
 references, standalone filename in the flat set), an `issueLog` array, and a `cover` object carrying
 the flat gallery's stat bar, survey, prose column and colophon as rendered HTML, so the routed index
@@ -40,7 +41,7 @@ the round.
 | `atlas`          | — (abstract)   | `ShellView`     | `manifest`                        |
 | `atlas.gallery`  | `/?subject&projection&mode&basis&kv` | `GalleryView` | — (the key index's filter, five nullable params) |
 | `atlas.sheet`    | `/sheet/:num?focus` | `SheetView` | `sheet`, `fragment` (`focus`: the plate's pick, dynamic) |
-| `atlas.city`     | `/city?focus`  | `CityView`      | `extra`, `fragment`, **`three`** (`focus`: the pinned member) |
+| `atlas.city`     | `/city?focus`  | `CityView`      | `extra`, `fragment`, **`viewer`** (`focus`: the pinned member) |
 | `atlas.plant`    | `/plant?focus` | `CityView`      | the same as `atlas.city`, on the `plant` row |
 | `atlas.bricks`   | `/bricks?focus` | `BricksView`   | `extra`, `fragment`, **`viewer`** (`focus`: the pinned brick, 1–6) |
 | `atlas.specimen` | `/specimen`    | `SpecimenView`  | **`specimen`** (its own element)  |
@@ -64,8 +65,10 @@ its own `APPENDIX` section and card grid. `mountsFor()` is fed BOTH lists, so `/
 into the server's `/sheet/{num:…}` alternation and `/sheet/a1` 302s to the cased id exactly as
 `/sheet/2a` does. `allSheets()`, `findSheet()` and `isAppendix()` in `src/manifest.ts` own it.
 
-`atlas.city` is the 3D plate and, with `atlas.plant`, its working twin (the same scene with every
-mass crowned by a working plant), one of the two states that load a library on entry (see
+`atlas.city` is sheet 7's city in the round and, with `atlas.plant`, its working twin (the same city
+with every mass crowned by a working plant): a `<model-viewer>` loading `public/models/city.glb` or
+`plant.glb`, with a `test-light` material variant for sheet 7A's lane, one clip (`rise`), four corner
+buttons and a numbered pin per member. Both load `@google/model-viewer` on entry (see
 **Dependencies on demand**). Neither is a sheet: no sheet number, in the manifest's `extras` rather than
 its `sheets`, and so invisible to the ascent order, the ← / → walk and the server's narrowed
 `/sheet/{num:…}` — a rail entry and a cover card, nothing more.
@@ -74,7 +77,7 @@ its `sheets`, and so invisible to the ascent order, the ← / → walk and the s
 round, a `<model-viewer>` loading `public/models/bricks.glb`, with the sheet's exploded view as its
 one clip (`assemble`), three corner buttons and a numbered badge per brick. `<atlas-bricks>`
 extends `<atlas-city>` and keeps its pin seam and teardown; only the generated module it calls
-differs. The flat set draws no copy of it.
+differs. The flat set draws no copy of any of the three.
 
 `atlas.specimen` is a **bench, not a plate**: a type specimen that draws ONE mock sheet from the
 set's own chrome and swaps every role token (`--display`, `--title`, `--rail-title`, `--data`,
@@ -195,21 +198,21 @@ which the Navigation API location plugin uses and which never touches `history.p
 `traverse` is back/forward, which fires popstate and is gtag's, and under the pushState fallback
 nothing is sent. Verified in Playwright with a stubbed `gtag`.
 
-**Dependencies on demand.** `atlas.city` is the one state that loads a library when it is entered:
-`resolve: [{ token: 'three', resolveFn: () => import('three') }]`. Vite gives that dynamic import
-its own chunk (`three.module-*.js`, 675 kB), and a Playwright request log confirms `/sheet/7/` never
-fetches it while `/city/` does — the router is the loader, and the view is handed the namespace as a
-resolve like any other value. The scene itself is `src/generated/city-init.js`, written by the
-generator from the flat gallery's inline module: the app cannot run an inserted
-`<script type="module">` (see `src/fragment.ts`) and its import must be bundled, not a cdnjs url, so
-the generator emits the identical scene body as an ES module `initCity(root, THREE)` returning a
-teardown. **`<atlas-city>` (`views.ts`) owns that teardown**, not a router hook: the scene holds a
-WebGL context, two observers, a media listener and pending frames, the experimental layer is
-deletable by design and this is not optional, and the element that created the scene is the one
-thing whose lifetime matches it. `atlas.bricks` takes the same route with
-`{ token: 'viewer', resolveFn: () => import('@google/model-viewer') }`: the element's chunk is
-fetched on entry, the prerender stands `undefined` in for it, and `src/generated/bricks-init.js`
-wires the fragment's controls once the element has loaded the model.
+**Dependencies on demand.** `atlas.city`, `atlas.plant` and `atlas.bricks` are the states that load
+a library when they are entered:
+`resolve: [{ token: 'viewer', resolveFn: () => import('@google/model-viewer') }]`. Vite gives that
+dynamic import its own chunk (model-viewer and the three.js it carries; `three` stays in
+`package.json` as model-viewer's peer, held to one copy by the `overrides` entry), and
+`generator/check-scenes.mjs` confirms from a request log that `/sheet/7/` fetches neither the element
+nor a model while `/city/` fetches `city.glb` once — the router is the loader, and the view is handed
+the module as a resolve like any other value; the prerender stands `undefined` in for it. The wiring
+is a generated ES module — `src/generated/city-init.js`, `initCity(root, viewer, focus)`, and
+`src/generated/bricks-init.js` — because the app cannot run an inserted `<script type="module">`
+(see `src/fragment.ts`); each returns a teardown. **`<atlas-city>` (`views.ts`) owns that
+teardown**, not a router hook: the wiring holds observers, a media listener, listeners, pending
+frames and a window hook, the experimental layer is deletable by design and this is not optional,
+and the element that created the wiring is the one thing whose lifetime matches it. Model-viewer
+keeps one renderer for every viewer on the page, so a visit leaves no context behind.
 
 Why `onBefore` for the slideshow: `document.startViewTransition()` snapshots the document at the
 moment it is called, so it must run **before** any resolve starts — `onStart` fires after resolves
@@ -232,13 +235,13 @@ file (~12 MB) that can be published as a claude.ai Artifact. That host
 is strict in four ways, and each one is a line in the build:
 
 - **One file, no fetches — not even same-origin.** `artifact.ts` bakes `public/manifest.json` and
-  all twenty-eight fragments (the bricks plate's GLB inlined as a `data:` url) into a
+  all twenty-eight fragments (the three plates' GLBs inlined as `data:` urls) into a
   `<script type="application/json" id="atlas-data">` island (every
   `<` escaped, so a fragment's own `</script>` cannot close it) and inlines `atlas.css` as a
   `<style>`; `src/manifest.ts` reads the island when present and falls back to the fetches the site
-  uses, and the `DrawingSet` layer in `src/runtime.ts` serves both. The cytoscape and three dynamic imports are folded into the single chunk by
+  uses, and the `DrawingSet` layer in `src/runtime.ts` serves both. The cytoscape and model-viewer dynamic imports are folded into the single chunk by
   `vite-plugin-singlefile` (`useRecommendedBuildConfig`, which sets `output.codeSplitting = false`
-  on vite 8), so `#/city` raises the scene with the network entirely blocked.
+  on vite 8), so `#/city` raises the city with the network entirely blocked.
 - **The host owns the document skeleton.** The published file must carry no
   `<!DOCTYPE>`/`<html>`/`<head>`/`<body>` of its own, and only its first 8KB is scanned for
   `<title>`, so `artifact.ts` strips the wrapper and moves the title to byte 0.

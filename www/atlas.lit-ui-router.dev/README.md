@@ -1,8 +1,8 @@
 # www/atlas.lit-ui-router.dev/ — The Altitude Atlas
 
 A drawing set: one subject, the lit-ui-router monorepo, surveyed at every altitude. Thirteen
-altitudes on 21 plates — the numbered sheets, their A/B alternates, three interactive lanes and a
-3D city — each in the form that altitude earns, and an appendix of 4 more about the atlas itself. Sheets 7–10 are a survey
+altitudes on 21 plates — the numbered sheets, their A/B alternates and three interactive lanes —
+each in the form that altitude earns, with sheets 2 and 7 standing in the round in the routed app, and an appendix of 4 more about the atlas itself. Sheets 7–10 are a survey
 quartet (the workspace by mass, a consumer's node_modules, a deploy on the wire, the inside of
 one bundle); 11 prices every published entry alone; appendix A2 draws the census pipeline that
 measured the rest, and A3 masses the atlas itself on sheet 7's ruler beside the codebase. The form riffs on an isometric codebase visualization seen in the wild; the notes on
@@ -60,9 +60,9 @@ generated files like the fragments beside them. `generator/thumbs.mjs` draws the
 photographing the flat set above in headless Chromium (playwright, reached through
 `tools/embed-heights`; the lanes' cytoscape is served from `app/node_modules`), and the
 three 3D cards (`city`, `plant`, `bricks`) from the BUILT app's prerendered `/city/`, `/plant/`
-and `/bricks/` pages, their WebGL stage cleared to transparent for the shot. The bricks plate's
-model, `app/public/models/bricks.glb`, is a tracked generated file `build.mjs` writes beside
-the fragments. `build.mjs` REFUSES to emit a manifest whose card has no picture, so a new
+and `/bricks/` pages, each `<model-viewer>` on a transparent clear, its pins hidden for the shot. The three
+models, `app/public/models/city.glb`, `plant.glb` and `bricks.glb`, are tracked generated files
+`build.mjs` writes beside the fragments (`generator/city-glb.mjs` and `brick-glb.mjs` on `glb.mjs`). `build.mjs` REFUSES to emit a manifest whose card has no picture, so a new
 plate takes the full order:
 
 ```bash
@@ -84,8 +84,8 @@ the tracked pictures: `thumbs.mjs <outdir> --only <ids> --out <dir> --tuning <fi
 
 Live at <https://atlas.lit-ui-router.dev/> — the app owns the root (`/`, `/sheet/7/`, `/city/`,
 `/plant/`, `/bricks/`, `/log`) and the flat set sits beside it under `/set/`; the two link to each other. The SVG
-sheets need nothing; the interactive plates (1i, 2B, 12i, 7·3D, 7B·3D, A2i) load cytoscape 3.31.0 and
-three.js 0.169.0, which the stage step vendors, and the app-only 2·3D bundles `@google/model-viewer`. `app/` is the same set as a prerendered
+sheets need nothing; the interactive lanes (1i, 2B, 12i, A2i) load cytoscape 3.31.0, which the stage step
+vendors, and the app-only plates in the round (2·3D, 7·3D, 7B·3D) bundle `@google/model-viewer`. `app/` is the same set as a prerendered
 lit-ui-router app (see `app/README.md`); `HISTORY.md` is the verbatim revision record, parsed
 into the app's `/log` at build time. This file is written by `build.mjs`; edit the emitter, not the output.
 

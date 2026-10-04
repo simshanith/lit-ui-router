@@ -145,9 +145,9 @@ Good, and small enough to hold in your head.
   /sheet/99       →  404   (url kept; the shell, at 404)
   /no-such-thing  →  404
   /city           →  200   (the shell carries the whole 3D plate as markup; the
-                            WebGL scene is client-only — three.js is a resolve,
+                            model is client-only — model-viewer is a resolve,
                             so nothing runs server-side and a no-JS reader still
-                            gets the legend, panel and basis note)
+                            gets the legend, pins, panel and basis note)
   /specimen       →  200   (head and standfirst are markup; the bench itself is
                             an empty <atlas-specimen> the client fills — its
                             pairings and readouts measure a LIVE document)
@@ -289,9 +289,10 @@ Everything that is not a router primitive:
 - `unsafeHTML`: fine, and it emits `<script>` tags verbatim — exactly the
   static-page behaviour I wanted, since the client re-creates them.
 - **the 3D plate's shell.** `dist/city/index.html` renders whole — legend,
-  controls, reading panel, basis note — with an empty `.cs-canvas` where the
-  scene will be. The library that fills it is a `resolve` (`import('three')`),
-  so the server never touches it and the page costs nothing extra.
+  controls, pins, reading panel, basis note — around a `<model-viewer>` tag
+  the client upgrades. The element that fills it is a `resolve`
+  (`import('@google/model-viewer')`), so the server never touches it and the
+  page costs nothing extra.
 - **the plates themselves.** `dist/sheet/7/index.html` is 69 KB and contains 12
   `<svg>` elements and 37 real `href`s: a crawler or a JS-less reader gets the
   whole drawing, the rail, and working navigation. Genuine content SSR, in about

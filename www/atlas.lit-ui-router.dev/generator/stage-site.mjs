@@ -5,7 +5,7 @@
 // pages, assets, manifest.json, the sheets/ fragments, 404.html and the
 // app's own _redirects). The flat drawing set — every www/atlas.lit-ui-router.dev/*.html — is
 // staged beside it under dist/set/, with the gallery doubled as
-// set/index.html and the two CDN scripts vendored into set/vendor/ so the
+// set/index.html and the cytoscape CDN script vendored into set/vendor/ so the
 // deployed site carries no external origin. Committed pages keep their cdnjs
 // URLs (the Artifact host's CSP allows only that origin); the rewrite below
 // touches the STAGED copies alone. Vendored bytes are pin-verified by sha256
@@ -36,11 +36,6 @@ const VENDOR = [
     url: 'https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.31.0/cytoscape.min.js',
     file: 'cytoscape.min.js',
     sha256: 'e7d4c6c286bee0ba346c68ed1c8b8b82b4740b75be5d0c4d6602ee38df55d9c1',
-  },
-  {
-    url: 'https://cdnjs.cloudflare.com/ajax/libs/three.js/0.169.0/three.module.min.js',
-    file: 'three.module.min.js',
-    sha256: 'f7cee3c7533449a1505cc12cb5128b89e3d4fd3d7ea62b05f9f5464a217472ee',
   },
 ];
 
@@ -224,5 +219,5 @@ console.log(`sheets/atlas.css?v=${cssHash} on ${String(busted)} pages`);
 
 const routedPages = walkHtml(dist).filter((p) => !p.startsWith(`${set}/`)).length;
 console.log(`staged the routed app at ${BASE} → dist/ (${routedPages - 1} prerendered pages + 404.html + manifest + fragments)`);
-console.log(`staged the flat set at ${SET} → dist${SET} (${pages.length} pages + index.html + ${VENDOR.length} vendored scripts)`);
+console.log(`staged the flat set at ${SET} → dist${SET} (${pages.length} pages + index.html + ${VENDOR.length} vendored script${VENDOR.length === 1 ? '' : 's'})`);
 console.log(`_redirects: ${appRules.split('\n').length} app rules + ${legacy.length} legacy rules (old filenames → ${SET}, ${OLD_APP_MOUNT}/* → ${BASE})${GA_ID ? ` · GA tag on ${tagged.routed} routed + ${tagged.flat} flat pages` : ''}`);

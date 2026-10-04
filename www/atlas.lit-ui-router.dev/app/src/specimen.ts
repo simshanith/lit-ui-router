@@ -33,7 +33,7 @@
  * the FIRST KNOB TOUCH and never by a page load. The PROSE knob's extra serifs
  * load on demand on top of that; the CODE knob asks for nothing, since both its
  * faces ship. Same rule `atlas.city` follows for
- * three.js, one turn later: the state loads it, and only when it is used.
+ * model-viewer, one turn later: the state loads it, and only when it is used.
  */
 import { LitElement, html } from 'lit';
 import type { PropertyValues, TemplateResult } from 'lit';

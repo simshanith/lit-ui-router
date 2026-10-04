@@ -1181,8 +1181,8 @@ export const AboutView: RoutedLitTemplate<ManifestResolves> = (props) => {
           <code>href</code> in the source is the <code>href</code> in the DOM — on every
           rail link, cover card and key chip;
           <code>resolve</code> for the manifest, the plate, and — on
-          <code>atlas.city</code> and <code>atlas.plant</code> — three.js itself, so a
-          600 KB library is fetched by the states that need it and by no other;
+          the three plates in the round — Google's <code>&lt;model-viewer&gt;</code> itself, so a
+          library and the three.js it carries are fetched by the states that need them and by no other;
           <code>redirectTo</code> for <code>/office</code> → appendix A2; a url-less
           <code>atlas.notFound</code> as the <code>otherwise</code> target, so an unknown
           sheet keeps its own url in the address bar; nested
@@ -1226,9 +1226,9 @@ export const AboutView: RoutedLitTemplate<ManifestResolves> = (props) => {
           <code>ui-router-navigation-location-plugin</code>, <code>lit</code>,
           <code>lit-ui-router-effect</code> and <code>effect</code> (the boot's
           settled route, the index filter and the arrow-key walk),
-          <code>cytoscape</code> (the four interactive plates) and <code>three</code>
-          (the isometric city, imported only by <code>atlas.city</code> and
-          <code>atlas.plant</code>); at build
+          <code>cytoscape</code> (the four interactive plates) and
+          <code>@google/model-viewer</code> (the plates in the round, imported only by
+          <code>atlas.city</code>, <code>atlas.plant</code> and <code>atlas.bricks</code>); at build
           time, <code>lit-ui-router-ssr</code> and <code>@lit-labs/ssr</code>. All from
           npm; no workspace links.
         </p>

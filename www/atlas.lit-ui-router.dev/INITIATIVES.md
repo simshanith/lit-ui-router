@@ -97,7 +97,7 @@ sitting); order is dependency order.
 | I5 | T3 recipes (turbo, nm, bundle 9/10/11, npm dates) | archive+install harness; costliest, least churn |
 | I6 | Pipeline self-portrait: static sheet 14 | house SVG style, introspected at build |
 | I7 | Cytoscape pipeline graph + sprite nodes | NODES/EDGES model, sprite skins; now appendix A2i |
-| I8 | 3D | CSS tilt (retired) → three.js isometric city |
+| I8 | 3D | CSS tilt (retired) → three.js isometric city (retired) → the city and its working twin as glTF in model-viewer |
 
 ## Operating notes and traps
 

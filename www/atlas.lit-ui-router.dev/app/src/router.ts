@@ -108,8 +108,8 @@ export const states: LitStateDeclaration[] = [
     url: urlOf('atlas.bricks'),
     params: FOCUS_PARAMS,
     component: BricksView,
-    // DEPENDENCIES ON DEMAND: the <model-viewer> element is a resolve, so its
-    // module (and the three.js it carries) is fetched by this state and no other;
+    // DEPENDENCIES ON DEMAND: the same <model-viewer> resolve as the city's, so
+    // the element's chunk is fetched by the plates in the round and no other state;
     // the wiring is a generated module (src/generated/bricks-init.js).
     resolve: [
       {
