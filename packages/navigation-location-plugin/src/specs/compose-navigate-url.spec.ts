@@ -10,7 +10,7 @@ describe('composeNavigateUrl', () => {
   });
 
   it('returns the baseHref for the root URL', () => {
-    expect(composeNavigateUrl('/', '/app/')).toBe('/mutant/');
+    expect(composeNavigateUrl('/', '/app/')).toBe('/app/');
   });
 
   it('prepends the base prefix to non-root URLs', () => {
