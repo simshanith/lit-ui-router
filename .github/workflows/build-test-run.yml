@@ -248,6 +248,8 @@ jobs:
         # Implicit success(): the summary step above is red after a red build.
         run: mise run codecov_bundle
         env:
+          # Runs after the task-log upload, so a failing upload is the only output kept.
+          TURBO_OUTPUT_LOGS: errors-only
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
           TURBO_API: ${{ secrets.TURBO_API }}

@@ -298,7 +298,10 @@ run = 'TURBO_OUTPUT_LOGS="${usage_output_logs?}" node ./apps/sample-app-lit-e2e/
 # env: CODECOV_TOKEN plus the ambient TURBO_* remote-cache config.
 depends = ["turbo_force_guard"]
 description = "Upload bundle-analysis stats to Codecov via turbo"
-run = "turbo run codecov:bundle --ui=stream --log-order=stream"
+usage = '''
+flag "--output-logs <mode>" help="turbo task output: full | errors-only | new-only | hash-only | none; CI sets errors-only" default="full" env="TURBO_OUTPUT_LOGS"
+'''
+run = "turbo run codecov:bundle --ui=stream --log-order=stream --output-logs=\"${usage_output_logs?}\""
 
 [tasks.dts_backtest_matrix]
 # Ad-hoc alias for the full dts-backtest TS matrix; CI runs it via ci_main.
