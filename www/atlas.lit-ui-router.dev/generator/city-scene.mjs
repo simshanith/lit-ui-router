@@ -13,7 +13,7 @@ import { CITY, PLACED } from './sheet7.mjs';
 import { SURVEY, SURVEY_META } from './sheet7a.mjs';
 import { PLANT_RULES } from './city-plant.mjs';
 import {
-  CITY_GLB, DRESS_JS, FACES, HATCH, LIT, PLANT_GLB, PX, TIERS, TINT, cityModel, materialPlan,
+  CITY_GLB, DRESS_JS, FACES, HATCH, LIT, PLANT_GLB, PX, RISE_SECONDS, TIERS, TINT, cityModel, materialPlan,
 } from './city-glb.mjs';
 import { ISO_POLAR, MV_JS, orbitAt, pinCss } from './mv-kit.mjs';
 import { BASE } from '../app/src/routes.ts';
@@ -111,7 +111,7 @@ export const CITY_META = {
   head: 'SHEET 7 · 3D',
   rev: REV,
   title: 'THE CITY, IN THE ROUND',
-  sub: `SHEET 7'S CENSUS CITY IN THE ROUND · ${CITY.length} MEMBERS · ${MASSED} MASSED · ${ANNEXES} SPEC ANNEXES · 4 DISTRICTS · ONE GLTF BINARY · THE CAMERA ORBITS FREE AND TURNS TO THE FOUR TRUE DIAGONALS · A SECOND LANE RELIGHTS THE CITY FROM SHEET 7A'S FILED SHADOW PLATE`,
+  sub: `SHEET 7'S CENSUS CITY IN THE ROUND · ${CITY.length} MEMBERS · ${MASSED} MASSED · ${ANNEXES} SPEC ANNEXES · 4 DISTRICTS · ONE GLTF BINARY · ONE CLIP RAISES IT FROM THE GROUND, RAISE ⇄ GROUND · THE CAMERA ORBITS FREE AND TURNS TO THE FOUR TRUE DIAGONALS · A SECOND LANE RELIGHTS THE CITY FROM SHEET 7A'S FILED SHADOW PLATE`,
   /** The flat set draws no copy of it. */
   standalone: '',
 };
@@ -122,7 +122,7 @@ export const PLANT_META = {
   head: 'SHEET 7B · 3D',
   rev: PLANT_REV,
   title: 'THE WORKING CITY, IN THE ROUND',
-  sub: `SHEET 7'S CENSUS CITY IN THE ROUND, AT WORK · ${CITY.length} MEMBERS · ${MASSED} MASSED · EACH CROWNED BY A WORKING PLANT SIZED FROM ITS OWN CENSUS · ${ANNEXES} SPEC ANNEXES · 4 DISTRICTS · ONE GLTF BINARY · THE CAMERA ORBITS FREE AND TURNS TO THE FOUR TRUE DIAGONALS · A SECOND LANE RELIGHTS THE CITY FROM SHEET 7A'S FILED SHADOW PLATE`,
+  sub: `SHEET 7'S CENSUS CITY IN THE ROUND, AT WORK · ${CITY.length} MEMBERS · ${MASSED} MASSED · EACH CROWNED BY A WORKING PLANT SIZED FROM ITS OWN CENSUS · ${ANNEXES} SPEC ANNEXES · 4 DISTRICTS · ONE GLTF BINARY · ONE CLIP RAISES IT FROM THE GROUND AND CROWNS IT, RAISE ⇄ GROUND · THE CAMERA ORBITS FREE AND TURNS TO THE FOUR TRUE DIAGONALS · A SECOND LANE RELIGHTS THE CITY FROM SHEET 7A'S FILED SHADOW PLATE`,
   /** The flat set draws no copy of it. */
   standalone: '',
 };
@@ -144,6 +144,7 @@ const CSS = `
 .cs-ctl button:hover { background: var(--paper-2); }
 .cs-ctl button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
 .cs-ctl label { display: inline-flex; gap: 5px; align-items: center; cursor: pointer; }
+.cs-ctl input[type=range] { width: 130px; accent-color: var(--accent); }
 .cs-ctl .touch { display: none; }
 @media (pointer: coarse) { .cs-ctl .mouse { display: none; } .cs-ctl .touch { display: inline; } }
 .cs-stage { position: relative; border: 1.5px solid var(--ink); background: var(--paper); }
@@ -227,10 +228,12 @@ const BODY = `${FOCUS_JS}${MV_JS}  ${DRESS_JS}
   var legend = root.querySelector('.cs-legend');
   var corners = Array.prototype.slice.call(root.querySelectorAll('[data-az]'));
   var reset = root.querySelector('#cs-reset');
+  var play = root.querySelector('#cs-play');
+  var slider = root.querySelector('#cs-t');
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
   var ac = new AbortController();
   var on = function (el, type, fn, capture) { el.addEventListener(type, fn, { signal: ac.signal, capture: Boolean(capture) }); };
-  var END = D.end, loaded = false, lane = 'tier', litN = null, pinN = null, pal = null, homeR = 0, homeFov = D.home.fov, raf = 0;
+  var END = D.end, t = END, clock = 0, loaded = false, lane = 'tier', litN = null, pinN = null, pal = null, homeR = 0, homeFov = D.home.fov, raf = 0;
   var byN = {}, pins = {};
   D.rows.forEach(function (b) {
     byN[b.n] = b;
@@ -356,6 +359,40 @@ const BODY = `${FOCUS_JS}${MV_JS}  ${DRESS_JS}
     });
   }
 
+  // ---- the rise: one clock for the pose, the pins riding it, and the controls that read it ----
+  function grown(at, span) { return 0.001 + 0.999 * Math.min(1, Math.max(0, (at - span[0]) / (span[1] - span[0]))); }
+  function pinAt(b) {
+    var y = b.h * grown(t, b.rise) + (D.crowns ? (b.top - b.h) * grown(t, D.crowns) : 0) + D.lift;
+    return b.cap[0] + 'm ' + y.toFixed(3) + 'm ' + b.cap[2] + 'm';
+  }
+  function pose(next) {
+    t = Math.min(END, Math.max(0, next));
+    // a hair short of the end: three clamps a LoopOnce action that reaches it, and a clamped action ignores later seeks
+    if (loaded) mv.currentTime = Math.min(t, END - 1e-4);
+    slider.value = String(t);
+    play.textContent = t >= END ? 'GROUND' : 'RAISE';
+    D.rows.forEach(function (b) { mv.updateHotspot({ name: 'hotspot-' + b.n, position: pinAt(b) }); });
+  }
+  function stop() {
+    if (clock) cancelAnimationFrame(clock);
+    clock = 0;
+  }
+  // forward or back at the clip's own speed; reduced motion lands at once
+  function run(to) {
+    stop();
+    if (reduce.matches) { pose(to); return; }
+    var dir = to > t ? 1 : -1, last = performance.now();
+    function tick(now) {
+      clock = 0;
+      var next = t + dir * (now - last) / 1000;
+      last = now;
+      if (dir > 0 ? next >= to : next <= to) { pose(to); return; }
+      pose(next);
+      clock = requestAnimationFrame(tick);
+    }
+    clock = requestAnimationFrame(tick);
+  }
+
   // ---- pins: one tab stop, on the pinned member or the first ----
   function rove() {
     var stop = pinN !== null ? pinN : order[0];
@@ -461,6 +498,8 @@ const BODY = `${FOCUS_JS}${MV_JS}  ${DRESS_JS}
     info.innerHTML = litN === null ? IDLE : describe(byN[litN]);
     void retint();
   });
+  on(play, 'click', function () { run(t >= END ? 0 : END); });
+  on(slider, 'input', function () { stop(); pose(Number(slider.value)); });
   on(mv, 'camera-change', onCamera);
   on(window, 'resize', onCamera);
   var themeOff = onTheme(retint, on);
@@ -471,10 +510,12 @@ const BODY = `${FOCUS_JS}${MV_JS}  ${DRESS_JS}
       homeFov = mv.getFieldOfView();
       home();
       mv.jumpCameraToGoal();
-      // LoopOnce, held a hair short of the end: three clamps a LoopOnce action that reaches it
+      // LoopOnce, so the clip's last frame is the raised city rather than a wrap to the ground
       mv.play({ repetitions: 1 });
       mv.pause();
-      mv.currentTime = END - 1e-4;
+      play.disabled = false;
+      slider.disabled = false;
+      pose(t);
       onCamera();
       revealPainted(mv, retint).then(resolve);
     }
@@ -500,6 +541,9 @@ const BODY = `${FOCUS_JS}${MV_JS}  ${DRESS_JS}
     target: function () { return mv.getCameraTarget().toString(); },
     panel: function () { return info.textContent; },
     pick: function (x, y) { return pick({ clientX: x, clientY: y }); },
+    animations: function () { return mv.availableAnimations; },
+    time: function () { return t; },
+    pose: function (v) { stop(); pose(v); },
     photo: function () {
       Array.prototype.forEach.call(mv.querySelectorAll('[slot^="hotspot-"]'), function (el) { el.style.visibility = 'hidden'; });
     },
@@ -508,6 +552,7 @@ const BODY = `${FOCUS_JS}${MV_JS}  ${DRESS_JS}
   return {
     select: function (n) { if (pin(member(n))) frame(pinN); },
     dispose: function () {
+      stop();
       if (raf) cancelAnimationFrame(raf);
       themeOff();
       ac.abort();
@@ -552,6 +597,7 @@ const BASIS_NOTES = (plant) => [
   ...(plant ? [['PLANT', `Every massed member is drawn as a working plant, after the sprite study's Factorio-leaning treatment, and every piece of it reads a field the census row already carries. The plant keeps to the roof's corners, clear of the pin over its centre. Stacks stand in a row up the west edge, one per ten authored files up to four, their height set by the footprint and banded in the tier's edge colour. Tanks line the north edge from the north-east corner, one at 150 sloc, two at 600, three at 1,800, as many as the roof holds. A header pipe joins them, and the field left over carries one vent per five files, up to six. A footprint of 45 units or more takes a portal gantry along its east edge, and one of 28 or more a catwalk rail. A wall of 20 units or more runs a riser up its east face, two from 60, and a mass of 40 or more is ringed by a deck every ${PLANT_RULES.deckEvery} units. A spec annex is joined by a pipe rack across the gap and carries three module lamps, lit green by sheet 7A's line coverage: three at 95 and over, two at 85, one below or unmetered, none when no suite loads the member. Where a choice is left, such as which roof cells the vents take, a generator seeded on the member's name makes it, so the same census always builds the same plant. Each solid is a box or two turned boxes, stacks and tanks as octagons, merged per material on its member's roof and shaded top to foot.`]] : []),
   ['CAMERA', `Perspective, at a ${HOME_FOV}° field of view, so the city reads close to the plates' isometric. The camera orbits free under the pointer with the viewer's own damping, and four buttons turn it to the true diagonals, ${CORNERS.join('°, ')}° at the isometric polar angle of 54.736°, instantly under <code>prefers-reduced-motion</code>. A plain scroll over the plate scrolls the page; the wheel zooms once the plate has been touched.`],
   ['LETTERING', `Each member carries a numbered pin with sheet 7's own number, standing over its ${plant ? 'plant' : 'cap'}, in the page's data face and its colours. Once the plan stands smaller than ${pct(DOTS)}% of its size at home on a desktop stage, the unpinned pins fold to dots, so a distant or a phone-sized plan stays a plan. District names stand on their ground plates as labels of their own. The reading panel prints the same row the schedule does.`],
+  ['RISE', `The model carries one clip, <code>rise</code>, ${RISE_SECONDS} s: every mass and its annex grow out of the ground in sheet 7's schedule order, district by district${plant ? ', and the plants grow onto their roofs over the last 0.4 s' : ''}. The plate opens raised and never plays by itself. RAISE ⇄ GROUND runs the clip at its own speed and the slider scrubs it, the pins riding the roofs; under <code>prefers-reduced-motion</code> the button lands at once.`],
   ['TEST LIGHT', `A second material lane over the same geometry, the model's <code>test-light</code> variant: the city relit from <code>data/census-shadow.json</code>, ${SURVEY_META.basis}, the ref the geometry is massed at, with ${SURVEY_META.metered} members read under their own suites' meters. The model and the flat shadow plate cannot drift either. Every mass in the model has a survey row; one without is a build error.`],
   ['POLARITY', `Sheet 7A's: covered source is LIT, source no suite loads is SHADOW, and the spec annex is the LAMP that throws the light. A metered member's mass splits along its footprint. The lit slab is side × the extent the meter records, taken from the annex (east) side, its tint stepping down through the line-coverage bands. The shadow slab is sheet 7A's own black wash with a faint stripe, lerped toward black rather than the ink, because <code>--ink</code> is light in the cyanotype theme and a shadow that brightens in the dark is not a shadow.`],
 ];
@@ -606,6 +652,8 @@ ${swatchCss}</style>
 ${CORNERS.map((az, i) => `        <button type="button" data-az="${az}" aria-pressed="${i === 0}">${az}°</button>`).join('\n')}
       </span>
       <label><input type="checkbox" id="cs-lane"> TEST LIGHT</label>
+      <button type="button" id="cs-play" disabled>GROUND</button>
+      <label>GROUND <input type="range" id="cs-t" min="0" max="${RISE_SECONDS}" step="0.01" value="${RISE_SECONDS}" disabled aria-label="The rise, from the ground to the raised city"> RAISED</label>
       <button type="button" id="cs-reset">RESET</button>
     </div>
   </div>

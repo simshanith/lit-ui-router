@@ -111,10 +111,12 @@ export async function initCity(root, viewer, focus) {
   var legend = root.querySelector('.cs-legend');
   var corners = Array.prototype.slice.call(root.querySelectorAll('[data-az]'));
   var reset = root.querySelector('#cs-reset');
+  var play = root.querySelector('#cs-play');
+  var slider = root.querySelector('#cs-t');
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
   var ac = new AbortController();
   var on = function (el, type, fn, capture) { el.addEventListener(type, fn, { signal: ac.signal, capture: Boolean(capture) }); };
-  var END = D.end, loaded = false, lane = 'tier', litN = null, pinN = null, pal = null, homeR = 0, homeFov = D.home.fov, raf = 0;
+  var END = D.end, t = END, clock = 0, loaded = false, lane = 'tier', litN = null, pinN = null, pal = null, homeR = 0, homeFov = D.home.fov, raf = 0;
   var byN = {}, pins = {};
   D.rows.forEach(function (b) {
     byN[b.n] = b;
@@ -240,6 +242,40 @@ export async function initCity(root, viewer, focus) {
     });
   }
 
+  // ---- the rise: one clock for the pose, the pins riding it, and the controls that read it ----
+  function grown(at, span) { return 0.001 + 0.999 * Math.min(1, Math.max(0, (at - span[0]) / (span[1] - span[0]))); }
+  function pinAt(b) {
+    var y = b.h * grown(t, b.rise) + (D.crowns ? (b.top - b.h) * grown(t, D.crowns) : 0) + D.lift;
+    return b.cap[0] + 'm ' + y.toFixed(3) + 'm ' + b.cap[2] + 'm';
+  }
+  function pose(next) {
+    t = Math.min(END, Math.max(0, next));
+    // a hair short of the end: three clamps a LoopOnce action that reaches it, and a clamped action ignores later seeks
+    if (loaded) mv.currentTime = Math.min(t, END - 1e-4);
+    slider.value = String(t);
+    play.textContent = t >= END ? 'GROUND' : 'RAISE';
+    D.rows.forEach(function (b) { mv.updateHotspot({ name: 'hotspot-' + b.n, position: pinAt(b) }); });
+  }
+  function stop() {
+    if (clock) cancelAnimationFrame(clock);
+    clock = 0;
+  }
+  // forward or back at the clip's own speed; reduced motion lands at once
+  function run(to) {
+    stop();
+    if (reduce.matches) { pose(to); return; }
+    var dir = to > t ? 1 : -1, last = performance.now();
+    function tick(now) {
+      clock = 0;
+      var next = t + dir * (now - last) / 1000;
+      last = now;
+      if (dir > 0 ? next >= to : next <= to) { pose(to); return; }
+      pose(next);
+      clock = requestAnimationFrame(tick);
+    }
+    clock = requestAnimationFrame(tick);
+  }
+
   // ---- pins: one tab stop, on the pinned member or the first ----
   function rove() {
     var stop = pinN !== null ? pinN : order[0];
@@ -345,6 +381,8 @@ export async function initCity(root, viewer, focus) {
     info.innerHTML = litN === null ? IDLE : describe(byN[litN]);
     void retint();
   });
+  on(play, 'click', function () { run(t >= END ? 0 : END); });
+  on(slider, 'input', function () { stop(); pose(Number(slider.value)); });
   on(mv, 'camera-change', onCamera);
   on(window, 'resize', onCamera);
   var themeOff = onTheme(retint, on);
@@ -355,10 +393,12 @@ export async function initCity(root, viewer, focus) {
       homeFov = mv.getFieldOfView();
       home();
       mv.jumpCameraToGoal();
-      // LoopOnce, held a hair short of the end: three clamps a LoopOnce action that reaches it
+      // LoopOnce, so the clip's last frame is the raised city rather than a wrap to the ground
       mv.play({ repetitions: 1 });
       mv.pause();
-      mv.currentTime = END - 1e-4;
+      play.disabled = false;
+      slider.disabled = false;
+      pose(t);
       onCamera();
       revealPainted(mv, retint).then(resolve);
     }
@@ -384,6 +424,9 @@ export async function initCity(root, viewer, focus) {
     target: function () { return mv.getCameraTarget().toString(); },
     panel: function () { return info.textContent; },
     pick: function (x, y) { return pick({ clientX: x, clientY: y }); },
+    animations: function () { return mv.availableAnimations; },
+    time: function () { return t; },
+    pose: function (v) { stop(); pose(v); },
     photo: function () {
       Array.prototype.forEach.call(mv.querySelectorAll('[slot^="hotspot-"]'), function (el) { el.style.visibility = 'hidden'; });
     },
@@ -392,6 +435,7 @@ export async function initCity(root, viewer, focus) {
   return {
     select: function (n) { if (pin(member(n))) frame(pinN); },
     dispose: function () {
+      stop();
       if (raf) cancelAnimationFrame(raf);
       themeOff();
       ac.abort();
