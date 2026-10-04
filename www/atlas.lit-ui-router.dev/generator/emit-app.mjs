@@ -11,6 +11,8 @@
 //   app/public/sheets/<id>.html   one fragment per sheet
 //   app/public/sheets/city.html   the gallery-only 3D plate, same treatment
 //   app/public/models/bricks.glb  sheet 2's seated model, the app-only bricks plate's glTF binary
+//   app/public/models/city.glb    sheet 7's city as measured, for the 3D city plate (city-glb.mjs)
+//   app/public/models/plant.glb   the same city crowned by its working plants, for the working twin
 //   app/public/sheets/atlas.css   the shared sheet chrome, lifted from chrome.mjs
 //   app/public/manifest.json      one row per sheet + the `extras` rows + the cover
 // Read, not written: app/public/thumbs/<id>.webp — generator/thumbs.mjs draws
@@ -24,6 +26,7 @@ import { join } from 'node:path';
 import { CSS, DATE, TOTAL, chipBreaks, plateRatio, sheetSection } from './chrome.mjs';
 import { CITY_META, PLANT_META, cityInitModule, cityMarkup, plantMarkup } from './city-scene.mjs';
 import { BRICKS_GLB, BRICKS_INIT_DTS, BRICKS_META, bricksGlb, bricksInitModule, bricksMarkup } from './brick-scene.mjs';
+import { CITY_GLB, PLANT_GLB, cityModel } from './city-glb.mjs';
 import { ICONS_DTS, iconsModule } from './icons.mjs';
 import { assertLabels, labelsFor } from './labels.mjs';
 import { cityHero } from './sheet7.mjs';
@@ -358,6 +361,8 @@ export function emitApp({ sheets, appendix = [], interactive, appendixInteractiv
   writeFileSync(join(generatedDir, 'bricks-init.d.ts'), BRICKS_INIT_DTS);
   mkdirSync(join(publicDir, 'models'), { recursive: true });
   writeFileSync(join(publicDir, BRICKS_GLB), bricksGlb());
+  writeFileSync(join(publicDir, CITY_GLB), cityModel({ plant: false }).glb);
+  writeFileSync(join(publicDir, PLANT_GLB), cityModel({ plant: true }).glb);
   writeFileSync(join(generatedDir, 'icons.js'), iconsModule());
   writeFileSync(join(generatedDir, 'icons.d.ts'), ICONS_DTS);
   const extras = scenes.map(([meta, refs]) => ({
