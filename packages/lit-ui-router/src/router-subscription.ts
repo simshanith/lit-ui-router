@@ -43,8 +43,14 @@ export class RouterSubscribers {
     callback(router, () => this.pending.delete(deliver));
   }
 
-  /** Hands every kept subscriber `router`, once, and forgets them. */
+  /**
+   * Hands every kept subscriber `router`, once, and forgets them.
+   *
+   * A subscriber that throws does not keep the router from the others; its
+   * error goes to {@link reportFailures} once all have it.
+   */
   deliver(router: UIRouterLit): void {
+    const failures: unknown[] = [];
     for (const deliver of [...this.pending]) {
       // An earlier subscriber may have disconnected this one, unsubscribing it.
       if (!this.pending.delete(deliver)) {
@@ -53,13 +59,30 @@ export class RouterSubscribers {
       try {
         deliver(router);
       } catch (thrown) {
-        queueMicrotask(() => {
-          throw thrown;
-        });
+        failures.push(thrown);
       }
     }
+    reportFailures(failures);
   }
 }
+
+/**
+ * Reports each failure through `reportError`, as the platform reports a
+ * throwing event listener. Without it (Node, DOM emulators) throws instead:
+ * the one error, or an `AggregateError` of several.
+ */
+const reportFailures = (failures: unknown[]): void => {
+  if (!failures.length) {
+    return;
+  }
+  if (typeof globalThis.reportError === 'function') {
+    failures.forEach((failure) => globalThis.reportError(failure));
+    return;
+  }
+  throw failures.length === 1
+    ? failures[0]
+    : new AggregateError(failures, 'router upgrade subscribers threw');
+};
 
 /**
  * What {@link subscribeRouter} found: the router, and the unsubscribe to call
