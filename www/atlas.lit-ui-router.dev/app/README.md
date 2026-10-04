@@ -70,7 +70,7 @@ mass crowned by a working plant), one of the two states that load a library on e
 its `sheets`, and so invisible to the ascent order, the ← / → walk and the server's narrowed
 `/sheet/{num:…}` — a rail entry and a cover card, nothing more.
 
-`atlas.bricks` is the third `extras` row, filed after the plant: sheet 2's finished model in the
+`atlas.bricks` is the third `extras` row, seated after 2B in the rail and the index: sheet 2's finished model in the
 round, a `<model-viewer>` loading `public/models/bricks.glb`, with the sheet's exploded view as its
 one clip (`assemble`), three corner buttons and a numbered badge per brick. `<atlas-bricks>`
 extends `<atlas-city>` and keeps its pin seam and teardown; only the generated module it calls

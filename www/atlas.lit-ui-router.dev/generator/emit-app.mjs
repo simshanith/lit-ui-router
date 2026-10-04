@@ -209,8 +209,8 @@ function issueLogOf(rows) {
         title: row.title, rev: head[1], desc: firstClause(desc) });
     }
   }
-  // the 3D plates seat right after 7B, in the manifest's order
-  const SEAT = { city: '7B·', plant: '7B··', bricks: '7B···' };
+  // each 3D plate seats after the last sheet of its own group, in the manifest's order
+  const SEAT = { city: '7B·', plant: '7B··', bricks: '2B·' };
   const order = (a, b) => bySheet(SEAT[a.num] ?? a.num, SEAT[b.num] ?? b.num);
   const dated = entries.filter((e) => e.date)
     .sort((a, b) => b.date.localeCompare(a.date) || order(a, b) || b.rev.localeCompare(a.rev));

@@ -183,17 +183,23 @@ export function allSheets(manifest: Manifest): SheetRow[] {
 }
 
 /**
- * The ascent as the rail and the index file it: the numbered sheets with the
- * 3D plates seated right after 7B — the city, then its working twin. They are
- * sheet 7's own plates in the round, so that is where they belong, not at the
- * end of the list.
+ * The ascent as the rail and the index file it: the numbered sheets, each 3D
+ * plate seated after the last sheet of the group its head names — the city and
+ * its working twin after 7B, the bricks after 2B. They are those sheets' own
+ * plates in the round, so that is where they belong, not at the end of the list.
  */
 export type AscentRow = { kind: 'sheet'; row: SheetRow } | { kind: 'city'; row: ExtraRow };
+const group = (num: string): number => Number.parseInt(num, 10);
+/** 'SHEET 2 · 3D' → 2 */
+const groupOf = (row: ExtraRow): number => group(row.shno.replace(/^SHEET /, ''));
 export function ascent(manifest: Manifest): AscentRow[] {
-  const scenes = (manifest.extras ?? []).map((row): AscentRow => ({ kind: 'city', row }));
-  return manifest.sheets.flatMap((row): AscentRow[] =>
-    row.num === '7B' ? [{ kind: 'sheet', row }, ...scenes] : [{ kind: 'sheet', row }],
-  );
+  const lastOf = new Map<number, string>();
+  for (const row of manifest.sheets) lastOf.set(group(row.num), row.num);
+  const scenes = manifest.extras ?? [];
+  return manifest.sheets.flatMap((row): AscentRow[] => [
+    { kind: 'sheet', row },
+    ...scenes.filter((extra) => lastOf.get(groupOf(extra)) === row.num).map((extra): AscentRow => ({ kind: 'city', row: extra })),
+  ]);
 }
 
 /** A 3D plate's state name: the manifest id under the shell. */

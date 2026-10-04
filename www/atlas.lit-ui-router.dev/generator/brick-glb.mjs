@@ -59,14 +59,15 @@ export function toModel(parts, x, y, z) {
 
 // One primitive's triangle soup: flat-shaded, so every face carries its own vertices.
 function soup() {
-  return { pos: [], nrm: [], idx: [], lines: false };
+  return { pos: [], nrm: [], idx: [], col: [], lines: false };
 }
-function quad(s, a, b, c, d) {
+// `shade` is a brightness per corner, multiplied into the material as COLOR_0
+function quad(s, a, b, c, d, shade = [1, 1, 1, 1]) {
   const u = a.map((v, i) => b[i] - v), w = a.map((v, i) => d[i] - v);
   const n = [u[1] * w[2] - u[2] * w[1], u[2] * w[0] - u[0] * w[2], u[0] * w[1] - u[1] * w[0]];
   const l = Math.hypot(...n);
   const base = s.pos.length / 3;
-  for (const p of [a, b, c, d]) { s.pos.push(...p); s.nrm.push(n[0] / l, n[1] / l, n[2] / l); }
+  [a, b, c, d].forEach((p, i) => { s.pos.push(...p); s.nrm.push(n[0] / l, n[1] / l, n[2] / l); s.col.push(shade[i], shade[i], shade[i]); });
   s.idx.push(base, base + 1, base + 2, base, base + 2, base + 3);
 }
 function segment(s, a, b) {
@@ -76,15 +77,20 @@ function segment(s, a, b) {
 }
 
 // A box in node-local units [0..w] × [0..h] × [0..d]: top to `top`, the rest to `side`.
-// Winding is counter-clockwise seen from outside.
+// Winding is counter-clockwise seen from outside. Every face is graded: the cap from
+// its near corner across to the far one, each flank from its top edge down.
+const CAP_FAR = 0.82, FLANK_FOOT = 0.7;
 function box(top, side, w, h, d) {
   const P = (x, y, z) => [x, y, z];
-  quad(top, P(0, h, 0), P(0, h, d), P(w, h, d), P(w, h, 0));
-  quad(side, P(0, 0, 0), P(w, 0, 0), P(w, 0, d), P(0, 0, d));
-  quad(side, P(0, 0, d), P(w, 0, d), P(w, h, d), P(0, h, d));
-  quad(side, P(w, 0, 0), P(0, 0, 0), P(0, h, 0), P(w, h, 0));
-  quad(side, P(w, 0, d), P(w, 0, 0), P(w, h, 0), P(w, h, d));
-  quad(side, P(0, 0, 0), P(0, 0, d), P(0, h, d), P(0, h, 0));
+  const cap = (x, z) => 1 - (1 - CAP_FAR) * ((x / w + z / d) / 2);
+  const foot = (y) => (y === h ? 1 : FLANK_FOOT);
+  const flank = (a, b, c, e) => quad(side, a, b, c, e, [a, b, c, e].map((v) => foot(v[1])));
+  quad(top, P(0, h, 0), P(0, h, d), P(w, h, d), P(w, h, 0), [cap(0, 0), cap(0, d), cap(w, d), cap(w, 0)]);
+  quad(side, P(0, 0, 0), P(w, 0, 0), P(w, 0, d), P(0, 0, d), [FLANK_FOOT, FLANK_FOOT, FLANK_FOOT, FLANK_FOOT]);
+  flank(P(0, 0, d), P(w, 0, d), P(w, h, d), P(0, h, d));
+  flank(P(w, 0, 0), P(0, 0, 0), P(0, h, 0), P(w, h, 0));
+  flank(P(w, 0, d), P(w, 0, 0), P(w, h, 0), P(w, h, d));
+  flank(P(0, 0, 0), P(0, 0, d), P(0, h, d), P(0, h, 0));
 }
 // Ink edges stand a hair proud of the faces, so a face never wins their depth test.
 const PROUD = 0.004;
@@ -108,7 +114,8 @@ function stud(cap, side, edge, cx, cz, y0) {
   const base = cap.pos.length / 3;
   cap.pos.push(cx, t, cz);
   cap.nrm.push(0, 1, 0);
-  for (const [x, z] of ring) { cap.pos.push(x, t, z); cap.nrm.push(0, 1, 0); }
+  cap.col.push(1, 1, 1);
+  for (const [x, z] of ring) { cap.pos.push(x, t, z); cap.nrm.push(0, 1, 0); cap.col.push(1, 1, 1); }
   for (let k = 0; k < SEG; k++) cap.idx.push(base, base + 1 + ((k + 1) % SEG), base + 1 + k);
   for (let k = 0; k < SEG; k++) {
     const [x1, z1] = ring[k], [x2, z2] = ring[(k + 1) % SEG];
@@ -186,7 +193,9 @@ export function brickGlb(parts, { explode = new Map() } = {}) {
       if (p.lines) return { attributes: { POSITION: position }, indices, material: p.mat, mode: 1 };
       triangles += p.idx.length / 3;
       const normal = accessor(new Float32Array(p.nrm), 'VEC3', 5126, 34962);
-      return { attributes: { POSITION: position, NORMAL: normal }, indices, material: p.mat };
+      if (p.col.length !== p.pos.length) throw new Error(`brick-glb: ${part.kind}-${part.id} grades ${p.col.length / 3} of ${p.pos.length / 3} vertices`);
+      const colour = accessor(new Float32Array(p.col), 'VEC3', 5126, 34962);
+      return { attributes: { POSITION: position, NORMAL: normal, COLOR_0: colour }, indices, material: p.mat };
     });
     const name = `${part.kind}-${part.id}`;
     meshes.push({ name, primitives });
