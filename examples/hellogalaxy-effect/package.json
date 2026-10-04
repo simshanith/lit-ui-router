@@ -15,8 +15,8 @@
     "@uirouter/visualizer": "^7.2.1",
     "effect": "^3.22.1",
     "lit": "^3.3.3",
-    "lit-ui-router": "^1.16.0",
-    "lit-ui-router-effect": "^0.1.3"
+    "lit-ui-router": "^1.16.2",
+    "lit-ui-router-effect": "^0.2.0"
   },
   "devDependencies": {
     "typescript": "^7.0.2",
