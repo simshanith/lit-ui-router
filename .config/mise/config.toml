@@ -112,7 +112,16 @@ NPM_CONFIG_FUND = "false"
 
 [tasks.lint_actionlint]
 description = "Lint GitHub Actions workflows for syntax/type errors"
-run = "actionlint"
+usage = '''
+flag "--github" help="Print GitHub workflow commands; set on Actions" env="GITHUB_ACTIONS"
+'''
+# --github: actionlint's documented workflow-command template, plus the rule as title.
+run = '''
+{% raw %}if [ "${usage_github:-}" = true ]; then
+  exec actionlint -format '{{range $err := .}}::error file={{$err.Filepath}},line={{$err.Line}},col={{$err.Column}},endColumn={{$err.EndColumn}},title={{$err.Kind}}::{{$err.Message}}%0A```%0A{{replace $err.Snippet "\\n" "%0A"}}%0A```\n{{end}}'
+fi
+exec actionlint{% endraw %}
+'''
 
 [tasks.lint_zizmor]
 # --offline: keep local and CI runs identical (online audits self-enable when a GH token is in env)
