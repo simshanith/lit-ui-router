@@ -69,6 +69,8 @@ export interface ExtraRow {
   file: string;
   /** Where the flat set draws it — a gallery anchor, not a page; '' where it draws none. */
   standalone: string;
+  /** Paths under the app's base, photographed from the built app by generator/thumbs.mjs. */
+  thumb: Thumb;
   refs: string[];
 }
 

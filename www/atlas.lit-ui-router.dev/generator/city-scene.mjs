@@ -279,7 +279,7 @@ const BODY = `$$FOCUS  var stage = document.getElementById('cs-canvas');
   function boot(THREE) {
     var renderer;
     try {
-      renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     } catch $$CATCH{
       note('THIS PLATE NEEDS WEBGL — SHEET 7 DRAWS THE SAME CITY FLAT');
       return;
@@ -1118,6 +1118,8 @@ const BODY = `$$FOCUS  var stage = document.getElementById('cs-canvas');
       zoom: function () { return camera.zoom; },
       tweening: function () { return tween !== null; },
       reset: home,
+      // the card photograph clears to alpha 0; a theme turn's paint() restores 1
+      clear: function (alpha) { renderer.setClearColor(new THREE.Color(pal().paper), alpha); draw(); },
       target: function () { return { x: target.x, y: target.y, z: target.z }; },
       hovered: function () { return litN; },
       pinned: function () { return pinN; },

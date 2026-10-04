@@ -21,14 +21,19 @@
 //   app/public/thumbs/<id>.webp        the light-theme picture
 //   app/public/thumbs/<id>-dark.webp   the same crop in cyanotype
 //
-// Run it AFTER build.mjs (it photographs the flat set build.mjs writes), then
-// run build.mjs again so the manifest can assert every card has its picture:
+// It photographs two things build.mjs's output feeds: the flat set build.mjs
+// writes, and — for the two 3D plates, which only the app raises — the BUILT
+// app's prerendered `/city/` and `/plant/` pages. So it runs after build.mjs
+// and the app build, and build.mjs runs again so the manifest can assert every
+// card has its picture:
 //
 //   node www/atlas.lit-ui-router.dev/generator/build.mjs www/atlas.lit-ui-router.dev
+//   npm --prefix www/atlas.lit-ui-router.dev/app run build
 //   node www/atlas.lit-ui-router.dev/generator/thumbs.mjs www/atlas.lit-ui-router.dev
 //   node www/atlas.lit-ui-router.dev/generator/build.mjs www/atlas.lit-ui-router.dev
+//   npm --prefix www/atlas.lit-ui-router.dev/app run build
 //
-// Only a NEW plate needs the three-pass dance; a re-run over an unchanged set
+// Only a NEW plate needs the five-pass dance; a re-run over an unchanged set
 // is idempotent, and build.mjs alone stays green.
 //
 // Optional flags, after the outdir:
@@ -38,7 +43,7 @@
 import { createRequire } from 'node:module';
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { extname, join, normalize } from 'node:path';
 import { ROOT } from './basis.mjs';
 import { THUMB_DIR, THUMB_H, THUMB_W, thumbFile } from './thumb-spec.mjs';
@@ -80,6 +85,8 @@ const CYTOSCAPE = new URL('../app/node_modules/cytoscape/dist/cytoscape.min.js',
 const SCALE = 2;
 /** Wide enough that a plate's own `min-width: 1000px` never has to bite. */
 const VIEWPORT = { width: 1400, height: 1000 };
+/** Portrait, so the 3D stage (80vh tall) comes out card-shaped. */
+const SCENE_VIEWPORT = { width: 900, height: 1200 };
 /** WebP's lossy quality. Line art with an alpha channel is the dearest thing
  *  this codec draws, and turning the knob barely moves it — 0.70 saves 5% on
  *  the heaviest plate — so the picture keeps the honest setting. */
@@ -174,6 +181,11 @@ const TUNING = {
     font: 20,
     anchor: 'top',
   },
+  // THE TWO 3D PLATES are the app's own WebGL canvas at its home pose, on a
+  // transparent clear. The camera fits the block city to the stage's width, so
+  // the box takes that width and the crop drops the empty sky above it.
+  city: { target: '#cs-canvas canvas', zoom: 1.08, crop: { top: 0.24, bottom: 1 } },
+  plant: { target: '#cs-canvas canvas', zoom: 1.08, crop: { top: 0.24, bottom: 1 } },
   // plates whose whole figure reads as grey at card width, enlarged into a detail
   '3a': { zoom: 1.3, x: 0.1 },
   4: { zoom: 1.2, x: 0.45 },
@@ -208,12 +220,12 @@ const TYPES = {
   '.webp': 'image/webp',
 };
 
-/** The flat set, served from disk: the standalone pages are what is photographed. */
-async function serveSet(dir) {
+/** A built tree, served from disk: `/` and every `…/` answer with `index`. */
+async function serveSet(dir, index) {
   const server = createServer((req, res) => {
     void (async () => {
       const path = decodeURIComponent(new URL(req.url ?? '/', 'http://atlas').pathname);
-      const file = normalize(join(dir, path === '/' ? '/gallery.html' : path));
+      const file = normalize(join(dir, path.endsWith('/') ? `${path}${index}` : path));
       if (!file.startsWith(dir)) {
         res.writeHead(403).end('no');
         return;
@@ -383,12 +395,30 @@ async function toWebp(page, { png, dx, dy, dw, dh }) {
   );
 }
 
+/**
+ * A 3D plate's scene, settled on a transparent clear. Three arrives on demand,
+ * so the hook is the signal; the theme's paint() resets the clear to opaque, so
+ * `clear(0)` comes after the theme is set.
+ */
+async function settleScene(page) {
+  await page.waitForFunction(() => window.__cityScene, null, { timeout: 30000 });
+  await page.waitForFunction(() => window.__cityScene.tweening() === false, null, { timeout: 30000 });
+  await page.evaluate(
+    () =>
+      new Promise((resolve) => {
+        window.__cityScene.clear(0);
+        requestAnimationFrame(() => requestAnimationFrame(resolve));
+      }),
+  );
+}
+
 /** One card's picture, in one theme. */
-async function shoot(page, { id, standalone, theme, origin }) {
+async function shoot(page, { id, standalone, scene, theme, origin, appOrigin }) {
   const tune = EFFECTIVE_TUNING[id] ?? {};
   await page.emulateMedia({ colorScheme: theme });
-  await page.goto(`${origin}/${standalone}`, { waitUntil: 'load' });
+  await page.goto(scene ? `${appOrigin}/${id}/` : `${origin}/${standalone}`, { waitUntil: 'load' });
   await page.evaluate((t) => document.documentElement.setAttribute('data-theme', t), theme);
+  if (scene) await settleScene(page);
   const target = tune.target ?? DEFAULT_TARGET;
   const zoom = Math.max(1, tune.zoom ?? 1);
   const contain = tune.fit === 'contain';
@@ -452,12 +482,15 @@ async function shoot(page, { id, standalone, theme, origin }) {
 }
 
 const manifest = JSON.parse(readFileSync(join(OUT, 'app', 'public', 'manifest.json'), 'utf8'));
-// The city card draws `cover.hero`, an SVG already in the manifest, so it is
-// not photographed here; every other card is.
-const allCards = [...manifest.sheets, ...manifest.appendix].map((row) => ({
-  id: row.id,
-  standalone: row.standalone,
-}));
+// The 3D plates are photographed in the built app, the rest in the flat set.
+const allCards = [
+  ...[...manifest.sheets, ...manifest.appendix].map((row) => ({
+    id: row.id,
+    standalone: row.standalone,
+    scene: false,
+  })),
+  ...manifest.extras.map((row) => ({ id: row.id, standalone: row.standalone, scene: true })),
+];
 
 let cards = allCards;
 if (onlyIds) {
@@ -473,9 +506,13 @@ if (onlyIds) {
 const dir = outDir ?? join(OUT, 'app', 'public', THUMB_DIR);
 mkdirSync(dir, { recursive: true });
 
-const server = await serveSet(normalize(join(OUT)));
-const { port } = server.address();
-const origin = `http://127.0.0.1:${String(port)}`;
+const server = await serveSet(normalize(join(OUT)), 'gallery.html');
+const origin = `http://127.0.0.1:${String(server.address().port)}`;
+const appDist = normalize(join(OUT, 'app', 'dist'));
+const appServer = cards.some((card) => card.scene) ? await serveSet(appDist, 'index.html') : null;
+if (appServer && !existsSync(join(appDist, 'city', 'index.html')))
+  throw new Error(`thumbs.mjs: no built app at ${appDist} — run the app build first`);
+const appOrigin = appServer ? `http://127.0.0.1:${String(appServer.address().port)}` : '';
 const browser = await chromium.launch();
 let bytes = 0;
 try {
@@ -484,17 +521,20 @@ try {
     route.fulfill({ contentType: 'text/javascript', body: readFileSync(CYTOSCAPE, 'utf8') }),
   );
   for (const card of cards) {
+    if (card.scene) await page.setViewportSize(SCENE_VIEWPORT);
     for (const theme of ['light', 'dark']) {
-      const shot = await shoot(page, { ...card, theme, origin });
+      const shot = await shoot(page, { ...card, theme, origin, appOrigin });
       const webp = await toWebp(page, shot);
       const file = join(dir, thumbFile(card.id, theme));
       writeFileSync(file, webp);
       bytes += webp.length;
     }
+    if (card.scene) await page.setViewportSize(VIEWPORT);
   }
 } finally {
   await browser.close();
   server.close();
+  appServer?.close();
 }
 console.log(
   `thumbs: ${String(cards.length)} plates × 2 themes · ` +

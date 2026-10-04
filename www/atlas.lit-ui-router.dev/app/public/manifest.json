@@ -1554,6 +1554,10 @@
         "mode": "interactive",
         "basis": "real 3d isometric"
       },
+      "thumb": {
+        "light": "thumbs/city.webp",
+        "dark": "thumbs/city-dark.webp"
+      },
       "refs": [
         "7",
         "7A"
@@ -1574,6 +1578,10 @@
         "projection": "isometric",
         "mode": "interactive",
         "basis": "real 3d isometric"
+      },
+      "thumb": {
+        "light": "thumbs/plant.webp",
+        "dark": "thumbs/plant-dark.webp"
       },
       "refs": [
         "7",

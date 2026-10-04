@@ -749,27 +749,22 @@
         border-bottom: 1px solid var(--line);
         background: color-mix(in oklab, var(--paper) 28%, transparent);
       }
-      .card-pic > img,
-      .card-pic > svg {
+      .card-pic > img {
         opacity: 0;
       }
       .card:hover .card-pic > img,
-      .card:hover .card-pic > svg,
-      .card:focus-within .card-pic > img,
-      .card:focus-within .card-pic > svg {
+      .card:focus-within .card-pic > img {
         opacity: 1;
       }
       @media (prefers-reduced-motion: no-preference) {
-        .card-pic > img,
-        .card-pic > svg {
+        .card-pic > img {
           transition: opacity 160ms ease;
         }
       }
       /* NO POINTER, NO REVEAL: there is no hover to answer, so the plate
          stands in its window at rest. The field still runs behind it. */
       @media (hover: none) {
-        .card-pic > img,
-        .card-pic > svg {
+        .card-pic > img {
           opacity: 1;
         }
       }
@@ -802,17 +797,6 @@
       }
       :root[data-theme='dark'] .card-pic .d {
         display: block;
-      }
-      /* The city's picture is the cover's own hero SVG — the whole drawing at
-         the card's width, top-anchored, exactly as a plate's raster is, and
-         transparent below where the body's paper takes over. */
-      .card-pic-svg svg {
-        display: block;
-        width: 100%;
-        height: auto;
-        min-width: 0;
-        min-height: 0;
-        max-width: none;
       }
       /* THE BODY — the card's paper, carried TRANSLUCENT so the lattice reads
          behind the writing as well as through the window. 76% over `--ground`

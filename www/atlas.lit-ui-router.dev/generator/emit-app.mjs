@@ -13,7 +13,8 @@
 //   app/public/sheets/atlas.css   the shared sheet chrome, lifted from chrome.mjs
 //   app/public/manifest.json      one row per sheet + the `extras` rows + the cover
 // Read, not written: app/public/thumbs/<id>.webp — generator/thumbs.mjs draws
-// those, and a card with no picture stops the build here.
+// those (the 3D cards' from the built app), and a card with no picture stops
+// the build here.
 //   app/src/generated/city-init.js  the 3D scene as a module (three is bundled)
 //   app/src/generated/icons.js      the icon sprite and key-id table (icons.mjs)
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -263,9 +264,10 @@ export function emitApp({ sheets, appendix = [], interactive, appendixInteractiv
   writeFileSync(join(sheetsDir, 'atlas.css'), `${CSS}\n`);
 
   // EVERY CARD CARRIES A PICTURE. The pictures are drawn by generator/thumbs.mjs
-  // against the flat set this same build just wrote, so a NEW plate needs one
-  // extra pass: build, thumbs, build. Nothing here draws them — this only
-  // refuses to emit a manifest that would leave a card blank.
+  // against the flat set this same build just wrote, and the 3D cards' against
+  // the built app, so a NEW plate takes build, app build, thumbs, build, app
+  // build. Nothing here draws them — this only refuses to emit a manifest that
+  // would leave a card blank.
   const thumbsDir = join(publicDir, THUMB_DIR);
   const thumbFor = (id) => {
     const paths = thumbPaths(id);
@@ -362,6 +364,7 @@ export function emitApp({ sheets, appendix = [], interactive, appendixInteractiv
     scale: index[meta.id]?.scale ?? '',
     verdict: index[meta.id]?.verdict ?? '',
     labels: labelsFor(meta.id),
+    thumb: thumbFor(meta.id),
     refs,
   }));
 

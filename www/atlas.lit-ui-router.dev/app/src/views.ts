@@ -798,12 +798,10 @@ const sheetCard = (sheet: SheetRow): TemplateResult => html`
   </article>
 `;
 
-// The 3D plates have no raster: `cover.hero` is already a build-time SVG in the
-// manifest, and drawing it again costs the cover nothing but DOM.
-const cityCard = (extra: ExtraRow, hero: string): TemplateResult => html`
+/** A 3D plate's card: the same three layers as a sheet's, its picture taken from the scene. */
+const cityCard = (extra: ExtraRow): TemplateResult => html`
   <article class="card">
-    <div class="card-pic card-pic-svg">${unsafeHTML(hero)}</div>
-    ${cardWindow()}
+    ${cardPic(extra.thumb)} ${cardWindow()}
     <div class="card-body">
       <span class="n">${extra.shno} · REV ${extra.rev}</span>
       <h3>
@@ -898,7 +896,7 @@ export const GalleryView: RoutedLitTemplate<ManifestResolves> = (props) => {
             ${shownAscent.map((entry) =>
               entry.kind === 'sheet'
                 ? sheetCard(entry.row)
-                : cityCard(entry.row, manifest.cover.hero),
+                : cityCard(entry.row),
             )}
           </div>
         </div>`

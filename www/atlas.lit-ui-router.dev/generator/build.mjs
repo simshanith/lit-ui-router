@@ -385,14 +385,17 @@ mise exec -- pnpm exec wrangler pages deploy dist --project-name altitude-atlas 
 plate — \`app/public/thumbs/<id>.webp\` and \`<id>-dark.webp\`, one per theme, tracked
 generated files like the fragments beside them. \`generator/thumbs.mjs\` draws them by
 photographing the flat set above in headless Chromium (playwright, reached through
-\`tools/embed-heights\`; the lanes' cytoscape is served from \`app/node_modules\`, so the
-step needs no network), and \`build.mjs\` REFUSES to emit a manifest whose card has no
-picture. A new plate therefore takes one extra pass:
+\`tools/embed-heights\`; the lanes' cytoscape is served from \`app/node_modules\`), and the
+two 3D cards (\`city\`, \`plant\`) from the BUILT app's prerendered \`/city/\` and \`/plant/\`
+pages, their WebGL stage cleared to transparent for the shot. \`build.mjs\` REFUSES to emit
+a manifest whose card has no picture, so a new plate takes the full order:
 
 \`\`\`bash
 node www/atlas.lit-ui-router.dev/generator/build.mjs www/atlas.lit-ui-router.dev   # writes the flat set, then stops on the missing picture
+npm --prefix www/atlas.lit-ui-router.dev/app run build                             # the app the 3D cards are shot from
 node www/atlas.lit-ui-router.dev/generator/thumbs.mjs www/atlas.lit-ui-router.dev  # photographs it
 node www/atlas.lit-ui-router.dev/generator/build.mjs www/atlas.lit-ui-router.dev   # green
+npm --prefix www/atlas.lit-ui-router.dev/app run build                             # the app with every picture
 \`\`\`
 
 The picture is the card's BACKDROP, not a strip across its head: the whole plate laid at

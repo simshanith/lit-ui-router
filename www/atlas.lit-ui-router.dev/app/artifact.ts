@@ -44,7 +44,7 @@ if (missing.length > 0)
 // there is no origin to load it from, so every path a card can ask for is
 // baked as a data: url and `thumbSrc()` resolves against this map instead.
 const thumbs: Record<string, string> = {};
-for (const row of [...manifest.sheets, ...manifest.appendix]) {
+for (const row of [...manifest.sheets, ...manifest.appendix, ...manifest.extras]) {
   for (const path of [row.thumb.light, row.thumb.dark]) {
     const file = join(PUBLIC, path);
     if (!existsSync(file)) throw new Error(`artifact: no card picture at public/${path}`);
