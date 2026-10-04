@@ -181,12 +181,11 @@ const TUNING = {
     font: 20,
     anchor: 'top',
   },
-  // THE TWO 3D PLATES are the app's own WebGL canvas at its home pose, on a
-  // transparent clear. The camera fits the block city to the stage's width, so
-  // the box takes that width and the crop drops the empty sky above it.
-  city: { target: '#cs-canvas canvas', zoom: 1.08, crop: { top: 0.24, bottom: 1 } },
-  plant: { target: '#cs-canvas canvas', zoom: 1.08, crop: { top: 0.24, bottom: 1 } },
-  // sheet 2's model is a <model-viewer> on a transparent clear, its badges hidden for the shot
+  // THE 3D PLATES are each a <model-viewer> at its home pose on a transparent
+  // clear, the pins hidden for the shot. The city's camera fills the stage's width,
+  // so the box takes that width and the crop keeps the band the city stands in.
+  city: { target: '#cs-viewer', zoom: 1.08, crop: { top: 0.21, bottom: 0.86 } },
+  plant: { target: '#cs-viewer', zoom: 1.08, crop: { top: 0.17, bottom: 0.86 } },
   bricks: { target: '#bk-viewer', zoom: 1.12, crop: { top: 0.2, bottom: 0.9 } },
   // plates whose whole figure reads as grey at card width, enlarged into a detail
   '3a': { zoom: 1.3, x: 0.1 },
@@ -399,28 +398,19 @@ async function toWebp(page, { png, dx, dy, dw, dh }) {
 }
 
 /**
- * A 3D plate's scene, settled on a transparent clear. Three arrives on demand,
- * so the hook is the signal; the theme's paint() resets the clear to opaque, so
- * `clear(0)` comes after the theme is set.
+ * A 3D plate's model, settled: model-viewer arrives on demand, so the plate's
+ * hook is the signal, and its `ready` holds until the theme's colours are on the
+ * model; then the pins step aside and the loading bar has faded.
  */
 async function settleScene(page) {
   await page.waitForFunction(() => window.__cityScene || window.__bricksScene, null, { timeout: 30000 });
-  if (await page.evaluate(() => Boolean(window.__bricksScene))) {
-    await page.evaluate(async () => {
-      await window.__bricksScene.ready;
-      window.__bricksScene.photo();
-      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-    });
-    return;
-  }
-  await page.waitForFunction(() => window.__cityScene.tweening() === false, null, { timeout: 30000 });
-  await page.evaluate(
-    () =>
-      new Promise((resolve) => {
-        window.__cityScene.clear(0);
-        requestAnimationFrame(() => requestAnimationFrame(resolve));
-      }),
-  );
+  await page.evaluate(async () => {
+    const scene = window.__cityScene ?? window.__bricksScene;
+    await scene.ready;
+    scene.photo();
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  });
+  await page.waitForTimeout(1500);
 }
 
 /** One card's picture, in one theme. */
