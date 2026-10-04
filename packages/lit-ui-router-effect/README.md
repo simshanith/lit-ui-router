@@ -13,7 +13,7 @@ A thin wrapper on top of `lit-ui-router` — it registers no custom elements and
 ## Features
 
 - **`routeRef(router)`** — a `SubscriptionRef<RouteSnapshot>` of the current state, params, and transition; one ref (and one transition hook) per router, attached lazily on first use
-- **`RouterRefController`** — follows the route ref of the nearest `<ui-router>` context, discovered automatically through the `ui-router-context` event; no prop drilling and no wiring in router configuration
+- **`RouterRefController`** — follows the route ref of the nearest `<ui-router>` context, requested automatically over the `context-request` protocol; no prop drilling and no wiring in router configuration
 - **`RefController`** — the generic primitive: selects over one or more `SubscriptionRef`s while the host is connected; works with any ref, not just the router's
 - **Lifecycle-safe** — one fiber per controller, forked in `hostConnected` and interrupted in `hostDisconnected`; the value is re-read on every (re)connect so components that re-enter the DOM (e.g. sticky states) never render stale values
 - **Renders before connect** — refs given directly are read at construction, so a host rendered on the server sees the same value a browser would
@@ -85,7 +85,7 @@ new RouterRefController(host, selector, options?)
 ```
 
 - `selector: (route: RouteSnapshot) => T` — the selected expression; the result is exposed as `.value`
-- `options.router` — explicit router instance, skipping context discovery; the route is then read at construction, so `.value` is live before the host connects. A thunk (`() => UIRouter | undefined`) is resolved at construction and again on every `hostConnected`; when it returns `undefined`, the controller discovers the router as if the option were omitted. A host on a page served by `lit-ui-router-ssr` must be handed its router, here or through `setRouter()`: discovery binds the placeholder router `<ui-router>` holds until `hydrateRoot()` sets the app's
+- `options.router` — explicit router instance, skipping context discovery; the route is then read at construction, so `.value` is live before the host connects. A thunk (`() => UIRouter | undefined`) is resolved at construction and again on every `hostConnected`; when it returns `undefined`, the controller discovers the router as if the option were omitted. Discovery subscribes, so on a page served by `lit-ui-router-ssr` the host follows `<ui-router>` from its placeholder router to the app's when `hydrateRoot()` sets it. A `lit-ui-router` that does not hand that router to subscribers leaves the host on the placeholder; hand such a host its router here or through `setRouter()`
 - `options.onChange` — effect invoked when the selected value changes (and once on every (re)connect); useful for resetting component state from route params
 - `options.equals` — comparer for precise, value-based change detection (`Equal.equals` for `Data` values, or any `(a, b) => boolean`); defaults to `Object.is`
 - `options.initialValue` — the value `.value` carries before the router is discovered: before `hostConnected`, and while a host has no router context

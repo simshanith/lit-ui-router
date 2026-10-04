@@ -12,7 +12,12 @@ import {
   ManagedRuntime,
 } from 'effect';
 import { UIRouterLit, UIRouterLitElement } from 'lit-ui-router';
-import { withRouterSync } from 'lit-ui-router/context';
+import {
+  ContextCallback,
+  contextRequestEventName,
+  isRouterContextRequest,
+  withRouterSync,
+} from 'lit-ui-router/context';
 
 import { RefRuntime } from '../ref-controller.js';
 import { RouterRefController } from '../router-ref-controller.js';
@@ -73,6 +78,53 @@ async function interrupted(
   fiber: Fiber.RuntimeFiber<unknown, unknown>,
 ): Promise<boolean> {
   return Exit.isInterrupted(await Effect.runPromise(Fiber.await(fiber)));
+}
+
+interface UpgradingProvider {
+  readonly element: HTMLElement;
+  readonly subscribers: Set<ContextCallback<UIRouterLit>>;
+  readonly requests: number;
+  upgrade(router: UIRouterLit): void;
+}
+
+/** A provider that hands its subscribers the router replacing its placeholder, once. */
+function upgradingProvider(
+  placeholder: UIRouterLit,
+  { honorUnsubscribe = true } = {},
+): UpgradingProvider {
+  const element = document.createElement('div');
+  const subscribers = new Set<ContextCallback<UIRouterLit>>();
+  let router = placeholder;
+  let requests = 0;
+  element.addEventListener(contextRequestEventName, (event) => {
+    if (!isRouterContextRequest(event)) return;
+    event.stopImmediatePropagation();
+    requests++;
+    const { callback } = event;
+    if (!event.subscribe || router !== placeholder) {
+      callback(router, event.subscribe ? () => {} : undefined);
+      return;
+    }
+    subscribers.add(callback);
+    callback(router, () => {
+      if (honorUnsubscribe) subscribers.delete(callback);
+    });
+  });
+  document.body.appendChild(element);
+  cleanups.push(() => element.remove());
+  return {
+    element,
+    subscribers,
+    get requests() {
+      return requests;
+    },
+    upgrade(next) {
+      router = next;
+      const delivered = [...subscribers];
+      subscribers.clear();
+      delivered.forEach((callback) => callback(next, () => {}));
+    },
+  };
 }
 
 async function mountInRouter(
@@ -539,6 +591,192 @@ describe('RouterRefController', () => {
       expect(controller.value).toBe('none');
       expect(warn).toHaveBeenCalledTimes(1);
       expect(warn.mock.calls[0]?.[1]).toBe(host);
+    });
+  });
+
+  describe('router upgrade', () => {
+    async function routers(): Promise<[UIRouterLit, UIRouterLit]> {
+      const placeholder = createTestRouter(testStates);
+      await routerGo(placeholder, 'a');
+      const app = createTestRouter(testStates);
+      await routerGo(app, 'b', { id: '1' });
+      return [placeholder, app];
+    }
+
+    async function mount(
+      host: RouterRefHost,
+      provider: UpgradingProvider,
+    ): Promise<void> {
+      provider.element.appendChild(host);
+      cleanups.push(() => host.remove());
+      await waitForUpdate(host);
+    }
+
+    it('rebinds to the router a provider hands over after its first answer', async () => {
+      const [placeholder, app] = await routers();
+      const provider = upgradingProvider(placeholder);
+      const runtime = recordingRuntime();
+      const onChange = vi.fn();
+      const host = createHost();
+      const controller = new RouterRefController(
+        host,
+        (route) => route.current?.name,
+        { runtime, onChange },
+      );
+      await mount(host, provider);
+      expect(controller.value).toBe('a');
+      expect(provider.subscribers.size).toBe(1);
+      const rendersBefore = host.renderCount;
+
+      provider.upgrade(app);
+
+      expect(controller.value).toBe('b');
+      expect(onChange).toHaveBeenLastCalledWith('b');
+      expect(runtime.fibers).toHaveLength(2);
+      expect(await interrupted(runtime.fibers[0])).toBe(true);
+      await waitForUpdate(host);
+      expect(host.renderCount).toBeGreaterThan(rendersBefore);
+
+      await routerGo(placeholder, 'b', { id: '2' });
+      await routerGo(app, 'b.child', { id: '1' });
+      expect(controller.value).toBe('b.child');
+      await routerGo(app, 'a');
+      expect(controller.value).toBe('a');
+    });
+
+    it('asks again on reconnect after an upgrade', async () => {
+      const [placeholder, app] = await routers();
+      const provider = upgradingProvider(placeholder);
+      const host = createHost();
+      const controller = new RouterRefController(
+        host,
+        (route) => route.current?.name,
+      );
+      await mount(host, provider);
+      provider.upgrade(app);
+
+      host.remove();
+      await mount(host, provider);
+
+      expect(provider.requests).toBe(2);
+      expect(controller.value).toBe('b');
+      await routerGo(app, 'a');
+      expect(controller.value).toBe('a');
+    });
+
+    it('unsubscribes on disconnect', async () => {
+      const [placeholder, app] = await routers();
+      const provider = upgradingProvider(placeholder);
+      const runtime = recordingRuntime();
+      const host = createHost();
+      const controller = new RouterRefController(
+        host,
+        (route) => route.current?.name,
+        { runtime },
+      );
+      await mount(host, provider);
+      expect(provider.subscribers.size).toBe(1);
+
+      host.remove();
+      expect(provider.subscribers.size).toBe(0);
+      provider.upgrade(app);
+
+      expect(controller.value).toBe('a');
+      expect(runtime.fibers).toHaveLength(1);
+    });
+
+    it('ignores a late answer from a provider that keeps it subscribed', async () => {
+      const [placeholder, app] = await routers();
+      const provider = upgradingProvider(placeholder, {
+        honorUnsubscribe: false,
+      });
+      const runtime = recordingRuntime();
+      const host = createHost();
+      const controller = new RouterRefController(
+        host,
+        (route) => route.current?.name,
+        { runtime },
+      );
+      await mount(host, provider);
+      expect(provider.subscribers.size).toBe(1);
+
+      host.remove();
+      provider.upgrade(app);
+
+      expect(controller.value).toBe('a');
+      expect(runtime.fibers).toHaveLength(1);
+    });
+
+    it('asks no provider for an explicit router or a thunk returning one', async () => {
+      const [placeholder, app] = await routers();
+      const provider = upgradingProvider(placeholder);
+      const explicitHost = createHost();
+      const explicit = new RouterRefController(
+        explicitHost,
+        (route) => route.current?.name,
+        { router: placeholder },
+      );
+      const thunkHost = createHost();
+      const thunk = new RouterRefController(
+        thunkHost,
+        (route) => route.current?.name,
+        { router: () => placeholder },
+      );
+      await mount(explicitHost, provider);
+      await mount(thunkHost, provider);
+
+      provider.upgrade(app);
+
+      expect(provider.requests).toBe(0);
+      expect(explicit.value).toBe('a');
+      expect(thunk.value).toBe('a');
+    });
+
+    it('drops the subscription when setRouter hands it a router', async () => {
+      const [placeholder, app] = await routers();
+      const provider = upgradingProvider(placeholder, {
+        honorUnsubscribe: false,
+      });
+      const chosen = createTestRouter(testStates);
+      await routerGo(chosen, 'b', { id: '2' });
+      const host = createHost();
+      const controller = new RouterRefController(host, (route) =>
+        String(route.params.id ?? route.current?.name),
+      );
+      await mount(host, provider);
+      expect(provider.subscribers.size).toBe(1);
+
+      controller.setRouter(chosen);
+      provider.upgrade(app);
+      expect(controller.value).toBe('2');
+
+      host.remove();
+      await mount(host, provider);
+      expect(provider.requests).toBe(1);
+      expect(controller.value).toBe('2');
+    });
+
+    it('follows a real <ui-router> with its one answer', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      cleanups.push(() => warn.mockRestore());
+      const [first, second] = await routers();
+      const runtime = recordingRuntime();
+      const host = createHost();
+      const controller = new RouterRefController(
+        host,
+        (route) => route.current?.name,
+        { runtime },
+      );
+      const uiRouterEl = await mountInRouter(host, first);
+      expect(controller.value).toBe('a');
+
+      uiRouterEl.uiRouter = second;
+      await waitForUpdate(uiRouterEl);
+
+      expect(controller.value).toBe('a');
+      expect(runtime.fibers).toHaveLength(1);
+      await routerGo(first, 'b', { id: '3' });
+      expect(controller.value).toBe('b');
     });
   });
 });
