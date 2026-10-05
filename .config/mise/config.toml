@@ -246,7 +246,7 @@ flag "--output-logs <mode>" help="turbo task output: full | errors-only | new-on
 '''
 run = [
   "mise run //tools/build_and_test:mark_session",
-  "turbo run ci --ui=stream --log-order=stream --summarize --output-logs=\"${usage_output_logs?}\"",
+  "turbo run ci --ui=stream --log-order=stream --summarize --continue=dependencies-successful --output-logs=\"${usage_output_logs?}\"",
   "TURBO_OUTPUT_LOGS=\"${usage_output_logs?}\" mise run test_e2e",
 ]
 

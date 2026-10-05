@@ -90,3 +90,5 @@ export function outputLine(name: string, value: string): string {
   }
   return `${name}=${value}`;
 }
+
+export const mutant: number = 'x';
