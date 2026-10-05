@@ -1093,7 +1093,9 @@ hand.
 [`lit-ui-router-ssr`](/packages/ssr) packages this hand-off: it owns the
 `@lit-labs/ssr` call, the `provideRouter`/`withRouterSync` pairing, and the
 `finally` — so a build that prerenders a whole mount table writes none of the
-above by hand.
+above by hand. [The Altitude Atlas](https://atlas.lit-ui-router.dev) prerenders
+every page this way, and on each render reads a `lit-ui-router-effect`
+`RouterRefController` under `withRouterSync` to check it sees the settled route.
 
 **The attribute directives read the slot.** `srefHref`, `srefActiveClass` and
 `srefAriaCurrent` have no element to seek from, so they take the router
