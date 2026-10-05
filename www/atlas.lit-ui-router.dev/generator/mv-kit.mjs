@@ -15,6 +15,28 @@ export const pinCss = (cls, size, font) => `
 .${cls}.on { background: var(--hue, var(--accent)); color: #F1F0E7; }
 .${cls}:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }`;
 
+/** A model plate's `.fillable` frame: stage, bar and `read` panel in `areas` order; filled, the stage takes what the rest leave. */
+export const frameCss = (p, read, areas) => {
+  const on = (s = '') => `.${p}-frame:fullscreen${s}, .${p}-frame.is-filled${s}`;
+  return `
+.${p}-frame { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-areas: ${areas.map((a) => `"${a}"`).join(' ')}; }
+.${p}-stage { grid-area: stage; min-width: 0; }
+.${p}-bar { grid-area: bar; }
+.${p}-frame > .${read} { grid-area: read; }
+/* positioned inside its grid area, the button keeps the stage's corner wherever the stage stands */
+.${p}-frame > .fill { grid-area: stage; }
+${on()} { box-sizing: border-box; overflow: auto; padding: 8px; grid-template-rows: minmax(min(62vh, 520px), 1fr) auto auto;
+  grid-template-areas: "stage" "bar" "read"; }
+${on(` .${p}-stage`)} { position: relative; min-height: 0; border: 1.5px solid var(--ink); }
+${on(` .${p}-view`)} { position: absolute; inset: 0; height: 100%; }
+${on(` .${p}-bar`)}, ${on(` .${read}`)} { border: 1.5px solid var(--ink); border-top: none; }
+@media (min-width: 1100px) {
+  ${on()} { grid-template-columns: minmax(0, 1fr) clamp(320px, 30vw, 460px); grid-template-rows: minmax(0, 1fr) auto;
+    grid-template-areas: "stage stage" "bar read"; }
+  ${on(` .${read}`)} { border-left: none; }
+}`;
+};
+
 // The script pieces. Each is a run of function declarations, so a body can call them anywhere.
 export const MV_JS = `  // setBaseColorFactor takes linear values, so a token's sRGB bytes are linearised first
   function lin(v) { return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }

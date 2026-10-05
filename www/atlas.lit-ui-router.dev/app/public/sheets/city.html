@@ -20,11 +20,27 @@
 #cs-play::after { content: "GROUND"; display: block; height: 0; overflow: hidden; visibility: hidden; }
 .cs-ctl .touch { display: none; }
 @media (pointer: coarse) { .cs-ctl .mouse { display: none; } .cs-ctl .touch { display: inline; } }
+
+.cs-frame { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-areas: "bar" "stage" "read"; }
+.cs-stage { grid-area: stage; min-width: 0; }
+.cs-bar { grid-area: bar; }
+.cs-frame > .cs-info { grid-area: read; }
+/* positioned inside its grid area, the button keeps the stage's corner wherever the stage stands */
+.cs-frame > .fill { grid-area: stage; }
+.cs-frame:fullscreen, .cs-frame.is-filled { box-sizing: border-box; overflow: auto; padding: 8px; grid-template-rows: minmax(min(62vh, 520px), 1fr) auto auto;
+  grid-template-areas: "stage" "bar" "read"; }
+.cs-frame:fullscreen .cs-stage, .cs-frame.is-filled .cs-stage { position: relative; min-height: 0; border: 1.5px solid var(--ink); }
+.cs-frame:fullscreen .cs-view, .cs-frame.is-filled .cs-view { position: absolute; inset: 0; height: 100%; }
+.cs-frame:fullscreen .cs-bar, .cs-frame.is-filled .cs-bar, .cs-frame:fullscreen .cs-info, .cs-frame.is-filled .cs-info { border: 1.5px solid var(--ink); border-top: none; }
+@media (min-width: 1100px) {
+  .cs-frame:fullscreen, .cs-frame.is-filled { grid-template-columns: minmax(0, 1fr) clamp(320px, 30vw, 460px); grid-template-rows: minmax(0, 1fr) auto;
+    grid-template-areas: "stage stage" "bar read"; }
+  .cs-frame:fullscreen .cs-info, .cs-frame.is-filled .cs-info { border-left: none; }
+}
 .cs-stage { position: relative; border: 1.5px solid var(--ink); background: var(--paper); }
 .cs-stage:focus-within { outline: 2px solid var(--accent); outline-offset: -2px; }
 .cs-view { display: block; width: 100%; height: clamp(520px, 80vh, 1400px); background: var(--paper);
   --poster-color: transparent; --progress-bar-color: var(--accent); }
-.cs-stage:fullscreen .cs-view, .cs-stage.is-filled .cs-view { height: calc(100vh - 92px); }
 .cs-stage.over .cs-view { cursor: pointer; }
 
 .cs-pin { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--hue, var(--ink)); background: var(--paper);
@@ -42,7 +58,7 @@
    is the one place that face earns its keep), a ledger line in the data face at the key
    block's size, and sentences in the prose face at the running text's. Two columns once
    the strip is wide enough to carry them: identity left, sentences right. */
-.cs-info { border-top: 1.5px solid var(--ink); background: var(--paper-2); padding: 14px 18px 16px;
+.cs-info { border: 1.5px solid var(--ink); border-top: none; background: var(--paper-2); padding: 14px 18px 16px;
   display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px 36px; align-items: start;
   min-height: 92px; color: var(--ink); }
 .cs-info h3 { font-family: var(--code); font-size: 16px; font-weight: 600; letter-spacing: 0.04em;
@@ -59,6 +75,8 @@
   .cs-info { grid-template-columns: 300px minmax(0, 1fr); }
   .cs-info > .hint { grid-column: 1 / -1; }
 }
+/* beside the bar, the panel is one column */
+@media (min-width: 1100px) { .cs-frame:fullscreen .cs-info, .cs-frame.is-filled .cs-info { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 560px) {
   .cs-info { padding: 12px 14px 14px; }
   .cs-info h3 { font-size: 15px; }
@@ -108,75 +126,77 @@
   <div class="sheet-head"><span class="proj"><span class="project-mark">THE ALTITUDE ATLAS</span> — INTERACTIVE PLATE</span><span class="shno"><a class="xref" data-sheet="7" href="/sheet/7">SHEET 7</a> · 3D · REV H</span></div>
   <h2 class="sheet-title"><sup class="art">the&nbsp;</sup>CITY, IN THE ROUND</h2>
   <p class="sheet-sub"><a class="xref" data-sheet="7" href="/sheet/7">SHEET 7</a>'S CENSUS CITY IN THE ROUND · 39 MEMBERS · 38 MASSED · 27 SPEC ANNEXES · 4 DISTRICTS · ONE GLTF BINARY · ONE CLIP RAISES IT FROM THE GROUND, RAISE ⇄ GROUND · THE CAMERA ORBITS FREE AND TURNS TO THE FOUR TRUE DIAGONALS · A SECOND LANE RELIGHTS THE CITY FROM <a class="xref" data-sheet="7A" href="/sheet/7A">SHEET 7A</a>'S FILED SHADOW PLATE</p>
-  <div class="cs-bar">
-    <div class="cs-legend">
-      <span class="lg"><i class="sw sw-halt"></i>halts a publish</span>
+  <div class="cs-frame fillable" id="cs-frame"><button type="button" class="fill" data-fill aria-label="Enlarge this figure, or leave it"></button>
+    <div class="cs-bar">
+      <div class="cs-legend">
+        <span class="lg"><i class="sw sw-halt"></i>halts a publish</span>
       <span class="lg"><i class="sw sw-pr"></i>stops the PR line</span>
       <span class="lg"><i class="sw sw-late"></i>gates a later stage</span>
       <span class="lg"><i class="sw sw-report"></i>never gates</span>
       <span class="lg"><i class="sw sw-line"></i>the material</span>
       <span class="lg"><i class="sw sw-annex"></i>spec annex — the test mass</span>
+      </div>
+      <div class="cs-ctl">
+        <span class="mouse">DRAG TO ORBIT · HOVER TO READ · TAP TO PIN · ← → STEP · ENTER PINS · ESC CLEARS</span><span class="touch">A FINGER ACROSS ORBITS · PINCH TO ZOOM · TAP TO PIN</span>
+        <span class="grp" role="group" aria-label="Camera corner">
+          <button type="button" data-az="45" aria-pressed="true">45°</button>
+          <button type="button" data-az="135" aria-pressed="false">135°</button>
+          <button type="button" data-az="225" aria-pressed="false">225°</button>
+          <button type="button" data-az="315" aria-pressed="false">315°</button>
+        </span>
+        <label><input type="checkbox" id="cs-lane"> TEST LIGHT</label>
+        <button type="button" id="cs-play" disabled>GROUND</button>
+        <label>GROUND <input type="range" id="cs-t" min="0" max="2.4" step="0.01" value="2.4" disabled aria-label="The rise, from the ground to the raised city"> RAISED</label>
+        <button type="button" id="cs-reset">RESET</button>
+      </div>
     </div>
-    <div class="cs-ctl">
-      <span class="mouse">DRAG TO ORBIT · HOVER TO READ · TAP TO PIN · ← → STEP · ENTER PINS · ESC CLEARS</span><span class="touch">A FINGER ACROSS ORBITS · PINCH TO ZOOM · TAP TO PIN</span>
-      <span class="grp" role="group" aria-label="Camera corner">
-        <button type="button" data-az="45" aria-pressed="true">45°</button>
-        <button type="button" data-az="135" aria-pressed="false">135°</button>
-        <button type="button" data-az="225" aria-pressed="false">225°</button>
-        <button type="button" data-az="315" aria-pressed="false">315°</button>
-      </span>
-      <label><input type="checkbox" id="cs-lane"> TEST LIGHT</label>
-      <button type="button" id="cs-play" disabled>GROUND</button>
-      <label>GROUND <input type="range" id="cs-t" min="0" max="2.4" step="0.01" value="2.4" disabled aria-label="The rise, from the ground to the raised city"> RAISED</label>
-      <button type="button" id="cs-reset">RESET</button>
+    <div class="cs-stage">
+      <model-viewer id="cs-viewer" class="cs-view" src="/models/city.glb" loading="eager" reveal="manual" camera-controls disable-tap touch-action="pan-y" interaction-prompt="none" camera-orbit="45deg 54.736deg auto" camera-target="auto 0m auto" max-camera-orbit="Infinity 88deg 160%" field-of-view="14deg" min-field-of-view="4deg" max-field-of-view="20deg" tone-mapping="none" exposure="1" shadow-intensity="0" animation-name="rise" alt="Sheet 7's census city in three dimensions: 38 massed workspace members in four districts, each an opaque paper box inside its girding frame, its right-hand wall hatched in the rake its gate tier is hatched in on the flat plate, footprint proportional to the square root of its authored lines and height three units per authored file, with 27 dashed spec annexes beside them. Each member carries a numbered pin matching sheet 7's schedule. A TEST LIGHT switch relights the same city from sheet 7A's shadow survey: each metered member's mass splits along its footprint, the share its own suite loads lit from the annex side and the rest washed toward black, with the spec annexes burning as the lamps that throw the light.">
+        <button type="button" class="cs-pin" slot="hotspot-1" data-position="-339.345m 80m -226.271m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 1, lit-ui-router">1</button>
+        <button type="button" class="cs-pin" slot="hotspot-2" data-position="-113.473m 41m -240.399m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 2, ui-router-server">2</button>
+        <button type="button" class="cs-pin" slot="hotspot-3" data-position="-199.886m 29m -130.812m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 3, lit-ui-router-mobx">3</button>
+        <button type="button" class="cs-pin" slot="hotspot-4" data-position="-111.813m 20m -148.739m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 4, navigation-location-plugin">4</button>
+        <button type="button" class="cs-pin" slot="hotspot-5" data-position="227.502m 131m -239.424m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 5, sample-app-shared">5</button>
+        <button type="button" class="cs-pin" slot="hotspot-6" data-position="355.258m 38m -261.669m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 6, sample-app-lit-vanilla">6</button>
+        <button type="button" class="cs-pin" slot="hotspot-7" data-position="355.677m 38m -181.249m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 7, sample-app-lit-mobx">7</button>
+        <button type="button" class="cs-pin" slot="hotspot-8" data-position="324.688m 20m -132.239m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 8, sample-app-routes">8</button>
+        <button type="button" class="cs-pin" slot="hotspot-9" data-position="212.999m 29m -123.928m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 9, sample-app-lit-e2e">9</button>
+        <button type="button" class="cs-pin" slot="hotspot-10" data-position="300.435m 41m 73.509m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 10, docs">10</button>
+        <button type="button" class="cs-pin" slot="hotspot-11" data-position="327m 80m 190.074m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 11, examples">11</button>
+        <button type="button" class="cs-pin" slot="hotspot-12" data-position="-341.901m 164m 206.173m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 12, @tools/release">12</button>
+        <button type="button" class="cs-pin" slot="hotspot-13" data-position="-136.496m 20m 156.578m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 13, @tools/typedoc-plugin">13</button>
+        <button type="button" class="cs-pin" slot="hotspot-14" data-position="-359.619m 18m 75.455m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 14, @tools/dts-backtest">14</button>
+        <button type="button" class="cs-pin" slot="hotspot-15" data-position="-48.231m 38m 174.843m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 15, @tools/build_and_test">15</button>
+        <button type="button" class="cs-pin" slot="hotspot-16" data-position="-384.24m 32m 274.834m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 16, @tools/shared">16</button>
+        <button type="button" class="cs-pin" slot="hotspot-17" data-position="-142.739m 26m 280.335m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 17, @tools/workers-builds">17</button>
+        <button type="button" class="cs-pin" slot="hotspot-18" data-position="-37.091m 29m 275.983m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 18, @tools/bundle-probe">18</button>
+        <button type="button" class="cs-pin" slot="hotspot-19" data-position="-238.842m 35m 274.232m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 19, @tools/compat-guards">19</button>
+        <button type="button" class="cs-pin" slot="hotspot-20" data-position="-138.537m 29m 74.536m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 20, @tools/oxc-emit">20</button>
+        <button type="button" class="cs-pin" slot="hotspot-21" data-position="-87.312m 18m 67.761m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 21, @tools/release-config">21</button>
+        <button type="button" class="cs-pin" slot="hotspot-22" data-position="-46.646m 23m 71.428m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 22, @tools/lit-template-lint">22</button>
+        <button type="button" class="cs-pin" slot="hotspot-23" data-position="-290.312m 18m 67.761m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 23, @tools/lit-test-env">23</button>
+        <button type="button" class="cs-pin" slot="hotspot-24" data-position="-5.312m 18m 67.761m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 24, @tools/vue-check">24</button>
+        <button type="button" class="cs-pin" slot="hotspot-25" data-position="-195.312m 20m 112.761m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 25, @tools/lcov-rebase">25</button>
+        <button type="button" class="cs-pin" slot="hotspot-26" data-position="-250.312m 20m 67.761m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 26, @tools/happy-dom">26</button>
+        <button type="button" class="cs-pin" slot="hotspot-27" data-position="-190.312m 18m 67.761m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 27, @tools/wintercg-globals">27</button>
+        <button type="button" class="cs-pin" slot="hotspot-28" data-position="23.598m 18m 272.672m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 28, @tools/lint-elements">28</button>
+        <button type="button" class="cs-pin" slot="hotspot-29" data-position="60.391m 18m 253.464m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 29, @tools/warn-lanes">29</button>
+        <button type="button" class="cs-pin" slot="hotspot-30" data-position="-321.312m 18m 67.761m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 30, @tools/eslint-ts-parser">30</button>
+        <button type="button" class="cs-pin" slot="hotspot-31" data-position="-0.318m 50m -87.244m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 31, eslint-plugin-lit-ui-router">31</button>
+        <button type="button" class="cs-pin" slot="hotspot-32" data-position="82.198m 23m 188.272m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 32, @tools/embed-heights">32</button>
+        <button type="button" class="cs-pin" slot="hotspot-33" data-position="114.688m 23m 67.761m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 33, @tools/bootstrap">33</button>
+        <button type="button" class="cs-pin" slot="hotspot-34" data-position="146.567m 32m 255.641m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 34, @tools/eslint">34</button>
+        <button type="button" class="cs-pin" slot="hotspot-35" data-position="93.35m 47m 122.424m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 35, @tools/repo-checks">35</button>
+        <button type="button" class="cs-pin" slot="hotspot-36" data-position="296.142m 41m -170.785m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 36, sample-app-lit-effect">36</button>
+        <button type="button" class="cs-pin" slot="hotspot-37" data-position="-337.736m 29m -64.662m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 37, lit-ui-router-effect">37</button>
+        <button type="button" class="cs-pin" slot="hotspot-38" data-position="-194.852m 47m -51.778m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 38, lit-ui-router-ssr">38</button>
+        <button type="button" class="cs-pin" slot="hotspot-39" data-position="197.378m 20m 150.452m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 39, @tools/crap">39</button>
+        <span class="cs-dist" slot="hotspot-district-pkg" data-position="61.563m 0.5m -35.762m" data-normal="0m 1m 0m" aria-hidden="true">PACKAGES/</span>
+        <span class="cs-dist" slot="hotspot-district-app" data-position="361.87m 0.5m -112.412m" data-normal="0m 1m 0m" aria-hidden="true">APPS/</span>
+        <span class="cs-dist" slot="hotspot-district-site" data-position="396.319m 0.5m 227.192m" data-normal="0m 1m 0m" aria-hidden="true">DOCS + EXAMPLES/</span>
+        <span class="cs-dist" slot="hotspot-district-tool" data-position="154.272m 0.5m 281.326m" data-normal="0m 1m 0m" aria-hidden="true">TOOLS/</span>
+      </model-viewer>
     </div>
-  </div>
-  <div class="cs-stage fillable" id="cs-stage"><button type="button" class="fill" data-fill aria-label="Enlarge this figure, or leave it"></button>
-    <model-viewer id="cs-viewer" class="cs-view" src="/models/city.glb" loading="eager" reveal="manual" camera-controls disable-tap touch-action="pan-y" interaction-prompt="none" camera-orbit="45deg 54.736deg auto" camera-target="auto 0m auto" max-camera-orbit="Infinity 88deg 160%" field-of-view="14deg" min-field-of-view="4deg" max-field-of-view="20deg" tone-mapping="none" exposure="1" shadow-intensity="0" animation-name="rise" alt="Sheet 7's census city in three dimensions: 38 massed workspace members in four districts, each an opaque paper box inside its girding frame, its right-hand wall hatched in the rake its gate tier is hatched in on the flat plate, footprint proportional to the square root of its authored lines and height three units per authored file, with 27 dashed spec annexes beside them. Each member carries a numbered pin matching sheet 7's schedule. A TEST LIGHT switch relights the same city from sheet 7A's shadow survey: each metered member's mass splits along its footprint, the share its own suite loads lit from the annex side and the rest washed toward black, with the spec annexes burning as the lamps that throw the light.">
-      <button type="button" class="cs-pin" slot="hotspot-1" data-position="-339.345m 80m -226.271m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 1, lit-ui-router">1</button>
-      <button type="button" class="cs-pin" slot="hotspot-2" data-position="-113.473m 41m -240.399m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 2, ui-router-server">2</button>
-      <button type="button" class="cs-pin" slot="hotspot-3" data-position="-199.886m 29m -130.812m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 3, lit-ui-router-mobx">3</button>
-      <button type="button" class="cs-pin" slot="hotspot-4" data-position="-111.813m 20m -148.739m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 4, navigation-location-plugin">4</button>
-      <button type="button" class="cs-pin" slot="hotspot-5" data-position="227.502m 131m -239.424m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 5, sample-app-shared">5</button>
-      <button type="button" class="cs-pin" slot="hotspot-6" data-position="355.258m 38m -261.669m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 6, sample-app-lit-vanilla">6</button>
-      <button type="button" class="cs-pin" slot="hotspot-7" data-position="355.677m 38m -181.249m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 7, sample-app-lit-mobx">7</button>
-      <button type="button" class="cs-pin" slot="hotspot-8" data-position="324.688m 20m -132.239m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 8, sample-app-routes">8</button>
-      <button type="button" class="cs-pin" slot="hotspot-9" data-position="212.999m 29m -123.928m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 9, sample-app-lit-e2e">9</button>
-      <button type="button" class="cs-pin" slot="hotspot-10" data-position="300.435m 41m 73.509m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 10, docs">10</button>
-      <button type="button" class="cs-pin" slot="hotspot-11" data-position="327m 80m 190.074m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 11, examples">11</button>
-      <button type="button" class="cs-pin" slot="hotspot-12" data-position="-341.901m 164m 206.173m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 12, @tools/release">12</button>
-      <button type="button" class="cs-pin" slot="hotspot-13" data-position="-136.496m 20m 156.578m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 13, @tools/typedoc-plugin">13</button>
-      <button type="button" class="cs-pin" slot="hotspot-14" data-position="-359.619m 18m 75.455m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 14, @tools/dts-backtest">14</button>
-      <button type="button" class="cs-pin" slot="hotspot-15" data-position="-48.231m 38m 174.843m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 15, @tools/build_and_test">15</button>
-      <button type="button" class="cs-pin" slot="hotspot-16" data-position="-384.24m 32m 274.834m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 16, @tools/shared">16</button>
-      <button type="button" class="cs-pin" slot="hotspot-17" data-position="-142.739m 26m 280.335m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 17, @tools/workers-builds">17</button>
-      <button type="button" class="cs-pin" slot="hotspot-18" data-position="-37.091m 29m 275.983m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 18, @tools/bundle-probe">18</button>
-      <button type="button" class="cs-pin" slot="hotspot-19" data-position="-238.842m 35m 274.232m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 19, @tools/compat-guards">19</button>
-      <button type="button" class="cs-pin" slot="hotspot-20" data-position="-138.537m 29m 74.536m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 20, @tools/oxc-emit">20</button>
-      <button type="button" class="cs-pin" slot="hotspot-21" data-position="-87.312m 18m 67.761m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 21, @tools/release-config">21</button>
-      <button type="button" class="cs-pin" slot="hotspot-22" data-position="-46.646m 23m 71.428m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 22, @tools/lit-template-lint">22</button>
-      <button type="button" class="cs-pin" slot="hotspot-23" data-position="-290.312m 18m 67.761m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 23, @tools/lit-test-env">23</button>
-      <button type="button" class="cs-pin" slot="hotspot-24" data-position="-5.312m 18m 67.761m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 24, @tools/vue-check">24</button>
-      <button type="button" class="cs-pin" slot="hotspot-25" data-position="-195.312m 20m 112.761m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 25, @tools/lcov-rebase">25</button>
-      <button type="button" class="cs-pin" slot="hotspot-26" data-position="-250.312m 20m 67.761m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 26, @tools/happy-dom">26</button>
-      <button type="button" class="cs-pin" slot="hotspot-27" data-position="-190.312m 18m 67.761m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 27, @tools/wintercg-globals">27</button>
-      <button type="button" class="cs-pin" slot="hotspot-28" data-position="23.598m 18m 272.672m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 28, @tools/lint-elements">28</button>
-      <button type="button" class="cs-pin" slot="hotspot-29" data-position="60.391m 18m 253.464m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 29, @tools/warn-lanes">29</button>
-      <button type="button" class="cs-pin" slot="hotspot-30" data-position="-321.312m 18m 67.761m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 30, @tools/eslint-ts-parser">30</button>
-      <button type="button" class="cs-pin" slot="hotspot-31" data-position="-0.318m 50m -87.244m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 31, eslint-plugin-lit-ui-router">31</button>
-      <button type="button" class="cs-pin" slot="hotspot-32" data-position="82.198m 23m 188.272m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 32, @tools/embed-heights">32</button>
-      <button type="button" class="cs-pin" slot="hotspot-33" data-position="114.688m 23m 67.761m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 33, @tools/bootstrap">33</button>
-      <button type="button" class="cs-pin" slot="hotspot-34" data-position="146.567m 32m 255.641m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 34, @tools/eslint">34</button>
-      <button type="button" class="cs-pin" slot="hotspot-35" data-position="93.35m 47m 122.424m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 35, @tools/repo-checks">35</button>
-      <button type="button" class="cs-pin" slot="hotspot-36" data-position="296.142m 41m -170.785m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 36, sample-app-lit-effect">36</button>
-      <button type="button" class="cs-pin" slot="hotspot-37" data-position="-337.736m 29m -64.662m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 37, lit-ui-router-effect">37</button>
-      <button type="button" class="cs-pin" slot="hotspot-38" data-position="-194.852m 47m -51.778m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 38, lit-ui-router-ssr">38</button>
-      <button type="button" class="cs-pin" slot="hotspot-39" data-position="197.378m 20m 150.452m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 39, @tools/crap">39</button>
-      <span class="cs-dist" slot="hotspot-district-pkg" data-position="61.563m 0.5m -35.762m" data-normal="0m 1m 0m" aria-hidden="true">PACKAGES/</span>
-      <span class="cs-dist" slot="hotspot-district-app" data-position="361.87m 0.5m -112.412m" data-normal="0m 1m 0m" aria-hidden="true">APPS/</span>
-      <span class="cs-dist" slot="hotspot-district-site" data-position="396.319m 0.5m 227.192m" data-normal="0m 1m 0m" aria-hidden="true">DOCS + EXAMPLES/</span>
-      <span class="cs-dist" slot="hotspot-district-tool" data-position="154.272m 0.5m 281.326m" data-normal="0m 1m 0m" aria-hidden="true">TOOLS/</span>
-    </model-viewer>
     <aside class="cs-info" id="cs-info" aria-live="polite"></aside>
   </div>
   <div class="cs-basis">

@@ -283,14 +283,17 @@ settled snapshot on the page's runtime (`src/runtime.ts`), then `hydrateRoot(roo
 wakes every served `<ui-view>`, which adopts the nodes it already holds. A cold container — the dev server, the
 artifact build — returns `false` and the same template is rendered instead.
 
-**Enlarge (`src/lightbox.ts`).** Every figure — a plate, a lane's stage, the city and plant
-stages, the bricks frame — is a `.fillable` box with one `.fill` button reading ENLARGE, and the
+**Enlarge (`src/lightbox.ts`).** Every figure — a plate, a lane's stage, the frame of the city,
+the plant or the bricks — is a `.fillable` box with one `.fill` button reading ENLARGE, and the
 document's one `<atlas-lightbox>`, seated on `<body>` by `installLightbox()`, answers them all
 with one delegated click. A plate's SVG is copied into the lightbox, which covers the viewport on
 the page's `--paper` and zooms and pans the copy with a transform: wheel or pinch about the
 pointer, drag, double-click, arrow keys, and the −, +, FIT and 1:1 buttons; it opens fitted. A
 stage keeps its own camera, so it is enlarged in place as the `.is-filled` overlay and the
-lightbox lays only its bar over it. Both carry CLOSE and, where the browser allows it, FULL
+lightbox lays only its bar over it. A model plate's frame holds its viewer, its key and control
+bar and its read panel, so all three fill the window together: the viewer takes the height the
+others leave, and from 1100px the panel stands beside the bar (`frameCss` in
+`generator/mv-kit.mjs`). Both carry CLOSE and, where the browser allows it, FULL
 SCREEN; Escape closes, Tab stays inside, and focus returns to the button. `html.has-filled`
 locks the page's scroll, and the box hears `atlas-fill` and the window a `resize` on the way in
 and out, which is how a cytoscape lane refits and a canvas resizes. One instance serves the
@@ -298,7 +301,7 @@ document because the scroll lock, the focus trap and the delegated click are doc
 
 The enlarged figure is the url's `?enlarge=`, a dynamic, uninherited param beside `?focus` on
 every figure state (`FOCUS_PARAMS` in `src/routes.ts`), so `/bricks?focus=5&enlarge=bk-frame` is
-a link. Its value is the box's own id where it has one (`bk-frame`, `cs-stage`, `lw-stage`), else
+a link. Its value is the box's own id where it has one (`bk-frame`, `cs-frame`, `lw-stage`), else
 its sheet section's (`sheet-7`, `sheet-12i`, `coupling-bench`, `pipeline-graph`). The button
 pushes the param; CLOSE and Escape go back when the entry beneath is the same page without it,
 and replace it away otherwise; Back closes. `installLightbox(router)` runs once the page is

@@ -10,7 +10,7 @@ import { PROJECT_MARK, articleTitle } from './chrome.mjs';
 import { FOCUS_JS } from './focus.mjs';
 import { basisStrip, laneCss } from './lane-chrome.mjs';
 import { ASSEMBLE_SECONDS, assembleMotion, brickGlb, seatedBoxes, toModel } from './brick-glb.mjs';
-import { MV_JS, orbitAt, pinCss } from './mv-kit.mjs';
+import { MV_JS, frameCss, orbitAt, pinCss } from './mv-kit.mjs';
 import { BRICK_COUPLES, BRICK_MODEL, BRICK_ROWS, EXPLODE } from './sheet2.mjs';
 import { BASE } from '../app/src/routes.ts';
 
@@ -88,9 +88,9 @@ export const BRICKS_META = {
 };
 
 const CSS = `
-.bk-frame { border: 1.5px solid var(--ink); border-bottom: none; }
-.bk-frame:focus-within { outline: 2px solid var(--accent); outline-offset: -2px; }
-.bk-frame:fullscreen .bk-view, .bk-frame.is-filled .bk-view { height: 100vh; }
+${frameCss('bk', 'bk-read', ['stage', 'bar', 'read'])}
+.bk-stage { border: 1.5px solid var(--ink); border-bottom: none; }
+.bk-stage:focus-within { outline: 2px solid var(--accent); outline-offset: -2px; }
 .bk-view { display: block; width: 100%; height: clamp(460px, 64vh, 920px);
   background: radial-gradient(ellipse 70% 60% at 50% 42%, var(--paper) 0%, var(--paper-2) 58%, var(--ground) 100%);
   --poster-color: transparent; --progress-bar-color: var(--accent); }
@@ -101,7 +101,8 @@ const CSS = `
 .bk-bar .lg i.sw-seat { background: #A63D2F; border-radius: 50%; width: 14px; }
 .bk-bar .lg i.sw-ghost { background: rgba(241, 240, 231, 0.45); border-style: dashed; }
 .bk-bar .lg i.sw-ground { background: #E9E8DD; height: 7px; }
-.bk-ctl .grp { display: inline-flex; gap: 6px; }
+.bk-ctl .grp { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+@media (max-width: 560px) { .bk-ctl .touch { white-space: normal; } }
 .bk-ctl button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
 .bk-ctl input[type=range] { width: 150px; accent-color: var(--accent); }
 /* the button keeps the wider label's width, so the slider after it never shifts under a drag */
@@ -134,32 +135,34 @@ const BASIS = `The model is <code>generator/sheet2.mjs</code>'s own <code>MODEL<
 export function bricksMarkup() {
   const meta = BRICKS_META;
   const pins = DATA.bricks.map((b) =>
-    `      <button type="button" class="bk-pin" slot="hotspot-${b.n}" style="--hue:${b.hue}" data-position="${b.cap.map((v) => `${v}m`).join(' ')}" data-normal="0m 1m 0m" aria-pressed="false" aria-label="Brick ${b.n}, ${b.name}">${b.n}</button>`).join('\n');
+    `        <button type="button" class="bk-pin" slot="hotspot-${b.n}" style="--hue:${b.hue}" data-position="${b.cap.map((v) => `${v}m`).join(' ')}" data-normal="0m 1m 0m" aria-pressed="false" aria-label="Brick ${b.n}, ${b.name}">${b.n}</button>`).join('\n');
   return `<style>${laneCss('bk')}${CSS}</style>
 <section class="sheet bk" id="${meta.id}-scene" aria-label="The Brick Assembly in the round — sheet 2's finished model as a three-dimensional model that explodes and reassembles">
   <div class="sheet-head"><span class="proj">${PROJECT_MARK} — INTERACTIVE PLATE</span><span class="shno">${meta.head} · REV ${meta.rev}</span></div>
   <h2 class="sheet-title">${articleTitle(meta.title)}</h2>
   <p class="sheet-sub">${meta.sub}</p>
   <div class="bk-frame fillable" id="bk-frame"><button type="button" class="fill" data-fill aria-label="Enlarge this figure, or leave it"></button>
-    <model-viewer id="bk-viewer" class="bk-view" src="${BASE}${BRICKS_GLB}" loading="eager" reveal="manual" camera-controls touch-action="pan-y" interaction-prompt="none" camera-orbit="${CORNERS[0].orbit}" max-camera-orbit="${SEATED_MAX}" field-of-view="14deg" min-field-of-view="5deg" max-field-of-view="18deg" exposure="1" shadow-intensity="0" animation-name="assemble" alt="Sheet 2's finished LEGO model in three dimensions: a low slab of browser ground carries the @uirouter/core baseplate, its back rail of studs ringed in the accent colour and one red location seat; lit-ui-router stands on it as a tall two-by-four, the one-stud navigation location plugin on the location seat, lit-ui-router-mobx and lit-ui-router-effect on lit-ui-router's cap; a raised server shelf carries a translucent headless plate with ui-router-server on it, and lit-ui-router-ssr bridges from lit-ui-router's cap to ui-router-server's. The explode control lifts the stacked bricks first, then the rest, each to at least half again the height the sheet's exploded view draws it at, with a dashed leader dropping from each to the stud it seats on.">
+    <div class="bk-stage">
+      <model-viewer id="bk-viewer" class="bk-view" src="${BASE}${BRICKS_GLB}" loading="eager" reveal="manual" camera-controls touch-action="pan-y" interaction-prompt="none" camera-orbit="${CORNERS[0].orbit}" max-camera-orbit="${SEATED_MAX}" field-of-view="14deg" min-field-of-view="5deg" max-field-of-view="18deg" exposure="1" shadow-intensity="0" animation-name="assemble" alt="Sheet 2's finished LEGO model in three dimensions: a low slab of browser ground carries the @uirouter/core baseplate, its back rail of studs ringed in the accent colour and one red location seat; lit-ui-router stands on it as a tall two-by-four, the one-stud navigation location plugin on the location seat, lit-ui-router-mobx and lit-ui-router-effect on lit-ui-router's cap; a raised server shelf carries a translucent headless plate with ui-router-server on it, and lit-ui-router-ssr bridges from lit-ui-router's cap to ui-router-server's. The explode control lifts the stacked bricks first, then the rest, each to at least half again the height the sheet's exploded view draws it at, with a dashed leader dropping from each to the stud it seats on.">
 ${pins}
-    </model-viewer>
-  </div>
-  <div class="bk-bar">
-    <div class="bk-legend">
-${LEGEND.map(([k, t]) => `      <span class="lg"><i class="sw sw-${k}"></i>${t}</span>`).join('\n')}
+      </model-viewer>
     </div>
-    <div class="bk-ctl">
-      <span class="hints"><span class="mouse">DRAG TO ORBIT · SCROLL TO ZOOM · TAP A NUMBER TO PIN <span class="nw">← → STEP THE PIN</span> <span class="nw">ESC CLEARS</span></span><span class="nw touch">A FINGER ACROSS ORBITS · PINCH TO ZOOM · TAP A NUMBER TO PIN</span></span>
-      <span class="grp" role="group" aria-label="Camera corner">
-${CORNERS.map((c, i) => `        <button type="button" data-orbit="${c.orbit}" aria-pressed="${i === 0}">${c.label}</button>`).join('\n')}
-      </span>
-      <button type="button" id="bk-turn" aria-pressed="false" aria-label="Turn the camera with the clip">TURN</button>
-      <button type="button" id="bk-play" disabled>EXPLODE</button>
-      <label>EXPLODED <input type="range" id="bk-t" min="0" max="${ASSEMBLE_SECONDS}" step="0.01" value="${ASSEMBLE_SECONDS}" disabled aria-label="Assembly, from exploded to seated"> SEATED</label>
+    <div class="bk-bar">
+      <div class="bk-legend">
+${LEGEND.map(([k, t]) => `        <span class="lg"><i class="sw sw-${k}"></i>${t}</span>`).join('\n')}
+      </div>
+      <div class="bk-ctl">
+        <span class="hints"><span class="mouse">DRAG TO ORBIT · SCROLL TO ZOOM · TAP A NUMBER TO PIN <span class="nw">← → STEP THE PIN</span> <span class="nw">ESC CLEARS</span></span><span class="nw touch">A FINGER ACROSS ORBITS · PINCH TO ZOOM · TAP A NUMBER TO PIN</span></span>
+        <span class="grp" role="group" aria-label="Camera corner">
+${CORNERS.map((c, i) => `          <button type="button" data-orbit="${c.orbit}" aria-pressed="${i === 0}">${c.label}</button>`).join('\n')}
+        </span>
+        <button type="button" id="bk-turn" aria-pressed="false" aria-label="Turn the camera with the clip">TURN</button>
+        <button type="button" id="bk-play" disabled>EXPLODE</button>
+        <label>EXPLODED <input type="range" id="bk-t" min="0" max="${ASSEMBLE_SECONDS}" step="0.01" value="${ASSEMBLE_SECONDS}" disabled aria-label="Assembly, from exploded to seated"> SEATED</label>
+      </div>
     </div>
+    <aside class="bk-read" id="bk-info" aria-live="polite"></aside>
   </div>
-  <aside class="bk-read" id="bk-info" aria-live="polite"></aside>
   ${basisStrip('bk', BASIS)}
 </section>
 <script type="application/json" id="bk-model">${json(DATA)}</script>`;
@@ -171,7 +174,7 @@ const BODY = `${FOCUS_JS}${MV_JS}  var mv = root.querySelector('#bk-viewer');
   var island = root.querySelector('#bk-model');
   if (!mv || !island || !viewer) return undefined;
   var D = JSON.parse(island.textContent);
-  var stage = root.querySelector('#bk-frame');
+  var stage = root.querySelector('.bk-stage');
   var info = root.querySelector('#bk-info');
   var play = root.querySelector('#bk-play');
   var slider = root.querySelector('#bk-t');

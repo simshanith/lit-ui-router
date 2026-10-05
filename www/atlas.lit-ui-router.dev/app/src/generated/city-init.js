@@ -105,7 +105,7 @@ export async function initCity(root, viewer, focus) {
   var island = root.querySelector('#cs-city');
   if (!mv || !island || !viewer) return undefined;
   var D = JSON.parse(island.textContent);
-  var stage = root.querySelector('#cs-stage');
+  var stage = root.querySelector('.cs-stage');
   var info = root.querySelector('#cs-info');
   var laneBox = root.querySelector('#cs-lane');
   var legend = root.querySelector('.cs-legend');

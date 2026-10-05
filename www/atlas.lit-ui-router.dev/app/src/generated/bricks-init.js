@@ -79,7 +79,7 @@ export async function initBricks(root, viewer, focus) {
   var island = root.querySelector('#bk-model');
   if (!mv || !island || !viewer) return undefined;
   var D = JSON.parse(island.textContent);
-  var stage = root.querySelector('#bk-frame');
+  var stage = root.querySelector('.bk-stage');
   var info = root.querySelector('#bk-info');
   var play = root.querySelector('#bk-play');
   var slider = root.querySelector('#bk-t');

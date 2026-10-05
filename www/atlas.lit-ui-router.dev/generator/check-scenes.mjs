@@ -237,7 +237,7 @@ try {
           for (const az of [45, 135, 225, 315]) {
             await page.click(`[data-az="${az}"]`);
             await page.waitForTimeout(1600);
-            await page.locator('#cs-stage').screenshot({ path: join(shots, `${id}-${theme}-${lane}-${az}.png`) });
+            await page.locator('#cs-frame').screenshot({ path: join(shots, `${id}-${theme}-${lane}-${az}.png`) });
           }
         }
       }
@@ -317,7 +317,7 @@ try {
 
     // the wheel gate: a plain scroll scrolls the page; once the stage is engaged, the wheel zooms
     await page.evaluate(() => window.scrollTo(0, 0));
-    await page.evaluate(() => document.querySelector('#cs-stage').scrollIntoView({ block: 'center' }));
+    await page.evaluate(() => document.querySelector('.cs-stage').scrollIntoView({ block: 'center' }));
     const before = await page.evaluate(() => ({ y: window.scrollY, r: document.querySelector('#cs-viewer').getCameraOrbit().radius }));
     await page.mouse.move(box.x + box.width / 2, 300);
     await page.mouse.wheel(0, 200);
@@ -337,15 +337,18 @@ try {
 
     // dots: pulled back, the unpinned pins fold
     await page.evaluate(() => { const mv = document.querySelector('#cs-viewer'); mv.cameraOrbit = '45deg 54.736deg 160%'; mv.fieldOfView = '20deg'; mv.jumpCameraToGoal(); });
-    await page.waitForFunction(() => document.querySelector('#cs-stage').classList.contains('far'));
+    await page.waitForFunction(() => document.querySelector('.cs-stage').classList.contains('far'));
     const dot = await page.evaluate(() => document.querySelector('[slot="hotspot-5"]').getBoundingClientRect().width);
     check(dot <= 10, `pulled back, the unpinned pins fold to ${dot}px dots`);
 
     // fill
-    await page.click('#cs-stage .fill');
+    await page.click('#cs-frame > .fill');
     await page.waitForTimeout(600);
-    const fill = await page.evaluate(() => ({ h: document.querySelector('#cs-viewer').getBoundingClientRect().height, wh: window.innerHeight }));
-    check(Math.abs(fill.h - (fill.wh - 92)) < 2, `filled, the viewer stands ${fill.h}px in a ${fill.wh}px window`);
+    const fill = await page.evaluate(() => {
+      const box = (s) => document.querySelector(s).getBoundingClientRect();
+      return { h: box('#cs-viewer').height, bar: box('.cs-bar').bottom, read: box('#cs-info').bottom, wh: window.innerHeight };
+    });
+    check(fill.h > fill.wh / 2 && Math.max(fill.bar, fill.read) <= fill.wh, `filled, the viewer stands ${fill.h}px in a ${fill.wh}px window with the bar and the read panel under it`, JSON.stringify(fill));
     await page.close();
   }
 
@@ -393,9 +396,9 @@ try {
     const page = await open('/city/', { viewport: { width: 390, height: 844 }, phone: true });
     await settled(page);
     await page.waitForTimeout(1500);
-    const s = await page.evaluate(() => ({ far: document.querySelector('#cs-stage').classList.contains('far'), scroll: document.documentElement.scrollWidth, w: window.innerWidth }));
+    const s = await page.evaluate(() => ({ far: document.querySelector('.cs-stage').classList.contains('far'), scroll: document.documentElement.scrollWidth, w: window.innerWidth }));
     check(s.far && s.scroll <= s.w, `on a phone the pins fold to dots and the page keeps its width (${s.scroll} ≤ ${s.w})`);
-    if (shots) await page.locator('#cs-stage').screenshot({ path: join(shots, 'city-phone.png') });
+    if (shots) await page.locator('#cs-frame').screenshot({ path: join(shots, 'city-phone.png') });
     await page.close();
   }
 

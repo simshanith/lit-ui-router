@@ -15,7 +15,7 @@ import { PLANT_RULES } from './city-plant.mjs';
 import {
   CITY_GLB, DRESS_JS, FACES, HATCH, LIT, PLANT_GLB, PX, RISE_SECONDS, TIERS, TINT, cityModel, materialPlan,
 } from './city-glb.mjs';
-import { ISO_POLAR, MV_JS, orbitAt, pinCss } from './mv-kit.mjs';
+import { ISO_POLAR, MV_JS, frameCss, orbitAt, pinCss } from './mv-kit.mjs';
 import { BASE } from '../app/src/routes.ts';
 
 export const REV = 'H';
@@ -149,11 +149,11 @@ const CSS = `
 #cs-play::after { content: "GROUND"; display: block; height: 0; overflow: hidden; visibility: hidden; }
 .cs-ctl .touch { display: none; }
 @media (pointer: coarse) { .cs-ctl .mouse { display: none; } .cs-ctl .touch { display: inline; } }
+${frameCss('cs', 'cs-info', ['bar', 'stage', 'read'])}
 .cs-stage { position: relative; border: 1.5px solid var(--ink); background: var(--paper); }
 .cs-stage:focus-within { outline: 2px solid var(--accent); outline-offset: -2px; }
 .cs-view { display: block; width: 100%; height: clamp(520px, 80vh, 1400px); background: var(--paper);
   --poster-color: transparent; --progress-bar-color: var(--accent); }
-.cs-stage:fullscreen .cs-view, .cs-stage.is-filled .cs-view { height: calc(100vh - 92px); }
 .cs-stage.over .cs-view { cursor: pointer; }
 ${pinCss('cs-pin', 22, 11)}
 .cs-pin { --hue: var(--ink-soft); transition: width 0.15s, height 0.15s; }
@@ -166,7 +166,7 @@ ${pinCss('cs-pin', 22, 11)}
    is the one place that face earns its keep), a ledger line in the data face at the key
    block's size, and sentences in the prose face at the running text's. Two columns once
    the strip is wide enough to carry them: identity left, sentences right. */
-.cs-info { border-top: 1.5px solid var(--ink); background: var(--paper-2); padding: 14px 18px 16px;
+.cs-info { border: 1.5px solid var(--ink); border-top: none; background: var(--paper-2); padding: 14px 18px 16px;
   display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px 36px; align-items: start;
   min-height: 92px; color: var(--ink); }
 .cs-info h3 { font-family: var(--code); font-size: 16px; font-weight: 600; letter-spacing: 0.04em;
@@ -183,6 +183,8 @@ ${pinCss('cs-pin', 22, 11)}
   .cs-info { grid-template-columns: 300px minmax(0, 1fr); }
   .cs-info > .hint { grid-column: 1 / -1; }
 }
+/* beside the bar, the panel is one column */
+@media (min-width: 1100px) { .cs-frame:fullscreen .cs-info, .cs-frame.is-filled .cs-info { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 560px) {
   .cs-info { padding: 12px 14px 14px; }
   .cs-info h3 { font-size: 15px; }
@@ -224,7 +226,7 @@ const BODY = `${FOCUS_JS}${MV_JS}  ${DRESS_JS}
   var island = root.querySelector('#cs-city');
   if (!mv || !island || !viewer) return undefined;
   var D = JSON.parse(island.textContent);
-  var stage = root.querySelector('#cs-stage');
+  var stage = root.querySelector('.cs-stage');
   var info = root.querySelector('#cs-info');
   var laneBox = root.querySelector('#cs-lane');
   var legend = root.querySelector('.cs-legend');
@@ -632,9 +634,9 @@ function markup(plant) {
     .concat(LIGHT_LEGEND.map(([k]) => swatch(k, LIT[k]))).join('\n');
   const r4 = (p) => p.map((v) => `${v}m`).join(' ');
   const pins = data.rows.map((b) =>
-    `      <button type="button" class="cs-pin" slot="hotspot-${b.n}" data-position="${r4(b.cap)}" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member ${b.n}, ${b.name}">${b.n}</button>`).join('\n');
+    `        <button type="button" class="cs-pin" slot="hotspot-${b.n}" data-position="${r4(b.cap)}" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member ${b.n}, ${b.name}">${b.n}</button>`).join('\n');
   const labels = data.districts.map((d) =>
-    `      <span class="cs-dist" slot="hotspot-district-${d.d}" data-position="${r4(d.at)}" data-normal="0m 1m 0m" aria-hidden="true">${DIST_LABEL[d.d]}</span>`).join('\n');
+    `        <span class="cs-dist" slot="hotspot-district-${d.d}" data-position="${r4(d.at)}" data-normal="0m 1m 0m" aria-hidden="true">${DIST_LABEL[d.d]}</span>`).join('\n');
   const alt = `Sheet 7's census city in three dimensions: ${MASSED} massed workspace members in four districts, ${plant ? 'each crowned by a working plant of stacks, tanks, vents and pipes sized from its own census, and ' : ''}each an opaque paper box inside its girding frame, its right-hand wall hatched in the rake its gate tier is hatched in on the flat plate, footprint proportional to the square root of its authored lines and height three units per authored file, with ${ANNEXES} dashed spec annexes beside them. Each member carries a numbered pin matching sheet 7's schedule. A TEST LIGHT switch relights the same city from sheet 7A's shadow survey: each metered member's mass splits along its footprint, the share its own suite loads lit from the annex side and the rest washed toward black, with the spec annexes burning as the lamps that throw the light.`;
 
   return `<style>${CSS}
@@ -643,26 +645,28 @@ ${swatchCss}</style>
   <div class="sheet-head"><span class="proj">${PROJECT_MARK} — INTERACTIVE PLATE</span><span class="shno">${meta.head} · REV ${meta.rev}</span></div>
   <h2 class="sheet-title">${articleTitle(meta.title)}</h2>
   <p class="sheet-sub">${meta.sub}</p>
-  <div class="cs-bar">
-    <div class="cs-legend">
-      ${data.legend.tier}
+  <div class="cs-frame fillable" id="cs-frame"><button type="button" class="fill" data-fill aria-label="Enlarge this figure, or leave it"></button>
+    <div class="cs-bar">
+      <div class="cs-legend">
+        ${data.legend.tier}
+      </div>
+      <div class="cs-ctl">
+        <span class="mouse">DRAG TO ORBIT · HOVER TO READ · TAP TO PIN · ← → STEP · ENTER PINS · ESC CLEARS</span><span class="touch">A FINGER ACROSS ORBITS · PINCH TO ZOOM · TAP TO PIN</span>
+        <span class="grp" role="group" aria-label="Camera corner">
+${CORNERS.map((az, i) => `          <button type="button" data-az="${az}" aria-pressed="${i === 0}">${az}°</button>`).join('\n')}
+        </span>
+        <label><input type="checkbox" id="cs-lane"> TEST LIGHT</label>
+        <button type="button" id="cs-play" disabled>GROUND</button>
+        <label>GROUND <input type="range" id="cs-t" min="0" max="${RISE_SECONDS}" step="0.01" value="${RISE_SECONDS}" disabled aria-label="The rise, from the ground to the raised city"> RAISED</label>
+        <button type="button" id="cs-reset">RESET</button>
+      </div>
     </div>
-    <div class="cs-ctl">
-      <span class="mouse">DRAG TO ORBIT · HOVER TO READ · TAP TO PIN · ← → STEP · ENTER PINS · ESC CLEARS</span><span class="touch">A FINGER ACROSS ORBITS · PINCH TO ZOOM · TAP TO PIN</span>
-      <span class="grp" role="group" aria-label="Camera corner">
-${CORNERS.map((az, i) => `        <button type="button" data-az="${az}" aria-pressed="${i === 0}">${az}°</button>`).join('\n')}
-      </span>
-      <label><input type="checkbox" id="cs-lane"> TEST LIGHT</label>
-      <button type="button" id="cs-play" disabled>GROUND</button>
-      <label>GROUND <input type="range" id="cs-t" min="0" max="${RISE_SECONDS}" step="0.01" value="${RISE_SECONDS}" disabled aria-label="The rise, from the ground to the raised city"> RAISED</label>
-      <button type="button" id="cs-reset">RESET</button>
-    </div>
-  </div>
-  <div class="cs-stage fillable" id="cs-stage"><button type="button" class="fill" data-fill aria-label="Enlarge this figure, or leave it"></button>
-    <model-viewer id="cs-viewer" class="cs-view" src="${BASE}${plant ? PLANT_GLB : CITY_GLB}" loading="eager" reveal="manual" camera-controls disable-tap touch-action="pan-y" interaction-prompt="none" camera-orbit="${orbitAt(CORNERS[0])}" camera-target="${HOME_TARGET}" max-camera-orbit="Infinity 88deg 160%" field-of-view="${HOME_FOV}deg" min-field-of-view="4deg" max-field-of-view="20deg" tone-mapping="none" exposure="1" shadow-intensity="0" animation-name="rise" alt="${alt}">
+    <div class="cs-stage">
+      <model-viewer id="cs-viewer" class="cs-view" src="${BASE}${plant ? PLANT_GLB : CITY_GLB}" loading="eager" reveal="manual" camera-controls disable-tap touch-action="pan-y" interaction-prompt="none" camera-orbit="${orbitAt(CORNERS[0])}" camera-target="${HOME_TARGET}" max-camera-orbit="Infinity 88deg 160%" field-of-view="${HOME_FOV}deg" min-field-of-view="4deg" max-field-of-view="20deg" tone-mapping="none" exposure="1" shadow-intensity="0" animation-name="rise" alt="${alt}">
 ${pins}
 ${labels}
-    </model-viewer>
+      </model-viewer>
+    </div>
     <aside class="cs-info" id="cs-info" aria-live="polite"></aside>
   </div>
   <div class="cs-basis">
