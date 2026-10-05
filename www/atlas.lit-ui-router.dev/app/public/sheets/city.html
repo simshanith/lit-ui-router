@@ -16,6 +16,8 @@
 .cs-ctl button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
 .cs-ctl label { display: inline-flex; gap: 5px; align-items: center; cursor: pointer; }
 .cs-ctl input[type=range] { width: 130px; accent-color: var(--accent); }
+/* the button keeps the wider label's width, so the slider after it never shifts under a drag */
+#cs-play::after { content: "GROUND"; display: block; height: 0; overflow: hidden; visibility: hidden; }
 .cs-ctl .touch { display: none; }
 @media (pointer: coarse) { .cs-ctl .mouse { display: none; } .cs-ctl .touch { display: inline; } }
 .cs-stage { position: relative; border: 1.5px solid var(--ink); background: var(--paper); }

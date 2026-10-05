@@ -104,6 +104,8 @@ const CSS = `
 .bk-ctl .grp { display: inline-flex; gap: 6px; }
 .bk-ctl button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
 .bk-ctl input[type=range] { width: 150px; accent-color: var(--accent); }
+/* the button keeps the wider label's width, so the slider after it never shifts under a drag */
+#bk-play::after { content: "ASSEMBLE"; display: block; height: 0; overflow: hidden; visibility: hidden; }
 ${pinCss('bk-pin', 26, 12)}
 .bk-read { border: 1.5px solid var(--ink); border-top: none; background: var(--paper-2); padding: 14px 22px 16px;
   min-height: 72px; color: var(--ink); }
