@@ -75,5 +75,3 @@ export function warnRouterSwapped(element: Element): void {
     element,
   );
 }
-
-export const mutantMax: number = Math.max('x');
