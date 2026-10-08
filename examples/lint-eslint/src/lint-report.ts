@@ -48,10 +48,7 @@ export class LintReportPanel extends LitElement {
       border-bottom: 1px solid light-dark(#d0d0d0, #30363d);
       font-size: 13px;
       font-weight: 600;
-      font-family:
-        system-ui,
-        -apple-system,
-        sans-serif;
+      font-family: system-ui, -apple-system, sans-serif;
     }
     p {
       margin: 0;
