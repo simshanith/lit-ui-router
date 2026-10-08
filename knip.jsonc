@@ -45,6 +45,7 @@
     "packages/lit-ui-router-effect": {
       "ignoreDependencies": [
         "@release-it/conventional-changelog",
+        "effect-3",
         "lit-2",
         "lit-ui-router-floor",
       ],

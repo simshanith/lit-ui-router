@@ -1,4 +1,4 @@
-import { Data, Effect, Either } from 'effect';
+import { Data, Effect, Result } from 'effect';
 
 import { runtime } from '../effect/runtime.js';
 import AppConfig from './appConfig.js';
@@ -35,7 +35,7 @@ class AuthService {
    * Delays 800ms to simulate an async REST API delay.
    */
   authenticate(username: string, password: string) {
-    const checkCredentials = Effect.gen(this, function* () {
+    const checkCredentials = Effect.gen({ self: this }, function* () {
       yield* Effect.sleep('800 millis');
       const validUsername = this.usernames.includes(username);
       const validPassword = password === 'password';
@@ -45,15 +45,15 @@ class AuthService {
       return username;
     });
 
-    // Either, not a bare runPromise: the shared Login component reads
+    // Result, not a bare runPromise: the shared Login component reads
     // `error.message`, and a rejected Effect hands back a Cause, not the error.
     return runtime
-      .runPromise(Effect.either(checkCredentials))
+      .runPromise(Effect.result(checkCredentials))
       .then((result) => {
-        if (Either.isLeft(result)) {
+        if (Result.isFailure(result)) {
           throw new Error('Invalid username or password');
         }
-        AppConfig.emailAddress = result.right;
+        AppConfig.emailAddress = result.success;
         AppConfig.save();
       });
   }

@@ -109,8 +109,8 @@ catalogs:
       specifier: ^9.0.0
       version: 9.0.0
     effect:
-      specifier: ^3.22.2
-      version: 3.22.2
+      specifier: ^4.0.2
+      version: 4.0.2
     esbuild:
       specifier: ^0.28.2
       version: 0.28.2
@@ -276,6 +276,10 @@ catalogs:
     yaml:
       specifier: ^2.9.0
       version: 2.9.1
+  effect3-compat:
+    effect-3:
+      specifier: npm:effect@^3.22.2
+      version: 3.22.2
   lit2-compat:
     lit-2:
       specifier: npm:lit@^2.8.0
@@ -569,7 +573,7 @@ importers:
         version: 6.1.2
       effect:
         specifier: 'catalog:'
-        version: 3.22.2
+        version: 4.0.2
       lit:
         specifier: 'catalog:'
         version: 3.3.3
@@ -1032,7 +1036,10 @@ importers:
         version: 5.0.3(@vitest/browser@5.0.3)(vitest@5.0.3)
       effect:
         specifier: 'catalog:'
-        version: 3.22.2
+        version: 4.0.2
+      effect-3:
+        specifier: catalog:effect3-compat
+        version: effect@3.22.2
       happy-dom:
         specifier: 'catalog:'
         version: 20.14.5
@@ -1541,7 +1548,7 @@ importers:
         version: 6.1.2
       effect:
         specifier: 'catalog:'
-        version: 3.22.2
+        version: 4.0.2
       hono:
         specifier: 'catalog:'
         version: 4.13.13
@@ -5411,6 +5418,9 @@ packages:
 
   effect@3.22.2:
     resolution: {integrity: sha512-fm1CQXCs7GTMwpadZxwU5rnAb2bN6mbQpknq/pXBGCzSKkosNYb9k0wsoL0TfB10rSa5xOEZJjo77u/KLXSANg==}
+
+  effect@4.0.2:
+    resolution: {integrity: sha512-YeYnLqSFrL4+tCOXRrfNP03w8FILoF/wDl+ukraJAGzXrjcS383W7LAAvGBbLatEyktmLxRq+9xJinx7QzXW5A==}
 
   emoji-regex@10.6.0:
     resolution: {integrity: sha512-toUI84YS5YmxW219erniWD0CIVOo46xGKColeNQRgOzDorgBi1v4D71/OFzgD9GO2UGKIv1C3Sp8DAn0+j5w7A==}
@@ -11112,6 +11122,8 @@ snapshots:
     dependencies:
       '@standard-schema/spec': 1.1.0
       fast-check: 3.23.2
+
+  effect@4.0.2: {}
 
   emoji-regex@10.6.0: {}
 

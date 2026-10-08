@@ -34,7 +34,7 @@ export async function routerGo(
   params?: Record<string, unknown>,
 ): Promise<void> {
   await router.stateService.go(state, params);
-  await tick();
+  await settle();
 }
 
 /**
@@ -48,6 +48,12 @@ export function tick(ms = 0): Promise<void> {
  * Waits for a LitElement to complete its update cycle.
  */
 export async function waitForUpdate(element: LitElement): Promise<void> {
+  await settle();
   await element.updateComplete;
   await tick();
+}
+
+/** Lets forked fibers run: effect 4 schedules on macrotasks, effect 3 on microtasks. */
+export async function settle(turns = 10): Promise<void> {
+  for (let turn = 0; turn < turns; turn++) await tick();
 }

@@ -13,5 +13,16 @@ const expectedLitMajor = import.meta.env.VITE_EXPECT_LIT_MAJOR ?? '3';
 await import('lit');
 assertLitMajor(expectedLitMajor);
 
+// Guards the effect3-compat alias swap in both directions: effect 4 moved
+// the change stream to the module-level `SubscriptionRef.changes`.
+const expectedEffectMajor = import.meta.env.VITE_EXPECT_EFFECT_MAJOR ?? '4';
+const { SubscriptionRef } = await import('effect');
+const actualEffectMajor = 'changes' in SubscriptionRef ? '4' : '3';
+if (actualEffectMajor !== expectedEffectMajor) {
+  throw new Error(
+    `vitest.setup: expected effect major ${expectedEffectMajor}, saw ${actualEffectMajor}`,
+  );
+}
+
 // top-level await above requires module-hood even with no exports
 export {};

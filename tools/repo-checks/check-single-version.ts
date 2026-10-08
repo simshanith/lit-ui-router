@@ -20,6 +20,10 @@ const CHECK = 'check-single-version';
 // Splits the workspace asks for. A row that stops splitting fails as stale.
 const ALLOWED: SplitAllowance[] = [
   {
+    name: 'effect',
+    why: 'the effect-3 alias (catalogs.effect3-compat) runs test:effect3-compat beside the effect 4 line',
+  },
+  {
     name: 'eslint',
     why: 'catalogs.peerFloorEslintPlugin pins eslint-floor to 9.0.0, the plugin peer floor, beside the 10.x linter',
   },

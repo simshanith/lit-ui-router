@@ -1,0 +1,11 @@
+{
+  // Typechecks src against the effect-3 alias (the 3.x line the widened effect
+  // peer range still covers), not the catalog's effect 4. Never emits.
+  "extends": "./tsconfig.src.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "paths": {
+      "effect": ["./node_modules/effect-3/dist/dts/index.d.ts"]
+    }
+  }
+}

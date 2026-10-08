@@ -50,8 +50,8 @@ export class Compose extends LitElement {
   //   in-progress one isn't clobbered by a reconnect or an identity-only
   //   param change.
   // uiCanExit below still guards against silently discarding unsaved edits.
-  // The param is an arbitrary plain object, so `isEqual` compares it — Effect's
-  // Equal.equals is reference equality outside Data values.
+  // The param is an arbitrary plain object; `isEqual` compares it, as the
+  // pristine checks below do.
   messageParam = new RouterRefController(
     this,
     (route) => route.params.message as Partial<Message> | undefined,
