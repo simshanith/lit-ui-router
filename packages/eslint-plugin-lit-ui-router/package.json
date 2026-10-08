@@ -52,9 +52,9 @@
     "lint:docs": "eslint-doc-generator --check",
     "lint:oxlint": "oxlint --ignore-pattern test/oxlint .",
     "lint:rules": "eslint --config eslint.rules.config.js .",
-    "test:oxlint": "node --test \"test/oxlint/*.spec.ts\"",
-    "test:peer-floor": "peer-floor-guard && node --import ./test/eslint-floor.ts --test \"src/**/*.spec.ts\"",
-    "test:unit": "node --test \"src/**/*.spec.ts\"",
+    "test:oxlint": "node --test --test-reporter=@tools/shared/test-reporter.ts \"test/oxlint/*.spec.ts\"",
+    "test:peer-floor": "peer-floor-guard && node --import ./test/eslint-floor.ts --test --test-reporter=@tools/shared/test-reporter.ts \"src/**/*.spec.ts\"",
+    "test:unit": "node --test --test-reporter=@tools/shared/test-reporter.ts \"src/**/*.spec.ts\"",
     "typecheck:tsc": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
@@ -66,6 +66,7 @@
     "@tools/eslint-ts-parser": "catalog:workspace",
     "@tools/oxc-emit": "catalog:workspace",
     "@tools/release-config": "catalog:workspace",
+    "@tools/shared": "catalog:workspace",
     "@types/node": "catalog:",
     "eslint": "catalog:",
     "eslint-doc-generator": "catalog:",

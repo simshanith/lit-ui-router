@@ -38,9 +38,14 @@
       "env": ["VITEST_BROWSER_API_PORT", "VITE_EXPECT_LIT_MAJOR"],
       // CYPRESS_video: CI disables Cypress recording (build-test.yml);
       // strict env mode would scrub the override before it reaches Cypress.
-      // CI: the vitest configs only pick a reporter from it, so the artifact is
-      // identical either way — hashing it would wall laptops off from CI's cache.
-      "passThroughEnv": ["WRANGLER_LOG", "CYPRESS_video", "CI"]
+      // CI, GITHUB_ACTIONS: they only pick reporters, so the artifact is
+      // identical either way — hashing them would wall laptops off from CI's cache.
+      "passThroughEnv": [
+        "WRANGLER_LOG",
+        "CYPRESS_video",
+        "CI",
+        "GITHUB_ACTIONS"
+      ]
     },
     "@tools/dts-backtest#test": {
       "dependsOn": ["^build"],
@@ -71,7 +76,7 @@
         "vitest.setup.ts"
       ],
       "env": ["VITEST_BROWSER_API_PORT", "VITE_EXPECT_LIT_MAJOR"],
-      "passThroughEnv": ["CI"],
+      "passThroughEnv": ["CI", "GITHUB_ACTIONS"],
       "outputs": ["coverage/**"]
     },
     // Report-only CRAP hotspots from this package's coverage-final.json; in no
@@ -92,7 +97,7 @@
         "vitest.setup.ts"
       ],
       "env": ["VITEST_BROWSER_API_PORT", "VITE_EXPECT_LIT_MAJOR"],
-      "passThroughEnv": ["CI"]
+      "passThroughEnv": ["CI", "GITHUB_ACTIONS"]
     },
     // Same unit suites resolved against the lit-2 alias (the 2.x line the
     // published lit peer range covers); cheap enough for the PR graph — no
@@ -105,7 +110,7 @@
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/pnpm-workspace.yaml"],
       "env": ["VITEST_BROWSER_API_PORT", "VITE_EXPECT_LIT_MAJOR"],
-      "passThroughEnv": ["CI"]
+      "passThroughEnv": ["CI", "GITHUB_ACTIONS"]
     },
     // Same unit suites resolved against the mobx-6 alias (the 6.x line the
     // widened mobx peer range still covers). Mirrors test:lit2-compat: no
@@ -117,7 +122,7 @@
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/pnpm-workspace.yaml"],
       "env": ["VITEST_BROWSER_API_PORT", "VITE_EXPECT_MOBX_MAJOR"],
-      "passThroughEnv": ["CI"]
+      "passThroughEnv": ["CI", "GITHUB_ACTIONS"]
     },
     // Umbrellas (no script) fan out via dependsOn to the leaves that carry the
     // scripts and cache keys; `with` is only for persistent sidecars. A package

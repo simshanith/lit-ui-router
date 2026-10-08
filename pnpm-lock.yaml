@@ -721,6 +721,9 @@ importers:
         specifier: catalog:workspace
         version: link:../../packages/ui-router-server
     devDependencies:
+      '@tools/shared':
+        specifier: catalog:workspace
+        version: link:../../tools/shared
       '@tools/wintercg-globals':
         specifier: catalog:workspace
         version: link:../../tools/wintercg-globals
@@ -818,6 +821,9 @@ importers:
 
   examples:
     devDependencies:
+      '@tools/shared':
+        specifier: catalog:workspace
+        version: link:../tools/shared
       concurrently:
         specifier: 'catalog:'
         version: 10.0.5
@@ -852,6 +858,9 @@ importers:
       '@tools/release-config':
         specifier: catalog:workspace
         version: link:../../tools/release-config
+      '@tools/shared':
+        specifier: catalog:workspace
+        version: link:../../tools/shared
       '@types/node':
         specifier: 'catalog:'
         version: 24.19.0
@@ -1337,6 +1346,9 @@ importers:
       '@tools/release-config':
         specifier: catalog:workspace
         version: link:../../tools/release-config
+      '@tools/shared':
+        specifier: catalog:workspace
+        version: link:../../tools/shared
       '@tools/typedoc-plugin-lit-ui-router':
         specifier: catalog:workspace
         version: link:../../tools/typedoc-plugin-lit-ui-router
@@ -1442,6 +1454,9 @@ importers:
       '@tools/build_and_test':
         specifier: catalog:workspace
         version: link:../build_and_test
+      '@tools/shared':
+        specifier: catalog:workspace
+        version: link:../shared
       '@types/node':
         specifier: 'catalog:'
         version: 24.19.0
@@ -1500,6 +1515,9 @@ importers:
       '@tools/bootstrap':
         specifier: catalog:workspace
         version: link:../bootstrap
+      '@tools/shared':
+        specifier: catalog:workspace
+        version: link:../shared
       '@types/node':
         specifier: 'catalog:'
         version: 24.19.0
@@ -1576,6 +1594,9 @@ importers:
         specifier: catalog:workspace
         version: link:../bootstrap
     devDependencies:
+      '@tools/shared':
+        specifier: catalog:workspace
+        version: link:../shared
       '@types/node':
         specifier: 'catalog:'
         version: 24.19.0
@@ -1678,6 +1699,9 @@ importers:
       '@tools/bootstrap':
         specifier: catalog:workspace
         version: link:../bootstrap
+      '@tools/shared':
+        specifier: catalog:workspace
+        version: link:../shared
       '@types/node':
         specifier: 'catalog:'
         version: 24.19.0
@@ -1763,6 +1787,9 @@ importers:
       '@tools/bootstrap':
         specifier: catalog:workspace
         version: link:../bootstrap
+      '@tools/shared':
+        specifier: catalog:workspace
+        version: link:../shared
       '@types/node':
         specifier: 'catalog:'
         version: 24.19.0
@@ -1944,6 +1971,9 @@ importers:
 
   tools/warn-lanes:
     devDependencies:
+      '@tools/shared':
+        specifier: catalog:workspace
+        version: link:../shared
       '@types/node':
         specifier: 'catalog:'
         version: 24.19.0
@@ -1974,6 +2004,9 @@ importers:
       '@tools/bootstrap':
         specifier: catalog:workspace
         version: link:../bootstrap
+      '@tools/shared':
+        specifier: catalog:workspace
+        version: link:../shared
       '@types/node':
         specifier: 'catalog:'
         version: 24.19.0

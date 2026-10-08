@@ -2,7 +2,7 @@
   "name": "@tools/shared",
   "version": "0.0.1",
   "private": true,
-  "description": "Cross-workflow tooling helpers: the exec seam, GitHub Actions plumbing, shared source globs, and workspace enumeration",
+  "description": "Cross-workflow tooling helpers: the exec seam, GitHub Actions plumbing, the node:test reporter, shared source globs, and workspace enumeration",
   "type": "module",
   "exports": {
     "./exec.ts": "./src/exec.ts",
@@ -10,13 +10,14 @@
     "./gha.core.ts": "./src/gha.core.ts",
     "./gha.ts": "./src/gha.ts",
     "./globs.ts": "./src/globs.ts",
+    "./test-reporter.ts": "./src/test-reporter.ts",
     "./workspace.ts": "./src/workspace.ts"
   },
   "scripts": {
     "format:check:oxfmt": "oxfmt --check \"**/*.{ts,js,json,jsonc,md}\"",
     "format:oxfmt": "oxfmt \"**/*.{ts,js,json,jsonc,md}\"",
     "lint:oxlint": "oxlint .",
-    "test": "node --test \"src/**/*.test.ts\"",
+    "test": "node --test --test-reporter=@tools/shared/test-reporter.ts \"src/**/*.test.ts\"",
     "typecheck:tsc": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {

@@ -234,6 +234,62 @@ describe('excerptLog', () => {
     ]);
   });
 
+  it("starts at node:test's failure report, past the passing tests", () => {
+    const log = [
+      '✔ passes (0.1ms)',
+      '✖ fails (0.2ms)',
+      'ℹ fail 1',
+      '',
+      '✖ failing tests:',
+      '',
+      'test at src/a.test.ts:4:3',
+      '✖ fails (0.2ms)',
+    ].join('\n');
+    const { text, omittedLines } = excerptLog(log);
+    assert.equal(omittedLines, 4);
+    assert.deepEqual(text.split('\n'), [
+      '… 4 lines before the failure report …',
+      '✖ failing tests:',
+      '',
+      'test at src/a.test.ts:4:3',
+      '✖ fails (0.2ms)',
+    ]);
+  });
+
+  it("starts at vitest's first failure banner, colour stripped", () => {
+    const log = [
+      ' ✓ |node| src/specs/a.spec.ts (3 tests) 2ms',
+      `${ESC}[31m⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯${ESC}[39m`,
+      ' FAIL  |chrome| src/specs/b.spec.ts',
+      '⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯',
+      ' ❯ src/specs/index.spec.ts:76:27',
+    ].join('\n');
+    assert.deepEqual(excerptLog(log).text.split('\n'), [
+      '… 1 lines before the failure report …',
+      '⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯',
+      ' FAIL  |chrome| src/specs/b.spec.ts',
+      '⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯',
+      ' ❯ src/specs/index.spec.ts:76:27',
+    ]);
+  });
+
+  it('counts the report cut and the budget cut together', () => {
+    const passes = Array.from({ length: 10 }, (_, i) => `✔ pass ${i}`);
+    const report = Array.from({ length: 10 }, (_, i) => `detail ${i}`);
+    const { text, omittedLines } = excerptLog(
+      [...passes, '✖ failing tests:', ...report].join('\n'),
+      { headLines: 2, tailLines: 2, maxBytes: 1024 },
+    );
+    assert.equal(omittedLines, 10 + 8);
+    assert.deepEqual(text.split('\n'), [
+      '… 10 lines before the failure report …',
+      '✖ failing tests:',
+      '… 8 lines omitted …',
+      'detail 8',
+      'detail 9',
+    ]);
+  });
+
   it('enforces the byte cap from the head, because the verdict is at the tail', () => {
     const lines = Array.from({ length: 50 }, (_, i) => `${i}`.repeat(40));
     const { text, omittedLines } = excerptLog(lines.join('\n'), {
@@ -1363,6 +1419,42 @@ describe('tool annotations', () => {
     assert.equal(
       parsed?.message,
       'key "timeout-minutes" is duplicated\n```\n    timeout-minutes: 11\n    ^~~~\n```',
+    );
+  });
+
+  it('parses the node:test reporter in @tools/shared', () => {
+    const parsed = parseAnnotation(
+      '::error file=src/gha.core.test.ts,line=27,col=12,title=escapes %25%2C CR%2C and LF::Expected values to be strictly equal:%0A%0A1 !== 2',
+      'tools/shared',
+    );
+    assert.deepEqual(parsed?.properties, {
+      file: 'tools/shared/src/gha.core.test.ts',
+      line: 27,
+      col: 12,
+      title: 'escapes %, CR, and LF',
+    });
+  });
+
+  it("reads vitest's `column` as `col`, with the absolute path under the root", () => {
+    const root = '/runner/work/lit-ui-router';
+    const parsed = parseAnnotation(
+      `::error file=${root}/packages/navigation-location-plugin/src/specs/index.spec.ts,title=[chrome] src/specs/index.spec.ts > NavigationLocationService > reads the real URL back,line=76,column=28::AssertionError: expected '/read-back#frag' to be '/read-back?q=1#frag'`,
+      'packages/navigation-location-plugin',
+      root,
+    );
+    assert.deepEqual(parsed?.properties, {
+      file: 'packages/navigation-location-plugin/src/specs/index.spec.ts',
+      title:
+        '[chrome] src/specs/index.spec.ts > NavigationLocationService > reads the real URL back',
+      line: 76,
+      col: 28,
+    });
+    assert.equal(
+      parseAnnotation(
+        '::error file=src/a.ts,col=1,column=2::repeated position',
+        '',
+      ),
+      undefined,
     );
   });
 
