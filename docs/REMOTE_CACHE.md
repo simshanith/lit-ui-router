@@ -153,9 +153,10 @@ into the local cache without saying so:
   `HEAD`, and _CI may still be running_ otherwise. Any other status, or a curl
   failure, propagates instead as a failure naming the status code.
 
-The `test`, `test:coverage`, `test:engines`, `test:lit2-compat` and
-`test:mobx6-compat` tasks hash `CI` in `turbo.json`, so their artifacts carry a
-key no laptop can produce: those always run locally, backfill or not.
+The `test`, `test:coverage`, `test:engines`, `test:lit2-compat`,
+`test:mobx6-compat` and `test:effect3-compat` tasks hash `CI` in `turbo.json`,
+so their artifacts carry a key no laptop can produce: those always run
+locally, backfill or not.
 
 Without the backfill, a worktree computes everything its branch changed and
 hits the shared cache for the rest, never re-probing the remote.

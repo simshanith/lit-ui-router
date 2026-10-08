@@ -32,6 +32,10 @@ const ALLOWED: SplitAllowance[] = [
     why: 'catalogs.peerFloor pins @uirouter/core-floor to 6.0.8, every package peer floor check:bundle bundles against',
   },
   {
+    name: 'effect',
+    why: 'the effect-3 alias (catalogs.effect3-compat) runs test:effect3-compat beside the effect 4 line',
+  },
+  {
     name: 'eslint',
     why: 'catalogs.peerFloorEslintPlugin pins eslint-floor to 9.0.0, the plugin peer floor, beside the 10.x linter',
   },

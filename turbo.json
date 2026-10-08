@@ -124,6 +124,14 @@
       "env": ["VITEST_BROWSER_API_PORT", "VITE_EXPECT_MOBX_MAJOR"],
       "passThroughEnv": ["CI", "GITHUB_ACTIONS"]
     },
+    // Same unit suites resolved against the effect-3 alias (the 3.x line the
+    // widened effect peer range still covers). Mirrors test:mobx6-compat.
+    "test:effect3-compat": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/pnpm-workspace.yaml"],
+      "env": ["VITEST_BROWSER_API_PORT", "VITE_EXPECT_EFFECT_MAJOR"],
+      "passThroughEnv": ["CI", "GITHUB_ACTIONS"]
+    },
     // Umbrellas (no script) fan out via dependsOn to the leaves that carry the
     // scripts and cache keys; `with` is only for persistent sidecars. A package
     // override replaces dependsOn wholesale, so it restates these lists.
@@ -338,7 +346,8 @@
         "//#typecheck:root",
         "typecheck:src",
         "typecheck:lit2",
-        "typecheck:mobx6"
+        "typecheck:mobx6",
+        "typecheck:effect3"
       ]
     },
     "typecheck:tsc": {
@@ -371,6 +380,15 @@
         "$TURBO_ROOT$/pnpm-workspace.yaml"
       ]
     },
+    // src against the effect-3 alias's types; mirrors typecheck:mobx6.
+    "typecheck:effect3": {
+      "dependsOn": ["^build:types"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/tsconfig.base.json",
+        "$TURBO_ROOT$/pnpm-workspace.yaml"
+      ]
+    },
     "typecheck:peer-floor": {
       // manual-only: not in ci — the floor pin can only reference published
       // versions, so gating would break atomic core-API + mobx-adoption PRs
@@ -392,6 +410,7 @@
         "test:coverage",
         "test:lit2-compat",
         "test:mobx6-compat",
+        "test:effect3-compat",
         "lint",
         "typecheck",
         "format:check",

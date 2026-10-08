@@ -40,24 +40,32 @@ pnpm add lit-ui-router-effect effect
 
 `lit-ui-router`, `lit`, `effect`, and `@uirouter/core` are peer dependencies.
 
+### Effect 3 and 4
+
+Both majors are supported (`effect@^3.22.0 || ^4.0.2`) and both are exercised
+in CI. The bindings' own API is identical on either. The examples below are
+written for Effect 4, whose `Equal.equals` compares plain objects
+structurally. On Effect 3 it compares them by reference, so wrap a selected
+object in `Data.struct(...)` for `equals: Equal.equals` to see two equal
+selections as unchanged.
+
 ## Quick start
 
 ```ts
 import { html, LitElement } from 'lit';
-import { Data, Equal } from 'effect';
+import { Equal } from 'effect';
 import { RouterRefController } from 'lit-ui-router-effect';
 
 class AppNav extends LitElement {
   // Re-renders only when a section's visibility actually flips —
-  // not on every transition. Data.struct gives the selection value
-  // equality, so Equal.equals compares it structurally.
+  // not on every transition. Equal.equals compares the selection
+  // structurally.
   private active = new RouterRefController(
     this,
-    (route) =>
-      Data.struct({
-        inbox: route.includes('inbox.**'),
-        contacts: route.includes('contacts.**'),
-      }),
+    (route) => ({
+      inbox: route.includes('inbox.**'),
+      contacts: route.includes('contacts.**'),
+    }),
     { equals: Equal.equals },
   );
 
@@ -119,8 +127,7 @@ new RouterRefController(host, selector, options?)
   once on every (re)connect); useful for resetting component state from route
   params
 - `options.equals` — comparer for precise, value-based change detection
-  (`Equal.equals` for `Data` values, or any `(a, b) => boolean`); defaults to
-  `Object.is`
+  (`Equal.equals`, or any `(a, b) => boolean`); defaults to `Object.is`
 - `options.initialValue` — the value `.value` carries before the router is
   discovered: before `hostConnected`, and while a host has no router context
 - `options.runtime` — the runtime the subscription fiber is forked on;
@@ -140,14 +147,14 @@ generic primitive behind `RouterRefController` — the same selector/options
 contract over **any** `SubscriptionRef`s, not just the router's:
 
 ```ts
-import { Data, Equal } from 'effect';
+import { Equal } from 'effect';
 import { RefController } from 'lit-ui-router-effect';
 
 class NavHeader extends LitElement {
   private auth = new RefController(
     this,
     [Session.user$, Session.loggedIn$],
-    (user, loggedIn) => Data.struct({ user, loggedIn }),
+    (user, loggedIn) => ({ user, loggedIn }),
     { equals: Equal.equals },
   );
 
@@ -200,7 +207,7 @@ that reads refs during `render()`:
   `ReactiveControllerHost`)
 - Dependencies are explicit: the refs tuple names exactly which state drives
   the host
-- `equals: Equal.equals` avoids re-renders when a recomputed `Data` value is
+- `equals: Equal.equals` avoids re-renders when a recomputed value is
   structurally unchanged
 - The fiber's lifetime is bound to the host's connection lifecycle
   automatically

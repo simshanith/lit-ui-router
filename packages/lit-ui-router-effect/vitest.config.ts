@@ -11,6 +11,10 @@ import { GithubActionsReporter } from 'vitest/node';
 // import.meta.env, where vitest.setup.ts asserts the swap took.
 const lit2Compat = process.env.VITE_EXPECT_LIT_MAJOR === '2';
 
+// VITE_EXPECT_EFFECT_MAJOR=3 (test:effect3-compat) resolves effect to the
+// effect-3 alias devDep, proving the widened `^3.22.0 || ^4.0.2` peer range.
+const effect3Compat = process.env.VITE_EXPECT_EFFECT_MAJOR === '3';
+
 export default defineConfig({
   cacheDir: `node_modules/.vite-${process.env.VITEST_BROWSER_API_PORT ?? 'default'}`,
   resolve: {
@@ -35,6 +39,7 @@ export default defineConfig({
             { find: /^lit\/(.+)$/, replacement: 'lit-2/$1' },
           ]
         : []),
+      ...(effect3Compat ? [{ find: /^effect$/, replacement: 'effect-3' }] : []),
     ],
   },
   test: {
