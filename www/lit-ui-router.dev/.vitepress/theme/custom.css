@@ -1,35 +1,59 @@
+:root {
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* Doc prose wrapping; overflow-wrap breaks only a word that would overflow. */
+.vp-doc {
+  overflow-wrap: break-word;
+}
+
+.vp-doc :is(h1, h2, h3, h4) {
+  text-wrap: balance;
+}
+
+.vp-doc :is(p, li) {
+  text-wrap: pretty;
+}
+
 /* Style links in the homepage tagline */
 .VPHero .tagline a {
   color: var(--vp-c-brand-1);
   text-decoration: none;
-  transition: color 0.25s, text-decoration 0.25s;
+  transition: color 0.25s var(--ease-out);
 }
 
-.VPHero .tagline a:hover {
-  color: var(--vp-c-brand-2);
-  text-decoration: underline;
+@media (hover: hover) and (pointer: fine) {
+  .VPHero .tagline a:hover {
+    color: var(--vp-c-brand-2);
+    text-decoration: underline;
+  }
 }
 
 .VPHero .tagline a.library {
   display: inline-flex;
   align-items: baseline;
   justify-content: center;
-  margin-bottom: 6px;
+  margin-block-end: 6px;
 }
 
 .VPHero .tagline a.library>img {
   display: inline-block;
-  margin: auto 4px auto 2px;
+  margin-block: auto;
+  margin-inline: 2px 4px;
 }
 
-.VPHero .tagline a.badge>img {
-  transition: box-shadow 0.25s ease-in-out;
+.VPHero .tagline a.badge>img,
+.vp-doc .badges a.badge>img {
   display: inline-block;
   box-shadow: 0px 0px 0px 0px currentColor;
+  transition: box-shadow 0.25s var(--ease-out);
 }
 
-.VPHero .tagline a.badge:hover>img {
-  box-shadow: 0px 0px 12px 0px currentColor;
+@media (hover: hover) and (pointer: fine) {
+  .VPHero .tagline a.badge:hover>img,
+  .vp-doc .badges a.badge:hover>img {
+    box-shadow: 0px 0px 12px 0px currentColor;
+  }
 }
 
 /* Version badges on package pages */
@@ -37,19 +61,11 @@
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 16px;
-  margin-bottom: 24px;
+  margin-block: 16px 24px;
 }
 
 .vp-doc .badges a.badge>img {
-  display: inline-block;
   border-radius: 4px;
-  box-shadow: 0px 0px 0px 0px currentColor;
-  transition: box-shadow 0.25s ease-in-out;
-}
-
-.vp-doc .badges a.badge:hover>img {
-  box-shadow: 0px 0px 12px 0px currentColor;
 }
 
 /* Shields badges: pin a legible height so the wide release badge doesn't
@@ -104,6 +120,7 @@
   --vp-home-hero-image-filter-brightness: 60%;
 }
 
+/* Physical top/left pair with the translate(-50%) centring in the transform. */
 .VPHero.has-image .image-bg {
   background-image: var(--vp-home-hero-image-background-image);
   background-size: contain;
@@ -117,7 +134,17 @@
   top: 50%;
   left: 50%;
   transform: var(--vp-home-hero-image-transform);
-  transition: width 0.5s, height 0.5s, transform 0.5s, filter 0.5s;
+  transition: filter 0.5s var(--ease-out);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .VPHero.has-image .image-bg {
+    transition:
+      width 0.5s var(--ease-out),
+      height 0.5s var(--ease-out),
+      transform 0.5s var(--ease-out),
+      filter 0.5s var(--ease-out);
+  }
 }
 
 

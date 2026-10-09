@@ -132,9 +132,6 @@ onUnmounted(() => {
 <style scoped>
 .stackblitz-embed {
   width: 100%;
-  transition:
-    padding 0.3s ease,
-    width 0.3s ease;
 }
 
 .stackblitz-embed iframe {
@@ -150,11 +147,7 @@ onUnmounted(() => {
   max-height: calc(100svh - 120px);
   border: 0;
   border-radius: 4px;
-  overflow: hidden;
-  transition:
-    height 0.3s ease,
-    width 0.3s ease,
-    border-radius 0.3s ease;
+  overflow: clip;
   margin: auto;
 }
 
@@ -169,19 +162,42 @@ onUnmounted(() => {
   height: calc(100vh - 80px);
   border-radius: 8px;
   width: 88%;
-  transition:
-    height 0.3s ease,
-    width 0s ease,
-    border-radius 0.3s ease;
 }
 
 .stackblitz-embed.fullscreen:fullscreen iframe,
 .stackblitz-embed.fullscreen:-webkit-full-screen iframe {
   width: 100%;
-  transition:
-    height 0.3s ease,
-    width 0.3s ease,
-    border-radius 0.3s ease;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .stackblitz-embed {
+    transition:
+      padding 0.3s var(--ease-out),
+      width 0.3s var(--ease-out);
+  }
+
+  .stackblitz-embed iframe {
+    transition:
+      height 0.3s var(--ease-out),
+      width 0.3s var(--ease-out),
+      border-radius 0.3s var(--ease-out);
+  }
+
+  .stackblitz-embed:fullscreen iframe,
+  .stackblitz-embed:-webkit-full-screen iframe {
+    transition:
+      height 0.3s var(--ease-out),
+      width 0s,
+      border-radius 0.3s var(--ease-out);
+  }
+
+  .stackblitz-embed.fullscreen:fullscreen iframe,
+  .stackblitz-embed.fullscreen:-webkit-full-screen iframe {
+    transition:
+      height 0.3s var(--ease-out),
+      width 0.3s var(--ease-out),
+      border-radius 0.3s var(--ease-out);
+  }
 }
 
 .stackblitz-embed-actions {
@@ -189,12 +205,13 @@ onUnmounted(() => {
   align-items: center;
   flex-wrap: wrap;
   gap: 12px;
-  margin-top: 8px;
+  margin-block-start: 8px;
 }
 
 .fallback-note {
-  margin: 0 0 8px;
-  padding: 8px 12px;
+  margin-block: 0 8px;
+  padding-block: 8px;
+  padding-inline: 12px;
   font-size: 14px;
   color: var(--vp-c-text-2);
   background: var(--vp-c-bg-soft);
@@ -206,7 +223,8 @@ onUnmounted(() => {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 12px;
+  padding-block: 6px;
+  padding-inline: 12px;
   font-size: 14px;
   font-weight: 500;
   color: var(--vp-c-text-1);
@@ -215,14 +233,27 @@ onUnmounted(() => {
   border: 1px solid var(--vp-c-divider);
   border-radius: 6px;
   cursor: pointer;
+  touch-action: manipulation;
   transition:
-    background-color 0.2s,
-    border-color 0.2s;
+    background-color 0.2s var(--ease-out),
+    border-color 0.2s var(--ease-out),
+    transform 0.15s var(--ease-out);
 }
 
-.btn:hover {
-  background: var(--vp-c-bg-mute);
-  border-color: var(--vp-c-brand-1);
+@media (hover: hover) and (pointer: fine) {
+  .btn:hover {
+    background: var(--vp-c-bg-mute);
+    border-color: var(--vp-c-brand-1);
+  }
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--vp-c-brand-1);
+  outline-offset: 1px;
 }
 
 /* Framed like the sibling .btn controls; border present in both states so
@@ -233,8 +264,8 @@ onUnmounted(() => {
   line-height: 0;
   border: 1px solid var(--vp-c-divider);
   border-radius: 6px;
-  overflow: hidden;
-  transition: border-color 0.2s;
+  overflow: clip;
+  transition: border-color 0.2s var(--ease-out);
 }
 
 .stackblitz-embed-actions :deep(a img) {
@@ -245,7 +276,9 @@ onUnmounted(() => {
   margin: 0;
 }
 
-.stackblitz-embed-actions :deep(a:hover) {
-  border-color: var(--vp-c-brand-1);
+@media (hover: hover) and (pointer: fine) {
+  .stackblitz-embed-actions :deep(a:hover) {
+    border-color: var(--vp-c-brand-1);
+  }
 }
 </style>

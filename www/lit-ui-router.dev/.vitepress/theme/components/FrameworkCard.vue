@@ -56,17 +56,18 @@ function toggle() {
   padding: 16px;
   /* the button reset: the card owns its own type and alignment */
   font: inherit;
-  text-align: left;
+  text-align: start;
   color: inherit;
   background: var(--vp-c-bg-soft);
   border: 1px solid var(--vp-c-divider);
   border-radius: 12px;
   cursor: pointer;
+  touch-action: manipulation;
   transition:
-    transform 0.15s ease,
-    border-color 0.15s ease,
-    box-shadow 0.15s ease,
-    opacity 0.15s ease;
+    transform 0.15s var(--ease-out),
+    border-color 0.15s var(--ease-out),
+    box-shadow 0.15s var(--ease-out),
+    opacity 0.15s var(--ease-out);
 }
 
 .framework-card.active {
@@ -84,20 +85,14 @@ function toggle() {
 }
 
 /* cosmetic lift only — linked highlighting is click-intent */
-@media (hover: hover) {
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
   .framework-card:hover {
     transform: translateY(-2px);
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .framework-card {
-    transition: none;
-  }
-
-  .framework-card:hover {
-    transform: none;
-  }
+.framework-card:active {
+  transform: scale(0.98);
 }
 
 .mark {
