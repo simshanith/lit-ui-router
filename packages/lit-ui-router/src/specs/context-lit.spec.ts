@@ -144,7 +144,7 @@ describe('lit-ui-router/context with @lit/context', () => {
       expect(subscriber.calls).toHaveLength(1);
       const [value, unsubscribe] = subscriber.calls[0];
       expect(value).toBe(router);
-      expect(typeof unsubscribe).toBe('function');
+      expect(unsubscribe).toBeTypeOf('function');
       expect(subscriber.consumer.value).toBe(router);
     });
 

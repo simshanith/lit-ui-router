@@ -127,7 +127,7 @@ class TestRetainedLeaf extends CountedElement implements UiOnParamsChanged {
   readonly propsSeen: (UIViewInjectedProps | undefined)[] = [];
 
   uiOnParamsChanged(params: RawParams) {
-    if (typeof params.starId === 'string') {
+    if (params.starId !== undefined) {
       this.starId = params.starId;
     }
   }
@@ -975,7 +975,7 @@ describe('UiView', () => {
     it('should confirm the specs run against lit dev mode', () => {
       // the guard above is only meaningful if the suite sees dev lit; without
       // this, every warning spec could pass vacuously
-      expect(typeof UIRouterLitElement.enableWarning).toBe('function');
+      expect(UIRouterLitElement.enableWarning).toBeTypeOf('function');
     });
 
     it('should not warn when a router ancestor is present', async () => {

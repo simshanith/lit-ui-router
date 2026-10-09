@@ -11,7 +11,7 @@
 // (release-bump.ts, release-publish.ts) now import it directly.
 
 import type { Exec } from '@tools/shared/exec.ts';
-import { defaultExec } from '@tools/shared/exec.ts';
+import { defaultExec, readExecFailure } from '@tools/shared/exec.ts';
 import {
   describeArgs,
   isFirstReleaseError,
@@ -76,13 +76,7 @@ export async function prevReleaseTag(
 
     return parsePrevTag(stdout);
   } catch (error) {
-    const stderr =
-      error !== null &&
-      typeof error === 'object' &&
-      'stderr' in error &&
-      typeof error.stderr === 'string'
-        ? error.stderr
-        : '';
+    const stderr = readExecFailure(error).stderr ?? '';
 
     if (!isFirstReleaseError(stderr)) throw error;
 

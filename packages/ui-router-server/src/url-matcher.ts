@@ -73,8 +73,17 @@ const typeEquals = (type: ParamType, a: unknown, b: unknown): boolean =>
   // eslint-disable-next-line eqeqeq -- core's default equals coerces (null/undefined/'' and string/number pairs compare loosely)
   type.equals ? type.equals(a, b) : a == b;
 
+const isString = <T>(val: T): val is T & string => typeof val === 'string';
+
+const isNumber = (val: unknown): val is number => typeof val === 'number';
+
+const isBoolean = (val: unknown): val is boolean => typeof val === 'boolean';
+
+const isFunction = (val: unknown): val is (...args: never[]) => void =>
+  typeof val === 'function';
+
 const stringBase = {
-  is: (val: unknown): boolean => typeof val === 'string',
+  is: (val: unknown): boolean => isString(val),
   // Stringly, like core's makeDefaultType: format()/validates() normalize
   // non-string inputs (numbers, booleans) through decode, not just url text.
   decode: valToString,
@@ -100,15 +109,14 @@ const builtinTypes = {
     name: 'int',
     pattern: /-?\d+/,
     // Only a number can strict-equal parseInt of its own string form.
-    is: (val: unknown) =>
-      typeof val === 'number' && decodeInt(val.toString()) === val,
+    is: (val: unknown) => isNumber(val) && decodeInt(val.toString()) === val,
     decode: decodeInt,
     encode: valToString,
   }),
   bool: freeze({
     name: 'bool',
     pattern: /0|1/,
-    is: (val: unknown) => typeof val === 'boolean',
+    is: (val: unknown) => isBoolean(val),
     decode: (val: string) => decodeInt(val) !== 0,
     // Truthiness, as upstream ((val && 1) || 0) — undefined encodes to '0'.
     encode: (val: unknown) => (val ? '1' : '0'),
@@ -167,12 +175,13 @@ const declarationKeys = ['value', 'type', 'squash', 'array', 'dynamic'];
 interface FullDeclaration
   extends ParamDeclaration, Pick<CoreParamDeclaration, 'array' | 'replace'> {}
 
-const unwrapShorthand = (config: unknown): FullDeclaration =>
+const isLonghandDeclaration = (config: unknown): config is FullDeclaration =>
   config !== null &&
   typeof config === 'object' &&
-  declarationKeys.some((key) => Object.hasOwn(config, key))
-    ? config
-    : { value: config };
+  declarationKeys.some((key) => Object.hasOwn(config, key));
+
+const unwrapShorthand = (config: unknown): FullDeclaration =>
+  isLonghandDeclaration(config) ? config : { value: config };
 
 const resolveType = (
   declared: string | ParamType | undefined,
@@ -183,13 +192,14 @@ const resolveType = (
   if (declared && urlType && urlType.name !== 'string')
     throw new Error(`Param '${id}' has two type configurations.`);
 
-  if (typeof declared === 'string' && unsupportedTypes.has(declared))
+  if (isString(declared) && unsupportedTypes.has(declared))
     throw new Error(
       `Param type '${declared}' is not supported by the standalone matcher`,
     );
 
-  const declaredBuiltin =
-    typeof declared === 'string' ? builtinType(declared) : undefined;
+  const declaredBuiltin = isString(declared)
+    ? builtinType(declared)
+    : undefined;
 
   if (urlType && declaredBuiltin) return declaredBuiltin;
 
@@ -197,7 +207,7 @@ const resolveType = (
 
   if (!declared) return builtinTypes[isSearch ? 'query' : 'path'];
 
-  if (typeof declared === 'object') return declared;
+  if (!isString(declared)) return declared;
   const named = builtinType(declared);
 
   if (!named)
@@ -238,7 +248,7 @@ const getSquashPolicy = (
 
   if (declared === undefined || declared === null) return defaultPolicy;
 
-  if (declared === true || typeof declared === 'string') return declared;
+  if (declared === true || isString(declared)) return declared;
   throw new Error(
     `Invalid squash policy: '${JSON.stringify(declared)}'. Valid policies: false, true, or arbitrary string`,
   );
@@ -258,8 +268,9 @@ const getReplace = (
   isOptional: boolean,
   squash: boolean | string,
 ): Replace[] => {
-  const fromSquash: Replace[] =
-    typeof squash === 'string' ? [{ from: squash, to: undefined }] : [];
+  const fromSquash: Replace[] = isString(squash)
+    ? [{ from: squash, to: undefined }]
+    : [];
 
   const defaults: Replace[] = [
     { from: '', to: isOptional ? undefined : '' },
@@ -307,7 +318,7 @@ const compileParam = (
       `'replace' is not supported by the standalone matcher (${where})`,
     );
 
-  if (typeof declared.value === 'function')
+  if (isFunction(declared.value))
     throw new Error(
       `Function (injected) defaults are not supported by the standalone matcher (${where}); use a static value`,
     );
@@ -385,7 +396,7 @@ const paramValidates = (param: CompiledParam, input: unknown): boolean => {
   // Of the right type, but its encoded form escapes the type's pattern.
   const encoded = typeEncode(param.type, normalized);
 
-  return !(typeof encoded === 'string' && !param.type.pattern.exec(encoded));
+  return !(isString(encoded) && !param.type.pattern.exec(encoded));
 };
 
 /** Escapes a static segment; with a param, appends its capture group per squash policy. */
@@ -700,7 +711,7 @@ export function format(
       return;
     }
 
-    if (typeof squash === 'string') {
+    if (isString(squash)) {
       result += squash;
 
       return;

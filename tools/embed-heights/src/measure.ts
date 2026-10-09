@@ -5,6 +5,7 @@
 
 import { readFile, stat } from 'node:fs/promises';
 import { createServer, type Server } from 'node:http';
+import type { AddressInfo } from 'node:net';
 import { extname, join, normalize } from 'node:path';
 import { chromium, type Page } from 'playwright';
 
@@ -77,10 +78,15 @@ export async function serveExamples(examplesDir: string): Promise<Server> {
   return server;
 }
 
+/** A TCP address, not a pipe path or the null of a server not listening. */
+const isTcpAddress = (
+  address: ReturnType<Server['address']>,
+): address is AddressInfo => address !== null && typeof address === 'object';
+
 export function serverOrigin(server: Server): string {
   const address = server.address();
 
-  if (address === null || typeof address === 'string') {
+  if (!isTcpAddress(address)) {
     throw new Error('server is not listening on a TCP port');
   }
 

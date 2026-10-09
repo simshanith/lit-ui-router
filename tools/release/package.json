@@ -31,6 +31,7 @@
     "pacote": "catalog:",
     "publint": "catalog:",
     "semver": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "valibot": "catalog:"
   }
 }

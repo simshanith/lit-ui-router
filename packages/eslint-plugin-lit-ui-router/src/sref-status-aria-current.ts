@@ -14,6 +14,7 @@ import {
   hasAriaCurrent,
   isLinkElement,
   isMemberExpression,
+  isString,
   LINK_ELEMENTS_SCHEMA,
   linkElementsOf,
   type Node,
@@ -45,7 +46,7 @@ const isNode = (value: unknown): value is Node =>
 
 /** A key's name, `#`-prefixed when private; nothing for a key with no name. */
 const nameOf = (key: Node): string | undefined => {
-  if (typeof key.name !== 'string') return undefined;
+  if (!isString(key.name)) return undefined;
 
   return key.type === 'PrivateIdentifier' ? `#${key.name}` : key.name;
 };

@@ -139,16 +139,21 @@ export interface AriaCurrentValues {
 const isLinkElement = (element: Element): boolean =>
   isNativeLink(element) || element.matches('[role~="link"]');
 
+/** Whether `value` is the per-state object form rather than a shorthand. */
+const isAriaCurrentValues = (
+  value: UiSrefActiveParams['ariaCurrentValue'],
+): value is AriaCurrentValues => typeof value === 'object';
+
 /**
  * Widens the shorthand forms to the per-state shape. A token, `false`, or
  * nothing at all is an `exact` value; only the object form sets `active`.
  *
  * @internal
  */
-const toAriaCurrentValues = (
+export const toAriaCurrentValues = (
   ariaCurrentValue: UiSrefActiveParams['ariaCurrentValue'],
 ): AriaCurrentValues =>
-  typeof ariaCurrentValue === 'object'
+  isAriaCurrentValues(ariaCurrentValue)
     ? ariaCurrentValue
     : { exact: ariaCurrentValue };
 

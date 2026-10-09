@@ -5,8 +5,20 @@
 // identical registry state always produces identical bytes — the file is a
 // cache key, and the registry's own key order is nondeterministic.
 
+import * as v from 'valibot';
+
 /** Package name → its dist-tags (`{}` when never published). */
 export type PublishedVersions = Record<string, Record<string, string>>;
+
+/** A JSON object of `entry` values; `v.record` alone also admits arrays. */
+const objectOf = <TEntry extends v.GenericSchema>(entry: TEntry) =>
+  v.pipe(
+    v.unknown(),
+    v.check((input) => !Array.isArray(input)),
+    v.record(v.string(), entry),
+  );
+
+const PublishedVersionsSchema = objectOf(objectOf(v.string()));
 
 function sortKeys<T>(entries: Record<string, T>): Record<string, T> {
   return Object.fromEntries(
@@ -36,30 +48,28 @@ export function parseManifest(text: string): PublishedVersions {
     throw new Error('published-versions.json is not valid JSON');
   }
 
-  if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+  const result = v.safeParse(PublishedVersionsSchema, parsed);
+
+  if (result.success) return result.output;
+
+  // The first issue's path names how deep the drift sits: the root, a package, or one of its dist-tags.
+  const [name, tag] = (result.issues[0].path ?? []).map((item) =>
+    String(item.key),
+  );
+
+  if (name === undefined) {
     throw new Error(
       'published-versions.json must be an object of package name → dist-tags',
     );
   }
 
-  // SAFETY: the claim the checks below hold it to, entry by entry
-  const versions = parsed as PublishedVersions;
-
-  for (const [name, tags] of Object.entries(versions)) {
-    if (typeof tags !== 'object' || tags === null || Array.isArray(tags)) {
-      throw new Error(
-        `published-versions.json: "${name}" must map to a dist-tag object`,
-      );
-    }
-
-    for (const [tag, version] of Object.entries(tags)) {
-      if (typeof version !== 'string') {
-        throw new Error(
-          `published-versions.json: "${name}" dist-tag "${tag}" must map to a version string`,
-        );
-      }
-    }
+  if (tag === undefined) {
+    throw new Error(
+      `published-versions.json: "${name}" must map to a dist-tag object`,
+    );
   }
 
-  return versions;
+  throw new Error(
+    `published-versions.json: "${name}" dist-tag "${tag}" must map to a version string`,
+  );
 }

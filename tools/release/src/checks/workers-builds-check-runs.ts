@@ -12,7 +12,7 @@
 
 import { fileURLToPath } from 'node:url';
 
-import { defaultExec } from '@tools/shared/exec.ts';
+import { defaultExec, readExecFailure } from '@tools/shared/exec.ts';
 import { ensureGh } from '../lib/gh.ts';
 import { logWarning } from '@tools/shared/gha.ts';
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
@@ -41,22 +41,13 @@ async function runTriggerCheck(): Promise<TriggerCheckResult> {
   } catch (error: unknown) {
     // execFile rejects with the child's code/stdout/stderr attached; anything
     // else (spawn failure) is an observer error too, so it lands on 2.
-    // SAFETY: execFile rejects only with Error objects; each field is typeof-checked
-    const failure = error as {
-      code?: unknown;
-      stdout?: unknown;
-      stderr?: unknown;
-    };
-
-    const exitCode = typeof failure.code === 'number' ? failure.code : 2;
-    const stdout = typeof failure.stdout === 'string' ? failure.stdout : '';
+    const failure = readExecFailure(error);
+    const exitCode = failure.code ?? 2;
+    const stdout = failure.stdout ?? '';
 
     const stderr =
-      typeof failure.stderr === 'string'
-        ? failure.stderr
-        : error instanceof Error
-          ? error.message
-          : String(error);
+      failure.stderr ??
+      (error instanceof Error ? error.message : String(error));
 
     return { exitCode, output: `${stdout}${stderr}` };
   }

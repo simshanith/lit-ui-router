@@ -109,7 +109,11 @@ export interface ConnectAdapterOptions {
 const acceptsHtml = (req: ConnectRequest): boolean => {
   const accept = req.headers.accept;
 
-  return typeof accept === 'string' && accept.includes('text/html');
+  return (
+    accept !== undefined &&
+    !Array.isArray(accept) &&
+    accept.includes('text/html')
+  );
 };
 
 const isNavigation = (req: ConnectRequest): boolean =>

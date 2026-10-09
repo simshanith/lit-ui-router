@@ -2,6 +2,8 @@
 // shell (./release-reconcile.ts) hashes the two tarballs and reads turbo's
 // run summary; the verdict logic lives here, unit-tested.
 
+import * as v from 'valibot';
+
 export interface CacheOutcome {
   status?: string;
   source?: string;
@@ -17,7 +19,7 @@ export function packCacheOutcome(
   summary: unknown,
   taskId: string,
 ): CacheOutcome {
-  if (typeof summary !== 'object' || summary === null) return {};
+  if (!v.is(v.looseObject({}), summary)) return {};
 
   // SAFETY: every field is optional and `tasks` is Array-checked before use
   const tasks =

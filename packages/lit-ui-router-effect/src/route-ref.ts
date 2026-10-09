@@ -1,6 +1,7 @@
 import { Effect, SubscriptionRef } from 'effect';
 import {
   Glob,
+  isString,
   Param,
   RawParams,
   StateDeclaration,
@@ -58,7 +59,7 @@ export function snapshotRoute(
     includes(stateOrName, values) {
       let target = stateOrName;
 
-      if (typeof stateOrName === 'string' && Glob.is(stateOrName)) {
+      if (isString(stateOrName) && Glob.is(stateOrName)) {
         if (!Glob.fromString(stateOrName).matches($current.name)) return false;
         target = $current.name;
       }

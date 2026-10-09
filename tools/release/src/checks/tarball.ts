@@ -5,6 +5,7 @@
 
 import type { Json } from '@tools/bootstrap/types.ts';
 import pacote from 'pacote';
+import * as v from 'valibot';
 
 // pacote.manifest on a file spec returns the archive's fields verbatim
 // (probe-verified against pnpm-packed and npm-published tarballs) except:
@@ -12,6 +13,11 @@ import pacote from 'pacote';
 // internal metadata) and injects exactly these fetch-metadata keys, which
 // the helper strips back out.
 const PACOTE_METADATA_FIELDS = ['_id', '_integrity', '_resolved', '_from'];
+
+const PackageIdentitySchema = v.object({
+  name: v.string(),
+  version: v.string(),
+});
 
 /**
  * The literal package/package.json fields of a packed tarball; rejects when
@@ -30,10 +36,7 @@ export async function tarballManifest(
     Record<string, Json>
   >;
 
-  if (
-    typeof manifest.name !== 'string' ||
-    typeof manifest.version !== 'string'
-  ) {
+  if (!v.is(PackageIdentitySchema, manifest)) {
     throw new Error(
       `${tarball}: package/package.json is not a package manifest (no name/version)`,
     );

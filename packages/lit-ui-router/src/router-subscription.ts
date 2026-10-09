@@ -1,4 +1,6 @@
 // The subscribe half of the router context: a provider's provisional router, and the one upgrade it may make.
+import { isFunction } from '@uirouter/core';
+
 import { isRouterContextRequest, requestRouter } from './context.js';
 import type { UIRouterLit } from './core.js';
 import { uiRouterContextEventName } from './events.js';
@@ -83,7 +85,7 @@ const reportFailures = (failures: unknown[]): void => {
     return;
   }
 
-  if (typeof globalThis.reportError === 'function') {
+  if (isFunction(globalThis.reportError)) {
     failures.forEach((failure) => globalThis.reportError(failure));
 
     return;

@@ -8,6 +8,7 @@
 import { isRootMember, type Member } from '@tools/shared/workspace.ts';
 
 import {
+  definesPeerFloorScript,
   PEER_FLOOR_SCRIPT,
   peerFloorTurboArgs,
 } from '../checks/peer-floor-check-runs.core.ts';
@@ -31,7 +32,7 @@ export function gateDecision(
     );
   }
 
-  if (typeof member.manifest?.scripts?.[PEER_FLOOR_SCRIPT] !== 'string') {
+  if (!definesPeerFloorScript(member)) {
     return {
       kind: 'skip',
       reason: `${packageName} defines no ${PEER_FLOOR_SCRIPT} script — gate does not apply`,

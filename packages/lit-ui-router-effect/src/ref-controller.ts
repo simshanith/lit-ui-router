@@ -1,4 +1,4 @@
-import { Effect, Fiber, Stream, SubscriptionRef } from 'effect';
+import { Effect, Fiber, Predicate, Stream, SubscriptionRef } from 'effect';
 import { ReactiveController, ReactiveControllerHost } from 'lit';
 
 /**
@@ -119,10 +119,9 @@ export class RefController<
   ) {
     this.runtime = options.runtime ?? defaultRefRuntime;
     // SAFETY: undefined unless `initialValue` is given, the pre-connect shape either way; `.value` stays `T` for render code.
-    this.value =
-      typeof refs === 'function'
-        ? (options.initialValue as T)
-        : selector(...this.read(refs));
+    this.value = Predicate.isFunction(refs)
+      ? (options.initialValue as T)
+      : selector(...this.read(refs));
     host.addController(this);
   }
 
@@ -150,7 +149,7 @@ export class RefController<
   }
 
   private fork(): void {
-    const refs = typeof this.refs === 'function' ? this.refs() : this.refs;
+    const refs = Predicate.isFunction(this.refs) ? this.refs() : this.refs;
 
     if (!refs) return;
     // Seed before forking: a fiber's first emission is not guaranteed to land

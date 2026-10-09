@@ -1,3 +1,5 @@
+import { isFunction } from '@uirouter/core';
+
 /**
  * Parses URL params with `?feature-*` prefix into a clean object.
  * Example: `?feature-location-plugin=navigation` -> { 'location-plugin': 'navigation' }
@@ -24,7 +26,7 @@ export function canUseNavigationAPI(): boolean {
   return (
     typeof window !== 'undefined' &&
     'navigation' in window &&
-    typeof window.navigation?.navigate === 'function'
+    isFunction(window.navigation?.navigate)
   );
 }
 
@@ -137,6 +139,10 @@ export interface FeatureFlagDefinitions {
   'enable-api-docs': boolean;
 }
 
+const isBooleanFlag = (
+  value: FeatureFlagDefinitions[keyof FeatureFlagDefinitions],
+): value is boolean => typeof value === 'boolean';
+
 const FLAG_DEFAULTS: FeatureFlagDefinitions = {
   'location-plugin': undefined,
   'enable-visualizer': true,
@@ -209,7 +215,7 @@ export class FeatureFlags {
   ): FeatureFlagDefinitions[K] {
     const current = this.get(flag);
 
-    if (typeof current !== 'boolean') {
+    if (!isBooleanFlag(current)) {
       throw new Error(`Cannot toggle non-boolean flag: ${flag}`);
     }
 
@@ -252,7 +258,7 @@ export class FeatureFlags {
   ): FeatureFlagDefinitions[K] {
     const defaultValue = FLAG_DEFAULTS[flag];
 
-    if (typeof defaultValue === 'boolean') {
+    if (isBooleanFlag(defaultValue)) {
       // SAFETY: a boolean default means K names a boolean flag
       return (value === 'true' || value === '1') as FeatureFlagDefinitions[K];
     }

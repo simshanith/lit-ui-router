@@ -1252,7 +1252,7 @@ describe('uiSrefActive directive', () => {
     it('should confirm the specs run against lit dev mode', () => {
       // the guard above is only meaningful if the suite sees dev lit; without
       // this, every warning spec could pass vacuously
-      expect(typeof UIRouterLitElement.enableWarning).toBe('function');
+      expect(UIRouterLitElement.enableWarning).toBeTypeOf('function');
     });
 
     it('should not warn when there was no authored value to take over', async () => {
@@ -1452,7 +1452,7 @@ describe('uiSrefActive directive', () => {
     it('should confirm the specs run against lit dev mode', () => {
       // the guard above is only meaningful if the suite sees dev lit; without
       // this, every warning spec could pass vacuously
-      expect(typeof UIRouterLitElement.enableWarning).toBe('function');
+      expect(UIRouterLitElement.enableWarning).toBeTypeOf('function');
     });
 
     it('should not warn when a correctly wired app renders', async () => {

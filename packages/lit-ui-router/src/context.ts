@@ -499,6 +499,13 @@ export const getScopedRouter: () => UIRouter | undefined = ():
   | UIRouter
   | undefined => scoped;
 
+/** Whether `value` is a thenable, which `withRouterSync` refuses. */
+const isThenable = <T>(value: T): value is T & PromiseLike<unknown> =>
+  (typeof value === 'object' || typeof value === 'function') &&
+  value !== null &&
+  'then' in value &&
+  typeof value.then === 'function';
+
 /**
  * Runs `run` with `router` published to {@link getScopedRouter | `getScopedRouter`},
  * restoring whatever was there before — `undefined` included — when it returns
@@ -559,12 +566,7 @@ export const withRouterSync: <T>(router: UIRouter, run: () => T) => T = <T>(
     scoped = previous;
   }
 
-  if (
-    (typeof result === 'object' || typeof result === 'function') &&
-    result !== null &&
-    'then' in result &&
-    typeof result.then === 'function'
-  ) {
+  if (isThenable(result)) {
     throw new TypeError(
       'withRouterSync() is synchronous: `run` returned a thenable, and the router slot is already restored by the time it settles. Consume the render inside `run` — collectResultSync(render(template)) — or read the router before awaiting.',
     );

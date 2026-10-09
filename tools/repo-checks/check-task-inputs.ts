@@ -8,7 +8,7 @@
 // so an unstaged new source file never fails the lane, and only a tracked
 // .gitignore counts as an ignore rule, so no machine's global excludes can
 // reach a verdict CI would not.
-import { defaultExec } from '@tools/shared/exec.ts';
+import { defaultExec, readExecFailure } from '@tools/shared/exec.ts';
 import {
   auditTaskInputs,
   formatFailure,
@@ -86,15 +86,9 @@ async function ignoredFiles(
         cwd: workspaceRoot,
       },
     ).catch((cause: unknown) => {
-      if (
-        typeof cause === 'object' &&
-        cause !== null &&
-        'stdout' in cause &&
-        'code' in cause &&
-        cause.code === 1
-      ) {
-        return { stdout: String(cause.stdout) };
-      }
+      const { code, stdout } = readExecFailure(cause);
+
+      if (code === 1 && stdout !== undefined) return { stdout };
 
       throw cause;
     });

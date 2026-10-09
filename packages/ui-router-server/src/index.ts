@@ -133,8 +133,11 @@ interface Mount {
   };
 }
 
+const isUrlText = (input: string | { pathname: string }): input is string =>
+  typeof input === 'string';
+
 const pathnameOf = (input: string | { pathname: string }): string => {
-  if (typeof input !== 'string') return input.pathname;
+  if (!isUrlText(input)) return input.pathname;
   // Accept absolute urls without requiring a URL global (runtime-neutral).
   const path = input.replace(/^[a-z][a-z0-9+.-]*:\/\/[^/?#]*/i, '');
   const end = path.search(/[?#]/);
@@ -156,8 +159,11 @@ const subpathIn = (base: string, pathname: string): string | null => {
 const join = (base: string, path: string): string =>
   base === '/' ? path || '/' : base + path;
 
+const isStateName = (to: string | RedirectTarget): to is string =>
+  typeof to === 'string';
+
 const toTarget = (to: string | RedirectTarget): RedirectTarget =>
-  typeof to === 'string' ? { state: to } : to;
+  isStateName(to) ? { state: to } : to;
 
 /**
  * Merges a request's search into a redirect `location` — the correct-by-

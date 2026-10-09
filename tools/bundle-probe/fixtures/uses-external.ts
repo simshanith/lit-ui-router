@@ -2,4 +2,4 @@
 // named external the way a probed package's declared deps are.
 import { rolldown } from 'rolldown';
 
-export const bundlerKind = typeof rolldown;
+export const bundlerKind = rolldown.name;

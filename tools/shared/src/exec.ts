@@ -6,6 +6,8 @@
 import { execFile, spawn } from 'node:child_process';
 import { promisify } from 'node:util';
 
+import * as v from 'valibot';
+
 export type ExecOptions = { cwd?: string; env?: NodeJS.ProcessEnv };
 
 export type ExecResult = { stdout: string; stderr: string };
@@ -80,6 +82,25 @@ export const defaultCapture: Exec = (command, args, options) =>
       }
     });
   });
+
+const ExecFailureSchema = v.object({
+  code: v.fallback(v.optional(v.number()), undefined),
+  stdout: v.fallback(v.optional(v.string()), undefined),
+  stderr: v.fallback(v.optional(v.string()), undefined),
+});
+
+/** The exit code and output a rejected exec carries; each absent when missing or mistyped. */
+export type ExecFailure = v.InferOutput<typeof ExecFailureSchema>;
+
+/**
+ * Reads the `code`/`stdout`/`stderr` that execFile and `defaultCapture` attach
+ * to a rejection. Anything else, a spawn failure or a non-object, reads as `{}`.
+ */
+export function readExecFailure(cause: unknown): ExecFailure {
+  const parsed = v.safeParse(ExecFailureSchema, cause);
+
+  return parsed.success ? parsed.output : {};
+}
 
 export const defaultStream: Stream = (command, args, options) =>
   new Promise((resolve, reject) => {

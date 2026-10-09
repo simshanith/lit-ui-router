@@ -46,6 +46,10 @@ async function capture(command: string, args: string[]): Promise<string> {
   return stdout.trim();
 }
 
+/** execFile's `code` is the exit status, or an errno string such as `ENOENT` when the spawn failed. */
+const isExitStatus = (code: number | string | null): code is number =>
+  typeof code === 'number';
+
 function messageOf(cause: unknown): string {
   return cause instanceof Error ? cause.message : String(cause);
 }
@@ -85,11 +89,11 @@ async function probeBase(baseRef: string, head: string): Promise<BaseVerdict> {
     // execFile rejects on any non-zero exit; exit 1 is the conflict answer,
     // not a failure, so the status and stdout decide rather than the rejection.
     // SAFETY: execFile rejects with an error carrying the exit code and stdout
-    const failure = error as { code?: number | null; stdout?: string };
+    const failure = error as { code?: number | string | null; stdout?: string };
     const code = failure.code ?? null;
 
     const state = mergeStateFromExit(
-      typeof code === 'number' ? code : null,
+      isExitStatus(code) ? code : null,
       failure.stdout ?? '',
     );
 

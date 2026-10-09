@@ -29,9 +29,12 @@ export function findUnsubstitutedRefs(
     for (const [dep, spec] of Object.entries(manifest?.[field] ?? {})) {
       // The type says string; the bytes come from a tarball, so say which
       // declaration disagreed rather than dying inside String.prototype.trim.
-      if (typeof spec !== 'string') {
+      // oxlint-disable-next-line anti-slop/no-runtime-typeof -- the error names the JSON type that arrived where the manifest type promises a string
+      const kind = typeof spec;
+
+      if (kind !== 'string') {
         throw new TypeError(
-          `${field}.${dep}: specifier is ${typeof spec}, not a string`,
+          `${field}.${dep}: specifier is ${kind}, not a string`,
         );
       }
 

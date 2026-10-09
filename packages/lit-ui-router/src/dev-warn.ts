@@ -1,3 +1,5 @@
+import { isFunction } from '@uirouter/core';
+
 import { UIRouterLitElement } from './ui-router.js';
 
 /**
@@ -9,7 +11,7 @@ import { UIRouterLitElement } from './ui-router.js';
  * @internal
  */
 export function inLitDevMode(): boolean {
-  return typeof UIRouterLitElement.enableWarning === 'function';
+  return isFunction(UIRouterLitElement.enableWarning);
 }
 
 /**

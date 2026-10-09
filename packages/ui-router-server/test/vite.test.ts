@@ -23,8 +23,8 @@ describe('serverRouterPlugin', () => {
   it('is a structural Vite plugin naming the package', () => {
     const plugin = serverRouterPlugin(routerOf({ kind: 'notFound' }));
     assert.equal(plugin.name, 'ui-router-server');
-    assert.equal(typeof plugin.configureServer, 'function');
-    assert.equal(typeof plugin.configurePreviewServer, 'function');
+    assert.ok(plugin.configureServer instanceof Function);
+    assert.ok(plugin.configurePreviewServer instanceof Function);
   });
 
   it('installs one middleware into both the dev and preview stacks', () => {

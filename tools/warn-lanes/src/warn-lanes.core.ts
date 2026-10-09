@@ -16,6 +16,8 @@
 // The IO — spawning the linter, reading and writing the snapshot file — lives
 // in each lane's own package; `@tools/lint-elements` is the first.
 
+import * as v from 'valibot';
+
 /**
  * Turbo task ids whose warnings are watched. Explicit by necessity, not by
  * preference: warn-only-ness cannot be derived from a run summary (see above),
@@ -254,6 +256,18 @@ const MARKER = 'warn-lane:';
  * A single line, JSON payload, because the consumer is a parser and prose is
  * not a protocol. The human-readable report is the rest of the lane's stdout.
  */
+// `rules` is checked as an object only; its counts are carried, not read.
+const WarnLaneStateSchema = v.object({
+  task: v.string(),
+  total: v.number(),
+  floor: v.number(),
+  status: v.picklist(WARN_LANE_STATUSES),
+  regressions: v.number(),
+  rules: v.custom<Record<string, number>>((rules) =>
+    v.is(v.looseObject({}), rules),
+  ),
+});
+
 export function formatWarnLaneMarker(state: WarnLaneState): string {
   return `${MARKER} ${JSON.stringify(state)}`;
 }
@@ -272,22 +286,7 @@ export function parseWarnLaneMarker(line: string): WarnLaneState | undefined {
 
   // Every field, not just the two this function reads: `warnLaneLine`
   // dereferences the rest, so a partial payload reaches it as a typed lie.
-  // SAFETY: `state` escapes only after the checks below confirm every field
-  const state = value as WarnLaneState;
-
-  if (
-    typeof state?.task !== 'string' ||
-    typeof state.total !== 'number' ||
-    typeof state.floor !== 'number' ||
-    typeof state.regressions !== 'number' ||
-    !WARN_LANE_STATUSES.includes(state.status) ||
-    typeof state.rules !== 'object' ||
-    state.rules === null
-  ) {
-    return undefined;
-  }
-
-  return state;
+  return v.is(WarnLaneStateSchema, value) ? value : undefined;
 }
 
 /** The last marker in a task log — a lane prints exactly one, at the end. */

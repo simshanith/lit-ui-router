@@ -1,6 +1,6 @@
 import { SubscriptionRef } from 'effect';
 import { ReactiveControllerHost } from 'lit';
-import { UIRouter } from '@uirouter/core';
+import { isFunction, UIRouter } from '@uirouter/core';
 import { getScopedRouter, requestRouter } from 'lit-ui-router/context';
 import { UIRouterLitElement } from 'lit-ui-router/pure';
 
@@ -71,8 +71,7 @@ export class RouterRefController<T> extends RefController<
     const option = options.router;
 
     const followed: Followed = {
-      router:
-        (typeof option === 'function' ? option() : option) ?? getScopedRouter(),
+      router: (isFunction(option) ? option() : option) ?? getScopedRouter(),
     };
 
     const discover = (): Route | undefined => {
@@ -102,7 +101,7 @@ export class RouterRefController<T> extends RefController<
       options,
     );
     this.followed = followed;
-    this.resolveRouter = typeof option === 'function' ? option : undefined;
+    this.resolveRouter = isFunction(option) ? option : undefined;
     followed.deliver = (router) => {
       if (router === followed.router) return;
       followed.delivered = router;
