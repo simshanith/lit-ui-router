@@ -9,7 +9,7 @@ hero:
     src: /images/lit-ui-router.svg
     alt: Lit UI Router
   tagline: |
-    A <a href="https://ui-router.github.io/" target="_blank" class="library"><img src="/images/ui-router.svg" width="24" height="24" alt="UI Router">UI-Router</a> implementation for <a href="https://lit.dev" target="_blank" class="library"><img src="/images/lit-flame.svg" width="24" height="24" alt="Lit">Lit</a> web components
+    A <a href="https://ui-router.github.io/" target="_blank" class="library"><img src="/images/ui-router.svg" width="24" height="24" alt="">UI-Router</a> implementation for <a href="https://lit.dev" target="_blank" class="library"><img src="/images/lit-flame.svg" width="24" height="24" alt="">Lit</a> web components
     <a href="https://npmx.dev/package/lit-ui-router" target="_blank" class="badge"><img alt="NPM Version" src="https://img.shields.io/npm/v/lit-ui-router" /></a> <a href="https://github.com/simshanith/lit-ui-router/releases/?q=lit-ui-router" target="_blank" class="badge"><img alt="GitHub Release" src="https://img.shields.io/github/v/release/simshanith/lit-ui-router?filter=lit-ui-router@*" /></a>
   actions:
     - theme: brand

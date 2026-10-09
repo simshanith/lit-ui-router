@@ -42,10 +42,10 @@ up would buy.
   <g font-family="var(--vp-font-family-base, ui-sans-serif, system-ui, sans-serif)">
     <!-- legend -->
     <rect x="404" y="6" width="10" height="10" rx="3" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" stroke="var(--vp-c-brand-1, #3451b2)" stroke-width="0.75" />
-    <text x="420" y="15" font-size="11" fill="var(--vp-c-text-3, #929295)">= live mount on lit-ui-router.dev</text>
+    <text x="420" y="15" font-size="11" fill="var(--vp-c-text-2, #67676c)">= live mount on lit-ui-router.dev</text>
     <!-- axis -->
     <line x1="24" y1="400" x2="24" y2="34" stroke="var(--vp-c-text-3, #929295)" stroke-width="1.25" marker-end="url(#arr-spectrum)" />
-    <text x="-214" y="18" font-size="11" fill="var(--vp-c-text-3, #929295)" transform="rotate(-90)">what the app asks of its server</text>
+    <text x="-214" y="18" font-size="11" fill="var(--vp-c-text-2, #67676c)" transform="rotate(-90)">what the app asks of its server</text>
     <!-- L5 -->
     <rect x="48" y="28" width="656" height="54" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
     <rect x="60" y="41" width="28" height="28" rx="14" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-divider, #e2e2e3)" />
@@ -73,7 +73,7 @@ up would buy.
     <text x="74" y="184" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">3</text>
     <text x="102" y="173" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">Path &#183; static error rules</text>
     <text x="102" y="192" font-size="12" fill="var(--vp-c-text-2, #67676c)">honest 404s, but only for asset misses &#8212; can't judge deep links</text>
-    <text x="692" y="185" font-size="11" fill="var(--vp-c-text-3, #929295)" text-anchor="end">per-mount 404.html</text>
+    <text x="692" y="185" font-size="11" fill="var(--vp-c-text-2, #67676c)" text-anchor="end">per-mount 404.html</text>
     <!-- L2 -->
     <rect x="48" y="214" width="656" height="54" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
     <rect x="60" y="227" width="28" height="28" rx="14" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-divider, #e2e2e3)" />
@@ -89,14 +89,14 @@ up would buy.
     <text x="74" y="308" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">1</text>
     <text x="102" y="297" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">Hash location</text>
     <text x="102" y="316" font-size="12" fill="var(--vp-c-text-2, #67676c)">the fragment never leaves the browser &#8212; any static host suffices</text>
-    <text x="692" y="309" font-size="11" fill="var(--vp-c-text-3, #929295)" text-anchor="end">out of scope &#8212; by design</text>
+    <text x="692" y="309" font-size="11" fill="var(--vp-c-text-2, #67676c)" text-anchor="end">out of scope &#8212; by design</text>
     <!-- L0 -->
     <rect x="48" y="338" width="656" height="54" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
     <rect x="60" y="351" width="28" height="28" rx="14" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-divider, #e2e2e3)" />
     <text x="74" y="370" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">0</text>
     <text x="102" y="359" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">Memory location</text>
     <text x="102" y="378" font-size="12" fill="var(--vp-c-text-2, #67676c)">no URL, no address bar &#8212; tests, embedded widgets, headless tooling</text>
-    <text x="692" y="371" font-size="11" fill="var(--vp-c-text-3, #929295)" text-anchor="end">no server story to need</text>
+    <text x="692" y="371" font-size="11" fill="var(--vp-c-text-2, #67676c)" text-anchor="end">no server story to need</text>
   </g>
 </svg>
 
@@ -278,7 +278,7 @@ min+gzip by its own esbuild probe:
     <!-- dependency-free group -->
     <rect x="8" y="10" width="704" height="138" rx="8" fill="none" stroke="var(--vp-c-divider, #e2e2e3)" />
     <text x="700" y="27" font-size="11" font-weight="600" fill="var(--vp-c-text-2, #67676c)" text-anchor="end">no @uirouter/core needed</text>
-    <text x="700" y="41" font-size="10" fill="var(--vp-c-text-3, #929295)" text-anchor="end">a differential-tested port of core's matching subset</text>
+    <text x="700" y="41" font-size="10" fill="var(--vp-c-text-2, #67676c)" text-anchor="end">a differential-tested port of core's matching subset</text>
     <text x="20" y="60" font-size="12" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-1, #3c3c43)">ui-router-server/matcher</text>
     <rect x="230" y="50" width="42" height="16" rx="4" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" stroke="var(--vp-c-brand-1, #3451b2)" stroke-width="0.75" />
     <text x="280" y="63" font-size="11" fill="var(--vp-c-text-2, #67676c)"><tspan font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">2.9 KiB</tspan> &#183; does this path match, with which params &#8212; and format()</text>
@@ -291,17 +291,17 @@ min+gzip by its own esbuild probe:
     <!-- needs-core group: simulate (lazy) and location (eager) -->
     <rect x="8" y="158" width="704" height="118" rx="8" fill="none" stroke="var(--vp-c-divider, #e2e2e3)" />
     <text x="700" y="174" font-size="11" font-weight="600" fill="var(--vp-c-purple-1, #8e18aa)" text-anchor="end">needs @uirouter/core &#8212; optional peer</text>
-    <text x="700" y="187" font-size="10" fill="var(--vp-c-text-3, #929295)" text-anchor="end">a lazy chunk, or your own eager import</text>
+    <text x="700" y="187" font-size="10" fill="var(--vp-c-text-2, #67676c)" text-anchor="end">a lazy chunk, or your own eager import</text>
     <text x="20" y="206" font-size="12" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-1, #3c3c43)">ui-router-server/simulate</text>
     <rect x="230" y="196" width="68" height="16" rx="4" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" stroke="var(--vp-c-brand-1, #3451b2)" stroke-width="0.75" />
     <rect x="300" y="196" width="397" height="16" rx="4" fill="var(--vp-c-purple-soft, rgba(159,122,234,0.14))" stroke="var(--vp-c-purple-1, #8e18aa)" stroke-width="0.75" stroke-dasharray="5 3" />
     <text x="498" y="209" font-size="11" font-weight="600" fill="var(--vp-c-purple-1, #8e18aa)" text-anchor="middle">+27.4 KiB &#183; lazy chunk &#8212; core, whole</text>
-    <text x="230" y="226" font-size="10" fill="var(--vp-c-text-3, #929295)">loads only when a simulate mount resolves &#8212; a matcher-only configuration never fetches it</text>
+    <text x="230" y="226" font-size="10" fill="var(--vp-c-text-2, #67676c)">loads only when a simulate mount resolves &#8212; a matcher-only configuration never fetches it</text>
     <text x="20" y="252" font-size="12" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-1, #3c3c43)">ui-router-server/location</text>
     <rect x="230" y="242" width="10" height="16" rx="4" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" stroke="var(--vp-c-brand-1, #3451b2)" stroke-width="0.75" />
     <text x="250" y="255" font-size="11" fill="var(--vp-c-text-2, #67676c)"><tspan font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">0.3 KiB</tspan> own code &#183; eager import, for a server that already runs a real router</text>
     <!-- scale note -->
-    <text x="712" y="292" font-size="10" fill="var(--vp-c-text-3, #929295)" text-anchor="end">min+gzip, measured by the package's own esbuild probe &#183; linear scale</text>
+    <text x="712" y="292" font-size="10" fill="var(--vp-c-text-2, #67676c)" text-anchor="end">min+gzip, measured by the package's own esbuild probe &#183; linear scale</text>
   </g>
 </svg>
 
@@ -358,14 +358,14 @@ Picking a tier:
     <!-- client panel -->
     <rect x="16" y="28" width="216" height="230" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
     <text x="32" y="52" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">Client app</text>
-    <text x="32" y="68" font-size="10" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-3, #929295)">sample-app &#183; states.ts</text>
+    <text x="32" y="68" font-size="10" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-2, #67676c)">sample-app &#183; states.ts</text>
     <!-- projected rows -->
     <rect x="28" y="80" width="192" height="22" rx="5" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" />
     <text x="36" y="95" font-size="11" fill="var(--vp-c-brand-1, #3451b2)">url-bearing states</text>
     <rect x="28" y="106" width="192" height="22" rx="5" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" />
     <text x="36" y="121" font-size="11" fill="var(--vp-c-brand-1, #3451b2)">root redirect &#8212; when(/^\/?$/)</text>
     <line x1="28" y1="140" x2="220" y2="140" stroke="var(--vp-c-divider, #e2e2e3)" />
-    <text x="220" y="154" font-size="10" font-style="italic" fill="var(--vp-c-text-3, #929295)" text-anchor="end">deliberately stays client-side</text>
+    <text x="220" y="154" font-size="10" font-style="italic" fill="var(--vp-c-text-2, #67676c)" text-anchor="end">deliberately stays client-side</text>
     <text x="36" y="174" font-size="11" fill="var(--vp-c-text-2, #67676c)">components &#8212; register custom</text>
     <text x="36" y="188" font-size="11" fill="var(--vp-c-text-2, #67676c)">elements at module scope</text>
     <text x="36" y="208" font-size="11" fill="var(--vp-c-text-2, #67676c)">conditional routing &#8212; DSR</text>
@@ -378,7 +378,7 @@ Picking a tier:
     <!-- data panel -->
     <rect x="288" y="28" width="188" height="230" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-brand-1, #3451b2)" />
     <text x="304" y="52" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">Pure data</text>
-    <text x="304" y="68" font-size="10" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-3, #929295)">sample-app-routes</text>
+    <text x="304" y="68" font-size="10" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-2, #67676c)">sample-app-routes</text>
     <g font-family="var(--vp-font-family-mono, ui-monospace, monospace)" font-size="11" fill="var(--vp-c-text-1, #3c3c43)">
       <text x="304" y="94">routes: [</text>
       <text x="312" y="110">{ name, url },</text>
@@ -388,15 +388,15 @@ Picking a tier:
       <text x="312" y="182">{ pattern, to },</text>
       <text x="304" y="198">]</text>
     </g>
-    <text x="304" y="226" font-size="10" fill="var(--vp-c-text-3, #929295)">no imports, no components &#8212;</text>
-    <text x="304" y="240" font-size="10" fill="var(--vp-c-text-3, #929295)">safe in any server runtime</text>
+    <text x="304" y="226" font-size="10" fill="var(--vp-c-text-2, #67676c)">no imports, no components &#8212;</text>
+    <text x="304" y="240" font-size="10" fill="var(--vp-c-text-2, #67676c)">safe in any server runtime</text>
     <!-- import arrow -->
     <line x1="476" y1="104" x2="528" y2="104" stroke="var(--vp-c-text-3, #929295)" stroke-width="1.25" marker-end="url(#arr-proj)" />
     <text x="502" y="94" font-size="10" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">imported</text>
     <!-- worker panel -->
     <rect x="532" y="28" width="172" height="230" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
     <text x="548" y="52" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">Edge worker</text>
-    <text x="548" y="68" font-size="10" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-3, #929295)">www/…/worker/index.ts</text>
+    <text x="548" y="68" font-size="10" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-2, #67676c)">www/…/worker/index.ts</text>
     <g font-family="var(--vp-font-family-mono, ui-monospace, monospace)" font-size="11" fill="var(--vp-c-text-1, #3c3c43)">
       <text x="548" y="98">createServerRouter(</text>
       <text x="556" y="114">{ mounts })</text>
@@ -410,8 +410,8 @@ Picking a tier:
     <line x1="382" y1="278" x2="382" y2="262" stroke="var(--vp-c-green-1, #18794e)" stroke-dasharray="5 4" />
     <text x="32" y="298" font-size="11" font-weight="600" fill="var(--vp-c-green-1, #18794e)">contract tests pin the seam &#8212; every CI run</text>
     <text x="32" y="314" font-size="11" fill="var(--vp-c-text-2, #67676c)">every verdict the worker will serve, resolved through the real package API</text>
-    <text x="548" y="302" font-size="10" font-style="italic" fill="var(--vp-c-text-3, #929295)">drift-resistant through a</text>
-    <text x="548" y="316" font-size="10" font-style="italic" fill="var(--vp-c-text-3, #929295)">test-pinned seam</text>
+    <text x="548" y="302" font-size="10" font-style="italic" fill="var(--vp-c-text-2, #67676c)">drift-resistant through a</text>
+    <text x="548" y="316" font-size="10" font-style="italic" fill="var(--vp-c-text-2, #67676c)">test-pinned seam</text>
   </g>
 </svg>
 
@@ -498,8 +498,8 @@ routes — through the real package API.
   </defs>
   <g font-family="var(--vp-font-family-base, ui-sans-serif, system-ui, sans-serif)">
     <!-- column headings -->
-    <text x="540" y="18" font-size="11" fill="var(--vp-c-text-3, #929295)" text-anchor="middle">verdict &#8212; a plain object</text>
-    <text x="660" y="18" font-size="11" fill="var(--vp-c-text-3, #929295)" text-anchor="middle">HTTP</text>
+    <text x="540" y="18" font-size="11" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">verdict &#8212; a plain object</text>
+    <text x="660" y="18" font-size="11" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">HTTP</text>
     <!-- request -->
     <rect x="16" y="110" width="152" height="64" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
     <text x="92" y="136" font-size="12" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">incoming request</text>
@@ -510,8 +510,8 @@ routes — through the real package API.
     <text x="316" y="132" font-size="12" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #3451b2)" text-anchor="middle">createServerRouter(&#8230;)</text>
     <text x="316" y="150" font-size="12" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #3451b2)" text-anchor="middle">.resolve(url)</text>
     <text x="316" y="169" font-size="11" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">longest mount base wins</text>
-    <text x="316" y="202" font-size="11" fill="var(--vp-c-text-3, #929295)" text-anchor="middle">no fetch, no Response &#8212;</text>
-    <text x="316" y="217" font-size="11" fill="var(--vp-c-text-3, #929295)" text-anchor="middle">mounts validate at construction</text>
+    <text x="316" y="202" font-size="11" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">no fetch, no Response &#8212;</text>
+    <text x="316" y="217" font-size="11" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">mounts validate at construction</text>
     <!-- fan-out arrows -->
     <line x1="414" y1="128" x2="466" y2="58" stroke="var(--vp-c-text-3, #929295)" stroke-width="1.25" marker-end="url(#arr-verdict)" />
     <line x1="414" y1="142" x2="466" y2="142" stroke="var(--vp-c-text-3, #929295)" stroke-width="1.25" marker-end="url(#arr-verdict)" />
@@ -535,18 +535,18 @@ routes — through the real package API.
     <!-- HTTP: 200 -->
     <rect x="638" y="34" width="44" height="22" rx="11" fill="var(--vp-c-green-soft, rgba(16,185,129,0.14))" />
     <text x="660" y="49" font-size="12" font-weight="600" fill="var(--vp-c-green-1, #18794e)" text-anchor="middle">200</text>
-    <text x="663" y="72" font-size="10" fill="var(--vp-c-text-3, #929295)" text-anchor="middle">app shell (304s ok);</text>
-    <text x="663" y="84" font-size="10" fill="var(--vp-c-text-3, #929295)" text-anchor="middle">status'd shell: 404</text>
+    <text x="663" y="72" font-size="10" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">app shell (304s ok);</text>
+    <text x="663" y="84" font-size="10" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">status'd shell: 404</text>
     <!-- HTTP: 302 -->
     <rect x="638" y="120" width="44" height="22" rx="11" fill="var(--vp-c-yellow-soft, rgba(234,179,8,0.14))" />
     <text x="660" y="135" font-size="12" font-weight="600" fill="var(--vp-c-yellow-1, #915930)" text-anchor="middle">302</text>
-    <text x="663" y="158" font-size="10" fill="var(--vp-c-text-3, #929295)" text-anchor="middle">Location: computed</text>
-    <text x="663" y="170" font-size="10" fill="var(--vp-c-text-3, #929295)" text-anchor="middle">by format()</text>
+    <text x="663" y="158" font-size="10" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">Location: computed</text>
+    <text x="663" y="170" font-size="10" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">by format()</text>
     <!-- HTTP: 404 -->
     <rect x="638" y="204" width="44" height="22" rx="11" fill="var(--vp-c-red-soft, rgba(244,63,94,0.14))" />
     <text x="660" y="219" font-size="12" font-weight="600" fill="var(--vp-c-red-1, #b8272c)" text-anchor="middle">404</text>
-    <text x="663" y="242" font-size="10" fill="var(--vp-c-text-3, #929295)" text-anchor="middle">per-mount 404.html,</text>
-    <text x="663" y="254" font-size="10" fill="var(--vp-c-text-3, #929295)" text-anchor="middle">a real status</text>
+    <text x="663" y="242" font-size="10" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">per-mount 404.html,</text>
+    <text x="663" y="254" font-size="10" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">a real status</text>
   </g>
 </svg>
 
