@@ -7,6 +7,6 @@ Every file in this directory is a verbatim copy of that path, installed by the s
 ## Local deviations
 
 - Installed as the workspace package `@tools/oxlint-anti-slop` (`../package.json`) rather than the skill's default `tools/oxlint/anti-slop/`. `.oxlintrc.json` names the package exports `@tools/oxlint-anti-slop` and `@tools/oxlint-anti-slop/effect` in `jsPlugins`.
-- The Effect plugin is enabled because several workspace packages declare `effect` directly.
+- The Effect rules are enabled through an `.oxlintrc.json` override that lists only the packages built on Effect. Their heuristics (`make*` imports, chained literal ternaries) misfire on code that doesn't use Effect.
 - Lint and format skip this directory: `.oxlintrc.json` ignores it, the package has no `lint:oxlint` or `format:oxfmt` script, and `tools/eslint/complexity-ceiling.ts` gives `rules/no-widen-then-assert.ts` a per-file limit.
 - `../tsconfig.json` typechecks it under the repo's `tsconfig.base.json`.

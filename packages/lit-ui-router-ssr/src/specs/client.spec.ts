@@ -18,7 +18,7 @@ import { UiViewRenderer } from '../ui-view-renderer.js';
 import {
   DetailView,
   fallbackRootTemplate,
-  shellRouter,
+  makeRouter,
   plainRootTemplate,
   rootTemplate,
   slottedFallbackRootTemplate,
@@ -137,7 +137,7 @@ describe('the round trip', () => {
     const container = document.createElement('div');
     document.body.append(container);
 
-    expect(hydrateRoot(container, rootTemplate(shellRouter()))).toBe(false);
+    expect(hydrateRoot(container, rootTemplate(makeRouter()))).toBe(false);
   });
 });
 
@@ -395,7 +395,7 @@ describe('the adopter hydrateRoot provides', () => {
   });
 
   it('keeps answering when a second hydrateRoot throws on the same container', () => {
-    expect(() => hydrateRoot(container, rootTemplate(shellRouter()))).toThrow(
+    expect(() => hydrateRoot(container, rootTemplate(makeRouter()))).toThrow(
       /live render/,
     );
     const view = servedView(SERVED_SHELL, container);
@@ -413,7 +413,7 @@ describe('a view detached before its update flushes', () => {
   it('sleeps until it is re-attached, then adopts through the pin', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const { container, served } = serve(await drawShell('/shell'));
-    const router = shellRouter();
+    const router = makeRouter();
     await settle(router, '/shell');
     const shell = container.querySelector('h1');
 
@@ -571,7 +571,7 @@ describe('the pin the walk leaves on a served view', () => {
   it('is installed once, however many walks reach the element', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const { container: first } = serve(await drawShell('/shell'));
-    const firstRouter = shellRouter();
+    const firstRouter = makeRouter();
     await settle(firstRouter, '/shell');
     const release = hydrateRoot(first, rootTemplate(firstRouter)) as () => void;
     // Detached before its update: the view sleeps, holding its nodes and its pin.
@@ -581,7 +581,7 @@ describe('the pin the walk leaves on a served view', () => {
     release();
 
     const { container: second } = serve(await drawShell('/shell'));
-    const secondRouter = shellRouter();
+    const secondRouter = makeRouter();
     await settle(secondRouter, '/shell');
     second.querySelector('ui-router')!.replaceWith(app);
     const releaseSecond = hydrateRoot(
@@ -607,7 +607,7 @@ describe('the pin the walk leaves on a served view', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const { container } = serve(await drawShell('/shell/detail'));
     const shell = container.querySelector('h1');
-    const router = shellRouter();
+    const router = makeRouter();
     await settle(router, '/shell/detail');
 
     // Drawn before the walk: everything from here to the guest's request is one task.
@@ -655,7 +655,7 @@ describe('the guard on what there is to adopt', () => {
     expect(container.querySelector('[defer-hydration]')).not.toBeNull();
     expect(readHydrationSignature(container)).not.toBeNull();
 
-    expect(hydrateRoot(container, rootTemplate(shellRouter()))).toBe(false);
+    expect(hydrateRoot(container, rootTemplate(makeRouter()))).toBe(false);
 
     expect(container.childNodes).toHaveLength(0);
     expect(warnedText(warn)).toContain('no lit-part marker follows it');
@@ -737,7 +737,7 @@ const bootReporting = async (
   path: string,
 ): Promise<Report[]> => {
   const received: Report[] = [];
-  const router = shellRouter();
+  const router = makeRouter();
   await settle(router, path);
   const release = hydrateRoot(container, rootTemplate(router), {
     onAdopt: (view, outcome, error) => {
@@ -833,7 +833,7 @@ describe('the hydration outcome', () => {
 
   it('reaches onAdopt through the pin after the release', async () => {
     const { container } = serve(await drawShell('/shell'));
-    const router = shellRouter();
+    const router = makeRouter();
     await settle(router, '/shell');
     const received: Report[] = [];
 
@@ -859,7 +859,7 @@ describe('the hydration outcome', () => {
 
   it('keeps a throwing onAdopt out of the adoption, through reportError', async () => {
     const { container } = serve(await drawShell('/shell'));
-    const router = shellRouter();
+    const router = makeRouter();
     await settle(router, '/shell');
     const reports = listen(container);
     const reportError = vi.fn<(error: unknown) => void>();
@@ -883,7 +883,7 @@ describe('the hydration outcome', () => {
 
   it('throws a failing onAdopt into the view update without reportError, after adopting', async () => {
     const { container } = serve(await drawShell('/shell'));
-    const router = shellRouter();
+    const router = makeRouter();
     await settle(router, '/shell');
     const reports = listen(container);
     vi.stubGlobal('reportError', undefined);
@@ -1056,7 +1056,7 @@ describe('the hydration signature', () => {
     const { container } = serve(markup);
     expect(container.querySelector('[defer-hydration]')).not.toBeNull();
 
-    expect(hydrateRoot(container, rootTemplate(shellRouter()))).toBe(false);
+    expect(hydrateRoot(container, rootTemplate(makeRouter()))).toBe(false);
 
     expect(container.childNodes).toHaveLength(0);
     expect(warn).not.toHaveBeenCalled();
@@ -1083,7 +1083,7 @@ describe('the hydration signature', () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
       const { container } = serve(await drawnBy(served));
 
-      expect(hydrateRoot(container, rootTemplate(shellRouter()))).toBe(false);
+      expect(hydrateRoot(container, rootTemplate(makeRouter()))).toBe(false);
 
       expect(container.childNodes).toHaveLength(0);
       expect(warn).toHaveBeenCalledOnce();
@@ -1100,7 +1100,7 @@ describe('the hydration signature', () => {
     const markup = stripComments(await drawShell('/shell/detail'));
     const { container } = serve(markup);
 
-    expect(hydrateRoot(container, rootTemplate(shellRouter()))).toBe(false);
+    expect(hydrateRoot(container, rootTemplate(makeRouter()))).toBe(false);
 
     expect(container.childNodes).toHaveLength(0);
     expect(warn).not.toHaveBeenCalled();
@@ -1124,7 +1124,7 @@ describe('the hydration signature', () => {
     async (_label, markup) => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
       const { container } = serve(await markup());
-      const router = shellRouter();
+      const router = makeRouter();
       await settle(router, '/shell/detail');
 
       expect(hydrateRoot(container, rootTemplate(router))).toBe(false);
@@ -1145,7 +1145,7 @@ describe('the hydration signature', () => {
       const { container } = serve(await markup());
       const served = views(container);
 
-      expect(hydrateRoot(container, rootTemplate(shellRouter()))).toBe(false);
+      expect(hydrateRoot(container, rootTemplate(makeRouter()))).toBe(false);
       await Promise.all(
         served.map((view) => (view as unknown as UiView).updateComplete),
       );
@@ -1158,7 +1158,7 @@ describe('the hydration signature', () => {
   it('clears a document whose walk throws, so the cold render draws the page once, silently', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const { container } = serve(await drawShell('/shell/detail'));
-    const router = shellRouter();
+    const router = makeRouter();
     await settle(router, '/shell/detail');
 
     expect(() =>
@@ -1178,7 +1178,7 @@ describe('the hydration signature', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const { container } = serve(await drawnBy('99.0.0'));
 
-    expect(hydrateRoot(container, rootTemplate(shellRouter()))).toBe(false);
+    expect(hydrateRoot(container, rootTemplate(makeRouter()))).toBe(false);
 
     expect(warn).not.toHaveBeenCalled();
   });

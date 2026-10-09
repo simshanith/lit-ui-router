@@ -186,14 +186,23 @@
     "anti-slop/no-reflect-get": "error",
     "anti-slop/no-shape-in-symbol-names": "error",
     "anti-slop/no-unknown-type-aliases": "error",
-    "anti-slop/no-widen-then-assert": "error",
-    "anti-slop-effect/no-manual-effect-error-tag": "error",
-    "anti-slop-effect/no-manual-tag-comparison": "error",
-    "anti-slop-effect/no-manual-tagged-construction": "error",
-    "anti-slop-effect/no-service-constructor-imports": "error",
-    "anti-slop-effect/prefer-effect-match": "error"
+    "anti-slop/no-widen-then-assert": "error"
   },
   "overrides": [
+    {
+      "files": [
+        "packages/lit-ui-router-effect/**",
+        "apps/sample-app-lit-effect/**",
+        "examples/hellogalaxy-effect/**"
+      ],
+      "rules": {
+        "anti-slop-effect/no-manual-effect-error-tag": "error",
+        "anti-slop-effect/no-manual-tag-comparison": "error",
+        "anti-slop-effect/no-manual-tagged-construction": "error",
+        "anti-slop-effect/no-service-constructor-imports": "error",
+        "anti-slop-effect/prefer-effect-match": "error"
+      }
+    },
     {
       "files": ["**/*.ts", "**/*.tsx", "**/*.mts", "**/*.cts"],
       "rules": {

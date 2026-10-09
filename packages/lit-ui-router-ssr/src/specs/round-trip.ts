@@ -6,7 +6,7 @@ import type { UIRouterLit } from 'lit-ui-router/pure';
 import { hydrateRoot } from '../client.js';
 import { renderPage } from '../prerender.js';
 import { settle } from '../settle.js';
-import { shellRouter } from './fixture.js';
+import { makeRouter } from './fixture.js';
 
 export { stripComments, withoutSignature } from './markup.js';
 
@@ -19,7 +19,7 @@ export const draw = async (
   renderers: RenderInfo['elementRenderers'],
   path: string,
 ): Promise<string> => {
-  const router = shellRouter();
+  const router = makeRouter();
   await settle(router, path);
   return renderPage(page(router), router, new EventTarget(), renderers);
 };
@@ -107,7 +107,7 @@ export const hydrateInto = async (
   page: Page,
   path: string,
 ): Promise<{ router: UIRouterLit; release: () => void }> => {
-  const router = shellRouter();
+  const router = makeRouter();
   await settle(router, path);
   const release = hydrateRoot(container, page(router));
   expect(release).toBeTypeOf('function');

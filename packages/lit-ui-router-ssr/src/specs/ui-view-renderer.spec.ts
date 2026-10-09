@@ -10,7 +10,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { UiViewRenderer } from '../ui-view-renderer.js';
 import { settle } from '../settle.js';
-import { shellRouter, rootTemplate } from './fixture.js';
+import { makeRouter, rootTemplate } from './fixture.js';
 
 const draw = (router: UIRouterLit): string =>
   withRouterSync(router, () =>
@@ -22,7 +22,7 @@ const draw = (router: UIRouterLit): string =>
   );
 
 const at = async (path: string): Promise<string> => {
-  const router = shellRouter();
+  const router = makeRouter();
   await settle(router, path);
   return draw(router);
 };
@@ -119,7 +119,7 @@ describe('UiViewRenderer', () => {
   });
 
   it('leaves the view service as it found it', async () => {
-    const router = shellRouter();
+    const router = makeRouter();
     await settle(router, '/shell/detail');
     draw(router);
     draw(router);
