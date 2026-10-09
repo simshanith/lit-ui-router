@@ -68,13 +68,13 @@ export class NavHeader extends LitElement {
           ></sample-user-menu>
           <a
             ${uiSref('home')}
-            style="margin-right: 5px"
+            style="margin-inline-end: 5px"
             class="btn btn-primary fa fa-home"
             aria-label="Home"
           ></a>
           <a
             ${uiSref('mymessages.compose')}
-            style="margin-right: 15px"
+            style="margin-inline-end: 15px"
             class="btn btn-primary"
           >
             <i class="fa fa-envelope"></i> New Message

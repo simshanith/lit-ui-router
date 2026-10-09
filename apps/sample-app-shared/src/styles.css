@@ -10,9 +10,13 @@ html {
   height: 100%;
 }
 
+:root {
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
 body {
   flex: 1 0 auto;
-  padding-bottom: 64px;
+  padding-block-end: 64px;
 }
 
 #root {
@@ -35,7 +39,7 @@ api-docs {
    skin rides a <span>; bootstrap styles .btn on all three, but these local
    rules were written element-qualified */
 :is(a, button, span).btn i + span {
-  margin-left: 0.75em;
+  margin-inline-start: 0.75em;
 }
 
 .flex-h {
@@ -83,11 +87,12 @@ api-docs {
 }
 
 .navheader {
-  margin: 0.3em 0.3em 0 0.3em;
+  margin: 0.3em;
+  margin-block-end: 0;
 }
 
 .navheader .navbar-right {
-  margin-right: 0;
+  margin-inline-end: 0;
 }
 
 /* bootstrap's `.nav > li > a` (display:block, tab padding) and the tab
@@ -98,7 +103,8 @@ api-docs {
    `.btn-primary`'s (0,1,0) ring */
 .navheader .nav-tabs > li.navbar-right > a.btn {
   display: inline-block;
-  padding: 6px 12px;
+  padding-block: 6px;
+  padding-inline: 12px;
   border-radius: 4px;
 }
 
@@ -130,13 +136,17 @@ api-docs {
 }
 
 .navheader .nav-tabs li.active a {
-  border-color: lightgray lightgray rgba(0, 0, 0, 0) lightgray;
+  border-color: lightgray;
+  border-block-end-color: transparent;
   background-color: #f7f7f7;
 }
 
 .navheader .nav-tabs li a {
   border-width: 1px;
-  border-radius: 10px 10px 0 0;
+  border-start-start-radius: 10px;
+  border-start-end-radius: 10px;
+  border-end-start-radius: 0;
+  border-end-end-radius: 0;
 }
 
 /* the widget is its own containing block: the merged navbar-right li also
@@ -146,8 +156,9 @@ api-docs {
   position: relative;
   /* the margin and the float are the ones the second li used to carry; the
      float keeps it out of the line box, so merging the lis moves nothing */
-  float: left;
-  margin: 0.5em 1.5em;
+  float: inline-start;
+  margin-block: 0.5em;
+  margin-inline: 1.5em;
 }
 
 /* the disclosure trigger is a button (a plain action), so strip the UA chrome
@@ -168,14 +179,20 @@ api-docs {
   width: 100%;
 }
 
-/* revealed by hover (mouse) or by the disclosure's expanded state (keyboard) */
-.navheader .logged-in-user:hover div.hoverdrop,
+/* revealed by hover (mouse) or by the disclosure's expanded state (keyboard, touch) */
 .navheader
   .logged-in-user
   .disclosure-toggle[aria-expanded='true']
   + div.hoverdrop {
   display: flex;
   flex-direction: row-reverse;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .navheader .logged-in-user:hover div.hoverdrop {
+    display: flex;
+    flex-direction: row-reverse;
+  }
 }
 
 /* my messages */
@@ -195,7 +212,8 @@ api-docs {
 /* selection lists */
 .selectlist {
   margin: 0;
-  padding: 1.5em 0;
+  padding-block: 1.5em;
+  padding-inline: 0;
   background-color: #ddd;
 }
 /* every row is a bare anchor again, New Contact included: block + this padding
@@ -203,7 +221,8 @@ api-docs {
 .selectlist a {
   display: block;
   color: black;
-  padding: 0.15em 1.5em;
+  padding-block: 0.15em;
+  padding-inline: 1.5em;
   text-decoration: none;
   font-size: small;
 }
@@ -273,9 +292,10 @@ api-docs {
 }
 
 .messagelist table td {
-  padding: 0.25em 0.75em;
+  padding-block: 0.25em;
+  padding-inline: 0.75em;
   white-space: nowrap;
-  overflow: hidden;
+  overflow: clip;
   text-overflow: ellipsis;
   font-size: small;
   cursor: default;
@@ -316,7 +336,8 @@ api-docs {
 
 .message .header,
 .body {
-  padding: 1em 2em;
+  padding-block: 1em;
+  padding-inline: 2em;
 }
 
 .message .header {
@@ -334,7 +355,8 @@ api-docs {
 }
 
 .compose .header label {
-  padding: 0 1em;
+  padding-block: 0;
+  padding-inline: 1em;
   flex: 0 0 6em;
 }
 
@@ -345,16 +367,17 @@ api-docs {
 .compose .body textarea {
   width: 100%;
   border: 0;
-  outline: 0;
 }
 
 .compose .body .buttons {
-  padding: 1em 0;
-  float: right;
+  padding-block: 1em;
+  padding-inline: 0;
+  float: inline-end;
 }
 
 .contact {
-  padding: 1em 3em;
+  padding-block: 1em;
+  padding-inline: 3em;
 }
 
 .contact .details > div {
@@ -363,7 +386,7 @@ api-docs {
 }
 
 .contact .details h3 {
-  margin-top: 0;
+  margin-block-start: 0;
 }
 
 .contact .details label {
@@ -377,20 +400,14 @@ api-docs {
 
 .dialog {
   position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
+  inset: 0;
   z-index: 1040;
 }
 
 .dialog .backdrop {
   position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  transition: opacity 0.25s ease;
+  inset: 0;
+  transition: opacity 0.25s var(--ease-out);
   background: #000;
   opacity: 0;
 }
@@ -401,7 +418,7 @@ api-docs {
    in the same frame the element is inserted, so transitions never fire. */
 .dialog .backdrop.in {
   opacity: 0.5;
-  animation: dialog-backdrop-in 0.25s ease;
+  animation: dialog-backdrop-in 0.25s var(--ease-out);
 }
 
 @keyframes dialog-backdrop-in {
@@ -419,22 +436,30 @@ api-docs {
 }
 
 .dialog .content {
-  transition: top 0.25s ease;
   flex: 1 1 auto;
   background: white;
   padding: 2em;
   position: relative;
-  top: -200px;
+  inset-block-start: -200px;
 }
 
 .dialog.in .content {
-  top: 4em;
-  animation: dialog-content-in 0.25s ease;
+  inset-block-start: 4em;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .dialog .content {
+    transition: inset-block-start 0.25s var(--ease-out);
+  }
+
+  .dialog.in .content {
+    animation: dialog-content-in 0.25s var(--ease-out);
+  }
 }
 
 @keyframes dialog-content-in {
   from {
-    top: -200px;
+    inset-block-start: -200px;
   }
 }
 
@@ -454,15 +479,17 @@ api-docs {
   box-shadow: none;
 }
 
-.bounce-horizontal {
-  animation: bounce-horizontal 0.5s alternate infinite;
+@media (prefers-reduced-motion: no-preference) {
+  .bounce-horizontal {
+    animation: bounce-horizontal 0.5s alternate infinite;
+  }
 }
 
 @keyframes bounce-horizontal {
   0% {
-    left: 1.5em;
+    inset-inline-start: 1.5em;
   }
   100% {
-    left: 0.5em;
+    inset-inline-start: 0.5em;
   }
 }

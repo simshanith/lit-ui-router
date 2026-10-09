@@ -39,7 +39,7 @@ export class SortMessages extends LitElement {
     if (sort == `+${col}`) sortClass = 'fa-sort-asc';
     else if (sort == `-${col}`) sortClass = 'fa-sort-desc';
     const chevron = html`<i
-      style="padding-left:0.25em"
+      style="padding-inline-start:0.25em"
       class="fa ${sortClass}"
     ></i>`;
     return html`<button

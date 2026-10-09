@@ -127,24 +127,24 @@ export class FeatureFlagsPanel extends LitElement {
       padding: 1rem;
       border: 1px solid #ddd;
       border-radius: 4px;
-      margin-top: 1rem;
+      margin-block-start: 1rem;
     }
 
     h3 {
-      margin-top: 0;
-      margin-bottom: 1rem;
+      margin-block-start: 0;
+      margin-block-end: 1rem;
     }
 
     .flag-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 0.5rem 0;
-      border-bottom: 1px solid #eee;
+      padding-block: 0.5rem;
+      border-block-end: 1px solid #eee;
     }
 
     .flag-row:last-child {
-      border-bottom: none;
+      border-block-end: none;
     }
 
     .flag-info {
@@ -161,7 +161,7 @@ export class FeatureFlagsPanel extends LitElement {
     }
 
     .flag-control {
-      margin-left: 1rem;
+      margin-inline-start: 1rem;
       display: flex;
       align-items: center;
       gap: 0.5rem;
@@ -180,13 +180,13 @@ export class FeatureFlagsPanel extends LitElement {
     .url-override {
       font-size: 0.75em;
       color: #f0ad4e;
-      margin-left: 0.5rem;
+      margin-inline-start: 0.5rem;
     }
 
     .actions {
-      margin-top: 1rem;
-      padding-top: 1rem;
-      border-top: 1px solid #ddd;
+      margin-block-start: 1rem;
+      padding-block-start: 1rem;
+      border-block-start: 1px solid #ddd;
       display: flex;
       gap: 0.5rem;
     }

@@ -85,7 +85,7 @@ export class Login extends LitElement {
               <option value="" disabled selected></option>
               ${this.usernames.map((option: string) => html`<option value=${option}>${option}</option>`)}
             </select>
-            ${!this.username ? html`<label for="username"><i style="display: block; position: relative; bottom: 1.8em; margin-left: 10em; height: 0" class="fa fa-arrow-left bounce-horizontal"> Choose </i></label>` : null}
+            ${!this.username ? html`<label for="username"><i style="display: block; position: relative; inset-block-end: 1.8em; margin-inline-start: 10em; height: 0" class="fa fa-arrow-left bounce-horizontal"> Choose </i></label>` : null}
           </div>
           <br />
           <div>
@@ -100,7 +100,7 @@ export class Login extends LitElement {
             ${
               this.username && this.password !== 'password'
                 ? html`<i
-                    style="position: relative; bottom: 1.8em; margin-left: 5em; height: 0"
+                    style="position: relative; inset-block-end: 1.8em; margin-inline-start: 5em; height: 0"
                     class="fa fa-arrow-left bounce-horizontal"
                     >Enter '<b>password</b>' here</i
                   >`
