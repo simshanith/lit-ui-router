@@ -49,9 +49,9 @@ export function packageFiles(
 ): string[] {
   if (directory === '' || directory === '.') return [...tracked];
   const prefix = `${directory.replace(/\/$/, '')}/`;
-  return tracked
-    .filter((file) => file.startsWith(prefix))
-    .map((file) => file.slice(prefix.length));
+  return tracked.flatMap((file) =>
+    file.startsWith(prefix) ? [file.slice(prefix.length)] : [],
+  );
 }
 
 /**
@@ -144,8 +144,7 @@ export function auditTaskInputs(
     failures,
     overhashing,
     stale: exemptions
-      .map(({ task }) => task)
-      .filter((name) => !used.has(name))
+      .flatMap(({ task }) => (used.has(task) ? [] : [task]))
       .sort(),
     audited,
   };
@@ -190,12 +189,10 @@ export function narrowToGenerated(
   overhashing: readonly InputsOverhash[],
   ignored: ReadonlySet<string>,
 ): InputsOverhash[] {
-  return overhashing
-    .map(({ taskId, untracked }) => ({
-      taskId,
-      untracked: untracked.filter((file) => ignored.has(file)),
-    }))
-    .filter(({ untracked }) => untracked.length > 0);
+  return overhashing.flatMap(({ taskId, untracked }) => {
+    const generated = untracked.filter((file) => ignored.has(file));
+    return generated.length > 0 ? [{ taskId, untracked: generated }] : [];
+  });
 }
 
 /** Error text naming the generated files the cache key should not hash. */

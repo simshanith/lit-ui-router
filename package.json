@@ -51,6 +51,7 @@
     "@tools/eslint": "catalog:workspace",
     "@tools/lint-elements": "catalog:workspace",
     "@tools/lit-template-lint": "catalog:workspace",
+    "@tools/oxlint-anti-slop": "catalog:workspace",
     "@types/node": "catalog:",
     "eslint": "catalog:",
     "eslint-formatter-tap": "catalog:",

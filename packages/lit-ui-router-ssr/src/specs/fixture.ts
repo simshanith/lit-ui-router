@@ -102,7 +102,7 @@ export const badgeRootTemplate = (router: Router): TemplateResult =>
   >`;
 
 /** Two states: `shell`, and `shell.detail` filling the nested view. */
-export const makeRouter = (): Router => {
+export const shellRouter = (): Router => {
   const router = installServerLocation(new UIRouterLit(), {
     strictMode: false,
   });

@@ -61,7 +61,7 @@ for (const file of publishableSources()) {
         // can type-strip them directly; no-op for extensionless imports
         rewriteImportExtensions: 'rewrite',
       },
-      ...(define === undefined ? {} : { define }),
+      define,
     });
     if (transformed.errors.length) fail(file, transformed.errors);
     const printed = minifySync(file, transformed.code, {

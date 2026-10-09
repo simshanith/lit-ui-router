@@ -77,15 +77,15 @@ const CI_LANES = ['ci', 'ci:main'];
 
 const configs = (
   await Promise.all(
-    ['.', ...members.map((member) => member.dir)]
-      .filter((dir, at, dirs) => dirs.indexOf(dir) === at)
-      .map(async (dir) => {
+    [...new Set(['.', ...members.map((member) => member.dir)])].map(
+      async (dir) => {
         const path = join(dir, 'turbo.json');
         const text = await readFile(join(workspaceRoot, path), 'utf8').catch(
           () => undefined,
         );
         return text === undefined ? undefined : { path, text };
-      }),
+      },
+    ),
   )
 ).filter((config) => config !== undefined);
 

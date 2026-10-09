@@ -25,7 +25,12 @@ describe('the renderLight flag', () => {
 
   // `@lit-labs/ssr` patches a rendered class to resolve through `render()`, so the update lit's own walk calls is reached here by hand.
   describe('the update lit calls on the client', () => {
-    const slotOn = (parentNode: object) => {
+    /** The part's parent, as the slot's update reads it. */
+    interface SlotHost {
+      renderLight?: () => unknown;
+    }
+
+    const slotOn = (parentNode: SlotHost) => {
       const Slot = getDirectiveClass(uiViewSlot());
       if (!Slot) throw new Error('a directive result carried no class');
       const part = { type: PartType.CHILD, parentNode } as unknown as ChildPart;
