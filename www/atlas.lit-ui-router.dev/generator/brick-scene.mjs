@@ -52,6 +52,19 @@ const seatsOf = (n, on) => {
 
 const SEATED = new Map(seatedBoxes(BRICK_MODEL).map((b) => [b.m.id, b]));
 const r4 = (v) => +v.toFixed(4);
+// the cap's centre, or on a cap bricks seat on, the open stud farthest from their badges
+const openStud = (b) => {
+  const riders = [...SEATED.values()].filter((o) => o.m.on === b.m.id), pitch = b.w / b.m.ws;
+  if (!riders.length) return [b.x + b.w / 2, b.y + b.d / 2];
+  const clear = (x, y) => Math.min(...riders.map((o) => Math.hypot(x - o.x - o.w / 2, y - o.y - o.d / 2)));
+  let best = null;
+  for (let i = 0; i < b.m.ws; i++) for (let j = 0; j < b.m.ds; j++) {
+    const x = b.x + (i + 0.5) * pitch, y = b.y + (j + 0.5) * pitch;
+    if (riders.some((o) => x > o.x && x < o.x + o.w && y > o.y && y < o.y + o.d)) continue;
+    if (!best || clear(x, y) > best[2]) best = [x, y, clear(x, y)];
+  }
+  return best ? [best[0], best[1]] : [b.x + b.w / 2, b.y + b.d / 2];
+};
 const MOTION = assembleMotion(BRICK_MODEL, EXPLODE);
 const DATA = {
   end: ASSEMBLE_SECONDS,
@@ -68,8 +81,8 @@ const DATA = {
       hue: row.hue,
       ledger: `${row.files}f · ${fmt(row.sloc)} sloc · ${row.shape[0]}×${row.shape[1]} · ${row.courses} course${row.courses > 1 ? 's' : ''}`,
       seats: seatsOf(row.n, b.m.on),
-      // a stud's height clear of the cap, so the badge stands over the studs, not among them
-      cap: toModel(BRICK_MODEL, ...mid, b.z0 + b.h + 14).map(r4),
+      // a stud's height clear of the cap, over an open stud, so the badge stands clear of the bricks seated on it
+      cap: toModel(BRICK_MODEL, ...openStud(b), b.z0 + b.h + 14).map(r4),
       centre: toModel(BRICK_MODEL, ...mid, b.z0 + b.h / 2).map(r4),
       rise: MOTION.us.map((u) => r4(MOTION.rise(row.n, u) / 40)),
     };

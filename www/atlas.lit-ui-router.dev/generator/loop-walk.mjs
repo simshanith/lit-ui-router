@@ -196,7 +196,7 @@ const CSS = laneCss('lw') + `
 .lw-ctl button:disabled { color: var(--ink-faint); border-color: var(--line); cursor: default; background: var(--paper); }
 .lw-ctl .lw-step { font-size: 11px; color: var(--accent); font-weight: 600; min-width: 10ch; text-align: center;
   font-variant-numeric: tabular-nums; }
-.lw-info h4 .n { font-family: var(--data); font-size: 11px; font-weight: 600; letter-spacing: 0.16em; color: var(--accent);
+.lw-info h3 .n { font-family: var(--data); font-size: 11px; font-weight: 600; letter-spacing: 0.16em; color: var(--accent);
   vertical-align: 0.12em; white-space: nowrap; }
 .lw-info p { font-family: var(--serif); font-size: 16px; letter-spacing: 0; line-height: 1.5; color: var(--ink); max-width: 66ch; }
 .lw-info li .now { font-size: 12.5px; color: var(--accent); }
@@ -220,7 +220,7 @@ $$FOCUS  // The cytoscape tag is deferred; deferred scripts run BEFORE DOMConten
   var wrap = document.getElementById('lw-stage');
   if (!stage || !info || !wrap) return;
   if (typeof cytoscape === 'undefined') {
-    info.innerHTML = '\\u003ch4\\u003eTHE RENDER LOOP\\u003c/h4\\u003e\\u003cp class="hint"\\u003ecytoscape did not load, so the '
+    info.innerHTML = '\\u003ch3\\u003eTHE RENDER LOOP\\u003c/h3\\u003e\\u003cp class="hint"\\u003ecytoscape did not load, so the '
       + 'walk is not available here. Sheet 1 draws the same circuit as a static plate, and '
       + 'www/atlas.lit-ui-router.dev/data/census-loop.json carries every station, leg and step of it.\\u003c/p\\u003e';
     return;
@@ -316,11 +316,11 @@ $$FOCUS  // The cytoscape tag is deferred; deferred scripts run BEFORE DOMConten
   }
   function describeStep() {
     if (!step) {
-      return '\\u003ch4\\u003e' + L.glyphs.rest + 'THE RENDER LOOP \\u00b7 AT REST\\u003c/h4\\u003e\\u003cp class="hint"\\u003e' + esc(L.idle) + '\\u003c/p\\u003e'
+      return '\\u003ch3\\u003e' + L.glyphs.rest + 'THE RENDER LOOP \\u00b7 AT REST\\u003c/h3\\u003e\\u003cp class="hint"\\u003e' + esc(L.idle) + '\\u003c/p\\u003e'
         + field(L.glyphs.walk + 'THE WALK', esc(P.walkOf) + ' \\u00b7 ' + W.length + ' steps');
     }
     var s = W[step - 1];
-    var h = '\\u003ch4\\u003e\\u003cspan class="n"\\u003eSTEP ' + s.step + ' / ' + W.length + '\\u003c/span\\u003e \\u00b7 ' + esc(s.title) + '\\u003c/h4\\u003e';
+    var h = '\\u003ch3\\u003e\\u003cspan class="n"\\u003eSTEP ' + s.step + ' / ' + W.length + '\\u003c/span\\u003e \\u00b7 ' + esc(s.title) + '\\u003c/h3\\u003e';
     h += '\\u003cp\\u003e' + esc(s.text) + '\\u003c/p\\u003e';
     h += field('LEGS LIT', '\\u003cul\\u003e' + s.legs.map(function (id) { return legLine(id, true); }).join('') + '\\u003c/ul\\u003e');
     h += field('EVIDENCE \\u00b7 ' + esc(P.ref) + ' @ ' + esc(P.sha), evidence(s.evidence));
@@ -402,7 +402,7 @@ $$FOCUS  // The cytoscape tag is deferred; deferred scripts run BEFORE DOMConten
     var n = byId[id];
     var outs = E.filter(function (e) { return e.from === id; });
     var ins = E.filter(function (e) { return e.to === id; });
-    var h = '\\u003ch4\\u003e' + esc(n.label) + '\\u003c/h4\\u003e';
+    var h = '\\u003ch3\\u003e' + esc(n.label) + '\\u003c/h3\\u003e';
     h += field('WHAT', esc(n.sub));
     h += field('ANCHOR', evidence([n]));
     if (outs.length) h += field(L.glyphs.out + 'LEGS OUT', '\\u003cul\\u003e' + outs.map(function (e) { return legLine(e.id, false); }).join('') + '\\u003c/ul\\u003e');
@@ -411,7 +411,7 @@ $$FOCUS  // The cytoscape tag is deferred; deferred scripts run BEFORE DOMConten
   }
   function describeLeg(id) {
     var e = legById[id];
-    var h = '\\u003ch4\\u003e' + esc(byId[e.from].label) + ' \\u2192 ' + esc(byId[e.to].label) + '\\u003c/h4\\u003e';
+    var h = '\\u003ch3\\u003e' + esc(byId[e.from].label) + ' \\u2192 ' + esc(byId[e.to].label) + '\\u003c/h3\\u003e';
     h += field('KIND', e.kind + ' \\u00b7 ' + L.kinds[e.kind]);
     h += field('CARRIED BY', esc(e.carrier));
     h += field('LIT AT STEP' + (e.steps.length > 1 ? 'S' : ''), e.steps.join(', '));

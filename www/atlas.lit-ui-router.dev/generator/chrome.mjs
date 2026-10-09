@@ -18,7 +18,7 @@ export const CSS = `
   --paper-2: #E9E8DD;
   --ink: #2B302C;
   --ink-soft: #5C6259;
-  --ink-faint: #9AA091;
+  --ink-faint: #626760;
   --line: #C6C8B6;
   --edge: #A9AB99;
   --accent: #2E5077;
@@ -39,7 +39,7 @@ export const CSS = `
     --paper-2: #0B1F3E;
     --ink: #D9E6F3;
     --ink-soft: #93A9C6;
-    --ink-faint: #6E88A8;
+    --ink-faint: #8099BA;
     --line: #23406B;
     --edge: #2E4C7C;
     --accent: #8FBCE9;
@@ -59,7 +59,7 @@ export const CSS = `
   --paper-2: #0B1F3E;
   --ink: #D9E6F3;
   --ink-soft: #93A9C6;
-  --ink-faint: #6E88A8;
+  --ink-faint: #8099BA;
   --line: #23406B;
   --edge: #2E4C7C;
   --accent: #8FBCE9;
@@ -237,6 +237,7 @@ sup.art {
    (--plate-ar, written per sheet). */
 .plate { position: relative; container-type: inline-size; margin: 36px 0 8px; --plate-cap: min(84vh, 1400px); }
 .figure-wrap { overflow-x: auto; }
+.figure-wrap:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .figure-wrap svg { display: block; width: 100%; max-width: min(100%, calc(var(--plate-cap) * var(--plate-ar, 1.4))); height: auto; min-width: 1000px; margin: 0 auto; }
 .plate::after {
   content: "SCROLL →";
@@ -601,7 +602,7 @@ export function sheetSection(sheet, { headline = true } = {}) {
   <div class="sheet-head"><span class="proj">${PROJECT_MARK} — DRAWING SET</span><span class="shno">${sheet.head ?? `SHEET ${sheet.num} / ${TOTAL}`}</span></div>
   ${headline ? `<h2 class="sheet-title">${articleTitle(sheet.title)}</h2>\n  <p class="sheet-sub">${sheet.sub}</p>` : ''}
   <figure>
-    <div class="plate fillable"${ar ? ` style="--plate-ar:${ar}"` : ''}>${fillButton()}<div class="figure-wrap">${sheet.svg}</div></div>
+    <div class="plate fillable"${ar ? ` style="--plate-ar:${ar}"` : ''}>${fillButton()}<div class="figure-wrap" tabindex="0" role="group" aria-label="Fig. ${sheet.num}, the drawing; scrolls sideways">${sheet.svg}</div></div>
     <figcaption><span class="figno">FIG. ${sheet.num}</span>${sheet.caption}</figcaption>
   </figure>
   <div class="notes-grid">
@@ -689,12 +690,21 @@ export const chipBreaks = (html) =>
 export function page(title, body, { desc = '' } = {}) {
   // the icon symbols this page's markup references, once; nothing when none
   const sprite = spriteFor(body);
-  return `<meta charset="utf-8">
+  return `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
 <title>${title}</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 ${desc ? `<meta name="description" content="${desc}">` : ''}
 <style>${CSS}</style>
+</head>
+<body>
+<main>
 ${sprite && `${sprite}\n`}${chipBreaks(body)}
+</main>
 <script>${PLATE_END_SCRIPT}
-${FILL_SCRIPT}</script>`;
+${FILL_SCRIPT}</script>
+</body>
+</html>`;
 }

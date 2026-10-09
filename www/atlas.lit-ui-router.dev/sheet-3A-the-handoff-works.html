@@ -1,3 +1,6 @@
+<!doctype html>
+<html lang="en">
+<head>
 <meta charset="utf-8">
 <title>THE HANDOFF WORKS — Sheet 3A of 13</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -9,7 +12,7 @@
   --paper-2: #E9E8DD;
   --ink: #2B302C;
   --ink-soft: #5C6259;
-  --ink-faint: #9AA091;
+  --ink-faint: #626760;
   --line: #C6C8B6;
   --edge: #A9AB99;
   --accent: #2E5077;
@@ -30,7 +33,7 @@
     --paper-2: #0B1F3E;
     --ink: #D9E6F3;
     --ink-soft: #93A9C6;
-    --ink-faint: #6E88A8;
+    --ink-faint: #8099BA;
     --line: #23406B;
     --edge: #2E4C7C;
     --accent: #8FBCE9;
@@ -50,7 +53,7 @@
   --paper-2: #0B1F3E;
   --ink: #D9E6F3;
   --ink-soft: #93A9C6;
-  --ink-faint: #6E88A8;
+  --ink-faint: #8099BA;
   --line: #23406B;
   --edge: #2E4C7C;
   --accent: #8FBCE9;
@@ -228,6 +231,7 @@ sup.art {
    (--plate-ar, written per sheet). */
 .plate { position: relative; container-type: inline-size; margin: 36px 0 8px; --plate-cap: min(84vh, 1400px); }
 .figure-wrap { overflow-x: auto; }
+.figure-wrap:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .figure-wrap svg { display: block; width: 100%; max-width: min(100%, calc(var(--plate-cap) * var(--plate-ar, 1.4))); height: auto; min-width: 1000px; margin: 0 auto; }
 .plate::after {
   content: "SCROLL →";
@@ -511,12 +515,15 @@ a { color: var(--accent); }
   vertical-align: calc(0.5cap - 6px); margin-right: 0.45em; }
 .gl.lane.after { margin-right: 0; margin-left: 0.45em; }
 </style>
+</head>
+<body>
+<main>
 <section class="sheet" id="sheet-3A" aria-label="Sheet 3A: THE HANDOFF WORKS">
   <div class="sheet-head"><span class="proj"><span class="project-mark">THE ALTITUDE ATLAS</span> — DRAWING SET</span><span class="shno">SHEET 3A / 13</span></div>
   <h2 class="sheet-title"><sup class="art">the&nbsp;</sup>HANDOFF WORKS</h2>
   <p class="sheet-sub">ALTITUDE 3 · ALTERNATE PLATE — the sheet-3 task-manager inset at full size: 8 of 13 workflows · 54 mise tasks in 4 homes · turbo ci 864 nodes, 235 real · 4 seam types · 3 service doors · every frame sized to the widest DIN line it holds, so the spine is computed rather than hand-set · every count imported from www/atlas.lit-ui-router.dev/data/census-handoff.json + census-plate.json · counted at origin/main @ 4dc0cbb7 (2026-10-04)</p>
   <figure>
-    <div class="plate fillable" style="--plate-ar:1.4028"><button type="button" class="fill" data-fill aria-label="Enlarge this figure, or leave it"></button><div class="figure-wrap"><svg viewBox="0 0 1400 998" role="img" aria-label="Flat coupling schematic of the two task managers in the lit-ui-router monorepo, promoted from the small inset on sheet 3. On the left a GitHub Actions panel lists 13 workflows, 8 of which call mise for a total of 37 call sites. A trunk crosses a bolted gasket labeled seam A into the mise machine, drawn as a node-free umbrella housing 54 tasks in four compartments: a tool belt of aqua-pinned binaries, nine build-and-test tasks including one dead task drawn in red, nine file tasks, sixteen release tasks, and fifteen inline tasks. Seven tasks marked with stars shell out to turbo; eight marked with return arrows are re-entered from turbo, and the two sets never overlap. A second gasket, seam B, crosses into the turbo machine, drawn as a real core of 235 tasks inside a hatched phantom shroud representing the 629 nodes that run nothing, cross-referenced to sheet twelve. Six root re-entrant ports at the bottom of the core return through a duct fitted with the featured cache gasket: turbo caches mise, because the lint tasks hash the mise task files and lockfile. The deepest chain, six hops from workflow YAML to the pinned taplo binary, is traced with circled digits and an accent thread. A red dashed service-door route arcs over the umbrella for the one bare-turbo bypass, and a red box catalogues all three deliberate bypasses including the mise-free production docs deploy. A seam schedule at the bottom lists every crossing with counts and citations.">
+    <div class="plate fillable" style="--plate-ar:1.4028"><button type="button" class="fill" data-fill aria-label="Enlarge this figure, or leave it"></button><div class="figure-wrap" tabindex="0" role="group" aria-label="Fig. 3A, the drawing; scrolls sideways"><svg viewBox="0 0 1400 998" role="img" aria-label="Flat coupling schematic of the two task managers in the lit-ui-router monorepo, promoted from the small inset on sheet 3. On the left a GitHub Actions panel lists 13 workflows, 8 of which call mise for a total of 37 call sites. A trunk crosses a bolted gasket labeled seam A into the mise machine, drawn as a node-free umbrella housing 54 tasks in four compartments: a tool belt of aqua-pinned binaries, nine build-and-test tasks including one dead task drawn in red, nine file tasks, sixteen release tasks, and fifteen inline tasks. Seven tasks marked with stars shell out to turbo; eight marked with return arrows are re-entered from turbo, and the two sets never overlap. A second gasket, seam B, crosses into the turbo machine, drawn as a real core of 235 tasks inside a hatched phantom shroud representing the 629 nodes that run nothing, cross-referenced to sheet twelve. Six root re-entrant ports at the bottom of the core return through a duct fitted with the featured cache gasket: turbo caches mise, because the lint tasks hash the mise task files and lockfile. The deepest chain, six hops from workflow YAML to the pinned taplo binary, is traced with circled digits and an accent thread. A red dashed service-door route arcs over the umbrella for the one bare-turbo bypass, and a red box catalogues all three deliberate bypasses including the mise-free production docs deploy. A seam schedule at the bottom lists every crossing with counts and citations.">
 <defs>
   <marker id="s3a-ai" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
     <path d="M0,0 L10,4 L0,8 z" class="fi"/>
@@ -788,6 +795,7 @@ a { color: var(--accent); }
     </div>
   </div>
 </section>
+</main>
 <script>document.addEventListener('scroll', (e) => {
   const w = e.target;
   if (!(w instanceof Element) || !w.classList.contains('figure-wrap')) return;
@@ -836,3 +844,5 @@ a { color: var(--accent); }
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && document.querySelector('.fillable.is-filled')) leave(); });
   sync();
 })();</script>
+</body>
+</html>

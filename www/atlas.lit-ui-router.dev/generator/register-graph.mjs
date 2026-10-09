@@ -204,7 +204,7 @@ $$FOCUS  // The cytoscape tag is deferred; deferred scripts run BEFORE DOMConten
   var info = document.getElementById('rg-info');
   if (!stage || !info) return;
   if (typeof cytoscape === 'undefined') {
-    info.innerHTML = '\\u003ch4\\u003eTHE REGISTER\\u003c/h4\\u003e\\u003cp class="hint"\\u003ecytoscape did not load, so the '
+    info.innerHTML = '\\u003ch3\\u003eTHE REGISTER\\u003c/h3\\u003e\\u003cp class="hint"\\u003ecytoscape did not load, so the '
       + 'walkable graph is not available here. Sheet 12 draws the same measurement as a static plate, '
       + 'and www/atlas.lit-ui-router.dev/data/census-plate.json carries every node and edge of it.\\u003c/p\\u003e';
     return;
@@ -325,7 +325,7 @@ $$FOCUS  // The cytoscape tag is deferred; deferred scripts run BEFORE DOMConten
   }
   applyShroud();
 
-  var IDLE = '\\u003ch4\\u003e' + L.glyphs.rest + 'THE REGISTER\\u003c/h4\\u003e\\u003cp class="hint"\\u003e' + L.idle + '\\u003c/p\\u003e';
+  var IDLE = '\\u003ch3\\u003e' + L.glyphs.rest + 'THE REGISTER\\u003c/h3\\u003e\\u003cp class="hint"\\u003e' + L.idle + '\\u003c/p\\u003e';
   function field(k, v) { return '\\u003cspan class="f"\\u003e' + k + '\\u003c/span\\u003e' + v; }
   function list(k, arr, cap) {
     if (!arr.length) return '';
@@ -340,7 +340,7 @@ $$FOCUS  // The cytoscape tag is deferred; deferred scripts run BEFORE DOMConten
     var n = N[i];
     var inR = deps[i].filter(function (j) { return N[j].real; });
     var outR = uses[i].filter(function (j) { return N[j].real; });
-    var h = '\\u003ch4\\u003e' + nid(i) + '\\u003c/h4\\u003e';
+    var h = '\\u003ch3\\u003e' + nid(i) + '\\u003c/h3\\u003e';
     h += field('PACKAGE', n.pkg);
     h += field('TASK', n.task);
     h += field('KIND', n.real ? 'command-bearing — this runs'

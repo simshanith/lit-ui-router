@@ -1,3 +1,6 @@
+<!doctype html>
+<html lang="en">
+<head>
 <meta charset="utf-8">
 <title>THE MEASURED CITY — Sheet 7 of 13</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -9,7 +12,7 @@
   --paper-2: #E9E8DD;
   --ink: #2B302C;
   --ink-soft: #5C6259;
-  --ink-faint: #9AA091;
+  --ink-faint: #626760;
   --line: #C6C8B6;
   --edge: #A9AB99;
   --accent: #2E5077;
@@ -30,7 +33,7 @@
     --paper-2: #0B1F3E;
     --ink: #D9E6F3;
     --ink-soft: #93A9C6;
-    --ink-faint: #6E88A8;
+    --ink-faint: #8099BA;
     --line: #23406B;
     --edge: #2E4C7C;
     --accent: #8FBCE9;
@@ -50,7 +53,7 @@
   --paper-2: #0B1F3E;
   --ink: #D9E6F3;
   --ink-soft: #93A9C6;
-  --ink-faint: #6E88A8;
+  --ink-faint: #8099BA;
   --line: #23406B;
   --edge: #2E4C7C;
   --accent: #8FBCE9;
@@ -228,6 +231,7 @@ sup.art {
    (--plate-ar, written per sheet). */
 .plate { position: relative; container-type: inline-size; margin: 36px 0 8px; --plate-cap: min(84vh, 1400px); }
 .figure-wrap { overflow-x: auto; }
+.figure-wrap:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .figure-wrap svg { display: block; width: 100%; max-width: min(100%, calc(var(--plate-cap) * var(--plate-ar, 1.4))); height: auto; min-width: 1000px; margin: 0 auto; }
 .plate::after {
   content: "SCROLL →";
@@ -511,12 +515,15 @@ a { color: var(--accent); }
   vertical-align: calc(0.5cap - 6px); margin-right: 0.45em; }
 .gl.lane.after { margin-right: 0; margin-left: 0.45em; }
 </style>
+</head>
+<body>
+<main>
 <section class="sheet" id="sheet-7" aria-label="Sheet 7: THE MEASURED CITY">
   <div class="sheet-head"><span class="proj"><span class="project-mark">THE ALTITUDE ATLAS</span> — DRAWING SET</span><span class="shno">SHEET 7 / 13</span></div>
   <h2 class="sheet-title"><sup class="art">the&nbsp;</sup>MEASURED CITY</h2>
   <p class="sheet-sub">ALTITUDE 3½ — the same city as sheet 3, surveyed by mass · 39 members in 4 districts, footprint ∝ √sloc, height ∝ authored files, spec mass drawn as an annex, gate severity in colour · counted at origin/main @ 4dc0cbb7 (2026-10-04)</p>
   <figure>
-    <div class="plate fillable" style="--plate-ar:1.2264"><button type="button" class="fill" data-fill aria-label="Enlarge this figure, or leave it"></button><div class="figure-wrap"><svg viewBox="0 0 1560 1272" role="img" aria-label="An isometric census city of the whole lit-ui-router workspace, drawn in four dashed districts. Every workspace member is a block massed by its own measured source — footprint side proportional to the square root of its authored lines, height three pixels per authored file — and every member that has tests carries a hatched annex beside it, massed the same way from its spec files. Upper left is the packages district, the product: lit-ui-router and ui-router-server each stand beside an annex with a larger footprint than the building it guards, the eslint plugin stands below them at the district's near corner, and the effect bindings and the prerender bridge take the two lots along the district's south row. To the right is the apps district, where sample-app-shared stands at 39 files and 2,354 lines. Below it sits the shopfront of docs and examples — examples the broadest source block on the sheet at 3,647 lines — and lower left the instrument yard of 24 tools, dominated by the tall red release block — 50 files and 2,427 lines, the only structure that can halt a publish. Gate severity is carried in colour, never in height: solid red halts a publish, red hatch stops the pull request line, accent hatch gates a later stage, faint blocks never gate at all. Roads run between the districts and carry real edges from the repository: solid roads where one member builds into another, dashed soft roads where tests exercise the code they cover, and an accent road that leaves both the source block and its spec annex together, because typecheck reads both. A structure schedule below lists all 39 members with exact file and line counts, their annex, and their gate tier.">
+    <div class="plate fillable" style="--plate-ar:1.2264"><button type="button" class="fill" data-fill aria-label="Enlarge this figure, or leave it"></button><div class="figure-wrap" tabindex="0" role="group" aria-label="Fig. 7, the drawing; scrolls sideways"><svg viewBox="0 0 1560 1272" role="img" aria-label="An isometric census city of the whole lit-ui-router workspace, drawn in four dashed districts. Every workspace member is a block massed by its own measured source — footprint side proportional to the square root of its authored lines, height three pixels per authored file — and every member that has tests carries a hatched annex beside it, massed the same way from its spec files. Upper left is the packages district, the product: lit-ui-router and ui-router-server each stand beside an annex with a larger footprint than the building it guards, the eslint plugin stands below them at the district's near corner, and the effect bindings and the prerender bridge take the two lots along the district's south row. To the right is the apps district, where sample-app-shared stands at 39 files and 2,354 lines. Below it sits the shopfront of docs and examples — examples the broadest source block on the sheet at 3,647 lines — and lower left the instrument yard of 24 tools, dominated by the tall red release block — 50 files and 2,427 lines, the only structure that can halt a publish. Gate severity is carried in colour, never in height: solid red halts a publish, red hatch stops the pull request line, accent hatch gates a later stage, faint blocks never gate at all. Roads run between the districts and carry real edges from the repository: solid roads where one member builds into another, dashed soft roads where tests exercise the code they cover, and an accent road that leaves both the source block and its spec annex together, because typecheck reads both. A structure schedule below lists all 39 members with exact file and line counts, their annex, and their gate tier.">
 <defs>
   <marker id="s7-ai" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
     <path d="M0,0 L10,4 L0,8 z" class="fi"/>
@@ -1378,6 +1385,7 @@ a { color: var(--accent); }
     </div>
   </div>
 </section>
+</main>
 <script>document.addEventListener('scroll', (e) => {
   const w = e.target;
   if (!(w instanceof Element) || !w.classList.contains('figure-wrap')) return;
@@ -1426,3 +1434,5 @@ a { color: var(--accent); }
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && document.querySelector('.fillable.is-filled')) leave(); });
   sync();
 })();</script>
+</body>
+</html>

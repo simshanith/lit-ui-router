@@ -42,10 +42,10 @@ export const laneCss = (p, wrap = 'break-word') => `
 .${p}-info { border-left: 1.5px solid var(--ink); background: var(--paper-2); padding: 20px 22px 22px;
   font-family: var(--data); font-size: 12.5px; letter-spacing: 0.04em; line-height: 1.5; color: var(--ink);
   overflow-y: auto; max-height: clamp(560px, 70vh, 960px); }
-.${p}-info h4 { font-family: var(--code); font-size: 16px; font-weight: 600; letter-spacing: 0.04em; line-height: 1.3;
+.${p}-info h3 { font-family: var(--code); font-size: 16px; font-weight: 600; letter-spacing: 0.04em; line-height: 1.3;
   margin: 0 0 10px; word-break: ${wrap}; }
 .${p}-info .f { display: block; font-size: 11px; letter-spacing: 0.14em; color: var(--ink-soft); margin: 16px 0 6px; }
-.${p}-info h4 + .f { margin-top: 0; }
+.${p}-info h3 + .f { margin-top: 0; }
 .${p}-info ul { list-style: none; padding: 0; margin: 0; }
 .${p}-info li { padding: 2px 0; line-height: 1.45; color: var(--ink-soft); word-break: ${wrap}; }
 .${p}-info .hint { font-family: var(--prose); font-size: 16px; font-style: normal; letter-spacing: 0; line-height: 1.5;

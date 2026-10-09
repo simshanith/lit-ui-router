@@ -184,6 +184,7 @@ const surveyCss = `.stat-bar { display: grid; grid-template-columns: repeat(6, 1
 .lang th { font-family: var(--data); font-size: 9.5px; letter-spacing: 0.16em; color: var(--ink-soft);
   text-align: right; padding: 7px 14px 6px; border-bottom: 1px solid var(--line); }
 .lang th:first-child { text-align: left; }
+.lang .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .lang td { font-family: var(--data); font-size: 12px; letter-spacing: 0.03em; padding: 5px 14px;
   border-bottom: 1px solid var(--line); text-align: right; font-variant-numeric: tabular-nums; }
 .lang td:first-child { text-align: left; letter-spacing: 0.08em; }
@@ -274,7 +275,7 @@ const survey = `<section class="survey" aria-label="general survey of the reposi
     <div><span class="k">COMMENTS</span><span class="v">${num(SURVEY_TOTAL.comment)}</span></div>
   </div>
   <table class="lang">
-    <thead><tr><th>LANGUAGE</th><th>FILES</th><th>SLOC</th><th class="bar"></th></tr></thead>
+    <thead><tr><th>LANGUAGE</th><th>FILES</th><th>SLOC</th><th class="bar"><span class="vh">SLOC, AS A BAR</span></th></tr></thead>
     <tbody>${SURVEY_LANGS.map((l) => `<tr><td>${l.name}</td><td>${num(l.count)}</td><td>${num(l.code)}</td>` +
       `<td class="bar"><span style="width:${((l.code / TOP_CODE) * 100).toFixed(1)}%"></span></td></tr>`).join('')}</tbody>
   </table>

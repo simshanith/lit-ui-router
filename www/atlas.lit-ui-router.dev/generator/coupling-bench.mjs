@@ -255,7 +255,7 @@ $$FOCUS  // The cytoscape tag above is deferred; deferred scripts run before
   floorLabels();
 
   var info = document.getElementById('cb-info');
-  var IDLE = '\\u003ch4\\u003e' + L.glyphs.rest + 'THE COUPLING BENCH\\u003c/h4\\u003e\\u003cp class="hint"\\u003eEvery line on this bench is a '
+  var IDLE = '\\u003ch3\\u003e' + L.glyphs.rest + 'THE COUPLING BENCH\\u003c/h3\\u003e\\u003cp class="hint"\\u003eEvery line on this bench is a '
     + 'published contract. Hover or tap an EDGE for the range it declares and the section it lives in; hover a '
     + 'BUILDING for its version, what it declares, and what declares it. '
     + L.totals.drawnContracts + ' contracts are drawn; ' + (L.totals.contracts - L.totals.drawnContracts)
@@ -276,7 +276,7 @@ $$FOCUS  // The cytoscape tag above is deferred; deferred scripts run before
   }
   function describeEdge(i) {
     var e = L.edges[i];
-    var h = '\\u003ch4\\u003e' + esc(e.from) + ' \\u2192 ' + esc(e.to) + '\\u003c/h4\\u003e';
+    var h = '\\u003ch3\\u003e' + esc(e.from) + ' \\u2192 ' + esc(e.to) + '\\u003c/h3\\u003e';
     h += field('DECLARED RANGE', '\\u003cspan class="rng"\\u003e' + esc(e.range) + '\\u003c/span\\u003e');
     h += field('SECTION', e.optional
       ? '\\u003cspan class="opt"\\u003e' + e.section + ' \\u00b7 OPTIONAL\\u003c/span\\u003e' : e.section);
@@ -292,7 +292,7 @@ $$FOCUS  // The cytoscape tag above is deferred; deferred scripts run before
     var outs = L.edges.filter(function (e) { return e.from === key; });
     var ins = L.edges.filter(function (e) { return e.to === key; });
     var off = L.offstage.filter(function (e) { return e.from === key; });
-    var h = '\\u003ch4\\u003e' + esc(n.key) + '\\u003c/h4\\u003e';
+    var h = '\\u003ch3\\u003e' + esc(n.key) + '\\u003c/h3\\u003e';
     h += field('VERSION', esc(n.version) + ' \\u00b7 ' + esc(n.versionFrom));
     if (n.sloc !== null) h += field('MASS', n.files + 'f \\u00b7 ' + n.sloc.toLocaleString('en-US')
       + ' sloc \\u00b7 ' + n.courses + ' courses');

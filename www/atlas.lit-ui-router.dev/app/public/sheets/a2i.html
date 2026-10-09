@@ -38,10 +38,10 @@
 .pg-info { border-left: 1.5px solid var(--ink); background: var(--paper-2); padding: 20px 22px 22px;
   font-family: var(--data); font-size: 12.5px; letter-spacing: 0.04em; line-height: 1.5; color: var(--ink);
   overflow-y: auto; max-height: clamp(560px, 70vh, 960px); }
-.pg-info h4 { font-family: var(--code); font-size: 16px; font-weight: 600; letter-spacing: 0.04em; line-height: 1.3;
+.pg-info h3 { font-family: var(--code); font-size: 16px; font-weight: 600; letter-spacing: 0.04em; line-height: 1.3;
   margin: 0 0 10px; word-break: break-all; }
 .pg-info .f { display: block; font-size: 11px; letter-spacing: 0.14em; color: var(--ink-soft); margin: 16px 0 6px; }
-.pg-info h4 + .f { margin-top: 0; }
+.pg-info h3 + .f { margin-top: 0; }
 .pg-info ul { list-style: none; padding: 0; margin: 0; }
 .pg-info li { padding: 2px 0; line-height: 1.45; color: var(--ink-soft); word-break: break-all; }
 .pg-info .hint { font-family: var(--prose); font-size: 16px; font-style: normal; letter-spacing: 0; line-height: 1.5;
@@ -250,7 +250,7 @@
   showTools(false);
 
   var info = document.getElementById('pg-info');
-  var IDLE = '<h4>' + L.glyphs.rest + 'THE SURVEY OFFICE</h4><p class="hint">Hover or tap any building to light its neighbourhood: '
+  var IDLE = '<h3>' + L.glyphs.rest + 'THE SURVEY OFFICE</h3><p class="hint">Hover or tap any building to light its neighbourhood: '
     + 'what wrote it, what reads it, what it imports. The wide accent fan leaving the master plate is the '
     + 'one-measurement-many-views claim, drawn. A tap pins a building and the link in the address bar carries '
     + 'the pin; tap it again or the ground to clear it.</p>';
@@ -264,7 +264,7 @@
     var n = byId[id], p = L.nodes[id];
     var ins = A.edges.filter(function (e) { return e.to === id; });
     var outs = A.edges.filter(function (e) { return e.from === id; });
-    var h = '<h4>' + p.label + '</h4>';
+    var h = '<h3>' + p.label + '</h3>';
     h += field('KIND', n.kind + (n.role ? ' · ' + n.role : ''));
     if (n.tier) h += field('TIER', n.tier);
     if (n.basis) h += field('BASIS', n.basis);
@@ -289,7 +289,7 @@
     node.removeClass('lit').addClass('pick');
     var id = node.data('nid');
     info.innerHTML = typeof id === 'number' ? describe(id)
-      : '<h4>' + node.data('label') + '</h4>' + field('KIND', 'the archive basis') + field('BASIS', L.basis.sub)
+      : '<h3>' + node.data('label') + '</h3>' + field('KIND', 'the archive basis') + field('BASIS', L.basis.sub)
         + field('OPENS', L.basis.ties.length + ' stations materialize this ref');
   }
   // hover previews over the pin; a tap pins, and the pinned building or the ground clears it

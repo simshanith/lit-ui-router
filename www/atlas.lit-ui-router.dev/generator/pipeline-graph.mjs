@@ -270,7 +270,7 @@ $$FOCUS  // The cytoscape tag above is deferred; deferred scripts run before
   showTools(false);
 
   var info = document.getElementById('pg-info');
-  var IDLE = '<h4>' + L.glyphs.rest + 'THE SURVEY OFFICE</h4><p class="hint">Hover or tap any building to light its neighbourhood: '
+  var IDLE = '<h3>' + L.glyphs.rest + 'THE SURVEY OFFICE</h3><p class="hint">Hover or tap any building to light its neighbourhood: '
     + 'what wrote it, what reads it, what it imports. The wide accent fan leaving the master plate is the '
     + 'one-measurement-many-views claim, drawn. A tap pins a building and the link in the address bar carries '
     + 'the pin; tap it again or the ground to clear it.</p>';
@@ -284,7 +284,7 @@ $$FOCUS  // The cytoscape tag above is deferred; deferred scripts run before
     var n = byId[id], p = L.nodes[id];
     var ins = A.edges.filter(function (e) { return e.to === id; });
     var outs = A.edges.filter(function (e) { return e.from === id; });
-    var h = '<h4>' + p.label + '</h4>';
+    var h = '<h3>' + p.label + '</h3>';
     h += field('KIND', n.kind + (n.role ? ' · ' + n.role : ''));
     if (n.tier) h += field('TIER', n.tier);
     if (n.basis) h += field('BASIS', n.basis);
@@ -309,7 +309,7 @@ $$FOCUS  // The cytoscape tag above is deferred; deferred scripts run before
     node.removeClass('lit').addClass('pick');
     var id = node.data('nid');
     info.innerHTML = typeof id === 'number' ? describe(id)
-      : '<h4>' + node.data('label') + '</h4>' + field('KIND', 'the archive basis') + field('BASIS', L.basis.sub)
+      : '<h3>' + node.data('label') + '</h3>' + field('KIND', 'the archive basis') + field('BASIS', L.basis.sub)
         + field('OPENS', L.basis.ties.length + ' stations materialize this ref');
   }
   // hover previews over the pin; a tap pins, and the pinned building or the ground clears it

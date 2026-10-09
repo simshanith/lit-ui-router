@@ -1,3 +1,6 @@
+<!doctype html>
+<html lang="en">
+<head>
 <meta charset="utf-8">
 <title>THE SHIPPED CITY — Sheet 9 of 13</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -9,7 +12,7 @@
   --paper-2: #E9E8DD;
   --ink: #2B302C;
   --ink-soft: #5C6259;
-  --ink-faint: #9AA091;
+  --ink-faint: #626760;
   --line: #C6C8B6;
   --edge: #A9AB99;
   --accent: #2E5077;
@@ -30,7 +33,7 @@
     --paper-2: #0B1F3E;
     --ink: #D9E6F3;
     --ink-soft: #93A9C6;
-    --ink-faint: #6E88A8;
+    --ink-faint: #8099BA;
     --line: #23406B;
     --edge: #2E4C7C;
     --accent: #8FBCE9;
@@ -50,7 +53,7 @@
   --paper-2: #0B1F3E;
   --ink: #D9E6F3;
   --ink-soft: #93A9C6;
-  --ink-faint: #6E88A8;
+  --ink-faint: #8099BA;
   --line: #23406B;
   --edge: #2E4C7C;
   --accent: #8FBCE9;
@@ -228,6 +231,7 @@ sup.art {
    (--plate-ar, written per sheet). */
 .plate { position: relative; container-type: inline-size; margin: 36px 0 8px; --plate-cap: min(84vh, 1400px); }
 .figure-wrap { overflow-x: auto; }
+.figure-wrap:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .figure-wrap svg { display: block; width: 100%; max-width: min(100%, calc(var(--plate-cap) * var(--plate-ar, 1.4))); height: auto; min-width: 1000px; margin: 0 auto; }
 .plate::after {
   content: "SCROLL →";
@@ -511,12 +515,15 @@ a { color: var(--accent); }
   vertical-align: calc(0.5cap - 6px); margin-right: 0.45em; }
 .gl.lane.after { margin-right: 0; margin-left: 0.45em; }
 </style>
+</head>
+<body>
+<main>
 <section class="sheet" id="sheet-9" aria-label="Sheet 9: THE SHIPPED CITY">
   <div class="sheet-head"><span class="proj"><span class="project-mark">THE ALTITUDE ATLAS</span> — DRAWING SET</span><span class="shno">SHEET 9 / 13</span></div>
   <h2 class="sheet-title"><sup class="art">the&nbsp;</sup>SHIPPED CITY</h2>
   <p class="sheet-sub">ALTITUDE 2¾ — what the browser downloads · lit-ui-router.dev, one deploy · 890 files in 12 districts, 4.8 MB on the wire, footprint from file count and height from gzipped bytes — measured at origin/main @ 4dc0cbb7 (2026-10-04) · www/atlas.lit-ui-router.dev/generator/census-shipped.mjs</p>
   <figure>
-    <div class="plate fillable" style="--plate-ar:1.1600"><button type="button" class="fill" data-fill aria-label="Enlarge this figure, or leave it"></button><div class="figure-wrap"><svg viewBox="0 0 1160 1000" role="img" aria-label="The production docs-site deploy drawn as an isometric city of 12 districts: footprint area from file counts, height from gzipped bytes on the wire. The three tallest towers are html pages, examples, inter fonts. A vacant lot at the plan's edge marks the footprint of the demo corpora, which the site no longer ships. The four routed sample apps are small accent buildings totalling 6.5 percent of the deploy. There is no ghost block: the census walks backtick-quoted asset URLs too, and this deploy carries no unreachable files at all. A structure schedule lists every district with exact counts and its largest tenant.">
+    <div class="plate fillable" style="--plate-ar:1.1600"><button type="button" class="fill" data-fill aria-label="Enlarge this figure, or leave it"></button><div class="figure-wrap" tabindex="0" role="group" aria-label="Fig. 9, the drawing; scrolls sideways"><svg viewBox="0 0 1160 1000" role="img" aria-label="The production docs-site deploy drawn as an isometric city of 12 districts: footprint area from file counts, height from gzipped bytes on the wire. The three tallest towers are html pages, examples, inter fonts. A vacant lot at the plan's edge marks the footprint of the demo corpora, which the site no longer ships. The four routed sample apps are small accent buildings totalling 6.5 percent of the deploy. There is no ghost block: the census walks backtick-quoted asset URLs too, and this deploy carries no unreachable files at all. A structure schedule lists every district with exact counts and its largest tenant.">
 <defs>
   <marker id="s9-ai" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
     <path d="M0,0 L10,4 L0,8 z" class="fi"/>
@@ -749,6 +756,7 @@ a { color: var(--accent); }
     </div>
   </div>
 </section>
+</main>
 <script>document.addEventListener('scroll', (e) => {
   const w = e.target;
   if (!(w instanceof Element) || !w.classList.contains('figure-wrap')) return;
@@ -797,3 +805,5 @@ a { color: var(--accent); }
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && document.querySelector('.fillable.is-filled')) leave(); });
   sync();
 })();</script>
+</body>
+</html>

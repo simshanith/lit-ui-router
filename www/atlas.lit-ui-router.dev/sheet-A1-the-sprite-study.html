@@ -1,3 +1,6 @@
+<!doctype html>
+<html lang="en">
+<head>
 <meta charset="utf-8">
 <title>THE SPRITE STUDY — Appendix A1</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -9,7 +12,7 @@
   --paper-2: #E9E8DD;
   --ink: #2B302C;
   --ink-soft: #5C6259;
-  --ink-faint: #9AA091;
+  --ink-faint: #626760;
   --line: #C6C8B6;
   --edge: #A9AB99;
   --accent: #2E5077;
@@ -30,7 +33,7 @@
     --paper-2: #0B1F3E;
     --ink: #D9E6F3;
     --ink-soft: #93A9C6;
-    --ink-faint: #6E88A8;
+    --ink-faint: #8099BA;
     --line: #23406B;
     --edge: #2E4C7C;
     --accent: #8FBCE9;
@@ -50,7 +53,7 @@
   --paper-2: #0B1F3E;
   --ink: #D9E6F3;
   --ink-soft: #93A9C6;
-  --ink-faint: #6E88A8;
+  --ink-faint: #8099BA;
   --line: #23406B;
   --edge: #2E4C7C;
   --accent: #8FBCE9;
@@ -228,6 +231,7 @@ sup.art {
    (--plate-ar, written per sheet). */
 .plate { position: relative; container-type: inline-size; margin: 36px 0 8px; --plate-cap: min(84vh, 1400px); }
 .figure-wrap { overflow-x: auto; }
+.figure-wrap:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .figure-wrap svg { display: block; width: 100%; max-width: min(100%, calc(var(--plate-cap) * var(--plate-ar, 1.4))); height: auto; min-width: 1000px; margin: 0 auto; }
 .plate::after {
   content: "SCROLL →";
@@ -511,12 +515,15 @@ a { color: var(--accent); }
   vertical-align: calc(0.5cap - 6px); margin-right: 0.45em; }
 .gl.lane.after { margin-right: 0; margin-left: 0.45em; }
 </style>
+</head>
+<body>
+<main>
 <section class="sheet" id="sheet-A1" aria-label="Appendix A1: THE SPRITE STUDY">
   <div class="sheet-head"><span class="proj"><span class="project-mark">THE ALTITUDE ATLAS</span> — DRAWING SET</span><span class="shno">APPENDIX A1 · META</span></div>
   <h2 class="sheet-title"><sup class="art">the&nbsp;</sup>SPRITE STUDY</h2>
   <p class="sheet-sub">APPENDIX · META — the research behind the building sprites, drawn in the set it argues about · three concepts on one demo member, five states each · and, at the foot, the reference strip itself: six fair-use thumbnails at reference size, credited — the set draws no images anywhere else</p>
   <figure>
-    <div class="plate fillable" style="--plate-ar:1.0196"><button type="button" class="fill" data-fill aria-label="Enlarge this figure, or leave it"></button><div class="figure-wrap"><svg viewBox="0 0 1560 1530" role="img" aria-label="An appendix plate of sprite studies: three rows of five isometric blocks each, showing one demo workspace member drawn from wreck to splendor under three competing sprite treatments. Row one, the reclaimed machine, is Horizon Zero Dawn leaning: the wrecked block has a breached parapet, rubble and green vines climbing both flanks, and each block to the right carries less vegetation until the last stands crisp with a ground halo, an accent trace along its roof edge and a survey flag. Row two, the ledger roof, is SimCity 2000 leaning: every roof is a four by four grid of tiles, one per authored file, collapsing and darkening on the left with a boarded door, clearing tile by tile to the right, with an accent construction crane on the fourth block and air-conditioner cubes, a water tower and an antenna on the last. Row three, the working plant, is Factorio leaning: the left machine is covered in red rust hatch with cracks, its outlet pipes dashed and dripping, its conveyor belt stopped and a red alert triangle floating above it; rightward the rust thins, the pipes reconnect, green module lamps light one by one and a steam plume grows from the roof vent. Beside each row a table maps every visual channel to the git measurement that would drive it, and a cost note prices the treatment across twenty-seven buildings. A recommendation panel at the foot ranks the three: build the working plant first, layer the vines second, park the ledger roof for a close-up plate; beside it a design guard states that rust red must never be confused with gate red. A reference strip across the foot of the plate carries the six photographs the studies were argued from, framed as thumbnails and grouped by study: a Horizon Zero Dawn landscape and an overgrown temple doorway at Angkor; a SimCity 2000 cityscape and a SimCity Urban Renewal Kit tile palette; and two Factorio Friday Facts screenshots, machine remnants and redrawn turrets. Each thumbnail carries the one sentence it teaches and a credit naming its source.">
+    <div class="plate fillable" style="--plate-ar:1.0196"><button type="button" class="fill" data-fill aria-label="Enlarge this figure, or leave it"></button><div class="figure-wrap" tabindex="0" role="group" aria-label="Fig. A1, the drawing; scrolls sideways"><svg viewBox="0 0 1560 1530" role="group" aria-label="An appendix plate of sprite studies: three rows of five isometric blocks each, showing one demo workspace member drawn from wreck to splendor under three competing sprite treatments. Row one, the reclaimed machine, is Horizon Zero Dawn leaning: the wrecked block has a breached parapet, rubble and green vines climbing both flanks, and each block to the right carries less vegetation until the last stands crisp with a ground halo, an accent trace along its roof edge and a survey flag. Row two, the ledger roof, is SimCity 2000 leaning: every roof is a four by four grid of tiles, one per authored file, collapsing and darkening on the left with a boarded door, clearing tile by tile to the right, with an accent construction crane on the fourth block and air-conditioner cubes, a water tower and an antenna on the last. Row three, the working plant, is Factorio leaning: the left machine is covered in red rust hatch with cracks, its outlet pipes dashed and dripping, its conveyor belt stopped and a red alert triangle floating above it; rightward the rust thins, the pipes reconnect, green module lamps light one by one and a steam plume grows from the roof vent. Beside each row a table maps every visual channel to the git measurement that would drive it, and a cost note prices the treatment across twenty-seven buildings. A recommendation panel at the foot ranks the three: build the working plant first, layer the vines second, park the ledger roof for a close-up plate; beside it a design guard states that rust red must never be confused with gate red. A reference strip across the foot of the plate carries the six photographs the studies were argued from, framed as thumbnails and grouped by study: a Horizon Zero Dawn landscape and an overgrown temple doorway at Angkor; a SimCity 2000 cityscape and a SimCity Urban Renewal Kit tile palette; and two Factorio Friday Facts screenshots, machine remnants and redrawn turrets. Each thumbnail carries the one sentence it teaches and a credit naming its source.">
 <defs>
   <marker id="sA1-ai" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
     <path d="M0,0 L10,4 L0,8 z" class="fi"/>
@@ -1066,6 +1073,7 @@ a { color: var(--accent); }
     </div>
   </div>
 </section>
+</main>
 <script>document.addEventListener('scroll', (e) => {
   const w = e.target;
   if (!(w instanceof Element) || !w.classList.contains('figure-wrap')) return;
@@ -1114,3 +1122,5 @@ a { color: var(--accent); }
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && document.querySelector('.fillable.is-filled')) leave(); });
   sync();
 })();</script>
+</body>
+</html>

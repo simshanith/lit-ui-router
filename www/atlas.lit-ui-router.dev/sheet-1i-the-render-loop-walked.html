@@ -1,3 +1,6 @@
+<!doctype html>
+<html lang="en">
+<head>
 <meta charset="utf-8">
 <title>THE RENDER LOOP, WALKED — Sheet 1i of 13</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -9,7 +12,7 @@
   --paper-2: #E9E8DD;
   --ink: #2B302C;
   --ink-soft: #5C6259;
-  --ink-faint: #9AA091;
+  --ink-faint: #626760;
   --line: #C6C8B6;
   --edge: #A9AB99;
   --accent: #2E5077;
@@ -30,7 +33,7 @@
     --paper-2: #0B1F3E;
     --ink: #D9E6F3;
     --ink-soft: #93A9C6;
-    --ink-faint: #6E88A8;
+    --ink-faint: #8099BA;
     --line: #23406B;
     --edge: #2E4C7C;
     --accent: #8FBCE9;
@@ -50,7 +53,7 @@
   --paper-2: #0B1F3E;
   --ink: #D9E6F3;
   --ink-soft: #93A9C6;
-  --ink-faint: #6E88A8;
+  --ink-faint: #8099BA;
   --line: #23406B;
   --edge: #2E4C7C;
   --accent: #8FBCE9;
@@ -228,6 +231,7 @@ sup.art {
    (--plate-ar, written per sheet). */
 .plate { position: relative; container-type: inline-size; margin: 36px 0 8px; --plate-cap: min(84vh, 1400px); }
 .figure-wrap { overflow-x: auto; }
+.figure-wrap:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .figure-wrap svg { display: block; width: 100%; max-width: min(100%, calc(var(--plate-cap) * var(--plate-ar, 1.4))); height: auto; min-width: 1000px; margin: 0 auto; }
 .plate::after {
   content: "SCROLL →";
@@ -511,6 +515,9 @@ a { color: var(--accent); }
   vertical-align: calc(0.5cap - 6px); margin-right: 0.45em; }
 .gl.lane.after { margin-right: 0; margin-left: 0.45em; }
 </style>
+</head>
+<body>
+<main>
 <svg class="icon-sprite" aria-hidden="true" focusable="false" width="0" height="0"><symbol id="gl-arrow-down-to-line" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><g transform="scale(.666667)" stroke-width="1.95"><path d="M12 17V3"/><path d="m6 11 6 6 6-6"/><path d="M19 21H5"/></g></symbol><symbol id="gl-arrow-up-from-line" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><g transform="scale(.666667)" stroke-width="1.95"><path d="m18 9-6-6-6 6"/><path d="M12 3v14"/><path d="M5 21h14"/></g></symbol><symbol id="gl-chevron-left" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><g transform="scale(.666667)" stroke-width="1.95"><path d="m15 18-6-6 6-6"/></g></symbol><symbol id="gl-chevron-right" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><g transform="scale(.666667)" stroke-width="1.95"><path d="m9 18 6-6-6-6"/></g></symbol><symbol id="gl-footprints" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><g transform="scale(.666667)" stroke-width="1.95"><path d="M4 16v-2.38C4 11.5 2.97 10.5 3 8c.03-2.72 1.49-6 4.5-6C9.37 2 10 3.8 10 5.5c0 3.11-2 5.66-2 8.68V16a2 2 0 1 1-4 0Z"/><path d="M20 20v-2.38c0-2.12 1.03-3.12 1-5.62-.03-2.72-1.49-6-4.5-6C14.63 6 14 7.8 14 9.5c0 3.11 2 5.66 2 8.68V20a2 2 0 1 0 4 0Z"/><path d="M16 17h4"/><path d="M4 13h4"/></g></symbol><symbol id="gl-rotate-ccw" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><g transform="scale(.666667)" stroke-width="1.95"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></g></symbol><symbol id="ic-circuit" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><g transform="scale(.666667)" stroke-width="1.95"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></g></symbol></svg>
 <section class="sheet lw" id="sheet-1i" aria-label="Sheet 1i: THE RENDER LOOP, WALKED">
   <div class="sheet-head"><span class="proj"><span class="project-mark">THE ALTITUDE ATLAS</span> — INTERACTIVE PLATE</span><span class="shno">SHEET 1i / 13</span></div>
@@ -556,10 +563,10 @@ a { color: var(--accent); }
 .lw-info { border-left: 1.5px solid var(--ink); background: var(--paper-2); padding: 20px 22px 22px;
   font-family: var(--data); font-size: 12.5px; letter-spacing: 0.04em; line-height: 1.5; color: var(--ink);
   overflow-y: auto; max-height: clamp(560px, 70vh, 960px); }
-.lw-info h4 { font-family: var(--code); font-size: 16px; font-weight: 600; letter-spacing: 0.04em; line-height: 1.3;
+.lw-info h3 { font-family: var(--code); font-size: 16px; font-weight: 600; letter-spacing: 0.04em; line-height: 1.3;
   margin: 0 0 10px; word-break: break-word; }
 .lw-info .f { display: block; font-size: 11px; letter-spacing: 0.14em; color: var(--ink-soft); margin: 16px 0 6px; }
-.lw-info h4 + .f { margin-top: 0; }
+.lw-info h3 + .f { margin-top: 0; }
 .lw-info ul { list-style: none; padding: 0; margin: 0; }
 .lw-info li { padding: 2px 0; line-height: 1.45; color: var(--ink-soft); word-break: break-word; }
 .lw-info .hint { font-family: var(--prose); font-size: 16px; font-style: normal; letter-spacing: 0; line-height: 1.5;
@@ -578,7 +585,7 @@ a { color: var(--accent); }
 .lw-ctl button:disabled { color: var(--ink-faint); border-color: var(--line); cursor: default; background: var(--paper); }
 .lw-ctl .lw-step { font-size: 11px; color: var(--accent); font-weight: 600; min-width: 10ch; text-align: center;
   font-variant-numeric: tabular-nums; }
-.lw-info h4 .n { font-family: var(--data); font-size: 11px; font-weight: 600; letter-spacing: 0.16em; color: var(--accent);
+.lw-info h3 .n { font-family: var(--data); font-size: 11px; font-weight: 600; letter-spacing: 0.16em; color: var(--accent);
   vertical-align: 0.12em; white-space: nowrap; }
 .lw-info p { font-family: var(--serif); font-size: 16px; letter-spacing: 0; line-height: 1.5; color: var(--ink); max-width: 66ch; }
 .lw-info li .now { font-size: 12.5px; color: var(--accent); }
@@ -661,7 +668,7 @@ a { color: var(--accent); }
   var wrap = document.getElementById('lw-stage');
   if (!stage || !info || !wrap) return;
   if (typeof cytoscape === 'undefined') {
-    info.innerHTML = '\u003ch4\u003eTHE RENDER LOOP\u003c/h4\u003e\u003cp class="hint"\u003ecytoscape did not load, so the '
+    info.innerHTML = '\u003ch3\u003eTHE RENDER LOOP\u003c/h3\u003e\u003cp class="hint"\u003ecytoscape did not load, so the '
       + 'walk is not available here. Sheet 1 draws the same circuit as a static plate, and '
       + 'www/atlas.lit-ui-router.dev/data/census-loop.json carries every station, leg and step of it.\u003c/p\u003e';
     return;
@@ -757,11 +764,11 @@ a { color: var(--accent); }
   }
   function describeStep() {
     if (!step) {
-      return '\u003ch4\u003e' + L.glyphs.rest + 'THE RENDER LOOP \u00b7 AT REST\u003c/h4\u003e\u003cp class="hint"\u003e' + esc(L.idle) + '\u003c/p\u003e'
+      return '\u003ch3\u003e' + L.glyphs.rest + 'THE RENDER LOOP \u00b7 AT REST\u003c/h3\u003e\u003cp class="hint"\u003e' + esc(L.idle) + '\u003c/p\u003e'
         + field(L.glyphs.walk + 'THE WALK', esc(P.walkOf) + ' \u00b7 ' + W.length + ' steps');
     }
     var s = W[step - 1];
-    var h = '\u003ch4\u003e\u003cspan class="n"\u003eSTEP ' + s.step + ' / ' + W.length + '\u003c/span\u003e \u00b7 ' + esc(s.title) + '\u003c/h4\u003e';
+    var h = '\u003ch3\u003e\u003cspan class="n"\u003eSTEP ' + s.step + ' / ' + W.length + '\u003c/span\u003e \u00b7 ' + esc(s.title) + '\u003c/h3\u003e';
     h += '\u003cp\u003e' + esc(s.text) + '\u003c/p\u003e';
     h += field('LEGS LIT', '\u003cul\u003e' + s.legs.map(function (id) { return legLine(id, true); }).join('') + '\u003c/ul\u003e');
     h += field('EVIDENCE \u00b7 ' + esc(P.ref) + ' @ ' + esc(P.sha), evidence(s.evidence));
@@ -843,7 +850,7 @@ a { color: var(--accent); }
     var n = byId[id];
     var outs = E.filter(function (e) { return e.from === id; });
     var ins = E.filter(function (e) { return e.to === id; });
-    var h = '\u003ch4\u003e' + esc(n.label) + '\u003c/h4\u003e';
+    var h = '\u003ch3\u003e' + esc(n.label) + '\u003c/h3\u003e';
     h += field('WHAT', esc(n.sub));
     h += field('ANCHOR', evidence([n]));
     if (outs.length) h += field(L.glyphs.out + 'LEGS OUT', '\u003cul\u003e' + outs.map(function (e) { return legLine(e.id, false); }).join('') + '\u003c/ul\u003e');
@@ -852,7 +859,7 @@ a { color: var(--accent); }
   }
   function describeLeg(id) {
     var e = legById[id];
-    var h = '\u003ch4\u003e' + esc(byId[e.from].label) + ' \u2192 ' + esc(byId[e.to].label) + '\u003c/h4\u003e';
+    var h = '\u003ch3\u003e' + esc(byId[e.from].label) + ' \u2192 ' + esc(byId[e.to].label) + '\u003c/h3\u003e';
     h += field('KIND', e.kind + ' \u00b7 ' + L.kinds[e.kind]);
     h += field('CARRIED BY', esc(e.carrier));
     h += field('LIT AT STEP' + (e.steps.length > 1 ? 'S' : ''), e.steps.join(', '));
@@ -968,6 +975,7 @@ excerpt and every count are the plate's.</p>
     </div>
   </div>
 </section>
+</main>
 <script>document.addEventListener('scroll', (e) => {
   const w = e.target;
   if (!(w instanceof Element) || !w.classList.contains('figure-wrap')) return;
@@ -1016,3 +1024,5 @@ excerpt and every count are the plate's.</p>
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && document.querySelector('.fillable.is-filled')) leave(); });
   sync();
 })();</script>
+</body>
+</html>

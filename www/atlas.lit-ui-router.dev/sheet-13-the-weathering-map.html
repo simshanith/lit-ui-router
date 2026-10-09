@@ -1,3 +1,6 @@
+<!doctype html>
+<html lang="en">
+<head>
 <meta charset="utf-8">
 <title>THE WEATHERING MAP — Sheet 13 of 13</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -9,7 +12,7 @@
   --paper-2: #E9E8DD;
   --ink: #2B302C;
   --ink-soft: #5C6259;
-  --ink-faint: #9AA091;
+  --ink-faint: #626760;
   --line: #C6C8B6;
   --edge: #A9AB99;
   --accent: #2E5077;
@@ -30,7 +33,7 @@
     --paper-2: #0B1F3E;
     --ink: #D9E6F3;
     --ink-soft: #93A9C6;
-    --ink-faint: #6E88A8;
+    --ink-faint: #8099BA;
     --line: #23406B;
     --edge: #2E4C7C;
     --accent: #8FBCE9;
@@ -50,7 +53,7 @@
   --paper-2: #0B1F3E;
   --ink: #D9E6F3;
   --ink-soft: #93A9C6;
-  --ink-faint: #6E88A8;
+  --ink-faint: #8099BA;
   --line: #23406B;
   --edge: #2E4C7C;
   --accent: #8FBCE9;
@@ -228,6 +231,7 @@ sup.art {
    (--plate-ar, written per sheet). */
 .plate { position: relative; container-type: inline-size; margin: 36px 0 8px; --plate-cap: min(84vh, 1400px); }
 .figure-wrap { overflow-x: auto; }
+.figure-wrap:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .figure-wrap svg { display: block; width: 100%; max-width: min(100%, calc(var(--plate-cap) * var(--plate-ar, 1.4))); height: auto; min-width: 1000px; margin: 0 auto; }
 .plate::after {
   content: "SCROLL →";
@@ -511,12 +515,15 @@ a { color: var(--accent); }
   vertical-align: calc(0.5cap - 6px); margin-right: 0.45em; }
 .gl.lane.after { margin-right: 0; margin-left: 0.45em; }
 </style>
+</head>
+<body>
+<main>
 <section class="sheet" id="sheet-13" aria-label="Sheet 13: THE WEATHERING MAP">
   <div class="sheet-head"><span class="proj"><span class="project-mark">THE ALTITUDE ATLAS</span> — DRAWING SET</span><span class="shno">SHEET 13 / 13</span></div>
   <h2 class="sheet-title"><sup class="art">the&nbsp;</sup>WEATHERING MAP</h2>
   <p class="sheet-sub">ALTITUDE t — the same city as sheet 7, surveyed in time · 448 files dated from the whole history · three construction seasons, 10 silent months · counted at origin/main @ 4dc0cbb7</p>
   <figure>
-    <div class="plate fillable" style="--plate-ar:0.8083"><button type="button" class="fill" data-fill aria-label="Enlarge this figure, or leave it"></button><div class="figure-wrap"><svg viewBox="0 0 1560 1930" role="img" aria-label="A flat plan-view weathering map of the lit-ui-router workspace: the same city as sheet 7, same four dashed districts and same footprints, but every building is now coloured by when its files were first committed and edged by how often they are touched. Each footprint is striped like masonry courses, oldest at the base: dense ink hatch for Season One, the July 2025 port; accent hatch for Season Two, the January 2026 winter works; plain paper for Season Three, the summer campaign that built 407 of the 448 files since July fourth. Under each building a tick gauge counts touches per file; 6 buildings carry red hot edges at six or more touches per file, and buildings touched less than twice are drawn faint. Dashed crosses seal three example slabs, untouched for over two hundred days. A 16-month timeline below shows all activity concentrated in 6 months separated by silence, and a structure schedule dates every member. The reading box states the verdict: mean touches per file falls from 12.3 for the port cohort to 2.9 for the summer cohort — the oldest walls are the most chiselled.">
+    <div class="plate fillable" style="--plate-ar:0.8083"><button type="button" class="fill" data-fill aria-label="Enlarge this figure, or leave it"></button><div class="figure-wrap" tabindex="0" role="group" aria-label="Fig. 13, the drawing; scrolls sideways"><svg viewBox="0 0 1560 1930" role="img" aria-label="A flat plan-view weathering map of the lit-ui-router workspace: the same city as sheet 7, same four dashed districts and same footprints, but every building is now coloured by when its files were first committed and edged by how often they are touched. Each footprint is striped like masonry courses, oldest at the base: dense ink hatch for Season One, the July 2025 port; accent hatch for Season Two, the January 2026 winter works; plain paper for Season Three, the summer campaign that built 407 of the 448 files since July fourth. Under each building a tick gauge counts touches per file; 6 buildings carry red hot edges at six or more touches per file, and buildings touched less than twice are drawn faint. Dashed crosses seal three example slabs, untouched for over two hundred days. A 16-month timeline below shows all activity concentrated in 6 months separated by silence, and a structure schedule dates every member. The reading box states the verdict: mean touches per file falls from 12.3 for the port cohort to 2.9 for the summer cohort — the oldest walls are the most chiselled.">
 <defs>
   <marker id="s13-ai" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
     <path d="M0,0 L10,4 L0,8 z" class="fi"/>
@@ -1091,6 +1098,7 @@ a { color: var(--accent); }
     </div>
   </div>
 </section>
+</main>
 <script>document.addEventListener('scroll', (e) => {
   const w = e.target;
   if (!(w instanceof Element) || !w.classList.contains('figure-wrap')) return;
@@ -1139,3 +1147,5 @@ a { color: var(--accent); }
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && document.querySelector('.fillable.is-filled')) leave(); });
   sync();
 })();</script>
+</body>
+</html>

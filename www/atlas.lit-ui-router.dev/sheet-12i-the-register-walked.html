@@ -1,3 +1,6 @@
+<!doctype html>
+<html lang="en">
+<head>
 <meta charset="utf-8">
 <title>THE REGISTER, WALKED — Sheet 12i of 13</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -9,7 +12,7 @@
   --paper-2: #E9E8DD;
   --ink: #2B302C;
   --ink-soft: #5C6259;
-  --ink-faint: #9AA091;
+  --ink-faint: #626760;
   --line: #C6C8B6;
   --edge: #A9AB99;
   --accent: #2E5077;
@@ -30,7 +33,7 @@
     --paper-2: #0B1F3E;
     --ink: #D9E6F3;
     --ink-soft: #93A9C6;
-    --ink-faint: #6E88A8;
+    --ink-faint: #8099BA;
     --line: #23406B;
     --edge: #2E4C7C;
     --accent: #8FBCE9;
@@ -50,7 +53,7 @@
   --paper-2: #0B1F3E;
   --ink: #D9E6F3;
   --ink-soft: #93A9C6;
-  --ink-faint: #6E88A8;
+  --ink-faint: #8099BA;
   --line: #23406B;
   --edge: #2E4C7C;
   --accent: #8FBCE9;
@@ -228,6 +231,7 @@ sup.art {
    (--plate-ar, written per sheet). */
 .plate { position: relative; container-type: inline-size; margin: 36px 0 8px; --plate-cap: min(84vh, 1400px); }
 .figure-wrap { overflow-x: auto; }
+.figure-wrap:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .figure-wrap svg { display: block; width: 100%; max-width: min(100%, calc(var(--plate-cap) * var(--plate-ar, 1.4))); height: auto; min-width: 1000px; margin: 0 auto; }
 .plate::after {
   content: "SCROLL →";
@@ -511,6 +515,9 @@ a { color: var(--accent); }
   vertical-align: calc(0.5cap - 6px); margin-right: 0.45em; }
 .gl.lane.after { margin-right: 0; margin-left: 0.45em; }
 </style>
+</head>
+<body>
+<main>
 <svg class="icon-sprite" aria-hidden="true" focusable="false" width="0" height="0"><symbol id="gl-arrow-down-up" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><g transform="scale(.666667)" stroke-width="1.95"><path d="m3 16 4 4 4-4"/><path d="M7 20V4"/><path d="m21 8-4-4-4 4"/><path d="M17 4v16"/></g></symbol><symbol id="gl-arrow-up-from-line" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><g transform="scale(.666667)" stroke-width="1.95"><path d="m18 9-6-6-6 6"/><path d="M12 3v14"/><path d="M5 21h14"/></g></symbol><symbol id="gl-ghost" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><g transform="scale(.666667)" stroke-width="1.95"><path d="M15 10v1"/><path d="M7.528 20.472a1.6 1.6 0 012.277 0l1.057 1.056a1.6 1.6 0 002.276 0l1.057-1.056a1.6 1.6 0 012.277 0l1.114 1.114a1.4 1.4 0 002.414-1V10a8 8 0 00-16 0v10.586a1.4 1.4 0 002.414 1z"/><path d="M9 10v1"/></g></symbol><symbol id="gl-hourglass" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><g transform="scale(.666667)" stroke-width="1.95"><path d="M5 22h14"/><path d="M5 2h14"/><path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"/><path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"/></g></symbol><symbol id="gl-mouse" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><g transform="scale(.666667)" stroke-width="1.95"><rect x="5" y="2" width="14" height="20" rx="7"/><path d="M12 6v4"/></g></symbol><symbol id="gl-move" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><g transform="scale(.666667)" stroke-width="1.95"><path d="M12 2v20"/><path d="m15 19-3 3-3-3"/><path d="m19 9 3 3-3 3"/><path d="M2 12h20"/><path d="m5 9-3 3 3 3"/><path d="m9 5 3-3 3 3"/></g></symbol><symbol id="gl-scan" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><g transform="scale(.666667)" stroke-width="1.95"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/></g></symbol><symbol id="ic-register" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path stroke-width="1.3" d="M2.6 2.6h7.9l2.9 2.6v8.2H2.6Z M10.5 2.6v2.6h2.9"/><path stroke-width="1.6" stroke-linecap="round" d="M4.9 8.4h0 M7.7 8.4h0 M10.5 8.4h0 M4.9 11.4h0 M7.7 11.4h0 M10.5 11.4h0"/></symbol></svg>
 <section class="sheet rg" id="sheet-12i" aria-label="Sheet 12i: THE REGISTER, WALKED">
   <div class="sheet-head"><span class="proj"><span class="project-mark">THE ALTITUDE ATLAS</span> — INTERACTIVE PLATE</span><span class="shno">SHEET 12i / 13</span></div>
@@ -556,10 +563,10 @@ a { color: var(--accent); }
 .rg-info { border-left: 1.5px solid var(--ink); background: var(--paper-2); padding: 20px 22px 22px;
   font-family: var(--data); font-size: 12.5px; letter-spacing: 0.04em; line-height: 1.5; color: var(--ink);
   overflow-y: auto; max-height: clamp(560px, 70vh, 960px); }
-.rg-info h4 { font-family: var(--code); font-size: 16px; font-weight: 600; letter-spacing: 0.04em; line-height: 1.3;
+.rg-info h3 { font-family: var(--code); font-size: 16px; font-weight: 600; letter-spacing: 0.04em; line-height: 1.3;
   margin: 0 0 10px; word-break: break-all; }
 .rg-info .f { display: block; font-size: 11px; letter-spacing: 0.14em; color: var(--ink-soft); margin: 16px 0 6px; }
-.rg-info h4 + .f { margin-top: 0; }
+.rg-info h3 + .f { margin-top: 0; }
 .rg-info ul { list-style: none; padding: 0; margin: 0; }
 .rg-info li { padding: 2px 0; line-height: 1.45; color: var(--ink-soft); word-break: break-all; }
 .rg-info .hint { font-family: var(--prose); font-size: 16px; font-style: normal; letter-spacing: 0; line-height: 1.5;
@@ -662,7 +669,7 @@ a { color: var(--accent); }
   var info = document.getElementById('rg-info');
   if (!stage || !info) return;
   if (typeof cytoscape === 'undefined') {
-    info.innerHTML = '\u003ch4\u003eTHE REGISTER\u003c/h4\u003e\u003cp class="hint"\u003ecytoscape did not load, so the '
+    info.innerHTML = '\u003ch3\u003eTHE REGISTER\u003c/h3\u003e\u003cp class="hint"\u003ecytoscape did not load, so the '
       + 'walkable graph is not available here. Sheet 12 draws the same measurement as a static plate, '
       + 'and www/atlas.lit-ui-router.dev/data/census-plate.json carries every node and edge of it.\u003c/p\u003e';
     return;
@@ -783,7 +790,7 @@ a { color: var(--accent); }
   }
   applyShroud();
 
-  var IDLE = '\u003ch4\u003e' + L.glyphs.rest + 'THE REGISTER\u003c/h4\u003e\u003cp class="hint"\u003e' + L.idle + '\u003c/p\u003e';
+  var IDLE = '\u003ch3\u003e' + L.glyphs.rest + 'THE REGISTER\u003c/h3\u003e\u003cp class="hint"\u003e' + L.idle + '\u003c/p\u003e';
   function field(k, v) { return '\u003cspan class="f"\u003e' + k + '\u003c/span\u003e' + v; }
   function list(k, arr, cap) {
     if (!arr.length) return '';
@@ -798,7 +805,7 @@ a { color: var(--accent); }
     var n = N[i];
     var inR = deps[i].filter(function (j) { return N[j].real; });
     var outR = uses[i].filter(function (j) { return N[j].real; });
-    var h = '\u003ch4\u003e' + nid(i) + '\u003c/h4\u003e';
+    var h = '\u003ch3\u003e' + nid(i) + '\u003c/h3\u003e';
     h += field('PACKAGE', n.pkg);
     h += field('TASK', n.task);
     h += field('KIND', n.real ? 'command-bearing — this runs'
@@ -996,6 +1003,7 @@ colours; the Lucide glyphs (ISC, restroked) that mark the lane's controls and pa
     </div>
   </div>
 </section>
+</main>
 <script>document.addEventListener('scroll', (e) => {
   const w = e.target;
   if (!(w instanceof Element) || !w.classList.contains('figure-wrap')) return;
@@ -1044,3 +1052,5 @@ colours; the Lucide glyphs (ISC, restroked) that mark the lane's controls and pa
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && document.querySelector('.fillable.is-filled')) leave(); });
   sync();
 })();</script>
+</body>
+</html>
