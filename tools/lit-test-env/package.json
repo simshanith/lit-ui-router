@@ -2,9 +2,10 @@
   "name": "@tools/lit-test-env",
   "version": "0.0.1",
   "private": true,
-  "description": "Spec knowledge shared by every lit suite: vitest.setup helpers and router spec helpers, minus the lit import itself",
+  "description": "Spec knowledge shared by every lit suite: vitest.setup helpers, router spec helpers and spec fixtures, minus the lit import itself",
   "type": "module",
   "exports": {
+    "./fixture.ts": "./src/fixture.ts",
     "./router.ts": "./src/router.ts",
     "./setup.ts": "./src/setup.ts"
   },
@@ -12,11 +13,18 @@
     "format:check:oxfmt": "oxfmt --check \"**/*.{ts,js,json,jsonc,md}\"",
     "format:oxfmt": "oxfmt \"**/*.{ts,js,json,jsonc,md}\"",
     "lint:oxlint": "oxlint .",
+    "test": "vitest run",
     "typecheck:tsc": "tsc -p tsconfig.json --noEmit"
   },
+  "dependencies": {
+    "@tools/happy-dom": "catalog:workspace"
+  },
   "devDependencies": {
+    "@types/node": "catalog:",
+    "happy-dom": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   }
 }

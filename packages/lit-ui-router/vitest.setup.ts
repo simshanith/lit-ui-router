@@ -1,9 +1,12 @@
+import { afterEach } from 'vitest';
+import { fixtureCleanup } from '@tools/lit-test-env/fixture.ts';
 import {
   assertLitMajor,
   silenceLitDevModeBanner,
 } from '@tools/lit-test-env/setup.ts';
 
 silenceLitDevModeBanner();
+afterEach(fixtureCleanup);
 
 // Both stay in-module: the import so the lit2-compat alias resolves against
 // this package's lit-2 devDep, the env read because vite only injects
