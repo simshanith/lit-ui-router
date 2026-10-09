@@ -122,6 +122,14 @@ describe('explicit rejections (fail at compile, never diverge silently)', () => 
     );
   });
 
+  it('resolves declared built-in type names', () => {
+    for (const pattern of ['/a/:x', '/a/{x:string}'])
+      assert.deepEqual(
+        exec(compile(pattern, { params: { x: { type: 'int' } } }), '/a/5'),
+        { x: 5 },
+      );
+  });
+
   it('resolves built-in type names from own keys only', () => {
     for (const name of ['constructor', 'toString', '__proto__']) {
       assert.throws(
