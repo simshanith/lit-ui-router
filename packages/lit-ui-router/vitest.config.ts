@@ -15,6 +15,8 @@ const browserOnlySpecs = [
   'src/specs/sref-status-controller.browser.spec.ts',
   // real custom-element connect ordering, which happy-dom gets wrong for innerHTML
   'src/specs/parser-connect.browser.spec.ts',
+  // native scoped custom element registries, which happy-dom lacks
+  'src/specs/scoped-registry.browser.spec.ts',
 ];
 // Plain node under the @lit-labs/ssr DOM shim; happy-dom would mask the shim's gaps.
 const nodeOnlySpecs = [
