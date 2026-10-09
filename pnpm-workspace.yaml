@@ -42,7 +42,7 @@ catalog:
   crap4ts: 2.0.0-rc.5
   cypress: ^16.1.1
   diff: ^9.0.0
-  effect: ^3.22.2
+  effect: ^4.0.2
   esbuild: ^0.28.2
   eslint: ^10.12.0
   eslint-doc-generator: ^3.7.1
@@ -101,6 +101,8 @@ catalog:
 catalogMode: prefer
 
 catalogs:
+  effect3-compat:
+    effect-3: npm:effect@^3.22.2
   lit2-compat:
     lit-2: npm:lit@^2.8.0
   mobx6-compat:
@@ -118,7 +120,7 @@ catalogs:
     '@lit-labs/ssr': ^4.0.0
     '@lit-labs/ssr-client': ^1.1.0
     '@uirouter/core': ^6.0.8
-    effect: ^3.22.0
+    effect: '^3.22.0 || ^4.0.2'
     eslint: '^9.0.0 || ^10.0.0'
     hono: ^4.0.0
     lit: '^2.0.0 || ^3.0.0'

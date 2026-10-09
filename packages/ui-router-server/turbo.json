@@ -23,6 +23,7 @@
         "typecheck:src",
         "typecheck:lit2",
         "typecheck:mobx6",
+        "typecheck:effect3",
         "typecheck:tests",
         "typecheck:runtime-globals"
       ]

@@ -1,7 +1,7 @@
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { when } from 'lit/directives/when.js';
-import { Data, Equal } from 'effect';
+import { Equal } from 'effect';
 import { uiSref, uiSrefActive } from 'lit-ui-router';
 
 import { RefController } from 'lit-ui-router-effect';
@@ -21,11 +21,10 @@ export class NavHeader extends LitElement {
   private readonly auth = new RefController(
     this,
     [AppConfig.emailAddress$],
-    (emailAddress) =>
-      Data.struct({
-        isAuthenticated: AuthService.isAuthenticated(),
-        emailAddress,
-      }),
+    (emailAddress) => ({
+      isAuthenticated: AuthService.isAuthenticated(),
+      emailAddress,
+    }),
     { equals: Equal.equals },
   );
 

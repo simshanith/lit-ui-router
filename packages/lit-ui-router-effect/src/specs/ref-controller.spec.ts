@@ -2,11 +2,9 @@ import { describe, it, expect, afterEach, vi } from 'vitest';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import {
-  Context,
   Data,
   Effect,
   Equal,
-  Exit,
   Fiber,
   Layer,
   ManagedRuntime,
@@ -14,6 +12,7 @@ import {
 } from 'effect';
 
 import { RefController } from '../ref-controller.js';
+import { isInterrupted, serviceKey } from './effect-compat.js';
 import { waitForUpdate } from './test-utils.js';
 
 @customElement('ref-controller-host')
@@ -38,10 +37,11 @@ afterEach(() => {
   while (cleanups.length) cleanups.shift()?.();
 });
 
-class Counter extends Context.Tag('Counter')<
-  Counter,
-  { readonly count: SubscriptionRef.SubscriptionRef<number> }
->() {}
+const Counter = serviceKey<{
+  readonly count: SubscriptionRef.SubscriptionRef<number>;
+}>('Counter');
+
+class Point extends Data.Class<{ readonly x: number }> {}
 
 const CounterLive = Layer.effect(
   Counter,
@@ -148,7 +148,7 @@ describe('RefController', () => {
     const point = makeRef({ x: 1, y: 2 });
     const host = createHost();
     const onChange = vi.fn();
-    new RefController(host, [point], (p) => Data.struct({ x: p.x }), {
+    new RefController(host, [point], (p) => new Point({ x: p.x }), {
       equals: Equal.equals,
       onChange,
     });
@@ -227,14 +227,18 @@ describe('RefController', () => {
     host.remove();
     expect(runFork).toHaveBeenCalledTimes(1);
     const fiber = runFork.mock.results[0].value;
-    expect(
-      Exit.isInterrupted(await Effect.runPromise(Fiber.await(fiber))),
-    ).toBe(true);
+    expect(isInterrupted(await Effect.runPromise(Fiber.await(fiber)))).toBe(
+      true,
+    );
   });
 
   it('stops following after its runtime is disposed', async () => {
     const runtime = ManagedRuntime.make(CounterLive);
-    const { count } = runtime.runSync(Counter);
+    const { count } = runtime.runSync(
+      Effect.gen(function* () {
+        return yield* Counter;
+      }),
+    );
     const runFork = vi.spyOn(runtime, 'runFork');
     const host = createHost();
     const controller = new RefController(host, [count], (n) => n, { runtime });
@@ -247,15 +251,19 @@ describe('RefController', () => {
 
     expect(controller.value).toBe(1);
     const fiber = runFork.mock.results[0].value;
-    expect(
-      Exit.isInterrupted(await Effect.runPromise(Fiber.await(fiber))),
-    ).toBe(true);
+    expect(isInterrupted(await Effect.runPromise(Fiber.await(fiber)))).toBe(
+      true,
+    );
   });
 
   it('reads and follows a service ref on a runtime built over a layer', async () => {
     const runtime = ManagedRuntime.make(CounterLive);
     cleanups.push(() => void runtime.dispose());
-    const { count } = runtime.runSync(Counter);
+    const { count } = runtime.runSync(
+      Effect.gen(function* () {
+        return yield* Counter;
+      }),
+    );
     const runSync = vi.spyOn(runtime, 'runSync');
     const host = createHost();
     const controller = new RefController(host, [count], (n) => n, { runtime });

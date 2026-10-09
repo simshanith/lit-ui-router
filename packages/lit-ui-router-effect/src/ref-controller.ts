@@ -12,7 +12,7 @@ export interface RefRuntime {
   /** starts an effect on a fiber the controller interrupts on disconnect */
   readonly runFork: (
     effect: Effect.Effect<void>,
-  ) => Fiber.RuntimeFiber<unknown, unknown>;
+  ) => Fiber.Fiber<unknown, unknown>;
   /** runs a synchronous effect, used to read a ref's current value */
   readonly runSync: <A>(effect: Effect.Effect<A>) => A;
 }
@@ -43,8 +43,8 @@ export interface RefControllerOptions<T> {
 
   /**
    * Comparer deciding whether the selected value changed. Defaults to
-   * `Object.is`; pass `Equal.equals` for `Data` structs, or a structural
-   * comparer for plain objects.
+   * `Object.is`; pass `Equal.equals` for structural comparison (plain objects
+   * on effect 4, `Data` values on either major).
    */
   equals?: (a: T, b: T) => boolean;
 
@@ -106,7 +106,7 @@ export class RefController<
   /** The selected value, for use in `render()`. */
   value: T;
 
-  private fiber?: Fiber.RuntimeFiber<unknown, unknown>;
+  private fiber?: Fiber.Fiber<unknown, unknown>;
   private initialized = false;
   private connected = false;
   private readonly runtime: RefRuntime;
@@ -163,7 +163,7 @@ export class RefController<
   }
 
   private interrupt(): void {
-    this.fiber?.unsafeInterruptAsFork(this.fiber.id());
+    if (this.fiber) interruptFiber(this.fiber);
     this.fiber = undefined;
     // Reconnecting re-fires onChange, as a fresh subscription would.
     this.initialized = false;
@@ -179,7 +179,7 @@ export class RefController<
   private static changes<Refs extends SubscriptionRefs>(
     refs: Refs,
   ): Stream.Stream<RefValues<Refs>> {
-    const streams = refs.map((ref) => ref.changes);
+    const streams = refs.map(changesOf);
     return Stream.zipLatestAll(...streams) as unknown as Stream.Stream<
       RefValues<Refs>
     >;
@@ -194,4 +194,39 @@ export class RefController<
     this.options.onChange?.(selected);
     this.host.requestUpdate();
   }
+}
+
+/** The stream of a ref's current and later values. */
+function changesOf<A>(
+  ref: SubscriptionRef.SubscriptionRef<A>,
+): Stream.Stream<A> {
+  // effect 3 carries the stream on the ref; effect 4 exports SubscriptionRef.changes.
+  // Static read keeps effect 4 tree-shaking; effect 3 bundlers warn IMPORT_IS_UNDEFINED.
+  const own = (ref as unknown as { readonly changes?: Stream.Stream<A> })
+    .changes;
+  if (own) return own;
+  return (
+    SubscriptionRef as unknown as {
+      readonly changes: (
+        self: SubscriptionRef.SubscriptionRef<A>,
+      ) => Stream.Stream<A>;
+    }
+  ).changes(ref);
+}
+
+/** A fiber's synchronous interrupt as effect 3 names it. */
+interface Effect3Fiber {
+  unsafeInterruptAsFork(fiberId: unknown): void;
+  id(): unknown;
+}
+
+/** A fiber's synchronous interrupt as effect 4 names it. */
+interface Effect4Fiber {
+  interruptUnsafe(): void;
+}
+
+function interruptFiber(fiber: Fiber.Fiber<unknown, unknown>): void {
+  const live = fiber as unknown as Effect3Fiber | Effect4Fiber;
+  if ('interruptUnsafe' in live) live.interruptUnsafe();
+  else live.unsafeInterruptAsFork(live.id());
 }
