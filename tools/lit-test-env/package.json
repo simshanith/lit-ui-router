@@ -2,9 +2,10 @@
   "name": "@tools/lit-test-env",
   "version": "0.0.1",
   "private": true,
-  "description": "Spec knowledge shared by every lit suite: vitest.setup helpers, router spec helpers and spec fixtures, minus the lit import itself",
+  "description": "Spec knowledge shared by every lit suite: vitest.setup helpers, router spec helpers, spec fixtures and a semantic DOM matcher, minus the lit import itself",
   "type": "module",
   "exports": {
+    "./dom.ts": "./src/dom.ts",
     "./fixture.ts": "./src/fixture.ts",
     "./router.ts": "./src/router.ts",
     "./setup.ts": "./src/setup.ts"
