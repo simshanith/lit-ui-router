@@ -38,7 +38,7 @@ export class AppRoot extends LitElement {
 
   render() {
     return html`
-      <nav>
+      <nav aria-label="ESLint report">
         <a ${uiSrefActive({ activeClasses: ['active'] })} ${uiSref('report')}
           >Report</a
         >

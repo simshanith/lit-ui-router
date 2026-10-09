@@ -26,8 +26,9 @@ export class AppRoot extends LitElement {
       display: block;
       color: var(--spectrum-gray-800);
     }
-    h3 {
+    h2 {
       margin: 0 0 4px;
+      font-size: 1.17em;
     }
     p {
       margin: 0 0 16px;
@@ -120,7 +121,7 @@ export class AppRoot extends LitElement {
       srefHref: srefHrefRow,
     } = this.rows;
     return html`
-      <h3>uiSref and a design-system link element</h3>
+      <h2>uiSref and a design-system link element</h2>
       <p>
         <code>&lt;sp-link&gt;</code> declares its own <code>href</code>, but its
         tag name is not <code>a</code> — so
@@ -189,7 +190,7 @@ const componentsState: LitStateDeclaration = {
   name: 'components',
   url: '/components',
   component: () =>
-    html`<h4>Components</h4>
+    html`<h3>Components</h3>
       <p>
         The first, third and last links carried a real href here, so hovering
         any of them showed the URL and a middle-click would have opened it in a
@@ -201,7 +202,7 @@ const tokensState: LitStateDeclaration = {
   name: 'tokens',
   url: '/tokens',
   component: () =>
-    html`<h4>Tokens</h4>
+    html`<h3>Tokens</h3>
       <p>
         Both links to this state navigated on click — the option governs the
         href attribute only, never the click handler.

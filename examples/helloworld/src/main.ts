@@ -29,7 +29,7 @@ export class AppRoot extends LitElement {
 
   render() {
     return html`
-      <nav>
+      <nav aria-label="Hello World">
         <a ${uiSrefActive({ activeClasses: ['active'] })} ${uiSref('hello')}
           >Hello</a
         >

@@ -97,7 +97,7 @@ class GalaxyShellComponent extends LitElement {
 
   render() {
     return html`
-      <nav>
+      <nav aria-label="Hello Galaxy">
         <!-- activeClasses use stateService.includes, so Stars stays lit on the nested detail state -->
         <a
           ${uiSrefActive({ activeClasses: ['active'] })}
@@ -142,7 +142,7 @@ class StarsContainerComponent extends LitElement {
     return html`
       <div class="container">
         <div class="list">
-          <h3>Milky Way stars</h3>
+          <h2>Milky Way stars</h2>
           <ul>
             ${this.stars.map(
               (star) => html`
@@ -284,7 +284,7 @@ class AstronautViewComponent extends LitElement {
 
   render() {
     return html`
-      <h3>Someone is exploring out here too</h3>
+      <h2>Someone is exploring out here too</h2>
       <p>Drag to orbit the astronaut. Scroll to zoom.</p>
       <model-viewer
         src="https://modelviewer.dev/shared-assets/models/NeilArmstrong.glb"
