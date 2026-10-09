@@ -1,0 +1,34 @@
+{
+  "name": "sample-app-lit-signals",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite",
+    "format:check:oxfmt": "oxfmt --check \"**/*.{js,ts,json,md,html}\"",
+    "format:oxfmt": "oxfmt \"**/*.{js,ts,json,md,html}\"",
+    "lint:oxlint": "oxlint .",
+    "typecheck:tsc": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@lit-labs/signals": "catalog:",
+    "@uirouter/core": "catalog:",
+    "lit": "catalog:",
+    "lit-ui-router": "catalog:workspace",
+    "lit-ui-router-signals": "catalog:workspace",
+    "lodash-es": "catalog:",
+    "sample-app-shared": "catalog:workspace",
+    "signal-polyfill": "catalog:"
+  },
+  "devDependencies": {
+    "@types/dom-navigation": "catalog:",
+    "@types/lodash-es": "catalog:",
+    "@types/node": "catalog:",
+    "oxfmt": "catalog:",
+    "oxlint": "catalog:",
+    "typescript": "catalog:typescript6-compat",
+    "typescript-7": "catalog:",
+    "vite": "catalog:"
+  }
+}

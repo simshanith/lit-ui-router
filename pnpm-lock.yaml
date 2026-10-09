@@ -30,6 +30,9 @@ catalogs:
     '@custom-elements-manifest/analyzer':
       specifier: ^0.11.0
       version: 0.11.0
+    '@lit-labs/signals':
+      specifier: ^0.3.0
+      version: 0.3.0
     '@lit-labs/ssr':
       specifier: ^4.1.0
       version: 4.1.0
@@ -222,6 +225,9 @@ catalogs:
     semver:
       specifier: ^7.8.5
       version: 7.8.5
+    signal-polyfill:
+      specifier: ^0.2.2
+      version: 0.2.2
     start-server-and-test:
       specifier: ^3.0.12
       version: 3.0.12
@@ -400,6 +406,9 @@ catalogs:
       specifier: workspace:*
       version: workspace:*
     lit-ui-router-mobx:
+      specifier: workspace:*
+      version: workspace:*
+    lit-ui-router-signals:
       specifier: workspace:*
       version: workspace:*
     lit-ui-router-ssr:
@@ -653,6 +662,58 @@ importers:
       '@tools/build_and_test':
         specifier: catalog:workspace
         version: link:../../tools/build_and_test
+      '@types/dom-navigation':
+        specifier: 'catalog:'
+        version: 1.0.7
+      '@types/lodash-es':
+        specifier: 'catalog:'
+        version: 4.17.12
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.19.1
+      oxfmt:
+        specifier: 'catalog:'
+        version: 0.72.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.87.0(oxlint-tsgolint@7.0.2003)
+      typescript:
+        specifier: catalog:typescript6-compat
+        version: '@typescript/typescript6@6.0.2'
+      typescript-7:
+        specifier: 'catalog:'
+        version: typescript@7.0.2
+      vite:
+        specifier: 'catalog:'
+        version: 8.3.4(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)
+
+  apps/sample-app-lit-signals:
+    dependencies:
+      '@lit-labs/signals':
+        specifier: 'catalog:'
+        version: 0.3.0
+      '@uirouter/core':
+        specifier: 'catalog:'
+        version: 6.1.2
+      lit:
+        specifier: 'catalog:'
+        version: 3.3.3
+      lit-ui-router:
+        specifier: catalog:workspace
+        version: link:../../packages/lit-ui-router
+      lit-ui-router-signals:
+        specifier: catalog:workspace
+        version: link:../../packages/lit-ui-router-signals
+      lodash-es:
+        specifier: 'catalog:'
+        version: 4.18.1
+      sample-app-shared:
+        specifier: catalog:workspace
+        version: link:../sample-app-shared
+      signal-polyfill:
+        specifier: 'catalog:'
+        version: 0.2.2
+    devDependencies:
       '@types/dom-navigation':
         specifier: 'catalog:'
         version: 1.0.7
@@ -1168,6 +1229,60 @@ importers:
       typedoc-vitepress-theme:
         specifier: 'catalog:'
         version: 1.1.4(typedoc-plugin-markdown@4.13.1(typedoc@0.28.20(@typescript/typescript6@6.0.2)))(typedoc@0.28.20(@typescript/typescript6@6.0.2))
+      typescript:
+        specifier: catalog:typescript6-compat
+        version: '@typescript/typescript6@6.0.2'
+      typescript-7:
+        specifier: 'catalog:'
+        version: typescript@7.0.2
+      vitest:
+        specifier: 'catalog:'
+        version: 5.0.3(@types/node@24.19.1)(@vitest/browser-playwright@5.0.3)(@vitest/coverage-v8@5.0.3)(@vitest/ui@5.0.3)(happy-dom@20.14.5)(vite@8.3.4(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
+
+  packages/lit-ui-router-signals:
+    devDependencies:
+      '@tools/compat-guards':
+        specifier: catalog:workspace
+        version: link:../../tools/compat-guards
+      '@tools/happy-dom':
+        specifier: catalog:workspace
+        version: link:../../tools/happy-dom
+      '@tools/lit-test-env':
+        specifier: catalog:workspace
+        version: link:../../tools/lit-test-env
+      '@tools/oxc-emit':
+        specifier: catalog:workspace
+        version: link:../../tools/oxc-emit
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.19.1
+      '@uirouter/core':
+        specifier: 'catalog:'
+        version: 6.1.2
+      '@vitest/coverage-v8':
+        specifier: 'catalog:'
+        version: 5.0.3(@vitest/browser@5.0.3)(vitest@5.0.3)
+      happy-dom:
+        specifier: 'catalog:'
+        version: 20.14.5
+      lit:
+        specifier: 'catalog:'
+        version: 3.3.3
+      lit-2:
+        specifier: catalog:lit2-compat
+        version: lit@2.8.0
+      lit-ui-router:
+        specifier: catalog:workspace
+        version: link:../lit-ui-router
+      oxfmt:
+        specifier: 'catalog:'
+        version: 0.72.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.87.0(oxlint-tsgolint@7.0.2003)
+      signal-polyfill:
+        specifier: 'catalog:'
+        version: 0.2.2
       typescript:
         specifier: catalog:typescript6-compat
         version: '@typescript/typescript6@6.0.2'
@@ -3020,6 +3135,9 @@ packages:
 
   '@lit-labs/observers@2.0.2':
     resolution: {integrity: sha512-eZb5+W9Cb0e/Y5m1DNxBSGTvGB2TAVTGMnTxL/IzFhPQEcZIAHewW1eVBhN8W07A5tirRaAmmF6fGL1V20p3gQ==}
+
+  '@lit-labs/signals@0.3.0':
+    resolution: {integrity: sha512-PfB5FLtorVfkhwTWXOPNT/rvrVdSDY8siwPyR17ztrViRbMqxy1TQBcHqJoA4303QT8yXPGxYtGKJGj7fEfEwg==}
 
   '@lit-labs/ssr-client@1.1.8':
     resolution: {integrity: sha512-PjGh81oKsoI64m3IDjTqqjhC7dr2uC/o0jrllUb5gRAyp/RlAHxapgJrjq9kWz97faCHLQ8jUlTi6tGm+8fgyA==}
@@ -7379,6 +7497,9 @@ packages:
     resolution: {integrity: sha512-bzyZ1e88w9O1iNJbKnOlvYTrWPDl46O1bG0D3XInv+9tkPrxrN8jUUTiFlDkkmKWgn1M6CfIA13SuGqOa9Korw==}
     engines: {node: '>=14'}
 
+  signal-polyfill@0.2.2:
+    resolution: {integrity: sha512-p63Y4Er5/eMQ9RHg0M0Y64NlsQKpiu6MDdhBXpyywRuWiPywhJTpKJ1iB5K2hJEbFZ0BnDS7ZkJ+0AfTuL37Rg==}
+
   sigstore@5.0.0:
     resolution: {integrity: sha512-hJqJfoG/e4qFQaauQL00c6J6FrHLBGKtkFvW3JbTSIEFOhLrSjdSM/gWd/yUOfYo/gsERehTXGC1VZWX+9X4Dg==}
     engines: {node: ^22.22.2 || ^24.15.0 || >=26.0.0}
@@ -9022,6 +9143,11 @@ snapshots:
   '@lit-labs/observers@2.0.2':
     dependencies:
       '@lit/reactive-element': 2.1.2
+
+  '@lit-labs/signals@0.3.0':
+    dependencies:
+      lit: 3.3.3
+      signal-polyfill: 0.2.2
 
   '@lit-labs/ssr-client@1.1.8':
     dependencies:
@@ -13429,6 +13555,8 @@ snapshots:
   signal-exit@3.0.7: {}
 
   signal-exit@4.1.0: {}
+
+  signal-polyfill@0.2.2: {}
 
   sigstore@5.0.0(supports-color@10.2.2):
     dependencies:
