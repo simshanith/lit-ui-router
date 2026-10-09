@@ -15,6 +15,14 @@ so it ships in the tarball.
 package manifest declares ISC; both are permissive. Full text in
 [`packages/eslint-plugin-lit-ui-router/LICENSE`](./packages/eslint-plugin-lit-ui-router/LICENSE).
 
+### @open-wc/semantic-dom-diff
+
+`tools/lit-test-env/src/dom.ts` adapts `getDiffableHTML` from
+[@open-wc/semantic-dom-diff](https://github.com/open-wc/open-wc/tree/master/packages/semantic-dom-diff)
+0.21.0, MIT, Copyright (c) 2018 open-wc. The package is private and never
+published; the open-wc MIT text is the one reproduced in
+[`packages/eslint-plugin-lit-ui-router/LICENSE`](./packages/eslint-plugin-lit-ui-router/LICENSE).
+
 ### @uirouter/core
 
 `packages/ui-router-server/src/url-matcher.ts` derives its `UrlMatcher`,

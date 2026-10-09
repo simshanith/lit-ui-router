@@ -1,4 +1,5 @@
-import { afterEach } from 'vitest';
+import { afterEach, expect } from 'vitest';
+import { domMatchers, domSnapshotSerializer } from '@tools/lit-test-env/dom.ts';
 import { fixtureCleanup } from '@tools/lit-test-env/fixture.ts';
 import {
   assertLitMajor,
@@ -7,6 +8,8 @@ import {
 
 silenceLitDevModeBanner();
 afterEach(fixtureCleanup);
+expect.extend(domMatchers);
+expect.addSnapshotSerializer(domSnapshotSerializer);
 
 // Both stay in-module: the import so the lit2-compat alias resolves against
 // this package's lit-2 devDep, the env read because vite only injects

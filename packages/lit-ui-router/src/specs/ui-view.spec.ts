@@ -352,7 +352,9 @@ describe('UiView', () => {
       await routerGo(router, 'home');
       await waitForUpdate(uiView);
 
-      expect(uiView.innerHTML).toContain('home-content');
+      expect(uiView).toEqualDom(
+        '<ui-view><div class="home-content">Home Content</div></ui-view>',
+      );
     });
 
     it('should pass router prop to component', async () => {
@@ -441,12 +443,15 @@ describe('UiView', () => {
 
       await routerGo(router, 'home');
       await waitForUpdate(uiView);
-      expect(uiView.innerHTML).toContain('home');
+      expect(uiView).toEqualDom(
+        '<ui-view><div class="home">Home</div></ui-view>',
+      );
 
       await routerGo(router, 'about');
       await waitForUpdate(uiView);
-      expect(uiView.innerHTML).toContain('about');
-      expect(uiView.innerHTML).not.toContain('class="home"');
+      expect(uiView).toEqualDom(
+        '<ui-view><div class="about">About</div></ui-view>',
+      );
     });
   });
 
@@ -470,8 +475,18 @@ describe('UiView', () => {
       await routerGo(router, 'parent.child');
       await tick(50);
 
-      expect(uiView.innerHTML).toContain('parent');
-      expect(uiView.innerHTML).toContain('child');
+      expect(uiView).toMatchInlineSnapshot(`
+        <ui-view>
+          <div class="parent">
+            Parent
+            <ui-view>
+              <div class="child">
+                Child
+              </div>
+            </ui-view>
+          </div>
+        </ui-view>
+      `);
     });
 
     it('should track parent-child view relationship', async () => {
@@ -515,7 +530,9 @@ describe('UiView', () => {
         start: false,
       });
 
-      expect(uiView.innerHTML).toContain('fallback');
+      expect(uiView).toEqualDom(
+        '<ui-view><div class="fallback">Loading...</div></ui-view>',
+      );
     });
 
     it('should capture authored hold content when the attribute is absent', async () => {
@@ -705,24 +722,27 @@ describe('UiView', () => {
       },
       { name: 'blank', url: '/blank' },
     ];
+    const homeView = '<ui-view><div class="home">Home</div></ui-view>';
 
     it('should keep rendering its state after its router is re-attached', async () => {
       const { uiRouter, uiView } = await setupRouter(reconnectStates);
 
       await routerGo(router, 'home');
       await waitForUpdate(uiView);
-      expect(uiView.innerHTML).toContain('class="home"');
+      expect(uiView).toEqualDom(homeView);
 
       uiRouter.remove();
       await tick();
       container.appendChild(uiRouter);
       await waitForUpdate(uiView);
 
-      expect(uiView.innerHTML).toContain('class="home"');
+      expect(uiView).toEqualDom(homeView);
 
       await routerGo(router, 'about');
       await waitForUpdate(uiView);
-      expect(uiView.innerHTML).toContain('class="about"');
+      expect(uiView).toEqualDom(
+        '<ui-view><div class="about">About</div></ui-view>',
+      );
     });
 
     it('should replay the hold content captured at first connect after a reconnect', async () => {
@@ -744,8 +764,7 @@ describe('UiView', () => {
       await routerGo(router, 'blank');
       await waitForUpdate(uiView);
 
-      expect(uiView.querySelectorAll('p.hold')).toHaveLength(1);
-      expect(uiView.innerHTML).not.toContain('class="home"');
+      expect(uiView).toEqualDom('<ui-view><p class="hold">hold</p></ui-view>');
     });
   });
 
@@ -993,7 +1012,9 @@ describe('UiView', () => {
       expect(leaf._uiViewProps).not.toBe(firstProps);
       expect(leaf._uiViewProps?.router).toBe(router);
       expect(leaf.starId).toBe('rigel');
-      expect(leaf.textContent).toContain('rigel');
+      expect(leaf).toEqualDom(
+        '<test-retained-leaf><div class="leaf">rigel</div></test-retained-leaf>',
+      );
       expect(leaf.propsSeen.length).toBeGreaterThan(1);
     });
 
