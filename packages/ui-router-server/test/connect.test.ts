@@ -108,8 +108,7 @@ describe('createConnectMiddleware', () => {
     const h = harness({ url: '/app/old?tab=2' });
     mw(h.req, h.res, h.next);
     await h.done;
-    const location = (h.writeHead[0].rest[0] as { Location: string }).Location;
-    assert.equal(location, '/app/home?tab=1');
+    assert.deepEqual(h.writeHead[0].rest, [{ Location: '/app/home?tab=1' }]);
   });
 
   it('serves a plain shell with a canonical Link and rewrites req.url into the static layer', async () => {

@@ -289,14 +289,9 @@ ruleTester.run('sref-status-aria-current', srefStatusAriaCurrent, {
 void describe('sref-status-aria-current meta', () => {
   void it('is fixable and takes the shared linkElements option', () => {
     assert.equal(srefStatusAriaCurrent.meta?.fixable, 'code');
-    assert.equal(
-      (
-        srefStatusAriaCurrent.meta?.schema as
-          | { properties?: { linkElements?: typeof LINK_ELEMENTS_SCHEMA } }[]
-          | undefined
-      )?.[0]?.properties?.linkElements,
-      LINK_ELEMENTS_SCHEMA,
-    );
+    const schema = srefStatusAriaCurrent.meta?.schema;
+    assert.ok(Array.isArray(schema));
+    assert.equal(schema[0]?.properties?.linkElements, LINK_ELEMENTS_SCHEMA);
   });
 
   void it('names the method the author is owed', () => {

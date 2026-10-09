@@ -96,6 +96,7 @@ export interface Excerpt {
  */
 // oxlint-disable-next-line anti-slop/no-unknown-parameters -- the parser over JSON.parse output
 export function parseRunSummary(value: unknown): RunSummary {
+  // SAFETY: turbo's --summarize schema; the two load-bearing fields are checked below
   const summary = value as RunSummary;
 
   if (!Array.isArray(summary?.tasks)) {
@@ -542,7 +543,7 @@ export interface ToolAnnotation {
 
 const ANNOTATION_LINE = /^::(error|warning|notice) ([^:]*)::(.*)$/;
 
-const POSITION_KEYS = new Set(['line', 'endLine', 'col', 'endColumn']);
+const POSITION_KEYS = ['line', 'endLine', 'col', 'endColumn'] as const;
 
 const POSITIVE_INT = /^[1-9]\d{0,6}$/;
 
@@ -625,10 +626,11 @@ export function parseAnnotation(
     if (seen.has(key)) return undefined;
     seen.add(key);
 
-    if (POSITION_KEYS.has(key)) {
+    const positionKey = POSITION_KEYS.find((candidate) => candidate === key);
+
+    if (positionKey !== undefined) {
       if (!POSITIVE_INT.test(value)) return undefined;
-      properties[key as 'line' | 'endLine' | 'col' | 'endColumn'] =
-        Number(value);
+      properties[positionKey] = Number(value);
     } else if (key === 'title') {
       properties.title = value;
     } else if (key === 'file') {
@@ -644,6 +646,7 @@ export function parseAnnotation(
 
   if (file === undefined) return undefined;
 
+  // SAFETY: ANNOTATION_LINE captures only error, warning or notice
   return {
     level: level as AnnotationLevel,
     message,

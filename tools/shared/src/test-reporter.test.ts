@@ -14,6 +14,7 @@ type TestFail = Extract<TestEvent, { type: 'test:fail' }>['data'];
 const FILE = '/repo/tools/x/src/a.test.ts';
 
 function failure(error: Error, overrides: Partial<TestFail> = {}): TestFail {
+  // SAFETY: the runner wraps any thrown value as `cause`; @types/node narrows it to Error
   return {
     name: 'adds',
     nesting: 0,

@@ -9,6 +9,7 @@ import navigationSidebarItemsJson from '../api/navigation-location-plugin/typedo
 import serverSidebarItemsJson from '../api/ui-router-server/typedoc-sidebar.json' with { type: 'json' };
 import ssrSidebarItemsJson from '../api/lit-ui-router-ssr/typedoc-sidebar.json' with { type: 'json' };
 
+// SAFETY: typedoc-vitepress-theme emits typedoc-sidebar.json as SidebarItem[]
 const typedocSidebarItems =
   typedocSidebarItemsJson as DefaultTheme.SidebarItem[];
 
@@ -26,14 +27,18 @@ function flattenGroups(
 // Assert to the sidebar type on a typed binding first — like typedocSidebarItems
 // above, the generated JSON may be absent when lint type-checks this file, which
 // would otherwise leave it `any` and trip no-unsafe-argument through flatten.
+// SAFETY: as for typedocSidebarItems
 const effectSidebarItemsRaw =
   effectSidebarItemsJson as DefaultTheme.SidebarItem[];
 
+// SAFETY: as for typedocSidebarItems
 const mobxSidebarItemsRaw = mobxSidebarItemsJson as DefaultTheme.SidebarItem[];
 
+// SAFETY: as for typedocSidebarItems
 const navigationSidebarItemsRaw =
   navigationSidebarItemsJson as DefaultTheme.SidebarItem[];
 
+// SAFETY: as for typedocSidebarItems
 const ssrSidebarItemsRaw = ssrSidebarItemsJson as DefaultTheme.SidebarItem[];
 
 const effectSidebarItems = flattenGroups(effectSidebarItemsRaw);
@@ -47,6 +52,7 @@ const ssrSidebarItems = flattenGroups(ssrSidebarItemsRaw);
 // ui-router-server is multi-entry: typedoc emits one module per subpath
 // export, so the module level is the import surface — keep it, retitle each
 // module to its import specifier, and flatten only the kind groups within.
+// SAFETY: as for typedocSidebarItems
 const serverSidebarItemsRaw =
   serverSidebarItemsJson as DefaultTheme.SidebarItem[];
 
@@ -302,11 +308,12 @@ export default defineConfig({
       description = config.description;
       pageUrl = baseUrl;
     } else {
-      // frontmatter is Record<string, any>.
+      // SAFETY: frontmatter is Record<string, any>; title and description are strings when set
       title =
         (pageData.frontmatter.title as string | undefined) || pageData.title;
       title = title ? `${config.title} - ${title}` : config.title;
 
+      // SAFETY: as for the frontmatter title
       description =
         (pageData.frontmatter.description as string | undefined) ||
         pageData.description ||

@@ -325,6 +325,7 @@ describe('RouterRefController', () => {
     const host = createHost();
     const onChange = vi.fn();
 
+    // SAFETY: state `b` declares `id` as a string param.
     const controller = new RouterRefController(
       host,
       (route) => Data.struct({ id: route.params.id as string | undefined }),

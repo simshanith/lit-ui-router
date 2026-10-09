@@ -19,5 +19,6 @@ export function setupNavigation(router: UIRouter): NavigationLocationService {
     }
   });
 
+  // SAFETY: navigationLocationPlugin's service is a NavigationLocationService
   return service as NavigationLocationService;
 }

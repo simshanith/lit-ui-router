@@ -46,7 +46,7 @@ export class DialogService implements DialogProps {
       denyMsg,
     });
 
-    // lit-dialog types open() as Promise<any>; it resolves the confirm/deny boolean.
+    // SAFETY: lit-dialog types open() as Promise<any>; it resolves the confirm/deny boolean
     return this.component.open() as Promise<boolean>;
   };
 }

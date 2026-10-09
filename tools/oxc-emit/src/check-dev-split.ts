@@ -36,6 +36,7 @@ if (!existsSync(DEV_OUT)) {
   process.exit(1);
 }
 
+// SAFETY: each package hand-authors dev-warnings.json as { devOnly: string[] }
 const { devOnly } = JSON.parse(readFileSync(CONFIG, 'utf8')) as {
   devOnly: string[];
 };

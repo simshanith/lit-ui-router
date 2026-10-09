@@ -19,6 +19,7 @@ export function packCacheOutcome(
 ): CacheOutcome {
   if (typeof summary !== 'object' || summary === null) return {};
 
+  // SAFETY: every field is optional and `tasks` is Array-checked before use
   const tasks =
     (summary as { tasks?: Array<{ taskId?: string; cache?: CacheOutcome }> })
       .tasks ?? [];

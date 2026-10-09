@@ -143,6 +143,7 @@ function check(
   configFile: string,
   extraRootNames: string[] = [],
 ) {
+  // SAFETY: every API_VERSIONS alias exports the classic compiler API
   const ts = require(specifier) as ClassicApi;
   const parsed = loadConfig(ts, configFile);
 
@@ -185,6 +186,7 @@ function check(
 // TypeScript 7 equivalent of check(). Diagnostics come back as plain objects
 // ({ fileName, pos, end, code, category, text }) rather than ts.Diagnostic.
 async function checkNative(specifier: string, configFile: string) {
+  // SAFETY: NATIVE_VERSION ships both modules in these shapes
   const [{ API, DiagnosticCategory }, { version }] = (await Promise.all([
     import(`${specifier}/unstable/sync`),
     import(specifier),

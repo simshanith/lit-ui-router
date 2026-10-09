@@ -38,6 +38,7 @@ export type SplitAudit = {
 const LOCAL = /^(link|workspace|file):/;
 
 export function parseLock(text: string): Lock {
+  // SAFETY: pnpm-lock.yaml is a pnpm-written lockfile in the Lock shape
   return (parse(text) as Lock | null) ?? {};
 }
 

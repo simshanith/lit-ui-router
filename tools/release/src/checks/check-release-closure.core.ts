@@ -20,7 +20,9 @@ export function selectedNames(json: string): string[] {
     throw new Error('pnpm ls --json did not return an array');
   }
 
-  return (parsed as unknown[]).map((project) => {
+  const projects: unknown[] = parsed;
+
+  return projects.map((project) => {
     const name =
       typeof project === 'object' && project !== null && 'name' in project
         ? project.name
@@ -116,6 +118,7 @@ type DryRunPlan = { tasks?: { package?: string; command?: string }[] };
 
 /** Packages whose scripts a `turbo run --dry-run=json` plan would spawn, sorted. */
 export function plannedScriptPackages(json: string): string[] {
+  // SAFETY: optional fields only; `tasks` and each entry are checked below
   const { tasks } = JSON.parse(json) as DryRunPlan;
 
   if (!Array.isArray(tasks)) {

@@ -25,6 +25,7 @@ const setFeatureParam = (key: string, value: string) => {
   history.replaceState(null, '', url);
 };
 
+// SAFETY: featureFlags.save writes the flags object as JSON
 const readStoredFlags = () =>
   JSON.parse(
     sessionStorage.getItem('featureFlags') ?? '{}',

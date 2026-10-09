@@ -41,6 +41,7 @@ async function runTriggerCheck(): Promise<TriggerCheckResult> {
   } catch (error: unknown) {
     // execFile rejects with the child's code/stdout/stderr attached; anything
     // else (spawn failure) is an observer error too, so it lands on 2.
+    // SAFETY: execFile rejects only with Error objects; each field is typeof-checked
     const failure = error as {
       code?: unknown;
       stdout?: unknown;

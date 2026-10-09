@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { html, render, TemplateResult } from 'lit';
 import { RejectType, TargetState, type RawParams } from '@uirouter/core';
+import { PartInfo, PartType } from 'lit/directive.js';
 
 import {
   uiSref,
@@ -147,15 +148,17 @@ describe('uiSref directive', () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
       try {
-        const anchor = document.createElement('a');
+        const anchor: Element = document.createElement('a');
         container.appendChild(anchor);
 
-        const srefDirective = new UiSrefDirective({ type: 6 } as any);
-        srefDirective.element = anchor as unknown as UiSrefElement;
+        const srefDirective = new UiSrefDirective({ type: PartType.ELEMENT });
+        // SAFETY: with no router the click never reads the link's `targetState`
+        srefDirective.element = anchor as UiSrefElement;
         srefDirective.state = 'home';
 
         anchor.addEventListener(
           'click',
+          // SAFETY: a 'click' event is a MouseEvent
           srefDirective.onClick as EventListener,
         );
         clickElement(anchor);
@@ -1206,6 +1209,7 @@ describe('uiSref directive', () => {
       uiRouter.appendChild(wrapper);
 
       let receivedTargetState: TargetState | undefined;
+      // SAFETY: only `uiSrefTargetEvent()` dispatches UI_SREF_TARGET_EVENT
       wrapper.addEventListener(UI_SREF_TARGET_EVENT, ((
         event: UiSrefTargetEvent,
       ) => {
@@ -1232,6 +1236,7 @@ describe('uiSref directive', () => {
       uiRouter.appendChild(wrapper);
 
       let receivedTargetState: TargetState | undefined;
+      // SAFETY: only `uiSrefTargetEvent()` dispatches UI_SREF_TARGET_EVENT
       wrapper.addEventListener(UI_SREF_TARGET_EVENT, ((
         event: UiSrefTargetEvent,
       ) => {
@@ -1283,6 +1288,7 @@ describe('uiSref directive', () => {
       expect(wrapper.querySelector('a')!.getAttribute('href')).toBe(hrefBefore);
       expect(eventSpy).toHaveBeenCalled();
 
+      // SAFETY: the spy listens for UI_SREF_TARGET_EVENT, only dispatched as `uiSrefTargetEvent()`
       const { targetState } = (eventSpy.mock.calls[0][0] as UiSrefTargetEvent)
         .detail;
 
@@ -1316,25 +1322,26 @@ describe('uiSref directive', () => {
   });
 
   describe('uiSrefTargetEvent factory', () => {
+    // SAFETY: the factory stores the target state without reading it
+    const targetState = {} as TargetState;
+
     it('should create event with correct type', () => {
-      const targetState = {} as TargetState;
       const event = uiSrefTargetEvent(targetState);
 
       expect(event.type).toBe(UI_SREF_TARGET_EVENT);
     });
 
     it('should create event that bubbles', () => {
-      const event = uiSrefTargetEvent({} as TargetState);
+      const event = uiSrefTargetEvent(targetState);
       expect(event.bubbles).toBe(true);
     });
 
     it('should create event that is composed', () => {
-      const event = uiSrefTargetEvent({} as TargetState);
+      const event = uiSrefTargetEvent(targetState);
       expect(event.composed).toBe(true);
     });
 
     it('should include targetState in detail', () => {
-      const targetState = { name: () => 'test' } as TargetState;
       const event = uiSrefTargetEvent(targetState);
 
       expect(event.detail.targetState).toBe(targetState);
@@ -1445,28 +1452,32 @@ describe('uiSref directive', () => {
 });
 
 describe('UiSrefDirective', () => {
+  const attributePart: PartInfo = {
+    type: PartType.ATTRIBUTE,
+    name: 'href',
+    tagName: 'a',
+  };
+
   it('should throw when used on non-element part', () => {
     expect(() => {
       // Simulate attribute part type
-      new UiSrefDirective({ type: 1 } as any);
+      new UiSrefDirective(attributePart);
     }).toThrow('The `uiSref` directive must be used as an element');
   });
 
   it('should not throw when used on element part', () => {
     expect(() => {
-      // Simulate element part type (type 1)
-      new UiSrefDirective({ type: 1 } as any);
-    }).toThrow(); // Still throws because type 1 is ATTRIBUTE, not ELEMENT
+      new UiSrefDirective(attributePart);
+    }).toThrow(); // still throws: an attribute part, not an element part
 
     expect(() => {
-      // Correct element part type (type 6)
-      new UiSrefDirective({ type: 6 } as any);
+      new UiSrefDirective({ type: PartType.ELEMENT });
     }).not.toThrow();
   });
 
   // update() never ran, so there is no part element to re-arm against
   it('should reconnect harmlessly when no part element was ever seen', () => {
-    const directive = new UiSrefDirective({ type: 6 } as any);
+    const directive = new UiSrefDirective({ type: PartType.ELEMENT });
     directive.disconnected();
     expect(() => directive.reconnected()).not.toThrow();
     expect(directive.element).toBeNull();

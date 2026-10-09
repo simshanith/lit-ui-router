@@ -123,6 +123,7 @@ describe('explicit rejections (fail at compile, never diverge silently)', () => 
     assert.throws(
       () =>
         urlMatcherFactory({
+          // oxlint-disable-next-line anti-slop/no-chained-type-assertions, anti-slop/require-safety-comment-for-type-assertion -- deliberately ill-typed policy exercises the runtime check
           defaultSquashPolicy: 5 as unknown as boolean,
         }),
       /Invalid squash policy/,
@@ -199,7 +200,7 @@ describe('format', () => {
     const params = { folderId: 'inbox', messageId: 5 };
     const url = format(matcher, params);
     assert.equal(url, '/mymessages/inbox/5');
-    assert.deepEqual(exec(matcher, url as string), params);
+    assert.deepEqual(exec(matcher, url), params);
   });
 });
 

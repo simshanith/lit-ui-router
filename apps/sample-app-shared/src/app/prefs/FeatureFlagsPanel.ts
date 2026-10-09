@@ -200,17 +200,20 @@ export class FeatureFlagsPanel extends LitElement {
   private _flags: FeatureFlagDefinitions = featureFlags.getAll();
 
   private _handleBooleanChange(flag: keyof FeatureFlagDefinitions, e: Event) {
+    // SAFETY: bound only to the flag checkbox <input> in render
     const checked = (e.target as HTMLInputElement).checked;
     featureFlags.set(flag, checked);
     this._flags = featureFlags.getAll();
   }
 
   private _handleSelectChange(flag: keyof FeatureFlagDefinitions, e: Event) {
+    // SAFETY: bound only to the flag <select> in render
     const value = (e.target as HTMLSelectElement).value;
 
     if (value === '') {
       featureFlags.reset(flag);
     } else {
+      // SAFETY: the <select> offers only this flag's config.options values
       featureFlags.set(flag, value as FeatureFlagDefinitions[typeof flag]);
     }
 

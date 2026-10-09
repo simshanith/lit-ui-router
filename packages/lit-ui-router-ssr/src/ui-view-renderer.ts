@@ -15,7 +15,6 @@ import { LitViewConfig, isRoutedLitElement } from 'lit-ui-router/pure';
 import type {
   NormalizedLitViewDeclaration,
   UIViewInjectedProps,
-  UIRouterLit,
 } from 'lit-ui-router/pure';
 import { getScopedRouter } from 'lit-ui-router/context';
 import { servedMarkerPrefix } from './served-markers.js';
@@ -33,6 +32,9 @@ let viewIdCounter = 0;
 const openViews: UiViewRenderer[] = [];
 
 const PART_CLOSE = '<!--/lit-part-->';
+
+/** The registration a server `<ui-view>` hands core, before any config arrives. */
+type Registration = Omit<ActiveUIView, 'config'> & { config?: ViewConfig };
 
 /**
  * Hides the markers this render wrote inside the view from the walk hydrating
@@ -116,7 +118,7 @@ export class UiViewRenderer extends ElementRenderer {
   /** No element instance is created, so attributes are held here and written back verbatim. */
   private readonly attributes: Map<string, string> = new Map();
 
-  private data?: ActiveUIView;
+  private data?: Registration;
 
   private config?: LitViewConfig;
 
@@ -150,7 +152,7 @@ export class UiViewRenderer extends ElementRenderer {
   private register(router: UIRouter): () => void {
     const name = this.attributes.get('name') || DEFAULT_VIEW;
 
-    const data: ActiveUIView = {
+    const data: Registration = {
       $type: 'lit',
       id: viewIdCounter++,
       name,
@@ -159,13 +161,14 @@ export class UiViewRenderer extends ElementRenderer {
       configUpdated: (config: ViewConfig) => {
         if (config instanceof LitViewConfig) this.config = config;
       },
-      config: undefined as unknown as ViewConfig,
+      config: undefined,
     };
 
     this.data = data;
 
     // registerUIView syncs, so `configUpdated` has already run when this returns.
-    return router.viewService.registerUIView(data);
+    // SAFETY: core never reads `config`; the view takes its config from `configUpdated`.
+    return router.viewService.registerUIView(data as ActiveUIView);
   }
 
   /** The props `<ui-view>` injects: the router, the resolved tokens, the transition. */
@@ -178,13 +181,16 @@ export class UiViewRenderer extends ElementRenderer {
       .filter((token) => isString(token))
       .map((token) => context.getResolvable(token))
       .filter((resolvable) => resolvable.resolved)
-      .map(({ token }) => [token as string, injector.get(token) as unknown])
+      .map(({ token }: { token: string }): [string, unknown] => [
+        token,
+        injector.get<unknown>(token),
+      ])
       .reduce(applyPairs, {});
 
     return {
       router,
       resolves,
-      transition: injector.get(Transition) as Transition,
+      transition: injector.get<Transition>(Transition),
     };
   }
 
@@ -192,12 +198,13 @@ export class UiViewRenderer extends ElementRenderer {
   override renderLight(
     renderInfo: RenderInfo,
   ): ThunkedRenderResult | undefined {
-    const router = getScopedRouter() as UIRouterLit | undefined;
+    const router = getScopedRouter();
 
     if (!router) return undefined;
     const deregister = this.register(router);
     const config = this.config;
 
+    // SAFETY: a `LitViewConfig` is built only from a lit state's normalized view declaration.
     const component = (config?.viewDecl as NormalizedLitViewDeclaration)
       ?.component;
 

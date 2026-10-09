@@ -411,7 +411,7 @@ describe('litViewsBuilder', () => {
       name: 'test',
       url: '/test',
       views: {
-        // runtime skips empty view configs; LitViewDeclaration requires a component
+        // oxlint-disable-next-line anti-slop/require-safety-comment-for-type-assertion -- deliberately invalid: runtime skips empty view configs; LitViewDeclaration requires a component
         empty: {} as LitViewDeclaration,
       },
     };
@@ -462,7 +462,7 @@ describe('litViewsBuilder', () => {
     });
     const state = router.stateRegistry.get('test').$$state?.();
 
-    // litViewsBuilder normalizes views; core's StateObject.views typing cannot express it
+    // SAFETY: litViewsBuilder normalizes views; core's StateObject.views typing cannot express it
     const views = state?.views as
       | Record<string, NormalizedLitViewDeclaration>
       | undefined;
@@ -483,7 +483,7 @@ describe('litViewsBuilder', () => {
 
     const state = router.stateRegistry.get('sticky').$$state?.();
 
-    // litViewsBuilder normalizes views; core's StateObject.views typing cannot express it
+    // SAFETY: litViewsBuilder normalizes views; core's StateObject.views typing cannot express it
     const views = state?.views as
       | Record<string, NormalizedLitViewDeclaration>
       | undefined;
@@ -495,10 +495,13 @@ describe('litViewsBuilder', () => {
     expect(component).not.toBe(TestElementSticky);
     expect(isRoutedLitElement(component)).toBe(false);
 
-    const first = (component as RoutedLitTemplate)({} as UIViewInjectedProps);
-    const props = {} as UIViewInjectedProps;
-    const second = (component as RoutedLitTemplate)(props);
+    // SAFETY: not a RoutedLitElement (asserted above), so the template form
+    const template = component as RoutedLitTemplate;
+    const first = template({ router, resolves: {} });
+    const props: UIViewInjectedProps = { router, resolves: {} };
+    const second = template(props);
 
+    // SAFETY: the sticky template interpolates its cached element as its one value
     const instance = second.values[0] as TestElementSticky & {
       _uiViewProps?: UIViewInjectedProps;
     };
@@ -535,7 +538,7 @@ describe('litViewsBuilder', () => {
     });
     const state = router.stateRegistry.get('argless').$$state?.();
 
-    // litViewsBuilder normalizes views; core's StateObject.views typing cannot express it
+    // SAFETY: litViewsBuilder normalizes views; core's StateObject.views typing cannot express it
     const views = state?.views as
       | Record<string, NormalizedLitViewDeclaration>
       | undefined;

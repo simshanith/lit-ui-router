@@ -49,6 +49,7 @@ export function parseTscDiagnostics(
     const message = [head ?? '', ...chain].join('\n').trim();
 
     if (message === '') continue;
+    // SAFETY: HEADER captures only error or warning
     found.push({
       level: level as AnnotationLevel,
       message,

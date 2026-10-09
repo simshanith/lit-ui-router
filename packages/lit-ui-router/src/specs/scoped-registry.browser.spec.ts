@@ -118,15 +118,18 @@ async function scopedRoutes(
 
   root.innerHTML = `<${tags.router}><${tags.view}></${tags.view}></${tags.router}>`;
 
-  const uiRouter = root.firstElementChild!;
-  expect(uiRouter).toBeInstanceOf(UIRouterLitElement);
-  (uiRouter as UIRouterLitElement).uiRouter = router;
-  await (uiRouter as UIRouterLitElement).updateComplete;
-  const view = uiRouter.firstElementChild!;
-  expect(view).toBeInstanceOf(UiView);
+  const routerChild = root.firstElementChild;
+  expect(routerChild).toBeInstanceOf(UIRouterLitElement);
+  // SAFETY: a UIRouterLitElement, asserted above
+  const uiRouter = routerChild as UIRouterLitElement;
+  uiRouter.uiRouter = router;
+  await uiRouter.updateComplete;
+  const view = uiRouter.firstElementChild;
+  expect(view).toBeInstanceOf(RecordingView);
   router.start();
   await tick();
 
+  // SAFETY: a RecordingView, asserted above
   return view as RecordingView;
 }
 

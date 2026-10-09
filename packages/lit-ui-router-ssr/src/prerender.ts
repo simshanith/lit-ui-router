@@ -201,6 +201,7 @@ interface NodeFsPromises {
 }
 
 const nodeWrite: FileWriter = async (file, body) => {
+  // SAFETY: `NODE_FS` names `node:fs/promises`, whose `mkdir` and `writeFile` take these shapes.
   const { mkdir, writeFile } = (await import(NODE_FS)) as NodeFsPromises;
   const dir = dirOf(file);
 
@@ -247,6 +248,7 @@ const defaultProbe = (
 
 // litServerRoot must lead: @lit-labs/ssr 4.1 makes any other first entry its own __eventTargetParent and the composed-path walk never ends; read per call because the shim installs on import.
 const rootedStack = (root: EventTarget): EventTarget[] => {
+  // SAFETY: the @lit-labs/ssr DOM shim sets `litServerRoot` to an `EventTarget`, or leaves it unset.
   const litServerRoot = (globalThis as { litServerRoot?: EventTarget })
     .litServerRoot;
 
@@ -503,17 +505,14 @@ export async function prerender(
   const warnings: string[] = [];
 
   const emit = async (
-    verdict: Verdict,
+    verdict: Extract<Verdict, { kind: 'shell' }>,
     path: string,
     subpath: string,
     file: string,
   ): Promise<void> => {
     const context: RenderContext = { path, subpath, file, root };
 
-    const body = await renderShell(
-      verdict as Extract<Verdict, { kind: 'shell' }>,
-      context,
-    );
+    const body = await renderShell(verdict, context);
 
     const markup =
       typeof body === 'string'

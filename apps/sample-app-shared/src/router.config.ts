@@ -126,7 +126,7 @@ export function configureRouter(router = new UIRouterLit()) {
     } else if ($error$ instanceof Rejection) {
       // custom downgrade to warning
       console.warn($error$.toString());
-      // Rejection.detail is `any`
+      // SAFETY: Rejection.detail is `any`; only a truthy `stack` is read from it
       const detail = $error$.detail as { stack?: string } | undefined;
 
       if (detail?.stack) console.warn(detail.stack);
@@ -136,6 +136,7 @@ export function configureRouter(router = new UIRouterLit()) {
   });
 
   appStates.forEach((state) =>
+    // SAFETY: every entry is a state declaration or class; typed resolves only fail to widen to the default
     stateRegistry.register(state as LitStateDeclaration),
   );
 

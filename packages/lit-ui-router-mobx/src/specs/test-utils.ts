@@ -18,15 +18,17 @@ export {
  */
 type StructuralComparer = <T>(a: T, b: T) => boolean;
 
-export const structural: StructuralComparer =
-  (
-    mobx as unknown as {
-      compareStructural?: StructuralComparer;
-      comparer?: { structural: StructuralComparer };
-    }
-  ).compareStructural ??
-  (mobx as unknown as { comparer: { structural: StructuralComparer } }).comparer
-    .structural;
+function structuralOf(
+  mobxMajor:
+    | { compareStructural: StructuralComparer }
+    | { comparer: { structural: StructuralComparer } },
+): StructuralComparer {
+  return 'compareStructural' in mobxMajor
+    ? mobxMajor.compareStructural
+    : mobxMajor.comparer.structural;
+}
+
+export const structural: StructuralComparer = structuralOf(mobx);
 
 /**
  * Creates a test router instance with memory location plugin.

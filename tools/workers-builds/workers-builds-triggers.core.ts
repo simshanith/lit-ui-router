@@ -94,6 +94,7 @@ export type TriggerKind = 'production' | 'preview';
 // won't do; jsonc-parser is the VS Code JSONC implementation.
 export function parseJsonc(text: string): Json {
   const errors: ParseError[] = [];
+  // SAFETY: jsonc-parser's parse builds only JSON values
   const result = parse(text, errors, { allowTrailingComma: true }) as Json;
   const [first] = errors;
 

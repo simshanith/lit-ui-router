@@ -13,7 +13,7 @@ const hook = {
   // Matches if the destination state's data property has a truthy 'requiresAuth' property
   criteria: {
     to: (state: StateObject | undefined) =>
-      // StateObject.data is typed `any`; requiresAuth is set in state declarations.
+      // SAFETY: StateObject.data is `any`; state declarations set requiresAuth as a boolean
       Boolean(
         (state?.data as { requiresAuth?: boolean } | undefined)?.requiresAuth,
       ),

@@ -150,6 +150,7 @@ function createPrinter(options: DomDiffOptions): Printer {
         pendingText += child.nodeValue ?? '';
       } else if (child.nodeType === ELEMENT_NODE) {
         flushText(depth);
+        // SAFETY: `nodeType` is `ELEMENT_NODE`, checked above.
         element(child as Element, depth);
       }
     }
@@ -178,6 +179,7 @@ export function getDiffableHTML(
     template.innerHTML = html;
     printer.children(template.content, 0);
   } else if (html.nodeType === ELEMENT_NODE) {
+    // SAFETY: `nodeType` is `ELEMENT_NODE`, checked above.
     printer.element(html as Element, 0);
   } else if (
     html.nodeType === DOCUMENT_FRAGMENT_NODE ||

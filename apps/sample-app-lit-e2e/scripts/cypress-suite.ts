@@ -18,6 +18,7 @@ if (name === undefined || !(name in suites)) {
   process.exit(1);
 }
 
+// SAFETY: the `name in suites` check above exits otherwise
 const suite = suites[name as keyof typeof suites];
 
 const port = resolveWwwDevPort();

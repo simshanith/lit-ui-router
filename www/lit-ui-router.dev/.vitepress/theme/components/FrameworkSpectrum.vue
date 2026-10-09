@@ -28,7 +28,7 @@ function toggle(id: string) {
 }
 
 function clearOnOutsideClick(e: MouseEvent) {
-  if (!(e.target as Element | null)?.closest?.('[data-fw-toggle]')) {
+  if (!(e.target instanceof Element && e.target.closest('[data-fw-toggle]'))) {
     activeId.value = null;
   }
 }

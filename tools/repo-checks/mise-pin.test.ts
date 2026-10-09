@@ -37,6 +37,7 @@ const workflows = trackedFiles(
   '.github/workflows/*.yaml',
 );
 
+// SAFETY: actionlint holds workflows to the Actions schema, which Workflow subsets
 const steps = workflows.flatMap((workflow) =>
   Object.entries((parse(load(workflow)) as Workflow).jobs ?? {}).flatMap(
     ([job, { steps = [] }]) =>

@@ -46,6 +46,7 @@ describe('pnpm version pins', () => {
   });
 
   it('.config/mise/mise.lock locks it, on every platform it covers', () => {
+    // SAFETY: `taplo get` on a mise.lock tool path yields its array of tables
     const [tool, ...extra] = taploGet(
       '.config/mise/mise.lock',
       MISE_TOOL,
@@ -59,6 +60,7 @@ describe('pnpm version pins', () => {
     // platforms belong here is `mise lock`'s business, not this test's: pnpm
     // publishes no macos-x64 asset, so it locks six where every other tool
     // gets seven.
+    // SAFETY: mise.lock writes every platforms.* key as a table with a url
     const platforms = Object.entries(tool).filter(([key]) =>
       key.startsWith('platforms.'),
     ) as [string, { url: string }][];

@@ -14,6 +14,7 @@ import type { Json } from '@tools/bootstrap/types.ts';
 
 /** `taplo get` on a repo-relative TOML file, parsed. */
 export const taploGet = (file: string, pattern: string): Json =>
+  // SAFETY: JSON.parse yields only JSON values
   JSON.parse(
     execFileSync(
       'taplo',

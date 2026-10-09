@@ -53,6 +53,7 @@ export class Compose extends LitElement {
   // uiCanExit below still guards against silently discarding unsaved edits.
   messageParam = new RouterReactionController(
     this,
+    // SAFETY: the non-URL `message` param is only ever set from a Message (Reply, Forward, Edit)
     (route) => route.params.message as Partial<Message> | undefined,
     {
       equals: compareStructural,
@@ -64,6 +65,7 @@ export class Compose extends LitElement {
   // Otherwise an unchanged param is not a new draft — the reaction fires again
   // on every reconnect, and the sticky branch reconnects on the way back in.
   resetMessage(message: Partial<Message> = {}, { force = false } = {}) {
+    // SAFETY: Compose reads only the composed fields; outgoingMessage() and save() stamp the rest
     const pristineMessage = {
       body: '',
       to: '',
@@ -141,6 +143,7 @@ export class Compose extends LitElement {
   handleChangeMessage = (detail: string) => (e: Event) => {
     this.message = {
       ...this.message,
+      // SAFETY: bound only to the <input> and <textarea> fields in render(), both with a string value
       [detail]: (e.target as HTMLInputElement).value,
     };
   };

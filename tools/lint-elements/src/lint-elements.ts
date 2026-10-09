@@ -90,6 +90,7 @@ function eslintCli(): string {
   const require = createRequire(import.meta.url);
   const manifestPath = require.resolve('eslint/package.json');
 
+  // SAFETY: eslint's manifest maps its `eslint` bin to the CLI entry
   const manifest = require('eslint/package.json') as {
     bin: Record<string, string>;
   };
@@ -124,6 +125,7 @@ function runEslint(): EslintResult[] {
 
   if (eslint.stderr.trim() !== '') process.stderr.write(eslint.stderr);
 
+  // SAFETY: `--format json` writes the LintResult[] that EslintResult mirrors
   return JSON.parse(eslint.stdout) as EslintResult[];
 }
 
@@ -153,6 +155,7 @@ function collect(results: readonly EslintResult[]): WarnMessage[] {
 
 function readSnapshot(): WarnSnapshot {
   try {
+    // SAFETY: the snapshot file is only ever written by writeSnapshot
     return JSON.parse(readFileSync(SNAPSHOT_FILE, 'utf8')) as WarnSnapshot;
   } catch (error: unknown) {
     throw new Error(

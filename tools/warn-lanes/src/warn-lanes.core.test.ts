@@ -206,6 +206,7 @@ describe('the marker', () => {
   });
 
   it('rejects a payload missing any field the report reads', () => {
+    // SAFETY: `state` is a WarnLaneState literal with no extra keys
     for (const field of Object.keys(state) as (keyof WarnLaneState)[]) {
       const partial: Partial<WarnLaneState> = { ...state };
       delete partial[field];

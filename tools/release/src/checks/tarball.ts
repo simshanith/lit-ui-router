@@ -24,6 +24,8 @@ const PACOTE_METADATA_FIELDS = ['_id', '_integrity', '_resolved', '_from'];
 export async function tarballManifest(
   tarball: string,
 ): Promise<Readonly<Record<string, Json>>> {
+  // SAFETY: pacote JSON-parses package.json, so every field value is Json
+  // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- @types/pacote's manifest interfaces lack an index signature, so no single assertion reaches Record<string, Json>
   const manifest = (await pacote.manifest(tarball)) as unknown as Readonly<
     Record<string, Json>
   >;

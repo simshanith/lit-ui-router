@@ -26,6 +26,7 @@ if (!tarball || extra.length > 0) {
 
 // Malformed manifests reject in tarballManifest — the gate fails loudly,
 // never a silent `{}` that absence-checks would pass.
+// SAFETY: the violation checks only test presence and stringify the fields
 const manifest = (await tarballManifest(tarball)) as PackageManifest;
 
 const { ok, text } = formatPackedManifestReport(

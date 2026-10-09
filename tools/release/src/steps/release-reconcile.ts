@@ -79,9 +79,9 @@ async function restoreCredit(
       };
     }
 
-    const summary = JSON.parse(
+    const summary: unknown = JSON.parse(
       await readFile(join(runsDir, runs[0]), 'utf8'),
-    ) as unknown;
+    );
 
     return {
       sha: await sha256File(creditPath),

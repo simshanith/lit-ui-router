@@ -6,6 +6,7 @@ import {
 } from '../util/featureDetection.js';
 import { FeatureFlagsPanel } from './FeatureFlagsPanel.js';
 
+// SAFETY: featureFlags.save writes the flags object as JSON
 const readStoredFlags = () =>
   JSON.parse(
     sessionStorage.getItem('featureFlags') ?? '{}',

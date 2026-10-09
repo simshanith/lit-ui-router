@@ -249,6 +249,7 @@ export class TransitionController implements ReactiveController {
     const events = this.options.events ?? ['onSuccess'];
 
     for (const event of events) {
+      // SAFETY: hook registration returns its deregistration function
       this.deregisterFns.push(
         router.transitionService[event](criteria, (transition) =>
           this.notify(transition, event),
@@ -287,6 +288,7 @@ export class TransitionController implements ReactiveController {
     const result = this.options.callback?.(transition, reason);
     this.host.requestUpdate();
 
+    // SAFETY: ui-router acts only on false, a TargetState or a promise; any other value continues
     return result as HookResult;
   }
 }

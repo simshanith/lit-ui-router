@@ -42,7 +42,7 @@ export function parseManifest(text: string): PublishedVersions {
     );
   }
 
-  // The claim the checks below hold it to, entry by entry.
+  // SAFETY: the claim the checks below hold it to, entry by entry
   const versions = parsed as PublishedVersions;
 
   for (const [name, tags] of Object.entries(versions)) {

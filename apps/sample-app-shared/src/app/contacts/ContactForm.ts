@@ -32,6 +32,7 @@ export class ContactForm extends LitElement {
           detail: set(
             { ...contact },
             path,
+            // SAFETY: bound only to the form's <input> fields
             (event.target as HTMLInputElement).value,
           ),
         }),

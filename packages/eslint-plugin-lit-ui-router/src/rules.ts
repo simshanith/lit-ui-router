@@ -49,6 +49,7 @@ const register = <Name extends RuleName>(
 // literal type, leaving only the assertion `Object.fromEntries` always costs;
 // taking the roster as a type parameter pins that assertion to the keys it was
 // handed rather than to the registry it is being used to build.
+// SAFETY: `Roster` keys are exactly `RULE_NAMES`, each registered under its own name
 const registerAll = <Rules extends Roster>(
   rules: Rules,
 ): { [Name in keyof Rules]: RegisteredRule<Name & RuleName> } =>

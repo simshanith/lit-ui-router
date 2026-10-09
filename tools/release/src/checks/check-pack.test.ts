@@ -57,6 +57,7 @@ describe('findUnsubstitutedRefs', () => {
     // fact. This check used to `continue`, which returned [] and reported the
     // package clean. The message is the contract: anyone who "fixes the crash"
     // by coercing instead of throwing has to delete an assertion to do it.
+    // oxlint-disable-next-line anti-slop/no-chained-type-assertions, anti-slop/require-safety-comment-for-type-assertion -- deliberately ill-typed input for the error path
     const manifest = {
       dependencies: { odd: 42 },
     } as unknown as PackageManifest;

@@ -145,11 +145,13 @@ export class UIRouterLitElement extends LitElement {
 
     this.addEventListener(
       this.constructor.uiRouterContextEventName,
+      // SAFETY: only `UiRouterContextEvent`s are dispatched under this name
       this.onUiRouterContextEvent as EventListener,
     );
     this.addEventListener(contextRequestEventName, this.onContextRequest);
     this.addEventListener(
       this.constructor.uiViewContextEventName,
+      // SAFETY: only `UiViewContextEvent`s are dispatched under this name
       this.onUiViewContextEvent as EventListener,
     );
 

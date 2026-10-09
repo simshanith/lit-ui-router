@@ -84,13 +84,17 @@ function resetCounts() {
 }
 
 /** Base fixture that records its own lifecycle, so specs can assert churn. */
+interface CountedElement {
+  constructor: typeof CountedElement;
+}
+
 class CountedElement extends LitElement {
   static tag = 'counted-element';
   declare _uiViewProps?: UIViewInjectedProps;
 
   constructor() {
     super();
-    countsFor((this.constructor as typeof CountedElement).tag).constructed++;
+    countsFor(this.constructor.tag).constructed++;
   }
 
   createRenderRoot() {
@@ -99,12 +103,12 @@ class CountedElement extends LitElement {
 
   connectedCallback() {
     super.connectedCallback();
-    countsFor((this.constructor as typeof CountedElement).tag).connected++;
+    countsFor(this.constructor.tag).connected++;
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
-    countsFor((this.constructor as typeof CountedElement).tag).disconnected++;
+    countsFor(this.constructor.tag).disconnected++;
   }
 }
 
@@ -876,9 +880,8 @@ describe('UiView', () => {
     /** The re-seek hook's own path: a real router the app assigned replaces the one the view sought. */
     function adoptUpgraded(view: UiView, upgraded: UIRouterLit) {
       view.uiRouter = upgraded;
-      (
-        view as unknown as { adoptProvidedRouter(): void }
-      ).adoptProvidedRouter();
+      // oxlint-disable-next-line typescript/dot-notation -- the hook is protected; bracket access keeps it type-checked
+      view['adoptProvidedRouter']();
     }
 
     it('should not re-register a detached nested view at the root context', async () => {
@@ -1036,6 +1039,7 @@ describe('UiView', () => {
       const { uiView } = await setupRouter([dynamicStar]);
 
       await routerGo(router, 'star', { starId: 'sun' });
+      // SAFETY: the 'star' state renders a TestRetainedLeaf as the view's child
       const leaf = uiView.firstElementChild as TestRetainedLeaf;
       const firstProps = leaf._uiViewProps;
       expect(firstProps?.router).toBe(router);
@@ -1059,6 +1063,7 @@ describe('UiView', () => {
       const { uiView } = await setupRouter(nestedStates);
 
       await routerGo(router, 'galaxy.star', { starId: 'sun' });
+      // SAFETY: the 'galaxy' state renders a TestRetainedShell as the view's child
       const shell = uiView.firstElementChild as TestRetainedShell;
       expect(shell).toBeInstanceOf(TestRetainedShell);
       const nestedView = shell.querySelector('ui-view');
@@ -1161,6 +1166,7 @@ describe('UiView', () => {
       await routerGo(router, 'home');
 
       // lit issues each warning once per realm; forget any earlier one so a repeat here is seen.
+      // SAFETY: lit's dev build keeps the warnings it issued in this optional global set
       const issued = (globalThis as { litIssuedWarnings?: Set<string> })
         .litIssuedWarnings;
 
@@ -1228,6 +1234,7 @@ describe('UiView', () => {
   describe('parent-view seek across a shadow boundary', () => {
     /** A `ui-view-context` event as a listener outside the source's shadow root sees it: `target` retargeted to the host. */
     function retargeted(host: UiView, source: Node): UiViewContextEvent {
+      // SAFETY: the `target` and `composedPath` a UiViewContextEvent carries are defined below
       const event = new CustomEvent(UIRouterLitElement.uiViewContextEventName, {
         bubbles: true,
         composed: true,
@@ -1311,6 +1318,7 @@ describe('UiView', () => {
       expect(uiView.querySelector('.home-content')).not.toBeNull();
 
       // A clone carries lit's nodes and part markers with `hasUpdated` false.
+      // SAFETY: a clone of a <ui-view> upgrades to a UiView
       const clone = uiView.cloneNode(true) as UiView;
       uiRouter.appendChild(clone);
       await waitForUpdate(clone);
@@ -1342,6 +1350,7 @@ describe('UiView', () => {
 
       // One capture: the fallback set is the first attach's node, taken once,
       // and `<p class="late">` arrived too late to join it.
+      // SAFETY: the authored prefix in front of the render is a lone <p>
       const fallbackNodes = uiView['fallbackNodes'] as Element[];
       expect(fallbackNodes.map((node) => node.className)).toEqual(['hold']);
       expect(uiView.querySelectorAll('p.hold')).toHaveLength(1);
@@ -1360,7 +1369,7 @@ describe('UiView', () => {
 
       // Never deferred, so the capture is the connect's: the render's nodes and
       // markers behind the authored <p> are no part of the fallback set.
-      const fallbackNodes = uiView['fallbackNodes'] as Element[];
+      const fallbackNodes = uiView['fallbackNodes'];
       expect(fallbackNodes).toHaveLength(1);
       expect(fallbackNodes[0]).toBe(uiView.querySelector('p.hold'));
       expect(uiView.querySelector('p.held')).not.toBeNull();
@@ -1490,6 +1499,8 @@ describe('UiView', () => {
     it('should take what stands ahead of a render, and leave it standing', async () => {
       const view = await mountInPlace(`<p class="hold">hold</p>${heldMarkup}`);
 
+      // SAFETY: the authored prefix in front of the render is a lone <p>
+
       const fallbackNodes = view['fallbackNodes'] as Element[];
       expect(fallbackNodes.map((node) => node.className)).toEqual(['hold']);
       // Not parked: the nodes were already in the document when they were taken.
@@ -1512,7 +1523,7 @@ describe('UiView', () => {
       view.requestUpdate();
       await waitForUpdate(view);
 
-      const fallbackNodes = view['fallbackNodes'] as Element[];
+      const fallbackNodes = view['fallbackNodes'];
       expect(fallbackNodes).toEqual([hold]);
     });
   });

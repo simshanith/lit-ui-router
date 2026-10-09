@@ -6,8 +6,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
-import type { Json } from '@tools/bootstrap/types.ts';
 import { analyze } from 'crap4ts';
+import * as v from 'valibot';
 
 import { formatReport, packageRelative, rank } from './report.ts';
 
@@ -27,9 +27,10 @@ if (!fs.existsSync(coveragePath)) {
   process.exit(1);
 }
 
-const coverage = JSON.parse(fs.readFileSync(coveragePath, 'utf8')) as Readonly<
-  Record<string, Json>
->;
+const coverage = v.parse(
+  v.record(v.string(), v.unknown()),
+  JSON.parse(fs.readFileSync(coveragePath, 'utf8')),
+);
 
 const packageDir = path
   .relative(workspaceRoot, process.cwd())

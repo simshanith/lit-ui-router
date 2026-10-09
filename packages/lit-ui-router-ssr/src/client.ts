@@ -130,6 +130,7 @@ class UiViewSlotDirective extends RenderLightDirective {
   constructor(part: PartInfo) {
     super(part);
     // The marker lit's walk wakes a custom element on is emitted only under a host-stack entry `@lit-labs/ssr` leaks for light-DOM renderers, so the wake is owned here instead.
+    // SAFETY: the directive renders only in child position, where lit passes the `ChildPart` itself.
     const view = (part as ChildPart).parentNode;
 
     if (!(view instanceof Element)) return;
@@ -148,6 +149,7 @@ class UiViewSlotDirective extends RenderLightDirective {
   /** A host `renderLight()` answers, as it does for ssr-client's own directive; a `<ui-view>` has none and keeps its nodes. */
   // oxlint-disable-next-line anti-slop/no-unknown-returns -- hands on a host's renderLight(), which lit types unknown
   override update(part: ChildPart): unknown {
+    // SAFETY: a host's `renderLight`, when present, is the `RenderLightHost` method ssr-client calls.
     const host = part.parentNode as Partial<RenderLightHost>;
 
     return typeof host.renderLight === 'function'
@@ -248,9 +250,11 @@ const warnMismatch = (view: AdoptableView, cause: unknown): void => {
   );
 };
 
-const isPart = (node: Node | null | undefined, data: string): boolean =>
-  node?.nodeType === Node.COMMENT_NODE &&
-  (node as Comment).data.startsWith(data);
+const isComment = (node: Node | null | undefined): node is Comment =>
+  node?.nodeType === Node.COMMENT_NODE;
+
+const isPart = (node: Node | null | undefined, data: string): node is Comment =>
+  isComment(node) && node.data.startsWith(data);
 
 /**
  * The opening marker of the pair the server wrote around a view's routed
@@ -262,7 +266,7 @@ const isPart = (node: Node | null | undefined, data: string): boolean =>
  */
 const servedPair = (view: Element): Comment | undefined => {
   for (const child of view.childNodes) {
-    if (isPart(child, 'lit-part')) return child as Comment;
+    if (isPart(child, 'lit-part')) return child;
   }
 
   return undefined;
@@ -282,8 +286,7 @@ const hasServedMarkers = (node: Node): boolean => {
 /** Strips {@link servedMarkerPrefix} from one marker comment, leaving anything else alone. */
 const revealMarker = (node: Node | null | undefined): void => {
   if (!isPart(node, servedMarkerPrefix)) return;
-  const comment = node as Comment;
-  comment.data = comment.data.slice(servedMarkerPrefix.length);
+  node.data = node.data.slice(servedMarkerPrefix.length);
 };
 
 /** The outer pair of a nested view, whatever stands in front of it. */
@@ -472,9 +475,10 @@ const pinAdopter = (
 /** The JSON a signature block carries, or null when it does not parse to one with a version. */
 const parseSignature = (json: string): HydrationSignature | null => {
   try {
+    // SAFETY: `JSON.parse` yields null or a value whose `version` reads as undefined when absent.
     const signature = JSON.parse(json) as { version?: unknown } | null;
 
-    // Only `version` is checked, and HydrationSignature claims nothing more.
+    // SAFETY: `version` is a string, the only member HydrationSignature requires.
     return typeof signature?.version === 'string'
       ? (signature as HydrationSignature)
       : null;
@@ -534,6 +538,7 @@ const signatureBlockIn = (
 const precedesRender = (block: Element): boolean => {
   let node = block.nextSibling;
 
+  // SAFETY: `nodeType` is `TEXT_NODE`, checked first.
   while (node?.nodeType === Node.TEXT_NODE && !(node as Text).data.trim()) {
     node = node.nextSibling;
   }

@@ -16,7 +16,7 @@ const CURRENT_ENTRY_CHANGE_EVENT = 'currententrychange';
 
 const NAVIGATE_EVENT = 'navigate';
 
-// @uirouter/core types `root` as `any`; it is the global object in browsers.
+// SAFETY: @uirouter/core types `root` as `any`; it is the global object in browsers.
 const globalRoot = root as typeof globalThis;
 
 /**
@@ -51,7 +51,14 @@ export interface UIRouterNavigateEvent extends NavigateEvent {
 export function isUIRouterNavigateEvent(
   event?: NavigateEvent,
 ): event is UIRouterNavigateEvent {
-  return (event as UIRouterNavigateEvent)?.info?.uiRouter instanceof UIRouter;
+  const info: unknown = event?.info;
+
+  return (
+    (typeof info === 'object' || typeof info === 'function') &&
+    info !== null &&
+    'uiRouter' in info &&
+    info.uiRouter instanceof UIRouter
+  );
 }
 
 /** Options for {@link navigationLocationPlugin}. */

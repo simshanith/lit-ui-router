@@ -53,7 +53,7 @@ customElements.define('shadow-badge', ShadowBadge);
 /** `LitElementRenderer`, narrowed to the badge so every other element renders as it does in the other lane. */
 export class ShadowBadgeRenderer extends LitElementRenderer {
   static override matchesClass(ctor: typeof HTMLElement): boolean {
-    return ctor === (ShadowBadge as unknown as typeof HTMLElement);
+    return ctor === ShadowBadge;
   }
 }
 

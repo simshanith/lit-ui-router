@@ -25,7 +25,7 @@ interface JSONNode {
 }
 
 interface JSONProgram {
-  body: [{ expression?: JSONNode }?];
+  body: { expression?: JSONNode }[];
 }
 
 const findProperty = (
@@ -80,11 +80,14 @@ const catalogFields: Rule.RuleModule = {
   create(context) {
     return {
       Program(program) {
-        const root = (program as unknown as JSONProgram).body[0]?.expression;
+        // SAFETY: jsonc-eslint-parser parses package.json, so Program is its JSONProgram
+        const root = (program as JSONProgram).body[0]?.expression;
         const published = !isPrivate(root);
 
         for (const field of FIELDS) {
-          const shipped = (SHIPPED_FIELDS as readonly string[]).includes(field);
+          const shipped = SHIPPED_FIELDS.some(
+            (shippedField) => shippedField === field,
+          );
 
           for (const entry of findProperty(root, field)?.value.properties ??
             []) {
@@ -92,8 +95,9 @@ const catalogFields: Rule.RuleModule = {
             const messageId = messageFor(catalog, shipped, published);
 
             if (messageId === undefined) continue;
+            // SAFETY: jsonc-eslint-parser's nodes carry the type/loc/range eslint reports on
             context.report({
-              node: entry.value as unknown as Rule.Node,
+              node: entry.value as Rule.Node,
               messageId,
               data: { field, catalog: catalog ?? '' },
             });

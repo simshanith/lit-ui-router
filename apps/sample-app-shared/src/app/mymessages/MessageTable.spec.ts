@@ -5,10 +5,10 @@ import type { Message } from './interface.js';
 import { MessageTable } from './MessageTable.js';
 import { snapshot } from './snapshot.js';
 
-// MessageTable reads the late-bound AppConfig.sort
-registerAppModules({
-  AppConfig: { sort: '-date' },
-} as unknown as AppModules);
+registerAppModules(
+  // SAFETY: MessageTable reads only the late-bound AppConfig.sort
+  { AppConfig: { sort: '-date' } } as AppModules,
+);
 
 const message = (_id: string, subject: string): Message => ({
   _id,

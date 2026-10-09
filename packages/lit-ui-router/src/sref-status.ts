@@ -1,9 +1,4 @@
-import {
-  extend,
-  TargetState,
-  TransitionOptions,
-  UIRouter,
-} from '@uirouter/core';
+import { TargetState, TransitionOptions, UIRouter } from '@uirouter/core';
 import { nothing } from 'lit';
 
 import type { SrefTargetParams } from './sref-active.js';
@@ -50,7 +45,7 @@ export class SrefTargets {
   options(): TransitionOptions {
     const defaultOpts: TransitionOptions = { relative: this.relative };
 
-    return extend(defaultOpts, this.params.options || {}) as TransitionOptions;
+    return { ...defaultOpts, ...this.params.options };
   }
 
   /** (Re)builds the named target from `params`, `relative` and `router`. */

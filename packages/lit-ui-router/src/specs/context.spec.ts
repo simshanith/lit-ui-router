@@ -12,6 +12,7 @@ import { servicesPlugin, UIRouter } from '@uirouter/core';
 
 import {
   contextRequestEventName,
+  isContextRequest,
   isRouterContextRequest,
   parentUiViewContext,
   type ParentUiView,
@@ -348,7 +349,7 @@ describe('lit-ui-router/context', () => {
       await tick(50);
 
       const nested = view.querySelector('ui-view')!;
-      const leaf = nested.querySelector('.leaf') as HTMLElement;
+      const leaf = nested.querySelector<HTMLElement>('.leaf')!;
 
       return { view, nested, leaf };
     }
@@ -496,8 +497,12 @@ describe('provideRouter', () => {
 describe('provideContext', () => {
   type SpecKey = Context<{ readonly name: string }, string>;
 
-  const key = Object.freeze({ name: 'spec#key' }) as SpecKey;
-  const otherKey = Object.freeze({ name: 'spec#other' }) as SpecKey;
+  const specKey = (name: string): SpecKey =>
+    // SAFETY: `__context__` is a phantom brand with no runtime value
+    Object.freeze({ name }) as SpecKey;
+
+  const key = specKey('spec#key');
+  const otherKey = specKey('spec#other');
 
   /** A minimal protocol request for `key`, shaped as a provider reads it. */
   function request(
@@ -570,8 +575,12 @@ describe('provideContext', () => {
 describe('requestContext', () => {
   type SpecKey = Context<{ readonly name: string }, string>;
 
-  const key = Object.freeze({ name: 'spec#request' }) as SpecKey;
-  const otherKey = Object.freeze({ name: 'spec#request-other' }) as SpecKey;
+  const specKey = (name: string): SpecKey =>
+    // SAFETY: `__context__` is a phantom brand with no runtime value
+    Object.freeze({ name }) as SpecKey;
+
+  const key = specKey('spec#request');
+  const otherKey = specKey('spec#request-other');
 
   it('returns the value a provider answers its key with', () => {
     const root = new EventTarget();
@@ -595,14 +604,9 @@ describe('requestContext', () => {
     const root = new EventTarget();
 
     const listener = (event: Event) => {
-      const request = event as Event & {
-        callback: ContextCallback<string>;
-        context: SpecKey;
-      };
-
-      if (request.context !== key) return;
-      request.callback('first');
-      request.callback('second');
+      if (!isContextRequest(event, key)) return;
+      event.callback('first');
+      event.callback('second');
     };
 
     root.addEventListener(contextRequestEventName, listener);
@@ -617,14 +621,9 @@ describe('requestContext', () => {
     const seen: string[] = [];
 
     const listener = (event: Event) => {
-      const request = event as Event & {
-        callback: ContextCallback<string>;
-        context: SpecKey;
-      };
-
-      if (request.context !== key) return;
-      request.callback('first');
-      request.callback('second');
+      if (!isContextRequest(event, key)) return;
+      event.callback('first');
+      event.callback('second');
     };
 
     root.addEventListener(contextRequestEventName, listener);

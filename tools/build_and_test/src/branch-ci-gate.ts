@@ -84,6 +84,7 @@ async function probeBase(baseRef: string, head: string): Promise<BaseVerdict> {
   } catch (error) {
     // execFile rejects on any non-zero exit; exit 1 is the conflict answer,
     // not a failure, so the status and stdout decide rather than the rejection.
+    // SAFETY: execFile rejects with an error carrying the exit code and stdout
     const failure = error as { code?: number | null; stdout?: string };
     const code = failure.code ?? null;
 

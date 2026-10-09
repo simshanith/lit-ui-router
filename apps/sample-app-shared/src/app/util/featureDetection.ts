@@ -24,8 +24,7 @@ export function canUseNavigationAPI(): boolean {
   return (
     typeof window !== 'undefined' &&
     'navigation' in window &&
-    typeof (window as { navigation?: { navigate?: unknown } }).navigation
-      ?.navigate === 'function'
+    typeof window.navigation?.navigate === 'function'
   );
 }
 
@@ -63,7 +62,7 @@ interface LocationPluginPreference {
 }
 
 function readLocationPluginPreference(): LocationPluginPreference {
-  const flag = featureFlags.get('location-plugin') as string | undefined;
+  const flag: string | undefined = featureFlags.get('location-plugin');
 
   if (isValidLocationPlugin(flag) || flag === LOCATION_PLUGIN_AUTO) {
     const source = featureFlags.isUrlOverridden('location-plugin')
@@ -73,9 +72,7 @@ function readLocationPluginPreference(): LocationPluginPreference {
     return { value: flag, source };
   }
 
-  const env = import.meta.env.VITE_SAMPLE_APP_LOCATION_PLUGIN as
-    | string
-    | undefined;
+  const env = import.meta.env.VITE_SAMPLE_APP_LOCATION_PLUGIN;
 
   return { value: env, source: 'env' };
 }
@@ -162,6 +159,7 @@ export class FeatureFlags {
       const stored = sessionStorage.getItem(STORAGE_KEY);
 
       if (stored) {
+        // SAFETY: save() is the only writer of STORAGE_KEY, as JSON of the flags
         this._flags = JSON.parse(stored) as Partial<FeatureFlagDefinitions>;
       }
     } catch (error) {
@@ -191,6 +189,7 @@ export class FeatureFlags {
     }
 
     if (flag in this._flags) {
+      // SAFETY: `flag in this._flags` holds, and set() stores only FeatureFlagDefinitions[K]
       return this._flags[flag] as FeatureFlagDefinitions[K];
     }
 
@@ -213,6 +212,8 @@ export class FeatureFlags {
     if (typeof current !== 'boolean') {
       throw new Error(`Cannot toggle non-boolean flag: ${flag}`);
     }
+
+    // SAFETY: current is a boolean, so K names a boolean flag
 
     const newValue = !current as FeatureFlagDefinitions[K];
     this.set(flag, newValue);
@@ -252,8 +253,11 @@ export class FeatureFlags {
     const defaultValue = FLAG_DEFAULTS[flag];
 
     if (typeof defaultValue === 'boolean') {
+      // SAFETY: a boolean default means K names a boolean flag
       return (value === 'true' || value === '1') as FeatureFlagDefinitions[K];
     }
+
+    // SAFETY: the one string flag is location-plugin, which readers check with isValidLocationPlugin
 
     return value as FeatureFlagDefinitions[K];
   }

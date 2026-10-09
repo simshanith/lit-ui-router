@@ -1,9 +1,14 @@
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 
+import type { TargetState } from '@uirouter/core';
 import { UIViewInjectedProps } from 'lit-ui-router';
 
 import { AppConfig, AuthService } from '../global/appModules.js';
+
+interface LoginResolves {
+  returnTo: TargetState;
+}
 
 @customElement('sample-login')
 export class Login extends LitElement {
@@ -11,7 +16,7 @@ export class Login extends LitElement {
     return this;
   }
 
-  constructor(public _uiViewProps: UIViewInjectedProps) {
+  constructor(public _uiViewProps: UIViewInjectedProps<LoginResolves>) {
     super();
   }
 
@@ -32,10 +37,7 @@ export class Login extends LitElement {
   login = () => {
     const { router, resolves } = this._uiViewProps;
 
-    const returnTo = resolves?.returnTo as {
-      state: () => string;
-      params: () => object;
-    };
+    const returnTo = resolves?.returnTo;
 
     const done = () => (this.authenticating = false);
 
@@ -83,6 +85,7 @@ export class Login extends LitElement {
               name="username"
               id="username"
               @change=${(e: Event) => {
+                // SAFETY: the listener is bound to this <select>
                 this.username = (e.target as HTMLSelectElement).value;
               }}
             >
@@ -100,7 +103,10 @@ export class Login extends LitElement {
               name="password"
               id="password"
               value=${this.password}
-              @change=${(e: Event) => (this.password = (e.target as HTMLInputElement).value)}
+              @change=${(e: Event) => {
+                // SAFETY: the listener is bound to this <input>
+                this.password = (e.target as HTMLInputElement).value;
+              }}
             />
             ${
               this.username && this.password !== 'password'

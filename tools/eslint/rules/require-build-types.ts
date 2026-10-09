@@ -22,7 +22,7 @@ interface JSONNode {
 }
 
 interface JSONProgram {
-  body: [{ expression?: JSONNode }?];
+  body: { expression?: JSONNode }[];
 }
 
 // A manifest advertises dist-resolved types when its `types` field, any
@@ -74,6 +74,7 @@ const requireBuildTypes: Rule.RuleModule = {
         let manifest: Manifest;
 
         try {
+          // SAFETY: package.json is a JSON object whose scripts map names to strings
           manifest = JSON.parse(context.sourceCode.text) as Manifest;
         } catch {
           return;
@@ -92,16 +93,17 @@ const requireBuildTypes: Rule.RuleModule = {
           return;
         }
 
-        const root = (program as unknown as JSONProgram).body[0]?.expression;
+        // SAFETY: jsonc-eslint-parser parses package.json, so Program is its JSONProgram
+        const root = (program as JSONProgram).body[0]?.expression;
         const scripts = findProperty(root, 'scripts');
 
         const build =
           findProperty(scripts?.value, 'build') ??
           findProperty(scripts?.value, 'build:js');
 
+        // SAFETY: jsonc-eslint-parser's nodes carry the type/loc/range eslint reports on
         context.report({
-          node:
-            ((build ?? scripts) as unknown as Rule.Node | undefined) ?? program,
+          node: ((build ?? scripts) as Rule.Node | undefined) ?? program,
           messageId: 'missingBuildTypes',
         });
       },

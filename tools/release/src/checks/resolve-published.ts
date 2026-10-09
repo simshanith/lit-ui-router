@@ -24,6 +24,7 @@ async function publishedTags(name: string): Promise<Record<string, string>> {
   } catch (error) {
     // An unpublished package is a real answer here; anything else (network,
     // 5xx, auth) must throw rather than silently report "unpublished".
+    // SAFETY: pacote rejects with Errors that carry npm's `code`
     if ((error as { code?: string }).code === 'E404') return {};
     throw error;
   }

@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 
-import { requestRouter } from '../context.js';
+import { requestRouter, type ContextCallback } from '../context.js';
 import { UIRouterLit } from '../core.js';
 import { LitStateDeclaration } from '../interface.js';
 import { RouterSubscribers } from '../router-subscription.js';
@@ -155,10 +155,10 @@ describe('placeholder router upgrade', () => {
 
     it('drops a subscriber that unsubscribed', async () => {
       const child = uiRouter.appendChild(document.createElement('div'));
-      const callback = vi.fn();
+      const callback = vi.fn<ContextCallback<UIRouterLit>>();
       requestRouter(child, { subscribe: true, callback });
-      const unsubscribe = callback.mock.calls[0]?.[1] as () => void;
-      unsubscribe();
+      const unsubscribe = callback.mock.calls[0]?.[1];
+      unsubscribe!();
 
       await upgrade();
 

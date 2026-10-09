@@ -118,8 +118,7 @@ export class RefController<
     private readonly options: RefControllerOptions<T> = {},
   ) {
     this.runtime = options.runtime ?? defaultRefRuntime;
-    // Undefined unless `initialValue` is given, which is the pre-connect
-    // shape either way; the cast keeps `.value` typed `T` for render code.
+    // SAFETY: undefined unless `initialValue` is given, the pre-connect shape either way; `.value` stays `T` for render code.
     this.value =
       typeof refs === 'function'
         ? (options.initialValue as T)
@@ -172,9 +171,10 @@ export class RefController<
   }
 
   private read(refs: Refs): RefValues<Refs> {
+    // SAFETY: `map` keeps tuple order, and each entry is its own ref's current value.
     return refs.map((ref: SubscriptionRef.SubscriptionRef<unknown>) =>
       this.runtime.runSync(SubscriptionRef.get(ref)),
-    ) as unknown as RefValues<Refs>;
+    ) as RefValues<Refs>;
   }
 
   /** One stream carrying the latest value of every ref. */
@@ -183,9 +183,8 @@ export class RefController<
   ): Stream.Stream<RefValues<Refs>> {
     const streams = refs.map((ref) => ref.changes);
 
-    return Stream.zipLatestAll(...streams) as unknown as Stream.Stream<
-      RefValues<Refs>
-    >;
+    // SAFETY: `zipLatestAll` emits one latest value per stream, in ref order.
+    return Stream.zipLatestAll(...streams) as Stream.Stream<RefValues<Refs>>;
   }
 
   private emit(values: RefValues<Refs>): void {

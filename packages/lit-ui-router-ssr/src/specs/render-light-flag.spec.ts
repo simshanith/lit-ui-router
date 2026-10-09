@@ -34,7 +34,8 @@ describe('the renderLight flag', () => {
       const Slot = getDirectiveClass(uiViewSlot());
 
       if (!Slot) throw new Error('a directive result carried no class');
-      const part = { type: PartType.CHILD, parentNode } as unknown as ChildPart;
+      // SAFETY: the slot reads only `type` and `parentNode` off its part.
+      const part = { type: PartType.CHILD, parentNode } as ChildPart;
 
       return { slot: new Slot(part), part };
     };

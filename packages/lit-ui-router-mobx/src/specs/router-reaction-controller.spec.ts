@@ -285,6 +285,7 @@ customElements.define('stub-router-provider', StubRouterProvider);
 class HouseEventProvider extends HTMLElement {
   constructor(router: UIRouterLit) {
     super();
+    // SAFETY: only `ui-router-context` events, always a `UiRouterContextEvent`, reach this listener.
     this.addEventListener(
       UIRouterLitElement.uiRouterContextEventName,
       UIRouterLitElement.onUiRouterContextEvent(router) as EventListener,
