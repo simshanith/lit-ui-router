@@ -70,3 +70,18 @@ export const laneHints = (mouse) => `<span class="mouse">${mouse} <span class="n
 
 // The provenance strip under a lane's stage; a path-shaped chip breaks after its slash, never mid-name.
 export const basisStrip = (p, html) => `<p class="${p}-basis"><span><b class="k">BASIS</b>${chipBreaks(html)}</span></p>`;
+
+// A lane's colour tokens, as cytoscape reads them: a probe element wears var(--name) and its computed colour comes back as rgb().
+export const LANE_TOK_JS = `  function tok(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+  function col(name) {
+    var el = document.getElementById('tok-probe');
+    if (!el) { el = document.createElement('i'); el.id = 'tok-probe'; el.hidden = true; document.body.appendChild(el); }
+    el.style.color = 'var(' + name + ')';
+    var v = getComputedStyle(el).color, m = /^oklch\\(\\s*([\\d.]+)(%?)\\s+([\\d.]+)\\s+([\\d.]+|none)/.exec(v);
+    if (!m) return v;
+    var L = Number(m[1]) / (m[2] ? 100 : 1), C = Number(m[3]), H = m[4] === 'none' ? 0 : Number(m[4]) * Math.PI / 180;
+    var a = C * Math.cos(H), b = C * Math.sin(H);
+    var l_ = Math.pow(L + 0.3963377774 * a + 0.2158037573 * b, 3), m_ = Math.pow(L - 0.1055613458 * a - 0.0638541728 * b, 3), s_ = Math.pow(L - 0.0894841775 * a - 1.291485548 * b, 3);
+    return 'rgb(' + [4.0767416621 * l_ - 3.3077115913 * m_ + 0.2309699292 * s_, -1.2684380046 * l_ + 2.6097574011 * m_ - 0.3413193965 * s_, -0.0041960863 * l_ - 0.7034186147 * m_ + 1.707614701 * s_]
+      .map(function (c) { c = Math.min(1, Math.max(0, c)); return Math.round((c <= 0.0031308 ? 12.92 * c : 1.055 * Math.pow(c, 1 / 2.4) - 0.055) * 255); }).join(', ') + ')';
+  }`;

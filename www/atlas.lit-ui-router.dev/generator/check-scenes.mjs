@@ -122,18 +122,28 @@ const idle = (page) => page.waitForTimeout(400);
 // the page's tokens, its island's plan and every material's factor, read in one turn
 const materialsOf = (page) => page.evaluate(() => {
   const mv = document.querySelector('#cs-viewer');
-  const cs = getComputedStyle(document.documentElement);
+  const probe = document.createElement('i'); probe.hidden = true; document.body.append(probe);
+  const colour = (name) => { probe.style.color = `var(${name})`; return getComputedStyle(probe).color; };
   const tok = { paper: '--paper', paper2: '--paper-2', ink: '--ink', soft: '--ink-soft', faint: '--ink-faint', line: '--line',
     accent: '--accent', red: '--red', redHatch: '--red-hatch', green: '--green', halo: '--halo' };
   return {
-    tokens: Object.fromEntries(Object.entries(tok).map(([k, v]) => [k, cs.getPropertyValue(v).trim()])),
+    tokens: Object.fromEntries(Object.entries(tok).map(([k, v]) => [k, colour(v)])),
     M: JSON.parse(document.querySelector('#cs-city').textContent).M,
     factors: Object.fromEntries(mv.model.materials.filter((m) => m.name !== 'Default').map((m) => [m.name, m.pbrMetallicRoughness.baseColorFactor])),
   };
 });
+const oklchRgb = (L, C, H) => {
+  const a = C * Math.cos((H * Math.PI) / 180), b = C * Math.sin((H * Math.PI) / 180);
+  const l_ = (L + 0.3963377774 * a + 0.2158037573 * b) ** 3, m_ = (L - 0.1055613458 * a - 0.0638541728 * b) ** 3, s_ = (L - 0.0894841775 * a - 1.291485548 * b) ** 3;
+  return [4.0767416621 * l_ - 3.3077115913 * m_ + 0.2309699292 * s_, -1.2684380046 * l_ + 2.6097574011 * m_ - 0.3413193965 * s_, -0.0041960863 * l_ - 0.7034186147 * m_ + 1.707614701 * s_]
+    .map((c) => Math.min(1, Math.max(0, c)));
+};
+// a computed colour as linear rgb: rgb(), oklch() or #rrggbb, the alpha dropped
 const tokenRgb = (v) => {
-  const m = /^rgba?\(\s*([\d.]+)[\s,]+([\d.]+)[\s,]+([\d.]+)/.exec(v);
+  let m = /^rgba?\(\s*([\d.]+)[\s,]+([\d.]+)[\s,]+([\d.]+)/.exec(v);
   if (m) return [m[1], m[2], m[3]].map((c) => lin(Number(c) / 255));
+  m = /^oklch\(\s*([\d.]+)(%?)\s+([\d.]+)\s+([\d.]+|none)/.exec(v);
+  if (m) return oklchRgb(Number(m[1]) / (m[2] ? 100 : 1), Number(m[3]), m[4] === 'none' ? 0 : Number(m[4]));
   return [1, 3, 5].map((i) => lin(parseInt(v.slice(i, i + 2), 16) / 255));
 };
 const paletteOf = (tokens) => {
@@ -266,7 +276,7 @@ try {
     const after = await page.evaluate(() => ({
       pinned: window.__cityScene.pinned(), panel: window.__cityScene.panel(),
       frame: document.querySelector('#cs-viewer').model.getMaterialByName('frame-2').pbrMetallicRoughness.baseColorFactor,
-      accent: getComputedStyle(document.documentElement).getPropertyValue('--accent').trim(),
+      accent: ((p) => { p.hidden = true; document.body.append(p); p.style.color = 'var(--accent)'; return getComputedStyle(p).color; })(document.createElement('i')),
     }));
     const accent = tokenRgb(after.accent);
     check(after.pinned === 2 && after.panel.includes('ui-router-server'), 'a pin click pins its member, ?focus=2, and the panel reads it');

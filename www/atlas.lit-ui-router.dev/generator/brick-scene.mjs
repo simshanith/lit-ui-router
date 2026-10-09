@@ -109,11 +109,11 @@ ${frameCss('bk', 'bk-read', ['stage', 'bar', 'read'])}
   --poster-color: transparent; --progress-bar-color: var(--accent); }
 .bk .bk-bar { border-block-end: 1.5px solid var(--ink); }
 .bk-bar .lg i.sw { display: block; width: 20px; height: 12px; border: 1.2px solid var(--ink); }
-.bk-bar .lg i.sw-brick { background: linear-gradient(90deg, #D8A33A, #D8A33A 33%, #5B8E4B 33%, #5B8E4B 66%, #4C86C6 66%); }
-.bk-bar .lg i.sw-stud { background: #2E5077; border-radius: 50%; width: 14px; }
-.bk-bar .lg i.sw-seat { background: #A63D2F; border-radius: 50%; width: 14px; }
-.bk-bar .lg i.sw-ghost { background: rgba(241, 240, 231, 0.45); border-style: dashed; }
-.bk-bar .lg i.sw-ground { background: #E9E8DD; height: 7px; }
+.bk-bar .lg i.sw-brick { background: linear-gradient(90deg, oklch(74.7% 0.133 80.8), oklch(74.7% 0.133 80.8) 33%, oklch(59.4% 0.111 138.6) 33%, oklch(59.4% 0.111 138.6) 66%, oklch(60.9% 0.115 252.3) 66%); }
+.bk-bar .lg i.sw-stud { background: oklch(42.4% 0.077 253.0); border-radius: 50%; width: 14px; }
+.bk-bar .lg i.sw-seat { background: oklch(50.5% 0.141 30.3); border-radius: 50%; width: 14px; }
+.bk-bar .lg i.sw-ghost { background: oklch(95.3% 0.012 101.5 / 0.45); border-style: dashed; }
+.bk-bar .lg i.sw-ground { background: oklch(92.9% 0.015 102.5); height: 7px; }
 .bk-ctl .grp { display: inline-flex; flex-wrap: wrap; gap: 6px; }
 @media (max-width: 560px) { .bk-ctl .touch { white-space: normal; } }
 .bk-ctl button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
@@ -331,8 +331,7 @@ const BODY = `${FOCUS_JS}${MV_JS}  var mv = root.querySelector('#bk-viewer');
   // the plates and ground wear the page's paper and the edges its ink, in either theme
   var TINT = [['cap', '--paper'], ['flank', '--paper-2'], ['edge', '--ink'], ['ghost-cap', '--paper', 0.45], ['ghost-flank', '--paper-2', 0.45], ['ghost-edge', '--ink', 0.45]];
   function tint() {
-    var cs = getComputedStyle(document.documentElement);
-    return paint(mv, TINT.map(function (row) { return [row[0], tokenRgb(cs.getPropertyValue(row[1])), row[2]]; }));
+    return paint(mv, TINT.map(function (row) { return [row[0], tokenRgb(tokColor(row[1])), row[2]]; }));
   }
   var themeOff = onTheme(tint, on);
 

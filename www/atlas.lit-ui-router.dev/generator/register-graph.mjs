@@ -15,7 +15,7 @@
 import { readFileSync } from 'node:fs';
 import { LANE_KEYS_JS, LANE_TOUCH_JS, PLATE_FOCUS_JS } from './focus.mjs';
 import { glyph } from './icons.mjs';
-import { basisStrip, laneCss, laneHints } from './lane-chrome.mjs';
+import { basisStrip, laneCss, laneHints, LANE_TOK_JS } from './lane-chrome.mjs';
 import { PALETTES } from './sprites.mjs';
 import { CYTOSCAPE_URL } from './pipeline-graph.mjs';
 
@@ -223,10 +223,10 @@ $$FOCUS  // The cytoscape tag is deferred; deferred scripts run BEFORE DOMConten
     if (t) return t === 'dark';
     return window.matchMedia('(prefers-color-scheme: dark)').matches;
   }
-  function tok(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+${LANE_TOK_JS}
   function pal() {
-    return { ink: tok('--ink'), soft: tok('--ink-soft'), faint: tok('--ink-faint'), accent: tok('--accent'),
-      paper: tok('--paper'), paper2: tok('--paper-2'), line: tok('--edge'), red: tok('--red'),
+    return { ink: col('--ink'), soft: col('--ink-soft'), faint: col('--ink-faint'), accent: col('--accent'),
+      paper: col('--paper'), paper2: col('--paper-2'), line: col('--edge'), red: col('--red'),
       data: tok('--data') || '"Barlow Semi Condensed", sans-serif' };
   }
   var skins = function () { return L.skins[dark() ? 'dark' : 'light']; };

@@ -8,64 +8,29 @@
 <meta name="description" content="A drawing set over thirteen altitudes: the lit-ui-router codebase and its ecosystems, each altitude in the form it earns.">
 <style>
 :root {
-  --ground: #E6E6DA;
-  --paper: #F1F0E7;
-  --paper-2: #E9E8DD;
-  --ink: #2B302C;
-  --ink-soft: #5C6259;
-  --ink-faint: #626760;
-  --line: #C6C8B6;
-  --edge: #A9AB99;
-  --accent: #2E5077;
-  --accent-soft: #6E88A6;
-  --red: #A63D2F;
-  --red-hatch: #A63D2F;
-  --green: #4C6B51;
-  --halo: rgba(46, 80, 119, 0.10);
+  color-scheme: light dark;
+  --ground: light-dark(oklch(92.2% 0.016 106.7), oklch(22.3% 0.054 258.1));
+  --paper: light-dark(oklch(95.3% 0.012 101.5), oklch(28.8% 0.077 258.1));
+  --paper-2: light-dark(oklch(92.9% 0.015 102.5), oklch(24.2% 0.065 259.0));
+  --ink: light-dark(oklch(30.3% 0.010 151.5), oklch(91.9% 0.023 248.1));
+  --ink-soft: light-dark(oklch(48.8% 0.016 135.0), oklch(72.8% 0.049 255.4));
+  --ink-faint: light-dark(oklch(50.7% 0.012 136.6), oklch(67.6% 0.057 255.5));
+  --line: light-dark(oklch(82.6% 0.025 112.1), oklch(37.2% 0.082 258.1));
+  --edge: light-dark(oklch(73.5% 0.025 112.2), oklch(41.7% 0.088 259.4));
+  --accent: light-dark(oklch(42.4% 0.077 253.0), oklch(77.9% 0.081 248.9));
+  --accent-soft: light-dark(oklch(61.8% 0.055 252.3), oklch(60.3% 0.087 253.0));
+  /* fills keep the red red; in the dark the salmon survives as the hatch stroke */
+  --red: light-dark(oklch(50.5% 0.141 30.3), oklch(65.5% 0.142 33.2));
+  --red-hatch: light-dark(oklch(50.5% 0.141 30.3), oklch(72.4% 0.114 39.2));
+  --green: light-dark(oklch(49.6% 0.055 149.0), oklch(73.8% 0.069 152.0));
+  --halo: light-dark(color-mix(in oklch, var(--accent) 10%, transparent), color-mix(in oklch, var(--accent) 12%, transparent));
   /* Annotation grey and the Cherokee-red chop. Declared for the whole set;
      read today only by the type specimen (app/src/specimen.ts). */
-  --pencil: #7B8078;
-  --cherokee: #9E3A2B;
+  --pencil: light-dark(oklch(59.3% 0.013 133.4), oklch(66.9% 0.057 255.5));
+  --cherokee: light-dark(oklch(48.7% 0.136 31.0), oklch(67.1% 0.144 32.5));
 }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --ground: #0A1B34;
-    --paper: #102A50;
-    --paper-2: #0B1F3E;
-    --ink: #D9E6F3;
-    --ink-soft: #93A9C6;
-    --ink-faint: #8099BA;
-    --line: #23406B;
-    --edge: #2E4C7C;
-    --accent: #8FBCE9;
-    --accent-soft: #5B84B4;
-    /* fills keep the red red; the salmon survives as the hatch stroke */
-    --red: #D96C55;
-    --red-hatch: #E38C6F;
-    --green: #8AB795;
-    --halo: rgba(143, 188, 233, 0.12);
-    --pencil: #7E97B8;
-    --cherokee: #E0705A;
-  }
-}
-:root[data-theme="dark"] {
-  --ground: #0A1B34;
-  --paper: #102A50;
-  --paper-2: #0B1F3E;
-  --ink: #D9E6F3;
-  --ink-soft: #93A9C6;
-  --ink-faint: #8099BA;
-  --line: #23406B;
-  --edge: #2E4C7C;
-  --accent: #8FBCE9;
-  --accent-soft: #5B84B4;
-  --red: #D96C55;
-  --red-hatch: #E38C6F;
-  --green: #8AB795;
-  --halo: rgba(143, 188, 233, 0.12);
-  --pencil: #7E97B8;
-  --cherokee: #E0705A;
-}
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"] { color-scheme: dark; }
 
 *, *::before, *::after { box-sizing: border-box; min-width: 0; margin: 0; }
 :root {
@@ -1068,9 +1033,21 @@ a { color: var(--accent); }
     return window.matchMedia('(prefers-color-scheme: dark)').matches;
   }
   function tok(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+  function col(name) {
+    var el = document.getElementById('tok-probe');
+    if (!el) { el = document.createElement('i'); el.id = 'tok-probe'; el.hidden = true; document.body.appendChild(el); }
+    el.style.color = 'var(' + name + ')';
+    var v = getComputedStyle(el).color, m = /^oklch\(\s*([\d.]+)(%?)\s+([\d.]+)\s+([\d.]+|none)/.exec(v);
+    if (!m) return v;
+    var L = Number(m[1]) / (m[2] ? 100 : 1), C = Number(m[3]), H = m[4] === 'none' ? 0 : Number(m[4]) * Math.PI / 180;
+    var a = C * Math.cos(H), b = C * Math.sin(H);
+    var l_ = Math.pow(L + 0.3963377774 * a + 0.2158037573 * b, 3), m_ = Math.pow(L - 0.1055613458 * a - 0.0638541728 * b, 3), s_ = Math.pow(L - 0.0894841775 * a - 1.291485548 * b, 3);
+    return 'rgb(' + [4.0767416621 * l_ - 3.3077115913 * m_ + 0.2309699292 * s_, -1.2684380046 * l_ + 2.6097574011 * m_ - 0.3413193965 * s_, -0.0041960863 * l_ - 0.7034186147 * m_ + 1.707614701 * s_]
+      .map(function (c) { c = Math.min(1, Math.max(0, c)); return Math.round((c <= 0.0031308 ? 12.92 * c : 1.055 * Math.pow(c, 1 / 2.4) - 0.055) * 255); }).join(', ') + ')';
+  }
   function pal() {
-    return { ink: tok('--ink'), soft: tok('--ink-soft'), faint: tok('--ink-faint'), accent: tok('--accent'),
-      paper: tok('--paper'), paper2: tok('--paper-2'), line: tok('--edge'), red: tok('--red'),
+    return { ink: col('--ink'), soft: col('--ink-soft'), faint: col('--ink-faint'), accent: col('--accent'),
+      paper: col('--paper'), paper2: col('--paper-2'), line: col('--edge'), red: col('--red'),
       data: tok('--data') || '"Barlow Semi Condensed", sans-serif' };
   }
   var skins = function () { return L.skins[dark() ? 'dark' : 'light']; };
@@ -3298,9 +3275,21 @@ excerpt and every count are the plate's.</p>
     return window.matchMedia('(prefers-color-scheme: dark)').matches;
   }
   function tok(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+  function col(name) {
+    var el = document.getElementById('tok-probe');
+    if (!el) { el = document.createElement('i'); el.id = 'tok-probe'; el.hidden = true; document.body.appendChild(el); }
+    el.style.color = 'var(' + name + ')';
+    var v = getComputedStyle(el).color, m = /^oklch\(\s*([\d.]+)(%?)\s+([\d.]+)\s+([\d.]+|none)/.exec(v);
+    if (!m) return v;
+    var L = Number(m[1]) / (m[2] ? 100 : 1), C = Number(m[3]), H = m[4] === 'none' ? 0 : Number(m[4]) * Math.PI / 180;
+    var a = C * Math.cos(H), b = C * Math.sin(H);
+    var l_ = Math.pow(L + 0.3963377774 * a + 0.2158037573 * b, 3), m_ = Math.pow(L - 0.1055613458 * a - 0.0638541728 * b, 3), s_ = Math.pow(L - 0.0894841775 * a - 1.291485548 * b, 3);
+    return 'rgb(' + [4.0767416621 * l_ - 3.3077115913 * m_ + 0.2309699292 * s_, -1.2684380046 * l_ + 2.6097574011 * m_ - 0.3413193965 * s_, -0.0041960863 * l_ - 0.7034186147 * m_ + 1.707614701 * s_]
+      .map(function (c) { c = Math.min(1, Math.max(0, c)); return Math.round((c <= 0.0031308 ? 12.92 * c : 1.055 * Math.pow(c, 1 / 2.4) - 0.055) * 255); }).join(', ') + ')';
+  }
   function pal() {
-    return { ink: tok('--ink'), soft: tok('--ink-soft'), faint: tok('--ink-faint'), accent: tok('--accent'),
-      paper: tok('--paper'), paper2: tok('--paper-2'), line: tok('--edge'), red: tok('--red'),
+    return { ink: col('--ink'), soft: col('--ink-soft'), faint: col('--ink-faint'), accent: col('--accent'),
+      paper: col('--paper'), paper2: col('--paper-2'), line: col('--edge'), red: col('--red'),
       data: tok('--data') || '"Barlow Semi Condensed", sans-serif' };
   }
   var sprites = function () { return L.sprites[dark() ? 'dark' : 'light']; };
@@ -10285,9 +10274,21 @@ excerpt and every count are the plate's.</p>
     return window.matchMedia('(prefers-color-scheme: dark)').matches;
   }
   function tok(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+  function col(name) {
+    var el = document.getElementById('tok-probe');
+    if (!el) { el = document.createElement('i'); el.id = 'tok-probe'; el.hidden = true; document.body.appendChild(el); }
+    el.style.color = 'var(' + name + ')';
+    var v = getComputedStyle(el).color, m = /^oklch\(\s*([\d.]+)(%?)\s+([\d.]+)\s+([\d.]+|none)/.exec(v);
+    if (!m) return v;
+    var L = Number(m[1]) / (m[2] ? 100 : 1), C = Number(m[3]), H = m[4] === 'none' ? 0 : Number(m[4]) * Math.PI / 180;
+    var a = C * Math.cos(H), b = C * Math.sin(H);
+    var l_ = Math.pow(L + 0.3963377774 * a + 0.2158037573 * b, 3), m_ = Math.pow(L - 0.1055613458 * a - 0.0638541728 * b, 3), s_ = Math.pow(L - 0.0894841775 * a - 1.291485548 * b, 3);
+    return 'rgb(' + [4.0767416621 * l_ - 3.3077115913 * m_ + 0.2309699292 * s_, -1.2684380046 * l_ + 2.6097574011 * m_ - 0.3413193965 * s_, -0.0041960863 * l_ - 0.7034186147 * m_ + 1.707614701 * s_]
+      .map(function (c) { c = Math.min(1, Math.max(0, c)); return Math.round((c <= 0.0031308 ? 12.92 * c : 1.055 * Math.pow(c, 1 / 2.4) - 0.055) * 255); }).join(', ') + ')';
+  }
   function pal() {
-    return { ink: tok('--ink'), soft: tok('--ink-soft'), faint: tok('--ink-faint'), accent: tok('--accent'),
-      paper: tok('--paper'), paper2: tok('--paper-2'), line: tok('--edge'), red: tok('--red'),
+    return { ink: col('--ink'), soft: col('--ink-soft'), faint: col('--ink-faint'), accent: col('--accent'),
+      paper: col('--paper'), paper2: col('--paper-2'), line: col('--edge'), red: col('--red'),
       data: tok('--data') || '"Barlow Semi Condensed", sans-serif' };
   }
   var skins = function () { return L.skins[dark() ? 'dark' : 'light']; };
@@ -12023,9 +12024,21 @@ colours; the Lucide glyphs (ISC, restroked) that mark the lane's controls and pa
     return window.matchMedia('(prefers-color-scheme: dark)').matches;
   }
   function tok(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+  function col(name) {
+    var el = document.getElementById('tok-probe');
+    if (!el) { el = document.createElement('i'); el.id = 'tok-probe'; el.hidden = true; document.body.appendChild(el); }
+    el.style.color = 'var(' + name + ')';
+    var v = getComputedStyle(el).color, m = /^oklch\(\s*([\d.]+)(%?)\s+([\d.]+)\s+([\d.]+|none)/.exec(v);
+    if (!m) return v;
+    var L = Number(m[1]) / (m[2] ? 100 : 1), C = Number(m[3]), H = m[4] === 'none' ? 0 : Number(m[4]) * Math.PI / 180;
+    var a = C * Math.cos(H), b = C * Math.sin(H);
+    var l_ = Math.pow(L + 0.3963377774 * a + 0.2158037573 * b, 3), m_ = Math.pow(L - 0.1055613458 * a - 0.0638541728 * b, 3), s_ = Math.pow(L - 0.0894841775 * a - 1.291485548 * b, 3);
+    return 'rgb(' + [4.0767416621 * l_ - 3.3077115913 * m_ + 0.2309699292 * s_, -1.2684380046 * l_ + 2.6097574011 * m_ - 0.3413193965 * s_, -0.0041960863 * l_ - 0.7034186147 * m_ + 1.707614701 * s_]
+      .map(function (c) { c = Math.min(1, Math.max(0, c)); return Math.round((c <= 0.0031308 ? 12.92 * c : 1.055 * Math.pow(c, 1 / 2.4) - 0.055) * 255); }).join(', ') + ')';
+  }
   function pal() {
-    return { ink: tok('--ink'), soft: tok('--ink-soft'), faint: tok('--ink-faint'), accent: tok('--accent'),
-      paper: tok('--paper'), paper2: tok('--paper-2'), line: tok('--edge'), red: tok('--red'),
+    return { ink: col('--ink'), soft: col('--ink-soft'), faint: col('--ink-faint'), accent: col('--accent'),
+      paper: col('--paper'), paper2: col('--paper-2'), line: col('--edge'), red: col('--red'),
       data: tok('--data') || '"Barlow Semi Condensed", sans-serif' };
   }
   var sprites = function () { return L.sprites[dark() ? 'dark' : 'light']; };

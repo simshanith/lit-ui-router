@@ -256,8 +256,8 @@ const BODY = `${FOCUS_JS}${MV_JS}  ${DRESS_JS}
   var TOK = { paper: '--paper', paper2: '--paper-2', ink: '--ink', soft: '--ink-soft', faint: '--ink-faint',
     line: '--line', accent: '--accent', red: '--red', redHatch: '--red-hatch', green: '--green', halo: '--halo' };
   function palette() {
-    var cs = getComputedStyle(document.documentElement), c = { black: [0, 0, 0] };
-    Object.keys(TOK).forEach(function (k) { c[k] = tokenRgb(cs.getPropertyValue(TOK[k])); });
+    var c = { black: [0, 0, 0] };
+    Object.keys(TOK).forEach(function (k) { c[k] = tokenRgb(tokColor(TOK[k])); });
     c.redHatch = c.redHatch || c.red;
     c.green = c.green || c.accent;
     // --halo is an rgba: its colour rides alone, the depth comes from D.M.lit's own factors

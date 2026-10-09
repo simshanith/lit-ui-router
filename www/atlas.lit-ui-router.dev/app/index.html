@@ -37,17 +37,10 @@
     <style>
       /* The app chrome. Everything below leans on the tokens atlas.css
          declares, so the index reads as part of the drawing set. */
-      /* the reset is atlas.css's; this repeats its eases and adds the colour scheme */
+      /* the reset and the colour scheme are atlas.css's; this repeats its eases */
       :root {
         --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
         --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
-        color-scheme: light dark;
-      }
-      :root[data-theme='light'] {
-        color-scheme: light;
-      }
-      :root[data-theme='dark'] {
-        color-scheme: dark;
       }
       body {
         padding: 0;

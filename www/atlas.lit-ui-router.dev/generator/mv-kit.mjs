@@ -12,7 +12,7 @@ export const pinCss = (cls, size, font) => `
 .${cls} { width: ${size}px; height: ${size}px; border-radius: 50%; border: 2px solid var(--hue, var(--ink)); background: var(--paper);
   color: var(--ink); font-family: var(--data); font-size: ${font}px; font-weight: 600; padding: 0; cursor: pointer;
   display: grid; place-items: center; }
-.${cls}.on { background: var(--hue, var(--accent)); color: #F1F0E7; }
+.${cls}.on { background: var(--hue, var(--accent)); color: oklch(95.3% 0.012 101.5); }
 .${cls}:focus-visible { outline: max(2px, 0.08em) solid var(--accent); outline-offset: 0.25em; }
 .${cls}:active { transform: scale(0.97); }
 @media (prefers-reduced-motion: no-preference) { .${cls} { transition: opacity 0.3s, transform 160ms var(--ease-out, ease-out); } }`;
@@ -40,14 +40,37 @@ ${on(` .${p}-bar`)}, ${on(` .${read}`)} { border: 1.5px solid var(--ink); border
 };
 
 // The script pieces. Each is a run of function declarations, so a body can call them anywhere.
-export const MV_JS = `  // setBaseColorFactor takes linear values, so a token's sRGB bytes are linearised first
+export const MV_JS = `  // a token's colour as the page resolves it for its scheme: a probe element wears var(--name) and its computed colour is read back
+  function tokColor(name) {
+    var el = document.getElementById('tok-probe');
+    if (!el) { el = document.createElement('i'); el.id = 'tok-probe'; el.hidden = true; document.body.appendChild(el); }
+    el.style.color = 'var(' + name + ')';
+    return getComputedStyle(el).color;
+  }
+  // setBaseColorFactor takes linear values, so a colour's sRGB bytes are linearised first
   function lin(v) { return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }
-  // a colour token as linear rgb: #rrggbb, or rgb() and rgba() with the alpha dropped; null for anything else
+  function gam(v) { return v <= 0.0031308 ? 12.92 * v : 1.055 * Math.pow(v, 1 / 2.4) - 0.055; }
+  // a computed colour as linear rgb: #rrggbb, rgb()/rgba(), color(srgb …) or oklch() with the alpha dropped; null for anything else
   function tokenRgb(value) {
     var v = String(value).trim(), m = /^rgba?\\(\\s*([\\d.]+)[\\s,]+([\\d.]+)[\\s,]+([\\d.]+)/.exec(v);
     if (m) return [m[1], m[2], m[3]].map(function (c) { return lin(Number(c) / 255); });
+    m = /^color\\(srgb\\s+([\\d.]+)\\s+([\\d.]+)\\s+([\\d.]+)/.exec(v);
+    if (m) return [m[1], m[2], m[3]].map(function (c) { return lin(Number(c)); });
+    m = /^oklch\\(\\s*([\\d.]+)(%?)\\s+([\\d.]+)\\s+([\\d.]+|none)/.exec(v);
+    if (m) {
+      var L = Number(m[1]) / (m[2] ? 100 : 1), C = Number(m[3]), H = m[4] === 'none' ? 0 : Number(m[4]) * Math.PI / 180;
+      var a = C * Math.cos(H), b = C * Math.sin(H);
+      var l_ = Math.pow(L + 0.3963377774 * a + 0.2158037573 * b, 3), m_ = Math.pow(L - 0.1055613458 * a - 0.0638541728 * b, 3), s_ = Math.pow(L - 0.0894841775 * a - 1.291485548 * b, 3);
+      return [4.0767416621 * l_ - 3.3077115913 * m_ + 0.2309699292 * s_, -1.2684380046 * l_ + 2.6097574011 * m_ - 0.3413193965 * s_, -0.0041960863 * l_ - 0.7034186147 * m_ + 1.707614701 * s_]
+        .map(function (c) { return Math.min(1, Math.max(0, c)); });
+    }
     if (!/^#[0-9a-fA-F]{6}$/.test(v)) return null;
     return [1, 3, 5].map(function (i) { return lin(parseInt(v.slice(i, i + 2), 16) / 255); });
+  }
+  // the same colour as an rgb() string, for a consumer that reads only legacy colour syntax
+  function tokenCss(value) {
+    var c = tokenRgb(value);
+    return c ? 'rgb(' + c.map(function (v) { return Math.round(gam(v) * 255); }).join(', ') + ')' : String(value).trim();
   }
   // rows of [material, linear rgb, alpha]; a material only an inactive variant or a line wears loads lazily
   function paint(mv, rows) {
