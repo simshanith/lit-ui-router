@@ -443,6 +443,8 @@ ${LANE_TOK_JS}
     show(callout);
     push();
   });
+  // the panel paints at rest first: the prerendered page ran this script once before cytoscape arrived
+  walkTo(0);
   apply(atlasFocusHost(stage, apply));
 
   function repaint() {

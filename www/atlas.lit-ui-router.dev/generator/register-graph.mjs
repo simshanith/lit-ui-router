@@ -452,6 +452,7 @@ ${LANE_TOK_JS}
     document.getElementById('rg-hint').innerHTML = shroud ? L.hintShroud : L.hintReal;
   }
   box.addEventListener('change', function (e) { setShroud(e.target.checked); });
+  show(null);
   apply(atlasFocusHost(stage, apply));
   atlasLaneKeys(stage, function () { return cy.nodes('.cell:visible'); }, function () { return pinned; }, steer);
   atlasLaneTouch(stage, cy, function () { cy.fit(cy.elements(':visible').not('.rowtag'), 26); });

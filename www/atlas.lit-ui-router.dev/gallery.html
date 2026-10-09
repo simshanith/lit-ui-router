@@ -1250,6 +1250,8 @@ a { color: var(--accent); }
     show(callout);
     push();
   });
+  // the panel paints at rest first: the prerendered page ran this script once before cytoscape arrived
+  walkTo(0);
   apply(atlasFocusHost(stage, apply));
 
   function repaint() {
@@ -10514,6 +10516,7 @@ excerpt and every count are the plate's.</p>
     document.getElementById('rg-hint').innerHTML = shroud ? L.hintShroud : L.hintReal;
   }
   box.addEventListener('change', function (e) { setShroud(e.target.checked); });
+  show(null);
   apply(atlasFocusHost(stage, apply));
   atlasLaneKeys(stage, function () { return cy.nodes('.cell:visible'); }, function () { return pinned; }, steer);
   atlasLaneTouch(stage, cy, function () { cy.fit(cy.elements(':visible').not('.rowtag'), 26); });
