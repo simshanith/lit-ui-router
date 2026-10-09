@@ -188,6 +188,15 @@ describe('format', () => {
     assert.equal(format(compile('/x/:id', params(true)), { id: '7' }), '/x/7');
   });
 
+  it('squashes a date default by calendar day', () => {
+    const matcher = compile('/x/{d:date}', {
+      params: { d: { value: new Date(2024, 0, 2), squash: true } },
+    });
+
+    assert.equal(format(matcher, { d: new Date(2024, 0, 2, 15) }), '/x');
+    assert.equal(format(matcher, { d: new Date(2024, 0, 3) }), '/x/2024-01-03');
+  });
+
   it('omits absent search params and appends a hash fragment', () => {
     const matcher = compile('/search?q&r');
     assert.equal(format(matcher, {}), '/search');
