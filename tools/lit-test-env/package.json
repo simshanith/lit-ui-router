@@ -2,9 +2,10 @@
   "name": "@tools/lit-test-env",
   "version": "0.0.1",
   "private": true,
-  "description": "vitest.setup knowledge shared by every lit suite: the dev-mode banner suppression and the lit2-compat major assertion, minus the lit import itself",
+  "description": "Spec knowledge shared by every lit suite: vitest.setup helpers and router spec helpers, minus the lit import itself",
   "type": "module",
   "exports": {
+    "./router.ts": "./src/router.ts",
     "./setup.ts": "./src/setup.ts"
   },
   "scripts": {

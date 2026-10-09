@@ -1,7 +1,13 @@
 import * as mobx from 'mobx';
-import { LitElement } from 'lit';
 import { memoryLocationPlugin } from '@uirouter/core';
 import { UIRouterLit, LitStateDeclaration } from 'lit-ui-router';
+
+export {
+  routerGo,
+  testStates,
+  tick,
+  waitForUpdate,
+} from '@tools/lit-test-env/router.ts';
 
 /**
  * Structural comparer for `options.equals`, resolved across mobx majors:
@@ -33,40 +39,4 @@ export function createTestRouter(
   router.plugin(memoryLocationPlugin);
   states.forEach((state) => router.stateRegistry.register(state));
   return router;
-}
-
-/**
- * States shared by the specs.
- */
-export const testStates: LitStateDeclaration[] = [
-  { name: 'a', url: '/a' },
-  { name: 'b', url: '/b/:id' },
-  { name: 'b.child', url: '/child' },
-];
-
-/**
- * Navigates to a state and waits for the transition to complete.
- */
-export async function routerGo(
-  router: UIRouterLit,
-  state: string,
-  params?: Record<string, unknown>,
-): Promise<void> {
-  await router.stateService.go(state, params);
-  await tick();
-}
-
-/**
- * Wait for microtasks and pending promises to flush.
- */
-export function tick(ms = 0): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-/**
- * Waits for a LitElement to complete its update cycle.
- */
-export async function waitForUpdate(element: LitElement): Promise<void> {
-  await element.updateComplete;
-  await tick();
 }
