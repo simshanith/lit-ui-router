@@ -203,8 +203,8 @@
         cursor: pointer;
         user-select: none;
         font-family: var(--data);
-        font-size: 10px;
-        letter-spacing: 0.14em;
+        font-size: 11px;
+        letter-spacing: 0.06em;
         color: var(--ink-soft);
         padding-block: 8px 7px;
         padding-inline: 16px;
@@ -225,12 +225,17 @@
       }
       .rail-band > summary .n {
         min-width: 34px;
+        color: var(--accent);
         font-weight: 600;
-        letter-spacing: 0.06em;
         font-variant-numeric: tabular-nums;
       }
+      /* the same face as the entries beneath, so the rail reads in one voice */
       .rail-band > summary .t {
         flex: 1;
+        font-family: var(--title);
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
       }
       /* the caret: a drawn chevron, right when shut, down when open */
       .rail-band > summary::after {
