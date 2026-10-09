@@ -513,3 +513,8 @@ api-docs {
     inset-inline-start: 0.5em;
   }
 }
+
+/* route headings take focus from script only; a ring would read as a control */
+main h1[tabindex='-1']:focus {
+  outline: none;
+}

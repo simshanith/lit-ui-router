@@ -30,6 +30,7 @@ const welcomeState = {
   name: 'welcome',
   url: '/welcome',
   component: Welcome,
+  data: { title: 'Welcome' },
 };
 
 /**
@@ -42,6 +43,7 @@ const homeState = {
   name: 'home',
   url: '/home',
   component: Home,
+  data: { title: 'Home' },
 };
 
 /**
@@ -56,6 +58,7 @@ const loginState = {
   name: 'login',
   url: '/login',
   component: Login,
+  data: { title: 'Log in' },
   resolve: [
     {
       token: 'returnTo',
@@ -104,6 +107,7 @@ export const notFoundState = {
   parent: 'app',
   name: 'notFound',
   params: { attemptedPath: null },
+  data: { title: 'Page not found' },
   resolve: [
     {
       token: 'attemptedPath',

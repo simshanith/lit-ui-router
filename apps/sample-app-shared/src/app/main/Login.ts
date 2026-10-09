@@ -60,7 +60,7 @@ export class Login extends LitElement {
   render() {
     return html` <div class="container">
       <div class="col-md-6 col-md-offset-3 col-sm-8 col-sm-offset-2">
-        <h1 class="h3">Log In</h1>
+        <h1 class="h3" tabindex="-1">Log In</h1>
         <p>
           (This login screen is for demonstration only... just pick a username,
           enter 'password' and click <b>"Log in"</b>)

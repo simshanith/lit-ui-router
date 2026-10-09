@@ -13,7 +13,7 @@ export interface NotFoundResolves {
  */
 export default (props: UIViewInjectedProps<NotFoundResolves>) =>
   html`<div class="container-fluid not-found">
-    <h1 class="h3">404 Page Not Found</h1>
+    <h1 class="h3" tabindex="-1">404 Page Not Found</h1>
     <p>
       No state matched the URL <code>${props.resolves.attemptedPath}</code>.
     </p>

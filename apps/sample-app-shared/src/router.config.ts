@@ -18,6 +18,7 @@ import { shellMounts } from 'sample-app-routes/shell-mounts';
 
 import appStates from './app/main/states.js';
 import reqAuthHook from './app/global/requiresAuth.hook.js';
+import routeFocusHook from './app/global/routeFocus.hook.js';
 import googleAnalyticsHook from './app/util/ga.js';
 import {
   featureFlags,
@@ -54,6 +55,8 @@ const locationPluginConfig = {
           );
           return Promise.resolve();
         },
+        // the default resets focus to <body>; routeFocus.hook places it
+        focusReset: 'manual',
       }),
     },
   },
@@ -165,6 +168,7 @@ export function configureRouter(router = new UIRouterLit()) {
     reqAuthHook.callback,
     { priority: 10 },
   );
+  routeFocusHook(router.transitionService);
   googleAnalyticsHook(router.transitionService);
 
   router.start();

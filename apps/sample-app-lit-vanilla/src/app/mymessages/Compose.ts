@@ -149,7 +149,7 @@ export class Compose extends LitElement {
   render() {
     const { message } = this;
     return html`<div class="compose">
-      <h1 class="sr-only">New Message</h1>
+      <h1 class="sr-only" tabindex="-1">New Message</h1>
       <div class="header">
         <div class="flex-h">
           <label for="to">Recipient</label>
