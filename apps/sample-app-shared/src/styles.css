@@ -226,8 +226,9 @@ api-docs {
   text-decoration: none;
   font-size: small;
 }
+/* bootstrap's btn-primary blue, so selection matches the buttons; white text on it is 4.56:1 */
 .selectlist .selected {
-  background-color: royalblue;
+  background-color: #337ab7;
 }
 .selectlist .selected a,
 .selectlist a.selected {
@@ -303,12 +304,12 @@ api-docs {
 }
 
 .messagelist i.fa-circle {
-  color: royalblue;
+  color: #337ab7;
   font-size: 50%;
 }
 
 .messagelist table tr.active {
-  background-color: royalblue;
+  background-color: #337ab7;
   color: white;
 }
 
