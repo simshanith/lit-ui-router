@@ -102,7 +102,8 @@ export const BRICKS_META = {
 
 const CSS = `
 ${frameCss('bk', 'bk-read', ['stage', 'bar', 'read'])}
-.bk-stage { border: 1.5px solid var(--ink); border-block-end: none; }
+/* the lane chrome lays a stage out as two columns; the viewer takes the whole stage */
+.bk-stage { display: block; border: 1.5px solid var(--ink); border-block-end: none; }
 .bk-stage:focus-within { outline: max(2px, 0.08em) solid var(--accent); outline-offset: -2px; }
 .bk-view { display: block; width: 100%; height: clamp(460px, 64vh, 920px);
   background: radial-gradient(ellipse 70% 60% at 50% 42%, var(--paper) 0%, var(--paper-2) 58%, var(--ground) 100%);
