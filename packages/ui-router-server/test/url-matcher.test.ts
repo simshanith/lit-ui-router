@@ -122,6 +122,26 @@ describe('explicit rejections (fail at compile, never diverge silently)', () => 
     );
   });
 
+  it('resolves built-in type names from own keys only', () => {
+    for (const name of ['constructor', 'toString', '__proto__']) {
+      assert.throws(
+        () => compile('/a/:x', { params: { x: { type: name } } }),
+        new RegExp(`Unknown type '${name}'`),
+      );
+      assert.deepEqual(
+        exec(
+          compile('/a/{x:string}', { params: { x: { type: name } } }),
+          '/a/v',
+        ),
+        { x: 'v' },
+      );
+      // An unknown inline name is a raw regexp.
+      assert.deepEqual(exec(compile(`/a/{x:${name}}`), `/a/${name}`), {
+        x: name,
+      });
+    }
+  });
+
   it('rejects invalid squash policies', () => {
     assert.throws(
       () => compile('/a/:x', { params: { x: { value: 'v', squash: 5 } } }),
