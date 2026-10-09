@@ -270,7 +270,7 @@ function stateClass(id: string) {
 .axis-caption {
   margin-top: 6px;
   font-size: 11px;
-  color: var(--vp-c-text-3);
+  color: var(--vp-c-text-2);
   text-align: right;
 }
 

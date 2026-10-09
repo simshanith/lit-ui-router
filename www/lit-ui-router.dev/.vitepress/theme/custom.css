@@ -87,6 +87,17 @@
   --vp-home-hero-image-height: 80%;
 }
 
+/* Brand tokens hold 4.5:1 for white button text and for brand link text. */
+:root:not(.dark) {
+  --vp-c-brand-3: #4a67ca;
+}
+
+.dark {
+  --vp-c-brand-2: #7a8cf0;
+  --vp-button-brand-hover-bg: #4f6ad0;
+  --vp-button-brand-active-bg: #3a5ccc;
+}
+
 .dark {
   --vp-home-hero-image-filter-hue-rotate: 180deg;
   --vp-home-hero-image-filter-invert: 1;
