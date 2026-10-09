@@ -32,6 +32,7 @@ import { parseArgs } from 'node:util';
 
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
 
+import { cf } from './cloudflare-api.ts';
 import {
   type DesiredWorker,
   type Trigger,
@@ -59,41 +60,6 @@ async function loadDesired(): Promise<DesiredWorker[]> {
       { cause: error },
     );
   }
-}
-
-const API_BASE = 'https://api.cloudflare.com/client/v4/accounts';
-
-type CloudflareEnvelope = {
-  success?: boolean;
-  errors?: { code?: number; message?: string }[];
-  result?: unknown;
-};
-
-// The token itself must never reach stdout/stderr — errors carry only the
-// API's own status and messages.
-async function cf(
-  token: string,
-  path: string,
-  init?: { method: 'PATCH'; body: unknown },
-): Promise<unknown> {
-  const response = await fetch(`${API_BASE}${path}`, {
-    method: init?.method ?? 'GET',
-    headers: {
-      authorization: `Bearer ${token}`,
-      ...(init ? { 'content-type': 'application/json' } : {}),
-    },
-    body: init ? JSON.stringify(init.body) : undefined,
-  });
-  const envelope = (await response.json()) as CloudflareEnvelope;
-  if (!response.ok || envelope.success === false) {
-    const details = (envelope.errors ?? [])
-      .map((error) => `${error.code ?? '?'}: ${error.message ?? '?'}`)
-      .join('; ');
-    throw new Error(
-      `Cloudflare API ${init?.method ?? 'GET'} ${path} failed (HTTP ${response.status})${details ? ` — ${details}` : ''}`,
-    );
-  }
-  return envelope.result;
 }
 
 async function workerTag(

@@ -3,10 +3,12 @@
 # single "workers-builds (triggers)" (README badges read them all via shields'
 # check-runs endpoint). All three answer "does the outside world still match
 # main?" — npm artifacts, peer ranges, and the Cloudflare deploy pipeline that
-# ships lit-ui-router.dev. action_required renders orange = a release, a
-# floor-bump, or a dashboard apply is owed; neutral renders grey = the check
-# could not reach a verdict. Never a CI failure — this job succeeds whatever
-# the signals say.
+# ships lit-ui-router.dev. One more, "pages-deploy (altitude-atlas)", sits on
+# the www/atlas head instead and asks whether atlas.lit-ui-router.dev serves
+# it. action_required renders orange = a release, a floor-bump, a dashboard
+# apply, or an atlas deploy is owed; neutral renders grey = the check could not
+# reach a verdict. Never a CI failure — this job succeeds whatever the signals
+# say.
 name: Release signals
 
 on:
@@ -41,10 +43,11 @@ on:
         # workflow, so the caller must pass it; absent = local cache only.
         required: false
       CLOUDFLARE_API_TOKEN:
-        # Read-scoped ("Workers Scripts: Read" for the name -> tag lookup plus
-        # "Workers Builds Configuration: Read"), USER-scoped —
-        # account-owned tokens don't cover the Builds triggers API. Absent =
-        # the workers-builds signal reports neutral (grey), never a failure.
+        # Read-scoped ("Workers Scripts: Read" for the name -> tag lookup,
+        # "Workers Builds Configuration: Read", and "Pages: Read" for the
+        # atlas deploy), USER-scoped — account-owned tokens don't cover the
+        # Builds triggers API. Absent = both Cloudflare signals report neutral
+        # (grey), never a failure.
         required: false
       CLOUDFLARE_ACCOUNT_ID:
         # A secret, not a var, so it stays out of public logs.
@@ -135,6 +138,18 @@ jobs:
       # phase stays unimplemented. Exits 0 on every path.
       - name: Workers Builds trigger check run
         run: mise run //tools/release:workers_builds_check_runs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      # Atlas deploy signal: the "pages-deploy (altitude-atlas)" check run,
+      # posted on the www/atlas head. The altitude-atlas Pages project takes
+      # direct uploads, so no push deploys it; success when its latest
+      # production deployment records the branch head, action_required when a
+      # deploy is owed, neutral when the check could not run. The weekly sweep
+      # and a dispatch after a deploy re-check it. Exits 0 on every path.
+      - name: Pages deploy check run
+        run: mise run //tools/release:pages_deploy_check_runs
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

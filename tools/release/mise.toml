@@ -135,6 +135,15 @@ run = "node src/checks/peer-floor-check-runs.ts"
 description = "Create the workers-builds trigger-drift check run (CD signal, non-gating)"
 run = "node src/checks/workers-builds-check-runs.ts"
 
+[tasks.pages_deploy_check_runs]
+# env: GH_TOKEN, GITHUB_REPOSITORY, CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID.
+# Altitude Atlas deploy signal: compares the altitude-atlas Pages project's
+# latest production deployment commit with the www/atlas head, reported as one
+# check run on that head. action_required when a deploy is owed, neutral when
+# the credential/API failed — never a job failure.
+description = "Create the altitude-atlas Pages deploy check run (deploy signal, non-gating)"
+run = "node src/checks/pages-deploy-check-runs.ts"
+
 [tasks.peer_floor_gate]
 # Tier-2 peer-floor gate: fails the bump of a package whose floor claim is
 # dishonest; no-ops for packages without the typecheck:peer-floor script.

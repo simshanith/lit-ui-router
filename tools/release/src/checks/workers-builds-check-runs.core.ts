@@ -12,14 +12,8 @@
 // share a colour with real drift. The IO (running the CLI, gh) lives in
 // ./workers-builds-check-runs.ts.
 
+import type { CliResult } from '../lib/run-cli.ts';
 import type { CheckRunPayload } from './publish-check-runs.core.ts';
-
-export type TriggerCheckResult = {
-  /** The CLI's exit code: 0 in sync, 1 drifted, 2 usage/API error. */
-  exitCode: number;
-  /** Combined stdout+stderr — the CLI's own report text. */
-  output: string;
-};
 
 /** The exact run name the README badge nameFilter must match. */
 export const WORKERS_BUILDS_CHECK_RUN_NAME = 'workers-builds (triggers)';
@@ -27,7 +21,8 @@ export const WORKERS_BUILDS_CHECK_RUN_NAME = 'workers-builds (triggers)';
 /** Checks API output.summary caps at 65535 chars; leave room for the framing. */
 const MAX_REPORT_CHARS = 60_000;
 
-function reportBlock(output: string): string[] {
+/** A CLI's report as a fenced block, clipped under the summary cap. */
+export function reportBlock(output: string): string[] {
   const text = output.trim();
   if (text === '') return [];
   const clipped =
@@ -39,7 +34,7 @@ function reportBlock(output: string): string[] {
 
 /** The CLI's verdict → its Checks API payload. */
 export function toWorkersBuildsCheckRun(
-  result: TriggerCheckResult,
+  result: CliResult,
   repo: string,
 ): CheckRunPayload {
   const name = WORKERS_BUILDS_CHECK_RUN_NAME;
