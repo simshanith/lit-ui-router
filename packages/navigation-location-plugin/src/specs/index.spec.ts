@@ -217,6 +217,39 @@ describe.skipIf(!hasNavigationAPI)(
         plugin.dispose?.(router);
       }
     });
+
+    it.each([
+      ['keeps focus where it was by default', undefined, 'link'],
+      [
+        'resets focus to body when the option asks for it',
+        'after-transition',
+        'body',
+      ],
+    ] as const)('%s', async (_, focusReset, expected) => {
+      service?.dispose(router);
+      service = null;
+      const link = document.createElement('a');
+      link.href = '#';
+      document.body.append(link);
+      const plugin = navigationLocationPlugin(
+        router,
+        focusReset ? { intercept: () => ({ focusReset }) } : {},
+      );
+      try {
+        link.focus();
+        expect(document.activeElement).toBe(link);
+
+        plugin.service.url('/focus-checked');
+        await window.navigation.transition?.finished;
+
+        expect(document.activeElement).toBe(
+          expected === 'link' ? link : document.body,
+        );
+      } finally {
+        plugin.dispose?.(router);
+        link.remove();
+      }
+    });
   },
 );
 

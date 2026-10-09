@@ -62,6 +62,22 @@ router.plugin(navigationLocationPlugin, {
 
 Without the option, the plugin intercepts with a handler that resolves immediately.
 
+### Focus
+
+The plugin intercepts with `focusReset: 'manual'`, so focus stays where it was across a router navigation, as it does under `pushStateLocationPlugin`. A `focusReset` returned from `intercept` takes precedence; `'after-transition'` restores the platform behaviour of moving focus to `<body>` after each navigation, as a full page load would.
+
+Keeping focus in place suits list–detail and in-page navigation. When a navigation replaces the view that held focus, the focused element leaves the document and focus falls back to `<body>`; move it yourself, for example to the new view's heading:
+
+```typescript
+router.transitionService.onSuccess({}, () => {
+  requestAnimationFrame(() =>
+    document.querySelector<HTMLElement>('main h1')?.focus(),
+  );
+});
+```
+
+The heading needs `tabindex="-1"` to take focus.
+
 Listeners that only observe navigations can tell router-driven ones apart with `isUIRouterNavigateEvent`, which also narrows `event.info` to carry the router.
 
 ## What Else Observes Navigation

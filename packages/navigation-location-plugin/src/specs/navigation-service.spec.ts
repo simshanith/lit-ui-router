@@ -245,12 +245,13 @@ describe('NavigationLocationService (stubbed Navigation seam)', () => {
       service = new TestableService(router);
     });
 
-    it('intercepts its own navigation with a resolving handler', async () => {
+    it('intercepts its own navigation with a resolving handler and focus left in place', async () => {
       const event = fakeNavigateEvent({ uiRouter: router });
 
       registeredInterceptor()(event);
 
       expect(event.intercept).toHaveBeenCalledWith({
+        focusReset: 'manual',
         handler: expect.any(Function),
       });
 
@@ -298,13 +299,27 @@ describe('NavigationLocationService (stubbed Navigation seam)', () => {
       service = new TestableService(router, { intercept });
     });
 
-    it('hands what the option returns to event.intercept', () => {
+    it('hands what the option returns to event.intercept over a manual focusReset', () => {
       const event = fakeNavigateEvent({ uiRouter: router });
 
       registeredInterceptor()(event);
 
       expect(intercept).toHaveBeenCalledExactlyOnceWith(event);
-      expect(event.intercept).toHaveBeenCalledExactlyOnceWith(interceptOptions);
+      expect(event.intercept).toHaveBeenCalledExactlyOnceWith({
+        focusReset: 'manual',
+        ...interceptOptions,
+      });
+    });
+
+    it('lets the option restore the platform focusReset', () => {
+      interceptOptions = { focusReset: 'after-transition' };
+      const event = fakeNavigateEvent({ uiRouter: router });
+
+      registeredInterceptor()(event as unknown as NavigateEvent);
+
+      expect(event.intercept).toHaveBeenCalledExactlyOnceWith({
+        focusReset: 'after-transition',
+      });
     });
 
     it.each([
@@ -343,7 +358,10 @@ describe('NavigationLocationService (stubbed Navigation seam)', () => {
       registeredInterceptor()(event);
 
       expect(plugin.service).toBe(router.locationService);
-      expect(event.intercept).toHaveBeenCalledExactlyOnceWith(interceptOptions);
+      expect(event.intercept).toHaveBeenCalledExactlyOnceWith({
+        focusReset: 'manual',
+        ...interceptOptions,
+      });
       plugin.dispose?.(router);
     });
   });
