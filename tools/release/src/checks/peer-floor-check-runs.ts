@@ -21,6 +21,7 @@ import {
   type PeerFloorResult,
 } from './peer-floor-check-runs.core.ts';
 import { checkRunApiArgs } from './publish-check-runs.core.ts';
+import { failMain } from '../lib/fail-main.ts';
 
 async function main() {
   const dryRun = process.argv.includes('--dry-run');
@@ -75,7 +76,4 @@ async function main() {
   }
 }
 
-main().catch((error: unknown) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+main().catch(failMain);

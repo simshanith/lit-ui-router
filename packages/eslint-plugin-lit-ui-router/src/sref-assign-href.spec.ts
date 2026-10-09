@@ -4,11 +4,7 @@ import { RuleTester } from 'eslint';
 import { srefAssignHref } from './sref-assign-href.ts';
 
 // RuleTester runs cases through these statics, which eslint's types omit.
-const hooks = RuleTester as unknown as Record<string, unknown>;
-
-hooks.describe = describe;
-
-hooks.it = it;
+Object.assign(RuleTester, { describe, it });
 
 const ruleTester = new RuleTester({
   languageOptions: { ecmaVersion: 'latest', sourceType: 'module' },

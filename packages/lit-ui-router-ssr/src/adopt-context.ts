@@ -21,6 +21,7 @@ export interface AdoptUiViewContextKey {
  */
 export interface AdoptableView extends HTMLElement {
   /** The routed template the served nodes came from. */
+  // oxlint-disable-next-line anti-slop/no-unknown-returns -- mirrors LitElement.render(), which lit types unknown
   render(): unknown;
   /** The options the view renders with, which the hydrate reads too. */
   readonly renderOptions: RenderOptions;

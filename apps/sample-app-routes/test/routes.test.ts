@@ -204,7 +204,7 @@ describe('mounts', () => {
       '/simulated-routing',
     ]);
 
-    for (const mount of ['/app', '/app-mobx', '/app-effect']) {
+    for (const mount of ['/app', '/app-mobx', '/app-effect'] as const) {
       assert.equal(mounts[mount].routes, routes);
     }
   });
@@ -236,6 +236,6 @@ describe('shellMounts (mount-agnostic shell base derivation)', () => {
       [...shellMounts].sort(),
       [...Object.keys(mounts), '/not-found-naive'].sort(),
     );
-    assert.equal(mounts['/not-found-naive'], undefined);
+    assert.equal(Object.hasOwn(mounts, '/not-found-naive'), false);
   });
 });

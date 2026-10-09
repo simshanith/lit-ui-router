@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { html, LitElement, nothing } from 'lit';
 import type { PropertyValues } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { ActiveUIView, Transition } from '@uirouter/core';
+import { ActiveUIView, Transition, type RawParams } from '@uirouter/core';
 
 import { UiView } from '../ui-view.js';
 import {
@@ -122,7 +122,7 @@ class TestRetainedLeaf extends CountedElement implements UiOnParamsChanged {
   @state() starId = '';
   readonly propsSeen: (UIViewInjectedProps | undefined)[] = [];
 
-  uiOnParamsChanged(params: { [key: string]: unknown }) {
+  uiOnParamsChanged(params: RawParams) {
     if (typeof params.starId === 'string') {
       this.starId = params.starId;
     }
@@ -664,7 +664,7 @@ describe('UiView', () => {
     });
 
     it('should pass changed params to uiOnParamsChanged', async () => {
-      let receivedParams: Record<string, unknown> | undefined;
+      let receivedParams: RawParams | undefined;
       receiveParams = (newParams) => {
         receivedParams = newParams;
       };

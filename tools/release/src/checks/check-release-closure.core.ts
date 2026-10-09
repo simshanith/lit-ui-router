@@ -20,7 +20,7 @@ export function selectedNames(json: string): string[] {
     throw new Error('pnpm ls --json did not return an array');
   }
 
-  return parsed.map((project: unknown) => {
+  return (parsed as unknown[]).map((project) => {
     const name =
       typeof project === 'object' && project !== null && 'name' in project
         ? project.name

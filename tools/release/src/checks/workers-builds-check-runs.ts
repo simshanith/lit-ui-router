@@ -90,11 +90,11 @@ async function main() {
   );
 }
 
-main().catch((error: unknown) => {
+main().catch((cause: unknown) => {
   // Even the reporting path stays non-gating: a gh outage must not turn a
   // deploy-pipeline signal into a red CI run. A warning annotation surfaces
   // it on the run summary instead of a non-zero exit.
   logWarning(
-    `workers-builds check run not reported: ${error instanceof Error ? error.message : String(error)}`,
+    `workers-builds check run not reported: ${cause instanceof Error ? cause.message : String(cause)}`,
   );
 });

@@ -13,7 +13,12 @@ const ORIGIN = 'http://docs.test';
 
 // Stand-ins for dist/: the four shell builds, the flagship 404 pages,
 // and a default that plays the binding's own 404.html handling.
-const ASSET_TABLE: Record<string, { body: string; headers: HeadersInit }> = {
+interface Asset {
+  body: string;
+  headers: HeadersInit;
+}
+
+const ASSET_TABLE = {
   '/app': { body: 'vanilla-shell', headers: { 'Content-Type': 'text/html' } },
   '/app-mobx': { body: 'mobx-shell', headers: { 'Content-Type': 'text/html' } },
   '/app-effect': {
@@ -33,7 +38,12 @@ const ASSET_TABLE: Record<string, { body: string; headers: HeadersInit }> = {
     body: 'effect-404-page',
     headers: { 'Content-Type': 'text/html; charset=utf-8' },
   },
-};
+} satisfies Record<string, Asset>;
+
+const assetAt = (pathname: string): Asset | undefined =>
+  Object.hasOwn(ASSET_TABLE, pathname)
+    ? ASSET_TABLE[pathname as keyof typeof ASSET_TABLE]
+    : undefined;
 
 // Every binding call is a Request built from the original — shell,
 // pass-through, and the 404-page probe alike — but stay tolerant of a bare
@@ -60,7 +70,7 @@ const env = {
       const method = methodOf(input);
       assetCalls.push(pathname);
       assetMethods.push(method);
-      const asset = ASSET_TABLE[pathname];
+      const asset = assetAt(pathname);
       // Like the real binding: a HEAD answers with the headers and no body.
       const bodyOf = (body: string) => (method === 'HEAD' ? null : body);
 
@@ -91,7 +101,7 @@ const dispatch = (
 
 describe('flagship mounts (/app, /app-mobx, /app-effect)', () => {
   it('serves each mount its own shell at 200 for real routes, indexable', async () => {
-    for (const mount of ['/app', '/app-mobx', '/app-effect']) {
+    for (const mount of ['/app', '/app-mobx', '/app-effect'] as const) {
       for (const path of ['/welcome', '/contacts/1/edit']) {
         assetCalls = [];
         const res = await dispatch(`${mount}${path}`);
@@ -108,7 +118,7 @@ describe('flagship mounts (/app, /app-mobx, /app-effect)', () => {
   });
 
   it('302s the mount root to /welcome — hash mode is not first-class there', async () => {
-    for (const mount of ['/app', '/app-mobx', '/app-effect']) {
+    for (const mount of ['/app', '/app-mobx', '/app-effect'] as const) {
       const res = await dispatch(mount);
       assert.equal(res.status, 302, mount);
       assert.equal(res.headers.get('Location'), `${mount}/welcome`, mount);
@@ -117,7 +127,7 @@ describe('flagship mounts (/app, /app-mobx, /app-effect)', () => {
   });
 
   it('serves the per-app 404 page, re-wrapped at an honest 404', async () => {
-    for (const mount of ['/app', '/app-mobx', '/app-effect']) {
+    for (const mount of ['/app', '/app-mobx', '/app-effect'] as const) {
       for (const path of [
         '/definitely-not-a-route',
         '/contacts/1/edit/extra',

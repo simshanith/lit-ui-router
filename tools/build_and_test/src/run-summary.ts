@@ -300,10 +300,10 @@ async function main(): Promise<void> {
   );
 }
 
-main().catch((error: unknown) => {
+main().catch((cause: unknown) => {
   warn(
     `run summary failed, the full step log is unaffected: ${
-      error instanceof Error ? error.message : String(error)
+      cause instanceof Error ? cause.message : String(cause)
     }`,
   );
 });

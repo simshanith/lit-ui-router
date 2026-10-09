@@ -2,6 +2,7 @@ import {
   isRenderLightDirective,
   renderLight,
 } from '@lit-labs/ssr-client/directives/render-light.js';
+import type { RenderLightHost } from '@lit-labs/ssr-client/directives/render-light.js';
 import { noChange } from 'lit';
 import { PartType } from 'lit/directive.js';
 import type { ChildPart } from 'lit/directive.js';
@@ -27,9 +28,7 @@ describe('the renderLight flag', () => {
   // `@lit-labs/ssr` patches a rendered class to resolve through `render()`, so the update lit's own walk calls is reached here by hand.
   describe('the update lit calls on the client', () => {
     /** The part's parent, as the slot's update reads it. */
-    interface SlotHost {
-      renderLight?: () => unknown;
-    }
+    type SlotHost = Partial<RenderLightHost>;
 
     const slotOn = (parentNode: SlotHost) => {
       const Slot = getDirectiveClass(uiViewSlot());

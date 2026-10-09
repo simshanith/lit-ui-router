@@ -42,7 +42,7 @@ function provideRecordingRouter(
   host: EventTarget,
   router: UIRouterLit,
   unsubscribe: () => void = () => {},
-): { listener: EventListener; subscribers: ContextCallback<UIRouterLit>[] } {
+) {
   const subscribers: ContextCallback<UIRouterLit>[] = [];
 
   const listener = (event: Event) => {
@@ -504,7 +504,7 @@ describe('provideContext', () => {
     target: EventTarget,
     requested: SpecKey,
     options: { subscribe?: boolean } = {},
-  ): { answers: string[]; unsubscribes: (undefined | (() => void))[] } {
+  ) {
     const answers: string[] = [];
     const unsubscribes: (undefined | (() => void))[] = [];
 

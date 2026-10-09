@@ -42,14 +42,15 @@ export interface ConnectRequest {
  */
 export interface ConnectResponse {
   /** Writes the status line and headers; patched to relabel a status'd shell. */
-  writeHead(statusCode: number, ...rest: unknown[]): unknown;
+  writeHead(statusCode: number, ...rest: unknown[]): void;
   /** Sets one response header (the canonical `Link` on a shell verdict). */
-  setHeader(name: string, value: string): unknown;
+  setHeader(name: string, value: string): void;
   /** Ends the response, optionally with a body. */
-  end(body?: string): unknown;
+  end(body?: string): void;
 }
 
 /** Connect's continuation: call with no argument to pass, with an error to fail. */
+// oxlint-disable-next-line anti-slop/no-unknown-parameters -- Connect's next() takes any thrown value
 export type ConnectNext = (error?: unknown) => void;
 
 /** Connect-shaped middleware: what {@link createConnectMiddleware} returns. */

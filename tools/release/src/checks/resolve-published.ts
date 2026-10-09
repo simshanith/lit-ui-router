@@ -13,6 +13,7 @@ import type { PublishedVersions } from './published-versions.core.ts';
 import { writePublishedVersions } from './published-versions.ts';
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
 import { isPublishable, loadWorkspace } from '@tools/shared/workspace.ts';
+import { failMain } from '../lib/fail-main.ts';
 
 /** `name`'s dist-tags, or `{}` when never published. */
 async function publishedTags(name: string): Promise<Record<string, string>> {
@@ -53,7 +54,4 @@ async function main() {
   );
 }
 
-main().catch((error: unknown) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+main().catch(failMain);

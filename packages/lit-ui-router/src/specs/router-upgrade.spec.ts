@@ -101,7 +101,7 @@ describe('placeholder router upgrade', () => {
       });
       const callback = vi.fn();
       requestRouter(child, { subscribe: true, callback });
-      const reportError = vi.fn<(error: unknown) => void>();
+      const reportError = vi.fn<typeof globalThis.reportError>();
       vi.stubGlobal('reportError', reportError);
 
       try {

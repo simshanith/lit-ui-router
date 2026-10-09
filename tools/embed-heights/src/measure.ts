@@ -11,18 +11,18 @@ import { chromium, type Page } from 'playwright';
 
 import { COLUMN_WIDTH_PX } from './reserve.core.ts';
 
-const CONTENT_TYPES: Record<string, string> = {
-  '.css': 'text/css',
-  '.html': 'text/html',
-  '.ico': 'image/x-icon',
-  '.js': 'text/javascript',
-  '.json': 'application/json',
-  '.map': 'application/json',
-  '.png': 'image/png',
-  '.svg': 'image/svg+xml',
-  '.webp': 'image/webp',
-  '.woff2': 'font/woff2',
-};
+const CONTENT_TYPES = new Map([
+  ['.css', 'text/css'],
+  ['.html', 'text/html'],
+  ['.ico', 'image/x-icon'],
+  ['.js', 'text/javascript'],
+  ['.json', 'application/json'],
+  ['.map', 'application/json'],
+  ['.png', 'image/png'],
+  ['.svg', 'image/svg+xml'],
+  ['.webp', 'image/webp'],
+  ['.woff2', 'font/woff2'],
+]);
 
 /** Viewport height only decides what is on screen; content height is measured in flow. */
 const VIEWPORT_HEIGHT_PX = 900;
@@ -61,7 +61,7 @@ export async function serveExamples(examplesDir: string): Promise<Server> {
         if (!(await stat(file)).isFile()) throw new Error('not a file');
         res.writeHead(200, {
           'content-type':
-            CONTENT_TYPES[extname(file)] ?? 'application/octet-stream',
+            CONTENT_TYPES.get(extname(file)) ?? 'application/octet-stream',
         });
         res.end(await readFile(file));
       } catch {

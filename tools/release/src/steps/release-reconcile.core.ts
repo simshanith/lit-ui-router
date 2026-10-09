@@ -13,6 +13,7 @@ export interface CacheOutcome {
  * unverifiable — a summary we can't parse must never read as a balance.
  */
 export function packCacheOutcome(
+  // oxlint-disable-next-line anti-slop/no-unknown-parameters -- parses JSON.parse output; any shape degrades to unverifiable
   summary: unknown,
   taskId: string,
 ): CacheOutcome {

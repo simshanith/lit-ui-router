@@ -67,20 +67,22 @@ export function tallyFiles(messages: readonly WarnMessage[]): WarnFiles {
 
 /** Stable key order so a regenerated snapshot diffs only where counts moved. */
 export function sortFiles(files: WarnFiles): WarnFiles {
-  const out: WarnFiles = {};
+  return Object.fromEntries(
+    Object.keys(files)
+      .sort()
+      .map((file) => {
+        const byRule = files[file] ?? {};
 
-  for (const file of Object.keys(files).sort()) {
-    const byRule = files[file] ?? {};
-    const rules: Record<string, number> = {};
-
-    for (const rule of Object.keys(byRule).sort()) {
-      rules[rule] = byRule[rule] ?? 0;
-    }
-
-    out[file] = rules;
-  }
-
-  return out;
+        return [
+          file,
+          Object.fromEntries(
+            Object.keys(byRule)
+              .sort()
+              .map((rule) => [rule, byRule[rule] ?? 0]),
+          ),
+        ];
+      }),
+  );
 }
 
 export function ruleTotals(files: WarnFiles): Record<string, number> {

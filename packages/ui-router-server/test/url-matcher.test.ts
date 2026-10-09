@@ -148,7 +148,7 @@ describe('custom ParamType objects', () => {
     const upper = {
       name: 'upper',
       pattern: /[A-Z]+/,
-      is: (val: unknown) =>
+      is: (val: unknown): val is string =>
         typeof val === 'string' && val === val.toUpperCase(),
       decode: (val: string) => val.toUpperCase(),
     };

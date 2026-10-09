@@ -6,10 +6,13 @@
  * `setup.ts`). Helpers that construct a router stay in each package.
  */
 
+/** Param values the specs pass; core's `RawParams` takes any. */
+export type GoParams = Readonly<Record<string, string | number>>;
+
 /** The slice of a `UIRouter` that {@link routerGo} drives. */
 export interface GoRouter {
   stateService: {
-    go(state: string, params?: Record<string, unknown>): PromiseLike<unknown>;
+    go(state: string, params?: GoParams): PromiseLike<object>;
   };
 }
 
@@ -31,7 +34,7 @@ export function tick(ms = 0): Promise<void> {
 export async function routerGo(
   router: GoRouter,
   state: string,
-  params?: Record<string, unknown>,
+  params?: GoParams,
 ): Promise<void> {
   await router.stateService.go(state, params);
   await tick();

@@ -10,6 +10,11 @@ export type PackageEntry = {
   free: string[];
 };
 
+// The `bundleProbe` manifest field: per-subpath boundary claims.
+export type BundleProbeClaims = Readonly<
+  Record<string, { readonly free?: readonly string[] }>
+>;
+
 export type PackageProbe = {
   name: string;
   declared: string[];
@@ -40,8 +45,7 @@ export const readPackageProbe = (packageDir: string): PackageProbe => {
     ...Object.keys(manifest.peerDependencies ?? {}),
   ];
 
-  const claims = (manifest as { bundleProbe?: Record<string, unknown> })
-    .bundleProbe;
+  const claims = (manifest as { bundleProbe?: BundleProbeClaims }).bundleProbe;
 
   const entries: PackageEntry[] = [];
   const bundled = new Set<string>();
@@ -52,7 +56,9 @@ export const readPackageProbe = (packageDir: string): PackageProbe => {
     const target =
       typeof value === 'string'
         ? value
-        : (value as Record<string, unknown>).default;
+        : value === null || Array.isArray(value)
+          ? undefined
+          : value.default;
 
     if (typeof target !== 'string') {
       throw new Error(`${name}: export '${subpath}' has no default target`);
@@ -78,12 +84,12 @@ export const readPackageProbe = (packageDir: string): PackageProbe => {
       );
     }
 
-    const free = (claims?.[subpath] as { free?: string[] } | undefined)?.free;
+    const free = claims?.[subpath]?.free;
     bundled.add(subpath);
     entries.push({
       label: subpath === '.' ? 'index' : subpath.slice(2),
       file,
-      free: free ?? [],
+      free: [...(free ?? [])],
     });
   }
 

@@ -33,7 +33,12 @@ class TestableService extends NavigationLocationService {
     return stub as unknown as Navigation;
   }
 
-  testSet(state: unknown, title: string, url: string, replace: boolean): void {
+  testSet(
+    state: { key: string } | null,
+    title: string,
+    url: string,
+    replace: boolean,
+  ): void {
     this._set(state, title, url, replace);
   }
 }
@@ -63,7 +68,7 @@ interface FakeNavigateEvent {
 }
 
 function fakeNavigateEvent(
-  info?: unknown,
+  info?: { uiRouter: UIRouter },
   canIntercept = true,
 ): FakeNavigateEvent {
   return { canIntercept, info, intercept: vi.fn() };

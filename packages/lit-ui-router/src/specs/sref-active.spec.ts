@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { RejectType } from '@uirouter/core';
+import { RejectType, type RawParams } from '@uirouter/core';
 import { html, nothing, render, TemplateResult } from 'lit';
 import { cache } from 'lit/directives/cache.js';
 import { AttributePartInfo, PartInfo, PartType } from 'lit/directive.js';
@@ -79,7 +79,7 @@ describe('attribute-part active directives', () => {
     return wrapper;
   }
 
-  async function goTo(state: string, params?: Record<string, unknown>) {
+  async function goTo(state: string, params?: RawParams) {
     await routerGo(router, state, params);
     await tick(20);
   }

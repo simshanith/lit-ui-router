@@ -215,6 +215,7 @@ export class NavigationLocationService extends BaseLocationServices {
    * @internal
    */
   protected _set(
+    // oxlint-disable-next-line anti-slop/no-unknown-parameters -- opaque history state, forwarded to navigate() which types it unknown
     state: unknown,
     title: string,
     url: string,

@@ -122,7 +122,7 @@ export function isRoutedLitElement<
 export function litViewsBuilder<
   T extends DefaultResolvesType = DefaultResolvesType,
 >(state: StateObject): Record<string, NormalizedLitViewDeclaration<T>> {
-  const views: Record<string, NormalizedLitViewDeclaration<T>> = {},
+  const views = new Map<string, NormalizedLitViewDeclaration<T>>(),
     viewsObject = state.views || {
       $default: pick(state, ['component']),
     };
@@ -166,11 +166,11 @@ export function litViewsBuilder<
         );
       }
 
-      views[name] = viewsObject[name] = normalizedConfig;
+      views.set(name, (viewsObject[name] = normalizedConfig));
     },
   );
 
-  return views;
+  return Object.fromEntries(views);
 }
 
 /**

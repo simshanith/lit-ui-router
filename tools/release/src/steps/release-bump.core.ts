@@ -22,6 +22,12 @@ export function branchPrefix(
   return `release/${packageName}/v`;
 }
 
+/** A release commit message, and a warning for the driver to surface. */
+export interface ReleaseCommitMessage {
+  message: string;
+  warning?: string;
+}
+
 /**
  * The release commit message: `Release <version>`, a blank line, then the
  * captured `release-it --changelog` output — the shape the old
@@ -34,7 +40,7 @@ export function releaseCommitMessage(
   version: string,
   changelog: string,
   from?: string,
-): { message: string; warning?: string } {
+): ReleaseCommitMessage {
   if (version.trim() === '') throw new Error('version must be non-empty');
   const body = changelog.trim();
 

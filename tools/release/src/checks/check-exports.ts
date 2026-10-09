@@ -30,6 +30,7 @@ import {
 } from './check-exports.core.ts';
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
 import { isPublishable, loadWorkspace } from '@tools/shared/workspace.ts';
+import { failMain } from '../lib/fail-main.ts';
 
 /** Run attw + publint over one package's publish-shape tarball. */
 async function checkExports(
@@ -82,7 +83,4 @@ async function main() {
   if (!ok) process.exitCode = 1;
 }
 
-main().catch((error: unknown) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+main().catch(failMain);

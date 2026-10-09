@@ -88,6 +88,7 @@ export type UiViewAdoptEvent = CustomEvent<UiViewAdoptDetail>;
 export type AdoptReporter = (
   view: Element,
   outcome: AdoptOutcome,
+  // oxlint-disable-next-line anti-slop/no-unknown-parameters -- the thrown value a fallback caught, as the platform reports one
   error?: unknown,
 ) => void;
 
@@ -145,6 +146,7 @@ class UiViewSlotDirective extends RenderLightDirective {
   }
 
   /** A host `renderLight()` answers, as it does for ssr-client's own directive; a `<ui-view>` has none and keeps its nodes. */
+  // oxlint-disable-next-line anti-slop/no-unknown-returns -- hands on a host's renderLight(), which lit types unknown
   override update(part: ChildPart): unknown {
     const host = part.parentNode as Partial<RenderLightHost>;
 
@@ -206,10 +208,10 @@ const report = (
   view: Element,
   reporter: AdoptReporter | undefined,
   outcome: AdoptOutcome,
-  error?: unknown,
+  cause?: unknown,
 ): void => {
   const detail: UiViewAdoptDetail =
-    outcome === 'fell-back' ? { outcome, error } : { outcome };
+    outcome === 'fell-back' ? { outcome, error: cause } : { outcome };
 
   view.dispatchEvent(
     new CustomEvent(uiViewAdoptEventName, {
@@ -220,7 +222,7 @@ const report = (
   );
 
   try {
-    reporter?.(view, outcome, error);
+    reporter?.(view, outcome, cause);
   } catch (thrown) {
     if (typeof globalThis.reportError !== 'function') {
       throw thrown;
@@ -230,13 +232,13 @@ const report = (
   }
 };
 
-const warnMismatch = (view: AdoptableView, error: unknown): void => {
+const warnMismatch = (view: AdoptableView, cause: unknown): void => {
   // DEV folds away in dist/*.js; see check:dev-split and dev-warnings.json.
   if (!import.meta.env.DEV) return;
   console.warn(
     'lit-ui-router-ssr: this element could not adopt the server render, so it rendered over it instead. One static document answers a whole family of urls, so a client that boots into another state reaches this legitimately.',
     view.localName,
-    error,
+    cause,
     // A view with no routed component of its own is also what an unbooted router looks like.
     ...(view instanceof UiView && view.viewContext
       ? []
@@ -657,6 +659,7 @@ const makeCold = (container: HTMLElement): void => {
  */
 export function hydrateRoot(
   container: HTMLElement,
+  // oxlint-disable-next-line anti-slop/no-unknown-parameters -- any value lit renders, as lit's render() and hydrate() take it
   value: unknown,
   options: HydrateRootOptions = {},
 ): false | (() => void) {

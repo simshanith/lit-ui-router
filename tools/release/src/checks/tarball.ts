@@ -3,6 +3,7 @@
 // unit-testable; this is the one pacote wrapper both consumers share
 // (check-packed-manifest.ts and check-published-diff.ts).
 
+import type { Json } from '@tools/bootstrap/types.ts';
 import pacote from 'pacote';
 
 // pacote.manifest on a file spec returns the archive's fields verbatim
@@ -22,10 +23,9 @@ const PACOTE_METADATA_FIELDS = ['_id', '_integrity', '_resolved', '_from'];
  */
 export async function tarballManifest(
   tarball: string,
-): Promise<Record<string, unknown>> {
-  const manifest = (await pacote.manifest(tarball)) as unknown as Record<
-    string,
-    unknown
+): Promise<Readonly<Record<string, Json>>> {
+  const manifest = (await pacote.manifest(tarball)) as unknown as Readonly<
+    Record<string, Json>
   >;
 
   if (

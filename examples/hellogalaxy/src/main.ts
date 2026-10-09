@@ -124,18 +124,18 @@ const StarService = {
 };
 
 // Approximate real star colors by spectral class letter (O hottest, M coolest)
-const spectralColors: Record<string, string> = {
-  O: '#92b5ff',
-  B: '#a5c0ff',
-  A: '#cad8ff',
-  F: '#f8f7ff',
-  G: '#ffefc4',
-  K: '#ffd2a1',
-  M: '#ffab6e',
-};
+const spectralColors = new Map([
+  ['O', '#92b5ff'],
+  ['B', '#a5c0ff'],
+  ['A', '#cad8ff'],
+  ['F', '#f8f7ff'],
+  ['G', '#ffefc4'],
+  ['K', '#ffd2a1'],
+  ['M', '#ffab6e'],
+]);
 
 const spectralColor = (spectralClass: string): string =>
-  spectralColors[spectralClass[0]] ?? '#ffffff';
+  spectralColors.get(spectralClass[0]) ?? '#ffffff';
 
 // Components
 @customElement('galaxy-shell')

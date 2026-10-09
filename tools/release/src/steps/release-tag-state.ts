@@ -90,11 +90,11 @@ export async function resolveTagState(
   });
 }
 
-function stderrOf(error: unknown): string {
-  return error !== null &&
-    typeof error === 'object' &&
-    'stderr' in error &&
-    typeof error.stderr === 'string'
-    ? error.stderr
+function stderrOf(cause: unknown): string {
+  return cause !== null &&
+    typeof cause === 'object' &&
+    'stderr' in cause &&
+    typeof cause.stderr === 'string'
+    ? cause.stderr
     : 'unknown git failure';
 }

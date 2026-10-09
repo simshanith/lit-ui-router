@@ -23,14 +23,14 @@ interface SidebarItem {
 }
 
 /** Kind folders emitted by typedoc-plugin-markdown and their page titles. */
-const KIND_FOLDER_TITLES: Record<string, string> = {
+const KIND_FOLDER_TITLES = {
   classes: 'Classes',
   enumerations: 'Enumerations',
   functions: 'Functions',
   interfaces: 'Interfaces',
   'type-aliases': 'Type Aliases',
   variables: 'Variables',
-};
+} satisfies Record<string, string>;
 
 /**
  * Load the kind-indexes TypeDoc plugin.

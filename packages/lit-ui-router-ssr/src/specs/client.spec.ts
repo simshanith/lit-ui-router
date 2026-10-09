@@ -897,7 +897,7 @@ describe('the hydration outcome', () => {
     const router = makeRouter();
     await settle(router, '/shell');
     const reports = listen(container);
-    const reportError = vi.fn<(error: unknown) => void>();
+    const reportError = vi.fn<typeof globalThis.reportError>();
     vi.stubGlobal('reportError', reportError);
     const failure = new Error('reporter failed');
 
@@ -924,17 +924,14 @@ describe('the hydration outcome', () => {
     const reports = listen(container);
     vi.stubGlobal('reportError', undefined);
     const failure = new Error('reporter failed');
-    let thrown: Promise<unknown> | undefined;
+    let thrown: Promise<void> | undefined;
 
     const release = hydrateRoot(container, rootTemplate(router), {
       onAdopt: (view) => {
         if (thrown) return;
-        thrown = (
-          view as View & { updateComplete: Promise<boolean> }
-        ).updateComplete.then(
-          () => undefined,
-          (error: unknown) => error,
-        );
+        thrown = expect(
+          (view as View & { updateComplete: Promise<boolean> }).updateComplete,
+        ).rejects.toBe(failure);
         throw failure;
       },
     });
@@ -943,7 +940,8 @@ describe('the hydration outcome', () => {
     (release as () => void)();
     vi.unstubAllGlobals();
 
-    expect(await thrown).toBe(failure);
+    expect(thrown).toBeDefined();
+    await thrown;
     const view = container.querySelector('ui-view')!;
     expect(reports[0]?.[1]).toBe('adopted');
     expect(view.querySelector('h1')?.textContent).toContain('shell');

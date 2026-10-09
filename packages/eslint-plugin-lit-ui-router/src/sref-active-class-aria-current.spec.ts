@@ -1,14 +1,11 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { RuleTester } from 'eslint';
+import { LINK_ELEMENTS_SCHEMA } from './directives.ts';
 import { srefActiveClassAriaCurrent } from './sref-active-class-aria-current.ts';
 
 // RuleTester runs cases through these statics, which eslint's types omit.
-const hooks = RuleTester as unknown as Record<string, unknown>;
-
-hooks.describe = describe;
-
-hooks.it = it;
+Object.assign(RuleTester, { describe, it });
 
 const ruleTester = new RuleTester({
   languageOptions: { ecmaVersion: 'latest', sourceType: 'module' },
@@ -346,12 +343,13 @@ clientTester.run(
 void describe('sref-active-class-aria-current meta', () => {
   void it('is fixable and takes the shared linkElements option', () => {
     assert.equal(srefActiveClassAriaCurrent.meta?.fixable, 'code');
-    assert.ok(
+    assert.equal(
       (
         srefActiveClassAriaCurrent.meta?.schema as
-          | { properties?: Record<string, unknown> }[]
+          | { properties?: { linkElements?: typeof LINK_ELEMENTS_SCHEMA } }[]
           | undefined
       )?.[0]?.properties?.linkElements,
+      LINK_ELEMENTS_SCHEMA,
     );
   });
 

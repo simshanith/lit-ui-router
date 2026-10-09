@@ -3,6 +3,7 @@
 // workers-builds-triggers.test.ts). The IO (env, Cloudflare API calls,
 // reading wrangler.jsonc) lives in workers-builds-triggers.ts.
 
+import type { Json } from '@tools/bootstrap/types.ts';
 import { type ParseError, parse, printParseErrorCode } from 'jsonc-parser';
 import * as v from 'valibot';
 
@@ -65,7 +66,7 @@ const DesiredTriggerSchema = v.strictObject({
   environment_variables: v.optional(v.record(environmentKey, nonEmptyString)),
 } satisfies Record<
   PinnableField | PinnableListField | 'environment_variables',
-  unknown
+  v.GenericSchema
 >);
 
 // One worker: the wrangler config that names it, plus its two triggers.
@@ -91,9 +92,9 @@ export type TriggerKind = 'production' | 'preview';
 
 // wrangler.jsonc allows comments and trailing commas, so JSON.parse alone
 // won't do; jsonc-parser is the VS Code JSONC implementation.
-export function parseJsonc(text: string): unknown {
+export function parseJsonc(text: string): Json {
   const errors: ParseError[] = [];
-  const result: unknown = parse(text, errors, { allowTrailingComma: true });
+  const result = parse(text, errors, { allowTrailingComma: true }) as Json;
   const [first] = errors;
 
   if (first) {
@@ -109,7 +110,7 @@ export function parseJsonc(text: string): unknown {
 // the config.
 function validate<Schema extends v.GenericSchema>(
   schema: Schema,
-  config: unknown,
+  config: Json,
 ): v.InferOutput<Schema> {
   const result = v.safeParse(schema, config);
 
@@ -127,12 +128,12 @@ function validate<Schema extends v.GenericSchema>(
 }
 
 /** One worker's desired state, the unit workers-builds-triggers.config.jsonc repeats. */
-export function desiredStateFromConfig(config: unknown): DesiredState {
+export function desiredStateFromConfig(config: Json): DesiredState {
   return validate(DesiredStateSchema, config);
 }
 
 /** Every worker in workers-builds-triggers.config.jsonc, tagged with its site key. */
-export function desiredWorkersFromConfig(config: unknown): DesiredWorker[] {
+export function desiredWorkersFromConfig(config: Json): DesiredWorker[] {
   const { workers } = validate(DesiredWorkersSchema, config);
 
   return Object.entries(workers).map(([site, worker]) => ({ site, ...worker }));
@@ -164,7 +165,7 @@ export function selectWorkers(
 const WranglerNameSchema = v.looseObject({ name: nonEmptyString });
 
 /** The `name` field of a parsed wrangler config, or throw. */
-export function workerNameFromConfig(config: unknown): string {
+export function workerNameFromConfig(config: Json): string {
   const result = v.safeParse(WranglerNameSchema, config);
 
   if (!result.success) {
@@ -214,10 +215,16 @@ const ENV_PAD = 34;
 // Per-key management: a declared key drifts on a wrong or absent live value; an
 // undeclared live key is listed as unmanaged and never diffed or patched. A
 // declared key that is live-secret is a conflict — reported, never overwritten.
+interface EnvironmentDescription {
+  lines: string[];
+  patch: EnvironmentPatch;
+  conflicts: string[];
+}
+
 function describeEnvironment(
   live: Record<string, TriggerEnvironmentVariable>,
   declared: Record<string, string>,
-): { lines: string[]; patch: EnvironmentPatch; conflicts: string[] } {
+): EnvironmentDescription {
   const patch: EnvironmentPatch = {};
   const conflicts: string[] = [];
   const lines: string[] = [];
@@ -317,16 +324,18 @@ function describeWatchPaths(
   return lines;
 }
 
-function describeTrigger(
-  trigger: Trigger,
-  kind: TriggerKind,
-  desired: DesiredTrigger,
-): {
+interface TriggerDescription {
   lines: string[];
   patch: Drift['patch'];
   environmentPatch: EnvironmentPatch;
   drift: boolean;
-} {
+}
+
+function describeTrigger(
+  trigger: Trigger,
+  kind: TriggerKind,
+  desired: DesiredTrigger,
+): TriggerDescription {
   const patch: Drift['patch'] = {};
 
   const lines = [

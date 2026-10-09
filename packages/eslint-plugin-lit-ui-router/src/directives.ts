@@ -60,6 +60,7 @@ export const isOurPackage = (source: string): boolean =>
 // parse5 nodes arrive untyped through the analyzer's visitor.
 export interface Node {
   type: string;
+  // oxlint-disable-next-line anti-slop/no-unsafe-dictionary-type -- parse5 nodes arrive untyped; each read narrows the member it needs
   [key: string]: unknown;
 }
 
@@ -401,21 +402,18 @@ export const hasSpread = (object: ObjectNode): boolean =>
  */
 export const linkElementsOf = (
   context: Rule.RuleContext,
-  option?: unknown,
+  option?: readonly string[],
 ): ReadonlySet<string> => {
   const { linkElements } = context.settings as { linkElements?: unknown };
 
-  const declared = Array.isArray(option)
-    ? option
-    : Array.isArray(linkElements)
-      ? linkElements
-      : [];
+  const declared: readonly unknown[] =
+    option ?? (Array.isArray(linkElements) ? linkElements : []);
 
   // parse5 lowercases tag names, so a declaration has to meet them there.
   return new Set(
-    declared
-      .filter((tag): tag is string => typeof tag === 'string')
-      .map((tag) => tag.toLowerCase()),
+    declared.flatMap((tag) =>
+      typeof tag === 'string' ? [tag.toLowerCase()] : [],
+    ),
   );
 };
 
@@ -426,7 +424,7 @@ export const linkElementsOf = (
  */
 export const allowElementPartsOf = (
   context: Rule.RuleContext,
-  option?: unknown,
+  option?: boolean,
 ): boolean => {
   if (typeof option === 'boolean') return option;
 

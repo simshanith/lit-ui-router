@@ -11,10 +11,11 @@
  *   option), never imported: the lit2-compat alias resolves `lit` per
  *   consuming package, which an import issued from here would bypass.
  */
+/* oxlint-disable anti-slop/no-unknown-parameters -- a template is any value lit renders, as lit's render() takes it */
 import { appendParentFirst } from '@tools/happy-dom/append.ts';
 
 /** lit's `render`, or anything that renders a value into a container. */
-export type FixtureRender = (value: unknown, container: HTMLElement) => unknown;
+export type FixtureRender = (value: unknown, container: HTMLElement) => void;
 
 export interface FixtureOptions {
   /** Renders a non-Node template (a lit `TemplateResult`). */

@@ -8,7 +8,7 @@ import type { ReactiveController, ReactiveControllerHost } from 'lit';
 const themeFragments = {
   light: () => import('@spectrum-web-components/theme/theme-light.js'),
   dark: () => import('@spectrum-web-components/theme/theme-dark.js'),
-} satisfies Record<string, () => Promise<unknown>>;
+} satisfies Record<string, () => Promise<object>>;
 
 export type ThemeColor = keyof typeof themeFragments;
 

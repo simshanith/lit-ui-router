@@ -14,7 +14,7 @@ function recordingExec(
     args: readonly string[],
     call: number,
   ) => boolean = () => false,
-): { exec: Exec; calls: string[][] } {
+) {
   const calls: string[][] = [];
 
   const exec: Exec = (command, args) => {

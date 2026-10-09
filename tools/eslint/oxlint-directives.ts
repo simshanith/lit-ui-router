@@ -7,12 +7,13 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
+import type { Json } from '@tools/bootstrap/types.ts';
 import type { ESLint, Rule } from 'eslint';
 import { parse } from 'jsonc-parser';
 
 interface OxlintConfig {
-  rules?: Record<string, unknown>;
-  overrides?: { rules?: Record<string, unknown> }[];
+  rules?: Record<string, Json>;
+  overrides?: { rules?: Record<string, Json> }[];
 }
 
 const config = parse(

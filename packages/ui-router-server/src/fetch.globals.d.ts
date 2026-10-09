@@ -40,6 +40,7 @@ declare class Request {
 declare class Response {
   // `body` is `unknown` so a raw asset's stream body round-trips through the
   // status-relabel/Link wrapper without this shim needing a ReadableStream type.
+  // oxlint-disable-next-line anti-slop/no-unknown-parameters -- any body round-trips; see above
   constructor(body?: unknown, init?: ResponseInit);
   readonly status: number;
   readonly body: unknown;

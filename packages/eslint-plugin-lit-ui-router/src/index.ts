@@ -29,7 +29,7 @@ const plugin: LitUiRouterPlugin = {
   rules: RULES,
   // Self-referential (recommended registers the plugin), so it lands after
   // construction.
-  configs: {} as { recommended: Linter.Config[] },
+  configs: { recommended: [] },
 };
 
 plugin.configs.recommended = [

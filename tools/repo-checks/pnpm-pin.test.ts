@@ -15,6 +15,7 @@ import { join } from 'node:path';
 import { describe, it } from 'node:test';
 
 import { requireManifest } from '@tools/bootstrap/manifest.ts';
+import type { Json } from '@tools/bootstrap/types.ts';
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
 import { taploGet } from './cli-query.ts';
 
@@ -32,7 +33,7 @@ const MISE_TOOL = 'tools."aqua:pnpm/pnpm"';
 // whose download URLs carries that version in its path.
 type LockedTool = {
   version: string;
-  [platform: string]: unknown;
+  [platform: string]: Json;
 };
 
 describe('pnpm version pins', () => {

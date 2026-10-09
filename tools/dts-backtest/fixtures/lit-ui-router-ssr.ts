@@ -14,7 +14,7 @@ import {
 } from 'lit-ui-router-ssr';
 import type { MountConfig } from 'ui-router-server';
 
-const mounts: Record<string, MountConfig> = {
+const mounts = {
   '/': {
     routes: [
       { name: 'home', url: '/' },
@@ -23,7 +23,7 @@ const mounts: Record<string, MountConfig> = {
     ],
     otherwise: { state: 'notFound' },
   },
-};
+} satisfies Record<string, MountConfig>;
 
 const files = new Map<string, string>();
 

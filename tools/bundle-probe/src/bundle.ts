@@ -34,13 +34,13 @@ export type BundleOptions = {
 // The build-time constant @tools/oxc-emit folds in each emit pass. Probes that
 // measure shipped size take the production value; probes that ask what the
 // module graph contains take the development one, which is the larger graph.
-export const PRODUCTION_DEFINE: Record<string, string> = {
+export const PRODUCTION_DEFINE = {
   'import.meta.env.DEV': 'false',
-};
+} satisfies Record<string, string>;
 
-export const DEVELOPMENT_DEFINE: Record<string, string> = {
+export const DEVELOPMENT_DEFINE = {
   'import.meta.env.DEV': 'true',
-};
+} satisfies Record<string, string>;
 
 export const bundlers = ['esbuild', 'rolldown'] as const;
 

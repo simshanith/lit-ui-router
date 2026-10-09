@@ -204,6 +204,7 @@ function isDiffable(value: unknown): value is Node | string {
 export const domMatchers = {
   toEqualDom(
     this: MatcherState,
+    // oxlint-disable-next-line anti-slop/no-unknown-parameters -- expect()'s actual value; isDiffable() parses it
     received: unknown,
     expected: Node | string,
     options: DomDiffOptions = {},
@@ -232,8 +233,7 @@ export const domMatchers = {
 
 /** `expect.addSnapshotSerializer(domSnapshotSerializer)`: Elements print diffable. */
 export const domSnapshotSerializer: SnapshotSerializer = {
-  test: (value: unknown) =>
-    typeof Element !== 'undefined' && value instanceof Element,
+  test: (value) => typeof Element !== 'undefined' && value instanceof Element,
   serialize: (value: Element) => getDiffableHTML(value),
 };
 

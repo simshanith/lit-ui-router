@@ -46,8 +46,8 @@ async function capture(command: string, args: string[]): Promise<string> {
   return stdout.trim();
 }
 
-function messageOf(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
+function messageOf(cause: unknown): string {
+  return cause instanceof Error ? cause.message : String(cause);
 }
 
 /**
@@ -175,10 +175,10 @@ async function report(gate: GateRun): Promise<void> {
   else console.log(`\n${markdown}`);
 }
 
-main().catch(async (error: unknown) => {
+main().catch(async (cause: unknown) => {
   // Fail open: the gate never becomes a way to lose CI. Any breakage here
   // (gh down, unexpected JSON, no git) reports as "run" and stays green.
-  const message = messageOf(error);
+  const message = messageOf(cause);
   console.log(
     `::warning::${escapeData(`branch CI gate failed, running CI anyway: ${message}`)}`,
   );

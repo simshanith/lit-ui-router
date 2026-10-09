@@ -30,6 +30,7 @@
 // This file is the IO shell; verdicts and rendering live in the pure,
 // unit-tested ./check-published-diff.core.ts.
 
+import type { Json } from '@tools/bootstrap/types.ts';
 import { execFile } from 'node:child_process';
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -54,6 +55,7 @@ import { readPublishedVersions } from './published-versions.ts';
 import { requireManifest } from '@tools/bootstrap/manifest.ts';
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
 import { isPublishable, loadWorkspace } from '@tools/shared/workspace.ts';
+import { failMain } from '../lib/fail-main.ts';
 
 const run = promisify(execFile);
 
@@ -69,8 +71,8 @@ async function diffAgainstPublished(
   spec: string,
 ): Promise<{
   diff: string;
-  localManifest?: Record<string, unknown>;
-  publishedManifest?: Record<string, unknown>;
+  localManifest?: Readonly<Record<string, Json>>;
+  publishedManifest?: Readonly<Record<string, Json>>;
 }> {
   const tarball = packTarballPath(name);
 
@@ -207,7 +209,4 @@ async function main() {
   if (!ok) process.exitCode = 1;
 }
 
-main().catch((error: unknown) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+main().catch(failMain);

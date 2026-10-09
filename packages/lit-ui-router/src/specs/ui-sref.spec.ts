@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { html, render, TemplateResult } from 'lit';
-import { RejectType, TargetState } from '@uirouter/core';
+import { RejectType, TargetState, type RawParams } from '@uirouter/core';
 
 import {
   uiSref,
@@ -59,7 +59,7 @@ describe('uiSref directive', () => {
   async function setupWithSref(
     states: LitStateDeclaration[],
     srefState: string,
-    params?: Record<string, unknown>,
+    params?: RawParams,
   ): Promise<{ anchor: HTMLAnchorElement; uiRouter: UIRouterLitElement }> {
     router = createTestRouter(states);
 

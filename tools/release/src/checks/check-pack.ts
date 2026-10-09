@@ -20,6 +20,7 @@ import {
 import { tarballManifest } from './tarball.ts';
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
 import { isPublishable, loadWorkspace } from '@tools/shared/workspace.ts';
+import { failMain } from '../lib/fail-main.ts';
 
 async function main() {
   const { members } = await loadWorkspace(workspaceRoot);
@@ -38,7 +39,4 @@ async function main() {
   if (!ok) process.exitCode = 1;
 }
 
-main().catch((error: unknown) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+main().catch(failMain);

@@ -6,9 +6,9 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { describe, it } from 'node:test';
 
-import { readPackageProbe } from './entries.ts';
+import { readPackageProbe, type BundleProbeClaims } from './entries.ts';
 
-const packageWith = (bundleProbe: Record<string, unknown>): string => {
+const packageWith = (bundleProbe: BundleProbeClaims): string => {
   const dir = mkdtempSync(path.join(tmpdir(), 'bundle-probe-entries-'));
   mkdirSync(path.join(dir, 'src'));
   writeFileSync(path.join(dir, 'src', 'index.ts'), 'export const a = 1;\n');

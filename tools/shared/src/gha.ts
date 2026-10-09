@@ -66,8 +66,8 @@ export async function setOutput(name: string, value: string): Promise<void> {
 
 /** Uniform entry-point wrapper: annotate the failure and fail the task. */
 export function runMain(main: () => Promise<void>): void {
-  main().catch((error: unknown) => {
-    logError(error instanceof Error ? error.message : String(error));
+  main().catch((cause: unknown) => {
+    logError(cause instanceof Error ? cause.message : String(cause));
     process.exitCode = 1;
   });
 }

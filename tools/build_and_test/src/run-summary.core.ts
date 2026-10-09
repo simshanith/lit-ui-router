@@ -94,6 +94,7 @@ export interface Excerpt {
  * than produce a silently empty report — the step runs only when CI is already
  * red, and a blank summary there reads as "nothing to see".
  */
+// oxlint-disable-next-line anti-slop/no-unknown-parameters -- the parser over JSON.parse output
 export function parseRunSummary(value: unknown): RunSummary {
   const summary = value as RunSummary;
 

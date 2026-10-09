@@ -60,6 +60,7 @@ export type TransitionCallbackReason = TransitionEventType | 'hostConnected';
 export type TransitionCallback = (
   transition: Transition | undefined,
   reason: TransitionCallbackReason,
+  // oxlint-disable-next-line anti-slop/no-unknown-returns -- public callback type; narrowing it rejects existing callbacks
 ) => unknown;
 
 /**
@@ -249,16 +250,15 @@ export class TransitionController implements ReactiveController {
 
     for (const event of events) {
       this.deregisterFns.push(
-        router.transitionService[event](
-          criteria,
-          (transition) => this.notify(transition, event) as HookResult,
+        router.transitionService[event](criteria, (transition) =>
+          this.notify(transition, event),
         ) as DeregisterFn,
       );
     }
 
     // Synchronize with the router's current state: the host may have
     // (re)connected after the transition that put it on screen succeeded.
-    this.notify(
+    void this.notify(
       router.globals.successfulTransitions.peekTail(),
       'hostConnected',
     );
@@ -282,11 +282,11 @@ export class TransitionController implements ReactiveController {
   private notify(
     transition: Transition | undefined,
     reason: TransitionCallbackReason,
-  ): unknown {
+  ): HookResult {
     this._transition = transition ?? this._transition;
     const result = this.options.callback?.(transition, reason);
     this.host.requestUpdate();
 
-    return result;
+    return result as HookResult;
   }
 }
