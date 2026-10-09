@@ -102,12 +102,12 @@ export const BRICKS_META = {
 
 const CSS = `
 ${frameCss('bk', 'bk-read', ['stage', 'bar', 'read'])}
-.bk-stage { border: 1.5px solid var(--ink); border-bottom: none; }
-.bk-stage:focus-within { outline: 2px solid var(--accent); outline-offset: -2px; }
+.bk-stage { border: 1.5px solid var(--ink); border-block-end: none; }
+.bk-stage:focus-within { outline: max(2px, 0.08em) solid var(--accent); outline-offset: -2px; }
 .bk-view { display: block; width: 100%; height: clamp(460px, 64vh, 920px);
   background: radial-gradient(ellipse 70% 60% at 50% 42%, var(--paper) 0%, var(--paper-2) 58%, var(--ground) 100%);
   --poster-color: transparent; --progress-bar-color: var(--accent); }
-.bk .bk-bar { border-bottom: 1.5px solid var(--ink); }
+.bk .bk-bar { border-block-end: 1.5px solid var(--ink); }
 .bk-bar .lg i.sw { display: block; width: 20px; height: 12px; border: 1.2px solid var(--ink); }
 .bk-bar .lg i.sw-brick { background: linear-gradient(90deg, #D8A33A, #D8A33A 33%, #5B8E4B 33%, #5B8E4B 66%, #4C86C6 66%); }
 .bk-bar .lg i.sw-stud { background: #2E5077; border-radius: 50%; width: 14px; }
@@ -117,21 +117,21 @@ ${frameCss('bk', 'bk-read', ['stage', 'bar', 'read'])}
 .bk-ctl .grp { display: inline-flex; flex-wrap: wrap; gap: 6px; }
 @media (max-width: 560px) { .bk-ctl .touch { white-space: normal; } }
 .bk-ctl button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
-.bk-ctl input[type=range] { width: 150px; accent-color: var(--accent); }
+.bk-ctl input[type=range] { flex: none; width: 150px; accent-color: var(--accent); }
 /* the button keeps the wider label's width, so the slider after it never shifts under a drag */
-#bk-play::after { content: "ASSEMBLE"; display: block; height: 0; overflow: hidden; visibility: hidden; }
+#bk-play::after { content: "ASSEMBLE"; display: block; height: 0; overflow: clip; visibility: hidden; }
 ${pinCss('bk-pin', 26, 12)}
-.bk-read { border: 1.5px solid var(--ink); border-top: none; background: var(--paper-2); padding: 14px 22px 16px;
+.bk-read { border: 1.5px solid var(--ink); border-block-start: none; background: var(--paper-2); padding-block: 14px 16px; padding-inline: 22px;
   min-height: 72px; color: var(--ink); }
 .bk-read h3 { font-family: var(--code); font-size: 16px; font-weight: 600; letter-spacing: 0.04em; line-height: 1.3;
   margin: 0; word-break: break-word; }
-.bk-read h3 i.sw { display: inline-block; width: 18px; height: 11px; margin-right: 8px; border: 1.2px solid var(--ink); vertical-align: baseline; }
+.bk-read h3 i.sw { display: inline-block; width: 18px; height: 11px; margin-inline-end: 8px; border: 1.2px solid var(--ink); vertical-align: baseline; }
 .bk-read h3 .n { font-family: var(--data); font-size: 11px; letter-spacing: 0.16em; color: var(--accent);
-  margin-right: 10px; vertical-align: 0.12em; white-space: nowrap; }
+  margin-inline-end: 10px; vertical-align: 0.12em; white-space: nowrap; }
 .bk-read .ledger { font-family: var(--data); font-size: 12px; letter-spacing: 0.08em; line-height: 1.5;
-  color: var(--ink-soft); margin: 3px 0 0; }
+  color: var(--ink-soft); margin-block: 3px 0; margin-inline: 0; }
 .bk-read .note, .bk-read .hint { font-family: var(--prose); font-size: 16px; line-height: 1.5; max-width: 66ch;
-  margin: 4px 0 0; color: var(--ink-soft); }
+  margin-block: 4px 0; margin-inline: 0; color: var(--ink-soft); }
 @media (max-width: 860px) { .bk-view { height: clamp(420px, 62vh, 620px); } }`;
 
 const LEGEND = [

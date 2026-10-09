@@ -43,34 +43,36 @@ export const SPECIMEN_CSS = `
    buttons, whose labels ARE the specimen. The label stays on the first row and
    the seams are drawn on the buttons, pulled up a pixel so the last row's rule
    lands on the group's own border rather than beside it. */
-.sp-controls { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: flex-start; margin-bottom: 10px; }
+.sp-controls { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: flex-start; margin-block-end: 10px; }
 .sp-group { display: flex; flex-wrap: wrap; align-items: stretch; max-width: 100%; border: 1px solid var(--ink); background: var(--paper); }
-.sp-group .sp-lbl { display: flex; align-items: center; font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.18em; color: var(--ink-faint); padding: 0 8px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); margin-bottom: -1px; }
-.sp-group button { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.12em; color: var(--ink); background: var(--paper); border: 0; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); margin-bottom: -1px; padding: 6px 10px; cursor: pointer; }
-.sp-group button:last-child { border-right: 0; }
-.sp-group button:hover:not(:disabled) { background: var(--paper-2); }
+.sp-group .sp-lbl { display: flex; align-items: center; font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.18em; color: var(--ink-faint); padding: 0 8px; border-inline-end: 1px solid var(--line); border-block-end: 1px solid var(--line); margin-block-end: -1px; }
+.sp-group button { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.12em; color: var(--ink); background: var(--paper); border: 0; border-inline-end: 1px solid var(--line); border-block-end: 1px solid var(--line); margin-block-end: -1px; padding: 6px 10px; cursor: pointer; }
+.sp-group button:last-child { border-inline-end: 0; }
+@media (hover: hover) and (pointer: fine) { .sp-group button:hover:not(:disabled) { background: var(--paper-2); } }
+.sp-group button:active:not(:disabled) { transform: scale(0.97); }
+@media (prefers-reduced-motion: no-preference) { .sp-group button { transition: transform 160ms var(--ease-out, ease-out); } }
 .sp-group button.on { background: var(--accent); color: var(--paper); font-weight: 600; }
 .sp-group button:disabled { color: var(--ink-faint); cursor: not-allowed; }
-.sp-group .sp-num { display: flex; align-items: center; font-family: var(--mono); font-size: 10px; padding: 0 8px; border-right: 1px solid var(--line); font-variant-numeric: tabular-nums; }
-.sp-note { font-family: var(--data); font-size: 10px; letter-spacing: 0.04em; line-height: 1.6; color: var(--ink-soft); margin-bottom: 14px; }
+.sp-group .sp-num { display: flex; align-items: center; font-family: var(--mono); font-size: 10px; padding: 0 8px; border-inline-end: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+.sp-note { font-family: var(--data); font-size: 10px; letter-spacing: 0.04em; line-height: 1.6; color: var(--ink-soft); margin-block-end: 14px; }
 .sp-note b { color: var(--ink); letter-spacing: 0.14em; }
 
 /* --- the readouts --------------------------------------------------------- */
-.sp-read { margin-top: 22px; }
-.sp-read h3 { font-family: var(--data); font-size: 9.5px; letter-spacing: 0.18em; color: var(--ink-soft); margin-bottom: 6px; font-weight: 600; }
+.sp-read { margin-block-start: 22px; }
+.sp-read h3 { font-family: var(--data); font-size: 9.5px; letter-spacing: 0.18em; color: var(--ink-soft); margin-block-end: 6px; font-weight: 600; }
 .sp-tbl { border-collapse: collapse; font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 10.5px; letter-spacing: 0.02em; }
 .sp-tbl.num { font-variant-numeric: tabular-nums; }
-.sp-tbl th { text-align: left; font-size: 8.5px; letter-spacing: 0.16em; color: var(--ink-faint); border-bottom: 1px solid var(--ink); padding: 0 14px 3px 0; font-weight: 600; }
-.sp-tbl td { padding: 3px 14px 3px 0; border-bottom: 1px solid var(--line); vertical-align: baseline; }
-.sp-tbl th.n, .sp-tbl td.n { text-align: right; }
+.sp-tbl th { text-align: start; font-size: 8.5px; letter-spacing: 0.16em; color: var(--ink-faint); border-block-end: 1px solid var(--ink); padding-block: 0 3px; padding-inline: 0 14px; font-weight: 600; }
+.sp-tbl td { padding-block: 3px; padding-inline: 0 14px; border-block-end: 1px solid var(--line); vertical-align: baseline; }
+.sp-tbl th.n, .sp-tbl td.n { text-align: end; }
 .sp-tbl td.k { color: var(--accent); }
 .sp-tbl td.dim { color: var(--ink-faint); }
-.sp-tbl tr.d td { color: var(--ink); font-weight: 600; border-bottom: 0; border-top: 1px solid var(--ink); }
+.sp-tbl tr.d td { color: var(--ink); font-weight: 600; border-block-end: 0; border-block-start: 1px solid var(--ink); }
 .sp-tbl td.got { font-weight: 600; }
 .sp-tbl td.got.adobe { color: var(--green); }
 .sp-tbl td.got.standin { color: var(--accent); }
 .sp-tbl td.got.system { color: var(--red); }
-.sp-foot { font-family: var(--data); font-size: 9.5px; line-height: 1.7; color: var(--ink-faint); max-width: 92ch; margin-top: 7px; }
+.sp-foot { font-family: var(--data); font-size: 9.5px; line-height: 1.7; color: var(--ink-faint); max-width: 92ch; margin-block-start: 7px; }
 .sp-foot code { font-size: 0.95em; background: var(--paper-2); border: 1px solid var(--line); padding: 0 3px; }
 
 /* --- the mock sheet ------------------------------------------------------- */
@@ -79,37 +81,37 @@ export const SPECIMEN_CSS = `
 @media (max-width: 860px) { .mock .shell { grid-template-columns: 1fr; } }
 
 /* rail as the drawing's left margin strip: index tabs */
-.mock .m-rail { border-right: 1.5px solid var(--ink); background: var(--paper-2); display: flex; flex-direction: column; }
-.mock .m-rail-head { padding: 12px 14px 10px; border-bottom: 1.5px solid var(--ink); }
+.mock .m-rail { border-inline-end: 1.5px solid var(--ink); background: var(--paper-2); display: flex; flex-direction: column; }
+.mock .m-rail-head { padding-block: 12px 10px; padding-inline: 14px; border-block-end: 1.5px solid var(--ink); }
 .mock .m-rail-head .kicker { display: block; font-family: var(--data); font-size: calc(var(--data-sz) - 3px); letter-spacing: 0.22em; color: var(--ink-soft); text-transform: uppercase; }
-.mock .m-rail-head h3 { font-family: var(--display); font-weight: var(--disp-wt); font-size: 15px; letter-spacing: var(--disp-ls); text-transform: uppercase; margin-top: 4px; line-height: 1.15; }
-.mock .bands { margin-top: 8px; height: 7px; background:
+.mock .m-rail-head h3 { font-family: var(--display); font-weight: var(--disp-wt); font-size: 15px; letter-spacing: var(--disp-ls); text-transform: uppercase; margin-block-start: 4px; line-height: 1.15; }
+.mock .bands { margin-block-start: 8px; height: 7px; background:
   linear-gradient(var(--ink), var(--ink)) 0 0/100% 1px no-repeat,
   linear-gradient(var(--ink), var(--ink)) 0 3px/100% 1px no-repeat,
   linear-gradient(var(--ink), var(--ink)) 0 6px/70% 2px no-repeat; }
-.mock .m-rail-sec { font-family: var(--data); font-size: calc(var(--data-sz) - 3.5px); letter-spacing: 0.2em; color: var(--ink-faint); padding: 12px 14px 4px; text-transform: uppercase; }
-.mock .m-rail a { display: grid; grid-template-columns: 34px 1fr; gap: 6px; align-items: baseline; text-decoration: none; color: var(--ink-soft); padding: 4px 14px 4px 12px; border-left: 3px solid transparent; font-family: var(--data); font-size: var(--data-sz); letter-spacing: 0.04em; text-transform: uppercase; font-variant-numeric: tabular-nums; }
-.mock .m-rail a .n { color: var(--accent); font-weight: 600; }
+.mock .m-rail-sec { font-family: var(--data); font-size: calc(var(--data-sz) - 3.5px); letter-spacing: 0.2em; color: var(--ink-faint); padding-block: 12px 4px; padding-inline: 14px; text-transform: uppercase; }
+.mock .m-rail a { display: grid; grid-template-columns: 34px 1fr; gap: 6px; align-items: baseline; text-decoration: none; color: var(--ink-soft); padding-block: 4px; padding-inline: 12px 14px; border-inline-start: 3px solid transparent; font-family: var(--data); font-size: var(--data-sz); letter-spacing: 0.04em; text-transform: uppercase; }
+.mock .m-rail a .n { color: var(--accent); font-weight: 600; font-variant-numeric: tabular-nums; }
 /* the RAIL TITLES knob: the data face by default, the sheet-title face when the
    user wants the sidebar nav to match the plate's title */
 .mock .m-rail a .t { font-family: var(--rail-title); letter-spacing: var(--rail-title-ls); }
-.mock .m-rail a.is-active { color: var(--ink); background: var(--paper); border-left-color: var(--ink); font-weight: 600; margin-right: -1.5px; border-right: 1.5px solid var(--paper); }
-.mock .m-rail .foot { margin-top: auto; padding: 10px 14px 12px; border-top: 1px solid var(--line); display: flex; align-items: center; gap: 8px; font-family: var(--data); font-size: calc(var(--data-sz) - 2px); letter-spacing: 0.12em; color: var(--ink-faint); text-transform: uppercase; font-variant-numeric: tabular-nums; }
+.mock .m-rail a.is-active { color: var(--ink); background: var(--paper); border-inline-start-color: var(--ink); font-weight: 600; margin-inline-end: -1.5px; border-inline-end: 1.5px solid var(--paper); }
+.mock .m-rail .foot { margin-block-start: auto; padding-block: 10px 12px; padding-inline: 14px; border-block-start: 1px solid var(--line); display: flex; align-items: center; gap: 8px; font-family: var(--data); font-size: calc(var(--data-sz) - 2px); letter-spacing: 0.12em; color: var(--ink-faint); text-transform: uppercase; font-variant-numeric: tabular-nums; }
 /* the chop: a SQUARE, unrotated */
 .mock .chop { width: 12px; height: 12px; background: var(--cherokee); flex: none; }
 
-.mock .m-body { padding: 0 22px 22px; min-width: 0; }
-.mock .m-crumb { display: flex; flex-wrap: wrap; border-bottom: 1px solid var(--ink); font-family: var(--data); font-size: calc(var(--data-sz) - 1px); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
-.mock .m-crumb > * { padding: 7px 12px; border-right: 1px solid var(--line); text-decoration: none; color: inherit; }
-.mock .m-crumb > *:first-child { padding-left: 0; }
+.mock .m-body { padding-block: 0 22px; padding-inline: 22px; min-width: 0; }
+.mock .m-crumb { display: flex; flex-wrap: wrap; border-block-end: 1px solid var(--ink); font-family: var(--data); font-size: calc(var(--data-sz) - 1px); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+.mock .m-crumb > * { padding: 7px 12px; border-inline-end: 1px solid var(--line); text-decoration: none; color: inherit; }
+.mock .m-crumb > *:first-child { padding-inline-start: 0; }
 .mock .m-crumb .of { color: var(--ink); font-weight: 600; }
-.mock .m-crumb .end { margin-left: auto; border-right: 0; padding-right: 0; }
-.mock .m-head { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; flex-wrap: wrap; padding: 10px 0 8px; }
+.mock .m-crumb .end { margin-inline-start: auto; border-inline-end: 0; padding-inline-end: 0; }
+.mock .m-head { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; flex-wrap: wrap; padding-block: 10px 8px; padding-inline: 0; }
 .mock .m-head .proj { font-family: var(--data); font-size: calc(var(--data-sz) - 1px); letter-spacing: 0.18em; color: var(--ink-soft); text-transform: uppercase; }
 .mock .m-head .shno { font-family: var(--data); font-size: var(--data-sz); letter-spacing: 0.14em; font-variant-numeric: tabular-nums; }
 /* THE SHEET TITLE is its own role: the rail head keeps --display, this does not */
-.mock .m-title { font-family: var(--title); font-weight: var(--title-wt); font-size: var(--title-sz); letter-spacing: var(--title-ls); text-transform: uppercase; line-height: 1.1; margin: 2px 0 6px; }
-.mock .m-sub { font-family: var(--data); font-size: calc(var(--data-sz) + 0.5px); letter-spacing: 0.05em; color: var(--ink-soft); line-height: 1.5; max-width: 96ch; margin-bottom: 14px; }
+.mock .m-title { font-family: var(--title); font-weight: var(--title-wt); font-size: var(--title-sz); letter-spacing: var(--title-ls); text-transform: uppercase; line-height: 1.1; margin-block: 2px 6px; margin-inline: 0; }
+.mock .m-sub { font-family: var(--data); font-size: calc(var(--data-sz) + 0.5px); letter-spacing: 0.05em; color: var(--ink-soft); line-height: 1.5; max-width: 96ch; margin-block-end: 14px; }
 
 .mock .m-plate { display: grid; grid-template-columns: minmax(0, 3fr) minmax(250px, 2fr); gap: 18px; align-items: start; }
 @media (max-width: 860px) { .mock .m-plate { grid-template-columns: 1fr; } }
@@ -129,54 +131,54 @@ export const SPECIMEN_CSS = `
 .mock .m-fig .fp2 { fill: var(--paper-2); }
 .mock .m-fig .fi { fill: var(--ink); }
 .mock .m-fig .hx { stroke: var(--red); stroke-width: 1; opacity: 0.55; }
-.mock .m-figcap { font-family: var(--prose); font-size: calc(var(--data-sz) + 0.5px); letter-spacing: 0.04em; color: var(--ink-faint); margin-top: 5px; }
+.mock .m-figcap { font-family: var(--prose); font-size: calc(var(--data-sz) + 0.5px); letter-spacing: 0.04em; color: var(--ink-faint); margin-block-start: 5px; }
 
 /* schedule — tabular figures */
 .mock .m-sched { width: 100%; border-collapse: collapse; font-family: var(--data); font-size: var(--data-sz); letter-spacing: 0.02em; font-variant-numeric: tabular-nums; }
-.mock .m-sched caption { text-align: left; font-family: var(--data); font-size: calc(var(--data-sz) - 2px); letter-spacing: 0.18em; color: var(--ink-soft); text-transform: uppercase; padding: 0 0 5px; }
-.mock .m-sched th { text-align: left; font-weight: 600; font-size: calc(var(--data-sz) - 2.5px); letter-spacing: 0.14em; color: var(--ink-faint); text-transform: uppercase; border-bottom: 1px solid var(--ink); padding: 0 6px 3px 0; }
-.mock .m-sched td { padding: 3px 6px 3px 0; border-bottom: 1px solid var(--line); vertical-align: baseline; white-space: nowrap; }
-.mock .m-sched td.num, .mock .m-sched th.num { text-align: right; }
+.mock .m-sched caption { text-align: start; font-family: var(--data); font-size: calc(var(--data-sz) - 2px); letter-spacing: 0.18em; color: var(--ink-soft); text-transform: uppercase; padding-block: 0 5px; padding-inline: 0; }
+.mock .m-sched th { text-align: start; font-weight: 600; font-size: calc(var(--data-sz) - 2.5px); letter-spacing: 0.14em; color: var(--ink-faint); text-transform: uppercase; border-block-end: 1px solid var(--ink); padding-block: 0 3px; padding-inline: 0 6px; }
+.mock .m-sched td { padding-block: 3px; padding-inline: 0 6px; border-block-end: 1px solid var(--line); vertical-align: baseline; white-space: nowrap; }
+.mock .m-sched td.num, .mock .m-sched th.num { text-align: end; }
 .mock .m-sched td.id { font-family: var(--code); font-size: 0.9em; letter-spacing: 0; }
 .mock .m-sched td.tier { color: var(--ink-soft); }
 .mock .m-sched td.halt { color: var(--red); font-weight: 600; }
-.mock .m-sched tr.total td { border-bottom: 0; border-top: 1px solid var(--ink); font-weight: 600; }
+.mock .m-sched tr.total td { border-block-end: 0; border-block-start: 1px solid var(--ink); font-weight: 600; }
 
 /* title block, with the square chop */
-.mock .m-tb { margin-top: 14px; border: 1.5px solid var(--ink); display: grid; grid-template-columns: 1fr 1fr; font-family: var(--data); font-variant-numeric: tabular-nums; }
-.mock .m-tb > div { padding: 5px 9px 6px; border-top: 1px solid var(--ink); font-size: var(--data-sz); letter-spacing: 0.04em; }
-.mock .m-tb > div:nth-child(-n+2) { border-top: 0; }
-.mock .m-tb > div:nth-child(2n) { border-left: 1px solid var(--ink); }
-.mock .m-tb .span2 { grid-column: 1 / -1; border-left: 0 !important; }
-.mock .m-tb .fld { display: block; font-family: var(--data); font-size: calc(var(--data-sz) - 3.5px); letter-spacing: 0.18em; color: var(--ink-soft); text-transform: uppercase; margin-bottom: 1px; }
+.mock .m-tb { margin-block-start: 14px; border: 1.5px solid var(--ink); display: grid; grid-template-columns: 1fr 1fr; font-family: var(--data); font-variant-numeric: tabular-nums; }
+.mock .m-tb > div { padding-block: 5px 6px; padding-inline: 9px; border-block-start: 1px solid var(--ink); font-size: var(--data-sz); letter-spacing: 0.04em; }
+.mock .m-tb > div:nth-child(-n+2) { border-block-start: 0; }
+.mock .m-tb > div:nth-child(2n) { border-inline-start: 1px solid var(--ink); }
+.mock .m-tb .span2 { grid-column: 1 / -1; border-inline-start: 0 !important; }
+.mock .m-tb .fld { display: block; font-family: var(--data); font-size: calc(var(--data-sz) - 3.5px); letter-spacing: 0.18em; color: var(--ink-soft); text-transform: uppercase; margin-block-end: 1px; }
 .mock .m-tb .ttl { font-family: var(--title); font-weight: var(--title-wt); letter-spacing: calc(var(--title-ls) * 0.8); text-transform: uppercase; font-size: 13px; }
 .mock .m-tb .sig { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 /* THE ONE HAND VALUE in the ledger */
 .mock .m-tb .sig .hand { font-family: var(--hand); font-size: calc(var(--data-sz) + 1px); color: var(--pencil); letter-spacing: 0; }
 
 /* the REV table — descriptions in the DATA face, never the hand */
-.mock .m-rev { width: 100%; border-collapse: collapse; margin-top: 12px; font-family: var(--data); font-size: calc(var(--data-sz) - 0.5px); letter-spacing: 0.02em; font-variant-numeric: tabular-nums; }
-.mock .m-rev caption { text-align: left; font-family: var(--data); font-size: calc(var(--data-sz) - 2px); letter-spacing: 0.18em; color: var(--ink-soft); text-transform: uppercase; padding: 0 0 5px; }
-.mock .m-rev th { text-align: left; font-weight: 600; font-size: calc(var(--data-sz) - 2.5px); letter-spacing: 0.14em; color: var(--ink-faint); text-transform: uppercase; border-bottom: 1px solid var(--ink); padding: 0 8px 3px 0; }
-.mock .m-rev td { padding: 4px 8px 4px 0; border-bottom: 1px solid var(--line); vertical-align: baseline; color: var(--ink-soft); line-height: 1.45; }
+.mock .m-rev { width: 100%; border-collapse: collapse; margin-block-start: 12px; font-family: var(--data); font-size: calc(var(--data-sz) - 0.5px); letter-spacing: 0.02em; font-variant-numeric: tabular-nums; }
+.mock .m-rev caption { text-align: start; font-family: var(--data); font-size: calc(var(--data-sz) - 2px); letter-spacing: 0.18em; color: var(--ink-soft); text-transform: uppercase; padding-block: 0 5px; padding-inline: 0; }
+.mock .m-rev th { text-align: start; font-weight: 600; font-size: calc(var(--data-sz) - 2.5px); letter-spacing: 0.14em; color: var(--ink-faint); text-transform: uppercase; border-block-end: 1px solid var(--ink); padding-block: 0 3px; padding-inline: 0 8px; }
+.mock .m-rev td { padding-block: 4px; padding-inline: 0 8px; border-block-end: 1px solid var(--line); vertical-align: baseline; color: var(--ink-soft); line-height: 1.45; }
 .mock .m-rev td.r { color: var(--ink); font-weight: 600; letter-spacing: 0.1em; white-space: nowrap; }
 .mock .m-rev td.d { white-space: nowrap; }
 
 /* the stamp: SQUARE and UNROTATED */
-.mock .m-stamp { display: inline-block; margin-top: 12px; padding: 4px 9px; border: 1.5px solid var(--cherokee); color: var(--cherokee); font-family: var(--data); font-weight: 600; font-size: calc(var(--data-sz) - 1.5px); letter-spacing: 0.2em; text-transform: uppercase; font-variant-numeric: tabular-nums; }
+.mock .m-stamp { display: inline-block; margin-block-start: 12px; padding: 4px 9px; border: 1.5px solid var(--cherokee); color: var(--cherokee); font-family: var(--data); font-weight: 600; font-size: calc(var(--data-sz) - 1.5px); letter-spacing: 0.2em; text-transform: uppercase; font-variant-numeric: tabular-nums; }
 
-.mock .m-notes { margin-top: 12px; max-width: 66ch; font-family: var(--prose); font-size: 14px; }
-.mock .m-notes h4 { font-family: var(--data); font-size: calc(var(--data-sz) - 2px); letter-spacing: 0.18em; color: var(--ink-soft); text-transform: uppercase; margin-bottom: 4px; font-weight: 600; }
+.mock .m-notes { margin-block-start: 12px; max-width: 66ch; font-family: var(--prose); font-size: 14px; }
+.mock .m-notes h4 { font-family: var(--data); font-size: calc(var(--data-sz) - 2px); letter-spacing: 0.18em; color: var(--ink-soft); text-transform: uppercase; margin-block-end: 4px; font-weight: 600; }
 .mock .m-notes code { font-family: var(--code); font-size: 0.85em; background: var(--paper-2); border: 1px solid var(--line); padding: 0 4px; }
 
 /* the cover card, once: index.html's .card rules, so the third THE is judged too */
-.mock .m-cardwrap { margin-top: 14px; max-width: 300px; }
-.mock .m-cardlbl { display: block; font-family: var(--data); font-size: calc(var(--data-sz) - 2px); letter-spacing: 0.18em; color: var(--ink-soft); text-transform: uppercase; margin-bottom: 6px; font-weight: 600; }
-.mock .m-card { display: block; border: 1.5px solid var(--ink); background: var(--paper); padding: 14px 16px 15px; text-decoration: none; color: inherit; }
+.mock .m-cardwrap { margin-block-start: 14px; max-width: 300px; }
+.mock .m-cardlbl { display: block; font-family: var(--data); font-size: calc(var(--data-sz) - 2px); letter-spacing: 0.18em; color: var(--ink-soft); text-transform: uppercase; margin-block-end: 6px; font-weight: 600; }
+.mock .m-card { display: block; border: 1.5px solid var(--ink); background: var(--paper); padding-block: 14px 15px; padding-inline: 16px; text-decoration: none; color: inherit; }
 .mock .m-card .n { font-family: var(--data); font-size: 10px; letter-spacing: 0.14em; color: var(--accent); font-variant-numeric: tabular-nums; }
-.mock .m-card h4 { font-family: var(--title); font-size: 15px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; margin: 5px 0 6px; }
-.mock .m-card .alt { display: block; font-family: var(--data); font-size: 9px; letter-spacing: 0.14em; color: var(--ink-faint); text-transform: uppercase; margin-bottom: 6px; }
-.mock .m-card p { font-family: var(--prose); font-size: 14px; color: var(--ink-soft); line-height: 1.45; margin: 0 0 6px; }
+.mock .m-card h4 { font-family: var(--title); font-size: 15px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; margin-block: 5px 6px; margin-inline: 0; }
+.mock .m-card .alt { display: block; font-family: var(--data); font-size: 9px; letter-spacing: 0.14em; color: var(--ink-faint); text-transform: uppercase; margin-block-end: 6px; }
+.mock .m-card p { font-family: var(--prose); font-size: 14px; color: var(--ink-soft); line-height: 1.45; margin-block: 0 6px; margin-inline: 0; }
 .mock .m-card .meta { font-family: var(--data); font-size: 9px; letter-spacing: 0.14em; color: var(--ink-faint); }
 
 /* --- THE ARTICLE knob: the leading THE of every title ---------------------
@@ -193,13 +195,13 @@ export const SPECIMEN_CSS = `
 .mock[data-article="muted"] .art { color: var(--ink-soft); opacity: 0.55; }
 /* cap-aligned: 0.7em caps sit 0.21 title-em lower, which is 0.3em of their own */
 .mock[data-article="small"] .art { font-size: 0.7em; color: var(--ink-soft); vertical-align: 0.3em; }
-.mock[data-article^="cw"] .art .w { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
-.mock[data-article^="cw"] .art::before { content: var(--article-key); font-family: "hwt-catchwords", var(--title); font-size: var(--article-scale, 1.075em); font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--ink-soft); margin-right: 0.22em; }
+.mock[data-article^="cw"] .art .w { position: absolute; width: 1px; height: 1px; overflow: clip; clip-path: inset(50%); }
+.mock[data-article^="cw"] .art::before { content: var(--article-key); font-family: "hwt-catchwords", var(--title); font-size: var(--article-scale, 1.075em); font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--ink-soft); margin-inline-end: 0.22em; }
 /* STACKED — the sheet head only: the catchword centred over the first word */
-.mock[data-article^="cw"][data-article-stack="on"] .m-title .w1 { display: inline-block; position: relative; padding-top: calc(var(--article-scale, 1.075em) * 0.72); }
-.mock[data-article^="cw"][data-article-stack="on"] .m-title .art { position: absolute; top: 0; left: 0; right: 0; text-align: center; line-height: 1; }
+.mock[data-article^="cw"][data-article-stack="on"] .m-title .w1 { display: inline-block; position: relative; padding-block-start: calc(var(--article-scale, 1.075em) * 0.72); }
+.mock[data-article^="cw"][data-article-stack="on"] .m-title .art { position: absolute; inset-block-start: 0; inset-inline: 0; text-align: center; line-height: 1; }
 /* 0.65 of the inline size: the stacked word sits above the caps, so it can be smaller and still read */
-.mock[data-article^="cw"][data-article-stack="on"] .m-title .art::before { font-size: calc(var(--article-scale, 1.075em) * 0.65); margin-right: 0; }
+.mock[data-article^="cw"][data-article-stack="on"] .m-title .art::before { font-size: calc(var(--article-scale, 1.075em) * 0.65); margin-inline-end: 0; }
 /* RAIL: OFF — the rail drops the article and keeps the title */
 .mock[data-article-rail="off"] .m-rail .art { display: none; }
 `;

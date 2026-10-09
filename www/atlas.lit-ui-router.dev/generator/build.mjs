@@ -84,16 +84,18 @@ const rail = `<nav class="alt-rail" aria-label="altitudes">
 ${sheets.map((s) => `<a href="#sheet-${s.num}"><span class="alt-n">ALT ${s.num}</span> ${s.title}</a>`).join('\n')}
 </nav>`;
 const megaCss = `
-.mega-head { margin: 0 0 26px; }
-.mega-head h1 { font-family: var(--display); font-weight: 600; font-size: clamp(21px, 3.5vw, 32px); letter-spacing: 0.16em; }
-.mega-head p { font-family: var(--prose); color: var(--ink-soft); max-width: 70ch; margin-top: 6px; }
-.alt-rail { position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; gap: 2px;
-  margin: 0 0 30px; background: var(--paper); border: 1.5px solid var(--ink); }
-.alt-rail a { font-family: var(--data); font-size: 11px; font-variant-numeric: tabular-nums; letter-spacing: 0.08em; text-decoration: none;
-  color: var(--ink); padding: 8px 12px; border-right: 1px solid var(--line); flex: 1 1 auto; text-align: center; }
-.alt-rail a:hover { background: var(--paper-2); }
+.mega-head { margin-block: 0 26px; margin-inline: 0; }
+.mega-head h1 { font-family: var(--display); font-weight: 600; font-size: clamp(21px, 0.25rem + 3.06vw, 32px); letter-spacing: 0.16em; }
+.mega-head p { font-family: var(--prose); color: var(--ink-soft); max-width: 70ch; margin-block-start: 6px; }
+.alt-rail { position: sticky; inset-block-start: 0; z-index: 5; display: flex; flex-wrap: wrap; gap: 2px;
+  margin-block: 0 30px; margin-inline: 0; background: var(--paper); border: 1.5px solid var(--ink); }
+.alt-rail a { font-family: var(--data); font-size: 11px; letter-spacing: 0.08em; text-decoration: none;
+  color: var(--ink); padding: 8px 12px; border-inline-end: 1px solid var(--line); flex: 1 1 auto; text-align: center; }
+@media (hover: hover) and (pointer: fine) { .alt-rail a:hover { background: var(--paper-2); } }
+.alt-rail a:active { transform: scale(0.97); }
+@media (prefers-reduced-motion: no-preference) { .alt-rail a { transition: transform 160ms var(--ease-out, ease-out); } }
 .alt-rail .alt-n { color: var(--accent); font-weight: 600; }
-.sheet { scroll-margin-top: 64px; }`;
+.sheet { scroll-margin-block-start: 64px; }`;
 writeFileSync(join(OUT, 'megacanvas.html'), page('The Megacanvas — The Altitude Atlas', `<style>${megaCss}</style>
 <header class="mega-head">
   <h1>THE MEGACANVAS</h1>
@@ -160,74 +162,74 @@ const INDEX_BY_NUM = Object.fromEntries([...verdicts, ...appIdx, ...appendixIdx]
 // The stat bar, the general survey, the prose column and the colophon line
 // ride the manifest as `cover.css`; .cover and .idx are gallery-only. The two
 // halves are re-joined below in their original order.
-const surveyCss = `.stat-bar { display: grid; grid-template-columns: repeat(6, 1fr); gap: 1px; border: 1.5px solid var(--ink); margin: 22px 0 26px; background: var(--ink); }
+const surveyCss = `.stat-bar { display: grid; grid-template-columns: repeat(6, 1fr); gap: 1px; border: 1.5px solid var(--ink); margin-block: 22px 26px; margin-inline: 0; background: var(--ink); }
 /* two ruled rows on a six-column field: the three one-line facts across the top
    at a third each, the two roster paragraphs at a half each below — nothing
    wraps to a row of its own and no cell is left half-empty */
-.stat-bar > div { padding: 8px 16px 10px; background: var(--paper-2); grid-column: span 2; }
+.stat-bar > div { padding-block: 8px 10px; padding-inline: 16px; background: var(--paper-2); grid-column: span 2; }
 .stat-bar > div:nth-child(n+4) { grid-column: span 3; }
 @media (max-width: 760px) { .stat-bar { grid-template-columns: 1fr; } .stat-bar > div, .stat-bar > div:nth-child(n+4) { grid-column: auto; } }
-.stat-bar .k { display: block; font-family: var(--data); font-size: 9.5px; letter-spacing: 0.16em; color: var(--ink-soft); margin-bottom: 3px; }
+.stat-bar .k { display: block; font-family: var(--data); font-size: 9.5px; letter-spacing: 0.16em; color: var(--ink-soft); margin-block-end: 3px; }
 .stat-bar .v { font-family: var(--data); font-size: 14.5px; font-variant-numeric: tabular-nums; letter-spacing: 0.04em; }
-.survey { border: 1.5px solid var(--ink); margin: 0 0 26px; background: var(--paper); }
+.survey { border: 1.5px solid var(--ink); margin-block: 0 26px; margin-inline: 0; background: var(--paper); }
 .survey h2 { font-family: var(--data); font-weight: 600; font-size: 10.5px; letter-spacing: 0.2em; color: var(--ink-soft);
-  padding: 8px 14px 7px; border-bottom: 1.5px solid var(--ink); background: var(--paper-2); }
-.survey-tot { display: flex; flex-wrap: wrap; gap: 0; border-bottom: 1.5px solid var(--ink); }
-.survey-tot > div { padding: 9px 14px 11px; border-right: 1px solid var(--line); flex: 1 1 auto; }
-.survey-tot > div:last-child { border-right: none; }
+  padding-block: 8px 7px; padding-inline: 14px; border-block-end: 1.5px solid var(--ink); background: var(--paper-2); }
+.survey-tot { display: flex; flex-wrap: wrap; gap: 0; border-block-end: 1.5px solid var(--ink); }
+.survey-tot > div { padding-block: 9px 11px; padding-inline: 14px; border-inline-end: 1px solid var(--line); flex: 1 1 auto; }
+.survey-tot > div:last-child { border-inline-end: none; }
 .survey-tot .k { display: block; font-family: var(--data); font-size: 9.5px; letter-spacing: 0.16em;
-  color: var(--ink-soft); margin-bottom: 3px; }
+  color: var(--ink-soft); margin-block-end: 3px; }
 .survey-tot .v { font-family: var(--data); font-size: 17.5px; font-variant-numeric: tabular-nums;
   letter-spacing: 0.03em; }
 .survey-tot > div:first-child .v { color: var(--accent); }
 .lang { width: 100%; border-collapse: collapse; }
 .lang th { font-family: var(--data); font-size: 9.5px; letter-spacing: 0.16em; color: var(--ink-soft);
-  text-align: right; padding: 7px 14px 6px; border-bottom: 1px solid var(--line); }
-.lang th:first-child { text-align: left; }
-.lang .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  text-align: end; padding-block: 7px 6px; padding-inline: 14px; border-block-end: 1px solid var(--line); }
+.lang th:first-child { text-align: start; }
+.lang .vh { position: absolute; width: 1px; height: 1px; overflow: clip; clip-path: inset(50%); white-space: nowrap; }
 .lang td { font-family: var(--data); font-size: 12px; letter-spacing: 0.03em; padding: 5px 14px;
-  border-bottom: 1px solid var(--line); text-align: right; font-variant-numeric: tabular-nums; }
-.lang td:first-child { text-align: left; letter-spacing: 0.08em; }
-.lang .bar { width: 40%; padding-right: 0; }
+  border-block-end: 1px solid var(--line); text-align: end; font-variant-numeric: tabular-nums; }
+.lang td:first-child { text-align: start; letter-spacing: 0.08em; }
+.lang .bar { width: 40%; padding-inline-end: 0; }
 .lang .bar span { display: block; height: 7px; background: var(--accent); }
-.lang tr:last-child td { border-bottom: none; }
+.lang tr:last-child td { border-block-end: none; }
 .survey .basis { font-family: var(--data); font-size: 10px; letter-spacing: 0.06em; color: var(--ink-faint);
-  padding: 8px 14px 9px; border-top: 1.5px solid var(--ink); background: var(--paper-2); }
-.gal-body p { font-family: var(--prose); font-size: 16px; max-width: 72ch; margin-bottom: 11px; }`;
+  padding-block: 8px 9px; padding-inline: 14px; border-block-start: 1.5px solid var(--ink); background: var(--paper-2); }
+.gal-body p { font-family: var(--prose); font-size: 16px; max-width: 72ch; margin-block-end: 11px; }`;
 // SOURCES is a paragraph, not a schedule; the second selector outranks the app's
 // `.prose p`, so in the reading column it stays a footnote under the body
 const provenanceCss = `.provenance, .prose p.provenance { font-family: var(--prose); font-size: 13.5px;
-  line-height: 1.5; color: var(--ink-soft); max-width: 68ch; margin: 0 0 40px; padding: 0 4px; }`;
+  line-height: 1.5; color: var(--ink-soft); max-width: 68ch; margin-block: 0 40px; margin-inline: 0; padding: 0 4px; }`;
 const coverCss = `${surveyCss}\n${provenanceCss}`;
 const galCss = `
-.cover { margin: 0 0 34px; background: var(--paper); border: 1.5px solid var(--ink);
+.cover { margin-block: 0 34px; margin-inline: 0; background: var(--paper); border: 1.5px solid var(--ink);
   padding: 30px; position: relative; }
 .cover::before { content: ""; position: absolute; inset: 8px; border: 1px solid var(--edge); pointer-events: none; }
 .cover > * { position: relative; }
-.cover h1 { font-family: var(--display); font-weight: 600; font-size: clamp(28px, 4.8vw, 46px); letter-spacing: 0.16em; margin: 18px 0 4px; }
+.cover h1 { font-family: var(--display); font-weight: 600; font-size: clamp(28px, 0.25rem + 4.38vw, 46px); letter-spacing: 0.16em; margin-block: 18px 4px; margin-inline: 0; }
 .cover .kicker, .cover .set { font-family: var(--data); font-size: 11.5px; letter-spacing: 0.16em; color: var(--ink-soft); }
-.cover .alt { display: block; margin-top: 6px; font-family: var(--data); font-size: 10px; letter-spacing: 0.16em; color: var(--ink-soft); }
+.cover .alt { display: block; margin-block-start: 6px; font-family: var(--data); font-size: 10px; letter-spacing: 0.16em; color: var(--ink-soft); }
 .cover .alt a { color: var(--accent); }
 ${surveyCss}
-.idx { width: 100%; border-collapse: collapse; border: 1.5px solid var(--ink); margin-top: 20px; }
+.idx { width: 100%; border-collapse: collapse; border: 1.5px solid var(--ink); margin-block-start: 20px; }
 .idx th { font-family: var(--data); font-size: 10px; letter-spacing: 0.16em; color: var(--ink-soft);
-  text-align: left; padding: 7px 12px; border-bottom: 1.5px solid var(--ink); }
+  text-align: start; padding: 7px 12px; border-block-end: 1.5px solid var(--ink); }
 .idx td { font-family: var(--data); font-size: 12px; font-variant-numeric: tabular-nums; letter-spacing: 0.04em; padding: 8px 12px;
-  border-bottom: 1px solid var(--line); vertical-align: baseline; }
+  border-block-end: 1px solid var(--line); vertical-align: baseline; }
 .idx td:first-child { color: var(--accent); font-weight: 600; }
-.idx tr:last-child td { border-bottom: none; }
+.idx tr:last-child td { border-block-end: none; }
 .idx .idx-sec td { font-size: 10px; letter-spacing: 0.16em; color: var(--ink-soft);
-  background: var(--paper-2); border-top: 1.5px solid var(--ink); border-bottom: 1.5px solid var(--ink); }
+  background: var(--paper-2); border-block-start: 1.5px solid var(--ink); border-block-end: 1.5px solid var(--ink); }
 .idx a { color: inherit; }
-.idx .kvs { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 5px; }
+.idx .kvs { display: flex; flex-wrap: wrap; gap: 3px; margin-block-start: 5px; }
 .idx .kv { font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-soft);
   border: 1px solid var(--line); padding: 1px 5px; white-space: nowrap; }
-.idx .kv i { font-style: normal; color: var(--accent); margin-right: 4px; }
+.idx .kv i { font-style: normal; color: var(--accent); margin-inline-end: 4px; }
 ${provenanceCss}
 .set-sec { font-family: var(--data); font-size: 11px; letter-spacing: 0.2em; font-weight: 600;
-  color: var(--ink-soft); margin: 0 0 14px; padding: 10px 4px 0;
-  border-top: 1.5px solid var(--ink); }
-.sheet { scroll-margin-top: 16px; }`;
+  color: var(--ink-soft); margin-block: 0 14px; margin-inline: 0; padding-block: 10px 0; padding-inline: 4px;
+  border-block-start: 1.5px solid var(--ink); }
+.sheet { scroll-margin-block-start: 16px; }`;
 
 // --- general survey: every number on the cover comes from www/atlas.lit-ui-router.dev/data/census-files.json ---
 // The plate is the checked-in master per-file snapshot census-scc.mjs writes at a named

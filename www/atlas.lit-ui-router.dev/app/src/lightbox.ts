@@ -478,6 +478,8 @@ export class AtlasLightbox extends LitElement {
 
   static override styles = css`
     :host {
+      --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+      --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
       display: none;
     }
     :host([open]) {
@@ -493,8 +495,8 @@ export class AtlasLightbox extends LitElement {
       background: var(--paper);
     }
     :host([open][mode='stage']) {
-      top: 8px;
-      right: 8px;
+      inset-block-start: 8px;
+      inset-inline-end: 8px;
     }
     @keyframes arrive {
       from {
@@ -504,27 +506,26 @@ export class AtlasLightbox extends LitElement {
     .view {
       position: absolute;
       inset: 0;
-      overflow: hidden;
+      overflow: clip;
       touch-action: none;
       user-select: none;
       -webkit-user-select: none;
       cursor: grab;
-      outline: none;
     }
     .view:active {
       cursor: grabbing;
     }
+    /* inset: the view fills the viewport, so an outer ring would fall off it */
     .view:focus-visible {
-      box-shadow: inset 0 0 0 2px var(--accent);
+      outline: max(2px, 0.08em) solid var(--accent);
+      outline-offset: calc(-1 * max(2px, 0.08em));
     }
+    /* physical: the script pans in x and y from the top-left corner */
     .zoom {
       position: absolute;
       top: 0;
       left: 0;
       transform-origin: 0 0;
-    }
-    .zoom.glide {
-      transition: transform 0.18s ease-out;
     }
     ::slotted(svg) {
       display: block;
@@ -537,9 +538,8 @@ export class AtlasLightbox extends LitElement {
     }
     .top {
       position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
+      inset-block-start: 0;
+      inset-inline: 0;
       justify-content: space-between;
       padding: 12px 16px;
       pointer-events: none;
@@ -564,9 +564,10 @@ export class AtlasLightbox extends LitElement {
     }
     .bottom {
       position: absolute;
-      bottom: 16px;
-      left: 50%;
-      transform: translateX(-50%);
+      inset-block-end: 16px;
+      inset-inline: 0;
+      width: fit-content;
+      margin-inline: auto;
       padding: 4px;
       background: var(--paper);
       border: 1px solid var(--ink-soft);
@@ -587,13 +588,18 @@ export class AtlasLightbox extends LitElement {
     .bottom button {
       min-width: 32px;
     }
-    button:hover,
     button:focus-visible {
       background: var(--paper-2);
+      outline: max(2px, 0.08em) solid var(--accent);
+      outline-offset: 0.25em;
     }
-    button:focus-visible {
-      outline: 2px solid var(--accent);
-      outline-offset: 2px;
+    @media (hover: hover) and (pointer: fine) {
+      button:hover {
+        background: var(--paper-2);
+      }
+    }
+    button:active {
+      transform: scale(0.97);
     }
     .pct {
       min-width: 44px;
@@ -602,12 +608,17 @@ export class AtlasLightbox extends LitElement {
       letter-spacing: 0.08em;
       font-variant-numeric: tabular-nums;
     }
+    @media (prefers-reduced-motion: no-preference) {
+      .zoom.glide {
+        transition: transform 0.18s ease-out;
+      }
+      button {
+        transition: transform 160ms var(--ease-out, ease-out);
+      }
+    }
     @media (prefers-reduced-motion: reduce) {
       :host([open]) {
         animation: none;
-      }
-      .zoom.glide {
-        transition: none;
       }
     }
   `;

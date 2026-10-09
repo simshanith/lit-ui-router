@@ -200,8 +200,8 @@ const CSS = laneCss('lw') + `
   vertical-align: 0.12em; white-space: nowrap; }
 .lw-info p { font-family: var(--serif); font-size: 16px; letter-spacing: 0; line-height: 1.5; color: var(--ink); max-width: 66ch; }
 .lw-info li .now { font-size: 12.5px; color: var(--accent); }
-.lw-info .ev { margin: 6px 0 10px; }
-.lw-info .ev .at { display: block; font-size: 11px; color: var(--accent); letter-spacing: 0.04em; margin-bottom: 3px; }
+.lw-info .ev { margin-block: 6px 10px; margin-inline: 0; }
+.lw-info .ev .at { display: block; font-size: 11px; color: var(--accent); letter-spacing: 0.04em; margin-block-end: 3px; }
 .lw-info .ev pre { font-family: var(--code); font-size: 11.5px; letter-spacing: 0; line-height: 1.4;
   color: var(--ink); background: var(--paper); border: 1px solid var(--line); padding: 6px 8px; margin: 0;
   overflow-x: auto; white-space: pre; }

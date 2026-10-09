@@ -3,6 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
     <!-- The location plugins read their base from here. %BASE_URL% is vite's
          html env replacement of `base`, which vite.config.ts derives from
          src/routes.ts's MOUNT — the one base constant. -->
@@ -36,6 +37,18 @@
     <style>
       /* The app chrome. Everything below leans on the tokens atlas.css
          declares, so the index reads as part of the drawing set. */
+      /* the reset is atlas.css's; this repeats its eases and adds the colour scheme */
+      :root {
+        --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+        --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+        color-scheme: light dark;
+      }
+      :root[data-theme='light'] {
+        color-scheme: light;
+      }
+      :root[data-theme='dark'] {
+        color-scheme: dark;
+      }
       body {
         padding: 0;
         /* the inset strip clears the sticky utility bar */
@@ -54,7 +67,7 @@
       /* ---- the rail: the sheet list, and only that ---- */
       .rail {
         position: sticky;
-        top: 0;
+        inset-block-start: 0;
         align-self: start;
         /* The paper box is the COLUMN, not the height of its links: without the
            min-height the ground shows under the last sheet on every page. */
@@ -62,13 +75,15 @@
         max-height: 100vh;
         overflow-y: auto;
         background: var(--paper);
-        border-right: 1.5px solid var(--ink);
-        padding: 14px 0 30px;
+        border-inline-end: 1.5px solid var(--ink);
+        padding-block: 14px 30px;
+        padding-inline: 0;
       }
       .rail-head {
-        padding: 6px 16px 12px;
-        border-bottom: 1.5px solid var(--ink);
-        margin-bottom: 10px;
+        padding-block: 6px 12px;
+        padding-inline: 16px;
+        border-block-end: 1.5px solid var(--ink);
+        margin-block-end: 10px;
       }
       .rail-head .kicker {
         display: block;
@@ -78,16 +93,19 @@
         color: var(--ink-soft);
         text-decoration: none;
       }
-      .rail-head .kicker:hover {
-        color: var(--accent);
-        text-decoration: underline;
+      @media (hover: hover) and (pointer: fine) {
+        .rail-head .kicker:hover {
+          color: var(--accent);
+          text-decoration: underline;
+        }
       }
       .rail-head h1 {
         font-family: var(--display);
         font-size: 17px;
         letter-spacing: 0.14em;
         font-weight: 600;
-        margin: 5px 0 0;
+        margin-block: 5px 0;
+        margin-inline: 0;
       }
       .rail-head h1 a {
         color: inherit;
@@ -99,7 +117,7 @@
         width: 1px;
         height: 1px;
         opacity: 0;
-        overflow: hidden;
+        overflow: clip;
       }
       .rail-toggle {
         display: none;
@@ -118,14 +136,16 @@
         text-decoration: none;
         color: var(--ink);
         padding: 6px 16px;
-        border-left: 3px solid transparent;
+        border-inline-start: 3px solid transparent;
       }
-      .rail-links a:hover {
-        background: var(--paper-2);
+      @media (hover: hover) and (pointer: fine) {
+        .rail-links a:hover {
+          background: var(--paper-2);
+        }
       }
       .rail-links a.is-active {
         background: var(--paper-2);
-        border-left-color: var(--accent);
+        border-inline-start-color: var(--accent);
       }
       .rail-links .n {
         font-family: var(--data);
@@ -148,7 +168,8 @@
         font-size: 10px;
         letter-spacing: 0.14em;
         color: var(--ink-faint);
-        padding: 14px 16px 5px;
+        padding-block: 14px 5px;
+        padding-inline: 16px;
       }
       /* INDEX · ABOUT — one small line, not two sheet-sized entries */
       .rail-top {
@@ -169,9 +190,13 @@
         color: var(--ink-faint);
         margin: 0 10px;
       }
-      .rail-top a:hover,
       .rail-top a.is-active {
         color: var(--ink);
+      }
+      @media (hover: hover) and (pointer: fine) {
+        .rail-top a:hover {
+          color: var(--ink);
+        }
       }
       .rail-top a.is-active {
         font-weight: 600;
@@ -188,15 +213,18 @@
         font-size: 10px;
         letter-spacing: 0.14em;
         color: var(--ink-soft);
-        padding: 8px 16px 7px;
-        border-left: 3px solid transparent;
+        padding-block: 8px 7px;
+        padding-inline: 16px;
+        border-inline-start: 3px solid transparent;
       }
       .rail-band > summary::-webkit-details-marker {
         display: none;
       }
-      .rail-band > summary:hover {
-        background: var(--paper-2);
-        color: var(--ink);
+      @media (hover: hover) and (pointer: fine) {
+        .rail-band > summary:hover {
+          background: var(--paper-2);
+          color: var(--ink);
+        }
       }
       .rail-band > summary:focus-visible {
         outline: 2px solid var(--accent);
@@ -230,12 +258,13 @@
       }
       /* a band's plates sit one step in, on a hairline the active bar overprints */
       .rail-band > .rail-links {
-        margin: 0 0 6px 19px;
-        border-left: 1px solid var(--line);
+        margin-block: 0 6px;
+        margin-inline: 19px 0;
+        border-inline-start: 1px solid var(--line);
       }
       .rail-band > .rail-links a {
-        margin-left: -2px;
-        padding-left: 12px;
+        margin-inline-start: -2px;
+        padding-inline-start: 12px;
       }
       @media (prefers-reduced-motion: no-preference) {
         .rail-band > summary::after {
@@ -248,8 +277,8 @@
           min-height: 0;
           max-height: none;
           overflow: visible;
-          border-right: none;
-          border-bottom: 1.5px solid var(--ink);
+          border-inline-end: none;
+          border-block-end: 1.5px solid var(--ink);
           padding: 0;
         }
         .rail-head {
@@ -260,7 +289,7 @@
           height: 48px;
           padding: 0 14px;
           margin: 0;
-          border-bottom: none;
+          border-block-end: none;
         }
         .rail-head .kicker {
           display: none;
@@ -282,15 +311,16 @@
           user-select: none;
         }
         .rail-open:focus-visible + .rail-head .rail-toggle {
-          outline: 2px solid var(--accent);
-          outline-offset: 2px;
+          outline: max(2px, 0.08em) solid var(--accent);
+          outline-offset: 0.25em;
         }
         .rail-body {
           display: none;
           max-height: calc(100vh - 48px);
           overflow-y: auto;
-          border-top: 1.5px solid var(--ink);
-          padding: 8px 0 16px;
+          border-block-start: 1.5px solid var(--ink);
+          padding-block: 8px 16px;
+          padding-inline: 0;
         }
         .rail:has(.rail-open:checked) .rail-body {
           display: block;
@@ -328,28 +358,34 @@
         }
         /* a band steps in less here, so its widest number (7B·3D) clears the clip */
         .rail-band > .rail-links {
-          margin-left: 8px;
+          margin-inline-start: 8px;
         }
         .rail-band > .rail-links a {
-          padding-left: 8px;
+          padding-inline-start: 8px;
         }
-        .rail:hover,
         .rail:focus-within {
           width: 240px;
         }
-        .rail:hover .rail-head,
-        .rail:hover .rail-top,
-        .rail:hover .rail-sec,
-        .rail:hover .rail-links .t,
         .rail:focus-within .rail-head,
         .rail:focus-within .rail-top,
         .rail:focus-within .rail-sec,
         .rail:focus-within .rail-links .t,
-        .rail:hover .rail-band > summary .t,
-        .rail:hover .rail-band > summary::after,
         .rail:focus-within .rail-band > summary .t,
         .rail:focus-within .rail-band > summary::after {
           opacity: 1;
+        }
+        @media (hover: hover) and (pointer: fine) {
+          .rail:hover {
+            width: 240px;
+          }
+          .rail:hover .rail-head,
+          .rail:hover .rail-top,
+          .rail:hover .rail-sec,
+          .rail:hover .rail-links .t,
+          .rail:hover .rail-band > summary .t,
+          .rail:hover .rail-band > summary::after {
+            opacity: 1;
+          }
         }
         @media (prefers-reduced-motion: no-preference) {
           .rail {
@@ -367,13 +403,14 @@
       /* ---- the content column ---- */
       .content {
         min-width: 0;
-        padding: 0 clamp(12px, 1.6vw, 24px) clamp(12px, 2.4vw, 30px);
+        padding-block: 0 clamp(12px, 0.25rem + 2vw, 30px);
+        padding-inline: clamp(12px, 0.25rem + 1.35vw, 24px);
       }
       ui-view {
         display: block;
       }
       .content > .sheet:first-child {
-        margin-top: 0;
+        margin-block-start: 0;
       }
       a.xref {
         color: var(--accent);
@@ -382,31 +419,33 @@
       /* THE UTILITY BAR: crumb left, utilities right, one sticky strip. */
       .util {
         position: sticky;
-        top: 0;
+        inset-block-start: 0;
         z-index: 6;
         display: flex;
         justify-content: space-between;
         align-items: center;
         gap: 10px 18px;
         min-height: 34px;
-        margin: 0 0 14px;
+        margin-block: 0 14px;
+        margin-inline: 0;
         padding: 4px 2px;
         background: var(--ground);
-        border-bottom: 1px solid var(--edge);
+        border-block-end: 1px solid var(--edge);
         font-family: var(--data);
         font-size: 10px;
         letter-spacing: 0.14em;
-        font-variant-numeric: tabular-nums;
         color: var(--ink-soft);
       }
       .util a {
         color: var(--ink-soft);
         text-decoration: none;
       }
-      .util a:hover {
-        color: var(--ink);
-        text-decoration: underline;
-        text-decoration-color: var(--accent-soft);
+      @media (hover: hover) and (pointer: fine) {
+        .util a:hover {
+          color: var(--ink);
+          text-decoration: underline;
+          text-decoration-color: var(--accent-soft);
+        }
       }
       .crumb {
         display: flex;
@@ -414,6 +453,7 @@
         align-items: baseline;
         gap: 4px 14px;
         min-width: 0;
+        font-variant-numeric: tabular-nums;
       }
       /* The one fact in the strip, not one link among six. */
       .crumb .sh {
@@ -431,9 +471,9 @@
       .themer {
         display: flex;
         gap: 10px;
-        margin-left: 4px;
-        padding-left: 14px;
-        border-left: 1px solid var(--edge);
+        margin-inline-start: 4px;
+        padding-inline-start: 14px;
+        border-inline-start: 1px solid var(--edge);
       }
       .themer button,
       .util-copy {
@@ -443,13 +483,16 @@
         color: var(--ink-soft);
         background: none;
         border: none;
-        border-bottom: 1.5px solid transparent;
-        padding: 2px 0 1px;
+        border-block-end: 1.5px solid transparent;
+        padding-block: 2px 1px;
+        padding-inline: 0;
         cursor: pointer;
       }
-      .themer button:hover,
-      .util-copy:hover {
-        color: var(--ink);
+      @media (hover: hover) and (pointer: fine) {
+        .themer button:hover,
+        .util-copy:hover {
+          color: var(--ink);
+        }
       }
       /* invisible, never display:none: the copy fallback selects it */
       .util-copy-src {
@@ -461,7 +504,7 @@
       }
       .themer button[aria-pressed='true'] {
         color: var(--ink);
-        border-bottom-color: var(--accent);
+        border-block-end-color: var(--accent);
       }
       @media (max-width: 900px) {
         .util {
@@ -477,7 +520,8 @@
       }
       /* Plate metadata under the bar: what the crumb used to carry beside the nav. */
       .plate-data {
-        margin: -4px 0 12px;
+        margin-block: -4px 12px;
+        margin-inline: 0;
         font-family: var(--data);
         font-size: 10px;
         letter-spacing: 0.14em;
@@ -493,10 +537,11 @@
       /* the plate's own keys, in the cards' key-row shape */
       .plate-data .keyrow {
         align-self: start;
-        margin-top: 0;
+        margin-block-start: 0;
       }
       .plate-verdict {
-        margin: -6px 0 14px;
+        margin-block: -6px 14px;
+        margin-inline: 0;
         font-family: var(--prose);
         font-size: 13.5px;
         font-style: italic;
@@ -512,10 +557,11 @@
       /* ---- the cover: a title sheet ---- */
       .cover-title {
         font-family: var(--display);
-        font-size: clamp(30px, 3.2vw, 44px);
+        font-size: clamp(30px, 0.5rem + 2.6vw, 44px);
         letter-spacing: 0.14em;
         font-weight: 600;
-        margin: 6px 0 6px;
+        margin-block: 6px;
+        margin-inline: 0;
       }
       /* ONE NAME, ONE FORM. The cover title and the rail head carry plain
          uppercase THE ALTITUDE ATLAS in the display face, nothing set apart, so
@@ -527,13 +573,14 @@
       .cover-sub .stamp {
         display: block;
         color: var(--ink-faint);
-        margin-top: 3px;
+        margin-block-start: 3px;
       }
       /* The key image is the whole width of the sheet — the issue log that used
          to ride beside it is its own state at /log. */
       .hero {
         display: block;
-        margin: 22px 0 14px;
+        margin-block: 22px 14px;
+        margin-inline: 0;
       }
       .hero-plate {
         display: block;
@@ -542,8 +589,10 @@
         color: inherit;
         text-decoration: none;
       }
-      .hero-plate:hover {
-        background: var(--paper-2);
+      @media (hover: hover) and (pointer: fine) {
+        .hero-plate:hover {
+          background: var(--paper-2);
+        }
       }
       .hero-plate svg {
         display: block;
@@ -555,15 +604,17 @@
            reaches it through max-width times the hero's own viewBox ratio
            (--plate-ar, stamped by emit-app's heroPlate). */
         max-width: min(100%, calc(min(72vh, 820px) * var(--plate-ar, 1.4)));
-        padding: 6px 4px 0;
+        padding-block: 6px 0;
+        padding-inline: 4px;
       }
       .hero-cap {
         display: flex;
         flex-wrap: wrap;
         justify-content: space-between;
         gap: 4px 16px;
-        border-top: 1.5px solid var(--ink);
-        padding: 8px 12px 9px;
+        border-block-start: 1.5px solid var(--ink);
+        padding-block: 8px 9px;
+        padding-inline: 12px;
         font-family: var(--data);
         font-size: 10px;
         letter-spacing: 0.14em;
@@ -583,7 +634,8 @@
       }
       /* THE ONE LINE OF ISSUE RECORD ON THE COVER — the log itself is /log. */
       .cover-latest {
-        margin: 0 0 8px;
+        margin-block: 0 8px;
+        margin-inline: 0;
       }
       .cover-latest a {
         display: flex;
@@ -591,9 +643,10 @@
         align-items: baseline;
         gap: 2px 14px;
         border: 1.5px solid var(--ink);
-        border-top: none;
+        border-block-start: none;
         background: var(--paper);
-        padding: 8px 12px 9px;
+        padding-block: 8px 9px;
+        padding-inline: 12px;
         font-family: var(--data);
         font-size: 10.5px;
         letter-spacing: 0.12em;
@@ -601,8 +654,10 @@
         color: var(--ink-soft);
         text-decoration: none;
       }
-      .cover-latest a:hover {
-        background: var(--paper-2);
+      @media (hover: hover) and (pointer: fine) {
+        .cover-latest a:hover {
+          background: var(--paper-2);
+        }
       }
       .cover-latest .k {
         font-weight: 600;
@@ -634,20 +689,22 @@
         letter-spacing: 0.18em;
         font-weight: 600;
         color: var(--ink-soft);
-        margin: 0 0 8px;
+        margin-block: 0 8px;
+        margin-inline: 0;
       }
       .issue-log ol {
         list-style: none;
         padding: 0;
         margin: 0;
-        border-top: 1.5px solid var(--ink);
+        border-block-start: 1.5px solid var(--ink);
       }
       .issue-log li {
         display: grid;
         grid-template-columns: 74px minmax(0, 1fr);
         gap: 1px 10px;
-        padding: 6px 0 7px;
-        border-bottom: 1px solid var(--line);
+        padding-block: 6px 7px;
+        padding-inline: 0;
+        border-block-end: 1px solid var(--line);
         font-family: var(--data);
         font-variant-numeric: tabular-nums;
         font-size: 11.5px;
@@ -657,26 +714,28 @@
         font-size: 9.5px;
         letter-spacing: 0.1em;
         color: var(--ink-soft);
-        padding-top: 2px;
+        padding-block-start: 2px;
       }
       .issue-log .s {
         color: var(--accent);
         font-weight: 600;
         text-decoration: none;
       }
-      .issue-log .s:hover {
-        text-decoration: underline;
+      @media (hover: hover) and (pointer: fine) {
+        .issue-log .s:hover {
+          text-decoration: underline;
+        }
       }
       .issue-log .t {
         grid-column: 2;
         color: var(--ink-soft);
       }
       .issue-log details {
-        margin-top: 10px;
+        margin-block-start: 10px;
       }
       /* /log: the same rows with room to be a rev BLOCK — date, sheet, clause. */
       .issue-log-page {
-        margin-top: 18px;
+        margin-block-start: 18px;
       }
       @media (min-width: 1000px) {
         .issue-log-page li {
@@ -696,14 +755,13 @@
         padding: 4px 0;
       }
       .issue-log details ol {
-        margin-top: 6px;
+        margin-block-start: 6px;
       }
       /* Gallery index */
       .gal-body,
       .stat-bar,
       .survey {
-        margin-left: 0;
-        margin-right: 0;
+        margin-inline: 0;
       }
       /* A section heading on the index, above a card grid. */
       .set-sec {
@@ -712,9 +770,11 @@
         letter-spacing: 0.2em;
         font-weight: 600;
         color: var(--ink-soft);
-        margin: 26px 0 14px;
-        padding: 10px 0 0;
-        border-top: 1.5px solid var(--ink);
+        margin-block: 26px 14px;
+        margin-inline: 0;
+        padding-block: 10px 0;
+        padding-inline: 0;
+        border-block-start: 1.5px solid var(--ink);
       }
       .cards {
         display: grid;
@@ -743,11 +803,11 @@
         /* the backdrop sits at z-index -1: isolate so it stays inside THIS card,
            and clip so it keeps the card's own edges */
         isolation: isolate;
-        overflow: hidden;
+        overflow: clip;
       }
-      .card:focus-within {
-        outline: 2px solid var(--accent);
-        outline-offset: 2px;
+      .card:has(:focus-visible) {
+        outline: max(2px, 0.08em) solid var(--accent);
+        outline-offset: 0.25em;
       }
       .card .card-go {
         color: inherit;
@@ -759,8 +819,9 @@
         position: absolute;
         inset: 0;
       }
+      /* the card draws the ring; transparent still shows under forced colours */
       .card .card-go:focus-visible {
-        outline: none;
+        outline: max(2px, 0.08em) solid transparent;
       }
       /* the current sheet's card, marked by uiSrefActive on its title link */
       .card:has(.card-go.is-active) {
@@ -804,7 +865,7 @@
       .card-window {
         width: 100%;
         aspect-ratio: 259 / 150;
-        border-bottom: 1px solid var(--line);
+        border-block-end: 1px solid var(--line);
       }
       .card-pic img {
         display: block;
@@ -840,11 +901,16 @@
          ground whatever runs under the window. */
       .card-body {
         background: var(--paper);
-        padding: 14px 16px 15px;
+        padding-block: 14px 15px;
+        padding-inline: 16px;
       }
-      .card:hover .card-body,
       .card:has(.card-go.is-active) .card-body {
         background: var(--paper-2);
+      }
+      @media (hover: hover) and (pointer: fine) {
+        .card:hover .card-body {
+          background: var(--paper-2);
+        }
       }
       .card .n {
         font-family: var(--data);
@@ -858,7 +924,8 @@
         font-size: 15px;
         font-weight: 600;
         letter-spacing: 0.04em;
-        margin: 5px 0 6px;
+        margin-block: 5px 6px;
+        margin-inline: 0;
       }
       /* three lines of caption, hovered or not; the rest is on the sheet */
       .card p {
@@ -878,14 +945,15 @@
         letter-spacing: 0.14em;
         color: var(--ink-faint);
         display: block;
-        margin: -2px 0 7px;
+        margin-block: -2px 7px;
+        margin-inline: 0;
       }
       .card .meta {
         font-family: var(--data);
         font-size: 10px;
         letter-spacing: 0.12em;
         color: var(--ink-faint);
-        margin-top: 9px;
+        margin-block-start: 9px;
         display: block;
       }
       /* THE KEY INDEX — FORM split into keys, each key indexed in the shape its
@@ -893,15 +961,17 @@
       .keyindex {
         border: 1.5px solid var(--ink);
         background: var(--paper);
-        margin: 0 0 14px;
+        margin-block: 0 14px;
+        margin-inline: 0;
       }
       .khead {
         display: flex;
         flex-wrap: wrap;
         align-items: baseline;
         gap: 0 14px;
-        padding: 8px 14px 7px;
-        border-bottom: 1.5px solid var(--ink);
+        padding-block: 8px 7px;
+        padding-inline: 14px;
+        border-block-end: 1.5px solid var(--ink);
         background: var(--paper-2);
         font-family: var(--data);
         font-size: 10px;
@@ -910,7 +980,7 @@
       }
       .khead .kn {
         font-variant-numeric: tabular-nums;
-        margin-left: auto;
+        margin-inline-start: auto;
       }
       .khead .kclear {
         color: var(--accent);
@@ -922,12 +992,12 @@
         align-items: baseline;
         gap: 6px 10px;
         padding: 8px 14px;
-        border-bottom: 1px solid var(--line);
+        border-block-end: 1px solid var(--line);
       }
       /* basis is meaningful only inside the city group, so it is drawn inside it */
       .krow-in {
-        padding-left: 34px;
-        border-left: 3px solid var(--accent);
+        padding-inline-start: 34px;
+        border-inline-start: 3px solid var(--accent);
         background: var(--paper-2);
       }
       .krow .kk {
@@ -954,9 +1024,11 @@
         text-decoration: none;
         white-space: nowrap;
       }
-      .keyindex .kv:hover {
-        border-color: var(--ink);
-        background: var(--paper-2);
+      @media (hover: hover) and (pointer: fine) {
+        .keyindex .kv:hover {
+          border-color: var(--ink);
+          background: var(--paper-2);
+        }
       }
       .keyindex .kv.is-on {
         border-color: var(--ink);
@@ -975,14 +1047,14 @@
         gap: 5px;
       }
       .keyindex .kv .gl {
-        flex: 0 0 auto;
+        flex: none;
         width: 12px;
         height: 12px;
         display: block;
       }
       .keyindex .kv .c {
         font-variant-numeric: tabular-nums;
-        margin-left: 6px;
+        margin-inline-start: 6px;
         color: var(--ink-faint);
       }
       .keyindex .kv.is-on .c {
@@ -994,7 +1066,8 @@
         flex-wrap: wrap;
         align-items: center;
         gap: 8px;
-        padding: 8px 14px 10px;
+        padding-block: 8px 10px;
+        padding-inline: 14px;
       }
       .kvbox label {
         font-family: var(--data);
@@ -1014,6 +1087,12 @@
         padding: 4px 8px;
         flex: 1 1 22ch;
         min-width: 0;
+      }
+      /* outranks .kvbox input's 11px so a touch focus never zooms the page */
+      @media (pointer: coarse) {
+        .kvbox input {
+          font-size: max(16px, 1rem);
+        }
       }
       .kvbox input:focus-visible {
         outline: 2px solid var(--accent);
@@ -1045,7 +1124,7 @@
         position: absolute;
         width: 0;
         height: 0;
-        overflow: hidden;
+        overflow: clip;
       }
       /* THE KEY ROW — FORM's keys as ONE LINE OF ICONS, hairline-separated in
          the idiom generator/chrome.mjs draws the plates' own title block:
@@ -1062,7 +1141,7 @@
         width: fit-content;
         max-width: 100%;
         border: 1px solid var(--line);
-        margin-top: 10px;
+        margin-block-start: 10px;
         position: relative;
         z-index: 1;
         font-family: var(--data);
@@ -1072,18 +1151,21 @@
         display: flex;
         align-items: center;
         gap: 6px;
-        padding: 4px 9px 5px;
-        border-left: 1px solid var(--line);
+        padding-block: 4px 5px;
+        padding-inline: 9px;
+        border-inline-start: 1px solid var(--line);
         color: var(--ink-soft);
         text-decoration: none;
         min-width: 0;
       }
       .keyrow .kr-cell:first-child {
-        border-left: none;
+        border-inline-start: none;
       }
-      .keyrow a.kr-cell:hover {
-        background: var(--paper-2);
-        color: var(--ink);
+      @media (hover: hover) and (pointer: fine) {
+        .keyrow a.kr-cell:hover {
+          background: var(--paper-2);
+          color: var(--ink);
+        }
       }
       .keyrow a.kr-cell:focus-visible {
         outline: 2px solid var(--accent);
@@ -1101,7 +1183,7 @@
       /* An icon draws at 14 on a card: one 16-grid symbol out of the page's
          one sprite, stroked in the running colour. */
       .keyrow .gl {
-        flex: 0 0 auto;
+        flex: none;
         width: 14px;
         height: 14px;
         display: block;
@@ -1126,12 +1208,14 @@
          1800 the survey table and the reading column sit side by side, so the
          width is used instead of leaving a canyon beside a 72ch column. */
       .cover-band {
-        margin: 26px 0 0;
-        padding: 10px 0 0;
-        border-top: 1.5px solid var(--ink);
+        margin-block: 26px 0;
+        margin-inline: 0;
+        padding-block: 10px 0;
+        padding-inline: 0;
+        border-block-start: 1.5px solid var(--ink);
       }
       .cover-band .stat-bar {
-        margin-top: 0;
+        margin-block-start: 0;
       }
       @media (min-width: 1800px) {
         .cover-wide {
@@ -1141,7 +1225,7 @@
           align-items: start;
         }
         .cover-wide .survey {
-          margin-bottom: 0;
+          margin-block-end: 0;
         }
       }
       /* THE COLOPHON reads at one measure, flush with its head like the cover's
@@ -1170,19 +1254,20 @@
         font-size: 19px;
         font-weight: 600;
         letter-spacing: 0.06em;
-        margin-bottom: 12px;
+        margin-block-end: 12px;
       }
       .prose h3 {
         font-family: var(--data);
         font-size: 11px;
         letter-spacing: 0.18em;
         color: var(--ink-soft);
-        margin: 22px 0 8px;
+        margin-block: 22px 8px;
+        margin-inline: 0;
       }
       .prose p {
         font-family: var(--prose);
         font-size: 15.5px;
-        margin-bottom: 10px;
+        margin-block-end: 10px;
       }
       .prose code {
         font-family: var(--code);
@@ -1196,7 +1281,24 @@
         font-size: 10px;
         letter-spacing: 0.14em;
         color: var(--ink-soft);
-        margin-right: 10px;
+        margin-inline-end: 10px;
+      }
+      /* ---- press: every pressable gives under the pointer ---- */
+      .themer button:active,
+      .util-copy:active,
+      .rail-toggle:active,
+      .kvbox button:active,
+      .keyindex .kv:active {
+        transform: scale(0.97);
+      }
+      @media (prefers-reduced-motion: no-preference) {
+        .themer button,
+        .util-copy,
+        .rail-toggle,
+        .kvbox button,
+        .keyindex .kv {
+          transition: transform 160ms var(--ease-out, ease-out);
+        }
       }
     </style>
   </head>

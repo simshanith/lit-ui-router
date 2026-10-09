@@ -13,7 +13,9 @@ export const pinCss = (cls, size, font) => `
   color: var(--ink); font-family: var(--data); font-size: ${font}px; font-weight: 600; padding: 0; cursor: pointer;
   display: grid; place-items: center; }
 .${cls}.on { background: var(--hue, var(--accent)); color: #F1F0E7; }
-.${cls}:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }`;
+.${cls}:focus-visible { outline: max(2px, 0.08em) solid var(--accent); outline-offset: 0.25em; }
+.${cls}:active { transform: scale(0.97); }
+@media (prefers-reduced-motion: no-preference) { .${cls} { transition: opacity 0.3s, transform 160ms var(--ease-out, ease-out); } }`;
 
 /** A model plate's `.fillable` frame: stage, bar and `read` panel in `areas` order; filled, the stage takes what the rest leave. */
 export const frameCss = (p, read, areas) => {
@@ -29,11 +31,11 @@ ${on()} { box-sizing: border-box; overflow: auto; padding: 8px; grid-template-ro
   grid-template-areas: "stage" "bar" "read"; }
 ${on(` .${p}-stage`)} { position: relative; min-height: 0; border: 1.5px solid var(--ink); }
 ${on(` .${p}-view`)} { position: absolute; inset: 0; height: 100%; }
-${on(` .${p}-bar`)}, ${on(` .${read}`)} { border: 1.5px solid var(--ink); border-top: none; }
+${on(` .${p}-bar`)}, ${on(` .${read}`)} { border: 1.5px solid var(--ink); border-block-start: none; }
 @media (min-width: 1100px) {
-  ${on()} { grid-template-columns: minmax(0, 1fr) clamp(320px, 30vw, 460px); grid-template-rows: minmax(0, 1fr) auto;
+  ${on()} { grid-template-columns: minmax(0, 1fr) clamp(320px, 1rem + 29vw, 460px); grid-template-rows: minmax(0, 1fr) auto;
     grid-template-areas: "stage stage" "bar read"; }
-  ${on(` .${read}`)} { border-left: none; }
+  ${on(` .${read}`)} { border-inline-start: none; }
 }`;
 };
 

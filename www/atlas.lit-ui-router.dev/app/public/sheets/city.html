@@ -1,23 +1,25 @@
 <style>
-.cs { margin: 0 0 40px; }
+.cs { margin-block: 0 40px; margin-inline: 0; }
 .cs-bar { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; justify-content: space-between;
-  border: 1.5px solid var(--ink); border-bottom: none; background: var(--paper-2); padding: 8px 14px; }
+  border: 1.5px solid var(--ink); border-block-end: none; background: var(--paper-2); padding: 8px 14px; }
 .cs-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: center; }
 .cs-legend .lg { display: inline-flex; align-items: center; gap: 7px; font-family: var(--data); font-size: 10.5px;
   letter-spacing: 0.06em; color: var(--ink-soft); }
-.cs-legend .sw { display: block; width: 20px; height: 12px; border: 1.2px solid var(--ink); }
+.cs-legend .sw { display: block; flex: none; width: 20px; height: 12px; border: 1.2px solid var(--ink); }
 .cs-legend .sw-annex, .cs-legend .sw-lamp { border-color: var(--ink-soft); border-style: dashed; }
 .cs-ctl { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; font-family: var(--data); font-size: 10.5px;
   letter-spacing: 0.1em; color: var(--ink-soft); }
 .cs-ctl .grp { display: inline-flex; gap: 6px; }
 .cs-ctl button { font: inherit; letter-spacing: inherit; color: var(--ink); background: var(--paper);
   border: 1px solid var(--ink); padding: 4px 9px; cursor: pointer; }
-.cs-ctl button:hover { background: var(--paper-2); }
+@media (hover: hover) and (pointer: fine) { .cs-ctl button:hover { background: var(--paper-2); } }
+.cs-ctl button:not(:disabled):active { transform: scale(0.97); }
+@media (prefers-reduced-motion: no-preference) { .cs-ctl button { transition: transform 160ms var(--ease-out, ease-out); } }
 .cs-ctl button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
 .cs-ctl label { display: inline-flex; gap: 5px; align-items: center; cursor: pointer; }
-.cs-ctl input[type=range] { width: 130px; accent-color: var(--accent); }
+.cs-ctl input[type=range] { flex: none; width: 130px; accent-color: var(--accent); }
 /* the button keeps the wider label's width, so the slider after it never shifts under a drag */
-#cs-play::after { content: "GROUND"; display: block; height: 0; overflow: hidden; visibility: hidden; }
+#cs-play::after { content: "GROUND"; display: block; height: 0; overflow: clip; visibility: hidden; }
 .cs-ctl .touch { display: none; }
 @media (pointer: coarse) { .cs-ctl .mouse { display: none; } .cs-ctl .touch { display: inline; } }
 
@@ -31,14 +33,14 @@
   grid-template-areas: "stage" "bar" "read"; }
 .cs-frame:fullscreen .cs-stage, .cs-frame.is-filled .cs-stage { position: relative; min-height: 0; border: 1.5px solid var(--ink); }
 .cs-frame:fullscreen .cs-view, .cs-frame.is-filled .cs-view { position: absolute; inset: 0; height: 100%; }
-.cs-frame:fullscreen .cs-bar, .cs-frame.is-filled .cs-bar, .cs-frame:fullscreen .cs-info, .cs-frame.is-filled .cs-info { border: 1.5px solid var(--ink); border-top: none; }
+.cs-frame:fullscreen .cs-bar, .cs-frame.is-filled .cs-bar, .cs-frame:fullscreen .cs-info, .cs-frame.is-filled .cs-info { border: 1.5px solid var(--ink); border-block-start: none; }
 @media (min-width: 1100px) {
-  .cs-frame:fullscreen, .cs-frame.is-filled { grid-template-columns: minmax(0, 1fr) clamp(320px, 30vw, 460px); grid-template-rows: minmax(0, 1fr) auto;
+  .cs-frame:fullscreen, .cs-frame.is-filled { grid-template-columns: minmax(0, 1fr) clamp(320px, 1rem + 29vw, 460px); grid-template-rows: minmax(0, 1fr) auto;
     grid-template-areas: "stage stage" "bar read"; }
-  .cs-frame:fullscreen .cs-info, .cs-frame.is-filled .cs-info { border-left: none; }
+  .cs-frame:fullscreen .cs-info, .cs-frame.is-filled .cs-info { border-inline-start: none; }
 }
 .cs-stage { position: relative; border: 1.5px solid var(--ink); background: var(--paper); }
-.cs-stage:focus-within { outline: 2px solid var(--accent); outline-offset: -2px; }
+.cs-stage:focus-within { outline: max(2px, 0.08em) solid var(--accent); outline-offset: -2px; }
 .cs-view { display: block; width: 100%; height: clamp(520px, 80vh, 1400px); background: var(--paper);
   --poster-color: transparent; --progress-bar-color: var(--accent); }
 .cs-stage.over .cs-view { cursor: pointer; }
@@ -47,8 +49,11 @@
   color: var(--ink); font-family: var(--data); font-size: 11px; font-weight: 600; padding: 0; cursor: pointer;
   display: grid; place-items: center; }
 .cs-pin.on { background: var(--hue, var(--accent)); color: #F1F0E7; }
-.cs-pin:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.cs-pin { --hue: var(--ink-soft); transition: width 0.15s, height 0.15s; }
+.cs-pin:focus-visible { outline: max(2px, 0.08em) solid var(--accent); outline-offset: 0.25em; }
+.cs-pin:active { transform: scale(0.97); }
+@media (prefers-reduced-motion: no-preference) { .cs-pin { transition: opacity 0.3s, transform 160ms var(--ease-out, ease-out); } }
+.cs-pin { --hue: var(--ink-soft); }
+@media (prefers-reduced-motion: no-preference) { .cs-pin { transition: width 0.15s, height 0.15s, transform 160ms var(--ease-out, ease-out); } }
 .cs-pin.on { background: var(--accent); border-color: var(--accent); color: var(--paper); }
 .cs-stage.far .cs-pin:not(.on) { width: 9px; height: 9px; font-size: 0; border-width: 1.5px; }
 .cs-dist { font-family: var(--data); font-size: 11px; font-weight: 600; letter-spacing: 0.16em; color: var(--ink-soft);
@@ -58,15 +63,15 @@
    is the one place that face earns its keep), a ledger line in the data face at the key
    block's size, and sentences in the prose face at the running text's. Two columns once
    the strip is wide enough to carry them: identity left, sentences right. */
-.cs-info { border: 1.5px solid var(--ink); border-top: none; background: var(--paper-2); padding: 14px 18px 16px;
+.cs-info { border: 1.5px solid var(--ink); border-block-start: none; background: var(--paper-2); padding-block: 14px 16px; padding-inline: 18px;
   display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px 36px; align-items: start;
   min-height: 92px; color: var(--ink); }
 .cs-info h3 { font-family: var(--code); font-size: 16px; font-weight: 600; letter-spacing: 0.04em;
   line-height: 1.3; margin: 0; word-break: break-all; }
 .cs-info h3 .n { font-family: var(--data); font-size: 11px; font-weight: 600; letter-spacing: 0.16em;
-  color: var(--accent); margin-right: 10px; vertical-align: 0.12em; white-space: nowrap; }
+  color: var(--accent); margin-inline-end: 10px; vertical-align: 0.12em; white-space: nowrap; }
 .cs-info .ledger { font-family: var(--data); font-size: 12px; letter-spacing: 0.08em; line-height: 1.5;
-  color: var(--ink-soft); margin: 3px 0 0; word-break: break-word; }
+  color: var(--ink-soft); margin-block: 3px 0; margin-inline: 0; word-break: break-word; }
 .cs-info .txt { display: grid; gap: 4px; }
 .cs-info .note, .cs-info .lamp, .cs-info .hint { font-family: var(--prose); font-size: 16px; line-height: 1.5;
   color: var(--ink); max-width: 66ch; margin: 0; }
@@ -78,28 +83,28 @@
 /* beside the bar, the panel is one column */
 @media (min-width: 1100px) { .cs-frame:fullscreen .cs-info, .cs-frame.is-filled .cs-info { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 560px) {
-  .cs-info { padding: 12px 14px 14px; }
+  .cs-info { padding-block: 12px 14px; padding-inline: 14px; }
   .cs-info h3 { font-size: 15px; }
   .cs-info .note, .cs-info .lamp, .cs-info .hint { font-size: 15px; }
 }
 /* the plate's general notes, set to the flat set's notes measure: 18/1.8 prose in columns
    no narrower than 24em (48ch) and, because the next column lands first, never past 74ch */
 .cs-basis { font-family: var(--prose); font-size: 18px; line-height: 1.8; color: var(--ink);
-  border: 1.5px solid var(--ink); border-top: none; background: var(--paper-2);
-  padding: 16px 22px 4px; column-width: 24em; column-gap: 44px; column-rule: 1px solid var(--line); }
+  border: 1.5px solid var(--ink); border-block-start: none; background: var(--paper-2);
+  padding-block: 16px 4px; padding-inline: 22px; column-width: 24em; column-gap: 44px; column-rule: 1px solid var(--line); }
 /* a note never splits across columns; the cap only bites in the single-column band */
-.cs-basis p { margin: 0 0 1.1em; max-width: 70ch; break-inside: avoid; }
+.cs-basis p { margin-block: 0 1.1em; margin-inline: 0; max-width: 70ch; break-inside: avoid; }
 /* the label is a key, not a sentence: data face, tracked caps, its own line */
 .cs-basis p > strong:first-child { display: block; font-family: var(--data); font-size: 11.5px;
   font-weight: 600; letter-spacing: 0.16em; line-height: 1.4; text-transform: uppercase;
-  color: var(--ink-soft); margin: 0 0 4px; }
+  color: var(--ink-soft); margin-block: 0 4px; margin-inline: 0; }
 /* chip on --paper because the strip is --paper-2; a chip never breaks at desktop */
 .cs-basis code { font-family: var(--code); font-size: 0.88em; color: var(--ink); background: var(--paper);
   padding: 0 3px; border-radius: 2px; white-space: nowrap; }
 /* nowrap does not hold the <wbr> chipBreaks writes after a slash */
 .cs-basis code wbr { display: none; }
 @media (max-width: 560px) {
-  .cs-basis { font-size: 16px; line-height: 1.65; padding: 14px 14px 2px; }
+  .cs-basis { font-size: 16px; line-height: 1.65; padding-block: 14px 2px; padding-inline: 14px; }
   .cs-basis code { white-space: normal; overflow-wrap: anywhere;
     -webkit-box-decoration-break: clone; box-decoration-break: clone; }
   .cs-basis code wbr { display: inline; }
