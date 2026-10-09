@@ -1,5 +1,6 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { html } from 'lit';
+import { fixture, fixtureSync, oneEvent } from '@tools/lit-test-env/fixture.ts';
 
 import { UIRouterLitElement } from '../ui-router.js';
 import type { UiRouterContextEvent } from '../events.js';
@@ -9,26 +10,13 @@ import { UIRouterLit } from '../core.js';
 import { createTestRouter, tick, waitForUpdate } from './test-utils.js';
 
 describe('UIRouterLitElement', () => {
-  let container: HTMLElement;
-
-  beforeEach(() => {
-    container = document.createElement('div');
-    document.body.appendChild(container);
-  });
-
-  afterEach(() => {
-    container.remove();
-  });
-
   describe('initialization', () => {
     it('should be defined as a custom element', () => {
       expect(customElements.get('ui-router')).toBe(UIRouterLitElement);
     });
 
     it('should create router instance if not provided', async () => {
-      const element = document.createElement('ui-router');
-      container.appendChild(element);
-      await waitForUpdate(element);
+      const element = await fixture(document.createElement('ui-router'));
 
       expect(element.uiRouter).toBeInstanceOf(UIRouterLit);
     });
@@ -37,8 +25,7 @@ describe('UIRouterLitElement', () => {
       const router = createTestRouter();
       const element = document.createElement('ui-router');
       element.uiRouter = router;
-      container.appendChild(element);
-      await waitForUpdate(element);
+      await fixture(element);
 
       expect(element.uiRouter).toBe(router);
     });
@@ -46,7 +33,7 @@ describe('UIRouterLitElement', () => {
     it('should render slot content', async () => {
       const element = document.createElement('ui-router');
       element.innerHTML = '<div id="test-content">Hello</div>';
-      container.appendChild(element);
+      fixtureSync(element);
       await waitForUpdate(element);
 
       const slot = element.shadowRoot?.querySelector('slot');
@@ -63,7 +50,7 @@ describe('UIRouterLitElement', () => {
       const eventSpy = vi.fn();
       element.addEventListener('ui-router-context', eventSpy);
 
-      container.appendChild(element);
+      fixtureSync(element);
       await waitForUpdate(element);
 
       expect(eventSpy).toHaveBeenCalled();
@@ -74,24 +61,22 @@ describe('UIRouterLitElement', () => {
       const element = document.createElement('ui-router');
       element.uiRouter = router;
 
-      let receivedRouter: UIRouterLit | undefined;
-      element.addEventListener('ui-router-context', ((
-        event: UiRouterContextEvent,
-      ) => {
-        receivedRouter = event.detail.uiRouter;
-      }) as EventListener);
+      const contextEvent = oneEvent<UiRouterContextEvent>(
+        element,
+        'ui-router-context',
+      );
 
-      container.appendChild(element);
+      fixtureSync(element);
       await waitForUpdate(element);
 
-      expect(receivedRouter).toBe(router);
+      expect((await contextEvent).detail.uiRouter).toBe(router);
     });
 
     it('should stop propagation and provide router to child events', async () => {
       const router = createTestRouter();
       const element = document.createElement('ui-router');
       element.uiRouter = router;
-      container.appendChild(element);
+      fixtureSync(element);
       await waitForUpdate(element);
 
       // Create a child element that seeks router
@@ -112,7 +97,7 @@ describe('UIRouterLitElement', () => {
       const router = createTestRouter();
       const element = document.createElement('ui-router');
       element.uiRouter = router;
-      container.appendChild(element);
+      fixtureSync(element);
       await waitForUpdate(element);
 
       const child = document.createElement('div');
@@ -125,7 +110,7 @@ describe('UIRouterLitElement', () => {
 
     it('should return undefined when no router ancestor exists', () => {
       const orphan = document.createElement('div');
-      container.appendChild(orphan);
+      fixtureSync(orphan);
 
       const foundRouter = UIRouterLitElement.seekRouter(orphan);
       expect(foundRouter).toBeUndefined();
@@ -195,7 +180,7 @@ describe('UIRouterLitElement', () => {
       innerElement.uiRouter = innerRouter;
 
       outerElement.appendChild(innerElement);
-      container.appendChild(outerElement);
+      fixtureSync(outerElement);
 
       await waitForUpdate(outerElement);
       await waitForUpdate(innerElement);
@@ -222,7 +207,7 @@ describe('UIRouterLitElement', () => {
       innerElement.uiRouter = innerRouter;
       middleDiv.appendChild(innerElement);
 
-      container.appendChild(outerElement);
+      fixtureSync(outerElement);
 
       await waitForUpdate(outerElement);
       await waitForUpdate(innerElement);
@@ -258,7 +243,7 @@ describe('UIRouterLitElement', () => {
       outerElement.uiRouter = outerRouter;
       const outerView = document.createElement('ui-view');
       outerElement.appendChild(outerView);
-      container.appendChild(outerElement);
+      fixtureSync(outerElement);
 
       outerRouter.start();
       innerRouter.start();
@@ -284,7 +269,7 @@ describe('UIRouterLitElement', () => {
       try {
         const element = document.createElement('ui-router');
         element.uiRouter = createTestRouter();
-        container.appendChild(element);
+        fixtureSync(element);
         await waitForUpdate(element);
 
         expect(warn).not.toHaveBeenCalled();
@@ -306,7 +291,7 @@ describe('UIRouterLitElement', () => {
       try {
         // The prerender path: the element provides a placeholder, the app hands it the real router.
         const element = document.createElement('ui-router');
-        container.appendChild(element);
+        fixtureSync(element);
         await waitForUpdate(element);
 
         element.uiRouter = createTestRouter();
@@ -323,11 +308,12 @@ describe('UIRouterLitElement', () => {
       try {
         const element = document.createElement('ui-router');
         element.uiRouter = createTestRouter();
-        container.appendChild(element);
+        fixtureSync(element);
         await waitForUpdate(element);
 
+        const wrapper = element.parentElement!;
         element.remove();
-        container.appendChild(element);
+        wrapper.appendChild(element);
         await waitForUpdate(element);
 
         expect(warn).not.toHaveBeenCalled();

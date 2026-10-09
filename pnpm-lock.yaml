@@ -1759,7 +1759,17 @@ importers:
         version: 7.0.2
 
   tools/lit-test-env:
+    dependencies:
+      '@tools/happy-dom':
+        specifier: catalog:workspace
+        version: link:../happy-dom
     devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.19.1
+      happy-dom:
+        specifier: 'catalog:'
+        version: 20.14.5
       oxfmt:
         specifier: 'catalog:'
         version: 0.72.0
@@ -1769,6 +1779,9 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
+      vitest:
+        specifier: 'catalog:'
+        version: 5.0.3(@types/node@24.19.1)(@vitest/browser-playwright@5.0.3)(@vitest/coverage-v8@5.0.3)(@vitest/ui@5.0.3)(happy-dom@20.14.5)(vite@8.3.4(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
 
   tools/oxc-emit:
     dependencies:
