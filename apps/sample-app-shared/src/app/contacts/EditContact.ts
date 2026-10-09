@@ -62,6 +62,7 @@ export class EditContact extends LitElement {
     const message = 'You have unsaved changes to this contact.';
     const question = 'Navigate away and lose changes?';
     this.canExit = await DialogService.confirm(message, question);
+
     return this.canExit;
   };
 

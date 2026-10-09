@@ -41,6 +41,7 @@ export function annotationCommand(
     .filter(([, value]) => value !== undefined)
     .map(([key, value]) => `${key}=${escapeProperty(String(value))}`)
     .join(',');
+
   return `::${level}${props === '' ? '' : ` ${props}`}::${escapeData(message)}`;
 }
 
@@ -83,10 +84,12 @@ export function outputLine(name: string, value: string): string {
   if (!OUTPUT_NAME.test(name)) {
     throw new Error(`invalid output name ${JSON.stringify(name)}`);
   }
+
   if (/[\r\n]/.test(value)) {
     throw new Error(
       `output ${name} must be single-line, got ${JSON.stringify(value)}`,
     );
   }
+
   return `${name}=${value}`;
 }

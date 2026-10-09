@@ -47,6 +47,7 @@ describe('frameIn', () => {
       `    at TestContext.<anonymous> (file://${FILE}:7:10)`,
       `    at ${FILE}:12:5`,
     ].join('\n');
+
     assert.deepEqual(frameIn(stack, FILE), { line: 7, col: 10 });
     assert.deepEqual(frameIn(`    at ${FILE}:12:5`, FILE), {
       line: 12,
@@ -65,6 +66,7 @@ describe('failureAnnotation', () => {
       'Expected values to be strictly equal:\n\n1 !== 2\n',
       `AssertionError\n    at TestContext.<anonymous> (file://${FILE}:7:10)`,
     );
+
     assert.equal(
       failureAnnotation(failure(wrapped(cause)), '/repo/tools/x'),
       '::error file=src/a.test.ts,line=7,col=10,title=adds::' +
@@ -127,13 +129,17 @@ describe('the reporter', () => {
     // set inside a node:test run; the nested runner would report as a child
     delete env.NODE_TEST_CONTEXT;
     delete env.GITHUB_ACTIONS;
+
     if (annotate) env.GITHUB_ACTIONS = 'true';
+
     const result = spawnSync(
       process.execPath,
       ['--test', `--test-reporter=${reporter}`, 'failing.test.mjs'],
       { cwd, env, encoding: 'utf8' },
     );
+
     assert.equal(result.status, 1, result.stderr);
+
     return result.stdout;
   }
 
@@ -147,6 +153,7 @@ describe('the reporter', () => {
     const commands = run(true)
       .split('\n')
       .filter((line) => line.startsWith('::'));
+
     assert.deepEqual(commands, [
       '::error file=failing.test.mjs,line=7,col=12,' +
         'title=fails on the assertion line::' +

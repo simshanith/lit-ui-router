@@ -22,9 +22,11 @@ const hook = {
   // if the user is not currently authenticated (according to the AuthService)
   callback: (transition: Transition) => {
     const $state = transition.router.stateService;
+
     if (!AuthService.isAuthenticated()) {
       return $state.target('login', undefined, { location: false });
     }
+
     return undefined;
   },
 };

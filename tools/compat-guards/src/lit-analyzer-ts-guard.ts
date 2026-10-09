@@ -22,7 +22,9 @@ import {
 import { guard } from './guard.ts';
 
 const CATALOG = 'typescript6-compat';
+
 const EXTENDED = ['lit-analyzer', 'ts-simple-type'];
+
 const DEP = 'typescript';
 
 const g = guard('lit-analyzer-ts-guard');

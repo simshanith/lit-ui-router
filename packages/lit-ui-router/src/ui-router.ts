@@ -83,6 +83,7 @@ export class UIRouterLitElement extends LitElement {
   static seekRouter(candidate: Element): UIRouterLit | undefined {
     const uiRouterContextEvent = this.uiRouterContextEvent();
     candidate.dispatchEvent(uiRouterContextEvent);
+
     return uiRouterContextEvent.detail.uiRouter ?? requestRouter(candidate);
   }
 
@@ -136,6 +137,7 @@ export class UIRouterLitElement extends LitElement {
   /** @internal */
   connectedCallback(): void {
     super.connectedCallback();
+
     if (!this.uiRouter) {
       this.ownRouter = new UIRouterLit();
       this.uiRouter = this.ownRouter;
@@ -160,6 +162,7 @@ export class UIRouterLitElement extends LitElement {
   /** @internal */
   protected willUpdate(changed: PropertyValues<this>): void {
     super.willUpdate(changed);
+
     // Registered views keep the router they took, so a swap splits the page; replacing the placeholder minted above is the sanctioned upgrade.
     if (
       this.hasUpdated &&
@@ -168,6 +171,7 @@ export class UIRouterLitElement extends LitElement {
     ) {
       warnRouterSwapped(this);
     }
+
     // Only a placeholder's answers are kept, so this reaches subscribers on the upgrade alone.
     if (this.uiRouter && this.uiRouter !== this.ownRouter) {
       this.routerSubscribers.deliver(this.uiRouter);

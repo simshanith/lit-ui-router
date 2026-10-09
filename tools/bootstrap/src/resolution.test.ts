@@ -20,20 +20,24 @@ describe('@tools/bootstrap resolution', () => {
     const sources = (await readdir(here)).filter(
       (name) => name.endsWith('.ts') && !name.endsWith('.test.ts'),
     );
+
     // A package whose whole point is being importable before an install cannot
     // prove that from an empty directory.
     assert.ok(sources.length > 0);
 
     const dir = await mkdtemp(join(tmpdir(), 'bootstrap-resolution-'));
+
     try {
       for (const name of sources) {
         await copyFile(fileURLToPath(new URL(name, here)), join(dir, name));
       }
+
       // Every entrypoint, not just the one with consumers today: an unreachable
       // module is exactly where an unresolvable import hides.
       const loader = sources
         .map((name) => `await import(${JSON.stringify(`./${name}`)});`)
         .join('\n');
+
       await writeFile(join(dir, 'load.mjs'), `${loader}\n`);
 
       await promisify(execFile)(process.execPath, [join(dir, 'load.mjs')], {

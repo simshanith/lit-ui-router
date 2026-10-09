@@ -30,6 +30,7 @@ services.$injector = {
 
 // eslint-disable-next-line typescript/no-deprecated -- the control group needs core's factory itself, not the urlService facade
 const { urlMatcherFactory: coreFactory } = new UIRouter();
+
 const { compile } = urlMatcherFactory();
 
 const coreCompile = (
@@ -37,10 +38,14 @@ const coreCompile = (
   options: UrlMatcherCompileOptions = {},
 ) => {
   const config: Record<string, unknown> = {};
+
   if (options.strict !== undefined) config.strict = options.strict;
+
   if (options.caseInsensitive !== undefined)
     config.caseInsensitive = options.caseInsensitive;
+
   if (options.params !== undefined) config.state = { params: options.params };
+
   return coreFactory.compile(pattern, config);
 };
 
@@ -253,6 +258,7 @@ const featureCases: DifferentialCase[] = [
 ];
 
 const allCases = [...appCases, ...featureCases];
+
 const comparisons = allCases.reduce((sum, c) => sum + c.urls.length, 0);
 
 describe(`differential: standalone matcher vs @uirouter/core (${allCases.length} patterns, ${comparisons} comparisons)`, () => {
@@ -261,6 +267,7 @@ describe(`differential: standalone matcher vs @uirouter/core (${allCases.length}
     it(label, () => {
       const expectedMatcher = coreCompile(pattern, options);
       const actualMatcher = compile(pattern, options);
+
       for (const url of urls) {
         const expected: unknown = expectedMatcher.exec(url);
         const actual: unknown = exec(actualMatcher, url);
@@ -337,6 +344,7 @@ describe('differential: standalone-only compile rejections (supported upstream)'
     const options = {
       params: { id: { value: () => 'fallback', squash: true } },
     };
+
     assert.deepStrictEqual(coreCompile('/x/:id', options).exec('/x'), {
       id: 'fallback',
     });
@@ -355,6 +363,7 @@ describe('differential: standalone-only compile rejections (supported upstream)'
     const options = {
       params: { id: { value: 'v', replace: [{ from: 'a', to: 'b' }] } },
     };
+
     assert.ok(coreCompile('/a/:id', options));
     assert.throws(
       () => compile('/a/:id', options),
@@ -534,6 +543,7 @@ describe(`differential: compare vs @uirouter/core (${specificityPatterns.length}
         const expected = sign(
           CoreUrlMatcher.compare(coreCompile(left), coreCompile(right)),
         );
+
         const actual = sign(compare(compile(left), compile(right)));
         assert.equal(actual, expected);
       });
@@ -552,6 +562,7 @@ describe(`differential: format() vs @uirouter/core (${formatCases.length} patter
     it(label, () => {
       const expectedMatcher = coreCompile(pattern, options);
       const actualMatcher = compile(pattern, options);
+
       for (const value of values) {
         const expected: unknown = expectedMatcher.format(value);
         const actual: unknown = format(actualMatcher, value);

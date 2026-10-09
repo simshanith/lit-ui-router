@@ -10,6 +10,7 @@ import {
 } from './publish-check-runs.core.ts';
 
 const REPO = 'simshanith/lit-ui-router';
+
 const RELEASE_URL = `https://github.com/${REPO}/actions/workflows/bump-version.yml`;
 
 const clean: PackageSummary = {
@@ -94,6 +95,7 @@ describe('toCheckRun', () => {
       { ...clean, name: 'lit-ui-router-ssr', tag: 'rc', version: '0.1.0-rc.0' },
       REPO,
     );
+
     assert.equal(payload.title, 'up to date with rc 0.1.0-rc.0');
     assert.match(payload.summary, /match lit-ui-router-ssr@0\.1\.0-rc\.0/);
   });

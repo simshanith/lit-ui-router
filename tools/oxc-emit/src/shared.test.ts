@@ -6,11 +6,13 @@ import { transformSync } from 'oxc-transform';
 import { DEV_DEFINE_KEY, passDefine, VERSION_DEFINE_KEY } from './shared.ts';
 
 const reader = `export const VERSION = ${VERSION_DEFINE_KEY};\n`;
+
 // the define plugin rewrites this to `void 0`, so its survival proves the plugin stayed off
 const unrelated = 'export const pick = (x?: number) => x ?? undefined;\n';
 
 const emit = (source: string, dev?: string): string => {
   const define = passDefine(source, '1.2.3', dev);
+
   return transformSync('src/index.ts', source, { define }).code;
 };
 

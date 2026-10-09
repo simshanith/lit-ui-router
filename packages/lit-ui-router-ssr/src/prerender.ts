@@ -187,6 +187,7 @@ const joinPath = (dir: string, file: string): string =>
 
 const dirOf = (file: string): string => {
   const cut = file.lastIndexOf('/');
+
   return cut === -1 ? '' : file.slice(0, cut);
 };
 
@@ -199,6 +200,7 @@ interface NodeFsPromises {
 const nodeWrite: FileWriter = async (file, body) => {
   const { mkdir, writeFile } = (await import(NODE_FS)) as NodeFsPromises;
   const dir = dirOf(file);
+
   if (dir) await mkdir(dir, { recursive: true });
   await writeFile(file, body, 'utf8');
 };
@@ -206,6 +208,7 @@ const nodeWrite: FileWriter = async (file, body) => {
 // The mount-relative path: '' at the mount root, '/sheet/7B' below it.
 const subpathIn = (mount: string, path: string): string => {
   const base = mount === '/' ? '' : mount.replace(/\/+$/, '');
+
   return path.startsWith(base)
     ? path.slice(base.length).replace(/\/+$/, '')
     : path;
@@ -214,12 +217,14 @@ const subpathIn = (mount: string, path: string): string => {
 // '<subpath>/index.html', or 'index.html' at the mount root.
 const fileFor = (subpath: string): string => {
   const trimmed = subpath.replace(/^\/+/, '').replace(/\/+$/, '');
+
   return trimmed === '' ? 'index.html' : `${trimmed}/index.html`;
 };
 
 // The same path spelled the other way round, or undefined at the host root.
 const otherSpelling = (from: string): string | undefined => {
   const paired = from.endsWith('/') ? from.replace(/\/+$/, '') : `${from}/`;
+
   return paired === '' || paired === from ? undefined : paired;
 };
 
@@ -227,11 +232,13 @@ const defaultProbe = (
   mounts: Record<string, MountConfig> | undefined,
 ): string => {
   const base = mounts && Object.keys(mounts)[0];
+
   if (base === undefined) {
     throw new Error(
       'prerender() cannot derive a notFound probe from a bare `resolver`: pass `notFound.probe`, or `notFound: false`.',
     );
   }
+
   return `${base === '/' ? '' : base.replace(/\/+$/, '')}/${PROBE_SEGMENT}`;
 };
 
@@ -239,6 +246,7 @@ const defaultProbe = (
 const rootedStack = (root: EventTarget): EventTarget[] => {
   const litServerRoot = (globalThis as { litServerRoot?: EventTarget })
     .litServerRoot;
+
   return litServerRoot && litServerRoot !== root
     ? [litServerRoot, root]
     : [root];
@@ -254,6 +262,7 @@ interface WrittenSignature {
 /** The signature of the page `router` currently stands on; config params never reach the url, so they stay out. */
 export const signatureOf = (router: UIRouterLit): WrittenSignature => {
   const { $current, params } = router.globals;
+
   return {
     version: packageVersion,
     state: $current.name,
@@ -275,6 +284,7 @@ export const signatureBlock = (signature: WrittenSignature): string => {
   const json = JSON.stringify(signature)
     .replaceAll('<', '\\u003c')
     .replaceAll('>', '\\u003e');
+
   return `<script type="application/json" ${signatureAttribute}>${json}</script>`;
 };
 
@@ -319,6 +329,7 @@ const warnStrictSlash = async (
   // DEV folds away in dist/*.js; see check:dev-split and dev-warnings.json.
   if (!import.meta.env.DEV) return;
   const slashed = await resolver.resolve(`${path}/`);
+
   if (slashed.kind === 'shell' && slashed.status === undefined) return;
   console.warn(
     'lit-ui-router-ssr: this page is written as <subpath>/index.html, which static hosts serve by redirecting <subpath> to <subpath>/, and its mount rejects the trailing slash. Pass `config: { strict: false }` on the mount and call `router.urlService.config.strictMode(false)` on the client:',
@@ -343,7 +354,9 @@ const redirectLines = (
     to: verdict.location,
     status: verdict.status,
   };
+
   const paired = trailingSlash === 'both' ? otherSpelling(path) : undefined;
+
   return paired === undefined ? [line] : [line, { ...line, from: paired }];
 };
 
@@ -356,7 +369,9 @@ const notFoundPage = async (
   if (notFound === false) return undefined;
   const probe = notFound?.probe ?? defaultProbe(mounts);
   const verdict = await resolver.resolve(probe);
+
   if (verdict.kind !== 'shell' || verdict.status !== 404) return undefined;
+
   return { verdict, probe, file: notFound?.file ?? DEFAULT_NOT_FOUND_FILE };
 };
 
@@ -367,30 +382,38 @@ const writeRules = async (
   outDir: string,
 ): Promise<void> => {
   if (rules === 'none') return;
+
   if (typeof rules === 'function') {
     await rules(lines);
+
     return;
   }
+
   if (lines.length === 0) return;
+
   const body = lines
     .map((line) => `${line.from} ${line.to} ${line.status}`)
     .join('\n');
+
   await write(joinPath(outDir, '_redirects'), `${body}\n`);
 };
 
 const resolverOf = (options: PrerenderOptions): ServerRouter => {
   if (options.resolver) return options.resolver;
+
   if (!options.mounts) {
     throw new Error(
       'prerender() needs a mount table: pass `mounts`, or a `resolver` from createServerRouter().',
     );
   }
+
   return createServerRouter({ mounts: options.mounts });
 };
 
 const warnUnregistered = (): void => {
   // DEV folds away in dist/*.js; see check:dev-split and dev-warnings.json.
   if (!import.meta.env.DEV) return;
+
   if (globalThis.customElements?.get('ui-view')) return;
   console.warn(
     'lit-ui-router-ssr: <ui-view> is not defined on the current customElements registry, so every <ui-view> on these pages renders empty. ' +
@@ -464,12 +487,14 @@ export async function prerender(
   warnUnregistered();
 
   const root = options.root ?? new EventTarget();
+
   const tally: PrerenderTally = {
     shell: 0,
     redirect: 0,
     notFound: 0,
     document: 0,
   };
+
   const pages: EmittedPage[] = [];
   const generated: RedirectLine[] = [];
   const warnings: string[] = [];
@@ -481,25 +506,32 @@ export async function prerender(
     file: string,
   ): Promise<void> => {
     const context: RenderContext = { path, subpath, file, root };
+
     const body = await renderShell(
       verdict as Extract<Verdict, { kind: 'shell' }>,
       context,
     );
+
     const markup =
       typeof body === 'string'
         ? body
         : renderPage(body, router, root, elementRenderers);
+
     const html = document ? await document(markup, context) : markup;
+
     if (!dryRun) await write(joinPath(outDir, file), html);
     pages.push({ path, file, verdict, bytes: encoder.encode(html).length });
   };
 
   let slashProbed = false;
+
   const visit = async (path: string): Promise<void> => {
     const verdict = await resolver.resolve(path);
+
     if (verdict.kind === 'shell') {
       const subpath = subpathIn(verdict.mount, path);
       tally.shell += 1;
+
       if (
         import.meta.env.DEV &&
         !slashProbed &&
@@ -508,24 +540,31 @@ export async function prerender(
         slashProbed = true;
         await warnStrictSlash(resolver, path);
       }
+
       await emit(verdict, path, subpath, fileFor(subpath));
+
       return;
     }
+
     if (verdict.kind === 'redirect') {
       tally.redirect += 1;
       generated.push(...redirectLines(path, verdict, trailingSlash));
+
       return;
     }
+
     tally.notFound += 1;
     warnings.push(path);
     warnUnclaimed(path);
   };
 
   const uninstall = provideRouter(root, router);
+
   try {
     for await (const path of paths) await visit(path);
 
     const page = await notFoundPage(notFound, mounts, resolver);
+
     if (page) {
       tally.document += 1;
       const { verdict, probe, file } = page;
@@ -536,6 +575,7 @@ export async function prerender(
   }
 
   const lines = [...extraRules, ...generated];
+
   if (!dryRun) await writeRules(lines, rules, write, outDir);
 
   return { tally, pages, rules: lines, warnings, root };

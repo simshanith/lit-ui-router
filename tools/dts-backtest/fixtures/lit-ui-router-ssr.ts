@@ -48,6 +48,7 @@ const options: PrerenderOptions = {
   renderShell: async (_verdict, context) => {
     const transition = await settle(router, context.path, settleOptions);
     void transition.to().name;
+
     return page(context);
   },
   document: (body, context) => `<title>${context.file}</title>${body}`,
@@ -64,5 +65,6 @@ export const emit = async (): Promise<{
   first: EmittedPage | undefined;
 }> => {
   const result: PrerenderResult = await prerender(options);
+
   return { tally: result.tally, first: result.pages[0] };
 };

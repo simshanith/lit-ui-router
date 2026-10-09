@@ -25,6 +25,7 @@ const rootWith = (packageManager?: string): string => {
     join(dir, 'package.json'),
     JSON.stringify(packageManager === undefined ? {} : { packageManager }),
   );
+
   return dir;
 };
 
@@ -64,11 +65,13 @@ describe('cloudflare-build.ts resolution', () => {
   it('loads with no node_modules on any parent', async () => {
     const root = new URL('../../', import.meta.url);
     const bootstrap = new URL(`${BOOTSTRAP_DIR}/`, root);
+
     const sources = (await readdir(bootstrap)).filter(
       (name) => name.endsWith('.ts') && !name.endsWith('.test.ts'),
     );
 
     const dir = await mkdtemp(join(tmpdir(), 'cloudflare-build-resolution-'));
+
     try {
       await mkdir(join(dir, PACKAGE_DIR), { recursive: true });
       await mkdir(join(dir, BOOTSTRAP_DIR), { recursive: true });
@@ -76,12 +79,14 @@ describe('cloudflare-build.ts resolution', () => {
         fileURLToPath(new URL('./cloudflare-build.ts', import.meta.url)),
         join(dir, PACKAGE_DIR, 'cloudflare-build.ts'),
       );
+
       for (const name of sources) {
         await copyFile(
           fileURLToPath(new URL(name, bootstrap)),
           join(dir, BOOTSTRAP_DIR, name),
         );
       }
+
       // `import.meta.main` is false for an imported module, so this resolves
       // the graph without running the build steps.
       await writeFile(

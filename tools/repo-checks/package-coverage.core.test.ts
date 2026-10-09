@@ -105,6 +105,7 @@ describe('formatCoverage', () => {
         tasks: new Set(['lint']),
       },
     ]);
+
     assert.ok(header && row);
     assert.equal(header.indexOf('eslint'), row.indexOf('linted'));
     assert.equal(header.indexOf('  lint  ') + 2, row.lastIndexOf('✓'));

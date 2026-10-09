@@ -228,6 +228,7 @@ describe('UIRouterLitElement', () => {
           component: () => html`<div class="inner">Inner</div>`,
         },
       ]);
+
       const outerRouter = createTestRouter([
         {
           name: 'outer',
@@ -266,6 +267,7 @@ describe('UIRouterLitElement', () => {
   describe('uiRouter swapped after the first update', () => {
     it('should warn that the page is split', async () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
       try {
         const element = document.createElement('ui-router');
         element.uiRouter = createTestRouter();
@@ -288,6 +290,7 @@ describe('UIRouterLitElement', () => {
 
     it('should stay silent when the placeholder it minted is replaced', async () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
       try {
         // The prerender path: the element provides a placeholder, the app hands it the real router.
         const element = document.createElement('ui-router');
@@ -305,6 +308,7 @@ describe('UIRouterLitElement', () => {
 
     it('should stay silent when the same router survives a re-attach', async () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
       try {
         const element = document.createElement('ui-router');
         element.uiRouter = createTestRouter();

@@ -335,7 +335,9 @@ class PlanetDetailComponent extends LitElement {
         Body not found. <a class="back-link" ${uiSref('planets')}>Back</a>
       </p>`;
     }
+
     const size = dotSize(this.planet.diameterKm) * 2;
+
     return html`
       <div>
         <a class="back-link top" ${uiSref('planets')}
@@ -437,6 +439,7 @@ const planetState: LitStateDeclaration<{ planet: SolarBody | undefined }> = {
         const planetId = parseInt(
           $transition$.params<{ planetId: string }>().planetId,
         );
+
         return SolarSystemService.getBody(planetId);
       },
     },
@@ -445,13 +448,19 @@ const planetState: LitStateDeclaration<{ planet: SolarBody | undefined }> = {
 
 // Router setup
 const router = new UIRouterLit();
+
 router.plugin(hashLocationPlugin);
+
 void import('@uirouter/visualizer').then(({ Visualizer }) =>
   router.plugin(Visualizer),
 );
+
 router.stateRegistry.register(planetsState);
+
 router.stateRegistry.register(planetState);
+
 router.urlService.rules.initial({ state: 'planets' });
+
 router.start();
 
 // Render

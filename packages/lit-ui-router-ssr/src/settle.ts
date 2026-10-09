@@ -64,33 +64,44 @@ export const settle = (
 ): Promise<Transition> => {
   const { timeout = 10_000 } = options;
   const { globals, stateService, transitionService, urlService } = router;
+
   return new Promise<Transition>((resolve, reject) => {
     let timer: ReturnType<typeof setTimeout> | undefined;
+
     const done = (): void => {
       offSuccess();
       offError();
       clearTimeout(timer);
     };
+
     const land = (transition: Transition): void => {
       done();
       resolve(transition);
     };
+
     const fail = (reason: Error): void => {
       done();
       reject(reason);
     };
+
     const offSuccess = transitionService.onSuccess({}, land) as () => void;
+
     const offError = transitionService.onError({}, (transition) => {
       const rejection = transition.error();
+
       if (rejection.type === RejectType.SUPERSEDED) return;
+
       if (rejection.type === RejectType.IGNORED) {
         // Ignored with nothing in flight: the router already stands where the url points.
         if (!globals.transition && globals.successfulTransitions.size() > 0)
           land(globals.successfulTransitions.peekTail());
+
         return;
       }
+
       fail(new Error(rejection.message, { cause: rejection }));
     }) as () => void;
+
     if (timeout > 0 && timeout !== Infinity)
       timer = setTimeout(
         () =>
@@ -99,18 +110,21 @@ export const settle = (
       );
 
     urlService.url(path);
+
     for (let rewrites = 0; rewrites <= maxRewrites; rewrites++) {
       const best = urlService.match({
         path: urlService.path(),
         search: urlService.search(),
         hash: urlService.hash(),
       });
+
       if (!best)
         return fail(
           new Error(
             `settle: no url rule matches ${urlService.url()} and the router declares no otherwise`,
           ),
         );
+
       // Core's state rule starts nothing when the url's href is the current one.
       if (
         best.rule.type === 'STATE' &&
@@ -123,9 +137,11 @@ export const settle = (
         return land(globals.successfulTransitions.peekTail());
       const before = urlService.url();
       urlService.sync();
+
       // A rule that rewrote the url to another url needs its own sync when the router is not listening.
       if (urlService.url() === before) return;
     }
+
     fail(
       new Error(
         `settle: ${path} rewrote its url more than ${maxRewrites} times`,

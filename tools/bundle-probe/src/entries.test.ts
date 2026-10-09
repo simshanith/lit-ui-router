@@ -24,6 +24,7 @@ const packageWith = (bundleProbe: Record<string, unknown>): string => {
       bundleProbe,
     }),
   );
+
   return dir;
 };
 
@@ -32,6 +33,7 @@ describe('readPackageProbe claims', () => {
     const { entries } = readPackageProbe(
       packageWith({ '.': { free: ['lit'] } }),
     );
+
     assert.deepEqual(
       entries.map(({ label, free }) => ({ label, free })),
       [{ label: 'index', free: ['lit'] }],

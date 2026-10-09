@@ -9,6 +9,7 @@ export function releaseTagName(packageName: string, version: string): string {
   if (packageName.trim() === '') {
     throw new Error('packageName must be non-empty');
   }
+
   // The version comes from the package manifest; anything unversioned (or a
   // manifest field of the wrong shape) must not compose a half-formed ref.
   if (version.trim() === '' || /\s/.test(version)) {
@@ -16,6 +17,7 @@ export function releaseTagName(packageName: string, version: string): string {
       `invalid version ${JSON.stringify(version)} for ${packageName}`,
     );
   }
+
   return `${packageName}@${version}`;
 }
 

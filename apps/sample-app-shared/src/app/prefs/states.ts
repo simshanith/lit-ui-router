@@ -1,4 +1,5 @@
 import Preferences from './Preferences.js';
+
 /**
  * This state allows the user to set their application preferences
  */

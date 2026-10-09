@@ -311,6 +311,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
   /** @internal */
   constructor(partInfo: PartInfo) {
     super(partInfo);
+
     if (partInfo.type !== PartType.ELEMENT) {
       throw new Error(
         'The `uiSrefActive` directive must be used as an element',
@@ -329,6 +330,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
     if (!this._firstUpdated) {
       return noChange;
     }
+
     activeClasses?.forEach((className) => {
       if (this.active) {
         this.element!.classList.add(className);
@@ -366,9 +368,11 @@ export class UiSrefActiveDirective extends AsyncDirective {
     if (this.exact) {
       return values.exact ?? (isLinkElement(this.element!) && 'page');
     }
+
     if (this.active) {
       return values.active ?? false;
     }
+
     return false;
   }
 
@@ -391,6 +395,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
       if (!this.ownsAriaCurrent) {
         this.warnAriaCurrentTakeover();
       }
+
       this.element!.setAttribute('aria-current', resolved);
       this.ownsAriaCurrent = true;
     } else if (this.ownsAriaCurrent) {
@@ -414,6 +419,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
     // DEV folds the whole body out of dist/*.js (check:dev-split).
     if (!import.meta.env.DEV) return;
     const existing = this.element!.getAttribute('aria-current');
+
     if (
       !inLitDevMode() ||
       existing === null ||
@@ -421,6 +427,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
     ) {
       return;
     }
+
     this.warnedAriaCurrentTakeover = true;
     console.warn(
       `lit-ui-router: uiSrefActive is taking over an existing aria-current="${existing}" that it did not set; ` +
@@ -435,6 +442,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
     const defaultOpts: TransitionOptions = {
       relative: this.parentView?.viewContext?.name,
     };
+
     return extend(defaultOpts, this.options || {}) as TransitionOptions;
   }
 
@@ -516,10 +524,12 @@ export class UiSrefActiveDirective extends AsyncDirective {
     if (this._firstUpdated || !this.isConnected) {
       return;
     }
+
     this.seekRouter();
     this.seekParentView();
 
     this.targetStates.clear();
+
     if (targetStates) {
       Array.prototype.forEach.call(targetStates, (targetState) => {
         this.targetStates.add(targetState as TargetState);
@@ -541,10 +551,12 @@ export class UiSrefActiveDirective extends AsyncDirective {
         this.onUiSrefTargetEvent as EventListener,
       );
     }
+
     this.element!.addEventListener(
       TRANSITION_STATE_CHANGE_EVENT,
       this.onTransitionStateChange,
     );
+
     // no router: nothing to subscribe to, and `_firstUpdated` still has to be
     // reached so the next update can report the no-op
     if (this.uiRouter) {
@@ -573,9 +585,11 @@ export class UiSrefActiveDirective extends AsyncDirective {
     // re-arming is what `reconnected` does; without this it would no-op
     this._firstUpdated = false;
     this._connection++;
+
     if (!this.element) {
       return;
     }
+
     this.element.removeEventListener(
       UI_SREF_TARGET_EVENT,
       this.onUiSrefTargetEvent as EventListener,
@@ -597,9 +611,11 @@ export class UiSrefActiveDirective extends AsyncDirective {
    */
   reconnected(): void {
     this.element = this._partElement;
+
     if (!this.element) {
       return;
     }
+
     // a same-element uiSref reconnects first; hold its target across the re-arm
     const listening = !this._lastTargetStates && !this.state;
     const retained = listening ? [...this.targetStates] : [];
@@ -607,6 +623,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
     retained.forEach((targetState) => this.targetStates.add(targetState));
     // whatever is in flight either started, or was let go, while disconnected
     const inFlight = this.uiRouter?.globals.transition;
+
     if (inFlight) {
       this.onTransitionStart(inFlight);
     }
@@ -624,6 +641,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
     };
 
     detail.status = this.getStatus(detail);
+
     return new CustomEvent<TransEvt>(TRANSITION_STATE_CHANGE_EVENT, {
       detail,
     });
@@ -633,13 +651,16 @@ export class UiSrefActiveDirective extends AsyncDirective {
   onUiSrefTargetEvent = (event: UiSrefTargetEvent): void => {
     const { targetState } = event.detail;
     const previous = this._linkTargets.get(event.target);
+
     if (previous) {
       this.targetStates.delete(previous);
       this.uiSrefs.delete(previous);
     }
+
     this.targetStates.add(targetState);
     this.uiSrefs.set(targetState, event.target);
     this._linkTargets.set(event.target, targetState);
+
     if (this._firstUpdated) {
       this.onStatesChanged();
     }
@@ -649,9 +670,11 @@ export class UiSrefActiveDirective extends AsyncDirective {
   onTransitionStateChange = (e: Event): void => {
     const event = e as unknown as CustomEvent<TransEvt>;
     const status = this.getStatus(event.detail);
+
     if (!status) {
       return;
     }
+
     const { active, exact, entering, exiting } = status;
     this.active = active;
     this.exact = exact;
@@ -663,13 +686,17 @@ export class UiSrefActiveDirective extends AsyncDirective {
   /** @internal */
   getStatus(transEvt?: TransEvt): SrefStatus | undefined {
     const { targetStates } = this;
+
     if (!targetStates.size) {
       return undefined;
     }
+
     const statuses: SrefStatus[] = [];
+
     for (const target of targetStates) {
       statuses.push(this.getSrefStatus(transEvt, target));
     }
+
     return statuses.reduce(mergeSrefStatus);
   }
 
@@ -677,14 +704,17 @@ export class UiSrefActiveDirective extends AsyncDirective {
   onTransitionStart = (trans: Transition): void => {
     // a settlement subscribed to before a disconnect stays quiet
     const connection = this._connection;
+
     const dispatch = (evt: TransitionStateChange): void => {
       if (connection !== this._connection) {
         return;
       }
+
       this.element?.dispatchEvent(
         this.createTransitionStateChangeEvent(evt, trans),
       );
     };
+
     dispatch(TransitionStateChange.start);
     trans.promise.then(
       () => dispatch(TransitionStateChange.success),

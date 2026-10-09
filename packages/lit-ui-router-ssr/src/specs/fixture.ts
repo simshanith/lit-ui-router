@@ -106,6 +106,7 @@ export const makeRouter = (): Router => {
   const router = installServerLocation(new UIRouterLit(), {
     strictMode: false,
   });
+
   const states: LitStateDeclaration[] = [
     {
       name: 'shell',
@@ -128,6 +129,8 @@ export const makeRouter = (): Router => {
     { name: 'badge', url: '/badge', component: BadgeView },
     { name: 'bare', url: '/bare' },
   ];
+
   for (const state of states) router.stateRegistry.register(state);
+
   return router;
 };

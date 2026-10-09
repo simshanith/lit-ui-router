@@ -18,6 +18,7 @@ const bodyText = (res: Response): Promise<string> =>
   (res as unknown as { text(): Promise<string> }).text();
 
 const ORIGIN = 'https://example.test';
+
 // A GET navigation is the default the middleware engages on.
 const navigation = (path: string, init?: RequestInit): Request =>
   new Request(`${ORIGIN}${path}`, {
@@ -30,10 +31,12 @@ const navigation = (path: string, init?: RequestInit): Request =>
 // raw asset Response for the adapter to wrap.
 const shellSpy = (asset: Response) => {
   const calls: Array<{ mount: string; request: Request }> = [];
+
   return {
     calls,
     serveShell: (mount: string, request: Request) => {
       calls.push({ mount, request });
+
       return asset;
     },
   };
@@ -54,6 +57,7 @@ describe('createFetchHandler', () => {
       }),
       { serveShell: noShell },
     );
+
     const res = await handler(navigation('/app/old?ref=email'));
     assert.ok(res);
     assert.equal(res.status, 302);
@@ -70,6 +74,7 @@ describe('createFetchHandler', () => {
       }),
       { serveShell: noShell },
     );
+
     const res = await handler(navigation('/app/old?tab=2'));
     assert.ok(res);
     assert.equal(res.headers.get('Location'), '/app/home?tab=1');
@@ -85,6 +90,7 @@ describe('createFetchHandler', () => {
       }),
       { serveShell: noShell },
     );
+
     const res = await handler(navigation('/app/old?ref=email#section'));
     assert.ok(res);
     assert.equal(res.headers.get('Location'), '/app/home?ref=email');
@@ -103,6 +109,7 @@ describe('createFetchHandler', () => {
       }),
       { serveShell: noShell },
     );
+
     const res = await handler(navigation('/app/old?ref=email'));
     assert.ok(res);
     assert.equal(res.status, 302);
@@ -114,11 +121,14 @@ describe('createFetchHandler', () => {
       status: 200,
       headers: { 'Content-Type': 'text/html', ETag: '"v1"' },
     });
+
     const shell = shellSpy(asset);
+
     const handler = createFetchHandler(
       routerOf({ kind: 'shell', mount: '/app' }),
       { serveShell: shell.serveShell },
     );
+
     const res = await handler(navigation('/app/about'));
     assert.ok(res);
     // The host got a request at the mount base (default shellPath), same origin.
@@ -135,10 +145,12 @@ describe('createFetchHandler', () => {
     // The asset layer answers a full 200 body (validators are gone).
     const asset = new Response('<html>not found</html>', { status: 200 });
     const shell = shellSpy(asset);
+
     const handler = createFetchHandler(
       routerOf({ kind: 'shell', mount: '/app', status: 404 }),
       { serveShell: shell.serveShell },
     );
+
     const res = await handler(
       navigation('/app/missing', {
         headers: {
@@ -148,6 +160,7 @@ describe('createFetchHandler', () => {
         },
       }),
     );
+
     assert.ok(res);
     // Conditional validators stripped from the shell request the host fetches.
     const shellRequest = shell.calls[0].request;
@@ -163,15 +176,18 @@ describe('createFetchHandler', () => {
     // A real 304 carries no body (undici enforces the null-body status).
     const asset = new Response(null, { status: 304 });
     const shell = shellSpy(asset);
+
     const handler = createFetchHandler(
       routerOf({ kind: 'shell', mount: '/app' }),
       { serveShell: shell.serveShell },
     );
+
     const res = await handler(
       navigation('/app/about', {
         headers: { accept: 'text/html', 'If-None-Match': '"v1"' },
       }),
     );
+
     assert.ok(res);
     // A plain shell carries the conditional header through, so the asset layer
     // can answer 304 — which the adapter passes unrelabeled.
@@ -184,6 +200,7 @@ describe('createFetchHandler', () => {
       routerOf({ kind: 'notFound', mount: '/app' }),
       { serveShell: noShell },
     );
+
     const res = await handler(navigation('/app/nope'));
     assert.ok(res);
     assert.equal(res.status, 404);
@@ -195,6 +212,7 @@ describe('createFetchHandler', () => {
       routerOf({ kind: 'notFound', mount: '/app' }),
       { serveShell: noShell },
     );
+
     const res = await handler(navigation('/app/nope', { method: 'HEAD' }));
     assert.ok(res);
     assert.equal(res.status, 404);
@@ -205,6 +223,7 @@ describe('createFetchHandler', () => {
     const handler = createFetchHandler(routerOf({ kind: 'notFound' }), {
       serveShell: noShell,
     });
+
     const res = await handler(navigation('/elsewhere'));
     assert.equal(res, null);
   });
@@ -214,16 +233,19 @@ describe('createFetchHandler', () => {
       routerOf({ kind: 'shell', mount: '/app' }),
       { serveShell: noShell },
     );
+
     // A module fetch on a route-shaped path: Accept: */*.
     const res = await handler(
       navigation('/app/about', { headers: { accept: '*/*' } }),
     );
+
     assert.equal(res, null);
   });
 
   it('honours shellPath and shouldHandle overrides', async () => {
     const asset = new Response('<html>shell</html>', { status: 200 });
     const shell = shellSpy(asset);
+
     const handler = createFetchHandler(
       routerOf({ kind: 'shell', mount: '/app' }),
       {
@@ -232,10 +254,12 @@ describe('createFetchHandler', () => {
         shouldHandle: () => true,
       },
     );
+
     // A non-navigation POST the default heuristic would skip.
     const res = await handler(
       new Request(`${ORIGIN}/app/deep`, { method: 'POST', headers: {} }),
     );
+
     assert.ok(res);
     assert.equal(shell.calls[0].request.url, `${ORIGIN}/app/index.html`);
   });
@@ -254,7 +278,9 @@ describe('createFetchHandler', () => {
         },
       },
     });
+
     const shell = shellSpy(new Response('<html>shell</html>', { status: 200 }));
+
     const handler = createFetchHandler(router, {
       serveShell: shell.serveShell,
     });
@@ -266,12 +292,14 @@ describe('createFetchHandler', () => {
       assert.equal(shell.calls.at(-1)?.request.url, `${ORIGIN}/app`);
       assert.equal(res.headers.get('Link'), '</app>; rel="canonical"');
     }
+
     // A redirect rule -> 302.
     {
       const res = await handler(navigation('/app/legacy'));
       assert.ok(res);
       assert.equal(res.status, 302);
     }
+
     // An unknown path under a mount with `otherwise` -> status'd 404 shell.
     {
       const res = await handler(navigation('/app/ghost'));

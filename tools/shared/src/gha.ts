@@ -25,6 +25,7 @@ export async function group<T>(
   fn: () => Promise<T>,
 ): Promise<T> {
   console.log(onActions() ? groupCommand(title) : `── ${title}`);
+
   try {
     return await fn();
   } finally {
@@ -58,6 +59,7 @@ export function logWarning(message: string): void {
 export async function setOutput(name: string, value: string): Promise<void> {
   const line = outputLine(name, value);
   const file = process.env.GITHUB_OUTPUT;
+
   if (file !== undefined && file !== '') await appendFile(file, `${line}\n`);
   else console.log(line);
 }

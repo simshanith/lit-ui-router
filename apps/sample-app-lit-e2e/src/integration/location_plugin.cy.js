@@ -18,6 +18,7 @@ const EXPECTED_PLUGIN = {
 };
 
 const expected = EXPECTED_PLUGIN[LOCATION_PLUGIN];
+
 const lane = LOCATION_PLUGIN || 'unseeded';
 
 describe(`location plugin resolution in the ${lane} lane`, () => {

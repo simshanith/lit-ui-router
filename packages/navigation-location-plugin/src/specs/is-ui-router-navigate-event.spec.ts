@@ -9,6 +9,7 @@ import { isUIRouterNavigateEvent } from '../index.js';
 describe('isUIRouterNavigateEvent', () => {
   it('returns true for events with valid UIRouter instance in info', () => {
     const router = new UIRouter();
+
     const event = {
       info: { uiRouter: router },
     } as unknown as NavigateEvent;

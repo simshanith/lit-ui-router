@@ -18,6 +18,7 @@ import {
 import { localTagSha } from './release-tag-state.ts';
 
 const HEAD = 'a'.repeat(40);
+
 const OTHER = 'b'.repeat(40);
 
 describe('classifyTagState', () => {
@@ -138,6 +139,7 @@ describe('tagStateMessage', () => {
     ] as const) {
       assert.match(tagStateMessage(state, 'lit-ui-router@1.8.0'), /1\.8\.0/);
     }
+
     assert.match(
       tagStateMessage('skip-remote-same', 'p@1'),
       /already released/,
@@ -159,6 +161,7 @@ const GIT_ENV = {
 function git(cwd: string, ...args: string[]): string {
   const run = spawnSync('git', args, { cwd, encoding: 'utf8', env: GIT_ENV });
   assert.equal(run.status, 0, `git ${args.join(' ')} failed: ${run.stderr}`);
+
   return run.stdout.trim();
 }
 
@@ -197,6 +200,7 @@ describe('localTagSha', () => {
 
   it('rethrows a genuine git failure instead of reading it as absent', async () => {
     const notARepo = fs.mkdtempSync(path.join(os.tmpdir(), 'tag-state-test-'));
+
     try {
       await assert.rejects(
         localTagSha('lit-ui-router@1.0.0', { cwd: notARepo }),

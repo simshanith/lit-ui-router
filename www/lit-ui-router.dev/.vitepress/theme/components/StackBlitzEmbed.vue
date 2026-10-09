@@ -18,12 +18,16 @@ const openUrl = computed(() => {
   const url = new URL(props.src);
   url.searchParams.delete('embed');
   url.searchParams.delete('view');
+
   return url.toString();
 });
 
 const container = useTemplateRef('container');
+
 const isFullscreenSupported = ref(false);
+
 const isFullscreen = ref(false);
+
 const iconsLoaded = ref(false);
 
 const toggleFullscreen = () => {
@@ -37,8 +41,10 @@ const handleFullscreenChange = () => {
 };
 
 const iframe = useTemplateRef('iframe');
+
 function refreshIframe() {
   const el = iframe.value;
+
   if (el) el.src += '';
 }
 
@@ -58,6 +64,7 @@ if (!import.meta.env.SSR) {
 onMounted(async () => {
   embedSupported.value = webContainersSupported();
   isFullscreenSupported.value = screenfull.isEnabled;
+
   if (screenfull.isEnabled) {
     screenfull.on('change', handleFullscreenChange);
   }

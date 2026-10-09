@@ -3,6 +3,7 @@ import type { HeadConfig } from 'vitepress';
 /** The gtag loader pair for a measurement id, or nothing without one. */
 export function analyticsHead(trackingId: string | undefined): HeadConfig[] {
   if (!trackingId) return [];
+
   return [
     [
       'script',

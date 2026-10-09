@@ -20,6 +20,7 @@ describe('compileRoutes', () => {
       { name: 'contacts.detail', url: '/:contactId' },
       { name: 'contacts.detail.edit', url: '/edit' },
     ]);
+
     assert.deepEqual(
       compiled.map((route) => route.pattern),
       ['/contacts', '/contacts/:contactId', '/contacts/:contactId/edit'],
@@ -34,6 +35,7 @@ describe('compileRoutes', () => {
       { name: 'app' },
       { name: 'app.home', url: '/home' },
     ]);
+
     assert.deepEqual(
       compiled.map((route) => route.name),
       ['app.home'],
@@ -101,6 +103,7 @@ describe('matchRoute', () => {
       { name: 'dynamicFirst', url: '/:x/b' },
       { name: 'staticFirst', url: '/a/:y' },
     ]);
+
     assert.deepEqual(matchRoute(routes, '/a/b'), {
       state: 'staticFirst',
       params: { y: 'b' },
@@ -112,6 +115,7 @@ describe('matchRoute', () => {
       { name: 'first', url: '/:a/:b' },
       { name: 'second', url: '/:c/:d' },
     ]);
+
     assert.equal(matchRoute(routes, '/x/y')?.state, 'first');
   });
 });
@@ -171,6 +175,7 @@ describe('evaluateRedirects', () => {
         { name: 'settings', url: '/legacy/settings' },
       ],
     };
+
     // Both routes match; the specific one has no redirect, so serve as-is.
     assert.equal(evaluateRedirects(overlapping, '/legacy/settings'), null);
     // A non-overlapping page still redirects through 'section'.
@@ -190,6 +195,7 @@ describe('evaluateRedirects', () => {
         { name: 'old', url: '/old/:num', redirectTo: 'page' },
       ],
     };
+
     assert.equal(evaluateRedirects(typed, '/old/3'), '/page/3');
     assert.equal(evaluateRedirects(typed, '/old/x'), null);
   });
@@ -278,9 +284,12 @@ describe('differential: evaluator vs headless simulation', () => {
     const states: StateDeclaration[] = table.routes.map((route) => ({
       ...route,
     }));
+
     const router: UIRouter = createHeadlessRouter(states);
+
     for (const rule of table.rules ?? []) {
       const to = typeof rule.to === 'string' ? { state: rule.to } : rule.to;
+
       if (rule.pattern instanceof RegExp) {
         router.urlService.rules.when(rule.pattern, () => ({
           state: to.state,
@@ -293,16 +302,20 @@ describe('differential: evaluator vs headless simulation', () => {
         }));
       }
     }
+
     if (!router.urlService.match({ path, search: {}, hash: '' })) return null;
     const settled = onceSettled(router);
     router.urlService.url(path);
     router.urlService.sync();
+
     if (!(await settled)) return null;
     const landed = router.urlService.url();
+
     return landed === path ? null : landed;
   }
 
   const evaluate = compileRedirects(table);
+
   for (const probe of probes) {
     it(`'${probe}'`, async () => {
       assert.equal(evaluate(probe), await control(probe), `probe '${probe}'`);

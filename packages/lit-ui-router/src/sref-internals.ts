@@ -86,6 +86,7 @@ export function uiSrefTargetRemovedEvent(): Event {
  */
 export function srefEventLink(event: Event): Element {
   const origin = event.composedPath()[0];
+
   return origin instanceof Element ? origin : (event.target as Element);
 }
 
@@ -122,6 +123,7 @@ export function srefTransitionOptions(
     inherit: true,
     source: 'sref',
   };
+
   return extend(defaultOpts, opts || {}) as TransitionOptions;
 }
 
@@ -140,6 +142,7 @@ export function srefTransitionOptions(
  */
 export function isNativeLink(element: Element): boolean {
   const tag = element.localName;
+
   return tag === 'a' || tag === 'area';
 }
 
@@ -150,6 +153,7 @@ export function isNativeLink(element: Element): boolean {
  */
 function isModifiedClick(event: MouseEvent): boolean {
   const { button, ctrlKey, metaKey, shiftKey, altKey } = event;
+
   return (
     !isNumber(button) || !!button || ctrlKey || metaKey || shiftKey || altKey
   );
@@ -162,12 +166,14 @@ function isModifiedClick(event: MouseEvent): boolean {
  */
 function opensOffApp(element: Element): boolean {
   const target = element.getAttribute('target');
+
   // browsing-context keywords are ASCII case-insensitive; a name we do not
   // recognise is a frame, which is equally not ours. untrimmed on purpose —
   // the browser does not trim either, so `" _blank"` really is a frame name
   if (target && target.toLowerCase() !== '_self') {
     return true;
   }
+
   // rel is a token list: `rel="external noopener"` is still external
   return (element.getAttribute('rel') ?? '').split(/\s+/).includes('external');
 }
@@ -190,6 +196,7 @@ export function clickBelongsToBrowser(
   if (event.defaultPrevented || element.hasAttribute('download')) {
     return true;
   }
+
   return (
     isNativeLink(element) &&
     element.hasAttribute('href') &&
@@ -210,16 +217,20 @@ const pathMatches = (target: TargetState): Predicate<PathNode[]> => {
   const state: StateObject = target.$state();
   const targetParamVals = target.params();
   const targetPath: PathNode[] = PathUtils.buildPath(target);
+
   const paramSchema: Param[] = targetPath
     .map((node) => node.paramSchema)
     .reduce<Param[]>(unnestR, [])
     .filter((param: Param) =>
       Object.prototype.hasOwnProperty.call(targetParamVals, param.id),
     );
+
   return (path: PathNode[] = []) => {
     const tailNode = tail(path);
+
     if (!tailNode || tailNode.state !== state) return false;
     const paramValues = PathUtils.paramValues(path) as RawParams;
+
     return Param.equals(paramSchema, paramValues, targetParamVals);
   };
 };

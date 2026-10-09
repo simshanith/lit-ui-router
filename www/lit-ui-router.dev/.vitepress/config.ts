@@ -11,6 +11,7 @@ import ssrSidebarItemsJson from '../api/lit-ui-router-ssr/typedoc-sidebar.json' 
 
 const typedocSidebarItems =
   typedocSidebarItemsJson as DefaultTheme.SidebarItem[];
+
 // The companion references are small, and their kind categories (Classes,
 // Interfaces, …) are generic — unlike the flagship's semantic categories
 // (Core, Components, …). Flatten them into a single member list under the
@@ -27,13 +28,20 @@ function flattenGroups(
 // would otherwise leave it `any` and trip no-unsafe-argument through flatten.
 const effectSidebarItemsRaw =
   effectSidebarItemsJson as DefaultTheme.SidebarItem[];
+
 const mobxSidebarItemsRaw = mobxSidebarItemsJson as DefaultTheme.SidebarItem[];
+
 const navigationSidebarItemsRaw =
   navigationSidebarItemsJson as DefaultTheme.SidebarItem[];
+
 const ssrSidebarItemsRaw = ssrSidebarItemsJson as DefaultTheme.SidebarItem[];
+
 const effectSidebarItems = flattenGroups(effectSidebarItemsRaw);
+
 const mobxSidebarItems = flattenGroups(mobxSidebarItemsRaw);
+
 const navigationSidebarItems = flattenGroups(navigationSidebarItemsRaw);
+
 const ssrSidebarItems = flattenGroups(ssrSidebarItemsRaw);
 
 // ui-router-server is multi-entry: typedoc emits one module per subpath
@@ -41,6 +49,7 @@ const ssrSidebarItems = flattenGroups(ssrSidebarItemsRaw);
 // module to its import specifier, and flatten only the kind groups within.
 const serverSidebarItemsRaw =
   serverSidebarItemsJson as DefaultTheme.SidebarItem[];
+
 const serverSidebarItems = serverSidebarItemsRaw
   .map((module) => ({
     ...module,
@@ -307,6 +316,7 @@ export default defineConfig({
         .replace(/^\.\//, '')
         .replace(/\/index\.md$/, '/')
         .replace(/\.md$/, '');
+
       pageUrl = `${baseUrl}/${pagePath}`;
     }
 
@@ -325,6 +335,7 @@ export default defineConfig({
       ['meta', { name: 'twitter:image', content: imageUrl }],
       ['meta', { name: 'twitter:image:alt', content: imageAlt }],
     );
+
     return head;
   },
 });

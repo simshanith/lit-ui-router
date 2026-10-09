@@ -21,6 +21,7 @@ class RouterReactionHost extends LitElement {
 
   render() {
     this.renderCount++;
+
     return html`<span>${this.renderCount}</span>`;
   }
 }
@@ -51,6 +52,7 @@ async function mountInRouter(
   appendParentFirst(document.body, uiRouterEl, host);
   cleanups.push(() => uiRouterEl.remove());
   await waitForUpdate(host);
+
   return uiRouterEl;
 }
 
@@ -60,10 +62,12 @@ describe('RouterReactionController', () => {
     await routerGo(router, 'a');
 
     const host = createHost();
+
     const controller = new RouterReactionController(
       host,
       (route) => route.current?.name,
     );
+
     await mountInRouter(host, router);
 
     expect(controller.store).toBeDefined();
@@ -75,11 +79,13 @@ describe('RouterReactionController', () => {
     await routerGo(router, 'a');
 
     const host = createHost();
+
     const controller = new RouterReactionController(
       host,
       (route) => route.current?.name,
       { router },
     );
+
     document.body.appendChild(host);
     cleanups.push(() => host.remove());
     await waitForUpdate(host);
@@ -92,10 +98,12 @@ describe('RouterReactionController', () => {
     cleanups.push(() => warn.mockRestore());
 
     const host = createHost();
+
     const controller = new RouterReactionController(
       host,
       (route) => route.current?.name,
     );
+
     document.body.appendChild(host);
     cleanups.push(() => host.remove());
     await waitForUpdate(host);
@@ -122,6 +130,7 @@ describe('RouterReactionController', () => {
     cleanups.push(() => warn.mockRestore());
 
     const host = createHost();
+
     const controller = new RouterReactionController(
       host,
       (route) => route.current?.name,
@@ -140,10 +149,12 @@ describe('RouterReactionController', () => {
   it('updates the host when the selected value changes', async () => {
     const router = createTestRouter(testStates);
     const host = createHost();
+
     const controller = new RouterReactionController(
       host,
       (route) => route.current?.name,
     );
+
     await mountInRouter(host, router);
     const rendersBefore = host.renderCount;
 
@@ -158,14 +169,17 @@ describe('RouterReactionController', () => {
     const router = createTestRouter(testStates);
     const hostA = createHost();
     const hostB = createHost();
+
     const controllerA = new RouterReactionController(
       hostA,
       (route) => route.current?.name,
     );
+
     const controllerB = new RouterReactionController(
       hostB,
       (route) => route.params.id,
     );
+
     const uiRouterEl = await mountInRouter(hostA, router);
     uiRouterEl.appendChild(hostB);
     await waitForUpdate(hostB);
@@ -203,10 +217,12 @@ describe('RouterReactionController', () => {
     await routerGo(router, 'a');
 
     const host = createHost();
+
     const controller = new RouterReactionController(
       host,
       (route) => route.current?.name,
     );
+
     const uiRouterEl = await mountInRouter(host, router);
     expect(controller.value).toBe('a');
 
@@ -239,10 +255,13 @@ class StubRouterProvider extends HTMLElement {
       if (!this.router || !isRouterContextRequest(event)) return;
       event.stopImmediatePropagation();
       const { callback, subscribe } = event;
+
       if (!subscribe) {
         callback(this.router);
+
         return;
       }
+
       const deliver = (next: UIRouterLit) => callback(next, () => {});
       this.subscribers.add(deliver);
       callback(this.router, () => {
@@ -255,9 +274,11 @@ class StubRouterProvider extends HTMLElement {
     this.router = router;
     const subscribers = [...this.subscribers];
     this.subscribers.clear();
+
     for (const deliver of subscribers) deliver(router);
   }
 }
+
 customElements.define('stub-router-provider', StubRouterProvider);
 
 /** Answers only the house `ui-router-context` event, which cannot subscribe. */
@@ -270,6 +291,7 @@ class HouseEventProvider extends HTMLElement {
     );
   }
 }
+
 customElements.define('house-event-provider', HouseEventProvider);
 
 describe('RouterReactionController router upgrade', () => {
@@ -286,6 +308,7 @@ describe('RouterReactionController router upgrade', () => {
     appendParentFirst(document.body, provider, host);
     cleanups.push(() => provider.remove());
     await waitForUpdate(host);
+
     return provider;
   }
 
@@ -297,11 +320,13 @@ describe('RouterReactionController router upgrade', () => {
 
     const host = createHost();
     const onChange = vi.fn();
+
     const controller = new RouterReactionController(
       host,
       (route) => route.current?.name,
       { onChange },
     );
+
     const provider = await mountInStub(host, placeholder);
     expect(controller.value).toBe('a');
     expect(controller.store).toBe(RouterStore.for(placeholder));
@@ -335,10 +360,12 @@ describe('RouterReactionController router upgrade', () => {
     await routerGo(router, 'b', { id: '1' });
 
     const host = createHost();
+
     const controller = new RouterReactionController(
       host,
       (route) => route.current?.name,
     );
+
     const provider = await mountInStub(host, placeholder);
     expect(provider.subscribers.size).toBe(1);
 
@@ -357,10 +384,12 @@ describe('RouterReactionController router upgrade', () => {
     await routerGo(router, 'b', { id: '1' });
 
     const host = createHost();
+
     const controller = new RouterReactionController(
       host,
       (route) => route.current?.name,
     );
+
     const provider = await mountInStub(host, placeholder);
     provider.ignoreUnsubscribe = true;
 
@@ -378,10 +407,12 @@ describe('RouterReactionController router upgrade', () => {
     await routerGo(router, 'b', { id: '1' });
 
     const host = createHost();
+
     const controller = new RouterReactionController(
       host,
       (route) => route.current?.name,
     );
+
     const provider = await mountInStub(host, placeholder);
     host.remove();
     provider.appendChild(host);
@@ -401,11 +432,13 @@ describe('RouterReactionController router upgrade', () => {
     await routerGo(other, 'b', { id: '1' });
 
     const host = createHost();
+
     const controller = new RouterReactionController(
       host,
       (route) => route.current?.name,
       { router },
     );
+
     const provider = await mountInStub(host, placeholder);
     expect(provider.subscribers.size).toBe(0);
 
@@ -419,10 +452,12 @@ describe('RouterReactionController router upgrade', () => {
     await routerGo(router, 'a');
 
     const host = createHost();
+
     const controller = new RouterReactionController(
       host,
       (route) => route.current?.name,
     );
+
     const provider = new HouseEventProvider(router);
     appendParentFirst(document.body, provider, host);
     cleanups.push(() => provider.remove());
@@ -445,6 +480,7 @@ describe('RouterReactionController placeholder router upgrade', () => {
     await waitForUpdate(uiRouterEl);
     const placeholder = uiRouterEl.uiRouter!;
     cleanups.push(() => placeholder.dispose());
+
     return { uiRouterEl, placeholder };
   }
 
@@ -452,6 +488,7 @@ describe('RouterReactionController placeholder router upgrade', () => {
     // core links each declaration to its registry, so every router needs its own copies
     const router = createTestRouter(testStates.map((state) => ({ ...state })));
     cleanups.push(() => router.dispose());
+
     return router;
   }
 

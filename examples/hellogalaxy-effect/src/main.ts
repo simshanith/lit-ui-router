@@ -144,6 +144,7 @@ const MODEL_URL =
 interface StarsApiService {
   readonly fetchAll: Effect.Effect<readonly Star[]>;
 }
+
 class StarsApi extends Context.Tag('StarsApi')<StarsApi, StarsApiService>() {}
 
 const StarsApiLive = Layer.succeed(StarsApi, {
@@ -155,6 +156,7 @@ const StarsApiLive = Layer.succeed(StarsApi, {
 
 // FetchHttpClient.layer is the browser HttpClient the astronaut resolve uses.
 const AppLayer = Layer.mergeAll(StarsApiLive, FetchHttpClient.layer);
+
 type AppServices = Layer.Layer.Success<typeof AppLayer>;
 
 // A typed failure, so an unknown :starId is a value the caller must handle
@@ -173,6 +175,7 @@ interface StarCatalogService {
   readonly all: readonly Star[];
   readonly find: (id: string) => Effect.Effect<Star, StarNotFound>;
 }
+
 class StarCatalog extends Context.Tag('StarCatalog')<
   StarCatalog,
   StarCatalogService
@@ -507,7 +510,9 @@ class StarDetailComponent extends LitElement {
     // and only if it really is off-screen, otherwise this fights the visitor.
     requestAnimationFrame(() => {
       const { top, bottom, height } = this.getBoundingClientRect();
+
       if (height === 0) return;
+
       if (top >= window.innerHeight || bottom <= 0) {
         this.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       }
@@ -670,6 +675,7 @@ export class FiberLogComponent extends LitElement {
 
   updated() {
     const list = this.renderRoot.querySelector('ol');
+
     if (list) list.scrollTop = list.scrollHeight;
   }
 
@@ -746,13 +752,17 @@ export class AppRoot extends LitElement {
 // it installs the resolve policy through a `resolvables` state-builder
 // decorator, which only sees states registered after it.
 const router = new UIRouterLit();
+
 router.plugin(hashLocationPlugin);
+
 void import('@uirouter/visualizer').then(({ Visualizer }) =>
   router.plugin(Visualizer),
 );
 
 const runtime = ManagedRuntime.make(AppLayer);
+
 const effect = router.plugin<EffectPlugin<AppServices>>(effectPlugin(runtime));
+
 const say = (line: string) => effect.append(line);
 
 // Written by the star state's scoped ticker, read by <star-detail>.
@@ -807,10 +817,12 @@ const starsState: EffectStateDeclaration<
         const api = yield* StarsApi;
         const all = yield* api.fetchAll;
         yield* say(`catalog: ${all.length} stars ready`);
+
         return {
           all,
           find: (id: string) => {
             const star = all.find((s) => s.id === id);
+
             return star
               ? Effect.succeed(star)
               : Effect.fail(new StarNotFound({ starId: id }));
@@ -836,6 +848,7 @@ const starState: EffectStateDeclaration<{ star: Star }, AppServices> = {
           const transition = yield* CurrentTransition;
           const catalog = yield* StarCatalog;
           const { starId } = transition.params<{ starId: string }>();
+
           return yield* catalog.find(starId);
         }),
     },
@@ -845,6 +858,7 @@ const starState: EffectStateDeclaration<{ star: Star }, AppServices> = {
   scoped: (params) => {
     const starId = String(params.starId);
     let seconds = 0;
+
     return Effect.gen(function* () {
       yield* say(`star scope opened: ${starId}`);
       yield* Effect.repeat(
@@ -885,9 +899,11 @@ const astronautState: EffectStateDeclaration<
       resolveFn: () =>
         Effect.gen(function* () {
           yield* say('astronaut: fiber started');
+
           const module = yield* Effect.promise(
             () => import('@google/model-viewer'),
           );
+
           const bytes = yield* HttpClient.get(MODEL_URL).pipe(
             Effect.flatMap((response) => response.arrayBuffer),
             // The model is served from a static host that answers OPTIONS with
@@ -897,9 +913,11 @@ const astronautState: EffectStateDeclaration<
             Effect.retry(Schedule.recurs(2)),
             Effect.catchAll((cause) => new ModelDownloadFailed({ cause })),
           );
+
           const src = URL.createObjectURL(
             new Blob([bytes], { type: 'model/gltf-binary' }),
           );
+
           // Uninterruptible, and it releases whatever the ref already held: a
           // transition superseded between here and its scope opening must not
           // orphan nine megabytes.
@@ -911,6 +929,7 @@ const astronautState: EffectStateDeclaration<
           yield* say(
             `astronaut: model downloaded (${Math.round(bytes.byteLength / 1024 / 1024)} MB)`,
           );
+
           return { module, src };
         }).pipe(Effect.onInterrupt(() => say('astronaut: fiber interrupted'))),
     },
@@ -933,7 +952,9 @@ effect.onBefore({ to: 'galaxy.stars.star' }, (transition) =>
     const api = yield* StarsApi;
     const all = yield* api.fetchAll;
     const { starId } = transition.params<{ starId: string }>();
+
     if (all.some((s) => s.id === starId)) return undefined;
+
     return yield* Effect.fail(new StarNotFound({ starId }));
   }).pipe(
     Effect.catchTag('StarNotFound', (error) =>
@@ -945,10 +966,15 @@ effect.onBefore({ to: 'galaxy.stars.star' }, (transition) =>
 );
 
 router.stateRegistry.register(galaxyState);
+
 router.stateRegistry.register(starsState);
+
 router.stateRegistry.register(starState);
+
 router.stateRegistry.register(astronautState);
+
 router.urlService.rules.initial({ state: 'galaxy.stars' });
+
 router.start();
 
 // Render

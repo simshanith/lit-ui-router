@@ -42,12 +42,15 @@ class Messages extends SessionStorage {
     const searchObject: Record<string, string> = { folder: folder._id };
     const toFromAttr = ['drafts', 'sent'].includes(folder._id) ? 'from' : 'to';
     searchObject[toFromAttr] = AppConfig.emailAddress ?? '';
+
     return this.search(searchObject);
   }
 }
 
 const ContactsStorage = new Contacts();
+
 const FoldersStorage = new Folders();
+
 const MessagesStorage = new Messages();
 
 export { ContactsStorage, FoldersStorage, MessagesStorage };

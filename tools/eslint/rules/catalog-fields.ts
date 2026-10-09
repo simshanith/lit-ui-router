@@ -8,6 +8,7 @@ const SHIPPED_FIELDS = [
   'peerDependencies',
   'optionalDependencies',
 ] as const;
+
 const FIELDS = [...SHIPPED_FIELDS, 'devDependencies'] as const;
 
 // Minimal structural view of jsonc-eslint-parser's JSON AST; eslint's types
@@ -16,10 +17,12 @@ interface JSONProperty {
   key: { value: string | number };
   value: JSONNode;
 }
+
 interface JSONNode {
   value?: unknown;
   properties?: JSONProperty[];
 }
+
 interface JSONProgram {
   body: [{ expression?: JSONNode }?];
 }
@@ -42,13 +45,17 @@ const messageFor = (
   published: boolean,
 ) => {
   const publishedCatalog = catalog?.startsWith('published') === true;
+
   if (shipped && published && !publishedCatalog) return 'shippedNotPublished';
+
   if (publishedCatalog && !(shipped && published)) {
     return 'publishedOutsideShipped';
   }
+
   if (catalog?.startsWith('peerFloor') && shipped) {
     return 'floorOutsideDevDependencies';
   }
+
   return undefined;
 };
 
@@ -74,12 +81,15 @@ const catalogFields: Rule.RuleModule = {
       Program(program) {
         const root = (program as unknown as JSONProgram).body[0]?.expression;
         const published = !isPrivate(root);
+
         for (const field of FIELDS) {
           const shipped = (SHIPPED_FIELDS as readonly string[]).includes(field);
+
           for (const entry of findProperty(root, field)?.value.properties ??
             []) {
             const catalog = catalogName(entry.value.value);
             const messageId = messageFor(catalog, shipped, published);
+
             if (messageId === undefined) continue;
             context.report({
               node: entry.value as unknown as Rule.Node,

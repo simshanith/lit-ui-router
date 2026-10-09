@@ -44,13 +44,17 @@ function provideRecordingRouter(
   unsubscribe: () => void = () => {},
 ): { listener: EventListener; subscribers: ContextCallback<UIRouterLit>[] } {
   const subscribers: ContextCallback<UIRouterLit>[] = [];
+
   const listener = (event: Event) => {
     if (!isRouterContextRequest(event)) return;
     event.stopImmediatePropagation();
+
     if (event.subscribe) subscribers.push(event.callback);
     event.callback(router, event.subscribe ? unsubscribe : undefined);
   };
+
   host.addEventListener(contextRequestEventName, listener);
+
   return { listener, subscribers };
 }
 
@@ -157,11 +161,13 @@ describe('lit-ui-router/context', () => {
       const host = document.createElement('div');
       container.appendChild(host);
       const unsubscribe = vi.fn();
+
       const { subscribers } = provideRecordingRouter(
         container,
         router,
         unsubscribe,
       );
+
       const callback = vi.fn();
 
       const answer = requestRouter(host, { subscribe: true, callback });
@@ -250,6 +256,7 @@ describe('lit-ui-router/context', () => {
         new Event(contextRequestEventName, { bubbles: true, composed: true }),
         { context: { name: 'someone-else' }, callback: () => {} },
       );
+
       child.dispatchEvent(event);
 
       expect(outer).toHaveBeenCalledTimes(1);
@@ -313,6 +320,7 @@ describe('lit-ui-router/context', () => {
       const view = document.createElement('ui-view');
       uiRouterEl.appendChild(view);
       await waitForUpdate(uiRouterEl);
+
       return view;
     }
 
@@ -341,6 +349,7 @@ describe('lit-ui-router/context', () => {
 
       const nested = view.querySelector('ui-view')!;
       const leaf = nested.querySelector('.leaf') as HTMLElement;
+
       return { view, nested, leaf };
     }
 
@@ -498,6 +507,7 @@ describe('provideContext', () => {
   ): { answers: string[]; unsubscribes: (undefined | (() => void))[] } {
     const answers: string[] = [];
     const unsubscribes: (undefined | (() => void))[] = [];
+
     const event = Object.assign(new Event(contextRequestEventName), {
       context: requested,
       callback: (value: string, unsubscribe?: () => void) => {
@@ -506,7 +516,9 @@ describe('provideContext', () => {
       },
       subscribe: options.subscribe,
     });
+
     target.dispatchEvent(event);
+
     return { answers, unsubscribes };
   }
 
@@ -581,15 +593,18 @@ describe('requestContext', () => {
 
   it('returns the first answer when several arrive', () => {
     const root = new EventTarget();
+
     const listener = (event: Event) => {
       const request = event as Event & {
         callback: ContextCallback<string>;
         context: SpecKey;
       };
+
       if (request.context !== key) return;
       request.callback('first');
       request.callback('second');
     };
+
     root.addEventListener(contextRequestEventName, listener);
 
     expect(requestContext(root, key)).toBe('first');
@@ -600,15 +615,18 @@ describe('requestContext', () => {
   it('forwards every answer to the callback', () => {
     const root = new EventTarget();
     const seen: string[] = [];
+
     const listener = (event: Event) => {
       const request = event as Event & {
         callback: ContextCallback<string>;
         context: SpecKey;
       };
+
       if (request.context !== key) return;
       request.callback('first');
       request.callback('second');
     };
+
     root.addEventListener(contextRequestEventName, listener);
 
     requestContext(root, key, { callback: (value) => seen.push(value) });
@@ -687,6 +705,7 @@ describe('withRouterSync', () => {
       /collectResultSync/,
     );
     expect(getScopedRouter()).toBeUndefined();
+
     return pending;
   });
 });
@@ -695,6 +714,7 @@ describe('the router types the hand-off takes', () => {
   const coreRouter = (): UIRouter => {
     const router = new UIRouter();
     router.plugin(servicesPlugin);
+
     return router;
   };
 

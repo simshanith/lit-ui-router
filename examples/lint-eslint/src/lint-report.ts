@@ -98,9 +98,11 @@ export class LintReportPanel extends LitElement {
 
   private renderMessage(m: LintMessage) {
     const url = m.ruleId ? this.ruleDocs[m.ruleId] : undefined;
+
     const rule = url
       ? html`<a href=${url} target="_blank" rel="noreferrer">${m.ruleId}</a>`
       : m.ruleId;
+
     return html`<li>
       <span class="loc">${m.line}:${m.column}</span>
       <span class=${m.severity === 2 ? 'error' : 'warn'}
@@ -124,6 +126,7 @@ export class LintReportPanel extends LitElement {
     const errors = this.results.reduce((n, r) => n + r.errorCount, 0);
     const warnings = this.results.reduce((n, r) => n + r.warningCount, 0);
     const names = this.results.map((r) => r.filePath).join(', ');
+
     return html`
       <h2>ESLint report</h2>
       ${

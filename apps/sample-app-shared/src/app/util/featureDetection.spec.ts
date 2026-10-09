@@ -11,7 +11,9 @@ import {
 } from './featureDetection.js';
 
 const ENV_KEY = 'VITE_SAMPLE_APP_LOCATION_PLUGIN';
+
 const originalHref = window.location.href;
+
 // the Navigation interface global is an independent signal from window.navigation
 const shipsNavigationAPI = typeof Navigation !== 'undefined';
 

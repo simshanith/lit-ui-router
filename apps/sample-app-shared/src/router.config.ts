@@ -29,7 +29,9 @@ import {
 import { replaceAwareHashLocationPlugin } from './app/util/replaceAwareHashLocation.js';
 
 export const HOME = 'home';
+
 export const NESTED_HOME = 'home.nested';
+
 export const UNLISTED_NESTED_HOME = 'home.unlisted';
 
 interface LocationPluginEntry {
@@ -53,6 +55,7 @@ const locationPluginConfig = {
             event.destination.url,
             event.info.uiRouter,
           );
+
           return Promise.resolve();
         },
         // the default resets focus to <body>; routeFocus.hook places it
@@ -79,11 +82,14 @@ export function configureRouter(router = new UIRouterLit()) {
   // (VITE_SAMPLE_APP_BASE_URL) when served off a known mount — e.g. the dev
   // server at the root — so the derivation only ever adds coverage.
   const path = location.pathname;
+
   const derived = shellMounts
     .filter((m) => path === m || path.startsWith(`${m}/`))
     .sort((a, b) => b.length - a.length)[0];
+
   const BASE_URL =
     (derived && `${derived}/`) || import.meta.env.VITE_SAMPLE_APP_BASE_URL;
+
   if (BASE_URL) {
     const base = document.createElement('base');
     base.href = BASE_URL;
@@ -92,11 +98,13 @@ export function configureRouter(router = new UIRouterLit()) {
 
   const booted = describeLocationPlugin();
   setBootedLocationPlugin(booted);
+
   const {
     plugin: locationPlugin,
     options,
     message,
   }: LocationPluginEntry = locationPluginConfig[booted.plugin];
+
   router.plugin(locationPlugin, options);
   console.info(message);
 
@@ -120,6 +128,7 @@ export function configureRouter(router = new UIRouterLit()) {
       console.warn($error$.toString());
       // Rejection.detail is `any`
       const detail = $error$.detail as { stack?: string } | undefined;
+
       if (detail?.stack) console.warn(detail.stack);
     } else {
       console.error($error$);
@@ -172,6 +181,7 @@ export function configureRouter(router = new UIRouterLit()) {
   googleAnalyticsHook(router.transitionService);
 
   router.start();
+
   return router;
 }
 

@@ -44,11 +44,13 @@ export class RouterStore {
    */
   static for(router: UIRouter): RouterStore {
     let store = this.stores.get(router);
+
     if (!store) {
       store = new RouterStore();
       store.attach(router);
       this.stores.set(router, store);
     }
+
     return store;
   }
 
@@ -92,17 +94,21 @@ export class RouterStore {
         'RouterStore.attach: already attached to a different router. Use RouterStore.for(router).',
       );
     }
+
     this.router = router;
     this.update();
+
     const deregister = router.transitionService.onSuccess(
       {},
       this.update,
     ) as () => void;
+
     this.deregister = () => {
       deregister();
       this.deregister = undefined;
       this.router = undefined;
     };
+
     return this.deregister;
   }
 
@@ -122,6 +128,7 @@ export class RouterStore {
     // Touch the observables so MobX tracks this read in observer renders.
     void this.current;
     void this.params;
+
     return this.router?.stateService.includes(stateOrName, params) ?? false;
   }
 }

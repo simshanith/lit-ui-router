@@ -55,6 +55,7 @@ class ExtendedContext extends DefaultLitAnalyzerContext {
         noIncompatibleTypeBinding,
       );
     }
+
     return this.#rules;
   }
 }
@@ -68,13 +69,17 @@ type Program = Parameters<
 
 // Set by analyzeSourceFile before the analyzer ever asks for it.
 let program!: Program;
+
 const context = new ExtendedContext({ getProgram: () => program });
+
 context.updateConfig(
   makeConfig({ ...(readLitAnalyzerConfigFromTsConfig() ?? {}) }),
 );
 
 const analyzer = new LitAnalyzer(context);
+
 const formatter = new CodeDiagnosticFormatter();
+
 const stats: AnalysisStats = {
   diagnostics: 0,
   errors: 0,
@@ -95,9 +100,11 @@ await analyzeGlobs([WORKSPACE_SRC_GLOB], CLI_CONFIG, {
     program = options.program;
     const diagnostics = analyzer.getDiagnosticsInFile(file);
     const text = formatter.diagnosticTextForFile(file, diagnostics);
+
     if (text != null) console.log(text);
     stats.diagnostics += diagnostics.length;
     stats.totalFiles += 1;
+
     if (diagnostics.length > 0) {
       stats.errors += diagnostics.filter((d) => d.severity === 'error').length;
       stats.warnings += diagnostics.filter(
@@ -109,6 +116,7 @@ await analyzeGlobs([WORKSPACE_SRC_GLOB], CLI_CONFIG, {
 });
 
 const report = formatter.report(stats);
+
 if (report != null) console.log(report);
 
 // maxWarnings is 0, so a warning fails the gate exactly like an error.

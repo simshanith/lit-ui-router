@@ -9,6 +9,7 @@ silenceLitDevModeBanner();
 
 // @lit-labs/ssr 4 needs lit 3, so this lane never joins test:lit2-compat.
 await import('lit');
+
 assertLitMajor('3');
 
 export {};

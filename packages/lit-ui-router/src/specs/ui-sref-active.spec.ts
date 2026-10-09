@@ -66,6 +66,7 @@ describe('uiSrefActive directive', () => {
         { name: 'home', url: '/home' },
         { name: 'about', url: '/about' },
       ];
+
       const { wrapper } = await setupWithStates(states);
 
       render(
@@ -90,6 +91,7 @@ describe('uiSrefActive directive', () => {
         { name: 'home', url: '/home' },
         { name: 'about', url: '/about' },
       ];
+
       const { wrapper } = await setupWithStates(states);
 
       render(
@@ -119,6 +121,7 @@ describe('uiSrefActive directive', () => {
         { name: 'parent', url: '/parent' },
         { name: 'parent.child', url: '/child' },
       ];
+
       const { wrapper } = await setupWithStates(states);
 
       render(
@@ -147,6 +150,7 @@ describe('uiSrefActive directive', () => {
         { name: 'parent', url: '/parent' },
         { name: 'parent.child', url: '/child' },
       ];
+
       const { wrapper } = await setupWithStates(states);
 
       render(
@@ -228,6 +232,7 @@ describe('uiSrefActive directive', () => {
         { name: 'home', url: '/home' },
         { name: 'about', url: '/about' },
       ];
+
       const { wrapper } = await setupWithStates(states);
 
       render(
@@ -265,6 +270,7 @@ describe('uiSrefActive directive', () => {
       const states: LitStateDeclaration[] = [
         { name: 'user', url: '/user/:id' },
       ];
+
       const { wrapper } = await setupWithStates(states);
 
       render(
@@ -288,6 +294,7 @@ describe('uiSrefActive directive', () => {
       const states: LitStateDeclaration[] = [
         { name: 'user', url: '/user/:id' },
       ];
+
       const { wrapper } = await setupWithStates(states);
 
       render(
@@ -369,6 +376,7 @@ describe('uiSrefActive directive', () => {
         { name: 'home', url: '/home' },
         { name: 'about', url: '/about' },
       ];
+
       const { wrapper } = await setupWithStates(states);
 
       render(
@@ -394,7 +402,9 @@ describe('uiSrefActive directive', () => {
       const states: LitStateDeclaration[] = [
         { name: 'item', url: '/item/:id' },
       ];
+
       const { wrapper } = await setupWithStates(states);
+
       const nav = (id: number) =>
         html`<li ${uiSrefActive({ activeClasses: ['active'] })}>
           <a ${uiSref('item', { id })}>Item</a>
@@ -427,6 +437,7 @@ describe('uiSrefActive directive', () => {
         { name: 'parent', url: '/parent' },
         { name: 'parent.child', url: '/child' },
       ];
+
       const { wrapper } = await setupWithStates(states);
 
       render(
@@ -464,6 +475,7 @@ describe('uiSrefActive directive', () => {
         { name: 'parent.child', url: '/child' },
         { name: 'elsewhere', url: '/elsewhere' },
       ];
+
       const { wrapper } = await setupWithStates(states);
 
       render(
@@ -503,6 +515,7 @@ describe('uiSrefActive directive', () => {
             }),
         },
       ];
+
       const { wrapper } = await setupWithStates(states);
 
       render(
@@ -536,6 +549,7 @@ describe('uiSrefActive directive', () => {
         { name: 'home', url: '/home' },
         { name: 'about', url: '/about' },
       ];
+
       const { wrapper } = await setupWithStates(states);
 
       const part = render(
@@ -546,6 +560,7 @@ describe('uiSrefActive directive', () => {
         >`,
         wrapper,
       );
+
       await tick(100);
 
       await routerGo(router, 'about');
@@ -579,6 +594,7 @@ describe('uiSrefActive directive', () => {
         { name: 'home', url: '/home' },
         { name: 'about', url: '/about' },
       ];
+
       const { wrapper } = await setupWithStates(states);
       const seeded = [router.stateService.target('about')];
 
@@ -589,6 +605,7 @@ describe('uiSrefActive directive', () => {
         >`,
         wrapper,
       );
+
       await tick(100);
       const span = wrapper.querySelector('span')!;
 
@@ -613,6 +630,7 @@ describe('uiSrefActive directive', () => {
     it('should pick up a transition that started while disconnected', async () => {
       let open!: () => void;
       const gate = new Promise<void>((resolve) => (open = resolve));
+
       const states: LitStateDeclaration[] = [
         { name: 'home', url: '/home' },
         {
@@ -621,6 +639,7 @@ describe('uiSrefActive directive', () => {
           resolve: [{ token: 'gate', resolveFn: () => gate }],
         },
       ];
+
       const { wrapper } = await setupWithStates(states);
 
       const part = render(
@@ -631,6 +650,7 @@ describe('uiSrefActive directive', () => {
         >`,
         wrapper,
       );
+
       await tick(100);
       const anchor = wrapper.querySelector('a')!;
 
@@ -656,6 +676,7 @@ describe('uiSrefActive directive', () => {
     it('should report an in-flight settlement once after a reconnect', async () => {
       let open!: () => void;
       const gate = new Promise<void>((resolve) => (open = resolve));
+
       const states: LitStateDeclaration[] = [
         { name: 'home', url: '/home' },
         {
@@ -664,6 +685,7 @@ describe('uiSrefActive directive', () => {
           resolve: [{ token: 'gate', resolveFn: () => gate }],
         },
       ];
+
       const { wrapper } = await setupWithStates(states);
 
       const part = render(
@@ -674,6 +696,7 @@ describe('uiSrefActive directive', () => {
         >`,
         wrapper,
       );
+
       await tick(100);
       const anchor = wrapper.querySelector('a')!;
 
@@ -703,6 +726,7 @@ describe('uiSrefActive directive', () => {
       { name: 'home', url: '/home' },
       { name: 'about', url: '/about' },
     ];
+
     const { wrapper } = await setupWithStates(states);
 
     const part = render(
@@ -711,6 +735,7 @@ describe('uiSrefActive directive', () => {
       >`,
       wrapper,
     );
+
     await tick(100);
 
     await routerGo(router, 'about');
@@ -737,6 +762,7 @@ describe('uiSrefActive directive', () => {
         { name: 'home', url: '/home' },
         { name: 'about', url: '/about' },
       ];
+
       const { wrapper } = await setupWithStates(states);
 
       render(
@@ -1133,6 +1159,7 @@ describe('uiSrefActive directive', () => {
 
     it('should warn once per element when taking over an authored value', async () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
       try {
         const { wrapper } = await setupWithStates(parentChildStates);
 
@@ -1217,6 +1244,7 @@ describe('uiSrefActive directive', () => {
 
     it('should not warn when there was no authored value to take over', async () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
       try {
         const { wrapper } = await setupWithStates(parentChildStates);
 
@@ -1243,6 +1271,7 @@ describe('uiSrefActive directive', () => {
 
     it('should not warn when aria-current is disabled', async () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
       try {
         const { wrapper } = await setupWithStates(parentChildStates);
 
@@ -1338,6 +1367,7 @@ describe('uiSrefActive directive', () => {
 
     it('should warn once when an update finds no router', async () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
       try {
         render(link(), container);
         await tick(50);
@@ -1366,6 +1396,7 @@ describe('uiSrefActive directive', () => {
       // one missing provider trips uiSref's render and uiSrefActive's update on
       // the same element; the shared registry keeps that to one message
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
       try {
         render(
           html`<a
@@ -1414,6 +1445,7 @@ describe('uiSrefActive directive', () => {
     it('should not warn when a correctly wired app renders', async () => {
       // the whole surface at once: provider, view, link and active link
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
       try {
         const { wrapper } = await setupWithStates([
           { name: 'home', url: '/home' },
@@ -1421,12 +1453,14 @@ describe('uiSrefActive directive', () => {
         ]);
 
         wrapper.appendChild(document.createElement('ui-view'));
+
         const nav = () =>
           html`<a
             ${uiSref('home')}
             ${uiSrefActive({ activeClasses: ['active'] })}
             >Home</a
           >`;
+
         render(nav(), wrapper);
         await tick(50);
         render(nav(), wrapper);
@@ -1504,6 +1538,7 @@ describe('mergeSrefStatus helper', () => {
       exiting: false,
       targetStates: [],
     };
+
     const right: SrefStatus = {
       active: false,
       exact: false,
@@ -1511,6 +1546,7 @@ describe('mergeSrefStatus helper', () => {
       exiting: false,
       targetStates: [],
     };
+
     const result = mergeSrefStatus(left, right);
     expect(result.active).toBe(true);
   });
@@ -1523,6 +1559,7 @@ describe('mergeSrefStatus helper', () => {
       exiting: false,
       targetStates: [],
     };
+
     const right: SrefStatus = {
       active: false,
       exact: false,
@@ -1530,6 +1567,7 @@ describe('mergeSrefStatus helper', () => {
       exiting: false,
       targetStates: [],
     };
+
     const result = mergeSrefStatus(left, right);
     expect(result.exact).toBe(true);
   });
@@ -1542,6 +1580,7 @@ describe('mergeSrefStatus helper', () => {
       exiting: false,
       targetStates: [],
     };
+
     const right: SrefStatus = {
       active: false,
       exact: false,
@@ -1549,6 +1588,7 @@ describe('mergeSrefStatus helper', () => {
       exiting: false,
       targetStates: [],
     };
+
     const result = mergeSrefStatus(left, right);
     expect(result.entering).toBe(true);
   });
@@ -1561,6 +1601,7 @@ describe('mergeSrefStatus helper', () => {
       exiting: true,
       targetStates: [],
     };
+
     const right: SrefStatus = {
       active: false,
       exact: false,
@@ -1568,12 +1609,14 @@ describe('mergeSrefStatus helper', () => {
       exiting: false,
       targetStates: [],
     };
+
     const result = mergeSrefStatus(left, right);
     expect(result.exiting).toBe(true);
   });
 
   it('should combine targetStates from both sides', () => {
     const targetState = {} as TargetState;
+
     const left: SrefStatus = {
       active: false,
       exact: false,
@@ -1581,6 +1624,7 @@ describe('mergeSrefStatus helper', () => {
       exiting: false,
       targetStates: [targetState],
     };
+
     const right: SrefStatus = {
       active: false,
       exact: false,
@@ -1588,6 +1632,7 @@ describe('mergeSrefStatus helper', () => {
       exiting: false,
       targetStates: [targetState],
     };
+
     const result = mergeSrefStatus(left, right);
     expect(result.targetStates).toHaveLength(2);
   });
@@ -1663,6 +1708,7 @@ describe('UiSrefActiveDirective methods', () => {
       await tick();
 
       const targetState = router.stateService.target('home', {}, {});
+
       const trans = {
         treeChanges: () => ({
           to: [],
@@ -1752,10 +1798,12 @@ describe('UiSrefActiveDirective methods', () => {
   describe('onTransitionStart', () => {
     it('should dispatch start event', () => {
       const dispatchEventSpy = vi.spyOn(element, 'dispatchEvent');
+
       const trans = {
         treeChanges: () => ({}),
         promise: Promise.resolve(),
       } as unknown as Transition;
+
       directive.onTransitionStart(trans);
       expect(dispatchEventSpy).toHaveBeenCalled();
     });
@@ -1765,6 +1813,7 @@ describe('UiSrefActiveDirective methods', () => {
         treeChanges: () => ({}),
         promise: Promise.reject(new Error('aborted')),
       } as unknown as Transition;
+
       // the directive handles it; this keeps the spec's own read handled too
       trans.promise.catch(() => {});
 
@@ -1779,6 +1828,7 @@ describe('UiSrefActiveDirective methods', () => {
     // deregistering stops the next onStart, not a settlement already subscribed
     it('should stay quiet when the transition settles after a disconnect', async () => {
       let settle!: () => void;
+
       const trans = {
         treeChanges: () => ({}),
         promise: new Promise<void>((resolve) => (settle = resolve)),
@@ -1786,6 +1836,7 @@ describe('UiSrefActiveDirective methods', () => {
 
       directive.onTransitionStart(trans);
       const dispatchEventSpy = vi.spyOn(element, 'dispatchEvent');
+
       // the settlement reaches for `element` to dispatch on; without the guard
       // it builds the event, then throws on the null. Watching the build is
       // what separates "skipped" from "threw on the way".
@@ -1816,6 +1867,7 @@ describe('UiSrefActiveDirective methods', () => {
       directive.exact = false;
 
       const stateObj = targetState.$state();
+
       const pathNode: any = {
         state: stateObj,
         paramSchema: [],
@@ -1823,6 +1875,7 @@ describe('UiSrefActiveDirective methods', () => {
         ownParams: [],
         paramValues: {},
       };
+
       const trans = {
         treeChanges: () => ({
           to: [pathNode],
@@ -1839,6 +1892,7 @@ describe('UiSrefActiveDirective methods', () => {
         trans,
         status: undefined,
       };
+
       directive.onTransitionStateChange({ detail: event } as any);
       await tick();
       expect(directive.active).toBeDefined();
@@ -1850,6 +1904,7 @@ describe('UiSrefActiveDirective methods', () => {
         trans: {} as Transition,
         status: undefined,
       };
+
       directive.active = undefined;
       directive.onTransitionStateChange({ detail: event } as any);
       expect(directive.active).toBeUndefined();
@@ -1859,10 +1914,12 @@ describe('UiSrefActiveDirective methods', () => {
   describe('onUiSrefTargetEvent', () => {
     it('should add targetState to targetStates set', () => {
       const targetState = router.stateService.target('home', {}, {}) as any;
+
       const event: any = {
         detail: { targetState },
         target: element,
       };
+
       directive.onUiSrefTargetEvent(event);
       expect(directive.targetStates.has(targetState)).toBe(true);
     });
@@ -1893,10 +1950,12 @@ describe('UiSrefActiveDirective methods', () => {
       directive.exact = undefined;
       directive.isConnected = true;
       const onStatesChangedSpy = vi.spyOn(directive, 'onStatesChanged');
+
       const onStatesChangedRegistrySpy = vi.spyOn(
         router.stateRegistry,
         'onStatesChanged',
       );
+
       directive.firstUpdated({});
       await tick();
       expect(onStatesChangedRegistrySpy).toHaveBeenCalled();

@@ -80,6 +80,7 @@ const directivePosition: RuleFor<typeof RULE_NAME> = {
 
       TaggedTemplateExpression(node) {
         if (!tracker.shouldAnalyse) return;
+
         if (!tracker.isLitTemplate(node.tag as unknown as Node)) return;
 
         const expressions = node.quasi.expressions as unknown as Node[];
@@ -92,11 +93,15 @@ const directivePosition: RuleFor<typeof RULE_NAME> = {
         analyzer.traverse({
           enterElement(rawElement) {
             const element = rawElement as unknown as Parse5Element;
+
             if (element.sourceCodeLocation === undefined) return;
+
             for (const attribute of Object.keys(element.attribs)) {
               const index = elementPartIndex(attribute);
+
               if (index !== undefined) elementParts.add(index);
             }
+
             for (const [index, part] of attributePartsOf(element)) {
               attributeParts.set(index, part);
             }
@@ -105,7 +110,9 @@ const directivePosition: RuleFor<typeof RULE_NAME> = {
 
         expressions.forEach((expression, index) => {
           const name = tracker.directiveOf(expression);
+
           if (name === undefined) return;
+
           const report = (
             messageId:
               | 'elementPartOnly'
@@ -118,19 +125,26 @@ const directivePosition: RuleFor<typeof RULE_NAME> = {
 
           if (ALLOWED_POSITION[name] === 'element') {
             if (!elementParts.has(index)) report('elementPartOnly');
+
             return;
           }
 
           const part = attributeParts.get(index);
+
           if (part === undefined) {
             report('attributePartOnly');
+
             return;
           }
+
           const attribute = ALLOWED_ATTRIBUTE[name];
+
           if (attribute !== undefined && part.name !== attribute) {
             report('classAttributeOnly');
+
             return;
           }
+
           if (WHOLE_VALUE[name] === true ? !part.whole : !part.only) {
             report('soleAttributeExpression');
           }

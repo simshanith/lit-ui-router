@@ -92,23 +92,28 @@ export function load(app: Application): void {
 function generateCategoryIndexFiles(outDir: string, app: Application): void {
   for (const category of Object.keys(CATEGORY_META) as Category[]) {
     const categoryDir = path.join(outDir, category);
+
     if (!fs.existsSync(categoryDir)) continue;
 
     const files = fs
       .readdirSync(categoryDir)
       .filter((f: string) => f.endsWith('.md') && f !== 'index.md')
       .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+
     if (files.length === 0) continue;
 
     const meta = CATEGORY_META[category];
+
     const items = files
       .map((f: string) => {
         const name = path.basename(f, '.md');
+
         return `- [\`${name}\`](./${name})`;
       })
       .join('\n');
 
     const next = path.basename(files[0], '.md');
+
     const indexContent = `---
 next:
   text: ${next}
@@ -157,16 +162,19 @@ function formatCemTagContent(text: string): string {
 
   let type = '';
   const typeMatch = /^\{([^}]+)\}\s*/.exec(rest);
+
   if (typeMatch) {
     type = typeMatch[1];
     rest = rest.slice(typeMatch[0].length).trim();
   }
 
   let name = '';
+
   if (rest.startsWith('-')) {
     rest = rest.replace(/^-\s*/, '');
   } else {
     const nameMatch = /^(\S+)\s*(?:-\s*)?/.exec(rest);
+
     if (nameMatch) {
       name = nameMatch[1];
       rest = rest.slice(nameMatch[0].length);
@@ -176,6 +184,7 @@ function formatCemTagContent(text: string): string {
   const description = rest.replace(/\s+/g, ' ').trim();
   const label = name ? `<code>${name}</code>` : '<em>default</em>';
   const typeSuffix = type ? ` (<code>${type}</code>)` : '';
+
   return `- ${label}${typeSuffix} — ${description}`;
 }
 
@@ -201,7 +210,9 @@ function checkCategoryTags(context: Context, app: Application): void {
         visit(child);
         continue;
       }
+
       if (!child.kindOf(CATEGORIZED_KINDS)) continue;
+
       if (!child.comment?.getTag('@category')) {
         app.logger.warn(
           `[lit-ui-router] ${child.getFriendlyFullName()} has no @category tag`,
@@ -224,6 +235,7 @@ function handleCemTags(context: Context): void {
 
     if ('children' in reflection) {
       const withChildren = reflection as { children?: Reflection[] };
+
       if (withChildren.children) {
         for (const child of withChildren.children) {
           visitReflection(child);
@@ -241,6 +253,7 @@ function handleCemTags(context: Context): void {
 function aggregateCemTags(comment: Comment): void {
   for (const { tag, groupTag } of CEM_TAG_GROUPS) {
     const matches = comment.blockTags.filter((t) => t.tag === tag);
+
     if (matches.length === 0) continue;
 
     const items = matches.map((t) =>
@@ -257,10 +270,13 @@ function aggregateCemTags(comment: Comment): void {
 /** Retitle and relink the sidebar's category entries. */
 function updateSidebarJson(outDir: string, app: Application): void {
   const sidebarPath = path.join(outDir, 'typedoc-sidebar.json');
+
   if (!fs.existsSync(sidebarPath)) return;
+
   const sidebar = JSON.parse(
     fs.readFileSync(sidebarPath, 'utf-8'),
   ) as SidebarItem[];
+
   for (const item of sidebar) {
     const category = item.text as Category;
     // Fall back to title-casing so an uncharted @category tag renders
@@ -270,6 +286,7 @@ function updateSidebarJson(outDir: string, app: Application): void {
       category.charAt(0).toUpperCase() + category.slice(1);
     item.link = `/api/reference/${category}`;
     delete item.collapsed;
+
     if (category === 'types') {
       item.collapsed = true;
     }

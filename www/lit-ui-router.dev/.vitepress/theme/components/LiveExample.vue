@@ -26,16 +26,23 @@ const props = withDefaults(
 type Mode = 'preview' | 'stackblitz';
 
 const example = computed(() => EXAMPLES[props.name]);
+
 const previewSrc = computed(() => staticSrc(props.name));
+
 const embedSrc = computed(() =>
   stackblitzEmbedSrc(props.name, props.file, props.view),
 );
+
 const openSrc = computed(() => stackblitzOpenSrc(props.name, props.file));
+
 const previewHeight = computed(() => props.height ?? example.value.height);
 
 const uid = useId();
+
 const active = ref<Mode>('preview');
+
 const supported = ref(true);
+
 // First StackBlitz selection boots the iframe; v-show keeps it alive after.
 const stackblitzBooted = ref(false);
 
@@ -43,6 +50,7 @@ const stackblitzBooted = ref(false);
 // and WebContainers only boot on an explicit tab click.
 function selectTab(mode: Mode) {
   active.value = mode;
+
   if (mode === 'stackblitz' && supported.value) stackblitzBooted.value = true;
 }
 

@@ -41,6 +41,7 @@ function attributePart(name: string, strings?: string[]): PartInfo {
     tagName: 'a',
     strings,
   };
+
   return info;
 }
 
@@ -74,6 +75,7 @@ describe('attribute-part active directives', () => {
 
     render(template, wrapper);
     await tick(20);
+
     return wrapper;
   }
 
@@ -94,6 +96,7 @@ describe('attribute-part active directives', () => {
           >Users</a
         >`,
       );
+
       const anchor = wrapper.querySelector('a')!;
       expect(anchor.classList.contains('nav-link')).toBe(true);
       expect(anchor.classList.contains('active')).toBe(false);
@@ -118,6 +121,7 @@ describe('attribute-part active directives', () => {
           >Users</a
         >`,
       );
+
       const anchor = wrapper.querySelector('a')!;
 
       await goTo('users');
@@ -137,6 +141,7 @@ describe('attribute-part active directives', () => {
           >Users</a
         >`,
       );
+
       const anchor = wrapper.querySelector('a')!;
       anchor.classList.add('focus-visible');
 
@@ -155,6 +160,7 @@ describe('attribute-part active directives', () => {
           <a href=${srefHref('users')}>Users</a>
         </li>`,
       );
+
       const item = wrapper.querySelector('li')!;
       expect(item.classList.contains('active')).toBe(false);
 
@@ -170,6 +176,7 @@ describe('attribute-part active directives', () => {
         html`<a class=${srefActiveClass({ state, activeClasses: ['active'] })}
           >Link</a
         >`;
+
       const wrapper = await mount(link('users'));
       const anchor = wrapper.querySelector('a')!;
 
@@ -189,6 +196,7 @@ describe('attribute-part active directives', () => {
           <a href=${srefHref('users')}>Users</a>
           ${extra ? html`<a href=${srefHref('home')}>Home</a>` : nothing}
         </nav>`;
+
       const wrapper = await mount(nav('users', false));
       const el = wrapper.querySelector('nav')!;
       await goTo('home');
@@ -210,6 +218,7 @@ describe('attribute-part active directives', () => {
           >User 1</a
         >`,
       );
+
       const anchor = wrapper.querySelector('a')!;
 
       await goTo('users.detail', { userId: 2 });
@@ -229,6 +238,7 @@ describe('attribute-part active directives', () => {
           })}
           >Users</a
         >`;
+
       const wrapper = await mount(link(false));
       const anchor = wrapper.querySelector('a')!;
       expect(anchor.className.split(/\s+/).filter(Boolean)).toEqual([
@@ -284,6 +294,7 @@ describe('attribute-part active directives', () => {
           >Users</a
         >`,
       );
+
       const anchor = wrapper.querySelector('a')!;
       expect(anchor.hasAttribute('aria-current')).toBe(false);
 
@@ -305,6 +316,7 @@ describe('attribute-part active directives', () => {
           <td>Users</td>
         </tr>`,
       );
+
       const row = wrapper.querySelector('tr')!;
 
       await goTo('users');
@@ -321,6 +333,7 @@ describe('attribute-part active directives', () => {
           >Users</a
         >`,
       );
+
       const anchor = wrapper.querySelector('a')!;
 
       await goTo('users');
@@ -336,6 +349,7 @@ describe('attribute-part active directives', () => {
           <a href=${srefHref('users')}>Users</a>
         </li>`,
       );
+
       const item = wrapper.querySelector('li')!;
 
       await goTo('users');
@@ -375,6 +389,7 @@ describe('attribute-part active directives', () => {
               >`
             : nothing,
         )}`;
+
       const wrapper = await mount(link(true));
       const anchor = wrapper.querySelector('a')!;
 
@@ -403,6 +418,7 @@ describe('attribute-part active directives', () => {
               >`
             : nothing,
         )}`;
+
       const wrapper = await mount(link(true));
       const anchor = wrapper.querySelector('a')!;
       const gate = defer();
@@ -450,6 +466,7 @@ describe('attribute-part active directives', () => {
           >Users</a
         >`,
       );
+
       const anchor = wrapper.querySelector('a')!;
       await goTo('users');
       expect(anchor.classList.contains('active')).toBe(true);
@@ -471,6 +488,7 @@ describe('attribute-part active directives', () => {
           >Late</a
         >`,
       );
+
       const anchor = wrapper.querySelector('a')!;
 
       router.stateRegistry.register({ name: 'late', url: '/late' });
@@ -485,6 +503,7 @@ describe('attribute-part active directives', () => {
           ${users ? html`<a href=${srefHref('users')}>Users</a>` : nothing}
           <a href=${srefHref('home')}>Home</a>
         </li>`;
+
       const wrapper = await mount(links(true));
       const item = wrapper.querySelector('li')!;
 
@@ -508,6 +527,7 @@ describe('attribute-part active directives', () => {
           <a href=${srefHref('home')}>Home</a>
         </li>`,
       );
+
       const item = wrapper.querySelector('li')!;
 
       await goTo('users');
@@ -525,6 +545,7 @@ describe('attribute-part active directives', () => {
         html`<li aria-current=${srefAriaCurrent({})}>
           ${users ? html`<a href=${srefHref('users')}>Users</a>` : nothing}
         </li>`;
+
       const wrapper = await mount(links(true));
       const item = wrapper.querySelector('li')!;
 
@@ -543,6 +564,7 @@ describe('attribute-part active directives', () => {
             users ? html`<a href=${srefHref('users')}>Users</a>` : nothing,
           )}
         </li>`;
+
       const wrapper = await mount(links(true));
       const item = wrapper.querySelector('li')!;
       const anchor = wrapper.querySelector('a')!;
@@ -566,6 +588,7 @@ describe('attribute-part active directives', () => {
           class=${srefActiveClass({ state: 'users', activeClasses: classes })}
           >Users</a
         >`;
+
       const wrapper = await mount(link(['active', 'current']));
       const anchor = wrapper.querySelector('a')!;
 
@@ -610,6 +633,7 @@ describe('attribute-part active directives', () => {
           <a href=${srefHref('users')}>Users</a>
         </li>`,
       );
+
       const item = wrapper.querySelector('li')!;
       render(html``, wrapper);
       await tick();
@@ -623,6 +647,7 @@ describe('attribute-part active directives', () => {
           <a href=${srefHref('late')}>Late</a>
         </li>`,
       );
+
       const item = wrapper.querySelector('li')!;
 
       router.stateRegistry.register({ name: 'late', url: '/late' });
@@ -635,12 +660,14 @@ describe('attribute-part active directives', () => {
   describe('missing <ui-router> ancestor', () => {
     it('warns once and applies nothing', async () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
       try {
         const link = () =>
           html`<a
             class=${srefActiveClass({ state: 'home', activeClasses: ['active'] })}
             >Home</a
           >`;
+
         render(link(), container);
         await tick(50);
 

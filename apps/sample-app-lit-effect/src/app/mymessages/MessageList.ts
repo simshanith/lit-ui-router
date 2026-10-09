@@ -35,6 +35,7 @@ export class MessageList extends LitElement {
 
   get messages() {
     const snapshot = this.storeUpdates.value;
+
     return snapshot.loaded
       ? byFolder(snapshot, this.folder._id)
       : (this._uiViewProps.resolves.messages ?? []);

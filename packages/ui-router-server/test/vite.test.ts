@@ -12,6 +12,7 @@ const routerOf = (verdict: Verdict): ServerRouter => ({
 // A fake Vite server that just captures whatever middleware the plugin installs.
 const fakeServer = () => {
   const installed: ConnectMiddleware[] = [];
+
   return {
     installed,
     middlewares: { use: (mw: ConnectMiddleware) => installed.push(mw) },
@@ -45,6 +46,7 @@ describe('serverRouterPlugin', () => {
         status: 302,
       }),
     );
+
     const server = fakeServer();
     plugin.configureServer(server);
     const middleware = server.installed[0];
@@ -52,25 +54,30 @@ describe('serverRouterPlugin', () => {
     let status = 0;
     let location = '';
     let nexted = false;
+
     const req = {
       url: '/app/legacy?ref=x',
       method: 'GET',
       headers: { accept: 'text/html' },
     };
+
     await new Promise<void>((resolve) => {
       const res = {
         writeHead: (s: number, headers?: unknown) => {
           status = s;
           location =
             (headers as { Location?: string } | undefined)?.Location ?? '';
+
           return res;
         },
         setHeader: () => res,
         end: () => {
           resolve();
+
           return res;
         },
       };
+
       middleware(req, res, () => {
         nexted = true;
         resolve();
@@ -85,6 +92,7 @@ describe('serverRouterPlugin', () => {
     const plugin = serverRouterPlugin(
       routerOf({ kind: 'shell', mount: '/app' }),
     );
+
     const server = fakeServer();
     plugin.configureServer(server);
     const middleware = server.installed[0];
@@ -94,16 +102,19 @@ describe('serverRouterPlugin', () => {
       method: 'GET',
       headers: { accept: 'text/html' },
     };
+
     const link: string[] = [];
     await new Promise<void>((resolve) => {
       const res = {
         writeHead: () => res,
         setHeader: (_name: string, value: string) => {
           link.push(value);
+
           return res;
         },
         end: () => res,
       };
+
       middleware(req, res, () => resolve());
     });
     assert.equal(req.url, '/app'); // rewritten to the mount shell

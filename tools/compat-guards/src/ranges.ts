@@ -13,7 +13,9 @@ import semver from 'semver';
 // module means routing it through here, not repeating the check.
 function bounded(range: string): string | undefined {
   const normalized = semver.validRange(range);
+
   if (normalized === null || normalized === '*') return undefined;
+
   return normalized;
 }
 
@@ -25,14 +27,18 @@ export function isBoundedRange(range: string): boolean {
 /** Whether a peer range admits some lit 2.x. */
 export function coversMajor2(range: string): boolean {
   const normalized = bounded(range);
+
   if (normalized === undefined) return false;
+
   return semver.intersects(normalized, '^2.0.0');
 }
 
 /** Lowest version a range admits; undefined when semver can't name one. */
 export function rangeFloor(range: string): string | undefined {
   const normalized = bounded(range);
+
   if (normalized === undefined) return undefined;
+
   return semver.minVersion(normalized)?.version;
 }
 
@@ -42,12 +48,16 @@ export function rangeFloor(range: string): string | undefined {
  */
 export function upperLegs(range: string): string[] {
   const floor = rangeFloor(range);
+
   if (floor === undefined) return [];
+
   const legs = new semver.Range(range).set.map((leg) =>
     leg.map((comparator) => comparator.value).join(' '),
   );
+
   const lowest = legs.findIndex(
     (leg) => semver.minVersion(leg)?.version === floor,
   );
+
   return legs.filter((_, index) => index !== lowest);
 }

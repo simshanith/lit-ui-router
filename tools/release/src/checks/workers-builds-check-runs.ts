@@ -36,6 +36,7 @@ async function runTriggerCheck(): Promise<TriggerCheckResult> {
     const { stdout, stderr } = await defaultExec('node', [CLI], {
       cwd: workspaceRoot,
     });
+
     return { exitCode: 0, output: `${stdout}${stderr}` };
   } catch (error: unknown) {
     // execFile rejects with the child's code/stdout/stderr attached; anything
@@ -45,14 +46,17 @@ async function runTriggerCheck(): Promise<TriggerCheckResult> {
       stdout?: unknown;
       stderr?: unknown;
     };
+
     const exitCode = typeof failure.code === 'number' ? failure.code : 2;
     const stdout = typeof failure.stdout === 'string' ? failure.stdout : '';
+
     const stderr =
       typeof failure.stderr === 'string'
         ? failure.stderr
         : error instanceof Error
           ? error.message
           : String(error);
+
     return { exitCode, output: `${stdout}${stderr}` };
   }
 }
@@ -60,6 +64,7 @@ async function runTriggerCheck(): Promise<TriggerCheckResult> {
 async function main() {
   const dryRun = process.argv.includes('--dry-run');
   const repo = process.env.GITHUB_REPOSITORY ?? 'simshanith/lit-ui-router';
+
   if (!process.env.GITHUB_REPOSITORY && !dryRun) {
     throw new Error('GITHUB_REPOSITORY must be set (or pass --dry-run)');
   }
@@ -69,10 +74,13 @@ async function main() {
   console.log(result.output);
 
   const payload = toWorkersBuildsCheckRun(result, repo);
+
   if (dryRun) {
     console.log(JSON.stringify(payload, null, 2));
+
     return;
   }
+
   const { stdout } = await defaultExec('git', ['rev-parse', 'HEAD']);
   const headSha = stdout.trim();
   await ensureGh();

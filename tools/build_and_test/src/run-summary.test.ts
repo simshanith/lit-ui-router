@@ -143,6 +143,7 @@ describe('failedTasks', () => {
         task({ taskId: 'b#typecheck' }),
       ]),
     );
+
     assert.deepEqual(
       failing.map((t) => t.taskId),
       ['b#typecheck'],
@@ -153,6 +154,7 @@ describe('failedTasks', () => {
     const failing = failedTasks(
       summary([task({ taskId: 'c#build', execution: undefined })]),
     );
+
     assert.deepEqual(failing, []);
   });
 
@@ -169,6 +171,7 @@ describe('failedTasks', () => {
         }),
       ]),
     );
+
     assert.deepEqual(
       failing.map((t) => t.taskId),
       ['early', 'late'],
@@ -200,6 +203,7 @@ describe('excerptLog', () => {
     const { text } = excerptLog(
       '$ tsc -p tsconfig.src.json --noEmit\nerror TS2322',
     );
+
     assert.equal(text, 'error TS2322');
   });
 
@@ -218,11 +222,13 @@ describe('excerptLog', () => {
 
   it('elides the middle and says how much, keeping head and tail', () => {
     const lines = Array.from({ length: 500 }, (_, i) => `line ${i}`);
+
     const { text, omittedLines } = excerptLog(lines.join('\n'), {
       headLines: 2,
       tailLines: 3,
       maxBytes: 1024,
     });
+
     assert.equal(omittedLines, 495);
     assert.deepEqual(text.split('\n'), [
       'line 0',
@@ -245,6 +251,7 @@ describe('excerptLog', () => {
       'test at src/a.test.ts:4:3',
       '✖ fails (0.2ms)',
     ].join('\n');
+
     const { text, omittedLines } = excerptLog(log);
     assert.equal(omittedLines, 4);
     assert.deepEqual(text.split('\n'), [
@@ -264,6 +271,7 @@ describe('excerptLog', () => {
       '⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯',
       ' ❯ src/specs/index.spec.ts:76:27',
     ].join('\n');
+
     assert.deepEqual(excerptLog(log).text.split('\n'), [
       '… 1 lines before the failure report …',
       '⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯',
@@ -276,10 +284,12 @@ describe('excerptLog', () => {
   it('counts the report cut and the budget cut together', () => {
     const passes = Array.from({ length: 10 }, (_, i) => `✔ pass ${i}`);
     const report = Array.from({ length: 10 }, (_, i) => `detail ${i}`);
+
     const { text, omittedLines } = excerptLog(
       [...passes, '✖ failing tests:', ...report].join('\n'),
       { headLines: 2, tailLines: 2, maxBytes: 1024 },
     );
+
     assert.equal(omittedLines, 10 + 8);
     assert.deepEqual(text.split('\n'), [
       '… 10 lines before the failure report …',
@@ -292,11 +302,13 @@ describe('excerptLog', () => {
 
   it('enforces the byte cap from the head, because the verdict is at the tail', () => {
     const lines = Array.from({ length: 50 }, (_, i) => `${i}`.repeat(40));
+
     const { text, omittedLines } = excerptLog(lines.join('\n'), {
       headLines: 50,
       tailLines: 50,
       maxBytes: 200,
     });
+
     assert.ok(Buffer.byteLength(text, 'utf8') <= 200 + 64);
     assert.ok(text.startsWith('… head trimmed to 200 bytes …'));
     assert.ok(text.endsWith('49'.repeat(40)), 'the last line survives');
@@ -340,6 +352,7 @@ describe('buildReports', () => {
       summary([task()]),
       new Map([['lit-ui-router#typecheck:src', 'error TS2322: nope']]),
     );
+
     assert.equal(report.durationMs, 7_000);
     assert.equal(report.excerpt.text, 'error TS2322: nope');
   });
@@ -358,6 +371,7 @@ describe('buildReports', () => {
       ]),
       new Map(),
     );
+
     assert.match(report.excerpt.text, /no log file at/);
     assert.match(report.excerpt.text, /exited \(1\)/);
   });
@@ -381,6 +395,7 @@ describe('headline', () => {
 describe('summaryMarkdown', () => {
   it('leads with a table and gives each failure its repro block', () => {
     const run = summary([task()]);
+
     const markdown = summaryMarkdown(
       run,
       buildReports(
@@ -388,6 +403,7 @@ describe('summaryMarkdown', () => {
         new Map([['lit-ui-router#typecheck:src', 'error TS2322']]),
       ),
     );
+
     assert.match(markdown, /^## CI failure summary/);
     assert.match(
       markdown,
@@ -405,10 +421,12 @@ describe('summaryMarkdown', () => {
   it('hides a truncated excerpt behind a disclosure, labelled with the loss', () => {
     const run = summary([task()]);
     const long = Array.from({ length: 400 }, (_, i) => `line ${i}`).join('\n');
+
     const markdown = summaryMarkdown(
       run,
       buildReports(run, new Map([['lit-ui-router#typecheck:src', long]])),
     );
+
     assert.match(markdown, /<details><summary>Log excerpt — 300 lines omitted/);
   });
 
@@ -424,6 +442,7 @@ describe('stdoutReport', () => {
   // `gh run view --log-failed` sees only this lane.
   it('prints the excerpt and both repro lines, headline last', () => {
     const run = summary([task()]);
+
     const lines = stdoutReport(
       run,
       buildReports(
@@ -431,6 +450,7 @@ describe('stdoutReport', () => {
         new Map([['lit-ui-router#typecheck:src', 'error TS2322']]),
       ),
     );
+
     const text = lines.join('\n');
     assert.match(text, /── lit-ui-router#typecheck:src \(exit 1\)/);
     assert.match(text, /repro: turbo run typecheck:src/);
@@ -452,6 +472,7 @@ describe('untrusted log text', () => {
 
   function hostileRun() {
     const run = summary([task()]);
+
     return {
       run,
       reports: buildReports(
@@ -474,9 +495,11 @@ describe('untrusted log text', () => {
   it('a `::` log line lands inside the guard, not before it', () => {
     const { run, reports } = hostileRun();
     const out = guardCommands(stdoutReport(run, reports), 'tok');
+
     const forged = out.findIndex((chunk) =>
       chunk.includes('forged annotation'),
     );
+
     assert.ok(forged > 0, 'the excerpt is emitted');
     assert.equal(out.indexOf('::stop-commands::tok'), 0);
     assert.equal(out.at(-1), '::tok::');
@@ -505,10 +528,12 @@ describe('untrusted log text', () => {
     // in it would close a fixed fence and forge markdown after the block.
     const escape = 'tsc --noEmit\n```\n</details><script>alert(1)</script>';
     const run = summary([task({ command: escape })]);
+
     const markdown = summaryMarkdown(
       run,
       buildReports(run, new Map([['lit-ui-router#typecheck:src', 'boom']])),
     );
+
     assert.match(markdown, /````sh\n/);
     assert.ok(
       markdown.includes(escape),
@@ -545,6 +570,7 @@ describe('cacheTally', () => {
       }),
       ran('c', 3_000),
     ]);
+
     assert.deepEqual(cacheTally(run), {
       hit: 2,
       local: 1,
@@ -622,6 +648,7 @@ describe('slowestTasks', () => {
       ran('quick', 100),
       ran('middling', 2_000),
     ]);
+
     assert.deepEqual(
       slowestTasks(run, 10).map((t) => t.taskId),
       ['slow', 'middling', 'quick'],
@@ -639,6 +666,7 @@ describe('omittedTaskCount', () => {
     const run = summary([task(), task({ taskId: 'other' })], 1, {
       attempted: 5,
     });
+
     assert.equal(omittedTaskCount(run), 3);
   });
 
@@ -657,6 +685,7 @@ describe('criticalPath', () => {
       ran('c', 500),
       ran('d', 4_000, { dependencies: ['c'] }),
     ]);
+
     assert.deepEqual(criticalPath(run), {
       taskIds: ['c', 'd'],
       totalMs: 4_500,
@@ -667,6 +696,7 @@ describe('criticalPath', () => {
     const run = summary([
       ran('a', 1_000, { dependencies: ['cancelled#task'] }),
     ]);
+
     assert.deepEqual(criticalPath(run), { taskIds: ['a'], totalMs: 1_000 });
   });
 
@@ -677,6 +707,7 @@ describe('criticalPath', () => {
       hit({ taskId: 'build' }),
       ran('typecheck', 7_000, { dependencies: ['build'] }),
     ]);
+
     assert.deepEqual(criticalPath(run), {
       taskIds: ['build', 'typecheck'],
       totalMs: 7_000,
@@ -688,6 +719,7 @@ describe('criticalPath', () => {
       ran('a', 1_000, { dependencies: ['b'] }),
       ran('b', 1_000, { dependencies: ['a'] }),
     ]);
+
     assert.ok(criticalPath(run).totalMs > 0);
   });
 });
@@ -735,6 +767,7 @@ describe('overviewMarkdown', () => {
     const many = Array.from({ length: MISS_LIST_LIMIT + 5 }, (_, i) =>
       ran(`pkg-${i}#build`, i),
     );
+
     const md = overviewMarkdown(summary(many, 0, { attempted: many.length }));
     assert.match(md, /… 5 more/);
   });
@@ -743,10 +776,13 @@ describe('overviewMarkdown', () => {
     const many = Array.from({ length: SLOWEST_LIMIT + 3 }, (_, i) =>
       ran(`pkg-${i}#build`, i * 100),
     );
+
     const run = summary(many, 0, { attempted: many.length });
+
     const rows = overviewMarkdown(run)
       .split('\n')
       .filter((l) => l.startsWith('| `'));
+
     assert.equal(rows.length, SLOWEST_LIMIT);
   });
 
@@ -766,6 +802,7 @@ describe('overviewMarkdown', () => {
       0,
       { attempted: 2 },
     );
+
     assert.match(overviewMarkdown(run), /3\.0s across 2 tasks/);
     assert.match(overviewMarkdown(run), /`a` → `b`/);
   });
@@ -807,6 +844,7 @@ describe('artifactLink', () => {
       artifactUrl: URL,
       fileNames: ['a.json', 'b.json', 'c.json'],
     });
+
     assert.ok(link?.markdown.includes('`a.json`, `b.json`, `c.json`'));
     assert.ok(link?.markdown.includes('the untruncated runs'));
   });
@@ -843,6 +881,7 @@ describe('the artifact link in the overview', () => {
       artifactUrl: URL,
       fileNames: ['abc.json'],
     });
+
     assert.ok(md.includes(URL));
     assert.ok(md.trimEnd().endsWith('artifacts.'));
   });
@@ -902,6 +941,7 @@ describe('the attachments link in the overview', () => {
       artifactUrl: SUMMARY_URL,
       attachmentsUrl: URL,
     });
+
     assert.ok(md.indexOf(URL) < md.indexOf(SUMMARY_URL));
   });
 
@@ -910,6 +950,7 @@ describe('the attachments link in the overview', () => {
       artifactUrl: SUMMARY_URL,
       attachmentsUrl: URL,
     });
+
     assert.deepEqual(lines.slice(-3), [
       '',
       `   vitest attachments: ${URL}`,
@@ -946,6 +987,7 @@ describe('logsLink', () => {
         logsUrl: URL,
       },
     );
+
     assert.deepEqual(lines.slice(-4), [
       '',
       '   vitest attachments: https://x/3',
@@ -983,6 +1025,7 @@ describe('savedClause', () => {
         cached: 1,
       },
     );
+
     assert.match(
       overviewMarkdown(run),
       /\*\*Cache\*\* — 1 hit \(1 remote, 0 local\), 0 miss\./,
@@ -998,6 +1041,7 @@ describe('warn-only lanes', () => {
     const entries = warnLaneEntries(
       new Map([['//#lint:elements', `some lint output\n${marker}\n`]]),
     );
+
     assert.deepEqual(
       entries.map((entry) => entry.task),
       ['//#lint:elements'],
@@ -1009,6 +1053,7 @@ describe('warn-only lanes', () => {
     const entries = warnLaneEntries(
       new Map([['//#lint:elements', `${ESC}[2m${marker}${ESC}[22m\n`]]),
     );
+
     assert.equal(entries[0]?.state?.status, 'at-floor');
   });
 
@@ -1105,6 +1150,7 @@ describe('sessionMarkdown', () => {
       success: 1,
       failed: 0,
     });
+
   const docs = () =>
     summary([hit({ taskId: '@www/lit-ui-router.dev#build' })], 0, {
       command: 'turbo run build --filter=@www/lit-ui-router.dev',
@@ -1113,6 +1159,7 @@ describe('sessionMarkdown', () => {
       success: 0,
       failed: 0,
     });
+
   const e2e = () =>
     summary([ran('sample-app-lit-e2e#test:e2e:hash', 27_000)], 0, {
       command: 'turbo run test:e2e:docs test:e2e:hash',
@@ -1166,6 +1213,7 @@ describe('sessionMarkdown', () => {
       [srun(ci()), srun(remoteHitRun()), srun(localHitRun())],
       { onActions: true },
     );
+
     assert.ok(!md.includes('none from the remote'));
   });
 
@@ -1173,6 +1221,7 @@ describe('sessionMarkdown', () => {
     const md = sessionMarkdown([srun(localHitRun()), srun(localHitRun())], {
       onActions: true,
     });
+
     assert.equal(md.split('none from the remote').length - 1, 1);
     assert.match(
       md,
@@ -1185,6 +1234,7 @@ describe('sessionMarkdown', () => {
 describe('the pipeline index', () => {
   const green = (command: string) =>
     summary([hit()], 0, { command, attempted: 1, cached: 1, failed: 0 });
+
   const red = (command: string) =>
     summary([task()], 1, { command, attempted: 1, cached: 0, failed: 1 });
 
@@ -1199,6 +1249,7 @@ describe('the pipeline index', () => {
       srun(green('turbo run ci')),
       srun(red('turbo run test:e2e:hash')),
     ]);
+
     assert.match(
       md,
       /\*\*1 of 2 turbo runs failed\*\* — `turbo run test:e2e:hash`\./,
@@ -1210,6 +1261,7 @@ describe('the pipeline index', () => {
       srun(green('turbo run ci')),
       srun(red('turbo run test:e2e:hash')),
     ]);
+
     assert.match(md, /\| ✅ \| `turbo run ci` \|/);
     assert.match(md, /\| ❌ \| `turbo run test:e2e:hash` \|/);
   });
@@ -1219,6 +1271,7 @@ describe('the pipeline index', () => {
       srun(green('turbo run ci'), 'a.json'),
       srun(green('turbo run build'), 'b.json'),
     ]);
+
     assert.match(md, /`turbo run ci` \| 1 \| .* \| `a\.json` \|/);
     assert.match(md, /`turbo run build` \| 1 \| .* \| `b\.json` \|/);
   });
@@ -1228,9 +1281,11 @@ describe('the pipeline index', () => {
   it('elides a command too long to scan, keeping it whole in the block', () => {
     const long = `turbo run ${'test:e2e:suite '.repeat(6)}--continue`;
     const md = sessionMarkdown([srun(green(long)), srun(green('b'))]);
+
     const row = md
       .split('\n')
       .find((line) => line.startsWith('| ✅ | `turbo run test:e2e'));
+
     assert.ok(
       (row?.length ?? 0) < long.length,
       'the row is shorter than the command',
@@ -1262,9 +1317,11 @@ describe('sessionLines', () => {
         }),
       ),
     ];
+
     const headlines = sessionLines(runs).filter((line) =>
       line.startsWith('──'),
     );
+
     assert.equal(headlines.length, 2);
     assert.match(headlines[1] ?? '', /--filter=@www\/lit-ui-router\.dev/);
   });
@@ -1274,9 +1331,11 @@ describe('sessionLines', () => {
       srun(summary([hit()], 0, { command: 'a', attempted: 1, failed: 0 })),
       srun(summary([task()], 1, { command: 'b', attempted: 1, failed: 1 })),
     ];
+
     const headlines = sessionLines(runs).filter((line) =>
       line.startsWith('──'),
     );
+
     assert.match(headlines[0] ?? '', /^── ✅ a —/);
     assert.match(headlines[1] ?? '', /^── ❌ b —/);
   });
@@ -1286,6 +1345,7 @@ describe('sessionLines', () => {
       srun(summary([hit()], 0, { command: 'a', attempted: 1, failed: 0 })),
       srun(summary([hit()], 0, { command: 'b', attempted: 1, failed: 0 })),
     ];
+
     const lines = sessionLines(runs);
     const second = lines.findIndex((line) => line.startsWith('── ✅ b'));
     assert.equal(lines[second - 1], '');
@@ -1295,6 +1355,7 @@ describe('sessionLines', () => {
     const lines = sessionLines([srun(remoteHitRun()), srun(localHitRun())], {
       onActions: true,
     }).join('\n');
+
     assert.ok(!lines.includes('none from the remote'));
   });
 
@@ -1302,6 +1363,7 @@ describe('sessionLines', () => {
     const notes = sessionLines([srun(localHitRun()), srun(localHitRun())], {
       onActions: true,
     }).filter((line) => line.includes('none from the remote'));
+
     assert.equal(notes.length, 1);
     assert.match(
       notes[0] ?? '',
@@ -1313,6 +1375,7 @@ describe('sessionLines', () => {
 describe('sessionHeadline', () => {
   const red = () =>
     summary([task()], 1, { command: 'turbo run ci', attempted: 2, cached: 1 });
+
   const green = () =>
     summary([hit()], 0, {
       command: 'turbo run build',
@@ -1337,22 +1400,27 @@ describe('sessionHeadline', () => {
 describe('sessionFailureMarkdown', () => {
   it('names only the run that actually failed', () => {
     const red = summary([task()], 1, { command: 'turbo run ci' });
+
     const md = sessionFailureMarkdown([
       { summary: red, reports: buildReports(red, new Map()) },
     ]);
+
     assert.equal(md.split('## CI failure summary').length - 1, 1);
     assert.match(md, /`turbo run ci` — \*\*1 failing\*\*/);
   });
 
   it('reports each failing run under the one heading', () => {
     const a = summary([task()], 1, { command: 'turbo run ci' });
+
     const b = summary([task({ taskId: 'other#test' })], 1, {
       command: 'turbo run test:e2e:hash',
     });
+
     const md = sessionFailureMarkdown([
       { summary: a, reports: buildReports(a, new Map()) },
       { summary: b, reports: buildReports(b, new Map()) },
     ]);
+
     assert.equal(md.split('## CI failure summary').length - 1, 1);
     assert.match(md, /`turbo run ci`/);
     assert.match(md, /`turbo run test:e2e:hash`/);
@@ -1369,9 +1437,11 @@ describe('sessionFailureMarkdown', () => {
 
 describe('tool annotations', () => {
   const ssrDir = 'packages/lit-ui-router-ssr';
+
   // oxlint's github format, as the task log holds it: no turbo prefix.
   const oxlintWarning =
     '::warning file=src/signature.ts,line=43,endLine=43,col=39,endColumn=70,title=turbo(no-undeclared-env-vars)::src/signature.ts:43:39: PACKAGE_VERSION is not listed';
+
   const oxlintError =
     '::error file=src/core.ts,line=273,endLine=273,col=3,endColumn=12,title=eslint(no-debugger)::src/core.ts:273:3: `debugger` statement is not allowed';
 
@@ -1402,6 +1472,7 @@ describe('tool annotations', () => {
       '::error file=docs/CONTRIBUTING.md,line=146,col=1,endLine=146,endColumn=10,title=MD001::Expected heading level 3',
       '',
     );
+
     assert.equal(parsed?.properties.file, 'docs/CONTRIBUTING.md');
     assert.equal(parsed?.properties.line, 146);
   });
@@ -1411,6 +1482,7 @@ describe('tool annotations', () => {
       '::error file=.github/workflows/lint-workflows.yml,line=19,col=5,endColumn=20,title=syntax-check::key "timeout-minutes" is duplicated%0A```%0A    timeout-minutes: 11%0A    ^~~~%0A```',
       '',
     );
+
     assert.equal(
       parsed?.properties.file,
       '.github/workflows/lint-workflows.yml',
@@ -1427,6 +1499,7 @@ describe('tool annotations', () => {
       '::error file=src/gha.core.test.ts,line=27,col=12,title=escapes %25%2C CR%2C and LF::Expected values to be strictly equal:%0A%0A1 !== 2',
       'tools/shared',
     );
+
     assert.deepEqual(parsed?.properties, {
       file: 'tools/shared/src/gha.core.test.ts',
       line: 27,
@@ -1437,11 +1510,13 @@ describe('tool annotations', () => {
 
   it("reads vitest's `column` as `col`, with the absolute path under the root", () => {
     const root = '/runner/work/lit-ui-router';
+
     const parsed = parseAnnotation(
       `::error file=${root}/packages/navigation-location-plugin/src/specs/index.spec.ts,title=[chrome] src/specs/index.spec.ts > NavigationLocationService > reads the real URL back,line=76,column=28::AssertionError: expected '/read-back#frag' to be '/read-back?q=1#frag'`,
       'packages/navigation-location-plugin',
       root,
     );
+
     assert.deepEqual(parsed?.properties, {
       file: 'packages/navigation-location-plugin/src/specs/index.spec.ts',
       title:
@@ -1503,6 +1578,7 @@ describe('tool annotations', () => {
       '::warning file=src/a.ts::x%0A::add-mask::secret',
       '',
     );
+
     assert.equal(parsed?.message, 'x\n::add-mask::secret');
     const plan = planAnnotations(parsed === undefined ? [] : [parsed]);
     assert.deepEqual(plan.commands, [
@@ -1530,6 +1606,7 @@ describe('tool annotations', () => {
       ran('//#lint:markdown', 10, { directory: '' }),
       ran('lit-ui-router#test', 10),
     ]);
+
     const logs = new Map([
       [
         'lit-ui-router-ssr#lint:oxlint',
@@ -1537,6 +1614,7 @@ describe('tool annotations', () => {
       ],
       ['//#lint:markdown', oxlintError],
     ]);
+
     assert.deepEqual(
       extractAnnotations(run, logs).map((a) => a.properties.file),
       ['packages/lit-ui-router-ssr/src/signature.ts', 'src/core.ts'],
@@ -1548,7 +1626,9 @@ describe('tool annotations', () => {
       `::warning file=src/a.ts,line=${line}::w${line}`,
       '',
     );
+
     assert.ok(parsed);
+
     return parsed;
   }
 
@@ -1556,6 +1636,7 @@ describe('tool annotations', () => {
     const many = Array.from({ length: ANNOTATION_LIMIT + 3 }, (_, i) =>
       warningAt(i + 1),
     );
+
     const plan = planAnnotations([...many, warningAt(1)]);
     assert.equal(plan.commands.length, ANNOTATION_LIMIT);
     assert.equal(plan.found.warning, ANNOTATION_LIMIT + 3);
@@ -1569,10 +1650,12 @@ describe('tool annotations', () => {
   it('holds a slot back for the failure headline, and orders errors first', () => {
     const error = parseAnnotation(oxlintError, '');
     assert.ok(error);
+
     const errors = Array.from({ length: ANNOTATION_LIMIT }, (_, i) => ({
       ...error,
       message: `${error.message} ${i}`,
     }));
+
     const plan = planAnnotations([warningAt(1), ...errors], { error: 1 });
     assert.equal(plan.emitted.error, ANNOTATION_LIMIT - 1);
     assert.match(plan.commands[0] ?? '', /^::error /);

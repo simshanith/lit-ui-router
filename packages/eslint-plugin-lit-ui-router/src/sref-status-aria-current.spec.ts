@@ -5,7 +5,9 @@ import { srefStatusAriaCurrent } from './sref-status-aria-current.ts';
 
 // RuleTester runs cases through these statics, which eslint's types omit.
 const hooks = RuleTester as unknown as Record<string, unknown>;
+
 hooks.describe = describe;
+
 hooks.it = it;
 
 const ruleTester = new RuleTester({

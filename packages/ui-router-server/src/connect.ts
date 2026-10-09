@@ -107,6 +107,7 @@ export interface ConnectAdapterOptions {
 
 const acceptsHtml = (req: ConnectRequest): boolean => {
   const accept = req.headers.accept;
+
   return typeof accept === 'string' && accept.includes('text/html');
 };
 
@@ -176,8 +177,10 @@ export function createConnectMiddleware(
   return (req, res, next) => {
     if (!shouldHandle(req)) {
       next();
+
       return;
     }
+
     const url = req.url ?? '/';
     const cut = url.indexOf('?');
     const search = cut === -1 ? '' : url.substring(cut);
@@ -187,8 +190,10 @@ export function createConnectMiddleware(
           Location: mergeSearch(verdict.location, search),
         });
         res.end();
+
         return;
       }
+
       if (verdict.kind === 'shell') {
         if (verdict.status === undefined) {
           res.setHeader('Link', `<${verdict.mount}>; rel="canonical"`);
@@ -196,13 +201,18 @@ export function createConnectMiddleware(
           stripValidators(req);
           relabel(res, verdict.status);
         }
+
         serveShell(verdict.mount, req, res, next);
+
         return;
       }
+
       if (verdict.mount === undefined) {
         next();
+
         return;
       }
+
       serveNotFound(verdict.mount, req, res, next);
     }, next);
   };

@@ -16,9 +16,11 @@ interface JSONProperty {
   key: { value: string | number };
   value: JSONNode;
 }
+
 interface JSONNode {
   properties?: JSONProperty[];
 }
+
 interface JSONProgram {
   body: [{ expression?: JSONNode }?];
 }
@@ -36,7 +38,9 @@ const exportsAdvertiseDistTypes = (
   if (typeof node === 'string') {
     return intoDist(node) && (underTypes || node.endsWith('.d.ts'));
   }
+
   if (node === null || typeof node !== 'object') return false;
+
   return Object.entries(node).some(([key, value]) =>
     exportsAdvertiseDistTypes(value, underTypes || key === 'types'),
   );
@@ -68,26 +72,33 @@ const requireBuildTypes: Rule.RuleModule = {
     return {
       Program(program) {
         let manifest: Manifest;
+
         try {
           manifest = JSON.parse(context.sourceCode.text) as Manifest;
         } catch {
           return;
         }
+
         if (!advertisesDistTypes(manifest)) return;
+
         // "builds at all" = build (single-pass) or build:js (pass-split)
         const builds =
           manifest.scripts?.build ?? manifest.scripts?.['build:js'];
+
         if (
           builds === undefined ||
           manifest.scripts?.['build:types'] !== undefined
         ) {
           return;
         }
+
         const root = (program as unknown as JSONProgram).body[0]?.expression;
         const scripts = findProperty(root, 'scripts');
+
         const build =
           findProperty(scripts?.value, 'build') ??
           findProperty(scripts?.value, 'build:js');
+
         context.report({
           node:
             ((build ?? scripts) as unknown as Rule.Node | undefined) ?? program,

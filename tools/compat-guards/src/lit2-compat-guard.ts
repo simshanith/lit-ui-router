@@ -10,6 +10,7 @@ import { coversMajor2 } from './ranges.ts';
 const g = guard('lit2-compat-guard');
 
 const range = await g.range('publishedPeer', 'lit');
+
 if (!coversMajor2(range)) {
   g.fail(
     `publishedPeer lit range "${range}" no longer covers major 2; drop the ` +
@@ -18,6 +19,7 @@ if (!coversMajor2(range)) {
 }
 
 const installed = g.installed('lit-2', 'lit');
+
 if (semver.major(installed) !== 2) {
   g.fail(
     `lit-2 resolves to ${installed}, not a 2.x build. Repin the lit2-compat ` +

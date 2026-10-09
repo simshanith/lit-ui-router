@@ -20,6 +20,7 @@ class UpdatingElement extends HTMLElement {
     return Promise.resolve().then(() => (this.updated = true));
   }
 }
+
 customElements.define('fixture-updating', UpdatingElement);
 
 describe('fixtureSync', () => {

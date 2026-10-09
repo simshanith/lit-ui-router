@@ -27,9 +27,11 @@ export async function resolveReleaseTagName(
   const { members } = await loadWorkspace(workspaceRoot);
   // memberDir doubles as membership validation before composing a ref.
   memberDir(packageName, members);
+
   const version =
     members.find((member) => member.name === packageName)?.manifest?.version ??
     '';
+
   return releaseTagName(packageName, version);
 }
 
@@ -39,9 +41,11 @@ export async function localTagSha(
   options: TagOptions = {},
 ): Promise<string | undefined> {
   const { cwd = workspaceRoot, exec = defaultExec } = options;
+
   try {
     const { stdout } = await exec('git', localTagShaArgs(tagName), { cwd });
     const sha = stdout.trim();
+
     return sha === '' ? undefined : sha;
   } catch (error) {
     if (isMissingRefError(stderrOf(error))) return undefined;
@@ -56,6 +60,7 @@ export async function remoteTagSha(
 ): Promise<string | undefined> {
   const { cwd = workspaceRoot, exec = defaultExec } = options;
   const { stdout } = await exec('git', remoteTagShaArgs(tagName), { cwd });
+
   return parseLsRemoteSha(stdout);
 }
 
@@ -63,6 +68,7 @@ export async function remoteTagSha(
 export async function headSha(options: TagOptions = {}): Promise<string> {
   const { cwd = workspaceRoot, exec = defaultExec } = options;
   const { stdout } = await exec('git', headShaArgs(), { cwd });
+
   return stdout.trim();
 }
 
@@ -76,6 +82,7 @@ export async function resolveTagState(
     remoteTagSha(tagName, options),
     headSha(options),
   ]);
+
   return classifyTagState({
     localSha: local,
     remoteSha: remote,

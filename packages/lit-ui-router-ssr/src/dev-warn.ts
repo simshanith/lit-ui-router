@@ -43,6 +43,7 @@ const warnedNeverWoken = new WeakSet<Element>();
 export function warnDeferredNeverWoken(element: Element): void {
   // DEV folds the whole body out of dist/*.js; see check:dev-split and dev-warnings.json.
   if (!import.meta.env.DEV) return;
+
   if (warnedNeverWoken.has(element)) return;
   warnedNeverWoken.add(element);
   console.warn(

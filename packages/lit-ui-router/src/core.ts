@@ -132,11 +132,13 @@ export function litViewsBuilder<
     function (config: LitViewDeclaration<T>, name: string) {
       let normalizedConfig: NormalizedLitViewDeclaration<T>;
       name = name || '$default'; // Account for views: { "": { template... } }
+
       if (isLitViewDeclarationTemplate<T>(config)) {
         normalizedConfig = { component: config };
       } else {
         normalizedConfig = config;
       }
+
       if (Object.keys(normalizedConfig || {}).length === 0) return;
 
       normalizedConfig.$type = 'lit';
@@ -147,6 +149,7 @@ export function litViewsBuilder<
         normalizedConfig.$context,
         normalizedConfig.$name,
       );
+
       normalizedConfig.$uiViewName = normalizedTarget.uiViewName;
       normalizedConfig.$uiViewContextAnchor =
         normalizedTarget.uiViewContextAnchor;
@@ -166,6 +169,7 @@ export function litViewsBuilder<
       views[name] = viewsObject[name] = normalizedConfig;
     },
   );
+
   return views;
 }
 
@@ -263,6 +267,7 @@ export class UIRouterLit extends UIRouter {
     if (this.started) {
       throw new Error('start() called multiple times');
     }
+
     // eslint-disable-next-line typescript/no-deprecated -- $get() flushes the param-type queue; kept deliberately over the @internal flush
     this.urlMatcherFactory.$get();
     this.urlService.listen();

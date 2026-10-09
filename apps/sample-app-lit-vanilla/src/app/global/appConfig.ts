@@ -30,4 +30,5 @@ export class AppConfig {
 }
 
 const instance = new AppConfig();
+
 export default instance;

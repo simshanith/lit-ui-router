@@ -54,6 +54,7 @@ async function checkExports(
     },
     level: 'suggestion',
   });
+
   const gating = publintGatingMessages(messages);
   const suggestions = messages.filter((m) => m.type === 'suggestion');
 
@@ -70,11 +71,14 @@ async function main() {
   const { members } = await loadWorkspace(workspaceRoot);
   const publishable = members.filter(isPublishable);
   const results: PackageExportsCheck[] = [];
+
   for (const { name, dir } of publishable) {
     results.push(await checkExports(name, dir));
   }
+
   const { ok, text } = formatExportsReport(results);
   (ok ? console.log : console.error)(text);
+
   if (!ok) process.exitCode = 1;
 }
 

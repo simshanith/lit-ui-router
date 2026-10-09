@@ -37,11 +37,13 @@ export type BundleOptions = {
 export const PRODUCTION_DEFINE: Record<string, string> = {
   'import.meta.env.DEV': 'false',
 };
+
 export const DEVELOPMENT_DEFINE: Record<string, string> = {
   'import.meta.env.DEV': 'true',
 };
 
 export const bundlers = ['esbuild', 'rolldown'] as const;
+
 export type Bundler = (typeof bundlers)[number];
 
 const basename = (path: string): string => path.split('/').pop()!;
@@ -55,7 +57,9 @@ const finish = (
   entryName: string,
 ): BundleResult => {
   const entry = chunks.find((chunk) => chunk.entry && chunk.name === entryName);
+
   if (!entry) throw new Error(`no ${entryName} entry chunk`);
+
   return { entry, chunks, inputs };
 };
 
@@ -80,11 +84,14 @@ const esbuildBundle = async (
     define,
     logLevel: 'silent',
   });
+
   const outputs = Object.entries(result.metafile.outputs);
+
   const chunks = result.outputFiles.map((file): Chunk => {
     const name = basename(file.path);
     const [, meta] = outputs.find(([out]) => basename(out) === name)!;
     const internal = meta.imports.filter((edge) => !edge.external);
+
     return {
       name,
       code: file.text,
@@ -101,6 +108,7 @@ const esbuildBundle = async (
         .map((edge) => edge.path),
     };
   });
+
   return finish(
     chunks,
     Object.keys(result.metafile.inputs),
@@ -123,6 +131,7 @@ const rolldownBundle = async (
     transform: define ? { define } : undefined,
     logLevel: 'silent',
   });
+
   try {
     // comments:false mirrors esbuild's default comment stripping, so both
     // legs probe code, not comments.
@@ -131,14 +140,19 @@ const rolldownBundle = async (
       minify,
       comments: false,
     });
+
     const inputs = new Set<string>();
     const names = new Set<string>();
+
     for (const item of output) {
       if (item.type === 'chunk') names.add(item.fileName);
     }
+
     const chunks: Chunk[] = [];
+
     for (const item of output) {
       if (item.type !== 'chunk') continue;
+
       for (const id of item.moduleIds) inputs.add(id);
       // rollup's `imports` mixes sibling chunk names with external ids; split
       // them so both legs report the same two lists.
@@ -152,6 +166,7 @@ const rolldownBundle = async (
         externalImports: item.imports.filter((id) => !names.has(id)),
       });
     }
+
     return finish(chunks, [...inputs], entryChunkName(entryPath));
   } finally {
     await bundle.close();

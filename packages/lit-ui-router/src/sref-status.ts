@@ -49,6 +49,7 @@ export class SrefTargets {
   /** `params.options` over the enclosing view's `relative` default */
   options(): TransitionOptions {
     const defaultOpts: TransitionOptions = { relative: this.relative };
+
     return extend(defaultOpts, this.params.options || {}) as TransitionOptions;
   }
 
@@ -78,6 +79,7 @@ export class SrefTargets {
   rebuild(): void {
     this.setExplicit();
     const $state = this.router!.stateService;
+
     for (const [element, target] of this.links) {
       this.links.set(
         element,
@@ -93,6 +95,7 @@ export class SrefTargets {
         this.links.delete(element);
       }
     }
+
     return this.explicit ? [this.explicit] : [...this.links.values()];
   }
 
@@ -100,6 +103,7 @@ export class SrefTargets {
   status(event?: TransEvt): SrefStatus | undefined {
     const router = this.router;
     const targets = this.list();
+
     return router && targets.length
       ? targets
           .map((target) => srefStatus(router, event, target))
@@ -121,10 +125,12 @@ export function resolveAriaCurrent(
 ): AriaCurrentValue | typeof nothing {
   const values: AriaCurrentValues =
     typeof value === 'object' ? value : { exact: value };
+
   const resolved = status.exact
     ? (values.exact ?? 'page')
     : status.active
       ? (values.active ?? false)
       : false;
+
   return resolved || nothing;
 }

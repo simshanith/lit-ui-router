@@ -85,6 +85,7 @@ describe('untrackedInputs', () => {
       '../other/src/index.ts': 'a',
       '../other/dist/out.js': 'b',
     };
+
     assert.deepEqual(untrackedInputs(task({ inputs }), trackedSet), [
       'packages/other/dist/out.js',
     ]);
@@ -92,10 +93,12 @@ describe('untrackedInputs', () => {
 
   it('allows a named file and anything under a named directory', () => {
     const inputs = { 'coverage/index.html': 'a', '../../.husky/_/x.sh': 'b' };
+
     const allowed = [
       { path: 'packages/pkg/coverage/index.html', why: 'exact' },
       { path: '.husky/_', why: 'directory' },
     ];
+
     assert.deepEqual(
       untrackedInputs(task({ inputs }), trackedSet, allowed),
       [],
@@ -126,11 +129,13 @@ describe('auditTaskInputs', () => {
     const hashesAll = Object.fromEntries(
       packageFiles(tracked, 'packages/pkg').map((file) => [file, 'h']),
     );
+
     const audit = auditTaskInputs(
       [task({ inputs: { ...hashesAll, 'dist/index.js': 'h' } })],
       tracked,
       [],
     );
+
     assert.deepEqual(audit.failures, []);
     assert.deepEqual(audit.overhashing, [
       { taskId: 'pkg#test', untracked: ['packages/pkg/dist/index.js'] },
@@ -141,6 +146,7 @@ describe('auditTaskInputs', () => {
     const audit = auditTaskInputs([gap], tracked, [
       { task: 'test', why: 'because' },
     ]);
+
     assert.deepEqual(audit.failures, []);
     assert.deepEqual(audit.overhashing, []);
   });
@@ -154,6 +160,7 @@ describe('auditTaskInputs', () => {
       tracked,
       [],
     );
+
     assert.deepEqual(audit.failures, []);
     assert.equal(audit.audited, 0);
   });
@@ -164,6 +171,7 @@ describe('auditTaskInputs', () => {
       tracked,
       [{ task: 'test', why: 'because' }],
     );
+
     assert.deepEqual(audit.failures, []);
     assert.deepEqual(audit.stale, []);
   });
@@ -173,6 +181,7 @@ describe('auditTaskInputs', () => {
       { task: 'test', why: 'because' },
       { task: 'lint:markdown', why: 'md only' },
     ]);
+
     assert.deepEqual(audit.stale, ['lint:markdown']);
   });
 
@@ -185,6 +194,7 @@ describe('auditTaskInputs', () => {
       tracked,
       [],
     );
+
     assert.deepEqual(
       audit.failures.map(({ taskId }) => taskId),
       ['a-pkg#test', 'z-pkg#test'],

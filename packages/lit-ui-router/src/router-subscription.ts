@@ -29,15 +29,19 @@ export class RouterSubscribers {
     if (!router || !isRouterContextRequest(event)) {
       return;
     }
+
     // stopped first: a throwing consumer must not leak the request outward
     event.stopImmediatePropagation();
     const { callback, subscribe } = event;
+
     if (!subscribe) {
       return callback(router);
     }
+
     if (!provisional) {
       return callback(router, noUnsubscribe);
     }
+
     const deliver = (next: UIRouterLit) => callback(next, noUnsubscribe);
     this.pending.add(deliver);
     callback(router, () => this.pending.delete(deliver));
@@ -51,17 +55,20 @@ export class RouterSubscribers {
    */
   deliver(router: UIRouterLit): void {
     const failures: unknown[] = [];
+
     for (const deliver of [...this.pending]) {
       // An earlier subscriber may have disconnected this one, unsubscribing it.
       if (!this.pending.delete(deliver)) {
         continue;
       }
+
       try {
         deliver(router);
       } catch (thrown) {
         failures.push(thrown);
       }
     }
+
     reportFailures(failures);
   }
 }
@@ -75,10 +82,13 @@ const reportFailures = (failures: unknown[]): void => {
   if (!failures.length) {
     return;
   }
+
   if (typeof globalThis.reportError === 'function') {
     failures.forEach((failure) => globalThis.reportError(failure));
+
     return;
   }
+
   throw failures.length === 1
     ? failures[0]
     : new AggregateError(failures, 'router upgrade subscribers threw');
@@ -110,23 +120,30 @@ export const subscribeRouter = (
 ): RouterSubscription => {
   let seeking = true;
   let unsubscribe: (() => void) | undefined;
+
   const router = requestRouter(target, {
     subscribe: true,
     callback: (value, offered) => {
       unsubscribe = offered === noUnsubscribe ? undefined : offered;
+
       if (!seeking) {
         onReplaced(value);
       }
     },
   });
+
   seeking = false;
+
   if (router) {
     return { router, unsubscribe };
   }
+
   const event: UiRouterContextEvent = new CustomEvent(
     uiRouterContextEventName,
     { bubbles: true, composed: true, detail: {} },
   );
+
   target.dispatchEvent(event);
+
   return { router: event.detail.uiRouter, unsubscribe: undefined };
 };

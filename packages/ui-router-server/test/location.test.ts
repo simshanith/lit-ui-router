@@ -20,8 +20,10 @@ const sheetRouter = (
 ): UIRouter => {
   const router = new UIRouter();
   router.plugin(servicesPlugin);
+
   if (plugin) router.plugin(plugin);
   router.stateRegistry.register({ name: 'sheet', url: '/sheet/:num' });
+
   return router;
 };
 
@@ -93,6 +95,7 @@ describe('installServerLocation', () => {
       url: '/sheet/7B',
       strictMode: false,
     });
+
     const settled = onceSettled(router);
 
     // Plain core has no start(); syncing the url is what a router start does.
@@ -108,6 +111,7 @@ describe('installServerLocation', () => {
       url: '/sheet/7B',
       baseHref: '/app/',
     });
+
     const settled = onceSettled(router);
 
     // Plain core has no start(); syncing the url is what a router start does.

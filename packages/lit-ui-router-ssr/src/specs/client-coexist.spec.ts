@@ -21,12 +21,15 @@ const drawBoth = (path: string): Promise<string> =>
 /** Every comment inside the badge's shadow root. */
 const shadowComments = (container: HTMLElement): string[] => {
   const root = container.querySelector('shadow-badge')?.shadowRoot;
+
   if (!root) return [];
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_COMMENT);
   const found: string[] = [];
+
   for (let node = walker.nextNode(); node; node = walker.nextNode()) {
     found.push((node as Comment).data);
   }
+
   return found;
 };
 
@@ -83,8 +86,10 @@ describe('alongside lit’s own hydrate support', () => {
 
   it('hydrates a shadow-DOM element the routed view holds', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
     const drawView = (path: string): Promise<string> =>
       draw(rootTemplate, [UiViewRenderer, ShadowBadgeRenderer], path);
+
     const { container } = serve(await drawView('/badge'));
     const server = badgeSpan(container);
     expect(server).toBeTruthy();

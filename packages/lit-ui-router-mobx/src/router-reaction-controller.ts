@@ -79,14 +79,17 @@ export class RouterReactionController<T> implements ReactiveController {
 
   hostConnected(): void {
     const router = this.options.router ?? this.seekRouter();
+
     if (!router) {
       warnMissingRouter(
         this.host,
         'RouterReactionController',
         'will not observe the router',
       );
+
       return;
     }
+
     this.react(router);
   }
 
@@ -101,6 +104,7 @@ export class RouterReactionController<T> implements ReactiveController {
     let live = true;
     let seeking = true;
     let offered: (() => void) | undefined;
+
     const router = requestRouter(this.host, {
       subscribe: true,
       callback: (next, unsubscribe) => {
@@ -112,12 +116,14 @@ export class RouterReactionController<T> implements ReactiveController {
         }
       },
     });
+
     seeking = false;
     // A provider that ignores unsubscribe must not reach a disconnected host.
     this.unsubscribe = () => {
       live = false;
       offered?.();
     };
+
     return router ?? UIRouterLitElement.seekRouter(this.host);
   }
 

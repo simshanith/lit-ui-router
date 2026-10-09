@@ -75,8 +75,10 @@ async function ignoredFiles(
   tracked: ReadonlySet<string>,
 ): Promise<Set<string>> {
   const ignored = new Set<string>();
+
   for (let at = 0; at < files.length; at += 500) {
     const batch = files.slice(at, at + 500);
+
     const read = await defaultExec(
       'git',
       ['check-ignore', '-v', '--', ...batch],
@@ -93,16 +95,20 @@ async function ignoredFiles(
       ) {
         return { stdout: String(error.stdout) };
       }
+
       throw error;
     });
+
     for (const file of repoIgnored(read.stdout, tracked)) {
       ignored.add(file);
     }
   }
+
   return ignored;
 }
 
 const { members } = await loadWorkspace(workspaceRoot);
+
 const names = [
   ...new Set(
     members.flatMap((member) => Object.keys(member.manifest?.scripts ?? {})),
@@ -112,10 +118,13 @@ const names = [
 const { stdout } = await defaultExec('git', ['ls-files', '-z'], {
   cwd: workspaceRoot,
 });
+
 const tracked = stdout.split('\0').filter((file) => file !== '');
+
 const trackedFiles = new Set(tracked);
 
 const planned = await plannedTasks(names);
+
 const { failures, overhashing, stale, audited } = auditTaskInputs(
   [...planned.values()],
   tracked,
@@ -128,9 +137,11 @@ if (audited === 0) {
   console.error(`${CHECK}: turbo planned no cacheable task`);
   process.exit(1);
 }
+
 for (const failure of failures) {
   console.error(`${CHECK}: ${formatFailure(failure)}`);
 }
+
 const generated = narrowToGenerated(
   overhashing,
   await ignoredFiles(
@@ -138,14 +149,17 @@ const generated = narrowToGenerated(
     trackedFiles,
   ),
 );
+
 for (const over of generated) {
   console.error(`${CHECK}: ${formatOverhash(over)}`);
 }
+
 for (const name of stale) {
   console.error(
     `${CHECK}: "${name}" is exempt but hashes every tracked file now; drop the row`,
   );
 }
+
 if (failures.length > 0 || generated.length > 0 || stale.length > 0) {
   process.exit(1);
 }

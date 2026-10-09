@@ -5,20 +5,24 @@ export const LOCATION_PLUGIN =
 
 function featureQuery(features: Record<string, string>) {
   const params = new URLSearchParams();
+
   for (const [key, value] of Object.entries(features)) {
     params.set(`feature-${key}`, value);
   }
 
   const locationPlugin: string = features['location-plugin'] || LOCATION_PLUGIN;
+
   return { query: params.toString(), isHashMode: locationPlugin === 'hash' };
 }
 
 // hash routing never rewrites location.search, so a query param would pin the flag as URL-overridden
 function seedLocationPlugin(win: Cypress.AUTWindow) {
   if (!LOCATION_PLUGIN) return;
+
   const flags = JSON.parse(
     win.sessionStorage.getItem('featureFlags') ?? '{}',
   ) as Record<string, unknown>;
+
   flags['location-plugin'] = LOCATION_PLUGIN;
   win.sessionStorage.setItem('featureFlags', JSON.stringify(flags));
 }
@@ -36,6 +40,7 @@ export function visitWithFeatures(
   // mount). Consecutive visits then differ only by hash, as hash routing
   // intends.
   const root = (Cypress.config('baseUrl') ?? '').replace(/\/+$/, '');
+
   const url = query
     ? isHashMode
       ? `${root}?${query}#${path}`
@@ -43,6 +48,7 @@ export function visitWithFeatures(
     : isHashMode
       ? `${root}#${path}`
       : path;
+
   return cy.visit(url, {
     onBeforeLoad(win) {
       seedLocationPlugin(win);
@@ -59,6 +65,7 @@ export function visitWithFeatures(
 export function visitRootWithFeatures(features: Record<string, string> = {}) {
   const { query } = featureQuery(features);
   const root = (Cypress.config('baseUrl') ?? '').replace(/\/+$/, '');
+
   return cy.visit(query ? `${root}?${query}` : root, {
     onBeforeLoad: seedLocationPlugin,
   });

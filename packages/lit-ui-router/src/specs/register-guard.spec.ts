@@ -6,7 +6,9 @@
 // the analyzer sees ui-view.ts/ui-router.ts, whose real definitions win.)
 function defineStub(tag: string): CustomElementConstructor {
   class Stub extends HTMLElement {}
+
   customElements.define(tag, Stub);
+
   return Stub;
 }
 
@@ -22,6 +24,7 @@ function stubRegistry(): Map<string, CustomElementConstructor> {
     },
   });
   vi.resetModules();
+
   return defined;
 }
 
@@ -65,7 +68,9 @@ describe('duplicate registration guard', () => {
   it('stays silent for a subclass of UiView and keeps it', async () => {
     const defined = stubRegistry();
     const { UiView } = await import('../ui-view.js');
+
     class ServedView extends UiView {}
+
     defined.set('ui-view', ServedView);
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
@@ -79,7 +84,9 @@ describe('duplicate registration guard', () => {
   it('stays silent for a subclass of UIRouterLitElement and keeps it', async () => {
     const defined = stubRegistry();
     const { UIRouterLitElement } = await import('../ui-router.js');
+
     class RouterHost extends UIRouterLitElement {}
+
     defined.set('ui-router', RouterHost);
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 

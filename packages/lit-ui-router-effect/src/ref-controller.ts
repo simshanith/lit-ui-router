@@ -144,6 +144,7 @@ export class RefController<
    */
   protected setRefs(refs: RefSource<Refs>): void {
     this.refs = refs;
+
     if (!this.connected) return;
     this.interrupt();
     this.fork();
@@ -151,6 +152,7 @@ export class RefController<
 
   private fork(): void {
     const refs = typeof this.refs === 'function' ? this.refs() : this.refs;
+
     if (!refs) return;
     // Seed before forking: a fiber's first emission is not guaranteed to land
     // synchronously, and render() must not see a stale `.value`.
@@ -180,6 +182,7 @@ export class RefController<
     refs: Refs,
   ): Stream.Stream<RefValues<Refs>> {
     const streams = refs.map((ref) => ref.changes);
+
     return Stream.zipLatestAll(...streams) as unknown as Stream.Stream<
       RefValues<Refs>
     >;
@@ -188,6 +191,7 @@ export class RefController<
   private emit(values: RefValues<Refs>): void {
     const selected = this.selector(...values);
     const equals = this.options.equals ?? Object.is;
+
     if (this.initialized && equals(selected, this.value)) return;
     this.initialized = true;
     this.value = selected;

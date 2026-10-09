@@ -5,6 +5,7 @@ import { defaultCapture, defaultExec } from './exec.ts';
 
 // Past defaultExec's 16 MiB ceiling, so the pair's difference is the assertion.
 const BIG = 17 * 1024 * 1024;
+
 const emit = (bytes: number) => `process.stdout.write('x'.repeat(${bytes}))`;
 
 describe('defaultCapture', () => {
@@ -13,6 +14,7 @@ describe('defaultCapture', () => {
       '-e',
       emit(BIG),
     ]);
+
     assert.equal(stdout.length, BIG);
 
     await assert.rejects(
@@ -31,6 +33,7 @@ describe('defaultCapture', () => {
         assert.ok(error instanceof Error);
         assert.match(error.message, /exited with code 3/);
         assert.equal((error as { stderr?: string }).stderr, 'nope');
+
         return true;
       },
     );

@@ -96,12 +96,15 @@ export interface Excerpt {
  */
 export function parseRunSummary(value: unknown): RunSummary {
   const summary = value as RunSummary;
+
   if (!Array.isArray(summary?.tasks)) {
     throw new Error('turbo run summary has no tasks[] array');
   }
+
   if (typeof summary.execution?.exitCode !== 'number') {
     throw new Error('turbo run summary has no execution.exitCode');
   }
+
   return summary;
 }
 
@@ -113,6 +116,7 @@ export function failedTasks(summary: RunSummary): SummaryTask[] {
   return summary.tasks
     .filter((task) => {
       const code = task.execution?.exitCode;
+
       return typeof code === 'number' && code !== 0;
     })
     .sort(
@@ -124,6 +128,7 @@ export function failedTasks(summary: RunSummary): SummaryTask[] {
 // markdown code fences render the escapes literally, so they have to go.
 // Built from a string so no ESC byte sits in this file.
 const ESC = '\\u001B';
+
 const ANSI = new RegExp(
   `${ESC}\\[[0-9;?]*[ -/]*[@-~]|${ESC}\\][^]*?(?:\\u0007|${ESC}\\\\)`,
   'g',
@@ -184,6 +189,7 @@ export function excerptLog(raw: string, budget = DEFAULT_BUDGET): Excerpt {
     lines.findIndex((line) => FAILURE_REPORT.test(line)),
     0,
   );
+
   if (report > 0) {
     lines.splice(0, report, `… ${report} lines before the failure report …`);
   }
@@ -191,6 +197,7 @@ export function excerptLog(raw: string, budget = DEFAULT_BUDGET): Excerpt {
   const keep = budget.headLines + budget.tailLines;
   let omitted = report;
   let kept = lines;
+
   if (lines.length > keep) {
     omitted += lines.length - keep;
     kept = [
@@ -201,6 +208,7 @@ export function excerptLog(raw: string, budget = DEFAULT_BUDGET): Excerpt {
   }
 
   let text = kept.join('\n');
+
   if (Buffer.byteLength(text, 'utf8') > budget.maxBytes) {
     // Trim from the head: the tail holds the verdict.
     const buffer = Buffer.from(text, 'utf8');
@@ -210,6 +218,7 @@ export function excerptLog(raw: string, budget = DEFAULT_BUDGET): Excerpt {
     omitted = Math.max(omitted, 1);
     text = `… head trimmed to ${budget.maxBytes} bytes …\n${text}`;
   }
+
   return { text, omittedLines: omitted };
 }
 
@@ -220,12 +229,14 @@ export function excerptLog(raw: string, budget = DEFAULT_BUDGET): Excerpt {
  */
 export function turboReproduction(task: SummaryTask): string {
   const filter = task.package === '//' ? '//' : task.package;
+
   return `turbo run ${task.task} --filter=${filter} --force`;
 }
 
 /** The exact command turbo ran, and where. The literal repro, not a re-derivation. */
 export function directReproduction(task: SummaryTask): string {
   const dir = task.directory === '' ? '.' : task.directory;
+
   return `cd ${dir} && ${task.command}`;
 }
 
@@ -237,6 +248,7 @@ function seconds(ms: number): string {
 export function humanDuration(ms: number): string {
   if (ms < 60_000) return seconds(ms);
   const whole = Math.round(ms / 1000);
+
   return `${Math.floor(whole / 60)}m ${whole % 60}s`;
 }
 
@@ -248,6 +260,7 @@ export function buildReports(
   return failedTasks(summary).map((task) => {
     const exec = task.execution;
     const raw = logs.get(task.taskId);
+
     return {
       task,
       durationMs: (exec?.endTime ?? 0) - (exec?.startTime ?? 0),
@@ -269,6 +282,7 @@ export function buildReports(
 /** Wall time the task itself took. A cache hit has none — start equals end. */
 export function taskDuration(task: SummaryTask): number {
   const exec = task.execution;
+
   return (exec?.endTime ?? 0) - (exec?.startTime ?? 0);
 }
 
@@ -305,16 +319,20 @@ export function cacheTally(summary: RunSummary): CacheTally {
     miss: 0,
     savedMs: 0,
   };
+
   for (const task of summary.tasks) {
     if (!wasCacheHit(task)) {
       tally.miss += 1;
       continue;
     }
+
     tally.hit += 1;
     tally.savedMs += task.cache?.timeSaved ?? 0;
+
     if (task.cache?.source === 'REMOTE') tally.remote += 1;
     else if (task.cache?.source === 'LOCAL') tally.local += 1;
   }
+
   return tally;
 }
 
@@ -338,13 +356,16 @@ export function remoteCacheAnomaly(
 ): string | undefined {
   let hit = 0;
   let remote = 0;
+
   for (const run of runs) {
     const tally = cacheTally(run);
     hit += tally.hit;
     remote += tally.remote;
   }
+
   if (!onActions || hit === 0 || remote > 0) return undefined;
   const across = runs.length === 1 ? '' : ` across ${runs.length} turbo runs`;
+
   return `${hit} cache hit${hit === 1 ? '' : 's'}${across}, none from the remote cache — CI restores no local .turbo, so the remote cache is likely misconfigured (check TURBO_TOKEN, TURBO_API, TURBO_TEAM and the signature key)`;
 }
 
@@ -388,7 +409,9 @@ export interface CriticalPath {
  */
 function longerPath(a: CriticalPath, b: CriticalPath): CriticalPath {
   if (b.totalMs > a.totalMs) return b;
+
   if (b.totalMs === a.totalMs && b.taskIds.length > a.taskIds.length) return b;
+
   return a;
 }
 
@@ -399,8 +422,10 @@ export function criticalPath(summary: RunSummary): CriticalPath {
 
   function walk(taskId: string): CriticalPath {
     const cached = memo.get(taskId);
+
     if (cached !== undefined) return cached;
     const task = byId.get(taskId);
+
     // Unknown id, or a cycle turbo should never emit: contribute nothing
     // rather than recurse forever.
     if (task === undefined || visiting.has(taskId)) {
@@ -409,6 +434,7 @@ export function criticalPath(summary: RunSummary): CriticalPath {
 
     visiting.add(taskId);
     let best: CriticalPath = { taskIds: [], totalMs: 0 };
+
     for (const dep of task.dependencies ?? [])
       best = longerPath(best, walk(dep));
     visiting.delete(taskId);
@@ -417,13 +443,17 @@ export function criticalPath(summary: RunSummary): CriticalPath {
       taskIds: [...best.taskIds, taskId],
       totalMs: best.totalMs + taskDuration(task),
     };
+
     memo.set(taskId, result);
+
     return result;
   }
 
   let longest: CriticalPath = { taskIds: [], totalMs: 0 };
+
   for (const task of summary.tasks)
     longest = longerPath(longest, walk(task.taskId));
+
   return longest;
 }
 
@@ -434,8 +464,10 @@ export function headline(
 ): string {
   const { attempted, success, cached } = summary.execution;
   const names = reports.map((report) => report.task.taskId).join(', ');
+
   const what =
     reports.length === 0 ? 'no task reported a non-zero exit' : names;
+
   return `${reports.length} failing task${reports.length === 1 ? '' : 's'}: ${what} — ${success} succeeded, ${cached} cached, ${attempted} attempted`;
 }
 
@@ -446,8 +478,10 @@ export function headline(
  */
 function longestBacktickRun(text: string): number {
   let longest = 0;
+
   for (const run of text.match(/`+/g) ?? [])
     longest = Math.max(longest, run.length);
+
   return longest;
 }
 
@@ -466,6 +500,7 @@ export function inlineCode(text: string): string {
   // A span whose content starts or ends with a backtick needs the padding
   // spaces; CommonMark strips one from each side on render.
   const pad = text.startsWith('`') || text.endsWith('`') ? ' ' : '';
+
   return `${delimiter}${pad}${text}${pad}${delimiter}`;
 }
 
@@ -486,6 +521,7 @@ export function cell(text: string): string {
  */
 export function guardCommands(chunks: string[], token?: string): string[] {
   if (token === undefined || token === '') return chunks;
+
   return [`::stop-commands::${token}`, ...chunks, `::${token}::`];
 }
 
@@ -504,14 +540,18 @@ export interface ToolAnnotation {
 }
 
 const ANNOTATION_LINE = /^::(error|warning|notice) ([^:]*)::(.*)$/;
+
 const POSITION_KEYS = new Set(['line', 'endLine', 'col', 'endColumn']);
+
 const POSITIVE_INT = /^[1-9]\d{0,6}$/;
 
 function hasControl(value: string): boolean {
   for (let at = 0; at < value.length; at += 1) {
     const code = value.charCodeAt(at);
+
     if (code < 0x20 || code === 0x7f) return true;
   }
+
   return false;
 }
 
@@ -534,15 +574,20 @@ export function repoRelativeFile(
 ): string | undefined {
   if (file === '' || hasControl(file) || file.includes('\\')) return undefined;
   let resolved: string;
+
   if (posix.isAbsolute(file)) {
     const base = root === undefined ? undefined : posix.normalize(`${root}/`);
+
     if (base === undefined || !file.startsWith(base)) return undefined;
     resolved = posix.normalize(file.slice(base.length));
   } else {
     resolved = posix.normalize(posix.join(directory || '.', file));
   }
+
   if (resolved === '..' || resolved.startsWith('../')) return undefined;
+
   if (posix.isAbsolute(resolved) || resolved === '.') return undefined;
+
   return resolved;
 }
 
@@ -557,22 +602,28 @@ export function parseAnnotation(
   root?: string,
 ): ToolAnnotation | undefined {
   const match = ANNOTATION_LINE.exec(stripAnsi(rawLine).replace(/\r$/, ''));
+
   if (match === null) return undefined;
   const [, level, rawProps, rawMessage] = match;
   const message = unescapeCommand(rawMessage ?? '');
+
   if (message.trim() === '') return undefined;
 
   const properties: AnnotationProperties = {};
   const seen = new Set<string>();
+
   for (const pair of (rawProps ?? '').split(',')) {
     const at = pair.indexOf('=');
+
     if (at <= 0) return undefined;
     const named = pair.slice(0, at);
     // vitest's github-actions reporter spells `col` as `column`
     const key = named === 'column' ? 'col' : named;
     const value = unescapeCommand(pair.slice(at + 1));
+
     if (seen.has(key)) return undefined;
     seen.add(key);
+
     if (POSITION_KEYS.has(key)) {
       if (!POSITIVE_INT.test(value)) return undefined;
       properties[key as 'line' | 'endLine' | 'col' | 'endColumn'] =
@@ -581,13 +632,17 @@ export function parseAnnotation(
       properties.title = value;
     } else if (key === 'file') {
       properties.file = repoRelativeFile(value, directory, root);
+
       if (properties.file === undefined) return undefined;
     } else {
       return undefined;
     }
   }
+
   const { file } = properties;
+
   if (file === undefined) return undefined;
+
   return {
     level: level as AnnotationLevel,
     message,
@@ -602,14 +657,19 @@ export function extractAnnotations(
   root?: string,
 ): ToolAnnotation[] {
   const found: ToolAnnotation[] = [];
+
   for (const task of summary.tasks) {
     const log = logs.get(task.taskId);
+
     if (log === undefined) continue;
+
     for (const line of log.split('\n')) {
       const annotation = parseAnnotation(line, task.directory, root);
+
       if (annotation !== undefined) found.push(annotation);
     }
   }
+
   return found;
 }
 
@@ -639,24 +699,30 @@ export function planAnnotations(
   const emitted = { error: 0, warning: 0, notice: 0 };
   const commands: string[] = [];
   const seen = new Set<string>();
+
   for (const level of LEVELS) {
     const cap = Math.max(0, ANNOTATION_LIMIT - (reserved[level] ?? 0));
+
     for (const annotation of annotations) {
       if (annotation.level !== level) continue;
+
       const command = annotationCommand(
         level,
         annotation.message,
         annotation.properties,
       );
+
       if (seen.has(command)) continue;
       seen.add(command);
       found[level] += 1;
+
       if (emitted[level] < cap) {
         emitted[level] += 1;
         commands.push(command);
       }
     }
   }
+
   return { commands, found, emitted };
 }
 
@@ -664,20 +730,26 @@ export function planAnnotations(
 export function annotationNote(plan: AnnotationPlan): string | undefined {
   const parts = LEVELS.flatMap((level) => {
     const found = plan.found[level];
+
     if (found <= 0) return [];
     const shown = plan.emitted[level];
     const noun = `${level}${found === 1 ? '' : 's'}`;
+
     return shown === found
       ? [`${found} ${noun}`]
       : [`${found} ${noun} (${shown} annotated)`];
   });
+
   if (parts.length === 0) return undefined;
+
   const capped = LEVELS.some(
     (level) => plan.emitted[level] < plan.found[level],
   );
+
   const tail = capped
     ? ` GitHub keeps ${ANNOTATION_LIMIT} per level per step; the rest are in the task logs.`
     : '';
+
   return `${parts.join(', ')} from task logs, re-emitted as annotations.${tail}`;
 }
 
@@ -704,6 +776,7 @@ export function runSucceeded(summary: RunSummary): boolean {
 
 /** The at-a-glance verdict marker. The first thing a reader needs is which. */
 export const PASS_MARK = '✅';
+
 export const FAIL_MARK = '❌';
 
 export function runMark(summary: RunSummary): string {
@@ -713,6 +786,7 @@ export function runMark(summary: RunSummary): string {
 function overviewHeadline(summary: RunSummary): string {
   const { command, attempted, cached, success, failed, startTime, endTime } =
     summary.execution;
+
   return `${runMark(summary)} ${inlineCode(command)} — ${attempted} attempted, ${cached} cached, ${success} succeeded, ${failed} failed, in ${humanDuration(endTime - startTime)}.`;
 }
 
@@ -792,14 +866,18 @@ export function artifactLink(
   context: OverviewContext,
 ): { markdown: string; line: string } | undefined {
   const artifactUrl = safeArtifactUrl(context.artifactUrl);
+
   if (artifactUrl === undefined) return undefined;
   const names = context.fileNames ?? [];
+
   const which =
     names.length === 0
       ? ''
       : ` (${names.map((name) => inlineCode(cell(name))).join(', ')})`;
+
   const what =
     names.length > 1 ? 'the untruncated runs' : 'the untruncated run';
+
   return {
     markdown: `[Full \`--summarize\` JSON](<${artifactUrl}>)${which} — ${what}, downloadable from this run's artifacts.`,
     line: `   run summary json: ${artifactUrl}`,
@@ -814,7 +892,9 @@ export function attachmentsLink(
   context: OverviewContext,
 ): { markdown: string; line: string } | undefined {
   const url = safeArtifactUrl(context.attachmentsUrl);
+
   if (url === undefined) return undefined;
+
   return {
     markdown: `[Vitest attachments](<${url}>) — failure screenshots and \`annotate\` attachments from the failing specs, downloadable from this run's artifacts.`,
     line: `   vitest attachments: ${url}`,
@@ -826,7 +906,9 @@ export function logsLink(
   context: OverviewContext,
 ): { markdown: string; line: string } | undefined {
   const url = safeArtifactUrl(context.logsUrl);
+
   if (url === undefined) return undefined;
+
   return {
     markdown: `[Full task logs](<${url}>) — every task's complete output, downloadable from this run's artifacts.`,
     line: `   task logs: ${url}`,
@@ -836,7 +918,9 @@ export function logsLink(
 /** Plain https only, and nothing that could end an angle-bracket destination. */
 function safeArtifactUrl(url: string | undefined): string | undefined {
   if (url === undefined || !url.startsWith('https://')) return undefined;
+
   if (/[\s<>]/.test(url)) return undefined;
+
   return url;
 }
 
@@ -844,11 +928,13 @@ function safeArtifactUrl(url: string | undefined): string | undefined {
 function overviewNotes(summary: RunSummary): string[] {
   const notes: string[] = [];
   const omitted = omittedTaskCount(summary);
+
   if (omitted > 0) {
     notes.push(
       `${omitted} task${omitted === 1 ? '' : 's'} cancelled — turbo killed them as it tore the run down and left them out of the summary. They are not failures.`,
     );
   }
+
   return notes;
 }
 
@@ -858,6 +944,7 @@ function jobNotes(runs: readonly SessionRun[], onActions: boolean): string[] {
     runs.map(({ summary }) => summary),
     onActions,
   );
+
   return anomaly === undefined ? [] : [anomaly];
 }
 
@@ -903,6 +990,7 @@ function runBlockMarkdown(summary: RunSummary): string[] {
   );
 
   const slowest = slowestTasks(summary, SLOWEST_LIMIT);
+
   if (slowest.length > 0) {
     out.push(
       '**Slowest tasks** — cache misses only; a hit costs no time.',
@@ -910,15 +998,18 @@ function runBlockMarkdown(summary: RunSummary): string[] {
       '| Task | Time |',
       '| --- | ---: |',
     );
+
     for (const task of slowest) {
       out.push(
         `| ${inlineCode(cell(task.taskId))} | ${humanDuration(taskDuration(task))} |`,
       );
     }
+
     out.push('');
   }
 
   const path = criticalPath(summary);
+
   if (path.taskIds.length > 1) {
     out.push(
       `**Longest dependency chain** — ${humanDuration(path.totalMs)} across ${path.taskIds.length} tasks, the floor no extra concurrency can beat.`,
@@ -929,17 +1020,21 @@ function runBlockMarkdown(summary: RunSummary): string[] {
   }
 
   const misses = summary.tasks.filter((task) => !wasCacheHit(task));
+
   if (misses.length > 0) {
     out.push(
       `<details><summary>${misses.length} cache miss${misses.length === 1 ? '' : 'es'}</summary>`,
       '',
     );
+
     for (const task of misses.slice(0, MISS_LIST_LIMIT)) {
       out.push(`- ${inlineCode(task.taskId)}`);
     }
+
     if (misses.length > MISS_LIST_LIMIT) {
       out.push(`- … ${misses.length - MISS_LIST_LIMIT} more`);
     }
+
     out.push('', '</details>', '');
   }
 
@@ -950,6 +1045,7 @@ function runBlockMarkdown(summary: RunSummary): string[] {
 function footerMarkdown(context: OverviewContext): string[] {
   const out: string[] = [];
   const warnLines = warnLaneReport(context.warnLanes ?? []);
+
   if (warnLines.length > 0) {
     out.push(
       '**Warn-only lanes** — green by design; the floor is `tools/lint-elements/warnings.json`.',
@@ -958,9 +1054,11 @@ function footerMarkdown(context: OverviewContext): string[] {
       '',
     );
   }
+
   if (context.annotations !== undefined) {
     out.push(`**Tool annotations** — ${context.annotations}`, '');
   }
+
   for (const link of [
     attachmentsLink(context),
     logsLink(context),
@@ -968,6 +1066,7 @@ function footerMarkdown(context: OverviewContext): string[] {
   ]) {
     if (link !== undefined) out.push(link.markdown, '');
   }
+
   return out;
 }
 
@@ -983,18 +1082,23 @@ export function sessionMarkdown(
   context: OverviewContext = {},
 ): string {
   const out: string[] = [SESSION_HEADING, ''];
+
   if (runs.length > 1) out.push(...pipelineIndex(runs));
   // A rule between blocks: three runs of tables and lists run together
   // otherwise, and the reader is scanning for which one is theirs.
   const blocks = runs.map(({ summary }) => runBlockMarkdown(summary));
+
   for (const [at, block] of blocks.entries()) {
     if (at > 0) out.push('---', '');
     out.push(...block);
   }
+
   for (const note of jobNotes(runs, context.onActions ?? false)) {
     out.push('> [!WARNING]', `> ${note}`, '');
   }
+
   out.push(...footerMarkdown(context));
+
   return `${out.join('\n')}\n`;
 }
 
@@ -1017,6 +1121,7 @@ function elide(text: string, max: number): string {
 
 function pipelineIndex(runs: readonly SessionRun[]): string[] {
   const failed = runs.filter(({ summary }) => !runSucceeded(summary));
+
   const verdict =
     failed.length === 0
       ? `**All ${runs.length} turbo runs succeeded.**`
@@ -1027,19 +1132,23 @@ function pipelineIndex(runs: readonly SessionRun[]): string[] {
             ),
           )
           .join(', ')}.`;
+
   const out = [
     verdict,
     '',
     '| | Run | Tasks | Time | Summary |',
     '| --- | --- | ---: | ---: | --- |',
   ];
+
   for (const { summary, fileName } of runs) {
     const { command, attempted, startTime, endTime } = summary.execution;
     out.push(
       `| ${runMark(summary)} | ${inlineCode(cell(elide(command, INDEX_COMMAND_CHARS)))} | ${attempted} | ${humanDuration(endTime - startTime)} | ${fileName === undefined ? '—' : inlineCode(cell(fileName))} |`,
     );
   }
+
   out.push('');
+
   return out;
 }
 
@@ -1055,14 +1164,17 @@ export function overviewLines(
 /** The stdout twin of `runBlockMarkdown`. */
 function runBlockLines(summary: RunSummary): string[] {
   const tally = cacheTally(summary);
+
   const { attempted, cached, success, failed, startTime, endTime } =
     summary.execution;
+
   const lines = [
     `── ${runMark(summary)} ${summary.execution.command} — ${attempted} attempted, ${cached} cached, ${success} succeeded, ${failed} failed, ${humanDuration(endTime - startTime)}`,
     `   cache: ${tally.hit} hit (${tally.remote} remote, ${tally.local} local), ${tally.miss} miss${savedClause(tally, ' saved')}`,
   ];
 
   const slowest = slowestTasks(summary, SLOWEST_LIMIT);
+
   if (slowest.length > 0) {
     lines.push(
       `   slowest: ${slowest.map((task) => `${task.taskId} ${humanDuration(taskDuration(task))}`).join(', ')}`,
@@ -1070,6 +1182,7 @@ function runBlockLines(summary: RunSummary): string[] {
   }
 
   const path = criticalPath(summary);
+
   if (path.taskIds.length > 1) {
     lines.push(
       `   longest chain: ${humanDuration(path.totalMs)} across ${path.taskIds.length} tasks`,
@@ -1084,10 +1197,12 @@ function runBlockLines(summary: RunSummary): string[] {
 /** The stdout twin of `footerMarkdown`. */
 function footerLines(context: OverviewContext): string[] {
   const lines: string[] = [];
+
   // Verdict only: the breakdown is a markdown-twin luxury, and here it competes
   // for one terminal row with the thing a reader actually needs off this line.
   for (const line of warnLaneReport(context.warnLanes ?? [], { rules: false }))
     lines.push(`   warn-lane: ${line}`);
+
   if (context.annotations !== undefined)
     lines.push(`   annotations: ${context.annotations}`);
 
@@ -1098,7 +1213,9 @@ function footerLines(context: OverviewContext): string[] {
     logsLink(context),
     artifactLink(context),
   ].filter((link) => link !== undefined);
+
   if (links.length > 0) lines.push('', ...links.map((link) => link.line));
+
   return lines;
 }
 
@@ -1108,15 +1225,18 @@ export function sessionLines(
   context: OverviewContext = {},
 ): string[] {
   const lines: string[] = [];
+
   for (const [at, { summary }] of runs.entries()) {
     // One blank line between runs: the per-run lines are indented under their
     // headline, and without a gap three runs read as one long block.
     if (at > 0) lines.push('');
     lines.push(...runBlockLines(summary));
   }
+
   for (const note of jobNotes(runs, context.onActions ?? false))
     lines.push(`   note: ${note}`);
   lines.push(...footerLines(context));
+
   return lines;
 }
 
@@ -1140,6 +1260,7 @@ function failureBody(summary: RunSummary, reports: FailureReport[]): string[] {
       'timeout, or a cancellation. The full step log is the only source.',
       '',
     );
+
     return out;
   }
 
@@ -1150,11 +1271,13 @@ function failureBody(summary: RunSummary, reports: FailureReport[]): string[] {
     '| Task | Package | Exit | Time |',
     '| --- | --- | ---: | ---: |',
   );
+
   for (const { task, durationMs } of reports) {
     out.push(
       `| \`${task.task}\` | \`${task.package}\` | ${task.execution?.exitCode} | ${seconds(durationMs)} |`,
     );
   }
+
   out.push('');
 
   for (const { task, excerpt } of reports) {
@@ -1166,6 +1289,7 @@ function failureBody(summary: RunSummary, reports: FailureReport[]): string[] {
       '# or, exactly as CI ran it:',
       directReproduction(task),
     ].join('\n');
+
     const fence = fenceFor(reproduction);
     out.push(
       `### \`${task.taskId}\``,
@@ -1177,16 +1301,20 @@ function failureBody(summary: RunSummary, reports: FailureReport[]): string[] {
       fence,
       '',
     );
+
     if (excerpt.omittedLines > 0) {
       out.push(
         `<details><summary>Log excerpt — ${excerpt.omittedLines} lines omitted, full log in the step output</summary>`,
         '',
       );
     }
+
     const excerptFence = fenceFor(excerpt.text);
     out.push(`${excerptFence}text`, excerpt.text, excerptFence, '');
+
     if (excerpt.omittedLines > 0) out.push('</details>', '');
   }
+
   return out;
 }
 
@@ -1202,9 +1330,11 @@ export interface RunReport extends SessionRun {
  */
 export function sessionFailureMarkdown(failures: readonly RunReport[]): string {
   const out: string[] = ['## CI failure summary', ''];
+
   for (const { summary, reports } of failures) {
     out.push(...failureBody(summary, reports));
   }
+
   return `${out.join('\n')}\n`;
 }
 
@@ -1218,10 +1348,14 @@ export function sessionHeadline(
 ): string {
   const total = (pick: (run: RunSummary) => number): number =>
     runs.reduce((sum, run) => sum + pick(run), 0);
+
   const names = reports.map((report) => report.task.taskId).join(', ');
+
   const what =
     reports.length === 0 ? 'no task reported a non-zero exit' : names;
+
   const across = runs.length === 1 ? '' : ` across ${runs.length} turbo runs`;
+
   return `${reports.length} failing task${reports.length === 1 ? '' : 's'}${across}: ${what} — ${total((run) => run.execution.success)} succeeded, ${total((run) => run.execution.cached)} cached, ${total((run) => run.execution.attempted)} attempted`;
 }
 
@@ -1241,6 +1375,7 @@ export function stdoutReport(
 /** The per-task half of the stdout lane, shared with the session renderer. */
 function excerptLines(reports: readonly FailureReport[]): string[] {
   const lines: string[] = [];
+
   for (const { task, excerpt } of reports) {
     lines.push(
       `── ${task.taskId} (exit ${task.execution?.exitCode})`,
@@ -1251,6 +1386,7 @@ function excerptLines(reports: readonly FailureReport[]): string[] {
       '',
     );
   }
+
   return lines;
 }
 
@@ -1260,5 +1396,6 @@ export function sessionStdoutReport(
   runs: readonly RunSummary[],
 ): string[] {
   const all = failures.flatMap(({ reports }) => reports);
+
   return [...excerptLines(all), sessionHeadline(runs, all)];
 }

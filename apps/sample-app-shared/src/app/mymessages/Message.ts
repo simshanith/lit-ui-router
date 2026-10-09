@@ -13,14 +13,17 @@ interface MessageResolves {
 }
 
 const messageBody = (msg = '') => msg.split(/\n/).map((p) => html`<p>${p}</p>`);
+
 const prefixSubject = (prefix: string, message: Message) =>
   prefix + message.subject;
+
 const makeResponseMsg = (prefix: string, msg: Message): Partial<Message> => ({
   from: msg.to,
   to: msg.from,
   subject: prefixSubject(prefix, msg),
   body: quoteMessage(msg),
 });
+
 const quoteMessage = (message: Message) => `
 
 ---------------------------------------
@@ -56,6 +59,7 @@ export class MessageElement extends LitElement {
   get actions() {
     return this.folder.actions.reduce<Record<string, true>>((obj, action) => {
       obj[action] = true;
+
       return obj;
     }, {});
   }
@@ -69,9 +73,11 @@ export class MessageElement extends LitElement {
    */
   connectedCallback() {
     super.connectedCallback();
+
     if (this.message.read) {
       return;
     }
+
     this.message.read = true;
     void MessagesStorage.put(this.message);
   }
@@ -111,9 +117,11 @@ export class MessageElement extends LitElement {
   removeMessage = () => {
     const { message, nextMessageGetter } = this;
     const nextMessageId = nextMessageGetter(message._id);
+
     const nextState = nextMessageId
       ? 'mymessages.messagelist.message'
       : 'mymessages.messagelist';
+
     const params = { messageId: nextMessageId };
 
     DialogService.confirm('Delete?', undefined)
@@ -128,6 +136,7 @@ export class MessageElement extends LitElement {
 
   render() {
     const { message } = this;
+
     return html`<div class="message">
       <div class="header">
         <div>

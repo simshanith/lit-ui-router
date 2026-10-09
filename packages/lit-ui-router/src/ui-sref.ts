@@ -22,10 +22,12 @@ import type { UiSrefElement } from './sref-internals.js';
 
 // re-export: `inLitDevMode` ships in the public d.ts (#541)
 export { inLitDevMode };
+
 export {
   UI_SREF_TARGET_EVENT,
   UI_SREF_TARGET_REMOVED_EVENT,
 } from './sref-internals.js';
+
 export type { UiSrefElement, UiSrefTargetEvent } from './sref-internals.js';
 
 export {
@@ -167,6 +169,7 @@ export class UiSrefDirective extends AsyncDirective {
   /** @internal */
   constructor(partInfo: PartInfo) {
     super(partInfo);
+
     if (partInfo.type !== PartType.ELEMENT) {
       throw new Error('The `uiSref` directive must be used as an element');
     }
@@ -189,10 +192,12 @@ export class UiSrefDirective extends AsyncDirective {
 
     const { uiRouter: router } = this;
     const $state = router?.stateService;
+
     if (!$state) {
       if (this._seekedRouter) {
         this.warnMissingRouter(state);
       }
+
       return noChange;
     }
 
@@ -224,6 +229,7 @@ export class UiSrefDirective extends AsyncDirective {
     if (targetChanged) {
       this.element.dispatchEvent(uiSrefTargetEvent(this.targetState));
     }
+
     return noChange;
   }
 
@@ -239,6 +245,7 @@ export class UiSrefDirective extends AsyncDirective {
     if (assignHref === 'auto') {
       return isNativeLink(element);
     }
+
     if (!assignHref) {
       return false;
     }
@@ -257,6 +264,7 @@ export class UiSrefDirective extends AsyncDirective {
           `Pass { assignHref: 'auto' } to write it only to links; 'auto' becomes the default in 2.0.`,
       );
     }
+
     return true;
   }
 
@@ -308,6 +316,7 @@ export class UiSrefDirective extends AsyncDirective {
    */
   reconnected(): void {
     this.element = this._partElement;
+
     if (this.element) {
       this.firstUpdated();
     }
@@ -318,10 +327,12 @@ export class UiSrefDirective extends AsyncDirective {
     const { uiRouter: router, state, params } = this;
     const options = this.getOptions();
     const $state = router?.stateService;
+
     if (!$state || !this.element?.isConnected || !state) {
       if (!$state && state && this.element?.isConnected) {
         this.warnMissingRouter(state);
       }
+
       return;
     }
 
@@ -351,6 +362,7 @@ export class UiSrefDirective extends AsyncDirective {
     this.uiSrefOptions = { assignHref };
     const uiSrefElement = part.element as unknown as UiSrefElement;
     this._partElement = uiSrefElement;
+
     if (this.element !== uiSrefElement) {
       this.element = uiSrefElement;
       this._firstUpdated = false;
@@ -379,6 +391,7 @@ export class UiSrefDirective extends AsyncDirective {
     this.seekRouter();
     this.seekParentView();
     this.element!.addEventListener('click', this.onClick as EventListener);
+
     // no router: the subscription is the only step that needs one, and
     // `doRender` still has to run for the no-op to report itself
     if (this.uiRouter) {
@@ -386,6 +399,7 @@ export class UiSrefDirective extends AsyncDirective {
         this.doRender,
       );
     }
+
     this.doRender();
     this._firstUpdated = true;
   }

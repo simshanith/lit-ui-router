@@ -54,6 +54,7 @@ describe('tallyFiles', () => {
       message('a.ts', 'z-rule'),
       message('a.ts', 'a-rule'),
     ]);
+
     assert.deepEqual(Object.keys(files), ['a.ts', 'z.ts']);
     assert.deepEqual(Object.keys(files['a.ts'] ?? {}), ['a-rule', 'z-rule']);
   });
@@ -96,6 +97,7 @@ describe('checkSnapshotIntegrity', () => {
       ...buildSnapshot('//#lane', files),
       rules: { 'rule-a': 2, 'rule-b': 3 },
     };
+
     assert.deepEqual(checkSnapshotIntegrity(snapshot), [
       'snapshot rules[rule-b] is 3 but files[] sums to 0',
     ]);
@@ -120,6 +122,7 @@ describe('diffWarnings', () => {
       ...snapshot,
       'a.ts': { ...snapshot['a.ts'], 'rule-c': 1 },
     });
+
     assert.deepEqual(regressions, [
       { file: 'a.ts', rule: 'rule-c', was: 0, now: 1 },
     ]);
@@ -130,6 +133,7 @@ describe('diffWarnings', () => {
       ...snapshot,
       'c.ts': { 'rule-a': 1 },
     });
+
     assert.deepEqual(regressions, [
       { file: 'c.ts', rule: 'rule-a', was: 0, now: 1 },
     ]);
@@ -141,6 +145,7 @@ describe('diffWarnings', () => {
       'a.ts': { 'rule-a': 1, 'rule-b': 1 },
       'b.ts': { 'rule-b': 2 },
     });
+
     assert.deepEqual(regressions, [
       { file: 'b.ts', rule: 'rule-b', was: 1, now: 2 },
     ]);
@@ -232,6 +237,7 @@ describe('the marker', () => {
       formatWarnLaneMarker(state),
       '',
     ].join('\n');
+
     assert.deepEqual(findWarnLaneState(log), state);
   });
 
@@ -294,6 +300,7 @@ describe('warnLaneLine', () => {
       regressions: 0,
       rules: { 'lit-a11y/anchor-is-valid': 32 },
     };
+
     assert.equal(
       warnLaneLine('//#lint:elements', state, { rules: false }),
       '//#lint:elements — 36 warnings, at the snapshot floor',

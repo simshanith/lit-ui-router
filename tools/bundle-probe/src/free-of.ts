@@ -29,16 +29,21 @@ export const staticExternals = ({ entry, chunks }: BundleResult): string[] => {
   const seen = new Set<string>([entry.name]);
   const queue = [entry];
   const externals = new Set<string>();
+
   while (queue.length > 0) {
     const chunk = queue.pop()!;
+
     for (const specifier of chunk.externalImports) externals.add(specifier);
+
     for (const name of chunk.staticImports) {
       if (seen.has(name)) continue;
       seen.add(name);
       const next = byName.get(name);
+
       if (next) queue.push(next);
     }
   }
+
   return [...externals];
 };
 

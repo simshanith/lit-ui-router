@@ -5,9 +5,11 @@ declare module 'eslint-plugin-lit-a11y' {
   import type { Linter, Rule } from 'eslint';
 
   export const recommendedRules: Linter.RulesRecord;
+
   const plugin: {
     configs: { recommended: Linter.Config };
     rules: Record<string, Rule.RuleModule>;
   };
+
   export default plugin;
 }

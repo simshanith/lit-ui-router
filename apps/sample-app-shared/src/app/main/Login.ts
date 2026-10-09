@@ -31,13 +31,17 @@ export class Login extends LitElement {
 
   login = () => {
     const { router, resolves } = this._uiViewProps;
+
     const returnTo = resolves?.returnTo as {
       state: () => string;
       params: () => object;
     };
+
     const done = () => (this.authenticating = false);
+
     const showError = (errorMessage: string) =>
       (this.errorMessage = errorMessage);
+
     const returnToOriginalState = () =>
       router.stateService.go(returnTo.state(), returnTo.params(), {
         reload: true,

@@ -2,11 +2,13 @@ import { describe, it, expect } from 'vitest';
 import { domMatchers, domSnapshotSerializer, getDiffableHTML } from '../dom.ts';
 
 expect.extend(domMatchers);
+
 expect.addSnapshotSerializer(domSnapshotSerializer);
 
 function fragment(html: string): DocumentFragment {
   const template = document.createElement('template');
   template.innerHTML = html;
+
   return template.content;
 }
 
@@ -150,6 +152,7 @@ describe('getDiffableHTML', () => {
       const el = document.createElement('div');
       el.attachShadow({ mode: 'open' }).innerHTML = '<p>shadow</p>';
       el.innerHTML = '<span>light</span>';
+
       return el;
     }
 
@@ -195,11 +198,13 @@ describe('toEqualDom', () => {
 
   it('fails with both sides normalised for the diff', () => {
     let error: unknown;
+
     try {
       expect('<p class="b a">x</p>').toEqualDom('<p class="a">x</p>');
     } catch (e) {
       error = e;
     }
+
     expect(error).toMatchObject({
       message: 'expected DOM to equal (semantic diff)',
       actual: '<p class="a b">\n  x\n</p>',

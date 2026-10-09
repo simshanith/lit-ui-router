@@ -40,11 +40,14 @@ const ASSET_TABLE: Record<string, { body: string; headers: HeadersInit }> = {
 // URL so a regression shows up as a method assertion, not a crash.
 const pathnameOf = (input: Request | URL | string): string =>
   new URL(input instanceof Request ? input.url : String(input)).pathname;
+
 const methodOf = (input: Request | URL | string): string =>
   input instanceof Request ? input.method : 'GET';
 
 let assetCalls: string[] = [];
+
 let assetMethods: string[] = [];
+
 beforeEach(() => {
   assetCalls = [];
   assetMethods = [];
@@ -60,6 +63,7 @@ const env = {
       const asset = ASSET_TABLE[pathname];
       // Like the real binding: a HEAD answers with the headers and no body.
       const bodyOf = (body: string) => (method === 'HEAD' ? null : body);
+
       return Promise.resolve(
         asset
           ? new Response(bodyOf(asset.body), {
@@ -144,9 +148,11 @@ describe('flagship mounts (/app, /app-mobx, /app-effect)', () => {
     for (const mount of ['/app', '/app-mobx']) {
       assetCalls = [];
       assetMethods = [];
+
       const res = await dispatch(`${mount}/definitely-not-a-route`, {
         method: 'HEAD',
       });
+
       assert.equal(res.status, 404, mount);
       assert.deepEqual(assetCalls, [`${mount}/404.html`], mount);
       assert.deepEqual(assetMethods, ['HEAD'], mount);

@@ -24,6 +24,7 @@ export function findUnsubstitutedRefs(
   manifest: PackageManifest | undefined,
 ): UnsubstitutedRef[] {
   const refs: UnsubstitutedRef[] = [];
+
   for (const field of DEP_FIELDS) {
     for (const [dep, spec] of Object.entries(manifest?.[field] ?? {})) {
       // The type says string; the bytes come from a tarball, so say which
@@ -33,12 +34,15 @@ export function findUnsubstitutedRefs(
           `${field}.${dep}: specifier is ${typeof spec}, not a string`,
         );
       }
+
       if (!UNSUBSTITUTED_PREFIXES.some((p) => spec.trim().startsWith(p))) {
         continue;
       }
+
       refs.push({ field, dep, spec });
     }
   }
+
   return refs;
 }
 
@@ -58,6 +62,7 @@ export function formatReport(results: PackResult[]): Report {
   }
 
   const bad = results.filter((result) => result.refs.length > 0);
+
   if (bad.length === 0) {
     return {
       ok: true,
@@ -72,13 +77,17 @@ export function formatReport(results: PackResult[]): Report {
       `refs npm cannot resolve (publishing would break consumers):`,
     '',
   ];
+
   for (const { name, dir, refs } of bad) {
     lines.push(`  ${name} (${dir})`);
+
     for (const { field, dep, spec } of refs) {
       lines.push(`      • ${field.padEnd(20)} ${dep.padEnd(30)} ${spec}`);
     }
+
     lines.push('');
   }
+
   return { ok: false, text: lines.join('\n') };
 }
 
@@ -104,19 +113,23 @@ export function findPackedManifestViolations(
   manifest: PackageManifest,
 ): string[] {
   const violations: string[] = [];
+
   for (const field of STRIPPED_MANIFEST_FIELDS) {
     if (manifest[field]) {
       violations.push(`${field} leaked into packed manifest`);
     }
   }
+
   const runtime = JSON.stringify([
     manifest.dependencies,
     manifest.peerDependencies,
     manifest.optionalDependencies,
   ]);
+
   if (/catalog:|workspace:/.test(runtime)) {
     violations.push('unsubstituted refs in packed manifest');
   }
+
   return violations;
 }
 
@@ -125,9 +138,11 @@ export function formatPackedManifestReport(violations: string[]): Report {
   if (violations.length === 0) {
     return { ok: true, text: '✓ packed manifest clean' };
   }
+
   const lines = [
     '✗ packed manifest check failed — this tarball must not be published:',
     ...violations.map((violation) => `  • ${violation}`),
   ];
+
   return { ok: false, text: lines.join('\n') };
 }

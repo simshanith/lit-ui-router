@@ -17,6 +17,7 @@ const stubRegistry = (): Map<string, CustomElementConstructor> => {
       defined.set(name, constructor);
     },
   });
+
   return defined;
 };
 

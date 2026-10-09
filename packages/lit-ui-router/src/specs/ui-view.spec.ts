@@ -34,7 +34,9 @@ import {
 // Module-scope fixtures delegate to these handles, reassigned per test so each
 // test keeps its own spy/state.
 let canExit: UiOnExit['uiCanExit'];
+
 let paramsChanged: UiOnParamsChanged['uiOnParamsChanged'];
+
 let receiveParams: UiOnParamsChanged['uiOnParamsChanged'];
 
 @customElement('test-exit-component')
@@ -128,6 +130,7 @@ class TestRetainedLeaf extends CountedElement implements UiOnParamsChanged {
 
   render() {
     this.propsSeen.push(this._uiViewProps);
+
     return html`<div class="leaf">${this.starId}</div>`;
   }
 }
@@ -216,7 +219,9 @@ describe('UiView', () => {
     // Fresh, inert defaults so no handle leaks between tests.
     canExit = () => true;
     paramsChanged = () => {};
+
     receiveParams = () => {};
+
     resetCounts();
   });
 
@@ -247,6 +252,7 @@ describe('UiView', () => {
 
     const uiView = document.createElement('ui-view');
     options.configure?.(uiView);
+
     const { uiRouterEl: uiRouter } = await mountElementInRouter(
       uiView,
       router,
@@ -275,6 +281,7 @@ describe('UiView', () => {
             'document.createDocumentFragment is not a function',
           );
         });
+
       try {
         const uiView = document.createElement('ui-view');
         const result = uiView.render();
@@ -301,6 +308,7 @@ describe('UiView', () => {
       const states: LitStateDeclaration[] = [
         { name: 'home', url: '/home', component: () => html`<div>Home</div>` },
       ];
+
       const { uiView } = await setupRouter(states);
 
       expect(uiView.uiRouter).toBe(router);
@@ -312,6 +320,7 @@ describe('UiView', () => {
       const states: LitStateDeclaration[] = [
         { name: 'home', url: '/home', component: () => html`<div>Home</div>` },
       ];
+
       await setupRouter(states);
 
       expect(router.viewService.available()).toContain('$default');
@@ -347,6 +356,7 @@ describe('UiView', () => {
           component: () => html`<div class="home-content">Home Content</div>`,
         },
       ];
+
       const { uiView } = await setupRouter(states);
 
       await routerGo(router, 'home');
@@ -366,10 +376,12 @@ describe('UiView', () => {
           url: '/home',
           component: (props) => {
             receivedProps = props;
+
             return html`<div>Home</div>`;
           },
         },
       ];
+
       const { uiView } = await setupRouter(states);
 
       await routerGo(router, 'home');
@@ -387,10 +399,12 @@ describe('UiView', () => {
           url: '/home',
           component: (props) => {
             receivedProps = props;
+
             return html`<div>Home</div>`;
           },
         },
       ];
+
       const { uiView } = await setupRouter(states);
 
       await routerGo(router, 'home');
@@ -414,10 +428,12 @@ describe('UiView', () => {
           ],
           component: (props) => {
             receivedProps = props;
+
             return html`<div>Home</div>`;
           },
         },
       ];
+
       const { uiView } = await setupRouter(states);
 
       await routerGo(router, 'home');
@@ -439,6 +455,7 @@ describe('UiView', () => {
           component: () => html`<div class="about">About</div>`,
         },
       ];
+
       const { uiView } = await setupRouter(states);
 
       await routerGo(router, 'home');
@@ -470,6 +487,7 @@ describe('UiView', () => {
           component: () => html`<div class="child">Child</div>`,
         },
       ];
+
       const { uiView } = await setupRouter(states);
 
       await routerGo(router, 'parent.child');
@@ -507,6 +525,7 @@ describe('UiView', () => {
           },
         },
       ];
+
       await setupRouter(states);
 
       await routerGo(router, 'parent.child');
@@ -514,9 +533,11 @@ describe('UiView', () => {
 
       // Verify nested view is properly registered
       const views = router.viewService['_uiViews'];
+
       const nestedView = views.find(
         (v: { name: string }) => v.name === 'nested',
       );
+
       expect(nestedView).toBeDefined();
     });
   });
@@ -568,6 +589,7 @@ describe('UiView', () => {
           component: () => html`<div>About</div>`,
         },
       ];
+
       const { uiView } = await setupRouter(states);
 
       await routerGo(router, 'home');
@@ -593,6 +615,7 @@ describe('UiView', () => {
           component: () => html`<div>About</div>`,
         },
       ];
+
       const { uiView } = await setupRouter(states);
 
       await routerGo(router, 'home');
@@ -604,6 +627,7 @@ describe('UiView', () => {
       } catch {
         // Transition rejected
       }
+
       await tick(50);
 
       // Should still be on home
@@ -626,6 +650,7 @@ describe('UiView', () => {
           component: TestParamsComponent,
         },
       ];
+
       const { uiView } = await setupRouter(states);
 
       await routerGo(router, 'user', { id: '1' });
@@ -654,6 +679,7 @@ describe('UiView', () => {
           component: TestParamsReceiveComponent,
         },
       ];
+
       const { uiView } = await setupRouter(states);
 
       await routerGo(router, 'user', { id: '1' });
@@ -673,6 +699,7 @@ describe('UiView', () => {
       const states: LitStateDeclaration[] = [
         { name: 'home', url: '/home', component: () => html`<div>Home</div>` },
       ];
+
       const { uiView } = await setupRouter(states);
 
       const initialViewCount = router.viewService['_uiViews'].length;
@@ -688,6 +715,7 @@ describe('UiView', () => {
       const states: LitStateDeclaration[] = [
         { name: 'home', url: '/home', component: () => html`<div>Home</div>` },
       ];
+
       const { uiView } = await setupRouter(states);
 
       await routerGo(router, 'home');
@@ -702,6 +730,7 @@ describe('UiView', () => {
 
       const afterHookCount =
         router.transitionService.getHooks('onBefore').length;
+
       expect(afterHookCount).toBeLessThan(initialHookCount);
     });
   });
@@ -722,6 +751,7 @@ describe('UiView', () => {
       },
       { name: 'blank', url: '/blank' },
     ];
+
     const homeView = '<ui-view><div class="home">Home</div></ui-view>';
 
     it('should keep rendering its state after its router is re-attached', async () => {
@@ -782,12 +812,14 @@ describe('UiView', () => {
           component: () => html`<div class="child">Child</div>`,
         },
       ];
+
       const { uiView } = await setupRouter(states);
 
       await routerGo(router, 'parent.child');
       await tick(50);
 
       const nestedView = uiView.querySelector('ui-view');
+
       if (nestedView) {
         const parentView = UiView.seekParentView(nestedView);
         expect(parentView).toBe(uiView);
@@ -798,6 +830,7 @@ describe('UiView', () => {
       const states: LitStateDeclaration[] = [
         { name: 'home', url: '/home', component: () => html`<div>Home</div>` },
       ];
+
       await setupRouter(states);
 
       const orphan = document.createElement('div');
@@ -830,6 +863,7 @@ describe('UiView', () => {
       const nested = uiView.querySelector('ui-view')!;
       expect(nested).toBeTruthy();
       expect(nested['_uiViewData'].fqn).toBe('$default.$default');
+
       return { uiRouter, uiView, nested };
     }
 
@@ -887,6 +921,7 @@ describe('UiView', () => {
   describe('missing <ui-router> ancestor', () => {
     it('should warn once when a view updates with no router', async () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
       try {
         const uiView = document.createElement('ui-view');
         uiView.textContent = 'fallback';
@@ -942,6 +977,7 @@ describe('UiView', () => {
 
     it('should not warn when a router ancestor is present', async () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
       try {
         const { uiView } = await setupRouter([
           {
@@ -950,6 +986,7 @@ describe('UiView', () => {
             component: () => html`<div>Home</div>`,
           },
         ]);
+
         await routerGo(router, 'home');
 
         expect(uiView.uiRouter).toBe(router);
@@ -1101,6 +1138,7 @@ describe('UiView', () => {
       container.appendChild(uiView);
       // Installed in the same task, so the provider is there by the first update.
       const uninstall = provideRouter(container, router);
+
       try {
         await waitForUpdate(uiView);
 
@@ -1121,16 +1159,20 @@ describe('UiView', () => {
       router = createTestRouter(homeStates);
       router.start();
       await routerGo(router, 'home');
+
       // lit issues each warning once per realm; forget any earlier one so a repeat here is seen.
       const issued = (globalThis as { litIssuedWarnings?: Set<string> })
         .litIssuedWarnings;
+
       for (const entry of issued ?? []) {
         if (entry.includes('change-in-update')) issued!.delete(entry);
       }
+
       const warn = vi.spyOn(console, 'warn');
       const uiView = document.createElement('ui-view');
       container.appendChild(uiView);
       const uninstall = provideRouter(container, router);
+
       try {
         expect(await uiView.updateComplete).toBe(true);
         expect(uiView.querySelector('.home-content')).not.toBeNull();
@@ -1152,6 +1194,7 @@ describe('UiView', () => {
           component: () => html`<div class="home-content">Home</div>`,
         },
       ];
+
       const routerA = createTestRouter(ownHomeStates());
       const routerB = createTestRouter(ownHomeStates());
       const elementA = document.createElement('ui-router');
@@ -1190,10 +1233,12 @@ describe('UiView', () => {
         composed: true,
         detail: { parentView: null },
       }) as UiViewContextEvent;
+
       Object.defineProperty(event, 'target', { value: host });
       Object.defineProperty(event, 'composedPath', {
         value: () => [source, host],
       });
+
       return event;
     }
 
@@ -1227,6 +1272,7 @@ describe('UiView', () => {
       Object.defineProperty(event, 'composedPath', {
         value: () => [source, host],
       });
+
       return event;
     }
 
@@ -1338,6 +1384,7 @@ describe('UiView', () => {
       await tick();
       const uiView = host.shadowRoot!.querySelector('ui-view')!;
       await waitForUpdate(uiView);
+
       return { host, uiView };
     }
 
@@ -1348,7 +1395,9 @@ describe('UiView', () => {
           el.innerHTML = '<p class="hold">hold</p>';
         },
       });
+
       await waitForUpdate(uiView);
+
       return uiView;
     }
 
@@ -1402,8 +1451,10 @@ describe('UiView', () => {
 
     it('should stand ahead of lit’s marker without doubling', async () => {
       const uiView = await mountAuthoredFallback();
+
       const markerAt = () =>
         [...uiView.childNodes].findIndex((node) => node.nodeType === 8);
+
       const holdAt = () =>
         [...uiView.childNodes].indexOf(uiView.querySelector('p.hold')!);
 
@@ -1428,6 +1479,7 @@ describe('UiView', () => {
       uiRouterEl.innerHTML = `<test-in-place-view>${markup}</test-in-place-view>`;
       const view = uiRouterEl.querySelector('test-in-place-view')!;
       await waitForUpdate(view);
+
       return view;
     }
 

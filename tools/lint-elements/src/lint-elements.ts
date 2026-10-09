@@ -40,13 +40,16 @@ import { WORKSPACE_SRC_GLOB } from '@tools/shared/globs.ts';
 
 /** The turbo task id this lane reports as; must match a WARN_WATCHED_LANES entry. */
 const TASK = '//#lint:elements';
+
 const REGENERATE = 'pnpm lint:elements:snapshot';
 
 // Everything below is anchored to the repo root rather than to cwd: the lane
 // runs as a root turbo task, but the bin is on PATH workspace-wide and lints
 // the same tree wherever it is called from.
 const ROOT = fileURLToPath(new URL('../../..', import.meta.url));
+
 const SNAPSHOT_FILE = new URL('../warnings.json', import.meta.url);
+
 /** How the snapshot is named in output — a path a reader can paste into an editor. */
 const SNAPSHOT_PATH = relative(ROOT, fileURLToPath(SNAPSHOT_FILE)).replaceAll(
   '\\',
@@ -86,9 +89,11 @@ interface EslintResult {
 function eslintCli(): string {
   const require = createRequire(import.meta.url);
   const manifestPath = require.resolve('eslint/package.json');
+
   const manifest = require('eslint/package.json') as {
     bin: Record<string, string>;
   };
+
   return join(dirname(manifestPath), manifest.bin.eslint);
 }
 
@@ -105,25 +110,31 @@ function runEslint(): EslintResult[] {
       maxBuffer: 64 * 1024 * 1024,
     },
   );
+
   if (eslint.error !== undefined) {
     throw new Error(`could not run eslint: ${eslint.error.message}`);
   }
+
   // 0 = clean or warnings-only, 1 = errors present (still a full report),
   // anything else = eslint itself failed and there is no report to read.
   if (eslint.status !== 0 && eslint.status !== 1) {
     process.stderr.write(eslint.stderr);
     process.exit(eslint.status ?? 1);
   }
+
   if (eslint.stderr.trim() !== '') process.stderr.write(eslint.stderr);
+
   return JSON.parse(eslint.stdout) as EslintResult[];
 }
 
 function collect(results: readonly EslintResult[]): WarnMessage[] {
   const messages: WarnMessage[] = [];
+
   for (const result of results) {
     // Repo-root-relative, because that is the key the snapshot is written with
     // and it has to survive being compared from a different cwd.
     const file = relative(ROOT, result.filePath).replaceAll('\\', '/');
+
     for (const message of result.messages) {
       if (message.severity === 0) continue;
       messages.push({
@@ -136,6 +147,7 @@ function collect(results: readonly EslintResult[]): WarnMessage[] {
       });
     }
   }
+
   return messages;
 }
 
@@ -157,16 +169,19 @@ function writeSnapshot(snapshot: WarnSnapshot): void {
 /** Every message, grouped by file — the lane's findings-only report. */
 function printMessages(messages: readonly WarnMessage[]): void {
   let current = '';
+
   for (const message of messages) {
     if (message.file !== current) {
       current = message.file;
       console.log(`\n${current}`);
     }
+
     const severity = message.severity === 2 ? 'error  ' : 'warning';
     console.log(
       `  ${message.line}:${message.column}  ${severity}  ${message.message}  ${message.ruleId ?? ''}`,
     );
   }
+
   if (messages.length > 0) console.log('');
 }
 
@@ -185,17 +200,21 @@ function main(): void {
     console.log(
       `${SNAPSHOT_PATH} updated: ${snapshot.total} warnings over ${Object.keys(snapshot.files).length} files.`,
     );
+
     // Errors are not snapshottable — they fail the lane even under --update.
     if (errors.length > 0) process.exit(1);
+
     return;
   }
 
   const snapshot = readSnapshot();
   const problems = checkSnapshotIntegrity(snapshot);
+
   if (problems.length > 0) {
     console.error(
       `${SNAPSHOT_PATH} is internally inconsistent — regenerate it with \`${REGENERATE}\`:`,
     );
+
     for (const problem of problems) console.error(`  ${problem}`);
     process.exit(1);
   }
@@ -214,9 +233,11 @@ function main(): void {
       (sum, delta) => sum + (delta.was - delta.now),
       0,
     );
+
     console.log(
       `\n${fixed} fewer warning${fixed === 1 ? '' : 's'} than the snapshot — update it with \`${REGENERATE}\`:`,
     );
+
     for (const { file, rule, was, now } of improvements) {
       console.log(`  ${file}  ${rule}  ${was} -> ${now}`);
     }
@@ -226,9 +247,11 @@ function main(): void {
     console.error(
       `\n${regressions.length} new warning entr${regressions.length === 1 ? 'y' : 'ies'} not in ${SNAPSHOT_PATH}:`,
     );
+
     for (const { file, rule, was, now } of regressions) {
       console.error(`  ${file}  ${rule}  ${was} -> ${now}`);
     }
+
     console.error(
       `\nFix them, suppress them at the call site, or — if the rule is wrong here —` +
         `\nre-evaluate the rule. The snapshot is a floor being drained (#606), not a budget` +

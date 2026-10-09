@@ -19,10 +19,12 @@ import {
 } from '@tools/shared/workspace.ts';
 
 const CHECK = 'check-release-closure';
+
 const FIX = 'widen RELEASE_CLOSURE in .config/mise/config.toml';
 
 const hasScript = (task: string) => (member: Member) =>
   member.manifest?.scripts?.[task] !== undefined;
+
 const hasDevDep = (dep: string) => (member: Member) =>
   member.manifest?.devDependencies?.[dep] !== undefined;
 
@@ -55,6 +57,7 @@ const PUBLISH_NPM: ClosureRule = {
 };
 
 const closure = requireEnv(process.env, 'RELEASE_CLOSURE');
+
 const [{ members }, { stdout }] = await Promise.all([
   loadWorkspace(workspaceRoot),
   defaultExec(
@@ -63,33 +66,43 @@ const [{ members }, { stdout }] = await Promise.all([
     { cwd: workspaceRoot },
   ),
 ]);
+
 const selected = selectedNames(stdout);
+
 const publishable = members.filter(isPublishable).map((member) => member.name);
+
 // root-anchored: turbo narrows a run to the package it is invoked from
 const plan = await defaultCapture('turbo', publishNpmDryRunArgs(publishable), {
   cwd: workspaceRoot,
 });
 
 let failed = false;
+
 for (const rule of RULES) {
   const required = members.filter(rule.select).map((member) => member.name);
+
   if (required.length === 0) {
     // the invariant is vacuous if nothing matches; that's a wiring bug, not a pass
     console.error(`${CHECK}: no member selects for ${rule.need}`);
     failed = true;
     continue;
   }
+
   const missing = missingFromClosure(required, selected);
+
   if (missing.length > 0) {
     console.error(`${CHECK}: ${formatMissing(rule, missing)}`);
     failed = true;
     continue;
   }
+
   console.log(`${CHECK}: ${rule.need}: ${required.length} selected`);
 }
 
 const planned = plannedScriptPackages(plan.stdout);
+
 const unplanned = missingFromClosure(planned, selected);
+
 if (planned.length === 0) {
   console.error(`${CHECK}: turbo planned no script for ${PUBLISH_NPM.need}`);
   failed = true;
@@ -101,6 +114,7 @@ if (planned.length === 0) {
 }
 
 const edges = unselectedWorkspaceEdges(members, selected);
+
 if (edges.length > 0) {
   console.error(
     `${CHECK}: workspace dependencies outside RELEASE_CLOSURE: ${edges.join(', ')}: a selected member cannot resolve them; ${FIX}`,
@@ -111,4 +125,5 @@ if (edges.length > 0) {
     `${CHECK}: workspace dependencies: ${selected.length} selected, none outside`,
   );
 }
+
 if (failed) process.exit(1);

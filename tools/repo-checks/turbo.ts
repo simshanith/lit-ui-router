@@ -42,9 +42,11 @@ type DryRunTasks = {
 /** `['<pkg>', '<task>']` from a turbo task id like `@www/lit-ui-router.dev#build` or `//#lint`. */
 export function splitTaskId(taskId: string): [string, string] {
   const at = taskId.lastIndexOf('#');
+
   if (at <= 0 || at === taskId.length - 1) {
     throw new Error(`not a turbo task id: ${taskId}`);
   }
+
   return [taskId.slice(0, at), taskId.slice(at + 1)];
 }
 
@@ -54,14 +56,18 @@ export async function resolvedTaskDeps(
   exec: Exec = defaultCapture,
 ): Promise<string[]> {
   const [pkg, task] = splitTaskId(taskId);
+
   const { stdout } = await exec(
     'turbo',
     ['run', task, `--filter=${pkg}`, '--dry-run=json'],
     AT_ROOT,
   );
+
   const plan = JSON.parse(stdout) as DryRun;
   const entry = plan.tasks?.find((t) => t.taskId === taskId);
+
   if (!entry) throw new Error(`turbo dry-run has no task ${taskId}`);
+
   return entry.dependencies ?? [];
 }
 
@@ -71,10 +77,12 @@ function isUndeclared(name: string, error: unknown): boolean {
     typeof error === 'object' && error !== null && 'stderr' in error
       ? String(error.stderr)
       : '';
+
   // turbo colors the message and wraps it at terminal width, inside a long
   // task name too, behind a `│` gutter; task names carry no whitespace
   const flat = (text: string) =>
     stripVTControlCharacters(text).replaceAll(/│|\s+/g, '');
+
   return flat(stderr).includes(flat(`Could not find task \`${name}\``));
 }
 
@@ -87,11 +95,13 @@ function isUndeclared(name: string, error: unknown): boolean {
  */
 export function declaredLanes(configs: readonly string[]): Set<string> {
   const lanes = new Set<string>();
+
   for (const text of configs) {
     for (const id of Object.keys(parseTasks(text))) {
       lanes.add(id.slice(id.lastIndexOf('#') + 1));
     }
   }
+
   return lanes;
 }
 
@@ -99,16 +109,20 @@ type TaskConfig = { with?: unknown; persistent?: unknown };
 
 function parseTasks(text: string): Record<string, TaskConfig> {
   const errors: ParseError[] = [];
+
   // turbo.json carries comments, so JSON.parse alone won't do
   const config = parse(text, errors, { allowTrailingComma: true }) as {
     tasks?: Record<string, TaskConfig>;
   } | null;
+
   const [first] = errors;
+
   if (first) {
     throw new Error(
       `invalid turbo.json at offset ${first.offset}: ${printParseErrorCode(first.error)}`,
     );
   }
+
   return config?.tasks ?? {};
 }
 
@@ -126,16 +140,20 @@ export function nonPersistentWith(
     path,
     tasks: parseTasks(text),
   }));
+
   const root = parsed.find(({ path }) => path === 'turbo.json')?.tasks ?? {};
   const found: string[] = [];
+
   for (const { path, tasks } of parsed) {
     for (const [id, task] of Object.entries(tasks)) {
       if (task.with === undefined || task.with === null) continue;
+
       if ((task.persistent ?? root[id]?.persistent) !== true) {
         found.push(`${path}: ${id}`);
       }
     }
   }
+
   return found.sort();
 }
 
@@ -149,7 +167,9 @@ export async function plannedLanes(
     ['run', ...lanes, '--dry-run=json'],
     AT_ROOT,
   );
+
   const plan = JSON.parse(stdout) as DryRun;
+
   return new Set(
     (plan.tasks ?? [])
       .map((task) => task.taskId)
@@ -171,6 +191,7 @@ export async function planFailure(
 ): Promise<string | undefined> {
   try {
     await exec('turbo', ['run', ...lanes, '--dry-run=json'], AT_ROOT);
+
     return undefined;
   } catch (error) {
     return typeof error === 'object' && error !== null && 'stderr' in error
@@ -191,9 +212,11 @@ export async function plannedTasks(
 ): Promise<Map<string, PlannedTask>> {
   const planned = new Map<string, PlannedTask>();
   const queue = [...names];
+
   const worker = async () => {
     for (let name = queue.shift(); name; name = queue.shift()) {
       let stdout: string;
+
       try {
         ({ stdout } = await exec(
           'turbo',
@@ -204,6 +227,7 @@ export async function plannedTasks(
         if (isUndeclared(name, error)) continue;
         throw error;
       }
+
       for (const task of (JSON.parse(stdout) as DryRunTasks).tasks ?? []) {
         if (task.taskId === undefined) continue;
         planned.set(task.taskId, {
@@ -216,8 +240,10 @@ export async function plannedTasks(
       }
     }
   };
+
   await Promise.all(
     Array.from({ length: Math.max(1, concurrency) }, () => worker()),
   );
+
   return planned;
 }

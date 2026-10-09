@@ -9,6 +9,7 @@ import { configureRouter } from './router.config.js';
 import { featureFlags } from './app/util/featureDetection.js';
 
 let router: UIRouterLit | undefined;
+
 const handleUiRouterContext = {
   handleEvent(e: CustomEvent<{ uiRouter: UIRouterLit }>) {
     router = e.detail.uiRouter;
@@ -28,6 +29,7 @@ const handleUiRouterContext = {
 const root = document.getElementById('root')!;
 
 const apiDocsEnabled = featureFlags.get('enable-api-docs');
+
 // <api-docs> upgrades in place when the definition lands, so the tag renders now
 if (apiDocsEnabled) void import('@api-viewer/docs');
 
@@ -46,7 +48,9 @@ render(
 );
 
 const element = root.querySelector('ui-router');
+
 const routerFromElement = element?.uiRouter;
+
 router = router || routerFromElement!;
 
 if (routerFromElement === router) {

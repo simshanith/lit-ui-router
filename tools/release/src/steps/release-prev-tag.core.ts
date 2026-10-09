@@ -32,9 +32,11 @@ export function describeArgs(
   if (packageName.trim() === '') {
     throw new Error('packageName must be non-empty');
   }
+
   if (releaseVersion.trim() === '') {
     throw new Error('releaseVersion must be non-empty');
   }
+
   const laneExcludes =
     prereleaseChannel(releaseVersion) === undefined
       ? [`--exclude=${packageName}@*-*`]
@@ -42,6 +44,7 @@ export function describeArgs(
           `--exclude=${packageName}@*-${channel}`,
           `--exclude=${packageName}@*-${channel}.*`,
         ]);
+
   return [
     'describe',
     '--tags',
@@ -70,6 +73,7 @@ export function assertKnownChannel(
   subject: string,
 ): string | undefined {
   const channel = prereleaseChannel(version);
+
   if (
     channel !== undefined &&
     !(PRERELEASE_CHANNELS as readonly string[]).includes(channel)
@@ -78,6 +82,7 @@ export function assertKnownChannel(
       `${subject}: unknown prerelease channel "${channel}" (allowed: ${PRERELEASE_CHANNELS.join(', ')})`,
     );
   }
+
   return channel;
 }
 
@@ -88,6 +93,7 @@ export function assertKnownChannel(
  */
 export function prereleaseChannel(version: string): string | undefined {
   const [first] = semver.prerelease(version.trim()) ?? [];
+
   return first === undefined ? undefined : String(first);
 }
 
@@ -102,18 +108,23 @@ export function prereleaseChannels(
 ): string[] {
   const prefix = `${packageName}@`;
   const channels = new Set<string>();
+
   for (const line of tagList.split('\n')) {
     const tag = line.trim();
+
     if (!tag.startsWith(prefix)) continue;
     const channel = prereleaseChannel(tag.slice(prefix.length));
+
     if (channel !== undefined) channels.add(channel);
   }
+
   return [...channels];
 }
 
 /** The previous tag from `git describe` stdout; empty output → no override. */
 export function parsePrevTag(stdout: string): string | undefined {
   const tag = stdout.trim();
+
   return tag === '' ? undefined : tag;
 }
 
@@ -129,11 +140,13 @@ export function rootCommitArgs(): string[] {
  */
 export function parseRootCommit(stdout: string): string {
   const [root] = stdout.split('\n').map((line) => line.trim());
+
   if (root === undefined || !/^(?:[0-9a-f]{40}|[0-9a-f]{64})$/.test(root)) {
     throw new Error(
       `expected a root commit sha, got: ${JSON.stringify(stdout)}`,
     );
   }
+
   return root;
 }
 

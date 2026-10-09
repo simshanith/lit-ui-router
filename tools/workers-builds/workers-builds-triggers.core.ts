@@ -39,11 +39,13 @@ export const PINNABLE_FIELDS = [
   'deploy_command',
   'root_directory',
 ] as const;
+
 export type PinnableField = (typeof PINNABLE_FIELDS)[number];
 
 // Build watch paths: array-valued, so pinned and patched whole-list rather than
 // per-entry (https://developers.cloudflare.com/workers/ci-cd/builds/build-watch-paths/).
 export const PINNABLE_LIST_FIELDS = ['path_includes', 'path_excludes'] as const;
+
 export type PinnableListField = (typeof PINNABLE_LIST_FIELDS)[number];
 
 const nonEmptyString = v.pipe(v.string(), v.nonEmpty());
@@ -80,7 +82,9 @@ const DesiredWorkersSchema = v.strictObject({
 });
 
 export type DesiredTrigger = v.InferOutput<typeof DesiredTriggerSchema>;
+
 export type DesiredState = v.InferOutput<typeof DesiredStateSchema>;
+
 export type DesiredWorker = DesiredState & { site: string };
 
 export type TriggerKind = 'production' | 'preview';
@@ -91,11 +95,13 @@ export function parseJsonc(text: string): unknown {
   const errors: ParseError[] = [];
   const result: unknown = parse(text, errors, { allowTrailingComma: true });
   const [first] = errors;
+
   if (first) {
     throw new Error(
       `invalid JSONC at offset ${first.offset}: ${printParseErrorCode(first.error)}`,
     );
   }
+
   return result;
 }
 
@@ -106,13 +112,17 @@ function validate<Schema extends v.GenericSchema>(
   config: unknown,
 ): v.InferOutput<Schema> {
   const result = v.safeParse(schema, config);
+
   if (!result.success) {
     const details = result.issues.map((issue) => {
       const path = v.getDotPath(issue);
+
       return path ? `  ${path}: ${issue.message}` : `  ${issue.message}`;
     });
+
     throw new Error(['invalid config:', ...details].join('\n'));
   }
+
   return result.output;
 }
 
@@ -124,6 +134,7 @@ export function desiredStateFromConfig(config: unknown): DesiredState {
 /** Every worker in workers-builds-triggers.config.jsonc, tagged with its site key. */
 export function desiredWorkersFromConfig(config: unknown): DesiredWorker[] {
   const { workers } = validate(DesiredWorkersSchema, config);
+
   return Object.entries(workers).map(([site, worker]) => ({ site, ...worker }));
 }
 
@@ -139,11 +150,13 @@ export function selectWorkers(
   if (sites.length === 0) return workers;
   const known = workers.map((worker) => worker.site);
   const unknown = sites.filter((site) => !known.includes(site));
+
   if (unknown.length > 0) {
     throw new Error(
       `unknown site(s): ${unknown.join(', ')} — configured: ${known.join(', ')}`,
     );
   }
+
   return workers.filter((worker) => sites.includes(worker.site));
 }
 
@@ -153,9 +166,11 @@ const WranglerNameSchema = v.looseObject({ name: nonEmptyString });
 /** The `name` field of a parsed wrangler config, or throw. */
 export function workerNameFromConfig(config: unknown): string {
   const result = v.safeParse(WranglerNameSchema, config);
+
   if (!result.success) {
     throw new Error('wrangler.jsonc has no "name" field');
   }
+
   return result.output.name;
 }
 
@@ -167,6 +182,7 @@ export function classifyTrigger(
 ): TriggerKind {
   const includes = trigger.branch_includes ?? [];
   const excludes = trigger.branch_excludes ?? [];
+
   return includes.includes(productionBranch) &&
     !excludes.includes(productionBranch)
     ? 'production'
@@ -206,12 +222,16 @@ function describeEnvironment(
   const conflicts: string[] = [];
   const lines: string[] = [];
   const liveKeys = Object.keys(live).sort();
+
   if (liveKeys.length === 0 && Object.keys(declared).length === 0) {
     return { lines, patch, conflicts };
   }
+
   lines.push('    environment_variables');
+
   for (const [key, wanted] of Object.entries(declared)) {
     const current = live[key];
+
     if (current?.is_secret) {
       conflicts.push(key);
       lines.push(
@@ -227,12 +247,14 @@ function describeEnvironment(
       );
     }
   }
+
   // Values omitted: an unmanaged var may hold a credential this tool prints.
   for (const key of liveKeys.filter((key) => !(key in declared))) {
     lines.push(
       `      ${key.padEnd(ENV_PAD)} ${live[key]?.is_secret ? '(secret) ' : ''}(unmanaged)`,
     );
   }
+
   return { lines, patch, conflicts };
 }
 
@@ -242,9 +264,11 @@ function describePinnedFields(
   patch: Drift['patch'],
 ): string[] {
   const lines: string[] = [];
+
   for (const field of PINNABLE_FIELDS) {
     const current = trigger[field] ?? '';
     const wanted = desired[field];
+
     if (wanted === undefined) {
       lines.push(
         `    ${field.padEnd(18)} ${current || '(empty)'} (not pinned)`,
@@ -257,6 +281,7 @@ function describePinnedFields(
       lines.push(`    ${' '.repeat(18)} wanted: ${wanted}`);
     }
   }
+
   return lines;
 }
 
@@ -268,10 +293,12 @@ function describeWatchPaths(
   patch: Drift['patch'],
 ): string[] {
   const lines: string[] = [];
+
   for (const field of PINNABLE_LIST_FIELDS) {
     const current = trigger[field] ?? [];
     const wanted = desired[field];
     const shown = JSON.stringify(current);
+
     if (wanted === undefined) {
       if (current.length > 0) {
         lines.push(`    ${field.padEnd(18)} ${shown} (not pinned)`);
@@ -286,6 +313,7 @@ function describeWatchPaths(
       );
     }
   }
+
   return lines;
 }
 
@@ -300,6 +328,7 @@ function describeTrigger(
   drift: boolean;
 } {
   const patch: Drift['patch'] = {};
+
   const lines = [
     `${kind} trigger ${trigger.trigger_uuid}` +
       (trigger.trigger_name ? ` (${trigger.trigger_name})` : ''),
@@ -307,11 +336,14 @@ function describeTrigger(
     ...describePinnedFields(trigger, desired, patch),
     ...describeWatchPaths(trigger, desired, patch),
   ];
+
   const environment = describeEnvironment(
     trigger.environment_variables ?? {},
     desired.environment_variables ?? {},
   );
+
   lines.push(...environment.lines);
+
   return {
     lines,
     patch,
@@ -338,14 +370,18 @@ export function diffTriggers(
   for (const trigger of triggers) {
     const kind = classifyTrigger(trigger, desired.productionBranch);
     seen[kind] += 1;
+
     const {
       lines: triggerLines,
       patch,
       environmentPatch,
       drift,
     } = describeTrigger(trigger, kind, desired[kind]);
+
     lines.push(...triggerLines, '');
+
     if (drift) drifted += 1;
+
     if (
       Object.keys(patch).length > 0 ||
       Object.keys(environmentPatch).length > 0
@@ -363,6 +399,7 @@ export function diffTriggers(
   const missing = (['production', 'preview'] as const).filter(
     (kind) => seen[kind] === 0,
   );
+
   for (const kind of missing) {
     lines.push(`  ✗ no ${kind} trigger found (create it in the dashboard)`, '');
   }
@@ -373,5 +410,6 @@ export function diffTriggers(
       ? '✓ Workers Builds triggers match the desired state.'
       : `✗ ${drifted + missing.length} trigger(s) drifted from the desired state.`,
   );
+
   return { report: { ok, text: lines.join('\n') }, drifts };
 }

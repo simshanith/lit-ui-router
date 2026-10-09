@@ -28,10 +28,13 @@ function fail(message: string): never {
 }
 
 const [projectArg, ...forwarded] = process.argv.slice(2);
+
 if (!projectArg) fail('missing <project>');
 
 const project = resolve(workspaceRoot, projectArg);
+
 if (!existsSync(project)) fail(`no such project: ${projectArg}`);
+
 const projectDir = statSync(project).isDirectory() ? project : dirname(project);
 
 const vueTsc = require.resolve('vue-tsc/bin/vue-tsc.js');
@@ -43,4 +46,5 @@ const result = spawnSync(
 );
 
 if (result.error) throw result.error;
+
 process.exit(result.status ?? 1);

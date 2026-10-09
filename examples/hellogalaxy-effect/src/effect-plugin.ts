@@ -89,6 +89,7 @@ export function provide<I, S, E, R>(
   effect: Effect.Effect<S, E, R>,
 ): ResolvableLiteral {
   serviceTags.set(tag.key, tag as unknown as Context.Tag<never, unknown>);
+
   return { token: tag.key, resolveFn: () => effect };
 }
 
@@ -154,6 +155,7 @@ export class EffectPlugin<R = never, ER = never> implements UIRouterPlugin {
       router.transitionService.onCreate({}, (transition) => {
         transition.onStart({}, () => {
           const alive = EffectPlugin.redirectChain(transition);
+
           for (const other of [...this.fibers.keys()]) {
             if (!alive.has(other)) this.closeFibers(other);
           }
@@ -174,6 +176,7 @@ export class EffectPlugin<R = never, ER = never> implements UIRouterPlugin {
   append(line: string): Effect.Effect<void> {
     return Effect.suspend(() => {
       const at = new Date().toLocaleTimeString('en-US', { hour12: false });
+
       return SubscriptionRef.update(this.log, (lines) =>
         [...lines, `${at}  ${line}`].slice(-60),
       );
@@ -194,10 +197,13 @@ export class EffectPlugin<R = never, ER = never> implements UIRouterPlugin {
   dispose(): void {
     if (this.disposed) return;
     this.disposed = true;
+
     for (const off of this.deregister) off();
+
     for (const scope of this.scopes.values()) {
       this.runtime.runFork(Scope.close(scope, Exit.void));
     }
+
     this.scopes.clear();
     void this.runtime.dispose();
   }
@@ -218,6 +224,7 @@ export class EffectPlugin<R = never, ER = never> implements UIRouterPlugin {
     // onSuccess/onError fire off the transition's own promise, by which point
     // its fiber set is already interrupted — run those on the bare runtime.
     const inSet = kind !== 'onSuccess' && kind !== 'onError';
+
     const off = this.router.transitionService[kind](
       criteria,
       (transition: Transition): HookResult =>
@@ -228,7 +235,9 @@ export class EffectPlugin<R = never, ER = never> implements UIRouterPlugin {
         ) as HookResult,
       options,
     ) as Deregister;
+
     this.deregister.push(off);
+
     return off;
   }
 
@@ -240,19 +249,25 @@ export class EffectPlugin<R = never, ER = never> implements UIRouterPlugin {
   private installResolvePolicy(): void {
     const builder: ResolvablesBuilder = (state, parentFn) => {
       const resolvables = parentFn?.(state) ?? [];
+
       return resolvables.map((resolvable) => {
         const inner = resolvable.resolveFn as
           | ((...deps: unknown[]) => unknown)
           | undefined;
+
         if (typeof inner !== 'function') return resolvable;
+
         const declared =
           resolvable.policy?.async ??
           (state.resolvePolicy as ResolvePolicy | undefined)?.async;
+
         return new Resolvable(
           resolvable.token,
           (transition: Transition, ...deps: unknown[]) => {
             const value: unknown = inner(...deps);
+
             if (!Effect.isEffect(value)) return value;
+
             return {
               [BOX]: true,
               run: () =>
@@ -265,6 +280,7 @@ export class EffectPlugin<R = never, ER = never> implements UIRouterPlugin {
         );
       });
     };
+
     this.router.stateRegistry.decorator(
       'resolvables',
       builder as BuilderFunction,
@@ -282,11 +298,14 @@ export class EffectPlugin<R = never, ER = never> implements UIRouterPlugin {
     inSet: boolean,
   ): Promise<unknown> {
     const provided = Effect.provide(effect, this.contextFor(transition));
+
     if (!inSet) return this.runtime.runPromise(provided);
     const set = this.fibersFor(transition);
     const fiber = this.runtime.runSync(FiberSet.run(set, provided));
+
     return this.runtime.runPromise(Fiber.await(fiber)).then((exit) => {
       if (Exit.isSuccess(exit)) return exit.value;
+
       // The transition this belonged to is already dead; rejecting here would
       // only re-report the interruption as a transition error.
       if (Exit.isInterrupted(exit)) return new Promise<never>(() => {});
@@ -300,17 +319,22 @@ export class EffectPlugin<R = never, ER = never> implements UIRouterPlugin {
       CurrentTransition,
       transition,
     ) as Context.Context<never>;
+
     const injector = transition.injector();
+
     for (const token of transition.getResolveTokens() as unknown[]) {
       if (typeof token !== 'string') continue;
       const tag = serviceTags.get(token);
+
       if (!tag) continue;
+
       try {
         context = Context.add(context, tag, injector.get(token));
       } catch {
         // Not resolved yet on this path — a later child resolve will see it.
       }
     }
+
     return context;
   }
 
@@ -320,19 +344,24 @@ export class EffectPlugin<R = never, ER = never> implements UIRouterPlugin {
    */
   private fibersFor(transition: Transition): FiberSet.FiberSet {
     const existing = this.fibers.get(transition);
+
     if (existing) return existing.set;
     const scope = this.runtime.runSync(Scope.make());
+
     const set = this.runtime.runSync(
       Effect.provideService(FiberSet.make(), Scope.Scope, scope),
     );
+
     this.fibers.set(transition, { scope, set });
     const close = () => this.closeFibers(transition);
     transition.promise.then(close, close);
+
     return set;
   }
 
   private closeFibers(transition: Transition): void {
     const entry = this.fibers.get(transition);
+
     if (!entry) return;
     this.fibers.delete(transition);
     this.runtime.runFork(Scope.close(entry.scope, Exit.void));
@@ -342,10 +371,12 @@ export class EffectPlugin<R = never, ER = never> implements UIRouterPlugin {
   private static redirectChain(transition: Transition): Set<Transition> {
     const chain = new Set<Transition>();
     let current: Transition | undefined = transition;
+
     while (current && !chain.has(current)) {
       chain.add(current);
       current = current.redirectedFrom() ?? undefined;
     }
+
     return chain;
   }
 
@@ -357,17 +388,21 @@ export class EffectPlugin<R = never, ER = never> implements UIRouterPlugin {
     const closing = [...transition.treeChanges('exiting')]
       .reverse()
       .map((node) => this.closeScope(node.state.name));
+
     const opening = transition
       .treeChanges('entering')
       .map((node) => this.openScope(node));
+
     return Effect.all([...closing, ...opening], { discard: true });
   }
 
   private closeScope(name: string): Effect.Effect<void> {
     return Effect.suspend(() => {
       const scope = this.scopes.get(name);
+
       if (!scope) return Effect.void;
       this.scopes.delete(name);
+
       return Scope.close(scope, Exit.void);
     });
   }
@@ -377,11 +412,15 @@ export class EffectPlugin<R = never, ER = never> implements UIRouterPlugin {
       Record<string, unknown>,
       R
     >;
+
     const scoped = declaration.scoped;
+
     if (!scoped) return Effect.void;
+
     return Scope.make().pipe(
       Effect.flatMap((scope) => {
         this.scopes.set(node.state.name, scope);
+
         return Effect.forkIn(
           Effect.provideService(scoped(node.paramValues), Scope.Scope, scope),
           scope,

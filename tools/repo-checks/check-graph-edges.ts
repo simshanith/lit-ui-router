@@ -80,9 +80,11 @@ const configs = (
     [...new Set(['.', ...members.map((member) => member.dir)])].map(
       async (dir) => {
         const path = join(dir, 'turbo.json');
+
         const text = await readFile(join(workspaceRoot, path), 'utf8').catch(
           () => undefined,
         );
+
         return text === undefined ? undefined : { path, text };
       },
     ),
@@ -90,17 +92,22 @@ const configs = (
 ).filter((config) => config !== undefined);
 
 const sidecars = nonPersistentWith(configs);
+
 if (sidecars.length > 0) {
   console.error(
     `${CHECK}: \`with\` on a non-persistent task; turbo kills the sidecar when the task exits, uncounted as a failure. Make the task an umbrella with dependsOn instead:\n  ${sidecars.join('\n  ')}`,
   );
   process.exit(1);
 }
+
 console.log(`${CHECK}: \`with\` appears on persistent tasks only`);
 
 const declared = declaredLanes(configs.map(({ text }) => text));
+
 const covered = await plannedLanes(CI_LANES);
+
 const unrun = [...declared].filter((lane) => !covered.has(lane)).sort();
+
 if (unrun.length === 0) {
   // the ci:* graphs cannot reach every lane; an empty set means the derivation
   // broke, not that everything is covered
@@ -109,15 +116,19 @@ if (unrun.length === 0) {
 }
 
 const failure = await planFailure(unrun);
+
 if (failure !== undefined) {
   console.error(`${CHECK}: turbo cannot plan ${unrun.join(', ')}:\n${failure}`);
   process.exit(1);
 }
+
 console.log(`${CHECK}: ${unrun.length} lanes outside ci:* plan`);
 
 let failed = false;
+
 for (const rule of RULES) {
   const selected = members.filter(rule.select).map((member) => member.name);
+
   if (selected.length === 0) {
     // the invariant is vacuous if nothing matches; that's a wiring bug, not a pass
     console.error(
@@ -126,18 +137,22 @@ for (const rule of RULES) {
     failed = true;
     continue;
   }
+
   const missing = missingEdges(
     selected,
     rule.producerTask,
     await resolvedTaskDeps(rule.consumer),
   );
+
   if (missing.length > 0) {
     console.error(`${CHECK}: ${formatMissing(rule, missing)}`);
     failed = true;
     continue;
   }
+
   console.log(
     `${CHECK}: ${rule.consumer} orders on ${selected.length} ${rule.producerTask} producers`,
   );
 }
+
 if (failed) process.exit(1);

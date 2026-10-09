@@ -47,6 +47,7 @@ function examplesIndexPlugin(): Plugin {
     configureServer(server) {
       server.middlewares.use((req, _res, next) => {
         const dir = req.url?.match(/^\/examples\/([\w-]+)\/?$/);
+
         if (dir) req.url = `/examples/${dir[1]}/index.html`;
         next();
       });

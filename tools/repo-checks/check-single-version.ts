@@ -40,7 +40,9 @@ const ALLOWED: SplitAllowance[] = [
 const lock = parseLock(
   readFileSync(join(workspaceRoot, 'pnpm-lock.yaml'), 'utf8'),
 );
+
 const controlled = controlledNames(lock);
+
 const { failures, allowed, stale } = auditSplits(
   lockVersions(lock),
   controlled,
@@ -54,14 +56,17 @@ if (controlled.size === 0) {
   );
   process.exit(1);
 }
+
 for (const failure of failures) {
   console.error(`${CHECK}: ${formatSplit(failure)}`);
 }
+
 for (const name of stale) {
   console.error(
     `${CHECK}: ${name} is allowlisted but resolves to one version now; drop the row`,
   );
 }
+
 if (failures.length > 0 || stale.length > 0) {
   console.error(
     `${CHECK}: ${failures.length} split, ${stale.length} stale; override the pin in pnpm-workspace.yaml or allowlist the split with a reason`,

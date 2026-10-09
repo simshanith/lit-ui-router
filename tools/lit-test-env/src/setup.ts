@@ -9,6 +9,7 @@ export function silenceLitDevModeBanner(): void {
   const g = globalThis as typeof globalThis & {
     litIssuedWarnings?: Set<unknown>;
   };
+
   (g.litIssuedWarnings ??= new Set())
     .add('dev-mode')
     .add(
@@ -34,6 +35,7 @@ export function assertLitMajor(expectedMajor: string): void {
   const litHtmlVersions =
     (globalThis as typeof globalThis & { litHtmlVersions?: string[] })
       .litHtmlVersions ?? [];
+
   if (
     litHtmlVersions.length === 0 ||
     litHtmlVersions.some((v) => !v.startsWith(`${expectedMajor}.`))

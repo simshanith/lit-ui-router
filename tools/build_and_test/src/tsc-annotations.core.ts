@@ -16,6 +16,7 @@ const HEADER =
 
 function clean(rawLine: string): string {
   const line = stripAnsi(rawLine).replace(/\r$/, '');
+
   return line.slice(line.lastIndexOf('\r') + 1);
 }
 
@@ -27,20 +28,26 @@ export function parseTscDiagnostics(
 ): ToolAnnotation[] {
   const lines = log.split('\n').map(clean);
   const found: ToolAnnotation[] = [];
+
   for (const [at, line] of lines.entries()) {
     const match = HEADER.exec(line);
+
     if (match === null) continue;
     const [, rawFile = '', line1, col1, line2, col2, level, code, head] = match;
     const file = repoRelativeFile(rawFile, directory, root);
     const lineNo = Number(line1 ?? line2);
     const col = Number(col1 ?? col2);
+
     if (file === undefined || lineNo < 1 || col < 1) continue;
     const chain: string[] = [];
+
     for (const next of lines.slice(at + 1)) {
       if (!/^\s+\S/.test(next) || HEADER.test(next)) break;
       chain.push(next.replace(/^ {2}/, '').trimEnd());
     }
+
     const message = [head ?? '', ...chain].join('\n').trim();
+
     if (message === '') continue;
     found.push({
       level: level as AnnotationLevel,
@@ -48,6 +55,7 @@ export function parseTscDiagnostics(
       properties: { file, line: lineNo, col, title: code },
     });
   }
+
   return found;
 }
 
@@ -59,6 +67,7 @@ export function extractTscDiagnostics(
 ): ToolAnnotation[] {
   return failedTasks(summary).flatMap((task) => {
     const log = logs.get(task.taskId);
+
     return log === undefined
       ? []
       : parseTscDiagnostics(log, task.directory, root);

@@ -95,6 +95,7 @@ const PUBLISHED_MANIFEST = {
   files: ['dist/**'],
   exports: './dist/index.js',
 };
+
 const LOCAL_MANIFEST_417 = {
   name: 'lit-ui-router',
   version: '1.7.1',
@@ -136,6 +137,7 @@ describe('manifestDriftFields', () => {
       name: 'lit-ui-router',
       files: ['dist/**'],
     };
+
     assert.deepEqual(manifestDriftFields(PUBLISHED_MANIFEST, reordered), []);
   });
 
@@ -323,6 +325,7 @@ describe('formatReport', () => {
     localVersion: '1.7.0',
     status: 'clean' as const,
   };
+
   const drift = {
     name: 'lit-ui-router-mobx',
     dir: 'packages/lit-ui-router-mobx',
@@ -369,6 +372,7 @@ describe('formatReport', () => {
     const { text } = formatReport([
       { ...drift, shipInertFiles: ['src/router-store.ts'] },
     ]);
+
     assert.match(
       text,
       /SHIPS CHANGES vs latest 0\.3\.2 — 2 ship-affecting file\(s\):/,
@@ -397,6 +401,7 @@ describe('formatReport', () => {
     const { text } = formatReport([
       { ...clean, localVersion: '1.7.1', status: 'drift', files: [] },
     ]);
+
     assert.match(
       text,
       /local 1\.7\.1 ahead of published — release in flight\?/,
@@ -407,6 +412,7 @@ describe('formatReport', () => {
     const { text } = formatReport([
       { ...clean, localVersion: '1.16.0-rc.0', version: '1.15.0' },
     ]);
+
     assert.match(
       text,
       /local 1\.16\.0-rc\.0 has no rc tag yet — compared against latest 1\.15\.0/,
@@ -423,6 +429,7 @@ describe('formatReport', () => {
         localVersion: '0.1.0-rc.0',
       },
     ]);
+
     assert.match(text, /lit-ui-router-ssr: clean vs rc 0\.1\.0-rc\.0/);
   });
 
@@ -436,6 +443,7 @@ describe('formatReport', () => {
         status: 'unpublished' as const,
       },
     ]);
+
     assert.equal(ok, true);
     assert.match(text, /ui-router-server: never published — skipped/);
   });
@@ -574,6 +582,7 @@ describe('renderSummary', () => {
         shipInertFiles: [],
       },
     ]);
+
     assert.equal(rendered.endsWith('\n'), true);
     assert.deepEqual(JSON.parse(rendered), [
       {

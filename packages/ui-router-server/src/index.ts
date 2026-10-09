@@ -138,14 +138,18 @@ const pathnameOf = (input: string | { pathname: string }): string => {
   // Accept absolute urls without requiring a URL global (runtime-neutral).
   const path = input.replace(/^[a-z][a-z0-9+.-]*:\/\/[^/?#]*/i, '');
   const end = path.search(/[?#]/);
+
   return end === -1 ? path : path.substring(0, end);
 };
 
 // The pathname within the mount, or null when the mount doesn't own it.
 const subpathIn = (base: string, pathname: string): string | null => {
   if (base === '/') return pathname;
+
   if (pathname === base) return '';
+
   if (pathname.startsWith(`${base}/`)) return pathname.substring(base.length);
+
   return null;
 };
 
@@ -168,6 +172,7 @@ const toTarget = (to: string | RedirectTarget): RedirectTarget =>
  */
 export function mergeSearch(location: string, incoming: string): string {
   const query = incoming.startsWith('?') ? incoming.substring(1) : incoming;
+
   if (!query) return location;
   // Split the fragment off FIRST. It terminates the url, so a '?' after it is
   // fragment text rather than a query — and merging into `pathname#frag` would
@@ -181,11 +186,15 @@ export function mergeSearch(location: string, incoming: string): string {
   const request = new URLSearchParams(query);
   const keys = new Set<string>();
   request.forEach((_value, key) => keys.add(key));
+
   for (const key of keys) {
     if (target.has(key)) continue;
+
     for (const value of request.getAll(key)) target.append(key, value);
   }
+
   const merged = target.toString();
+
   return merged ? `${pathname}?${merged}${fragment}` : `${pathname}${fragment}`;
 }
 
@@ -194,6 +203,7 @@ export function mergeSearch(location: string, incoming: string): string {
 const normalizeBase = (base: string): string => {
   if (!base.startsWith('/'))
     throw new Error(`Mount '${base}' must start with '/'`);
+
   return base !== '/' && base.endsWith('/') ? base.slice(0, -1) : base;
 };
 
@@ -202,13 +212,16 @@ const normalizeBase = (base: string): string => {
 // that is a redirect, not a shell-404 at the retained path.
 const validateOtherwise = (base: string, config: MountConfig): void => {
   if (!config.otherwise) return;
+
   const state = config.routes.find(
     (route) => route.name === config.otherwise?.state,
   );
+
   if (!state)
     throw new Error(
       `Mount '${base}': otherwise state '${config.otherwise.state}' is not declared`,
     );
+
   if (state.url !== undefined)
     throw new Error(
       `Mount '${base}': otherwise state '${config.otherwise.state}' must be url-less (the unmatched url stays in the address bar)`,
@@ -217,6 +230,7 @@ const validateOtherwise = (base: string, config: MountConfig): void => {
 
 const compileMount = ([base, config]: [string, MountConfig]): Mount => {
   validateOtherwise(base, config);
+
   return {
     base: normalizeBase(base),
     config,
@@ -240,8 +254,10 @@ const compileMounts = (record: Record<string, MountConfig>): Mount[] => {
     .map(compileMount)
     // The longest matching base owns a pathname outright.
     .sort((a, b) => b.base.length - a.base.length);
+
   if (new Set(mounts.map((mount) => mount.base)).size !== mounts.length)
     throw new Error('Mount bases must be unique');
+
   return mounts;
 };
 
@@ -253,6 +269,7 @@ type SimulateModule = typeof import('./simulate.ts');
 // through this dynamic import, so matcher-only configs never load it.
 const makeSimulateLoader = (): (() => Promise<SimulateModule>) => {
   let loaded: Promise<SimulateModule> | null = null;
+
   return () => (loaded ??= import('./simulate.ts'));
 };
 
@@ -262,15 +279,19 @@ const buildHeadlessRouter = (simulate: SimulateModule, mount: Mount) => {
   const states: StateDeclaration[] = mount.config.routes.map((route) => ({
     ...route,
   }));
+
   const router = simulate.createHeadlessRouter(states);
+
   // The real rule, replayed: otherwise() only fires when no other rule
   // matches, and the url-less target leaves the memory location unmoved.
   if (mount.config.otherwise) {
     const state = mount.config.otherwise.state;
     router.urlService.rules.otherwise(() => ({ state }));
   }
+
   for (const rule of mount.config.redirects ?? []) {
     const to = toTarget(rule.to);
+
     if (rule.pattern instanceof RegExp) {
       router.urlService.rules.when(rule.pattern, () => ({
         state: to.state,
@@ -283,6 +304,7 @@ const buildHeadlessRouter = (simulate: SimulateModule, mount: Mount) => {
       }));
     }
   }
+
   return router;
 };
 
@@ -326,9 +348,12 @@ const otherwiseVerdict = (mount: Mount): Verdict => ({
 
 const matcherVerdict = (mount: Mount, subpath: string): Verdict => {
   const redirected = mount.compiled.evaluate(subpath);
+
   if (redirected !== null) return redirectVerdict(mount, redirected);
+
   if (matchRoute(mount.compiled.routes, subpath) !== null)
     return shellVerdict(mount);
+
   return mount.config.otherwise
     ? otherwiseVerdict(mount)
     : notFoundVerdict(mount);
@@ -341,20 +366,24 @@ const simulateVerdict = async (
 ): Promise<Verdict> => {
   try {
     const router = buildHeadlessRouter(simulate, mount);
+
     if (!router.urlService.match({ path: subpath, search: {}, hash: '' }))
       return notFoundVerdict(mount);
     const settled = simulate.onceSettled(router);
     router.urlService.url(subpath);
     router.urlService.sync();
+
     // Failed and timed-out transitions degrade to the shell — the client
     // router re-runs them with its full configuration; never a wrong redirect.
     if (!(await settledWithinTimeout(settled))) return shellVerdict(mount);
+
     // A transition that settled on the otherwise state IS the 404 page.
     if (router.globals.current.name === mount.config.otherwise?.state)
       return otherwiseVerdict(mount);
     // The memory location only moves when the client's address bar would:
     // core skips the url push for url-sourced transitions.
     const landed = router.urlService.url();
+
     return landed === subpath
       ? shellVerdict(mount)
       : redirectVerdict(mount, landed);
@@ -384,6 +413,7 @@ export function createServerRouter(config: {
 }): ServerRouter {
   const mounts = compileMounts(config.mounts);
   const loadSimulate = makeSimulateLoader();
+
   // Still lazy for matcher-only configs, but paid at construction when a
   // simulate mount exists — not on its first request. The stray rejection is
   // silenced here; resolve() awaits the same cached promise and rethrows.
@@ -393,12 +423,17 @@ export function createServerRouter(config: {
   return {
     async resolve(pathnameOrUrl) {
       const pathname = pathnameOf(pathnameOrUrl);
+
       for (const mount of mounts) {
         const subpath = subpathIn(mount.base, pathname);
+
         if (subpath === null) continue;
+
         if (mount.strategy === 'matcher') return matcherVerdict(mount, subpath);
+
         return simulateVerdict(await loadSimulate(), mount, subpath);
       }
+
       return { kind: 'notFound' };
     },
   };

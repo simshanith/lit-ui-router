@@ -60,7 +60,9 @@ const isRenderMarker = (node: ChildNode | null): boolean => {
   if (!node || node.nodeType !== COMMENT_NODE) {
     return false;
   }
+
   const { data } = node as Comment;
+
   return data === '' || data.includes('lit-part');
 };
 
@@ -162,6 +164,7 @@ export class UiView extends LitElement {
     if (!config) {
       this.component = null;
       this.requestUpdate();
+
       return;
     }
 
@@ -206,6 +209,7 @@ export class UiView extends LitElement {
     if (event.composedPath()[0] === this) {
       return;
     }
+
     // handle event; provide self as parent
     event.stopPropagation();
     event.detail.parentView = this;
@@ -225,6 +229,7 @@ export class UiView extends LitElement {
     ) {
       return;
     }
+
     event.stopImmediatePropagation();
     event.callback(this, event.subscribe ? noParentViewUnsubscribe : undefined);
   };
@@ -241,6 +246,7 @@ export class UiView extends LitElement {
       this.onParentViewContextRequest,
     );
     this.setupUiView();
+
     if (this.hasUpdated) {
       // Re-attached under another provider: the seek above was skipped, the router it holds may no longer be the enclosing one.
       this.adoptProvidedRouter();
@@ -267,6 +273,7 @@ export class UiView extends LitElement {
   static seekParentView(candidate: Element): ParentView | null {
     const uiViewContextEvent = this.uiViewContextEvent();
     candidate.dispatchEvent(uiViewContextEvent);
+
     return uiViewContextEvent.detail.parentView;
   }
 
@@ -279,6 +286,7 @@ export class UiView extends LitElement {
     if (this.seekingProvidedRouter) {
       return;
     }
+
     UIRouterLitElement.onUiRouterContextEvent(this.uiRouter)(event);
   };
 
@@ -297,6 +305,7 @@ export class UiView extends LitElement {
     if (this.seekingProvidedRouter) {
       return;
     }
+
     this.routerSubscribers.answer(
       event,
       this.uiRouter,
@@ -309,6 +318,7 @@ export class UiView extends LitElement {
       this.soughtRouter = this.seekProvidedRouter();
       this.uiRouter = this.soughtRouter!;
     }
+
     this.addEventListener(
       UIRouterLitElement.uiRouterContextEventName,
       this.onUiRouterContextEvent as EventListener,
@@ -351,12 +361,15 @@ export class UiView extends LitElement {
   private seekProvidedRouter(): UIRouterLit | undefined {
     this.providerSubscription?.();
     this.seekingProvidedRouter = true;
+
     try {
       const { router, unsubscribe } = subscribeRouter(
         this,
         this.onProvidedRouterReplaced,
       );
+
       this.providerSubscription = unsubscribe;
+
       return router;
     } finally {
       this.seekingProvidedRouter = false;
@@ -392,6 +405,7 @@ export class UiView extends LitElement {
 
     const assigned = !!this.uiRouter && this.uiRouter !== this.soughtRouter;
     const router = assigned ? this.uiRouter : this.seekProvidedRouter();
+
     if (!router || router === this.registeredRouter) {
       return;
     }
@@ -399,6 +413,7 @@ export class UiView extends LitElement {
     if (!assigned) {
       this.soughtRouter = router;
     }
+
     this.deregisterAll();
     this.uiRouter = router;
     this.setupUiView();
@@ -422,10 +437,12 @@ export class UiView extends LitElement {
    */
   private authoredPrefix(): ChildNode[] {
     const authored: ChildNode[] = [];
+
     for (const child of this.childNodes) {
       if (isRenderMarker(child)) break;
       authored.push(child);
     }
+
     return authored;
   }
 
@@ -445,6 +462,7 @@ export class UiView extends LitElement {
     if (this.captured || isRenderMarker(this.firstChild)) {
       return;
     }
+
     this.captured = true;
     this.fallback ??= document.createDocumentFragment();
     this.fallbackNodes = this.authoredPrefix();
@@ -467,10 +485,13 @@ export class UiView extends LitElement {
     if (this.captured) {
       return;
     }
+
     const authored = this.authoredPrefix();
+
     if (!authored.length) {
       return;
     }
+
     this.captured = true;
     this.fallback ??= document.createDocumentFragment();
     this.fallbackNodes = authored;
@@ -492,10 +513,13 @@ export class UiView extends LitElement {
   private placeFallback(): void {
     const fallback = this.fallback;
     const park = !this.showsFallback;
+
     if (!fallback || park === this.fallbackParked) {
       return;
     }
+
     this.fallbackParked = park;
+
     if (park) {
       fallback.append(...this.fallbackNodes);
     } else {
@@ -512,8 +536,10 @@ export class UiView extends LitElement {
     const name = this.name || '$default';
 
     const parentFqn = parentView?.fqn;
+
     const creationContext =
       parentView?.viewContext || router?.stateRegistry.root();
+
     const fqn = parentFqn ? parentFqn + '.' + name : name;
 
     this._uiViewData = {
@@ -576,6 +602,7 @@ export class UiView extends LitElement {
   private _invokeUiCanExitHook(trans: Transition) {
     const instance = this.firstElementChild as UiOnExit & Element;
     const uiCanExitFn: TransitionHookFn = instance?.uiCanExit;
+
     if (isFunction(uiCanExitFn)) {
       const state: StateDeclaration = this.state;
 
@@ -591,6 +618,7 @@ export class UiView extends LitElement {
   requestUpdate(...args: Parameters<LitElement['requestUpdate']>): void {
     super.requestUpdate(...args);
     const instance = this.firstElementChild as LitElement;
+
     if (isFunction(instance?.requestUpdate)) {
       instance.requestUpdate();
     }
@@ -608,9 +636,11 @@ export class UiView extends LitElement {
 
     if (isFunction(uiOnParamsChanged)) {
       const viewState = this.state;
+
       const resolveContext: ResolveContext = new ResolveContext(
         this._uiViewData.config.path,
       );
+
       const viewCreationTrans: unknown =
         resolveContext.getResolvable('$transition$').data;
 
@@ -624,13 +654,17 @@ export class UiView extends LitElement {
 
       const toParams: { [paramName: string]: unknown } =
         $transition$.params('to');
+
       const fromParams: { [paramName: string]: unknown } =
         $transition$.params('from');
+
       const getNodeSchema = (node: PathNode) => node.paramSchema;
+
       const toSchema: Param[] = $transition$
         .treeChanges('to')
         .map(getNodeSchema)
         .reduce<Param[]>(unnestR, []);
+
       const fromSchema: Param[] = $transition$
         .treeChanges('from')
         .map(getNodeSchema)
@@ -639,6 +673,7 @@ export class UiView extends LitElement {
       // Find the to params that have different values than the from params
       const changedToParams = toSchema.filter((param: Param) => {
         const idx = fromSchema.indexOf(param);
+
         return (
           idx === -1 ||
           !fromSchema[idx].type.equals(toParams[param.id], fromParams[param.id])
@@ -648,10 +683,12 @@ export class UiView extends LitElement {
       // Only trigger callback if a to param has changed or is new
       if (changedToParams.length) {
         const changedKeys: string[] = changedToParams.map((x) => x.id);
+
         // Filter the params to only changed/new to params.  `$transition$.params()` may be used to get all params.
         const newValues = filter(toParams, (_, key) =>
           changedKeys.includes(key!),
         );
+
         instance.uiOnParamsChanged(newValues, $transition$);
       }
     }
@@ -684,9 +721,11 @@ export class UiView extends LitElement {
    */
   protected willUpdate(changed: PropertyValues<this>): void {
     super.willUpdate(changed);
+
     if (!this.hasUpdated) {
       this.adoptProvidedRouter();
     }
+
     this.placeFallback();
   }
 
@@ -703,6 +742,7 @@ export class UiView extends LitElement {
    */
   protected firstUpdated(changed: PropertyValues): void {
     super.firstUpdated(changed);
+
     if (!this.uiRouter) {
       warnMissingRouter(this, '<ui-view>', 'will never render a routed view');
     }
@@ -720,6 +760,7 @@ export class UiView extends LitElement {
 
     const { uiRouter: router, component } = this;
     const injector = this.resolveContext.injector();
+
     const resolvables = this.resolveContext
       .getTokens()
       .filter((token) => isString(token))
@@ -729,6 +770,7 @@ export class UiView extends LitElement {
     const resolves = resolvables
       .map(({ token }) => [token as string, injector.get(token) as unknown])
       .reduce(applyPairs, {});
+
     const transition = injector.get(Transition) as Transition;
 
     const props: UIViewInjectedProps = { router, resolves, transition };

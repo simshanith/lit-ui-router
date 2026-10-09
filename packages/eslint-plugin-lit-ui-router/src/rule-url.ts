@@ -12,6 +12,7 @@ const REPO = 'https://github.com/simshanith/lit-ui-router';
 // each package as `<name>@<version>`, so the version here names a tag: between
 // releases it is the last one tagged, and a bump commit is tagged as it ships.
 const TAG = `${packageJson.name}@${packageJson.version}`;
+
 const RULE_DOCS = `${REPO}/blob/${TAG}/${packageJson.repository.directory}/docs/rules`;
 
 /** Canonical url for one rule's documentation. */

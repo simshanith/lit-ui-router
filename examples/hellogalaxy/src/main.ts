@@ -439,6 +439,7 @@ class StarDetailComponent extends LitElement {
     if (!this.star) {
       return html`<p>Star not found</p>`;
     }
+
     return html`
       <h3 style="color: ${spectralColor(this.star.spectralClass)}">
         ${this.star.name}
@@ -610,6 +611,7 @@ const starState: LitStateDeclaration<{ star: Star | undefined }> = {
       deps: ['$transition$', 'stars'],
       resolveFn: ($transition$: Transition, stars: Star[]) => {
         const starId = $transition$.params<{ starId: string }>().starId;
+
         return stars.find((s) => s.id === starId);
       },
     },
@@ -633,15 +635,23 @@ const astronautState: LitStateDeclaration = {
 
 // Router setup
 const router = new UIRouterLit();
+
 router.plugin(hashLocationPlugin);
+
 void import('@uirouter/visualizer').then(({ Visualizer }) =>
   router.plugin(Visualizer),
 );
+
 router.stateRegistry.register(galaxyState);
+
 router.stateRegistry.register(starsState);
+
 router.stateRegistry.register(starState);
+
 router.stateRegistry.register(astronautState);
+
 router.urlService.rules.initial({ state: 'galaxy.stars' });
+
 router.start();
 
 // Render

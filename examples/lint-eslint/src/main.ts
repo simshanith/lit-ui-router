@@ -67,10 +67,15 @@ const htmlState: LitStateDeclaration = {
 };
 
 const router = new UIRouterLit();
+
 router.plugin(hashLocationPlugin);
+
 router.stateRegistry.register(reportState);
+
 router.stateRegistry.register(htmlState);
+
 router.urlService.rules.initial({ state: 'report' });
+
 router.start();
 
 render(

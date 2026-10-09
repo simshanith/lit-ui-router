@@ -18,6 +18,7 @@ import { isPublishable, loadWorkspace } from '@tools/shared/workspace.ts';
 async function publishedTags(name: string): Promise<Record<string, string>> {
   try {
     const packument = await pacote.packument(name);
+
     return { ...packument['dist-tags'] };
   } catch (error) {
     // An unpublished package is a real answer here; anything else (network,
@@ -32,16 +33,20 @@ async function main() {
   const publishable = members.filter(isPublishable);
   const versions: PublishedVersions = {};
   const summary: string[] = [];
+
   for (const { name } of publishable) {
     const tags = await publishedTags(name);
     versions[name] = tags;
+
     const specs = Object.entries(tags)
       .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
       .map(([tag, version]) => `${tag}@${version}`);
+
     summary.push(
       `${name}: ${specs.length === 0 ? 'unpublished' : specs.join(' ')}`,
     );
   }
+
   await writePublishedVersions(versions);
   console.log(
     `resolved dist-tags → published-versions.json: ${summary.join(', ')}`,

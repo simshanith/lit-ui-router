@@ -60,6 +60,7 @@ function describeResolution(resolved: ResolvedLocationPlugin): string {
   const why = resolved.downgraded
     ? `${SOURCE_LABELS[resolved.source]}, downgraded: no Navigation API`
     : SOURCE_LABELS[resolved.source];
+
   return `${PLUGIN_LABELS[resolved.plugin]} (${why})`;
 }
 
@@ -67,6 +68,7 @@ function describeResolution(resolved: ResolvedLocationPlugin): string {
 function renderLocationPluginStatus(): TemplateResult {
   const pending = describeLocationPlugin();
   const booted = bootedLocationPlugin();
+
   if (!booted) {
     return html`<div class="flag-resolved">
       Resolves to: ${describeResolution(pending)}
@@ -205,11 +207,13 @@ export class FeatureFlagsPanel extends LitElement {
 
   private _handleSelectChange(flag: keyof FeatureFlagDefinitions, e: Event) {
     const value = (e.target as HTMLSelectElement).value;
+
     if (value === '') {
       featureFlags.reset(flag);
     } else {
       featureFlags.set(flag, value as FeatureFlagDefinitions[typeof flag]);
     }
+
     this._flags = featureFlags.getAll();
   }
 
@@ -232,6 +236,7 @@ export class FeatureFlagsPanel extends LitElement {
 
     if (config.type === 'boolean') {
       const value = this._flags[config.key];
+
       return html`
         <input
           type="checkbox"
@@ -244,6 +249,7 @@ export class FeatureFlagsPanel extends LitElement {
     }
 
     const value = this._flags[config.key];
+
     return html`
       <select
         id=${config.key}

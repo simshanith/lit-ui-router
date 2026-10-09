@@ -17,7 +17,9 @@ import type { Manifest } from 'vite';
 type UploadedAsset = { name: string; size: number };
 
 const args = process.argv.slice(2);
+
 const noManifest = args.includes('--no-manifest');
+
 const [bundleName, buildDir = 'dist'] = args.filter(
   (arg) => arg !== '--no-manifest',
 );
@@ -46,11 +48,13 @@ const readEmittedAssets = async (): Promise<Set<string> | null> => {
   if (noManifest) return null;
   const manifestPath = path.resolve(buildDir, '.vite', 'manifest.json');
   let manifest: Manifest;
+
   try {
     // vite wrote this file in the same build, so vite's own type describes it.
     const module = (await import(pathToFileURL(manifestPath).href, {
       with: { type: 'json' },
     })) as { default: Manifest };
+
     manifest = module.default;
   } catch (error) {
     // A missing or unparseable manifest means build.manifest regressed in the
@@ -61,12 +65,17 @@ const readEmittedAssets = async (): Promise<Set<string> | null> => {
     );
     process.exit(1);
   }
+
   const emitted = new Set(['index.html']);
+
   for (const entry of Object.values(manifest)) {
     emitted.add(entry.file);
+
     for (const file of entry.css ?? []) emitted.add(file);
+
     for (const file of entry.assets ?? []) emitted.add(file);
   }
+
   return emitted;
 };
 
@@ -76,6 +85,7 @@ const emitted = await readEmittedAssets();
 // ships everything but sourcemaps and wrangler's outdir README.
 const isReportable = (name: string): boolean => {
   if (emitted) return emitted.has(name);
+
   return !name.endsWith('.map') && name !== 'README.md';
 };
 
@@ -102,6 +112,7 @@ try {
           isReportable(asset.name),
         );
         uploaded = report.assets ?? [];
+
         return Promise.resolve(report);
       },
     },

@@ -50,22 +50,28 @@ export function snapshotRoute(
   // eslint-disable-next-line typescript/no-misused-spread -- snapshot StateParams' own props as a fresh plain object per transition
   const params: RawParams = { ...router.globals.params };
   const { matcher } = router.stateRegistry;
+
   return {
     current,
     params,
     transition,
     includes(stateOrName, values) {
       let target = stateOrName;
+
       if (typeof stateOrName === 'string' && Glob.is(stateOrName)) {
         if (!Glob.fromString(stateOrName).matches($current.name)) return false;
         target = $current.name;
       }
+
       const state = matcher.find(target, $current) as
         | ReturnType<typeof matcher.find>
         | undefined;
+
       if (!state || !$current.includes[state.name]) return false;
+
       if (!values) return true;
       const schema = state.parameters({ inherit: true, matchingKeys: values });
+
       return Param.equals(schema, Param.values(schema, params), values);
     },
   };
@@ -83,11 +89,13 @@ export function routeRef(
   router: UIRouter,
 ): SubscriptionRef.SubscriptionRef<RouteSnapshot> {
   const existing = routeRefs.get(router);
+
   if (existing) return existing;
   const ref = Effect.runSync(SubscriptionRef.make(snapshotRoute(router)));
   routeRefs.set(router, ref);
   router.transitionService.onSuccess({}, (transition) => {
     Effect.runSync(SubscriptionRef.set(ref, snapshotRoute(router, transition)));
   });
+
   return ref;
 }

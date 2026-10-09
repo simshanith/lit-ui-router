@@ -4,6 +4,7 @@ import { playwright } from '@vitest/browser-playwright';
 
 // partition: every spec runs in exactly one project
 const allSpecs = ['src/specs/**/*.spec.ts'];
+
 // Real user gestures (page.elementLocator) and declarative-shadow-root composition;
 // every other spec uses synthetic events that happy-dom supports.
 const browserOnlySpecs = [
@@ -18,6 +19,7 @@ const browserOnlySpecs = [
   // native scoped custom element registries, which happy-dom lacks
   'src/specs/scoped-registry.browser.spec.ts',
 ];
+
 // Plain node under the @lit-labs/ssr DOM shim; happy-dom would mask the shim's gaps.
 const nodeOnlySpecs = [
   'src/specs/context-ssr.spec.ts',
@@ -36,6 +38,7 @@ const cacheKey = process.env.VITEST_BROWSER_API_PORT ?? 'default';
 // into import.meta.env everywhere (browser included), where vitest.setup.ts
 // asserts the swap
 const lit2Compat = process.env.VITE_EXPECT_LIT_MAJOR === '2';
+
 const litAlias = lit2Compat
   ? [
       { find: /^lit$/, replacement: 'lit-2' },
