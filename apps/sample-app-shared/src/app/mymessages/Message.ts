@@ -131,10 +131,10 @@ export class MessageElement extends LitElement {
     return html`<div class="message">
       <div class="header">
         <div>
-          <h4>${message.subject}</h4>
-          <h5>
+          <h2 class="h4">${message.subject}</h2>
+          <p class="h5">
             ${message.from} <i class="fa fa-long-arrow-right"></i> ${message.to}
-          </h5>
+          </p>
         </div>
         <div class="line2">
           <div>

@@ -42,9 +42,10 @@ export class ContactForm extends LitElement {
     const { contact } = this;
     const inputs = formInputs.map((input) => {
       return html`<div>
-        <label>${input.label}</label>
+        <label for=${input.path}>${input.label}</label>
         <input
           type="text"
+          id=${input.path}
           value=${get(contact, input.path)}
           @change=${this.handleChangeFor(input.path)}
         />

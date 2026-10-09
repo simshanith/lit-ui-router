@@ -130,7 +130,8 @@ export class FeatureFlagsPanel extends LitElement {
       margin-block-start: 1rem;
     }
 
-    h3 {
+    h2 {
+      font-size: 1.17em;
       margin-block-start: 0;
       margin-block-end: 1rem;
     }
@@ -152,6 +153,7 @@ export class FeatureFlagsPanel extends LitElement {
     }
 
     .flag-label {
+      display: block;
       font-weight: bold;
     }
 
@@ -164,7 +166,7 @@ export class FeatureFlagsPanel extends LitElement {
       margin-inline-start: 1rem;
       display: flex;
       align-items: center;
-      gap: 0.5rem;
+      gap: 0.75rem;
     }
 
     .flag-resolved {
@@ -233,6 +235,7 @@ export class FeatureFlagsPanel extends LitElement {
       return html`
         <input
           type="checkbox"
+          id=${config.key}
           ?checked=${value}
           ?disabled=${isOverridden}
           @change=${(e: Event) => this._handleBooleanChange(config.key, e)}
@@ -243,6 +246,7 @@ export class FeatureFlagsPanel extends LitElement {
     const value = this._flags[config.key];
     return html`
       <select
+        id=${config.key}
         ?disabled=${isOverridden}
         @change=${(e: Event) => this._handleSelectChange(config.key, e)}
       >
@@ -259,20 +263,20 @@ export class FeatureFlagsPanel extends LitElement {
 
   render() {
     return html`
-      <h3>Feature Flags</h3>
+      <h2>Feature Flags</h2>
 
       ${FLAG_CONFIGS.map(
         (config) => html`
           <div class="flag-row">
             <div class="flag-info">
-              <div class="flag-label">
+              <label class="flag-label" for=${config.key}>
                 ${config.label}
                 ${
                   featureFlags.isUrlOverridden(config.key)
                     ? html`<span class="url-override">(URL override)</span>`
                     : ''
                 }
-              </div>
+              </label>
               <div class="flag-description">${config.description}</div>
               ${config.status?.() ?? ''}
             </div>

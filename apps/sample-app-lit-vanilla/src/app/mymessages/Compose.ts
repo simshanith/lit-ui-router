@@ -149,9 +149,10 @@ export class Compose extends LitElement {
   render() {
     const { message } = this;
     return html`<div class="compose">
+      <h1 class="sr-only">New Message</h1>
       <div class="header">
         <div class="flex-h">
-          <label>Recipient</label>
+          <label for="to">Recipient</label>
           <input
             type="text"
             id="to"
@@ -161,7 +162,7 @@ export class Compose extends LitElement {
           />
         </div>
         <div class="flex-h">
-          <label>Subject</label>
+          <label for="subject">Subject</label>
           <input
             type="text"
             id="subject"
@@ -176,6 +177,7 @@ export class Compose extends LitElement {
         <textarea
           name="body"
           id="body"
+          aria-label="Body"
           cols="30"
           rows="20"
           @change=${this.handleChangeMessage('body')}

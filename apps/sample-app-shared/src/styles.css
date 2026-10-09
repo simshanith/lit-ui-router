@@ -221,15 +221,16 @@ api-docs {
 .selectlist a {
   display: block;
   color: black;
-  padding-block: 0.15em;
+  padding-block: 0.25em;
   padding-inline: 1.5em;
   text-decoration: none;
   font-size: small;
 }
 .selectlist .selected {
-  background-color: cornflowerblue;
+  background-color: royalblue;
 }
-.selectlist .selected a {
+.selectlist .selected a,
+.selectlist a.selected {
   color: white;
 }
 .selectlist i.fa {
@@ -302,13 +303,31 @@ api-docs {
 }
 
 .messagelist i.fa-circle {
-  color: cornflowerblue;
+  color: royalblue;
   font-size: 50%;
 }
 
 .messagelist table tr.active {
-  background-color: cornflowerblue;
+  background-color: royalblue;
   color: white;
+}
+
+/* the subject link stretches over its row, so the whole row stays the hit target */
+.messagelist tbody tr {
+  position: relative;
+}
+.messagelist tbody tr a {
+  color: inherit;
+  text-decoration: none;
+}
+.messagelist tbody tr a::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+.messagelist tbody tr:focus-within {
+  outline: 2px solid black;
+  outline-offset: -2px;
 }
 
 .messagelist table td:nth-child(1) {
@@ -385,7 +404,7 @@ api-docs {
   flex-flow: row wrap;
 }
 
-.contact .details h3 {
+.contact .details h2 {
   margin-block-start: 0;
 }
 
