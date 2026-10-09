@@ -187,6 +187,12 @@ const featureCases: DifferentialCase[] = [
     urls: ['/n', '/n/', '/n/7', '/n/x'],
   },
   { pattern: '/s/{v:string}', urls: ['/s/abc', '/s/a/b'] },
+  // A declared built-in type replaces an inline string type
+  {
+    pattern: '/s/{v:string}',
+    options: { params: { v: { type: 'int' } } },
+    urls: ['/s/7', '/s/abc'],
+  },
   // Inline regexps
   {
     pattern: '/hex/{id:[0-9a-fA-F]{1,8}}',
