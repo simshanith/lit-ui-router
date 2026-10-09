@@ -400,7 +400,7 @@ export class AppRoot extends LitElement {
   render() {
     return html`
       <h2>Hello Solar System</h2>
-      <nav>
+      <nav aria-label="Hello Solar System">
         <a ${uiSrefActive({ activeClasses: ['active'] })} ${uiSref('planets')}
           >Planets</a
         >

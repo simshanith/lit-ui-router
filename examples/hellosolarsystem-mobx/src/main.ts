@@ -545,7 +545,7 @@ export class AppRoot extends LitElement {
     const { active, trail, visited } = this.tour.value;
     return html`
       <h2>Hello Solar System (MobX)</h2>
-      <nav>
+      <nav aria-label="Hello Solar System (MobX)">
         <a
           ?data-detail=${onDetail}
           ${uiSrefActive({ activeClasses: ['active'] })}

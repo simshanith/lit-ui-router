@@ -267,7 +267,7 @@ class GalaxyShellComponent extends LitElement {
 
   render() {
     return html`
-      <nav>
+      <nav aria-label="Hello Galaxy (Effect)">
         <!-- activeClasses use stateService.includes, so Stars stays lit on the nested detail state -->
         <a
           ${uiSrefActive({ activeClasses: ['active'] })}
@@ -308,7 +308,7 @@ class StarsContainerComponent extends LitElement {
     .list {
       flex: 0 0 220px;
     }
-    .list h3 {
+    .list h2 {
       margin: 0 0 12px;
       color: #9db2ce;
       font-size: 0.8rem;
@@ -397,7 +397,7 @@ class StarsContainerComponent extends LitElement {
     return html`
       <div class="container">
         <div class="list">
-          <h3>Milky Way stars</h3>
+          <h2>Milky Way stars</h2>
           <ul>
             ${this.stars.map(
               (star) => html`
@@ -537,8 +537,9 @@ class StarDetailComponent extends LitElement {
 @customElement('astronaut-view')
 class AstronautViewComponent extends LitElement {
   static styles = css`
-    h3 {
+    h2 {
       margin: 0 0 12px;
+      font-size: 1.17em;
     }
     p {
       color: #9db2ce;
@@ -586,7 +587,7 @@ class AstronautViewComponent extends LitElement {
 
   render() {
     return html`
-      <h3>Someone is exploring out here too</h3>
+      <h2>Someone is exploring out here too</h2>
       <p>Drag to orbit the astronaut. Scroll to zoom.</p>
       <!-- touch-action="pan-y" keeps one-finger vertical swipes scrolling the page -->
       <!-- src is the blob the resolve already downloaded, so the viewer paints
@@ -637,7 +638,7 @@ export class FiberLogComponent extends LitElement {
       border-radius: 12px;
       padding: 12px 16px;
     }
-    h3 {
+    h2 {
       margin: 0 0 8px;
       color: #9db2ce;
       font-size: 0.75rem;
@@ -675,7 +676,7 @@ export class FiberLogComponent extends LitElement {
   render() {
     return html`
       <section>
-        <h3>Fibers</h3>
+        <h2>Fibers</h2>
         <ol>
           ${this.lines.value.map((line) => html`<li>${line}</li>`)}
         </ol>
