@@ -7,6 +7,7 @@ import { MessagesStorage } from 'sample-app-shared/app/global/dataSources.js';
 import DialogService from 'sample-app-shared/app/global/dialogService.js';
 import { dsrForgetFinishedState } from 'sample-app-shared/app/util/dsr-forget-finished-state.js';
 import { Message } from 'sample-app-shared/app/mymessages/interface.js';
+import { outgoingMessage } from 'sample-app-shared/app/mymessages/outgoing.js';
 
 import { RouterRefController } from 'lit-ui-router-effect';
 import AppConfig from '../global/appConfig.js';
@@ -133,12 +134,7 @@ export class Compose extends LitElement {
   /** "Send" the message (save to the 'sent' folder), and then go to the previous state */
   send() {
     const { message } = this;
-    void MessagesStorage.save({
-      ...message,
-      date: new Date(),
-      read: true,
-      folder: 'sent',
-    })
+    void MessagesStorage.save(outgoingMessage(message, 'sent'))
       .then(() => this.finishDraft())
       .then(() => this.gotoPreviousState());
   }
@@ -153,12 +149,7 @@ export class Compose extends LitElement {
   /** Save the message to the 'drafts' folder, and then go to the previous state */
   save() {
     const { message } = this;
-    void MessagesStorage.save({
-      ...message,
-      date: new Date(),
-      read: true,
-      folder: 'drafts',
-    })
+    void MessagesStorage.save(outgoingMessage(message, 'drafts'))
       .then(() => this.finishDraft())
       .then(() => this.gotoPreviousState());
   }
