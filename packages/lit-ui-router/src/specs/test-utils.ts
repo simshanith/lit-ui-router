@@ -2,10 +2,13 @@ import { html, LitElement, TemplateResult } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { memoryLocationPlugin, pushStateLocationPlugin } from '@uirouter/core';
 import { appendParentFirst } from '@tools/happy-dom/append.ts';
+import { waitForUpdate } from '@tools/lit-test-env/router.ts';
 import { UIRouterLit } from '../core.js';
 import { UIRouterLitElement } from '../ui-router.js';
 import '../ui-router.register.js';
 import { LitStateDeclaration } from '../interface.js';
+
+export { routerGo, tick, waitForUpdate } from '@tools/lit-test-env/router.ts';
 
 /**
  * Creates a test router instance with memory location plugin.
@@ -29,25 +32,6 @@ export function createTestRouter(
 }
 
 /**
- * Navigates to a state and waits for the transition to complete.
- */
-export async function routerGo(
-  router: UIRouterLit,
-  state: string,
-  params?: Record<string, unknown>,
-): Promise<void> {
-  await router.stateService.go(state, params);
-  await tick();
-}
-
-/**
- * Wait for microtasks and pending promises to flush.
- */
-export function tick(ms = 0): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-/**
  * Simulates a mouse click on an element.
  */
 export function clickElement(
@@ -62,14 +46,6 @@ export function clickElement(
     ...options,
   });
   element.dispatchEvent(event);
-}
-
-/**
- * Waits for a LitElement to complete its update cycle.
- */
-export async function waitForUpdate(element: LitElement): Promise<void> {
-  await element.updateComplete;
-  await tick();
 }
 
 /**
@@ -222,23 +198,6 @@ export function createTestComponent(
     }
   }
   return TestComponent;
-}
-
-/**
- * Wait for a specific condition to be true.
- */
-export async function waitFor(
-  condition: () => boolean,
-  timeout = 1000,
-  interval = 10,
-): Promise<void> {
-  const start = Date.now();
-  while (!condition()) {
-    if (Date.now() - start > timeout) {
-      throw new Error('waitFor timeout');
-    }
-    await tick(interval);
-  }
 }
 
 /**
