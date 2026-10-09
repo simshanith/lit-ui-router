@@ -1,3 +1,16 @@
+diff --git a/lib/base.js b/lib/base.js
+index 6ce30308b404a2ec704da517a3a706409bb1e66e..8b39626080ea4890b465e0265b353319d243859c 100644
+--- a/lib/base.js
++++ b/lib/base.js
+@@ -21,7 +21,7 @@ async function renderDocs(jsonFetched, onSelect, only, selected) {
+             @change=${onSelect}
+             .value=${selected || ''}
+             ?hidden=${elements.length === 1}
+-            part="select"
++            part="select" aria-label="Custom element"
+           >
+             ${elements.map((tag) => html `<option value=${tag.name}>${tag.name}</option>`)}
+           </select>
 diff --git a/package.json b/package.json
 index f39eb1004707666fa0c01583e8d4594934936678..d2484be78e02d885a7344f102674b91bf6aaeb8e 100644
 --- a/package.json

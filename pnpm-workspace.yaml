@@ -231,6 +231,8 @@ autoDedupe: true
 
 patchedDependencies:
   '@api-viewer/docs': patches/@api-viewer__docs.patch
+  '@api-viewer/tabs': patches/@api-viewer__tabs.patch
+  '@uirouter/visualizer': patches/@uirouter__visualizer.patch
   braces: patches/braces.patch
   lit-dialog: patches/lit-dialog.patch
 
