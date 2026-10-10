@@ -177,7 +177,7 @@ export class NavigationLocationService extends BaseLocationServices {
     this._navigation().addEventListener(NAVIGATE_EVENT, this._intercept);
   }
 
-  // Firefox repeats currententrychange, from the entry it is already on, after an intercepted traversal.
+  // Firefox repeats currententrychange, from the entry it is already on, after an intercepted traversal in an iframe (#1192).
   private readonly _onCurrentEntryChange = (
     event: NavigationCurrentEntryChangeEvent,
   ): void => {
@@ -262,7 +262,7 @@ export class NavigationLocationService extends BaseLocationServices {
       }
     };
 
-    // Firefox runs an intercepted traversal's handler twice.
+    // Firefox reruns a pending handler of an intercepted traversal in an iframe (#1192).
     let settled: Promise<void> | undefined;
     event.intercept({
       focusReset: 'manual',
