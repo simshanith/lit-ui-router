@@ -14,15 +14,15 @@ That production-like flow builds the docs site (which embeds every app's
 build), serves it with wrangler on port 8787, and runs every suite in
 parallel:
 
-| Suite       | Target         | Covers                                                                                                              |
-| ----------- | -------------- | ------------------------------------------------------------------------------------------------------------------- |
-| `vanilla`   | `/app/`        | vanilla app, default routing — the Navigation API plugin                                                            |
-| `mobx`      | `/app-mobx/`   | MobX app, default routing — the Navigation API plugin                                                               |
-| `effect`    | `/app-effect/` | Effect app, default routing — the Navigation API plugin                                                             |
-| `docs`      | site + mounts  | docs pages plus the mount matrix — flagships, hash demo, and the server-support exhibits (`cypress.docs.config.ts`) |
-| `hash`      | `/app/`        | vanilla app under the `hash` location plugin                                                                        |
-| `a11y`      | site + mounts  | axe-core (`@tools/a11y`) over every docs page in light and dark, and a walk through each sample-app mount           |
-| `pushState` | `/app/`        | vanilla app under the `pushState` fallback                                                                          |
+| Suite       | Target         | Covers                                                                                                                                     |
+| ----------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `vanilla`   | `/app/`        | vanilla app, default routing — the Navigation API plugin                                                                                   |
+| `mobx`      | `/app-mobx/`   | MobX app, default routing — the Navigation API plugin                                                                                      |
+| `effect`    | `/app-effect/` | Effect app, default routing — the Navigation API plugin                                                                                    |
+| `docs`      | site + mounts  | docs pages plus the mount matrix — flagships, hash demo, and the server-support exhibits (`cypress.docs.config.ts`)                        |
+| `hash`      | `/app/`        | vanilla app under the `hash` location plugin                                                                                               |
+| `a11y`      | site + mounts  | axe-core (`@tools/a11y`) over the docs pages (one per API reference directory) in light and dark, and a walk through each sample-app mount |
+| `pushState` | `/app/`        | vanilla app under the `pushState` fallback                                                                                                 |
 
 Each suite is its own turbo task (`test:e2e:<suite>`). The Cypress suites have their own cache keys,
 so rerunning one after a flake costs that suite alone rather than the whole

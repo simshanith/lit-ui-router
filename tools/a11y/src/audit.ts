@@ -1,4 +1,4 @@
-// axe over every docs page in both color schemes and each sample-app mount's main routes.
+// axe over the docs pages in both color schemes and each sample-app mount's main routes.
 
 import { AxeBuilder } from '@axe-core/playwright';
 import type { Browser, BrowserContext, Page } from 'playwright';

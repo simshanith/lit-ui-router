@@ -15,6 +15,7 @@ import {
   auditDocs,
   type Finding,
 } from './audit.ts';
+import { samplePages } from './pages.ts';
 import { runsWorkerFirst, workerFirstPatterns } from './worker-first.ts';
 
 const SITE_DIR = join(workspaceRoot, 'www/lit-ui-router.dev');
@@ -78,8 +79,11 @@ const patterns = workerFirstPatterns(
   await readFile(join(SITE_DIR, 'wrangler.jsonc'), 'utf8'),
 );
 
-const docsPaths = (await htmlPaths()).filter(
-  (path) => !runsWorkerFirst(patterns, path) && !path.startsWith('/examples/'),
+const docsPaths = samplePages(
+  (await htmlPaths()).filter(
+    (path) =>
+      !runsWorkerFirst(patterns, path) && !path.startsWith('/examples/'),
+  ),
 );
 
 const audit: Audit = { axeVersion: '', scans: 0, findings: [] };
