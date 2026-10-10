@@ -13,5 +13,10 @@ export default defineConfig({
         : []),
       'default',
     ],
+    coverage: {
+      reporter: ['text', 'json', 'lcov'],
+      reportsDirectory: './coverage',
+      exclude: ['src/specs/**'],
+    },
   },
 });
