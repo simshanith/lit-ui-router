@@ -43,7 +43,7 @@ router.plugin(navigationLocationPlugin);
 
 ## Navigation Event Interception
 
-The plugin intercepts the navigations it starts, so a router transition commits as a same-document navigation. The `intercept` option returns the [`NavigationInterceptOptions`](https://developer.mozilla.org/en-US/docs/Web/API/NavigateEvent/intercept#options) for each of those navigations, with the router available as `event.info.uiRouter` — it is where the app's extra work goes: view transitions, analytics, progress UI. The function runs after the router transition has committed, so `handler` governs when `navigation.transition.finished` settles and when the browser resets focus and restores scroll, not the transition itself. `focusReset` and `scroll` pass through.
+The plugin intercepts the navigations it starts, so a router transition commits as a same-document navigation. The `intercept` option returns the [`NavigationInterceptOptions`](https://developer.mozilla.org/en-US/docs/Web/API/NavigateEvent/intercept#options) for each of those navigations, with the router available as `event.info.uiRouter` — it is where the app's extra work goes: view transitions, analytics, progress UI. The function runs after the router transition has committed, so `handler` governs when `navigation.transition.finished` settles and when the browser resets focus and restores scroll, not the transition itself.
 
 ```typescript
 import {
@@ -61,6 +61,48 @@ router.plugin(navigationLocationPlugin, {
 ```
 
 Without the option, the plugin intercepts with a handler that resolves immediately.
+
+### Focus
+
+The plugin intercepts with `focusReset: 'manual'`, so focus stays where it was across a router navigation, as it does under `pushStateLocationPlugin`. A `focusReset` returned from `intercept` takes precedence; `'after-transition'` restores the platform behaviour of moving focus to `<body>` after each navigation, as a full page load would.
+
+Keeping focus in place suits list–detail and in-page navigation. When a navigation replaces the view that held focus, the focused element leaves the document and focus falls back to `<body>`; move it yourself, for example to the new view's heading:
+
+```typescript
+router.transitionService.onSuccess({}, () => {
+  requestAnimationFrame(() =>
+    document.querySelector<HTMLElement>('main h1')?.focus(),
+  );
+});
+```
+
+The heading needs `tabindex="-1"` to take focus. See [Focus handling](https://developer.chrome.com/docs/web-platform/navigation-api#focus_handling) for the platform behaviour.
+
+### Scroll
+
+The plugin leaves `scroll` at the platform default, `'after-transition'`: once `handler` settles, the browser scrolls each router navigation to its URL's fragment, or to the top of the page. `pushStateLocationPlugin` leaves the scroll position where it was. Back and forward are traversals the plugin doesn't intercept, and the browser restores their scroll position under either plugin.
+
+The default handler resolves immediately, so the browser can scroll before the new view has rendered. `intercept` runs once per navigation, while the router's `globals.transition` is still the transition being committed, so the scroll behaviour can depend on the route. In this example, a state flagged `data: { keepScroll: true }` (say, a message opening beside its list) returns `scroll: 'manual'` and keeps the list where it was. Every other navigation waits a frame for the views to render, then calls `event.scroll()` before any slower work:
+
+```typescript
+router.plugin(navigationLocationPlugin, {
+  intercept: (event) => {
+    const { transition } = event.info.uiRouter.globals;
+    if (transition?.to().data?.keepScroll) {
+      return { scroll: 'manual' };
+    }
+    return {
+      async handler() {
+        await new Promise(requestAnimationFrame);
+        event.scroll();
+        // slower work: analytics, prefetching…
+      },
+    };
+  },
+} satisfies NavigationLocationPluginOptions);
+```
+
+See [Scroll handling](https://developer.chrome.com/docs/web-platform/navigation-api#scroll_handling) for the platform behaviour.
 
 Listeners that only observe navigations can tell router-driven ones apart with `isUIRouterNavigateEvent`, which also narrows `event.info` to carry the router.
 
@@ -218,6 +260,7 @@ For older browsers, consider using:
 - [Docs - Navigation API Plugin](https://lit-ui-router.dev/packages/navigation-plugin)
 - [Docs - Location Plugins guide](https://lit-ui-router.dev/guides/location-plugins)
 - [MDN - Navigation API](https://developer.mozilla.org/en-US/docs/Web/API/Navigation_API)
+- [Chrome for Developers - Modern client-side routing: the Navigation API](https://developer.chrome.com/docs/web-platform/navigation-api)
 - [@uirouter/core - LocationPlugin](https://ui-router.github.io/core/docs/latest/interfaces/_vanilla_interface_.locationplugin.html)
 - [@uirouter/core - LocationServices](https://ui-router.github.io/core/docs/latest/interfaces/_common_coreservices_.locationservices.html)
 - [@uirouter/core - BaseLocationServices](https://ui-router.github.io/core/docs/latest/classes/_vanilla_baselocationservice_.baselocationservices.html)

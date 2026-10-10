@@ -72,6 +72,10 @@ export interface NavigationLocationPluginOptions {
    * reset and scroll restoration, and `focusReset` and `scroll` pass through.
    * The router is available as `event.info.uiRouter`.
    *
+   * `focusReset` defaults to `'manual'`, so focus stays where it was, as under
+   * `pushStateLocationPlugin`. Return `focusReset: 'after-transition'` to have
+   * the browser move focus to `<body>` after each navigation instead.
+   *
    * Absent, the service intercepts with an immediately resolving handler.
    *
    * @example
@@ -146,9 +150,13 @@ export class NavigationLocationService extends BaseLocationServices {
       return;
     }
 
-    event.intercept(
-      this._options.intercept?.(event) ?? { handler: () => Promise.resolve() },
-    );
+    // Focus stays put, as under pushStateLocationPlugin; the option's own focusReset wins.
+    event.intercept({
+      focusReset: 'manual',
+      ...(this._options.intercept?.(event) ?? {
+        handler: () => Promise.resolve(),
+      }),
+    });
   };
 
   /**
