@@ -138,7 +138,7 @@ onMounted(() => {
 
 <style scoped>
 .live-example {
-  margin: 16px 0;
+  margin-block: 16px;
   container-type: inline-size;
 }
 
@@ -147,7 +147,7 @@ onMounted(() => {
   align-items: center;
   flex-wrap: wrap;
   gap: 12px;
-  margin-bottom: 8px;
+  margin-block-end: 8px;
 }
 
 .live-example-tablist {
@@ -160,7 +160,8 @@ onMounted(() => {
 }
 
 .tab {
-  padding: 5px 12px;
+  padding-block: 5px;
+  padding-inline: 12px;
   font-size: 14px;
   font-weight: 500;
   color: var(--vp-c-text-2);
@@ -168,13 +169,26 @@ onMounted(() => {
   border: 0;
   border-radius: 6px;
   cursor: pointer;
+  touch-action: manipulation;
   transition:
-    background-color 0.2s,
-    color 0.2s;
+    background-color 0.2s var(--ease-out),
+    color 0.2s var(--ease-out),
+    transform 0.15s var(--ease-out);
 }
 
-.tab:hover {
-  color: var(--vp-c-text-1);
+@media (hover: hover) and (pointer: fine) {
+  .tab:hover {
+    color: var(--vp-c-text-1);
+  }
+}
+
+.tab:active {
+  transform: scale(0.97);
+}
+
+.tab:focus-visible {
+  outline: 2px solid var(--vp-c-brand-1);
+  outline-offset: 1px;
 }
 
 .tab.active {
@@ -187,23 +201,25 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   line-height: 0;
-  margin-left: auto;
+  margin-inline-start: auto;
   border: 1px solid var(--vp-c-divider);
   border-radius: 6px;
-  overflow: hidden;
-  transition: border-color 0.2s;
+  overflow: clip;
+  transition: border-color 0.2s var(--ease-out);
 }
 
 /* Below the tabs+badge intrinsic width the bar wraps the badge onto its own
    row — align it with the tabs instead of the far edge. */
 @container (max-width: 420px) {
   .open-badge {
-    margin-left: 0;
+    margin-inline-start: 0;
   }
 }
 
-.open-badge:hover {
-  border-color: var(--vp-c-brand-1);
+@media (hover: hover) and (pointer: fine) {
+  .open-badge:hover {
+    border-color: var(--vp-c-brand-1);
+  }
 }
 
 .open-badge img {
@@ -227,7 +243,8 @@ onMounted(() => {
 }
 
 .fallback-note {
-  padding: 8px 12px;
+  padding-block: 8px;
+  padding-inline: 12px;
   font-size: 14px;
   color: var(--vp-c-text-2);
   background: var(--vp-c-bg-soft);

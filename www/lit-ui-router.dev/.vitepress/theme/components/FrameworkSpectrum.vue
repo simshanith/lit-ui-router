@@ -125,7 +125,7 @@ function stateClass(id: string) {
 
 <style scoped>
 .framework-spectrum {
-  margin: 20px 0 8px;
+  margin-block: 20px 8px;
 }
 
 .bands {
@@ -135,7 +135,7 @@ function stateClass(id: string) {
   border: 1px solid var(--vp-c-divider);
   border-radius: 8px;
   background: var(--vp-c-bg-soft);
-  overflow: hidden;
+  overflow: clip;
 }
 
 /* the no-server zone: bands 0-1 sit on a darker ground that dissolves into
@@ -169,11 +169,12 @@ function stateClass(id: string) {
   flex-direction: column;
   gap: 8px;
   min-height: 120px;
-  padding: 8px 6px;
+  padding-block: 8px;
+  padding-inline: 6px;
 }
 
 .band + .band {
-  border-left: 1px solid var(--vp-c-divider);
+  border-inline-start: 1px solid var(--vp-c-divider);
 }
 
 .band-label {
@@ -219,10 +220,11 @@ function stateClass(id: string) {
   border-radius: 50%;
   background: var(--vp-c-bg);
   cursor: pointer;
+  touch-action: manipulation;
   transition:
-    border-color 0.15s ease,
-    opacity 0.15s ease,
-    transform 0.15s ease;
+    border-color 0.15s var(--ease-out),
+    opacity 0.15s var(--ease-out),
+    transform 0.15s var(--ease-out);
 }
 
 .point img {
@@ -240,7 +242,17 @@ function stateClass(id: string) {
 .point.active {
   border-color: var(--vp-c-brand-1);
   box-shadow: 0 0 0 1px var(--vp-c-brand-1);
-  transform: translateY(-1px);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .point.active {
+    transform: translateY(-1px);
+  }
+}
+
+.point:active,
+.legend-entry:active {
+  transform: scale(0.97);
 }
 
 /* …and active still reads stronger */
@@ -257,7 +269,7 @@ function stateClass(id: string) {
 .ambient {
   display: flex;
   gap: 6px;
-  margin-top: auto;
+  margin-block-start: auto;
   color: var(--vp-c-text-3);
   opacity: 0.55;
 }
@@ -268,10 +280,10 @@ function stateClass(id: string) {
 }
 
 .axis-caption {
-  margin-top: 6px;
+  margin-block-start: 6px;
   font-size: 11px;
   color: var(--vp-c-text-2);
-  text-align: right;
+  text-align: end;
 }
 
 .legend {
@@ -279,7 +291,8 @@ function stateClass(id: string) {
   flex-direction: column;
   gap: 6px;
   max-width: 320px;
-  margin: 12px 0 0;
+  margin-block: 12px 0;
+  margin-inline: 0;
   padding: 0;
   list-style: none;
 }
@@ -293,21 +306,24 @@ function stateClass(id: string) {
   width: 100%;
   align-items: center;
   gap: 8px;
-  padding: 6px 10px;
+  padding-block: 6px;
+  padding-inline: 10px;
   border: 1px solid var(--vp-c-divider);
   border-radius: 8px;
   background: none;
   font-size: 12.5px;
-  text-align: left;
+  text-align: start;
   color: var(--vp-c-text-2);
   cursor: pointer;
+  touch-action: manipulation;
   transition:
-    border-color 0.15s ease,
-    opacity 0.15s ease;
+    border-color 0.15s var(--ease-out),
+    opacity 0.15s var(--ease-out),
+    transform 0.15s var(--ease-out);
 }
 
 .legend li.featured {
-  margin-bottom: 6px;
+  margin-block-end: 6px;
 }
 
 .legend-entry.featured {
@@ -350,17 +366,6 @@ function stateClass(id: string) {
   display: inline;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .point,
-  .legend-entry {
-    transition: none;
-  }
-
-  .point.active {
-    transform: none;
-  }
-}
-
 @media (max-width: 640px) {
   .bands {
     grid-template-columns: repeat(3, 1fr);
@@ -389,11 +394,11 @@ function stateClass(id: string) {
   }
 
   .band:nth-child(4) {
-    border-left: none;
+    border-inline-start: none;
   }
 
   .band:nth-child(n + 4) {
-    border-top: 1px solid var(--vp-c-divider);
+    border-block-start: 1px solid var(--vp-c-divider);
   }
 
   .band {
