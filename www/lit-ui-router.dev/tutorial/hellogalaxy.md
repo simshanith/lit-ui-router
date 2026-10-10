@@ -449,7 +449,7 @@ You've now learned the core concepts of lit-ui-router:
 Explore the <a href="/app" target="_self">Sample App</a> to see a more complete example with:
 
 - Authentication and protected routes
-- Lazy-loaded states
+- Lazy-loaded states (see [Routed Components](/guides/routed-components#lazy-loading-a-route-s-element))
 - Sticky states and deep state redirect
 - Complex view targeting
 - And more!
