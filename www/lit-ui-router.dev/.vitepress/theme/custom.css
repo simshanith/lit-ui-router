@@ -178,14 +178,22 @@ html.chrome.dark .VPHero .VPImage {
       max-inline-size: none;
     }
 
-    /* The glow overhangs the logo without adding size. */
+    /* The logo contains to the column beside the text, so the text alone sets the row height. */
+    .VPHero.has-image .image {
+      container-type: size;
+    }
+
+    .VPHero.has-image .image-container {
+      place-items: center end;
+    }
+
     .VPHero.has-image .image-src {
-      inline-size: 100%;
+      inline-size: 100cqmin;
     }
 
     .VPHero.has-image .image-bg {
-      inline-size: 125%;
-      margin: -12.5%;
+      inline-size: 125cqmin;
+      margin: -12.5cqmin;
     }
 }
 
