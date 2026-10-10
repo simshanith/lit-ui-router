@@ -89,6 +89,7 @@ const messageState = {
     title: (transition: Transition) =>
       // SAFETY: this state's `message` resolve yields a Message
       (transition.injector().get('message') as Message).subject,
+    keepScroll: true,
   },
   views: {
     // Relatively target the parent-state's parent-state's 'messagecontent' ui-view

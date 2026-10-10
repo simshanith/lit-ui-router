@@ -48,17 +48,30 @@ const locationPluginConfig = {
     plugin: navigationLocationPlugin,
     message: 'navigationLocationPlugin enabled',
     options: {
-      intercept: (event) => ({
-        handler() {
-          console.debug(
-            'uiRouter navigation',
-            event.destination.url,
-            event.info.uiRouter,
-          );
+      intercept: (event) => {
+        const { transition } = event.info.uiRouter.globals;
 
-          return Promise.resolve();
-        },
-      }),
+        // SAFETY: StateDeclaration.data is `any`; the state declarations set `keepScroll` only as a boolean
+        const data = transition?.to().data as
+          | { keepScroll?: boolean }
+          | undefined;
+
+        if (data?.keepScroll) {
+          return { scroll: 'manual' };
+        }
+
+        return {
+          async handler() {
+            await new Promise(requestAnimationFrame);
+            event.scroll();
+            console.debug(
+              'uiRouter navigation',
+              event.destination.url,
+              event.info.uiRouter,
+            );
+          },
+        };
+      },
     },
   },
   pushState: {

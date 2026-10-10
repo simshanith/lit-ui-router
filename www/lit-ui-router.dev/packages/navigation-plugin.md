@@ -161,6 +161,10 @@ router.plugin(navigationLocationPlugin, {
 });
 ```
 
+The <a href="/app" target="_self">sample app</a> runs this example in
+[`router.config.ts`](https://github.com/simshanith/lit-ui-router/blob/main/apps/sample-app-shared/src/router.config.ts),
+flagging its message and contact detail states with `keepScroll`.
+
 See
 [Scroll handling](https://developer.chrome.com/docs/web-platform/navigation-api#scroll_handling)
 for the platform behaviour.
