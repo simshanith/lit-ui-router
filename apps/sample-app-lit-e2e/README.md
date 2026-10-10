@@ -11,8 +11,8 @@ mise run test_e2e
 ```
 
 That production-like flow builds the docs site (which embeds every app's
-build), serves it with wrangler on port 8787, and runs every suite in
-parallel:
+build), serves it with wrangler on port 8787, and runs the Cypress suites in
+parallel, then `a11y`:
 
 | Suite       | Target         | Covers                                                                                                                                     |
 | ----------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
