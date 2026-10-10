@@ -19,5 +19,6 @@ export function createTestRouter(
   router.plugin(memoryLocationPlugin);
   // Copies: registration binds a declaration to one router, and specs share testStates.
   states.forEach((state) => router.stateRegistry.register({ ...state }));
+
   return router;
 }

@@ -12,6 +12,7 @@ class SignalControllerHost extends LitElement {
 
   render() {
     this.renderCount++;
+
     return html`<span>${this.renderCount}</span>`;
   }
 }
@@ -32,6 +33,7 @@ async function mountHost(): Promise<SignalControllerHost> {
   document.body.appendChild(host);
   cleanups.push(() => host.remove());
   await waitForUpdate(host);
+
   return host;
 }
 
@@ -61,6 +63,7 @@ describe('SignalController', () => {
   it('exposes initialValue before the host connects', async () => {
     const count = new Signal.State(7);
     const host = document.createElement('signal-controller-host');
+
     const controller = new SignalController(host, () => count.get(), {
       initialValue: 0,
     });

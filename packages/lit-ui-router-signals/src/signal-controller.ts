@@ -1,6 +1,5 @@
 import { ReactiveController, ReactiveControllerHost } from 'lit';
-
-import { watchSelection } from './watch.js';
+import { watchSelection } from 'ui-router-signals';
 
 /** Options for {@link SignalController}. */
 export interface SignalControllerOptions<T> {
@@ -51,8 +50,7 @@ export class SignalController<T> implements ReactiveController {
     private readonly expression: () => T,
     private readonly options: SignalControllerOptions<T> = {},
   ) {
-    // Undefined unless `initialValue` is given, which is the pre-connect
-    // shape either way; the cast keeps `.value` typed `T` for render code.
+    // SAFETY: undefined unless `initialValue` is given, the pre-connect shape either way; `.value` stays `T` for render code.
     this.value = options.initialValue as T;
     host.addController(this);
   }

@@ -6,8 +6,6 @@ import { Signal } from 'signal-polyfill';
  * changes. A value the computed's `equals` judges unchanged is skipped.
  *
  * @returns a function that stops watching.
- *
- * @internal
  */
 export function watchSelection<T>(
   expression: () => T,
@@ -25,14 +23,17 @@ export function watchSelection<T>(
     pending = true;
     queueMicrotask(() => {
       pending = false;
+
       if (!live) return;
       watcher.watch();
       const value = computed.get();
+
       if (Object.is(value, last)) return;
       last = value;
       apply(value);
     });
   });
+
   watcher.watch(computed);
   apply(last);
 

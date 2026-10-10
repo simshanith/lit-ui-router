@@ -6,10 +6,7 @@ import {
   Transition,
   UIRouter,
 } from '@uirouter/core';
-import {
-  snapshotRoute,
-  type RouteSnapshot,
-} from 'lit-ui-router/route-snapshot';
+import { snapshotRoute, type RouteSnapshot } from './shared/route-snapshot.js';
 
 const detached: RouteSnapshot = {
   current: undefined,
@@ -25,9 +22,9 @@ const detached: RouteSnapshot = {
  * {@link RouterSignals.attach | attach}) writes one `RouteSnapshot` per
  * successful transition into a `Signal.State`. The public fields are
  * read-only `Signal.Computed`s over it, so any signal consumer — a
- * {@link SignalController}, a {@link RouterSignalController}, or a
- * `@lit-labs/signals` `SignalWatcher` render — tracks exactly the fields it
- * reads. `onSuccess` is the only hook a later transition cannot supersede, so
+ * `watchSelection` callback, a framework binding such as
+ * lit-ui-router-signals, or a `@lit-labs/signals` `SignalWatcher` render —
+ * tracks exactly the fields it reads. `onSuccess` is the only hook a later transition cannot supersede, so
  * every value is a settled route.
  *
  * Use the {@link RouterSignals.for | for} factory to get the signals for a
@@ -67,11 +64,13 @@ export class RouterSignals {
    */
   static for(router: UIRouter): RouterSignals {
     let signals = this.instances.get(router);
+
     if (!signals) {
       signals = new RouterSignals();
       signals.attach(router);
       this.instances.set(router, signals);
     }
+
     return signals;
   }
 
@@ -97,16 +96,21 @@ export class RouterSignals {
         'RouterSignals.attach: already attached to a different router. Use RouterSignals.for(router).',
       );
     }
+
     this.router = router;
     this.state.set(snapshotRoute(router));
+
+    // SAFETY: `onSuccess` returns its deregistration function, typed only as `Function`.
     const deregister = router.transitionService.onSuccess({}, (transition) =>
       this.state.set(snapshotRoute(router, transition)),
     ) as () => void;
+
     this.deregister = () => {
       deregister();
       this.deregister = undefined;
       this.router = undefined;
     };
+
     return this.deregister;
   }
 

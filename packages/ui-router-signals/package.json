@@ -1,8 +1,8 @@
 {
-  "name": "lit-ui-router-signals",
+  "name": "ui-router-signals",
   "version": "0.0.0",
   "private": true,
-  "description": "TC39 Signals bindings for lit-ui-router: watcher-based Lit ReactiveControllers over ui-router-signals",
+  "description": "TC39 Signals for UI-Router: a framework-agnostic signal mirror of the router's current state",
   "homepage": "https://lit-ui-router.dev",
   "bugs": {
     "url": "https://github.com/simshanith/lit-ui-router/issues"
@@ -12,12 +12,13 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/simshanith/lit-ui-router.git",
-    "directory": "packages/lit-ui-router-signals"
+    "directory": "packages/ui-router-signals"
   },
   "files": [
     "dist/**",
     "!dist/.*/**",
-    "src/*.ts"
+    "src/*.ts",
+    "src/shared/*.ts"
   ],
   "type": "module",
   "sideEffects": false,
@@ -27,44 +28,33 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "development": "./dist/development/index.js",
       "default": "./dist/index.js"
     },
     "./dist/*": "./dist/*",
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build:js": "oxc-emit-js --development",
+    "build:js": "oxc-emit-js",
     "build:types": "oxc-emit-dts",
-    "check:dev-split": "oxc-emit-check-dev-split",
     "format:check:oxfmt": "oxfmt --check \"**/*.{ts,js,json,md}\"",
     "format:oxfmt": "oxfmt \"**/*.{ts,js,json,md}\"",
     "lint:oxlint": "oxlint .",
-    "test": "VITEST_BROWSER_API_PORT=63370 vitest run",
-    "test:coverage": "VITEST_BROWSER_API_PORT=63375 vitest run --coverage",
-    "test:lit2-compat": "lit2-compat-guard && VITE_EXPECT_LIT_MAJOR=2 VITEST_BROWSER_API_PORT=63371 vitest run",
-    "typecheck:lit2": "lit2-compat-guard && tsc -p tsconfig.lit2-compat.json --noEmit",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "typecheck:src": "tsc -p tsconfig.src.json --noEmit",
     "typecheck:tsc": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
-    "@tools/compat-guards": "catalog:workspace",
-    "@tools/happy-dom": "catalog:workspace",
     "@tools/lit-test-env": "catalog:workspace",
     "@tools/oxc-emit": "catalog:workspace",
     "@types/node": "catalog:",
     "@uirouter/core": "catalog:",
     "@vitest/coverage-v8": "catalog:",
-    "happy-dom": "catalog:",
-    "lit": "catalog:",
-    "lit-2": "catalog:lit2-compat",
-    "lit-ui-router": "catalog:workspace",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
     "signal-polyfill": "catalog:",
     "typescript": "catalog:typescript6-compat",
     "typescript-7": "catalog:",
-    "ui-router-signals": "catalog:workspace",
     "vitest": "catalog:"
   }
 }

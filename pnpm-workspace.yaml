@@ -177,6 +177,7 @@ catalogs:
     sample-app-shared: workspace:*
     ui-router-navigation-location-plugin: workspace:*
     ui-router-server: workspace:*
+    ui-router-signals: workspace:*
 
 allowBuilds:
   cypress: true

@@ -1,12 +1,11 @@
 import { ReactiveController, ReactiveControllerHost } from 'lit';
-import { UIRouter } from '@uirouter/core';
+import { isFunction, UIRouter } from '@uirouter/core';
 import { getScopedRouter, requestRouter } from 'lit-ui-router/context';
 import { UIRouterLitElement } from 'lit-ui-router/pure';
+import { RouterSignals, watchSelection } from 'ui-router-signals';
 
 import { warnMissingRouter } from './dev-warn.js';
-import { RouterSignals } from './router-signals.js';
 import { SignalControllerOptions } from './signal-controller.js';
-import { watchSelection } from './watch.js';
 
 /** Options for {@link RouterSignalController}. */
 export interface RouterSignalControllerOptions<
@@ -88,18 +87,19 @@ export class RouterSignalController<T> implements ReactiveController {
     private readonly options: RouterSignalControllerOptions<T> = {},
   ) {
     const option = options.router;
-    if (typeof option === 'function') this.resolveRouter = option;
-    this.pinned =
-      (typeof option === 'function' ? option() : option) ?? getScopedRouter();
+
+    if (isFunction(option)) this.resolveRouter = option;
+    this.pinned = (isFunction(option) ? option() : option) ?? getScopedRouter();
+
     if (this.pinned) {
       this.followed = this.pinned;
       this.signals = RouterSignals.for(this.pinned);
       this.value = selector(this.signals);
     } else {
-      // Undefined unless `initialValue` is given, which is the pre-connect
-      // shape either way; the cast keeps `.value` typed `T` for render code.
+      // SAFETY: undefined unless `initialValue` is given, the pre-connect shape either way; `.value` stays `T` for render code.
       this.value = options.initialValue as T;
     }
+
     host.addController(this);
   }
 
@@ -113,6 +113,7 @@ export class RouterSignalController<T> implements ReactiveController {
     if (router === this.followed) return;
     this.dropSubscription();
     this.pinned = this.followed = router;
+
     if (!this.connected) return;
     this.unwatch?.();
     this.watch(router);
@@ -121,16 +122,20 @@ export class RouterSignalController<T> implements ReactiveController {
   hostConnected(): void {
     this.connected = true;
     const resolved = this.resolveRouter?.();
+
     if (resolved) this.pinned = resolved;
     const router = this.pinned ?? this.seekRouter();
+
     if (!router) {
       warnMissingRouter(
         this.host,
         'RouterSignalController',
         'will not watch the router',
       );
+
       return;
     }
+
     this.watch(router);
   }
 
@@ -145,6 +150,7 @@ export class RouterSignalController<T> implements ReactiveController {
     let live = true;
     let seeking = true;
     let offered: (() => void) | undefined;
+
     const router = requestRouter(this.host, {
       subscribe: true,
       callback: (next, unsubscribe) => {
@@ -156,12 +162,14 @@ export class RouterSignalController<T> implements ReactiveController {
         }
       },
     });
+
     seeking = false;
     // A provider that ignores unsubscribe must not reach a dropped subscription.
     this.unsubscribe = () => {
       live = false;
       offered?.();
     };
+
     return router ?? UIRouterLitElement.seekRouter(this.host);
   }
 

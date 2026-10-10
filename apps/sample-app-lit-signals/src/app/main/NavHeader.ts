@@ -24,6 +24,7 @@ export class NavHeader extends SignalWatcher(LitElement) {
   render() {
     const isAuthenticated = AuthService.isAuthenticated();
     const emailAddress = AppConfig.emailAddress;
+
     const navbar = html`
       <ul class="nav nav-tabs">
         <li
@@ -71,6 +72,7 @@ export class NavHeader extends SignalWatcher(LitElement) {
         </li>
       </ul>
     `;
+
     return html`${when(
       isAuthenticated,
       () => navbar,
