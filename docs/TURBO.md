@@ -75,6 +75,7 @@ ci:pull_request
 │   ├── //#format:check:root
 │   └── //#format:check:toml
 ├── check:bundle
+├── @www/lit-ui-router.dev#check:a11y
 └── codecov:bundle
 
 ci:main
@@ -121,6 +122,7 @@ Exceptions: `www/lit-ui-router.dev/api/**` (generated VitePress content, not a b
 - `@tools/dts-backtest#test:matrix` runs the full TS version matrix; PRs run only the current-TS `test` leg.
 - `build` composes the two own-package passes: `build:js` (JS) and `build:types` (d.ts, self-chaining via `^build:types`).
 - `check:bundle` holds the bundle invariants (size budgets, deps-none probes); `codecov:bundle` uploads bundle analysis, uncached.
+- `@www/lit-ui-router.dev#check:a11y` runs axe-core through `@tools/a11y` over the built site, every docs page in light and dark, and a walk through each sample-app mount, served by the docs worker module in node. Any violation fails it. It is uncached for the reason `check:embeds` is below: contrast and target size are measured on the host's rendering.
 - `dev`, `e2e`, and `docs` are persistent, uncached tasks. `e2e` is `cypress open`, the interactive lane — not the headless suites, which are the cached `test:e2e:*` tasks under `//:test_e2e`.
 - Per-task `inputs`/`outputs` live in `turbo.json` itself — see [Cache Control](#cache-control).
 
@@ -181,7 +183,7 @@ Workspaces extend the root configuration using `"extends": ["//"]`:
 | `apps/sample-app-lit-effect`                              | Adds env vars for build (VITE\_\*)                                                                                                                                                                                                                          |
 | `apps/sample-app-lit-e2e`                                 | One cached `test:e2e:*` task per Cypress suite, reached via the `//:test_e2e` umbrella (which owns the dev server); CYPRESS\_\* passes through un-hashed                                                                                                    |
 | `apps/sample-app-routes`, `apps/sample-app-shared`        | Widens `test` inputs beyond the root's `src/**/*.ts` (non-TS/config surface)                                                                                                                                                                                |
-| `@www/lit-ui-router.dev`                                  | Adds `check:embeds`, `docs:preview`, `wrangler:dev`, worker tasks (`types:worker`, `typecheck:worker`, `typecheck:worker:tests`, `bundle:worker`); `test` runs the worker contract tests in node; requires `^docs:api` before build                         |
+| `@www/lit-ui-router.dev`                                  | Adds `check:a11y`, `check:embeds`, `docs:preview`, `wrangler:dev`, worker tasks (`types:worker`, `typecheck:worker`, `typecheck:worker:tests`, `bundle:worker`); `test` runs the worker contract tests in node; requires `^docs:api` before build           |
 | `examples`                                                | Adds `build:embeds` (tutorial apps built as docs embeds)                                                                                                                                                                                                    |
 | `tools/release`                                           | Adds `check:pack`, `resolve:published` (uncached registry read), `check:published-diff`                                                                                                                                                                     |
 | `tools/workers-builds`                                    | Adds `check` (live Cloudflare API diff; uncached); over-approximated `test` inputs                                                                                                                                                                          |
@@ -303,6 +305,7 @@ TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }
 | `test:mobx6-compat`, `typecheck:mobx6` | `ci:pull_request` — same split against the mobx-6 alias (lit-ui-router-mobx only); `typecheck:mobx6` is likewise a leaf of `typecheck`                                                   |
 | `format:check`                         | `ci:pull_request`                                                                                                                                                                        |
 | `check:bundle`, `codecov:bundle`       | `ci:pull_request`                                                                                                                                                                        |
+| `@www/lit-ui-router.dev#check:a11y`    | `ci:pull_request` — uncached axe pass over the built site and sample apps                                                                                                                |
 | `test:engines`                         | `ci:main` only — Firefox + WebKit vitest pass (lit-ui-router, navigation-location-plugin)                                                                                                |
 | `@tools/release#check:pack`            | `ci:main` only                                                                                                                                                                           |
 | `@tools/dts-backtest#test:matrix`      | `ci:main` only; PRs run the current-TS `#test` leg                                                                                                                                       |
