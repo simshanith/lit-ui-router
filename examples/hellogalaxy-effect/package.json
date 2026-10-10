@@ -34,5 +34,8 @@
   "allowScripts": {
     "fsevents@2.3.3": true,
     "msgpackr-extract": false
+  },
+  "patchedDependencies": {
+    "@uirouter/visualizer@7.2.1": "patches/@uirouter/visualizer@7.2.1.patch"
   }
 }
