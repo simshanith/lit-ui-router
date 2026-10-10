@@ -10,8 +10,8 @@ import type { DirectiveResult } from 'lit/directive.js';
 import { AsyncDirective } from 'lit/async-directive.js';
 
 import { UIRouterLit } from './core.js';
-import { UIRouterLitElement } from './ui-router.js';
 import { inLitDevMode, warnMissingRouter } from './dev-warn.js';
+import { subscribeRouter } from './router-subscription.js';
 import {
   isNativeLink,
   mergeSrefStatus,
@@ -210,8 +210,19 @@ export class UiSrefActiveDirective extends AsyncDirective {
   uiRouter: UIRouterLit | undefined;
   /** @internal */
   seekRouter(): void {
-    this.uiRouter = UIRouterLitElement.seekRouter(this.element!);
+    this._unsubscribeRouter?.();
+
+    const { router, unsubscribe } = subscribeRouter(
+      this.element!,
+      this.onRouterReplaced,
+    );
+
+    this.uiRouter = router;
+    this._unsubscribeRouter = unsubscribe;
   }
+
+  /** drops the subscription to a provider that may still replace its router */
+  private _unsubscribeRouter: deregisterFn | undefined;
 
   /** @internal */
   parentView: ParentView | null = null;
@@ -524,13 +535,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
     } else if (this.state) {
       // no router: no target to resolve, and the update that follows reports it
       if (this.uiRouter) {
-        this.targetStates.add(
-          this.uiRouter.stateService.target(
-            this.state,
-            this.params,
-            this.getOptions(),
-          ),
-        );
+        this.targetStates.add(this.explicitTarget(this.uiRouter, this.state));
       }
     } else {
       this.element!.addEventListener(
@@ -548,13 +553,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
     // no router: nothing to subscribe to, and `_firstUpdated` still has to be
     // reached so the next update can report the no-op
     if (this.uiRouter) {
-      // SAFETY: hook registration returns its deregistration function
-      this._deregisterOnStart = this.uiRouter.transitionService.onStart(
-        {},
-        this.onTransitionStart,
-      ) as deregisterFn;
-      this._deregisterOnStatesChanged =
-        this.uiRouter.stateRegistry.onStatesChanged(this.onStatesChanged);
+      this.watch(this.uiRouter);
     }
 
     setTimeout(() => {
@@ -569,11 +568,51 @@ export class UiSrefActiveDirective extends AsyncDirective {
     this._firstUpdated = true;
   }
 
+  private explicitTarget(router: UIRouterLit, state: string): TargetState {
+    return router.stateService.target(state, this.params, this.getOptions());
+  }
+
+  private watch(router: UIRouterLit): void {
+    // SAFETY: hook registration returns its deregistration function
+    this._deregisterOnStart = router.transitionService.onStart(
+      {},
+      this.onTransitionStart,
+    ) as deregisterFn;
+    this._deregisterOnStatesChanged = router.stateRegistry.onStatesChanged(
+      this.onStatesChanged,
+    );
+  }
+
+  private unwatch(): void {
+    this._connection++;
+    this._deregisterOnStart?.();
+    this._deregisterOnStart = undefined;
+    this._deregisterOnStatesChanged?.();
+    this._deregisterOnStatesChanged = undefined;
+  }
+
+  /** What a disconnect and reconnect would do, for the router that replaced the one found. */
+  private readonly onRouterReplaced = (router: UIRouterLit): void => {
+    this._unsubscribeRouter = undefined;
+    this.unwatch();
+    this.uiRouter = router;
+
+    if (!this._lastTargetStates && this.state) {
+      this.targetStates.clear();
+      this.targetStates.add(this.explicitTarget(router, this.state));
+    }
+
+    this.watch(router);
+    this.onStatesChanged();
+  };
+
   /** @internal */
   disconnected(): void {
     // re-arming is what `reconnected` does; without this it would no-op
     this._firstUpdated = false;
-    this._connection++;
+    this.unwatch();
+    this._unsubscribeRouter?.();
+    this._unsubscribeRouter = undefined;
 
     if (!this.element) {
       return;
@@ -589,10 +628,6 @@ export class UiSrefActiveDirective extends AsyncDirective {
       this.onTransitionStateChange,
     );
     this.element = null;
-    this._deregisterOnStart?.();
-    this._deregisterOnStart = undefined;
-    this._deregisterOnStatesChanged?.();
-    this._deregisterOnStatesChanged = undefined;
   }
 
   /**

@@ -6,9 +6,13 @@ import { requestRouter, type ContextCallback } from '../context.js';
 import { UIRouterLit } from '../core.js';
 import { LitStateDeclaration } from '../interface.js';
 import { RouterSubscribers } from '../router-subscription.js';
+import { srefActiveClass } from '../sref-active.js';
+import { srefHref } from '../sref-href.js';
 import { SrefStatusController } from '../sref-status-controller.js';
 import { TransitionController } from '../transition-controller.js';
 import { UIRouterLitElement } from '../ui-router.js';
+import { uiSref } from '../ui-sref.js';
+import { uiSrefActive } from '../ui-sref-active.js';
 import '../ui-router.register.js';
 import '../ui-view.register.js';
 import {
@@ -34,9 +38,30 @@ class RouterUpgradeHost extends LitElement {
   }
 }
 
+@customElement('test-router-upgrade-links')
+class RouterUpgradeLinks extends LitElement {
+  createRenderRoot() {
+    return this;
+  }
+
+  render() {
+    return html`<a id="ui-sref" ${uiSref('b')}>b</a
+      ><span
+        id="ui-sref-active"
+        ${uiSrefActive({ state: 'b', activeClasses: ['active'] })}
+      ></span
+      ><a id="sref-href" href=${srefHref('b')}>b</a
+      ><span
+        id="sref-active-class"
+        class=${srefActiveClass({ state: 'b', activeClasses: ['active'] })}
+      ></span>`;
+  }
+}
+
 declare global {
   interface HTMLElementTagNameMap {
     'test-router-upgrade-host': RouterUpgradeHost;
+    'test-router-upgrade-links': RouterUpgradeLinks;
   }
 }
 
@@ -250,6 +275,61 @@ describe('placeholder router upgrade', () => {
       await upgrade();
 
       expect(host.transitions.router).toBe(placeholder);
+    });
+  });
+
+  describe('directives', () => {
+    let links: RouterUpgradeLinks;
+
+    beforeEach(async () => {
+      links = uiRouter.appendChild(
+        document.createElement('test-router-upgrade-links'),
+      );
+      await waitForUpdate(links);
+      // the deferred router lookup has run and found the placeholder
+      await tick();
+    });
+
+    const link = (id: string): Element => links.querySelector(`#${id}`)!;
+
+    it('uiSref writes the href of the router that replaces the placeholder', async () => {
+      expect(link('ui-sref').getAttribute('href')).toBeNull();
+
+      await upgrade();
+
+      expect(link('ui-sref').getAttribute('href')).toBe('#/b');
+    });
+
+    it('uiSrefActive follows the router that replaces the placeholder', async () => {
+      await upgrade();
+      await routerGo(router, 'b');
+
+      expect(link('ui-sref-active').classList.contains('active')).toBe(true);
+    });
+
+    it('srefHref writes the href of the router that replaces the placeholder', async () => {
+      expect(link('sref-href').hasAttribute('href')).toBe(false);
+
+      await upgrade();
+
+      expect(link('sref-href').getAttribute('href')).toBe('#/b');
+    });
+
+    it('srefActiveClass follows the router that replaces the placeholder', async () => {
+      await upgrade();
+      await routerGo(router, 'b');
+
+      expect(link('sref-active-class').classList.contains('active')).toBe(true);
+    });
+
+    it('stop listening once the host disconnects', async () => {
+      const onStatesChanged = vi.spyOn(router.stateRegistry, 'onStatesChanged');
+      links.remove();
+
+      await upgrade();
+
+      expect(onStatesChanged).not.toHaveBeenCalled();
+      expect(link('ui-sref').hasAttribute('href')).toBe(false);
     });
   });
 });
