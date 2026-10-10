@@ -37,8 +37,9 @@ const findProperty = (
 const isPrivate = (root: JSONNode | undefined): boolean =>
   findProperty(root, 'private')?.value.value === true;
 
+// No non-string literal stringifies to a `catalog:` prefix.
 const catalogName = (spec: JSONNode['value']): string | undefined =>
-  typeof spec === 'string' ? /^catalog:(.*)$/.exec(spec)?.[1] : undefined;
+  /^catalog:(.*)$/.exec(String(spec))?.[1];
 
 const messageFor = (
   catalog: string | undefined,

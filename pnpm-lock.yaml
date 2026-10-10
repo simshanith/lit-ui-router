@@ -1879,6 +1879,9 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
+      valibot:
+        specifier: 'catalog:'
+        version: 1.5.0(typescript@7.0.2)
 
   tools/release-config:
     devDependencies:
@@ -1957,6 +1960,9 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
+      valibot:
+        specifier: 'catalog:'
+        version: 1.5.0(typescript@7.0.2)
 
   tools/typedoc-plugin-lit-ui-router:
     devDependencies:
@@ -2018,6 +2024,9 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
+      valibot:
+        specifier: 'catalog:'
+        version: 1.5.0(typescript@7.0.2)
 
   tools/wintercg-globals:
     devDependencies:

@@ -1,6 +1,7 @@
 import {
   BrowserLocationConfig,
   HashLocationService,
+  isFunction,
   LocationPlugin,
   locationPluginFactory,
   UIRouter,
@@ -33,7 +34,7 @@ class ReplaceAwareHashLocationService extends HashLocationService {
 
   // oxlint-disable-next-line anti-slop/no-unknown-parameters -- opaque history state, forwarded to history.replaceState() and core's _set()
   _set(state: unknown, title: string, url: string, replace: boolean) {
-    if (!replace || typeof this._history.replaceState !== 'function') {
+    if (!replace || !isFunction(this._history.replaceState)) {
       super._set(state, title, url, replace);
 
       return;

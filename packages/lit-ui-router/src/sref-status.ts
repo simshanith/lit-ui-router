@@ -6,6 +6,7 @@ import {
   mergeSrefStatus,
   srefEventLink,
   srefStatus,
+  toAriaCurrentValues,
   UiSrefTargetEvent,
 } from './sref-internals.js';
 import {
@@ -118,8 +119,7 @@ export function resolveAriaCurrent(
   status: SrefStatus,
   value: AriaCurrentValue | AriaCurrentValues = 'page',
 ): AriaCurrentValue | typeof nothing {
-  const values: AriaCurrentValues =
-    typeof value === 'object' ? value : { exact: value };
+  const values = toAriaCurrentValues(value);
 
   const resolved = status.exact
     ? (values.exact ?? 'page')

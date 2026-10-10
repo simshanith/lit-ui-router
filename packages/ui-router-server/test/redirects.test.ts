@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
+import { isString } from '@uirouter/core';
 import type { RawParams, StateDeclaration, UIRouter } from '@uirouter/core';
 
 import {
@@ -288,7 +289,7 @@ describe('differential: evaluator vs headless simulation', () => {
     const router: UIRouter = createHeadlessRouter(states);
 
     for (const rule of table.rules ?? []) {
-      const to = typeof rule.to === 'string' ? { state: rule.to } : rule.to;
+      const to = isString(rule.to) ? { state: rule.to } : rule.to;
 
       if (rule.pattern instanceof RegExp) {
         router.urlService.rules.when(rule.pattern, () => ({

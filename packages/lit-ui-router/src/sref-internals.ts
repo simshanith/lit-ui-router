@@ -16,8 +16,31 @@ import {
   unnestR,
 } from '@uirouter/core';
 
-import type { SrefStatus, TransEvt } from './ui-sref-active.js';
+import type {
+  AriaCurrentValues,
+  SrefStatus,
+  TransEvt,
+  UiSrefActiveParams,
+} from './ui-sref-active.js';
 import type { ParentView } from './events.js';
+
+/** Whether `value` is the per-state object form rather than a shorthand. */
+const isAriaCurrentValues = (
+  value: UiSrefActiveParams['ariaCurrentValue'],
+): value is AriaCurrentValues => typeof value === 'object';
+
+/**
+ * Widens the shorthand forms to the per-state shape. A token, `false`, or
+ * nothing at all is an `exact` value; only the object form sets `active`.
+ *
+ * @internal
+ */
+export const toAriaCurrentValues = (
+  ariaCurrentValue: UiSrefActiveParams['ariaCurrentValue'],
+): AriaCurrentValues =>
+  isAriaCurrentValues(ariaCurrentValue)
+    ? ariaCurrentValue
+    : { exact: ariaCurrentValue };
 
 /**
  * Event name dispatched when a uiSref target state changes.

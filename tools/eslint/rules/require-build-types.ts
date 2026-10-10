@@ -31,15 +31,18 @@ interface JSONProgram {
 const intoDist = (value: Json | undefined): value is string =>
   typeof value === 'string' && /^(\.\/)?dist\//.test(value);
 
+const isJsonContainer = (
+  node: Json | undefined,
+): node is Json[] | { [key: string]: Json } =>
+  node !== null && typeof node === 'object';
+
 const exportsAdvertiseDistTypes = (
   node: Json | undefined,
   underTypes = false,
 ): boolean => {
-  if (typeof node === 'string') {
-    return intoDist(node) && (underTypes || node.endsWith('.d.ts'));
-  }
+  if (intoDist(node)) return underTypes || node.endsWith('.d.ts');
 
-  if (node === null || typeof node !== 'object') return false;
+  if (!isJsonContainer(node)) return false;
 
   return Object.entries(node).some(([key, value]) =>
     exportsAdvertiseDistTypes(value, underTypes || key === 'types'),

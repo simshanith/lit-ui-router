@@ -182,8 +182,14 @@ export function matchRoute(
   return best;
 }
 
+const isStateName = (to: string | RedirectTarget): to is string =>
+  typeof to === 'string';
+
 const toTarget = (to: string | RedirectTarget): RedirectTarget =>
-  typeof to === 'string' ? { state: to } : to;
+  isStateName(to) ? { state: to } : to;
+
+const isPathPattern = (pattern: string | RegExp): pattern is string =>
+  typeof pattern === 'string';
 
 /**
  * Compiles a redirect table into an evaluator: pathname in, redirected path
@@ -214,7 +220,7 @@ export function compileRedirects(
   };
 
   const rules = (table.rules ?? []).map((rule) => ({
-    matcher: typeof rule.pattern === 'string' ? compile(rule.pattern) : null,
+    matcher: isPathPattern(rule.pattern) ? compile(rule.pattern) : null,
     regexp: rule.pattern instanceof RegExp ? rule.pattern : null,
     to: resolveTarget(rule.to, `Rule '${String(rule.pattern)}'`),
   }));

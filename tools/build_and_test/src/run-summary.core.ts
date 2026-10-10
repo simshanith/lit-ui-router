@@ -29,6 +29,10 @@ import {
   warnLaneLine,
 } from '@tools/warn-lanes/warn-lanes.core.ts';
 
+/** turbo's exit codes arrive as JSON, which the cast below does not check. */
+const isExitCode = (code: number | null | undefined): code is number =>
+  typeof code === 'number';
+
 /** Per-task execution record. turbo 2.10 carries no `status` — exitCode is it. */
 export interface TaskExecution {
   startTime: number;
@@ -103,7 +107,7 @@ export function parseRunSummary(value: unknown): RunSummary {
     throw new Error('turbo run summary has no tasks[] array');
   }
 
-  if (typeof summary.execution?.exitCode !== 'number') {
+  if (!isExitCode(summary.execution?.exitCode)) {
     throw new Error('turbo run summary has no execution.exitCode');
   }
 
@@ -119,7 +123,7 @@ export function failedTasks(summary: RunSummary): SummaryTask[] {
     .filter((task) => {
       const code = task.execution?.exitCode;
 
-      return typeof code === 'number' && code !== 0;
+      return isExitCode(code) && code !== 0;
     })
     .sort(
       (a, b) => (a.execution?.startTime ?? 0) - (b.execution?.startTime ?? 0),

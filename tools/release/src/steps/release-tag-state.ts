@@ -3,7 +3,7 @@
 // ./release-tag-state.core.ts. Only a missing local ref is tolerated.
 
 import type { Exec } from '@tools/shared/exec.ts';
-import { defaultExec } from '@tools/shared/exec.ts';
+import { defaultExec, readExecFailure } from '@tools/shared/exec.ts';
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
 import { loadWorkspace } from '@tools/shared/workspace.ts';
 import { memberDir } from './release-package-info.core.ts';
@@ -91,10 +91,5 @@ export async function resolveTagState(
 }
 
 function stderrOf(cause: unknown): string {
-  return cause !== null &&
-    typeof cause === 'object' &&
-    'stderr' in cause &&
-    typeof cause.stderr === 'string'
-    ? cause.stderr
-    : 'unknown git failure';
+  return readExecFailure(cause).stderr ?? 'unknown git failure';
 }

@@ -6,6 +6,7 @@
 import { hydrate } from '@lit-labs/ssr-client';
 import { renderLight } from '@lit-labs/ssr-client/directives/render-light.js';
 import type { RenderLightHost } from '@lit-labs/ssr-client/directives/render-light.js';
+import { isFunction } from '@uirouter/core';
 import { noChange } from 'lit';
 import type { ChildPart, RenderOptions } from 'lit';
 import { directive } from 'lit/directive.js';
@@ -152,9 +153,7 @@ class UiViewSlotDirective extends RenderLightDirective {
     // SAFETY: a host's `renderLight`, when present, is the `RenderLightHost` method ssr-client calls.
     const host = part.parentNode as Partial<RenderLightHost>;
 
-    return typeof host.renderLight === 'function'
-      ? host.renderLight()
-      : noChange;
+    return isFunction(host.renderLight) ? host.renderLight() : noChange;
   }
 }
 
@@ -226,7 +225,7 @@ const report = (
   try {
     reporter?.(view, outcome, cause);
   } catch (thrown) {
-    if (typeof globalThis.reportError !== 'function') {
+    if (!isFunction(globalThis.reportError)) {
       throw thrown;
     }
 
@@ -472,16 +471,19 @@ const pinAdopter = (
   });
 };
 
+/** Whether parsed JSON is an object whose `version` is a string, the only member HydrationSignature requires. */
+const isHydrationSignature = (value: unknown): value is HydrationSignature =>
+  typeof value === 'object' &&
+  value !== null &&
+  'version' in value &&
+  typeof value.version === 'string';
+
 /** The JSON a signature block carries, or null when it does not parse to one with a version. */
 const parseSignature = (json: string): HydrationSignature | null => {
   try {
-    // SAFETY: `JSON.parse` yields null or a value whose `version` reads as undefined when absent.
-    const signature = JSON.parse(json) as { version?: unknown } | null;
+    const signature: unknown = JSON.parse(json);
 
-    // SAFETY: `version` is a string, the only member HydrationSignature requires.
-    return typeof signature?.version === 'string'
-      ? (signature as HydrationSignature)
-      : null;
+    return isHydrationSignature(signature) ? signature : null;
   } catch {
     return null;
   }

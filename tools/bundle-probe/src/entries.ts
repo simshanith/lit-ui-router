@@ -2,6 +2,7 @@ import { existsSync } from 'node:fs';
 import path from 'node:path';
 
 import { requireManifest } from '@tools/bootstrap/manifest.ts';
+import type { ExportsTarget } from '@tools/bootstrap/types.ts';
 
 export type PackageEntry = {
   label: string;
@@ -9,6 +10,10 @@ export type PackageEntry = {
   // packages this entry claims to bundle without; see free-of.ts
   free: string[];
 };
+
+/** An exports target that is a path, not conditions, a fallback list, or null. */
+const isTargetPath = (target: ExportsTarget | undefined): target is string =>
+  typeof target === 'string';
 
 // The `bundleProbe` manifest field: per-subpath boundary claims.
 export type BundleProbeClaims = Readonly<
@@ -54,14 +59,13 @@ export const readPackageProbe = (packageDir: string): PackageProbe => {
   for (const [subpath, value] of Object.entries(manifest.exports ?? {})) {
     if (subpath === './package.json' || subpath.includes('*')) continue;
 
-    const target =
-      typeof value === 'string'
-        ? value
-        : value === null || Array.isArray(value)
-          ? undefined
-          : value.default;
+    const target = isTargetPath(value)
+      ? value
+      : value === null || Array.isArray(value)
+        ? undefined
+        : value.default;
 
-    if (typeof target !== 'string') {
+    if (!isTargetPath(target)) {
       throw new Error(`${name}: export '${subpath}' has no default target`);
     }
 

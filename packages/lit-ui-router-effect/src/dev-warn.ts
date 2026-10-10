@@ -1,9 +1,10 @@
+import { isFunction } from '@uirouter/core';
 import { UIRouterLitElement } from 'lit-ui-router/pure';
 
 // Copy of lit-ui-router's @internal helper; enableWarning exists only in lit's dev build.
 /** @internal */
 export function inLitDevMode(): boolean {
-  return typeof UIRouterLitElement.enableWarning === 'function';
+  return isFunction(UIRouterLitElement.enableWarning);
 }
 
 // Package-wide, not per controller: a host with several controllers has one missing provider.

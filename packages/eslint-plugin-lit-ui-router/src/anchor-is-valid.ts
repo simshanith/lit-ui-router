@@ -20,6 +20,7 @@ import {
   isCallExpression,
   isIdentifier,
   isObjectExpression,
+  isString,
   LINK_ELEMENTS_SCHEMA,
   linkElementsOf,
   type Node,
@@ -161,7 +162,7 @@ const getLiteralAttributeValue = (
 
   if (expr === null) return undefined;
 
-  if (typeof expr !== 'string') {
+  if (!isString(expr)) {
     if (expr.type === 'Literal') return expr.value;
 
     return undefined;
@@ -434,7 +435,7 @@ const anchorIsValid: RuleFor<typeof RULE_NAME> = {
               getLiteralAttributeValue(analyzer, element, '.href', source);
 
             const invalidHrefValue =
-              typeof value === 'string' &&
+              isString(value) &&
               (!value.length ||
                 (ruleOptions.allowHash === false && value === '#') ||
                 /^\W*?javascript:/.test(value));

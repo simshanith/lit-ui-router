@@ -106,10 +106,14 @@ export interface ConnectAdapterOptions {
   shouldHandle?: (req: ConnectRequest) => boolean;
 }
 
+const isHeaderString = (
+  value: string | string[] | undefined,
+): value is string => typeof value === 'string';
+
 const acceptsHtml = (req: ConnectRequest): boolean => {
   const accept = req.headers.accept;
 
-  return typeof accept === 'string' && accept.includes('text/html');
+  return isHeaderString(accept) && accept.includes('text/html');
 };
 
 const isNavigation = (req: ConnectRequest): boolean =>

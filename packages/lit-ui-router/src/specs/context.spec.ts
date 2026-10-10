@@ -75,7 +75,7 @@ describe('lit-ui-router/context', () => {
 
   describe('routerContext', () => {
     it('is a frozen object, so the key is stable and unique', () => {
-      expect(typeof routerContext).toBe('object');
+      expect(routerContext).toBeTypeOf('object');
       expect(Object.isFrozen(routerContext)).toBe(true);
       expect(routerContext.name).toBe('lit-ui-router/context#router');
       expect(new RouterContextRequestEvent(() => {}).context).toBe(
@@ -120,6 +120,28 @@ describe('lit-ui-router/context', () => {
       expect(isRouterContextRequest(new Event('ui-router-context'))).toBe(
         false,
       );
+    });
+  });
+
+  describe('isContextRequest', () => {
+    // SAFETY: an untyped caller can pass an undefined key; the guard must still require a named context
+    const undefinedKey = undefined as never;
+
+    it('rejects a request that names no context, even against an undefined key', () => {
+      const event = Object.assign(new Event(contextRequestEventName), {
+        callback: () => {},
+      });
+
+      expect(isContextRequest(event, undefinedKey)).toBe(false);
+    });
+
+    it('matches a request whose context is present, by identity', () => {
+      const event = Object.assign(new Event(contextRequestEventName), {
+        context: undefined,
+        callback: () => {},
+      });
+
+      expect(isContextRequest(event, undefinedKey)).toBe(true);
     });
   });
 
@@ -224,7 +246,7 @@ describe('lit-ui-router/context', () => {
 
       expect(callback).toHaveBeenCalledTimes(1);
       const unsubscribe = callback.mock.calls[0][1];
-      expect(typeof unsubscribe).toBe('function');
+      expect(unsubscribe).toBeTypeOf('function');
       expect(() => unsubscribe()).not.toThrow();
     });
 
@@ -410,7 +432,7 @@ describe('lit-ui-router/context', () => {
 
       expect(callback).toHaveBeenCalledTimes(1);
       const unsubscribe = callback.mock.calls[0][1];
-      expect(typeof unsubscribe).toBe('function');
+      expect(unsubscribe).toBeTypeOf('function');
       expect(() => unsubscribe()).not.toThrow();
     });
 
@@ -451,17 +473,17 @@ describe('provideRouter', () => {
     const root = new EventTarget();
     const router = new UIRouterLit();
     const uninstall = provideRouter(root, router);
-    const answers: (string | undefined)[] = [];
+    const answers: (undefined | (() => void))[] = [];
 
     requestRouter(root, {
       subscribe: true,
-      callback: (_router, unsubscribe) => answers.push(typeof unsubscribe),
+      callback: (_router, unsubscribe) => answers.push(unsubscribe),
     });
     requestRouter(root, {
-      callback: (_router, unsubscribe) => answers.push(typeof unsubscribe),
+      callback: (_router, unsubscribe) => answers.push(unsubscribe),
     });
 
-    expect(answers).toEqual(['function', 'undefined']);
+    expect(answers).toEqual([expect.any(Function), undefined]);
     uninstall();
   });
 
@@ -545,7 +567,7 @@ describe('provideContext', () => {
     const subscribed = request(root, key, { subscribe: true });
     const once = request(root, key);
 
-    expect(typeof subscribed.unsubscribes[0]).toBe('function');
+    expect(subscribed.unsubscribes[0]).toBeTypeOf('function');
     expect(once.unsubscribes[0]).toBeUndefined();
     uninstall();
   });
@@ -647,10 +669,7 @@ describe('requestContext', () => {
       callback: (_value, unsubscribe) => unsubscribes.push(unsubscribe),
     });
 
-    expect(unsubscribes.map((it) => typeof it)).toEqual([
-      'function',
-      'undefined',
-    ]);
+    expect(unsubscribes).toEqual([expect.any(Function), undefined]);
     uninstall();
   });
 });

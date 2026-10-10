@@ -161,6 +161,9 @@ function createPrinter(options: DomDiffOptions): Printer {
   return { children, element, lines };
 }
 
+const isMarkup = (html: Node | string): html is string =>
+  typeof html === 'string';
+
 /**
  * Prints `html` one element or text run per indented line, for comparing as
  * a string: comments dropped, attributes and class tokens sorted, whitespace
@@ -173,7 +176,7 @@ export function getDiffableHTML(
 ): string {
   const printer = createPrinter(options);
 
-  if (typeof html === 'string') {
+  if (isMarkup(html)) {
     // Template content stays disconnected: no connectedCallback runs.
     const template = document.createElement('template');
     template.innerHTML = html;

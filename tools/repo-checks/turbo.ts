@@ -6,7 +6,11 @@ import { stripVTControlCharacters } from 'node:util';
 
 import { type ParseError, parse, printParseErrorCode } from 'jsonc-parser';
 
-import { defaultCapture, type Exec } from '@tools/shared/exec.ts';
+import {
+  defaultCapture,
+  type Exec,
+  readExecFailure,
+} from '@tools/shared/exec.ts';
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
 
 // turbo scopes a run to the package it is invoked from, so every dry run here
@@ -74,10 +78,7 @@ export async function resolvedTaskDeps(
 
 /** A script name with no turbo task declared for it — skip, don't fail. */
 function isUndeclared(name: string, cause: unknown): boolean {
-  const stderr =
-    typeof cause === 'object' && cause !== null && 'stderr' in cause
-      ? String(cause.stderr)
-      : '';
+  const stderr = readExecFailure(cause).stderr ?? '';
 
   // turbo colors the message and wraps it at terminal width, inside a long
   // task name too, behind a `│` gutter; task names carry no whitespace
@@ -197,9 +198,7 @@ export async function planFailure(
 
     return undefined;
   } catch (error) {
-    return typeof error === 'object' && error !== null && 'stderr' in error
-      ? String(error.stderr)
-      : String(error);
+    return readExecFailure(error).stderr ?? String(error);
   }
 }
 

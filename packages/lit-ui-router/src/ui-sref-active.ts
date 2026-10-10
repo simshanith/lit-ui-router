@@ -16,6 +16,7 @@ import {
   isNativeLink,
   mergeSrefStatus,
   srefStatus,
+  toAriaCurrentValues,
   UiSrefElement,
   UiSrefTargetEvent,
   UI_SREF_TARGET_EVENT,
@@ -138,19 +139,6 @@ export interface AriaCurrentValues {
  */
 const isLinkElement = (element: Element): boolean =>
   isNativeLink(element) || element.matches('[role~="link"]');
-
-/**
- * Widens the shorthand forms to the per-state shape. A token, `false`, or
- * nothing at all is an `exact` value; only the object form sets `active`.
- *
- * @internal
- */
-const toAriaCurrentValues = (
-  ariaCurrentValue: UiSrefActiveParams['ariaCurrentValue'],
-): AriaCurrentValues =>
-  typeof ariaCurrentValue === 'object'
-    ? ariaCurrentValue
-    : { exact: ariaCurrentValue };
 
 /**
  * Parameters for the uiSrefActive directive.

@@ -49,9 +49,13 @@ export function load(app: Application): void {
  * Resolve the site-absolute link of the output directory from the
  * typedoc-vitepress-theme `docsRoot` option (e.g. `/api/lit-ui-router-mobx/`).
  */
+/** `docsRoot` is another plugin's option, so typedoc hands it over untyped. */
+const isDocsRoot = (value: unknown): value is string =>
+  typeof value === 'string';
+
 function resolveBaseLink(outDir: string, app: Application): string {
   const docsRootValue = app.options.getValue('docsRoot');
-  const docsRoot = typeof docsRootValue === 'string' ? docsRootValue : '';
+  const docsRoot = isDocsRoot(docsRootValue) ? docsRootValue : '';
 
   if (!docsRoot) return './';
   const relative = path.relative(path.resolve(docsRoot), outDir);

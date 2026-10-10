@@ -18,6 +18,9 @@ const load = (file: string): string =>
 // A bare CalVer release, as the action's `version` input takes it.
 const MISE_RELEASE = /^\d{4}\.\d{1,2}\.\d+$/;
 
+/** A step's `with:` value as YAML parses it. */
+type StepInput = string | number | boolean | null;
+
 /** As much of a workflow as this check reads. */
 type Workflow = {
   jobs?: Record<
@@ -25,11 +28,15 @@ type Workflow = {
     {
       steps?: {
         uses?: string;
-        with?: Record<string, string | number | boolean | null>;
+        with?: Record<string, StepInput>;
       }[];
     }
   >;
 };
+
+/** A YAML number (`2026.10`) parses to its own shape; only a string is a release. */
+const isReleaseText = (version: StepInput | undefined): version is string =>
+  typeof version === 'string';
 
 // GitHub reads both extensions, so a .yaml workflow must not slip past.
 const workflows = trackedFiles(
@@ -60,7 +67,7 @@ describe('mise version pins', () => {
   it('pins an explicit mise release on every mise-action step', () => {
     for (const { where, version } of steps) {
       assert.ok(
-        typeof version === 'string',
+        isReleaseText(version),
         `${where} pins no mise version: ${JSON.stringify(version)}`,
       );
       assert.match(version, MISE_RELEASE, `${where}: ${version}`);

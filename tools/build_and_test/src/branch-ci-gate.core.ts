@@ -36,6 +36,10 @@ export function wantsMainGraph(branch: string): boolean {
   return branch.startsWith(MAIN_GRAPH_PREFIX);
 }
 
+/** Whether both fields `gh pr list` was asked for arrived with their JSON types. */
+const isOpenPr = (pr: Partial<OpenPr> | null): pr is OpenPr =>
+  typeof pr?.number === 'number' && typeof pr.baseRefName === 'string';
+
 /**
  * Validate `gh pr list --json number,baseRefName` output. Throws on any shape
  * surprise so the caller can fail open rather than silently read zero PRs —
@@ -45,14 +49,15 @@ export function wantsMainGraph(branch: string): boolean {
 // oxlint-disable-next-line anti-slop/no-unknown-parameters -- the parser over JSON.parse output
 export function parseOpenPrs(raw: unknown): OpenPr[] {
   if (!Array.isArray(raw)) {
+    // oxlint-disable-next-line anti-slop/no-runtime-typeof -- names the JSON type that arrived; this builtins-only gate has no valibot to decode with
     throw new Error(`expected a JSON array of PRs, got ${typeof raw}`);
   }
 
   return raw.map((entry, index) => {
-    // SAFETY: Partial claims no field; both are typeof-checked before use
-    const pr = entry as Partial<OpenPr>;
+    // SAFETY: Partial claims no field; isOpenPr checks both before use
+    const pr = entry as Partial<OpenPr> | null;
 
-    if (typeof pr?.number !== 'number' || typeof pr?.baseRefName !== 'string') {
+    if (!isOpenPr(pr)) {
       throw new Error(
         `PR entry ${index} is missing number/baseRefName: ${JSON.stringify(entry)}`,
       );

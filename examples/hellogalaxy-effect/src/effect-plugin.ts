@@ -19,6 +19,8 @@ import {
   HookMatchCriteria,
   HookRegOptions,
   HookResult,
+  isFunction,
+  isString,
   PathNode,
   RawParams,
   Resolvable,
@@ -267,7 +269,7 @@ export class EffectPlugin<R = never, ER = never> implements UIRouterPlugin {
           // oxlint-disable-next-line anti-slop/no-unknown-returns -- resolve values are untyped (any) in core
           ((...deps: unknown[]) => unknown) | undefined;
 
-        if (typeof inner !== 'function') return resolvable;
+        if (!isFunction(inner)) return resolvable;
 
         const deps: unknown[] = resolvable.deps;
 
@@ -336,7 +338,7 @@ export class EffectPlugin<R = never, ER = never> implements UIRouterPlugin {
     const tokens: unknown[] = transition.getResolveTokens();
 
     for (const token of tokens) {
-      if (typeof token !== 'string') continue;
+      if (!isString(token)) continue;
       const addService = serviceTags.get(token);
 
       if (!addService) continue;

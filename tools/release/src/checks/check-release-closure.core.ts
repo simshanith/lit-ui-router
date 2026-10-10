@@ -1,5 +1,7 @@
 // Pure logic for check-release-closure.ts, which owns the IO.
 
+import * as v from 'valibot';
+
 /** Members a release lane needs installed, and which lane needs them. */
 export type ClosureRule = {
   need: string;
@@ -12,6 +14,8 @@ export function filterArgs(filter: string): string[] {
   return filter.split(/\s+/u).filter((token) => token !== '');
 }
 
+const ListedProjectSchema = v.object({ name: v.string() });
+
 /** Project names from `pnpm ls -r --depth -1 --json`. */
 export function selectedNames(json: string): string[] {
   const parsed: unknown = JSON.parse(json);
@@ -23,16 +27,11 @@ export function selectedNames(json: string): string[] {
   const projects: unknown[] = parsed;
 
   return projects.map((project) => {
-    const name =
-      typeof project === 'object' && project !== null && 'name' in project
-        ? project.name
-        : undefined;
-
-    if (typeof name !== 'string') {
+    if (!v.is(ListedProjectSchema, project)) {
       throw new Error('pnpm ls --json project without a name');
     }
 
-    return name;
+    return project.name;
   });
 }
 
@@ -116,6 +115,9 @@ const NO_SCRIPT = '<NONEXISTENT>';
 
 type DryRunPlan = { tasks?: { package?: string; command?: string }[] };
 
+const isPackageName = (name: string | undefined): name is string =>
+  typeof name === 'string';
+
 /** Packages whose scripts a `turbo run --dry-run=json` plan would spawn, sorted. */
 export function plannedScriptPackages(json: string): string[] {
   // SAFETY: optional fields only; `tasks` and each entry are checked below
@@ -128,7 +130,7 @@ export function plannedScriptPackages(json: string): string[] {
   const packages = new Set<string>();
 
   for (const { package: name, command } of tasks) {
-    if (typeof name !== 'string') {
+    if (!isPackageName(name)) {
       throw new Error('turbo --dry-run=json task without a package');
     }
 

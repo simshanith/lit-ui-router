@@ -5,7 +5,7 @@ import { collectResultSync } from '@lit-labs/ssr/lib/render-result.js';
 import type { TemplateResult } from 'lit';
 import type { UIRouterLit } from 'lit-ui-router';
 import { provideRouter, withRouterSync } from 'lit-ui-router/context';
-import { DefType } from '@uirouter/core';
+import { DefType, isFunction, isString } from '@uirouter/core';
 import { createServerRouter } from 'ui-router-server';
 import type { MountConfig, ServerRouter, Verdict } from 'ui-router-server';
 
@@ -388,7 +388,7 @@ const writeRules = async (
 ): Promise<void> => {
   if (rules === 'none') return;
 
-  if (typeof rules === 'function') {
+  if (isFunction(rules)) {
     await rules(lines);
 
     return;
@@ -514,10 +514,9 @@ export async function prerender(
 
     const body = await renderShell(verdict, context);
 
-    const markup =
-      typeof body === 'string'
-        ? body
-        : renderPage(body, router, root, elementRenderers);
+    const markup = isString(body)
+      ? body
+      : renderPage(body, router, root, elementRenderers);
 
     const html = document ? await document(markup, context) : markup;
 

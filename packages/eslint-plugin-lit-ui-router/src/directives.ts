@@ -127,6 +127,13 @@ export const isObjectExpression = (
 const isProperty = (node: Node | null | undefined): node is PropertyNode =>
   node?.type === 'Property';
 
+// Literal values, node names and `settings` entries arrive untyped or as a union.
+export const isString = <T>(value: T): value is T & string =>
+  typeof value === 'string';
+
+const isBoolean = <T>(value: T): value is T & boolean =>
+  typeof value === 'boolean';
+
 /** Given `lit-html/lit-html.js`, the package name `lit-html`. */
 const packageOf = (source: string): string =>
   source.split('/', source.startsWith('@') ? 2 : 1).join('/');
@@ -157,7 +164,7 @@ const importBindingOf = (context: Rule.RuleContext, node: Node) => {
   if (definition?.type !== 'ImportBinding') return undefined;
   const source = definition.parent.source.value;
 
-  if (typeof source !== 'string') return undefined;
+  if (!isString(source)) return undefined;
 
   return { node: definition.node, source };
 };
@@ -326,7 +333,7 @@ const ourSpecifiers = (source: SourceCode) =>
     if (statement.type !== 'ImportDeclaration') return [];
     const from = statement.source.value;
 
-    if (typeof from !== 'string' || !isOurPackage(from)) return [];
+    if (!isString(from) || !isOurPackage(from)) return [];
 
     return statement.specifiers.filter(
       (specifier) => specifier.type === 'ImportSpecifier',
@@ -395,14 +402,18 @@ export const linkElementsOf = (
 ): ReadonlySet<string> => {
   const { linkElements } = context.settings;
 
-  const declared: readonly unknown[] =
-    option ?? (Array.isArray(linkElements) ? linkElements : []);
+  const fromSettings: readonly unknown[] = Array.isArray(linkElements)
+    ? linkElements
+    : [];
+
+  // A host that skips meta.schema can pass a malformed option; it falls back like a malformed setting.
+  const declared: readonly unknown[] = Array.isArray(option)
+    ? option
+    : fromSettings;
 
   // parse5 lowercases tag names, so a declaration has to meet them there.
   return new Set(
-    declared.flatMap((tag) =>
-      typeof tag === 'string' ? [tag.toLowerCase()] : [],
-    ),
+    declared.flatMap((tag) => (isString(tag) ? [tag.toLowerCase()] : [])),
   );
 };
 
@@ -415,11 +426,11 @@ export const allowElementPartsOf = (
   context: Rule.RuleContext,
   option?: boolean,
 ): boolean => {
-  if (typeof option === 'boolean') return option;
+  if (isBoolean(option)) return option;
 
   const { allowElementParts } = context.settings;
 
-  return typeof allowElementParts === 'boolean' ? allowElementParts : true;
+  return isBoolean(allowElementParts) ? allowElementParts : true;
 };
 
 /** The shared `linkElements` option, identical in every rule that reads it. */
@@ -476,7 +487,7 @@ export const createDirectiveTracker = (
     onImport(node) {
       const source = node.source.value;
 
-      if (typeof source !== 'string') return;
+      if (!isString(source)) return;
       analyse =
         // A previous import supplied lit-html
         analyse ||
