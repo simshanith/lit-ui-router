@@ -98,7 +98,6 @@
   --vp-home-hero-image-filter-invert: 0;
   --vp-home-hero-image-filter-brightness: 250%;
   --vp-home-hero-image-filter: blur(var(--vp-home-hero-image-filter-blur)) hue-rotate(var(--vp-home-hero-image-filter-hue-rotate)) invert(var(--vp-home-hero-image-filter-invert)) brightness(var(--vp-home-hero-image-filter-brightness));
-  --hero-logo-size: clamp(12rem, 8rem + 16vw, 20rem);
 }
 
 /* Brand tokens hold 4.5:1 for white button text and for brand link text. */
@@ -118,11 +117,20 @@
   --vp-home-hero-image-filter-brightness: 60%;
 }
 
-/* One grid cell stacks the glow under the logo; both centre on it. */
+/* The logo sizes to the hero's width, in feature-card columns; the box is the logo, so no negative margins. */
+.VPHero.has-image .image {
+  margin: 0 0 2rem;
+  container-type: inline-size;
+}
+
+/* One grid cell stacks the glow under the logo; both centre on it. Stacked, the logo is 2/3 of the width, then 1/2 from 768px. */
 .VPHero.has-image .image-container {
+  --hero-logo-size: calc((200cqi - 1rem) / 3);
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   place-items: center;
+  inline-size: auto;
+  block-size: auto;
   transform: none;
 }
 
@@ -135,13 +143,15 @@
 }
 
 .VPHero.has-image .image-src {
-  inline-size: min(100%, var(--hero-logo-size));
+  inline-size: var(--hero-logo-size);
   max-inline-size: none;
   max-block-size: none;
 }
 
+/* The glow overhangs the logo without growing the hero. */
 .VPHero.has-image .image-bg {
-  inline-size: min(100%, var(--hero-logo-size) * 1.25);
+  inline-size: calc(var(--hero-logo-size) * 1.25);
+  margin: calc(var(--hero-logo-size) * -0.125);
   background-image: var(--vp-home-hero-image-background-image);
   background-size: contain;
   background-repeat: no-repeat;
@@ -154,6 +164,12 @@
 /* The home page has no footer to clear; VitePress's 6–8rem bottom margin only adds scroll. */
 .VPHome.VPHome {
   margin-block-end: 1.5rem;
+}
+
+@media (min-width: 768px) {
+    .VPHero.has-image .image-container {
+      --hero-logo-size: calc((100cqi - 1rem) / 2);
+    }
 }
 
 html.chrome .VPHero .VPImage {
@@ -183,22 +199,14 @@ html.chrome.dark .VPHero .VPImage {
       max-inline-size: none;
     }
 
-    /* The logo contains to the column beside the text, so the text alone sets the row height. */
     .VPHero.has-image .image {
-      container-type: size;
+      margin: 0;
     }
 
     .VPHero.has-image .image-container {
+      --hero-logo-size: 100cqi;
       place-items: center end;
-    }
-
-    .VPHero.has-image .image-src {
-      inline-size: 100cqmin;
-    }
-
-    .VPHero.has-image .image-bg {
-      inline-size: 125cqmin;
-      margin: -12.5cqmin;
+      block-size: 100%;
     }
 }
 
