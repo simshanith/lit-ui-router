@@ -52,6 +52,7 @@ export class Compose extends LitElement {
   // uiCanExit below still guards against silently discarding unsaved edits.
   messageParam = new RouterSignalController(
     this,
+    // SAFETY: the non-URL `message` param is only ever set from a Message (Reply, Forward, Edit)
     (route) => route.params.get().message as Partial<Message> | undefined,
     {
       equals: isEqual,
@@ -63,6 +64,7 @@ export class Compose extends LitElement {
   // Otherwise an unchanged param is not a new draft — the controller fires again
   // on every reconnect, and the sticky branch reconnects on the way back in.
   resetMessage(message: Partial<Message> = {}, { force = false } = {}) {
+    // SAFETY: Compose reads only the composed fields; outgoingMessage() and save() stamp the rest
     const pristineMessage = {
       body: '',
       to: '',
@@ -70,6 +72,7 @@ export class Compose extends LitElement {
       ...message,
       from: AppConfig.emailAddress,
     } as Message;
+
     if (!force && isEqual(this.pristineMessage, pristineMessage)) return;
     this.pristineMessage = pristineMessage;
     this.message = { ...pristineMessage };
@@ -87,6 +90,7 @@ export class Compose extends LitElement {
     const message = 'You have not saved this message.';
     const question = 'Navigate away and lose changes?';
     this.canExit = await DialogService.confirm(message, question, 'Yes', 'No');
+
     return this.canExit;
   };
 
@@ -138,6 +142,7 @@ export class Compose extends LitElement {
   handleChangeMessage = (detail: string) => (e: Event) => {
     this.message = {
       ...this.message,
+      // SAFETY: bound only to the <input> and <textarea> fields in render(), both with a string value
       [detail]: (e.target as HTMLInputElement).value,
     };
   };
@@ -152,6 +157,7 @@ export class Compose extends LitElement {
 
   render() {
     const { message } = this;
+
     return html`<div class="compose">
       <div class="header">
         <div class="flex-h">

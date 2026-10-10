@@ -47,6 +47,7 @@ export class MessagesStore {
   byFolder(folderId: string): Message[] {
     const toFromAttr = ['drafts', 'sent'].includes(folderId) ? 'from' : 'to';
     const emailAddress = AppConfig.emailAddress ?? '';
+
     return this.messages.filter(
       (message) =>
         message.folder === folderId &&
@@ -56,4 +57,5 @@ export class MessagesStore {
 }
 
 const instance = new MessagesStore();
+
 export default instance;

@@ -3,9 +3,9 @@ import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { UIRouterLit, UIRouterLitElement } from 'lit-ui-router';
 import { isRouterContextRequest, withRouterSync } from 'lit-ui-router/context';
+import { RouterSignals } from 'ui-router-signals';
 
 import { RouterSignalController } from '../router-signal-controller.js';
-import { RouterSignals } from '../router-signals.js';
 import { appendParentFirst } from '@tools/happy-dom/append.ts';
 import {
   createTestRouter,
@@ -23,6 +23,7 @@ class RouterSignalHost extends LitElement {
 
   render() {
     this.renderCount++;
+
     return html`<span>${this.renderCount}</span>`;
   }
 }
@@ -53,6 +54,7 @@ async function mountInRouter(
   appendParentFirst(document.body, uiRouterEl, host);
   cleanups.push(() => uiRouterEl.remove());
   await waitForUpdate(host);
+
   return uiRouterEl;
 }
 
@@ -62,10 +64,12 @@ describe('RouterSignalController', () => {
     await routerGo(router, 'a');
 
     const host = createHost();
+
     const controller = new RouterSignalController(
       host,
       (route) => route.current.get()?.name,
     );
+
     await mountInRouter(host, router);
 
     expect(controller.signals).toBeDefined();
@@ -77,11 +81,13 @@ describe('RouterSignalController', () => {
     await routerGo(router, 'a');
 
     const host = createHost();
+
     const controller = new RouterSignalController(
       host,
       (route) => route.current.get()?.name,
       { router },
     );
+
     document.body.appendChild(host);
     cleanups.push(() => host.remove());
     await waitForUpdate(host);
@@ -94,10 +100,12 @@ describe('RouterSignalController', () => {
     cleanups.push(() => warn.mockRestore());
 
     const host = createHost();
+
     const controller = new RouterSignalController(
       host,
       (route) => route.current.get()?.name,
     );
+
     document.body.appendChild(host);
     cleanups.push(() => host.remove());
     await waitForUpdate(host);
@@ -124,6 +132,7 @@ describe('RouterSignalController', () => {
     cleanups.push(() => warn.mockRestore());
 
     const host = createHost();
+
     const controller = new RouterSignalController(
       host,
       (route) => route.current.get()?.name,
@@ -142,10 +151,12 @@ describe('RouterSignalController', () => {
   it('updates the host when the selected value changes', async () => {
     const router = createTestRouter(testStates);
     const host = createHost();
+
     const controller = new RouterSignalController(
       host,
       (route) => route.current.get()?.name,
     );
+
     await mountInRouter(host, router);
     const rendersBefore = host.renderCount;
 
@@ -160,14 +171,17 @@ describe('RouterSignalController', () => {
     const router = createTestRouter(testStates);
     const hostA = createHost();
     const hostB = createHost();
+
     const controllerA = new RouterSignalController(
       hostA,
       (route) => route.current.get()?.name,
     );
+
     const controllerB = new RouterSignalController(
       hostB,
       (route) => route.params.get().id,
     );
+
     const uiRouterEl = await mountInRouter(hostA, router);
     uiRouterEl.appendChild(hostB);
     await waitForUpdate(hostB);
@@ -209,10 +223,12 @@ describe('RouterSignalController', () => {
     await routerGo(router, 'a');
 
     const host = createHost();
+
     const controller = new RouterSignalController(
       host,
       (route) => route.current.get()?.name,
     );
+
     const uiRouterEl = await mountInRouter(host, router);
     expect(controller.value).toBe('a');
 
@@ -230,6 +246,7 @@ describe('RouterSignalController', () => {
     await routerGo(router, 'a');
 
     const host = createHost();
+
     const controller = new RouterSignalController(
       host,
       (route) => route.current.get()?.name,
@@ -247,6 +264,7 @@ describe('RouterSignalController', () => {
     await routerGo(router, 'a');
 
     const host = createHost();
+
     const controller = withRouterSync(
       router,
       () =>
@@ -293,11 +311,13 @@ describe('RouterSignalController', () => {
       await routerGo(second, 'b', { id: '1' });
       const onChange = vi.fn();
       const host = createHost();
+
       const controller = new RouterSignalController(
         host,
         (route) => route.current.get()?.name,
         { onChange },
       );
+
       await mountInRouter(host, first);
       const rendersBefore = host.renderCount;
 
@@ -321,11 +341,13 @@ describe('RouterSignalController', () => {
       const router = createTestRouter(testStates);
       await routerGo(router, 'a');
       const host = createHost();
+
       const controller = new RouterSignalController(
         host,
         (route) => route.current.get()?.name,
         { initialValue: 'none' },
       );
+
       document.body.appendChild(host);
       cleanups.push(() => host.remove());
       await waitForUpdate(host);
@@ -343,6 +365,7 @@ describe('RouterSignalController', () => {
       const router = createTestRouter(testStates);
       await routerGo(router, 'a');
       const host = createHost();
+
       const controller = new RouterSignalController(
         host,
         (route) => route.current.get()?.name,
@@ -367,17 +390,21 @@ describe('RouterSignalController', () => {
       await routerGo(router, 'a');
       const onChange = vi.fn();
       const explicitHost = createHost();
+
       const explicit = new RouterSignalController(
         explicitHost,
         (route) => route.current.get()?.name,
         { router, onChange },
       );
+
       const soughtHost = createHost();
+
       const sought = new RouterSignalController(
         soughtHost,
         (route) => route.current.get()?.name,
         { onChange },
       );
+
       await mountInRouter(explicitHost, router);
       await mountInRouter(soughtHost, router);
       expect(onChange).toHaveBeenCalledTimes(2);
@@ -410,11 +437,13 @@ describe('RouterSignalController', () => {
       await routerGo(second, 'b', { id: '1' });
       let current: UIRouterLit | undefined;
       const host = createHost();
+
       const controller = new RouterSignalController(
         host,
         (route) => route.current.get()?.name,
         { router: () => current, initialValue: 'none' },
       );
+
       expect(controller.value).toBe('none');
 
       current = first;
@@ -439,11 +468,13 @@ describe('RouterSignalController', () => {
       await routerGo(router, 'a');
       let current: UIRouterLit | undefined = router;
       const host = createHost();
+
       const controller = new RouterSignalController(
         host,
         (route) => route.current.get()?.name,
         { router: () => current },
       );
+
       document.body.appendChild(host);
       cleanups.push(() => host.remove());
       await waitForUpdate(host);
@@ -461,11 +492,13 @@ describe('RouterSignalController', () => {
       const router = createTestRouter(testStates);
       await routerGo(router, 'a');
       const host = createHost();
+
       const controller = new RouterSignalController(
         host,
         (route) => route.current.get()?.name,
         { router: () => undefined },
       );
+
       expect(controller.value).toBeUndefined();
 
       await mountInRouter(host, router);
@@ -477,11 +510,13 @@ describe('RouterSignalController', () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
       cleanups.push(() => warn.mockRestore());
       const host = createHost();
+
       const controller = new RouterSignalController(
         host,
         (route) => route.current.get()?.name,
         { router: () => undefined, initialValue: 'none' },
       );
+
       document.body.appendChild(host);
       cleanups.push(() => host.remove());
       await waitForUpdate(host);
@@ -512,10 +547,13 @@ class StubRouterProvider extends HTMLElement {
       if (!this.router || !isRouterContextRequest(event)) return;
       event.stopImmediatePropagation();
       const { callback, subscribe } = event;
+
       if (!subscribe) {
         callback(this.router);
+
         return;
       }
+
       const deliver = (next: UIRouterLit) => callback(next, () => {});
       this.subscribers.add(deliver);
       callback(this.router, () => {
@@ -528,21 +566,25 @@ class StubRouterProvider extends HTMLElement {
     this.router = router;
     const subscribers = [...this.subscribers];
     this.subscribers.clear();
+
     for (const deliver of subscribers) deliver(router);
   }
 }
+
 customElements.define('signal-stub-router-provider', StubRouterProvider);
 
 /** Answers only the house `ui-router-context` event, which cannot subscribe. */
 class HouseEventProvider extends HTMLElement {
   constructor(router: UIRouterLit) {
     super();
+    // SAFETY: only `ui-router-context` events, always a `UiRouterContextEvent`, reach this listener.
     this.addEventListener(
       UIRouterLitElement.uiRouterContextEventName,
       UIRouterLitElement.onUiRouterContextEvent(router) as EventListener,
     );
   }
 }
+
 customElements.define('signal-house-event-provider', HouseEventProvider);
 
 describe('RouterSignalController router upgrade', () => {
@@ -559,6 +601,7 @@ describe('RouterSignalController router upgrade', () => {
     appendParentFirst(document.body, provider, host);
     cleanups.push(() => provider.remove());
     await waitForUpdate(host);
+
     return provider;
   }
 
@@ -570,11 +613,13 @@ describe('RouterSignalController router upgrade', () => {
 
     const host = createHost();
     const onChange = vi.fn();
+
     const controller = new RouterSignalController(
       host,
       (route) => route.current.get()?.name,
       { onChange },
     );
+
     const provider = await mountInStub(host, placeholder);
     expect(controller.value).toBe('a');
     expect(controller.signals).toBe(RouterSignals.for(placeholder));
@@ -608,10 +653,12 @@ describe('RouterSignalController router upgrade', () => {
     await routerGo(router, 'b', { id: '1' });
 
     const host = createHost();
+
     const controller = new RouterSignalController(
       host,
       (route) => route.current.get()?.name,
     );
+
     const provider = await mountInStub(host, placeholder);
     expect(provider.subscribers.size).toBe(1);
 
@@ -630,10 +677,12 @@ describe('RouterSignalController router upgrade', () => {
     await routerGo(router, 'b', { id: '1' });
 
     const host = createHost();
+
     const controller = new RouterSignalController(
       host,
       (route) => route.current.get()?.name,
     );
+
     const provider = await mountInStub(host, placeholder);
     provider.ignoreUnsubscribe = true;
 
@@ -651,10 +700,12 @@ describe('RouterSignalController router upgrade', () => {
     await routerGo(router, 'b', { id: '1' });
 
     const host = createHost();
+
     const controller = new RouterSignalController(
       host,
       (route) => route.current.get()?.name,
     );
+
     const provider = await mountInStub(host, placeholder);
     host.remove();
     provider.appendChild(host);
@@ -674,11 +725,13 @@ describe('RouterSignalController router upgrade', () => {
     await routerGo(other, 'b', { id: '1' });
 
     const host = createHost();
+
     const controller = new RouterSignalController(
       host,
       (route) => route.current.get()?.name,
       { router },
     );
+
     const provider = await mountInStub(host, placeholder);
     expect(provider.subscribers.size).toBe(0);
 
@@ -694,9 +747,11 @@ describe('RouterSignalController router upgrade', () => {
     await routerGo(chosen, 'b', { id: '2' });
 
     const host = createHost();
+
     const controller = new RouterSignalController(host, (route) =>
       String(route.params.get().id ?? route.current.get()?.name),
     );
+
     const provider = await mountInStub(host, placeholder);
     provider.ignoreUnsubscribe = true;
     expect(provider.subscribers.size).toBe(1);
@@ -718,10 +773,12 @@ describe('RouterSignalController router upgrade', () => {
     await routerGo(router, 'a');
 
     const host = createHost();
+
     const controller = new RouterSignalController(
       host,
       (route) => route.current.get()?.name,
     );
+
     const provider = new HouseEventProvider(router);
     appendParentFirst(document.body, provider, host);
     cleanups.push(() => provider.remove());
@@ -744,6 +801,7 @@ describe('RouterSignalController placeholder router upgrade', () => {
     await waitForUpdate(uiRouterEl);
     const placeholder = uiRouterEl.uiRouter!;
     cleanups.push(() => placeholder.dispose());
+
     return { uiRouterEl, placeholder };
   }
 
@@ -751,6 +809,7 @@ describe('RouterSignalController placeholder router upgrade', () => {
     // core links each declaration to its registry, so every router needs its own copies
     const router = createTestRouter(testStates.map((state) => ({ ...state })));
     cleanups.push(() => router.dispose());
+
     return router;
   }
 

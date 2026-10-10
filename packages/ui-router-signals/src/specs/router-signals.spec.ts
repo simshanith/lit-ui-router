@@ -139,15 +139,19 @@ describe('RouterSignals', () => {
       await routerGo(router, 'b', { id: '1' });
 
       let runs = 0;
+
       const name = new Signal.Computed(() => {
         runs++;
+
         return signals.current.get()?.name;
       });
+
       const stop = watchSelection(
         () => name.get(),
         undefined,
         () => {},
       );
+
       const runsBefore = runs;
 
       await routerGo(router, 'b', { id: '2' });

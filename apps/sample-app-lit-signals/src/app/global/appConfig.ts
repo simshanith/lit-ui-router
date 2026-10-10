@@ -45,12 +45,16 @@ export class AppConfig {
 
   load() {
     try {
+      // SAFETY: `appConfig` in sessionStorage is written only by save(), from these fields
       const saved = JSON.parse(
         sessionStorage.getItem('appConfig') || '{}',
       ) as Partial<AppConfigFields>;
+
       if (saved.sort !== undefined) this.sort = saved.sort;
+
       if (saved.emailAddress !== undefined)
         this.emailAddress = saved.emailAddress;
+
       if (saved.restDelay !== undefined) this.restDelay = saved.restDelay;
     } catch (error) {
       console.error(error);
@@ -63,9 +67,11 @@ export class AppConfig {
       emailAddress: this.emailAddress,
       restDelay: this.restDelay,
     };
+
     sessionStorage.setItem('appConfig', JSON.stringify(fields));
   }
 }
 
 const instance = new AppConfig();
+
 export default instance;

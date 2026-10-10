@@ -2,7 +2,7 @@
   "name": "lit-ui-router-signals",
   "version": "0.0.0",
   "private": true,
-  "description": "TC39 Signals bindings for lit-ui-router: a signal mirror of the router and watcher-based Lit ReactiveControllers",
+  "description": "TC39 Signals bindings for lit-ui-router: watcher-based Lit ReactiveControllers over ui-router-signals",
   "homepage": "https://lit-ui-router.dev",
   "bugs": {
     "url": "https://github.com/simshanith/lit-ui-router/issues"
@@ -64,6 +64,7 @@
     "signal-polyfill": "catalog:",
     "typescript": "catalog:typescript6-compat",
     "typescript-7": "catalog:",
+    "ui-router-signals": "catalog:workspace",
     "vitest": "catalog:"
   }
 }

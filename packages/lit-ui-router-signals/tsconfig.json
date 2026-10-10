@@ -2,7 +2,6 @@
   // tooling umbrella (IDE, tsgolint, typedoc): src + specs, no emit
   "extends": "./tsconfig.src.json",
   "compilerOptions": {
-    "rootDir": ".",
     "noEmit": true,
     // Specs and vitest.setup.ts import @tools/* source-exported .ts files.
     "allowImportingTsExtensions": true,

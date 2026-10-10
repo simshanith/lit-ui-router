@@ -15,8 +15,8 @@ export default defineConfig({
   cacheDir: `node_modules/.vite-${process.env.VITEST_BROWSER_API_PORT ?? 'default'}`,
   resolve: {
     alias: [
-      // Resolve the workspace peer, root and subpaths, to its source so tests
-      // do not require a prior `lit-ui-router` build.
+      // Resolve the workspace peers, root and subpaths, to their source so
+      // tests do not require a prior `lit-ui-router` or `ui-router-signals` build.
       {
         find: /^lit-ui-router$/,
         replacement: fileURLToPath(
@@ -27,6 +27,12 @@ export default defineConfig({
         find: /^lit-ui-router\/(.+)$/,
         replacement: fileURLToPath(
           new URL('../lit-ui-router/src/$1.ts', import.meta.url),
+        ),
+      },
+      {
+        find: /^ui-router-signals$/,
+        replacement: fileURLToPath(
+          new URL('../ui-router-signals/src/index.ts', import.meta.url),
         ),
       },
       ...(lit2Compat

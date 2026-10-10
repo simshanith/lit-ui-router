@@ -1,9 +1,10 @@
+import { isFunction } from '@uirouter/core';
 import { UIRouterLitElement } from 'lit-ui-router/pure';
 
 // Copy of lit-ui-router's @internal helper; enableWarning exists only in lit's dev build.
 /** @internal */
 export function inLitDevMode(): boolean {
-  return typeof UIRouterLitElement.enableWarning === 'function';
+  return isFunction(UIRouterLitElement.enableWarning);
 }
 
 // Package-wide, not per controller: a host with several controllers has one missing provider.
@@ -25,9 +26,11 @@ export function warnMissingRouter(
 ): void {
   // DEV folds away in dist/*.js (check:dev-split); inLitDevMode() is the runtime probe.
   if (!import.meta.env.DEV) return;
+
   if (!inLitDevMode() || warnedMissingRouter.has(element)) {
     return;
   }
+
   warnedMissingRouter.add(element);
   console.warn(
     `lit-ui-router-signals: ${subject} found no <ui-router> ancestor, so it ${consequence}. ` +
