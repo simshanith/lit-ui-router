@@ -123,6 +123,28 @@ describe('lit-ui-router/context', () => {
     });
   });
 
+  describe('isContextRequest', () => {
+    // SAFETY: an untyped caller can pass an undefined key; the guard must still require a named context
+    const undefinedKey = undefined as never;
+
+    it('rejects a request that names no context, even against an undefined key', () => {
+      const event = Object.assign(new Event(contextRequestEventName), {
+        callback: () => {},
+      });
+
+      expect(isContextRequest(event, undefinedKey)).toBe(false);
+    });
+
+    it('matches a request whose context is present, by identity', () => {
+      const event = Object.assign(new Event(contextRequestEventName), {
+        context: undefined,
+        callback: () => {},
+      });
+
+      expect(isContextRequest(event, undefinedKey)).toBe(true);
+    });
+  });
+
   describe('requestRouter', () => {
     it('returns the value a provider supplies synchronously', () => {
       const host = document.createElement('div');
