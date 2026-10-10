@@ -1,0 +1,23 @@
+{
+  "name": "@repo/route-snapshot",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Canonical source of snapshotRoute and RouteSnapshot, copied into each consuming package's src/shared/ by sync:shared-source",
+  "type": "module",
+  "scripts": {
+    "format:check:oxfmt": "oxfmt --check \"**/*.{ts,js,json,jsonc,md}\"",
+    "format:oxfmt": "oxfmt \"**/*.{ts,js,json,jsonc,md}\"",
+    "lint:oxlint": "oxlint .",
+    "test": "vitest run",
+    "typecheck:tsc": "tsc -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "@tools/lit-test-env": "catalog:workspace",
+    "@types/node": "catalog:",
+    "@uirouter/core": "catalog:",
+    "oxfmt": "catalog:",
+    "oxlint": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

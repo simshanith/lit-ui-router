@@ -138,6 +138,7 @@
         "//#lint:workflows",
         "//#lint:templates",
         "@tools/repo-checks#check:patches",
+        "@tools/repo-checks#check:shared-source",
         "@tools/repo-checks#check:dedupe",
         "@tools/repo-checks#check:single-version",
         "@tools/repo-checks#check:package-coverage",
