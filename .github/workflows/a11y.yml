@@ -1,6 +1,6 @@
 # The axe pass over the docs site and sample apps (`test:e2e:a11y`), post-merge.
 # Its own workflow so a violation reds the main commit without gating tag_push,
-# which needs only build-test.yml's build_and_test. Off the PR lane: on PRs it
+# which needs only build-test.yml's build_and_test. Off the PR lane: there it
 # cost every e2e suite its runner share (#1172, #1188).
 name: Accessibility
 
@@ -8,11 +8,16 @@ on:
   push:
     branches:
       - main
+  # Not a required check: a PR that changes the axe tooling sees its run, no PR waits on it.
+  pull_request:
+    paths:
+      - .github/workflows/a11y.yml
+      - tools/a11y/**
   workflow_dispatch:
 
 # Never cancel main runs: each commit gets its own verdict.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 env:
