@@ -12,7 +12,8 @@ mise run test_e2e
 
 That production-like flow builds the docs site (which embeds every app's
 build), serves it with wrangler on port 8787, and runs the Cypress suites in
-parallel, then `a11y`:
+parallel. `a11y` runs only when named; CI runs it after merge to `main`
+([`a11y.yml`](../../.github/workflows/a11y.yml)):
 
 | Suite       | Target         | Covers                                                                                                                                     |
 | ----------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |

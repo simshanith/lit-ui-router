@@ -10,7 +10,7 @@ import { serveAndTest } from './serve-and-test.ts';
 // Suite selection for the `//:test_e2e` umbrella: turns bare suite names into
 // the `turbo run` that start-server-and-test wraps in a dev server.
 //
-// Usage: run-e2e.ts [suite]...   (no names selects every suite)
+// Usage: run-e2e.ts [suite]...   (no names selects every suite but NAMED_ONLY)
 
 const PREFIX = 'test:e2e:';
 
@@ -35,31 +35,23 @@ if (unknown.length > 0) {
   process.exit(1);
 }
 
-const selected = asked.length > 0 ? asked.sort() : suites;
+// Run only when named: the axe pass runs post-merge (.github/workflows/a11y.yml).
+const NAMED_ONLY = ['a11y'];
+
+const selected =
+  asked.length > 0
+    ? asked.sort()
+    : suites.filter((suite) => !NAMED_ONLY.includes(suite));
 
 // --continue=dependencies-successful: one failing suite still lets the rest
 // report and turbo still exits non-zero, while a failed build cancels them all.
 // Bare --continue means `always`, which runs suites whose build failed.
-const turboRun = (group: readonly string[]) =>
-  [
-    'turbo run',
-    ...group.map((suite) => `${PREFIX}${suite}`),
-    '--continue=dependencies-successful --ui=stream --log-order=stream --summarize',
-    `--output-logs=${process.env.TURBO_OUTPUT_LOGS ?? 'full'}`,
-  ].join(' ');
-
-// The axe pass runs after the Cypress suites: sharing a 4-vCPU runner and one
-// wrangler with them doubled every suite's time. It runs even when they fail.
-const AFTER = 'a11y';
-
-const first = selected.filter((suite) => suite !== AFTER);
-
-const test = !selected.includes(AFTER)
-  ? turboRun(first)
-  : first.length === 0
-    ? turboRun([AFTER])
-    : // start-server-and-test runs this through a shell
-      `${turboRun(first)}; status=$?; ${turboRun([AFTER])} || exit; exit $status`;
+const test = [
+  'turbo run',
+  ...selected.map((suite) => `${PREFIX}${suite}`),
+  '--continue=dependencies-successful --ui=stream --log-order=stream --summarize',
+  `--output-logs=${process.env.TURBO_OUTPUT_LOGS ?? 'full'}`,
+].join(' ');
 
 // not the serve mise task: its build_www depends would re-run under nested mise.
 // Not `pnpm --filter … run` either: start-server-and-test stops the server with

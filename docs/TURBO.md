@@ -121,7 +121,7 @@ Exceptions: `www/lit-ui-router.dev/api/**` (generated VitePress content, not a b
 - `@tools/dts-backtest#test:matrix` runs the full TS version matrix; PRs run only the current-TS `test` leg.
 - `build` composes the two own-package passes: `build:js` (JS) and `build:types` (d.ts, self-chaining via `^build:types`).
 - `check:bundle` holds the bundle invariants (size budgets, deps-none probes); `codecov:bundle` uploads bundle analysis, uncached.
-- `dev`, `e2e`, and `docs` are persistent, uncached tasks. `e2e` is `cypress open`, the interactive lane — not the headless suites, which are the `test:e2e:*` tasks under `//:test_e2e`: one cached task per Cypress suite, plus the uncached axe pass `test:e2e:a11y`.
+- `dev`, `e2e`, and `docs` are persistent, uncached tasks. `e2e` is `cypress open`, the interactive lane — not the headless suites, which are the `test:e2e:*` tasks under `//:test_e2e`: one cached task per Cypress suite, plus the uncached axe pass `test:e2e:a11y`, which runs only when named (post-merge, `a11y.yml`).
 - Per-task `inputs`/`outputs` live in `turbo.json` itself — see [Cache Control](#cache-control).
 
 **Deliberately outside both ci graphs:** `@www/lit-ui-router.dev#check:embeds` measures every built example in headless Chromium and checks the heights `examples/embeds.ts` reserves for their embeds. Text wraps at engine-specific metrics, so the measurement is host-dependent — a Linux runner and a macOS laptop do not have to agree — and gating on it would make the docs' reserved space a property of whoever ran it. Run it locally when an example's content changes.
