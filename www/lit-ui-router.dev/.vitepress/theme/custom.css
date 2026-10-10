@@ -151,6 +151,11 @@
   transition: filter 0.5s var(--ease-out);
 }
 
+/* The home page has no footer to clear; VitePress's 6–8rem bottom margin only adds scroll. */
+.VPHome.VPHome {
+  margin-block-end: 1.5rem;
+}
+
 html.chrome .VPHero .VPImage {
   mix-blend-mode: multiply;
 }
