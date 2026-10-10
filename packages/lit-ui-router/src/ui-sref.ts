@@ -6,7 +6,7 @@ import { AsyncDirective } from 'lit/async-directive.js';
 
 import { UIRouterLit } from './core.js';
 import { inLitDevMode, warnMissingRouter } from './dev-warn.js';
-import { UIRouterLitElement } from './ui-router.js';
+import { subscribeRouter } from './router-subscription.js';
 import type { ParentView } from './events.js';
 import { UiView } from './ui-view.js';
 
@@ -160,6 +160,9 @@ export class UiSrefDirective extends AsyncDirective {
   /** @internal */
   unsubscribe: (() => void) | undefined;
 
+  /** drops the subscription to a provider that may still replace its router */
+  private _unsubscribeRouter: (() => void) | undefined;
+
   /**
    * Kept across a disconnect so {@link reconnected} can re-arm.
    * @internal
@@ -270,9 +273,26 @@ export class UiSrefDirective extends AsyncDirective {
 
   /** @internal */
   seekRouter(): void {
-    this.uiRouter = UIRouterLitElement.seekRouter(this.element!);
+    this._unsubscribeRouter?.();
+
+    const { router, unsubscribe } = subscribeRouter(
+      this.element!,
+      this.onRouterReplaced,
+    );
+
+    this.uiRouter = router;
+    this._unsubscribeRouter = unsubscribe;
     this._seekedRouter = true;
   }
+
+  /** What a disconnect and reconnect would do, for the router that replaced the one found. */
+  private readonly onRouterReplaced = (router: UIRouterLit): void => {
+    this._unsubscribeRouter = undefined;
+    this.unsubscribe?.();
+    this.uiRouter = router;
+    this.unsubscribe = router.stateRegistry.onStatesChanged(this.doRender);
+    this.doRender();
+  };
 
   /**
    * Names this sref in the missing-provider warning. Shared by the two sites
@@ -307,6 +327,8 @@ export class UiSrefDirective extends AsyncDirective {
     this._ownsHref = false;
     this.unsubscribe?.();
     this.unsubscribe = undefined;
+    this._unsubscribeRouter?.();
+    this._unsubscribeRouter = undefined;
     // re-arming is what `reconnected` does; without this it would no-op
     this._firstUpdated = false;
   }
