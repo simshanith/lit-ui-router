@@ -105,9 +105,13 @@ export interface NavigationLocationPluginOptions {
    * redirects, to settle. A superseding navigation ends the wait.
    *
    * Pass `true` for the defaults, or a function whose return value is handed
-   * to `event.intercept()`. Its `handler` runs after the router transition
-   * settles, and `focusReset` and `scroll` pass through; `focusReset`
-   * defaults to `'manual'`, as for {@link intercept}.
+   * to `event.intercept()`. The function runs at `navigate` time, before the
+   * router transition exists, so unlike {@link intercept} it cannot read the
+   * destination state's `data`. Its `handler` runs after the router
+   * transition settles, and the service forces a layout once it settles, so
+   * the browser restores scroll against the rendered view. `focusReset` and
+   * `scroll` pass through; `focusReset` defaults to `'manual'`, as for
+   * {@link intercept}.
    *
    * @example
    * ```ts
@@ -253,6 +257,8 @@ export class NavigationLocationService extends BaseLocationServices {
 
       if (!event.signal.aborted) {
         await handler?.();
+        // Gecko and WebKit restore scroll against the last layout, so the restored view must be laid out.
+        void globalRoot.document.documentElement.scrollHeight;
       }
     };
 

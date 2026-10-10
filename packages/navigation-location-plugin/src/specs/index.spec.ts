@@ -332,10 +332,13 @@ describe.skipIf(!hasNavigationAPI)('traversal interception', () => {
   let router: UIRouter;
   let spacer: HTMLElement;
   let originalHref: string;
+  let rendered: Promise<void>;
 
-  // State a renders a tall page and the others a short one, a microtask after success as a view would.
-  // Gecko and WebKit restore scroll against the last layout, so the render flushes it.
-  function startRouter(options: NavigationLocationPluginOptions): UIRouter {
+  // State a renders a tall page and the others a short one, a microtask after success as a view would, or a task later.
+  function startRouter(
+    options: NavigationLocationPluginOptions,
+    schedule: (render: () => void) => void = queueMicrotask,
+  ): UIRouter {
     router = new UIRouter();
     router.plugin(servicesPlugin);
     router.urlService.config.baseHref = () => '/';
@@ -350,12 +353,14 @@ describe.skipIf(!hasNavigationAPI)('traversal interception', () => {
       });
     }
 
-    router.transitionService.onSuccess({}, (transition) =>
-      queueMicrotask(() => {
-        spacer.style.height = transition.to().name === 'a' ? '5000px' : '0';
-        void spacer.offsetHeight;
-      }),
-    );
+    router.transitionService.onSuccess({}, (transition) => {
+      rendered = new Promise((resolve) =>
+        schedule(() => {
+          spacer.style.height = transition.to().name === 'a' ? '5000px' : '0';
+          resolve();
+        }),
+      );
+    });
     router.urlService.listen();
 
     return router;
@@ -428,6 +433,23 @@ describe.skipIf(!hasNavigationAPI)('traversal interception', () => {
     await vi.waitFor(() => expect(router.globals.current.name).toBe('a'));
 
     expect(window.scrollY).toBe(expected);
+  });
+
+  it('restores scroll once a view the option handler waits for is back', async () => {
+    startRouter(
+      { interceptTraverse: () => ({ handler: () => rendered }) },
+      (render) => setTimeout(render, 20),
+    );
+    await go('a');
+    await rendered;
+    window.scrollTo(0, 1000);
+    expect(window.scrollY).toBe(1000);
+    await go('b');
+    await rendered;
+
+    await window.navigation.back().finished;
+
+    expect(window.scrollY).toBe(1000);
   });
 
   it('aborts a traversal superseded by another, then finishes the second once its view is back', async () => {
