@@ -296,8 +296,8 @@ describe('the adopter hydrateRoot provides', () => {
       'holds no nested part': '<p class="plate" id="plate">plate</p>',
     };
 
-    for (const [shape, interior] of Object.entries(interiors)) {
-      it(`clears everything up to the matching close when the view ${shape}`, () => {
+    for (const [contents, interior] of Object.entries(interiors)) {
+      it(`clears everything up to the matching close when the view ${contents}`, () => {
         const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
         const view = servedView(
           `<!--lit-part VIEW-->${interior}<!--/lit-part--><p class="after">after</p>`,
@@ -1044,7 +1044,7 @@ describe('the hydration signature', () => {
       'a JSON block without the marker',
       `<script type="application/json">{"version":"${version}"}</script>`,
     ],
-  ])('reads null off a container holding %s', (_shape, markup) => {
+  ])('reads null off a container holding %s', (_label, markup) => {
     const { container } = serve(markup);
 
     expect(readHydrationSignature(container)).toBeNull();
@@ -1121,7 +1121,7 @@ describe('the hydration signature', () => {
 
   it.each(coldDocuments)(
     'clears a document with %s, so the cold render draws the page once, silently',
-    async (_shape, markup) => {
+    async (_label, markup) => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
       const { container } = serve(await markup());
       const router = makeRouter();
@@ -1140,7 +1140,7 @@ describe('the hydration signature', () => {
 
   it.each(coldDocuments)(
     'wakes no served view without an adopter for a document with %s',
-    async (_shape, markup) => {
+    async (_label, markup) => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
       const { container } = serve(await markup());
       const served = views(container);

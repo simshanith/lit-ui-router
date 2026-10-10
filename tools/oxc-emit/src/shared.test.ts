@@ -11,9 +11,7 @@ const unrelated = 'export const pick = (x?: number) => x ?? undefined;\n';
 
 const emit = (source: string, dev?: string): string => {
   const define = passDefine(source, '1.2.3', dev);
-  return transformSync('src/index.ts', source, {
-    ...(define === undefined ? {} : { define }),
-  }).code;
+  return transformSync('src/index.ts', source, { define }).code;
 };
 
 describe('passDefine', () => {

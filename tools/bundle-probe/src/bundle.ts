@@ -120,7 +120,7 @@ const rolldownBundle = async (
     treeshake: annotations,
     // rolldown takes `define` under `transform` (oxc's define plugin), not at
     // the top level — an unknown top-level key is only a warning.
-    ...(define ? { transform: { define } } : {}),
+    transform: define ? { define } : undefined,
     logLevel: 'silent',
   });
   try {

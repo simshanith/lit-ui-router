@@ -269,6 +269,14 @@ export function findWarnLaneState(log: string): WarnLaneState | undefined {
   return undefined;
 }
 
+const VERDICTS: Record<WarnLaneStatus, (state: WarnLaneState) => string> = {
+  'above-floor': ({ total, floor }) =>
+    `${total} warnings, ABOVE the snapshot floor of ${floor}`,
+  'below-floor': ({ total, floor }) =>
+    `${total} warnings, ${floor - total} below the snapshot floor — the snapshot is stale`,
+  'at-floor': ({ total }) => `${total} warnings, at the snapshot floor`,
+};
+
 /** Whether the line carries the per-rule breakdown after its verdict. */
 export interface WarnLaneLineOptions {
   /** Default true. Off for a one-row terminal line, where the verdict is what
@@ -300,11 +308,5 @@ export function warnLaneLine(
     const count = state.regressions;
     return `${task} — ${count} warning entr${count === 1 ? 'y' : 'ies'} not in the snapshot (${state.total} warnings, floor ${state.floor})${detail}`;
   }
-  const verdict =
-    state.status === 'above-floor'
-      ? `${state.total} warnings, ABOVE the snapshot floor of ${state.floor}`
-      : state.status === 'below-floor'
-        ? `${state.total} warnings, ${state.floor - state.total} below the snapshot floor — the snapshot is stale`
-        : `${state.total} warnings, at the snapshot floor`;
-  return `${task} — ${verdict}${detail}`;
+  return `${task} — ${VERDICTS[state.status](state)}${detail}`;
 }

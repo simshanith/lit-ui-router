@@ -76,12 +76,13 @@ async function cf(
   path: string,
   init?: { method: 'PATCH'; body: unknown },
 ): Promise<unknown> {
+  const headers: Record<string, string> = {
+    authorization: `Bearer ${token}`,
+  };
+  if (init) headers['content-type'] = 'application/json';
   const response = await fetch(`${API_BASE}${path}`, {
     method: init?.method ?? 'GET',
-    headers: {
-      authorization: `Bearer ${token}`,
-      ...(init ? { 'content-type': 'application/json' } : {}),
-    },
+    headers,
     body: init ? JSON.stringify(init.body) : undefined,
   });
   const envelope = (await response.json()) as CloudflareEnvelope;

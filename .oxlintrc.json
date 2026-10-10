@@ -1,7 +1,15 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "plugins": ["typescript", "unicorn"],
-  "jsPlugins": ["eslint-plugin-turbo", "eslint-plugin-lit-ui-router"],
+  "jsPlugins": [
+    "eslint-plugin-turbo",
+    "eslint-plugin-lit-ui-router",
+    { "name": "anti-slop", "specifier": "@tools/oxlint-anti-slop" },
+    {
+      "name": "anti-slop-effect",
+      "specifier": "@tools/oxlint-anti-slop/effect"
+    }
+  ],
   "options": {
     "typeAware": true
   },
@@ -15,7 +23,10 @@
     "**/dist/**",
     "**/coverage/**",
     "**/node_modules/**",
-    "**/.vitepress/cache/**"
+    "**/.vitepress/cache/**",
+    ".agents/**",
+    ".claude/**",
+    "tools/oxlint-anti-slop/src/**"
   ],
   "rules": {
     "complexity": ["error", { "max": 15 }],
@@ -164,9 +175,34 @@
     "lit-ui-router/sref-active-aria-current": "error",
     "lit-ui-router/sref-active-class-aria-current": "error",
     "lit-ui-router/sref-assign-href": "error",
-    "lit-ui-router/sref-status-aria-current": "error"
+    "lit-ui-router/sref-status-aria-current": "error",
+    "oxc/no-accumulating-spread": "error",
+    "anti-slop/no-array-filter-map": "error",
+    "anti-slop/no-reduce-accumulator-copy": "error",
+    "anti-slop/no-conditional-empty-object-spread": "error",
+    "anti-slop/no-module-mocking": "error",
+    "anti-slop/no-object-parameters": "error",
+    "anti-slop/no-reflect-apply": "error",
+    "anti-slop/no-reflect-get": "error",
+    "anti-slop/no-shape-in-symbol-names": "error",
+    "anti-slop/no-unknown-type-aliases": "error",
+    "anti-slop/no-widen-then-assert": "error"
   },
   "overrides": [
+    {
+      "files": [
+        "packages/lit-ui-router-effect/**",
+        "apps/sample-app-lit-effect/**",
+        "examples/hellogalaxy-effect/**"
+      ],
+      "rules": {
+        "anti-slop-effect/no-manual-effect-error-tag": "error",
+        "anti-slop-effect/no-manual-tag-comparison": "error",
+        "anti-slop-effect/no-manual-tagged-construction": "error",
+        "anti-slop-effect/no-service-constructor-imports": "error",
+        "anti-slop-effect/prefer-effect-match": "error"
+      }
+    },
     {
       "files": ["**/*.ts", "**/*.tsx", "**/*.mts", "**/*.cts"],
       "rules": {

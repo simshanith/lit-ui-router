@@ -49,7 +49,7 @@ export interface SrefStatusControllerOptions extends SrefTargetParams {
  * the very targets they are about. Targets are held until a retarget, a link
  * change or a rebuild replaces them, so identity is the exact test.
  */
-const sameShape = (
+const rendersSame = (
   a: SrefStatus | undefined,
   b: SrefStatus | undefined,
 ): boolean =>
@@ -355,7 +355,7 @@ export class SrefStatusController implements ReactiveController {
     this._status = this.targets.status(event);
     const first = !this.computed;
     this.computed = true;
-    return first || !sameShape(before, this._status);
+    return first || !rendersSame(before, this._status);
   }
 
   private readonly onUiSrefTargetEvent = (event: UiSrefTargetEvent): void => {

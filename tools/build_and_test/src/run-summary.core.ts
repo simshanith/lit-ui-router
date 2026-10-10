@@ -662,13 +662,14 @@ export function planAnnotations(
 
 /** The tally line both lanes print; undefined when no log carried any. */
 export function annotationNote(plan: AnnotationPlan): string | undefined {
-  const parts = LEVELS.filter((level) => plan.found[level] > 0).map((level) => {
+  const parts = LEVELS.flatMap((level) => {
     const found = plan.found[level];
+    if (found <= 0) return [];
     const shown = plan.emitted[level];
     const noun = `${level}${found === 1 ? '' : 's'}`;
     return shown === found
-      ? `${found} ${noun}`
-      : `${found} ${noun} (${shown} annotated)`;
+      ? [`${found} ${noun}`]
+      : [`${found} ${noun} (${shown} annotated)`];
   });
   if (parts.length === 0) return undefined;
   const capped = LEVELS.some(

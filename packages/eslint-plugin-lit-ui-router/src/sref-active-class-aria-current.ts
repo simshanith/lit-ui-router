@@ -96,9 +96,10 @@ const srefActiveClassAriaCurrent: RuleFor<typeof RULE_NAME> = {
 
         /** The `state`, `params` and `options` the fix copies, as written. */
         const paramsLiteral = (object: ObjectNode): string => {
-          const kept = SHARED_PARAMS.map((name) =>
-            propertyNamed(object, name),
-          ).filter((property) => property !== undefined);
+          const kept = SHARED_PARAMS.flatMap((name) => {
+            const property = propertyNamed(object, name);
+            return property === undefined ? [] : [property];
+          });
           return kept.length === 0
             ? '{}'
             : `{ ${kept
