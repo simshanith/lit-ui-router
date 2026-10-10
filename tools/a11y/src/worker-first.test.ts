@@ -1,11 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import {
-  assetCandidates,
-  runsWorkerFirst,
-  workerFirstPatterns,
-} from './site.core.ts';
+import { runsWorkerFirst, workerFirstPatterns } from './worker-first.ts';
 
 test('workerFirstPatterns reads run_worker_first from JSONC', () => {
   const source = `{
@@ -29,14 +25,4 @@ test('runsWorkerFirst matches bare mounts exactly and wildcards below them', () 
   assert.equal(runsWorkerFirst(patterns, '/app-mobx'), false);
   assert.equal(runsWorkerFirst(patterns, '/app.html'), false);
   assert.equal(runsWorkerFirst(patterns, '/guides/'), false);
-});
-
-test('assetCandidates follows auto-trailing-slash html handling', () => {
-  assert.deepEqual(assetCandidates('/'), ['/index.html']);
-  assert.deepEqual(assetCandidates('/guides/'), ['/guides/index.html']);
-  assert.deepEqual(assetCandidates('/guides/route-guards'), [
-    '/guides/route-guards',
-    '/guides/route-guards.html',
-    '/guides/route-guards/index.html',
-  ]);
 });

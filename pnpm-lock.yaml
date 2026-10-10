@@ -549,6 +549,9 @@ importers:
         specifier: catalog:workspace
         version: link:../../www/lit-ui-router.dev
     devDependencies:
+      '@tools/a11y':
+        specifier: catalog:workspace
+        version: link:../../tools/a11y
       '@tools/bootstrap':
         specifier: catalog:workspace
         version: link:../../tools/bootstrap
@@ -2137,9 +2140,6 @@ importers:
         specifier: 'catalog:'
         version: 3.5.43(typescript@7.0.2)
     devDependencies:
-      '@tools/a11y':
-        specifier: catalog:workspace
-        version: link:../../tools/a11y
       '@tools/build_and_test':
         specifier: catalog:workspace
         version: link:../../tools/build_and_test

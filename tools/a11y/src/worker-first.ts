@@ -1,4 +1,4 @@
-// Which requests the docs worker answers, and which dist file an asset request resolves to.
+// Which requests the docs worker answers before the assets binding.
 
 import { type ParseError, parse, printParseErrorCode } from 'jsonc-parser';
 import * as v from 'valibot';
@@ -31,14 +31,4 @@ export function runsWorkerFirst(
       ? pathname.startsWith(pattern.slice(0, -1))
       : pathname === pattern,
   );
-}
-
-/**
- * dist-relative files an asset path may resolve to, in order, after the
- * binding's default `auto-trailing-slash` html_handling.
- */
-export function assetCandidates(pathname: string): string[] {
-  if (pathname.endsWith('/')) return [`${pathname}index.html`];
-
-  return [pathname, `${pathname}.html`, `${pathname}/index.html`];
 }

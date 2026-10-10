@@ -19,13 +19,6 @@
       ],
       "outputs": ["worker/dist/**"]
     },
-    "check:a11y": {
-      // axe over the built site and its sample-app mounts in headless
-      // Chromium. Uncached for the reason check:embeds is: color-contrast and
-      // target-size read the host's rendering and fonts, which no input names.
-      "dependsOn": ["build"],
-      "cache": false
-    },
     "check:embeds": {
       // Reader of the built examples: measures each in Chromium and checks the
       // heights examples.ts reserves for them. Uncached because the result is a

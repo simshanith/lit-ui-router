@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// Runs axe-core over the built docs site and its sample-app mounts; any violation fails.
-// Usage: check-a11y [--json]
+// Runs axe-core over the served docs site and its sample-app mounts; any violation fails.
+// Usage: check-a11y <origin> [--json]   (origin: the wrangler dev server, e.g. http://localhost:8787)
 
 import { readdir, readFile, stat } from 'node:fs/promises';
 import { join, relative, sep } from 'node:path';
@@ -15,8 +15,7 @@ import {
   auditDocs,
   type Finding,
 } from './audit.ts';
-import { runsWorkerFirst, workerFirstPatterns } from './site.core.ts';
-import { serveSite } from './site.ts';
+import { runsWorkerFirst, workerFirstPatterns } from './worker-first.ts';
 
 const SITE_DIR = join(workspaceRoot, 'www/lit-ui-router.dev');
 
@@ -34,11 +33,19 @@ const APPS: readonly AppMount[] = [
   { mount: '/app-hash', hash: true },
 ];
 
-const asJson = process.argv.includes('--json');
+const args = process.argv.slice(2);
+
+const asJson = args.includes('--json');
+
+const origin = args.find((arg) => arg !== '--json');
 
 function fail(message: string): never {
   console.error(`check-a11y: ${message}`);
   process.exit(1);
+}
+
+if (origin === undefined || !URL.canParse(origin)) {
+  fail('usage: check-a11y <origin> [--json]');
 }
 
 /** Every built page as its clean URL. */
@@ -77,17 +84,15 @@ const docsPaths = (await htmlPaths()).filter(
 
 const audit: Audit = { axeVersion: '', scans: 0, findings: [] };
 
-const site = await serveSite(SITE_DIR);
-
 const browser = await chromium.launch();
 
 let errors: unknown[];
 
 try {
   const runs = await Promise.allSettled([
-    auditDocs(browser, site.origin, docsPaths, 'light', audit),
-    auditDocs(browser, site.origin, docsPaths, 'dark', audit),
-    ...APPS.map((app) => auditApp(browser, site.origin, app, audit)),
+    auditDocs(browser, origin, docsPaths, 'light', audit),
+    auditDocs(browser, origin, docsPaths, 'dark', audit),
+    ...APPS.map((app) => auditApp(browser, origin, app, audit)),
   ]);
 
   errors = runs.flatMap((run): unknown[] =>
@@ -95,7 +100,6 @@ try {
   );
 } finally {
   await browser.close();
-  site.close();
 }
 
 const findings = audit.findings.sort(

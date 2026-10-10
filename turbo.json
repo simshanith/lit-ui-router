@@ -397,7 +397,6 @@
         "format:check",
         "check:bundle",
         "check:dev-split",
-        "@www/lit-ui-router.dev#check:a11y",
         "@tools/release#check:exports"
       ]
     },
