@@ -164,18 +164,23 @@ html.chrome.dark .VPHero .VPImage {
   border-radius: 6px;
 }
 
-@media (min-width: 640px) {
-    :root {
-        --vp-home-hero-image-width: 80%;
-        --vp-home-hero-image-height: 80%;
-        --vp-home-hero-image-transform: translate3D(-50%, -52.5%, 0) scale(0.75, 0.75);
-        --vp-home-hero-image-filter-blur: 36px;
-    }
-}
-
 @media (min-width: 960px) {
     .VPHero.has-image .main.main {
       max-width: 640px;
+    }
+
+    /* Beside the text, the logo's track sits at the column end; the glow overhangs it. */
+    .VPHero.has-image .image {
+      min-inline-size: 0;
+    }
+
+    .VPHero.has-image .image-container {
+      grid-template-columns: min(100%, var(--hero-logo-size));
+      justify-content: end;
+    }
+
+    .VPHero.has-image .image-bg {
+      inline-size: calc(var(--hero-logo-size) * 1.25);
     }
 }
 
