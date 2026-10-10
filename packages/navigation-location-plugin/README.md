@@ -43,7 +43,7 @@ router.plugin(navigationLocationPlugin);
 
 ## Navigation Event Interception
 
-The plugin intercepts the navigations it starts, so a router transition commits as a same-document navigation. The `intercept` option returns the [`NavigationInterceptOptions`](https://developer.mozilla.org/en-US/docs/Web/API/NavigateEvent/intercept#options) for each of those navigations, with the router available as `event.info.uiRouter` — it is where the app's extra work goes: view transitions, analytics, progress UI. The function runs after the router transition has committed, so `handler` governs when `navigation.transition.finished` settles and when the browser resets focus and restores scroll, not the transition itself. `focusReset` and `scroll` pass through.
+The plugin intercepts the navigations it starts, so a router transition commits as a same-document navigation. The `intercept` option returns the [`NavigationInterceptOptions`](https://developer.mozilla.org/en-US/docs/Web/API/NavigateEvent/intercept#options) for each of those navigations, with the router available as `event.info.uiRouter` — it is where the app's extra work goes: view transitions, analytics, progress UI. The function runs after the router transition has committed, so `handler` governs when `navigation.transition.finished` settles and when the browser resets focus and restores scroll, not the transition itself.
 
 ```typescript
 import {
@@ -76,7 +76,13 @@ router.transitionService.onSuccess({}, () => {
 });
 ```
 
-The heading needs `tabindex="-1"` to take focus.
+The heading needs `tabindex="-1"` to take focus. See [Focus handling](https://developer.chrome.com/docs/web-platform/navigation-api#focus_handling) for the platform behaviour.
+
+### Scroll
+
+The plugin leaves `scroll` at the platform default, `'after-transition'`. Once `handler` settles, the browser scrolls a push or replace navigation to its fragment or to the top of the page, and restores the saved position on back, forward and reload. `pushStateLocationPlugin` never scrolls.
+
+The default handler resolves immediately, so the browser may scroll before the new view has rendered. A handler that waits for rendering lets restoration land on the finished layout, and calling `event.scroll()` inside it scrolls at a moment the app chooses. Return `scroll: 'manual'` to leave scrolling to the app. See [Scroll handling](https://developer.chrome.com/docs/web-platform/navigation-api#scroll_handling).
 
 Listeners that only observe navigations can tell router-driven ones apart with `isUIRouterNavigateEvent`, which also narrows `event.info` to carry the router.
 
@@ -234,6 +240,7 @@ For older browsers, consider using:
 - [Docs - Navigation API Plugin](https://lit-ui-router.dev/packages/navigation-plugin)
 - [Docs - Location Plugins guide](https://lit-ui-router.dev/guides/location-plugins)
 - [MDN - Navigation API](https://developer.mozilla.org/en-US/docs/Web/API/Navigation_API)
+- [Chrome for Developers - Modern client-side routing: the Navigation API](https://developer.chrome.com/docs/web-platform/navigation-api)
 - [@uirouter/core - LocationPlugin](https://ui-router.github.io/core/docs/latest/interfaces/_vanilla_interface_.locationplugin.html)
 - [@uirouter/core - LocationServices](https://ui-router.github.io/core/docs/latest/interfaces/_common_coreservices_.locationservices.html)
 - [@uirouter/core - BaseLocationServices](https://ui-router.github.io/core/docs/latest/classes/_vanilla_baselocationservice_.baselocationservices.html)

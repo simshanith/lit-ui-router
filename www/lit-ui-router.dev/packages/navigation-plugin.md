@@ -109,9 +109,36 @@ router.plugin(navigationLocationPlugin, {
 
 The function runs after the router transition has committed, so `handler`
 governs when `navigation.transition.finished` settles and when the browser
-resets focus and restores scroll, not the transition itself. `focusReset` and
-`scroll` pass through. Without the option, the plugin intercepts with a handler
-that resolves immediately.
+resets focus and restores scroll, not the transition itself. Without the option,
+the plugin intercepts with a handler that resolves immediately.
+
+### Focus
+
+The plugin intercepts with `focusReset: 'manual'`, so focus stays where it was
+across a router navigation, as it does under `pushStateLocationPlugin`. A
+`focusReset` returned from `intercept` takes precedence; `'after-transition'`
+restores the platform behaviour of moving focus to `<body>` after each
+navigation.
+
+When a navigation replaces the view that held focus, the focused element leaves
+the document and focus falls back to `<body>`. Move it yourself from an
+`onSuccess` hook, for example to the new view's heading (with
+`tabindex="-1"`). See
+[Focus handling](https://developer.chrome.com/docs/web-platform/navigation-api#focus_handling).
+
+### Scroll
+
+The plugin leaves `scroll` at the platform default, `'after-transition'`. Once
+`handler` settles, the browser scrolls a push or replace navigation to its
+fragment or to the top of the page, and restores the saved position on back,
+forward and reload. `pushStateLocationPlugin` never scrolls.
+
+The default handler resolves immediately, so the browser may scroll before the
+new view has rendered. A handler that waits for rendering lets restoration land
+on the finished layout, and calling `event.scroll()` inside it scrolls at a
+moment the app chooses. Return `scroll: 'manual'` to leave scrolling to the app.
+See
+[Scroll handling](https://developer.chrome.com/docs/web-platform/navigation-api#scroll_handling).
 
 The plugin passes the `UIRouter` instance along in each of its navigations'
 [`info`](https://developer.mozilla.org/en-US/docs/Web/API/Navigation/navigate#info)
@@ -190,5 +217,6 @@ See the full [API reference](/api/navigation-location-plugin/).
 ## Further reading
 
 - [MDN — Navigation API](https://developer.mozilla.org/en-US/docs/Web/API/Navigation_API)
+- [Chrome for Developers — Modern client-side routing: the Navigation API](https://developer.chrome.com/docs/web-platform/navigation-api)
 - [Can I Use — Navigation API](https://caniuse.com/mdn-api_navigation)
 - [@uirouter/core — LocationPlugin](https://ui-router.github.io/core/docs/latest/interfaces/_vanilla_interface_.locationplugin.html)
