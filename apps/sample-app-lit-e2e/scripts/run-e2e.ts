@@ -35,7 +35,7 @@ if (unknown.length > 0) {
   process.exit(1);
 }
 
-// Run only when named: the axe pass runs post-merge (.github/workflows/a11y.yml).
+// Run only when named: CI runs the axe pass with the main graph (a11y-run.yml).
 const NAMED_ONLY = ['a11y'];
 
 const selected =

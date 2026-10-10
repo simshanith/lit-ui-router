@@ -1,30 +1,25 @@
-# The axe pass over the docs site and sample apps (`test:e2e:a11y`), post-merge.
-# Its own workflow so a violation reds the main commit without gating tag_push,
-# which needs only build-test.yml's build_and_test. Off the PR lane: there it
-# cost every e2e suite its runner share (#1172, #1188).
-name: Accessibility
+# The axe pass over the docs site and sample apps (`test:e2e:a11y`), for the main
+# graph only: main pushes and mainGraph dispatches (build-test.yml) and `ci-main/`
+# branches (build-test-branch.yml). Off the PR lane, where it cost every e2e
+# suite its runner share (#1172, #1188). A job beside build_and_test, so a
+# violation reds the commit without gating tag_push.
+name: Accessibility (run)
 
 on:
-  push:
-    branches:
-      - main
-  # Not a required check: a PR that changes the axe tooling sees its run, no PR waits on it.
-  pull_request:
-    paths:
-      - .github/workflows/a11y.yml
-      - tools/a11y/**
-  workflow_dispatch:
-
-# Never cancel main runs: each commit gets its own verdict.
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+  workflow_call:
+    secrets:
+      TURBO_TOKEN:
+        required: false
+      TURBO_REMOTE_CACHE_SIGNATURE_KEY:
+        required: false
+      TURBO_API:
+        required: false
 
 env:
   HUSKY: 0
 
 jobs:
-  axe:
+  run:
     runs-on: ubuntu-26.04
     timeout-minutes: 20
     permissions:

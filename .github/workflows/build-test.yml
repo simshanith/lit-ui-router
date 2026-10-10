@@ -60,6 +60,19 @@ jobs:
       TURBO_API: ${{ secrets.TURBO_API }}
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
+  a11y:
+    # The axe pass, main graph only (same condition as mainGraph above). Not in
+    # tag_push's needs: a violation reds the commit, never the release.
+    name: a11y
+    if: ${{ inputs.mainGraph || (github.event_name == 'push' && github.ref == 'refs/heads/main') }}
+    permissions:
+      contents: read
+    uses: ./.github/workflows/a11y-run.yml
+    secrets:
+      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+      TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
+      TURBO_API: ${{ secrets.TURBO_API }}
+
   tag_push:
     # Gated tagging: rides the same run as main CI, so a red build_and_test
     # (Check pack included) means no tag, hence no publish trigger.

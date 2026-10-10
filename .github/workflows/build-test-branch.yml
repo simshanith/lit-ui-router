@@ -86,3 +86,17 @@ jobs:
       TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
       TURBO_API: ${{ secrets.TURBO_API }}
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+  a11y_branch:
+    # The axe pass for a `ci-main/` branch, keyed on the gate's mainGraph like
+    # the build above; a broken gate leaves it unset, so this skips.
+    name: a11y (branch)
+    needs: signal_gate
+    if: ${{ !cancelled() && needs.signal_gate.outputs.mainGraph == 'true' }}
+    permissions:
+      contents: read
+    uses: ./.github/workflows/a11y-run.yml
+    secrets:
+      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+      TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
+      TURBO_API: ${{ secrets.TURBO_API }}

@@ -121,7 +121,7 @@ Exceptions: `www/lit-ui-router.dev/api/**` (generated VitePress content, not a b
 - `@tools/dts-backtest#test:matrix` runs the full TS version matrix; PRs run only the current-TS `test` leg.
 - `build` composes the two own-package passes: `build:js` (JS) and `build:types` (d.ts, self-chaining via `^build:types`).
 - `check:bundle` holds the bundle invariants (size budgets, deps-none probes); `codecov:bundle` uploads bundle analysis, uncached.
-- `dev`, `e2e`, and `docs` are persistent, uncached tasks. `e2e` is `cypress open`, the interactive lane — not the headless suites, which are the `test:e2e:*` tasks under `//:test_e2e`: one cached task per Cypress suite, plus the uncached axe pass `test:e2e:a11y`, which runs only when named (post-merge, `a11y.yml`).
+- `dev`, `e2e`, and `docs` are persistent, uncached tasks. `e2e` is `cypress open`, the interactive lane — not the headless suites, which are the `test:e2e:*` tasks under `//:test_e2e`: one cached task per Cypress suite, plus the uncached axe pass `test:e2e:a11y`, which runs only when named (the main graph's `a11y` job).
 - Per-task `inputs`/`outputs` live in `turbo.json` itself — see [Cache Control](#cache-control).
 
 **Deliberately outside both ci graphs:** `@www/lit-ui-router.dev#check:embeds` measures every built example in headless Chromium and checks the heights `examples/embeds.ts` reserves for their embeds. Text wraps at engine-specific metrics, so the measurement is host-dependent — a Linux runner and a macOS laptop do not have to agree — and gating on it would make the docs' reserved space a property of whoever ran it. Run it locally when an example's content changes.
@@ -266,7 +266,7 @@ The GitHub Actions workflow (`.github/workflows/build-test.yml`) runs the CI pip
 1. **Checkout** - Clone repository
 2. **Setup** - mise installs Node.js (version pinned in `.nvmrc`) and pnpm (held equal to the `packageManager` pin); `mise run setup` installs dependencies
 3. **Install browsers** - Playwright and Cypress for e2e tests, restored from `actions/cache` keyed on the installed package versions
-4. **Build and Test** - PRs and branch pushes run `mise run ci` (turbo `ci:pull_request`); main pushes, `mainGraph` dispatches and `ci-main/` branches run `mise run ci_main` (turbo `ci:main`, adding the main-only guards)
+4. **Build and Test** - PRs and branch pushes run `mise run ci` (turbo `ci:pull_request`); main pushes, `mainGraph` dispatches and `ci-main/` branches run `mise run ci_main` (turbo `ci:main`, adding the main-only guards), and a separate `a11y` job runs the axe pass (`mise run test_e2e a11y`); it is not in `tag_push`'s `needs`
 5. **Coverage reports** - Vitest coverage for PR comments, Codecov upload
 6. **Tag** (main pushes only) - a green run calls the Tag & push workflow, so release tags fire only after green main CI
 
@@ -274,7 +274,7 @@ Manual dispatch of the workflow has two deflake inputs: `force` (`TURBO_FORCE`) 
 
 ### Smoke-testing the main graph before merge
 
-The main-only guards (`test:engines`, `check:pack`, the full `dts-backtest` matrix) run after merge, so a break in them surfaces on main rather than on the PR. Two ways to pull that signal forward:
+The main-only guards (`test:engines`, `check:pack`, the full `dts-backtest` matrix) and the `a11y` job run after merge, so a break in them surfaces on main rather than on the PR. Two ways to pull that signal forward:
 
 - **Per run** — dispatch **Build and Test** with `mainGraph: true` and pick the branch as the ref. Nothing needs to be pushed, and the branch needs no PR.
 - **Per branch** — name the branch `ci-main/<topic>`. Every push to it builds `ci:main` instead of the PR graph, and it runs even when the branch merges cleanly (a `pull_request` run would only cover the PR graph). The prefix is the whole opt-in; there is no other flag.
