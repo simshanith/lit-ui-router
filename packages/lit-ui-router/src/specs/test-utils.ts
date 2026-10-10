@@ -205,16 +205,19 @@ export function createTestComponent(
   return TestComponent;
 }
 
+/** A promise with its settlers exposed. */
+export interface Deferred<T> {
+  promise: Promise<T>;
+  resolve: (value: T) => void;
+  reject: (reason: Error) => void;
+}
+
 /**
  * Creates a deferred promise that can be resolved/rejected externally.
  */
-export function defer<T = void>(): {
-  promise: Promise<T>;
-  resolve: (value: T) => void;
-  reject: (reason?: unknown) => void;
-} {
+export function defer<T = void>(): Deferred<T> {
   let resolve!: (value: T) => void;
-  let reject!: (reason?: unknown) => void;
+  let reject!: (reason: Error) => void;
 
   const promise = new Promise<T>((res, rej) => {
     resolve = res;

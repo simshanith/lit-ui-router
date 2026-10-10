@@ -15,7 +15,7 @@ export type Lock = {
       >
     >
   >;
-  packages?: Record<string, unknown>;
+  packages?: Record<string, { resolution?: { integrity?: string } }>;
 };
 
 /** A package name the lock may resolve to more than one version. */

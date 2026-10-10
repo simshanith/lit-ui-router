@@ -42,18 +42,17 @@ export function parseManifest(text: string): PublishedVersions {
     );
   }
 
-  for (const [name, tags] of Object.entries(
-    parsed as Record<string, unknown>,
-  )) {
+  // The claim the checks below hold it to, entry by entry.
+  const versions = parsed as PublishedVersions;
+
+  for (const [name, tags] of Object.entries(versions)) {
     if (typeof tags !== 'object' || tags === null || Array.isArray(tags)) {
       throw new Error(
         `published-versions.json: "${name}" must map to a dist-tag object`,
       );
     }
 
-    for (const [tag, version] of Object.entries(
-      tags as Record<string, unknown>,
-    )) {
+    for (const [tag, version] of Object.entries(tags)) {
       if (typeof version !== 'string') {
         throw new Error(
           `published-versions.json: "${name}" dist-tag "${tag}" must map to a version string`,
@@ -62,5 +61,5 @@ export function parseManifest(text: string): PublishedVersions {
     }
   }
 
-  return parsed as PublishedVersions;
+  return versions;
 }

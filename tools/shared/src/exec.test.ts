@@ -29,10 +29,10 @@ describe('defaultCapture', () => {
         '-e',
         "process.stderr.write('nope'); process.exit(3)",
       ]),
-      (error: unknown) => {
+      (error: Error & { stderr?: string }) => {
         assert.ok(error instanceof Error);
         assert.match(error.message, /exited with code 3/);
-        assert.equal((error as { stderr?: string }).stderr, 'nope');
+        assert.equal(error.stderr, 'nope');
 
         return true;
       },

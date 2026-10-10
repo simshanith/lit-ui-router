@@ -72,10 +72,10 @@ export async function resolvedTaskDeps(
 }
 
 /** A script name with no turbo task declared for it — skip, don't fail. */
-function isUndeclared(name: string, error: unknown): boolean {
+function isUndeclared(name: string, cause: unknown): boolean {
   const stderr =
-    typeof error === 'object' && error !== null && 'stderr' in error
-      ? String(error.stderr)
+    typeof cause === 'object' && cause !== null && 'stderr' in cause
+      ? String(cause.stderr)
       : '';
 
   // turbo colors the message and wraps it at terminal width, inside a long

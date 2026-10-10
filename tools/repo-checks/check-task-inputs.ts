@@ -85,18 +85,18 @@ async function ignoredFiles(
       {
         cwd: workspaceRoot,
       },
-    ).catch((error: unknown) => {
+    ).catch((cause: unknown) => {
       if (
-        typeof error === 'object' &&
-        error !== null &&
-        'stdout' in error &&
-        'code' in error &&
-        error.code === 1
+        typeof cause === 'object' &&
+        cause !== null &&
+        'stdout' in cause &&
+        'code' in cause &&
+        cause.code === 1
       ) {
-        return { stdout: String(error.stdout) };
+        return { stdout: String(cause.stdout) };
       }
 
-      throw error;
+      throw cause;
     });
 
     for (const file of repoIgnored(read.stdout, tracked)) {

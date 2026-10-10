@@ -14,6 +14,7 @@ import {
 } from 'effect';
 import { FetchHttpClient, HttpClient } from '@effect/platform';
 import {
+  DefaultResolvesType,
   UIRouterLit,
   uiSref,
   uiSrefActive,
@@ -182,18 +183,18 @@ class StarCatalog extends Context.Tag('StarCatalog')<
 >() {}
 
 // Approximate real star colors by spectral class letter (O hottest, M coolest)
-const spectralColors: Record<string, string> = {
-  O: '#92b5ff',
-  B: '#a5c0ff',
-  A: '#cad8ff',
-  F: '#f8f7ff',
-  G: '#ffefc4',
-  K: '#ffd2a1',
-  M: '#ffab6e',
-};
+const spectralColors = new Map([
+  ['O', '#92b5ff'],
+  ['B', '#a5c0ff'],
+  ['A', '#cad8ff'],
+  ['F', '#f8f7ff'],
+  ['G', '#ffefc4'],
+  ['K', '#ffd2a1'],
+  ['M', '#ffab6e'],
+]);
 
 const spectralColor = (spectralClass: string): string =>
-  spectralColors[spectralClass[0]] ?? '#ffffff';
+  spectralColors.get(spectralClass[0]) ?? '#ffffff';
 
 // Components
 @customElement('galaxy-shell')
@@ -782,10 +783,7 @@ const releaseModel = (src: string | undefined) =>
 
 // State definitions
 // Parent shell state; owns the section nav and a nested <ui-view>
-const galaxyState: EffectStateDeclaration<
-  Record<string, unknown>,
-  AppServices
-> = {
+const galaxyState: EffectStateDeclaration<DefaultResolvesType, AppServices> = {
   name: 'galaxy',
   url: '/galaxy',
   component: GalaxyShellComponent,

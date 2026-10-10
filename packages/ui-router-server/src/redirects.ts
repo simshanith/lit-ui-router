@@ -23,6 +23,7 @@ export interface RouteDeclaration {
   /** Url segment appended to the ancestors' segments; a url-less state is structural only (never matched, never a redirect target). */
   url?: string;
   /** Param declarations for this state's own placeholders (shorthand defaults or {@link matcher!ParamDeclaration | ParamDeclaration}s). */
+  // oxlint-disable-next-line anti-slop/no-unsafe-dictionary-type -- published; a shorthand default is any value, as core's state.params
   params?: Record<string, unknown>;
   /**
    * Data redirect, mirroring ui-router's redirectTo subset: a url landing on
@@ -113,7 +114,7 @@ export function compileRoutes(
     if (route.url === undefined) continue;
     const segments = route.name.split('.');
     let pattern = '';
-    let params: Record<string, unknown> = {};
+    let params: NonNullable<RouteDeclaration['params']> = {};
 
     for (let depth = 1; depth <= segments.length; depth++) {
       const name = segments.slice(0, depth).join('.');

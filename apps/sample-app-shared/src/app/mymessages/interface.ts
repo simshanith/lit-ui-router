@@ -13,5 +13,5 @@ export interface Message {
   subject: string;
   body: string;
   folder?: string;
-  [key: string]: unknown;
+  [key: string]: string | boolean | undefined;
 }

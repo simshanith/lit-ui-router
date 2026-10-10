@@ -62,6 +62,7 @@ type deregisterFn = () => void;
  */
 export abstract class SrefStatusDirective<
   Params extends SrefTargetParams,
+  Rendered = unknown,
 > extends AsyncDirective {
   /** @internal */
   element: Element | null = null;
@@ -109,7 +110,7 @@ export abstract class SrefStatusDirective<
   }
 
   /** the value for `status` and `params` as they stand */
-  abstract render(params: Params): unknown;
+  abstract render(params: Params): Rendered;
 
   /**
    * What `update()` and a status change hand to the part: `render()`, or
@@ -117,7 +118,7 @@ export abstract class SrefStatusDirective<
    *
    * @internal
    */
-  protected abstract commit(): unknown;
+  protected abstract commit(): Rendered;
 
   /**
    * The status to render: the one `update()` already computed, or — when
@@ -144,7 +145,7 @@ export abstract class SrefStatusDirective<
   }
 
   /** @internal */
-  update(part: AttributePart, [params]: [Params]): unknown {
+  update(part: AttributePart, [params]: [Params]): Rendered | typeof noChange {
     this.params = params;
     this.targets.params = params;
 
@@ -331,7 +332,10 @@ export interface SrefActiveClassParams extends SrefTargetParams {
  *
  * @category directives
  */
-export class SrefActiveClassDirective extends SrefStatusDirective<SrefActiveClassParams> {
+export class SrefActiveClassDirective extends SrefStatusDirective<
+  SrefActiveClassParams,
+  string | typeof noChange
+> {
   /** classes the template wrote around the expression; never toggled */
   private _staticClasses: Set<string> | undefined;
   /** our classes on the element as of the last commit; `undefined` before one */
@@ -354,20 +358,20 @@ export class SrefActiveClassDirective extends SrefStatusDirective<SrefActiveClas
     activeClasses = [],
     exactClasses = [],
     classes = {},
-  }: SrefActiveClassParams): Record<string, boolean> {
-    const info: Record<string, boolean> = {};
+  }: SrefActiveClassParams): Map<string, boolean> {
+    const info = new Map<string, boolean>();
     const { active = false, exact = false } = this.status ?? {};
 
     for (const name in classes) {
-      info[name] = !!classes[name];
+      info.set(name, !!classes[name]);
     }
 
     for (const name of activeClasses) {
-      info[name] = info[name] || active;
+      info.set(name, info.get(name) || active);
     }
 
     for (const name of exactClasses) {
-      info[name] = info[name] || exact;
+      info.set(name, info.get(name) || exact);
     }
 
     return info;
@@ -388,15 +392,18 @@ export class SrefActiveClassDirective extends SrefStatusDirective<SrefActiveClas
 
     return (
       ' ' +
-      Object.keys(info)
-        .filter((name) => info[name])
+      [...info]
+        .flatMap(([name, applies]) => (applies ? [name] : []))
         .join(' ') +
       ' '
     );
   }
 
   /** @internal */
-  update(part: AttributePart, args: [SrefActiveClassParams]): unknown {
+  update(
+    part: AttributePart,
+    args: [SrefActiveClassParams],
+  ): string | typeof noChange {
     if (this._staticClasses === undefined && part.strings !== undefined) {
       this._staticClasses = new Set(
         part.strings
@@ -410,7 +417,7 @@ export class SrefActiveClassDirective extends SrefStatusDirective<SrefActiveClas
   }
 
   /** @internal */
-  protected commit(): unknown {
+  protected commit(): string | typeof noChange {
     const info = this.classInfo(this.params!);
 
     if (this._previousClasses === undefined) {
@@ -422,8 +429,8 @@ export class SrefActiveClassDirective extends SrefStatusDirective<SrefActiveClas
 
       this._previousClasses = new Set();
 
-      for (const name in info) {
-        if (info[name] && !this._staticClasses?.has(name)) {
+      for (const [name, applies] of info) {
+        if (applies && !this._staticClasses?.has(name)) {
           this._previousClasses.add(name);
         }
       }
@@ -434,15 +441,13 @@ export class SrefActiveClassDirective extends SrefStatusDirective<SrefActiveClas
     const { classList } = this.element!;
 
     for (const name of this._previousClasses) {
-      if (!(name in info)) {
+      if (!info.has(name)) {
         classList.remove(name);
         this._previousClasses.delete(name);
       }
     }
 
-    for (const name in info) {
-      const value = info[name];
-
+    for (const [name, value] of info) {
       if (
         value !== this._previousClasses.has(name) &&
         !this._staticClasses?.has(name)
@@ -483,7 +488,10 @@ export interface SrefAriaCurrentParams extends SrefTargetParams {
  *
  * @category directives
  */
-export class SrefAriaCurrentDirective extends SrefStatusDirective<SrefAriaCurrentParams> {
+export class SrefAriaCurrentDirective extends SrefStatusDirective<
+  SrefAriaCurrentParams,
+  AriaCurrentValue | typeof nothing | typeof noChange
+> {
   /** whether a status was ever written, so losing every target clears it */
   private _wrote = false;
 
@@ -499,7 +507,7 @@ export class SrefAriaCurrentDirective extends SrefStatusDirective<SrefAriaCurren
   }
 
   /** @internal */
-  protected commit(): unknown {
+  protected commit(): AriaCurrentValue | typeof nothing | typeof noChange {
     if (!this.status) {
       return this._wrote ? nothing : noChange;
     }

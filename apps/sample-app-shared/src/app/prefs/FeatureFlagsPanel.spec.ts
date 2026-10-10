@@ -1,15 +1,15 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import {
   featureFlags,
+  type FeatureFlagDefinitions,
   setBootedLocationPlugin,
 } from '../util/featureDetection.js';
 import { FeatureFlagsPanel } from './FeatureFlagsPanel.js';
 
 const readStoredFlags = () =>
-  JSON.parse(sessionStorage.getItem('featureFlags') ?? '{}') as Record<
-    string,
-    unknown
-  >;
+  JSON.parse(
+    sessionStorage.getItem('featureFlags') ?? '{}',
+  ) as Partial<FeatureFlagDefinitions>;
 
 describe('feature flags panel', () => {
   let panel: FeatureFlagsPanel;

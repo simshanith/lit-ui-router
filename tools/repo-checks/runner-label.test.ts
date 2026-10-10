@@ -13,8 +13,8 @@ import { parse } from 'yaml';
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
 import { trackedFiles } from './cli-query.ts';
 
-const load = (file: string): unknown =>
-  parse(readFileSync(join(workspaceRoot, file), 'utf8'));
+const load = (file: string): string =>
+  readFileSync(join(workspaceRoot, file), 'utf8');
 
 const actionlintConfig = join('.github', 'actionlint.yaml');
 
@@ -54,7 +54,7 @@ const workflows = trackedFiles(
 );
 
 const jobs = workflows.flatMap((workflow) =>
-  Object.entries((load(workflow) as Workflow).jobs ?? {})
+  Object.entries((parse(load(workflow)) as Workflow).jobs ?? {})
     .filter(([, job]) => job.uses === undefined)
     .map(([job, { 'runs-on': runsOn }]) => ({ workflow, job, runsOn })),
 );
@@ -68,7 +68,7 @@ const used = [
 ].sort();
 
 const declared = [
-  ...((load(actionlintConfig) as ActionlintConfig)['self-hosted-runner']
+  ...((parse(load(actionlintConfig)) as ActionlintConfig)['self-hosted-runner']
     ?.labels ?? []),
 ].sort();
 

@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import type { HookMatchCriteria } from '@uirouter/core';
 import googleAnalyticsHook from './ga.js';
 import { featureFlags } from './featureDetection.js';
 
@@ -32,13 +33,18 @@ const fakeTransition = {
   params: () => ({}),
 };
 
+/** The params ga.js sends with a page_view. */
+interface PageView {
+  page_location: string;
+}
+
 /** Captures the onSuccess callback the hook registers, to fire per navigation. */
 function fakeTransitionService() {
   let onSuccess: (trans: typeof fakeTransition) => void = () => {};
 
   const service = {
     onSuccess: (
-      _criteria: unknown,
+      _criteria: HookMatchCriteria,
       callback: (trans: typeof fakeTransition) => void,
     ) => {
       onSuccess = callback;
@@ -51,7 +57,7 @@ function fakeTransitionService() {
 
 describe('googleAnalyticsHook page_view', () => {
   let navigation: NavigationStub;
-  let pageViews: unknown[];
+  let pageViews: PageView[];
 
   beforeEach(() => {
     featureFlags.resetAll();
@@ -59,7 +65,7 @@ describe('googleAnalyticsHook page_view', () => {
     navigation = new NavigationStub();
     vi.stubGlobal('navigation', navigation);
     pageViews = [];
-    vi.stubGlobal('gtag', (command: string, name: string, params: unknown) => {
+    vi.stubGlobal('gtag', (command: string, name: string, params: PageView) => {
       if (command === 'event' && name === 'page_view') pageViews.push(params);
     });
     // the hook traces every page_view decision to console.debug

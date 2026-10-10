@@ -41,10 +41,14 @@ const attachShadowRoots = (root: ParentNode): void => {
   }
 };
 
+/** A served container and the elements it held, in document order. */
+export interface Served {
+  container: HTMLElement;
+  served: Element[];
+}
+
 /** Parses `markup` into a live container and stamps every element it holds. */
-export const serve = (
-  markup: string,
-): { container: HTMLElement; served: Element[] } => {
+export const serve = (markup: string): Served => {
   const container = document.createElement('div');
   document.body.append(container);
   container.innerHTML = markup;

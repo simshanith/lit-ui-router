@@ -1,4 +1,5 @@
 /** @module matcher */
+/* oxlint-disable anti-slop/no-unknown-parameters -- param values are core's untyped (`any`) values; this port keeps them unknown */
 // Derived from @uirouter/core (MIT, Copyright (c) 2013-2015 The AngularUI Team, Karsten Sperling) — UrlMatcher/Param/ParamTypes, https://github.com/ui-router/core
 
 /**
@@ -90,7 +91,7 @@ const isDate = (val: unknown): val is Date =>
  * The ui-router built-in types, minus json/hash/any (rejected at compile).
  * Frozen: every compiled matcher shares these singletons.
  */
-const builtinTypes: Record<string, ParamType> = {
+const builtinTypes = {
   string: freeze({ ...stringBase, name: 'string', pattern: /.*/ }),
   path: freeze({ ...stringBase, name: 'path', pattern: /[^/]*/ }),
   query: freeze({ ...stringBase, name: 'query', pattern: /.*/ }),
@@ -134,7 +135,11 @@ const builtinTypes: Record<string, ParamType> = {
         (fn) => (l as Date)[fn]() === (r as Date)[fn](),
       ),
   }),
-};
+} satisfies Record<string, ParamType>;
+
+/** The built-in type a name spells. */
+const builtinType = (name: string): ParamType | undefined =>
+  builtinTypes[name as keyof typeof builtinTypes];
 
 // Upstream registers these, but they only mean something with url building
 // or search-value handling; rejected at compile (see the module docblock).
@@ -181,15 +186,17 @@ const resolveType = (
       `Param type '${declared}' is not supported by the standalone matcher`,
     );
 
-  if (typeof declared === 'string' && urlType && builtinTypes[declared])
-    return builtinTypes[declared];
+  const declaredBuiltin =
+    typeof declared === 'string' ? builtinType(declared) : undefined;
+
+  if (urlType && declaredBuiltin) return declaredBuiltin;
 
   if (urlType) return urlType;
 
   if (!declared) return builtinTypes[isSearch ? 'query' : 'path'];
 
   if (typeof declared === 'object') return declared;
-  const named = builtinTypes[declared] as ParamType | undefined;
+  const named = builtinType(declared);
 
   if (!named)
     throw new Error(
@@ -212,7 +219,7 @@ const resolveInlineType = (
     );
 
   return (
-    builtinTypes[inline] ?? {
+    builtinType(inline) ?? {
       ...builtinTypes[isSearch ? 'query' : 'path'],
       pattern: new RegExp(inline, caseInsensitive ? 'i' : undefined),
     }
@@ -323,6 +330,7 @@ const compileParam = (
 };
 
 /** The typed value for a decoded input, or the static default when absent (core's Param.value). */
+// oxlint-disable-next-line anti-slop/no-unknown-returns -- a param value, which core types any
 const paramValue = (param: CompiledParam, input: unknown): unknown => {
   for (const { from, to } of param.replace) {
     if (from === input) {
@@ -405,6 +413,7 @@ export interface UrlMatcherCompileOptions<M = undefined> extends Pick<
   'strict' | 'caseInsensitive'
 > {
   /** Relaxation vs core: `state.params` flattened to `params` (no StateDeclaration here) — a {@link ParamDeclaration} or a shorthand static default per name. */
+  // oxlint-disable-next-line anti-slop/no-unsafe-dictionary-type -- published; a shorthand default is any value, as core's state.params
   params?: Record<string, unknown>;
   /** Passenger field: rides the compiled matcher as {@link CompiledMatcher.meta}, untouched by compilation. */
   meta?: M;
@@ -422,7 +431,7 @@ export interface UrlMatcherCompilerConfig extends Pick<
 }
 
 interface ResolvedConfig extends Required<UrlMatcherCompilerConfig> {
-  params: Record<string, unknown>;
+  params: NonNullable<UrlMatcherCompileOptions['params']>;
 }
 
 /**
@@ -747,6 +756,7 @@ export function urlMatcherFactory(config: UrlMatcherCompilerConfig = {}): {
   // Same validation as ui-router's UrlConfig.defaultSquashPolicy().
   getSquashPolicy(defaultSquashPolicy, true, false);
 
+  // oxlint-disable-next-line anti-slop/no-known-value-widening -- published return shape; naming it would add a matcher export
   return {
     compile: <M = undefined>(
       pattern: string,

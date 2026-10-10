@@ -5,17 +5,13 @@
 export function parseFeatureParams(
   search: string = window.location.search,
 ): Record<string, string> {
-  const params = new URLSearchParams(search);
-  const features: Record<string, string> = {};
   const prefix = 'feature-';
 
-  for (const [key, value] of params.entries()) {
-    if (key.startsWith(prefix)) {
-      features[key.slice(prefix.length)] = value;
-    }
-  }
-
-  return features;
+  return Object.fromEntries(
+    [...new URLSearchParams(search)].flatMap(([key, value]) =>
+      key.startsWith(prefix) ? [[key.slice(prefix.length), value]] : [],
+    ),
+  );
 }
 
 export type LocationPluginFeatureSymbol = 'pushState' | 'navigation' | 'hash';
@@ -61,10 +57,12 @@ export interface ResolvedLocationPlugin {
  * `default` at any level means "no preference", so it stops the lookup rather
  * than falling through to the level below.
  */
-function readLocationPluginPreference(): {
+interface LocationPluginPreference {
   value: string | undefined;
   source: Exclude<LocationPluginSource, 'auto'>;
-} {
+}
+
+function readLocationPluginPreference(): LocationPluginPreference {
   const flag = featureFlags.get('location-plugin') as string | undefined;
 
   if (isValidLocationPlugin(flag) || flag === LOCATION_PLUGIN_AUTO) {
@@ -233,23 +231,12 @@ export class FeatureFlags {
   }
 
   getAll(): FeatureFlagDefinitions {
-    const urlParams = parseFeatureParams();
-    const result: Record<string, unknown> = { ...FLAG_DEFAULTS };
-
-    for (const key of Object.keys(this._flags)) {
-      if (key in FLAG_DEFAULTS) {
-        result[key] = this._flags[key as keyof FeatureFlagDefinitions];
-      }
-    }
-
-    for (const key of Object.keys(urlParams)) {
-      if (key in FLAG_DEFAULTS) {
-        const flagKey = key as keyof FeatureFlagDefinitions;
-        result[key] = this._parseValue(flagKey, urlParams[key]);
-      }
-    }
-
-    return result as unknown as FeatureFlagDefinitions;
+    return {
+      'location-plugin': this.get('location-plugin'),
+      'enable-visualizer': this.get('enable-visualizer'),
+      'enable-trace': this.get('enable-trace'),
+      'enable-api-docs': this.get('enable-api-docs'),
+    };
   }
 
   isUrlOverridden(flag: keyof FeatureFlagDefinitions): boolean {

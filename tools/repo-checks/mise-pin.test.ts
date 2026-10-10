@@ -12,8 +12,8 @@ import { parse } from 'yaml';
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
 import { trackedFiles } from './cli-query.ts';
 
-const load = (file: string): unknown =>
-  parse(readFileSync(join(workspaceRoot, file), 'utf8'));
+const load = (file: string): string =>
+  readFileSync(join(workspaceRoot, file), 'utf8');
 
 // A bare CalVer release, as the action's `version` input takes it.
 const MISE_RELEASE = /^\d{4}\.\d{1,2}\.\d+$/;
@@ -22,7 +22,12 @@ const MISE_RELEASE = /^\d{4}\.\d{1,2}\.\d+$/;
 type Workflow = {
   jobs?: Record<
     string,
-    { steps?: { uses?: string; with?: Record<string, unknown> }[] }
+    {
+      steps?: {
+        uses?: string;
+        with?: Record<string, string | number | boolean | null>;
+      }[];
+    }
   >;
 };
 
@@ -33,7 +38,7 @@ const workflows = trackedFiles(
 );
 
 const steps = workflows.flatMap((workflow) =>
-  Object.entries((load(workflow) as Workflow).jobs ?? {}).flatMap(
+  Object.entries((parse(load(workflow)) as Workflow).jobs ?? {}).flatMap(
     ([job, { steps = [] }]) =>
       steps
         .filter(({ uses }) => uses?.startsWith('jdx/mise-action@'))

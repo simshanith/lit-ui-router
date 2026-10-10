@@ -30,7 +30,7 @@ import {
   UIRouter,
   UIRouterPlugin,
 } from '@uirouter/core';
-import { LitStateDeclaration } from 'lit-ui-router';
+import { DefaultResolvesType, LitStateDeclaration } from 'lit-ui-router';
 
 /** The transition a resolve or hook effect is running inside. */
 export class CurrentTransition extends Context.Tag('CurrentTransition')<
@@ -44,7 +44,7 @@ export class CurrentTransition extends Context.Tag('CurrentTransition')<
  * exits it.
  */
 export interface EffectStateDeclaration<
-  Resolves extends Record<string, unknown> = Record<string, unknown>,
+  Resolves extends Record<string, unknown> = DefaultResolvesType,
   R = never,
 > extends LitStateDeclaration<Resolves> {
   scoped?: (params: RawParams) => Effect.Effect<void, never, Scope.Scope | R>;
@@ -60,6 +60,7 @@ const BOX = Symbol('ui-router-effect/boxed-resolve');
 
 interface BoxedResolve {
   [BOX]: true;
+  // oxlint-disable-next-line anti-slop/no-unknown-returns -- resolve values are untyped (any) in core
   run: () => Promise<unknown>;
 }
 
@@ -74,6 +75,7 @@ const isBoxed = (value: unknown): value is BoxedResolve =>
  * with the closure that runs it. Everything else passes straight through, and
  * plain resolves keep behaving exactly as they did.
  */
+// oxlint-disable-next-line anti-slop/no-unknown-parameters -- resolve values are untyped (any) in core
 export const EFFECT_WAIT: CustomAsyncPolicy = (data: unknown) =>
   isBoxed(data) ? data.run() : Promise.resolve(data);
 
@@ -252,8 +254,8 @@ export class EffectPlugin<R = never, ER = never> implements UIRouterPlugin {
 
       return resolvables.map((resolvable) => {
         const inner = resolvable.resolveFn as
-          | ((...deps: unknown[]) => unknown)
-          | undefined;
+          // oxlint-disable-next-line anti-slop/no-unknown-returns -- resolve values are untyped (any) in core
+          ((...deps: unknown[]) => unknown) | undefined;
 
         if (typeof inner !== 'function') return resolvable;
 
@@ -296,6 +298,7 @@ export class EffectPlugin<R = never, ER = never> implements UIRouterPlugin {
     effect: ResolveEffect,
     transition: Transition,
     inSet: boolean,
+    // oxlint-disable-next-line anti-slop/no-unknown-returns -- resolve values are untyped (any) in core
   ): Promise<unknown> {
     const provided = Effect.provide(effect, this.contextFor(transition));
 
@@ -409,7 +412,7 @@ export class EffectPlugin<R = never, ER = never> implements UIRouterPlugin {
 
   private openScope(node: PathNode): Effect.Effect<void, never, R> {
     const declaration = node.state.self as EffectStateDeclaration<
-      Record<string, unknown>,
+      Record<string, never>,
       R
     >;
 

@@ -13,6 +13,7 @@ import type { PackageSummary } from './check-published-diff.core.ts';
 import { checkRunApiArgs, toCheckRun } from './publish-check-runs.core.ts';
 import { defaultExec } from '@tools/shared/exec.ts';
 import { ensureGh } from '../lib/gh.ts';
+import { failMain } from '../lib/fail-main.ts';
 
 async function main() {
   const dryRun = process.argv.includes('--dry-run');
@@ -57,7 +58,4 @@ async function main() {
   }
 }
 
-main().catch((error: unknown) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+main().catch(failMain);

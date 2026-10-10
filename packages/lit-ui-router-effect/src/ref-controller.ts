@@ -172,7 +172,7 @@ export class RefController<
   }
 
   private read(refs: Refs): RefValues<Refs> {
-    return refs.map((ref): unknown =>
+    return refs.map((ref: SubscriptionRef.SubscriptionRef<unknown>) =>
       this.runtime.runSync(SubscriptionRef.get(ref)),
     ) as unknown as RefValues<Refs>;
   }

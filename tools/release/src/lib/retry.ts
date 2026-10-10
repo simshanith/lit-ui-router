@@ -11,7 +11,7 @@ export type RetryOptions = {
   baseDelayMs?: number;
   /** Injectable for tests: records the backoff instead of waiting it out. */
   sleep?: (ms: number) => Promise<void>;
-  onRetry?: (error: unknown, attempt: number) => void;
+  onRetry?: (cause: unknown, attempt: number) => void;
 };
 
 function defaultSleep(ms: number): Promise<void> {

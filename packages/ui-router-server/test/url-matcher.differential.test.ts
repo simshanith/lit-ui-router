@@ -6,7 +6,7 @@ import {
   UIRouter,
   UrlMatcher as CoreUrlMatcher,
 } from '@uirouter/core';
-import type { RawParams } from '@uirouter/core';
+import type { RawParams, UrlMatcherCompileConfig } from '@uirouter/core';
 
 import {
   compare,
@@ -25,7 +25,7 @@ import type { UrlMatcherCompileOptions } from '../src/url-matcher.ts';
 // (params/param.ts) and throws without one. The standalone matcher is the
 // control group — it never touches an injector.
 services.$injector = {
-  invoke: (fn: () => unknown) => fn(),
+  invoke: <T>(fn: () => T): T => fn(),
 } as typeof services.$injector;
 
 // eslint-disable-next-line typescript/no-deprecated -- the control group needs core's factory itself, not the urlService facade
@@ -37,7 +37,7 @@ const coreCompile = (
   pattern: string,
   options: UrlMatcherCompileOptions = {},
 ) => {
-  const config: Record<string, unknown> = {};
+  const config: UrlMatcherCompileConfig = {};
 
   if (options.strict !== undefined) config.strict = options.strict;
 
@@ -187,6 +187,12 @@ const featureCases: DifferentialCase[] = [
     urls: ['/n', '/n/', '/n/7', '/n/x'],
   },
   { pattern: '/s/{v:string}', urls: ['/s/abc', '/s/a/b'] },
+  // A declared built-in type replaces an inline string type
+  {
+    pattern: '/s/{v:string}',
+    options: { params: { v: { type: 'int' } } },
+    urls: ['/s/7', '/s/abc'],
+  },
   // Inline regexps
   {
     pattern: '/hex/{id:[0-9a-fA-F]{1,8}}',

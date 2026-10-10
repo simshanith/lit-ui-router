@@ -4,6 +4,7 @@
 // the publish workflow's manifest strip, running `npm diff`) lives in
 // check-published-diff.ts.
 
+import type { Json } from '@tools/bootstrap/types.ts';
 import {
   assertKnownChannel,
   prereleaseChannel,
@@ -90,8 +91,8 @@ export function hasFileSetChange(diffOutput: string): boolean {
  * IO fails safe to ship-affecting.
  */
 export function manifestDriftFields(
-  a: Record<string, unknown>,
-  b: Record<string, unknown>,
+  a: Readonly<Record<string, Json>>,
+  b: Readonly<Record<string, Json>>,
 ): string[] {
   const keys = new Set([...Object.keys(a), ...Object.keys(b)]);
 
@@ -119,11 +120,14 @@ export function isManifestDriftInert(options: {
   );
 }
 
-/** Split a diff's file list into ship-affecting and ship-inert. */
-export function classifyFiles(files: string[]): {
+/** A diff's file list split by whether the change reaches consumers. */
+export interface ClassifiedFiles {
   shipAffecting: string[];
   shipInert: string[];
-} {
+}
+
+/** Split a diff's file list into ship-affecting and ship-inert. */
+export function classifyFiles(files: string[]): ClassifiedFiles {
   const shipAffecting: string[] = [];
   const shipInert: string[] = [];
 
@@ -138,11 +142,11 @@ export function classifyFiles(files: string[]): {
  * Missing or unparsable manifests leave it ship-affecting (fail safe).
  */
 export function reclassifyManifest(
-  files: { shipAffecting: string[]; shipInert: string[] },
+  files: ClassifiedFiles,
   diff: string,
-  localManifest: Record<string, unknown> | undefined,
-  publishedManifest: Record<string, unknown> | undefined,
-): { shipAffecting: string[]; shipInert: string[] } {
+  localManifest: Readonly<Record<string, Json>> | undefined,
+  publishedManifest: Readonly<Record<string, Json>> | undefined,
+): ClassifiedFiles {
   if (
     !files.shipAffecting.includes('package.json') ||
     localManifest === undefined ||

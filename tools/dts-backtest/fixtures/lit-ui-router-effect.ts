@@ -10,7 +10,7 @@ import {
   type RouterRefControllerOptions,
 } from 'lit-ui-router-effect';
 
-const structuralEquals = (a: unknown, b: unknown) =>
+const structuralEquals = <T>(a: T, b: T): boolean =>
   JSON.stringify(a) === JSON.stringify(b);
 
 const structural: RefControllerOptions<string | undefined> = {

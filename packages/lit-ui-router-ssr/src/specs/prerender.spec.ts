@@ -15,6 +15,7 @@ import { installServerLocation } from 'ui-router-server/location';
 import packageJson from '../../package.json' with { type: 'json' };
 
 import { prerender } from '../prerender.js';
+import type { HydrationSignature } from '../client.js';
 import type { FileWriter, RedirectLine } from '../prerender.js';
 import { settle } from '../settle.js';
 import { signatureText, withoutSignature } from './markup.js';
@@ -40,10 +41,10 @@ const appMount: MountConfig = {
   config: { strict: false },
 };
 
-const mounts: Record<string, MountConfig> = {
+const mounts = {
   '/': rootMount,
   '/app': appMount,
-};
+} satisfies Record<string, MountConfig>;
 
 const sheetRouter = (): UIRouterLit => {
   const router = new UIRouterLit();
@@ -55,10 +56,12 @@ const sheetRouter = (): UIRouterLit => {
 };
 
 /** An in-memory {@link FileWriter} over a Map, plus the map it fills. */
-const memoryWriter = (): { files: Map<string, string>; write: FileWriter } => {
+const memoryWriter = () => {
   const files = new Map<string, string>();
 
-  return { files, write: (file, body) => void files.set(file, body) };
+  const write: FileWriter = (file, body) => void files.set(file, body);
+
+  return { files, write };
 };
 
 const run = async (
@@ -83,7 +86,8 @@ const run = async (
 };
 
 /** The signature block a page opens on, parsed. */
-const signatureIn = (page: string): unknown => JSON.parse(signatureText(page));
+const signatureIn = (page: string): HydrationSignature =>
+  JSON.parse(signatureText(page));
 
 // --- verdict → artefact --------------------------------------------------
 
@@ -577,7 +581,11 @@ describe('the hydration signature', () => {
   });
 
   it('keeps the url params only, so a config param that cannot serialise stays out', async () => {
-    const cyclic: Record<string, unknown> = {};
+    interface Cyclic {
+      self?: Cyclic;
+    }
+
+    const cyclic: Cyclic = {};
     cyclic.self = cyclic;
     const router = sheetRouter();
     router.stateRegistry.register({

@@ -63,10 +63,9 @@ describe('serverRouterPlugin', () => {
 
     await new Promise<void>((resolve) => {
       const res = {
-        writeHead: (s: number, headers?: unknown) => {
+        writeHead: (s: number, headers?: { Location?: string }) => {
           status = s;
-          location =
-            (headers as { Location?: string } | undefined)?.Location ?? '';
+          location = headers?.Location ?? '';
 
           return res;
         },

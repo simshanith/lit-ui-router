@@ -15,6 +15,7 @@ import {
   isString,
   unnestR,
   Param,
+  type RawParams,
   filter,
   ViewContext,
   StateObject,
@@ -652,11 +653,9 @@ export class UiView extends LitElement {
       )
         return;
 
-      const toParams: { [paramName: string]: unknown } =
-        $transition$.params('to');
+      const toParams: RawParams = $transition$.params('to');
 
-      const fromParams: { [paramName: string]: unknown } =
-        $transition$.params('from');
+      const fromParams: RawParams = $transition$.params('from');
 
       const getNodeSchema = (node: PathNode) => node.paramSchema;
 

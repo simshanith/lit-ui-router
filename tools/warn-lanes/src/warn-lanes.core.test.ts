@@ -206,8 +206,8 @@ describe('the marker', () => {
   });
 
   it('rejects a payload missing any field the report reads', () => {
-    for (const field of Object.keys(state)) {
-      const partial: Record<string, unknown> = { ...state };
+    for (const field of Object.keys(state) as (keyof WarnLaneState)[]) {
+      const partial: Partial<WarnLaneState> = { ...state };
       delete partial[field];
       assert.equal(
         parseWarnLaneMarker(`warn-lane: ${JSON.stringify(partial)}`),

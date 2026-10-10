@@ -42,6 +42,7 @@ export function wantsMainGraph(branch: string): boolean {
  * "no PRs" is itself a run-triggering answer, so a parse failure that looked
  * like an empty list would be indistinguishable from the real thing.
  */
+// oxlint-disable-next-line anti-slop/no-unknown-parameters -- the parser over JSON.parse output
 export function parseOpenPrs(raw: unknown): OpenPr[] {
   if (!Array.isArray(raw)) {
     throw new Error(`expected a JSON array of PRs, got ${typeof raw}`);

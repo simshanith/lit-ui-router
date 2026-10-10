@@ -10,16 +10,17 @@ import { execFileSync } from 'node:child_process';
 import { join } from 'node:path';
 
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
+import type { Json } from '@tools/bootstrap/types.ts';
 
 /** `taplo get` on a repo-relative TOML file, parsed. */
-export const taploGet = (file: string, pattern: string): unknown =>
+export const taploGet = (file: string, pattern: string): Json =>
   JSON.parse(
     execFileSync(
       'taplo',
       ['get', '-f', join(workspaceRoot, file), '-o', 'json', pattern],
       { encoding: 'utf8' },
     ),
-  );
+  ) as Json;
 
 /** Repo-relative paths of the tracked files matching any of the pathspecs. */
 export const trackedFiles = (...patterns: string[]): string[] =>

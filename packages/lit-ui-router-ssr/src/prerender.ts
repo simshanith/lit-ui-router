@@ -193,7 +193,10 @@ const dirOf = (file: string): string => {
 
 // Typed structurally so src never pulls in @types/node.
 interface NodeFsPromises {
-  mkdir(path: string, options: { recursive: boolean }): Promise<unknown>;
+  mkdir(
+    path: string,
+    options: { recursive: boolean },
+  ): Promise<string | undefined>;
   writeFile(path: string, data: string, encoding: string): Promise<void>;
 }
 
@@ -256,7 +259,7 @@ const rootedStack = (root: EventTarget): EventTarget[] => {
 interface WrittenSignature {
   readonly version: string;
   readonly state: string;
-  readonly params: Readonly<Record<string, unknown>>;
+  readonly params: Readonly<Record<string, string | string[]>>;
 }
 
 /** The signature of the page `router` currently stands on; config params never reach the url, so they stay out. */

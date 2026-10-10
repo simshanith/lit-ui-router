@@ -31,6 +31,7 @@ import { join } from 'node:path';
 import { parseArgs } from 'node:util';
 
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
+import type { Json } from '@tools/bootstrap/types.ts';
 
 import {
   type DesiredWorker,
@@ -66,7 +67,7 @@ const API_BASE = 'https://api.cloudflare.com/client/v4/accounts';
 type CloudflareEnvelope = {
   success?: boolean;
   errors?: { code?: number; message?: string }[];
-  result?: unknown;
+  result?: Json;
 };
 
 // The token itself must never reach stdout/stderr — errors carry only the
@@ -75,12 +76,10 @@ async function cf(
   token: string,
   path: string,
   init?: { method: 'PATCH'; body: unknown },
-): Promise<unknown> {
-  const headers: Record<string, string> = {
-    authorization: `Bearer ${token}`,
-  };
+): Promise<Json | undefined> {
+  const headers = new Headers({ authorization: `Bearer ${token}` });
 
-  if (init) headers['content-type'] = 'application/json';
+  if (init) headers.set('content-type', 'application/json');
 
   const response = await fetch(`${API_BASE}${path}`, {
     method: init?.method ?? 'GET',
@@ -246,7 +245,7 @@ async function main() {
   process.exitCode = 1;
 }
 
-main().catch((error: unknown) => {
-  console.error(error instanceof Error ? error.message : error);
+main().catch((cause: unknown) => {
+  console.error(cause instanceof Error ? cause.message : cause);
   process.exitCode = 2;
 });

@@ -21,7 +21,7 @@ function seedLocationPlugin(win: Cypress.AUTWindow) {
 
   const flags = JSON.parse(
     win.sessionStorage.getItem('featureFlags') ?? '{}',
-  ) as Record<string, unknown>;
+  ) as { 'location-plugin'?: string };
 
   flags['location-plugin'] = LOCATION_PLUGIN;
   win.sessionStorage.setItem('featureFlags', JSON.stringify(flags));

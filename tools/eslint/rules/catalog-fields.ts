@@ -19,7 +19,8 @@ interface JSONProperty {
 }
 
 interface JSONNode {
-  value?: unknown;
+  // a literal's value; objects and arrays carry none
+  value?: string | number | boolean | null;
   properties?: JSONProperty[];
 }
 
@@ -36,7 +37,7 @@ const findProperty = (
 const isPrivate = (root: JSONNode | undefined): boolean =>
   findProperty(root, 'private')?.value.value === true;
 
-const catalogName = (spec: unknown): string | undefined =>
+const catalogName = (spec: JSONNode['value']): string | undefined =>
   typeof spec === 'string' ? /^catalog:(.*)$/.exec(spec)?.[1] : undefined;
 
 const messageFor = (
