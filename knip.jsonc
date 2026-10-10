@@ -57,6 +57,10 @@
         "lit-ui-router-floor",
       ],
     },
+    "packages/lit-ui-router-signals": {
+      // vitest alias target for the lit 2 compat lane
+      "ignoreDependencies": ["lit-2"],
+    },
     "packages/lit-ui-router-ssr": {
       "ignoreDependencies": [
         // imported by the emitted dist, not by src

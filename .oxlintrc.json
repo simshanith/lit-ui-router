@@ -252,6 +252,7 @@
         "packages/lit-ui-router/src/**/*.ts",
         "packages/lit-ui-router-effect/src/**/*.ts",
         "packages/lit-ui-router-mobx/src/**/*.ts",
+        "packages/lit-ui-router-signals/src/**/*.ts",
         "packages/lit-ui-router-ssr/src/**/*.ts"
       ],
       "rules": {
@@ -487,6 +488,37 @@
                 "name": "@uirouter/core",
                 "allowTypeImports": true,
                 "message": "matcher tier stays core-free — a static @uirouter/core import defeats the lazy simulate boundary (the `bundleProbe.free` claims under check:bundle enforce the bundle); use `import type` or a dynamic import()."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["packages/ui-router-signals/src/**/*.ts"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "lit",
+                "message": "ui-router-signals is framework-agnostic; Lit bindings live in lit-ui-router-signals."
+              },
+              {
+                "name": "lit-ui-router",
+                "message": "ui-router-signals is framework-agnostic; Lit bindings live in lit-ui-router-signals."
+              }
+            ],
+            "patterns": [
+              {
+                "group": [
+                  "lit/**",
+                  "lit-ui-router/**",
+                  "@lit/**",
+                  "@lit-labs/**"
+                ],
+                "message": "ui-router-signals is framework-agnostic; Lit bindings live in lit-ui-router-signals."
               }
             ]
           }

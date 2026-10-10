@@ -10,7 +10,7 @@ import {
 } from '@uirouter/core';
 
 /**
- * The router's current state, as a value a `SubscriptionRef` can hold.
+ * The router's current state as one immutable value, for a reactive cell to hold.
  *
  * Taken once per successful transition; every field, `includes()` included,
  * answers for that moment. A selector asking during a later transition gets
