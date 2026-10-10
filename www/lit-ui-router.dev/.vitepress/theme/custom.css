@@ -165,22 +165,27 @@ html.chrome.dark .VPHero .VPImage {
 }
 
 @media (min-width: 960px) {
+    /* The feature cards' three columns and 1rem gutter: text spans two, the logo fills the third. */
+    .VPHero.has-image .container {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      column-gap: 1rem;
+    }
+
     .VPHero.has-image .main.main {
-      max-width: 640px;
+      grid-column: span 2;
+      inline-size: auto;
+      max-inline-size: none;
     }
 
-    /* Beside the text, the logo's track sits at the column end; the glow overhangs it. */
-    .VPHero.has-image .image {
-      min-inline-size: 0;
-    }
-
-    .VPHero.has-image .image-container {
-      grid-template-columns: min(100%, var(--hero-logo-size));
-      justify-content: end;
+    /* The glow overhangs the logo without adding size. */
+    .VPHero.has-image .image-src {
+      inline-size: 100%;
     }
 
     .VPHero.has-image .image-bg {
-      inline-size: calc(var(--hero-logo-size) * 1.25);
+      inline-size: 125%;
+      margin: -12.5%;
     }
 }
 
