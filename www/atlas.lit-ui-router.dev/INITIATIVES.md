@@ -687,12 +687,12 @@ sitting); order is dependency order.
   `lint & probe fleet` doubled the fleet to 136 units and hid sheet 3's PR gates 9 and 10, while
   `orphans 0` read true throughout. Before widening a broad rule, ask whether the member is a new
   structure, and look at the plate it stands on.
-- A DATE-ONLY SINCE IS A WALL-CLOCK WINDOW. `census-steam.mjs` passes a date-only `since`
-  ("2026-07-12") to `git log`, and git reads a bare date at the current time of day, so the window's
-  lower edge moves with the hour the probe runs. Between the fourteenth and the fifteenth a3fc4919
-  (2026-07-12 13:08 PDT) dropped out as 76ccefc0 came in, and the count read 586 both times while
-  `git rev-list` from midnight reads 585 → 586. The probe is unchanged; a window edge is a date and
-  a time, anchored at T00:00.
+- A DATE-ONLY SINCE IS A WALL-CLOCK WINDOW. git reads a bare date ("2026-07-12") at the current
+  time of day, so a probe that passes one to `git log` has a lower edge that moves with the hour it
+  runs and the host's zone. Between the fourteenth and the fifteenth a3fc4919 (2026-07-12 13:08 PDT)
+  dropped out of `census-steam.mjs`'s window as 76ccefc0 came in, and the count read 586 both times.
+  The probe passes the edge as an instant, `<date>T00:00:00Z`, UTC midnight of the date 90 days
+  before the ref's commit, and the same ref counts the same on any machine at any hour: 596.
 - A plate's two dates are read from two clocks and can disagree by a day. `commitDate` is
   `git show -s --format=%cI`, the committer's LOCAL time, and `chrome.mjs::DATE` takes its first
   ten characters; `generatedAtTime` is a UTC ISO string, and sheet 7's `BASIS` line takes ITS

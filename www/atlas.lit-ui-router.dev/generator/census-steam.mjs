@@ -13,7 +13,8 @@ const fileToMember = new Map(files.map((f) => [f.path, f.member]));
 
 const until = snap.commitDate.slice(0, 10);
 const since = new Date(Date.parse(snap.commitDate) - 90 * 86400000).toISOString().slice(0, 10);
-const log = historyLog(snap.sha, { since });
+// git reads a bare date at the wall-clock hour; the edge is anchored at UTC midnight.
+const log = historyLog(snap.sha, { since: `${since}T00:00:00Z` });
 
 const commits = new Map(members.map((m) => [m.dir, new Set()]));
 for (const c of log)
