@@ -1349,6 +1349,9 @@ importers:
       '@uirouter/core':
         specifier: 'catalog:'
         version: 6.1.2
+      '@vitest/coverage-v8':
+        specifier: 'catalog:'
+        version: 5.0.3(@vitest/browser@5.0.3)(vitest@5.0.3)
       oxfmt:
         specifier: 'catalog:'
         version: 0.72.0
