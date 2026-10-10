@@ -60,7 +60,7 @@ export class Login extends LitElement {
   render() {
     return html` <div class="container">
       <div class="col-md-6 col-md-offset-3 col-sm-8 col-sm-offset-2">
-        <h3>Log In</h3>
+        <h1 class="h3">Log In</h1>
         <p>
           (This login screen is for demonstration only... just pick a username,
           enter 'password' and click <b>"Log in"</b>)
@@ -85,7 +85,7 @@ export class Login extends LitElement {
               <option value="" disabled selected></option>
               ${this.usernames.map((option: string) => html`<option value=${option}>${option}</option>`)}
             </select>
-            ${!this.username ? html`<label for="username"><i style="display: block; position: relative; inset-block-end: 1.8em; margin-inline-start: 10em; height: 0" class="fa fa-arrow-left bounce-horizontal"> Choose </i></label>` : null}
+            ${!this.username ? html`<i aria-hidden="true" style="display: block; position: relative; inset-block-end: 1.8em; margin-inline-start: 10em; height: 0" class="fa fa-arrow-left bounce-horizontal"> Choose </i>` : null}
           </div>
           <br />
           <div>
@@ -94,6 +94,7 @@ export class Login extends LitElement {
               class="form-control"
               type="password"
               name="password"
+              id="password"
               value=${this.password}
               @change=${(e: Event) => (this.password = (e.target as HTMLInputElement).value)}
             />

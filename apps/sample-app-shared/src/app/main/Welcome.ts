@@ -3,7 +3,7 @@ import { uiSref } from 'lit-ui-router';
 
 export default () =>
   html`<div class="container-fluid">
-    <h3>UI-Router Sample App</h3>
+    <h1 class="h3">UI-Router Sample App</h1>
     <p>Welcome to the sample app!</p>
     <p>
       This is a demonstration app intended to highlight some patterns that can
@@ -11,7 +11,7 @@ export default () =>
       cohesive, robust apps. Additionally, this app uses state-vis to show the
       tree of states, and a transition log visualizer.
     </p>
-    <h4>App Overview</h4>
+    <h2 class="h4">App Overview</h2>
     <p>
       First, start exploring the application's functionality at a high level by
       activating one of the three submodules: Messages, Contacts, or
@@ -30,7 +30,7 @@ export default () =>
         <i class="fa fa-cogs"></i><span>Preferences</span>
       </a>
     </div>
-    <h4>Patterns and Recipes</h4>
+    <h2 class="h4">Patterns and Recipes</h2>
     <ul>
       <li>Require Authentication</li>
       <li>Previous State</li>

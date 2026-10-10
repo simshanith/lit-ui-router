@@ -27,6 +27,7 @@ export class Preferences extends LitElement {
   };
   render() {
     return html`<div>
+      <h1 class="sr-only">Preferences</h1>
       <div>
         <button class="btn btn-primary" @click=${this.handleResetData}>
           <i class="fa fa-recycle"></i> <span>Reset All Data</span>
@@ -37,6 +38,7 @@ export class Preferences extends LitElement {
         <input
           type="text"
           name="restDelay"
+          id="restDelay"
           value=${this.restDelay}
           @change=${this.handleRestDelayChange}
         />
