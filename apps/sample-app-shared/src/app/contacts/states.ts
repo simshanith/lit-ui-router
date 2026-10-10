@@ -74,7 +74,7 @@ const viewContactState = {
         ) as Promise<Contact>,
     },
   ],
-  data: { title: contactName },
+  data: { title: contactName, keepScroll: true },
   component:
     ContactView satisfies LitViewDeclarationElement<ContactViewResolves>,
 } satisfies LitStateDeclaration<ContactViewResolves>;
