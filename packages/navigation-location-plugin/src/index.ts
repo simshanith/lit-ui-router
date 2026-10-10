@@ -257,7 +257,7 @@ export class NavigationLocationService extends BaseLocationServices {
 
       if (!event.signal.aborted) {
         await handler?.();
-        // Firefox, and WebKit in an iframe, restore scroll against the last layout, so the restored view must be laid out.
+        // Firefox, and WebKit in an iframe, restore scroll against the last layout, so the restored view must be laid out (#1193, #1194).
         void globalRoot.document.documentElement.scrollHeight;
       }
     };
