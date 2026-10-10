@@ -236,7 +236,7 @@ for (const m of members) {
       '--experimental-test-coverage',
       '--test-reporter=spec', '--test-reporter-destination=stdout',
       '--test-reporter=lcov', `--test-reporter-destination=${file(label)}`,
-      ...toks.slice(i + 1),
+      ...toks.slice(i + 1).filter((t) => !t.startsWith('--test-reporter')),
     ];
     recipe = `node --test --experimental-test-coverage (${cmd})`;
     const r = run(label, toks[0], args, { cwd: join(basis.dir, m.dir), env });

@@ -22,6 +22,13 @@ const row = (dir) => {
   if (!r) throw new Error(`sheet 7: member ${dir} is missing from www/atlas.lit-ui-router.dev/data/census-city.json`);
   return r;
 };
+// road G's count: the members whose ci tasks wait on @tools/shared's, read off the plate's own graph
+const CIG = JSON.parse(readFileSync(new URL('../data/census-plate.json', import.meta.url), 'utf8'));
+const SHARED_IMP = [...new Set(CIG.graphEdges
+  .filter(([d, t]) => CIG.graphNodes[d].pkg === '@tools/shared' && CIG.graphNodes[t].pkg !== '@tools/shared')
+  .map(([, t]) => CIG.graphNodes[t].pkg))];
+const SHARED_TOOLS = SHARED_IMP.filter((p) => p.startsWith('@tools/')).length;
+if (!SHARED_IMP.includes('@tools/release')) throw new Error('sheet 7: road G runs to @tools/release, which no longer depends on @tools/shared');
 if (row('tools/dts-backtest').srcFiles !== 1) throw new Error('sheet 7: №14\'s note says one file, the plate says otherwise');
 const ratio = (dir) => (row(dir).specSloc / row(dir).srcSloc).toFixed(1);
 const BASIS = `counted at ${PLATE.ref} @ ${PLATE.sha} (${PLATE.generatedAtTime.slice(0, 10)})`;
@@ -55,9 +62,9 @@ const TIER_TEXT = {
 export const PLACED = [
   // --- packages/ — the product -------------------------------------------------
   [1,  'lit-ui-router',            'packages/lit-ui-router',             'pkg',  'line',     0,  20, `the subject of this set · annex ${ratio('packages/lit-ui-router')}× the source`],
-  // moved east off 200, 222 and 226, each time lit-ui-router's annex grew into its
-  // west wall: the annex reaches 233.9 at this ref, so 240 is the first lot with air
-  [2,  'ui-router-server',         'packages/ui-router-server',          'pkg',  'line',   240,  20, `the server adapter · annex ${ratio('packages/ui-router-server')}×`],
+  // moved east off 200, 222, 226 and 240, each time lit-ui-router's annex grew into its
+  // west wall: the annex reaches 241.5 at this ref, so 250 is the first lot with air
+  [2,  'ui-router-server',         'packages/ui-router-server',          'pkg',  'line',   250,  20, `the server adapter · annex ${ratio('packages/ui-router-server')}×`],
   // dropped south of the 130 row: the flagship's annex reaches 132.0 at this ref
   [3,  'lit-ui-router-mobx',       'packages/lit-ui-router-mobx',        'pkg',  'line',   170, 146, `the mobx companion · annex ${ratio('packages/lit-ui-router-mobx')}×`],
   [4,  'navigation-location-plugin','packages/navigation-location-plugin','pkg', 'line',   260, 130, `the location seat, core's pushStateLocation swapped out · annex ${ratio('packages/navigation-location-plugin')}×`],
@@ -72,13 +79,14 @@ export const PLACED = [
   [11, 'examples',                 'examples',                           'site', 'line',   660, 430, 'stackblitz-ready copies, own lockfiles'],
   // --- tools/ — the instrument yard --------------------------------------------
   // south-west off 20, 430, where the 150 px tower stands in front of dts-backtest,
-  // eslint-ts-parser and lit-test-env on the 350 row; from here it hides none of them
-  [12, '@tools/release',           'tools/release',                      'tool', 'halt',     0, 455, 'hosts published-diff — the one publish halt'],
+  // eslint-ts-parser and lit-test-env on the 350 row; at y 452 it still hides none of them
+  [12, '@tools/release',           'tools/release',                      'tool', 'halt',     0, 452, 'hosts published-diff — the one publish halt'],
   [13, '@tools/typedoc-plugin',    'tools/typedoc-plugin-lit-ui-router', 'tool', 'report', 230, 430, 'builds the API pages, gates nothing'],
   [14, '@tools/dts-backtest',      'tools/dts-backtest',                 'tool', 'pr',       8, 350, `one ${row('tools/dts-backtest').srcSloc}-line run.ts holds the TS 5.0 floor`],
-  [15, '@tools/build_and_test',    'tools/build_and_test',               'tool', 'report', 300, 430, 'the CI graph helper — and its error summary'],
-  // west off 20 with the release tower, so its badge rides clear of the tower's face
-  [16, '@tools/shared',            'tools/shared',                       'tool', 'report', -16, 550, 'the library under the instruments'],
+  // west off 300 when its annex grew into repo-checks and embed-heights at the 9e656ab3 refresh
+  [15, '@tools/build_and_test',   'tools/build_and_test',               'tool', 'report', 270, 430, 'the CI graph helper — and its error summary'],
+  // south of workers-builds, so road G runs west and then north between 40 and compat-guards
+  [16, '@tools/shared',            'tools/shared',                       'tool', 'report', 200, 600, 'the library under the instruments'],
   [17, '@tools/workers-builds',    'tools/workers-builds',               'tool', 'late',   220, 550, 'the docs deploy watch'],
   [18, '@tools/bundle-probe',      'tools/bundle-probe',                 'tool', 'report', 330, 550, 'size probe, advisory'],
   [19, '@tools/compat-guards',     'tools/compat-guards',                'tool', 'pr',     130, 550, 'the lit 2 / mobx 6 / peer-floor lanes'],
@@ -90,8 +98,9 @@ export const PLACED = [
   [24, '@tools/vue-check',         'tools/vue-check',                    'tool', 'report', 370, 350, 'vue-tsc over the docs components'],
   // off the 350 row's east end, where repo-checks' roof and badge stand over it
   [25, '@tools/lcov-rebase',       'tools/lcov-rebase',                  'tool', 'report', 180, 395, 'coverage path rewriting'],
-  [26, '@tools/happy-dom',         'tools/happy-dom',                    'tool', 'pr',     125, 350, 'the node-side DOM the unit suites run in'],
-  [27, '@tools/wintercg-globals',  'tools/wintercg-globals',             'tool', 'off',    185, 350, 'ambient types only — nothing to mass'],
+  // east off 125 when lit-test-env took a spec annex at the 9e656ab3 refresh
+  [26, '@tools/happy-dom',         'tools/happy-dom',                    'tool', 'pr',     163, 350, 'the node-side DOM the unit suites run in'],
+  [27, '@tools/wintercg-globals',  'tools/wintercg-globals',             'tool', 'off',    208, 350,'ambient types only — nothing to mass'],
   // --- born 2026-08-31 (#639) and 2026-08-16 (#557) --------------------------------
   // east off 380, then 388, so bundle-probe's annex (to 383.7) keeps paper before its roof
   [28, '@tools/lint-elements',     'tools/lint-elements',                'tool', 'pr',     394, 550, 'the shared custom-element lint lane (#655)'],
@@ -119,6 +128,8 @@ export const PLACED = [
   // --- born 2026-10-01 (#1056) -----------------------------------------------------
   // east off 560 when repo-checks' annex grew to 562.2 at the 4dc0cbb7 refresh
   [39, '@tools/crap',              'tools/crap',                         'tool', 'report', 570, 430, 'CRAP hotspots from coverage — reports, gates nothing'],
+  // --- born 2026-10-09 (#1143): the yard's south-west corner, in front of the tower ---
+  [40, '@tools/oxlint-anti-slop',  'tools/oxlint-anti-slop',             'tool', 'report',   0, 540, 'the vendored anti-slop rules every oxlint lane loads'],
 ];
 
 // [n, name, district, tier, x, y, srcFiles, srcSloc, specFiles, specSloc, note]
@@ -134,6 +145,14 @@ const dsum = (d) => M.filter((r) => r[2] === d)
   .reduce((a, r) => ({ n: a.n + 1, f: a.f + r[6], sl: a.sl + r[7] }), { n: 0, f: 0, sl: 0 });
 const DP = dsum('pkg'), DA = dsum('app'), DS = dsum('site'), DT = dsum('tool');
 const PUBLISHED_PKGS = M.filter((r) => r[2] === 'pkg').length;
+// the broadest-block claims, ranked from the plate: examples first, then whoever follows
+const SRC_RANK = M.slice().sort((a, b) => b[7] - a[7]);
+if (SRC_RANK[0][0] !== 11) throw new Error('sheet 7: examples is no longer the broadest source block — the notes say it is');
+const ORDW = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth'];
+const SAS_RANK = ORDW[SRC_RANK.findIndex((r) => r[0] === 5)];
+const OVER_EX = M.filter((r) => r[9] > SRC_RANK[0][7]).map((r) => r[1]);
+const OVER_SAS_SRC = SRC_RANK.filter((r) => r[0] !== 5 && r[7] > M.find((q) => q[0] === 5)[7]).map((r) => r[1]);
+const OVER_SAS_ANNEX = M.filter((r) => r[9] > M.find((q) => q[0] === 5)[7]).length;
 const inTier = (t) => M.filter((r) => r[3] === t).map((r) => r[0]).join(' · ');
 // the smallest structure that can stop a pull request — the node-side DOM harness
 const HARNESS = M.find((r) => r[1] === '@tools/happy-dom');
@@ -241,14 +260,14 @@ const roads = [
   // 6 · the harness under the annexes: every vitest package devDepends on
   //    @tools/lit-test-env and @tools/happy-dom (turbo test inputs vitest.setup.ts).
   road([[91, g(23).y], [91, 335], [104, 335]], { ...TESTS, t0: 9, t1: 0, mk: null }),
-  road([[131, g(26).y], [131, 335], [106, 335]], { ...TESTS, t0: 9, t1: 0, mk: null }),
+  road([[g(26).x + 6, g(26).y], [g(26).x + 6, 335], [106, 335]], { ...TESTS, t0: 9, t1: 0, mk: null }),
   road([[105, 335], [105, g(1).ay + g(1).sa]], { ...TESTS, t0: 0, to: 1, toAnnex: true }),
   // 7 · the docs build is what cypress drives: sample-app-lit-e2e depends on docs;
   //    turbo e2e dependsOn ^build, with @www/lit-ui-router.dev#wrangler:dev.
   road([[g(10).x, 352], [606, 352], [606, g(9).y2]], { ...TESTS, t0: 9, to: 9, toAnnex: true }),
-  // 8 · @tools/shared is imported by five instruments; the road to the largest,
-  //    ending where the tower's west edge takes it out of sight.
-  road([[g(16).x - 6, 563], [-106, 563], [-106, 475], [g(12).x, 475]], { ...LIB, t0: 9, t1: 61 }),
+  // 8 · @tools/shared has SHARED_IMP.length dependents; the road to the largest,
+  //    run north between member 40 and compat-guards into the tower's annex.
+  road([[g(16).x - 6, g(16).y + 15], [115, g(16).y + 15], [115, g(12).ay + g(12).sa]], { ...LIB, t0: 9, to: 12, toAnnex: true }),
 ];
 
 // ---- districts, derived from what was actually placed ----------------------------
@@ -347,7 +366,7 @@ ${roads.join('\n')}
 ${bodies}
 
 <!-- road tags: each keys a row of the ROAD REGISTER below -->
-${[['A', 900, 300], ['B', 566, 366], ['C', 470, 195], ['D', 522, 262], ['E', 902, 540], ['F', 879, 498], ['G', 62, 330]]
+${[['A', 900, 300], ['B', 566, 366], ['C', 470, 195], ['D', 522, 262], ['E', 902, 540], ['F', 879, 498], ['G', 196, 470]]
   .map(([k, x, y]) => txt(x, y, k, 'lbl')).join('\n')}
 
 <!-- district lettering, off the geometry, leaders where the gap is wide -->
@@ -359,7 +378,7 @@ ${txt(824, 135, 'every one carries a bigger annex than itself', 'lblf')}
 
 ${txt(1540, 300, `sample-app-shared — ${g(5).sf}f · ${fmt(g(5).sl)} sloc`, 'lblb', 'end')}
 ${txt(1540, 313, 'the proving ground’s broadest block —', 'lblf', 'end')}
-${txt(1540, 325, 'outbuilt only by examples and two spec annexes', 'lblf', 'end')}
+${txt(1540, 325, `outbuilt by ${WORDN[OVER_SAS_SRC.length]} source blocks and ${WORDN[OVER_SAS_ANNEX]} spec annexes`, 'lblf', 'end')}
 <line x1="1258" y1="318" x2="1132" y2="340" class="skf"/>
 
 ${txt(1540, 380, 'apps/ — THE PROVING GROUND', 'lblb', 'end')}
@@ -386,7 +405,7 @@ ${txt(60, 156, 'the biggest thing this district ever built is a test', 'lblf')}
 ${txt(20, 502, `@tools/release — ${g(12).sf}f · ${fmt(g(12).sl)} sloc`, 'lblr')}
 ${txt(20, 515, 'the tallest block on the sheet,', 'lblf')}
 ${txt(20, 527, 'and the only publish halt', 'lblf')}
-<line x1="160" y1="496" x2="176" y2="365" class="skf"/>
+<line x1="178" y1="497" x2="252" y2="380" class="skf"/>
 
 <!-- road register: every road on this sheet, and the edge in the repo it stands for -->
 <rect x="40" y="646" width="700" height="162" class="skf fnone"/>
@@ -399,7 +418,7 @@ ${[
   ['D', 'tests exercise', '@tools/lit-test-env + @tools/happy-dom → the annex · devDep of lit-ui-router + -mobx'],
   ['E', 'tests exercise', 'sample-app-lit-e2e → docs · workspace dep · e2e dependsOn ^build, with @www/lit-ui-router.dev#wrangler:dev'],
   ['F', 'typecheck reads', 'lit-ui-router src AND specs → docs · tsconfig include src/** · turbo dependsOn ^build:types'],
-  ['G', 'library under', '@tools/shared → @tools/release · one of eight importers; only this road is drawn'],
+  ['G', 'library under', `@tools/shared → @tools/release · one of ${SHARED_IMP.length} dependents; only this road is drawn`],
 ].map(([k, cls, ev], i) => {
   const y = 692 + i * 15;
   return `${txt(58, y, k, 'lbl')}${txt(78, y, cls, 'lbls')}${txt(190, y, ev, 'lblf')}`;
@@ -420,9 +439,9 @@ export const sheet7 = {
   notes: `
 <p><strong>Method — one basis, two series.</strong> Every count on this sheet is read at build time from the checked-in plate <code>www/atlas.lit-ui-router.dev/data/census-city.json</code>, ${BASIS}: <code>.ts/.tsx/.js/.jsx/.mjs</code> under each member's source directory, excluding <code>*.d.ts</code>, <code>*.test-d.ts</code>, fixtures, <code>dist/</code> and <code>node_modules/</code>; <em>sloc</em> is <code>scc</code>'s <code>Code</code> count — string-aware, so the interior of a template literal counts as code rather than as one line. Sheet 3 throws test code away; this sheet does not — anything matching <code>*.{spec,test,cy}.*</code> or living under <code>specs/ test/ tests/ __tests__/ cypress/</code> is counted into a second series and drawn as that member's annex. ${M.length} members: ${TOT_SF} authored files and ${fmt(TOT_SL)} sloc of source, plus ${TOT_PF} files and ${fmt(TOT_PL)} sloc of spec. The packages district's ${DP.n} buildings reconcile exactly with sheet 3's source slab — ${DP.f} files, ${fmt(DP.sl)} lines — because both are queries over one census rather than two hand counts.</p>
 <p><strong>Every shipped building carries an annex bigger than itself.</strong> <code>lit-ui-router</code>: ${fmt(g(1).sl)} authored lines against ${fmt(g(1).pl)} of spec (${ratio('packages/lit-ui-router')}×). <code>ui-router-server</code>: ${fmt(g(2).sl)} vs ${fmt(g(2).pl)} (${ratio('packages/ui-router-server')}×). <code>lit-ui-router-mobx</code>: ${g(3).sl} vs ${g(3).pl} (${ratio('packages/lit-ui-router-mobx')}×). <code>eslint-plugin-lit-ui-router</code>: ${g(31).sl} vs ${g(31).pl} (${ratio('packages/eslint-plugin-lit-ui-router')}×). <code>lit-ui-router-effect</code>: ${g(37).sl} vs ${g(37).pl} (${ratio('packages/lit-ui-router-effect')}×). <code>lit-ui-router-ssr</code>: ${g(38).sl} vs ${g(38).pl} (${ratio('packages/lit-ui-router-ssr')}×). <code>navigation-location-plugin</code>: ${g(4).sl} lines in ${g(4).sf} file${g(4).sf === 1 ? '' : 's'} under ${g(4).pf} spec files (${ratio('packages/navigation-location-plugin')}×). The test budget lives exactly where the repo says it should — in <code>packages/*</code>, and nowhere else at that ratio.</p>
-<p><strong>Every road is citable.</strong> Solid roads are build edges: <code>packages/*</code> into the sample apps, the apps into <code>docs</code>, <code>@tools/oxc-emit</code> into all ${WORDN[PKG_N]} packages — each a <code>workspace:</code> dependency, each backed by turbo's <code>build</code>/<code>docs</code> tasks depending on <code>^build</code>. Dashed soft roads are the test lane: <code>@tools/dts-backtest</code> depends on the runtime packages of the district and backtests their emitted <code>d.ts</code> against the TS 5.0 floor; <code>@tools/lit-test-env</code> and <code>@tools/happy-dom</code> run up into <code>lit-ui-router</code>'s annex because they are its devDependencies and the harness its suites load; <code>sample-app-lit-e2e</code> depends on <code>docs</code>, and turbo's <code>e2e</code> depends on <code>^build</code> and runs with <code>@www/lit-ui-router.dev#wrangler:dev</code>, so Cypress drives the built shopfront under its worker rather than a vite dev server. The accent road is the one that leaves a member twice — once from the source block and once from the spec annex — because the package's <code>typecheck</code> reads both: <code>tsconfig.json</code> includes <code>src/**</code>, specs and all (only the narrower <code>typecheck:src</code> excludes them), while the <code>^build:types</code> dependency is what carries the result into the next district. One faint road stands for eight: that many instruments import <code>@tools/shared</code>, whose <code>src/globs.ts</code> (#655) holds the custom-element glob three lanes share. Only the road to the largest is drawn, because drawing all eight would turn the yard into hatching.</p>
+<p><strong>Every road is citable.</strong> Solid roads are build edges: <code>packages/*</code> into the sample apps, the apps into <code>docs</code>, <code>@tools/oxc-emit</code> into all ${WORDN[PKG_N]} packages — each a <code>workspace:</code> dependency, each backed by turbo's <code>build</code>/<code>docs</code> tasks depending on <code>^build</code>. Dashed soft roads are the test lane: <code>@tools/dts-backtest</code> depends on the runtime packages of the district and backtests their emitted <code>d.ts</code> against the TS 5.0 floor; <code>@tools/lit-test-env</code> and <code>@tools/happy-dom</code> run up into <code>lit-ui-router</code>'s annex because they are its devDependencies and the harness its suites load; <code>sample-app-lit-e2e</code> depends on <code>docs</code>, and turbo's <code>e2e</code> depends on <code>^build</code> and runs with <code>@www/lit-ui-router.dev#wrangler:dev</code>, so Cypress drives the built shopfront under its worker rather than a vite dev server. The accent road is the one that leaves a member twice — once from the source block and once from the spec annex — because the package's <code>typecheck</code> reads both: <code>tsconfig.json</code> includes <code>src/**</code>, specs and all (only the narrower <code>typecheck:src</code> excludes them), while the <code>^build:types</code> dependency is what carries the result into the next district. One faint road stands for ${SHARED_IMP.length}: that many members depend on <code>@tools/shared</code>, ${SHARED_TOOLS} of them instruments, and its <code>src/globs.ts</code> (#655) holds the custom-element glob three lanes share. Only the road to the largest is drawn, because drawing all ${SHARED_IMP.length} would turn the yard into hatching.</p>
 <p><strong>Severity in colour, mass in geometry — and they disagree.</strong> The tiers are sheet 3's, applied to whole members: <code>@tools/release</code> is solid red because it hosts <code>published-diff</code>, the only structure that halts a publish; red hatch marks the seven members that can stop a pull request — Cypress <code>e2e</code>, <code>dts-backtest</code>, <code>compat-guards</code>, <code>lit-test-env</code>, <code>happy-dom</code>, <code>lint-elements</code>, whose ratchet exits non-zero on a new warning, and <code>repo-checks</code>, whose six checks — graph edges, task inputs, single version, patches, knip and dedupe — ride the lint lane; accent hatch marks <code>@tools/workers-builds</code>, which gates the docs deploy and nothing earlier. Here the two encodings happen to agree once, on <code>release</code>, and disagree everywhere else: the harness that can stop every pull request in the repo is ${g(26).sl} authored lines of <code>@tools/happy-dom</code>, sitting on the drawing's minimum footprint.</p>
-<p><strong>What the districts say.</strong> The product is ${DP.n} modest buildings — ${fmt(DP.sl)} lines — against ${fmt(DT.sl)} in the instrument yard and ${fmt(DA.sl)} in the proving ground. The broadest source block on the sheet is <code>examples</code> — ${fmt(g(11).sl)} lines of stackblitz copies — with <code>sample-app-shared</code>, which ships to nobody and gates nothing, just behind at ${fmt(g(5).sl)}; the only footprint that outbuilds both is <code>lit-ui-router</code>'s spec annex. <code>@tools/wintercg-globals</code> is drawn on the floor with no mass at all: it is ambient types, and a census that hides its empty members is not a census.</p>
+<p><strong>What the districts say.</strong> The product is ${DP.n} modest buildings — ${fmt(DP.sl)} lines — against ${fmt(DT.sl)} in the instrument yard and ${fmt(DA.sl)} in the proving ground. The broadest source block on the sheet is <code>examples</code> — ${fmt(g(11).sl)} lines of stackblitz copies — ${SRC_RANK[1][0] === 5 ? `with <code>sample-app-shared</code>, which ships to nobody and gates nothing, just behind at ${fmt(g(5).sl)}` : `with <code>${SRC_RANK[1][1]}</code> just behind at ${fmt(SRC_RANK[1][7])} and <code>sample-app-shared</code>, which ships to nobody and gates nothing, ${SAS_RANK} at ${fmt(g(5).sl)}`}; ${OVER_EX.length === 1 ? `the only footprint that outbuilds <code>examples</code> is <code>${OVER_EX[0]}</code>'s spec annex` : `${WORDN[OVER_EX.length]} spec annexes outbuild <code>examples</code>`}. <code>@tools/wintercg-globals</code> is drawn on the floor with no mass at all: it is ambient types, and a census that hides its empty members is not a census.</p>
 <p><strong>Numbers by import, not by paste.</strong> Every count above and on the drawing is read from <code>www/atlas.lit-ui-router.dev/data/census-city.json</code>, the snapshot <code>census-city.mjs</code> writes out of the master per-file census; this module holds placement, tiers and prose only. The plate is measured at a named ref rather than at whatever a working tree happens to hold — ${BASIS} — so every number here is citable to a committed file, and a member the sheet draws but the plate does not carry is a build error rather than a stale constant.</p>`,
   key: [
     keyRow('<rect x="6" y="3" width="36" height="12" class="sk fp"/>', 'a member, massed — footprint ∝ √sloc, height ∝ files'),

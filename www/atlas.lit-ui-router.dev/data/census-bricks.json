@@ -1,22 +1,22 @@
 {
   "ref": "origin/main",
-  "sha": "4dc0cbb7",
-  "commitDate": "2026-10-04T14:10:24-07:00",
-  "generatedAtTime": "2026-10-04T21:14:40.852Z",
+  "sha": "9e656ab3",
+  "commitDate": "2026-10-10T12:32:14-07:00",
+  "generatedAtTime": "2026-10-10T19:44:42.940Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-bricks.mjs",
-  "used": "www/atlas.lit-ui-router.dev/data/census-files.json @ 4dc0cbb7",
+  "used": "www/atlas.lit-ui-router.dev/data/census-files.json @ 9e656ab3",
   "wasAssociatedWith": [
     "scc 4.0.0 (mise x aqua:boyter/scc)",
     "codeload.github.com ui-router/core@6.1.2 source tarball"
   ],
   "rows": [
     {"name":"@uirouter/core","version":"6.1.2","files":80,"sloc":5272,"studs":36,"shape":"2x4","courses":27},
-    {"name":"lit-ui-router","version":"1.16.2","files":22,"sloc":2752,"studs":19,"shape":"2x4","courses":8},
-    {"name":"eslint-plugin-lit-ui-router","version":"1.2.0","files":12,"sloc":1501,"studs":11,"shape":"2x4","courses":4},
-    {"name":"ui-router-server","version":"0.2.0","files":9,"sloc":1211,"studs":9,"shape":"2x4","courses":3},
-    {"name":"lit-ui-router-ssr","version":"0.2.0","files":11,"sloc":1094,"studs":8,"shape":"2x4","courses":4},
-    {"name":"lit-ui-router-effect","version":"0.2.0","files":5,"sloc":288,"studs":2,"shape":"1x2","courses":2},
-    {"name":"lit-ui-router-mobx","version":"1.1.0","files":5,"sloc":204,"studs":2,"shape":"1x2","courses":2},
-    {"name":"ui-router-navigation-location-plugin","version":"1.0.1","files":2,"sloc":141,"studs":1,"shape":"1x1","courses":1}
+    {"name":"lit-ui-router","version":"1.16.3","files":22,"sloc":2776,"studs":19,"shape":"2x4","courses":8},
+    {"name":"eslint-plugin-lit-ui-router","version":"1.2.1","files":12,"sloc":1462,"studs":10,"shape":"2x4","courses":4},
+    {"name":"ui-router-server","version":"0.2.2","files":9,"sloc":1235,"studs":9,"shape":"2x4","courses":3},
+    {"name":"lit-ui-router-ssr","version":"0.2.1","files":11,"sloc":1117,"studs":8,"shape":"2x4","courses":4},
+    {"name":"lit-ui-router-effect","version":"0.2.1","files":5,"sloc":286,"studs":2,"shape":"1x2","courses":2},
+    {"name":"lit-ui-router-mobx","version":"1.1.1","files":5,"sloc":205,"studs":2,"shape":"1x2","courses":2},
+    {"name":"ui-router-navigation-location-plugin","version":"1.0.2","files":2,"sloc":147,"studs":1,"shape":"1x1","courses":1}
   ]
 }

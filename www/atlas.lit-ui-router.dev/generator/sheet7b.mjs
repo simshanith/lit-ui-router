@@ -66,6 +66,9 @@ const wmember = (dir) => {
   return r;
 };
 const TDP = wmember('tools/typedoc-plugin-lit-ui-router');
+// the plugin's split story holds only while a file other than index.ts stands idle
+const TDP_SPLIT = !TDP.idlestFile.endsWith('/index.ts') && TDP.idlestDays > 1;
+const TDP_DAYS = `${TDP.idlestDays} day${TDP.idlestDays === 1 ? '' : 's'}`;
 // PIPES: the build graph, from the same plate sheets 3/3A/12 read — never re-typed
 const BUILD = JSON.parse(readFileSync(new URL('../data/census-plate.json', import.meta.url), 'utf8')).pipelines.build;
 const CITY_ROW = new Map(CITY.rows.map((r) => [r.member, r]));
@@ -111,16 +114,16 @@ const idleOf = (dir) => {
   return IDLE.get(dir);
 };
 const IDLE_D = [...new Set([...IDLE.values()].filter((v) => v !== null))].sort((a, b) => a - b);
-if (IDLE_D.length < 6) throw new Error('plate 7B: the idle distribution is too flat to cut a five-step ladder');
+if (IDLE_D.length < 3) throw new Error('plate 7B: the idle distribution is too flat to cut a ladder');
 const JOINTS = IDLE_D.slice(1).map((v, i) => ({ lip: IDLE_D[i], w: v - IDLE_D[i] }));
 const TOP_JOINT = JOINTS[JOINTS.length - 1];
 const IDLE_MAX = IDLE_D[IDLE_D.length - 1];
 const R4_OPEN = TOP_JOINT.w >= Math.max(...JOINTS.map((j) => j.w));
-const CUTS = [
-  ...JOINTS.slice(0, -1).slice().sort((a, b) => b.w - a.w || a.lip - b.lip).slice(0, 3)
-    .map((j) => j.lip).sort((a, b) => a - b),
-  R4_OPEN ? TOP_JOINT.lip : IDLE_D[IDLE_D.length - 1],
-];
+const INNER = JOINTS.slice(0, -1).slice().sort((a, b) => b.w - a.w || a.lip - b.lip).slice(0, 3)
+  .map((j) => j.lip).sort((a, b) => a - b);
+const TOP_CUT = R4_OPEN ? TOP_JOINT.lip : IDLE_D[IDLE_D.length - 1];
+// a flat distribution has fewer than three inner joints: the steps it cannot cut stand empty
+const CUTS = [...INNER, ...Array(3 - INNER.length).fill(TOP_CUT), TOP_CUT];
 const rustOf = (dir) => {
   const v = idleOf(dir);
   if (v === null) return null;
@@ -128,7 +131,8 @@ const rustOf = (dir) => {
   return s === -1 ? 4 : s;
 };
 const RUST_T = ['0', 'R1', 'R2', 'R3', 'R4'];
-const LADDER = `0 ≤${CUTS[0]}d · R1 ≤${CUTS[1]} · R2 ≤${CUTS[2]} · R3 ≤${CUTS[3]} · R4 >${CUTS[3]}`;
+const STEPS_TXT = CUTS.map((c, i) => (i && c === CUTS[i - 1] ? `${RUST_T[i]} —` : `${RUST_T[i]} ≤${c}${i ? '' : 'd'}`)).join(' · ');
+const LADDER = `${STEPS_TXT} · R4 >${CUTS[3]}`;
 // LAMPS, derived from plate 7A's snapshot: lit share = extent × line coverage.
 // A member with no mass has no slots; e2e/unmetered light burns accent.
 const SHADOW_ROW = new Map(SHADOW.rows.map((r) => [r.member, r]));
@@ -153,6 +157,7 @@ const RUST_O = [0, 0.18, 0.32, 0.5, 0.85];
 const PUFFS = (c) => (c <= 2 ? 0 : c <= 8 ? 1 : c <= 15 ? 2 : 3);
 // every rust claim on this plate is told from the computed steps, never from copy
 const RSTEP = M.map((r) => r[10]);
+const EDGE_EMPTY = [3, 9, 16].filter((e) => !M.some((r) => r[11] === e));
 const rustN = (st) => RSTEP.filter((v) => v === st).length;
 const DEEPEST = Math.max(...RSTEP.filter((v) => v !== null));
 const DATED = RSTEP.filter((v) => v !== null).length;
@@ -292,7 +297,7 @@ const TB = `
 ${txt(1168, 116, 'PLANT TELEMETRY — FOUR CHANNELS, ALL INDEPENDENT', 'lbls')}
 <line x1="1152" y1="124" x2="1540" y2="124" class="skf"/>
 ${txt(1168, 142, 'RUST (speckle) — median idle, cut on this cabinet’s', 'lbls')}
-${txt(1180, 156, `own distribution: 0 ≤${CUTS[0]}d · R1 ≤${CUTS[1]} · R2 ≤${CUTS[2]} · R3 ≤${CUTS[3]}`, 'lbls')}
+${txt(1180, 156, `own distribution: ${STEPS_TXT}`, 'lbls')}
 ${txt(1180, 170, `R4 >${CUTS[3]} — ${R4_OPEN ? 'CRACKED' : 'RESERVED, UNOCCUPIED HERE'}`, 'lbls')}
 ${txt(1168, 188, 'STEAM (puffs) — commits/90d: 0 ≤2 · 1: 3–8 · 2: 9–15 · 3: ≥16', 'lbls')}
 ${txt(1168, 206, 'LAMPS — 7A lit share: 3 ≥90 · 2 ≥50 · 1 >0 · accent = unmetered e2e', 'lbls')}
@@ -353,7 +358,7 @@ ${txt(52, 43, 'THE WORKING CITY — SHEET 7’S CENSUS, RUNNING', 'lbls')}
 ${txt(52, 58, 'massing, districts, gates unchanged · sprite = state: rust, steam, lamps, pipes', 'lblf')}
 
 ${txt(1520, 34, 'SPRITE RULE — decoration is state, never texture: every mark on a plant is a measured channel', 'lbls', 'end')}
-${txt(1520, 48, `rust = weathering census (sheet 13) · steam = commits ${WINDOW}, from www/atlas.lit-ui-router.dev/data/census-steam.json · lamps = plate 7A light · pipes = live turbo`, 'lblf', 'end')}
+${txt(1520, 48, `rust = weathering census (sheet 13) · steam = commits ${WINDOW}, from data/census-steam.json · lamps = plate 7A light · pipes = live turbo`, 'lblf', 'end')}
 ${txt(1520, 62, 'massing and gate severity are sheet 7’s, unchanged — a sprite may decorate a block, never re-mass it', 'lblf', 'end')}
 
 ${TB}
@@ -392,7 +397,7 @@ ${txt(60, 156, 'old AND running, which one axis could never draw', 'lblf')}
 
 <!-- west of the plant row the caption passes under, whose bases reach y 646 -->
 ${txt(356, 652, `@tools/typedoc-plugin — rust ${RUST_T[g(13).rust]}, ${PUFFS(g(13).steam)} puffs:`, 'lblr')}
-${txt(356, 664, `${TDP.files} files: index.ts live, ${TDP.idlestFile.split('/').pop()} idle ${TDP.idlestDays}d`, 'lblf')}
+${txt(356, 664, TDP_SPLIT ? `${TDP.files} files: index.ts live, ${TDP.idlestFile.split('/').pop()} idle ${TDP.idlestDays}d` : `${TDP.files} files, each touched within ${TDP.idlestDays}d`, 'lblf')}
 <line x1="372" y1="638" x2="440" y2="492" class="skf"/>
 
 ${txt(20, 620, '@tools/happy-dom — a spec annex lit by its own canary:', 'lblr')}
@@ -412,8 +417,8 @@ export const sheet7b = {
   caption: `Sheet 7 counted the city, sheet 13 dated its stone, plate 7A metered its test light. This plate turns the same city on: every member becomes a Working Plant sprite in the Factorio sense — a machine whose state is broadcast, not implied. The alert channel is drawn and empty: no gate in the city is red at HEAD.`,
   notes: `
 <p><strong>The sprite decorates; the census governs.</strong> Every block is sheet 7's, unchanged: footprint 1.6·√sloc, height 3 px per authored file, spec annexes beside their buildings, gate severity in the same colours with the same uniform hatch including the cap. The Working Plant sprite (concept 3 of the sprite studies) adds four state channels as overlays. The design guard from the study is enforced: rust is a dotted <em>speckle</em> at partial opacity on the flanks only — never the cap, never a 45° line hatch — so a red-gated pristine plant (uniform hatch, cap included) and a rusting never-gating plant cannot be confused, in either theme.</p>
-<p><strong>Every channel is measured, and every threshold comes from a distribution.</strong> RUST is sheet 13's weathering census, read from <code>www/atlas.lit-ui-router.dev/data/census-weather.json</code> at ${WEATHER.ref} @ ${WEATHER.sha}: the member's median idle days — the very number sheet 13's schedule prints as "idle Nd" — stepped by a ladder this build <em>cuts for itself</em>. The rust ladder is not written down: it is re-cut from the idle distribution every cabinet, so a step means only what this plate’s own key says it means. The rule is the plate's stated method, mechanised: sort the distinct readings, measure the joints between them, and cut at the widest. The top step is reserved for a true outlier and opens only when the topmost joint is also the widest in the distribution; otherwise R4 is pinned above the highest reading and stands EMPTY. ${R4_OPEN ? `At this cabinet it opens: the topmost joint, ${TOP_JOINT.lip}d to ${IDLE_MAX}d, is the widest in the distribution` : `At this cabinet it stays shut: the topmost joint, ${TOP_JOINT.lip}d to ${IDLE_MAX}d, is not the widest joint in the distribution, so R4 sits above the highest idle on the plate and nothing occupies it`}. The ladder cuts 0 ≤${CUTS[0]}d · R1 ≤${CUTS[1]} · R2 ≤${CUTS[2]} · R3 ≤${CUTS[3]} · R4 &gt;${CUTS[3]}, the deepest rust in the city is ${RUST_T[DEEPEST]} (${codes(atStep(DEEPEST))}), ${rustN(0)} of the ${DATED} dated plants ${rustN(0) === 1 ? 'stands' : 'stand'} clean at ${RUST_T[0]}, ${rustN(4) ? `and ${codes(atStep(4))} ${rustN(4) === 1 ? 'wears' : 'wear'} the cracked flanks the key draws` : 'and the cracked flanks the key draws stand unworn'}. <strong>A step label therefore means nothing across cabinets</strong> — the cuts move with the distribution, which is why they are printed in the telemetry box rather than remembered. STEAM is distinct commits touching the member in a trailing 90-day window, read from <code>www/atlas.lit-ui-router.dev/data/census-steam.json</code> — window ${WINDOW}, ${BASIS} — banded 0 puffs ≤2 · 1: 3–8 · 2: 9–15 · 3: ≥16. Those edges are editorial: 3, 9 and 16 are all occupied on this window, so they sit in traffic rather than in empty air. ${TOP_STEAM_NOTE} LAMPS compress plate 7A's meter to one number — lit share = extent × line coverage — read from <code>www/atlas.lit-ui-router.dev/data/census-shadow.json</code>, metered at ${SHADOW.ref} @ ${SHADOW.sha}: three lamps at ${'≥'}90, two at ${'≥'}50, one above zero, and the accent lamp is 7A's honest category for light no meter reads. PIPES are the <code>turbo run build</code> graph from <code>www/atlas.lit-ui-router.dev/data/census-plate.json</code>: ${BUILD.real} real tasks in ${BUILD.nodes} nodes, last run green on 2026-08-17 (all cache hits — a replay of green, stated as such), so every pipe on the sheet connects and the key says so rather than inventing a broken one.</p>
-<p><strong>The channels disagree, which is the point.</strong> The channels are independent on purpose, and the city proves they must be: the flagship stands at rust ${RUST_T[g(1).rust]} under full steam and every lamp, and the deepest rust in the city, ${RUST_T[DEEPEST]}, stands on ${codes(atStep(DEEPEST))}${RUSTY_HOT.length ? ` — where ${codes(RUSTY_HOT)} ${RUSTY_HOT.length === 1 ? 'is' : 'are'} still steaming` : ', none of them steaming'}. A single wreck-to-splendor axis would have to average these stories away. <code>lit-ui-router</code> is the oldest masonry in the city <em>and</em> its hottest steam <em>and</em> fully lamped — old and running. The typedoc plugin rusts at ${RUST_T[g(13).rust]} on ${TDP.files} files and still steams, because <code>index.ts</code> takes the commits while <code>${TDP.idlestFile.split('/').pop()}</code>, the other half of the plugin, idles its ${TDP.idlestDays} days. <code>examples</code> steams at ${PUFFS(g(11).steam)} puffs with ${lampsNote(g(11))} at rust ${RUST_T[g(11).rust]} — worked on, ${g(11).lamps ? 'barely tested' : 'untested'}, barely aging — while <code>docs</code> steams at ${PUFFS(g(10).steam)} puffs under ${dimOf(10)} metered light in the city (${g(10).eff}% lit). And <code>@tools/happy-dom</code> keeps plate 7A's oddest light: a plant whose spec annex is a canary pointed upstream, lighting only the workaround it guards (${g(26).eff}% lit).</p>
+<p><strong>Every channel is measured, and every threshold comes from a distribution.</strong> RUST is sheet 13's weathering census, read from <code>www/atlas.lit-ui-router.dev/data/census-weather.json</code> at ${WEATHER.ref} @ ${WEATHER.sha}: the member's median idle days — the very number sheet 13's schedule prints as "idle Nd" — stepped by a ladder this build <em>cuts for itself</em>. The rust ladder is not written down: it is re-cut from the idle distribution every cabinet, so a step means only what this plate’s own key says it means. The rule is the plate's stated method, mechanised: sort the distinct readings, measure the joints between them, and cut at the widest. The top step is reserved for a true outlier and opens only when the topmost joint is also the widest in the distribution; otherwise R4 is pinned above the highest reading and stands EMPTY. ${R4_OPEN ? `At this cabinet it opens: the topmost joint, ${TOP_JOINT.lip}d to ${IDLE_MAX}d, is the widest in the distribution` : `At this cabinet it stays shut: the topmost joint, ${TOP_JOINT.lip}d to ${IDLE_MAX}d, is not the widest joint in the distribution, so R4 sits above the highest idle on the plate and nothing occupies it`}. The ladder cuts ${STEPS_TXT} · R4 &gt;${CUTS[3]}, the deepest rust in the city is ${RUST_T[DEEPEST]} (${codes(atStep(DEEPEST))}), ${rustN(0)} of the ${DATED} dated plants ${rustN(0) === 1 ? 'stands' : 'stand'} clean at ${RUST_T[0]}, ${rustN(4) ? `and ${codes(atStep(4))} ${rustN(4) === 1 ? 'wears' : 'wear'} the cracked flanks the key draws` : 'and the cracked flanks the key draws stand unworn'}. <strong>A step label therefore means nothing across cabinets</strong> — the cuts move with the distribution, which is why they are printed in the telemetry box rather than remembered. STEAM is distinct commits touching the member in a trailing 90-day window, read from <code>www/atlas.lit-ui-router.dev/data/census-steam.json</code> — window ${WINDOW}, ${BASIS} — banded 0 puffs ≤2 · 1: 3–8 · 2: 9–15 · 3: ≥16. Those edges are editorial: ${EDGE_EMPTY.length ? `${[3, 9, 16].filter((e) => !EDGE_EMPTY.includes(e)).join(' and ') || 'none of 3, 9 and 16'} ${EDGE_EMPTY.length === 2 ? 'is' : 'are'} occupied on this window and ${EDGE_EMPTY.join(' and ')} ${EDGE_EMPTY.length === 1 ? 'is' : 'are'} not` : '3, 9 and 16 are all occupied on this window, so they sit in traffic rather than in empty air'}. ${TOP_STEAM_NOTE} LAMPS compress plate 7A's meter to one number — lit share = extent × line coverage — read from <code>www/atlas.lit-ui-router.dev/data/census-shadow.json</code>, metered at ${SHADOW.ref} @ ${SHADOW.sha}: three lamps at ${'≥'}90, two at ${'≥'}50, one above zero, and the accent lamp is 7A's honest category for light no meter reads. PIPES are the <code>turbo run build</code> graph from <code>www/atlas.lit-ui-router.dev/data/census-plate.json</code>: ${BUILD.real} real tasks in ${BUILD.nodes} nodes, last run green on 2026-08-17 (all cache hits — a replay of green, stated as such), so every pipe on the sheet connects and the key says so rather than inventing a broken one.</p>
+<p><strong>The channels disagree, which is the point.</strong> The channels are independent on purpose, and the city proves they must be: the flagship stands at rust ${RUST_T[g(1).rust]} under full steam and every lamp, and the deepest rust in the city, ${RUST_T[DEEPEST]}, stands on ${codes(atStep(DEEPEST))}${RUSTY_HOT.length ? ` — where ${codes(RUSTY_HOT)} ${RUSTY_HOT.length === 1 ? 'is' : 'are'} still steaming` : ', none of them steaming'}. A single wreck-to-splendor axis would have to average these stories away. <code>lit-ui-router</code> is the oldest masonry in the city <em>and</em> its hottest steam <em>and</em> fully lamped — old and running. ${TDP_SPLIT ? `The typedoc plugin rusts at ${RUST_T[g(13).rust]} on ${TDP.files} files and still steams, because <code>index.ts</code> takes the commits while <code>${TDP.idlestFile.split('/').pop()}</code>, the other half of the plugin, idles its ${TDP_DAYS}.` : `The typedoc plugin stands at rust ${RUST_T[g(13).rust]} on ${TDP.files} files and steams at ${PUFFS(g(13).steam)} puffs, every file of it touched within ${TDP_DAYS}.`} <code>examples</code> steams at ${PUFFS(g(11).steam)} puffs with ${lampsNote(g(11))} at rust ${RUST_T[g(11).rust]} — worked on, ${g(11).lamps ? 'barely tested' : 'untested'}, barely aging — while <code>docs</code> steams at ${PUFFS(g(10).steam)} puffs under ${dimOf(10)} metered light in the city (${g(10).eff}% lit). And <code>@tools/happy-dom</code> keeps plate 7A's oddest light: a plant whose spec annex is a canary pointed upstream, lighting only the workaround it guards (${g(26).eff}% lit).</p>
 <p><strong>Every channel by import, and the ladder cuts itself.</strong> Placements, districts and gate tiers are <em>imported</em> from sheet 7's own placement table, and the masses from <code>www/atlas.lit-ui-router.dev/data/census-city.json</code>, so the two sheets cannot drift building for building. Rust, steam, lamps and pipes are each looked up by member directory in their own filed plate, and a member this sheet draws that a plate does not carry is a build error rather than a stale number. Rust was the last channel drawn by hand — an editorial step per member, keyed by badge — and it is not any more: the step is the ladder above applied to the weather plate's own <code>medIdle</code>, so 7B and sheet 13 cannot disagree about how long a member has stood idle, and a member with no dated source (<code>@tools/wintercg-globals</code>) carries no step rather than a guessed zero. The steam total — ${TOT_STEAM} member-touches from ${PLATE.windowCommits} window commits — double-counts commits touching several members, as any per-member count must, so the window commit count is printed beside it.</p>`,
   key: [
     keyRow('<rect x="6" y="3" width="36" height="12" class="sk fp"/>', 'a member, massed by sheet 7’s census — unchanged'),

@@ -69,7 +69,7 @@ const fmt = (v) => v.toLocaleString('en-US');
 const TERRACE = [
   '@tools/bootstrap', '@tools/build_and_test', '@tools/bundle-probe', '@tools/compat-guards', '@tools/crap', '@tools/embed-heights',
   '@tools/eslint', '@tools/eslint-ts-parser', '@tools/happy-dom', '@tools/lcov-rebase', '@tools/lint-elements', '@tools/lit-template-lint',
-  '@tools/lit-test-env', '@tools/oxc-emit', '@tools/release-config', '@tools/vue-check',
+  '@tools/lit-test-env', '@tools/oxc-emit', '@tools/oxlint-anti-slop', '@tools/release-config', '@tools/vue-check',
   '@tools/warn-lanes', '@tools/wintercg-globals', '@tools/workers-builds',
 ];
 const APPS = [

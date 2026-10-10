@@ -224,12 +224,12 @@ const NOTE = {
   15: '3 wrappers in shadow, the cores lit',
   16: 'pale: exec.ts and workspace.ts',
   17: 'trigger wrapper in shadow',
-  18: 'size probe, advisory, unlit',
+  18: 'size probe, advisory · its cores lit',
   19: 'ranges.ts lit; six CI lanes unmetered',
   20: 'the check lane, lit by its own suite',
   21: 'config only',
   22: 'wrapper only',
-  23: 'harness for the vitest suites — borrowed light',
+  23: 'the spec helpers lit, the setup in shadow',
   24: 'wrapper only',
   25: 'rebase.ts lit · CLI wrapper in shadow',
   26: 'canary lights inner-html.ts, not append.ts',
@@ -239,15 +239,16 @@ const NOTE = {
   30: 'a one-line parser shim — nothing to light',
   31: 'vendored rules, lit wall to wall',
   32: 'reserve lit — driver + CLI in shadow',
-  33: 'the repo rule plugin — its stubs are unlit',
-  34: 'the flat-config host — config only',
+  33: 'the manifest reads lit, types.ts in shadow',
+  34: 'the repo rule plugin and the oxlint stubs, all dark',
   35: 'the four lint-lane guards, half lit',
   36: 'the effect demo — e2e light only',
   37: 'the bindings lit; the barrel in shadow',
   38: 'the bridge lit, its own barrel dark',
   39: 'report.ts lit, the crap-report CLI in shadow',
+  40: 'vendored rules with no suite of their own',
 };
-const ART_H = 866;
+const ART_H = 902;
 const SY = ART_H + 16;
 const pctS = (v) => (v == null ? '—' : `${v}%`);
 const schedRow = ([n, name, , cat, , , sf, sl, , , lf, ls, ext, line, br, fn]) => {
@@ -352,9 +353,9 @@ ${txt(1146, 573, `the worker: fully lit — a ${fmt(g(10).r[11])}-sloc sliver of
 ${txt(1146, 585, `examples: ${fmt(g(11).r[11] ?? 0)} of ${fmt(g(11).r[7])} sloc lit, the copies dark`, 'lblf')}
 <line x1="1140" y1="569" x2="1064" y2="560" class="skf"/>
 
-${txt(96, 852, 'tools/ — THE INSTRUMENT YARD', 'lblb')}
-${txt(96, 865, `${DT.metered} metered members: ${pct1(DT.linesHit, DT.lines)}% of ${fmt(DT.lines)} lines lit — the lamps reach ${pct1(DT.litSloc, DT.sloc)}% of the yard’s ${fmt(DT.sloc)} sloc`, 'lblf')}
-${txt(96, 877, 'the habit, visible from the air: every .core.ts lit, every CLI wrapper left in shadow', 'lblf')}
+${txt(96, 874, 'tools/ — THE INSTRUMENT YARD', 'lblb')}
+${txt(96, 887, `${DT.metered} metered members: ${pct1(DT.linesHit, DT.lines)}% of ${fmt(DT.lines)} lines lit — the lamps reach ${pct1(DT.litSloc, DT.sloc)}% of the yard’s ${fmt(DT.sloc)} sloc`, 'lblf')}
+${txt(96, 899, 'the habit, visible from the air: every .core.ts lit, every CLI wrapper left in shadow', 'lblf')}
 <line x1="140" y1="840" x2="152" y2="826" class="skf"/>
 
 <!-- callouts -->

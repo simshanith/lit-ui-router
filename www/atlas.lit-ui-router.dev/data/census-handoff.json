@@ -1,10 +1,10 @@
 {
   "ref": "origin/main",
-  "sha": "4dc0cbb7",
-  "commitDate": "2026-10-04T14:10:24-07:00",
-  "generatedAtTime": "2026-10-04T21:14:41.608Z",
+  "sha": "9e656ab3",
+  "commitDate": "2026-10-10T12:32:14-07:00",
+  "generatedAtTime": "2026-10-10T19:44:43.800Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-handoff.mjs",
-  "used": "git archive origin/main @ 4dc0cbb7",
+  "used": "git archive origin/main @ 9e656ab3",
   "wasAssociatedWith": [
     "git"
   ],
@@ -22,11 +22,11 @@
     "dependsEdges": 15
   },
   "turbo": {
-    "files": 22,
+    "files": 23,
     "distinctNames": 90,
-    "definitions": 127,
+    "definitions": 128,
     "rootDefinitions": 50,
-    "memberDefinitions": 77,
+    "memberDefinitions": 78,
     "cacheFalse": 13,
     "rootCacheFalse": 7,
     "memberCacheFalse": 6
@@ -99,6 +99,7 @@
     {"file":"tools/bootstrap/turbo.json","root":false,"definitions":1,"cacheFalse":0},
     {"file":"tools/build_and_test/turbo.json","root":false,"definitions":1,"cacheFalse":0},
     {"file":"tools/happy-dom/turbo.json","root":false,"definitions":1,"cacheFalse":0},
+    {"file":"tools/lit-test-env/turbo.json","root":false,"definitions":1,"cacheFalse":0},
     {"file":"tools/release/turbo.json","root":false,"definitions":7,"cacheFalse":1},
     {"file":"tools/repo-checks/turbo.json","root":false,"definitions":8,"cacheFalse":0},
     {"file":"tools/shared/turbo.json","root":false,"definitions":1,"cacheFalse":0},

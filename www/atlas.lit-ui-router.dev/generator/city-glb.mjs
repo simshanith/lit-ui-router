@@ -84,7 +84,7 @@ const DASH = [5 * PX, 4 * PX], DISTRICT_DASH = [7 * PX, 6 * PX];
 const WALL_FOOT = 0.9;
 export const CROWN_FOOT = 0.78;
 const PAD = 30, GRID_STEP = 50;
-export const BUDGET = { city: 200 * 1024, plant: 350 * 1024 };
+export const BUDGET = { city: 200 * 1024, plant: 384 * 1024 };
 
 // The material dress, as one function the page and the bake both run: `c` is a token
 // name → linear [r, g, b], `M` the material plan, `lane` 'tier' or 'light'.

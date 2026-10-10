@@ -194,7 +194,11 @@ async function probePixel(page, tag, x, y, want, dress, foot = 1) {
   const name = await materialAt(page, x, y);
   check(want.test(name ?? ''), `${tag} lands on ${name}`, `wanted ${want}`);
   const factor = dress.find((r) => r[0] === name)[1];
-  const got = await pixel(page, x, y);
+  // read the pixel mid-run of the material's rows within 8 px, never on a part's antialiased edge
+  let y0 = y, y1 = y;
+  while (y0 > y - 8 && (await materialAt(page, x, y0 - 1)) === name) y0 -= 1;
+  while (y1 < y + 8 && (await materialAt(page, x, y1 + 1)) === name) y1 += 1;
+  const got = await pixel(page, x, Math.round((y0 + y1) / 2));
   const hi = factor.map(srgb), lo = factor.map((v) => srgb(v * foot));
   check(got.slice(0, 3).every((v, i) => v <= hi[i] + 2 && v >= lo[i] - 2), `${tag}: its pixel is ${name}'s factor in sRGB ±2${foot < 1 ? `, shaded down to ${foot}` : ''}`, `${got} vs ${lo}..${hi}`);
   return got;

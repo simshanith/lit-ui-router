@@ -80,7 +80,6 @@ GROUPS.push({ key: 'atlas', dir: 'www/atlas.lit-ui-router.dev/', role: 'THE ATLA
 const C = 0.866;
 const LOT_GAP = 18;   // between atlas members
 const PAD = 16;       // the atlas's frame, plan units outside its masses; a summed block is its own district
-const GAP = 40;       // screen px between districts
 let n = 0;
 const massOf = (m) => {
   const s = S(m.sl), h = H(m.f);
@@ -137,6 +136,9 @@ const CODEBASE = GROUPS.filter((g) => !g.atlas);
 const ATLAS = GROUPS.find((g) => g.atlas);
 const GY1 = HEAD + 22 + Math.max(...CODEBASE.map((g) => g.rise));
 let sx = 40;
+for (const g of CODEBASE) place(g, 0, GY1);
+// screen px between districts: 40, closed up as far as the main row needs to fit in 1520
+const GAP = Math.min(40, (1520 - 40 - CODEBASE.reduce((a, g) => a + g.right, 0)) / (CODEBASE.length - 1));
 for (const g of CODEBASE) { place(g, sx, GY1); sx = g.right + GAP; }
 const GY2 = GY1 + LABEL_H + 40 + ATLAS.rise;
 place(ATLAS, 40, GY2);

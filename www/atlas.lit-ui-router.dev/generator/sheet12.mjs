@@ -120,7 +120,7 @@ const TAIL_ROOT = TAIL.filter(([id]) => id.startsWith('//#')).length;
 // the deepest chain in the ci graph — hand-traced path; its length and every
 // rung's fill are checked against the plate.
 const CHAIN = [
-  '@tools/bootstrap#build:types', '@tools/shared#build:types',
+  '@tools/bootstrap#build:types', '@tools/shared#build:types', '@tools/warn-lanes#build:types',
   '@tools/build_and_test#build:types', '@tools/bundle-probe#build:types',
   'ui-router-server#build:types', 'sample-app-routes#build:types',
   'sample-app-routes#build', 'sample-app-shared#build',

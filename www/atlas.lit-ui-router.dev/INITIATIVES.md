@@ -510,6 +510,54 @@ sitting); order is dependency order.
   gz; nm 173,820 lines / 41,155 d.ts; mass3b 13,307 hashes over 235 real tasks and 3,029 command
   sloc; the ci graph 864 / 235 / 3,024 edges; steam 643 commits; weather 448 dated files; 7A 11,937
   of 19,307 metered sloc lit over 25 members.
+- 2026-10-10 — THE FOURTEENTH REFRESH, at `origin/main` @ 9e656ab3 (commit 2026-10-10), all 17
+  plates re-run at the one ref: the 2026-10-10 release train — `lit-ui-router` 1.16.3,
+  `lit-ui-router-ssr` and `lit-ui-router-effect` 0.2.1, `lit-ui-router-mobx` 1.1.1,
+  `ui-router-navigation-location-plugin` 1.0.2, `eslint-plugin-lit-ui-router` 1.2.1 and
+  `ui-router-server` 0.2.2 (#1183) — and the anti-slop sweep (#1143 vendored the rules, #1144
+  touched 370 files). The chain ran first at 9fc06ab9 and again whole at 9e656ab3; between the
+  passes only `ui-router-server` 0.2.1 → 0.2.2, one steam window commit and weather's `today` moved.
+  The registry serves all seven releases under `latest` and no other tag.
+  ONE MEMBER WAS BORN, №40 `@tools/oxlint-anti-slop` (tools/, private, only `typecheck:tsc`, tier
+  `report` like `@tools/eslint`): sheet 7's `PLACED` (0, 540, the yard's south-west corner in front
+  of the release tower's lower flank), sheet 13's (520, 575, with `TLY` 1148 → 1262), 3B's
+  `TERRACE`, 7A's `NOTE`, its own `INSTRUMENTS` row and sheet 3's structure 20. `APPS`, `APP_ORDER`,
+  sheet 9's `PLAN`, `labels.mjs` and sheet 11 took nothing; 7B's rust derives. Filed first under the
+  `lint & probe fleet`, it doubled the fleet to 136 units and hid sheet 3's PR gates 9 and 10.
+  THREE PROBES NEEDED A HAND. `census-loop.mjs` stopped on `core.ts:268`: the sweep rewrote
+  `ui-view.ts`, 47 cite occurrences relocated by content, two ambiguous ones were chosen by meaning,
+  three re-texted where the resolvables chain in `render()` was rewritten, and two legs widened to
+  span 3. `census-shadow.mjs` passed each `node --test` script's own
+  `--test-reporter=@tools/shared/test-reporter.ts` through to node, which threw on the unmatched
+  destinations, and about 16 members fell from `m` to `u`; the probe drops the script's reporter
+  tokens, since it supplies its own. `census-yard.mjs` printed `orphans 35` for the new member; it
+  is its own instrument, `anti-slop — vendored oxlint rules`, and the yard reads `orphans 0`.
+  `census-mass3b.mjs` printed the same three `check:dev-split` DRIFT lines as before, and
+  `census-shipped.mjs` no unclassified file.
+  GUARDS THREW ON SHEETS 3, 7, 7B, 12, 13 AND A3, IN `city-glb` AND IN `check-scenes`. `assertPlots`
+  on 3, 7 and 13: the yards recomposed around the new member and the grown annexes. 7B's ladder
+  found four distinct idle readings where it asked for six; it pads the steps it cannot cut and
+  prints "R3 —". Sheet 12's hand-traced chain read 14 against the plate's 15 and was retraced from
+  the plate's graph. A3's main row reached 1,576 against 1,520; the gap between districts derives to
+  fit. `plant.glb` measured 374,700 bytes against its 350 KiB budget, raised to 384 KiB; the
+  `/plant` probe's pixel landed on an antialiased crown edge, and `probePixel` reads mid-run of the
+  material's rows within ±8 px.
+  THE HONESTY SWEEP DERIVED WHAT WAS TYPED: sheet 3's heaviest-mass ranking and its sample-apps
+  label ("the heaviest", false at the thirteenth); sheet 7's broadest-block runner-up,
+  sample-app-shared's "outbuilt" label and road G's "one faint road stands for eight" (20
+  dependents, 14 instruments); 7B's typedoc split and its "3, 9 and 16 are all occupied"; sheet 13's
+  "clean gap 4.65–6.0" and "per-file median is 2" (the median is 4), its "three example slabs" (one
+  slab, two files), the sealed `helloworld/main.ts` label and "idle 1 days"; and 7A's NOTEs 18, 23,
+  33 and 34. Sheet 3A's root `turbo.json` cites shifted +5 across six ranges.
+  THE FRAME AUDIT read 0 escapes and 0 hits at the old ref, 2 and 29 after the first build at the
+  new data, and 0 and 0 after the moves; text-on-text holds at 82. Thumbs: all 28 plates in both
+  themes, 3,560,010 bytes.
+  THE NUMBERS: city 338 src files / 29,029 sloc and 162 spec / 28,535; yard 298 / 24,010 massed;
+  doors 182,512 min / 65,108 gz; the bundle 124,625 gz in 17 chunks; the deploy 898 files /
+  5,019,566 gz; nm 174,501 lines / 41,359 d.ts; mass3b 14,023 hashes over 237 real tasks and 3,033
+  command sloc; the ci graph 885 / 237 / 3,208 edges (deepest chain 15); couplings 23 contracts, 3
+  optional; steam 586 commits; weather 500 dated files; 7A 12,509 of 20,045 metered sloc lit over 26
+  members.
 - A SUITE PICKED BY SCRIPT NAME IS A HAND TABLE. A probe that keys on `test`, `lint` or `build` reads
   the repo's naming, not its behaviour; when a name becomes an umbrella the probe goes quiet rather than
   wrong-loud. Diff each T3 plate's categories (`m`/`n`/`u`), not only its totals.
@@ -550,6 +598,28 @@ sitting); order is dependency order.
   while claiming `lint_workflows` — without any refresh noticing. After a refresh, diff every
   typed `file:line` against the ref's file (`git show <ref>:<path>`), not just the ones a probe
   owns; the same goes for hand lists a plate cannot see, like `lint`'s `with` list on sheet 3B.
+- A PROBE THAT RE-RUNS A SCRIPT INHERITS ITS FLAGS. `census-shadow.mjs` splices its own coverage
+  reporters into each member's `node --test` command, and the day every script on main named its own
+  `--test-reporter`, node refused the unmatched destinations and about 16 members fell to `u` with
+  no error on the sheet. A probe that wraps a repo command owns the flags it adds: drop the script's
+  copies of them, then diff the categories.
+- A BUDGET RAISED IS A DESIGN CONSTANT CHANGED. `city-glb.mjs`'s 350 KiB plant budget threw at
+  374,700 bytes; lifting it to 384 KiB is a decision about what the model may weigh, not a fix, so
+  it lands in the record with the measured size beside it.
+- A PIXEL PROBE READS MID-RUN, NEVER AT A POINT. A sampled pixel on an antialiased edge blends two
+  materials and fails a colour check that is right; `check-scenes.mjs`'s `probePixel` walks the
+  material's rows within ±8 px and reads the middle.
+- A LADDER THAT CANNOT CUT PADS ITS STEPS. A guard that demands six distinct readings before it cuts
+  five steps is a hand constant on the distribution's shape; when a sweep flattens the readings,
+  keep the steps, stand the uncut ones empty and print them empty ("R3 —").
+- A THRESHOLD PRINTED AS A MEASUREMENT IS A HAND COUNT. Sheet 13 interpolated its COLD constant
+  where the notes claimed "the per-file median is 2" and typed "a clean gap between 4.65 and 6.0";
+  at 9e656ab3 the median is 4 and the gap is gone. Call an editorial cut a cut, and print the
+  statistic beside it from the plate.
+- A NEW MEMBER WITH ITS OWN MASS IS ITS OWN INSTRUMENT. Filing `@tools/oxlint-anti-slop` under the
+  `lint & probe fleet` doubled the fleet to 136 units and hid sheet 3's PR gates 9 and 10, while
+  `orphans 0` read true throughout. Before widening a broad rule, ask whether the member is a new
+  structure, and look at the plate it stands on.
 - A plate's two dates are read from two clocks and can disagree by a day. `commitDate` is
   `git show -s --format=%cI`, the committer's LOCAL time, and `chrome.mjs::DATE` takes its first
   ten characters; `generatedAtTime` is a UTC ISO string, and sheet 7's `BASIS` line takes ITS
