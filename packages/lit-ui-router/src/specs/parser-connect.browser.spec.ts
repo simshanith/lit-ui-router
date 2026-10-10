@@ -16,6 +16,7 @@ class ParserConnectProbe extends HTMLElement {
     this.childCountAtConnect = this.childNodes.length;
   }
 }
+
 customElements.define('parser-connect-probe', ParserConnectProbe);
 
 describe('custom element connect order in a real browser', () => {

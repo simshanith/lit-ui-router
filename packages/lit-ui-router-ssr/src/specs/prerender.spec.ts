@@ -50,12 +50,14 @@ const sheetRouter = (): UIRouterLit => {
   installServerLocation(router, { strictMode: false });
   router.stateRegistry.register({ name: 'home', url: '/' });
   router.stateRegistry.register({ name: 'sheet', url: '/sheet/:num' });
+
   return router;
 };
 
 /** An in-memory {@link FileWriter} over a Map, plus the map it fills. */
 const memoryWriter = (): { files: Map<string, string>; write: FileWriter } => {
   const files = new Map<string, string>();
+
   return { files, write: (file, body) => void files.set(file, body) };
 };
 
@@ -66,6 +68,7 @@ const run = async (
   result: Awaited<ReturnType<typeof prerender>>;
 }> => {
   const { files, write } = memoryWriter();
+
   const result = await prerender({
     mounts,
     router: sheetRouter(),
@@ -75,6 +78,7 @@ const run = async (
     write,
     ...overrides,
   });
+
   return { files, result };
 };
 
@@ -110,6 +114,7 @@ describe('shell verdicts', () => {
       notFound: false,
       renderShell: (_verdict, context) => {
         seen.push({ subpath: context.subpath, file: context.file });
+
         return '<p>page</p>';
       },
     });
@@ -150,6 +155,7 @@ describe('redirect verdicts', () => {
       notFound: false,
       trailingSlash: 'exact',
     });
+
     expect(exact.result.rules.map((line) => line.from)).toEqual([
       '/app/legacy',
     ]);
@@ -219,6 +225,7 @@ describe('an unregistered <ui-view>', () => {
     const unregistered = warn.mock.calls.filter(([message]) =>
       String(message).includes('<ui-view> is not defined'),
     );
+
     expect(unregistered).toEqual([
       [expect.stringContaining('dynamic import after the shim')],
     ]);
@@ -240,10 +247,12 @@ describe('an unregistered <ui-view>', () => {
 describe('the 404 document', () => {
   it('writes 404.html once, from the probe, at status 404', async () => {
     const seen: { path: string; status?: number }[] = [];
+
     const { files, result } = await run({
       paths: ['/'],
       renderShell: (verdict, context) => {
         seen.push({ path: context.path, status: verdict.status });
+
         return '<p>page</p>';
       },
     });
@@ -273,6 +282,7 @@ describe('the 404 document', () => {
       paths: [],
       notFound: { probe: '/app/nothing-claims-this' },
     });
+
     expect(unprojected.files.size).toBe(0);
     expect(unprojected.result.tally.document).toBe(0);
   });
@@ -285,6 +295,7 @@ describe('the rules file', () => {
         paths: ['/', '/app/legacy'],
         trailingSlash,
       });
+
       expect(files.get('dist/_redirects')).not.toContain('/index.html 200');
       expect(result.rules.some((line) => line.from === '/*')).toBe(false);
     }
@@ -295,6 +306,7 @@ describe('the rules file', () => {
       { from: '/megacanvas', to: '/megacanvas.html', status: 301 },
       { from: '/old', to: '/', status: 308 },
     ];
+
     const { files, result } = await run({
       paths: ['/app/legacy'],
       notFound: false,
@@ -319,15 +331,18 @@ describe('the rules file', () => {
       notFound: false,
       rules: 'none',
     });
+
     expect(none.files.has('dist/_redirects')).toBe(false);
     expect(none.result.rules).toHaveLength(2);
 
     let received: RedirectLine[] | undefined;
+
     const hook = await run({
       paths: ['/app/legacy'],
       notFound: false,
       rules: (lines) => void (received = lines),
     });
+
     expect(hook.files.has('dist/_redirects')).toBe(false);
     expect(received).toEqual(hook.result.rules);
   });
@@ -362,6 +377,7 @@ describe('dryRun', () => {
 describe('the default writer', () => {
   it('writes through node:fs, creating each page directory', async () => {
     const outDir = await mkdtemp(path.join(tmpdir(), 'lit-ui-router-ssr-'));
+
     try {
       // `write: undefined` reaches prerender's destructuring default, the node:fs writer.
       const { result } = await run({
@@ -375,8 +391,10 @@ describe('the default writer', () => {
         redirect: 1,
         document: 1,
       });
+
       const read = (file: string): Promise<string> =>
         readFile(path.join(outDir, file), 'utf8');
+
       expect(await read('index.html')).toBe('<p>page</p>');
       expect(await read('sheet/7B/index.html')).toBe('<p>page</p>');
       expect(await read('404.html')).toBe('<p>page</p>');
@@ -402,6 +420,7 @@ describe('renderShell return values', () => {
       notFound: false,
       renderShell: (): TemplateResult => html`<p>from a template</p>`,
     });
+
     expect(templated.files.get('dist/index.html')).toContain(
       '<p>from a template</p>',
     );
@@ -411,6 +430,7 @@ describe('renderShell return values', () => {
       notFound: false,
       renderShell: () => '<p>verbatim</p>',
     });
+
     expect(verbatim.files.get('dist/index.html')).toBe('<p>verbatim</p>');
   });
 
@@ -452,11 +472,13 @@ describe('renderShell return values', () => {
 class RouterProbe extends LitElement {
   override render(): TemplateResult {
     const router = requestRouter(this);
+
     return html`<span
       >${router ? router.stateService.href('sheet', { num: '7B' }) : 'no-router'}</span
     >`;
   }
 }
+
 customElements.define('router-probe', RouterProbe);
 
 describe('the render composition', () => {
@@ -514,12 +536,14 @@ describe('the hydration signature', () => {
   /** Prerenders `paths` with a renderShell that settles the router on each one first. */
   const settled = (paths: string[]) => {
     const router = sheetRouter();
+
     return run({
       router,
       paths,
       notFound: false,
       renderShell: async (_verdict, { path }): Promise<TemplateResult> => {
         await settle(router, path);
+
         return html`<p>page</p>`;
       },
     });
@@ -574,9 +598,11 @@ describe('the hydration signature', () => {
       },
       renderShell: async (_verdict, { path }): Promise<TemplateResult> => {
         await settle(router, path);
+
         return html`<p>page</p>`;
       },
     });
+
     const [page] = files.values();
 
     expect(signatureIn(page)).toEqual({
@@ -596,11 +622,13 @@ describe('the hydration signature', () => {
 describe('the render root', () => {
   it('is the same object in the context and on the result', async () => {
     const seen: EventTarget[] = [];
+
     const { result } = await run({
       paths: ['/'],
       notFound: false,
       renderShell: (_verdict, context) => {
         seen.push(context.root);
+
         return '<p>page</p>';
       },
     });

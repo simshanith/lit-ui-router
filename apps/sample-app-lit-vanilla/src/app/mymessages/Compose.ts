@@ -66,6 +66,7 @@ export class Compose extends LitElement {
       ...message,
       from: AppConfig.emailAddress,
     } as Message;
+
     if (!force && isEqual(this.pristineMessage, pristineMessage)) return;
     this.pristineMessage = pristineMessage;
     this.message = { ...pristineMessage };
@@ -83,6 +84,7 @@ export class Compose extends LitElement {
     const message = 'You have not saved this message.';
     const question = 'Navigate away and lose changes?';
     this.canExit = await DialogService.confirm(message, question, 'Yes', 'No');
+
     return this.canExit;
   };
 
@@ -148,6 +150,7 @@ export class Compose extends LitElement {
 
   render() {
     const { message } = this;
+
     return html`<div class="compose">
       <h1 class="sr-only" tabindex="-1">New Message</h1>
       <div class="header">

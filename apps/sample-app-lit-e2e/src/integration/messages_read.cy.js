@@ -44,6 +44,7 @@ describe('unread dots in the message list', () => {
     cy.get('sample-message-table').then(($table) => {
       table = $table[0];
     });
+
     const sameTable = () =>
       cy.get('sample-message-table').should(($table) => {
         expect($table[0]).to.equal(table);

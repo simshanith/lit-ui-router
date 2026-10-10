@@ -1,7 +1,9 @@
 import { visitWithFeatures } from '../support/e2e';
 
 const EMAIL_ADDRESS = 'myself@angular.dev';
+
 const APP_TITLE = 'UI-Router Lit sample app';
+
 const { ENTER, TAB } = Cypress.Keyboard.Keys;
 
 const subjectLink = (row) => cy.get('table tbody tr').eq(row).find('a');

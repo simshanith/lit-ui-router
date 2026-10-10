@@ -18,6 +18,7 @@ export function serveAndTest(
   paths: readonly string[],
 ): never {
   const port = resolveWwwDevPort();
+
   const ready = paths
     .map((path) => `http://localhost:${port}/${path}`)
     .join('|');

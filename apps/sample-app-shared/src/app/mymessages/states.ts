@@ -134,6 +134,7 @@ const messageListState = {
   data: {
     title: (transition: Transition) => {
       const folderId = String(transition.params().folderId);
+
       return folderId.charAt(0).toUpperCase() + folderId.slice(1);
     },
   },

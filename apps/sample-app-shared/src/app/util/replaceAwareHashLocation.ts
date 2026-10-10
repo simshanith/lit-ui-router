@@ -27,14 +27,17 @@ class ReplaceAwareHashLocationService extends HashLocationService {
     if (!router) {
       throw new Error('ReplaceAwareHashLocationService requires a UIRouter');
     }
+
     super(router);
   }
 
   _set(state: unknown, title: string, url: string, replace: boolean) {
     if (!replace || typeof this._history.replaceState !== 'function') {
       super._set(state, title, url, replace);
+
       return;
     }
+
     const { pathname, search } = this._location;
     this._history.replaceState(state, title, `${pathname}${search}#${url}`);
   }

@@ -12,6 +12,7 @@ import {
 } from './tsc-annotations.core.ts';
 
 const ESC = '\u001B';
+
 const c = (code: number, text: string) => `${ESC}[${code}m${text}${ESC}[0m`;
 
 // Captured from `turbo run typecheck:tsc --filter=@tools/shared` with two injected errors.
@@ -126,6 +127,7 @@ describe('parseTscDiagnostics', () => {
       '                 ~~~~~~',
       "  src/core.ts:95:28 - 'b' is declared here.",
     ].join('\n');
+
     assert.deepEqual(parseTscDiagnostics(noise, 'tools/shared'), []);
   });
 
@@ -140,6 +142,7 @@ describe('parseTscDiagnostics', () => {
         title: 'TS2307',
       },
     };
+
     assert.deepEqual(parseTscDiagnostics(viteLog, 'apps/app'), [expected]);
     const glued = `transforming...src/main.ts:1:18 - error TS2307: ${missingModule}`;
     assert.deepEqual(parseTscDiagnostics(glued, 'apps/app'), [expected]);
@@ -152,6 +155,7 @@ describe('parseTscDiagnostics', () => {
       "src/a.ts(3,7): error TS2322: Type 'string' is not assignable to type 'number'.",
       "src/b.ts(1,1): warning TS6133: 'x' is declared but its value is never read.",
     ].join('\n');
+
     assert.deepEqual(
       parseTscDiagnostics(plain, 'tools/x').map((a) => [
         a.level,
@@ -171,6 +175,7 @@ describe('parseTscDiagnostics', () => {
       '../../../etc/a.ts:1:1 - error TS1: escape',
       'src/a.ts:0:1 - error TS1: zero line',
     ].join('\n');
+
     assert.deepEqual(parseTscDiagnostics(bad, 'tools/x'), []);
   });
 });
@@ -185,13 +190,16 @@ describe('extractTscDiagnostics', () => {
         execution: { startTime: 0, endTime: 1, exitCode: 0 },
       }),
     ]);
+
     const logs = new Map([
       ['@tools/shared#typecheck:tsc', tscLog],
       ['lit-ui-router#test', tscLog],
     ]);
+
     const files = extractTscDiagnostics(run, logs).map(
       (a) => a.properties.file,
     );
+
     assert.deepEqual(files, [
       'tools/shared/src/gha.core.ts',
       'tools/shared/src/gha.core.ts',

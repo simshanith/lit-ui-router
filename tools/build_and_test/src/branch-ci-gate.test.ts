@@ -22,7 +22,9 @@ import {
 } from './branch-ci-gate.core.ts';
 
 const PR_ONE: OpenPr = { number: 1, baseRefName: 'main' };
+
 const PR_TWO: OpenPr = { number: 2, baseRefName: 'main' };
+
 const PR_STACKED: OpenPr = { number: 3, baseRefName: 'feature/base' };
 
 function verdict(
@@ -83,6 +85,7 @@ describe('mergeStateFromExit', () => {
     'Auto-merging f.txt',
     'CONFLICT (content): Merge conflict in f.txt',
   ].join('\n');
+
   const UNMERGEABLE_STDOUT = 'merge-tree: nope - not something we can merge\n';
 
   it('reads a clean merge from exit 0', () => {
@@ -138,6 +141,7 @@ describe('decide', () => {
       [PR_ONE, PR_TWO],
       [verdict('main', 'clean', [1, 2])],
     );
+
     assert.equal(decision.run, false);
     assert.match(decision.reason, /already covers this SHA/);
   });
@@ -153,6 +157,7 @@ describe('decide', () => {
       [PR_ONE, PR_STACKED],
       [verdict('feature/base', 'clean', [3]), verdict('main', 'conflict')],
     );
+
     assert.equal(decision.run, true);
     assert.match(decision.reason, /conflicts with main/);
   });
@@ -162,6 +167,7 @@ describe('decide', () => {
       [PR_ONE, PR_STACKED],
       [verdict('feature/base', 'clean', [3]), verdict('main', 'clean')],
     );
+
     assert.equal(decision.run, false);
   });
 
@@ -176,6 +182,7 @@ describe('decide', () => {
       [PR_ONE, PR_STACKED],
       [verdict('feature/base', 'unknown', [3]), verdict('main', 'conflict')],
     );
+
     assert.equal(decision.run, true);
     assert.match(decision.reason, /conflicts with main/);
   });
@@ -211,6 +218,7 @@ describe('decide', () => {
       assert.equal(decision.run, true);
       assert.equal(decision.mainGraph, true);
     }
+
     const noPr = decide([], [], true);
     assert.equal(noPr.run, true);
     assert.equal(noPr.mainGraph, true);
@@ -239,6 +247,7 @@ describe('summaryMarkdown', () => {
     const markdown = summaryMarkdown(
       gateRun('topic', [PR_ONE, PR_TWO], [verdict('main', 'clean', [1, 2])]),
     );
+
     assert.match(markdown, /skipping/);
     assert.match(markdown, /`topic` @ `0123456789ab`/);
     assert.match(markdown, /\| `main` \| #1, #2 \| mergeable \|/);
@@ -248,6 +257,7 @@ describe('summaryMarkdown', () => {
     const markdown = summaryMarkdown(
       gateRun('topic', [PR_ONE], [verdict('main', 'conflict')]),
     );
+
     assert.match(markdown, /running/);
     assert.match(markdown, /CONFLICTS/);
   });
@@ -297,17 +307,20 @@ describe('branch-ci-gate.ts resolution', () => {
 
   it('names only node builtins and relative siblings', async () => {
     const bare: string[] = [];
+
     for (const file of GATE_FILES) {
       const source = await readFile(
         new URL(`./${file}`, import.meta.url),
         'utf8',
       );
+
       for (const specifier of importsOf(source)) {
         if (!specifier.startsWith('node:') && !specifier.startsWith('./')) {
           bare.push(`${file}: ${specifier}`);
         }
       }
     }
+
     assert.deepEqual(bare, []);
   });
 
@@ -316,6 +329,7 @@ describe('branch-ci-gate.ts resolution', () => {
   // on any parent, a bare specifier is ERR_MODULE_NOT_FOUND and a failing exit.
   it('loads and fails open with no node_modules on any parent', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'branch-ci-gate-'));
+
     try {
       for (const file of GATE_FILES) {
         await copyFile(
@@ -323,6 +337,7 @@ describe('branch-ci-gate.ts resolution', () => {
           join(dir, file),
         );
       }
+
       // Dropped rather than blanked: the gate throws on a missing ref name
       // before it spawns git or gh, so the run stays hermetic. The two runner
       // files go too, or this would append to the real job's output.

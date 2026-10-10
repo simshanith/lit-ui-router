@@ -24,6 +24,7 @@ const draw = (router: UIRouterLit): string =>
 const at = async (path: string): Promise<string> => {
   const router = makeRouter();
   await settle(router, path);
+
   return draw(router);
 };
 
@@ -35,10 +36,13 @@ const boxedRouter = (): UIRouterLit => {
   const router = installServerLocation(new UIRouterLit(), {
     strictMode: false,
   });
+
   const states: LitStateDeclaration[] = [
     { name: 'boxed', url: '/boxed', component: BoxedView },
   ];
+
   for (const state of states) router.stateRegistry.register(state);
+
   return router;
 };
 
@@ -68,6 +72,7 @@ describe('UiViewRenderer', () => {
     const interior = markup.slice(
       markup.indexOf('<!--lit-part HRwFDUbdJU8=-->'),
     );
+
     // the pair itself is the only plain marker left in the view's own run
     expect(interior.match(/<!--\/?lit-(part|node)/g)).toEqual([
       '<!--lit-part',

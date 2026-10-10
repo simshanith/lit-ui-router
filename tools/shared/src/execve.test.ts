@@ -22,6 +22,7 @@ describe('binPath', () => {
       import.meta.resolve('typescript/package.json'),
       'tsc',
     );
+
     // the manifest spells this one `./bin/tsc`, so the join has to normalize
     assert.match(bin, /[^.]\/bin\/tsc$/);
     assert.ok(existsSync(bin), `${bin} does not exist`);
@@ -38,6 +39,7 @@ describe('binPath', () => {
 describe('execve', () => {
   it('replaces the process: the exit code is the target’s, and nothing follows', () => {
     const module = JSON.stringify(new URL('./execve.ts', import.meta.url).href);
+
     const child = spawnSync(
       process.execPath,
       [

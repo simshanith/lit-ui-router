@@ -32,14 +32,18 @@ function contentNodes(template: unknown, render?: FixtureRender): Node[] {
   if (render) {
     const scratch = document.createElement('div');
     render(template, scratch);
+
     return [...scratch.childNodes];
   }
+
   if (template instanceof DocumentFragment) {
     return [...template.childNodes];
   }
+
   if (template instanceof Node) {
     return [template];
   }
+
   throw new TypeError(
     'fixture: pass a Node, or a template with options.render',
   );
@@ -65,20 +69,25 @@ export function fixtureSync(
   const wrapper = document.createElement('div');
   document.body.appendChild(wrapper);
   wrappers.push(wrapper);
+
   if (options.parent) {
     appendParentFirst(wrapper, options.parent, ...nodes);
   } else {
     wrapper.append(...nodes);
   }
+
   const element = nodes.find((node) => node instanceof Element);
+
   if (!element) {
     throw new TypeError('fixture: the template rendered no element');
   }
+
   return element;
 }
 
 async function updated(element: Element): Promise<void> {
   const { updateComplete } = element as { updateComplete?: unknown };
+
   if (updateComplete instanceof Promise) {
     await updateComplete;
   }
@@ -101,10 +110,13 @@ export async function fixture(
   options: FixtureOptions = {},
 ): Promise<Element> {
   const element = fixtureSync(template, options);
+
   if (options.parent) {
     await updated(options.parent);
   }
+
   await updated(element);
+
   return element;
 }
 

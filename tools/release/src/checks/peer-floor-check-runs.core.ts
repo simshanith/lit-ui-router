@@ -63,6 +63,7 @@ export function toPeerFloorCheckRun(
   repo: string,
 ): CheckRunPayload {
   const name = peerFloorCheckRunName(result.name);
+
   if (result.ok) {
     return {
       name,
@@ -73,10 +74,13 @@ export function toPeerFloorCheckRun(
         'against the pinned floor of its published peer range.',
     };
   }
+
   const peerCatalog = result.peerCatalog ?? 'peer catalog';
+
   const floorPin = result.floorCatalog
     ? `the ${result.floorCatalog} pin`
     : 'its matching peerFloor pin';
+
   return {
     name,
     conclusion: 'action_required',

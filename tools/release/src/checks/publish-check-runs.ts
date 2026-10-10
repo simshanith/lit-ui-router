@@ -16,29 +16,39 @@ import { ensureGh } from '../lib/gh.ts';
 
 async function main() {
   const dryRun = process.argv.includes('--dry-run');
+
   // Reads the check's canonical output; a positional path overrides ad hoc.
   const summaryPath =
     process.argv.slice(2).find((arg) => !arg.startsWith('--')) ??
     publishedDiffSummaryPath;
+
   const parsed: unknown = JSON.parse(await readFile(summaryPath, 'utf8'));
+
   if (!Array.isArray(parsed)) {
     throw new Error(`${summaryPath} must contain a JSON array of summaries`);
   }
+
   const summaries = parsed as PackageSummary[];
 
   // The resolve line's URL needs the slug too; dry runs may fall back.
   const repo = process.env.GITHUB_REPOSITORY ?? 'simshanith/lit-ui-router';
+
   if (!process.env.GITHUB_REPOSITORY && !dryRun) {
     throw new Error('GITHUB_REPOSITORY must be set (or pass --dry-run)');
   }
+
   const payloads = summaries.map((summary) => toCheckRun(summary, repo));
+
   if (dryRun) {
     console.log(JSON.stringify(payloads, null, 2));
+
     return;
   }
+
   const { stdout } = await defaultExec('git', ['rev-parse', 'HEAD']);
   const headSha = stdout.trim();
   await ensureGh();
+
   for (const payload of payloads) {
     await defaultExec('gh', checkRunApiArgs(repo, headSha, payload));
     console.log(

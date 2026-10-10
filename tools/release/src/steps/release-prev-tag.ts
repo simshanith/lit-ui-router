@@ -34,8 +34,10 @@ export async function changelogFrom(
 ): Promise<string> {
   const { cwd = workspaceRoot, exec = defaultExec } = options;
   const tag = await prevReleaseTag(packageName, releaseVersion, { cwd, exec });
+
   if (tag !== undefined) return tag;
   const { stdout } = await exec('git', rootCommitArgs(), { cwd });
+
   return parseRootCommit(stdout);
 }
 
@@ -50,23 +52,28 @@ export async function prevReleaseTag(
   options: { cwd?: string; exec?: Exec } = {},
 ): Promise<string | undefined> {
   const { cwd = workspaceRoot, exec = defaultExec } = options;
+
   try {
     // the other channels this package has tagged, so a prerelease's describe
     // walk can exclude their lanes (a stable excludes all of them by glob)
     const channel = prereleaseChannel(releaseVersion);
+
     const { stdout: tagList } = await exec(
       'git',
       ['tag', '-l', `${packageName}@*`],
       { cwd },
     );
+
     const otherChannels = prereleaseChannels(packageName, tagList).filter(
       (c) => c !== channel,
     );
+
     const { stdout } = await exec(
       'git',
       describeArgs(packageName, releaseVersion, otherChannels),
       { cwd },
     );
+
     return parsePrevTag(stdout);
   } catch (error) {
     const stderr =
@@ -76,7 +83,9 @@ export async function prevReleaseTag(
       typeof error.stderr === 'string'
         ? error.stderr
         : '';
+
     if (!isFirstReleaseError(stderr)) throw error;
+
     return undefined;
   }
 }

@@ -5,7 +5,9 @@ import { srefActiveClassAriaCurrent } from './sref-active-class-aria-current.ts'
 
 // RuleTester runs cases through these statics, which eslint's types omit.
 const hooks = RuleTester as unknown as Record<string, unknown>;
+
 hooks.describe = describe;
+
 hooks.it = it;
 
 const ruleTester = new RuleTester({
@@ -196,6 +198,7 @@ html\`<a href="/home" class=\${srefActiveClass({ state: 'home' })} aria-current=
 // `allowElementParts: false`: a server render never runs uiSrefActive, so a
 // link carrying it is held to the attribute-part bar, and reports unfixed.
 const SERVED = [{ allowElementParts: false }];
+
 const ACTIVE = `
 import { html } from 'lit';
 import { uiSref, uiSrefActive } from 'lit-ui-router';

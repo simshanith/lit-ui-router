@@ -40,6 +40,7 @@ export class NavElement extends LitElement {
 
   render(): TemplateResult {
     const transition = this.stateName.store?.transition;
+
     return html`${this.stateName.value} ${this.params.value.id} ${transition}`;
   }
 }

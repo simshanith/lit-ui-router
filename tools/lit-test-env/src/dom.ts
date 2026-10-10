@@ -27,7 +27,9 @@ export interface DomDiffOptions {
 }
 
 const DEFAULT_IGNORE_TAGS = ['script', 'style', 'svg'];
+
 const DEFAULT_EMPTY_ATTRS = ['class', 'id'];
+
 const VOID_ELEMENTS = new Set([
   'area',
   'base',
@@ -48,8 +50,11 @@ const VOID_ELEMENTS = new Set([
 ]);
 
 const ELEMENT_NODE = 1;
+
 const TEXT_NODE = 3;
+
 const DOCUMENT_NODE = 9;
+
 const DOCUMENT_FRAGMENT_NODE = 11;
 
 const collapse = (text: string) => text.replace(/\s+/g, ' ').trim();
@@ -62,17 +67,22 @@ interface Printer {
 
 function createPrinter(options: DomDiffOptions): Printer {
   const ignoreAttributes = options.ignoreAttributes ?? [];
+
   const ignoreEverywhere = new Set(
     ignoreAttributes.filter((e): e is string => typeof e === 'string'),
   );
+
   const ignoreForTags = ignoreAttributes.filter(
     (e): e is IgnoreAttributesForTags => typeof e !== 'string',
   );
+
   const ignoreTags = new Set([
     ...(options.ignoreTags ?? []),
     ...DEFAULT_IGNORE_TAGS,
   ]);
+
   const ignoreChildren = new Set(options.ignoreChildren ?? []);
+
   const stripEmpty = new Set(
     options.stripEmptyAttributes ?? DEFAULT_EMPTY_ATTRS,
   );
@@ -85,6 +95,7 @@ function createPrinter(options: DomDiffOptions): Printer {
   function flushText(depth: number) {
     const value = collapse(pendingText);
     pendingText = '';
+
     if (value !== '') lines.push(`${indent(depth)}${value}`);
   }
 
@@ -103,6 +114,7 @@ function createPrinter(options: DomDiffOptions): Printer {
       name === 'class'
         ? [...el.classList].sort().join(' ')
         : value.replace(/[&"]/g, (m) => (m === '&' ? '&amp;' : '&quot;'));
+
     return ` ${name}="${printed}"`;
   }
 
@@ -116,15 +128,19 @@ function createPrinter(options: DomDiffOptions): Printer {
 
   function element(el: Element, depth: number) {
     const tag = el.localName;
+
     if (ignoreTags.has(tag)) return;
     lines.push(`${indent(depth)}<${tag}${attributesString(el)}>`);
+
     if (!ignoreChildren.has(tag)) {
       if (options.shadowRoots && el.shadowRoot) {
         lines.push(`${indent(depth + 1)}#shadow-root`);
         children(el.shadowRoot, depth + 2);
       }
+
       children(el, depth + 1);
     }
+
     if (!VOID_ELEMENTS.has(tag)) lines.push(`${indent(depth)}</${tag}>`);
   }
 
@@ -137,6 +153,7 @@ function createPrinter(options: DomDiffOptions): Printer {
         element(child as Element, depth);
       }
     }
+
     flushText(depth);
   }
 
@@ -154,6 +171,7 @@ export function getDiffableHTML(
   options: DomDiffOptions = {},
 ): string {
   const printer = createPrinter(options);
+
   if (typeof html === 'string') {
     // Template content stays disconnected: no connectedCallback runs.
     const template = document.createElement('template');
@@ -171,6 +189,7 @@ export function getDiffableHTML(
   } else {
     throw new TypeError(`Cannot create diffable HTML from: ${html.nodeName}`);
   }
+
   return printer.lines.join('\n');
 }
 
@@ -194,9 +213,11 @@ export const domMatchers = {
         `toEqualDom expects a Node or an HTML string, received ${this.utils.stringify(received)}`,
       );
     }
+
     const actual = getDiffableHTML(received, options);
     const want = getDiffableHTML(expected, options);
     const pass = actual === want;
+
     return {
       pass,
       actual,

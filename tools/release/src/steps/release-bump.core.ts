@@ -12,10 +12,13 @@ export function branchPrefix(
   packageName: string,
 ): string {
   const trimmed = input?.trim() ?? '';
+
   if (trimmed !== '') return trimmed;
+
   if (packageName.trim() === '') {
     throw new Error('packageName must be non-empty');
   }
+
   return `release/${packageName}/v`;
 }
 
@@ -34,8 +37,10 @@ export function releaseCommitMessage(
 ): { message: string; warning?: string } {
   if (version.trim() === '') throw new Error('version must be non-empty');
   const body = changelog.trim();
+
   if (body === '') {
     const range = from === undefined ? '' : ` (${from}..HEAD)`;
+
     return {
       message: `Release ${version}`,
       warning:
@@ -43,5 +48,6 @@ export function releaseCommitMessage(
         'commits under this package since the range start; check the range pin',
     };
   }
+
   return { message: `Release ${version}\n\n${body}` };
 }

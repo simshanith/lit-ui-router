@@ -22,14 +22,17 @@ const config = parse(
 const noop: Rule.RuleModule = { create: () => ({}) };
 
 const plugins: Record<string, ESLint.Plugin> = {};
+
 for (const ruleId of [
   ...Object.keys(config.rules ?? {}),
   ...(config.overrides ?? []).flatMap((o) => Object.keys(o.rules ?? {})),
 ]) {
   const separator = ruleId.lastIndexOf('/');
+
   if (separator === -1) continue;
   const namespace = ruleId.slice(0, separator);
   const name = ruleId.slice(separator + 1);
+
   // oxlint accepts the `@typescript-eslint` alias for its `typescript` plugin.
   for (const ns of namespace === 'typescript'
     ? [namespace, '@typescript-eslint']

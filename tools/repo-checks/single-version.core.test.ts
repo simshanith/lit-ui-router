@@ -154,6 +154,7 @@ describe('auditSplits', () => {
     const { failures, allowed } = auditSplits(versions, controlled, [
       { name: 'lit', why: 'lit2-compat' },
     ]);
+
     assert.deepEqual(
       failures.map(({ name }) => name),
       ['esbuild'],
@@ -166,6 +167,7 @@ describe('auditSplits', () => {
       { name: 'mobx', why: 'mobx6-compat' },
       { name: 'gone', why: 'removed' },
     ]);
+
     assert.deepEqual(stale, ['mobx', 'gone']);
   });
 
@@ -175,6 +177,7 @@ describe('auditSplits', () => {
       new Set(['typescript']),
       [],
     );
+
     assert.deepEqual(failures[0]?.versions, ['5.9.3', '5.10.0']);
   });
 });

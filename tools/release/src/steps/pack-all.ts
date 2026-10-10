@@ -21,6 +21,7 @@ async function main() {
   const publishable = members.filter(isPublishable);
   // Clear stale tarballs so a removed package leaves no ghost output.
   await mkdir(packDir, { recursive: true });
+
   for (const entry of await readdir(packDir)) {
     if (entry.endsWith('.tgz')) await unlink(join(packDir, entry));
   }

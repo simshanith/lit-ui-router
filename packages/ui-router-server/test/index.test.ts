@@ -122,6 +122,7 @@ for (const strategy of ['matcher', 'simulate'] as const) {
 // verdicts — the shell is the error page, at the retained path.
 const appMountWith404 = (strategy: MountConfig['strategy']): MountConfig => {
   const mount = appMount(strategy);
+
   return {
     ...mount,
     routes: [...mount.routes, { name: 'notFound' }],
@@ -178,6 +179,7 @@ describe('otherwise configuration', () => {
         '/other': appMount('matcher'),
       },
     });
+
     assert.deepEqual(await router.resolve('/app/nope'), {
       kind: 'shell',
       mount: '/app',
@@ -226,6 +228,7 @@ describe('mount handling', () => {
         '/app': appMount('matcher'),
       },
     });
+
     assert.deepEqual(await router.resolve('/app/welcome'), {
       kind: 'shell',
       mount: '/app',
@@ -245,6 +248,7 @@ describe('mount handling', () => {
     const router = createServerRouter({
       mounts: { '/': appMount('matcher') },
     });
+
     assert.deepEqual(await router.resolve('/'), {
       kind: 'redirect',
       mount: '/',
@@ -284,12 +288,14 @@ describe('simulate strategy isolation', () => {
     const router = createServerRouter({
       mounts: { '/app': appMount('simulate') },
     });
+
     const verdicts = await Promise.all([
       router.resolve('/app'),
       router.resolve('/app/welcome'),
       router.resolve('/app/legacy'),
       router.resolve('/app'),
     ]);
+
     assert.deepEqual(
       verdicts.map((verdict) =>
         verdict.kind === 'redirect' ? verdict.location : verdict.kind,
@@ -339,8 +345,10 @@ describe('mergeSearch', () => {
     const router = createServerRouter({
       mounts: { '/app': appMount('matcher') },
     });
+
     const verdict = await router.resolve('/app/old-inbox');
     assert.equal(verdict.kind, 'redirect');
+
     if (verdict.kind === 'redirect') {
       assert.equal(
         mergeSearch(verdict.location, '?q=1'),
@@ -402,8 +410,10 @@ describe('mergeSearch', () => {
         },
       },
     });
+
     const verdict = await router.resolve('/app/old');
     assert.equal(verdict.kind, 'redirect');
+
     if (verdict.kind === 'redirect') {
       assert.equal(verdict.location, '/app/new#section');
       assert.equal(

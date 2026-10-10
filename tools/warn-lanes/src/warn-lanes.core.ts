@@ -52,6 +52,7 @@ export interface WarnMessage {
 
 export function tallyFiles(messages: readonly WarnMessage[]): WarnFiles {
   const files: WarnFiles = {};
+
   for (const { file, ruleId, severity } of messages) {
     if (severity !== 1) continue;
     // A warning with no rule id is a linter-level report, not a rule the
@@ -60,30 +61,37 @@ export function tallyFiles(messages: readonly WarnMessage[]): WarnFiles {
     const byRule = (files[file] ??= {});
     byRule[rule] = (byRule[rule] ?? 0) + 1;
   }
+
   return sortFiles(files);
 }
 
 /** Stable key order so a regenerated snapshot diffs only where counts moved. */
 export function sortFiles(files: WarnFiles): WarnFiles {
   const out: WarnFiles = {};
+
   for (const file of Object.keys(files).sort()) {
     const byRule = files[file] ?? {};
     const rules: Record<string, number> = {};
+
     for (const rule of Object.keys(byRule).sort()) {
       rules[rule] = byRule[rule] ?? 0;
     }
+
     out[file] = rules;
   }
+
   return out;
 }
 
 export function ruleTotals(files: WarnFiles): Record<string, number> {
   const totals: Record<string, number> = {};
+
   for (const byRule of Object.values(files)) {
     for (const [rule, count] of Object.entries(byRule)) {
       totals[rule] = (totals[rule] ?? 0) + count;
     }
   }
+
   // Descending count, then rule id: the biggest block is the one being worked.
   return Object.fromEntries(
     Object.entries(totals).sort(
@@ -95,14 +103,17 @@ export function ruleTotals(files: WarnFiles): Record<string, number> {
 
 export function totalWarnings(files: WarnFiles): number {
   let total = 0;
+
   for (const byRule of Object.values(files)) {
     for (const count of Object.values(byRule)) total += count;
   }
+
   return total;
 }
 
 export function buildSnapshot(task: string, files: WarnFiles): WarnSnapshot {
   const sorted = sortFiles(files);
+
   return {
     task,
     total: totalWarnings(sorted),
@@ -119,24 +130,29 @@ export function buildSnapshot(task: string, files: WarnFiles): WarnSnapshot {
 export function checkSnapshotIntegrity(snapshot: WarnSnapshot): string[] {
   const problems: string[] = [];
   const total = totalWarnings(snapshot.files);
+
   if (snapshot.total !== total) {
     problems.push(
       `snapshot total is ${snapshot.total} but files[] sums to ${total}`,
     );
   }
+
   const rules = ruleTotals(snapshot.files);
+
   for (const rule of new Set([
     ...Object.keys(rules),
     ...Object.keys(snapshot.rules),
   ])) {
     const committed = snapshot.rules[rule];
     const derived = rules[rule];
+
     if (committed !== derived) {
       problems.push(
         `snapshot rules[${rule}] is ${committed ?? 'absent'} but files[] sums to ${derived ?? 0}`,
       );
     }
   }
+
   return problems;
 }
 
@@ -168,24 +184,29 @@ export function diffWarnings(
 ): WarnDiff {
   const regressions: WarnDelta[] = [];
   const improvements: WarnDelta[] = [];
+
   for (const file of new Set([
     ...Object.keys(snapshot),
     ...Object.keys(observed),
   ])) {
     const before = snapshot[file] ?? {};
     const after = observed[file] ?? {};
+
     for (const rule of new Set([
       ...Object.keys(before),
       ...Object.keys(after),
     ])) {
       const was = before[rule] ?? 0;
       const now = after[rule] ?? 0;
+
       if (now > was) regressions.push({ file, rule, was, now });
       else if (now < was) improvements.push({ file, rule, was, now });
     }
   }
+
   const order = (a: WarnDelta, b: WarnDelta): number =>
     a.file.localeCompare(b.file) || a.rule.localeCompare(b.rule);
+
   return {
     regressions: regressions.sort(order),
     improvements: improvements.sort(order),
@@ -202,7 +223,9 @@ const WARN_LANE_STATUSES: readonly WarnLaneStatus[] = [
 
 export function statusOf(total: number, floor: number): WarnLaneStatus {
   if (total > floor) return 'above-floor';
+
   if (total < floor) return 'below-floor';
+
   return 'at-floor';
 }
 
@@ -235,16 +258,20 @@ export function formatWarnLaneMarker(state: WarnLaneState): string {
 
 export function parseWarnLaneMarker(line: string): WarnLaneState | undefined {
   const trimmed = line.trim();
+
   if (!trimmed.startsWith(MARKER)) return undefined;
   let value: unknown;
+
   try {
     value = JSON.parse(trimmed.slice(MARKER.length));
   } catch {
     return undefined;
   }
+
   // Every field, not just the two this function reads: `warnLaneLine`
   // dereferences the rest, so a partial payload reaches it as a typed lie.
   const state = value as WarnLaneState;
+
   if (
     typeof state?.task !== 'string' ||
     typeof state.total !== 'number' ||
@@ -256,16 +283,20 @@ export function parseWarnLaneMarker(line: string): WarnLaneState | undefined {
   ) {
     return undefined;
   }
+
   return state;
 }
 
 /** The last marker in a task log — a lane prints exactly one, at the end. */
 export function findWarnLaneState(log: string): WarnLaneState | undefined {
   const lines = log.split('\n');
+
   for (let index = lines.length - 1; index >= 0; index--) {
     const state = parseWarnLaneMarker(lines[index] ?? '');
+
     if (state !== undefined) return state;
   }
+
   return undefined;
 }
 
@@ -297,16 +328,21 @@ export function warnLaneLine(
   if (state === undefined) {
     return `${task} — warn-only lane, no state in this run (task did not run, or predates the marker)`;
   }
+
   const top = rules
     ? Object.entries(state.rules)
         .slice(0, 3)
         .map(([rule, count]) => `${rule} ${count}`)
         .join(', ')
     : '';
+
   const detail = top === '' ? '' : ` — ${top}`;
+
   if ((state.regressions ?? 0) > 0) {
     const count = state.regressions;
+
     return `${task} — ${count} warning entr${count === 1 ? 'y' : 'ies'} not in the snapshot (${state.total} warnings, floor ${state.floor})${detail}`;
   }
+
   return `${task} — ${VERDICTS[state.status](state)}${detail}`;
 }

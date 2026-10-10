@@ -27,10 +27,13 @@ export function classifyTagState(shas: {
   headSha: string;
 }): TagState {
   const { localSha, remoteSha, headSha } = shas;
+
   if (headSha.trim() === '') throw new Error('headSha must be non-empty');
+
   if (remoteSha !== undefined && remoteSha !== '') {
     return remoteSha === headSha ? 'skip-remote-same' : 'skip-remote-diverged';
   }
+
   if (localSha !== undefined && localSha !== '') {
     // The push step would ship this ref, so a stale local tag is fatal.
     if (localSha !== headSha) {
@@ -38,20 +41,24 @@ export function classifyTagState(shas: {
         `local tag points at ${localSha}, not HEAD ${headSha}; delete or move it`,
       );
     }
+
     return 'skip-local';
   }
+
   return 'tag';
 }
 
 /** argv resolving the commit a local tag points at (annotated tags peel). */
 export function localTagShaArgs(tagName: string): string[] {
   requireTagName(tagName);
+
   return ['rev-parse', '-q', '--verify', `refs/tags/${tagName}^{commit}`];
 }
 
 /** argv asking the remote whether the tag ref exists there. */
 export function remoteTagShaArgs(tagName: string): string[] {
   requireTagName(tagName);
+
   return ['ls-remote', '--tags', 'origin', `refs/tags/${tagName}`];
 }
 
@@ -67,12 +74,16 @@ export function headShaArgs(): string[] {
  */
 export function parseLsRemoteSha(stdout: string): string | undefined {
   let plain: string | undefined;
+
   for (const line of stdout.split('\n')) {
     const [sha = '', ref = ''] = line.trim().split(/\s+/);
+
     if (sha === '' || ref === '') continue;
+
     if (ref.endsWith('^{}')) return sha;
     plain ??= sha;
   }
+
   return plain;
 }
 
@@ -93,6 +104,7 @@ export function tagStateMessage(state: TagState, tagName: string): string {
     'skip-remote-same': `already released: ${tagName} is on the remote at this commit`,
     'skip-remote-diverged': `already released: ${tagName} is on the remote at a different commit (main has advanced past it)`,
   };
+
   return messages[state];
 }
 

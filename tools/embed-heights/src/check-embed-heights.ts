@@ -25,10 +25,13 @@ import {
 } from './reserve.core.ts';
 
 const MANIFEST = join(workspaceRoot, 'examples/embeds.ts');
+
 const EXAMPLES_DIR = join(workspaceRoot, 'examples');
 
 const args = new Set(process.argv.slice(2));
+
 const asJson = args.has('--json');
+
 const verbose = args.has('--verbose');
 
 function fail(message: string): never {
@@ -40,8 +43,10 @@ function fail(message: string): never {
 async function exampleDirs(): Promise<string[]> {
   const entries = await readdir(EXAMPLES_DIR, { withFileTypes: true });
   const names: string[] = [];
+
   for (const entry of entries) {
     if (!entry.isDirectory() || entry.name === 'node_modules') continue;
+
     try {
       await stat(join(EXAMPLES_DIR, entry.name, 'package.json'));
       names.push(entry.name);
@@ -49,23 +54,30 @@ async function exampleDirs(): Promise<string[]> {
       // not an example
     }
   }
+
   return names.sort();
 }
 
 const manifest = (await import(pathToFileURL(MANIFEST).href)) as {
   EXAMPLES: Record<string, { title: string; height: string }>;
 };
+
 const declared = manifest.EXAMPLES;
+
 const built = await exampleDirs();
 
 const missing = built.filter((name) => !(name in declared));
+
 if (missing.length > 0) {
   fail(`no entry in examples/embeds.ts for: ${missing.join(', ')}`);
 }
+
 const orphaned = Object.keys(declared).filter((name) => !built.includes(name));
+
 if (orphaned.length > 0) {
   fail(`declared but not an example under examples/: ${orphaned.join(', ')}`);
 }
+
 for (const name of built) {
   try {
     if (
@@ -82,7 +94,9 @@ for (const name of built) {
 }
 
 const server = await serveExamples(EXAMPLES_DIR);
+
 let measured;
+
 try {
   measured = await measureExamples(serverOrigin(server), built);
 } finally {
@@ -90,6 +104,7 @@ try {
 }
 
 const verdicts = new Map<string, Verdict>();
+
 for (const name of built) {
   verdicts.set(
     name,
@@ -119,6 +134,7 @@ if (asJson) {
   console.log(
     `${'example'.padEnd(pad)}  measured  required  declared  status  tallest state`,
   );
+
   for (const name of built) {
     const verdict = verdicts.get(name)!;
     const shot = measured.get(name)!;
@@ -129,6 +145,7 @@ if (asJson) {
         8,
       )}  ${String(verdict.declared).padStart(8)}  ${verdict.status.padEnd(6)}  ${shot.tallest}`,
     );
+
     if (verbose) {
       for (const state of shot.states) {
         console.log(`  ${String(state.height).padStart(6)}  ${state.state}`);
@@ -138,8 +155,10 @@ if (asJson) {
 }
 
 const broken = built.filter((name) => verdicts.get(name)!.status !== 'ok');
+
 if (broken.length > 0) {
   console.error('');
+
   for (const name of broken) {
     const {
       status,
@@ -147,11 +166,13 @@ if (broken.length > 0) {
       declared: value,
       suggested,
     } = verdicts.get(name)!;
+
     console.error(
       status === 'under'
         ? `${name}: reserves ${value}px but needs ${required}px — the embed scrolls inside itself. Use '${suggested}px'.`
         : `${name}: reserves ${value}px for ${required}px of content — stale. Use '${suggested}px'.`,
     );
   }
+
   fail(`${broken.length} height(s) out of date in examples/embeds.ts`);
 }

@@ -24,6 +24,7 @@ export async function writePublishedVersions(
 /** Read the manifest; a missing file points at the resolve step. */
 export async function readPublishedVersions(): Promise<PublishedVersions> {
   let text: string;
+
   try {
     text = await readFile(publishedVersionsPath, 'utf8');
   } catch {
@@ -31,5 +32,6 @@ export async function readPublishedVersions(): Promise<PublishedVersions> {
       'tools/release/.cache/published-versions.json missing — run the resolve:published task first (the root check:published-diff script chains it).',
     );
   }
+
   return parseManifest(text);
 }

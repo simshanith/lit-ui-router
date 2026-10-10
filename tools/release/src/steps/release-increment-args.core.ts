@@ -26,17 +26,21 @@ const PRE_INCREMENT_KEYWORDS = new Set([
 function validatedOther(other: string): string {
   // The old word-splitting trimmed surrounding whitespace; keep that.
   const value = other.trim();
+
   if (SEMVER_VERSION.test(value)) {
     // The channel becomes the publish dist-tag, so a typo must fail here.
     assertKnownChannel(
       value,
       `invalid 'other' increment ${JSON.stringify(other)}`,
     );
+
     return value;
   }
+
   if (PRE_INCREMENT_KEYWORDS.has(value)) {
     return value;
   }
+
   throw new Error(
     `invalid 'other' increment ${JSON.stringify(other)}: expected an exact ` +
       `semver version (e.g. 1.2.3-alpha.0) or one of ` +

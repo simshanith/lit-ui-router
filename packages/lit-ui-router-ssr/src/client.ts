@@ -25,6 +25,7 @@ export {
   type AdoptUiViewContext,
   type AdoptUiViewContextKey,
 } from './adopt-context.js';
+
 export {
   isServedViewClass,
   type ServedUiView,
@@ -32,6 +33,7 @@ export {
   servedViewBrand,
   withServedRender,
 } from './served-view.js';
+
 export type { HydrationSignature } from './signature.js';
 
 /** The attribute `@lit-labs/ssr` writes on a server-rendered custom element. */
@@ -128,9 +130,12 @@ class UiViewSlotDirective extends RenderLightDirective {
     super(part);
     // The marker lit's walk wakes a custom element on is emitted only under a host-stack entry `@lit-labs/ssr` leaks for light-DOM renderers, so the wake is owned here instead.
     const view = (part as ChildPart).parentNode;
+
     if (!(view instanceof Element)) return;
+
     // The pin keys off the served pair, not the wake below: where that marker is there, lit's own walk cleared the attribute before this part was reached.
     if (servedPair(view)) pinAdopter(view, walkReporter);
+
     if (view.hasAttribute(DEFER)) view.removeAttribute(DEFER);
   }
 
@@ -142,6 +147,7 @@ class UiViewSlotDirective extends RenderLightDirective {
   /** A host `renderLight()` answers, as it does for ssr-client's own directive; a `<ui-view>` has none and keeps its nodes. */
   override update(part: ChildPart): unknown {
     const host = part.parentNode as Partial<RenderLightHost>;
+
     return typeof host.renderLight === 'function'
       ? host.renderLight()
       : noChange;
@@ -182,6 +188,7 @@ const walkWith = (
 ): void => {
   const outer = walkReporter;
   walkReporter = reporter;
+
   try {
     walk();
   } finally {
@@ -203,6 +210,7 @@ const report = (
 ): void => {
   const detail: UiViewAdoptDetail =
     outcome === 'fell-back' ? { outcome, error } : { outcome };
+
   view.dispatchEvent(
     new CustomEvent(uiViewAdoptEventName, {
       bubbles: true,
@@ -210,12 +218,14 @@ const report = (
       detail,
     }),
   );
+
   try {
     reporter?.(view, outcome, error);
   } catch (thrown) {
     if (typeof globalThis.reportError !== 'function') {
       throw thrown;
     }
+
     globalThis.reportError(thrown);
   }
 };
@@ -252,6 +262,7 @@ const servedPair = (view: Element): Comment | undefined => {
   for (const child of view.childNodes) {
     if (isPart(child, 'lit-part')) return child as Comment;
   }
+
   return undefined;
 };
 
@@ -259,8 +270,10 @@ const servedPair = (view: Element): Comment | undefined => {
 const hasServedMarkers = (node: Node): boolean => {
   for (const child of node.childNodes) {
     if (isPart(child, servedMarkerPrefix)) return true;
+
     if (child instanceof Element && hasServedMarkers(child)) return true;
   }
+
   return false;
 };
 
@@ -276,6 +289,7 @@ const revealNestedPair = (view: Element): void => {
   const markers = [...view.childNodes].filter((node) =>
     isPart(node, servedMarkerPrefix),
   );
+
   revealMarker(markers[0]);
   revealMarker(markers.at(-1));
 };
@@ -311,18 +325,22 @@ const revealServedMarkers = (node: Node): void => {
  */
 const dropServedRender = (view: Element): void => {
   const children = [...view.childNodes];
+
   const from = children.findIndex(
     (child) =>
       isPart(child, servedMarkerPrefix) ||
       (child instanceof Element && hasServedMarkers(child)),
   );
+
   if (from < 0) return;
+
   for (const child of children.slice(from)) child.remove();
 };
 
 /** How far `node` moves the part depth: 1 opens, -1 closes, 0 is anything else. */
 const partStep = (node: Node): number => {
   if (isPart(node, 'lit-part')) return 1;
+
   return isPart(node, '/lit-part') ? -1 : 0;
 };
 
@@ -333,8 +351,10 @@ const partStep = (node: Node): number => {
  */
 const clearInterior = (open: Comment): void => {
   let depth = 0;
+
   for (let node = open.nextSibling; node; node = open.nextSibling) {
     const step = partStep(node);
+
     if (step < 0 && depth === 0) return;
     depth += step;
     node.remove();
@@ -384,25 +404,31 @@ const adopt = (
   reporter: AdoptReporter | undefined,
 ): void => {
   const open = servedPair(view);
+
   if (!open) {
     if (!hasServedMarkers(view)) return report(view, reporter, 'none');
     const error = 'the served part pair is gone';
     warnMismatch(view, error);
     dropServedRender(view);
+
     return report(view, reporter, 'fell-back', error);
   }
+
   // The address no state routed: nothing between the pair to adopt, and the element renders after it.
   if (isPart(open.nextSibling, '/lit-part')) {
     return report(view, reporter, 'none');
   }
+
   try {
     revealServedMarkers(view);
     walkWith(reporter, () => hydrate(view.render(), view, view.renderOptions));
   } catch (error) {
     warnMismatch(view, error);
     clearInterior(open);
+
     return report(view, reporter, 'fell-back', error);
   }
+
   report(view, reporter, 'adopted');
 };
 
@@ -433,6 +459,7 @@ const pinAdopter = (
   if (pinned.has(view)) return;
   pinned.add(view);
   let release = (): void => {};
+
   release = provideContext(view, adoptUiViewContext, (woken) => {
     // A descendant's request passes through this element and is answered; only this view's own spends the pin.
     if (woken === view) release();
@@ -444,6 +471,7 @@ const pinAdopter = (
 const parseSignature = (json: string): HydrationSignature | null => {
   try {
     const signature = JSON.parse(json) as { version?: unknown } | null;
+
     // Only `version` is checked, and HydrationSignature claims nothing more.
     return typeof signature?.version === 'string'
       ? (signature as HydrationSignature)
@@ -488,6 +516,7 @@ export function readHydrationSignature(
   container: ParentNode,
 ): HydrationSignature | null {
   const block = signatureBlockIn(container);
+
   return block ? parseSignature(block.text) : null;
 }
 
@@ -502,15 +531,18 @@ const signatureBlockIn = (
 /** Whether the block is followed, past whitespace, by the opening marker of the render it precedes. */
 const precedesRender = (block: Element): boolean => {
   let node = block.nextSibling;
+
   while (node?.nodeType === Node.TEXT_NODE && !(node as Text).data.trim()) {
     node = node.nextSibling;
   }
+
   return isPart(node, 'lit-part');
 };
 
 /** The release line a version belongs to: `0.<minor>` below 1.0, where a minor breaks, and the major above it. */
 const releaseLine = (version: string): string => {
   const [major = '', minor = ''] = version.split('.');
+
   return major === '0' ? `0.${minor}` : major;
 };
 
@@ -536,13 +568,18 @@ const warnMarkersStripped = (): void => {
 const isAdoptable = (container: HTMLElement): boolean => {
   const block = signatureBlockIn(container);
   const signature = block && parseSignature(block.text);
+
   if (!signature) return false;
+
   if (releaseLine(signature.version) !== releaseLine(packageVersion)) {
     warnVersionSkew(signature.version);
+
     return false;
   }
+
   if (precedesRender(block)) return true;
   warnMarkersStripped();
+
   return false;
 };
 
@@ -625,12 +662,16 @@ export function hydrateRoot(
 ): false | (() => void) {
   if (!isAdoptable(container)) {
     makeCold(container);
+
     return false;
   }
+
   const { onAdopt, ...renderOptions } = options;
+
   const release = provideContext(container, adoptUiViewContext, (view) =>
     adopt(view, onAdopt),
   );
+
   try {
     walkWith(onAdopt, () => hydrate(value, container, renderOptions));
   } catch (error) {
@@ -638,9 +679,11 @@ export function hydrateRoot(
     makeCold(container);
     throw error;
   }
+
   // `@lit-labs/ssr` defers a custom element it wrote no marker for, so the walk passed it by; a `<ui-view>` still asleep is a nested one, waiting on its parent's update.
   for (const element of container.querySelectorAll(`[${DEFER}]`)) {
     if (!(element instanceof UiView)) element.removeAttribute(DEFER);
   }
+
   return release;
 }

@@ -56,6 +56,7 @@ describe('static param defaults without any $injector', () => {
     const matcher = compile('/x/:id', {
       params: { id: { value: 'fallback', squash: true } },
     });
+
     assert.deepEqual(exec(matcher, '/x'), { id: 'fallback' });
     assert.deepEqual(exec(matcher, '/x/'), { id: 'fallback' });
     assert.deepEqual(exec(matcher, '/x/7'), { id: '7' });
@@ -66,6 +67,7 @@ describe('static param defaults without any $injector', () => {
     const matcher = compile('/page/{num:int}', {
       params: { num: { value: 1, squash: true } },
     });
+
     assert.deepEqual(exec(matcher, '/page'), { num: 1 });
     assert.deepEqual(exec(matcher, '/page/3'), { num: 3 });
   });
@@ -150,6 +152,7 @@ describe('custom ParamType objects', () => {
         typeof val === 'string' && val === val.toUpperCase(),
       decode: (val: string) => val.toUpperCase(),
     };
+
     const matcher = compile('/tag/:tag', { params: { tag: { type: upper } } });
     assert.deepEqual(exec(matcher, '/tag/ABC'), { tag: 'ABC' });
     assert.equal(exec(matcher, '/tag/abc'), null);
@@ -177,6 +180,7 @@ describe('format', () => {
     const params = (squash: boolean | string) => ({
       params: { id: { value: 'fallback', squash } },
     });
+
     assert.equal(format(compile('/x/:id', params(true)), {}), '/x');
     assert.equal(format(compile('/x/:id', params(false)), {}), '/x/fallback');
     assert.equal(format(compile('/x/:id', params('~')), {}), '/x/~');
@@ -268,12 +272,14 @@ describe('compiled matcher surface', () => {
 
   it('cannot poison a matcher compiled after a mutation attempt', () => {
     const first = compile('/a/{num:int}');
+
     try {
       // @ts-expect-error -- readonly; sloppy-mode callers no-op instead
       first.pathParams[0].type.decode = () => 'poisoned';
     } catch {
       // strict mode: the assignment throws; either way the singleton is intact
     }
+
     const second = compile('/b/{num:int}');
     assert.deepEqual(exec(second, '/b/7'), { num: 7 });
     assert.deepEqual(exec(first, '/a/7'), { num: 7 });

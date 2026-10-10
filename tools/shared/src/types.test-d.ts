@@ -22,20 +22,27 @@ import type { DependencyMap, PackageManifest } from '@tools/bootstrap/types.ts';
 declare function accepts<T>(value: T): T;
 
 declare const pnpmBase: BaseManifest;
+
 declare const pnpmProject: ProjectManifest;
+
 declare const pnpmPackage: PnpmPackageManifest;
+
 declare const pnpmDependencies: Dependencies;
+
 declare const ourDependencies: DependencyMap;
 
 // -- ours is a supertype: every pnpm manifest flavour satisfies it ------------
 
 accepts<PackageManifest>(pnpmBase);
+
 accepts<PackageManifest>(pnpmProject);
+
 accepts<PackageManifest>(pnpmPackage);
 
 // -- specifiers agree with pnpm exactly, in both directions -------------------
 
 accepts<DependencyMap>(pnpmDependencies);
+
 accepts<Dependencies>(ourDependencies);
 
 // -- `exports` is the one divergence, and only one direction holds ------------
@@ -48,5 +55,6 @@ const conditionalExports = {
 };
 
 accepts<PackageManifest>(conditionalExports);
+
 // @ts-expect-error -- pnpm's exports is too narrow for conditional subpaths
 accepts<BaseManifest>(conditionalExports);

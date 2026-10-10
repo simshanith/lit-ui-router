@@ -47,9 +47,11 @@ export function binPath(
   // the one-bin shorthand names itself after the package
   const path =
     typeof manifest.bin === 'string' ? manifest.bin : manifest.bin?.[bin];
+
   if (path === undefined) {
     throw new Error(`${manifest.name} declares no ${bin} bin`);
   }
+
   // join normalizes, so the `./bin/x` and `bin/x` spellings both land
   return join(dirname(fileURLToPath(manifestUrl)), path);
 }

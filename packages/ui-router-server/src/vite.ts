@@ -56,9 +56,11 @@ export function serverRouterPlugin(
   options?: ConnectAdapterOptions,
 ): ServerRouterPlugin {
   const middleware = createConnectMiddleware(router, options);
+
   const install = (server: ViteMiddlewareServer): void => {
     server.middlewares.use(middleware);
   };
+
   return {
     name: 'ui-router-server',
     configureServer: install,

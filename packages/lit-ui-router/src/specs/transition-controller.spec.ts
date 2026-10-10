@@ -29,6 +29,7 @@ class TransitionControllerHost extends LitElement {
 
   render() {
     this.renderCount++;
+
     return html`<span>${this.controller?.current?.name ?? ''}</span>`;
   }
 }
@@ -77,6 +78,7 @@ describe('TransitionController', () => {
     }
 
     await waitForUpdate(host);
+
     return host;
   }
 

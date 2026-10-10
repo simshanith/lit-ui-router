@@ -62,18 +62,22 @@ export interface Node {
   type: string;
   [key: string]: unknown;
 }
+
 export interface CallNode extends Node {
   callee: Node;
   arguments: Node[];
 }
+
 export interface ObjectNode extends Node {
   properties: Node[];
 }
+
 export interface PropertyNode extends Node {
   key: Node & { name?: string; value?: unknown };
   value: Node & { value?: unknown };
   computed?: boolean;
 }
+
 /** parse5's Token.Location, structurally — parse5 itself is not a direct dep. */
 export interface Parse5Location {
   startLine: number;
@@ -83,11 +87,13 @@ export interface Parse5Location {
   endCol: number;
   endOffset: number;
 }
+
 export interface Parse5Element {
   name: string;
   attribs: Record<string, string>;
   sourceCodeLocation?: { startTag?: Parse5Location };
 }
+
 /** A node as eslint ranges it; parse5's side of these rules carries no range. */
 export interface Ranged {
   range?: [number, number];
@@ -102,11 +108,13 @@ interface ScopeLike {
   set: Map<string, { defs: DefinitionLike[] }>;
   upper: ScopeLike | null;
 }
+
 interface DefinitionLike {
   type: string;
   node: Node;
   parent?: Node & { source?: { value?: unknown } };
 }
+
 interface ImportBinding {
   node: Node & { local: { name: string }; imported?: Node & { name?: string } };
   source: string;
@@ -119,14 +127,19 @@ const definitionOf = (
 ): DefinitionLike | undefined => {
   if (node.type !== 'Identifier') return undefined;
   const name = (node as { name?: string }).name;
+
   if (name === undefined) return undefined;
+
   let scope: ScopeLike | null = context.sourceCode.getScope(
     node as never,
   ) as unknown as ScopeLike;
+
   for (; scope !== null; scope = scope.upper) {
     const variable = scope.set.get(name);
+
     if (variable !== undefined) return variable.defs[0];
   }
+
   return undefined;
 };
 
@@ -137,9 +150,11 @@ const importBindingOf = (
 ): ImportBinding | undefined => {
   const definition = definitionOf(context, node);
   const source = definition?.parent?.source?.value;
+
   if (definition?.type !== 'ImportBinding' || typeof source !== 'string') {
     return undefined;
   }
+
   return { node: definition.node as ImportBinding['node'], source };
 };
 
@@ -152,17 +167,22 @@ const importedAs = (
 ): boolean => {
   if (node.type === 'Identifier') {
     const binding = importBindingOf(context, node);
+
     if (binding?.node.type !== 'ImportSpecifier') return false;
+
     return (
       binding.node.imported?.type === 'Identifier' &&
       binding.node.imported.name === name &&
       accepts(binding.source)
     );
   }
+
   if (node.type !== 'MemberExpression' || node.computed === true) return false;
   const property = (node.property as { name?: string } | undefined)?.name;
+
   if (property !== name) return false;
   const binding = importBindingOf(context, node.object as Node);
+
   return (
     binding?.node.type === 'ImportNamespaceSpecifier' && accepts(binding.source)
   );
@@ -171,6 +191,7 @@ const importedAs = (
 /** The tagged-template expression index an element-part attribute addresses. */
 export const elementPartIndex = (attribute: string): number | undefined => {
   const match = ELEMENT_PART.exec(attribute);
+
   return match === null ? undefined : Number(match[1]);
 };
 
@@ -197,12 +218,16 @@ export const attributePartsOf = (
   element: Parse5Element,
 ): Map<number, AttributePart> => {
   const parts = new Map<number, AttributePart>();
+
   for (const [name, value] of Object.entries(element.attribs)) {
     if (elementPartIndex(name) !== undefined) continue;
+
     if (BINDING_PREFIX.test(name)) continue;
+
     const indices = [...value.matchAll(ATTRIBUTE_PART)].map((match) =>
       Number(match[1]),
     );
+
     for (const index of indices) {
       parts.set(index, {
         name,
@@ -211,6 +236,7 @@ export const attributePartsOf = (
       });
     }
   }
+
   return parts;
 };
 
@@ -229,18 +255,24 @@ export const attributeEnd = (
   expressions: Node[],
 ): number | undefined => {
   const value = element.attribs[attribute];
+
   if (value === undefined) return undefined;
   const last = [...value.matchAll(ATTRIBUTE_PART)].at(-1);
+
   if (last?.index === undefined) return undefined;
   const range = (expressions[Number(last[1])] as Ranged | undefined)?.range;
+
   if (range === undefined) return undefined;
   // The expression's own text stops short of the template's `}`.
   const close = text.indexOf('}', range[1]);
+
   if (close === -1) return undefined;
   // parse5 keeps the static text around the placeholder, so the raw source
   // resumes with it, and the value's quote (if any) follows.
   let end = close + 1 + (value.length - last.index - last[0].length);
+
   if (text[end] === '"' || text[end] === "'") end += 1;
+
   return end;
 };
 
@@ -256,6 +288,7 @@ export const isLinkElement = (
 ): boolean => {
   const bound = [...parts.values()].some((part) => part.name === 'role');
   const role = bound ? undefined : element.attribs.role;
+
   return (
     NATIVE_LINKS.has(element.name) ||
     linkElements.has(element.name) ||
@@ -278,8 +311,10 @@ export const propertyNamed = (
   for (const property of object.properties) {
     if (property.type !== 'Property' || property.computed === true) continue;
     const candidate = property as PropertyNode;
+
     if ((candidate.key.name ?? candidate.key.value) === name) return candidate;
   }
+
   return undefined;
 };
 
@@ -292,15 +327,19 @@ interface SpecifierNode extends Node {
 /** Named specifiers of every lit-ui-router import in this file. */
 const ourSpecifiers = (source: SourceCode): SpecifierNode[] => {
   const found: SpecifierNode[] = [];
+
   for (const statement of source.ast.body) {
     if (statement.type !== 'ImportDeclaration') continue;
     const from = statement.source.value;
+
     if (typeof from !== 'string' || !isOurPackage(from)) continue;
+
     for (const specifier of statement.specifiers) {
       if (specifier.type !== 'ImportSpecifier') continue;
       found.push(specifier as unknown as SpecifierNode);
     }
   }
+
   return found;
 };
 
@@ -328,17 +367,23 @@ export const siblingBinding = (
       edits: [],
     };
   }
+
   const specifiers = ourSpecifiers(source);
+
   const existing = specifiers.find(
     (specifier) => specifier.imported.name === name,
   );
+
   if (existing !== undefined) {
     return { binding: existing.local.name ?? name, edits: [] };
   }
+
   const anchor = specifiers.find(
     (specifier) => specifier.local.name === (callee as { name?: string }).name,
   );
+
   if (anchor === undefined) return undefined;
+
   return {
     binding: name,
     edits: [fixer.insertTextAfter(anchor as never, `, ${name}`)],
@@ -359,11 +404,13 @@ export const linkElementsOf = (
   option?: unknown,
 ): ReadonlySet<string> => {
   const { linkElements } = context.settings as { linkElements?: unknown };
+
   const declared = Array.isArray(option)
     ? option
     : Array.isArray(linkElements)
       ? linkElements
       : [];
+
   // parse5 lowercases tag names, so a declaration has to meet them there.
   return new Set(
     declared
@@ -382,9 +429,11 @@ export const allowElementPartsOf = (
   option?: unknown,
 ): boolean => {
   if (typeof option === 'boolean') return option;
+
   const { allowElementParts } = context.settings as {
     allowElementParts?: unknown;
   };
+
   return typeof allowElementParts === 'boolean' ? allowElementParts : true;
 };
 
@@ -424,10 +473,12 @@ export const createDirectiveTracker = (
   const { litHtmlSources } = context.settings as {
     litHtmlSources?: boolean | string[];
   };
+
   const sources = new Set([
     ...DEFAULT_LIT_HTML_SOURCES,
     ...(Array.isArray(litHtmlSources) ? litHtmlSources : []),
   ]);
+
   const isLitSource = (source: string) => sources.has(packageOf(source));
   const isOurs = isOurPackage;
   // Falsy `litHtmlSources` means analyse every bare `html` tag, imported or not.
@@ -445,6 +496,7 @@ export const createDirectiveTracker = (
   return {
     onImport(node) {
       const source = node.source.value;
+
       if (typeof source !== 'string') return;
       analyse =
         // A previous import supplied lit-html
@@ -470,14 +522,17 @@ export const createDirectiveTracker = (
       ) {
         // unbound or imported from anywhere counts; a shadowing local does not
         const definition = definitionOf(context, tag);
+
         return definition === undefined || definition.type === 'ImportBinding';
       }
+
       return importedAs(context, tag, 'html', isLitSource);
     },
 
     directiveOf(expression) {
       if (expression.type !== 'CallExpression') return undefined;
       const { callee } = expression as CallNode;
+
       return DIRECTIVE_NAMES.find((name) =>
         importedAs(context, callee, name, isOurs),
       );
@@ -487,8 +542,10 @@ export const createDirectiveTracker = (
 
     isControllerBinding(node) {
       const definition = definitionOf(context, node);
+
       if (definition?.type !== 'Variable') return false;
       const declarator = definition.node;
+
       return (
         declarator.type === 'VariableDeclarator' &&
         isControllerNew(declarator.init as Node | null | undefined)

@@ -221,10 +221,12 @@ export class TransitionController implements ReactiveController {
         this.host,
         this.onRouterReplaced,
       );
+
       // A reconnect outside any provider keeps the router it had.
       this._router = router ?? this._router;
       this.unsubscribe = unsubscribe;
     }
+
     this.watch();
   }
 
@@ -237,6 +239,7 @@ export class TransitionController implements ReactiveController {
 
   private watch(): void {
     const router = this._router;
+
     if (!router) {
       return;
     }
@@ -283,6 +286,7 @@ export class TransitionController implements ReactiveController {
     this._transition = transition ?? this._transition;
     const result = this.options.callback?.(transition, reason);
     this.host.requestUpdate();
+
     return result;
   }
 }

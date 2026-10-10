@@ -42,13 +42,17 @@ const passes = dual
 
 // a decorator lowers to an import of this package, so the emitting one must declare it
 const RUNTIME = '@oxc-project/runtime';
+
 const { dependencies = {}, version } = requireManifest(process.cwd());
+
 const undeclaredRuntime = new Set<string>();
 
 for (const file of publishableSources()) {
   const source = readFileSync(file, 'utf8');
+
   for (const { out: outDir, dev } of passes) {
     const define = passDefine(source, version, dev);
+
     const transformed = transformSync(file, source, {
       target: 'es2022',
       sourcemap: true,
@@ -63,17 +67,22 @@ for (const file of publishableSources()) {
       },
       define,
     });
+
     if (transformed.errors.length) fail(file, transformed.errors);
+
     const printed = minifySync(file, transformed.code, {
       compress: false,
       mangle: false,
       codegen: { removeWhitespace: false },
       sourcemap: true,
     });
+
     if (printed.errors.length) fail(file, printed.errors);
+
     if (!(RUNTIME in dependencies) && printed.code.includes(`"${RUNTIME}/`)) {
       undeclaredRuntime.add(file);
     }
+
     const out = join(outDir, relative(SRC, file)).replace(/\.ts$/, '.js');
     mkdirSync(dirname(out), { recursive: true });
     writeFileSync(

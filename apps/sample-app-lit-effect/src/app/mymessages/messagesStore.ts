@@ -65,6 +65,7 @@ export function byFolder(
 ): readonly Message[] {
   const toFromAttr = ['drafts', 'sent'].includes(folderId) ? 'from' : 'to';
   const emailAddress = AppConfig.emailAddress ?? '';
+
   return cache.messages.filter(
     (message) =>
       message.folder === folderId &&

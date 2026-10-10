@@ -21,6 +21,7 @@ export const draw = async (
 ): Promise<string> => {
   const router = makeRouter();
   await settle(router, path);
+
   return renderPage(page(router), router, new EventTarget(), renderers);
 };
 
@@ -30,6 +31,7 @@ const attachShadowRoots = (root: ParentNode): void => {
     ...root.querySelectorAll('template[shadowrootmode]'),
   ]) {
     const host = template.parentElement;
+
     if (!host) continue;
     const mode = template.getAttribute('shadowrootmode') as ShadowRootMode;
     const shadow = host.attachShadow({ mode });
@@ -48,9 +50,11 @@ export const serve = (
   container.innerHTML = markup;
   attachShadowRoots(container);
   const served = [...container.querySelectorAll('*')];
+
   for (const [index, element] of served.entries()) {
     element.setAttribute('data-served', String(index));
   }
+
   return { container, served };
 };
 
@@ -63,8 +67,10 @@ const tick = (): Promise<void> =>
 export const drain = async (container: HTMLElement): Promise<void> => {
   for (let pass = 0; pass < 10; pass += 1) {
     await tick();
+
     if (!container.querySelector('[defer-hydration]')) break;
   }
+
   await tick();
 };
 
@@ -72,9 +78,11 @@ export const drain = async (container: HTMLElement): Promise<void> => {
 export const comments = (container: HTMLElement): string[] => {
   const walker = document.createTreeWalker(container, NodeFilter.SHOW_COMMENT);
   const found: string[] = [];
+
   for (let node = walker.nextNode(); node; node = walker.nextNode()) {
     found.push((node as Comment).data);
   }
+
   return found;
 };
 
@@ -87,14 +95,19 @@ export const comments = (container: HTMLElement): string[] => {
 export const dropViewNodeMarkers = (container: HTMLElement): number => {
   const walker = document.createTreeWalker(container, NodeFilter.SHOW_COMMENT);
   const doomed: Comment[] = [];
+
   for (let node = walker.nextNode(); node; node = walker.nextNode()) {
     const comment = node as Comment;
+
     if (!/^(ui-view:)?lit-node \d+$/.test(comment.data)) continue;
+
     if (comment.nextElementSibling?.localName === 'ui-view') {
       doomed.push(comment);
     }
   }
+
   for (const comment of doomed) comment.remove();
+
   return doomed.length;
 };
 
@@ -111,6 +124,7 @@ export const hydrateInto = async (
   await settle(router, path);
   const release = hydrateRoot(container, page(router));
   expect(release).toBeTypeOf('function');
+
   return { router, release: release as () => void };
 };
 
@@ -126,5 +140,6 @@ export const boot = async (
   const { router, release } = await hydrateInto(container, page, path);
   await drain(container);
   release();
+
   return router;
 };

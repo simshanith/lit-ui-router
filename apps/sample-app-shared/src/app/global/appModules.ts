@@ -40,9 +40,13 @@ export interface AuthService {
 }
 
 export let AppConfig: AppConfig;
+
 export let AuthService: AuthService;
+
 export let App: LitViewDeclaration;
+
 export let Compose: LitViewDeclaration;
+
 export let MessageList: LitViewDeclaration<MessageListResolves>;
 
 let markRegistered: (modules: AppModules) => void;

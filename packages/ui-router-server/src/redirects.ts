@@ -93,9 +93,11 @@ export function compileRoutes(
 ): CompiledRoute[] {
   const { compile } = urlMatcherFactory(config);
   const byName = new Map<string, RouteDeclaration>();
+
   for (const route of routes) {
     if (byName.has(route.name))
       throw new Error(`Duplicate route '${route.name}'`);
+
     // Naive appending turns '/parent' + 'edit' into '/parentedit'; a url
     // must contribute a path segment ('/...') or a search part ('?...').
     if (route.url && !route.url.startsWith('/') && !route.url.startsWith('?'))
@@ -104,17 +106,22 @@ export function compileRoutes(
       );
     byName.set(route.name, route);
   }
+
   const compiled: CompiledRoute[] = [];
+
   for (const route of routes) {
     if (route.url === undefined) continue;
     const segments = route.name.split('.');
     let pattern = '';
     let params: Record<string, unknown> = {};
+
     for (let depth = 1; depth <= segments.length; depth++) {
       const name = segments.slice(0, depth).join('.');
       const ancestor = byName.get(name);
+
       if (!ancestor)
         throw new Error(`Route '${route.name}' has no ancestor '${name}'`);
+
       if (ancestor.url) {
         // Naive concatenation cannot splice a child into a parent's search
         // part (core's UrlMatcher.append can); fail rather than diverge.
@@ -124,8 +131,10 @@ export function compileRoutes(
           );
         pattern += ancestor.url;
       }
+
       if (ancestor.params) params = { ...params, ...ancestor.params };
     }
+
     compiled.push({
       name: route.name,
       pattern,
@@ -133,6 +142,7 @@ export function compileRoutes(
       redirectTo: route.redirectTo,
     });
   }
+
   return compiled;
 }
 
@@ -155,15 +165,19 @@ export function matchRoute(
 ): RouteMatch | null {
   let best: RouteMatch | null = null;
   let bestMatcher: CompiledMatcher | null = null;
+
   for (const { name, matcher } of routes) {
     const params = exec(matcher, pathname);
+
     if (params === null) continue;
+
     // Strict < keeps the earlier declaration on ties.
     if (bestMatcher === null || compare(matcher, bestMatcher) < 0) {
       best = { state: name, params };
       bestMatcher = matcher;
     }
   }
+
   return best;
 }
 
@@ -189,10 +203,12 @@ export function compileRedirects(
     where: string,
   ): RedirectTarget => {
     const target = toTarget(to);
+
     if (!byName.has(target.state))
       throw new Error(
         `${where} redirects to unknown or url-less state '${target.state}'`,
       );
+
     return target;
   };
 
@@ -201,12 +217,15 @@ export function compileRedirects(
     regexp: rule.pattern instanceof RegExp ? rule.pattern : null,
     to: resolveTarget(rule.to, `Rule '${String(rule.pattern)}'`),
   }));
+
   for (const route of routes) {
     // Validate targets and reject cycles while the table is being compiled.
     const seen = new Set([route.name]);
     let step = route;
+
     while (step.redirectTo !== undefined) {
       const next = resolveTarget(step.redirectTo, `State '${step.name}'`);
+
       if (seen.has(next.state))
         throw new Error(
           `Redirect cycle through '${next.state}' (from '${route.name}')`,
@@ -223,6 +242,7 @@ export function compileRedirects(
   ): string | null => {
     let state = byName.get(stateName)!;
     let carried = initial;
+
     while (state.redirectTo !== undefined) {
       const next = toTarget(state.redirectTo);
       // Explicit target params replace the carried ones, as core's
@@ -230,7 +250,9 @@ export function compileRedirects(
       carried = next.params ?? carried;
       state = byName.get(next.state)!;
     }
+
     const path = format(state.matcher, carried);
+
     // Invalid target params, or a redirect landing where it started: no-op.
     return path === null || path === pathname ? null : path;
   };
@@ -242,7 +264,9 @@ export function compileRedirects(
           return follow(rule.to.state, rule.to.params ?? {}, pathname);
         continue;
       }
+
       const params = exec(rule.matcher!, pathname);
+
       if (params !== null)
         return follow(
           rule.to.state,
@@ -250,11 +274,15 @@ export function compileRedirects(
           pathname,
         );
     }
+
     const match = matchRoute(routes, pathname);
+
     if (match === null) return null;
     const route = byName.get(match.state)!;
+
     if (route.redirectTo === undefined) return null;
     const target = toTarget(route.redirectTo);
+
     return follow(target.state, target.params ?? match.params, pathname);
   };
 }

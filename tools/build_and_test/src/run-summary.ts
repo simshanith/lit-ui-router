@@ -58,6 +58,7 @@ import { errorCommand, warningCommand } from '@tools/shared/gha.core.ts';
 import { onActions } from '@tools/shared/gha.ts';
 
 const RUNS_DIR = process.env.TURBO_RUNS_DIR ?? '.turbo/runs';
+
 const SESSION_FILE =
   process.env.TURBO_SUMMARY_SESSION ?? '.turbo/summary-session';
 
@@ -83,6 +84,7 @@ function warn(message: string): void {
 async function sessionStart(): Promise<number | undefined> {
   try {
     const raw = Number.parseInt(await readFile(SESSION_FILE, 'utf8'), 10);
+
     return Number.isFinite(raw) ? raw : undefined;
   } catch {
     return undefined;
@@ -97,17 +99,21 @@ interface FoundSummary {
 /** Every `*.json` in the runs directory, newest first. */
 async function allSummaries(): Promise<FoundSummary[]> {
   let names: string[];
+
   try {
     names = (await readdir(RUNS_DIR)).filter((name) => name.endsWith('.json'));
   } catch {
     return [];
   }
+
   const found: FoundSummary[] = [];
+
   for (const name of names) {
     const path = join(RUNS_DIR, name);
     const { mtimeMs } = await stat(path);
     found.push({ path, mtimeMs });
   }
+
   return found.sort((a, b) => b.mtimeMs - a.mtimeMs);
 }
 
@@ -122,13 +128,17 @@ async function allSummaries(): Promise<FoundSummary[]> {
  */
 async function sessionSummaries(): Promise<string[]> {
   const found = await allSummaries();
+
   if (found.length === 0) return [];
   const started = await sessionStart();
+
   if (started === undefined) return [found[0]?.path ?? ''].filter(Boolean);
   const mine = found.filter((entry) => entry.mtimeMs >= started);
+
   // A marker older than every summary would still be a session of one: the
   // newest run is never wrong to report, and an empty report always is.
   if (mine.length === 0) return [found[0]?.path ?? ''].filter(Boolean);
+
   return mine.reverse().map((entry) => entry.path);
 }
 
@@ -139,6 +149,7 @@ async function sessionSummaries(): Promise<string[]> {
  */
 async function readLogs(summary: RunSummary): Promise<Map<string, string>> {
   const logs = new Map<string, string>();
+
   for (const task of summary.tasks) {
     try {
       logs.set(task.taskId, await readFile(task.logFile, 'utf8'));
@@ -146,6 +157,7 @@ async function readLogs(summary: RunSummary): Promise<Map<string, string>> {
       // Left unset: buildReports renders the execution.error instead.
     }
   }
+
   return logs;
 }
 
@@ -157,6 +169,7 @@ async function publish(
   const summaries = runs.map(({ summary }) => summary);
   const allReports = runs.flatMap(({ reports }) => reports);
   const line = sessionHeadline(summaries, allReports);
+
   // A run's own verdict, not `reports.length`: a red run whose tasks all
   // exited 0 still needs the failure section, which is where the "turbo died
   // outside a task" wording lives. `--continue` would give the mirror case.
@@ -164,18 +177,23 @@ async function publish(
     ({ summary, reports }) =>
       summary.execution.exitCode !== 0 || reports.length > 0,
   );
+
   const failed = failures.length > 0;
+
   // Off Actions nothing parses them, and the note would describe nothing.
   const plan = onActions()
     ? planAnnotations(annotations, { error: failed ? 1 : 0 })
     : undefined;
+
   if (plan !== undefined) context.annotations = annotationNote(plan);
   // The failure leads on both lanes: a red build opens this step, and the
   // reader came for what broke. The overview follows as context.
   const overview = sessionMarkdown(runs, context);
+
   const markdown = failed
     ? `${sessionFailureMarkdown(failures)}\n${overview}`
     : overview;
+
   const file = process.env.GITHUB_STEP_SUMMARY;
   const toFile = file !== undefined && file !== '';
 
@@ -191,8 +209,10 @@ async function publish(
         '',
       ]
     : [...sessionLines(runs, context), ''];
+
   // The fallback prints the same untrusted excerpts, so it goes inside the guard.
   if (!toFile) chunks.push(`\n${markdown}`);
+
   for (const chunk of guardCommands(chunks, commandToken())) console.log(chunk);
 
   // After the guard resumed: our own annotation has to be parsed. The step
@@ -212,10 +232,12 @@ async function publish(
 
 async function main(): Promise<void> {
   const paths = await sessionSummaries();
+
   if (paths.length === 0) {
     warn(
       `no turbo run summary under ${RUNS_DIR} — the job ended before or outside the turbo run; read the full step log`,
     );
+
     return;
   }
 
@@ -227,8 +249,10 @@ async function main(): Promise<void> {
   // looked up by taskId, and no task appears in two runs of one session.
   const logs = new Map<string, string>();
   const annotations: ToolAnnotation[] = [];
+
   for (const path of paths) {
     let summary: RunSummary;
+
     try {
       summary = parseRunSummary(JSON.parse(await readFile(path, 'utf8')));
     } catch (error: unknown) {
@@ -239,16 +263,21 @@ async function main(): Promise<void> {
       );
       continue;
     }
+
     const runLogs = await readLogs(summary);
+
     for (const [taskId, log] of runLogs) logs.set(taskId, log);
     annotations.push(...extractAnnotations(summary, runLogs, process.cwd()));
     annotations.push(...extractTscDiagnostics(summary, runLogs, process.cwd()));
     runs.push({ summary, fileName: basename(path), reports: [] });
   }
+
   if (runs.length === 0) {
     warn(`no readable turbo run summary under ${RUNS_DIR}`);
+
     return;
   }
+
   // Reports built after every log is in hand, so a task's log is available
   // whichever run of the session wrote it.
   for (const run of runs) run.reports = buildReports(run.summary, logs);

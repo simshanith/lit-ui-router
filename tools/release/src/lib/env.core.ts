@@ -8,9 +8,11 @@ export type Env = Record<string, string | undefined>;
 /** The trimmed value of a required environment variable; throws when unset or blank. */
 export function requireEnv(env: Env, name: string): string {
   const value = env[name]?.trim() ?? '';
+
   if (value === '') {
     throw new Error(`missing required environment variable ${name}`);
   }
+
   return value;
 }
 

@@ -25,10 +25,13 @@ export function selectTarget(
     localVersion ?? '',
     `${packageName}@${localVersion}`,
   );
+
   const preferred = channel ?? 'latest';
   const version = distTags[preferred];
+
   if (version !== undefined) return { tag: preferred, version };
   const latest = distTags.latest;
+
   return latest === undefined ? null : { tag: 'latest', version: latest };
 }
 
@@ -47,13 +50,17 @@ export function isCleanDiff(diffOutput: string): boolean {
  */
 export function changedFiles(diffOutput: string): string[] {
   const files = new Set<string>();
+
   for (const line of diffOutput.split('\n')) {
     const marker = line.startsWith('+++ ') || line.startsWith('--- ');
+
     if (!marker) continue;
     const rawPath = line.slice(4).trim();
+
     if (rawPath === '/dev/null') continue;
     files.add(rawPath.replace(/^[^/]*\//, '').replace(/^package\//, ''));
   }
+
   return [...files].sort();
 }
 
@@ -87,6 +94,7 @@ export function manifestDriftFields(
   b: Record<string, unknown>,
 ): string[] {
   const keys = new Set([...Object.keys(a), ...Object.keys(b)]);
+
   return [...keys]
     .filter((key) => JSON.stringify(a[key]) !== JSON.stringify(b[key]))
     .sort();
@@ -104,6 +112,7 @@ export function isManifestDriftInert(options: {
   driftFields: string[];
 }): boolean {
   const { fileSetChanged, driftFields } = options;
+
   return (
     !fileSetChanged &&
     driftFields.every((field) => MANIFEST_INERT_FIELDS.includes(field))
@@ -117,8 +126,10 @@ export function classifyFiles(files: string[]): {
 } {
   const shipAffecting: string[] = [];
   const shipInert: string[] = [];
+
   for (const file of files)
     (isShipAffecting(file) ? shipAffecting : shipInert).push(file);
+
   return { shipAffecting, shipInert };
 }
 
@@ -139,7 +150,9 @@ export function reclassifyManifest(
   ) {
     return files;
   }
+
   let manifestInert = false;
+
   try {
     manifestInert = isManifestDriftInert({
       fileSetChanged: hasFileSetChange(diff),
@@ -148,7 +161,9 @@ export function reclassifyManifest(
   } catch {
     // Unparsable manifest bytes stay ship-affecting.
   }
+
   if (!manifestInert) return files;
+
   return {
     shipAffecting: files.shipAffecting.filter(
       (file) => file !== 'package.json',
@@ -184,13 +199,16 @@ export function scopePackages(
     .split(',')
     .map((name) => name.trim())
     .filter(Boolean);
+
   if (requested.length === 0) return publishable;
   const unknown = requested.filter((name) => !publishable.includes(name));
+
   if (unknown.length > 0) {
     throw new Error(
       `PUBLISHED_DIFF_PACKAGES names no publishable member: ${unknown.join(', ')} — publishable: ${publishable.join(', ')}`,
     );
   }
+
   return publishable.filter((name) => requested.includes(name));
 }
 
@@ -213,6 +231,7 @@ export function summarizeResults(results: DiffResult[]): PackageSummary[] {
     ({ name, dir, tag, version, status, files, shipInertFiles }) => {
       const shipAffectingFiles = status === 'drift' ? (files ?? []) : [];
       const inert = shipInertFiles ?? [];
+
       return {
         name,
         dir,
@@ -241,9 +260,11 @@ function aheadNote(
 ): string {
   if (!localVersion || !tag || !version || localVersion === version) return '';
   const channel = prereleaseChannel(localVersion);
+
   if (channel !== undefined && tag === 'latest') {
     return ` (local ${localVersion} has no ${channel} tag yet — compared against latest ${version})`;
   }
+
   return ` (local ${localVersion} ahead of published — release in flight?)`;
 }
 
@@ -265,17 +286,22 @@ export function formatReport(
   }
 
   const drifted = results.filter((result) => result.status === 'drift');
+
   const shipInertOnly = results.filter(
     (result) => result.status === 'ship-inert',
   );
+
   const ok = !options.strict || drifted.length === 0;
+
   const shipInertNote =
     shipInertOnly.length > 0 ? ` (${shipInertOnly.length} ship-inert)` : '';
+
   const headline = ok
     ? drifted.length === 0
       ? `✓ published-diff check passed — ${results.length} packages, no ship-affecting drift${shipInertNote}.`
       : `published-diff report — ${drifted.length} of ${results.length} packages would ship changes if released${shipInertNote}:`
     : `✗ published-diff check failed — ${drifted.length} of ${results.length} packages drift from their published tarballs${shipInertNote}:`;
+
   return {
     ok,
     text: [headline, ...results.flatMap(resultLines)].join('\n'),
@@ -285,18 +311,23 @@ export function formatReport(
 function resultLines(result: DiffResult): string[] {
   const { name, tag, version, localVersion, status, files, shipInertFiles } =
     result;
+
   if (status === 'unpublished') return [`  ${name}: never published — skipped`];
   const target = `${tag} ${version}`;
   const ahead = aheadNote(localVersion, tag, version);
   const inert = shipInertFiles ?? [];
+
   if (status === 'clean') return [`  ${name}: clean vs ${target}${ahead}`];
+
   if (status === 'ship-inert') {
     return [
       `  ${name}: ship-inert drift vs ${target}${ahead} — ${inert.length} ship-inert file(s):`,
       ...inert.map((file) => `      ◦ ${file}`),
     ];
   }
+
   const affecting = files ?? [];
+
   return [
     `  ${name}: SHIPS CHANGES vs ${target}${ahead} — ${affecting.length} ship-affecting file(s):`,
     ...affecting.map((file) => `      • ${file}`),

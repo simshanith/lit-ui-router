@@ -45,6 +45,7 @@ export function clickElement(
     view: window,
     ...options,
   });
+
   element.dispatchEvent(event);
 }
 
@@ -134,6 +135,7 @@ export async function mountElementInRouter<E extends Element>(
 }> {
   const ownsContainer = !container;
   const host = container ?? document.createElement('div');
+
   if (ownsContainer) {
     document.body.appendChild(host);
   }
@@ -144,6 +146,7 @@ export async function mountElementInRouter<E extends Element>(
   appendParentFirst(host, uiRouterEl, element);
 
   await waitForUpdate(uiRouterEl);
+
   if (element instanceof LitElement) {
     await waitForUpdate(element);
   }
@@ -178,6 +181,7 @@ export async function mountInRouter<K extends keyof HTMLElementTagNameMap>(
   Object.entries(attributes).forEach(([key, value]) => {
     element.setAttribute(key, value);
   });
+
   return mountElementInRouter(element, router);
 }
 
@@ -197,6 +201,7 @@ export function createTestComponent(
       return html`<div class="test-component">${content}</div>`;
     }
   }
+
   return TestComponent;
 }
 
@@ -210,10 +215,12 @@ export function defer<T = void>(): {
 } {
   let resolve!: (value: T) => void;
   let reject!: (reason?: unknown) => void;
+
   const promise = new Promise<T>((res, rej) => {
     resolve = res;
     reject = rej;
   });
+
   return { promise, resolve, reject };
 }
 
@@ -223,6 +230,7 @@ export function defer<T = void>(): {
 export function suppressConsoleErrors(): () => void {
   const originalError = console.error;
   console.error = () => {};
+
   return () => {
     console.error = originalError;
   };

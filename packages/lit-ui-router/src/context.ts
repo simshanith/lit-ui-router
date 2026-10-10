@@ -187,6 +187,7 @@ export const isContextRequest: <T extends UnknownContext>(
   key: T,
 ): event is Event & ContextRequest<T> => {
   const request = event as Partial<ContextRequest<T>>;
+
   return (
     event.type === contextRequestEventName &&
     request.context === key &&
@@ -280,11 +281,13 @@ export const requestContext: <T extends UnknownContext>(
           answered = true;
           answer = value;
         }
+
         options.callback?.(value, unsubscribe);
       },
       options.subscribe,
     ),
   );
+
   return answer;
 };
 
@@ -373,7 +376,9 @@ export const provideContext: <T extends UnknownContext>(
     event.stopImmediatePropagation();
     event.callback(value, event.subscribe ? () => {} : undefined);
   };
+
   root.addEventListener(contextRequestEventName, listener);
+
   return () => root.removeEventListener(contextRequestEventName, listener);
 };
 
@@ -545,15 +550,18 @@ export const withRouterSync: <T>(router: UIRouter, run: () => T) => T = <T>(
   const previous = scoped;
   scoped = router;
   let result: T;
+
   try {
     result = run();
   } finally {
     scoped = previous;
   }
+
   if (typeof (result as { then?: unknown } | undefined)?.then === 'function') {
     throw new TypeError(
       'withRouterSync() is synchronous: `run` returned a thenable, and the router slot is already restored by the time it settles. Consume the render inside `run` — collectResultSync(render(template)) — or read the router before awaiting.',
     );
   }
+
   return result;
 };

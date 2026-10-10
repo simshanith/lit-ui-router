@@ -17,6 +17,7 @@ runMain(async () => {
     packageInput: process.env.PACKAGE_INPUT,
     ref: process.env.GITHUB_REF,
   });
+
   const { members } = await loadWorkspace(workspaceRoot);
   const dir = memberDir(name, members);
   console.log(`${name} → ${dir}`);

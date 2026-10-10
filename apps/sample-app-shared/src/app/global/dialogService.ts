@@ -45,10 +45,12 @@ export class DialogService implements DialogProps {
       confirmMsg,
       denyMsg,
     });
+
     // lit-dialog types open() as Promise<any>; it resolves the confirm/deny boolean.
     return this.component.open() as Promise<boolean>;
   };
 }
 
 const instance = new DialogService();
+
 export default instance;

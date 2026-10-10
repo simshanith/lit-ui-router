@@ -203,6 +203,7 @@ describe('mounts', () => {
       '/not-found-spa',
       '/simulated-routing',
     ]);
+
     for (const mount of ['/app', '/app-mobx', '/app-effect']) {
       assert.equal(mounts[mount].routes, routes);
     }

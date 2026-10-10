@@ -25,6 +25,7 @@ import { dsrRedirectToDefaultFromWithin } from '../util/dsr-default-redirect-wit
  */
 function contactName(transition: Transition) {
   const { name } = transition.injector().get('contact') as Contact;
+
   return `${name.first} ${name.last}`;
 }
 

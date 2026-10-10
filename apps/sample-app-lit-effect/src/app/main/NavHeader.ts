@@ -35,6 +35,7 @@ export class NavHeader extends LitElement {
 
   render() {
     const { isAuthenticated, emailAddress } = this.auth.value;
+
     const navbar = html`
       <nav aria-label="Main">
         <ul class="nav nav-tabs">
@@ -84,6 +85,7 @@ export class NavHeader extends LitElement {
         </ul>
       </nav>
     `;
+
     return html`${when(
       isAuthenticated,
       () => navbar,

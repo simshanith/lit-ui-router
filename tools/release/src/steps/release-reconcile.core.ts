@@ -17,11 +17,14 @@ export function packCacheOutcome(
   taskId: string,
 ): CacheOutcome {
   if (typeof summary !== 'object' || summary === null) return {};
+
   const tasks =
     (summary as { tasks?: Array<{ taskId?: string; cache?: CacheOutcome }> })
       .tasks ?? [];
+
   if (!Array.isArray(tasks)) return {};
   const task = tasks.find((entry) => entry.taskId === taskId);
+
   return { status: task?.cache?.status, source: task?.cache?.source };
 }
 
@@ -49,5 +52,6 @@ export function reconcile(
       reason: `pack:all was not a remote-cache hit (status=${outcome.status ?? 'none'}, source=${outcome.source ?? 'none'})`,
     };
   }
+
   return debitSha === creditSha ? { kind: 'balanced' } : { kind: 'drift' };
 }

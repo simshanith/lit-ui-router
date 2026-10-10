@@ -19,8 +19,10 @@ export const STRIPPED_MANIFEST_FIELDS = [
 /** A copy of `manifest` without {@link STRIPPED_MANIFEST_FIELDS}. */
 export function strippedManifest(manifest: ProjectManifest): ProjectManifest {
   const stripped = { ...manifest };
+
   for (const field of STRIPPED_MANIFEST_FIELDS) {
     delete stripped[field];
   }
+
   return stripped;
 }

@@ -32,8 +32,10 @@ const E2E_TASK = '//:test_e2e';
 // digits. Anything unparseable or empty falls back to 5.
 export function clampRuns(raw: string | undefined): number {
   const parsed = Number(raw?.trim());
+
   if (raw === undefined || raw.trim() === '' || !Number.isFinite(parsed))
     return 5;
+
   return Math.min(10, Math.max(1, Math.trunc(parsed)));
 }
 
@@ -61,6 +63,7 @@ function portHeld(port: number): Promise<boolean> {
 function exitsZero(cmd: 'pkill' | 'pgrep' | 'mise', args: string[]): boolean {
   try {
     execFileSync(cmd, args, { stdio: 'ignore' });
+
     return true;
   } catch {
     return false;
@@ -79,6 +82,7 @@ async function sweep(phase: string, port: number): Promise<boolean> {
   exitsZero('pkill', ['-f', 'wrangler']);
   exitsZero('pkill', ['-x', 'workerd']);
   await sleep(1000);
+
   if (
     exitsZero('pgrep', ['-f', 'wrangler']) ||
     exitsZero('pgrep', ['-x', 'workerd'])
@@ -90,13 +94,16 @@ async function sweep(phase: string, port: number): Promise<boolean> {
     exitsZero('pkill', ['-9', '-x', 'workerd']);
     await sleep(1000);
   }
+
   for (let i = 1; i <= PORT_WAIT_TRIES; i++) {
     if (!(await portHeld(port))) return true;
     await sleep(1000);
   }
+
   console.error(
     `[deflake] ${phase}: port :${port} still held after ${PORT_WAIT_TRIES}s`,
   );
+
   return false;
 }
 
@@ -117,31 +124,38 @@ function assertTaskResolves(): void {
   if (!exitsZero('mise', ['tasks', 'info', E2E_TASK])) {
     const note = `cannot resolve \`mise run ${E2E_TASK}\` — harness error, not flake. No attempts run.`;
     console.error(`[deflake] ${note}`);
+
     if (process.env.GITHUB_STEP_SUMMARY) {
       appendFileSync(
         process.env.GITHUB_STEP_SUMMARY,
         `### Deflake e2e: harness error\n\n${note}\n\n`,
       );
     }
+
     process.exit(64);
   }
 }
 
 async function runAttempt(logFile: string): Promise<number> {
   const log = createWriteStream(logFile);
+
   const child = spawn('mise', ['run', E2E_TASK], {
     stdio: ['ignore', 'pipe', 'pipe'],
     env: { ...process.env, TURBO_FORCE: '1' },
   });
+
   inflight = child;
   child.stdout.pipe(log);
   child.stderr.pipe(log);
+
   const code = await new Promise<number>((resolve, reject) => {
     child.once('error', reject);
     child.once('close', (exitCode) => resolve(exitCode ?? 1));
   });
+
   inflight = undefined;
   await new Promise((resolve) => log.close(resolve));
+
   return code;
 }
 
@@ -181,18 +195,22 @@ async function main(): Promise<void> {
     }
 
     console.log(`::group::[deflake] attempt ${i}/${runs}`);
+
     if ((await runAttempt(logFile)) !== 0) row.result = 'FAIL';
     const output = readFileSync(logFile, 'utf8');
+
     if (output.includes(crashSignature)) {
       row.crash = 'workers-sdk#14926 class';
       crashes++;
     }
+
     if (row.result === 'FAIL') {
       fails++;
       console.log(output.split('\n').slice(-60).join('\n'));
     } else if (row.crash !== '-') {
       row.note = 'near miss: passed with the crash signature';
     }
+
     console.log('::endgroup::');
 
     console.log(

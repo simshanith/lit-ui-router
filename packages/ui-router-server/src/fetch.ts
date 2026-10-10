@@ -81,6 +81,7 @@ export interface FetchAdapterOptions {
 
 const acceptsHtml = (request: Request): boolean => {
   const accept = request.headers.get('accept');
+
   return accept?.includes('text/html') ?? false;
 };
 
@@ -93,8 +94,10 @@ const isNavigation = (request: Request): boolean =>
 // fold a trailing `#hash` into the last value. String ops, no URL global.
 const searchOf = (url: string): string => {
   const q = url.indexOf('?');
+
   if (q === -1) return '';
   const hash = url.indexOf('#', q);
+
   return hash === -1 ? url.substring(q) : url.substring(q, hash);
 };
 
@@ -104,6 +107,7 @@ const searchOf = (url: string): string => {
 // shellPath so it points at the asset, not the route path.
 const originOf = (url: string): string => {
   const match = /^[a-z][a-z0-9+.-]*:\/\/[^/?#]*/i.exec(url);
+
   return match ? match[0] : '';
 };
 
@@ -172,13 +176,16 @@ export function createFetchHandler(
         originOf(request.url) + shellPath(verdict.mount),
         request,
       );
+
       if (verdict.status !== undefined) stripValidators(shellRequest);
       const asset = await serveShell(verdict.mount, shellRequest);
       const headers = new Headers(asset.headers);
+
       // No canonical Link on a status'd shell: a 404 is not an alternate
       // representation of the mount root.
       if (verdict.status === undefined)
         headers.set('Link', `<${verdict.mount}>; rel="canonical"`);
+
       return new Response(asset.body, {
         status: verdict.status ?? asset.status,
         headers,
@@ -186,6 +193,7 @@ export function createFetchHandler(
     }
 
     if (verdict.mount === undefined) return null;
+
     return serveNotFound(verdict.mount, request);
   };
 }

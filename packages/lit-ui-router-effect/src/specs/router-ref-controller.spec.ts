@@ -35,6 +35,7 @@ class RouterRefHost extends LitElement {
 
   render() {
     this.renderCount++;
+
     return html`<span>${this.renderCount}</span>`;
   }
 }
@@ -63,11 +64,13 @@ function recordingRuntime(): RefRuntime & {
   readonly fibers: Fiber.RuntimeFiber<unknown, unknown>[];
 } {
   const fibers: Fiber.RuntimeFiber<unknown, unknown>[] = [];
+
   return {
     fibers,
     runFork: (effect) => {
       const fiber = Effect.runFork(effect);
       fibers.push(fiber);
+
       return fiber;
     },
     runSync: (effect) => Effect.runSync(effect),
@@ -101,10 +104,13 @@ function upgradingProvider(
     event.stopImmediatePropagation();
     requests++;
     const { callback } = event;
+
     if (!event.subscribe || router !== placeholder) {
       callback(router, event.subscribe ? () => {} : undefined);
+
       return;
     }
+
     subscribers.add(callback);
     callback(router, () => {
       if (honorUnsubscribe) subscribers.delete(callback);
@@ -112,6 +118,7 @@ function upgradingProvider(
   });
   document.body.appendChild(element);
   cleanups.push(() => element.remove());
+
   return {
     element,
     subscribers,
@@ -136,6 +143,7 @@ async function mountInRouter(
   appendParentFirst(document.body, uiRouterEl, host);
   cleanups.push(() => uiRouterEl.remove());
   await waitForUpdate(host);
+
   return uiRouterEl;
 }
 
@@ -145,10 +153,12 @@ describe('RouterRefController', () => {
     await routerGo(router, 'a');
 
     const host = createHost();
+
     const controller = new RouterRefController(
       host,
       (route) => route.current?.name,
     );
+
     expect(controller.value).toBeUndefined();
 
     await mountInRouter(host, router);
@@ -161,6 +171,7 @@ describe('RouterRefController', () => {
     await routerGo(router, 'a');
 
     const host = createHost();
+
     const controller = new RouterRefController(
       host,
       (route) => route.current?.name,
@@ -183,6 +194,7 @@ describe('RouterRefController', () => {
     await routerGo(router, 'a');
 
     const host = createHost();
+
     const controller = withRouterSync(
       router,
       () =>
@@ -224,10 +236,12 @@ describe('RouterRefController', () => {
     cleanups.push(() => warn.mockRestore());
 
     const host = createHost();
+
     const controller = new RouterRefController(
       host,
       (route) => route.current?.name,
     );
+
     document.body.appendChild(host);
     cleanups.push(() => host.remove());
     await waitForUpdate(host);
@@ -253,6 +267,7 @@ describe('RouterRefController', () => {
     cleanups.push(() => warn.mockRestore());
 
     const host = createHost();
+
     const controller = new RouterRefController(
       host,
       (route) => route.current?.name,
@@ -271,10 +286,12 @@ describe('RouterRefController', () => {
   it('updates the host when the selected value changes', async () => {
     const router = createTestRouter(testStates);
     const host = createHost();
+
     const controller = new RouterRefController(
       host,
       (route) => route.current?.name,
     );
+
     await mountInRouter(host, router);
     const rendersBefore = host.renderCount;
 
@@ -307,11 +324,13 @@ describe('RouterRefController', () => {
     await routerGo(router, 'b', { id: '1' });
     const host = createHost();
     const onChange = vi.fn();
+
     const controller = new RouterRefController(
       host,
       (route) => Data.struct({ id: route.params.id as string | undefined }),
       { equals: Equal.equals, onChange },
     );
+
     await mountInRouter(host, router);
     expect(onChange).toHaveBeenCalledTimes(1);
 
@@ -330,10 +349,12 @@ describe('RouterRefController', () => {
     const router = createTestRouter(testStates);
     await routerGo(router, 'a');
     const host = createHost();
+
     const controller = new RouterRefController(
       host,
       (route) => route.current?.name,
     );
+
     const uiRouterEl = await mountInRouter(host, router);
 
     host.remove();
@@ -352,11 +373,13 @@ describe('RouterRefController', () => {
     cleanups.push(() => void runtime.dispose());
     const runFork = vi.spyOn(runtime, 'runFork');
     const host = createHost();
+
     const controller = new RouterRefController(
       host,
       (route) => route.current?.name,
       { router: runtime.runSync(Router), runtime },
     );
+
     document.body.appendChild(host);
     cleanups.push(() => host.remove());
     await waitForUpdate(host);
@@ -385,11 +408,13 @@ describe('RouterRefController', () => {
       const runtime = recordingRuntime();
       const onChange = vi.fn();
       const host = createHost();
+
       const controller = new RouterRefController(
         host,
         (route) => route.current?.name,
         { runtime, onChange },
       );
+
       await mountInRouter(host, first);
       expect(runtime.fibers).toHaveLength(1);
       const rendersBefore = host.renderCount;
@@ -415,11 +440,13 @@ describe('RouterRefController', () => {
       const router = createTestRouter(testStates);
       await routerGo(router, 'a');
       const host = createHost();
+
       const controller = new RouterRefController(
         host,
         (route) => route.current?.name,
         { initialValue: 'none' },
       );
+
       document.body.appendChild(host);
       cleanups.push(() => host.remove());
       await waitForUpdate(host);
@@ -438,6 +465,7 @@ describe('RouterRefController', () => {
       await routerGo(router, 'a');
       const runtime = recordingRuntime();
       const host = createHost();
+
       const controller = new RouterRefController(
         host,
         (route) => route.current?.name,
@@ -465,17 +493,21 @@ describe('RouterRefController', () => {
       const runtime = recordingRuntime();
       const onChange = vi.fn();
       const explicitHost = createHost();
+
       const explicit = new RouterRefController(
         explicitHost,
         (route) => route.current?.name,
         { router, runtime, onChange },
       );
+
       const soughtHost = createHost();
+
       const sought = new RouterRefController(
         soughtHost,
         (route) => route.current?.name,
         { runtime, onChange },
       );
+
       await mountInRouter(explicitHost, router);
       await mountInRouter(soughtHost, router);
       expect(runtime.fibers).toHaveLength(2);
@@ -511,11 +543,13 @@ describe('RouterRefController', () => {
       let current: UIRouterLit | undefined;
       const runtime = recordingRuntime();
       const host = createHost();
+
       const controller = new RouterRefController(
         host,
         (route) => route.current?.name,
         { router: () => current, initialValue: 'none', runtime },
       );
+
       expect(controller.value).toBe('none');
 
       current = first;
@@ -541,11 +575,13 @@ describe('RouterRefController', () => {
       await routerGo(router, 'a');
       let current: UIRouterLit | undefined = router;
       const host = createHost();
+
       const controller = new RouterRefController(
         host,
         (route) => route.current?.name,
         { router: () => current },
       );
+
       document.body.appendChild(host);
       cleanups.push(() => host.remove());
       await waitForUpdate(host);
@@ -563,11 +599,13 @@ describe('RouterRefController', () => {
       const router = createTestRouter(testStates);
       await routerGo(router, 'a');
       const host = createHost();
+
       const controller = new RouterRefController(
         host,
         (route) => route.current?.name,
         { router: () => undefined },
       );
+
       expect(controller.value).toBeUndefined();
 
       await mountInRouter(host, router);
@@ -579,11 +617,13 @@ describe('RouterRefController', () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
       cleanups.push(() => warn.mockRestore());
       const host = createHost();
+
       const controller = new RouterRefController(
         host,
         (route) => route.current?.name,
         { router: () => undefined, initialValue: 'none' },
       );
+
       document.body.appendChild(host);
       cleanups.push(() => host.remove());
       await waitForUpdate(host);
@@ -600,6 +640,7 @@ describe('RouterRefController', () => {
       await routerGo(placeholder, 'a');
       const app = createTestRouter(testStates);
       await routerGo(app, 'b', { id: '1' });
+
       return [placeholder, app];
     }
 
@@ -618,11 +659,13 @@ describe('RouterRefController', () => {
       const runtime = recordingRuntime();
       const onChange = vi.fn();
       const host = createHost();
+
       const controller = new RouterRefController(
         host,
         (route) => route.current?.name,
         { runtime, onChange },
       );
+
       await mount(host, provider);
       expect(controller.value).toBe('a');
       expect(provider.subscribers.size).toBe(1);
@@ -648,10 +691,12 @@ describe('RouterRefController', () => {
       const [placeholder, app] = await routers();
       const provider = upgradingProvider(placeholder);
       const host = createHost();
+
       const controller = new RouterRefController(
         host,
         (route) => route.current?.name,
       );
+
       await mount(host, provider);
       provider.upgrade(app);
 
@@ -669,11 +714,13 @@ describe('RouterRefController', () => {
       const provider = upgradingProvider(placeholder);
       const runtime = recordingRuntime();
       const host = createHost();
+
       const controller = new RouterRefController(
         host,
         (route) => route.current?.name,
         { runtime },
       );
+
       await mount(host, provider);
       expect(provider.subscribers.size).toBe(1);
 
@@ -687,16 +734,20 @@ describe('RouterRefController', () => {
 
     it('ignores a late answer from a provider that keeps it subscribed', async () => {
       const [placeholder, app] = await routers();
+
       const provider = upgradingProvider(placeholder, {
         honorUnsubscribe: false,
       });
+
       const runtime = recordingRuntime();
       const host = createHost();
+
       const controller = new RouterRefController(
         host,
         (route) => route.current?.name,
         { runtime },
       );
+
       await mount(host, provider);
       expect(provider.subscribers.size).toBe(1);
 
@@ -711,17 +762,21 @@ describe('RouterRefController', () => {
       const [placeholder, app] = await routers();
       const provider = upgradingProvider(placeholder);
       const explicitHost = createHost();
+
       const explicit = new RouterRefController(
         explicitHost,
         (route) => route.current?.name,
         { router: placeholder },
       );
+
       const thunkHost = createHost();
+
       const thunk = new RouterRefController(
         thunkHost,
         (route) => route.current?.name,
         { router: () => placeholder },
       );
+
       await mount(explicitHost, provider);
       await mount(thunkHost, provider);
 
@@ -734,15 +789,19 @@ describe('RouterRefController', () => {
 
     it('drops the subscription when setRouter hands it a router', async () => {
       const [placeholder, app] = await routers();
+
       const provider = upgradingProvider(placeholder, {
         honorUnsubscribe: false,
       });
+
       const chosen = createTestRouter(testStates);
       await routerGo(chosen, 'b', { id: '2' });
       const host = createHost();
+
       const controller = new RouterRefController(host, (route) =>
         String(route.params.id ?? route.current?.name),
       );
+
       await mount(host, provider);
       expect(provider.subscribers.size).toBe(1);
 
@@ -762,11 +821,13 @@ describe('RouterRefController', () => {
       const [first, second] = await routers();
       const runtime = recordingRuntime();
       const host = createHost();
+
       const controller = new RouterRefController(
         host,
         (route) => route.current?.name,
         { runtime },
       );
+
       const uiRouterEl = await mountInRouter(host, first);
       expect(controller.value).toBe('a');
 
@@ -792,12 +853,14 @@ describe('RouterRefController', () => {
       await waitForUpdate(uiRouterEl);
       const placeholder = uiRouterEl.uiRouter!;
       cleanups.push(() => placeholder.dispose());
+
       return { uiRouterEl, placeholder };
     }
 
     function createAppRouter(): UIRouterLit {
       const router = createTestRouter(testStates);
       cleanups.push(() => router.dispose());
+
       return router;
     }
 
@@ -814,11 +877,13 @@ describe('RouterRefController', () => {
       const router = createAppRouter();
       const runtime = recordingRuntime();
       const host = createHost();
+
       const controller = new RouterRefController(
         host,
         (route) => route.current?.name,
         { runtime },
       );
+
       uiRouterEl.appendChild(host);
       await waitForUpdate(host);
       expect(runtime.fibers).toHaveLength(1);
@@ -841,11 +906,13 @@ describe('RouterRefController', () => {
       await waitForUpdate(view);
       const runtime = recordingRuntime();
       const host = createHost();
+
       const controller = new RouterRefController(
         host,
         (route) => route.current?.name,
         { runtime },
       );
+
       view.appendChild(host);
       await waitForUpdate(host);
       expect(runtime.fibers).toHaveLength(1);
@@ -866,11 +933,13 @@ describe('RouterRefController', () => {
       await routerGo(router, 'a');
       const runtime = recordingRuntime();
       const host = createHost();
+
       const controller = new RouterRefController(
         host,
         (route) => route.current?.name,
         { runtime },
       );
+
       uiRouterEl.appendChild(host);
       await waitForUpdate(host);
       const placeholderValue = controller.value;

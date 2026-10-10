@@ -37,21 +37,28 @@ interface MemberNode extends Node {
 const keyOf = (member: MemberNode): string | undefined => {
   if (member.computed === true) return undefined;
   const { key } = member;
+
   if (key?.name === undefined) return undefined;
+
   return key.type === 'PrivateIdentifier' ? `#${key.name}` : key.name;
 };
 
 /** The same key read off `this.users` / `this.#users`, or nothing. */
 const thisKeyOf = (node: Node): string | undefined => {
   if (node.type !== 'MemberExpression') return undefined;
+
   const target = node as MemberNode & {
     object?: Node;
     property?: Node & { name?: string };
   };
+
   if (target.computed === true) return undefined;
+
   if (target.object?.type !== 'ThisExpression') return undefined;
   const { property } = target;
+
   if (property?.name === undefined) return undefined;
+
   return property.type === 'PrivateIdentifier'
     ? `#${property.name}`
     : property.name;
@@ -71,13 +78,16 @@ const isNode = (value: unknown): value is Node =>
 const isReferenceKey = (node: Node, key: string): boolean => {
   if (key === 'parent') return false;
   const computed = (node as MemberNode).computed === true;
+
   if (node.type === 'MemberExpression' && key === 'property') return computed;
+
   if (
     (node.type === 'Property' || node.type === 'PropertyDefinition') &&
     key === 'key'
   ) {
     return computed;
   }
+
   return true;
 };
 
@@ -87,15 +97,19 @@ const firstMatch = (
   matches: (candidate: Node) => boolean,
 ): Node | undefined => {
   if (matches(node)) return node;
+
   for (const [key, value] of Object.entries(node)) {
     if (!isReferenceKey(node, key)) continue;
     const children = Array.isArray(value) ? value : [value];
+
     for (const child of children) {
       if (!isNode(child)) continue;
       const found = firstMatch(child, matches);
+
       if (found !== undefined) return found;
     }
   }
+
   return undefined;
 };
 
@@ -132,8 +146,10 @@ const srefStatusAriaCurrent: RuleFor<typeof RULE_NAME> = {
 
   create(context) {
     const tracker = createDirectiveTracker(context);
+
     const { linkElements: option } =
       (context.options[0] as { linkElements?: string[] } | undefined) ?? {};
+
     const linkElements = linkElementsOf(context, option);
 
     // One set per enclosing class body, innermost last: `this` in a template
@@ -143,22 +159,31 @@ const srefStatusAriaCurrent: RuleFor<typeof RULE_NAME> = {
     // Top-level constructor statements only; branches and callbacks don't count.
     const constructorFields = (member: MemberNode): string[] => {
       const keys: string[] = [];
+
       const body = (member.value as { body?: { body?: Node[] } } | null)?.body
         ?.body;
+
       for (const statement of body ?? []) {
         if (statement.type !== 'ExpressionStatement') continue;
+
         const assignment = statement.expression as
           | (Node & { operator?: string; left?: Node; right?: Node })
           | undefined;
+
         if (assignment?.type !== 'AssignmentExpression') continue;
+
         if (assignment.operator !== '=') continue;
+
         if (!tracker.isControllerNew(assignment.right)) continue;
+
         const key =
           assignment.left === undefined
             ? undefined
             : thisKeyOf(assignment.left);
+
         if (key !== undefined) keys.push(key);
       }
+
       return keys;
     };
 
@@ -169,19 +194,27 @@ const srefStatusAriaCurrent: RuleFor<typeof RULE_NAME> = {
 
       ClassBody(node) {
         const held = new Set<string>();
+
         for (const raw of node.body) {
           const member = raw as unknown as MemberNode;
+
           if (member.static === true) continue;
+
           if (member.type === 'PropertyDefinition') {
             if (!tracker.isControllerNew(member.value)) continue;
             const key = keyOf(member);
+
             if (key !== undefined) held.add(key);
             continue;
           }
+
           if (member.type !== 'MethodDefinition') continue;
+
           if (member.kind !== 'constructor') continue;
+
           for (const key of constructorFields(member)) held.add(key);
         }
+
         fields.push(held);
       },
 
@@ -191,6 +224,7 @@ const srefStatusAriaCurrent: RuleFor<typeof RULE_NAME> = {
 
       TaggedTemplateExpression(node) {
         if (!tracker.shouldAnalyse) return;
+
         if (!tracker.isLitTemplate(node.tag as unknown as Node)) return;
 
         const source = context.sourceCode;
@@ -202,7 +236,9 @@ const srefStatusAriaCurrent: RuleFor<typeof RULE_NAME> = {
         const controllerIn = (expression: Node): Node | undefined =>
           firstMatch(expression, (candidate) => {
             const key = thisKeyOf(candidate);
+
             if (key !== undefined) return held.has(key);
+
             return (
               candidate.type === 'Identifier' &&
               tracker.isControllerBinding(candidate)
@@ -212,21 +248,27 @@ const srefStatusAriaCurrent: RuleFor<typeof RULE_NAME> = {
         analyzer.traverse({
           enterElement(rawElement) {
             const element = rawElement as unknown as Parse5Element;
+
             // probably a tree correction node
             if (element.sourceCodeLocation === undefined) return;
             const tag = element.name;
+
             if (
               !isLinkElement(element, attributePartsOf(element), linkElements)
             )
               return;
+
             if (hasAriaCurrent(element)) return;
 
             for (const [name, value] of Object.entries(element.attribs)) {
               if (!CLASS_ATTRIBUTES.has(name)) continue;
+
               for (const match of value.matchAll(ATTRIBUTE_PART)) {
                 const expression = expressions[Number(match[1])];
+
                 if (expression === undefined) continue;
                 const reference = controllerIn(expression);
+
                 if (reference === undefined) continue;
                 const controller = source.getText(reference as never);
                 // One report per element: the remedy is a single binding, and a
@@ -242,6 +284,7 @@ const srefStatusAriaCurrent: RuleFor<typeof RULE_NAME> = {
                       name,
                       expressions,
                     );
+
                     return insert === undefined
                       ? null
                       : fixer.insertTextAfterRange(
@@ -250,6 +293,7 @@ const srefStatusAriaCurrent: RuleFor<typeof RULE_NAME> = {
                         );
                   },
                 });
+
                 return;
               }
             }

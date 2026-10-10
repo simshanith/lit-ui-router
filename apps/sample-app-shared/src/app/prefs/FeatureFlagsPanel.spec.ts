@@ -19,6 +19,7 @@ describe('feature flags panel', () => {
     const option = [...pluginSelect.options].find(
       (opt) => opt.text.trim() === label,
     );
+
     if (!option) throw new Error(`no option labeled ${label}`);
     pluginSelect.value = option.value;
     pluginSelect.dispatchEvent(new Event('change'));
@@ -39,6 +40,7 @@ describe('feature flags panel', () => {
     document.body.append(panel);
     await panel.updateComplete;
     const select = panel.shadowRoot?.querySelector('select');
+
     if (!select) throw new Error('location-plugin select not rendered');
     pluginSelect = select;
   };

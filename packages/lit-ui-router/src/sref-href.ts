@@ -65,6 +65,7 @@ export class SrefHrefDirective extends AsyncDirective {
   /** @internal */
   constructor(partInfo: PartInfo) {
     super(partInfo);
+
     if (
       partInfo.type !== PartType.ATTRIBUTE ||
       partInfo.strings !== undefined
@@ -94,10 +95,12 @@ export class SrefHrefDirective extends AsyncDirective {
     options?: TransitionOptions,
   ): string | typeof nothing | typeof noChange {
     const $state = (this.uiRouter ?? getScopedRouter())?.stateService;
+
     if (!$state) {
       if (this._seekedRouter) {
         this.warnMissingRouter(state);
       }
+
       return noChange;
     }
 
@@ -113,6 +116,7 @@ export class SrefHrefDirective extends AsyncDirective {
     if (targetChanged && this.element) {
       this.element.dispatchEvent(uiSrefTargetEvent(targetState));
     }
+
     return this.href ?? nothing;
   }
 
@@ -146,16 +150,19 @@ export class SrefHrefDirective extends AsyncDirective {
     if (this._firstUpdated || !this.isConnected) {
       return;
     }
+
     const element = this.element!;
     this.uiRouter = UIRouterLitElement.seekRouter(element);
     this._seekedRouter = true;
     this.parentView = UiView.seekParentView(element);
     element.addEventListener('click', this.onClick as EventListener);
+
     if (this.uiRouter) {
       this.unsubscribe = this.uiRouter.stateRegistry.onStatesChanged(
         this.doRender,
       );
     }
+
     // the update that scheduled this rendered before the seek: push the value
     // it could not, or let the no-op report itself
     this.doRender();
@@ -165,6 +172,7 @@ export class SrefHrefDirective extends AsyncDirective {
   /** @internal */
   doRender = (): void => {
     const value = this.render(this.state!, this.params, this.options);
+
     if (value !== noChange && this.isConnected) {
       this.setValue(value);
     }
@@ -174,15 +182,19 @@ export class SrefHrefDirective extends AsyncDirective {
   onClick = (event: MouseEvent): void => {
     const { uiRouter: router, state, params } = this;
     const $state = router?.stateService;
+
     if (!$state || !this.element?.isConnected || !state) {
       if (!$state && state && this.element?.isConnected) {
         this.warnMissingRouter(state);
       }
+
       return;
     }
+
     if (clickBelongsToBrowser(event, event.currentTarget as Element)) {
       return;
     }
+
     // fire-and-forget: @uirouter/core handles transition promise rejections
     void $state.go(state, params, this.getOptions());
     event.preventDefault();
@@ -190,6 +202,7 @@ export class SrefHrefDirective extends AsyncDirective {
 
   private warnMissingRouter(state: string): void {
     const element = this.element;
+
     if (!element) return;
     warnMissingRouter(
       element,

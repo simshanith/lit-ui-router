@@ -25,13 +25,16 @@ async function main() {
   const { members } = await loadWorkspace(workspaceRoot);
   const publishable = members.filter(isPublishable);
   const results: PackResult[] = [];
+
   for (const { name, dir } of publishable) {
     // Malformed manifests reject in tarballManifest — loud, never a silent {}.
     const manifest = await tarballManifest(packTarballPath(name));
     results.push({ name, dir, refs: findUnsubstitutedRefs(manifest) });
   }
+
   const { ok, text } = formatReport(results);
   (ok ? console.log : console.error)(text);
+
   if (!ok) process.exitCode = 1;
 }
 

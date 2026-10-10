@@ -23,6 +23,7 @@ export class SessionStorage {
   constructor(sessionStorageKey, sourceUrl) {
     let data,
       fromSession = sessionStorage.getItem(sessionStorageKey);
+
     // A promise for *all* of the data.
     this._data = undefined;
 
@@ -63,6 +64,7 @@ export class SessionStorage {
   _commit = (data) => {
     sessionStorage.setItem(this.sessionStorageKey, JSON.stringify(data));
     this._eventEmitter.dispatchEvent(new Event('commit'));
+
     return Promise.resolve(data);
   };
 
@@ -71,6 +73,7 @@ export class SessionStorage {
     let promise = new Promise((resolve) => {
       setTimeout(() => resolve(this._data), AppConfig.restDelay);
     });
+
     return promise.then(thenFn);
   };
 
@@ -78,11 +81,13 @@ export class SessionStorage {
   search = (exampleItem) => {
     let contains = (search, inString) =>
       ('' + inString).indexOf('' + search) !== -1;
+
     let matchesExample = (example, item) =>
       Object.keys(example).reduce(
         (memo, key) => memo && contains(example[key], item[key]),
         true,
       );
+
     return this.all((items) =>
       items.filter(matchesExample.bind(null, exampleItem)),
     );
@@ -101,6 +106,7 @@ export class SessionStorage {
   /** Returns a promise to save (POST) a new item.   The item's identifier is auto-assigned. */
   post = (item) => {
     item[this._idProp] = guid();
+
     return this.all((items) => pushToArr(items, item)).then(
       this._commit.bind(this),
     );
@@ -110,8 +116,10 @@ export class SessionStorage {
   put = (item, eqFn = this._eqFn) => {
     return this.all((items) => {
       let idx = items.findIndex(eqFn.bind(null, item));
+
       if (idx === -1) throw Error(`${item} not found in ${this}`);
       items[idx] = item;
+
       return this._commit(items).then(() => item);
     });
   };
@@ -120,8 +128,10 @@ export class SessionStorage {
   remove = (item, eqFn = this._eqFn) => {
     return this.all((items) => {
       let idx = items.findIndex(eqFn.bind(null, item));
+
       if (idx === -1) throw Error(`${item} not found in ${this}`);
       items.splice(idx, 1);
+
       return this._commit(items).then(() => item);
     });
   };

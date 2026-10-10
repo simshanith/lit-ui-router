@@ -38,6 +38,7 @@ export class MyMessages extends LitElement {
           </a>
         </li>`,
     );
+
     return html`<div>
       <h1 class="sr-only" tabindex="-1">Messages</h1>
       <div class="my-messages">

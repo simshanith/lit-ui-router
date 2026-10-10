@@ -15,6 +15,7 @@ describe('the renderLight flag', () => {
   it('inherits the flag from the class ssr-client itself carries it on', () => {
     const light = getDirectiveClass(renderLight());
     const slot = getDirectiveClass(uiViewSlot());
+
     if (!light || !slot) throw new Error('a directive result carried no class');
     expect(slot.prototype instanceof light).toBe(true);
   });
@@ -32,8 +33,10 @@ describe('the renderLight flag', () => {
 
     const slotOn = (parentNode: SlotHost) => {
       const Slot = getDirectiveClass(uiViewSlot());
+
       if (!Slot) throw new Error('a directive result carried no class');
       const part = { type: PartType.CHILD, parentNode } as unknown as ChildPart;
+
       return { slot: new Slot(part), part };
     };
 

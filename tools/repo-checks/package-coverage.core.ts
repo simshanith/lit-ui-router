@@ -19,16 +19,21 @@ export function parseLintPatterns(command: string): string[] {
   const [bin, ...args] = (command.match(/"[^"]*"|\S+/g) ?? []).map((token) =>
     token.replace(/^"(.*)"$/, '$1'),
   );
+
   if (bin !== 'eslint') throw new Error(`not an eslint call: ${command}`);
   const patterns: string[] = [];
+
   for (let i = 0; i < args.length; i++) {
     const arg = args[i] ?? '';
+
     if (arg === '--format') i++;
     else if (arg.startsWith('-'))
       throw new Error(`unhandled eslint flag ${arg} in: ${command}`);
     else patterns.push(arg);
   }
+
   if (patterns.length === 0) throw new Error(`no file patterns in: ${command}`);
+
   return patterns;
 }
 
@@ -54,6 +59,7 @@ export function auditCoverage(
   const lintedSet = new Set(linted);
   const expectedSet = new Set(expected);
   const trackedSet = new Set(tracked);
+
   return {
     missing: expected.filter((file) => !lintedSet.has(file)),
     extra: linted.filter((file) => !expectedSet.has(file)),
@@ -64,6 +70,7 @@ export function auditCoverage(
 /** The umbrellas a scripts block reaches: `task` itself or a `task:*` leaf. */
 export function scriptTasks(scripts: Record<string, string> = {}): Set<Task> {
   const names = Object.keys(scripts);
+
   return new Set(
     TASKS.filter((task) =>
       names.some((name) => name === task || name.startsWith(`${task}:`)),
@@ -88,6 +95,7 @@ const MARK = { yes: '✓', no: '-' } as const;
 /** Space-aligned columns, header first; plain text so any log renders it. */
 export function formatCoverage(rows: readonly CoverageRow[]): string[] {
   const header = ['dir', 'name', 'eslint', 'member', 'catalog', ...TASKS];
+
   const cells = rows.map((row) => [
     row.dir,
     row.name,
@@ -96,9 +104,11 @@ export function formatCoverage(rows: readonly CoverageRow[]): string[] {
     row.catalog ? MARK.yes : MARK.no,
     ...TASKS.map((task) => (row.tasks.has(task) ? MARK.yes : MARK.no)),
   ]);
+
   const widths = header.map((title, column) =>
     Math.max(title.length, ...cells.map((cell) => (cell[column] ?? '').length)),
   );
+
   return [header, ...cells].map((cell) =>
     cell
       .map((value, column) => value.padEnd(widths[column] ?? 0))

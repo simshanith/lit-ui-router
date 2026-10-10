@@ -66,6 +66,7 @@ const typeEncode = (
   val: unknown,
 ): string | string[] | null | undefined =>
   type.encode ? type.encode(val) : (val as string | null | undefined);
+
 const typeEquals = (type: ParamType, a: unknown, b: unknown): boolean =>
   // eslint-disable-next-line eqeqeq -- core's default equals coerces (null/undefined/'' and string/number pairs compare loosely)
   type.equals ? type.equals(a, b) : a == b;
@@ -79,7 +80,9 @@ const stringBase = {
 };
 
 const decodeInt = (val: string) => parseInt(val, 10);
+
 const dateCapture = /([0-9]{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])/;
+
 const isDate = (val: unknown): val is Date =>
   val instanceof Date && !Number.isNaN(val.valueOf());
 
@@ -114,6 +117,7 @@ const builtinTypes: Record<string, ParamType> = {
     is: isDate,
     decode: (val: string) => {
       const match = dateCapture.exec(val);
+
       return match ? new Date(+match[1], +match[2] - 1, +match[3]) : undefined;
     },
     encode: (val: unknown) =>
@@ -171,20 +175,27 @@ const resolveType = (
 ): ParamType => {
   if (declared && urlType && urlType.name !== 'string')
     throw new Error(`Param '${id}' has two type configurations.`);
+
   if (typeof declared === 'string' && unsupportedTypes.has(declared))
     throw new Error(
       `Param type '${declared}' is not supported by the standalone matcher`,
     );
+
   if (typeof declared === 'string' && urlType && builtinTypes[declared])
     return builtinTypes[declared];
+
   if (urlType) return urlType;
+
   if (!declared) return builtinTypes[isSearch ? 'query' : 'path'];
+
   if (typeof declared === 'object') return declared;
   const named = builtinTypes[declared] as ParamType | undefined;
+
   if (!named)
     throw new Error(
       `Unknown type '${declared}' for param '${id}'; built-in types: ${Object.keys(builtinTypes).join(', ')}`,
     );
+
   return named;
 };
 
@@ -199,6 +210,7 @@ const resolveInlineType = (
     throw new Error(
       `Param type '${inline}' is not supported by the standalone matcher`,
     );
+
   return (
     builtinTypes[inline] ?? {
       ...builtinTypes[isSearch ? 'query' : 'path'],
@@ -214,7 +226,9 @@ const getSquashPolicy = (
   defaultPolicy: boolean | string,
 ): boolean | string => {
   if (!isOptional || declared === false) return false;
+
   if (declared === undefined || declared === null) return defaultPolicy;
+
   if (declared === true || typeof declared === 'string') return declared;
   throw new Error(
     `Invalid squash policy: '${JSON.stringify(declared)}'. Valid policies: false, true, or arbitrary string`,
@@ -237,10 +251,12 @@ const getReplace = (
 ): Replace[] => {
   const fromSquash: Replace[] =
     typeof squash === 'string' ? [{ from: squash, to: undefined }] : [];
+
   const defaults: Replace[] = [
     { from: '', to: isOptional ? undefined : '' },
     { from: null, to: isOptional ? undefined : '' },
   ].filter((item) => !fromSquash.some((r) => r.from === item.from));
+
   return [...defaults, ...fromSquash];
 };
 
@@ -271,25 +287,30 @@ const compileParam = (
 ): CompiledParam => {
   const declared = unwrapShorthand(config.params[id]);
   const where = `param '${id}' in pattern '${pattern}'`;
+
   if (id.endsWith('[]') || (Object.hasOwn(declared, 'array') && declared.array))
     throw new Error(
       `Array parameters are not supported by the standalone matcher (${where})`,
     );
+
   if (Object.hasOwn(declared, 'replace'))
     throw new Error(
       `'replace' is not supported by the standalone matcher (${where})`,
     );
+
   if (typeof declared.value === 'function')
     throw new Error(
       `Function (injected) defaults are not supported by the standalone matcher (${where}); use a static value`,
     );
 
   const isOptional = declared.value !== undefined || isSearch;
+
   const squash = getSquashPolicy(
     declared.squash,
     isOptional,
     config.defaultSquashPolicy,
   );
+
   return freeze<CompiledParam>({
     id,
     type: resolveType(declared.type, urlType, isSearch, id),
@@ -309,16 +330,20 @@ const paramValue = (param: CompiledParam, input: unknown): unknown => {
       break;
     }
   }
+
   if (input === undefined) {
     // Static value, applied directly: upstream invokes even non-function
     // defaults through services.$injector and throws when none exists.
     const value = param.defaultValue;
+
     if (value !== null && value !== undefined && !param.type.is(value))
       throw new Error(
         `Default value (${JSON.stringify(value)}) for parameter '${param.id}' is not an instance of ParamType (${param.type.name})`,
       );
+
     return value;
   }
+
   return param.type.is(input) ? input : param.type.decode(input as string);
 };
 
@@ -326,10 +351,12 @@ const paramValue = (param: CompiledParam, input: unknown): unknown => {
 const paramIsDefault = (param: CompiledParam, input: unknown): boolean => {
   if (!param.isOptional) return false;
   const defaultValue = paramValue(param, undefined);
+
   // Search params are auto-array-wrapped upstream, where an absent value
   // compares as the empty array: equal only to another absent value.
   if (param.isSearch && (defaultValue === undefined || input === undefined))
     return defaultValue === undefined && input === undefined;
+
   return typeEquals(param.type, defaultValue, input);
 };
 
@@ -337,20 +364,25 @@ const paramIsDefault = (param: CompiledParam, input: unknown): boolean => {
 const paramValidates = (param: CompiledParam, input: unknown): boolean => {
   // No value, but the param is optional.
   if ((input === undefined || input === null) && param.isOptional) return true;
+
   const normalized: unknown = param.type.is(input)
     ? input
     : param.type.decode(input as string);
+
   if (!param.type.is(normalized)) return false;
   // Of the right type, but its encoded form escapes the type's pattern.
   const encoded = typeEncode(param.type, normalized);
+
   return !(typeof encoded === 'string' && !param.type.pattern.exec(encoded));
 };
 
 /** Escapes a static segment; with a param, appends its capture group per squash policy. */
 const quoteRegExp = (segment: string, param?: CompiledParam): string => {
   let result = segment.replace(/[\\[\]^$*+?.()|{}]/g, '\\$&');
+
   if (!param) return result;
   let surround: [string, string];
+
   switch (param.squash) {
     case false:
       surround = ['(', param.isOptional ? ')?' : ')'];
@@ -363,6 +395,7 @@ const quoteRegExp = (segment: string, param?: CompiledParam): string => {
       surround = [`(${param.squash}|`, ')?'];
       break;
   }
+
   return result + surround[0] + param.type.pattern.source + surround[1];
 };
 
@@ -431,6 +464,7 @@ const compileMatcher = <M>(
   // names. The (?=(\s*))\4 backreference makes the regexp-body atom atomic.
   const placeholder =
     /([:*])([\w[\]]+)|\{([\w[\]]+)(?::(?=(\s*))\4((?:[^{}\\]|\\.|\{(?:[^{}\\]|\\.)*\})+))?\}/g;
+
   const searchPlaceholder =
     /([:]?)([\w[\].-]+)|\{([\w[\].-]+)(?::(?=(\s*))\4((?:[^{}\\]|\\.|\{(?:[^{}\\]|\\.)*\})+))?\}/g;
 
@@ -443,27 +477,34 @@ const compileMatcher = <M>(
     isSearch: boolean,
   ): CompiledParam => {
     const id = m[2] || m[3];
+
     // Inline regexp or type name from '{name:...}'; '*name' matches everything.
     const inline = isSearch
       ? m[5]
       : m[5] || (m[1] === '*' ? '[\\s\\S]*' : null);
+
     if (!nameValidator.test(id))
       throw new Error(`Invalid parameter name '${id}' in pattern '${pattern}'`);
+
     if (params.some((p) => p.id === id))
       throw new Error(
         `Duplicate parameter name '${id}' in pattern '${pattern}'`,
       );
+
     const urlType = inline
       ? resolveInlineType(inline, isSearch, config.caseInsensitive)
       : null;
+
     return compileParam(id, urlType, isSearch, config, pattern);
   };
 
   // Split the path part into static segments separated by param placeholders.
   let last = 0;
   let match: RegExpExecArray | null;
+
   while ((match = placeholder.exec(pattern)) !== null) {
     const segment = pattern.substring(last, match.index);
+
     if (segment.includes('?')) break; // we're into the search part
     const param = paramFromMatch(match, false);
     params.push(param);
@@ -471,18 +512,22 @@ const compileMatcher = <M>(
     segments.push(segment);
     last = placeholder.lastIndex;
   }
+
   let segment = pattern.substring(last);
 
   // Search params live after '?'; they parse (and must be valid) but never
   // affect whether a path matches.
   const searchIndex = segment.indexOf('?');
+
   if (searchIndex >= 0) {
     const search = segment.substring(searchIndex + 1);
     segment = segment.substring(0, searchIndex);
+
     while ((match = searchPlaceholder.exec(search)) !== null) {
       params.push(paramFromMatch(match, true));
     }
   }
+
   compiled.push(quoteRegExp(segment));
   segments.push(segment);
 
@@ -507,6 +552,7 @@ const weightsCache = new WeakMap<CompiledMatcher<unknown>, number[]>();
 
 const segmentWeights = (matcher: CompiledMatcher<unknown>): number[] => {
   const cached = weightsCache.get(matcher);
+
   if (cached) return cached;
   const weights: number[] = [];
   matcher.segments.forEach((segment, index) => {
@@ -514,9 +560,11 @@ const segmentWeights = (matcher: CompiledMatcher<unknown>): number[] => {
       if (piece === '') continue;
       weights.push(piece === '/' ? 1 : 2);
     }
+
     if (matcher.pathParams[index]) weights.push(3);
   });
   weightsCache.set(matcher, weights);
+
   return weights;
 };
 
@@ -533,10 +581,13 @@ export function compare(
   const weightsA = segmentWeights(a);
   const weightsB = segmentWeights(b);
   const length = Math.max(weightsA.length, weightsB.length);
+
   for (let i = 0; i < length; i++) {
     const cmp = (weightsA[i] ?? 0) - (weightsB[i] ?? 0);
+
     if (cmp !== 0) return cmp;
   }
+
   return 0;
 }
 
@@ -552,7 +603,9 @@ export function exec(
   path: string,
 ): RawParams | null {
   const match = matcher.regexp.exec(path);
+
   if (!match) return null;
+
   // A custom inline regexp with its own capture group would misalign values.
   if (match.length - 1 !== matcher.pathParams.length)
     throw new Error(`Unbalanced capture group in route '${matcher.pattern}'`);
@@ -560,21 +613,27 @@ export function exec(
   const values: RawParams = {};
   matcher.pathParams.forEach((param, index) => {
     let value: unknown = match[index + 1];
+
     for (const { from, to } of param.replace) {
       if (from === value) value = to;
     }
+
     if (value !== undefined) {
       const raw =
         matcher.decodeParams && !param.type.raw
           ? decodeURIComponent(value as string)
           : (value as string);
+
       value = param.type.decode(raw);
     }
+
     values[param.id] = paramValue(param, value);
   });
+
   for (const param of matcher.searchParams) {
     values[param.id] = paramValue(param, undefined);
   }
+
   return values;
 }
 
@@ -597,32 +656,42 @@ export function format(
     const isDefaultValue = paramIsDefault(param, value);
     // Squashing only ever applies to a param sitting at its default.
     const squash = isDefaultValue ? param.squash : false;
+
     // Auto-array wrapping again: an absent search value encodes to
     // undefined (the empty array unwraps), skipping the scalar encoder.
     const encoded =
       param.isSearch && value === undefined
         ? undefined
         : typeEncode(param.type, value);
+
     return { param, isValid, isDefaultValue, squash, encoded };
   };
+
   const path = matcher.pathParams.map(details);
   const search = matcher.searchParams.map(details);
+
   if ([...path, ...search].some((d) => !d.isValid)) return null;
 
   let result = '';
   matcher.segments.forEach((segment, index) => {
     result += segment;
     const detail = path[index];
+
     if (!detail) return; // the final segment has no param after it
     const { squash, encoded, param } = detail;
+
     if (squash === true) {
       if (result.endsWith('/')) result = result.slice(0, -1);
+
       return;
     }
+
     if (typeof squash === 'string') {
       result += squash;
+
       return;
     }
+
     if (encoded === null || encoded === undefined) return;
     result += param.type.raw
       ? String(encoded)
@@ -638,7 +707,9 @@ export function format(
       )
         return null;
       const vals = Array.isArray(encoded) ? encoded : [encoded];
+
       if (vals.length === 0) return null;
+
       return vals
         .map(
           (val) =>
@@ -650,6 +721,7 @@ export function format(
     .join('&');
 
   const fragment = values['#'] ? `#${String(values['#'])}` : '';
+
   return result + (query ? `?${query}` : '') + fragment;
 }
 
@@ -671,8 +743,10 @@ export function urlMatcherFactory(config: UrlMatcherCompilerConfig = {}): {
     decodeParams = true,
     defaultSquashPolicy = false,
   } = config;
+
   // Same validation as ui-router's UrlConfig.defaultSquashPolicy().
   getSquashPolicy(defaultSquashPolicy, true, false);
+
   return {
     compile: <M = undefined>(
       pattern: string,

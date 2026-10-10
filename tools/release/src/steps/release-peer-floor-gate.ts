@@ -20,10 +20,13 @@ runMain(async () => {
   const packageName = requireEnv(process.env, 'PACKAGE');
   const { members } = await loadWorkspace(workspaceRoot);
   const decision = gateDecision(packageName, members);
+
   if (decision.kind === 'skip') {
     console.log(decision.reason);
+
     return;
   }
+
   // nonzero turbo exit propagates and fails the bump
   await defaultStream('turbo', decision.turboArgs, { cwd: workspaceRoot });
 });

@@ -44,6 +44,7 @@ describe('readManifest', () => {
       () => readManifest(dir),
       (error: NodeJS.ErrnoException) => {
         assert.equal(error.code, 'EISDIR');
+
         return true;
       },
     );

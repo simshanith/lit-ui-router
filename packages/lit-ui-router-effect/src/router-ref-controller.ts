@@ -69,25 +69,32 @@ export class RouterRefController<T> extends RefController<
     options: RouterRefControllerOptions<T> = {},
   ) {
     const option = options.router;
+
     const followed: Followed = {
       router:
         (typeof option === 'function' ? option() : option) ?? getScopedRouter(),
     };
+
     const discover = (): Route | undefined => {
       const delivered = followed.delivered;
       followed.delivered = undefined;
       const sought = delivered ?? subscribe(host, followed);
+
       if (!sought) {
         warnMissingRouter(
           host,
           'RouterRefController',
           'will not observe the router',
         );
+
         return undefined;
       }
+
       followed.router = sought;
+
       return [routeRef(sought)];
     };
+
     super(
       host,
       followed.router ? [routeRef(followed.router)] : discover,
@@ -119,6 +126,7 @@ export class RouterRefController<T> extends RefController<
   override hostConnected(): void {
     // Unset while the base constructor connects an already-connected host.
     const router = this.resolveRouter?.();
+
     if (router) this.setRouter(router);
     super.hostConnected();
   }
@@ -147,6 +155,7 @@ function subscribe(host: Element, followed: Followed): UIRouter | undefined {
   let live = true;
   let answering = true;
   let offered: (() => void) | undefined;
+
   const router = requestRouter(host, {
     subscribe: true,
     callback: (next, drop) => {
@@ -154,12 +163,14 @@ function subscribe(host: Element, followed: Followed): UIRouter | undefined {
       else if (live && next) followed.deliver?.(next);
     },
   });
+
   answering = false;
   // A provider that ignores unsubscribe must not reach a dropped subscription.
   followed.unsubscribe = () => {
     live = false;
     offered?.();
   };
+
   return router ?? UIRouterLitElement.seekRouter(host);
 }
 

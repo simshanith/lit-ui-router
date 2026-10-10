@@ -41,6 +41,7 @@ class TestableService extends NavigationLocationService {
 function createTestRouter(baseHref = '/'): UIRouter {
   const router = new UIRouter();
   router.urlService.config.baseHref = () => baseHref;
+
   return router;
 }
 
@@ -49,7 +50,9 @@ function registeredInterceptor(): (event: NavigateEvent) => void {
   const call = stub.addEventListener.mock.calls.find(
     (args: unknown[]) => args[0] === 'navigate',
   ) as [string, (event: NavigateEvent) => void] | undefined;
+
   if (!call) throw new Error('no navigate listener registered');
+
   return call[1];
 }
 
@@ -227,9 +230,11 @@ describe('NavigationLocationService (stubbed Navigation seam)', () => {
       expect(event.intercept).toHaveBeenCalledWith({
         handler: expect.any(Function),
       });
+
       const [{ handler }] = event.intercept.mock.calls[0] as [
         { handler: () => Promise<void> },
       ];
+
       await expect(handler()).resolves.toBeUndefined();
     });
 
@@ -260,6 +265,7 @@ describe('NavigationLocationService (stubbed Navigation seam)', () => {
 
   describe('intercept option', () => {
     let interceptOptions: NavigationInterceptOptions;
+
     let intercept: ReturnType<
       typeof vi.fn<Required<NavigationLocationPluginOptions>['intercept']>
     >;
@@ -315,14 +321,17 @@ describe('NavigationLocationService (stubbed Navigation seam)', () => {
       router = createTestRouter();
       const interceptOptions = { handler: async () => {} };
       const intercept = vi.fn(() => interceptOptions);
+
       const plugin = router.plugin<LocationPlugin>(navigationLocationPlugin, {
         intercept,
       });
+
       const event = fakeNavigateEvent({ uiRouter: router });
 
       const call = addEventListener.mock.calls.find(
         (args: unknown[]) => args[0] === 'navigate',
       ) as [string, (event: NavigateEvent) => void];
+
       call[1](event as unknown as NavigateEvent);
 
       expect(plugin.service).toBe(router.locationService);

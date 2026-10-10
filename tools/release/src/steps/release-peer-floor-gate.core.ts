@@ -24,16 +24,19 @@ export function gateDecision(
   const member = members.find(
     (candidate) => candidate.name === packageName && !isRootMember(candidate),
   );
+
   if (member === undefined) {
     throw new Error(
       `package ${JSON.stringify(packageName)} is not a workspace member`,
     );
   }
+
   if (typeof member.manifest?.scripts?.[PEER_FLOOR_SCRIPT] !== 'string') {
     return {
       kind: 'skip',
       reason: `${packageName} defines no ${PEER_FLOOR_SCRIPT} script — gate does not apply`,
     };
   }
+
   return { kind: 'check', turboArgs: peerFloorTurboArgs(packageName) };
 }

@@ -56,6 +56,7 @@ class CanaryInnerHTML extends HTMLElement {
     this.childCountAtConnect = this.childNodes.length;
   }
 }
+
 customElements.define('canary-inner-html', CanaryInnerHTML);
 
 describe('happy-dom innerHTML conformance canary', () => {

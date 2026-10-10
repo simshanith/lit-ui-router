@@ -38,6 +38,7 @@ export class NavElement extends LitElement {
 
   render(): TemplateResult {
     const transition = this.params.value.count;
+
     return html`${this.stateName.value} ${this.params.value.id} ${transition}`;
   }
 }

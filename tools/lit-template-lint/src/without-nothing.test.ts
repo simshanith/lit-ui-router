@@ -6,12 +6,16 @@ import { withoutNothing } from './without-nothing.ts';
 type Type = Parameters<typeof withoutNothing>[0];
 
 const nothing = { kind: 'ES_SYMBOL_UNIQUE', value: '__@nothing@12345' } as Type;
+
 const str = { kind: 'STRING' } as Type;
+
 const num = { kind: 'NUMBER' } as Type;
+
 const otherSymbol = {
   kind: 'ES_SYMBOL_UNIQUE',
   value: '__@noChange@7',
 } as Type;
+
 const union = (...types: Type[]) => ({ kind: 'UNION', types }) as Type;
 
 describe('withoutNothing', () => {
@@ -33,6 +37,7 @@ describe('withoutNothing', () => {
       name: 'AriaCurrent',
       target: union(str, nothing),
     } as Type;
+
     assert.deepEqual(withoutNothing(alias), {
       kind: 'ALIAS',
       name: 'AriaCurrent',

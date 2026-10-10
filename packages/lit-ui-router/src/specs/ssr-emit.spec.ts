@@ -52,6 +52,7 @@ describe('@lit-labs/ssr emit', () => {
 
     const views = out.match(/<ui-view[^>]*><template[^>]*>(.*?)<\/template>/g);
     expect(views).toHaveLength(2);
+
     for (const view of views!) {
       expect(view).toContain('<slot></slot>');
     }

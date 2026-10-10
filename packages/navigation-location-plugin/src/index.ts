@@ -13,6 +13,7 @@ import {
 import { composeNavigateUrl } from './compose-navigate-url.js';
 
 const CURRENT_ENTRY_CHANGE_EVENT = 'currententrychange';
+
 const NAVIGATE_EVENT = 'navigate';
 
 // @uirouter/core types `root` as `any`; it is the global object in browsers.
@@ -115,6 +116,7 @@ export class NavigationLocationService extends BaseLocationServices {
     if (!router) {
       throw new Error('NavigationLocationService requires a UIRouter instance');
     }
+
     super(router, false);
     this._router = router;
     this._options = options;
@@ -136,6 +138,7 @@ export class NavigationLocationService extends BaseLocationServices {
     ) {
       return;
     }
+
     event.intercept(
       this._options.intercept?.(event) ?? { handler: () => Promise.resolve() },
     );
@@ -253,10 +256,12 @@ export function navigationLocationPlugin(
     router,
     options,
   ));
+
   const configuration = (router.locationConfig = new BrowserLocationConfig(
     router,
     true,
   ));
+
   return {
     name: 'vanilla.navigationLocation',
     service,

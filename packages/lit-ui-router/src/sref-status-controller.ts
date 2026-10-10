@@ -249,16 +249,20 @@ export class SrefStatusController implements ReactiveController {
   /** @internal */
   hostConnected(): void {
     const { host } = this;
+
     if (!this.options.router) {
       const { router, unsubscribe } = subscribeRouter(
         host,
         this.onRouterReplaced,
       );
+
       this.targets.router = router;
+
       if (unsubscribe) {
         this.deregisterFns.push(unsubscribe);
       }
     }
+
     this.targets.relative = UiView.seekParentView(host)?.viewContext?.name;
     this.targets.setExplicit();
 
@@ -266,6 +270,7 @@ export class SrefStatusController implements ReactiveController {
     // listened for in named mode too, since `retarget({})` can drop the name
     const scope: EventTarget =
       (host as { renderRoot?: EventTarget }).renderRoot ?? host;
+
     scope.addEventListener(
       UI_SREF_TARGET_EVENT,
       this.onUiSrefTargetEvent as EventListener,
@@ -286,6 +291,7 @@ export class SrefStatusController implements ReactiveController {
     });
 
     const router = this.targets.router;
+
     if (router) {
       this.watch(router);
     } else {
@@ -302,9 +308,11 @@ export class SrefStatusController implements ReactiveController {
   /** @internal */
   hostDisconnected(): void {
     this.unwatch();
+
     while (this.deregisterFns.length) {
       this.deregisterFns.shift()?.();
     }
+
     if (!this.options.router) {
       // found through context: the host may reconnect under another router
       this.targets.router = undefined;
@@ -322,6 +330,7 @@ export class SrefStatusController implements ReactiveController {
 
   private unwatch(): void {
     this._connection++;
+
     while (this.routerDeregisterFns.length) {
       this.routerDeregisterFns.shift()?.();
     }
@@ -355,6 +364,7 @@ export class SrefStatusController implements ReactiveController {
     this._status = this.targets.status(event);
     const first = !this.computed;
     this.computed = true;
+
     return first || !rendersSame(before, this._status);
   }
 
@@ -377,11 +387,13 @@ export class SrefStatusController implements ReactiveController {
   private readonly onTransitionStart = (trans: Transition): void => {
     // deregistering stops the next start, not a settlement already subscribed
     const connection = this._connection;
+
     const settled = (evt: TransEvt['evt']): void => {
       if (connection === this._connection) {
         this.refresh({ evt, trans });
       }
     };
+
     this.refresh({ evt: 'start', trans });
     trans.promise.then(
       () => settled('success'),

@@ -21,6 +21,7 @@ import { taploGet } from './cli-query.ts';
 // `pnpm@<version>+sha512.<hash>` — the integrity hash rides along, the version
 // ahead of it is what the other files have to match.
 const packageManager = requireManifest(workspaceRoot).packageManager ?? '';
+
 const pinned = /^pnpm@([^+]+)\+sha512\./.exec(packageManager)?.[1];
 
 // The mise files are TOML, so query them instead of matching their text (see
@@ -48,6 +49,7 @@ describe('pnpm version pins', () => {
       '.config/mise/mise.lock',
       MISE_TOOL,
     ) as LockedTool[];
+
     assert.equal(extra.length, 0, 'pnpm is locked more than once');
     assert.ok(tool, 'pnpm is not in the lockfile');
     assert.equal(tool.version, pinned);
@@ -59,7 +61,9 @@ describe('pnpm version pins', () => {
     const platforms = Object.entries(tool).filter(([key]) =>
       key.startsWith('platforms.'),
     ) as [string, { url: string }][];
+
     assert.notEqual(platforms.length, 0, 'pnpm is locked for no platform');
+
     for (const [platform, { url }] of platforms) {
       assert.match(url, new RegExp(`/v${pinned}/`), `${platform} url: ${url}`);
     }

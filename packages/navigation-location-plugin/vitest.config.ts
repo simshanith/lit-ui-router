@@ -4,8 +4,10 @@ import { playwright } from '@vitest/browser-playwright';
 
 // partition: every spec runs in exactly one project
 const allSpecs = ['src/specs/**/*.spec.ts'];
+
 // Pure functions — no DOM at all, so they get plain node speed.
 const nodeSpecs = ['src/specs/compose-navigate-url.spec.ts'];
+
 // This plugin wraps the Navigation API (window.navigation), which happy-dom
 // does not implement. NavigationLocationService reaches it through the
 // protected `_navigation()` seam, so specs that only need to observe what we

@@ -52,6 +52,7 @@ const srefActiveAriaCurrent: RuleFor<typeof RULE_NAME> = {
 
       TaggedTemplateExpression(node) {
         if (!tracker.shouldAnalyse) return;
+
         if (!tracker.isLitTemplate(node.tag as unknown as Node)) return;
 
         const source = context.sourceCode;
@@ -61,22 +62,28 @@ const srefActiveAriaCurrent: RuleFor<typeof RULE_NAME> = {
         analyzer.traverse({
           enterElement(rawElement) {
             const element = rawElement as unknown as Parse5Element;
+
             // probably a tree correction node
             if (element.sourceCodeLocation === undefined) return;
             const attributes = Object.keys(element.attribs);
+
             if (!attributes.includes('aria-current')) return;
 
             for (const attribute of attributes) {
               const index = elementPartIndex(attribute);
+
               if (index === undefined) continue;
               const expression = expressions[index];
+
               if (
                 expression === undefined ||
                 tracker.directiveOf(expression) !== 'uiSrefActive'
               ) {
                 continue;
               }
+
               const call = expression as CallNode;
+
               const report = (fix: Rule.ReportFixer): void => {
                 context.report({
                   node: call,
@@ -87,8 +94,10 @@ const srefActiveAriaCurrent: RuleFor<typeof RULE_NAME> = {
               };
 
               const params = call.arguments[0];
+
               if (params === undefined) {
                 const close = source.getLastToken(call as never);
+
                 if (close === null) continue;
                 report((fixer) =>
                   fixer.insertTextBefore(close, `{ ${OPT_OUT} }`),
@@ -98,6 +107,7 @@ const srefActiveAriaCurrent: RuleFor<typeof RULE_NAME> = {
 
               if (params.type !== 'ObjectExpression') continue;
               const object = params as ObjectNode;
+
               if (hasSpread(object)) continue;
               const property = propertyNamed(object, 'ariaCurrentValue');
 
@@ -112,6 +122,7 @@ const srefActiveAriaCurrent: RuleFor<typeof RULE_NAME> = {
               }
 
               const { value } = property;
+
               // Non-literal is unknowable, so it stays suppressed.
               if (value.type !== 'Literal' || value.value === false) continue;
               // An explicit value still takes the attribute over; rewriting

@@ -25,14 +25,17 @@ import { checkRunApiArgs } from './publish-check-runs.core.ts';
 async function main() {
   const dryRun = process.argv.includes('--dry-run');
   const repo = process.env.GITHUB_REPOSITORY ?? 'simshanith/lit-ui-router';
+
   if (!process.env.GITHUB_REPOSITORY && !dryRun) {
     throw new Error('GITHUB_REPOSITORY must be set (or pass --dry-run)');
   }
 
   const { members } = await loadWorkspace(workspaceRoot);
   const results: PeerFloorResult[] = [];
+
   for (const member of peerFloorMembers(members)) {
     let ok = true;
+
     try {
       await defaultExec('turbo', peerFloorTurboArgs(member.name), {
         cwd: workspaceRoot,
@@ -41,22 +44,29 @@ async function main() {
       // a stale floor is a signal, not a job failure
       ok = false;
     }
+
     console.log(`${member.name}: ${ok ? 'floor honest' : 'floor stale'}`);
     results.push({ name: member.name, ok, ...peerFloorCatalogs(member) });
   }
 
   const payloads = results.map((result) => toPeerFloorCheckRun(result, repo));
+
   if (dryRun) {
     console.log(JSON.stringify(payloads, null, 2));
+
     return;
   }
+
   if (payloads.length === 0) {
     console.log('no packages define typecheck:peer-floor — nothing to report');
+
     return;
   }
+
   const { stdout } = await defaultExec('git', ['rev-parse', 'HEAD']);
   const headSha = stdout.trim();
   await ensureGh();
+
   for (const payload of payloads) {
     await defaultExec('gh', checkRunApiArgs(repo, headSha, payload));
     console.log(

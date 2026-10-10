@@ -38,6 +38,7 @@ class SrefStatusHost extends LitElement {
   render() {
     this.renderCount++;
     const status = this.controller;
+
     return html`<a
       class=${classMap({
         'nav-link': true,
@@ -118,6 +119,7 @@ class PlainHost extends HTMLElement {
     this.controllers.forEach((controller) => controller.hostConnected?.());
   }
 }
+
 customElements.define('test-sref-status-plain', PlainHost);
 
 declare global {
@@ -179,6 +181,7 @@ describe('SrefStatusController', () => {
     await waitForUpdate(uiRouter);
     router.start();
     await tick();
+
     return uiRouter;
   }
 
@@ -194,7 +197,9 @@ describe('SrefStatusController', () => {
     } else {
       container.appendChild(host);
     }
+
     await waitForUpdate(host);
+
     return host;
   }
 
@@ -302,6 +307,7 @@ describe('SrefStatusController', () => {
         state: 'users.detail',
         params: { userId: 1 },
       });
+
       const controller = host.controller!;
 
       await goTo('users.detail', { userId: 2 });
@@ -318,10 +324,12 @@ describe('SrefStatusController', () => {
       await goTo('users');
 
       const host = document.createElement('test-sref-status-host');
+
       const controller = new SrefStatusController(host, {
         state: 'users',
         router,
       });
+
       // no <ui-router> ancestor, no DOM: the status is there already
       expect(controller.status).toBeDefined();
       expect(controller.exact).toBe(true);
@@ -339,11 +347,13 @@ describe('SrefStatusController', () => {
 
     it('warns once and stays inert without a router', async () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
       try {
         const host = await mountHost(
           { state: 'users' },
           { withContext: false },
         );
+
         const controller = host.controller!;
 
         expect(controller.router).toBeUndefined();
@@ -441,8 +451,10 @@ describe('SrefStatusController', () => {
       const uiRouter = await mountRouter();
       const host = document.createElement('test-sref-status-plain');
       uiRouter.appendChild(host);
+
       const links = (users: boolean) =>
         html`${users ? html`<a href=${srefHref('users')}>Users</a>` : nothing}`;
+
       render(links(true), host);
       await tick(20);
 
@@ -560,6 +572,7 @@ describe('SrefStatusController', () => {
         state: 'users.detail',
         params: { userId: 1 },
       });
+
       const controller = host.controller!;
       await goTo('home');
       const requestUpdate = vi.spyOn(host, 'requestUpdate');
@@ -647,6 +660,7 @@ describe('SrefStatusController', () => {
             ? html`<test-sref-status-link></test-sref-status-link>`
             : nothing,
         )}`;
+
       render(template(true), wrapper);
       const link = wrapper.querySelector('test-sref-status-link')!;
       await waitForUpdate(link);

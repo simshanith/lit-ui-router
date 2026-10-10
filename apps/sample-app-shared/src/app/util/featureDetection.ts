@@ -14,6 +14,7 @@ export function parseFeatureParams(
       features[key.slice(prefix.length)] = value;
     }
   }
+
   return features;
 }
 
@@ -65,21 +66,25 @@ function readLocationPluginPreference(): {
   source: Exclude<LocationPluginSource, 'auto'>;
 } {
   const flag = featureFlags.get('location-plugin') as string | undefined;
+
   if (isValidLocationPlugin(flag) || flag === LOCATION_PLUGIN_AUTO) {
     const source = featureFlags.isUrlOverridden('location-plugin')
       ? 'url'
       : 'session';
+
     return { value: flag, source };
   }
 
   const env = import.meta.env.VITE_SAMPLE_APP_LOCATION_PLUGIN as
     | string
     | undefined;
+
   return { value: env, source: 'env' };
 }
 
 export function resolveLocationPluginFeature(): string | undefined {
   const { value } = readLocationPluginPreference();
+
   return value === LOCATION_PLUGIN_AUTO ? undefined : value;
 }
 
@@ -93,6 +98,7 @@ export function resolveLocationPluginFeature(): string | undefined {
  */
 export function describeLocationPlugin(): ResolvedLocationPlugin {
   const { value, source } = readLocationPluginPreference();
+
   const preferred =
     value === LOCATION_PLUGIN_AUTO || !isValidLocationPlugin(value)
       ? undefined
@@ -101,6 +107,7 @@ export function describeLocationPlugin(): ResolvedLocationPlugin {
   if (preferred === 'navigation' && !canUseNavigationAPI()) {
     return { plugin: 'pushState', source, downgraded: true };
   }
+
   if (preferred) return { plugin: preferred, source, downgraded: false };
 
   return {
@@ -155,6 +162,7 @@ export class FeatureFlags {
   load(): void {
     try {
       const stored = sessionStorage.getItem(STORAGE_KEY);
+
       if (stored) {
         this._flags = JSON.parse(stored) as Partial<FeatureFlagDefinitions>;
       }
@@ -179,6 +187,7 @@ export class FeatureFlags {
     flag: K,
   ): FeatureFlagDefinitions[K] {
     const urlParams = parseFeatureParams();
+
     if (flag in urlParams) {
       return this._parseValue(flag, urlParams[flag]);
     }
@@ -202,11 +211,14 @@ export class FeatureFlags {
     flag: K,
   ): FeatureFlagDefinitions[K] {
     const current = this.get(flag);
+
     if (typeof current !== 'boolean') {
       throw new Error(`Cannot toggle non-boolean flag: ${flag}`);
     }
+
     const newValue = !current as FeatureFlagDefinitions[K];
     this.set(flag, newValue);
+
     return newValue;
   }
 
@@ -242,6 +254,7 @@ export class FeatureFlags {
 
   isUrlOverridden(flag: keyof FeatureFlagDefinitions): boolean {
     const urlParams = parseFeatureParams();
+
     return flag in urlParams;
   }
 
@@ -260,4 +273,5 @@ export class FeatureFlags {
 }
 
 export const featureFlags = new FeatureFlags();
+
 featureFlags.load();

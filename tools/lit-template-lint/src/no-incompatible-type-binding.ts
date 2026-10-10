@@ -21,12 +21,15 @@ export const noIncompatibleTypeBinding: RuleModule = {
   meta: { priority: 'low' },
   visitHtmlAssignment(assignment, context) {
     const htmlAttr = assignment.htmlAttr;
+
     if (assignment.kind === HtmlNodeAttrAssignmentKind.ELEMENT_EXPRESSION) {
       const { typeB } = extractBindingTypes(assignment, context);
       isAssignableInElementBinding(htmlAttr, typeB, context);
     }
+
     if (context.htmlStore.getHtmlAttrTarget(htmlAttr) == null) return;
     const { typeA, typeB } = extractBindingTypes(assignment, context);
+
     switch (htmlAttr.modifier) {
       // Stock below: lit hands `nothing` to a property as undefined, and the
       // boolean and element paths have semantics of their own.
@@ -40,6 +43,7 @@ export const noIncompatibleTypeBinding: RuleModule = {
         break;
       default: {
         const bound = withoutNothing(typeB);
+
         // undefined: only `nothing` reaches the attribute, so it is removed.
         if (bound != null) {
           isAssignableInAttributeBinding(
@@ -48,6 +52,7 @@ export const noIncompatibleTypeBinding: RuleModule = {
             context,
           );
         }
+
         break;
       }
     }

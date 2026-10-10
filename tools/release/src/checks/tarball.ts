@@ -27,6 +27,7 @@ export async function tarballManifest(
     string,
     unknown
   >;
+
   if (
     typeof manifest.name !== 'string' ||
     typeof manifest.version !== 'string'
@@ -35,6 +36,7 @@ export async function tarballManifest(
       `${tarball}: package/package.json is not a package manifest (no name/version)`,
     );
   }
+
   return Object.fromEntries(
     Object.entries(manifest).filter(
       ([key]) => !PACOTE_METADATA_FIELDS.includes(key),

@@ -30,41 +30,54 @@ export type PackageProbe = {
 export const readPackageProbe = (packageDir: string): PackageProbe => {
   const manifest = requireManifest(packageDir);
   const name = manifest.name;
+
   if (name === undefined) {
     throw new Error(`${packageDir}: package.json has no name`);
   }
+
   const declared = [
     ...Object.keys(manifest.dependencies ?? {}),
     ...Object.keys(manifest.peerDependencies ?? {}),
   ];
+
   const claims = (manifest as { bundleProbe?: Record<string, unknown> })
     .bundleProbe;
+
   const entries: PackageEntry[] = [];
   const bundled = new Set<string>();
+
   for (const [subpath, value] of Object.entries(manifest.exports ?? {})) {
     if (subpath === './package.json' || subpath.includes('*')) continue;
+
     const target =
       typeof value === 'string'
         ? value
         : (value as Record<string, unknown>).default;
+
     if (typeof target !== 'string') {
       throw new Error(`${name}: export '${subpath}' has no default target`);
     }
+
     if (!/\.(js|ts)$/.test(target)) continue;
+
     const source = target.startsWith('./src/')
       ? target
       : target.replace(/^\.\/dist\/(.+)\.js$/, './src/$1.ts');
+
     if (!source.startsWith('./src/')) {
       throw new Error(
         `${name}: cannot map export '${subpath}' target '${target}' to a source file`,
       );
     }
+
     const file = path.join(packageDir, source);
+
     if (!existsSync(file)) {
       throw new Error(
         `${name}: export '${subpath}' resolves to missing ${source}`,
       );
     }
+
     const free = (claims?.[subpath] as { free?: string[] } | undefined)?.free;
     bundled.add(subpath);
     entries.push({
@@ -73,9 +86,11 @@ export const readPackageProbe = (packageDir: string): PackageProbe => {
       free: free ?? [],
     });
   }
+
   if (entries.length === 0) {
     throw new Error(`${name}: no bundleable exports found`);
   }
+
   // A claim on an export the loop skipped would otherwise pass unchecked.
   for (const subpath of Object.keys(claims ?? {})) {
     if (!bundled.has(subpath)) {
@@ -84,5 +99,6 @@ export const readPackageProbe = (packageDir: string): PackageProbe => {
       );
     }
   }
+
   return { name, declared, entries };
 };

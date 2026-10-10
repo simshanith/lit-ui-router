@@ -71,9 +71,11 @@ describe('the round trip', () => {
     await boot(container, rootTemplate, '/shell/detail');
 
     expect(container.querySelectorAll('[defer-hydration]')).toHaveLength(0);
+
     for (const view of views(container)) {
       expect(view.deferHydration).toBe(false);
     }
+
     expect(container.querySelector('h1')?.textContent).toContain('shell hello');
     expect(container.querySelector('.detail')?.textContent).toBe('leaf');
   });
@@ -110,10 +112,12 @@ describe('the round trip', () => {
 
     const woken = views(container);
     expect(woken).toHaveLength(2);
+
     for (const view of woken) {
       expect(view.deferHydration).toBe(false);
       expect(view.hasUpdated).toBe(true);
     }
+
     expect(
       served.filter((element) => container.contains(element)),
     ).toHaveLength(served.length);
@@ -222,6 +226,7 @@ const servedView = (
   view.setAttribute('defer-hydration', '');
   view.innerHTML = markup;
   parent.append(view);
+
   return view;
 };
 
@@ -229,6 +234,7 @@ const servedView = (
 const wake = (view: UiView): boolean => {
   const adopt = requestContext(view, adoptUiViewContext);
   adopt?.(view);
+
   return adopt !== undefined;
 };
 
@@ -253,6 +259,7 @@ describe('the adopter hydrateRoot provides', () => {
     // The reveal has to be done by the time core's `render()` is read, because that value is what hydrates against these markers.
     view.render = () => {
       revealed = comments(view);
+
       return nothing;
     };
 
@@ -299,14 +306,17 @@ describe('the adopter hydrateRoot provides', () => {
     for (const [contents, interior] of Object.entries(interiors)) {
       it(`clears everything up to the matching close when the view ${contents}`, () => {
         const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
         const view = servedView(
           `<!--lit-part VIEW-->${interior}<!--/lit-part--><p class="after">after</p>`,
           container,
         );
+
         const [open, close] = [
           view.firstChild,
           view.lastChild!.previousSibling,
         ];
+
         view.render = () => {
           throw new Error('drawn for another state');
         };
@@ -341,6 +351,7 @@ describe('the adopter hydrateRoot provides', () => {
 
   it('drops the served nodes of a view whose pair the document lost', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
     // Prefixed markers under no plain pair: a render's nodes with nothing left to hydrate against.
     const view = servedView(
       '<!--ui-view:lit-part--><p class="detail">leaf</p><!--ui-view:/lit-part-->',
@@ -356,10 +367,12 @@ describe('the adopter hydrateRoot provides', () => {
 
   it('keeps what the author wrote ahead of a render whose pair is gone', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
     const view = servedView(
       '<p class="hold">hold</p><!--ui-view:lit-part--><p class="detail">leaf</p><!--ui-view:/lit-part-->',
       container,
     );
+
     const hold = view.querySelector('.hold');
 
     expect(wake(view)).toBe(true);
@@ -461,9 +474,11 @@ describe('a view the document drew empty', () => {
 describe('a view the document drew with authored fallback content', () => {
   it('parks it for the component the boot routes in', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
     const { container } = serve(
       await draw(fallbackRootTemplate, [UiViewRenderer], '/shell'),
     );
+
     expect(container.querySelector('.loading')).not.toBeNull();
 
     await boot(container, fallbackRootTemplate, '/shell');
@@ -475,9 +490,11 @@ describe('a view the document drew with authored fallback content', () => {
 
   it('keeps it across the boot, and brings the same nodes back', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
     const { container } = serve(
       await draw(fallbackRootTemplate, [UiViewRenderer], '/bare'),
     );
+
     const loading = container.querySelector('.loading');
     expect(loading).not.toBeNull();
 
@@ -497,9 +514,11 @@ describe('a view the document drew with authored fallback content', () => {
 
   it('parks it around the served render it stands in front of', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
     const { container, served } = serve(
       await draw(slottedFallbackRootTemplate, [UiViewRenderer], '/shell'),
     );
+
     const loading = container.querySelector('.loading');
     const shell = container.querySelector('h1');
     expect(loading).not.toBeNull();
@@ -524,6 +543,7 @@ describe('a view this cannot adopt', () => {
   it('adopts past whitespace, a foreign comment and an injected element', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const { container } = serve(await drawShell('/shell/detail'));
+
     for (const view of views(container)) {
       view.prepend(
         document.createTextNode('\n  '),
@@ -539,10 +559,12 @@ describe('a view this cannot adopt', () => {
     expect(
       comments(container).filter((data) => data.startsWith('ui-view:')),
     ).toEqual([]);
+
     for (const view of views(container)) {
       expect(view.deferHydration).toBe(false);
       expect(view.hasUpdated).toBe(true);
     }
+
     expect(warn).not.toHaveBeenCalled();
   });
 });
@@ -556,14 +578,18 @@ const detailProps = { resolves: { detail: 'leaf' } } as unknown as Parameters<
 const servedDetail = async (): Promise<string> => {
   const { container } = serve(await drawShell('/shell/detail'));
   const nested = [...container.querySelectorAll('ui-view')].at(-1)!;
+
   const markers = [...nested.childNodes].filter(
     (node) => node.nodeType === Node.COMMENT_NODE,
   ) as Comment[];
+
   for (const marker of [markers[0], markers.at(-1)!]) {
     marker.data = marker.data.slice('ui-view:'.length);
   }
+
   const markup = nested.innerHTML;
   container.remove();
+
   return markup;
 };
 
@@ -584,10 +610,12 @@ describe('the pin the walk leaves on a served view', () => {
     const secondRouter = makeRouter();
     await settle(secondRouter, '/shell');
     second.querySelector('ui-router')!.replaceWith(app);
+
     const releaseSecond = hydrateRoot(
       second,
       rootTemplate(secondRouter),
     ) as () => void;
+
     await drain(second);
     releaseSecond();
 
@@ -667,6 +695,7 @@ describe('the guard on what there is to adopt', () => {
       '</script>',
       '</script>\n  ',
     );
+
     const { container } = serve(`\n  ${markup}`);
 
     await boot(container, rootTemplate, '/shell/detail');
@@ -678,6 +707,7 @@ describe('the guard on what there is to adopt', () => {
     const { container } = serve(
       await draw(plainRootTemplate, [UiViewRenderer], '/shell'),
     );
+
     expect(
       container.querySelector('plain-mark')?.hasAttribute('defer-hydration'),
     ).toBe(true);
@@ -728,6 +758,7 @@ const listen = (target: EventTarget): Report[] => {
         : [view as Element, detail.outcome],
     );
   });
+
   return reports;
 };
 
@@ -739,6 +770,7 @@ const bootReporting = async (
   const received: Report[] = [];
   const router = makeRouter();
   await settle(router, path);
+
   const release = hydrateRoot(container, rootTemplate(router), {
     onAdopt: (view, outcome, error) => {
       received.push(
@@ -746,9 +778,11 @@ const bootReporting = async (
       );
     },
   });
+
   expect(release).toBeTypeOf('function');
   await drain(container);
   (release as () => void)();
+
   return received;
 };
 
@@ -840,6 +874,7 @@ describe('the hydration outcome', () => {
     const release = hydrateRoot(container, rootTemplate(router), {
       onAdopt: (view, outcome) => received.push([view, outcome]),
     });
+
     const app = container.querySelector('ui-router')!;
     const view = app.querySelector<UiView>('ui-view')!;
     app.remove();
@@ -871,6 +906,7 @@ describe('the hydration outcome', () => {
         throw failure;
       },
     });
+
     await drain(container);
     (release as () => void)();
     vi.unstubAllGlobals();
@@ -902,6 +938,7 @@ describe('the hydration outcome', () => {
         throw failure;
       },
     });
+
     await drain(container);
     (release as () => void)();
     vi.unstubAllGlobals();
@@ -941,10 +978,12 @@ describe('the hydration outcome', () => {
 
     it('reports fell-back with the cause for a view whose pair is gone', () => {
       vi.spyOn(console, 'warn').mockImplementation(() => {});
+
       const view = servedView(
         '<!--ui-view:lit-part--><p class="detail">leaf</p><!--ui-view:/lit-part-->',
         container,
       );
+
       const reports = listen(view);
 
       wake(view);
@@ -956,14 +995,17 @@ describe('the hydration outcome', () => {
 
     it('reports fell-back with what hydrate threw', () => {
       vi.spyOn(console, 'warn').mockImplementation(() => {});
+
       const view = servedView(
         '<!--lit-part VIEW--><p>plate</p><!--/lit-part-->',
         container,
       );
+
       const thrown = new Error('drawn for another state');
       view.render = () => {
         throw thrown;
       };
+
       const reports = listen(view);
 
       wake(view);

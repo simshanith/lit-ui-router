@@ -76,9 +76,11 @@ describe('runner labels', () => {
   it('finds a runs-on on every job that runs steps', () => {
     assert.notEqual(workflows.length, 0, 'no workflows found');
     assert.notEqual(jobs.length, 0, 'no step-running jobs found');
+
     const missing = jobs
       .filter(({ runsOn }) => runsOn === null || runsOn === undefined)
       .map(({ workflow, job }) => `${workflow}#${job}`);
+
     assert.deepEqual(missing, [], 'jobs with steps but no runs-on');
   });
 

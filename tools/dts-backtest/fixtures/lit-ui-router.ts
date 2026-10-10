@@ -118,6 +118,7 @@ export function setupRouter(): UIRouterLit {
   router.plugin(pushStateLocationPlugin);
   states.forEach((state) => router.stateRegistry.register(state));
   router.start();
+
   return router;
 }
 
@@ -159,11 +160,13 @@ export class NavLinkElement extends LitElement {
 
 // Both entries must expose the same declarations.
 TransitionController satisfies typeof PureTransitionController;
+
 SrefStatusController satisfies typeof PureSrefStatusController;
 
 export function pureEntry(host: LitElement): PureUIRouterLit | undefined {
   void new PureTransitionController(host);
   void new PureSrefStatusController(host, { state: 'home' });
+
   return PureUIRouterLitElement.seekRouter(host);
 }
 
@@ -173,21 +176,26 @@ export function contextEntry(target: EventTarget): UIRouterLit | undefined {
   const key: RouterContext = routerContext;
   void key;
   void new RouterContextRequestEvent(() => {}, true);
+
   const value: ContextType<RouterContext> | undefined = requestRouter(target, {
     subscribe: true,
     callback: (router) => void router,
   });
+
   return value;
 }
 
 export function handOff(root: EventTarget): string {
   const router = setupRouter();
   const uninstall = provideRouter(root, router);
+
   const href = withRouterSync(
     router,
     () => getScopedRouter()?.stateService.href('user', { id: 1 }) ?? '',
   );
+
   uninstall();
+
   return href;
 }
 

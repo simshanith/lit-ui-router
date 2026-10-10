@@ -35,6 +35,7 @@ type Fixtures = {
   triggers: { production: Trigger; preview: Trigger };
   driftScenario: { driftedDeployCommand: string; expectedDrifts: Drift[] };
 };
+
 const { triggers, driftScenario } = JSON.parse(
   await readFile(
     join(import.meta.dirname, 'workers-builds-triggers.fixtures.json'),
@@ -52,8 +53,11 @@ const workers = desiredWorkersFromConfig(
     ),
   ),
 );
+
 const flagship = workers.find((worker) => worker.site === 'lit-ui-router.dev');
+
 assert.ok(flagship, 'no lit-ui-router.dev entry in the trigger config');
+
 const desired = flagship;
 
 const withEnvironment = (
@@ -80,8 +84,10 @@ describe('parseJsonc', () => {
         join(workspaceRoot, worker.wranglerConfig),
         'utf8',
       );
+
       assert.ok(workerNameFromConfig(parseJsonc(raw)));
     }
+
     assert.equal(
       desired.wranglerConfig,
       'www/lit-ui-router.dev/wrangler.jsonc',
@@ -155,6 +161,7 @@ describe('desiredStateFromConfig', () => {
       join(import.meta.dirname, 'cloudflare-build.sh'),
       'utf8',
     );
+
     assert.match(
       shim,
       /^exec \.\/tools\/workers-builds\/cloudflare-build\.ts\b/m,
@@ -174,6 +181,7 @@ describe('desiredStateFromConfig', () => {
       '--config',
       'www/lit-ui-router.dev/wrangler.jsonc',
     ] as const;
+
     for (const [kind, mode, wrangler] of [
       ['production', 'main', ['wrangler', 'deploy', ...config]],
       ['preview', 'branch', ['wrangler', 'versions', 'upload', ...config]],
@@ -233,6 +241,7 @@ describe('desiredStateFromConfig', () => {
       productionBranch: 'main',
       preview: {},
     };
+
     assert.throws(
       () =>
         desiredStateFromConfig({
@@ -254,6 +263,7 @@ describe('desiredStateFromConfig', () => {
       productionBranch: 'main',
       preview: {},
     };
+
     assert.throws(
       () =>
         desiredStateFromConfig({
@@ -327,6 +337,7 @@ describe('diffTriggers', () => {
       [triggers.production, triggers.preview],
       desired,
     );
+
     assert.equal(report.ok, true);
     assert.deepEqual(drifts, []);
     assert.match(report.text, /✓ Workers Builds triggers match/);
@@ -337,10 +348,12 @@ describe('diffTriggers', () => {
       ...triggers.preview,
       deploy_command: driftScenario.driftedDeployCommand,
     };
+
     const { report, drifts } = diffTriggers(
       [triggers.production, drifted],
       desired,
     );
+
     assert.equal(report.ok, false);
     assert.deepEqual(drifts, driftScenario.expectedDrifts);
     assert.ok(
@@ -350,10 +363,12 @@ describe('diffTriggers', () => {
 
   it('never drifts on unpinned fields like root_directory', () => {
     const withRoot = { ...triggers.production, root_directory: '/docs' };
+
     const { report, drifts } = diffTriggers(
       [withRoot, triggers.preview],
       desired,
     );
+
     assert.equal(report.ok, true);
     assert.deepEqual(drifts, []);
     assert.match(report.text, /root_directory {5}\/docs \(not pinned\)/);
@@ -364,10 +379,12 @@ describe('diffTriggers', () => {
       ...declaredPreviewLive,
       SKIP_DEPENDENCY_INSTALL: { value: '0', is_secret: false },
     });
+
     const { report, drifts } = diffTriggers(
       [triggers.production, drifted],
       desired,
     );
+
     assert.equal(report.ok, false);
     assert.deepEqual(drifts, [
       {
@@ -384,10 +401,12 @@ describe('diffTriggers', () => {
 
   it('drifts on a declared environment variable missing from the trigger', () => {
     const drifted = withEnvironment(triggers.preview, {});
+
     const { report, drifts } = diffTriggers(
       [triggers.production, drifted],
       desired,
     );
+
     assert.equal(report.ok, false);
     // Every declared key is absent, so every one is patched.
     assert.deepEqual(drifts[0]?.environmentPatch, declaredPreviewLive);
@@ -400,10 +419,12 @@ describe('diffTriggers', () => {
       SOMETHING_ELSE: { value: 'dashboard-only', is_secret: false },
       TURBO_TOKEN: { is_secret: true },
     });
+
     const { report, drifts } = diffTriggers(
       [triggers.production, extra],
       desired,
     );
+
     assert.equal(report.ok, true);
     assert.deepEqual(drifts, []);
     assert.match(report.text, /SOMETHING_ELSE +\(unmanaged\)/);
@@ -417,6 +438,7 @@ describe('diffTriggers', () => {
       SOMETHING_ELSE: { value: 'dashboard-only', is_secret: false },
       TURBO_TOKEN: { is_secret: true },
     });
+
     const { drifts } = diffTriggers([triggers.production, drifted], desired);
     assert.deepEqual(
       Object.keys(drifts[0]?.environmentPatch ?? {}),
@@ -429,10 +451,12 @@ describe('diffTriggers', () => {
       ...declaredPreviewLive,
       SKIP_DEPENDENCY_INSTALL: { is_secret: true },
     });
+
     const { report, drifts } = diffTriggers(
       [triggers.production, conflicted],
       desired,
     );
+
     assert.equal(report.ok, false);
     assert.deepEqual(drifts, []);
     assert.match(report.text, /refusing to overwrite/);
@@ -447,6 +471,7 @@ describe('diffTriggers', () => {
       [triggers.production, triggers.preview],
       desired,
     );
+
     assert.equal(report.ok, true);
     assert.deepEqual(drifts, []);
     assert.doesNotMatch(report.text, /path_includes/);
@@ -457,10 +482,12 @@ describe('diffTriggers', () => {
       ...triggers.production,
       path_includes: ['www/lit-ui-router.dev/*'],
     };
+
     const { report, drifts } = diffTriggers(
       [watched, triggers.preview],
       desired,
     );
+
     assert.equal(report.ok, true);
     assert.deepEqual(drifts, []);
     assert.match(
@@ -477,10 +504,12 @@ describe('diffTriggers', () => {
         path_includes: ['www/atlas.lit-ui-router.dev/*'],
       },
     };
+
     const { report, drifts } = diffTriggers(
       [triggers.production, triggers.preview],
       pinned,
     );
+
     assert.equal(report.ok, false);
     assert.deepEqual(drifts, [
       {
@@ -509,17 +538,20 @@ describe('cloudflare-deploy', () => {
   const runDeploy = (...args: string[]) => {
     const dir = mkdtempSync(join(tmpdir(), 'cloudflare-deploy-'));
     const record = join(dir, 'invoked');
+
     try {
       writeFileSync(
         join(dir, 'npx'),
         `#!/bin/sh\nprintf '%s' "$*" > '${record}'\n`,
         { mode: 0o755 },
       );
+
       const result = spawnSync(process.execPath, [script, ...args], {
         encoding: 'utf8',
         // Only the stub on PATH: everything else the script runs is absolute.
         env: { ...process.env, PATH: dir },
       });
+
       return {
         status: result.status,
         stderr: result.stderr,

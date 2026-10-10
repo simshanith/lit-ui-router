@@ -35,6 +35,7 @@ const fakeTransition = {
 /** Captures the onSuccess callback the hook registers, to fire per navigation. */
 function fakeTransitionService() {
   let onSuccess: (trans: typeof fakeTransition) => void = () => {};
+
   const service = {
     onSuccess: (
       _criteria: unknown,
@@ -44,6 +45,7 @@ function fakeTransitionService() {
     },
     onError: () => {},
   };
+
   return { service, success: () => onSuccess(fakeTransition) };
 }
 
@@ -77,6 +79,7 @@ describe('googleAnalyticsHook page_view', () => {
     setLocationPlugin(plugin);
     const { service, success } = fakeTransitionService();
     googleAnalyticsHook(service);
+
     return (navigationType?: string) => {
       if (navigationType) navigation.emit(navigationType);
       success();

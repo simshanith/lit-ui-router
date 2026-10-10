@@ -71,6 +71,7 @@ function createRouter(states: LitStateDeclaration[]): UIRouterLit {
   router.plugin(memoryLocationPlugin);
   states.forEach((state) => router.stateRegistry.register(state));
   routers.push(router);
+
   return router;
 }
 
@@ -109,10 +110,12 @@ async function scopedRoutes(
   registry.define(tags.view, RecordingView);
   registry.define(tags.home, ScopedHome);
   const host = await fixture(document.createElement('div'));
+
   const root = host.attachShadow({
     mode: 'open',
     customElementRegistry: registry,
   });
+
   root.innerHTML = `<${tags.router}><${tags.view}></${tags.view}></${tags.router}>`;
 
   const uiRouter = root.firstElementChild!;
@@ -123,6 +126,7 @@ async function scopedRoutes(
   expect(view).toBeInstanceOf(UiView);
   router.start();
   await tick();
+
   return view as RecordingView;
 }
 
@@ -170,6 +174,7 @@ describe.each([
       const router = createRouter([
         { name: 'home', url: '/home', component: ScopedHome },
       ]);
+
       const view = await scopedRoutes(tags, router);
       expectNotGloballyDefined(tags);
 
@@ -198,6 +203,7 @@ describe.each([
                   ></app-home>`,
         },
       ]);
+
       const view = await scopedRoutes(tags, router);
       expectNotGloballyDefined(tags);
 

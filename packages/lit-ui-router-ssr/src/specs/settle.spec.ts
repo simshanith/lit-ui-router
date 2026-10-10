@@ -65,10 +65,14 @@ const makeRouter = (otherwise = false): UIRouterLit => {
   const router = installServerLocation(new UIRouterLit(), {
     strictMode: false,
   });
+
   // The failing specs assert the rejection; keep core's logger quiet.
   router.stateService.defaultErrorHandler(() => {});
+
   for (const state of states()) router.stateRegistry.register(state);
+
   if (otherwise) router.urlService.rules.otherwise({ state: 'notFound' });
+
   return router;
 };
 
@@ -197,6 +201,7 @@ describe('settle', () => {
       paths: ['/', '/sheet/7B'],
       renderShell: async (_verdict, { path }) => {
         await settle(router, path);
+
         return rootTemplate(router);
       },
       write: (file, body) => void files.set(file, body),

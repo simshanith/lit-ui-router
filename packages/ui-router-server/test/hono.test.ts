@@ -31,6 +31,7 @@ const appWith = (verdict: Verdict, options = {}) => {
     }),
   );
   app.all('*', (c) => c.text('downstream', 200));
+
   return app;
 };
 
@@ -45,6 +46,7 @@ describe('serverRouterHono', () => {
       location: '/app/home',
       status: 302,
     });
+
     const res = await navigate(app, '/app/old?ref=email');
     assert.equal(res.status, 302);
     assert.equal(res.headers.get('Location'), '/app/home?ref=email');

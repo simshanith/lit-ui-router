@@ -19,12 +19,16 @@ import { isRootMember, type Member } from '@tools/shared/workspace.ts';
  */
 export function packageFromRef(ref: string): string {
   const prefix = 'refs/tags/';
+
   if (!ref.startsWith(prefix)) {
     throw new Error(`GITHUB_REF ${JSON.stringify(ref)} is not a tag ref`);
   }
+
   const tag = ref.slice(prefix.length);
+
   if (tag === '') throw new Error('GITHUB_REF names an empty tag');
   const at = tag.lastIndexOf('@');
+
   return at <= 0 ? tag : tag.slice(0, at);
 }
 
@@ -40,10 +44,13 @@ export function resolvePackageName(options: {
 }): string {
   const { packageInput, ref } = options;
   const input = packageInput?.trim() ?? '';
+
   if (input !== '') return input;
+
   if (ref === undefined || ref.trim() === '') {
     throw new Error('neither PACKAGE_INPUT nor GITHUB_REF is set');
   }
+
   return packageFromRef(ref.trim());
 }
 
@@ -57,10 +64,12 @@ export function memberDir(name: string, members: readonly Member[]): string {
   const member = members.find(
     (candidate) => candidate.name === name && !isRootMember(candidate),
   );
+
   if (member === undefined) {
     throw new Error(
       `package ${JSON.stringify(name)} is not a workspace member`,
     );
   }
+
   return member.dir;
 }

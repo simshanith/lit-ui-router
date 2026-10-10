@@ -11,6 +11,7 @@ import { workspaceRoot } from '@tools/bootstrap/root.ts';
 import { rebaseLcov } from './rebase.ts';
 
 const files = process.argv.slice(2);
+
 if (files.length === 0) {
   console.error('usage: rebase-lcov <lcov-file> [...]');
   process.exit(1);

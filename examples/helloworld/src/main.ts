@@ -59,10 +59,15 @@ const aboutState: LitStateDeclaration = {
 
 // Router setup
 const router = new UIRouterLit();
+
 router.plugin(hashLocationPlugin);
+
 router.stateRegistry.register(helloState);
+
 router.stateRegistry.register(aboutState);
+
 router.urlService.rules.initial({ state: 'hello' });
+
 router.start();
 
 // Render

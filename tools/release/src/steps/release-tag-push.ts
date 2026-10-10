@@ -20,19 +20,25 @@ runMain(async () => {
   const dryRun = boolEnv(process.env, 'DRY_RUN');
   const tagName = await resolveReleaseTagName(packageName);
   const state = await resolveTagState(tagName);
+
   if (isPushed(state)) {
     console.log(tagStateMessage(state, tagName));
     console.log(`skipping push of refs/tags/${tagName}`);
+
     return;
   }
+
   // A dry run never tagged, so it reports the push it would make and stops.
   if (dryRun) {
     console.log(`dry-run: would push refs/tags/${tagName}`);
+
     return;
   }
+
   if (state === 'tag') {
     // Nothing to push: the Tag step did not leave a local tag behind.
     throw new Error(`no local tag ${tagName} to push`);
   }
+
   await defaultStream('git', pushTagArgs(tagName), { cwd: workspaceRoot });
 });

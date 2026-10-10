@@ -89,6 +89,7 @@ export class AppRoot extends LitElement {
   firstUpdated(): void {
     for (const row of Object.values(this.rows)) {
       const el = row.value;
+
       if (el) {
         this.observer.observe(el, {
           attributes: true,
@@ -96,6 +97,7 @@ export class AppRoot extends LitElement {
         });
       }
     }
+
     this.hrefTick += 1;
   }
 
@@ -108,6 +110,7 @@ export class AppRoot extends LitElement {
     // read through the tick so lit re-evaluates when the attribute changes
     void this.hrefTick;
     const href = row.value?.getAttribute('href') ?? null;
+
     return href === null
       ? html`<span class="href none">no href attribute</span>`
       : html`<span class="href">href="${href}"</span>`;
@@ -120,6 +123,7 @@ export class AppRoot extends LitElement {
       anchorAuto,
       srefHref: srefHrefRow,
     } = this.rows;
+
     return html`
       <h2>uiSref and a design-system link element</h2>
       <p>
@@ -216,6 +220,7 @@ function createRouter(): UIRouterLit {
   router.stateRegistry.register(tokensState);
   router.urlService.rules.initial({ state: 'components' });
   router.start();
+
   return router;
 }
 
@@ -228,9 +233,11 @@ export class AppShell extends LitElement {
 
   render() {
     const { color } = this.scheme;
+
     // hold the first paint until a stop is registered — sp-theme adopts the
     // one it is told to, and an unregistered stop leaves it nothing to adopt
     if (!color) return nothing;
+
     return html`
       <sp-theme system="spectrum" color=${color} scale="medium">
         <ui-router .uiRouter=${this.router}>

@@ -6,6 +6,7 @@ import { registerHooks } from 'node:module';
 registerHooks({
   resolve(specifier, context, nextResolve) {
     const match = /^eslint(\/.*)?$/.exec(specifier);
+
     return nextResolve(
       match ? import.meta.resolve(`eslint-floor${match[1] ?? ''}`) : specifier,
       context,

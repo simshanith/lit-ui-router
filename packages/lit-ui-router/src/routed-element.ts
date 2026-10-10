@@ -19,9 +19,11 @@ export function routedLitElementRenderer<
   T extends DefaultResolvesType = DefaultResolvesType,
 >(Component: RoutedLitElement<T>): RoutedLitTemplate<T> {
   let element: InstanceType<RoutedLitElement<T>>;
+
   return (props: UIViewInjectedProps<T>) => {
     element ??= new Component(props);
     element._uiViewProps = props;
+
     return html`${element}`;
   };
 }

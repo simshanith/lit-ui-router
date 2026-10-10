@@ -35,7 +35,9 @@ export function suppressNativeClickNavigation(): NativeClickSuppression {
   if (active) {
     return active;
   }
+
   const events: SuppressedNativeClick[] = [];
+
   const listener = (event: Event) => {
     const target = event.target instanceof Element ? event.target : null;
     events.push({
@@ -46,6 +48,7 @@ export function suppressNativeClickNavigation(): NativeClickSuppression {
     });
     event.preventDefault();
   };
+
   window.addEventListener('click', listener);
   window.addEventListener('auxclick', listener);
   active = {
@@ -56,5 +59,6 @@ export function suppressNativeClickNavigation(): NativeClickSuppression {
       active = undefined;
     },
   };
+
   return active;
 }

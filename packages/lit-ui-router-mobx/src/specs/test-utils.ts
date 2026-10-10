@@ -38,5 +38,6 @@ export function createTestRouter(
   const router = new UIRouterLit();
   router.plugin(memoryLocationPlugin);
   states.forEach((state) => router.stateRegistry.register(state));
+
   return router;
 }

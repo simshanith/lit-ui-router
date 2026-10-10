@@ -29,11 +29,14 @@ const MAX_REPORT_CHARS = 60_000;
 
 function reportBlock(output: string): string[] {
   const text = output.trim();
+
   if (text === '') return [];
+
   const clipped =
     text.length > MAX_REPORT_CHARS
       ? `${text.slice(0, MAX_REPORT_CHARS)}\n… report truncated`
       : text;
+
   return ['', '```', clipped, '```'];
 }
 
@@ -44,6 +47,7 @@ export function toWorkersBuildsCheckRun(
 ): CheckRunPayload {
   const name = WORKERS_BUILDS_CHECK_RUN_NAME;
   const configUrl = `https://github.com/${repo}/blob/main/tools/workers-builds/workers-builds-triggers.config.jsonc`;
+
   if (result.exitCode === 0) {
     return {
       name,
@@ -56,6 +60,7 @@ export function toWorkersBuildsCheckRun(
       ].join('\n'),
     };
   }
+
   if (result.exitCode === 1) {
     return {
       name,
@@ -77,6 +82,7 @@ export function toWorkersBuildsCheckRun(
       // details_url: not settable — GitHub pins GITHUB_TOKEN-created check runs to their own page
     };
   }
+
   return {
     name,
     conclusion: 'neutral',

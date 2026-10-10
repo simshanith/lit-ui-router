@@ -7,8 +7,11 @@ import {
 } from '@tools/lit-test-env/setup.ts';
 
 silenceLitDevModeBanner();
+
 afterEach(fixtureCleanup);
+
 expect.extend(domMatchers);
+
 expect.addSnapshotSerializer(domSnapshotSerializer);
 
 // Both stay in-module: the import so the lit2-compat alias resolves against
@@ -16,7 +19,9 @@ expect.addSnapshotSerializer(domSnapshotSerializer);
 // import.meta.env where it is read in-module (browser projects included).
 // Typed by vitest.env.d.ts, not vite/client.
 const expectedLitMajor = import.meta.env.VITE_EXPECT_LIT_MAJOR ?? '3';
+
 await import('lit');
+
 assertLitMajor(expectedLitMajor);
 
 // top-level await above requires module-hood even with no exports

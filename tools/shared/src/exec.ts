@@ -7,6 +7,7 @@ import { execFile, spawn } from 'node:child_process';
 import { promisify } from 'node:util';
 
 export type ExecOptions = { cwd?: string; env?: NodeJS.ProcessEnv };
+
 export type ExecResult = { stdout: string; stderr: string };
 
 /** Captured-output run for commands whose stdout the caller consumes. */
@@ -33,6 +34,7 @@ export const defaultExec: Exec = async (command, args, options) => {
     maxBuffer: 16 * 1024 * 1024,
     ...options,
   });
+
   return { stdout, stderr };
 };
 
@@ -51,6 +53,7 @@ export const defaultCapture: Exec = (command, args, options) =>
       stdio: ['ignore', 'pipe', 'pipe'],
       ...options,
     });
+
     const out: Buffer[] = [];
     const err: Buffer[] = [];
     child.stdout.on('data', (chunk: Buffer) => out.push(chunk));
@@ -61,6 +64,7 @@ export const defaultCapture: Exec = (command, args, options) =>
         stdout: Buffer.concat(out).toString('utf8'),
         stderr: Buffer.concat(err).toString('utf8'),
       };
+
       if (code === 0) resolve(result);
       else {
         reject(

@@ -14,8 +14,11 @@ const props = withDefaults(
 );
 
 const container = useTemplateRef('container');
+
 const isFullscreenSupported = ref(false);
+
 const isFullscreen = ref(false);
+
 const iconsLoaded = ref(false);
 
 const toggleFullscreen = () => {
@@ -29,8 +32,10 @@ const handleFullscreenChange = () => {
 };
 
 const iframe = useTemplateRef('iframe');
+
 function restartIframe() {
   const el = iframe.value;
+
   if (el) el.src += '';
 }
 
@@ -50,6 +55,7 @@ if (!import.meta.env.SSR) {
 
 onMounted(async () => {
   isFullscreenSupported.value = screenfull.isEnabled;
+
   if (screenfull.isEnabled) {
     screenfull.on('change', handleFullscreenChange);
   }

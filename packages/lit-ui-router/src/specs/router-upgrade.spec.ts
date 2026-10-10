@@ -117,8 +117,10 @@ describe('placeholder router upgrade', () => {
 
     it('skips a subscriber that an earlier one unsubscribed during the upgrade', async () => {
       const child = uiRouter.appendChild(document.createElement('div'));
+
       const later =
         vi.fn<(value: UIRouterLit, unsubscribe?: () => void) => void>();
+
       requestRouter(child, {
         subscribe: true,
         callback: (value) => {
@@ -134,6 +136,7 @@ describe('placeholder router upgrade', () => {
 
     it('delivers the upgrade once, and never a later swap', async () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
       try {
         const child = uiRouter.appendChild(document.createElement('div'));
         const callback = vi.fn();
@@ -170,6 +173,7 @@ describe('placeholder router upgrade', () => {
 
       uiRouter.uiRouter = createTestRouter();
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
       try {
         await waitForUpdate(uiRouter);
       } finally {
@@ -204,6 +208,7 @@ describe('placeholder router upgrade', () => {
       const host = uiRouter.appendChild(
         document.createElement('test-router-upgrade-host'),
       );
+
       await waitForUpdate(host);
       expect(host.transitions.router).toBe(placeholder);
       expect(host.status.router).toBe(placeholder);
@@ -238,6 +243,7 @@ describe('placeholder router upgrade', () => {
       const host = uiRouter.appendChild(
         document.createElement('test-router-upgrade-host'),
       );
+
       await waitForUpdate(host);
       host.remove();
 

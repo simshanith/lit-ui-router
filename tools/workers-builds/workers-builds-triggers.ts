@@ -79,21 +79,27 @@ async function cf(
   const headers: Record<string, string> = {
     authorization: `Bearer ${token}`,
   };
+
   if (init) headers['content-type'] = 'application/json';
+
   const response = await fetch(`${API_BASE}${path}`, {
     method: init?.method ?? 'GET',
     headers,
     body: init ? JSON.stringify(init.body) : undefined,
   });
+
   const envelope = (await response.json()) as CloudflareEnvelope;
+
   if (!response.ok || envelope.success === false) {
     const details = (envelope.errors ?? [])
       .map((error) => `${error.code ?? '?'}: ${error.message ?? '?'}`)
       .join('; ');
+
     throw new Error(
       `Cloudflare API ${init?.method ?? 'GET'} ${path} failed (HTTP ${response.status})${details ? ` — ${details}` : ''}`,
     );
   }
+
   return envelope.result;
 }
 
@@ -106,10 +112,13 @@ async function workerTag(
     id?: string;
     tag?: string;
   }[];
+
   const script = scripts.find((candidate) => candidate.id === name);
+
   if (!script?.tag) {
     throw new Error(`worker "${name}" not found in account's workers/scripts`);
   }
+
   return script.tag;
 }
 
@@ -124,6 +133,7 @@ async function getTriggers(
     token,
     `/${accountId}/builds/workers/${tag}/triggers`,
   )) as Trigger[];
+
   return Promise.all(
     triggers.map(async (trigger) =>
       trigger.environment_variables
@@ -150,11 +160,13 @@ async function main() {
     },
     strict: true,
   });
+
   const apply = values.apply;
   const sites = values.site.flatMap((value) => value.split(','));
 
   const token = process.env.CLOUDFLARE_API_TOKEN;
   const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
+
   if (!token || !accountId) {
     console.error(
       'Missing required env: set CLOUDFLARE_API_TOKEN (user token with ' +
@@ -162,6 +174,7 @@ async function main() {
         'CLOUDFLARE_ACCOUNT_ID.',
     );
     process.exitCode = 2;
+
     return;
   }
 
@@ -178,10 +191,12 @@ async function main() {
     );
 
     const tag = await workerTag(token, accountId, name);
+
     const { report, drifts } = diffTriggers(
       await getTriggers(token, accountId, tag),
       worker,
     );
+
     console.log(`${index > 0 ? '\n' : ''}worker: ${name} (${tag})\n`);
     console.log(report.text);
 
@@ -200,6 +215,7 @@ async function main() {
           body: drift.patch,
         });
       }
+
       // Declared keys only — undeclared live vars are never in this body.
       if (Object.keys(drift.environmentPatch).length > 0) {
         console.log(
@@ -218,11 +234,14 @@ async function main() {
       await getTriggers(token, accountId, tag),
       worker,
     );
+
     console.log(`\nAfter --apply:\n\n${after.report.text}`);
+
     if (!after.report.ok) ok = false;
   }
 
   if (ok) return;
+
   if (!apply) console.log('\nRun with --apply to update the drifted triggers.');
   process.exitCode = 1;
 }

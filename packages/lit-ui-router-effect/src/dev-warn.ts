@@ -25,9 +25,11 @@ export function warnMissingRouter(
 ): void {
   // DEV folds away in dist/*.js (check:dev-split); inLitDevMode() is the runtime probe.
   if (!import.meta.env.DEV) return;
+
   if (!inLitDevMode() || warnedMissingRouter.has(element)) {
     return;
   }
+
   warnedMissingRouter.add(element);
   console.warn(
     `lit-ui-router-effect: ${subject} found no <ui-router> ancestor, so it ${consequence}. ` +

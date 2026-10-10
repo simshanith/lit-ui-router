@@ -22,6 +22,7 @@ const serverMarkup =
 // Composed and painted, not merely present in the light DOM.
 function isLaidOut(element: Element): boolean {
   const { width, height } = element.getBoundingClientRect();
+
   return (
     width > 0 && height > 0 && (element as HTMLElement).offsetParent !== null
   );
@@ -44,6 +45,7 @@ describe('<ui-view> server-rendered shape', () => {
         component: () => html`<div class="home-content">Home Content</div>`,
       },
     ];
+
     router = createTestRouter(states);
 
     // Parse detached so the router is set before <ui-router> upgrades and its views seek it.
@@ -83,6 +85,7 @@ describe('<ui-view> server-rendered shape', () => {
         component: () => html`<div class="home-content">Home Content</div>`,
       },
     ];
+
     router = createTestRouter(states);
 
     // An inert document never upgrades custom elements, so `uiRouter` lands as a

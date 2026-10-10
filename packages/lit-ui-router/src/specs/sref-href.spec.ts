@@ -33,6 +33,7 @@ function attributePart(name: string, strings?: string[]): PartInfo {
     tagName: 'a',
     strings,
   };
+
   return info;
 }
 
@@ -69,6 +70,7 @@ describe('srefHref directive', () => {
 
     render(template, wrapper);
     await tick(20);
+
     return wrapper;
   }
 
@@ -88,6 +90,7 @@ describe('srefHref directive', () => {
       const wrapper = await mount(
         html`<a href=${srefHref('users.detail', { userId: 42 })}>User</a>`,
       );
+
       expect(wrapper.querySelector('a')!.getAttribute('href')).toBe(
         '#/users/42',
       );
@@ -97,12 +100,14 @@ describe('srefHref directive', () => {
       const wrapper = await mount(
         html`<a href=${srefHref('nourl')}>No url</a>`,
       );
+
       expect(wrapper.querySelector('a')!.hasAttribute('href')).toBe(false);
     });
 
     it('follows a re-render that changes the params', async () => {
       const link = (userId: number) =>
         html`<a href=${srefHref('users.detail', { userId })}>User</a>`;
+
       const wrapper = await mount(link(1));
       const anchor = wrapper.querySelector('a')!;
       expect(anchor.getAttribute('href')).toBe('#/users/1');
@@ -134,6 +139,7 @@ describe('srefHref directive', () => {
         claimed = event.defaultPrevented;
         event.preventDefault();
       });
+
       return () => claimed;
     }
 
@@ -147,6 +153,7 @@ describe('srefHref directive', () => {
         cancelable: true,
         button: 0,
       });
+
       anchor.dispatchEvent(event);
       await tick(20);
 
@@ -175,6 +182,7 @@ describe('srefHref directive', () => {
       const wrapper = await mount(
         html`<a href=${srefHref('users')} target="_blank">Users</a>`,
       );
+
       const go = vi.spyOn(router.stateService, 'go');
       const claimed = claimAfter(wrapper);
 
@@ -209,6 +217,7 @@ describe('srefHref directive', () => {
           <a href=${srefHref('users')}>Users</a>
         </li>`,
       );
+
       await tick(50);
       const item = wrapper.querySelector('li')!;
 
@@ -224,6 +233,7 @@ describe('srefHref directive', () => {
     it('re-announces when the target changes, not when only the href would', async () => {
       const link = (userId: number) =>
         html`<a href=${srefHref('users.detail', { userId })}>User</a>`;
+
       const targets: unknown[] = [];
       container.addEventListener(UI_SREF_TARGET_EVENT, ((
         event: UiSrefTargetEvent,
@@ -270,6 +280,7 @@ describe('srefHref directive', () => {
         html`${cache(
           show ? html`<a href=${srefHref('users')}>Users</a>` : nothing,
         )}`;
+
       const wrapper = await mount(link(true));
       const anchor = wrapper.querySelector('a')!;
       expect(anchor.getAttribute('href')).toBe('#/users');
@@ -303,6 +314,7 @@ describe('srefHref directive', () => {
 
     it('warns once and writes nothing', async () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
       try {
         render(link(), container);
         await tick(50);

@@ -15,6 +15,7 @@ export function pnpmReleaseItArgs(
   if (packageName.trim() === '') {
     throw new Error('packageName must be non-empty');
   }
+
   return ['--filter', packageName, 'exec', '--', 'release-it', ...args];
 }
 
@@ -27,6 +28,7 @@ export async function releaseItOutput(
   const { stdout } = await exec('pnpm', pnpmReleaseItArgs(packageName, args), {
     cwd: workspaceRoot,
   });
+
   return stdout.trim();
 }
 

@@ -23,6 +23,7 @@ function createTestRouter(baseHref = '/'): UIRouter {
   const router = new UIRouter();
   // Configure the base href
   router.urlService.config.baseHref = () => baseHref;
+
   return router;
 }
 
@@ -126,6 +127,7 @@ describe.skipIf(!hasNavigationAPI)('NavigationLocationService', () => {
 
   it('fires navigate event with UIRouter info when navigating', () => {
     let capturedEvent: NavigateEvent | null = null;
+
     const navigateHandler = (event: NavigateEvent) => {
       capturedEvent = event;
     };
@@ -188,6 +190,7 @@ describe.skipIf(!hasNavigationAPI)(
       const holder = window as unknown as { __sameDocumentMarker?: object };
       holder.__sameDocumentMarker = marker;
       let handled = false;
+
       const plugin = navigationLocationPlugin(router, {
         intercept: () => ({
           async handler() {
@@ -196,6 +199,7 @@ describe.skipIf(!hasNavigationAPI)(
           },
         }),
       });
+
       try {
         plugin.service.url('/option-intercepted');
         const finished = window.navigation.transition?.finished;

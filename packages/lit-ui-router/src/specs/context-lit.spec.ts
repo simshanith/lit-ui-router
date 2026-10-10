@@ -107,6 +107,7 @@ describe('lit-ui-router/context with @lit/context', () => {
     element.uiRouter = router;
     container.appendChild(element);
     await waitForUpdate(element);
+
     return element;
   }
 

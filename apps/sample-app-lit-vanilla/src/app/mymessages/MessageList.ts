@@ -47,6 +47,7 @@ export class MessageList extends LitElement {
   // <ui-view> re-delivers _uiViewProps every update, so re-seed only on a new resolve
   willUpdate() {
     const resolved = this._uiViewProps.resolves.messages ?? [];
+
     if (resolved !== this.resolved) {
       this.resolved = resolved;
       this.messages = snapshot(resolved);
