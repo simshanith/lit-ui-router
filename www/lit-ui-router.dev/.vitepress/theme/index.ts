@@ -1,5 +1,7 @@
 import type { Theme } from 'vitepress';
 import DefaultTheme from 'vitepress/theme';
+import NotFound from 'vitepress/dist/client/theme-default/NotFound.vue';
+import { h } from 'vue';
 import './custom.css';
 import StackBlitzEmbed from './components/StackBlitzEmbed.vue';
 import ExampleEmbed from './components/ExampleEmbed.vue';
@@ -9,6 +11,9 @@ import FrameworkCards from './components/FrameworkCards.vue';
 
 export default {
   extends: DefaultTheme,
+  // The 404 layout renders no <main>; its not-found slot wraps the stock page in one.
+  Layout: () =>
+    h(DefaultTheme.Layout, null, { 'not-found': () => h('main', h(NotFound)) }),
   enhanceApp({ app }) {
     app.component('StackBlitzEmbed', StackBlitzEmbed);
     app.component('ExampleEmbed', ExampleEmbed);

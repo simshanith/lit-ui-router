@@ -41,7 +41,9 @@ render(
     </ui-router>
     ${
       apiDocsEnabled
-        ? html`<api-docs src=${customElementsJsonUrl}></api-docs>`
+        ? html`<aside aria-label="API documentation">
+            <api-docs src=${customElementsJsonUrl}></api-docs>
+          </aside>`
         : ''
     }`,
   root,
