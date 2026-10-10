@@ -205,6 +205,23 @@ describe('createConnectMiddleware', () => {
     assert.equal(h.headers.Link, undefined);
   });
 
+  it('passes a hand-built request whose accept header is null', async () => {
+    const mw = createConnectMiddleware(
+      routerOf({ kind: 'shell', mount: '/app' }),
+    );
+
+    const h = harness({
+      url: '/app/about',
+      // oxlint-disable-next-line anti-slop/no-chained-type-assertions, anti-slop/require-safety-comment-for-type-assertion -- deliberately ill-typed header exercises the runtime check
+      headers: { accept: null as unknown as undefined },
+    });
+
+    mw(h.req, h.res, h.next);
+    await h.done;
+    assert.equal(h.nextArgs.length, 1);
+    assert.equal(h.req.url, '/app/about');
+  });
+
   it('honours shellPath and shouldHandle overrides', async () => {
     const mw = createConnectMiddleware(
       routerOf({ kind: 'shell', mount: '/app' }),

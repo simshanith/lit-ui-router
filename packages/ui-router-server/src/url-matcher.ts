@@ -75,6 +75,10 @@ const typeEquals = (type: ParamType, a: unknown, b: unknown): boolean =>
 
 const isString = <T>(val: T): val is T & string => typeof val === 'string';
 
+const isParamTypeObject = (
+  declared: string | ParamType | undefined,
+): declared is ParamType => typeof declared === 'object';
+
 const isNumber = (val: unknown): val is number => typeof val === 'number';
 
 const isBoolean = (val: unknown): val is boolean => typeof val === 'boolean';
@@ -207,7 +211,7 @@ const resolveType = (
 
   if (!declared) return builtinTypes[isSearch ? 'query' : 'path'];
 
-  if (!isString(declared)) return declared;
+  if (isParamTypeObject(declared)) return declared;
   const named = builtinType(declared);
 
   if (!named)

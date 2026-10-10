@@ -402,8 +402,14 @@ export const linkElementsOf = (
 ): ReadonlySet<string> => {
   const { linkElements } = context.settings;
 
-  const declared: readonly unknown[] =
-    option ?? (Array.isArray(linkElements) ? linkElements : []);
+  const fromSettings: readonly unknown[] = Array.isArray(linkElements)
+    ? linkElements
+    : [];
+
+  // A host that skips meta.schema can pass a malformed option; it falls back like a malformed setting.
+  const declared: readonly unknown[] = Array.isArray(option)
+    ? option
+    : fromSettings;
 
   // parse5 lowercases tag names, so a declaration has to meet them there.
   return new Set(

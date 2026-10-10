@@ -113,6 +113,13 @@ describe('explicit rejections (fail at compile, never diverge silently)', () => 
       () => compile('/a/:x', { params: { x: { type: 'uuid' } } }),
       /Unknown type 'uuid'/,
     );
+    // oxlint-disable-next-line anti-slop/no-chained-type-assertions, anti-slop/require-safety-comment-for-type-assertion -- deliberately ill-typed type exercises the runtime check
+    const notAType = 5 as unknown as string;
+
+    assert.throws(
+      () => compile('/a/:x', { params: { x: { type: notAType } } }),
+      /Unknown type '5'/,
+    );
   });
 
   it('rejects invalid squash policies', () => {
