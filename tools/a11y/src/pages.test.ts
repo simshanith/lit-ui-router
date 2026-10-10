@@ -9,11 +9,15 @@ test('samplePages keeps every page outside the API reference', () => {
   assert.deepEqual(samplePages(paths), [...paths].sort());
 });
 
-test('samplePages keeps the first page of each API reference directory', () => {
+test('samplePages keeps the first API reference page of each kind', () => {
   const paths = [
     '/api/reference/types/B',
     '/api/reference/types/A',
-    '/api/reference/core/X',
+    '/api/server/matcher/interfaces/Y',
+    '/api/reference/interfaces/X',
+    '/api/server/matcher/',
+    '/api/server/connect/',
+    '/api/server/',
     '/api/reference/',
     '/api/',
   ];
@@ -21,7 +25,8 @@ test('samplePages keeps the first page of each API reference directory', () => {
   assert.deepEqual(samplePages(paths), [
     '/api/',
     '/api/reference/',
-    '/api/reference/core/X',
+    '/api/reference/interfaces/X',
     '/api/reference/types/A',
+    '/api/server/connect/',
   ]);
 });

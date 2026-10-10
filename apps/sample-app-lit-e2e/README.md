@@ -21,7 +21,7 @@ parallel:
 | `effect`    | `/app-effect/` | Effect app, default routing — the Navigation API plugin                                                                                    |
 | `docs`      | site + mounts  | docs pages plus the mount matrix — flagships, hash demo, and the server-support exhibits (`cypress.docs.config.ts`)                        |
 | `hash`      | `/app/`        | vanilla app under the `hash` location plugin                                                                                               |
-| `a11y`      | site + mounts  | axe-core (`@tools/a11y`) over the docs pages (one per API reference directory) in light and dark, and a walk through each sample-app mount |
+| `a11y`      | site + mounts  | axe-core (`@tools/a11y`) over the docs pages (one API reference page per kind) in light and dark, and a walk through each sample-app mount |
 | `pushState` | `/app/`        | vanilla app under the `pushState` fallback                                                                                                 |
 
 Each suite is its own turbo task (`test:e2e:<suite>`). The Cypress suites have their own cache keys,
