@@ -9,6 +9,10 @@ export const APP_TITLE = 'UI-Router Lit sample app';
 /** A state's `data.title`: fixed, or read from the transition's resolves. */
 export type RouteTitle = string | ((transition: Transition) => string);
 
+const isTitleResolver = (
+  title: RouteTitle | undefined,
+): title is (transition: Transition) => string => typeof title === 'function';
+
 /** The top-level state under `app`: `contacts.contact.edit` is `contacts`. */
 const sectionOf = (state: StateDeclaration) => state.name?.split('.')[0] ?? '';
 
@@ -17,7 +21,7 @@ function titleOf(transition: Transition) {
   const title = (transition.to().data as { title?: RouteTitle } | undefined)
     ?.title;
 
-  const text = typeof title === 'function' ? title(transition) : title;
+  const text = isTitleResolver(title) ? title(transition) : title;
 
   return text ? `${text} — ${APP_TITLE}` : APP_TITLE;
 }
