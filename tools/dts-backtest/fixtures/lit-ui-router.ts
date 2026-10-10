@@ -43,6 +43,10 @@ import {
   type RouterContext,
 } from 'lit-ui-router/context';
 import {
+  snapshotRoute,
+  type RouteSnapshot,
+} from 'lit-ui-router/route-snapshot';
+import {
   SrefStatusController as PureSrefStatusController,
   TransitionController as PureTransitionController,
   UIRouterLitElement as PureUIRouterLitElement,
@@ -189,6 +193,19 @@ export function handOff(root: EventTarget): string {
   );
   uninstall();
   return href;
+}
+
+// The route-snapshot entry: one settled value per successful transition.
+export function followRoute(
+  router: UIRouterLit,
+  set: (route: RouteSnapshot) => void,
+): void {
+  set(snapshotRoute(router));
+  router.transitionService.onSuccess({}, (transition) => {
+    const route = snapshotRoute(router, transition);
+    set(route);
+    void route.includes('user.**', { id: 1 });
+  });
 }
 
 // The register import above puts the tag-map augmentation in scope.

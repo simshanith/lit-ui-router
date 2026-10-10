@@ -53,6 +53,11 @@
       "development": "./dist/development/register.js",
       "default": "./dist/register.js"
     },
+    "./route-snapshot": {
+      "types": "./dist/route-snapshot.d.ts",
+      "development": "./dist/development/route-snapshot.js",
+      "default": "./dist/route-snapshot.js"
+    },
     "./ui-router.register": {
       "types": "./dist/ui-router.register.d.ts",
       "development": "./dist/development/ui-router.register.js",
@@ -137,6 +142,13 @@
       "free": [
         "lit",
         "@uirouter/core",
+        "ui-router-server",
+        "@lit-labs/ssr"
+      ]
+    },
+    "./route-snapshot": {
+      "free": [
+        "lit",
         "ui-router-server",
         "@lit-labs/ssr"
       ]
