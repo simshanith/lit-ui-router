@@ -92,6 +92,7 @@ function makeSidebar() {
           text: 'Component Lifecycle Hooks',
           link: '/guides/component-lifecycle',
         },
+        { text: 'Routed Components', link: '/guides/routed-components' },
         {
           text: 'View Fallback Content',
           link: '/guides/view-fallback-content',
