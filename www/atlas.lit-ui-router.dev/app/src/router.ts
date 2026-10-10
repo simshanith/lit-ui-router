@@ -253,7 +253,7 @@ export function createRouter(): UIRouterLit {
   // url-less notFound state WITHOUT moving the address bar. A miscased
   // number ('2a') is the sheet under its canonical id: redirect there, so
   // the url, the rail's uiSrefActive and the prerendered directory agree.
-  // An aliased id ('14') redirects the same way, to the plate it names.
+  // An aliased id ('14i') redirects the same way, to the plate it names.
   router.transitionService.onBefore({ to: 'atlas.sheet' }, async (transition) => {
     const manifest = await loadManifest();
     const num = String(transition.params().num);

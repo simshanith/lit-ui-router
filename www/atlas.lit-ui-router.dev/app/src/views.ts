@@ -1238,7 +1238,7 @@ export const AboutView: RoutedLitTemplate<ManifestResolves> = (props) => {
         <h2>THE SET, ROUTED</h2>
         ${manifest ? html`<p>${unsafeHTML(manifest.cover.thesis)}</p>` : nothing}
         <p>
-          The atlas is ${manifest?.total ?? 13} sheets of static HTML. This is the same
+          The atlas is ${manifest?.total ?? 14} sheets of static HTML. This is the same
           set as one <code>lit-ui-router</code> application: an abstract
           <code>atlas</code> state renders the rail and a nested
           <code>&lt;ui-view&gt;</code>, and <code>atlas.sheet</code> resolves one

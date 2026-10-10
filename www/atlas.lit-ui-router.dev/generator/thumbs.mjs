@@ -193,6 +193,7 @@ const TUNING = {
   5: { zoom: 1.5, x: 0.55, focus: 0.05 },
   6: { zoom: 1.5, x: 0 },
   13: { zoom: 1.8, x: 0.02, focus: 0.02 },
+  14: { zoom: 2, x: 0.8, focus: 0.08 },
   // Every other plate takes the default: the whole drawing at the card's width,
   // top-anchored. They are landscape to a plate, and a landscape drawing laid at
   // the card's width is already as large as it can be — which is why no row here

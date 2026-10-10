@@ -40,11 +40,11 @@ export const href = {
 };
 
 /**
- * Sheet ids that resolve to a plate filed under another id: the survey office
- * and its lane are appendix A2 and A2i. `/sheet/14` redirects on both sides of
- * the seam, and HISTORY.md's record headings file under the plate's own id.
+ * Sheet ids that resolve to a plate filed under another id: the survey office's
+ * lane is appendix A2i. `/sheet/14i` redirects on both sides of the seam, and
+ * HISTORY.md's record headings file under the plate's own id.
  */
-export const SHEET_ALIASES: Readonly<Record<string, string>> = { '14': 'A2', '14i': 'A2i' };
+export const SHEET_ALIASES: Readonly<Record<string, string>> = { '14i': 'A2i' };
 
 /**
  * The gallery's filter params — null by default, so an absent key is an

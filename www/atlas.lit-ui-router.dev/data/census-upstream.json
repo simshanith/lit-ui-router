@@ -1,0 +1,57 @@
+{
+  "ref": "origin/main",
+  "sha": "9e656ab3",
+  "commitDate": "2026-10-10T12:32:14-07:00",
+  "generatedAtTime": "2026-10-10T20:41:59.358Z",
+  "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-upstream.mjs",
+  "used": "gh search prs+issues --author simshanith -user:simshanith (github.com) + gh api graphql simshanith/lit-ui-router pullRequests, issues, comments + git log 9e656ab3 @ 9e656ab3 + bugzilla REST (bugzilla.mozilla.org, bugs.webkit.org) + npm view, api.npmjs.org downloads",
+  "wasAssociatedWith": [
+    "gh (GitHub search, REST + GraphQL)",
+    "git log",
+    "Bugzilla REST",
+    "npm"
+  ],
+  "surveyor": {
+    "login": "simshanith",
+    "reporter": "simrpgman@gmail.com"
+  },
+  "window": {
+    "since": "2025-07-21T23:29:22-07:00",
+    "until": "2026-10-10T12:32:14-07:00"
+  },
+  "yards": [
+    {"id":"pnpm/pnpm","host":"github","name":"pnpm","stars":36776,"package":"pnpm","weeklyDownloads":215044702,"engine":null},
+    {"id":"vitest-dev/vitest","host":"github","name":"vitest","stars":17196,"package":"vitest","weeklyDownloads":123007750,"engine":null},
+    {"id":"web-padawan/awesome-lit","host":"github","name":"awesome-lit","stars":1736,"package":null,"weeklyDownloads":null,"engine":null},
+    {"id":"publint/publint","host":"github","name":"publint","stars":1307,"package":"publint","weeklyDownloads":1413337,"engine":null},
+    {"id":"jdx/mise-action","host":"github","name":"mise-action","stars":383,"package":null,"weeklyDownloads":null,"engine":null},
+    {"id":"ui-router/core","host":"github","name":"core","stars":124,"package":"@uirouter/core","weeklyDownloads":109569,"engine":null},
+    {"id":"coder/registry","host":"github","name":"registry","stars":81,"package":null,"weeklyDownloads":null,"engine":null},
+    {"id":"ui-router/ui-router.github.io","host":"github","name":"ui-router.github.io","stars":6,"package":null,"weeklyDownloads":null,"engine":null},
+    {"id":"bugzilla.mozilla.org","host":"bugzilla","name":"Firefox","stars":null,"package":null,"weeklyDownloads":null,"engine":"firefox"},
+    {"id":"bugs.webkit.org","host":"bugzilla","name":"WebKit","stars":null,"package":null,"weeklyDownloads":null,"engine":"webkit"}
+  ],
+  "consignments": [
+    {"id":"ui-router/ui-router.github.io#42","yard":"ui-router/ui-router.github.io","kind":"issue","number":42,"title":"Include new framework support - Lit","url":"https://github.com/ui-router/ui-router.github.io/issues/42","state":"open","createdAt":"2025-10-09T21:16:57Z","closedAt":null,"returns":[{"kind":"issue","ref":"#25","title":"reach out to uirouter core team","date":"2025-10-09T21:20:07Z","state":"open"}]},
+    {"id":"ui-router/core#847","yard":"ui-router/core","kind":"issue","number":847,"title":"Include additional framework support - Lit","url":"https://github.com/ui-router/core/issues/847","state":"open","createdAt":"2025-10-10T16:16:59Z","closedAt":null,"returns":[{"kind":"issue","ref":"#25","title":"reach out to uirouter core team","date":"2025-10-10T16:17:10Z","state":"open"}]},
+    {"id":"web-padawan/awesome-lit#85","yard":"web-padawan/awesome-lit","kind":"pr","number":85,"title":"doc: add lit-ui-router","url":"https://github.com/web-padawan/awesome-lit/pull/85","state":"open","createdAt":"2026-01-03T02:50:48Z","closedAt":null,"returns":[{"kind":"issue","ref":"#25","title":"reach out to uirouter core team","date":"2026-01-03T02:51:10Z","state":"open"}]},
+    {"id":"vitest-dev/vitest#9379","yard":"vitest-dev/vitest","kind":"issue","number":9379,"title":"Browser mode: Infinite 'Unknown event: response:response:...' loop when running multiple click tests","url":"https://github.com/vitest-dev/vitest/issues/9379","state":"closed","createdAt":"2026-01-03T19:12:49Z","closedAt":"2026-07-29T07:35:17Z","returns":[{"kind":"pr","ref":"#68","title":"Feat/unit tests","date":"2026-01-03T19:50:20Z","state":"merged"},{"kind":"commit","ref":"464bb16","title":"Feat/unit tests (#68)","date":"2026-01-03T12:41:16-08:00","state":"merged"}]},
+    {"id":"vitest-dev/vitest#9381","yard":"vitest-dev/vitest","kind":"pr","number":9381,"title":"fix(browser): ignore channel events in a tester opened as a top-level window (fix #9379)","url":"https://github.com/vitest-dev/vitest/pull/9381","state":"merged","createdAt":"2026-01-03T22:40:24Z","closedAt":"2026-07-29T07:35:16Z","returns":[{"kind":"issue","ref":"#69","title":"Vitest browser-mode: 'Unknown event: response:response:...' errors when running multiple click tests","date":"2026-01-03T22:40:46Z","state":"closed"},{"kind":"pr","ref":"#186","title":"fix(test): backport upstream isEmbedded tester guard into @vitest/browser patch","date":"2026-07-07T03:39:35Z","state":"merged"},{"kind":"commit","ref":"18629a8","title":"fix(test): backport upstream isEmbedded tester guard into @vitest/browser patch (#186)","date":"2026-07-06T21:20:54-07:00","state":"merged"},{"kind":"pr","ref":"#421","title":"ci(lint): guard pnpm patches against silent no-ops on dependency bumps","date":"2026-07-19T22:59:09Z","state":"merged"},{"kind":"pr","ref":"#422","title":"test(lit-ui-router): cancel native click defaults in browser specs","date":"2026-07-19T23:13:33Z","state":"merged"},{"kind":"pr","ref":"#424","title":"build: bump vitest to v5 and drop the @vitest/browser patch","date":"2026-07-19T23:51:22Z","state":"merged"},{"kind":"pr","ref":"#429","title":"test(lit-ui-router): register click suppression as a browser-project default","date":"2026-07-20T06:23:54Z","state":"merged"},{"kind":"pr","ref":"#436","title":"docs: evaluate vitest vs native node:test runners (#330)","date":"2026-07-22T06:29:28Z","state":"closed"},{"kind":"commit","ref":"01b9b1c","title":"build: bump vitest to v5 and drop the @vitest/browser patch (#424)","date":"2026-09-03T10:57:09-07:00","state":"merged"},{"kind":"pr","ref":"#710","title":"Release 1.11.2","date":"2026-09-04T23:49:59Z","state":"merged"},{"kind":"commit","ref":"0322815","title":"Release 1.11.2 (#710)","date":"2026-09-04T16:59:54-07:00","state":"merged"},{"kind":"pr","ref":"#776","title":"Release 0.3.1","date":"2026-09-09T03:40:08Z","state":"merged"},{"kind":"commit","ref":"d1e0adc","title":"Release 0.3.1 (#776)","date":"2026-09-09T03:43:31Z","state":"merged"}]},
+    {"id":"ui-router/core#850","yard":"ui-router/core","kind":"issue","number":850,"title":"lazyLoad: URL-sourced transition to a replaced `.**` placeholder supersedes the `otherwise()` transition started by `sync()`","url":"https://github.com/ui-router/core/issues/850","state":"open","createdAt":"2026-07-07T04:29:00Z","closedAt":null,"returns":[{"kind":"issue","ref":"#25","title":"reach out to uirouter core team","date":"2026-07-07T04:30:38Z","state":"open"},{"kind":"issue","ref":"#665","title":"Catalog: sample-app drift from the upstream ui-router sample apps","date":"2026-09-01T22:11:05Z","state":"open"}]},
+    {"id":"ui-router/core#851","yard":"ui-router/core","kind":"pr","number":851,"title":"fix(lazyLoad): abort URL-sourced transition when lazy loaded states do not match the URL","url":"https://github.com/ui-router/core/pull/851","state":"open","createdAt":"2026-07-07T19:46:27Z","closedAt":null,"returns":[]},
+    {"id":"coder/registry#1017","yard":"coder/registry","kind":"issue","number":1017,"title":"Vault (JWT) module displays Vault (GitHub)","url":"https://github.com/coder/registry/issues/1017","state":"closed","createdAt":"2026-07-17T01:47:15Z","closedAt":"2026-07-17T17:28:23Z","returns":[]},
+    {"id":"publint/publint#252","yard":"publint/publint","kind":"issue","number":252,"title":"@publint/pack reads a NUL typeflag as end-of-archive, so it cannot parse pnpm 12 tarballs","url":"https://github.com/publint/publint/issues/252","state":"closed","createdAt":"2026-08-15T15:41:41Z","closedAt":"2026-08-18T02:51:33Z","returns":[{"kind":"pr","ref":"#566","title":"build: adopt pnpm 12 as the mise-provisioned package manager","date":"2026-08-14T13:38:05Z","state":"merged"}]},
+    {"id":"publint/publint#253","yard":"publint/publint","kind":"pr","number":253,"title":"Support tarballs with a NUL typeflag","url":"https://github.com/publint/publint/pull/253","state":"merged","createdAt":"2026-08-15T15:45:37Z","closedAt":"2026-08-18T02:51:31Z","returns":[{"kind":"pr","ref":"#566","title":"build: adopt pnpm 12 as the mise-provisioned package manager","date":"2026-08-14T13:38:05Z","state":"merged"}]},
+    {"id":"pnpm/pnpm#13924","yard":"pnpm/pnpm","kind":"issue","number":13924,"title":"pnpm 12 packs a NUL typeflag for regular files; pnpm 11 and npm write '0'","url":"https://github.com/pnpm/pnpm/issues/13924","state":"closed","createdAt":"2026-08-15T15:49:18Z","closedAt":"2026-08-21T01:10:49Z","returns":[{"kind":"pr","ref":"#566","title":"build: adopt pnpm 12 as the mise-provisioned package manager","date":"2026-08-14T13:38:05Z","state":"merged"}]},
+    {"id":"pnpm/pnpm#16275","yard":"pnpm/pnpm","kind":"issue","number":16275,"title":"`pnpm pack` / `pnpm publish` no longer resolve `catalog:` in a directory the `packages` patterns leave out (11.27.1, 12.6.0)","url":"https://github.com/pnpm/pnpm/issues/16275","state":"closed","createdAt":"2026-09-27T16:05:15Z","closedAt":"2026-09-27T18:12:22Z","returns":[{"kind":"issue","ref":"#958","title":"pnpm 12.6.0: pack from the release staging dir can't resolve catalog: — bump held at 12.5.1","date":"2026-09-27T16:05:54Z","state":"closed"},{"kind":"pr","ref":"#979","title":"build(deps): bump pnpm to 12.7.0","date":"2026-09-27T16:08:56Z","state":"merged"},{"kind":"commit","ref":"c02b0b3","title":"build(deps): bump pnpm to 12.7.0 (#979)","date":"2026-09-27T09:58:43-07:00","state":"merged"},{"kind":"pr","ref":"#995","title":"build(release): pack in place with a beforePacking hook instead of a staging copy","date":"2026-09-27T22:47:01Z","state":"merged"},{"kind":"commit","ref":"c17fbec","title":"build(release): pack in place with a beforePacking hook instead of a staging copy (#995)","date":"2026-09-28T09:23:04-07:00","state":"merged"}]},
+    {"id":"jdx/mise-action#641","yard":"jdx/mise-action","kind":"issue","number":641,"title":"With `version` unset, a cached mise binary fails integrity verification on every run after a new mise release","url":"https://github.com/jdx/mise-action/issues/641","state":"closed","createdAt":"2026-10-03T20:00:09Z","closedAt":"2026-10-03T22:16:06Z","returns":[{"kind":"pr","ref":"#1088","title":"ci: pin mise-action to mise 2026.10.1 so the cached binary verifies","date":"2026-10-03T16:47:37Z","state":"merged"},{"kind":"issue","ref":"#1092","title":"ci: switch daily-CI mise-action steps to auto_update once jdx/mise-action#642 ships","date":"2026-10-03T22:01:59Z","state":"open"}]}
+  ],
+  "prior": {
+    "prs": 32,
+    "merged": 23,
+    "issues": 33,
+    "repos": 38,
+    "first": "2013-02-13",
+    "last": "2025-04-09"
+  }
+}

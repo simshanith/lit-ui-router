@@ -220,6 +220,7 @@ export const BANDS = [
   { from: 11, label: 'SEVEN PACKAGES' },
   { from: 12, label: 'PR CI GRAPH' },
   { from: 13, label: 'WORKSPACE × TIME' },
+  { from: 14, label: 'CITY × COMMONS' },
 ] as const;
 
 /** One band as the rail draws it: its key, its altitudes ('7–10'), its label and its plates. */

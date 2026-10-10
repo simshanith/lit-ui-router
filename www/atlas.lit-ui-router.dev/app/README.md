@@ -30,7 +30,7 @@ measured and at work, as glTF binaries), and `public/manifest.json`: one row
 per plate (title, rev, ALTITUDE wording, FIT VERDICT line, census plates read, cross-sheet
 references, standalone filename in the flat set), an `issueLog` array, and a `cover` object carrying
 the flat gallery's stat bar, survey, prose column and colophon as rendered HTML, so the routed index
-draws the same bytes the flat one does. Twenty-eight fragments: twenty-one sheets, four `appendix`
+draws the same bytes the flat one does. Twenty-nine fragments: twenty-two sheets, four `appendix`
 rows (A1, A2, A2i, A3) and three `extras` rows: the 3D city, its working twin and sheet 2's model in
 the round.
 
@@ -50,9 +50,9 @@ the round.
 | `atlas.about`    | `/about`       | `AboutView`     | —                                 |
 | `atlas.notFound` | — (url-less)   | `NotFoundView`  | — (the `otherwise` projection)    |
 
-The twenty-one sheets are the eighteen SVG plates and three interactive lanes (1i, 2B, 12i) of the
+The twenty-two sheets are the nineteen SVG plates and three interactive lanes (1i, 2B, 12i) of the
 ascent; the appendix files A1, A2, A2i (the survey office's own lane) and A3 under the same `/sheet/:num`
-state, and `/sheet/14` and `/sheet/14i` redirect to A2 and A2i.
+state, and `/sheet/14i` redirects to A2i.
 `atlas.log` is the set's issue record — every REV across every plate, latest first — read from the
 manifest. The megacanvas is not a state: the flat set publishes the whole reel as one page, so the
 prerender writes `/megacanvas` and `/megacanvas/` → `/set/megacanvas.html` 301 into `_redirects`.

@@ -1,0 +1,862 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>THE UPSTREAM WORKS — Sheet 14 of 14</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="Every other sheet draws the city; this one draws what the city sends out. Across a river of time from the first commit, 13 consignments — pull requests, issues and bug reports filed in other projects' trackers — sit at the day they were filed, moored to the works on the north bank, and roads cross back to the 21 home pull requests, issues and commits that cite them on the city's wharf.">
+<style>
+:root {
+  color-scheme: light dark;
+  --ground: light-dark(oklch(92.2% 0.016 106.7), oklch(22.3% 0.054 258.1));
+  --paper: light-dark(oklch(95.3% 0.012 101.5), oklch(28.8% 0.077 258.1));
+  --paper-2: light-dark(oklch(92.9% 0.015 102.5), oklch(24.2% 0.065 259.0));
+  --ink: light-dark(oklch(30.3% 0.010 151.5), oklch(91.9% 0.023 248.1));
+  --ink-soft: light-dark(oklch(48.8% 0.016 135.0), oklch(72.8% 0.049 255.4));
+  --ink-faint: light-dark(oklch(50.7% 0.012 136.6), oklch(67.6% 0.057 255.5));
+  --line: light-dark(oklch(82.6% 0.025 112.1), oklch(37.2% 0.082 258.1));
+  --edge: light-dark(oklch(73.5% 0.025 112.2), oklch(41.7% 0.088 259.4));
+  --accent: light-dark(oklch(42.4% 0.077 253.0), oklch(77.9% 0.081 248.9));
+  --accent-soft: light-dark(oklch(61.8% 0.055 252.3), oklch(60.3% 0.087 253.0));
+  /* fills keep the red red; in the dark the salmon survives as the hatch stroke */
+  --red: light-dark(oklch(50.5% 0.141 30.3), oklch(65.5% 0.142 33.2));
+  --red-hatch: light-dark(oklch(50.5% 0.141 30.3), oklch(72.4% 0.114 39.2));
+  --green: light-dark(oklch(49.6% 0.055 149.0), oklch(73.8% 0.069 152.0));
+  --halo: light-dark(color-mix(in oklch, var(--accent) 10%, transparent), color-mix(in oklch, var(--accent) 12%, transparent));
+  /* Annotation grey and the Cherokee-red chop. Declared for the whole set;
+     read today only by the type specimen (app/src/specimen.ts). */
+  --pencil: light-dark(oklch(59.3% 0.013 133.4), oklch(66.9% 0.057 255.5));
+  --cherokee: light-dark(oklch(48.7% 0.136 31.0), oklch(67.1% 0.144 32.5));
+}
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"] { color-scheme: dark; }
+
+*, *::before, *::after { box-sizing: border-box; min-width: 0; margin: 0; }
+:root {
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  interpolate-size: allow-keywords;
+  scrollbar-gutter: stable;
+  text-wrap: pretty;
+  overflow-wrap: break-word;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+h1, h2, h3, h4, h5, h6 { text-wrap: balance; }
+img, video { display: block; max-width: 100%; height: auto; }
+button, a, [role="button"] { touch-action: manipulation; }
+button, [role="button"] { user-select: none; -webkit-user-select: none; }
+@media (pointer: coarse) { input, select, textarea { font-size: max(16px, 1rem); } }
+/* ---- THE TYPE ROLES ----
+   Decided 2026-09-05 on the type specimen (app/src/specimen.ts, pairing
+   5 · THE ATLAS SET). Each stack names the ADOBE FONTS family FIRST — it draws
+   on the site, where generator/stage-site.mjs injects the kit — the Google
+   Fonts stand-in SECOND, and a generic last. The artifact, and any host
+   without the kit, resolves the second name; nothing is ever synthesised.
+   Weight 600 is asked for wherever the plan said Demi: Adobe serves 400/700
+   and CSS resolves a 600 request upward to 700, Google serves a real 600, so
+   ONE number covers both hosts.
+
+   --display  the atlas name, EVERYWHERE it is drawn: rail head, cover title,
+              and the wordmark (.project-mark) in every sheet-head PROJECT line
+              and title block PROJECT value
+   --title    sheet titles, card and prose headings, rail entry titles
+   --data     kickers, tracked caps, numbers, schedules, the title block
+   --prose    running text, figcaptions, general notes, About. Source Serif
+              is the one role whose two names are the SAME design under two
+              releases: source-serif-pro from the kit on the site, Source
+              Serif 4 from Google in the artifact.
+   --code     code identifiers. Source Code Pro on BOTH hosts (2026-09-06):
+              source-code-pro from the kit on the site, the same Slimbach
+              design from Google in the artifact. Since 2026-09-06 the PLATES
+              draw in --data too (see text.lbl* below): mono is reserved for
+              code, and --mono survives only as the tail of this stack.
+   --hand     P22 FLLW Eaglefeather Informal, MIXED CASE, on the title block's
+              DRAWN BY value and at most one callout line per sheet — nowhere
+              else. No Google stand-in by decision: off the kit it falls to
+              --data, so the artifact loads nothing new.
+   --serif    kept as an alias of --prose so nothing downstream breaks. */
+:root {
+  /* the system stack; since 2026-09-06 nothing reads it but --code's tail */
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  --display: "p22-fllw-eaglefeather", "Josefin Sans", sans-serif;
+  --title: "p22-flw-exhibition", "Josefin Sans", sans-serif;
+  --data: "din-2014", "Barlow Semi Condensed", sans-serif;
+  --prose: "source-serif-pro", "Source Serif 4", "Charter", "Bitstream Charter", "Sitka Text", Cambria, Georgia, serif;
+  --code: "source-code-pro", "Source Code Pro", var(--mono);
+  --hand: "p22-fllw-eaglefeather-inf", var(--data);
+  --serif: var(--prose);
+}
+body {
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--prose);
+  padding: clamp(12px, 0.25rem + 2.7vw, 40px);
+  min-height: 100svh;
+  line-height: 1.5;
+  /* what a sticky inset clears: the routed app raises it for its utility bar */
+  --sticky-top: 12px;
+}
+
+/* THE SHEET. Full width at every viewport — no centred cap, so a widescreen
+   shows the plate near its drawn size; the inner rule at 8 and the text at
+   22 keep the double frame reading as one. Only running text keeps a measure. */
+.sheet {
+  position: relative;
+  max-width: none;
+  margin-block: 0 40px;
+  margin-inline: 0;
+  background: var(--paper);
+  border: 1.5px solid var(--ink);
+  padding: 22px;
+  /* paper on a light table casts no soft shadow: the 1px edge only */
+  box-shadow: 0 1px 0 var(--edge);
+}
+.sheet::before {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  border: 1px solid var(--edge);
+  pointer-events: none;
+}
+.sheet > * { position: relative; }
+
+.sheet-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  flex-wrap: wrap;
+  border-block-end: 1px solid var(--ink);
+  padding-block: 4px 10px;
+  padding-inline: 2px;
+  margin-block-end: 18px;
+}
+/* The ledger. 11px of the data face carries the same cap-height as the 10.5px
+   mono it replaces (specimen GLYPH SIZE readout, within 1%), so the sizes here
+   step up by half a pixel rather than by eye. */
+.lettering, .sheet-head, .titleblock, .keyblock, .stat-bar {
+  font-family: var(--data);
+  font-variant-numeric: tabular-nums;
+}
+.sheet-head .proj {
+  font-size: 11.5px;
+  letter-spacing: 0.14em;
+  color: var(--ink-soft);
+}
+.sheet-head .shno {
+  font-size: 11.5px;
+  letter-spacing: 0.14em;
+  font-variant-numeric: tabular-nums;
+}
+.sheet-title {
+  font-family: var(--title);
+  font-size: clamp(18px, 0.25rem + 2.25vw, 24px);
+  letter-spacing: 0.06em;
+  font-weight: 600;
+  text-wrap: balance;
+  margin-block-end: 4px;
+}
+/* THE ARTICLE (T9, shipped 2026-09-06). Every sheet title begins with THE and
+   the title face is unicase — no small cap, no alternate, nothing to demote it
+   with. So the article is drawn as a superior in the DATA face: lowercase, 0.6em
+   of the title, soft ink. It needs no kit face, so it is identical on the site,
+   the flat set and the artifact. line-height 0 keeps the superior out of the
+   title's line box. */
+sup.art {
+  font-family: var(--data);
+  font-size: 0.6em;
+  font-weight: 400;
+  font-variant-numeric: normal;
+  letter-spacing: 0;
+  text-transform: lowercase;
+  line-height: 0;
+  color: var(--ink-soft);
+  /* the sup carries its own no-break space (so the title reads "the MEASURED
+     CITY" to a reader and never breaks after the article); this is the rest */
+  margin-inline-end: 0.1em;
+}
+/* THE WORDMARK — the atlas has ONE name for itself and draws it one way:
+   plain uppercase THE ALTITUDE ATLAS in the display face, nothing set apart.
+   The rail head and the cover title carry it as text; the ledger sites — every
+   sheet-head PROJECT line and the title block's PROJECT value — emit
+   PROJECT_MARK, which wraps the same name in .project-mark so the face travels
+   with the mark. Only the size differs by site. */
+/* THE NAME, wherever the wordmark is drawn in a ledger line. The face travels
+   with the MARK, not with the site: the sheet-head line and the title block's
+   PROJECT value both emit PROJECT_MARK, so both set THE ALTITUDE ATLAS in
+   Eaglefeather at the weight the rail head and the cover title use.
+   1.06em, MEASURED not guessed: Eaglefeather at the resolved 700 caps at 0.651
+   of its em and DIN 2014 at 0.690, so 0.690/0.651 = 1.06 is the size at which
+   the name's cap sits on the ledger's. In a sheet head that is 12.19px of
+   display beside 11.5px of data — both cap at 7.94px — and the tail
+   (" — DRAWING SET") keeps the ledger face at the line's own size. In a title
+   block it is 14.31px inside the 13.5px .dsp, capping at 9.32px: the same cap
+   the ledger face would have drawn there, a tenth under the sheet title's. */
+.project-mark {
+  font-family: var(--display);
+  font-size: 1.06em;
+  font-weight: 600;
+}
+.sheet-sub {
+  font-family: var(--data);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--ink-soft);
+  margin-block-end: 16px;
+}
+
+/* THE PLATE IS THE PAGE. It never shrinks below 1000px — under that width it
+   scrolls in its own wrap like a drawing on a light table, and the wrap says so.
+   Above that it grows with the column but is CONTAINED: the whole plate stays on
+   one screen. An inline SVG letterboxes under max-height instead of shrinking,
+   so the cap reaches it through max-width times the plate's own viewBox ratio
+   (--plate-ar, written per sheet). */
+.plate { position: relative; container-type: inline-size; margin-block: 36px 8px; margin-inline: 0; --plate-cap: min(84vh, 1400px); }
+.figure-wrap { overflow-x: auto; }
+.figure-wrap:focus-visible { outline: max(2px, 0.08em) solid var(--accent); outline-offset: -2px; }
+.figure-wrap svg { display: block; width: 100%; max-width: min(100%, calc(var(--plate-cap) * var(--plate-ar, 1.4))); height: auto; min-width: 1000px; margin: 0 auto; }
+.plate::after {
+  content: "SCROLL →";
+  display: none;
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0;
+  width: 72px;
+  padding-block: 6px 0;
+  padding-inline: 0;
+  text-align: end;
+  font-family: var(--data);
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  color: var(--ink-soft);
+  background: linear-gradient(90deg, transparent, var(--paper) 70%);
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+@container (width < 1000px) { .plate::after { display: block; } }
+/* at the end of the scroll the affordance steps aside — the plate's right edge is the point */
+.plate[data-end]::after { opacity: 0; }
+/* a fillable figure carries a .fill button: fullscreen where the browser grants it, the is-filled overlay where it does not */
+.fillable { position: relative; }
+.fill { position: absolute; inset-block-start: 8px; inset-inline-end: 8px; z-index: 3; font-family: var(--data); font-size: 9.5px;
+  font-weight: 600; letter-spacing: 0.16em; line-height: 1; color: var(--ink); background: var(--paper);
+  border: 1px solid var(--ink); padding: 6px 8px; cursor: pointer; opacity: 0.72; }
+@media (hover: hover) and (pointer: fine) { .fill:hover { opacity: 1; background: var(--paper-2); } }
+.fill:focus-visible { opacity: 1; background: var(--paper-2); outline: max(2px, 0.08em) solid var(--accent); outline-offset: 0.25em; }
+.fill:active { transform: scale(0.97); }
+@media (prefers-reduced-motion: no-preference) { .fill { transition: transform 160ms var(--ease-out, ease-out); } }
+.fill::before { content: "ENLARGE ⤢"; }
+.fillable:fullscreen .fill::before, .fillable.is-filled .fill::before { content: "LEAVE ⤡"; }
+.fillable:fullscreen, .fillable.is-filled { background: var(--paper); margin: 0; }
+.fillable.is-filled { position: fixed; inset: 0; z-index: 60; overflow: auto; }
+html.has-filled { overflow: hidden; }
+/* a plate fills by its own ratio: as wide as the window allows under its height */
+.plate:fullscreen, .plate.is-filled { display: grid; place-items: center; padding: 16px; box-sizing: border-box; overflow: auto; }
+.plate:fullscreen .figure-wrap, .plate.is-filled .figure-wrap { width: 100%; }
+.plate:fullscreen .figure-wrap svg, .plate.is-filled .figure-wrap svg {
+  max-width: min(100%, calc((100vh - 32px) * var(--plate-ar, 1.4))); min-width: 0; }
+.plate:fullscreen::after, .plate.is-filled::after { display: none; }
+/* a plate's lettering reaches its corners, so its button hangs in the margin above; the filled plate takes it back into the corner */
+.plate > .fill { inset-block-start: auto; inset-block-end: calc(100% + 4px); inset-inline-end: 0; }
+.plate:fullscreen > .fill, .plate.is-filled > .fill { inset-block-start: 8px; inset-block-end: auto; inset-inline-end: 8px; }
+figure { margin: 0; }
+/* the caption is a margin note: a rule on the sheet's edge, its text inset to the plate's column */
+figcaption {
+  font-family: var(--prose);
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--ink-soft);
+  max-width: calc(750px + 45.5px);
+  margin-block: 0 40px;
+  margin-inline: 0;
+  padding-block: 2px 4px;
+  padding-inline: 22px;
+  border-inline-start: 1.5px solid var(--ink);
+  font-style: italic;
+  text-wrap: pretty;
+}
+figcaption code { font-family: var(--code); font-size: 0.86em; font-style: normal; color: var(--ink); }
+/* beside a fixed key column the caption stops where the notes column does */
+@media (min-width: 1181px) { figcaption { max-width: min(calc(750px + 45.5px), calc(100% - 352px - 24px)); } }
+@media (max-width: 720px) { figcaption { padding-block: 0 2px; padding-inline: 14px 0; font-size: 15px; line-height: 1.55; } }
+figcaption .figno {
+  font-family: var(--data);
+  font-style: normal;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: var(--ink-soft);
+  margin-inline-end: 10px;
+}
+
+/* ONE MEASURE, INSETS TO THE RIGHT. Running text in the left column; the key,
+   the title block and the revisions are one inset strip that rides alongside
+   whatever paragraph is on screen. The strip and its gutter are named because
+   the notes' column count has to subtract them to know its own width. */
+.notes-grid {
+  --inset: 352px;
+  --inset-gap: 24px;
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) var(--inset);
+  gap: var(--inset-gap);
+  border-block-start: 1px solid var(--ink);
+  padding-block-start: 16px;
+  align-items: start;
+}
+@media (max-width: 1180px) { .notes-grid { grid-template-columns: minmax(0, 3fr) minmax(260px, 2fr); } }
+@media (max-width: 720px) { .notes-grid { grid-template-columns: minmax(0, 1fr); } }
+.keyblock { position: sticky; inset-block-start: var(--sticky-top); }
+@media (max-width: 720px) { .keyblock { position: static; } }
+/* COLUMNS AT THE WIDTH THE PAPER GIVES. The count is an integer read off the
+   paper itself — one column per 28rem of the notes cell, which is the grid
+   less the inset strip and its gutter, both named above so the subtraction
+   cannot drift from the track it is subtracting. The query hangs off
+   .notes-grid because an element's own container-type does not feed its own
+   properties; declared on .notes it would silently resolve against the
+   viewport. Under 1180 the grid re-proportions and the cell is never wide
+   enough to divide, so the count is simply 1 and no second formula is owed.
+   Rounded to nearest, not down: rounding down cannot hold both ends at once —
+   two columns at 1440 wants the divisor under 469px, three rather than four at
+   2560 wants it over 514px. Nearest at 38rem takes both, and lands 4 at 3008,
+   3 at 2560, 2 at 1440, with no column narrower than 447px or wider than 706
+   between 1200 and 3400. The measure cap on the paragraph is the one guard the
+   count cannot give: it bites only at a single column. */
+.notes-grid { container-type: inline-size; }
+.notes {
+  column-count: calc((100cqw - var(--inset) - var(--inset-gap)) / 38rem);
+  column-gap: 44px;
+}
+@media (max-width: 1180px) { .notes { column-count: 1; } }
+.notes h3, .keyblock h3 {
+  font-family: var(--data);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  font-weight: 600;
+  color: var(--ink-soft);
+  margin-block-end: 8px;
+}
+/* the head rules the whole block, so it spans it — and is lettered to match */
+.notes h3 {
+  column-span: all;
+  font-size: 12.5px;
+  margin-block-end: 18px;
+}
+.notes p {
+  font-family: var(--prose);
+  font-size: 18px;
+  line-height: 1.8;
+  /* Only ever bites at one column: the count holds every wider layout under
+     706px on its own, so this is the guard for the 1180–1440 band, where a
+     lone column would otherwise run out to 91ch. */
+  max-width: 74ch;
+  margin-block-end: 2em;
+}
+.notes p strong { font-weight: 600; }
+/* a paragraph's opening strong is a run-in head — give it its own line, but
+   only where it opens the paragraph, never a strong caught mid-sentence. It
+   never ends a column alone: a head is a promise about the text under it. */
+.notes p > strong:first-child { display: block; break-after: avoid; }
+/* every inline chip is the code face, not the UA's own monospace default */
+code, kbd, samp { font-family: var(--code); }
+.notes p code, .gal-body code {
+  font-family: var(--code);
+  font-size: 0.88em;
+  background: var(--paper-2);
+  /* fill only: at 14 chips in 15 lines a border made the paragraph a form */
+  padding: 0 3px;
+  border-radius: 2px;
+  /* A chip breaks only when it would otherwise run off the column, and then at
+     a space, never inside an identifier. */
+  overflow-wrap: break-word;
+  hyphens: none;
+}
+.keyblock table { border-collapse: collapse; width: 100%; }
+.keyblock td {
+  font-size: 11.5px;
+  letter-spacing: 0.03em;
+  padding-block: 5px;
+  padding-inline: 0 8px;
+  border-block-end: 1px solid var(--line);
+  vertical-align: middle;
+}
+.keyblock td:first-child { width: 58px; }
+.keyblock svg { display: block; }
+
+.titleblock {
+  margin-block-start: 20px;
+  margin-inline-start: auto;
+  width: min(460px, 100%);
+  border: 1.5px solid var(--ink);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  font-variant-numeric: tabular-nums;
+}
+.titleblock > div {
+  padding-block: 6px 7px;
+  padding-inline: 10px;
+  border-block-start: 1px solid var(--ink);
+  font-size: 11.5px;
+  letter-spacing: 0.06em;
+}
+.titleblock > div:nth-child(-n+2) { border-block-start: none; }
+.titleblock > div:nth-child(2n) { border-inline-start: 1px solid var(--ink); }
+.titleblock .span2 { grid-column: 1 / -1; border-inline-start: none !important; }
+.titleblock .fld {
+  display: block;
+  font-family: var(--data);
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  color: var(--ink-soft);
+  margin-block-end: 2px;
+}
+/* The two values that carry the atlas's own name, and the sheet's. PROJECT is
+   the wordmark, whole and uppercase in the display face — the same wordmark the
+   sheet-head line above it carries, at the size this field asks for. */
+.titleblock .dsp {
+  font-family: var(--display);
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: 0.10em;
+}
+.titleblock .ttl {
+  font-family: var(--title);
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+/* THE ARTICLE, INLINE — the title block's SHEET TITLE field ALONE. A ledger
+   field is read as a value, not as a headline, so here the word is set at the
+   value's own size on its own baseline in the data face, rather than lifted
+   into a superior. Its own class, so it can never reach sup.art. */
+.titleblock .ttl .art-inline {
+  font-family: var(--data);
+  font-size: inherit;
+  font-weight: 400;
+  font-variant-numeric: normal;
+  text-transform: lowercase;
+  letter-spacing: 0.02em;
+  color: var(--ink-soft);
+  vertical-align: baseline;
+}
+/* DRAWN BY: the one signed value, in the hand, in mixed case — never tracked
+   caps. Sized up from the .dsp 13.5px because Eaglefeather Informal runs a
+   smaller cap for its em. */
+.titleblock .hand {
+  font-family: var(--hand);
+  font-size: 16px;
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+/* The chop: a plain square in the Cherokee red, unrotated — the corner stamp,
+   not a jaunty sticker. It sits at the right edge of the SHEET cell. */
+.titleblock .sh { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.titleblock .chop {
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+  margin-inline-end: 2px;
+  border: 1.5px solid var(--cherokee);
+  box-shadow: inset 0 0 0 1.5px var(--paper), inset 0 0 0 4px var(--cherokee);
+}
+
+/* ---- SVG drawing classes ---- */
+.sk   { stroke: var(--ink); fill: none; stroke-width: 1.3; }
+.sk2  { stroke: var(--ink); fill: none; stroke-width: 2; }
+.skf  { stroke: var(--line); fill: none; stroke-width: 1; }
+.sks  { stroke: var(--ink-soft); fill: none; stroke-width: 1.1; }
+.ska  { stroke: var(--accent); fill: none; stroke-width: 1.6; }
+.skr  { stroke: var(--red); fill: none; stroke-width: 1.4; }
+.skg  { stroke: var(--green); fill: none; stroke-width: 1.4; }
+.fp   { fill: var(--paper); }
+.fp2  { fill: var(--paper-2); }
+.fi   { fill: var(--ink); }
+.fis  { fill: var(--ink-soft); }
+.fa   { fill: var(--accent); }
+.fr   { fill: var(--red); }
+.fg   { fill: var(--green); }
+.fhalo{ fill: var(--halo); }
+.fnone{ fill: none; }
+/* THE PLATES DRAW IN THE DATA FACE (2026-09-06). Mono is reserved for code.
+   DIN is a strict contraction of the system mono at these sizes — median -26%,
+   nothing grows — and every label is start- or end-anchored, so the lettering
+   only opens air. Sizes, weights, fills and tracking are unchanged. */
+text.lbl   { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 11.5px; fill: var(--ink); letter-spacing: 0.05em; }
+text.lblb  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 11.5px; font-weight: 600; fill: var(--ink); letter-spacing: 0.07em; }
+text.lbls  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 10.5px; fill: var(--ink-soft); letter-spacing: 0.05em; }
+text.lblf  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 10px; fill: var(--ink-faint); letter-spacing: 0.05em; }
+text.lbla  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 11px; font-weight: 600; fill: var(--accent); letter-spacing: 0.07em; }
+text.lblr  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 9.5px; fill: var(--red); letter-spacing: 0.05em; }
+text.lblt  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 13px; font-weight: 600; fill: var(--ink); letter-spacing: 0.12em; }
+text.serif { font-family: var(--serif); font-size: 13px; fill: var(--ink); }
+
+@media (prefers-reduced-motion: no-preference) {
+  .sheet { transition: box-shadow 0.2s; }
+}
+a { color: var(--accent); }
+:focus-visible { outline: max(2px, 0.08em) solid var(--accent); outline-offset: 0.25em; }
+
+/* The icon table's sprite (icons.mjs): never painted, but not display:none,
+   which would stop a <use> resolving. */
+.icon-sprite { position: absolute; width: 0; height: 0; overflow: clip; }
+/* A lane glyph: 12px in the running colour, centred on the cap height of the
+   tracked caps it leads, a small gap before its label. */
+.gl.lane { display: inline-block; width: 12px; height: 12px; flex: none;
+  vertical-align: calc(0.5cap - 6px); margin-inline-end: 0.45em; }
+.gl.lane.after { margin-inline-end: 0; margin-inline-start: 0.45em; }
+</style>
+</head>
+<body>
+<main>
+<section class="sheet" id="sheet-14" aria-label="Sheet 14: THE UPSTREAM WORKS">
+  <div class="sheet-head"><span class="proj"><span class="project-mark">THE ALTITUDE ATLAS</span> — DRAWING SET</span><span class="shno">SHEET 14 / 14</span></div>
+  <h2 class="sheet-title"><sup class="art">the&nbsp;</sup>UPSTREAM WORKS</h2>
+  <p class="sheet-sub">ALTITUDE 14 — the city among the commons it builds on · 13 consignments to eight works since the first commit, 2 merged, 11 returned home · counted at origin/main @ 9e656ab3</p>
+  <figure>
+    <div class="plate fillable" style="--plate-ar:1.4478"><button type="button" class="fill" data-fill aria-label="Enlarge this figure, or leave it"></button><div class="figure-wrap" tabindex="0" role="group" aria-label="Fig. 14, the drawing; scrolls sideways"><svg viewBox="0 0 1400 967" role="img" aria-label="A plan map of the open-source commons around lit-ui-router, drawn as a river of time. A river band runs west to east across the plate from 2025-07-21, the repository's first commit, to 2026-10-10, with month ticks lettered along its south bank. On the north bank stand ten yards, one per upstream work, in the order the city first sent them anything; a yard's footprint grows with the logarithm of its GitHub stars, and two browser bug trackers, Firefox and WebKit, stand at the east end as dashed berths at the minimum footprint, each lettered 0 reports filed and 0 reports filed. On the river float 13 consignments, each a crate at the day it was filed and moored by a line to its yard: a rectangle for a pull request, a circle for an issue, a hexagon for a bug report; filled in ink where it merged, outlined where it closed, dashed where it stands open. 2 are filled. On the south bank the city's wharf carries 21 blocks, one per home pull request, issue or commit that cites a consignment, and a faint road with an arrowhead crosses the river from each consignment to each of its returns; the roads from vitest #9381 cross nine times. A ledger above the river counts the work sent before the city existed, and a schedule below lists every consignment.">
+<defs>
+  <marker id="s14-ai" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,4 L0,8 z" class="fi"/>
+  </marker>
+  <marker id="s14-aa" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,4 L0,8 z" class="fa"/>
+  </marker>
+  <marker id="s14-ar" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,4 L0,8 z" class="fr"/>
+  </marker>
+  <marker id="s14-as" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,4 L0,8 z" class="fis"/>
+  </marker>
+  <pattern id="s14-hx" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+    <line x1="0" y1="0" x2="0" y2="6" class="skf"/>
+  </pattern>
+  <pattern id="s14-hd" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+    <line x1="0" y1="0" x2="0" y2="5" stroke="var(--ink-soft)" stroke-width="1"/>
+  </pattern>
+  <pattern id="s14-hr" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)">
+    <line x1="0" y1="0" x2="0" y2="6" stroke="var(--red-hatch)" stroke-width="1" opacity="0.55"/>
+  </pattern>
+  <pattern id="s14-ha" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+    <line x1="0" y1="0" x2="0" y2="6" stroke="var(--accent)" stroke-width="1" opacity="0.5"/>
+  </pattern>
+</defs>
+
+<rect x="40" y="24" width="600" height="42" class="skf fnone"/>
+<text x="52" y="41" class="lbls" text-anchor="start" >THE UPSTREAM WORKS — WHAT THE CITY SENDS ACROSS THE RIVER, AND WHAT COMES HOME</text>
+<text x="52" y="56" class="lblf" text-anchor="start" >north bank, the works the city builds on · the river, time · south bank, the city</text>
+
+<text x="1360" y="34" class="lbls" text-anchor="end" >TIME RUNS EAST — 2025-07-21, the first commit, to 2026-10-10 · one crate per consignment, at the day it was filed</text>
+<text x="1360" y="48" class="lblf" text-anchor="end" >yard footprint grows with log₁₀ of stars · ★ GitHub stars · npm downloads per week · counted at origin/main @ 9e656ab3</text>
+<text x="1360" y="62" class="lblf" text-anchor="end" >a road across the river = a return: a home PR, issue or commit that cites the consignment</text>
+
+<text x="40" y="96" class="lbl" text-anchor="start" >BEFORE THE CITY — 32 pull requests (23 merged) and 33 issues to 38 repositories, 2013–2025</text>
+
+<rect x="140" y="300" width="1220" height="94" class="fp2"/>
+<line x1="140" y1="300" x2="1360" y2="300" class="sk"/>
+<line x1="140" y1="394" x2="1360" y2="394" class="sk"/>
+<path d="M1280,386 L1352,386" class="sks"  marker-end="url(#s14-as)"/>
+<text x="1274" y="389.5" class="lblf" text-anchor="end" >TIME</text>
+<line x1="195.5" y1="394" x2="195.5" y2="400" class="sk"/><text x="195.5" y="413" class="lblf" text-anchor="middle" >'25-08</text>
+<line x1="277.0" y1="394" x2="277.0" y2="400" class="sk"/><text x="277.0" y="413" class="lblf" text-anchor="middle" >'25-09</text>
+<line x1="355.7" y1="394" x2="355.7" y2="400" class="sk"/><text x="355.7" y="413" class="lblf" text-anchor="middle" >'25-10</text>
+<line x1="437.1" y1="394" x2="437.1" y2="400" class="sk"/><text x="437.1" y="413" class="lblf" text-anchor="middle" >'25-11</text>
+<line x1="515.9" y1="394" x2="515.9" y2="400" class="sk"/><text x="515.9" y="413" class="lblf" text-anchor="middle" >'25-12</text>
+<line x1="597.3" y1="394" x2="597.3" y2="400" class="sk"/><text x="597.3" y="413" class="lblf" text-anchor="middle" >'26-01</text>
+<line x1="678.7" y1="394" x2="678.7" y2="400" class="sk"/><text x="678.7" y="413" class="lblf" text-anchor="middle" >'26-02</text>
+<line x1="752.3" y1="394" x2="752.3" y2="400" class="sk"/><text x="752.3" y="413" class="lblf" text-anchor="middle" >'26-03</text>
+<line x1="833.7" y1="394" x2="833.7" y2="400" class="sk"/><text x="833.7" y="413" class="lblf" text-anchor="middle" >'26-04</text>
+<line x1="912.4" y1="394" x2="912.4" y2="400" class="sk"/><text x="912.4" y="413" class="lblf" text-anchor="middle" >'26-05</text>
+<line x1="993.9" y1="394" x2="993.9" y2="400" class="sk"/><text x="993.9" y="413" class="lblf" text-anchor="middle" >'26-06</text>
+<line x1="1072.6" y1="394" x2="1072.6" y2="400" class="sk"/><text x="1072.6" y="413" class="lblf" text-anchor="middle" >'26-07</text>
+<line x1="1154.0" y1="394" x2="1154.0" y2="400" class="sk"/><text x="1154.0" y="413" class="lblf" text-anchor="middle" >'26-08</text>
+<line x1="1235.4" y1="394" x2="1235.4" y2="400" class="sk"/><text x="1235.4" y="413" class="lblf" text-anchor="middle" >'26-09</text>
+<line x1="1314.2" y1="394" x2="1314.2" y2="400" class="sk"/><text x="1314.2" y="413" class="lblf" text-anchor="middle" >'26-10</text>
+<line x1="199.9" y1="300" x2="379.1" y2="313.0" class="sks"/>
+<line x1="323.2" y1="300" x2="381.2" y2="337.0" class="sks"/>
+<line x1="438.9" y1="300" x2="602.9" y2="313.0" class="sks"/>
+<line x1="573.8" y1="300" x2="604.7" y2="337.0" class="sks"/>
+<line x1="573.8" y1="300" x2="605.1" y2="361.0" class="sks"/>
+<line x1="323.2" y1="300" x2="1088.9" y2="313.0" class="sks"/>
+<line x1="323.2" y1="300" x2="1090.6" y2="337.0" class="sks"/>
+<line x1="696.7" y1="300" x2="1114.8" y2="361.0" class="sks"/>
+<line x1="809.6" y1="300" x2="1192.5" y2="313.0" class="sks"/>
+<line x1="809.6" y1="300" x2="1192.5" y2="337.0" class="sks"/>
+<line x1="946.4" y1="300" x2="1192.5" y2="361.0" class="sks"/>
+<line x1="946.4" y1="300" x2="1305.5" y2="313.0" class="sks"/>
+<line x1="1078.4" y1="300" x2="1321.7" y2="337.0" class="sks"/>
+<path d="M379.1,327.0 L379.1,450.0" class="skf"  marker-end="url(#s14-as)"/>
+<path d="M381.2,351.0 L381.2,474.0" class="skf"  marker-end="url(#s14-as)"/>
+<path d="M602.9,327.0 L602.9,450.0" class="skf"  marker-end="url(#s14-as)"/>
+<path d="M604.7,351.0 L604.8,474.0" class="skf"  marker-end="url(#s14-as)"/>
+<path d="M605.1,375.0 L605.1,498.0" class="skf"  marker-end="url(#s14-as)"/>
+<path d="M605.1,375.0 L1088.8,450.0" class="skf"  marker-end="url(#s14-as)"/>
+<path d="M1088.9,327.0 L1088.9,474.0" class="skf"  marker-end="url(#s14-as)"/>
+<path d="M605.1,375.0 L1122.4,498.0" class="skf"  marker-end="url(#s14-as)"/>
+<path d="M605.1,375.0 L1122.4,522.0" class="skf"  marker-end="url(#s14-as)"/>
+<path d="M605.1,375.0 L1122.5,546.0" class="skf"  marker-end="url(#s14-as)"/>
+<path d="M605.1,375.0 L1123.2,570.0" class="skf"  marker-end="url(#s14-as)"/>
+<path d="M605.1,375.0 L1128.5,474.0" class="skf"  marker-end="url(#s14-as)"/>
+<path d="M1192.5,327.0 L1189.7,450.0" class="skf"  marker-end="url(#s14-as)"/>
+<path d="M1192.5,351.0 L1189.7,450.0" class="skf"  marker-end="url(#s14-as)"/>
+<path d="M1192.5,375.0 L1189.7,450.0" class="skf"  marker-end="url(#s14-as)"/>
+<path d="M1088.9,327.0 L1237.9,450.0" class="skf"  marker-end="url(#s14-as)"/>
+<path d="M605.1,375.0 L1245.9,474.0" class="skf"  marker-end="url(#s14-as)"/>
+<path d="M605.1,375.0 L1256.9,498.0" class="skf"  marker-end="url(#s14-as)"/>
+<path d="M1305.5,327.0 L1305.5,450.0" class="skf"  marker-end="url(#s14-as)"/>
+<path d="M1305.5,327.0 L1305.5,474.0" class="skf"  marker-end="url(#s14-as)"/>
+<path d="M1305.5,327.0 L1306.2,498.0" class="skf"  marker-end="url(#s14-as)"/>
+<path d="M1321.7,351.0 L1321.3,522.0" class="skf"  marker-end="url(#s14-as)"/>
+<path d="M1321.7,351.0 L1321.9,546.0" class="skf"  marker-end="url(#s14-as)"/>
+<circle cx="379.1" cy="320.0" r="6" class="sk fp" stroke-dasharray="2.5 2"/>
+<text x="389.1" y="323.6" class="lbls" text-anchor="start" >1</text>
+<circle cx="381.2" cy="344.0" r="6" class="sk fp" stroke-dasharray="2.5 2"/>
+<text x="391.2" y="347.6" class="lbls" text-anchor="start" >2</text>
+<rect x="595.9" y="315.0" width="14" height="10" class="sk fp" stroke-dasharray="2.5 2"/>
+<text x="612.9" y="323.6" class="lbls" text-anchor="start" >3</text>
+<circle cx="604.7" cy="344.0" r="6" class="sk fp"/>
+<text x="614.7" y="347.6" class="lbls" text-anchor="start" >4</text>
+<rect x="598.1" y="363.0" width="14" height="10" class="sk fi"/>
+<text x="615.1" y="371.6" class="lbls" text-anchor="start" >5</text>
+<circle cx="1088.9" cy="320.0" r="6" class="sk fp" stroke-dasharray="2.5 2"/>
+<text x="1098.9" y="323.6" class="lbls" text-anchor="start" >6</text>
+<rect x="1083.6" y="339.0" width="14" height="10" class="sk fp" stroke-dasharray="2.5 2"/>
+<text x="1100.6" y="347.6" class="lbls" text-anchor="start" >7</text>
+<circle cx="1114.8" cy="368.0" r="6" class="sk fp"/>
+<text x="1124.8" y="371.6" class="lbls" text-anchor="start" >8</text>
+<circle cx="1192.5" cy="320.0" r="6" class="sk fp"/>
+<text x="1202.5" y="323.6" class="lbls" text-anchor="start" >9</text>
+<rect x="1185.5" y="339.0" width="14" height="10" class="sk fi"/>
+<text x="1202.5" y="347.6" class="lbls" text-anchor="start" >10</text>
+<circle cx="1192.5" cy="368.0" r="6" class="sk fp"/>
+<text x="1202.5" y="371.6" class="lbls" text-anchor="start" >11</text>
+<circle cx="1305.5" cy="320.0" r="6" class="sk fp"/>
+<text x="1315.5" y="323.6" class="lbls" text-anchor="start" >12</text>
+<circle cx="1321.7" cy="344.0" r="6" class="sk fp"/>
+<text x="1331.7" y="347.6" class="lbls" text-anchor="start" >13</text>
+<rect x="172.9" y="182" width="54.0" height="38" class="fp2"/><rect x="172.9" y="182" width="54.0" height="38" fill="url(#s14-hx)"/><rect x="172.9" y="182" width="54.0" height="38" class="sk fnone"/>
+<text x="199.9" y="128" class="lblf" text-anchor="middle" >ui-router</text>
+<text x="199.9" y="141" class="lblb" text-anchor="middle" >ui-router.github.io</text>
+<text x="199.9" y="154" class="lbls" text-anchor="middle" >★ 6</text>
+<line x1="199.9" y1="220" x2="199.9" y2="300" class="sk"/>
+<rect x="284.4" y="182" width="77.7" height="38" class="fp2"/><rect x="284.4" y="182" width="77.7" height="38" fill="url(#s14-hx)"/><rect x="284.4" y="182" width="77.7" height="38" class="sk fnone"/>
+<text x="323.2" y="115" class="lblf" text-anchor="middle" >ui-router</text>
+<text x="323.2" y="128" class="lblb" text-anchor="middle" >core</text>
+<text x="323.2" y="141" class="lbls" text-anchor="middle" >★ 124</text>
+<text x="323.2" y="154" class="lblf" text-anchor="middle" >110K / wk</text>
+<line x1="323.2" y1="220" x2="323.2" y2="300" class="sk"/>
+<rect x="389.7" y="182" width="98.3" height="38" class="fp2"/><rect x="389.7" y="182" width="98.3" height="38" fill="url(#s14-hx)"/><rect x="389.7" y="182" width="98.3" height="38" class="sk fnone"/>
+<text x="438.9" y="128" class="lblf" text-anchor="middle" >web-padawan</text>
+<text x="438.9" y="141" class="lblb" text-anchor="middle" >awesome-lit</text>
+<text x="438.9" y="154" class="lbls" text-anchor="middle" >★ 1,736</text>
+<line x1="438.9" y1="220" x2="438.9" y2="300" class="sk"/>
+<rect x="515.7" y="182" width="116.2" height="38" class="fp2"/><rect x="515.7" y="182" width="116.2" height="38" fill="url(#s14-hx)"/><rect x="515.7" y="182" width="116.2" height="38" class="sk fnone"/>
+<text x="573.8" y="115" class="lblf" text-anchor="middle" >vitest-dev</text>
+<text x="573.8" y="128" class="lblb" text-anchor="middle" >vitest</text>
+<text x="573.8" y="141" class="lbls" text-anchor="middle" >★ 17,196</text>
+<text x="573.8" y="154" class="lblf" text-anchor="middle" >123M / wk</text>
+<line x1="573.8" y1="220" x2="573.8" y2="300" class="sk"/>
+<rect x="659.6" y="182" width="74.4" height="38" class="fp2"/><rect x="659.6" y="182" width="74.4" height="38" fill="url(#s14-hx)"/><rect x="659.6" y="182" width="74.4" height="38" class="sk fnone"/>
+<text x="696.7" y="128" class="lblf" text-anchor="middle" >coder</text>
+<text x="696.7" y="141" class="lblb" text-anchor="middle" >registry</text>
+<text x="696.7" y="154" class="lbls" text-anchor="middle" >★ 81</text>
+<line x1="696.7" y1="220" x2="696.7" y2="300" class="sk"/>
+<rect x="761.6" y="182" width="96.1" height="38" class="fp2"/><rect x="761.6" y="182" width="96.1" height="38" fill="url(#s14-hx)"/><rect x="761.6" y="182" width="96.1" height="38" class="sk fnone"/>
+<text x="809.6" y="115" class="lblf" text-anchor="middle" >publint</text>
+<text x="809.6" y="128" class="lblb" text-anchor="middle" >publint</text>
+<text x="809.6" y="141" class="lbls" text-anchor="middle" >★ 1,307</text>
+<text x="809.6" y="154" class="lblf" text-anchor="middle" >1.4M / wk</text>
+<line x1="809.6" y1="220" x2="809.6" y2="300" class="sk"/>
+<rect x="885.3" y="182" width="122.2" height="38" class="fp2"/><rect x="885.3" y="182" width="122.2" height="38" fill="url(#s14-hx)"/><rect x="885.3" y="182" width="122.2" height="38" class="sk fnone"/>
+<text x="946.4" y="115" class="lblf" text-anchor="middle" >pnpm</text>
+<text x="946.4" y="128" class="lblb" text-anchor="middle" >pnpm</text>
+<text x="946.4" y="141" class="lbls" text-anchor="middle" >★ 36,776</text>
+<text x="946.4" y="154" class="lblf" text-anchor="middle" >215M / wk</text>
+<line x1="946.4" y1="220" x2="946.4" y2="300" class="sk"/>
+<rect x="1035.1" y="182" width="86.5" height="38" class="fp2"/><rect x="1035.1" y="182" width="86.5" height="38" fill="url(#s14-hx)"/><rect x="1035.1" y="182" width="86.5" height="38" class="sk fnone"/>
+<text x="1078.4" y="128" class="lblf" text-anchor="middle" >jdx</text>
+<text x="1078.4" y="141" class="lblb" text-anchor="middle" >mise-action</text>
+<text x="1078.4" y="154" class="lbls" text-anchor="middle" >★ 383</text>
+<line x1="1078.4" y1="220" x2="1078.4" y2="300" class="sk"/>
+<rect x="1178.6" y="182" width="40.0" height="38" class="sks fp" stroke-dasharray="4 3"/>
+<text x="1198.6" y="128" class="lblf" text-anchor="middle" >bugzilla.mozilla.org</text>
+<text x="1198.6" y="141" class="lblb" text-anchor="middle" >Firefox</text>
+<text x="1198.6" y="154" class="lbls" text-anchor="middle" >0 reports filed</text>
+
+<rect x="1296.3" y="182" width="40.0" height="38" class="sks fp" stroke-dasharray="4 3"/>
+<text x="1316.3" y="128" class="lblf" text-anchor="middle" >bugs.webkit.org</text>
+<text x="1316.3" y="141" class="lblb" text-anchor="middle" >WebKit</text>
+<text x="1316.3" y="154" class="lbls" text-anchor="middle" >0 reports filed</text>
+
+
+<line x1="1178.6" y1="230" x2="1336.3" y2="230" class="skf"/>
+<text x="1336.3" y="246" class="lblf" text-anchor="end" >the main lane's test:engines</text>
+<text x="1336.3" y="259" class="lblf" text-anchor="end" >runs on these two engines,</text>
+<text x="1336.3" y="272" class="lblf" text-anchor="end" >in three packages</text>
+<rect x="140" y="438" width="1220" height="164" class="sk fp"/>
+<rect x="363.8" y="452" width="30.5" height="16" class="sk fp2"/>
+<text x="379.1" y="463.8" class="lbls" text-anchor="middle" >#25</text>
+<rect x="365.9" y="476" width="30.5" height="16" class="sk fp2"/>
+<text x="381.2" y="487.8" class="lbls" text-anchor="middle" >#25</text>
+<rect x="587.7" y="452" width="30.5" height="16" class="sk fp2"/>
+<text x="602.9" y="463.8" class="lbls" text-anchor="middle" >#25</text>
+<rect x="589.5" y="476" width="30.5" height="16" class="sk fp2"/>
+<text x="604.8" y="487.8" class="lbls" text-anchor="middle" >#68</text>
+<rect x="589.8" y="500" width="30.5" height="16" class="sk fp2"/>
+<text x="605.1" y="511.8" class="lbls" text-anchor="middle" >#69</text>
+<rect x="1070.1" y="452" width="37.3" height="16" class="sk fp2"/>
+<text x="1088.8" y="463.8" class="lbls" text-anchor="middle" >#186</text>
+<rect x="1073.6" y="476" width="30.5" height="16" class="sk fp2"/>
+<text x="1088.9" y="487.8" class="lbls" text-anchor="middle" >#25</text>
+<rect x="1103.8" y="500" width="37.3" height="16" class="sk fp2"/>
+<text x="1122.4" y="511.8" class="lbls" text-anchor="middle" >#421</text>
+<rect x="1103.8" y="524" width="37.3" height="16" class="sk fp2"/>
+<text x="1122.4" y="535.8" class="lbls" text-anchor="middle" >#422</text>
+<rect x="1103.9" y="548" width="37.3" height="16" class="sk fp2"/>
+<text x="1122.5" y="559.8" class="lbls" text-anchor="middle" >#424</text>
+<rect x="1104.6" y="572" width="37.3" height="16" class="sk fp2"/>
+<text x="1123.2" y="583.8" class="lbls" text-anchor="middle" >#429</text>
+<rect x="1109.8" y="476" width="37.3" height="16" class="sk fp2"/>
+<text x="1128.5" y="487.8" class="lbls" text-anchor="middle" >#436</text>
+<rect x="1171.0" y="452" width="37.3" height="16" class="sk fp2"/>
+<text x="1189.7" y="463.8" class="lbls" text-anchor="middle" >#566</text>
+<rect x="1219.2" y="452" width="37.3" height="16" class="sk fp2"/>
+<text x="1237.9" y="463.8" class="lbls" text-anchor="middle" >#665</text>
+<rect x="1227.3" y="476" width="37.3" height="16" class="sk fp2"/>
+<text x="1245.9" y="487.8" class="lbls" text-anchor="middle" >#710</text>
+<rect x="1238.2" y="500" width="37.3" height="16" class="sk fp2"/>
+<text x="1256.9" y="511.8" class="lbls" text-anchor="middle" >#776</text>
+<rect x="1286.8" y="452" width="37.3" height="16" class="sk fp2"/>
+<text x="1305.5" y="463.8" class="lbls" text-anchor="middle" >#958</text>
+<rect x="1286.8" y="476" width="37.3" height="16" class="sk fp2"/>
+<text x="1305.5" y="487.8" class="lbls" text-anchor="middle" >#979</text>
+<rect x="1287.6" y="500" width="37.3" height="16" class="sk fp2"/>
+<text x="1306.2" y="511.8" class="lbls" text-anchor="middle" >#995</text>
+<rect x="1299.3" y="524" width="44.1" height="16" class="sk fp2"/>
+<text x="1321.3" y="535.8" class="lbls" text-anchor="middle" >#1088</text>
+<rect x="1299.8" y="548" width="44.1" height="16" class="sk fp2"/>
+<text x="1321.9" y="559.8" class="lbls" text-anchor="middle" >#1092</text>
+
+<text x="40" y="192" class="lblb" text-anchor="start" >NORTH BANK</text>
+<text x="40" y="206" class="lblf" text-anchor="start" >the commons</text>
+<text x="40" y="344" class="lblb" text-anchor="start" >THE RIVER</text>
+<text x="40" y="358" class="lblf" text-anchor="start" >time, west → east</text>
+<text x="40" y="452" class="lblb" text-anchor="start" >SOUTH BANK</text>
+<text x="40" y="466" class="lblf" text-anchor="start" >the city’s wharf</text>
+<rect x="40" y="642" width="1320" height="295" class="sk fp"/>
+<text x="58" y="664" class="lbls" text-anchor="start" >CONSIGNMENT SCHEDULE — date filed · work · kind · number in its tracker · title · state · returns home</text>
+<line x1="40" y1="674" x2="1360" y2="674" class="skf"/>
+<text x="72" y="694" class="lbls" text-anchor="end" >1</text>
+<text x="83" y="694" class="lbls" text-anchor="start" >2025-10-09</text><text x="160" y="694" class="lbls" text-anchor="start" >ui-router/ui-router.github.io</text><text x="330" y="694" class="lbls" text-anchor="start" >issue</text><text x="374" y="694" class="lbls" text-anchor="start" >#42</text><text x="434" y="694" class="lbls" text-anchor="start" >Include new framework support - Lit</text><text x="1090" y="694" class="lbls" text-anchor="start" >open</text><text x="1150" y="694" class="lbls" text-anchor="start" >→ #25</text>
+<text x="72" y="711" class="lbls" text-anchor="end" >2</text>
+<text x="83" y="711" class="lbls" text-anchor="start" >2025-10-10</text><text x="160" y="711" class="lbls" text-anchor="start" >ui-router/core</text><text x="330" y="711" class="lbls" text-anchor="start" >issue</text><text x="374" y="711" class="lbls" text-anchor="start" >#847</text><text x="434" y="711" class="lbls" text-anchor="start" >Include additional framework support - Lit</text><text x="1090" y="711" class="lbls" text-anchor="start" >open</text><text x="1150" y="711" class="lbls" text-anchor="start" >→ #25</text>
+<text x="72" y="728" class="lbls" text-anchor="end" >3</text>
+<text x="83" y="728" class="lbls" text-anchor="start" >2026-01-03</text><text x="160" y="728" class="lbls" text-anchor="start" >web-padawan/awesome-lit</text><text x="330" y="728" class="lbls" text-anchor="start" >PR</text><text x="374" y="728" class="lbls" text-anchor="start" >#85</text><text x="434" y="728" class="lbls" text-anchor="start" >doc: add lit-ui-router</text><text x="1090" y="728" class="lbls" text-anchor="start" >open</text><text x="1150" y="728" class="lbls" text-anchor="start" >→ #25</text>
+<text x="72" y="745" class="lbls" text-anchor="end" >4</text>
+<text x="83" y="745" class="lbls" text-anchor="start" >2026-01-03</text><text x="160" y="745" class="lbls" text-anchor="start" >vitest-dev/vitest</text><text x="330" y="745" class="lbls" text-anchor="start" >issue</text><text x="374" y="745" class="lbls" text-anchor="start" >#9379</text><text x="434" y="745" class="lbls" text-anchor="start" >Browser mode: Infinite 'Unknown event: response:response:...' loop when running multiple click tests</text><text x="1090" y="745" class="lbls" text-anchor="start" >closed</text><text x="1150" y="745" class="lbls" text-anchor="start" >→ #68</text>
+<text x="72" y="762" class="lbls" text-anchor="end" >5</text>
+<text x="83" y="762" class="lbls" text-anchor="start" >2026-01-03</text><text x="160" y="762" class="lbls" text-anchor="start" >vitest-dev/vitest</text><text x="330" y="762" class="lbls" text-anchor="start" >PR</text><text x="374" y="762" class="lbls" text-anchor="start" >#9381</text><text x="434" y="762" class="lbls" text-anchor="start" >fix(browser): ignore channel events in a tester opened as a top-level window (fix #9379)</text><text x="1090" y="762" class="lbl" text-anchor="start" >merged</text><text x="1150" y="762" class="lbls" text-anchor="start" >→ #69, #186, #421, #422, #424, #4…</text>
+<text x="72" y="779" class="lbls" text-anchor="end" >6</text>
+<text x="83" y="779" class="lbls" text-anchor="start" >2026-07-07</text><text x="160" y="779" class="lbls" text-anchor="start" >ui-router/core</text><text x="330" y="779" class="lbls" text-anchor="start" >issue</text><text x="374" y="779" class="lbls" text-anchor="start" >#850</text><text x="434" y="779" class="lbls" text-anchor="start" >lazyLoad: URL-sourced transition to a replaced `.**` placeholder supersedes the `otherwise()` transition started by…</text><text x="1090" y="779" class="lbls" text-anchor="start" >open</text><text x="1150" y="779" class="lbls" text-anchor="start" >→ #25, #665</text>
+<text x="72" y="796" class="lbls" text-anchor="end" >7</text>
+<text x="83" y="796" class="lbls" text-anchor="start" >2026-07-07</text><text x="160" y="796" class="lbls" text-anchor="start" >ui-router/core</text><text x="330" y="796" class="lbls" text-anchor="start" >PR</text><text x="374" y="796" class="lbls" text-anchor="start" >#851</text><text x="434" y="796" class="lbls" text-anchor="start" >fix(lazyLoad): abort URL-sourced transition when lazy loaded states do not match the URL</text><text x="1090" y="796" class="lbls" text-anchor="start" >open</text><text x="1150" y="796" class="lbls" text-anchor="start" >—</text>
+<text x="72" y="813" class="lbls" text-anchor="end" >8</text>
+<text x="83" y="813" class="lbls" text-anchor="start" >2026-07-17</text><text x="160" y="813" class="lbls" text-anchor="start" >coder/registry</text><text x="330" y="813" class="lbls" text-anchor="start" >issue</text><text x="374" y="813" class="lbls" text-anchor="start" >#1017</text><text x="434" y="813" class="lbls" text-anchor="start" >Vault (JWT) module displays Vault (GitHub)</text><text x="1090" y="813" class="lbls" text-anchor="start" >closed</text><text x="1150" y="813" class="lbls" text-anchor="start" >—</text>
+<text x="72" y="830" class="lbls" text-anchor="end" >9</text>
+<text x="83" y="830" class="lbls" text-anchor="start" >2026-08-15</text><text x="160" y="830" class="lbls" text-anchor="start" >publint/publint</text><text x="330" y="830" class="lbls" text-anchor="start" >issue</text><text x="374" y="830" class="lbls" text-anchor="start" >#252</text><text x="434" y="830" class="lbls" text-anchor="start" >@publint/pack reads a NUL typeflag as end-of-archive, so it cannot parse pnpm 12 tarballs</text><text x="1090" y="830" class="lbls" text-anchor="start" >closed</text><text x="1150" y="830" class="lbls" text-anchor="start" >→ #566</text>
+<text x="72" y="847" class="lbls" text-anchor="end" >10</text>
+<text x="83" y="847" class="lbls" text-anchor="start" >2026-08-15</text><text x="160" y="847" class="lbls" text-anchor="start" >publint/publint</text><text x="330" y="847" class="lbls" text-anchor="start" >PR</text><text x="374" y="847" class="lbls" text-anchor="start" >#253</text><text x="434" y="847" class="lbls" text-anchor="start" >Support tarballs with a NUL typeflag</text><text x="1090" y="847" class="lbl" text-anchor="start" >merged</text><text x="1150" y="847" class="lbls" text-anchor="start" >→ #566</text>
+<text x="72" y="864" class="lbls" text-anchor="end" >11</text>
+<text x="83" y="864" class="lbls" text-anchor="start" >2026-08-15</text><text x="160" y="864" class="lbls" text-anchor="start" >pnpm/pnpm</text><text x="330" y="864" class="lbls" text-anchor="start" >issue</text><text x="374" y="864" class="lbls" text-anchor="start" >#13924</text><text x="434" y="864" class="lbls" text-anchor="start" >pnpm 12 packs a NUL typeflag for regular files; pnpm 11 and npm write '0'</text><text x="1090" y="864" class="lbls" text-anchor="start" >closed</text><text x="1150" y="864" class="lbls" text-anchor="start" >→ #566</text>
+<text x="72" y="881" class="lbls" text-anchor="end" >12</text>
+<text x="83" y="881" class="lbls" text-anchor="start" >2026-09-27</text><text x="160" y="881" class="lbls" text-anchor="start" >pnpm/pnpm</text><text x="330" y="881" class="lbls" text-anchor="start" >issue</text><text x="374" y="881" class="lbls" text-anchor="start" >#16275</text><text x="434" y="881" class="lbls" text-anchor="start" >`pnpm pack` / `pnpm publish` no longer resolve `catalog:` in a directory the `packages` patterns leave out (11.27.1,…</text><text x="1090" y="881" class="lbls" text-anchor="start" >closed</text><text x="1150" y="881" class="lbls" text-anchor="start" >→ #958, #979, #995</text>
+<text x="72" y="898" class="lbls" text-anchor="end" >13</text>
+<text x="83" y="898" class="lbls" text-anchor="start" >2026-10-03</text><text x="160" y="898" class="lbls" text-anchor="start" >jdx/mise-action</text><text x="330" y="898" class="lbls" text-anchor="start" >issue</text><text x="374" y="898" class="lbls" text-anchor="start" >#641</text><text x="434" y="898" class="lbls" text-anchor="start" >With `version` unset, a cached mise binary fails integrity verification on every run after a new mise release</text><text x="1090" y="898" class="lbls" text-anchor="start" >closed</text><text x="1150" y="898" class="lbls" text-anchor="start" >→ #1088, #1092</text>
+<text x="58" y="921" class="lbls" text-anchor="start" >TOTAL — 13 consignments · 4 PRs · 9 issues · 0 bugs · 2 merged or fixed, 6 closed, 5 open · 21 blocks on the wharf · window 2025-07-21 → 2026-10-10 · counted at origin/main @ 9e656ab3</text>
+</svg></div></div>
+    <figcaption><span class="figno">FIG. 14</span>Every other sheet draws the city; this one draws what the city sends out. Across a river of time from the first commit, 13 consignments — pull requests, issues and bug reports filed in other projects' trackers — sit at the day they were filed, moored to the works on the north bank, and roads cross back to the 21 home pull requests, issues and commits that cite them on the city's wharf.</figcaption>
+  </figure>
+  <div class="notes-grid">
+    <div class="notes">
+      <h3>GENERAL NOTES</h3>
+      
+<p><strong>Method — one probe, one plate.</strong> Every figure on this sheet is read at build time from <code>www/<wbr>atlas.lit-ui-router.dev/<wbr>data/<wbr>census-upstream.json</code>, counted at origin/main @ 9e656ab3. The probe lists what the surveyor (<code>simshanith</code>) files in other projects' trackers — pull requests and issues on GitHub, bug reports on the browser engines' Bugzillas — from 2025-07-21, this repository's first commit on <code>main</code>, to 2026-10-10. A <em>consignment</em> is one of those filings. A <em>return</em> is a pull request, issue or commit of this repository that cites a consignment: the place the upstream work comes back into the city. Stars and weekly npm downloads are read from GitHub and the npm registry for each work the plate carries. The berths' note is read from <code>census-plate.json</code>, the ci graph plate: the packages whose <code>ci:main</code> graph runs a real <code>test:engines</code> task.</p>
+<p><strong>The river is time.</strong> The river's x axis runs from 2025-07-21 at the west to 2026-10-10 at the east, one tick per calendar month, and every crate and every wharf block sits at its own day: a crate at the day the consignment was filed, a block at the day its return landed. Where days crowd, crates stack across the river and blocks along the wharf, so nothing moves off its date. The yards on the north bank stand in the order the city first sent each of them a consignment, not by size, so the bank reads west to east in the same order as the river; a yard's footprint grows with the base-ten logarithm of its stars. A crate's shape is its kind and its fill its state: ink where it merged or was fixed, an outline where it closed unmerged, a dashed outline where it stands open.</p>
+<p><strong>What the plate reads.</strong> 13 consignments to eight works: 4 pull requests, 9 issues and 0 bug reports. 2 merged or fixed, 6 closed and 5 open. ui-router/core takes the most, three consignments. 11 of the 13 have come home, and 2 consignments have no return: ui-router/core #851, coder/registry #1017. The wharf holds 21 blocks for 18 home items — 13 pull requests and 5 issues. A squash commit whose subject ends in a pull request's number folds into that pull request's block when the same consignment cites both: 7 commits fold this way. vitest-dev/vitest #9381 comes home the most, nine times, from 2026-01-03 to 2026-09-09; #25, reach out to uirouter core team, is cited by four consignments, the most of any home item. A return is dated by the citing text's own day, so a road can run west: #566 (2026-08-14) cites publint/publint #252 (2026-08-15); #566 (2026-08-14) cites publint/publint #253 (2026-08-15); #566 (2026-08-14) cites pnpm/pnpm #13924 (2026-08-15); #1088 (2026-10-03) cites jdx/mise-action #641 (2026-10-03) — in each the home text is the older one, and the upstream filing is named in it.</p>
+<p><strong>The berths.</strong> Firefox (bugzilla.mozilla.org) reads 0 reports filed, and WebKit (bugs.webkit.org) reads 0 reports filed. They stand on the bank because the suite runs on these engines: <code>test:engines</code> is a real task in three packages of the <code>ci:main</code> graph — <code>lit-ui-router</code>, <code>sample-app-shared</code>, <code>ui-router-navigation-location-plugin</code>.</p>
+<p><strong>Before the city.</strong> The surveyor's ledger reaches back past this repository: 32 pull requests, 23 of them merged, and 33 issues, filed in 38 repositories from 2013-02-13 to 2025-04-09. The plate counts them as one line, above the river's west end, and draws none of them.</p>
+    </div>
+    <div class="keyblock">
+      <h3>KEY</h3>
+      <table><tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><rect x="6" y="3" width="36" height="12" class="fp2"/><rect x="6" y="3" width="36" height="12" fill="url(#s14-hx)"/><rect x="6" y="3" width="36" height="12" class="sk fnone"/></svg></td><td>yard — one upstream work · width grows with log₁₀ stars</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><rect x="6" y="3" width="36" height="12" class="sks fnone" stroke-dasharray="4 3"/></svg></td><td>berth — a browser bug tracker</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><rect x="17" y="4" width="14" height="10" class="sk fi"/></svg></td><td>pull request, merged</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><circle cx="24" cy="9" r="6" class="sk fp"/></svg></td><td>issue, closed</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><circle cx="24" cy="9" r="6" class="sk fp" stroke-dasharray="2.5 2"/></svg></td><td>open — dashed outline, any kind</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><polygon points="31,9 27.5,15.1 20.5,15.1 17,9 20.5,2.9 27.5,2.9" class="sk fp"/></svg></td><td>bug report — a hexagon</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><line x1="24" y1="1" x2="24" y2="17" class="sks"/></svg></td><td>mooring — a consignment to its yard</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><path d="M24,1 L24,15" class="skf" marker-end="url(#s14-as)"/></svg></td><td>road — a consignment to a return home</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><rect x="10" y="2" width="28" height="14" class="sk fp2"/><text x="24" y="13" class="lbls" text-anchor="middle" font-size="9">#N</text></svg></td><td>return — a home PR, issue or commit, on the wharf</td></tr></table>
+      <div class="titleblock" aria-label="title block">
+  <div class="span2"><span class="fld">PROJECT</span><span class="dsp"><span class="project-mark">THE ALTITUDE ATLAS</span></span></div>
+  <div class="span2"><span class="fld">SHEET TITLE</span><span class="ttl"><span class="art-inline">the&nbsp;</span>UPSTREAM WORKS</span></div>
+  <div><span class="fld">SCALE</span>CITY × COMMONS</div>
+  <div><span class="fld">FORM</span>UPSTREAM WORKS</div>
+  <div><span class="fld">CLIENT</span>lit-ui-router · simshanith</div>
+  <div><span class="fld">DATE / REV</span>2026-10-10 · A</div>
+  <div><span class="fld">DRAWN BY</span><span class="hand">Fable (Claude, AI)</span></div>
+  <div class="sh"><span><span class="fld">SHEET</span>14 OF 14</span><span class="chop" aria-hidden="true"></span></div>
+</div>
+    </div>
+  </div>
+</section>
+</main>
+<script>document.addEventListener('scroll', (e) => {
+  const w = e.target;
+  if (!(w instanceof Element) || !w.classList.contains('figure-wrap')) return;
+  w.parentElement?.toggleAttribute('data-end', w.scrollLeft + w.clientWidth >= w.scrollWidth - 1);
+}, true);
+(() => {
+  const key = (box) => box.id || (box.closest('section[id]') || {}).id || '';
+  const find = (id) => Array.from(document.querySelectorAll('.fillable')).find((box) => key(box) === id) || null;
+  const param = () => new URLSearchParams(location.search).get('enlarge');
+  const current = () => { const f = document.fullscreenElement; return f && f.classList.contains('fillable') ? f : document.querySelector('.fillable.is-filled'); };
+  const tell = (box) => { box.dispatchEvent(new CustomEvent('atlas-fill', { bubbles: true })); window.dispatchEvent(new Event('resize')); };
+  const write = (id, push) => { const url = new URL(location.href); if (id) url.searchParams.set('enlarge', id); else url.searchParams.delete('enlarge'); history[push ? 'pushState' : 'replaceState'](history.state, '', url); };
+  let ours = false;
+  const fill = (box) => {
+    const ask = box.requestFullscreen ? box.requestFullscreen() : Promise.reject(new Error('no fullscreen'));
+    ask.catch(() => { box.classList.add('is-filled'); document.documentElement.classList.add('has-filled'); tell(box); });
+  };
+  const unfill = () => {
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    const box = document.querySelector('.fillable.is-filled');
+    if (!box) return;
+    box.classList.remove('is-filled'); document.documentElement.classList.remove('has-filled'); tell(box);
+  };
+  const leave = () => { if (ours) { ours = false; history.back(); } else { write(null, false); unfill(); } };
+  const sync = () => {
+    const id = param(); const box = id ? find(id) : null; const open = current();
+    if (open && open !== box) unfill();
+    if (box && box !== open) fill(box);
+    if (id && !box) write(null, false);
+  };
+  document.addEventListener('click', (e) => {
+    const b = e.target instanceof Element ? e.target.closest('.fill') : null;
+    const box = b && b.closest('.fillable');
+    if (!box) return;
+    if (current() === box) { leave(); return; }
+    const push = !param();
+    if (push) ours = true;
+    write(key(box), push); fill(box);
+  });
+  addEventListener('popstate', () => { ours = param() !== null; sync(); });
+  document.addEventListener('fullscreenchange', () => {
+    const box = document.fullscreenElement;
+    tell(box && box.classList.contains('fillable') ? box : document.body);
+    if (!box && param() && !document.querySelector('.fillable.is-filled')) leave();
+  });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && document.querySelector('.fillable.is-filled')) leave(); });
+  sync();
+})();</script>
+</body>
+</html>

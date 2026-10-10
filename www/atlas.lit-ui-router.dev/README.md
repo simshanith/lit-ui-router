@@ -1,7 +1,7 @@
 # www/atlas.lit-ui-router.dev/ — The Altitude Atlas
 
-A drawing set: one subject, the lit-ui-router monorepo, surveyed at every altitude. Thirteen
-altitudes on 21 plates — the numbered sheets, their A/B alternates and three interactive lanes —
+A drawing set: one subject, the lit-ui-router monorepo, surveyed at every altitude. Fourteen altitudes
+on 22 plates — the numbered sheets, their A/B alternates and three interactive lanes —
 each in the form that altitude earns, with sheets 2 and 7 standing in the round in the routed app, and an appendix of 4 more about the atlas itself. Sheets 7–10 are a survey
 quartet (the workspace by mass, a consumer's node_modules, a deploy on the wire, the inside of
 one bundle); 11 prices every published entry alone; appendix A2 draws the census pipeline that
@@ -31,6 +31,7 @@ each sheet argue where that form fits and where it lies.
 | [12](sheet-12-the-register-plate.html) | PR CI GRAPH | REGISTER PLATE |
 | [12i](sheet-12i-the-register-walked.html) | PR CI GRAPH | INTERACTIVE REGISTER |
 | [13](sheet-13-the-weathering-map.html) | WORKSPACE × TIME | WEATHERING MAP |
+| [14](sheet-14-the-upstream-works.html) | CITY × COMMONS | UPSTREAM WORKS |
 
 ## Appendix — plates about the atlas, not the codebase
 
@@ -41,7 +42,7 @@ each sheet argue where that form fits and where it lies.
 | [A3](sheet-A3-the-atlas-measured.html) | THE ATLAS ITSELF | ISOMETRIC CITY |
 | [A2i](sheet-A2i-the-survey-office-interactive.html) | THE CENSUS PIPELINE | INTERACTIVE GRAPH |
 
-- `megacanvas.html` — the 18 SVG plates on one page, ascent order.
+- `megacanvas.html` — the 19 SVG plates on one page, ascent order.
 - `gallery.html` — cover, index and the full set, interactive lanes included.
 
 **Build and host.** From the repo root, in order:

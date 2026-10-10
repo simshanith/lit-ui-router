@@ -9,7 +9,10 @@ const PLATE = JSON.parse(readFileSync(new URL('../data/census-files.json', impor
 export const DATE = PLATE.commitDate.slice(0, 10);
 export const PROJECT = 'THE ALTITUDE ATLAS';
 export const CLIENT = 'lit-ui-router · simshanith';
-export const TOTAL = 13;
+export const TOTAL = 14;
+const NUMBER_WORDS = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty'];
+/** TOTAL in words, for prose that counts the altitudes. */
+export const TOTAL_WORDS = NUMBER_WORDS[TOTAL];
 
 export const CSS = `
 :root {

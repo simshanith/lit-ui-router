@@ -1,6 +1,6 @@
 import { writeFileSync, mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { page, sheetSection, TOTAL } from './chrome.mjs';
+import { page, sheetSection, TOTAL, TOTAL_WORDS } from './chrome.mjs';
 import { sheet1 } from './sheet1.mjs';
 import { loopWalkedSection, sheet1i } from './sheet1i.mjs';
 import { sheet2 } from './sheet2.mjs';
@@ -23,6 +23,7 @@ import { sheet11, SHEET11_VERDICT } from './sheet11.mjs';
 import { sheet12, PHANTOM_PCT } from './sheet12.mjs';
 import { register12iSection, sheet12i } from './sheet12i.mjs';
 import { sheet13, SHEET13_VERDICT } from './sheet13.mjs';
+import { sheet14, SHEET14_VERDICT } from './sheet14.mjs';
 import { sheetA1 } from './sheetA1.mjs';
 import { sheetA2 } from './sheetA2.mjs';
 import { sheetA3, SHEETA3_VERDICT } from './sheetA3.mjs';
@@ -36,7 +37,7 @@ const OUT = process.argv[2];
 if (!OUT) throw new Error('usage: node build.mjs <outdir>');
 mkdirSync(OUT, { recursive: true });
 
-const sheets = [sheet1, sheet2, sheet2a, sheet3, sheet3a, sheet3b, sheet4, sheet5, sheet6, sheet7, sheet7a, sheet7b, sheet8, sheet9, sheet10, sheet11, sheet12, sheet13];
+const sheets = [sheet1, sheet2, sheet2a, sheet3, sheet3a, sheet3b, sheet4, sheet5, sheet6, sheet7, sheet7a, sheet7b, sheet8, sheet9, sheet10, sheet11, sheet12, sheet13, sheet14];
 // The interactive lanes that have a standalone page of their own — the plate
 // count on the cover, in the megacanvas prose and in the README derives here.
 const lanes = [sheet1i, sheet2b, sheet12i];
@@ -48,6 +49,8 @@ const appendix = [sheetA1, sheetA2, sheetA3];
 // The appendix's interactive lane: a standalone page, and a row in `manifest.appendix`.
 const appendixLanes = [sheetA2i];
 const PLATES = sheets.length + lanes.length;
+if (TOTAL !== Math.max(...sheets.map((s) => Number.parseInt(s.num, 10)))) throw new Error(`build: chrome.mjs TOTAL is ${TOTAL}, and the ascent's highest sheet is ${Math.max(...sheets.map((s) => Number.parseInt(s.num, 10)))}`);
+const ALTITUDES = `${TOTAL_WORDS[0].toUpperCase()}${TOTAL_WORDS.slice(1)} altitudes`;
 const fname = (s) => `sheet-${s.num}-${s.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}.html`;
 
 // --- individual sheet files ---
@@ -99,11 +102,11 @@ const megaCss = `
 writeFileSync(join(OUT, 'megacanvas.html'), page('The Megacanvas — The Altitude Atlas', `<style>${megaCss}</style>
 <header class="mega-head">
   <h1>THE MEGACANVAS</h1>
-  <p>The full drawing set on one surface, in ascent order: one package, its companions, the monorepo that ships them, the family they belong to, the ecosystem that family competes in, and routing as such — plus a survey quartet: the monorepo by mass, the sample app's node_modules as a delivered city, the docs deploy as a shipped city, and the inside of one bundle after tree-shaking — then the same wire cut the other way, every published entry priced alone, and the same monorepo as its CI reads it — and finally the same city surveyed in time, every wall dated by the commit that laid it. Thirteen altitudes, ${sheets.length} plates in ascent (the A/B alternates ride beside their parents; the interactive lanes 1i, 2B and 12i stand alone); the form changes at every altitude because the truth does. The office that took every one of those measurements, drawn by its own instrument, is filed in the gallery's appendix as A2.</p>
+  <p>The full drawing set on one surface, in ascent order: one package, its companions, the monorepo that ships them, the family they belong to, the ecosystem that family competes in, and routing as such — plus a survey quartet: the monorepo by mass, the sample app's node_modules as a delivered city, the docs deploy as a shipped city, and the inside of one bundle after tree-shaking — then the same wire cut the other way, every published entry priced alone, and the same monorepo as its CI reads it — then the same city surveyed in time, every wall dated by the commit that laid it — and finally the city among the commons it builds on, the work it sends upstream and the work that comes home. ${ALTITUDES}, ${sheets.length} plates in ascent (the A/B alternates ride beside their parents; the interactive lanes 1i, 2B and 12i stand alone); the form changes at every altitude because the truth does. The office that took every one of those measurements, drawn by its own instrument, is filed in the gallery's appendix as A2.</p>
 </header>
 ${rail}
 ${sheets.map((s) => sheetSection(s)).join('\n')}`,
-{ desc: `All ${sheets.length} plates of the lit-ui-router drawing set on one page, thirteen altitudes in ascent.` }));
+{ desc: `All ${sheets.length} plates of the lit-ui-router drawing set on one page, ${TOTAL_WORDS} altitudes in ascent.` }));
 
 // --- gallery / artifact ---
 // THE INDEX — [num, ALTITUDE, FORM, FIT VERDICT] and, where the row is not a
@@ -131,6 +134,7 @@ const verdicts = [
   ['11', 'SEVEN PACKAGES', 'ENTRY QUARTERS', SHEET11_VERDICT],
   ['12', 'PR CI GRAPH', 'REGISTER PLATE', `the punched inventory — ${PHANTOM_PCT}% of the graph runs nothing, and the real→real edges that remain are a thin core inside a large node count`],
   ['13', 'WORKSPACE × TIME', 'WEATHERING MAP', SHEET13_VERDICT],
+  ['14', 'CITY × COMMONS', 'UPSTREAM WORKS', SHEET14_VERDICT],
   ['12i', 'PR CI GRAPH', 'INTERACTIVE REGISTER', `sheet 12's punchcard with a pointer in it — the whole ci graph carried node by node, real subgraph by default, and one checkbox that floods the ${PHANTOM_PCT}% that runs nothing`],
   ['city', 'MONOREPO, IN THE ROUND', 'REAL 3D CITY IN THE ROUND', "sheet 7's city as one glTF binary in Google's model-viewer, written from the plate's own computed geometry — opaque paper walls hatched in the tier's own rake inside a girding frame, sheet 7A's test light as a second material lane, a rise from the ground as its one clip, and a camera that orbits free and turns to the four true diagonals", '/city', 'S7·3D'],
 ];
@@ -295,7 +299,7 @@ const statBar = `<div class="stat-bar" role="group" aria-label="set statistics">
 const galBody = `<div class="gal-body">
     <p>The source image — an isometric block city over a strategy-breeding harness — works because of three quiet decisions, and only one of them is the city: it maps <em>roles in a mechanism</em> rather than files; it spends its one visual scalar (height) on a true quantity; and it keeps a CONDITION field that says what is currently wrong. This set keeps those three decisions and lets everything else change with altitude.</p>
     <p>The result is an argument about form: a loop where there is a genuine cycle (sheet 1), panels where packages are too small to be cities (sheet 2), the full city where the measurement thesis is actually true (sheet 3), a massed spine where the family shares one core but the limbs never touch (sheet 4), a chart where edges would be fiction (sheet 5), and mostly prose where only a definition survives (sheet 6). Fitness peaks in the middle altitudes and collapses at both ends.</p>
-    <p>Above the sixth altitude the set stops arguing about form and starts measuring. Sheets 7–10 are a survey quartet, each counting the same subject at a different boundary: what the repository holds (the monorepo by mass), what npm delivers (the sample app's <code>node_modules</code>, ${SHEET8_TIMES}× the app it serves), what the browser downloads (the docs deploy on the wire, where the prerendered prose tops the skyline and the lettering alone outweighs every routed app the site demonstrates), and who occupies the bytes after tree-shaking (the machine the router wraps is ${SHEET10_CORE_SHARE} of the bundle; the router itself, ${SHEET10_ROUTER_SHARE}). Sheet 11 cuts the same wire the other way, pricing ${DOOR_PKGS} package quarters and ${DOOR_N} doors one at a time. Sheet 12 leaves the wire and draws the monorepo as its own CI reads it, the pull-request task graph punched onto a register plate. Sheet 13 ages the city by commit date. Interactive lanes (1i, 2B and 12i) walk the plates they sit beside, and the routed set stands sheets 2 and 7 in the round. The appendix files plates whose subject is the atlas rather than the codebase: the sprite study behind the building sprites (appendix A1), and the survey office that turns the instrument on itself (appendix A2) — the census pipeline behind almost every number here, drawn as archive → probe stations → filed plates → drawings, introspected from the generator at build time, and walked live in its lane A2i. Appendix A3 turns sheet 7's ruler on the atlas itself: its drawing office, survey office, routed site and site build, massed beside the codebase they draw.</p>
+    <p>Above the sixth altitude the set stops arguing about form and starts measuring. Sheets 7–10 are a survey quartet, each counting the same subject at a different boundary: what the repository holds (the monorepo by mass), what npm delivers (the sample app's <code>node_modules</code>, ${SHEET8_TIMES}× the app it serves), what the browser downloads (the docs deploy on the wire, where the prerendered prose tops the skyline and the lettering alone outweighs every routed app the site demonstrates), and who occupies the bytes after tree-shaking (the machine the router wraps is ${SHEET10_CORE_SHARE} of the bundle; the router itself, ${SHEET10_ROUTER_SHARE}). Sheet 11 cuts the same wire the other way, pricing ${DOOR_PKGS} package quarters and ${DOOR_N} doors one at a time. Sheet 12 leaves the wire and draws the monorepo as its own CI reads it, the pull-request task graph punched onto a register plate. Sheet 13 ages the city by commit date, and sheet 14 draws it among the commons it builds on: the pull requests, issues and bug reports it sends upstream, and the home work that cites them. Interactive lanes (1i, 2B and 12i) walk the plates they sit beside, and the routed set stands sheets 2 and 7 in the round. The appendix files plates whose subject is the atlas rather than the codebase: the sprite study behind the building sprites (appendix A1), and the survey office that turns the instrument on itself (appendix A2) — the census pipeline behind almost every number here, drawn as archive → probe stations → filed plates → drawings, introspected from the generator at build time, and walked live in its lane A2i. Appendix A3 turns sheet 7's ruler on the atlas itself: its drawing office, survey office, routed site and site build, massed beside the codebase they draw.</p>
   </div>`;
 
 const cover = `<header class="cover">
@@ -328,7 +332,7 @@ ${register12iSection()}
 ${appendix.map((s) => sheetSection(s)).join('\n')}
 ${pipelineSection()}
 ${provenance}`,
-{ desc: 'A drawing set over thirteen altitudes: the lit-ui-router codebase and its ecosystems, each altitude in the form it earns.' }));
+{ desc: `A drawing set over ${TOTAL_WORDS} altitudes: the lit-ui-router codebase and its ecosystems, each altitude in the form it earns.` }));
 
 // --- README for the folder ---
 // THESIS and GEN_NOTES are shared with the routed app's colophon: the README
@@ -356,8 +360,8 @@ const mdLine = (md) => md.replace(/\n/g, ' ').replace(/`([^`]+)`/g, '<code>$1</c
 
 writeFileSync(join(OUT, 'README.md'), `# www/atlas.lit-ui-router.dev/ — The Altitude Atlas
 
-A drawing set: one subject, the lit-ui-router monorepo, surveyed at every altitude. Thirteen
-altitudes on ${PLATES} plates — the numbered sheets, their A/B alternates and three interactive lanes —
+A drawing set: one subject, the lit-ui-router monorepo, surveyed at every altitude. ${ALTITUDES}
+on ${PLATES} plates — the numbered sheets, their A/B alternates and three interactive lanes —
 each in the form that altitude earns, with sheets 2 and 7 standing in the round in the routed app, and an appendix of ${appendix.length + appendixLanes.length} more about the atlas itself. Sheets 7–10 are a survey
 quartet (the workspace by mass, a consumer's node_modules, a deploy on the wire, the inside of
 one bundle); 11 prices every published entry alone; appendix A2 draws the census pipeline that
