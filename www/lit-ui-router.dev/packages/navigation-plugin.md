@@ -131,8 +131,9 @@ the document and focus falls back to `<body>`. Move it yourself from an
 The plugin leaves `scroll` at the platform default, `'after-transition'`: once
 `handler` settles, the browser scrolls each router navigation to its URL's
 fragment, or to the top of the page. `pushStateLocationPlugin` leaves the scroll
-position where it was. Back and forward are traversals the plugin doesn't
-intercept, and the browser restores their scroll position under either plugin.
+position where it was. Back and forward are traversals the plugin leaves alone
+unless asked (see [Back and forward](#back-and-forward)); the browser then
+restores their scroll position straight away under either plugin.
 
 The default handler resolves immediately, so the browser can scroll before the
 new view has rendered. `intercept` runs once per navigation, while the router's
@@ -164,6 +165,35 @@ router.plugin(navigationLocationPlugin, {
 See
 [Scroll handling](https://developer.chrome.com/docs/web-platform/navigation-api#scroll_handling)
 for the platform behaviour.
+
+#### Back and forward
+
+A back or forward traversal starts a router transition only once the browser
+has committed it, so the browser restores the scroll position before the
+previous view is back, and a page that is shorter in the meantime loses it. The
+`interceptTraverse` option makes the plugin intercept those traversals with a
+handler that waits for the router transition, including its redirects, so
+`scroll: 'after-transition'` restores the position once the view has rendered:
+
+```ts
+router.plugin(navigationLocationPlugin, { interceptTraverse: true });
+```
+
+Pass a function instead of `true` to return the `NavigationInterceptOptions` for
+each traversal. The function runs at `navigate` time, before the router
+transition exists, so unlike `intercept` it cannot read the destination state's
+`data`. Its `handler` runs after the router transition settles, which is the
+place to wait for views that render later
+([#982](https://github.com/simshanith/lit-ui-router/issues/982) tracks a
+`lit-ui-router` signal for that moment), and `focusReset` defaults to
+`'manual'` as it does for `intercept`. Firefox, and WebKit in an iframe,
+restore scroll against the last layout, so the plugin forces a layout once
+`handler` settles. A navigation that supersedes the traversal ends the wait.
+
+In WebKit, a traversal that supersedes another traversal (back, then back
+again) commits, but its `navigation.transition.finished` rejects with an
+`AbortError`; the router still ends on the state of the URL, so code that awaits
+`finished` should not treat that rejection as a failed navigation.
 
 The plugin passes the `UIRouter` instance along in each of its navigations'
 [`info`](https://developer.mozilla.org/en-US/docs/Web/API/Navigation/navigate#info)
@@ -226,7 +256,9 @@ each location plugin.
   `router.plugin(...)`, with `NavigationLocationPluginOptions` as the second
   argument
 - **`NavigationLocationPluginOptions`** — `intercept`, which returns the
-  `NavigationInterceptOptions` for each navigation the plugin starts
+  `NavigationInterceptOptions` for each navigation the plugin starts, and
+  `interceptTraverse`, which opts back/forward traversals into interception
+  that waits for the router transition they start
 - **`NavigationLocationService`** — the location service class (extends
   `BaseLocationServices` from `@uirouter/core`); handles URL reads/writes via
   the Navigation API, including `<base href>` handling for non-root
