@@ -128,17 +128,42 @@ the document and focus falls back to `<body>`. Move it yourself from an
 
 ### Scroll
 
-The plugin leaves `scroll` at the platform default, `'after-transition'`. Once
-`handler` settles, the browser scrolls a push or replace navigation to its
-fragment or to the top of the page, and restores the saved position on back,
-forward and reload. `pushStateLocationPlugin` never scrolls.
+The plugin leaves `scroll` at the platform default, `'after-transition'`: once
+`handler` settles, the browser scrolls each router navigation to its URL's
+fragment, or to the top of the page. `pushStateLocationPlugin` leaves the scroll
+position where it was. Back and forward are traversals the plugin doesn't
+intercept, and the browser restores their scroll position under either plugin.
 
-The default handler resolves immediately, so the browser may scroll before the
-new view has rendered. A handler that waits for rendering lets restoration land
-on the finished layout, and calling `event.scroll()` inside it scrolls at a
-moment the app chooses. Return `scroll: 'manual'` to leave scrolling to the app.
+The default handler resolves immediately, so the browser can scroll before the
+new view has rendered. `intercept` runs once per navigation, while the router's
+`globals.transition` is still the transition being committed, so the scroll
+behaviour can depend on the route. In this example, a state flagged
+`data: { keepScroll: true }` (say, a message opening beside its list) returns
+`scroll: 'manual'` and keeps the list where it was. Every other navigation waits
+a frame for the views to render, then calls `event.scroll()` before any slower
+work:
+
+```ts
+router.plugin(navigationLocationPlugin, {
+  intercept: (event) => {
+    const { transition } = event.info.uiRouter.globals;
+    if (transition?.to().data?.keepScroll) {
+      return { scroll: 'manual' };
+    }
+    return {
+      async handler() {
+        await new Promise(requestAnimationFrame);
+        event.scroll();
+        // slower work: analytics, prefetching…
+      },
+    };
+  },
+});
+```
+
 See
-[Scroll handling](https://developer.chrome.com/docs/web-platform/navigation-api#scroll_handling).
+[Scroll handling](https://developer.chrome.com/docs/web-platform/navigation-api#scroll_handling)
+for the platform behaviour.
 
 The plugin passes the `UIRouter` instance along in each of its navigations'
 [`info`](https://developer.mozilla.org/en-US/docs/Web/API/Navigation/navigate#info)

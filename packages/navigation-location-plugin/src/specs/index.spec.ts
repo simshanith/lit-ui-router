@@ -250,6 +250,34 @@ describe.skipIf(!hasNavigationAPI)(
         link.remove();
       }
     });
+
+    it.each([
+      ['scrolls to the top by default', undefined, 0],
+      ['leaves scroll alone when the option asks for it', 'manual', 500],
+    ] as const)('%s', async (_, scroll, expected) => {
+      service?.dispose(router);
+      service = null;
+      const spacer = document.createElement('div');
+      spacer.style.height = '5000px';
+      document.body.append(spacer);
+      const plugin = navigationLocationPlugin(
+        router,
+        scroll ? { intercept: () => ({ scroll }) } : {},
+      );
+      try {
+        window.scrollTo(0, 500);
+        expect(window.scrollY).toBe(500);
+
+        plugin.service.url('/scroll-checked');
+        await window.navigation.transition?.finished;
+
+        expect(window.scrollY).toBe(expected);
+      } finally {
+        plugin.dispose?.(router);
+        spacer.remove();
+        window.scrollTo(0, 0);
+      }
+    });
   },
 );
 
