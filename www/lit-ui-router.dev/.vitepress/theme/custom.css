@@ -93,14 +93,12 @@
      ≥1440px width formula derives from this variable too. */
   --vp-sidebar-width: 320px;
   --vp-home-hero-image-background-image: url(/images/lit-flame.svg);
-  --vp-home-hero-image-filter-blur: 24px;
+  --vp-home-hero-image-filter-blur: clamp(24px, 3.5vw + 10px, 42px);
   --vp-home-hero-image-filter-hue-rotate: 0;
   --vp-home-hero-image-filter-invert: 0;
   --vp-home-hero-image-filter-brightness: 250%;
   --vp-home-hero-image-filter: blur(var(--vp-home-hero-image-filter-blur)) hue-rotate(var(--vp-home-hero-image-filter-hue-rotate)) invert(var(--vp-home-hero-image-filter-invert)) brightness(var(--vp-home-hero-image-filter-brightness));
-  --vp-home-hero-image-transform: translate3D(-50%, -55%, 0) scale(1, 1);
-  --vp-home-hero-image-width: 80%;
-  --vp-home-hero-image-height: 80%;
+  --hero-logo-size: clamp(12rem, 8rem + 16vw, 20rem);
 }
 
 /* Brand tokens hold 4.5:1 for white button text and for brand link text. */
@@ -120,33 +118,38 @@
   --vp-home-hero-image-filter-brightness: 60%;
 }
 
-/* Physical top/left pair with the translate(-50%) centring in the transform. */
+/* One grid cell stacks the glow under the logo; both centre on it. */
+.VPHero.has-image .image-container {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  place-items: center;
+  transform: none;
+}
+
+.VPHero.has-image :is(.image-bg, .image-src) {
+  grid-area: 1 / 1;
+  position: static;
+  transform: none;
+  aspect-ratio: 1;
+  block-size: auto;
+}
+
+.VPHero.has-image .image-src {
+  inline-size: min(100%, var(--hero-logo-size));
+  max-inline-size: none;
+  max-block-size: none;
+}
+
 .VPHero.has-image .image-bg {
+  inline-size: min(100%, var(--hero-logo-size) * 1.25);
   background-image: var(--vp-home-hero-image-background-image);
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
-  width: var(--vp-home-hero-image-width);
-  height: var(--vp-home-hero-image-height);
   filter: var(--vp-home-hero-image-filter);
   border-radius: 50%;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: var(--vp-home-hero-image-transform);
   transition: filter 0.5s var(--ease-out);
 }
-
-@media (prefers-reduced-motion: no-preference) {
-  .VPHero.has-image .image-bg {
-    transition:
-      width 0.5s var(--ease-out),
-      height 0.5s var(--ease-out),
-      transform 0.5s var(--ease-out),
-      filter 0.5s var(--ease-out);
-  }
-}
-
 
 html.chrome .VPHero .VPImage {
   mix-blend-mode: multiply;
@@ -161,32 +164,36 @@ html.chrome.dark .VPHero .VPImage {
   border-radius: 6px;
 }
 
-@media (min-width: 640px) {
-    :root {
-        --vp-home-hero-image-width: 80%;
-        --vp-home-hero-image-height: 80%;
-        --vp-home-hero-image-transform: translate3D(-50%, -52.5%, 0) scale(0.75, 0.75);
-        --vp-home-hero-image-filter-blur: 36px;
-    }
-}
-
 @media (min-width: 960px) {
-    :root {
-        --vp-home-hero-image-width: 100%;
-        --vp-home-hero-image-height: 100%;
-        --vp-home-hero-image-transform: translate3D(-50%, -60%, 0) scale(0.8, 0.8);
-        --vp-home-hero-image-filter-blur: 42px;
+    /* The feature cards' three columns and 1rem gutter: text spans two, the logo fills the third. */
+    .VPHero.has-image .container {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      column-gap: 1rem;
     }
 
     .VPHero.has-image .main.main {
-      max-width: 640px;
+      grid-column: span 2;
+      inline-size: auto;
+      max-inline-size: none;
+    }
+
+    /* The logo contains to the column beside the text, so the text alone sets the row height. */
+    .VPHero.has-image .image {
+      container-type: size;
+    }
+
+    .VPHero.has-image .image-container {
+      place-items: center end;
+    }
+
+    .VPHero.has-image .image-src {
+      inline-size: 100cqmin;
+    }
+
+    .VPHero.has-image .image-bg {
+      inline-size: 125cqmin;
+      margin: -12.5cqmin;
     }
 }
 
-@media (min-width: 1280px) {
-    :root {
-        --vp-home-hero-image-width: 100%;
-        --vp-home-hero-image-height: 100%;
-        --vp-home-hero-image-transform: translate3D(-50%, -60%, 0) scale(1, 1);
-    }
-}
