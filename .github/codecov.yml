@@ -14,7 +14,8 @@ coverage:
 # Copies of packages/shared/* source; coverage is credited to the canonical
 # file under the route-snapshot (and any later shared) component instead.
 ignore:
-  - 'packages/*/src/shared/**/*'
+  # `**/*` compiles to `.*/[^/]*` and misses files directly in shared/
+  - 'packages/*/src/shared/**'
 
 # Bundle stats (apps' vite builds, ui-router-server entries, the docs worker).
 # Informational while the new series baseline; the intent is to flip status to
