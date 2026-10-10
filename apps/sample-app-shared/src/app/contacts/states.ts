@@ -24,6 +24,7 @@ import { dsrRedirectToDefaultFromWithin } from '../util/dsr-default-redirect-wit
  * The contacts are fetched using a resolve.
  */
 function contactName(transition: Transition) {
+  // SAFETY: only contacts.contact titles with this, and its `contact` resolve yields a Contact
   const { name } = transition.injector().get('contact') as Contact;
 
   return `${name.first} ${name.last}`;

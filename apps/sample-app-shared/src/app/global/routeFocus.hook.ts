@@ -13,7 +13,7 @@ export type RouteTitle = string | ((transition: Transition) => string);
 const sectionOf = (state: StateDeclaration) => state.name?.split('.')[0] ?? '';
 
 function titleOf(transition: Transition) {
-  // StateDeclaration.data is `any`; titles are set in the state declarations.
+  // SAFETY: StateDeclaration.data is `any`; the state declarations set `title` only as a RouteTitle
   const title = (transition.to().data as { title?: RouteTitle } | undefined)
     ?.title;
 
