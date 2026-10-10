@@ -573,6 +573,88 @@
         color: var(--ink-faint);
         margin-block-start: 3px;
       }
+      /* THE NAME AND THE CLIENT'S MARK share one line: the name takes the
+         width, the mark sits at the end; under 640px the mark drops beneath. */
+      .cover-block {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 8px 32px;
+      }
+      @media (max-width: 640px) {
+        .cover-block {
+          grid-template-columns: minmax(0, 1fr);
+          justify-items: center;
+          text-align: center;
+        }
+      }
+      /* The docs site's hero, at the cover's scale: the glow is the Lit flame
+         blurred and brightened under the logo, the logo multiplied over it;
+         dark turns the flame's hue, inverts it and dims it, and the logo adds
+         light instead. The glow overhangs the logo by a quarter. */
+      .client-mark {
+        --mark: clamp(88px, 6rem + 4vw, 148px);
+        --glow-blur: calc(var(--mark) * 0.09);
+        --glow-filter: blur(var(--glow-blur)) brightness(2.5);
+        --logo-blend: multiply;
+        display: grid;
+        grid-template-columns: minmax(var(--mark), max-content);
+        grid-template-rows: var(--mark) auto;
+        justify-items: center;
+        row-gap: 10px;
+        /* the glow's overhang stays inside the sheet's margin */
+        padding: calc(var(--mark) * 0.125) 0 0;
+        margin-inline-end: calc(var(--mark) * 0.125);
+        color: var(--ink-soft);
+        text-decoration: none;
+      }
+      .client-glow,
+      .client-logo {
+        grid-area: 1 / 1;
+        display: block;
+        aspect-ratio: 1;
+        place-self: center;
+      }
+      .client-glow {
+        width: calc(var(--mark) * 1.25);
+        max-width: none;
+        object-fit: contain;
+        border-radius: 50%;
+        filter: var(--glow-filter);
+      }
+      .client-logo {
+        width: var(--mark);
+        mix-blend-mode: var(--logo-blend);
+      }
+      .client-cap {
+        grid-area: 2 / 1;
+        font-family: var(--data);
+        font-size: 10px;
+        line-height: 1.5;
+        letter-spacing: 0.14em;
+        text-align: center;
+        white-space: nowrap;
+      }
+      .client-cap .go {
+        display: block;
+        color: var(--accent);
+        font-weight: 600;
+      }
+      @media (hover: hover) and (pointer: fine) {
+        .client-mark:hover .client-cap .go {
+          text-decoration: underline;
+        }
+      }
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme='light']) .client-mark {
+          --glow-filter: blur(var(--glow-blur)) hue-rotate(180deg) invert(1) brightness(0.6);
+          --logo-blend: plus-lighter;
+        }
+      }
+      :root[data-theme='dark'] .client-mark {
+        --glow-filter: blur(var(--glow-blur)) hue-rotate(180deg) invert(1) brightness(0.6);
+        --logo-blend: plus-lighter;
+      }
       /* The key image is the whole width of the sheet — the issue log that used
          to ride beside it is its own state at /log. */
       .hero {

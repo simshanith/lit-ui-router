@@ -50,6 +50,7 @@ import {
 import { loadCytoscape, runScripts } from './fragment.ts';
 import type { FocusDetail } from './fragment.ts';
 import { ICON_SPRITE, iconId } from './generated/icons.js';
+import { FLAME_URL, LOGO_URL } from './generated/brand.js';
 import { initCity } from './generated/city-init.js';
 import type { CityScene } from './generated/city-init.js';
 import { initBricks } from './generated/bricks-init.js';
@@ -925,11 +926,22 @@ export const GalleryView: RoutedLitTemplate<ManifestResolves> = (props) => {
       <!-- THE WORDMARK — the same plain uppercase name the rail head and the
            sheet-head line above carry, in the display face, so every site reads
            as one mark; only the size changes. -->
-      <h2 class="cover-title">THE ALTITUDE ATLAS</h2>
-      <p class="sheet-sub cover-sub">
-        SAME SUBJECT AT EVERY SCALE — THE FORM CHANGES BECAUSE THE TRUTH DOES
-        <span class="stamp">CLIENT ${manifest.client} · PLATES COUNTED ${manifest.date}</span>
-      </p>
+      <div class="cover-block">
+        <div class="cover-name">
+          <h2 class="cover-title">THE ALTITUDE ATLAS</h2>
+          <p class="sheet-sub cover-sub">
+            SAME SUBJECT AT EVERY SCALE — THE FORM CHANGES BECAUSE THE TRUTH DOES
+            <span class="stamp">CLIENT ${manifest.client} · PLATES COUNTED ${manifest.date}</span>
+          </p>
+        </div>
+        <!-- THE CLIENT'S MARK — the logo the docs site's home hero draws, over
+             the Lit flame it glows with; the same filter stack, by scheme. -->
+        <a class="client-mark" href="${DOCS}" target="_blank" rel="noopener">
+          <img class="client-glow" src=${FLAME_URL} alt="" aria-hidden="true" />
+          <img class="client-logo" src=${LOGO_URL} alt="Lit UI Router" />
+          <span class="client-cap">THE CLIENT'S MARK<span class="go">LIT-UI-ROUTER.DEV ↗</span></span>
+        </a>
+      </div>
       <div class="hero">
         <!-- The key image: sheet 7's city, drawn at build time. model-viewer loads on the 3D plates and nowhere else. -->
         ${city

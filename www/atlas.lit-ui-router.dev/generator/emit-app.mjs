@@ -28,6 +28,7 @@ import { CITY_INIT_DTS, CITY_META, PLANT_META, cityInitModule, cityMarkup, plant
 import { BRICKS_GLB, BRICKS_INIT_DTS, BRICKS_META, bricksGlb, bricksInitModule, bricksMarkup } from './brick-scene.mjs';
 import { CITY_GLB, PLANT_GLB, cityModel } from './city-glb.mjs';
 import { ICONS_DTS, iconsModule } from './icons.mjs';
+import { BRAND_DTS, brandModule } from './brand.mjs';
 import { assertLabels, labelsFor } from './labels.mjs';
 import { cityHero } from './sheet7.mjs';
 import { THUMB_DIR, thumbPaths } from './thumb-spec.mjs';
@@ -348,6 +349,8 @@ export function emitApp({ sheets, appendix = [], interactive, appendixInteractiv
   writeFileSync(join(publicDir, PLANT_GLB), cityModel({ plant: true }).glb);
   writeFileSync(join(generatedDir, 'icons.js'), iconsModule());
   writeFileSync(join(generatedDir, 'icons.d.ts'), ICONS_DTS);
+  writeFileSync(join(generatedDir, 'brand.js'), brandModule());
+  writeFileSync(join(generatedDir, 'brand.d.ts'), BRAND_DTS);
   const extras = scenes.map(([meta, refs]) => ({
     id: meta.id,
     title: meta.title,
