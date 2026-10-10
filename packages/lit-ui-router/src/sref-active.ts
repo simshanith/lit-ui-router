@@ -183,6 +183,7 @@ export abstract class SrefStatusDirective<
     // listened for in named mode too: a re-render may drop the name
     element.addEventListener(
       UI_SREF_TARGET_EVENT,
+      // SAFETY: only `uiSrefTargetEvent()` dispatches UI_SREF_TARGET_EVENT
       this.onUiSrefTargetEvent as EventListener,
     );
     element.addEventListener(
@@ -192,6 +193,7 @@ export abstract class SrefStatusDirective<
     this._deregister.push(() => {
       element.removeEventListener(
         UI_SREF_TARGET_EVENT,
+        // SAFETY: only `uiSrefTargetEvent()` dispatches UI_SREF_TARGET_EVENT
         this.onUiSrefTargetEvent as EventListener,
       );
       element.removeEventListener(
@@ -203,6 +205,7 @@ export abstract class SrefStatusDirective<
     const router = this.uiRouter;
 
     if (router) {
+      // SAFETY: hook registration returns its deregistration function
       this._deregister.push(
         router.transitionService.onStart({}, this.onTransitionStart, {
           priority: -Infinity,
@@ -344,6 +347,7 @@ export class SrefActiveClassDirective extends SrefStatusDirective<
   /** @internal */
   constructor(partInfo: PartInfo) {
     super(partInfo, 'srefActiveClass');
+    // SAFETY: the base constructor throws unless this is an attribute part
     const { name, strings } = partInfo as AttributePartInfo;
 
     if (name !== 'class' || (strings?.length ?? 0) > 2) {
@@ -499,6 +503,7 @@ export class SrefAriaCurrentDirective extends SrefStatusDirective<
   constructor(partInfo: PartInfo) {
     super(partInfo, 'srefAriaCurrent');
 
+    // SAFETY: the base constructor throws unless this is an attribute part
     if ((partInfo as AttributePartInfo).strings !== undefined) {
       throw new Error(
         '`srefAriaCurrent()` must be the only expression in its attribute',

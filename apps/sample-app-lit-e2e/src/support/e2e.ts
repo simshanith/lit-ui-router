@@ -1,6 +1,6 @@
 // Suite-wide location plugin (settable via `cypress run --expose LOCATION_PLUGIN=hash`)
 export const LOCATION_PLUGIN =
-  // Cypress.expose(key) is typed `any`.
+  // SAFETY: Cypress.expose(key) is `any`; --expose values are strings
   (Cypress.expose('LOCATION_PLUGIN') as string | undefined) || '';
 
 function featureQuery(features: Record<string, string>) {
@@ -19,6 +19,7 @@ function featureQuery(features: Record<string, string>) {
 function seedLocationPlugin(win: Cypress.AUTWindow) {
   if (!LOCATION_PLUGIN) return;
 
+  // SAFETY: the app's featureFlags.save writes this key as JSON of the flags
   const flags = JSON.parse(
     win.sessionStorage.getItem('featureFlags') ?? '{}',
   ) as { 'location-plugin'?: string };
@@ -84,13 +85,13 @@ interface UIRouterElement extends HTMLElement {
  */
 export function syncUrl(path: string) {
   return cy
-    .get('ui-router')
+    .get<UIRouterElement>('ui-router')
     .should(($el) => {
-      const element = $el[0] as UIRouterElement;
+      const element = $el[0];
       expect(element.uiRouter, 'ui-router element upgraded').to.be.an('object');
     })
     .then(($el) => {
-      const element = $el[0] as UIRouterElement;
+      const element = $el[0];
       // replace: false — url()'s default replace goes through replaceState in
       // the app's replace-aware hash service, which fires no hashchange, so
       // the router would never sync. A push navigates in every location mode.

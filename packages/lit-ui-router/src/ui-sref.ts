@@ -297,6 +297,7 @@ export class UiSrefDirective extends AsyncDirective {
 
   /** @internal */
   disconnected(): void {
+    // SAFETY: a 'click' event is a MouseEvent
     this.element?.removeEventListener('click', this.onClick as EventListener);
     // lit notifies before it removes the nodes: the container still hears this
     this.element?.dispatchEvent(uiSrefTargetRemovedEvent());
@@ -336,6 +337,7 @@ export class UiSrefDirective extends AsyncDirective {
       return;
     }
 
+    // SAFETY: `currentTarget` is the link element this listener was added to
     if (clickBelongsToBrowser(event, event.currentTarget as Element)) {
       return;
     }
@@ -360,7 +362,8 @@ export class UiSrefDirective extends AsyncDirective {
     this.params = params;
     this.options = transitionOptions;
     this.uiSrefOptions = { assignHref };
-    const uiSrefElement = part.element as unknown as UiSrefElement;
+    // SAFETY: `updateHref` assigns `targetState` onto the element before anything reads it
+    const uiSrefElement = part.element as UiSrefElement;
     this._partElement = uiSrefElement;
 
     if (this.element !== uiSrefElement) {
@@ -390,6 +393,7 @@ export class UiSrefDirective extends AsyncDirective {
 
     this.seekRouter();
     this.seekParentView();
+    // SAFETY: a 'click' event is a MouseEvent
     this.element!.addEventListener('click', this.onClick as EventListener);
 
     // no router: the subscription is the only step that needs one, and

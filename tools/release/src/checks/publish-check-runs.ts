@@ -29,6 +29,7 @@ async function main() {
     throw new Error(`${summaryPath} must contain a JSON array of summaries`);
   }
 
+  // SAFETY: check-published-diff renders this file from summarizeResults()
   const summaries = parsed as PackageSummary[];
 
   // The resolve line's URL needs the slug too; dry runs may fall back.

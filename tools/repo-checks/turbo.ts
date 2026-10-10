@@ -63,6 +63,7 @@ export async function resolvedTaskDeps(
     AT_ROOT,
   );
 
+  // SAFETY: `turbo run --dry-run=json` prints a DryRun document
   const plan = JSON.parse(stdout) as DryRun;
   const entry = plan.tasks?.find((t) => t.taskId === taskId);
 
@@ -111,6 +112,7 @@ function parseTasks(text: string): Record<string, TaskConfig> {
   const errors: ParseError[] = [];
 
   // turbo.json carries comments, so JSON.parse alone won't do
+  // SAFETY: turbo validates turbo.json's schema, so `tasks` maps names to TaskConfig
   const config = parse(text, errors, { allowTrailingComma: true }) as {
     tasks?: Record<string, TaskConfig>;
   } | null;
@@ -168,6 +170,7 @@ export async function plannedLanes(
     AT_ROOT,
   );
 
+  // SAFETY: `turbo run --dry-run=json` prints a DryRun document
   const plan = JSON.parse(stdout) as DryRun;
 
   return new Set(
@@ -228,6 +231,7 @@ export async function plannedTasks(
         throw error;
       }
 
+      // SAFETY: `turbo run --dry-run=json` prints a DryRun document
       for (const task of (JSON.parse(stdout) as DryRunTasks).tasks ?? []) {
         if (task.taskId === undefined) continue;
         planned.set(task.taskId, {

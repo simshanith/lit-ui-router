@@ -87,10 +87,11 @@ export function fixtureSync(
 }
 
 async function updated(element: Element): Promise<void> {
-  const { updateComplete } = element as { updateComplete?: unknown };
-
-  if (updateComplete instanceof Promise) {
-    await updateComplete;
+  if (
+    'updateComplete' in element &&
+    element.updateComplete instanceof Promise
+  ) {
+    await element.updateComplete;
   }
 }
 
@@ -134,6 +135,7 @@ export function oneEvent<E extends Event = Event>(
   type: string,
 ): Promise<E> {
   return new Promise((resolve) => {
+    // SAFETY: the caller names the event class dispatched under `type`
     target.addEventListener(type, (event) => resolve(event as E), {
       once: true,
     });

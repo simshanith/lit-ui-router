@@ -63,6 +63,7 @@ export function snapshotRoute(
         target = $current.name;
       }
 
+      // SAFETY: `find` returns undefined for an unregistered state, which its signature omits.
       const state = matcher.find(target, $current) as
         | ReturnType<typeof matcher.find>
         | undefined;

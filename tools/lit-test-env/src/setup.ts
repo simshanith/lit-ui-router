@@ -6,6 +6,7 @@
  * full message.
  */
 export function silenceLitDevModeBanner(): void {
+  // SAFETY: lit's dev build keeps its issued-warning set on globalThis under this key
   const g = globalThis as typeof globalThis & {
     litIssuedWarnings?: Set<unknown>;
   };
@@ -32,6 +33,7 @@ export function silenceLitDevModeBanner(): void {
  *   boundary silently loses it in the browser projects.
  */
 export function assertLitMajor(expectedMajor: string): void {
+  // SAFETY: lit-html pushes its version onto globalThis.litHtmlVersions on load
   const litHtmlVersions =
     (globalThis as typeof globalThis & { litHtmlVersions?: string[] })
       .litHtmlVersions ?? [];

@@ -11,7 +11,7 @@ interface DsrTransition extends Transition {
   to(): DsrStateDeclaration;
 }
 
-// upstream's declared DSRFunction return type omits the TargetState its runtime consumes
+// SAFETY: upstream's declared DSRFunction return type omits the TargetState its runtime consumes
 export const dsrRedirectToDefaultFromWithin = ((
   transition: DsrTransition,
   redirect: TargetState,

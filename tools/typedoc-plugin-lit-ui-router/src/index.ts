@@ -12,7 +12,7 @@ import {
   Converter,
   Context,
   DeclarationReflection,
-  Reflection,
+  ContainerReflection,
   Comment,
   CommentTag,
   ReflectionKind,
@@ -29,14 +29,17 @@ interface SidebarItem {
 }
 
 /** Categories the `router: "category"` output is organized into. */
-type Category =
-  | 'core'
-  | 'components'
-  | 'directives'
-  | 'controllers'
-  | 'hooks'
-  | 'types'
-  | 'other';
+const CATEGORIES = [
+  'core',
+  'components',
+  'directives',
+  'controllers',
+  'hooks',
+  'types',
+  'other',
+] as const;
+
+type Category = (typeof CATEGORIES)[number];
 
 /** Titles and blurbs for the generated category index pages. */
 const CATEGORY_META: Record<Category, { title: string; description: string }> =
@@ -90,7 +93,7 @@ export function load(app: Application): void {
 
 /** Generate an index.md for each category folder. */
 function generateCategoryIndexFiles(outDir: string, app: Application): void {
-  for (const category of Object.keys(CATEGORY_META) as Category[]) {
+  for (const category of CATEGORIES) {
     const categoryDir = path.join(outDir, category);
 
     if (!fs.existsSync(categoryDir)) continue;
@@ -203,9 +206,8 @@ const CATEGORIZED_KINDS =
  * `treatWarningsAsErrors` this fails the build; packages opt out by not setting it.
  */
 function checkCategoryTags(context: Context, app: Application): void {
-  const visit = (reflection: Reflection): void => {
-    for (const child of (reflection as { children?: Reflection[] }).children ??
-      []) {
+  const visit = (reflection: ContainerReflection): void => {
+    for (const child of reflection.children ?? []) {
       if (child.kindOf(ReflectionKind.Module)) {
         visit(child);
         continue;
@@ -228,19 +230,13 @@ function checkCategoryTags(context: Context, app: Application): void {
  * Rewrite CEM tags on every reflection comment into aggregate list tags.
  */
 function handleCemTags(context: Context): void {
-  const visitReflection = (reflection: Reflection): void => {
+  const visitReflection = (reflection: ContainerReflection): void => {
     if (reflection instanceof DeclarationReflection && reflection.comment) {
       aggregateCemTags(reflection.comment);
     }
 
-    if ('children' in reflection) {
-      const withChildren = reflection as { children?: Reflection[] };
-
-      if (withChildren.children) {
-        for (const child of withChildren.children) {
-          visitReflection(child);
-        }
-      }
+    for (const child of reflection.children ?? []) {
+      visitReflection(child);
     }
   };
 
@@ -273,16 +269,21 @@ function updateSidebarJson(outDir: string, app: Application): void {
 
   if (!fs.existsSync(sidebarPath)) return;
 
+  // SAFETY: typedoc-plugin-markdown writes the sidebar as a SidebarItem array
   const sidebar = JSON.parse(
     fs.readFileSync(sidebarPath, 'utf-8'),
   ) as SidebarItem[];
 
+  const metaByCategory = new Map<string, { title: string }>(
+    Object.entries(CATEGORY_META),
+  );
+
   for (const item of sidebar) {
-    const category = item.text as Category;
+    const category = item.text;
     // Fall back to title-casing so an uncharted @category tag renders
     // instead of crashing the docs build.
     item.text =
-      CATEGORY_META[category]?.title ??
+      metaByCategory.get(category)?.title ??
       category.charAt(0).toUpperCase() + category.slice(1);
     item.link = `/api/reference/${category}`;
     delete item.collapsed;

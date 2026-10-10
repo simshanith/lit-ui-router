@@ -1,4 +1,5 @@
 import { nothing, render } from 'lit';
+import type { TemplateResult } from 'lit';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { requestContext } from 'lit-ui-router/context';
 import { UiView } from 'lit-ui-router/pure';
@@ -10,7 +11,11 @@ import {
   readHydrationSignature,
   uiViewAdoptEventName,
 } from '../client.js';
-import type { AdoptOutcome, UiViewAdoptEvent } from '../client.js';
+import type {
+  AdoptOutcome,
+  HydrateRootOptions,
+  UiViewAdoptEvent,
+} from '../client.js';
 import { settle } from '../settle.js';
 import { signatureBlock } from '../prerender.js';
 import { signatureAttribute, signatureSelector } from '../signature.js';
@@ -38,10 +43,24 @@ import {
 } from './round-trip.js';
 
 /** A `<ui-view>`, as the assertions read it. */
-type View = Element & { deferHydration: boolean; hasUpdated: boolean };
+type View = UiView & { deferHydration: boolean };
 
-const views = (container: HTMLElement): View[] =>
-  [...container.querySelectorAll('ui-view')] as unknown as View[];
+const views = (container: HTMLElement): View[] => [
+  ...container.querySelectorAll<View>('ui-view'),
+];
+
+/** `hydrateRoot`'s release, for a container it adopts. */
+const hydrated = (
+  container: HTMLElement,
+  value: TemplateResult,
+  options?: HydrateRootOptions,
+): (() => void) => {
+  const release = hydrateRoot(container, value, options);
+
+  if (!release) throw new Error('hydrateRoot left the container cold');
+
+  return release;
+};
 
 /** The document a build would have emitted for `path`. */
 const drawShell = (path: string): Promise<string> =>
@@ -430,12 +449,12 @@ describe('a view detached before its update flushes', () => {
     await settle(router, '/shell');
     const shell = container.querySelector('h1');
 
-    const release = hydrateRoot(container, rootTemplate(router));
+    const release = hydrated(container, rootTemplate(router));
     // The walk woke the view; the app takes the subtree holding it out of the container, and the root provider down, in the same task — before that wake updates.
     const app = container.querySelector('ui-router')!;
     const view = app.querySelector<UiView>('ui-view')!;
     app.remove();
-    (release as () => void)();
+    release();
     await view.updateComplete;
 
     // Asleep while detached: the held nodes are untouched and nothing adopted them.
@@ -569,19 +588,14 @@ describe('a view this cannot adopt', () => {
   });
 });
 
-/** The props `DetailView` was drawn with, as the one render a guest view adopts against. */
-const detailProps = { resolves: { detail: 'leaf' } } as unknown as Parameters<
-  typeof DetailView
->[0];
-
 /** One served view's markup with its outer pair plain: what the walk passes at the top level. */
 const servedDetail = async (): Promise<string> => {
   const { container } = serve(await drawShell('/shell/detail'));
   const nested = [...container.querySelectorAll('ui-view')].at(-1)!;
 
   const markers = [...nested.childNodes].filter(
-    (node) => node.nodeType === Node.COMMENT_NODE,
-  ) as Comment[];
+    (node): node is Comment => node.nodeType === Node.COMMENT_NODE,
+  );
 
   for (const marker of [markers[0], markers.at(-1)!]) {
     marker.data = marker.data.slice('ui-view:'.length);
@@ -599,7 +613,7 @@ describe('the pin the walk leaves on a served view', () => {
     const { container: first } = serve(await drawShell('/shell'));
     const firstRouter = makeRouter();
     await settle(firstRouter, '/shell');
-    const release = hydrateRoot(first, rootTemplate(firstRouter)) as () => void;
+    const release = hydrated(first, rootTemplate(firstRouter));
     // Detached before its update: the view sleeps, holding its nodes and its pin.
     const app = first.querySelector('ui-router')!;
     const view = app.querySelector<UiView>('ui-view')!;
@@ -611,10 +625,7 @@ describe('the pin the walk leaves on a served view', () => {
     await settle(secondRouter, '/shell');
     second.querySelector('ui-router')!.replaceWith(app);
 
-    const releaseSecond = hydrateRoot(
-      second,
-      rootTemplate(secondRouter),
-    ) as () => void;
+    const releaseSecond = hydrated(second, rootTemplate(secondRouter));
 
     await drain(second);
     releaseSecond();
@@ -641,14 +652,14 @@ describe('the pin the walk leaves on a served view', () => {
     // Drawn before the walk: everything from here to the guest's request is one task.
     const markup = await servedDetail();
 
-    const release = hydrateRoot(container, rootTemplate(router)) as () => void;
+    const release = hydrated(container, rootTemplate(router));
     // The view the walk woke has not updated yet, so its pin is still armed.
     const view = container.querySelector<UiView>('ui-view')!;
     const guest = document.createElement('ui-view');
     guest.setAttribute('defer-hydration', '');
     guest.innerHTML = markup;
     // The render the served markup was drawn from: a guest registers at an address this document does not fill.
-    guest.render = () => DetailView(detailProps);
+    guest.render = () => DetailView({ resolves: { detail: 'leaf' }, router });
     view.append(guest);
     const detail = guest.querySelector('.detail');
 
@@ -751,11 +762,15 @@ type Report = [view: Element, outcome: AdoptOutcome, error?: unknown];
 const listen = (target: EventTarget): Report[] => {
   const reports: Report[] = [];
   target.addEventListener(uiViewAdoptEventName, (event) => {
-    const { detail, target: view } = event as UiViewAdoptEvent;
+    // SAFETY: only `ui-view:adopt` reaches this listener, dispatched from the `<ui-view>` it reports.
+    const { detail, target: view } = event as UiViewAdoptEvent & {
+      target: Element;
+    };
+
     reports.push(
       'error' in detail
-        ? [view as Element, detail.outcome, detail.error]
-        : [view as Element, detail.outcome],
+        ? [view, detail.outcome, detail.error]
+        : [view, detail.outcome],
     );
   });
 
@@ -771,7 +786,7 @@ const bootReporting = async (
   const router = makeRouter();
   await settle(router, path);
 
-  const release = hydrateRoot(container, rootTemplate(router), {
+  const release = hydrated(container, rootTemplate(router), {
     onAdopt: (view, outcome, error) => {
       received.push(
         outcome === 'fell-back' ? [view, outcome, error] : [view, outcome],
@@ -781,7 +796,7 @@ const bootReporting = async (
 
   expect(release).toBeTypeOf('function');
   await drain(container);
-  (release as () => void)();
+  release();
 
   return received;
 };
@@ -871,14 +886,14 @@ describe('the hydration outcome', () => {
     await settle(router, '/shell');
     const received: Report[] = [];
 
-    const release = hydrateRoot(container, rootTemplate(router), {
+    const release = hydrated(container, rootTemplate(router), {
       onAdopt: (view, outcome) => received.push([view, outcome]),
     });
 
     const app = container.querySelector('ui-router')!;
     const view = app.querySelector<UiView>('ui-view')!;
     app.remove();
-    (release as () => void)();
+    release();
     await view.updateComplete;
     expect(received).toEqual([]);
 
@@ -901,14 +916,14 @@ describe('the hydration outcome', () => {
     vi.stubGlobal('reportError', reportError);
     const failure = new Error('reporter failed');
 
-    const release = hydrateRoot(container, rootTemplate(router), {
+    const release = hydrated(container, rootTemplate(router), {
       onAdopt: () => {
         throw failure;
       },
     });
 
     await drain(container);
-    (release as () => void)();
+    release();
     vi.unstubAllGlobals();
 
     const view = container.querySelector('ui-view')!;
@@ -926,18 +941,17 @@ describe('the hydration outcome', () => {
     const failure = new Error('reporter failed');
     let thrown: Promise<void> | undefined;
 
-    const release = hydrateRoot(container, rootTemplate(router), {
+    const release = hydrated(container, rootTemplate(router), {
       onAdopt: (view) => {
         if (thrown) return;
-        thrown = expect(
-          (view as View & { updateComplete: Promise<boolean> }).updateComplete,
-        ).rejects.toBe(failure);
+        // SAFETY: `onAdopt` reports only `<ui-view>` elements.
+        thrown = expect((view as View).updateComplete).rejects.toBe(failure);
         throw failure;
       },
     });
 
     await drain(container);
-    (release as () => void)();
+    release();
     vi.unstubAllGlobals();
 
     expect(thrown).toBeDefined();
@@ -1186,9 +1200,7 @@ describe('the hydration signature', () => {
       const served = views(container);
 
       expect(hydrateRoot(container, rootTemplate(makeRouter()))).toBe(false);
-      await Promise.all(
-        served.map((view) => (view as unknown as UiView).updateComplete),
-      );
+      await Promise.all(served.map((view) => view.updateComplete));
       await drain(container);
 
       expect(dropped(warn)).toBe(false);

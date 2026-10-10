@@ -1,5 +1,4 @@
 import {
-  extend,
   RawParams,
   TargetState,
   Transition,
@@ -443,7 +442,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
       relative: this.parentView?.viewContext?.name,
     };
 
-    return extend(defaultOpts, this.options || {}) as TransitionOptions;
+    return { ...defaultOpts, ...this.options };
   }
 
   /**
@@ -531,8 +530,8 @@ export class UiSrefActiveDirective extends AsyncDirective {
     this.targetStates.clear();
 
     if (targetStates) {
-      Array.prototype.forEach.call(targetStates, (targetState) => {
-        this.targetStates.add(targetState as TargetState);
+      Array.prototype.forEach.call(targetStates, (targetState: TargetState) => {
+        this.targetStates.add(targetState);
       });
     } else if (this.state) {
       // no router: no target to resolve, and the update that follows reports it
@@ -548,6 +547,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
     } else {
       this.element!.addEventListener(
         UI_SREF_TARGET_EVENT,
+        // SAFETY: only `uiSrefTargetEvent()` dispatches UI_SREF_TARGET_EVENT
         this.onUiSrefTargetEvent as EventListener,
       );
     }
@@ -560,6 +560,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
     // no router: nothing to subscribe to, and `_firstUpdated` still has to be
     // reached so the next update can report the no-op
     if (this.uiRouter) {
+      // SAFETY: hook registration returns its deregistration function
       this._deregisterOnStart = this.uiRouter.transitionService.onStart(
         {},
         this.onTransitionStart,
@@ -592,6 +593,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
 
     this.element.removeEventListener(
       UI_SREF_TARGET_EVENT,
+      // SAFETY: only `uiSrefTargetEvent()` dispatches UI_SREF_TARGET_EVENT
       this.onUiSrefTargetEvent as EventListener,
     );
     this.element.removeEventListener(
@@ -668,7 +670,8 @@ export class UiSrefActiveDirective extends AsyncDirective {
 
   /** @internal */
   onTransitionStateChange = (e: Event): void => {
-    const event = e as unknown as CustomEvent<TransEvt>;
+    // SAFETY: only `createTransitionStateChangeEvent()` dispatches TRANSITION_STATE_CHANGE_EVENT
+    const event = e as CustomEvent<TransEvt>;
     const status = this.getStatus(event.detail);
 
     if (!status) {

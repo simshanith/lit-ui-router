@@ -98,6 +98,7 @@ export class RouterStore {
     this.router = router;
     this.update();
 
+    // SAFETY: `onSuccess` returns its deregistration function, typed only as `Function`.
     const deregister = router.transitionService.onSuccess(
       {},
       this.update,

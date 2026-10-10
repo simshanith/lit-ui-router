@@ -235,6 +235,7 @@ describe('srefHref directive', () => {
         html`<a href=${srefHref('users.detail', { userId })}>User</a>`;
 
       const targets: unknown[] = [];
+      // SAFETY: only `uiSrefTargetEvent()` dispatches UI_SREF_TARGET_EVENT
       container.addEventListener(UI_SREF_TARGET_EVENT, ((
         event: UiSrefTargetEvent,
       ) => {

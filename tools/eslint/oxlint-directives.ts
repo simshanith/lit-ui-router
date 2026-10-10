@@ -16,6 +16,7 @@ interface OxlintConfig {
   overrides?: { rules?: Record<string, Json> }[];
 }
 
+// SAFETY: oxlint validates .oxlintrc.json against its schema, which OxlintConfig subsets
 const config = parse(
   readFileSync(join(workspaceRoot, '.oxlintrc.json'), 'utf8'),
 ) as OxlintConfig;

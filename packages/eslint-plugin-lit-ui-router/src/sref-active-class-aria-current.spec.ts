@@ -343,14 +343,9 @@ clientTester.run(
 void describe('sref-active-class-aria-current meta', () => {
   void it('is fixable and takes the shared linkElements option', () => {
     assert.equal(srefActiveClassAriaCurrent.meta?.fixable, 'code');
-    assert.equal(
-      (
-        srefActiveClassAriaCurrent.meta?.schema as
-          | { properties?: { linkElements?: typeof LINK_ELEMENTS_SCHEMA } }[]
-          | undefined
-      )?.[0]?.properties?.linkElements,
-      LINK_ELEMENTS_SCHEMA,
-    );
+    const schema = srefActiveClassAriaCurrent.meta?.schema;
+    assert.ok(Array.isArray(schema));
+    assert.equal(schema[0]?.properties?.linkElements, LINK_ELEMENTS_SCHEMA);
   });
 
   void it('leaves allowElementParts out of defaultOptions, so the setting reaches it', () => {

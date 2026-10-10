@@ -4,13 +4,13 @@
 import type { RuleFor } from './rule-shape.ts';
 import { TemplateAnalyzer } from 'eslint-plugin-lit/lib/template-analyzer.js';
 import {
+  asNode,
+  asNodes,
   type AttributePart,
   attributePartsOf,
   createDirectiveTracker,
   type DirectiveName,
   elementPartIndex,
-  type Node,
-  type Parse5Element,
 } from './directives.ts';
 
 /**
@@ -81,9 +81,9 @@ const directivePosition: RuleFor<typeof RULE_NAME> = {
       TaggedTemplateExpression(node) {
         if (!tracker.shouldAnalyse) return;
 
-        if (!tracker.isLitTemplate(node.tag as unknown as Node)) return;
+        if (!tracker.isLitTemplate(asNode(node.tag))) return;
 
-        const expressions = node.quasi.expressions as unknown as Node[];
+        const expressions = asNodes(node.quasi.expressions);
         const analyzer = TemplateAnalyzer.create(node);
 
         // Every expression index the parsed template resolved to an element
@@ -91,9 +91,7 @@ const directivePosition: RuleFor<typeof RULE_NAME> = {
         const elementParts = new Set<number>();
         const attributeParts = new Map<number, AttributePart>();
         analyzer.traverse({
-          enterElement(rawElement) {
-            const element = rawElement as unknown as Parse5Element;
-
+          enterElement(element) {
             if (element.sourceCodeLocation === undefined) return;
 
             for (const attribute of Object.keys(element.attribs)) {

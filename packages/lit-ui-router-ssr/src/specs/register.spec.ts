@@ -80,6 +80,7 @@ describe('lit-ui-router-ssr/register', () => {
   it('defines a class that answers the slot the enclosing render reaches with noChange', () => {
     const Served = withServedRender(UiView);
 
+    // SAFETY: `withServedRender`'s class defines `renderLight` on its prototype.
     expect((Served.prototype as ServedUiView).renderLight()).toBe(noChange);
   });
 

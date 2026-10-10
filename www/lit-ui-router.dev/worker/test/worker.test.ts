@@ -40,10 +40,10 @@ const ASSET_TABLE = {
   },
 } satisfies Record<string, Asset>;
 
+const assetsByPath = new Map<string, Asset>(Object.entries(ASSET_TABLE));
+
 const assetAt = (pathname: string): Asset | undefined =>
-  Object.hasOwn(ASSET_TABLE, pathname)
-    ? ASSET_TABLE[pathname as keyof typeof ASSET_TABLE]
-    : undefined;
+  assetsByPath.get(pathname);
 
 // Every binding call is a Request built from the original — shell,
 // pass-through, and the 404-page probe alike — but stay tolerant of a bare
@@ -63,8 +63,13 @@ beforeEach(() => {
   assetMethods = [];
 });
 
-const env = {
+const env: Env = {
+  VITE_GOOGLE_ANALYTICS_TRACKING_ID: '',
+  VITE_TRACE: '',
   ASSETS: {
+    connect: () => {
+      throw new Error('the assets binding has no sockets');
+    },
     fetch: (input: Request | URL | string) => {
       const pathname = pathnameOf(input);
       const method = methodOf(input);
@@ -87,7 +92,7 @@ const env = {
       );
     },
   },
-} as unknown as Parameters<typeof worker.fetch>[1];
+};
 
 // Plain GETs, like the Cypress cy.request calls these tests replace; the
 // worker judges every request it receives (shouldHandle: () => true — it only

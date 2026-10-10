@@ -55,13 +55,14 @@ export interface ParamType
 
 const { freeze } = Object;
 
-// Core's makeDefaultType encode: stringly, null/undefined passed through.
+// SAFETY: as core's makeDefaultType encode, which calls toString() on any non-nullish value.
 const valToString = (val: unknown): string | null | undefined =>
   val === null || val === undefined
     ? val
     : (val as number | string | boolean).toString();
 
 // Core's ParamType class defaults, for custom types that omit the members.
+// SAFETY: core's default encode is identity; format() stringifies whatever it returns.
 const typeEncode = (
   type: ParamType,
   val: unknown,
@@ -130,14 +131,15 @@ const builtinTypes = {
           ].join('-')
         : undefined,
     // Calendar-day equality, as upstream: throws on non-dates, core does too.
-    equals: (l: unknown, r: unknown) =>
+    equals: (l: Date, r: Date) =>
       (['getFullYear', 'getMonth', 'getDate'] as const).every(
-        (fn) => (l as Date)[fn]() === (r as Date)[fn](),
+        (fn) => l[fn]() === r[fn](),
       ),
   }),
 } satisfies Record<string, ParamType>;
 
 /** The built-in type a name spells. */
+// SAFETY: a name outside the table reads undefined; Object.prototype names are not guarded.
 const builtinType = (name: string): ParamType | undefined =>
   builtinTypes[name as keyof typeof builtinTypes];
 
@@ -352,6 +354,7 @@ const paramValue = (param: CompiledParam, input: unknown): unknown => {
     return value;
   }
 
+  // SAFETY: as core's Param, a value the type rejects goes to decode as-is.
   return param.type.is(input) ? input : param.type.decode(input as string);
 };
 
@@ -373,6 +376,7 @@ const paramValidates = (param: CompiledParam, input: unknown): boolean => {
   // No value, but the param is optional.
   if ((input === undefined || input === null) && param.isOptional) return true;
 
+  // SAFETY: as core's Param, a value the type rejects goes to decode as-is.
   const normalized: unknown = param.type.is(input)
     ? input
     : param.type.decode(input as string);
@@ -628,6 +632,7 @@ export function exec(
     }
 
     if (value !== undefined) {
+      // SAFETY: every replace entry maps to undefined, so a defined value is the captured string.
       const raw =
         matcher.decodeParams && !param.type.raw
           ? decodeURIComponent(value as string)
@@ -702,6 +707,7 @@ export function format(
     }
 
     if (encoded === null || encoded === undefined) return;
+    // SAFETY: as core, encodeURIComponent stringifies whatever the type encoded.
     result += param.type.raw
       ? String(encoded)
       : encodeURIComponent(encoded as string);
@@ -771,7 +777,7 @@ export function urlMatcherFactory(config: UrlMatcherCompilerConfig = {}): {
           defaultSquashPolicy,
           params: options.params ?? {},
         },
-        // Omitted meta is the declared default: `compile(p)` → meta undefined.
+        // SAFETY: omitted meta is the declared default: `compile(p)` → M = undefined.
         options.meta as M,
       ),
   };

@@ -154,6 +154,7 @@ export const installServerLocation: <T extends UIRouter>(
 
   // `urlService.config.baseHref()` only reads; the memory config holds the value
   if (options.baseHref !== undefined)
+    // SAFETY: serverLocationPlugin, installed above, sets a ServerLocationConfig.
     (router.locationConfig as MemoryLocationConfig)._baseHref =
       options.baseHref;
 

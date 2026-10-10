@@ -87,6 +87,7 @@ const messageState = {
   ],
   data: {
     title: (transition: Transition) =>
+      // SAFETY: this state's `message` resolve yields a Message
       (transition.injector().get('message') as Message).subject,
   },
   views: {

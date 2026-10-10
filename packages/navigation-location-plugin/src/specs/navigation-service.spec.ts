@@ -2,6 +2,7 @@
 /// <reference types="@types/dom-navigation" />
 
 import { type LocationPlugin, UIRouter } from '@uirouter/core';
+import type { Mock } from 'vitest';
 import {
   NavigationLocationService,
   navigationLocationPlugin,
@@ -16,12 +17,21 @@ import {
 // API stay in index.spec.ts, in the browser project.
 
 interface StubNavigation {
-  addEventListener: ReturnType<typeof vi.fn>;
+  addEventListener: Mock<
+    (type: string, listener: (event: NavigateEvent) => void) => void
+  >;
   removeEventListener: ReturnType<typeof vi.fn>;
   navigate: ReturnType<typeof vi.fn>;
 }
 
-let stub: StubNavigation;
+type NavigationStub = Navigation & StubNavigation;
+
+function navigationStub(fake: StubNavigation): NavigationStub {
+  // SAFETY: the service touches only addEventListener, removeEventListener and navigate.
+  return fake as NavigationStub;
+}
+
+let stub: NavigationStub;
 
 /**
  * The spec file's "testable subclass" idiom, extended to the seam: reads the
@@ -30,7 +40,7 @@ let stub: StubNavigation;
  */
 class TestableService extends NavigationLocationService {
   protected override _navigation(): Navigation {
-    return stub as unknown as Navigation;
+    return stub;
   }
 
   testSet(
@@ -53,8 +63,8 @@ function createTestRouter(baseHref = '/'): UIRouter {
 /** The `navigate` listener the service registered, as the stub recorded it. */
 function registeredInterceptor(): (event: NavigateEvent) => void {
   const call = stub.addEventListener.mock.calls.find(
-    (args: unknown[]) => args[0] === 'navigate',
-  ) as [string, (event: NavigateEvent) => void] | undefined;
+    ([type]) => type === 'navigate',
+  );
 
   if (!call) throw new Error('no navigate listener registered');
 
@@ -64,14 +74,21 @@ function registeredInterceptor(): (event: NavigateEvent) => void {
 interface FakeNavigateEvent {
   canIntercept: boolean;
   info?: unknown;
-  intercept: ReturnType<typeof vi.fn>;
+  intercept: Mock<NavigateEvent['intercept']>;
 }
 
 function fakeNavigateEvent(
   info?: { uiRouter: UIRouter },
   canIntercept = true,
-): FakeNavigateEvent {
-  return { canIntercept, info, intercept: vi.fn() };
+): NavigateEvent & FakeNavigateEvent {
+  const fake: FakeNavigateEvent = {
+    canIntercept,
+    info,
+    intercept: vi.fn<NavigateEvent['intercept']>(),
+  };
+
+  // SAFETY: the service reads only canIntercept, info and intercept off a navigate event.
+  return fake as NavigateEvent & FakeNavigateEvent;
 }
 
 describe('NavigationLocationService (stubbed Navigation seam)', () => {
@@ -79,20 +96,21 @@ describe('NavigationLocationService (stubbed Navigation seam)', () => {
   let service: TestableService | null;
 
   beforeEach(() => {
-    stub = {
+    stub = navigationStub({
       addEventListener: vi.fn(),
       removeEventListener: vi.fn(),
       navigate: vi.fn(() => ({
-        committed: Promise.resolve({} as NavigationHistoryEntry),
-        finished: Promise.resolve({} as NavigationHistoryEntry),
+        committed: Promise.resolve({}),
+        finished: Promise.resolve({}),
       })),
-    };
+    });
     service = null;
   });
 
   afterEach(() => {
     service?.dispose(router);
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
   });
 
   describe('constructor', () => {
@@ -230,23 +248,21 @@ describe('NavigationLocationService (stubbed Navigation seam)', () => {
     it('intercepts its own navigation with a resolving handler', async () => {
       const event = fakeNavigateEvent({ uiRouter: router });
 
-      registeredInterceptor()(event as unknown as NavigateEvent);
+      registeredInterceptor()(event);
 
       expect(event.intercept).toHaveBeenCalledWith({
         handler: expect.any(Function),
       });
 
-      const [{ handler }] = event.intercept.mock.calls[0] as [
-        { handler: () => Promise<void> },
-      ];
+      const [options] = event.intercept.mock.calls[0];
 
-      await expect(handler()).resolves.toBeUndefined();
+      await expect(options?.handler?.()).resolves.toBeUndefined();
     });
 
     it('leaves a navigation it cannot intercept alone', () => {
       const event = fakeNavigateEvent({ uiRouter: router }, false);
 
-      registeredInterceptor()(event as unknown as NavigateEvent);
+      registeredInterceptor()(event);
 
       expect(event.intercept).not.toHaveBeenCalled();
     });
@@ -254,7 +270,7 @@ describe('NavigationLocationService (stubbed Navigation seam)', () => {
     it('leaves a navigation it did not start alone', () => {
       const event = fakeNavigateEvent();
 
-      registeredInterceptor()(event as unknown as NavigateEvent);
+      registeredInterceptor()(event);
 
       expect(event.intercept).not.toHaveBeenCalled();
     });
@@ -262,7 +278,7 @@ describe('NavigationLocationService (stubbed Navigation seam)', () => {
     it("leaves another router's navigation alone", () => {
       const event = fakeNavigateEvent({ uiRouter: new UIRouter() });
 
-      registeredInterceptor()(event as unknown as NavigateEvent);
+      registeredInterceptor()(event);
 
       expect(event.intercept).not.toHaveBeenCalled();
     });
@@ -285,7 +301,7 @@ describe('NavigationLocationService (stubbed Navigation seam)', () => {
     it('hands what the option returns to event.intercept', () => {
       const event = fakeNavigateEvent({ uiRouter: router });
 
-      registeredInterceptor()(event as unknown as NavigateEvent);
+      registeredInterceptor()(event);
 
       expect(intercept).toHaveBeenCalledExactlyOnceWith(event);
       expect(event.intercept).toHaveBeenCalledExactlyOnceWith(interceptOptions);
@@ -304,7 +320,7 @@ describe('NavigationLocationService (stubbed Navigation seam)', () => {
     ])('is not called for a navigation %s', (_, makeEvent) => {
       const event = makeEvent();
 
-      registeredInterceptor()(event as unknown as NavigateEvent);
+      registeredInterceptor()(event);
 
       expect(intercept).not.toHaveBeenCalled();
       expect(event.intercept).not.toHaveBeenCalled();
@@ -313,16 +329,7 @@ describe('NavigationLocationService (stubbed Navigation seam)', () => {
 
   describe('navigationLocationPlugin', () => {
     it('passes its options to the service when router.plugin() installs it', () => {
-      const addEventListener = vi.fn();
-      vi.spyOn(
-        NavigationLocationService.prototype as unknown as {
-          _navigation(): Navigation;
-        },
-        '_navigation',
-      ).mockReturnValue({
-        addEventListener,
-        removeEventListener: vi.fn(),
-      } as unknown as Navigation);
+      vi.stubGlobal('navigation', stub);
       router = createTestRouter();
       const interceptOptions = { handler: async () => {} };
       const intercept = vi.fn(() => interceptOptions);
@@ -333,11 +340,7 @@ describe('NavigationLocationService (stubbed Navigation seam)', () => {
 
       const event = fakeNavigateEvent({ uiRouter: router });
 
-      const call = addEventListener.mock.calls.find(
-        (args: unknown[]) => args[0] === 'navigate',
-      ) as [string, (event: NavigateEvent) => void];
-
-      call[1](event as unknown as NavigateEvent);
+      registeredInterceptor()(event);
 
       expect(plugin.service).toBe(router.locationService);
       expect(event.intercept).toHaveBeenCalledExactlyOnceWith(interceptOptions);

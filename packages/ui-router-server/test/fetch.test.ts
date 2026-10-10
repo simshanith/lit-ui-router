@@ -11,11 +11,9 @@ const routerOf = (verdict: Verdict): ServerRouter => ({
   resolve: () => Promise.resolve(verdict),
 });
 
-// The fetch globals shim (fetch.globals.d.ts) declares only the surface the
-// adapter touches; node's real Response has `.text()` at runtime, so reach it
-// through a cast rather than widening the shim for tests.
+// SAFETY: node's real Response, which the fetch globals shim shadows, has text().
 const bodyText = (res: Response): Promise<string> =>
-  (res as unknown as { text(): Promise<string> }).text();
+  (res as Response & { text(): Promise<string> }).text();
 
 const ORIGIN = 'https://example.test';
 

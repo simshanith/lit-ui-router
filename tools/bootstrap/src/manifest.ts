@@ -44,6 +44,7 @@ export function readManifest(dir: string): PackageManifest | undefined {
     source = readFileSync(file, 'utf8');
   } catch (error) {
     // absent is a caller-level answer; anything else (EACCES, EISDIR) is a bug
+    // SAFETY: readFileSync throws only system errors, which carry `code`
     const code = (error as NodeJS.ErrnoException).code;
 
     if (code === 'ENOENT' || code === 'ENOTDIR') return undefined;
@@ -51,6 +52,7 @@ export function readManifest(dir: string): PackageManifest | undefined {
   }
 
   try {
+    // SAFETY: a package.json is a JSON object and every declared field is optional
     return JSON.parse(source) as PackageManifest;
   } catch (error) {
     throw new Error(`${file}: not valid JSON`, { cause: error });

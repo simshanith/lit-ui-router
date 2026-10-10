@@ -49,6 +49,7 @@ export function parseOpenPrs(raw: unknown): OpenPr[] {
   }
 
   return raw.map((entry, index) => {
+    // SAFETY: Partial claims no field; both are typeof-checked before use
     const pr = entry as Partial<OpenPr>;
 
     if (typeof pr?.number !== 'number' || typeof pr?.baseRefName !== 'string') {

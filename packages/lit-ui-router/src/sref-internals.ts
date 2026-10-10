@@ -2,7 +2,6 @@
 import {
   anyTrueR,
   equals,
-  extend,
   isNumber,
   Param,
   PathNode,
@@ -55,6 +54,7 @@ export interface UiSrefTargetEvent extends CustomEvent<{
  * @internal
  */
 export function uiSrefTargetEvent(targetState: TargetState): UiSrefTargetEvent {
+  // SAFETY: callers dispatch it on the link element, which becomes `target`
   return new CustomEvent(UI_SREF_TARGET_EVENT, {
     bubbles: true,
     composed: true,
@@ -87,6 +87,7 @@ export function uiSrefTargetRemovedEvent(): Event {
 export function srefEventLink(event: Event): Element {
   const origin = event.composedPath()[0];
 
+  // SAFETY: sref listeners sit on elements, and a click targets an element
   return origin instanceof Element ? origin : (event.target as Element);
 }
 
@@ -96,6 +97,7 @@ export function srefEventLink(event: Event): Element {
  * structural compare (arrays, Date by `getTime`, RegExp by source, NaN).
  * @internal
  */
+// SAFETY: both `equals` implementations compare two values and return a boolean
 const paramsEqual = equals as (a: RawParams, b: RawParams) => boolean;
 
 /**
@@ -124,7 +126,7 @@ export function srefTransitionOptions(
     source: 'sref',
   };
 
-  return extend(defaultOpts, opts || {}) as TransitionOptions;
+  return { ...defaultOpts, ...opts };
 }
 
 /**
@@ -229,6 +231,7 @@ const pathMatches = (target: TargetState): Predicate<PathNode[]> => {
     const tailNode = tail(path);
 
     if (!tailNode || tailNode.state !== state) return false;
+    // SAFETY: `paramValues` merges each node's params record
     const paramValues = PathUtils.paramValues(path) as RawParams;
 
     return Param.equals(paramSchema, paramValues, targetParamVals);

@@ -105,9 +105,7 @@ export class MessageTable extends LitElement {
         >
           ${visibleColumns.map(
             (column) =>
-              html`<td>
-                ${this.formattedContent(message, column.name as keyof Message)}
-              </td>`,
+              html`<td>${this.formattedContent(message, column.name)}</td>`,
           )}
         </tr>`,
     );

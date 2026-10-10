@@ -23,6 +23,7 @@ export function dsrForgetFinishedState(
   dsrState: StateOrName,
   finished: string,
 ): void {
+  // SAFETY: DSR_PLUGIN is the name DSRPlugin registers under
   const dsr = router.getPlugin(DSR_PLUGIN) as DSRPlugin | undefined;
 
   // getRedirect falls back to the configured default, so it is never empty

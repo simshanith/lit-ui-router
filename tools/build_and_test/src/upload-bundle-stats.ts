@@ -50,7 +50,7 @@ const readEmittedAssets = async (): Promise<Set<string> | null> => {
   let manifest: Manifest;
 
   try {
-    // vite wrote this file in the same build, so vite's own type describes it.
+    // SAFETY: vite wrote this file in the same build, so vite's own type describes it
     const module = (await import(pathToFileURL(manifestPath).href, {
       with: { type: 'json' },
     })) as { default: Manifest };

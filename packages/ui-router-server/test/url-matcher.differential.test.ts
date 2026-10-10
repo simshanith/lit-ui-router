@@ -24,6 +24,7 @@ import type { UrlMatcherCompileOptions } from '../src/url-matcher.ts';
 // Core-side only: core routes static param defaults through services.$injector
 // (params/param.ts) and throws without one. The standalone matcher is the
 // control group — it never touches an injector.
+// SAFETY: core's static param defaults reach the injector only through invoke().
 services.$injector = {
   invoke: <T>(fn: () => T): T => fn(),
 } as typeof services.$injector;
@@ -307,7 +308,7 @@ const throwCases: {
     label: 'invalid squash policy',
     pattern: '/x/:id',
     options: {
-      params: { id: { value: 'v', squash: 5 as unknown as boolean } },
+      params: { id: { value: 'v', squash: 5 } },
     },
     url: '/x/1',
   },

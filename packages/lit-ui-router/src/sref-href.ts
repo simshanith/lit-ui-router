@@ -155,6 +155,7 @@ export class SrefHrefDirective extends AsyncDirective {
     this.uiRouter = UIRouterLitElement.seekRouter(element);
     this._seekedRouter = true;
     this.parentView = UiView.seekParentView(element);
+    // SAFETY: a 'click' event is a MouseEvent
     element.addEventListener('click', this.onClick as EventListener);
 
     if (this.uiRouter) {
@@ -191,6 +192,7 @@ export class SrefHrefDirective extends AsyncDirective {
       return;
     }
 
+    // SAFETY: `currentTarget` is the link element this listener was added to
     if (clickBelongsToBrowser(event, event.currentTarget as Element)) {
       return;
     }
@@ -213,6 +215,7 @@ export class SrefHrefDirective extends AsyncDirective {
 
   /** @internal */
   disconnected(): void {
+    // SAFETY: a 'click' event is a MouseEvent
     this.element?.removeEventListener('click', this.onClick as EventListener);
     // lit notifies before it removes the nodes: the container still hears this
     this.element?.dispatchEvent(uiSrefTargetRemovedEvent());

@@ -56,4 +56,5 @@ export const EXAMPLES = {
 
 export type ExampleName = keyof typeof EXAMPLES;
 
+// SAFETY: EXAMPLES is a const literal, so its own keys are exactly ExampleName
 export const EXAMPLE_NAMES = Object.keys(EXAMPLES) as ExampleName[];

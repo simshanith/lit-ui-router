@@ -76,7 +76,7 @@ export function assertKnownChannel(
 
   if (
     channel !== undefined &&
-    !(PRERELEASE_CHANNELS as readonly string[]).includes(channel)
+    !PRERELEASE_CHANNELS.some((known) => known === channel)
   ) {
     throw new Error(
       `${subject}: unknown prerelease channel "${channel}" (allowed: ${PRERELEASE_CHANNELS.join(', ')})`,

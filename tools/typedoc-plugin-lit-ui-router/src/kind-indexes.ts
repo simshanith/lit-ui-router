@@ -188,6 +188,7 @@ function linkSidebarGroups(
     ]),
   );
 
+  // SAFETY: typedoc-plugin-markdown writes the sidebar as a SidebarItem array
   const sidebar = JSON.parse(
     fs.readFileSync(sidebarPath, 'utf-8'),
   ) as SidebarItem[];

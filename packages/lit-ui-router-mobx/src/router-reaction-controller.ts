@@ -71,8 +71,7 @@ export class RouterReactionController<T> implements ReactiveController {
     private readonly selector: (store: RouterStore) => T,
     private readonly options: RouterReactionControllerOptions<T> = {},
   ) {
-    // Undefined unless `initialValue` is given, which is the pre-connect
-    // shape either way; the cast keeps `.value` typed `T` for render code.
+    // SAFETY: undefined unless `initialValue` is given, the pre-connect shape either way; `.value` stays `T` for render code.
     this.value = options.initialValue as T;
     host.addController(this);
   }

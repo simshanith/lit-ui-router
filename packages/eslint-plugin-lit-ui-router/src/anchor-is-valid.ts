@@ -13,8 +13,13 @@ import {
   attributePartsOf,
   type CallNode,
   allowElementPartsOf,
+  asNode,
+  asNodes,
   createDirectiveTracker,
   elementPartIndex,
+  isCallExpression,
+  isIdentifier,
+  isObjectExpression,
   LINK_ELEMENTS_SCHEMA,
   linkElementsOf,
   type Node,
@@ -22,7 +27,6 @@ import {
   type Parse5Element,
   propertyNamed,
   type PropertyNode,
-  type Ranged,
   siblingBinding,
 } from './directives.ts';
 
@@ -46,8 +50,8 @@ interface RuleOptions {
 const assignsHref = (call: CallNode, nativeLink: boolean): boolean => {
   const options = call.arguments[2];
 
-  if (options?.type !== 'ObjectExpression') return true;
-  const property = propertyNamed(options as ObjectNode, 'assignHref');
+  if (!isObjectExpression(options)) return true;
+  const property = propertyNamed(options, 'assignHref');
 
   if (property === undefined) return true;
 
@@ -58,8 +62,8 @@ const assignsHref = (call: CallNode, nativeLink: boolean): boolean => {
 };
 
 /** The arguments a fix can rewrite with certainty: one to three, no spread. */
-const plainArguments = (call: CallNode): (Node & Ranged)[] | undefined => {
-  const args = call.arguments as (Node & Ranged)[];
+const plainArguments = (call: CallNode): Node[] | undefined => {
+  const args = call.arguments;
 
   if (args.length === 0 || args.length > 3) return undefined;
 
@@ -70,14 +74,13 @@ const plainArguments = (call: CallNode): (Node & Ranged)[] | undefined => {
 
 /** An object literal a fix can read in full: no spread, no computed key. */
 const plainObject = (node: Node): ObjectNode | undefined => {
-  if (node.type !== 'ObjectExpression') return undefined;
-  const object = node as ObjectNode;
+  if (!isObjectExpression(node)) return undefined;
 
-  const unknowable = object.properties.some(
+  const unknowable = node.properties.some(
     (property) => property.type !== 'Property' || property.computed === true,
   );
 
-  return unknowable ? undefined : object;
+  return unknowable ? undefined : node;
 };
 
 /** Whether an `assignHref` value is one that writes the href anyway. */
@@ -89,14 +92,9 @@ const writesHref = (property: PropertyNode, nativeLink: boolean): boolean => {
 };
 
 /** The options argument, and an `undefined` params placeholder before it. */
-const optionsRange = (
-  args: (Node & Ranged)[],
-): [number, number] | undefined => {
+const optionsRange = (args: Node[]): [number, number] | undefined => {
   const [state, params, options] = args;
-
-  const placeholder =
-    params?.type === 'Identifier' &&
-    (params as { name?: string }).name === 'undefined';
+  const placeholder = isIdentifier(params) && params.name === 'undefined';
 
   const from = (placeholder ? state : params)?.range?.[1];
   const to = options?.range?.[1];
@@ -106,8 +104,8 @@ const optionsRange = (
 
 /** One property, with the separator that joins it to a neighbour. */
 const propertyRange = (
-  properties: (Node & Ranged)[],
-  property: Node & Ranged,
+  properties: Node[],
+  property: Node,
 ): [number, number] | undefined => {
   const at = properties.indexOf(property);
   const next = properties[at + 1];
@@ -158,13 +156,13 @@ const getLiteralAttributeValue = (
   element: Parse5Element,
   attr: string,
   source: SourceCode,
-): string | undefined => {
-  const expr = analyzer.getAttributeValue(element as never, attr, source);
+): string | number | bigint | boolean | RegExp | null | undefined => {
+  const expr = analyzer.getAttributeValue(element, attr, source);
 
   if (expr === null) return undefined;
 
   if (typeof expr !== 'string') {
-    if (expr.type === 'Literal') return expr.value as string | undefined;
+    if (expr.type === 'Literal') return expr.value;
 
     return undefined;
   }
@@ -236,6 +234,7 @@ const anchorIsValid: RuleFor<typeof RULE_NAME> = {
     const tracker = createDirectiveTracker(context);
 
     const ruleOptions: RuleOptions =
+      // SAFETY: the linter validates options against meta.schema before create runs
       (context.options[0] as RuleOptions | undefined) ?? {};
 
     const linkElements = linkElementsOf(context, ruleOptions.linkElements);
@@ -248,7 +247,7 @@ const anchorIsValid: RuleFor<typeof RULE_NAME> = {
     /** The uiSref element parts on an element. */
     const uiSrefsOf = (
       element: Parse5Element,
-      expressions: Node[],
+      expressions: readonly Node[],
     ): CallNode[] => {
       const calls: CallNode[] = [];
 
@@ -258,10 +257,10 @@ const anchorIsValid: RuleFor<typeof RULE_NAME> = {
         if (index === undefined) continue;
         const expression = expressions[index];
 
-        if (expression === undefined) continue;
+        if (!isCallExpression(expression)) continue;
 
         if (tracker.directiveOf(expression) === 'uiSref') {
-          calls.push(expression as CallNode);
+          calls.push(expression);
         }
       }
 
@@ -270,7 +269,7 @@ const anchorIsValid: RuleFor<typeof RULE_NAME> = {
 
     const isNavigable = (
       element: Parse5Element,
-      expressions: Node[],
+      expressions: readonly Node[],
     ): boolean =>
       allowElementParts &&
       uiSrefsOf(element, expressions).some((call) =>
@@ -280,7 +279,7 @@ const anchorIsValid: RuleFor<typeof RULE_NAME> = {
     // ours: the binding is the href, so there is no `assignHref` to opt out of.
     const bindsHref = (
       element: Parse5Element,
-      expressions: Node[],
+      expressions: readonly Node[],
     ): boolean => {
       for (const [index, part] of attributePartsOf(element)) {
         if (part.name !== 'href') continue;
@@ -300,7 +299,7 @@ const anchorIsValid: RuleFor<typeof RULE_NAME> = {
      */
     const toSrefHref = (
       element: Parse5Element,
-      expressions: Node[],
+      expressions: readonly Node[],
     ): Rule.ReportFixer | undefined => {
       if (allowElementParts) return undefined;
       const calls = uiSrefsOf(element, expressions);
@@ -309,9 +308,9 @@ const anchorIsValid: RuleFor<typeof RULE_NAME> = {
       if (call === undefined || calls.length > 1) return undefined;
 
       if (!assignsHref(call, element.name === 'a')) return undefined;
-      const callee = call.callee as Node & Ranged;
-      const start = (call as Ranged).range?.[0];
-      const end = (call as Ranged).range?.[1];
+      const { callee } = call;
+      const start = call.range?.[0];
+      const end = call.range?.[1];
 
       if (start === undefined || end === undefined) return undefined;
       const text = context.sourceCode.getText();
@@ -349,16 +348,15 @@ const anchorIsValid: RuleFor<typeof RULE_NAME> = {
       TaggedTemplateExpression(node) {
         if (!tracker.shouldAnalyse) return;
 
-        if (!tracker.isLitTemplate(node.tag as unknown as Node)) return;
+        if (!tracker.isLitTemplate(asNode(node.tag))) return;
 
         const source = context.sourceCode;
-        const expressions = node.quasi.expressions as unknown as Node[];
+        const expressions = asNodes(node.quasi.expressions);
         const analyzer = TemplateAnalyzer.create(node);
 
         analyzer.traverse({
           // eslint-disable-next-line complexity -- kept in lit-a11y's shape so upstream re-syncs stay a diff
-          enterElement(rawElement) {
-            const element = rawElement as unknown as Parse5Element;
+          enterElement(element) {
             const startTag = element.sourceCodeLocation?.startTag;
 
             // probably a tree correction node

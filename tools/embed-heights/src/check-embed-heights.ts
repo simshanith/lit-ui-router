@@ -58,6 +58,7 @@ async function exampleDirs(): Promise<string[]> {
   return names.sort();
 }
 
+// SAFETY: examples/embeds.ts exports EXAMPLES as a record of this entry shape
 const manifest = (await import(pathToFileURL(MANIFEST).href)) as {
   EXAMPLES: Record<string, { title: string; height: string }>;
 };

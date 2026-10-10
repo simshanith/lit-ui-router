@@ -24,6 +24,7 @@ import { dsrRedirectToDefaultFromWithin } from '../util/dsr-default-redirect-wit
  * The contacts are fetched using a resolve.
  */
 function contactName(transition: Transition) {
+  // SAFETY: only contacts.contact titles with this, and its `contact` resolve yields a Contact
   const { name } = transition.injector().get('contact') as Contact;
 
   return `${name.first} ${name.last}`;
@@ -49,7 +50,7 @@ const contactsState = {
   views: {
     contacts: ((props: UIViewInjectedProps<ContactsResolves>) => {
       return html`<sample-contacts ._uiViewProps=${props}></sample-contacts>`;
-    }) as LitViewDeclarationTemplate,
+    }) satisfies LitViewDeclarationTemplate<ContactsResolves>,
   },
 };
 
@@ -67,7 +68,7 @@ const viewContactState = {
       token: 'contact',
       deps: ['$transition$'],
       resolveFn: async ($transition$: Transition) =>
-        // The untyped SessionStorage fake-REST client resolves a Contact here.
+        // SAFETY: the untyped SessionStorage fake-REST client resolves a Contact here
         ContactsStorage.get(
           $transition$.params().contactId,
         ) as Promise<Contact>,
@@ -96,7 +97,7 @@ const editContactState = {
     // Relatively target the grand-parent-state's $default (unnamed) ui-view
     // This could also have been written using ui-view@state addressing: $default@contacts
     // Or, this could also have been written using absolute ui-view addressing: !$default.contacts.$default
-    '^.^.$default': EditContact as LitViewDeclarationElement,
+    '^.^.$default': EditContact satisfies LitViewDeclarationElement,
   },
 };
 
@@ -109,7 +110,7 @@ const newContactState = {
   name: 'contacts.new',
   url: '/new',
   data: { title: 'New contact' },
-  component: EditContact as LitViewDeclarationElement,
+  component: EditContact satisfies LitViewDeclarationElement,
 };
 
 export const states = [

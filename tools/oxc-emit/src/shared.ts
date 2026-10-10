@@ -59,6 +59,7 @@ interface ComposedMap {
   toString(): string;
 }
 
+// SAFETY: remapping's module.exports is the function with this signature
 const remapping = createRequire(import.meta.url)('@ampproject/remapping') as (
   map: RawMap,
   loader: (source: string) => RawMap | null,

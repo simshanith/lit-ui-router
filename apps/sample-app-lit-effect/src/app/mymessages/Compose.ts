@@ -55,6 +55,7 @@ export class Compose extends LitElement {
   // Equal.equals is reference equality outside Data values.
   messageParam = new RouterRefController(
     this,
+    // SAFETY: the non-URL `message` param is only ever set from a Message (Reply, Forward, Edit)
     (route) => route.params.message as Partial<Message> | undefined,
     {
       equals: isEqual,
@@ -67,6 +68,7 @@ export class Compose extends LitElement {
   // onChange again on every reconnect, and the sticky branch reconnects on
   // the way back in.
   resetMessage(message: Partial<Message> = {}, { force = false } = {}) {
+    // SAFETY: Compose reads only the composed fields; outgoingMessage() and save() stamp the rest
     const pristineMessage = {
       body: '',
       to: '',
@@ -144,6 +146,7 @@ export class Compose extends LitElement {
   handleChangeMessage = (detail: string) => (e: Event) => {
     this.message = {
       ...this.message,
+      // SAFETY: bound only to the <input> and <textarea> fields in render(), both with a string value
       [detail]: (e.target as HTMLInputElement).value,
     };
   };

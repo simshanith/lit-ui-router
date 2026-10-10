@@ -29,6 +29,7 @@ import { routedLitElementRenderer } from './routed-element.js';
  * form used here, where the callback receives `(value, key)`.
  * @internal
  */
+// SAFETY: both `forEach` implementations call back with `(value, key)` for objects
 const forEachValue = forEach as <V>(
   obj: Record<string, V>,
   cb: (value: V, key: string) => void,
@@ -103,7 +104,12 @@ export function isLitViewDeclarationTemplate<
 export function isRoutedLitElement<
   T extends DefaultResolvesType = DefaultResolvesType,
 >(component?: unknown): component is RoutedLitElement<T> {
-  return (component as { prototype: unknown })?.prototype instanceof LitElement;
+  return (
+    (typeof component === 'object' || typeof component === 'function') &&
+    component !== null &&
+    'prototype' in component &&
+    component.prototype instanceof LitElement
+  );
 }
 
 /**
@@ -128,6 +134,7 @@ export function litViewsBuilder<
     };
 
   forEachValue(
+    // SAFETY: lit states declare `views` (or a `component`) as lit view declarations
     viewsObject as Record<string, LitViewDeclaration<T>>,
     function (config: LitViewDeclaration<T>, name: string) {
       let normalizedConfig: NormalizedLitViewDeclaration<T>;

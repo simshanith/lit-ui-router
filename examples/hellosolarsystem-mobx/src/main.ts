@@ -630,6 +630,7 @@ router.transitionService.onSuccess({}, (transition) => {
   if (!state) return; // the root state, which nothing navigates to
 
   // injector(<name>) scopes the lookup to that state's own resolves.
+  // SAFETY: the planet state's `planet` resolve yields a SolarBody
   const body =
     state === 'planet'
       ? (transition.injector(state).get('planet') as SolarBody | undefined)

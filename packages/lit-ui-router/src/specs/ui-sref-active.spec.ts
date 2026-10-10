@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { html, render } from 'lit';
 import { PartInfo, PartType } from 'lit/directive.js';
-import { TargetState, Transition } from '@uirouter/core';
+import { TargetState, Transition, TreeChanges } from '@uirouter/core';
 
 import {
   uiSrefActive,
@@ -23,8 +23,20 @@ import {
   routerGo,
 } from './test-utils.js';
 
-function createPartInfo(type: PartType): PartInfo {
-  return { type } as PartInfo;
+const elementPart: PartInfo = { type: PartType.ELEMENT };
+
+const attributePart: PartInfo = {
+  type: PartType.ATTRIBUTE,
+  name: 'class',
+  tagName: 'a',
+};
+
+function fakeTransition(
+  treeChanges: Partial<TreeChanges>,
+  promise: Promise<void>,
+): Transition {
+  // SAFETY: the directive reads only `treeChanges()` and `promise` off a transition
+  return { treeChanges: () => treeChanges, promise } as Transition;
 }
 
 describe('uiSrefActive directive', () => {
@@ -708,6 +720,7 @@ describe('uiSrefActive directive', () => {
       await tick(50);
       const settled: TransitionStateChange[] = [];
       anchor.addEventListener(TRANSITION_STATE_CHANGE_EVENT, (e) => {
+        // SAFETY: only `createTransitionStateChangeEvent()` dispatches TRANSITION_STATE_CHANGE_EVENT
         settled.push((e as CustomEvent).detail.evt);
       });
 
@@ -1480,13 +1493,13 @@ describe('uiSrefActive directive', () => {
 describe('UiSrefActiveDirective', () => {
   it('should throw when used on non-element part', () => {
     expect(() => {
-      new UiSrefActiveDirective(createPartInfo(PartType.ATTRIBUTE));
+      new UiSrefActiveDirective(attributePart);
     }).toThrow('The `uiSrefActive` directive must be used as an element');
   });
 
   it('should not throw when used on element part', () => {
     expect(() => {
-      new UiSrefActiveDirective(createPartInfo(PartType.ELEMENT));
+      new UiSrefActiveDirective(elementPart);
     }).not.toThrow();
   });
 });
@@ -1615,6 +1628,7 @@ describe('mergeSrefStatus helper', () => {
   });
 
   it('should combine targetStates from both sides', () => {
+    // SAFETY: mergeSrefStatus concatenates target states without reading them
     const targetState = {} as TargetState;
 
     const left: SrefStatus = {
@@ -1657,7 +1671,7 @@ describe('UiSrefActiveDirective methods', () => {
     element = document.createElement('div');
     uiRouter.appendChild(element);
 
-    directive = new UiSrefActiveDirective(createPartInfo(PartType.ELEMENT));
+    directive = new UiSrefActiveDirective(elementPart);
     directive.element = element;
     directive.uiRouter = router;
 
@@ -1709,16 +1723,16 @@ describe('UiSrefActiveDirective methods', () => {
 
       const targetState = router.stateService.target('home', {}, {});
 
-      const trans = {
-        treeChanges: () => ({
+      const trans = fakeTransition(
+        {
           to: [],
           from: [],
           retained: [],
           entering: [],
           exiting: [],
-        }),
-        promise: Promise.resolve(),
-      } as unknown as Transition;
+        },
+        Promise.resolve(),
+      );
 
       const event: any = { evt: 'start', trans, status: undefined };
       const status = directive.getSrefStatus(event, targetState);
@@ -1799,20 +1813,14 @@ describe('UiSrefActiveDirective methods', () => {
     it('should dispatch start event', () => {
       const dispatchEventSpy = vi.spyOn(element, 'dispatchEvent');
 
-      const trans = {
-        treeChanges: () => ({}),
-        promise: Promise.resolve(),
-      } as unknown as Transition;
+      const trans = fakeTransition({}, Promise.resolve());
 
       directive.onTransitionStart(trans);
       expect(dispatchEventSpy).toHaveBeenCalled();
     });
 
     it('should dispatch an error event when the transition rejects', async () => {
-      const trans = {
-        treeChanges: () => ({}),
-        promise: Promise.reject(new Error('aborted')),
-      } as unknown as Transition;
+      const trans = fakeTransition({}, Promise.reject(new Error('aborted')));
 
       // the directive handles it; this keeps the spec's own read handled too
       trans.promise.catch(() => {});
@@ -1821,6 +1829,7 @@ describe('UiSrefActiveDirective methods', () => {
       const dispatchEventSpy = vi.spyOn(element, 'dispatchEvent');
       await tick();
 
+      // SAFETY: the directive dispatches only `createTransitionStateChangeEvent()` events
       const [event] = dispatchEventSpy.mock.calls[0] as [CustomEvent];
       expect(event.detail.evt).toBe(TransitionStateChange.error);
     });
@@ -1829,10 +1838,10 @@ describe('UiSrefActiveDirective methods', () => {
     it('should stay quiet when the transition settles after a disconnect', async () => {
       let settle!: () => void;
 
-      const trans = {
-        treeChanges: () => ({}),
-        promise: new Promise<void>((resolve) => (settle = resolve)),
-      } as unknown as Transition;
+      const trans = fakeTransition(
+        {},
+        new Promise<void>((resolve) => (settle = resolve)),
+      );
 
       directive.onTransitionStart(trans);
       const dispatchEventSpy = vi.spyOn(element, 'dispatchEvent');
@@ -1876,16 +1885,16 @@ describe('UiSrefActiveDirective methods', () => {
         paramValues: {},
       };
 
-      const trans = {
-        treeChanges: () => ({
+      const trans = fakeTransition(
+        {
           to: [pathNode],
           from: [],
           retained: [],
           entering: [],
           exiting: [],
-        }),
-        promise: Promise.resolve(),
-      } as unknown as Transition;
+        },
+        Promise.resolve(),
+      );
 
       const event: any = {
         evt: 'success',
@@ -1893,7 +1902,9 @@ describe('UiSrefActiveDirective methods', () => {
         status: undefined,
       };
 
-      directive.onTransitionStateChange({ detail: event } as any);
+      directive.onTransitionStateChange(
+        new CustomEvent(TRANSITION_STATE_CHANGE_EVENT, { detail: event }),
+      );
       await tick();
       expect(directive.active).toBeDefined();
     });
@@ -1901,19 +1912,21 @@ describe('UiSrefActiveDirective methods', () => {
     it('should return early when status is undefined', () => {
       const event: any = {
         evt: 'success',
-        trans: {} as Transition,
+        trans: {},
         status: undefined,
       };
 
       directive.active = undefined;
-      directive.onTransitionStateChange({ detail: event } as any);
+      directive.onTransitionStateChange(
+        new CustomEvent(TRANSITION_STATE_CHANGE_EVENT, { detail: event }),
+      );
       expect(directive.active).toBeUndefined();
     });
   });
 
   describe('onUiSrefTargetEvent', () => {
     it('should add targetState to targetStates set', () => {
-      const targetState = router.stateService.target('home', {}, {}) as any;
+      const targetState = router.stateService.target('home', {}, {});
 
       const event: any = {
         detail: { targetState },

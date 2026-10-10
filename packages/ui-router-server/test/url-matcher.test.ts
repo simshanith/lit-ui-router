@@ -123,6 +123,7 @@ describe('explicit rejections (fail at compile, never diverge silently)', () => 
     assert.throws(
       () =>
         urlMatcherFactory({
+          // oxlint-disable-next-line anti-slop/no-chained-type-assertions, anti-slop/require-safety-comment-for-type-assertion -- deliberately ill-typed policy exercises the runtime check
           defaultSquashPolicy: 5 as unknown as boolean,
         }),
       /Invalid squash policy/,
@@ -187,6 +188,15 @@ describe('format', () => {
     assert.equal(format(compile('/x/:id', params(true)), { id: '7' }), '/x/7');
   });
 
+  it('squashes a date default by calendar day', () => {
+    const matcher = compile('/x/{d:date}', {
+      params: { d: { value: new Date(2024, 0, 2), squash: true } },
+    });
+
+    assert.equal(format(matcher, { d: new Date(2024, 0, 2, 15) }), '/x');
+    assert.equal(format(matcher, { d: new Date(2024, 0, 3) }), '/x/2024-01-03');
+  });
+
   it('omits absent search params and appends a hash fragment', () => {
     const matcher = compile('/search?q&r');
     assert.equal(format(matcher, {}), '/search');
@@ -199,7 +209,7 @@ describe('format', () => {
     const params = { folderId: 'inbox', messageId: 5 };
     const url = format(matcher, params);
     assert.equal(url, '/mymessages/inbox/5');
-    assert.deepEqual(exec(matcher, url as string), params);
+    assert.deepEqual(exec(matcher, url), params);
   });
 });
 

@@ -272,6 +272,7 @@ export function parseWarnLaneMarker(line: string): WarnLaneState | undefined {
 
   // Every field, not just the two this function reads: `warnLaneLine`
   // dereferences the rest, so a partial payload reaches it as a typed lie.
+  // SAFETY: `state` escapes only after the checks below confirm every field
   const state = value as WarnLaneState;
 
   if (

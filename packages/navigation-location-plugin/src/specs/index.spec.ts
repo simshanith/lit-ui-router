@@ -9,6 +9,12 @@ import {
 } from '../index.js';
 import { interceptNavigations, restoreUrl } from './real-navigation.js';
 
+declare global {
+  interface Window {
+    __sameDocumentMarker?: object;
+  }
+}
+
 /**
  * Check if the Navigation API is available in this browser.
  * The Navigation API is only supported in Chromium-based browsers.
@@ -91,7 +97,7 @@ describe.skipIf(!hasNavigationAPI)('NavigationLocationService', () => {
   });
 
   it('fires onChange listeners from a real currententrychange event', async () => {
-    const onChange = vi.fn();
+    const onChange = vi.fn<EventListener>();
     service!.onChange(onChange);
 
     service!.url('/listener-path');
@@ -100,7 +106,7 @@ describe.skipIf(!hasNavigationAPI)('NavigationLocationService', () => {
       expect(onChange).toHaveBeenCalled();
     });
     // the callback receives the real NavigationCurrentEntryChangeEvent
-    const [event] = onChange.mock.calls[0] as [Event];
+    const [event] = onChange.mock.calls[0];
     expect(event.type).toBe('currententrychange');
   });
 
@@ -172,23 +178,21 @@ describe.skipIf(!hasNavigationAPI)(
 
     it('commits its own navigation same-document', async () => {
       const marker = {};
-      const holder = window as unknown as { __sameDocumentMarker?: object };
-      holder.__sameDocumentMarker = marker;
+      window.__sameDocumentMarker = marker;
 
       service!.url('/self-intercepted');
 
       await vi.waitFor(() => {
         expect(window.location.pathname).toBe('/self-intercepted');
       });
-      expect(holder.__sameDocumentMarker).toBe(marker);
+      expect(window.__sameDocumentMarker).toBe(marker);
     });
 
     it('lets the intercept option govern when the navigation finishes', async () => {
       service?.dispose(router);
       service = null;
       const marker = {};
-      const holder = window as unknown as { __sameDocumentMarker?: object };
-      holder.__sameDocumentMarker = marker;
+      window.__sameDocumentMarker = marker;
       let handled = false;
 
       const plugin = navigationLocationPlugin(router, {
@@ -208,7 +212,7 @@ describe.skipIf(!hasNavigationAPI)(
 
         expect(handled).toBe(true);
         expect(window.location.pathname).toBe('/option-intercepted');
-        expect(holder.__sameDocumentMarker).toBe(marker);
+        expect(window.__sameDocumentMarker).toBe(marker);
       } finally {
         plugin.dispose?.(router);
       }

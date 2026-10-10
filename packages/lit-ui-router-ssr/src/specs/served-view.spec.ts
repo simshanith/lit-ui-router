@@ -17,6 +17,7 @@ import '../register.js';
 type View = ServedUiView;
 
 /** `document.createElement`, typed as the class `lit-ui-router-ssr/register` defined. */
+// SAFETY: `lit-ui-router-ssr/register` defines `ui-view` as the served class.
 const makeView = (): View => document.createElement('ui-view') as View;
 
 const tick = (ms = 0): Promise<void> =>
@@ -82,7 +83,7 @@ describe('the served <ui-view>', () => {
     container.append(uiRouterEl);
     uiRouterEl.innerHTML = `<ui-view ${attributes}>${markup}</ui-view>`;
 
-    return uiRouterEl.querySelector('ui-view') as View;
+    return uiRouterEl.querySelector<View>('ui-view')!;
   }
 
   /** Mounts one view under a `<ui-router>`, parent first, the way an upgrade order allows. */
@@ -146,7 +147,7 @@ describe('the served <ui-view>', () => {
       // Parsed with the attribute already on it, the way server output arrives.
       uiRouterEl.innerHTML =
         '<ui-view defer-hydration><p class="server">server</p></ui-view>';
-      const uiView = uiRouterEl.querySelector('ui-view') as View;
+      const uiView = uiRouterEl.querySelector<View>('ui-view')!;
       await waitForUpdate(uiView);
 
       expect(uiView.deferHydration).toBe(true);
@@ -295,6 +296,7 @@ describe('the served <ui-view>', () => {
       let seenHeld: Element | null = null;
 
       const adopt = vi.fn((view: AdoptableView) => {
+        // SAFETY: only a waking `<ui-view>` requests the adopter.
         const woken = view as UiView;
         seenRouter = woken.uiRouter;
         seenHasUpdated = woken.hasUpdated;
@@ -524,6 +526,7 @@ describe('the served <ui-view>', () => {
         expect(uiView.querySelector('.home-content')).not.toBeNull();
 
         // And what stood ahead of it is the fallback set, parked while a component renders.
+        // SAFETY: the fallback this markup authors is a lone `<p>`.
         const fallbackNodes = uiView['fallbackNodes'] as Element[];
         expect(fallbackNodes).toHaveLength(1);
         expect(fallbackNodes[0].className).toBe('hold');
@@ -588,6 +591,7 @@ describe('the served <ui-view>', () => {
       try {
         router = createTestRouter(homeStates);
         const uiView = mountHeld('defer-hydration', servedMarkup);
+        // SAFETY: a `<ui-view>` clones through the same registered class.
         const clone = uiView.cloneNode(true) as View;
         // The walk wakes the served view in the task it connected in, and never sees the clone.
         uiView.removeAttribute('defer-hydration');
@@ -763,6 +767,7 @@ describe('the served <ui-view>', () => {
     it('should capture only what stands ahead of the render it holds', async () => {
       const uiView = await wakeHolding(`<p class="hold">hold</p>${heldMarkup}`);
 
+      // SAFETY: the fallback this markup authors is a lone `<p>`.
       const fallbackNodes = uiView['fallbackNodes'] as Element[];
       expect(fallbackNodes.map((node) => node.className)).toEqual(['hold']);
       expect(uiView.querySelector('p.held')).not.toBeNull();
@@ -797,7 +802,7 @@ describe('the served <ui-view>', () => {
         uninstall();
       }
 
-      const fallbackNodes = uiView['fallbackNodes'] as Element[];
+      const fallbackNodes = uiView['fallbackNodes'];
       expect(fallbackNodes).toHaveLength(1);
       expect(fallbackNodes[0]).toBe(hold);
       expect(uiView.querySelectorAll('p.hold')).toHaveLength(1);

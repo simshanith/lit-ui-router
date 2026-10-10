@@ -6,7 +6,6 @@
 import { readFile, stat } from 'node:fs/promises';
 import { createServer, type Server } from 'node:http';
 import { extname, join, normalize } from 'node:path';
-import type { AddressInfo } from 'node:net';
 import { chromium, type Page } from 'playwright';
 
 import { COLUMN_WIDTH_PX } from './reserve.core.ts';
@@ -79,7 +78,11 @@ export async function serveExamples(examplesDir: string): Promise<Server> {
 }
 
 export function serverOrigin(server: Server): string {
-  const address = server.address() as AddressInfo;
+  const address = server.address();
+
+  if (address === null || typeof address === 'string') {
+    throw new Error('server is not listening on a TCP port');
+  }
 
   return `http://127.0.0.1:${address.port}`;
 }

@@ -27,6 +27,7 @@ describe('custom element connect order in a real browser', () => {
     parent.innerHTML =
       '<parser-connect-probe><span>child</span></parser-connect-probe>';
 
+    // SAFETY: the parser upgrades <parser-connect-probe>, defined above
     const child = parent.firstElementChild as ParserConnectProbe;
     expect(child.childCountAtConnect).toBe(1);
 
@@ -41,6 +42,7 @@ describe('custom element connect order in a real browser', () => {
     probe.appendChild(document.createElement('span'));
     parent.appendChild(probe);
 
+    // SAFETY: createElement upgrades <parser-connect-probe>, defined above
     expect((probe as ParserConnectProbe).childCountAtConnect).toBe(1);
 
     parent.remove();

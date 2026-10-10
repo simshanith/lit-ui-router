@@ -59,6 +59,12 @@ class CanaryInnerHTML extends HTMLElement {
 
 customElements.define('canary-inner-html', CanaryInnerHTML);
 
+declare global {
+  interface HTMLElementTagNameMap {
+    'canary-inner-html': CanaryInnerHTML;
+  }
+}
+
 describe('happy-dom innerHTML conformance canary', () => {
   it('connects a custom element parsed by innerHTML with 0 children', () => {
     const parent = document.createElement('div');
@@ -67,8 +73,8 @@ describe('happy-dom innerHTML conformance canary', () => {
     parent.innerHTML =
       '<canary-inner-html><span>child</span></canary-inner-html>';
 
-    const child = parent.firstElementChild as CanaryInnerHTML;
-    expect(child.childCountAtConnect).toBe(0);
+    const child = parent.querySelector('canary-inner-html');
+    expect(child?.childCountAtConnect).toBe(0);
   });
 
   it('setInnerHTMLDetached connects it with its children present', () => {
@@ -80,7 +86,7 @@ describe('happy-dom innerHTML conformance canary', () => {
       '<canary-inner-html><span>child</span></canary-inner-html>',
     );
 
-    const child = parent.firstElementChild as CanaryInnerHTML;
-    expect(child.childCountAtConnect).toBe(1);
+    const child = parent.querySelector('canary-inner-html');
+    expect(child?.childCountAtConnect).toBe(1);
   });
 });

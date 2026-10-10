@@ -36,6 +36,7 @@ type Fixtures = {
   driftScenario: { driftedDeployCommand: string; expectedDrifts: Drift[] };
 };
 
+// SAFETY: the checked-in fixture file is authored in the Fixtures shape
 const { triggers, driftScenario } = JSON.parse(
   await readFile(
     join(import.meta.dirname, 'workers-builds-triggers.fixtures.json'),

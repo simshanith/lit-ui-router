@@ -45,7 +45,7 @@ export function failureAnnotation(
   data: TestFail,
   cwd: string,
 ): string | undefined {
-  const error = data.details.error as TestFailure;
+  const error: TestFailure = data.details.error;
 
   if (data.file === undefined) return undefined;
 

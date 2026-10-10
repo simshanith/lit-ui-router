@@ -87,6 +87,7 @@ async function cf(
     body: init ? JSON.stringify(init.body) : undefined,
   });
 
+  // SAFETY: every Cloudflare v4 API response, error or not, is this envelope
   const envelope = (await response.json()) as CloudflareEnvelope;
 
   if (!response.ok || envelope.success === false) {
@@ -107,6 +108,7 @@ async function workerTag(
   accountId: string,
   name: string,
 ): Promise<string> {
+  // SAFETY: workers/scripts results are script objects carrying id and tag
   const scripts = (await cf(token, `/${accountId}/workers/scripts`)) as {
     id?: string;
     tag?: string;
@@ -128,6 +130,7 @@ async function getTriggers(
   accountId: string,
   tag: string,
 ): Promise<Trigger[]> {
+  // SAFETY: the triggers endpoint returns trigger objects; Trigger is a subset
   const triggers = (await cf(
     token,
     `/${accountId}/builds/workers/${tag}/triggers`,
@@ -139,6 +142,7 @@ async function getTriggers(
         ? trigger
         : {
             ...trigger,
+            // SAFETY: this sub-resource returns the trigger's variable map
             environment_variables: (await cf(
               token,
               `/${accountId}/builds/triggers/${trigger.trigger_uuid}/environment_variables`,

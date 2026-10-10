@@ -45,6 +45,7 @@ export const readPackageProbe = (packageDir: string): PackageProbe => {
     ...Object.keys(manifest.peerDependencies ?? {}),
   ];
 
+  // SAFETY: bundleProbe, when present, is hand-authored as BundleProbeClaims
   const claims = (manifest as { bundleProbe?: BundleProbeClaims }).bundleProbe;
 
   const entries: PackageEntry[] = [];

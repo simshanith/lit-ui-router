@@ -5,18 +5,18 @@ import { withoutNothing } from './without-nothing.ts';
 
 type Type = Parameters<typeof withoutNothing>[0];
 
-const nothing = { kind: 'ES_SYMBOL_UNIQUE', value: '__@nothing@12345' } as Type;
+const nothing: Type = { kind: 'ES_SYMBOL_UNIQUE', value: '__@nothing@12345' };
 
-const str = { kind: 'STRING' } as Type;
+const str: Type = { kind: 'STRING' };
 
-const num = { kind: 'NUMBER' } as Type;
+const num: Type = { kind: 'NUMBER' };
 
-const otherSymbol = {
+const otherSymbol: Type = {
   kind: 'ES_SYMBOL_UNIQUE',
   value: '__@noChange@7',
-} as Type;
+};
 
-const union = (...types: Type[]) => ({ kind: 'UNION', types }) as Type;
+const union = (...types: Type[]): Type => ({ kind: 'UNION', types });
 
 describe('withoutNothing', () => {
   it('leaves a non-union alone', () => {
@@ -32,11 +32,11 @@ describe('withoutNothing', () => {
   });
 
   it('recurses through an alias, keeping the wrapper', () => {
-    const alias = {
+    const alias: Type = {
       kind: 'ALIAS',
       name: 'AriaCurrent',
       target: union(str, nothing),
-    } as Type;
+    };
 
     assert.deepEqual(withoutNothing(alias), {
       kind: 'ALIAS',

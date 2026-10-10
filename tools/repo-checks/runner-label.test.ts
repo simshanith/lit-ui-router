@@ -53,6 +53,7 @@ const workflows = trackedFiles(
   '.github/workflows/*.yaml',
 );
 
+// SAFETY: actionlint holds workflows to the Actions schema, which Workflow subsets
 const jobs = workflows.flatMap((workflow) =>
   Object.entries((parse(load(workflow)) as Workflow).jobs ?? {})
     .filter(([, job]) => job.uses === undefined)
@@ -67,6 +68,7 @@ const used = [
   ),
 ].sort();
 
+// SAFETY: actionlint's config schema lists self-hosted labels as strings
 const declared = [
   ...((parse(load(actionlintConfig)) as ActionlintConfig)['self-hosted-runner']
     ?.labels ?? []),

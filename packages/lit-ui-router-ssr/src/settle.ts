@@ -84,8 +84,10 @@ export const settle = (
       reject(reason);
     };
 
+    // SAFETY: hook registration returns its deregistration function, typed only as `Function`.
     const offSuccess = transitionService.onSuccess({}, land) as () => void;
 
+    // SAFETY: hook registration returns its deregistration function, typed only as `Function`.
     const offError = transitionService.onError({}, (transition) => {
       const rejection = transition.error();
 
@@ -126,6 +128,7 @@ export const settle = (
         );
 
       // Core's state rule starts nothing when the url's href is the current one.
+      // SAFETY: a `STATE` rule is core's `StateRule`, and its match is the url's param values.
       if (
         best.rule.type === 'STATE' &&
         globals.successfulTransitions.size() > 0 &&

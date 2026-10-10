@@ -32,6 +32,7 @@ export class NavElement extends LitElement {
   private readonly params = new RefController(
     this,
     [this.route, this.count],
+    // SAFETY: the `id` param, when present, is a string-typed path param
     (route, count) => ({ id: route.params.id as string | undefined, count }),
     { equals: structuralEquals },
   );

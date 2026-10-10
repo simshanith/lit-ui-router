@@ -23,6 +23,7 @@ export class Preferences extends LitElement {
     document.location.reload();
   };
   handleRestDelayChange = (e: Event) => {
+    // SAFETY: bound only to the restDelay <input>
     this.restDelay = Number((e.target as HTMLInputElement).value);
   };
   render() {

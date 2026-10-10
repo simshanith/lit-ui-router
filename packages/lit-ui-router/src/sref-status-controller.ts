@@ -268,11 +268,13 @@ export class SrefStatusController implements ReactiveController {
 
     // links announce themselves from inside the render root, if there is one;
     // listened for in named mode too, since `retarget({})` can drop the name
+    // SAFETY: a LitElement host's `renderRoot` is an EventTarget; other hosts lack it
     const scope: EventTarget =
       (host as { renderRoot?: EventTarget }).renderRoot ?? host;
 
     scope.addEventListener(
       UI_SREF_TARGET_EVENT,
+      // SAFETY: only `uiSrefTargetEvent()` dispatches UI_SREF_TARGET_EVENT
       this.onUiSrefTargetEvent as EventListener,
     );
     scope.addEventListener(
@@ -282,6 +284,7 @@ export class SrefStatusController implements ReactiveController {
     this.deregisterFns.push(() => {
       scope.removeEventListener(
         UI_SREF_TARGET_EVENT,
+        // SAFETY: only `uiSrefTargetEvent()` dispatches UI_SREF_TARGET_EVENT
         this.onUiSrefTargetEvent as EventListener,
       );
       scope.removeEventListener(
@@ -320,6 +323,7 @@ export class SrefStatusController implements ReactiveController {
   }
 
   private watch(router: UIRouter): void {
+    // SAFETY: hook registration returns its deregistration function
     this.routerDeregisterFns.push(
       router.transitionService.onStart({}, this.onTransitionStart, {
         priority: -Infinity,

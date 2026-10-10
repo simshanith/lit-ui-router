@@ -23,6 +23,7 @@ const COMMENT_NODE = 8 satisfies Node['COMMENT_NODE'];
  */
 const isRenderMarker = (node: ChildNode | null): boolean => {
   if (!node || node.nodeType !== COMMENT_NODE) return false;
+  // SAFETY: `nodeType` is `COMMENT_NODE`, checked above.
   const { data } = node as Comment;
 
   return data === '' || data.includes('lit-part');
@@ -82,7 +83,8 @@ export const isServedViewClass = (
   constructor: CustomElementConstructor | undefined,
 ): boolean =>
   !!constructor &&
-  (constructor as Partial<ServedUiViewConstructor>)[servedViewBrand] === true;
+  servedViewBrand in constructor &&
+  constructor[servedViewBrand] === true;
 
 /**
  * Adds the served-render side of `<ui-view>` to `Base`.

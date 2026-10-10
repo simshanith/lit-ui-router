@@ -11,7 +11,9 @@ export function orderBy(predicate: string) {
 
   return (a: Message, b: Message) => {
     let result = 0;
+    // SAFETY: sort predicates name fields every message carries
     const valA = a[predicate] as string | number | boolean;
+    // SAFETY: as for valA
     const valB = b[predicate] as string | number | boolean;
 
     if (valA < valB) result = -1;

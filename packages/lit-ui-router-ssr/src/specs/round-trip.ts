@@ -1,5 +1,4 @@
 // The round trip both client lanes run: draw a document on the server, serve it into a live container, boot a client into it.
-import { expect } from 'vitest';
 import type { RenderInfo } from '@lit-labs/ssr';
 import type { TemplateResult } from 'lit';
 import type { UIRouterLit } from 'lit-ui-router/pure';
@@ -28,14 +27,15 @@ export const draw = async (
 // happy-dom parses `<template shadowrootmode>` as a plain template, where a browser's parser would attach a shadow root; lit's own hydrate support arms on `shadowRoot` being there.
 const attachShadowRoots = (root: ParentNode): void => {
   for (const template of [
-    ...root.querySelectorAll('template[shadowrootmode]'),
+    ...root.querySelectorAll<HTMLTemplateElement>('template[shadowrootmode]'),
   ]) {
     const host = template.parentElement;
 
     if (!host) continue;
+    // SAFETY: the server writes `shadowrootmode` as a `ShadowRootMode` keyword.
     const mode = template.getAttribute('shadowrootmode') as ShadowRootMode;
     const shadow = host.attachShadow({ mode });
-    shadow.append((template as HTMLTemplateElement).content);
+    shadow.append(template.content);
     template.remove();
     attachShadowRoots(shadow);
   }
@@ -84,6 +84,7 @@ export const comments = (container: HTMLElement): string[] => {
   const found: string[] = [];
 
   for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    // SAFETY: a `SHOW_COMMENT` walker yields only comments.
     found.push((node as Comment).data);
   }
 
@@ -101,6 +102,7 @@ export const dropViewNodeMarkers = (container: HTMLElement): number => {
   const doomed: Comment[] = [];
 
   for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    // SAFETY: a `SHOW_COMMENT` walker yields only comments.
     const comment = node as Comment;
 
     if (!/^(ui-view:)?lit-node \d+$/.test(comment.data)) continue;
@@ -127,9 +129,10 @@ export const hydrateInto = async (
   const router = makeRouter();
   await settle(router, path);
   const release = hydrateRoot(container, page(router));
-  expect(release).toBeTypeOf('function');
 
-  return { router, release: release as () => void };
+  if (!release) throw new Error('hydrateRoot left the container cold');
+
+  return { router, release };
 };
 
 /**

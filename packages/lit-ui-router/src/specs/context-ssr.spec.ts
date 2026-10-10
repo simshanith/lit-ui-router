@@ -14,6 +14,7 @@ import {
 import { UIRouterLit } from '../core.js';
 
 // The @lit-labs/ssr DOM shim: no elements, so a provider on its root answers every request.
+// SAFETY: the @lit-labs/ssr DOM shim installs `litServerRoot` on globalThis
 const litServerRoot = (globalThis as { litServerRoot?: EventTarget })
   .litServerRoot;
 

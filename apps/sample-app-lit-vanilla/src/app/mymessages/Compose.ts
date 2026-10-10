@@ -53,12 +53,14 @@ export class Compose extends LitElement {
     criteria: { to: 'mymessages.compose' },
     callback: (transition, reason) =>
       this.resetMessage(
+        // SAFETY: the non-URL `message` param is only ever set from a Message (Reply, Forward, Edit)
         transition?.params().message as Partial<Message> | undefined,
         { force: reason === 'hostConnected' },
       ),
   });
 
   resetMessage(message: Partial<Message> = {}, { force = false } = {}) {
+    // SAFETY: Compose reads only the composed fields; outgoingMessage() and save() stamp the rest
     const pristineMessage = {
       body: '',
       to: '',
@@ -136,6 +138,7 @@ export class Compose extends LitElement {
   handleChangeMessage = (detail: string) => (e: Event) => {
     this.message = {
       ...this.message,
+      // SAFETY: bound only to the <input> and <textarea> fields in render(), both with a string value
       [detail]: (e.target as HTMLInputElement).value,
     };
   };

@@ -57,8 +57,7 @@ export class ReactionController<T> implements ReactiveController {
     private readonly expression: () => T,
     private readonly options: ReactionControllerOptions<T> = {},
   ) {
-    // Undefined unless `initialValue` is given, which is the pre-connect
-    // shape either way; the cast keeps `.value` typed `T` for render code.
+    // SAFETY: undefined unless `initialValue` is given, the pre-connect shape either way; `.value` stays `T` for render code.
     this.value = options.initialValue as T;
     host.addController(this);
   }

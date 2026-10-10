@@ -62,6 +62,7 @@ export type AdoptUiViewContext = Context<
  *
  * @category client
  */
+// SAFETY: the adopter brand is type-only; the frozen key object is the whole runtime value.
 export const adoptUiViewContext: AdoptUiViewContext = Object.freeze({
   name: 'lit-ui-router-ssr/context#adopt-ui-view',
 }) as AdoptUiViewContext;

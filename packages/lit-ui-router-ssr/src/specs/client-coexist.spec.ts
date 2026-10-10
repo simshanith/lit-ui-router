@@ -27,6 +27,7 @@ const shadowComments = (container: HTMLElement): string[] => {
   const found: string[] = [];
 
   for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    // SAFETY: a `SHOW_COMMENT` walker yields only comments.
     found.push((node as Comment).data);
   }
 
@@ -67,7 +68,7 @@ describe('alongside lit’s own hydrate support', () => {
 
     await boot(container, badgeRootTemplate, '/shell/detail');
 
-    const badge = container.querySelector('shadow-badge') as ShadowBadge;
+    const badge = container.querySelector<ShadowBadge>('shadow-badge')!;
     // The same node, so lit adopted the server's shadow render rather than re-rendering over it.
     expect(badgeSpan(container)).toBe(server);
     expect(

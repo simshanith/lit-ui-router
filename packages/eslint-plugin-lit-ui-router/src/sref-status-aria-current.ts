@@ -2,19 +2,31 @@
 // host raw status flags so `classMap` can compose them; nothing about that
 // writes `aria-current`, so a link painted from `this.users.active` is active
 // for CSS only, exactly the gap the srefActiveClass rule closes for directives.
+import type { Rule } from 'eslint';
 import type { RuleFor } from './rule-shape.ts';
 import { TemplateAnalyzer } from 'eslint-plugin-lit/lib/template-analyzer.js';
 import {
+  asNode,
+  asNodes,
   attributeEnd,
   attributePartsOf,
   createDirectiveTracker,
   hasAriaCurrent,
   isLinkElement,
+  isMemberExpression,
   LINK_ELEMENTS_SCHEMA,
   linkElementsOf,
   type Node,
-  type Parse5Element,
+  toEstree,
 } from './directives.ts';
+
+type ClassMember = Parameters<
+  NonNullable<Rule.NodeListener['ClassBody']>
+>[0]['body'][number];
+
+type MethodNode = Extract<ClassMember, { type: 'MethodDefinition' }>;
+
+type FieldNode = Extract<ClassMember, { type: 'PropertyDefinition' }>;
 
 /** The class binding in both spellings: the attribute, and the property lit maps it to. */
 const CLASS_ATTRIBUTES = new Set(['class', '.classname']);
@@ -24,51 +36,32 @@ const ATTRIBUTE_PART = /\{\{__q:(\d+)__\}\}/gi;
 
 export const RULE_NAME = 'sref-status-aria-current';
 
-/** A class member, structurally: `static` and a key that may be private. */
-interface MemberNode extends Node {
-  static?: boolean;
-  computed?: boolean;
-  key?: Node & { name?: string };
-  value?: Node | null;
-  kind?: string;
-}
-
-/** The field key a controller is held under: `users`, or `#users` when private. */
-const keyOf = (member: MemberNode): string | undefined => {
-  if (member.computed === true) return undefined;
-  const { key } = member;
-
-  if (key?.name === undefined) return undefined;
-
-  return key.type === 'PrivateIdentifier' ? `#${key.name}` : key.name;
-};
-
-/** The same key read off `this.users` / `this.#users`, or nothing. */
-const thisKeyOf = (node: Node): string | undefined => {
-  if (node.type !== 'MemberExpression') return undefined;
-
-  const target = node as MemberNode & {
-    object?: Node;
-    property?: Node & { name?: string };
-  };
-
-  if (target.computed === true) return undefined;
-
-  if (target.object?.type !== 'ThisExpression') return undefined;
-  const { property } = target;
-
-  if (property?.name === undefined) return undefined;
-
-  return property.type === 'PrivateIdentifier'
-    ? `#${property.name}`
-    : property.name;
-};
-
 /** Whether a value off an AST node is itself a node. */
 const isNode = (value: unknown): value is Node =>
   typeof value === 'object' &&
   value !== null &&
-  typeof (value as { type?: unknown }).type === 'string';
+  'type' in value &&
+  typeof value.type === 'string';
+
+/** A key's name, `#`-prefixed when private; nothing for a key with no name. */
+const nameOf = (key: Node): string | undefined => {
+  if (typeof key.name !== 'string') return undefined;
+
+  return key.type === 'PrivateIdentifier' ? `#${key.name}` : key.name;
+};
+
+/** The field key a controller is held under: `users`, or `#users` when private. */
+const keyOf = (member: FieldNode): string | undefined =>
+  member.computed ? undefined : nameOf(asNode(member.key));
+
+/** The same key read off `this.users` / `this.#users`, or nothing. */
+const thisKeyOf = (node: Node): string | undefined => {
+  if (!isMemberExpression(node) || node.computed === true) return undefined;
+
+  if (node.object.type !== 'ThisExpression') return undefined;
+
+  return nameOf(node.property);
+};
 
 /**
  * A child key that carries a *reference*. A non-computed member property and a
@@ -77,7 +70,7 @@ const isNode = (value: unknown): value is Node =>
  */
 const isReferenceKey = (node: Node, key: string): boolean => {
   if (key === 'parent') return false;
-  const computed = (node as MemberNode).computed === true;
+  const computed = node.computed === true;
 
   if (node.type === 'MemberExpression' && key === 'property') return computed;
 
@@ -148,6 +141,7 @@ const srefStatusAriaCurrent: RuleFor<typeof RULE_NAME> = {
     const tracker = createDirectiveTracker(context);
 
     const { linkElements: option } =
+      // SAFETY: the linter validates options against meta.schema before create runs
       (context.options[0] as { linkElements?: string[] } | undefined) ?? {};
 
     const linkElements = linkElementsOf(context, option);
@@ -157,29 +151,23 @@ const srefStatusAriaCurrent: RuleFor<typeof RULE_NAME> = {
     const fields: Set<string>[] = [];
 
     // Top-level constructor statements only; branches and callbacks don't count.
-    const constructorFields = (member: MemberNode): string[] => {
+    const constructorFields = (member: MethodNode): string[] => {
       const keys: string[] = [];
 
-      const body = (member.value as { body?: { body?: Node[] } } | null)?.body
-        ?.body;
+      // A `declare class` constructor parses with a null body, which ESTree's types omit.
+      const block: MethodNode['value']['body'] | null | undefined =
+        member.value?.body;
 
-      for (const statement of body ?? []) {
+      for (const statement of block?.body ?? []) {
         if (statement.type !== 'ExpressionStatement') continue;
+        const assignment = statement.expression;
 
-        const assignment = statement.expression as
-          | (Node & { operator?: string; left?: Node; right?: Node })
-          | undefined;
-
-        if (assignment?.type !== 'AssignmentExpression') continue;
+        if (assignment.type !== 'AssignmentExpression') continue;
 
         if (assignment.operator !== '=') continue;
 
-        if (!tracker.isControllerNew(assignment.right)) continue;
-
-        const key =
-          assignment.left === undefined
-            ? undefined
-            : thisKeyOf(assignment.left);
+        if (!tracker.isControllerNew(asNode(assignment.right))) continue;
+        const key = thisKeyOf(asNode(assignment.left));
 
         if (key !== undefined) keys.push(key);
       }
@@ -195,20 +183,20 @@ const srefStatusAriaCurrent: RuleFor<typeof RULE_NAME> = {
       ClassBody(node) {
         const held = new Set<string>();
 
-        for (const raw of node.body) {
-          const member = raw as unknown as MemberNode;
-
-          if (member.static === true) continue;
+        for (const member of node.body) {
+          if (member.type === 'StaticBlock' || member.static) continue;
 
           if (member.type === 'PropertyDefinition') {
-            if (!tracker.isControllerNew(member.value)) continue;
+            const { value } = member;
+
+            if (value === null || value === undefined) continue;
+
+            if (!tracker.isControllerNew(asNode(value))) continue;
             const key = keyOf(member);
 
             if (key !== undefined) held.add(key);
             continue;
           }
-
-          if (member.type !== 'MethodDefinition') continue;
 
           if (member.kind !== 'constructor') continue;
 
@@ -225,10 +213,10 @@ const srefStatusAriaCurrent: RuleFor<typeof RULE_NAME> = {
       TaggedTemplateExpression(node) {
         if (!tracker.shouldAnalyse) return;
 
-        if (!tracker.isLitTemplate(node.tag as unknown as Node)) return;
+        if (!tracker.isLitTemplate(asNode(node.tag))) return;
 
         const source = context.sourceCode;
-        const expressions = node.quasi.expressions as unknown as Node[];
+        const expressions = asNodes(node.quasi.expressions);
         const analyzer = TemplateAnalyzer.create(node);
         const held = fields.at(-1) ?? new Set<string>();
 
@@ -246,9 +234,7 @@ const srefStatusAriaCurrent: RuleFor<typeof RULE_NAME> = {
           });
 
         analyzer.traverse({
-          enterElement(rawElement) {
-            const element = rawElement as unknown as Parse5Element;
-
+          enterElement(element) {
             // probably a tree correction node
             if (element.sourceCodeLocation === undefined) return;
             const tag = element.name;
@@ -270,7 +256,7 @@ const srefStatusAriaCurrent: RuleFor<typeof RULE_NAME> = {
                 const reference = controllerIn(expression);
 
                 if (reference === undefined) continue;
-                const controller = source.getText(reference as never);
+                const controller = source.getText(toEstree(reference));
                 // One report per element: the remedy is a single binding, and a
                 // second insert would land on the same point.
                 context.report({

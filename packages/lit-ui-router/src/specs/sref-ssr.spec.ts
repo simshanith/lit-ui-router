@@ -11,6 +11,7 @@ import { srefActiveClass, srefAriaCurrent } from '../sref-active.js';
 import { srefHref } from '../sref-href.js';
 
 // @lit-labs/ssr's root event target: what `provideRouter` serves elements from.
+// SAFETY: the @lit-labs/ssr DOM shim installs `litServerRoot` on globalThis
 const litServerRoot = (globalThis as { litServerRoot?: EventTarget })
   .litServerRoot;
 
