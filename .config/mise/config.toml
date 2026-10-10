@@ -252,7 +252,8 @@ run = [
 
 [tasks.ci_main]
 # Superset of `ci` (same env contract): adds the main-only guard tasks
-# (@tools/release#check:pack, @tools/dts-backtest#test:matrix) to the graph.
+# (@tools/release#check:pack, @tools/dts-backtest#test:matrix) to the graph,
+# and the axe pass after the Cypress suites (it doubled their time alongside).
 depends = ["turbo_force_guard"]
 description = "Run the main-push CI pipeline via turbo"
 usage = '''
@@ -262,6 +263,7 @@ run = [
   "mise run //tools/build_and_test:mark_session",
   "turbo run ci:main --ui=stream --log-order=stream --summarize --output-logs=\"${usage_output_logs?}\"",
   "TURBO_OUTPUT_LOGS=\"${usage_output_logs?}\" mise run test_e2e",
+  "TURBO_OUTPUT_LOGS=\"${usage_output_logs?}\" mise run test_e2e a11y",
 ]
 
 [tasks.test_e2e]

@@ -35,7 +35,7 @@ if (unknown.length > 0) {
   process.exit(1);
 }
 
-// Run only when named: CI runs the axe pass with the main graph (a11y-run.yml).
+// Run only when named: `ci_main` runs the axe pass after the Cypress suites.
 const NAMED_ONLY = ['a11y'];
 
 const selected =
