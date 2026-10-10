@@ -2,7 +2,7 @@ import { describe, it, expect, afterEach, vi } from 'vitest';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { UIRouterLit, UIRouterLitElement } from 'lit-ui-router';
-import { isRouterContextRequest } from 'lit-ui-router/context';
+import { isRouterContextRequest, withRouterSync } from 'lit-ui-router/context';
 
 import { RouterSignalController } from '../router-signal-controller.js';
 import { RouterSignals } from '../router-signals.js';
@@ -224,6 +224,273 @@ describe('RouterSignalController', () => {
     await waitForUpdate(host);
     expect(controller.value).toBe('b');
   });
+
+  it('reads an explicit router at construction, before connect', async () => {
+    const router = createTestRouter(testStates);
+    await routerGo(router, 'a');
+
+    const host = createHost();
+    const controller = new RouterSignalController(
+      host,
+      (route) => route.current.get()?.name,
+      { router },
+    );
+
+    expect(controller.value).toBe('a');
+    expect(controller.signals).toBe(RouterSignals.for(router));
+  });
+
+  it('reads the router withRouterSync scoped at construction', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    cleanups.push(() => warn.mockRestore());
+    const router = createTestRouter(testStates);
+    await routerGo(router, 'a');
+
+    const host = createHost();
+    const controller = withRouterSync(
+      router,
+      () =>
+        new RouterSignalController(host, (route) => route.current.get()?.name, {
+          initialValue: 'INIT',
+        }),
+    );
+
+    expect(controller.value).toBe('a');
+
+    document.body.appendChild(host);
+    cleanups.push(() => host.remove());
+    await waitForUpdate(host);
+    await routerGo(router, 'b', { id: '1' });
+
+    expect(controller.value).toBe('b');
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it('prefers an explicit router over the scoped one', async () => {
+    const scoped = createTestRouter(testStates);
+    await routerGo(scoped, 'a');
+    const explicit = createTestRouter(testStates);
+    await routerGo(explicit, 'b', { id: '1' });
+
+    const controller = withRouterSync(
+      scoped,
+      () =>
+        new RouterSignalController(
+          createHost(),
+          (route) => route.current.get()?.name,
+          { router: explicit },
+        ),
+    );
+
+    expect(controller.value).toBe('b');
+  });
+
+  describe('setRouter', () => {
+    it('rebinds while connected and updates the host', async () => {
+      const first = createTestRouter(testStates);
+      await routerGo(first, 'a');
+      const second = createTestRouter(testStates);
+      await routerGo(second, 'b', { id: '1' });
+      const onChange = vi.fn();
+      const host = createHost();
+      const controller = new RouterSignalController(
+        host,
+        (route) => route.current.get()?.name,
+        { onChange },
+      );
+      await mountInRouter(host, first);
+      const rendersBefore = host.renderCount;
+
+      controller.setRouter(second);
+      expect(controller.value).toBe('b');
+      expect(controller.signals).toBe(RouterSignals.for(second));
+      expect(onChange).toHaveBeenLastCalledWith('b');
+      await waitForUpdate(host);
+      expect(host.renderCount).toBeGreaterThan(rendersBefore);
+
+      await routerGo(first, 'b', { id: '2' });
+      await routerGo(second, 'b.child', { id: '1' });
+      expect(controller.value).toBe('b.child');
+      await routerGo(second, 'a');
+      expect(controller.value).toBe('a');
+    });
+
+    it('starts watching after a failed seek while connected', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      cleanups.push(() => warn.mockRestore());
+      const router = createTestRouter(testStates);
+      await routerGo(router, 'a');
+      const host = createHost();
+      const controller = new RouterSignalController(
+        host,
+        (route) => route.current.get()?.name,
+        { initialValue: 'none' },
+      );
+      document.body.appendChild(host);
+      cleanups.push(() => host.remove());
+      await waitForUpdate(host);
+      expect(controller.value).toBe('none');
+
+      controller.setRouter(router);
+      expect(controller.value).toBe('a');
+      await routerGo(router, 'b', { id: '1' });
+      expect(controller.value).toBe('b');
+    });
+
+    it('records the router for the next hostConnected while disconnected', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      cleanups.push(() => warn.mockRestore());
+      const router = createTestRouter(testStates);
+      await routerGo(router, 'a');
+      const host = createHost();
+      const controller = new RouterSignalController(
+        host,
+        (route) => route.current.get()?.name,
+        { initialValue: 'none' },
+      );
+
+      controller.setRouter(router);
+      expect(controller.value).toBe('none');
+
+      document.body.appendChild(host);
+      cleanups.push(() => host.remove());
+      await waitForUpdate(host);
+      expect(controller.value).toBe('a');
+      expect(warn).not.toHaveBeenCalled();
+
+      await routerGo(router, 'b', { id: '1' });
+      expect(controller.value).toBe('b');
+    });
+
+    it('is a no-op for the router it already follows', async () => {
+      const router = createTestRouter(testStates);
+      await routerGo(router, 'a');
+      const onChange = vi.fn();
+      const explicitHost = createHost();
+      const explicit = new RouterSignalController(
+        explicitHost,
+        (route) => route.current.get()?.name,
+        { router, onChange },
+      );
+      const soughtHost = createHost();
+      const sought = new RouterSignalController(
+        soughtHost,
+        (route) => route.current.get()?.name,
+        { onChange },
+      );
+      await mountInRouter(explicitHost, router);
+      await mountInRouter(soughtHost, router);
+      expect(onChange).toHaveBeenCalledTimes(2);
+
+      explicit.setRouter(router);
+      sought.setRouter(router);
+
+      expect(onChange).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe('router thunk', () => {
+    it('resolves at construction, before connect', async () => {
+      const router = createTestRouter(testStates);
+      await routerGo(router, 'a');
+
+      const controller = new RouterSignalController(
+        createHost(),
+        (route) => route.current.get()?.name,
+        { router: () => router },
+      );
+
+      expect(controller.value).toBe('a');
+    });
+
+    it('resolves again on each hostConnected', async () => {
+      const first = createTestRouter(testStates);
+      await routerGo(first, 'a');
+      const second = createTestRouter(testStates);
+      await routerGo(second, 'b', { id: '1' });
+      let current: UIRouterLit | undefined;
+      const host = createHost();
+      const controller = new RouterSignalController(
+        host,
+        (route) => route.current.get()?.name,
+        { router: () => current, initialValue: 'none' },
+      );
+      expect(controller.value).toBe('none');
+
+      current = first;
+      document.body.appendChild(host);
+      cleanups.push(() => host.remove());
+      await waitForUpdate(host);
+      expect(controller.value).toBe('a');
+
+      host.remove();
+      current = second;
+      document.body.appendChild(host);
+      await waitForUpdate(host);
+      expect(controller.value).toBe('b');
+
+      await routerGo(first, 'b', { id: '2' });
+      await routerGo(second, 'a');
+      expect(controller.value).toBe('a');
+    });
+
+    it('keeps the router it follows when a later resolution is undefined', async () => {
+      const router = createTestRouter(testStates);
+      await routerGo(router, 'a');
+      let current: UIRouterLit | undefined = router;
+      const host = createHost();
+      const controller = new RouterSignalController(
+        host,
+        (route) => route.current.get()?.name,
+        { router: () => current },
+      );
+      document.body.appendChild(host);
+      cleanups.push(() => host.remove());
+      await waitForUpdate(host);
+
+      host.remove();
+      current = undefined;
+      document.body.appendChild(host);
+      await waitForUpdate(host);
+      await routerGo(router, 'b', { id: '1' });
+
+      expect(controller.value).toBe('b');
+    });
+
+    it('falls back to the <ui-router> context when it returns undefined', async () => {
+      const router = createTestRouter(testStates);
+      await routerGo(router, 'a');
+      const host = createHost();
+      const controller = new RouterSignalController(
+        host,
+        (route) => route.current.get()?.name,
+        { router: () => undefined },
+      );
+      expect(controller.value).toBeUndefined();
+
+      await mountInRouter(host, router);
+
+      expect(controller.value).toBe('a');
+    });
+
+    it('warns and no-ops when it returns undefined without a context', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      cleanups.push(() => warn.mockRestore());
+      const host = createHost();
+      const controller = new RouterSignalController(
+        host,
+        (route) => route.current.get()?.name,
+        { router: () => undefined, initialValue: 'none' },
+      );
+      document.body.appendChild(host);
+      cleanups.push(() => host.remove());
+      await waitForUpdate(host);
+
+      expect(controller.value).toBe('none');
+      expect(warn).toHaveBeenCalledTimes(1);
+      expect(warn.mock.calls[0]?.[1]).toBe(host);
+    });
+  });
 });
 
 /**
@@ -418,6 +685,32 @@ describe('RouterSignalController router upgrade', () => {
     provider.upgrade(other);
     expect(controller.signals).toBe(RouterSignals.for(router));
     expect(controller.value).toBe('a');
+  });
+
+  it('drops the subscription when setRouter hands it a router', async () => {
+    const placeholder = createOwnRouter();
+    const other = createOwnRouter();
+    const chosen = createOwnRouter();
+    await routerGo(chosen, 'b', { id: '2' });
+
+    const host = createHost();
+    const controller = new RouterSignalController(host, (route) =>
+      String(route.params.get().id ?? route.current.get()?.name),
+    );
+    const provider = await mountInStub(host, placeholder);
+    provider.ignoreUnsubscribe = true;
+    expect(provider.subscribers.size).toBe(1);
+
+    controller.setRouter(chosen);
+    provider.upgrade(other);
+    expect(controller.signals).toBe(RouterSignals.for(chosen));
+    expect(controller.value).toBe('2');
+
+    host.remove();
+    provider.appendChild(host);
+    await waitForUpdate(host);
+    expect(provider.subscribers.size).toBe(0);
+    expect(controller.value).toBe('2');
   });
 
   it('falls back to the house ui-router-context event', async () => {
