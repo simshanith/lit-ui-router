@@ -1,6 +1,7 @@
 packages:
   - apps/*
   - packages/*
+  - packages/shared/*
   - tools/*
   - www/lit-ui-router.dev
   - examples

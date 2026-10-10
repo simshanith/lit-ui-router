@@ -16,7 +16,8 @@
   "files": [
     "dist/**",
     "!dist/.*/**",
-    "src/*.ts"
+    "src/*.ts",
+    "src/shared/*.ts"
   ],
   "type": "module",
   "sideEffects": false,

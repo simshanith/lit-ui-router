@@ -108,6 +108,19 @@
         "$TURBO_ROOT$/pnpm-workspace.yaml"
       ]
     },
+    "check:shared-source": {
+      // the canonical sources and every consumer's copies of them
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/packages/shared/*/src/**",
+        "$TURBO_ROOT$/packages/*/src/shared/**"
+      ]
+    },
+    // WRITER into other packages' src/shared/, uncacheable for the same reason
+    // as `format:oxfmt`; run it alone.
+    "sync:shared-source": {
+      "cache": false
+    },
     "check:task-inputs": {
       // the audit is over every planned task, so any turbo.json or manifest
       // can change the verdict
