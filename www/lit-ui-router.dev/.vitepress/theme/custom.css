@@ -123,7 +123,7 @@
   container-type: inline-size;
 }
 
-/* One grid cell stacks the glow under the logo; both centre on it. Stacked, the logo spans two of the feature cards' three columns. */
+/* One grid cell stacks the glow under the logo; both centre on it. Stacked, the logo is 2/3 of the width, then 1/2 from 768px. */
 .VPHero.has-image .image-container {
   --hero-logo-size: calc((200cqi - 1rem) / 3);
   display: grid;
@@ -164,6 +164,12 @@
 /* The home page has no footer to clear; VitePress's 6–8rem bottom margin only adds scroll. */
 .VPHome.VPHome {
   margin-block-end: 1.5rem;
+}
+
+@media (min-width: 768px) {
+    .VPHero.has-image .image-container {
+      --hero-logo-size: calc((100cqi - 1rem) / 2);
+    }
 }
 
 html.chrome .VPHero .VPImage {
