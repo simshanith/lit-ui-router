@@ -16,7 +16,9 @@ function titleOf(transition: Transition) {
   // StateDeclaration.data is `any`; titles are set in the state declarations.
   const title = (transition.to().data as { title?: RouteTitle } | undefined)
     ?.title;
+
   const text = typeof title === 'function' ? title(transition) : title;
+
   return text ? `${text} — ${APP_TITLE}` : APP_TITLE;
 }
 
@@ -26,6 +28,7 @@ const visible = (element: Element | null) =>
 
 function focusLost() {
   const active = document.activeElement;
+
   return !active || active === document.body || !visible(active);
 }
 
@@ -33,6 +36,7 @@ function focusViewHeading() {
   const heading = [...document.querySelectorAll<HTMLElement>('main h1')].find(
     visible,
   );
+
   heading?.focus();
 }
 
@@ -47,13 +51,16 @@ export default function routeFocusHook(transitionService: TransitionService) {
       document.title = titleOf(transition);
 
       const from = transition.from();
+
       if (!from.name) return;
       const sectionChanged = sectionOf(from) !== sectionOf(transition.to());
 
       // ui-views render in microtasks after onSuccess; a task runs after them
       setTimeout(() => {
         const { globals } = transition.router;
+
         if (globals.successfulTransitions.peekTail() !== transition) return;
+
         if (sectionChanged || focusLost()) {
           focusViewHeading();
         }
