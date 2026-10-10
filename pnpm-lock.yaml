@@ -445,7 +445,9 @@ overrides:
 packageExtensionsChecksum: sha256-8F/PUxRGPfzeR7JNosA48W0ZCgKrtYLtVZi24XY7zcw=
 
 patchedDependencies:
-  '@api-viewer/docs': 6cfa0893375a4ba334488a5b9e4a56178c62231d864b5271bf4c7a25a0e4f9ac
+  '@api-viewer/docs': c6c7a1ebb74597e0dd7dc19971feaf6f3db19f2f05b57efc350682d93a412098
+  '@api-viewer/tabs': efaf5cff6c9c2374e2b5cb22f9f886d43efec2cbd201e743a638bbe1f989b83e
+  '@uirouter/visualizer': 74bfbc33376d1b01d6d2cc8f661de8c05ee57615c8ee376ff5a5af7ce2cc42df
   braces: bfdb0c171556074c2785f98d0a7355209223df8e29dbc2ff489240c16a47da97
   lit-dialog: 37ea59e3d9469863602cc50f6df73c8ed55814caae1f875ac8f0fa9e45d65a37
 
@@ -742,7 +744,7 @@ importers:
     dependencies:
       '@api-viewer/docs':
         specifier: 'catalog:'
-        version: 1.0.0-pre.10(patch_hash=6cfa0893375a4ba334488a5b9e4a56178c62231d864b5271bf4c7a25a0e4f9ac)
+        version: 1.0.0-pre.10(patch_hash=c6c7a1ebb74597e0dd7dc19971feaf6f3db19f2f05b57efc350682d93a412098)
       '@uirouter/core':
         specifier: 'catalog:'
         version: 6.1.2
@@ -754,7 +756,7 @@ importers:
         version: 1.5.1(@uirouter/core@6.1.2)
       '@uirouter/visualizer':
         specifier: 'catalog:'
-        version: 7.2.1(@uirouter/core@6.1.2)
+        version: 7.2.1(patch_hash=74bfbc33376d1b01d6d2cc8f661de8c05ee57615c8ee376ff5a5af7ce2cc42df)(@uirouter/core@6.1.2)
       lit:
         specifier: 'catalog:'
         version: 3.3.3
@@ -8198,10 +8200,10 @@ snapshots:
       lit: 3.3.3
       tslib: 2.8.1
 
-  '@api-viewer/docs@1.0.0-pre.10(patch_hash=6cfa0893375a4ba334488a5b9e4a56178c62231d864b5271bf4c7a25a0e4f9ac)':
+  '@api-viewer/docs@1.0.0-pre.10(patch_hash=c6c7a1ebb74597e0dd7dc19971feaf6f3db19f2f05b57efc350682d93a412098)':
     dependencies:
       '@api-viewer/common': 1.0.0-pre.10
-      '@api-viewer/tabs': 1.0.0-pre.10
+      '@api-viewer/tabs': 1.0.0-pre.10(patch_hash=efaf5cff6c9c2374e2b5cb22f9f886d43efec2cbd201e743a638bbe1f989b83e)
       '@types/dompurify': 2.4.0
       '@types/marked': 4.3.2
       dompurify: 3.4.16
@@ -8209,7 +8211,7 @@ snapshots:
       marked: 4.3.0
       tslib: 2.8.1
 
-  '@api-viewer/tabs@1.0.0-pre.10':
+  '@api-viewer/tabs@1.0.0-pre.10(patch_hash=efaf5cff6c9c2374e2b5cb22f9f886d43efec2cbd201e743a638bbe1f989b83e)':
     dependencies:
       '@api-viewer/common': 1.0.0-pre.10
 
@@ -10211,7 +10213,7 @@ snapshots:
     dependencies:
       '@uirouter/core': 6.1.2
 
-  '@uirouter/visualizer@7.2.1(@uirouter/core@6.1.2)':
+  '@uirouter/visualizer@7.2.1(patch_hash=74bfbc33376d1b01d6d2cc8f661de8c05ee57615c8ee376ff5a5af7ce2cc42df)(@uirouter/core@6.1.2)':
     dependencies:
       '@uirouter/core': 6.1.2
       d3-hierarchy: 2.0.0

@@ -49,10 +49,12 @@ The files under [`patches/`](./patches/) are small diffs applied to installed
 dependencies at install time; each is a modification of the named package and
 is offered under that package's license.
 
-| Patch                             | Package                      | License |
-| --------------------------------- | ---------------------------- | ------- |
-| `patches/@api-viewer__docs.patch` | `@api-viewer/docs` (open-wc) | MIT     |
-| `patches/lit-dialog.patch`        | `lit-dialog` (magethle)      | ISC     |
+| Patch                                 | Package                            | License |
+| ------------------------------------- | ---------------------------------- | ------- |
+| `patches/@api-viewer__docs.patch`     | `@api-viewer/docs` (open-wc)       | MIT     |
+| `patches/@api-viewer__tabs.patch`     | `@api-viewer/tabs` (open-wc)       | MIT     |
+| `patches/@uirouter__visualizer.patch` | `@uirouter/visualizer` (UI-Router) | MIT     |
+| `patches/lit-dialog.patch`            | `lit-dialog` (magethle)            | ISC     |
 
 ## Brand marks
 
