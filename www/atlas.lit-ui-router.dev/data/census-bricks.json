@@ -1,10 +1,10 @@
 {
   "ref": "origin/main",
-  "sha": "9e656ab3",
-  "commitDate": "2026-10-10T12:32:14-07:00",
-  "generatedAtTime": "2026-10-10T19:44:42.940Z",
+  "sha": "76ccefc0",
+  "commitDate": "2026-10-10T12:45:38-07:00",
+  "generatedAtTime": "2026-10-10T20:53:21.533Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-bricks.mjs",
-  "used": "www/atlas.lit-ui-router.dev/data/census-files.json @ 9e656ab3",
+  "used": "www/atlas.lit-ui-router.dev/data/census-files.json @ 76ccefc0",
   "wasAssociatedWith": [
     "scc 4.0.0 (mise x aqua:boyter/scc)",
     "codeload.github.com ui-router/core@6.1.2 source tarball"

@@ -1,14 +1,14 @@
 {
   "ref": "origin/main",
-  "sha": "9e656ab3",
-  "commitDate": "2026-10-10T12:32:14-07:00",
-  "generatedAtTime": "2026-10-10T19:44:43.390Z",
+  "sha": "76ccefc0",
+  "commitDate": "2026-10-10T12:45:38-07:00",
+  "generatedAtTime": "2026-10-10T20:53:21.959Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-weather.mjs",
-  "used": "www/atlas.lit-ui-router.dev/data/census-files.json @ 9e656ab3",
+  "used": "www/atlas.lit-ui-router.dev/data/census-files.json @ 76ccefc0",
   "wasAssociatedWith": [
     "git log (historyLog)"
   ],
-  "today": "2026-10-10T12:32:14-07:00",
+  "today": "2026-10-10T12:45:38-07:00",
   "members": [
     {"member":"packages/eslint-plugin-lit-ui-router","files":25,"medAge":38,"medIdle":1,"touches":114,"perFile":4.6,"oldestFirst":"2026-09-01","newestFirst":"2026-10-03","idlestFile":"packages/eslint-plugin-lit-ui-router/src/rule-shape.ts","idlestDays":37,"hotFile":"packages/eslint-plugin-lit-ui-router/src/anchor-is-valid.ts","hotTouches":13},
     {"member":"packages/lit-ui-router","files":52,"medAge":58,"medIdle":1,"touches":369,"perFile":7.1,"oldestFirst":"2025-07-21","newestFirst":"2026-10-09","idlestFile":"packages/lit-ui-router/src/register.ts","idlestDays":92,"hotFile":"packages/lit-ui-router/src/ui-sref.ts","hotTouches":28},

@@ -1,10 +1,10 @@
 {
   "ref": "origin/main",
-  "sha": "9e656ab3",
-  "commitDate": "2026-10-10T12:32:14-07:00",
-  "generatedAtTime": "2026-10-10T19:49:07.289Z",
+  "sha": "76ccefc0",
+  "commitDate": "2026-10-10T12:45:38-07:00",
+  "generatedAtTime": "2026-10-10T20:58:43.281Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-shadow.mjs",
-  "used": "git archive origin/main @ 9e656ab3 + pnpm install --frozen-lockfile --silent (mise-provisioned pnpm)",
+  "used": "git archive origin/main @ 76ccefc0 + pnpm install --frozen-lockfile --silent (mise-provisioned pnpm)",
   "wasAssociatedWith": [
     "turbo 2.11.7",
     "node v24.21.0",

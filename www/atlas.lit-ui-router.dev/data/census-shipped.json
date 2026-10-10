@@ -1,10 +1,10 @@
 {
   "ref": "origin/main",
-  "sha": "9e656ab3",
-  "commitDate": "2026-10-10T12:32:14-07:00",
-  "generatedAtTime": "2026-10-10T19:47:58.173Z",
+  "sha": "76ccefc0",
+  "commitDate": "2026-10-10T12:45:38-07:00",
+  "generatedAtTime": "2026-10-10T20:57:42.714Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-shipped.mjs",
-  "used": "git archive origin/main @ 9e656ab3 + pnpm install --frozen-lockfile --silent (mise-provisioned pnpm) + turbo run build -> www/lit-ui-router.dev/dist",
+  "used": "git archive origin/main @ 76ccefc0 + pnpm install --frozen-lockfile --silent (mise-provisioned pnpm) + turbo run build -> www/lit-ui-router.dev/dist",
   "wasAssociatedWith": [
     "pnpm (mise-provisioned)",
     "turbo",
@@ -18,13 +18,13 @@
   ],
   "totals": {
     "files": 898,
-    "rawBytes": 32023943,
-    "gzBytes": 5019566
+    "rawBytes": 32024314,
+    "gzBytes": 5019761
   },
   "rows": [
     {"district":"inter fonts","files":16,"gz":868670,"top":{"name":"assets/inter-italic-latin-ext.Dm0n7MN1.woff2","gz":141087}},
     {"district":"html pages","files":239,"gz":1817914,"top":{"name":"guides/server-route-matching.html","gz":40272}},
-    {"district":"examples","files":22,"gz":1073654,"top":{"name":"examples/hellogalaxy/assets/model-viewer-C8EVMy8l.js","gz":281843}},
+    {"district":"examples","files":22,"gz":1073849,"top":{"name":"examples/hellogalaxy/assets/model-viewer-COI-aTNF.js","gz":281842}},
     {"district":"page chunks","files":460,"gz":465541,"top":{"name":"assets/guides_server-route-matching.md.o3XEa3oZ.js","gz":25845}},
     {"district":"vp framework","files":13,"gz":237806,"top":{"name":"assets/chunks/@localSearchIndexroot.Dkt8eTxa.js","gz":122201}},
     {"district":"images","files":99,"gz":146010,"top":{"name":"images/lit-ui-router.png","gz":68708}},

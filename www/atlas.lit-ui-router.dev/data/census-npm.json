@@ -1,7 +1,7 @@
 {
   "ref": "origin/main",
-  "sha": "9e656ab3",
-  "generatedAtTime": "2026-10-10T19:44:49.983Z",
+  "sha": "76ccefc0",
+  "generatedAtTime": "2026-10-10T20:53:29.369Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-npm.mjs",
   "used": "npm view <pkg> version time dist-tags (registry.npmjs.org)",
   "wasAssociatedWith": [

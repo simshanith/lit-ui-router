@@ -119,11 +119,11 @@ sitting); order is dependency order.
 - A late T3 probe's `generatedAtTime` can land on the next UTC day while `commitDate` stays
   put. That is honest — only `commitDate` drives the title blocks
   (`generator/chrome.mjs::DATE`).
-- `census-upstream.mjs` is a live-registry station like `census-npm.mjs`: it reads GitHub search,
-  the repo's PR and issue conversations (GraphQL, reviews included), `git log <ref>`, both
-  bugzillas and npm, and runs in seconds with no install. Pass the cabinet's ref string, and
-  expect `prior`, stars, downloads and upstream states to move between refreshes even at a fixed
-  sha.
+- `census-upstream.mjs` is a live-registry station: it reads the repo's PRs/issues/comments/reviews
+  (GraphQL, bot text excluded) and `git log <ref>` for citations of other projects' issues/PRs and
+  the Firefox/WebKit bugzillas, then resolves each upstream; pass the cabinet's ref string. Expect
+  states, stars and downloads to move between refreshes at a fixed sha, and Discussions
+  (turborepo) to file as `missing`.
 - THE NEW-MEMBER CHECKLIST — the one manual step a refresh has. A workspace member born
   since the last cabinet needs a row in: sheet 3B's `TERRACE` (`generator/sheet3b.mjs`),
   sheet 7's `PLACED` (`generator/sheet7.mjs`, which 7B imports), sheet 13's `PLACED`
@@ -515,6 +515,39 @@ sitting); order is dependency order.
   gz; nm 173,820 lines / 41,155 d.ts; mass3b 13,307 hashes over 235 real tasks and 3,029 command
   sloc; the ci graph 864 / 235 / 3,024 edges; steam 643 commits; weather 448 dated files; 7A 11,937
   of 19,307 metered sloc lit over 25 members.
+- 2026-10-10 — THE FIFTEENTH REFRESH, at `origin/main` @ 76ccefc0 (commit 2026-10-10), all 18 plates
+  re-run at the one ref: one commit past the fourteenth, #1184, which bumped the examples to
+  `lit-ui-router` ^1.16.3 and the adapter and plugin patches — 14 files, all
+  `examples/*/package{,-lock}.json`. SHEET 14'S PLATE JOINED THE CABINET: `census-upstream.json` is
+  filed at the same ref as the other seventeen, and the survey office reads 18 probes, 18 plates, 22
+  drawings (A2i 75 nodes, 108 edges). NO member was born, no checklist table took a row, and the
+  yard reads `orphans 0`. The registry is unmoved under `latest` and no other tag; `census-npm.mjs`
+  filed 0 leaf changes.
+  NO PROBE NEEDED A HAND, and no guard threw on the cabinet's data: the loop's 52 cites hold, 0
+  moved; `census-mass3b.mjs` printed its same three `check:dev-split` DRIFT lines,
+  `census-shipped.mjs` no unclassified file, and `census-shadow.mjs` its same two FAIL lines.
+  FOURTEEN PLATES RE-FILED WITHOUT A FIGURE MOVING — bricks, bundle, city, couplings, doors, files,
+  handoff, loop, mass3b, nm, plate, shadow, steam and yard — only `generatedAtTime`, `used` and
+  `commitDate` changed on them. WHAT MOVED: shipped, on the examples' manifests, 32,024,314 raw /
+  5,019,761 gz (was 32,023,943 / 5,019,566), the examples district 1,073,849 gz (was 1,073,654) and
+  its lead chunk `model-viewer-COI-aTNF.js` at 281,842 gz (was `model-viewer-C8EVMy8l.js`, 281,843),
+  so sheet 9 reads 1049 KB and 744,065 bytes behind the html pages (was 1048, 744,260); weather's
+  `today` 12:45:38 (was 12:32:14) with no dated file moved; and survey-self, outside the cabinet at
+  www/atlas @ 7d98dbdc (was ce84fc22), 267 tracked (was 255), the survey office 24 / 2,447, the
+  drawing office 53 / 13,063, the routed site 4,277 sloc and two off-ruler brand SVGs, so A3 reads
+  2.8× (was 2.7×) and 69% (was 67%). STEAM'S 586 HOLDS BY THE WINDOW'S EDGE: a3fc4919 (2026-07-12
+  13:08 PDT) left the window as 76ccefc0 entered it, while `git rev-list` from midnight reads 585 →
+  586; the trap is filed with the fourteenth's.
+  THE FRAME AUDIT read 0 escapes and 0 hits over 1 px, text-on-text 82 across 22 plates, and 0 / 0 /
+  0 on sheet 14. Thumbs: all 28 plates in both themes, 3,571,494 bytes. The app prerenders 33 pages
+  plus the 404 with 26 redirects, 34/34 renders scoped; the 84 scene checks hold. The chain took 4
+  min 05 s with the pnpm store warm.
+  THE NUMBERS: city 338 src files / 29,029 sloc and 162 spec / 28,535; yard 298 / 24,010 massed;
+  doors 182,512 min / 65,108 gz; the bundle 124,625 gz in 17 chunks; the deploy 898 files /
+  5,019,761 gz; nm 174,501 lines / 41,359 d.ts; mass3b 14,023 hashes over 237 real tasks and 3,033
+  command sloc; the ci graph 885 / 237 / 3,208 edges (deepest chain 15); couplings 23 contracts, 3
+  optional; steam 586 commits; weather 500 dated files; 7A 12,509 of 20,045 metered sloc lit over 26
+  members; upstream 59 consignments to 30 works, 11 sent, 48 watched, 55 tracked.
 - 2026-10-10 — THE FOURTEENTH REFRESH, at `origin/main` @ 9e656ab3 (commit 2026-10-10), all 17
   plates re-run at the one ref: the 2026-10-10 release train — `lit-ui-router` 1.16.3,
   `lit-ui-router-ssr` and `lit-ui-router-effect` 0.2.1, `lit-ui-router-mobx` 1.1.1,
@@ -563,32 +596,35 @@ sitting); order is dependency order.
   command sloc; the ci graph 885 / 237 / 3,208 edges (deepest chain 15); couplings 23 contracts, 3
   optional; steam 586 commits; weather 500 dated files; 7A 12,509 of 20,045 metered sloc lit over 26
   members.
-- 2026-10-10 — SHEET 14, THE UPSTREAM WORKS, at the 9e656ab3 cabinet: the city among the commons
-  it builds on, a plan map, `S('map', 'plan', 'static')`, band CITY × COMMONS. THE PROBE is
-  `census-upstream.mjs`, filing `census-upstream.json`: `window` (`since` the first commit on
-  `main`, `until` the ref's commit date), `yards[]` (`id`, `host` github or bugzilla, `name`,
-  `stars`, `package`, `weeklyDownloads`, `engine`), `consignments[]` (`yard`, `kind` pr/issue/bug,
-  `number`, `title`, `state`, `createdAt`, `returns[]` of `kind`, `ref`, `title`, `date`,
-  `state`), `prior` and `surveyor`. THE DRAWING: a river of time west to east; yards on the north
-  bank in order of first consignment, footprint on log₁₀ stars, the two Bugzillas as dashed berths
-  at the minimum footprint lettered `N reports filed`; one crate per consignment at its filing day,
-  kind as glyph, state as fill, moored to its yard; a road across the river to each return block on
-  the wharf. A block is one home item per citing day; a squash commit `… (#N)` folds into the PR #N
-  block its consignment also cites; a road that runs west (a return dated before its consignment)
-  is drawn as it is and the notes name each one off the plate. THE GUARDS: an unknown kind, state
-  or yard host throws; a crate or return outside the window throws; yards, crates and wharf blocks
-  go through `assertPlots`; the north bank throws when its gap falls under 14; the berths' engine
-  note reads `ci:main` cells in `census-plate.json` and throws when no package runs a real
-  `test:engines`. Every count, plural, "most" and the ledger line derive from the plate. THE
-  WIRING: `build.mjs` (import, `sheets`, index row), `emit-app.mjs` `MODULE`, `labels.mjs`,
+- 2026-10-10 — SHEET 14, THE UPSTREAM WORKS, at origin/main @ 76ccefc0: the city among the commons
+  it builds on, a plan map, `S('map', 'plan', 'static')`, band CITY × COMMONS. Re-scoped before it
+  shipped from one author's filings to what the city's own record cites (the user: "i'd rather follow
+  our repo's issues etc than me"). THE PROBE is `census-upstream.mjs`, filing `census-upstream.json`:
+  `window` (`since` the first commit on `main`, `until` the ref's commit date), `yards[]` (`id`,
+  `host` github or bugzilla, `name`, `stars`, `package`, `weeklyDownloads`, `engine`),
+  `consignments[]` (`yard`, `kind` pr/issue/bug, `number`, `title`, `state`
+  merged/fixed/closed/open/missing, `createdAt`, `author.login`, `sent`, `inWindow`, `tracked`,
+  `returns[]` of `kind`, `ref`, `title`, `date`, `state` and, on pr/issue, `external`). THE
+  DRAWING: a river of time west to east; yards on the north bank in order of first consignment,
+  footprint on log₁₀ stars, rows added until the bank holds them, no pier through a nearer row's
+  footprint, lettering on paper placards; the Bugzillas as dashed berths in the nearest row,
+  lettered `N reports filed`; a crate per consignment at its filing day, kind as glyph, state as
+  fill, an accent pennant when sent, a red tag when tracked (a home item labelled `external` cites
+  it); off-window items in the river's west mouth; missing items drawn nowhere and scheduled under
+  their own heading; a road to each wharf block, release PRs as narrow posts, squash commits folded
+  into their PR. THE GUARDS: unknown kind, state or host throws; `sent`/`inWindow`/`tracked` must
+  be booleans and `tracked` must agree with its returns' `external`; window membership is checked
+  both ways; yards (and their lettering), crates and wharf blocks go through `assertPlots`; the
+  berths' engine note throws when no package's `ci:main` runs a real `test:engines`. Every count,
+  plural and "most" derives. THE WIRING: `build.mjs`, `emit-app.mjs` `MODULE`, `labels.mjs`,
   `thumbs.mjs` `TUNING`, `manifest.ts` `BANDS`, `chrome.mjs` `TOTAL` 14 (asserted against the
-  highest sheet in `build.mjs`; the "thirteen altitudes" prose derives from it), and `routes.ts`
-  `SHEET_ALIASES` loses `'14'` → A2, so HISTORY.md's survey-office heading reads `Sheet A2`.
-  A NEW PLATE'S FIRST CARD PICTURE IS A BOOTSTRAP: `thumbs.mjs --only` reads the manifest, which
-  `build.mjs` refuses to write without the picture; seed `<id>.webp` from a sibling, build, then
-  shoot. THE NUMBERS: 13 consignments to 8 works, 2 merged, 11 returned home; 21 wharf blocks for
-  18 home items, 7 commits folded; the app prerenders 33 pages, 34/34 renders scoped; 84 scene
-  checks; frame audit 0 escapes and 0 hits on the new plate; 29 plates carry card pictures.
+  highest sheet; "thirteen altitudes" now derives), `routes.ts` `SHEET_ALIASES` loses `'14'` → A2,
+  so HISTORY.md's survey-office heading reads `Sheet A2`. A NEW PLATE'S FIRST CARD PICTURE IS A
+  BOOTSTRAP: `thumbs.mjs --only` reads the manifest, which `build.mjs` refuses to write without the
+  picture; seed `<id>.webp` from a sibling, build, then shoot. THE NUMBERS: 59 consignments to 30
+  works, 11 sent and 48 watched, 55 tracked, 59 returned home, 18 off the river (3 missing); 87
+  wharf blocks for 83 home items; the app prerenders 33 pages, 34/34 renders scoped; 84 scene
+  checks; frame audit 0 / 0 / 0 on the plate; 29 plates carry card pictures.
 - A SUITE PICKED BY SCRIPT NAME IS A HAND TABLE. A probe that keys on `test`, `lint` or `build` reads
   the repo's naming, not its behaviour; when a name becomes an umbrella the probe goes quiet rather than
   wrong-loud. Diff each T3 plate's categories (`m`/`n`/`u`), not only its totals.
@@ -651,6 +687,12 @@ sitting); order is dependency order.
   `lint & probe fleet` doubled the fleet to 136 units and hid sheet 3's PR gates 9 and 10, while
   `orphans 0` read true throughout. Before widening a broad rule, ask whether the member is a new
   structure, and look at the plate it stands on.
+- A DATE-ONLY SINCE IS A WALL-CLOCK WINDOW. `census-steam.mjs` passes a date-only `since`
+  ("2026-07-12") to `git log`, and git reads a bare date at the current time of day, so the window's
+  lower edge moves with the hour the probe runs. Between the fourteenth and the fifteenth a3fc4919
+  (2026-07-12 13:08 PDT) dropped out as 76ccefc0 came in, and the count read 586 both times while
+  `git rev-list` from midnight reads 585 → 586. The probe is unchanged; a window edge is a date and
+  a time, anchored at T00:00.
 - A plate's two dates are read from two clocks and can disagree by a day. `commitDate` is
   `git show -s --format=%cI`, the committer's LOCAL time, and `chrome.mjs::DATE` takes its first
   ten characters; `generatedAtTime` is a UTC ISO string, and sheet 7's `BASIS` line takes ITS

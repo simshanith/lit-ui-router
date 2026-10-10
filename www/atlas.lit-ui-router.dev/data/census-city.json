@@ -1,10 +1,10 @@
 {
   "ref": "origin/main",
-  "sha": "9e656ab3",
-  "commitDate": "2026-10-10T12:32:14-07:00",
-  "generatedAtTime": "2026-10-10T19:44:41.650Z",
+  "sha": "76ccefc0",
+  "commitDate": "2026-10-10T12:45:38-07:00",
+  "generatedAtTime": "2026-10-10T20:53:20.088Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-city.mjs",
-  "used": "www/atlas.lit-ui-router.dev/data/census-files.json @ 9e656ab3",
+  "used": "www/atlas.lit-ui-router.dev/data/census-files.json @ 76ccefc0",
   "wasAssociatedWith": [],
   "rows": [
     {"member":"packages/eslint-plugin-lit-ui-router","srcFiles":12,"srcSloc":1462,"specFiles":13,"specSloc":2437},
