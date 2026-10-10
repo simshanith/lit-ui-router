@@ -123,9 +123,9 @@
   container-type: inline-size;
 }
 
-/* One grid cell stacks the glow under the logo; both centre on it. */
+/* One grid cell stacks the glow under the logo; both centre on it. Stacked, the logo spans two of the feature cards' three columns. */
 .VPHero.has-image .image-container {
-  --hero-logo-size: 100cqi;
+  --hero-logo-size: calc((200cqi - 1rem) / 3);
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   place-items: center;
@@ -166,13 +166,6 @@
   margin-block-end: 1.5rem;
 }
 
-/* The feature cards' three columns and 1rem gutter: the stacked logo spans two. */
-@media (min-width: 768px) {
-    .VPHero.has-image .image-container {
-      --hero-logo-size: calc((200cqi - 1rem) / 3);
-    }
-}
-
 html.chrome .VPHero .VPImage {
   mix-blend-mode: multiply;
 }
@@ -200,14 +193,12 @@ html.chrome.dark .VPHero .VPImage {
       max-inline-size: none;
     }
 
-    /* The logo contains to the column beside the text, so the text alone sets the row height. */
     .VPHero.has-image .image {
       margin: 0;
-      container-type: size;
     }
 
     .VPHero.has-image .image-container {
-      --hero-logo-size: 100cqmin;
+      --hero-logo-size: 100cqi;
       place-items: center end;
       block-size: 100%;
     }
