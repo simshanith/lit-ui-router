@@ -22,11 +22,3 @@ export default {
     app.component('FrameworkCards', FrameworkCards);
   },
 } satisfies Theme;
-
-export const isChrome =
-  navigator.userAgent.includes('Chrome') &&
-  navigator.vendor.includes('Google Inc');
-
-if (isChrome) {
-  document.documentElement.classList.add('chrome');
-}

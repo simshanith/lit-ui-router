@@ -172,11 +172,12 @@
     }
 }
 
-html.chrome .VPHero .VPImage {
+/* The blend also makes the logo a stacking context, so it paints over the filtered glow. */
+.VPHero .VPImage {
   mix-blend-mode: multiply;
 }
 
-html.chrome.dark .VPHero .VPImage {
+.dark .VPHero .VPImage {
   mix-blend-mode: plus-lighter;
 }
 
