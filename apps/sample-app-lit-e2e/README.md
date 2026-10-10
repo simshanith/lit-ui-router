@@ -1,6 +1,6 @@
 # sample-app-lit-e2e
 
-One Cypress spec suite, run against all three sample apps and the docs site —
+One Cypress spec suite and an axe pass, run against all three sample apps and the docs site —
 this is what enforces the apps' behavioral identity and keeps every
 published location strategy exercised.
 
@@ -11,21 +11,22 @@ mise run test_e2e
 ```
 
 That production-like flow builds the docs site (which embeds every app's
-build), serves it with wrangler on port 8787, and runs every Cypress suite in
-parallel:
+build), serves it with wrangler on port 8787, and runs the Cypress suites in
+parallel. `a11y` runs only when named; `mise run ci_main` runs it after the Cypress suites:
 
-| Suite       | Target         | Covers                                                                                                              |
-| ----------- | -------------- | ------------------------------------------------------------------------------------------------------------------- |
-| `vanilla`   | `/app/`        | vanilla app, default routing — the Navigation API plugin                                                            |
-| `mobx`      | `/app-mobx/`   | MobX app, default routing — the Navigation API plugin                                                               |
-| `effect`    | `/app-effect/` | Effect app, default routing — the Navigation API plugin                                                             |
-| `docs`      | site + mounts  | docs pages plus the mount matrix — flagships, hash demo, and the server-support exhibits (`cypress.docs.config.ts`) |
-| `hash`      | `/app/`        | vanilla app under the `hash` location plugin                                                                        |
-| `pushState` | `/app/`        | vanilla app under the `pushState` fallback                                                                          |
+| Suite       | Target         | Covers                                                                                                                                     |
+| ----------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `vanilla`   | `/app/`        | vanilla app, default routing — the Navigation API plugin                                                                                   |
+| `mobx`      | `/app-mobx/`   | MobX app, default routing — the Navigation API plugin                                                                                      |
+| `effect`    | `/app-effect/` | Effect app, default routing — the Navigation API plugin                                                                                    |
+| `docs`      | site + mounts  | docs pages plus the mount matrix — flagships, hash demo, and the server-support exhibits (`cypress.docs.config.ts`)                        |
+| `hash`      | `/app/`        | vanilla app under the `hash` location plugin                                                                                               |
+| `a11y`      | site + mounts  | axe-core (`@tools/a11y`) over the docs pages (one API reference page per kind) in light and dark, and a walk through each sample-app mount |
+| `pushState` | `/app/`        | vanilla app under the `pushState` fallback                                                                                                 |
 
-Each suite is its own turbo task (`test:e2e:<suite>`) with its own cache key,
+Each suite is its own turbo task (`test:e2e:<suite>`). The Cypress suites have their own cache keys,
 so rerunning one after a flake costs that suite alone rather than the whole
-set. Name the suites you want and the umbrella runs those, around the same
+set. `a11y` is uncached, because contrast and target size are measured on the host's rendering. Name the suites you want and the umbrella runs those, around the same
 server, cached and summarized exactly like the full run:
 
 ```bash

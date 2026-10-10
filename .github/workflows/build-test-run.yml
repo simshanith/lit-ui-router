@@ -104,7 +104,7 @@ jobs:
       - name: Start shared Xvfb display
         # Cypress spawns its own Xvfb when there is no DISPLAY, so any two
         # suites running at once race ("Fatal server error") — and turbo runs
-        # the `test:e2e:*` suites in parallel. One shared display serves
+        # the Cypress `test:e2e:*` suites in parallel. One shared display serves
         # however many of them there are.
         # https://docs.cypress.io/app/continuous-integration/overview#Xvfb
         # The task captures Xvfb's stderr (routine xkbcomp keysym noise on

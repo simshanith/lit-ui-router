@@ -121,7 +121,7 @@ Exceptions: `www/lit-ui-router.dev/api/**` (generated VitePress content, not a b
 - `@tools/dts-backtest#test:matrix` runs the full TS version matrix; PRs run only the current-TS `test` leg.
 - `build` composes the two own-package passes: `build:js` (JS) and `build:types` (d.ts, self-chaining via `^build:types`).
 - `check:bundle` holds the bundle invariants (size budgets, deps-none probes); `codecov:bundle` uploads bundle analysis, uncached.
-- `dev`, `e2e`, and `docs` are persistent, uncached tasks. `e2e` is `cypress open`, the interactive lane — not the headless suites, which are the cached `test:e2e:*` tasks under `//:test_e2e`.
+- `dev`, `e2e`, and `docs` are persistent, uncached tasks. `e2e` is `cypress open`, the interactive lane — not the headless suites, which are the `test:e2e:*` tasks under `//:test_e2e`: one cached task per Cypress suite, plus the uncached axe pass `test:e2e:a11y`, which runs only when named (`mise run ci_main` names it).
 - Per-task `inputs`/`outputs` live in `turbo.json` itself — see [Cache Control](#cache-control).
 
 **Deliberately outside both ci graphs:** `@www/lit-ui-router.dev#check:embeds` measures every built example in headless Chromium and checks the heights `examples/embeds.ts` reserves for their embeds. Text wraps at engine-specific metrics, so the measurement is host-dependent — a Linux runner and a macOS laptop do not have to agree — and gating on it would make the docs' reserved space a property of whoever ran it. Run it locally when an example's content changes.
@@ -179,7 +179,7 @@ Workspaces extend the root configuration using `"extends": ["//"]`:
 | `apps/sample-app-lit-vanilla`                             | `build` is an umbrella over `build:vanilla` and `build:hash` (VITE\_\* env on each)                                                                                                                                                                         |
 | `apps/sample-app-lit-mobx`                                | Adds env vars for build (VITE\_\*)                                                                                                                                                                                                                          |
 | `apps/sample-app-lit-effect`                              | Adds env vars for build (VITE\_\*)                                                                                                                                                                                                                          |
-| `apps/sample-app-lit-e2e`                                 | One cached `test:e2e:*` task per Cypress suite, reached via the `//:test_e2e` umbrella (which owns the dev server); CYPRESS\_\* passes through un-hashed                                                                                                    |
+| `apps/sample-app-lit-e2e`                                 | One `test:e2e:*` task per suite (Cypress suites cached, the `a11y` axe pass uncached), reached via the `//:test_e2e` umbrella (which owns the dev server); CYPRESS\_\* passes through un-hashed                                                             |
 | `apps/sample-app-routes`, `apps/sample-app-shared`        | Widens `test` inputs beyond the root's `src/**/*.ts` (non-TS/config surface)                                                                                                                                                                                |
 | `@www/lit-ui-router.dev`                                  | Adds `check:embeds`, `docs:preview`, `wrangler:dev`, worker tasks (`types:worker`, `typecheck:worker`, `typecheck:worker:tests`, `bundle:worker`); `test` runs the worker contract tests in node; requires `^docs:api` before build                         |
 | `examples`                                                | Adds `build:embeds` (tutorial apps built as docs embeds)                                                                                                                                                                                                    |
@@ -266,7 +266,7 @@ The GitHub Actions workflow (`.github/workflows/build-test.yml`) runs the CI pip
 1. **Checkout** - Clone repository
 2. **Setup** - mise installs Node.js (version pinned in `.nvmrc`) and pnpm (held equal to the `packageManager` pin); `mise run setup` installs dependencies
 3. **Install browsers** - Playwright and Cypress for e2e tests, restored from `actions/cache` keyed on the installed package versions
-4. **Build and Test** - PRs and branch pushes run `mise run ci` (turbo `ci:pull_request`); main pushes, `mainGraph` dispatches and `ci-main/` branches run `mise run ci_main` (turbo `ci:main`, adding the main-only guards)
+4. **Build and Test** - PRs and branch pushes run `mise run ci` (turbo `ci:pull_request`); main pushes, `mainGraph` dispatches and `ci-main/` branches run `mise run ci_main` (turbo `ci:main`, adding the main-only guards, then the axe pass `mise run test_e2e a11y` after the Cypress suites)
 5. **Coverage reports** - Vitest coverage for PR comments, Codecov upload
 6. **Tag** (main pushes only) - a green run calls the Tag & push workflow, so release tags fire only after green main CI
 
@@ -274,7 +274,7 @@ Manual dispatch of the workflow has two deflake inputs: `force` (`TURBO_FORCE`) 
 
 ### Smoke-testing the main graph before merge
 
-The main-only guards (`test:engines`, `check:pack`, the full `dts-backtest` matrix) run after merge, so a break in them surfaces on main rather than on the PR. Two ways to pull that signal forward:
+The main-only guards (`test:engines`, `check:pack`, the full `dts-backtest` matrix, the axe pass) run after merge, so a break in them surfaces on main rather than on the PR. Two ways to pull that signal forward:
 
 - **Per run** — dispatch **Build and Test** with `mainGraph: true` and pick the branch as the ref. Nothing needs to be pushed, and the branch needs no PR.
 - **Per branch** — name the branch `ci-main/<topic>`. Every push to it builds `ci:main` instead of the PR graph, and it runs even when the branch merges cleanly (a `pull_request` run would only cover the PR graph). The prefix is the whole opt-in; there is no other flag.
@@ -421,7 +421,7 @@ E2E tasks (`e2e`, `dev`, `docs`) are `persistent: true` and don't cache:
 Run these separately from cached tasks.
 
 `e2e` here is `cypress open`, the interactive lane. The headless suites are the
-five `test:e2e:*` tasks — cached, not persistent, and reached through the
+`test:e2e:*` tasks — not persistent, cached except the `a11y` axe pass, and reached through the
 `//:test_e2e` mise task, which owns the dev server because turbo has no
 lifecycle for one. If those hang, look at the server or the suite, not at a
 persistent task.

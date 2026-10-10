@@ -10,7 +10,7 @@ import { serveAndTest } from './serve-and-test.ts';
 // Suite selection for the `//:test_e2e` umbrella: turns bare suite names into
 // the `turbo run` that start-server-and-test wraps in a dev server.
 //
-// Usage: run-e2e.ts [suite]...   (no names selects every suite)
+// Usage: run-e2e.ts [suite]...   (no names selects every suite but NAMED_ONLY)
 
 const PREFIX = 'test:e2e:';
 
@@ -35,7 +35,13 @@ if (unknown.length > 0) {
   process.exit(1);
 }
 
-const selected = asked.length > 0 ? asked.sort() : suites;
+// Run only when named: `ci_main` runs the axe pass after the Cypress suites.
+const NAMED_ONLY = ['a11y'];
+
+const selected =
+  asked.length > 0
+    ? asked.sort()
+    : suites.filter((suite) => !NAMED_ONLY.includes(suite));
 
 // --continue=dependencies-successful: one failing suite still lets the rest
 // report and turbo still exits non-zero, while a failed build cancels them all.
