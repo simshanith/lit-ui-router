@@ -1,11 +1,12 @@
 /// <reference types="vitest/globals" />
 /// <reference types="@types/dom-navigation" />
 
-import { UIRouter } from '@uirouter/core';
+import { UIRouter, servicesPlugin } from '@uirouter/core';
 import {
   NavigationLocationService,
   navigationLocationPlugin,
   isUIRouterNavigateEvent,
+  type NavigationLocationPluginOptions,
 } from '../index.js';
 import { interceptNavigations, restoreUrl } from './real-navigation.js';
 
@@ -324,5 +325,142 @@ describe.skipIf(!hasNavigationAPI)('navigationLocationPlugin', () => {
     });
 
     plugin.dispose?.(router);
+  });
+});
+
+describe.skipIf(!hasNavigationAPI)('traversal interception', () => {
+  let router: UIRouter;
+  let spacer: HTMLElement;
+  let originalHref: string;
+
+  // State a renders a tall page and the others a short one, a microtask after success as a view would.
+  // Gecko and WebKit restore scroll against the last layout, so the render flushes it.
+  function startRouter(options: NavigationLocationPluginOptions): UIRouter {
+    router = new UIRouter();
+    router.plugin(servicesPlugin);
+    router.urlService.config.baseHref = () => '/';
+    router.plugin(navigationLocationPlugin, options);
+    const delay = () => new Promise((resolve) => setTimeout(resolve, 50));
+
+    for (const name of ['a', 'b', 'c']) {
+      router.stateRegistry.register({
+        name,
+        url: `/traverse-${name}`,
+        resolve: { delay },
+      });
+    }
+
+    router.transitionService.onSuccess({}, (transition) =>
+      queueMicrotask(() => {
+        spacer.style.height = transition.to().name === 'a' ? '5000px' : '0';
+        void spacer.offsetHeight;
+      }),
+    );
+    router.urlService.listen();
+
+    return router;
+  }
+
+  // Firefox aborts a navigation that hasn't finished when the next one starts.
+  async function go(state: string): Promise<void> {
+    await router.stateService.go(state);
+    await window.navigation.transition?.finished;
+  }
+
+  beforeEach(() => {
+    originalHref = window.location.href;
+    spacer = document.createElement('div');
+    document.body.append(spacer);
+  });
+
+  afterEach(async () => {
+    router.dispose();
+    spacer.remove();
+    window.scrollTo(0, 0);
+    await restoreUrl(originalHref);
+  });
+
+  it('runs the option handler once the transition the traversal started has settled', async () => {
+    const handlerSaw: (string | undefined)[] = [];
+    startRouter({
+      interceptTraverse: () => ({
+        handler() {
+          handlerSaw.push(router.globals.current.name);
+
+          return Promise.resolve();
+        },
+      }),
+    });
+    const seen: (string | undefined)[] = [];
+    const record = () => seen.push(router.globals.transition?.to().name);
+    window.navigation.addEventListener('navigate', record);
+
+    try {
+      await go('a');
+      await go('b');
+      seen.length = 0;
+
+      await window.navigation.back().finished;
+
+      expect(seen).toEqual([undefined]);
+      expect(handlerSaw).toEqual(['a']);
+      expect(router.globals.current.name).toBe('a');
+    } finally {
+      window.navigation.removeEventListener('navigate', record);
+    }
+  });
+
+  it.each([
+    [
+      'restores scroll once the view is back',
+      { interceptTraverse: true },
+      1000,
+    ],
+    ['restores scroll before the view is back without the option', {}, 0],
+  ] as const)('%s', async (_, options, expected) => {
+    startRouter(options);
+    await go('a');
+    window.scrollTo(0, 1000);
+    expect(window.scrollY).toBe(1000);
+    await go('b');
+
+    await window.navigation.back().finished;
+    await vi.waitFor(() => expect(router.globals.current.name).toBe('a'));
+
+    expect(window.scrollY).toBe(expected);
+  });
+
+  it('aborts a traversal superseded by another, then finishes the second once its view is back', async () => {
+    startRouter({ interceptTraverse: true });
+    await go('a');
+    await go('b');
+    await go('c');
+
+    const first = window.navigation.back();
+    await first.committed;
+    const second = window.navigation.back();
+
+    await expect(first.finished).rejects.toMatchObject({ name: 'AbortError' });
+    await second.committed;
+    // WebKit rejects the second traversal's finished as well, though it commits.
+    await second.finished?.catch(() => undefined);
+    await vi.waitFor(() => expect(router.globals.current.name).toBe('a'));
+    expect(window.location.pathname).toBe('/traverse-a');
+  });
+
+  it('finishes a traversal superseded by a router navigation without waiting on the stale transition', async () => {
+    startRouter({ interceptTraverse: true });
+    await go('a');
+    await go('b');
+    await go('c');
+
+    const traversal = window.navigation.back();
+    await traversal.committed;
+    const push = router.stateService.go('a');
+
+    await traversal.finished;
+    expect(router.globals.transition?.to().name).toBe('a');
+    await push;
+    expect(window.location.pathname).toBe('/traverse-a');
   });
 });

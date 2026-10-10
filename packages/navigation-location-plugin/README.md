@@ -80,7 +80,7 @@ The heading needs `tabindex="-1"` to take focus. See [Focus handling](https://de
 
 ### Scroll
 
-The plugin leaves `scroll` at the platform default, `'after-transition'`: once `handler` settles, the browser scrolls each router navigation to its URL's fragment, or to the top of the page. `pushStateLocationPlugin` leaves the scroll position where it was. Back and forward are traversals the plugin doesn't intercept, and the browser restores their scroll position under either plugin.
+The plugin leaves `scroll` at the platform default, `'after-transition'`: once `handler` settles, the browser scrolls each router navigation to its URL's fragment, or to the top of the page. `pushStateLocationPlugin` leaves the scroll position where it was. Back and forward are traversals the plugin leaves alone unless asked (see [Back and forward](#back-and-forward)); the browser then restores their scroll position straight away under either plugin.
 
 The default handler resolves immediately, so the browser can scroll before the new view has rendered. `intercept` runs once per navigation, while the router's `globals.transition` is still the transition being committed, so the scroll behaviour can depend on the route. In this example, a state flagged `data: { keepScroll: true }` (say, a message opening beside its list) returns `scroll: 'manual'` and keeps the list where it was. Every other navigation waits a frame for the views to render, then calls `event.scroll()` before any slower work:
 
@@ -103,6 +103,16 @@ router.plugin(navigationLocationPlugin, {
 ```
 
 See [Scroll handling](https://developer.chrome.com/docs/web-platform/navigation-api#scroll_handling) for the platform behaviour.
+
+#### Back and forward
+
+A back or forward traversal starts a router transition only once the browser has committed it, so the browser restores the scroll position before the previous view is back, and a page that is shorter in the meantime loses it. The `interceptTraverse` option makes the plugin intercept those traversals with a handler that waits for the router transition, including its redirects, so `scroll: 'after-transition'` restores the position once the view has rendered:
+
+```typescript
+router.plugin(navigationLocationPlugin, { interceptTraverse: true });
+```
+
+Pass a function instead of `true` to return the `NavigationInterceptOptions` for each traversal. Its `handler` runs after the router transition settles, which is the place to wait for views that render later, and `focusReset` defaults to `'manual'` as it does for `intercept`. A navigation that supersedes the traversal ends the wait.
 
 Listeners that only observe navigations can tell router-driven ones apart with `isUIRouterNavigateEvent`, which also narrows `event.info` to carry the router.
 
@@ -166,10 +176,14 @@ function navigationLocationPlugin(
 ```typescript
 interface NavigationLocationPluginOptions {
   intercept?: (event: UIRouterNavigateEvent) => NavigationInterceptOptions;
+  interceptTraverse?:
+    | true
+    | ((event: NavigateEvent) => NavigationInterceptOptions);
 }
 ```
 
 - `intercept` — called for each navigation the service starts, after the router transition has committed; its return value is handed to `event.intercept()`. See [Navigation Event Interception](#navigation-event-interception).
+- `interceptTraverse` — opts back/forward traversals into interception that waits for the router transition they start; a function returns the `NavigationInterceptOptions` for each. See [Back and forward](#back-and-forward).
 
 ### `NavigationLocationService`
 
