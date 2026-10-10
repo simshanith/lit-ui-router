@@ -173,6 +173,7 @@ catalogs:
     sample-app-routes: workspace:*
     sample-app-shared: workspace:*
     ui-router-navigation-location-plugin: workspace:*
+    ui-router-effect: workspace:*
     ui-router-server: workspace:*
 
 allowBuilds:

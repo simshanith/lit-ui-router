@@ -52,6 +52,10 @@ component_management:
       name: lit-ui-router-mobx
       paths:
         - packages/lit-ui-router-mobx/src/**
+    - component_id: ui-router-effect
+      name: ui-router-effect
+      paths:
+        - packages/ui-router-effect/src/**
     - component_id: ui-router-server
       name: ui-router-server
       paths:

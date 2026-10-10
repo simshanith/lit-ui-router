@@ -200,6 +200,7 @@
     {
       "files": [
         "packages/lit-ui-router-effect/**",
+        "packages/ui-router-effect/**",
         "apps/sample-app-lit-effect/**",
         "examples/hellogalaxy-effect/**"
       ],
@@ -487,6 +488,38 @@
                 "name": "@uirouter/core",
                 "allowTypeImports": true,
                 "message": "matcher tier stays core-free — a static @uirouter/core import defeats the lazy simulate boundary (the `bundleProbe.free` claims under check:bundle enforce the bundle); use `import type` or a dynamic import()."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      // Mirrors bundleProbe["."].free in packages/ui-router-effect/package.json.
+      "files": ["packages/ui-router-effect/src/**/*.ts"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "lit",
+                "message": "ui-router-effect is framework-agnostic; Lit bindings live in lit-ui-router-effect."
+              },
+              {
+                "name": "lit-ui-router",
+                "message": "ui-router-effect is framework-agnostic; Lit bindings live in lit-ui-router-effect."
+              }
+            ],
+            "patterns": [
+              {
+                "group": [
+                  "lit/**",
+                  "lit-ui-router/**",
+                  "@lit/**",
+                  "@lit-labs/**"
+                ],
+                "message": "ui-router-effect is framework-agnostic; Lit bindings live in lit-ui-router-effect."
               }
             ]
           }
