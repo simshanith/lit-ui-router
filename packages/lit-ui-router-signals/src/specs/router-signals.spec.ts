@@ -177,4 +177,44 @@ describe('RouterSignals', () => {
       expect(values).toEqual([false, true, false]);
     });
   });
+
+  describe('snapshot', () => {
+    it('exposes the whole route as one value per transition', async () => {
+      const router = createTestRouter(testStates);
+      const signals = RouterSignals.for(router);
+      const before = signals.route.get();
+
+      await routerGo(router, 'b', { id: '1' });
+
+      const route = signals.route.get();
+      expect(route).not.toBe(before);
+      expect(route.current?.name).toBe('b');
+      expect(route.params.id).toBe('1');
+      expect(route.includes('b', { id: '1' })).toBe(true);
+    });
+
+    it('includes() answers for the settled route, not the in-flight one', async () => {
+      const router = createTestRouter(testStates);
+      await routerGo(router, 'a');
+      const signals = new RouterSignals();
+      let seen: [live: boolean, settled: boolean] | undefined;
+      // Registered first, so it runs before the RouterSignals hook writes b.
+      router.transitionService.onSuccess({}, () => {
+        seen = [router.stateService.includes('b'), signals.includes('b')];
+      });
+      signals.attach(router);
+
+      await routerGo(router, 'b', { id: '1' });
+
+      expect(seen).toEqual([true, false]);
+      expect(signals.includes('b')).toBe(true);
+    });
+
+    it('answers false while detached', () => {
+      const signals = new RouterSignals();
+
+      expect(signals.includes('')).toBe(false);
+      expect(signals.current.get()).toBeUndefined();
+    });
+  });
 });

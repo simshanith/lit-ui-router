@@ -6,42 +6,53 @@ import {
   Transition,
   UIRouter,
 } from '@uirouter/core';
+import {
+  snapshotRoute,
+  type RouteSnapshot,
+} from 'lit-ui-router/route-snapshot';
 
-interface RouteSnapshot {
-  current?: StateDeclaration;
-  params: RawParams;
-  transition?: Transition;
-}
+const detached: RouteSnapshot = {
+  current: undefined,
+  params: {},
+  transition: undefined,
+  includes: () => false,
+};
 
 /**
  * A signal mirror of a router's current state.
  *
  * A single `transitionService.onSuccess` hook (registered by
- * {@link RouterSignals.attach | attach}) writes the current state, params
- * and transition into one `Signal.State` per transition. The public fields
- * are read-only `Signal.Computed`s over it, so any signal consumer — a
+ * {@link RouterSignals.attach | attach}) writes one `RouteSnapshot` per
+ * successful transition into a `Signal.State`. The public fields are
+ * read-only `Signal.Computed`s over it, so any signal consumer — a
  * {@link SignalController}, a {@link RouterSignalController}, or a
  * `@lit-labs/signals` `SignalWatcher` render — tracks exactly the fields it
- * reads.
+ * reads. `onSuccess` is the only hook a later transition cannot supersede, so
+ * every value is a settled route.
  *
  * Use the {@link RouterSignals.for | for} factory to get the signals for a
  * router: it memoizes one instance (and one transition hook) per router.
  */
 export class RouterSignals {
-  private readonly route = new Signal.State<RouteSnapshot>({ params: {} });
+  private readonly state = new Signal.State<RouteSnapshot>(detached);
+
+  /** The whole route as one value, replaced per transition. */
+  readonly route: Signal.Computed<RouteSnapshot> = new Signal.Computed(() =>
+    this.state.get(),
+  );
 
   /** The current state declaration (`globals.current`). */
   readonly current: Signal.Computed<StateDeclaration | undefined> =
-    new Signal.Computed(() => this.route.get().current);
+    new Signal.Computed(() => this.state.get().current);
 
   /** The current parameter values (`globals.params`), replaced per transition. */
   readonly params: Signal.Computed<RawParams> = new Signal.Computed(
-    () => this.route.get().params,
+    () => this.state.get().params,
   );
 
   /** The most recent successful transition. */
   readonly transition: Signal.Computed<Transition | undefined> =
-    new Signal.Computed(() => this.route.get().transition);
+    new Signal.Computed(() => this.state.get().transition);
 
   private router?: UIRouter = undefined;
 
@@ -87,9 +98,9 @@ export class RouterSignals {
       );
     }
     this.router = router;
-    this.update();
+    this.state.set(snapshotRoute(router));
     const deregister = router.transitionService.onSuccess({}, (transition) =>
-      this.update(transition),
+      this.state.set(snapshotRoute(router, transition)),
     ) as () => void;
     this.deregister = () => {
       deregister();
@@ -99,23 +110,13 @@ export class RouterSignals {
     return this.deregister;
   }
 
-  private update(transition?: Transition): void {
-    const globals = this.router?.globals;
-    this.route.set({
-      current: globals?.current,
-      // eslint-disable-next-line typescript/no-misused-spread -- snapshot StateParams' own props as a fresh plain object per transition
-      params: { ...globals?.params },
-      transition: transition ?? globals?.successfulTransitions.peekTail(),
-    });
-  }
-
   /**
-   * Tracked version of `StateService.includes`: is the state (or glob
-   * pattern, e.g. `'admin.**'`) included in the current active state?
-   * Reading it inside a computed or watcher subscribes to every transition.
+   * Tracked `StateService.includes`, evaluated against the current
+   * {@link RouterSignals.route | route}: is the state (or glob pattern, e.g.
+   * `'admin.**'`) included in the settled active state? Reading it inside a
+   * computed or watcher subscribes to every transition.
    */
   includes(stateOrName: StateOrName, params?: RawParams): boolean {
-    this.route.get();
-    return this.router?.stateService.includes(stateOrName, params) ?? false;
+    return this.state.get().includes(stateOrName, params);
   }
 }

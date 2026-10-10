@@ -4,18 +4,18 @@
 
 A private sketch, not yet published; the design and the path into core are tracked in [#1157](https://github.com/simshanith/lit-ui-router/issues/1157). [`apps/sample-app-lit-signals`](../../apps/sample-app-lit-signals/) uses it.
 
-It registers no custom elements and adds no routing behavior. It is the [`lit-ui-router-mobx`](../lit-ui-router-mobx/) shape on the proposal's API, through [`signal-polyfill`](https://github.com/proposal-signals/signal-polyfill):
+It registers no custom elements and adds no routing behavior. It takes the companion-adapter shape of [`lit-ui-router-mobx`](../lit-ui-router-mobx/) and [`lit-ui-router-effect`](../lit-ui-router-effect/) onto the proposal's API, through [`signal-polyfill`](https://github.com/proposal-signals/signal-polyfill):
 
-| lit-ui-router-signals    | lit-ui-router-mobx         |
-| ------------------------ | -------------------------- |
-| `RouterSignals`          | `RouterStore`              |
-| `SignalController`       | `ReactionController`       |
-| `RouterSignalController` | `RouterReactionController` |
+| lit-ui-router-signals    | lit-ui-router-mobx         | lit-ui-router-effect  |
+| ------------------------ | -------------------------- | --------------------- |
+| `RouterSignals`          | `RouterStore`              | `routeRef`            |
+| `SignalController`       | `ReactionController`       | `RefController`       |
+| `RouterSignalController` | `RouterReactionController` | `RouterRefController` |
 
 ## Features
 
-- **`RouterSignals`**: `current`, `params` and `transition` as read-only `Signal.Computed`s over one `Signal.State` written per transition, plus a tracked `includes()`. One instance (and one transition hook) per router via `RouterSignals.for(router)`.
-- **`RouterSignalController`**: watches the `RouterSignals` of the router its nearest provider supplies, found over `context-request` with the `ui-router-context` event as fallback.
+- **`RouterSignals`**: one `RouteSnapshot` from `lit-ui-router/route-snapshot` per successful transition, in a `Signal.State`. `route`, `current`, `params` and `transition` are read-only `Signal.Computed`s over it, and the tracked `includes()` answers for that settled snapshot, not the live router. One instance (and one transition hook) per router via `RouterSignals.for(router)`.
+- **`RouterSignalController`**: watches the `RouterSignals` of a router given explicitly (or by a thunk resolved on each connect), scoped by `withRouterSync` for a server render, or supplied by the nearest provider over `context-request` with the `ui-router-context` event as fallback. An explicit or scoped router is read at construction, so a host rendered on the server sees the same `.value` a browser would. `setRouter()` hands it a router later.
 - **`SignalController`**: the generic primitive. A `Signal.subtle.Watcher` over a selector's `Signal.Computed` while the host is connected; `requestUpdate()` only when the selected value changes under `equals`.
 - **Lifecycle-safe**: watching starts in `hostConnected` and stops in `hostDisconnected`. The selector runs on every (re)connect, so sticky components never render stale values.
 
@@ -40,4 +40,4 @@ Both need one copy of `signal-polyfill` in the bundle; two copies keep two separ
 
 ## Dependencies
 
-It uses `lit-ui-router/context` (from `lit-ui-router@1.15.0`), `lit`, `@uirouter/core`, and `signal-polyfill@^0.2.2`. They are devDependencies while the package is private; publishing turns them into peers.
+It uses `lit-ui-router/context` and `lit-ui-router/route-snapshot` (the latter unreleased, [#1167](https://github.com/simshanith/lit-ui-router/pull/1167)), `lit`, `@uirouter/core`, and `signal-polyfill@^0.2.2`. They are devDependencies while the package is private; publishing turns them into peers.
