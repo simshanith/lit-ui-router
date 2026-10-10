@@ -3,7 +3,7 @@ import { uiSref } from 'lit-ui-router';
 
 export default () =>
   html`<div class="container-fluid">
-    <h1 class="h3">UI-Router Sample App</h1>
+    <h1 class="h3" tabindex="-1">UI-Router Sample App</h1>
     <p>Welcome to the sample app!</p>
     <p>
       This is a demonstration app intended to highlight some patterns that can

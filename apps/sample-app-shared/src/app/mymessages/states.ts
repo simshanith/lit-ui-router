@@ -23,6 +23,7 @@ const composeState = {
   params: {
     message: {},
   },
+  data: { title: 'New message' },
   views: {
     // Absolutely targets the ui-view named 'mymessages' (which is nested inside an unnamed ui-view) with the 'Compose' component.
     // Absolute targeting finds the nested ui-view in the DOM, using view names.
@@ -84,6 +85,10 @@ const messageState = {
         MessageListUI.proximalMessageId.bind(MessageListUI, messages),
     },
   ],
+  data: {
+    title: (transition: Transition) =>
+      (transition.injector().get('message') as Message).subject,
+  },
   views: {
     // Relatively target the parent-state's parent-state's 'messagecontent' ui-view
     // This could also have been written using ui-view@state addressing: 'messagecontent@mymessages'
@@ -126,6 +131,12 @@ const messageListState = {
         againable(() => MessagesStorage.byFolder(folder))(),
     },
   ],
+  data: {
+    title: (transition: Transition) => {
+      const folderId = String(transition.params().folderId);
+      return folderId.charAt(0).toUpperCase() + folderId.slice(1);
+    },
+  },
   views: {
     // This targets the "messagelist" named UIView added to the DOM in the parent state 'mymessages'
     messagelist: MessageList,

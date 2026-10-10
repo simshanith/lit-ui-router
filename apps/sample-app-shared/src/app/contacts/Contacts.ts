@@ -30,7 +30,7 @@ export class Contacts extends LitElement {
 
   render() {
     return html`<div class="my-contacts flex-h">
-      <h1 class="sr-only">Contacts</h1>
+      <h1 class="sr-only" tabindex="-1">Contacts</h1>
       <sample-contact-list
         .contacts=${this.contacts}
         class="flex nogrow"

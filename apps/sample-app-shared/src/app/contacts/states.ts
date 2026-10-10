@@ -23,6 +23,11 @@ import { dsrRedirectToDefaultFromWithin } from '../util/dsr-default-redirect-wit
  *
  * The contacts are fetched using a resolve.
  */
+function contactName(transition: Transition) {
+  const { name } = transition.injector().get('contact') as Contact;
+  return `${name.first} ${name.last}`;
+}
+
 const contactsState = {
   parent: 'app', // declares that 'contacts' is a child of 'app'
   name: 'contacts',
@@ -34,7 +39,7 @@ const contactsState = {
       resolveFn: () => ContactsStorage.all(),
     },
   ],
-  data: { requiresAuth: true },
+  data: { requiresAuth: true, title: 'Contacts' },
   dsr: {
     default: 'contacts',
     fn: dsrRedirectToDefaultFromWithin,
@@ -67,6 +72,7 @@ const viewContactState = {
         ) as Promise<Contact>,
     },
   ],
+  data: { title: contactName },
   component:
     ContactView satisfies LitViewDeclarationElement<ContactViewResolves>,
 } satisfies LitStateDeclaration<ContactViewResolves>;
@@ -82,6 +88,9 @@ const viewContactState = {
 const editContactState = {
   name: 'contacts.contact.edit',
   url: '/edit',
+  data: {
+    title: (transition: Transition) => `Edit ${contactName(transition)}`,
+  },
   views: {
     // Relatively target the grand-parent-state's $default (unnamed) ui-view
     // This could also have been written using ui-view@state addressing: $default@contacts
@@ -98,6 +107,7 @@ const editContactState = {
 const newContactState = {
   name: 'contacts.new',
   url: '/new',
+  data: { title: 'New contact' },
   component: EditContact as LitViewDeclarationElement,
 };
 
