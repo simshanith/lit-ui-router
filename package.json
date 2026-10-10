@@ -14,6 +14,7 @@
     "check:patches": "turbo run @tools/repo-checks#check:patches",
     "check:published-diff": "turbo run resolve:published && turbo run check:published-diff",
     "check:release-closure": "turbo run @tools/release#check:release-closure",
+    "check:shared-source": "turbo run @tools/repo-checks#check:shared-source",
     "check:single-version": "turbo run @tools/repo-checks#check:single-version",
     "check:task-inputs": "turbo run @tools/repo-checks#check:task-inputs",
     "check:workers-builds": "turbo run @tools/workers-builds#check",
@@ -39,6 +40,7 @@
     "lint:toml": "mise run lint_toml",
     "lint:zizmor": "mise run lint_zizmor",
     "prepare": "husky",
+    "sync:shared-source": "turbo run @tools/repo-checks#sync:shared-source",
     "test:coverage": "turbo run test:coverage",
     "typecheck": "turbo run typecheck",
     "typecheck:root": "tsc -p tsconfig.json --noEmit"

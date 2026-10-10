@@ -2,7 +2,7 @@
   "name": "@tools/repo-checks",
   "version": "0.0.1",
   "private": true,
-  "description": "Repo-wide invariant checks: turbo graph edges and dry-run plumbing, turbo task input keys, dependency use (knip), lockfile dedupe, single-version controlled dependencies, pnpm patch application, and manifest lint coverage",
+  "description": "Repo-wide invariant checks: turbo graph edges and dry-run plumbing, turbo task input keys, dependency use (knip), lockfile dedupe, single-version controlled dependencies, pnpm patch application, manifest lint coverage, and the shared-source copies (with their sync)",
   "type": "module",
   "scripts": {
     "check:dedupe": "pnpm dedupe --check --loglevel=error",
@@ -10,11 +10,13 @@
     "check:knip": "knip --directory ../..",
     "check:package-coverage": "node check-package-coverage.ts",
     "check:patches": "node check-patches.ts",
+    "check:shared-source": "node check-shared-source.ts",
     "check:single-version": "node check-single-version.ts",
     "check:task-inputs": "node check-task-inputs.ts",
     "format:check:oxfmt": "oxfmt --check \"**/*.{ts,js,json,jsonc,md}\"",
     "format:oxfmt": "oxfmt \"**/*.{ts,js,json,jsonc,md}\"",
     "lint:oxlint": "oxlint .",
+    "sync:shared-source": "node sync-shared-source.ts",
     "test": "node --test --test-reporter=@tools/shared/test-reporter.ts \"*.test.ts\"",
     "typecheck:tsc": "tsc -p tsconfig.json --noEmit"
   },

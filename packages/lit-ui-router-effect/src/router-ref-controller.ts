@@ -6,7 +6,8 @@ import { UIRouterLitElement } from 'lit-ui-router/pure';
 
 import { warnMissingRouter } from './dev-warn.js';
 import { RefController, RefControllerOptions } from './ref-controller.js';
-import { routeRef, RouteSnapshot } from './route-ref.js';
+import { routeRef } from './route-ref.js';
+import { RouteSnapshot } from './shared/route-snapshot.js';
 
 /** Options for {@link RouterRefController}. */
 export interface RouterRefControllerOptions<T> extends RefControllerOptions<T> {
