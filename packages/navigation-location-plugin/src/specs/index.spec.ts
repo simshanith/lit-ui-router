@@ -231,10 +231,12 @@ describe.skipIf(!hasNavigationAPI)(
       const link = document.createElement('a');
       link.href = '#';
       document.body.append(link);
+
       const plugin = navigationLocationPlugin(
         router,
         focusReset ? { intercept: () => ({ focusReset }) } : {},
       );
+
       try {
         link.focus();
         expect(document.activeElement).toBe(link);
@@ -260,10 +262,12 @@ describe.skipIf(!hasNavigationAPI)(
       const spacer = document.createElement('div');
       spacer.style.height = '5000px';
       document.body.append(spacer);
+
       const plugin = navigationLocationPlugin(
         router,
         scroll ? { intercept: () => ({ scroll }) } : {},
       );
+
       try {
         window.scrollTo(0, 500);
         expect(window.scrollY).toBe(500);

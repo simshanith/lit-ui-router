@@ -315,7 +315,7 @@ describe('NavigationLocationService (stubbed Navigation seam)', () => {
       interceptOptions = { focusReset: 'after-transition' };
       const event = fakeNavigateEvent({ uiRouter: router });
 
-      registeredInterceptor()(event as unknown as NavigateEvent);
+      registeredInterceptor()(event);
 
       expect(event.intercept).toHaveBeenCalledExactlyOnceWith({
         focusReset: 'after-transition',
