@@ -1,7 +1,7 @@
 // THE CLIENT'S MARK — the lit-ui-router logo and the Lit flame it glows with,
 // the pair the docs site's home hero draws (www/lit-ui-router.dev/index.md and
 // its theme's `--vp-home-hero-image-*` tokens). The cover stamps the client's
-// name; this is the client's mark beside it. Both files are the docs site's
+// name; the mark heads the rail, the link to the docs site. Both files are the docs site's
 // own, copied under generator/brand/, and ride into the app as data URIs
 // through the generated module, so the prerender, the site and the artifact
 // all carry them with no request.
