@@ -96,6 +96,7 @@ const PACKAGE_DIRS = [
   'lit-ui-router-mobx',
   'lit-ui-router-ssr',
   'navigation-location-plugin',
+  'ui-router-effect',
   'ui-router-server',
 ].map((dir) => resolve(here, '..', '..', 'packages', dir, 'dist') + sep);
 

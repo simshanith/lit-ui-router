@@ -84,6 +84,10 @@
         "@uirouter/core-floor",
       ],
     },
+    "packages/ui-router-effect": {
+      // vitest alias target for the effect 3 compat lane
+      "ignoreDependencies": ["effect-3"],
+    },
     "packages/ui-router-server": {
       "ignoreDependencies": [
         "@release-it/conventional-changelog",
