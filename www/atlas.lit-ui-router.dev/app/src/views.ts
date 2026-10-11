@@ -6,7 +6,7 @@
  */
 import type { UIRouter } from '@uirouter/core';
 import { LitElement, ReactiveElement, html, noChange, nothing } from 'lit';
-import type { TemplateResult } from 'lit';
+import type { PropertyValues, TemplateResult } from 'lit';
 import { live } from 'lit/directives/live.js';
 import { ref } from 'lit/directives/ref.js';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
@@ -55,6 +55,8 @@ import { initCity } from './generated/city-init.js';
 import type { CityScene } from './generated/city-init.js';
 import { initBricks } from './generated/bricks-init.js';
 import { ARTIFACT } from './mode.ts';
+import { readPref, setTrace, setVisualizer } from './prefs.ts';
+import type { PrefName, PrefState } from './prefs.ts';
 import { href } from './routes.ts';
 import { runtime } from './runtime.ts';
 import type { ThemeChoice } from './theme.ts';
@@ -400,6 +402,119 @@ export class AtlasCopyLink extends LitElement {
 }
 customElements.define('atlas-copy-link', AtlasCopyLink);
 
+// --- <atlas-prefs> — the two live switches, in a panel off the utility bar --
+
+export class AtlasPrefs extends LitElement {
+  static override properties = {
+    open: { state: true },
+    visualizer: { state: true },
+    trace: { state: true },
+  };
+
+  declare open: boolean;
+  declare visualizer: PrefState;
+  declare trace: PrefState;
+
+  constructor() {
+    super();
+    this.open = false;
+    this.visualizer = readPref('visualizer');
+    this.trace = readPref('trace');
+  }
+
+  override createRenderRoot(): HTMLElement {
+    return this;
+  }
+
+  #onPointerDown = (event: Event): void => {
+    if (!this.contains(event.target as Node)) this.open = false;
+  };
+
+  #onKeyDown = (event: KeyboardEvent): void => {
+    if (event.key !== 'Escape') return;
+    this.open = false;
+    this.querySelector<HTMLButtonElement>('.prefs-toggle')?.focus();
+  };
+
+  #listen(on: boolean): void {
+    const method = on ? 'addEventListener' : 'removeEventListener';
+    document[method]('pointerdown', this.#onPointerDown);
+    document[method]('keydown', this.#onKeyDown as EventListener);
+  }
+
+  override updated(changed: PropertyValues<this>): void {
+    if (changed.has('open')) this.#listen(this.open);
+  }
+
+  override disconnectedCallback(): void {
+    this.#listen(false);
+    super.disconnectedCallback();
+  }
+
+  #flip(name: PrefName, on: boolean): void {
+    if (name === 'visualizer') {
+      this.visualizer = { on, forced: false };
+      void setVisualizer(on);
+    } else {
+      this.trace = { on, forced: false };
+      setTrace(on);
+    }
+  }
+
+  #row(name: PrefName, label: string, description: string): TemplateResult {
+    const pref = this[name];
+    return html`
+      <div class="pref-row">
+        <span class="pref-text">
+          <span class="pref-label">${label}</span>
+          <span class="pref-desc">${description}${pref.forced ? ' · set by the url' : ''}</span>
+        </span>
+        <button
+          type="button"
+          class="pref-switch"
+          role="switch"
+          aria-checked=${pref.on ? 'true' : 'false'}
+          aria-label=${label.toLowerCase()}
+          ?disabled=${pref.forced}
+          @click=${() => this.#flip(name, !pref.on)}
+        >
+          ${pref.on ? 'ON' : 'OFF'}
+        </button>
+      </div>
+    `;
+  }
+
+  override render(): TemplateResult {
+    return html`
+      <button
+        type="button"
+        class="prefs-toggle"
+        aria-expanded=${this.open ? 'true' : 'false'}
+        @click=${() => {
+          this.open = !this.open;
+        }}
+      >
+        PREFS
+      </button>
+      ${this.open
+        ? html`
+            <div class="prefs-panel" role="group" aria-label="preferences">
+              ${ARTIFACT
+                ? nothing
+                : this.#row(
+                    'visualizer',
+                    'VISUALIZER',
+                    'the state tree and transition log, drawn over the page',
+                  )}
+              ${this.#row('trace', 'TRACE', 'transition, view config and ui-view logging in the console')}
+            </div>
+          `
+        : nothing}
+    `;
+  }
+}
+customElements.define('atlas-prefs', AtlasPrefs);
+
 const copyLink = (router: UIRouter | undefined): TemplateResult =>
   html`<atlas-copy-link .router=${router}></atlas-copy-link>`;
 
@@ -421,6 +536,7 @@ function utilBar(
         <a class="util-set" href="${out(href.set)}" target=${outTarget}>THE FLAT SET ↗</a>
         ${copy}
         <atlas-themer></atlas-themer>
+        <atlas-prefs></atlas-prefs>
       </nav>
     </div>
   `;

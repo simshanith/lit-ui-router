@@ -7,6 +7,7 @@ import { onXrefClick } from './fragment.ts';
 import type { FocusDetail, XrefDetail } from './fragment.ts';
 import { installLightbox } from './lightbox.ts';
 import { createRouter } from './router.ts';
+import { installPrefs } from './prefs.ts';
 import { runtime } from './runtime.ts';
 import { applyTheme, readTheme } from './theme.ts';
 import { page } from './views.ts';
@@ -54,6 +55,8 @@ const booted = runtime.runPromise(
 );
 router.start();
 await booted;
+// the visualizer and trace switches, applied once the first transition has settled
+installPrefs(router);
 
 /** Resolves once the root view's own update — and the microtask after it — is done. */
 const pageSettled = async (): Promise<void> => {

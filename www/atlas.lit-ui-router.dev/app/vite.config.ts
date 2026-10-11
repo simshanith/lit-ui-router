@@ -1,17 +1,27 @@
 import { existsSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { createRequire } from 'node:module';
+import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 import type { Plugin } from 'vite';
 import { createServerRouter } from 'ui-router-server';
 import { serverRouterPlugin } from 'ui-router-server/vite';
 import { viteSingleFile } from 'vite-plugin-singlefile';
+import { viteStaticCopy } from 'vite-plugin-static-copy';
 import { allSheets } from './src/manifest.ts';
 import type { Manifest } from './src/manifest.ts';
 import { BASE, mountsFor } from './src/routes.ts';
 
 const HERE = fileURLToPath(new URL('.', import.meta.url));
 const DIST = join(HERE, 'dist');
+// The visualizer's css asks for `../../images/…` against the document, so the
+// icons are served at /images/ beside the page, as the sample apps serve them.
+const VISUALIZER_IMAGES = join(
+  dirname(createRequire(import.meta.url).resolve('@uirouter/visualizer/package.json')),
+  'images',
+).replaceAll('\\', '/');
+// static-copy keeps the source's own segments under dest; the rename drops them
+const VISUALIZER_STRIP = relative(HERE, VISUALIZER_IMAGES).split('/').length;
 
 // The generated index is on disk at config time, so the dev server can narrow
 // /sheet/:num to the numbers that were actually drawn — and answer 404 for
@@ -71,6 +81,15 @@ export default defineConfig(({ isPreview, mode }) => {
       target: 'esnext',
     },
     plugins: [
+      viteStaticCopy({
+        targets: [
+          {
+            src: `${VISUALIZER_IMAGES}/**`,
+            dest: 'images',
+            rename: { stripBase: VISUALIZER_STRIP },
+          },
+        ],
+      }),
       serverRouterPlugin(serverRouter, {
         // Preview serves what Pages serves: the prerendered `<subpath>/index.html`
         // when the build wrote one, with or without the trailing slash. Dev has
