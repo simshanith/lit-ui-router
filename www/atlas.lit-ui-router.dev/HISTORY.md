@@ -123,6 +123,7 @@ The cover carries no `sub` line and no REV of its own. Its history lives in two 
 
 **Record notes**
 
+- 2026-10-11: links — the notes link Tilt, the two MDN event pages and the manifest to their homes.
 - 2026-09-28, cabinet refresh at origin/main @ 9b1b1bf3: the lead reads lit-ui-router 1.16.0 (was 1.16.0-rc.1) from `census-files.json`, and the door strip re-prices off `census-doors.json`: `.` 8,719 → 8,837 gz, `./pure` 8,678 → 8,680, `./register` 3,389 → 3,508, `./context` 718 unmoved — #990 moved the router adoption into `willUpdate`.
 - 2026-09-26, cabinet refresh at origin/main @ fe44598e: nothing on the sheet moved. The lead reads lit-ui-router 1.16.0-rc.1 from `census-files.json`, and the six doors re-read off `census-doors.json` at the same prices — `.` 8,719 gz, `./pure` 8,678, `./register` 3,389, `./context` 718 — no flagship file having changed. Only the title block's date and ref advance.
 - 2026-09-23, cabinet refresh at origin/main @ 38c9fa1c: the lead reads lit-ui-router 1.16.0-rc.1, read from `census-files.json` as always — the repo's version, which npm serves under `rc` while `latest` stays 1.15.0. The six doors re-priced on #940 and #941: `.` 8,206 → 8,719 gz, `./pure` 8,139 → 8,678, `./register` 2,837 → 3,389, `./context` 633 → 718. The circuit and every station are unchanged.
@@ -135,6 +136,7 @@ The cover carries no `sub` line and no REV of its own. Its history lives in two 
 - Basis: none stated; the altitude line reads `diagrams/data/census-files.json` for the version.
 
 ## Sheet 1i — THE RENDER LOOP, WALKED
+- 2026-10-11: links — the notes link the source tree, core, cytoscape preset and Lucide to their homes.
 - 2026-10-03, no rev clause: the link carries the pin as well as the step. A tapped station writes its id (`?focus=core`), a tapped leg its ends (`?focus=core>hall`), and a pin held while walking rides with the step (`?focus=3:core>hall`); opening any of those links restores step and pin, and Escape clears the pin while the lane has focus. The other three cytoscape lanes and the city link their pins the same way.
 
 - **file** `diagrams/generator/sheet1i.mjs` · **id** `loop-walked` · **current rev** A
@@ -210,6 +212,7 @@ resolved →
 
 **Record notes**
 
+- 2026-10-11: links — the notes link every package to npmx and each protocol and library to its home.
 - 2026-10-11, cabinet refresh at origin/main @ bd10638a: the bricks re-letter nothing — `lit-ui-router` 1.16.3 at 22 files / 2,776 sloc, 8 courses, and the five companions at the fifteenth's figures; the TOTAL holds at 6 bricks · 54 authored files · 5,766 sloc.
 - 2026-10-10, cabinet refresh at origin/main @ 76ccefc0: the bricks re-letter nothing — `lit-ui-router` 1.16.3 at 22 files / 2,776 sloc, 8 courses, and the five companions at the fourteenth's figures; the TOTAL holds at 6 bricks · 54 authored files · 5,766 sloc. No brick changed shape or course.
 - 2026-10-10, cabinet refresh at origin/main @ 9e656ab3: the bricks re-letter the 2026-10-10 releases — `lit-ui-router` 1.16.3 at 22 files / 2,776 sloc, still 8 courses (was 1.16.2, 2,752); effect 0.2.1 at 286 (was 288), mobx 1.1.1 at 205 (was 204), ssr 0.2.1 at 1,117 (was 1,094), `ui-router-server` 0.2.2 at 1,235 (was 0.2.0, 1,211), `ui-router-navigation-location-plugin` 1.0.2 at 147 (was 1.0.1, 141), and the plugin 1.2.1 at 1,462 sloc on 10 studs (was 1.2.0, 1,501, 11). The TOTAL reads 6 bricks · 54 authored files · 5,766 sloc (was 54 / 5,690). No brick changed shape or course.
@@ -269,6 +272,7 @@ resolved →
 
 **Record notes**
 
+- 2026-10-11: links — the notes link the blocks to npmx, the protocol and peerDependenciesMeta to docs.
 - 2026-10-11, cabinet refresh at origin/main @ bd10638a: blocks unmoved — `lit-ui-router` 1.16.3 at 2,776 sloc and the five companions at the fifteenth's figures; every tie is unmoved: mobx and effect peer ^1.15.0, ssr ^1.16.1 and ^0.2.0.
 - 2026-10-10, cabinet refresh at origin/main @ 76ccefc0: blocks unmoved — `lit-ui-router` 1.16.3 at 2,776 sloc and the five companions at the fourteenth's figures; every tie is unmoved: mobx and effect peer ^1.15.0, ssr ^1.16.1 and ^0.2.0. No block moved.
 - 2026-10-10, cabinet refresh at origin/main @ 9e656ab3: blocks re-letter `lit-ui-router` 1.16.3 at 2,776 sloc, `location-plugin 1.0.2` at 147, mobx 1.1.1 at 205, `ui-router-server` 0.2.2 at 1,235, effect 0.2.1 at 286 and ssr 0.2.1 at 1,117. Every tie is unmoved: mobx and effect peer ^1.15.0, ssr ^1.16.1 and ^0.2.0. No block moved.
@@ -311,6 +315,7 @@ resolved →
 
 **Record notes**
 
+- 2026-10-11: links — the notes link bench packages to npmx, catalogs and npm fields to docs.
 - 2026-10-11, cabinet refresh at origin/main @ bd10638a: the head is unmoved at 9 NODES · 14 DRAWN CONTRACTS OF 23 · 20 PEERS / 3 DEPENDENCIES · 3 OPTIONAL, and the seven published nodes letter the versions the fifteenth lettered.
 - 2026-10-10, cabinet refresh at origin/main @ 76ccefc0: the head is unmoved at 9 NODES · 14 DRAWN CONTRACTS OF 23 · 20 PEERS / 3 DEPENDENCIES · 3 OPTIONAL, no range moved under it, and the seven published nodes letter the versions the fourteenth lettered.
 - 2026-10-10, cabinet refresh at origin/main @ 9e656ab3: the head is unmoved at 9 NODES · 14 DRAWN CONTRACTS OF 23 · 20 PEERS / 3 DEPENDENCIES · 3 OPTIONAL, and no range moved under it; the seven published nodes re-letter their versions — 1.16.3, 1.2.1, 0.2.1, 1.1.1, 0.2.1, 1.0.2 and 0.2.2.
@@ -401,6 +406,7 @@ resolved →
 
 **Record notes**
 
+- 2026-10-11: links — the notes link the instruments to tools/ and checkers and linters to their homes.
 - 2026-09-13, after the refresh, no rev clause: the frame audit. Block 14 `lint & probe fleet` moved 175,320 → 175,298 and the yard's own frame deepened, `district(10, 175, 445, 385)` → `district(10, 175, 445, 393)`: row B's giant hung 17.9 units below the dashed yard frame — a fault since the fleet took `tools/eslint`, and worse at this ref's sloc — so the block steps 22 north of its row mates and the frame drops 8 to close behind it. No other mass moved and no ruler changed.
 - 2026-09-11, no rev clause: re-counted at origin/main @ 65e2843 — `INSTRUMENTS` in `census-yard.mjs` gains "repo checks — graph edges, task inputs, knip, patches" and "bootstrap — pre-install manifest reads", and `tools/eslint/` joins the "lint & probe fleet"; orphans 0. The yard stands at 19 rows, 217 files / 15,094 sloc.
 - 2026-10-11, later, no rev clause: the conveyor's first leg points forward. The user: "looks like there's an arrow going the wrong way back into oxc-emit step 2". `leg()` trimmed a leg's departure by the departing block's height plus a gap, as it trims the arrival; mass 1 stands 99 px tall at 66 files, taller than the 1→2 leg is long, so both trims overshot and the segment flipped, its head landing on mass 2 from the east. A leg leaves from the base of a front face, which hides nothing beyond it, so the departure clears by the gap alone, and `leg()` throws when a two-point leg cannot clear its trims. The bus from 4, the return from 6 and the four later conveyor legs start at their blocks. The frame audit holds at 0 / 0 / 0 on the plate; thumbs re-shot.
@@ -483,6 +489,7 @@ resolved →
 
 **Record notes**
 
+- 2026-10-11: links — the notes link each cited file to main and the linters and deploy host to docs.
 - 2026-10-11, cabinet refresh at origin/main @ bd10638a: ci 885 nodes, 237 real; 128 turbo definitions in 23 files; 54 mise tasks, 27 with `$usage_*` specs — all unmoved, and the `turbo.json`, `config.toml` and workflow cites hold unchanged.
 - 2026-10-10, cabinet refresh at origin/main @ 76ccefc0: ci 885 nodes, 237 real; 128 turbo definitions in 23 files; 54 mise tasks, 27 with `$usage_*` specs — all unmoved, and the `turbo.json`, `config.toml` and workflow cites hold unchanged.
 - 2026-10-10, cabinet refresh at origin/main @ 9e656ab3: ci 885 nodes, 237 real; 128 turbo definitions in 23 files (was 127 in 22), the new file `tools/lit-test-env/turbo.json`; 54 mise tasks, 27 with `$usage_*` specs, unmoved. Root `turbo.json` shifted uniformly +5 above the cited ranges, so its six ranges (ten occurrences) re-cite: `ci:pull_request` turbo.json:388-402, `//#lint:workflows` 285-293, the cache-gasket inputs 296-300 · 314-320 · 325-331 and 296-331. The `config.toml` and workflow cites hold unchanged.
@@ -588,6 +595,7 @@ resolved →
 
 **Record notes**
 
+- 2026-10-11: links — the notes link the dry run, scc, the instruments and the guards to their homes.
 - 2026-09-13, after the refresh, no rev clause: the frame audit. Three roads off the quarters row were leaving from inside a building, the sixth quarter (27 `lit-ui-router-effect`) having been founded under them and the fifth (2) having grown: quarters → release y 50 → 64, quarters → dts tower (the dashed leg) y 54 → 68, and typedoc's return leg 62 → 84, so it drops with them instead of running two units off the release lane. No quarter moved.
 - 2026-09-11, no rev clause: re-surveyed at origin/main @ 65e2843. Structure 24 "the harbour" repoints from `docs` to `@www/lit-ui-router.dev`; `@tools/repo-checks` is drawn whole as structure 1, "the guard house" — 8 tasks, 763 files, 299 sloc — sited off the root yard's west edge, and the former structures 2 and 28, the separate check plots, fold into it; the eslint-plugin quarter renumbers 27 → 2 so the badges stay contiguous at 1–26. `TERRACE` holds 18 packages, `@tools/bootstrap` and `@tools/eslint` among them. The root yard's lettering and notes are rewritten: six equal slabs watch 688 root files, and the four guards (graph-edges, task-inputs, patches, knip) are named in the root lint task's `with` list rather than as root tasks of their own. The floating harbour label moved to open ground at (560, 660).
 - 2026-10-11, cabinet refresh at origin/main @ bd10638a: 237 real tasks in 29 structures over 14,023 task-file hashes and 3,033 command sloc, unmoved; 648 phantom plots. `census-mass3b.mjs` printed the same three `check:dev-split` DRIFT lines.
@@ -644,6 +652,7 @@ resolved →
 
 **Record notes**
 
+- 2026-10-11: links — package links move to npmx.dev, the home the README and docs site use.
 - 2026-10-11, later, no rev clause: the notes link what they name. The user: "sheets 4, 5, and 14 could benefit from links in the prose body". Every drawn package the notes name is an anchor to its npm page — `@uirouter/core`, `@uirouter/sticky-states`, `@uirouter/rx`, `@uirouter/angularjs`, `@uirouter/angular`, `@uirouter/react`, `@uirouter/visualizer`, `lit-ui-router`, `lit-ui-router-mobx`, `lit-ui-router-effect`, `lit-ui-router-ssr`, `ui-router-server` — through `npmLink()`, which checks the name against `census-npm.json` before it letters a url, so a package missing from the registry plate throws as a drawn one does; "This repo" in the Method paragraph is the home repository and the `ui-router` org is its GitHub page, both literals. A target links once per paragraph; `@uirouter/vue` stays plain, a seat with no registry page. The caption carries no anchor: it doubles as the flat page's `<meta name="description">`, which takes it verbatim. The anchors are bare `<a href>` in the running text, as A1's Friday Facts links are; chrome's `a { color: var(--accent) }` colours them.
 - 2026-10-11, cabinet refresh at origin/main @ bd10638a: the registry re-read after #1196 — the seven published members under `latest` and no other tag at the 2026-10-10 versions, 0 leaf changes on the plate; the TOTAL holds at 14 packages · 236 authored files · 16,812 sloc, the spine's ranges unmoved.
 - 2026-10-10, cabinet refresh at origin/main @ 76ccefc0: the registry re-read after #1184 — the seven published members under `latest` and no other tag at the 2026-10-10 versions, 0 leaf changes on the plate; the TOTAL holds at 14 packages · 236 authored files · 16,812 sloc, the spine's ranges unmoved.
@@ -701,6 +710,7 @@ _No REV clauses, historical paragraphs or rev-bearing callouts: this plate has o
 **Record notes**
 
 - No REV material of any kind: `sheet6` has no `rev` key, and no lettering, paragraph, caption or key row on the plate references a revision. Untouched since its two 2026-08-16 commits (c73b65b, and 693e6d8's label-collision pass).
+- 2026-10-11: links — the notes link BGP, the state router and ui-view to their homes.
 - Basis: none — the sheet is a definition, not a measurement.
 
 ## Sheet 7 — THE MEASURED CITY
@@ -755,6 +765,7 @@ resolved →
 
 **Record notes**
 
+- 2026-10-11: links — the notes link each named member to its directory and the plate to its file.
 - 2026-10-11, cabinet refresh at origin/main @ bd10638a: 40 members in 4 districts, 338 authored files / 29,023 sloc (was 29,029) plus 162 spec files / 28,535. #1196 trimmed the docs member's theme: docs 9 files · 751 sloc (was 757), and the shopfront district 32 files · 4,423 (was 4,429). No member was born, `assertPlots` held and no neighbour moved.
 - 2026-10-10, cabinet refresh at origin/main @ 76ccefc0: 40 members in 4 districts, 338 authored files / 29,029 sloc plus 162 spec files / 28,535, unmoved. No member was born, no figure moved, `assertPlots` held and no neighbour moved; #1184's fourteen manifests stand off the city's ruler.
 - 2026-10-10, cabinet refresh at origin/main @ 9e656ab3: 40 members in 4 districts, 338 authored files / 29,029 sloc plus 162 spec files / 28,535 (was 294 / 24,550 and 154 / 27,313). ONE member was born: №40 `@tools/oxlint-anti-slop` (tools/, private, #1143), only `typecheck:tsc`, tier `report` like `@tools/eslint`, at (0, 540), the yard's south-west corner in front of the release tower's lower flank — "the vendored anti-slop rules every oxlint lane loads". `assertPlots` threw, and neighbours moved: №2 `ui-router-server` x 240 → 250 (the flagship's annex reaches 241.5); №12 `@tools/release` y 455 → 452; №15 `@tools/build_and_test` x 300 → 270 (its annex grew into repo-checks and embed-heights); №16 `@tools/shared` (-16, 550) → (200, 600); №26 `@tools/happy-dom` x 125 → 163 (`@tools/lit-test-env` took a spec annex); №27 `@tools/wintercg-globals` x 185 → 208. Road G runs from shared west, then north between №40 and compat-guards into the tower's annex, its tag at (196, 470); the release leader runs (178, 497) → (252, 380); road D's happy-dom stub reads `g(26).x + 6`. "One faint road stands for eight" derives from the plate's graph: 20 members depend on `@tools/shared`, 14 of them instruments, and the build throws if `@tools/release` leaves them. The broadest-block sentence ranks from the plate — `examples` 3,672, `@tools/oxlint-anti-slop` just behind at 3,665, `sample-app-shared` fourth at 2,454 — and asserts examples' rank; the sample-app-shared label reads "outbuilt by three source blocks and three spec annexes".
@@ -837,6 +848,7 @@ resolved →
 
 **Record notes**
 
+- 2026-10-11: links — the notes link the plates, the meters and each named member to their homes.
 - 2026-09-11, no rev clause: re-metered at origin/main @ 65e2843, and `census-shadow.mjs`'s e2e guard now reads the `test:e2e:*` lanes — a non-empty set required, and `test:e2e:vanilla` on cypress — because the app carries no bare `test` script any more. The semantics are unchanged.
 - 2026-09-29, no rev clause: the plan follows sheet 7's three moved lots — №12 `@tools/release` at 0,455, №16 `@tools/shared` at -16,550, №25 `@tools/lcov-rebase` at 180,395. №16's badge steps 9 units west (`BADGE_DX`) off the release footprint's south-west corner, and the №12 and №16 leaders re-aim at their own blocks. The frame audit reads 0 escapes, 0 hits and 0 text-on-text.
 - 2026-10-11, cabinet refresh at origin/main @ bd10638a: re-metered at the ref — 26 members under their own suites, 12,509 of 20,039 metered src sloc lit (was 20,045), 13,711 of 13,897 lines at 98.7%; categories m 26 · e 3 · u 1 · n 9 · z 1. The docs member's worker stays fully lit, 74 of 751 sloc (9.9%, was 74 of 757, 9.8%). `census-shadow.mjs` printed the same two FAIL lines (`sample-app-shared`, `_tools_repo-checks`).
@@ -957,6 +969,7 @@ resolved →
 
 **Record notes**
 
+- 2026-10-11: links — the notes link the five plates and each named member to their files.
 - 2026-09-13, REV H: the rust channel stops being an editorial hand map. The `RUST` Map keyed by badge is deleted; `rustOf` takes a member DIRECTORY and reads `medIdle` out of `census-weather.json` — the same field sheet 13's schedule prints as "idle Nd", so a member's step on 7B is now the ladder applied to 13's own number and the two sheets cannot disagree. The ladder itself is cut at build time, by a rule stated in the source, in the telemetry box, in the key and in the notes: take the DISTINCT readings sorted; the differences between neighbours are the distribution's joints; R4 opens only if the TOPMOST joint is also the WIDEST joint, in which case it is everything above the second-highest reading, and otherwise it is pinned above the highest reading and stands empty; the three cuts below are the three widest remaining joints, each cut at the joint's LOWER lip (a step reads "≤ lip"), ties to the lower lip. Deterministic: the same distribution gives the same cuts. At this cabinet the topmost joint is 56→65 against a widest of 13→28, so R4 stays shut and the ladder cuts **0 ≤13d · R1 ≤35 · R2 ≤46 · R3 ≤65 · R4 >65 (reserved, unoccupied)** — 25 / 6 / 3 / 2 / 0 plants across the steps, one member (`@tools/wintercg-globals`, no dated source) carrying no step at all. Nineteen members moved off the hand map, most of them DOWN: №1 `lit-ui-router` 3 → 0 (idle 2d — the hand map was reading its AGE, not its idleness), №2 `ui-router-server` 3 → 2, №5, №6, №8, №12 and №24 all 3 → 0 or 1, and №13 the typedoc plugin 3 → 2. The deepest rust in the city is now R3 on №7 `sample-app-lit-mobx` (65d) and №26 `@tools/happy-dom` (56d). Every rust claim on the plate derives from the computed steps: the aria label, the caption, both prose paragraphs, the four district callouts, the flagship and typedoc callouts, the key's rust and cracks rows, the schedule header (which prints the ladder) and the schedule total (which prints the step counts and the idle basis). The telemetry box grew 148 → 182 px to carry the third rust line and the two lines saying the steps are re-cut every cabinet.
 - 2026-09-11, no rev clause: re-drawn at origin/main @ 65e2843 over sheet 7's new `PLACED`; the `RUST` map gains rows 33, 34 and 35 at step 0, all three born 2026-09-07/08.
 - 2026-09-29, no rev clause: sheet 7's lot moves arrive through the imported `PLACED` — №12 `@tools/release` at 0,455, №16 `@tools/shared` at -16,550, №25 `@tools/lcov-rebase` at 180,395 — so №14, №30 and №23 stand clear of the release plant and №25 clear of `@tools/repo-checks`' roof and badge. №12's badge lift drops 26 → 20, off the flagship callout's last line. The frame audit reads no hits above 1 px; the two sub-pixel pieces are the refresh's, unchanged.
@@ -1025,6 +1038,7 @@ resolved →
 
 **Record notes**
 
+- 2026-10-11: links — the notes link every named package to npmx and the prior art to its home.
 - 2026-10-10, cabinet refresh at origin/main @ 76ccefc0: 32 delivered packages carrying 174,501 lines of code, with 41,359 d.ts lines beside them, 270× the app's own 646, unmoved; `lit-ui-router` 1.16.3 delivers 3,152 lines over 44 files, 55× smaller than the city.
 - 2026-10-10, cabinet refresh at origin/main @ 9e656ab3: 32 delivered packages carrying 174,501 lines of code, with 41,359 d.ts lines beside them (was 173,820 / 41,155), 270× the app's own 646 (was 269×); `lit-ui-router` 1.16.3 delivers 3,152 lines over 44 files, still 55× smaller than the city.
 - 2026-10-04, cabinet refresh at origin/main @ 4dc0cbb7: 32 delivered packages carrying 173,820 lines of code, with 41,155 d.ts lines beside them (was 173,596 / 41,079), still 269× the app's own 646; `lit-ui-router` delivers 3,152 lines over 44 files, 55× smaller than the city (was 2,928 / 42 / 59×).
@@ -1113,6 +1127,7 @@ resolved →
 
 **Record notes**
 
+- 2026-10-11: links — the notes link the plate, the site pages and the shipped libraries to homes.
 - 2026-10-11, cabinet refresh at origin/main @ bd10638a: the wire re-counted at 898 files, 32,024,161 raw / 5,019,989 gz over the same 12 districts (was 32,024,314 / 5,019,761), 0 unclassified. #1196 moved the docs site alone — the html pages 1,818,200 gz, 1776 KB on the plate (was 1,817,914, 1775), the vp framework 237,761 (was 237,806), and the site css 23,691 with its lead `assets/style.EJaTsLP1.css` at 21,257 (was `style.Cl3uw3i6.css`, 21,270) — so the skyline paragraph reads the examples 744,351 bytes behind the html pages (was 744,065); "1.7 to 1" holds. No district changed.
 - 2026-10-10, cabinet refresh at origin/main @ 76ccefc0: the wire re-counted at 898 files, 32,024,314 raw / 5,019,761 gz over the same 12 districts (was 32,023,943 / 5,019,566), 0 unclassified. #1184's bumps moved the examples district alone — 1,073,849 gz (was 1,073,654), 1049 KB on the plate (was 1048), its lead chunk `model-viewer-COI-aTNF.js` at 281,842 gz (was `model-viewer-C8EVMy8l.js`, 281,843) — so the skyline paragraph reads the examples 744,065 bytes behind the html pages (was 744,260); "1.7 to 1" and "heavier than the vanilla, mobx and hash apps combined" hold. The routed apps 328 KB. No district changed.
 - 2026-10-10, cabinet refresh at origin/main @ 9e656ab3: the wire re-counted at 898 files, 32,023,943 raw / 5,019,566 gz over the same 12 districts (was 890 / 31,765,147 / 4,987,887), 0 unclassified; the routed apps 328 KB (was 319). No district changed.
@@ -1172,6 +1187,7 @@ resolved →
 
 **Record notes**
 
+- 2026-10-11: links — the notes link bundled packages to npmx, and vite, codecov and lit to their homes.
 - 2026-10-11, cabinet refresh at origin/main @ bd10638a: 124,625 gz in 17 chunks, 688,373 kept → 383,968 emitted, unmoved; `lit-ui-router` 7.0 KB, 5.7% of the wire.
 - 2026-10-10, cabinet refresh at origin/main @ 76ccefc0: 124,625 gz in 17 chunks, 688,373 kept → 383,968 emitted, unmoved; `lit-ui-router` 7.0 KB, 5.7% of the wire; the residual against sheet 9's vanilla district holds at 4,917 gz over one file.
 - 2026-10-10, cabinet refresh at origin/main @ 9e656ab3: 124,625 gz in 17 chunks (was 123,271), 688,373 kept → 383,968 emitted; `lit-ui-router` 7.0 KB, 5.7% of the wire (was 6.1 KB, 5.1%); the residual against sheet 9's vanilla district holds at 4,917 gz over one file.
@@ -1241,6 +1257,7 @@ resolved →
 
 **Record notes**
 
+- 2026-10-11: links — the notes link each priced package to npmx and each server adapter to its home.
 - 2026-09-13, after the refresh, no rev clause: the frame audit. The `eslint-plugin-lit-ui-router|.` door block moved 330,285 → 320,258: the door grew 9.7 → 16.9 KB minified at the 1.14.1 ref and its old lot pushed the block's base 10.5 units out through the dashed quarter frame's south-east dashes. No other door moved and no price was re-probed.
 - 2026-10-11, cabinet refresh at origin/main @ bd10638a: twenty-two doors in seven quarters, 182,512 minified / 65,108 gz, and no door re-priced.
 - 2026-10-10, cabinet refresh at origin/main @ 76ccefc0: twenty-two doors in seven quarters, 182,512 minified / 65,108 gz, priced by rolldown 1.2.13, and no door re-priced. npm serves ssr under `latest` at 0.2.1, the version the ref carries. No lot moved.
@@ -1315,6 +1332,7 @@ resolved →
 
 **Record notes**
 
+- 2026-10-11: links — the notes link turbo flags to turborepo.dev and #693, #703 to the repo.
 - 2026-10-11, cabinet refresh at origin/main @ bd10638a: the register re-punched at 885 nodes, 237 real, 3,208 edges, 109 real→real, unmoved; the deepest chain 15, the deepest real run 6.
 - 2026-10-10, cabinet refresh at origin/main @ 76ccefc0: the register re-punched at 885 nodes, 237 real, 3,208 edges, 109 real→real, unmoved; the fanned tail is 40 names, the deepest chain 15, the deepest real run 6.
 - 2026-10-10, cabinet refresh at origin/main @ 9e656ab3: the register re-punched at 885 nodes, 237 real, 3,208 edges, 109 real→real (was 864 / 235 / 3,024 / 109); the fanned tail is 40 names, the deepest real run 6. The hand-traced chain threw at 14 rungs against the plate's 15: retraced from the plate's graph, it takes `@tools/warn-lanes#build:types` after `@tools/shared#build:types`, and the deepest chain reads 15.
@@ -1347,6 +1365,7 @@ _No REV clauses, historical paragraphs or rev-bearing callouts: this plate has o
 
 **Record notes**
 
+- 2026-10-11: links — the notes link turbo flags, the cytoscape preset layout and Lucide to docs.
 - 2026-10-11, cabinet refresh at origin/main @ bd10638a: the same plate walked at the new ref, nothing moved; the lane's head reads 885 NODES · 237 RUN A COMMAND · 3,208 EDGES · 109 JOIN TWO REAL TASKS.
 - 2026-10-10, cabinet refresh at origin/main @ 76ccefc0: the same plate walked at the new ref, nothing moved; the lane's head reads 885 NODES · 237 RUN A COMMAND · 3,208 EDGES · 109 JOIN TWO REAL TASKS.
 - 2026-10-10, cabinet refresh at origin/main @ 9e656ab3: the lane's head reads 885 NODES · 237 RUN A COMMAND · 3,208 EDGES · 109 JOIN TWO REAL TASKS.
@@ -1427,6 +1446,7 @@ resolved →
 
 **Record notes**
 
+- 2026-10-11: links — the notes link git log, the vitepress config pair and dated dirs to the repo.
 - 2026-09-11, no rev clause: the same 15 → 300 / 32 → 440 move as sheet 7, applied to this sheet's own `PLACED` table, which had carried the same overlap; asserted by `assertPlots` as well (DESIGN-REVIEW §T53).
 - 2026-09-11, cabinet refresh at origin/main @ 65e2843: this sheet's own `PLACED` takes the same three new rows as sheet 7 — 33 `@tools/bootstrap` (490, 350), 34 `@tools/eslint` (514, 530), 35 `@tools/repo-checks` (449, 385) — and the same №32 step, 440,430 → 449,462.
 - 2026-10-11, cabinet refresh at origin/main @ bd10638a: 500 dated files, 2,434 touches (was 2,433). #1196 touched `www/lit-ui-router.dev/.vitepress/theme/index.ts`, a winter file, ×12 (was ×11): the docs block reads ×112, 10.2/f (was ×111, 10.1/f), its src block-average ×11.6/f (was ×11.4), still the hottest multi-file block in the city; the winter cohort's mean ×10.6 (was ×10.5), still falling monotonically with youth; October's timeline bar 865 (was 864), site 48. No block moved, and `assertPlots` held.
@@ -1510,6 +1530,7 @@ resolved →
 
 **Record notes**
 
+- 2026-10-11: links — the notes link scc, git, mise, pnpm, turbo, vite and rolldown to their homes.
 - 2026-10-11, cabinet refresh at origin/main @ bd10638a: re-introspected over the same 18 plates, all pinned to origin/main @ bd10638a; 920 tracked paths, 884 rows.
 - 2026-10-10, cabinet refresh at origin/main @ 76ccefc0: re-introspected over 18 plates (was 17), all pinned to origin/main @ 76ccefc0: the census-upstream station joined — `census-upstream.mjs` and `census-upstream.json` — and the office reads 18 probes, 18 plates, 22 drawings; 920 tracked paths, 884 rows.
 - 2026-10-10, cabinet refresh at origin/main @ 9e656ab3: re-introspected over the same 17 plates, all pinned to origin/main @ 9e656ab3; 920 tracked paths, 884 rows.
@@ -1595,6 +1616,7 @@ _No REV clauses, historical paragraphs or rev-bearing callouts: this plate has o
 - Basis: a separate plate outside the cabinet. `generator/survey-self.mjs` archives the atlas's own branch and runs the cabinet's scc 4.0.0 over it, filing `data/survey-self.json` under a `survey-` name so appendix A2's one-ref check stays about main.
 - The fixed-point rule: the atlas counts what it writes by hand and serves to a browser, never what it draws. Four members (drawing office, survey office, routed site, site build); plates, generated pages, `app/public/`, `app/src/generated/` and prose stand outside and are tallied on the plate.
 - One ruler: `S()`, `H()` and `AG` are exported from `sheet7.mjs` and imported, and file admission is `onCityRuler` in `census-query.mjs`, the predicate the city census itself runs.
+- 2026-10-11: links — the notes link git archive and the pinned scc 4.0.0 release to their homes.
 - 2026-10-11, re-measured: `survey-self.mjs` re-run at www/atlas @ ea081707 (was 7d98dbdc), against the cabinet at origin/main @ bd10638a. The atlas reads four members, 100 files · 20,405 sloc (was 99 / 20,117), 268 tracked (was 267) — the survey office 24 files · 2,467 (was 2,447), the drawing office 53 · 13,153 (was 13,063), the routed site 19 files · 4,439 (was 18 / 4,277), the site build 4 · 346 (was 330) — 2.8× the product's 7,228 and 70% of the codebase's 29,023 (was 69% of 29,029). Four of the five excluded rows grew, `app/src/generated/` holding at 706; `app/index.html` stands off-ruler at 1,447 (was 1,372), `app/package.json` at 58 (was 56). "More source than any one district" and "the product outweighs it only with tests (25,657)" hold.
 - 2026-10-10, re-measured: `survey-self.mjs` re-run at www/atlas @ 7d98dbdc (was ce84fc22), a commit that holds `survey-self.mjs` itself, against the cabinet at origin/main @ 76ccefc0. The atlas reads four members, 99 files · 20,117 sloc (was 96 / 19,521), 267 tracked (was 255) — the survey office 24 files · 2,447 (was 23 / 2,243), the drawing office 53 · 13,063 (was 51 / 12,684), the routed site 4,277 sloc (was 4,264) — 2.8× the product's 7,228 (was 2.7×) and 69% of the codebase's 29,029 (was 67%). All five excluded rows grew; `app/index.html` stands off-ruler at 1,372 (was 1,290), and two off-ruler SVGs stand beside it, `generator/brand/lit-flame.svg` and `generator/brand/lit-ui-router.svg`. The EXCLUDED list wraps to a fourth line inside its frame, and "more source than any one district" (20,117 against 13,198) and "the product outweighs it only with tests (25,657)" hold.
 - 2026-10-10, re-measured: `survey-self.mjs` re-run at www/atlas @ ce84fc22 (was e1fbec96), a commit that holds `survey-self.mjs` itself, against the cabinet at origin/main @ 9e656ab3. The atlas reads four members, 96 files · 19,521 sloc (was 92 / 18,243) — the survey office 23 files · 2,243, the drawing office 51 · 12,684 — 2.7× the product's 7,228 (was 2.5× / 7,191) and 67% of the codebase's 29,029 (was 74% of 24,550). At a fixed 40 px gap the main row reached 1,576 against 1,520, so the gap between districts derives to fit, 40 at most.

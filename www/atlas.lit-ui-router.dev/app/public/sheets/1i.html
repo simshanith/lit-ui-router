@@ -409,7 +409,7 @@
 <p><strong>Method — what is drawn, and from where.</strong> Everything on this page comes out of
 <code>www/<wbr>atlas.lit-ui-router.dev/<wbr>data/<wbr>census-loop.json</code>, the checked-in plate <code>generator/<wbr>census-loop.mjs</code> reads off
 a materialized archive of the ref — surveyed at origin/main @ bd10638a (commit 2026-10-10). It is a T1 tree probe: nothing runs, seven files under
-<code>packages/<wbr>lit-ui-router/<wbr>src/<wbr></code> are read line by line. The plate carries the 10 stations of
+<a href="https://github.com/simshanith/lit-ui-router/tree/main/packages/lit-ui-router/src"><code>packages/<wbr>lit-ui-router/<wbr>src/<wbr></code></a> are read line by line. The plate carries the 10 stations of
 <a class="xref" data-sheet="1" href="/sheet/1">sheet 1</a> (each anchored to the line where lit-ui-router implements it), the 12 legs between them (each with the
 call or event that carries it), and the walk — 12 steps, 30 evidence lines in all. Every
 evidence entry is filed as <code>file:line</code> plus the verbatim source at that line, and the probe
@@ -422,7 +422,7 @@ memory — the click handler's own guards and its <code>$state.go</code>, then c
 the hooks lit-ui-router registers in it: <code>&lt;ui-view&gt;</code>'s <code>onBefore</code> (uiCanExit) and
 <code>onSuccess</code> (uiOnParamsChanged), <code>uiSrefActive</code>'s <code>onStart</code> tap and its
 <code>trans.promise</code>, <code>TransitionController</code>'s default <code>['onSuccess']</code>. No line of
-<code>@uirouter/<wbr>core</code> is cited, so where the machine itself moves — matching, resolving, writing the url —
+<a href="https://npmx.dev/package/@uirouter/core"><code>@uirouter/<wbr>core</code></a> is cited, so where the machine itself moves — matching, resolving, writing the url —
 the step says so and cites the wire lit-ui-router owns at that point. Step 2 is the click; step 1 is
 the circuit at rest, because before any click the stations have already found each other by composed DOM
 events, and that wiring is the only reason the click has anywhere to go.</p>
@@ -430,8 +430,8 @@ events, and that wiring is the only reason the click has anywhere to go.</p>
 around a ring: location, core, the transition hall, the view with its child below it, Lit render, the document
 with the link on it. The two stations <a class="xref" data-sheet="1" href="/sheet/1">sheet 1</a> draws elevated — uiSrefActive and TransitionController
 — stand <em>inside</em> the ring here, because they are not on the route: <a class="xref" data-sheet="1" href="/sheet/1">sheet 1</a>'s key says "elevated = overlay",
-and inside is the flat drawing's word for the same thing. Positions are computed here and drawn with cytoscape
-<code>preset</code>: no physics, so a station is always in the same place when you come back to it. Loop legs
+and inside is the flat drawing's word for the same thing. Positions are computed here and drawn with <a href="https://js.cytoscape.org/#layouts/preset">cytoscape
+<code>preset</code></a>: no physics, so a station is always in the same place when you come back to it. Loop legs
 run straight; the legs that would otherwise be read as passing through a building bow clear of it.</p>
 <p><strong>Sprites.</strong> Ten skins, one per station,
 authored to the house recipe — the girding frame drawn first and a semi-opaque wall washed over it, so the frame
@@ -447,7 +447,7 @@ does. The two overlays never light a loop leg at all, in 12 steps. And the last 
 one leg this package does not own: core writes the url; lit-ui-router's part of that wire is the
 <code>listen()</code> that carries the next back-button press in.</p>
 <p><strong>What is editorial.</strong> The ring and where the overlays stand; the sprite drawings and the colours;
-the Lucide glyphs (ISC, restroked) that mark the lane's controls and panel heads; the narration sentences and this prose. The stations, the legs, the order of the steps, every line number, every
+the <a href="https://lucide.dev/">Lucide</a> glyphs (ISC, restroked) that mark the lane's controls and panel heads; the narration sentences and this prose. The stations, the legs, the order of the steps, every line number, every
 excerpt and every count are the plate's.</p>
     </div>
     <div class="keyblock">

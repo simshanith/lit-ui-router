@@ -3,6 +3,13 @@ import { txt, lines, keyRow } from './helpers.mjs';
 
 const P = 's6';
 
+// the homes the notes name: BGP's RFC, the ui-router site, the API page that defines <ui-view>
+const HOME = {
+  bgp: 'https://www.rfc-editor.org/rfc/rfc4271',
+  uirouter: 'https://ui-router.github.io/',
+  uiView: 'https://lit-ui-router.dev/api/',
+};
+
 // Strata, surface (top) to bedrock (bottom).
 const strata = [
   {
@@ -77,9 +84,9 @@ export const sheet6 = {
   svg,
   caption: 'At the widest altitude the only shared structure is a definition, so the drawing shrinks to a core sample and the writing does the work: five strata, one invariant triple.',
   notes: `
-<p><strong>The definition that survives every stratum:</strong> a router is an address space, a matching function, and transition semantics. BGP matches prefixes and forwards with no memory; an HTTP framework matches path patterns into a stateless response; an edge ruleset rewrites and proxies; a SPA router matches a URL into a view tree through a cancellable lifecycle; a state router matches into a named hierarchy through guarded, resolving transitions.</p>
+<p><strong>The definition that survives every stratum:</strong> a router is an address space, a matching function, and transition semantics. <a href="${HOME.bgp}">BGP</a> matches prefixes and forwards with no memory; an HTTP framework matches path patterns into a stateless response; an edge ruleset rewrites and proxies; a SPA router matches a URL into a view tree through a cancellable lifecycle; a <a href="${HOME.uirouter}">state router</a> matches into a named hierarchy through guarded, resolving transitions.</p>
 <p><strong>What changes with ascent is the transition.</strong> At the bedrock a transition is a forwarding decision that forgets itself immediately. Each stratum upward, transitions acquire more: statefulness, interceptability, cancellation, resolved data, meaning. By the surface a transition is a first-class object with a lifecycle — which is precisely the layer sheet 1 drew.</p>
-<p><strong>Why this sheet is mostly writing:</strong> no mechanism spans these strata — an IP hop and a <code>ui-view</code> activation share a definition, not a wire. Drawing more than a core sample here would be decoration, and the reference's own rule applies: the drawing earns exactly as much ink as the mechanism deserves.</p>`,
+<p><strong>Why this sheet is mostly writing:</strong> no mechanism spans these strata — an IP hop and a <a href="${HOME.uiView}"><code>ui-view</code></a> activation share a definition, not a wire. Drawing more than a core sample here would be decoration, and the reference's own rule applies: the drawing earns exactly as much ink as the mechanism deserves.</p>`,
   key: [
     keyRow(`<rect x="2" y="2" width="40" height="14" fill="url(#s6-ha)"/>`, 'the stratum this repo inhabits'),
     keyRow(`<rect x="2" y="2" width="40" height="14" fill="url(#s6-hx)"/>`, 'strata below (shared definition only)'),

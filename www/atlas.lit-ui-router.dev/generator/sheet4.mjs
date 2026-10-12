@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { defs } from './chrome.mjs';
-import { txt, schedTxt, lines, keyRow } from './helpers.mjs';
+import { txt, schedTxt, lines, keyRow, npmUrl } from './helpers.mjs';
 
 const P = 's4';
 
@@ -32,7 +32,7 @@ const npmVersion = (r) => {
   return `${r.tags.rc} · rc`;
 };
 // a drawn package's registry page; the name is checked against the plate first
-const npmLink = (name, text = `<code>${name}</code>`) => `<a href="https://www.npmjs.com/package/${npmRow(name).name}">${text}</a>`;
+const npmLink = (name, text = `<code>${name}</code>`) => `<a href="${npmUrl(npmRow(name).name)}">${text}</a>`;
 const HOME = 'https://github.com/simshanith/lit-ui-router';
 const ORG = 'https://github.com/ui-router';
 const brickRow = (name) => {

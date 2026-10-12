@@ -1,5 +1,8 @@
 // SVG builders shared across sheets.
 
+// a package's registry page, the home the repo's README and docs site link
+export const npmUrl = (name) => `https://npmx.dev/package/${name}`;
+
 export const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
 export function txt(x, y, s, cls = 'lbl', anchor = 'start', extra = '') {

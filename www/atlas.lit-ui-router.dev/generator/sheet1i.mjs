@@ -6,7 +6,7 @@
 // lane and its layout.
 import { readFileSync } from 'node:fs';
 import { PROJECT_MARK, TOTAL, articleTitle, titleBlock } from './chrome.mjs';
-import { esc, keyRow } from './helpers.mjs';
+import { esc, keyRow, npmUrl } from './helpers.mjs';
 import { LOOP as R, loopWalkLane } from './loop-walk.mjs';
 
 const PLATE = JSON.parse(readFileSync(new URL('../data/census-loop.json', import.meta.url), 'utf8'));
@@ -16,6 +16,13 @@ const word = (n) => WORD[n] ?? String(n);
 const K = R.byKind;
 const WALK_OF = esc(R.walkOf);
 const OVERLAYS = R.overlays.map(esc);
+// the homes the notes name: the surveyed source tree, core's registry page, cytoscape's preset layout, Lucide
+const HOME = {
+  src: 'https://github.com/simshanith/lit-ui-router/tree/main/packages/lit-ui-router/src',
+  core: npmUrl('@uirouter/core'),
+  preset: 'https://js.cytoscape.org/#layouts/preset',
+  lucide: 'https://lucide.dev/',
+};
 
 const KEY = [
   keyRow('<rect x="10" y="2" width="28" height="14" fill="none" stroke="var(--ink)" stroke-width="1.6"/>'
@@ -36,7 +43,7 @@ const NOTES = `
 <p><strong>Method — what is drawn, and from where.</strong> Everything on this page comes out of
 <code>www/atlas.lit-ui-router.dev/data/census-loop.json</code>, the checked-in plate <code>generator/census-loop.mjs</code> reads off
 a materialized archive of the ref — ${BASIS}. It is a T1 tree probe: nothing runs, ${word(R.files)} files under
-<code>packages/lit-ui-router/src/</code> are read line by line. The plate carries the ${R.stations} stations of
+<a href="${HOME.src}"><code>packages/lit-ui-router/src/</code></a> are read line by line. The plate carries the ${R.stations} stations of
 sheet 1 (each anchored to the line where lit-ui-router implements it), the ${R.legs} legs between them (each with the
 call or event that carries it), and the walk — ${R.steps} steps, ${R.evidence} evidence lines in all. Every
 evidence entry is filed as <code>file:line</code> plus the verbatim source at that line, and the probe
@@ -49,7 +56,7 @@ memory — the click handler's own guards and its <code>$state.go</code>, then c
 the hooks lit-ui-router registers in it: <code>&lt;ui-view&gt;</code>'s <code>onBefore</code> (uiCanExit) and
 <code>onSuccess</code> (uiOnParamsChanged), <code>uiSrefActive</code>'s <code>onStart</code> tap and its
 <code>trans.promise</code>, <code>TransitionController</code>'s default <code>['onSuccess']</code>. No line of
-<code>@uirouter/core</code> is cited, so where the machine itself moves — matching, resolving, writing the url —
+<a href="${HOME.core}"><code>@uirouter/core</code></a> is cited, so where the machine itself moves — matching, resolving, writing the url —
 the step says so and cites the wire lit-ui-router owns at that point. Step ${R.clickStep} is the click; step 1 is
 the circuit at rest, because before any click the stations have already found each other by composed DOM
 events, and that wiring is the only reason the click has anywhere to go.</p>
@@ -57,8 +64,8 @@ events, and that wiring is the only reason the click has anywhere to go.</p>
 around a ring: location, core, the transition hall, the view with its child below it, Lit render, the document
 with the link on it. The ${word(R.overlays.length)} stations sheet 1 draws elevated — ${OVERLAYS.join(' and ')}
 — stand <em>inside</em> the ring here, because they are not on the route: sheet 1's key says "elevated = overlay",
-and inside is the flat drawing's word for the same thing. Positions are computed here and drawn with cytoscape
-<code>preset</code>: no physics, so a station is always in the same place when you come back to it. Loop legs
+and inside is the flat drawing's word for the same thing. Positions are computed here and drawn with <a href="${HOME.preset}">cytoscape
+<code>preset</code></a>: no physics, so a station is always in the same place when you come back to it. Loop legs
 run straight; the legs that would otherwise be read as passing through a building bow clear of it.</p>
 <p><strong>Sprites.</strong> ${word(R.stations).replace(/^./, (c) => c.toUpperCase())} skins, one per station,
 authored to the house recipe — the girding frame drawn first and a semi-opaque wall washed over it, so the frame
@@ -74,7 +81,7 @@ does. The two overlays never light a loop leg at all, in ${R.steps} steps. And t
 one leg this package does not own: core writes the url; lit-ui-router's part of that wire is the
 <code>listen()</code> that carries the next back-button press in.</p>
 <p><strong>What is editorial.</strong> The ring and where the overlays stand; the sprite drawings and the colours;
-the Lucide glyphs (ISC, restroked) that mark the lane's controls and panel heads; the narration sentences and this prose. The stations, the legs, the order of the steps, every line number, every
+the <a href="${HOME.lucide}">Lucide</a> glyphs (ISC, restroked) that mark the lane's controls and panel heads; the narration sentences and this prose. The stations, the legs, the order of the steps, every line number, every
 excerpt and every count are the plate's.</p>`;
 
 export const sheet1i = {

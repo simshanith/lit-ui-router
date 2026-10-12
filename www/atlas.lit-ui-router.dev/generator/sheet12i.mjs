@@ -31,10 +31,19 @@ const KEY = [
     `a red column head — 100% phantom (${R.allPhantomCols.join(', ')})`),
 ].join('\n');
 
+// the homes the notes name: turbo's reference pages, the layout and the glyph set
+const HOME = {
+  dry: 'https://turborepo.dev/docs/reference/run#--dry----dry-run',
+  graph: 'https://turborepo.dev/docs/reference/run#--graph-file-name',
+  cache: 'https://turborepo.dev/docs/reference/configuration#cache',
+  preset: 'https://js.cytoscape.org/#layouts/preset',
+  lucide: 'https://lucide.dev',
+};
+
 const NOTES = `
 <p><strong>Method — what is drawn, and from where.</strong> Everything on this page comes out of
 <code>www/atlas.lit-ui-router.dev/data/census-plate.json</code>, the checked-in plate <code>generator/census-plate.mjs</code>
-writes from <code>turbo run ${R.pipeline} --dry=json</code> against a materialized, <em>installed</em> archive of
+writes from <a href="${HOME.dry}"><code>turbo run ${R.pipeline} --dry=json</code></a> against a materialized, <em>installed</em> archive of
 the ref — ${BASIS}. Sheet 12 reads that plate's cell codes and tallies; this sheet reads the plate's two
 full-graph fields, <code>graphNodes</code> and <code>graphEdges</code>: one <code>(package, task)</code> pair
 per line, sorted by task id, and one <code>[dependency, dependent]</code> index pair per line into that array.
@@ -48,14 +57,14 @@ a placeholder turbo mints so that a <code>^task</code> chain has something in th
 The default view here is the real subgraph alone — ${R.real} nodes and the ${R.realEdges} edges that join two of
 them. <code>PHANTOM SHROUD</code> floods in the other ${SHROUD_N} nodes and ${fmt(SHROUD_E)} edges, faint, and
 that flood <em>is</em> the ${PCT}% figure sheet 12 prints: the share of this graph a maintainer reads in
-<code>--graph</code> output that runs nothing at all. Untick it and the real subgraph comes back unchanged —
+<a href="${HOME.graph}"><code>--graph</code></a> output that runs nothing at all. Untick it and the real subgraph comes back unchanged —
 the shroud is a visibility swap over one fixed layout, never a re-layout.</p>
 <p><strong>Layout — ranked from the edges, computed at build time.</strong> Rows are the ${R.pkgs} packages in
 sheet 12's own block order (publishable, apps, docs and examples, tools, root), so the two plates read the same
 way down the page. Columns are the ${R.cols} task names, and their order is not editorial: each column is
 ranked by the longest dependency depth any of its nodes reaches, which sorts the graph into its real stages —
 gather, emit, check, prove, roll-up — out of the edge list rather than out of a hand-written list. Positions are
-computed here and drawn with cytoscape <code>preset</code>: no physics, so the picture is identical on every
+computed here and drawn with <a href="${HOME.preset}">cytoscape <code>preset</code></a>: no physics, so the picture is identical on every
 load and a node is always in the same place when you come back to it. ${WORD[R.allPhantomCols.length] ?? R.allPhantomCols.length}
 column heads are drawn in red because not one node in them runs anything at all:
 <code>${R.allPhantomCols.join('</code>, <code>')}</code> — and in the default view those columns are not drawn,
@@ -71,11 +80,11 @@ ${R.realEdges} real edges are sparse enough to trace one by one — the deepest 
 build steps, from <code>${REAL_RUN.first}</code> to <code>${REAL_RUN.last}</code>. With the shroud
 on, the same picture disappears into ${fmt(R.nodes)} nodes and ${fmt(R.edges)} edges of scaffolding. Hover any
 building for its package, its task, whether it runs, whether a cache hit would be wrong (${R.cacheFalse} nodes in
-this graph are <code>cache:false</code> — the repo's uncacheable tier is outside every <code>ci:*</code> graph by
+this graph are <a href="${HOME.cache}"><code>cache:false</code></a> — the repo's uncacheable tier is outside every <code>ci:*</code> graph by
 design, which is sheet 12's finding, here as an empty field), its in and out degree in both readings, and the
 full list of what it waits on.</p>
 <p><strong>What is editorial.</strong> The row blocks and their order; the pitch, the sprite drawing and the
-colours; the Lucide glyphs (ISC, restroked) that mark the lane's controls and panel heads; this prose. The nodes, the edges, the column ranking, every count and every name are the plate's.</p>`;
+colours; the <a href="${HOME.lucide}">Lucide</a> glyphs (ISC, restroked) that mark the lane's controls and panel heads; this prose. The nodes, the edges, the column ranking, every count and every name are the plate's.</p>`;
 
 export const sheet12i = {
   num: '12i',

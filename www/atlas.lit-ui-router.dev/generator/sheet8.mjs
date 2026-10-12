@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { defs } from './chrome.mjs';
-import { txt, isoBlock, isoPt, keyRow } from './helpers.mjs';
+import { txt, isoBlock, isoPt, keyRow, npmUrl } from './helpers.mjs';
 import { depthSort, solidFaces } from './iso-hidden.mjs';
 
 const P = 's8';
@@ -43,6 +43,17 @@ const item = (name) => {
   // unpublished workspace members carry 0.0.0 — no version worth printing
   return { name, label: r.version === '0.0.0' ? name : `${name} ${r.version}`,
     f: r.f, l: r.l, df: r.df, dl: r.dl };
+};
+// the notes link a package only if the plate carries it
+const npmLink = (name, text = `<code>${name}</code>`) => `<a href="${npmUrl(item(name).name)}">${text}</a>`;
+const REPO = 'https://github.com/simshanith/lit-ui-router';
+const HOME = {
+  plate: `${REPO}/blob/www/atlas/www/atlas.lit-ui-router.dev/data/census-nm.json`,
+  pnpmPeers: 'https://pnpm.io/settings#autoinstallpeers',
+  pnpmOverrides: 'https://pnpm.io/settings#overrides',
+  bundlephobia: 'https://bundlephobia.com',
+  packagephobia: 'https://packagephobia.com',
+  npmgraph: 'https://npmgraph.js.org',
 };
 const DATA = {
   // The app is what the closure hangs off, so the plate does not carry a row for
@@ -190,10 +201,10 @@ export const sheet8 = {
   svg,
   caption: `The production dependency closure of one sample app, surveyed on disk: every delivered package as a building — footprint from file count, height from lines — with the consumer’s own ${APP_L}-line building standing in the city it summoned.`,
   notes: `
-<p><strong>Method:</strong> the production closure of <code>${PLATE.app}</code> (dependencies plus installed peers — pnpm auto-installs peers, so they are genuinely on disk), resolved through the pnpm store and measured as delivered: lines of <code>.js/.ts/.css/.html</code> per package directory, source maps and prose excluded, <code>.d.ts</code> drawn separately as the hatched annex. Workspace-linked members are measured by their built <code>dist/</code> — the shape a registry install would deliver. Plenty of prior art measures this differently — bundlephobia and packagephobia weigh tarballs and install bytes, npmgraph draws the dependency graph — but this sheet measures what actually lands on disk, in files and lines, and stages it as a city with the consumer's own building standing in it for scale. Every count on the drawing and in these notes is read at build time from the plate <code>www/atlas.lit-ui-router.dev/data/census-nm.json</code> — ${BASIS} — written after installing and building the ref itself, never the working tree. A package the drawing places that the plate does not carry, or a package the plate carries that no district draws, is a build error rather than a stale constant.</p>
-<p><strong>The consumer is a doormat in its own city.</strong> The app brings ${APP_L} lines of its own and receives ${fmt(TOT_L)} delivered lines of code plus ${fmt(TOT_DL)} of type declarations — ${times}× its own mass. The router this repo exists to ship, <code>lit-ui-router</code>, delivers ${fmt(pkg('lit-ui-router').l)} lines over ${pkg('lit-ui-router').f} files: one of the smaller buildings on the skyline it anchors, and ${(TOT_L / pkg('lit-ui-router').l).toFixed(0)}× smaller than the city it stands in.</p>
-<p><strong>Four imports, ${fmt(pkg('lodash-es').l)} lines.</strong> <code>lodash-es</code> is delivered whole — ${fmt(pkg('lodash-es').l)} lines across ${pkg('lodash-es').f} files — so the app can call <code>isEqual</code>, <code>cloneDeep</code>, <code>get</code> and <code>set</code>. The bundler tree-shakes almost all of it away, and sheet 9 charts what survives to the wire; the delivered city is the other measure, the one that installs, audits and updates. It is the fourth-tallest building here, behind dompurify, hono and <code>@uirouter/core</code>.</p>
-<p><strong>One lit, and a server in a client demo.</strong> Scoped pnpm overrides (<code>@api-viewer/docs&gt;lit</code>, <code>@api-viewer/common&gt;lit</code>, <code>lit-dialog&gt;lit</code> → ^3.3.3) hold the demo chrome to one lit major, so lit, lit-html, lit-element and <code>@lit/reactive-element</code> each stand once in this city. The oddest building is <code>hono</code> at ${fmt(pkg('hono').l)} lines: <code>ui-router-server</code> names it a peer, so peer auto-install delivers a server framework into a client demo.</p>
+<p><strong>Method:</strong> the production closure of <a href="${REPO}/tree/main/${PLATE.app}"><code>${PLATE.app}</code></a> (dependencies plus installed peers — pnpm <a href="${HOME.pnpmPeers}">auto-installs peers</a>, so they are genuinely on disk), resolved through the pnpm store and measured as delivered: lines of <code>.js/.ts/.css/.html</code> per package directory, source maps and prose excluded, <code>.d.ts</code> drawn separately as the hatched annex. Workspace-linked members are measured by their built <code>dist/</code> — the shape a registry install would deliver. Plenty of prior art measures this differently — <a href="${HOME.bundlephobia}">bundlephobia</a> and <a href="${HOME.packagephobia}">packagephobia</a> weigh tarballs and install bytes, <a href="${HOME.npmgraph}">npmgraph</a> draws the dependency graph — but this sheet measures what actually lands on disk, in files and lines, and stages it as a city with the consumer's own building standing in it for scale. Every count on the drawing and in these notes is read at build time from the plate <a href="${HOME.plate}"><code>www/atlas.lit-ui-router.dev/data/census-nm.json</code></a> — ${BASIS} — written after installing and building the ref itself, never the working tree. A package the drawing places that the plate does not carry, or a package the plate carries that no district draws, is a build error rather than a stale constant.</p>
+<p><strong>The consumer is a doormat in its own city.</strong> The app brings ${APP_L} lines of its own and receives ${fmt(TOT_L)} delivered lines of code plus ${fmt(TOT_DL)} of type declarations — ${times}× its own mass. The router this repo exists to ship, ${npmLink('lit-ui-router')}, delivers ${fmt(pkg('lit-ui-router').l)} lines over ${pkg('lit-ui-router').f} files: one of the smaller buildings on the skyline it anchors, and ${(TOT_L / pkg('lit-ui-router').l).toFixed(0)}× smaller than the city it stands in.</p>
+<p><strong>Four imports, ${fmt(pkg('lodash-es').l)} lines.</strong> ${npmLink('lodash-es')} is delivered whole — ${fmt(pkg('lodash-es').l)} lines across ${pkg('lodash-es').f} files — so the app can call <code>isEqual</code>, <code>cloneDeep</code>, <code>get</code> and <code>set</code>. The bundler tree-shakes almost all of it away, and sheet 9 charts what survives to the wire; the delivered city is the other measure, the one that installs, audits and updates. It is the fourth-tallest building here, behind ${npmLink('dompurify', 'dompurify')}, ${npmLink('hono', 'hono')} and ${npmLink('@uirouter/core')}.</p>
+<p><strong>One lit, and a server in a client demo.</strong> Scoped <a href="${HOME.pnpmOverrides}">pnpm overrides</a> (<code>${npmLink('@api-viewer/docs', '@api-viewer/docs')}&gt;lit</code>, <code>${npmLink('@api-viewer/common', '@api-viewer/common')}&gt;lit</code>, <code>${npmLink('lit-dialog', 'lit-dialog')}&gt;lit</code> → ^3.3.3) hold the demo chrome to one lit major, so ${npmLink('lit', 'lit')}, ${npmLink('lit-html', 'lit-html')}, ${npmLink('lit-element', 'lit-element')} and ${npmLink('@lit/reactive-element')} each stand once in this city. The oddest building is ${npmLink('hono')} at ${fmt(pkg('hono').l)} lines: ${npmLink('ui-router-server')} names it a peer, so peer auto-install delivers a server framework into a client demo.</p>
 <p><strong>Note the vertical scale:</strong> 1 px ≈ 250 lines against sheet 7's ≈ 34. Drawn at the workspace's own scale, <code>lodash-es</code> alone would stand ${Math.round(pkg('lodash-es').l / 34)} px tall — the compression <em>is</em> the finding.</p>`,
   key: [
     keyRow('<rect x="8" y="3" width="18" height="12" class="sk fp"/>', 'delivered code — height = lines on disk'),
