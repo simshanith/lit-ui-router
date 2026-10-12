@@ -50,7 +50,7 @@ const MODULE = {
   '7B': 'sheet7b.mjs', '8': 'sheet8.mjs', '9': 'sheet9.mjs', '10': 'sheet10.mjs',
   '11': 'sheet11.mjs', '12': 'sheet12.mjs', '12i': 'sheet12i.mjs',
   '13': 'sheet13.mjs', '14': 'sheet14.mjs',
-  A1: 'sheetA1.mjs', A2: 'sheetA2.mjs', A2i: 'pipeline-graph.mjs', A3: 'sheetA3.mjs',
+  A1: 'sheetA1.mjs', A2: 'sheetA2.mjs', A2i: 'pipeline-graph.mjs', A3: 'sheetA3.mjs', A4: 'sheetA4.mjs',
 };
 
 // chrome.mjs is read by every sheet (the title block dates itself off

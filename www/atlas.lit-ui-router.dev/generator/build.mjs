@@ -26,6 +26,7 @@ import { sheet14, SHEET14_VERDICT } from './sheet14.mjs';
 import { sheetA1 } from './sheetA1.mjs';
 import { sheetA2 } from './sheetA2.mjs';
 import { sheetA3, SHEETA3_VERDICT } from './sheetA3.mjs';
+import { sheetA4, SHEETA4_VERDICT } from './sheetA4.mjs';
 import { PIPELINE_VERDICT, pipelineSection, sheetA2i } from './pipeline-graph.mjs';
 import { ATLAS } from './census-atlas.mjs';
 import { LOOP } from './loop-walk.mjs';
@@ -43,7 +44,7 @@ const lanes = [sheet1i, sheet2b, sheet12i];
 // codebase. Letter-prefixed ids, deliberately OUTSIDE `sheets`: the ascent
 // order, the cover's plate count and the ← / → walk all read that array, and
 // an appendix stands at no altitude.
-const appendix = [sheetA1, sheetA2, sheetA3];
+const appendix = [sheetA1, sheetA2, sheetA3, sheetA4];
 // The appendix's interactive lane: a plate of its own, and a row in `manifest.appendix`.
 const appendixLanes = [sheetA2i];
 const PLATES = sheets.length + lanes.length;
@@ -92,6 +93,7 @@ const appendixIdx = [
   ['A2', 'THE CENSUS PIPELINE', 'FLOW GRAPH', `meta — the atlas measuring itself: one archive, ${ATLAS.stats.probes} probe stations, ${ATLAS.stats.plates} filed plates, and every station, plate and edge introspected from the generator at build time`],
   ['A2i', 'THE CENSUS PIPELINE', 'INTERACTIVE GRAPH', PIPELINE_VERDICT],
   ['A3', 'THE ATLAS ITSELF', 'ISOMETRIC CITY', SHEETA3_VERDICT],
+  ['A4', 'THE ATLAS ITSELF', 'SHIPPED CITY', SHEETA4_VERDICT],
 ];
 /** The row for a sheet number — the app reads its altitude and verdict here. */
 const INDEX_BY_NUM = Object.fromEntries([...verdicts, ...appIdx, ...appendixIdx].map((row) => [row[0], { scale: row[1], verdict: row[3] }]));
@@ -141,7 +143,8 @@ const coverCss = `${surveyCss}\n${provenanceCss}`;
 // ref; the rollup below is census-overview.mjs's group-by-language query, recomputed here.
 // Deliberately wider than any sheet (JSON, Markdown, config all count) and deliberately
 // main, not this branch: the atlas's own drawings are a self-portrait, and appendix A3
-// measures that on sheet 7's ruler from data/survey-self.json.
+// measures that on sheet 7's ruler from data/survey-self.json, and A4 its deploy on
+// sheet 9's ruler from data/survey-shipped.json.
 const PLATE = JSON.parse(readFileSync(new URL('../data/census-files.json', import.meta.url), 'utf8'));
 const byLang = new Map();
 for (const r of PLATE.rows) {
@@ -200,7 +203,7 @@ const statBar = `<div class="stat-bar" role="group" aria-label="set statistics">
 const galBody = `<div class="gal-body">
     <p>The source image — an isometric block city over a strategy-breeding harness — works because of three quiet decisions, and only one of them is the city: it maps <em>roles in a mechanism</em> rather than files; it spends its one visual scalar (height) on a true quantity; and it keeps a CONDITION field that says what is currently wrong. This set keeps those three decisions and lets everything else change with altitude.</p>
     <p>The result is an argument about form: a loop where there is a genuine cycle (sheet 1), panels where packages are too small to be cities (sheet 2), the full city where the measurement thesis is actually true (sheet 3), a massed spine where the family shares one core but the limbs never touch (sheet 4), a chart where edges would be fiction (sheet 5), and mostly prose where only a definition survives (sheet 6). Fitness peaks in the middle altitudes and collapses at both ends.</p>
-    <p>Above the sixth altitude the set stops arguing about form and starts measuring. Sheets 7–10 are a survey quartet, each counting the same subject at a different boundary: what the repository holds (the monorepo by mass), what npm delivers (the sample app's <code>node_modules</code>, ${SHEET8_TIMES}× the app it serves), what the browser downloads (the docs deploy on the wire, where the prerendered prose tops the skyline and the lettering alone outweighs every routed app the site demonstrates), and who occupies the bytes after tree-shaking (the machine the router wraps is ${SHEET10_CORE_SHARE} of the bundle; the router itself, ${SHEET10_ROUTER_SHARE}). Sheet 11 cuts the same wire the other way, pricing ${DOOR_PKGS} package quarters and ${DOOR_N} doors one at a time. Sheet 12 leaves the wire and draws the monorepo as its own CI reads it, the pull-request task graph punched onto a register plate. Sheet 13 ages the city by commit date, and sheet 14 draws it among the commons it builds on: the pull requests, issues and bug reports in other projects that its own record cites, sent or watched, and the home work that cites them. Interactive lanes (1i, 2B and 12i) walk the plates they sit beside, and the routed set stands sheets 2 and 7 in the round. The appendix files plates whose subject is the atlas rather than the codebase: the sprite study behind the building sprites (appendix A1), and the survey office that turns the instrument on itself (appendix A2) — the census pipeline behind almost every number here, drawn as archive → probe stations → filed plates → drawings, introspected from the generator at build time, and walked live in its lane A2i. Appendix A3 turns sheet 7's ruler on the atlas itself: its drawing office, survey office, routed site and site build, massed beside the codebase they draw.</p>
+    <p>Above the sixth altitude the set stops arguing about form and starts measuring. Sheets 7–10 are a survey quartet, each counting the same subject at a different boundary: what the repository holds (the monorepo by mass), what npm delivers (the sample app's <code>node_modules</code>, ${SHEET8_TIMES}× the app it serves), what the browser downloads (the docs deploy on the wire, where the prerendered prose tops the skyline and the lettering alone outweighs every routed app the site demonstrates), and who occupies the bytes after tree-shaking (the machine the router wraps is ${SHEET10_CORE_SHARE} of the bundle; the router itself, ${SHEET10_ROUTER_SHARE}). Sheet 11 cuts the same wire the other way, pricing ${DOOR_PKGS} package quarters and ${DOOR_N} doors one at a time. Sheet 12 leaves the wire and draws the monorepo as its own CI reads it, the pull-request task graph punched onto a register plate. Sheet 13 ages the city by commit date, and sheet 14 draws it among the commons it builds on: the pull requests, issues and bug reports in other projects that its own record cites, sent or watched, and the home work that cites them. Interactive lanes (1i, 2B and 12i) walk the plates they sit beside, and the routed set stands sheets 2 and 7 in the round. The appendix files plates whose subject is the atlas rather than the codebase: the sprite study behind the building sprites (appendix A1), and the survey office that turns the instrument on itself (appendix A2) — the census pipeline behind almost every number here, drawn as archive → probe stations → filed plates → drawings, introspected from the generator at build time, and walked live in its lane A2i. Appendix A3 turns sheet 7's ruler on the atlas itself: its drawing office, survey office, routed site and site build, massed beside the codebase they draw. Appendix A4 turns sheet 9's ruler on the atlas's own deploy: what the browser downloads from atlas.lit-ui-router.dev, district by district, beside the docs deploy summed by role.</p>
   </div>`;
 
 const provenance = `<p class="provenance">SOURCES — module inventory & manifests read from the repo at branch www/atlas · npm dates from www/atlas.lit-ui-router.dev/data/census-npm.json, which prints its own registry-read date on sheet 4 · every plate in www/atlas.lit-ui-router.dev/data/ counted at ${COUNTED_AT} in one pass — plate 7A's test light included, metered at that ref by www/atlas.lit-ui-router.dev/generator/census-shadow.mjs · cover general survey = ${COUNTED_AT}, counted ${COUNTED_ON}, imported from www/atlas.lit-ui-router.dev/data/census-files.json · eslint-plugin-lit-ui-router is counted on every plate and drawn or scheduled on sheets 2, 4, 7, 7A, 7B, 11, 12 and 13 · sheet 5 positions are editorial. FILES — www/atlas.lit-ui-router.dev/app/ files every plate, routed as one lit-ui-router app. DRAWN BY FABLE (CLAUDE, AI) FOR SHANE DANIEL.</p>`;
@@ -234,7 +237,8 @@ on ${PLATES} plates — the numbered sheets, their A/B alternates and three inte
 each in the form that altitude earns, with sheets 2 and 7 standing in the round in the routed app, and an appendix of ${appendix.length + appendixLanes.length} more about the atlas itself. Sheets 7–10 are a survey
 quartet (the workspace by mass, a consumer's node_modules, a deploy on the wire, the inside of
 one bundle); 11 prices every published entry alone; appendix A2 draws the census pipeline that
-measured the rest, and A3 masses the atlas itself on sheet 7's ruler beside the codebase. The form riffs on an isometric codebase visualization seen in the wild; the notes on
+measured the rest, and A3 masses the atlas itself on sheet 7's ruler beside the codebase, A4 its deploy
+on sheet 9's ruler beside the docs deploy. The form riffs on an isometric codebase visualization seen in the wild; the notes on
 each sheet argue where that form fits and where it lies.
 
 | Sheet | Altitude | Form |
@@ -301,9 +305,10 @@ into the app's \`/log\` at build time. This file is written by \`build.mjs\`; ed
 
 **The cabinet.** Every figure on every plate is read from \`data/*.json\`, written by the
 \`generator/census-*.mjs\` probes at one ref — currently ${COUNTED_AT} — on the scc 4.0.0
-\`Code\` basis. Lookups throw on a missing row; nothing is hand-pasted. One plate stands outside the
-cabinet: \`data/survey-self.json\`, which \`generator/survey-self.mjs\` measures from an archive of the
-atlas's own branch for appendix A3, because main does not hold the atlas. \`INITIATIVES.md\` records
+\`Code\` basis. Lookups throw on a missing row; nothing is hand-pasted. Two plates stand outside the
+cabinet: \`data/survey-self.json\` and \`data/survey-shipped.json\`, which \`generator/survey-self.mjs\` and
+\`generator/survey-shipped.mjs\` measure from an archive of the atlas's own branch for appendices A3 and
+A4, because main does not hold the atlas. \`INITIATIVES.md\` records
 the pipeline's design and the traps of refreshing it. \`docs/ISOMETRIC.md\` is the drawing recipe the
 isometric sheets share, \`docs/SHIPPING.md\` the run that ships a change and \`docs/COPY.md\` the rules the
 words follow; the skills under \`.agents/skills/\` point at them.

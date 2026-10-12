@@ -40,8 +40,8 @@ const row = (district) => {
   return r;
 };
 
-const SIDE = (f) => Math.max(18, 10 * Math.sqrt(f));
-const HT = (gz) => Math.max(8, gz / 4300);
+export const SIDE = (f) => Math.max(18, 10 * Math.sqrt(f));
+export const HT = (gz) => Math.max(8, gz / 4300);
 
 // Manual plan, grouped by role, tall districts in back. [name → x, y]
 const PLAN = {
@@ -66,6 +66,16 @@ const PLAN = {
 // the plan shows the gap. Files size the outline, as for every other district.
 const LOT = { name: 'demo corpora', x: 60, y: 10, files: 15, gz: 899000 };
 
+// The role outlines, in drawing order; appendix A4 sums the deploy by these roles, so a district no role claims is a build error.
+export const ROLES = [
+  { name: 'demo payload', role: 'demo payload — media · data', box: [20, 0, 230, 200], label: [40, 150, 'start'],
+    districts: ['examples', 'images', 'static data'] },
+  { name: 'the documentation site', role: 'the documentation site', box: [320, 0, 700, 260], label: [985, 318, 'start'],
+    districts: ['html pages', 'inter fonts', 'vp framework', 'page chunks', 'site css'] },
+  { name: 'the routed apps', role: 'the routed apps', box: [540, 290, 720, 450], label: [540, 700, 'end'],
+    districts: ['app: vanilla', 'app: hash', 'app: mobx', 'app: effect'] },
+];
+
 // Plate order is drawing order; a district with no plan slot is a build error.
 const all = PLATE.rows.map((r, i) => {
   const at = PLAN[r.district];
@@ -73,6 +83,14 @@ const all = PLATE.rows.map((r, i) => {
   const [x, y] = at;
   return { name: r.district, f: r.files, gz: r.gz, top: r.top, x, y, s: SIDE(r.files), h: HT(r.gz), n: i + 1 };
 });
+
+for (const { role, districts } of ROLES) for (const d of districts) {
+  if (!PLATE.rows.some((r) => r.district === d)) throw new Error(`sheet 9: role ${role} names district ${d}, which is not on the plate`);
+}
+for (const { district } of PLATE.rows) {
+  const claims = ROLES.filter((g) => g.districts.includes(district)).length;
+  if (claims !== 1) throw new Error(`sheet 9: district ${district} is claimed by ${claims} roles, not one`);
+}
 
 // hand PLAN, data-driven sides: the plan may not ship overlapped
 assertPlots('sheet 9', all.map(({ n, name, x, y, s }) => ({ n, name, part: 'block', x, y, w: s, d: s })));
@@ -106,6 +124,10 @@ function groupOutline(x1, y1, x2, y2, label, lx, ly, anchor = 'start') {
   return `<polygon points="${pts}" class="skf fnone" stroke-dasharray="5 4"/>
 ${txt(lx, ly, label, 'lblf', anchor)}`;
 }
+
+// the vacant lot stands inside the demo payload's outline, so it is drawn right after it
+const outlines = ROLES.map(({ box, role, label }, i) =>
+  groupOutline(...box, role, ...label) + (i === 0 ? `\n${lotOutline(LOT)}` : '')).join('\n');
 
 const KB = (gz) => `${(gz / 1024).toFixed(gz < 100000 ? 1 : 0)} KB`;
 const MB = (b) => `${(b / 1048576).toFixed(1)} MB`;
@@ -151,10 +173,7 @@ ${txt(56, SY + 58 + half * 17, `TOTAL — ${all.length} districts · ${fmt(PLATE
 const svg = `<svg viewBox="0 0 1160 ${SY + 108 + half * 17}" role="img" aria-label="The production docs-site deploy drawn as an isometric city of ${all.length} districts: footprint area from file counts, height from gzipped bytes on the wire. The three tallest towers are ${RANKED.slice(0, 3).map((r) => r.name).join(', ')}. A vacant lot at the plan's edge marks the footprint of the demo corpora, which the site no longer ships. The four routed sample apps are small accent buildings totalling ${APP_PCT} percent of the deploy. There is no ghost block: the census walks backtick-quoted asset URLs too, and this deploy carries no unreachable files at all. A structure schedule lists every district with exact counts and its largest tenant.">
 ${defs(P)}
 
-${groupOutline(20, 0, 230, 200, 'demo payload — media · data', 40, 150)}
-${lotOutline(LOT)}
-${groupOutline(320, 0, 700, 260, 'the documentation site', 985, 318)}
-${groupOutline(540, 290, 720, 450, 'the routed apps', 540, 700, 'end')}
+${outlines}
 
 ${bodies}
 

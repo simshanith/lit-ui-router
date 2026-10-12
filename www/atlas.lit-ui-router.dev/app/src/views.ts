@@ -1269,7 +1269,7 @@ type SpecimenResolves = { specimen?: unknown };
 
 const neighbours = (manifest: Manifest, sheet: SheetRow): [SheetRow?, SheetRow?] => {
   // The ← / → walk stays inside the ascent; an appendix plate walks its own
-  // list (A1, A2, A2i), so A1 never appears as "next" after sheet 13.
+  // list (A1, A2, A2i, A3, A4), so A1 never appears as "next" after sheet 13.
   const list = isAppendix(sheet.num) ? (manifest.appendix ?? []) : manifest.sheets;
   const index = list.findIndex((row) => row.id === sheet.id);
   return [list[index - 1], list[index + 1]];

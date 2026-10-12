@@ -1,0 +1,41 @@
+{
+  "ref": "www/atlas",
+  "sha": "0ade0a3a",
+  "commitDate": "2026-10-12T13:10:36-07:00",
+  "generatedAtTime": "2026-10-12T20:38:47.381Z",
+  "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/survey-shipped.mjs",
+  "used": "git archive www/atlas @ 0ade0a3a + npm ci + npm run build (vite build, prerender) -> www/atlas.lit-ui-router.dev/app/dist",
+  "wasAssociatedWith": [
+    "npm",
+    "vite",
+    "node:zlib gzip level 9"
+  ],
+  "measure": "per-file raw bytes + gzip level 9; districts by pattern table after a reachability walk from every page",
+  "seededTrees": [
+    "sheets/",
+    "images/",
+    "manifest.json",
+    "_redirects"
+  ],
+  "scope": "www/atlas.lit-ui-router.dev/app/dist",
+  "totals": {
+    "files": 252,
+    "rawBytes": 18388183,
+    "gzBytes": 7557464
+  },
+  "rows": [
+    {"district":"routed pages","files":34,"raw":4718109,"gz":1127387,"top":{"name":"sheet/A1/index.html","gz":281089}},
+    {"district":"bare plates","files":26,"raw":2471270,"gz":680011,"top":{"name":"plate/A1/index.html","gz":270905}},
+    {"district":"plate fragments","files":29,"raw":2206227,"gz":620213,"top":{"name":"sheets/a1.html","gz":267117}},
+    {"district":"card pictures","files":58,"raw":3672584,"gz":3644266,"top":{"name":"thumbs/a2i-dark.webp","gz":165437}},
+    {"district":"models","files":3,"raw":1134664,"gz":180234,"top":{"name":"models/bricks.glb","gz":86805}},
+    {"district":"model viewer","files":8,"raw":2938242,"gz":874177,"top":{"name":"assets/model-viewer-BupDWnUC.js","gz":288734}},
+    {"district":"cytoscape","files":1,"raw":434864,"gz":136478,"top":{"name":"assets/cytoscape.esm-Djy5M2Ec.js","gz":136478}},
+    {"district":"the routed app","files":8,"raw":595490,"gz":181417,"top":{"name":"assets/index-B7VwzaZ9.js","gz":124151}},
+    {"district":"icons","files":83,"raw":93123,"gz":88292,"top":{"name":"favicon.ico","gz":18937}},
+    {"district":"manifest","files":2,"raw":123610,"gz":24989,"top":{"name":"manifest.json","gz":24756}}
+  ],
+  "orphans": [
+
+  ]
+}

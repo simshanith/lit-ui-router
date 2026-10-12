@@ -4,7 +4,8 @@
 // origin/main).  Deliberately main and not this atlas branch: surveying the
 // branch counts the atlas's own drawings, which the cover should not do;
 // appendix A3 measures that self-portrait on sheet 7's ruler from
-// data/survey-self.json.  The measurement ledger — what scc skips, the wc
+// data/survey-self.json, and A4 its deploy on sheet 9's ruler from
+// data/survey-shipped.json.  The measurement ledger — what scc skips, the wc
 // cross-check discipline — lives with the measurement in census-scc.mjs.
 // Refresh flow: `node census-scc.mjs [--ref <ref>]` then re-run this.
 import { readFileSync } from 'node:fs';
