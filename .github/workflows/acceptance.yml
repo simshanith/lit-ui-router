@@ -56,9 +56,16 @@ jobs:
       - name: Install Playwright Browsers
         if: ${{ steps.playwright-cache.outputs.cache-hit != 'true' }}
         run: mise run //tools/build_and_test:playwright
+      - name: Mark summary session
+        # Bounds the report below to this job's runs: the docs build and the suite.
+        run: mise run //tools/build_and_test:mark_session
       - name: Axe
+        # Same continue-on-error hand-off to the summary step as build-test-run.yml.
+        id: axe
+        continue-on-error: true
         run: mise run test_e2e a11y
         env:
+          # Only failing tasks print; every task's full log is uploaded below.
           TURBO_OUTPUT_LOGS: errors-only
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
@@ -66,6 +73,43 @@ jobs:
           TURBO_TEAM: ${{ vars.TURBO_TEAM }}
           # Silence per-request [wrangler:info] logging from the e2e dev server.
           WRANGLER_LOG: warn
+      - name: Upload turbo run summaries
+        # Same fail-open uploads as build-test-run.yml; the report links both.
+        id: run_summaries
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        continue-on-error: true
+        with:
+          name: turbo-run-summaries
+          path: .turbo/runs/
+          retention-days: 30
+          if-no-files-found: warn
+      - name: Upload turbo task logs
+        # The suite is uncached, so this is the only record of a green run's scans.
+        id: task_logs
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7
+        continue-on-error: true
+        with:
+          name: turbo-task-logs
+          path: |
+            .turbo/turbo-*.log
+            apps/*/.turbo/turbo-*.log
+            examples/.turbo/turbo-*.log
+            packages/*/.turbo/turbo-*.log
+            tools/*/.turbo/turbo-*.log
+            www/*/.turbo/turbo-*.log
+          include-hidden-files: true
+          retention-days: 5
+          if-no-files-found: warn
+      - name: Turbo run summary
+        # Goes red after a failed suite, so a red job opens on the report.
+        if: ${{ !cancelled() }}
+        run: mise run //tools/build_and_test:turbo_summary
+        env:
+          BUILD_OUTCOME: ${{ steps.axe.outcome }}
+          TURBO_SUMMARY_ARTIFACT_URL: ${{ steps.run_summaries.outputs.artifact-url }}
+          TURBO_LOGS_ARTIFACT_URL: ${{ steps.task_logs.outputs.artifact-url }}
       - name: Upload wrangler logs
         # Same crash-log capture as build-test-run.yml.
         if: ${{ failure() }}
