@@ -1500,6 +1500,7 @@ resolved →
 
 **Record notes**
 
+- 2026-10-12: the berths count sent and watched apart — the Firefox and WebKit yard labels and the berths paragraph read "N sent · M watched" where they read "N reports filed", which counted every cited bug as the city's own (the user: "i've only really done 2 firefox and 1 webkit the others were refeerencing pre-existing issues"); the plate's `sent` flag already held the split, 2 of 17 and 1 of 4.
 - REV A — 2026-10-10, first printing. The plate reads `data/census-upstream.json`, filed by `generator/census-upstream.mjs` at origin/main @ 9e656ab3, and `data/census-plate.json` for the berths' engine note.
 - Schema the drawing reads: `window.since`/`until`; `yards[]` (`id`, `host` github or bugzilla, `name`, `stars`, `package`, `weeklyDownloads`, `engine`); `consignments[]` (`yard`, `kind` pr/issue/bug, `number`, `title`, `state` merged/fixed/closed/open, `createdAt`, `returns[]` of `kind`, `ref`, `title`, `date`, `state`); `prior` (`prs`, `merged`, `issues`, `repos`, `first`, `last`); `surveyor.login`.
 - Decisions: a wharf block is one home item per citing day, so issue #25 stands four times, at the four days four consignments are cited in it; a squash commit folds into its PR's block when the same consignment cites both; a road that runs west is drawn as it is, and the notes name each from the plate.
