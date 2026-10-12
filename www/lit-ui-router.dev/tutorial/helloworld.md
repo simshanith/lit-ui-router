@@ -44,7 +44,7 @@ class AppRoot extends LitElement {
 
   render() {
     return html`
-      <nav>
+      <nav aria-label="Hello World">
         <a ${uiSrefActive({ activeClasses: ['active'] })} ${uiSref('hello')}
           >Hello</a
         >
@@ -165,7 +165,7 @@ The `uiSref` directive creates navigational links to states:
 class AppRoot extends LitElement {
   render() {
     return html`
-      <nav>
+      <nav aria-label="Hello World">
         <a ${uiSrefActive({ activeClasses: ['active'] })} ${uiSref('hello')}
           >Hello</a
         >

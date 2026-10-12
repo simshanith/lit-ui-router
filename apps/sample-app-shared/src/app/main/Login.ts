@@ -1,9 +1,14 @@
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 
+import type { TargetState } from '@uirouter/core';
 import { UIViewInjectedProps } from 'lit-ui-router';
 
 import { AppConfig, AuthService } from '../global/appModules.js';
+
+interface LoginResolves {
+  returnTo: TargetState;
+}
 
 @customElement('sample-login')
 export class Login extends LitElement {
@@ -11,7 +16,7 @@ export class Login extends LitElement {
     return this;
   }
 
-  constructor(public _uiViewProps: UIViewInjectedProps) {
+  constructor(public _uiViewProps: UIViewInjectedProps<LoginResolves>) {
     super();
   }
 
@@ -31,13 +36,14 @@ export class Login extends LitElement {
 
   login = () => {
     const { router, resolves } = this._uiViewProps;
-    const returnTo = resolves?.returnTo as {
-      state: () => string;
-      params: () => object;
-    };
+
+    const returnTo = resolves?.returnTo;
+
     const done = () => (this.authenticating = false);
+
     const showError = (errorMessage: string) =>
       (this.errorMessage = errorMessage);
+
     const returnToOriginalState = () =>
       router.stateService.go(returnTo.state(), returnTo.params(), {
         reload: true,
@@ -46,9 +52,9 @@ export class Login extends LitElement {
     this.authenticating = true;
     AuthService.authenticate(this.username, this.password)
       .then(returnToOriginalState)
-      .catch((error: unknown) => {
+      .catch((cause: unknown) => {
         done();
-        showError(error instanceof Error ? error.message : String(error));
+        showError(cause instanceof Error ? cause.message : String(cause));
       });
   };
 
@@ -60,7 +66,7 @@ export class Login extends LitElement {
   render() {
     return html` <div class="container">
       <div class="col-md-6 col-md-offset-3 col-sm-8 col-sm-offset-2">
-        <h3>Log In</h3>
+        <h1 class="h3" tabindex="-1">Log In</h1>
         <p>
           (This login screen is for demonstration only... just pick a username,
           enter 'password' and click <b>"Log in"</b>)
@@ -79,13 +85,14 @@ export class Login extends LitElement {
               name="username"
               id="username"
               @change=${(e: Event) => {
+                // SAFETY: the listener is bound to this <select>
                 this.username = (e.target as HTMLSelectElement).value;
               }}
             >
               <option value="" disabled selected></option>
               ${this.usernames.map((option: string) => html`<option value=${option}>${option}</option>`)}
             </select>
-            ${!this.username ? html`<label for="username"><i style="display: block; position: relative; bottom: 1.8em; margin-left: 10em; height: 0" class="fa fa-arrow-left bounce-horizontal"> Choose </i></label>` : null}
+            ${!this.username ? html`<i aria-hidden="true" style="display: block; position: relative; inset-block-end: 1.8em; margin-inline-start: 10em; height: 0" class="fa fa-arrow-left bounce-horizontal"> Choose </i>` : null}
           </div>
           <br />
           <div>
@@ -94,13 +101,17 @@ export class Login extends LitElement {
               class="form-control"
               type="password"
               name="password"
+              id="password"
               value=${this.password}
-              @change=${(e: Event) => (this.password = (e.target as HTMLInputElement).value)}
+              @change=${(e: Event) => {
+                // SAFETY: the listener is bound to this <input>
+                this.password = (e.target as HTMLInputElement).value;
+              }}
             />
             ${
               this.username && this.password !== 'password'
                 ? html`<i
-                    style="position: relative; bottom: 1.8em; margin-left: 5em; height: 0"
+                    style="position: relative; inset-block-end: 1.8em; margin-inline-start: 5em; height: 0"
                     class="fa fa-arrow-left bounce-horizontal"
                     >Enter '<b>password</b>' here</i
                   >`

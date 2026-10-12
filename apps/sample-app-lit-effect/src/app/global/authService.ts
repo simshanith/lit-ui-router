@@ -39,9 +39,11 @@ class AuthService {
       yield* Effect.sleep('800 millis');
       const validUsername = this.usernames.includes(username);
       const validPassword = password === 'password';
+
       if (!validUsername || !validPassword) {
         return yield* new InvalidCredentials({ username });
       }
+
       return username;
     });
 
@@ -53,6 +55,7 @@ class AuthService {
         if (Either.isLeft(result)) {
           throw new Error('Invalid username or password');
         }
+
         AppConfig.emailAddress = result.right;
         AppConfig.save();
       });
@@ -66,4 +69,5 @@ class AuthService {
 }
 
 const instance = new AuthService();
+
 export default instance;

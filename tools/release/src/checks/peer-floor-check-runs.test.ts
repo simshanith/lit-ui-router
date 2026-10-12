@@ -12,6 +12,7 @@ import {
 } from './peer-floor-check-runs.core.ts';
 
 const REPO = 'simshanith/lit-ui-router';
+
 const RELEASE_URL = `https://github.com/${REPO}/actions/workflows/bump-version.yml`;
 
 const members: Member[] = [
@@ -71,6 +72,7 @@ describe('toPeerFloorCheckRun', () => {
       { name: 'lit-ui-router-mobx', ok: true },
       REPO,
     );
+
     assert.equal(payload.conclusion, 'success');
     assert.equal(payload.name, 'peer-floor (lit-ui-router-mobx)');
     assert.equal(
@@ -90,6 +92,7 @@ describe('toPeerFloorCheckRun', () => {
       },
       REPO,
     );
+
     assert.equal(payload.conclusion, 'action_required');
     assert.equal(
       payload.title,
@@ -107,6 +110,7 @@ describe('toPeerFloorCheckRun', () => {
       },
       REPO,
     );
+
     assert.match(summary, new RegExp(`\\(${RELEASE_URL}\\)`));
     assert.match(summary, /publishedPeerMobx floor and the peerFloorMobx pin/);
     assert.match(summary, /flips green on the floor/);
@@ -117,6 +121,7 @@ describe('toPeerFloorCheckRun', () => {
       { name: 'lit-ui-router-mobx', ok: false },
       REPO,
     );
+
     assert.match(title, /bump the peer catalog floor/);
     assert.match(summary, /peer catalog floor and its matching peerFloor pin/);
   });

@@ -1,0 +1,21 @@
+diff --git a/lib/api-viewer-tabs.js b/lib/api-viewer-tabs.js
+index 7a89a78f39bb5c2585cccd40f35c34970aefcd2d..ae8901b5585179b345b9bd7c2c1db70407f3008f 100644
+--- a/lib/api-viewer-tabs.js
++++ b/lib/api-viewer-tabs.js
+@@ -23,7 +23,7 @@ const tpl = html `
+       }
+     }
+   </style>
+-  <div class="tabs">
++  <div class="tabs" role="tablist">
+     <slot name="tab"></slot>
+   </div>
+   <slot name="panel"></slot>
+@@ -40,7 +40,6 @@ export class ApiViewerTabs extends HTMLElement {
+         this.addEventListener('click', this.handleEvent);
+     }
+     connectedCallback() {
+-        this.setAttribute('role', 'tablist');
+         requestAnimationFrame(() => {
+             this._linkPanels();
+         });

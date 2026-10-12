@@ -4,6 +4,7 @@ import { mounts } from 'sample-app-routes';
 // Examples embedded same-origin at /examples/<name>/; built by
 // `examples#build:embeds` (hash routing, so no SPA fallback needed).
 import { EXAMPLE_NAMES } from 'examples/embeds';
+import { fileURLToPath } from 'node:url';
 import { defineConfig, Plugin } from 'vite';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 
@@ -16,14 +17,14 @@ import { viteStaticCopy } from 'vite-plugin-static-copy';
 // /simulated-routing too, mirroring the worker's shellPath aliasing.
 // /app-mobx, /app-effect and /app-hash keep their own builds (different
 // bindings / location mode).
-const SHELL_PATHS: Record<string, string> = {
-  '/app': '/app.html',
-  '/app-mobx': '/app-mobx.html',
-  '/app-effect': '/app-effect.html',
-  '/app-hash': '/app-hash.html',
-  '/not-found-spa': '/app.html',
-  '/simulated-routing': '/app.html',
-};
+const SHELL_PATHS = new Map([
+  ['/app', '/app.html'],
+  ['/app-mobx', '/app-mobx.html'],
+  ['/app-effect', '/app-effect.html'],
+  ['/app-hash', '/app-hash.html'],
+  ['/not-found-spa', '/app.html'],
+  ['/simulated-routing', '/app.html'],
+]);
 
 // The dev-server twin of the docs worker: the SAME mounts table, resolved by
 // the SAME ui-router-server engine, so `vitepress dev` answers the honest
@@ -46,6 +47,7 @@ function examplesIndexPlugin(): Plugin {
     configureServer(server) {
       server.middlewares.use((req, _res, next) => {
         const dir = req.url?.match(/^\/examples\/([\w-]+)\/?$/);
+
         if (dir) req.url = `/examples/${dir[1]}/index.html`;
         next();
       });
@@ -56,7 +58,7 @@ function examplesIndexPlugin(): Plugin {
 export default defineConfig({
   plugins: [
     serverRouterPlugin(router, {
-      shellPath: (mount) => SHELL_PATHS[mount] ?? mount,
+      shellPath: (mount) => SHELL_PATHS.get(mount) ?? mount,
       // Dev parity with the worker's mount-owned 404: serve the mount's
       // static-copied 404 page relabeled to an honest 404, not the adapter's
       // text/plain default. The 304 guard mirrors the adapter's own relabel.
@@ -170,6 +172,18 @@ export default defineConfig({
       ],
     }),
   ],
+
+  resolve: {
+    // VitePress's documented internal-component override; only VPContent imports this path.
+    alias: [
+      {
+        find: /^\.\/VPHome\.vue$/,
+        replacement: fileURLToPath(
+          new URL('./theme/components/VPHomeMain.vue', import.meta.url),
+        ),
+      },
+    ],
+  },
 
   server: {
     open: !process.env.CI && !process.env.E2E_TEST,

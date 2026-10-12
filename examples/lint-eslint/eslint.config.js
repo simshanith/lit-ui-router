@@ -11,11 +11,13 @@ export default [
   ...litUiRouter.configs.recommended,
   // the design system's link element, declared once for both rules that ask
   { settings: { linkElements: ['sp-link'] } },
+  // a server never runs element parts, so these templates lint as it serves them
+  { files: ['src/prerendered/**'], settings: { allowElementParts: false } },
   {
     // The violation gallery: recommended ships these at error, and the app
     // itself is held to that. Here they warn so the demo has output to show
     // without `npm run lint` exiting non-zero.
-    files: ['src/violations.ts'],
+    files: ['src/violations.ts', 'src/prerendered/violations.ts'],
     rules: {
       'lit-ui-router/anchor-is-valid': 'warn',
       'lit-ui-router/directive-position': 'warn',

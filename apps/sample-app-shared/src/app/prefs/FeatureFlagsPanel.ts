@@ -60,6 +60,7 @@ function describeResolution(resolved: ResolvedLocationPlugin): string {
   const why = resolved.downgraded
     ? `${SOURCE_LABELS[resolved.source]}, downgraded: no Navigation API`
     : SOURCE_LABELS[resolved.source];
+
   return `${PLUGIN_LABELS[resolved.plugin]} (${why})`;
 }
 
@@ -67,6 +68,7 @@ function describeResolution(resolved: ResolvedLocationPlugin): string {
 function renderLocationPluginStatus(): TemplateResult {
   const pending = describeLocationPlugin();
   const booted = bootedLocationPlugin();
+
   if (!booted) {
     return html`<div class="flag-resolved">
       Resolves to: ${describeResolution(pending)}
@@ -127,24 +129,25 @@ export class FeatureFlagsPanel extends LitElement {
       padding: 1rem;
       border: 1px solid #ddd;
       border-radius: 4px;
-      margin-top: 1rem;
+      margin-block-start: 1rem;
     }
 
-    h3 {
-      margin-top: 0;
-      margin-bottom: 1rem;
+    h2 {
+      font-size: 1.17em;
+      margin-block-start: 0;
+      margin-block-end: 1rem;
     }
 
     .flag-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 0.5rem 0;
-      border-bottom: 1px solid #eee;
+      padding-block: 0.5rem;
+      border-block-end: 1px solid #eee;
     }
 
     .flag-row:last-child {
-      border-bottom: none;
+      border-block-end: none;
     }
 
     .flag-info {
@@ -152,6 +155,7 @@ export class FeatureFlagsPanel extends LitElement {
     }
 
     .flag-label {
+      display: block;
       font-weight: bold;
     }
 
@@ -161,10 +165,10 @@ export class FeatureFlagsPanel extends LitElement {
     }
 
     .flag-control {
-      margin-left: 1rem;
+      margin-inline-start: 1rem;
       display: flex;
       align-items: center;
-      gap: 0.5rem;
+      gap: 0.75rem;
     }
 
     .flag-resolved {
@@ -180,13 +184,13 @@ export class FeatureFlagsPanel extends LitElement {
     .url-override {
       font-size: 0.75em;
       color: #f0ad4e;
-      margin-left: 0.5rem;
+      margin-inline-start: 0.5rem;
     }
 
     .actions {
-      margin-top: 1rem;
-      padding-top: 1rem;
-      border-top: 1px solid #ddd;
+      margin-block-start: 1rem;
+      padding-block-start: 1rem;
+      border-block-start: 1px solid #ddd;
       display: flex;
       gap: 0.5rem;
     }
@@ -196,18 +200,23 @@ export class FeatureFlagsPanel extends LitElement {
   private _flags: FeatureFlagDefinitions = featureFlags.getAll();
 
   private _handleBooleanChange(flag: keyof FeatureFlagDefinitions, e: Event) {
+    // SAFETY: bound only to the flag checkbox <input> in render
     const checked = (e.target as HTMLInputElement).checked;
     featureFlags.set(flag, checked);
     this._flags = featureFlags.getAll();
   }
 
   private _handleSelectChange(flag: keyof FeatureFlagDefinitions, e: Event) {
+    // SAFETY: bound only to the flag <select> in render
     const value = (e.target as HTMLSelectElement).value;
+
     if (value === '') {
       featureFlags.reset(flag);
     } else {
+      // SAFETY: the <select> offers only this flag's config.options values
       featureFlags.set(flag, value as FeatureFlagDefinitions[typeof flag]);
     }
+
     this._flags = featureFlags.getAll();
   }
 
@@ -230,9 +239,11 @@ export class FeatureFlagsPanel extends LitElement {
 
     if (config.type === 'boolean') {
       const value = this._flags[config.key];
+
       return html`
         <input
           type="checkbox"
+          id=${config.key}
           ?checked=${value}
           ?disabled=${isOverridden}
           @change=${(e: Event) => this._handleBooleanChange(config.key, e)}
@@ -241,8 +252,10 @@ export class FeatureFlagsPanel extends LitElement {
     }
 
     const value = this._flags[config.key];
+
     return html`
       <select
+        id=${config.key}
         ?disabled=${isOverridden}
         @change=${(e: Event) => this._handleSelectChange(config.key, e)}
       >
@@ -259,20 +272,20 @@ export class FeatureFlagsPanel extends LitElement {
 
   render() {
     return html`
-      <h3>Feature Flags</h3>
+      <h2>Feature Flags</h2>
 
       ${FLAG_CONFIGS.map(
         (config) => html`
           <div class="flag-row">
             <div class="flag-info">
-              <div class="flag-label">
+              <label class="flag-label" for=${config.key}>
                 ${config.label}
                 ${
                   featureFlags.isUrlOverridden(config.key)
                     ? html`<span class="url-override">(URL override)</span>`
                     : ''
                 }
-              </div>
+              </label>
               <div class="flag-description">${config.description}</div>
               ${config.status?.() ?? ''}
             </div>

@@ -22,7 +22,7 @@ export class DialogService implements DialogProps {
     return html`
       ${message ? html`<h4>${message}</h4>` : null}
       ${details ? html`<div>${details}</div>` : null}
-      <div style="padding-top: 1em;">
+      <div style="padding-block-start: 1em;">
         <button class="btn btn-primary" @click=${() => component.resolve(true)}>
           ${confirmMsg}
         </button>
@@ -45,10 +45,12 @@ export class DialogService implements DialogProps {
       confirmMsg,
       denyMsg,
     });
-    // lit-dialog types open() as Promise<any>; it resolves the confirm/deny boolean.
+
+    // SAFETY: lit-dialog types open() as Promise<any>; it resolves the confirm/deny boolean
     return this.component.open() as Promise<boolean>;
   };
 }
 
 const instance = new DialogService();
+
 export default instance;

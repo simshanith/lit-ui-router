@@ -1,13 +1,20 @@
 /// <reference types="vitest/globals" />
 /// <reference types="@types/dom-navigation" />
 
-import { UIRouter } from '@uirouter/core';
+import { UIRouter, servicesPlugin } from '@uirouter/core';
 import {
   NavigationLocationService,
   navigationLocationPlugin,
   isUIRouterNavigateEvent,
+  type NavigationLocationPluginOptions,
 } from '../index.js';
 import { interceptNavigations, restoreUrl } from './real-navigation.js';
+
+declare global {
+  interface Window {
+    __sameDocumentMarker?: object;
+  }
+}
 
 /**
  * Check if the Navigation API is available in this browser.
@@ -23,6 +30,7 @@ function createTestRouter(baseHref = '/'): UIRouter {
   const router = new UIRouter();
   // Configure the base href
   router.urlService.config.baseHref = () => baseHref;
+
   return router;
 }
 
@@ -90,7 +98,7 @@ describe.skipIf(!hasNavigationAPI)('NavigationLocationService', () => {
   });
 
   it('fires onChange listeners from a real currententrychange event', async () => {
-    const onChange = vi.fn();
+    const onChange = vi.fn<EventListener>();
     service!.onChange(onChange);
 
     service!.url('/listener-path');
@@ -99,7 +107,7 @@ describe.skipIf(!hasNavigationAPI)('NavigationLocationService', () => {
       expect(onChange).toHaveBeenCalled();
     });
     // the callback receives the real NavigationCurrentEntryChangeEvent
-    const [event] = onChange.mock.calls[0] as [Event];
+    const [event] = onChange.mock.calls[0];
     expect(event.type).toBe('currententrychange');
   });
 
@@ -126,6 +134,7 @@ describe.skipIf(!hasNavigationAPI)('NavigationLocationService', () => {
 
   it('fires navigate event with UIRouter info when navigating', () => {
     let capturedEvent: NavigateEvent | null = null;
+
     const navigateHandler = (event: NavigateEvent) => {
       capturedEvent = event;
     };
@@ -170,24 +179,23 @@ describe.skipIf(!hasNavigationAPI)(
 
     it('commits its own navigation same-document', async () => {
       const marker = {};
-      const holder = window as unknown as { __sameDocumentMarker?: object };
-      holder.__sameDocumentMarker = marker;
+      window.__sameDocumentMarker = marker;
 
       service!.url('/self-intercepted');
 
       await vi.waitFor(() => {
         expect(window.location.pathname).toBe('/self-intercepted');
       });
-      expect(holder.__sameDocumentMarker).toBe(marker);
+      expect(window.__sameDocumentMarker).toBe(marker);
     });
 
     it('lets the intercept option govern when the navigation finishes', async () => {
       service?.dispose(router);
       service = null;
       const marker = {};
-      const holder = window as unknown as { __sameDocumentMarker?: object };
-      holder.__sameDocumentMarker = marker;
+      window.__sameDocumentMarker = marker;
       let handled = false;
+
       const plugin = navigationLocationPlugin(router, {
         intercept: () => ({
           async handler() {
@@ -196,6 +204,7 @@ describe.skipIf(!hasNavigationAPI)(
           },
         }),
       });
+
       try {
         plugin.service.url('/option-intercepted');
         const finished = window.navigation.transition?.finished;
@@ -204,9 +213,74 @@ describe.skipIf(!hasNavigationAPI)(
 
         expect(handled).toBe(true);
         expect(window.location.pathname).toBe('/option-intercepted');
-        expect(holder.__sameDocumentMarker).toBe(marker);
+        expect(window.__sameDocumentMarker).toBe(marker);
       } finally {
         plugin.dispose?.(router);
+      }
+    });
+
+    it.each([
+      ['keeps focus where it was by default', undefined, 'link'],
+      [
+        'resets focus to body when the option asks for it',
+        'after-transition',
+        'body',
+      ],
+    ] as const)('%s', async (_, focusReset, expected) => {
+      service?.dispose(router);
+      service = null;
+      const link = document.createElement('a');
+      link.href = '#';
+      document.body.append(link);
+
+      const plugin = navigationLocationPlugin(
+        router,
+        focusReset ? { intercept: () => ({ focusReset }) } : {},
+      );
+
+      try {
+        link.focus();
+        expect(document.activeElement).toBe(link);
+
+        plugin.service.url('/focus-checked');
+        await window.navigation.transition?.finished;
+
+        expect(document.activeElement).toBe(
+          expected === 'link' ? link : document.body,
+        );
+      } finally {
+        plugin.dispose?.(router);
+        link.remove();
+      }
+    });
+
+    it.each([
+      ['scrolls to the top by default', undefined, 0],
+      ['leaves scroll alone when the option asks for it', 'manual', 500],
+    ] as const)('%s', async (_, scroll, expected) => {
+      service?.dispose(router);
+      service = null;
+      const spacer = document.createElement('div');
+      spacer.style.height = '5000px';
+      document.body.append(spacer);
+
+      const plugin = navigationLocationPlugin(
+        router,
+        scroll ? { intercept: () => ({ scroll }) } : {},
+      );
+
+      try {
+        window.scrollTo(0, 500);
+        expect(window.scrollY).toBe(500);
+
+        plugin.service.url('/scroll-checked');
+        await window.navigation.transition?.finished;
+
+        expect(window.scrollY).toBe(expected);
+      } finally {
+        plugin.dispose?.(router);
+        spacer.remove();
+        window.scrollTo(0, 0);
       }
     });
   },
@@ -251,5 +325,172 @@ describe.skipIf(!hasNavigationAPI)('navigationLocationPlugin', () => {
     });
 
     plugin.dispose?.(router);
+  });
+});
+
+describe.skipIf(!hasNavigationAPI)('traversal interception', () => {
+  let router: UIRouter;
+  let spacer: HTMLElement;
+  let originalHref: string;
+  let rendered: Promise<void>;
+
+  // State a renders a tall page and the others a short one, a microtask after success as a view would, or a task later.
+  function startRouter(
+    options: NavigationLocationPluginOptions,
+    schedule: (render: () => void) => void = queueMicrotask,
+  ): UIRouter {
+    router = new UIRouter();
+    router.plugin(servicesPlugin);
+    router.urlService.config.baseHref = () => '/';
+    router.plugin(navigationLocationPlugin, options);
+    const delay = () => new Promise((resolve) => setTimeout(resolve, 50));
+
+    for (const name of ['a', 'b', 'c']) {
+      router.stateRegistry.register({
+        name,
+        url: `/traverse-${name}`,
+        resolve: { delay },
+      });
+    }
+
+    router.transitionService.onSuccess({}, (transition) => {
+      rendered = new Promise((resolve) =>
+        schedule(() => {
+          spacer.style.height = transition.to().name === 'a' ? '5000px' : '0';
+          resolve();
+        }),
+      );
+    });
+    router.urlService.listen();
+
+    return router;
+  }
+
+  // Firefox aborts a navigation that hasn't finished when the next one starts.
+  async function go(state: string): Promise<void> {
+    await router.stateService.go(state);
+    await window.navigation.transition?.finished;
+  }
+
+  // Firefox skips a traversal's scroll restore when the previous navigation's scroll lands after the commit.
+  async function settleScroll(): Promise<void> {
+    await new Promise(requestAnimationFrame);
+    await new Promise(requestAnimationFrame);
+  }
+
+  beforeEach(() => {
+    originalHref = window.location.href;
+    spacer = document.createElement('div');
+    document.body.append(spacer);
+  });
+
+  afterEach(async () => {
+    router.dispose();
+    spacer.remove();
+    window.scrollTo(0, 0);
+    await restoreUrl(originalHref);
+  });
+
+  it('runs the option handler once the transition the traversal started has settled', async () => {
+    const handlerSaw: (string | undefined)[] = [];
+    startRouter({
+      interceptTraverse: () => ({
+        handler() {
+          handlerSaw.push(router.globals.current.name);
+
+          return Promise.resolve();
+        },
+      }),
+    });
+    const seen: (string | undefined)[] = [];
+    const record = () => seen.push(router.globals.transition?.to().name);
+    window.navigation.addEventListener('navigate', record);
+
+    try {
+      await go('a');
+      await go('b');
+      seen.length = 0;
+
+      await window.navigation.back().finished;
+
+      expect(seen).toEqual([undefined]);
+      expect(handlerSaw).toEqual(['a']);
+      expect(router.globals.current.name).toBe('a');
+    } finally {
+      window.navigation.removeEventListener('navigate', record);
+    }
+  });
+
+  it.each([
+    [
+      'restores scroll once the view is back',
+      { interceptTraverse: true },
+      1000,
+    ],
+    ['restores scroll before the view is back without the option', {}, 0],
+  ] as const)('%s', async (_, options, expected) => {
+    startRouter(options);
+    await go('a');
+    window.scrollTo(0, 1000);
+    expect(window.scrollY).toBe(1000);
+    await go('b');
+    await settleScroll();
+
+    await window.navigation.back().finished;
+    await vi.waitFor(() => expect(router.globals.current.name).toBe('a'));
+
+    expect(window.scrollY).toBe(expected);
+  });
+
+  it('restores scroll once a view the option handler waits for is back', async () => {
+    startRouter(
+      { interceptTraverse: () => ({ handler: () => rendered }) },
+      (render) => setTimeout(render, 20),
+    );
+    await go('a');
+    await rendered;
+    window.scrollTo(0, 1000);
+    expect(window.scrollY).toBe(1000);
+    await go('b');
+    await rendered;
+    await settleScroll();
+
+    await window.navigation.back().finished;
+
+    expect(window.scrollY).toBe(1000);
+  });
+
+  it('aborts a traversal superseded by another, then finishes the second once its view is back', async () => {
+    startRouter({ interceptTraverse: true });
+    await go('a');
+    await go('b');
+    await go('c');
+
+    const first = window.navigation.back();
+    await first.committed;
+    const second = window.navigation.back();
+
+    await expect(first.finished).rejects.toMatchObject({ name: 'AbortError' });
+    await second.committed;
+    // WebKit rejects the second traversal's finished as well, though it commits.
+    await second.finished?.catch(() => undefined);
+    await vi.waitFor(() => expect(router.globals.current.name).toBe('a'));
+    expect(window.location.pathname).toBe('/traverse-a');
+  });
+
+  it('finishes a traversal superseded by a router navigation without waiting on the stale transition', async () => {
+    startRouter({ interceptTraverse: true });
+    await go('a');
+    await go('b');
+    await go('c');
+
+    const traversal = window.navigation.back();
+    await traversal.committed;
+    const push = router.stateService.go('a');
+
+    await traversal.finished;
+    expect(router.globals.transition?.to().name).toBe('a');
+    await push;
+    expect(window.location.pathname).toBe('/traverse-a');
   });
 });

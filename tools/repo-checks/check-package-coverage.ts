@@ -25,6 +25,7 @@ import {
 } from './package-coverage.core.ts';
 
 const CHECK = 'check-package-coverage';
+
 const SCRIPT = 'lint:package-json';
 
 // Tracked manifests the lane leaves out on purpose. A row that is linted again,
@@ -37,6 +38,7 @@ const EXCLUDED: Exclusion[] = [
 ];
 
 const script = requireManifest(workspaceRoot).scripts?.[SCRIPT];
+
 if (!script) {
   console.error(`${CHECK}: root package.json has no ${SCRIPT} script`);
   process.exit(1);
@@ -44,8 +46,11 @@ if (!script) {
 
 // eslint-plugin-oxlint reads ./.oxlintrc.json against the process cwd.
 process.chdir(workspaceRoot);
+
 const eslint = new ESLint({ cwd: workspaceRoot });
+
 const linted: string[] = [];
+
 for (const { filePath } of await eslint.lintFiles(parseLintPatterns(script))) {
   // an explicitly named file comes back as an "ignored" warning, not a lint
   if (!(await eslint.isPathIgnored(filePath))) {
@@ -54,6 +59,7 @@ for (const { filePath } of await eslint.lintFiles(parseLintPatterns(script))) {
 }
 
 const tracked = trackedFiles(':(glob)**/package.json', 'pnpm-workspace.yaml');
+
 const { missing, extra, stale } = auditCoverage(tracked, linted, EXCLUDED);
 
 for (const file of missing) {
@@ -61,11 +67,13 @@ for (const file of missing) {
     `${CHECK}: ${file} is tracked but ${SCRIPT} does not lint it; lint it, or add it to EXCLUDED with a reason`,
   );
 }
+
 for (const file of extra) {
   console.error(
     `${CHECK}: ${SCRIPT} lints ${file}, which is in EXCLUDED or untracked (git add a new manifest)`,
   );
 }
+
 for (const file of stale) {
   console.error(
     `${CHECK}: ${file} is in EXCLUDED but is not a tracked manifest; drop the row`,
@@ -73,27 +81,34 @@ for (const file of stale) {
 }
 
 const { members, workspaceManifest } = await loadWorkspace(workspaceRoot);
+
 const memberDirs = new Map(
   members.map((member) => [isRootMember(member) ? '.' : member.dir, member]),
 );
+
 const catalogued = new Set(
   Object.keys((await selectCatalogs(workspaceManifest)).workspace ?? {}),
 );
+
 const excludedFiles = new Set(EXCLUDED.map(({ file }) => file));
+
 const missingFiles = new Set(missing);
 
 const eslintStatus = (file: string): CoverageRow['eslint'] => {
   if (missingFiles.has(file)) return 'MISSING';
+
   return excludedFiles.has(file) ? 'excluded' : 'linted';
 };
 
 const row = (file: string): CoverageRow => {
   const dir = dirname(file);
   const member = memberDirs.get(dir);
+
   // turbo never plans a standalone project, so its scripts join no umbrella
   if (!member) {
     const { name = '-' } = requireManifest(join(workspaceRoot, dir));
     const tasks = new Set<never>();
+
     return {
       dir,
       name,
@@ -103,6 +118,7 @@ const row = (file: string): CoverageRow => {
       tasks,
     };
   }
+
   return {
     dir,
     name: member.name,

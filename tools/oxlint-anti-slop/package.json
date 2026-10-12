@@ -1,0 +1,20 @@
+{
+  "name": "@tools/oxlint-anti-slop",
+  "version": "0.0.1",
+  "private": true,
+  "description": "The vendored anti-slop oxlint jsPlugin, copied verbatim from upstream so updates diff cleanly; provenance and local deviations live in src/UPSTREAM.md",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./effect": "./src/effect/index.ts"
+  },
+  "scripts": {
+    "typecheck:tsc": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@oxlint/plugins": "catalog:"
+  },
+  "devDependencies": {
+    "typescript": "catalog:"
+  }
+}

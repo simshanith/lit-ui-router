@@ -48,6 +48,7 @@ export async function loadWorkspaceManifest(
 ): Promise<WorkspaceManifest | undefined> {
   const { readWorkspaceManifest } =
     await import('@pnpm/workspace.workspace-manifest-reader');
+
   return readWorkspaceManifest(root);
 }
 
@@ -60,18 +61,22 @@ export async function loadWorkspace(root: string): Promise<{
     import('@pnpm/workspace.projects-reader'),
     loadWorkspaceManifest(root),
   ]);
+
   const projects = await findPackages(root, {
     patterns: workspaceManifest?.packages,
     includeRoot: true,
   });
+
   const members: Member[] = projects.map((project) => {
     const dir = relative(root, project.rootDir) || ROOT_DIR;
+
     return {
       name: project.manifest?.name ?? dir,
       dir,
       manifest: project.manifest,
     };
   });
+
   return { members, workspaceManifest };
 }
 
@@ -96,6 +101,7 @@ export async function selectCatalogs(
   source: WorkspaceManifestSource,
 ): Promise<Record<string, Record<string, string>>> {
   const manifest = await source;
+
   return { default: manifest?.catalog ?? {}, ...manifest?.catalogs };
 }
 

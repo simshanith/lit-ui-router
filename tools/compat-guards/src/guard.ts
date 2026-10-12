@@ -24,11 +24,13 @@ export function guard(name: string): Guard {
   const fail = (message: string): never => {
     throw new Error(`${name}: ${message}`);
   };
+
   return {
     async range(catalog, dep) {
       const range =
         (await catalogRange(catalog, dep)) ??
         fail(`no ${catalog} ${dep} range in pnpm-workspace.yaml`);
+
       if (!isBoundedRange(range)) {
         fail(
           `${catalog} ${dep} range "${range}" names no bound — it is either ` +
@@ -36,6 +38,7 @@ export function guard(name: string): Guard {
             '`x`, empty). Fix it in pnpm-workspace.yaml.',
         );
       }
+
       return range;
     },
     installed(alias, dep) {
@@ -45,6 +48,7 @@ export function guard(name: string): Guard {
           `no ${alias} installed in ${process.cwd()}; run this guard from the ` +
             'package that declares the alias, and reinstall',
         );
+
       // a mis-specified `npm:` target passes every version check but tests the
       // wrong package, so pin the alias to the dep whose range was just read
       if (manifest.name !== dep) {
@@ -53,6 +57,7 @@ export function guard(name: string): Guard {
             `${dep}. Repoint the alias in pnpm-workspace.yaml and reinstall.`,
         );
       }
+
       return (
         manifest.version ??
         fail(`${alias} in ${process.cwd()} has no version; reinstall`)

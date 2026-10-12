@@ -22,6 +22,7 @@ const HEADROOM = 1.03;
 
 /** Above this the reservation is stale, not deliberate slack. */
 const STALE_FACTOR = 1.5;
+
 const STALE_SLACK_PX = 100;
 
 export type Status = 'ok' | 'under' | 'stale';
@@ -41,8 +42,10 @@ export interface Verdict {
 /** `'800px'` -> 800. Throws on anything else: the manifest is authored, not parsed. */
 export function parsePx(value: string): number {
   const match = /^(\d+(?:\.\d+)?)px$/.exec(value.trim());
+
   if (!match)
     throw new Error(`expected a px height, got ${JSON.stringify(value)}`);
+
   return Number(match[1]);
 }
 
@@ -57,11 +60,13 @@ export function suggest(measured: number): number {
 
 export function judge(measured: number, declared: number): Verdict {
   const required = requiredFor(measured);
+
   const status: Status =
     declared < required
       ? 'under'
       : declared > required * STALE_FACTOR + STALE_SLACK_PX
         ? 'stale'
         : 'ok';
+
   return { measured, required, declared, suggested: suggest(measured), status };
 }

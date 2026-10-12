@@ -4,6 +4,7 @@ import { customElement } from 'lit/decorators.js';
 import { Transition } from '@uirouter/core';
 
 import {
+  TransitionCallback,
   TransitionController,
   TransitionControllerOptions,
 } from '../transition-controller.js';
@@ -29,6 +30,7 @@ class TransitionControllerHost extends LitElement {
 
   render() {
     this.renderCount++;
+
     return html`<span>${this.controller?.current?.name ?? ''}</span>`;
   }
 }
@@ -77,6 +79,7 @@ describe('TransitionController', () => {
     }
 
     await waitForUpdate(host);
+
     return host;
   }
 
@@ -125,7 +128,7 @@ describe('TransitionController', () => {
     it('should synchronize once when the host connects', async () => {
       await routerGo(router, 'a');
 
-      const callback = vi.fn();
+      const callback = vi.fn<TransitionCallback>();
       const host = await mountHost({ callback });
 
       expect(callback).toHaveBeenCalledTimes(1);
@@ -138,7 +141,7 @@ describe('TransitionController', () => {
 
   describe('callback', () => {
     it('should invoke the callback with the transition and reason', async () => {
-      const callback = vi.fn();
+      const callback = vi.fn<TransitionCallback>();
       await mountHost({ callback });
       callback.mockClear();
 
@@ -147,11 +150,11 @@ describe('TransitionController', () => {
       expect(callback).toHaveBeenCalledTimes(1);
       const [transition, reason] = callback.mock.calls[0];
       expect(reason).toBe('onSuccess');
-      expect((transition as Transition).to().name).toBe('a');
+      expect(transition?.to().name).toBe('a');
     });
 
     it('should respect hook match criteria', async () => {
-      const callback = vi.fn();
+      const callback = vi.fn<TransitionCallback>();
       await mountHost({ callback, criteria: { to: 'b' } });
       callback.mockClear();
 
@@ -163,7 +166,7 @@ describe('TransitionController', () => {
     });
 
     it('should observe additional transition events', async () => {
-      const callback = vi.fn();
+      const callback = vi.fn<TransitionCallback>();
       await mountHost({ callback, events: ['onStart', 'onSuccess'] });
       callback.mockClear();
 
@@ -191,7 +194,7 @@ describe('TransitionController', () => {
 
   describe('lifecycle cleanup', () => {
     it('should deregister hooks when the host disconnects', async () => {
-      const callback = vi.fn();
+      const callback = vi.fn<TransitionCallback>();
       const host = await mountHost({ callback });
       callback.mockClear();
 
@@ -203,7 +206,7 @@ describe('TransitionController', () => {
     });
 
     it('should re-register hooks and synchronize when the host reconnects', async () => {
-      const callback = vi.fn();
+      const callback = vi.fn<TransitionCallback>();
       const host = await mountHost({ callback });
       const parent = host.parentElement!;
 
@@ -219,10 +222,25 @@ describe('TransitionController', () => {
       expect(callback).toHaveBeenCalledTimes(1);
       const [transition, reason] = callback.mock.calls[0];
       expect(reason).toBe('hostConnected');
-      expect((transition as Transition).to().name).toBe('a');
+      expect(transition?.to().name).toBe('a');
 
       callback.mockClear();
       await routerGo(router, 'b', { id: '7' });
+      expect(callback).toHaveBeenCalledTimes(1);
+    });
+
+    it('should keep its router when it reconnects outside any provider', async () => {
+      const callback = vi.fn<TransitionCallback>();
+      const host = await mountHost({ callback });
+
+      host.remove();
+      await tick();
+      container.appendChild(host);
+      await waitForUpdate(host);
+
+      expect(host.controller!.router).toBe(router);
+      callback.mockClear();
+      await routerGo(router, 'a');
       expect(callback).toHaveBeenCalledTimes(1);
     });
   });

@@ -46,6 +46,7 @@ describe('formatMissing', () => {
       },
       ['a-new-pkg'],
     );
+
     assert.match(
       text,
       /^@www\/lit-ui-router\.dev#build does not order on "a-new-pkg#docs:api": because$/,

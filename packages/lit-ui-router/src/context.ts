@@ -113,6 +113,7 @@ export type RouterContext = Context<RouterContextKey, UIRouterLit>;
  *
  * @category core
  */
+// SAFETY: `__context__` is a phantom brand with no runtime value
 export const routerContext: RouterContext = Object.freeze({
   name: 'lit-ui-router/context#router',
 }) as RouterContext;
@@ -186,11 +187,12 @@ export const isContextRequest: <T extends UnknownContext>(
   event: Event,
   key: T,
 ): event is Event & ContextRequest<T> => {
-  const request = event as Partial<ContextRequest<T>>;
   return (
     event.type === contextRequestEventName &&
-    request.context === key &&
-    typeof request.callback === 'function'
+    'context' in event &&
+    event.context === key &&
+    'callback' in event &&
+    typeof event.callback === 'function'
   );
 };
 
@@ -280,11 +282,13 @@ export const requestContext: <T extends UnknownContext>(
           answered = true;
           answer = value;
         }
+
         options.callback?.(value, unsubscribe);
       },
       options.subscribe,
     ),
   );
+
   return answer;
 };
 
@@ -373,7 +377,9 @@ export const provideContext: <T extends UnknownContext>(
     event.stopImmediatePropagation();
     event.callback(value, event.subscribe ? () => {} : undefined);
   };
+
   root.addEventListener(contextRequestEventName, listener);
+
   return () => root.removeEventListener(contextRequestEventName, listener);
 };
 
@@ -474,6 +480,7 @@ export type ParentUiViewContext = Context<ParentUiViewContextKey, ParentUiView>;
  *
  * @category core
  */
+// SAFETY: `__context__` is a phantom brand with no runtime value
 export const parentUiViewContext: ParentUiViewContext = Object.freeze({
   name: 'lit-ui-router/context#parent-ui-view',
 }) as ParentUiViewContext;
@@ -491,6 +498,13 @@ let scoped: UIRouter | undefined;
 export const getScopedRouter: () => UIRouter | undefined = ():
   | UIRouter
   | undefined => scoped;
+
+/** Whether `value` is a thenable, which `withRouterSync` refuses. */
+const isThenable = <T>(value: T): value is T & PromiseLike<unknown> =>
+  (typeof value === 'object' || typeof value === 'function') &&
+  value !== null &&
+  'then' in value &&
+  typeof value.then === 'function';
 
 /**
  * Runs `run` with `router` published to {@link getScopedRouter | `getScopedRouter`},
@@ -545,15 +559,18 @@ export const withRouterSync: <T>(router: UIRouter, run: () => T) => T = <T>(
   const previous = scoped;
   scoped = router;
   let result: T;
+
   try {
     result = run();
   } finally {
     scoped = previous;
   }
-  if (typeof (result as { then?: unknown } | undefined)?.then === 'function') {
+
+  if (isThenable(result)) {
     throw new TypeError(
       'withRouterSync() is synchronous: `run` returned a thenable, and the router slot is already restored by the time it settles. Consume the render inside `run` — collectResultSync(render(template)) — or read the router before awaiting.',
     );
   }
+
   return result;
 };

@@ -42,12 +42,16 @@ runMain(async () => {
 
   const version = await group('calculate bumped version', async () => {
     const args = releaseVersionArgs(incrementArgs(increment, otherIncrement));
+
     const bumped = parseReleaseVersion(
       await releaseItOutput(packageName, args),
     );
+
     console.log(bumped);
+
     return bumped;
   });
+
   const branch = `${prefix}${version}`;
 
   if (!dryRun) {
@@ -61,13 +65,17 @@ runMain(async () => {
   const commitMessage = await group('changelog', async () => {
     const from = await changelogFrom(packageName, version);
     console.log(`range start: ${from}`);
+
     const changelog = await releaseItOutput(
       packageName,
       changelogArgs({ packageName, from }),
     );
+
     const { message, warning } = releaseCommitMessage(version, changelog, from);
+
     if (warning !== undefined) logWarning(warning);
     console.log(message);
+
     return message;
   });
 
@@ -79,6 +87,7 @@ runMain(async () => {
     const url = await group(`create PR against ${prBase}`, () =>
       createReleasePr(prBase, branch),
     );
+
     logNotice(`release PR: ${url}`);
   }
 });

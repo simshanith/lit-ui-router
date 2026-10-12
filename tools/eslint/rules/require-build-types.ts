@@ -16,11 +16,13 @@ interface JSONProperty {
   key: { value: string | number };
   value: JSONNode;
 }
+
 interface JSONNode {
   properties?: JSONProperty[];
 }
+
 interface JSONProgram {
-  body: [{ expression?: JSONNode }?];
+  body: { expression?: JSONNode }[];
 }
 
 // A manifest advertises dist-resolved types when its `types` field, any
@@ -29,14 +31,19 @@ interface JSONProgram {
 const intoDist = (value: Json | undefined): value is string =>
   typeof value === 'string' && /^(\.\/)?dist\//.test(value);
 
+const isJsonContainer = (
+  node: Json | undefined,
+): node is Json[] | { [key: string]: Json } =>
+  node !== null && typeof node === 'object';
+
 const exportsAdvertiseDistTypes = (
   node: Json | undefined,
   underTypes = false,
 ): boolean => {
-  if (typeof node === 'string') {
-    return intoDist(node) && (underTypes || node.endsWith('.d.ts'));
-  }
-  if (node === null || typeof node !== 'object') return false;
+  if (intoDist(node)) return underTypes || node.endsWith('.d.ts');
+
+  if (!isJsonContainer(node)) return false;
+
   return Object.entries(node).some(([key, value]) =>
     exportsAdvertiseDistTypes(value, underTypes || key === 'types'),
   );
@@ -68,29 +75,38 @@ const requireBuildTypes: Rule.RuleModule = {
     return {
       Program(program) {
         let manifest: Manifest;
+
         try {
+          // SAFETY: package.json is a JSON object whose scripts map names to strings
           manifest = JSON.parse(context.sourceCode.text) as Manifest;
         } catch {
           return;
         }
+
         if (!advertisesDistTypes(manifest)) return;
+
         // "builds at all" = build (single-pass) or build:js (pass-split)
         const builds =
           manifest.scripts?.build ?? manifest.scripts?.['build:js'];
+
         if (
           builds === undefined ||
           manifest.scripts?.['build:types'] !== undefined
         ) {
           return;
         }
-        const root = (program as unknown as JSONProgram).body[0]?.expression;
+
+        // SAFETY: jsonc-eslint-parser parses package.json, so Program is its JSONProgram
+        const root = (program as JSONProgram).body[0]?.expression;
         const scripts = findProperty(root, 'scripts');
+
         const build =
           findProperty(scripts?.value, 'build') ??
           findProperty(scripts?.value, 'build:js');
+
+        // SAFETY: jsonc-eslint-parser's nodes carry the type/loc/range eslint reports on
         context.report({
-          node:
-            ((build ?? scripts) as unknown as Rule.Node | undefined) ?? program,
+          node: ((build ?? scripts) as Rule.Node | undefined) ?? program,
           messageId: 'missingBuildTypes',
         });
       },

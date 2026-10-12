@@ -3,7 +3,9 @@
 // unit-testable; this is the one pacote wrapper both consumers share
 // (check-packed-manifest.ts and check-published-diff.ts).
 
+import type { Json } from '@tools/bootstrap/types.ts';
 import pacote from 'pacote';
+import * as v from 'valibot';
 
 // pacote.manifest on a file spec returns the archive's fields verbatim
 // (probe-verified against pnpm-packed and npm-published tarballs) except:
@@ -11,6 +13,11 @@ import pacote from 'pacote';
 // internal metadata) and injects exactly these fetch-metadata keys, which
 // the helper strips back out.
 const PACOTE_METADATA_FIELDS = ['_id', '_integrity', '_resolved', '_from'];
+
+const PackageIdentitySchema = v.object({
+  name: v.string(),
+  version: v.string(),
+});
 
 /**
  * The literal package/package.json fields of a packed tarball; rejects when
@@ -22,19 +29,19 @@ const PACOTE_METADATA_FIELDS = ['_id', '_integrity', '_resolved', '_from'];
  */
 export async function tarballManifest(
   tarball: string,
-): Promise<Record<string, unknown>> {
-  const manifest = (await pacote.manifest(tarball)) as unknown as Record<
-    string,
-    unknown
+): Promise<Readonly<Record<string, Json>>> {
+  // SAFETY: pacote JSON-parses package.json, so every field value is Json
+  // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- @types/pacote's manifest interfaces lack an index signature, so no single assertion reaches Record<string, Json>
+  const manifest = (await pacote.manifest(tarball)) as unknown as Readonly<
+    Record<string, Json>
   >;
-  if (
-    typeof manifest.name !== 'string' ||
-    typeof manifest.version !== 'string'
-  ) {
+
+  if (!v.is(PackageIdentitySchema, manifest)) {
     throw new Error(
       `${tarball}: package/package.json is not a package manifest (no name/version)`,
     );
   }
+
   return Object.fromEntries(
     Object.entries(manifest).filter(
       ([key]) => !PACOTE_METADATA_FIELDS.includes(key),

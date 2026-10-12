@@ -42,17 +42,25 @@ export const EXAMPLES = {
   },
   'lint-eslint': {
     title: 'ESLint Plugin',
-    // Reserves the open report, the tallest state the embed reaches: 1127px
-    // at the 686px column, which `check:embeds` turns into 1170px with the
-    // frame's border and wrap slack. Seven warnings now, not five — the
-    // reservation moves with the plugin's recommended ruleset. The report
-    // rewraps taller as the column narrows, so a column much under the doc
-    // default scrolls instead of being reserved for.
-    height: '1170px',
+    // Reserves the open report, the tallest state the embed reaches: 1549px
+    // at the 686px column, which `check:embeds` turns into 1600px with the
+    // frame's border and wrap slack. Ten warnings in two files — the
+    // reservation moves with the plugin's recommended ruleset and the
+    // prerendered gallery. The report rewraps taller as the column narrows,
+    // so a column much under the doc default scrolls instead of being
+    // reserved for.
+    height: '1600px',
+    file: 'src/main.ts',
+  },
+  'navigation-api': {
+    title: 'Navigation API',
+    // check:embeds walks hash links only, so it measures the initial state; every other state keeps that height.
+    height: '650px',
     file: 'src/main.ts',
   },
 } as const;
 
 export type ExampleName = keyof typeof EXAMPLES;
 
+// SAFETY: EXAMPLES is a const literal, so its own keys are exactly ExampleName
 export const EXAMPLE_NAMES = Object.keys(EXAMPLES) as ExampleName[];

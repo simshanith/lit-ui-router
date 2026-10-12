@@ -23,7 +23,9 @@ export function stackblitzEmbedSrc(
   const url = new URL(`${REPO_TREE}/${name}`);
   url.searchParams.set('embed', '1');
   url.searchParams.set('file', file);
+
   if (view) url.searchParams.set('view', view);
+
   return url.toString();
 }
 
@@ -33,5 +35,6 @@ export function stackblitzOpenSrc(
 ): string {
   const url = new URL(`${REPO_TREE}/${name}`);
   url.searchParams.set('file', file);
+
   return url.toString();
 }

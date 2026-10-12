@@ -3,6 +3,7 @@ import {
   canUseNavigationAPI,
   describeLocationPlugin,
   featureFlags,
+  type FeatureFlagDefinitions,
   isValidLocationPlugin,
   LOCATION_PLUGIN_AUTO,
   parseFeatureParams,
@@ -11,7 +12,9 @@ import {
 } from './featureDetection.js';
 
 const ENV_KEY = 'VITE_SAMPLE_APP_LOCATION_PLUGIN';
+
 const originalHref = window.location.href;
+
 // the Navigation interface global is an independent signal from window.navigation
 const shipsNavigationAPI = typeof Navigation !== 'undefined';
 
@@ -22,11 +25,11 @@ const setFeatureParam = (key: string, value: string) => {
   history.replaceState(null, '', url);
 };
 
+// SAFETY: featureFlags.save writes the flags object as JSON
 const readStoredFlags = () =>
-  JSON.parse(sessionStorage.getItem('featureFlags') ?? '{}') as Record<
-    string,
-    unknown
-  >;
+  JSON.parse(
+    sessionStorage.getItem('featureFlags') ?? '{}',
+  ) as Partial<FeatureFlagDefinitions>;
 
 const clearFlags = () => {
   // reset the module singleton's in-memory flags, then the storage itself

@@ -90,22 +90,29 @@ const router: ServerRouter = createServerRouter({
 // point of the package's HTTP-honesty contract.
 export async function statusFor(pathname: string): Promise<number> {
   const verdict: Verdict = await router.resolve(pathname);
+
   if (verdict.kind === 'redirect') {
     void mergeSearch(verdict.location, '?ref=nav');
     void verdict.mount;
+
     return verdict.status;
   }
+
   if (verdict.kind === 'shell') {
     void verdict.mount;
+
     return verdict.status ?? 200;
   }
+
   // `notFound` is the only arm whose `mount` is optional.
   void verdict.mount?.length;
+
   return 404;
 }
 
 // Matcher tier: the meta type parameter must flow through compile -> matcher.
 const { compile } = urlMatcherFactory(matcherConfig);
+
 const detail: CompiledMatcher<{ routeId: number }> = compile('/contacts/{id}', {
   params: { id: 'default' },
   meta: { routeId: 7 },
@@ -113,21 +120,26 @@ const detail: CompiledMatcher<{ routeId: number }> = compile('/contacts/{id}', {
 
 export function matcherRoundTrip(path: string): string | null {
   const params = exec(detail, path);
+
   if (params === null) return null;
   void detail.meta.routeId;
   void compare(detail, compile('/contacts/new'));
+
   return format(detail, params);
 }
 
 // Redirect tier: data-only, no router instance.
 const table: RedirectTable = { routes, rules, config: matcherConfig };
+
 const compiled: CompiledRoute[] = compileRoutes(routes, matcherConfig);
+
 const evaluate: (pathname: string) => string | null = compileRedirects(table);
 
 export function redirectFor(pathname: string): string | null {
   const match: RouteMatch | null = matchRoute(compiled, pathname);
   void match?.state;
   void match?.params;
+
   return evaluate(pathname) ?? evaluateRedirects(table, pathname);
 }
 
@@ -148,6 +160,7 @@ export function serverHref(states: StateDeclaration[]): string {
   const headless = createHeadlessRouter(states);
   void new ServerLocationConfig(undefined, false).html5Mode();
   void serverLocationPlugin;
+
   return installServerLocation(headless, locationOptions).stateService.href(
     'app.contacts',
   );
@@ -157,6 +170,7 @@ const hashLocationOptions: ServerLocationPluginOptions = { html5Mode: false };
 
 export function serverHashHref(states: StateDeclaration[]): string {
   const headless = createHeadlessRouter(states);
+
   return installServerLocation(headless, hashLocationOptions).stateService.href(
     'app.contacts',
   );

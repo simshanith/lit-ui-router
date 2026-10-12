@@ -30,6 +30,7 @@ export function releaseWorkflowUrl(repo: string): string {
 /** Collapsed ship-inert listing appended to either verdict's summary. */
 function inertDetails({ shipInert, shipInertFiles }: PackageSummary): string[] {
   if (shipInert === 0) return [];
+
   return [
     '',
     '<details>',
@@ -47,6 +48,7 @@ export function toCheckRun(
   repo: string,
 ): CheckRunPayload {
   const name = checkRunName(summary.name);
+
   if (summary.version === null) {
     return {
       name,
@@ -55,10 +57,13 @@ export function toCheckRun(
       summary: `${summary.name} has no published dist-tag to compare against.`,
     };
   }
+
   const spec = `${summary.name}@${summary.version}`;
   const target = `${summary.tag} ${summary.version}`;
+
   if (summary.shipAffecting > 0) {
     const releaseUrl = releaseWorkflowUrl(repo);
+
     return {
       name,
       conclusion: 'action_required',
@@ -75,6 +80,7 @@ export function toCheckRun(
       // details_url: not settable — GitHub pins GITHUB_TOKEN-created check runs to their own page
     };
   }
+
   return {
     name,
     conclusion: 'success',

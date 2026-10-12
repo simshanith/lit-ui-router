@@ -23,14 +23,14 @@ interface SidebarItem {
 }
 
 /** Kind folders emitted by typedoc-plugin-markdown and their page titles. */
-const KIND_FOLDER_TITLES: Record<string, string> = {
+const KIND_FOLDER_TITLES = {
   classes: 'Classes',
   enumerations: 'Enumerations',
   functions: 'Functions',
   interfaces: 'Interfaces',
   'type-aliases': 'Type Aliases',
   variables: 'Variables',
-};
+} satisfies Record<string, string>;
 
 /**
  * Load the kind-indexes TypeDoc plugin.
@@ -49,11 +49,17 @@ export function load(app: Application): void {
  * Resolve the site-absolute link of the output directory from the
  * typedoc-vitepress-theme `docsRoot` option (e.g. `/api/lit-ui-router-mobx/`).
  */
+/** `docsRoot` is another plugin's option, so typedoc hands it over untyped. */
+const isDocsRoot = (value: unknown): value is string =>
+  typeof value === 'string';
+
 function resolveBaseLink(outDir: string, app: Application): string {
   const docsRootValue = app.options.getValue('docsRoot');
-  const docsRoot = typeof docsRootValue === 'string' ? docsRootValue : '';
+  const docsRoot = isDocsRoot(docsRootValue) ? docsRootValue : '';
+
   if (!docsRoot) return './';
   const relative = path.relative(path.resolve(docsRoot), outDir);
+
   return `/${relative.split(path.sep).join('/')}/`;
 }
 
@@ -69,22 +75,26 @@ function generateKindIndexFiles(
 
   for (const [folder, title] of Object.entries(KIND_FOLDER_TITLES)) {
     const kindDir = path.join(outDir, folder);
+
     if (!fs.existsSync(kindDir)) continue;
 
     const files = fs
       .readdirSync(kindDir)
       .filter((f: string) => f.endsWith('.md') && f !== 'index.md')
       .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+
     if (files.length === 0) continue;
 
     const items = files
       .map((f: string) => {
         const name = path.basename(f, '.md');
+
         return `- [\`${name}\`](./${name})`;
       })
       .join('\n');
 
     const next = path.basename(files[0], '.md');
+
     const indexContent = `---
 next:
   text: ${next}
@@ -114,11 +124,13 @@ function retitleRootModule(outDir: string, app: Application): void {
   const moduleDir = path.join(outDir, 'index');
   const modulePage = path.join(moduleDir, 'index.md');
   const rootPage = path.join(outDir, 'index.md');
+
   // Single-entry packages have no `index/` module folder.
   if (!fs.existsSync(modulePage) || !fs.existsSync(rootPage)) return;
 
   const entry = `- [index](index/index.md)\n`;
   const root = fs.readFileSync(rootPage, 'utf-8');
+
   if (root.includes(entry)) {
     fs.writeFileSync(
       rootPage,
@@ -141,7 +153,9 @@ function retitleRootModule(outDir: string, app: Application): void {
 
   for (const kindFolder of fs.readdirSync(moduleDir)) {
     const kindDir = path.join(moduleDir, kindFolder);
+
     if (!fs.statSync(kindDir).isDirectory()) continue;
+
     for (const file of fs.readdirSync(kindDir)) {
       if (!file.endsWith('.md')) continue;
       const memberPage = path.join(kindDir, file);
@@ -155,6 +169,7 @@ function retitleRootModule(outDir: string, app: Application): void {
       );
     }
   }
+
   app.logger.verbose(`[lit-ui-router] Retitled root module to ${packageName}`);
 }
 
@@ -167,6 +182,7 @@ function linkSidebarGroups(
   app: Application,
 ): void {
   const sidebarPath = path.join(outDir, 'typedoc-sidebar.json');
+
   if (!fs.existsSync(sidebarPath)) return;
 
   const folderByTitle = Object.fromEntries(
@@ -176,11 +192,14 @@ function linkSidebarGroups(
     ]),
   );
 
+  // SAFETY: typedoc-plugin-markdown writes the sidebar as a SidebarItem array
   const sidebar = JSON.parse(
     fs.readFileSync(sidebarPath, 'utf-8'),
   ) as SidebarItem[];
+
   for (const item of sidebar) {
     const folder = folderByTitle[item.text];
+
     if (folder && fs.existsSync(path.join(outDir, folder, 'index.md'))) {
       item.link = `${baseLink}${folder}/`;
     }

@@ -42,11 +42,16 @@ const run = promisify(execFile);
 // argv arrays only — ref names reach git and gh without a shell re-parsing them.
 async function capture(command: string, args: string[]): Promise<string> {
   const { stdout } = await run(command, args, { maxBuffer: 16 * 1024 * 1024 });
+
   return stdout.trim();
 }
 
-function messageOf(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
+/** execFile's `code` is the exit status, or an errno string such as `ENOENT` when the spawn failed. */
+const isExitStatus = (code: number | string | null): code is number =>
+  typeof code === 'number';
+
+function messageOf(cause: unknown): string {
+  return cause instanceof Error ? cause.message : String(cause);
 }
 
 /**
@@ -59,6 +64,7 @@ async function probeBase(baseRef: string, head: string): Promise<BaseVerdict> {
     baseRef,
     prs: [],
   };
+
   try {
     await capture('git', [
       'fetch',
@@ -74,18 +80,23 @@ async function probeBase(baseRef: string, head: string): Promise<BaseVerdict> {
       detail: `fetch failed: ${messageOf(error)}`,
     };
   }
+
   try {
     await capture('git', ['merge-tree', '--write-tree', 'FETCH_HEAD', head]);
+
     return { ...base, state: 'clean' };
   } catch (error) {
     // execFile rejects on any non-zero exit; exit 1 is the conflict answer,
     // not a failure, so the status and stdout decide rather than the rejection.
-    const failure = error as { code?: number | null; stdout?: string };
+    // SAFETY: execFile rejects with an error carrying the exit code and stdout
+    const failure = error as { code?: number | string | null; stdout?: string };
     const code = failure.code ?? null;
+
     const state = mergeStateFromExit(
-      typeof code === 'number' ? code : null,
+      isExitStatus(code) ? code : null,
       failure.stdout ?? '',
     );
+
     return {
       ...base,
       state,
@@ -96,9 +107,11 @@ async function probeBase(baseRef: string, head: string): Promise<BaseVerdict> {
 
 async function main(): Promise<void> {
   const branch = process.env.GITHUB_REF_NAME?.trim() ?? '';
+
   if (branch === '') {
     throw new Error('missing required environment variable GITHUB_REF_NAME');
   }
+
   const head = await capture('git', ['rev-parse', 'HEAD']);
 
   const prs: OpenPr[] = parseOpenPrs(
@@ -117,6 +130,7 @@ async function main(): Promise<void> {
   );
 
   const verdicts: BaseVerdict[] = [];
+
   for (const { baseRef, prs: numbers } of distinctBases(prs)) {
     const verdict = await probeBase(baseRef, head);
     verdicts.push({ ...verdict, prs: numbers });
@@ -138,6 +152,7 @@ async function main(): Promise<void> {
 async function writeOutputs(run: boolean, mainGraph: boolean): Promise<void> {
   const lines = `run=${run}\nmainGraph=${mainGraph}\n`;
   const file = process.env.GITHUB_OUTPUT;
+
   if (file) await appendFile(file, lines);
   else process.stdout.write(lines);
 }
@@ -160,14 +175,15 @@ async function report(gate: GateRun): Promise<void> {
 
   const summary = process.env.GITHUB_STEP_SUMMARY;
   const markdown = summaryMarkdown(gate);
+
   if (summary) await appendFile(summary, markdown);
   else console.log(`\n${markdown}`);
 }
 
-main().catch(async (error: unknown) => {
+main().catch(async (cause: unknown) => {
   // Fail open: the gate never becomes a way to lose CI. Any breakage here
   // (gh down, unexpected JSON, no git) reports as "run" and stays green.
-  const message = messageOf(error);
+  const message = messageOf(cause);
   console.log(
     `::warning::${escapeData(`branch CI gate failed, running CI anyway: ${message}`)}`,
   );

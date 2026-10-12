@@ -19,11 +19,14 @@ runMain(async () => {
   const dryRun = boolEnv(process.env, 'DRY_RUN');
   const tagName = await resolveReleaseTagName(packageName);
   const state = await resolveTagState(tagName);
+
   if (state !== 'tag') {
     console.log(tagStateMessage(state, tagName));
     console.log(`skipping tag of ${tagName}`);
+
     return;
   }
+
   await group(`tag current version of ${packageName}`, () =>
     releaseItRun(packageName, tagArgs(dryRun)),
   );

@@ -22,7 +22,7 @@ export interface ViteMiddlewareServer {
   /** Vite's Connect stack; the plugin `use`s the adapter into it. */
   middlewares: {
     /** Appends middleware to the stack, in call order. */
-    use(middleware: ConnectMiddleware): unknown;
+    use(middleware: ConnectMiddleware): void;
   };
 }
 
@@ -56,9 +56,11 @@ export function serverRouterPlugin(
   options?: ConnectAdapterOptions,
 ): ServerRouterPlugin {
   const middleware = createConnectMiddleware(router, options);
+
   const install = (server: ViteMiddlewareServer): void => {
     server.middlewares.use(middleware);
   };
+
   return {
     name: 'ui-router-server',
     configureServer: install,

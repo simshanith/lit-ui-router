@@ -24,6 +24,7 @@ import { createTestRouter, waitForUpdate, tick } from './test-utils.js';
 /** Reconnects an element in place, driving disconnect/connect `times` over. */
 async function reconnect(element: HTMLElement, times: number): Promise<void> {
   const parent = element.parentElement!;
+
   for (let i = 0; i < times; i++) {
     element.remove();
     parent.appendChild(element);

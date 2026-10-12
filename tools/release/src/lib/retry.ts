@@ -11,7 +11,7 @@ export type RetryOptions = {
   baseDelayMs?: number;
   /** Injectable for tests: records the backoff instead of waiting it out. */
   sleep?: (ms: number) => Promise<void>;
-  onRetry?: (error: unknown, attempt: number) => void;
+  onRetry?: (cause: unknown, attempt: number) => void;
 };
 
 function defaultSleep(ms: number): Promise<void> {
@@ -29,17 +29,21 @@ export async function withRetry<T>(
     sleep = defaultSleep,
     onRetry,
   } = options;
+
   if (attempts < 1) throw new Error('attempts must be >= 1');
   let lastError: unknown;
+
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
     try {
       return await fn();
     } catch (error) {
       lastError = error;
+
       if (attempt === attempts) break;
       onRetry?.(error, attempt);
       await sleep(baseDelayMs * 2 ** (attempt - 1));
     }
   }
+
   throw lastError;
 }

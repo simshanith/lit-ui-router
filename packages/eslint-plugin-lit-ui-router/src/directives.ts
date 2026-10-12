@@ -1,5 +1,8 @@
 // Syntax-only, so the rules also load into oxlint jsPlugins (#676).
-import type { Rule, SourceCode } from 'eslint';
+import type { Rule, Scope, SourceCode } from 'eslint';
+import type { Parse5Element } from 'eslint-plugin-lit/lib/util.js';
+
+export type { Parse5Element };
 
 /** The node type eslint hands a listener, without naming `estree` directly. */
 type ListenerNode<K extends keyof Rule.NodeListener> = Parameters<
@@ -60,87 +63,110 @@ export const isOurPackage = (source: string): boolean =>
 // parse5 nodes arrive untyped through the analyzer's visitor.
 export interface Node {
   type: string;
+  range?: [number, number];
+  // oxlint-disable-next-line anti-slop/no-unsafe-dictionary-type -- parse5 nodes arrive untyped; each read narrows the member it needs
   [key: string]: unknown;
 }
+
+interface IdentifierNode extends Node {
+  name: string;
+}
+
+export interface MemberNode extends Node {
+  object: Node;
+  property: Node;
+}
+
 export interface CallNode extends Node {
   callee: Node;
   arguments: Node[];
 }
+
 export interface ObjectNode extends Node {
   properties: Node[];
 }
+
 export interface PropertyNode extends Node {
   key: Node & { name?: string; value?: unknown };
   value: Node & { value?: unknown };
   computed?: boolean;
 }
-/** parse5's Token.Location, structurally — parse5 itself is not a direct dep. */
-export interface Parse5Location {
-  startLine: number;
-  startCol: number;
-  startOffset: number;
-  endLine: number;
-  endCol: number;
-  endOffset: number;
-}
-export interface Parse5Element {
-  name: string;
-  attribs: Record<string, string>;
-  sourceCodeLocation?: { startTag?: Parse5Location };
-}
-/** A node as eslint ranges it; parse5's side of these rules carries no range. */
-export interface Ranged {
-  range?: [number, number];
-}
+
+/** An eslint AST node through the `Node` view. */
+export const asNode = (node: { type: string }): Node => node;
+
+/** An eslint AST node list through the `Node` view, read-only as the AST's own. */
+export const asNodes = (nodes: readonly { type: string }[]): readonly Node[] =>
+  nodes;
+
+/** A `Node` back as eslint's own, for the `SourceCode` and fixer APIs. */
+// SAFETY: every `Node` these rules hold was read off eslint's AST, never built
+export const toEstree = (node: { type: string }): Rule.Node =>
+  node as Rule.Node;
+
+// Discriminant checks: a node with ESTree's `type` has ESTree's shape for it.
+export const isIdentifier = (
+  node: Node | null | undefined,
+): node is IdentifierNode => node?.type === 'Identifier';
+
+export const isMemberExpression = (
+  node: Node | null | undefined,
+): node is MemberNode => node?.type === 'MemberExpression';
+
+export const isCallExpression = (
+  node: Node | null | undefined,
+): node is CallNode => node?.type === 'CallExpression';
+
+const isNewExpression = (node: Node | null | undefined): node is CallNode =>
+  node?.type === 'NewExpression';
+
+export const isObjectExpression = (
+  node: Node | null | undefined,
+): node is ObjectNode => node?.type === 'ObjectExpression';
+
+const isProperty = (node: Node | null | undefined): node is PropertyNode =>
+  node?.type === 'Property';
+
+// Literal values, node names and `settings` entries arrive untyped or as a union.
+export const isString = <T>(value: T): value is T & string =>
+  typeof value === 'string';
+
+const isBoolean = <T>(value: T): value is T & boolean =>
+  typeof value === 'boolean';
 
 /** Given `lit-html/lit-html.js`, the package name `lit-html`. */
 const packageOf = (source: string): string =>
   source.split('/', source.startsWith('@') ? 2 : 1).join('/');
 
-/** The eslint-scope surface these rules read; oxlint `jsPlugins` bundles the same. */
-interface ScopeLike {
-  set: Map<string, { defs: DefinitionLike[] }>;
-  upper: ScopeLike | null;
-}
-interface DefinitionLike {
-  type: string;
-  node: Node;
-  parent?: Node & { source?: { value?: unknown } };
-}
-interface ImportBinding {
-  node: Node & { local: { name: string }; imported?: Node & { name?: string } };
-  source: string;
-}
-
 /** The definition an identifier resolves to; `undefined` when it is unbound. */
 const definitionOf = (
   context: Rule.RuleContext,
   node: Node,
-): DefinitionLike | undefined => {
-  if (node.type !== 'Identifier') return undefined;
-  const name = (node as { name?: string }).name;
-  if (name === undefined) return undefined;
-  let scope: ScopeLike | null = context.sourceCode.getScope(
-    node as never,
-  ) as unknown as ScopeLike;
+): Scope.Definition | undefined => {
+  if (!isIdentifier(node)) return undefined;
+  const { name } = node;
+
+  let scope: Scope.Scope | null = context.sourceCode.getScope(toEstree(node));
+
   for (; scope !== null; scope = scope.upper) {
     const variable = scope.set.get(name);
+
     if (variable !== undefined) return variable.defs[0];
   }
+
   return undefined;
 };
 
 /** The import an identifier resolves to, or nothing: a shadowing local wins. */
-const importBindingOf = (
-  context: Rule.RuleContext,
-  node: Node,
-): ImportBinding | undefined => {
+const importBindingOf = (context: Rule.RuleContext, node: Node) => {
   const definition = definitionOf(context, node);
-  const source = definition?.parent?.source?.value;
-  if (definition?.type !== 'ImportBinding' || typeof source !== 'string') {
-    return undefined;
-  }
-  return { node: definition.node as ImportBinding['node'], source };
+
+  if (definition?.type !== 'ImportBinding') return undefined;
+  const source = definition.parent.source.value;
+
+  if (!isString(source)) return undefined;
+
+  return { node: definition.node, source };
 };
 
 /** `name` imported from an accepted source, or `ns.name` with `ns` such a namespace. */
@@ -150,19 +176,23 @@ const importedAs = (
   name: string,
   accepts: (source: string) => boolean,
 ): boolean => {
-  if (node.type === 'Identifier') {
+  if (isIdentifier(node)) {
     const binding = importBindingOf(context, node);
+
     if (binding?.node.type !== 'ImportSpecifier') return false;
+
     return (
-      binding.node.imported?.type === 'Identifier' &&
+      binding.node.imported.type === 'Identifier' &&
       binding.node.imported.name === name &&
       accepts(binding.source)
     );
   }
-  if (node.type !== 'MemberExpression' || node.computed === true) return false;
-  const property = (node.property as { name?: string } | undefined)?.name;
-  if (property !== name) return false;
-  const binding = importBindingOf(context, node.object as Node);
+
+  if (!isMemberExpression(node) || node.computed === true) return false;
+
+  if (node.property.name !== name) return false;
+  const binding = importBindingOf(context, node.object);
+
   return (
     binding?.node.type === 'ImportNamespaceSpecifier' && accepts(binding.source)
   );
@@ -171,6 +201,7 @@ const importedAs = (
 /** The tagged-template expression index an element-part attribute addresses. */
 export const elementPartIndex = (attribute: string): number | undefined => {
   const match = ELEMENT_PART.exec(attribute);
+
   return match === null ? undefined : Number(match[1]);
 };
 
@@ -197,12 +228,16 @@ export const attributePartsOf = (
   element: Parse5Element,
 ): Map<number, AttributePart> => {
   const parts = new Map<number, AttributePart>();
+
   for (const [name, value] of Object.entries(element.attribs)) {
     if (elementPartIndex(name) !== undefined) continue;
+
     if (BINDING_PREFIX.test(name)) continue;
+
     const indices = [...value.matchAll(ATTRIBUTE_PART)].map((match) =>
       Number(match[1]),
     );
+
     for (const index of indices) {
       parts.set(index, {
         name,
@@ -211,6 +246,7 @@ export const attributePartsOf = (
       });
     }
   }
+
   return parts;
 };
 
@@ -226,21 +262,27 @@ export const attributeEnd = (
   text: string,
   element: Parse5Element,
   attribute: string,
-  expressions: Node[],
+  expressions: readonly Node[],
 ): number | undefined => {
   const value = element.attribs[attribute];
+
   if (value === undefined) return undefined;
   const last = [...value.matchAll(ATTRIBUTE_PART)].at(-1);
+
   if (last?.index === undefined) return undefined;
-  const range = (expressions[Number(last[1])] as Ranged | undefined)?.range;
+  const range = expressions[Number(last[1])]?.range;
+
   if (range === undefined) return undefined;
   // The expression's own text stops short of the template's `}`.
   const close = text.indexOf('}', range[1]);
+
   if (close === -1) return undefined;
   // parse5 keeps the static text around the placeholder, so the raw source
   // resumes with it, and the value's quote (if any) follows.
   let end = close + 1 + (value.length - last.index - last[0].length);
+
   if (text[end] === '"' || text[end] === "'") end += 1;
+
   return end;
 };
 
@@ -256,6 +298,7 @@ export const isLinkElement = (
 ): boolean => {
   const bound = [...parts.values()].some((part) => part.name === 'role');
   const role = bound ? undefined : element.attribs.role;
+
   return (
     NATIVE_LINKS.has(element.name) ||
     linkElements.has(element.name) ||
@@ -276,33 +319,26 @@ export const propertyNamed = (
   name: string,
 ): PropertyNode | undefined => {
   for (const property of object.properties) {
-    if (property.type !== 'Property' || property.computed === true) continue;
-    const candidate = property as PropertyNode;
-    if ((candidate.key.name ?? candidate.key.value) === name) return candidate;
+    if (!isProperty(property) || property.computed === true) continue;
+
+    if ((property.key.name ?? property.key.value) === name) return property;
   }
+
   return undefined;
 };
 
-/** A named import specifier, structurally. */
-interface SpecifierNode extends Node {
-  imported: Node & { name?: string };
-  local: Node & { name?: string };
-}
-
 /** Named specifiers of every lit-ui-router import in this file. */
-const ourSpecifiers = (source: SourceCode): SpecifierNode[] => {
-  const found: SpecifierNode[] = [];
-  for (const statement of source.ast.body) {
-    if (statement.type !== 'ImportDeclaration') continue;
+const ourSpecifiers = (source: SourceCode) =>
+  source.ast.body.flatMap((statement) => {
+    if (statement.type !== 'ImportDeclaration') return [];
     const from = statement.source.value;
-    if (typeof from !== 'string' || !isOurPackage(from)) continue;
-    for (const specifier of statement.specifiers) {
-      if (specifier.type !== 'ImportSpecifier') continue;
-      found.push(specifier as unknown as SpecifierNode);
-    }
-  }
-  return found;
-};
+
+    if (!isString(from) || !isOurPackage(from)) return [];
+
+    return statement.specifiers.filter(
+      (specifier) => specifier.type === 'ImportSpecifier',
+    );
+  });
 
 /** How a fix spells a lit-ui-router export, and the import edits it needs. */
 export interface SiblingBinding {
@@ -321,27 +357,33 @@ export const siblingBinding = (
   callee: Node,
   name: string,
 ): SiblingBinding | undefined => {
-  if (callee.type === 'MemberExpression') {
+  if (isMemberExpression(callee)) {
     // The same namespace already carries it, so no import to add.
     return {
-      binding: `${source.getText(callee.object as never)}.${name}`,
+      binding: `${source.getText(toEstree(callee.object))}.${name}`,
       edits: [],
     };
   }
+
   const specifiers = ourSpecifiers(source);
+
   const existing = specifiers.find(
-    (specifier) => specifier.imported.name === name,
+    ({ imported }) => imported.type === 'Identifier' && imported.name === name,
   );
+
   if (existing !== undefined) {
-    return { binding: existing.local.name ?? name, edits: [] };
+    return { binding: existing.local.name, edits: [] };
   }
+
   const anchor = specifiers.find(
-    (specifier) => specifier.local.name === (callee as { name?: string }).name,
+    (specifier) => specifier.local.name === callee.name,
   );
+
   if (anchor === undefined) return undefined;
+
   return {
     binding: name,
-    edits: [fixer.insertTextAfter(anchor as never, `, ${name}`)],
+    edits: [fixer.insertTextAfter(anchor, `, ${name}`)],
   };
 };
 
@@ -356,19 +398,22 @@ export const hasSpread = (object: ObjectNode): boolean =>
  */
 export const linkElementsOf = (
   context: Rule.RuleContext,
-  option?: unknown,
+  option?: readonly string[],
 ): ReadonlySet<string> => {
-  const { linkElements } = context.settings as { linkElements?: unknown };
-  const declared = Array.isArray(option)
+  const { linkElements } = context.settings;
+
+  const fromSettings: readonly unknown[] = Array.isArray(linkElements)
+    ? linkElements
+    : [];
+
+  // A host that skips meta.schema can pass a malformed option; it falls back like a malformed setting.
+  const declared: readonly unknown[] = Array.isArray(option)
     ? option
-    : Array.isArray(linkElements)
-      ? linkElements
-      : [];
+    : fromSettings;
+
   // parse5 lowercases tag names, so a declaration has to meet them there.
   return new Set(
-    declared
-      .filter((tag): tag is string => typeof tag === 'string')
-      .map((tag) => tag.toLowerCase()),
+    declared.flatMap((tag) => (isString(tag) ? [tag.toLowerCase()] : [])),
   );
 };
 
@@ -379,13 +424,13 @@ export const linkElementsOf = (
  */
 export const allowElementPartsOf = (
   context: Rule.RuleContext,
-  option?: unknown,
+  option?: boolean,
 ): boolean => {
-  if (typeof option === 'boolean') return option;
-  const { allowElementParts } = context.settings as {
-    allowElementParts?: unknown;
-  };
-  return typeof allowElementParts === 'boolean' ? allowElementParts : true;
+  if (isBoolean(option)) return option;
+
+  const { allowElementParts } = context.settings;
+
+  return isBoolean(allowElementParts) ? allowElementParts : true;
 };
 
 /** The shared `linkElements` option, identical in every rule that reads it. */
@@ -421,31 +466,28 @@ export interface DirectiveTracker {
 export const createDirectiveTracker = (
   context: Rule.RuleContext,
 ): DirectiveTracker => {
-  const { litHtmlSources } = context.settings as {
-    litHtmlSources?: boolean | string[];
-  };
-  const sources = new Set([
-    ...DEFAULT_LIT_HTML_SOURCES,
-    ...(Array.isArray(litHtmlSources) ? litHtmlSources : []),
-  ]);
+  const { litHtmlSources } = context.settings;
+
+  const listed: readonly unknown[] = Array.isArray(litHtmlSources)
+    ? litHtmlSources
+    : [];
+
+  const sources = new Set<unknown>([...DEFAULT_LIT_HTML_SOURCES, ...listed]);
+
   const isLitSource = (source: string) => sources.has(packageOf(source));
   const isOurs = isOurPackage;
   // Falsy `litHtmlSources` means analyse every bare `html` tag, imported or not.
   let analyse = !litHtmlSources;
 
   const isControllerNew = (expression: Node | null | undefined): boolean =>
-    expression?.type === 'NewExpression' &&
-    importedAs(
-      context,
-      (expression as CallNode).callee,
-      STATUS_CONTROLLER,
-      isOurs,
-    );
+    isNewExpression(expression) &&
+    importedAs(context, expression.callee, STATUS_CONTROLLER, isOurs);
 
   return {
     onImport(node) {
       const source = node.source.value;
-      if (typeof source !== 'string') return;
+
+      if (!isString(source)) return;
       analyse =
         // A previous import supplied lit-html
         analyse ||
@@ -463,21 +505,20 @@ export const createDirectiveTracker = (
     },
 
     isLitTemplate(tag) {
-      if (
-        !litHtmlSources &&
-        tag.type === 'Identifier' &&
-        (tag as { name?: string }).name === 'html'
-      ) {
+      if (!litHtmlSources && isIdentifier(tag) && tag.name === 'html') {
         // unbound or imported from anywhere counts; a shadowing local does not
         const definition = definitionOf(context, tag);
+
         return definition === undefined || definition.type === 'ImportBinding';
       }
+
       return importedAs(context, tag, 'html', isLitSource);
     },
 
     directiveOf(expression) {
-      if (expression.type !== 'CallExpression') return undefined;
-      const { callee } = expression as CallNode;
+      if (!isCallExpression(expression)) return undefined;
+      const { callee } = expression;
+
       return DIRECTIVE_NAMES.find((name) =>
         importedAs(context, callee, name, isOurs),
       );
@@ -487,12 +528,11 @@ export const createDirectiveTracker = (
 
     isControllerBinding(node) {
       const definition = definitionOf(context, node);
+
       if (definition?.type !== 'Variable') return false;
-      const declarator = definition.node;
-      return (
-        declarator.type === 'VariableDeclarator' &&
-        isControllerNew(declarator.init as Node | null | undefined)
-      );
+      const { init } = definition.node;
+
+      return init != null && isControllerNew(asNode(init));
     },
   };
 };

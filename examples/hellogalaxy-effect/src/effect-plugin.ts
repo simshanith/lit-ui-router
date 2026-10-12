@@ -15,11 +15,12 @@ import {
   SubscriptionRef,
 } from 'effect';
 import {
-  BuilderFunction,
   CustomAsyncPolicy,
   HookMatchCriteria,
   HookRegOptions,
   HookResult,
+  isFunction,
+  isString,
   PathNode,
   RawParams,
   Resolvable,
@@ -27,10 +28,11 @@ import {
   ResolvableLiteral,
   StateObject,
   Transition,
+  UIInjector,
   UIRouter,
   UIRouterPlugin,
 } from '@uirouter/core';
-import { LitStateDeclaration } from 'lit-ui-router';
+import { DefaultResolvesType, LitStateDeclaration } from 'lit-ui-router';
 
 /** The transition a resolve or hook effect is running inside. */
 export class CurrentTransition extends Context.Tag('CurrentTransition')<
@@ -44,7 +46,7 @@ export class CurrentTransition extends Context.Tag('CurrentTransition')<
  * exits it.
  */
 export interface EffectStateDeclaration<
-  Resolves extends Record<string, unknown> = Record<string, unknown>,
+  Resolves extends Record<string, unknown> = DefaultResolvesType,
   R = never,
 > extends LitStateDeclaration<Resolves> {
   scoped?: (params: RawParams) => Effect.Effect<void, never, Scope.Scope | R>;
@@ -53,13 +55,20 @@ export interface EffectStateDeclaration<
 /** A resolve effect, before the plugin provides the path's services to it. */
 type ResolveEffect = Effect.Effect<unknown, unknown>;
 
+/** Adds a resolved service to a context under the tag it was declared with. */
+type ServiceAdder = <C>(
+  context: Context.Context<C>,
+  injector: UIInjector,
+) => Context.Context<C>;
+
 /** Tags declared through {@link provide}, keyed by the resolve token they use. */
-const serviceTags = new Map<string, Context.Tag<never, unknown>>();
+const serviceTags = new Map<string, ServiceAdder>();
 
 const BOX = Symbol('ui-router-effect/boxed-resolve');
 
 interface BoxedResolve {
   [BOX]: true;
+  // oxlint-disable-next-line anti-slop/no-unknown-returns -- resolve values are untyped (any) in core
   run: () => Promise<unknown>;
 }
 
@@ -74,6 +83,7 @@ const isBoxed = (value: unknown): value is BoxedResolve =>
  * with the closure that runs it. Everything else passes straight through, and
  * plain resolves keep behaving exactly as they did.
  */
+// oxlint-disable-next-line anti-slop/no-unknown-parameters -- resolve values are untyped (any) in core
 export const EFFECT_WAIT: CustomAsyncPolicy = (data: unknown) =>
   isBoxed(data) ? data.run() : Promise.resolve(data);
 
@@ -88,7 +98,11 @@ export function provide<I, S, E, R>(
   tag: Context.Tag<I, S>,
   effect: Effect.Effect<S, E, R>,
 ): ResolvableLiteral {
-  serviceTags.set(tag.key, tag as unknown as Context.Tag<never, unknown>);
+  serviceTags.set(tag.key, (context, injector) =>
+    // SAFETY: the token resolves to the S that `effect` produced
+    Context.add(context, tag, injector.get(tag.key) as S),
+  );
+
   return { token: tag.key, resolveFn: () => effect };
 }
 
@@ -151,9 +165,11 @@ export class EffectPlugin<R = never, ER = never> implements UIRouterPlugin {
     // redundant, and a transition-scoped onStart never fires for one that core
     // ignores — so a double click cannot interrupt the resolve it duplicates.
     this.deregister.push(
+      // SAFETY: core's hook registrations return their deregister fn, typed Function
       router.transitionService.onCreate({}, (transition) => {
         transition.onStart({}, () => {
           const alive = EffectPlugin.redirectChain(transition);
+
           for (const other of [...this.fibers.keys()]) {
             if (!alive.has(other)) this.closeFibers(other);
           }
@@ -164,6 +180,7 @@ export class EffectPlugin<R = never, ER = never> implements UIRouterPlugin {
     // State scopes key off onSuccess: it is the only hook that cannot still
     // be superseded.
     this.deregister.push(
+      // SAFETY: as for onCreate above
       router.transitionService.onSuccess({}, (transition) => {
         runtime.runFork(this.applyScopes(transition));
       }) as Deregister,
@@ -174,6 +191,7 @@ export class EffectPlugin<R = never, ER = never> implements UIRouterPlugin {
   append(line: string): Effect.Effect<void> {
     return Effect.suspend(() => {
       const at = new Date().toLocaleTimeString('en-US', { hour12: false });
+
       return SubscriptionRef.update(this.log, (lines) =>
         [...lines, `${at}  ${line}`].slice(-60),
       );
@@ -194,10 +212,13 @@ export class EffectPlugin<R = never, ER = never> implements UIRouterPlugin {
   dispose(): void {
     if (this.disposed) return;
     this.disposed = true;
+
     for (const off of this.deregister) off();
+
     for (const scope of this.scopes.values()) {
       this.runtime.runFork(Scope.close(scope, Exit.void));
     }
+
     this.scopes.clear();
     void this.runtime.dispose();
   }
@@ -218,17 +239,18 @@ export class EffectPlugin<R = never, ER = never> implements UIRouterPlugin {
     // onSuccess/onError fire off the transition's own promise, by which point
     // its fiber set is already interrupted — run those on the bare runtime.
     const inSet = kind !== 'onSuccess' && kind !== 'onError';
+
+    // SAFETY: registrations return their deregister fn (typed Function), and
+    // the hook's promise settles to the callback effect's HookResult
     const off = this.router.transitionService[kind](
       criteria,
       (transition: Transition): HookResult =>
-        this.runEffect(
-          callback(transition) as unknown as ResolveEffect,
-          transition,
-          inSet,
-        ) as HookResult,
+        this.runEffect(callback(transition), transition, inSet) as HookResult,
       options,
     ) as Deregister;
+
     this.deregister.push(off);
+
     return off;
   }
 
@@ -240,35 +262,44 @@ export class EffectPlugin<R = never, ER = never> implements UIRouterPlugin {
   private installResolvePolicy(): void {
     const builder: ResolvablesBuilder = (state, parentFn) => {
       const resolvables = parentFn?.(state) ?? [];
+
       return resolvables.map((resolvable) => {
+        // SAFETY: core types resolveFn as Function; it is called with the resolved deps
         const inner = resolvable.resolveFn as
-          | ((...deps: unknown[]) => unknown)
-          | undefined;
-        if (typeof inner !== 'function') return resolvable;
+          // oxlint-disable-next-line anti-slop/no-unknown-returns -- resolve values are untyped (any) in core
+          ((...deps: unknown[]) => unknown) | undefined;
+
+        if (!isFunction(inner)) return resolvable;
+
+        const deps: unknown[] = resolvable.deps;
+
+        // SAFETY: StateObject.resolvePolicy is the declaration's, typed any
         const declared =
           resolvable.policy?.async ??
           (state.resolvePolicy as ResolvePolicy | undefined)?.async;
+
         return new Resolvable(
           resolvable.token,
           (transition: Transition, ...deps: unknown[]) => {
             const value: unknown = inner(...deps);
+
             if (!Effect.isEffect(value)) return value;
+
             return {
               [BOX]: true,
               run: () =>
+                // SAFETY: a resolve effect needs only what the runtime and the path's tags provide
                 this.runEffect(value as ResolveEffect, transition, true),
             } satisfies BoxedResolve;
           },
-          ['$transition$', ...(resolvable.deps as unknown[])],
+          ['$transition$', ...deps],
           // An explicitly declared async policy (e.g. NOWAIT) still wins.
           { ...resolvable.policy, async: declared ?? EFFECT_WAIT },
         );
       });
     };
-    this.router.stateRegistry.decorator(
-      'resolvables',
-      builder as BuilderFunction,
-    );
+
+    this.router.stateRegistry.decorator('resolvables', builder);
   }
 
   /**
@@ -276,17 +307,20 @@ export class EffectPlugin<R = never, ER = never> implements UIRouterPlugin {
    * `CurrentTransition` are provided, the fiber joins the transition's set,
    * and the returned promise is what core awaits.
    */
-  private runEffect(
-    effect: ResolveEffect,
+  private runEffect<A>(
+    effect: Effect.Effect<A, unknown, R | CurrentTransition>,
     transition: Transition,
     inSet: boolean,
-  ): Promise<unknown> {
+  ): Promise<A> {
     const provided = Effect.provide(effect, this.contextFor(transition));
+
     if (!inSet) return this.runtime.runPromise(provided);
     const set = this.fibersFor(transition);
     const fiber = this.runtime.runSync(FiberSet.run(set, provided));
+
     return this.runtime.runPromise(Fiber.await(fiber)).then((exit) => {
       if (Exit.isSuccess(exit)) return exit.value;
+
       // The transition this belonged to is already dead; rejecting here would
       // only re-report the interruption as a transition error.
       if (Exit.isInterrupted(exit)) return new Promise<never>(() => {});
@@ -295,22 +329,27 @@ export class EffectPlugin<R = never, ER = never> implements UIRouterPlugin {
   }
 
   /** Every service-tagged resolve already resolved on the transition's path. */
-  private contextFor(transition: Transition): Context.Context<never> {
-    let context = Context.make(
-      CurrentTransition,
-      transition,
-    ) as Context.Context<never>;
+  private contextFor(
+    transition: Transition,
+  ): Context.Context<CurrentTransition> {
+    let context = Context.make(CurrentTransition, transition);
+
     const injector = transition.injector();
-    for (const token of transition.getResolveTokens() as unknown[]) {
-      if (typeof token !== 'string') continue;
-      const tag = serviceTags.get(token);
-      if (!tag) continue;
+    const tokens: unknown[] = transition.getResolveTokens();
+
+    for (const token of tokens) {
+      if (!isString(token)) continue;
+      const addService = serviceTags.get(token);
+
+      if (!addService) continue;
+
       try {
-        context = Context.add(context, tag, injector.get(token));
+        context = addService(context, injector);
       } catch {
         // Not resolved yet on this path — a later child resolve will see it.
       }
     }
+
     return context;
   }
 
@@ -320,19 +359,24 @@ export class EffectPlugin<R = never, ER = never> implements UIRouterPlugin {
    */
   private fibersFor(transition: Transition): FiberSet.FiberSet {
     const existing = this.fibers.get(transition);
+
     if (existing) return existing.set;
     const scope = this.runtime.runSync(Scope.make());
+
     const set = this.runtime.runSync(
       Effect.provideService(FiberSet.make(), Scope.Scope, scope),
     );
+
     this.fibers.set(transition, { scope, set });
     const close = () => this.closeFibers(transition);
     transition.promise.then(close, close);
+
     return set;
   }
 
   private closeFibers(transition: Transition): void {
     const entry = this.fibers.get(transition);
+
     if (!entry) return;
     this.fibers.delete(transition);
     this.runtime.runFork(Scope.close(entry.scope, Exit.void));
@@ -342,10 +386,12 @@ export class EffectPlugin<R = never, ER = never> implements UIRouterPlugin {
   private static redirectChain(transition: Transition): Set<Transition> {
     const chain = new Set<Transition>();
     let current: Transition | undefined = transition;
+
     while (current && !chain.has(current)) {
       chain.add(current);
       current = current.redirectedFrom() ?? undefined;
     }
+
     return chain;
   }
 
@@ -357,31 +403,40 @@ export class EffectPlugin<R = never, ER = never> implements UIRouterPlugin {
     const closing = [...transition.treeChanges('exiting')]
       .reverse()
       .map((node) => this.closeScope(node.state.name));
+
     const opening = transition
       .treeChanges('entering')
       .map((node) => this.openScope(node));
+
     return Effect.all([...closing, ...opening], { discard: true });
   }
 
   private closeScope(name: string): Effect.Effect<void> {
     return Effect.suspend(() => {
       const scope = this.scopes.get(name);
+
       if (!scope) return Effect.void;
       this.scopes.delete(name);
+
       return Scope.close(scope, Exit.void);
     });
   }
 
   private openScope(node: PathNode): Effect.Effect<void, never, R> {
+    // SAFETY: `scoped` is the only extension read, and it is optional
     const declaration = node.state.self as EffectStateDeclaration<
-      Record<string, unknown>,
+      Record<string, never>,
       R
     >;
+
     const scoped = declaration.scoped;
+
     if (!scoped) return Effect.void;
+
     return Scope.make().pipe(
       Effect.flatMap((scope) => {
         this.scopes.set(node.state.name, scope);
+
         return Effect.forkIn(
           Effect.provideService(scoped(node.paramValues), Scope.Scope, scope),
           scope,

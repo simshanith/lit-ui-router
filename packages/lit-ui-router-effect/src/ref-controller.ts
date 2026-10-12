@@ -1,12 +1,12 @@
-import { Effect, Fiber, Stream, SubscriptionRef } from 'effect';
+import { Effect, Fiber, Predicate, Stream, SubscriptionRef } from 'effect';
 import { ReactiveController, ReactiveControllerHost } from 'lit';
 
 /**
  * The slice of a runtime the controllers need. `Effect.runFork` /
  * `Effect.runSync` on the default runtime unless one is given; a
- * [`ManagedRuntime`](https://effect.website/docs/runtime/#managedruntime)
- * satisfies it directly, so an app with real layers keeps its fibers on the
- * runtime it already owns.
+ * [`ManagedRuntime<R>`](https://effect.website/docs/runtime/#managedruntime)
+ * satisfies it because the controllers' effects require nothing from `R`. It runs the controllers' own fibers; it does not provide
+ * services to a selector, which stays a plain function over the values.
  */
 export interface RefRuntime {
   /** starts an effect on a fiber the controller interrupts on disconnect */
@@ -51,7 +51,7 @@ export interface RefControllerOptions<T> {
   /**
    * The runtime the subscription fiber is forked on, and refs are read with.
    * Defaults to Effect's default runtime; pass the app's `ManagedRuntime` to
-   * keep everything on one.
+   * keep the fibers on one. The selector gets no services from it.
    */
   runtime?: RefRuntime;
 }
@@ -108,26 +108,49 @@ export class RefController<
 
   private fiber?: Fiber.RuntimeFiber<unknown, unknown>;
   private initialized = false;
+  private connected = false;
   private readonly runtime: RefRuntime;
 
   constructor(
     private readonly host: ReactiveControllerHost,
-    private readonly refs: RefSource<Refs>,
+    private refs: RefSource<Refs>,
     private readonly selector: (...values: RefValues<Refs>) => T,
     private readonly options: RefControllerOptions<T> = {},
   ) {
     this.runtime = options.runtime ?? defaultRefRuntime;
-    // Undefined unless `initialValue` is given, which is the pre-connect
-    // shape either way; the cast keeps `.value` typed `T` for render code.
-    this.value =
-      typeof refs === 'function'
-        ? (options.initialValue as T)
-        : selector(...this.read(refs));
+    // SAFETY: undefined unless `initialValue` is given, the pre-connect shape either way; `.value` stays `T` for render code.
+    this.value = Predicate.isFunction(refs)
+      ? (options.initialValue as T)
+      : selector(...this.read(refs));
     host.addController(this);
   }
 
   hostConnected(): void {
-    const refs = typeof this.refs === 'function' ? this.refs() : this.refs;
+    this.connected = true;
+    this.fork();
+  }
+
+  hostDisconnected(): void {
+    this.connected = false;
+    this.interrupt();
+  }
+
+  /**
+   * Replaces the refs. A connected controller interrupts its fiber and
+   * re-seeds and re-forks on the new refs, as a reconnect does; a
+   * disconnected one only records them for its next `hostConnected`.
+   */
+  protected setRefs(refs: RefSource<Refs>): void {
+    this.refs = refs;
+
+    if (!this.connected) return;
+    this.interrupt();
+    this.fork();
+  }
+
+  private fork(): void {
+    const refs = Predicate.isFunction(this.refs) ? this.refs() : this.refs;
+
     if (!refs) return;
     // Seed before forking: a fiber's first emission is not guaranteed to land
     // synchronously, and render() must not see a stale `.value`.
@@ -139,7 +162,7 @@ export class RefController<
     );
   }
 
-  hostDisconnected(): void {
+  private interrupt(): void {
     this.fiber?.unsafeInterruptAsFork(this.fiber.id());
     this.fiber = undefined;
     // Reconnecting re-fires onChange, as a fresh subscription would.
@@ -147,9 +170,10 @@ export class RefController<
   }
 
   private read(refs: Refs): RefValues<Refs> {
-    return refs.map((ref): unknown =>
+    // SAFETY: `map` keeps tuple order, and each entry is its own ref's current value.
+    return refs.map((ref: SubscriptionRef.SubscriptionRef<unknown>) =>
       this.runtime.runSync(SubscriptionRef.get(ref)),
-    ) as unknown as RefValues<Refs>;
+    ) as RefValues<Refs>;
   }
 
   /** One stream carrying the latest value of every ref. */
@@ -157,14 +181,15 @@ export class RefController<
     refs: Refs,
   ): Stream.Stream<RefValues<Refs>> {
     const streams = refs.map((ref) => ref.changes);
-    return Stream.zipLatestAll(...streams) as unknown as Stream.Stream<
-      RefValues<Refs>
-    >;
+
+    // SAFETY: `zipLatestAll` emits one latest value per stream, in ref order.
+    return Stream.zipLatestAll(...streams) as Stream.Stream<RefValues<Refs>>;
   }
 
   private emit(values: RefValues<Refs>): void {
     const selected = this.selector(...values);
     const equals = this.options.equals ?? Object.is;
+
     if (this.initialized && equals(selected, this.value)) return;
     this.initialized = true;
     this.value = selected;

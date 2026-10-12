@@ -67,14 +67,18 @@ async function workerTag(
   accountId: string,
   name: string,
 ): Promise<string> {
+  // SAFETY: workers/scripts results are script objects carrying id and tag
   const scripts = (await cf(token, `/${accountId}/workers/scripts`)) as {
     id?: string;
     tag?: string;
   }[];
+
   const script = scripts.find((candidate) => candidate.id === name);
+
   if (!script?.tag) {
     throw new Error(`worker "${name}" not found in account's workers/scripts`);
   }
+
   return script.tag;
 }
 
@@ -85,16 +89,19 @@ async function getTriggers(
   accountId: string,
   tag: string,
 ): Promise<Trigger[]> {
+  // SAFETY: the triggers endpoint returns trigger objects; Trigger is a subset
   const triggers = (await cf(
     token,
     `/${accountId}/builds/workers/${tag}/triggers`,
   )) as Trigger[];
+
   return Promise.all(
     triggers.map(async (trigger) =>
       trigger.environment_variables
         ? trigger
         : {
             ...trigger,
+            // SAFETY: this sub-resource returns the trigger's variable map
             environment_variables: (await cf(
               token,
               `/${accountId}/builds/triggers/${trigger.trigger_uuid}/environment_variables`,
@@ -115,11 +122,13 @@ async function main() {
     },
     strict: true,
   });
+
   const apply = values.apply;
   const sites = values.site.flatMap((value) => value.split(','));
 
   const token = process.env.CLOUDFLARE_API_TOKEN;
   const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
+
   if (!token || !accountId) {
     console.error(
       'Missing required env: set CLOUDFLARE_API_TOKEN (user token with ' +
@@ -127,6 +136,7 @@ async function main() {
         'CLOUDFLARE_ACCOUNT_ID.',
     );
     process.exitCode = 2;
+
     return;
   }
 
@@ -143,10 +153,12 @@ async function main() {
     );
 
     const tag = await workerTag(token, accountId, name);
+
     const { report, drifts } = diffTriggers(
       await getTriggers(token, accountId, tag),
       worker,
     );
+
     console.log(`${index > 0 ? '\n' : ''}worker: ${name} (${tag})\n`);
     console.log(report.text);
 
@@ -165,6 +177,7 @@ async function main() {
           body: drift.patch,
         });
       }
+
       // Declared keys only — undeclared live vars are never in this body.
       if (Object.keys(drift.environmentPatch).length > 0) {
         console.log(
@@ -183,16 +196,19 @@ async function main() {
       await getTriggers(token, accountId, tag),
       worker,
     );
+
     console.log(`\nAfter --apply:\n\n${after.report.text}`);
+
     if (!after.report.ok) ok = false;
   }
 
   if (ok) return;
+
   if (!apply) console.log('\nRun with --apply to update the drifted triggers.');
   process.exitCode = 1;
 }
 
-main().catch((error: unknown) => {
-  console.error(error instanceof Error ? error.message : error);
+main().catch((cause: unknown) => {
+  console.error(cause instanceof Error ? cause.message : cause);
   process.exitCode = 2;
 });

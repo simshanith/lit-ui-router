@@ -53,7 +53,7 @@ customElements.define('shadow-badge', ShadowBadge);
 /** `LitElementRenderer`, narrowed to the badge so every other element renders as it does in the other lane. */
 export class ShadowBadgeRenderer extends LitElementRenderer {
   static override matchesClass(ctor: typeof HTMLElement): boolean {
-    return ctor === (ShadowBadge as unknown as typeof HTMLElement);
+    return ctor === ShadowBadge;
   }
 }
 
@@ -106,6 +106,7 @@ export const makeRouter = (): Router => {
   const router = installServerLocation(new UIRouterLit(), {
     strictMode: false,
   });
+
   const states: LitStateDeclaration[] = [
     {
       name: 'shell',
@@ -128,6 +129,8 @@ export const makeRouter = (): Router => {
     { name: 'badge', url: '/badge', component: BadgeView },
     { name: 'bare', url: '/bare' },
   ];
+
   for (const state of states) router.stateRegistry.register(state);
+
   return router;
 };

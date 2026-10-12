@@ -12,13 +12,17 @@ const suites = {
 } as const;
 
 const name = process.argv[2];
+
 if (name === undefined || !(name in suites)) {
   console.error(`usage: cypress-suite.ts <${Object.keys(suites).join('|')}>`);
   process.exit(1);
 }
 
+// SAFETY: the `name in suites` check above exits otherwise
 const suite = suites[name as keyof typeof suites];
+
 const port = resolveWwwDevPort();
+
 const child = spawn(
   'cypress',
   [
@@ -35,6 +39,7 @@ const child = spawn(
   ],
   { stdio: 'inherit' },
 );
+
 child.on('exit', (code, signal) => {
   if (signal) process.kill(process.pid, signal);
   process.exitCode = code ?? 1;

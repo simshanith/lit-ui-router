@@ -8,7 +8,7 @@ import type { ReactiveController, ReactiveControllerHost } from 'lit';
 const themeFragments = {
   light: () => import('@spectrum-web-components/theme/theme-light.js'),
   dark: () => import('@spectrum-web-components/theme/theme-dark.js'),
-} satisfies Record<string, () => Promise<unknown>>;
+} satisfies Record<string, () => Promise<object>>;
 
 export type ThemeColor = keyof typeof themeFragments;
 
@@ -56,6 +56,7 @@ export class ColorSchemeController implements ReactiveController {
 
   async #adopt(): Promise<void> {
     const wanted = this.#preferred;
+
     if (!this.#loaded.has(wanted)) {
       try {
         await themeFragments[wanted]();
@@ -66,12 +67,15 @@ export class ColorSchemeController implements ReactiveController {
         console.error(`could not load the ${wanted} theme fragment`, error);
         this.#applied ??= wanted;
         this.#host.requestUpdate();
+
         return;
       }
     }
+
     // re-read the query: whatever it says now is what should be on screen, and
     // the previous stop stays applied while an unloaded one is still in flight
     const preferred = this.#preferred;
+
     if (this.#loaded.has(preferred)) this.#applied = preferred;
     this.#host.requestUpdate();
   }

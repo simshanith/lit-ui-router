@@ -18,6 +18,8 @@ export function composeNavigateUrl(url: string, baseHref: string): string {
   if (url === '' || url === '/') {
     return baseHref;
   }
+
   const slash = url.startsWith('/') ? '' : '/';
+
   return stripLastPathElement(baseHref) + slash + url;
 }

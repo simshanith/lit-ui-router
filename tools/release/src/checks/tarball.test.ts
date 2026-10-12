@@ -13,6 +13,7 @@ const run = promisify(execFile);
 describe('tarballManifest', () => {
   let dir: string;
   let tarball: string;
+
   const manifest = {
     name: 'probe',
     version: '1.0.0',
@@ -52,6 +53,7 @@ describe('tarballManifest', () => {
     await writeFile(join(bad, 'package', 'package.json'), bytes);
     const tgz = join(bad, 'bad.tgz');
     await run('tar', ['-czf', tgz, '-C', bad, 'package/package.json']);
+
     return tgz;
   };
 

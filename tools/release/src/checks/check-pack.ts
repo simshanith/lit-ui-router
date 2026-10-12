@@ -20,22 +20,23 @@ import {
 import { tarballManifest } from './tarball.ts';
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
 import { isPublishable, loadWorkspace } from '@tools/shared/workspace.ts';
+import { failMain } from '../lib/fail-main.ts';
 
 async function main() {
   const { members } = await loadWorkspace(workspaceRoot);
   const publishable = members.filter(isPublishable);
   const results: PackResult[] = [];
+
   for (const { name, dir } of publishable) {
     // Malformed manifests reject in tarballManifest — loud, never a silent {}.
     const manifest = await tarballManifest(packTarballPath(name));
     results.push({ name, dir, refs: findUnsubstitutedRefs(manifest) });
   }
+
   const { ok, text } = formatReport(results);
   (ok ? console.log : console.error)(text);
+
   if (!ok) process.exitCode = 1;
 }
 
-main().catch((error: unknown) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+main().catch(failMain);

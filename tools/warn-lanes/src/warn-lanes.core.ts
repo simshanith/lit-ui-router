@@ -16,6 +16,8 @@
 // The IO — spawning the linter, reading and writing the snapshot file — lives
 // in each lane's own package; `@tools/lint-elements` is the first.
 
+import * as v from 'valibot';
+
 /**
  * Turbo task ids whose warnings are watched. Explicit by necessity, not by
  * preference: warn-only-ness cannot be derived from a run summary (see above),
@@ -52,6 +54,7 @@ export interface WarnMessage {
 
 export function tallyFiles(messages: readonly WarnMessage[]): WarnFiles {
   const files: WarnFiles = {};
+
   for (const { file, ruleId, severity } of messages) {
     if (severity !== 1) continue;
     // A warning with no rule id is a linter-level report, not a rule the
@@ -60,30 +63,39 @@ export function tallyFiles(messages: readonly WarnMessage[]): WarnFiles {
     const byRule = (files[file] ??= {});
     byRule[rule] = (byRule[rule] ?? 0) + 1;
   }
+
   return sortFiles(files);
 }
 
 /** Stable key order so a regenerated snapshot diffs only where counts moved. */
 export function sortFiles(files: WarnFiles): WarnFiles {
-  const out: WarnFiles = {};
-  for (const file of Object.keys(files).sort()) {
-    const byRule = files[file] ?? {};
-    const rules: Record<string, number> = {};
-    for (const rule of Object.keys(byRule).sort()) {
-      rules[rule] = byRule[rule] ?? 0;
-    }
-    out[file] = rules;
-  }
-  return out;
+  return Object.fromEntries(
+    Object.keys(files)
+      .sort()
+      .map((file) => {
+        const byRule = files[file] ?? {};
+
+        return [
+          file,
+          Object.fromEntries(
+            Object.keys(byRule)
+              .sort()
+              .map((rule) => [rule, byRule[rule] ?? 0]),
+          ),
+        ];
+      }),
+  );
 }
 
 export function ruleTotals(files: WarnFiles): Record<string, number> {
   const totals: Record<string, number> = {};
+
   for (const byRule of Object.values(files)) {
     for (const [rule, count] of Object.entries(byRule)) {
       totals[rule] = (totals[rule] ?? 0) + count;
     }
   }
+
   // Descending count, then rule id: the biggest block is the one being worked.
   return Object.fromEntries(
     Object.entries(totals).sort(
@@ -95,14 +107,17 @@ export function ruleTotals(files: WarnFiles): Record<string, number> {
 
 export function totalWarnings(files: WarnFiles): number {
   let total = 0;
+
   for (const byRule of Object.values(files)) {
     for (const count of Object.values(byRule)) total += count;
   }
+
   return total;
 }
 
 export function buildSnapshot(task: string, files: WarnFiles): WarnSnapshot {
   const sorted = sortFiles(files);
+
   return {
     task,
     total: totalWarnings(sorted),
@@ -119,24 +134,29 @@ export function buildSnapshot(task: string, files: WarnFiles): WarnSnapshot {
 export function checkSnapshotIntegrity(snapshot: WarnSnapshot): string[] {
   const problems: string[] = [];
   const total = totalWarnings(snapshot.files);
+
   if (snapshot.total !== total) {
     problems.push(
       `snapshot total is ${snapshot.total} but files[] sums to ${total}`,
     );
   }
+
   const rules = ruleTotals(snapshot.files);
+
   for (const rule of new Set([
     ...Object.keys(rules),
     ...Object.keys(snapshot.rules),
   ])) {
     const committed = snapshot.rules[rule];
     const derived = rules[rule];
+
     if (committed !== derived) {
       problems.push(
         `snapshot rules[${rule}] is ${committed ?? 'absent'} but files[] sums to ${derived ?? 0}`,
       );
     }
   }
+
   return problems;
 }
 
@@ -168,24 +188,29 @@ export function diffWarnings(
 ): WarnDiff {
   const regressions: WarnDelta[] = [];
   const improvements: WarnDelta[] = [];
+
   for (const file of new Set([
     ...Object.keys(snapshot),
     ...Object.keys(observed),
   ])) {
     const before = snapshot[file] ?? {};
     const after = observed[file] ?? {};
+
     for (const rule of new Set([
       ...Object.keys(before),
       ...Object.keys(after),
     ])) {
       const was = before[rule] ?? 0;
       const now = after[rule] ?? 0;
+
       if (now > was) regressions.push({ file, rule, was, now });
       else if (now < was) improvements.push({ file, rule, was, now });
     }
   }
+
   const order = (a: WarnDelta, b: WarnDelta): number =>
     a.file.localeCompare(b.file) || a.rule.localeCompare(b.rule);
+
   return {
     regressions: regressions.sort(order),
     improvements: improvements.sort(order),
@@ -202,7 +227,9 @@ const WARN_LANE_STATUSES: readonly WarnLaneStatus[] = [
 
 export function statusOf(total: number, floor: number): WarnLaneStatus {
   if (total > floor) return 'above-floor';
+
   if (total < floor) return 'below-floor';
+
   return 'at-floor';
 }
 
@@ -229,45 +256,59 @@ const MARKER = 'warn-lane:';
  * A single line, JSON payload, because the consumer is a parser and prose is
  * not a protocol. The human-readable report is the rest of the lane's stdout.
  */
+// `rules` is checked as an object only; its counts are carried, not read.
+const WarnLaneStateSchema = v.object({
+  task: v.string(),
+  total: v.number(),
+  floor: v.number(),
+  status: v.picklist(WARN_LANE_STATUSES),
+  regressions: v.number(),
+  rules: v.custom<Record<string, number>>((rules) =>
+    v.is(v.looseObject({}), rules),
+  ),
+});
+
 export function formatWarnLaneMarker(state: WarnLaneState): string {
   return `${MARKER} ${JSON.stringify(state)}`;
 }
 
 export function parseWarnLaneMarker(line: string): WarnLaneState | undefined {
   const trimmed = line.trim();
+
   if (!trimmed.startsWith(MARKER)) return undefined;
   let value: unknown;
+
   try {
     value = JSON.parse(trimmed.slice(MARKER.length));
   } catch {
     return undefined;
   }
+
   // Every field, not just the two this function reads: `warnLaneLine`
   // dereferences the rest, so a partial payload reaches it as a typed lie.
-  const state = value as WarnLaneState;
-  if (
-    typeof state?.task !== 'string' ||
-    typeof state.total !== 'number' ||
-    typeof state.floor !== 'number' ||
-    typeof state.regressions !== 'number' ||
-    !WARN_LANE_STATUSES.includes(state.status) ||
-    typeof state.rules !== 'object' ||
-    state.rules === null
-  ) {
-    return undefined;
-  }
-  return state;
+  return v.is(WarnLaneStateSchema, value) ? value : undefined;
 }
 
 /** The last marker in a task log — a lane prints exactly one, at the end. */
 export function findWarnLaneState(log: string): WarnLaneState | undefined {
   const lines = log.split('\n');
+
   for (let index = lines.length - 1; index >= 0; index--) {
     const state = parseWarnLaneMarker(lines[index] ?? '');
+
     if (state !== undefined) return state;
   }
+
   return undefined;
 }
+
+const VERDICTS: Record<WarnLaneStatus, (state: WarnLaneState) => string> = {
+  'above-floor': ({ total, floor }) =>
+    `${total} warnings, ABOVE the snapshot floor of ${floor}`,
+  'below-floor': ({ total, floor }) =>
+    `${total} warnings, ${floor - total} below the snapshot floor — the snapshot is stale`,
+  'at-floor': ({ total }) => `${total} warnings, at the snapshot floor`,
+};
 
 /** Whether the line carries the per-rule breakdown after its verdict. */
 export interface WarnLaneLineOptions {
@@ -289,22 +330,21 @@ export function warnLaneLine(
   if (state === undefined) {
     return `${task} — warn-only lane, no state in this run (task did not run, or predates the marker)`;
   }
+
   const top = rules
     ? Object.entries(state.rules)
         .slice(0, 3)
         .map(([rule, count]) => `${rule} ${count}`)
         .join(', ')
     : '';
+
   const detail = top === '' ? '' : ` — ${top}`;
+
   if ((state.regressions ?? 0) > 0) {
     const count = state.regressions;
+
     return `${task} — ${count} warning entr${count === 1 ? 'y' : 'ies'} not in the snapshot (${state.total} warnings, floor ${state.floor})${detail}`;
   }
-  const verdict =
-    state.status === 'above-floor'
-      ? `${state.total} warnings, ABOVE the snapshot floor of ${state.floor}`
-      : state.status === 'below-floor'
-        ? `${state.total} warnings, ${state.floor - state.total} below the snapshot floor — the snapshot is stale`
-        : `${state.total} warnings, at the snapshot floor`;
-  return `${task} — ${verdict}${detail}`;
+
+  return `${task} — ${VERDICTS[state.status](state)}${detail}`;
 }

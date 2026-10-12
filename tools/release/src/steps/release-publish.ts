@@ -31,13 +31,16 @@ runMain(async () => {
     const version = parseReleaseVersion(
       await releaseItOutput(packageName, currentReleaseVersionArgs()),
     );
+
     console.log(version);
+
     return version;
   });
 
   const from = await group('changelog range start (#302 pin)', async () => {
     const start = await changelogFrom(packageName, releaseVersion);
     console.log(start);
+
     return start;
   });
 

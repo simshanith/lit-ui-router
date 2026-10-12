@@ -72,14 +72,16 @@ async function restoreCredit(
     const runs = (await readdir(runsDir)).filter((file) =>
       file.endsWith('.json'),
     );
+
     if (runs.length !== 1) {
       return {
         failure: `expected exactly one turbo run summary in ${runsDir}, found ${runs.length}`,
       };
     }
-    const summary = JSON.parse(
+
+    const summary: unknown = JSON.parse(
       await readFile(join(runsDir, runs[0]), 'utf8'),
-    ) as unknown;
+    );
 
     return {
       sha: await sha256File(creditPath),
@@ -105,6 +107,7 @@ runMain(async () => {
       const debitSha = await sha256File(debitPath);
       const credit = await restoreCredit(creditPath, runsDir);
       const creditSha = 'failure' in credit ? undefined : credit.sha;
+
       const verdict: Verdict =
         'failure' in credit
           ? { kind: 'unverifiable', reason: credit.failure }
@@ -115,11 +118,13 @@ runMain(async () => {
           console.log(
             `✓ reconciled ${packageName}: cold bake ≡ CI-verified pack (sha256 ${debitSha})`,
           );
+
           return;
         case 'unverifiable':
           logWarning(
             `reconcile skipped for ${packageName}: ${verdict.reason}. Publishing the trusted cold-baked tarball, uncross-checked against CI.`,
           );
+
           return;
         case 'drift':
           throw new Error(

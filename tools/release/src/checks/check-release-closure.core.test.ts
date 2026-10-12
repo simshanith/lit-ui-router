@@ -27,6 +27,7 @@ describe('selectedNames', () => {
       { name: '@tools/release', path: '/w/tools/release' },
       { name: 'lit-ui-router', path: '/w/packages/lit-ui-router' },
     ]);
+
     assert.deepEqual(selectedNames(json), ['@tools/release', 'lit-ui-router']);
   });
 
@@ -63,6 +64,7 @@ describe('formatMissing', () => {
       { need: 'release-it devDependencies', why: 'because' },
       ['a-new-pkg'],
     );
+
     assert.equal(
       text,
       'release-it devDependencies outside RELEASE_CLOSURE: a-new-pkg: because',
@@ -141,6 +143,7 @@ describe('plannedScriptPackages', () => {
         { package: '@tools/shared', command: '<NONEXISTENT>' },
       ],
     });
+
     assert.deepEqual(plannedScriptPackages(json), [
       '@tools/typedoc-plugin-lit-ui-router',
       'lit-ui-router',

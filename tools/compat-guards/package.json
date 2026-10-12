@@ -14,7 +14,7 @@
     "format:check:oxfmt": "oxfmt --check \"**/*.{ts,js,json,jsonc,md}\"",
     "format:oxfmt": "oxfmt \"**/*.{ts,js,json,jsonc,md}\"",
     "lint:oxlint": "oxlint .",
-    "test": "node --test \"src/**/*.test.ts\"",
+    "test": "node --test --test-reporter=@tools/shared/test-reporter.ts \"src/**/*.test.ts\"",
     "typecheck:tsc": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {

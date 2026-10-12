@@ -91,14 +91,14 @@ const hashDemo: MountConfig = {
  * absence of routing config), and /app-hash the hash-location shape (shell at
  * the root, no redirect, so the fragment survives entry).
  */
-export const mounts: Record<string, MountConfig> = {
+export const mounts = {
   '/app': app,
   '/app-mobx': app,
   '/app-effect': app,
   '/app-hash': hashDemo,
   '/not-found-spa': notFoundSpaDemo,
   '/simulated-routing': simulatedRoutingDemo,
-};
+} satisfies Record<string, MountConfig>;
 
 // The prefixes the mount-agnostic shell derives its base from live in
 // ./shellMounts.ts (a dependency-free `./shell-mounts` subpath, so the client

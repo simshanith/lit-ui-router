@@ -46,6 +46,7 @@ export function findDevSplitViolations({
         `declared dev-only message is missing from dist/development: ${JSON.stringify(message)}`,
       );
     }
+
     if (production.includes(message)) {
       violations.push(
         `dev-only message leaked into dist: ${JSON.stringify(message)}`,
@@ -55,6 +56,7 @@ export function findDevSplitViolations({
 
   for (const chunk of new Set(development.match(messageChunks(prefix)) ?? [])) {
     if (production.includes(chunk)) continue;
+
     if (devOnly.some((message) => chunk.startsWith(message))) continue;
     violations.push(
       `dist/development carries an undeclared dev-only message: ${JSON.stringify(chunk)}`,
@@ -77,6 +79,7 @@ export function formatDevSplitReport(
       text: `✓ dev/prod split holds — ${declared} dev-only messages ship in dist/development only.`,
     };
   }
+
   return {
     ok: false,
     text: [

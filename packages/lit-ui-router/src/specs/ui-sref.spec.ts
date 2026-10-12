@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { html, render, TemplateResult } from 'lit';
-import { RejectType, TargetState } from '@uirouter/core';
+import { RejectType, TargetState, type RawParams } from '@uirouter/core';
+import { PartInfo, PartType } from 'lit/directive.js';
 
 import {
   uiSref,
@@ -52,13 +53,14 @@ describe('uiSref directive', () => {
       router.dispose();
       router = undefined;
     }
+
     await tick();
   });
 
   async function setupWithSref(
     states: LitStateDeclaration[],
     srefState: string,
-    params?: Record<string, unknown>,
+    params?: RawParams,
   ): Promise<{ anchor: HTMLAnchorElement; uiRouter: UIRouterLitElement }> {
     router = createTestRouter(states);
 
@@ -114,6 +116,7 @@ describe('uiSref directive', () => {
 
     it('should warn once when a render finds no router', async () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
       try {
         render(link(), container);
         await tick(50);
@@ -143,16 +146,19 @@ describe('uiSref directive', () => {
       // the shared once-per-element registry silences this site, so it is the
       // fallback for a click that arrives with no render report behind it
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
       try {
-        const anchor = document.createElement('a');
+        const anchor: Element = document.createElement('a');
         container.appendChild(anchor);
 
-        const srefDirective = new UiSrefDirective({ type: 6 } as any);
-        srefDirective.element = anchor as unknown as UiSrefElement;
+        const srefDirective = new UiSrefDirective({ type: PartType.ELEMENT });
+        // SAFETY: with no router the click never reads the link's `targetState`
+        srefDirective.element = anchor as UiSrefElement;
         srefDirective.state = 'home';
 
         anchor.addEventListener(
           'click',
+          // SAFETY: a 'click' event is a MouseEvent
           srefDirective.onClick as EventListener,
         );
         clickElement(anchor);
@@ -193,11 +199,12 @@ describe('uiSref directive', () => {
     it('should confirm the specs run against lit dev mode', () => {
       // the guard above is only meaningful if the suite sees dev lit; without
       // this, every warning spec could pass vacuously
-      expect(typeof UIRouterLitElement.enableWarning).toBe('function');
+      expect(UIRouterLitElement.enableWarning).toBeTypeOf('function');
     });
 
     it('should not warn when a router ancestor is present', async () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
       try {
         const wrapper = await setupWithTemplate(
           [{ name: 'home', url: '/home' }],
@@ -227,6 +234,7 @@ describe('uiSref directive', () => {
       const states: LitStateDeclaration[] = [
         { name: 'user', url: '/user/:id' },
       ];
+
       const { anchor } = await setupWithSref(states, 'user', { id: '123' });
 
       expect(anchor.getAttribute('href')).toContain('/user/123');
@@ -236,6 +244,7 @@ describe('uiSref directive', () => {
       const states: LitStateDeclaration[] = [
         { name: 'search', url: '/search?query' },
       ];
+
       const { anchor } = await setupWithSref(states, 'search', {
         query: 'test',
       });
@@ -325,6 +334,7 @@ describe('uiSref directive', () => {
         { name: 'home', url: '/home' },
         { name: 'about', url: '/about' },
       ];
+
       const { anchor } = await setupWithSref(states, 'about');
 
       const goSpy = vi.spyOn(router!.stateService, 'go');
@@ -340,6 +350,7 @@ describe('uiSref directive', () => {
         { name: 'home', url: '/home' },
         { name: 'about', url: '/about' },
       ];
+
       router = createTestRouter(states);
 
       const uiRouter = document.createElement('ui-router');
@@ -378,6 +389,7 @@ describe('uiSref directive', () => {
         cancelable: true,
         button: 0,
       });
+
       const preventDefaultSpy = vi.spyOn(event, 'preventDefault');
       anchor.dispatchEvent(event);
       await tick();
@@ -393,6 +405,7 @@ describe('uiSref directive', () => {
       const states: LitStateDeclaration[] = [
         { name: 'user', url: '/user/:id' },
       ];
+
       const { anchor } = await setupWithSref(states, 'user', { id: '456' });
 
       const goSpy = vi.spyOn(router!.stateService, 'go');
@@ -669,6 +682,7 @@ describe('uiSref directive', () => {
         [{ name: 'home', url: '/home' }],
         html`<button ${uiSref('home', {}, { assignHref: 'auto' })}>Go</button>`,
       );
+
       const button = wrapper.querySelector('button')!;
       button.setAttribute('target', '_top');
 
@@ -685,6 +699,7 @@ describe('uiSref directive', () => {
 
     it('should write href to a non-link by default', async () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
       const wrapper = await setupWithTemplate(
         home,
         html`<button ${uiSref('home')}>Go</button>`,
@@ -714,6 +729,7 @@ describe('uiSref directive', () => {
 
       const link = (id: string) =>
         html`<button ${uiSref('user', { id })}>Go</button>`;
+
       render(link('1'), wrapper);
       await tick(50);
       render(link('2'), wrapper);
@@ -750,11 +766,12 @@ describe('uiSref directive', () => {
     it('should confirm the specs run against lit dev mode', () => {
       // the guard above is only meaningful if the suite sees dev lit; without
       // this, every warning spec could pass vacuously
-      expect(typeof UIRouterLitElement.enableWarning).toBe('function');
+      expect(UIRouterLitElement.enableWarning).toBeTypeOf('function');
     });
 
     it('should not write href to a non-link under auto', async () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
       const wrapper = await setupWithTemplate(
         home,
         html`<button ${uiSref('home', {}, { assignHref: 'auto' })}>Go</button>`,
@@ -1192,6 +1209,7 @@ describe('uiSref directive', () => {
       uiRouter.appendChild(wrapper);
 
       let receivedTargetState: TargetState | undefined;
+      // SAFETY: only `uiSrefTargetEvent()` dispatches UI_SREF_TARGET_EVENT
       wrapper.addEventListener(UI_SREF_TARGET_EVENT, ((
         event: UiSrefTargetEvent,
       ) => {
@@ -1218,6 +1236,7 @@ describe('uiSref directive', () => {
       uiRouter.appendChild(wrapper);
 
       let receivedTargetState: TargetState | undefined;
+      // SAFETY: only `uiSrefTargetEvent()` dispatches UI_SREF_TARGET_EVENT
       wrapper.addEventListener(UI_SREF_TARGET_EVENT, ((
         event: UiSrefTargetEvent,
       ) => {
@@ -1268,8 +1287,11 @@ describe('uiSref directive', () => {
       // the param never reaches the url, so the old href-change guard held
       expect(wrapper.querySelector('a')!.getAttribute('href')).toBe(hrefBefore);
       expect(eventSpy).toHaveBeenCalled();
+
+      // SAFETY: the spy listens for UI_SREF_TARGET_EVENT, only dispatched as `uiSrefTargetEvent()`
       const { targetState } = (eventSpy.mock.calls[0][0] as UiSrefTargetEvent)
         .detail;
+
       expect(targetState.params().message).toBe('b');
     });
 
@@ -1300,25 +1322,26 @@ describe('uiSref directive', () => {
   });
 
   describe('uiSrefTargetEvent factory', () => {
+    // SAFETY: the factory stores the target state without reading it
+    const targetState = {} as TargetState;
+
     it('should create event with correct type', () => {
-      const targetState = {} as TargetState;
       const event = uiSrefTargetEvent(targetState);
 
       expect(event.type).toBe(UI_SREF_TARGET_EVENT);
     });
 
     it('should create event that bubbles', () => {
-      const event = uiSrefTargetEvent({} as TargetState);
+      const event = uiSrefTargetEvent(targetState);
       expect(event.bubbles).toBe(true);
     });
 
     it('should create event that is composed', () => {
-      const event = uiSrefTargetEvent({} as TargetState);
+      const event = uiSrefTargetEvent(targetState);
       expect(event.composed).toBe(true);
     });
 
     it('should include targetState in detail', () => {
-      const targetState = { name: () => 'test' } as TargetState;
       const event = uiSrefTargetEvent(targetState);
 
       expect(event.detail.targetState).toBe(targetState);
@@ -1361,6 +1384,7 @@ describe('uiSref directive', () => {
 
       // The nested view should be able to use relative references
       const nestedView = uiView.querySelector('ui-view');
+
       if (nestedView) {
         const wrapper = document.createElement('div');
         nestedView.appendChild(wrapper);
@@ -1428,28 +1452,32 @@ describe('uiSref directive', () => {
 });
 
 describe('UiSrefDirective', () => {
+  const attributePart: PartInfo = {
+    type: PartType.ATTRIBUTE,
+    name: 'href',
+    tagName: 'a',
+  };
+
   it('should throw when used on non-element part', () => {
     expect(() => {
       // Simulate attribute part type
-      new UiSrefDirective({ type: 1 } as any);
+      new UiSrefDirective(attributePart);
     }).toThrow('The `uiSref` directive must be used as an element');
   });
 
   it('should not throw when used on element part', () => {
     expect(() => {
-      // Simulate element part type (type 1)
-      new UiSrefDirective({ type: 1 } as any);
-    }).toThrow(); // Still throws because type 1 is ATTRIBUTE, not ELEMENT
+      new UiSrefDirective(attributePart);
+    }).toThrow(); // still throws: an attribute part, not an element part
 
     expect(() => {
-      // Correct element part type (type 6)
-      new UiSrefDirective({ type: 6 } as any);
+      new UiSrefDirective({ type: PartType.ELEMENT });
     }).not.toThrow();
   });
 
   // update() never ran, so there is no part element to re-arm against
   it('should reconnect harmlessly when no part element was ever seen', () => {
-    const directive = new UiSrefDirective({ type: 6 } as any);
+    const directive = new UiSrefDirective({ type: PartType.ELEMENT });
     directive.disconnected();
     expect(() => directive.reconnected()).not.toThrow();
     expect(directive.element).toBeNull();

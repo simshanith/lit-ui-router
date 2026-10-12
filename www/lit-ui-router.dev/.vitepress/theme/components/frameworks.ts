@@ -128,7 +128,9 @@ export const frameworks: FrameworkEntry[] = [
 // non-interactive — not tools on the spectrum, so no cards or legend rows.
 // Simple Icons paths (24x24), drawn with currentColor.
 // (Edge is absent upstream: Microsoft marks were removed from simple-icons.)
-export const ambientMarks: Record<number, { name: string; d: string }[]> = {
+export const ambientMarks: Partial<
+  Record<SpectrumPoint['level'], { name: string; d: string }[]>
+> = {
   0: [
     {
       name: 'Node.js',

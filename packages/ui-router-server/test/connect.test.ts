@@ -29,6 +29,7 @@ interface Harness {
 // Headers default to a GET navigation so the middleware engages.
 const harness = (overrides: Partial<ConnectRequest> = {}): Harness => {
   let settle!: () => void;
+
   const h: Harness = {
     req: {
       url: '/app/about',
@@ -39,16 +40,19 @@ const harness = (overrides: Partial<ConnectRequest> = {}): Harness => {
     res: {
       writeHead(status: number, ...rest: unknown[]) {
         h.writeHead.push({ status, rest });
+
         return h.res;
       },
       setHeader(name: string, value: string) {
         h.headers[name] = value;
+
         return h.res;
       },
       end(body?: string) {
         h.ended = true;
         h.body = body;
         settle();
+
         return h.res;
       },
     },
@@ -64,6 +68,7 @@ const harness = (overrides: Partial<ConnectRequest> = {}): Harness => {
     ended: false,
     nextArgs: [],
   };
+
   return h;
 };
 
@@ -79,6 +84,7 @@ describe('createConnectMiddleware', () => {
         status: 302,
       }),
     );
+
     const h = harness({ url: '/app/old?ref=email' });
     mw(h.req, h.res, h.next);
     await h.done;
@@ -98,17 +104,18 @@ describe('createConnectMiddleware', () => {
         status: 302,
       }),
     );
+
     const h = harness({ url: '/app/old?tab=2' });
     mw(h.req, h.res, h.next);
     await h.done;
-    const location = (h.writeHead[0].rest[0] as { Location: string }).Location;
-    assert.equal(location, '/app/home?tab=1');
+    assert.deepEqual(h.writeHead[0].rest, [{ Location: '/app/home?tab=1' }]);
   });
 
   it('serves a plain shell with a canonical Link and rewrites req.url into the static layer', async () => {
     const mw = createConnectMiddleware(
       routerOf({ kind: 'shell', mount: '/app' }),
     );
+
     const h = harness({ url: '/app/about' });
     mw(h.req, h.res, h.next);
     await h.done;
@@ -122,6 +129,7 @@ describe('createConnectMiddleware', () => {
     const mw = createConnectMiddleware(
       routerOf({ kind: 'shell', mount: '/app', status: 404 }),
     );
+
     const h = harness({
       url: '/app/missing',
       headers: {
@@ -130,6 +138,7 @@ describe('createConnectMiddleware', () => {
         'if-modified-since': 'yesterday',
       },
     });
+
     mw(h.req, h.res, h.next);
     await h.done;
     // No canonical Link for an error representation.
@@ -151,6 +160,7 @@ describe('createConnectMiddleware', () => {
     const mw = createConnectMiddleware(
       routerOf({ kind: 'notFound', mount: '/app' }),
     );
+
     const h = harness({ url: '/app/nope' });
     mw(h.req, h.res, h.next);
     await h.done;
@@ -163,6 +173,7 @@ describe('createConnectMiddleware', () => {
     const mw = createConnectMiddleware(
       routerOf({ kind: 'notFound', mount: '/app' }),
     );
+
     const h = harness({ url: '/app/nope', method: 'HEAD' });
     mw(h.req, h.res, h.next);
     await h.done;
@@ -184,6 +195,7 @@ describe('createConnectMiddleware', () => {
     const mw = createConnectMiddleware(
       routerOf({ kind: 'shell', mount: '/app' }),
     );
+
     // A Vite module fetch on a route-shaped path: Accept: */*.
     const h = harness({ url: '/app/about', headers: { accept: '*/*' } });
     mw(h.req, h.res, h.next);
@@ -191,6 +203,23 @@ describe('createConnectMiddleware', () => {
     assert.equal(h.nextArgs.length, 1);
     assert.equal(h.req.url, '/app/about'); // untouched, not rewritten
     assert.equal(h.headers.Link, undefined);
+  });
+
+  it('passes a hand-built request whose accept header is null', async () => {
+    const mw = createConnectMiddleware(
+      routerOf({ kind: 'shell', mount: '/app' }),
+    );
+
+    const h = harness({
+      url: '/app/about',
+      // oxlint-disable-next-line anti-slop/no-chained-type-assertions, anti-slop/require-safety-comment-for-type-assertion -- deliberately ill-typed header exercises the runtime check
+      headers: { accept: null as unknown as undefined },
+    });
+
+    mw(h.req, h.res, h.next);
+    await h.done;
+    assert.equal(h.nextArgs.length, 1);
+    assert.equal(h.req.url, '/app/about');
   });
 
   it('honours shellPath and shouldHandle overrides', async () => {
@@ -201,6 +230,7 @@ describe('createConnectMiddleware', () => {
         shouldHandle: () => true,
       },
     );
+
     // A non-navigation POST the default heuristic would skip.
     const h = harness({ url: '/app/deep', method: 'POST', headers: {} });
     mw(h.req, h.res, h.next);
@@ -223,6 +253,7 @@ describe('createConnectMiddleware', () => {
         },
       },
     });
+
     const mw = createConnectMiddleware(router);
 
     // A matched route → shell, rewritten to the mount base.
@@ -233,6 +264,7 @@ describe('createConnectMiddleware', () => {
       assert.equal(h.req.url, '/app');
       assert.equal(h.headers.Link, CANONICAL_APP);
     }
+
     // A redirect rule → 302.
     {
       const h = harness({ url: '/app/legacy' });
@@ -240,6 +272,7 @@ describe('createConnectMiddleware', () => {
       await h.done;
       assert.equal(h.writeHead[0].status, 302);
     }
+
     // An unknown path under a mount with `otherwise` → status’d 404 shell.
     {
       const h = harness({ url: '/app/ghost' });

@@ -10,9 +10,12 @@ export function resolveWwwDevPort(
   name = 'WWW_DEV_PORT',
 ): number {
   const value = raw?.trim();
+
   if (!value) return DEFAULT_WWW_DEV_PORT;
   const port = Number(value);
+
   if (!Number.isInteger(port) || port < 1 || port > 65535)
     throw new Error(`${name} is not a valid port number: ${value}`);
+
   return port;
 }

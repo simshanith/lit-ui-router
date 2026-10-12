@@ -151,12 +151,17 @@ export const installServerLocation: <T extends UIRouter>(
   options: ServerLocationOptions = {},
 ): T => {
   router.plugin(serverLocationPlugin, { html5Mode: options.html5Mode });
+
   // `urlService.config.baseHref()` only reads; the memory config holds the value
   if (options.baseHref !== undefined)
+    // SAFETY: serverLocationPlugin, installed above, sets a ServerLocationConfig.
     (router.locationConfig as MemoryLocationConfig)._baseHref =
       options.baseHref;
+
   if (options.strictMode !== undefined)
     router.urlService.config.strictMode(options.strictMode);
+
   if (options.url !== undefined) router.urlService.url(options.url);
+
   return router;
 };

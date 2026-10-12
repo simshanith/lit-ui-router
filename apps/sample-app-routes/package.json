@@ -11,13 +11,14 @@
     "format:check:oxfmt": "oxfmt --check \"**/*.{ts,json,md}\"",
     "format:oxfmt": "oxfmt \"**/*.{ts,json,md}\"",
     "lint:oxlint": "oxlint .",
-    "test": "node --test \"test/**/*.test.ts\"",
+    "test": "node --test --test-reporter=@tools/shared/test-reporter.ts \"test/**/*.test.ts\"",
     "typecheck:tsc": "tsc -p tsconfig.json --noEmit && tsc -p test/tsconfig.json --noEmit"
   },
   "dependencies": {
     "ui-router-server": "catalog:workspace"
   },
   "devDependencies": {
+    "@tools/shared": "catalog:workspace",
     "@tools/wintercg-globals": "catalog:workspace",
     "@types/node": "catalog:",
     "oxfmt": "catalog:",

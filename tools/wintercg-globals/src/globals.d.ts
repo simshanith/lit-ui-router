@@ -4,7 +4,7 @@
 // uses. Opt in through tsconfig `types`, never a `/// <reference>`: only a
 // config-level opt-in can be withdrawn per program, which is what the
 // runtime-globals drift guard needs.
-declare function setTimeout(handler: () => void, ms: number): unknown;
+declare function setTimeout(handler: () => void, ms: number): void;
 
 declare class URLSearchParams {
   constructor(init?: string);

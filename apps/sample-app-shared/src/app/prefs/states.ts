@@ -1,4 +1,5 @@
 import Preferences from './Preferences.js';
+
 /**
  * This state allows the user to set their application preferences
  */
@@ -8,7 +9,7 @@ const prefsState = {
   url: '/prefs',
   component: Preferences,
   // Mark this state as requiring authentication.  See ../global/requiresAuth.hook.js.
-  data: { requiresAuth: true },
+  data: { requiresAuth: true, title: 'Preferences' },
 };
 
 export const states = [prefsState];

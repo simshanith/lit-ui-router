@@ -15,6 +15,7 @@ runMain(async () => {
       'refusing to write --global git config outside GitHub Actions',
     );
   }
+
   for (const args of gitUserConfigArgs()) {
     await defaultExec('git', args);
   }

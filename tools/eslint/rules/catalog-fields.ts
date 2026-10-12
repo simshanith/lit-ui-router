@@ -8,6 +8,7 @@ const SHIPPED_FIELDS = [
   'peerDependencies',
   'optionalDependencies',
 ] as const;
+
 const FIELDS = [...SHIPPED_FIELDS, 'devDependencies'] as const;
 
 // Minimal structural view of jsonc-eslint-parser's JSON AST; eslint's types
@@ -16,12 +17,15 @@ interface JSONProperty {
   key: { value: string | number };
   value: JSONNode;
 }
+
 interface JSONNode {
-  value?: unknown;
+  // a literal's value; objects and arrays carry none
+  value?: string | number | boolean | null;
   properties?: JSONProperty[];
 }
+
 interface JSONProgram {
-  body: [{ expression?: JSONNode }?];
+  body: { expression?: JSONNode }[];
 }
 
 const findProperty = (
@@ -33,8 +37,9 @@ const findProperty = (
 const isPrivate = (root: JSONNode | undefined): boolean =>
   findProperty(root, 'private')?.value.value === true;
 
-const catalogName = (spec: unknown): string | undefined =>
-  typeof spec === 'string' ? /^catalog:(.*)$/.exec(spec)?.[1] : undefined;
+// No non-string literal stringifies to a `catalog:` prefix.
+const catalogName = (spec: JSONNode['value']): string | undefined =>
+  /^catalog:(.*)$/.exec(String(spec))?.[1];
 
 const messageFor = (
   catalog: string | undefined,
@@ -42,13 +47,17 @@ const messageFor = (
   published: boolean,
 ) => {
   const publishedCatalog = catalog?.startsWith('published') === true;
+
   if (shipped && published && !publishedCatalog) return 'shippedNotPublished';
+
   if (publishedCatalog && !(shipped && published)) {
     return 'publishedOutsideShipped';
   }
+
   if (catalog?.startsWith('peerFloor') && shipped) {
     return 'floorOutsideDevDependencies';
   }
+
   return undefined;
 };
 
@@ -72,17 +81,24 @@ const catalogFields: Rule.RuleModule = {
   create(context) {
     return {
       Program(program) {
-        const root = (program as unknown as JSONProgram).body[0]?.expression;
+        // SAFETY: jsonc-eslint-parser parses package.json, so Program is its JSONProgram
+        const root = (program as JSONProgram).body[0]?.expression;
         const published = !isPrivate(root);
+
         for (const field of FIELDS) {
-          const shipped = (SHIPPED_FIELDS as readonly string[]).includes(field);
+          const shipped = SHIPPED_FIELDS.some(
+            (shippedField) => shippedField === field,
+          );
+
           for (const entry of findProperty(root, field)?.value.properties ??
             []) {
             const catalog = catalogName(entry.value.value);
             const messageId = messageFor(catalog, shipped, published);
+
             if (messageId === undefined) continue;
+            // SAFETY: jsonc-eslint-parser's nodes carry the type/loc/range eslint reports on
             context.report({
-              node: entry.value as unknown as Rule.Node,
+              node: entry.value as Rule.Node,
               messageId,
               data: { field, catalog: catalog ?? '' },
             });

@@ -157,6 +157,10 @@ such as `vite preview` serves the file without the redirect, so only the
 deployed site shows the failure. The development build warns once when the
 first page's slashed spelling does not resolve to the same shell.
 
+[The Altitude Atlas](https://atlas.lit-ui-router.dev), where `/sheet/7B` comes
+from, runs both halves on Cloudflare Pages: its client sets `strictMode(false)`
+and its mount compiles `strict: false`.
+
 ## One render at a time
 
 `withRouterSync` is a module slot, so renders run sequentially — there is
@@ -356,6 +360,10 @@ const { prerender, settle } = await import('lit-ui-router-ssr');
 const { page } = await import('./views.js');
 ```
 
+The atlas's
+[`app/prerender.ts`](https://github.com/simshanith/lit-ui-router/blob/www/atlas/www/atlas.lit-ui-router.dev/app/prerender.ts)
+is a complete entry in this shape.
+
 Preloading the shim with
 `node --import @lit-labs/ssr/lib/install-global-dom-shim.js` finishes it before
 the entry's graph starts, so static imports hold there too.
@@ -509,3 +517,6 @@ app that never prerenders carries none of it.
 - [`ui-router-server`](/packages/server) — the mount table and its verdicts
 - [View fallback content](/guides/view-fallback-content#prerendered-shells-and-server-rendering) —
   what a `<ui-view>` renders in a prerendered shell
+- [The Altitude Atlas](https://atlas.lit-ui-router.dev) and
+  [its source](https://github.com/simshanith/lit-ui-router/tree/www/atlas/www/atlas.lit-ui-router.dev)
+  on `www/atlas` — the dogfood consumer whose prerender build shaped this package

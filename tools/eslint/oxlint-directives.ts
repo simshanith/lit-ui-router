@@ -7,14 +7,16 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
+import type { Json } from '@tools/bootstrap/types.ts';
 import type { ESLint, Rule } from 'eslint';
 import { parse } from 'jsonc-parser';
 
 interface OxlintConfig {
-  rules?: Record<string, unknown>;
-  overrides?: { rules?: Record<string, unknown> }[];
+  rules?: Record<string, Json>;
+  overrides?: { rules?: Record<string, Json> }[];
 }
 
+// SAFETY: oxlint validates .oxlintrc.json against its schema, which OxlintConfig subsets
 const config = parse(
   readFileSync(join(workspaceRoot, '.oxlintrc.json'), 'utf8'),
 ) as OxlintConfig;
@@ -22,14 +24,17 @@ const config = parse(
 const noop: Rule.RuleModule = { create: () => ({}) };
 
 const plugins: Record<string, ESLint.Plugin> = {};
+
 for (const ruleId of [
   ...Object.keys(config.rules ?? {}),
   ...(config.overrides ?? []).flatMap((o) => Object.keys(o.rules ?? {})),
 ]) {
   const separator = ruleId.lastIndexOf('/');
+
   if (separator === -1) continue;
   const namespace = ruleId.slice(0, separator);
   const name = ruleId.slice(separator + 1);
+
   // oxlint accepts the `@typescript-eslint` alias for its `typescript` plugin.
   for (const ns of namespace === 'typescript'
     ? [namespace, '@typescript-eslint']

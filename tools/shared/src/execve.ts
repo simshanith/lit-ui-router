@@ -15,6 +15,10 @@ export interface BinManifest {
   bin?: string | Record<string, string>;
 }
 
+/** Whether `bin` is the one-bin shorthand, a path rather than a name → path map. */
+const isBinShorthand = (bin: BinManifest['bin']): bin is string =>
+  typeof bin === 'string';
+
 /**
  * A dependency's bin, resolved through its own manifest rather than PATH.
  *
@@ -45,11 +49,14 @@ export function binPath(
   bin: string = manifest.name,
 ): string {
   // the one-bin shorthand names itself after the package
-  const path =
-    typeof manifest.bin === 'string' ? manifest.bin : manifest.bin?.[bin];
+  const path = isBinShorthand(manifest.bin)
+    ? manifest.bin
+    : manifest.bin?.[bin];
+
   if (path === undefined) {
     throw new Error(`${manifest.name} declares no ${bin} bin`);
   }
+
   // join normalizes, so the `./bin/x` and `bin/x` spellings both land
   return join(dirname(fileURLToPath(manifestUrl)), path);
 }

@@ -12,6 +12,7 @@ class ReactionControllerHost extends LitElement {
 
   render() {
     this.renderCount++;
+
     return html`<span>${this.renderCount}</span>`;
   }
 }
@@ -29,6 +30,7 @@ async function mountHost(): Promise<ReactionControllerHost> {
   document.body.appendChild(host);
   cleanups.push(() => host.remove());
   await waitForUpdate(host);
+
   return host;
 }
 
@@ -52,6 +54,7 @@ describe('ReactionController', () => {
   it('exposes initialValue before the host connects', async () => {
     const state = observable({ count: 7 });
     const host = document.createElement('reaction-controller-host');
+
     const controller = new ReactionController(host, () => state.count, {
       initialValue: 0,
     });

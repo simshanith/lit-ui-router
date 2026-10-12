@@ -1,3 +1,5 @@
+import { isFunction } from '@uirouter/core';
+
 /**
  * Parses URL params with `?feature-*` prefix into a clean object.
  * Example: `?feature-location-plugin=navigation` -> { 'location-plugin': 'navigation' }
@@ -5,16 +7,13 @@
 export function parseFeatureParams(
   search: string = window.location.search,
 ): Record<string, string> {
-  const params = new URLSearchParams(search);
-  const features: Record<string, string> = {};
   const prefix = 'feature-';
 
-  for (const [key, value] of params.entries()) {
-    if (key.startsWith(prefix)) {
-      features[key.slice(prefix.length)] = value;
-    }
-  }
-  return features;
+  return Object.fromEntries(
+    [...new URLSearchParams(search)].flatMap(([key, value]) =>
+      key.startsWith(prefix) ? [[key.slice(prefix.length), value]] : [],
+    ),
+  );
 }
 
 export type LocationPluginFeatureSymbol = 'pushState' | 'navigation' | 'hash';
@@ -27,8 +26,7 @@ export function canUseNavigationAPI(): boolean {
   return (
     typeof window !== 'undefined' &&
     'navigation' in window &&
-    typeof (window as { navigation?: { navigate?: unknown } }).navigation
-      ?.navigate === 'function'
+    isFunction(window.navigation?.navigate)
   );
 }
 
@@ -60,26 +58,30 @@ export interface ResolvedLocationPlugin {
  * `default` at any level means "no preference", so it stops the lookup rather
  * than falling through to the level below.
  */
-function readLocationPluginPreference(): {
+interface LocationPluginPreference {
   value: string | undefined;
   source: Exclude<LocationPluginSource, 'auto'>;
-} {
-  const flag = featureFlags.get('location-plugin') as string | undefined;
+}
+
+function readLocationPluginPreference(): LocationPluginPreference {
+  const flag: string | undefined = featureFlags.get('location-plugin');
+
   if (isValidLocationPlugin(flag) || flag === LOCATION_PLUGIN_AUTO) {
     const source = featureFlags.isUrlOverridden('location-plugin')
       ? 'url'
       : 'session';
+
     return { value: flag, source };
   }
 
-  const env = import.meta.env.VITE_SAMPLE_APP_LOCATION_PLUGIN as
-    | string
-    | undefined;
+  const env = import.meta.env.VITE_SAMPLE_APP_LOCATION_PLUGIN;
+
   return { value: env, source: 'env' };
 }
 
 export function resolveLocationPluginFeature(): string | undefined {
   const { value } = readLocationPluginPreference();
+
   return value === LOCATION_PLUGIN_AUTO ? undefined : value;
 }
 
@@ -93,6 +95,7 @@ export function resolveLocationPluginFeature(): string | undefined {
  */
 export function describeLocationPlugin(): ResolvedLocationPlugin {
   const { value, source } = readLocationPluginPreference();
+
   const preferred =
     value === LOCATION_PLUGIN_AUTO || !isValidLocationPlugin(value)
       ? undefined
@@ -101,6 +104,7 @@ export function describeLocationPlugin(): ResolvedLocationPlugin {
   if (preferred === 'navigation' && !canUseNavigationAPI()) {
     return { plugin: 'pushState', source, downgraded: true };
   }
+
   if (preferred) return { plugin: preferred, source, downgraded: false };
 
   return {
@@ -135,6 +139,10 @@ export interface FeatureFlagDefinitions {
   'enable-api-docs': boolean;
 }
 
+const isBooleanFlag = (
+  value: FeatureFlagDefinitions[keyof FeatureFlagDefinitions],
+): value is boolean => typeof value === 'boolean';
+
 const FLAG_DEFAULTS: FeatureFlagDefinitions = {
   'location-plugin': undefined,
   'enable-visualizer': true,
@@ -155,7 +163,9 @@ export class FeatureFlags {
   load(): void {
     try {
       const stored = sessionStorage.getItem(STORAGE_KEY);
+
       if (stored) {
+        // SAFETY: save() is the only writer of STORAGE_KEY, as JSON of the flags
         this._flags = JSON.parse(stored) as Partial<FeatureFlagDefinitions>;
       }
     } catch (error) {
@@ -179,11 +189,13 @@ export class FeatureFlags {
     flag: K,
   ): FeatureFlagDefinitions[K] {
     const urlParams = parseFeatureParams();
+
     if (flag in urlParams) {
       return this._parseValue(flag, urlParams[flag]);
     }
 
     if (flag in this._flags) {
+      // SAFETY: `flag in this._flags` holds, and set() stores only FeatureFlagDefinitions[K]
       return this._flags[flag] as FeatureFlagDefinitions[K];
     }
 
@@ -202,11 +214,16 @@ export class FeatureFlags {
     flag: K,
   ): FeatureFlagDefinitions[K] {
     const current = this.get(flag);
-    if (typeof current !== 'boolean') {
+
+    if (!isBooleanFlag(current)) {
       throw new Error(`Cannot toggle non-boolean flag: ${flag}`);
     }
+
+    // SAFETY: current is a boolean, so K names a boolean flag
+
     const newValue = !current as FeatureFlagDefinitions[K];
     this.set(flag, newValue);
+
     return newValue;
   }
 
@@ -221,27 +238,17 @@ export class FeatureFlags {
   }
 
   getAll(): FeatureFlagDefinitions {
-    const urlParams = parseFeatureParams();
-    const result: Record<string, unknown> = { ...FLAG_DEFAULTS };
-
-    for (const key of Object.keys(this._flags)) {
-      if (key in FLAG_DEFAULTS) {
-        result[key] = this._flags[key as keyof FeatureFlagDefinitions];
-      }
-    }
-
-    for (const key of Object.keys(urlParams)) {
-      if (key in FLAG_DEFAULTS) {
-        const flagKey = key as keyof FeatureFlagDefinitions;
-        result[key] = this._parseValue(flagKey, urlParams[key]);
-      }
-    }
-
-    return result as unknown as FeatureFlagDefinitions;
+    return {
+      'location-plugin': this.get('location-plugin'),
+      'enable-visualizer': this.get('enable-visualizer'),
+      'enable-trace': this.get('enable-trace'),
+      'enable-api-docs': this.get('enable-api-docs'),
+    };
   }
 
   isUrlOverridden(flag: keyof FeatureFlagDefinitions): boolean {
     const urlParams = parseFeatureParams();
+
     return flag in urlParams;
   }
 
@@ -251,13 +258,17 @@ export class FeatureFlags {
   ): FeatureFlagDefinitions[K] {
     const defaultValue = FLAG_DEFAULTS[flag];
 
-    if (typeof defaultValue === 'boolean') {
+    if (isBooleanFlag(defaultValue)) {
+      // SAFETY: a boolean default means K names a boolean flag
       return (value === 'true' || value === '1') as FeatureFlagDefinitions[K];
     }
+
+    // SAFETY: the one string flag is location-plugin, which readers check with isValidLocationPlugin
 
     return value as FeatureFlagDefinitions[K];
   }
 }
 
 export const featureFlags = new FeatureFlags();
+
 featureFlags.load();

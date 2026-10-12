@@ -18,6 +18,7 @@ export function createHeadlessRouter(states: StateDeclaration[]): UIRouter {
   // Callers observe outcomes through onceSettled; keep the console quiet.
   router.stateService.defaultErrorHandler(() => {});
   states.forEach((state) => router.stateRegistry.register(state));
+
   return router;
 }
 

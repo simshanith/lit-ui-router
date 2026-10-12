@@ -40,4 +40,9 @@ export default defineConfig(
     files: ['packages/eslint-plugin-lit-ui-router/src/anchor-is-valid.ts'],
     rules: { complexity: ['error', { max: 34 }] },
   },
+  {
+    // Vendored from anti-slop; kept in upstream's shape so re-syncs stay a diff.
+    files: ['tools/oxlint-anti-slop/src/rules/no-widen-then-assert.ts'],
+    rules: { complexity: ['error', { max: 27 }] },
+  },
 );

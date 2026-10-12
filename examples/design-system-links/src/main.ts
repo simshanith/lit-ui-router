@@ -26,8 +26,9 @@ export class AppRoot extends LitElement {
       display: block;
       color: var(--spectrum-gray-800);
     }
-    h3 {
+    h2 {
       margin: 0 0 4px;
+      font-size: 1.17em;
     }
     p {
       margin: 0 0 16px;
@@ -88,6 +89,7 @@ export class AppRoot extends LitElement {
   firstUpdated(): void {
     for (const row of Object.values(this.rows)) {
       const el = row.value;
+
       if (el) {
         this.observer.observe(el, {
           attributes: true,
@@ -95,6 +97,7 @@ export class AppRoot extends LitElement {
         });
       }
     }
+
     this.hrefTick += 1;
   }
 
@@ -107,6 +110,7 @@ export class AppRoot extends LitElement {
     // read through the tick so lit re-evaluates when the attribute changes
     void this.hrefTick;
     const href = row.value?.getAttribute('href') ?? null;
+
     return href === null
       ? html`<span class="href none">no href attribute</span>`
       : html`<span class="href">href="${href}"</span>`;
@@ -119,8 +123,9 @@ export class AppRoot extends LitElement {
       anchorAuto,
       srefHref: srefHrefRow,
     } = this.rows;
+
     return html`
-      <h3>uiSref and a design-system link element</h3>
+      <h2>uiSref and a design-system link element</h2>
       <p>
         <code>&lt;sp-link&gt;</code> declares its own <code>href</code>, but its
         tag name is not <code>a</code> — so
@@ -189,7 +194,7 @@ const componentsState: LitStateDeclaration = {
   name: 'components',
   url: '/components',
   component: () =>
-    html`<h4>Components</h4>
+    html`<h3>Components</h3>
       <p>
         The first, third and last links carried a real href here, so hovering
         any of them showed the URL and a middle-click would have opened it in a
@@ -201,7 +206,7 @@ const tokensState: LitStateDeclaration = {
   name: 'tokens',
   url: '/tokens',
   component: () =>
-    html`<h4>Tokens</h4>
+    html`<h3>Tokens</h3>
       <p>
         Both links to this state navigated on click — the option governs the
         href attribute only, never the click handler.
@@ -215,6 +220,7 @@ function createRouter(): UIRouterLit {
   router.stateRegistry.register(tokensState);
   router.urlService.rules.initial({ state: 'components' });
   router.start();
+
   return router;
 }
 
@@ -227,9 +233,11 @@ export class AppShell extends LitElement {
 
   render() {
     const { color } = this.scheme;
+
     // hold the first paint until a stop is registered — sp-theme adopts the
     // one it is told to, and an unregistered stop leaves it nothing to adopt
     if (!color) return nothing;
+
     return html`
       <sp-theme system="spectrum" color=${color} scale="medium">
         <ui-router .uiRouter=${this.router}>

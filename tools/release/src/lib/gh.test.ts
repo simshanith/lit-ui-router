@@ -14,14 +14,17 @@ function recordingExec(
     args: readonly string[],
     call: number,
   ) => boolean = () => false,
-): { exec: Exec; calls: string[][] } {
+) {
   const calls: string[][] = [];
+
   const exec: Exec = (command, args) => {
     calls.push([command, ...args]);
+
     return fail(command, args, calls.length)
       ? Promise.reject(new Error('scripted failure'))
       : Promise.resolve({ stdout: PR_URL_STDOUT, stderr: '' });
   };
+
   return { exec, calls };
 }
 

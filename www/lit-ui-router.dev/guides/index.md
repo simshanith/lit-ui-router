@@ -31,6 +31,9 @@ client deployed across every point on the server-support spectrum.
   authentication
 - [Component Lifecycle Hooks](./component-lifecycle) — `uiCanExit` for
   unsaved-changes prompts and `uiOnParamsChanged` for dynamic parameters
+- [Routed Components](./routed-components) — reading a state's params
+  through a resolve, and code-splitting a route's element with an awaited
+  import or a `lazyLoad` future state
 
 ## Links & Markup
 

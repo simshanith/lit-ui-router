@@ -8,8 +8,11 @@ import {
 } from './check-dev-split.core.ts';
 
 const prefix = messagePrefix('lit-ui-router');
+
 const devOnly = ['lit-ui-router: uiSref wrote href='];
+
 const kept = "console.warn('lit-ui-router: <ui-view> is already defined');";
+
 // as it survives emit: the template literal breaks at the interpolated quote
 const emitted =
   'console.warn(`lit-ui-router: uiSref wrote href="' + '${href}" to <x>`);';
@@ -34,6 +37,7 @@ describe('findDevSplitViolations', () => {
       production: emitted,
       development: emitted,
     });
+
     assert.equal(violations.length, 1);
     assert.match(violations[0], /leaked into dist/);
   });
@@ -45,6 +49,7 @@ describe('findDevSplitViolations', () => {
       production: '',
       development: '',
     });
+
     assert.equal(violations.length, 1);
     assert.match(violations[0], /missing from dist\/development/);
   });
@@ -56,6 +61,7 @@ describe('findDevSplitViolations', () => {
       production: '',
       development: emitted,
     });
+
     assert.equal(violations.length, 1);
     assert.match(violations[0], /undeclared dev-only message/);
   });

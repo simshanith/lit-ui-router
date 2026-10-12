@@ -10,10 +10,9 @@ const routerOf = (verdict: Verdict): ServerRouter => ({
   resolve: () => Promise.resolve(verdict),
 });
 
-// The fetch globals shim shadows node's richer Response in the src graph;
-// reach `.text()` through a cast rather than widening the shim for tests.
+// SAFETY: node's real Response, which the fetch globals shim shadows, has text().
 const bodyText = (res: Response): Promise<string> =>
-  (res as unknown as { text(): Promise<string> }).text();
+  (res as Response & { text(): Promise<string> }).text();
 
 // A Hono app with the router middleware mounted before a sentinel fallthrough
 // route, so a passed-through (`null`) verdict is observable as the sentinel.
@@ -31,6 +30,7 @@ const appWith = (verdict: Verdict, options = {}) => {
     }),
   );
   app.all('*', (c) => c.text('downstream', 200));
+
   return app;
 };
 
@@ -45,6 +45,7 @@ describe('serverRouterHono', () => {
       location: '/app/home',
       status: 302,
     });
+
     const res = await navigate(app, '/app/old?ref=email');
     assert.equal(res.status, 302);
     assert.equal(res.headers.get('Location'), '/app/home?ref=email');

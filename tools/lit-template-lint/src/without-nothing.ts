@@ -13,17 +13,24 @@ const NOTHING_VALUE = /^__@nothing@\d+$/;
 export function withoutNothing(type: BindingType): BindingType | undefined {
   if (type.kind === 'ALIAS') {
     const target = withoutNothing(type.target);
+
     return target == null ? undefined : { ...type, target };
   }
+
   if (type.kind === 'UNION') {
     const types = type.types
       .map(withoutNothing)
       .filter((member) => member != null);
+
     if (types.length === 0) return undefined;
+
     if (types.length === 1) return types[0];
+
     return { ...type, types };
   }
+
   const isNothing =
     type.kind === 'ES_SYMBOL_UNIQUE' && NOTHING_VALUE.test(type.value);
+
   return isNothing ? undefined : type;
 }

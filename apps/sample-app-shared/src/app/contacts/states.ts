@@ -23,6 +23,13 @@ import { dsrRedirectToDefaultFromWithin } from '../util/dsr-default-redirect-wit
  *
  * The contacts are fetched using a resolve.
  */
+function contactName(transition: Transition) {
+  // SAFETY: only contacts.contact titles with this, and its `contact` resolve yields a Contact
+  const { name } = transition.injector().get('contact') as Contact;
+
+  return `${name.first} ${name.last}`;
+}
+
 const contactsState = {
   parent: 'app', // declares that 'contacts' is a child of 'app'
   name: 'contacts',
@@ -34,7 +41,7 @@ const contactsState = {
       resolveFn: () => ContactsStorage.all(),
     },
   ],
-  data: { requiresAuth: true },
+  data: { requiresAuth: true, title: 'Contacts' },
   dsr: {
     default: 'contacts',
     fn: dsrRedirectToDefaultFromWithin,
@@ -43,7 +50,7 @@ const contactsState = {
   views: {
     contacts: ((props: UIViewInjectedProps<ContactsResolves>) => {
       return html`<sample-contacts ._uiViewProps=${props}></sample-contacts>`;
-    }) as LitViewDeclarationTemplate,
+    }) satisfies LitViewDeclarationTemplate<ContactsResolves>,
   },
 };
 
@@ -61,12 +68,13 @@ const viewContactState = {
       token: 'contact',
       deps: ['$transition$'],
       resolveFn: async ($transition$: Transition) =>
-        // The untyped SessionStorage fake-REST client resolves a Contact here.
+        // SAFETY: the untyped SessionStorage fake-REST client resolves a Contact here
         ContactsStorage.get(
           $transition$.params().contactId,
         ) as Promise<Contact>,
     },
   ],
+  data: { title: contactName, keepScroll: true },
   component:
     ContactView satisfies LitViewDeclarationElement<ContactViewResolves>,
 } satisfies LitStateDeclaration<ContactViewResolves>;
@@ -82,11 +90,14 @@ const viewContactState = {
 const editContactState = {
   name: 'contacts.contact.edit',
   url: '/edit',
+  data: {
+    title: (transition: Transition) => `Edit ${contactName(transition)}`,
+  },
   views: {
     // Relatively target the grand-parent-state's $default (unnamed) ui-view
     // This could also have been written using ui-view@state addressing: $default@contacts
     // Or, this could also have been written using absolute ui-view addressing: !$default.contacts.$default
-    '^.^.$default': EditContact as LitViewDeclarationElement,
+    '^.^.$default': EditContact satisfies LitViewDeclarationElement,
   },
 };
 
@@ -98,7 +109,8 @@ const editContactState = {
 const newContactState = {
   name: 'contacts.new',
   url: '/new',
-  component: EditContact as LitViewDeclarationElement,
+  data: { title: 'New contact' },
+  component: EditContact satisfies LitViewDeclarationElement,
 };
 
 export const states = [

@@ -29,6 +29,7 @@ import { routedLitElementRenderer } from './routed-element.js';
  * form used here, where the callback receives `(value, key)`.
  * @internal
  */
+// SAFETY: both `forEach` implementations call back with `(value, key)` for objects
 const forEachValue = forEach as <V>(
   obj: Record<string, V>,
   cb: (value: V, key: string) => void,
@@ -103,7 +104,12 @@ export function isLitViewDeclarationTemplate<
 export function isRoutedLitElement<
   T extends DefaultResolvesType = DefaultResolvesType,
 >(component?: unknown): component is RoutedLitElement<T> {
-  return (component as { prototype: unknown })?.prototype instanceof LitElement;
+  return (
+    (typeof component === 'object' || typeof component === 'function') &&
+    component !== null &&
+    'prototype' in component &&
+    component.prototype instanceof LitElement
+  );
 }
 
 /**
@@ -122,21 +128,24 @@ export function isRoutedLitElement<
 export function litViewsBuilder<
   T extends DefaultResolvesType = DefaultResolvesType,
 >(state: StateObject): Record<string, NormalizedLitViewDeclaration<T>> {
-  const views: Record<string, NormalizedLitViewDeclaration<T>> = {},
+  const views = new Map<string, NormalizedLitViewDeclaration<T>>(),
     viewsObject = state.views || {
       $default: pick(state, ['component']),
     };
 
   forEachValue(
+    // SAFETY: lit states declare `views` (or a `component`) as lit view declarations
     viewsObject as Record<string, LitViewDeclaration<T>>,
     function (config: LitViewDeclaration<T>, name: string) {
       let normalizedConfig: NormalizedLitViewDeclaration<T>;
       name = name || '$default'; // Account for views: { "": { template... } }
+
       if (isLitViewDeclarationTemplate<T>(config)) {
         normalizedConfig = { component: config };
       } else {
         normalizedConfig = config;
       }
+
       if (Object.keys(normalizedConfig || {}).length === 0) return;
 
       normalizedConfig.$type = 'lit';
@@ -147,6 +156,7 @@ export function litViewsBuilder<
         normalizedConfig.$context,
         normalizedConfig.$name,
       );
+
       normalizedConfig.$uiViewName = normalizedTarget.uiViewName;
       normalizedConfig.$uiViewContextAnchor =
         normalizedTarget.uiViewContextAnchor;
@@ -163,10 +173,11 @@ export function litViewsBuilder<
         );
       }
 
-      views[name] = viewsObject[name] = normalizedConfig;
+      views.set(name, (viewsObject[name] = normalizedConfig));
     },
   );
-  return views;
+
+  return Object.fromEntries(views);
 }
 
 /**
@@ -263,6 +274,7 @@ export class UIRouterLit extends UIRouter {
     if (this.started) {
       throw new Error('start() called multiple times');
     }
+
     // eslint-disable-next-line typescript/no-deprecated -- $get() flushes the param-type queue; kept deliberately over the @internal flush
     this.urlMatcherFactory.$get();
     this.urlService.listen();

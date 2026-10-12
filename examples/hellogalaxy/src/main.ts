@@ -124,18 +124,18 @@ const StarService = {
 };
 
 // Approximate real star colors by spectral class letter (O hottest, M coolest)
-const spectralColors: Record<string, string> = {
-  O: '#92b5ff',
-  B: '#a5c0ff',
-  A: '#cad8ff',
-  F: '#f8f7ff',
-  G: '#ffefc4',
-  K: '#ffd2a1',
-  M: '#ffab6e',
-};
+const spectralColors = new Map([
+  ['O', '#92b5ff'],
+  ['B', '#a5c0ff'],
+  ['A', '#cad8ff'],
+  ['F', '#f8f7ff'],
+  ['G', '#ffefc4'],
+  ['K', '#ffd2a1'],
+  ['M', '#ffab6e'],
+]);
 
 const spectralColor = (spectralClass: string): string =>
-  spectralColors[spectralClass[0]] ?? '#ffffff';
+  spectralColors.get(spectralClass[0]) ?? '#ffffff';
 
 // Components
 @customElement('galaxy-shell')
@@ -212,7 +212,7 @@ class GalaxyShellComponent extends LitElement {
 
   render() {
     return html`
-      <nav>
+      <nav aria-label="Hello Galaxy">
         <!-- activeClasses use stateService.includes, so Stars stays lit on the nested detail state -->
         <a
           ${uiSrefActive({ activeClasses: ['active'] })}
@@ -253,7 +253,7 @@ class StarsContainerComponent extends LitElement {
     .list {
       flex: 0 0 220px;
     }
-    .list h3 {
+    .list h2 {
       margin: 0 0 12px;
       color: #9db2ce;
       font-size: 0.8rem;
@@ -340,7 +340,7 @@ class StarsContainerComponent extends LitElement {
     return html`
       <div class="container">
         <div class="list">
-          <h3>Milky Way stars</h3>
+          <h2>Milky Way stars</h2>
           <ul>
             ${this.stars.map(
               (star) => html`
@@ -439,6 +439,7 @@ class StarDetailComponent extends LitElement {
     if (!this.star) {
       return html`<p>Star not found</p>`;
     }
+
     return html`
       <h3 style="color: ${spectralColor(this.star.spectralClass)}">
         ${this.star.name}
@@ -460,8 +461,9 @@ class StarDetailComponent extends LitElement {
 @customElement('astronaut-view')
 class AstronautViewComponent extends LitElement {
   static styles = css`
-    h3 {
+    h2 {
       margin: 0 0 12px;
+      font-size: 1.17em;
     }
     p {
       color: #9db2ce;
@@ -508,7 +510,7 @@ class AstronautViewComponent extends LitElement {
 
   render() {
     return html`
-      <h3>Someone is exploring out here too</h3>
+      <h2>Someone is exploring out here too</h2>
       <p>Drag to orbit the astronaut. Scroll to zoom.</p>
       <!-- touch-action="pan-y" keeps one-finger vertical swipes scrolling the page -->
       <model-viewer
@@ -609,6 +611,7 @@ const starState: LitStateDeclaration<{ star: Star | undefined }> = {
       deps: ['$transition$', 'stars'],
       resolveFn: ($transition$: Transition, stars: Star[]) => {
         const starId = $transition$.params<{ starId: string }>().starId;
+
         return stars.find((s) => s.id === starId);
       },
     },
@@ -632,15 +635,23 @@ const astronautState: LitStateDeclaration = {
 
 // Router setup
 const router = new UIRouterLit();
+
 router.plugin(hashLocationPlugin);
+
 void import('@uirouter/visualizer').then(({ Visualizer }) =>
   router.plugin(Visualizer),
 );
+
 router.stateRegistry.register(galaxyState);
+
 router.stateRegistry.register(starsState);
+
 router.stateRegistry.register(starState);
+
 router.stateRegistry.register(astronautState);
+
 router.urlService.rules.initial({ state: 'galaxy.stars' });
+
 router.start();
 
 // Render

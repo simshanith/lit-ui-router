@@ -10,6 +10,7 @@ describe('renderManifest', () => {
       'lit-ui-router': { latest: '1.7.0' },
       'lit-ui-router-mobx': { latest: '0.3.3' },
     });
+
     assert.equal(
       text,
       `${JSON.stringify(
@@ -42,6 +43,7 @@ describe('renderManifest', () => {
       'lit-ui-router': { latest: '1.7.0' },
       'never-published': {},
     };
+
     assert.deepEqual(parseManifest(renderManifest(versions)), versions);
   });
 });

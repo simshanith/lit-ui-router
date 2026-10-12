@@ -14,6 +14,7 @@ import { rangeFloor, upperLegs } from './ranges.ts';
 const g: Guard = guard('peer-floor-guard');
 
 const manifest = readManifest(process.cwd());
+
 const catalogName = (spec: string | undefined) =>
   spec?.match(/^catalog:(\w+)$/)?.[1];
 
@@ -24,6 +25,7 @@ const peers = Object.entries(manifest?.devDependencies ?? {})
       alias.endsWith('-floor') && catalogName(spec)?.startsWith('peerFloor'),
   )
   .map(([alias]) => alias.slice(0, -'-floor'.length));
+
 if (peers.length === 0) {
   g.fail(
     `${process.cwd()} declares no <peer>-floor devDependency from a ` +
@@ -34,6 +36,7 @@ if (peers.length === 0) {
 for (const peer of peers) {
   const alias = `${peer}-floor`;
   const spec = manifest?.peerDependencies?.[peer];
+
   const catalog =
     catalogName(spec) ??
     g.fail(
@@ -48,6 +51,7 @@ for (const peer of peers) {
   // sits in it: API present at both the lowest floor and the dev version is
   // present at the upper leg's floor too, barring a removal later reverted.
   const upper = upperLegs(range);
+
   if (upper.length > 1) {
     g.fail(
       `${catalog} ${peer} range "${range}" has more than two \`||\` legs; ` +
@@ -56,10 +60,13 @@ for (const peer of peers) {
         'guard to check each.',
     );
   }
+
   let covered = '';
   const [leg] = upper;
+
   if (leg !== undefined) {
     const dev = g.installed(peer, peer);
+
     if (!semver.satisfies(dev, leg)) {
       g.fail(
         `${catalog} ${peer} range "${range}" has an upper leg "${leg}" that ` +
@@ -67,6 +74,7 @@ for (const peer of peers) {
           'devDependency into it, or narrow the range.',
       );
     }
+
     covered = `; dev ${peer} ${dev} runs its upper leg`;
   }
 
@@ -78,6 +86,7 @@ for (const peer of peers) {
     );
 
   const installed = g.installed(alias, peer);
+
   if (installed !== floor) {
     g.fail(
       `${alias} resolves to ${installed}, but the floor of the declared peer ` +

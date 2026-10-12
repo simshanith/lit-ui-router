@@ -17,6 +17,7 @@ describe('findUnsubstitutedRefs', () => {
       peerDependencies: { mobx: '^6.0.0', 'lit-ui-router': '^1.5.1' },
       devDependencies: { vitest: '^4.1.9' },
     };
+
     assert.deepEqual(findUnsubstitutedRefs(manifest), []);
   });
 
@@ -27,6 +28,7 @@ describe('findUnsubstitutedRefs', () => {
       peerDependencies: { mobx: 'catalog:' },
       optionalDependencies: { fsevents: 'catalog:' },
     };
+
     assert.deepEqual(findUnsubstitutedRefs(manifest), [
       { field: 'dependencies', dep: 'lit', spec: 'catalog:publishedPeer' },
       { field: 'devDependencies', dep: 'vitest', spec: 'catalog:' },
@@ -39,6 +41,7 @@ describe('findUnsubstitutedRefs', () => {
     const manifest = {
       peerDependencies: { 'lit-ui-router': 'workspace:^' },
     };
+
     assert.deepEqual(findUnsubstitutedRefs(manifest), [
       { field: 'peerDependencies', dep: 'lit-ui-router', spec: 'workspace:^' },
     ]);
@@ -54,9 +57,11 @@ describe('findUnsubstitutedRefs', () => {
     // fact. This check used to `continue`, which returned [] and reported the
     // package clean. The message is the contract: anyone who "fixes the crash"
     // by coercing instead of throwing has to delete an assertion to do it.
+    // oxlint-disable-next-line anti-slop/no-chained-type-assertions, anti-slop/require-safety-comment-for-type-assertion -- deliberately ill-typed input for the error path
     const manifest = {
       dependencies: { odd: 42 },
     } as unknown as PackageManifest;
+
     assert.throws(() => findUnsubstitutedRefs(manifest), {
       name: 'TypeError',
       message: 'dependencies.odd: specifier is number, not a string',
@@ -74,6 +79,7 @@ describe('formatReport', () => {
         refs: [],
       },
     ]);
+
     assert.equal(ok, true);
     assert.match(text, /✓ pack check passed — 2 publishable packages/);
   });
@@ -98,6 +104,7 @@ describe('formatReport', () => {
         ],
       },
     ]);
+
     assert.equal(ok, false);
     assert.match(text, /✗ pack check failed/);
     assert.match(text, /lit-ui-router-mobx \(packages\/lit-ui-router-mobx\)/);
@@ -120,6 +127,7 @@ describe('findPackedManifestViolations', () => {
       dependencies: { '@uirouter/core': '^6.0.8' },
       peerDependencies: { lit: '^3.0.0' },
     };
+
     assert.deepEqual(findPackedManifestViolations(manifest), []);
   });
 
@@ -171,6 +179,7 @@ describe('findPackedManifestViolations', () => {
       devDependencies: { vitest: '^4.1.9' },
       dependencies: { lit: 'catalog:publishedPeer' },
     };
+
     assert.deepEqual(findPackedManifestViolations(manifest), [
       'devDependencies leaked into packed manifest',
       'scripts leaked into packed manifest',
@@ -195,6 +204,7 @@ describe('formatPackedManifestReport', () => {
       'devDependencies leaked into packed manifest',
       'scripts leaked into packed manifest',
     ]);
+
     assert.equal(ok, false);
     assert.match(text, /✗ packed manifest check failed/);
     assert.match(text, /devDependencies leaked/);

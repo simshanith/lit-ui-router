@@ -12,7 +12,7 @@
     "@uirouter/core": "^6.1.2",
     "@uirouter/visualizer": "^7.2.1",
     "lit": "^3.3.3",
-    "lit-ui-router": "^1.16.0"
+    "lit-ui-router": "^1.16.4"
   },
   "devDependencies": {
     "typescript": "^7.0.2",
@@ -29,5 +29,8 @@
   },
   "allowScripts": {
     "fsevents@2.3.3": true
+  },
+  "patchedDependencies": {
+    "@uirouter/visualizer@7.2.1": "patches/@uirouter/visualizer@7.2.1.patch"
   }
 }

@@ -10,11 +10,11 @@ import {
   StateDeclaration,
   PathNode,
   trace,
-  TransitionHookFn,
   isFunction,
   isString,
   unnestR,
   Param,
+  type RawParams,
   filter,
   ViewContext,
   StateObject,
@@ -41,6 +41,7 @@ import {
   isContextRequest,
   parentUiViewContext,
 } from './context.js';
+import { RouterSubscribers, subscribeRouter } from './router-subscription.js';
 
 /** @internal */
 let viewIdCounter = 0;
@@ -59,7 +60,10 @@ const isRenderMarker = (node: ChildNode | null): boolean => {
   if (!node || node.nodeType !== COMMENT_NODE) {
     return false;
   }
+
+  // SAFETY: `nodeType` COMMENT_NODE is a Comment
   const { data } = node as Comment;
+
   return data === '' || data.includes('lit-part');
 };
 
@@ -161,6 +165,7 @@ export class UiView extends LitElement {
     if (!config) {
       this.component = null;
       this.requestUpdate();
+
       return;
     }
 
@@ -190,6 +195,7 @@ export class UiView extends LitElement {
     this.resolveContext = new ResolveContext(config.path);
     // Past the identity gate, so the config genuinely changed: a fresh renderer
     // here is what drops the old element.
+    // SAFETY: `litViewsBuilder` normalizes every view declaration of a lit state
     const { component } = config.viewDecl as NormalizedLitViewDeclaration;
     this.component = isRoutedLitElement(component)
       ? routedLitElementRenderer(component)
@@ -205,6 +211,7 @@ export class UiView extends LitElement {
     if (event.composedPath()[0] === this) {
       return;
     }
+
     // handle event; provide self as parent
     event.stopPropagation();
     event.detail.parentView = this;
@@ -224,6 +231,7 @@ export class UiView extends LitElement {
     ) {
       return;
     }
+
     event.stopImmediatePropagation();
     event.callback(this, event.subscribe ? noParentViewUnsubscribe : undefined);
   };
@@ -233,6 +241,7 @@ export class UiView extends LitElement {
     super.connectedCallback();
     this.addEventListener(
       this.constructor.uiViewContextEventName,
+      // SAFETY: only `UiViewContextEvent`s are dispatched under this name
       this.onUiViewContextEvent as EventListener,
     );
     this.addEventListener(
@@ -240,6 +249,7 @@ export class UiView extends LitElement {
       this.onParentViewContextRequest,
     );
     this.setupUiView();
+
     if (this.hasUpdated) {
       // Re-attached under another provider: the seek above was skipped, the router it holds may no longer be the enclosing one.
       this.adoptProvidedRouter();
@@ -266,6 +276,7 @@ export class UiView extends LitElement {
   static seekParentView(candidate: Element): ParentView | null {
     const uiViewContextEvent = this.uiViewContextEvent();
     candidate.dispatchEvent(uiViewContextEvent);
+
     return uiViewContextEvent.detail.parentView;
   }
 
@@ -278,24 +289,42 @@ export class UiView extends LitElement {
     if (this.seekingProvidedRouter) {
       return;
     }
+
     UIRouterLitElement.onUiRouterContextEvent(this.uiRouter)(event);
   };
 
-  /** Answers `context-request` for the router, so a `@lit/context` consumer under this view is served too. */
+  /** Subscribers that took a router this view may still supersede. */
+  private readonly routerSubscribers = new RouterSubscribers();
+
+  /**
+   * Answers `context-request` for the router, so a `@lit/context` consumer
+   * under this view is served too.
+   *
+   * While the router this view holds is a sought one its provider may still
+   * replace, a `subscribe` request is kept and called once more with the router
+   * this view adopts.
+   */
   private readonly onContextRequest = (event: Event) => {
     if (this.seekingProvidedRouter) {
       return;
     }
-    UIRouterLitElement.onContextRequest(this.uiRouter)(event);
+
+    this.routerSubscribers.answer(
+      event,
+      this.uiRouter,
+      !!this.providerSubscription && this.uiRouter === this.soughtRouter,
+    );
   };
 
   private seekRouter() {
     if (!this.uiRouter) {
-      this.soughtRouter = UIRouterLitElement.seekRouter(this);
+      this.soughtRouter = this.seekProvidedRouter();
       this.uiRouter = this.soughtRouter!;
     }
+
     this.addEventListener(
       UIRouterLitElement.uiRouterContextEventName,
+      // SAFETY: only `UiRouterContextEvent`s are dispatched under this name
       this.onUiRouterContextEvent as EventListener,
     );
     this.addEventListener(contextRequestEventName, this.onContextRequest);
@@ -317,6 +346,15 @@ export class UiView extends LitElement {
   /** Set only for the synchronous span of our own re-seek. */
   private seekingProvidedRouter = false;
 
+  /** Drops this view's subscription to its provider; set while the provider may still replace its router. */
+  private providerSubscription?: () => void;
+
+  /** The provider replaced the router this view sought: adopt it, and pass it on. */
+  private readonly onProvidedRouterReplaced = () => {
+    this.providerSubscription = undefined;
+    this.adoptProvidedRouter();
+  };
+
   /**
    * Seeks the provider's router, past our own answer.
    *
@@ -325,9 +363,18 @@ export class UiView extends LitElement {
    * dispatch keeps the guarantee intact for everyone else.
    */
   private seekProvidedRouter(): UIRouterLit | undefined {
+    this.providerSubscription?.();
     this.seekingProvidedRouter = true;
+
     try {
-      return UIRouterLitElement.seekRouter(this);
+      const { router, unsubscribe } = subscribeRouter(
+        this,
+        this.onProvidedRouterReplaced,
+      );
+
+      this.providerSubscription = unsubscribe;
+
+      return router;
     } finally {
       this.seekingProvidedRouter = false;
     }
@@ -362,6 +409,7 @@ export class UiView extends LitElement {
 
     const assigned = !!this.uiRouter && this.uiRouter !== this.soughtRouter;
     const router = assigned ? this.uiRouter : this.seekProvidedRouter();
+
     if (!router || router === this.registeredRouter) {
       return;
     }
@@ -369,9 +417,11 @@ export class UiView extends LitElement {
     if (!assigned) {
       this.soughtRouter = router;
     }
+
     this.deregisterAll();
     this.uiRouter = router;
     this.setupUiView();
+    this.routerSubscribers.deliver(router);
   }
 
   private deregisterAll(): void {
@@ -391,10 +441,12 @@ export class UiView extends LitElement {
    */
   private authoredPrefix(): ChildNode[] {
     const authored: ChildNode[] = [];
+
     for (const child of this.childNodes) {
       if (isRenderMarker(child)) break;
       authored.push(child);
     }
+
     return authored;
   }
 
@@ -414,6 +466,7 @@ export class UiView extends LitElement {
     if (this.captured || isRenderMarker(this.firstChild)) {
       return;
     }
+
     this.captured = true;
     this.fallback ??= document.createDocumentFragment();
     this.fallbackNodes = this.authoredPrefix();
@@ -436,10 +489,13 @@ export class UiView extends LitElement {
     if (this.captured) {
       return;
     }
+
     const authored = this.authoredPrefix();
+
     if (!authored.length) {
       return;
     }
+
     this.captured = true;
     this.fallback ??= document.createDocumentFragment();
     this.fallbackNodes = authored;
@@ -461,10 +517,13 @@ export class UiView extends LitElement {
   private placeFallback(): void {
     const fallback = this.fallback;
     const park = !this.showsFallback;
+
     if (!fallback || park === this.fallbackParked) {
       return;
     }
+
     this.fallbackParked = park;
+
     if (park) {
       fallback.append(...this.fallbackNodes);
     } else {
@@ -481,30 +540,38 @@ export class UiView extends LitElement {
     const name = this.name || '$default';
 
     const parentFqn = parentView?.fqn;
+
     const creationContext =
       parentView?.viewContext || router?.stateRegistry.root();
+
     const fqn = parentFqn ? parentFqn + '.' + name : name;
 
-    this._uiViewData = {
-      $type: 'lit',
-      id: viewId,
-      name,
-      fqn,
-      creationContext,
-      configUpdated: this._viewConfigUpdated.bind(this),
-      config: undefined as unknown as ViewConfig,
-    };
+    const registration: Omit<ActiveUIView, 'config'> & { config?: ViewConfig } =
+      {
+        $type: 'lit',
+        id: viewId,
+        name,
+        fqn,
+        creationContext,
+        configUpdated: this._viewConfigUpdated.bind(this),
+        config: undefined,
+      };
+
+    // SAFETY: ui-router calls `configUpdated` with a config before anything reads `config`
+    this._uiViewData = registration as ActiveUIView;
 
     if (!router) {
       return;
     }
 
+    // SAFETY: hook registration returns its deregistration function
     this.disconnectedHandlers.push(
       router.transitionService.onBefore({}, (trans) => {
         return this._invokeUiCanExitHook(trans);
       }) as deregisterFn,
     );
 
+    // SAFETY: hook registration returns its deregistration function
     this.disconnectedHandlers.push(
       router.transitionService.onSuccess({}, (trans) =>
         this._invokeUiOnParamsChangedHook(trans),
@@ -522,6 +589,7 @@ export class UiView extends LitElement {
     super.disconnectedCallback();
     this.removeEventListener(
       this.constructor.uiViewContextEventName,
+      // SAFETY: only `UiViewContextEvent`s are dispatched under this name
       this.onUiViewContextEvent as EventListener,
     );
     this.removeEventListener(
@@ -529,6 +597,8 @@ export class UiView extends LitElement {
       this.onParentViewContextRequest,
     );
 
+    this.providerSubscription?.();
+    this.providerSubscription = undefined;
     this.deregisterAll();
   }
 
@@ -541,8 +611,11 @@ export class UiView extends LitElement {
    * If both are true, adds the uiCanExit component function as a hook to that singular Transition.
    */
   private _invokeUiCanExitHook(trans: Transition) {
-    const instance = this.firstElementChild as UiOnExit & Element;
-    const uiCanExitFn: TransitionHookFn = instance?.uiCanExit;
+    const instance: (Partial<UiOnExit> & Element) | null =
+      this.firstElementChild;
+
+    const uiCanExitFn = instance?.uiCanExit;
+
     if (isFunction(uiCanExitFn)) {
       const state: StateDeclaration = this.state;
 
@@ -557,7 +630,11 @@ export class UiView extends LitElement {
   /** @internal */
   requestUpdate(...args: Parameters<LitElement['requestUpdate']>): void {
     super.requestUpdate(...args);
-    const instance = this.firstElementChild as LitElement;
+
+    const instance:
+      | (Partial<Pick<LitElement, 'requestUpdate'>> & Element)
+      | null = this.firstElementChild;
+
     if (isFunction(instance?.requestUpdate)) {
       instance.requestUpdate();
     }
@@ -570,14 +647,16 @@ export class UiView extends LitElement {
     // Fresh resolves need a re-render; `render` reuses the element rather than rebuilding it.
     this.requestUpdate();
 
-    const instance = this.firstElementChild as UiOnParamsChanged & Element;
-    const uiOnParamsChanged: TransitionHookFn = instance?.uiOnParamsChanged;
+    const instance: (Partial<UiOnParamsChanged> & Element) | null =
+      this.firstElementChild;
 
-    if (isFunction(uiOnParamsChanged)) {
+    if (isFunction(instance?.uiOnParamsChanged)) {
       const viewState = this.state;
+
       const resolveContext: ResolveContext = new ResolveContext(
         this._uiViewData.config.path,
       );
+
       const viewCreationTrans: unknown =
         resolveContext.getResolvable('$transition$').data;
 
@@ -589,15 +668,17 @@ export class UiView extends LitElement {
       )
         return;
 
-      const toParams: { [paramName: string]: unknown } =
-        $transition$.params('to');
-      const fromParams: { [paramName: string]: unknown } =
-        $transition$.params('from');
+      const toParams: RawParams = $transition$.params('to');
+
+      const fromParams: RawParams = $transition$.params('from');
+
       const getNodeSchema = (node: PathNode) => node.paramSchema;
+
       const toSchema: Param[] = $transition$
         .treeChanges('to')
         .map(getNodeSchema)
         .reduce<Param[]>(unnestR, []);
+
       const fromSchema: Param[] = $transition$
         .treeChanges('from')
         .map(getNodeSchema)
@@ -606,6 +687,7 @@ export class UiView extends LitElement {
       // Find the to params that have different values than the from params
       const changedToParams = toSchema.filter((param: Param) => {
         const idx = fromSchema.indexOf(param);
+
         return (
           idx === -1 ||
           !fromSchema[idx].type.equals(toParams[param.id], fromParams[param.id])
@@ -615,10 +697,12 @@ export class UiView extends LitElement {
       // Only trigger callback if a to param has changed or is new
       if (changedToParams.length) {
         const changedKeys: string[] = changedToParams.map((x) => x.id);
+
         // Filter the params to only changed/new to params.  `$transition$.params()` may be used to get all params.
         const newValues = filter(toParams, (_, key) =>
           changedKeys.includes(key!),
         );
+
         instance.uiOnParamsChanged(newValues, $transition$);
       }
     }
@@ -636,6 +720,7 @@ export class UiView extends LitElement {
 
   /** @internal */
   public get state(): StateDeclaration {
+    // SAFETY: a lit view's `$context` is the StateObject that declared it
     return (this.viewContext as StateObject).self;
   }
 
@@ -651,9 +736,11 @@ export class UiView extends LitElement {
    */
   protected willUpdate(changed: PropertyValues<this>): void {
     super.willUpdate(changed);
+
     if (!this.hasUpdated) {
       this.adoptProvidedRouter();
     }
+
     this.placeFallback();
   }
 
@@ -670,6 +757,7 @@ export class UiView extends LitElement {
    */
   protected firstUpdated(changed: PropertyValues): void {
     super.firstUpdated(changed);
+
     if (!this.uiRouter) {
       warnMissingRouter(this, '<ui-view>', 'will never render a routed view');
     }
@@ -687,16 +775,15 @@ export class UiView extends LitElement {
 
     const { uiRouter: router, component } = this;
     const injector = this.resolveContext.injector();
-    const resolvables = this.resolveContext
-      .getTokens()
-      .filter((token) => isString(token))
-      .map((token) => this.resolveContext.getResolvable(token))
-      .filter((r) => r.resolved);
 
-    const resolves = resolvables
-      .map(({ token }) => [token as string, injector.get(token) as unknown])
+    const resolves = this.resolveContext
+      .getTokens()
+      .filter(isString)
+      .filter((token) => this.resolveContext.getResolvable(token).resolved)
+      .map((token): [string, unknown] => [token, injector.get<unknown>(token)])
       .reduce(applyPairs, {});
-    const transition = injector.get(Transition) as Transition;
+
+    const transition = injector.get<Transition>(Transition);
 
     const props: UIViewInjectedProps = { router, resolves, transition };
 

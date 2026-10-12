@@ -10,7 +10,7 @@ import {
   type RouterRefControllerOptions,
 } from 'lit-ui-router-effect';
 
-const structuralEquals = (a: unknown, b: unknown) =>
+const structuralEquals = <T>(a: T, b: T): boolean =>
   JSON.stringify(a) === JSON.stringify(b);
 
 const structural: RefControllerOptions<string | undefined> = {
@@ -32,12 +32,14 @@ export class NavElement extends LitElement {
   private readonly params = new RefController(
     this,
     [this.route, this.count],
+    // SAFETY: the `id` param, when present, is a string-typed path param
     (route, count) => ({ id: route.params.id as string | undefined, count }),
     { equals: structuralEquals },
   );
 
   render(): TemplateResult {
     const transition = this.params.value.count;
+
     return html`${this.stateName.value} ${this.params.value.id} ${transition}`;
   }
 }

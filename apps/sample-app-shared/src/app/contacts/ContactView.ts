@@ -25,6 +25,7 @@ export class ContactView extends LitElement {
 
   render() {
     const { contact } = this;
+
     const composeButton = html`<button
       class="btn btn-primary"
       ${uiSref(
@@ -35,12 +36,14 @@ export class ContactView extends LitElement {
     >
       <i class="fa fa-envelope"></i><span>Message</span>
     </button>`;
+
     const editContactButton = html`<a
       class="btn btn-primary"
       ${uiSref('.edit')}
     >
       <i class="fa fa-pencil"></i><span>Edit Contact</span>
     </a>`;
+
     return html`<div class="contact">
       <sample-contact-detail .contact=${contact}></sample-contact-detail>
       ${composeButton} ${editContactButton}

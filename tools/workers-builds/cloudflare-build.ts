@@ -41,11 +41,13 @@ export const pnpmSpec = (root: string): string => {
   const packageManager = requireManifest(root).packageManager;
   // `pnpm@<version>+sha512.<hash>`; npm has no use for corepack's hash
   const spec = packageManager?.split('+')[0];
+
   if (!spec?.startsWith('pnpm@')) {
     throw new Error(
       `cloudflare-build: packageManager is not a pnpm pin: ${packageManager}`,
     );
   }
+
   return spec;
 };
 

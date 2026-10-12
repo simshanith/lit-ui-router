@@ -22,6 +22,7 @@ class RefControllerHost extends LitElement {
 
   render() {
     this.renderCount++;
+
     return html`<span>${this.renderCount}</span>`;
   }
 }
@@ -49,6 +50,7 @@ const CounterLive = Layer.effect(
 );
 
 const makeRef = <T>(value: T) => Effect.runSync(SubscriptionRef.make(value));
+
 const set = <T>(ref: SubscriptionRef.SubscriptionRef<T>, value: T) =>
   Effect.runSync(SubscriptionRef.set(ref, value));
 
@@ -73,6 +75,7 @@ describe('RefController', () => {
   it('carries initialValue until a ref thunk resolves on connect', async () => {
     const count = makeRef(7);
     const host = createHost();
+
     const controller = new RefController(
       host,
       () => [count],
@@ -92,6 +95,7 @@ describe('RefController', () => {
   it('stays idle while the thunk returns nothing', async () => {
     const host = createHost();
     const onChange = vi.fn();
+
     const controller = new RefController(
       host,
       () => undefined,
@@ -126,11 +130,13 @@ describe('RefController', () => {
     const first = makeRef('a');
     const second = makeRef(1);
     const host = createHost();
+
     const controller = new RefController(
       host,
       [first, second],
       (s, n) => `${s}${n}`,
     );
+
     await mount(host);
 
     expect(controller.value).toBe('a1');

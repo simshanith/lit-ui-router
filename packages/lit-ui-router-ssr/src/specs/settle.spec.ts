@@ -65,10 +65,14 @@ const makeRouter = (otherwise = false): UIRouterLit => {
   const router = installServerLocation(new UIRouterLit(), {
     strictMode: false,
   });
+
   // The failing specs assert the rejection; keep core's logger quiet.
   router.stateService.defaultErrorHandler(() => {});
+
   for (const state of states()) router.stateRegistry.register(state);
+
   if (otherwise) router.urlService.rules.otherwise({ state: 'notFound' });
+
   return router;
 };
 
@@ -102,12 +106,15 @@ describe('settle', () => {
 
   it('rejects with an error whose cause is the transition’s rejection when a resolve fails', async () => {
     const router = makeRouter();
-    const error = await settle(router, '/broken').catch((e: unknown) => e);
-    expect(error).toBeInstanceOf(Error);
-    const cause = (error as Error).cause;
-    expect(cause).toBeInstanceOf(Rejection);
-    expect((cause as Rejection).type).toBe(RejectType.ERROR);
-    expect((cause as Rejection).detail).toEqual(new Error('no sheet'));
+    const settling = settle(router, '/broken');
+    await expect(settling).rejects.toBeInstanceOf(Error);
+    await expect(settling).rejects.toHaveProperty(
+      'cause',
+      expect.any(Rejection),
+    );
+    await expect(settling).rejects.toMatchObject({
+      cause: { type: RejectType.ERROR, detail: new Error('no sheet') },
+    });
   });
 
   it('rejects an unknown url when the router declares no otherwise', async () => {
@@ -197,6 +204,7 @@ describe('settle', () => {
       paths: ['/', '/sheet/7B'],
       renderShell: async (_verdict, { path }) => {
         await settle(router, path);
+
         return rootTemplate(router);
       },
       write: (file, body) => void files.set(file, body),

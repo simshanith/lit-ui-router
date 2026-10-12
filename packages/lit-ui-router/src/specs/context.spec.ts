@@ -12,6 +12,7 @@ import { servicesPlugin, UIRouter } from '@uirouter/core';
 
 import {
   contextRequestEventName,
+  isContextRequest,
   isRouterContextRequest,
   parentUiViewContext,
   type ParentUiView,
@@ -42,15 +43,19 @@ function provideRecordingRouter(
   host: EventTarget,
   router: UIRouterLit,
   unsubscribe: () => void = () => {},
-): { listener: EventListener; subscribers: ContextCallback<UIRouterLit>[] } {
+) {
   const subscribers: ContextCallback<UIRouterLit>[] = [];
+
   const listener = (event: Event) => {
     if (!isRouterContextRequest(event)) return;
     event.stopImmediatePropagation();
+
     if (event.subscribe) subscribers.push(event.callback);
     event.callback(router, event.subscribe ? unsubscribe : undefined);
   };
+
   host.addEventListener(contextRequestEventName, listener);
+
   return { listener, subscribers };
 }
 
@@ -70,7 +75,7 @@ describe('lit-ui-router/context', () => {
 
   describe('routerContext', () => {
     it('is a frozen object, so the key is stable and unique', () => {
-      expect(typeof routerContext).toBe('object');
+      expect(routerContext).toBeTypeOf('object');
       expect(Object.isFrozen(routerContext)).toBe(true);
       expect(routerContext.name).toBe('lit-ui-router/context#router');
       expect(new RouterContextRequestEvent(() => {}).context).toBe(
@@ -118,6 +123,28 @@ describe('lit-ui-router/context', () => {
     });
   });
 
+  describe('isContextRequest', () => {
+    // SAFETY: an untyped caller can pass an undefined key; the guard must still require a named context
+    const undefinedKey = undefined as never;
+
+    it('rejects a request that names no context, even against an undefined key', () => {
+      const event = Object.assign(new Event(contextRequestEventName), {
+        callback: () => {},
+      });
+
+      expect(isContextRequest(event, undefinedKey)).toBe(false);
+    });
+
+    it('matches a request whose context is present, by identity', () => {
+      const event = Object.assign(new Event(contextRequestEventName), {
+        context: undefined,
+        callback: () => {},
+      });
+
+      expect(isContextRequest(event, undefinedKey)).toBe(true);
+    });
+  });
+
   describe('requestRouter', () => {
     it('returns the value a provider supplies synchronously', () => {
       const host = document.createElement('div');
@@ -157,11 +184,13 @@ describe('lit-ui-router/context', () => {
       const host = document.createElement('div');
       container.appendChild(host);
       const unsubscribe = vi.fn();
+
       const { subscribers } = provideRecordingRouter(
         container,
         router,
         unsubscribe,
       );
+
       const callback = vi.fn();
 
       const answer = requestRouter(host, { subscribe: true, callback });
@@ -217,7 +246,7 @@ describe('lit-ui-router/context', () => {
 
       expect(callback).toHaveBeenCalledTimes(1);
       const unsubscribe = callback.mock.calls[0][1];
-      expect(typeof unsubscribe).toBe('function');
+      expect(unsubscribe).toBeTypeOf('function');
       expect(() => unsubscribe()).not.toThrow();
     });
 
@@ -250,6 +279,7 @@ describe('lit-ui-router/context', () => {
         new Event(contextRequestEventName, { bubbles: true, composed: true }),
         { context: { name: 'someone-else' }, callback: () => {} },
       );
+
       child.dispatchEvent(event);
 
       expect(outer).toHaveBeenCalledTimes(1);
@@ -313,6 +343,7 @@ describe('lit-ui-router/context', () => {
       const view = document.createElement('ui-view');
       uiRouterEl.appendChild(view);
       await waitForUpdate(uiRouterEl);
+
       return view;
     }
 
@@ -340,7 +371,8 @@ describe('lit-ui-router/context', () => {
       await tick(50);
 
       const nested = view.querySelector('ui-view')!;
-      const leaf = nested.querySelector('.leaf') as HTMLElement;
+      const leaf = nested.querySelector<HTMLElement>('.leaf')!;
+
       return { view, nested, leaf };
     }
 
@@ -400,7 +432,7 @@ describe('lit-ui-router/context', () => {
 
       expect(callback).toHaveBeenCalledTimes(1);
       const unsubscribe = callback.mock.calls[0][1];
-      expect(typeof unsubscribe).toBe('function');
+      expect(unsubscribe).toBeTypeOf('function');
       expect(() => unsubscribe()).not.toThrow();
     });
 
@@ -441,17 +473,17 @@ describe('provideRouter', () => {
     const root = new EventTarget();
     const router = new UIRouterLit();
     const uninstall = provideRouter(root, router);
-    const answers: (string | undefined)[] = [];
+    const answers: (undefined | (() => void))[] = [];
 
     requestRouter(root, {
       subscribe: true,
-      callback: (_router, unsubscribe) => answers.push(typeof unsubscribe),
+      callback: (_router, unsubscribe) => answers.push(unsubscribe),
     });
     requestRouter(root, {
-      callback: (_router, unsubscribe) => answers.push(typeof unsubscribe),
+      callback: (_router, unsubscribe) => answers.push(unsubscribe),
     });
 
-    expect(answers).toEqual(['function', 'undefined']);
+    expect(answers).toEqual([expect.any(Function), undefined]);
     uninstall();
   });
 
@@ -487,17 +519,22 @@ describe('provideRouter', () => {
 describe('provideContext', () => {
   type SpecKey = Context<{ readonly name: string }, string>;
 
-  const key = Object.freeze({ name: 'spec#key' }) as SpecKey;
-  const otherKey = Object.freeze({ name: 'spec#other' }) as SpecKey;
+  const specKey = (name: string): SpecKey =>
+    // SAFETY: `__context__` is a phantom brand with no runtime value
+    Object.freeze({ name }) as SpecKey;
+
+  const key = specKey('spec#key');
+  const otherKey = specKey('spec#other');
 
   /** A minimal protocol request for `key`, shaped as a provider reads it. */
   function request(
     target: EventTarget,
     requested: SpecKey,
     options: { subscribe?: boolean } = {},
-  ): { answers: string[]; unsubscribes: (undefined | (() => void))[] } {
+  ) {
     const answers: string[] = [];
     const unsubscribes: (undefined | (() => void))[] = [];
+
     const event = Object.assign(new Event(contextRequestEventName), {
       context: requested,
       callback: (value: string, unsubscribe?: () => void) => {
@@ -506,7 +543,9 @@ describe('provideContext', () => {
       },
       subscribe: options.subscribe,
     });
+
     target.dispatchEvent(event);
+
     return { answers, unsubscribes };
   }
 
@@ -528,7 +567,7 @@ describe('provideContext', () => {
     const subscribed = request(root, key, { subscribe: true });
     const once = request(root, key);
 
-    expect(typeof subscribed.unsubscribes[0]).toBe('function');
+    expect(subscribed.unsubscribes[0]).toBeTypeOf('function');
     expect(once.unsubscribes[0]).toBeUndefined();
     uninstall();
   });
@@ -558,8 +597,12 @@ describe('provideContext', () => {
 describe('requestContext', () => {
   type SpecKey = Context<{ readonly name: string }, string>;
 
-  const key = Object.freeze({ name: 'spec#request' }) as SpecKey;
-  const otherKey = Object.freeze({ name: 'spec#request-other' }) as SpecKey;
+  const specKey = (name: string): SpecKey =>
+    // SAFETY: `__context__` is a phantom brand with no runtime value
+    Object.freeze({ name }) as SpecKey;
+
+  const key = specKey('spec#request');
+  const otherKey = specKey('spec#request-other');
 
   it('returns the value a provider answers its key with', () => {
     const root = new EventTarget();
@@ -581,15 +624,13 @@ describe('requestContext', () => {
 
   it('returns the first answer when several arrive', () => {
     const root = new EventTarget();
+
     const listener = (event: Event) => {
-      const request = event as Event & {
-        callback: ContextCallback<string>;
-        context: SpecKey;
-      };
-      if (request.context !== key) return;
-      request.callback('first');
-      request.callback('second');
+      if (!isContextRequest(event, key)) return;
+      event.callback('first');
+      event.callback('second');
     };
+
     root.addEventListener(contextRequestEventName, listener);
 
     expect(requestContext(root, key)).toBe('first');
@@ -600,15 +641,13 @@ describe('requestContext', () => {
   it('forwards every answer to the callback', () => {
     const root = new EventTarget();
     const seen: string[] = [];
+
     const listener = (event: Event) => {
-      const request = event as Event & {
-        callback: ContextCallback<string>;
-        context: SpecKey;
-      };
-      if (request.context !== key) return;
-      request.callback('first');
-      request.callback('second');
+      if (!isContextRequest(event, key)) return;
+      event.callback('first');
+      event.callback('second');
     };
+
     root.addEventListener(contextRequestEventName, listener);
 
     requestContext(root, key, { callback: (value) => seen.push(value) });
@@ -630,10 +669,7 @@ describe('requestContext', () => {
       callback: (_value, unsubscribe) => unsubscribes.push(unsubscribe),
     });
 
-    expect(unsubscribes.map((it) => typeof it)).toEqual([
-      'function',
-      'undefined',
-    ]);
+    expect(unsubscribes).toEqual([expect.any(Function), undefined]);
     uninstall();
   });
 });
@@ -687,6 +723,7 @@ describe('withRouterSync', () => {
       /collectResultSync/,
     );
     expect(getScopedRouter()).toBeUndefined();
+
     return pending;
   });
 });
@@ -695,6 +732,7 @@ describe('the router types the hand-off takes', () => {
   const coreRouter = (): UIRouter => {
     const router = new UIRouter();
     router.plugin(servicesPlugin);
+
     return router;
   };
 

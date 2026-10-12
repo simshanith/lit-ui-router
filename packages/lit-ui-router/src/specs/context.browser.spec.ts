@@ -54,6 +54,7 @@ describe('lit-ui-router/context across a shadow boundary', () => {
     const host = document.createElement('test-context-shadow-host');
     parent.appendChild(host);
     await waitForUpdate(host);
+
     return host.shadowRoot!.querySelector('#inner')!;
   }
 

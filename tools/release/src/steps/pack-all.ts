@@ -15,12 +15,14 @@ import { packDir, packTarballPath } from '../checks/cache-paths.ts';
 import { packPublishTarball } from './pack-publish.ts';
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
 import { isPublishable, loadWorkspace } from '@tools/shared/workspace.ts';
+import { failMain } from '../lib/fail-main.ts';
 
 async function main() {
   const { members } = await loadWorkspace(workspaceRoot);
   const publishable = members.filter(isPublishable);
   // Clear stale tarballs so a removed package leaves no ghost output.
   await mkdir(packDir, { recursive: true });
+
   for (const entry of await readdir(packDir)) {
     if (entry.endsWith('.tgz')) await unlink(join(packDir, entry));
   }
@@ -31,7 +33,4 @@ async function main() {
   }
 }
 
-main().catch((error: unknown) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+main().catch(failMain);

@@ -13,8 +13,8 @@ import { AsyncDirective } from 'lit/async-directive.js';
 import { getScopedRouter } from './context.js';
 import { UIRouterLit } from './core.js';
 import { warnMissingRouter } from './dev-warn.js';
+import { subscribeRouter } from './router-subscription.js';
 import { resolveAriaCurrent, SrefTargets } from './sref-status.js';
-import { UIRouterLitElement } from './ui-router.js';
 import {
   UI_SREF_TARGET_EVENT,
   UI_SREF_TARGET_REMOVED_EVENT,
@@ -62,6 +62,7 @@ type deregisterFn = () => void;
  */
 export abstract class SrefStatusDirective<
   Params extends SrefTargetParams,
+  Rendered = unknown,
 > extends AsyncDirective {
   /** @internal */
   element: Element | null = null;
@@ -83,6 +84,8 @@ export abstract class SrefStatusDirective<
 
   private _firstUpdated = false;
   private _deregister: deregisterFn[] = [];
+  /** the hooks on the router itself, which a replacement router moves */
+  private _routerDeregister: deregisterFn[] = [];
   /** bumped on disconnect, so a settlement subscribed before it stays quiet */
   private _connection = 0;
 
@@ -98,16 +101,18 @@ export abstract class SrefStatusDirective<
     protected readonly directiveName: string,
   ) {
     super(partInfo);
+
     if (partInfo.type !== PartType.ATTRIBUTE) {
       throw new Error(
         `The \`${directiveName}\` directive must be used in an attribute`,
       );
     }
+
     this.attributeName = partInfo.name;
   }
 
   /** the value for `status` and `params` as they stand */
-  abstract render(params: Params): unknown;
+  abstract render(params: Params): Rendered;
 
   /**
    * What `update()` and a status change hand to the part: `render()`, or
@@ -115,7 +120,7 @@ export abstract class SrefStatusDirective<
    *
    * @internal
    */
-  protected abstract commit(): unknown;
+  protected abstract commit(): Rendered;
 
   /**
    * The status to render: the one `update()` already computed, or — when
@@ -131,18 +136,21 @@ export abstract class SrefStatusDirective<
   protected getScopedStatus(params: Params): SrefStatus | undefined {
     if (this.status || this.uiRouter) return this.status;
     const router = getScopedRouter();
+
     if (!router) return this.status;
     this.targets.router = router;
     this.targets.params = params;
     this.targets.setExplicit();
     this.status = this.targets.status();
+
     return this.status;
   }
 
   /** @internal */
-  update(part: AttributePart, [params]: [Params]): unknown {
+  update(part: AttributePart, [params]: [Params]): Rendered | typeof noChange {
     this.params = params;
     this.targets.params = params;
+
     if (this.element !== part.element) {
       this.element = part.element;
       this._firstUpdated = false;
@@ -154,8 +162,10 @@ export abstract class SrefStatusDirective<
       // a re-render may name a different state
       this.targets.setExplicit();
       this.refresh();
+
       return noChange;
     }
+
     return this.commit();
   }
 
@@ -164,8 +174,20 @@ export abstract class SrefStatusDirective<
     if (this._firstUpdated || !this.isConnected) {
       return;
     }
+
     const element = this.element!;
-    this.uiRouter = UIRouterLitElement.seekRouter(element);
+
+    const { router, unsubscribe } = subscribeRouter(
+      element,
+      this.onRouterReplaced,
+    );
+
+    this.uiRouter = router;
+
+    if (unsubscribe) {
+      this._deregister.push(unsubscribe);
+    }
+
     this.parentView = UiView.seekParentView(element);
     this.targets.router = this.uiRouter;
     this.targets.relative = this.parentView?.viewContext?.name;
@@ -174,6 +196,7 @@ export abstract class SrefStatusDirective<
     // listened for in named mode too: a re-render may drop the name
     element.addEventListener(
       UI_SREF_TARGET_EVENT,
+      // SAFETY: only `uiSrefTargetEvent()` dispatches UI_SREF_TARGET_EVENT
       this.onUiSrefTargetEvent as EventListener,
     );
     element.addEventListener(
@@ -183,6 +206,7 @@ export abstract class SrefStatusDirective<
     this._deregister.push(() => {
       element.removeEventListener(
         UI_SREF_TARGET_EVENT,
+        // SAFETY: only `uiSrefTargetEvent()` dispatches UI_SREF_TARGET_EVENT
         this.onUiSrefTargetEvent as EventListener,
       );
       element.removeEventListener(
@@ -191,14 +215,8 @@ export abstract class SrefStatusDirective<
       );
     });
 
-    const router = this.uiRouter;
     if (router) {
-      this._deregister.push(
-        router.transitionService.onStart({}, this.onTransitionStart, {
-          priority: -Infinity,
-        }) as deregisterFn,
-        router.stateRegistry.onStatesChanged(this.onStatesChanged),
-      );
+      this.watch(router);
     } else {
       warnMissingRouter(
         element,
@@ -210,6 +228,32 @@ export abstract class SrefStatusDirective<
     this._firstUpdated = true;
     this.refresh();
   }
+
+  private watch(router: UIRouterLit): void {
+    // SAFETY: hook registration returns its deregistration function
+    this._routerDeregister.push(
+      router.transitionService.onStart({}, this.onTransitionStart, {
+        priority: -Infinity,
+      }) as deregisterFn,
+      router.stateRegistry.onStatesChanged(this.onStatesChanged),
+    );
+  }
+
+  private unwatch(): void {
+    this._connection++;
+    this._routerDeregister.forEach((deregister) => deregister());
+    this._routerDeregister = [];
+  }
+
+  /** What a disconnect and reconnect would do, for the router that replaced the one found. */
+  private readonly onRouterReplaced = (router: UIRouterLit): void => {
+    this.unwatch();
+    this.uiRouter = router;
+    this.targets.router = router;
+    this.targets.rebuild();
+    this.watch(router);
+    this.refresh();
+  };
 
   /** @internal */
   onUiSrefTargetEvent = (event: UiSrefTargetEvent): void => {
@@ -240,11 +284,13 @@ export abstract class SrefStatusDirective<
     // deregistering stops the next start, not a settlement already subscribed;
     // past a disconnect the class directive would write a detached element
     const connection = this._connection;
+
     const settled = (evt: TransEvt['evt']): void => {
       if (connection === this._connection) {
         this.refresh({ evt, trans });
       }
     };
+
     this.refresh({ evt: 'start', trans });
     trans.promise.then(
       () => settled('success'),
@@ -260,6 +306,7 @@ export abstract class SrefStatusDirective<
   refresh(event?: TransEvt): void {
     this.status = this.targets.status(event);
     const value = this.commit();
+
     if (value !== noChange && this.isConnected) {
       this.setValue(value);
     }
@@ -267,7 +314,7 @@ export abstract class SrefStatusDirective<
 
   /** @internal */
   disconnected(): void {
-    this._connection++;
+    this.unwatch();
     this._deregister.forEach((deregister) => deregister());
     this._deregister = [];
     this._firstUpdated = false;
@@ -319,7 +366,10 @@ export interface SrefActiveClassParams extends SrefTargetParams {
  *
  * @category directives
  */
-export class SrefActiveClassDirective extends SrefStatusDirective<SrefActiveClassParams> {
+export class SrefActiveClassDirective extends SrefStatusDirective<
+  SrefActiveClassParams,
+  string | typeof noChange
+> {
   /** classes the template wrote around the expression; never toggled */
   private _staticClasses: Set<string> | undefined;
   /** our classes on the element as of the last commit; `undefined` before one */
@@ -328,7 +378,9 @@ export class SrefActiveClassDirective extends SrefStatusDirective<SrefActiveClas
   /** @internal */
   constructor(partInfo: PartInfo) {
     super(partInfo, 'srefActiveClass');
+    // SAFETY: the base constructor throws unless this is an attribute part
     const { name, strings } = partInfo as AttributePartInfo;
+
     if (name !== 'class' || (strings?.length ?? 0) > 2) {
       throw new Error(
         '`srefActiveClass()` can only be used in the `class` attribute and must be the only expression in it',
@@ -341,18 +393,22 @@ export class SrefActiveClassDirective extends SrefStatusDirective<SrefActiveClas
     activeClasses = [],
     exactClasses = [],
     classes = {},
-  }: SrefActiveClassParams): Record<string, boolean> {
-    const info: Record<string, boolean> = {};
+  }: SrefActiveClassParams): Map<string, boolean> {
+    const info = new Map<string, boolean>();
     const { active = false, exact = false } = this.status ?? {};
+
     for (const name in classes) {
-      info[name] = !!classes[name];
+      info.set(name, !!classes[name]);
     }
+
     for (const name of activeClasses) {
-      info[name] = info[name] || active;
+      info.set(name, info.get(name) || active);
     }
+
     for (const name of exactClasses) {
-      info[name] = info[name] || exact;
+      info.set(name, info.get(name) || exact);
     }
+
     return info;
   }
 
@@ -362,21 +418,27 @@ export class SrefActiveClassDirective extends SrefStatusDirective<SrefActiveClas
    */
   render(params: SrefActiveClassParams): string | typeof noChange {
     const status = this.getScopedStatus(params);
+
     if (!status) {
       return noChange;
     }
+
     const info = this.classInfo(params);
+
     return (
       ' ' +
-      Object.keys(info)
-        .filter((name) => info[name])
+      [...info]
+        .flatMap(([name, applies]) => (applies ? [name] : []))
         .join(' ') +
       ' '
     );
   }
 
   /** @internal */
-  update(part: AttributePart, args: [SrefActiveClassParams]): unknown {
+  update(
+    part: AttributePart,
+    args: [SrefActiveClassParams],
+  ): string | typeof noChange {
     if (this._staticClasses === undefined && part.strings !== undefined) {
       this._staticClasses = new Set(
         part.strings
@@ -385,35 +447,42 @@ export class SrefActiveClassDirective extends SrefStatusDirective<SrefActiveClas
           .filter((s) => s !== ''),
       );
     }
+
     return super.update(part, args);
   }
 
   /** @internal */
-  protected commit(): unknown {
+  protected commit(): string | typeof noChange {
     const info = this.classInfo(this.params!);
+
     if (this._previousClasses === undefined) {
       const value = this.render(this.params!);
+
       if (value === noChange) {
         return value;
       }
+
       this._previousClasses = new Set();
-      for (const name in info) {
-        if (info[name] && !this._staticClasses?.has(name)) {
+
+      for (const [name, applies] of info) {
+        if (applies && !this._staticClasses?.has(name)) {
           this._previousClasses.add(name);
         }
       }
+
       return value;
     }
 
     const { classList } = this.element!;
+
     for (const name of this._previousClasses) {
-      if (!(name in info)) {
+      if (!info.has(name)) {
         classList.remove(name);
         this._previousClasses.delete(name);
       }
     }
-    for (const name in info) {
-      const value = info[name];
+
+    for (const [name, value] of info) {
       if (
         value !== this._previousClasses.has(name) &&
         !this._staticClasses?.has(name)
@@ -427,6 +496,7 @@ export class SrefActiveClassDirective extends SrefStatusDirective<SrefActiveClas
         }
       }
     }
+
     return noChange;
   }
 }
@@ -453,13 +523,18 @@ export interface SrefAriaCurrentParams extends SrefTargetParams {
  *
  * @category directives
  */
-export class SrefAriaCurrentDirective extends SrefStatusDirective<SrefAriaCurrentParams> {
+export class SrefAriaCurrentDirective extends SrefStatusDirective<
+  SrefAriaCurrentParams,
+  AriaCurrentValue | typeof nothing | typeof noChange
+> {
   /** whether a status was ever written, so losing every target clears it */
   private _wrote = false;
 
   /** @internal */
   constructor(partInfo: PartInfo) {
     super(partInfo, 'srefAriaCurrent');
+
+    // SAFETY: the base constructor throws unless this is an attribute part
     if ((partInfo as AttributePartInfo).strings !== undefined) {
       throw new Error(
         '`srefAriaCurrent()` must be the only expression in its attribute',
@@ -468,11 +543,13 @@ export class SrefAriaCurrentDirective extends SrefStatusDirective<SrefAriaCurren
   }
 
   /** @internal */
-  protected commit(): unknown {
+  protected commit(): AriaCurrentValue | typeof nothing | typeof noChange {
     if (!this.status) {
       return this._wrote ? nothing : noChange;
     }
+
     this._wrote = true;
+
     return this.render(this.params!);
   }
 
@@ -484,9 +561,11 @@ export class SrefAriaCurrentDirective extends SrefStatusDirective<SrefAriaCurren
     params: SrefAriaCurrentParams,
   ): AriaCurrentValue | typeof nothing | typeof noChange {
     const status = this.getScopedStatus(params);
+
     if (!status) {
       return noChange;
     }
+
     return resolveAriaCurrent(status, params.value);
   }
 }

@@ -1,5 +1,4 @@
 // The round trip both client lanes run: draw a document on the server, serve it into a live container, boot a client into it.
-import { expect } from 'vitest';
 import type { RenderInfo } from '@lit-labs/ssr';
 import type { TemplateResult } from 'lit';
 import type { UIRouterLit } from 'lit-ui-router/pure';
@@ -21,36 +20,45 @@ export const draw = async (
 ): Promise<string> => {
   const router = makeRouter();
   await settle(router, path);
+
   return renderPage(page(router), router, new EventTarget(), renderers);
 };
 
 // happy-dom parses `<template shadowrootmode>` as a plain template, where a browser's parser would attach a shadow root; lit's own hydrate support arms on `shadowRoot` being there.
 const attachShadowRoots = (root: ParentNode): void => {
   for (const template of [
-    ...root.querySelectorAll('template[shadowrootmode]'),
+    ...root.querySelectorAll<HTMLTemplateElement>('template[shadowrootmode]'),
   ]) {
     const host = template.parentElement;
+
     if (!host) continue;
+    // SAFETY: the server writes `shadowrootmode` as a `ShadowRootMode` keyword.
     const mode = template.getAttribute('shadowrootmode') as ShadowRootMode;
     const shadow = host.attachShadow({ mode });
-    shadow.append((template as HTMLTemplateElement).content);
+    shadow.append(template.content);
     template.remove();
     attachShadowRoots(shadow);
   }
 };
 
+/** A served container and the elements it held, in document order. */
+export interface Served {
+  container: HTMLElement;
+  served: Element[];
+}
+
 /** Parses `markup` into a live container and stamps every element it holds. */
-export const serve = (
-  markup: string,
-): { container: HTMLElement; served: Element[] } => {
+export const serve = (markup: string): Served => {
   const container = document.createElement('div');
   document.body.append(container);
   container.innerHTML = markup;
   attachShadowRoots(container);
   const served = [...container.querySelectorAll('*')];
+
   for (const [index, element] of served.entries()) {
     element.setAttribute('data-served', String(index));
   }
+
   return { container, served };
 };
 
@@ -63,8 +71,10 @@ const tick = (): Promise<void> =>
 export const drain = async (container: HTMLElement): Promise<void> => {
   for (let pass = 0; pass < 10; pass += 1) {
     await tick();
+
     if (!container.querySelector('[defer-hydration]')) break;
   }
+
   await tick();
 };
 
@@ -72,9 +82,12 @@ export const drain = async (container: HTMLElement): Promise<void> => {
 export const comments = (container: HTMLElement): string[] => {
   const walker = document.createTreeWalker(container, NodeFilter.SHOW_COMMENT);
   const found: string[] = [];
+
   for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    // SAFETY: a `SHOW_COMMENT` walker yields only comments.
     found.push((node as Comment).data);
   }
+
   return found;
 };
 
@@ -87,14 +100,20 @@ export const comments = (container: HTMLElement): string[] => {
 export const dropViewNodeMarkers = (container: HTMLElement): number => {
   const walker = document.createTreeWalker(container, NodeFilter.SHOW_COMMENT);
   const doomed: Comment[] = [];
+
   for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    // SAFETY: a `SHOW_COMMENT` walker yields only comments.
     const comment = node as Comment;
+
     if (!/^(ui-view:)?lit-node \d+$/.test(comment.data)) continue;
+
     if (comment.nextElementSibling?.localName === 'ui-view') {
       doomed.push(comment);
     }
   }
+
   for (const comment of doomed) comment.remove();
+
   return doomed.length;
 };
 
@@ -110,8 +129,10 @@ export const hydrateInto = async (
   const router = makeRouter();
   await settle(router, path);
   const release = hydrateRoot(container, page(router));
-  expect(release).toBeTypeOf('function');
-  return { router, release: release as () => void };
+
+  if (!release) throw new Error('hydrateRoot left the container cold');
+
+  return { router, release };
 };
 
 /**
@@ -126,5 +147,6 @@ export const boot = async (
   const { router, release } = await hydrateInto(container, page, path);
   await drain(container);
   release();
+
   return router;
 };

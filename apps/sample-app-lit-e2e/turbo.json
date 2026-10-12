@@ -6,7 +6,7 @@
       "dependsOn": ["^build"],
       "outputs": []
     },
-    // One turbo task per Cypress suite, each with its own cache key, so a rerun
+    // One turbo task per suite, each with its own cache key, so a rerun
     // after a flake costs one suite instead of six.
     //
     // They all assume a dev server is already up. It is: the //:test_e2e mise
@@ -17,7 +17,7 @@
     // never reaches them. (Not the root `e2e` turbo task, which is a different
     // thing entirely: `cypress open`, persistent, for iterating by hand.)
     //
-    // The six keys are identical by construction, and the duplication is not
+    // The six Cypress keys are identical by construction, and the duplication is not
     // reducible: turbo has no task-level `extends`, and check:task-inputs fails
     // any key that drops a tracked file, so per-suite input narrowing is not
     // available either. A source change still busts all six — the win is the
@@ -32,6 +32,14 @@
     // affect cache validity. WWW_DEV_PORT is an override of the code default,
     // so it is transport too — a different port is the same suite.
     // Videos/screenshots stay uncached side effects.
+    // axe over every docs page and sample-app mount the server serves. Uncached:
+    // color-contrast and target-size read the host's rendering and fonts, which
+    // no input names.
+    "test:e2e:a11y": {
+      "dependsOn": ["build"],
+      "cache": false,
+      "passThroughEnv": ["WWW_DEV_PORT"]
+    },
     "test:e2e:docs": {
       "dependsOn": ["build"],
       "inputs": [

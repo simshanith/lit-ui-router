@@ -28,10 +28,10 @@ async function main(): Promise<void> {
   await writeFile(SESSION_FILE, `${Date.now()}\n`);
 }
 
-main().catch((error: unknown) => {
+main().catch((cause: unknown) => {
   console.log(
     `could not mark the turbo summary session, the report falls back to the newest run: ${
-      error instanceof Error ? error.message : String(error)
+      cause instanceof Error ? cause.message : String(cause)
     }`,
   );
 });

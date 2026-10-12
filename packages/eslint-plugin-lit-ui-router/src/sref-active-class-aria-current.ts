@@ -9,19 +9,23 @@ import {
   attributeEnd,
   allowElementPartsOf,
   attributePartsOf,
+  asNode,
+  asNodes,
   type CallNode,
   createDirectiveTracker,
   elementPartIndex,
   hasAriaCurrent,
   hasSpread,
+  isCallExpression,
   isLinkElement,
+  isObjectExpression,
   LINK_ELEMENTS_SCHEMA,
   linkElementsOf,
-  type Node,
   type ObjectNode,
   type Parse5Element,
   propertyNamed,
   siblingBinding,
+  toEstree,
 } from './directives.ts';
 
 /** The params srefAriaCurrent shares with srefActiveClass; the classes are its own. */
@@ -74,10 +78,13 @@ const srefActiveClassAriaCurrent: RuleFor<typeof RULE_NAME> = {
 
   create(context) {
     const tracker = createDirectiveTracker(context);
+
     const { allowElementParts: allowOption, linkElements: option } =
+      // SAFETY: the linter validates options against meta.schema before create runs
       (context.options[0] as
         | { allowElementParts?: boolean; linkElements?: string[] }
         | undefined) ?? {};
+
     const linkElements = linkElementsOf(context, option);
     const allowElementParts = allowElementPartsOf(context, allowOption);
 
@@ -88,21 +95,25 @@ const srefActiveClassAriaCurrent: RuleFor<typeof RULE_NAME> = {
 
       TaggedTemplateExpression(node) {
         if (!tracker.shouldAnalyse) return;
-        if (!tracker.isLitTemplate(node.tag as unknown as Node)) return;
+
+        if (!tracker.isLitTemplate(asNode(node.tag))) return;
 
         const source = context.sourceCode;
-        const expressions = node.quasi.expressions as unknown as Node[];
+        const expressions = asNodes(node.quasi.expressions);
         const analyzer = TemplateAnalyzer.create(node);
 
         /** The `state`, `params` and `options` the fix copies, as written. */
         const paramsLiteral = (object: ObjectNode): string => {
-          const kept = SHARED_PARAMS.map((name) =>
-            propertyNamed(object, name),
-          ).filter((property) => property !== undefined);
+          const kept = SHARED_PARAMS.flatMap((name) => {
+            const property = propertyNamed(object, name);
+
+            return property === undefined ? [] : [property];
+          });
+
           return kept.length === 0
             ? '{}'
             : `{ ${kept
-                .map((property) => source.getText(property as never))
+                .map((property) => source.getText(toEstree(property)))
                 .join(', ')} }`;
         };
 
@@ -119,9 +130,11 @@ const srefActiveClassAriaCurrent: RuleFor<typeof RULE_NAME> = {
             'class',
             expressions,
           );
+
           if (insert === undefined) return null;
 
           const sibling = siblingBinding(fixer, source, call.callee, DIRECTIVE);
+
           if (sibling === undefined) return null;
           const { binding, edits } = sibling;
           edits.push(
@@ -130,22 +143,27 @@ const srefActiveClassAriaCurrent: RuleFor<typeof RULE_NAME> = {
               ` aria-current=\${${binding}(${literal})}`,
             ),
           );
+
           return edits;
         };
 
         /** Under allowElementParts false, each uiSrefActive part a server drops. */
         const reportElementParts = (element: Parse5Element, tag: string) => {
           if (allowElementParts) return;
+
           for (const attribute of Object.keys(element.attribs)) {
             const index = elementPartIndex(attribute);
+
             if (index === undefined) continue;
             const expression = expressions[index];
+
             if (
               expression === undefined ||
               tracker.directiveOf(expression) !== 'uiSrefActive'
             ) {
               continue;
             }
+
             context.report({
               node: expression,
               messageId: 'elementPartNotServed',
@@ -155,13 +173,14 @@ const srefActiveClassAriaCurrent: RuleFor<typeof RULE_NAME> = {
         };
 
         analyzer.traverse({
-          enterElement(rawElement) {
-            const element = rawElement as unknown as Parse5Element;
+          enterElement(element) {
             // probably a tree correction node
             if (element.sourceCodeLocation === undefined) return;
             const tag = element.name;
             const parts = attributePartsOf(element);
+
             if (!isLinkElement(element, parts, linkElements)) return;
+
             // Any aria-current at all is the author's, and whether its value is
             // right is not this rule's business.
             if (hasAriaCurrent(element)) return;
@@ -171,19 +190,22 @@ const srefActiveClassAriaCurrent: RuleFor<typeof RULE_NAME> = {
             for (const [index, part] of parts) {
               if (part.name !== 'class') continue;
               const expression = expressions[index];
+
               if (
-                expression === undefined ||
+                !isCallExpression(expression) ||
                 tracker.directiveOf(expression) !== 'srefActiveClass'
               ) {
                 continue;
               }
-              const call = expression as CallNode;
+
+              const call = expression;
               const params = call.arguments[0];
+
               const object =
-                params?.type === 'ObjectExpression' &&
-                !hasSpread(params as ObjectNode)
-                  ? (params as ObjectNode)
+                isObjectExpression(params) && !hasSpread(params)
+                  ? params
                   : undefined;
+
               // A missing or unknowable params literal has nothing to copy, so
               // the message cannot name the call the fix would have written.
               if (object === undefined) {

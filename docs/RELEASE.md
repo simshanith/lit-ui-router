@@ -146,7 +146,7 @@ When a release PR merges and main CI is green:
 
 ### 4. Publish to NPM (`publish-npm.yml`)
 
-**Triggers:** Tag push matching a published package tag (`lit-ui-router@*`, `lit-ui-router-mobx@*`, `ui-router-navigation-location-plugin@*`, `ui-router-server@*`, `eslint-plugin-lit-ui-router@*`); manual dispatch for dry runs
+**Triggers:** Tag push matching a published package tag (the `on.push.tags` list in `publish-npm.yml`); manual dispatch for dry runs
 
 [Actions ▸ Publish to NPM ▸ **Run workflow**](https://github.com/simshanith/lit-ui-router/actions/workflows/publish-npm.yml)
 
@@ -190,6 +190,23 @@ devDependency, which `peer-floor-guard` requires to sit in it.
 release-it publishes under: a prerelease answers to its own channel tag,
 everything else to `latest`. A channel the registry does not carry yet falls
 back to `latest`, and the run names the missing tag.
+
+### 6. Acceptance (`acceptance.yml`)
+
+**Triggers:** Pull requests; pushes to `main`; manual dispatch against any ref
+
+[Actions ▸ Acceptance ▸ **Run workflow**](https://github.com/simshanith/lit-ui-router/actions/workflows/acceptance.yml)
+
+Slower suites over the built site, on runners of their own outside
+`build_and_test`. On a PR they are advisory, not required checks. Each suite is
+one job and reports one check run on the commit, named `acceptance (<suite>)`:
+
+- `acceptance (a11y)`: the axe pass (`mise run test_e2e a11y`), described in the
+  [e2e README](../apps/sample-app-lit-e2e/README.md).
+
+A red check is a real failure on that commit, unlike a release signal, but it
+gates nothing: Tag & push needs only `build_and_test`. The README badges read
+these check runs.
 
 ## Step-by-Step Release Process
 
@@ -398,6 +415,10 @@ surfaces such as `www/` get no milestone.
 The description says what kind of release the train is, not which issues are
 on it: a new minor copies the previous minor's wording with the version
 changed. Per-issue detail belongs on the issue.
+
+A minor's milestone closes with its x.0 train; no milestone tracks patches. A
+`fix:` that ships as a patch of the current minor files under the next minor's
+milestone, and the release, not the milestone, decides patch or minor.
 
 Work that can only happen after publish still rides the train's milestone.
 `examples/*` pin the published `lit-ui-router` range rather than

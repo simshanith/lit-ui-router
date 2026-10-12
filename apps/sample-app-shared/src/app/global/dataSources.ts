@@ -1,4 +1,5 @@
 import { SessionStorage } from '../util/sessionStorage.js';
+import type { Message } from '../mymessages/interface.js';
 import { AppConfig } from './appModules.js';
 /**
  * Fake REST Services (Contacts, Folders, Messages) used in the mymessages submodule.
@@ -39,15 +40,18 @@ class Messages extends SessionStorage {
   }
 
   byFolder(folder: { _id: string }) {
-    const searchObject: Record<string, string> = { folder: folder._id };
+    const searchObject: Partial<Message> = { folder: folder._id };
     const toFromAttr = ['drafts', 'sent'].includes(folder._id) ? 'from' : 'to';
     searchObject[toFromAttr] = AppConfig.emailAddress ?? '';
+
     return this.search(searchObject);
   }
 }
 
 const ContactsStorage = new Contacts();
+
 const FoldersStorage = new Folders();
+
 const MessagesStorage = new Messages();
 
 export { ContactsStorage, FoldersStorage, MessagesStorage };

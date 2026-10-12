@@ -111,10 +111,10 @@ same criteria/callback shape.
     <rect x="654" y="20" width="62" height="36" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
     <text x="685" y="36" font-size="11" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">views</text>
     <text x="685" y="49" font-size="11" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">render</text>
-    <text x="654" y="70" font-size="10" fill="var(--vp-c-text-3, #929295)">on the next</text>
-    <text x="654" y="82" font-size="10" fill="var(--vp-c-text-3, #929295)">Lit update</text>
-    <text x="642" y="106" font-size="10" fill="var(--vp-c-text-3, #929295)">cancelled</text>
-    <text x="642" y="118" font-size="10" fill="var(--vp-c-text-3, #929295)">or failed</text>
+    <text x="654" y="70" font-size="10" fill="var(--vp-c-text-2, #67676c)">on the next</text>
+    <text x="654" y="82" font-size="10" fill="var(--vp-c-text-2, #67676c)">Lit update</text>
+    <text x="642" y="106" font-size="10" fill="var(--vp-c-text-2, #67676c)">cancelled</text>
+    <text x="642" y="118" font-size="10" fill="var(--vp-c-text-2, #67676c)">or failed</text>
     <!-- resolves bracket -->
     <line x1="122" y1="112" x2="122" y2="106" stroke="var(--vp-c-divider, #e2e2e3)" />
     <line x1="122" y1="112" x2="502" y2="112" stroke="var(--vp-c-divider, #e2e2e3)" />
@@ -124,13 +124,13 @@ same criteria/callback shape.
     <line x1="60" y1="148" x2="60" y2="94" stroke="var(--vp-c-brand-1, #3451b2)" stroke-width="1.25" marker-end="url(#arr-lifecycle)" />
     <rect x="16" y="150" width="330" height="94" rx="8" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" stroke="var(--vp-c-brand-1, #3451b2)" />
     <text x="30" y="172" font-size="12" font-weight="600" fill="var(--vp-c-brand-1, #3451b2)">a route guard is an onBefore hook</text>
-    <text x="30" y="188" font-size="10" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-3, #929295)">criteria: { to: (s) =&gt; s.data.requiresAuth }</text>
+    <text x="30" y="188" font-size="10" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-2, #67676c)">criteria: { to: (s) =&gt; s.data.requiresAuth }</text>
     <text x="30" y="208" font-size="11" fill="var(--vp-c-text-1, #3c3c43)"><tspan font-family="var(--vp-font-family-mono, ui-monospace, monospace)">TargetState</tspan> &#8594; redirect (e.g. to login)</text>
     <text x="30" y="224" font-size="11" fill="var(--vp-c-text-1, #3c3c43)"><tspan font-family="var(--vp-font-family-mono, ui-monospace, monospace)">false</tspan> &#8594; cancel the transition</text>
     <text x="30" y="240" font-size="11" fill="var(--vp-c-text-1, #3c3c43)"><tspan font-family="var(--vp-font-family-mono, ui-monospace, monospace)">nothing</tspan> &#8594; proceed</text>
     <!-- async note -->
-    <text x="368" y="208" font-size="10" fill="var(--vp-c-text-3, #929295)">guards can be async &#8212; the transition</text>
-    <text x="368" y="221" font-size="10" fill="var(--vp-c-text-3, #929295)">waits for the returned Promise</text>
+    <text x="368" y="208" font-size="10" fill="var(--vp-c-text-2, #67676c)">guards can be async &#8212; the transition</text>
+    <text x="368" y="221" font-size="10" fill="var(--vp-c-text-2, #67676c)">waits for the returned Promise</text>
   </g>
 </svg>
 

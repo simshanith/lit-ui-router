@@ -13,15 +13,18 @@ import type { PublishedVersions } from './published-versions.core.ts';
 import { writePublishedVersions } from './published-versions.ts';
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
 import { isPublishable, loadWorkspace } from '@tools/shared/workspace.ts';
+import { failMain } from '../lib/fail-main.ts';
 
 /** `name`'s dist-tags, or `{}` when never published. */
 async function publishedTags(name: string): Promise<Record<string, string>> {
   try {
     const packument = await pacote.packument(name);
+
     return { ...packument['dist-tags'] };
   } catch (error) {
     // An unpublished package is a real answer here; anything else (network,
     // 5xx, auth) must throw rather than silently report "unpublished".
+    // SAFETY: pacote rejects with Errors that carry npm's `code`
     if ((error as { code?: string }).code === 'E404') return {};
     throw error;
   }
@@ -32,23 +35,24 @@ async function main() {
   const publishable = members.filter(isPublishable);
   const versions: PublishedVersions = {};
   const summary: string[] = [];
+
   for (const { name } of publishable) {
     const tags = await publishedTags(name);
     versions[name] = tags;
+
     const specs = Object.entries(tags)
       .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
       .map(([tag, version]) => `${tag}@${version}`);
+
     summary.push(
       `${name}: ${specs.length === 0 ? 'unpublished' : specs.join(' ')}`,
     );
   }
+
   await writePublishedVersions(versions);
   console.log(
     `resolved dist-tags → published-versions.json: ${summary.join(', ')}`,
   );
 }
 
-main().catch((error: unknown) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+main().catch(failMain);

@@ -13,7 +13,9 @@ import { workspaceRoot } from '@tools/bootstrap/root.ts';
 /** argv for `gh pr create`, verbatim from bump-version.yml's Create PR step. */
 export function prCreateArgs(base: string, head: string): string[] {
   if (base.trim() === '') throw new Error('base must be non-empty');
+
   if (head.trim() === '') throw new Error('head must be non-empty');
+
   return [
     'pr',
     'create',
@@ -51,6 +53,7 @@ export async function createReleasePr(
   exec: Exec = defaultExec,
 ): Promise<string> {
   await ensureGh(exec);
+
   const { stdout } = await withRetry(
     () => exec('gh', prCreateArgs(base, head), { cwd: workspaceRoot }),
     {
@@ -63,5 +66,6 @@ export async function createReleasePr(
       },
     },
   );
+
   return stdout.trim();
 }

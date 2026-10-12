@@ -49,9 +49,10 @@ export function packageFiles(
 ): string[] {
   if (directory === '' || directory === '.') return [...tracked];
   const prefix = `${directory.replace(/\/$/, '')}/`;
-  return tracked
-    .filter((file) => file.startsWith(prefix))
-    .map((file) => file.slice(prefix.length));
+
+  return tracked.flatMap((file) =>
+    file.startsWith(prefix) ? [file.slice(prefix.length)] : [],
+  );
 }
 
 /**
@@ -68,6 +69,7 @@ export function unhashedFiles(
   tracked: readonly string[],
 ): string[] {
   const hashed = new Set(Object.keys(task.inputs));
+
   return packageFiles(tracked, task.directory)
     .filter((file) => !hashed.has(file))
     .sort();
@@ -124,28 +126,32 @@ export function auditTaskInputs(
     audited += 1;
 
     const untracked = untrackedInputs(task, trackedSet, allowances);
+
     if (untracked.length > 0) {
       overhashing.push({ taskId: task.taskId, untracked });
     }
 
     const missing = unhashedFiles(task, tracked);
+
     if (missing.length === 0) continue;
     const [, name] = splitTaskId(task.taskId);
+
     if (exempt.has(name)) {
       used.add(name);
       continue;
     }
+
     failures.push({ taskId: task.taskId, missing });
   }
 
   failures.sort((a, b) => a.taskId.localeCompare(b.taskId));
   overhashing.sort((a, b) => a.taskId.localeCompare(b.taskId));
+
   return {
     failures,
     overhashing,
     stale: exemptions
-      .map(({ task }) => task)
-      .filter((name) => !used.has(name))
+      .flatMap(({ task }) => (used.has(task) ? [] : [task]))
       .sort(),
     audited,
   };
@@ -155,6 +161,7 @@ export function auditTaskInputs(
 export function formatFailure({ taskId, missing }: InputsFailure): string {
   const shown = missing.slice(0, 5).join(', ');
   const rest = missing.length > 5 ? `, +${missing.length - 5} more` : '';
+
   return `${taskId} does not hash ${missing.length} tracked file(s) in its package: ${shown}${rest} — lead its "inputs" with "$TURBO_DEFAULT$"`;
 }
 
@@ -170,13 +177,17 @@ export function repoIgnored(
   tracked: ReadonlySet<string>,
 ): Set<string> {
   const ignored = new Set<string>();
+
   for (const line of verbose.split('\n')) {
     // <source>:<line>:<pattern>\t<path>
     const tab = line.indexOf('\t');
+
     if (tab < 1) continue;
     const source = line.slice(0, tab).split(':')[0] ?? '';
+
     if (tracked.has(source)) ignored.add(line.slice(tab + 1));
   }
+
   return ignored;
 }
 
@@ -190,17 +201,17 @@ export function narrowToGenerated(
   overhashing: readonly InputsOverhash[],
   ignored: ReadonlySet<string>,
 ): InputsOverhash[] {
-  return overhashing
-    .map(({ taskId, untracked }) => ({
-      taskId,
-      untracked: untracked.filter((file) => ignored.has(file)),
-    }))
-    .filter(({ untracked }) => untracked.length > 0);
+  return overhashing.flatMap(({ taskId, untracked }) => {
+    const generated = untracked.filter((file) => ignored.has(file));
+
+    return generated.length > 0 ? [{ taskId, untracked: generated }] : [];
+  });
 }
 
 /** Error text naming the generated files the cache key should not hash. */
 export function formatOverhash({ taskId, untracked }: InputsOverhash): string {
   const shown = untracked.slice(0, 5).join(', ');
   const rest = untracked.length > 5 ? `, +${untracked.length - 5} more` : '';
+
   return `${taskId} hashes ${untracked.length} untracked file(s): ${shown}${rest} — negate the generated tree in its "inputs" (only "$TURBO_DEFAULT$" is gitignore-pruned)`;
 }

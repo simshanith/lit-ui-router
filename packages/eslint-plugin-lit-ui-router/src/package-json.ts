@@ -8,6 +8,7 @@ interface PackageJson {
   repository: { directory: string };
 }
 
+// SAFETY: this package's own manifest, which carries every field PackageJson names
 export const packageJson = createRequire(import.meta.url)(
   '../package.json',
 ) as PackageJson;

@@ -283,7 +283,7 @@ describe('authenticated sample app', () => {
     const selectMessage = (subject, guid) => {
       cy.contains(subject).click();
       cy.url().should('contain', guid);
-      cy.get('.message h4').contains(subject);
+      cy.get('.message h2').contains(subject);
     };
 
     visitWithFeatures('/mymessages/finance');
@@ -302,7 +302,7 @@ describe('authenticated sample app', () => {
       cy.contains(name).click();
       cy.url().should('contain', id);
       cy.get('li').contains(name).should('have.class', 'selected');
-      cy.get('.contact h3').contains(name);
+      cy.get('.contact h2').contains(name);
     };
 
     selectContact('Rios Sears', 'rsears');

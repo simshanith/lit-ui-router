@@ -38,7 +38,7 @@ export class AppRoot extends LitElement {
 
   render() {
     return html`
-      <nav>
+      <nav aria-label="ESLint report">
         <a ${uiSrefActive({ activeClasses: ['active'] })} ${uiSref('report')}
           >Report</a
         >
@@ -67,10 +67,15 @@ const htmlState: LitStateDeclaration = {
 };
 
 const router = new UIRouterLit();
+
 router.plugin(hashLocationPlugin);
+
 router.stateRegistry.register(reportState);
+
 router.stateRegistry.register(htmlState);
+
 router.urlService.rules.initial({ state: 'report' });
+
 router.start();
 
 render(

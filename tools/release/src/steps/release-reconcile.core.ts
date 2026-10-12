@@ -2,6 +2,8 @@
 // shell (./release-reconcile.ts) hashes the two tarballs and reads turbo's
 // run summary; the verdict logic lives here, unit-tested.
 
+import * as v from 'valibot';
+
 export interface CacheOutcome {
   status?: string;
   source?: string;
@@ -13,15 +15,20 @@ export interface CacheOutcome {
  * unverifiable — a summary we can't parse must never read as a balance.
  */
 export function packCacheOutcome(
+  // oxlint-disable-next-line anti-slop/no-unknown-parameters -- parses JSON.parse output; any shape degrades to unverifiable
   summary: unknown,
   taskId: string,
 ): CacheOutcome {
-  if (typeof summary !== 'object' || summary === null) return {};
+  if (!v.is(v.looseObject({}), summary)) return {};
+
+  // SAFETY: every field is optional and `tasks` is Array-checked before use
   const tasks =
     (summary as { tasks?: Array<{ taskId?: string; cache?: CacheOutcome }> })
       .tasks ?? [];
+
   if (!Array.isArray(tasks)) return {};
   const task = tasks.find((entry) => entry.taskId === taskId);
+
   return { status: task?.cache?.status, source: task?.cache?.source };
 }
 
@@ -49,5 +56,6 @@ export function reconcile(
       reason: `pack:all was not a remote-cache hit (status=${outcome.status ?? 'none'}, source=${outcome.source ?? 'none'})`,
     };
   }
+
   return debitSha === creditSha ? { kind: 'balanced' } : { kind: 'drift' };
 }

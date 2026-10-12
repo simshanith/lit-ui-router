@@ -6,7 +6,7 @@ import {
   UIRouter,
   UrlMatcher as CoreUrlMatcher,
 } from '@uirouter/core';
-import type { RawParams } from '@uirouter/core';
+import type { RawParams, UrlMatcherCompileConfig } from '@uirouter/core';
 
 import {
   compare,
@@ -24,23 +24,29 @@ import type { UrlMatcherCompileOptions } from '../src/url-matcher.ts';
 // Core-side only: core routes static param defaults through services.$injector
 // (params/param.ts) and throws without one. The standalone matcher is the
 // control group — it never touches an injector.
+// SAFETY: core's static param defaults reach the injector only through invoke().
 services.$injector = {
-  invoke: (fn: () => unknown) => fn(),
+  invoke: <T>(fn: () => T): T => fn(),
 } as typeof services.$injector;
 
 // eslint-disable-next-line typescript/no-deprecated -- the control group needs core's factory itself, not the urlService facade
 const { urlMatcherFactory: coreFactory } = new UIRouter();
+
 const { compile } = urlMatcherFactory();
 
 const coreCompile = (
   pattern: string,
   options: UrlMatcherCompileOptions = {},
 ) => {
-  const config: Record<string, unknown> = {};
+  const config: UrlMatcherCompileConfig = {};
+
   if (options.strict !== undefined) config.strict = options.strict;
+
   if (options.caseInsensitive !== undefined)
     config.caseInsensitive = options.caseInsensitive;
+
   if (options.params !== undefined) config.state = { params: options.params };
+
   return coreFactory.compile(pattern, config);
 };
 
@@ -182,6 +188,12 @@ const featureCases: DifferentialCase[] = [
     urls: ['/n', '/n/', '/n/7', '/n/x'],
   },
   { pattern: '/s/{v:string}', urls: ['/s/abc', '/s/a/b'] },
+  // A declared built-in type replaces an inline string type
+  {
+    pattern: '/s/{v:string}',
+    options: { params: { v: { type: 'int' } } },
+    urls: ['/s/7', '/s/abc'],
+  },
   // Inline regexps
   {
     pattern: '/hex/{id:[0-9a-fA-F]{1,8}}',
@@ -253,6 +265,7 @@ const featureCases: DifferentialCase[] = [
 ];
 
 const allCases = [...appCases, ...featureCases];
+
 const comparisons = allCases.reduce((sum, c) => sum + c.urls.length, 0);
 
 describe(`differential: standalone matcher vs @uirouter/core (${allCases.length} patterns, ${comparisons} comparisons)`, () => {
@@ -261,6 +274,7 @@ describe(`differential: standalone matcher vs @uirouter/core (${allCases.length}
     it(label, () => {
       const expectedMatcher = coreCompile(pattern, options);
       const actualMatcher = compile(pattern, options);
+
       for (const url of urls) {
         const expected: unknown = expectedMatcher.exec(url);
         const actual: unknown = exec(actualMatcher, url);
@@ -294,7 +308,7 @@ const throwCases: {
     label: 'invalid squash policy',
     pattern: '/x/:id',
     options: {
-      params: { id: { value: 'v', squash: 5 as unknown as boolean } },
+      params: { id: { value: 'v', squash: 5 } },
     },
     url: '/x/1',
   },
@@ -337,6 +351,7 @@ describe('differential: standalone-only compile rejections (supported upstream)'
     const options = {
       params: { id: { value: () => 'fallback', squash: true } },
     };
+
     assert.deepStrictEqual(coreCompile('/x/:id', options).exec('/x'), {
       id: 'fallback',
     });
@@ -355,6 +370,7 @@ describe('differential: standalone-only compile rejections (supported upstream)'
     const options = {
       params: { id: { value: 'v', replace: [{ from: 'a', to: 'b' }] } },
     };
+
     assert.ok(coreCompile('/a/:id', options));
     assert.throws(
       () => compile('/a/:id', options),
@@ -534,6 +550,7 @@ describe(`differential: compare vs @uirouter/core (${specificityPatterns.length}
         const expected = sign(
           CoreUrlMatcher.compare(coreCompile(left), coreCompile(right)),
         );
+
         const actual = sign(compare(compile(left), compile(right)));
         assert.equal(actual, expected);
       });
@@ -552,6 +569,7 @@ describe(`differential: format() vs @uirouter/core (${formatCases.length} patter
     it(label, () => {
       const expectedMatcher = coreCompile(pattern, options);
       const actualMatcher = compile(pattern, options);
+
       for (const value of values) {
         const expected: unknown = expectedMatcher.format(value);
         const actual: unknown = format(actualMatcher, value);

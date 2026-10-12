@@ -22,7 +22,7 @@ npm run build    # bakes the report into dist/
 
 `vite.config.ts` carries a local plugin — no extra dependency, just `vite` and `eslint`. It serves a virtual module, `virtual:lint-report`, whose `load` hook runs `new ESLint({ cwd }).lintFiles(['src/**/*.ts'])` and emits the results as JSON, plus a rule-id-to-docs-URL map from `getRulesMetaForResults()`. Lint problems are the payload, never a build failure.
 
-In dev, the plugin watches `src/` and `eslint.config.js` on the Vite file watcher and calls `server.reloadModule()` on the virtual module, which re-runs the lint and pushes an HMR update; `src/report-views.ts` accepts it and re-renders the connected views in place. `vite build` runs the same `load` once and bakes the report into `dist`. Either way the terminal gets a one-line summary (`lint-report: 7 problems in 4 files`).
+In dev, the plugin watches `src/` and `eslint.config.js` on the Vite file watcher and calls `server.reloadModule()` on the virtual module, which re-runs the lint and pushes an HMR update; `src/report-views.ts` accepts it and re-renders the connected views in place. `vite build` runs the same `load` once and bakes the report into `dist`. Either way the terminal gets a one-line summary (`lint-report: 10 problems in 5 files`).
 
 The formatter stamps `Generated on <date>` into its output, which would put a fresh timestamp in the bundle on every build and change its content hash without a source change. The plugin strips that one line so `dist` is byte-stable, and warns if the stamp ever stops matching rather than silently letting the nondeterminism back in.
 
@@ -38,9 +38,11 @@ ESLint's formatter ships every message row hidden behind a click on its file hea
 
 Three of the pairs are one rule each for the three ways a link learns it is active, which is how the plugin covers that surface: `sref-active-aria-current` for the `uiSrefActive` **element part**, `sref-active-class-aria-current` for the `srefActiveClass` **attribute part**, and `sref-status-aria-current` for a host that reads a `SrefStatusController` itself. The last one is the only pair that needs a class: the controller hands the status to the component, so the template holds no directive call to read, and the gallery holds a small `StatusHost` element alongside its module-level templates.
 
-`eslint.config.js` scopes those six rules to `warn` **for that file only**. `recommended` ships them at `error` and `src/main.ts` is held to that, so the app stays a clean consumer while the demo still has something to report and `npm run lint` still exits 0.
+`src/prerendered/violations.ts` holds templates as a server prerenders them, linted with `settings.allowElementParts: false`. A server never runs an element part, so there `anchor-is-valid` reports `<a ${uiSref(...)}>` and `sref-active-class-aria-current` reports a `uiSrefActive` link: three more warnings, while the same tabs in `src/main.ts` stay clean. The rules can't tell which templates a server renders, so `eslint.config.js` scopes the setting with `files`, as the plugin's [prerendered templates recipe](https://github.com/simshanith/lit-ui-router/blob/main/packages/eslint-plugin-lit-ui-router/README.md#prerendered-templates) does.
 
-Four of the rules are auto-fixable, so `eslint . --fix` repairs most of the gallery. `git restore src/violations.ts` puts it back.
+`eslint.config.js` scopes those six rules to `warn` **for the two gallery files only**. `recommended` ships them at `error` and `src/main.ts` is held to that, so the app stays a clean consumer while the demo still has something to report and `npm run lint` still exits 0.
+
+Four of the rules are auto-fixable, so `eslint . --fix` repairs most of both galleries. `git restore src/violations.ts src/prerendered` puts them back.
 
 Whenever the plugin's `recommended` config gains or drops a rule, the gallery gains or drops its pair — that is what keeps this example an honest picture of what installing the plugin gives you.
 

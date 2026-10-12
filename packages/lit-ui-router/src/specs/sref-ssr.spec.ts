@@ -11,6 +11,7 @@ import { srefActiveClass, srefAriaCurrent } from '../sref-active.js';
 import { srefHref } from '../sref-href.js';
 
 // @lit-labs/ssr's root event target: what `provideRouter` serves elements from.
+// SAFETY: the @lit-labs/ssr DOM shim installs `litServerRoot` on globalThis
 const litServerRoot = (globalThis as { litServerRoot?: EventTarget })
   .litServerRoot;
 
@@ -24,19 +25,23 @@ const sheetRouter = (): UIRouterLit => {
   router.stateRegistry.register({ name: 'sheet', url: '/sheet/:num' });
   router.stateRegistry.register({ name: 'index', url: '/' });
   router.urlService.url('/sheet/7B');
+
   return router;
 };
 
 /** A router settled on `/sheet/7B`, as a request handler hands one over. */
 const startedRouter = async (): Promise<UIRouterLit> => {
   const router = sheetRouter();
+
   const settled = new Promise<void>((resolve) =>
     router.transitionService.onSuccess({}, () => {
       resolve();
     }),
   );
+
   router.start();
   await settled;
+
   return router;
 };
 
@@ -101,11 +106,13 @@ describe('async resolves ahead of the sync render', () => {
       },
     });
     router.urlService.url('/sheet/7B');
+
     const settled = new Promise<void>((resolve) =>
       router.transitionService.onSuccess({}, () => {
         resolve();
       }),
     );
+
     router.start();
     await settled;
 

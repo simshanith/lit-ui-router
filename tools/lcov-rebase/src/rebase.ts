@@ -14,5 +14,6 @@ import path from 'node:path';
 export const rebaseLcov = (content: string, packageDir: string): string =>
   content.replace(/^SF:(.+)$/gm, (record, sf: string) => {
     if (path.posix.isAbsolute(sf) || path.win32.isAbsolute(sf)) return record;
+
     return `SF:${path.posix.normalize(path.posix.join(packageDir, sf))}`;
   });

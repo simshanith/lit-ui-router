@@ -1,8 +1,10 @@
 import { configDefaults, defineConfig } from 'vitest/config';
+import { GithubActionsReporter } from 'vitest/node';
 import { playwright } from '@vitest/browser-playwright';
 
 // partition: every spec runs in exactly one project
 const allSpecs = ['src/specs/**/*.spec.ts'];
+
 // Real user gestures (page.elementLocator) and declarative-shadow-root composition;
 // every other spec uses synthetic events that happy-dom supports.
 const browserOnlySpecs = [
@@ -14,7 +16,10 @@ const browserOnlySpecs = [
   'src/specs/sref-status-controller.browser.spec.ts',
   // real custom-element connect ordering, which happy-dom gets wrong for innerHTML
   'src/specs/parser-connect.browser.spec.ts',
+  // native scoped custom element registries, which happy-dom lacks
+  'src/specs/scoped-registry.browser.spec.ts',
 ];
+
 // Plain node under the @lit-labs/ssr DOM shim; happy-dom would mask the shim's gaps.
 const nodeOnlySpecs = [
   'src/specs/context-ssr.spec.ts',
@@ -33,6 +38,7 @@ const cacheKey = process.env.VITEST_BROWSER_API_PORT ?? 'default';
 // into import.meta.env everywhere (browser included), where vitest.setup.ts
 // asserts the swap
 const lit2Compat = process.env.VITE_EXPECT_LIT_MAJOR === '2';
+
 const litAlias = lit2Compat
   ? [
       { find: /^lit$/, replacement: 'lit-2' },
@@ -44,8 +50,14 @@ export default defineConfig({
   cacheDir: `node_modules/.vite-${cacheKey}`,
   resolve: { alias: litAlias },
   test: {
-    // hanging-process logs the open handles in CI
-    reporters: process.env.CI ? ['default', 'hanging-process'] : ['default'],
+    // github-actions precedes the failure banner; hanging-process logs open handles in CI
+    reporters: [
+      ...(process.env.GITHUB_ACTIONS === 'true'
+        ? [new GithubActionsReporter({ jobSummary: { enabled: false } })]
+        : []),
+      'default',
+      ...(process.env.CI ? (['hanging-process'] as const) : []),
+    ],
     coverage: {
       reporter: ['text', 'json', 'lcov', 'html'],
       reportsDirectory: './coverage',

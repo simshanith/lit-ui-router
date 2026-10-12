@@ -4,9 +4,7 @@ import { RuleTester } from 'eslint';
 import { anchorIsValid } from './anchor-is-valid.ts';
 
 // RuleTester runs cases through these statics, which eslint's types omit.
-const hooks = RuleTester as unknown as Record<string, unknown>;
-hooks.describe = describe;
-hooks.it = it;
+Object.assign(RuleTester, { describe, it });
 
 const ruleTester = new RuleTester({
   languageOptions: { ecmaVersion: 'latest', sourceType: 'module' },
@@ -109,6 +107,7 @@ ruleTester.run('anchor-is-valid', anchorIsValid, {
 // `allowElementParts: false`: a server render never runs an element part, so
 // only an href in the markup counts, and a lone uiSref is fixed to srefHref.
 const SERVED = [{ allowElementParts: false }];
+
 const SREF_ONLY = `
 import { html } from 'lit';
 import { uiSref } from 'lit-ui-router';

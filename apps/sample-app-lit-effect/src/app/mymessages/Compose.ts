@@ -7,6 +7,7 @@ import { MessagesStorage } from 'sample-app-shared/app/global/dataSources.js';
 import DialogService from 'sample-app-shared/app/global/dialogService.js';
 import { dsrForgetFinishedState } from 'sample-app-shared/app/util/dsr-forget-finished-state.js';
 import { Message } from 'sample-app-shared/app/mymessages/interface.js';
+import { outgoingMessage } from 'sample-app-shared/app/mymessages/outgoing.js';
 
 import { RouterRefController } from 'lit-ui-router-effect';
 import AppConfig from '../global/appConfig.js';
@@ -54,6 +55,7 @@ export class Compose extends LitElement {
   // Equal.equals is reference equality outside Data values.
   messageParam = new RouterRefController(
     this,
+    // SAFETY: the non-URL `message` param is only ever set from a Message (Reply, Forward, Edit)
     (route) => route.params.message as Partial<Message> | undefined,
     {
       equals: isEqual,
@@ -66,6 +68,7 @@ export class Compose extends LitElement {
   // onChange again on every reconnect, and the sticky branch reconnects on
   // the way back in.
   resetMessage(message: Partial<Message> = {}, { force = false } = {}) {
+    // SAFETY: Compose reads only the composed fields; outgoingMessage() and save() stamp the rest
     const pristineMessage = {
       body: '',
       to: '',
@@ -73,6 +76,7 @@ export class Compose extends LitElement {
       ...message,
       from: AppConfig.emailAddress,
     } as Message;
+
     if (!force && isEqual(this.pristineMessage, pristineMessage)) return;
     this.pristineMessage = pristineMessage;
     this.message = { ...pristineMessage };
@@ -90,6 +94,7 @@ export class Compose extends LitElement {
     const message = 'You have not saved this message.';
     const question = 'Navigate away and lose changes?';
     this.canExit = await DialogService.confirm(message, question, 'Yes', 'No');
+
     return this.canExit;
   };
 
@@ -133,12 +138,7 @@ export class Compose extends LitElement {
   /** "Send" the message (save to the 'sent' folder), and then go to the previous state */
   send() {
     const { message } = this;
-    void MessagesStorage.save({
-      ...message,
-      date: new Date(),
-      read: true,
-      folder: 'sent',
-    })
+    void MessagesStorage.save(outgoingMessage(message, 'sent'))
       .then(() => this.finishDraft())
       .then(() => this.gotoPreviousState());
   }
@@ -146,6 +146,7 @@ export class Compose extends LitElement {
   handleChangeMessage = (detail: string) => (e: Event) => {
     this.message = {
       ...this.message,
+      // SAFETY: bound only to the <input> and <textarea> fields in render(), both with a string value
       [detail]: (e.target as HTMLInputElement).value,
     };
   };
@@ -153,22 +154,19 @@ export class Compose extends LitElement {
   /** Save the message to the 'drafts' folder, and then go to the previous state */
   save() {
     const { message } = this;
-    void MessagesStorage.save({
-      ...message,
-      date: new Date(),
-      read: true,
-      folder: 'drafts',
-    })
+    void MessagesStorage.save(outgoingMessage(message, 'drafts'))
       .then(() => this.finishDraft())
       .then(() => this.gotoPreviousState());
   }
 
   render() {
     const { message } = this;
+
     return html`<div class="compose">
+      <h1 class="sr-only" tabindex="-1">New Message</h1>
       <div class="header">
         <div class="flex-h">
-          <label>Recipient</label>
+          <label for="to">Recipient</label>
           <input
             type="text"
             id="to"
@@ -178,7 +176,7 @@ export class Compose extends LitElement {
           />
         </div>
         <div class="flex-h">
-          <label>Subject</label>
+          <label for="subject">Subject</label>
           <input
             type="text"
             id="subject"
@@ -193,6 +191,7 @@ export class Compose extends LitElement {
         <textarea
           name="body"
           id="body"
+          aria-label="Body"
           cols="30"
           rows="20"
           @change=${this.handleChangeMessage('body')}

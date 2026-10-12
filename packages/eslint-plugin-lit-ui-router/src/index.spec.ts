@@ -44,6 +44,7 @@ void describe('plugin', () => {
     const configured = Object.keys(
       plugin.configs.recommended[0]?.rules ?? {},
     ).filter((rule) => rule.startsWith('lit-ui-router/'));
+
     assert.deepEqual(
       configured.sort(),
       Object.keys(plugin.rules)
@@ -64,6 +65,7 @@ void describe('plugin', () => {
     const messages = lint(
       `${IMPORTS}html\`<button \${uiSref('home')}>Home</button>\`;`,
     );
+
     assert.deepEqual(
       messages.map((message) => message.ruleId),
       ['lit-ui-router/sref-assign-href'],
@@ -74,6 +76,7 @@ void describe('plugin', () => {
     const messages = lint(
       `${IMPORTS}html\`<a href="/home" aria-current="page" \${uiSrefActive({})}>Home</a>\`;`,
     );
+
     assert.deepEqual(
       messages.map((message) => message.ruleId),
       ['lit-ui-router/sref-active-aria-current'],
@@ -84,6 +87,7 @@ void describe('plugin', () => {
     const messages = lint(
       `${IMPORTS}html\`<a href=\${srefHref('home')} class=\${srefActiveClass({ state: 'home' })}>Home</a>\`;`,
     );
+
     assert.deepEqual(
       messages.map((message) => message.ruleId),
       ['lit-ui-router/sref-active-class-aria-current'],
@@ -94,6 +98,7 @@ void describe('plugin', () => {
     const messages = lint(
       `${IMPORTS}class Nav {\n  users = new SrefStatusController(this, { state: 'users' });\n  render() {\n    return html\`<a href=\${srefHref('users')} class="nav \${this.users.active ? 'on' : ''}">Users</a>\`;\n  }\n}`,
     );
+
     assert.deepEqual(
       messages.map((message) => message.ruleId),
       ['lit-ui-router/sref-status-aria-current'],
@@ -104,6 +109,7 @@ void describe('plugin', () => {
     const messages = lint(
       `${IMPORTS}html\`<a href=\${uiSref('home')}>Home</a>\`;`,
     );
+
     assert.deepEqual(
       messages.map((message) => message.ruleId),
       ['lit-ui-router/directive-position'],
@@ -114,6 +120,7 @@ void describe('plugin', () => {
     const messages = lint(
       `${IMPORTS}html\`<a \${srefHref('home')}>Home</a>\`;`,
     );
+
     assert.deepEqual(
       messages.map((message) => message.ruleId),
       ['lit-ui-router/anchor-is-valid', 'lit-ui-router/directive-position'],

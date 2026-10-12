@@ -1,3 +1,5 @@
+import { isFunction } from '@uirouter/core';
+
 import { UIRouterLitElement } from './ui-router.js';
 
 /**
@@ -9,7 +11,7 @@ import { UIRouterLitElement } from './ui-router.js';
  * @internal
  */
 export function inLitDevMode(): boolean {
-  return typeof UIRouterLitElement.enableWarning === 'function';
+  return isFunction(UIRouterLitElement.enableWarning);
 }
 
 /**
@@ -44,9 +46,11 @@ export function warnMissingRouter(
 ): void {
   // DEV folds the whole body out of dist/*.js (check:dev-split); inLitDevMode() is the runtime probe.
   if (!import.meta.env.DEV) return;
+
   if (!inLitDevMode() || warnedMissingRouter.has(element)) {
     return;
   }
+
   warnedMissingRouter.add(element);
   console.warn(
     `lit-ui-router: ${subject} found no <ui-router> ancestor, so it ${consequence}. ` +
@@ -67,6 +71,7 @@ export function warnMissingRouter(
 export function warnRouterSwapped(element: Element): void {
   // DEV folds the whole body out of dist/*.js (check:dev-split); inLitDevMode() is the runtime probe.
   if (!import.meta.env.DEV) return;
+
   if (!inLitDevMode()) return;
   console.warn(
     'lit-ui-router: this <ui-router> was given a different uiRouter after its first update. ' +

@@ -1,12 +1,11 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { RuleTester } from 'eslint';
+import { LINK_ELEMENTS_SCHEMA } from './directives.ts';
 import { srefActiveClassAriaCurrent } from './sref-active-class-aria-current.ts';
 
 // RuleTester runs cases through these statics, which eslint's types omit.
-const hooks = RuleTester as unknown as Record<string, unknown>;
-hooks.describe = describe;
-hooks.it = it;
+Object.assign(RuleTester, { describe, it });
 
 const ruleTester = new RuleTester({
   languageOptions: { ecmaVersion: 'latest', sourceType: 'module' },
@@ -196,6 +195,7 @@ html\`<a href="/home" class=\${srefActiveClass({ state: 'home' })} aria-current=
 // `allowElementParts: false`: a server render never runs uiSrefActive, so a
 // link carrying it is held to the attribute-part bar, and reports unfixed.
 const SERVED = [{ allowElementParts: false }];
+
 const ACTIVE = `
 import { html } from 'lit';
 import { uiSref, uiSrefActive } from 'lit-ui-router';
@@ -343,13 +343,9 @@ clientTester.run(
 void describe('sref-active-class-aria-current meta', () => {
   void it('is fixable and takes the shared linkElements option', () => {
     assert.equal(srefActiveClassAriaCurrent.meta?.fixable, 'code');
-    assert.ok(
-      (
-        srefActiveClassAriaCurrent.meta?.schema as
-          | { properties?: Record<string, unknown> }[]
-          | undefined
-      )?.[0]?.properties?.linkElements,
-    );
+    const schema = srefActiveClassAriaCurrent.meta?.schema;
+    assert.ok(Array.isArray(schema));
+    assert.equal(schema[0]?.properties?.linkElements, LINK_ELEMENTS_SCHEMA);
   });
 
   void it('leaves allowElementParts out of defaultOptions, so the setting reaches it', () => {

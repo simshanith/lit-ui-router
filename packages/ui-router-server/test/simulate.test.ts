@@ -12,10 +12,13 @@ async function settleUrl(path: string): Promise<string | null> {
     { name: 'b', url: '/b' },
     { name: 'plain', url: '/plain' },
   ]);
+
   const settled = onceSettled(router);
   router.urlService.url(path);
   router.urlService.sync();
+
   if (!(await settled)) return null;
+
   return router.urlService.url();
 }
 
@@ -25,6 +28,7 @@ describe('onceSettled', () => {
       { name: 'a', url: '/a', redirectTo: 'b' },
       { name: 'b', url: '/b' },
     ]);
+
     const settled = onceSettled(router);
     router.urlService.url('/a');
     router.urlService.sync();
@@ -44,6 +48,7 @@ describe('onceSettled', () => {
         ],
       },
     ]);
+
     const settled = onceSettled(router);
     router.urlService.url('/boom');
     router.urlService.sync();
@@ -71,6 +76,7 @@ describe('per-call state declarations', () => {
       settleUrl('/plain'),
       settleUrl('/a'),
     ]);
+
     assert.deepEqual(results, ['/b', '/plain', '/b']);
   });
 });

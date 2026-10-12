@@ -23,7 +23,9 @@ const COMMENT_NODE = 8 satisfies Node['COMMENT_NODE'];
  */
 const isRenderMarker = (node: ChildNode | null): boolean => {
   if (!node || node.nodeType !== COMMENT_NODE) return false;
+  // SAFETY: `nodeType` is `COMMENT_NODE`, checked above.
   const { data } = node as Comment;
+
   return data === '' || data.includes('lit-part');
 };
 
@@ -81,7 +83,8 @@ export const isServedViewClass = (
   constructor: CustomElementConstructor | undefined,
 ): boolean =>
   !!constructor &&
-  (constructor as Partial<ServedUiViewConstructor>)[servedViewBrand] === true;
+  servedViewBrand in constructor &&
+  constructor[servedViewBrand] === true;
 
 /**
  * Adds the served-render side of `<ui-view>` to `Base`.
@@ -134,9 +137,11 @@ export const withServedRender = (
     /** @internal */
     override connectedCallback(): void {
       super.connectedCallback();
+
       // A deferred view holds a render's nodes behind whatever the author wrote ahead of them.
       if (this.deferHydration) {
         this.deferredAtConnect = true;
+
         if (import.meta.env.DEV) {
           // A macrotask: the hydrate walk clears the attribute within this task, and a pin answers on the wake update queued inside it.
           setTimeout(() => {
@@ -178,8 +183,10 @@ export const withServedRender = (
     protected override shouldUpdate(changed: PropertyValues<this>): boolean {
       // Asleep: nothing renders, and `hasUpdated` stays false, so `firstUpdated` still fires on the real first render.
       if (this.deferHydration) return false;
+
       // Detached before the wake ran: `willUpdate` is skipped too, so the held nodes and the wake survive until a re-attach.
       if (this.deferredAtConnect && !this.isConnected) return false;
+
       return super.shouldUpdate(changed);
     }
 
@@ -190,6 +197,7 @@ export const withServedRender = (
         // The wake is this view's first look at its children.
         this.captureContentInPlace();
       }
+
       super.willUpdate(changed);
     }
 
@@ -198,6 +206,7 @@ export const withServedRender = (
       this.deferredAtConnect = false;
       this.adoptProvidedRouter();
       const adopt = requestContext(this, adoptUiViewContext);
+
       if (adopt) return adopt(this);
       // Rendering over a render's nodes doubles the markup; what the author wrote ahead of them is the capture's.
       this.dropHeldRender();
@@ -208,7 +217,9 @@ export const withServedRender = (
     private dropHeldRender(): void {
       const children = [...this.childNodes];
       const from = children.findIndex((child) => isRenderMarker(child));
+
       if (from < 0) return;
+
       // Optionally called: the @lit-labs/ssr DOM shim gives its nodes no `remove`.
       for (const child of children.slice(from)) child.remove?.();
     }
@@ -218,5 +229,6 @@ export const withServedRender = (
       return noChange;
     }
   }
+
   return ServedView;
 };

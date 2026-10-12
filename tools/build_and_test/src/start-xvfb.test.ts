@@ -13,11 +13,13 @@ const KEYSYM_NOISE = [
   '> Warning:          Could not resolve keysym XF86CameraAccessDisable',
   '> Warning:          Could not resolve keysym XF86CameraAccessToggle',
 ];
+
 const REAL_LINES = [
   'The XKEYBOARD keymap compiler (xkbcomp) reports:',
   'Errors from xkbcomp are not fatal to the X server',
   '(EE) Fatal server error: Cannot establish any listening sockets',
 ];
+
 const SAMPLE_LINES = [
   REAL_LINES[0],
   ...KEYSYM_NOISE,
@@ -37,7 +39,9 @@ async function* asAsyncLines(lines: Iterable<string>): AsyncGenerator<string> {
 async function drain(generator: AsyncGenerator<string, number, void>) {
   const kept: string[] = [];
   let next: IteratorResult<string, number>;
+
   while (!(next = await generator.next()).done) kept.push(next.value);
+
   return { kept, filtered: next.value };
 }
 
@@ -52,6 +56,7 @@ describe('filterStderr', () => {
     const { kept, filtered } = await drain(
       filterStderr(asAsyncLines(SAMPLE_LINES)),
     );
+
     assert.deepEqual(kept, REAL_LINES);
     assert.equal(filtered, 3);
   });
@@ -60,6 +65,7 @@ describe('filterStderr', () => {
     const { kept, filtered } = await drain(
       filterStderr(['> Warning:          Type "ONE_LEVEL" has 1 levels']),
     );
+
     assert.deepEqual(kept, [
       '> Warning:          Type "ONE_LEVEL" has 1 levels',
     ]);
@@ -81,6 +87,7 @@ const scriptPath = fileURLToPath(new URL('./start-xvfb.ts', import.meta.url));
 function writeFakeXvfb(dir: string, body: string): string {
   const bin = path.join(dir, 'fake-xvfb.mjs');
   fs.writeFileSync(bin, `#!/usr/bin/env node\n${body}`, { mode: 0o755 });
+
   return bin;
 }
 
@@ -94,16 +101,19 @@ function runStartXvfb(env: NodeJS.ProcessEnv) {
 describe('start-xvfb.ts', () => {
   it('fails with filtered stderr when Xvfb dies', () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'xvfb-test-'));
+
     const bin = writeFakeXvfb(
       dir,
       [...KEYSYM_NOISE, ...REAL_LINES]
         .map((line) => `console.error(${JSON.stringify(line)});`)
         .join('\n') + '\nprocess.exit(1);\n',
     );
+
     const run = runStartXvfb({
       XVFB_BIN: bin,
       XVFB_SOCKET: path.join(dir, 'no-such-socket'),
     });
+
     assert.equal(run.status, 1);
     assert.match(run.stderr, /Xvfb failed to start:/);
     assert.match(run.stderr, /Fatal server error/);
@@ -117,16 +127,19 @@ describe('start-xvfb.ts', () => {
 
   it('omits the filtered-count line when nothing was filtered', () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'xvfb-test-'));
+
     const bin = writeFakeXvfb(
       dir,
       REAL_LINES.map((line) => `console.error(${JSON.stringify(line)});`).join(
         '\n',
       ) + '\nprocess.exit(1);\n',
     );
+
     const run = runStartXvfb({
       XVFB_BIN: bin,
       XVFB_SOCKET: path.join(dir, 'no-such-socket'),
     });
+
     assert.equal(run.status, 1);
     assert.match(run.stderr, /Fatal server error/);
     assert.doesNotMatch(run.stderr, /filtered/);
@@ -138,6 +151,7 @@ describe('start-xvfb.ts', () => {
     const socket = path.join(dir, 'socket');
     const githubEnv = path.join(dir, 'github.env');
     fs.writeFileSync(githubEnv, '');
+
     const bin = writeFakeXvfb(
       dir,
       [
@@ -149,11 +163,13 @@ describe('start-xvfb.ts', () => {
         'setTimeout(() => {}, 3000);',
       ].join('\n') + '\n',
     );
+
     const run = runStartXvfb({
       XVFB_BIN: bin,
       XVFB_SOCKET: socket,
       GITHUB_ENV: githubEnv,
     });
+
     assert.equal(run.status, 0);
     assert.match(run.stdout, /Xvfb ready on :99/);
     assert.doesNotMatch(run.stderr, /keysym/);
