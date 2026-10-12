@@ -13,6 +13,10 @@
       name="description"
       content="The Altitude Atlas as a single-page drawing set: twenty-one sheets of the lit-ui-router codebase, routed with lit-ui-router."
     />
+    <!-- the client's mark is the tab's icon: the ico for Safari, the svg for the rest, the png for a home screen -->
+    <link rel="icon" href="%BASE_URL%favicon.ico" sizes="any" />
+    <link rel="icon" href="%BASE_URL%favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="%BASE_URL%apple-touch-icon.png" />
     <link rel="stylesheet" href="%BASE_URL%sheets/atlas.css" />
     <!-- THE TYPE, stand-in half. atlas.css names the Adobe family first in
          every role stack and the Google Fonts stand-in second; this link is
@@ -86,13 +90,14 @@
          by a quarter, and the link's name is the logo's alt. The head is a
          column with one gap, and its first row spells the client out in the
          docs site's own marks, lit-ui-router.dev = ui-router + lit, each a
-         link; the marks are sized from the root font and start-aligned, the
+         link; the marks are sized from the root font, the client's a third
+         over its operands, the row and the name centred on the head, the
          operators set in the ink so the row reads as an equation, and the
          head's own padding takes the glow's overhang. */
       .rail-name {
         display: flex;
         flex-direction: column;
-        align-items: start;
+        align-items: center;
         gap: 1rem;
       }
       .client-eq {
@@ -114,7 +119,7 @@
         display: block;
       }
       .client-mark {
-        --mark: 3rem;
+        --mark: 2rem;
         --glow-blur: calc(var(--mark) * 0.09);
         --glow-filter: blur(var(--glow-blur)) brightness(2.5);
         --logo-blend: multiply;
@@ -165,6 +170,7 @@
         line-height: 1.3;
         letter-spacing: 0.14em;
         font-weight: 600;
+        text-align: center;
         margin: 0;
       }
       .rail-head h1 a {
@@ -442,6 +448,10 @@
         }
         .rail-head {
           padding-inline-start: 14px;
+        }
+        /* the strip is 56px: the mark leaves the centre for the start edge */
+        .rail-name {
+          align-items: start;
         }
         .client-mark {
           --mark: 1.75rem;

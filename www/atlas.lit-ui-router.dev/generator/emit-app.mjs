@@ -15,6 +15,7 @@
 //   app/public/models/plant.glb   the same city crowned by its working plants, for the working twin
 //   app/public/sheets/atlas.css   the shared sheet chrome, lifted from chrome.mjs
 //   app/public/manifest.json      one row per sheet + the `extras` rows + the cover
+//   app/public/favicon.svg        the client's logo, the tab's icon (generator/brand.mjs)
 // Read, not written: app/public/thumbs/<id>.webp — generator/thumbs.mjs draws
 // those (the 3D cards' from the built app), and a card with no picture stops
 // the build here.
@@ -28,7 +29,7 @@ import { CITY_INIT_DTS, CITY_META, PLANT_META, cityInitModule, cityMarkup, plant
 import { BRICKS_GLB, BRICKS_INIT_DTS, BRICKS_META, bricksGlb, bricksInitModule, bricksMarkup } from './brick-scene.mjs';
 import { CITY_GLB, PLANT_GLB, cityModel } from './city-glb.mjs';
 import { ICONS_DTS, iconsModule } from './icons.mjs';
-import { BRAND_DTS, brandModule } from './brand.mjs';
+import { BRAND_DTS, brandModule, faviconSvg } from './brand.mjs';
 import { assertLabels, labelsFor } from './labels.mjs';
 import { cityHero } from './sheet7.mjs';
 import { THUMB_DIR, thumbPaths } from './thumb-spec.mjs';
@@ -351,6 +352,7 @@ export function emitApp({ sheets, appendix = [], interactive, appendixInteractiv
   writeFileSync(join(generatedDir, 'icons.d.ts'), ICONS_DTS);
   writeFileSync(join(generatedDir, 'brand.js'), brandModule());
   writeFileSync(join(generatedDir, 'brand.d.ts'), BRAND_DTS);
+  writeFileSync(join(publicDir, 'favicon.svg'), faviconSvg());
   const extras = scenes.map(([meta, refs]) => ({
     id: meta.id,
     title: meta.title,

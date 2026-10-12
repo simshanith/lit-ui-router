@@ -6,7 +6,9 @@
 // logo a link. All three files are the docs site's own, copied under
 // generator/brand/, and ride into the app as data URIs through the generated
 // module, so the prerender, the site and the artifact all carry them with no
-// request.
+// request. The logo is also the site's icon: emit-app.mjs writes it to
+// app/public/favicon.svg beside the docs site's own favicon.ico and a 180px
+// apple-touch-icon.png, both tracked copies.
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -26,6 +28,9 @@ export const brandModule = () =>
   `export const LOGO_URL = ${JSON.stringify(dataUri('lit-ui-router.svg'))};\n` +
   `export const FLAME_URL = ${JSON.stringify(dataUri('lit-flame.svg'))};\n` +
   `export const UIROUTER_URL = ${JSON.stringify(dataUri('ui-router.svg'))};\n`;
+
+/** app/public/favicon.svg: the logo file itself. */
+export const faviconSvg = () => readFileSync(join(HERE, 'brand', 'lit-ui-router.svg'), 'utf8');
 
 /** app/src/generated/brand.d.ts */
 export const BRAND_DTS =
