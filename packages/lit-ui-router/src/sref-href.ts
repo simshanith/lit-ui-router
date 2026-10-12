@@ -7,7 +7,7 @@ import { AsyncDirective } from 'lit/async-directive.js';
 import { getScopedRouter } from './context.js';
 import { UIRouterLit } from './core.js';
 import { warnMissingRouter } from './dev-warn.js';
-import { UIRouterLitElement } from './ui-router.js';
+import { subscribeRouter } from './router-subscription.js';
 import {
   clickBelongsToBrowser,
   sameTarget,
@@ -61,6 +61,9 @@ export class SrefHrefDirective extends AsyncDirective {
 
   /** @internal */
   unsubscribe: (() => void) | undefined;
+
+  /** drops the subscription to a provider that may still replace its router */
+  private _unsubscribeRouter: (() => void) | undefined;
 
   /** @internal */
   constructor(partInfo: PartInfo) {
@@ -152,7 +155,14 @@ export class SrefHrefDirective extends AsyncDirective {
     }
 
     const element = this.element!;
-    this.uiRouter = UIRouterLitElement.seekRouter(element);
+
+    const { router, unsubscribe } = subscribeRouter(
+      element,
+      this.onRouterReplaced,
+    );
+
+    this.uiRouter = router;
+    this._unsubscribeRouter = unsubscribe;
     this._seekedRouter = true;
     this.parentView = UiView.seekParentView(element);
     // SAFETY: a 'click' event is a MouseEvent
@@ -169,6 +179,15 @@ export class SrefHrefDirective extends AsyncDirective {
     this.doRender();
     this._firstUpdated = true;
   }
+
+  /** What a disconnect and reconnect would do, for the router that replaced the one found. */
+  private readonly onRouterReplaced = (router: UIRouterLit): void => {
+    this._unsubscribeRouter = undefined;
+    this.unsubscribe?.();
+    this.uiRouter = router;
+    this.unsubscribe = router.stateRegistry.onStatesChanged(this.doRender);
+    this.doRender();
+  };
 
   /** @internal */
   doRender = (): void => {
@@ -223,6 +242,8 @@ export class SrefHrefDirective extends AsyncDirective {
     this.targetState = null;
     this.unsubscribe?.();
     this.unsubscribe = undefined;
+    this._unsubscribeRouter?.();
+    this._unsubscribeRouter = undefined;
     this._firstUpdated = false;
   }
 

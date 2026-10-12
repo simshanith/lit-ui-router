@@ -13,8 +13,8 @@ import { AsyncDirective } from 'lit/async-directive.js';
 import { getScopedRouter } from './context.js';
 import { UIRouterLit } from './core.js';
 import { warnMissingRouter } from './dev-warn.js';
+import { subscribeRouter } from './router-subscription.js';
 import { resolveAriaCurrent, SrefTargets } from './sref-status.js';
-import { UIRouterLitElement } from './ui-router.js';
 import {
   UI_SREF_TARGET_EVENT,
   UI_SREF_TARGET_REMOVED_EVENT,
@@ -84,6 +84,8 @@ export abstract class SrefStatusDirective<
 
   private _firstUpdated = false;
   private _deregister: deregisterFn[] = [];
+  /** the hooks on the router itself, which a replacement router moves */
+  private _routerDeregister: deregisterFn[] = [];
   /** bumped on disconnect, so a settlement subscribed before it stays quiet */
   private _connection = 0;
 
@@ -174,7 +176,18 @@ export abstract class SrefStatusDirective<
     }
 
     const element = this.element!;
-    this.uiRouter = UIRouterLitElement.seekRouter(element);
+
+    const { router, unsubscribe } = subscribeRouter(
+      element,
+      this.onRouterReplaced,
+    );
+
+    this.uiRouter = router;
+
+    if (unsubscribe) {
+      this._deregister.push(unsubscribe);
+    }
+
     this.parentView = UiView.seekParentView(element);
     this.targets.router = this.uiRouter;
     this.targets.relative = this.parentView?.viewContext?.name;
@@ -202,16 +215,8 @@ export abstract class SrefStatusDirective<
       );
     });
 
-    const router = this.uiRouter;
-
     if (router) {
-      // SAFETY: hook registration returns its deregistration function
-      this._deregister.push(
-        router.transitionService.onStart({}, this.onTransitionStart, {
-          priority: -Infinity,
-        }) as deregisterFn,
-        router.stateRegistry.onStatesChanged(this.onStatesChanged),
-      );
+      this.watch(router);
     } else {
       warnMissingRouter(
         element,
@@ -223,6 +228,32 @@ export abstract class SrefStatusDirective<
     this._firstUpdated = true;
     this.refresh();
   }
+
+  private watch(router: UIRouterLit): void {
+    // SAFETY: hook registration returns its deregistration function
+    this._routerDeregister.push(
+      router.transitionService.onStart({}, this.onTransitionStart, {
+        priority: -Infinity,
+      }) as deregisterFn,
+      router.stateRegistry.onStatesChanged(this.onStatesChanged),
+    );
+  }
+
+  private unwatch(): void {
+    this._connection++;
+    this._routerDeregister.forEach((deregister) => deregister());
+    this._routerDeregister = [];
+  }
+
+  /** What a disconnect and reconnect would do, for the router that replaced the one found. */
+  private readonly onRouterReplaced = (router: UIRouterLit): void => {
+    this.unwatch();
+    this.uiRouter = router;
+    this.targets.router = router;
+    this.targets.rebuild();
+    this.watch(router);
+    this.refresh();
+  };
 
   /** @internal */
   onUiSrefTargetEvent = (event: UiSrefTargetEvent): void => {
@@ -283,7 +314,7 @@ export abstract class SrefStatusDirective<
 
   /** @internal */
   disconnected(): void {
-    this._connection++;
+    this.unwatch();
     this._deregister.forEach((deregister) => deregister());
     this._deregister = [];
     this._firstUpdated = false;
