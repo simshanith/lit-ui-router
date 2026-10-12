@@ -83,10 +83,15 @@
          rail's scale, the Lit flame blurred and brightened under the logo, the
          logo multiplied over it; dark turns the flame's hue, inverts it and
          dims it, and the logo adds light instead. The glow overhangs the logo
-         by a quarter, and the link's name is the logo's alt. The logo is a
-         third of the rail, centred, a third of air either side. */
+         by a quarter, and the link's name is the logo's alt. The head is a
+         column with one gap; the logo is sized from the root font, centred. */
+      .rail-name {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
       .client-mark {
-        --mark: calc(var(--rail-w) / 3);
+        --mark: 3rem;
         --glow-blur: calc(var(--mark) * 0.09);
         --glow-filter: blur(var(--glow-blur)) brightness(2.5);
         --logo-blend: multiply;
@@ -95,8 +100,7 @@
         grid-template-rows: var(--mark);
         /* the glow's overhang stays inside the head */
         padding-block-start: calc(var(--mark) * 0.125);
-        width: fit-content;
-        margin-inline: auto;
+        align-self: center;
       }
       .client-glow,
       .client-logo {
@@ -133,8 +137,7 @@
         font-size: 17px;
         letter-spacing: 0.14em;
         font-weight: 600;
-        margin-block: 5px 0;
-        margin-inline: 0;
+        margin: 0;
       }
       .rail-head h1 a {
         color: inherit;
@@ -327,15 +330,15 @@
         }
         /* the bar is 48px: the mark shrinks to sit beside the name */
         .rail-name {
-          display: flex;
+          flex-direction: row;
           align-items: center;
-          gap: 10px;
+          gap: 0.5rem;
           min-width: 0;
         }
         .client-mark {
-          --mark: 28px;
+          --mark: 1.75rem;
           padding: 0;
-          margin-inline: 0;
+          align-self: auto;
         }
         .rail-head h1 {
           font-size: 15px;
