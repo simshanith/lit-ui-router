@@ -114,6 +114,8 @@ A back or forward traversal starts a router transition only once the browser has
 router.plugin(navigationLocationPlugin, { interceptTraverse: true });
 ```
 
+The sample app passes `interceptTraverse: true` alongside its `intercept` in [`router.config.ts`](https://github.com/simshanith/lit-ui-router/blob/main/apps/sample-app-shared/src/router.config.ts).
+
 Pass a function instead of `true` to return the `NavigationInterceptOptions` for each traversal. The function runs at `navigate` time, before the router transition exists, so unlike `intercept` it cannot read the destination state's `data`. Its `handler` runs after the router transition settles, which is the place to wait for views that render later, and `focusReset` defaults to `'manual'` as it does for `intercept`. Firefox, and WebKit in an iframe, restore scroll against the last layout, so the plugin forces a layout once `handler` settles. A navigation that supersedes the traversal ends the wait.
 
 In WebKit, a traversal that supersedes another traversal (back, then back again) commits, but its `navigation.transition.finished` rejects with an `AbortError`; the router still ends on the state of the URL, so code that awaits `finished` should not treat that rejection as a failed navigation.

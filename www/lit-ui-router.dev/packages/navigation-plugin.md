@@ -183,6 +183,10 @@ handler that waits for the router transition, including its redirects, so
 router.plugin(navigationLocationPlugin, { interceptTraverse: true });
 ```
 
+The <a href="/app" target="_self">sample app</a> passes `interceptTraverse: true`
+alongside its `intercept` in
+[`router.config.ts`](https://github.com/simshanith/lit-ui-router/blob/main/apps/sample-app-shared/src/router.config.ts).
+
 Pass a function instead of `true` to return the `NavigationInterceptOptions` for
 each traversal. The function runs at `navigate` time, before the router
 transition exists, so unlike `intercept` it cannot read the destination state's
