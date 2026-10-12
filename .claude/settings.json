@@ -7,6 +7,7 @@
       "Bash(turbo run format:check:*)",
       "Bash(turbo run check:*)",
       "Bash(turbo query:*)",
+      "Bash(mise exec -- node www/atlas.lit-ui-router.dev/generator/ship.mjs:*)",
       "Bash(mise run lint_:*)",
       "Bash(mise tasks:*)",
       "Bash(mise ls:*)",
@@ -21,6 +22,20 @@
       "Bash(pnpm --version)",
       "Bash(npm ls:*)",
       "Bash(npm pack --dry-run:*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ -f www/atlas.lit-ui-router.dev/generator/ship-guard.mjs ] && node www/atlas.lit-ui-router.dev/generator/ship-guard.mjs || true",
+            "timeout": 10
+          }
+        ]
+      }
     ]
   }
 }
