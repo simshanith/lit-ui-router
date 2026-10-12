@@ -125,7 +125,7 @@ async function goto(page: Page, url: string): Promise<void> {
 
 /**
  * Lazy same-origin embeds load only on scroll; axe scans a frame only once it has loaded.
- * Not networkidle: Playwright can drop it for good when an embed navigates after the page idled.
+ * Not networkidle: Playwright never re-fires it once a main-frame request finishes after it and an embed then navigates.
  */
 async function loadEmbeds(page: Page, requests: Requests): Promise<void> {
   await page.evaluate(() => {
