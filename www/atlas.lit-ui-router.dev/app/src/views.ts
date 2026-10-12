@@ -5,7 +5,7 @@
  * standalone pages.
  */
 import type { UIRouter } from '@uirouter/core';
-import { LitElement, ReactiveElement, html, noChange, nothing } from 'lit';
+import { LitElement, ReactiveElement, html, noChange, nothing, svg } from 'lit';
 import type { PropertyValues, TemplateResult } from 'lit';
 import { live } from 'lit/directives/live.js';
 import { ref } from 'lit/directives/ref.js';
@@ -628,12 +628,35 @@ const restoreBand = (element?: Element): void => {
 
 const railGroups = (rail: HTMLElement): HTMLDetailsElement[] => [...rail.querySelectorAll<HTMLDetailsElement>('details.rail-group')];
 
-/** The control reads COLLAPSE ALL while every group is open, EXPAND ALL otherwise. */
+/** The control folds while every group is open and unfolds otherwise; `data-all` picks the glyph. */
 const labelAll = (button: HTMLButtonElement): void => {
   const rail = button.closest('nav.rail');
   if (!rail) return;
-  button.textContent = railGroups(rail as HTMLElement).every((g) => g.open) ? 'COLLAPSE ALL' : 'EXPAND ALL';
+  const allOpen = railGroups(rail as HTMLElement).every((g) => g.open);
+  const label = allOpen ? 'Collapse all' : 'Expand all';
+  button.dataset.all = allOpen ? 'open' : 'shut';
+  button.setAttribute('aria-label', label);
+  button.title = label;
 };
+
+// Lucide chevrons-up-down and chevrons-down-up (ISC), in the house's 16-grid idiom.
+const allGlyph = (glyph: 'expand' | 'collapse', paths: TemplateResult): TemplateResult => html`
+  <svg
+    class="rail-all-glyph"
+    data-glyph=${glyph}
+    viewBox="0 0 16 16"
+    fill="none"
+    stroke="currentColor"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    aria-hidden="true"
+  >
+    <g transform="scale(.666667)" stroke-width="1.95">${paths}</g>
+  </svg>
+`;
+
+const UNFOLD = svg`<path d="m7 15 5 5 5-5" /><path d="m7 9 5-5 5 5" />`;
+const FOLD = svg`<path d="m7 20 5-5 5 5" /><path d="m7 4 5 5 5-5" />`;
 
 // Opens every group when any is shut, else shuts them all; the choice is remembered per group.
 const toggleAll = (event: Event): void => {
@@ -666,14 +689,13 @@ const labelAllRef = (element?: Element): void => {
 
 /** One altitude band inside a group: a flat head, then its plates. */
 const railBand = (band: Band): TemplateResult => html`
-  <p class="rail-band"><span class="n">${band.n}</span><span class="t">${band.label}</span></p>
+  <p class="rail-band">${band.label}</p>
   <div class="rail-links">${band.rows.map(railEntry)}</div>
 `;
 
 /** A group of bands as one native disclosure: the set, then the appendix. */
 interface Group {
   key: string;
-  n: string;
   label: string;
   bands: Band[];
 }
@@ -681,9 +703,8 @@ interface Group {
 const groupsOf = (railBands: Band[]): Group[] => {
   const set = railBands.filter((band) => band.key !== 'appendix');
   const appendix = railBands.filter((band) => band.key === 'appendix');
-  const last = set.at(-1)?.n.split('–').at(-1) ?? '';
-  const groups: Group[] = set.length > 0 ? [{ key: 'set', n: `1–${last}`, label: 'SHEETS', bands: set }] : [];
-  return appendix.length > 0 ? [...groups, { key: 'appendix', n: 'A', label: 'APPENDIX', bands: appendix }] : groups;
+  const groups: Group[] = set.length > 0 ? [{ key: 'set', label: 'SHEETS', bands: set }] : [];
+  return appendix.length > 0 ? [...groups, { key: 'appendix', label: 'APPENDIX', bands: appendix }] : groups;
 };
 
 /**
@@ -698,7 +719,7 @@ const railGroup = (group: Group, here: Here): TemplateResult => html`
     ${ref(restoreBand)}
     @toggle=${relabelAll}
   >
-    <summary @click=${rememberBand}><span class="n">${group.n}</span><span class="t">${group.label}</span></summary>
+    <summary @click=${rememberBand}><span class="t">${group.label}</span></summary>
     ${group.bands.length === 1 ? html`<div class="rail-links">${group.bands[0]?.rows.map(railEntry)}</div>` : group.bands.map(railBand)}
   </details>
 `;
@@ -746,10 +767,21 @@ function rail(manifest: Manifest | undefined, here: Here): TemplateResult {
             >ABOUT</a
           >
         </div>
-        <p class="rail-sec">
-          <span>SHEETS — ASCENT ORDER</span>
-          <button type="button" class="rail-all" @click=${toggleAll} ${ref(labelAllRef)}>EXPAND ALL</button>
-        </p>
+        <!-- a zero-height sticky dock: the control rides the scroll over the list -->
+        <div class="rail-dock">
+          <button
+            type="button"
+            class="rail-all"
+            data-all="shut"
+            aria-label="Expand all"
+            title="Expand all"
+            @click=${toggleAll}
+            ${ref(labelAllRef)}
+          >
+            ${allGlyph('expand', UNFOLD)}${allGlyph('collapse', FOLD)}
+          </button>
+        </div>
+        <p class="rail-sec">ASCENT ORDER</p>
         ${groupsOf(railBands).map((group) => railGroup(group, here))}
         <!-- The type specimen is a bench, not a plate: reachable at /specimen, off the rail. -->
       </div>

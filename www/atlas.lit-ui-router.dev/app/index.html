@@ -231,30 +231,70 @@
         color: var(--ink);
       }
       .rail-sec {
-        display: flex;
-        justify-content: space-between;
-        align-items: baseline;
-        gap: 8px;
         font-family: var(--data);
         font-size: 10px;
         letter-spacing: 0.14em;
         color: var(--ink-faint);
         padding-block: 14px 5px;
-        padding-inline: 19px 16px;
+        /* the end padding keeps the line clear of the docked control */
+        padding-inline: 19px 46px;
       }
-      /* the one control over the groups: text, in the section's own voice */
+      /* The dock is zero-height and sticky, so the control rests on the
+         section line and then rides the rail's scroll; the paper behind the
+         glyph keeps the list from showing through. */
+      .rail-dock {
+        position: sticky;
+        inset-block-start: 0;
+        z-index: 1;
+        block-size: 0;
+        display: flex;
+        justify-content: end;
+        /* the glyph centres over the group chevrons; the focus ring still fits */
+        padding-inline-end: 7px;
+      }
       .rail-all {
         all: unset;
+        box-sizing: border-box;
+        position: relative;
+        flex: none;
+        display: grid;
+        place-items: center;
+        inline-size: 28px;
+        block-size: 28px;
+        margin-block-start: 6px;
+        font-size: 11px;
         cursor: pointer;
-        font: inherit;
-        letter-spacing: inherit;
         color: var(--ink-soft);
-        white-space: nowrap;
+        background: var(--paper);
+        border: 1px solid transparent;
+        /* a paper halo so the stuck glyph clears the list it floats over */
+        box-shadow: 0 0 0 6px var(--paper);
+      }
+      /* the hit area grows up and sideways only, so the first summary stays clear */
+      .rail-all::after {
+        content: '';
+        position: absolute;
+        inset: -8px -8px 0;
+      }
+      .rail-all-glyph {
+        grid-area: 1 / 1;
+        block-size: 1.5em;
+        inline-size: auto;
+        aspect-ratio: 1;
+      }
+      .rail-all[data-all='shut'] [data-glyph='collapse'],
+      .rail-all[data-all='open'] [data-glyph='expand'] {
+        display: none;
       }
       @media (hover: hover) and (pointer: fine) {
         .rail-all:hover {
           color: var(--ink);
+          border-color: var(--ink-faint);
         }
+      }
+      .rail-all:active {
+        color: var(--ink);
+        background: var(--paper-2);
       }
       .rail-all:focus-visible {
         outline: 2px solid var(--accent);
@@ -292,6 +332,16 @@
         font-weight: 600;
       }
       /* ---- the rail's groups: the set and the appendix, one native disclosure each ---- */
+      /* Group and band heads share the sheet-title face, size and weight; the
+         group sets in the ink, the band in the soft ink, and that is the whole
+         difference. They start on the entries' edge. */
+      .rail-group > summary,
+      .rail-band {
+        font-family: var(--title);
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+      }
       .rail-group > summary {
         display: flex;
         gap: 9px;
@@ -299,10 +349,7 @@
         list-style: none;
         cursor: pointer;
         user-select: none;
-        font-family: var(--data);
-        font-size: 11px;
-        letter-spacing: 0.06em;
-        color: var(--ink-soft);
+        color: var(--ink);
         padding-block: 8px 7px;
         padding-inline: 16px;
         border-inline-start: 3px solid transparent;
@@ -313,26 +360,14 @@
       @media (hover: hover) and (pointer: fine) {
         .rail-group > summary:hover {
           background: var(--paper-2);
-          color: var(--ink);
         }
       }
       .rail-group > summary:focus-visible {
         outline: 2px solid var(--accent);
         outline-offset: -2px;
       }
-      .rail-group > summary .n {
-        min-width: 34px;
-        color: var(--accent);
-        font-weight: 600;
-        font-variant-numeric: tabular-nums;
-      }
-      /* the same face as the entries beneath, so the rail reads in one voice */
       .rail-group > summary .t {
         flex: 1;
-        font-family: var(--title);
-        font-size: 12px;
-        font-weight: 600;
-        letter-spacing: 0.04em;
       }
       /* the caret: a drawn chevron, right when shut, down when open */
       .rail-group > summary::after {
@@ -345,28 +380,14 @@
         border-bottom: 1.5px solid currentColor;
         transform: rotate(-45deg);
       }
-      .rail-group[open] > summary {
-        color: var(--ink);
-      }
       .rail-group[open] > summary::after {
         transform: translateY(-2px) rotate(45deg);
       }
       /* an altitude band inside a group: a flat head in the soft ink, its plates flush beneath */
       .rail-band {
-        display: flex;
-        gap: 9px;
-        align-items: baseline;
-        font-family: var(--data);
-        font-size: 10px;
-        letter-spacing: 0.1em;
         color: var(--ink-soft);
         padding-block: 10px 3px;
         padding-inline: 19px 16px;
-      }
-      .rail-band .n {
-        min-width: 34px;
-        font-weight: 600;
-        font-variant-numeric: tabular-nums;
       }
       .rail-group > .rail-links:last-child {
         margin-block-end: 6px;
@@ -474,11 +495,14 @@
         .rail-top,
         .rail-sec,
         .rail-links .t,
-        .rail-band .t,
+        .rail-band,
         .rail-all,
-        .rail-group > summary .t,
-        .rail-group > summary::after {
+        .rail-group > summary .t {
           opacity: 0;
+        }
+        /* a titleless group head keeps its chevron, moved into the number column */
+        .rail-group > summary::after {
+          order: -1;
         }
         .rail-head {
           padding-inline-start: 14px;
@@ -499,11 +523,13 @@
         .rail:focus-within .rail-top,
         .rail:focus-within .rail-sec,
         .rail:focus-within .rail-links .t,
-        .rail:focus-within .rail-band .t,
+        .rail:focus-within .rail-band,
         .rail:focus-within .rail-all,
-        .rail:focus-within .rail-group > summary .t,
-        .rail:focus-within .rail-group > summary::after {
+        .rail:focus-within .rail-group > summary .t {
           opacity: 1;
+        }
+        .rail:focus-within .rail-group > summary::after {
+          order: 0;
         }
         @media (hover: hover) and (pointer: fine) {
           .rail:hover {
@@ -515,11 +541,13 @@
           .rail:hover .rail-top,
           .rail:hover .rail-sec,
           .rail:hover .rail-links .t,
-          .rail:hover .rail-band .t,
+          .rail:hover .rail-band,
           .rail:hover .rail-all,
-          .rail:hover .rail-group > summary .t,
-          .rail:hover .rail-group > summary::after {
+          .rail:hover .rail-group > summary .t {
             opacity: 1;
+          }
+          .rail:hover .rail-group > summary::after {
+            order: 0;
           }
         }
         @media (prefers-reduced-motion: no-preference) {
@@ -532,6 +560,7 @@
           .rail-top,
           .rail-sec,
           .rail-links .t,
+          .rail-band,
           .rail-group > summary .t {
             transition: opacity 120ms ease;
           }
@@ -1531,6 +1560,7 @@
       .prefs-toggle:active,
       .pref-switch:active:enabled,
       .rail-toggle:active,
+      .rail-all:active,
       .client-mark:active,
       .client-term:active,
       .kvbox button:active,
@@ -1548,6 +1578,12 @@
         .kvbox button,
         .keyindex .kv {
           transition: transform 160ms var(--ease-out, ease-out);
+        }
+        /* the rail's control also fades with the clipped rail */
+        .rail-all {
+          transition:
+            transform 160ms var(--ease-out, ease-out),
+            opacity 120ms ease;
         }
       }
     </style>
