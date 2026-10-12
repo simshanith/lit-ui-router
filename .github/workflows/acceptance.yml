@@ -9,6 +9,8 @@ on:
   push:
     branches:
       - main
+  # TEMPORARY: one pre-merge run on #1172; reverted before merge.
+  pull_request:
   # Runs a suite against any ref before merge; ci-main/ branches don't run it.
   workflow_dispatch:
 
