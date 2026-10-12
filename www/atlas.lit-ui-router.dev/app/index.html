@@ -84,11 +84,34 @@
          logo multiplied over it; dark turns the flame's hue, inverts it and
          dims it, and the logo adds light instead. The glow overhangs the logo
          by a quarter, and the link's name is the logo's alt. The head is a
-         column with one gap; the logo is sized from the root font, centred. */
+         column with one gap, and its first row spells the client out in the
+         docs site's own marks, lit-ui-router.dev = ui-router + lit, each a
+         link; the marks are sized from the root font and start-aligned, the
+         operators set in the ink so the row reads as an equation, and the
+         head's own padding takes the glow's overhang. */
       .rail-name {
         display: flex;
         flex-direction: column;
+        align-items: start;
         gap: 1rem;
+      }
+      .client-eq {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-family: var(--data);
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--ink);
+      }
+      .client-term {
+        display: block;
+        flex: none;
+      }
+      .client-term img {
+        block-size: 1.5rem;
+        inline-size: auto;
+        display: block;
       }
       .client-mark {
         --mark: 3rem;
@@ -98,9 +121,7 @@
         display: grid;
         grid-template-columns: var(--mark);
         grid-template-rows: var(--mark);
-        /* the glow's overhang stays inside the head */
-        padding-block-start: calc(var(--mark) * 0.125);
-        align-self: center;
+        flex: none;
       }
       .client-glow,
       .client-logo {
@@ -110,14 +131,14 @@
         place-self: center;
       }
       .client-glow {
-        width: calc(var(--mark) * 1.25);
-        max-width: none;
+        inline-size: calc(var(--mark) * 1.25);
+        max-inline-size: none;
         object-fit: contain;
         border-radius: 50%;
         filter: var(--glow-filter);
       }
       .client-logo {
-        width: var(--mark);
+        inline-size: var(--mark);
         mix-blend-mode: var(--logo-blend);
         /* the filtered glow is a stacking context; a static sibling paints under it in Firefox and WebKit */
         z-index: 1;
@@ -127,14 +148,21 @@
           --glow-filter: blur(var(--glow-blur)) hue-rotate(180deg) invert(1) brightness(0.6);
           --logo-blend: plus-lighter;
         }
+        :root:not([data-theme='light']) .client-term .flame {
+          filter: brightness(1.6);
+        }
       }
       :root[data-theme='dark'] .client-mark {
         --glow-filter: blur(var(--glow-blur)) hue-rotate(180deg) invert(1) brightness(0.6);
         --logo-blend: plus-lighter;
       }
+      :root[data-theme='dark'] .client-term .flame {
+        filter: brightness(1.6);
+      }
       .rail-head h1 {
         font-family: var(--display);
         font-size: 17px;
+        line-height: 1.3;
         letter-spacing: 0.14em;
         font-weight: 600;
         margin: 0;
@@ -143,8 +171,9 @@
         color: inherit;
         text-decoration: none;
       }
-      /* the ≤900 disclosure: a checkbox the label toggles, no script needed */
+      /* the ≤900 disclosure: a checkbox the label toggles, no script needed; it leaves the tab order with its label */
       .rail-open {
+        display: none;
         position: absolute;
         width: 1px;
         height: 1px;
@@ -201,13 +230,14 @@
         letter-spacing: 0.14em;
         color: var(--ink-faint);
         padding-block: 14px 5px;
-        padding-inline: 16px;
+        padding-inline: 19px 16px;
       }
-      /* INDEX · ABOUT — one small line, not two sheet-sized entries */
+      /* INDEX · ABOUT — one small line, not two sheet-sized entries; it starts on the entries' text edge */
       .rail-top {
         display: flex;
         gap: 0;
-        padding: 0 16px;
+        padding-block: 0;
+        padding-inline: 19px 16px;
       }
       .rail-top a {
         font-family: var(--data);
@@ -324,9 +354,12 @@
           justify-content: space-between;
           gap: 12px;
           height: 48px;
-          padding: 0 14px;
+          padding: 0 16px;
           margin: 0;
           border-block-end: none;
+        }
+        .rail-open {
+          display: block;
         }
         /* the bar is 48px: the mark shrinks to sit beside the name */
         .rail-name {
@@ -337,8 +370,11 @@
         }
         .client-mark {
           --mark: 1.75rem;
-          padding: 0;
-          align-self: auto;
+        }
+        /* the bar keeps the mark alone */
+        .client-eq .op,
+        .client-term {
+          display: none;
         }
         .rail-head h1 {
           font-size: 15px;
@@ -393,14 +429,22 @@
         .rail-body {
           width: var(--rail-w);
         }
-        /* clipped, not removed: the lettering fades, the links stay focusable */
-        .rail-head,
+        /* clipped, not removed: the lettering fades, the links stay focusable; the mark heads the strip */
+        .rail-head h1,
+        .client-eq .op,
+        .client-term,
         .rail-top,
         .rail-sec,
         .rail-links .t,
         .rail-band > summary .t,
         .rail-band > summary::after {
           opacity: 0;
+        }
+        .rail-head {
+          padding-inline-start: 14px;
+        }
+        .client-mark {
+          --mark: 1.75rem;
         }
         /* a band steps in less here, so its widest number (7B·3D) clears the clip */
         .rail-band > .rail-links {
@@ -412,7 +456,9 @@
         .rail:focus-within {
           width: var(--rail-w);
         }
-        .rail:focus-within .rail-head,
+        .rail:focus-within .rail-head h1,
+        .rail:focus-within .client-eq .op,
+        .rail:focus-within .client-term,
         .rail:focus-within .rail-top,
         .rail:focus-within .rail-sec,
         .rail:focus-within .rail-links .t,
@@ -424,7 +470,9 @@
           .rail:hover {
             width: var(--rail-w);
           }
-          .rail:hover .rail-head,
+          .rail:hover .rail-head h1,
+          .rail:hover .client-eq .op,
+          .rail:hover .client-term,
           .rail:hover .rail-top,
           .rail:hover .rail-sec,
           .rail:hover .rail-links .t,
@@ -437,7 +485,9 @@
           .rail {
             transition: width 120ms ease;
           }
-          .rail-head,
+          .rail-head h1,
+          .client-eq .op,
+          .client-term,
           .rail-top,
           .rail-sec,
           .rail-links .t,
@@ -1440,6 +1490,8 @@
       .prefs-toggle:active,
       .pref-switch:active:enabled,
       .rail-toggle:active,
+      .client-mark:active,
+      .client-term:active,
       .kvbox button:active,
       .keyindex .kv:active {
         transform: scale(0.97);
@@ -1450,6 +1502,8 @@
         .prefs-toggle,
         .pref-switch,
         .rail-toggle,
+        .client-mark,
+        .client-term,
         .kvbox button,
         .keyindex .kv {
           transition: transform 160ms var(--ease-out, ease-out);

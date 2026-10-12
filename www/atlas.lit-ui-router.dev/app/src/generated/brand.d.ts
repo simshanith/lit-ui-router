@@ -3,3 +3,5 @@
 export declare const LOGO_URL: string;
 /** The Lit flame the logo glows with, as a data URI. */
 export declare const FLAME_URL: string;
+/** The UI-Router mark, as a data URI. */
+export declare const UIROUTER_URL: string;

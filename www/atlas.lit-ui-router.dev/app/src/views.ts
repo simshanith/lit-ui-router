@@ -50,7 +50,7 @@ import {
 import { loadCytoscape, runScripts } from './fragment.ts';
 import type { FocusDetail } from './fragment.ts';
 import { ICON_SPRITE, iconId } from './generated/icons.js';
-import { FLAME_URL, LOGO_URL } from './generated/brand.js';
+import { FLAME_URL, LOGO_URL, UIROUTER_URL } from './generated/brand.js';
 import { initCity } from './generated/city-init.js';
 import type { CityScene } from './generated/city-init.js';
 import { initBricks } from './generated/bricks-init.js';
@@ -651,11 +651,21 @@ function rail(manifest: Manifest | undefined, here: Here): TemplateResult {
       <input type="checkbox" id="rail-open" class="rail-open" aria-label="show the sheets" />
       <div class="rail-head">
         <div class="rail-name">
-          <!-- THE CLIENT'S MARK: the docs site's home hero, the logo over the Lit flame it glows with -->
-          <a class="client-mark" href=${DOCS} target="_blank" rel="noopener">
-            <img class="client-glow" src=${FLAME_URL} alt="" aria-hidden="true" />
-            <img class="client-logo" src=${LOGO_URL} alt="lit-ui-router.dev" />
-          </a>
+          <!-- THE CLIENT, SPELLED OUT: lit-ui-router.dev = ui-router + lit, in the docs site's own marks -->
+          <div class="client-eq" role="group" aria-label="lit-ui-router.dev equals ui-router plus lit">
+            <a class="client-mark" href=${DOCS} title="lit-ui-router.dev" target="_blank" rel="noopener">
+              <img class="client-glow" src=${FLAME_URL} alt="" aria-hidden="true" />
+              <img class="client-logo" src=${LOGO_URL} alt="lit-ui-router.dev" />
+            </a>
+            <span class="op">=</span>
+            <a class="client-term" href="https://ui-router.github.io/" title="UI-Router" target="_blank" rel="noopener">
+              <img src=${UIROUTER_URL} alt="UI-Router" />
+            </a>
+            <span class="op">+</span>
+            <a class="client-term" href="https://lit.dev" title="Lit" target="_blank" rel="noopener">
+              <img class="flame" src=${FLAME_URL} alt="Lit" />
+            </a>
+          </div>
           <h1><a href=${srefHref('atlas.gallery')}>THE ALTITUDE ATLAS</a></h1>
         </div>
         <label class="rail-toggle" for="rail-open">SHEETS ▾</label>
