@@ -1,25 +1,26 @@
-# Post-merge acceptance checks on main: slower suites against the built site,
-# off the PR lane and outside build_and_test, so a red check never holds
-# tag_push. One job per suite, each named `acceptance (<suite>)`; the job's own
-# check run is the signal (README badges read it via shields' check-runs
-# endpoint). Release steps decide whether to read it; nothing here gates.
+# Acceptance checks: slower suites against the built site, outside build_and_test,
+# so a red check never holds tag_push. Advisory on PRs (not a required check);
+# on main, the commit's verdict. One job per suite, each named
+# `acceptance (<suite>)`; the job's own check run is the signal (README badges
+# read main's via shields' check-runs endpoint). Nothing here gates.
 name: Acceptance
 
 on:
   push:
     branches:
       - main
-  # Runs a suite against any ref before merge; ci-main/ branches don't run it.
+  pull_request:
+  # Runs a suite against any ref; ci-main/ branches don't run it.
   workflow_dispatch:
 
 # Standard husky CI setup: skip the prepare-script git-hook install on CI installs.
 env:
   HUSKY: 0
 
-# Per commit: a shared group keeps one pending run and drops the rest, and every
-# main commit needs its own verdict. A repeat dispatch of a branch SHA cancels.
+# Every main commit needs its own verdict, so main groups per commit; other refs
+# share one group and cancel superseded runs.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.sha }}
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.ref == 'refs/heads/main' && github.sha || 'latest' }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:

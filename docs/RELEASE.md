@@ -193,13 +193,13 @@ back to `latest`, and the run names the missing tag.
 
 ### 6. Acceptance (`acceptance.yml`)
 
-**Triggers:** Pushes to `main`; manual dispatch against any ref
+**Triggers:** Pull requests; pushes to `main`; manual dispatch against any ref
 
 [Actions ▸ Acceptance ▸ **Run workflow**](https://github.com/simshanith/lit-ui-router/actions/workflows/acceptance.yml)
 
-Slower suites over the built site that run after merge, off the PR lane. Each
-suite is one job and reports one check run on the commit, named
-`acceptance (<suite>)`:
+Slower suites over the built site, on runners of their own outside
+`build_and_test`. On a PR they are advisory, not required checks. Each suite is
+one job and reports one check run on the commit, named `acceptance (<suite>)`:
 
 - `acceptance (a11y)`: the axe pass (`mise run test_e2e a11y`), described in the
   [e2e README](../apps/sample-app-lit-e2e/README.md).
