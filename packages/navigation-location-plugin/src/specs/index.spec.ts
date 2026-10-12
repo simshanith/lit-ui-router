@@ -217,6 +217,71 @@ describe.skipIf(!hasNavigationAPI)(
         plugin.dispose?.(router);
       }
     });
+
+    it.each([
+      ['keeps focus where it was by default', undefined, 'link'],
+      [
+        'resets focus to body when the option asks for it',
+        'after-transition',
+        'body',
+      ],
+    ] as const)('%s', async (_, focusReset, expected) => {
+      service?.dispose(router);
+      service = null;
+      const link = document.createElement('a');
+      link.href = '#';
+      document.body.append(link);
+
+      const plugin = navigationLocationPlugin(
+        router,
+        focusReset ? { intercept: () => ({ focusReset }) } : {},
+      );
+
+      try {
+        link.focus();
+        expect(document.activeElement).toBe(link);
+
+        plugin.service.url('/focus-checked');
+        await window.navigation.transition?.finished;
+
+        expect(document.activeElement).toBe(
+          expected === 'link' ? link : document.body,
+        );
+      } finally {
+        plugin.dispose?.(router);
+        link.remove();
+      }
+    });
+
+    it.each([
+      ['scrolls to the top by default', undefined, 0],
+      ['leaves scroll alone when the option asks for it', 'manual', 500],
+    ] as const)('%s', async (_, scroll, expected) => {
+      service?.dispose(router);
+      service = null;
+      const spacer = document.createElement('div');
+      spacer.style.height = '5000px';
+      document.body.append(spacer);
+
+      const plugin = navigationLocationPlugin(
+        router,
+        scroll ? { intercept: () => ({ scroll }) } : {},
+      );
+
+      try {
+        window.scrollTo(0, 500);
+        expect(window.scrollY).toBe(500);
+
+        plugin.service.url('/scroll-checked');
+        await window.navigation.transition?.finished;
+
+        expect(window.scrollY).toBe(expected);
+      } finally {
+        plugin.dispose?.(router);
+        spacer.remove();
+        window.scrollTo(0, 0);
+      }
+    });
   },
 );
 

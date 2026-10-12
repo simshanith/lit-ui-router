@@ -58,8 +58,6 @@ const locationPluginConfig = {
 
           return Promise.resolve();
         },
-        // the default resets focus to <body>; routeFocus.hook places it
-        focusReset: 'manual',
       }),
     },
   },
