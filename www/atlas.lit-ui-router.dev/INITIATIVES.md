@@ -515,6 +515,34 @@ sitting); order is dependency order.
   gz; nm 173,820 lines / 41,155 d.ts; mass3b 13,307 hashes over 235 real tasks and 3,029 command
   sloc; the ci graph 864 / 235 / 3,024 edges; steam 643 commits; weather 448 dated files; 7A 11,937
   of 19,307 metered sloc lit over 25 members.
+- 2026-10-11 — THE SIXTEENTH REFRESH, at `origin/main` @ bd10638a (commit 2026-10-10), all 18 plates
+  re-run at the one ref: one commit past the fifteenth, #1196, which blends the docs site's hero
+  logo in every browser — 2 files, `www/lit-ui-router.dev/.vitepress/theme/custom.css` and
+  `index.ts`. NO member was born, no checklist table took a row, and the yard reads `orphans 0`. The
+  registry is unmoved under `latest` and no other tag; `census-npm.mjs` filed 0 leaf changes. NO
+  PROBE NEEDED A HAND, and no guard threw: the loop's 52 cites hold, 0 moved; `census-mass3b.mjs`
+  printed its same three `check:dev-split` DRIFT lines, `census-shipped.mjs` no unclassified file,
+  and `census-shadow.mjs` its same two FAIL lines. TEN PLATES RE-FILED WITHOUT A FIGURE MOVING —
+  bricks, bundle, couplings, doors, handoff, loop, mass3b, nm, plate and yard. WHAT MOVED: the docs
+  member, city 29,023 sloc (was 29,029) and docs 751 (was 757), 7A's extent 12,509 of 20,039; steam
+  597 (was 596), the first count on the midnight-anchored window, and `git rev-list` from
+  2026-07-12T00:00Z agrees at both refs; weather 2,434 touches; shipped 32,024,161 raw / 5,019,989
+  gz; survey-self at www/atlas @ ea081707, 268 tracked, 100 files / 20,405 sloc, so A3 reads 70%
+  (was 69%). THE UPSTREAM PLATE TOOK THE BROWSER BUGS: 81 consignments to 33 works (was 59 to 30),
+  21 of them Bugzilla reports, 14 sent, 67 watched, 76 tracked; the north bank fills its fourth and
+  last row. WEBKIT HIDES ITS REPORTERS' ADDRESSES: its REST answers an anonymous read with the
+  address's local part, so `census-upstream.mjs` matches a bare login against the committers' local
+  parts, and WebKit #327109, filed by the home repo's owner, reads sent beside the two Firefox
+  reports filed the same day. THE FRAME AUDIT read 0 escapes and 0 hits over 1 px, text-on-text 82
+  across 23 plates, sheet 14 included at 0 / 0 / 0, per plate identical to the fifteenth. Thumbs:
+  all 29 plates in both themes, 3,694,918 bytes. The app prerenders 33 pages plus the 404 with 26
+  redirects, 34/34 renders scoped; the 84 scene checks hold. The T3 chain took 4 min 03 s. THE
+  NUMBERS: city 338 src files / 29,023 sloc and 162 spec / 28,535; yard 298 / 24,010 massed; doors
+  182,512 min / 65,108 gz; the bundle 124,625 gz in 17 chunks; the deploy 898 files / 5,019,989 gz;
+  nm 174,501 lines / 41,359 d.ts; mass3b 14,023 hashes over 237 real tasks and 3,033 command sloc;
+  the ci graph 885 / 237 / 3,208 edges (deepest chain 15); couplings 23 contracts, 3 optional; steam
+  597 commits; weather 500 dated files; 7A 12,509 of 20,039 metered sloc lit over 26 members;
+  upstream 81 consignments to 33 works, 14 sent, 67 watched, 76 tracked.
 - 2026-10-10 — THE FIFTEENTH REFRESH, at `origin/main` @ 76ccefc0 (commit 2026-10-10), all 18 plates
   re-run at the one ref: one commit past the fourteenth, #1184, which bumped the examples to
   `lit-ui-router` ^1.16.3 and the adapter and plugin patches — 14 files, all

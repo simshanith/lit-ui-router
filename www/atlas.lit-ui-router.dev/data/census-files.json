@@ -1,10 +1,10 @@
 {
   "ref": "origin/main",
-  "sha": "76ccefc0",
-  "commitDate": "2026-10-10T12:45:38-07:00",
-  "generatedAtTime": "2026-10-10T20:53:01.194Z",
+  "sha": "bd10638a",
+  "commitDate": "2026-10-10T16:52:14-07:00",
+  "generatedAtTime": "2026-10-12T03:45:28.943Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-scc.mjs",
-  "used": "git archive origin/main @ 76ccefc0",
+  "used": "git archive origin/main @ bd10638a",
   "wasAssociatedWith": [
     "scc 4.0.0 (mise x aqua:boyter/scc)",
     "git"
@@ -919,8 +919,8 @@
     {"path":"www/lit-ui-router.dev/.vitepress/theme/components/examples.ts","lang":"TypeScript","lines":40,"blank":9,"comment":4,"code":27},
     {"path":"www/lit-ui-router.dev/.vitepress/theme/components/frameworks.ts","lang":"TypeScript","lines":162,"blank":7,"comment":9,"code":146},
     {"path":"www/lit-ui-router.dev/.vitepress/theme/components/webcontainers.ts","lang":"TypeScript","lines":17,"blank":2,"comment":6,"code":9},
-    {"path":"www/lit-ui-router.dev/.vitepress/theme/custom.css","lang":"CSS","lines":212,"blank":33,"comment":14,"code":165},
-    {"path":"www/lit-ui-router.dev/.vitepress/theme/index.ts","lang":"TypeScript","lines":32,"blank":3,"comment":1,"code":28},
+    {"path":"www/lit-ui-router.dev/.vitepress/theme/custom.css","lang":"CSS","lines":213,"blank":33,"comment":15,"code":165},
+    {"path":"www/lit-ui-router.dev/.vitepress/theme/index.ts","lang":"TypeScript","lines":24,"blank":1,"comment":1,"code":22},
     {"path":"www/lit-ui-router.dev/.vitepress/vite.config.ts","lang":"TypeScript","lines":191,"blank":7,"comment":49,"code":135},
     {"path":"www/lit-ui-router.dev/api/index.md","lang":"Markdown","lines":348,"blank":83,"comment":0,"code":265},
     {"path":"www/lit-ui-router.dev/dev-port.ts","lang":"TypeScript","lines":21,"blank":4,"comment":5,"code":12},

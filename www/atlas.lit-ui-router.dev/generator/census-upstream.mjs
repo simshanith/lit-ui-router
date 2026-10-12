@@ -87,6 +87,9 @@ const COMMITS = git('log', REF, '--format=%H%x1f%cI%x1f%an <%ae>%x1f%s%x1f%B%x1e
 const EMAILS = new Set(git('shortlog', '-sne', REF).split('\n').filter(Boolean)
   .map((l) => l.match(/<([^>]+)>$/)?.[1] ?? fail(`unparsed shortlog line ${l}`))
   .filter((e) => !isBotEmail(e)).map((e) => e.toLowerCase()));
+// a bugzilla that hides addresses from anonymous readers serves the local part alone
+const LOGINS = new Set([...EMAILS].map((e) => e.split('@')[0]));
+const isCommitter = (who) => EMAILS.has(who) || (!who.includes('@') && LOGINS.has(who));
 
 // ---- citation extraction: GitHub URLs, owner/repo#N, repo#N beside a named owner/repo, bugzilla links ----
 const GH_URL = /github\.com\/([\w.-]+)\/([\w.-]+)\/(?:issues|pull)\/(\d+)(?!\d)/gi;
@@ -147,7 +150,7 @@ const resolveBug = async (host, number) => {
   return {
     id: `${host}#${number}`, yard: host, kind: 'bug', number, title: b.summary, url, state,
     createdAt: b.creation_time, closedAt: state === 'open' ? null : b.last_change_time,
-    author: { login: b.creator ?? null }, sent: EMAILS.has(String(b.creator ?? '').toLowerCase()),
+    author: { login: b.creator ?? null }, sent: isCommitter(String(b.creator ?? '').toLowerCase()),
   };
 };
 const ghGet = (path) => {

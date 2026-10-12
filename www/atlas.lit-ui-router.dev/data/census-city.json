@@ -1,10 +1,10 @@
 {
   "ref": "origin/main",
-  "sha": "76ccefc0",
-  "commitDate": "2026-10-10T12:45:38-07:00",
-  "generatedAtTime": "2026-10-10T20:53:20.088Z",
+  "sha": "bd10638a",
+  "commitDate": "2026-10-10T16:52:14-07:00",
+  "generatedAtTime": "2026-10-12T03:45:29.736Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-city.mjs",
-  "used": "www/atlas.lit-ui-router.dev/data/census-files.json @ 76ccefc0",
+  "used": "www/atlas.lit-ui-router.dev/data/census-files.json @ bd10638a",
   "wasAssociatedWith": [],
   "rows": [
     {"member":"packages/eslint-plugin-lit-ui-router","srcFiles":12,"srcSloc":1462,"specFiles":13,"specSloc":2437},
@@ -20,7 +20,7 @@
     {"member":"apps/sample-app-lit-vanilla","srcFiles":8,"srcSloc":426,"specFiles":0,"specSloc":0},
     {"member":"apps/sample-app-routes","srcFiles":2,"srcSloc":53,"specFiles":1,"specSloc":188},
     {"member":"apps/sample-app-shared","srcFiles":41,"srcSloc":2454,"specFiles":8,"specSloc":784},
-    {"member":"www/lit-ui-router.dev","srcFiles":9,"srcSloc":757,"specFiles":2,"specSloc":254},
+    {"member":"www/lit-ui-router.dev","srcFiles":9,"srcSloc":751,"specFiles":2,"specSloc":254},
     {"member":"examples","srcFiles":23,"srcSloc":3672,"specFiles":1,"specSloc":25},
     {"member":"tools/bootstrap","srcFiles":3,"srcSloc":58,"specFiles":3,"specSloc":107},
     {"member":"tools/build_and_test","srcFiles":9,"srcSloc":1892,"specFiles":4,"specSloc":2075},

@@ -1,10 +1,10 @@
 {
   "ref": "origin/main",
-  "sha": "76ccefc0",
-  "commitDate": "2026-10-10T12:45:38-07:00",
-  "generatedAtTime": "2026-10-10T20:58:43.281Z",
+  "sha": "bd10638a",
+  "commitDate": "2026-10-10T16:52:14-07:00",
+  "generatedAtTime": "2026-10-12T03:52:12.139Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-shadow.mjs",
-  "used": "git archive origin/main @ 76ccefc0 + pnpm install --frozen-lockfile --silent (mise-provisioned pnpm)",
+  "used": "git archive origin/main @ bd10638a + pnpm install --frozen-lockfile --silent (mise-provisioned pnpm)",
   "wasAssociatedWith": [
     "turbo 2.11.7",
     "node v24.21.0",
@@ -21,7 +21,7 @@
     "funcs": 1196,
     "funcsHit": 1174,
     "litSloc": 12509,
-    "meteredSrcSloc": 20045,
+    "meteredSrcSloc": 20039,
     "byCat": {
       "m": 26,
       "e": 3,
@@ -44,7 +44,7 @@
     {"member":"apps/sample-app-lit-vanilla","name":"sample-app-lit-vanilla","srcFiles":8,"srcSloc":426,"specFiles":0,"specSloc":0,"cat":"e","suite":null,"recipe":"driven by the cypress rig — emits no lcov"},
     {"member":"apps/sample-app-routes","name":"sample-app-routes","srcFiles":2,"srcSloc":53,"specFiles":1,"specSloc":188,"litFiles":2,"litSloc":53,"extent":100,"lines":127,"linesHit":127,"line":100,"branches":2,"branchesHit":2,"branch":100,"funcs":0,"funcsHit":0,"func":null,"shadow":[],"cat":"m","suite":"test","recipe":"node --test --experimental-test-coverage (node --test --test-reporter=@tools/shared/test-reporter.ts \"test/**/*.test.ts\")"},
     {"member":"apps/sample-app-shared","name":"sample-app-shared","srcFiles":41,"srcSloc":2454,"specFiles":8,"specSloc":784,"cat":"u","suite":"test","recipe":"vitest run --coverage.enabled --coverage.provider=v8 (VITEST_BROWSER_API_PORT=63350 vitest run --project=chrome)","note":"suite passes, no meter attaches — Command failed: <archive>/apps/sample-app-shared/node_modules/.bin/vitest run --project=chrome --coverage.enabled --coverage.provider=v8 --coverage.reporter=lcov --coverage.reportsDirectory=<archive>/apps/sample-app-shared/.shadow-cov"},
-    {"member":"www/lit-ui-router.dev","name":"@www/lit-ui-router.dev","srcFiles":9,"srcSloc":757,"specFiles":2,"specSloc":254,"litFiles":2,"litSloc":74,"extent":9.8,"lines":146,"linesHit":146,"line":100,"branches":25,"branchesHit":25,"branch":100,"funcs":9,"funcsHit":9,"func":100,"shadow":[".vitepress/config.ts",".vitepress/theme/components/brands.ts",".vitepress/theme/components/examples.ts",".vitepress/theme/components/frameworks.ts",".vitepress/theme/components/webcontainers.ts",".vitepress/theme/index.ts",".vitepress/vite.config.ts"],"cat":"m","suite":"test","recipe":"node --test --experimental-test-coverage (node --test --test-reporter=@tools/shared/test-reporter.ts \"worker/test/*.test.ts\" \".vitepress/test/*.test.ts\")"},
+    {"member":"www/lit-ui-router.dev","name":"@www/lit-ui-router.dev","srcFiles":9,"srcSloc":751,"specFiles":2,"specSloc":254,"litFiles":2,"litSloc":74,"extent":9.9,"lines":146,"linesHit":146,"line":100,"branches":25,"branchesHit":25,"branch":100,"funcs":9,"funcsHit":9,"func":100,"shadow":[".vitepress/config.ts",".vitepress/theme/components/brands.ts",".vitepress/theme/components/examples.ts",".vitepress/theme/components/frameworks.ts",".vitepress/theme/components/webcontainers.ts",".vitepress/theme/index.ts",".vitepress/vite.config.ts"],"cat":"m","suite":"test","recipe":"node --test --experimental-test-coverage (node --test --test-reporter=@tools/shared/test-reporter.ts \"worker/test/*.test.ts\" \".vitepress/test/*.test.ts\")"},
     {"member":"examples","name":"examples","srcFiles":23,"srcSloc":3672,"specFiles":1,"specSloc":25,"litFiles":1,"litSloc":35,"extent":1,"lines":60,"linesHit":60,"line":100,"branches":1,"branchesHit":1,"branch":100,"funcs":0,"funcsHit":0,"func":null,"shadow":["build-embeds.ts","design-system-links/src/color-scheme.ts","design-system-links/src/main.ts","design-system-links/vite.config.ts","hellogalaxy-effect/src/effect-plugin.ts","hellogalaxy-effect/src/main.ts","hellogalaxy-effect/vite.config.ts","hellogalaxy/src/main.ts","hellogalaxy/vite.config.ts","hellosolarsystem-mobx/src/main.ts","hellosolarsystem-mobx/vite.config.ts","hellosolarsystem/src/main.ts","hellosolarsystem/vite.config.ts","helloworld/src/main.ts","helloworld/vite.config.ts","lint-eslint/eslint.config.js","lint-eslint/src/lint-report.ts","lint-eslint/src/main.ts","lint-eslint/src/prerendered/violations.ts","lint-eslint/src/report-views.ts","lint-eslint/src/violations.ts","lint-eslint/vite.config.ts"],"cat":"m","suite":"test","recipe":"node --test --experimental-test-coverage (node --test --test-reporter=@tools/shared/test-reporter.ts \"*.test.ts\")"},
     {"member":"tools/bootstrap","name":"@tools/bootstrap","srcFiles":3,"srcSloc":58,"specFiles":3,"specSloc":107,"litFiles":2,"litSloc":34,"extent":58.6,"lines":92,"linesHit":92,"line":100,"branches":11,"branchesHit":11,"branch":100,"funcs":2,"funcsHit":2,"func":100,"shadow":["src/types.ts"],"cat":"m","suite":"test","recipe":"node --test --experimental-test-coverage (node --test \"src/**/*.test.ts\")"},
     {"member":"tools/build_and_test","name":"@tools/build_and_test","srcFiles":9,"srcSloc":1892,"specFiles":4,"specSloc":2075,"litFiles":5,"litSloc":1501,"extent":79.3,"lines":1846,"linesHit":1841,"line":99.7,"branches":403,"branchesHit":385,"branch":95.5,"funcs":118,"funcsHit":117,"func":99.2,"shadow":["src/branch-ci-gate.ts","src/mark-summary-session.ts","src/run-summary.ts","src/upload-bundle-stats.ts"],"cat":"m","suite":"test","recipe":"node --test --experimental-test-coverage (node --test --test-reporter=@tools/shared/test-reporter.ts \"src/**/*.test.ts\")"},

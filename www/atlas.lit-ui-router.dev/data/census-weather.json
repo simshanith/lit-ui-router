@@ -1,14 +1,14 @@
 {
   "ref": "origin/main",
-  "sha": "76ccefc0",
-  "commitDate": "2026-10-10T12:45:38-07:00",
-  "generatedAtTime": "2026-10-10T20:53:21.959Z",
+  "sha": "bd10638a",
+  "commitDate": "2026-10-10T16:52:14-07:00",
+  "generatedAtTime": "2026-10-12T03:45:31.844Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-weather.mjs",
-  "used": "www/atlas.lit-ui-router.dev/data/census-files.json @ 76ccefc0",
+  "used": "www/atlas.lit-ui-router.dev/data/census-files.json @ bd10638a",
   "wasAssociatedWith": [
     "git log (historyLog)"
   ],
-  "today": "2026-10-10T12:45:38-07:00",
+  "today": "2026-10-10T16:52:14-07:00",
   "members": [
     {"member":"packages/eslint-plugin-lit-ui-router","files":25,"medAge":38,"medIdle":1,"touches":114,"perFile":4.6,"oldestFirst":"2026-09-01","newestFirst":"2026-10-03","idlestFile":"packages/eslint-plugin-lit-ui-router/src/rule-shape.ts","idlestDays":37,"hotFile":"packages/eslint-plugin-lit-ui-router/src/anchor-is-valid.ts","hotTouches":13},
     {"member":"packages/lit-ui-router","files":52,"medAge":58,"medIdle":1,"touches":369,"perFile":7.1,"oldestFirst":"2025-07-21","newestFirst":"2026-10-09","idlestFile":"packages/lit-ui-router/src/register.ts","idlestDays":92,"hotFile":"packages/lit-ui-router/src/ui-sref.ts","hotTouches":28},
@@ -23,7 +23,7 @@
     {"member":"apps/sample-app-lit-vanilla","files":8,"medAge":447,"medIdle":1,"touches":65,"perFile":8.1,"oldestFirst":"2025-07-21","newestFirst":"2026-07-06","idlestFile":"apps/sample-app-lit-vanilla/src/main.ts","idlestDays":97,"hotFile":"apps/sample-app-lit-vanilla/src/app/mymessages/Compose.ts","hotTouches":16},
     {"member":"apps/sample-app-routes","files":3,"medAge":89,"medIdle":1,"touches":12,"perFile":4,"oldestFirst":"2026-07-14","newestFirst":"2026-07-15","idlestFile":"apps/sample-app-routes/src/shellMounts.ts","idlestDays":30,"hotFile":"apps/sample-app-routes/test/routes.test.ts","hotTouches":5},
     {"member":"apps/sample-app-shared","files":49,"medAge":99,"medIdle":1,"touches":290,"perFile":5.9,"oldestFirst":"2025-07-21","newestFirst":"2026-10-10","idlestFile":"apps/sample-app-shared/src/app/contacts/interface.ts","idlestDays":97,"hotFile":"apps/sample-app-shared/src/router.config.ts","hotTouches":20},
-    {"member":"www/lit-ui-router.dev","files":11,"medAge":89,"medIdle":1,"touches":111,"perFile":10.1,"oldestFirst":"2025-07-23","newestFirst":"2026-09-07","idlestFile":"www/lit-ui-router.dev/.vitepress/theme/components/brands.ts","idlestDays":35,"hotFile":"www/lit-ui-router.dev/.vitepress/config.ts","hotTouches":36},
+    {"member":"www/lit-ui-router.dev","files":11,"medAge":89,"medIdle":1,"touches":112,"perFile":10.2,"oldestFirst":"2025-07-23","newestFirst":"2026-09-07","idlestFile":"www/lit-ui-router.dev/.vitepress/theme/components/brands.ts","idlestDays":35,"hotFile":"www/lit-ui-router.dev/.vitepress/config.ts","hotTouches":36},
     {"member":"examples","files":24,"medAge":37,"medIdle":1,"touches":95,"perFile":4,"oldestFirst":"2026-01-01","newestFirst":"2026-10-04","idlestFile":"examples/hellosolarsystem/vite.config.ts","idlestDays":283,"hotFile":"examples/hellogalaxy/src/main.ts","hotTouches":13},
     {"member":"tools/bootstrap","files":6,"medAge":63,"medIdle":1,"touches":17,"perFile":2.8,"oldestFirst":"2026-07-14","newestFirst":"2026-09-08","idlestFile":"tools/bootstrap/src/root.test.ts","idlestDays":33,"hotFile":"tools/bootstrap/src/manifest.ts","hotTouches":5},
     {"member":"tools/build_and_test","files":13,"medAge":78,"medIdle":1,"touches":75,"perFile":5.8,"oldestFirst":"2026-07-07","newestFirst":"2026-10-08","idlestFile":"tools/build_and_test/src/branch-ci-gate.core.ts","idlestDays":1,"hotFile":"tools/build_and_test/src/run-summary.core.ts","hotTouches":13},
@@ -55,7 +55,7 @@
     "2026-10": {
       "pkg": 302,
       "app": 154,
-      "site": 47,
+      "site": 48,
       "tool": 361
     },
     "2026-09": {
@@ -338,7 +338,7 @@
     {"path":"www/lit-ui-router.dev/.vitepress/theme/components/examples.ts","member":"www/lit-ui-router.dev","spec":false,"first":"2026-08-01","last":"2026-10-10","touches":12},
     {"path":"www/lit-ui-router.dev/.vitepress/theme/components/frameworks.ts","member":"www/lit-ui-router.dev","spec":false,"first":"2026-07-14","last":"2026-10-10","touches":3},
     {"path":"www/lit-ui-router.dev/.vitepress/theme/components/webcontainers.ts","member":"www/lit-ui-router.dev","spec":false,"first":"2026-08-01","last":"2026-09-06","touches":2},
-    {"path":"www/lit-ui-router.dev/.vitepress/theme/index.ts","member":"www/lit-ui-router.dev","spec":false,"first":"2026-01-02","last":"2026-10-10","touches":11},
+    {"path":"www/lit-ui-router.dev/.vitepress/theme/index.ts","member":"www/lit-ui-router.dev","spec":false,"first":"2026-01-02","last":"2026-10-10","touches":12},
     {"path":"www/lit-ui-router.dev/.vitepress/vite.config.ts","member":"www/lit-ui-router.dev","spec":false,"first":"2025-07-24","last":"2026-10-10","touches":29},
     {"path":"www/lit-ui-router.dev/worker/index.ts","member":"www/lit-ui-router.dev","spec":false,"first":"2026-07-14","last":"2026-10-10","touches":6},
     {"path":"www/lit-ui-router.dev/worker/test/worker.test.ts","member":"www/lit-ui-router.dev","spec":true,"first":"2026-07-18","last":"2026-10-10","touches":7},

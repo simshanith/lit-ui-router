@@ -1,10 +1,10 @@
 {
   "ref": "origin/main",
-  "sha": "76ccefc0",
-  "commitDate": "2026-10-10T12:45:38-07:00",
-  "generatedAtTime": "2026-10-10T23:30:39.537Z",
+  "sha": "bd10638a",
+  "commitDate": "2026-10-10T16:52:14-07:00",
+  "generatedAtTime": "2026-10-12T03:45:31.627Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-steam.mjs",
-  "used": "www/atlas.lit-ui-router.dev/data/census-files.json @ 76ccefc0",
+  "used": "www/atlas.lit-ui-router.dev/data/census-files.json @ bd10638a",
   "wasAssociatedWith": [
     "git log (historyLog)"
   ],
@@ -12,7 +12,7 @@
     "since": "2026-07-12",
     "until": "2026-10-10"
   },
-  "windowCommits": 596,
+  "windowCommits": 597,
   "rows": [
     {"member":"packages/eslint-plugin-lit-ui-router","commits":18},
     {"member":"packages/lit-ui-router","commits":55},
@@ -27,7 +27,7 @@
     {"member":"apps/sample-app-lit-vanilla","commits":14},
     {"member":"apps/sample-app-routes","commits":6},
     {"member":"apps/sample-app-shared","commits":33},
-    {"member":"www/lit-ui-router.dev","commits":16},
+    {"member":"www/lit-ui-router.dev","commits":17},
     {"member":"examples","commits":20},
     {"member":"tools/bootstrap","commits":6},
     {"member":"tools/build_and_test","commits":19},
