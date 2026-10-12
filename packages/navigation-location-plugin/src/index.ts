@@ -7,6 +7,7 @@ import {
   splitHash,
   splitQuery,
   stripLastPathElement,
+  type Transition,
   UIRouter,
 } from '@uirouter/core';
 
@@ -90,6 +91,42 @@ export interface NavigationLocationPluginOptions {
    * ```
    */
   intercept?: (event: UIRouterNavigateEvent) => NavigationInterceptOptions;
+
+  /**
+   * Intercepts back/forward traversals of this document, so the browser
+   * restores scroll, and resets focus if asked to, once the router transition
+   * the traversal starts has settled.
+   *
+   * Absent, the service leaves traversals alone and the browser restores
+   * their scroll position straight away, before the router transition the
+   * traversal starts has run. Passed, the service intercepts each `traverse`
+   * navigation it can intercept, other than one this plugin started itself,
+   * with a handler that waits for that router transition, including its
+   * redirects, to settle. A superseding navigation ends the wait.
+   *
+   * Pass `true` for the defaults, or a function whose return value is handed
+   * to `event.intercept()`. The function runs at `navigate` time, before the
+   * router transition exists, so unlike {@link intercept} it cannot read the
+   * destination state's `data`. Its `handler` runs after the router
+   * transition settles, and the service forces a layout once it settles, so
+   * the browser restores scroll against the rendered view. `focusReset` and
+   * `scroll` pass through; `focusReset` defaults to `'manual'`, as for
+   * {@link intercept}.
+   *
+   * @example
+   * ```ts
+   * router.plugin(navigationLocationPlugin, {
+   *   interceptTraverse: (event) => ({
+   *     async handler() {
+   *       // the destination view has rendered
+   *     },
+   *   }),
+   * } satisfies NavigationLocationPluginOptions);
+   * ```
+   */
+  interceptTraverse?:
+    | true
+    | ((event: NavigateEvent) => NavigationInterceptOptions);
 }
 
 /**
@@ -134,19 +171,39 @@ export class NavigationLocationService extends BaseLocationServices {
     this._config = router.urlService.config;
     this._navigation().addEventListener(
       CURRENT_ENTRY_CHANGE_EVENT,
-      this._listener,
+      this._onCurrentEntryChange,
       false,
     );
     this._navigation().addEventListener(NAVIGATE_EVENT, this._intercept);
   }
 
+  // Firefox repeats currententrychange, from the entry it is already on, after an intercepted traversal in an iframe (#1192).
+  private readonly _onCurrentEntryChange = (
+    event: NavigationCurrentEntryChangeEvent,
+  ): void => {
+    if (
+      event.navigationType === 'traverse' &&
+      event.from === this._navigation().currentEntry
+    ) {
+      return;
+    }
+
+    this._listener(event);
+  };
+
   // Keeps this service's own navigations same-document; another router's are not ours.
   private readonly _intercept = (event: NavigateEvent): void => {
-    if (
-      !event.canIntercept ||
-      !isUIRouterNavigateEvent(event) ||
-      event.info.uiRouter !== this._router
-    ) {
+    if (!event.canIntercept) {
+      return;
+    }
+
+    if (!isUIRouterNavigateEvent(event)) {
+      this._interceptTraverse(event);
+
+      return;
+    }
+
+    if (event.info.uiRouter !== this._router) {
       return;
     }
 
@@ -158,6 +215,61 @@ export class NavigationLocationService extends BaseLocationServices {
       }),
     });
   };
+
+  private _interceptTraverse(event: NavigateEvent): void {
+    const option = this._options.interceptTraverse;
+
+    if (!option || event.navigationType !== 'traverse') {
+      return;
+    }
+
+    // currententrychange runs the URL sync before the handler, so the transition is created by then.
+    let transition: Transition | undefined;
+
+    // SAFETY: hook registration returns its deregistration function, typed only as `Function`.
+    const stopWatching = this._router.transitionService.onCreate(
+      {},
+      (created) => {
+        if (
+          !transition ||
+          created.originalTransition() === transition.originalTransition()
+        ) {
+          transition = created;
+        }
+      },
+    ) as () => void;
+
+    const aborted = new Promise<void>((resolve) =>
+      event.signal.addEventListener('abort', () => resolve(), { once: true }),
+    );
+
+    void aborted.then(stopWatching);
+    const { handler, ...options } = option === true ? {} : option(event);
+
+    const settle = async (): Promise<void> => {
+      // A redirect replaces the awaited transition before its promise settles.
+      for (let awaited = transition; awaited && !event.signal.aborted;) {
+        await Promise.race([awaited.promise.catch(() => undefined), aborted]);
+        awaited = awaited === transition ? undefined : transition;
+      }
+
+      stopWatching();
+
+      if (!event.signal.aborted) {
+        await handler?.();
+        // Firefox, and WebKit in an iframe, restore scroll against the last layout, so the restored view must be laid out (#1193, #1194).
+        void globalRoot.document.documentElement.scrollHeight;
+      }
+    };
+
+    // Firefox reruns a pending handler of an intercepted traversal in an iframe (#1192).
+    let settled: Promise<void> | undefined;
+    event.intercept({
+      focusReset: 'manual',
+      ...options,
+      handler: () => (settled ??= settle()),
+    });
+  }
 
   /**
    * The Navigation API object this service drives.
@@ -256,7 +368,7 @@ export class NavigationLocationService extends BaseLocationServices {
     super.dispose(router);
     this._navigation().removeEventListener(
       CURRENT_ENTRY_CHANGE_EVENT,
-      this._listener,
+      this._onCurrentEntryChange,
     );
     this._navigation().removeEventListener(NAVIGATE_EVENT, this._intercept);
   }

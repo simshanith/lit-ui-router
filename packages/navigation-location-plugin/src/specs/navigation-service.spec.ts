@@ -1,7 +1,7 @@
 /// <reference types="vitest/globals" />
 /// <reference types="@types/dom-navigation" />
 
-import { type LocationPlugin, UIRouter } from '@uirouter/core';
+import { type LocationPlugin, servicesPlugin, UIRouter } from '@uirouter/core';
 import type { Mock } from 'vitest';
 import {
   NavigationLocationService,
@@ -22,12 +22,13 @@ interface StubNavigation {
   >;
   removeEventListener: ReturnType<typeof vi.fn>;
   navigate: ReturnType<typeof vi.fn>;
+  currentEntry?: NavigationHistoryEntry | null;
 }
 
 type NavigationStub = Navigation & StubNavigation;
 
 function navigationStub(fake: StubNavigation): NavigationStub {
-  // SAFETY: the service touches only addEventListener, removeEventListener and navigate.
+  // SAFETY: the service touches only addEventListener, removeEventListener, navigate and currentEntry.
   return fake as NavigationStub;
 }
 
@@ -71,23 +72,55 @@ function registeredInterceptor(): (event: NavigateEvent) => void {
   return call[1];
 }
 
+/** The `currententrychange` listener the service registered, as the stub recorded it. */
+function registeredEntryChangeListener(): (
+  event: NavigationCurrentEntryChangeEvent,
+) => void {
+  const call = stub.addEventListener.mock.calls.find(
+    ([type]) => type === 'currententrychange',
+  );
+
+  if (!call) throw new Error('no currententrychange listener registered');
+
+  // SAFETY: the stub types every listener as a navigate listener; this one was registered for currententrychange.
+  return call[1] as (event: Event) => void;
+}
+
+interface FakeCurrentEntryChangeEvent {
+  navigationType: NavigationType;
+  from: NavigationHistoryEntry;
+}
+
+function fakeCurrentEntryChangeEvent(
+  fake: FakeCurrentEntryChangeEvent,
+): NavigationCurrentEntryChangeEvent {
+  // SAFETY: the service reads only navigationType and from off a currententrychange event.
+  return fake as NavigationCurrentEntryChangeEvent;
+}
+
 interface FakeNavigateEvent {
   canIntercept: boolean;
   info?: unknown;
   intercept: Mock<NavigateEvent['intercept']>;
+  navigationType: NavigationType;
+  signal: AbortSignal;
 }
 
 function fakeNavigateEvent(
   info?: { uiRouter: UIRouter },
   canIntercept = true,
+  navigationType: NavigationType = 'push',
+  signal = new AbortController().signal,
 ): NavigateEvent & FakeNavigateEvent {
   const fake: FakeNavigateEvent = {
     canIntercept,
     info,
     intercept: vi.fn<NavigateEvent['intercept']>(),
+    navigationType,
+    signal,
   };
 
-  // SAFETY: the service reads only canIntercept, info and intercept off a navigate event.
+  // SAFETY: the service reads only canIntercept, info, intercept, navigationType and signal off a navigate event.
   return fake as NavigateEvent & FakeNavigateEvent;
 }
 
@@ -285,6 +318,47 @@ describe('NavigationLocationService (stubbed Navigation seam)', () => {
     });
   });
 
+  describe('currententrychange', () => {
+    let onChange: ReturnType<typeof vi.fn<EventListener>>;
+
+    function historyEntry(): NavigationHistoryEntry {
+      // SAFETY: the service compares history entries by identity only.
+      return {} as NavigationHistoryEntry;
+    }
+
+    function dispatch(
+      navigationType: NavigationType,
+      from: NavigationHistoryEntry,
+    ): void {
+      registeredEntryChangeListener()(
+        fakeCurrentEntryChangeEvent({ navigationType, from }),
+      );
+    }
+
+    beforeEach(() => {
+      router = createTestRouter();
+      service = new TestableService(router);
+      onChange = vi.fn<EventListener>();
+      service.onChange(onChange);
+      stub.currentEntry = historyEntry();
+    });
+
+    it.each(['push', 'replace', 'traverse'] as const)(
+      'notifies listeners of a %s to another entry',
+      (navigationType) => {
+        dispatch(navigationType, historyEntry());
+
+        expect(onChange).toHaveBeenCalledOnce();
+      },
+    );
+
+    it('skips a repeated traversal change from the entry it is already on', () => {
+      dispatch('traverse', stub.currentEntry!);
+
+      expect(onChange).not.toHaveBeenCalled();
+    });
+  });
+
   describe('intercept option', () => {
     let interceptOptions: NavigationInterceptOptions;
 
@@ -339,6 +413,202 @@ describe('NavigationLocationService (stubbed Navigation seam)', () => {
 
       expect(intercept).not.toHaveBeenCalled();
       expect(event.intercept).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('interceptTraverse option', () => {
+    let controller: AbortController;
+
+    function fakeTraverseEvent(
+      navigationType: NavigationType = 'traverse',
+      info?: { uiRouter: UIRouter },
+      canIntercept = true,
+    ): NavigateEvent & FakeNavigateEvent {
+      return fakeNavigateEvent(
+        info,
+        canIntercept,
+        navigationType,
+        controller.signal,
+      );
+    }
+
+    function interceptedHandler(
+      event: FakeNavigateEvent,
+    ): NavigationInterceptHandler {
+      const handler = event.intercept.mock.calls[0]?.[0]?.handler;
+
+      if (!handler) throw new Error('no handler intercepted');
+
+      return handler;
+    }
+
+    beforeEach(() => {
+      controller = new AbortController();
+      router = createTestRouter();
+      router.plugin(servicesPlugin);
+    });
+
+    it('leaves traversals alone without the option', () => {
+      service = new TestableService(router);
+      const event = fakeTraverseEvent();
+
+      registeredInterceptor()(event);
+
+      expect(event.intercept).not.toHaveBeenCalled();
+    });
+
+    it('intercepts a traversal with focus left in place when the option is true', async () => {
+      service = new TestableService(router, { interceptTraverse: true });
+      const event = fakeTraverseEvent();
+
+      registeredInterceptor()(event);
+
+      expect(event.intercept).toHaveBeenCalledExactlyOnceWith({
+        focusReset: 'manual',
+        handler: expect.any(Function),
+      });
+      await expect(interceptedHandler(event)()).resolves.toBeUndefined();
+    });
+
+    it('merges what the option returns over a manual focusReset and runs its handler after the wait', async () => {
+      const handler = vi.fn(async () => {});
+
+      const interceptTraverse = vi.fn(() => ({
+        focusReset: 'after-transition' as const,
+        scroll: 'manual' as const,
+        handler,
+      }));
+
+      service = new TestableService(router, { interceptTraverse });
+      const event = fakeTraverseEvent();
+
+      registeredInterceptor()(event);
+
+      expect(interceptTraverse).toHaveBeenCalledExactlyOnceWith(event);
+      expect(event.intercept).toHaveBeenCalledExactlyOnceWith({
+        focusReset: 'after-transition',
+        scroll: 'manual',
+        handler: expect.any(Function),
+      });
+      expect(interceptedHandler(event)).not.toBe(handler);
+      await interceptedHandler(event)();
+      expect(handler).toHaveBeenCalledOnce();
+    });
+
+    it('runs the option handler once when the browser calls the handler twice', async () => {
+      const handler = vi.fn(async () => {});
+      service = new TestableService(router, {
+        interceptTraverse: () => ({ handler }),
+      });
+      const event = fakeTraverseEvent();
+      registeredInterceptor()(event);
+
+      const intercepted = interceptedHandler(event);
+      await Promise.all([intercepted(), intercepted()]);
+
+      expect(handler).toHaveBeenCalledOnce();
+    });
+
+    it.each([
+      ['a push', () => fakeTraverseEvent('push')],
+      ['a reload', () => fakeTraverseEvent('reload')],
+      [
+        'a traversal this router started',
+        () => fakeTraverseEvent('traverse', { uiRouter: router }),
+      ],
+      [
+        'a traversal it cannot intercept',
+        () => fakeTraverseEvent('traverse', undefined, false),
+      ],
+    ])('is not called for %s', (_, makeEvent) => {
+      const interceptTraverse = vi.fn(() => ({}));
+      service = new TestableService(router, { interceptTraverse });
+      const event = makeEvent();
+
+      registeredInterceptor()(event);
+
+      expect(interceptTraverse).not.toHaveBeenCalled();
+    });
+
+    describe('waiting for the router', () => {
+      let release: () => void;
+
+      beforeEach(() => {
+        const gate = new Promise<void>((resolve) => (release = resolve));
+        router.stateRegistry.register({
+          name: 'slow',
+          resolve: { gate: () => gate },
+        });
+        router.stateRegistry.register({
+          name: 'redirecting',
+          redirectTo: 'slow',
+        });
+      });
+
+      async function settles(promise: Promise<unknown>): Promise<boolean> {
+        let settled = false;
+        void promise.finally(() => (settled = true));
+        await new Promise((resolve) => setTimeout(resolve));
+
+        return settled;
+      }
+
+      it.each(['slow', 'redirecting'])(
+        'settles once the transition to %s the traversal started settles',
+        async (state) => {
+          const handler = vi.fn(async () => {});
+          router.locationService = service = new TestableService(router, {
+            interceptTraverse: () => ({ handler }),
+          });
+          const event = fakeTraverseEvent();
+          registeredInterceptor()(event);
+          const done = router.stateService.go(state, {}, { location: false });
+
+          const waiting = Promise.resolve(interceptedHandler(event)());
+
+          expect(await settles(waiting)).toBe(false);
+          release();
+          await done;
+          await waiting;
+          expect(router.globals.current.name).toBe('slow');
+          expect(handler).toHaveBeenCalledOnce();
+        },
+      );
+
+      it('stops waiting, without the option handler, when the traversal is aborted', async () => {
+        const handler = vi.fn(async () => {});
+        router.locationService = service = new TestableService(router, {
+          interceptTraverse: () => ({ handler }),
+        });
+        const event = fakeTraverseEvent();
+        registeredInterceptor()(event);
+        void router.stateService
+          .go('slow', {}, { location: false })
+          .catch(() => undefined);
+
+        const waiting = Promise.resolve(interceptedHandler(event)());
+        controller.abort();
+
+        await waiting;
+        expect(handler).not.toHaveBeenCalled();
+        release();
+      });
+
+      it('stops watching for transitions when the traversal is aborted before its handler runs', async () => {
+        service = new TestableService(router, { interceptTraverse: true });
+
+        const hooks = () =>
+          router.transitionService.getHooks('onCreate').length;
+
+        const before = hooks();
+        registeredInterceptor()(fakeTraverseEvent());
+        expect(hooks()).toBe(before + 1);
+
+        controller.abort();
+        await Promise.resolve();
+
+        expect(hooks()).toBe(before);
+      });
     });
   });
 

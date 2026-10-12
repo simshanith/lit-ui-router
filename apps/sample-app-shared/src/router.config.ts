@@ -48,6 +48,7 @@ const locationPluginConfig = {
     plugin: navigationLocationPlugin,
     message: 'navigationLocationPlugin enabled',
     options: {
+      interceptTraverse: true,
       intercept: (event) => {
         const { transition } = event.info.uiRouter.globals;
 
