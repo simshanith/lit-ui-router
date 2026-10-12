@@ -382,12 +382,12 @@ export const sheet3b = {
 <p><strong>Roads and reach.</strong> Five arteries are drawn, one per district pair, and the plate labels them with degree rather than with an edge tally it cannot cite: <code>@www/lit-ui-router.dev#build</code> waits on ${deg('@www/lit-ui-router.dev#build', 'deps')} nodes (every quarter ships <code>docs:api</code> there, plus worker types and app fixtures — it is the city's sink), <code>@tools/typedoc-plugin-lit-ui-router#build:types</code> unblocks ${deg('@tools/typedoc-plugin-lit-ui-router#build:types', 'dependents')}, <code>@tools/release#check:exports</code> ${deg('@tools/release#check:exports', 'dependents')} (<code>pack:all</code> and <code>check:exports</code> read every quarter), and the widest fan-out in the graph is <code>lit-ui-router#build:types</code> at ${deg('lit-ui-router#build:types', 'dependents')}. Of the graph's ${fmt(CI.edges)} edges only ${CI.realEdges} join two real tasks; the rest hang off phantom transit nodes, which is why the roads are drawn as districts and not as a wire count.</p>`,
   key: [
     keyRow(`<polygon points="6,10 24,2 42,10 24,18" class="skr fp"/><polygon points="6,10 24,2 42,10 24,18" fill="url(#${P}-hr)"/>`, 'massed task block — stops the PR (all of them do)'),
-    keyRow('<polygon points="6,10 24,2 42,10 24,18" class="sks fnone" stroke-dasharray="4 3"/>', 'vacant plot — phantom node, runs nothing'),
-    keyRow(`<rect x="6" y="4" width="36" height="10" fill="url(#${P}-hd)" opacity="0.35"/><rect x="6" y="4" width="36" height="10" class="sks fnone" stroke-dasharray="5 4"/>`, `the phantom flats — ${fmt(PHANTOM)} plots (see sheet 12)`),
-    keyRow(`<polygon points="6,10 24,2 42,10 24,18" class="ska fp"/><polygon points="6,10 24,2 42,10 24,18" fill="url(#${P}-ha)"/>`, 'ci:main annex — gates main, not the PR; unmassed'),
-    keyRow(`<path d="M2,9 L40,9" class="sk2" marker-end="url(#${P}-ai)"/>`, 'artery — real dependsOn edges, count labelled'),
-    keyRow(`<path d="M2,9 L40,9" class="ska" stroke-dasharray="3 3" marker-end="url(#${P}-aa)"/>`, 'the deepest chain passing through (plate 3A, hops ②③)'),
     keyRow('<polygon points="6,12 24,4 42,12 24,20" class="skr fp"/><rect x="21" y="1" width="6" height="8" class="skr fp"/>', 'height = command sloc — script line + the file behind it'),
     keyRow('<polygon points="2,14 24,4 46,14 24,24" class="skr fp"/>', 'footprint = watched files — the task’s hashed inputs'),
+    keyRow(`<polygon points="6,10 24,2 42,10 24,18" class="ska fp"/><polygon points="6,10 24,2 42,10 24,18" fill="url(#${P}-ha)"/>`, 'ci:main annex — gates main, not the PR; unmassed'),
+    keyRow('<polygon points="6,10 24,2 42,10 24,18" class="sks fnone" stroke-dasharray="4 3"/>', 'vacant plot — phantom node, runs nothing'),
+    keyRow(`<rect x="6" y="4" width="36" height="10" fill="url(#${P}-hd)" opacity="0.35"/><rect x="6" y="4" width="36" height="10" class="sks fnone" stroke-dasharray="5 4"/>`, `the phantom flats — ${fmt(PHANTOM)} plots (see sheet 12)`),
+    keyRow(`<path d="M2,9 L40,9" class="sk2" marker-end="url(#${P}-ai)"/>`, 'artery — real dependsOn edges, count labelled'),
+    keyRow(`<path d="M2,9 L40,9" class="ska" stroke-dasharray="3 3" marker-end="url(#${P}-aa)"/>`, 'the deepest chain passing through (plate 3A, hops ②③)'),
   ].join('\n'),
 };
