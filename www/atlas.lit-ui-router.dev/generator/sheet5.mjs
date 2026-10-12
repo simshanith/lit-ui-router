@@ -3,6 +3,14 @@ import { txt, lines, box, keyRow } from './helpers.mjs';
 
 const P = 's5';
 
+// the homes the notes name: two routers' docs, the Navigation API's section of the HTML standard, the ui-router site
+const HOME = {
+  tanstack: 'https://tanstack.com/router',
+  sveltekit: 'https://svelte.dev/docs/kit',
+  navigation: 'https://html.spec.whatwg.org/multipage/nav-history-apis.html#navigation-api',
+  uirouter: 'https://ui-router.github.io/',
+};
+
 // Plot area
 const PX = 130, PW = 870, PY = 70, PH = 440;
 const bandY = { library: PY + 70, framework: PY + 220, platform: PY + 370 };
@@ -86,9 +94,9 @@ export const sheet5 = {
   svg,
   caption: 'No mechanism connects these projects, so any drawn edge would be fiction. What is real is position: where matching happens, who owns navigation, and — the one square — whether the URL or a state tree is the source of truth.',
   notes: `
-<p><strong>This altitude forbids the city outright.</strong> A diagram's edges assert mechanism, and there is none between TanStack and SvelteKit. The honest form is a positioned chart whose axes are real, contested design decisions — with the positions owned as editorial judgment, not measurement.</p>
-<p><strong>Reading the columns:</strong> the field has been sliding left for a decade — filesystem routes and typegen move matching toward build time; server components move it toward the server. The client-runtime column is where the platform itself now competes, via the Navigation API.</p>
-<p><strong>The square is the argument.</strong> Every circle on this chart treats the URL as the source of truth and derives the view from it. The ui-router lineage inverts that: a named, hierarchical state tree is primary, and the URL is a projection — one of several possible addresses for a state. That inversion is why sheet 1's loop runs through a state registry rather than a path matcher, and why the same tree can answer HTTP requests in sheet 2's server lane. It is also why the square sits alone: the niche is real, small, and — for state-heavy embedded UIs where the address bar is not the whole story — defensible.</p>`,
+<p><strong>This altitude forbids the city outright.</strong> A diagram's edges assert mechanism, and there is none between <a href="${HOME.tanstack}">TanStack</a> and <a href="${HOME.sveltekit}">SvelteKit</a>. The honest form is a positioned chart whose axes are real, contested design decisions — with the positions owned as editorial judgment, not measurement.</p>
+<p><strong>Reading the columns:</strong> the field has been sliding left for a decade — filesystem routes and typegen move matching toward build time; server components move it toward the server. The client-runtime column is where the platform itself now competes, via the <a href="${HOME.navigation}">Navigation API</a>.</p>
+<p><strong>The square is the argument.</strong> Every circle on this chart treats the URL as the source of truth and derives the view from it. The <a href="${HOME.uirouter}">ui-router</a> lineage inverts that: a named, hierarchical state tree is primary, and the URL is a projection — one of several possible addresses for a state. That inversion is why sheet 1's loop runs through a state registry rather than a path matcher, and why the same tree can answer HTTP requests in sheet 2's server lane. It is also why the square sits alone: the niche is real, small, and — for state-heavy embedded UIs where the address bar is not the whole story — defensible.</p>`,
   key: [
     keyRow('<circle cx="22" cy="9" r="6" class="sk fp" stroke-width="1.6"/>', 'URL-first router'),
     keyRow('<rect x="16" y="3" width="12" height="12" class="ska fp" stroke-width="2"/>', 'state-first router (this lineage)'),
