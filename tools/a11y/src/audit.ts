@@ -1,7 +1,7 @@
 // axe over the docs pages in both color schemes and each sample-app mount's main routes.
 
 import { AxeBuilder } from '@axe-core/playwright';
-import type { Browser, BrowserContext, Page } from 'playwright';
+import type { Browser, BrowserContext, Page, Request } from 'playwright';
 
 /** WCAG 2.0–2.2 A and AA, plus best-practice. */
 const TAGS = [
@@ -37,8 +37,43 @@ export interface Audit {
   findings: Finding[];
 }
 
-function newContext(browser: Browser, scheme: Scheme): Promise<BrowserContext> {
-  return browser.newContext({ colorScheme: scheme, reducedMotion: 'reduce' });
+/** Badge-sized, so a stubbed third-party image (the shields badges) keeps its layout. */
+const STUB_IMAGE =
+  '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="20"></svg>';
+
+/** Third-party requests never reach the network: networkidle must not wait on another service. */
+async function newContext(
+  browser: Browser,
+  origin: string,
+  scheme: Scheme,
+): Promise<BrowserContext> {
+  const own = new URL(origin).origin;
+
+  const context = await browser.newContext({
+    colorScheme: scheme,
+    reducedMotion: 'reduce',
+  });
+
+  await context.route(
+    (url) => url.origin !== own,
+    (route) =>
+      route.request().resourceType() === 'image'
+        ? route.fulfill({ contentType: 'image/svg+xml', body: STUB_IMAGE })
+        : route.abort('blockedbyclient'),
+  );
+
+  return context;
+}
+
+/** The URLs of the page's requests still in flight, for a timeout's error. */
+function inFlight(page: Page): () => string[] {
+  const pending = new Set<Request>();
+
+  page.on('request', (request) => pending.add(request));
+  page.on('requestfinished', (request) => pending.delete(request));
+  page.on('requestfailed', (request) => pending.delete(request));
+
+  return () => [...pending].map((request) => request.url());
 }
 
 async function scan(
@@ -106,13 +141,14 @@ export async function auditDocs(
   scheme: Scheme,
   audit: Audit,
 ): Promise<void> {
-  const context = await newContext(browser, scheme);
+  const context = await newContext(browser, origin, scheme);
 
   try {
     const queue = [...paths];
 
     const worker = async () => {
       const page = await context.newPage();
+      const pending = inFlight(page);
 
       for (let path = queue.shift(); path; path = queue.shift()) {
         try {
@@ -120,7 +156,9 @@ export async function auditDocs(
           await loadEmbeds(page);
           await scan(page, path, scheme, audit);
         } catch (error) {
-          throw new Error(`${path} [${scheme}]`, { cause: error });
+          const urls = pending();
+          const detail = urls.length ? `, in flight: ${urls.join(' ')}` : '';
+          throw new Error(`${path} [${scheme}]${detail}`, { cause: error });
         }
       }
 
@@ -151,7 +189,7 @@ export async function auditApp(
   app: AppMount,
   audit: Audit,
 ): Promise<void> {
-  const context = await newContext(browser, 'light');
+  const context = await newContext(browser, origin, 'light');
   const page = await context.newPage();
 
   const url = (path: string) =>
