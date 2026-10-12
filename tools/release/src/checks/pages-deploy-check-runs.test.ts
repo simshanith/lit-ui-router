@@ -10,6 +10,7 @@ import {
 } from './pages-deploy-check-runs.core.ts';
 
 const REPO = 'simshanith/lit-ui-router';
+
 const HEAD = '7c893cda19015bdc5e50629e13808e89d7c5da34';
 
 describe('PAGES_DEPLOY_CHECK_RUN_NAME', () => {
@@ -46,6 +47,7 @@ describe('toPagesDeployCheckRun', () => {
       exitCode: 0,
       output: '✓ production serves the www/atlas head.',
     });
+
     assert.equal(payload.name, PAGES_DEPLOY_CHECK_RUN_NAME);
     assert.equal(payload.conclusion, 'success');
     assert.match(payload.summary, /production serves/);
@@ -57,6 +59,7 @@ describe('toPagesDeployCheckRun', () => {
       output:
         '✗ production does not serve the www/atlas head; a deploy is owed.',
     });
+
     assert.equal(payload.conclusion, 'action_required');
     assert.match(payload.title, /a deploy is owed/);
     assert.match(payload.summary, /release-signals/);
@@ -68,6 +71,7 @@ describe('toPagesDeployCheckRun', () => {
       output:
         'Cloudflare API GET /x/pages/projects/altitude-atlas/deployments?env=production failed (HTTP 403) — 10000: Authentication error',
     });
+
     assert.equal(payload.conclusion, 'neutral');
     assert.match(payload.title, /observer error/);
     assert.match(payload.summary, /HTTP 403/);

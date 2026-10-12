@@ -31,12 +31,14 @@ const main = async ([branchHead, ...extra]: string[]): Promise<void> => {
 
   const token = process.env.CLOUDFLARE_API_TOKEN;
   const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
+
   if (!token || !accountId) {
     console.error(
       'Missing required env: set CLOUDFLARE_API_TOKEN (token with ' +
         '"Pages: Read") and CLOUDFLARE_ACCOUNT_ID.',
     );
     process.exitCode = 2;
+
     return;
   }
 
@@ -45,6 +47,7 @@ const main = async ([branchHead, ...extra]: string[]): Promise<void> => {
       token,
       `/${accountId}/pages/projects/${PAGES_PROJECT}/deployments?env=production`,
     );
+
     const report = deployVerdict(deploymentsFromApi(result), branchHead);
     console.log(report.text);
     process.exitCode = report.ok ? 0 : 1;

@@ -31,17 +31,20 @@ export function branchHeadApiArgs(repo: string): string[] {
 /** The sha `branchHeadApiArgs` printed, or throw. */
 export function parseBranchHead(stdout: string): string {
   const sha = stdout.trim();
+
   if (!isCommitSha(sha)) {
     throw new Error(
       `${PRODUCTION_BRANCH} head did not resolve to a commit sha: ${JSON.stringify(sha)}`,
     );
   }
+
   return sha;
 }
 
 /** The CLI's verdict → its Checks API payload. */
 export function toPagesDeployCheckRun(result: CliResult): CheckRunPayload {
   const name = PAGES_DEPLOY_CHECK_RUN_NAME;
+
   if (result.exitCode === 0) {
     return {
       name,
@@ -54,6 +57,7 @@ export function toPagesDeployCheckRun(result: CliResult): CheckRunPayload {
       ].join('\n'),
     };
   }
+
   if (result.exitCode === 1) {
     return {
       name,
@@ -70,6 +74,7 @@ export function toPagesDeployCheckRun(result: CliResult): CheckRunPayload {
       ].join('\n'),
     };
   }
+
   return {
     name,
     conclusion: 'neutral',

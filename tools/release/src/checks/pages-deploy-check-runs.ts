@@ -26,6 +26,7 @@ const CLI = fileURLToPath(
 async function main() {
   const dryRun = process.argv.includes('--dry-run');
   const repo = process.env.GITHUB_REPOSITORY ?? 'simshanith/lit-ui-router';
+
   if (!process.env.GITHUB_REPOSITORY && !dryRun) {
     throw new Error('GITHUB_REPOSITORY must be set (or pass --dry-run)');
   }
@@ -40,10 +41,13 @@ async function main() {
   console.log(result.output);
 
   const payload = toPagesDeployCheckRun(result);
+
   if (dryRun) {
     console.log(JSON.stringify(payload, null, 2));
+
     return;
   }
+
   await defaultExec('gh', checkRunApiArgs(repo, headSha, payload));
   console.log(
     `created check run "${payload.name}" (${payload.conclusion}) on ${headSha}`,
@@ -51,9 +55,9 @@ async function main() {
 }
 
 if (import.meta.main) {
-  await main().catch((error: unknown) => {
+  await main().catch((cause: unknown) => {
     logWarning(
-      `pages-deploy check run not reported: ${error instanceof Error ? error.message : String(error)}`,
+      `pages-deploy check run not reported: ${cause instanceof Error ? cause.message : String(cause)}`,
     );
   });
 }

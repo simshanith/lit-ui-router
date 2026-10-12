@@ -2,6 +2,7 @@
 // directly testable with plain fixtures (see pages-deploy.test.ts). The IO
 // (env, the Cloudflare API) lives in pages-deploy.ts.
 
+import type { Json } from '@tools/bootstrap/types.ts';
 import * as v from 'valibot';
 
 import type { Report } from './workers-builds-triggers.core.ts';
@@ -49,17 +50,21 @@ const DeploymentsSchema = v.array(DeploymentSchema);
 export type Deployment = v.InferOutput<typeof DeploymentSchema>;
 
 /** The deployments list `result`, validated; throws with every issue's path. */
-export function deploymentsFromApi(result: unknown): Deployment[] {
+export function deploymentsFromApi(result: Json | undefined): Deployment[] {
   const parsed = v.safeParse(DeploymentsSchema, result);
+
   if (!parsed.success) {
     const details = parsed.issues.map((issue) => {
       const path = v.getDotPath(issue);
+
       return path ? `  ${path}: ${issue.message}` : `  ${issue.message}`;
     });
+
     throw new Error(
       ['unexpected Pages deployments response:', ...details].join('\n'),
     );
   }
+
   return parsed.output;
 }
 
@@ -88,7 +93,9 @@ export function deployVerdict(
     `project: ${PAGES_PROJECT}`,
     `${PRODUCTION_BRANCH} head: ${branchHead}`,
   ];
+
   const live = liveProductionDeployment(deployments);
+
   if (!live) {
     return {
       ok: false,
@@ -99,8 +106,10 @@ export function deployVerdict(
       ].join('\n'),
     };
   }
+
   const metadata = live.deployment_trigger.metadata;
   const deployed = metadata?.commit_hash ?? '';
+
   const lines = [
     ...header,
     `deployed commit: ${deployed || '(none recorded)'}${metadata?.commit_dirty ? ' (dirty tree)' : ''}`,
@@ -108,11 +117,13 @@ export function deployVerdict(
     `deployment: ${live.id} (${live.created_on})${live.url ? ` ${live.url}` : ''}`,
     '',
   ];
+
   const ok = deployed.toLowerCase() === branchHead.toLowerCase();
   lines.push(
     ok
       ? `✓ production serves the ${PRODUCTION_BRANCH} head.`
       : `✗ production does not serve the ${PRODUCTION_BRANCH} head; a deploy is owed.`,
   );
+
   return { ok, text: lines.join('\n') };
 }
