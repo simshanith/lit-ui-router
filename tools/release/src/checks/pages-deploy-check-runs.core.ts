@@ -1,9 +1,4 @@
-// Pure shaping for the Altitude Atlas deploy signal: the pages-deploy CLI's
-// exit code and output in, one Checks API payload out, posted on the
-// www/atlas head rather than main's. Same vocabulary as the workers-builds
-// signal: action_required = a deploy is owed, neutral = the observer failed
-// (a token without Pages read scope, an API outage). The IO lives in
-// ./pages-deploy-check-runs.ts.
+// Pure shaping: the pages-deploy CLI's exit code in, one Checks API payload out.
 
 import {
   PAGES_PROJECT,
@@ -67,8 +62,8 @@ export function toPagesDeployCheckRun(result: CliResult): CheckRunPayload {
         `The latest production deployment of the \`${PAGES_PROJECT}\` Pages`,
         `project records a different commit than the head of \`${PRODUCTION_BRANCH}\`.`,
         '',
-        `To resolve: deploy from a checkout of \`${PRODUCTION_BRANCH}\` with the`,
-        "recipe in the atlas tree's README, then run the release-signals",
+        `To resolve: ship from a checkout of \`${PRODUCTION_BRANCH}\` as the atlas`,
+        "tree's `docs/SHIPPING.md` describes, then run the release-signals",
         'workflow to re-check.',
         ...reportBlock(result.output),
       ].join('\n'),

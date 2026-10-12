@@ -1,9 +1,5 @@
 #!/usr/bin/env node
-// Altitude Atlas deploy signal: resolve the www/atlas head, run the read-only
-// pages-deploy check against it, and report the verdict as one check run on
-// that head. Non-gating — this exits 0 for every verdict, and a failure to
-// resolve the head or post the run is a warning annotation. Shaping is pure
-// and unit-tested in ./pages-deploy-check-runs.core.ts.
+// Posts the pages-deploy verdict on the www/atlas head; a failure is a warning, never an exit.
 
 import { fileURLToPath } from 'node:url';
 

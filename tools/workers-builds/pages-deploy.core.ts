@@ -1,6 +1,4 @@
-// Pure logic for the Pages deploy check — no network here, so the verdict is
-// directly testable with plain fixtures (see pages-deploy.test.ts). The IO
-// (env, the Cloudflare API) lives in pages-deploy.ts.
+// Pure verdict logic for pages-deploy.ts; no network here.
 
 import type { Json } from '@tools/bootstrap/types.ts';
 import * as v from 'valibot';

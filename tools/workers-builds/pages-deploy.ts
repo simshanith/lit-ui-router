@@ -18,8 +18,7 @@ import {
   isCommitSha,
 } from './pages-deploy.core.ts';
 
-// Annotated, not just inferred: never-returning calls only narrow past an
-// explicitly typed declaration, which is what lets `branchHead` narrow below.
+// Annotated so the never-returning call narrows `branchHead`.
 const usage: () => never = () => {
   console.error(`usage: pages-deploy.ts <${PRODUCTION_BRANCH} head sha>`);
   process.exit(2);
