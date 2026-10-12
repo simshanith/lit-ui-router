@@ -1,0 +1,5 @@
+{
+  "name": "altitude-atlas",
+  "description": "The Altitude Atlas's skills: drawing an isometric census sheet and shipping a change to atlas.lit-ui-router.dev.",
+  "skills": "./.agents/skills/"
+}

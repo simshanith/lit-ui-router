@@ -433,7 +433,9 @@ into the app's \`/log\` at build time. This file is written by \`build.mjs\`; ed
 \`Code\` basis. Lookups throw on a missing row; nothing is hand-pasted. One plate stands outside the
 cabinet: \`data/survey-self.json\`, which \`generator/survey-self.mjs\` measures from an archive of the
 atlas's own branch for appendix A3, because main does not hold the atlas. \`INITIATIVES.md\` records
-the pipeline's design and the traps of refreshing it.
+the pipeline's design and the traps of refreshing it. \`docs/ISOMETRIC.md\` is the drawing recipe the
+isometric sheets share, \`docs/SHIPPING.md\` the run that ships a change and \`docs/COPY.md\` the rules the
+words follow; the skills under \`.agents/skills/\` point at them.
 
 **Type and theme.** Plates letter in the data face (DIN 2014 on the site's kit, Barlow Semi
 Condensed off it); monospace is reserved for code. Light is graphite-on-vellum, dark is
