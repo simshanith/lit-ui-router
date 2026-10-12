@@ -6,7 +6,7 @@ const P = 's5';
 // the homes the notes and the plate name: each router's docs, the Navigation API's section of the HTML standard, the ui-router site, the two server-side guides
 const HOME = {
   tanstack: 'https://tanstack.com/router',
-  sveltekit: 'https://svelte.dev/docs/kit',
+  sveltekit: 'https://svelte.dev/docs/kit/routing',
   next: 'https://nextjs.org/docs/app',
   reactrouter: 'https://reactrouter.com/',
   angular: 'https://angular.dev/guide/routing',
