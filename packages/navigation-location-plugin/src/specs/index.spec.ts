@@ -372,6 +372,12 @@ describe.skipIf(!hasNavigationAPI)('traversal interception', () => {
     await window.navigation.transition?.finished;
   }
 
+  // Firefox skips a traversal's scroll restore when the previous navigation's scroll lands after the commit.
+  async function settleScroll(): Promise<void> {
+    await new Promise(requestAnimationFrame);
+    await new Promise(requestAnimationFrame);
+  }
+
   beforeEach(() => {
     originalHref = window.location.href;
     spacer = document.createElement('div');
@@ -428,6 +434,7 @@ describe.skipIf(!hasNavigationAPI)('traversal interception', () => {
     window.scrollTo(0, 1000);
     expect(window.scrollY).toBe(1000);
     await go('b');
+    await settleScroll();
 
     await window.navigation.back().finished;
     await vi.waitFor(() => expect(router.globals.current.name).toBe('a'));
@@ -446,6 +453,7 @@ describe.skipIf(!hasNavigationAPI)('traversal interception', () => {
     expect(window.scrollY).toBe(1000);
     await go('b');
     await rendered;
+    await settleScroll();
 
     await window.navigation.back().finished;
 
