@@ -1,5 +1,5 @@
 // The Cloudflare v4 API client the CLIs here share. The token itself must
-// never reach stdout/stderr — errors carry only the API's own status and messages.
+// never reach stdout/stderr, and errors redact the account id.
 
 import type { Json } from '@tools/bootstrap/types.ts';
 
@@ -35,8 +35,11 @@ export async function cf(
       .map((error) => `${error.code ?? '?'}: ${error.message ?? '?'}`)
       .join('; ');
 
+    // The account id leads the path; check-run summaries are public.
+    const shown = path.replace(/^\/[^/]+/, '/{account_id}');
+
     throw new Error(
-      `Cloudflare API ${init?.method ?? 'GET'} ${path} failed (HTTP ${response.status})${details ? ` — ${details}` : ''}`,
+      `Cloudflare API ${init?.method ?? 'GET'} ${shown} failed (HTTP ${response.status})${details ? ` — ${details}` : ''}`,
     );
   }
 

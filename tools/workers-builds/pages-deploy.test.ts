@@ -193,6 +193,8 @@ describe('pages-deploy CLI', () => {
     assert.match(output, /HTTP 403/);
     assert.match(output, /Authentication error/);
     assert.doesNotMatch(output, /test-token/);
+    assert.doesNotMatch(output, /test-account/);
+    assert.match(output, /\/\{account_id\}\/pages\/projects\//);
   });
 
   it('exits 2 when Cloudflare is unreachable', () => {
