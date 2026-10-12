@@ -258,6 +258,90 @@ so it is running the rule live: see
 whose Cypress suite asserts the resulting `page_view` counts separately under
 each location plugin.
 
+## Reaching past the router
+
+The plugin is a drop-in location strategy: swap it in and nothing else in the
+app changes. Links go through `uiSref`, guards through transition hooks, and
+extra work on a router navigation through `intercept`. A `navigate` listener of
+the app's own reaches past the router, and it is correct in one case only: a
+navigation the router does not own.
+
+### When it is correct
+
+A link or form that leaves the app, to a page the server renders, a sign-out
+endpoint or a download, never becomes a router transition. The plugin leaves it
+alone, the browser loads a new document, and no transition hook runs. The
+`navigate` event is the only place the app sees it coming, so holding it while
+a draft is unsaved belongs there:
+
+```ts
+import { isUIRouterNavigateEvent } from 'ui-router-navigation-location-plugin';
+
+navigation.addEventListener('navigate', (event) => {
+  const leavesTheApp =
+    !isUIRouterNavigateEvent(event) &&
+    (event.navigationType === 'push' || event.navigationType === 'replace') &&
+    !event.hashChange;
+
+  if (leavesTheApp && hasUnsavedDraft() && event.cancelable) {
+    event.preventDefault();
+    askBeforeLeaving(event.destination.url);
+  }
+});
+```
+
+Under this plugin, a push or replace that the router did not start loads a new
+document unless something intercepts it, which is what makes `leavesTheApp`
+hold. To leave after all, call `navigation.navigate(url, { info })` with an
+`info` the listener recognises and lets through. `navigate` fires only for
+navigations the document starts; a typed URL or a closed tab never reaches it,
+so `beforeunload` stays the backstop.
+
+### When it is a smell
+
+A listener that acts on the router's own navigations, or on URLs the router
+matches, is routing around it:
+
+- Cancelling a navigation to keep the user on a state is a transition hook's
+  job: return `false` from `onBefore` or `onExit`, and the router knows the
+  transition did not happen.
+- Extra work on a router navigation goes through
+  [`intercept`](#navigation-event-interception), which hands over the same
+  event.
+- `event.intercept()` on a navigation the router did not start commits its URL
+  as a same-document navigation, and the plugin then syncs that URL into the
+  router. If the destination renders in the app, it is a state.
+- A plain `<a href>` to a router URL loads a new document under this plugin,
+  as it does under `pushStateLocationPlugin`. Link with `uiSref`.
+
+### Work scoped to a navigation
+
+Each navigation the plugin intercepts carries an `event.signal`, which aborts
+when a newer navigation supersedes it. Work handed to `intercept` that should
+not outlive its navigation, such as a prefetch, takes that signal:
+
+```ts
+router.plugin(navigationLocationPlugin, {
+  intercept: (event) => ({
+    handler: () => prefetch(event.destination.url, { signal: event.signal }),
+  }),
+});
+```
+
+The router transition has committed by the time `handler` runs, so an aborted
+or failed handler settles `navigation.transition.finished`, not the transition.
+
+### Example
+
+The example holds its Sign out link while the draft is unsaved, and prefetches
+on every router navigation through `intercept`. Click between Inbox and Archive
+faster than the prefetch finishes to see the superseded one abort. Its log is a
+`navigate` listener too, so it shows every router navigation that a
+`history.pushState` patch misses (see
+[What else observes navigation](#what-else-observes-navigation)).
+
+<LiveExample name="navigation-api" />
+
 ## API summary
 
 - **`navigationLocationPlugin`** — the plugin factory; pass it to

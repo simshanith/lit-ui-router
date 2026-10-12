@@ -52,6 +52,12 @@ export const EXAMPLES = {
     height: '1600px',
     file: 'src/main.ts',
   },
+  'navigation-api': {
+    title: 'Navigation API',
+    // check:embeds walks hash links only, so it measures the initial state; every other state keeps that height.
+    height: '650px',
+    file: 'src/main.ts',
+  },
 } as const;
 
 export type ExampleName = keyof typeof EXAMPLES;
