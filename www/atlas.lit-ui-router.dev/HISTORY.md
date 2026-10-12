@@ -682,7 +682,7 @@ resolved →
 
 ## Sheet 5 — THE DESIGN SPACE
 
-- **file** `diagrams/generator/sheet5.mjs` · **id** `runtime` · **current rev** C
+- **file** `diagrams/generator/sheet5.mjs` · **id** `runtime` · **current rev** D
 - **subject line / lead** (resolved, present-state — not history):
 
 > ALTITUDE 5 — routers in the JS runtime · positions are editorial, argued in the notes
@@ -692,6 +692,14 @@ resolved →
 **`sub` clause** (verbatim source):
 
 > REV B 2026-09-06: the empty-quarter callout re-cut to the line it frames (330 → 236 wide) — the dashed box had been drawn to the mono lettering and, at the data face, crossed the first column boundary into the server column it says nothing about; no point moved
+
+### REV D — 2026-10-12
+
+**clause** (the record's own; the sub carries no rev clauses):
+
+> REV D 2026-10-12: the server-runtime column gets its platform floor — one circle at platform × server runtime, x 0.36, lettered `node:http / fetch handler` with each name linked to its own home (the Node http docs; the WinterTC Minimum Common Web Platform API), note "a request, a URL string, no match"; the Navigation API's twin in the client column. The notes' column paragraph names the pair and keeps URLPattern off the plot as the platform's matcher that owns neither a request nor navigation; the sub counts eleven entries, the aria label ten circles.
+
+The user: "for sheet 5 wondering if node http server module qualifies? for platform x server runtime zone" and then "go, draw the pair and note urlpattern". The rev B/C empty-quarter callout sits at platform × build time and is untouched; the new circle's lettering ends short of the server/client column line.
 
 ### REV C — 2026-10-11
 

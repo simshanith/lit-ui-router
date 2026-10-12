@@ -18,6 +18,14 @@
   "issueLog": [
     {
       "date": "2026-10-12",
+      "num": "5",
+      "head": "SHEET 5",
+      "title": "THE DESIGN SPACE",
+      "rev": "D",
+      "desc": "the server-runtime column gets its platform floor"
+    },
+    {
+      "date": "2026-10-12",
       "num": "7B",
       "head": "SHEET 7B",
       "title": "THE WORKING CITY",
@@ -1137,7 +1145,7 @@
       "id": "5",
       "num": "5",
       "title": "THE DESIGN SPACE",
-      "sub": "ALTITUDE 5 — ten routers placed by where matching happens and who owns navigation, shape marking the source of truth · positions are editorial, argued in the notes",
+      "sub": "ALTITUDE 5 — eleven entries placed by where matching happens and who owns navigation, shape marking the source of truth · positions are editorial, argued in the notes",
       "caption": "No mechanism connects these projects, so an edge between them would be fiction; the one line on the sheet runs inside the lineage, where sheet 2 draws the mechanism. What is real is position: where matching happens, who owns navigation, and — the squares — whether the URL or a state tree is the source of truth.",
       "scale": "JS ECOSYSTEM",
       "verdict": "no shared mechanism — position, not edges",
@@ -1147,7 +1155,7 @@
         "projection": "chart",
         "mode": "static"
       },
-      "rev": "C",
+      "rev": "D",
       "file": "sheets/5.html",
       "interactive": false,
       "needsCytoscape": false,

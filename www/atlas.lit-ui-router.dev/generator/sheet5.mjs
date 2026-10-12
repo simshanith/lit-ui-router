@@ -3,7 +3,7 @@ import { txt, lines, box, keyRow, link } from './helpers.mjs';
 
 const P = 's5';
 
-// the homes the notes and the plate name: each router's docs, the Navigation API's section of the HTML standard, the ui-router site, the two server-side guides
+// the homes the notes and the plate name: each router's docs, the platform's primitives at their standards, the ui-router site, the two server-side guides
 const HOME = {
   tanstack: 'https://tanstack.com/router',
   sveltekit: 'https://svelte.dev/docs/kit/routing',
@@ -13,6 +13,9 @@ const HOME = {
   vue: 'https://router.vuejs.org/',
   wouter: 'https://github.com/molefrog/wouter',
   hono: 'https://hono.dev/',
+  nodehttp: 'https://nodejs.org/api/http.html',
+  fetch: 'https://min-common-api.proposal.wintertc.org/',
+  urlpattern: 'https://urlpattern.spec.whatwg.org/',
   navigation: 'https://html.spec.whatwg.org/multipage/nav-history-apis.html#navigation-api',
   uirouter: 'https://ui-router.github.io/',
   lit: 'https://lit-ui-router.dev/',
@@ -32,6 +35,7 @@ const MEMBER_HOME = {
   'wouter': HOME.wouter,
   'Hono / Express': HOME.hono,
   'Navigation API': HOME.navigation,
+  'node:http / fetch handler': [['node:http', HOME.nodehttp], [' / ', null], ['fetch handler', HOME.fetch]],
   'lit-ui-router-ssr': HOME.ssr,
   'ui-router-server': HOME.server,
   'ui-router / lit-ui-router': HOME.lit,
@@ -40,13 +44,19 @@ const home = (name) => {
   if (!MEMBER_HOME[name]) throw new Error(`sheet5: ${name} has no home`);
   return MEMBER_HOME[name];
 };
+const lettering = (name, x, y, anchor) => {
+  const h = home(name);
+  if (!Array.isArray(h)) return link(h, txt(x, y, name, 'lblb', anchor));
+  const spans = h.map(([s, href]) => (href ? link(href, `<tspan>${s}</tspan>`) : `<tspan>${s}</tspan>`)).join('');
+  return `<text x="${x}" y="${y}" class="lblb" text-anchor="${anchor}">${spans}</text>`;
+};
 
 // Plot area
 const PX = 130, PW = 870, PY = 70, PH = 440;
 const bandY = { library: PY + 70, framework: PY + 220, platform: PY + 370 };
 const cx = (f) => PX + f * PW;
 
-// [xFrac, band, dy, name, note, 'c', side?] — every point here is a circle, URL-first.
+// [xFrac, band, dy, name, note, 'c', side?] — every point here is a circle, URL-first; a pair home is one lettering, two links.
 // side pins the label to one flank when the default would straddle a column line.
 const points = [
   [0.10, 'framework', -26, 'SvelteKit', 'filesystem routes, compiled', 'c'],
@@ -57,6 +67,7 @@ const points = [
   [0.70, 'library', -34, 'TanStack Router', 'typed at build, matched in the client', 'c', 'r'],
   [0.92, 'library', 4, 'wouter', 'minimal hook', 'c'],
   [0.38, 'library', 0, 'Hono / Express', 'server-only: match, no navigation', 'c'],
+  [0.36, 'platform', 0, 'node:http / fetch handler', 'a request, a URL string, no match', 'c'],
   [0.69, 'platform', 0, 'Navigation API', 'the primitive the client column builds on', 'c', 'r'],
 ];
 
@@ -87,11 +98,11 @@ const marks = points.map(([xf, band, dy, name, note, , side]) => {
   const lx = right ? x + 14 : x - 14;
   const anchor = right ? 'start' : 'end';
   return `<g><title>${name} — ${note}</title><circle cx="${x}" cy="${y}" r="6" class="sk fp" stroke-width="1.6"/>
-${link(home(name), txt(lx, y - 1, name, 'lblb', anchor))}
+${lettering(name, lx, y - 1, anchor)}
 ${txt(lx, y + 12, note, 'lblf', anchor)}</g>`;
 }).join('\n');
 
-const svg = `<svg viewBox="0 0 1080 640" role="img" aria-label="A positioned chart of the JavaScript router design space: horizontal axis runs from build-time to server-runtime to client-runtime route matching; vertical bands separate platform, framework, and library ownership of navigation. Nine routers are plotted as labeled circles. The ui-router lineage is the one state-first entry, drawn as three squares on one row of the library band, one in each column — lit-ui-router-ssr at build time, ui-router-server at server runtime, lit-ui-router at client runtime — joined by a bracket, the sheet's only edge.">
+const svg = `<svg viewBox="0 0 1080 640" role="img" aria-label="A positioned chart of the JavaScript router design space: horizontal axis runs from build-time to server-runtime to client-runtime route matching; vertical bands separate platform, framework, and library ownership of navigation. Ten entries are plotted as labeled circles, the platform's own primitives among them: the Navigation API at client runtime, node:http and the fetch handler at server runtime. The ui-router lineage is the one state-first entry, drawn as three squares on one row of the library band, one in each column — lit-ui-router-ssr at build time, ui-router-server at server runtime, lit-ui-router at client runtime — joined by a bracket, the sheet's only edge.">
 ${defs(P)}
 
 <!-- frame + column bands -->
@@ -133,16 +144,16 @@ ${txt(PX + 28, PY + PH + 90, 'state-first — a named state tree; the URL is one
 </svg>`;
 
 export const sheet5 = {
-  num: 5, id: 'runtime', rev: 'C',
+  num: 5, id: 'runtime', rev: 'D',
   title: 'THE DESIGN SPACE',
-  sub: 'ALTITUDE 5 — ten routers placed by where matching happens and who owns navigation, shape marking the source of truth · positions are editorial, argued in the notes',
+  sub: 'ALTITUDE 5 — eleven entries placed by where matching happens and who owns navigation, shape marking the source of truth · positions are editorial, argued in the notes',
   scale: 'JS ECOSYSTEM',
   form: 'POSITIONED CHART',
   svg,
   caption: 'No mechanism connects these projects, so an edge between them would be fiction; the one line on the sheet runs inside the lineage, where sheet 2 draws the mechanism. What is real is position: where matching happens, who owns navigation, and — the squares — whether the URL or a state tree is the source of truth.',
   notes: `
 <p><strong>This altitude forbids the city outright.</strong> A diagram's edges assert mechanism, and there is none between <a href="${HOME.tanstack}">TanStack</a> and <a href="${HOME.sveltekit}">SvelteKit</a>. The honest form is a positioned chart whose axes are real, contested design decisions — with the positions owned as editorial judgment, not measurement.</p>
-<p><strong>Reading the columns:</strong> the field has been sliding left for a decade — filesystem routes and typegen move matching toward build time; server components move it toward the server. The client-runtime column is where the platform itself now competes, via the <a href="${HOME.navigation}">Navigation API</a>.</p>
+<p><strong>Reading the columns:</strong> the field has been sliding left for a decade — filesystem routes and typegen move matching toward build time; server components move it toward the server. The client-runtime column is where the platform itself now competes, via the <a href="${HOME.navigation}">Navigation API</a>. The server-runtime column has a platform floor of its own, drawn as one circle with two names: <a href="${HOME.nodehttp}"><code>node:http</code></a> hands a listener a request whose URL is a bare string, and the <a href="${HOME.fetch}">fetch handler</a> hands one a Request and wants a Response back; neither matches anything, and Hono, Express and the lineage's connect and fetch adapters all stand on one or the other. <a href="${HOME.urlpattern}">URLPattern</a> is the platform's matcher, in browsers and global in Node 24, and it stays off the plot: it matches a string against a pattern and owns neither a request nor navigation, so it is a part routers are built from, not a router.</p>
 <p><strong>The squares are the argument.</strong> Every circle on this chart treats the URL as the source of truth and derives the view from it. The <a href="${HOME.uirouter}">ui-router</a> lineage inverts that: a named, hierarchical state tree is primary, and the URL is a projection — one of several possible addresses for a state. That inversion is why sheet 1's loop runs through a state registry rather than a path matcher, and why the same tree answers HTTP requests in sheet 2's server lane. It is also why the squares sit alone: the niche is real, small, and — for state-heavy embedded UIs where the address bar is not the whole story — defensible.</p>
 <p><strong>One tree, every column — and this atlas is the measurement.</strong> The lineage is the one entry drawn in all three columns, and the bracket under its row is the sheet's one edge with a mechanism behind it. <a href="${HOME.server}"><code>ui-router-server</code></a> compiles the same state declarations into a mount table and gives each path an HTTP verdict — shell, redirect or 404 — at server runtime, in its connect, vite, fetch and hono adapters. <a href="${HOME.ssr}"><code>lit-ui-router-ssr</code></a> takes that mount table at build time, drives one router to every path and draws each <code>&lt;ui-view&gt;</code> to a page; its client half adopts the page one view per route match, the per-boundary, provided cell of the <a href="${HOME.compare}">hydration models its guide compares</a>. Every page of this atlas, this one included, is a verdict the server router gave and a document the prerenderer wrote at build, adopted by <code>lit-ui-router</code> at client runtime: the three squares are the three times one state tree matched the address you are reading.</p>`,
   key: [
