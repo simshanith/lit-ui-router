@@ -1,6 +1,6 @@
 # Examples
 
-This folder contains standalone example projects demonstrating lit-ui-router usage. The tutorial examples escalate in scope — start with **helloworld**, then work outward through the solar system and into the galaxy. **design-system-links** is not a tutorial rung: it is live documentation for one API surface, embedded in the guide that explains it. **hellosolarsystem-mobx** is not a rung either: it is the solar-system rung rebuilt on the MobX bindings, embedded in the pages that document them. Nor is **hellogalaxy-effect**: it is the galaxy rung rebuilt on [Effect](https://effect.website) and the [Effect bindings](https://lit-ui-router.dev/packages/effect), with the resolve-and-scope plugin it also needs inlined as a spike of a future `ui-router-effect` package. Nor is **lint-eslint**: it is the consumer wiring of [`eslint-plugin-lit-ui-router`](https://lit-ui-router.dev/packages/eslint-plugin), installed from npm exactly as a consumer would, and it renders its own lint report in the page.
+This folder contains standalone example projects demonstrating lit-ui-router usage. The tutorial examples escalate in scope — start with **helloworld**, then work outward through the solar system and into the galaxy. **design-system-links** is not a tutorial rung: it is live documentation for one API surface, embedded in the guide that explains it. **hellosolarsystem-mobx** is not a rung either: it is the solar-system rung rebuilt on the MobX bindings, embedded in the pages that document them. Nor is **hellogalaxy-effect**: it is the galaxy rung rebuilt on [Effect](https://effect.website) and the [Effect bindings](https://lit-ui-router.dev/packages/effect), with the resolve-and-scope plugin it also needs inlined as a spike of a future `ui-router-effect` package. Nor is **lint-eslint**: it is the consumer wiring of [`eslint-plugin-lit-ui-router`](https://lit-ui-router.dev/packages/eslint-plugin), installed from npm exactly as a consumer would, and it renders its own lint report in the page. Nor is **navigation-api**: it is the escape hatch documented on the [Navigation API plugin page](https://lit-ui-router.dev/packages/navigation-plugin#reaching-past-the-router), a `navigate` listener for the one navigation the router does not own.
 
 ## StackBlitz Integration
 
@@ -23,6 +23,7 @@ See [StackBlitz Tips & Best Practices](https://developer.stackblitz.com/guides/i
 | **hellogalaxy-effect**    | The same explorer rebuilt on Effect: typed resolve inheritance, state-scoped fibers, and interruptible loads | [Open](https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/hellogalaxy-effect)    |
 | **design-system-links**   | `uiSref` driving a design-system link element (`<sp-link>`): `assignHref: true` vs `'auto'`                  | [Open](https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/design-system-links)   |
 | **lint-eslint**           | `eslint-plugin-lit-ui-router` the ESLint-only way, with the lint report rendered in the page                 | [Open](https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/lint-eslint)           |
+| **navigation-api**        | `ui-router-navigation-location-plugin` with an app `navigate` listener that holds a link leaving the app     | [Open](https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/navigation-api)        |
 
 ## What Each Example Teaches
 
@@ -104,6 +105,16 @@ A Vite project that lints itself: the same small lit app as **helloworld**, an `
 - `lint:tap` (one TAP line per file) alongside the plain `lint`, and `lint:watch` (chokidar-cli + `eslint-formatter-pretty`) as the terminal-only alternative to the dev server
 
 The oxlint wiring (`jsPlugins` in `.oxlintrc.json`) has no example of its own: this monorepo's root config already lints every example with it, and oxlint ships native bindings with no `wasm32-wasi` build, so it cannot run on StackBlitz at all.
+
+### navigation-api
+
+An inbox on [`ui-router-navigation-location-plugin`](https://lit-ui-router.dev/packages/navigation-plugin), with a draft field kept outside the `<ui-view>` and a log of every Navigation API event. Embedded in the plugin page's [Reaching past the router](https://lit-ui-router.dev/packages/navigation-plugin#reaching-past-the-router) section, which says when an app's own `navigate` listener is correct and when it is a smell.
+
+- **The navigation the router does not own.** Sign out is a plain `<a href>` to `signed-out.html`, a static page in `public/`. The router never sees it, so the app's `navigate` listener holds it with `preventDefault()` while the draft is unsaved, and "Leave anyway" re-issues it with an `info` the listener lets through. `beforeunload` covers the typed URL and the closed tab, which never fire `navigate`
+- **The navigations the router does own.** Inbox and Archive are `uiSref` links. The listener only logs them, recognised with `isUIRouterNavigateEvent`; the plugin intercepts them itself
+- **Work scoped to a navigation.** The plugin's `intercept` option runs a simulated prefetch on each router navigation, bound to `event.signal`, so a navigation that supersedes it aborts it and the log shows the `AbortError`
+- **A static host.** `<base href="%BASE_URL%">` gives the plugin the embed's path prefix, and the one state keeps its URLs on that path with a `?folder` query parameter, so a reload or a back into the app never asks the host for a path it does not serve
+- **No Navigation API.** The page says so and stops; an app falls back to `pushStateLocationPlugin`, which has no `navigate` event to listen to
 
 ## Running Locally
 

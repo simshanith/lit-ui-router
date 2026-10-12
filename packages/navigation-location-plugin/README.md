@@ -159,6 +159,10 @@ router.transitionService.onSuccess({}, () => {
 
 See [What else observes navigation](https://lit-ui-router.dev/packages/navigation-plugin#what-else-observes-navigation) for the full walkthrough.
 
+## Reaching Past the Router
+
+A `navigate` listener of the app's own is correct for a navigation the router does not own, such as a link that leaves the app while a draft is unsaved. On the router's own navigations it is a smell: guard those with transition hooks and do extra work through `intercept`. See [Reaching past the router](https://lit-ui-router.dev/packages/navigation-plugin#reaching-past-the-router) for when each applies, with a live example.
+
 ## API
 
 ### `navigationLocationPlugin`

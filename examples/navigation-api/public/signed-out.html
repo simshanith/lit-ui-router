@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Signed out - lit-ui-router</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+      }
+      body {
+        font-family:
+          system-ui,
+          -apple-system,
+          sans-serif;
+        max-width: 800px;
+        margin: 32px auto;
+        padding: 0 20px;
+        color: light-dark(#222, #e6e6e6);
+        background: light-dark(#fff, #1d1d1d);
+      }
+      a {
+        color: light-dark(#0b5cad, #7ab8ff);
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Signed out</h1>
+    <p>
+      A page the server renders, outside the app. The router never saw this
+      navigation: it loaded a new document.
+    </p>
+    <p><a href="./">Back to the app</a></p>
+  </body>
+</html>
