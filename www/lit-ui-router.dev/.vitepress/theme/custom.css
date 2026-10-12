@@ -132,6 +132,8 @@
   inline-size: auto;
   block-size: auto;
   transform: none;
+  /* Bounds the logo's blend to the glow; blending against the page left Safari painting stale glow tiles. */
+  isolation: isolate;
 }
 
 .VPHero.has-image :is(.image-bg, .image-src) {
@@ -172,11 +174,12 @@
     }
 }
 
-html.chrome .VPHero .VPImage {
+/* The blend also makes the logo a stacking context, so it paints over the filtered glow. */
+.VPHero .VPImage {
   mix-blend-mode: multiply;
 }
 
-html.chrome.dark .VPHero .VPImage {
+.dark .VPHero .VPImage {
   mix-blend-mode: plus-lighter;
 }
 

@@ -150,10 +150,12 @@ const builtinTypes = {
   }),
 } satisfies Record<string, ParamType>;
 
-/** The built-in type a name spells. */
-// SAFETY: a name outside the table reads undefined; Object.prototype names are not guarded.
+const isBuiltinName = (name: string): name is keyof typeof builtinTypes =>
+  Object.hasOwn(builtinTypes, name);
+
+/** The built-in type a name spells, from own keys only: never an Object.prototype member. */
 const builtinType = (name: string): ParamType | undefined =>
-  builtinTypes[name as keyof typeof builtinTypes];
+  isBuiltinName(name) ? builtinTypes[name] : undefined;
 
 // Upstream registers these, but they only mean something with url building
 // or search-value handling; rejected at compile (see the module docblock).
@@ -212,14 +214,13 @@ const resolveType = (
   if (!declared) return builtinTypes[isSearch ? 'query' : 'path'];
 
   if (isParamTypeObject(declared)) return declared;
-  const named = builtinType(declared);
 
-  if (!named)
+  if (!declaredBuiltin)
     throw new Error(
       `Unknown type '${declared}' for param '${id}'; built-in types: ${Object.keys(builtinTypes).join(', ')}`,
     );
 
-  return named;
+  return declaredBuiltin;
 };
 
 // An inline '{name:...}' body: a built-in type name, or a raw regexp that

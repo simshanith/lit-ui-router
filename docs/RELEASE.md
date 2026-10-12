@@ -399,6 +399,10 @@ The description says what kind of release the train is, not which issues are
 on it: a new minor copies the previous minor's wording with the version
 changed. Per-issue detail belongs on the issue.
 
+A minor's milestone closes with its x.0 train; no milestone tracks patches. A
+`fix:` that ships as a patch of the current minor files under the next minor's
+milestone, and the release, not the milestone, decides patch or minor.
+
 Work that can only happen after publish still rides the train's milestone.
 `examples/*` pin the published `lit-ui-router` range rather than
 `workspace:*`, so bumping them to the new version is the train's last item
