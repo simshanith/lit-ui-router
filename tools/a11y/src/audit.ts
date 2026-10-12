@@ -115,9 +115,13 @@ export async function auditDocs(
       const page = await context.newPage();
 
       for (let path = queue.shift(); path; path = queue.shift()) {
-        await goto(page, origin + path);
-        await loadEmbeds(page);
-        await scan(page, path, scheme, audit);
+        try {
+          await goto(page, origin + path);
+          await loadEmbeds(page);
+          await scan(page, path, scheme, audit);
+        } catch (error) {
+          throw new Error(`${path} [${scheme}]`, { cause: error });
+        }
       }
 
       await page.close();
