@@ -3,12 +3,15 @@ import { txt, lines, box, keyRow } from './helpers.mjs';
 
 const P = 's5';
 
-// the homes the notes name: two routers' docs, the Navigation API's section of the HTML standard, the ui-router site
+// the homes the notes name: two routers' docs, the Navigation API's section of the HTML standard, the ui-router site, the two server-side guides
 const HOME = {
   tanstack: 'https://tanstack.com/router',
   sveltekit: 'https://svelte.dev/docs/kit',
   navigation: 'https://html.spec.whatwg.org/multipage/nav-history-apis.html#navigation-api',
   uirouter: 'https://ui-router.github.io/',
+  server: 'https://lit-ui-router.dev/packages/server',
+  ssr: 'https://lit-ui-router.dev/packages/ssr',
+  compare: 'https://lit-ui-router.dev/packages/ssr#how-this-compares',
 };
 
 // Plot area
@@ -16,7 +19,7 @@ const PX = 130, PW = 870, PY = 70, PH = 440;
 const bandY = { library: PY + 70, framework: PY + 220, platform: PY + 370 };
 const cx = (f) => PX + f * PW;
 
-// [xFrac, band, dy, name, note, shape, side?] — square = state-first, circle = URL-first.
+// [xFrac, band, dy, name, note, 'c', side?] — every point here is a circle, URL-first.
 // side pins the label to one flank when the default would straddle a column line.
 const points = [
   [0.10, 'framework', -26, 'SvelteKit', 'filesystem routes, compiled', 'c'],
@@ -26,27 +29,42 @@ const points = [
   [0.88, 'framework', 30, 'Vue Router', 'official, but installable', 'c'],
   [0.70, 'library', -34, 'TanStack Router', 'typed at build, matched in the client', 'c', 'r'],
   [0.92, 'library', 4, 'wouter', 'minimal hook', 'c'],
-  [0.38, 'library', 40, 'Hono / Express', 'server-only: match, no navigation', 'c'],
-  [0.71, 'library', 56, 'ui-router / lit-ui-router', 'named state tree — URL is a projection', 's', 'r'],
+  [0.38, 'library', 0, 'Hono / Express', 'server-only: match, no navigation', 'c'],
   [0.69, 'platform', 0, 'Navigation API', 'the primitive the client column builds on', 'c', 'r'],
 ];
 
-const marks = points.map(([xf, band, dy, name, note, shape, side]) => {
+// The lineage is one row of squares, one per column, on one state tree: the
+// same declarations prerendered at build, answered per path on the server and
+// navigated in the client. The bracket under the row is the sheet's one edge.
+const LY = bandY.library + 36;
+const LINEAGE = [
+  [0.17, 'lit-ui-router-ssr', 'prerender · drawn to pages at build'],
+  [0.50, 'ui-router-server', 'HTTP verdict per path'],
+  [0.80, 'ui-router / lit-ui-router', 'navigated in the client'],
+];
+const lineage = `<g><title>the ui-router lineage — one named state tree, matched in every column; the URL is a projection</title>
+${LINEAGE.map(([xf, name, note]) => {
+  const x = cx(xf);
+  return `<rect x="${x - 7}" y="${LY - 7}" width="14" height="14" class="ska fp" stroke-width="2.2"/><rect x="${x - 13}" y="${LY - 13}" width="26" height="26" rx="4" class="fhalo"/>
+<line x1="${x}" y1="${LY + 7}" x2="${x}" y2="${LY + 24}" class="ska"/>
+${txt(x + 20, LY - 1, name, 'lbla')}
+${txt(x + 20, LY + 12, note, 'lblf')}`;
+}).join('\n')}
+<line x1="${cx(LINEAGE[0][0])}" y1="${LY + 24}" x2="${cx(LINEAGE[2][0])}" y2="${LY + 24}" class="ska"/>
+${txt(cx(0.485), LY + 36, 'ONE STATE TREE · MATCHED IN EVERY COLUMN · THE URL IS A PROJECTION', 'lbla', 'middle')}
+</g>`;
+
+const marks = points.map(([xf, band, dy, name, note, , side]) => {
   const x = cx(xf), y = bandY[band] + dy;
-  const isUs = shape === 's';
-  const mark = isUs
-    ? `<rect x="${x - 7}" y="${y - 7}" width="14" height="14" class="ska fp" stroke-width="2.2"/><rect x="${x - 13}" y="${y - 13}" width="26" height="26" rx="4" class="fhalo"/>`
-    : `<circle cx="${x}" cy="${y}" r="6" class="sk fp" stroke-width="1.6"/>`;
   const right = side ? side === 'r' : xf < 0.70;
-  const gap = isUs ? 20 : 14;
-  const lx = right ? x + gap : x - gap;
+  const lx = right ? x + 14 : x - 14;
   const anchor = right ? 'start' : 'end';
-  return `<g><title>${name} — ${note}</title>${mark}
-${txt(lx, y - 1, name, isUs ? 'lbla' : 'lblb', anchor)}
+  return `<g><title>${name} — ${note}</title><circle cx="${x}" cy="${y}" r="6" class="sk fp" stroke-width="1.6"/>
+${txt(lx, y - 1, name, 'lblb', anchor)}
 ${txt(lx, y + 12, note, 'lblf', anchor)}</g>`;
 }).join('\n');
 
-const svg = `<svg viewBox="0 0 1080 640" role="img" aria-label="A positioned chart of the JavaScript router design space: horizontal axis runs from build-time to server-runtime to client-runtime route matching; vertical bands separate platform, framework, and library ownership of navigation. Ten routers are plotted as labeled points. ui-router and lit-ui-router sit alone as the only state-first router, marked with a square, in an otherwise URL-first field.">
+const svg = `<svg viewBox="0 0 1080 640" role="img" aria-label="A positioned chart of the JavaScript router design space: horizontal axis runs from build-time to server-runtime to client-runtime route matching; vertical bands separate platform, framework, and library ownership of navigation. Nine routers are plotted as labeled circles. The ui-router lineage is the one state-first entry, drawn as three squares on one row of the library band, one in each column — lit-ui-router-ssr at build time, ui-router-server at server runtime, lit-ui-router at client runtime — joined by a bracket, the sheet's only edge.">
 ${defs(P)}
 
 <!-- frame + column bands -->
@@ -67,14 +85,16 @@ ${txt(PX - 12, yTop + PH / 6 + 4, { library: 'LIBRARY', framework: 'FRAMEWORK', 
 ${txt(22, PY + PH / 2, 'WHO OWNS NAVIGATION ↑', 'lblb', 'middle', `transform="rotate(-90 22 ${PY + PH / 2})"`)}
 
 ${marks}
+${lineage}
 
-<!-- the thesis callout -->
-<rect x="${PX + 16}" y="${PY + 14}" width="236" height="86" class="skr fnone" stroke-dasharray="6 4"/>
-${lines(PX + 30, PY + 38, [
+<!-- the thesis callout, in the quarter no router occupies -->
+<rect x="${PX + 16}" y="${PY + 2 * PH / 3 + 14}" width="236" height="100" class="skr fnone" stroke-dasharray="6 4"/>
+${lines(PX + 30, PY + 2 * PH / 3 + 38, [
   'THE EMPTY QUARTER',
   'nearly every router here is URL-first:',
   'the address is the source of truth.',
-  'state-first routing is a one-square niche.',
+  'state-first routing is one lineage —',
+  'three squares, one tree, every column.',
 ], 'lbls', 'start', 15)}
 
 <!-- shape legend under plot -->
@@ -86,20 +106,22 @@ ${txt(PX + 28, PY + PH + 90, 'state-first — a named state tree; the URL is one
 </svg>`;
 
 export const sheet5 = {
-  num: 5, id: 'runtime', rev: 'B',
+  num: 5, id: 'runtime', rev: 'C',
   title: 'THE DESIGN SPACE',
   sub: 'ALTITUDE 5 — ten routers placed by where matching happens and who owns navigation, shape marking the source of truth · positions are editorial, argued in the notes',
   scale: 'JS ECOSYSTEM',
   form: 'POSITIONED CHART',
   svg,
-  caption: 'No mechanism connects these projects, so any drawn edge would be fiction. What is real is position: where matching happens, who owns navigation, and — the one square — whether the URL or a state tree is the source of truth.',
+  caption: 'No mechanism connects these projects, so an edge between them would be fiction; the one line on the sheet runs inside the lineage, where sheet 2 draws the mechanism. What is real is position: where matching happens, who owns navigation, and — the squares — whether the URL or a state tree is the source of truth.',
   notes: `
 <p><strong>This altitude forbids the city outright.</strong> A diagram's edges assert mechanism, and there is none between <a href="${HOME.tanstack}">TanStack</a> and <a href="${HOME.sveltekit}">SvelteKit</a>. The honest form is a positioned chart whose axes are real, contested design decisions — with the positions owned as editorial judgment, not measurement.</p>
 <p><strong>Reading the columns:</strong> the field has been sliding left for a decade — filesystem routes and typegen move matching toward build time; server components move it toward the server. The client-runtime column is where the platform itself now competes, via the <a href="${HOME.navigation}">Navigation API</a>.</p>
-<p><strong>The square is the argument.</strong> Every circle on this chart treats the URL as the source of truth and derives the view from it. The <a href="${HOME.uirouter}">ui-router</a> lineage inverts that: a named, hierarchical state tree is primary, and the URL is a projection — one of several possible addresses for a state. That inversion is why sheet 1's loop runs through a state registry rather than a path matcher, and why the same tree can answer HTTP requests in sheet 2's server lane. It is also why the square sits alone: the niche is real, small, and — for state-heavy embedded UIs where the address bar is not the whole story — defensible.</p>`,
+<p><strong>The squares are the argument.</strong> Every circle on this chart treats the URL as the source of truth and derives the view from it. The <a href="${HOME.uirouter}">ui-router</a> lineage inverts that: a named, hierarchical state tree is primary, and the URL is a projection — one of several possible addresses for a state. That inversion is why sheet 1's loop runs through a state registry rather than a path matcher, and why the same tree answers HTTP requests in sheet 2's server lane. It is also why the squares sit alone: the niche is real, small, and — for state-heavy embedded UIs where the address bar is not the whole story — defensible.</p>
+<p><strong>One tree, every column — and this atlas is the measurement.</strong> The lineage is the one entry drawn in all three columns, and the bracket under its row is the sheet's one edge with a mechanism behind it. <a href="${HOME.server}"><code>ui-router-server</code></a> compiles the same state declarations into a mount table and gives each path an HTTP verdict — shell, redirect or 404 — at server runtime, in its connect, vite, fetch and hono adapters. <a href="${HOME.ssr}"><code>lit-ui-router-ssr</code></a> takes that mount table at build time, drives one router to every path and draws each <code>&lt;ui-view&gt;</code> to a page; its client half adopts the page one view per route match, the per-boundary, provided cell of the <a href="${HOME.compare}">hydration models its guide compares</a>. Every page of this atlas, this one included, is a verdict the server router gave and a document the prerenderer wrote at build, adopted by <code>lit-ui-router</code> at client runtime: the three squares are the three times one state tree matched the address you are reading.</p>`,
   key: [
     keyRow('<circle cx="22" cy="9" r="6" class="sk fp" stroke-width="1.6"/>', 'URL-first router'),
-    keyRow('<rect x="16" y="3" width="12" height="12" class="ska fp" stroke-width="2"/>', 'state-first router (this lineage)'),
+    keyRow('<rect x="16" y="3" width="12" height="12" class="ska fp" stroke-width="2"/>', 'state-first router (this lineage) — one square per column it matches in'),
+    keyRow('<line x1="8" y1="4" x2="8" y2="13" class="ska"/><line x1="36" y1="4" x2="36" y2="13" class="ska"/><line x1="8" y1="13" x2="36" y2="13" class="ska"/>', 'the lineage\'s span — the sheet\'s one edge; sheet 2 draws the mechanism'),
     keyRow('<rect x="2" y="2" width="40" height="14" class="skr fnone" stroke-dasharray="4 3"/>', 'editorial callout'),
     keyRow('<line x1="2" y1="9" x2="40" y2="9" class="skf" stroke-dasharray="4 4"/>', 'column boundary (soft)'),
   ].join('\n'),

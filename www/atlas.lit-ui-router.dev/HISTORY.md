@@ -664,7 +664,7 @@ resolved →
 
 ## Sheet 5 — THE DESIGN SPACE
 
-- **file** `diagrams/generator/sheet5.mjs` · **id** `runtime` · **current rev** B
+- **file** `diagrams/generator/sheet5.mjs` · **id** `runtime` · **current rev** C
 - **subject line / lead** (resolved, present-state — not history):
 
 > ALTITUDE 5 — routers in the JS runtime · positions are editorial, argued in the notes
@@ -675,8 +675,15 @@ resolved →
 
 > REV B 2026-09-06: the empty-quarter callout re-cut to the line it frames (330 → 236 wide) — the dashed box had been drawn to the mono lettering and, at the data face, crossed the first column boundary into the server column it says nothing about; no point moved
 
+### REV C — 2026-10-11
+
+**clause** (the record's own; the sub carries no rev clauses):
+
+> REV C 2026-10-11: the lineage is drawn in every column — `lit-ui-router-ssr` at build time, `ui-router-server` at server runtime, `lit-ui-router` at client runtime — three squares on one row of the library band under a bracket, the sheet's one edge; the empty-quarter callout moves to the platform band's build-time corner, the quarter no router occupies
+
 **Record notes**
 
+- 2026-10-11, REV C: the lineage stands in every column. The user: "let's also revisit the truth of https://atlas.lit-ui-router.dev/sheet/5 given latest ssr dogfooding". Rev B drew the lineage as one square at the client-runtime column, and the atlas itself is the counter-evidence: every page of it is a verdict `ui-router-server` gives the path and a document `lit-ui-router-ssr` writes at build, adopted by `lit-ui-router` in the client. The row is three squares at `bandY.library + 36`, x 0.17 / 0.50 / 0.80, each with its own name and note, a tick from each square down to one accent bracket and the line ONE STATE TREE · MATCHED IN EVERY COLUMN · THE URL IS A PROJECTION under it. Hono / Express moves `dy` 40 → 0 to clear the row. The callout keeps its 236 width, grows 86 → 100 for a fifth line ("state-first routing is one lineage — / three squares, one tree, every column."), and moves from the library band's build-time corner to the platform band's, where no router sits. The notes gain a fourth paragraph naming the two server-side packages, the four adapters and the hydration-model cell, with links to the server and ssr guides; the caption owns the one line as the sheet's one edge. Nine circles, one lineage: the sub's "ten routers" holds.
 - 2026-10-11, later, no rev clause: the notes link what they name. The user: "sheets 4, 5, and 14 could benefit from links in the prose body". Four literal homes sit in a `HOME` table in `sheet5.mjs`: TanStack to the TanStack Router docs, SvelteKit to the SvelteKit docs, the Navigation API to its section of the WHATWG HTML standard, and the ui-router lineage to ui-router.github.io, the url the rail's own mark carries. The chart's positions stay editorial; the links are not. Bare `<a href>` anchors in the running text, as A1's prose links are.
 - REV A — 2026-08-16 (c73b65b; label-collision pass 693e6d8 the same day) · REV B — 2026-09-06, dated in the sub, committed 2026-09-07 (cf45bb0).
 - The empty-quarter callout was 330 wide at rev A and is 236 now, 86 tall.

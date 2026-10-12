@@ -17,6 +17,14 @@
   },
   "issueLog": [
     {
+      "date": "2026-10-11",
+      "num": "5",
+      "head": "SHEET 5",
+      "title": "THE DESIGN SPACE",
+      "rev": "C",
+      "desc": "the lineage is drawn in every column — `lit-ui-router-ssr` at build time, `ui-router-server` at server runtime, `lit-ui-router` at client runtime"
+    },
+    {
       "date": "2026-10-10",
       "num": "14",
       "head": "SHEET 14",
@@ -1123,7 +1131,7 @@
       "num": "5",
       "title": "THE DESIGN SPACE",
       "sub": "ALTITUDE 5 — ten routers placed by where matching happens and who owns navigation, shape marking the source of truth · positions are editorial, argued in the notes",
-      "caption": "No mechanism connects these projects, so any drawn edge would be fiction. What is real is position: where matching happens, who owns navigation, and — the one square — whether the URL or a state tree is the source of truth.",
+      "caption": "No mechanism connects these projects, so an edge between them would be fiction; the one line on the sheet runs inside the lineage, where sheet 2 draws the mechanism. What is real is position: where matching happens, who owns navigation, and — the squares — whether the URL or a state tree is the source of truth.",
       "scale": "JS ECOSYSTEM",
       "verdict": "no shared mechanism — position, not edges",
       "form": "POSITIONED CHART",
@@ -1132,7 +1140,7 @@
         "projection": "chart",
         "mode": "static"
       },
-      "rev": "B",
+      "rev": "C",
       "file": "sheets/5.html",
       "standalone": "sheet-5-the-design-space.html",
       "interactive": false,
