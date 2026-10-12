@@ -17,6 +17,14 @@
   },
   "issueLog": [
     {
+      "date": "2026-10-12",
+      "num": "7B",
+      "head": "SHEET 7B",
+      "title": "THE WORKING CITY",
+      "rev": "I",
+      "desc": "the alert register box is gone from the plate"
+    },
+    {
       "date": "2026-10-11",
       "num": "5",
       "head": "SHEET 5",
@@ -1241,7 +1249,7 @@
       "sub": "ALTITUDE 3½ — SYNTHESIS PLATE TO SHEET 7: the census city as a working plant · weathering (13) × test light (7A) × gates (7) × live build, one sprite per member · steam window 2026-07-12..2026-10-10 · counted at origin/main @ bd10638a (2026-10-12)",
       "caption": "Sheet 7 counted the city, sheet 13 dated its stone, plate 7A metered its test light. This plate turns the same city on: every member becomes a Working Plant sprite in the Factorio sense — a machine whose state is broadcast, not implied. The alert channel is drawn and empty: no gate in the city is red at HEAD.",
       "scale": "MONOREPO, RUNNING",
-      "verdict": "the synthesis plate — rust, steam, lamps and pipes on one city: 39 plants run and every pipe connects on 31 green build tasks, 26 carry metered lamps, and the alert register stands drawn and empty — no gate is red at HEAD",
+      "verdict": "the synthesis plate — rust, steam, lamps and pipes on one city: 39 plants run and every pipe connects on 31 green build tasks, 26 carry metered lamps, and the alert channel stands empty — no gate is red at HEAD",
       "form": "WORKING CITY",
       "labels": {
         "subject": "city",
@@ -1249,7 +1257,7 @@
         "mode": "static",
         "basis": "working"
       },
-      "rev": "H",
+      "rev": "I",
       "file": "sheets/7b.html",
       "interactive": false,
       "needsCytoscape": false,

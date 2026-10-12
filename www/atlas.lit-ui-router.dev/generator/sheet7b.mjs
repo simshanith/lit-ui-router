@@ -28,8 +28,8 @@ const OX = 600, OY = 96;
 //   PIPES (connected vs dashed+drip) — the `turbo run build` graph, read from
 //         www/atlas.lit-ui-router.dev/data/census-plate.json, last run green 2026-08-17 (all cache
 //         hits — a replay of green).  Every pipe connects.
-//   ALERT (floating triangle) — a gate red at HEAD.  The register is CLEAR, and
-//         the struck triangle by it is the channel's legend, not an alarm.
+//   ALERT (floating triangle) — a gate red at HEAD.  The channel stands empty;
+//         the key's struck triangle is its legend, and the plate carries no register.
 // DESIGN GUARD: rust must not collude with gate-tier red — gate hatch is uniform
 // 45° line hatch incl. the cap; rust is a dotted SPECKLE at partial opacity on
 // the flanks only, plus jagged cracks at R4.  A red-gated pristine plant and a
@@ -95,6 +95,8 @@ const TURBO_RUN = 'https://turborepo.dev/docs/reference/run';
 // ---- the RUST ladder, re-cut from the weather plate every cabinet ----------------
 // REV H: the rust ladder DERIVES — five steps re-cut from the weather plate's own
 // idle distribution every cabinet, and the hand map is gone.
+// REV I: the alert register box is gone from the plate — the key's struck triangle
+// is the channel's one legend, and the city carries no second copy of it.
 // The reading is census-weather.json's medIdle, per member: the same number sheet
 // 13's schedule prints as "idle Nd", so the two sheets reconcile by arithmetic and
 // not by eye.  A member with no dated source (wintercg-globals) reads null and
@@ -312,18 +314,6 @@ ${txt(1168, 242, 'the rust steps are RE-CUT every cabinet: an R2 here is not', '
 ${txt(1168, 254, `last cabinet’s R2 · idle read at ${WEATHER.ref} @ ${WEATHER.sha}`, 'lblf')}
 ${txt(1168, 268, `steam window ${WINDOW} — ${PLATE.ref} @ ${PLATE.sha}`, 'lblf')}`;
 
-// ---- alert register ---------------------------------------------------------------
-const AR = `
-<rect x="40" y="668" width="600" height="126" class="sk fp"/>
-<polygon points="76,690 62,716 90,716" class="sks fnone"/>
-<line x1="58" y1="720" x2="94" y2="686" class="sks"/>
-${txt(108, 696, 'ALERT REGISTER — NO GATE IS RED AT HEAD; THE CHANNEL STAYS DRAWN', 'lbls')}
-${txt(108, 714, 'a triangle floats over any plant whose own gate task is failing at HEAD.', 'lblf')}
-${txt(108, 728, 'the register is clear: every gate in the city exits 0, //#lint:root over the', 'lblf')}
-${txt(108, 742, 'atlas’s own www/atlas.lit-ui-router.dev/generator among them, so no plant carries a triangle.', 'lblf')}
-${txt(108, 756, 'the struck triangle at the left is this channel’s legend, not an alarm.', 'lbls')}
-${txt(108, 776, `checked 2026-08-31 · oxlint over www/atlas.lit-ui-router.dev/generator, exit 0 · build graph ${BUILD.real} real`, 'lblf')}`;
-
 // ---- schedule --------------------------------------------------------------------
 const ART_H = 812;
 const schedRow = ([n, name, , , , , sf, , , , rust, steam, lamps, eff]) => {
@@ -337,7 +327,7 @@ const TOT_STEAM = M.reduce((a, r) => a + r[11], 0);
 const METERED = M.filter((r) => typeof r[12] === 'number' && r[12] > 0).length;
 const ACCENT = M.filter((r) => r[12] === 'e').length;
 // the cover index's fit verdict, told from the plate's own channels
-export const SHEET7B_VERDICT = `the synthesis plate — rust, steam, lamps and pipes on one city: ${RUNNING} plants run and every pipe connects on ${BUILD.real} green build tasks, ${METERED} carry metered lamps, and the alert register stands drawn and empty — no gate is red at HEAD`;
+export const SHEET7B_VERDICT = `the synthesis plate — rust, steam, lamps and pipes on one city: ${RUNNING} plants run and every pipe connects on ${BUILD.real} green build tasks, ${METERED} carry metered lamps, and the alert channel stands empty — no gate is red at HEAD`;
 const half = Math.ceil(M.length / 2);
 const SY = ART_H + 16;
 const schedule = `<rect x="40" y="${SY}" width="1480" height="${91 + half * 17}" class="sk fp"/>
@@ -348,7 +338,7 @@ ${M.slice(half).map((r, i) => schedTxt(800, SY + 52 + i * 17, schedRow(r), 'lbls
 ${txt(58, SY + 58 + half * 17, `TOTAL — ${RUNNING} plants running, 0 seized · steam ${TOT_STEAM} member-touches from ${PLATE.windowCommits} window commits (${WINDOW}) · ${METERED} metered-lamp plants + ${ACCENT} accent · rust ${[0, 1, 2, 3, 4].map((st) => rustN(st)).join('/')} across 0–R4, idle at ${WEATHER.ref} @ ${WEATHER.sha}`, 'lbls')}
 ${txt(58, SY + 75 + half * 17, `steam ${BASIS}; lamps carry 7A's own base`, 'lbls')}`;
 
-const svg = `<svg viewBox="0 0 1560 ${SY + 121 + half * 17}" role="img" aria-label="Sheet 7's isometric census city redrawn as a working industrial plant, every workspace member a machine on the line. Massing is unchanged — footprint proportional to the square root of source lines, height three pixels per authored file, the same four dashed districts. Each machine broadcasts its state the way a Factorio building does: red rust speckle on the flanks where a member has gone untouched, on a five-step ladder the plate cuts from its own idle distribution at build time — ${rustN(0)} ${rustN(0) === 1 ? 'plant stands' : 'plants stand'} clean, ${names(atStep(DEEPEST))} ${atStep(DEEPEST).length === 1 ? 'carries' : 'carry'} the deepest rust in the city at ${RUST_T[DEEPEST]}, and the top step stands empty so no flank on the plate is cracked; steam puffs rising from roof vents where commits touched the member in the last ninety days, six accent puffs over lit-ui-router, sample-app-shared, the Cypress host, docs, examples and the release tool; up to three green module lamps low on each front face showing how much of the member its own test suite lights, read straight from plate 7A's own filed snapshot, with accent lamps on the sample apps whose only light is the unmetered end-to-end rig; and outlet pipes that all connect, because the build graph's ${BUILD.real} real tasks last ran green. No alert triangle stands over the city at all: the alert register records that no gate task in the workspace is failing at HEAD, and the struck triangle beside the register is the channel's legend rather than an alarm. A plant schedule lists every member's channel values.">
+const svg = `<svg viewBox="0 0 1560 ${SY + 121 + half * 17}" role="img" aria-label="Sheet 7's isometric census city redrawn as a working industrial plant, every workspace member a machine on the line. Massing is unchanged — footprint proportional to the square root of source lines, height three pixels per authored file, the same four dashed districts. Each machine broadcasts its state the way a Factorio building does: red rust speckle on the flanks where a member has gone untouched, on a five-step ladder the plate cuts from its own idle distribution at build time — ${rustN(0)} ${rustN(0) === 1 ? 'plant stands' : 'plants stand'} clean, ${names(atStep(DEEPEST))} ${atStep(DEEPEST).length === 1 ? 'carries' : 'carry'} the deepest rust in the city at ${RUST_T[DEEPEST]}, and the top step stands empty so no flank on the plate is cracked; steam puffs rising from roof vents where commits touched the member in the last ninety days, six accent puffs over lit-ui-router, sample-app-shared, the Cypress host, docs, examples and the release tool; up to three green module lamps low on each front face showing how much of the member its own test suite lights, read straight from plate 7A's own filed snapshot, with accent lamps on the sample apps whose only light is the unmetered end-to-end rig; and outlet pipes that all connect, because the build graph's ${BUILD.real} real tasks last ran green. No alert triangle stands over the city at all: no gate task in the workspace is failing at HEAD, and the key's struck triangle is the channel's legend rather than an alarm. A plant schedule lists every member's channel values.">
 ${defs(P)}
 <defs>
   <!-- rust: dotted speckle, deliberately unlike every house line hatch -->
@@ -370,7 +360,6 @@ ${txt(1520, 62, 'massing and gate severity are sheet 7’s, unchanged — a spri
 ${TB}
 ${districts}
 ${bodies}
-${AR}
 
 <!-- district lettering -->
 <!-- east off 772: the flagship's roof reaches x 780 at the third line -->
@@ -414,7 +403,7 @@ ${schedule}
 </svg>`;
 
 export const sheet7b = {
-  num: '7B', id: 'working', rev: 'H',
+  num: '7B', id: 'working', rev: 'I',
   title: 'THE WORKING CITY',
   sub: `ALTITUDE 3½ — SYNTHESIS PLATE TO SHEET 7: the census city as a working plant · weathering (13) × test light (7A) × gates (7) × live build, one sprite per member · steam window ${WINDOW} · ${BASIS}`,
   scale: 'WHOLE WORKSPACE',

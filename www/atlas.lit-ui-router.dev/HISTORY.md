@@ -878,7 +878,7 @@ resolved →
 
 ## Sheet 7B — THE WORKING CITY
 
-- **file** `diagrams/generator/sheet7b.mjs` · **id** `working` · **current rev** H
+- **file** `diagrams/generator/sheet7b.mjs` · **id** `working` · **current rev** I
 - **basis** (source): `const BASIS = `counted at ${PLATE.ref} @ ${PLATE.sha} (${PLATE.generatedAtTime.slice(0, 10)})`;`
 - **subject line / lead** (resolved, present-state — not history):
 
@@ -953,6 +953,14 @@ resolved →
 **`sub` clause** (verbatim source):
 
 > REV F 2026-09-04: cabinet refresh after the 1.11.2 + mobx 1.0.0 releases — №32 @tools/embed-heights joins the plant at rust 0, its lamp metered by its own node:test suite
+
+### REV I — 2026-10-12
+
+**REV clause** (verbatim source comment, `sheet7b.mjs`):
+
+> REV I: the alert register box is gone from the plate — the key's struck triangle is the channel's one legend, and the city carries no second copy of it.
+
+The box stood at the plate's south-west, 600 × 126, under the instrument yard, and said in six lines what the key's row says in one; the user: "the alert register callout is distracting on sheet 7b. it's also duplicated in the key / legend component below". The aria-label and the cover's fit verdict stop naming a register; the caption's "the alert channel is drawn and empty" holds. The frame audit over the plate read 0 escapes · 0 hits · text-on-text unchanged, and the card picture was re-shot.
 
 ### REV H — 2026-09-13
 
