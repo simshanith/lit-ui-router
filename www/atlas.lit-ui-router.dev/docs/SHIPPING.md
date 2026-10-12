@@ -131,8 +131,10 @@ are done by hand between the steps.
   and loses git entirely.
 - **The ship guard.** [generator/ship-guard.mjs](../generator/ship-guard.mjs) is a Claude Code
   PreToolUse hook on Bash. It denies a wrangler deploy that is not `ship.mjs deploy` and any
-  force-push to `www/atlas`. The repo root's `.claude/settings.json` wires it, beside the allow
-  rule `Bash(mise exec -- node www/atlas.lit-ui-router.dev/generator/ship.mjs:*)`. A denial is
+  force-push to `www/atlas`. The repo root's `.claude/settings.json`, tracked and committed on
+  `www/atlas`, wires it beside the allow rule
+  `Bash(mise exec -- node www/atlas.lit-ui-router.dev/generator/ship.mjs:*)`, so every checkout
+  of the branch carries both; no local settings file holds a deploy command. A denial is
   reported to the user, never routed around.
 - **The classifier.** The deploy and the Artifact upload carry standing authorization; a
   denial is reported to the user, never worked around.
