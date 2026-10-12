@@ -3,7 +3,7 @@
 //
 //   mise exec -- node www/atlas.lit-ui-router.dev/generator/ship.mjs <step> [options]
 //
-//   build                 the generator: flat set, fragments, models, manifest
+//   build                 the generator: fragments, models, manifest, and the standalone pages under tmp/flat/
 //   app                   typecheck, then the vite build and prerender; the two count
 //                         lines are compared with the last run's (--accept to lower them)
 //   audit <tag> [--only ids]   frame audit, then light and dark photographs under tmp/shots/<tag>
@@ -131,7 +131,7 @@ const STEPS = {
       if (m[0] < 1 || m[0] !== m[1]) stop(`${page}: marker ${JSON.stringify(marker)} seen ${m.join('/')} across two fetches`);
       say(`${page}: marker ×${m[0]} on both fetches`);
     }
-    const EXPECT = { '/': 200, '/sheet/7/': 200, '/sheet/2a': 200, '/set/': 200, '/sheet/99': 404 };
+    const EXPECT = { '/': 200, '/sheet/7/': 200, '/sheet/2a': 200, '/set/gallery.html': 200, '/sheet/99': 404 };
     for (const [path, status] of Object.entries(EXPECT)) {
       const r = await fetch(`${SITE}${path}`, { redirect: 'follow', cache: 'no-store' });
       if (r.status !== status) stop(`${path}: ${r.status}, expected ${status}`);

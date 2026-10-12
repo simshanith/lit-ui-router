@@ -42,8 +42,6 @@ export interface SheetRow {
   verdict: string;
   rev: string;
   file: string;
-  /** The sheet's standalone page in the flat set (build.mjs's own filename). */
-  standalone: string;
   interactive: boolean;
   needsCytoscape: boolean;
   plates: string[];
@@ -53,9 +51,9 @@ export interface SheetRow {
 }
 
 /**
- * A plate with no sheet number — the flat set publishes it inside the gallery
- * only. Kept OUT of `sheets` on purpose: the reel walk, the ascent order and
- * the server's narrowed `/sheet/:num` all read that array.
+ * A plate with no sheet number. Kept OUT of `sheets` on purpose: the reel
+ * walk, the ascent order and the server's narrowed `/sheet/:num` all read
+ * that array.
  */
 export interface ExtraRow {
   id: string;
@@ -67,18 +65,15 @@ export interface ExtraRow {
   verdict: string;
   labels: SheetLabels;
   file: string;
-  /** Where the flat set draws it — a gallery anchor, not a page; '' where it draws none. */
-  standalone: string;
   /** Paths under the app's base, photographed from the built app by generator/thumbs.mjs. */
   thumb: Thumb;
   refs: string[];
 }
 
 /**
- * The gallery cover, rendered by the generator and carried verbatim so the
- * routed index and the flat one cannot drift. Every field is HTML, inserted
- * with `unsafeHTML`; `css` is the half of the flat gallery's stylesheet these
- * blocks need.
+ * The gallery cover, rendered by the generator and carried verbatim. Every
+ * field is HTML, inserted with `unsafeHTML`; `css` is the half of the cover's
+ * stylesheet these blocks need.
  */
 export interface Cover {
   css: string;

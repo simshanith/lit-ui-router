@@ -1,93 +1,94 @@
 // Stage the atlas for static hosting. Run from www/atlas.lit-ui-router.dev/:
 //   node generator/stage-site.mjs
 //
-// The routed app owns the site root: dist/ IS app/dist (the prerendered
-// pages, assets, manifest.json, the sheets/ fragments, 404.html and the
-// app's own _redirects). The flat drawing set — every www/atlas.lit-ui-router.dev/*.html — is
-// staged beside it under dist/set/, with the gallery doubled as
-// set/index.html and the cytoscape CDN script vendored into set/vendor/ so the
-// deployed site carries no external origin. Committed pages keep their cdnjs
-// URLs (the Artifact host's CSP allows only that origin); the rewrite below
-// touches the STAGED copies alone. Vendored bytes are pin-verified by sha256
-// — a hash mismatch aborts the stage.
+// The routed app is the site: dist/ IS app/dist (the prerendered pages,
+// assets, manifest.json, the sheets/ fragments, 404.html and the app's own
+// _redirects). The standalone pages build.mjs writes under tmp/flat/ are a
+// build product the frame audit and the thumbs read; none is staged.
 //
 // _redirects, merged at the root (Cloudflare Pages reads only that one):
 //   the app's own lines (prerender.ts: /office, the lowercase sheet ids)
-//   /<old flat filename>  → /set/<same file>  301   (every page but index.html)
-//   /app, /app/*          → /, /:splat         301   (the app's old mount)
+//   /<page>, /<page>.html, /set/<page>, /set/<page>.html → /sheet/<num>  301
+//     for every page under tmp/flat/ and every filename `retired` names
+//   /set, /set/, the gallery and megacanvas urls → /                     301
+//   /app, /app/*          → /, /:splat                                   301
+// Cloudflare Pages reads at most 2,000 static rules; the count is printed.
 //
-// The staged routed pages also get a content hash on their one fixed
-// stylesheet url (sheets/atlas.css?v=<sha>), so a chrome change can never be
-// served from a stale cache.
+// The staged pages also get a content hash on their one fixed stylesheet url
+// (sheets/atlas.css?v=<sha>), so a chrome change can never be served from a
+// stale cache.
 //
-// Three <head> injections, all staged-copies-only: the GA tag on every page
-// (env-gated on VITE_GOOGLE_ANALYTICS_TRACKING_ID), the Google Fonts stand-ins
-// on every page that does not already carry them (the flat set — the routed app
-// ships them in its own index.html), and the Adobe Fonts kit on every page
-// (env-gated on VITE_ADOBE_FONTS_KIT). Both ids are public and both live in
-// .config/mise/cloudflare.local.env, which is gitignored.
-import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+// Two <head> injections, staged copies only: the GA tag on every page
+// (env-gated on VITE_GOOGLE_ANALYTICS_TRACKING_ID) and the Adobe Fonts kit on
+// every page (env-gated on VITE_ADOBE_FONTS_KIT). Both ids are public and both
+// live in .config/mise/cloudflare.local.env, which is gitignored.
+import { cpSync, existsSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { join } from 'node:path';
-import { BASE, SET } from '../app/src/routes.ts';
-
-const VENDOR = [
-  {
-    url: 'https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.31.0/cytoscape.min.js',
-    file: 'cytoscape.min.js',
-    sha256: 'e7d4c6c286bee0ba346c68ed1c8b8b82b4740b75be5d0c4d6602ee38df55d9c1',
-  },
-];
+import { BASE } from '../app/src/routes.ts';
+import { FLAT_DIR } from './thumb-spec.mjs';
 
 // Where the app used to be mounted; old links keep resolving through _redirects.
 const OLD_APP_MOUNT = '/app';
+// The retired /set/ mount: every url under it redirects.
+const OLD_SET_MOUNT = '/set';
 
 const root = new URL('..', import.meta.url).pathname;
 const dist = join(root, 'dist');
 const appDist = join(root, 'app', 'dist');
+const flat = join(root, FLAT_DIR);
 if (!existsSync(join(appDist, 'index.html')))
   throw new Error('no app/dist — run `npm install && npm run build` in www/atlas.lit-ui-router.dev/app first');
+if (!existsSync(flat)) throw new Error(`no ${FLAT_DIR}/ — run generator/build.mjs first`);
 if (BASE !== '/') throw new Error(`stage-site expects the app at the root, not ${BASE}`);
 
 rmSync(dist, { recursive: true, force: true });
 cpSync(appDist, dist, { recursive: true });
 
-// --- the flat set, under /set/ --------------------------------------------
-const set = join(dist, SET.replace(/^\/|\/$/g, ''));
-mkdirSync(join(set, 'vendor'), { recursive: true });
-
-for (const { url, file, sha256 } of VENDOR) {
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`${url}: ${res.status}`);
-  const bytes = Buffer.from(await res.arrayBuffer());
-  const got = createHash('sha256').update(bytes).digest('hex');
-  if (got !== sha256) throw new Error(`${file}: sha256 ${got}, pinned ${sha256}`);
-  writeFileSync(join(set, 'vendor', file), bytes);
-}
-
-// The pages sit in /set/ and the scripts in /set/vendor/, so the relative
-// path is the same one the old root layout used.
-const vendored = (html) =>
-  VENDOR.reduce((s, { url, file }) => s.replaceAll(url, `./vendor/${file}`), html);
-
-const pages = readdirSync(root).filter((f) => f.endsWith('.html')).sort();
-for (const f of pages) writeFileSync(join(set, f), vendored(readFileSync(join(root, f), 'utf8')));
-writeFileSync(join(set, 'index.html'), readFileSync(join(set, 'gallery.html'), 'utf8'));
-
 // --- _redirects, merged -----------------------------------------------------
 const appRules = readFileSync(join(dist, '_redirects'), 'utf8').trim();
 // filenames the set no longer writes: the survey office is appendix A2 / A2i
 const retired = [
-  ['sheet-14-the-survey-office.html', 'sheet-A2-the-survey-office.html'],
-  ['sheet-14i-the-survey-office-interactive.html', 'sheet-A2i-the-survey-office-interactive.html'],
+  ['sheet-14-the-survey-office.html', 'A2'],
+  ['sheet-14i-the-survey-office-interactive.html', 'A2i'],
 ];
+// the manifest's cased nums are the sheet route's params; a page's num is the
+// second dash-field of build.mjs's `sheet-<num>-<title>.html`
+const manifest = JSON.parse(readFileSync(join(dist, 'manifest.json'), 'utf8'));
+const nums = new Set([...manifest.sheets, ...manifest.appendix].map((row) => row.num));
+const pages = readdirSync(flat).filter((f) => /^sheet-.*\.html$/.test(f)).sort();
+const numOf = (file) => {
+  const num = file.split('-')[1];
+  if (!nums.has(num)) throw new Error(`${file}: no sheet ${num} in the manifest`);
+  return num;
+};
+const sheetUrl = (num) => `${BASE}sheet/${num}`;
+const spellings = (file) => {
+  const stem = file.replace(/\.html$/, '');
+  return [`/${file}`, `/${stem}`, `${OLD_SET_MOUNT}/${file}`, `${OLD_SET_MOUNT}/${stem}`];
+};
+const toSheet = (file, num) => spellings(file).map((from) => `${from} ${sheetUrl(num)} 301`);
+const indexUrls = [
+  OLD_SET_MOUNT,
+  `${OLD_SET_MOUNT}/`,
+  ...['gallery', 'megacanvas'].flatMap((page) => [
+    `/${page}.html`,
+    `${OLD_SET_MOUNT}/${page}`,
+    `${OLD_SET_MOUNT}/${page}.html`,
+  ]),
+];
+// a `from` the app's own rules already claim is theirs; Pages takes the first match
+const appFroms = new Set(appRules.split('\n').map((line) => line.split(/\s+/)[0]));
 const legacy = [
-  // /index.html is NOT redirected: it is the app now.
-  ...pages.map((f) => `/${f} ${SET}${f} 301`),
-  ...retired.flatMap(([old, now]) => [`/${old} ${SET}${now} 301`, `${SET}${old} ${SET}${now} 301`]),
+  // /index.html is NOT redirected: it is the app.
+  ...pages.flatMap((f) => toSheet(f, numOf(f))),
+  ...retired.flatMap(([old, num]) => toSheet(old, num)),
+  ...indexUrls.map((from) => `${from} ${BASE} 301`),
   `${OLD_APP_MOUNT} ${BASE} 301`,
   `${OLD_APP_MOUNT}/* ${BASE}:splat 301`,
-];
+].filter((rule) => !appFroms.has(rule.split(' ')[0]));
+const ruleCount = appRules.split('\n').length + legacy.length;
+if (ruleCount > 2000) throw new Error(`_redirects: ${ruleCount} rules, Cloudflare Pages reads 2,000`);
 writeFileSync(join(dist, '_redirects'), `${[appRules, ...legacy].filter(Boolean).join('\n')}\n`);
 
 // --- Google Analytics, staged copies only -----------------------------------
@@ -112,15 +113,12 @@ const walkHtml = (dir, out = []) => {
   }
   return out;
 };
-const tagged = { routed: 0, flat: 0 };
+let tagged = 0;
 if (GA_ID) {
   for (const p of walkHtml(dist)) {
-    const routed = !p.startsWith(`${set}/`);
-    // the flat pages are head-less (the Artifact host wraps them), so the tag leads the file
     const html = readFileSync(p, 'utf8');
-    const tag = gaTag(GA_ID);
-    writeFileSync(p, html.includes('</head>') ? html.replace('</head>', `${tag}</head>`) : tag + html);
-    tagged[routed ? 'routed' : 'flat'] += 1;
+    writeFileSync(p, html.replace('</head>', `${gaTag(GA_ID)}</head>`));
+    tagged += 1;
   }
 } else {
   console.warn('VITE_GOOGLE_ANALYTICS_TRACKING_ID missing — staging without analytics');
@@ -129,27 +127,21 @@ if (GA_ID) {
 // --- the type, on every staged page ----------------------------------------
 // atlas.css (generator/chrome.mjs) names the ADOBE family first in every role
 // stack and the Google Fonts stand-in second, so the <head> is the whole
-// difference between the two hosts — and since 2026-09-06 a staged page has
-// exactly ONE font host:
+// difference between the two hosts, and a staged page has exactly ONE font host:
 //
 //   WITH the kit (VITE_ADOBE_FONTS_KIT set) — the kit <link> goes into EVERY
-//     staged page, routed and flat, and the Google preconnects + stylesheet
-//     the app's own index.html carries are STRIPPED from the staged copy. All
-//     five roles resolve their first name, prose included (source-serif-pro),
-//     so the site never touches fonts.googleapis.com or fonts.gstatic.com.
-//   WITHOUT the kit — no kit link, and the Google <link> is written into every
-//     head-less flat page instead (the routed pages already have it), so the
-//     stand-ins draw everywhere and nothing breaks.
+//     staged page, and the Google preconnects + stylesheet the app's own
+//     index.html carries are STRIPPED from the staged copy. All five roles
+//     resolve their first name, prose included (source-serif-pro), so the site
+//     never touches fonts.googleapis.com or fonts.gstatic.com.
+//   WITHOUT the kit — no kit link; the Google <link> the app's index.html
+//     carries stays, so the stand-ins draw everywhere.
 //
 // The claude.ai artifact build is untouched by either branch: it never passes
 // through here, and its host allows fonts.googleapis.com and nothing else.
 //
 // The kit id is PUBLIC (it is in the page source); it lives beside the GA id in
 // .config/mise/cloudflare.local.env, which is gitignored.
-const GOOGLE_FONTS = `<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@600&family=Barlow+Semi+Condensed:wght@400;600&family=Source+Serif+4:ital,wght@0,400;1,400&family=Source+Code+Pro:wght@400;700&display=swap">
-`;
 const KIT = process.env.VITE_ADOBE_FONTS_KIT;
 const kitLink = (kit) => `<link rel="preconnect" href="https://use.typekit.net" crossorigin>
 <link rel="stylesheet" href="https://use.typekit.net/${kit}.css">
@@ -159,12 +151,11 @@ const kitLink = (kit) => `<link rel="preconnect" href="https://use.typekit.net" 
 // attribute run is the stable part, not the surrounding whitespace.
 const GOOGLE_LINK_LINES =
   /[ \t]*<link[^>]*(?:fonts\.googleapis\.com|fonts\.gstatic\.com)[^>]*>[ \t]*\n?/g;
-const typed = { routed: 0, flat: 0 };
-for (const p of walkHtml(dist)) {
-  const routed = !p.startsWith(`${set}/`);
-  let html = readFileSync(p, 'utf8');
-  let touched = false;
-  if (KIT) {
+let typed = 0;
+if (KIT) {
+  for (const p of walkHtml(dist)) {
+    let html = readFileSync(p, 'utf8');
+    let touched = false;
     // ONE host: the kit answers every role, so the Google half goes away
     if (GOOGLE_LINK_LINES.test(html)) {
       GOOGLE_LINK_LINES.lastIndex = 0;
@@ -172,28 +163,20 @@ for (const p of walkHtml(dist)) {
       touched = true;
     }
     GOOGLE_LINK_LINES.lastIndex = 0;
-  } else if (!html.includes('fonts.googleapis.com')) {
-    // no kit: the app's index.html already carries the Google half, the flat
-    // pages are head-less until the host wraps them
-    html = html.includes('</head>')
-      ? html.replace('</head>', `${GOOGLE_FONTS}</head>`)
-      : GOOGLE_FONTS + html;
-    touched = true;
-  }
-  if (KIT && !html.includes('use.typekit.net')) {
-    const link = kitLink(KIT);
-    html = html.includes('</head>') ? html.replace('</head>', `${link}</head>`) : link + html;
-    touched = true;
-  }
-  if (touched) {
-    writeFileSync(p, html);
-    typed[routed ? 'routed' : 'flat'] += 1;
+    if (!html.includes('use.typekit.net')) {
+      html = html.replace('</head>', `${kitLink(KIT)}</head>`);
+      touched = true;
+    }
+    if (touched) {
+      writeFileSync(p, html);
+      typed += 1;
+    }
   }
 }
 console.log(
   KIT
-    ? `Adobe Fonts kit: ${KIT} → every staged page, Google links stripped (single host) · type <head>s written on ${typed.routed} routed + ${typed.flat} flat pages`
-    : `Adobe Fonts kit: none — the Google stand-ins draw · type <head>s written on ${typed.routed} routed + ${typed.flat} flat pages`,
+    ? `Adobe Fonts kit: ${KIT} → every staged page, Google links stripped (single host) · type <head>s written on ${typed} pages`
+    : 'Adobe Fonts kit: none — the Google stand-ins draw',
 );
 
 // --- the stylesheet's cache buster ------------------------------------------
@@ -201,8 +184,7 @@ console.log(
 // prerendered pages are all stamped out of the built index). A fixed url with a
 // changed body is the one asset a browser can serve stale forever, so the
 // staged <link> carries a short content hash: the chrome changes, the url
-// changes, the cache misses. The flat set needs none — those pages carry the
-// same CSS inline, in a <style>.
+// changes, the cache misses.
 const cssFile = join(dist, 'sheets', 'atlas.css');
 const cssHash = createHash('sha256').update(readFileSync(cssFile)).digest('hex').slice(0, 8);
 const CSS_LINK = /(<link\b[^>]*\bhref=")([^"]*sheets\/atlas\.css)(")/g;
@@ -217,7 +199,6 @@ for (const p of walkHtml(dist)) {
 }
 console.log(`sheets/atlas.css?v=${cssHash} on ${String(busted)} pages`);
 
-const routedPages = walkHtml(dist).filter((p) => !p.startsWith(`${set}/`)).length;
+const routedPages = walkHtml(dist).length;
 console.log(`staged the routed app at ${BASE} → dist/ (${routedPages - 1} prerendered pages + 404.html + manifest + fragments)`);
-console.log(`staged the flat set at ${SET} → dist${SET} (${pages.length} pages + index.html + ${VENDOR.length} vendored script${VENDOR.length === 1 ? '' : 's'})`);
-console.log(`_redirects: ${appRules.split('\n').length} app rules + ${legacy.length} legacy rules (old filenames → ${SET}, ${OLD_APP_MOUNT}/* → ${BASE})${GA_ID ? ` · GA tag on ${tagged.routed} routed + ${tagged.flat} flat pages` : ''}`);
+console.log(`_redirects: ${ruleCount} rules of 2,000 — ${appRules.split('\n').length} app rules + ${legacy.length} legacy rules (${pages.length + retired.length} standalone filenames → ${sheetUrl('<num>')}, ${OLD_SET_MOUNT}/* and the gallery → ${BASE}, ${OLD_APP_MOUNT}/* → ${BASE})${GA_ID ? ` · GA tag on ${tagged} pages` : ''}`);

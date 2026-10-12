@@ -21,11 +21,11 @@
 //   app/public/thumbs/<id>.webp        the light-theme picture
 //   app/public/thumbs/<id>-dark.webp   the same crop in cyanotype
 //
-// It photographs two things build.mjs's output feeds: the flat set build.mjs
-// writes, and — for the 3D plates, which only the app raises — the BUILT
-// app's prerendered `/city/`, `/plant/` and `/bricks/` pages. So it runs after build.mjs
-// and the app build, and build.mjs runs again so the manifest can assert every
-// card has its picture:
+// It photographs two things build.mjs's output feeds: the standalone pages
+// build.mjs writes under tmp/flat/, and — for the 3D plates, which only the app
+// raises — the BUILT app's prerendered `/city/`, `/plant/` and `/bricks/` pages.
+// So it runs after build.mjs and the app build, and build.mjs runs again so the
+// manifest can assert every card has its picture:
 //
 //   node www/atlas.lit-ui-router.dev/generator/build.mjs www/atlas.lit-ui-router.dev
 //   npm --prefix www/atlas.lit-ui-router.dev/app run build
@@ -43,10 +43,10 @@
 import { createRequire } from 'node:module';
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { extname, join, normalize } from 'node:path';
 import { ROOT } from './basis.mjs';
-import { THUMB_DIR, THUMB_H, THUMB_W, thumbFile } from './thumb-spec.mjs';
+import { FLAT_DIR, THUMB_DIR, THUMB_H, THUMB_W, thumbFile } from './thumb-spec.mjs';
 
 const [OUT, ...FLAGS] = process.argv.slice(2);
 if (!OUT)
@@ -484,14 +484,23 @@ async function shoot(page, { id, standalone, scene, theme, origin, appOrigin }) 
 }
 
 const manifest = JSON.parse(readFileSync(join(OUT, 'app', 'public', 'manifest.json'), 'utf8'));
-// The 3D plates are photographed in the built app, the rest in the flat set.
+const flat = normalize(join(OUT, FLAT_DIR));
+if (!existsSync(flat)) throw new Error(`thumbs.mjs: no standalone pages at ${flat} — run build.mjs first`);
+const flatPages = readdirSync(flat);
+// build.mjs names a page `sheet-<num>-<title>.html` with the cased num; the card id is the lowercase num
+const standaloneOf = (id) => {
+  const file = flatPages.find((f) => f.toLowerCase().startsWith(`sheet-${id}-`));
+  if (!file) throw new Error(`thumbs.mjs: no standalone page for ${id} under ${flat}`);
+  return file;
+};
+// The 3D plates are photographed in the built app, the rest on their standalone pages.
 const allCards = [
   ...[...manifest.sheets, ...manifest.appendix].map((row) => ({
     id: row.id,
-    standalone: row.standalone,
+    standalone: standaloneOf(row.id),
     scene: false,
   })),
-  ...manifest.extras.map((row) => ({ id: row.id, standalone: row.standalone, scene: true })),
+  ...manifest.extras.map((row) => ({ id: row.id, standalone: '', scene: true })),
 ];
 
 let cards = allCards;
@@ -508,7 +517,7 @@ if (onlyIds) {
 const dir = outDir ?? join(OUT, 'app', 'public', THUMB_DIR);
 mkdirSync(dir, { recursive: true });
 
-const server = await serveSet(normalize(join(OUT)), 'gallery.html');
+const server = await serveSet(flat, 'index.html');
 const origin = `http://127.0.0.1:${String(server.address().port)}`;
 const appDist = normalize(join(OUT, 'app', 'dist'));
 const appServer = cards.some((card) => card.scene) ? await serveSet(appDist, 'index.html') : null;

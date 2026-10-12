@@ -37,10 +37,11 @@ ends the run. Long output goes to a file under the job's `tmp/`, exit code echoe
 searched; nothing is piped to `head` or `tail`. The commit, the push and the Artifact publish
 are done by hand between the steps.
 
-1. **`build`** runs the generator: the flat set, the fragments, the models and the manifest
-   ([README.md](../README.md), "Build and host"). A new plate needs the picture pass first
-   (build → app → `thumbs.mjs` → build → app; `build.mjs` refuses a manifest whose card has no
-   picture).
+1. **`build`** runs the generator: the standalone sheet pages into the gitignored `tmp/flat/`
+   (an internal build product; the audit and the photographs read them there), the fragments,
+   the models and the manifest ([README.md](../README.md), "Build and host"). A new plate
+   needs the picture pass first (build → app → `thumbs.mjs` → build → app; `build.mjs` refuses
+   a manifest whose card has no picture).
 2. **`app`** typechecks and runs the vite build and prerender. The build log carries
    `prerendered N pages + 1 × 404.html · M redirects` and
    `scoped router at construction: N/N renders match router.globals`; the step stops on a
@@ -67,8 +68,10 @@ are done by hand between the steps.
    `mise exec` supplies `VITE_ADOBE_FONTS_KIT` and `VITE_GOOGLE_ANALYTICS_TRACKING_ID` from the
    gitignored `.config/mise/cloudflare.local.env`; the step stops on `Adobe Fonts kit: none`.
    A fork worktree has no such file and never deploys (the stager's header). `dist/` is the
-   staged site; `app/dist` one level down is the raw vite build with Google font links and no
-   GA tag.
+   staged app only; `app/dist` one level down is the raw vite build with Google font links
+   and no GA tag. The stager also writes the 301 rules that land every retired `/set/…` and
+   root `sheet-*.html` URL on its routed sheet `/sheet/<num>`, and `/set/` on `/`; its log
+   names the kit and the redirect rule count.
 7. **`deploy`** runs `check` first, then the Pages upload to `altitude-atlas` on branch
    `www/atlas`, and prints the deployment URL. `check` stops unless the branch is `www/atlas`,
    the atlas tree is clean, HEAD is on origin, and `dist/city/index.html` carries `typekit` and
@@ -76,10 +79,10 @@ are done by hand between the steps.
    upload, not the tree, which is why the check gates it. The deploy stands alone in its Bash
    call, and only the main session deploys.
 8. **`verify [--page <path> --marker <text>]`** fetches the page twice; both fetches carry
-   `typekit` and agree on the change's marker, and `/`, `/sheet/7/`, `/sheet/2a`, `/set/` and
-   `/sheet/99` answer with the codes the step lists. The first fetch after a deploy can read
-   the previous deploy; a stop on disagreement is rerun once, and the deployment's own
-   `*.altitude-atlas.pages.dev` URL answers at once.
+   `typekit` and agree on the change's marker, and `/`, `/sheet/7/`, `/sheet/2a`, a retired
+   `/set/` URL and `/sheet/99` answer with the codes the step lists. The first fetch after a
+   deploy can read the previous deploy; a stop on disagreement is rerun once, and the
+   deployment's own `*.altitude-atlas.pages.dev` URL answers at once.
 9. **`artifact`** builds `app/dist-artifact/index.html`; then publish it with the Artifact tool
    by `url` (`https://claude.ai/artifact/JpLqLDXLwY8nwKByiLx5V4`), a short `label`, no icon.
    The artifact build keeps the Google font links by design ([app/README.md](../app/README.md),
@@ -146,7 +149,7 @@ A shipment is done when all of these hold:
 - `ship.mjs build` and `ship.mjs app` exit 0, the latter without `--accept` unless the change
   removes pages on purpose.
 - `audit-frames.mjs` reports 0 escapes, 0 hits over 1px and 0 text overlaps on every plate the
-  change touched (and on the whole set after a cabinet refresh); `check-scenes.mjs` passes when
+  change touched (and on every plate after a cabinet refresh); `check-scenes.mjs` passes when
   a model or its viewer moved.
 - Every photograph in `tmp/shots/<tag>/` has been read, light and dark; a layout or type
   change also has a before tag to set beside it, at the layout's seam widths.

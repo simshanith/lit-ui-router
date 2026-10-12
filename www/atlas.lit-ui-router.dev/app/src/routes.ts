@@ -12,16 +12,12 @@ import type { MountConfig, RedirectRule, RouteDeclaration } from 'ui-router-serv
 /**
  * The mount base — THE ONE base constant. vite's `base`, `<base href>`,
  * every href in both template sets, the generator's fragment links and the
- * staged site's _redirects all derive from it. The app owns the site root;
- * the flat drawing set lives beside it under `/set/`.
+ * staged site's _redirects all derive from it. The app owns the site root.
  */
 export const MOUNT = '/';
 
 /** `MOUNT` with its trailing slash: the prefix every href in the app starts with. */
 export const BASE = MOUNT.endsWith('/') ? MOUNT : `${MOUNT}/`;
-
-/** Where the standalone drawing set is staged, relative to the site root. */
-export const SET = `${BASE}set/`;
 
 /** The hrefs the client templates and the server templates share. */
 export const href = {
@@ -33,10 +29,6 @@ export const href = {
   specimen: `${BASE}specimen`,
   log: `${BASE}log`,
   sheet: (num: string): string => `${BASE}sheet/${num}`,
-  /** The flat set's index — a plain page, never a router state. */
-  set: SET,
-  /** A sheet's standalone page in the flat set. */
-  plate: (file: string): string => `${SET}${file}`,
 };
 
 /**

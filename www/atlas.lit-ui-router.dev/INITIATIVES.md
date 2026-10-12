@@ -98,6 +98,8 @@ sitting); order is dependency order.
 | I6 | Pipeline self-portrait: static sheet 14 | house SVG style, introspected at build |
 | I7 | Cytoscape pipeline graph + sprite nodes | NODES/EDGES model, sprite skins; now appendix A2i |
 | I8 | 3D | CSS tilt (retired) → three.js isometric city (retired) → the city and its working twin as glTF in model-viewer |
+| I9 | The canvas: every plate on one surface in the routed app, horizontal and vertical scroll, zoom and pan, sheets animating into view (user, 2026-10-12: the flat set's gallery and megacanvas were "nice to see it all in one layout"; deferred, not started) | a routed state over the fragments; stands where `/set/` and `megacanvas.html` stood |
+| I10 | The bare plate: a `plate` route in `app/src/routes.ts` that the prerender answers with one fragment in a bare page, no shell and no client bundle, the client knowing it only as a link target (user, 2026-10-12: "opting out of the ui router client but still using source data of state definitions to define rendering behavior"). Once it serves, the `/set/sheet-*` redirects land there, the audit and the thumbs photograph it, and `chrome.mjs`'s page wrapper and `tmp/flat/` go | follows the flat-set retirement; next in order |
 
 ## Operating notes and traps
 

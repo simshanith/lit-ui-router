@@ -10,6 +10,8 @@ export const THUMB_H = 400;
 export const THUMB_SCALE = 2;
 /** Under `app/public/`, and served at `${BASE}thumbs/`. */
 export const THUMB_DIR = 'thumbs';
+/** Under the atlas dir, gitignored: the standalone pages build.mjs writes for the audit and the thumbs. */
+export const FLAT_DIR = 'tmp/flat';
 
 /** A plate's file for one theme — the dark one is the same crop in cyanotype. */
 export const thumbFile = (id, theme) => `${id}${theme === 'dark' ? '-dark' : ''}.webp`;

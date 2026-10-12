@@ -13,8 +13,9 @@ commit messages. Each rule names the mechanism that holds it where one exists.
 - **A hand-written count is a claim the build does not check.** "one", "the tallest", "the
   smallest", "N published" are derived from the plate or guarded by a throw
   ([INITIATIVES.md](../INITIATIVES.md): a label that counts is asserted against the data).
-- **Captions stay plain.** No anchors and no markup: the flat page's `<meta name="description">`
-  takes the caption verbatim. SVG lettering carries no anchors either.
+- **Captions stay plain.** No anchors and no markup: the build writes the caption verbatim into
+  the `<meta name="description">` of the sheet page under `tmp/flat/`. SVG lettering carries
+  no anchors either.
 - **Notes link what they name.** Packages go to npmx.dev through `npmUrl()` in
   [helpers.mjs](../generator/helpers.mjs), and through a plate-checked `npmLink()` on a sheet that
   reads a plate, so a name off the plate throws. Repo files link to `main`; the atlas's own plates

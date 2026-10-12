@@ -447,7 +447,7 @@ export const ARTICLES = [
     note:
       'SHIPPED 2026-09-06 — the word kept, set as a superior in the DATA face at 0.6em, ' +
       'lowercase, soft ink: the one treatment that needs no glyph the title face does not have, ' +
-      'so the site, the flat set and the artifact draw it identically. The atlas’s OWN name ' +
+      'so the site and the artifact draw it identically. The atlas’s OWN name ' +
       'is the exception: its condensed wordmark takes the catchword on the kit host',
   },
   {

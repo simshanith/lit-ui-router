@@ -1,11 +1,10 @@
 // EMIT-APP — the drawing set, cut into fragments a router can mount.
 //
-// The atlas ships as ~23 standalone HTML pages. `www/atlas.lit-ui-router.dev/app/` is the same
-// set as a lit-ui-router single-page app, and this module is the seam: it
-// writes one CHROME-LESS fragment per sheet plus a manifest, so nothing in
-// the app is transcribed by hand. Every string here comes out of the same
-// sheet objects build.mjs already renders — including each sheet's standalone
-// filename, so the app can link back to the flat set without hand-typing.
+// `www/atlas.lit-ui-router.dev/app/` is the drawing set as a lit-ui-router
+// single-page app, and this module is the seam: it writes one CHROME-LESS
+// fragment per sheet plus a manifest, so nothing in the app is transcribed by
+// hand. Every string here comes out of the same sheet objects build.mjs
+// already renders.
 //
 // Written, relative to build.mjs's OUT argument (the repo's www/atlas.lit-ui-router.dev/):
 //   app/public/sheets/<id>.html   one fragment per sheet
@@ -248,13 +247,12 @@ function heroPlate() {
  * @param {Array<[object, () => string]>} args.appendixInteractive the same, for
  *        an appendix lane — emitted into `manifest.appendix` beside its plate
  * @param {string} args.outDir             build.mjs's OUT argument
- * @param {(sheet: object) => string} args.fname  build.mjs's standalone filename rule
  * @param {Record<string, {scale: string, verdict: string}>} args.index the gallery
  *        index table — CANONICAL for a row's altitude wording and its fit verdict
  * @param {Record<string, string>} args.cover the cover's own rendered HTML
  * @returns {number} fragments written (sheets + extras)
  */
-export function emitApp({ sheets, appendix = [], interactive, appendixInteractive = [], outDir, fname, index, cover }) {
+export function emitApp({ sheets, appendix = [], interactive, appendixInteractive = [], outDir, index, cover }) {
   const rows = [...sheets.map((s) => [s, null]), ...interactive].sort(([a], [b]) =>
     bySheet(a.num, b.num),
   );
@@ -273,10 +271,10 @@ export function emitApp({ sheets, appendix = [], interactive, appendixInteractiv
   writeFileSync(join(sheetsDir, 'atlas.css'), `${CSS}\n`);
 
   // EVERY CARD CARRIES A PICTURE. The pictures are drawn by generator/thumbs.mjs
-  // against the flat set this same build just wrote, and the 3D cards' against
-  // the built app, so a NEW plate takes build, app build, thumbs, build, app
-  // build. Nothing here draws them — this only refuses to emit a manifest that
-  // would leave a card blank.
+  // against the standalone pages this same build just wrote under tmp/flat/,
+  // and the 3D cards' against the built app, so a NEW plate takes build, app
+  // build, thumbs, build, app build. Nothing here draws them — this only refuses
+  // to emit a manifest that would leave a card blank.
   const thumbsDir = join(publicDir, THUMB_DIR);
   const thumbFor = (id) => {
     const paths = thumbPaths(id);
@@ -315,7 +313,6 @@ export function emitApp({ sheets, appendix = [], interactive, appendixInteractiv
       labels: labelsFor(sheet.num),
       rev: sheet.rev ?? 'A',
       file: `sheets/${id}.html`,
-      standalone: fname(sheet),
       interactive: Boolean(render),
       needsCytoscape,
       plates: platesOf(MODULE[String(sheet.num)]),
@@ -328,7 +325,7 @@ export function emitApp({ sheets, appendix = [], interactive, appendixInteractiv
   const appManifest = appRows.map(rowFor);
 
   // EXTRAS — the 3D plates: the city, its working twin and sheet 2's model, which
-  // the flat set does not draw. None has a sheet number, so all are kept OUT of
+  // only the app draws. None has a sheet number, so all are kept OUT of
   // `sheets`: the reel walk, the ascent order and the sheet mount all read that
   // array and must not see them. Each plate's wiring is an ES module rather than an
   // inline script: the app's runScripts() cannot run a <script type="module"> it inserts.
@@ -360,7 +357,6 @@ export function emitApp({ sheets, appendix = [], interactive, appendixInteractiv
     rev: meta.rev,
     shno: meta.head,
     file: `sheets/${meta.id}.html`,
-    standalone: meta.standalone,
     scale: index[meta.id]?.scale ?? '',
     verdict: index[meta.id]?.verdict ?? '',
     labels: labelsFor(meta.id),

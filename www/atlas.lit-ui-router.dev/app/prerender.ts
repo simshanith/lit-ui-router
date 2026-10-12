@@ -233,12 +233,11 @@ const verdictOnly: string[] = [
   ...Object.keys(SHEET_ALIASES).map((alias) => href.sheet(alias)),
 ];
 
-// The megacanvas was retired from the app on 2026-09-05; the flat set still
-// publishes the page, so both spellings of the old url are sent to it.
+// The megacanvas is not a state: both spellings of its url go to the index.
 // `trailingSlash` pairs the generated lines only — these ride verbatim.
 const megacanvas: RedirectLine[] = [
-  { from: `${BASE}megacanvas`, to: href.plate('megacanvas.html'), status: 301 },
-  { from: `${BASE}megacanvas/`, to: href.plate('megacanvas.html'), status: 301 },
+  { from: `${BASE}megacanvas`, to: href.gallery, status: 301 },
+  { from: `${BASE}megacanvas/`, to: href.gallery, status: 301 },
 ];
 
 const result = await prerender({

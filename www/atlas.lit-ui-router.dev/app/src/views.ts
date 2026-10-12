@@ -1,8 +1,7 @@
 /**
  * The views. Everything renders into the LIGHT DOM so the generated
  * `sheets/atlas.css` — the drawing set's own chrome, lifted verbatim out of
- * www/atlas.lit-ui-router.dev/generator/chrome.mjs — styles the plates as it styles the
- * standalone pages.
+ * www/atlas.lit-ui-router.dev/generator/chrome.mjs — styles the plates.
  */
 import type { UIRouter } from '@uirouter/core';
 import { LitElement, ReactiveElement, html, noChange, nothing, svg } from 'lit';
@@ -73,7 +72,7 @@ const ACTIVE_CLASSES = ['is-active'];
 /**
  * THE ARTICLE (T9, shipped 2026-09-06): a title keeps its THE, drawn as a
  * lowercase superior in the data face (`sup.art`, styled in the generated
- * sheets/atlas.css so the flat set, the app and the artifact draw it alike).
+ * sheets/atlas.css so the app and the artifact draw it alike).
  * Twins: `articleTitle` in generator/chrome.mjs and in prerender.ts.
  */
 const THE: TemplateResult = html`<sup class="art">the&nbsp;</sup>`;
@@ -91,8 +90,6 @@ const PROJECT_MARK: TemplateResult = html`<span class="project-mark">THE ALTITUD
 const articleTitle = (title: string): TemplateResult =>
   ARTICLE.test(title) ? html`${THE}${entryTitle(title)}` : html`${title}`;
 
-/** The live site — the only place the flat set exists for an artifact reader. */
-const SITE = 'https://atlas.lit-ui-router.dev';
 const DOCS = 'https://lit-ui-router.dev';
 const GITHUB = 'https://github.com/simshanith/lit-ui-router';
 
@@ -103,12 +100,6 @@ const GITHUB = 'https://github.com/simshanith/lit-ui-router';
  * `hashLocationPlugin` (src/router.ts) and not from a string prefix here.
  */
 const to = (path: string): string => (ARTIFACT ? `#${path}` : path);
-
-/** A link out to the flat set: relative on the site, absolute in the artifact. */
-const out = (path: string): string => (ARTIFACT ? `${SITE}${path}` : path);
-
-/** Artifact-only: the flat set is a different document, so open a new tab. */
-const outTarget = ARTIFACT ? '_blank' : nothing;
 
 // --- <atlas-plate> — a generated fragment, inserted and brought to life ----
 
@@ -152,7 +143,7 @@ export class AtlasPlate extends ReactiveElement {
   }
 
   // The scrolled plate marks its end so the SCROLL → fade clears the drawing's
-  // right edge — the same rule chrome.mjs writes for the flat set.
+  // right edge — the rule chrome.mjs writes.
   #markEnd = (event: Event): void => {
     const wrap = event.target;
     if (!(wrap instanceof HTMLElement) || !wrap.classList.contains('figure-wrap')) return;
@@ -532,8 +523,6 @@ function utilBar(
         <a class="util-log" href=${srefHref('atlas.log')}>LOG</a>
         <a class="util-docs" href="${DOCS}" target="_blank" rel="noopener">DOCS ↗</a>
         <a class="util-github" href="${GITHUB}" target="_blank" rel="noopener">GITHUB ↗</a>
-        <!-- The flat set is plain pages beside the app, not a state: a real link. -->
-        <a class="util-set" href="${out(href.set)}" target=${outTarget}>THE FLAT SET ↗</a>
         ${copy}
         <atlas-themer></atlas-themer>
         <atlas-prefs></atlas-prefs>
@@ -1336,7 +1325,6 @@ export const SheetView: RoutedLitTemplate<SheetResolves> = (props) => {
       ${next
         ? html`<a href=${srefHref('atlas.sheet', { num: next.num })}>NEXT · ${next.num}</a>`
         : nothing}
-      <a href="${out(href.plate(sheet.standalone))}" target=${outTarget}>STANDALONE PLATE ↗</a>
     `,
       sheet.needsCytoscape ? copyLink(props?.router) : nothing,
     )}
@@ -1363,11 +1351,6 @@ export const CityView: RoutedLitTemplate<SceneResolves> = (props) => {
     ${utilBar(html`
       ${indexCrumb()}
       <span class="sh">${extra.shno}</span>
-      ${extra.standalone
-        ? html`<a href="${out(href.plate(extra.standalone))}" target=${outTarget}
-            >STANDALONE PLATE ↗</a
-          >`
-        : nothing}
     `,
       copyLink(props?.router),
     )}
@@ -1455,8 +1438,7 @@ export const AboutView: RoutedLitTemplate<ManifestResolves> = (props) => {
           set as one <code>lit-ui-router</code> application: an abstract
           <code>atlas</code> state renders the rail and a nested
           <code>&lt;ui-view&gt;</code>, and <code>atlas.sheet</code> resolves one
-          generated fragment per plate. Every plate is the same drawing the standalone
-          set publishes, cut out of its page chrome by
+          generated fragment per plate. Every plate is cut out of its page chrome by
           <code>${manifest?.generatedBy ?? 'www/atlas.lit-ui-router.dev/generator/emit-app.mjs'}</code> and
           mounted through one state — nothing here is transcribed by hand.
         </p>
@@ -1484,16 +1466,6 @@ export const AboutView: RoutedLitTemplate<ManifestResolves> = (props) => {
           record, and rides the manifest as JSON, so the app fetches no markdown. The
           sheets themselves carry no revision table: each describes its present state,
           and the log is where the set's history is read.
-        </p>
-        <h3>THE FLAT SET</h3>
-        <p>
-          The same drawings as the standalone pages they were first published as — the
-          gallery, the megacanvas and one page per sheet — are kept beside this app at
-          <a href="${out(href.set)}" target=${outTarget}
-            ><code>${out(href.set)}</code></a
-          >
-          as the version to compare
-          against. Every sheet here links to its standalone plate from its crumb.
         </p>
         <h3>WHAT THE SERVER DOES</h3>
         <p>

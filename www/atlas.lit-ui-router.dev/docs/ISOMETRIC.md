@@ -130,10 +130,11 @@ Arrow markers come from `defs(p)` in `chrome.mjs` (`ai`, `aa`, `ar`, `as`).
 
 ## Verification
 
-1. **Build.** [`build.mjs`](../generator/build.mjs) writes every sheet. Each throw described above
-   (plots, plate rows, labels) stops it.
-2. **Frame audit.** [`audit-frames.mjs`](../generator/audit-frames.mjs) drives the built
-   `sheet-*.html` through Playwright and reports three counts per sheet, in the SVG's own user units:
+1. **Build.** [`build.mjs`](../generator/build.mjs) writes every sheet, its standalone page under
+   the gitignored `tmp/flat/`. Each throw described above (plots, plate rows, labels) stops it.
+2. **Frame audit.** [`audit-frames.mjs`](../generator/audit-frames.mjs) drives the sheet pages
+   under `tmp/flat/` through Playwright and reports three counts per sheet, in the SVG's own user
+   units:
    - **escapes:** an element outside the viewBox;
    - **hits:** lettering over a filled mass, tested by separating axis against the real silhouette.
      A panel that contains the label is skipped, and so is a one- or two-digit badge;

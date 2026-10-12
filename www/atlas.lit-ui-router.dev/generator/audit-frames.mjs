@@ -10,7 +10,7 @@
 //
 //   node www/atlas.lit-ui-router.dev/generator/audit-frames.mjs [tag] [--only 3B,7] [--out <dir>]
 //
-// Run after build.mjs, from the workspace root. Prints one line per plate and a
+// Run after build.mjs, from the workspace root; reads the pages under tmp/flat/. Prints one line per plate and a
 // TOTAL line; writes <out>/<tag>.json with every finding. Exits 1 when any
 // escape, hit deeper than 1px or text-on-text overlap is found. The interactive
 // lanes are skipped: cytoscape lays them out at runtime.
@@ -19,17 +19,19 @@ import { mkdirSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ROOT } from './basis.mjs';
+import { FLAT_DIR } from './thumb-spec.mjs';
 
-const SET = fileURLToPath(new URL('../', import.meta.url));
+const ATLAS = fileURLToPath(new URL('../', import.meta.url));
+const FLAT = join(ATLAS, FLAT_DIR);
 const SKIP = /sheet-(1i|2B|12i|14i)-/;
 const argv = process.argv.slice(2);
 const flag = (name) => { const i = argv.indexOf(name); return i !== -1 ? argv[i + 1] : undefined; };
 const TAG = argv.find((a, i) => !a.startsWith('--') && argv[i - 1] !== '--only' && argv[i - 1] !== '--out') ?? 'audit';
 const ONLY = flag('--only') ? new Set(flag('--only').split(',')) : null;
-const OUT = flag('--out') ?? join(SET, 'tmp', 'audit');
+const OUT = flag('--out') ?? join(ATLAS, 'tmp', 'audit');
 mkdirSync(OUT, { recursive: true });
 
-const files = readdirSync(SET).filter((f) => /^sheet-.*\.html$/.test(f) && !SKIP.test(f)).sort()
+const files = readdirSync(FLAT).filter((f) => /^sheet-.*\.html$/.test(f) && !SKIP.test(f)).sort()
   .filter((f) => !ONLY || ONLY.has(f.split('-')[1]));
 const require = createRequire(join(ROOT, 'tools/embed-heights/package.json'));
 const { chromium } = require('playwright');
@@ -38,7 +40,7 @@ const page = await browser.newPage({ viewport: { width: 1600, height: 1200 } });
 
 const all = {};
 for (const f of files) {
-  await page.goto(`file://${join(SET, f)}`, { waitUntil: 'load' });
+  await page.goto(`file://${join(FLAT, f)}`, { waitUntil: 'load' });
   await page.waitForTimeout(150);
   all[f] = await page.evaluate(() => {
     const sat = (a, b) => {

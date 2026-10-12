@@ -28,9 +28,8 @@ plate), `public/sheets/atlas.css`, `src/generated/city-init.js`, `src/generated/
 `public/models/bricks.glb`, `city.glb` and `plant.glb` (sheet 2's seated model and sheet 7's city,
 measured and at work, as glTF binaries), and `public/manifest.json`: one row
 per plate (title, rev, ALTITUDE wording, FIT VERDICT line, census plates read, cross-sheet
-references, standalone filename in the flat set), an `issueLog` array, and a `cover` object carrying
-the flat gallery's stat bar, survey, prose column and colophon as rendered HTML, so the routed index
-draws the same bytes the flat one does. Twenty-nine fragments: twenty-two sheets, four `appendix`
+references), an `issueLog` array, and a `cover` object carrying the gallery's stat bar, survey,
+prose column and colophon as rendered HTML. Twenty-nine fragments: twenty-two sheets, four `appendix`
 rows (A1, A2, A2i, A3) and three `extras` rows: the 3D city, its working twin and sheet 2's model in
 the round.
 
@@ -54,8 +53,8 @@ The twenty-two sheets are the nineteen SVG plates and three interactive lanes (1
 ascent; the appendix files A1, A2, A2i (the survey office's own lane) and A3 under the same `/sheet/:num`
 state, and `/sheet/14i` redirects to A2i.
 `atlas.log` is the set's issue record — every REV across every plate, latest first — read from the
-manifest. The megacanvas is not a state: the flat set publishes the whole reel as one page, so the
-prerender writes `/megacanvas` and `/megacanvas/` → `/set/megacanvas.html` 301 into `_redirects`.
+manifest. The megacanvas is not a state: the prerender writes `/megacanvas` and `/megacanvas/` → `/`
+301 into `_redirects`.
 
 The manifest's **`appendix`** array is the third list, beside `sheets` and `extras`: a plate whose
 subject is the atlas itself, at no altitude — **A1 THE SPRITE STUDY**, **A2 THE SURVEY OFFICE**
@@ -77,7 +76,7 @@ its `sheets`, and so invisible to the ascent order, the ← / → walk and the s
 round, a `<model-viewer>` loading `public/models/bricks.glb`, with the sheet's exploded view as its
 one clip (`assemble`), three corner buttons and a numbered badge per brick. `<atlas-bricks>`
 extends `<atlas-city>` and keeps its pin seam and teardown; only the generated module it calls
-differs. The flat set draws no copy of any of the three.
+differs.
 
 `atlas.specimen` is a **bench, not a plate**: a type specimen that draws ONE mock sheet from the
 set's own chrome and swaps every role token (`--display`, `--title`, `--rail-title`, `--data`,
@@ -104,7 +103,7 @@ GLYPH SIZE readout measures the data face against the mono it replaces.
 **The article, and the wordmark.** Almost every title in the set begins with THE. On a sheet
 title and on a cover card it is drawn as `sup.art` (in `sheets/atlas.css`, from
 `generator/chrome.mjs`): the word kept, set as a lowercase superior in the data face at 0.6em, soft
-ink — no kit glyph, so the site, the flat set and the artifact draw it identically. The plates'
+ink — no kit glyph, so the site and the artifact draw it identically. The plates'
 title block is the one exception: its SHEET TITLE field uses `.art-inline` instead, the same word at
 the value's own size on its own baseline, because a ledger field is read as a value, not a headline.
 
@@ -113,21 +112,18 @@ set apart. The rail head and the cover title carry it as text. The ledger sites 
 PROJECT line (`THE ALTITUDE ATLAS — DRAWING SET` / `— INTERACTIVE PLATE`) and the title block's
 PROJECT value — draw the same name wrapped in `.project-mark`, at a measured 1.06em so its cap sits
 on the ledger line's; only the size differs by site. The mark needs no kit glyph beyond the display
-face, so it draws alike on the site, the flat set and the artifact. (An HWT Catchwords glyph, and
+face, so it draws alike on the site and the artifact. (An HWT Catchwords glyph, and
 then a superior `the`, were both tried for the ledger article and dropped.) `titles.ts`, `<title>`
 and every aria name keep the same plain `THE ALTITUDE ATLAS`.
 
 ## Where it lives
 
 The app owns the site root of atlas.lit-ui-router.dev: `/`, `/sheet/7`, `/city`, `/bricks`, `/specimen`,
-`/log`, `/about`, `/office`. The flat drawing set — the pages this app was cut from — is staged
-beside it under `/set/` as the version to compare against, and the two link to each other: the
-rail's THE FLAT SET entry and each sheet's STANDALONE PLATE crumb go out, the flat gallery's cover
-links back. `src/routes.ts` holds the ONE base constant (`MOUNT`, `BASE`, `SET`, and the `href`
-table the views and the prerender share); vite's `base`, `<base href>` (via `%BASE_URL%`), the generator's
-fragment links and the staged `_redirects` all derive from it. `generator/stage-site.mjs` assembles
-`dist/`: this app at the root, the flat set under `dist/set/`, and one merged `_redirects` (the
-prerender's lines, every old flat filename → `/set/`, and `/app/*` → `/:splat`).
+`/log`, `/about`, `/office`. `src/routes.ts` holds the ONE base constant (`MOUNT`, `BASE`, and the
+`href` table the views and the prerender share); vite's `base`, `<base href>` (via `%BASE_URL%`),
+the generator's fragment links and the staged `_redirects` all derive from it.
+`generator/stage-site.mjs` assembles `dist/`: this app at the root and one merged `_redirects` (the
+prerender's lines, each retired standalone url → its routed sheet, and `/app/*` → `/:splat`).
 
 ## Base vs experimental
 
@@ -251,8 +247,6 @@ is strict in four ways, and each one is a line in the build:
   the url, so `#/sheet/7` comes out of the location plugin and not out of a string prefix. The
   one `to()` left in `views.ts` is for the key box's `<form action>`, which is a plain GET
   target and takes no directive.
-- **The flat set does not exist offline**, so `THE FLAT SET ↗` and each sheet's `STANDALONE PLATE ↗`
-  point at `https://atlas.lit-ui-router.dev/set/…` in a new tab.
 
 `src/mode.ts` is the one flag (`import.meta.env.MODE === 'artifact'`) the readers share; analytics
 is skipped in this mode. Nothing above changes the site build, which prerenders 32 pages +
@@ -307,9 +301,7 @@ pushes the param; CLOSE and Escape go back when the entry beneath is the same pa
 and replace it away otherwise; Back closes. `installLightbox(router)` runs once the page is
 adopted and syncs the lightbox from each successful transition, so a deep link opens on load and
 an id no figure carries is replaced away. Each move carries the other param, `focus` and
-`enlarge` both being uninherited. The flat set answers the same buttons and the same param with
-`FILL_SCRIPT` in `generator/chrome.mjs` (fullscreen on the box, the `.is-filled` overlay where
-fullscreen is refused or the page loads enlarged); the CSS is shared through `atlas.css`.
+`enlarge` both being uninherited. The CSS is `atlas.css`'s, from `generator/chrome.mjs`.
 
 What rendered, what did not, and what the package would need to close the gap is in
 [`SSR-VERDICT.md`](./SSR-VERDICT.md).

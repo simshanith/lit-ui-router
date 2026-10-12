@@ -10,56 +10,56 @@ each sheet argue where that form fits and where it lies.
 
 | Sheet | Altitude | Form |
 | --- | --- | --- |
-| [1](sheet-1-the-render-loop.html) | ONE PACKAGE | ISO CIRCUIT |
-| [1i](sheet-1i-the-render-loop-walked.html) | ONE PACKAGE | INTERACTIVE CIRCUIT |
-| [2](sheet-2-the-brick-assembly.html) | SIX PACKAGES | BRICK ASSEMBLY |
-| [2A](sheet-2A-the-coupling-plan.html) | SIX PACKAGES | COUPLING PLAN |
-| [2B](sheet-2B-the-coupling-bench.html) | 9 NODES · 14 DRAWN CONTRACTS | INTERACTIVE COUPLING GRAPH |
-| [3](sheet-3-the-instrument-yard.html) | THE MONOREPO | ISOMETRIC CITY |
-| [3A](sheet-3A-the-handoff-works.html) | TWO TASK MANAGERS | COUPLING SCHEMATIC |
-| [3B](sheet-3B-the-watched-city.html) | THE CI TASK GRAPH | ISOMETRIC GRAPH CITY |
-| [4](sheet-4-the-family-spine.html) | UI-ROUTER ECOSYSTEM | MASSED SPINE |
-| [5](sheet-5-the-design-space.html) | JS ECOSYSTEM | POSITIONED CHART |
-| [6](sheet-6-the-routing-strata.html) | EVERYTHING | CORE SAMPLE |
-| [7](sheet-7-the-measured-city.html) | WHOLE WORKSPACE | MEASURED CITY |
-| [7A](sheet-7A-the-shadow-survey.html) | WHOLE WORKSPACE | SHADOW PLAN |
-| [7B](sheet-7B-the-working-city.html) | WHOLE WORKSPACE | WORKING CITY |
-| [8](sheet-8-the-delivered-city.html) | ONE CONSUMER | DELIVERED CITY |
-| [9](sheet-9-the-shipped-city.html) | ONE DEPLOY | SHIPPED CITY |
-| [10](sheet-10-the-bundled-city.html) | ONE BUNDLE | BUNDLED CITY |
-| [11](sheet-11-the-entry-quarters.html) | SEVEN PACKAGES | ENTRY QUARTERS |
-| [12](sheet-12-the-register-plate.html) | PR CI GRAPH | REGISTER PLATE |
-| [12i](sheet-12i-the-register-walked.html) | PR CI GRAPH | INTERACTIVE REGISTER |
-| [13](sheet-13-the-weathering-map.html) | WORKSPACE × TIME | WEATHERING MAP |
-| [14](sheet-14-the-upstream-works.html) | CITY × COMMONS | UPSTREAM WORKS |
+| [1](https://atlas.lit-ui-router.dev/sheet/1) | ONE PACKAGE | ISO CIRCUIT |
+| [1i](https://atlas.lit-ui-router.dev/sheet/1i) | ONE PACKAGE | INTERACTIVE CIRCUIT |
+| [2](https://atlas.lit-ui-router.dev/sheet/2) | SIX PACKAGES | BRICK ASSEMBLY |
+| [2A](https://atlas.lit-ui-router.dev/sheet/2A) | SIX PACKAGES | COUPLING PLAN |
+| [2B](https://atlas.lit-ui-router.dev/sheet/2B) | 9 NODES · 14 DRAWN CONTRACTS | INTERACTIVE COUPLING GRAPH |
+| [3](https://atlas.lit-ui-router.dev/sheet/3) | THE MONOREPO | ISOMETRIC CITY |
+| [3A](https://atlas.lit-ui-router.dev/sheet/3A) | TWO TASK MANAGERS | COUPLING SCHEMATIC |
+| [3B](https://atlas.lit-ui-router.dev/sheet/3B) | THE CI TASK GRAPH | ISOMETRIC GRAPH CITY |
+| [4](https://atlas.lit-ui-router.dev/sheet/4) | UI-ROUTER ECOSYSTEM | MASSED SPINE |
+| [5](https://atlas.lit-ui-router.dev/sheet/5) | JS ECOSYSTEM | POSITIONED CHART |
+| [6](https://atlas.lit-ui-router.dev/sheet/6) | EVERYTHING | CORE SAMPLE |
+| [7](https://atlas.lit-ui-router.dev/sheet/7) | WHOLE WORKSPACE | MEASURED CITY |
+| [7A](https://atlas.lit-ui-router.dev/sheet/7A) | WHOLE WORKSPACE | SHADOW PLAN |
+| [7B](https://atlas.lit-ui-router.dev/sheet/7B) | WHOLE WORKSPACE | WORKING CITY |
+| [8](https://atlas.lit-ui-router.dev/sheet/8) | ONE CONSUMER | DELIVERED CITY |
+| [9](https://atlas.lit-ui-router.dev/sheet/9) | ONE DEPLOY | SHIPPED CITY |
+| [10](https://atlas.lit-ui-router.dev/sheet/10) | ONE BUNDLE | BUNDLED CITY |
+| [11](https://atlas.lit-ui-router.dev/sheet/11) | SEVEN PACKAGES | ENTRY QUARTERS |
+| [12](https://atlas.lit-ui-router.dev/sheet/12) | PR CI GRAPH | REGISTER PLATE |
+| [12i](https://atlas.lit-ui-router.dev/sheet/12i) | PR CI GRAPH | INTERACTIVE REGISTER |
+| [13](https://atlas.lit-ui-router.dev/sheet/13) | WORKSPACE × TIME | WEATHERING MAP |
+| [14](https://atlas.lit-ui-router.dev/sheet/14) | CITY × COMMONS | UPSTREAM WORKS |
 
 ## Appendix — plates about the atlas, not the codebase
 
 | Plate | Subject | Form |
 | --- | --- | --- |
-| [A1](sheet-A1-the-sprite-study.html) | THE ATLAS ITSELF | SPRITE STUDIES |
-| [A2](sheet-A2-the-survey-office.html) | THE CENSUS PIPELINE | FLOW GRAPH |
-| [A3](sheet-A3-the-atlas-measured.html) | THE ATLAS ITSELF | ISOMETRIC CITY |
-| [A2i](sheet-A2i-the-survey-office-interactive.html) | THE CENSUS PIPELINE | INTERACTIVE GRAPH |
+| [A1](https://atlas.lit-ui-router.dev/sheet/A1) | THE ATLAS ITSELF | SPRITE STUDIES |
+| [A2](https://atlas.lit-ui-router.dev/sheet/A2) | THE CENSUS PIPELINE | FLOW GRAPH |
+| [A3](https://atlas.lit-ui-router.dev/sheet/A3) | THE ATLAS ITSELF | ISOMETRIC CITY |
+| [A2i](https://atlas.lit-ui-router.dev/sheet/A2i) | THE CENSUS PIPELINE | INTERACTIVE GRAPH |
 
-- `megacanvas.html` — the 19 SVG plates on one page, ascent order.
-- `gallery.html` — cover, index and the full set, interactive lanes included.
-
-**Build and host.** From the repo root, in order:
+**Build and host.** `generator/ship.mjs` runs the shipment one named step per call, from the repo root, in order:
 
 ```bash
-node www/atlas.lit-ui-router.dev/generator/build.mjs www/atlas.lit-ui-router.dev  # the flat set + the app's fragments and manifest
-npm --prefix www/atlas.lit-ui-router.dev/app run build               # the routed app, prerendered
-npm --prefix www/atlas.lit-ui-router.dev/app run build:artifact      # the single-file build published as a claude.ai Artifact
-node www/atlas.lit-ui-router.dev/generator/check-scenes.mjs www/atlas.lit-ui-router.dev  # checks the three models, drives the built app's 3D plates in headless Chromium
-cd www/atlas.lit-ui-router.dev && mise exec -- node generator/stage-site.mjs   # dist/: app at /, this set at /set/, vendored libs
-mise exec -- pnpm exec wrangler pages deploy dist --project-name altitude-atlas --branch www/atlas --commit-dirty=true
+mise exec -- node www/atlas.lit-ui-router.dev/generator/ship.mjs build     # the generator: fragments, models, manifest, and the standalone pages under tmp/flat/
+mise exec -- node www/atlas.lit-ui-router.dev/generator/ship.mjs app       # typecheck, then the vite build and prerender
+mise exec -- node www/atlas.lit-ui-router.dev/generator/ship.mjs audit     # the frame audit, then light and dark photographs under tmp/shots/
+mise exec -- node www/atlas.lit-ui-router.dev/generator/ship.mjs stage     # dist/: the app at /, its _redirects merged
+mise exec -- node www/atlas.lit-ui-router.dev/generator/ship.mjs deploy    # the branch, tree and kit checks, then the Pages upload
+mise exec -- node www/atlas.lit-ui-router.dev/generator/ship.mjs verify    # two live fetches agree; five status codes match
+mise exec -- node www/atlas.lit-ui-router.dev/generator/ship.mjs artifact  # the single-file build published as a claude.ai Artifact
 ```
+
+`docs/SHIPPING.md` is the account of the whole run.
 
 **The card pictures.** Every card on the cover carries a 300 x 400 picture of its own
 plate — `app/public/thumbs/<id>.webp` and `<id>-dark.webp`, one per theme, tracked
 generated files like the fragments beside them. `generator/thumbs.mjs` draws them by
-photographing the flat set above in headless Chromium (playwright, reached through
+photographing the standalone pages under `tmp/flat/` in headless Chromium (playwright, reached through
 `tools/embed-heights`; the lanes' cytoscape is served from `app/node_modules`), and the
 three 3D cards (`city`, `plant`, `bricks`) from the BUILT app's prerendered `/city/`, `/plant/`
 and `/bricks/` pages, each `<model-viewer>` on a transparent clear, its pins hidden for the shot. The three
@@ -68,7 +68,7 @@ models, `app/public/models/city.glb`, `plant.glb` and `bricks.glb`, are tracked 
 plate takes the full order:
 
 ```bash
-node www/atlas.lit-ui-router.dev/generator/build.mjs www/atlas.lit-ui-router.dev   # writes the flat set, then stops on the missing picture
+node www/atlas.lit-ui-router.dev/generator/build.mjs www/atlas.lit-ui-router.dev   # writes the standalone pages, then stops on the missing picture
 npm --prefix www/atlas.lit-ui-router.dev/app run build                             # the app the 3D cards are shot from
 node www/atlas.lit-ui-router.dev/generator/thumbs.mjs www/atlas.lit-ui-router.dev  # photographs it
 node www/atlas.lit-ui-router.dev/generator/build.mjs www/atlas.lit-ui-router.dev   # green
@@ -84,10 +84,11 @@ the whole drawing instead, `crop` to fit the drawing band alone, `target` for a 
 canvas) and nothing else changes. To try a row without touching
 the tracked pictures: `thumbs.mjs <outdir> --only <ids> --out <dir> --tuning <file.json>`.
 
-Live at <https://atlas.lit-ui-router.dev/> — the app owns the root (`/`, `/sheet/7/`, `/city/`,
-`/plant/`, `/bricks/`, `/log`) and the flat set sits beside it under `/set/`; the two link to each other. The SVG
-sheets need nothing; the interactive lanes (1i, 2B, 12i, A2i) load cytoscape 3.31.0, which the stage step
-vendors, and the app-only plates in the round (2·3D, 7·3D, 7B·3D) bundle `@google/model-viewer`. `app/` is the same set as a prerendered
+Live at <https://atlas.lit-ui-router.dev/> — the app owns the site (`/`, `/sheet/7/`, `/city/`,
+`/plant/`, `/bricks/`, `/log`). Each sheet is also written as a standalone page under `tmp/flat/`, a
+gitignored build product the frame audit (`generator/audit-frames.mjs`, `shoot.mjs`) and the card pictures read;
+every old standalone url redirects to its routed sheet. The interactive lanes (1i, 2B, 12i, A2i) bundle cytoscape 3.31.0,
+and the app-only plates in the round (2·3D, 7·3D, 7B·3D) bundle `@google/model-viewer`. `app/` is the same set as a prerendered
 lit-ui-router app (see `app/README.md`); `HISTORY.md` is the verbatim revision record, parsed
 into the app's `/log` at build time. This file is written by `build.mjs`; edit the emitter, not the output.
 
