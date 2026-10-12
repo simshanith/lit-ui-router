@@ -24,26 +24,35 @@ them, and the traps of the shell they run in. Paths are relative to this directo
 
 ## The run, in order
 
-Each step is one Bash call. Long output goes to a file under the job's `tmp/`, exit code
-echoed, then searched; nothing is piped to `head` or `tail`.
+[generator/ship.mjs](../generator/ship.mjs) owns the automated steps and the checks between
+them; its header lists them. Every step has one form, run from `<WT>`:
 
-1. **Generator build**, from `<WT>`:
-   `node www/atlas.lit-ui-router.dev/generator/build.mjs www/atlas.lit-ui-router.dev`.
-   Writes the flat set, the fragments, the models and the manifest ([README.md](../README.md),
-   "Build and host"). A new plate needs the picture pass first (build → app build →
-   `thumbs.mjs` → build → app build; `build.mjs` refuses a manifest whose card has no picture).
-2. **App build**, absolute prefix:
-   `mise exec -- npm --prefix <WT>/www/atlas.lit-ui-router.dev/app run typecheck`, then `… run build`.
-   The build log carries two lines to read: `prerendered N pages + 1 × 404.html · M redirects`
-   and `scoped router at construction: N/N renders match router.globals`. A count below the
-   previous shipment's is a stop.
-3. **Frame audit and photographs**, from `<WT>`:
-   `mise exec -- node www/atlas.lit-ui-router.dev/generator/audit-frames.mjs <tag> [--only ids]`
-   and `… generator/shoot.mjs <tag> [--only ids]`. The audit exits 1 on an escape, a hit deeper
-   than 1px or text over text; its TOTAL line is compared against the last tag's. `shoot.mjs`
-   writes light and dark PNGs under `tmp/shots/<tag>/`; read every picture with the Read tool,
-   both themes, before going on. A 3D plate change also runs `generator/check-scenes.mjs`.
-4. **Commit**, message in a file, plain git:
+```sh
+mise exec -- node www/atlas.lit-ui-router.dev/generator/ship.mjs <step> [options]
+```
+
+Each step is one Bash call. It resolves every path from its own file, prints
+`ship <step>: STOP — <why>` and exits 1 when a check fails, and exits 0 otherwise; a stop
+ends the run. Long output goes to a file under the job's `tmp/`, exit code echoed, then
+searched; nothing is piped to `head` or `tail`. The commit, the push and the Artifact publish
+are done by hand between the steps.
+
+1. **`build`** runs the generator: the flat set, the fragments, the models and the manifest
+   ([README.md](../README.md), "Build and host"). A new plate needs the picture pass first
+   (build → app → `thumbs.mjs` → build → app; `build.mjs` refuses a manifest whose card has no
+   picture).
+2. **`app`** typechecks and runs the vite build and prerender. The build log carries
+   `prerendered N pages + 1 × 404.html · M redirects` and
+   `scoped router at construction: N/N renders match router.globals`; the step stops on a
+   scoped-router mismatch, and on a page count below the last run's, recorded in
+   `tmp/ship/last.json`. `--accept` takes a lower count when the change removes pages on
+   purpose.
+3. **`audit <tag> [--only ids]`** runs `generator/audit-frames.mjs`, which exits 1 on an
+   escape, a hit deeper than 1px or text over text, then `generator/shoot.mjs`, which writes
+   light and dark PNGs under `tmp/shots/<tag>/`. Set the TOTAL line beside the last tag's,
+   and read every picture with the Read tool, both themes, before going on. A 3D plate change
+   also runs `generator/check-scenes.mjs`.
+4. **Commit**, by hand, message in a file, plain git:
    `git -C <WT> commit -F <tmp>/msg.txt`. The husky `commit-msg` hook runs commitlint
    ([CONTRIBUTING.md](../../../docs/CONTRIBUTING.md#commit-conventions), rules in
    `.commitlintrc.ts`): a lowercase conventional subject such as `feat(atlas): sheet 5 rev c, …`;
@@ -51,35 +60,30 @@ echoed, then searched; nothing is piped to `head` or `tail`.
    it as a footer); a blank line before the trailer `Claude-Session: <session url>`. A
    `footer-leading-blank` warning means the blank line is missing; fix the file rather than
    accept it.
-5. **Push**: `git -C <WT> push origin www/atlas`. The remote prints
+5. **Push**, by hand: `git -C <WT> push origin www/atlas`, never forced. The remote prints
    `remote: Bypassed rule violations for refs/heads/www/atlas: - Cannot update this protected ref.`
-   on every push; that is the admin bypass reporting itself and the push succeeds. Confirm with
-   `git -C <WT> ls-remote origin www/atlas` against `git -C <WT> rev-parse HEAD`.
-6. **Stage**, cwd = the atlas dir: `mise exec -- node generator/stage-site.mjs`.
+   on every push; that is the admin bypass reporting itself and the push succeeds.
+6. **`stage`** runs [generator/stage-site.mjs](../generator/stage-site.mjs) in the atlas dir.
    `mise exec` supplies `VITE_ADOBE_FONTS_KIT` and `VITE_GOOGLE_ANALYTICS_TRACKING_ID` from the
-   gitignored `.config/mise/cloudflare.local.env`; the log line `Adobe Fonts kit: <id>` is the
-   check, and `Adobe Fonts kit: none` is a stop. A fork worktree has no such file and never
-   deploys ([generator/stage-site.mjs](../generator/stage-site.mjs) header).
-7. **Pre-deploy check**, in the atlas dir: `grep -c typekit dist/city/index.html` is 1 or more
-   and `grep -c fonts.googleapis dist/city/index.html` is 0. `dist/` here is the staged site;
-   `app/dist` one level down is the raw vite build with Google font links and no GA tag.
-8. **Deploy**, alone in its own Bash call, cwd = the atlas dir:
-   `mise exec -- pnpm exec wrangler pages deploy dist --project-name altitude-atlas --branch www/atlas --commit-dirty=true`.
-   That exact string is the allow-listed command in the main checkout's
-   `.claude/settings.local.json`; any variation asks. "Deployment complete" names the upload,
-   not the tree, which is why step 7 exists. Only the main session deploys; a subagent's deploy
-   is refused.
-9. **Live verify**, twice: `curl -sL https://atlas.lit-ui-router.dev/<page>/ | grep -c <marker>`
-   for the change's own marker and for `typekit`, plus
-   `curl -sL -o /dev/null -w '%{http_code} %{url_effective}'` on `/`, `/sheet/7/`, `/sheet/2a`
-   (302 to `/sheet/2A`), `/set/` and `/sheet/99` (404). The first fetch after a deploy can
-   still read the previous deploy; a second fetch that agrees is the verdict, and the
-   deployment's own `*.altitude-atlas.pages.dev` URL answers at once.
-10. **Artifact**: `npm --prefix <WT>/www/atlas.lit-ui-router.dev/app run build:artifact`, then
-    publish `app/dist-artifact/index.html` with the Artifact tool by `url`
-    (`https://claude.ai/artifact/JpLqLDXLwY8nwKByiLx5V4`), a short `label`, no icon. The
-    artifact build keeps the Google font links by design ([app/README.md](../app/README.md),
-    "Artifact build"); it never passes through the stager.
+   gitignored `.config/mise/cloudflare.local.env`; the step stops on `Adobe Fonts kit: none`.
+   A fork worktree has no such file and never deploys (the stager's header). `dist/` is the
+   staged site; `app/dist` one level down is the raw vite build with Google font links and no
+   GA tag.
+7. **`deploy`** runs `check` first, then the Pages upload to `altitude-atlas` on branch
+   `www/atlas`, and prints the deployment URL. `check` stops unless the branch is `www/atlas`,
+   the atlas tree is clean, HEAD is on origin, and `dist/city/index.html` carries `typekit` and
+   no `fonts.googleapis`; it also runs alone as `check`. "Deployment complete" names the
+   upload, not the tree, which is why the check gates it. The deploy stands alone in its Bash
+   call, and only the main session deploys.
+8. **`verify [--page <path> --marker <text>]`** fetches the page twice; both fetches carry
+   `typekit` and agree on the change's marker, and `/`, `/sheet/7/`, `/sheet/2a`, `/set/` and
+   `/sheet/99` answer with the codes the step lists. The first fetch after a deploy can read
+   the previous deploy; a stop on disagreement is rerun once, and the deployment's own
+   `*.altitude-atlas.pages.dev` URL answers at once.
+9. **`artifact`** builds `app/dist-artifact/index.html`; then publish it with the Artifact tool
+   by `url` (`https://claude.ai/artifact/JpLqLDXLwY8nwKByiLx5V4`), a short `label`, no icon.
+   The artifact build keeps the Google font links by design ([app/README.md](../app/README.md),
+   "Artifact build"); it never passes through the stager.
 
 ## Records
 
@@ -111,9 +115,8 @@ echoed, then searched; nothing is piped to `head` or `tail`.
 - **pnpm.** `mise exec -- pnpm …`, never `corepack pnpm`. Never pnpm inside `app/`: a `pnpm`
   install there relinks `node_modules` to the pnpm layout and leaves a stray `pnpm-lock.yaml`;
   the cure is `rm -rf app/node_modules` and `npm --prefix … ci`.
-- **The shell's cwd drifts** between calls and after environment updates. `--prefix` takes an
-  absolute path; `cd <atlas dir> && …` prefixes the stage and the checks; the deploy stands
-  alone in its call.
+- **The shell's cwd drifts** between calls and after environment updates. `ship.mjs` resolves
+  its paths from its own file; any other `--prefix` takes an absolute path.
 - **zsh globs.** A glob with no match aborts the whole command line
   (`(eval):1: no matches found: …`). Quote the pattern or test the directory first.
 - **Ports 8787, 5173 and 5174** belong to the e2e suite and the sample apps across every
@@ -126,6 +129,11 @@ echoed, then searched; nothing is piped to `head` or `tail`.
 - **Subagents never commit, push or deploy.** They build, audit and report; the main session
   validates, commits, pushes and deploys. A subagent in a second worktree inherits the pin
   and loses git entirely.
+- **The ship guard.** [generator/ship-guard.mjs](../generator/ship-guard.mjs) is a Claude Code
+  PreToolUse hook on Bash. It denies a wrangler deploy that is not `ship.mjs deploy` and any
+  force-push to `www/atlas`. The repo root's `.claude/settings.json` wires it, beside the allow
+  rule `Bash(mise exec -- node www/atlas.lit-ui-router.dev/generator/ship.mjs:*)`. A denial is
+  reported to the user, never routed around.
 - **The classifier.** The deploy and the Artifact upload carry standing authorization; a
   denial is reported to the user, never worked around.
 
@@ -133,16 +141,15 @@ echoed, then searched; nothing is piped to `head` or `tail`.
 
 A shipment is done when all of these hold:
 
-- `build.mjs` and the app build exit 0; the `prerendered` and `scoped router` counts are at or
-  above the last shipment's.
+- `ship.mjs build` and `ship.mjs app` exit 0, the latter without `--accept` unless the change
+  removes pages on purpose.
 - `audit-frames.mjs` reports 0 escapes, 0 hits over 1px and 0 text overlaps on every plate the
   change touched (and on the whole set after a cabinet refresh); `check-scenes.mjs` passes when
   a model or its viewer moved.
 - Every photograph in `tmp/shots/<tag>/` has been read, light and dark; a layout or type
   change also has a before tag to set beside it, at the layout's seam widths.
-- `dist/city/index.html` carries `typekit` and no `fonts.googleapis`.
-- `git ls-remote` shows the pushed sha; the deploy log ends in a `*.altitude-atlas.pages.dev`
-  URL; two live fetches agree on the change's marker and on `typekit`.
+- `ship.mjs deploy` exits 0, its check passed, and prints a `*.altitude-atlas.pages.dev` URL.
+- `ship.mjs verify --page <path> --marker <text>` exits 0 for the change's own marker.
 - The Artifact publish result names a new version at the same URL.
 - HISTORY.md carries the dated line (and the REV subhead when the letter moved); the hub line
   is written.
