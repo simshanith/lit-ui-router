@@ -9,6 +9,7 @@ catalog:
   '@ampproject/remapping': ^2.3.0
   '@api-viewer/docs': 1.0.0-pre.10
   '@arethetypeswrong/core': ^0.18.5
+  '@axe-core/playwright': 4.13.0
   '@codecov/bundle-analyzer': ^2.0.1
 
   oxc-project-runtime: 'npm:@oxc-project/runtime@0.153.0'
@@ -137,6 +138,7 @@ catalogs:
     typescript: ^6.0.3
     typescript-6: npm:typescript@^6.0.3
   workspace:
+    '@tools/a11y': workspace:*
     '@tools/bootstrap': workspace:*
     '@tools/build_and_test': workspace:*
     '@tools/bundle-probe': workspace:*

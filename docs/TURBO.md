@@ -121,7 +121,7 @@ Exceptions: `www/lit-ui-router.dev/api/**` (generated VitePress content, not a b
 - `@tools/dts-backtest#test:matrix` runs the full TS version matrix; PRs run only the current-TS `test` leg.
 - `build` composes the two own-package passes: `build:js` (JS) and `build:types` (d.ts, self-chaining via `^build:types`).
 - `check:bundle` holds the bundle invariants (size budgets, deps-none probes); `codecov:bundle` uploads bundle analysis, uncached.
-- `dev`, `e2e`, and `docs` are persistent, uncached tasks. `e2e` is `cypress open`, the interactive lane — not the headless suites, which are the cached `test:e2e:*` tasks under `//:test_e2e`.
+- `dev`, `e2e`, and `docs` are persistent, uncached tasks. `e2e` is `cypress open`, the interactive lane — not the headless suites, which are the `test:e2e:*` tasks under `//:test_e2e`: one cached task per Cypress suite, plus the uncached axe pass `test:e2e:a11y`, which runs only when named (the Acceptance workflow names it).
 - Per-task `inputs`/`outputs` live in `turbo.json` itself — see [Cache Control](#cache-control).
 
 **Deliberately outside both ci graphs:** `@www/lit-ui-router.dev#check:embeds` measures every built example in headless Chromium and checks the heights `examples/embeds.ts` reserves for their embeds. Text wraps at engine-specific metrics, so the measurement is host-dependent — a Linux runner and a macOS laptop do not have to agree — and gating on it would make the docs' reserved space a property of whoever ran it. Run it locally when an example's content changes.
@@ -179,7 +179,7 @@ Workspaces extend the root configuration using `"extends": ["//"]`:
 | `apps/sample-app-lit-vanilla`                             | `build` is an umbrella over `build:vanilla` and `build:hash` (VITE\_\* env on each)                                                                                                                                                                         |
 | `apps/sample-app-lit-mobx`                                | Adds env vars for build (VITE\_\*)                                                                                                                                                                                                                          |
 | `apps/sample-app-lit-effect`                              | Adds env vars for build (VITE\_\*)                                                                                                                                                                                                                          |
-| `apps/sample-app-lit-e2e`                                 | One cached `test:e2e:*` task per Cypress suite, reached via the `//:test_e2e` umbrella (which owns the dev server); CYPRESS\_\* passes through un-hashed                                                                                                    |
+| `apps/sample-app-lit-e2e`                                 | One `test:e2e:*` task per suite (Cypress suites cached, the `a11y` axe pass uncached), reached via the `//:test_e2e` umbrella (which owns the dev server); CYPRESS\_\* passes through un-hashed                                                             |
 | `apps/sample-app-routes`, `apps/sample-app-shared`        | Widens `test` inputs beyond the root's `src/**/*.ts` (non-TS/config surface)                                                                                                                                                                                |
 | `@www/lit-ui-router.dev`                                  | Adds `check:embeds`, `docs:preview`, `wrangler:dev`, worker tasks (`types:worker`, `typecheck:worker`, `typecheck:worker:tests`, `bundle:worker`); `test` runs the worker contract tests in node; requires `^docs:api` before build                         |
 | `examples`                                                | Adds `build:embeds` (tutorial apps built as docs embeds)                                                                                                                                                                                                    |
@@ -421,7 +421,7 @@ E2E tasks (`e2e`, `dev`, `docs`) are `persistent: true` and don't cache:
 Run these separately from cached tasks.
 
 `e2e` here is `cypress open`, the interactive lane. The headless suites are the
-five `test:e2e:*` tasks — cached, not persistent, and reached through the
+`test:e2e:*` tasks — not persistent, cached except the `a11y` axe pass, and reached through the
 `//:test_e2e` mise task, which owns the dev server because turbo has no
 lifecycle for one. If those hang, look at the server or the suite, not at a
 persistent task.

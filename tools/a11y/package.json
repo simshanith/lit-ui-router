@@ -1,0 +1,31 @@
+{
+  "name": "@tools/a11y",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Runs axe-core over the built docs site and the sample apps it serves, in headless Chromium, and fails on any violation",
+  "bin": {
+    "check-a11y": "./src/check-a11y.ts"
+  },
+  "type": "module",
+  "scripts": {
+    "format:check:oxfmt": "oxfmt --check \"**/*.{ts,js,json,jsonc,md}\"",
+    "format:oxfmt": "oxfmt \"**/*.{ts,js,json,jsonc,md}\"",
+    "lint:oxlint": "oxlint .",
+    "test": "node --test --test-reporter=@tools/shared/test-reporter.ts \"src/**/*.test.ts\"",
+    "typecheck:tsc": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@tools/bootstrap": "catalog:workspace"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "catalog:",
+    "@tools/shared": "catalog:workspace",
+    "@types/node": "catalog:",
+    "jsonc-parser": "catalog:",
+    "oxfmt": "catalog:",
+    "oxlint": "catalog:",
+    "playwright": "catalog:",
+    "typescript": "catalog:",
+    "valibot": "catalog:"
+  }
+}

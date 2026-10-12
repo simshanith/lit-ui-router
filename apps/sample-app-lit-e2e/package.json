@@ -10,6 +10,7 @@
     "format:check:oxfmt": "oxfmt --check \"**/*.{ts,js,json,md}\"",
     "format:oxfmt": "oxfmt \"**/*.{ts,js,json,md}\"",
     "lint:oxlint": "oxlint .",
+    "test:e2e:a11y": "node ./scripts/a11y-suite.ts",
     "test:e2e:docs": "cypress run --config-file cypress.docs.config.ts",
     "test:e2e:effect": "node ./scripts/cypress-suite.ts effect",
     "test:e2e:hash": "node ./scripts/cypress-suite.ts hash",
@@ -21,6 +22,7 @@
     "@www/lit-ui-router.dev": "catalog:workspace"
   },
   "devDependencies": {
+    "@tools/a11y": "catalog:workspace",
     "@tools/bootstrap": "catalog:workspace",
     "@tools/shared": "catalog:workspace",
     "@types/node": "catalog:",
