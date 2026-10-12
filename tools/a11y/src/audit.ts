@@ -37,43 +37,53 @@ export interface Audit {
   findings: Finding[];
 }
 
-/** Badge-sized, so a stubbed third-party image (the shields badges) keeps its layout. */
-const STUB_IMAGE =
-  '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="20"></svg>';
-
-/** Third-party requests never reach the network: networkidle must not wait on another service. */
-async function newContext(
-  browser: Browser,
-  origin: string,
-  scheme: Scheme,
-): Promise<BrowserContext> {
-  const own = new URL(origin).origin;
-
-  const context = await browser.newContext({
-    colorScheme: scheme,
-    reducedMotion: 'reduce',
-  });
-
-  await context.route(
-    (url) => url.origin !== own,
-    (route) =>
-      route.request().resourceType() === 'image'
-        ? route.fulfill({ contentType: 'image/svg+xml', body: STUB_IMAGE })
-        : route.abort('blockedbyclient'),
-  );
-
-  return context;
+function newContext(browser: Browser, scheme: Scheme): Promise<BrowserContext> {
+  return browser.newContext({ colorScheme: scheme, reducedMotion: 'reduce' });
 }
 
-/** The URLs of the page's requests still in flight, for a timeout's error. */
-function inFlight(page: Page): () => string[] {
-  const pending = new Set<Request>();
+const QUIET_MS = 500;
 
-  page.on('request', (request) => pending.add(request));
-  page.on('requestfinished', (request) => pending.delete(request));
-  page.on('requestfailed', (request) => pending.delete(request));
+const SETTLE_TIMEOUT_MS = 30_000;
 
-  return () => [...pending].map((request) => request.url());
+interface Requests {
+  /** URLs still in flight, for a timeout's error. */
+  pending: () => string[];
+  /** Resolves once no request has been in flight for QUIET_MS. */
+  settled: () => Promise<void>;
+}
+
+/** The page's requests, every frame included. */
+function track(page: Page): Requests {
+  const inFlight = new Set<Request>();
+  let lastChange = Date.now();
+
+  const update = (change: () => void) => {
+    change();
+    lastChange = Date.now();
+  };
+
+  page.on('request', (request) => update(() => inFlight.add(request)));
+  page.on('requestfinished', (request) =>
+    update(() => inFlight.delete(request)),
+  );
+  page.on('requestfailed', (request) => update(() => inFlight.delete(request)));
+
+  const settled = async () => {
+    const deadline = Date.now() + SETTLE_TIMEOUT_MS;
+
+    while (inFlight.size > 0 || Date.now() - lastChange < QUIET_MS) {
+      if (Date.now() > deadline) {
+        throw new Error(`requests unsettled after ${SETTLE_TIMEOUT_MS}ms`);
+      }
+
+      await page.waitForTimeout(100);
+    }
+  };
+
+  return {
+    pending: () => [...inFlight].map((request) => request.url()),
+    settled,
+  };
 }
 
 async function scan(
@@ -113,8 +123,11 @@ async function goto(page: Page, url: string): Promise<void> {
   }
 }
 
-/** Lazy same-origin embeds load only on scroll; axe scans a frame only once it has loaded. */
-async function loadEmbeds(page: Page): Promise<void> {
+/**
+ * Lazy same-origin embeds load only on scroll; axe scans a frame only once it has loaded.
+ * Not networkidle: Playwright can drop it for good when an embed navigates after the page idled.
+ */
+async function loadEmbeds(page: Page, requests: Requests): Promise<void> {
   await page.evaluate(() => {
     for (const frame of document.querySelectorAll('iframe')) {
       frame.loading = 'eager';
@@ -131,7 +144,7 @@ async function loadEmbeds(page: Page): Promise<void> {
           frame.contentDocument?.readyState === 'complete',
       ),
   );
-  await page.waitForLoadState('networkidle');
+  await requests.settled();
 }
 
 export async function auditDocs(
@@ -141,22 +154,22 @@ export async function auditDocs(
   scheme: Scheme,
   audit: Audit,
 ): Promise<void> {
-  const context = await newContext(browser, origin, scheme);
+  const context = await newContext(browser, scheme);
 
   try {
     const queue = [...paths];
 
     const worker = async () => {
       const page = await context.newPage();
-      const pending = inFlight(page);
+      const requests = track(page);
 
       for (let path = queue.shift(); path; path = queue.shift()) {
         try {
           await goto(page, origin + path);
-          await loadEmbeds(page);
+          await loadEmbeds(page, requests);
           await scan(page, path, scheme, audit);
         } catch (error) {
-          const urls = pending();
+          const urls = requests.pending();
           const detail = urls.length ? `, in flight: ${urls.join(' ')}` : '';
           throw new Error(`${path} [${scheme}]${detail}`, { cause: error });
         }
@@ -189,7 +202,7 @@ export async function auditApp(
   app: AppMount,
   audit: Audit,
 ): Promise<void> {
-  const context = await newContext(browser, origin, 'light');
+  const context = await newContext(browser, 'light');
   const page = await context.newPage();
 
   const url = (path: string) =>
