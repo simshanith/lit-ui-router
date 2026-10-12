@@ -48,6 +48,7 @@ the round.
 | `atlas.office`   | `/office`      | — `redirectTo`  | — (302 to `atlas.sheet` A2)       |
 | `atlas.about`    | `/about`       | `AboutView`     | —                                 |
 | `atlas.notFound` | — (url-less)   | `NotFoundView`  | — (the `otherwise` projection)    |
+| `plate`          | `/plate/:num`  | — (top-level; the prerender writes the fragment in a bare document) | — |
 
 The twenty-two sheets are the nineteen SVG plates and three interactive lanes (1i, 2B, 12i) of the
 ascent; the appendix files A1, A2, A2i (the survey office's own lane) and A3 under the same `/sheet/:num`
@@ -119,11 +120,14 @@ and every aria name keep the same plain `THE ALTITUDE ATLAS`.
 ## Where it lives
 
 The app owns the site root of atlas.lit-ui-router.dev: `/`, `/sheet/7`, `/city`, `/bricks`, `/specimen`,
-`/log`, `/about`, `/office`. `src/routes.ts` holds the ONE base constant (`MOUNT`, `BASE`, and the
+`/log`, `/about`, `/office`. `/plate/<num>` serves each sheet as one plate in a bare document with no
+client bundle: a top-level `plate` state in the same route table, which `prerender.ts` answers with the
+sheet's fragment and the client knows only as the crumb's STANDALONE PLATE link. `src/routes.ts` holds
+the ONE base constant (`MOUNT`, `BASE`, and the
 `href` table the views and the prerender share); vite's `base`, `<base href>` (via `%BASE_URL%`),
 the generator's fragment links and the staged `_redirects` all derive from it.
 `generator/stage-site.mjs` assembles `dist/`: this app at the root and one merged `_redirects` (the
-prerender's lines, each retired standalone url → its routed sheet, and `/app/*` → `/:splat`).
+prerender's lines, each retired standalone url → its bare plate, and `/app/*` → `/:splat`).
 
 ## Base vs experimental
 

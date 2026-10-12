@@ -90,6 +90,8 @@ const PROJECT_MARK: TemplateResult = html`<span class="project-mark">THE ALTITUD
 const articleTitle = (title: string): TemplateResult =>
   ARTICLE.test(title) ? html`${THE}${entryTitle(title)}` : html`${title}`;
 
+/** The live site — where the bare plates exist for an artifact reader. */
+const SITE = 'https://atlas.lit-ui-router.dev';
 const DOCS = 'https://lit-ui-router.dev';
 const GITHUB = 'https://github.com/simshanith/lit-ui-router';
 
@@ -100,6 +102,12 @@ const GITHUB = 'https://github.com/simshanith/lit-ui-router';
  * `hashLocationPlugin` (src/router.ts) and not from a string prefix here.
  */
 const to = (path: string): string => (ARTIFACT ? `#${path}` : path);
+
+/** A link out to a bare plate: relative on the site, absolute in the artifact. */
+const out = (path: string): string => (ARTIFACT ? `${SITE}${path}` : path);
+
+/** Artifact-only: a bare plate is a different document, so open a new tab. */
+const outTarget = ARTIFACT ? '_blank' : nothing;
 
 // --- <atlas-plate> — a generated fragment, inserted and brought to life ----
 
@@ -1325,6 +1333,8 @@ export const SheetView: RoutedLitTemplate<SheetResolves> = (props) => {
       ${next
         ? html`<a href=${srefHref('atlas.sheet', { num: next.num })}>NEXT · ${next.num}</a>`
         : nothing}
+      <!-- The bare plate is a document of its own, not a state: a real link. -->
+      <a href="${out(href.plate(sheet.num))}" target=${outTarget}>STANDALONE PLATE ↗</a>
     `,
       sheet.needsCytoscape ? copyLink(props?.router) : nothing,
     )}
@@ -1466,6 +1476,13 @@ export const AboutView: RoutedLitTemplate<ManifestResolves> = (props) => {
           record, and rides the manifest as JSON, so the app fetches no markdown. The
           sheets themselves carry no revision table: each describes its present state,
           and the log is where the set's history is read.
+        </p>
+        <h3>THE BARE PLATE</h3>
+        <p>
+          Every sheet is also served at <code>${href.plate('<num>')}</code>: one plate in a
+          bare document, with no rail and no client script, which the prerender writes from
+          the same route table — a top-level <code>plate</code> state the client knows only
+          as a link target. Each sheet's crumb links its own.
         </p>
         <h3>WHAT THE SERVER DOES</h3>
         <p>

@@ -50,7 +50,7 @@ mise exec -- node www/atlas.lit-ui-router.dev/generator/ship.mjs app       # typ
 mise exec -- node www/atlas.lit-ui-router.dev/generator/ship.mjs audit     # the frame audit, then light and dark photographs under tmp/shots/
 mise exec -- node www/atlas.lit-ui-router.dev/generator/ship.mjs stage     # dist/: the app at /, its _redirects merged
 mise exec -- node www/atlas.lit-ui-router.dev/generator/ship.mjs deploy    # the branch, tree and kit checks, then the Pages upload
-mise exec -- node www/atlas.lit-ui-router.dev/generator/ship.mjs verify    # two live fetches agree; five status codes match
+mise exec -- node www/atlas.lit-ui-router.dev/generator/ship.mjs verify    # two live fetches agree; seven status codes match
 mise exec -- node www/atlas.lit-ui-router.dev/generator/ship.mjs artifact  # the single-file build published as a claude.ai Artifact
 ```
 
@@ -85,9 +85,11 @@ canvas) and nothing else changes. To try a row without touching
 the tracked pictures: `thumbs.mjs <outdir> --only <ids> --out <dir> --tuning <file.json>`.
 
 Live at <https://atlas.lit-ui-router.dev/> — the app owns the site (`/`, `/sheet/7/`, `/city/`,
-`/plant/`, `/bricks/`, `/log`). Each sheet is also written as a standalone page under `tmp/flat/`, a
-gitignored build product the frame audit (`generator/audit-frames.mjs`, `shoot.mjs`) and the card pictures read;
-every old standalone url redirects to its routed sheet. The interactive lanes (1i, 2B, 12i, A2i) bundle cytoscape 3.31.0,
+`/plant/`, `/bricks/`, `/log`). `/plate/<num>` serves each sheet as one plate in a bare document with no
+client bundle, prerendered from the same route table (`app/prerender.ts`), and every old standalone url redirects
+there. Each sheet is also written as a standalone page under `tmp/flat/`, a
+gitignored build product the frame audit (`generator/audit-frames.mjs`, `shoot.mjs`) and the card pictures read.
+The interactive lanes (1i, 2B, 12i, A2i) bundle cytoscape 3.31.0,
 and the app-only plates in the round (2·3D, 7·3D, 7B·3D) bundle `@google/model-viewer`. `app/` is the same set as a prerendered
 lit-ui-router app (see `app/README.md`); `HISTORY.md` is the verbatim revision record, parsed
 into the app's `/log` at build time. This file is written by `build.mjs`; edit the emitter, not the output.

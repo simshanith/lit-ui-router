@@ -29,6 +29,7 @@ export const href = {
   specimen: `${BASE}specimen`,
   log: `${BASE}log`,
   sheet: (num: string): string => `${BASE}sheet/${num}`,
+  plate: (num: string): string => `${BASE}plate/${num}`,
 };
 
 /**
@@ -99,6 +100,10 @@ export const routes: RouteDeclaration[] = [
   // Url-less on purpose: an unmatched path keeps its own url in the address
   // bar, exactly as a server 404 does. This is the `otherwise` projection.
   { name: 'atlas.notFound' },
+  // THE BARE PLATE: one sheet as one plate in a bare document, with no shell
+  // and no client bundle. A top-level state, so no rail; the prerender answers
+  // it from the sheet's fragment, and the client knows it as a link target.
+  { name: 'plate', url: '/plate/:num' },
 ];
 
 /** The declared url for a state name — the client reads its urls from here. */
@@ -123,22 +128,34 @@ export function urlOf(name: string): string | undefined {
  * guard redirects it, so prerender writes one directory per sheet and the
  * rail's uiSrefActive compares like with like.
  */
+/** The two states whose `:num` is a sheet number: the routed sheet and its bare plate. */
+const SHEET_STATES: ReadonlyArray<[state: string, segment: string, query: string]> = [
+  ['atlas.sheet', 'sheet', '?focus&enlarge'],
+  ['plate', 'plate', ''],
+];
+
 export function mountsFor(sheetNums?: readonly string[]): Record<string, MountConfig> {
   const nums = [...new Set(sheetNums ?? [])].sort();
   const narrowed = routes.map((route) => {
-    if (route.name !== 'atlas.sheet' || nums.length === 0) return route;
-    return { ...route, url: `/sheet/{num:(?:${nums.join('|')})}?focus&enlarge` };
+    const own = SHEET_STATES.find(([state]) => state === route.name);
+    if (!own || nums.length === 0) return route;
+    const [, segment, query] = own;
+    return { ...route, url: `/${segment}/{num:(?:${nums.join('|')})}${query}` };
   });
-  const lowercased: RedirectRule[] = nums
-    .filter((num) => num !== num.toLowerCase())
-    .map((num) => ({
-      pattern: `/sheet/${num.toLowerCase()}`,
-      to: { state: 'atlas.sheet', params: { num } },
-    }));
-  const aliased: RedirectRule[] = Object.entries(SHEET_ALIASES).map(([alias, num]) => ({
-    pattern: `/sheet/${alias}`,
-    to: { state: 'atlas.sheet', params: { num } },
-  }));
+  const lowercased: RedirectRule[] = SHEET_STATES.flatMap(([state, segment]) =>
+    nums
+      .filter((num) => num !== num.toLowerCase())
+      .map((num) => ({
+        pattern: `/${segment}/${num.toLowerCase()}`,
+        to: { state, params: { num } },
+      })),
+  );
+  const aliased: RedirectRule[] = SHEET_STATES.flatMap(([state, segment]) =>
+    Object.entries(SHEET_ALIASES).map(([alias, num]) => ({
+      pattern: `/${segment}/${alias}`,
+      to: { state, params: { num } },
+    })),
+  );
 
   return {
     [MOUNT]: {

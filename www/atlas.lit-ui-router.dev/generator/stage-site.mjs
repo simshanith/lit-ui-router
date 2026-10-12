@@ -8,8 +8,9 @@
 //
 // _redirects, merged at the root (Cloudflare Pages reads only that one):
 //   the app's own lines (prerender.ts: /office, the lowercase sheet ids)
-//   /<page>, /<page>.html, /set/<page>, /set/<page>.html → /sheet/<num>  301
-//     for every page under tmp/flat/ and every filename `retired` names
+//   /<page>, /<page>.html, /set/<page>, /set/<page>.html → /plate/<num>  301
+//     for every page under tmp/flat/ and every filename `retired` names: the
+//     bare plate the prerender writes from the same route table (app/prerender.ts)
 //   /set, /set/, the gallery and megacanvas urls → /                     301
 //   /app, /app/*          → /, /:splat                                   301
 // Cloudflare Pages reads at most 2,000 static rules; the count is printed.
@@ -62,12 +63,12 @@ const numOf = (file) => {
   if (!nums.has(num)) throw new Error(`${file}: no sheet ${num} in the manifest`);
   return num;
 };
-const sheetUrl = (num) => `${BASE}sheet/${num}`;
+const plateUrl = (num) => `${BASE}plate/${num}`;
 const spellings = (file) => {
   const stem = file.replace(/\.html$/, '');
   return [`/${file}`, `/${stem}`, `${OLD_SET_MOUNT}/${file}`, `${OLD_SET_MOUNT}/${stem}`];
 };
-const toSheet = (file, num) => spellings(file).map((from) => `${from} ${sheetUrl(num)} 301`);
+const toPlate = (file, num) => spellings(file).map((from) => `${from} ${plateUrl(num)} 301`);
 const indexUrls = [
   OLD_SET_MOUNT,
   `${OLD_SET_MOUNT}/`,
@@ -81,8 +82,8 @@ const indexUrls = [
 const appFroms = new Set(appRules.split('\n').map((line) => line.split(/\s+/)[0]));
 const legacy = [
   // /index.html is NOT redirected: it is the app.
-  ...pages.flatMap((f) => toSheet(f, numOf(f))),
-  ...retired.flatMap(([old, num]) => toSheet(old, num)),
+  ...pages.flatMap((f) => toPlate(f, numOf(f))),
+  ...retired.flatMap(([old, num]) => toPlate(old, num)),
   ...indexUrls.map((from) => `${from} ${BASE} 301`),
   `${OLD_APP_MOUNT} ${BASE} 301`,
   `${OLD_APP_MOUNT}/* ${BASE}:splat 301`,
@@ -201,4 +202,4 @@ console.log(`sheets/atlas.css?v=${cssHash} on ${String(busted)} pages`);
 
 const routedPages = walkHtml(dist).length;
 console.log(`staged the routed app at ${BASE} → dist/ (${routedPages - 1} prerendered pages + 404.html + manifest + fragments)`);
-console.log(`_redirects: ${ruleCount} rules of 2,000 — ${appRules.split('\n').length} app rules + ${legacy.length} legacy rules (${pages.length + retired.length} standalone filenames → ${sheetUrl('<num>')}, ${OLD_SET_MOUNT}/* and the gallery → ${BASE}, ${OLD_APP_MOUNT}/* → ${BASE})${GA_ID ? ` · GA tag on ${tagged} pages` : ''}`);
+console.log(`_redirects: ${ruleCount} rules of 2,000 — ${appRules.split('\n').length} app rules + ${legacy.length} legacy rules (${pages.length + retired.length} standalone filenames → ${plateUrl('<num>')}, ${OLD_SET_MOUNT}/* and the gallery → ${BASE}, ${OLD_APP_MOUNT}/* → ${BASE})${GA_ID ? ` · GA tag on ${tagged} pages` : ''}`);

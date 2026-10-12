@@ -70,7 +70,7 @@ are done by hand between the steps.
    A fork worktree has no such file and never deploys (the stager's header). `dist/` is the
    staged app only; `app/dist` one level down is the raw vite build with Google font links
    and no GA tag. The stager also writes the 301 rules that land every retired `/set/…` and
-   root `sheet-*.html` URL on its routed sheet `/sheet/<num>`, and `/set/` on `/`; its log
+   root `sheet-*.html` URL on its bare plate `/plate/<num>`, and `/set/` on `/`; its log
    names the kit and the redirect rule count.
 7. **`deploy`** runs `check` first, then the Pages upload to `altitude-atlas` on branch
    `www/atlas`, and prints the deployment URL. `check` stops unless the branch is `www/atlas`,

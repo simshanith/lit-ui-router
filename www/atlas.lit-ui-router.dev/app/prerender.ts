@@ -6,6 +6,7 @@
  * mount table in src/routes.ts for a verdict on every path listed here:
  *
  *   shell     → dist/<subpath>/index.html, rendered from src/views.ts
+ *   plate     → dist/plate/<num>/index.html, one fragment in a bare document
  *   redirect  → a line in dist/_redirects (Cloudflare Pages), no page
  *   notFound  → dist/404.html, once, from the otherwise projection
  *
@@ -17,6 +18,12 @@
  * the client's own views emit real hrefs, the `is-active` class and
  * `aria-current` for the state the page IS, and `UiViewRenderer` draws each
  * `<ui-view>`'s routed component into the element's light DOM.
+ *
+ * THE BARE PLATE is the one page outside that template: `plate` is a top-level
+ * state in the same route table, and its render is the sheet's fragment as a
+ * string in a document of its own — no shell, no hydration signature, no
+ * client bundle — so a reader who opts out of the router still gets the plate
+ * the route table defines.
  */
 import '@lit-labs/ssr/lib/install-global-dom-shim.js';
 
@@ -32,6 +39,8 @@ import type { ExtraRow, Manifest, SheetRow } from './src/manifest.ts';
 import { allSheets, findExtra, findSheet } from './src/manifest.ts';
 import { BASE, MOUNT, SHEET_ALIASES, href, mountsFor, routes } from './src/routes.ts';
 import { TITLES, sheetTitle } from './src/titles.ts';
+import { ICON_SPRITE } from './src/generated/icons.js';
+import { CYTOSCAPE_URL, FILL_SCRIPT, PLATE_END_SCRIPT } from './src/generated/plate-page.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const DIST = join(HERE, 'dist');
@@ -45,6 +54,8 @@ const shellHtml = readFileSync(join(DIST, 'index.html'), 'utf8');
 const ROOT_RE = /(<div id="root">)(\s*)(<\/div>)/;
 if (!ROOT_RE.test(shellHtml))
   throw new Error('prerender: dist/index.html has no empty <div id="root">');
+// The stand-in font links, as the shell carries them; the stager swaps them for the kit.
+const FONT_LINKS = shellHtml.match(/<link[^>]*(?:fonts\.googleapis\.com|fonts\.gstatic\.com)[^>]*>/g) ?? [];
 
 // BOTH lists narrow the `/sheet/{num:...}` alternation: the appendix is out of
 // the ascent, but /sheet/A1 is as real a url as /sheet/13.
@@ -172,6 +183,38 @@ router.urlService.rules.otherwise({ state: 'atlas.notFound' });
 
 /** The sheet each `/sheet/*` page is, by path. */
 const sheetOf = new Map(PLATES.map((row): [string, string] => [href.sheet(row.num), row.num]));
+/** The sheet each `/plate/*` page draws, by path. */
+const plateOf = new Map(PLATES.map((row): [string, SheetRow] => [href.plate(row.num), row]));
+
+/**
+ * The bare plate's document: the fragment is already the whole sheet section
+ * (chrome.mjs's `sheetSection`), so the page adds the head, the sprite, the
+ * two inline scripts every standalone page carries, and the lanes' cytoscape.
+ */
+const plateDocument = (row: SheetRow, fragment: string): string => `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>${sheetTitle(row)}</title>
+<meta name="description" content="${row.caption}">
+<link rel="icon" href="${BASE}favicon.ico" sizes="any">
+<link rel="icon" href="${BASE}favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="${BASE}apple-touch-icon.png">
+<link rel="stylesheet" href="${BASE}sheets/atlas.css">
+${FONT_LINKS.join('\n')}
+${row.needsCytoscape ? `<script defer src="${CYTOSCAPE_URL}"></script>\n` : ''}</head>
+<body>
+<main>
+${ICON_SPRITE}
+${fragment}
+</main>
+<script>${PLATE_END_SCRIPT}
+${FILL_SCRIPT}</script>
+</body>
+</html>
+`;
 const routeRefFailures: string[] = [];
 let routeRefReads = 0;
 let routeRefMisses = 0;
@@ -221,6 +264,7 @@ const titles = new Map<string, string>([
   ...(bricksRow ? ([[href.bricks, TITLES.bricks]] as [string, string][]) : []),
   [href.specimen, TITLES.specimen],
   ...PLATES.map((row: SheetRow): [string, string] => [href.sheet(row.num), sheetTitle(row)]),
+  ...PLATES.map((row: SheetRow): [string, string] => [href.plate(row.num), sheetTitle(row)]),
 ]);
 
 // Verdict-only: /office is a redirect, a bare mount (when the mount is not the
@@ -231,6 +275,8 @@ const verdictOnly: string[] = [
   ...(MOUNT === BASE ? [] : [MOUNT]),
   ...PLATES.filter((row) => row.id !== row.num).map((row) => href.sheet(row.id)),
   ...Object.keys(SHEET_ALIASES).map((alias) => href.sheet(alias)),
+  ...PLATES.filter((row) => row.id !== row.num).map((row) => href.plate(row.id)),
+  ...Object.keys(SHEET_ALIASES).map((alias) => href.plate(alias)),
 ];
 
 // The megacanvas is not a state: both spellings of its url go to the index.
@@ -253,9 +299,13 @@ const result = await prerender({
   renderShell: async (_verdict, { path }) => {
     await settle(router, path);
     checkRouteRef(path);
-    return views.page(router);
+    // A string is written as-is, with no hydration signature: the bare plate.
+    const plate = plateOf.get(path);
+    return plate ? fragmentOf(plate) : views.page(router);
   },
   document: (body, { path }) => {
+    const plate = plateOf.get(path);
+    if (plate) return plateDocument(plate, body);
     const title = titles.get(path) ?? TITLES.notFound;
     return shellHtml
       .replace(/<title>[^<]*<\/title>/, `<title>${title}</title>`)

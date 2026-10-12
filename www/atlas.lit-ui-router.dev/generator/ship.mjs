@@ -12,7 +12,7 @@
 //                         origin, dist/city/index.html carries typekit and no Google font link
 //   deploy                check, then the Pages upload; prints the deployment URL
 //   verify [--page p --marker m]   two live fetches must agree on the marker and on typekit;
-//                         five status codes must match
+//                         seven status codes must match
 //   artifact              the single-file build for the claude.ai Artifact
 //
 // Run from anywhere: every path is resolved from this file. The hook in
@@ -131,7 +131,7 @@ const STEPS = {
       if (m[0] < 1 || m[0] !== m[1]) stop(`${page}: marker ${JSON.stringify(marker)} seen ${m.join('/')} across two fetches`);
       say(`${page}: marker ×${m[0]} on both fetches`);
     }
-    const EXPECT = { '/': 200, '/sheet/7/': 200, '/sheet/2a': 200, '/set/gallery.html': 200, '/sheet/99': 404 };
+    const EXPECT = { '/': 200, '/sheet/7/': 200, '/sheet/2a': 200, '/plate/7/': 200, '/set/sheet-7-the-measured-city': 200, '/set/gallery.html': 200, '/sheet/99': 404 };
     for (const [path, status] of Object.entries(EXPECT)) {
       const r = await fetch(`${SITE}${path}`, { redirect: 'follow', cache: 'no-store' });
       if (r.status !== status) stop(`${path}: ${r.status}, expected ${status}`);
