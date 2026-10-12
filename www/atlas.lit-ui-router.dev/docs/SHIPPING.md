@@ -50,10 +50,12 @@ are done by hand between the steps.
 3. **`audit <tag> [--only ids]`** reads the bare plates `app` wrote under `app/dist/plate/`
    (`generator/plates.mjs` serves `app/dist` on a free port, so the lanes' cytoscape loads)
    and stops when they are missing. It runs `generator/audit-frames.mjs`, which exits 1 on an
-   escape, a hit deeper than 1px or text over text, then `generator/shoot.mjs`, which writes
-   light and dark PNGs under `tmp/shots/<tag>/`. Set the TOTAL line beside the last tag's,
-   and read every picture with the Read tool, both themes, before going on. A 3D plate change
-   also runs `generator/check-scenes.mjs`.
+   escape, a hit deeper than 1px or text over text; the step stops on an escape or a deep hit,
+   and on a full run (no `--only`) it compares text-on-text with the last full run's, recorded
+   in `tmp/ship/last.json`, stopping on a rise unless `--accept` says the rise is understood.
+   Then `generator/shoot.mjs` writes light and dark PNGs under `tmp/shots/<tag>/`; read every
+   picture with the Read tool, both themes, before going on. A 3D plate change also runs
+   `generator/check-scenes.mjs`.
 4. **Commit**, by hand, message in a file, plain git:
    `git -C <WT> commit -F <tmp>/msg.txt`. The husky `commit-msg` hook runs commitlint
    ([CONTRIBUTING.md](../../../docs/CONTRIBUTING.md#commit-conventions), rules in
@@ -150,9 +152,10 @@ A shipment is done when all of these hold:
 
 - `ship.mjs build` and `ship.mjs app` exit 0, the latter without `--accept` unless the change
   removes pages on purpose.
-- `audit-frames.mjs` reports 0 escapes, 0 hits over 1px and 0 text overlaps on every plate the
-  change touched (and on every plate after a cabinet refresh); `check-scenes.mjs` passes when
-  a model or its viewer moved.
+- `ship.mjs audit` exits 0: 0 escapes and 0 hits over 1px on every plate the change touched,
+  and on a full run (every plate after a cabinet refresh) text-on-text at or under the last
+  full run's, or `--accept` with the reason in HISTORY; `check-scenes.mjs` passes when a model
+  or its viewer moved.
 - Every photograph in `tmp/shots/<tag>/` has been read, light and dark; a layout or type
   change also has a before tag to set beside it, at the layout's seam widths.
 - `ship.mjs deploy` exits 0, its check passed, and prints a `*.altitude-atlas.pages.dev` URL.

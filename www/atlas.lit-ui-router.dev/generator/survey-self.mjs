@@ -22,6 +22,7 @@ const EXCLUDED = [
   ['app/src/generated/ — written by build.mjs', (p) => p.startsWith('app/src/generated/')],
   ['app/public/ — fragments, pictures, model, manifest', (p) => p.startsWith('app/public/')],
   ['*.md — README (generated), HISTORY and the other prose', (p) => p.endsWith('.md')],
+  ['.agents/ · .claude/ · .claude-plugin/ — the skills and their manifest', (p) => /^\.(agents|claude|claude-plugin)\//.test(p)],
 ];
 
 const basis = materialize(REF);

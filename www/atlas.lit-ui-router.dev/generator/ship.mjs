@@ -7,7 +7,9 @@
 //   app                   typecheck, then the vite build and prerender; the two count
 //                         lines are compared with the last run's (--accept to lower them)
 //   audit <tag> [--only ids]   frame audit of the bare plates under app/dist/plate/, then light
-//                         and dark photographs under tmp/shots/<tag>; needs `app` to have run
+//                         and dark photographs under tmp/shots/<tag>; needs `app` to have run.
+//                         Escapes and deep hits stop; text-on-text on a full run is compared
+//                         with the last full run's (--accept to raise it)
 //   stage                 stage-site.mjs; stops unless the Adobe Fonts kit is on every page
 //   check                 the gate the deploy runs first: branch www/atlas, tree clean, HEAD on
 //                         origin, dist/city/index.html carries typekit and no Google font link
@@ -79,11 +81,21 @@ const STEPS = {
     if (!existsSync(join(APP, 'dist', 'plate'))) stop('app/dist/plate missing; run ship.mjs app first');
     const tag = ARGV.find((a, i) => !a.startsWith('--') && ARGV[i - 1] !== '--only') ?? 'ship';
     const only = flag('--only') ? ['--only', flag('--only')] : [];
-    const out = read('node', [join(ATLAS, 'generator', 'audit-frames.mjs'), tag, ...only], ROOT);
-    const total = /TOTAL escapes (\d+) · hits>1px (\d+) · text-on-text (\d+)/.exec(out);
+    // audit-frames exits 1 on any finding; text-on-text is judged against the last full run, not against zero
+    const r = spawnSync('node', [join(ATLAS, 'generator', 'audit-frames.mjs'), tag, ...only], { cwd: ROOT, encoding: 'utf8', env: process.env, maxBuffer: 64 * 1024 * 1024 });
+    process.stdout.write(r.stdout ?? '');
+    process.stderr.write(r.stderr ?? '');
+    const total = /TOTAL escapes (\d+) · hits>1px (\d+) · text-on-text (\d+)/.exec(r.stdout ?? '');
     if (!total) stop('no TOTAL line from the frame audit');
+    const [escapes, hits, text] = total.slice(1).map(Number);
+    if (escapes || hits) stop(`${escapes} escapes, ${hits} hits deeper than 1px`);
+    if (only.length === 0) {
+      const last = lastRun();
+      if (!has('--accept') && last.text !== undefined && text > last.text) stop(`text-on-text ${text}, the last full run had ${last.text} (--accept to raise it)`);
+      remember({ text });
+    }
     run('node', [join(ATLAS, 'generator', 'shoot.mjs'), tag, ...only], ROOT);
-    say(`audit clean · photographs under ${join(ATLAS, 'tmp', 'shots', tag)} — read every one`);
+    say(`escapes 0 · hits 0 · text-on-text ${text}${only.length ? ' (partial)' : ''} · photographs under ${join(ATLAS, 'tmp', 'shots', tag)} — read every one`);
   },
 
   stage() {

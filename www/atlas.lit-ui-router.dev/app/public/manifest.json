@@ -1610,10 +1610,10 @@
       "id": "a3",
       "num": "A3",
       "title": "THE ATLAS, MEASURED",
-      "sub": "APPENDIX · META — the atlas as a census city on sheet 7's ruler, standing beside the codebase it draws · four members, 20,405 sloc · measured at www/atlas @ ea081707, outside the cabinet, which is main's (origin/main @ bd10638a)",
-      "caption": "The atlas turned on itself with the census city's own instrument: footprint ∝ √sloc, height ∝ files, from sheet 7's functions. Sheet 7's four districts stand along the top as one block each; the atlas stands below them as a fifth district of four members — 2.8× the product it draws: 20,405 sloc against 7,228 in packages/.",
+      "sub": "APPENDIX · META — the atlas as a census city on sheet 7's ruler, standing beside the codebase it draws · four members, 20,996 sloc · measured at www/atlas @ 1f9b1c30, outside the cabinet, which is main's (origin/main @ bd10638a)",
+      "caption": "The atlas turned on itself with the census city's own instrument: footprint ∝ √sloc, height ∝ files, from sheet 7's functions. Sheet 7's four districts stand along the top as one block each; the atlas stands below them as a fifth district of four members — 2.9× the product it draws: 20,996 sloc against 7,228 in packages/.",
       "scale": "THE ATLAS ITSELF",
-      "verdict": "meta — the atlas measured on sheet 7's ruler: 20,405 sloc of generator and app against 7,228 in the packages district, 2.8× the product it draws, with no annex",
+      "verdict": "meta — the atlas measured on sheet 7's ruler: 20,996 sloc of generator and app against 7,228 in the packages district, 2.9× the product it draws, with no annex",
       "form": "ISOMETRIC CITY",
       "labels": {
         "subject": "city",
