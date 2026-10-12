@@ -231,12 +231,34 @@
         color: var(--ink);
       }
       .rail-sec {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 8px;
         font-family: var(--data);
         font-size: 10px;
         letter-spacing: 0.14em;
         color: var(--ink-faint);
         padding-block: 14px 5px;
         padding-inline: 19px 16px;
+      }
+      /* the one control over the groups: text, in the section's own voice */
+      .rail-all {
+        all: unset;
+        cursor: pointer;
+        font: inherit;
+        letter-spacing: inherit;
+        color: var(--ink-soft);
+        white-space: nowrap;
+      }
+      @media (hover: hover) and (pointer: fine) {
+        .rail-all:hover {
+          color: var(--ink);
+        }
+      }
+      .rail-all:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
       }
       /* INDEX · ABOUT — one small line, not two sheet-sized entries; it starts on the entries' text edge */
       .rail-top {
@@ -269,8 +291,8 @@
       .rail-top a.is-active {
         font-weight: 600;
       }
-      /* ---- the rail's altitude bands: one native disclosure each ---- */
-      .rail-band > summary {
+      /* ---- the rail's groups: the set and the appendix, one native disclosure each ---- */
+      .rail-group > summary {
         display: flex;
         gap: 9px;
         align-items: baseline;
@@ -285,27 +307,27 @@
         padding-inline: 16px;
         border-inline-start: 3px solid transparent;
       }
-      .rail-band > summary::-webkit-details-marker {
+      .rail-group > summary::-webkit-details-marker {
         display: none;
       }
       @media (hover: hover) and (pointer: fine) {
-        .rail-band > summary:hover {
+        .rail-group > summary:hover {
           background: var(--paper-2);
           color: var(--ink);
         }
       }
-      .rail-band > summary:focus-visible {
+      .rail-group > summary:focus-visible {
         outline: 2px solid var(--accent);
         outline-offset: -2px;
       }
-      .rail-band > summary .n {
+      .rail-group > summary .n {
         min-width: 34px;
         color: var(--accent);
         font-weight: 600;
         font-variant-numeric: tabular-nums;
       }
       /* the same face as the entries beneath, so the rail reads in one voice */
-      .rail-band > summary .t {
+      .rail-group > summary .t {
         flex: 1;
         font-family: var(--title);
         font-size: 12px;
@@ -313,7 +335,7 @@
         letter-spacing: 0.04em;
       }
       /* the caret: a drawn chevron, right when shut, down when open */
-      .rail-band > summary::after {
+      .rail-group > summary::after {
         content: '';
         flex: none;
         align-self: center;
@@ -323,24 +345,34 @@
         border-bottom: 1.5px solid currentColor;
         transform: rotate(-45deg);
       }
-      .rail-band[open] > summary {
+      .rail-group[open] > summary {
         color: var(--ink);
       }
-      .rail-band[open] > summary::after {
+      .rail-group[open] > summary::after {
         transform: translateY(-2px) rotate(45deg);
       }
-      /* a band's plates sit one step in, on a hairline the active bar overprints */
-      .rail-band > .rail-links {
-        margin-block: 0 6px;
-        margin-inline: 19px 0;
-        border-inline-start: 1px solid var(--line);
+      /* an altitude band inside a group: a flat head in the soft ink, its plates flush beneath */
+      .rail-band {
+        display: flex;
+        gap: 9px;
+        align-items: baseline;
+        font-family: var(--data);
+        font-size: 10px;
+        letter-spacing: 0.1em;
+        color: var(--ink-soft);
+        padding-block: 10px 3px;
+        padding-inline: 19px 16px;
       }
-      .rail-band > .rail-links a {
-        margin-inline-start: -2px;
-        padding-inline-start: 12px;
+      .rail-band .n {
+        min-width: 34px;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+      }
+      .rail-group > .rail-links:last-child {
+        margin-block-end: 6px;
       }
       @media (prefers-reduced-motion: no-preference) {
-        .rail-band > summary::after {
+        .rail-group > summary::after {
           transition: transform 120ms ease;
         }
       }
@@ -442,8 +474,10 @@
         .rail-top,
         .rail-sec,
         .rail-links .t,
-        .rail-band > summary .t,
-        .rail-band > summary::after {
+        .rail-band .t,
+        .rail-all,
+        .rail-group > summary .t,
+        .rail-group > summary::after {
           opacity: 0;
         }
         .rail-head {
@@ -456,13 +490,6 @@
         .client-mark {
           --mark: 1.75rem;
         }
-        /* a band steps in less here, so its widest number (7B·3D) clears the clip */
-        .rail-band > .rail-links {
-          margin-inline-start: 8px;
-        }
-        .rail-band > .rail-links a {
-          padding-inline-start: 8px;
-        }
         .rail:focus-within {
           width: var(--rail-w);
         }
@@ -472,8 +499,10 @@
         .rail:focus-within .rail-top,
         .rail:focus-within .rail-sec,
         .rail:focus-within .rail-links .t,
-        .rail:focus-within .rail-band > summary .t,
-        .rail:focus-within .rail-band > summary::after {
+        .rail:focus-within .rail-band .t,
+        .rail:focus-within .rail-all,
+        .rail:focus-within .rail-group > summary .t,
+        .rail:focus-within .rail-group > summary::after {
           opacity: 1;
         }
         @media (hover: hover) and (pointer: fine) {
@@ -486,8 +515,10 @@
           .rail:hover .rail-top,
           .rail:hover .rail-sec,
           .rail:hover .rail-links .t,
-          .rail:hover .rail-band > summary .t,
-          .rail:hover .rail-band > summary::after {
+          .rail:hover .rail-band .t,
+          .rail:hover .rail-all,
+          .rail:hover .rail-group > summary .t,
+          .rail:hover .rail-group > summary::after {
             opacity: 1;
           }
         }
@@ -501,7 +532,7 @@
           .rail-top,
           .rail-sec,
           .rail-links .t,
-          .rail-band > summary .t {
+          .rail-group > summary .t {
             transition: opacity 120ms ease;
           }
         }

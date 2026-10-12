@@ -590,7 +590,7 @@ type Here = (entry: AscentRow) => boolean;
 
 const OPEN_BANDS = 'atlas-rail-open';
 
-/** The bands this viewer opened by hand, as space-separated keys. */
+/** The groups this viewer opened by hand, as space-separated keys. */
 function readOpenBands(): Set<string> {
   try {
     return new Set(localStorage.getItem(OPEN_BANDS)?.split(' ').filter(Boolean));
@@ -600,49 +600,108 @@ function readOpenBands(): Set<string> {
   }
 }
 
-// The click lands before the details flips, so `open` is still the old state.
-const rememberBand = (event: Event): void => {
-  const band = (event.currentTarget as HTMLElement).parentElement as HTMLDetailsElement;
-  const key = band.dataset.band;
-  if (!key) return;
-  const open = readOpenBands();
-  if (band.open) open.delete(key);
-  else open.add(key);
+const writeOpenBands = (open: Set<string>): void => {
   try {
     localStorage.setItem(OPEN_BANDS, [...open].join(' '));
   } catch {
-    // a remembered band is a convenience, never a requirement
+    // a remembered group is a convenience, never a requirement
   }
 };
 
-// Element parts never run on the server, so a remembered band opens after hydration.
+// The click lands before the details flips, so `open` is still the old state.
+const rememberBand = (event: Event): void => {
+  const group = (event.currentTarget as HTMLElement).parentElement as HTMLDetailsElement;
+  const key = group.dataset.band;
+  if (!key) return;
+  const open = readOpenBands();
+  if (group.open) open.delete(key);
+  else open.add(key);
+  writeOpenBands(open);
+};
+
+// Element parts never run on the server, so a remembered group opens after hydration.
 const restoreBand = (element?: Element): void => {
   if (!(element instanceof HTMLDetailsElement)) return;
   const key = element.dataset.band;
   if (key && readOpenBands().has(key)) element.open = true;
 };
 
-/**
- * One altitude band as a native disclosure. The band holding the page on
- * screen is opened by `live(true)`, so arriving in a band the viewer shut
- * reopens it; every other band is left as the viewer set it. A band of one
- * plate is no band: its entry stands in the list on its own.
- */
-const railBand = (band: Band, here: Here): TemplateResult => {
-  const [only, ...rest] = band.rows;
-  if (only && rest.length === 0) return html`<div class="rail-links">${railEntry(only)}</div>`;
-  return html`
-    <details
-      class="rail-band"
-      data-band=${band.key}
-      ?open=${band.rows.some(here) ? live(true) : noChange}
-      ${ref(restoreBand)}
-    >
-      <summary @click=${rememberBand}><span class="n">${band.n}</span><span class="t">${band.label}</span></summary>
-      <div class="rail-links">${band.rows.map(railEntry)}</div>
-    </details>
-  `;
+const railGroups = (rail: HTMLElement): HTMLDetailsElement[] => [...rail.querySelectorAll<HTMLDetailsElement>('details.rail-group')];
+
+/** The control reads COLLAPSE ALL while every group is open, EXPAND ALL otherwise. */
+const labelAll = (button: HTMLButtonElement): void => {
+  const rail = button.closest('nav.rail');
+  if (!rail) return;
+  button.textContent = railGroups(rail as HTMLElement).every((g) => g.open) ? 'COLLAPSE ALL' : 'EXPAND ALL';
 };
+
+// Opens every group when any is shut, else shuts them all; the choice is remembered per group.
+const toggleAll = (event: Event): void => {
+  const button = event.currentTarget as HTMLButtonElement;
+  const rail = button.closest('nav.rail');
+  if (!rail) return;
+  const groups = railGroups(rail as HTMLElement);
+  const open = !groups.every((g) => g.open);
+  const remembered = readOpenBands();
+  for (const g of groups) {
+    g.open = open;
+    if (!g.dataset.band) continue;
+    if (open) remembered.add(g.dataset.band);
+    else remembered.delete(g.dataset.band);
+  }
+  writeOpenBands(remembered);
+  labelAll(button);
+};
+
+const relabelAll = (event: Event): void => {
+  const rail = (event.currentTarget as HTMLElement).closest('nav.rail');
+  const button = rail?.querySelector<HTMLButtonElement>('button.rail-all');
+  // the toggle has fired and the details has flipped by the time this runs
+  if (button) queueMicrotask(() => labelAll(button));
+};
+
+const labelAllRef = (element?: Element): void => {
+  if (element instanceof HTMLButtonElement) labelAll(element);
+};
+
+/** One altitude band inside a group: a flat head, then its plates. */
+const railBand = (band: Band): TemplateResult => html`
+  <p class="rail-band"><span class="n">${band.n}</span><span class="t">${band.label}</span></p>
+  <div class="rail-links">${band.rows.map(railEntry)}</div>
+`;
+
+/** A group of bands as one native disclosure: the set, then the appendix. */
+interface Group {
+  key: string;
+  n: string;
+  label: string;
+  bands: Band[];
+}
+
+const groupsOf = (railBands: Band[]): Group[] => {
+  const set = railBands.filter((band) => band.key !== 'appendix');
+  const appendix = railBands.filter((band) => band.key === 'appendix');
+  const last = set.at(-1)?.n.split('–').at(-1) ?? '';
+  const groups: Group[] = set.length > 0 ? [{ key: 'set', n: `1–${last}`, label: 'SHEETS', bands: set }] : [];
+  return appendix.length > 0 ? [...groups, { key: 'appendix', n: 'A', label: 'APPENDIX', bands: appendix }] : groups;
+};
+
+/**
+ * The group holding the page on screen is opened by `live(true)`, so arriving
+ * in a group the viewer shut reopens it; the other is left as the viewer set it.
+ */
+const railGroup = (group: Group, here: Here): TemplateResult => html`
+  <details
+    class="rail-group"
+    data-band=${group.key}
+    ?open=${group.bands.some((band) => band.rows.some(here)) ? live(true) : noChange}
+    ${ref(restoreBand)}
+    @toggle=${relabelAll}
+  >
+    <summary @click=${rememberBand}><span class="n">${group.n}</span><span class="t">${group.label}</span></summary>
+    ${group.bands.length === 1 ? html`<div class="rail-links">${group.bands[0]?.rows.map(railEntry)}</div>` : group.bands.map(railBand)}
+  </details>
+`;
 
 function rail(manifest: Manifest | undefined, here: Here): TemplateResult {
   const railBands = manifest ? bands(manifest) : [];
@@ -687,8 +746,11 @@ function rail(manifest: Manifest | undefined, here: Here): TemplateResult {
             >ABOUT</a
           >
         </div>
-        <p class="rail-sec">SHEETS — ASCENT ORDER</p>
-        ${railBands.map((band) => railBand(band, here))}
+        <p class="rail-sec">
+          <span>SHEETS — ASCENT ORDER</span>
+          <button type="button" class="rail-all" @click=${toggleAll} ${ref(labelAllRef)}>EXPAND ALL</button>
+        </p>
+        ${groupsOf(railBands).map((group) => railGroup(group, here))}
         <!-- The type specimen is a bench, not a plate: reachable at /specimen, off the rail. -->
       </div>
     </nav>
