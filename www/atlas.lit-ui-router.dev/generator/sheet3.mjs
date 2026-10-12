@@ -135,16 +135,21 @@ ${txt(bx.toFixed(1), (by - 13.4).toFixed(1), String(n), t.num, 'middle')}`;
 
 // A leg routed on the iso grid and trimmed in SCREEN space at both ends.  A block's
 // roof floats exactly h px above the ground point a leg aims at, so clearing the
-// silhouette costs h + 1.15·gap — computed from the census, never guessed.
+// silhouette at the arrival costs h + 1.15·gap — computed from the census, never
+// guessed.  A leg leaves from the base of a front face, which hides nothing beyond
+// it, so the departure clears by the gap alone; a height there would swallow a
+// short leg and flip it.
 const clearance = (n, gap) => (n == null ? gap : g(n).h + 1.15 * gap);
-function leg(wps, { from = null, to = null, t0 = null, t1 = null, mk = 'ai', cls = 'sk2', dash = '' } = {}) {
+function leg(wps, { to = null, t0 = null, t1 = null, mk = 'ai', cls = 'sk2', dash = '' } = {}) {
   const pts = wps.map(([x, y, z = 0]) => pt(x, y, z));
   const trim = (a, b, d) => {
     const dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy);
     return [a[0] + (dx / L) * d, a[1] + (dy / L) * d];
   };
-  const d0 = t0 ?? clearance(from, 9);
+  const d0 = t0 ?? 9;
   const d1 = t1 ?? clearance(to, 11.5);
+  const L = Math.hypot(pts[1][0] - pts[0][0], pts[1][1] - pts[0][1]);
+  if (pts.length === 2 && d0 + d1 >= L) throw new Error(`sheet 3: a leg of ${L.toFixed(1)}px cannot clear ${d0 + d1}px of trims`);
   if (d0) pts[0] = trim(pts[0], pts[1], d0);
   if (d1) pts[pts.length - 1] = trim(pts[pts.length - 1], pts[pts.length - 2], d1);
   const d = 'M' + pts.map((p) => p.map((v) => v.toFixed(1)).join(',')).join(' L');
@@ -153,7 +158,7 @@ function leg(wps, { from = null, to = null, t0 = null, t1 = null, mk = 'ai', cls
 
 // ---- the conveyor: one straight run along the y = 71 lane -----------------------
 const LANE = 71;
-const runLeg = (a, b) => leg([[g(a).x + g(a).side, LANE], [g(b).x, LANE]], { from: a, to: b });
+const runLeg = (a, b) => leg([[g(a).x + g(a).side, LANE], [g(b).x, LANE]], { to: b });
 const conveyor = [runLeg(1, 2), runLeg(2, 3), runLeg(3, 4), runLeg(4, 5), runLeg(5, 6)].join('\n');
 
 // ---- the tarball bus: one cached pack, three readers ----------------------------
@@ -161,7 +166,7 @@ const BUS = 145;
 const READERS = [11, 10, 9];
 const busTrunk = leg(
   [[g(4).cx, g(4).y + g(4).side], [g(4).cx, BUS], [g(READERS.at(-1)).cx, BUS]],
-  { from: 4, mk: null, cls: 'sks', dash: '5 4', t1: 0 },
+  { mk: null, cls: 'sks', dash: '5 4', t1: 0 },
 );
 const busStubs = READERS
   .map((n) => leg([[g(n).cx, BUS], [g(n).cx, g(n).y]], { to: n, t0: 0, mk: 'as', cls: 'sks', dash: '5 4' }))
@@ -171,7 +176,7 @@ const busStubs = READERS
 const RET = 545;
 const ret = leg(
   [[g(6).cx, g(6).y + g(6).side], [g(6).cx, RET], [g(11).cx, RET], [g(11).cx, g(11).y + g(11).side]],
-  { from: 6, mk: 'aa', cls: 'ska', dash: '7 4', t1: 11 },
+  { mk: 'aa', cls: 'ska', dash: '7 4', t1: 11 },
 );
 
 // ---- e2e drives the sample apps ---------------------------------------------------
