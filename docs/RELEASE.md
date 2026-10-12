@@ -191,6 +191,23 @@ release-it publishes under: a prerelease answers to its own channel tag,
 everything else to `latest`. A channel the registry does not carry yet falls
 back to `latest`, and the run names the missing tag.
 
+### 6. Acceptance (`acceptance.yml`)
+
+**Triggers:** Pushes to `main`; manual dispatch against any ref
+
+[Actions ▸ Acceptance ▸ **Run workflow**](https://github.com/simshanith/lit-ui-router/actions/workflows/acceptance.yml)
+
+Slower suites over the built site that run after merge, off the PR lane. Each
+suite is one job and reports one check run on the commit, named
+`acceptance (<suite>)`:
+
+- `acceptance (a11y)`: the axe pass (`mise run test_e2e a11y`), described in the
+  [e2e README](../apps/sample-app-lit-e2e/README.md).
+
+A red check is a real failure on that commit, unlike a release signal, but it
+gates nothing: Tag & push needs only `build_and_test`. The README badges read
+these check runs.
+
 ## Step-by-Step Release Process
 
 ### Standard Release

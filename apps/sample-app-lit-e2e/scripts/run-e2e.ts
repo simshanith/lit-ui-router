@@ -35,7 +35,7 @@ if (unknown.length > 0) {
   process.exit(1);
 }
 
-// Run only when named: `ci_main` runs the axe pass after the Cypress suites.
+// Run only when named: the Acceptance workflow runs the axe pass on its own runner.
 const NAMED_ONLY = ['a11y'];
 
 const selected =
