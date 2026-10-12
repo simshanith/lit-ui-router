@@ -21,10 +21,10 @@
 //   app/public/thumbs/<id>.webp        the light-theme picture
 //   app/public/thumbs/<id>-dark.webp   the same crop in cyanotype
 //
-// It photographs two things build.mjs's output feeds: the standalone pages
-// build.mjs writes under tmp/flat/, and — for the 3D plates, which only the app
-// raises — the BUILT app's prerendered `/city/`, `/plant/` and `/bricks/` pages.
-// So it runs after build.mjs and the app build, and build.mjs runs again so the
+// It photographs the BUILT app (generator/plates.mjs serves it): the bare
+// plates the prerender writes at `/plate/<num>/`, and — for the 3D plates, which
+// only the app raises — its `/city/`, `/plant/` and `/bricks/` pages. So it
+// runs after build.mjs and the app build, and build.mjs runs again so the
 // manifest can assert every card has its picture:
 //
 //   node www/atlas.lit-ui-router.dev/generator/build.mjs www/atlas.lit-ui-router.dev
@@ -41,12 +41,11 @@
 //   --out <dir>        write the webps there instead of app/public/thumbs/
 //   --tuning <file>    a JSON object merged over TUNING, per-id, for scratch runs
 import { createRequire } from 'node:module';
-import { createServer } from 'node:http';
-import { readFile } from 'node:fs/promises';
-import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
-import { extname, join, normalize } from 'node:path';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { join, normalize } from 'node:path';
 import { ROOT } from './basis.mjs';
-import { FLAT_DIR, THUMB_DIR, THUMB_H, THUMB_W, thumbFile } from './thumb-spec.mjs';
+import { APP_DIST, originOf, plateUrl, platesOf, serveSet } from './plates.mjs';
+import { THUMB_DIR, THUMB_H, THUMB_W, thumbFile } from './thumb-spec.mjs';
 
 const [OUT, ...FLAGS] = process.argv.slice(2);
 if (!OUT)
@@ -77,7 +76,7 @@ try {
   );
 }
 
-// The lanes' cytoscape is served off cdnjs on a standalone page. The build does
+// The lanes' cytoscape is served off cdnjs on a bare plate. The build does
 // not reach the network: the request is answered from the app's own copy.
 const CYTOSCAPE = new URL('../app/node_modules/cytoscape/dist/cytoscape.min.js', import.meta.url);
 
@@ -211,43 +210,6 @@ const EFFECTIVE_TUNING = tuningOverride
   : TUNING;
 
 const DEFAULT_TARGET = '.plate .figure-wrap svg';
-
-const TYPES = {
-  '.css': 'text/css',
-  '.glb': 'model/gltf-binary',
-  '.html': 'text/html',
-  '.js': 'text/javascript',
-  '.json': 'application/json',
-  '.png': 'image/png',
-  '.svg': 'image/svg+xml',
-  '.webp': 'image/webp',
-};
-
-/** A built tree, served from disk: `/` and every `…/` answer with `index`. */
-async function serveSet(dir, index) {
-  const server = createServer((req, res) => {
-    void (async () => {
-      const path = decodeURIComponent(new URL(req.url ?? '/', 'http://atlas').pathname);
-      const file = normalize(join(dir, path.endsWith('/') ? `${path}${index}` : path));
-      if (!file.startsWith(dir)) {
-        res.writeHead(403).end('no');
-        return;
-      }
-      try {
-        const body = await readFile(file);
-        res.writeHead(200, { 'content-type': TYPES[extname(file)] ?? 'application/octet-stream' });
-        res.end(body);
-      } catch {
-        res.writeHead(404).end('not found');
-      }
-    })();
-  });
-  await new Promise((resolve, reject) => {
-    server.once('error', reject);
-    server.listen(0, '127.0.0.1', resolve);
-  });
-  return server;
-}
 
 // The plate is re-laid at a width this step picks and everything around it is
 // cut, so the capture is a piece of the DRAWING and never of the page it sits
@@ -415,10 +377,10 @@ async function settleScene(page) {
 }
 
 /** One card's picture, in one theme. */
-async function shoot(page, { id, standalone, scene, theme, origin, appOrigin }) {
+async function shoot(page, { id, num, scene, theme, origin }) {
   const tune = EFFECTIVE_TUNING[id] ?? {};
   await page.emulateMedia({ colorScheme: theme });
-  await page.goto(scene ? `${appOrigin}/${id}/` : `${origin}/${standalone}`, { waitUntil: 'load' });
+  await page.goto(scene ? `${origin}/${id}/` : plateUrl(origin, num), { waitUntil: 'load' });
   await page.evaluate((t) => document.documentElement.setAttribute('data-theme', t), theme);
   if (scene) await settleScene(page);
   const target = tune.target ?? DEFAULT_TARGET;
@@ -484,23 +446,14 @@ async function shoot(page, { id, standalone, scene, theme, origin, appOrigin }) 
 }
 
 const manifest = JSON.parse(readFileSync(join(OUT, 'app', 'public', 'manifest.json'), 'utf8'));
-const flat = normalize(join(OUT, FLAT_DIR));
-if (!existsSync(flat)) throw new Error(`thumbs.mjs: no standalone pages at ${flat} — run build.mjs first`);
-const flatPages = readdirSync(flat);
-// build.mjs names a page `sheet-<num>-<title>.html` with the cased num; the card id is the lowercase num
-const standaloneOf = (id) => {
-  const file = flatPages.find((f) => f.toLowerCase().startsWith(`sheet-${id}-`));
-  if (!file) throw new Error(`thumbs.mjs: no standalone page for ${id} under ${flat}`);
-  return file;
-};
-// The 3D plates are photographed in the built app, the rest on their standalone pages.
+const plates = new Set(platesOf(OUT));
+// The 3D plates are photographed on the app's own pages, the rest on their bare plates.
 const allCards = [
-  ...[...manifest.sheets, ...manifest.appendix].map((row) => ({
-    id: row.id,
-    standalone: standaloneOf(row.id),
-    scene: false,
-  })),
-  ...manifest.extras.map((row) => ({ id: row.id, standalone: '', scene: true })),
+  ...[...manifest.sheets, ...manifest.appendix].map((row) => {
+    if (!plates.has(row.num)) throw new Error(`thumbs.mjs: no plate at app/dist/plate/${row.num}/ — run ship.mjs app first`);
+    return { id: row.id, num: row.num, scene: false };
+  }),
+  ...manifest.extras.map((row) => ({ id: row.id, num: '', scene: true })),
 ];
 
 let cards = allCards;
@@ -517,13 +470,11 @@ if (onlyIds) {
 const dir = outDir ?? join(OUT, 'app', 'public', THUMB_DIR);
 mkdirSync(dir, { recursive: true });
 
-const server = await serveSet(flat, 'index.html');
-const origin = `http://127.0.0.1:${String(server.address().port)}`;
-const appDist = normalize(join(OUT, 'app', 'dist'));
-const appServer = cards.some((card) => card.scene) ? await serveSet(appDist, 'index.html') : null;
-if (appServer && !existsSync(join(appDist, 'city', 'index.html')))
-  throw new Error(`thumbs.mjs: no built app at ${appDist} — run the app build first`);
-const appOrigin = appServer ? `http://127.0.0.1:${String(appServer.address().port)}` : '';
+const appDist = normalize(join(OUT, APP_DIST));
+if (cards.some((card) => card.scene) && !existsSync(join(appDist, 'city', 'index.html')))
+  throw new Error(`thumbs.mjs: no built app at ${appDist} — run ship.mjs app first`);
+const server = await serveSet(appDist);
+const origin = originOf(server);
 const browser = await chromium.launch();
 let bytes = 0;
 try {
@@ -534,7 +485,7 @@ try {
   for (const card of cards) {
     if (card.scene) await page.setViewportSize(SCENE_VIEWPORT);
     for (const theme of ['light', 'dark']) {
-      const shot = await shoot(page, { ...card, theme, origin, appOrigin });
+      const shot = await shoot(page, { ...card, theme, origin });
       const webp = await toWebp(page, shot);
       const file = join(dir, thumbFile(card.id, theme));
       writeFileSync(file, webp);
@@ -545,7 +496,6 @@ try {
 } finally {
   await browser.close();
   server.close();
-  appServer?.close();
 }
 console.log(
   `thumbs: ${String(cards.length)} plates × 2 themes · ` +

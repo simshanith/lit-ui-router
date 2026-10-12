@@ -3,14 +3,13 @@
 //
 // The routed app is the site: dist/ IS app/dist (the prerendered pages,
 // assets, manifest.json, the sheets/ fragments, 404.html and the app's own
-// _redirects). The standalone pages build.mjs writes under tmp/flat/ are a
-// build product the frame audit and the thumbs read; none is staged.
+// _redirects). The bare plates at /plate/<num>/ ride inside it.
 //
 // _redirects, merged at the root (Cloudflare Pages reads only that one):
 //   the app's own lines (prerender.ts: /office, the lowercase sheet ids)
 //   /<page>, /<page>.html, /set/<page>, /set/<page>.html → /plate/<num>  301
-//     for every page under tmp/flat/ and every filename `retired` names: the
-//     bare plate the prerender writes from the same route table (app/prerender.ts)
+//     for every manifest row's retired filename (thumb-spec.mjs, `legacyFile`) and
+//     every one `retired` names: the bare plate the prerender writes (app/prerender.ts)
 //   /set, /set/, the gallery and megacanvas urls → /                     301
 //   /app, /app/*          → /, /:splat                                   301
 // Cloudflare Pages reads at most 2,000 static rules; the count is printed.
@@ -27,7 +26,7 @@ import { cpSync, existsSync, readdirSync, readFileSync, rmSync, writeFileSync } 
 import { createHash } from 'node:crypto';
 import { join } from 'node:path';
 import { BASE } from '../app/src/routes.ts';
-import { FLAT_DIR } from './thumb-spec.mjs';
+import { legacyFile } from './thumb-spec.mjs';
 
 // Where the app used to be mounted; old links keep resolving through _redirects.
 const OLD_APP_MOUNT = '/app';
@@ -37,10 +36,8 @@ const OLD_SET_MOUNT = '/set';
 const root = new URL('..', import.meta.url).pathname;
 const dist = join(root, 'dist');
 const appDist = join(root, 'app', 'dist');
-const flat = join(root, FLAT_DIR);
 if (!existsSync(join(appDist, 'index.html')))
   throw new Error('no app/dist — run `npm install && npm run build` in www/atlas.lit-ui-router.dev/app first');
-if (!existsSync(flat)) throw new Error(`no ${FLAT_DIR}/ — run generator/build.mjs first`);
 if (BASE !== '/') throw new Error(`stage-site expects the app at the root, not ${BASE}`);
 
 rmSync(dist, { recursive: true, force: true });
@@ -48,21 +45,16 @@ cpSync(appDist, dist, { recursive: true });
 
 // --- _redirects, merged -----------------------------------------------------
 const appRules = readFileSync(join(dist, '_redirects'), 'utf8').trim();
-// filenames the set no longer writes: the survey office is appendix A2 / A2i
+// retired filenames off the manifest: the survey office is appendix A2 / A2i
 const retired = [
   ['sheet-14-the-survey-office.html', 'A2'],
   ['sheet-14i-the-survey-office-interactive.html', 'A2i'],
 ];
-// the manifest's cased nums are the sheet route's params; a page's num is the
-// second dash-field of build.mjs's `sheet-<num>-<title>.html`
+// every manifest row's retired standalone filename, with its cased num
 const manifest = JSON.parse(readFileSync(join(dist, 'manifest.json'), 'utf8'));
-const nums = new Set([...manifest.sheets, ...manifest.appendix].map((row) => row.num));
-const pages = readdirSync(flat).filter((f) => /^sheet-.*\.html$/.test(f)).sort();
-const numOf = (file) => {
-  const num = file.split('-')[1];
-  if (!nums.has(num)) throw new Error(`${file}: no sheet ${num} in the manifest`);
-  return num;
-};
+const pages = [...manifest.sheets, ...manifest.appendix]
+  .map((row) => [legacyFile(row.num, row.title), row.num])
+  .sort(([a], [b]) => a.localeCompare(b));
 const plateUrl = (num) => `${BASE}plate/${num}`;
 const spellings = (file) => {
   const stem = file.replace(/\.html$/, '');
@@ -82,7 +74,7 @@ const indexUrls = [
 const appFroms = new Set(appRules.split('\n').map((line) => line.split(/\s+/)[0]));
 const legacy = [
   // /index.html is NOT redirected: it is the app.
-  ...pages.flatMap((f) => toPlate(f, numOf(f))),
+  ...pages.flatMap(([file, num]) => toPlate(file, num)),
   ...retired.flatMap(([old, num]) => toPlate(old, num)),
   ...indexUrls.map((from) => `${from} ${BASE} 301`),
   `${OLD_APP_MOUNT} ${BASE} 301`,

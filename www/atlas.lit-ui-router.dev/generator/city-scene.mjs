@@ -5,7 +5,7 @@
 // city.glb and plant.glb and hands back the layout beside them (pins, pick boxes,
 // district labels, the rise schedule), which this module ships as a JSON island.
 // One body wires both plates; the island's `plant` field is the switch. The plates
-// are app-only: the flat set draws no copy.
+// are app-only: no bare plate draws a copy.
 import { readFileSync } from 'node:fs';
 import { PROJECT_MARK, articleTitle } from './chrome.mjs';
 import { FOCUS_JS } from './focus.mjs';
@@ -112,7 +112,7 @@ export const CITY_META = {
   rev: REV,
   title: 'THE CITY, IN THE ROUND',
   sub: `SHEET 7'S CENSUS CITY IN THE ROUND · ${CITY.length} MEMBERS · ${MASSED} MASSED · ${ANNEXES} SPEC ANNEXES · 4 DISTRICTS · ONE GLTF BINARY · ONE CLIP RAISES IT FROM THE GROUND, RAISE ⇄ GROUND · THE CAMERA ORBITS FREE AND TURNS TO THE FOUR TRUE DIAGONALS · A SECOND LANE RELIGHTS THE CITY FROM SHEET 7A'S FILED SHADOW PLATE`,
-  /** The flat set draws no copy of it. */
+  /** App-only: no bare plate of it. */
 };
 
 // The same city at work: sheet 7B's twin in the round.
@@ -122,7 +122,7 @@ export const PLANT_META = {
   rev: PLANT_REV,
   title: 'THE WORKING CITY, IN THE ROUND',
   sub: `SHEET 7'S CENSUS CITY IN THE ROUND, AT WORK · ${CITY.length} MEMBERS · ${MASSED} MASSED · EACH CROWNED BY A WORKING PLANT SIZED FROM ITS OWN CENSUS · ${ANNEXES} SPEC ANNEXES · 4 DISTRICTS · ONE GLTF BINARY · ONE CLIP RAISES IT FROM THE GROUND AND CROWNS IT, RAISE ⇄ GROUND · THE CAMERA ORBITS FREE AND TURNS TO THE FOUR TRUE DIAGONALS · A SECOND LANE RELIGHTS THE CITY FROM SHEET 7A'S FILED SHADOW PLATE`,
-  /** The flat set draws no copy of it. */
+  /** App-only: no bare plate of it. */
 };
 
 const CSS = `
@@ -191,7 +191,7 @@ ${pinCss('cs-pin', 22, 11)}
   .cs-info h3 { font-size: 15px; }
   .cs-info .note, .cs-info .lamp, .cs-info .hint { font-size: 15px; }
 }
-/* the plate's general notes, set to the flat set's notes measure: 18/1.8 prose in columns
+/* the plate's general notes, set to the sheets' notes measure: 18/1.8 prose in columns
    no narrower than 24em (48ch) and, because the next column lands first, never past 74ch */
 .cs-basis { font-family: var(--prose); font-size: 18px; line-height: 1.8; color: var(--ink);
   border: 1.5px solid var(--ink); border-block-start: none; background: var(--paper-2);

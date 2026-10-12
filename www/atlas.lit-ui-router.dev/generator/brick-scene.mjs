@@ -4,7 +4,7 @@
 // Nothing is re-derived: sheet2.mjs exports the MODEL its finished-model band
 // draws and the EXPLODE lifts its exploded view hovers at, brick-glb.mjs writes
 // them into one GLB along assembleMotion's keys, and this module ships the
-// bricks' rows, seats and keyed rises as a JSON island beside the viewer. The plate is app-only: the flat set draws no copy.
+// bricks' rows, seats and keyed rises as a JSON island beside the viewer. The plate is app-only: no bare plate draws a copy.
 import { readFileSync } from 'node:fs';
 import { PROJECT_MARK, articleTitle } from './chrome.mjs';
 import { FOCUS_JS } from './focus.mjs';
@@ -96,7 +96,7 @@ export const BRICKS_META = {
   rev: 'A',
   title: 'THE BRICK ASSEMBLY, IN THE ROUND',
   sub: `SHEET 2'S FINISHED MODEL IN THE ROUND · ${BRICK_ROWS.length} BRICKS · 2 PLATES · 2 LEVELS OF GROUND · ONE GLTF BINARY · THE SHEET'S EXPLOSION HALF AGAIN AS HIGH AS ITS ONE CLIP, ASSEMBLE ⇄ EXPLODE · THE CAMERA TURNS TO THE SHEET'S THREE DRAWN CORNERS`,
-  /** The flat set draws no copy of it. */
+  /** App-only: no bare plate of it. */
 };
 
 const CSS = `

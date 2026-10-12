@@ -1702,8 +1702,8 @@ export class AtlasSpecimen extends LitElement {
         </table>
         <p class="sp-foot">
           Put the kit id in <code>VITE_ADOBE_FONTS_KIT</code> before
-          <code>node generator/stage-site.mjs</code> and every staged page — routed and
-          flat, since the whole chrome now draws on the set — gets
+          <code>node generator/stage-site.mjs</code> and every staged page, the bare
+          plates included, gets
           <code>&lt;link rel="stylesheet" href="https://use.typekit.net/&lt;kit&gt;.css"&gt;</code>
           and LOSES the Google Fonts links, so the site talks to one font host. Unset,
           the stage logs <code>Adobe Fonts kit: none</code>, the Google links stay and the

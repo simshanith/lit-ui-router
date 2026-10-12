@@ -6,7 +6,7 @@
 // and a one-line credit; the notes on sheet A1 carry the full citations.
 //
 // WHY INLINE, AND NOT A <image href="assets/…"> REFERENCE. The set is carried
-// as one document three different ways — the flat SVG sheets, the routed app's
+// as one document three different ways — the bare plates, the routed app's
 // fragments and the single-file claude.ai artifact — and the artifact host
 // allows no image fetches at all. A linked file would be a hole in two of the
 // three. So the jpg is read at BUILD time and inlined as a data URI: the sheet

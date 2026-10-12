@@ -37,18 +37,19 @@ ends the run. Long output goes to a file under the job's `tmp/`, exit code echoe
 searched; nothing is piped to `head` or `tail`. The commit, the push and the Artifact publish
 are done by hand between the steps.
 
-1. **`build`** runs the generator: the standalone sheet pages into the gitignored `tmp/flat/`
-   (an internal build product; the audit and the photographs read them there), the fragments,
-   the models and the manifest ([README.md](../README.md), "Build and host"). A new plate
-   needs the picture pass first (build → app → `thumbs.mjs` → build → app; `build.mjs` refuses
-   a manifest whose card has no picture).
+1. **`build`** runs the generator: the fragments, the models, the manifest and the README
+   ([README.md](../README.md), "Build and host"). A new plate needs the picture pass first
+   (build → app → `thumbs.mjs` → build → app; `build.mjs` refuses a manifest whose card has no
+   picture).
 2. **`app`** typechecks and runs the vite build and prerender. The build log carries
    `prerendered N pages + 1 × 404.html · M redirects` and
    `scoped router at construction: N/N renders match router.globals`; the step stops on a
    scoped-router mismatch, and on a page count below the last run's, recorded in
    `tmp/ship/last.json`. `--accept` takes a lower count when the change removes pages on
    purpose.
-3. **`audit <tag> [--only ids]`** runs `generator/audit-frames.mjs`, which exits 1 on an
+3. **`audit <tag> [--only ids]`** reads the bare plates `app` wrote under `app/dist/plate/`
+   (`generator/plates.mjs` serves `app/dist` on a free port, so the lanes' cytoscape loads)
+   and stops when they are missing. It runs `generator/audit-frames.mjs`, which exits 1 on an
    escape, a hit deeper than 1px or text over text, then `generator/shoot.mjs`, which writes
    light and dark PNGs under `tmp/shots/<tag>/`. Set the TOTAL line beside the last tag's,
    and read every picture with the Read tool, both themes, before going on. A 3D plate change
@@ -123,7 +124,8 @@ are done by hand between the steps.
 - **zsh globs.** A glob with no match aborts the whole command line
   (`(eval):1: no matches found: …`). Quote the pattern or test the directory first.
 - **Ports 8787, 5173 and 5174** belong to the e2e suite and the sample apps across every
-  checkout; the atlas uses vite preview on its own port or a file:// page in Playwright.
+  checkout; the atlas serves `app/dist` on a free port for Playwright, or uses vite preview on
+  its own.
 - **Logs.** Output over a screen goes to a file, exit code echoed, then grep; a `tail` on a
   state-changing command hides its refusal.
 - **Patches.** A multi-line edit to generated or large files is a `python3` script written with

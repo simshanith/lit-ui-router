@@ -2,7 +2,6 @@
 // Light = graphite on vellum; dark = cyanotype. One token set in light-dark(); color-scheme picks the side.
 
 import { readFileSync } from 'node:fs';
-import { spriteFor } from './icons.mjs';
 
 // Title-block date = the census basis ref's commit date, never a hard-coded day
 const PLATE = JSON.parse(readFileSync(new URL('../data/census-files.json', import.meta.url), 'utf8'));
@@ -170,7 +169,7 @@ body {
    the title face is unicase — no small cap, no alternate, nothing to demote it
    with. So the article is drawn as a superior in the DATA face: lowercase, 0.6em
    of the title, soft ink. It needs no kit face, so it is identical on the site,
-   the flat set and the artifact. line-height 0 keeps the superior out of the
+   the bare plates and the artifact. line-height 0 keeps the superior out of the
    title's line box. */
 sup.art {
   font-family: var(--data);
@@ -678,29 +677,3 @@ export const FILL_SCRIPT = `(() => {
 export const chipBreaks = (html) =>
   String(html).replace(/(<code\b[^>]*>)([^<]*)(<\/code>)/g, (m, open, text, close) =>
     text.includes('/') ? open + text.replace(/[/,](?!<wbr>)/g, '$&<wbr>') + close : m);
-
-export function page(title, body, { desc = '' } = {}) {
-  // the icon symbols this page's markup references, once; nothing when none
-  const sprite = spriteFor(body);
-  return `<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<title>${title}</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="color-scheme" content="light dark">
-${desc ? `<meta name="description" content="${desc}">` : ''}
-<link rel="icon" href="/favicon.ico" sizes="any">
-<link rel="icon" href="/favicon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<style>${CSS}</style>
-</head>
-<body>
-<main>
-${sprite && `${sprite}\n`}${chipBreaks(body)}
-</main>
-<script>${PLATE_END_SCRIPT}
-${FILL_SCRIPT}</script>
-</body>
-</html>`;
-}

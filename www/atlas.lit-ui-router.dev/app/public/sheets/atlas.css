@@ -154,7 +154,7 @@ body {
    the title face is unicase — no small cap, no alternate, nothing to demote it
    with. So the article is drawn as a superior in the DATA face: lowercase, 0.6em
    of the title, soft ink. It needs no kit face, so it is identical on the site,
-   the flat set and the artifact. line-height 0 keeps the superior out of the
+   the bare plates and the artifact. line-height 0 keeps the superior out of the
    title's line box. */
 sup.art {
   font-family: var(--data);

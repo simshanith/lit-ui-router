@@ -15,9 +15,8 @@
 // or a family spine. The lane glyphs are lucide-static 1.48.0.
 //
 // The sprite is INLINE MARKUP, not a fetch. The app writes `ICON_SPRITE` into
-// its shell through the generated module (emit-app.mjs → app/src/generated/
-// icons.js); a flat page gets `spriteFor(body)` — the symbols it references
-// and no others — from chrome.mjs's `page()`. No icon package, no runtime
+// its shell and into every bare plate through the generated module
+// (emit-app.mjs → app/src/generated/icons.js). No icon package, no runtime
 // request.
 
 /** A Lucide body, scaled off its 24 grid onto the house's 16. */
@@ -143,14 +142,6 @@ const sprite = (ids) =>
 
 /** Every symbol, once — the app shell's sprite. `display: none` would not resolve. */
 export const ICON_SPRITE = sprite([...SYMBOLS.keys()]);
-
-const REF_RE = /#((?:ic|gl)-[a-z0-9-]+)/g;
-
-/** The symbols a flat page's markup references, as one sprite; '' when none. */
-export function spriteFor(body) {
-  const ids = new Set([...String(body).matchAll(REF_RE)].map((m) => m[1]).filter((id) => SYMBOLS.has(id)));
-  return ids.size ? sprite([...ids].sort()) : '';
-}
 
 /**
  * One glyph in a lane's chrome: 12px, `currentColor`, decorative, before its

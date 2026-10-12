@@ -10,39 +10,39 @@
 //
 //   node www/atlas.lit-ui-router.dev/generator/audit-frames.mjs [tag] [--only 3B,7] [--out <dir>]
 //
-// Run after build.mjs, from the workspace root; reads the pages under tmp/flat/. Prints one line per plate and a
+// Run after ship.mjs app, from the workspace root: serves app/dist and reads the
+// bare plates at /plate/<num>/ (generator/plates.mjs). Prints one line per plate and a
 // TOTAL line; writes <out>/<tag>.json with every finding. Exits 1 when any
 // escape, hit deeper than 1px or text-on-text overlap is found. The interactive
 // lanes are skipped: cytoscape lays them out at runtime.
 import { createRequire } from 'node:module';
-import { mkdirSync, readdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ROOT } from './basis.mjs';
-import { FLAT_DIR } from './thumb-spec.mjs';
+import { APP_DIST, onlyPlates, originOf, plateUrl, platesOf, serveSet } from './plates.mjs';
 
 const ATLAS = fileURLToPath(new URL('../', import.meta.url));
-const FLAT = join(ATLAS, FLAT_DIR);
-const SKIP = /sheet-(1i|2B|12i|14i)-/;
+const SKIP = new Set(['1i', '2B', '12i']);
 const argv = process.argv.slice(2);
 const flag = (name) => { const i = argv.indexOf(name); return i !== -1 ? argv[i + 1] : undefined; };
 const TAG = argv.find((a, i) => !a.startsWith('--') && argv[i - 1] !== '--only' && argv[i - 1] !== '--out') ?? 'audit';
-const ONLY = flag('--only') ? new Set(flag('--only').split(',')) : null;
 const OUT = flag('--out') ?? join(ATLAS, 'tmp', 'audit');
 mkdirSync(OUT, { recursive: true });
 
-const files = readdirSync(FLAT).filter((f) => /^sheet-.*\.html$/.test(f) && !SKIP.test(f)).sort()
-  .filter((f) => !ONLY || ONLY.has(f.split('-')[1]));
+const plates = onlyPlates(platesOf(ATLAS), flag('--only')).filter((num) => !SKIP.has(num));
+const server = await serveSet(join(ATLAS, APP_DIST));
+const origin = originOf(server);
 const require = createRequire(join(ROOT, 'tools/embed-heights/package.json'));
 const { chromium } = require('playwright');
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1600, height: 1200 } });
 
 const all = {};
-for (const f of files) {
-  await page.goto(`file://${join(FLAT, f)}`, { waitUntil: 'load' });
+for (const num of plates) {
+  await page.goto(plateUrl(origin, num), { waitUntil: 'load' });
   await page.waitForTimeout(150);
-  all[f] = await page.evaluate(() => {
+  all[num] = await page.evaluate(() => {
     const sat = (a, b) => {
       const axes = [];
       const edges = (set) => { for (let i = 0; i < set.length; i++) { const p = set[i], q = set[(i + 1) % set.length]; axes.push([-(q[1] - p[1]), q[0] - p[0]]); } };
@@ -126,15 +126,16 @@ for (const f of files) {
   });
 }
 await browser.close();
+server.close();
 writeFileSync(join(OUT, `${TAG}.json`), JSON.stringify(all, null, 1));
 let E = 0, H = 0, X = 0;
-for (const [f, svgs] of Object.entries(all)) {
+for (const [num, svgs] of Object.entries(all)) {
   const esc = svgs.flatMap((s) => s.escapes.map((e) => ({ ...e, idx: s.idx })));
   const deep = svgs.flatMap((s) => s.hits.filter((h) => h.depth > 1).map((h) => ({ ...h, idx: s.idx })));
   const slack = svgs.flatMap((s) => s.hits.filter((h) => h.depth <= 1));
   const texts = svgs.flatMap((s) => s.texts);
   E += esc.length; H += deep.length; X += texts.length;
-  console.log(`\n=== ${f}   escapes ${esc.length} | hits>1px ${deep.length} | hits<=1px ${slack.length} | text-on-text ${texts.length}`);
+  console.log(`\n=== ${num}   escapes ${esc.length} | hits>1px ${deep.length} | hits<=1px ${slack.length} | text-on-text ${texts.length}`);
   for (const e of esc) console.log(`   ESC svg${e.idx} <${e.tag} class="${e.cls}"> ${JSON.stringify(e.text)} over ${JSON.stringify(e.over)}`);
   for (const h of deep) console.log(`   HIT svg${h.idx} ${JSON.stringify(h.text)} [${h.cls}] depth ${h.depth} rect ${h.rect.x},${h.rect.y}-${h.rect.x2},${h.rect.y2} mass[${h.poly}] ${h.pts.map((p) => p.join(',')).join(' ')}`);
   for (const h of slack) console.log(`   slack ${JSON.stringify(h.text)} depth ${h.depth} mass[${h.poly}]`);

@@ -45,7 +45,7 @@ each sheet argue where that form fits and where it lies.
 **Build and host.** `generator/ship.mjs` runs the shipment one named step per call, from the repo root, in order:
 
 ```bash
-mise exec -- node www/atlas.lit-ui-router.dev/generator/ship.mjs build     # the generator: fragments, models, manifest, and the standalone pages under tmp/flat/
+mise exec -- node www/atlas.lit-ui-router.dev/generator/ship.mjs build     # the generator: fragments, models, manifest and this README
 mise exec -- node www/atlas.lit-ui-router.dev/generator/ship.mjs app       # typecheck, then the vite build and prerender
 mise exec -- node www/atlas.lit-ui-router.dev/generator/ship.mjs audit     # the frame audit, then light and dark photographs under tmp/shots/
 mise exec -- node www/atlas.lit-ui-router.dev/generator/ship.mjs stage     # dist/: the app at /, its _redirects merged
@@ -59,17 +59,17 @@ mise exec -- node www/atlas.lit-ui-router.dev/generator/ship.mjs artifact  # the
 **The card pictures.** Every card on the cover carries a 300 x 400 picture of its own
 plate — `app/public/thumbs/<id>.webp` and `<id>-dark.webp`, one per theme, tracked
 generated files like the fragments beside them. `generator/thumbs.mjs` draws them by
-photographing the standalone pages under `tmp/flat/` in headless Chromium (playwright, reached through
-`tools/embed-heights`; the lanes' cytoscape is served from `app/node_modules`), and the
-three 3D cards (`city`, `plant`, `bricks`) from the BUILT app's prerendered `/city/`, `/plant/`
-and `/bricks/` pages, each `<model-viewer>` on a transparent clear, its pins hidden for the shot. The three
+photographing the BUILT app in headless Chromium (playwright, reached through
+`tools/embed-heights`; the lanes' cytoscape is served from `app/node_modules`): each sheet's bare plate
+at `/plate/<num>/`, and the three 3D cards (`city`, `plant`, `bricks`) from its prerendered `/city/`,
+`/plant/` and `/bricks/` pages, each `<model-viewer>` on a transparent clear, its pins hidden for the shot. The three
 models, `app/public/models/city.glb`, `plant.glb` and `bricks.glb`, are tracked generated files
 `build.mjs` writes beside the fragments (`generator/city-glb.mjs` and `brick-glb.mjs` on `glb.mjs`). `build.mjs` REFUSES to emit a manifest whose card has no picture, so a new
 plate takes the full order:
 
 ```bash
-node www/atlas.lit-ui-router.dev/generator/build.mjs www/atlas.lit-ui-router.dev   # writes the standalone pages, then stops on the missing picture
-npm --prefix www/atlas.lit-ui-router.dev/app run build                             # the app the 3D cards are shot from
+node www/atlas.lit-ui-router.dev/generator/build.mjs www/atlas.lit-ui-router.dev   # writes the fragments, then stops on the missing picture
+npm --prefix www/atlas.lit-ui-router.dev/app run build                             # the app the cards are shot from
 node www/atlas.lit-ui-router.dev/generator/thumbs.mjs www/atlas.lit-ui-router.dev  # photographs it
 node www/atlas.lit-ui-router.dev/generator/build.mjs www/atlas.lit-ui-router.dev   # green
 npm --prefix www/atlas.lit-ui-router.dev/app run build                             # the app with every picture
@@ -87,9 +87,8 @@ the tracked pictures: `thumbs.mjs <outdir> --only <ids> --out <dir> --tuning <fi
 Live at <https://atlas.lit-ui-router.dev/> — the app owns the site (`/`, `/sheet/7/`, `/city/`,
 `/plant/`, `/bricks/`, `/log`). `/plate/<num>` serves each sheet as one plate in a bare document with no
 client bundle, prerendered from the same route table (`app/prerender.ts`), and every old standalone url redirects
-there. Each sheet is also written as a standalone page under `tmp/flat/`, a
-gitignored build product the frame audit (`generator/audit-frames.mjs`, `shoot.mjs`) and the card pictures read.
-The interactive lanes (1i, 2B, 12i, A2i) bundle cytoscape 3.31.0,
+there; the frame audit (`generator/audit-frames.mjs`, `shoot.mjs`) and the card pictures read those bare plates
+from `app/dist/plate/`. The interactive lanes (1i, 2B, 12i, A2i) bundle cytoscape 3.31.0,
 and the app-only plates in the round (2·3D, 7·3D, 7B·3D) bundle `@google/model-viewer`. `app/` is the same set as a prerendered
 lit-ui-router app (see `app/README.md`); `HISTORY.md` is the verbatim revision record, parsed
 into the app's `/log` at build time. This file is written by `build.mjs`; edit the emitter, not the output.

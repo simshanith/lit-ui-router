@@ -292,9 +292,8 @@ export function emitApp({ sheets, appendix = [], interactive, appendixInteractiv
   writeFileSync(join(sheetsDir, 'atlas.css'), `${CSS}\n`);
 
   // EVERY CARD CARRIES A PICTURE. The pictures are drawn by generator/thumbs.mjs
-  // against the standalone pages this same build just wrote under tmp/flat/,
-  // and the 3D cards' against the built app, so a NEW plate takes build, app
-  // build, thumbs, build, app build. Nothing here draws them — this only refuses
+  // against the built app's bare plates under app/dist/plate/ and its 3D pages,
+  // so a NEW plate takes build, app build, thumbs, build, app build. Nothing here draws them — this only refuses
   // to emit a manifest that would leave a card blank.
   const thumbsDir = join(publicDir, THUMB_DIR);
   const thumbFor = (id) => {

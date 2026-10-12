@@ -21,7 +21,6 @@ const EXCLUDED = [
   ['data/ — the filed plates', (p) => p.startsWith('data/')],
   ['app/src/generated/ — written by build.mjs', (p) => p.startsWith('app/src/generated/')],
   ['app/public/ — fragments, pictures, model, manifest', (p) => p.startsWith('app/public/')],
-  ['sheet-*.html · gallery · megacanvas — the flat set', (p) => /^[^/]+\.html$/.test(p)],
   ['*.md — README (generated), HISTORY and the other prose', (p) => p.endsWith('.md')],
 ];
 

@@ -21,7 +21,7 @@ output to a file under `$CLAUDE_JOB_DIR/tmp`. Search that file; do not `head` or
    It exits 1 unless every changed sheet reports zero escapes, zero hits and zero text-on-text.
 4. Photograph every changed sheet before and after:
    `mise exec -- node www/atlas.lit-ui-router.dev/generator/shoot.mjs <tag> --only <ids>` (ids as the
-   sheet page filenames under `tmp/flat/` spell them: `3B`, `7A`, `A2`). Open each PNG and read it, with 4× crops at the junctions
+   manifest spells them: `3B`, `7A`, `A2`). Open each PNG and read it, with 4× crops at the junctions
    and a 390 px load.
 5. Cite a structure by name through the sheet's lookup (`NO()` in `sheet3b.mjs`), never by a
    literal number.

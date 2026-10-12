@@ -35,20 +35,20 @@ the round.
 
 ## The routes
 
-| State            | Url            | View            | Resolves                          |
-| ---------------- | -------------- | --------------- | --------------------------------- |
-| `atlas`          | — (abstract)   | `ShellView`     | `manifest`                        |
-| `atlas.gallery`  | `/?subject&projection&mode&basis&kv` | `GalleryView` | — (the key index's filter, five nullable params) |
-| `atlas.sheet`    | `/sheet/:num?focus` | `SheetView` | `sheet`, `fragment` (`focus`: the plate's pick, dynamic) |
-| `atlas.city`     | `/city?focus`  | `CityView`      | `extra`, `fragment`, **`viewer`** (`focus`: the pinned member) |
-| `atlas.plant`    | `/plant?focus` | `CityView`      | the same as `atlas.city`, on the `plant` row |
-| `atlas.bricks`   | `/bricks?focus` | `BricksView`   | `extra`, `fragment`, **`viewer`** (`focus`: the pinned brick, 1–6) |
-| `atlas.specimen` | `/specimen`    | `SpecimenView`  | **`specimen`** (its own element)  |
-| `atlas.log`      | `/log`         | `LogView`       | `manifest` (its `issueLog`)       |
-| `atlas.office`   | `/office`      | — `redirectTo`  | — (302 to `atlas.sheet` A2)       |
-| `atlas.about`    | `/about`       | `AboutView`     | —                                 |
-| `atlas.notFound` | — (url-less)   | `NotFoundView`  | — (the `otherwise` projection)    |
-| `plate`          | `/plate/:num`  | — (top-level; the prerender writes the fragment in a bare document) | — |
+| State            | Url                                  | View                                                                | Resolves                                                           |
+| ---------------- | ------------------------------------ | ------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| `atlas`          | — (abstract)                         | `ShellView`                                                         | `manifest`                                                         |
+| `atlas.gallery`  | `/?subject&projection&mode&basis&kv` | `GalleryView`                                                       | — (the key index's filter, five nullable params)                   |
+| `atlas.sheet`    | `/sheet/:num?focus`                  | `SheetView`                                                         | `sheet`, `fragment` (`focus`: the plate's pick, dynamic)           |
+| `atlas.city`     | `/city?focus`                        | `CityView`                                                          | `extra`, `fragment`, **`viewer`** (`focus`: the pinned member)     |
+| `atlas.plant`    | `/plant?focus`                       | `CityView`                                                          | the same as `atlas.city`, on the `plant` row                       |
+| `atlas.bricks`   | `/bricks?focus`                      | `BricksView`                                                        | `extra`, `fragment`, **`viewer`** (`focus`: the pinned brick, 1–6) |
+| `atlas.specimen` | `/specimen`                          | `SpecimenView`                                                      | **`specimen`** (its own element)                                   |
+| `atlas.log`      | `/log`                               | `LogView`                                                           | `manifest` (its `issueLog`)                                        |
+| `atlas.office`   | `/office`                            | — `redirectTo`                                                      | — (302 to `atlas.sheet` A2)                                        |
+| `atlas.about`    | `/about`                             | `AboutView`                                                         | —                                                                  |
+| `atlas.notFound` | — (url-less)                         | `NotFoundView`                                                      | — (the `otherwise` projection)                                     |
+| `plate`          | `/plate/:num`                        | — (top-level; the prerender writes the fragment in a bare document) | —                                                                  |
 
 The twenty-two sheets are the nineteen SVG plates and three interactive lanes (1i, 2B, 12i) of the
 ascent; the appendix files A1, A2, A2i (the survey office's own lane) and A3 under the same `/sheet/:num`
@@ -92,7 +92,7 @@ injects a Google Fonts `<link>` for the CANDIDATE stand-ins, on demand and on no
 `--code` / `--hand` with the Adobe family first and the Google stand-in second (the PLATES keep
 `--mono`, whose advance every SVG label is hand-placed against), and `index.html` carries the
 Google links. On the site,
-`generator/stage-site.mjs` injects the typekit `<link>` into **every staged page, routed and flat**,
+`generator/stage-site.mjs` injects the typekit `<link>` into **every staged page, the bare plates included**,
 when `VITE_ADOBE_FONTS_KIT` is set — it sits beside the GA id in the gitignored
 `.config/mise/cloudflare.local.env` — **and strips the Google links**, so a staged page never
 references `fonts.googleapis.com` or `fonts.gstatic.com`. Unset, the stage logs
@@ -182,15 +182,15 @@ the line:
 **Experimental — `src/experimental/`.** Optional motion, wired in by a single call in `main.ts`.
 Delete the directory and that one line and the base app is unchanged.
 
-| Module                | What it does                                    | Router hook                                          |
-| --------------------- | ----------------------------------------------- | ---------------------------------------------------- |
-| `view-transitions.ts` | slideshow between sheets (View Transitions API, CSS keyframe fallback) | `onBefore` for the snapshot; `transition.promise` + `viewRendered()` for the release |
-| `view-rendered.ts`    | the missing "view has re-rendered" promise: lit's `updateComplete` on every `<ui-view>`, then on the `<atlas-plate>` it rendered | none — shared by the two below |
-| `keyboard.ts`         | ← / → walk the set; focus lands on the arriving sheet's title | none — reads `snapshotRoute(router)`     |
-| `analytics.ts`        | only the `page_view`s gtag cannot see for itself (below), and only if the staged page carries gtag (`VITE_GOOGLE_ANALYTICS_TRACKING_ID` at stage time) | `onSuccess` |
+| Module                | What it does                                                                                                                                           | Router hook                                                                          |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
+| `view-transitions.ts` | slideshow between sheets (View Transitions API, CSS keyframe fallback)                                                                                 | `onBefore` for the snapshot; `transition.promise` + `viewRendered()` for the release |
+| `view-rendered.ts`    | the missing "view has re-rendered" promise: lit's `updateComplete` on every `<ui-view>`, then on the `<atlas-plate>` it rendered                       | none — shared by the two below                                                       |
+| `keyboard.ts`         | ← / → walk the set; focus lands on the arriving sheet's title                                                                                          | none — reads `snapshotRoute(router)`                                                 |
+| `analytics.ts`        | only the `page_view`s gtag cannot see for itself (below), and only if the staged page carries gtag (`VITE_GOOGLE_ANALYTICS_TRACKING_ID` at stage time) | `onSuccess`                                                                          |
 
 **The analytics rule.** The atlas shares the flagship's GA stream, whose enhanced measurement counts
-"page changes based on browser history events", so gtag already owns the initial `page_view` *and*
+"page changes based on browser history events", so gtag already owns the initial `page_view` _and_
 every pushState / replaceState / popstate. The one thing it cannot see is `navigation.navigate()`,
 which the Navigation API location plugin uses and which never touches `history.pushState`.
 `analytics.ts` therefore sends on `onSuccess` only when the router took that plugin
@@ -218,7 +218,7 @@ Why `onBefore` for the slideshow: `document.startViewTransition()` snapshots the
 moment it is called, so it must run **before** any resolve starts — `onStart` fires after resolves
 are already in flight, and a slow fetch would then be frozen inside the old snapshot. Why
 `transition.promise` + `updateComplete` for the release: ui-router has no "the view has re-rendered"
-hook. `onSuccess` fires when the *transition* succeeded and `<ui-view>` swaps its component in a lit
+hook. `onSuccess` fires when the _transition_ succeeded and `<ui-view>` swaps its component in a lit
 update after that, so releasing there cross-fades to the old content; releasing two
 `requestAnimationFrame`s later instead froze the page for four seconds per sheet, because rendering
 is suspended while the snapshot is held and the frames never fire. `<ui-view>` is a `LitElement`, so

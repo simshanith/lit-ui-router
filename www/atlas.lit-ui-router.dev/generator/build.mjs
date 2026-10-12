@@ -1,6 +1,6 @@
 import { writeFileSync, mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { page, sheetSection, TOTAL, TOTAL_WORDS } from './chrome.mjs';
+import { TOTAL, TOTAL_WORDS } from './chrome.mjs';
 import { sheet1 } from './sheet1.mjs';
 import { loopWalkedSection, sheet1i } from './sheet1i.mjs';
 import { sheet2 } from './sheet2.mjs';
@@ -30,59 +30,26 @@ import { PIPELINE_VERDICT, pipelineSection, sheetA2i } from './pipeline-graph.mj
 import { ATLAS } from './census-atlas.mjs';
 import { LOOP } from './loop-walk.mjs';
 import { emitApp } from './emit-app.mjs';
-import { FLAT_DIR } from './thumb-spec.mjs';
 
 const OUT = process.argv[2];
 if (!OUT) throw new Error('usage: node build.mjs <outdir>');
 mkdirSync(OUT, { recursive: true });
-// The standalone pages: a build product the frame audit and the thumbs read, never published.
-const FLAT = join(OUT, FLAT_DIR);
-mkdirSync(FLAT, { recursive: true });
 
 const sheets = [sheet1, sheet2, sheet2a, sheet3, sheet3a, sheet3b, sheet4, sheet5, sheet6, sheet7, sheet7a, sheet7b, sheet8, sheet9, sheet10, sheet11, sheet12, sheet13, sheet14];
-// The interactive lanes that have a standalone page of their own — the plate
-// count on the cover and in the README derives here.
+// The interactive lanes with a plate of their own — the plate count on the
+// cover and in the README derives here.
 const lanes = [sheet1i, sheet2b, sheet12i];
 // THE APPENDIX — plates whose subject is the atlas itself rather than the
 // codebase. Letter-prefixed ids, deliberately OUTSIDE `sheets`: the ascent
 // order, the cover's plate count and the ← / → walk all read that array, and
 // an appendix stands at no altitude.
 const appendix = [sheetA1, sheetA2, sheetA3];
-// The appendix's interactive lane: a standalone page, and a row in `manifest.appendix`.
+// The appendix's interactive lane: a plate of its own, and a row in `manifest.appendix`.
 const appendixLanes = [sheetA2i];
 const PLATES = sheets.length + lanes.length;
 if (TOTAL !== Math.max(...sheets.map((s) => Number.parseInt(s.num, 10)))) throw new Error(`build: chrome.mjs TOTAL is ${TOTAL}, and the ascent's highest sheet is ${Math.max(...sheets.map((s) => Number.parseInt(s.num, 10)))}`);
 const ALTITUDES = `${TOTAL_WORDS[0].toUpperCase()}${TOTAL_WORDS.slice(1)} altitudes`;
-const fname = (s) => `sheet-${s.num}-${s.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}.html`;
 const SITE = 'https://atlas.lit-ui-router.dev';
-
-// --- individual sheet files, under tmp/flat/ ---
-for (const s of [...sheets, ...appendix]) {
-  writeFileSync(join(FLAT, fname(s)),
-    page(s.appendix ? `${s.title} — Appendix ${s.num}` : `${s.title} — Sheet ${s.num} of ${TOTAL}`,
-      sheetSection(s), { desc: s.caption }));
-}
-
-// --- the interactive plates that have a standalone page of their own ---
-// Sheet 2B is a lane, not an SVG sheet, so it is written here rather than
-// through sheetSection().
-writeFileSync(join(FLAT, fname(sheet2b)),
-  page(`${sheet2b.title} — Sheet ${sheet2b.num} of ${TOTAL}`, sheet2bPage(), { desc: sheet2b.caption }));
-
-// Sheet 12i is the same arrangement one altitude up: sheet 12's register plate
-// as a cytoscape lane.
-writeFileSync(join(FLAT, fname(sheet12i)),
-  page(`${sheet12i.title} — Sheet ${sheet12i.num} of ${TOTAL}`, register12iSection(), { desc: sheet12i.caption }));
-
-// Sheet 1i is the same arrangement at the first altitude: sheet 1's circuit as
-// a cytoscape lane with one navigation walked through it.
-writeFileSync(join(FLAT, fname(sheet1i)),
-  page(`${sheet1i.title} — Sheet ${sheet1i.num} of ${TOTAL}`, loopWalkedSection(), { desc: sheet1i.caption }));
-
-// Appendix A2i is the survey office's own lane: A2's flow graph as a live
-// cytoscape picture.
-writeFileSync(join(FLAT, fname(sheetA2i)),
-  page(`${sheetA2i.title} — Appendix ${sheetA2i.num}`, pipelineSection(), { desc: sheetA2i.caption }));
 
 // --- the cover ---
 // THE INDEX — [num, ALTITUDE, FORM, FIT VERDICT]. Canonical for both the
@@ -244,8 +211,8 @@ const THESIS = `Riffs on an isometric codebase-visualization form seen in the wi
 notes on each sheet argue where that form fits and where it lies.`;
 const GEN_NOTES = `Plates written by \`node generator/build.mjs .\` from this directory: one chrome-less fragment
 per sheet and a manifest for \`app/\`, the drawing set as a prerendered lit-ui-router app, the glTF binaries of its
-three plates in the round (\`city\`, \`plant\`, \`bricks\`), drawn in Google's model-viewer, and each sheet as a
-standalone page under \`tmp/flat/\`, a build product the frame audit and the card pictures read. The interactive
+three plates in the round (\`city\`, \`plant\`, \`bricks\`), drawn in Google's model-viewer. The frame audit and
+the card pictures read each sheet as a bare plate under \`app/dist/plate/\`, written by the prerender. The interactive
 lanes (1i, 2B, 12i and appendix A2i) bundle cytoscape 3.31.0. \`generator/check-scenes.mjs\` checks the three
 models and drives the built app's 3D plates in headless Chromium. The published site is the app alone:
 \`/\`, \`/sheet/7\`, \`/city\`.
@@ -284,7 +251,7 @@ ${[...appendix, ...appendixLanes].map((s) => `| [${s.num}](${SITE}/sheet/${s.num
 **Build and host.** \`generator/ship.mjs\` runs the shipment one named step per call, from the repo root, in order:
 
 \`\`\`bash
-mise exec -- node www/atlas.lit-ui-router.dev/generator/ship.mjs build     # the generator: fragments, models, manifest, and the standalone pages under tmp/flat/
+mise exec -- node www/atlas.lit-ui-router.dev/generator/ship.mjs build     # the generator: fragments, models, manifest and this README
 mise exec -- node www/atlas.lit-ui-router.dev/generator/ship.mjs app       # typecheck, then the vite build and prerender
 mise exec -- node www/atlas.lit-ui-router.dev/generator/ship.mjs audit     # the frame audit, then light and dark photographs under tmp/shots/
 mise exec -- node www/atlas.lit-ui-router.dev/generator/ship.mjs stage     # dist/: the app at /, its _redirects merged
@@ -298,17 +265,17 @@ mise exec -- node www/atlas.lit-ui-router.dev/generator/ship.mjs artifact  # the
 **The card pictures.** Every card on the cover carries a 300 x 400 picture of its own
 plate — \`app/public/thumbs/<id>.webp\` and \`<id>-dark.webp\`, one per theme, tracked
 generated files like the fragments beside them. \`generator/thumbs.mjs\` draws them by
-photographing the standalone pages under \`tmp/flat/\` in headless Chromium (playwright, reached through
-\`tools/embed-heights\`; the lanes' cytoscape is served from \`app/node_modules\`), and the
-three 3D cards (\`city\`, \`plant\`, \`bricks\`) from the BUILT app's prerendered \`/city/\`, \`/plant/\`
-and \`/bricks/\` pages, each \`<model-viewer>\` on a transparent clear, its pins hidden for the shot. The three
+photographing the BUILT app in headless Chromium (playwright, reached through
+\`tools/embed-heights\`; the lanes' cytoscape is served from \`app/node_modules\`): each sheet's bare plate
+at \`/plate/<num>/\`, and the three 3D cards (\`city\`, \`plant\`, \`bricks\`) from its prerendered \`/city/\`,
+\`/plant/\` and \`/bricks/\` pages, each \`<model-viewer>\` on a transparent clear, its pins hidden for the shot. The three
 models, \`app/public/models/city.glb\`, \`plant.glb\` and \`bricks.glb\`, are tracked generated files
 \`build.mjs\` writes beside the fragments (\`generator/city-glb.mjs\` and \`brick-glb.mjs\` on \`glb.mjs\`). \`build.mjs\` REFUSES to emit a manifest whose card has no picture, so a new
 plate takes the full order:
 
 \`\`\`bash
-node www/atlas.lit-ui-router.dev/generator/build.mjs www/atlas.lit-ui-router.dev   # writes the standalone pages, then stops on the missing picture
-npm --prefix www/atlas.lit-ui-router.dev/app run build                             # the app the 3D cards are shot from
+node www/atlas.lit-ui-router.dev/generator/build.mjs www/atlas.lit-ui-router.dev   # writes the fragments, then stops on the missing picture
+npm --prefix www/atlas.lit-ui-router.dev/app run build                             # the app the cards are shot from
 node www/atlas.lit-ui-router.dev/generator/thumbs.mjs www/atlas.lit-ui-router.dev  # photographs it
 node www/atlas.lit-ui-router.dev/generator/build.mjs www/atlas.lit-ui-router.dev   # green
 npm --prefix www/atlas.lit-ui-router.dev/app run build                             # the app with every picture
@@ -326,9 +293,8 @@ the tracked pictures: \`thumbs.mjs <outdir> --only <ids> --out <dir> --tuning <f
 Live at <${SITE}/> — the app owns the site (\`/\`, \`/sheet/7/\`, \`/city/\`,
 \`/plant/\`, \`/bricks/\`, \`/log\`). \`/plate/<num>\` serves each sheet as one plate in a bare document with no
 client bundle, prerendered from the same route table (\`app/prerender.ts\`), and every old standalone url redirects
-there. Each sheet is also written as a standalone page under \`tmp/flat/\`, a
-gitignored build product the frame audit (\`generator/audit-frames.mjs\`, \`shoot.mjs\`) and the card pictures read.
-The interactive lanes (1i, 2B, 12i, A2i) bundle cytoscape 3.31.0,
+there; the frame audit (\`generator/audit-frames.mjs\`, \`shoot.mjs\`) and the card pictures read those bare plates
+from \`app/dist/plate/\`. The interactive lanes (1i, 2B, 12i, A2i) bundle cytoscape 3.31.0,
 and the app-only plates in the round (2·3D, 7·3D, 7B·3D) bundle \`@google/model-viewer\`. \`app/\` is the same set as a prerendered
 lit-ui-router app (see \`app/README.md\`); \`HISTORY.md\` is the verbatim revision record, parsed
 into the app's \`/log\` at build time. This file is written by \`build.mjs\`; edit the emitter, not the output.
@@ -360,6 +326,6 @@ const appSheets = emitApp({
   outDir: OUT,
 });
 
-// PLATES counts the three interactive lanes with a standalone page of their own
-console.log('built', PLATES, 'sheets +', appendix.length + appendixLanes.length, 'appendix →', FLAT, '+ README →', OUT);
+// PLATES counts the three interactive lanes with a plate of their own
+console.log('built', PLATES, 'sheets +', appendix.length + appendixLanes.length, 'appendix · README →', OUT);
 console.log('emitted', appSheets, 'app fragments + manifest →', join(OUT, 'app/public'));

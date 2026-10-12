@@ -3,10 +3,11 @@
 //
 //   mise exec -- node www/atlas.lit-ui-router.dev/generator/ship.mjs <step> [options]
 //
-//   build                 the generator: fragments, models, manifest, and the standalone pages under tmp/flat/
+//   build                 the generator: fragments, models, manifest and the README
 //   app                   typecheck, then the vite build and prerender; the two count
 //                         lines are compared with the last run's (--accept to lower them)
-//   audit <tag> [--only ids]   frame audit, then light and dark photographs under tmp/shots/<tag>
+//   audit <tag> [--only ids]   frame audit of the bare plates under app/dist/plate/, then light
+//                         and dark photographs under tmp/shots/<tag>; needs `app` to have run
 //   stage                 stage-site.mjs; stops unless the Adobe Fonts kit is on every page
 //   check                 the gate the deploy runs first: branch www/atlas, tree clean, HEAD on
 //                         origin, dist/city/index.html carries typekit and no Google font link
@@ -75,6 +76,7 @@ const STEPS = {
   },
 
   audit() {
+    if (!existsSync(join(APP, 'dist', 'plate'))) stop('app/dist/plate missing; run ship.mjs app first');
     const tag = ARGV.find((a, i) => !a.startsWith('--') && ARGV[i - 1] !== '--only') ?? 'ship';
     const only = flag('--only') ? ['--only', flag('--only')] : [];
     const out = read('node', [join(ATLAS, 'generator', 'audit-frames.mjs'), tag, ...only], ROOT);
