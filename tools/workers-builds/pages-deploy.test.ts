@@ -81,6 +81,7 @@ describe('deployVerdict', () => {
     assert.equal(report.ok, true);
     assert.match(report.text, new RegExp(`deployed commit: ${liveCommit}`));
     assert.match(report.text, /✓ production serves the www\/atlas head/);
+    assert.doesNotMatch(report.text, /dirty/);
   });
 
   // The newer failed upload of branchAhead must not count as deployed.

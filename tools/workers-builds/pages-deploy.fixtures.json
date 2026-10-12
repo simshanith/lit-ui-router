@@ -17,7 +17,7 @@
           "branch": "www/atlas",
           "commit_hash": "8086afee00000000000000000000000000000000",
           "commit_message": "build(atlas): an older deploy",
-          "commit_dirty": false
+          "commit_dirty": true
         }
       }
     },
@@ -35,7 +35,7 @@
           "branch": "www/atlas",
           "commit_hash": "aab08d5900000000000000000000000000000000",
           "commit_message": "fix(atlas): a failed upload",
-          "commit_dirty": false
+          "commit_dirty": true
         }
       }
     },
@@ -53,7 +53,7 @@
           "branch": "www/atlas",
           "commit_hash": "7c893cda19015bdc5e50629e13808e89d7c5da34",
           "commit_message": "fix(atlas): the live deploy",
-          "commit_dirty": false
+          "commit_dirty": true
         }
       }
     }

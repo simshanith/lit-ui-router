@@ -39,7 +39,6 @@ const DeploymentSchema = v.looseObject({
       v.looseObject({
         branch: v.nullish(v.string()),
         commit_hash: v.nullish(v.string()),
-        commit_dirty: v.nullish(v.boolean()),
       }),
     ),
   }),
@@ -112,13 +111,13 @@ export function deployVerdict(
 
   const lines = [
     ...header,
-    `deployed commit: ${deployed || '(none recorded)'}${metadata?.commit_dirty ? ' (dirty tree)' : ''}`,
+    `deployed commit: ${deployed || '(none recorded)'}`,
     `deployed branch: ${metadata?.branch || '(none recorded)'}`,
     `deployment: ${live.id} (${live.created_on})${live.url ? ` ${live.url}` : ''}`,
     '',
   ];
 
-  const ok = deployed.toLowerCase() === branchHead.toLowerCase();
+  const ok = deployed === branchHead;
   lines.push(
     ok
       ? `✓ production serves the ${PRODUCTION_BRANCH} head.`
