@@ -48,8 +48,9 @@ const PLAN = {
   'examples': [150, 30],
   'images': [30, 120],
   'static data': [175, 140],
-  'inter fonts': [330, 10],
   'html pages': [430, 20],
+  // east of the html-pages slab and in front of it: behind, the slab hid the whole tower
+  'inter fonts': [590, 110],
   'vp framework': [600, 30],
   // dropped south as the html-pages slab grows: it reaches 170.7 at this ref
   'page chunks': [330, 178],
@@ -160,11 +161,11 @@ ${bodies}
 ${txt(150, 120, `a vacant lot — ${LOT.files} files, ${KB(LOT.gz)} of Dickens,`, 'lbla')}
 ${txt(150, 132, 'Beowulf and an RFC the site no longer ships', 'lbla')}
 <line x1="442" y1="132" x2="502" y2="248" class="skf"/>
-<!-- off the html-pages cap, which reaches y 38 at this ref: hung beside its east wall -->
-${txt(975, 140, `${KB(INTER.gz)} of Inter —`, 'lbla')}
-${txt(975, 152, `the lettering stands ${ORD[INTER_RANK - 1]}`, 'lbla')}
-${txt(975, 164, `on the wire; only ${TALLER_THAN_INTER[0]}`, 'lbla')}
-${txt(975, 176, TALLER_THAN_INTER.length > 1 ? `${TALLER_THAN_INTER.slice(1).map((t) => `and ${t}`).join(' ')} stand taller` : 'stands taller', 'lbla')}
+<!-- east of the Inter tower's cap (x 930 at this ref), under the site outline's label -->
+${txt(985, 360, `${KB(INTER.gz)} of Inter —`, 'lbla')}
+${txt(985, 372, `the lettering stands ${ORD[INTER_RANK - 1]}`, 'lbla')}
+${txt(985, 384, `on the wire; only ${TALLER_THAN_INTER[0]}`, 'lbla')}
+${txt(985, 396, TALLER_THAN_INTER.length > 1 ? `${TALLER_THAN_INTER.slice(1).map((t) => `and ${t}`).join(' ')} stand taller` : 'stands taller', 'lbla')}
 ${txt(1120, 715, `all four apps: ${KB(APPS)} —`, 'lbla', 'end')}
 ${txt(1120, 727, `${APP_PCT}% of the deploy they exist to demonstrate`, 'lbla', 'end')}
 <line x1="937" y1="711" x2="878" y2="689" class="skf"/>
