@@ -595,6 +595,7 @@ resolved →
 
 **Record notes**
 
+- 2026-10-12: the structures are numbered 1 to 29 in schedule order; the badges on the plan carry the same numbers, so the eslint-plugin quarter is 19, effect 20, ssr 21 and lint:complexity 14.
 - 2026-10-11: the key reads block, its two size encodings, the other block kinds, then the edges.
 - 2026-10-11: links — the notes link the dry run, scc, the instruments and the guards to their homes.
 - 2026-09-13, after the refresh, no rev clause: the frame audit. Three roads off the quarters row were leaving from inside a building, the sixth quarter (27 `lit-ui-router-effect`) having been founded under them and the fifth (2) having grown: quarters → release y 50 → 64, quarters → dts tower (the dashed leg) y 54 → 68, and typedoc's return leg 62 → 84, so it drops with them instead of running two units off the release lane. No quarter moved.
