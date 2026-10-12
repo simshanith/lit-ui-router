@@ -1,17 +1,44 @@
 import { defs } from './chrome.mjs';
-import { txt, lines, box, keyRow } from './helpers.mjs';
+import { txt, lines, box, keyRow, link } from './helpers.mjs';
 
 const P = 's5';
 
-// the homes the notes name: two routers' docs, the Navigation API's section of the HTML standard, the ui-router site, the two server-side guides
+// the homes the notes and the plate name: each router's docs, the Navigation API's section of the HTML standard, the ui-router site, the two server-side guides
 const HOME = {
   tanstack: 'https://tanstack.com/router',
   sveltekit: 'https://svelte.dev/docs/kit',
+  next: 'https://nextjs.org/docs/app',
+  reactrouter: 'https://reactrouter.com/',
+  angular: 'https://angular.dev/guide/routing',
+  vue: 'https://router.vuejs.org/',
+  wouter: 'https://github.com/molefrog/wouter',
+  hono: 'https://hono.dev/',
   navigation: 'https://html.spec.whatwg.org/multipage/nav-history-apis.html#navigation-api',
   uirouter: 'https://ui-router.github.io/',
+  lit: 'https://lit-ui-router.dev/',
   server: 'https://lit-ui-router.dev/packages/server',
   ssr: 'https://lit-ui-router.dev/packages/ssr',
   compare: 'https://lit-ui-router.dev/packages/ssr#how-this-compares',
+};
+
+// every member's name lettering links to its home; a member with no home is a build error
+const MEMBER_HOME = {
+  'SvelteKit': HOME.sveltekit,
+  'Next App Router': HOME.next,
+  'React Router v7': HOME.reactrouter,
+  'Angular Router': HOME.angular,
+  'Vue Router': HOME.vue,
+  'TanStack Router': HOME.tanstack,
+  'wouter': HOME.wouter,
+  'Hono / Express': HOME.hono,
+  'Navigation API': HOME.navigation,
+  'lit-ui-router-ssr': HOME.ssr,
+  'ui-router-server': HOME.server,
+  'ui-router / lit-ui-router': HOME.lit,
+};
+const home = (name) => {
+  if (!MEMBER_HOME[name]) throw new Error(`sheet5: ${name} has no home`);
+  return MEMBER_HOME[name];
 };
 
 // Plot area
@@ -47,7 +74,7 @@ ${LINEAGE.map(([xf, name, note]) => {
   const x = cx(xf);
   return `<rect x="${x - 7}" y="${LY - 7}" width="14" height="14" class="ska fp" stroke-width="2.2"/><rect x="${x - 13}" y="${LY - 13}" width="26" height="26" rx="4" class="fhalo"/>
 <line x1="${x}" y1="${LY + 7}" x2="${x}" y2="${LY + 24}" class="ska"/>
-${txt(x + 20, LY - 1, name, 'lbla')}
+${link(home(name), txt(x + 20, LY - 1, name, 'lbla'))}
 ${txt(x + 20, LY + 12, note, 'lblf')}`;
 }).join('\n')}
 <line x1="${cx(LINEAGE[0][0])}" y1="${LY + 24}" x2="${cx(LINEAGE[2][0])}" y2="${LY + 24}" class="ska"/>
@@ -60,7 +87,7 @@ const marks = points.map(([xf, band, dy, name, note, , side]) => {
   const lx = right ? x + 14 : x - 14;
   const anchor = right ? 'start' : 'end';
   return `<g><title>${name} — ${note}</title><circle cx="${x}" cy="${y}" r="6" class="sk fp" stroke-width="1.6"/>
-${txt(lx, y - 1, name, 'lblb', anchor)}
+${link(home(name), txt(lx, y - 1, name, 'lblb', anchor))}
 ${txt(lx, y + 12, note, 'lblf', anchor)}</g>`;
 }).join('\n');
 

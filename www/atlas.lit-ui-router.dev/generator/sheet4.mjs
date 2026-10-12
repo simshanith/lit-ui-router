@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { defs } from './chrome.mjs';
-import { txt, schedTxt, lines, keyRow, npmUrl } from './helpers.mjs';
+import { txt, schedTxt, lines, keyRow, npmUrl, link } from './helpers.mjs';
 
 const P = 's4';
 
@@ -59,11 +59,11 @@ const REGISTRY = `npm registry read ${NPM.generatedAtTime.slice(0, 10)}`;
 const COUNTED = `counted at ${BRICKS.ref} @ ${BRICKS.sha} (${BRICKS.generatedAtTime.slice(0, 10)})`;
 const CLONED = 'clone counts 2026-08-16';
 
-// [name, version, lastPublish, files, sloc, gateRange, gateKind, status]
+// [name, version, lastPublish, files, sloc, gateRange, gateKind, status, href]
 // clone(): files/sloc hand-carried from the 2026-08-16 clones; brick(): from the plate.
 const clone = (name, files, sloc, range, kind, status, disp = name) => {
   const r = npmRow(name);
-  return [disp, npmVersion(r), r.published, files, sloc, range, kind, status];
+  return [disp, npmVersion(r), r.published, files, sloc, range, kind, status, npmUrl(r.name)];
 };
 const brick = (name, range, kind, status, disp = name) => {
   const b = brickRow(name);
@@ -154,7 +154,7 @@ const CENTERS = cols.map((c) => c.cx);
 // ---- adapters (above the rail) --------------------------------------------------
 const adapterArt = cols
   .map(({ m, x, w, cx }) => {
-    const [name, ver, date, files, sloc, range, kind, status] = m;
+    const [name, ver, date, files, sloc, range, kind, status, href] = m;
     const h = H(files), top = BASE_UP - h;
     const halo = status === 'this'
       ? `<rect x="${(x - 8).toFixed(1)}" y="${(top - 8).toFixed(1)}" width="${(w + 16).toFixed(1)}" height="${(h + 16).toFixed(1)}" rx="6" class="fhalo"/>`
@@ -163,7 +163,7 @@ const adapterArt = cols
 ${gate(cx, 262, range, kind)}
 ${halo}
 <rect x="${x.toFixed(1)}" y="${top.toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" class="${blockCls(status)}"/>
-${txt(cx.toFixed(1), (top - 40).toFixed(1), `${name} ${ver}`, nameCls(status), 'middle')}
+${link(href, txt(cx.toFixed(1), (top - 40).toFixed(1), `${name} ${ver}`, nameCls(status), 'middle'))}
 ${txt(cx.toFixed(1), (top - 27).toFixed(1), `${files} files · ${fmt(sloc)} sloc`, 'lblf', 'middle')}
 ${txt(cx.toFixed(1), (top - 14).toFixed(1), `last publish ${date}`, 'lblf', 'middle')}`;
   })
@@ -171,12 +171,12 @@ ${txt(cx.toFixed(1), (top - 14).toFixed(1), `last publish ${date}`, 'lblf', 'mid
 
 // ---- instruments (below the rail) -----------------------------------------------
 const instrumentArt = INSTRUMENTS.map((m, i) => {
-  const [name, ver, date, files, sloc, range, kind, status] = m;
+  const [name, ver, date, files, sloc, range, kind, status, href] = m;
   const w = W(sloc), h = H(files), cx = CENTERS[i], x = cx - w / 2, bot = BASE_DN + h;
   return `${stem(cx.toFixed(1), BASE_DN - 8, RAIL_B + 7, 'skf', '5 4')}
 ${gate(cx, 338, range, kind)}
 <rect x="${x.toFixed(1)}" y="${BASE_DN}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" class="${blockCls(status)}" stroke-dasharray="5 4"/>
-${txt(cx.toFixed(1), (bot + 20).toFixed(1), `${name} ${ver}`, nameCls(status), 'middle')}
+${link(href, txt(cx.toFixed(1), (bot + 20).toFixed(1), `${name} ${ver}`, nameCls(status), 'middle'))}
 ${txt(cx.toFixed(1), (bot + 32).toFixed(1), `${files} files · ${fmt(sloc)} sloc`, 'lblf', 'middle')}
 ${txt(cx.toFixed(1), (bot + 44).toFixed(1), `quiet since ${date}`, 'lblf', 'middle')}`;
 }).join('\n');
@@ -188,11 +188,11 @@ const BAY_X = 1110, BAY_R = 1310, BAY_T = 26, BAY_B = 250, BAY_CX = 1180;
 let bayCursor = 72;
 const bayY = new Map();
 const bayRows = COMPANIONS.map((m) => {
-  const [name, ver, , files, sloc] = m;
+  const [name, ver, , files, sloc, , , , href] = m;
   const w = W(sloc), h = H(files), y = bayCursor;
   bayY.set(name, y);
   bayCursor += 27 + h;
-  return `${txt(BAY_X + 12, y, name, 'lbla')}
+  return `${link(href, txt(BAY_X + 12, y, name, 'lbla'))}
 ${txt(BAY_X + 12, y + 11, `${ver} · ${files}f`, 'lblf')}
 <rect x="${BAY_X + 12}" y="${(y + 15).toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" class="ska fa"/>
 ${LIT_PEERS.has(name) ? `<path d="M${BAY_X - 8},${(y - 3).toFixed(1)} H${BAY_X + 6}" class="ska" stroke-dasharray="4 3" marker-end="url(#${P}-aa)"/>` : ''}`;
@@ -229,7 +229,7 @@ const CORE_X = 96, CORE_Y = RAIL_Y - CORE_H / 2;
 const spine = `<rect x="70" y="${RAIL_T}" width="1240" height="${RAIL_H}" class="sks fp2"/>
 <rect x="${CORE_X}" y="${CORE_Y.toFixed(1)}" width="${CORE_W.toFixed(1)}" height="${CORE_H.toFixed(1)}" class="sk2 fp2"/>
 <rect x="${CORE_X}" y="${CORE_Y.toFixed(1)}" width="${CORE_W.toFixed(1)}" height="${CORE_H.toFixed(1)}" fill="url(#${P}-hx)" opacity="0.3"/>
-${txt(CORE_X, 406, `${CORE[0]} ${CORE[1]}`, 'lblb')}
+${link(CORE[8], txt(CORE_X, 406, `${CORE[0]} ${CORE[1]}`, 'lblb'))}
 ${txt(CORE_X, 420, `${CORE[3]} files · ${fmt(CORE[4])} sloc`, 'lblf')}
 ${txt(CORE_X, 432, `${CORE_SHARE}% of the family’s authored mass`, 'lblf')}
 ${txt(CORE_X, 444, 'states · registry · transitions', 'lblf')}`;

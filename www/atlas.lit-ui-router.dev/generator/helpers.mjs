@@ -5,6 +5,9 @@ export const npmUrl = (name) => `https://npmx.dev/package/${name}`;
 
 export const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
+// A link inside a plate: wraps lettering or a mark; outward, in a new tab, as the chrome's outward links are.
+export const link = (href, inner) => `<a href="${href}" target="_blank" rel="noopener">${inner}</a>`;
+
 export function txt(x, y, s, cls = 'lbl', anchor = 'start', extra = '') {
   return `<text x="${x}" y="${y}" class="${cls}" text-anchor="${anchor}" ${extra}>${esc(s)}</text>`;
 }

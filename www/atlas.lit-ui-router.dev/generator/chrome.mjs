@@ -502,6 +502,11 @@ text.serif { font-family: var(--serif); font-size: 13px; fill: var(--ink); }
 }
 a { color: var(--accent); }
 :focus-visible { outline: max(2px, 0.08em) solid var(--accent); outline-offset: 0.25em; }
+/* A link inside a plate (helpers.mjs link()): the lettering it wraps underlines on hover and press. */
+svg a { cursor: pointer; }
+svg a:active text { text-decoration: underline; }
+svg a:focus-visible { outline: max(2px, 0.08em) solid var(--accent); outline-offset: 2px; }
+@media (hover: hover) and (pointer: fine) { svg a:hover text { text-decoration: underline; } }
 
 /* The icon table's sprite (icons.mjs): never painted, but not display:none,
    which would stop a <use> resolving. */
