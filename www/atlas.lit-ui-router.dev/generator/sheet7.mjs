@@ -78,8 +78,8 @@ export const PLACED = [
   // moved east off 200, 222, 226 and 240, each time lit-ui-router's annex grew into its
   // west wall: the annex reaches 241.5 at this ref, so 250 is the first lot with air
   [2,  'ui-router-server',         'packages/ui-router-server',          'pkg',  'line',   250,  20, `the server adapter · annex ${ratio('packages/ui-router-server')}×`],
-  // dropped south of the 130 row: the flagship's annex reaches 132.0 at this ref
-  [3,  'lit-ui-router-mobx',       'packages/lit-ui-router-mobx',        'pkg',  'line',   170, 146, `the mobx companion · annex ${ratio('packages/lit-ui-router-mobx')}×`],
+  // dropped south of the 130 row: the flagship's annex reaches 136.6 at this ref
+  [3,  'lit-ui-router-mobx',       'packages/lit-ui-router-mobx',        'pkg',  'line',   170, 150, `the mobx companion · annex ${ratio('packages/lit-ui-router-mobx')}×`],
   [4,  'navigation-location-plugin','packages/navigation-location-plugin','pkg', 'line',   260, 130, `the location seat, core's pushStateLocation swapped out · annex ${ratio('packages/navigation-location-plugin')}×`],
   // --- apps/ — the proving ground ----------------------------------------------
   [5,  'sample-app-shared',        'apps/sample-app-shared',             'app',  'line',   570,  10, 'the routes + views every sample app mounts'],

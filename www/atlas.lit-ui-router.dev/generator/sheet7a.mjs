@@ -219,12 +219,14 @@ const numList = (ns) => (ns.length ? `№${ns.join(' ')}` : 'none this survey');
 const CAT_TEXT = {
   m: 'metered', e: 'e2e light only', u: 'tests run, no meter', n: 'FULL SHADOW — no suite', z: 'no mass',
 };
+// the plugin's note counts its own full meters off the plate
+const NAV_FULL = ['line', 'branch', 'func'].filter((k) => SH.get(4)[k] === 100).length;
 // prose only — every figure in the schedule is computed from the two plates
 const NOTE = {
   1: 'in shadow: barrels + interface.ts',
   2: 'whole footprint fully lit',
   3: 'in shadow: the index barrel',
-  4: 'all three meters read 100',
+  4: NAV_FULL === 3 ? 'all three meters read 100' : `${['no', 'one', 'two'][NAV_FULL]} of three meters read 100`,
   5: 'tests pass · no provider in browser mode',
   6: 'lit only by the cypress rig',
   7: 'lit only by the cypress rig',

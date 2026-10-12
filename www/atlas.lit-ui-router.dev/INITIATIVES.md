@@ -517,6 +517,37 @@ sitting); order is dependency order.
   gz; nm 173,820 lines / 41,155 d.ts; mass3b 13,307 hashes over 235 real tasks and 3,029 command
   sloc; the ci graph 864 / 235 / 3,024 edges; steam 643 commits; weather 448 dated files; 7A 11,937
   of 19,307 metered sloc lit over 25 members.
+- 2026-10-12 — THE SEVENTEENTH REFRESH, at `origin/main` @ eb72c568 (commit 2026-10-12), all 18 plates
+  re-run at the one ref: ten commits past the sixteenth, among them `lit-ui-router` 1.16.4 (#1200)
+  with the router directives following the placeholder router's upgrade (#1190), and the
+  navigation plugin 1.1.0 (#1201) with `focusReset` defaulting to `'manual'` (#1162) and
+  `interceptTraverse` (#1181). NO member was born, no checklist table took a row, and the yard reads
+  `orphans 0`; the registry serves both releases under `latest` and no other tag.
+  THE LOOP RELOCATED 11 CITES AND RE-TEXTED ONE: #1190 put `subscribeRouter()` and an
+  `onRouterReplaced` path into `ui-sref.ts` (+3, +22) and `ui-sref-active.ts` (+11, +35), and the
+  perch's onStart tap moved into `watch(router)`, so `this.uiRouter.transitionService.onStart(` reads
+  `router.transitionService.onStart(` at 577. THREE GUARDS THREW AND THE AUDIT STOPPED TWICE, all on
+  one cause: the plugin grew from 147 to 208 sloc and its annex from 616 to 1,039. Sheet 2's tile
+  guard held sloc order and mobx's 205 now sorts under the plugin; sheet 13's "smallest package"
+  guard went false the same way; sheet 7's `assertPlots` met the flagship's annex at y 136.6 and
+  dropped №3 to y 150. The audit found the plugin's label under its new 1×2 brick on sheet 2, and
+  sheet 13's CHURN key over the plugin's annex. That annex had slid under the reading box, beside
+  №37's and №2's: A PANEL THAT HIDES A BLOCK IS AN OVERLAP NO GUARD SEES, because `assertPlots`
+  holds blocks against blocks, never against the box. The box moves to 722,262, clear of every annex.
+  THREE TYPED SENTENCES WENT FALSE AND NOW DERIVE: 2A's "(1×1 and 1×2)" smallest companions (SCALE
+  line and notes), sheet 2's aria "one-by-one one course", and 7A's "all three meters read 100" (the
+  plugin's branches read 98.1%). STEAM WENT DOWN WHILE THE CITY GREW: the window ends at the ref's
+  commit date, so it slid to 2026-07-14..2026-10-12 and reads 594 commits (was 597).
+  THE FRAME AUDIT read 0 escapes, 0 hits over 1 px and text-on-text 99 across 24 plates, the record.
+  Thumbs: all 30 plates in both themes, 3,519,934 bytes. The app prerenders 61 pages plus the 404
+  with 52 redirects, 62/62 renders scoped; the 84 scene checks hold. The T3 chain took 4 min 11 s.
+  THE NUMBERS: city 338 src files / 29,173 sloc and 162 spec / 29,019; yard 298 / 24,160 massed;
+  doors 186,158 min / 65,724 gz; the bundle 125,137 gz in 17 chunks; the deploy 898 files /
+  5,028,259 gz; nm 174,690 lines / 41,419 d.ts; mass3b 14,023 hashes over 237 real tasks and 3,033
+  command sloc; the ci graph 885 / 237 / 3,208 edges (deepest chain 15); couplings 23 contracts, 3
+  optional; steam 594 commits; weather 500 dated files, 2,451 touches; 7A 12,648 of 20,178 metered
+  sloc lit over 26 members; upstream 81 consignments to 33 works, 14 sent, 67 watched, 76 tracked;
+  survey-self 107 files / 21,444 sloc at www/atlas @ d0252420; survey-shipped 257 files / 7.3 MB.
 - 2026-10-11 — THE SIXTEENTH REFRESH, at `origin/main` @ bd10638a (commit 2026-10-10), all 18 plates
   re-run at the one ref: one commit past the fifteenth, #1196, which blends the docs site's hero
   logo in every browser — 2 files, `www/lit-ui-router.dev/.vitepress/theme/custom.css` and

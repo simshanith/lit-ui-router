@@ -1,32 +1,32 @@
 {
   "ref": "origin/main",
-  "sha": "bd10638a",
-  "commitDate": "2026-10-10T16:52:14-07:00",
-  "generatedAtTime": "2026-10-12T03:45:31.627Z",
+  "sha": "eb72c568",
+  "commitDate": "2026-10-12T22:05:55Z",
+  "generatedAtTime": "2026-10-12T22:10:45.314Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-steam.mjs",
-  "used": "www/atlas.lit-ui-router.dev/data/census-files.json @ bd10638a",
+  "used": "www/atlas.lit-ui-router.dev/data/census-files.json @ eb72c568",
   "wasAssociatedWith": [
     "git log (historyLog)"
   ],
   "window": {
-    "since": "2026-07-12",
-    "until": "2026-10-10"
+    "since": "2026-07-14",
+    "until": "2026-10-12"
   },
-  "windowCommits": 597,
+  "windowCommits": 594,
   "rows": [
     {"member":"packages/eslint-plugin-lit-ui-router","commits":18},
-    {"member":"packages/lit-ui-router","commits":55},
+    {"member":"packages/lit-ui-router","commits":56},
     {"member":"packages/lit-ui-router-effect","commits":16},
     {"member":"packages/lit-ui-router-mobx","commits":16},
     {"member":"packages/lit-ui-router-ssr","commits":21},
-    {"member":"packages/navigation-location-plugin","commits":11},
+    {"member":"packages/navigation-location-plugin","commits":14},
     {"member":"packages/ui-router-server","commits":16},
-    {"member":"apps/sample-app-lit-e2e","commits":36},
+    {"member":"apps/sample-app-lit-e2e","commits":35},
     {"member":"apps/sample-app-lit-effect","commits":8},
     {"member":"apps/sample-app-lit-mobx","commits":15},
     {"member":"apps/sample-app-lit-vanilla","commits":14},
     {"member":"apps/sample-app-routes","commits":6},
-    {"member":"apps/sample-app-shared","commits":33},
+    {"member":"apps/sample-app-shared","commits":36},
     {"member":"www/lit-ui-router.dev","commits":17},
     {"member":"examples","commits":20},
     {"member":"tools/bootstrap","commits":6},
