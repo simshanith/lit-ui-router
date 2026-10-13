@@ -34,9 +34,9 @@ covers the same ground with transition hooks instead of refs.
 ## Installation
 
 ```bash
-npm install lit-ui-router-effect ui-router-effect@rc effect
+npm install lit-ui-router-effect ui-router-effect effect
 # or
-pnpm add lit-ui-router-effect ui-router-effect@rc effect
+pnpm add lit-ui-router-effect ui-router-effect effect
 ```
 
 `lit-ui-router`, `ui-router-effect`, `lit`, `effect`, and `@uirouter/core` are
