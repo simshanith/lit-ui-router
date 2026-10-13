@@ -1,5 +1,6 @@
 // Photographs card.html into app/public/brand: card-light.webp and card-dark.webp at 1200 x 630 @2x, card.png (dark, @1x) for og:image.
-// usage: node render-card.mjs <carddir> [--port 4975]   <carddir> holds the card.html build-card.mjs wrote.
+// usage: node render-card.mjs <carddir> [--port 4975] [--out <dir>] [--probe]   <carddir> holds the card.html build-card.mjs wrote.
+// --out writes elsewhere than app/public/brand; --probe writes card-<theme>.png at @1x for both themes and nothing else.
 import { createRequire } from 'node:module';
 import { readFile, writeFile } from 'node:fs/promises';
 import { mkdirSync } from 'node:fs';
@@ -72,8 +73,10 @@ async function shoot(browser, origin, theme, scale) {
 async function main() {
   const [dir, ...flags] = process.argv.slice(2);
   const port = Number(flags[flags.indexOf('--port') + 1] || 4975);
-  if (!dir || flags.some((f) => f.startsWith('--') && f !== '--port')) {
-    console.error('usage: node render-card.mjs <carddir> [--port 4975]');
+  const out = flags.includes('--out') ? normalize(flags[flags.indexOf('--out') + 1] ?? '') : OUT;
+  const probe = flags.includes('--probe');
+  if (!dir || !out || flags.some((f) => f.startsWith('--') && !['--port', '--out', '--probe'].includes(f))) {
+    console.error('usage: node render-card.mjs <carddir> [--port 4975] [--out <dir>] [--probe]');
     process.exitCode = 1;
     return;
   }
@@ -85,22 +88,25 @@ async function main() {
     process.exitCode = 1;
     return;
   }
-  mkdirSync(OUT, { recursive: true });
+  mkdirSync(out, { recursive: true });
   const server = await serve(normalize(dir), port);
   const origin = `http://127.0.0.1:${String(port)}`;
   const browser = await chromium.launch();
   const written = [];
   for (const theme of ['light', 'dark']) {
-    const shot = await shoot(browser, origin, theme, 2);
-    const file = join(OUT, `card-${theme}.webp`);
-    await writeFile(file, shot.webp);
-    written.push(`${file} ${String(shot.webp.length)} bytes (${shot.faces})`);
-    if (shot.webp.length > WEBP_MAX) process.exitCode = 1;
+    const shot = await shoot(browser, origin, theme, probe ? 1 : 2);
+    const file = join(out, probe ? `card-${theme}.png` : `card-${theme}.webp`);
+    const data = probe ? shot.png : shot.webp;
+    await writeFile(file, data);
+    written.push(`${file} ${String(data.length)} bytes (${shot.faces})`);
+    if (!probe && shot.webp.length > WEBP_MAX) process.exitCode = 1;
   }
-  const share = await shoot(browser, origin, 'dark', 1);
-  const png = join(OUT, 'card.png');
-  await writeFile(png, share.png);
-  written.push(`${png} ${String(share.png.length)} bytes (${share.faces})`);
+  if (!probe) {
+    const share = await shoot(browser, origin, 'dark', 1);
+    const png = join(out, 'card.png');
+    await writeFile(png, share.png);
+    written.push(`${png} ${String(share.png.length)} bytes (${share.faces})`);
+  }
   await browser.close();
   server.close();
   console.log(written.join('\n'));

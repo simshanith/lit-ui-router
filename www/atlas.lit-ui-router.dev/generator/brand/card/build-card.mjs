@@ -1,5 +1,5 @@
 // THE EQUATION CARD — the rail head's lit-ui-router.dev = lit + ui-router over sheet 7's city, as one page.
-// usage: node build-card.mjs <outdir>   writes <outdir>/card.html; render-card.mjs photographs it.
+// usage: node build-card.mjs <outdir> [--variant <name>]   writes <outdir>/card.html; render-card.mjs photographs it.
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -26,7 +26,74 @@ function city() {
   return svg;
 }
 
-const page = ({ LOGO, FLAME, UIROUTER, GLOW, GLOW_DARK, CITY }) => `<!doctype html>
+// the lockup moved west-south-west: start-aligned at 8cqw, its centre at 57cqh, the city's fade following it
+const WSW = `
+.card { --fade-x: 36%; --fade-y: 57%; }
+.city { mask-image: radial-gradient(ellipse 50% 72% at var(--fade-x) var(--fade-y), transparent 42%, #000 100%), linear-gradient(to bottom, #000 0%, #000 78%, transparent 100%); }
+.name { align-items: flex-start; padding: 88px 0 0 8cqw; }
+h1 { text-align: start; padding-inline-start: 0; }
+.tag { padding-inline-start: 0.04em; }
+`;
+const HALO_DRAWN = `<svg class="client-halo" viewBox="-100 -100 200 200" aria-hidden="true" focusable="false">
+<defs><pattern id="halo-hx" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="6" class="skf"/></pattern></defs>
+<circle r="84" fill="url(#halo-hx)" opacity="0.7"/>
+<circle r="84" class="skf"/>
+<circle r="96" class="skf" stroke-dasharray="3 5"/>
+<path class="skf" d="M-100 0h-8M100 0h8M0 -100v-8M0 100v8"/>
+</svg>`;
+// the title card laid over the sheet: a slide mount around a pane of poured glass, the city refracted through it.
+// Chromium cannot displace a backdrop, so the pane redraws the city (a second inline copy; a <use> clone takes no document CSS)
+// through the liquid filter, and the sheet's own city is masked out under the pane; the pane box is therefore fixed from --r.
+const pane = (band, CITY) => `<svg class="pane" aria-hidden="true" focusable="false">
+<defs>
+<filter id="liquid" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+<feTurbulence type="fractalNoise" baseFrequency="0.009 0.014" numOctaves="2" seed="7" result="n"/>
+<feDisplacementMap in="SourceGraphic" in2="n" scale="10" xChannelSelector="R" yChannelSelector="G"/>
+</filter>
+<filter id="poured" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+<feTurbulence type="fractalNoise" baseFrequency="0.0035 0.006" numOctaves="3" seed="3" result="n"/>
+<feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0.14 0.14 0.14 0 0.05" result="a"/>
+<feComposite in="SourceGraphic" in2="a" operator="in"/>
+</filter>
+</defs>
+<g class="refract"><svg width="1200" height="630">${CITY}</svg></g>
+<rect class="glass" x="0" y="0" width="100%" height="100%" rx="10" filter="url(#poured)"/>
+${band ? `<rect class="glass band" x="0" y="0" width="100%" height="100%" rx="10" filter="url(#poured)"/>` : ''}
+</svg>`;
+const glass = (band) => `${WSW}.client-mark { --client-glow: 0; } .client-glow { display: none; }
+:root { --lead: light-dark(oklch(34% 0.03 258), oklch(11% 0.035 258)); --lead-hi: light-dark(oklch(99% 0.005 101.5 / 0.7), oklch(95% 0.02 248 / 0.28)); }
+.card { --r: min(5.3cqw, 8.6cqh); --pane-w: 66cqw; --pane-h: calc(var(--r) * 5.91325 + 84px); --pane-left: 8cqw; --pane-top: calc(57cqh - var(--pane-h) / 2); }
+.city { mask-image: radial-gradient(ellipse 50% 72% at var(--fade-x) var(--fade-y), transparent 42%, #000 100%), linear-gradient(to bottom, #000 0%, #000 78%, transparent 100%), linear-gradient(#000, #000);
+  mask-size: auto, auto, var(--pane-w) var(--pane-h); mask-position: 0 0, 0 0, var(--pane-left) var(--pane-top); mask-repeat: no-repeat; mask-composite: intersect, exclude, add; -webkit-mask-composite: source-in, xor, source-over; }
+.name { position: absolute; z-index: auto; inset-inline-start: var(--pane-left); inset-block-start: var(--pane-top); inline-size: var(--pane-w); block-size: var(--pane-h); padding: 44px 60px 40px 56px; border-radius: 12px; }
+.tag { line-height: 1.2; } h1 { white-space: nowrap; }
+.op, .client-term, .client-logo, h1, .tag { position: relative; z-index: 1; }
+.pane { position: absolute; inset: 0; z-index: 0; inline-size: 100%; block-size: 100%; border-radius: inherit; overflow: hidden; }
+/* a <use> instance matches selectors in its own shadow tree, so the sheet's hidden labels are hidden again here */
+.refract { translate: calc(-1 * var(--pane-left)) calc(-1 * var(--pane-top)); opacity: 0.32; filter: url(#liquid) saturate(0.55); }
+.refract text, .refract circle[r="9"] { display: none; }
+.glass { fill: light-dark(var(--accent-soft), var(--accent)); mix-blend-mode: var(--logo-blend); }
+.band { fill: var(--accent-soft); clip-path: inset(0 calc(100% - 14px) 0 0); }
+.name::after { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  border: 1.5px solid var(--lead); box-shadow: inset 0 0 0 1px var(--lead-hi), inset 0 1px 0 1px var(--lead-hi);${band ? ' background: linear-gradient(to right, transparent 14px, var(--lead) 14px, var(--lead) 15.5px, transparent 15.5px);' : ''} }
+`;
+const VARIANTS = {
+  'wsw-glass': { css: glass(false), halo: (CITY) => pane(false, CITY) },
+  'wsw-glass2': { css: glass(true), halo: (CITY) => pane(true, CITY) },
+  'wsw-lit': { css: `${WSW}.client-glow { mix-blend-mode: var(--logo-blend); }\n` },
+  'wsw-noglow': {
+    css: `${WSW}.client-mark { --client-glow: 0; } .client-glow { display: none; }\n.client-logo { filter: drop-shadow(0 0 1px color-mix(in oklch, var(--ink) 40%, transparent)); }\n`,
+  },
+  'wsw-accent': {
+    css: `${WSW}.client-mark { --client-glow: 0; } .client-glow { display: none; }\n.client-mark::before { content: ''; grid-area: 1 / 1; place-self: center; inline-size: calc(var(--mark) * 1.95); aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle, color-mix(in oklch, var(--accent) 18%, transparent) 0%, transparent 70%); }\n`,
+  },
+  'wsw-drawn': {
+    css: `${WSW}.client-mark { --client-glow: 0; } .client-glow { display: none; }\n.client-halo { grid-area: 1 / 1; place-self: center; inline-size: calc(var(--mark) * 2.2); aspect-ratio: 1; display: block; overflow: visible; }\n`,
+    halo: () => HALO_DRAWN,
+  },
+};
+
+const page = ({ LOGO, FLAME, UIROUTER, GLOW, GLOW_DARK, CITY, EXTRA = '', HALO = '' }) => `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8" />
@@ -178,7 +245,7 @@ h1 {
   color: var(--ink-soft);
   padding-inline-start: 0.22em;
 }
-</style>
+${EXTRA}</style>
 </head>
 <body>
 <main class="card">
@@ -186,7 +253,7 @@ h1 {
   <div class="name">
     <div class="client-eq" role="group" aria-label="lit-ui-router.dev equals lit plus ui-router">
       <span class="client-mark">
-        <img class="client-glow client-glow-light" src="${GLOW}" alt="" aria-hidden="true" />
+        ${HALO}<img class="client-glow client-glow-light" src="${GLOW}" alt="" aria-hidden="true" />
         <img class="client-glow client-glow-dark" src="${GLOW_DARK}" alt="" aria-hidden="true" />
         <img class="client-logo" src="${LOGO}" alt="lit-ui-router.dev" />
         <img class="client-logo client-logo-lit" src="${LOGO}" alt="" aria-hidden="true" />
@@ -205,14 +272,17 @@ h1 {
 `;
 
 function main() {
-  const out = process.argv[2];
-  if (!out) {
-    console.error('usage: node build-card.mjs <outdir>');
+  const [out, flag, name] = process.argv.slice(2);
+  const variant = flag === '--variant' ? VARIANTS[name] : undefined;
+  if (!out || (flag && !variant)) {
+    console.error(`usage: node build-card.mjs <outdir> [--variant ${Object.keys(VARIANTS).join('|')}]`);
     process.exitCode = 1;
     return;
   }
   mkdirSync(out, { recursive: true });
   const html = page({
+    EXTRA: variant?.css,
+    HALO: variant?.halo?.(city()),
     LOGO: dataUri('lit-ui-router.svg'),
     FLAME: dataUri('lit-flame.svg'),
     UIROUTER: dataUri('ui-router.svg'),
