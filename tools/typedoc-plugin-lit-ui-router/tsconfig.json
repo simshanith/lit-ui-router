@@ -1,7 +1,0 @@
-{
-  // tooling umbrella (IDE, tsgolint): no emit; typecheck:src enforces conformance
-  "extends": "./tsconfig.src.json",
-  "compilerOptions": {
-    "noEmit": true
-  }
-}

@@ -1,9 +1,0 @@
-{
-  "$schema": "https://turborepo.com/schema.json",
-  "extends": ["//"],
-  "tasks": {
-    "docs:api": {
-      "outputs": ["../../www/lit-ui-router.dev/api/lit-ui-router-effect/**"]
-    }
-  }
-}

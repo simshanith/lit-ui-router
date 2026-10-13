@@ -1,4 +1,0 @@
-{
-  // For eslint/IDE tooling only; run.ts drives the tsconfig.fixture*.json matrix.
-  "extends": "./tsconfig.fixture.json"
-}
