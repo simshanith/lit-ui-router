@@ -15,7 +15,7 @@ description: A framework-agnostic Effect SubscriptionRef of the router's current
 [`SubscriptionRef`](https://effect.website/docs/state-management/subscriptionref/)
 of its current state. It imports only `effect` and `@uirouter/core`, so any
 Effect program can follow route state without Lit. The
-[Lit controllers](/packages/effect) live in `lit-ui-router-effect`.
+[Lit controllers](/packages/lit-ui-router-effect) live in `lit-ui-router-effect`.
 
 ## Installation
 
@@ -55,5 +55,5 @@ live router.
 
 ## Further reading
 
-- [lit-ui-router-effect](/packages/effect)
+- [lit-ui-router-effect](/packages/lit-ui-router-effect)
 - [Effect — SubscriptionRef](https://effect.website/docs/state-management/subscriptionref/)

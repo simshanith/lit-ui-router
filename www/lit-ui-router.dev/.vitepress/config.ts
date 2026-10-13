@@ -126,13 +126,13 @@ function makeSidebar() {
         { text: 'Overview', link: '/packages/' },
         {
           text: 'Effect',
-          link: '/packages/effect-family',
+          link: '/packages/effect',
           collapsed: true,
           items: [
             { text: 'ui-router-effect', link: '/packages/ui-router-effect' },
             {
               text: 'lit-ui-router-effect',
-              link: '/packages/effect',
+              link: '/packages/lit-ui-router-effect',
               collapsed: true,
               items: [
                 {
@@ -188,11 +188,14 @@ function makeSidebar() {
         },
         {
           text: 'Signals',
-          link: '/packages/signals-family',
+          link: '/packages/signals',
           collapsed: true,
           items: [
             { text: 'ui-router-signals', link: '/packages/ui-router-signals' },
-            { text: 'lit-ui-router-signals', link: '/packages/signals' },
+            {
+              text: 'lit-ui-router-signals',
+              link: '/packages/lit-ui-router-signals',
+            },
           ],
         },
         {

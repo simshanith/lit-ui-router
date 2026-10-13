@@ -1,99 +1,38 @@
 ---
-title: Signals Bindings
-description: Watcher-based Lit controllers over TC39 Signals of the route with lit-ui-router-signals
+title: Signals
+description: The TC39 Signals packages for UI-Router — ui-router-signals mirrors the router's state into signals, and lit-ui-router-signals builds Lit controllers on that mirror
 ---
 
-# lit-ui-router-signals
+# Signals
 
-<p class="badges">
-<a href="https://npmx.dev/package/lit-ui-router-signals" target="_blank" class="badge"><img alt="NPM Version" src="https://img.shields.io/npm/v/lit-ui-router-signals" /></a>
-<a href="https://github.com/simshanith/lit-ui-router/releases/?q=lit-ui-router-signals" target="_blank" class="badge"><img alt="GitHub Release" src="https://img.shields.io/github/v/release/simshanith/lit-ui-router?filter=lit-ui-router-signals@*" /></a>
-</p>
+Two packages bring [TC39 Signals](https://github.com/tc39/proposal-signals)
+to UI-Router, one layered on the other:
 
-[`lit-ui-router-signals`](https://npmx.dev/package/lit-ui-router-signals)
-provides [TC39 Signals](https://github.com/tc39/proposal-signals) bindings for
-lit-ui-router: [ReactiveControllers](https://lit.dev/docs/composition/controllers/)
-that watch the [`ui-router-signals`](/packages/ui-router-signals) mirror of the
-router's state and update their host when a selected value changes.
+| Package                                                      | Builds on                            | What it is                                                                        |
+| ------------------------------------------------------------ | ------------------------------------ | --------------------------------------------------------------------------------- |
+| [**ui-router-signals**](/packages/ui-router-signals)         | `@uirouter/core`, `signal-polyfill`  | `RouterSignals`, a signal mirror of the router's current state, with no Lit       |
+| [**lit-ui-router-signals**](/packages/lit-ui-router-signals) | `ui-router-signals`, `lit-ui-router` | Lit controllers that watch that mirror and update their host when a value changes |
 
-It registers no custom elements and adds no routing behavior. It has the
-shape of the [Effect](/packages/effect) and [MobX](/packages/mobx) bindings:
+`ui-router-signals` is enough for code outside Lit, and for a
+`@lit-labs/signals` `SignalWatcher` that reads `RouterSignals` fields in
+`render()`. `lit-ui-router-signals` adds controllers that select a value,
+compare it under `equals`, and find the router from the enclosing
+`<ui-router>`.
 
-| Signals                               | MobX                       | Effect                |
-| ------------------------------------- | -------------------------- | --------------------- |
-| `RouterSignals` (`ui-router-signals`) | `RouterStore`              | `routeRef`            |
-| `SignalController`                    | `ReactionController`       | `RefController`       |
-| `RouterSignalController`              | `RouterReactionController` | `RouterRefController` |
+## One signal graph
 
-## Installation
+Every signal reader and writer in a bundle has to share one copy of
+`signal-polyfill`: `ui-router-signals`, `@lit-labs/signals`, and the
+application's own `Signal.State`s. Two copies keep two separate graphs, and a
+watcher on one never sees a write to the other. `npm ls signal-polyfill`
+should list a single version.
 
-```bash
-npm install lit-ui-router-signals@rc ui-router-signals@rc signal-polyfill
-# or
-pnpm add lit-ui-router-signals@rc ui-router-signals@rc signal-polyfill
-```
+## In use
 
-`lit-ui-router`, `ui-router-signals`, `lit`, and `@uirouter/core` are peer
-dependencies, and `signal-polyfill` is a peer of `ui-router-signals`.
-
-## Quick start
-
-```ts
-import { html, LitElement } from 'lit';
-import { RouterSignalController } from 'lit-ui-router-signals';
-
-class AppNav extends LitElement {
-  // Re-renders only when the selection flips, not on every transition.
-  private inbox = new RouterSignalController(this, (signals) =>
-    signals.route.get().includes('inbox.**'),
-  );
-
-  render() {
-    return html`...${this.inbox.value ? 'Inbox is open' : ''}...`;
-  }
-}
-```
-
-No router configuration is required: the controller discovers the router from
-the enclosing `<ui-router>` element when the host connects, and
-`RouterSignals.for` attaches its single transition hook on first use.
-
-## The pieces
-
-### RouterSignalController
-
-Watches the `RouterSignals` of a router and exposes the selector's result as
-`.value`. The router comes from the `router` option (a router or a thunk), a
-`withRouterSync` scope at construction, or the nearest provider on
-`hostConnected`, as the Effect and MobX router controllers find theirs.
-`setRouter()` hands it a router later.
-
-### SignalController
-
-The generic primitive: watches any selector over signals while the host is
-connected, and calls `requestUpdate()` only when the selected value changes
-under `equals` (default `Object.is`).
-
-Both take `initialValue`, `equals` and `onChange` options. Changes arrive in a
-microtask after the source changes: a watcher's notify callback may not read
-signals, so it schedules the read.
-
-## Lifecycle safety
-
-Watching starts in `hostConnected` and stops in `hostDisconnected`. The
-selector runs on every (re)connect, so a component that re-enters the DOM
-renders current values.
-
-## `@lit-labs/signals`
-
-[`@lit-labs/signals`](https://www.npmjs.com/package/@lit-labs/signals) builds
-on the same `signal-polyfill`, so a `SignalWatcher` element tracks the
-`RouterSignals` fields it reads in `render()` without a controller. Both need
-one copy of `signal-polyfill` in the bundle; two copies keep two separate
-signal graphs.
-
-## Further reading
-
-- [ui-router-signals](/packages/ui-router-signals)
-- [TC39 Signals proposal](https://github.com/tc39/proposal-signals)
-- [Lit — Reactive Controllers](https://lit.dev/docs/composition/controllers/)
+- [Hello Solar System (Signals)](/tutorial/live-examples#hello-solar-system-signals)
+  follows the route from an un-routed header with a `RouterSignalController`,
+  shares a `Signal.State` between routed and un-routed views, and sets the
+  tab title with a bare `watchSelection`.
+- [Hello Galaxy (Signals)](/tutorial/live-examples#hello-galaxy-signals) puts
+  `@lit-labs/signals` and `lit-ui-router-signals` on one graph: a star chart
+  that nested views share, and a breadcrumb built from `RouterSignals`.
