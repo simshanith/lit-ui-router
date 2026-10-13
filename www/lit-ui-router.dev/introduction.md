@@ -92,6 +92,7 @@ you need to start; the companions are optional layers.
 | [`ui-router-server`](https://npmx.dev/package/ui-router-server)                                         | Server-side routing verdicts at the edge — honest 404/302/200 for static SPAs (in development). [Guide →](./packages/server)                                                   |
 | [`lit-ui-router-ssr`](https://npmx.dev/package/lit-ui-router-ssr)                                       | Static prerendering: a `ui-router-server` mount table in, an emitted site out. [Guide →](./packages/ssr)                                                                       |
 | [`ui-router-signals`](https://npmx.dev/package/ui-router-signals)                                       | [TC39 Signals](https://github.com/tc39/proposal-signals) for UI-Router: a framework-agnostic mirror of the router's state. [Guide →](./packages/ui-router-signals)             |
+| [`ui-router-effect`](https://npmx.dev/package/ui-router-effect)                                         | [Effect](https://effect.website) for UI-Router: a framework-agnostic `SubscriptionRef` of the router's state. [Guide →](./packages/ui-router-effect)                           |
 | [`eslint-plugin-lit-ui-router`](https://npmx.dev/package/eslint-plugin-lit-ui-router)                   | ESLint rules that understand the router's directives — hrefless anchors, inert `href`s, `aria-current` conflicts and misplaced directives. [Guide →](./packages/eslint-plugin) |
 
 Because lit-ui-router is a `@uirouter/core` implementation, the wider

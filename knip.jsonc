@@ -91,8 +91,13 @@
       ],
     },
     "packages/ui-router-effect": {
-      // vitest alias target for the effect 3 compat lane
-      "ignoreDependencies": ["effect-3"],
+      "ignoreDependencies": [
+        "@release-it/conventional-changelog",
+        // vitest alias target for the effect 3 compat lane
+        "effect-3",
+        "effect-floor",
+        "@uirouter/core-floor",
+      ],
     },
     "packages/ui-router-signals": {
       "ignoreDependencies": [
