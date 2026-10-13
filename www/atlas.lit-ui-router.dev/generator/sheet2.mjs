@@ -55,9 +55,10 @@ const HOME = {
 // — one stud per 150 sloc, rounded up, then rounded up again to the next standard
 // brick shape (1×1, 1×2, 2×2, 2×3, 2×4) — and its HEIGHT is one course per three
 // authored files, rounded up.  The baseplate is not massed: a plate is ground.
-const STUDS = (sloc) => Math.max(1, Math.ceil(sloc / 150));
+export const SLOC_PER_STUD = 150, FILES_PER_COURSE = 3;
+export const STUDS = (sloc) => Math.max(1, Math.ceil(sloc / SLOC_PER_STUD));
 const SHAPE = (n) => (n <= 1 ? [1, 1] : n <= 2 ? [1, 2] : n <= 4 ? [2, 2] : n <= 6 ? [2, 3] : [2, 4]);
-const COURSES = (files) => Math.max(1, Math.ceil(files / 3));
+export const COURSES = (files) => Math.max(1, Math.ceil(files / FILES_PER_COURSE));
 const fmt = (v) => v.toLocaleString('en-US');
 const shapeName = ([w, d]) => `${w}×${d}`;
 
