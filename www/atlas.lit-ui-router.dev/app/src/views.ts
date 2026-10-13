@@ -735,6 +735,7 @@ function rail(manifest: Manifest | undefined, here: Here): TemplateResult {
               <img class="client-glow client-glow-light" src=${GLOW_URL} alt="" aria-hidden="true" />
               <img class="client-glow client-glow-dark" src=${GLOW_DARK_URL} alt="" aria-hidden="true" />
               <img class="client-logo" src=${LOGO_URL} alt="lit-ui-router.dev" />
+              <img class="client-logo client-logo-lit" src=${LOGO_URL} alt="" aria-hidden="true" />
             </a>
             <span class="op">=</span>
             <a class="client-term" href="https://ui-router.github.io/" title="UI-Router" target="_blank" rel="noopener">

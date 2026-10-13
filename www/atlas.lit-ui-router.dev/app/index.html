@@ -93,7 +93,10 @@
          the link's name is the logo's alt. The glow belongs to hover, focus
          and the press: at rest the logo stands alone, one registered number
          fades the glow in and blooms it under the pointer or the focus ring
-         and lends the logo its blend, and a press flares it past the mark. The head is a
+         and crossfades the plain logo into its blended twin, since a blend
+         mode cannot ease, and a press flares the glow past the mark. The
+         glow arrives on the ease-out and leaves on the ease-in-out, so the
+         fade back spends its middle in view. The head is a
          column with one gap, and its first row spells the client out in the
          docs site's own marks, lit-ui-router.dev = ui-router + lit, each a
          link; the marks are sized from the root font, the client's a third
@@ -169,22 +172,23 @@
           --client-glow: 1.3;
         }
       }
-      .client-mark:is(:focus-visible, :active) .client-logo {
-        mix-blend-mode: var(--logo-blend);
-      }
-      @media (hover: hover) and (pointer: fine) {
-        .client-mark:hover .client-logo {
-          mix-blend-mode: var(--logo-blend);
-        }
-      }
       @media (prefers-reduced-motion: no-preference) {
         .client-mark {
           transition:
-            --client-glow 300ms var(--ease-out, ease-out),
+            --client-glow 300ms var(--ease-in-out, ease-in-out),
             transform 160ms var(--ease-out, ease-out);
+        }
+        .client-mark:focus-visible {
+          transition-timing-function: var(--ease-out, ease-out);
         }
         .client-mark:active {
           transition-duration: 160ms;
+          transition-timing-function: var(--ease-out, ease-out);
+        }
+      }
+      @media (prefers-reduced-motion: no-preference) and (hover: hover) and (pointer: fine) {
+        .client-mark:hover {
+          transition-timing-function: var(--ease-out, ease-out);
         }
       }
       .client-glow-light {
@@ -195,6 +199,11 @@
       }
       .client-logo {
         inline-size: var(--mark);
+        opacity: calc(1 - min(var(--client-glow), 1));
+      }
+      .client-logo-lit {
+        opacity: var(--client-glow);
+        mix-blend-mode: var(--logo-blend);
       }
       @media (prefers-color-scheme: dark) {
         :root:not([data-theme='light']) .client-mark {
