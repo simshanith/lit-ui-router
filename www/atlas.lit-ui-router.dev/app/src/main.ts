@@ -2,7 +2,7 @@ import { Stream } from 'effect';
 import { render } from 'lit';
 import 'lit-ui-router-ssr/register';
 import { hydrateRoot } from 'lit-ui-router-ssr/client';
-import { routeRef } from 'lit-ui-router-effect';
+import { routeRef } from 'ui-router-effect';
 import { onXrefClick } from './fragment.ts';
 import type { FocusDetail, XrefDetail } from './fragment.ts';
 import { installLightbox } from './lightbox.ts';

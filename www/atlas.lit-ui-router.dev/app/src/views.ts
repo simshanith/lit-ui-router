@@ -4,6 +4,7 @@
  * www/atlas.lit-ui-router.dev/generator/chrome.mjs — styles the plates.
  */
 import type { UIRouter } from '@uirouter/core';
+import type { SubscriptionRef } from 'effect';
 import { LitElement, ReactiveElement, html, noChange, nothing, svg } from 'lit';
 import type { PropertyValues, TemplateResult } from 'lit';
 import { live } from 'lit/directives/live.js';
@@ -12,8 +13,9 @@ import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { srefActiveClass, srefAriaCurrent, srefHref } from 'lit-ui-router/pure';
 import type { RoutedLitTemplate, UIRouterLit } from 'lit-ui-router';
 import { uiViewSlot } from 'lit-ui-router-ssr/client';
-import { RouterRefController, snapshotRoute } from 'lit-ui-router-effect';
-import type { RouteSnapshot } from 'lit-ui-router-effect';
+import { RefController } from 'lit-ui-router-effect';
+import { routeRef, snapshotRoute } from 'ui-router-effect';
+import type { RouteSnapshot } from 'ui-router-effect';
 import type {
   AscentRow,
   Band,
@@ -210,8 +212,8 @@ const cityPin = (route: RouteSnapshot): string | null =>
  * `updateComplete` for "the fragment is in the DOM" — the same promise
  * `experimental/view-rendered.ts` chains, owned locally so `src/*.ts` stays
  * free of that directory. The pin is the url's `focus`, read by a
- * `RouterRefController` on the page's runtime and handed to the scene on boot
- * and on every change after it.
+ * `RefController` over the router's one `routeRef` on the page's runtime and
+ * handed to the scene on boot and on every change after it.
  */
 export class AtlasCity extends ReactiveElement {
   static override properties = {
@@ -226,7 +228,7 @@ export class AtlasCity extends ReactiveElement {
   declare router: UIRouter | undefined;
   #scene: CityScene | null = null;
   #seq = 0;
-  #pin: RouterRefController<string | null> | undefined;
+  #pin: RefController<[SubscriptionRef.SubscriptionRef<RouteSnapshot>], string | null> | undefined;
 
   constructor() {
     super();
@@ -238,8 +240,7 @@ export class AtlasCity extends ReactiveElement {
   override willUpdate(): void {
     // Served, the city upgrades before hydration hands <ui-router> the app's router, and never reconnects.
     if (!this.router || this.#pin) return;
-    this.#pin = new RouterRefController(this, cityPin, {
-      router: this.router,
+    this.#pin = new RefController(this, [routeRef(this.router)], cityPin, {
       runtime,
       onChange: () => this.#select(),
     });
@@ -1499,8 +1500,10 @@ export const AboutView: RoutedLitTemplate<ManifestResolves> = (props) => {
           <code>lit-ui-router</code>, <code>@uirouter/core</code>,
           <code>ui-router-server</code>,
           <code>ui-router-navigation-location-plugin</code>, <code>lit</code>,
-          <code>lit-ui-router-effect</code> and <code>effect</code> (the boot's
-          settled route, the index filter and the arrow-key walk),
+          <code>ui-router-effect</code> (the route ref: the boot's settled route,
+          the index filter and the arrow-key walk read it),
+          <code>lit-ui-router-effect</code> (the Lit controller that binds the city pin
+          to it), <code>effect</code>,
           <code>cytoscape</code> (the four interactive plates) and
           <code>@google/model-viewer</code> (the plates in the round, imported only by
           <code>atlas.city</code>, <code>atlas.plant</code> and <code>atlas.bricks</code>); at build

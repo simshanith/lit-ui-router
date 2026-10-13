@@ -13,7 +13,7 @@
  * lands on the document rather than on a stale link.
  */
 import type { UIRouterLit } from 'lit-ui-router';
-import { snapshotRoute } from 'lit-ui-router-effect';
+import { snapshotRoute } from 'ui-router-effect';
 import { loadManifest } from '../runtime.ts';
 import { viewRendered } from './view-rendered.ts';
 
