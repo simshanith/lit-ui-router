@@ -116,6 +116,7 @@ catalogs:
     '@lit-labs/ssr-client-floor': npm:@lit-labs/ssr-client@1.1.0
     '@lit-labs/ssr-floor': npm:@lit-labs/ssr@4.0.0
     '@uirouter/core-floor': npm:@uirouter/core@6.0.8
+    effect-floor: npm:effect@3.22.0
     hono-floor: npm:hono@4.0.0
     signal-polyfill-floor: npm:signal-polyfill@0.2.0
   peerFloorEffect:

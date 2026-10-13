@@ -310,6 +310,9 @@ catalogs:
     '@uirouter/core-floor':
       specifier: npm:@uirouter/core@6.0.8
       version: 6.0.8
+    effect-floor:
+      specifier: npm:effect@3.22.0
+      version: 3.22.0
     hono-floor:
       specifier: npm:hono@4.0.0
       version: 4.0.0
@@ -1164,6 +1167,9 @@ importers:
       effect-3:
         specifier: catalog:effect3-compat
         version: effect@3.22.2
+      effect-floor:
+        specifier: catalog:peerFloor
+        version: effect@3.22.0
       happy-dom:
         specifier: 'catalog:'
         version: 20.14.5
@@ -5921,6 +5927,9 @@ packages:
     resolution: {integrity: sha512-T0ix8GhtxyKVfUFEcvdNDt3YGqlwkFHbD4/5bgFUDgFmxhI/cSRAeJ87/Sz//Cq8Eam6JX/e23RkoFO71P7aAA==}
     engines: {node: '>=20'}
     hasBin: true
+
+  effect@3.22.0:
+    resolution: {integrity: sha512-jhYFe0zTlIRqYFrKTS+6luhmS/Tm0f+JLo0K9KUxvtFab1SUGEszQi2ehOP6QzAZvy831lDmTwwzvVDZSPNz3g==}
 
   effect@3.22.2:
     resolution: {integrity: sha512-fm1CQXCs7GTMwpadZxwU5rnAb2bN6mbQpknq/pXBGCzSKkosNYb9k0wsoL0TfB10rSa5xOEZJjo77u/KLXSANg==}
@@ -11688,6 +11697,11 @@ snapshots:
       commander: 14.0.3
       minimatch: 10.2.5
       semver: 7.8.5
+
+  effect@3.22.0:
+    dependencies:
+      '@standard-schema/spec': 1.1.0
+      fast-check: 3.23.2
 
   effect@3.22.2:
     dependencies:

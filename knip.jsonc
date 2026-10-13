@@ -48,6 +48,7 @@
       "ignoreDependencies": [
         "@release-it/conventional-changelog",
         "effect-3",
+        "effect-floor",
         "lit-2",
         "lit-ui-router-floor",
         "@uirouter/core-floor",
