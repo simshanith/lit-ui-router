@@ -34,8 +34,9 @@ yarn add lit-ui-router-mobx mobx
 `RouterStore` imports only `mobx` and `@uirouter/core`, and the package is free of side effects, so
 `import { RouterStore } from 'lit-ui-router-mobx'` bundles without Lit or the controllers. `lit` and
 `lit-ui-router` stay declared peers: your package manager still installs them or warns about them,
-though none of their code reaches the bundle. To avoid them entirely, copy
-[`src/router-store.ts`](./src/router-store.ts), which ships in the package.
+though none of their code reaches the bundle. To avoid them entirely, copy the shipped store into
+your project: `dist/router-store.js` with `dist/router-store.d.ts`, or the TypeScript source
+[`src/router-store.ts`](./src/router-store.ts).
 
 ### MobX 6 and 7
 
