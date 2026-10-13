@@ -20,8 +20,28 @@ const CHECK = 'check-single-version';
 // Splits the workspace asks for. A row that stops splitting fails as stale.
 const ALLOWED: SplitAllowance[] = [
   {
+    name: '@lit-labs/ssr',
+    why: 'catalogs.peerFloor pins @lit-labs/ssr-floor to 4.0.0, the ssr peer floor check:bundle bundles against',
+  },
+  {
+    name: '@lit-labs/ssr-client',
+    why: 'catalogs.peerFloor pins @lit-labs/ssr-client-floor to 1.1.0, the ssr peer floor check:bundle bundles against',
+  },
+  {
+    name: '@uirouter/core',
+    why: 'catalogs.peerFloor pins @uirouter/core-floor to 6.0.8, every package peer floor check:bundle bundles against',
+  },
+  {
     name: 'eslint',
     why: 'catalogs.peerFloorEslintPlugin pins eslint-floor to 9.0.0, the plugin peer floor, beside the 10.x linter',
+  },
+  {
+    name: 'hono',
+    why: 'catalogs.peerFloor pins hono-floor to 4.0.0, the ui-router-server peer floor check:bundle bundles against',
+  },
+  {
+    name: 'lit-ui-router',
+    why: 'peerFloorEffect and peerFloorMobx pin lit-ui-router-floor to 1.15.0 and peerFloorSsr to 1.16.1, each adapter its own published floor',
   },
   {
     name: 'lit',

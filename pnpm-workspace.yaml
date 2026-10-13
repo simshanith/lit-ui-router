@@ -107,12 +107,20 @@ catalogs:
     lit-2: npm:lit@^2.8.0
   mobx6-compat:
     mobx-6: npm:mobx@^6.16.1
+  peerFloor:
+    '@lit-labs/ssr-client-floor': npm:@lit-labs/ssr-client@1.1.0
+    '@lit-labs/ssr-floor': npm:@lit-labs/ssr@4.0.0
+    '@uirouter/core-floor': npm:@uirouter/core@6.0.8
+    hono-floor: npm:hono@4.0.0
   peerFloorEffect:
     lit-ui-router-floor: npm:lit-ui-router@1.15.0
   peerFloorEslintPlugin:
     eslint-floor: npm:eslint@9.0.0
   peerFloorMobx:
     lit-ui-router-floor: npm:lit-ui-router@1.15.0
+  peerFloorSsr:
+    lit-ui-router-floor: npm:lit-ui-router@1.16.1
+    ui-router-server-floor: npm:ui-router-server@0.2.0
   publishedDependencies:
     '@oxc-project/runtime': '>=0.50.0'
     eslint-plugin-lit: ^2.0.0

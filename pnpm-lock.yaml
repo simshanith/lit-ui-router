@@ -290,6 +290,19 @@ catalogs:
     mobx-6:
       specifier: npm:mobx@^6.16.1
       version: 6.16.1
+  peerFloor:
+    '@lit-labs/ssr-client-floor':
+      specifier: npm:@lit-labs/ssr-client@1.1.0
+      version: 1.1.0
+    '@lit-labs/ssr-floor':
+      specifier: npm:@lit-labs/ssr@4.0.0
+      version: 4.0.0
+    '@uirouter/core-floor':
+      specifier: npm:@uirouter/core@6.0.8
+      version: 6.0.8
+    hono-floor:
+      specifier: npm:hono@4.0.0
+      version: 4.0.0
   peerFloorEffect:
     lit-ui-router-floor:
       specifier: npm:lit-ui-router@1.15.0
@@ -302,6 +315,13 @@ catalogs:
     lit-ui-router-floor:
       specifier: npm:lit-ui-router@1.15.0
       version: 1.15.0
+  peerFloorSsr:
+    lit-ui-router-floor:
+      specifier: npm:lit-ui-router@1.16.1
+      version: 1.16.1
+    ui-router-server-floor:
+      specifier: npm:ui-router-server@0.2.0
+      version: 0.2.0
   publishedDependencies:
     '@oxc-project/runtime':
       specifier: '>=0.50.0'
@@ -955,6 +975,9 @@ importers:
       '@uirouter/core':
         specifier: 'catalog:'
         version: 6.1.2
+      '@uirouter/core-floor':
+        specifier: catalog:peerFloor
+        version: '@uirouter/core@6.0.8'
       '@vitest/browser':
         specifier: 'catalog:'
         version: 5.0.3(vite@8.3.4(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))(vitest@5.0.3)
@@ -1045,6 +1068,9 @@ importers:
       '@uirouter/core':
         specifier: 'catalog:'
         version: 6.1.2
+      '@uirouter/core-floor':
+        specifier: catalog:peerFloor
+        version: '@uirouter/core@6.0.8'
       '@vitest/coverage-v8':
         specifier: 'catalog:'
         version: 5.0.3(@vitest/browser@5.0.3)(vitest@5.0.3)
@@ -1132,6 +1158,9 @@ importers:
       '@uirouter/core':
         specifier: 'catalog:'
         version: 6.1.2
+      '@uirouter/core-floor':
+        specifier: catalog:peerFloor
+        version: '@uirouter/core@6.0.8'
       '@vitest/coverage-v8':
         specifier: 'catalog:'
         version: 5.0.3(@vitest/browser@5.0.3)(vitest@5.0.3)
@@ -1199,12 +1228,21 @@ importers:
       '@lit-labs/ssr-client':
         specifier: 'catalog:'
         version: 1.1.8
+      '@lit-labs/ssr-client-floor':
+        specifier: catalog:peerFloor
+        version: '@lit-labs/ssr-client@1.1.0'
+      '@lit-labs/ssr-floor':
+        specifier: catalog:peerFloor
+        version: '@lit-labs/ssr@4.0.0(@types/node@24.19.1)'
       '@release-it/conventional-changelog':
         specifier: 'catalog:'
         version: 12.0.2(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.2)(release-it@21.1.1(@types/node@24.19.1)(magicast@0.5.4)(supports-color@10.2.2))
       '@tools/bundle-probe':
         specifier: catalog:workspace
         version: link:../../tools/bundle-probe
+      '@tools/compat-guards':
+        specifier: catalog:workspace
+        version: link:../../tools/compat-guards
       '@tools/crap':
         specifier: catalog:workspace
         version: link:../../tools/crap
@@ -1226,6 +1264,9 @@ importers:
       '@uirouter/core':
         specifier: 'catalog:'
         version: 6.1.2
+      '@uirouter/core-floor':
+        specifier: catalog:peerFloor
+        version: '@uirouter/core@6.0.8'
       '@vitest/coverage-v8':
         specifier: 'catalog:'
         version: 5.0.3(@vitest/browser@5.0.3)(vitest@5.0.3)
@@ -1238,6 +1279,9 @@ importers:
       lit-ui-router:
         specifier: catalog:workspace
         version: link:../lit-ui-router
+      lit-ui-router-floor:
+        specifier: catalog:peerFloorSsr
+        version: lit-ui-router@1.16.1(@uirouter/core@6.1.2)(lit@3.3.3)
       oxfmt:
         specifier: 'catalog:'
         version: 0.72.0
@@ -1268,6 +1312,9 @@ importers:
       ui-router-server:
         specifier: catalog:workspace
         version: link:../ui-router-server
+      ui-router-server-floor:
+        specifier: catalog:peerFloorSsr
+        version: ui-router-server@0.2.0(@uirouter/core@6.1.2)(hono@4.13.13)
       vitest:
         specifier: 'catalog:'
         version: 5.0.3(@types/node@24.19.1)(@vitest/browser-playwright@5.0.3)(@vitest/coverage-v8@5.0.3)(@vitest/ui@5.0.3)(happy-dom@20.14.5)(vite@8.3.4(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
@@ -1280,6 +1327,9 @@ importers:
       '@tools/bundle-probe':
         specifier: catalog:workspace
         version: link:../../tools/bundle-probe
+      '@tools/compat-guards':
+        specifier: catalog:workspace
+        version: link:../../tools/compat-guards
       '@tools/crap':
         specifier: catalog:workspace
         version: link:../../tools/crap
@@ -1301,6 +1351,9 @@ importers:
       '@uirouter/core':
         specifier: 'catalog:'
         version: 6.1.2
+      '@uirouter/core-floor':
+        specifier: catalog:peerFloor
+        version: '@uirouter/core@6.0.8'
       '@vitest/browser':
         specifier: 'catalog:'
         version: 5.0.3(vite@8.3.4(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))(vitest@5.0.3)
@@ -1355,6 +1408,9 @@ importers:
       '@tools/bundle-probe':
         specifier: catalog:workspace
         version: link:../../tools/bundle-probe
+      '@tools/compat-guards':
+        specifier: catalog:workspace
+        version: link:../../tools/compat-guards
       '@tools/lcov-rebase':
         specifier: catalog:workspace
         version: link:../../tools/lcov-rebase
@@ -1379,9 +1435,15 @@ importers:
       '@uirouter/core':
         specifier: 'catalog:'
         version: 6.1.2
+      '@uirouter/core-floor':
+        specifier: catalog:peerFloor
+        version: '@uirouter/core@6.0.8'
       hono:
         specifier: 'catalog:'
         version: 4.13.13
+      hono-floor:
+        specifier: catalog:peerFloor
+        version: hono@4.0.0
       oxfmt:
         specifier: 'catalog:'
         version: 0.72.0
@@ -3042,11 +3104,23 @@ packages:
   '@lit-labs/observers@2.0.2':
     resolution: {integrity: sha512-eZb5+W9Cb0e/Y5m1DNxBSGTvGB2TAVTGMnTxL/IzFhPQEcZIAHewW1eVBhN8W07A5tirRaAmmF6fGL1V20p3gQ==}
 
+  '@lit-labs/ssr-client@1.1.0':
+    resolution: {integrity: sha512-IY2SuhIOlFhVJu0eRfpRdg9EbBtwRpuEyNPJbFlgmmb6NX2nAwgQB6fJF4SPfpGntz2oMYg4qi2TMe+7ajbu5A==}
+
   '@lit-labs/ssr-client@1.1.8':
     resolution: {integrity: sha512-PjGh81oKsoI64m3IDjTqqjhC7dr2uC/o0jrllUb5gRAyp/RlAHxapgJrjq9kWz97faCHLQ8jUlTi6tGm+8fgyA==}
 
   '@lit-labs/ssr-dom-shim@1.6.0':
     resolution: {integrity: sha512-VHb0ALPMTlgKjM6yIxxoQNnpKyUKLD04VzeQdsiXkMqkvYlAHxq9glGLmgbb889/1GsohSOAjvQYoiBppXFqrQ==}
+
+  '@lit-labs/ssr@4.0.0':
+    resolution: {integrity: sha512-pODr+t7cZVIrCRLuSLuWAACDnztEk5IrRFwFsbxyAyWcP2XP8aKuUZdVM/biXqxvIyHyCKtNZ92Gdcr+pjA5BQ==}
+    engines: {node: '>=13.9.0'}
+    peerDependencies:
+      '@types/node': '>=20.0.0 <25.0.0'
+    peerDependenciesMeta:
+      '@types/node':
+        optional: true
 
   '@lit-labs/ssr@4.1.0':
     resolution: {integrity: sha512-m0zymVVlHB1ddJQ1lastsV8ROW3whFOiHJhVPQWd04MnGTkTlUUVLQctux1QlyD9BtLXNN6iASxv388vhgKMFg==}
@@ -4630,6 +4704,10 @@ packages:
     resolution: {integrity: sha512-mbCddXd+jm7hfx7w2YU64/Av4/NqqeG3GoRZgxPcgoTxYjhrcfJRw9ULch71SS4G+Q3bOXFhRvPqjguN0Hyp5w==}
     hasBin: true
 
+  '@uirouter/core@6.0.8':
+    resolution: {integrity: sha512-Gc/BAW47i4L54p8dqYCJJZuv2s3tqlXQ0fvl6Zp2xrblELPVfxmjnc0eurx3XwfQdaqm3T6uls6tQKkof/4QMw==}
+    engines: {node: '>=4.0.0'}
+
   '@uirouter/core@6.1.2':
     resolution: {integrity: sha512-pYcg+cxVd9E9poC7AJf7ZrlQQrwAV6KVkiPvlbLJX5km+pBWrUOGQhdd87oIGc7/5iVQ7qSiAdl9QD+l55yegg==}
     engines: {node: '>=4.0.0'}
@@ -6087,6 +6165,10 @@ packages:
   hast-util-whitespace@3.0.0:
     resolution: {integrity: sha512-88JUN06ipLwsnv+dVn+OIYOvAuvBMy/Qoi6O7mQHxdPXpjy+Cd6xRkWwux7DKO+4sYILtLBRIKgsdpS2gQc7qw==}
 
+  hono@4.0.0:
+    resolution: {integrity: sha512-8dKhuBBpRZEodUttQhrSFJ6PQqHRjXHyeeegfxOf132pvgbf0tOb9qqb7q7eYwAWpOcYrsUOsWdJ0sQIIovhZg==}
+    engines: {node: '>=16.0.0'}
+
   hono@4.13.13:
     resolution: {integrity: sha512-CQ46U0ZkAGmbT/4UxdzzGJpacP2IeKgY4a5/tOI9AABbpOMfK739wfDXmv1usCk+3RkKj1hQy4/fjhiwa2xlrA==}
     engines: {node: '>=16.9.0'}
@@ -6523,6 +6605,12 @@ packages:
 
   lit-ui-router@1.15.0:
     resolution: {integrity: sha512-bSkXolXTrFvjZwRqz4P/e3qSJycvy3BnqLtlz3doM2DwYDQPBvDiHaoyJHvwjZbtYd99fUJq7HkSC/38Szz9fA==}
+    peerDependencies:
+      '@uirouter/core': ^6.0.8
+      lit: ^2.0.0 || ^3.0.0
+
+  lit-ui-router@1.16.1:
+    resolution: {integrity: sha512-RNnFGqL8H+WAkVngSqp+o3KqMHUkYVfS/95pMMQztX8aJ6AvtLhedxVt3jVJ1IrJ0ATPmniNceUZMJ/lc0jSig==}
     peerDependencies:
       '@uirouter/core': ^6.0.8
       lit: ^2.0.0 || ^3.0.0
@@ -7766,6 +7854,18 @@ packages:
 
   uc.micro@2.1.0:
     resolution: {integrity: sha512-ARDJmphmdvUk6Glw7y9DQ2bFkKBHwQHLi2lsaH6PPmz/Ka9sFOBsBluozhDltWmnv9u/cF6Rt87znRTPV+yp/A==}
+
+  ui-router-server@0.2.0:
+    resolution: {integrity: sha512-oawYIyc5/Ucb3lYj1LbqJn7C3gwWwxFqh6xYfI828wj+UZKKRLRN60QKGBGyiHwd/OJiyIVhBrbZ+iK9ZqLlYQ==}
+    engines: {node: '>=22.12'}
+    peerDependencies:
+      '@uirouter/core': ^6.0.8
+      hono: ^4.0.0
+    peerDependenciesMeta:
+      '@uirouter/core':
+        optional: true
+      hono:
+        optional: true
 
   unbash@4.0.11:
     resolution: {integrity: sha512-FoSOKV7NEofQSkAefMVHam4ZPKYMxjAydxiV72UFEDNV/YofxjGfiZ2A9pZjdL/lRJzTjcu4PABo1JYJX8N5iQ==}
@@ -9049,6 +9149,12 @@ snapshots:
     dependencies:
       '@lit/reactive-element': 2.1.2
 
+  '@lit-labs/ssr-client@1.1.0':
+    dependencies:
+      '@lit/reactive-element': 1.6.3
+      lit: 2.8.0
+      lit-html: 2.8.0
+
   '@lit-labs/ssr-client@1.1.8':
     dependencies:
       '@lit/reactive-element': 2.1.2
@@ -9056,6 +9162,21 @@ snapshots:
       lit-html: 3.3.3
 
   '@lit-labs/ssr-dom-shim@1.6.0': {}
+
+  '@lit-labs/ssr@4.0.0(@types/node@24.19.1)':
+    dependencies:
+      '@lit-labs/ssr-client': 1.1.8
+      '@lit-labs/ssr-dom-shim': 1.6.0
+      '@lit/reactive-element': 2.1.2
+      '@parse5/tools': 0.3.0
+      enhanced-resolve: 5.24.5
+      lit: 3.3.3
+      lit-element: 4.2.2
+      lit-html: 3.3.3
+      node-fetch: 3.3.2
+      parse5: 7.3.0
+    optionalDependencies:
+      '@types/node': 24.19.1
 
   '@lit-labs/ssr@4.1.0(@types/node@24.19.1)':
     dependencies:
@@ -10289,6 +10410,8 @@ snapshots:
   '@typescript/typescript6@6.0.2':
     dependencies:
       '@typescript/old': typescript@6.0.3
+
+  '@uirouter/core@6.0.8': {}
 
   '@uirouter/core@6.1.2': {}
 
@@ -11971,6 +12094,8 @@ snapshots:
     dependencies:
       '@types/hast': 3.0.5
 
+  hono@4.0.0: {}
+
   hono@4.13.13: {}
 
   hookable@5.5.3: {}
@@ -12369,6 +12494,12 @@ snapshots:
       '@types/trusted-types': 2.0.7
 
   lit-ui-router@1.15.0(@uirouter/core@6.1.2)(lit@3.3.3):
+    dependencies:
+      '@oxc-project/runtime': 0.153.0
+      '@uirouter/core': 6.1.2
+      lit: 3.3.3
+
+  lit-ui-router@1.16.1(@uirouter/core@6.1.2)(lit@3.3.3):
     dependencies:
       '@oxc-project/runtime': 0.153.0
       '@uirouter/core': 6.1.2
@@ -13817,6 +13948,11 @@ snapshots:
   typical@4.0.0: {}
 
   uc.micro@2.1.0: {}
+
+  ui-router-server@0.2.0(@uirouter/core@6.1.2)(hono@4.13.13):
+    optionalDependencies:
+      '@uirouter/core': 6.1.2
+      hono: 4.13.13
 
   unbash@4.0.11: {}
 

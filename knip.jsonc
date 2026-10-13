@@ -40,6 +40,8 @@
         "@release-it/conventional-changelog",
         // vitest alias target for the lit 2 compat lane
         "lit-2",
+        // peer floor installs, bundled by check:bundle's peer lines
+        "@uirouter/core-floor",
       ],
     },
     "packages/lit-ui-router-effect": {
@@ -47,6 +49,7 @@
         "@release-it/conventional-changelog",
         "lit-2",
         "lit-ui-router-floor",
+        "@uirouter/core-floor",
       ],
     },
     "packages/lit-ui-router-mobx": {
@@ -55,6 +58,7 @@
         "lit-2",
         "mobx-6",
         "lit-ui-router-floor",
+        "@uirouter/core-floor",
       ],
     },
     "packages/lit-ui-router-ssr": {
@@ -62,13 +66,25 @@
         // imported by the emitted dist, not by src
         "@oxc-project/runtime",
         "@release-it/conventional-changelog",
+        "@lit-labs/ssr-floor",
+        "@lit-labs/ssr-client-floor",
+        "@uirouter/core-floor",
+        "lit-ui-router-floor",
+        "ui-router-server-floor",
       ],
     },
     "packages/navigation-location-plugin": {
-      "ignoreDependencies": ["@release-it/conventional-changelog"],
+      "ignoreDependencies": [
+        "@release-it/conventional-changelog",
+        "@uirouter/core-floor",
+      ],
     },
     "packages/ui-router-server": {
-      "ignoreDependencies": ["@release-it/conventional-changelog"],
+      "ignoreDependencies": [
+        "@release-it/conventional-changelog",
+        "@uirouter/core-floor",
+        "hono-floor",
+      ],
     },
     "packages/eslint-plugin-lit-ui-router": {
       "ignoreDependencies": ["@release-it/conventional-changelog"],
