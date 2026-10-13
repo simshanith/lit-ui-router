@@ -1,0 +1,12 @@
+{
+  // Consumers' tsconfig.src module settings; their typecheck:src holds the copies to isolatedDeclarations.
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "es2022",
+    "moduleResolution": "bundler",
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "types": ["node"]
+  },
+  "include": ["**/*.ts"]
+}

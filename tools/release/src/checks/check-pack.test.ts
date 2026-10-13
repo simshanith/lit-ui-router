@@ -4,10 +4,13 @@ import { describe, it } from 'node:test';
 import type { PackageManifest } from '@tools/bootstrap/types.ts';
 
 import {
+  findPackedFileProblems,
   findPackedManifestViolations,
   findUnsubstitutedRefs,
+  formatFileReport,
   formatPackedManifestReport,
   formatReport,
+  type PackedMap,
 } from './check-pack.core.ts';
 
 describe('findUnsubstitutedRefs', () => {
@@ -209,5 +212,122 @@ describe('formatPackedManifestReport', () => {
     assert.match(text, /✗ packed manifest check failed/);
     assert.match(text, /devDependencies leaked/);
     assert.match(text, /scripts leaked/);
+  });
+});
+
+describe('findPackedFileProblems', () => {
+  const paths = [
+    'package.json',
+    'src/route-ref.ts',
+    'dist/route-ref.js',
+    'dist/route-ref.d.ts',
+    'dist/route-ref.js.map',
+    'dist/shared/route-snapshot.js',
+    'dist/shared/route-snapshot.d.ts',
+    'dist/shared/route-snapshot.js.map',
+  ];
+
+  const emitted = (text: string) => [{ path: 'dist/route-ref.js', text }];
+
+  const noMaps = new Map<string, PackedMap>();
+
+  it('passes imports that resolve to packed files or declarations', () => {
+    assert.deepEqual(
+      findPackedFileProblems(
+        paths,
+        [
+          ...emitted(
+            'import { a } from "effect";\nimport { s } from "./shared/route-snapshot.js";\n',
+          ),
+          {
+            path: 'dist/shared/route-snapshot.d.ts',
+            text: 'export { x } from "../route-ref.js";\n',
+          },
+        ],
+        noMaps,
+      ),
+      [],
+    );
+  });
+
+  it('flags a private @repo import in emitted code', () => {
+    assert.deepEqual(
+      findPackedFileProblems(
+        paths,
+        emitted('import { s } from "@repo/route-snapshot";'),
+        noMaps,
+      ),
+      ['dist/route-ref.js: imports private @repo/route-snapshot'],
+    );
+  });
+
+  it('flags a relative import the tarball lacks, static or dynamic', () => {
+    assert.deepEqual(
+      findPackedFileProblems(
+        paths,
+        emitted('export * from "./gone.js";\nawait import("./also-gone.js");'),
+        noMaps,
+      ),
+      [
+        'dist/route-ref.js: imports ./gone.js, which is not packed',
+        'dist/route-ref.js: imports ./also-gone.js, which is not packed',
+      ],
+    );
+  });
+
+  it('skips shipped TypeScript sources, which are sourcemap referents only', () => {
+    assert.deepEqual(
+      findPackedFileProblems(
+        paths,
+        [{ path: 'src/route-ref.ts', text: "import '@repo/route-snapshot';" }],
+        noMaps,
+      ),
+      [],
+    );
+  });
+
+  it('passes map sources that are packed or embedded', () => {
+    const maps = new Map<string, PackedMap>([
+      ['dist/route-ref.js.map', { sources: ['../src/route-ref.ts'] }],
+      [
+        'dist/shared/route-snapshot.js.map',
+        {
+          sources: ['../../../shared/route-snapshot/src/route-snapshot.ts'],
+          sourcesContent: ['export {};'],
+        },
+      ],
+    ]);
+
+    assert.deepEqual(findPackedFileProblems(paths, [], maps), []);
+  });
+
+  it('flags a map source that is neither packed nor embedded', () => {
+    const maps = new Map<string, PackedMap>([
+      ['dist/route-ref.js.map', { sources: ['../src/gone.ts'] }],
+    ]);
+
+    assert.deepEqual(findPackedFileProblems(paths, [], maps), [
+      'dist/route-ref.js.map: source ../src/gone.ts is neither packed nor embedded',
+    ]);
+  });
+});
+
+describe('formatFileReport', () => {
+  it('passes when no package has problems', () => {
+    const { ok } = formatFileReport([{ name: 'a', problems: [] }]);
+
+    assert.equal(ok, true);
+  });
+
+  it('fails and lists each package with its problems', () => {
+    const { ok, text } = formatFileReport([
+      { name: 'a', problems: [] },
+      { name: 'b', problems: ['dist/x.js: imports private @repo/y'] },
+    ]);
+
+    assert.equal(ok, false);
+    assert.match(text, /^ {2}b$/m);
+    assert.match(text, /• dist\/x\.js: imports private @repo\/y/);
+    assert.doesNotMatch(text, /^ {2}a$/m);
   });
 });

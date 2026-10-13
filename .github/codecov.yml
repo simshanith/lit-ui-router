@@ -50,3 +50,7 @@ component_management:
       name: ui-router-server
       paths:
         - packages/ui-router-server/src/**
+    - component_id: route-snapshot
+      name: route-snapshot
+      paths:
+        - packages/shared/route-snapshot/src/**

@@ -1,4 +1,4 @@
-import { existsSync } from 'node:fs';
+import { existsSync, realpathSync } from 'node:fs';
 import path from 'node:path';
 
 import { requireManifest } from '@tools/bootstrap/manifest.ts';
@@ -23,6 +23,8 @@ export type BundleProbeClaims = Readonly<
 export type PackageProbe = {
   name: string;
   declared: string[];
+  // dirs of the @repo/* devDependencies that @tools/oxc-emit inlines into dist/
+  inlined: string[];
   entries: PackageEntry[];
 };
 
@@ -49,6 +51,12 @@ export const readPackageProbe = (packageDir: string): PackageProbe => {
     ...Object.keys(manifest.dependencies ?? {}),
     ...Object.keys(manifest.peerDependencies ?? {}),
   ];
+
+  const inlined = Object.keys(manifest.devDependencies ?? {})
+    .filter((dependency) => dependency.startsWith('@repo/'))
+    .map((dependency) =>
+      realpathSync(path.join(packageDir, 'node_modules', dependency)),
+    );
 
   // SAFETY: bundleProbe, when present, is hand-authored as BundleProbeClaims
   const claims = (manifest as { bundleProbe?: BundleProbeClaims }).bundleProbe;
@@ -111,5 +119,5 @@ export const readPackageProbe = (packageDir: string): PackageProbe => {
     }
   }
 
-  return { name, declared, entries };
+  return { name, declared, inlined, entries };
 };
