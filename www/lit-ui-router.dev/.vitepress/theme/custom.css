@@ -92,12 +92,7 @@
      320px, giving the deep API identifiers room to sit on one line. The
      ≥1440px width formula derives from this variable too. */
   --vp-sidebar-width: 320px;
-  --vp-home-hero-image-background-image: url(/images/lit-flame.svg);
-  --vp-home-hero-image-filter-blur: clamp(24px, 3.5vw + 10px, 42px);
-  --vp-home-hero-image-filter-hue-rotate: 0;
-  --vp-home-hero-image-filter-invert: 0;
-  --vp-home-hero-image-filter-brightness: 250%;
-  --vp-home-hero-image-filter: blur(var(--vp-home-hero-image-filter-blur)) hue-rotate(var(--vp-home-hero-image-filter-hue-rotate)) invert(var(--vp-home-hero-image-filter-invert)) brightness(var(--vp-home-hero-image-filter-brightness));
+  --vp-home-hero-image-background-image: url(/images/hero-glow.svg);
 }
 
 /* Brand tokens hold 4.5:1 for white button text and for brand link text. */
@@ -112,9 +107,7 @@
 }
 
 .dark {
-  --vp-home-hero-image-filter-hue-rotate: 180deg;
-  --vp-home-hero-image-filter-invert: 1;
-  --vp-home-hero-image-filter-brightness: 60%;
+  --vp-home-hero-image-background-image: url(/images/hero-glow-dark.svg);
 }
 
 /* The logo sizes to the hero's width, in feature-card columns; the box is the logo, so no negative margins. */
@@ -150,17 +143,14 @@
   max-block-size: none;
 }
 
-/* The glow overhangs the logo without growing the hero. */
+/* The glow SVG bakes in its blur, since Safari's composited CSS filters blur and brighten differently; it overhangs the logo without growing the hero. */
 .VPHero.has-image .image-bg {
-  inline-size: calc(var(--hero-logo-size) * 1.25);
-  margin: calc(var(--hero-logo-size) * -0.125);
+  inline-size: calc(var(--hero-logo-size) * 1.95);
+  margin: calc(var(--hero-logo-size) * -0.475);
   background-image: var(--vp-home-hero-image-background-image);
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
-  filter: var(--vp-home-hero-image-filter);
-  border-radius: 50%;
-  transition: filter 0.5s var(--ease-out);
 }
 
 /* The home page has no footer to clear; VitePress's 6–8rem bottom margin only adds scroll. */
