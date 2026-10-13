@@ -154,12 +154,13 @@ nothing interactive is nested inside a link. One finding from that: `rules.initi
 erases a first-load query; the function form hands `url.search` through (`router.ts`). The page
 owns one Effect `ManagedRuntime` (`runtime.ts`) over one layer, the `DrawingSet` service: the
 manifest, read once per runtime, and any plate's fragment. Every `manifest` and `fragment` resolve,
-the notFound guard and the experimental layer read through it. The boot awaits the first settled
-snapshot of `ui-router-effect`'s `routeRef(router)` on that runtime (`main.ts`), and the
-gallery reads its filter from `snapshotRoute(router)`, so the server and the browser read the same
-settled route. `<atlas-city>` holds the one controller in the browser: `lit-ui-router-effect`'s
-`RefController` over that same `routeRef(router)`, which reads the city's `focus` and forks its
-subscription on the page's runtime, so the page holds one ref per router. The prerender's
+the notFound guard and the experimental layer read through it. The boot awaits the router's first
+successful transition (`main.ts`), and the shell, the gallery, the sheet and the keyboard walk read
+the settled route from `router.globals`, the same read on the server and in the browser.
+`<atlas-city>` holds the one route controller: `lit-ui-router-effect`'s `RefController` over
+`ui-router-effect`'s `routeRef(router)`, which derives the city's `focus` pin, calls back on each
+change and forks its subscription on the page's runtime, so the page holds one ref per router and
+the one place a derived route value drives a callback is the one place the ref is read. The prerender's
 route-ref guard hands `RouterRefController` no router and reads the one `withRouterSync` scopes,
 so a served render exercises the same scoped-router path the sref directives take. Nothing in `src/*.ts` imports anything from `src/experimental/`. This
 layer is meant to be liftable into `examples/` as-is.

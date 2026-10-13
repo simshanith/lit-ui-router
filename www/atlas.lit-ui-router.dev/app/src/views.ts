@@ -14,7 +14,7 @@ import { srefActiveClass, srefAriaCurrent, srefHref } from 'lit-ui-router/pure';
 import type { RoutedLitTemplate, UIRouterLit } from 'lit-ui-router';
 import { uiViewSlot } from 'lit-ui-router-ssr/client';
 import { RefController } from 'lit-ui-router-effect';
-import { routeRef, snapshotRoute } from 'ui-router-effect';
+import { routeRef } from 'ui-router-effect';
 import type { RouteSnapshot } from 'ui-router-effect';
 import type {
   AscentRow,
@@ -369,7 +369,7 @@ export class AtlasCopyLink extends LitElement {
   async #copy(): Promise<void> {
     const router = this.router;
     if (!router) return;
-    const url = router.stateService.href('.', snapshotRoute(router).params, { absolute: true });
+    const url = router.stateService.href('.', router.globals.params, { absolute: true });
     if (!url) return;
     try {
       await navigator.clipboard.writeText(url);
@@ -813,9 +813,9 @@ export const shell = (manifest: Manifest | undefined, content: unknown, here: He
 
 // Every ui-view re-renders on each successful transition, so the shell reads the settled state.
 export const ShellView: RoutedLitTemplate<ManifestResolves> = (props) => {
-  const route = props?.router ? snapshotRoute(props.router) : undefined;
-  const name = route?.current ? route.current.name : props?.transition?.to().name;
-  const params = route?.current ? route.params : (props?.transition?.params() ?? {});
+  const globals = props?.router?.globals;
+  const name = globals ? globals.current.name : props?.transition?.to().name;
+  const params = globals ? globals.params : (props?.transition?.params() ?? {});
   const here: Here = (entry) =>
     entry.kind === 'sheet' ? name === 'atlas.sheet' && params.num === entry.row.num : name === sceneState(entry.row);
   return shell(props?.resolves?.manifest, html`<ui-view>${uiViewSlot()}</ui-view>`, here);
@@ -1128,11 +1128,9 @@ export const GalleryView: RoutedLitTemplate<ManifestResolves> = (props) => {
   const city = findExtra(manifest, 'city');
   // ONE line of issue record on the title sheet; the log itself is /log.
   const latest = (manifest.issueLog ?? []).find((entry) => entry.date);
-  // The key index's state is the url's: the router's settled snapshot, the
+  // The key index's state is the url's: the router's settled globals, the
   // same read on the server and in the browser; with no router, the transition.
-  const filter = readFilter(
-    props?.router ? snapshotRoute(props.router).params : props?.transition?.params(),
-  );
+  const filter = readFilter(props?.router ? props.router.globals.params : props?.transition?.params());
   const shownAscent = ascent(manifest).filter((entry) => matchesFilter(entry.row.labels, filter));
   const shownAppendix = (manifest.appendix ?? []).filter((row) =>
     matchesFilter(row.labels, filter),
@@ -1318,8 +1316,8 @@ export const SheetView: RoutedLitTemplate<SheetResolves> = (props) => {
   const manifest = resolves?.manifest;
   if (!sheet || !manifest) return html`<p class="loading">LOADING PLATE…</p>`;
   const [prev, next] = neighbours(manifest, sheet);
-  // the settled route, as the city reads it
-  const params = props?.router ? snapshotRoute(props.router).params : props?.transition?.params();
+  // the settled route
+  const params = props?.router ? props.router.globals.params : props?.transition?.params();
   const focus = typeof params?.focus === 'string' ? params.focus : null;
   return html`
     ${utilBar(html`
