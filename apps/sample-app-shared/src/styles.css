@@ -205,8 +205,13 @@ api-docs {
 
 .my-messages .folderlist {
   flex: 0 0 auto;
-  overflow-y: scroll;
+  overflow-y: auto;
   max-height: 200px;
+}
+
+/* seven folders at 1.5em padding overflow the 200px cap by 17px */
+.my-messages .folderlist .selectlist {
+  padding-block: 0.75em;
 }
 
 /* selection lists */
@@ -254,7 +259,7 @@ api-docs {
 
 .messagelist {
   flex: 1 0 12em;
-  overflow-y: scroll;
+  overflow-y: auto;
   max-height: 200px;
   -webkit-user-select: none;
   -moz-user-select: none;
