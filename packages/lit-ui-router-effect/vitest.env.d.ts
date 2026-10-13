@@ -2,4 +2,5 @@
 // Repo-internal: seen only through tsconfig.json alongside vitest.setup.ts.
 interface ImportMetaEnv {
   readonly VITE_EXPECT_LIT_MAJOR?: string;
+  readonly VITE_EXPECT_EFFECT_MAJOR?: string;
 }
