@@ -27,6 +27,8 @@ const child = spawn(
   'cypress',
   [
     'run',
+    '--browser',
+    'chrome',
     ...(suite.expose ? ['--expose', suite.expose] : []),
     ...[
       '--config',

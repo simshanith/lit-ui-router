@@ -23,7 +23,7 @@ The real round-trip specs — `index.spec.ts` and `url-shape.spec.ts`, where
 navigations actually commit and events actually fire — run on Chromium on every
 pull request via `test`/`test:coverage`, and on Firefox and WebKit on every
 push to `main` via `test:engines` (on demand through a `ci-main/` branch or the
-`mainGraph` dispatch). The Cypress end-to-end suite runs in Electron only.
+`mainGraph` dispatch). The Cypress end-to-end suite runs in Chrome only.
 
 ## How location plugins fit in
 
