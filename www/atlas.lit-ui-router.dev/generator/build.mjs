@@ -31,6 +31,7 @@ import { PIPELINE_VERDICT, pipelineSection, sheetA2i } from './pipeline-graph.mj
 import { ATLAS } from './census-atlas.mjs';
 import { LOOP } from './loop-walk.mjs';
 import { emitApp } from './emit-app.mjs';
+import { link, npmUrl } from './helpers.mjs';
 
 const OUT = process.argv[2];
 if (!OUT) throw new Error('usage: node build.mjs <outdir>');
@@ -51,6 +52,20 @@ const PLATES = sheets.length + lanes.length;
 if (TOTAL !== Math.max(...sheets.map((s) => Number.parseInt(s.num, 10)))) throw new Error(`build: chrome.mjs TOTAL is ${TOTAL}, and the ascent's highest sheet is ${Math.max(...sheets.map((s) => Number.parseInt(s.num, 10)))}`);
 const ALTITUDES = `${TOTAL_WORDS[0].toUpperCase()}${TOTAL_WORDS.slice(1)} altitudes`;
 const SITE = 'https://atlas.lit-ui-router.dev';
+// the colophon's homes: the atlas's files on its branch, each tool's own site
+const REPO = 'https://github.com/simshanith/lit-ui-router';
+const BRANCH = `${REPO}/tree/www/atlas`;
+const atlasFile = (path, kind = 'blob') => `${REPO}/${kind}/www/atlas/www/atlas.lit-ui-router.dev/${path}`;
+const HOME = {
+  modelViewer: 'https://modelviewer.dev/',
+  cytoscape: 'https://js.cytoscape.org/',
+  chromium: 'https://www.chromium.org/Home/',
+  din: 'https://fonts.adobe.com/fonts/din-2014',
+  barlow: 'https://fonts.adobe.com/fonts/barlow-semi-condensed',
+  claude: 'https://www.anthropic.com/claude',
+  scc: 'https://github.com/boyter/scc',
+  author: 'https://github.com/simshanith',
+};
 
 // --- the cover ---
 // THE INDEX — [num, ALTITUDE, FORM, FIT VERDICT]. Canonical for both the
@@ -206,27 +221,27 @@ const galBody = `<div class="gal-body">
     <p>Above the sixth altitude the set stops arguing about form and starts measuring. Sheets 7–10 are a survey quartet, each counting the same subject at a different boundary: what the repository holds (the monorepo by mass), what npm delivers (the sample app's <code>node_modules</code>, ${SHEET8_TIMES}× the app it serves), what the browser downloads (the docs deploy on the wire, where the prerendered prose tops the skyline and the lettering alone outweighs every routed app the site demonstrates), and who occupies the bytes after tree-shaking (the machine the router wraps is ${SHEET10_CORE_SHARE} of the bundle; the router itself, ${SHEET10_ROUTER_SHARE}). Sheet 11 cuts the same wire the other way, pricing ${DOOR_PKGS} package quarters and ${DOOR_N} doors one at a time. Sheet 12 leaves the wire and draws the monorepo as its own CI reads it, the pull-request task graph punched onto a register plate. Sheet 13 ages the city by commit date, and sheet 14 draws it among the commons it builds on: the pull requests, issues and bug reports in other projects that its own record cites, sent or watched, and the home work that cites them. Interactive lanes (1i, 2B and 12i) walk the plates they sit beside, and the routed set stands sheets 2 and 7 in the round. The appendix files plates whose subject is the atlas rather than the codebase: the sprite study behind the building sprites (appendix A1), and the survey office that turns the instrument on itself (appendix A2) — the census pipeline behind almost every number here, drawn as archive → probe stations → filed plates → drawings, introspected from the generator at build time, and walked live in its lane A2i. Appendix A3 turns sheet 7's ruler on the atlas itself: its drawing office, survey office, routed site and site build, massed beside the codebase they draw. Appendix A4 turns sheet 9's ruler on the atlas's own deploy: what the browser downloads from atlas.lit-ui-router.dev, district by district, beside the docs deploy summed by role.</p>
   </div>`;
 
-const provenance = `<p class="provenance">SOURCES — module inventory & manifests read from the repo at branch www/atlas · npm dates from www/atlas.lit-ui-router.dev/data/census-npm.json, which prints its own registry-read date on sheet 4 · every plate in www/atlas.lit-ui-router.dev/data/ counted at ${COUNTED_AT} in one pass — plate 7A's test light included, metered at that ref by www/atlas.lit-ui-router.dev/generator/census-shadow.mjs · cover general survey = ${COUNTED_AT}, counted ${COUNTED_ON}, imported from www/atlas.lit-ui-router.dev/data/census-files.json · eslint-plugin-lit-ui-router is counted on every plate and drawn or scheduled on sheets 2, 4, 7, 7A, 7B, 11, 12 and 13 · sheet 5 positions are editorial. FILES — www/atlas.lit-ui-router.dev/app/ files every plate, routed as one lit-ui-router app. DRAWN BY FABLE (CLAUDE, AI) FOR SHANE DANIEL.</p>`;
+const provenance = `<p class="provenance">SOURCES — module inventory & manifests read from the repo at ${link(BRANCH, 'branch www/atlas')} · npm dates from ${link(atlasFile('data/census-npm.json'), 'www/atlas.lit-ui-router.dev/data/census-npm.json')}, which prints its own registry-read date on sheet 4 · every plate in ${link(atlasFile('data', 'tree'), 'www/atlas.lit-ui-router.dev/data/')} counted at ${COUNTED_AT} in one pass — plate 7A's test light included, metered at that ref by ${link(atlasFile('generator/census-shadow.mjs'), 'www/atlas.lit-ui-router.dev/generator/census-shadow.mjs')} · cover general survey = ${COUNTED_AT}, counted ${COUNTED_ON}, imported from ${link(atlasFile('data/census-files.json'), 'www/atlas.lit-ui-router.dev/data/census-files.json')} · ${link(npmUrl('eslint-plugin-lit-ui-router'), 'eslint-plugin-lit-ui-router')} is counted on every plate and drawn or scheduled on sheets 2, 4, 7, 7A, 7B, 11, 12 and 13 · sheet 5 positions are editorial. FILES — ${link(atlasFile('app', 'tree'), 'www/atlas.lit-ui-router.dev/app/')} files every plate, routed as one ${link(npmUrl('lit-ui-router'), 'lit-ui-router')} app. DRAWN BY FABLE (${link(HOME.claude, 'CLAUDE')}, AI) FOR ${link(HOME.author, 'SHANE DANIEL')}.</p>`;
 
 // --- README for the folder ---
 // THESIS and GEN_NOTES ride the manifest as HTML for the routed app's colophon.
 const THESIS = `Riffs on an isometric codebase-visualization form seen in the wild; the
 notes on each sheet argue where that form fits and where it lies.`;
-const GEN_NOTES = `Plates written by \`node generator/build.mjs .\` from this directory: one chrome-less fragment
-per sheet and a manifest for \`app/\`, the drawing set as a prerendered lit-ui-router app, the glTF binaries of its
-three plates in the round (\`city\`, \`plant\`, \`bricks\`), drawn in Google's model-viewer. The frame audit and
+const GEN_NOTES = `Plates written by ${link(atlasFile('generator/build.mjs'), '\`node generator/build.mjs .\`')} from this directory: one chrome-less fragment
+per sheet and a manifest for ${link(atlasFile('app', 'tree'), '\`app/\`')}, the drawing set as a prerendered ${link(npmUrl('lit-ui-router'), 'lit-ui-router')} app, the glTF binaries of its
+three plates in the round (\`city\`, \`plant\`, \`bricks\`), drawn in Google's ${link(HOME.modelViewer, 'model-viewer')}. The frame audit and
 the card pictures read each sheet as a bare plate under \`app/dist/plate/\`, written by the prerender. The interactive
-lanes (1i, 2B, 12i and appendix A2i) bundle cytoscape 3.31.0. \`generator/check-scenes.mjs\` checks the three
-models and drives the built app's 3D plates in headless Chromium. The published site is the app alone:
+lanes (1i, 2B, 12i and appendix A2i) bundle ${link(HOME.cytoscape, 'cytoscape')} 3.31.0. ${link(atlasFile('generator/check-scenes.mjs'), '\`generator/check-scenes.mjs\`')} checks the three
+models and drives the built app's 3D plates in headless ${link(HOME.chromium, 'Chromium')}. The published site is the app alone:
 \`/\`, \`/sheet/7\`, \`/city\`.
 Light theme is graphite-on-vellum; dark is cyanotype.
-Since 2026-09-06 every label on the plates draws in the data face (DIN 2014, Barlow Semi Condensed off the kit) rather than the system monospace; mono is reserved for code.
-Generated 2026-08-16 by Fable (Claude, AI).
-Every plate in \`data/\` — versions, dates and all — was re-counted at ${COUNTED_AT} in one pass,
-plate 7A's test light included: \`generator/census-shadow.mjs\` re-meters it at the same ref. The cover's general survey — every
-tracked file on the scc 4.0.0 \`Code\` basis, ${COUNTED_AT} — is imported from
-\`data/census-files.json\`, the master snapshot \`generator/census-scc.mjs\` writes;
-\`generator/census-overview.mjs\` prints the same rollup on the terminal.`;
+Since 2026-09-06 every label on the plates draws in the data face (${link(HOME.din, 'DIN 2014')}, ${link(HOME.barlow, 'Barlow Semi Condensed')} off the kit) rather than the system monospace; mono is reserved for code.
+Generated 2026-08-16 by Fable (${link(HOME.claude, 'Claude')}, AI).
+Every plate in ${link(atlasFile('data', 'tree'), '\`data/\`')} — versions, dates and all — was re-counted at ${COUNTED_AT} in one pass,
+plate 7A's test light included: ${link(atlasFile('generator/census-shadow.mjs'), '\`generator/census-shadow.mjs\`')} re-meters it at the same ref. The cover's general survey — every
+tracked file on the ${link(HOME.scc, 'scc')} 4.0.0 \`Code\` basis, ${COUNTED_AT} — is imported from
+${link(atlasFile('data/census-files.json'), '\`data/census-files.json\`')}, the master snapshot ${link(atlasFile('generator/census-scc.mjs'), '\`generator/census-scc.mjs\`')} writes;
+${link(atlasFile('generator/census-overview.mjs'), '\`generator/census-overview.mjs\`')} prints the same rollup on the terminal.`;
 /** The same prose as one HTML paragraph: line breaks flow, \`code\` becomes <code>. */
 const mdLine = (md) => md.replace(/\n/g, ' ').replace(/`([^`]+)`/g, '<code>$1</code>');
 

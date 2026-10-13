@@ -263,12 +263,17 @@ const annexOf = (n) => {
   return solidFaces(isoBlock(P, OX, OY, b.ax, b.ay, b.sa, b.sa, b.ha, { edge: 'sks', capCls: 'fp2', sideFill: `url(#${P}-hd)` }));
 };
 
-function badge(n) {
-  const b = g(n), t = TIER[b.tier];
+const BADGE_R = 9;
+const badgeAt = (n) => {
+  const b = g(n);
   const [bx, by] = pt(b.x + b.s / 2, b.y, b.h);
-  const lift = (BADGE_LIFT[n] ?? 15);
-  return `<circle cx="${bx.toFixed(1)}" cy="${(by - lift).toFixed(1)}" r="9" class="${t.badge}"/>
-${txt(bx.toFixed(1), (by - lift + 3.4).toFixed(1), String(n), t.num, 'middle')}`;
+  return [bx, by - (BADGE_LIFT[n] ?? 15)];
+};
+function badge(n) {
+  const t = TIER[g(n).tier];
+  const [bx, cy] = badgeAt(n);
+  return `<circle cx="${bx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${BADGE_R}" class="${t.badge}"/>
+${txt(bx.toFixed(1), (cy + 3.4).toFixed(1), String(n), t.num, 'middle')}`;
 }
 // badges lifted clear of roofs AND of their own steam plumes
 const BADGE_LIFT = { 1: 46, 2: 34, 5: 40, 6: 35, 7: 52, 9: 28, 10: 44, 11: 18, 12: 20, 16: 30, 20: 26, 21: 34, 23: 34, 26: 13, 27: 34 };
@@ -295,6 +300,26 @@ const bodies = depthSort(M.flatMap(([n]) => {
   return out;
 })).map((m) => m.svg).join('\n')
   + '\n' + M.map(([n]) => badge(n)).join('\n');
+
+// the flagship callout stands under the title box, north-west of №12's badge, at a 14 px pitch
+const FLAG_X = 60, FLAG_Y = 100;
+const FLAG_LINES = [
+  [FLAG_Y, 'lit-ui-router — THE FLAGSHIP PLANT', 'lbla'],
+  [FLAG_Y + 14, `3 puffs (${g(1).steam} commits/90d) · ${g(1).lamps} lamps (${g(1).eff}% lit) · rust ${RUST_T[g(1).rust]}`, 'lblf'],
+  [FLAG_Y + 28, `the port’s masonry, idle ${idleOf('packages/lit-ui-router')}d at full steam —`, 'lblf'],
+  [FLAG_Y + 42, 'old AND running, which one axis could never draw', 'lblf'],
+];
+// no bbox helper exists: each line's rect is estimated at 6.3 px per character, a margin over the data face
+const LINE_H = { lbla: 11, lblf: 10 };
+for (const [y, s, cls] of FLAG_LINES) {
+  const r = { x1: FLAG_X, y1: y - LINE_H[cls], x2: FLAG_X + s.length * 6.3, y2: y + 3 };
+  const hit = M.find(([n]) => {
+    const [cx, cy] = badgeAt(n);
+    const dx = cx - Math.max(r.x1, Math.min(cx, r.x2)), dy = cy - Math.max(r.y1, Math.min(cy, r.y2));
+    return dx * dx + dy * dy < BADGE_R * BADGE_R;
+  });
+  if (hit) throw new Error(`sheet 7B: the flagship callout line "${s}" lands on №${hit[0]} ${hit[1]}'s badge — move FLAG_X/FLAG_Y or BADGE_LIFT[${hit[0]}]`);
+}
 
 // ---- telemetry (reading) box ------------------------------------------------------
 // The rust ladder outgrew the wall it was drawn to, so the reading takes a
@@ -384,11 +409,8 @@ ${txt(60, 585, `rust: ${TOOLRUST} of the ${TOOLN} carry any at all, the rest sta
 <line x1="300" y1="552" x2="330" y2="522" class="skf"/>
 
 <!-- callouts -->
-${txt(60, 118, 'lit-ui-router — THE FLAGSHIP PLANT', 'lbla')}
-${txt(60, 132, `3 puffs (${g(1).steam} commits/90d) · ${g(1).lamps} lamps (${g(1).eff}% lit) · rust ${RUST_T[g(1).rust]}`, 'lblf')}
-${txt(60, 144, `the port’s masonry, idle ${idleOf('packages/lit-ui-router')}d at full steam —`, 'lblf')}
-${txt(60, 156, 'old AND running, which one axis could never draw', 'lblf')}
-<line x1="388" y1="127" x2="526" y2="132" class="skf"/>
+${FLAG_LINES.map(([y, s, cls]) => txt(FLAG_X, y, s, cls)).join('\n')}
+<line x1="388" y1="${FLAG_Y + 9}" x2="526" y2="132" class="skf"/>
 
 <!-- west of the plant row the caption passes under, whose bases reach y 646 -->
 ${txt(356, 652, `@tools/typedoc-plugin — rust ${RUST_T[g(13).rust]}, ${PUFFS(g(13).steam)} puffs:`, 'lblr')}

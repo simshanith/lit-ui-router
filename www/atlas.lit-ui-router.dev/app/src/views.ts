@@ -96,6 +96,20 @@ const articleTitle = (title: string): TemplateResult =>
 const SITE = 'https://atlas.lit-ui-router.dev';
 const DOCS = 'https://lit-ui-router.dev';
 const GITHUB = 'https://github.com/simshanith/lit-ui-router';
+// the homes the colophon names: packages at npmx.dev, the atlas's files on its branch, each tool's own site
+const BRANCH = `${GITHUB}/blob/www/atlas/`;
+const npmUrl = (name: string) => `https://npmx.dev/package/${name}`;
+const HOME = {
+  npm: 'https://npmx.dev/',
+  modelViewer: 'https://modelviewer.dev/',
+  three: 'https://threejs.org/',
+  navigation: 'https://developer.mozilla.org/en-US/docs/Web/API/Navigation_API',
+  vite: 'https://vite.dev/',
+  redirects: 'https://developers.cloudflare.com/pages/configuration/redirects/',
+  lucide: 'https://lucide.dev/',
+};
+const ext = (href: string, inner: unknown) => html`<a href=${href} target="_blank" rel="noopener">${inner}</a>`;
+const pkg = (name: string) => ext(npmUrl(name), html`<code>${name}</code>`);
 
 /**
  * An in-app path for the ONE site that is not a router link: the key box's
@@ -1434,6 +1448,7 @@ export const SpecimenView: RoutedLitTemplate<SpecimenResolves> = (props) => {
 
 export const AboutView: RoutedLitTemplate<ManifestResolves> = (props) => {
   const manifest = props?.resolves?.manifest;
+  const generatedBy = manifest?.generatedBy ?? 'www/atlas.lit-ui-router.dev/generator/emit-app.mjs';
   return html`
     ${utilBar(html`${indexCrumb()}<span class="sh">COLOPHON</span>`)}
     <section class="sheet">
@@ -1446,11 +1461,11 @@ export const AboutView: RoutedLitTemplate<ManifestResolves> = (props) => {
         ${manifest ? html`<p>${unsafeHTML(manifest.cover.thesis)}</p>` : nothing}
         <p>
           The atlas is ${manifest?.total ?? 14} sheets of static HTML. This is the same
-          set as one <code>lit-ui-router</code> application: an abstract
+          set as one ${ext(npmUrl('lit-ui-router'), html`<code>lit-ui-router</code>`)} application: an abstract
           <code>atlas</code> state renders the rail and a nested
           <code>&lt;ui-view&gt;</code>, and <code>atlas.sheet</code> resolves one
           generated fragment per plate. Every plate is cut out of its page chrome by
-          <code>${manifest?.generatedBy ?? 'www/atlas.lit-ui-router.dev/generator/emit-app.mjs'}</code> and
+          ${ext(`${BRANCH}${generatedBy}`, html`<code>${generatedBy}</code>`)} and
           mounted through one state — nothing here is transcribed by hand.
         </p>
         <h3>WHAT IS DOGFOODED</h3>
@@ -1460,12 +1475,12 @@ export const AboutView: RoutedLitTemplate<ManifestResolves> = (props) => {
           <code>href</code> in the source is the <code>href</code> in the DOM — on every
           rail link, cover card and key chip;
           <code>resolve</code> for the manifest, the plate, and — on
-          the three plates in the round — Google's <code>&lt;model-viewer&gt;</code> itself, so a
-          library and the three.js it carries are fetched by the states that need them and by no other;
+          the three plates in the round — Google's ${ext(HOME.modelViewer, html`<code>&lt;model-viewer&gt;</code>`)} itself, so a
+          library and the ${ext(HOME.three, 'three.js')} it carries are fetched by the states that need them and by no other;
           <code>redirectTo</code> for <code>/office</code> → appendix A2; a url-less
           <code>atlas.notFound</code> as the <code>otherwise</code> target, so an unknown
           sheet keeps its own url in the address bar; nested
-          <code>&lt;ui-view&gt;</code>; and the Navigation API location plugin with a
+          <code>&lt;ui-view&gt;</code>; and the ${ext(HOME.navigation, 'Navigation API')} location plugin with a
           <code>pushState</code> fallback.
         </p>
         <h3>THE ISSUE LOG</h3>
@@ -1473,7 +1488,7 @@ export const AboutView: RoutedLitTemplate<ManifestResolves> = (props) => {
           Every REV across every plate — the set's own revision record, latest first —
           is at
           <a href=${srefHref('atlas.log')}><code>${href.log}</code></a>.
-          It is parsed at build time out of <code>www/atlas.lit-ui-router.dev/HISTORY.md</code>, the frozen
+          It is parsed at build time out of ${ext(`${BRANCH}www/atlas.lit-ui-router.dev/HISTORY.md`, html`<code>www/atlas.lit-ui-router.dev/HISTORY.md</code>`)}, the frozen
           record, and rides the manifest as JSON, so the app fetches no markdown. The
           sheets themselves carry no revision table: each describes its present state,
           and the log is where the set's history is read.
@@ -1487,33 +1502,34 @@ export const AboutView: RoutedLitTemplate<ManifestResolves> = (props) => {
         </p>
         <h3>WHAT THE SERVER DOES</h3>
         <p>
-          <code>ui-router-server</code> compiles <code>src/routes.ts</code> — the same
+          ${ext(npmUrl('ui-router-server'), html`<code>ui-router-server</code>`)} compiles
+          ${ext(`${BRANCH}www/atlas.lit-ui-router.dev/app/src/routes.ts`, html`<code>src/routes.ts</code>`)} — the same
           route table, projected as data — into a mount at the site root. It runs in
-          the Vite dev and preview servers, so a bad deep link answers 404 rather than 200,
+          the ${ext(HOME.vite, 'Vite')} dev and preview servers, so a bad deep link answers 404 rather than 200,
           and it drives the build-time prerender: every route a
           <code>shell</code> verdict claims gets its own HTML file, redirect verdicts
-          become <code>_redirects</code> lines. See
-          <code>SSR-VERDICT.md</code> for what rendered and what did not.
+          become ${ext(HOME.redirects, html`<code>_redirects</code>`)} lines. See
+          ${ext(`${BRANCH}www/atlas.lit-ui-router.dev/app/SSR-VERDICT.md`, html`<code>SSR-VERDICT.md</code>`)} for what rendered and what did not.
         </p>
         <h3>PACKAGES</h3>
         <p>
-          <code>lit-ui-router</code>, <code>@uirouter/core</code>,
-          <code>ui-router-server</code>,
-          <code>ui-router-navigation-location-plugin</code>, <code>lit</code>,
-          <code>ui-router-effect</code> (the route ref: the boot's settled route,
+          ${pkg('lit-ui-router')}, ${pkg('@uirouter/core')},
+          ${pkg('ui-router-server')},
+          ${pkg('ui-router-navigation-location-plugin')}, ${pkg('lit')},
+          ${pkg('ui-router-effect')} (the route ref: the boot's settled route,
           the index filter and the arrow-key walk read it),
-          <code>lit-ui-router-effect</code> (the Lit controller that binds the city pin
-          to it), <code>effect</code>,
-          <code>cytoscape</code> (the four interactive plates) and
-          <code>@google/model-viewer</code> (the plates in the round, imported only by
+          ${pkg('lit-ui-router-effect')} (the Lit controller that binds the city pin
+          to it), ${pkg('effect')},
+          ${pkg('cytoscape')} (the four interactive plates) and
+          ${pkg('@google/model-viewer')} (the plates in the round, imported only by
           <code>atlas.city</code>, <code>atlas.plant</code> and <code>atlas.bricks</code>); at build
-          time, <code>lit-ui-router-ssr</code> and <code>@lit-labs/ssr</code>. All from
-          npm; no workspace links.
+          time, ${pkg('lit-ui-router-ssr')} and ${pkg('@lit-labs/ssr')}. All from
+          ${ext(HOME.npm, 'npm')}; no workspace links.
         </p>
         <h3>HOW THE SET IS DRAWN</h3>
         ${manifest ? html`<p>${unsafeHTML(manifest.cover.notes)}</p>` : nothing}
         <p>
-          Icons: Lucide (ISC), restroked — the card keys, and the glyphs that mark the
+          Icons: ${ext(HOME.lucide, 'Lucide')} (ISC), restroked — the card keys, and the glyphs that mark the
           interactive plates' controls and panel heads; projection glyphs and the
           register and spine drawn here.
         </p>

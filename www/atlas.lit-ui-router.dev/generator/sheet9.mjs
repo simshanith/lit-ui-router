@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { defs } from './chrome.mjs';
-import { txt, isoBlock, isoPt, keyRow, npmUrl } from './helpers.mjs';
+import { txt, lines, isoBlock, isoPt, keyRow, npmUrl } from './helpers.mjs';
 import { assertPlots, depthSort, solidFaces } from './iso-hidden.mjs';
 
 const P = 's9';
@@ -24,6 +24,8 @@ const HOME = {
 // the origin keeps the tallest cap and its badge 24 px inside the frame's top; the frame guard below holds every district there
 const OX = 480, OY = 305;
 const VB_W = 1160;
+// callout pitch: an 11 px lbla line's box is 13.1 px tall, so 12 px stacks touch
+const CP = 14;
 
 // ---- census: every count comes from www/atlas.lit-ui-router.dev/data/census-shipped.json --------
 // The plate is the checked-in snapshot census-shipped.mjs writes: docs/dist
@@ -202,30 +204,19 @@ ${outlines}
 
 ${bodies}
 
-${txt(150, OY - 85, `a vacant lot — ${LOT.files} files, ${KB(LOT.gz)} of Dickens,`, 'lbla')}
-${txt(150, OY - 73, 'Beowulf and an RFC the site does not ship', 'lbla')}
-<line x1="442" y1="${OY - 73}" x2="502" y2="${OY + 43}" class="skf"/>
+${lines(150, OY - 85, [`a vacant lot — ${LOT.files} files, ${KB(LOT.gz)} of Dickens,`, 'Beowulf and an RFC the site does not ship'], 'lbla', 'start', CP)}
+<line x1="442" y1="${OY - 85 + CP}" x2="502" y2="${OY + 43}" class="skf"/>
 <!-- east of the Inter tower's cap (x 930 at this ref), under the site outline's label -->
-${txt(985, OY + 155, `${KB(INTER.gz)} of Inter —`, 'lbla')}
-${txt(985, OY + 167, `the lettering stands ${ORD[INTER_RANK - 1]}`, 'lbla')}
-${txt(985, OY + 179, `on the wire; only ${TALLER_THAN_INTER[0]}`, 'lbla')}
-${txt(985, OY + 191, TALLER_THAN_INTER.length > 1 ? `${TALLER_THAN_INTER.slice(1).map((t) => `and ${t}`).join(' ')} stand taller` : 'stands taller', 'lbla')}
-${txt(1120, OY + 510, `all four apps: ${KB(APPS)} —`, 'lbla', 'end')}
-${txt(1120, OY + 522, `${APP_PCT}% of the deploy they exist to demonstrate`, 'lbla', 'end')}
+${lines(985, OY + 155, [`${KB(INTER.gz)} of Inter —`, `the lettering stands ${ORD[INTER_RANK - 1]}`, `on the wire; only ${TALLER_THAN_INTER[0]}`,
+  TALLER_THAN_INTER.length > 1 ? `${TALLER_THAN_INTER.slice(1).map((t) => `and ${t}`).join(' ')} stand taller` : 'stands taller'], 'lbla', 'start', CP)}
+${lines(1120, OY + 510, [`all four apps: ${KB(APPS)} —`, `${APP_PCT}% of the deploy they exist to demonstrate`], 'lbla', 'end', CP)}
 <line x1="937" y1="${OY + 506}" x2="878" y2="${OY + 484}" class="skf"/>
-${txt(110, OY + 353, 'no ghost district stands on this plan:', 'lbla')}
-${txt(110, OY + 365, 'the walk follows backtick-quoted asset URLs,', 'lbla')}
-${txt(110, OY + 377, 'and this deploy ships ZERO unreachable files', 'lbla')}
-${txt(110, OY + 409, 'the api-viewer panel is off the critical path:', 'lbla')}
-${txt(110, OY + 421, 'it arrives in a lazy api-docs chunk, and the apps', 'lbla')}
-${txt(110, OY + 433, 'share one lit major, so identical chunks hash', 'lbla')}
-${txt(110, OY + 445, 'alike across all four', 'lbla')}
-${txt(110, OY + 469, 'every district is read from the census plate —', 'lbla')}
-${txt(110, OY + 481, 'first claim seats the visualizer in app: vanilla', 'lbla')}
+${lines(110, OY + 353, ['no ghost district stands on this plan:', 'the walk follows backtick-quoted asset URLs,', 'and this deploy ships ZERO unreachable files'], 'lbla', 'start', CP)}
+${lines(110, OY + 409, ['the api-viewer panel is off the critical path:', 'it arrives in a lazy api-docs chunk, and the apps', 'share one lit major, so identical chunks hash', 'alike across all four'], 'lbla', 'start', CP)}
+${lines(110, OY + 471, ['every district is read from the census plate —', 'first claim seats the visualizer in app: vanilla'], 'lbla', 'start', CP)}
 
 <!-- two short lines at the frame's top-right corner, east of the html-pages cap -->
-${txt(1120, 26, 'SCALE — footprint area ∝ files', 'lbls', 'end')}
-${txt(1120, 38, '1 px of height ≈ 4.2 KB gzipped', 'lbls', 'end')}
+${lines(1120, 26, ['SCALE — footprint area ∝ files', '1 px of height ≈ 4.2 KB gzipped'], 'lbls', 'end', CP)}
 
 ${schedule}
 </svg>`;
