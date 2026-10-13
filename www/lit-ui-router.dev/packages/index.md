@@ -27,6 +27,11 @@ nothing you don't.
 Each package page has its own install snippet, guide, and — where the package
 has a runtime API — its own reference.
 
+The Effect and Signals bindings each come as two packages: a
+framework-agnostic one for `@uirouter/core`, and a Lit one for
+`lit-ui-router`. The [Effect](/packages/effect-family) and
+[Signals](/packages/signals-family) overviews say which to install.
+
 `eslint-plugin-lit-ui-router` is the odd one out: it ships lint rules rather
 than runtime code, so its only peer is `eslint` rather than the router
 itself. Its `1.0` line is stable, and its
