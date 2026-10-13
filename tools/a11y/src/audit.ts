@@ -46,13 +46,14 @@ const QUIET_MS = 500;
 const SETTLE_TIMEOUT_MS = 30_000;
 
 interface Requests {
-  /** URLs still in flight, for a timeout's error. */
-  pending: () => string[];
-  /** Resolves once no request has been in flight for QUIET_MS. */
+  /** Resolves once no request has been in flight for QUIET_MS; a timeout names what was. */
   settled: () => Promise<void>;
 }
 
-/** The page's requests, every frame included. */
+/**
+ * The page's requests, every frame included. Stands in for networkidle, which Playwright never
+ * re-fires once a request finishes after it and an iframe commit or DOMContentLoaded follows.
+ */
 function track(page: Page): Requests {
   const inFlight = new Set<Request>();
   let lastChange = Date.now();
@@ -62,7 +63,19 @@ function track(page: Page): Requests {
     lastChange = Date.now();
   };
 
-  page.on('request', (request) => update(() => inFlight.add(request)));
+  page.on('request', (request) =>
+    update(() => {
+      // like networkidle, a new main-frame document starts the count over
+      if (
+        request.isNavigationRequest() &&
+        request.frame() === page.mainFrame()
+      ) {
+        inFlight.clear();
+      }
+
+      inFlight.add(request);
+    }),
+  );
   page.on('requestfinished', (request) =>
     update(() => inFlight.delete(request)),
   );
@@ -73,17 +86,18 @@ function track(page: Page): Requests {
 
     while (inFlight.size > 0 || Date.now() - lastChange < QUIET_MS) {
       if (Date.now() > deadline) {
-        throw new Error(`requests unsettled after ${SETTLE_TIMEOUT_MS}ms`);
+        const urls = [...inFlight].map((request) => request.url());
+
+        throw new Error(
+          `requests unsettled after ${SETTLE_TIMEOUT_MS}ms: ${urls.join(' ')}`,
+        );
       }
 
       await page.waitForTimeout(100);
     }
   };
 
-  return {
-    pending: () => [...inFlight].map((request) => request.url()),
-    settled,
-  };
+  return { settled };
 }
 
 async function scan(
@@ -114,19 +128,22 @@ async function scan(
   }
 }
 
-async function goto(page: Page, url: string): Promise<void> {
-  const response = await page.goto(url, { waitUntil: 'networkidle' });
+async function goto(
+  page: Page,
+  requests: Requests,
+  url: string,
+): Promise<void> {
+  const response = await page.goto(url, { waitUntil: 'load' });
 
   // null is a same-document (hash) navigation
   if (response && response.status() !== 200) {
     throw new Error(`${url} answered ${response.status()}`);
   }
+
+  await requests.settled();
 }
 
-/**
- * Lazy same-origin embeds load only on scroll; axe scans a frame only once it has loaded.
- * Not networkidle: Playwright never re-fires it once a main-frame request finishes after it and an embed then navigates.
- */
+/** Lazy same-origin embeds load only on scroll; axe scans a frame only once it has loaded. */
 async function loadEmbeds(page: Page, requests: Requests): Promise<void> {
   await page.evaluate(() => {
     for (const frame of document.querySelectorAll('iframe')) {
@@ -165,13 +182,11 @@ export async function auditDocs(
 
       for (let path = queue.shift(); path; path = queue.shift()) {
         try {
-          await goto(page, origin + path);
+          await goto(page, requests, origin + path);
           await loadEmbeds(page, requests);
           await scan(page, path, scheme, audit);
         } catch (error) {
-          const urls = requests.pending();
-          const detail = urls.length ? `, in flight: ${urls.join(' ')}` : '';
-          throw new Error(`${path} [${scheme}]${detail}`, { cause: error });
+          throw new Error(`${path} [${scheme}]`, { cause: error });
         }
       }
 
@@ -204,12 +219,13 @@ export async function auditApp(
 ): Promise<void> {
   const context = await newContext(browser, 'light');
   const page = await context.newPage();
+  const requests = track(page);
 
   const url = (path: string) =>
     app.hash ? `${origin}${app.mount}#${path}` : `${origin}${app.mount}${path}`;
 
   const visit = async (path: string) => {
-    await goto(page, url(path));
+    await goto(page, requests, url(path));
     await page.locator('main h1').first().waitFor({ state: 'attached' });
   };
 
@@ -217,7 +233,7 @@ export async function auditApp(
     scan(page, `${app.mount} ${label}`, 'light', audit);
 
   try {
-    await goto(page, `${origin}${app.mount}${app.query ?? ''}`);
+    await goto(page, requests, `${origin}${app.mount}${app.query ?? ''}`);
     await visit('/welcome');
     await check('welcome');
 
@@ -246,7 +262,7 @@ export async function auditApp(
     await page.locator('.details h2').waitFor();
     await check('contact');
     const contact = page.url();
-    await goto(page, `${contact}/edit`);
+    await goto(page, requests, `${contact}/edit`);
     await page.locator('main input').first().waitFor();
     await check('contact edit');
     await visit('/contacts/new');
