@@ -15,7 +15,7 @@ import { PLANT_RULES } from './city-plant.mjs';
 import {
   CITY_GLB, DRESS_JS, FACES, HATCH, LIT, PLANT_GLB, PX, RISE_SECONDS, TIERS, TINT, cityModel, materialPlan,
 } from './city-glb.mjs';
-import { ISO_POLAR, MV_JS, frameCss, orbitAt, pinCss } from './mv-kit.mjs';
+import { ISO_POLAR, MV_JS, frameCss, orbitAt, partsCss, partsMarkup, pinCss } from './mv-kit.mjs';
 import { BASE } from '../app/src/routes.ts';
 
 export const REV = 'H';
@@ -156,6 +156,7 @@ ${frameCss('cs', 'cs-info', ['bar', 'stage', 'read'])}
   --poster-color: transparent; --progress-bar-color: var(--accent); }
 .cs-stage.over .cs-view { cursor: pointer; }
 ${pinCss('cs-pin', 22, 11)}
+${partsCss('cs-parts', { side: 'end', top: 40, cols: 2, font: 10.5 })}
 .cs-pin { --hue: var(--ink-soft); }
 @media (prefers-reduced-motion: no-preference) { .cs-pin { transition: width 0.15s, height 0.15s, transform 160ms var(--ease-out, ease-out); } }
 .cs-pin.on { background: var(--accent); border-color: var(--accent); color: var(--paper); }
@@ -411,6 +412,7 @@ const BODY = `${FOCUS_JS}${MV_JS}  ${DRESS_JS}
       pins[b.n].classList.toggle('on', b.n === n);
       pins[b.n].setAttribute('aria-pressed', String(b.n === n));
     });
+    parts.light(n);
     rove();
     show(n);
     return true;
@@ -471,6 +473,8 @@ const BODY = `${FOCUS_JS}${MV_JS}  ${DRESS_JS}
     stage.classList.remove('over');
     show(pinN);
   });
+  // a chip pins and frames its member, as a pin pressed from the keyboard does
+  var parts = partsPanel(root, 'cs-parts', on, key);
   D.rows.forEach(function (b) {
     var n = b.n;
     on(pins[n], 'click', function (e) {
@@ -483,7 +487,7 @@ const BODY = `${FOCUS_JS}${MV_JS}  ${DRESS_JS}
   pinKeys(stage, on, {
     step: function (d) { key(walk(order, pinN, d)); },
     enter: function (e) {
-      if (e.target && e.target.classList && e.target.classList.contains('cs-pin')) return false;
+      if (e.target && e.target.closest && e.target.closest('.cs-pin, .cs-parts')) return false;
       key(litN !== null ? litN : pinN !== null ? pinN : order[0]);
       return true;
     },
@@ -550,6 +554,7 @@ const BODY = `${FOCUS_JS}${MV_JS}  ${DRESS_JS}
     pose: function (v) { stop(); pose(v); },
     photo: function () {
       Array.prototype.forEach.call(mv.querySelectorAll('[slot^="hotspot-"]'), function (el) { el.style.visibility = 'hidden'; });
+      parts.hide();
     },
   };
 
@@ -667,6 +672,7 @@ ${CORNERS.map((az, i) => `          <button type="button" data-az="${az}" aria-p
 ${pins}
 ${labels}
       </model-viewer>
+${partsMarkup('cs-parts', 'Members', data.rows)}
     </div>
     <aside class="cs-info" id="cs-info" aria-live="polite"></aside>
   </div>

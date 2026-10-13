@@ -78,7 +78,7 @@
   .bk-frame:fullscreen .bk-read, .bk-frame.is-filled .bk-read { border-inline-start: none; }
 }
 /* the lane chrome lays a stage out as two columns; the viewer takes the whole stage */
-.bk-stage { display: block; border: 1.5px solid var(--ink); border-block-end: none; }
+.bk-stage { display: block; position: relative; border: 1.5px solid var(--ink); border-block-end: none; }
 .bk-stage:focus-within { outline: max(2px, 0.08em) solid var(--accent); outline-offset: -2px; }
 .bk-view { display: block; width: 100%; height: clamp(460px, 64vh, 920px);
   background: radial-gradient(ellipse 70% 60% at 50% 42%, var(--paper) 0%, var(--paper-2) 58%, var(--ground) 100%);
@@ -104,6 +104,32 @@
 .bk-pin:focus-visible { outline: max(2px, 0.08em) solid var(--accent); outline-offset: 0.25em; }
 .bk-pin:active { transform: scale(0.97); }
 @media (prefers-reduced-motion: no-preference) { .bk-pin { transition: opacity 0.3s, transform 160ms var(--ease-out, ease-out); } }
+
+.bk-parts { position: absolute; inset-block-start: 8px; inset-inline-start: 8px; z-index: 3; max-width: calc(100% - 16px);
+  max-height: calc(100% - 16px); display: flex; flex-direction: column; align-items: flex-start; }
+.bk-parts .pt-toggle { display: none; font-family: var(--data); font-size: 9.5px; font-weight: 600; letter-spacing: 0.16em; line-height: 1;
+  color: var(--ink); background: var(--paper); border: 1px solid var(--ink); padding: 6px 8px; cursor: pointer; opacity: 0.72; }
+.bk-parts .pt-toggle[aria-expanded="true"] { opacity: 1; background: var(--paper-2); }
+.bk-parts .pt-toggle:focus-visible { opacity: 1; outline: max(2px, 0.08em) solid var(--accent); outline-offset: 0.25em; }
+.bk-parts .pts { display: grid; grid-template-columns: repeat(1, auto); gap: 2px 4px; min-height: 0; overflow: auto; overscroll-behavior: contain;
+  padding: 5px; border: 1px solid var(--line); background: color-mix(in oklab, var(--paper) 70%, transparent);
+  font-family: var(--data); font-size: 11px; letter-spacing: 0.1em; }
+.bk-parts .pt { display: inline-flex; align-items: center; gap: 6px; padding-block: 2px; padding-inline: 2px 7px; border: 1px solid transparent;
+  color: var(--ink-soft); text-decoration: none; white-space: nowrap; }
+.bk-parts .pt .n { display: grid; place-items: center; width: 16px; height: 16px; border: 1.5px solid var(--hue, var(--ink-soft)); border-radius: 50%;
+  font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: 0; color: var(--ink); }
+@media (hover: hover) and (pointer: fine) { .bk-parts .pt:hover { border-color: var(--ink); background: var(--paper-2); color: var(--ink); } }
+.bk-parts .pt:focus-visible { outline: max(2px, 0.08em) solid var(--accent); outline-offset: 0; }
+.bk-parts .pt:active { transform: scale(0.97); }
+@media (prefers-reduced-motion: no-preference) { .bk-parts .pt { transition: transform 160ms var(--ease-out, ease-out); } }
+.bk-parts .pt.on { border-color: var(--hue, var(--accent)); background: var(--hue, var(--accent)); color: oklch(95.3% 0.012 101.5); }
+.bk-parts .pt.on .n { border-color: currentColor; color: inherit; }
+@media (max-width: 719px) {
+  .bk-parts { gap: 4px; }
+  .bk-parts .pt-toggle { display: block; }
+  .bk-parts:not(.open) .pts { display: none; }
+  .bk-parts .pts { grid-template-columns: auto; }
+}
 .bk-read { border: 1.5px solid var(--ink); border-block-start: none; background: var(--paper-2); padding-block: 14px 16px; padding-inline: 22px;
   min-height: 72px; color: var(--ink); }
 .bk-read h3 { font-family: var(--code); font-size: 16px; font-weight: 600; letter-spacing: 0.04em; line-height: 1.3;
@@ -133,6 +159,20 @@
         <button type="button" class="bk-pin" slot="hotspot-8" style="--hue:#9C86C4" data-position="-3m 1.85m 4.5m" data-normal="0m 1m 0m" aria-pressed="false" aria-label="Brick 8, ui-router-effect">8</button>
         <button type="button" class="bk-pin" slot="hotspot-9" style="--hue:#CC86A8" data-position="1m 1.85m 2.5m" data-normal="0m 1m 0m" aria-pressed="false" aria-label="Brick 9, ui-router-signals">9</button>
       </model-viewer>
+      <nav class="bk-parts" aria-label="Bricks">
+        <button type="button" class="pt-toggle" aria-expanded="false" aria-controls="bk-parts-list">PARTS</button>
+        <div class="pts" id="bk-parts-list">
+          <a class="pt" href="?focus=1" data-focus="1" style="--hue:#D8A33A"><span class="n">1</span>lit-ui-router</a>
+          <a class="pt" href="?focus=2" data-focus="2" style="--hue:#5B8E4B"><span class="n">2</span>ui-router-navigation-location-plugin</a>
+          <a class="pt" href="?focus=3" data-focus="3" style="--hue:#D26E2C"><span class="n">3</span>lit-ui-router-mobx</a>
+          <a class="pt" href="?focus=4" data-focus="4" style="--hue:#3E8A8B"><span class="n">4</span>ui-router-server</a>
+          <a class="pt" href="?focus=5" data-focus="5" style="--hue:#7B5B9F"><span class="n">5</span>lit-ui-router-effect</a>
+          <a class="pt" href="?focus=6" data-focus="6" style="--hue:#4C86C6"><span class="n">6</span>lit-ui-router-ssr</a>
+          <a class="pt" href="?focus=7" data-focus="7" style="--hue:#B0507E"><span class="n">7</span>lit-ui-router-signals</a>
+          <a class="pt" href="?focus=8" data-focus="8" style="--hue:#9C86C4"><span class="n">8</span>ui-router-effect</a>
+          <a class="pt" href="?focus=9" data-focus="9" style="--hue:#CC86A8"><span class="n">9</span>ui-router-signals</a>
+        </div>
+      </nav>
     </div>
     <div class="bk-bar">
       <div class="bk-legend">

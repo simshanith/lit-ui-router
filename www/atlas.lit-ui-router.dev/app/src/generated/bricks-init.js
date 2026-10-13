@@ -84,6 +84,35 @@ export async function initBricks(root, viewer, focus) {
     var i = order.indexOf(at);
     return order[i < 0 ? (d > 0 ? 0 : order.length - 1) : (i + d + order.length) % order.length];
   }
+  // the parts panel: a chip click takes the hotspot's own tap (the href stays the no-script path); light(n) lights the pinned chip
+  function partsPanel(root, cls, on, tap) {
+    var nav = root.querySelector('.' + cls);
+    if (!nav) return { light: function () {}, hide: function () {} };
+    var chips = Array.prototype.slice.call(nav.querySelectorAll('a.pt'));
+    var toggle = nav.querySelector('.pt-toggle');
+    on(nav, 'click', function (e) {
+      var a = e.target && e.target.closest ? e.target.closest('a.pt') : null;
+      if (!a || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      e.preventDefault();
+      tap(Number(a.getAttribute('data-focus')));
+    });
+    on(toggle, 'click', function () {
+      var open = !nav.classList.contains('open');
+      nav.classList.toggle('open', open);
+      toggle.setAttribute('aria-expanded', String(open));
+    });
+    return {
+      light: function (n) {
+        chips.forEach(function (a) {
+          var hit = Number(a.getAttribute('data-focus')) === n;
+          a.classList.toggle('on', hit);
+          if (hit) a.setAttribute('aria-current', 'true');
+          else a.removeAttribute('aria-current');
+        });
+      },
+      hide: function () { nav.style.visibility = 'hidden'; },
+    };
+  }
   // captured on the way down, so the viewer's own arrow-key orbit never sees ← →; ↑ ↓ stay the viewer's;
   // escape and enter answer whether they acted, so an unanswered key goes on to the page
   function pinKeys(stage, on, act) {
@@ -215,6 +244,7 @@ export async function initBricks(root, viewer, focus) {
       pins[k].classList.toggle('on', k === n);
       pins[k].setAttribute('aria-pressed', String(k === n));
     });
+    parts.light(n);
     aim();
     show(n);
   }
@@ -224,6 +254,7 @@ export async function initBricks(root, viewer, focus) {
     atlasFocusPush(mv, next === null ? null : String(next));
   }
 
+  var parts = partsPanel(root, 'bk-parts', on, tap);
   order.forEach(function (n) { on(pins[n], 'click', function () { tap(n); }); });
   on(play, 'click', function () { run(t >= END ? 0 : END); });
   on(slider, 'input', function () { stop(); pose(Number(slider.value)); });
@@ -277,7 +308,7 @@ export async function initBricks(root, viewer, focus) {
     orbit: function () { return mv.getCameraOrbit().toString(); },
     turn: function (v) { turn(v); },
     turning: function () { return turning; },
-    photo: function () { order.forEach(function (n) { pins[n].style.visibility = 'hidden'; }); },
+    photo: function () { order.forEach(function (n) { pins[n].style.visibility = 'hidden'; }); parts.hide(); },
   };
 
   return {

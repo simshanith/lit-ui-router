@@ -10,7 +10,7 @@ import { PROJECT_MARK, articleTitle } from './chrome.mjs';
 import { FOCUS_JS } from './focus.mjs';
 import { basisStrip, laneCss } from './lane-chrome.mjs';
 import { ASSEMBLE_SECONDS, assembleMotion, brickGlb, seatedBoxes, toModel } from './brick-glb.mjs';
-import { MV_JS, frameCss, orbitAt, pinCss } from './mv-kit.mjs';
+import { MV_JS, frameCss, orbitAt, partsCss, partsMarkup, pinCss } from './mv-kit.mjs';
 import { BRICK_COUPLES, BRICK_MODEL, BRICK_REACHES, BRICK_ROWS, EXPLODE } from './sheet2.mjs';
 import { BASE } from '../app/src/routes.ts';
 
@@ -106,7 +106,7 @@ export const BRICKS_META = {
 const CSS = `
 ${frameCss('bk', 'bk-read', ['stage', 'bar', 'read'])}
 /* the lane chrome lays a stage out as two columns; the viewer takes the whole stage */
-.bk-stage { display: block; border: 1.5px solid var(--ink); border-block-end: none; }
+.bk-stage { display: block; position: relative; border: 1.5px solid var(--ink); border-block-end: none; }
 .bk-stage:focus-within { outline: max(2px, 0.08em) solid var(--accent); outline-offset: -2px; }
 .bk-view { display: block; width: 100%; height: clamp(460px, 64vh, 920px);
   background: radial-gradient(ellipse 70% 60% at 50% 42%, var(--paper) 0%, var(--paper-2) 58%, var(--ground) 100%);
@@ -125,6 +125,7 @@ ${frameCss('bk', 'bk-read', ['stage', 'bar', 'read'])}
 /* the button keeps the wider label's width, so the slider after it never shifts under a drag */
 #bk-play::after { content: "ASSEMBLE"; display: block; height: 0; overflow: clip; visibility: hidden; }
 ${pinCss('bk-pin', 26, 12)}
+${partsCss('bk-parts', { side: 'start', top: 8, cols: 1, font: 11 })}
 .bk-read { border: 1.5px solid var(--ink); border-block-start: none; background: var(--paper-2); padding-block: 14px 16px; padding-inline: 22px;
   min-height: 72px; color: var(--ink); }
 .bk-read h3 { font-family: var(--code); font-size: 16px; font-weight: 600; letter-spacing: 0.04em; line-height: 1.3;
@@ -163,6 +164,7 @@ export function bricksMarkup() {
       <model-viewer id="bk-viewer" class="bk-view" src="${BASE}${BRICKS_GLB}" loading="eager" reveal="manual" camera-controls touch-action="pan-y" interaction-prompt="none" camera-orbit="${CORNERS[0].orbit}" max-camera-orbit="${SEATED_MAX}" field-of-view="14deg" min-field-of-view="5deg" max-field-of-view="18deg" exposure="1" shadow-intensity="0" animation-name="assemble" alt="Sheet 2's finished LEGO model in three dimensions: a low slab of browser ground carries the @uirouter/core baseplate, its back rail of studs ringed in the accent colour and one red location seat; lit-ui-router stands on it as a tall two-by-four, the one-stud navigation location plugin on the location seat, lit-ui-router-mobx, lit-ui-router-effect and lit-ui-router-signals on lit-ui-router's cap, the one-stud ui-router-effect on the plate's stud C and the one-stud ui-router-signals on stud E, each with a ringed stud the effect and signals bindings peer; a raised server shelf carries a translucent headless plate with ui-router-server on it, and lit-ui-router-ssr bridges from lit-ui-router's cap to ui-router-server's. The explode control lifts the stacked bricks first, then the rest, each to at least half again the height the sheet's exploded view draws it at, with a dashed leader dropping from each to the stud it seats on.">
 ${pins}
       </model-viewer>
+${partsMarkup('bk-parts', 'Bricks', DATA.bricks)}
     </div>
     <div class="bk-bar">
       <div class="bk-legend">
@@ -304,6 +306,7 @@ const BODY = `${FOCUS_JS}${MV_JS}  var mv = root.querySelector('#bk-viewer');
       pins[k].classList.toggle('on', k === n);
       pins[k].setAttribute('aria-pressed', String(k === n));
     });
+    parts.light(n);
     aim();
     show(n);
   }
@@ -313,6 +316,7 @@ const BODY = `${FOCUS_JS}${MV_JS}  var mv = root.querySelector('#bk-viewer');
     atlasFocusPush(mv, next === null ? null : String(next));
   }
 
+  var parts = partsPanel(root, 'bk-parts', on, tap);
   order.forEach(function (n) { on(pins[n], 'click', function () { tap(n); }); });
   on(play, 'click', function () { run(t >= END ? 0 : END); });
   on(slider, 'input', function () { stop(); pose(Number(slider.value)); });
@@ -366,7 +370,7 @@ const BODY = `${FOCUS_JS}${MV_JS}  var mv = root.querySelector('#bk-viewer');
     orbit: function () { return mv.getCameraOrbit().toString(); },
     turn: function (v) { turn(v); },
     turning: function () { return turning; },
-    photo: function () { order.forEach(function (n) { pins[n].style.visibility = 'hidden'; }); },
+    photo: function () { order.forEach(function (n) { pins[n].style.visibility = 'hidden'; }); parts.hide(); },
   };
 
   return {

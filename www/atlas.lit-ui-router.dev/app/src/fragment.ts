@@ -32,13 +32,6 @@ export interface FocusDetail {
   focus: string | null;
 }
 
-/** A fragment's JSON island by id, the data its own script reads; a fragment without one throws. */
-export function readIsland<T>(fragment: string, id: string): T {
-  const json = new RegExp(`<script type="application/json" id="${id}">([^]*?)</script>`).exec(fragment)?.[1];
-  if (json === undefined) throw new Error(`no #${id} island in the fragment`);
-  return JSON.parse(json) as T;
-}
-
 let cytoscapeLoaded: Promise<unknown> | null = null;
 
 /**

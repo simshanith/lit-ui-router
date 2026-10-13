@@ -880,69 +880,6 @@
         align-self: start;
         margin-block-start: 0;
       }
-      /* THE PARTS LIST: a plate in the round's members as links, each the url's
-         `?focus=`; the lit link wears the pin's lit state, the brick's own hue. */
-      .parts {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 5px;
-        margin-block: 0 14px;
-        margin-inline: 0;
-        font-family: var(--data);
-        font-size: 10px;
-        letter-spacing: 0.1em;
-      }
-      .parts a {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        border: 1px solid var(--line);
-        padding-block: 2px;
-        padding-inline: 4px 7px;
-        color: var(--ink-soft);
-        text-decoration: none;
-        white-space: nowrap;
-      }
-      .parts a .n {
-        display: grid;
-        place-items: center;
-        width: 16px;
-        height: 16px;
-        border: 1.5px solid var(--hue, var(--ink-soft));
-        border-radius: 50%;
-        font-weight: 600;
-        font-variant-numeric: tabular-nums;
-        letter-spacing: 0;
-        color: var(--ink);
-      }
-      @media (hover: hover) and (pointer: fine) {
-        .parts a:hover {
-          border-color: var(--ink);
-          background: var(--paper-2);
-          color: var(--ink);
-        }
-      }
-      .parts a:focus-visible {
-        outline: 2px solid var(--accent);
-        outline-offset: 2px;
-      }
-      .parts a.is-on {
-        border-color: var(--hue, var(--accent));
-        background: var(--hue, var(--accent));
-        color: var(--paper);
-      }
-      .parts a.is-on .n {
-        border-color: var(--paper);
-        color: var(--paper);
-      }
-      /* on a brick's hue the lit ink is the pin's, light in either theme */
-      .parts-hued a.is-on,
-      .parts-hued a.is-on .n {
-        color: oklch(95.3% 0.012 101.5);
-      }
-      .parts-hued a.is-on .n {
-        border-color: oklch(95.3% 0.012 101.5);
-      }
       .plate-verdict {
         margin-block: -6px 14px;
         margin-inline: 0;
@@ -1736,8 +1673,7 @@
       .client-mark:active,
       .client-term:active,
       .kvbox button:active,
-      .keyindex .kv:active,
-      .parts a:active {
+      .keyindex .kv:active {
         transform: scale(0.97);
       }
       @media (prefers-reduced-motion: no-preference) {
@@ -1748,8 +1684,7 @@
         .rail-toggle,
         .client-term,
         .kvbox button,
-        .keyindex .kv,
-        .parts a {
+        .keyindex .kv {
           transition: transform 160ms var(--ease-out, ease-out);
         }
         /* the rail's control also fades with the clipped rail */

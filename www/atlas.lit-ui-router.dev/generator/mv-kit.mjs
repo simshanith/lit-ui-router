@@ -17,6 +17,47 @@ export const pinCss = (cls, size, font) => `
 .${cls}:active { transform: scale(0.97); }
 @media (prefers-reduced-motion: no-preference) { .${cls} { transition: opacity 0.3s, transform 160ms var(--ease-out, ease-out); } }`;
 
+/**
+ * THE PARTS PANEL: the plate's members as chips inside the viewer, one corner of the stage, on the
+ * key row's translucent paper. Each chip is an anchor on `?focus=n`, the no-script path; the scene's
+ * script takes the click through the hotspot's own tap, and its pin() lights the chip. Under 720px
+ * the panel folds to a PARTS toggle in the same corner.
+ */
+export const partsCss = (cls, { side, top, cols, font }) => `
+.${cls} { position: absolute; inset-block-start: ${top}px; inset-inline-${side}: 8px; z-index: 3; max-width: calc(100% - 16px);
+  max-height: calc(100% - ${top + 8}px); display: flex; flex-direction: column; align-items: flex-${side}; }
+.${cls} .pt-toggle { display: none; font-family: var(--data); font-size: 9.5px; font-weight: 600; letter-spacing: 0.16em; line-height: 1;
+  color: var(--ink); background: var(--paper); border: 1px solid var(--ink); padding: 6px 8px; cursor: pointer; opacity: 0.72; }
+.${cls} .pt-toggle[aria-expanded="true"] { opacity: 1; background: var(--paper-2); }
+.${cls} .pt-toggle:focus-visible { opacity: 1; outline: max(2px, 0.08em) solid var(--accent); outline-offset: 0.25em; }
+.${cls} .pts { display: grid; grid-template-columns: repeat(${cols}, auto); gap: 2px 4px; min-height: 0; overflow: auto; overscroll-behavior: contain;
+  padding: 5px; border: 1px solid var(--line); background: color-mix(in oklab, var(--paper) 70%, transparent);
+  font-family: var(--data); font-size: ${font}px; letter-spacing: 0.1em; }
+.${cls} .pt { display: inline-flex; align-items: center; gap: 6px; padding-block: 2px; padding-inline: 2px 7px; border: 1px solid transparent;
+  color: var(--ink-soft); text-decoration: none; white-space: nowrap; }
+.${cls} .pt .n { display: grid; place-items: center; width: 16px; height: 16px; border: 1.5px solid var(--hue, var(--ink-soft)); border-radius: 50%;
+  font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: 0; color: var(--ink); }
+@media (hover: hover) and (pointer: fine) { .${cls} .pt:hover { border-color: var(--ink); background: var(--paper-2); color: var(--ink); } }
+.${cls} .pt:focus-visible { outline: max(2px, 0.08em) solid var(--accent); outline-offset: 0; }
+.${cls} .pt:active { transform: scale(0.97); }
+@media (prefers-reduced-motion: no-preference) { .${cls} .pt { transition: transform 160ms var(--ease-out, ease-out); } }
+.${cls} .pt.on { border-color: var(--hue, var(--accent)); background: var(--hue, var(--accent)); color: oklch(95.3% 0.012 101.5); }
+.${cls} .pt.on .n { border-color: currentColor; color: inherit; }
+@media (max-width: 719px) {
+  .${cls} { gap: 4px; }
+  .${cls} .pt-toggle { display: block; }
+  .${cls}:not(.open) .pts { display: none; }
+  .${cls} .pts { grid-template-columns: auto; }
+}`;
+
+/** The panel's markup: `items` are `{ n, name, hue? }` in the plate's own order. */
+export const partsMarkup = (cls, label, items) => `      <nav class="${cls}" aria-label="${label}">
+        <button type="button" class="pt-toggle" aria-expanded="false" aria-controls="${cls}-list">PARTS</button>
+        <div class="pts" id="${cls}-list">
+${items.map((it) => `          <a class="pt" href="?focus=${it.n}" data-focus="${it.n}"${it.hue ? ` style="--hue:${it.hue}"` : ''}><span class="n">${it.n}</span>${it.name}</a>`).join('\n')}
+        </div>
+      </nav>`;
+
 /** A model plate's `.fillable` frame: stage, bar and `read` panel in `areas` order; filled, the stage takes what the rest leave. */
 export const frameCss = (p, read, areas) => {
   const on = (s = '') => `.${p}-frame:fullscreen${s}, .${p}-frame.is-filled${s}`;
@@ -110,6 +151,35 @@ export const MV_JS = `  // a token's colour as the page resolves it for its sche
   function walk(order, at, d) {
     var i = order.indexOf(at);
     return order[i < 0 ? (d > 0 ? 0 : order.length - 1) : (i + d + order.length) % order.length];
+  }
+  // the parts panel: a chip click takes the hotspot's own tap (the href stays the no-script path); light(n) lights the pinned chip
+  function partsPanel(root, cls, on, tap) {
+    var nav = root.querySelector('.' + cls);
+    if (!nav) return { light: function () {}, hide: function () {} };
+    var chips = Array.prototype.slice.call(nav.querySelectorAll('a.pt'));
+    var toggle = nav.querySelector('.pt-toggle');
+    on(nav, 'click', function (e) {
+      var a = e.target && e.target.closest ? e.target.closest('a.pt') : null;
+      if (!a || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      e.preventDefault();
+      tap(Number(a.getAttribute('data-focus')));
+    });
+    on(toggle, 'click', function () {
+      var open = !nav.classList.contains('open');
+      nav.classList.toggle('open', open);
+      toggle.setAttribute('aria-expanded', String(open));
+    });
+    return {
+      light: function (n) {
+        chips.forEach(function (a) {
+          var hit = Number(a.getAttribute('data-focus')) === n;
+          a.classList.toggle('on', hit);
+          if (hit) a.setAttribute('aria-current', 'true');
+          else a.removeAttribute('aria-current');
+        });
+      },
+      hide: function () { nav.style.visibility = 'hidden'; },
+    };
   }
   // captured on the way down, so the viewer's own arrow-key orbit never sees ← →; ↑ ↓ stay the viewer's;
   // escape and enter answer whether they acted, so an unanswered key goes on to the page

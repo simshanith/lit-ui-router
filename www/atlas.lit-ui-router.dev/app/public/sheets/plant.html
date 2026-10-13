@@ -52,6 +52,32 @@
 .cs-pin:focus-visible { outline: max(2px, 0.08em) solid var(--accent); outline-offset: 0.25em; }
 .cs-pin:active { transform: scale(0.97); }
 @media (prefers-reduced-motion: no-preference) { .cs-pin { transition: opacity 0.3s, transform 160ms var(--ease-out, ease-out); } }
+
+.cs-parts { position: absolute; inset-block-start: 40px; inset-inline-end: 8px; z-index: 3; max-width: calc(100% - 16px);
+  max-height: calc(100% - 48px); display: flex; flex-direction: column; align-items: flex-end; }
+.cs-parts .pt-toggle { display: none; font-family: var(--data); font-size: 9.5px; font-weight: 600; letter-spacing: 0.16em; line-height: 1;
+  color: var(--ink); background: var(--paper); border: 1px solid var(--ink); padding: 6px 8px; cursor: pointer; opacity: 0.72; }
+.cs-parts .pt-toggle[aria-expanded="true"] { opacity: 1; background: var(--paper-2); }
+.cs-parts .pt-toggle:focus-visible { opacity: 1; outline: max(2px, 0.08em) solid var(--accent); outline-offset: 0.25em; }
+.cs-parts .pts { display: grid; grid-template-columns: repeat(2, auto); gap: 2px 4px; min-height: 0; overflow: auto; overscroll-behavior: contain;
+  padding: 5px; border: 1px solid var(--line); background: color-mix(in oklab, var(--paper) 70%, transparent);
+  font-family: var(--data); font-size: 10.5px; letter-spacing: 0.1em; }
+.cs-parts .pt { display: inline-flex; align-items: center; gap: 6px; padding-block: 2px; padding-inline: 2px 7px; border: 1px solid transparent;
+  color: var(--ink-soft); text-decoration: none; white-space: nowrap; }
+.cs-parts .pt .n { display: grid; place-items: center; width: 16px; height: 16px; border: 1.5px solid var(--hue, var(--ink-soft)); border-radius: 50%;
+  font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: 0; color: var(--ink); }
+@media (hover: hover) and (pointer: fine) { .cs-parts .pt:hover { border-color: var(--ink); background: var(--paper-2); color: var(--ink); } }
+.cs-parts .pt:focus-visible { outline: max(2px, 0.08em) solid var(--accent); outline-offset: 0; }
+.cs-parts .pt:active { transform: scale(0.97); }
+@media (prefers-reduced-motion: no-preference) { .cs-parts .pt { transition: transform 160ms var(--ease-out, ease-out); } }
+.cs-parts .pt.on { border-color: var(--hue, var(--accent)); background: var(--hue, var(--accent)); color: oklch(95.3% 0.012 101.5); }
+.cs-parts .pt.on .n { border-color: currentColor; color: inherit; }
+@media (max-width: 719px) {
+  .cs-parts { gap: 4px; }
+  .cs-parts .pt-toggle { display: block; }
+  .cs-parts:not(.open) .pts { display: none; }
+  .cs-parts .pts { grid-template-columns: auto; }
+}
 .cs-pin { --hue: var(--ink-soft); }
 @media (prefers-reduced-motion: no-preference) { .cs-pin { transition: width 0.15s, height 0.15s, transform 160ms var(--ease-out, ease-out); } }
 .cs-pin.on { background: var(--accent); border-color: var(--accent); color: var(--paper); }
@@ -208,6 +234,57 @@
         <span class="cs-dist" slot="hotspot-district-site" data-position="395.64m 0.5m 220.337m" data-normal="0m 1m 0m" aria-hidden="true">DOCS + EXAMPLES/</span>
         <span class="cs-dist" slot="hotspot-district-tool" data-position="150.484m 0.5m 298.831m" data-normal="0m 1m 0m" aria-hidden="true">TOOLS/</span>
       </model-viewer>
+      <nav class="cs-parts" aria-label="Members">
+        <button type="button" class="pt-toggle" aria-expanded="false" aria-controls="cs-parts-list">PARTS</button>
+        <div class="pts" id="cs-parts-list">
+          <a class="pt" href="?focus=1" data-focus="1"><span class="n">1</span>lit-ui-router</a>
+          <a class="pt" href="?focus=2" data-focus="2"><span class="n">2</span>ui-router-server</a>
+          <a class="pt" href="?focus=3" data-focus="3"><span class="n">3</span>lit-ui-router-mobx</a>
+          <a class="pt" href="?focus=4" data-focus="4"><span class="n">4</span>navigation-location-plugin</a>
+          <a class="pt" href="?focus=5" data-focus="5"><span class="n">5</span>sample-app-shared</a>
+          <a class="pt" href="?focus=6" data-focus="6"><span class="n">6</span>sample-app-lit-vanilla</a>
+          <a class="pt" href="?focus=7" data-focus="7"><span class="n">7</span>sample-app-lit-mobx</a>
+          <a class="pt" href="?focus=8" data-focus="8"><span class="n">8</span>sample-app-routes</a>
+          <a class="pt" href="?focus=9" data-focus="9"><span class="n">9</span>sample-app-lit-e2e</a>
+          <a class="pt" href="?focus=10" data-focus="10"><span class="n">10</span>docs</a>
+          <a class="pt" href="?focus=11" data-focus="11"><span class="n">11</span>examples</a>
+          <a class="pt" href="?focus=12" data-focus="12"><span class="n">12</span>@tools/release</a>
+          <a class="pt" href="?focus=13" data-focus="13"><span class="n">13</span>@tools/typedoc-plugin</a>
+          <a class="pt" href="?focus=14" data-focus="14"><span class="n">14</span>@tools/dts-backtest</a>
+          <a class="pt" href="?focus=15" data-focus="15"><span class="n">15</span>@tools/build_and_test</a>
+          <a class="pt" href="?focus=16" data-focus="16"><span class="n">16</span>@tools/shared</a>
+          <a class="pt" href="?focus=17" data-focus="17"><span class="n">17</span>@tools/workers-builds</a>
+          <a class="pt" href="?focus=18" data-focus="18"><span class="n">18</span>@tools/bundle-probe</a>
+          <a class="pt" href="?focus=19" data-focus="19"><span class="n">19</span>@tools/compat-guards</a>
+          <a class="pt" href="?focus=20" data-focus="20"><span class="n">20</span>@tools/oxc-emit</a>
+          <a class="pt" href="?focus=21" data-focus="21"><span class="n">21</span>@tools/release-config</a>
+          <a class="pt" href="?focus=22" data-focus="22"><span class="n">22</span>@tools/lit-template-lint</a>
+          <a class="pt" href="?focus=23" data-focus="23"><span class="n">23</span>@tools/lit-test-env</a>
+          <a class="pt" href="?focus=24" data-focus="24"><span class="n">24</span>@tools/vue-check</a>
+          <a class="pt" href="?focus=25" data-focus="25"><span class="n">25</span>@tools/lcov-rebase</a>
+          <a class="pt" href="?focus=26" data-focus="26"><span class="n">26</span>@tools/happy-dom</a>
+          <a class="pt" href="?focus=27" data-focus="27"><span class="n">27</span>@tools/wintercg-globals</a>
+          <a class="pt" href="?focus=28" data-focus="28"><span class="n">28</span>@tools/lint-elements</a>
+          <a class="pt" href="?focus=29" data-focus="29"><span class="n">29</span>@tools/warn-lanes</a>
+          <a class="pt" href="?focus=30" data-focus="30"><span class="n">30</span>@tools/eslint-ts-parser</a>
+          <a class="pt" href="?focus=31" data-focus="31"><span class="n">31</span>eslint-plugin-lit-ui-router</a>
+          <a class="pt" href="?focus=32" data-focus="32"><span class="n">32</span>@tools/embed-heights</a>
+          <a class="pt" href="?focus=33" data-focus="33"><span class="n">33</span>@tools/bootstrap</a>
+          <a class="pt" href="?focus=34" data-focus="34"><span class="n">34</span>@tools/eslint</a>
+          <a class="pt" href="?focus=35" data-focus="35"><span class="n">35</span>@tools/repo-checks</a>
+          <a class="pt" href="?focus=36" data-focus="36"><span class="n">36</span>sample-app-lit-effect</a>
+          <a class="pt" href="?focus=37" data-focus="37"><span class="n">37</span>lit-ui-router-effect</a>
+          <a class="pt" href="?focus=38" data-focus="38"><span class="n">38</span>lit-ui-router-ssr</a>
+          <a class="pt" href="?focus=39" data-focus="39"><span class="n">39</span>@tools/crap</a>
+          <a class="pt" href="?focus=40" data-focus="40"><span class="n">40</span>@tools/oxlint-anti-slop</a>
+          <a class="pt" href="?focus=41" data-focus="41"><span class="n">41</span>lit-ui-router-signals</a>
+          <a class="pt" href="?focus=42" data-focus="42"><span class="n">42</span>ui-router-signals</a>
+          <a class="pt" href="?focus=43" data-focus="43"><span class="n">43</span>ui-router-effect</a>
+          <a class="pt" href="?focus=44" data-focus="44"><span class="n">44</span>@repo/route-snapshot</a>
+          <a class="pt" href="?focus=45" data-focus="45"><span class="n">45</span>sample-app-lit-signals</a>
+          <a class="pt" href="?focus=46" data-focus="46"><span class="n">46</span>@tools/a11y</a>
+        </div>
+      </nav>
     </div>
     <aside class="cs-info" id="cs-info" aria-live="polite"></aside>
   </div>
