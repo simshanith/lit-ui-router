@@ -1,5 +1,7 @@
 # ui-router-signals
 
+[![codecov](https://codecov.io/gh/simshanith/lit-ui-router/graph/badge.svg?component=ui-router-signals)](https://app.codecov.io/gh/simshanith/lit-ui-router?components%5B0%5D=ui-router-signals)
+
 [TC39 Signals](https://github.com/tc39/proposal-signals) for [UI-Router](https://ui-router.github.io): a framework-agnostic signal mirror of the router's current state, through [`signal-polyfill`](https://github.com/proposal-signals/signal-polyfill).
 
 The design is tracked in [#1157](https://github.com/simshanith/lit-ui-router/issues/1157). [`lit-ui-router-signals`](../lit-ui-router-signals/) builds Lit controllers on it.

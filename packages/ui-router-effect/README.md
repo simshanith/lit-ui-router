@@ -1,5 +1,7 @@
 # ui-router-effect
 
+[![codecov](https://codecov.io/gh/simshanith/lit-ui-router/graph/badge.svg?component=ui-router-effect)](https://app.codecov.io/gh/simshanith/lit-ui-router?components%5B0%5D=ui-router-effect)
+
 [Effect](https://effect.website) bindings for [UI-Router](https://ui-router.github.io): a framework-agnostic `SubscriptionRef` of the router's current state. It imports only `effect` and `@uirouter/core`.
 
 [`lit-ui-router-effect`](../lit-ui-router-effect/) holds the Lit controllers.
