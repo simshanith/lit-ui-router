@@ -49,7 +49,7 @@ import {
   thumbSrc,
   without,
 } from './manifest.ts';
-import { loadCytoscape, runScripts } from './fragment.ts';
+import { loadCytoscape, readIsland, runScripts } from './fragment.ts';
 import type { FocusDetail } from './fragment.ts';
 import { ICON_SPRITE, iconId } from './generated/icons.js';
 import { FLAME_URL, GLOW_DARK_URL, GLOW_URL, LOGO_URL, UIROUTER_URL } from './generated/brand.js';
@@ -1367,6 +1367,44 @@ export const SheetView: RoutedLitTemplate<SheetResolves> = (props) => {
   `;
 };
 
+// --- the parts list: one link per part of a plate in the round -------------
+
+/** A part the scene pins: its badge number, the url's `focus`, its name, and the bricks' own hue. */
+type Part = { n: number; name: string; hue?: string };
+
+// the scene's own island — the bricks' `bricks`, the city's `rows` in placed order — read as the scene reads it
+const partsOf = (extra: ExtraRow, fragment: string): Part[] =>
+  extra.id === 'bricks'
+    ? readIsland<{ bricks: Part[] }>(fragment, 'bk-model').bricks
+    : readIsland<{ rows: Part[] }>(fragment, 'cs-city').rows;
+
+/**
+ * THE CLICKABLE LEGEND. Each link srefs the plate's own state with the part's
+ * number as `focus`, so the url moves as a hotspot tap moves it and the
+ * scene's pin follows through `cityPin`; the lit link is the pinned part.
+ */
+const partsList = (extra: ExtraRow, fragment: string): TemplateResult => {
+  const state = sceneState(extra);
+  const bricks = extra.id === 'bricks';
+  return html`
+    <nav class="parts ${bricks ? 'parts-hued' : ''}" aria-label=${bricks ? 'Bricks' : 'Members'}>
+      ${partsOf(extra, fragment).map(
+        (part) => html`<a
+            href=${srefHref(state, { focus: String(part.n) }, { location: 'replace' })}
+            class=${srefActiveClass({
+              state,
+              params: { focus: String(part.n) },
+              activeClasses: ON_CLASSES,
+            })}
+            aria-current=${srefAriaCurrent({ state, params: { focus: String(part.n) } })}
+            style=${part.hue ? `--hue:${part.hue}` : nothing}
+            ><span class="n">${part.n}</span>${part.name}</a
+          >`,
+      )}
+    </nav>
+  `;
+};
+
 // --- the city: sheet 7 in the round, with model-viewer loaded on demand ----
 
 export const CityView: RoutedLitTemplate<SceneResolves> = (props) => {
@@ -1384,7 +1422,7 @@ export const CityView: RoutedLitTemplate<SceneResolves> = (props) => {
       <span>ALTITUDE · ${extra.scale}</span>
       ${seeAlso(extra.refs)} ${keyBlock(extra.labels)}
     </div>
-    ${verdictLine(extra.verdict)}
+    ${verdictLine(extra.verdict)} ${partsList(extra, resolves.fragment)}
     <atlas-city .fragment=${resolves.fragment} .lib=${resolves.viewer} .router=${props?.router}
       >${plate(resolves.fragment, false)}</atlas-city
     >
@@ -1408,7 +1446,7 @@ export const BricksView: RoutedLitTemplate<SceneResolves> = (props) => {
       <span>ALTITUDE · ${extra.scale}</span>
       ${seeAlso(extra.refs)} ${keyBlock(extra.labels)}
     </div>
-    ${verdictLine(extra.verdict)}
+    ${verdictLine(extra.verdict)} ${partsList(extra, resolves.fragment)}
     <atlas-bricks .fragment=${resolves.fragment} .lib=${resolves.viewer} .router=${props?.router}
       >${plate(resolves.fragment, false)}</atlas-bricks
     >
