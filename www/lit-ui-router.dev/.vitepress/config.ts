@@ -191,6 +191,7 @@ function makeSidebar() {
             },
           ],
         },
+        { text: 'UI-Router Signals', link: '/packages/ui-router-signals' },
       ],
     },
     {

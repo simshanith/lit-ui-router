@@ -25,7 +25,8 @@
         "lit-ui-router-mobx#build",
         "lit-ui-router-ssr#build",
         "ui-router-navigation-location-plugin#build",
-        "ui-router-server#build"
+        "ui-router-server#build",
+        "ui-router-signals#build"
       ],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/pnpm-workspace.yaml"],
       "outputs": [".cache/pack/*.tgz"]

@@ -22,6 +22,7 @@ on:
           - eslint-plugin-lit-ui-router
           - lit-ui-router-effect
           - lit-ui-router-ssr
+          - ui-router-signals
         default: 'lit-ui-router'
       increment:
         description: 'Increment'

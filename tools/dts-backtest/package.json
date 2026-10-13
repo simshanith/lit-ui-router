@@ -24,12 +24,14 @@
     "mobx": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
+    "signal-polyfill": "catalog:",
     "typescript-5.0": "catalog:",
     "typescript-5.9": "catalog:",
     "typescript-6": "catalog:typescript6",
     "typescript-7": "catalog:",
     "ui-router-effect": "catalog:workspace",
     "ui-router-navigation-location-plugin": "catalog:workspace",
-    "ui-router-server": "catalog:workspace"
+    "ui-router-server": "catalog:workspace",
+    "ui-router-signals": "catalog:workspace"
   }
 }
