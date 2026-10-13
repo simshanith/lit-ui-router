@@ -4,7 +4,7 @@
 // the same page sets beside the flame. The glow is the flame blurred and
 // brightened inside its own SVG, one per theme, since Safari composites CSS
 // filters differently from Chrome. The cover stamps the client's name; the
-// rail head spells the client out, lit-ui-router.dev = ui-router + lit, each
+// rail head spells the client out, lit-ui-router.dev = lit + ui-router, each
 // logo a link. All five files are the docs site's own, copied under
 // generator/brand/, and ride into the app as data URIs through the generated
 // module, so the prerender, the site and the artifact all carry them with no

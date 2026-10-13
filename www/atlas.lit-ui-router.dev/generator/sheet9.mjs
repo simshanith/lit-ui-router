@@ -12,7 +12,7 @@ const HOME = {
   site: 'https://lit-ui-router.dev',
   siteDir: `${REPO}/tree/main/www/lit-ui-router.dev`,
   sampleApp: 'https://lit-ui-router.dev/sample-app',
-  hellogalaxy: 'https://lit-ui-router.dev/tutorial/hellogalaxy',
+  example: (name) => `https://lit-ui-router.dev/examples/${name}/`,
   inter: 'https://rsms.me/inter/',
   visualizer: npmUrl('@uirouter/visualizer'),
   apiViewer: 'https://github.com/open-wc/api-viewer-element',
@@ -21,7 +21,9 @@ const HOME = {
   manifest: 'https://custom-elements-manifest.open-wc.org',
   modelViewer: 'https://modelviewer.dev',
 };
-const OX = 480, OY = 205;
+// the origin keeps the tallest cap and its badge 24 px inside the frame's top; the frame guard below holds every district there
+const OX = 480, OY = 305;
+const VB_W = 1160;
 
 // ---- census: every count comes from www/atlas.lit-ui-router.dev/data/census-shipped.json --------
 // The plate is the checked-in snapshot census-shipped.mjs writes: docs/dist
@@ -69,11 +71,11 @@ const LOT = { name: 'demo corpora', x: 60, y: 10, files: 15, gz: 899000 };
 
 // The role outlines, in drawing order; appendix A4 sums the deploy by these roles, so a district no role claims is a build error.
 export const ROLES = [
-  { name: 'demo payload', role: 'demo payload — media · data', box: [20, 0, 230, 200], label: [40, 150, 'start'],
+  { name: 'demo payload', role: 'demo payload — media · data', box: [20, 0, 230, 200], label: [40, OY - 55, 'start'],
     districts: ['examples', 'images', 'static data'] },
-  { name: 'the documentation site', role: 'the documentation site', box: [320, 0, 700, 260], label: [985, 318, 'start'],
+  { name: 'the documentation site', role: 'the documentation site', box: [320, 0, 700, 260], label: [985, OY + 113, 'start'],
     districts: ['html pages', 'inter fonts', 'vp framework', 'page chunks', 'site css'] },
-  { name: 'the routed apps', role: 'the routed apps', box: [540, 290, 720, 450], label: [540, 700, 'end'],
+  { name: 'the routed apps', role: 'the routed apps', box: [540, 290, 720, 450], label: [540, OY + 495, 'end'],
     districts: ['app: vanilla', 'app: hash', 'app: mobx', 'app: effect'] },
 ];
 
@@ -109,6 +111,21 @@ ${txt(bx.toFixed(1), (by - 10.6).toFixed(1), String(n), 'lbls', 'middle')}`;
 
 const bodies = depthSort(masses).map((m) => m.svg).join('\n') + '\n' + badges;
 
+const half = Math.ceil(all.length / 2);
+const SY = OY + 585;
+const VB_H = SY + 108 + half * 17;
+// every cap corner and badge stays inside the frame: a grown district cannot ship cut off
+for (const { name, x, y, s, h } of all) {
+  const [bx, by] = isoPt(OX, OY, x + s / 2, y, h);
+  const pts = [
+    ...[[x, y], [x + s, y], [x + s, y + s], [x, y + s]].map(([px, py]) => ['cap', ...isoPt(OX, OY, px, py, h)]),
+    ['badge', bx - 9, by - 14], ['badge', bx + 9, by - 14], ['badge', bx, by - 23], ['badge', bx, by - 5],
+  ];
+  for (const [part, px, py] of pts) {
+    if (px < 0 || py < 0 || px > VB_W || py > VB_H) throw new Error(`sheet9: the ${part} of ${name} stands outside the ${VB_W} × ${VB_H} frame at ${px.toFixed(1)},${py.toFixed(1)} — move OY or its PLAN slot`);
+  }
+}
+
 const lotOutline = ({ x, y, files }) => {
   const s = SIDE(files);
   const pts = [[x, y], [x + s, y], [x + s, y + s], [x, y + s]]
@@ -142,6 +159,15 @@ const APPS = all.filter((r) => r.name.startsWith('app:')).reduce((s, r) => s + r
 const APP_PCT = ((APPS / PLATE.totals.gzBytes) * 100).toFixed(1);
 const INTER = row('inter fonts'), PAGES = row('html pages');
 const EXAMPLES = row('examples'), VANILLA = row('app: vanilla'), HASH = row('app: hash');
+// the examples' lead is read off the plate: the example that carries it and the chunk's unhashed name
+const LEAD = EXAMPLES.top;
+const LEAD_EXAMPLE = LEAD.name.match(/^examples\/([^/]+)\//)?.[1];
+if (!LEAD_EXAMPLE) throw new Error(`sheet9: the examples district's largest tenant ${LEAD.name} is not under examples/<name>/`);
+const LEAD_CHUNK = tenant(LEAD.name).replace(/\.js$/, '');
+if (LEAD_CHUNK !== 'model-viewer') throw new Error(`sheet9: the notes say a model-viewer chunk leads the examples, and the plate's lead is ${LEAD_CHUNK}`);
+if (!LEAD_EXAMPLE.startsWith('hellogalaxy')) throw new Error(`sheet9: the notes say a galaxy leads the examples, and the plate's lead belongs to ${LEAD_EXAMPLE}`);
+const SMALL_APPS = VANILLA.gz + row('app: mobx').gz + HASH.gz;
+if (LEAD.gz <= SMALL_APPS) throw new Error(`sheet9: the notes say the ${LEAD_CHUNK} chunk outweighs vanilla, mobx and hash combined, and the plate reads ${LEAD.gz} against ${SMALL_APPS}`);
 // The top of the skyline is a race, and the order changes between refs — so the
 // ranking is read off the plate rather than typed. RANKED is every district by
 // gz, tallest first; nothing below names a district's position by hand.
@@ -159,8 +185,6 @@ if (RANKED[0].name !== PAGES.district) throw new Error(`sheet 9: the notes say t
 // the cover index's fit verdict, told from the plate's own ranking
 export const SHEET9_VERDICT = `the wire survey — the deploy's tallest district is ${RANKED[0].name} at ${KB(RANKED[0].gz)}, and the lettering alone outweighs every routed app the site exists to demonstrate (${KB(INTER.gz)} against ${KB(APPS)})`;
 
-const half = Math.ceil(all.length / 2);
-const SY = 790;
 const line = (r) => `${r.n} ${r.name} — ${r.f}f ${KB(r.gz)} · ${tenant(r.top.name)} ${KB(r.top.gz)}`;
 const schedule = `<g>
 <rect x="40" y="${SY}" width="1080" height="${70 + half * 17}" class="sk fp"/>
@@ -171,35 +195,35 @@ ${all.slice(half).map((r, i) => txt(590, SY + 52 + i * 17, line(r), 'lbls')).joi
 ${txt(56, SY + 58 + half * 17, `TOTAL — ${all.length} districts · ${fmt(PLATE.totals.files)} files · ${fmt(PLATE.totals.rawBytes)} raw bytes · ${fmt(PLATE.totals.gzBytes)} gzipped · 0 orphans · ${BASIS}`, 'lbls')}
 </g>`;
 
-const svg = `<svg viewBox="0 0 1160 ${SY + 108 + half * 17}" role="img" aria-label="The production docs-site deploy drawn as an isometric city of ${all.length} districts: footprint area from file counts, height from gzipped bytes on the wire. The three tallest towers are ${RANKED.slice(0, 3).map((r) => r.name).join(', ')}. A vacant lot at the plan's edge marks the footprint of the demo corpora, which the site no longer ships. The four routed sample apps are small accent buildings totalling ${APP_PCT} percent of the deploy. There is no ghost block: the census walks backtick-quoted asset URLs too, and this deploy carries no unreachable files at all. A structure schedule lists every district with exact counts and its largest tenant.">
+const svg = `<svg viewBox="0 0 ${VB_W} ${VB_H}" role="img" aria-label="The production docs-site deploy drawn as an isometric city of ${all.length} districts: footprint area from file counts, height from gzipped bytes on the wire. The three tallest towers are ${RANKED.slice(0, 3).map((r) => r.name).join(', ')}. A vacant lot at the plan's edge is the demo corpora's footprint, which the deploy does not carry. The four routed sample apps are small accent buildings totalling ${APP_PCT} percent of the deploy. There is no ghost block: the census walks backtick-quoted asset URLs too, and this deploy carries no unreachable files at all. A structure schedule lists every district with exact counts and its largest tenant.">
 ${defs(P)}
 
 ${outlines}
 
 ${bodies}
 
-${txt(150, 120, `a vacant lot — ${LOT.files} files, ${KB(LOT.gz)} of Dickens,`, 'lbla')}
-${txt(150, 132, 'Beowulf and an RFC the site does not ship', 'lbla')}
-<line x1="442" y1="132" x2="502" y2="248" class="skf"/>
+${txt(150, OY - 85, `a vacant lot — ${LOT.files} files, ${KB(LOT.gz)} of Dickens,`, 'lbla')}
+${txt(150, OY - 73, 'Beowulf and an RFC the site does not ship', 'lbla')}
+<line x1="442" y1="${OY - 73}" x2="502" y2="${OY + 43}" class="skf"/>
 <!-- east of the Inter tower's cap (x 930 at this ref), under the site outline's label -->
-${txt(985, 360, `${KB(INTER.gz)} of Inter —`, 'lbla')}
-${txt(985, 372, `the lettering stands ${ORD[INTER_RANK - 1]}`, 'lbla')}
-${txt(985, 384, `on the wire; only ${TALLER_THAN_INTER[0]}`, 'lbla')}
-${txt(985, 396, TALLER_THAN_INTER.length > 1 ? `${TALLER_THAN_INTER.slice(1).map((t) => `and ${t}`).join(' ')} stand taller` : 'stands taller', 'lbla')}
-${txt(1120, 715, `all four apps: ${KB(APPS)} —`, 'lbla', 'end')}
-${txt(1120, 727, `${APP_PCT}% of the deploy they exist to demonstrate`, 'lbla', 'end')}
-<line x1="937" y1="711" x2="878" y2="689" class="skf"/>
-${txt(110, 558, 'no ghost district stands on this plan:', 'lbla')}
-${txt(110, 570, 'the walk follows backtick-quoted asset URLs,', 'lbla')}
-${txt(110, 582, 'and this deploy ships ZERO unreachable files', 'lbla')}
-${txt(110, 614, 'the api-viewer panel is off the critical path:', 'lbla')}
-${txt(110, 626, 'it arrives in a lazy api-docs chunk, and the apps', 'lbla')}
-${txt(110, 638, 'share one lit major, so identical chunks hash', 'lbla')}
-${txt(110, 650, 'alike across all four', 'lbla')}
-${txt(110, 674, 'every district is read from the census plate —', 'lbla')}
-${txt(110, 686, 'first claim seats the visualizer in app: vanilla', 'lbla')}
+${txt(985, OY + 155, `${KB(INTER.gz)} of Inter —`, 'lbla')}
+${txt(985, OY + 167, `the lettering stands ${ORD[INTER_RANK - 1]}`, 'lbla')}
+${txt(985, OY + 179, `on the wire; only ${TALLER_THAN_INTER[0]}`, 'lbla')}
+${txt(985, OY + 191, TALLER_THAN_INTER.length > 1 ? `${TALLER_THAN_INTER.slice(1).map((t) => `and ${t}`).join(' ')} stand taller` : 'stands taller', 'lbla')}
+${txt(1120, OY + 510, `all four apps: ${KB(APPS)} —`, 'lbla', 'end')}
+${txt(1120, OY + 522, `${APP_PCT}% of the deploy they exist to demonstrate`, 'lbla', 'end')}
+<line x1="937" y1="${OY + 506}" x2="878" y2="${OY + 484}" class="skf"/>
+${txt(110, OY + 353, 'no ghost district stands on this plan:', 'lbla')}
+${txt(110, OY + 365, 'the walk follows backtick-quoted asset URLs,', 'lbla')}
+${txt(110, OY + 377, 'and this deploy ships ZERO unreachable files', 'lbla')}
+${txt(110, OY + 409, 'the api-viewer panel is off the critical path:', 'lbla')}
+${txt(110, OY + 421, 'it arrives in a lazy api-docs chunk, and the apps', 'lbla')}
+${txt(110, OY + 433, 'share one lit major, so identical chunks hash', 'lbla')}
+${txt(110, OY + 445, 'alike across all four', 'lbla')}
+${txt(110, OY + 469, 'every district is read from the census plate —', 'lbla')}
+${txt(110, OY + 481, 'first claim seats the visualizer in app: vanilla', 'lbla')}
 
-<!-- two short lines, east of the html-pages cap, which reaches y 15.6 at this ref -->
+<!-- two short lines at the frame's top-right corner, east of the html-pages cap -->
 ${txt(1120, 26, 'SCALE — footprint area ∝ files', 'lbls', 'end')}
 ${txt(1120, 38, '1 px of height ≈ 4.2 KB gzipped', 'lbls', 'end')}
 
@@ -216,10 +240,10 @@ export const sheet9 = {
   caption: `The production docs deploy surveyed on the wire: ${fmt(PLATE.totals.files)} files, ${MB(PLATE.totals.gzBytes)} gzipped, drawn as ${all.length} districts — the tallest towers are prerendered prose and font files, the routed apps are ${KB(APPS)} of accent buildings in their own city, and there is no ghost block: the deploy carries no unreachable files at all.`,
   notes: `
 <p><strong>Method:</strong> every number on this sheet is read at build time from the checked-in plate <a href="${HOME.plate}"><code>www/atlas.lit-ui-router.dev/data/census-shipped.json</code></a> — ${BASIS}. The probe builds <code><a href="${HOME.siteDir}">www/lit-ui-router.dev</a>/dist</code> inside a materialized, installed archive of the ref, never the working tree, and measures it file by file: height is gzip level 9 of each file, the honest wire measure, since the CDN serves compressed. Footprint is file count, as on sheets 7 and 8. A reachability walk — every HTML shell and hashed chunk, following static asset references — sorts the assets into districts, and a shared chunk counts where it is first claimed (vanilla → mobx → effect → hash), because the CDN ships it once. This sheet extends the survey a step further: sheet 7 measures the source, sheet 8 what npm delivers, this sheet what one deploy actually ships — ${fmt(PLATE.totals.files)} files, ${MB(PLATE.totals.rawBytes)} on disk, ${MB(PLATE.totals.gzBytes)} on the wire. Sheet 10 goes one level in again and opens the bundle itself.</p>
-<p><strong>The tallest building is the prose.</strong> The skyline is <a href="${HOME.site}">the site</a>'s ${PAGES.files} prerendered HTML pages at ${KB(PAGES.gz)}, with <code>${RANKED[1].name}</code> ${fmt(RUNNER_GAP)} bytes behind at ${KB(RANKED[1].gz)} — the prose outweighs the runner-up ${(PAGES.gz / RANKED[1].gz).toFixed(1)} to 1. <a href="${HOME.inter}">Inter</a>'s ${INTER.files} <code>woff2</code> faces stand ${ORD[INTER_RANK - 1]} at ${KB(INTER.gz)}: on the wire, this documentation site is still mostly prose and typography, and the one script district that outranks the lettering is the examples, led by a single galaxy. A vacant lot at the plan's edge marks where the demo corpora stood; they are no longer shipped.</p>
+<p><strong>The tallest building is the prose.</strong> The skyline is <a href="${HOME.site}">the site</a>'s ${PAGES.files} prerendered HTML pages at ${KB(PAGES.gz)}, with <code>${RANKED[1].name}</code> ${fmt(RUNNER_GAP)} bytes behind at ${KB(RANKED[1].gz)} — the prose outweighs the runner-up ${(PAGES.gz / RANKED[1].gz).toFixed(1)} to 1. <a href="${HOME.inter}">Inter</a>'s ${INTER.files} <code>woff2</code> faces stand ${ORD[INTER_RANK - 1]} at ${KB(INTER.gz)}: on the wire, this documentation site is still mostly prose and typography, and the one script district that outranks the lettering is the examples, led by a single galaxy. A vacant lot at the plan's edge is the demo corpora's footprint, which the deploy does not carry.</p>
 <p><strong>The product is a guest in its own city.</strong> The four routed <a href="${HOME.sampleApp}">sample apps</a> — the thing the site exists to demonstrate — total ${KB(APPS)} gzipped, ${APP_PCT}% of the deploy. First claim seats <a href="${HOME.visualizer}"><code>visualizer.esm</code></a> and the <a href="${HOME.manifest}">custom-elements manifest</a> in <code>app: vanilla</code>, which is why that district reads ${VANILLA.files} files and ${KB(VANILLA.gz)} while the hash app's whole district is ${HASH.files} files and ${KB(HASH.gz)}. Two rules shape those numbers rather than the CDN: a <a href="${HOME.overrides}">scoped override</a> holds the <a href="${HOME.apiViewer}"><code>@api-viewer</code></a>/<a href="${HOME.litDialog}"><code>lit-dialog</code></a> stack to one lit major, so identical lit chunks hash identically <em>across</em> apps and part of mobx's download is chunks vanilla already ships; and the api-viewer docs panel, which renders only behind a feature flag, arrives in a lazy <code>api-docs</code> chunk rather than the eager main one. Same bytes on the CDN, fewer on the critical path.</p>
 <p><strong>There is no ghost district.</strong> The reachability walk follows the backtick-quoted asset URLs the app chunks build by hand, so the api-viewer custom-elements manifest is reachable after all, and the orphan list on this plate is <em>empty</em> — no hatched block stands here. Read that as a statement about the instrument as much as the deploy: an orphan count is only as good as the walk that produces it, and earlier walks over an accumulated local <code>dist/</code> reported orphans that were stale build output, not shipped weight. This census builds clean, into a materialized archive of the ref, and counts what a browser can reach.</p>
-<p><strong>One example outweighs the router.</strong> The examples district — ${EXAMPLES.files} files, ${KB(EXAMPLES.gz)} — is led by the <a href="${HOME.hellogalaxy}">hellogalaxy demo</a>'s <a href="${HOME.modelViewer}"><code>model-viewer</code></a> chunk at ${KB(EXAMPLES.top.gz)} on its own, heavier than the vanilla, mobx and hash apps combined, delivered so one tutorial page can spin a galaxy.</p>`,
+<p><strong>One example outweighs the router.</strong> The examples district — ${EXAMPLES.files} files, ${KB(EXAMPLES.gz)} — is led by the <a href="${HOME.example(LEAD_EXAMPLE)}"><code>${LEAD_EXAMPLE}</code></a> example's <a href="${HOME.modelViewer}"><code>${LEAD_CHUNK}</code></a> chunk at ${KB(LEAD.gz)} on its own, heavier than the vanilla, mobx and hash apps combined, delivered so one tutorial page can spin a galaxy.</p>`,
   key: [
     keyRow('<rect x="8" y="3" width="18" height="12" class="sk fp"/>', 'site district — height = gzipped bytes'),
     keyRow('<rect x="8" y="3" width="18" height="12" class="sk fa"/>', 'a routed sample app'),

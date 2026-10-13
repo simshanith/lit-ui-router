@@ -729,8 +729,8 @@ function rail(manifest: Manifest | undefined, here: Here): TemplateResult {
       <input type="checkbox" id="rail-open" class="rail-open" aria-label="show the sheets" />
       <div class="rail-head">
         <div class="rail-name">
-          <!-- THE CLIENT, SPELLED OUT: lit-ui-router.dev = ui-router + lit, in the docs site's own marks -->
-          <div class="client-eq" role="group" aria-label="lit-ui-router.dev equals ui-router plus lit">
+          <!-- THE CLIENT, SPELLED OUT: lit-ui-router.dev = lit + ui-router, in the docs site's own marks -->
+          <div class="client-eq" role="group" aria-label="lit-ui-router.dev equals lit plus ui-router">
             <a class="client-mark" href=${DOCS} title="lit-ui-router.dev" target="_blank" rel="noopener">
               <img class="client-glow client-glow-light" src=${GLOW_URL} alt="" aria-hidden="true" />
               <img class="client-glow client-glow-dark" src=${GLOW_DARK_URL} alt="" aria-hidden="true" />
@@ -738,12 +738,12 @@ function rail(manifest: Manifest | undefined, here: Here): TemplateResult {
               <img class="client-logo client-logo-lit" src=${LOGO_URL} alt="" aria-hidden="true" />
             </a>
             <span class="op">=</span>
-            <a class="client-term" href="https://ui-router.github.io/" title="UI-Router" target="_blank" rel="noopener">
-              <img src=${UIROUTER_URL} alt="UI-Router" />
-            </a>
-            <span class="op">+</span>
             <a class="client-term" href="https://lit.dev" title="Lit" target="_blank" rel="noopener">
               <img class="flame" src=${FLAME_URL} alt="Lit" />
+            </a>
+            <span class="op">+</span>
+            <a class="client-term" href="https://ui-router.github.io/" title="UI-Router" target="_blank" rel="noopener">
+              <img src=${UIROUTER_URL} alt="UI-Router" />
             </a>
           </div>
           <h1><a href=${srefHref('atlas.gallery')}>THE ALTITUDE ATLAS</a></h1>
