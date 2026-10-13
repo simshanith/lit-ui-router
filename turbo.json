@@ -401,6 +401,8 @@
       // manual-only: not in ci — the floor pin can only reference published
       // versions, so gating would break atomic core-API + mobx-adoption PRs
       // floor comes from the catalog; the aliased package is pinned by the lockfile
+      // workspace peers without a floor alias resolve to their built d.ts
+      "dependsOn": ["^build:types"],
       "inputs": [
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/tsconfig.base.json",
