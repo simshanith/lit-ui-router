@@ -61,7 +61,6 @@
     "lit-ui-router": "catalog:workspace",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
-    "signal-polyfill": "catalog:",
     "typescript": "catalog:typescript6-compat",
     "typescript-7": "catalog:",
     "ui-router-signals": "catalog:workspace",

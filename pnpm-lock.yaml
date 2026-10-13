@@ -1340,9 +1340,6 @@ importers:
       oxlint:
         specifier: 'catalog:'
         version: 1.87.0(oxlint-tsgolint@7.0.2003)
-      signal-polyfill:
-        specifier: 'catalog:'
-        version: 0.2.2
       typescript:
         specifier: catalog:typescript6-compat
         version: '@typescript/typescript6@6.0.2'

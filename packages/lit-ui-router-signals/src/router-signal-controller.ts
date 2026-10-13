@@ -5,12 +5,29 @@ import { UIRouterLitElement } from 'lit-ui-router/pure';
 import { RouterSignals, watchSelection } from 'ui-router-signals';
 
 import { warnMissingRouter } from './dev-warn.js';
-import { SignalControllerOptions } from './signal-controller.js';
 
 /** Options for {@link RouterSignalController}. */
-export interface RouterSignalControllerOptions<
-  T,
-> extends SignalControllerOptions<T> {
+export interface RouterSignalControllerOptions<T> {
+  /**
+   * Invoked (before `host.requestUpdate()`) whenever the selected value
+   * changes — and once on every host (re)connect. Use for effects such as
+   * resetting component state from route params.
+   */
+  onChange?: (value: T) => void;
+
+  /**
+   * Value exposed on `.value` until a router is known: before `hostConnected`
+   * without an explicit or scoped router, and while no provider answers.
+   * Without it `.value` is `undefined` until then.
+   */
+  initialValue?: T;
+
+  /**
+   * Comparer deciding whether the selected value changed, passed to the
+   * selector's `Signal.Computed`. Defaults to `Object.is`.
+   */
+  equals?: (a: T, b: T) => boolean;
+
   /**
    * Explicit router instance, or a thunk returning one. When omitted (or the
    * thunk returns `undefined`), the controller takes the router an enclosing
@@ -33,8 +50,10 @@ export interface RouterSignalControllerOptions<
 }
 
 /**
- * A {@link SignalController} preselected on the router: watches the
- * {@link RouterSignals} of the router the host's nearest provider supplies.
+ * A ReactiveController that watches a selector over the {@link RouterSignals}
+ * of the router the host's nearest provider supplies, and calls
+ * `host.requestUpdate()` when the selected value changes. The selector runs
+ * on every (re)connect, so sticky routed components resync with the router.
  *
  * Router discovery matches `lit-ui-router-effect`'s `RouterRefController`:
  * `<ui-router>`, `<ui-view>`, a `@lit/context` `ContextProvider` of
