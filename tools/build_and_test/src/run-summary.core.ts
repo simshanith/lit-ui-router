@@ -55,12 +55,46 @@ export interface SummaryTask {
   package: string;
   directory: string;
   command: string;
-  /** Repo-root-relative; written as the task runs, so it survives the failure. */
-  logFile: string;
+  /**
+   * Repo-root-relative; written as the task runs, so it survives the failure. Absent on an
+   * uncached task, whose output only turbo's `--log-file` keeps.
+   */
+  logFile?: string;
   cache?: TaskCache;
   execution?: TaskExecution;
   /** taskIds this task waited on. Absent on older turbo; treated as empty. */
   dependencies?: string[];
+}
+
+/** One line of turbo's `--log-file` JSON. */
+export interface StructuredLogEntry {
+  source: string;
+  level: string;
+  timestamp: number;
+  text: string;
+}
+
+/**
+ * A task's output from turbo's `--log-file` JSON, the fallback for a task with no `logFile`.
+ * The execution window tells apart two runs of one session that share a taskId.
+ */
+export function structuredTaskLog(
+  entries: readonly StructuredLogEntry[],
+  task: SummaryTask,
+): string | undefined {
+  const exec = task.execution;
+
+  if (exec === undefined) return undefined;
+
+  const lines = entries.flatMap((entry) =>
+    entry.source === task.taskId &&
+    entry.timestamp >= exec.startTime &&
+    entry.timestamp <= exec.endTime
+      ? [entry.text]
+      : [],
+  );
+
+  return lines.length > 0 ? lines.join('\n') : undefined;
 }
 
 export interface RunSummary {
@@ -273,7 +307,7 @@ export function buildReports(
       excerpt:
         raw === undefined
           ? {
-              text: `(no log file at ${task.logFile})\n${exec?.error ?? ''}`.trim(),
+              text: `(no log for ${task.taskId})\n${exec?.error ?? ''}`.trim(),
               omittedLines: 0,
             }
           : excerptLog(raw, budget),
