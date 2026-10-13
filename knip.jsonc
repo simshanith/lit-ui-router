@@ -63,8 +63,13 @@
       ],
     },
     "packages/lit-ui-router-signals": {
-      // vitest alias target for the lit 2 compat lane
-      "ignoreDependencies": ["lit-2"],
+      "ignoreDependencies": [
+        "@release-it/conventional-changelog",
+        // vitest alias target for the lit 2 compat lane
+        "lit-2",
+        "lit-ui-router-floor",
+        "@uirouter/core-floor",
+      ],
     },
     "packages/lit-ui-router-ssr": {
       "ignoreDependencies": [

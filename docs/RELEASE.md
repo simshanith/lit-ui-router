@@ -178,7 +178,7 @@ renders orange, meaning a release or floor bump is owed — never a CI failure.
 A floor bump raises the catalog the adapter's `lit-ui-router` peer names and
 the matching `peerFloor*` pin in `pnpm-workspace.yaml`: `publishedPeerMobx`
 and `peerFloorMobx` for mobx, `publishedPeerEffect` and `peerFloorEffect` for
-effect.
+effect, `publishedPeerSignals` and `peerFloorSignals` for signals.
 
 `eslint-plugin-lit-ui-router` has no check run: its floor is a published eslint,
 so `test:peer-floor` runs its rule suite on the `eslint-floor` alias in every PR.

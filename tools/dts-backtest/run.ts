@@ -94,6 +94,7 @@ const PACKAGE_DIRS = [
   'lit-ui-router',
   'lit-ui-router-effect',
   'lit-ui-router-mobx',
+  'lit-ui-router-signals',
   'lit-ui-router-ssr',
   'navigation-location-plugin',
   'ui-router-effect',

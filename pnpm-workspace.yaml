@@ -124,6 +124,8 @@ catalogs:
     eslint-floor: npm:eslint@9.0.0
   peerFloorMobx:
     lit-ui-router-floor: npm:lit-ui-router@1.15.0
+  peerFloorSignals:
+    lit-ui-router-floor: npm:lit-ui-router@1.15.0
   peerFloorSsr:
     lit-ui-router-floor: npm:lit-ui-router@1.16.1
     ui-router-server-floor: npm:ui-router-server@0.2.0
@@ -144,6 +146,9 @@ catalogs:
     lit-ui-router: ^1.15.0
   publishedPeerMobx:
     lit-ui-router: ^1.15.0
+  publishedPeerSignals:
+    lit-ui-router: ^1.15.0
+    ui-router-signals: ^0.1.0-rc.0
   publishedPeerSsr:
     lit-ui-router: ^1.16.1
     ui-router-server: ^0.2.0

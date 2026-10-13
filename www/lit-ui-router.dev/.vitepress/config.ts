@@ -178,6 +178,7 @@ function makeSidebar() {
             },
           ],
         },
+        { text: 'Signals', link: '/packages/signals' },
         {
           text: 'SSR',
           link: '/packages/ssr',

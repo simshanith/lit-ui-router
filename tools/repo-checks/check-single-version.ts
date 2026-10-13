@@ -45,7 +45,7 @@ const ALLOWED: SplitAllowance[] = [
   },
   {
     name: 'lit-ui-router',
-    why: 'peerFloorEffect and peerFloorMobx pin lit-ui-router-floor to 1.15.0 and peerFloorSsr to 1.16.1, each adapter its own published floor',
+    why: 'peerFloorEffect, peerFloorMobx and peerFloorSignals pin lit-ui-router-floor to 1.15.0 and peerFloorSsr to 1.16.1, each adapter its own published floor',
   },
   {
     name: 'lit',

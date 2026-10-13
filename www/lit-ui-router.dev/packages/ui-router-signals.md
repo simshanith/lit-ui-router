@@ -15,7 +15,8 @@ description: A framework-agnostic TC39 Signals mirror of the router's current st
 [TC39 Signals](https://github.com/tc39/proposal-signals), through
 [`signal-polyfill`](https://github.com/proposal-signals/signal-polyfill). It
 imports neither Lit nor `lit-ui-router`, so any signal consumer can track
-route state.
+route state. [`lit-ui-router-signals`](/packages/signals) builds Lit
+controllers on it.
 
 ## Installation
 
