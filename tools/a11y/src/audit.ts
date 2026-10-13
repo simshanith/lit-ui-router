@@ -37,8 +37,10 @@ export interface Audit {
   findings: Finding[];
 }
 
-/** Stands in for the shields.io badges: an image that never answers holds the page's load event. */
-const BADGE =
+/** Third-party image hosts the pages show; one that never answers holds load or the request settle. */
+const IMAGE_HOSTS = ['https://img.shields.io/**', 'https://placebear.com/**'];
+
+const IMAGE =
   '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="20"><rect width="80" height="20" fill="#555"/></svg>';
 
 async function newContext(
@@ -50,9 +52,11 @@ async function newContext(
     reducedMotion: 'reduce',
   });
 
-  await context.route('https://img.shields.io/**', (route) =>
-    route.fulfill({ contentType: 'image/svg+xml', body: BADGE }),
-  );
+  for (const host of IMAGE_HOSTS) {
+    await context.route(host, (route) =>
+      route.fulfill({ contentType: 'image/svg+xml', body: IMAGE }),
+    );
+  }
 
   return context;
 }
