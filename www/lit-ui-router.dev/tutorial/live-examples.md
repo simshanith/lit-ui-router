@@ -65,3 +65,14 @@ resolves, hooks and state lifetimes into effects, fibers and scopes. The fiber
 log at the foot shows them run.
 
 <LiveExample name="hellogalaxy-effect" />
+
+## Hello Galaxy (Signals)
+
+The same states, URLs and resolves, with a star chart that nested views share.
+`@lit-labs/signals` and the [Signals bindings](/packages/signals) read one
+signal graph. The star list follows the chart through a `SignalController`.
+The `SignalWatcher` shell binds a summary with `watch()`, so charting updates
+that text alone. A `RouterSignalController` builds the shell's breadcrumb from
+the route and the star its state resolved.
+
+<LiveExample name="hellogalaxy-signals" />

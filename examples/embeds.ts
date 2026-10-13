@@ -40,6 +40,11 @@ export const EXAMPLES = {
     height: '1120px',
     file: 'src/main.ts',
   },
+  'hellogalaxy-signals': {
+    title: 'Hello Galaxy (Signals)',
+    height: '930px',
+    file: 'src/main.ts',
+  },
   'design-system-links': {
     title: 'Design System Links',
     height: '540px',
