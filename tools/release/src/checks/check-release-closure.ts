@@ -56,74 +56,84 @@ const PUBLISH_NPM: ClosureRule = {
   why: `publish-npm runs \`turbo run <pkg>#build\` and reconcile's @tools/release#pack:all, and package-qualified edges reach members no manifest names; ${FIX}`,
 };
 
-const closure = requireEnv(process.env, 'RELEASE_CLOSURE');
+const main = async (): Promise<void> => {
+  const closure = requireEnv(process.env, 'RELEASE_CLOSURE');
 
-const [{ members }, { stdout }] = await Promise.all([
-  loadWorkspace(workspaceRoot),
-  defaultExec(
-    'pnpm',
-    ['ls', '-r', ...filterArgs(closure), '--depth', '-1', '--json'],
-    { cwd: workspaceRoot },
-  ),
-]);
+  const [{ members }, { stdout }] = await Promise.all([
+    loadWorkspace(workspaceRoot),
+    defaultExec(
+      'pnpm',
+      ['ls', '-r', ...filterArgs(closure), '--depth', '-1', '--json'],
+      { cwd: workspaceRoot },
+    ),
+  ]);
 
-const selected = selectedNames(stdout);
+  const selected = selectedNames(stdout);
 
-const publishable = members.filter(isPublishable).map((member) => member.name);
+  const publishable = members
+    .filter(isPublishable)
+    .map((member) => member.name);
 
-// root-anchored: turbo narrows a run to the package it is invoked from
-const plan = await defaultCapture('turbo', publishNpmDryRunArgs(publishable), {
-  cwd: workspaceRoot,
-});
+  // root-anchored: turbo narrows a run to the package it is invoked from
+  const plan = await defaultCapture(
+    'turbo',
+    publishNpmDryRunArgs(publishable),
+    {
+      cwd: workspaceRoot,
+    },
+  );
 
-let failed = false;
+  let failed = false;
 
-for (const rule of RULES) {
-  const required = members.filter(rule.select).map((member) => member.name);
+  for (const rule of RULES) {
+    const required = members.filter(rule.select).map((member) => member.name);
 
-  if (required.length === 0) {
-    // the invariant is vacuous if nothing matches; that's a wiring bug, not a pass
-    console.error(`${CHECK}: no member selects for ${rule.need}`);
-    failed = true;
-    continue;
+    if (required.length === 0) {
+      // the invariant is vacuous if nothing matches; that's a wiring bug, not a pass
+      console.error(`${CHECK}: no member selects for ${rule.need}`);
+      failed = true;
+      continue;
+    }
+
+    const missing = missingFromClosure(required, selected);
+
+    if (missing.length > 0) {
+      console.error(`${CHECK}: ${formatMissing(rule, missing)}`);
+      failed = true;
+      continue;
+    }
+
+    console.log(`${CHECK}: ${rule.need}: ${required.length} selected`);
   }
 
-  const missing = missingFromClosure(required, selected);
+  const planned = plannedScriptPackages(plan.stdout);
 
-  if (missing.length > 0) {
-    console.error(`${CHECK}: ${formatMissing(rule, missing)}`);
+  const unplanned = missingFromClosure(planned, selected);
+
+  if (planned.length === 0) {
+    console.error(`${CHECK}: turbo planned no script for ${PUBLISH_NPM.need}`);
     failed = true;
-    continue;
+  } else if (unplanned.length > 0) {
+    console.error(`${CHECK}: ${formatMissing(PUBLISH_NPM, unplanned)}`);
+    failed = true;
+  } else {
+    console.log(`${CHECK}: ${PUBLISH_NPM.need}: ${planned.length} selected`);
   }
 
-  console.log(`${CHECK}: ${rule.need}: ${required.length} selected`);
-}
+  const edges = unselectedWorkspaceEdges(members, selected);
 
-const planned = plannedScriptPackages(plan.stdout);
+  if (edges.length > 0) {
+    console.error(
+      `${CHECK}: workspace dependencies outside RELEASE_CLOSURE: ${edges.join(', ')}: a selected member cannot resolve them; ${FIX}`,
+    );
+    failed = true;
+  } else {
+    console.log(
+      `${CHECK}: workspace dependencies: ${selected.length} selected, none outside`,
+    );
+  }
 
-const unplanned = missingFromClosure(planned, selected);
+  if (failed) process.exitCode = 1;
+};
 
-if (planned.length === 0) {
-  console.error(`${CHECK}: turbo planned no script for ${PUBLISH_NPM.need}`);
-  failed = true;
-} else if (unplanned.length > 0) {
-  console.error(`${CHECK}: ${formatMissing(PUBLISH_NPM, unplanned)}`);
-  failed = true;
-} else {
-  console.log(`${CHECK}: ${PUBLISH_NPM.need}: ${planned.length} selected`);
-}
-
-const edges = unselectedWorkspaceEdges(members, selected);
-
-if (edges.length > 0) {
-  console.error(
-    `${CHECK}: workspace dependencies outside RELEASE_CLOSURE: ${edges.join(', ')}: a selected member cannot resolve them; ${FIX}`,
-  );
-  failed = true;
-} else {
-  console.log(
-    `${CHECK}: workspace dependencies: ${selected.length} selected, none outside`,
-  );
-}
-
-if (failed) process.exit(1);
+if (import.meta.main) await main();

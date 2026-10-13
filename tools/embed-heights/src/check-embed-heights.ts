@@ -34,9 +34,9 @@ const asJson = args.has('--json');
 
 const verbose = args.has('--verbose');
 
-function fail(message: string): never {
+function fail(message: string): void {
   console.error(`check-embed-heights: ${message}`);
-  process.exit(1);
+  process.exitCode = 1;
 }
 
 /** Directories under examples/ that are examples: the tutorials, not the workspace member. */
@@ -58,122 +58,134 @@ async function exampleDirs(): Promise<string[]> {
   return names.sort();
 }
 
-// SAFETY: examples/embeds.ts exports EXAMPLES as a record of this entry shape
-const manifest = (await import(pathToFileURL(MANIFEST).href)) as {
-  EXAMPLES: Record<string, { title: string; height: string }>;
-};
+const main = async (): Promise<void> => {
+  // SAFETY: examples/embeds.ts exports EXAMPLES as a record of this entry shape
+  const manifest = (await import(pathToFileURL(MANIFEST).href)) as {
+    EXAMPLES: Record<string, { title: string; height: string }>;
+  };
 
-const declared = manifest.EXAMPLES;
+  const declared = manifest.EXAMPLES;
 
-const built = await exampleDirs();
+  const built = await exampleDirs();
 
-const missing = built.filter((name) => !(name in declared));
+  const missing = built.filter((name) => !(name in declared));
 
-if (missing.length > 0) {
-  fail(`no entry in examples/embeds.ts for: ${missing.join(', ')}`);
-}
+  if (missing.length > 0) {
+    fail(`no entry in examples/embeds.ts for: ${missing.join(', ')}`);
 
-const orphaned = Object.keys(declared).filter((name) => !built.includes(name));
-
-if (orphaned.length > 0) {
-  fail(`declared but not an example under examples/: ${orphaned.join(', ')}`);
-}
-
-for (const name of built) {
-  try {
-    if (
-      !(await stat(join(EXAMPLES_DIR, name, 'dist', 'index.html'))).isFile()
-    ) {
-      throw new Error('not a file');
-    }
-  } catch {
-    fail(
-      `examples/${name}/dist is not built — run \`turbo run build:embeds --filter=examples\`` +
-        ` (is ${name} listed in examples/embeds.ts?)`,
-    );
+    return;
   }
-}
 
-const server = await serveExamples(EXAMPLES_DIR);
-
-let measured;
-
-try {
-  measured = await measureExamples(serverOrigin(server), built);
-} finally {
-  server.close();
-}
-
-const verdicts = new Map<string, Verdict>();
-
-for (const name of built) {
-  verdicts.set(
-    name,
-    judge(measured.get(name)!.height, parsePx(declared[name].height)),
+  const orphaned = Object.keys(declared).filter(
+    (name) => !built.includes(name),
   );
-}
 
-if (asJson) {
-  console.log(
-    JSON.stringify(
-      {
-        columnWidth: COLUMN_WIDTH_PX,
-        examples: Object.fromEntries(
-          built.map((name) => [
-            name,
-            { ...verdicts.get(name)!, ...measured.get(name)! },
-          ]),
-        ),
-      },
-      null,
-      2,
-    ),
-  );
-} else {
-  const pad = Math.max(...built.map((name) => name.length));
-  console.log(`content measured at the docs ${COLUMN_WIDTH_PX}px column\n`);
-  console.log(
-    `${'example'.padEnd(pad)}  measured  required  declared  status  tallest state`,
-  );
+  if (orphaned.length > 0) {
+    fail(`declared but not an example under examples/: ${orphaned.join(', ')}`);
+
+    return;
+  }
 
   for (const name of built) {
-    const verdict = verdicts.get(name)!;
-    const shot = measured.get(name)!;
+    try {
+      if (
+        !(await stat(join(EXAMPLES_DIR, name, 'dist', 'index.html'))).isFile()
+      ) {
+        throw new Error('not a file');
+      }
+    } catch {
+      fail(
+        `examples/${name}/dist is not built — run \`turbo run build:embeds --filter=examples\`` +
+          ` (is ${name} listed in examples/embeds.ts?)`,
+      );
+
+      return;
+    }
+  }
+
+  const server = await serveExamples(EXAMPLES_DIR);
+
+  let measured;
+
+  try {
+    measured = await measureExamples(serverOrigin(server), built);
+  } finally {
+    server.close();
+  }
+
+  const verdicts = new Map<string, Verdict>();
+
+  for (const name of built) {
+    verdicts.set(
+      name,
+      judge(measured.get(name)!.height, parsePx(declared[name].height)),
+    );
+  }
+
+  if (asJson) {
     console.log(
-      `${name.padEnd(pad)}  ${String(verdict.measured).padStart(8)}  ${String(
-        verdict.required,
-      ).padStart(
-        8,
-      )}  ${String(verdict.declared).padStart(8)}  ${verdict.status.padEnd(6)}  ${shot.tallest}`,
+      JSON.stringify(
+        {
+          columnWidth: COLUMN_WIDTH_PX,
+          examples: Object.fromEntries(
+            built.map((name) => [
+              name,
+              { ...verdicts.get(name)!, ...measured.get(name)! },
+            ]),
+          ),
+        },
+        null,
+        2,
+      ),
+    );
+  } else {
+    const pad = Math.max(...built.map((name) => name.length));
+    console.log(`content measured at the docs ${COLUMN_WIDTH_PX}px column\n`);
+    console.log(
+      `${'example'.padEnd(pad)}  measured  required  declared  status  tallest state`,
     );
 
-    if (verbose) {
-      for (const state of shot.states) {
-        console.log(`  ${String(state.height).padStart(6)}  ${state.state}`);
+    for (const name of built) {
+      const verdict = verdicts.get(name)!;
+      const shot = measured.get(name)!;
+      console.log(
+        `${name.padEnd(pad)}  ${String(verdict.measured).padStart(8)}  ${String(
+          verdict.required,
+        ).padStart(
+          8,
+        )}  ${String(verdict.declared).padStart(8)}  ${verdict.status.padEnd(6)}  ${shot.tallest}`,
+      );
+
+      if (verbose) {
+        for (const state of shot.states) {
+          console.log(`  ${String(state.height).padStart(6)}  ${state.state}`);
+        }
       }
     }
   }
-}
 
-const broken = built.filter((name) => verdicts.get(name)!.status !== 'ok');
+  const broken = built.filter((name) => verdicts.get(name)!.status !== 'ok');
 
-if (broken.length > 0) {
-  console.error('');
+  if (broken.length > 0) {
+    console.error('');
 
-  for (const name of broken) {
-    const {
-      status,
-      required,
-      declared: value,
-      suggested,
-    } = verdicts.get(name)!;
+    for (const name of broken) {
+      const {
+        status,
+        required,
+        declared: value,
+        suggested,
+      } = verdicts.get(name)!;
 
-    console.error(
-      status === 'under'
-        ? `${name}: reserves ${value}px but needs ${required}px — the embed scrolls inside itself. Use '${suggested}px'.`
-        : `${name}: reserves ${value}px for ${required}px of content — stale. Use '${suggested}px'.`,
-    );
+      console.error(
+        status === 'under'
+          ? `${name}: reserves ${value}px but needs ${required}px — the embed scrolls inside itself. Use '${suggested}px'.`
+          : `${name}: reserves ${value}px for ${required}px of content — stale. Use '${suggested}px'.`,
+      );
+    }
+
+    fail(`${broken.length} height(s) out of date in examples/embeds.ts`);
   }
+};
 
-  fail(`${broken.length} height(s) out of date in examples/embeds.ts`);
-}
+if (import.meta.main) await main();

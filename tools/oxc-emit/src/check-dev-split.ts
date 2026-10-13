@@ -22,51 +22,61 @@ const read = (dir: string): string =>
     .map((file) => readFileSync(file, 'utf8'))
     .join('\n');
 
-if (!existsSync(CONFIG)) {
-  console.error(
-    `✗ dev/prod split check failed — ${CONFIG} not found in ${process.cwd()}.`,
-  );
-  process.exit(1);
-}
+const main = (): void => {
+  if (!existsSync(CONFIG)) {
+    console.error(
+      `✗ dev/prod split check failed — ${CONFIG} not found in ${process.cwd()}.`,
+    );
+    process.exitCode = 1;
 
-if (!existsSync(DEV_OUT)) {
-  console.error(
-    `✗ dev/prod split check failed — ${DEV_OUT}/ is missing; is build:js running with --development?`,
-  );
-  process.exit(1);
-}
+    return;
+  }
 
-// SAFETY: each package hand-authors dev-warnings.json as { devOnly: string[] }
-const { devOnly } = JSON.parse(readFileSync(CONFIG, 'utf8')) as {
-  devOnly: string[];
+  if (!existsSync(DEV_OUT)) {
+    console.error(
+      `✗ dev/prod split check failed — ${DEV_OUT}/ is missing; is build:js running with --development?`,
+    );
+    process.exitCode = 1;
+
+    return;
+  }
+
+  // SAFETY: each package hand-authors dev-warnings.json as { devOnly: string[] }
+  const { devOnly } = JSON.parse(readFileSync(CONFIG, 'utf8')) as {
+    devOnly: string[];
+  };
+
+  // dist/*.js is non-recursive, so the dist/development/ emit is not double-read
+  const production = read(OUT);
+
+  if (!production) {
+    console.error(
+      `✗ dev/prod split check failed — ${OUT}/ has no production JavaScript; an empty set would pass vacuously.`,
+    );
+    process.exitCode = 1;
+
+    return;
+  }
+
+  // The undeclared-message scan keys off the package's own name, so a sibling
+  // package's prefix (lit-ui-router-mobx:) is never read as lit-ui-router:.
+  const { name } = requireManifest(process.cwd());
+
+  if (!name) throw new Error('package.json has no name');
+
+  const report = formatDevSplitReport(
+    findDevSplitViolations({
+      prefix: messagePrefix(name),
+      devOnly,
+      production,
+      development: read(DEV_OUT),
+    }),
+    devOnly.length,
+  );
+
+  console[report.ok ? 'log' : 'error'](report.text);
+
+  if (!report.ok) process.exitCode = 1;
 };
 
-// dist/*.js is non-recursive, so the dist/development/ emit is not double-read
-const production = read(OUT);
-
-if (!production) {
-  console.error(
-    `✗ dev/prod split check failed — ${OUT}/ has no production JavaScript; an empty set would pass vacuously.`,
-  );
-  process.exit(1);
-}
-
-// The undeclared-message scan keys off the package's own name, so a sibling
-// package's prefix (lit-ui-router-mobx:) is never read as lit-ui-router:.
-const { name } = requireManifest(process.cwd());
-
-if (!name) throw new Error('package.json has no name');
-
-const report = formatDevSplitReport(
-  findDevSplitViolations({
-    prefix: messagePrefix(name),
-    devOnly,
-    production,
-    development: read(DEV_OUT),
-  }),
-  devOnly.length,
-);
-
-console[report.ok ? 'log' : 'error'](report.text);
-
-if (!report.ok) process.exit(1);
+if (import.meta.main) main();

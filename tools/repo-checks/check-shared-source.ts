@@ -20,7 +20,9 @@ function main(): void {
 
   if (canonicals.length === 0) {
     console.error(`${CHECK}: no canonical sources found`);
-    process.exit(1);
+    process.exitCode = 1;
+
+    return;
   }
 
   const stateful = canonicals.flatMap((file) =>
@@ -31,7 +33,11 @@ function main(): void {
     console.error(`${CHECK}: module state or side effect at ${line}`);
   }
 
-  if (stateful.length > 0) process.exit(1);
+  if (stateful.length > 0) {
+    process.exitCode = 1;
+
+    return;
+  }
 
   console.log(`${CHECK}: ${canonicals.length} canonical sources hold no state`);
 }

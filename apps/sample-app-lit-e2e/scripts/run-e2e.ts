@@ -24,50 +24,58 @@ const suites = Object.keys(scripts)
   .map((name) => name.slice(PREFIX.length))
   .sort();
 
-const asked = [...new Set(process.argv.slice(2))];
+const main = async (): Promise<void> => {
+  const asked = [...new Set(process.argv.slice(2))];
 
-const unknown = asked.filter((name) => !suites.includes(name));
+  const unknown = asked.filter((name) => !suites.includes(name));
 
-if (unknown.length > 0) {
-  console.error(
-    `run-e2e: no such suite: ${unknown.join(', ')}\n  available: ${suites.join(', ')}`,
-  );
-  process.exit(1);
-}
+  if (unknown.length > 0) {
+    console.error(
+      `run-e2e: no such suite: ${unknown.join(', ')}\n  available: ${suites.join(', ')}`,
+    );
+    process.exitCode = 1;
 
-// Run only when named: the Acceptance workflow runs the axe pass on its own runner.
-const NAMED_ONLY = ['a11y'];
+    return;
+  }
 
-const selected =
-  asked.length > 0
-    ? asked.sort()
-    : suites.filter((suite) => !NAMED_ONLY.includes(suite));
+  // Run only when named: the Acceptance workflow runs the axe pass on its own runner.
+  const NAMED_ONLY = ['a11y'];
 
-// --continue=dependencies-successful: one failing suite still lets the rest
-// report and turbo still exits non-zero, while a failed build cancels them all.
-// Bare --continue means `always`, which runs suites whose build failed.
-const test = [
-  'turbo run',
-  ...selected.map((suite) => `${PREFIX}${suite}`),
-  '--continue=dependencies-successful --ui=stream --log-order=stream --summarize --log-file',
-  `--output-logs=${process.env.TURBO_OUTPUT_LOGS ?? 'full'}`,
-].join(' ');
+  const selected =
+    asked.length > 0
+      ? asked.sort()
+      : suites.filter((suite) => !NAMED_ONLY.includes(suite));
 
-// not the serve mise task: its build_www depends would re-run under nested mise.
-// Not `pnpm --filter … run` either: start-server-and-test stops the server with
-// SIGINT, which pnpm reports as a failed recursive run on every clean teardown.
-const WWW = '@www/lit-ui-router.dev';
+  // --continue=dependencies-successful: one failing suite still lets the rest
+  // report and turbo still exits non-zero, while a failed build cancels them all.
+  // Bare --continue means `always`, which runs suites whose build failed.
+  const test = [
+    'turbo run',
+    ...selected.map((suite) => `${PREFIX}${suite}`),
+    '--continue=dependencies-successful --ui=stream --log-order=stream --summarize --log-file',
+    `--output-logs=${process.env.TURBO_OUTPUT_LOGS ?? 'full'}`,
+  ].join(' ');
 
-const { members } = await loadWorkspace(workspaceRoot);
+  // not the serve mise task: its build_www depends would re-run under nested mise.
+  // Not `pnpm --filter … run` either: start-server-and-test stops the server with
+  // SIGINT, which pnpm reports as a failed recursive run on every clean teardown.
+  const WWW = '@www/lit-ui-router.dev';
 
-const www = members.find((member) => member.name === WWW);
+  const { members } = await loadWorkspace(workspaceRoot);
 
-if (!www) {
-  console.error(`run-e2e: no workspace member ${WWW}`);
-  process.exit(1);
-}
+  const www = members.find((member) => member.name === WWW);
 
-const server = `node ${JSON.stringify(join(workspaceRoot, www.dir, 'scripts/wrangler-dev.ts'))}`;
+  if (!www) {
+    console.error(`run-e2e: no workspace member ${WWW}`);
+    process.exitCode = 1;
 
-// every app is mounted whichever suites run
-serveAndTest(server, test, ['app/', 'app-mobx/', 'app-effect/']);
+    return;
+  }
+
+  const server = `node ${JSON.stringify(join(workspaceRoot, www.dir, 'scripts/wrangler-dev.ts'))}`;
+
+  // every app is mounted whichever suites run
+  serveAndTest(server, test, ['app/', 'app-mobx/', 'app-effect/']);
+};
+
+if (import.meta.main) await main();

@@ -40,13 +40,9 @@ const asJson = args.includes('--json');
 
 const origin = args.find((arg) => arg !== '--json');
 
-function fail(message: string): never {
+function fail(message: string): void {
   console.error(`check-a11y: ${message}`);
-  process.exit(1);
-}
-
-if (origin === undefined || !URL.canParse(origin)) {
-  fail('usage: check-a11y <origin> [--json]');
+  process.exitCode = 1;
 }
 
 /** Every built page as its clean URL. */
@@ -66,79 +62,91 @@ async function htmlPaths(): Promise<string[]> {
     .sort();
 }
 
-try {
-  if (!(await stat(join(DIST, 'index.html'))).isFile()) throw new Error();
-} catch {
-  fail(
-    'www/lit-ui-router.dev/dist is not built — run `turbo run build --filter=@www/lit-ui-router.dev`',
-  );
-}
+const main = async (): Promise<void> => {
+  if (origin === undefined || !URL.canParse(origin)) {
+    fail('usage: check-a11y <origin> [--json]');
 
-// Mount shells are walked as apps below; examples are scanned inside the pages that frame them.
-const patterns = workerFirstPatterns(
-  await readFile(join(SITE_DIR, 'wrangler.jsonc'), 'utf8'),
-);
+    return;
+  }
 
-const docsPaths = samplePages(
-  (await htmlPaths()).filter(
-    (path) =>
-      !runsWorkerFirst(patterns, path) && !path.startsWith('/examples/'),
-  ),
-);
-
-const audit: Audit = { axeVersion: '', scans: 0, findings: [] };
-
-const browser = await chromium.launch();
-
-let errors: unknown[];
-
-try {
-  const runs = await Promise.allSettled([
-    auditDocs(browser, origin, docsPaths, 'light', audit),
-    auditDocs(browser, origin, docsPaths, 'dark', audit),
-    ...APPS.map((app) => auditApp(browser, origin, app, audit)),
-  ]);
-
-  errors = runs.flatMap((run): unknown[] =>
-    run.status === 'rejected' ? [run.reason] : [],
-  );
-} finally {
-  await browser.close();
-}
-
-const findings = audit.findings.sort(
-  (a, b) =>
-    a.page.localeCompare(b.page) ||
-    a.scheme.localeCompare(b.scheme) ||
-    a.rule.localeCompare(b.rule),
-);
-
-if (asJson) {
-  console.log(JSON.stringify(audit, null, 2));
-} else {
-  console.log(
-    `axe-core ${audit.axeVersion}: ${audit.scans} scans over ${docsPaths.length} docs pages ` +
-      `(light, dark) and ${APPS.length} sample-app mounts`,
-  );
-
-  const print = (finding: Finding) => {
-    console.log(
-      `\n${finding.page} [${finding.scheme}] ${finding.rule} (${finding.impact}): ${finding.help}`,
+  try {
+    if (!(await stat(join(DIST, 'index.html'))).isFile()) throw new Error();
+  } catch {
+    fail(
+      'www/lit-ui-router.dev/dist is not built — run `turbo run build --filter=@www/lit-ui-router.dev`',
     );
 
-    for (const target of finding.targets) console.log(`  ${target}`);
-  };
+    return;
+  }
 
-  findings.forEach(print);
-}
+  // Mount shells are walked as apps below; examples are scanned inside the pages that frame them.
+  const patterns = workerFirstPatterns(
+    await readFile(join(SITE_DIR, 'wrangler.jsonc'), 'utf8'),
+  );
 
-// A walk that could not reach its pages has not checked them.
-for (const error of errors) console.error(error);
+  const docsPaths = samplePages(
+    (await htmlPaths()).filter(
+      (path) =>
+        !runsWorkerFirst(patterns, path) && !path.startsWith('/examples/'),
+    ),
+  );
 
-if (errors.length > 0) {
-  fail(`${errors.length} audit run(s) failed before finishing`);
-}
+  const audit: Audit = { axeVersion: '', scans: 0, findings: [] };
 
-if (findings.length > 0) {
-  fail(`${findings.length} axe violation(s)`);
-}
+  const browser = await chromium.launch();
+
+  let errors: unknown[];
+
+  try {
+    const runs = await Promise.allSettled([
+      auditDocs(browser, origin, docsPaths, 'light', audit),
+      auditDocs(browser, origin, docsPaths, 'dark', audit),
+      ...APPS.map((app) => auditApp(browser, origin, app, audit)),
+    ]);
+
+    errors = runs.flatMap((run): unknown[] =>
+      run.status === 'rejected' ? [run.reason] : [],
+    );
+  } finally {
+    await browser.close();
+  }
+
+  const findings = audit.findings.sort(
+    (a, b) =>
+      a.page.localeCompare(b.page) ||
+      a.scheme.localeCompare(b.scheme) ||
+      a.rule.localeCompare(b.rule),
+  );
+
+  if (asJson) {
+    console.log(JSON.stringify(audit, null, 2));
+  } else {
+    console.log(
+      `axe-core ${audit.axeVersion}: ${audit.scans} scans over ${docsPaths.length} docs pages ` +
+        `(light, dark) and ${APPS.length} sample-app mounts`,
+    );
+
+    const print = (finding: Finding) => {
+      console.log(
+        `\n${finding.page} [${finding.scheme}] ${finding.rule} (${finding.impact}): ${finding.help}`,
+      );
+
+      for (const target of finding.targets) console.log(`  ${target}`);
+    };
+
+    findings.forEach(print);
+  }
+
+  // A walk that could not reach its pages has not checked them.
+  for (const error of errors) console.error(error);
+
+  if (errors.length > 0) {
+    fail(`${errors.length} audit run(s) failed before finishing`);
+
+    return;
+  }
+
+  if (findings.length > 0) fail(`${findings.length} axe violation(s)`);
+};
+
+if (import.meta.main) await main();

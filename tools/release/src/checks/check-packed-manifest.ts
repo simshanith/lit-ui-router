@@ -17,22 +17,30 @@ import {
 import { tarballManifest } from './tarball.ts';
 import type { PackageManifest } from '@tools/bootstrap/types.ts';
 
-const [tarball, ...extra] = process.argv.slice(2);
+const main = async (): Promise<void> => {
+  const [tarball, ...extra] = process.argv.slice(2);
 
-if (!tarball || extra.length > 0) {
-  console.error('usage: node tools/release/check-packed-manifest.ts <tarball>');
-  process.exit(1);
-}
+  if (!tarball || extra.length > 0) {
+    console.error(
+      'usage: node tools/release/check-packed-manifest.ts <tarball>',
+    );
+    process.exitCode = 1;
 
-// Malformed manifests reject in tarballManifest — the gate fails loudly,
-// never a silent `{}` that absence-checks would pass.
-// SAFETY: the violation checks only test presence and stringify the fields
-const manifest = (await tarballManifest(tarball)) as PackageManifest;
+    return;
+  }
 
-const { ok, text } = formatPackedManifestReport(
-  findPackedManifestViolations(manifest),
-);
+  // Malformed manifests reject in tarballManifest — the gate fails loudly,
+  // never a silent `{}` that absence-checks would pass.
+  // SAFETY: the violation checks only test presence and stringify the fields
+  const manifest = (await tarballManifest(tarball)) as PackageManifest;
 
-(ok ? console.log : console.error)(text);
+  const { ok, text } = formatPackedManifestReport(
+    findPackedManifestViolations(manifest),
+  );
 
-if (!ok) process.exitCode = 1;
+  (ok ? console.log : console.error)(text);
+
+  if (!ok) process.exitCode = 1;
+};
+
+if (import.meta.main) await main();
