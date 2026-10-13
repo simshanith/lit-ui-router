@@ -68,6 +68,14 @@
     "no-prototype-builtins": "error",
     "no-redeclare": "error",
     "no-regex-spaces": "error",
+    "no-restricted-properties": [
+      "error",
+      {
+        "object": "process",
+        "property": "exit",
+        "message": "it ends the process before pending stdout/stderr writes flush and skips finally blocks; set process.exitCode and return from main."
+      }
+    ],
     "no-self-assign": "error",
     "no-setter-return": "error",
     "no-shadow-restricted-names": "error",

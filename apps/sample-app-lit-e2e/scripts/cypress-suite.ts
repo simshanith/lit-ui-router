@@ -11,38 +11,44 @@ const suites = {
   hash: { path: 'app-hash/', expose: 'LOCATION_PLUGIN=hash' },
 } as const;
 
-const name = process.argv[2];
+const main = (): void => {
+  const name = process.argv[2];
 
-if (name === undefined || !(name in suites)) {
-  console.error(`usage: cypress-suite.ts <${Object.keys(suites).join('|')}>`);
-  process.exit(1);
-}
+  if (name === undefined || !(name in suites)) {
+    console.error(`usage: cypress-suite.ts <${Object.keys(suites).join('|')}>`);
+    process.exitCode = 1;
 
-// SAFETY: the `name in suites` check above exits otherwise
-const suite = suites[name as keyof typeof suites];
+    return;
+  }
 
-const port = resolveWwwDevPort();
+  // SAFETY: the `name in suites` check above returns otherwise
+  const suite = suites[name as keyof typeof suites];
 
-const child = spawn(
-  'cypress',
-  [
-    'run',
-    '--browser',
-    'chrome',
-    ...(suite.expose ? ['--expose', suite.expose] : []),
-    ...[
-      '--config',
-      [
-        `baseUrl=http://localhost:${port}/${suite.path}`,
-        `videosFolder=cypress/videos-${name}`,
-        `screenshotsFolder=cypress/screenshots-${name}`,
-      ].join(','),
+  const port = resolveWwwDevPort();
+
+  const child = spawn(
+    'cypress',
+    [
+      'run',
+      '--browser',
+      'chrome',
+      ...(suite.expose ? ['--expose', suite.expose] : []),
+      ...[
+        '--config',
+        [
+          `baseUrl=http://localhost:${port}/${suite.path}`,
+          `videosFolder=cypress/videos-${name}`,
+          `screenshotsFolder=cypress/screenshots-${name}`,
+        ].join(','),
+      ],
     ],
-  ],
-  { stdio: 'inherit' },
-);
+    { stdio: 'inherit' },
+  );
 
-child.on('exit', (code, signal) => {
-  if (signal) process.kill(process.pid, signal);
-  process.exitCode = code ?? 1;
-});
+  child.on('exit', (code, signal) => {
+    if (signal) process.kill(process.pid, signal);
+    process.exitCode = code ?? 1;
+  });
+};
+
+if (import.meta.main) main();

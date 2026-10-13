@@ -37,112 +37,122 @@ const EXCLUDED: Exclusion[] = [
   },
 ];
 
-const script = requireManifest(workspaceRoot).scripts?.[SCRIPT];
+const main = async (): Promise<void> => {
+  const script = requireManifest(workspaceRoot).scripts?.[SCRIPT];
 
-if (!script) {
-  console.error(`${CHECK}: root package.json has no ${SCRIPT} script`);
-  process.exit(1);
-}
+  if (!script) {
+    console.error(`${CHECK}: root package.json has no ${SCRIPT} script`);
+    process.exitCode = 1;
 
-// eslint-plugin-oxlint reads ./.oxlintrc.json against the process cwd.
-process.chdir(workspaceRoot);
-
-const eslint = new ESLint({ cwd: workspaceRoot });
-
-const linted: string[] = [];
-
-for (const { filePath } of await eslint.lintFiles(parseLintPatterns(script))) {
-  // an explicitly named file comes back as an "ignored" warning, not a lint
-  if (!(await eslint.isPathIgnored(filePath))) {
-    linted.push(relative(workspaceRoot, filePath));
+    return;
   }
-}
 
-const tracked = trackedFiles(':(glob)**/package.json', 'pnpm-workspace.yaml');
+  // eslint-plugin-oxlint reads ./.oxlintrc.json against the process cwd.
+  process.chdir(workspaceRoot);
 
-const { missing, extra, stale } = auditCoverage(tracked, linted, EXCLUDED);
+  const eslint = new ESLint({ cwd: workspaceRoot });
 
-for (const file of missing) {
-  console.error(
-    `${CHECK}: ${file} is tracked but ${SCRIPT} does not lint it; lint it, or add it to EXCLUDED with a reason`,
+  const linted: string[] = [];
+
+  for (const { filePath } of await eslint.lintFiles(
+    parseLintPatterns(script),
+  )) {
+    // an explicitly named file comes back as an "ignored" warning, not a lint
+    if (!(await eslint.isPathIgnored(filePath))) {
+      linted.push(relative(workspaceRoot, filePath));
+    }
+  }
+
+  const tracked = trackedFiles(':(glob)**/package.json', 'pnpm-workspace.yaml');
+
+  const { missing, extra, stale } = auditCoverage(tracked, linted, EXCLUDED);
+
+  for (const file of missing) {
+    console.error(
+      `${CHECK}: ${file} is tracked but ${SCRIPT} does not lint it; lint it, or add it to EXCLUDED with a reason`,
+    );
+  }
+
+  for (const file of extra) {
+    console.error(
+      `${CHECK}: ${SCRIPT} lints ${file}, which is in EXCLUDED or untracked (git add a new manifest)`,
+    );
+  }
+
+  for (const file of stale) {
+    console.error(
+      `${CHECK}: ${file} is in EXCLUDED but is not a tracked manifest; drop the row`,
+    );
+  }
+
+  const { members, workspaceManifest } = await loadWorkspace(workspaceRoot);
+
+  const memberDirs = new Map(
+    members.map((member) => [isRootMember(member) ? '.' : member.dir, member]),
   );
-}
 
-for (const file of extra) {
-  console.error(
-    `${CHECK}: ${SCRIPT} lints ${file}, which is in EXCLUDED or untracked (git add a new manifest)`,
+  const catalogued = new Set(
+    Object.keys((await selectCatalogs(workspaceManifest)).workspace ?? {}),
   );
-}
 
-for (const file of stale) {
-  console.error(
-    `${CHECK}: ${file} is in EXCLUDED but is not a tracked manifest; drop the row`,
-  );
-}
+  const excludedFiles = new Set(EXCLUDED.map(({ file }) => file));
 
-const { members, workspaceManifest } = await loadWorkspace(workspaceRoot);
+  const missingFiles = new Set(missing);
 
-const memberDirs = new Map(
-  members.map((member) => [isRootMember(member) ? '.' : member.dir, member]),
-);
+  const eslintStatus = (file: string): CoverageRow['eslint'] => {
+    if (missingFiles.has(file)) return 'MISSING';
 
-const catalogued = new Set(
-  Object.keys((await selectCatalogs(workspaceManifest)).workspace ?? {}),
-);
+    return excludedFiles.has(file) ? 'excluded' : 'linted';
+  };
 
-const excludedFiles = new Set(EXCLUDED.map(({ file }) => file));
+  const row = (file: string): CoverageRow => {
+    const dir = dirname(file);
+    const member = memberDirs.get(dir);
 
-const missingFiles = new Set(missing);
+    // turbo never plans a standalone project, so its scripts join no umbrella
+    if (!member) {
+      const { name = '-' } = requireManifest(join(workspaceRoot, dir));
+      const tasks = new Set<never>();
 
-const eslintStatus = (file: string): CoverageRow['eslint'] => {
-  if (missingFiles.has(file)) return 'MISSING';
-
-  return excludedFiles.has(file) ? 'excluded' : 'linted';
-};
-
-const row = (file: string): CoverageRow => {
-  const dir = dirname(file);
-  const member = memberDirs.get(dir);
-
-  // turbo never plans a standalone project, so its scripts join no umbrella
-  if (!member) {
-    const { name = '-' } = requireManifest(join(workspaceRoot, dir));
-    const tasks = new Set<never>();
+      return {
+        dir,
+        name,
+        eslint: eslintStatus(file),
+        member: '-',
+        catalog: false,
+        tasks,
+      };
+    }
 
     return {
       dir,
-      name,
+      name: member.name,
       eslint: eslintStatus(file),
-      member: '-',
-      catalog: false,
-      tasks,
+      member: isRootMember(member) ? 'root' : 'member',
+      catalog: catalogued.has(member.name),
+      tasks: scriptTasks(member.manifest?.scripts),
     };
+  };
+
+  const rows = tracked
+    .filter((file) => file.endsWith('package.json'))
+    .map(row)
+    .sort((a, b) => a.dir.localeCompare(b.dir));
+
+  for (const line of formatCoverage(rows)) console.log(line);
+
+  if (missing.length > 0 || extra.length > 0 || stale.length > 0) {
+    console.error(
+      `${CHECK}: ${missing.length} missing, ${extra.length} unexpected, ${stale.length} stale`,
+    );
+    process.exitCode = 1;
+
+    return;
   }
 
-  return {
-    dir,
-    name: member.name,
-    eslint: eslintStatus(file),
-    member: isRootMember(member) ? 'root' : 'member',
-    catalog: catalogued.has(member.name),
-    tasks: scriptTasks(member.manifest?.scripts),
-  };
+  console.log(
+    `${CHECK}: ${SCRIPT} lints ${linted.length} of ${tracked.length} tracked manifests (${EXCLUDED.length} excluded)`,
+  );
 };
 
-const rows = tracked
-  .filter((file) => file.endsWith('package.json'))
-  .map(row)
-  .sort((a, b) => a.dir.localeCompare(b.dir));
-
-for (const line of formatCoverage(rows)) console.log(line);
-
-if (missing.length > 0 || extra.length > 0 || stale.length > 0) {
-  console.error(
-    `${CHECK}: ${missing.length} missing, ${extra.length} unexpected, ${stale.length} stale`,
-  );
-  process.exit(1);
-}
-
-console.log(
-  `${CHECK}: ${SCRIPT} lints ${linted.length} of ${tracked.length} tracked manifests (${EXCLUDED.length} excluded)`,
-);
+if (import.meta.main) await main();

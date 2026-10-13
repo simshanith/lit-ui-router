@@ -98,7 +98,10 @@ function eslintCli(): string {
   return join(dirname(manifestPath), manifest.bin.eslint);
 }
 
-function runEslint(): EslintResult[] {
+/** eslint's report, or its exit status when it failed without one. */
+function runEslint():
+  | { ok: true; results: EslintResult[] }
+  | { ok: false; status: number } {
   // From the repo root, which is where the globs, the flat config and the
   // cache location are all relative to. `--format json` puts the report on
   // stdout alone, so stderr stays a genuine failure channel.
@@ -120,13 +123,14 @@ function runEslint(): EslintResult[] {
   // anything else = eslint itself failed and there is no report to read.
   if (eslint.status !== 0 && eslint.status !== 1) {
     process.stderr.write(eslint.stderr);
-    process.exit(eslint.status ?? 1);
+
+    return { ok: false, status: eslint.status ?? 1 };
   }
 
   if (eslint.stderr.trim() !== '') process.stderr.write(eslint.stderr);
 
   // SAFETY: `--format json` writes the LintResult[] that EslintResult mirrors
-  return JSON.parse(eslint.stdout) as EslintResult[];
+  return { ok: true, results: JSON.parse(eslint.stdout) as EslintResult[] };
 }
 
 function collect(results: readonly EslintResult[]): WarnMessage[] {
@@ -190,7 +194,15 @@ function printMessages(messages: readonly WarnMessage[]): void {
 
 function main(): void {
   const update = process.argv.includes('--update');
-  const messages = collect(runEslint());
+  const run = runEslint();
+
+  if (!run.ok) {
+    process.exitCode = run.status;
+
+    return;
+  }
+
+  const messages = collect(run.results);
   const errors = messages.filter((message) => message.severity === 2);
   const observed: WarnFiles = tallyFiles(messages);
   const total = totalWarnings(observed);
@@ -205,7 +217,7 @@ function main(): void {
     );
 
     // Errors are not snapshottable — they fail the lane even under --update.
-    if (errors.length > 0) process.exit(1);
+    if (errors.length > 0) process.exitCode = 1;
 
     return;
   }
@@ -219,7 +231,9 @@ function main(): void {
     );
 
     for (const problem of problems) console.error(`  ${problem}`);
-    process.exit(1);
+    process.exitCode = 1;
+
+    return;
   }
 
   const { regressions, improvements } = diffWarnings(snapshot.files, observed);
@@ -274,7 +288,7 @@ function main(): void {
     }),
   );
 
-  if (errors.length > 0 || regressions.length > 0) process.exit(1);
+  if (errors.length > 0 || regressions.length > 0) process.exitCode = 1;
 }
 
-main();
+if (import.meta.main) main();

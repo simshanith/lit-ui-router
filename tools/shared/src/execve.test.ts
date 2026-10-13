@@ -47,7 +47,7 @@ describe('execve', () => {
         '-e',
         `const { execve } = await import(${module});
          execve('probe', process.execPath, [
-           process.execPath, '-e', "process.stdout.write('became'); process.exit(7)",
+           process.execPath, '-e', "process.stdout.write('became'); process.exitCode = 7",
          ]);
          process.stdout.write('unreachable');`,
       ],

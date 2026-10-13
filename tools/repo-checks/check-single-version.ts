@@ -65,43 +65,51 @@ const ALLOWED: SplitAllowance[] = [
   },
 ];
 
-const lock = parseLock(
-  readFileSync(join(workspaceRoot, 'pnpm-lock.yaml'), 'utf8'),
-);
-
-const controlled = controlledNames(lock);
-
-const { failures, allowed, stale } = auditSplits(
-  lockVersions(lock),
-  controlled,
-  ALLOWED,
-);
-
-if (controlled.size === 0) {
-  // an empty scope would pass every assertion below; that's a parse bug
-  console.error(
-    `${CHECK}: pnpm-lock.yaml names no catalog or direct dependency`,
+const main = (): void => {
+  const lock = parseLock(
+    readFileSync(join(workspaceRoot, 'pnpm-lock.yaml'), 'utf8'),
   );
-  process.exit(1);
-}
 
-for (const failure of failures) {
-  console.error(`${CHECK}: ${formatSplit(failure)}`);
-}
+  const controlled = controlledNames(lock);
 
-for (const name of stale) {
-  console.error(
-    `${CHECK}: ${name} is allowlisted but resolves to one version now; drop the row`,
+  const { failures, allowed, stale } = auditSplits(
+    lockVersions(lock),
+    controlled,
+    ALLOWED,
   );
-}
 
-if (failures.length > 0 || stale.length > 0) {
-  console.error(
-    `${CHECK}: ${failures.length} split, ${stale.length} stale; override the pin in pnpm-workspace.yaml or allowlist the split with a reason`,
+  if (controlled.size === 0) {
+    // an empty scope would pass every assertion below; that's a parse bug
+    console.error(
+      `${CHECK}: pnpm-lock.yaml names no catalog or direct dependency`,
+    );
+    process.exitCode = 1;
+
+    return;
+  }
+
+  for (const failure of failures) {
+    console.error(`${CHECK}: ${formatSplit(failure)}`);
+  }
+
+  for (const name of stale) {
+    console.error(
+      `${CHECK}: ${name} is allowlisted but resolves to one version now; drop the row`,
+    );
+  }
+
+  if (failures.length > 0 || stale.length > 0) {
+    console.error(
+      `${CHECK}: ${failures.length} split, ${stale.length} stale; override the pin in pnpm-workspace.yaml or allowlist the split with a reason`,
+    );
+    process.exitCode = 1;
+
+    return;
+  }
+
+  console.log(
+    `${CHECK}: ${controlled.size} controlled packages resolve to one version each (${allowed.length} allowlisted splits)`,
   );
-  process.exit(1);
-}
+};
 
-console.log(
-  `${CHECK}: ${controlled.size} controlled packages resolve to one version each (${allowed.length} allowlisted splits)`,
-);
+if (import.meta.main) main();

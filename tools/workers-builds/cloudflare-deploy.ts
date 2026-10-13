@@ -30,17 +30,15 @@ const commandPath = (name: string): string =>
     stdio: ['ignore', 'pipe', 'inherit'],
   }).trim();
 
-// Annotated, not just inferred: never-returning calls only narrow past an
-// explicitly typed declaration, which is what lets `mode` narrow below.
-const usage: () => never = () => {
-  console.error(
-    `usage: cloudflare-deploy.ts <${Object.keys(DEPLOY_MODES).join('|')}>`,
-  );
-  process.exit(2);
-};
-
 const main = ([mode, ...extra]: string[]): void => {
-  if (extra.length > 0 || !isDeployMode(mode)) usage();
+  if (extra.length > 0 || !isDeployMode(mode)) {
+    console.error(
+      `usage: cloudflare-deploy.ts <${Object.keys(DEPLOY_MODES).join('|')}>`,
+    );
+    process.exitCode = 2;
+
+    return;
+  }
 
   // POSIX-only, hence optional in @types/node; replaces the process like bash `exec`.
   if (!process.execve) {

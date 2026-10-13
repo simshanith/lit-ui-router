@@ -12,24 +12,30 @@ import { resolveWwwDevPort } from '../dev-port.ts';
 
 const BIN = binPath(wrangler, import.meta.resolve('wrangler/package.json'));
 
-const args = process.argv.slice(2);
+const main = (): void => {
+  const args = process.argv.slice(2);
 
-// A later --port wins in yargs, so it would move the server without moving the
-// readiness URLs built from the same resolver. --inspector-port is unaffected.
-if (args.some((arg) => arg === '--port' || arg.startsWith('--port='))) {
-  console.error('wrangler-dev.ts: set WWW_DEV_PORT, not --port');
-  process.exit(2);
-}
+  // A later --port wins in yargs, so it would move the server without moving the
+  // readiness URLs built from the same resolver. --inspector-port is unaffected.
+  if (args.some((arg) => arg === '--port' || arg.startsWith('--port='))) {
+    console.error('wrangler-dev.ts: set WWW_DEV_PORT, not --port');
+    process.exitCode = 2;
 
-// wrangler reads wrangler.jsonc and .env from cwd, so any caller gets this package's
-process.chdir(join(import.meta.dirname, '..'));
+    return;
+  }
 
-// argv[0] is ours to set; env defaults to process.env
-execve('wrangler-dev', process.execPath, [
-  process.execPath,
-  BIN,
-  'dev',
-  '--port',
-  String(resolveWwwDevPort()),
-  ...args,
-]);
+  // wrangler reads wrangler.jsonc and .env from cwd, so any caller gets this package's
+  process.chdir(join(import.meta.dirname, '..'));
+
+  // argv[0] is ours to set; env defaults to process.env
+  execve('wrangler-dev', process.execPath, [
+    process.execPath,
+    BIN,
+    'dev',
+    '--port',
+    String(resolveWwwDevPort()),
+    ...args,
+  ]);
+};
+
+if (import.meta.main) main();
