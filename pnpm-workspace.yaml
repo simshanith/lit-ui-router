@@ -117,6 +117,7 @@ catalogs:
     '@lit-labs/ssr-floor': npm:@lit-labs/ssr@4.0.0
     '@uirouter/core-floor': npm:@uirouter/core@6.0.8
     hono-floor: npm:hono@4.0.0
+    signal-polyfill-floor: npm:signal-polyfill@0.2.0
   peerFloorEffect:
     lit-ui-router-floor: npm:lit-ui-router@1.15.0
   peerFloorEslintPlugin:
@@ -138,6 +139,7 @@ catalogs:
     hono: ^4.0.0
     lit: '^2.0.0 || ^3.0.0'
     mobx: '^6.0.0 || ^7.0.0'
+    signal-polyfill: ^0.2.0
   publishedPeerEffect:
     lit-ui-router: ^1.15.0
   publishedPeerMobx:

@@ -313,6 +313,9 @@ catalogs:
     hono-floor:
       specifier: npm:hono@4.0.0
       version: 4.0.0
+    signal-polyfill-floor:
+      specifier: npm:signal-polyfill@0.2.0
+      version: 0.2.0
   peerFloorEffect:
     lit-ui-router-floor:
       specifier: npm:lit-ui-router@1.15.0
@@ -1689,21 +1692,36 @@ importers:
 
   packages/ui-router-signals:
     devDependencies:
+      '@release-it/conventional-changelog':
+        specifier: 'catalog:'
+        version: 12.0.2(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.2)(release-it@21.1.1(@types/node@24.19.1)(magicast@0.5.4)(supports-color@10.2.2))
       '@repo/route-snapshot':
         specifier: catalog:workspace
         version: link:../shared/route-snapshot
+      '@tools/bundle-probe':
+        specifier: catalog:workspace
+        version: link:../../tools/bundle-probe
+      '@tools/compat-guards':
+        specifier: catalog:workspace
+        version: link:../../tools/compat-guards
       '@tools/lit-test-env':
         specifier: catalog:workspace
         version: link:../../tools/lit-test-env
       '@tools/oxc-emit':
         specifier: catalog:workspace
         version: link:../../tools/oxc-emit
+      '@tools/release-config':
+        specifier: catalog:workspace
+        version: link:../../tools/release-config
       '@types/node':
         specifier: 'catalog:'
         version: 24.19.1
       '@uirouter/core':
         specifier: 'catalog:'
         version: 6.1.2
+      '@uirouter/core-floor':
+        specifier: catalog:peerFloor
+        version: '@uirouter/core@6.0.8'
       '@vitest/coverage-v8':
         specifier: 'catalog:'
         version: 5.0.3(@vitest/browser@5.0.3)(vitest@5.0.3)
@@ -1713,9 +1731,15 @@ importers:
       oxlint:
         specifier: 'catalog:'
         version: 1.87.0(oxlint-tsgolint@7.0.2003)
+      release-it:
+        specifier: 'catalog:'
+        version: 21.1.1(@types/node@24.19.1)(magicast@0.5.4)(supports-color@10.2.2)
       signal-polyfill:
         specifier: 'catalog:'
         version: 0.2.2
+      signal-polyfill-floor:
+        specifier: catalog:peerFloor
+        version: signal-polyfill@0.2.0
       typescript:
         specifier: catalog:typescript6-compat
         version: '@typescript/typescript6@6.0.2'
@@ -1934,6 +1958,9 @@ importers:
       oxlint:
         specifier: 'catalog:'
         version: 1.87.0(oxlint-tsgolint@7.0.2003)
+      signal-polyfill:
+        specifier: 'catalog:'
+        version: 0.2.2
       typescript-5.0:
         specifier: 'catalog:'
         version: typescript@5.0.4
@@ -1955,6 +1982,9 @@ importers:
       ui-router-server:
         specifier: catalog:workspace
         version: link:../../packages/ui-router-server
+      ui-router-signals:
+        specifier: catalog:workspace
+        version: link:../../packages/ui-router-signals
 
   tools/embed-heights:
     dependencies:
@@ -7747,6 +7777,9 @@ packages:
   signal-exit@4.1.0:
     resolution: {integrity: sha512-bzyZ1e88w9O1iNJbKnOlvYTrWPDl46O1bG0D3XInv+9tkPrxrN8jUUTiFlDkkmKWgn1M6CfIA13SuGqOa9Korw==}
     engines: {node: '>=14'}
+
+  signal-polyfill@0.2.0:
+    resolution: {integrity: sha512-EbZ5L6pm0LPVZECfzfDLQ+2tWd2xQ+iG+HfuvqWjF+pl0yvdT1rsL/YgfeBakubLbnwAd1zRvap1rYqPBG8prA==}
 
   signal-polyfill@0.2.2:
     resolution: {integrity: sha512-p63Y4Er5/eMQ9RHg0M0Y64NlsQKpiu6MDdhBXpyywRuWiPywhJTpKJ1iB5K2hJEbFZ0BnDS7ZkJ+0AfTuL37Rg==}
@@ -13856,6 +13889,8 @@ snapshots:
   signal-exit@3.0.7: {}
 
   signal-exit@4.1.0: {}
+
+  signal-polyfill@0.2.0: {}
 
   signal-polyfill@0.2.2: {}
 

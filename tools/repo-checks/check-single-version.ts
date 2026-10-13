@@ -56,6 +56,10 @@ const ALLOWED: SplitAllowance[] = [
     why: 'the mobx-6 alias (catalogs.mobx6-compat) runs test:mobx6-compat beside the mobx 7 line',
   },
   {
+    name: 'signal-polyfill',
+    why: 'catalogs.peerFloor pins signal-polyfill-floor to 0.2.0, the ui-router-signals peer floor check:bundle bundles against',
+  },
+  {
     name: 'typescript',
     why: 'dts-backtest and the typescript6/7 catalogs alias one compiler per line; attw, the cem analyzer and web-component-analyzer pin their own',
   },

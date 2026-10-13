@@ -19,6 +19,7 @@ on:
       - 'eslint-plugin-lit-ui-router@*'
       - 'lit-ui-router-effect@*'
       - 'lit-ui-router-ssr@*'
+      - 'ui-router-signals@*'
   workflow_dispatch:
     inputs:
       package:
@@ -33,6 +34,7 @@ on:
           - eslint-plugin-lit-ui-router
           - lit-ui-router-effect
           - lit-ui-router-ssr
+          - ui-router-signals
       dryRun:
         description: 'Dry run: log the publish/release/attestation release-it would perform without doing it'
         required: false

@@ -274,7 +274,9 @@ Break the cycle by hand, once, before adding the package to any workflow list:
    manifest has no `workspace:` or `catalog:` specifiers, so none of the
    pack-time rewriting the pipeline relies on
    (`publishPath`, `check:pack`) has to be reproduced by hand. The seed only
-   has to make the name exist.
+   has to make the name exist. npm also records a `0.0.0-stage` version when
+   it creates the name; like every npm version it is permanent, and it holds
+   no dist-tag.
 
    **`--tag latest`, never a channel tag.** A package's first publish always
    takes `latest` regardless — npm requires that tag to exist — and npm 12
@@ -303,7 +305,9 @@ Break the cycle by hand, once, before adding the package to any workflow list:
    `npm dist-tag add <package>@<version> latest`.
 
 2. **Configure the trusted publisher** on npmjs.com for the new package,
-   pointing at `publish-npm.yml`.
+   pointing at `publish-npm.yml`. npm expires a trusted-publisher config that
+   has not validated a publish within 48 hours of its creation, so configure
+   it on release day; delete and re-add one that expired.
 
 3. **Admit the tag** on the GitHub side: add `<package>@*` to the release
    tags ruleset and to the `publish` environment's deployment tag policies.
