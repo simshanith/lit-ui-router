@@ -1,7 +1,7 @@
 import { Effect, SubscriptionRef } from 'effect';
 import { UIRouter } from '@uirouter/core';
 
-import { RouteSnapshot, snapshotRoute } from './shared/route-snapshot.js';
+import { RouteSnapshot, snapshotRoute } from '@repo/route-snapshot';
 
 const routeRefs = new WeakMap<
   UIRouter,

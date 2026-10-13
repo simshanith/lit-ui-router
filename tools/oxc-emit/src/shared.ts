@@ -2,6 +2,12 @@ import { globSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { basename, dirname, relative } from 'node:path';
 
+import {
+  assertNoCollision,
+  inlinedSources,
+  type InlinedSource,
+} from './inline.ts';
+
 export const SRC = 'src';
 
 export const OUT = 'dist';
@@ -48,6 +54,44 @@ export function publishableSources(): string[] {
   });
 }
 
+/** One emitted file: its source and its path under the out dir, without extension. */
+export interface EmitUnit {
+  readonly file: string;
+  readonly stem: string;
+  /** Canonical `@repo/*` source; its map embeds the text, which no tarball ships. */
+  readonly inlined: boolean;
+}
+
+/** Every file both passes emit, and the specifiers they rewrite. */
+export interface EmitPlan {
+  readonly units: EmitUnit[];
+  readonly inlined: InlinedSource[];
+}
+
+/** The package's own sources plus the `@repo/*` sources it inlines. */
+export function emitPlan(): EmitPlan {
+  const own = publishableSources().map((file) => ({
+    file,
+    stem: relative(SRC, file).replace(/\.ts$/, ''),
+    inlined: false,
+  }));
+
+  const inlined = inlinedSources(process.cwd());
+
+  assertNoCollision(
+    own.map((unit) => unit.stem),
+    inlined,
+  );
+
+  return {
+    units: [
+      ...own,
+      ...inlined.map(({ file, stem }) => ({ file, stem, inlined: true })),
+    ],
+    inlined,
+  };
+}
+
 // remapping ships CJS function-as-module.exports; typed locally, fetched via require
 interface RawMap {
   sources?: (string | null)[];
@@ -55,6 +99,7 @@ interface RawMap {
 
 interface ComposedMap {
   sources: string[];
+  sourcesContent?: (string | null)[];
   file: string;
   toString(): string;
 }
@@ -67,12 +112,13 @@ const remapping = createRequire(import.meta.url)('@ampproject/remapping') as (
 ) => ComposedMap;
 
 // Compose an emit stage's map (or chain of two) into the shipped map for `out`:
-// single relative src source, no sourcesContent — the shipped src/ files are the referents.
+// single relative source; sourcesContent only for `embed`, a source no tarball ships.
 export function shippedMap(
   file: string,
   out: string,
   finalMap: RawMap,
   priorMap?: RawMap,
+  embed?: string,
 ): string {
   const map = remapping(
     finalMap,
@@ -83,6 +129,8 @@ export function shippedMap(
   // exactly one original source; remapping's own resolution double-prefixes relative paths
   map.sources = [relative(dirname(out), file)];
   map.file = basename(out);
+
+  if (embed !== undefined) map.sourcesContent = [embed];
 
   return map.toString();
 }

@@ -345,6 +345,9 @@ catalogs:
       specifier: npm:@typescript/typescript6@^6.0.2
       version: 6.0.2
   workspace:
+    '@repo/route-snapshot':
+      specifier: workspace:*
+      version: workspace:*
     '@tools/a11y':
       specifier: workspace:*
       version: workspace:*
@@ -1042,6 +1045,9 @@ importers:
       '@release-it/conventional-changelog':
         specifier: 'catalog:'
         version: 12.0.2(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.2)(release-it@21.1.1(@types/node@24.19.1)(magicast@0.5.4)(supports-color@10.2.2))
+      '@repo/route-snapshot':
+        specifier: catalog:workspace
+        version: link:../shared/route-snapshot
       '@tools/bundle-probe':
         specifier: catalog:workspace
         version: link:../../tools/bundle-probe

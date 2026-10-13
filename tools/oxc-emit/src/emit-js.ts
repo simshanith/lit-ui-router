@@ -12,21 +12,21 @@
 // defined, so a package can name its own release without importing package.json.
 // A pass with nothing to define passes no `define`, keeping its emit unchanged.
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { basename, dirname, join, relative } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 
 import { minifySync } from 'oxc-minify';
 import { transformSync } from 'oxc-transform';
 
 import { requireManifest } from '@tools/bootstrap/manifest.ts';
 
+import { rewriteInlined } from './inline.ts';
 import {
   DEV_OUT,
+  emitPlan,
   fail,
   OUT,
   passDefine,
-  publishableSources,
   shippedMap,
-  SRC,
 } from './shared.ts';
 
 const dual = process.argv.includes('--development');
@@ -47,7 +47,9 @@ const { dependencies = {}, version } = requireManifest(process.cwd());
 
 const undeclaredRuntime = new Set<string>();
 
-for (const file of publishableSources()) {
+const { units, inlined } = emitPlan();
+
+for (const { file, stem, inlined: embed } of units) {
   const source = readFileSync(file, 'utf8');
 
   for (const { out: outDir, dev } of passes) {
@@ -83,15 +85,19 @@ for (const file of publishableSources()) {
       undeclaredRuntime.add(file);
     }
 
-    const out = join(outDir, relative(SRC, file)).replace(/\.ts$/, '.js');
+    const out = join(outDir, `${stem}.js`);
+    const code = rewriteInlined(printed.code, stem, inlined);
     mkdirSync(dirname(out), { recursive: true });
-    writeFileSync(
-      out,
-      `${printed.code}//# sourceMappingURL=${basename(out)}.map\n`,
-    );
+    writeFileSync(out, `${code}//# sourceMappingURL=${basename(out)}.map\n`);
     writeFileSync(
       `${out}.map`,
-      shippedMap(file, out, printed.map!, transformed.map),
+      shippedMap(
+        file,
+        out,
+        printed.map!,
+        transformed.map,
+        embed ? source : undefined,
+      ),
     );
   }
 }

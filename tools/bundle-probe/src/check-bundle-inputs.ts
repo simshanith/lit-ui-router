@@ -28,7 +28,10 @@ import { readPeerLines } from './peer-lines.ts';
 
 const packageDir = process.cwd();
 
-const { name, declared, entries } = readPackageProbe(packageDir);
+const { name, declared, inlined, entries } = readPackageProbe(packageDir);
+
+// Inputs from the package itself, or from @repo/* source oxc-emit ships inside it.
+const shipped = [packageDir, ...inlined].map((dir) => dir + path.sep);
 
 const peerLines = readPeerLines(packageDir);
 
@@ -60,11 +63,14 @@ for (const { label, file, free } of entries) {
       for (const specifier of reached) console.error(`  ${specifier}`);
     }
 
-    const outside = inputs.filter(
-      (input) =>
+    const outside = inputs.filter((input) => {
+      const resolved = path.resolve(packageDir, input);
+
+      return (
         !input.startsWith('\0') &&
-        !path.resolve(packageDir, input).startsWith(packageDir + path.sep),
-    );
+        !shipped.some((dir) => resolved.startsWith(dir))
+      );
+    });
 
     if (outside.length === 0) continue;
     failed = true;
