@@ -6,7 +6,7 @@
 [![Website](https://img.shields.io/website?url=https%3A%2F%2Flit-ui-router.dev)](https://lit-ui-router.dev/packages/lit-ui-router-effect)
 [![codecov](https://codecov.io/gh/simshanith/lit-ui-router/graph/badge.svg?component=lit-ui-router-effect)](https://app.codecov.io/gh/simshanith/lit-ui-router?components%5B0%5D=lit-ui-router-effect)
 
-[Effect](https://effect.website) bindings for [lit-ui-router](https://lit-ui-router.dev): a `SubscriptionRef` of the route and ref-following Lit ReactiveControllers.
+[Effect](https://effect.website) bindings for [lit-ui-router](https://lit-ui-router.dev): a `SubscriptionRef` of the route, from [`ui-router-effect`](https://lit-ui-router.dev/packages/ui-router-effect), and ref-following Lit ReactiveControllers.
 
 A thin wrapper on top of `lit-ui-router` — it registers no custom elements and adds no routing behavior. It mirrors the router's state into a `SubscriptionRef` and gives components a declarative, lifecycle-safe way to follow it (and any other `SubscriptionRef`) with automatic `requestUpdate()` — no manual refresh plumbing.
 
@@ -21,14 +21,14 @@ A thin wrapper on top of `lit-ui-router` — it registers no custom elements and
 ## Installation
 
 ```bash
-npm install lit-ui-router-effect effect
+npm install lit-ui-router-effect ui-router-effect@rc effect
 # or
-pnpm add lit-ui-router-effect effect
+pnpm add lit-ui-router-effect ui-router-effect@rc effect
 # or
-yarn add lit-ui-router-effect effect
+yarn add lit-ui-router-effect ui-router-effect@rc effect
 ```
 
-`lit-ui-router`, `lit`, `effect`, and `@uirouter/core` are peer dependencies.
+`lit-ui-router`, `ui-router-effect`, `lit`, `effect`, and `@uirouter/core` are peer dependencies.
 
 ### Effect 3 and 4
 
@@ -66,7 +66,7 @@ No router configuration is required: the controller discovers the router from th
 
 ### `routeRef(router)`
 
-The `SubscriptionRef<RouteSnapshot>` for a router — memoized, one per router instance. The first call registers one `transitionService.onSuccess` hook that replaces the value per successful transition.
+The `SubscriptionRef<RouteSnapshot>` for a router — memoized, one per router instance. The first call registers one `transitionService.onSuccess` hook that replaces the value per successful transition. It is `ui-router-effect`'s `routeRef`, re-exported, so code using either package shares one ref per router.
 
 ### `RouteSnapshot`
 
@@ -132,6 +132,7 @@ The development build adds one console warning here: a `RouterRefController` who
 - [Docs - Effect Bindings](https://lit-ui-router.dev/packages/lit-ui-router-effect)
 - [Docs - Reactive Components guide](https://lit-ui-router.dev/guides/reactive-components)
 - [lit-ui-router](https://lit-ui-router.dev)
+- [ui-router-effect](https://lit-ui-router.dev/packages/ui-router-effect)
 - [Effect — SubscriptionRef](https://effect.website/docs/state-management/subscriptionref/)
 - [Lit — Reactive Controllers](https://lit.dev/docs/composition/controllers/)
 - [@uirouter/core — TransitionService hooks](https://ui-router.github.io/core/docs/latest/classes/transition.transitionservice.html)

@@ -7,10 +7,10 @@ description: The Effect packages for UI-Router — ui-router-effect holds the ro
 
 Two packages bring [Effect](https://effect.website) to UI-Router:
 
-| Package                                                    | Builds on                  | What it is                                                                  |
-| ---------------------------------------------------------- | -------------------------- | --------------------------------------------------------------------------- |
-| [**ui-router-effect**](/packages/ui-router-effect)         | `@uirouter/core`, `effect` | `routeRef`, a `SubscriptionRef` of the router's current state, with no Lit  |
-| [**lit-ui-router-effect**](/packages/lit-ui-router-effect) | `lit-ui-router`, `effect`  | Lit controllers that follow the route's ref and any other `SubscriptionRef` |
+| Package                                                    | Builds on                           | What it is                                                                  |
+| ---------------------------------------------------------- | ----------------------------------- | --------------------------------------------------------------------------- |
+| [**ui-router-effect**](/packages/ui-router-effect)         | `@uirouter/core`, `effect`          | `routeRef`, a `SubscriptionRef` of the router's current state, with no Lit  |
+| [**lit-ui-router-effect**](/packages/lit-ui-router-effect) | `ui-router-effect`, `lit-ui-router` | Lit controllers that follow the route's ref and any other `SubscriptionRef` |
 
 `ui-router-effect` is for Effect programs that follow the route without Lit;
 `lit-ui-router-effect` is for Lit components. Each package page has its own

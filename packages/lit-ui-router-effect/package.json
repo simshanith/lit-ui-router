@@ -56,7 +56,6 @@
   },
   "devDependencies": {
     "@release-it/conventional-changelog": "catalog:",
-    "@repo/route-snapshot": "catalog:workspace",
     "@tools/bundle-probe": "catalog:workspace",
     "@tools/compat-guards": "catalog:workspace",
     "@tools/crap": "catalog:workspace",
@@ -86,12 +85,14 @@
     "typedoc-vitepress-theme": "catalog:",
     "typescript": "catalog:typescript6-compat",
     "typescript-7": "catalog:",
+    "ui-router-effect": "catalog:workspace",
     "vitest": "catalog:"
   },
   "peerDependencies": {
     "@uirouter/core": "catalog:publishedPeer",
     "effect": "catalog:publishedPeer",
     "lit": "catalog:publishedPeer",
-    "lit-ui-router": "catalog:publishedPeerEffect"
+    "lit-ui-router": "catalog:publishedPeerEffect",
+    "ui-router-effect": "catalog:publishedPeerEffect"
   }
 }
