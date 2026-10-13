@@ -9,9 +9,8 @@ interface AppConfigFields {
 /**
  * This service stores and retrieves user preferences in session storage.
  *
- * Each field is backed by a `Signal.State`, so components that read them —
- * through a SignalController, or in a SignalWatcher render like the nav
- * header — update automatically when they change.
+ * Each field is backed by a `Signal.State`, so components that read them in
+ * a SignalWatcher update, like the nav header, re-render when they change.
  */
 export class AppConfig {
   readonly #sort = new Signal.State('+date');

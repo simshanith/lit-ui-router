@@ -11,9 +11,8 @@ import { snapshot } from 'sample-app-shared/app/mymessages/snapshot.js';
  *
  * The storage's 'commit' event (message sent, drafted, deleted, marked read)
  * is funneled into a single `Signal.State` here, so components watching it
- * through SignalController selectors re-render automatically when messages
- * change between route transitions — resolves only run during transitions
- * and would otherwise go stale.
+ * update automatically when messages change between route transitions —
+ * resolves only run during transitions and would otherwise go stale.
  */
 export class MessagesStore {
   readonly #messages = new Signal.State<readonly Message[]>([]);

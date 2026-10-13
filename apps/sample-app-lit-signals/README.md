@@ -2,19 +2,27 @@
 
 This is the [TC39 Signals](https://github.com/tc39/proposal-signals) variant of the
 [MobX sample app](../sample-app-lit-mobx/): the same non-trivial ui-router lit application,
-with reactivity handled by [`lit-ui-router-signals`](../../packages/lit-ui-router-signals/)
-on [`signal-polyfill`](https://github.com/proposal-signals/signal-polyfill). It is a spike
+with reactivity handled by [`@lit-labs/signals`](https://www.npmjs.com/package/@lit-labs/signals)
+and [`lit-ui-router-signals`](../../packages/lit-ui-router-signals/) on one shared
+[`signal-polyfill`](https://github.com/proposal-signals/signal-polyfill). It is a spike
 for [#1157](https://github.com/simshanith/lit-ui-router/issues/1157): it runs on the vite dev
 server (port 5176) and is not yet deployed or covered by the Cypress suite.
 
 What's different here:
 
-- `RouterSignalController` watches the router (via `RouterSignals`) in `main/App.ts` and
-  `mymessages/Compose.ts` — no transition-hook plumbing in components
-- A `SignalController` selector watches the messages cache in `mymessages/MessageList.ts`
-- `main/NavHeader.ts` extends `@lit-labs/signals`' `SignalWatcher` and reads the auth
-  signals in `render()` with no controller
 - App state lives in `Signal.State`s: `global/appConfig.ts` and `mymessages/messagesStore.ts`
+- `@lit-labs/signals` renders app state:
+  - `main/NavHeader.ts` extends `SignalWatcher`, so the auth signals it reads in `render()`
+    re-render it
+  - `mymessages/MessageList.ts` passes a `computed` of the messages cache to the message
+    table through `watch()`, so a sent, drafted or deleted message updates that one binding
+    without re-running `render()`
+- `lit-ui-router-signals`' `RouterSignalController` renders router state. It finds the
+  router from the `<ui-router>` context, which a module-level signal can't:
+  - `main/App.ts` selects which sticky sections are active, with an `equals` comparer so
+    it re-renders only when one flips
+  - `mymessages/Compose.ts` resets its draft from the `message` param in `onChange`, which
+    also runs when the sticky component reconnects
 
 See [`sample-app-shared`](../sample-app-shared/) for everything the sample apps have in common.
 
