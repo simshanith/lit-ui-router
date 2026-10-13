@@ -37,8 +37,24 @@ export interface Audit {
   findings: Finding[];
 }
 
-function newContext(browser: Browser, scheme: Scheme): Promise<BrowserContext> {
-  return browser.newContext({ colorScheme: scheme, reducedMotion: 'reduce' });
+/** Stands in for the shields.io badges: an image that never answers holds the page's load event. */
+const BADGE =
+  '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="20"><rect width="80" height="20" fill="#555"/></svg>';
+
+async function newContext(
+  browser: Browser,
+  scheme: Scheme,
+): Promise<BrowserContext> {
+  const context = await browser.newContext({
+    colorScheme: scheme,
+    reducedMotion: 'reduce',
+  });
+
+  await context.route('https://img.shields.io/**', (route) =>
+    route.fulfill({ contentType: 'image/svg+xml', body: BADGE }),
+  );
+
+  return context;
 }
 
 const QUIET_MS = 500;
@@ -48,6 +64,8 @@ const SETTLE_TIMEOUT_MS = 30_000;
 interface Requests {
   /** Resolves once no request has been in flight for QUIET_MS; a timeout names what was. */
   settled: () => Promise<void>;
+  /** The URLs in flight now. */
+  pending: () => string[];
 }
 
 /**
@@ -87,15 +105,15 @@ function track(page: Page): Requests {
   );
   page.on('requestfailed', (request) => update(() => inFlight.delete(request)));
 
+  const pending = () => [...inFlight].map((request) => request.url());
+
   const settled = async () => {
     const deadline = Date.now() + SETTLE_TIMEOUT_MS;
 
     while (inFlight.size > 0 || Date.now() - lastChange < QUIET_MS) {
       if (Date.now() > deadline) {
-        const urls = [...inFlight].map((request) => request.url());
-
         throw new Error(
-          `requests unsettled after ${SETTLE_TIMEOUT_MS}ms: ${urls.join(' ')}`,
+          `requests unsettled after ${SETTLE_TIMEOUT_MS}ms: ${pending().join(' ')}`,
         );
       }
 
@@ -103,7 +121,7 @@ function track(page: Page): Requests {
     }
   };
 
-  return { settled };
+  return { settled, pending };
 }
 
 async function scan(
@@ -139,7 +157,15 @@ async function goto(
   requests: Requests,
   url: string,
 ): Promise<void> {
-  const response = await page.goto(url, { waitUntil: 'load' });
+  let response;
+
+  try {
+    response = await page.goto(url, { waitUntil: 'load' });
+  } catch (error) {
+    const urls = requests.pending().join(' ');
+
+    throw new Error(`no load event; in flight: ${urls}`, { cause: error });
+  }
 
   // null is a same-document (hash) navigation
   if (response && response.status() !== 200) {
