@@ -2338,6 +2338,9 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 24.19.1
+      '@types/semver':
+        specifier: 'catalog:'
+        version: 7.8.0
       diff:
         specifier: 'catalog:'
         version: 9.0.0
@@ -2356,12 +2359,18 @@ importers:
       oxlint:
         specifier: 'catalog:'
         version: 1.87.0(oxlint-tsgolint@7.0.2003)
+      semver:
+        specifier: 'catalog:'
+        version: 7.8.5
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
       typescript-6:
         specifier: catalog:typescript6
         version: typescript@6.0.3
+      valibot:
+        specifier: 'catalog:'
+        version: 1.5.0(typescript@7.0.2)
       yaml:
         specifier: 'catalog:'
         version: 2.9.1

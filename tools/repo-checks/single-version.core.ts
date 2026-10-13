@@ -11,7 +11,7 @@ export type Lock = {
     Partial<
       Record<
         'dependencies' | 'devDependencies' | 'optionalDependencies',
-        Record<string, { version: string }>
+        Record<string, { specifier: string; version: string }>
       >
     >
   >;

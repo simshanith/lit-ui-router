@@ -449,10 +449,19 @@ when a hunk no longer lands in the installed package. To extend a patch:
 ## Dependency audit
 
 [`dependency-audit.yml`](../.github/workflows/dependency-audit.yml) runs
-`pnpm audit --audit-level high` on every lockfile or workspace-config change to
-`main`, weekly, and on dispatch. It runs outside turbo, so a cached result never
-hides a newly published advisory. Accepted advisories go in the `audit:` section
-of `pnpm-workspace.yaml`.
+`check:audit` ([`tools/repo-checks/check-audit.ts`](../tools/repo-checks/check-audit.ts))
+on every lockfile or workspace-config change to `main`, weekly, and on dispatch.
+It runs outside turbo, so a cached result never hides a newly published
+advisory.
+
+The check runs `pnpm audit` and splits its findings by what reaches them. The
+tree the workspace ships and tests must have no finding at or above `high`.
+Findings only a `peerFloor*` catalog alias reaches are accepted: a peer floor is
+a compatibility claim, and consumers choose their own versions in the range. A
+floor finding at or above `high` with no patched version in the package's
+published peer range fails, since keeping that floor is a support decision.
+Accepted real-tree advisories go in the `audit:` section of
+`pnpm-workspace.yaml`.
 
 ## Releases
 

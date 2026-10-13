@@ -1,5 +1,6 @@
-# pnpm's own advisory check over the lockfile, outside turbo so a cache hit can
-# never replay a clean result after a new advisory lands.
+# pnpm's own advisory check over the lockfile, less findings only a peer-floor
+# alias installs, outside turbo so a cache hit can never replay a clean result
+# after a new advisory lands.
 name: Dependency audit
 
 on:
@@ -41,9 +42,11 @@ jobs:
         uses: jdx/mise-action@9149ea85001c7435d5a66bb127d6a1b6227cb0a5 # v5.0.0
         with:
           version: 2026.10.1
-          # pnpm only: audit reads the lockfile, no install
-          install_args: aqua:pnpm/pnpm
+          # node and pnpm only: the check needs its own package installed
+          install_args: node aqua:pnpm/pnpm
           cache: false
+      - name: Install dependencies
+        run: pnpm install --filter @tools/repo-checks...
       - name: Audit
-        # the audit: section in pnpm-workspace.yaml holds accepted advisories
-        run: pnpm audit --audit-level high
+        # peer-floor-only findings pass unless no fix lands in the peer range
+        run: pnpm --filter @tools/repo-checks run check:audit --audit-level high
