@@ -25,5 +25,5 @@
 <stop offset="0.92" stop-color="#fff" stop-opacity="0.09"/>
 <stop offset="1" stop-color="#fff" stop-opacity="0"/>
 </radialGradient>
-<ellipse cx="80" cy="140" rx="78" ry="40" fill="url(#veil)"/>
+<ellipse cx="80" cy="140" rx="78" ry="40" fill="url(#veil)" fill-opacity="0.7"/>
 </svg>
