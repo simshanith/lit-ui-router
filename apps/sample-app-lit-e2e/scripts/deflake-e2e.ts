@@ -163,10 +163,10 @@ async function main(): Promise<void> {
   // The workflow's cancel-in-progress delivers SIGTERM/SIGINT; take the
   // in-flight test child down with us instead of orphaning a dev server.
   for (const sig of ['SIGTERM', 'SIGINT'] as const) {
-    process.on(sig, () => {
+    // once: the re-sent signal meets the default handler and ends the process
+    process.once(sig, () => {
       inflight?.kill(sig);
-      // eslint-disable-next-line no-restricted-properties -- a signal handler replaces the default exit, so it must end the process itself
-      process.exit(1);
+      process.kill(process.pid, sig);
     });
   }
 
