@@ -12,6 +12,12 @@ It registers no custom elements and adds no routing behavior. It takes the compa
 | `SignalController`                    | `ReactionController`       | `RefController`       |
 | `RouterSignalController`              | `RouterReactionController` | `RouterRefController` |
 
+## Installation
+
+```bash
+npm install lit-ui-router-signals ui-router-signals signal-polyfill
+```
+
 ## Features
 
 - **`RouterSignalController`**: watches the `RouterSignals` of a router given explicitly (or by a thunk resolved on each connect), scoped by `withRouterSync` for a server render, or supplied by the nearest provider over `context-request` with the `ui-router-context` event as fallback. An explicit or scoped router is read at construction, so a host rendered on the server sees the same `.value` a browser would. `setRouter()` hands it a router later.

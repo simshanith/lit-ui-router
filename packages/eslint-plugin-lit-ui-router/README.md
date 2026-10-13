@@ -13,7 +13,7 @@ The rest are the directives' own runtime dev warnings, statically: the inert `hr
 
 ## Install
 
-```sh
+```bash
 npm install --save-dev eslint-plugin-lit-ui-router
 ```
 

@@ -6,8 +6,6 @@ This guide provides a quick overview of the `lit-ui-router` API. For detailed ty
 
 ```bash
 npm install lit-ui-router
-# or
-pnpm add lit-ui-router
 ```
 
 ## Entry Points

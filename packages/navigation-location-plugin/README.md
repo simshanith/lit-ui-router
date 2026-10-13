@@ -20,10 +20,6 @@ A UI-Router location plugin that uses the modern browser Navigation API for URL 
 
 ```bash
 npm install ui-router-navigation-location-plugin
-# or
-pnpm add ui-router-navigation-location-plugin
-# or
-yarn add ui-router-navigation-location-plugin
 ```
 
 The type declarations reference the global `Navigation`, `NavigateEvent` and `NavigationInterceptOptions` types, which TypeScript ships from 6.0. On TypeScript 5.x, also install `@types/dom-navigation` and add `"dom-navigation"` to `compilerOptions.types`.

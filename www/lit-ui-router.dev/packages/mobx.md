@@ -33,8 +33,6 @@ covers the same ground with transition hooks instead of observables.
 
 ```bash
 npm install lit-ui-router-mobx mobx
-# or
-pnpm add lit-ui-router-mobx mobx
 ```
 
 `lit-ui-router`, `lit`, `mobx`, and `@uirouter/core` are peer dependencies.
