@@ -31,8 +31,8 @@ import { join } from 'node:path';
 import { parseArgs } from 'node:util';
 
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
-import type { Json } from '@tools/bootstrap/types.ts';
 
+import { cf } from './cloudflare-api.ts';
 import {
   type DesiredWorker,
   type Trigger,
@@ -60,47 +60,6 @@ async function loadDesired(): Promise<DesiredWorker[]> {
       { cause: error },
     );
   }
-}
-
-const API_BASE = 'https://api.cloudflare.com/client/v4/accounts';
-
-type CloudflareEnvelope = {
-  success?: boolean;
-  errors?: { code?: number; message?: string }[];
-  result?: Json;
-};
-
-// The token itself must never reach stdout/stderr — errors carry only the
-// API's own status and messages.
-async function cf(
-  token: string,
-  path: string,
-  init?: { method: 'PATCH'; body: unknown },
-): Promise<Json | undefined> {
-  const headers = new Headers({ authorization: `Bearer ${token}` });
-
-  if (init) headers.set('content-type', 'application/json');
-
-  const response = await fetch(`${API_BASE}${path}`, {
-    method: init?.method ?? 'GET',
-    headers,
-    body: init ? JSON.stringify(init.body) : undefined,
-  });
-
-  // SAFETY: every Cloudflare v4 API response, error or not, is this envelope
-  const envelope = (await response.json()) as CloudflareEnvelope;
-
-  if (!response.ok || envelope.success === false) {
-    const details = (envelope.errors ?? [])
-      .map((error) => `${error.code ?? '?'}: ${error.message ?? '?'}`)
-      .join('; ');
-
-    throw new Error(
-      `Cloudflare API ${init?.method ?? 'GET'} ${path} failed (HTTP ${response.status})${details ? ` — ${details}` : ''}`,
-    );
-  }
-
-  return envelope.result;
 }
 
 async function workerTag(

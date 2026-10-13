@@ -306,6 +306,7 @@ See Cloudflare Workers Testing Docs: [Local Development](https://developers.clou
 
 [![Build and Test - Altitude Atlas](https://img.shields.io/github/check-runs/simshanith/lit-ui-router/www%2Fatlas?nameFilter=build_and_test%20%28branch%29%20%2F%20run&label=Build%20and%20Test%20-%20Altitude%20Atlas)](https://github.com/simshanith/lit-ui-router/actions/workflows/build-test-branch.yml?query=branch%3Awww%2Fatlas)
 [![Website](https://img.shields.io/website?url=https%3A%2F%2Fatlas.lit-ui-router.dev)](https://atlas.lit-ui-router.dev)
+[![Deploy - Altitude Atlas](https://img.shields.io/github/check-runs/simshanith/lit-ui-router/www%2Fatlas?nameFilter=pages-deploy%20%28altitude-atlas%29&label=Deploy%20-%20Altitude%20Atlas)](https://github.com/simshanith/lit-ui-router/actions/workflows/release-signals.yml)
 
 The Altitude Atlas is a drawing set of this repository and a consumer app served by
 `lit-ui-router-ssr`. It lives in `www/atlas.lit-ui-router.dev/` on the `www/atlas` branch and
@@ -318,5 +319,6 @@ the build and deploy recipe.
   the app too. It has no PR lane: the branch takes direct pushes.
 - **Site.** [atlas.lit-ui-router.dev](https://atlas.lit-ui-router.dev) is the Cloudflare Pages
   project `altitude-atlas`, production branch `www/atlas`. A deploy is a `wrangler pages deploy`
-  direct upload from a checkout of the branch, so no GitHub check reports it; the website badge
-  is the signal.
+  direct upload from a checkout of the branch, so no build check reports it. The deploy badge is
+  the `pages-deploy (altitude-atlas)` check run that [`release-signals.yml`](../.github/workflows/release-signals.yml)
+  posts on the branch head: it compares the latest production deployment's commit with that head.
