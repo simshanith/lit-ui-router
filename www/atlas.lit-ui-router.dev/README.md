@@ -13,9 +13,9 @@ each sheet argue where that form fits and where it lies.
 | --- | --- | --- |
 | [1](https://atlas.lit-ui-router.dev/sheet/1) | ONE PACKAGE | ISO CIRCUIT |
 | [1i](https://atlas.lit-ui-router.dev/sheet/1i) | ONE PACKAGE | INTERACTIVE CIRCUIT |
-| [2](https://atlas.lit-ui-router.dev/sheet/2) | EIGHT PACKAGES | BRICK ASSEMBLY |
+| [2](https://atlas.lit-ui-router.dev/sheet/2) | NINE PACKAGES | BRICK ASSEMBLY |
 | [2A](https://atlas.lit-ui-router.dev/sheet/2A) | NINE PACKAGES | COUPLING PLAN |
-| [2B](https://atlas.lit-ui-router.dev/sheet/2B) | 12 NODES · 20 DRAWN CONTRACTS | INTERACTIVE COUPLING GRAPH |
+| [2B](https://atlas.lit-ui-router.dev/sheet/2B) | 12 NODES · 21 DRAWN CONTRACTS | INTERACTIVE COUPLING GRAPH |
 | [3](https://atlas.lit-ui-router.dev/sheet/3) | THE MONOREPO | ISOMETRIC CITY |
 | [3A](https://atlas.lit-ui-router.dev/sheet/3A) | TWO TASK MANAGERS | COUPLING SCHEMATIC |
 | [3B](https://atlas.lit-ui-router.dev/sheet/3B) | THE CI TASK GRAPH | ISOMETRIC GRAPH CITY |
@@ -96,7 +96,7 @@ lit-ui-router app (see `app/README.md`); `HISTORY.md` is the verbatim revision r
 into the app's `/log` at build time. This file is written by `build.mjs`; edit the emitter, not the output.
 
 **The cabinet.** Every figure on every plate is read from `data/*.json`, written by the
-`generator/census-*.mjs` probes at one ref — currently origin/main @ c1b759a4 — on the scc 4.0.0
+`generator/census-*.mjs` probes at one ref — currently origin/main @ 108456af — on the scc 4.0.0
 `Code` basis. Lookups throw on a missing row; nothing is hand-pasted. Two plates stand outside the
 cabinet: `data/survey-self.json` and `data/survey-shipped.json`, which `generator/survey-self.mjs` and
 `generator/survey-shipped.mjs` measure from an archive of the atlas's own branch for appendices A3 and

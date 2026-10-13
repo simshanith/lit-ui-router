@@ -1,10 +1,10 @@
 {
   "ref": "origin/main",
-  "sha": "c1b759a4",
-  "commitDate": "2026-10-13T05:04:32Z",
-  "generatedAtTime": "2026-10-13T05:18:56.187Z",
+  "sha": "108456af",
+  "commitDate": "2026-10-13T10:14:45-07:00",
+  "generatedAtTime": "2026-10-13T17:22:45.102Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-steam.mjs",
-  "used": "www/atlas.lit-ui-router.dev/data/census-files.json @ c1b759a4",
+  "used": "www/atlas.lit-ui-router.dev/data/census-files.json @ 108456af",
   "wasAssociatedWith": [
     "git log (historyLog)"
   ],
@@ -12,11 +12,11 @@
     "since": "2026-07-15",
     "until": "2026-10-13"
   },
-  "windowCommits": 615,
+  "windowCommits": 635,
   "rows": [
     {"member":"packages/eslint-plugin-lit-ui-router","commits":18},
     {"member":"packages/lit-ui-router","commits":56},
-    {"member":"packages/lit-ui-router-effect","commits":18},
+    {"member":"packages/lit-ui-router-effect","commits":19},
     {"member":"packages/lit-ui-router-mobx","commits":16},
     {"member":"packages/lit-ui-router-signals","commits":1},
     {"member":"packages/lit-ui-router-ssr","commits":21},
@@ -32,9 +32,9 @@
     {"member":"apps/sample-app-lit-vanilla","commits":14},
     {"member":"apps/sample-app-routes","commits":6},
     {"member":"apps/sample-app-shared","commits":36},
-    {"member":"www/lit-ui-router.dev","commits":20},
-    {"member":"examples","commits":21},
-    {"member":"tools/a11y","commits":4},
+    {"member":"www/lit-ui-router.dev","commits":21},
+    {"member":"examples","commits":23},
+    {"member":"tools/a11y","commits":5},
     {"member":"tools/bootstrap","commits":6},
     {"member":"tools/build_and_test","commits":20},
     {"member":"tools/bundle-probe","commits":16},
@@ -51,7 +51,7 @@
     {"member":"tools/lit-test-env","commits":8},
     {"member":"tools/oxc-emit","commits":11},
     {"member":"tools/oxlint-anti-slop","commits":1},
-    {"member":"tools/release","commits":38},
+    {"member":"tools/release","commits":39},
     {"member":"tools/release-config","commits":3},
     {"member":"tools/repo-checks","commits":33},
     {"member":"tools/shared","commits":21},
@@ -59,6 +59,6 @@
     {"member":"tools/vue-check","commits":3},
     {"member":"tools/warn-lanes","commits":6},
     {"member":"tools/wintercg-globals","commits":0},
-    {"member":"tools/workers-builds","commits":21}
+    {"member":"tools/workers-builds","commits":22}
   ]
 }

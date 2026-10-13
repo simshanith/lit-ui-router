@@ -11,7 +11,7 @@ import { FOCUS_JS } from './focus.mjs';
 import { basisStrip, laneCss } from './lane-chrome.mjs';
 import { ASSEMBLE_SECONDS, assembleMotion, brickGlb, seatedBoxes, toModel } from './brick-glb.mjs';
 import { MV_JS, frameCss, orbitAt, pinCss } from './mv-kit.mjs';
-import { BRICK_COUPLES, BRICK_MODEL, BRICK_ROWS, EXPLODE } from './sheet2.mjs';
+import { BRICK_COUPLES, BRICK_MODEL, BRICK_REACHES, BRICK_ROWS, EXPLODE } from './sheet2.mjs';
 import { BASE } from '../app/src/routes.ts';
 
 const PLATE = JSON.parse(readFileSync(new URL('../data/census-bricks.json', import.meta.url), 'utf8'));
@@ -44,11 +44,14 @@ const SEATED_MAX = 'Infinity 88deg auto';
 const EXPLODED_MAX = `Infinity 88deg ${+(RADIUS * (1 + DOLLY)).toFixed(2)}%`;
 
 const PLATE_NAME = { P1: 'the @uirouter/core plate', P2: 'the headless plate, on the server shelf' };
+// a reach is a peer from a brick's cap to a plate brick, not a seat: it reads as `peers`
+const isReach = (c) => BRICK_REACHES.includes(c);
 const seatsOf = (n, on) => {
-  const couples = BRICK_COUPLES.filter(([a]) => a === n);
+  const couples = BRICK_COUPLES.filter((c) => c[0] === n && !isReach(c));
   if (couples.length) return couples.map(([, b, stud]) => `brick ${b}, stud ${stud}`).join(' and ');
   return PLATE_NAME[on];
 };
+const peersOf = (n) => BRICK_COUPLES.filter((c) => c[0] === n && isReach(c)).map(([, b, stud]) => `brick ${b}, stud ${stud}`).join(' and ');
 
 const SEATED = new Map(seatedBoxes(BRICK_MODEL).map((b) => [b.m.id, b]));
 const r4 = (v) => +v.toFixed(4);
@@ -81,6 +84,7 @@ const DATA = {
       hue: row.hue,
       ledger: `${row.files}f · ${fmt(row.sloc)} sloc · ${row.shape[0]}×${row.shape[1]} · ${row.courses} course${row.courses > 1 ? 's' : ''}`,
       seats: seatsOf(row.n, b.m.on),
+      peers: peersOf(row.n),
       // a stud's height clear of the cap, over an open stud, so the badge stands clear of the bricks seated on it
       cap: toModel(BRICK_MODEL, ...openStud(b), b.z0 + b.h + 14).map(r4),
       centre: toModel(BRICK_MODEL, ...mid, b.z0 + b.h / 2).map(r4),
@@ -156,7 +160,7 @@ export function bricksMarkup() {
   <p class="sheet-sub">${meta.sub}</p>
   <div class="bk-frame fillable" id="bk-frame"><button type="button" class="fill" data-fill aria-label="Enlarge this figure, or leave it"></button>
     <div class="bk-stage">
-      <model-viewer id="bk-viewer" class="bk-view" src="${BASE}${BRICKS_GLB}" loading="eager" reveal="manual" camera-controls touch-action="pan-y" interaction-prompt="none" camera-orbit="${CORNERS[0].orbit}" max-camera-orbit="${SEATED_MAX}" field-of-view="14deg" min-field-of-view="5deg" max-field-of-view="18deg" exposure="1" shadow-intensity="0" animation-name="assemble" alt="Sheet 2's finished LEGO model in three dimensions: a low slab of browser ground carries the @uirouter/core baseplate, its back rail of studs ringed in the accent colour and one red location seat; lit-ui-router stands on it as a tall two-by-four, the one-stud navigation location plugin on the location seat, lit-ui-router-mobx, lit-ui-router-effect and lit-ui-router-signals on lit-ui-router's cap, the one-stud ui-router-effect on the plate's stud C; a raised server shelf carries a translucent headless plate with ui-router-server on it, and lit-ui-router-ssr bridges from lit-ui-router's cap to ui-router-server's. The explode control lifts the stacked bricks first, then the rest, each to at least half again the height the sheet's exploded view draws it at, with a dashed leader dropping from each to the stud it seats on.">
+      <model-viewer id="bk-viewer" class="bk-view" src="${BASE}${BRICKS_GLB}" loading="eager" reveal="manual" camera-controls touch-action="pan-y" interaction-prompt="none" camera-orbit="${CORNERS[0].orbit}" max-camera-orbit="${SEATED_MAX}" field-of-view="14deg" min-field-of-view="5deg" max-field-of-view="18deg" exposure="1" shadow-intensity="0" animation-name="assemble" alt="Sheet 2's finished LEGO model in three dimensions: a low slab of browser ground carries the @uirouter/core baseplate, its back rail of studs ringed in the accent colour and one red location seat; lit-ui-router stands on it as a tall two-by-four, the one-stud navigation location plugin on the location seat, lit-ui-router-mobx, lit-ui-router-effect and lit-ui-router-signals on lit-ui-router's cap, the one-stud ui-router-effect on the plate's stud C and the one-stud ui-router-signals on stud E, each with a ringed stud the effect and signals bindings peer; a raised server shelf carries a translucent headless plate with ui-router-server on it, and lit-ui-router-ssr bridges from lit-ui-router's cap to ui-router-server's. The explode control lifts the stacked bricks first, then the rest, each to at least half again the height the sheet's exploded view draws it at, with a dashed leader dropping from each to the stud it seats on.">
 ${pins}
       </model-viewer>
     </div>
@@ -289,7 +293,7 @@ const BODY = `${FOCUS_JS}${MV_JS}  var mv = root.querySelector('#bk-viewer');
     if (n === null) { info.innerHTML = IDLE; return; }
     var b = byN[n];
     info.innerHTML = '<h3><i class="sw" style="background:' + b.hue + '"></i><span class="n">BRICK ' + b.n + '</span>' + b.name + ' ' + b.ver + '</h3>'
-      + '<p class="ledger">' + b.ledger + '</p><p class="note">Seats on ' + b.seats + '.</p>';
+      + '<p class="ledger">' + b.ledger + '</p><p class="note">Seats on ' + b.seats + (b.peers ? '; peers ' + b.peers : '') + '.</p>';
   }
   function member(v) { return v !== null && v !== undefined && byN[v] ? Number(v) : null; }
   // idempotent, so the url's echo of a pick lands on a no-op

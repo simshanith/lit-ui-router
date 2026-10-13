@@ -4,7 +4,7 @@ import { TOTAL, TOTAL_WORDS } from './chrome.mjs';
 import { sheet1 } from './sheet1.mjs';
 import { loopWalkedSection, sheet1i } from './sheet1i.mjs';
 import { sheet2 } from './sheet2.mjs';
-import { sheet2a } from './sheet2a.mjs';
+import { sheet2a, SHEET2A_VERDICT } from './sheet2a.mjs';
 import { sheet2b, sheet2bPage, SHEET2B_VERDICT } from './sheet2b.mjs';
 import { sheet3 } from './sheet3.mjs';
 import { sheet3a, SHEET3A_VERDICT } from './sheet3a.mjs';
@@ -60,7 +60,7 @@ const verdicts = [
   ['1', 'ONE PACKAGE', 'CLOSED LOOP', 'strong fit — the render cycle is a genuine circuit'],
   ['1i', 'ONE PACKAGE', 'INTERACTIVE CIRCUIT', `sheet 1's circuit with a pointer in it — ${LOOP.stations} stations, ${LOOP.legs} legs, and one click walked in ${LOOP.steps} steps, every step standing on the source lines the plate cites verbatim`],
   ['2', 'COMPANIONS', 'BRICK ASSEMBLY', 'exploded, then seated: every coupling is a published stud, on core or on the brick below — and the server takes none of core’s'],
-  ['2A', 'COMPANIONS', 'COUPLING PLAN', 'alternate plate — the same joints at reading size, sheet 2’s two newest companions included: one hangs off the flagship, one bridges the flagship and the server across the no-DOM line'],
+  ['2A', 'COMPANIONS', 'COUPLING PLAN', SHEET2A_VERDICT],
   ['2B', 'COMPANIONS, CONTRACTED', 'COUPLING BENCH', SHEET2B_VERDICT],
   ['3', 'MONOREPO', 'ISOMETRIC CITY', 'the yard re-massed from sloc × files — gate severity in colour: the smallest blocks stop the line; the task-manager inset reads the same plates as 3A, so the two cannot disagree'],
   ['3A', 'TWO TASK MANAGERS', 'COUPLING SCHEMATIC', SHEET3A_VERDICT],
@@ -74,7 +74,7 @@ const verdicts = [
   ['8', 'ONE CONSUMER', 'DELIVERED CITY', SHEET8_VERDICT],
   ['9', 'ONE DEPLOY', 'SHIPPED CITY', SHEET9_VERDICT],
   ['10', 'ONE BUNDLE', 'BUNDLED CITY', SHEET10_VERDICT],
-  ['11', 'SEVEN PACKAGES', 'ENTRY QUARTERS', SHEET11_VERDICT],
+  ['11', sheet11.scale, 'ENTRY QUARTERS', SHEET11_VERDICT],
   ['12', 'PR CI GRAPH', 'REGISTER PLATE', `the punched inventory — ${PHANTOM_PCT}% of the graph runs nothing, and the real→real edges that remain are a thin core inside a large node count`],
   ['13', 'WORKSPACE × TIME', 'WEATHERING MAP', SHEET13_VERDICT],
   ['14', 'CITY × COMMONS', 'UPSTREAM WORKS', SHEET14_VERDICT],

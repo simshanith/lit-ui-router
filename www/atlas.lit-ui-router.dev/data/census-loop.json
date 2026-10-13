@@ -1,10 +1,10 @@
 {
   "ref": "origin/main",
-  "sha": "c1b759a4",
-  "commitDate": "2026-10-13T05:04:32Z",
-  "generatedAtTime": "2026-10-13T05:26:41.625Z",
+  "sha": "108456af",
+  "commitDate": "2026-10-13T10:14:45-07:00",
+  "generatedAtTime": "2026-10-13T17:31:10.549Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-loop.mjs",
-  "used": "git archive origin/main @ c1b759a4 — packages/lit-ui-router/src/{core.ts,sref-internals.ts,transition-controller.ts,ui-router.ts,ui-sref-active.ts,ui-sref.ts,ui-view.ts} read line by line; every evidence line checked against its expected text",
+  "used": "git archive origin/main @ 108456af — packages/lit-ui-router/src/{core.ts,sref-internals.ts,transition-controller.ts,ui-router.ts,ui-sref-active.ts,ui-sref.ts,ui-view.ts} read line by line; every evidence line checked against its expected text",
   "wasAssociatedWith": [
     "git"
   ],

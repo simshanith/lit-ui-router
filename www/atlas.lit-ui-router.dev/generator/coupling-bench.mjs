@@ -23,7 +23,7 @@ import { basisStrip, laneCss, laneHints, LANE_TOK_JS } from './lane-chrome.mjs';
 import { CYTOSCAPE_URL } from './pipeline-graph.mjs';
 import { SPRITES, spriteSvg } from './sprites.mjs';
 
-export const REV = 'E';
+export const REV = 'F';
 
 const C = JSON.parse(readFileSync(new URL('../data/census-couplings.json', import.meta.url), 'utf8'));
 const B = JSON.parse(readFileSync(new URL('../data/census-bricks.json', import.meta.url), 'utf8'));
@@ -38,8 +38,9 @@ const brick = (name) => B.rows.find((r) => r.name === name) ?? null;
 // with lit lifted clear of the wall, effect, ssr and ui-router-signals at 900, and
 // the eslint bay at 1120 — a bay, not a basement. ui-router-signals stands over
 // effect, not in the core-only column: there its tie from lit-ui-router-signals
-// would cross the flagship's tie to the wall.  effect and ssr cannot stand in the 680 column:
-// both tie lit-ui-router, and a tie laid down that column would run straight
+// would cross the flagship's tie to the wall.
+// lit-ui-router-effect's second tie runs from the 900 column to ui-router-effect at 400.
+// effect and ssr cannot stand in the 680 column: both tie lit-ui-router, and a tie laid down that column would run straight
 // through mobx, which the guard below throws on.  The middle column is the plate's whole argument about that plugin:
 // it declares @uirouter/core and nothing else, so it sits on the wall's own
 // baseline (y = 0) and its single tie is a straight horizontal run.  Keeping it

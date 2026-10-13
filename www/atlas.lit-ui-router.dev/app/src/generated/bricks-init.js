@@ -204,7 +204,7 @@ export async function initBricks(root, viewer, focus) {
     if (n === null) { info.innerHTML = IDLE; return; }
     var b = byN[n];
     info.innerHTML = '<h3><i class="sw" style="background:' + b.hue + '"></i><span class="n">BRICK ' + b.n + '</span>' + b.name + ' ' + b.ver + '</h3>'
-      + '<p class="ledger">' + b.ledger + '</p><p class="note">Seats on ' + b.seats + '.</p>';
+      + '<p class="ledger">' + b.ledger + '</p><p class="note">Seats on ' + b.seats + (b.peers ? '; peers ' + b.peers : '') + '.</p>';
   }
   function member(v) { return v !== null && v !== undefined && byN[v] ? Number(v) : null; }
   // idempotent, so the url's echo of a pick lands on a no-op

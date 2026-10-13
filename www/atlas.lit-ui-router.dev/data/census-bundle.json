@@ -1,10 +1,10 @@
 {
   "ref": "origin/main",
-  "sha": "c1b759a4",
-  "commitDate": "2026-10-13T05:04:32Z",
-  "generatedAtTime": "2026-10-13T05:23:41.927Z",
+  "sha": "108456af",
+  "commitDate": "2026-10-13T10:14:45-07:00",
+  "generatedAtTime": "2026-10-13T17:27:49.471Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-bundle.mjs",
-  "used": "git archive origin/main @ c1b759a4 + pnpm install --frozen-lockfile --silent (mise-provisioned pnpm) + turbo run build + vite build (JS API)",
+  "used": "git archive origin/main @ 108456af + pnpm install --frozen-lockfile --silent (mise-provisioned pnpm) + turbo run build + vite build (JS API)",
   "wasAssociatedWith": [
     "pnpm (mise-provisioned)",
     "turbo",

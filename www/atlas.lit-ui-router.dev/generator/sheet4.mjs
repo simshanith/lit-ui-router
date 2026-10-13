@@ -51,8 +51,8 @@ const peerRange = (from, to) => {
 };
 // this repo's router limbs: the flagship and the bay, each column top to bottom
 const BAY_COLS = [
-  ['ui-router-server', 'lit-ui-router-ssr', 'lit-ui-router-effect', 'lit-ui-router-mobx'],
-  ['ui-router-navigation-location-plugin', 'ui-router-effect', 'ui-router-signals', 'lit-ui-router-signals'],
+  ['ui-router-server', 'lit-ui-router-ssr', 'lit-ui-router-mobx'],
+  ['ui-router-navigation-location-plugin', 'ui-router-effect', 'lit-ui-router-effect', 'ui-router-signals', 'lit-ui-router-signals'],
 ];
 const COMP_NAMES = BAY_COLS.flat();
 const WORD = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
@@ -103,10 +103,14 @@ const LIT_PEERS = new Map(COMP_NAMES.filter((p) => COUPLINGS.rows.some((r) => r.
   .map((p) => [p, peerRange(p, 'lit-ui-router')]));
 // the companions whose peers include a second companion, and that companion
 const BRIDGES = COMP_NAMES.flatMap((p) => COUPLINGS.rows.filter((r) => r.kind === 'peer' && r.from === p && COMP_NAMES.includes(r.to)).map((r) => [p, r.to, r.range]));
-if (BRIDGES.map(([a, b]) => `${a}>${b}`).join() !== 'lit-ui-router-ssr>ui-router-server,lit-ui-router-signals>ui-router-signals')
-  throw new Error(`sheet 4: the bay draws ssr over the server and signals over ui-router-signals, but the plate peers [${BRIDGES.map(([a, b]) => `${a} → ${b}`)}]`);
+if (BRIDGES.map(([a, b]) => `${a}>${b}`).join() !== 'lit-ui-router-ssr>ui-router-server,lit-ui-router-effect>ui-router-effect,lit-ui-router-signals>ui-router-signals')
+  throw new Error(`sheet 4: the bay draws ssr under the server and each Lit binding under its renderer-free package, but the plate peers [${BRIDGES.map(([a, b]) => `${a} → ${b}`)}]`);
 const SSR_SERVER_GATE = peerRange('lit-ui-router-ssr', 'ui-router-server');
-const SIG_USG_GATE = peerRange('lit-ui-router-signals', 'ui-router-signals');
+// what each Lit binding takes from the renderer-free package it bridges to
+const BINDS = { 'ui-router-effect': 'the renderer-free route ref', 'ui-router-signals': 'the renderer-free signals' };
+const BOUND = BRIDGES.filter(([a]) => a !== 'lit-ui-router-ssr');
+if (!BOUND.every(([a, b]) => BINDS[b] && LIT_PEERS.has(a))) throw new Error(`sheet 4: the notes read every bridge but ssr's as a Lit binding over a renderer-free package, and the plate bridges [${BOUND.map(([a, b]) => `${a} → ${b}`)}]`);
+const short = (n) => n.replace(/^lit-ui-router-/, '');
 // sheet 2's bricks, so the notes can say which companions it draws
 const ON_SHEET2 = new Set(BRICK_ROWS.map((b) => b.name));
 const OFF_SHEET2 = COMP_NAMES.filter((n) => !ON_SHEET2.has(n));
@@ -299,7 +303,7 @@ ${schedule}
 </svg>`;
 
 export const sheet4 = {
-  num: 4, id: 'family', rev: 'F',
+  num: 4, id: 'family', rev: 'G',
   title: 'THE FAMILY SPINE',
   sub: `ALTITUDE 4 — one core, four living adapters, four dormant instruments, massed by authored source and gated on the core range each admits · versions ${REGISTRY}, mass ${COUNTED}`,
   scale: 'UI-ROUTER ECOSYSTEM',
@@ -311,7 +315,7 @@ export const sheet4 = {
 <p><strong>An isometric city would still lie here.</strong> Adjacent blocks imply interaction, and the adapters have none — each rib touches only the spine. So the plan stays radial and the new ink is mass: block width ∝ √sloc, block height ∝ file count, which lets a two-file, 233-line package like ${npmLink('@uirouter/sticky-states', 'sticky-states')} read as the sliver it is beside core's ${CORE[3]}-file slab. Core alone is ${fmt(CORE[4])} lines — ${CORE_SHARE}% of the family's authored mass, and more than the four adapters combined.</p>
 <p><strong>The gates disagree, and that is the finding.</strong> Every limb declares a range on ${npmLink('@uirouter/core')}, drawn here as a hatched tablet where the limb's stem crosses toward the rail. The dormant instruments still admit core 5 (<code>&gt;=5.0.0</code>, <code>&gt;=5.0.1</code>); ${npmLink('@uirouter/rx', 'rx')} admits <code>&gt;=6.0.1</code>; ${npmLink('@uirouter/angularjs', 'angularjs')} and ${npmLink('@uirouter/angular', 'angular')} carets on <code>^6.1.2</code>; this repo's ${WORD[COMPANIONS.length + 1]} router packages sit on <code>${CORE_GATE}</code>. One gate is red: ${npmLink('@uirouter/react')} pins core at exactly <code>6.1.2</code> <em>and ships it as a dependency, not a peer</em> — the only limb that can install a second copy of the state machine into a consumer's tree, and the only one that cannot be moved forward without a react release.</p>
 <p><strong>Mass does not track liveness.</strong> The largest limb on the sheet is the dormant ${npmLink('@uirouter/visualizer')} (34 files, 2,018 lines, last published ${npmRow('@uirouter/visualizer').published}) — it carries a preact/d3 rendering stack, so it out-masses every living adapter. The limb this repo builds, ${npmLink('lit-ui-router')}, is ${ADAPTERS[3][3]} files and ${fmt(ADAPTERS[3][4])} lines at ${ADAPTERS[3][1]}, and it is the only limb growing limbs of its own: the companion bay adds another ${fmt(BAY_L)} lines behind a single shared gate, and ${LIT_PEERS.size} of its ${COMPANIONS.length} members peer the limb as well as the spine — ${listOf([...LIT_PEERS].map(([n, r]) => `${npmLink(n)} at ${r}`))}. Sheet 2 draws ${OFF_SHEET2.length ? `every one of them as a brick but ${listOf(OFF_SHEET2.map((n) => `<code>${n}</code>`))}, which it schedules` : `all ${WORD[COMPANIONS.length]} as bricks`}.</p>
-<p><strong>${WORD[BRIDGES.length][0].toUpperCase() + WORD[BRIDGES.length].slice(1)} companions sit above two others.</strong> ${npmLink('lit-ui-router-ssr')} declares on ${npmLink('lit-ui-router')} ${LIT_PEERS.get('lit-ui-router-ssr')} <em>and</em> on ${npmLink('ui-router-server')} ${SSR_SERVER_GATE}, so it cannot be installed without both. That is why it is drawn taking two arrows rather than one — it is a bridge between the element library and the server router, not a limb hanging off either. ${npmLink('lit-ui-router-signals')} is the other: it declares on the flagship ${LIT_PEERS.get('lit-ui-router-signals')} <em>and</em> on ${npmLink('ui-router-signals')} ${SIG_USG_GATE}, the renderer-free signals it binds to a Lit host, and its second arrow runs down the bay's second column. ${npmLink('ui-router-signals')} and ${npmLink('ui-router-effect')} stand in that column with the navigation plugin: they declare on the spine and nothing else. ${npmLink('lit-ui-router-effect')} hangs off the flagship the way mobx does. ${RC_NOTE}</p>
+<p><strong>${WORD[BRIDGES.length][0].toUpperCase() + WORD[BRIDGES.length].slice(1)} companions each stand under a companion they peer.</strong> ${npmLink('lit-ui-router-ssr')} declares on ${npmLink('lit-ui-router')} ${LIT_PEERS.get('lit-ui-router-ssr')} <em>and</em> on ${npmLink('ui-router-server')} ${SSR_SERVER_GATE}, so it cannot be installed without both. That is why it is drawn taking two arrows rather than one — it is a bridge between the element library and the server router, not a limb hanging off either — and it stands under the server in the bay's first column. ${listOf(BOUND.map(([a, b, r]) => `${npmLink(a)} declares on the flagship ${LIT_PEERS.get(a)} <em>and</em> on ${npmLink(b)} ${r}, ${BINDS[b]} it binds to a Lit host`))}, so each Lit binding stands under its renderer-free package in the bay's second column, its bridge run up that column's right gutter. ${listOf(BOUND.map(([, b]) => `<code>${b}</code>`))} declare on the spine and nothing else, as the navigation plugin does, and ${npmLink('lit-ui-router-mobx')} declares on the flagship alone. ${RC_NOTE}</p>
 <p><strong>Publish dates sort the family into three states.</strong> ${npmLink('@uirouter/angular')} stands at ${npmRow('@uirouter/angular').version} (${npmRow('@uirouter/angular').published}), a major of its own, so it is drawn <em>active</em>; ${npmLink('@uirouter/angularjs', 'angularjs')} and ${npmLink('@uirouter/react', 'react')} carry only the ${npmRow('@uirouter/core').published} patch wave that followed core inside a day, so they are drawn <em>wave</em>. Below the rail nothing is current — the newest instrument publish is ${npmLink('@uirouter/rx', 'rx')} at ${npmRow('@uirouter/rx').published}, the rest 2019–2020 — and the dashes say so. <code>@uirouter/vue</code> holds a seat with no registry row at all: an absence, not a package.</p>`,
   key: [
     keyRow('<rect x="4" y="4" width="40" height="11" class="sk fp2"/>', 'member — width ∝ √sloc, height ∝ files'),
@@ -321,6 +325,6 @@ export const sheet4 = {
     keyRow('<rect x="10" y="2" width="28" height="14" rx="2" fill="url(#s4-hr)"/><rect x="10" y="2" width="28" height="14" rx="2" class="skr fnone"/>', 'hard gate — core pinned exactly, as a dependency'),
     keyRow('<line x1="22" y1="2" x2="22" y2="16" class="sk"/>', 'declares on the spine (and only the spine)'),
     keyRow('<line x1="4" y1="9" x2="44" y2="9" class="ska" stroke-dasharray="4 3"/>', 'also declares on a companion, not just the spine'),
-    keyRow('<line x1="24" y1="2" x2="24" y2="16" class="ska" stroke-dasharray="4 3"/>', `a bridge — ssr declares ui-router-server ${SSR_SERVER_GATE}, signals ui-router-signals ${SIG_USG_GATE}`),
+    keyRow('<line x1="24" y1="2" x2="24" y2="16" class="ska" stroke-dasharray="4 3"/>', `a bridge — ${BRIDGES.map(([a, b, r], i) => `${short(a)}${i ? '' : ' declares'} ${b} ${r}`).join(', ')}`),
   ].join('\n'),
 };

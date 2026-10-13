@@ -1,10 +1,10 @@
 {
   "ref": "www/atlas",
-  "sha": "7abec3a5",
-  "commitDate": "2026-10-12T15:40:40-07:00",
-  "generatedAtTime": "2026-10-13T05:27:00.887Z",
+  "sha": "b8ab7b02",
+  "commitDate": "2026-10-13T10:08:52-07:00",
+  "generatedAtTime": "2026-10-13T17:31:24.931Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/survey-shipped.mjs",
-  "used": "git archive www/atlas @ 7abec3a5 + npm ci + npm run build (vite build, prerender) -> www/atlas.lit-ui-router.dev/app/dist",
+  "used": "git archive www/atlas @ b8ab7b02 + npm ci + npm run build (vite build, prerender) -> www/atlas.lit-ui-router.dev/app/dist",
   "wasAssociatedWith": [
     "npm",
     "vite",
@@ -20,20 +20,20 @@
   "scope": "www/atlas.lit-ui-router.dev/app/dist",
   "totals": {
     "files": 257,
-    "rawBytes": 18444333,
-    "gzBytes": 7447401
+    "rawBytes": 19301989,
+    "gzBytes": 7634263
   },
   "rows": [
-    {"district":"routed pages","files":35,"raw":4834778,"gz":1149769,"top":{"name":"sheet/A1/index.html","gz":281104}},
-    {"district":"bare plates","files":27,"raw":2519483,"gz":691060,"top":{"name":"plate/A1/index.html","gz":270905}},
-    {"district":"plate fragments","files":30,"raw":2239592,"gz":627607,"top":{"name":"sheets/a1.html","gz":267117}},
-    {"district":"card pictures","files":60,"raw":3519934,"gz":3492013,"top":{"name":"thumbs/a2i-dark.webp","gz":160399}},
-    {"district":"models","files":3,"raw":1141452,"gz":180850,"top":{"name":"models/bricks.glb","gz":87148}},
+    {"district":"routed pages","files":35,"raw":5201585,"gz":1191326,"top":{"name":"sheet/A1/index.html","gz":281759}},
+    {"district":"bare plates","files":27,"raw":2653083,"gz":709160,"top":{"name":"plate/A1/index.html","gz":270905}},
+    {"district":"plate fragments","files":30,"raw":2382289,"gz":647326,"top":{"name":"sheets/a1.html","gz":267117}},
+    {"district":"card pictures","files":60,"raw":3613520,"gz":3585993,"top":{"name":"thumbs/12-dark.webp","gz":148196}},
+    {"district":"models","files":3,"raw":1252408,"gz":193251,"top":{"name":"models/bricks.glb","gz":88786}},
     {"district":"model viewer","files":8,"raw":2938242,"gz":874177,"top":{"name":"assets/model-viewer-BupDWnUC.js","gz":288734}},
     {"district":"cytoscape","files":1,"raw":434864,"gz":136478,"top":{"name":"assets/cytoscape.esm-Djy5M2Ec.js","gz":136478}},
-    {"district":"the routed app","files":8,"raw":596920,"gz":181812,"top":{"name":"assets/index-BPa0r3tc.js","gz":124546}},
+    {"district":"the routed app","files":8,"raw":600156,"gz":182137,"top":{"name":"assets/index-BykMFqlM.js","gz":124871}},
     {"district":"icons","files":83,"raw":93123,"gz":88292,"top":{"name":"favicon.ico","gz":18937}},
-    {"district":"manifest","files":2,"raw":125945,"gz":25343,"top":{"name":"manifest.json","gz":25099}}
+    {"district":"manifest","files":2,"raw":132719,"gz":26123,"top":{"name":"manifest.json","gz":25879}}
   ],
   "orphans": [
 

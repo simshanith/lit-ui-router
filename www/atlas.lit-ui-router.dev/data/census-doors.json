@@ -1,10 +1,10 @@
 {
   "ref": "origin/main",
-  "sha": "c1b759a4",
-  "commitDate": "2026-10-13T05:04:32Z",
-  "generatedAtTime": "2026-10-13T05:24:09.805Z",
+  "sha": "108456af",
+  "commitDate": "2026-10-13T10:14:45-07:00",
+  "generatedAtTime": "2026-10-13T17:28:14.702Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-doors.mjs",
-  "used": "git archive origin/main @ c1b759a4 + pnpm install --frozen-lockfile --silent (mise-provisioned pnpm) + tools/bundle-probe (rolldown, minify, declared deps+peers external, annotations off)",
+  "used": "git archive origin/main @ 108456af + pnpm install --frozen-lockfile --silent (mise-provisioned pnpm) + tools/bundle-probe (rolldown, minify, declared deps+peers external, annotations off)",
   "wasAssociatedWith": [
     "pnpm (mise-provisioned)",
     "rolldown@1.2.13",
@@ -18,7 +18,7 @@
     {"pkg":"lit-ui-router","door":"./register","min":12080,"gz":3934},
     {"pkg":"lit-ui-router","door":"./ui-router.register","min":4735,"gz":1969},
     {"pkg":"lit-ui-router","door":"./ui-view.register","min":11687,"gz":3893},
-    {"pkg":"lit-ui-router-effect","door":".","min":3503,"gz":1596},
+    {"pkg":"lit-ui-router-effect","door":".","min":2932,"gz":1308},
     {"pkg":"lit-ui-router-mobx","door":".","min":2574,"gz":1020},
     {"pkg":"lit-ui-router-signals","door":".","min":2114,"gz":835},
     {"pkg":"lit-ui-router-ssr","door":".","min":7305,"gz":3388},

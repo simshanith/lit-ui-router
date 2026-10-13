@@ -25,17 +25,16 @@ const SSR_REPO = FILES.members.find((m) => m.name === 'lit-ui-router-ssr')?.vers
 if (!SSR_NPM || !SSR_REPO) throw new Error('sheet 11: census-npm.json or census-files.json has no lit-ui-router-ssr');
 if (SSR_NPM.tags?.rc && ahead(SSR_NPM.tags.rc, SSR_NPM.version)) throw new Error('sheet 11: census-npm.json leads lit-ui-router-ssr with an rc, and the ssr paragraph says latest serves its newest work');
 if (SSR_NPM.version !== SSR_REPO) throw new Error(`sheet 11: npm serves lit-ui-router-ssr ${SSR_NPM.version} under latest, and the ssr paragraph says that is the ref's ${SSR_REPO}`);
-// the packages npm leads with an rc: read off the plate, and the ref's package.json must carry that rc
+// the notes quote latest for every quarter, so no rc may lead one
 const RC_LED = NPM.rows.filter((r) => r.tags?.rc && ahead(r.tags.rc, r.version) && PLATE.rows.some((d) => d.pkg === r.name));
-if (RC_LED.map((r) => r.name).sort().join() !== 'lit-ui-router-signals,ui-router-effect,ui-router-signals')
-  throw new Error(`sheet 11: the notes name the signals pair and ui-router-effect as the rc-led quarters, but census-npm.json leads [${RC_LED.map((r) => r.name)}] with an rc`);
-for (const r of RC_LED) {
-  const repo = FILES.members.find((m) => m.name === r.name)?.version;
-  if (repo !== r.tags.rc) throw new Error(`sheet 11: npm leads ${r.name} with rc ${r.tags.rc}, and the notes say that is the ref's ${repo}`);
-}
-const RC_VER = [...new Set(RC_LED.map((r) => r.tags.rc))];
-const RC_SEED = [...new Set(RC_LED.map((r) => r.version))];
-if (RC_VER.length !== 1 || RC_SEED.length !== 1) throw new Error('sheet 11: the rc sentence quotes one rc and one latest seed for all three');
+if (RC_LED.length) throw new Error(`sheet 11: the notes quote latest for every quarter, but census-npm.json leads [${RC_LED.map((r) => r.name)}] with an rc`);
+// what npm serves a quarter under latest, checked against the version its package.json carries at the ref
+const latest = (name) => {
+  const r = NPM.rows.find((x) => x.name === name);
+  const repo = FILES.members.find((m) => m.name === name)?.version;
+  if (!r || r.version !== repo) throw new Error(`sheet 11: npm serves ${name} ${r?.version} under latest, and the notes say that is the ref's ${repo}`);
+  return r.version;
+};
 // a package's registry page; the name is checked against the registry plate first
 const npmLink = (name, text = `<code>${name}</code>`) => {
   if (!NPM.rows.some((r) => r.name === name)) throw new Error(`census-npm.json: no row named ${name}`);
@@ -118,8 +117,7 @@ const PLAN = {
   // to the quarter's south edge: at [40, 365] its badge stood in the register note
   'lit-ui-router-effect|.': [46, 385],
   'lit-ui-router-mobx|.': [155, 310],
-  // the three rc quarters stand in the plate's free corners: the Lit binding west of the
-  // flagship's quarter, the renderer-free pair south-west under the mobx lettering
+  // the signals binding west of the flagship's quarter, the renderer-free pair south-west under the mobx lettering
   'lit-ui-router-signals|.': [-140, 196],
   'ui-router-signals|.': [178, 494],
   'ui-router-effect|.': [208, 596],
@@ -207,7 +205,7 @@ const FOOT = [['mobx', MOBX], ['effect', EFF], ['ssr', SSR], ['nav', NAV], ['lit
   const want = PLATE.rows.filter((r) => r.door === '.' && !['lit-ui-router', 'ui-router-server', 'eslint-plugin-lit-ui-router'].includes(r.pkg)).length;
   if (FOOT.length !== want) throw new Error(`sheet 11: the footnote line prices ${FOOT.length} companion index doors, the plate carries ${want}`);
 }
-if (![SIG, USG, UEF].every((d) => d.gz < ELEM_GAP)) throw new Error('sheet 11: the notes price the three rc doors under the ./register element-door gap, and the plate does not');
+if (![SIG, USG, UEF].every((d) => d.gz < ELEM_GAP)) throw new Error('sheet 11: the notes price the three one-door quarters under the ./register element-door gap, and the plate does not');
 const SRV_GAP = FLAG.gz - SRV.gz;
 const ADAPTERS = ['./hono', './fetch', './vite', './connect'].map((d) => at('ui-router-server', d));
 const ADAPTER_SPREAD = Math.max(...ADAPTERS.map((a) => a.gz)) - Math.min(...ADAPTERS.map((a) => a.gz));
@@ -294,7 +292,7 @@ ${schedule}
 </svg>`;
 
 export const sheet11 = {
-  num: 11, id: 'entries', rev: 'F',
+  num: 11, id: 'entries', rev: 'G',
   title: 'THE ENTRY QUARTERS',
   sub: `ALTITUDE 2⅞ — the same wire, cut by published package · every exported entry priced alone · ${DOOR_N} doors in ${PKG_N} package quarters, footprint from minified bytes and height from gzipped, dependencies external — ${BASIS}`,
   scale: `${WORD[PKG_N].toUpperCase()} PACKAGES`,
@@ -306,7 +304,7 @@ export const sheet11 = {
 <p><strong>The twin towers are one building with two doors.</strong> <code>.</code> and <code>./pure</code> differ by ${REG_COST} gzipped bytes — the whole cost of custom-element registration. The register economics run the other way: the two one-element doors sum to ${fmt(ELEM_SUM)} gz while the umbrella <code>./register</code> is ${fmt(UMB.gz)}, because each element door carries the shared element core with it. Take the umbrella or one element door; taking two per-element doors ships the core twice.</p>
 <p><strong>The server is a storefront, not a tower.</strong> Nine doors: an index at ${fmt(SRV.gz)} gz, ${fmt(SRV_GAP)} under the client flagship; redirect and matcher wings at ${fmt(at('ui-router-server', './redirects').gz)} and ${fmt(at('ui-router-server', './matcher').gz)}; four framework adapters — <a href="${HOME.hono}">hono</a>, <a href="${HOME.fetch}">fetch</a>, <a href="${HOME.vite}">vite</a>, <a href="${HOME.connect}">connect</a> — packed within ${ADAPTER_SPREAD} bytes of one another, which is what thin skins over one core look like priced; and two doors that barely register, <code>./simulate</code> at ${SIM.gz} bytes and <code>./location</code> at ${at('ui-router-server', './location').gz}, the cheapest door on the sheet.</p>
 <p><strong>Two more quarters, and one of them sits between the other two.</strong> ${npmLink('lit-ui-router-effect')} enters at ${fmt(EFF.gz)} gz through its one door. ${npmLink('lit-ui-router-ssr')} has three: the prerender index at ${fmt(SSR.gz)} gz, <code>./client</code> — the browser half that adopts a served render — at ${fmt(SSR_CLIENT.gz)}, and <code>./register</code>, which defines <code>&lt;ui-router&gt;</code> and a served <code>&lt;ui-view&gt;</code> in place of <code>lit-ui-router/register</code>, at ${fmt(SSR_REG.gz)}. The ssr quarter is drawn in the gap between the client and server quarters because that is where its declarations put it: it is the one package here that peers both ${npmLink('lit-ui-router')} and ${npmLink('ui-router-server')} (sheet 4 draws that bridge). npm serves it under <code>latest</code> at <code>${SSR_NPM.version}</code>, the version its <a href="${HOME.repo}/blob/main/packages/lit-ui-router-ssr/package.json"><code>package.json</code></a> carries at this ref.</p>
-<p><strong>Three one-door quarters stand under an rc.</strong> ${npmLink('lit-ui-router-signals')} binds the router to a Lit host at ${fmt(SIG.gz)} gz; ${npmLink('ui-router-signals')} and ${npmLink('ui-router-effect')}, the renderer-free halves that hold one hook per router, enter at ${fmt(USG.gz)} and ${fmt(UEF.gz)} — each under the ${fmt(ELEM_GAP)}-byte element-door gap. npm serves all three under <code>rc</code> at <code>${RC_VER[0]}</code>, the version their <code>package.json</code> files carry at this ref, while <code>latest</code> points at the <code>${RC_SEED[0]}</code> seed.</p>
+<p><strong>Three more one-door quarters, the signals pair and the renderer-free effect ref.</strong> ${npmLink('lit-ui-router-signals')} binds the router to a Lit host at ${fmt(SIG.gz)} gz; ${npmLink('ui-router-signals')} and ${npmLink('ui-router-effect')}, the renderer-free halves that hold one hook per router, enter at ${fmt(USG.gz)} and ${fmt(UEF.gz)} — each under the ${fmt(ELEM_GAP)}-byte element-door gap. npm serves them under <code>latest</code> at <code>${latest('lit-ui-router-signals')}</code>, <code>${latest('ui-router-signals')}</code> and <code>${latest('ui-router-effect')}</code>, the versions their <code>package.json</code> files carry at this ref.</p>
 <p><strong>Plugins price like footnotes.</strong> The entire ${npmLink('lit-ui-router-mobx', 'mobx reactivity layer')} enters at ${fmt(MOBX.gz)} gz and the ${npmLink('ui-router-navigation-location-plugin', 'navigation-location plugin')} at ${fmt(NAV.gz)} — each cheaper than the ${fmt(ELEM_GAP)}-byte gap between <code>./register</code> and its two element doors — and the effect and ssr index doors (${fmt(EFF.gz)} and ${fmt(SSR.gz)}) each cost under half the flagship's own <code>.</code> door at ${fmt(FLAG.gz)}. The expensive thing in this family is never the adapter; it is the state machine they all defer to, and that machine (sheet 10's ${npmLink('@uirouter/core')}) is external here by design.</p>
 <p><strong>Door ${LINT.n} is not a door a browser opens.</strong> ${npmLink('eslint-plugin-lit-ui-router')} (<a href="${HOME.repo}/issues/676">#676</a>) is the family's one non-runtime published package, so its quarter is drawn but its number means something different: ${fmt(LINT.m)} minified, ${fmt(LINT.gz)} gz is what a <em>lint host</em> loads, once, at author time. It is priced here because the probe prices every published entry without exception — the honest thing for a ledger — and it is worth knowing that the plugin costs ${LINT_SHARE}% of the flagship to a tool that already has Node's whole module graph resident. Nothing in it ever reaches a bundle: it peers <a href="${HOME.eslint}">ESLint</a> alone — oxlint loads it as a <a href="${HOME.jsPlugins}">JS plugin</a>, unpeered — never ${npmLink('@uirouter/core')} (sheet 2 leaves it off the plate for the same reason).</p>
 <p><strong>Why both views exist.</strong> The split view is the seller's ledger — what each door costs at the threshold. The unified view is the buyer's receipt — what one app's bundler actually made of them (it paid ${fmt(RECEIPT)} of the flagship's ${fmt(FLAG.gz)}). <a href="${HOME.codecov}">Codecov</a> tracks the ledger per commit; sheet 10 audits the receipt.</p>`,

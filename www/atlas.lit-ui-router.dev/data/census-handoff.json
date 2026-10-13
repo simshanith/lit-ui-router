@@ -1,21 +1,21 @@
 {
   "ref": "origin/main",
-  "sha": "c1b759a4",
-  "commitDate": "2026-10-13T05:04:32Z",
-  "generatedAtTime": "2026-10-13T05:18:56.806Z",
+  "sha": "108456af",
+  "commitDate": "2026-10-13T10:14:45-07:00",
+  "generatedAtTime": "2026-10-13T17:22:45.706Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-handoff.mjs",
-  "used": "git archive origin/main @ c1b759a4",
+  "used": "git archive origin/main @ 108456af",
   "wasAssociatedWith": [
     "git"
   ],
   "workflows": {
     "files": 14,
     "calling": 9,
-    "callSites": 43,
-    "targets": 30
+    "callSites": 44,
+    "targets": 31
   },
   "mise": {
-    "tasks": 54,
+    "tasks": 55,
     "homes": 4,
     "withUsage": 27,
     "withDepends": 11,
@@ -44,7 +44,7 @@
     {"file":"lint-workflows.yml","name":"lint-workflows","callSites":1},
     {"file":"publish-gh.yml","name":"publish-gh","callSites":4},
     {"file":"publish-npm.yml","name":"publish-npm","callSites":7},
-    {"file":"release-signals.yml","name":"release-signals","callSites":5},
+    {"file":"release-signals.yml","name":"release-signals","callSites":6},
     {"file":"semantic-pr.yml","name":"semantic-pr","callSites":0}
   ],
   "miseTargets": [
@@ -63,6 +63,7 @@
     {"target":"//tools/release:git_user","calls":2},
     {"target":"//tools/release:pack","calls":1},
     {"target":"//tools/release:package_info","calls":1},
+    {"target":"//tools/release:pages_deploy_check_runs","calls":1},
     {"target":"//tools/release:peer_floor_check_runs","calls":1},
     {"target":"//tools/release:peer_floor_gate","calls":1},
     {"target":"//tools/release:publish","calls":1},
@@ -82,7 +83,7 @@
   "miseHomes": [
     {"home":"tools/build_and_test/mise.toml","label":"tools/build_and_test","count":10,"withUsage":2,"withDepends":0,"dependsEdges":0,"names":["xvfb","branch_ci_gate","mark_session","turbo_summary","playwright_version","cypress_version","playwright","playwright_deps","playwright_deps_engines","cypress"]},
     {"home":".config/mise/tasks/*","label":".config/mise/tasks/*","count":11,"withUsage":7,"withDepends":0,"dependsEdges":0,"names":["check_workers_builds","cloudflare_item_create","read_secret","rumdl","shellcheck","taplo","turbo_backfill","turbo_cache_probe","turbo_force_guard","turbo_login","turbo_pin_worktree"]},
-    {"home":"tools/release/mise.toml","label":"tools/release","count":16,"withUsage":10,"withDepends":2,"dependsEdges":2,"names":["git_user","package_info","pack","reconcile","check_tarball","tag","tag_push","publish","check_pack","published_diff","publish_check_runs","peer_floor_check_runs","workers_builds_check_runs","peer_floor_gate","bump","check_release_closure"]},
+    {"home":"tools/release/mise.toml","label":"tools/release","count":17,"withUsage":10,"withDepends":2,"dependsEdges":2,"names":["git_user","package_info","pack","reconcile","check_tarball","tag","tag_push","publish","check_pack","published_diff","publish_check_runs","peer_floor_check_runs","workers_builds_check_runs","pages_deploy_check_runs","peer_floor_gate","bump","check_release_closure"]},
     {"home":".config/mise/config.toml","label":"config.toml inline","count":17,"withUsage":8,"withDepends":9,"dependsEdges":13,"names":["setup","lint_actionlint","lint_zizmor","lint_toml","lint_shellcheck","lint_markdown","lint_workflows","format_toml","format_check_toml","cloudflare_login","build","build_www","ci","ci_main","test_e2e","codecov_bundle","dts_backtest_matrix"]}
   ],
   "turboRows": [
