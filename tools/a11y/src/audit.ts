@@ -57,6 +57,7 @@ interface Requests {
 function track(page: Page): Requests {
   const inFlight = new Set<Request>();
   let lastChange = Date.now();
+  let documentPending = false;
 
   const update = (change: () => void) => {
     change();
@@ -65,17 +66,22 @@ function track(page: Page): Requests {
 
   page.on('request', (request) =>
     update(() => {
-      // like networkidle, a new main-frame document starts the count over
       if (
         request.isNavigationRequest() &&
         request.frame() === page.mainFrame()
       ) {
-        inFlight.clear();
+        documentPending = true;
       }
 
       inFlight.add(request);
     }),
   );
+  // recount from each document commit, as networkidle does: the outgoing document's requests never report back
+  page.on('framenavigated', (frame) => {
+    if (frame !== page.mainFrame() || !documentPending) return;
+    documentPending = false;
+    update(() => inFlight.clear());
+  });
   page.on('requestfinished', (request) =>
     update(() => inFlight.delete(request)),
   );
