@@ -28,9 +28,9 @@ shape of the [Effect](/packages/lit-ui-router-effect) and [MobX](/packages/mobx)
 ## Installation
 
 ```bash
-npm install lit-ui-router-signals@rc ui-router-signals signal-polyfill
+npm install lit-ui-router-signals ui-router-signals signal-polyfill
 # or
-pnpm add lit-ui-router-signals@rc ui-router-signals signal-polyfill
+pnpm add lit-ui-router-signals ui-router-signals signal-polyfill
 ```
 
 `lit-ui-router`, `ui-router-signals`, `lit`, and `@uirouter/core` are peer
