@@ -49,7 +49,7 @@ const selected =
 const test = [
   'turbo run',
   ...selected.map((suite) => `${PREFIX}${suite}`),
-  '--continue=dependencies-successful --ui=stream --log-order=stream --summarize',
+  '--continue=dependencies-successful --ui=stream --log-order=stream --summarize --log-file',
   `--output-logs=${process.env.TURBO_OUTPUT_LOGS ?? 'full'}`,
 ].join(' ');
 

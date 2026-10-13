@@ -3,6 +3,7 @@ import { describe, it } from 'node:test';
 
 import {
   type RunSummary,
+  type StructuredLogEntry,
   type SummaryTask,
   ANNOTATION_LIMIT,
   MISS_LIST_LIMIT,
@@ -41,6 +42,7 @@ import {
   slowestTasks,
   stdoutReport,
   stripAnsi,
+  structuredTaskLog,
   summaryMarkdown,
   turboReproduction,
   warnLaneEntries,
@@ -372,8 +374,43 @@ describe('buildReports', () => {
       new Map(),
     );
 
-    assert.match(report.excerpt.text, /no log file at/);
+    assert.match(report.excerpt.text, /no log for lit-ui-router#typecheck:src/);
     assert.match(report.excerpt.text, /exited \(1\)/);
+  });
+});
+
+describe('structuredTaskLog', () => {
+  const entry = (
+    source: string,
+    timestamp: number,
+    text: string,
+  ): StructuredLogEntry => ({ source, level: 'stdout', timestamp, text });
+
+  it("joins the task's lines inside its execution window", () => {
+    const entries = [
+      entry('turbo', 1_000, 'Running typecheck:src'),
+      entry('lit-ui-router#typecheck:src', 500, 'an earlier run'),
+      entry('lit-ui-router#typecheck:src', 1_000, '$ tsc'),
+      entry('lit-ui-router#build', 2_000, 'another task'),
+      entry('lit-ui-router#typecheck:src', 8_000, 'error TS2322: nope'),
+      entry('lit-ui-router#typecheck:src', 8_001, 'a later run'),
+    ];
+
+    assert.equal(
+      structuredTaskLog(entries, task({ logFile: undefined })),
+      '$ tsc\nerror TS2322: nope',
+    );
+  });
+
+  it('is undefined with no matching line or no execution', () => {
+    assert.equal(structuredTaskLog([], task()), undefined);
+    assert.equal(
+      structuredTaskLog(
+        [entry('lit-ui-router#typecheck:src', 1_000, '$ tsc')],
+        task({ execution: undefined }),
+      ),
+      undefined,
+    );
   });
 });
 

@@ -191,6 +191,7 @@ jobs:
           # The workspace globs, not `**`: that would walk node_modules.
           path: |
             .turbo/turbo-*.log
+            .turbo/logs/*.json
             apps/*/.turbo/turbo-*.log
             examples/.turbo/turbo-*.log
             packages/*/.turbo/turbo-*.log
