@@ -42,6 +42,17 @@
   margin-inline: 2px 4px;
 }
 
+/* 24px on desktop; 20px on phones, where 24px wraps the pair onto two lines. */
+.VPHero .tagline a.badge>img {
+  block-size: clamp(20px, 1rem + 0.8vw, 24px);
+  inline-size: auto;
+}
+
+/* Twice the hero's 12px rhythm, down from VitePress's 1.5–2rem, so the two-row CTA stays with the badges. */
+.VPHero.has-image .actions.actions {
+  padding-block-start: 1rem;
+}
+
 .VPHero .tagline a.badge>img,
 .vp-doc .badges a.badge>img {
   display: inline-block;
