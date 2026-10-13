@@ -29,31 +29,19 @@
   }
 }
 
+/* Each logo stays with its name and sizes to the text, so a wrapped tagline keeps its line height. */
 .VPHero .tagline a.library {
-  display: inline-flex;
-  align-items: baseline;
-  justify-content: center;
-  margin-block-end: 6px;
+  white-space: nowrap;
 }
 
 .VPHero .tagline a.library>img {
-  display: inline-block;
-  margin-block: auto;
-  margin-inline: 2px 4px;
-}
-
-/* 24px on desktop; 20px on phones, where 24px wraps the pair onto two lines. */
-.VPHero .tagline a.badge>img {
-  block-size: clamp(20px, 1rem + 0.8vw, 24px);
+  display: inline;
+  block-size: 1em;
   inline-size: auto;
+  margin-inline: 0.1em 0.2em;
+  vertical-align: -0.125em;
 }
 
-/* Twice the hero's 12px rhythm, down from VitePress's 1.5–2rem, so the two-row CTA stays with the badges. */
-.VPHero.has-image .actions.actions {
-  padding-block-start: 1rem;
-}
-
-.VPHero .tagline a.badge>img,
 .vp-doc .badges a.badge>img {
   display: inline-block;
   box-shadow: 0px 0px 0px 0px currentColor;
@@ -61,10 +49,44 @@
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .VPHero .tagline a.badge:hover>img,
   .vp-doc .badges a.badge:hover>img {
     box-shadow: 0px 0px 12px 0px currentColor;
   }
+}
+
+/* The CTAs: the install link spans both columns over the two buttons, as wide as the hero logo (cqi of .container). */
+.VPHero.has-image .actions.actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(max-content, 1fr));
+  gap: 12px;
+  inline-size: calc((200cqi - 1rem) / 3);
+  min-inline-size: max-content;
+  margin-inline: auto;
+  margin-block: 0;
+}
+
+@media (min-width: 768px) {
+  .VPHero.has-image .actions.actions {
+    inline-size: calc((100cqi - 1rem) / 2);
+  }
+}
+
+/* One feature-card column, the logo's column. */
+@media (min-width: 960px) {
+  .VPHero.has-image .actions.actions {
+    inline-size: calc((100cqi - 2rem) / 3);
+    margin-inline: 0;
+  }
+}
+
+.VPHero .actions .action {
+  padding: 0;
+}
+
+.VPHero .actions .VPButton {
+  display: block;
+  inline-size: 100%;
+  text-align: center;
 }
 
 /* Version badges on package pages */
