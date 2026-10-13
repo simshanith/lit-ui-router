@@ -35,34 +35,58 @@ async function copy() {
 </template>
 
 <style scoped>
-/* VPHero's .action wrapper gives the row its spacing; the button matches VPButton's medium size. */
+/* VPHero's .action wrapper gives the row its spacing; full width puts the buttons on the next row. */
 .action {
-  flex-shrink: 0;
+  flex: none;
+  inline-size: 100%;
   padding: 6px;
 }
 
 .hero-install {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  height: 40px;
-  padding: 0 14px 0 18px;
+  justify-content: center;
+  gap: 0.6em;
+  /* As wide as the hero logo (custom.css), in cqi of the hero's .container; never narrower than the command. */
+  inline-size: calc((200cqi - 1rem) / 3);
+  min-inline-size: max-content;
+  block-size: 44px;
+  padding-inline: 18px;
   font-family: var(--vp-font-family-mono);
-  font-size: 14px;
+  font-size: 15px;
   color: var(--vp-c-text-1);
   background: var(--vp-c-bg-soft);
   border: 1px solid var(--vp-c-divider);
-  border-radius: 20px;
+  border-radius: 22px;
   cursor: copy;
   touch-action: manipulation;
-  transition:
-    border-color 0.15s var(--ease-out),
-    transform 0.15s var(--ease-out);
+  transition: border-color 0.15s var(--ease-out);
+}
+
+@media (min-width: 768px) {
+  .hero-install {
+    inline-size: calc((100cqi - 1rem) / 2);
+  }
+}
+
+/* One feature-card column, the logo's column. */
+@media (min-width: 960px) {
+  .hero-install {
+    inline-size: calc((100cqi - 2rem) / 3);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero-install {
+    transition:
+      border-color 0.15s var(--ease-out),
+      transform 0.15s var(--ease-out);
+  }
 }
 
 .hero-install:focus-visible {
   outline: 2px solid var(--vp-c-brand-1);
-  outline-offset: 1px;
+  outline-offset: 2px;
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -73,6 +97,11 @@ async function copy() {
 
 .hero-install:active {
   transform: scale(0.97);
+}
+
+.prompt,
+.hero-install code {
+  text-box: trim-both cap alphabetic;
 }
 
 .prompt {
@@ -86,8 +115,9 @@ async function copy() {
 }
 
 .icon {
-  inline-size: 18px;
-  block-size: 18px;
+  flex: none;
+  inline-size: 1.2em;
+  block-size: 1.2em;
   background-color: var(--vp-c-text-2);
   mask: var(--vp-icon-copy) center / contain no-repeat;
 }
@@ -101,7 +131,7 @@ async function copy() {
   position: absolute;
   inline-size: 1px;
   block-size: 1px;
-  overflow: hidden;
+  overflow: clip;
   clip-path: inset(50%);
   white-space: nowrap;
 }

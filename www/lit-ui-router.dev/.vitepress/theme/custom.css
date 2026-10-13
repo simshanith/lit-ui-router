@@ -110,6 +110,11 @@
   --vp-home-hero-image-background-image: url(/images/hero-glow-dark.svg);
 }
 
+/* The install button (HeroInstall.vue) sizes in cqi of this box, matching the logo. */
+.VPHero.has-image .container {
+  container-type: inline-size;
+}
+
 /* The logo sizes to the hero's width, in feature-card columns; the box is the logo, so no negative margins. */
 .VPHero.has-image .image {
   margin: 0 0 2rem;
