@@ -36,6 +36,7 @@
     "build:types": "oxc-emit-dts",
     "changelog": "release-it --changelog --git.tagMatch=\"ui-router-effect@[0-9]*.[0-9]*.[0-9]*\"",
     "check:bundle": "peer-floor-guard && check-bundle-inputs",
+    "codecov:bundle": "upload-entry-bundles",
     "format:check:oxfmt": "oxfmt --check \"**/*.{ts,js,json,md}\"",
     "format:oxfmt": "oxfmt \"**/*.{ts,js,json,md}\"",
     "lint:oxlint": "oxlint .",
