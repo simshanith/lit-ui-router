@@ -13,6 +13,17 @@
       name="description"
       content="The Altitude Atlas as a single-page drawing set: twenty-one sheets of the lit-ui-router codebase, routed with lit-ui-router."
     />
+    <!-- the share card: generator/brand/card/render-card.mjs writes public/brand/card.png; a share image is absolute -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="The Altitude Atlas — Drawing Set" />
+    <meta
+      property="og:description"
+      content="The Altitude Atlas as a single-page drawing set: twenty-one sheets of the lit-ui-router codebase, routed with lit-ui-router."
+    />
+    <meta property="og:image" content="https://atlas.lit-ui-router.dev/brand/card.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
     <!-- the client's mark is the tab's icon: the ico for Safari, the svg for the rest, the png for a home screen -->
     <link rel="icon" href="%BASE_URL%favicon.ico" sizes="any" />
     <link rel="icon" href="%BASE_URL%favicon.svg" type="image/svg+xml" />
@@ -1604,6 +1615,45 @@
         font-size: 0.88em;
         background: var(--paper-2);
         padding: 0 3px;
+      }
+      /* THE COLOPHON'S FIGURE — the equation card at the column's width; the
+         theme picks one of its pair by the three states the card backdrops use */
+      .card-figure {
+        margin-block-end: 24px;
+      }
+      .card-figure img {
+        width: 100%;
+        aspect-ratio: 1200 / 630;
+        border: 1px solid var(--line);
+      }
+      .card-figure .d {
+        display: none;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme='light']) .card-figure .l {
+          display: none;
+        }
+        :root:not([data-theme='light']) .card-figure .d {
+          display: block;
+        }
+      }
+      :root[data-theme='dark'] .card-figure .l {
+        display: none;
+      }
+      :root[data-theme='dark'] .card-figure .d {
+        display: block;
+      }
+      .card-figure figcaption {
+        max-width: none;
+        margin-block: 10px 0;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+      @media (min-width: 1800px) {
+        .card-figure {
+          column-span: all;
+          max-width: 72ch;
+        }
       }
       .plate-verdict .lead {
         font-family: var(--data);

@@ -17,6 +17,7 @@
 import { existsSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { CARD } from './src/manifest.ts';
 import type { Manifest } from './src/manifest.ts';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -58,6 +59,12 @@ for (const row of [...manifest.sheets, ...manifest.appendix, ...manifest.extras]
     if (!existsSync(file)) throw new Error(`artifact: no card picture at public/${path}`);
     thumbs[path] = `data:image/webp;base64,${readFileSync(file).toString('base64')}`;
   }
+}
+// the colophon's figure, the equation card, resolves through the same map
+for (const path of [CARD.light, CARD.dark]) {
+  const file = join(PUBLIC, path);
+  if (!existsSync(file)) throw new Error(`artifact: no card at public/${path}`);
+  thumbs[path] = `data:image/webp;base64,${readFileSync(file).toString('base64')}`;
 }
 
 const atlasCss = readFileSync(join(SHEETS, 'atlas.css'), 'utf8');

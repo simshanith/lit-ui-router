@@ -167,6 +167,9 @@ export function thumbSrc(path: string): string {
   return baked ?? `${BASE}${path}`;
 }
 
+/** The colophon's figure, the equation card — one 1200 x 630 WebP per theme, written by generator/brand/card/render-card.mjs. */
+export const CARD: Thumb = { light: 'brand/card-light.webp', dark: 'brand/card-dark.webp' };
+
 /** The one extra, by id — `undefined` if an older manifest predates it. */
 export function findExtra(manifest: Manifest, id: string): ExtraRow | undefined {
   return manifest.extras?.find((row) => row.id === id);

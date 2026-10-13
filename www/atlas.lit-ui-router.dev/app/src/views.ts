@@ -31,6 +31,7 @@ import type {
 import {
   ARTICLE,
   BASIS_SUBJECT,
+  CARD,
   EMPTY_FILTER,
   LABEL_KEYS,
   ascent,
@@ -1446,6 +1447,9 @@ export const SpecimenView: RoutedLitTemplate<SpecimenResolves> = (props) => {
 
 // --- about -----------------------------------------------------------------
 
+const CARD_ALT =
+  'The equation card: the lit-ui-router logo, an equals sign, the Lit flame, a plus sign and the UI-Router mark over the measured city of sheet 7, with THE ALTITUDE ATLAS lettered beneath.';
+
 export const AboutView: RoutedLitTemplate<ManifestResolves> = (props) => {
   const manifest = props?.resolves?.manifest;
   const generatedBy = manifest?.generatedBy ?? 'www/atlas.lit-ui-router.dev/generator/emit-app.mjs';
@@ -1457,6 +1461,26 @@ export const AboutView: RoutedLitTemplate<ManifestResolves> = (props) => {
         <span class="shno">COLOPHON</span>
       </div>
       <div class="prose">
+        <!-- THE EQUATION CARD, above the fold: one WebP per theme, picked as the cover's card backdrops are -->
+        <figure class="card-figure">
+          <img
+            class="l"
+            src="${thumbSrc(CARD.light)}"
+            alt="${CARD_ALT}"
+            width="1200"
+            height="630"
+            decoding="async"
+          />
+          <img
+            class="d"
+            src="${thumbSrc(CARD.dark)}"
+            alt="${CARD_ALT}"
+            width="1200"
+            height="630"
+            decoding="async"
+          />
+          <figcaption>lit-ui-router.dev equals lit plus ui-router — the equation card, sheet 7's census city faded under the marks.</figcaption>
+        </figure>
         <h2>THE SET, ROUTED</h2>
         ${manifest ? html`<p>${unsafeHTML(manifest.cover.thesis)}</p>` : nothing}
         <p>
