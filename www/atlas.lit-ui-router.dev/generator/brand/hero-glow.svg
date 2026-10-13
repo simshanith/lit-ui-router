@@ -16,4 +16,14 @@
 <path fill="#0ff" d="M40 200v-80l40 40"/>
 </g>
 </g>
+<radialGradient id="veil">
+<stop offset="0" stop-color="#f1f0e7"/>
+<stop offset="0.4" stop-color="#f1f0e7"/>
+<stop offset="0.55" stop-color="#f1f0e7" stop-opacity="0.85"/>
+<stop offset="0.7" stop-color="#f1f0e7" stop-opacity="0.55"/>
+<stop offset="0.82" stop-color="#f1f0e7" stop-opacity="0.28"/>
+<stop offset="0.92" stop-color="#f1f0e7" stop-opacity="0.09"/>
+<stop offset="1" stop-color="#f1f0e7" stop-opacity="0"/>
+</radialGradient>
+<ellipse cx="80" cy="140" rx="78" ry="40" fill="url(#veil)" fill-opacity="0.7"/>
 </svg>
