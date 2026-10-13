@@ -50,10 +50,9 @@ async function main() {
   );
 }
 
-if (import.meta.main) {
-  await main().catch((cause: unknown) => {
-    logWarning(
-      `pages-deploy check run not reported: ${cause instanceof Error ? cause.message : String(cause)}`,
-    );
-  });
-}
+const warn = (cause: unknown): void =>
+  logWarning(
+    `pages-deploy check run not reported: ${cause instanceof Error ? cause.message : String(cause)}`,
+  );
+
+if (import.meta.main) await main().catch(warn);

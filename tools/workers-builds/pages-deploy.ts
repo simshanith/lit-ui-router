@@ -18,15 +18,17 @@ import {
   isCommitSha,
 } from './pages-deploy.core.ts';
 
-// Annotated so the never-returning call narrows `branchHead`.
-const usage: () => never = () => {
-  console.error(`usage: pages-deploy.ts <${PRODUCTION_BRANCH} head sha>`);
-  process.exit(2);
-};
-
 const main = async ([branchHead, ...extra]: string[]): Promise<void> => {
-  if (extra.length > 0 || branchHead === undefined || !isCommitSha(branchHead))
-    usage();
+  if (
+    extra.length > 0 ||
+    branchHead === undefined ||
+    !isCommitSha(branchHead)
+  ) {
+    console.error(`usage: pages-deploy.ts <${PRODUCTION_BRANCH} head sha>`);
+    process.exitCode = 2;
+
+    return;
+  }
 
   const token = process.env.CLOUDFLARE_API_TOKEN;
   const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
