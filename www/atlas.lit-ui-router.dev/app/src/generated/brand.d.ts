@@ -3,5 +3,9 @@
 export declare const LOGO_URL: string;
 /** The Lit flame the logo glows with, as a data URI. */
 export declare const FLAME_URL: string;
+/** The flame blurred and brightened under the logo, the light theme, as a data URI. */
+export declare const GLOW_URL: string;
+/** The glow with its hue turned, inverted and dimmed, the dark theme, as a data URI. */
+export declare const GLOW_DARK_URL: string;
 /** The UI-Router mark, as a data URI. */
 export declare const UIROUTER_URL: string;

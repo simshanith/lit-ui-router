@@ -51,7 +51,7 @@ import {
 import { loadCytoscape, runScripts } from './fragment.ts';
 import type { FocusDetail } from './fragment.ts';
 import { ICON_SPRITE, iconId } from './generated/icons.js';
-import { FLAME_URL, LOGO_URL, UIROUTER_URL } from './generated/brand.js';
+import { FLAME_URL, GLOW_DARK_URL, GLOW_URL, LOGO_URL, UIROUTER_URL } from './generated/brand.js';
 import { initCity } from './generated/city-init.js';
 import type { CityScene } from './generated/city-init.js';
 import { initBricks } from './generated/bricks-init.js';
@@ -732,7 +732,8 @@ function rail(manifest: Manifest | undefined, here: Here): TemplateResult {
           <!-- THE CLIENT, SPELLED OUT: lit-ui-router.dev = ui-router + lit, in the docs site's own marks -->
           <div class="client-eq" role="group" aria-label="lit-ui-router.dev equals ui-router plus lit">
             <a class="client-mark" href=${DOCS} title="lit-ui-router.dev" target="_blank" rel="noopener">
-              <img class="client-glow" src=${FLAME_URL} alt="" aria-hidden="true" />
+              <img class="client-glow client-glow-light" src=${GLOW_URL} alt="" aria-hidden="true" />
+              <img class="client-glow client-glow-dark" src=${GLOW_DARK_URL} alt="" aria-hidden="true" />
               <img class="client-logo" src=${LOGO_URL} alt="lit-ui-router.dev" />
             </a>
             <span class="op">=</span>
