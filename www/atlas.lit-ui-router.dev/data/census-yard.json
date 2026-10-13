@@ -1,34 +1,34 @@
 {
   "ref": "origin/main",
-  "sha": "eb72c568",
-  "commitDate": "2026-10-12T22:05:55Z",
-  "generatedAtTime": "2026-10-12T22:10:43.882Z",
+  "sha": "c1b759a4",
+  "commitDate": "2026-10-13T05:04:32Z",
+  "generatedAtTime": "2026-10-13T05:33:37.729Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-yard.mjs",
-  "used": "www/atlas.lit-ui-router.dev/data/census-files.json @ eb72c568",
+  "used": "www/atlas.lit-ui-router.dev/data/census-files.json @ c1b759a4",
   "wasAssociatedWith": [],
   "orphans": [
 
   ],
   "rows": [
-    {"instrument":"src (7 published packages)","files":66,"sloc":7367},
-    {"instrument":"build — @tools/oxc-emit","files":5,"sloc":256},
-    {"instrument":"pack — packPublishTarball","files":12,"sloc":300},
+    {"instrument":"src — packages/*/src","files":76,"sloc":7704},
+    {"instrument":"build — @tools/oxc-emit","files":6,"sloc":395},
+    {"instrument":"pack — packPublishTarball","files":12,"sloc":441},
     {"instrument":"published-diff","files":5,"sloc":471},
     {"instrument":"check:exports","files":2,"sloc":141},
     {"instrument":"peer-floor tier-1","files":2,"sloc":128},
     {"instrument":"peer-floor tier-2","files":3,"sloc":117},
     {"instrument":"docs deploy watch","files":6,"sloc":672},
-    {"instrument":"publish — release-it","files":27,"sloc":1244},
-    {"instrument":"compat-guards","files":6,"sloc":172},
-    {"instrument":"dts-backtest","files":1,"sloc":293},
+    {"instrument":"publish — release-it","files":27,"sloc":1253},
+    {"instrument":"compat-guards","files":7,"sloc":190},
+    {"instrument":"dts-backtest","files":1,"sloc":300},
     {"instrument":"tests — vitest harness","files":6,"sloc":380},
     {"instrument":"anti-slop — vendored oxlint rules","files":35,"sloc":3665},
-    {"instrument":"lint & probe fleet","files":34,"sloc":3577},
-    {"instrument":"repo checks — graph edges, task inputs, knip, patches","files":11,"sloc":1029},
+    {"instrument":"lint & probe fleet","files":39,"sloc":4267},
+    {"instrument":"repo checks — graph edges, task inputs, knip, patches","files":15,"sloc":1528},
     {"instrument":"bootstrap — pre-install manifest reads","files":3,"sloc":58},
     {"instrument":"@tools/shared","files":7,"sloc":351},
     {"instrument":"typedoc plugin","files":2,"sloc":344},
     {"instrument":"e2e — cypress","files":11,"sloc":817},
-    {"instrument":"sample apps","files":68,"sloc":3865}
+    {"instrument":"sample apps","files":76,"sloc":4314}
   ]
 }

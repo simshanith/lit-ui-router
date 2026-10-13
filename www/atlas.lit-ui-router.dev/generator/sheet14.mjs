@@ -36,7 +36,7 @@ const T0 = Date.parse(SINCE), T1 = Date.parse(UNTIL);
 const KINDS = { pr: 'pull request', issue: 'issue', bug: 'bug report' };
 const KIND_SHORT = { pr: 'PR', issue: 'issue', bug: 'bug' };
 // merged and fixed land in the yard; closed is answered without landing; open stands;
-// missing is cited at home and no longer readable upstream, so it carries no day
+// missing is cited at home and unreadable upstream, so it carries no day
 const STATE = { merged: 'landed', fixed: 'landed', closed: 'closed', open: 'open', missing: 'missing' };
 const NO_DAY = -8.64e15;
 const TRACKERS = ['github', 'bugzilla'];
@@ -60,7 +60,7 @@ const ALL = PLATE.consignments.map((c) => {
     const rt = Date.parse(r.date);
     if (!(rt >= T0 && rt <= T1)) throw new Error(`sheet 14: return ${r.ref} (${r.date}) falls outside the window`);
   }
-  return { ...c, t, fate: STATE[c.state], title: c.title ?? 'no longer readable upstream' };
+  return { ...c, t, fate: STATE[c.state], title: c.title ?? 'unreadable upstream' };
 });
 const byDay = (a, b) => a.t - b.t || a.yard.localeCompare(b.yard) || a.number - b.number;
 // on the river, numbered by day; the ones cited from before the first commit after them

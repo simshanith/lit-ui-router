@@ -30,7 +30,7 @@ const POOL = snap.members
 
 // instrument -> ordered match rules (first match wins, so order matters)
 const INSTRUMENTS = [
-  ['src (7 published packages)', [/^packages\//]],
+  ['src — packages/*/src', [/^packages\//]],
   ['build — @tools/oxc-emit', [/^tools\/oxc-emit\//]],
   ['pack — packPublishTarball', [/^tools\/release\/src\/checks\/(check-pack|check-packed-manifest|tarball|cache-paths)/, /^tools\/release\/src\/steps\/(pack-all|pack-publish|strip-manifest|release-pack)/]],
   ['published-diff', [/^tools\/release\/src\/checks\/(check-published-diff|published-versions|resolve-published)/]],
@@ -43,7 +43,7 @@ const INSTRUMENTS = [
   ['dts-backtest', [/^tools\/dts-backtest\//]],
   ['tests — vitest harness', [/^tools\/lit-test-env\//, /^tools\/happy-dom\//, /^tools\/wintercg-globals\//]],
   ['anti-slop — vendored oxlint rules', [/^tools\/oxlint-anti-slop\//]],
-  ['lint & probe fleet', [/^tools\/lit-template-lint\//, /^tools\/lint-elements\//, /^tools\/warn-lanes\//, /^tools\/eslint\//, /^tools\/eslint-ts-parser\//, /^tools\/embed-heights\//, /^tools\/bundle-probe\//, /^tools\/vue-check\//, /^tools\/lcov-rebase\//, /^tools\/crap\//, /^tools\/build_and_test\//]],
+  ['lint & probe fleet', [/^tools\/lit-template-lint\//, /^tools\/lint-elements\//, /^tools\/warn-lanes\//, /^tools\/eslint\//, /^tools\/eslint-ts-parser\//, /^tools\/embed-heights\//, /^tools\/bundle-probe\//, /^tools\/vue-check\//, /^tools\/lcov-rebase\//, /^tools\/crap\//, /^tools\/build_and_test\//, /^tools\/a11y\//]],
   ['repo checks — graph edges, task inputs, knip, patches', [/^tools\/repo-checks\//]],
   ['bootstrap — pre-install manifest reads', [/^tools\/bootstrap\//]],
   ['@tools/shared', [/^tools\/shared\//]],

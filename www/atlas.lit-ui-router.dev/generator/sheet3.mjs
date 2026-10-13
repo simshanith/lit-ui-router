@@ -52,6 +52,16 @@ const HOME = {
   zizmor: 'https://docs.zizmor.sh/',
 };
 const PUBLISHED = FILES.members.filter((m) => !m.private).length;
+const PKG_MEMBERS = FILES.members.filter((m) => m.dir.startsWith('packages/'));
+const PKG_PRIVATE = PKG_MEMBERS.filter((m) => m.private).length;
+const WORD = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve'];
+const word = (n) => { if (!WORD[n]) throw new Error(`sheet 3: no number word for ${n} — extend WORD`); return WORD[n]; };
+const SRC_NOTE = `${word(PKG_MEMBERS.length - PKG_PRIVATE)} published${PKG_PRIVATE ? ` + ${word(PKG_PRIVATE)} private` : ''} — the material`;
+// the sample-apps slab is every apps/ member but the e2e harness, named by its suffix
+const APP_NOTE = FILES.members
+  .filter((m) => m.dir.startsWith('apps/') && m.dir !== 'apps/sample-app-lit-e2e')
+  .map((m) => m.name.replace(/^sample-app-(lit-)?/, ''))
+  .join(' + ');
 const TOOLS = FILES.members.filter((m) => m.dir.startsWith('tools/')).length;
 const HW = HANDOFF.workflows, HM = HANDOFF.mise;
 const CI_NODES = CIPLATE.pipelines.ci.nodes;
@@ -81,7 +91,7 @@ const TIER_TEXT = {
 // [n, name, tier, x, y, files, sloc, fixed side, fixed height, schedule note]
 const M = [
   // --- the conveyor (packages/), one straight lane at y = 71 --------------------
-  [1,  'src — packages/*/src',      'line',    25,    30.45, ...C('src (7 published packages)'), null, null, 'seven published packages — the material'],
+  [1,  'src — packages/*/src',      'line',    25,    30.45, ...C('src — packages/*/src'), null, null, SRC_NOTE],
   [2,  'build — @tools/oxc-emit',   'line',   201.1,  63,    ...C('build — @tools/oxc-emit'), null, null, 'JS pass + d.ts pass, one emitter'],
   [3,  'pack — packPublishTarball', 'line',   296.1,  55.9,  ...C('pack — packPublishTarball'), null, null, 'the one packer (#449), cached'],
   [4,  'THE TARBALL',               'art',    426.8,  53,     0,    0,   36,   26, 'the one artifact every check reads'],
@@ -98,12 +108,12 @@ const M = [
   [13, 'peer-floor tier-1',         'report',  90,   338,    ...C('peer-floor tier-1'), null, null, 'reports check runs, never gates'],
   // row B's giant: it outgrows the row's y = 320 top line every refresh (the fleet
   // took the eslint plugin's growth at 1.14.1), so it sits 22 north of its row mates
-  [14, 'lint & probe fleet',        'report', 175,   298,    ...C('lint & probe fleet'), null, null, 'oxlint · elements · warn-lanes · CI gate'],
+  [14, 'lint & probe fleet',        'report', 166,   298,    ...C('lint & probe fleet'), null, null, 'oxlint · elements · warn-lanes · axe · CI gate'],
   [15, '@tools/shared',             'report', 275,   320,    ...C('@tools/shared'), null, null, 'the library under every instrument'],
   [16, 'typedoc plugin',            'report', 380,   320,    ...C('typedoc plugin'), null, null, 'builds the API pages, gates nothing'],
   // --- proving ground & shopfront (apps/ + www/) --------------------------------
   [17, 'e2e — cypress',             'pr',     377.8, 420,    ...C('e2e — cypress'), null, null, 'drives the sample apps · stops the PR line'],
-  [18, 'sample apps',               'line',   560,   390,    ...C('sample apps'), null, null, 'shared routes + vanilla + mobx + e2e fixtures'],
+  [18, 'sample apps',               'line',   560,   390,    ...C('sample apps'), null, null, APP_NOTE],
   [19, 'docs deploy watch',         'late',   680,   400,    ...C('docs deploy watch'), null, null, 'workers-builds triggers · gates the deploy'],
   // the yard's west lot, which 7 and 8 left for the east end of row A: from here it
   // stands in front of no PR gate
@@ -308,7 +318,7 @@ ${bodies}
 <!-- lettering: every label in its own pocket, leaders where the gap is wide -->
 ${txt(40, 200, 'PACKAGES/* — THE MATERIAL', 'lblb')}
 ${txt(40, 213, `${nf(1)} authored files · ${fmt(nl(1))} sloc`, 'lblf')}
-${txt(40, 225, 'seven published packages enter here', 'lblf')}
+${txt(40, 225, `${word(PKG_MEMBERS.length - PKG_PRIVATE)} published packages enter here`, 'lblf')}
 <line x1="250" y1="212" x2="276" y2="238" class="skf"/>
 
 ${txt(742, 398, 'THE TARBALL', 'lblb')}

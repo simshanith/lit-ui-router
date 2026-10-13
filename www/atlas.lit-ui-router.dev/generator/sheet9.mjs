@@ -48,13 +48,14 @@ const PLAN = {
   'examples': [150, 30],
   'images': [30, 120],
   'static data': [175, 140],
-  'html pages': [430, 20],
+  'html pages': [432, 26],
   // east of the html-pages slab and in front of it: behind, the slab hid the whole tower
   'inter fonts': [590, 110],
   'vp framework': [600, 30],
-  // dropped south as the html-pages slab grows: it reaches 170.7 at this ref
-  'page chunks': [330, 178],
-  'site css': [545, 200],
+  // dropped south as the html-pages slab grows: it reaches 181.6 at this ref
+  'page chunks': [330, 184],
+  // east off 545 when the page-chunks slab reached 545.9 at the c1b759a4 refresh
+  'site css': [552, 200],
   'app: vanilla': [560, 300],
   'app: hash': [575, 398],
   'app: mobx': [655, 345],
@@ -178,7 +179,7 @@ ${outlines}
 ${bodies}
 
 ${txt(150, 120, `a vacant lot — ${LOT.files} files, ${KB(LOT.gz)} of Dickens,`, 'lbla')}
-${txt(150, 132, 'Beowulf and an RFC the site no longer ships', 'lbla')}
+${txt(150, 132, 'Beowulf and an RFC the site does not ship', 'lbla')}
 <line x1="442" y1="132" x2="502" y2="248" class="skf"/>
 <!-- east of the Inter tower's cap (x 930 at this ref), under the site outline's label -->
 ${txt(985, 360, `${KB(INTER.gz)} of Inter —`, 'lbla')}

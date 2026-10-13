@@ -43,9 +43,9 @@ const phantomPct = (p) => Math.round(((p.nodes - p.real) / p.nodes) * 100);
 // column order = pipeline stage, not fan; every fanned name in the plate must be placed here
 const COLS = [
   'transit', 'build:types', 'build:js', 'build', 'docs:api',
-  'typecheck', 'typecheck:tsc', 'typecheck:src', 'typecheck:lit2', 'typecheck:mobx6',
+  'typecheck', 'typecheck:tsc', 'typecheck:src', 'typecheck:lit2', 'typecheck:mobx6', 'typecheck:effect3',
   'lint', 'lint:oxlint', 'format:check', 'format:check:oxfmt',
-  'test', 'test:coverage', 'test:lit2-compat', 'test:mobx6-compat', 'check:bundle', 'check:dev-split',
+  'test', 'test:coverage', 'test:lit2-compat', 'test:mobx6-compat', 'test:effect3-compat', 'check:bundle', 'check:dev-split',
   'ci:pull_request', 'ci',
 ];
 const FANNED = CI.names.filter((n) => n.nodes > 1).map((n) => n.name);
@@ -60,12 +60,12 @@ const ALLP = new Set(COLS.filter((n) => nm(n).real === 0));                     
 const UMBRELLAS = ['typecheck', 'lint', 'format:check'];
 if ([...ALLP].sort().join() !== ['transit', ...UMBRELLAS, 'ci:pull_request', 'ci'].sort().join()) throw new Error(`sheet 12: the all-placeholder columns are ${[...ALLP].join(', ')} — re-word the notes`);
 
-const STAGES = [[0, 0, 'GATHER'], [1, 4, 'EMIT'], [5, 13, 'CHECK'], [14, 19, 'PROVE'], [20, 21, 'ROLL-UP']];
+const STAGES = [[0, 0, 'GATHER'], [1, 4, 'EMIT'], [5, 14, 'CHECK'], [15, 21, 'PROVE'], [22, 23, 'ROLL-UP']];
 
 // row grouping: a rule per block, so a new member lands in its own block
-const APP_ORDER = ['sample-app-shared', 'sample-app-routes', 'sample-app-lit-vanilla', 'sample-app-lit-mobx', 'sample-app-lit-effect', 'sample-app-lit-e2e'];
+const APP_ORDER = ['sample-app-shared', 'sample-app-routes', 'sample-app-lit-vanilla', 'sample-app-lit-mobx', 'sample-app-lit-effect', 'sample-app-lit-signals', 'sample-app-lit-e2e'];
 const BLOCKS = [
-  { label: (n) => `PACKAGES/ — PUBLISHABLE ×${n}`, test: (p) => !p.startsWith('@tools/') && !p.startsWith('@www/') && !p.startsWith('sample-app-') && p !== 'examples' && p !== '//' },
+  { label: (n) => `PACKAGES/ — THE PRODUCT ×${n}`, test: (p) => !p.startsWith('@tools/') && !p.startsWith('@www/') && !p.startsWith('sample-app-') && p !== 'examples' && p !== '//' },
   { label: (n) => `APPS/ — SAMPLE + E2E ×${n}`, test: (p) => p.startsWith('sample-app-'), order: APP_ORDER },
   { label: (n) => `DOCS + EXAMPLES ×${n}`, test: (p) => p.startsWith('@www/') || p === 'examples' },
   { label: (n) => `TOOLS/ — INSTRUMENTS ×${n}`, test: (p) => p.startsWith('@tools/') },
@@ -166,7 +166,8 @@ const LEDGER = [
 // GEOMETRY
 // ---------------------------------------------------------------------------
 const LX = 252;              // right edge of the row-label gutter
-const CX0 = 268, CP = 20;    // first column centre, column pitch
+// pitch 18 keeps the overlay frame west of the RX annotation column at 24 columns
+const CX0 = 268, CP = 18;    // first column centre, column pitch
 const RP = 16;               // row pitch
 const CW = 15, CH = 10;      // card-hole size
 const RX = 810;              // right annotation column
@@ -254,7 +255,7 @@ const tallies = COLS.map((c, i) => {
 // --- ci:main overlay frame
 const oFrame = `<rect x="${OX0 - 16}" y="${MTOP + 4}" width="${CP * (OCOLS.length - 1) + 32}" height="${MBOT - MTOP - 4}" class="ska fnone" stroke-dasharray="5 4" opacity="0.75"/>
 ${OCOLS.map((n, j) => head(ox(j) + 3.5, n, 'lbla')).join('\n')}
-${txt(OX0 - 16, 176, 'ci:main OVERLAY', 'lbla')}
+${txt(OX0 - 4, 176, 'ci:main OVERLAY', 'lbla')}
 ${txt(OX0 - 16, TOTY, `+${ODN} nodes · ${OCOLS.length} names · +${ODR} real`, 'lbla')}`;
 
 // --- right column: the phantom share, the deepest chain, the uncacheable tier

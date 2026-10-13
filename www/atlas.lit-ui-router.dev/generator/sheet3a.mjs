@@ -116,7 +116,10 @@ const NO_MISE_LINES = NO_MISE.slice(1).reduce((ls, n) => {
   else ls.push(n);
   return ls;
 }, [`no mise: ${NO_MISE[0]}`]);
-const wfRowY = (i) => 162 + i * 37;
+// the rows close up as workflows join, so the last box clears the no-mise rule at 468
+const WF_STEP = Math.min(37, Math.floor((460 - 26 - 162) / Math.max(1, WF.length - 1)));
+if (WF_STEP < 30) throw new Error(`sheet3a: ${WF.length} mise-calling workflows no longer fit the GITHUB ACTIONS panel`);
+const wfRowY = (i) => 162 + i * WF_STEP;
 // the branch-gate footnote rides below however many lines the no-mise list takes
 const NOTE_Y = Math.max(532, 482 + (NO_MISE_LINES.length - 1) * 12 + 16);
 if (NOTE_Y + 24 > MACH_BOT - 4) throw new Error(`sheet3a: the no-mise list (${NO_MISE_LINES.length} lines) pushes the branch-gate footnote past the panel floor`);
@@ -258,7 +261,9 @@ ${clines(SEAM_B, 474, [
 
 // ---- door 1 route (bare turbo over the umbrella) --------------------------------
 const D1_X = GX + GW + 28;
-const D1_Y = wfRowY(5) + 13; // the door sits on the panel edge, mid-row
+const D1_ROW = WF.findIndex((w) => w.name === 'deflake-e2e');
+if (D1_ROW < 0) throw new Error('sheet3a: door 1 leaves deflake-e2e, which no longer calls mise');
+const D1_Y = wfRowY(D1_ROW) + 13; // the door sits on the panel edge, mid-row
 const door1 = `${box(GX + GW - 8, D1_Y - 7, 8, 14, 'skr fp')}<rect x="${GX + GW - 8}" y="${D1_Y - 7}" width="8" height="14" fill="url(#${P}-hr)"/>
 ${arrow(P, `M${GX + GW},${D1_Y} L${D1_X},${D1_Y} L${D1_X},102 L${DUCT_X},102 L${DUCT_X},108`, 'ar', 'skr', '6 4')}
 ${txt((D1_X + DUCT_X) / 2, 94, 'DOOR 1 — deflake-e2e.yml:75 · bare `turbo run build --filter=…` — over the umbrella, straight into turbo (PATH still mise)', 'lblr', 'middle')}`;

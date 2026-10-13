@@ -1,10 +1,10 @@
 {
   "ref": "origin/main",
-  "sha": "eb72c568",
-  "commitDate": "2026-10-12T22:05:55Z",
-  "generatedAtTime": "2026-10-12T22:14:43.275Z",
+  "sha": "c1b759a4",
+  "commitDate": "2026-10-13T05:04:32Z",
+  "generatedAtTime": "2026-10-13T05:23:11.655Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-nm.mjs",
-  "used": "git archive origin/main @ eb72c568 + pnpm install --frozen-lockfile --silent (mise-provisioned pnpm) + turbo run build",
+  "used": "git archive origin/main @ c1b759a4 + pnpm install --frozen-lockfile --silent (mise-provisioned pnpm) + turbo run build",
   "wasAssociatedWith": [
     "pnpm (mise-provisioned)",
     "turbo"
@@ -38,7 +38,7 @@
     {"name":"sample-app-routes","version":"0.0.0","ws":true,"measured":"dist/","f":3,"l":371,"df":0,"dl":0},
     {"name":"@api-viewer/tabs","version":"1.0.0-pre.10","ws":false,"measured":"pkg","f":3,"l":316,"df":3,"dl":53},
     {"name":"@api-viewer/common","version":"1.0.0-pre.10","ws":false,"measured":"pkg","f":6,"l":234,"df":6,"dl":53},
-    {"name":"ui-router-navigation-location-plugin","version":"1.1.0","ws":true,"measured":"dist/","f":2,"l":133,"df":2,"dl":194},
+    {"name":"ui-router-navigation-location-plugin","version":"1.1.1","ws":true,"measured":"dist/","f":2,"l":133,"df":2,"dl":194},
     {"name":"@types/trusted-types","version":"2.0.7","ws":false,"measured":"pkg","f":0,"l":0,"df":2,"dl":119},
     {"name":"@types/dompurify","version":"2.4.0","ws":false,"measured":"pkg","f":0,"l":0,"df":1,"dl":135},
     {"name":"@types/marked","version":"4.3.2","ws":false,"measured":"pkg","f":0,"l":0,"df":2,"dl":650},

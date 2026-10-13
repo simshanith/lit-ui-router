@@ -18,6 +18,10 @@ const OX = 480, OY = 210;
 const PLATE = JSON.parse(readFileSync(new URL('../data/census-bundle.json', import.meta.url), 'utf8'));
 const DOORS = JSON.parse(readFileSync(new URL('../data/census-doors.json', import.meta.url), 'utf8'));
 const SHIPPED = JSON.parse(readFileSync(new URL('../data/census-shipped.json', import.meta.url), 'utf8'));
+// the sample apps that share the demo package: every sample-app-lit-* member but the e2e harness
+const FILES = JSON.parse(readFileSync(new URL('../data/census-files.json', import.meta.url), 'utf8'));
+const APPS_N = FILES.members.filter((m) => /^sample-app-lit-/.test(m.name) && m.name !== 'sample-app-lit-e2e').length;
+const APPS_WORD = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight'][APPS_N];
 
 const row = (group) => {
   const r = PLATE.rows.find((x) => x.group === group);
@@ -152,10 +156,10 @@ const TOPS = {
   'dompurify': 'one file, whole — lazy chunk',
   '@api-viewer': 'docs · tabs · common',
   'lit-dialog': 'the demo dialog, on the shared lit',
-  'sample-app-shared': 'the demo the three apps share',
+  'sample-app-shared': `the demo the ${APPS_WORD} sample apps share`,
   'lodash-es': "_baseClone graph — isEqual's family",
   'app own src': 'the vanilla shell and its views',
-  'sample-app-routes': 'the shared route table three apps import',
+  'sample-app-routes': 'the route table the sample apps and the docs site share',
 };
 const half = Math.ceil(all.length / 2);
 const SY = 810;
@@ -231,7 +235,7 @@ export const sheet10 = {
 <p><strong>Reconciliation with sheet 9.</strong> The two sheets do not meet at an identity, and the reason is a rule: on sheet 9 a chunk counts where it is <em>first claimed</em>, so <code>ui-router-visualizer.esm</code> sits inside <code>app: vanilla</code> rather than beside it. Straight from the two plates: sheet 9's vanilla district is ${fmt(VAN.gz)} gz over ${VAN.files} files; this bundle is ${fmt(T.gz)} gz over ${T.chunks} chunks; the residual is ${fmt(RESID)} gz over ${RESID_FILES} file. That file is the one emitted <em>asset</em> in the app's output that is not a chunk — the api-viewer <a href="${HOME.cem}">custom-elements manifest</a>, JSON a module census structurally cannot see, since it walks <code>bundle</code> entries of type <code>chunk</code>. The app's stylesheet is not in the gap: sheet 9's pattern table files <code>.css</code> under <em>site css</em> before the app districts are reached. So ${fmt(T.gz)} + ${fmt(RESID)} = ${fmt(VAN.gz)}, and the named residual is a manifest, not a rounding error.</p>
 <p><strong>The library is a skin over the machine.</strong> The biggest building in the bundle is not the router package — it is ${npmLink('@uirouter/core')} at ${KB(G('@uirouter/core').gz)} gz, ${pct(G('@uirouter/core').gz)} of the wire, ${G('@uirouter/core').mods} modules. ${npmLink('lit-ui-router')} itself is the small accent building: ${KB(G('lit-ui-router').gz)}, ${pct(G('lit-ui-router').gz)}, ${G('lit-ui-router').mods} modules. The two independent measurements reconcile: the codecov door prices the bare <code>.</code> entry at ${fmt(door('.').gz)} gz with deps external, and this app's census pulls ${fmt(G('lit-ui-router').gz)} of it — the ${Math.round((1 - G('lit-ui-router').gz / door('.').gz) * 100)}% difference is what the app's own imports leave on the shelf.</p>
 <p><strong>The chrome outweighs the machine.</strong> ${npmLink('marked', 'marked')}, ${npmLink('dompurify', 'dompurify')} and <a href="${HOME.apiViewer}"><code>@api-viewer</code></a> total ${KB(CHROME_GZ + G('@api-viewer').gz)} gz — more than the routing machine they document — and the prebundled ${npmLink('@uirouter/visualizer')} adds ${KB(G('@uirouter/visualizer').gz)} on its own, opaque to tree-shaking because it arrives already bundled. None of it is on the eager path: the panel renders behind a feature flag and rides a lazy <code>api-docs</code> chunk. This census counts who occupies the bundle, not when they arrive; sheet 9 draws the critical path. One <a href="${HOME.lit}">lit</a> major serves all of it — ${KB(G('lit').gz)} gz across ${G('lit').mods} modules, no second copy riding in with the docs-viewer stack, because a scoped <a href="${HOME.overrides}">pnpm override</a> (<code>^3.3.3</code>, a floor, not a pin) holds <code>@api-viewer/*</code> and ${npmLink('lit-dialog')} to it.</p>
-<p><strong>The app's own district is the small one.</strong> ${npmLink('lodash-es')} is ${KB(G('lodash-es').gz)} gz from ${G('lodash-es').mods} modules and ${KB(G('lodash-es').r)} of kept source — <a href="${HOME.isEqual}"><code>isEqual</code></a>'s <code>_base*</code> family, the largest module count in the bundle and its own chunk, which is what four imports truly cost once tree-shaking has done its work. Beside it, the app's own source is ${KB(G('app own src').gz)} and <a href="${tree('apps/sample-app-routes')}"><code>sample-app-routes</code></a> — the route table three apps import — is ${fmt(G('sample-app-routes').r)} bytes kept, ${fmt(G('sample-app-routes').gz)} on the wire, one module: the smallest building on the map.</p>
+<p><strong>The app's own district is the small one.</strong> ${npmLink('lodash-es')} is ${KB(G('lodash-es').gz)} gz from ${G('lodash-es').mods} modules and ${KB(G('lodash-es').r)} of kept source — <a href="${HOME.isEqual}"><code>isEqual</code></a>'s <code>_base*</code> family, the largest module count in the bundle and its own chunk, which is what four imports truly cost once tree-shaking has done its work. Beside it, the app's own source is ${KB(G('app own src').gz)} and <a href="${tree('apps/sample-app-routes')}"><code>sample-app-routes</code></a> — the route table the sample apps and the docs site import — is ${fmt(G('sample-app-routes').r)} bytes kept, ${fmt(G('sample-app-routes').gz)} on the wire, one module: the smallest building on the map.</p>
 <p><strong>The runtime tax is near-zero.</strong> All bundler machinery — <a href="${HOME.oxc}">oxc</a> decorator helpers, <a href="${HOME.vite}">vite</a>'s preload helper and polyfill, a stray <a href="${npmUrl('tslib')}"><code>tslib</code></a> — totals ${KB(G('runtime helpers').r)} kept, ${KB(G('runtime helpers').gz)} gz, ${((G('runtime helpers').r / T.kept) * 100).toFixed(1)}% of the kept source, in ${G('runtime helpers').mods} modules. No duplicated-helper problem.</p>`,
   key: [
     keyRow('<rect x="8" y="3" width="18" height="12" class="sk fp"/>', 'package group — height = gz wire share'),

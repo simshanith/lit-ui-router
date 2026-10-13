@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { defs } from './chrome.mjs';
 import { txt, schedTxt, lines, keyRow, npmUrl, link } from './helpers.mjs';
+import { BRICK_ROWS } from './sheet2.mjs';
 
 const P = 's4';
 
@@ -48,13 +49,19 @@ const peerRange = (from, to) => {
   if (!r) throw new Error(`census-couplings.json: no peer row ${from} → ${to}`);
   return r.range;
 };
+// this repo's router limbs: the flagship and the bay, each column top to bottom
+const BAY_COLS = [
+  ['ui-router-server', 'lit-ui-router-ssr', 'lit-ui-router-effect', 'lit-ui-router-mobx'],
+  ['ui-router-navigation-location-plugin', 'ui-router-effect', 'ui-router-signals', 'lit-ui-router-signals'],
+];
+const COMP_NAMES = BAY_COLS.flat();
+const WORD = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
+const listOf = (xs) => (xs.length < 2 ? xs.join('') : `${xs.slice(0, -1).join(', ')} and ${xs.at(-1)}`);
 const CORE_GATE = (() => {
-  const ranges = new Set(['lit-ui-router', 'ui-router-server', 'lit-ui-router-mobx', 'ui-router-navigation-location-plugin',
-    'lit-ui-router-effect', 'lit-ui-router-ssr'].map((p) => peerRange(p, '@uirouter/core')));
+  const ranges = new Set(['lit-ui-router', ...COMP_NAMES].map((p) => peerRange(p, '@uirouter/core')));
   if (ranges.size !== 1) throw new Error(`sheet 4: the companions no longer share one core gate — ${[...ranges].join(', ')}`);
   return [...ranges][0];
 })();
-const MOBX_GATE = peerRange('lit-ui-router-mobx', 'lit-ui-router');
 const REGISTRY = `npm registry read ${NPM.generatedAtTime.slice(0, 10)}`;
 const COUNTED = `counted at ${BRICKS.ref} @ ${BRICKS.sha} (${BRICKS.generatedAtTime.slice(0, 10)})`;
 const CLONED = 'clone counts 2026-08-16';
@@ -84,18 +91,25 @@ const INSTRUMENTS = [
   clone('@uirouter/sticky-states', 2, 233, '>=5.0.1', 'peer', 'dormant'),
   clone('@uirouter/dsr', 4, 266, '>=5.0.0', 'peer', 'dormant'),
 ];
-const COMPANIONS = [
-  brick('ui-router-server', CORE_GATE, 'peer', 'this'),
-  brick('lit-ui-router-effect', CORE_GATE, 'peer', 'this'),
-  brick('lit-ui-router-mobx', CORE_GATE, 'peer', 'this'),
-  brick('lit-ui-router-ssr', CORE_GATE, 'peer', 'this'),
-  brick('ui-router-navigation-location-plugin', CORE_GATE, 'peer', 'this', '…-nav-location-plugin'),
-];
-// three companions declare on the flagship as well as the spine
-const LIT_PEERS = new Map(['lit-ui-router-effect', 'lit-ui-router-mobx', 'lit-ui-router-ssr']
+const DISP = { 'ui-router-navigation-location-plugin': '…-nav-location-plugin' };
+const COMPANIONS = COMP_NAMES.map((n) => brick(n, CORE_GATE, 'peer', 'this', DISP[n] ?? n));
+// every published package but the lint plugin is a limb on this sheet; a newcomer throws until it has a bay row
+{
+  const limbs = COUPLINGS.nodes.filter((n) => n.kind === 'published' && n.key !== 'eslint-plugin-lit-ui-router' && n.key !== 'lit-ui-router').map((n) => n.key).sort();
+  if (limbs.join() !== [...COMP_NAMES].sort().join()) throw new Error(`sheet 4: the bay holds [${COMP_NAMES}] but the plate publishes [${limbs}]`);
+}
+// the companions that declare on the flagship as well as the spine, read off the plate
+const LIT_PEERS = new Map(COMP_NAMES.filter((p) => COUPLINGS.rows.some((r) => r.kind === 'peer' && r.from === p && r.to === 'lit-ui-router'))
   .map((p) => [p, peerRange(p, 'lit-ui-router')]));
-// ssr is the one companion that peers a second companion: it bridges the two
+// the companions whose peers include a second companion, and that companion
+const BRIDGES = COMP_NAMES.flatMap((p) => COUPLINGS.rows.filter((r) => r.kind === 'peer' && r.from === p && COMP_NAMES.includes(r.to)).map((r) => [p, r.to, r.range]));
+if (BRIDGES.map(([a, b]) => `${a}>${b}`).join() !== 'lit-ui-router-ssr>ui-router-server,lit-ui-router-signals>ui-router-signals')
+  throw new Error(`sheet 4: the bay draws ssr over the server and signals over ui-router-signals, but the plate peers [${BRIDGES.map(([a, b]) => `${a} → ${b}`)}]`);
 const SSR_SERVER_GATE = peerRange('lit-ui-router-ssr', 'ui-router-server');
+const SIG_USG_GATE = peerRange('lit-ui-router-signals', 'ui-router-signals');
+// sheet 2's bricks, so the notes can say which companions it draws
+const ON_SHEET2 = new Set(BRICK_ROWS.map((b) => b.name));
+const OFF_SHEET2 = COMP_NAMES.filter((n) => !ON_SHEET2.has(n));
 // the one published member that is not a router limb — scheduled, not massed
 const LINT = npmRow('eslint-plugin-lit-ui-router');
 
@@ -107,7 +121,7 @@ const H = (files) => Math.max(3, KH * files);
 const fmt = (v) => v.toLocaleString('en-US');
 // which rows quote an rc is read off the registry plate, never typed
 const RC_NOTE = RC_QUOTED.length
-  ? `${RC_QUOTED.map((n) => `<code>${n}</code>`).join(' and ')} ${RC_QUOTED.length === 1 ? 'ships its' : 'ship their'} newest work under npm's <code>rc</code> tag rather than <code>latest</code>${RC_QUOTED.length === 1 ? ', the one package on this sheet that does' : ''}; wherever the <code>rc</code> leads, this sheet quotes it, marked as such.`
+  ? `${listOf(RC_QUOTED.map((n) => `<code>${n}</code>`))} ${RC_QUOTED.length === 1 ? 'ships its' : 'ship their'} newest work under npm's <code>rc</code> tag rather than <code>latest</code>${RC_QUOTED.length === 1 ? ', the one package on this sheet that does' : ''}; wherever the <code>rc</code> leads, this sheet quotes it, marked as such.`
   : 'Every version on this sheet is the one npm serves under <code>latest</code>.';
 
 // ---- datum ---------------------------------------------------------------------
@@ -141,7 +155,7 @@ const blockCls = (status) =>
 const nameCls = (status) => (status === 'dormant' ? 'lbls' : status === 'this' ? 'lbla' : 'lblb');
 
 // ---- column layout -------------------------------------------------------------
-const COL_X0 = 340, COL_GAP = 120;
+const COL_X0 = 320, COL_GAP = 100;
 let cursor = COL_X0;
 const cols = ADAPTERS.map((m) => {
   const w = W(m[4]);
@@ -182,26 +196,34 @@ ${txt(cx.toFixed(1), (bot + 44).toFixed(1), `quiet since ${date}`, 'lblf', 'midd
 }).join('\n');
 
 // ---- companions bay (this repo's own limbs, right of the adapters) ---------------
-const BAY_X = 1110, BAY_R = 1310, BAY_T = 26, BAY_B = 250, BAY_CX = 1180;
-// Rows stack by their own DRAWN height, largest mass first, so five fit the bay:
-// name, version line, then the mass block itself, and the next name clears it.
-let bayCursor = 72;
-const bayY = new Map();
-const bayRows = COMPANIONS.map((m) => {
-  const [name, ver, , files, sloc, , , , href] = m;
-  const w = W(sloc), h = H(files), y = bayCursor;
-  bayY.set(name, y);
-  bayCursor += 27 + h;
-  return `${link(href, txt(BAY_X + 12, y, name, 'lbla'))}
-${txt(BAY_X + 12, y + 11, `${ver} · ${files}f`, 'lblf')}
-<rect x="${BAY_X + 12}" y="${(y + 15).toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" class="ska fa"/>
-${LIT_PEERS.has(name) ? `<path d="M${BAY_X - 8},${(y - 3).toFixed(1)} H${BAY_X + 6}" class="ska" stroke-dasharray="4 3" marker-end="url(#${P}-aa)"/>` : ''}`;
+const BAY_X = 1030, BAY_R = 1340, BAY_T = 26, BAY_B = 250, BAY_CX = 1185, BAY_COL = 155;
+// Two columns; rows stack by their own DRAWN height: name, version line, then the
+// mass block itself, and the next name clears it.
+const bayY = new Map(), bayX = new Map();
+const bayRows = BAY_COLS.map((col, c) => {
+  let y = 72;
+  const x0 = BAY_X + c * BAY_COL;
+  return col.map((n) => {
+    const [name, ver, , files, sloc, , , , href] = COMPANIONS[COMP_NAMES.indexOf(n)];
+    const w = W(sloc), h = H(files), at = y;
+    bayY.set(n, at);
+    bayX.set(n, x0);
+    y += 27 + h;
+    if (y > BAY_B) throw new Error(`sheet 4: the bay's column ${c + 1} runs past its floor at ${n} — relay the bay`);
+    return `${link(href, txt(x0 + 12, at, name, 'lbla'))}
+${txt(x0 + 12, at + 11, `${ver} · ${files}f`, 'lblf')}
+<rect x="${x0 + 12}" y="${(at + 15).toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" class="ska fa"/>
+${LIT_PEERS.has(n) ? `<path d="M${x0 - 8},${(at - 3).toFixed(1)} H${x0 + 6}" class="ska" stroke-dasharray="4 3" marker-end="url(#${P}-aa)"/>` : ''}`;
+  }).join('\n');
 }).join('\n');
 
-// The bridge: ssr is the only companion drawing on another companion. It runs in
-// the bay's right gutter, unlettered — the key and the notes carry its range.
-const SRV_Y = bayY.get('ui-router-server'), SSR_Y = bayY.get('lit-ui-router-ssr');
-const bridge = `<path d="M1298,${(SRV_Y + 38).toFixed(1)} V${(SSR_Y - 5).toFixed(1)}" class="ska" stroke-dasharray="4 3" marker-end="url(#${P}-aa)"/>`;
+// The bridges: a companion drawing on another companion, run in its column's right
+// gutter, unlettered — the key and the notes carry the ranges. The lower row peers the upper.
+const bridge = BRIDGES.map(([from, to]) => {
+  if (bayX.get(from) !== bayX.get(to) || bayY.get(to) > bayY.get(from)) throw new Error(`sheet 4: ${from} must stand under ${to} in one bay column`);
+  const gx = bayX.get(from) + BAY_COL - 12;
+  return `<path d="M${gx},${(bayY.get(to) - 8).toFixed(1)} V${(bayY.get(from) - 5).toFixed(1)}" class="ska" stroke-dasharray="4 3" marker-end="url(#${P}-aa)"/>`;
+}).join('\n');
 
 const bay = `<rect x="${BAY_X}" y="${BAY_T}" width="${BAY_R - BAY_X}" height="${BAY_B - BAY_T}" class="skf fnone" stroke-dasharray="5 4"/>
 ${txt(BAY_X + 12, BAY_T + 18, 'COMPANIONS — this repo', 'lbls')}
@@ -210,7 +232,7 @@ ${bayRows}
 ${bridge}
 ${stem(BAY_CX, BAY_B + 8, RAIL_T - 7, 'ska', '', 'aa')}
 ${gate(BAY_CX, 272, CORE_GATE, 'peer')}
-${txt(BAY_CX + 18, 288, 'all five', 'lblf')}`;
+${txt(BAY_CX + 18, 288, `all ${WORD[COMPANIONS.length]}`, 'lblf')}`;
 
 // ---- totals ----------------------------------------------------------------------
 const ALL = [CORE, ...ADAPTERS, ...INSTRUMENTS, ...COMPANIONS].sort((a, b) => b[4] - a[4]);
@@ -247,9 +269,9 @@ ${txt(56, SY + 22, 'STRUCTURE SCHEDULE — authored source per member · files (
 ${ALL.slice(0, half).map((r, i) => schedTxt(56, SY + 52 + i * 17, schedRow(r, i), 'lbls')).join('\n')}
 ${ALL.slice(half).map((r, i) => schedTxt(700, SY + 52 + i * 17, schedRow(r, i + half), 'lbls')).join('\n')}
 ${txt(56, SY + 58 + half * 17, `TOTAL — ${ALL.length} packages · ${TOT_F} authored files · ${fmt(TOT_L)} sloc · versions and dates ${REGISTRY} · this repo + core ${COUNTED} · upstream family ${CLONED}`, 'lbls')}
-${txt(56, SY + 75 + half * 17, `NOT MASSED — ${LINT.name} ${LINT.version} on npm (published ${LINT.published}) · ${brickRow(LINT.name).version} in the repo: the one of this repo's seven published packages that is not a router limb — it declares no gate on the spine.`, 'lblf')}`;
+${txt(56, SY + 75 + half * 17, `NOT MASSED — ${LINT.name} ${LINT.version} on npm (published ${LINT.published}) · ${brickRow(LINT.name).version} in the repo: the one of this repo's ${WORD[COUPLINGS.totals.published]} published packages that is not a router limb — it declares no gate on the spine.`, 'lblf')}`;
 
-const svg = `<svg viewBox="0 0 1350 ${SY + 148 + half * 17}" role="img" aria-label="The ui-router family drawn as a spine, massed from measured source: @uirouter/core is a hatched block astride a horizontal rail, four framework adapters stand on the rail above it and four dormant instruments hang below, each drawn as a block whose width is proportional to the square root of its authored source lines and whose height is proportional to its file count. Core is by far the largest mass at ${CORE[3]} files and ${fmt(CORE[4])} lines, ${CORE_SHARE} percent of the family; the visualizer is the next largest at 2,018 lines; sticky-states is a two-file sliver. Every limb's stem crosses a gate — a hatched tablet in the accent colour naming the @uirouter/core version range that limb admits — and the gates disagree: floors of greater-or-equal 5.0.0, 5.0.1 and 6.0.1, carets on 6.1.2 and 6.0.8, and one red gate on @uirouter/react, which pins core exactly at 6.1.2 and ships it as a dependency instead of a peer. A dashed bay at the right holds this repo's five companion packages behind a single shared gate; three of them take a second dashed arrow from lit-ui-router, and lit-ui-router-ssr takes a third from ui-router-server, the only companion that bridges two others. A structure schedule lists every member with exact file and line counts.">
+const svg = `<svg viewBox="0 0 1350 ${SY + 148 + half * 17}" role="img" aria-label="The ui-router family drawn as a spine, massed from measured source: @uirouter/core is a hatched block astride a horizontal rail, four framework adapters stand on the rail above it and four dormant instruments hang below, each drawn as a block whose width is proportional to the square root of its authored source lines and whose height is proportional to its file count. Core is by far the largest mass at ${CORE[3]} files and ${fmt(CORE[4])} lines, ${CORE_SHARE} percent of the family; the visualizer is the next largest at 2,018 lines; sticky-states is a two-file sliver. Every limb's stem crosses a gate — a hatched tablet in the accent colour naming the @uirouter/core version range that limb admits — and the gates disagree: floors of greater-or-equal 5.0.0, 5.0.1 and 6.0.1, carets on 6.1.2 and 6.0.8, and one red gate on @uirouter/react, which pins core exactly at 6.1.2 and ships it as a dependency instead of a peer. A dashed bay at the right holds this repo's ${WORD[COMPANIONS.length]} companion packages in two columns behind a single shared gate; ${WORD[LIT_PEERS.size]} of them take a second dashed arrow from lit-ui-router, and ${listOf(BRIDGES.map(([a, b]) => `${a} takes a third from ${b}`))} — the companions that bridge two others. A structure schedule lists every member with exact file and line counts.">
 ${defs(P)}
 
 ${txt(70, 96, 'ADAPTERS — one per renderer, standing on the spine', 'lbls')}
@@ -264,8 +286,8 @@ ${bay}
 ${txt(70, 520, 'PLUGINS & INSTRUMENTS — hanging below the spine', 'lbls')}
 ${lines(70, 540, ['no @uirouter/vue was ever published:', 'the vue seat has zero mass —', 'the one name absent from the registry plate'], 'lblf', 'start', 12)}
 
-${txt(1100, 26, 'SCALE — block width = 2.7 · √sloc · block height = 2.2 px per authored file · gates and rail not to scale', 'lbls', 'end')}
-${txt(1100, 40, 'mass ranks by code volume, not downloads · authored src, tests and d.ts excluded', 'lblf', 'end')}
+${txt(1016, 26, 'SCALE — block width = 2.7 · √sloc · block height = 2.2 px per authored file · gates and rail not to scale', 'lbls', 'end')}
+${txt(1016, 40, 'mass ranks by code volume, not downloads · authored src, tests and d.ts excluded', 'lblf', 'end')}
 
 ${txt(1310, 508, 'PROVENANCE — three plates and one set of hand-carried counts', 'lbls', 'end')}
 ${txt(1310, 522, `every version and last-publish date on this sheet: census-npm.json · ${REGISTRY}`, 'lblf', 'end')}
@@ -285,11 +307,11 @@ export const sheet4 = {
   svg,
   caption: `Not a loop and not a city: a spine. Every limb shares @uirouter/core and no limb talks to another, so the honest drawing is radial. Each block is massed from its own authored source and each stem crosses a gate naming the core range that limb admits — and the gates do not agree.`,
   notes: `
-<p><strong>Method — four provenances, kept apart.</strong> <a href="${HOME}">This repo</a>'s own gates — the core range its six packages share and the three ranges declared on <code>lit-ui-router</code> itself — are read from <code>www/atlas.lit-ui-router.dev/data/census-couplings.json</code> (${COUPLINGS.ref} @ ${COUPLINGS.sha}); the upstream limbs' gates are read from their manifests by hand. Versions and last-publish dates are not typed on this sheet: every one is read by name from <code>www/atlas.lit-ui-router.dev/data/census-npm.json</code> (<code>npm view</code>, ${REGISTRY}), and a drawn package missing from that plate throws the build. Mass has two sources. ${npmLink('@uirouter/core')} and this repo's own packages are read from <code>www/atlas.lit-ui-router.dev/data/census-bricks.json</code> — scc <code>Code</code> over authored <code>.ts/.tsx/.js/.mjs</code> under each source dir, <code>*.d.ts</code>, specs and typedoc stubs excluded, ${COUNTED}. The upstream adapters and instruments have no plate at all: their file and line counts are ${CLONED} of the <a href="${ORG}"><code>ui-router</code></a> org repositories, carried in this file by hand and labelled as such. ${ALL.length} packages, ${TOT_F} authored files, ${fmt(TOT_L)} lines.</p>
+<p><strong>Method — four provenances, kept apart.</strong> <a href="${HOME}">This repo</a>'s own gates — the core range its ${WORD[COMPANIONS.length + 1]} router packages share and the ${WORD[LIT_PEERS.size]} ranges declared on <code>lit-ui-router</code> itself — are read from <code>www/atlas.lit-ui-router.dev/data/census-couplings.json</code> (${COUPLINGS.ref} @ ${COUPLINGS.sha}); the upstream limbs' gates are read from their manifests by hand. Versions and last-publish dates are not typed on this sheet: every one is read by name from <code>www/atlas.lit-ui-router.dev/data/census-npm.json</code> (<code>npm view</code>, ${REGISTRY}), and a drawn package missing from that plate throws the build. Mass has two sources. ${npmLink('@uirouter/core')} and this repo's own packages are read from <code>www/atlas.lit-ui-router.dev/data/census-bricks.json</code> — scc <code>Code</code> over authored <code>.ts/.tsx/.js/.mjs</code> under each source dir, <code>*.d.ts</code>, specs and typedoc stubs excluded, ${COUNTED}. The upstream adapters and instruments have no plate at all: their file and line counts are ${CLONED} of the <a href="${ORG}"><code>ui-router</code></a> org repositories, carried in this file by hand and labelled as such. ${ALL.length} packages, ${TOT_F} authored files, ${fmt(TOT_L)} lines.</p>
 <p><strong>An isometric city would still lie here.</strong> Adjacent blocks imply interaction, and the adapters have none — each rib touches only the spine. So the plan stays radial and the new ink is mass: block width ∝ √sloc, block height ∝ file count, which lets a two-file, 233-line package like ${npmLink('@uirouter/sticky-states', 'sticky-states')} read as the sliver it is beside core's ${CORE[3]}-file slab. Core alone is ${fmt(CORE[4])} lines — ${CORE_SHARE}% of the family's authored mass, and more than the four adapters combined.</p>
-<p><strong>The gates disagree, and that is the finding.</strong> Every limb declares a range on ${npmLink('@uirouter/core')}, drawn here as a hatched tablet where the limb's stem crosses toward the rail. The dormant instruments still admit core 5 (<code>&gt;=5.0.0</code>, <code>&gt;=5.0.1</code>); ${npmLink('@uirouter/rx', 'rx')} admits <code>&gt;=6.0.1</code>; ${npmLink('@uirouter/angularjs', 'angularjs')} and ${npmLink('@uirouter/angular', 'angular')} carets on <code>^6.1.2</code>; this repo's six packages sit on <code>^6.0.8</code>. One gate is red: ${npmLink('@uirouter/react')} pins core at exactly <code>6.1.2</code> <em>and ships it as a dependency, not a peer</em> — the only limb that can install a second copy of the state machine into a consumer's tree, and the only one that cannot be moved forward without a react release.</p>
-<p><strong>Mass does not track liveness.</strong> The largest limb on the sheet is the dormant ${npmLink('@uirouter/visualizer')} (34 files, 2,018 lines, last published ${npmRow('@uirouter/visualizer').published}) — it carries a preact/d3 rendering stack, so it out-masses every living adapter. The limb this repo builds, ${npmLink('lit-ui-router')}, is ${ADAPTERS[3][3]} files and ${fmt(ADAPTERS[3][4])} lines at ${ADAPTERS[3][1]}, and it is the only limb growing limbs of its own: the companion bay adds another ${fmt(BAY_L)} lines behind a single shared gate, and ${LIT_PEERS.size} of its ${COMPANIONS.length} members peer the limb as well as the spine — ${npmLink('lit-ui-router-mobx')} at ${MOBX_GATE}, ${npmLink('lit-ui-router-effect')} at ${LIT_PEERS.get('lit-ui-router-effect')} and ${npmLink('lit-ui-router-ssr')} at ${LIT_PEERS.get('lit-ui-router-ssr')}. Sheet 2 draws all five as bricks.</p>
-<p><strong>One companion sits above two others.</strong> ${npmLink('lit-ui-router-ssr')} is the only member on this sheet whose peers include a second companion: it declares on ${npmLink('lit-ui-router')} ${LIT_PEERS.get('lit-ui-router-ssr')} <em>and</em> on ${npmLink('ui-router-server')} ${SSR_SERVER_GATE}, so it cannot be installed without both. That is why it is drawn taking two arrows rather than one — it is a bridge between the element library and the server router, not a limb hanging off either, and at ${brickRow('lit-ui-router-ssr').files} files and ${fmt(brickRow('lit-ui-router-ssr').sloc)} lines it is the lightest thing on the sheet that carries two gates. ${npmLink('lit-ui-router-effect')} hangs off the flagship the way mobx does. ${RC_NOTE}</p>
+<p><strong>The gates disagree, and that is the finding.</strong> Every limb declares a range on ${npmLink('@uirouter/core')}, drawn here as a hatched tablet where the limb's stem crosses toward the rail. The dormant instruments still admit core 5 (<code>&gt;=5.0.0</code>, <code>&gt;=5.0.1</code>); ${npmLink('@uirouter/rx', 'rx')} admits <code>&gt;=6.0.1</code>; ${npmLink('@uirouter/angularjs', 'angularjs')} and ${npmLink('@uirouter/angular', 'angular')} carets on <code>^6.1.2</code>; this repo's ${WORD[COMPANIONS.length + 1]} router packages sit on <code>${CORE_GATE}</code>. One gate is red: ${npmLink('@uirouter/react')} pins core at exactly <code>6.1.2</code> <em>and ships it as a dependency, not a peer</em> — the only limb that can install a second copy of the state machine into a consumer's tree, and the only one that cannot be moved forward without a react release.</p>
+<p><strong>Mass does not track liveness.</strong> The largest limb on the sheet is the dormant ${npmLink('@uirouter/visualizer')} (34 files, 2,018 lines, last published ${npmRow('@uirouter/visualizer').published}) — it carries a preact/d3 rendering stack, so it out-masses every living adapter. The limb this repo builds, ${npmLink('lit-ui-router')}, is ${ADAPTERS[3][3]} files and ${fmt(ADAPTERS[3][4])} lines at ${ADAPTERS[3][1]}, and it is the only limb growing limbs of its own: the companion bay adds another ${fmt(BAY_L)} lines behind a single shared gate, and ${LIT_PEERS.size} of its ${COMPANIONS.length} members peer the limb as well as the spine — ${listOf([...LIT_PEERS].map(([n, r]) => `${npmLink(n)} at ${r}`))}. Sheet 2 draws ${OFF_SHEET2.length ? `every one of them as a brick but ${listOf(OFF_SHEET2.map((n) => `<code>${n}</code>`))}, which it schedules` : `all ${WORD[COMPANIONS.length]} as bricks`}.</p>
+<p><strong>${WORD[BRIDGES.length][0].toUpperCase() + WORD[BRIDGES.length].slice(1)} companions sit above two others.</strong> ${npmLink('lit-ui-router-ssr')} declares on ${npmLink('lit-ui-router')} ${LIT_PEERS.get('lit-ui-router-ssr')} <em>and</em> on ${npmLink('ui-router-server')} ${SSR_SERVER_GATE}, so it cannot be installed without both. That is why it is drawn taking two arrows rather than one — it is a bridge between the element library and the server router, not a limb hanging off either. ${npmLink('lit-ui-router-signals')} is the other: it declares on the flagship ${LIT_PEERS.get('lit-ui-router-signals')} <em>and</em> on ${npmLink('ui-router-signals')} ${SIG_USG_GATE}, the renderer-free signals it binds to a Lit host, and its second arrow runs down the bay's second column. ${npmLink('ui-router-signals')} and ${npmLink('ui-router-effect')} stand in that column with the navigation plugin: they declare on the spine and nothing else. ${npmLink('lit-ui-router-effect')} hangs off the flagship the way mobx does. ${RC_NOTE}</p>
 <p><strong>Publish dates sort the family into three states.</strong> ${npmLink('@uirouter/angular')} stands at ${npmRow('@uirouter/angular').version} (${npmRow('@uirouter/angular').published}), a major of its own, so it is drawn <em>active</em>; ${npmLink('@uirouter/angularjs', 'angularjs')} and ${npmLink('@uirouter/react', 'react')} carry only the ${npmRow('@uirouter/core').published} patch wave that followed core inside a day, so they are drawn <em>wave</em>. Below the rail nothing is current — the newest instrument publish is ${npmLink('@uirouter/rx', 'rx')} at ${npmRow('@uirouter/rx').published}, the rest 2019–2020 — and the dashes say so. <code>@uirouter/vue</code> holds a seat with no registry row at all: an absence, not a package.</p>`,
   key: [
     keyRow('<rect x="4" y="4" width="40" height="11" class="sk fp2"/>', 'member — width ∝ √sloc, height ∝ files'),
@@ -299,6 +321,6 @@ export const sheet4 = {
     keyRow('<rect x="10" y="2" width="28" height="14" rx="2" fill="url(#s4-hr)"/><rect x="10" y="2" width="28" height="14" rx="2" class="skr fnone"/>', 'hard gate — core pinned exactly, as a dependency'),
     keyRow('<line x1="22" y1="2" x2="22" y2="16" class="sk"/>', 'declares on the spine (and only the spine)'),
     keyRow('<line x1="4" y1="9" x2="44" y2="9" class="ska" stroke-dasharray="4 3"/>', 'also declares on a companion, not just the spine'),
-    keyRow('<line x1="24" y1="2" x2="24" y2="16" class="ska" stroke-dasharray="4 3"/>', `the bridge — ssr declares ui-router-server ${SSR_SERVER_GATE} as well`),
+    keyRow('<line x1="24" y1="2" x2="24" y2="16" class="ska" stroke-dasharray="4 3"/>', `a bridge — ssr declares ui-router-server ${SSR_SERVER_GATE}, signals ui-router-signals ${SIG_USG_GATE}`),
   ].join('\n'),
 };

@@ -517,6 +517,51 @@ sitting); order is dependency order.
   gz; nm 173,820 lines / 41,155 d.ts; mass3b 13,307 hashes over 235 real tasks and 3,029 command
   sloc; the ci graph 864 / 235 / 3,024 edges; steam 643 commits; weather 448 dated files; 7A 11,937
   of 19,307 metered sloc lit over 25 members.
+- 2026-10-13 — THE EIGHTEENTH REFRESH, at `origin/main` @ c1b759a4 (commit 2026-10-13), all 18 plates
+  re-run at the one ref: 22 commits past the seventeenth. SIX MEMBERS WERE BORN: `lit-ui-router-signals` and `ui-router-signals` (#1159, #1214, #1215), `ui-router-effect`
+  (#1189, #1216), the private `@repo/route-snapshot` (#1185), `sample-app-lit-signals` (#1159,
+  #1219) and `@tools/a11y` (#1172). 46 members (was 40), ten published (was seven); npm serves the
+  three new packages as 0.1.0-rc.0 under `rc`. `lit-ui-router-effect` 0.3.0 (#1238) and the plugin
+  1.1.1 (#1241) rode with them. The loop's 52 cites hold.
+  EIGHT MODULES THREW at the first build: sheet 2's family guard, the coupling bench, sheet 11's
+  door count, sheet 12's column table, sheet 3B's undrawn tasks, and `assertPlots` on 7, 13 and 9.
+  The last three were growth, not births: `@tools/bundle-probe`'s annex met `@tools/lint-elements`
+  on 7 and 13, and sheet 9's page chunks met site css. Every birth took a seat but one:
+  `ui-router-signals` is scheduled on sheet 2, A BRICK, NOT DRAWN IN THIS REV, and drawn on 2A.
+  Typed claims about one member went false at once: "ssr is the one node with a tie to two siblings"
+  (2B, sheet 4), "the only companion-to-companion joint" (2A), the plugin as "the smallest quarter"
+  (3B) and among the three smallest packages (13); each derives and throws.
+  `census-mass3b.mjs` printed 17 DRIFT lines; the cite rows moved and it prints 0. The yard read
+  `orphans 4` until `@tools/a11y` joined the lint & probe fleet. The city and plant models outgrew
+  their budgets: `city.glb` 233,000 bytes against 200 KiB, raised to 256 KiB; `plant.glb` 427,988
+  against 384 KiB, raised to 448 KiB (at the seventeenth they were 201,416 and 376,036).
+  THE FRAME AUDIT read 0 escapes, 0 hits over 1 px and text-on-text
+  134 across 24 plates; the audit stopped twice on the way: sheet 9's html-pages tower poked 2.2 px above the viewBox (html pages 430,20 → 432,26, page chunks y 178 → 184), and sheet 13's "both winter-built" ran 1.9 px over the examples block (the callout x 1262 → 1266); sheet 3A's ninth mise-calling workflow pushed the `lint-workflows` row through the no-mise list, so `wfRowY` steps by a derived `WF_STEP` (34 at this ref, throws under 30) and door 1 finds `deflake-e2e`'s row by name. Text-on-text rose from 99, 17 of the rise sheet 12's rotated column headers from the two effect3 columns and the rest stacked lines 1.1–2 px apart, and the count was accepted. Thumbs: 30 plates in
+  both themes, 3,613,520 bytes. The app prerenders 61 pages plus the 404 with
+  52 redirects, 62/62 renders scoped. The T3 chain took 5 min 01 s.
+  LESSONS. `assertPlots` REPORTS THE FIRST PAIR ONLY: sheet 7 threw on 18/28, and a plan check over
+  every pair found 20/21 and 35/39 overlapping too; after a throw, check every pair before re-running
+  the build. A PRIVATE `packages/` MEMBER IS A QUARTER, NOT A PUBLISHED COUNT: `@repo/route-snapshot`
+  takes a lot on 7 and 13, a quarter on 3B and a place in sheet 12's block, but every "N published"
+  counts `census-files.json`'s `private` flag; the yard's "src (7 published packages)" was a count
+  in a key, and the key reads `src — packages/*/src`. A SEATED MODEL DRAWS ONLY JOINTS A BRICK CAN
+  MAKE: a 1×2 cannot bridge two caps eight courses apart, so `ui-router-signals` is scheduled on 2
+  rather than drawn with one of its joints missing, and 2A, which seats nothing, draws the joint. A
+  CITE ROW KEYED TO ONE PACKAGE ROTS WHEN THE TASK SPREADS: the three `check:dev-split` DRIFT lines
+  every cabinet since the thirteenth carried were the flagship-only CITES row for a task that runs in
+  four packages; in `BY_TASK` they read 0, and so did the lines `check:bundle`'s peer-floor guard and the
+  effect3 lanes raised.
+  A NUMBER-WORD TABLE IS A HAND COUNT: sheet 7's `WORDN` stopped at 'eight' and would have printed
+  `undefined` at ten; word tables throw past their end. THE HARNESS REFUSES SUBAGENT REPORT FILES:
+  a placement agent's hand-back arrives as its final message, so the orchestrator files it.
+  THE NUMBERS: city 370 src files / 31,823 sloc and 178 spec / 30,843; yard 341 / 27,536, 323 /
+  25,950 massed; doors 25 · 191,116 min / 67,963 gz; the bundle 125,137 gz in 17 chunks; the deploy
+  910 files / 5,086,283 gz; nm 174,690 lines / 41,419 d.ts; mass3b 15,806 hashes over 285 real tasks
+  and 5,333 command sloc; the ci graph 1,103 / 285 / 4,313 edges (deepest chain 15); couplings 31
+  contracts, 20 drawn on 12 nodes; steam 615 commits; weather 548 dated files, 2,575 touches; 7A
+  13,679 of 22,325 metered sloc lit over 31 members; upstream 85 consignments to 34 works, 14 sent,
+  71 watched, 80 tracked; survey-self 107 files / 21,449 sloc and survey-shipped 257 files / 7.1 MB,
+  both at www/atlas @ 7abec3a5.
 - 2026-10-12 — THE SEVENTEENTH REFRESH, at `origin/main` @ eb72c568 (commit 2026-10-12), all 18 plates
   re-run at the one ref: ten commits past the sixteenth, among them `lit-ui-router` 1.16.4 (#1200)
   with the router directives following the placeholder router's upgrade (#1190), and the

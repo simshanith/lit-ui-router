@@ -1,10 +1,10 @@
 {
   "ref": "origin/main",
-  "sha": "eb72c568",
-  "commitDate": "2026-10-12T22:05:55Z",
-  "generatedAtTime": "2026-10-12T22:10:45.108Z",
+  "sha": "c1b759a4",
+  "commitDate": "2026-10-13T05:04:32Z",
+  "generatedAtTime": "2026-10-13T05:18:55.975Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-bricks.mjs",
-  "used": "www/atlas.lit-ui-router.dev/data/census-files.json @ eb72c568",
+  "used": "www/atlas.lit-ui-router.dev/data/census-files.json @ c1b759a4",
   "wasAssociatedWith": [
     "scc 4.0.0 (mise x aqua:boyter/scc)",
     "codeload.github.com ui-router/core@6.1.2 source tarball"
@@ -15,8 +15,11 @@
     {"name":"eslint-plugin-lit-ui-router","version":"1.2.1","files":12,"sloc":1462,"studs":10,"shape":"2x4","courses":4},
     {"name":"ui-router-server","version":"0.2.2","files":9,"sloc":1235,"studs":9,"shape":"2x4","courses":3},
     {"name":"lit-ui-router-ssr","version":"0.2.1","files":11,"sloc":1117,"studs":8,"shape":"2x4","courses":4},
-    {"name":"lit-ui-router-effect","version":"0.2.1","files":5,"sloc":286,"studs":2,"shape":"1x2","courses":2},
-    {"name":"ui-router-navigation-location-plugin","version":"1.1.0","files":2,"sloc":208,"studs":2,"shape":"1x2","courses":1},
-    {"name":"lit-ui-router-mobx","version":"1.1.1","files":5,"sloc":205,"studs":2,"shape":"1x2","courses":2}
+    {"name":"lit-ui-router-effect","version":"0.3.0","files":5,"sloc":291,"studs":2,"shape":"1x2","courses":2},
+    {"name":"ui-router-navigation-location-plugin","version":"1.1.1","files":2,"sloc":208,"studs":2,"shape":"1x2","courses":1},
+    {"name":"lit-ui-router-mobx","version":"1.1.1","files":5,"sloc":205,"studs":2,"shape":"1x2","courses":2},
+    {"name":"lit-ui-router-signals","version":"0.1.0-rc.0","files":4,"sloc":171,"studs":2,"shape":"1x2","courses":2},
+    {"name":"ui-router-signals","version":"0.1.0-rc.0","files":3,"sloc":95,"studs":1,"shape":"1x1","courses":1},
+    {"name":"ui-router-effect","version":"0.1.0-rc.0","files":2,"sloc":21,"studs":1,"shape":"1x1","courses":1}
   ]
 }

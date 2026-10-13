@@ -16,6 +16,9 @@ const OX = 400, OY = 170;
 // Graph-level counts (nodes, real, edges) come from the ci pipeline of
 // www/atlas.lit-ui-router.dev/data/census-plate.json. This file holds placement and prose only.
 const PLATE = JSON.parse(readFileSync(new URL('../data/census-mass3b.json', import.meta.url), 'utf8'));
+// the package quarters are the packages/ members, by name
+const FILES_PKGS = new Set(JSON.parse(readFileSync(new URL('../data/census-files.json', import.meta.url), 'utf8')).members
+  .filter((m) => m.dir.startsWith('packages/')).map((m) => m.name));
 const GRAPH = JSON.parse(readFileSync(new URL('../data/census-plate.json', import.meta.url), 'utf8'));
 const CI = GRAPH.pipelines.ci;
 const MAIN = GRAPH.pipelines['ci:main'];
@@ -66,7 +69,7 @@ const LINT_WITH = [...LINT_WITH_GUARDS, ...LINT_WITH_LINES].map((t) => row(`@too
 if (LINT_WITH_LINES.some((t) => row(`@tools/repo-checks#${t}`).mass !== 1)) throw new Error('sheet 3B: a repo-checks lane the notes call one script line carries command mass');
 if (LINT_WITH_GUARDS.some((t) => row(`@tools/repo-checks#${t}`).mass === 1)) throw new Error('sheet 3B: a repo-checks lane the notes call a guard is one script line');
 if (Math.max(...(BY_PKG.get('@tools/repo-checks') ?? []).map((r) => r.inputs)) !== row('@tools/repo-checks#check:knip').inputs) throw new Error('sheet 3B: check:knip is no longer the widest lot in the guard house');
-const NUMW = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
+const NUMW = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve'];
 // direct graph degree of a real task (real and phantom neighbours alike)
 const deg = (id, k) => {
   const t = TASK.get(id);
@@ -82,19 +85,32 @@ const fmt = (v) => v.toLocaleString('en-US');
 
 // packages only — @tools/repo-checks is drawn whole as structure 1
 const TERRACE = [
-  '@tools/bootstrap', '@tools/build_and_test', '@tools/bundle-probe', '@tools/compat-guards', '@tools/crap', '@tools/embed-heights',
+  '@tools/a11y', '@tools/bootstrap', '@tools/build_and_test', '@tools/bundle-probe', '@tools/compat-guards', '@tools/crap', '@tools/embed-heights',
   '@tools/eslint', '@tools/eslint-ts-parser', '@tools/happy-dom', '@tools/lcov-rebase', '@tools/lint-elements', '@tools/lit-template-lint',
   '@tools/lit-test-env', '@tools/oxc-emit', '@tools/oxlint-anti-slop', '@tools/release-config', '@tools/vue-check',
   '@tools/warn-lanes', '@tools/wintercg-globals', '@tools/workers-builds',
 ];
 const APPS = [
-  'sample-app-lit-e2e', 'sample-app-lit-effect', 'sample-app-lit-mobx', 'sample-app-lit-vanilla',
+  'sample-app-lit-e2e', 'sample-app-lit-effect', 'sample-app-lit-mobx', 'sample-app-lit-signals', 'sample-app-lit-vanilla',
   'sample-app-routes', 'sample-app-shared',
 ];
 const ROOT = BY_PKG.get('//') ?? [];
 const SURFACE = row('//#lint:root').inputs;  // the shared root glob the equal slabs watch
 // the tower's lot is the whole dts-backtest block, not just the task that stands on it
 const TOWER = (BY_PKG.get('@tools/dts-backtest') ?? []).reduce((a, r) => a + r.inputs, 0);
+
+// the quarters that ship docs:api into the harbour, off the plate
+const DOCS_API = PLATE.rows.filter((r) => r.task === 'docs:api').map((r) => r.pkg);
+// the private quarter's lanes are all bare script lines
+const SNAP = BY_PKG.get('@repo/route-snapshot') ?? [];
+if (!SNAP.length || SNAP.some((r) => r.mass !== 1)) throw new Error('sheet 3B: quarter 33\'s note says every lane is one script line, and the plate says otherwise');
+// the package quarters, and the plugin's rank among them by watched files
+const QUARTERS = [...FILES_PKGS];
+const quarterFiles = (pkg) => (BY_PKG.get(pkg) ?? []).reduce((a, r) => a + r.inputs, 0);
+const SIZE_ORD = ['the smallest', 'the second-smallest', 'the third-smallest', 'the fourth-smallest', 'the fifth-smallest', 'the sixth-smallest'];
+const NAV_RANK = QUARTERS.map(quarterFiles).sort((a, b) => a - b).indexOf(quarterFiles('ui-router-navigation-location-plugin'));
+if (!SIZE_ORD[NAV_RANK]) throw new Error(`sheet 3B: the plugin ranks ${NAV_RANK + 1} by watched files among the quarters — extend SIZE_ORD`);
+const NAV_SIZE_NOTE = `${SIZE_ORD[NAV_RANK]} quarter by watched files, same block shape`;
 
 // [n, name, x, y, plate selector (task id, package, or packages), schedule note]
 const M = [
@@ -105,27 +121,32 @@ const M = [
   [2,  '//#format:check:root',    0,    0, '//#format:check:root', `one oxfmt line · the ${fmt(SURFACE)}-file root glob`],
   [3,  '//#format:check:toml',   88,  110, '//#format:check:toml', `mise run + tasks/${cite('//#format:check:toml')} — plate 3A, seam C`],
   [4,  '//#lint:actionlint',    144,  110, '//#lint:actionlint', 'mise run + config.toml run line'],
-  [5,  '//#lint:elements',      114,    0, '//#lint:elements', `${cite('//#lint:elements')} + ${cite('//#lint:elements', 1)} — THE TALLEST`],
+  [5,  '//#lint:elements',      120,    0, '//#lint:elements', `${cite('//#lint:elements')} + ${cite('//#lint:elements', 1)} — THE TALLEST`],
   [6,  '//#lint:markdown',       56,  110, '//#lint:markdown', `mise run + tasks/${cite('//#lint:markdown')}`],
   [7,  '//#lint:package-json',   60,   48, '//#lint:package-json', `one eslint line watching ${fmt(row('//#lint:package-json').inputs)} manifests`],
-  [8,  '//#lint:root',           38,    0, '//#lint:root', `one oxlint line · the same ${fmt(SURFACE)}-file surface`],
+  [8,  '//#lint:root',           40,    0, '//#lint:root', `one oxlint line · the same ${fmt(SURFACE)}-file surface`],
   [9,  '//#lint:shellcheck',     28,  110, '//#lint:shellcheck', `mise run + tasks/${cite('//#lint:shellcheck')}`],
-  [10, '//#lint:templates',     152,    0, '//#lint:templates', `${cite('//#lint:templates')} + ${cite('//#lint:templates', 1)}`],
+  [10, '//#lint:templates',     160,    0, '//#lint:templates', `${cite('//#lint:templates')} + ${cite('//#lint:templates', 1)}`],
   [11, '//#lint:toml',          116,  110, '//#lint:toml', `mise run + tasks/${cite('//#lint:toml')} — chain hop ③`],
   [12, '//#lint:zizmor',        172,  110, '//#lint:zizmor', 'mise run + config.toml run line'],
-  [13, '//#typecheck:root',      76,    0, '//#typecheck:root', `one tsc line · the same ${fmt(SURFACE)}-file surface`],
+  [13, '//#typecheck:root',      80,    0, '//#typecheck:root', `one tsc line · the same ${fmt(SURFACE)}-file surface`],
   // born 2026-10-02 (#1058): the second slab row, east of lint:package-json
   [14, '//#lint:complexity',    104,   48, '//#lint:complexity', `one eslint line · the same ${fmt(SURFACE)}-file surface`],
   // --- the package quarters — one block per packages/ member ----------------------
   [15, 'lit-ui-router',         250,   30, 'lit-ui-router', 'guards + oxc-emit + bundle-probe bins behind every task'],
   [16, 'lit-ui-router-mobx',    292,   30, 'lit-ui-router-mobx', 'heaviest commands: the lit2 and mobx6 guards ride four tasks'],
-  [17, 'nav-location-plugin',   360,   30, 'ui-router-navigation-location-plugin', 'the smallest quarter, same block shape'],
+  [17, 'nav-location-plugin',   360,   30, 'ui-router-navigation-location-plugin', NAV_SIZE_NOTE],
   [18, 'ui-router-server',      325,   30, 'ui-router-server', 'node:test + runtime-globals lanes'],
   [19, 'eslint-plugin',         388,   30, 'eslint-plugin-lit-ui-router', 'the fifth quarter — rules, docs and oxlint lanes'],
   // born 2026-09-12 (#833)
   [20, 'lit-ui-router-effect',   418,   30, 'lit-ui-router-effect', 'the sixth quarter — the effect bindings, running every lane'],
   // born 2026-09-14 (#806): the row's east end, 5.6 units clear of quarter 20
   [21, 'lit-ui-router-ssr',      445,   30, 'lit-ui-router-ssr', 'the seventh quarter — the prerender bridge'],
+  // born 2026-10-12/13 (#1185): the row's east end, west of the release road's x 560 leg
+  [30, 'lit-ui-router-signals',  474,   30, 'lit-ui-router-signals', 'the eighth quarter — the signals bindings'],
+  [31, 'ui-router-signals',      498,   30, 'ui-router-signals', 'the ninth quarter — the framework-agnostic signal mirror'],
+  [32, 'ui-router-effect',       515,   30, 'ui-router-effect', 'the tenth quarter — the framework-agnostic SubscriptionRef'],
+  [33, '@repo/route-snapshot',   534,   30, '@repo/route-snapshot', `the eleventh quarter — private, ${NUMW[SNAP.length]} one-line lanes, nothing to build`],
   // --- the instrument end of town -------------------------------------------------
   [22, '@tools/release',        600,   15, '@tools/release', `${cite('@tools/release#pack:all')} + ${cite('@tools/release#check:exports')} live here`],
   [23, '@tools/dts-backtest',   700,   40, '@tools/dts-backtest', `${cite('@tools/dts-backtest#test')} on a ${TOWER}-file footprint: THE TOWER`],
@@ -133,7 +154,7 @@ const M = [
   [25, 'typedoc-plugin',        634,   96, '@tools/typedoc-plugin-lit-ui-router', `oxc-emit both passes — ${deg('@tools/typedoc-plugin-lit-ui-router#build:types', 'dependents')} nodes wait on build:types`],
   [26, 'instrument terrace',    690,  124, TERRACE, `${TERRACE.length} small tools × their style/test/typecheck rows`],
   // --- south of the river ---------------------------------------------------------
-  [27, 'www — the harbour',     330,  205, '@www/lit-ui-router.dev', `every quarter ships docs:api here — its build waits on ${deg('@www/lit-ui-router.dev#build', 'deps')} nodes`],
+  [27, 'www — the harbour',     330,  205, '@www/lit-ui-router.dev', `${NUMW[DOCS_API.length]} quarters ship docs:api here — its build waits on ${deg('@www/lit-ui-router.dev#build', 'deps')} nodes`],
   [28, 'examples — the plain',  420,  250, 'examples', `format:check:oxfmt hashes ${fmt(row('examples#format:check:oxfmt').inputs)}, lint:oxlint ${fmt(row('examples#lint:oxlint').inputs)}`],
   [29, `apps (${APPS.length} sample pkgs)`, 150, 210, APPS, `${APPS.length} packages, every command one line`],
 ];
@@ -205,7 +226,7 @@ function massBadge(n) {
   // Badge seats: wide caps (side >= 26) carry it on the roof; smalls float it
   // north, south or east — whichever pocket their neighbours leave open.
   const MODE = { 3: 'S', 6: 'S', 9: 'S', 16: 'S', 25: 'S', 4: 'E', 11: 'E', 12: 'E' };
-  const ADJ = { 5: [-4, 2] };
+  const ADJ = { 5: [-4, 2], 30: [-4, -18] };
   const mode = MODE[n] ?? (side >= 26 ? 'C' : 'N');
   let bx, by;
   if (mode === 'C') { [bx, by] = pt(x + side / 2, y + side / 2, h); by -= 3; }
@@ -301,7 +322,7 @@ ${txt(58, SY + 72 + half * 16, `ROADS — five district arteries drawn, the grap
 ${txt(58, SY + 86 + half * 16, `${fmt(CI.realEdges)} of the graph's ${fmt(CI.edges)} edges join two real tasks, the rest are local streets itemised in the dry-run JSON`, 'lblf')}`;
 
 // ---- assemble -------------------------------------------------------------------
-const svg = `<svg viewBox="0 0 1400 ${SY + 126 + half * 16}" role="img" aria-label="Isometric city of the lit-ui-router pull-request CI task graph, the second alternate plate at altitude three. Behind the city lies a long hatched vacant field: ${fmt(PHANTOM)} phantom plots, the ${PHPCT} percent of the graph that runs nothing. The root yard at the north-west holds every root-scoped task as its own pad: ${NUMW[SLABS.length]} equal slabs that each watch the same ${fmt(SURFACE)} root files — one of them, lint:elements, a ${row('//#lint:elements').mass}-sloc spire whose lane runs the repo's own bin rather than an external one — and a cluster of small pads including the taplo pad the deepest chain enters. One vacant lot among them is the phantom lint:workflows twin. Off the yard's west edge stands the guard house: @tools/repo-checks, one block for all ${CELL.get(NO('repo-checks')).tasks} of its tasks, ${CELL.get(NO('repo-checks')).mass} sloc of command over ${fmt(CELL.get(NO('repo-checks')).inputs)} watched files, ${LINT_WITH.length} of them checks the lint umbrella depends on. The seven package quarters stand in a center row, massed by their watched files and the guard and emitter scripts behind their tasks; the easternmost is the prerender bridge. To the east, the instrument end of town: the release works, the typedoc plugin annotated with its fan-out, a terrace of ${TERRACE.length} small tools, and the city's landmark — the dts-backtest tower, ${slocOf('@tools/dts-backtest#test')} lines of run dot ts standing on a ${TOWER}-file footprint. South of the river sit the apps block, the harbour that every quarter ships API docs into, and the defining horizontal feature: the examples plain, ${fmt(CELL.get(NO('examples — the plain')).inputs)} watched files under ${CELL.get(NO('examples — the plain')).mass} lines of command. Every massed block carries the same red hatch because every one stops the PR — severity is uniform by construction. Roads trace the dependency arteries with degree counts; an accent dashed road marks where the six-hop deepest chain of plate 3A passes through. A structure schedule reconciles all ${CI.real} real tasks, their ${fmt(TOT_I)} task-file hashes and ${fmt(TOT_M)} command sloc.">
+const svg = `<svg viewBox="0 0 1400 ${SY + 126 + half * 16}" role="img" aria-label="Isometric city of the lit-ui-router pull-request CI task graph, the second alternate plate at altitude three. Behind the city lies a long hatched vacant field: ${fmt(PHANTOM)} phantom plots, the ${PHPCT} percent of the graph that runs nothing. The root yard at the north-west holds every root-scoped task as its own pad: ${NUMW[SLABS.length]} equal slabs that each watch the same ${fmt(SURFACE)} root files — one of them, lint:elements, a ${row('//#lint:elements').mass}-sloc spire whose lane runs the repo's own bin rather than an external one — and a cluster of small pads including the taplo pad the deepest chain enters. One vacant lot among them is the phantom lint:workflows twin. Off the yard's west edge stands the guard house: @tools/repo-checks, one block for all ${CELL.get(NO('repo-checks')).tasks} of its tasks, ${CELL.get(NO('repo-checks')).mass} sloc of command over ${fmt(CELL.get(NO('repo-checks')).inputs)} watched files, ${LINT_WITH.length} of them checks the lint umbrella depends on. The ${NUMW[QUARTERS.length]} package quarters stand in a center row, massed by their watched files and the guard and emitter scripts behind their tasks; the easternmost is the prerender bridge. To the east, the instrument end of town: the release works, the typedoc plugin annotated with its fan-out, a terrace of ${TERRACE.length} small tools, and the city's landmark — the dts-backtest tower, ${slocOf('@tools/dts-backtest#test')} lines of run dot ts standing on a ${TOWER}-file footprint. South of the river sit the apps block, the harbour ${NUMW[DOCS_API.length]} quarters ship API docs into, and the defining horizontal feature: the examples plain, ${fmt(CELL.get(NO('examples — the plain')).inputs)} watched files under ${CELL.get(NO('examples — the plain')).mass} lines of command. Every massed block carries the same red hatch because every one stops the PR — severity is uniform by construction. Roads trace the dependency arteries with degree counts; an accent dashed road marks where the six-hop deepest chain of plate 3A passes through. A structure schedule reconciles all ${CI.real} real tasks, their ${fmt(TOT_I)} task-file hashes and ${fmt(TOT_M)} command sloc.">
 ${defs(P)}
 
 <rect x="40" y="24" width="420" height="72" class="skf fnone"/>
@@ -380,7 +401,7 @@ export const sheet3b = {
 <p><strong>The city is flat, and that is the finding.</strong> ${FLAT} of ${CI.real} real tasks have command mass 1 — one script line handing the work to a pinned binary. The whole city executes ${fmt(TOT_M)} sloc of repo-written command while watching ${fmt(TOT_I)} task-file hashes. The skyline is inverted from intuition: <a href="${HOME.dtsBacktest}"><code>@tools/dts-backtest#test</code></a> is a ${slocOf('@tools/dts-backtest#test')}-line <code>run.ts</code> on a ${TOWER}-file lot — sheet 3 calls it "one ${slocOf('@tools/dts-backtest#test')}-line run.ts holds the TS 5.0 floor", and the graph survey agrees to the line — while the largest footprint, the examples plain, watches ${fmt(CELL.get(NO('examples — the plain')).inputs)} files (format:check:oxfmt ${fmt(row('examples#format:check:oxfmt').inputs)} + lint:oxlint ${fmt(row('examples#lint:oxlint').inputs)} alone) under ${CELL.get(NO('examples — the plain')).mass} lines of command. The tallest command is the root yard's <code>//#lint:elements</code>, the one root lane that runs a repo-written bin rather than an external one — ${slocOf('//#lint:elements')} sloc over <a href="${HOME.warnLanes}"><code>warn-lanes.core.ts</code></a>'s ${slocOf('//#lint:elements', 1)} — a ${row('//#lint:elements').mass}-sloc spire on a root-surface footprint. The eslint-plugin quarter is ${EP_HEAVY.length ? 'nearly flat' : 'flat throughout'}: <a href="${HOME.eslintPlugin}"><code>eslint-plugin-lit-ui-router</code></a> brings ${CELL.get(NO('eslint-plugin')).tasks} tasks and ${CELL.get(NO('eslint-plugin')).mass} sloc, and ${EP_NOTE}.</p>
 <p><strong>The root yard repays the walk.</strong> All ${ROOT.length + 1} <code>//#</code> plots are drawn individually, and ${NUMW[SLABS.length]} of them — ${andList(SLABS.map(([, , , , sel]) => `<code>${sel.slice(3)}</code>`))} — are equal slabs watching one identical root surface of ${fmt(SURFACE)} files. ${capW(SLABS.length)} tasks, one surface, one number: it is the plate's cleanest finding. The guards that patrol that surface are not root tasks: <a href="${HOME.repoChecks}"><code>@tools/repo-checks</code></a> is a package, drawn whole as the guard house (${NO('repo-checks')}) standing apart, south-west of the yard, and ${NUMW[LINT_WITH.length]} of its ${CELL.get(NO('repo-checks')).tasks} tasks — ${andList(LINT_WITH.map((r) => `<code>${r.task}</code>`))} — are named in the <code>dependsOn</code> list of the <code>lint</code> umbrella, so a lint run takes them along wherever it starts. ${capW(LINT_WITH_GUARDS.length)} of the ${NUMW[LINT_WITH.length]} are the city's tall one-file guards, ${andList(LINT_WITH_GUARDS.map((t) => slocOf(`@tools/repo-checks#${t}`)))} lines of TypeScript apiece; the other ${NUMW[LINT_WITH_LINES.length]} are one script line each — <a href="${HOME.knip}"><code>knip</code></a> hashing ${fmt(row('@tools/repo-checks#check:knip').inputs)} files, the widest lot in the block, and <a href="${HOME.dedupe}"><code>pnpm dedupe --check</code></a> hashing ${fmt(row('@tools/repo-checks#check:dedupe').inputs)}. The <a href="${HOME.taplo}">taplo</a> pad (${NO('//#lint:toml')}) is where plate 3A's six-hop chain touches ground: hops ①–② arrive from <code>mise run ci</code>, hop ③ is this block, and ④–⑥ leave immediately to run back inside mise through the cache gasket. And one lot in the yard is vacant on purpose — <code>//#lint:workflows</code>, an umbrella with no script of its own, has no command even here.</p>
 <p><strong>One tier, uniformly red.</strong> Sheet 3's severity vocabulary survives, but at this altitude it degenerates truthfully: every real node in the <code>ci</code> graph stops the PR when it fails, so every massed block wears the same red hatch, and the drawing spends its information elsewhere. The ${MAIN.real - CI.real} ci:main-only tasks (test:engines ×3, check:pack, test:matrix) sit outside this survey on an unmassed accent annex — ${MAIN.nodes}/${MAIN.real} nodes when they are included; the ${fmt(PHANTOM)} phantom plots — ${PHPCT}% of the graph, transit and ^build hash carriers and the script-less <code>lint</code>, <code>typecheck</code> and <code>format:check</code> umbrellas — are the vacant field behind the city, inventoried hole-by-hole on sheet 12.</p>
-<p><strong>Roads and reach.</strong> Five arteries are drawn, one per district pair, and the plate labels them with degree rather than with an edge tally it cannot cite: <code>@www/lit-ui-router.dev#build</code> waits on ${deg('@www/lit-ui-router.dev#build', 'deps')} nodes (every quarter ships <code>docs:api</code> there, plus worker types and app fixtures — it is the city's sink), <code>@tools/typedoc-plugin-lit-ui-router#build:types</code> unblocks ${deg('@tools/typedoc-plugin-lit-ui-router#build:types', 'dependents')}, <code>@tools/release#check:exports</code> ${deg('@tools/release#check:exports', 'dependents')} (<code>pack:all</code> and <code>check:exports</code> read every quarter), and the widest fan-out in the graph is <code>lit-ui-router#build:types</code> at ${deg('lit-ui-router#build:types', 'dependents')}. Of the graph's ${fmt(CI.edges)} edges only ${CI.realEdges} join two real tasks; the rest hang off phantom transit nodes, which is why the roads are drawn as districts and not as a wire count.</p>`,
+<p><strong>Roads and reach.</strong> Five arteries are drawn, one per district pair, and the plate labels them with degree rather than with an edge tally it cannot cite: <code>@www/lit-ui-router.dev#build</code> waits on ${deg('@www/lit-ui-router.dev#build', 'deps')} nodes (${NUMW[DOCS_API.length]} quarters ship <code>docs:api</code> there, plus worker types and app fixtures — it is the city's sink), <code>@tools/typedoc-plugin-lit-ui-router#build:types</code> unblocks ${deg('@tools/typedoc-plugin-lit-ui-router#build:types', 'dependents')}, <code>@tools/release#check:exports</code> ${deg('@tools/release#check:exports', 'dependents')} (<code>pack:all</code> and <code>check:exports</code> read every published quarter), and the widest fan-out in the graph is <code>lit-ui-router#build:types</code> at ${deg('lit-ui-router#build:types', 'dependents')}. Of the graph's ${fmt(CI.edges)} edges only ${CI.realEdges} join two real tasks; the rest hang off phantom transit nodes, which is why the roads are drawn as districts and not as a wire count.</p>`,
   key: [
     keyRow(`<polygon points="6,10 24,2 42,10 24,18" class="skr fp"/><polygon points="6,10 24,2 42,10 24,18" fill="url(#${P}-hr)"/>`, 'massed task block — stops the PR (all of them do)'),
     keyRow('<polygon points="6,12 24,4 42,12 24,20" class="skr fp"/><rect x="21" y="1" width="6" height="8" class="skr fp"/>', 'height = command sloc — script line + the file behind it'),

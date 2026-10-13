@@ -221,6 +221,14 @@ const CAT_TEXT = {
 };
 // the plugin's note counts its own full meters off the plate
 const NAV_FULL = ['line', 'branch', 'func'].filter((k) => SH.get(4)[k] === 100).length;
+const guardFail = (n, said) => { throw new Error(`sheet 7A: №${n}'s note says ${said}, and the plate says otherwise`); };
+// a package whose only dark file is its barrel
+const barrelOnly = (n, lit) => (SH.get(n).shadow?.length === 1 && SH.get(n).shadow[0] === 'src/index.ts'
+  ? `${lit} lit; the barrel in shadow` : guardFail(n, 'only the barrel is in shadow'));
+// the apps lettering names what lives on e2e light alone: the rig and the demos it drives
+const E_APPS = M.filter((r) => r[2] === 'app' && r[3] === 'e');
+if (!E_APPS.some((r) => r[0] === 9)) throw new Error('sheet 7A: the apps lettering says the rig lives on e2e light alone, and the plate says otherwise');
+const E_DEMOS = `${['no', 'one', 'two', 'three', 'four', 'five'][E_APPS.length - 1]} demo${E_APPS.length === 2 ? '' : 's'}`;
 // prose only — every figure in the schedule is computed from the two plates
 const NOTE = {
   1: 'in shadow: barrels + interface.ts',
@@ -241,7 +249,7 @@ const NOTE = {
   16: 'pale: exec.ts and workspace.ts',
   17: 'trigger wrapper in shadow',
   18: 'size probe, advisory · its cores lit',
-  19: 'ranges.ts lit; six CI lanes unmetered',
+  19: 'ranges.ts lit; the CI guards unmetered',
   20: 'the check lane, lit by its own suite',
   21: 'config only',
   22: 'wrapper only',
@@ -257,12 +265,18 @@ const NOTE = {
   32: 'reserve lit — driver + CLI in shadow',
   33: 'the manifest reads lit, types.ts in shadow',
   34: 'the repo rule plugin and the oxlint stubs, all dark',
-  35: 'the four lint-lane guards, half lit',
+  35: 'the lint-lane guards, half lit',
   36: 'the effect demo — e2e light only',
   37: 'the bindings lit; the barrel in shadow',
   38: 'the bridge lit, its own barrel dark',
   39: 'report.ts lit, the crap-report CLI in shadow',
   40: 'vendored rules with no suite of their own',
+  41: barrelOnly(41, 'the bindings'),
+  42: barrelOnly(42, 'the signal mirror'),
+  43: barrelOnly(43, 'the SubscriptionRef'),
+  44: SH.get(44).shadow?.length === 0 ? 'private · the inlined snapshot, lit wall to wall' : guardFail(44, 'lit wall to wall'),
+  45: SH.get(45).cat === 'n' ? 'the signals demo — no test script' : guardFail(45, 'no test script'),
+  46: `${SH.get(46).shadow.map((f) => f.replace(/^src\//, '')).join(' + ')} in shadow · the rest lit`,
 };
 const ART_H = 902;
 const SY = ART_H + 16;
@@ -338,10 +352,12 @@ ${(() => {
     const cls = edge === 'skr' ? 'lblr' : edge === 'ska' ? 'lbla' : 'lbls';
     const one = list ? `${head} · ${list}` : head;
     const wrap = one.length > 52;
+    // the continuation itself breaks at 52 characters, one more line per break
+    const cont = wrap ? list.split(' ').reduce((ls, w) => ((ls.at(-1) + ' ' + w).length > 52 ? [...ls, w] : [...ls.slice(0, -1), `${ls.at(-1)} ${w}`.trim()]), ['']) : [];
     const top = y;
-    y += wrap ? 34 : 22;
+    y += wrap ? 22 + 12 * cont.length : 22;
     return `<rect x="1144" y="${top}" width="34" height="14" fill="${fill}"/><rect x="1144" y="${top}" width="34" height="14" class="${edge} fnone" ${dash ? `stroke-dasharray="${dash}"` : ''}/>
-${txt(1192, top + 11, wrap ? head : one, cls)}${wrap ? `\n${txt(1192, top + 24, list, cls)}` : ''}`;
+${txt(1192, top + 11, wrap ? head : one, cls)}${cont.map((l, i) => `\n${txt(1192, top + 24 + 12 * i, l, cls)}`).join('')}`;
   }).join('\n');
   return `<rect x="1128" y="96" width="392" height="${y - 78}" class="skf fnone"/>
 ${txt(1144, 118, 'BRIGHTNESS — LINE COVERAGE OF WHAT THE SUITE LIGHTS', 'lbls')}
@@ -361,7 +377,7 @@ ${txt(140, 340, `bought by sheet 7's ${ANNEX_RANGE} annexes`, 'lblf')}
 <line x1="150" y1="292" x2="160" y2="282" class="skf"/>
 
 ${txt(1096, 372, 'apps/ — THE PROVING GROUND', 'lblb', 'end')}
-${txt(1096, 385, `${DA.metered} metered member${DA.metered === 1 ? '' : 's'} · two demos + the rig`, 'lblf', 'end')}
+${txt(1096, 385, `${DA.metered} metered member${DA.metered === 1 ? '' : 's'} · ${E_DEMOS} + the rig`, 'lblf', 'end')}
 ${txt(1096, 397, 'live on e2e light alone · №5 tests pass with no meter', 'lblf', 'end')}
 
 ${txt(1146, 560, 'www/ + examples/ — THE SHOPFRONT', 'lblb')}
@@ -380,10 +396,10 @@ ${txt(620, 94, `in shadow: ${g(1).r[6] - g(1).r[10]} files, ${fmt(g(1).r[7] - g(
 ${txt(620, 106, 'and interface.ts, which is type declarations', 'lblf')}
 <line x1="612" y1="110" x2="305" y2="136" class="skf"/>
 
-${txt(1144, 338, '№5 sample-app-shared — an outline of light:', 'lbls')}
-${txt(1144, 351, 'its unit tests pass, but browser-mode vitest cannot', 'lblf')}
-${txt(1144, 363, 'load a meter the repo never installed', 'lblf')}
-<line x1="1138" y1="346" x2="1032" y2="270" class="skf"/>
+${txt(1144, 349, '№5 sample-app-shared — an outline of light:', 'lbls')}
+${txt(1144, 361, 'its unit tests pass, but browser-mode vitest cannot', 'lblf')}
+${txt(1144, 373, 'load a meter the repo never installed', 'lblf')}
+<line x1="1138" y1="357" x2="1032" y2="270" class="skf"/>
 
 ${txt(30, 430, '№26 happy-dom — a lamp with half its light on itself:', 'lblr')}
 ${txt(30, 442, 'its canary spec lights happy-dom’s ordering bug and', 'lblf')}

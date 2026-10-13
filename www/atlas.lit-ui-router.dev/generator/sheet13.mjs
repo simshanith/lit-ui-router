@@ -92,7 +92,7 @@ const PLACED = [
   [18, '@tools/bundle-probe', 'tools/bundle-probe', 'tool', 330, 550],
   [19, '@tools/compat-guards', 'tools/compat-guards', 'tool', 130, 550],
   [20, '@tools/oxc-emit', 'tools/oxc-emit', 'tool', 230, 350],
-  [21, '@tools/release-config', 'tools/release-config', 'tool', 288, 350],
+  [21, '@tools/release-config', 'tools/release-config', 'tool', 298, 350],
   [22, '@tools/lit-template-lint', 'tools/lit-template-lint', 'tool', 325, 350],
   [23, '@tools/lit-test-env', 'tools/lit-test-env', 'tool', 85, 350],
   [24, '@tools/vue-check', 'tools/vue-check', 'tool', 370, 350],
@@ -100,7 +100,7 @@ const PLACED = [
   [26, '@tools/happy-dom', 'tools/happy-dom', 'tool', 163, 350],
   [27, '@tools/wintercg-globals', 'tools/wintercg-globals', 'tool', 208, 350],
   // nudged east with sheet 7, off bundle-probe's grown annex
-  [28, '@tools/lint-elements', 'tools/lint-elements', 'tool', 394, 550],
+  [28, '@tools/lint-elements', 'tools/lint-elements', 'tool', 402, 550],
   [29, '@tools/warn-lanes', 'tools/warn-lanes', 'tool', 430, 530],
   [30, '@tools/eslint-ts-parser', 'tools/eslint-ts-parser', 'tool', 54, 350],
   // --- the fifth published package (#676): row two's west lot ---------------------
@@ -120,9 +120,19 @@ const PLACED = [
   // --- the prerender package, born 2026-09-14 (#806): row two, between 31 and 4 ---
   [38, 'lit-ui-router-ssr', 'packages/lit-ui-router-ssr', 'pkg', 172, 156],
   // --- born 2026-10-01 (#1056): sheet 7's lot -----------------------------------
-  [39, '@tools/crap', 'tools/crap', 'tool', 570, 430],
+  [39, '@tools/crap', 'tools/crap', 'tool', 584, 430],
   // --- born 2026-10-09 (#1143): sheet 7's lot -----------------------------------
   [40, '@tools/oxlint-anti-slop', 'tools/oxlint-anti-slop', 'tool', 520, 575],
+  // --- born 2026-10-12/13 (#1185): the packages lots are this sheet's own, clear of the
+  //     reading box and both callouts; the bindings and the snapshot take the strip
+  //     under ssr's annex, the agnostic pair the north-east corner east of 2's annex ---
+  [41, 'lit-ui-router-signals', 'packages/lit-ui-router-signals', 'pkg', 184, 248],
+  [42, 'ui-router-signals', 'packages/ui-router-signals', 'pkg', 402, 40],
+  [43, 'ui-router-effect', 'packages/ui-router-effect', 'pkg', 462, 40],
+  [44, '@repo/route-snapshot', 'packages/shared/route-snapshot', 'pkg', 270, 236],
+  // --- sheet 7's lots -------------------------------------------------------------
+  [45, 'sample-app-lit-signals', 'apps/sample-app-lit-signals', 'app', 590, 100],
+  [46, '@tools/a11y', 'tools/a11y', 'tool', 540, 472],
 ];
 
 // [n, name, dist, x, y, srcSloc, specSloc,
@@ -379,8 +389,10 @@ const MONTH = (d) => new Date(`${d}T00:00:00Z`).toLocaleString('en-US', { month:
 const NAV_RANK = D.filter((r) => r[7]).map((r) => r[7][2] / r[7][0]).sort((a, b) => b - a).indexOf(g(4).src[2] / g(4).src[0]) + 1;
 const ORD = ['', 'the highest', 'the second-highest', 'the third-highest', 'the fourth-highest', 'the fifth-highest', 'the sixth-highest', 'the seventh-highest', 'the eighth-highest'];
 const NAV_RANK_TXT = ORD[NAV_RANK] ?? `number ${NAV_RANK}`;
-const NAV_SIZE_TXT = ['the smallest', 'the second-smallest', 'the third-smallest'][D.filter((r) => r[2] === 'pkg').sort((a, b) => a[5] - b[5]).findIndex((r) => r[0] === 4)];
-if (!NAV_SIZE_TXT) throw new Error('sheet 13: the notes rank navigation-location-plugin among the three smallest packages, and the plate says otherwise');
+const SIZE_ORD = ['the smallest', 'the second-smallest', 'the third-smallest', 'the fourth-smallest', 'the fifth-smallest', 'the sixth-smallest', 'the seventh-smallest', 'the eighth-smallest', 'the ninth-smallest', 'the tenth-smallest'];
+const NAV_SIZE_RANK = D.filter((r) => r[2] === 'pkg').sort((a, b) => a[5] - b[5]).findIndex((r) => r[0] === 4);
+const NAV_SIZE_TXT = SIZE_ORD[NAV_SIZE_RANK];
+if (!NAV_SIZE_TXT) throw new Error(`sheet 13: navigation-location-plugin ranks ${NAV_SIZE_RANK + 1} by size among the packages — extend SIZE_ORD`);
 const HOTTEST_MULTI = D.filter((r) => r[7] && r[7][0] > 1).sort((a, b) => b[7][2] / b[7][0] - a[7][2] / a[7][0])[0][0];
 if (HOTTEST_MULTI !== 10) throw new Error('sheet 13: the notes call docs the hottest multi-file block-average, and the plate says otherwise');
 if (['pkg', 'app', 'site'].some((d) => distSloc(d) > distSloc('tool'))) throw new Error('sheet 13: the notes call the instrument yard the largest district by mass, and the plate says otherwise');
@@ -396,10 +408,10 @@ ${txt(1250, 714, 'the most-weathered wall in the city —', 'lblf')}
 ${txt(1250, 726, `${days(DCFG.first)} days old, repainted ${DCFG.touches} times, idle ${days(DCFG.last)}d`, 'lblf')}
 <line x1="1246" y1="710" x2="1188" y2="702" class="skf"/>
 
-${txt(1262, 780, 'examples/ — THE OLDEST UNTOUCHED STONE', 'lbls')}
-${txt(1262, 794, `${NUMW[SEALED_VITE]} vite configs sealed ${days(SOLAR.last)} days,`, 'lblf')}
-${txt(1262, 806, `${days(HELLO.last) > SEAL ? `helloworld/main.ts sealed ${days(HELLO.last)} — ` : ''}${SEALED_WINTER ? `${SEALED_F === 2 ? 'both' : `all ${SEALED_F}`} winter-built` : 'not all of them winter stone'}`, 'lblf')}
-<line x1="1258" y1="790" x2="1178" y2="800" class="skf"/>
+${txt(1266, 780, 'examples/ — THE OLDEST UNTOUCHED STONE', 'lbls')}
+${txt(1266, 794, `${NUMW[SEALED_VITE]} vite configs sealed ${days(SOLAR.last)} days,`, 'lblf')}
+${txt(1266, 806, `${days(HELLO.last) > SEAL ? `helloworld/main.ts sealed ${days(HELLO.last)} — ` : ''}${SEALED_WINTER ? `${SEALED_F === 2 ? 'both' : `all ${SEALED_F}`} winter-built` : 'not all of them winter stone'}`, 'lblf')}
+<line x1="1262" y1="790" x2="1178" y2="800" class="skf"/>
 
 ${txt(560, 1078, '@tools/typedoc-plugin — THE YARD’S ONE WINTER WALL', 'lbls')}
 ${txt(560, 1092, `index.ts laid ${SYM.first}, still under the chisel — ×${SYM.touches}, idle ${days(SYM.last)}d`, 'lblf')}
@@ -416,7 +428,7 @@ ${txt(526, 574, NAV_REST.length === 1 ? `one ${MONTH(NAV_REST[0].first)} wall be
 
 // ---- assemble --------------------------------------------------------------------
 const H = SY + 104 + half * 17;
-const svg = `<svg viewBox="0 0 1560 ${H}" role="img" aria-label="A flat plan-view weathering map of the lit-ui-router workspace: the same city as sheet 7, same four dashed districts and same footprints, but every building is now coloured by when its files were first committed and edged by how often they are touched. Each footprint is striped like masonry courses, oldest at the base: dense ink hatch for Season One, the July 2025 port; accent hatch for Season Two, the January 2026 winter works; plain paper for Season Three, the summer campaign that built ${SEASON_N[2]} of the ${TOT_F} files since July fourth. Under each building a tick gauge counts touches per file; ${HOT_BLOCKS} buildings carry red hot edges at six or more touches per file, and buildings touched less than twice are drawn faint. Dashed crosses seal ${SEALED_BLOCKS.length === 1 ? `the ${SEALED_BLOCKS[0]} slab` : `${NUMW[SEALED_BLOCKS.length]} slabs`}, where ${NUMW[SEALED_F] ?? SEALED_F} files stand untouched for over ${SEAL} days. A ${MONTHS.length}-month timeline below shows all activity concentrated in ${ALIVE} months separated by silence, and a structure schedule dates every member. The reading box states the verdict: mean touches per file falls from ${SEASON_TPF[0]} for the port cohort to ${SEASON_TPF[2]} for the summer cohort — the oldest walls are the most chiselled.">
+const svg = `<svg viewBox="0 0 1560 ${H}" role="img" aria-label="A flat plan-view weathering map of the lit-ui-router workspace: the same city as sheet 7, same four dashed districts and same footprints, but every building is coloured by when its files were first committed and edged by how often they are touched. Each footprint is striped like masonry courses, oldest at the base: dense ink hatch for Season One, the July 2025 port; accent hatch for Season Two, the January 2026 winter works; plain paper for Season Three, the summer campaign that built ${SEASON_N[2]} of the ${TOT_F} files since July fourth. Under each building a tick gauge counts touches per file; ${HOT_BLOCKS} buildings carry red hot edges at six or more touches per file, and buildings touched less than twice are drawn faint. Dashed crosses seal ${SEALED_BLOCKS.length === 1 ? `the ${SEALED_BLOCKS[0]} slab` : `${NUMW[SEALED_BLOCKS.length]} slabs`}, where ${NUMW[SEALED_F] ?? SEALED_F} files stand untouched for over ${SEAL} days. A ${MONTHS.length}-month timeline below shows all activity concentrated in ${ALIVE} months separated by silence, and a structure schedule dates every member. The reading box states the verdict: mean touches per file falls from ${SEASON_TPF[0]} for the port cohort to ${SEASON_TPF[2]} for the summer cohort — the oldest walls are the most chiselled.">
 ${defs(P)}
 <defs>
   <pattern id="${P}-w1" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">

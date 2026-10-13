@@ -1,10 +1,10 @@
 {
   "ref": "origin/main",
-  "sha": "eb72c568",
-  "commitDate": "2026-10-12T22:05:55Z",
-  "generatedAtTime": "2026-10-12T22:15:26.929Z",
+  "sha": "c1b759a4",
+  "commitDate": "2026-10-13T05:04:32Z",
+  "generatedAtTime": "2026-10-13T05:24:09.805Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-doors.mjs",
-  "used": "git archive origin/main @ eb72c568 + pnpm install --frozen-lockfile --silent (mise-provisioned pnpm) + tools/bundle-probe (rolldown, minify, declared deps+peers external, annotations off)",
+  "used": "git archive origin/main @ c1b759a4 + pnpm install --frozen-lockfile --silent (mise-provisioned pnpm) + tools/bundle-probe (rolldown, minify, declared deps+peers external, annotations off)",
   "wasAssociatedWith": [
     "pnpm (mise-provisioned)",
     "rolldown@1.2.13",
@@ -18,11 +18,13 @@
     {"pkg":"lit-ui-router","door":"./register","min":12080,"gz":3934},
     {"pkg":"lit-ui-router","door":"./ui-router.register","min":4735,"gz":1969},
     {"pkg":"lit-ui-router","door":"./ui-view.register","min":11687,"gz":3893},
-    {"pkg":"lit-ui-router-effect","door":".","min":3216,"gz":1460},
+    {"pkg":"lit-ui-router-effect","door":".","min":3503,"gz":1596},
     {"pkg":"lit-ui-router-mobx","door":".","min":2574,"gz":1020},
+    {"pkg":"lit-ui-router-signals","door":".","min":2114,"gz":835},
     {"pkg":"lit-ui-router-ssr","door":".","min":7305,"gz":3388},
     {"pkg":"lit-ui-router-ssr","door":"./client","min":6510,"gz":2754},
     {"pkg":"lit-ui-router-ssr","door":"./register","min":2845,"gz":1273},
+    {"pkg":"ui-router-effect","door":".","min":770,"gz":464},
     {"pkg":"ui-router-navigation-location-plugin","door":".","min":2569,"gz":1152},
     {"pkg":"ui-router-server","door":".","min":12432,"gz":5150},
     {"pkg":"ui-router-server","door":"./connect","min":2974,"gz":1590},
@@ -32,6 +34,7 @@
     {"pkg":"ui-router-server","door":"./matcher","min":6647,"gz":2892},
     {"pkg":"ui-router-server","door":"./redirects","min":8803,"gz":3663},
     {"pkg":"ui-router-server","door":"./simulate","min":677,"gz":396},
-    {"pkg":"ui-router-server","door":"./vite","min":3101,"gz":1647}
+    {"pkg":"ui-router-server","door":"./vite","min":3101,"gz":1647},
+    {"pkg":"ui-router-signals","door":".","min":1787,"gz":804}
   ]
 }
