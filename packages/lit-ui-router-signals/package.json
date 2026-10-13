@@ -1,9 +1,8 @@
 {
   "name": "lit-ui-router-signals",
-  "version": "0.0.0",
-  "private": true,
+  "version": "0.1.0-rc.0",
   "description": "TC39 Signals bindings for lit-ui-router: watcher-based Lit ReactiveControllers over ui-router-signals",
-  "homepage": "https://lit-ui-router.dev",
+  "homepage": "https://lit-ui-router.dev/packages/signals",
   "bugs": {
     "url": "https://github.com/simshanith/lit-ui-router/issues"
   },
@@ -36,6 +35,8 @@
   "scripts": {
     "build:js": "oxc-emit-js --development",
     "build:types": "oxc-emit-dts",
+    "changelog": "release-it --changelog --git.tagMatch=\"lit-ui-router-signals@[0-9]*.[0-9]*.[0-9]*\"",
+    "check:bundle": "peer-floor-guard && check-bundle-inputs",
     "check:dev-split": "oxc-emit-check-dev-split",
     "format:check:oxfmt": "oxfmt --check \"**/*.{ts,js,json,md}\"",
     "format:oxfmt": "oxfmt \"**/*.{ts,js,json,md}\"",
@@ -44,27 +45,40 @@
     "test:coverage": "VITEST_BROWSER_API_PORT=63375 vitest run --coverage",
     "test:lit2-compat": "lit2-compat-guard && VITE_EXPECT_LIT_MAJOR=2 VITEST_BROWSER_API_PORT=63371 vitest run",
     "typecheck:lit2": "lit2-compat-guard && tsc -p tsconfig.lit2-compat.json --noEmit",
+    "typecheck:peer-floor": "peer-floor-guard && tsc -p tsconfig.peer-floor.json --noEmit",
     "typecheck:src": "tsc -p tsconfig.src.json --noEmit",
     "typecheck:tsc": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
+    "@release-it/conventional-changelog": "catalog:",
+    "@tools/bundle-probe": "catalog:workspace",
     "@tools/compat-guards": "catalog:workspace",
     "@tools/happy-dom": "catalog:workspace",
     "@tools/lit-test-env": "catalog:workspace",
     "@tools/oxc-emit": "catalog:workspace",
+    "@tools/release-config": "catalog:workspace",
     "@types/node": "catalog:",
     "@uirouter/core": "catalog:",
+    "@uirouter/core-floor": "catalog:peerFloor",
     "@vitest/coverage-v8": "catalog:",
     "happy-dom": "catalog:",
     "lit": "catalog:",
     "lit-2": "catalog:lit2-compat",
     "lit-ui-router": "catalog:workspace",
+    "lit-ui-router-floor": "catalog:peerFloorSignals",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
+    "release-it": "catalog:",
     "signal-polyfill": "catalog:",
     "typescript": "catalog:typescript6-compat",
     "typescript-7": "catalog:",
     "ui-router-signals": "catalog:workspace",
     "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "@uirouter/core": "catalog:publishedPeer",
+    "lit": "catalog:publishedPeer",
+    "lit-ui-router": "catalog:publishedPeerSignals",
+    "ui-router-signals": "catalog:publishedPeerSignals"
   }
 }

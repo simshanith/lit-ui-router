@@ -2,7 +2,7 @@
 
 [TC39 Signals](https://github.com/tc39/proposal-signals) bindings for [lit-ui-router](https://lit-ui-router.dev): watcher-based Lit ReactiveControllers over the framework-agnostic [`ui-router-signals`](../ui-router-signals/).
 
-A private sketch, not yet published; the design is tracked in [#1157](https://github.com/simshanith/lit-ui-router/issues/1157). [`apps/sample-app-lit-signals`](../../apps/sample-app-lit-signals/) uses it.
+The design is tracked in [#1157](https://github.com/simshanith/lit-ui-router/issues/1157). [`apps/sample-app-lit-signals`](../../apps/sample-app-lit-signals/) uses it.
 
 It registers no custom elements and adds no routing behavior. It takes the companion-adapter shape of [`lit-ui-router-mobx`](../lit-ui-router-mobx/) and [`lit-ui-router-effect`](../lit-ui-router-effect/) onto the proposal's API, through [`signal-polyfill`](https://github.com/proposal-signals/signal-polyfill):
 
@@ -39,4 +39,4 @@ Both need one copy of `signal-polyfill` in the bundle; two copies keep two separ
 
 ## Dependencies
 
-It uses `ui-router-signals`, `lit-ui-router/context`, `lit`, `@uirouter/core`, and `signal-polyfill@^0.2.2`. They are devDependencies while the package is private; publishing turns them into peers.
+`lit`, `lit-ui-router`, `ui-router-signals` and `@uirouter/core` are peer dependencies. `signal-polyfill` arrives as a peer of `ui-router-signals`.

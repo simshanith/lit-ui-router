@@ -20,6 +20,7 @@
     "lit-ui-router": "catalog:workspace",
     "lit-ui-router-effect": "catalog:workspace",
     "lit-ui-router-mobx": "catalog:workspace",
+    "lit-ui-router-signals": "catalog:workspace",
     "lit-ui-router-ssr": "catalog:workspace",
     "mobx": "catalog:",
     "oxfmt": "catalog:",
