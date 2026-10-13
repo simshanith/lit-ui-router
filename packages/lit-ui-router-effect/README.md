@@ -3,7 +3,7 @@
 [![npm version](https://img.shields.io/npm/v/lit-ui-router-effect.svg)](https://npmx.dev/package/lit-ui-router-effect)
 [![GitHub Release](https://img.shields.io/github/v/release/simshanith/lit-ui-router?filter=lit-ui-router-effect@*)](https://github.com/simshanith/lit-ui-router/releases/?q=lit-ui-router-effect)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![Website](https://img.shields.io/website?url=https%3A%2F%2Flit-ui-router.dev)](https://lit-ui-router.dev/packages/effect)
+[![Website](https://img.shields.io/website?url=https%3A%2F%2Flit-ui-router.dev)](https://lit-ui-router.dev/packages/lit-ui-router-effect)
 [![codecov](https://codecov.io/gh/simshanith/lit-ui-router/graph/badge.svg?component=lit-ui-router-effect)](https://app.codecov.io/gh/simshanith/lit-ui-router?components%5B0%5D=lit-ui-router-effect)
 
 [Effect](https://effect.website) bindings for [lit-ui-router](https://lit-ui-router.dev): a `SubscriptionRef` of the route and ref-following Lit ReactiveControllers.
@@ -129,7 +129,7 @@ The development build adds one console warning here: a `RouterRefController` who
 
 ## Links
 
-- [Docs - Effect Bindings](https://lit-ui-router.dev/packages/effect)
+- [Docs - Effect Bindings](https://lit-ui-router.dev/packages/lit-ui-router-effect)
 - [Docs - Reactive Components guide](https://lit-ui-router.dev/guides/reactive-components)
 - [lit-ui-router](https://lit-ui-router.dev)
 - [Effect — SubscriptionRef](https://effect.website/docs/state-management/subscriptionref/)

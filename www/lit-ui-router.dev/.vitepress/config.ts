@@ -124,20 +124,28 @@ function makeSidebar() {
       text: 'Companion Packages',
       items: [
         { text: 'Overview', link: '/packages/' },
-        // Lint rules, not a runtime API — no typedoc reference to nest.
         {
           text: 'Effect',
           link: '/packages/effect',
           collapsed: true,
           items: [
+            { text: 'ui-router-effect', link: '/packages/ui-router-effect' },
             {
-              text: 'lit-ui-router-effect API',
-              link: '/api/lit-ui-router-effect/',
-              collapsed: false,
-              items: effectSidebarItems,
+              text: 'lit-ui-router-effect',
+              link: '/packages/lit-ui-router-effect',
+              collapsed: true,
+              items: [
+                {
+                  text: 'lit-ui-router-effect API',
+                  link: '/api/lit-ui-router-effect/',
+                  collapsed: false,
+                  items: effectSidebarItems,
+                },
+              ],
             },
           ],
         },
+        // Lint rules, not a runtime API — no typedoc reference to nest.
         { text: 'ESLint Plugin', link: '/packages/eslint-plugin' },
         {
           text: 'MobX',
@@ -178,7 +186,18 @@ function makeSidebar() {
             },
           ],
         },
-        { text: 'Signals', link: '/packages/signals' },
+        {
+          text: 'Signals',
+          link: '/packages/signals',
+          collapsed: true,
+          items: [
+            { text: 'ui-router-signals', link: '/packages/ui-router-signals' },
+            {
+              text: 'lit-ui-router-signals',
+              link: '/packages/lit-ui-router-signals',
+            },
+          ],
+        },
         {
           text: 'SSR',
           link: '/packages/ssr',
@@ -192,8 +211,6 @@ function makeSidebar() {
             },
           ],
         },
-        { text: 'UI-Router Effect', link: '/packages/ui-router-effect' },
-        { text: 'UI-Router Signals', link: '/packages/ui-router-signals' },
       ],
     },
     {

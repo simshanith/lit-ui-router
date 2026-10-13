@@ -2,7 +2,7 @@
   "name": "lit-ui-router-signals",
   "version": "0.1.0-rc.0",
   "description": "TC39 Signals bindings for lit-ui-router: watcher-based Lit ReactiveControllers over ui-router-signals",
-  "homepage": "https://lit-ui-router.dev/packages/signals",
+  "homepage": "https://lit-ui-router.dev/packages/lit-ui-router-signals",
   "bugs": {
     "url": "https://github.com/simshanith/lit-ui-router/issues"
   },
