@@ -9,17 +9,30 @@
 //    static graph counts: a lazily-imported chunk is the boundary such a claim
 //    is built on (see free-of.ts).
 //
-// Entries and claims derive from package.json (see entries.ts); no arguments.
+// Plus one bundle per entry per bundler per peer line, registry installs
+// inlined:
+//
+// 3. Peer lines — fail when bundling an entry the way a consumer does warns
+//    about this package's own source, at each installed peer and each compat
+//    alias's older line (an import that is undefined on one major).
+//
+// Entries, claims and peer lines derive from package.json and the installed
+// node_modules (see entries.ts, peer-lines.ts); no arguments.
 // Usage (from the package dir): check-bundle-inputs
 import path from 'node:path';
 
 import { bundleEntry, bundlers, DEVELOPMENT_DEFINE } from './bundle.ts';
 import { readPackageProbe } from './entries.ts';
 import { violations } from './free-of.ts';
+import { readPeerLines } from './peer-lines.ts';
 
 const packageDir = process.cwd();
 
 const { name, declared, entries } = readPackageProbe(packageDir);
+
+const peerLines = readPeerLines(packageDir);
+
+const ownSource = path.join(packageDir, 'src') + path.sep;
 
 let failed = false;
 
@@ -63,6 +76,35 @@ for (const { label, file, free } of entries) {
   }
 }
 
+for (const { label, file } of entries) {
+  for (const line of peerLines) {
+    for (const bundler of bundlers) {
+      const { warnings } = await bundleEntry(file, bundler, {
+        external: declared.filter((dep) => !line.inline.includes(dep)),
+        alias: { from: packageDir, packages: line.alias },
+        // as above: sideEffects globs name dist/, so src/ bare imports would warn
+        annotations: false,
+        define: DEVELOPMENT_DEFINE,
+      });
+
+      // a peer's own warnings are its maintainers' to fix, not this package's
+      const own = warnings.filter((warning) =>
+        warning.file?.startsWith(ownSource),
+      );
+
+      if (own.length === 0) continue;
+      failed = true;
+      console.error(
+        `[bundle-probe] ${name} ${label} (${bundler}) against ${line.label}: bundler warnings in this package's source`,
+      );
+
+      for (const warning of own) {
+        console.error(`  ${warning.code}: ${warning.message.split('\n')[0]}`);
+      }
+    }
+  }
+}
+
 if (failed) process.exit(1);
 
 console.log(
@@ -76,5 +118,11 @@ const claimed = entries.filter((entry) => entry.free.length > 0);
 for (const entry of claimed) {
   console.log(
     `[bundle-probe] ${name}: ${entry.label} statically bundles without [${entry.free.join(', ')}].`,
+  );
+}
+
+for (const line of peerLines) {
+  console.log(
+    `[bundle-probe] ${name}: bundles warning-free against ${line.label}.`,
   );
 }
