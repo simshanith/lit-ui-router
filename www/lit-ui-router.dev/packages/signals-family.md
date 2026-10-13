@@ -26,3 +26,13 @@ Every signal reader and writer in a bundle has to share one copy of
 application's own `Signal.State`s. Two copies keep two separate graphs, and a
 watcher on one never sees a write to the other. `npm ls signal-polyfill`
 should list a single version.
+
+## In use
+
+- [Hello Solar System (Signals)](/tutorial/live-examples#hello-solar-system-signals)
+  follows the route from an un-routed header with a `RouterSignalController`,
+  shares a `Signal.State` between routed and un-routed views, and sets the
+  tab title with a bare `watchSelection`.
+- [Hello Galaxy (Signals)](/tutorial/live-examples#hello-galaxy-signals) puts
+  `@lit-labs/signals` and `lit-ui-router-signals` on one graph: a star chart
+  that nested views share, and a breadcrumb built from `RouterSignals`.

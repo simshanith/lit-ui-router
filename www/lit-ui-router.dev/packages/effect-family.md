@@ -1,20 +1,20 @@
 ---
 title: Effect
-description: The Effect packages for UI-Router — ui-router-effect holds the router's state in a SubscriptionRef, and lit-ui-router-effect adds ref-following Lit controllers
+description: The Effect packages for UI-Router — ui-router-effect holds the router's state in a SubscriptionRef, and lit-ui-router-effect provides ref-following Lit controllers
 ---
 
 # Effect
 
 Two packages bring [Effect](https://effect.website) to UI-Router:
 
-| Package                                            | Builds on                  | What it is                                                                               |
-| -------------------------------------------------- | -------------------------- | ---------------------------------------------------------------------------------------- |
-| [**ui-router-effect**](/packages/ui-router-effect) | `@uirouter/core`, `effect` | `routeRef`, a `SubscriptionRef` of the router's current state, with no Lit               |
-| [**lit-ui-router-effect**](/packages/effect)       | `lit-ui-router`, `effect`  | the same `routeRef`, plus Lit controllers that follow it and any other `SubscriptionRef` |
+| Package                                            | Builds on                  | What it is                                                                  |
+| -------------------------------------------------- | -------------------------- | --------------------------------------------------------------------------- |
+| [**ui-router-effect**](/packages/ui-router-effect) | `@uirouter/core`, `effect` | `routeRef`, a `SubscriptionRef` of the router's current state, with no Lit  |
+| [**lit-ui-router-effect**](/packages/effect)       | `lit-ui-router`, `effect`  | Lit controllers that follow the route's ref and any other `SubscriptionRef` |
 
-`lit-ui-router-effect` exports `routeRef` and `RouteSnapshot` itself, so a Lit
-application installs that one package. `ui-router-effect` is for Effect
-programs that follow the route without Lit.
+`ui-router-effect` is for Effect programs that follow the route without Lit;
+`lit-ui-router-effect` is for Lit components. Each package page has its own
+install snippet.
 
 Both support Effect 3 and 4; [Effect 3 and 4](/packages/effect#effect-3-and-4)
 covers the one difference the bindings' callers see.
