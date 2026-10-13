@@ -36,6 +36,17 @@ sample apps are where the two idioms are compared at application scale.
 
 <LiveExample name="hellosolarsystem-mobx" />
 
+## Hello Solar System (Signals)
+
+The same states and resolves, on the [Signals bindings](/packages/signals),
+with `planetId` declared as an `int` param. The header follows the route through a
+`RouterSignalController` for previous/next links (or the arrow keys). A
+distance-unit signal reaches routed and un-routed views alike. The detail
+view's light-travel clock ticks only while something watches it, and the tab
+title tracks the route with no component at all.
+
+<LiveExample name="hellosolarsystem-signals" />
+
 ## Hello Galaxy
 
 Nested states and views: a star catalog in a three-level state tree, resolve

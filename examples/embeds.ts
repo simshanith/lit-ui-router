@@ -23,6 +23,11 @@ export const EXAMPLES = {
     height: '880px',
     file: 'src/main.ts',
   },
+  'hellosolarsystem-signals': {
+    title: 'Hello Solar System (Signals)',
+    height: '810px',
+    file: 'src/main.ts',
+  },
   hellogalaxy: {
     title: 'Hello Galaxy',
     height: '920px',

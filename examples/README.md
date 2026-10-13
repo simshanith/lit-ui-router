@@ -1,6 +1,6 @@
 # Examples
 
-This folder contains standalone example projects demonstrating lit-ui-router usage. The tutorial examples escalate in scope — start with **helloworld**, then work outward through the solar system and into the galaxy. **design-system-links** is not a tutorial rung: it is live documentation for one API surface, embedded in the guide that explains it. **hellosolarsystem-mobx** is not a rung either: it is the solar-system rung rebuilt on the MobX bindings, embedded in the pages that document them. Nor is **hellogalaxy-effect**: it is the galaxy rung rebuilt on [Effect](https://effect.website) and the [Effect bindings](https://lit-ui-router.dev/packages/effect), with the resolve-and-scope plugin it also needs inlined as a spike of a future `ui-router-effect` package. Nor is **lint-eslint**: it is the consumer wiring of [`eslint-plugin-lit-ui-router`](https://lit-ui-router.dev/packages/eslint-plugin), installed from npm exactly as a consumer would, and it renders its own lint report in the page. Nor is **navigation-api**: it is the escape hatch documented on the [Navigation API plugin page](https://lit-ui-router.dev/packages/navigation-plugin#reaching-past-the-router), a `navigate` listener for the one navigation the router does not own.
+This folder contains standalone example projects demonstrating lit-ui-router usage. The tutorial examples escalate in scope — start with **helloworld**, then work outward through the solar system and into the galaxy. **design-system-links** is not a tutorial rung: it is live documentation for one API surface, embedded in the guide that explains it. **hellosolarsystem-mobx** is not a rung either: it is the solar-system rung rebuilt on the MobX bindings, embedded in the pages that document them. Nor is **hellosolarsystem-signals**: it is the solar-system rung with app state and router state joined through [TC39 Signals](https://lit-ui-router.dev/packages/signals). Nor is **hellogalaxy-effect**: it is the galaxy rung rebuilt on [Effect](https://effect.website) and the [Effect bindings](https://lit-ui-router.dev/packages/effect), with the resolve-and-scope plugin it also needs inlined as a spike of a future `ui-router-effect` package. Nor is **lint-eslint**: it is the consumer wiring of [`eslint-plugin-lit-ui-router`](https://lit-ui-router.dev/packages/eslint-plugin), installed from npm exactly as a consumer would, and it renders its own lint report in the page. Nor is **navigation-api**: it is the escape hatch documented on the [Navigation API plugin page](https://lit-ui-router.dev/packages/navigation-plugin#reaching-past-the-router), a `navigate` listener for the one navigation the router does not own.
 
 ## StackBlitz Integration
 
@@ -14,16 +14,17 @@ See [StackBlitz Tips & Best Practices](https://developer.stackblitz.com/guides/i
 
 ### Available Examples
 
-| Example                   | Description                                                                                                  | StackBlitz                                                                                              |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------- |
-| **helloworld**            | Ultra-minimal starter: two states with `uiSref`/`uiSrefActive` navigation                                    | [Open](https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/helloworld)            |
-| **hellosolarsystem**      | Solar System tour: route parameters and async `resolve` data with a master/detail flow                       | [Open](https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/hellosolarsystem)      |
-| **hellosolarsystem-mobx** | The same tour rebuilt on `lit-ui-router-mobx`: an observable router store, reactions, and a computed tour    | [Open](https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/hellosolarsystem-mobx) |
-| **hellogalaxy**           | Milky Way explorer: nested states and views, resolve inheritance, and a 3D model-viewer surprise             | [Open](https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/hellogalaxy)           |
-| **hellogalaxy-effect**    | The same explorer rebuilt on Effect: typed resolve inheritance, state-scoped fibers, and interruptible loads | [Open](https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/hellogalaxy-effect)    |
-| **design-system-links**   | `uiSref` driving a design-system link element (`<sp-link>`): `assignHref: true` vs `'auto'`                  | [Open](https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/design-system-links)   |
-| **lint-eslint**           | `eslint-plugin-lit-ui-router` the ESLint-only way, with the lint report rendered in the page                 | [Open](https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/lint-eslint)           |
-| **navigation-api**        | `ui-router-navigation-location-plugin` with an app `navigate` listener that holds a link leaving the app     | [Open](https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/navigation-api)        |
+| Example                      | Description                                                                                                  | StackBlitz                                                                                                 |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------- |
+| **helloworld**               | Ultra-minimal starter: two states with `uiSref`/`uiSrefActive` navigation                                    | [Open](https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/helloworld)               |
+| **hellosolarsystem**         | Solar System tour: route parameters and async `resolve` data with a master/detail flow                       | [Open](https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/hellosolarsystem)         |
+| **hellosolarsystem-mobx**    | The same tour rebuilt on `lit-ui-router-mobx`: an observable router store, reactions, and a computed tour    | [Open](https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/hellosolarsystem-mobx)    |
+| **hellosolarsystem-signals** | The same tour with `lit-ui-router-signals`: router and app signals, prev/next keys, a watched-only clock     | [Open](https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/hellosolarsystem-signals) |
+| **hellogalaxy**              | Milky Way explorer: nested states and views, resolve inheritance, and a 3D model-viewer surprise             | [Open](https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/hellogalaxy)              |
+| **hellogalaxy-effect**       | The same explorer rebuilt on Effect: typed resolve inheritance, state-scoped fibers, and interruptible loads | [Open](https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/hellogalaxy-effect)       |
+| **design-system-links**      | `uiSref` driving a design-system link element (`<sp-link>`): `assignHref: true` vs `'auto'`                  | [Open](https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/design-system-links)      |
+| **lint-eslint**              | `eslint-plugin-lit-ui-router` the ESLint-only way, with the lint report rendered in the page                 | [Open](https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/lint-eslint)              |
+| **navigation-api**           | `ui-router-navigation-location-plugin` with an app `navigate` listener that holds a link leaving the app     | [Open](https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/navigation-api)           |
 
 ## What Each Example Teaches
 
@@ -57,6 +58,15 @@ It layers on four things, each answering a different question:
 - **What follows from all that?** `visited` is a `computed` over the trail, so revisiting the list never inflates it. `<planet-list>` selects it through a `ReactionController`; `<app-root>` selects an object off the same store with `equals: compareStructural`, so it re-renders when that selection changes rather than on every stop added
 
 It is the minimal layering, not a rewrite: the vanilla example's plumbing stays put and MobX goes only where the router stops helping. The [sample apps](../apps) are the direct side-by-side — two complete builds of the same application, one on `TransitionController` and one on these bindings
+
+### hellosolarsystem-signals
+
+**hellosolarsystem** on [`lit-ui-router-signals`](https://lit-ui-router.dev/packages/signals), with the router's `RouterSignals` and the app's own `Signal.State`s read side by side. The states and resolves are the vanilla ones. The one change is that `planetId` uses ui-router's `int` param type, so it reaches every reader as a number.
+
+- `<app-root>` sits outside every `<ui-view>`, so a `RouterSignalController` selects the body the URL names and renders previous/next links for it. The arrow keys step along the same links.
+- A distance-unit `Signal.State` is set by the header's toggle and read by the routed list and detail through `SignalController`. No props or context connect them.
+- The detail view's light-travel clock is a `Signal.State` whose `watched`/`unwatched` callbacks start and stop its timer, so the clock runs only while a view reads it.
+- `document.title` follows the route through a bare `watchSelection` from `ui-router-signals`, with no component involved.
 
 ### hellogalaxy
 
