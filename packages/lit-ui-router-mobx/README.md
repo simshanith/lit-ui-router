@@ -29,6 +29,21 @@ yarn add lit-ui-router-mobx mobx
 
 `lit-ui-router`, `lit`, `mobx`, and `@uirouter/core` are peer dependencies.
 
+### RouterStore without Lit
+
+`RouterStore` imports only `mobx` and `@uirouter/core`, so a project without Lit can import it or
+copy it.
+
+- **Import.** The package is free of side effects, so a bundler drops Lit and the controllers from
+  `import { RouterStore } from 'lit-ui-router-mobx'`. Without a tree-shaking bundler, as with an
+  import map or an unbundled dev server, import the module directly:
+  `import { RouterStore } from 'lit-ui-router-mobx/dist/router-store.js'`. Either way `lit` and
+  `lit-ui-router` stay declared peers: your package manager still installs them or warns about
+  them, though none of their code is loaded.
+- **Copy.** To drop the peers too, copy the shipped store into your project:
+  `dist/router-store.js` with `dist/router-store.d.ts`, or the TypeScript source
+  [`src/router-store.ts`](./src/router-store.ts).
+
 ### MobX 6 and 7
 
 Both majors are supported (`mobx@^6.0.0 || ^7.0.0`) and both are exercised in
