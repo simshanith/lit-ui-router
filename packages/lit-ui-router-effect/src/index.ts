@@ -1,7 +1,16 @@
-export * from './ref-controller.js';
+export {
+  defaultRefRuntime,
+  RefController,
+  type RefControllerOptions,
+  type RefRuntime,
+  type RefSource,
+  type RefValues,
+  type SubscriptionRefs,
+} from './ref-controller.js';
 
-export * from './route-ref.js';
+export {
+  RouterRefController,
+  type RouterRefControllerOptions,
+} from './router-ref-controller.js';
 
-export * from './router-ref-controller.js';
-
-export { type RouteSnapshot, snapshotRoute } from '@repo/route-snapshot';
+export { routeRef, type RouteSnapshot, snapshotRoute } from 'ui-router-effect';

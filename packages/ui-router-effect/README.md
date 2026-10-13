@@ -4,7 +4,7 @@
 
 [Effect](https://effect.website) bindings for [UI-Router](https://ui-router.github.io): a framework-agnostic `SubscriptionRef` of the router's current state. It imports only `effect` and `@uirouter/core`.
 
-[`lit-ui-router-effect`](../lit-ui-router-effect/) holds the Lit controllers.
+[`lit-ui-router-effect`](../lit-ui-router-effect/) builds Lit controllers on it and re-exports `routeRef`.
 
 ## Features
 

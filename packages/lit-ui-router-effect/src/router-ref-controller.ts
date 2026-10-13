@@ -3,11 +3,10 @@ import { ReactiveControllerHost } from 'lit';
 import { isFunction, UIRouter } from '@uirouter/core';
 import { getScopedRouter, requestRouter } from 'lit-ui-router/context';
 import { UIRouterLitElement } from 'lit-ui-router/pure';
+import { routeRef, RouteSnapshot } from 'ui-router-effect';
 
 import { warnMissingRouter } from './dev-warn.js';
 import { RefController, RefControllerOptions } from './ref-controller.js';
-import { routeRef } from './route-ref.js';
-import { RouteSnapshot } from '@repo/route-snapshot';
 
 /** Options for {@link RouterRefController}. */
 export interface RouterRefControllerOptions<T> extends RefControllerOptions<T> {

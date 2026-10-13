@@ -13,7 +13,8 @@ description: A SubscriptionRef of the route and ref-following Lit controllers wi
 [`lit-ui-router-effect`](https://npmx.dev/package/lit-ui-router-effect)
 provides [Effect](https://effect.website) bindings for lit-ui-router: a
 [`SubscriptionRef`](https://effect.website/docs/state-management/subscriptionref/)
-of the router's state and ref-following
+of the router's state, from
+[`ui-router-effect`](/packages/ui-router-effect), and ref-following
 [ReactiveControllers](https://lit.dev/docs/composition/controllers/) that keep
 components in sync with it — and with any other `SubscriptionRef` the
 application holds.
@@ -33,12 +34,13 @@ covers the same ground with transition hooks instead of refs.
 ## Installation
 
 ```bash
-npm install lit-ui-router-effect effect
+npm install lit-ui-router-effect ui-router-effect effect
 # or
-pnpm add lit-ui-router-effect effect
+pnpm add lit-ui-router-effect ui-router-effect effect
 ```
 
-`lit-ui-router`, `lit`, `effect`, and `@uirouter/core` are peer dependencies.
+`lit-ui-router`, `ui-router-effect`, `lit`, `effect`, and `@uirouter/core` are
+peer dependencies.
 
 ### Effect 3 and 4
 
@@ -88,7 +90,9 @@ there is no element to seek, it reads the router
 [`routeRef(router)`](/api/lit-ui-router-effect/functions/routeRef) is the
 `SubscriptionRef<RouteSnapshot>` for a router — memoized, one per router
 instance. The first call registers one `transitionService.onSuccess` hook that
-replaces the value per successful transition.
+replaces the value per successful transition. It is `ui-router-effect`'s
+`routeRef`, re-exported, so code using either package shares one ref per
+router.
 
 A [`RouteSnapshot`](/api/lit-ui-router-effect/interfaces/RouteSnapshot) is a
 value taken once per successful transition. Every member answers for that
