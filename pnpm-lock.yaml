@@ -1597,6 +1597,9 @@ importers:
 
   packages/ui-router-effect:
     devDependencies:
+      '@release-it/conventional-changelog':
+        specifier: 'catalog:'
+        version: 12.0.2(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.2)(release-it@21.1.1(@types/node@24.19.1)(magicast@0.5.4)(supports-color@10.2.2))
       '@repo/route-snapshot':
         specifier: catalog:workspace
         version: link:../shared/route-snapshot
@@ -1612,12 +1615,18 @@ importers:
       '@tools/oxc-emit':
         specifier: catalog:workspace
         version: link:../../tools/oxc-emit
+      '@tools/release-config':
+        specifier: catalog:workspace
+        version: link:../../tools/release-config
       '@types/node':
         specifier: 'catalog:'
         version: 24.19.1
       '@uirouter/core':
         specifier: 'catalog:'
         version: 6.1.2
+      '@uirouter/core-floor':
+        specifier: catalog:peerFloor
+        version: '@uirouter/core@6.0.8'
       '@vitest/coverage-v8':
         specifier: 'catalog:'
         version: 5.0.3(@vitest/browser@5.0.3)(vitest@5.0.3)
@@ -1627,12 +1636,18 @@ importers:
       effect-3:
         specifier: catalog:effect3-compat
         version: effect@3.22.2
+      effect-floor:
+        specifier: catalog:peerFloor
+        version: effect@3.22.0
       oxfmt:
         specifier: 'catalog:'
         version: 0.72.0
       oxlint:
         specifier: 'catalog:'
         version: 1.87.0(oxlint-tsgolint@7.0.2003)
+      release-it:
+        specifier: 'catalog:'
+        version: 21.1.1(@types/node@24.19.1)(magicast@0.5.4)(supports-color@10.2.2)
       typescript:
         specifier: catalog:typescript6-compat
         version: '@typescript/typescript6@6.0.2'
