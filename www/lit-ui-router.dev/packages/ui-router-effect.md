@@ -20,9 +20,9 @@ Effect program can follow route state without Lit. The
 ## Installation
 
 ```bash
-npm install ui-router-effect@rc effect
+npm install ui-router-effect effect
 # or
-pnpm add ui-router-effect@rc effect
+pnpm add ui-router-effect effect
 ```
 
 `@uirouter/core` and `effect` are peer dependencies. Both Effect majors are

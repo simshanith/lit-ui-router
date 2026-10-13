@@ -21,9 +21,9 @@ controllers on it.
 ## Installation
 
 ```bash
-npm install ui-router-signals@rc signal-polyfill
+npm install ui-router-signals signal-polyfill
 # or
-pnpm add ui-router-signals@rc signal-polyfill
+pnpm add ui-router-signals signal-polyfill
 ```
 
 `@uirouter/core` and `signal-polyfill` are peer dependencies. Every signal
