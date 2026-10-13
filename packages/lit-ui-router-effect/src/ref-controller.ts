@@ -3,6 +3,7 @@ import {
   Fiber,
   Predicate,
   PubSub,
+  Scheduler,
   Stream,
   SubscriptionRef,
 } from 'effect';
@@ -16,9 +17,13 @@ import { ReactiveController, ReactiveControllerHost } from 'lit';
  * services to a selector, which stays a plain function over the values.
  */
 export interface RefRuntime {
-  /** starts an effect on a fiber the controller interrupts on disconnect */
+  /**
+   * starts an effect on a fiber the controller interrupts on disconnect, on
+   * `options.scheduler` when given
+   */
   readonly runFork: (
     effect: Effect.Effect<void>,
+    options?: { readonly scheduler?: Scheduler.Scheduler | undefined },
   ) => Fiber.Fiber<unknown, unknown>;
   /** runs a synchronous effect, used to read a ref's current value */
   readonly runSync: <A>(effect: Effect.Effect<A>) => A;
@@ -26,7 +31,7 @@ export interface RefRuntime {
 
 /** {@link RefRuntime} over Effect's default runtime. */
 export const defaultRefRuntime: RefRuntime = {
-  runFork: (effect) => Effect.runFork(effect),
+  runFork: (effect, options) => Effect.runFork(effect, options),
   runSync: (effect) => Effect.runSync(effect),
 };
 
@@ -162,10 +167,13 @@ export class RefController<
     // Seed before forking: a fiber's first emission is not guaranteed to land
     // synchronously, and render() must not see a stale `.value`.
     this.emit(this.read(refs));
+    const scheduler = microtaskScheduler();
+
     this.fiber = this.runtime.runFork(
       Stream.runForEach(RefController.changes(refs), (values) =>
         Effect.sync(() => this.emit(values)),
       ),
+      scheduler && { scheduler },
     );
   }
 
@@ -229,6 +237,24 @@ function changesOf<A>(
   // SAFETY: an effect 4 ref carries `pubsub`; effect 3 returned above.
   // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- each major's types omit the other's member, so no single assertion reaches it
   return Stream.fromPubSub((ref as unknown as Effect4Ref<A>).pubsub);
+}
+
+/** Effect 4's `MixedScheduler` constructor; effect 3's takes a yield depth instead. */
+interface Effect4MixedScheduler {
+  new (executionMode: 'sync'): Scheduler.Scheduler;
+}
+
+/** Effect 4's default scheduler resumes fibers a task later; this keeps them in the transition's task, as effect 3's default does. */
+function microtaskScheduler(): Scheduler.Scheduler | undefined {
+  if (!('makeDispatcher' in Scheduler.MixedScheduler.prototype)) {
+    return undefined;
+  }
+
+  // SAFETY: only effect 4's MixedScheduler has `makeDispatcher`, and its constructor takes an execution mode.
+  // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- each major's types omit the other's constructor, so no single assertion reaches it
+  const Mixed = Scheduler.MixedScheduler as unknown as Effect4MixedScheduler;
+
+  return new Mixed('sync');
 }
 
 /** A fiber's synchronous interrupt as effect 3 names it. */

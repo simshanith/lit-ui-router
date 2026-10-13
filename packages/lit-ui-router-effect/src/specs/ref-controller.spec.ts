@@ -126,6 +126,35 @@ describe('RefController', () => {
     expect(host.renderCount).toBeGreaterThan(rendersBefore);
   });
 
+  // A transition hook's setTimeout (focusing the new view) must see the update.
+  for (const [label, makeRuntime] of [
+    ['the default runtime', () => undefined],
+    ['a ManagedRuntime', () => ManagedRuntime.make(Layer.empty)],
+  ] as const) {
+    it(`selects a ref change before a timer queued ahead of it fires, on ${label}`, async () => {
+      const runtime = makeRuntime();
+
+      if (runtime) cleanups.push(() => void runtime.dispose());
+      const count = makeRef(0);
+      const host = createHost();
+
+      const controller = new RefController(host, [count], (n) => n, {
+        runtime,
+      });
+
+      await mount(host);
+
+      // effect 4 resumes fibers on setImmediate here (setTimeout in browsers), so a task queued first runs first
+      const seen = new Promise<number>((resolve) => {
+        setImmediate(() => resolve(controller.value));
+      });
+
+      set(count, 1);
+
+      expect(await seen).toBe(1);
+    });
+  }
+
   it('selects across several refs', async () => {
     const first = makeRef('a');
     const second = makeRef(1);
