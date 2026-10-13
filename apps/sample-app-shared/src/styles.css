@@ -337,7 +337,14 @@ api-docs {
 }
 
 .messagelist table td:nth-child(1) {
-  width: 1.75em;
+  width: 2em;
+  padding-inline: 0;
+  text-align: center;
+}
+/* the icon column's sort button fills its cell to a 24px target (axe target-size) */
+.messagelist thead td:nth-child(1) button {
+  inline-size: 100%;
+  min-block-size: 24px;
 }
 .messagelist table td:nth-child(2) {
   width: 21%;
