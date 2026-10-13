@@ -68,6 +68,7 @@ mise.*.local.toml
 lit-ui-router-*.tgz
 **/.vitest/
 coverage
+coverage-effect3
 .wrangler
 .dev.vars
 

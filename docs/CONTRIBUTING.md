@@ -211,6 +211,8 @@ vitest's text reporter prints an `Uncovered Line #s` column, and the package's
 that did run shows there, not in the line column). `ui-router-server` runs
 `node --test` instead, which prints an `uncovered lines` column and writes
 `coverage/lcov.info` rewritten to repo-relative paths by `rebase-lcov`.
+`lit-ui-router-effect` also uploads `coverage-effect3/` from
+`test:effect3-compat`, where its effect 3 branches run; Codecov merges the two.
 
 To list only the files the branch touched (per file, not per line):
 

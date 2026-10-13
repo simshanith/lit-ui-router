@@ -125,12 +125,15 @@
       "passThroughEnv": ["CI", "GITHUB_ACTIONS"]
     },
     // Same unit suites resolved against the effect-3 alias (the 3.x line the
-    // widened effect peer range still covers). Mirrors test:mobx6-compat.
+    // widened effect peer range still covers). Mirrors test:mobx6-compat, but
+    // uploads coverage-effect3/ beside coverage/: the per-major shims in src
+    // take their effect 3 branches only here.
     "test:effect3-compat": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/pnpm-workspace.yaml"],
       "env": ["VITEST_BROWSER_API_PORT", "VITE_EXPECT_EFFECT_MAJOR"],
-      "passThroughEnv": ["CI", "GITHUB_ACTIONS"]
+      "passThroughEnv": ["CI", "GITHUB_ACTIONS"],
+      "outputs": ["coverage-effect3/**"]
     },
     // Umbrellas (no script) fan out via dependsOn to the leaves that carry the
     // scripts and cache keys; `with` is only for persistent sidecars. A package
@@ -170,6 +173,7 @@
         "!**/node_modules/**",
         "!**/dist/**",
         "!**/coverage/**",
+        "!**/coverage-effect3/**",
         "!**/.turbo/**",
         "!**/.probe-scratch/**",
         "!.cache/**",
@@ -477,6 +481,7 @@
         "!**/node_modules/**",
         "!**/dist/**",
         "!**/coverage/**",
+        "!**/coverage-effect3/**",
         "!**/.turbo/**",
         "!**/.probe-scratch/**",
         "!.cache/**",
