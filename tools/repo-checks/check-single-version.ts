@@ -33,7 +33,7 @@ const ALLOWED: SplitAllowance[] = [
   },
   {
     name: 'effect',
-    why: 'the effect-3 alias (catalogs.effect3-compat) runs test:effect3-compat beside the effect 4 line',
+    why: 'the effect-3 alias (catalogs.effect3-compat) runs test:effect3-compat beside the effect 4 line, and catalogs.peerFloor pins effect-floor to 3.22.0, the effect peer floor check:bundle bundles against',
   },
   {
     name: 'eslint',

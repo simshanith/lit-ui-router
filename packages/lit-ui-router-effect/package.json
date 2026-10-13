@@ -71,6 +71,7 @@
     "@vitest/coverage-v8": "catalog:",
     "effect": "catalog:",
     "effect-3": "catalog:effect3-compat",
+    "effect-floor": "catalog:peerFloor",
     "happy-dom": "catalog:",
     "lit": "catalog:",
     "lit-2": "catalog:lit2-compat",
