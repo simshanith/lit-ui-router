@@ -178,10 +178,30 @@ const bounds = (d) => {
   return [Math.min(...bs.map((b) => b.x)), Math.min(...bs.map((b) => Math.min(b.y, b.sa ? b.ay : b.y))),
     Math.max(...bs.map((b) => b.x + b.s + (b.sa ? AG + b.sa : 0))), Math.max(...bs.map((b) => Math.max(b.y + b.s, b.sa ? b.ay + b.sa : 0)))];
 };
-const districts = DIST.map(([d, pad]) => {
+// each district's drawn edge in screen units, so lettering can key off it
+const EDGE = Object.fromEntries(DIST.map(([d, pad]) => {
   const [x1, y1, x2, y2] = bounds(d);
-  return `<rect x="${X(x1 - pad)}" y="${Y(y1 - pad)}" width="${(K * (x2 - x1 + 2 * pad)).toFixed(1)}" height="${(K * (y2 - y1 + 2 * pad)).toFixed(1)}" class="skf fnone" stroke-dasharray="5 4"/>`;
-}).join('\n');
+  return [d, { x1: +X(x1 - pad), y1: +Y(y1 - pad), x2: +X(x2 + pad), y2: +Y(y2 + pad) }];
+}));
+const districts = Object.values(EDGE).map(({ x1, y1, x2, y2 }) =>
+  `<rect x="${x1}" y="${y1}" width="${(x2 - x1).toFixed(1)}" height="${(y2 - y1).toFixed(1)}" class="skf fnone" stroke-dasharray="5 4"/>`).join('\n');
+
+// a callout stands in clear air: off every mass, and cut by no district edge
+const EM = { lblr: 9.5, lblf: 10 };
+function assertClear(who, x, baselines, lines) {
+  const w = Math.max(...lines.map(([s, cls]) => s.length * EM[cls] * 0.46));
+  const c = { x1: x, y1: baselines[0] - 10, x2: x + w, y2: baselines.at(-1) + 3 };
+  const apart = (r) => c.x2 <= r.x1 || r.x2 <= c.x1 || c.y2 <= r.y1 || r.y2 <= c.y1;
+  const inside = (r) => c.x1 >= r.x1 && c.x2 <= r.x2 && c.y1 >= r.y1 && c.y2 <= r.y2;
+  const at = `[${c.x1.toFixed(1)} ${c.y1.toFixed(1)} → ${c.x2.toFixed(1)} ${c.y2.toFixed(1)}]`;
+  for (const b of geom.values()) {
+    const r = { x1: +X(b.x), y1: +Y(Math.min(b.y, b.sa ? b.ay : b.y)), x2: +X(b.sa ? b.ax + b.sa : b.x + b.s), y2: +Y(Math.max(b.y + b.s, b.sa ? b.ay + b.sa : 0)) };
+    if (!apart(r)) throw new Error(`sheet 7A: ${who}'s callout ${at} lands on №${b.n} ${b.name}`);
+  }
+  for (const [d, r] of Object.entries(EDGE)) {
+    if (!apart(r) && !inside(r)) throw new Error(`sheet 7A: ${who}'s callout ${at} is cut by the ${d} district's edge`);
+  }
+}
 
 const bodies = M.map(([n]) => member(n)).join('\n');
 const furn = M.map(([n]) => furniture(n)).join('\n');
@@ -281,6 +301,15 @@ const NOTE = {
 const ART_H = 902;
 const SY = ART_H + 16;
 const pctS = (v) => (v == null ? '—' : `${v}%`);
+// №12's callout stands under the shopfront district and east of the yard's edge; its leader ends on the lamp's east face
+const C12 = { x: EDGE.tool.x2 + 8, y: [14, 27, 39, 51].map((d) => EDGE.site.y2 + d) };
+C12.lines = [
+  ['№12 @tools/release — the yard in one building:', 'lblr'],
+  [`${g(12).r[10]} files lit at ${pctS(g(12).r[13])} bright; ${g(12).r[6] - g(12).r[10]} in shadow, ${fmt(g(12).r[7] - g(12).r[11])} sloc —`, 'lblf'],
+  ['the publish halt is lit at its core', 'lblf'],
+  ['and dark at its process edge', 'lblf'],
+];
+assertClear('№12', C12.x, C12.y, C12.lines);
 const schedRow = ([n, name, , cat, , , sf, sl, , , lf, ls, ext, line, br, fn]) => {
   const meat = cat === 'm'
     ? `${lf}/${sf}f · ${fmt(ls)}/${fmt(sl)} (${pctS(ext)}) · L ${pctS(line)} B ${pctS(br)} F ${pctS(fn)}`
@@ -407,11 +436,8 @@ ${txt(30, 454, `the innerHTML workaround it guards — ${g(26).r[11]} of ${g(26)
 ${txt(30, 466, 'append.ts is lit from №1’s lamp instead', 'lblf')}
 <line x1="250" y1="474" x2="272" y2="522" class="skf"/>
 
-${txt(863, 748, '№12 @tools/release — the yard in one building:', 'lblr')}
-${txt(863, 761, `${g(12).r[10]} files lit at ${pctS(g(12).r[13])} bright; ${g(12).r[6] - g(12).r[10]} in shadow, ${fmt(g(12).r[7] - g(12).r[11])} sloc —`, 'lblf')}
-${txt(863, 773, 'the publish halt is lit at its core', 'lblf')}
-${txt(863, 785, 'and dark at its process edge', 'lblf')}
-<line x1="857" y1="766" x2="217" y2="712" class="skf"/>
+${C12.lines.map(([s, cls], i) => txt(C12.x, C12.y[i], s, cls)).join('\n')}
+<line x1="${C12.x - 6}" y1="${C12.y[1] + 5}" x2="${X(g(12).ax + g(12).sa)}" y2="${Y(g(12).ay + g(12).sa / 2)}" class="skf"/>
 
 ${txt(700, 852, `№16 @tools/shared — ${PALE_W} light thrown: ${pctS(g(16).r[13])} line, ${pctS(g(16).r[15])} function`, 'lblr')}
 ${txt(700, 865, 'exec.ts and workspace.ts are the worst-lit things that are lit at all', 'lblf')}

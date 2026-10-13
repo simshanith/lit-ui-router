@@ -961,6 +961,7 @@ resolved →
 
 **Record notes**
 
+- 2026-10-13, after the nineteenth cabinet's frame audit: №11 `examples` reaches y 757.7 at origin/main @ 108456af, under the №12 `@tools/release` callout's typed spot (863, 748), by 19.6 px. The callout keys off the drawn district edges — x 8 east of the yard's, y 14 under the shopfront's — and its leader ends on №12's lamp at the annex's east face, from the block's lit strip; it reads 889.7, 799.3 at this ref. `assertClear` throws when a callout's rect, at 0.46 em a character, lands on any member's block or annex, or a district edge cuts it; put back at the typed spot it names №11.
 - 2026-10-11: links — the notes link the plates, the meters and each named member to their homes.
 - 2026-09-11, no rev clause: re-metered at origin/main @ 65e2843, and `census-shadow.mjs`'s e2e guard now reads the `test:e2e:*` lanes — a non-empty set required, and `test:e2e:vanilla` on cypress — because the app carries no bare `test` script any more. The semantics are unchanged.
 - 2026-09-29, no rev clause: the plan follows sheet 7's three moved lots — №12 `@tools/release` at 0,455, №16 `@tools/shared` at -16,550, №25 `@tools/lcov-rebase` at 180,395. №16's badge steps 9 units west (`BADGE_DX`) off the release footprint's south-west corner, and the №12 and №16 leaders re-aim at their own blocks. The frame audit reads 0 escapes, 0 hits and 0 text-on-text.
@@ -1633,6 +1634,7 @@ resolved →
 
 **Record notes**
 
+- 2026-10-13, after the nineteenth cabinet's frame audit: the examples callout (THE OLDEST UNTOUCHED STONE) stood on №11's block, which the refile had grown to 188.1 under its hand-placed lettering ("both winter-built" over the mass by 9.6). Its three baselines key to the block's top edge now, 752 / 766 / 778 from `g(11).y − 20`, and the leader's foot derives from the block (`g(11).x + 0.4·s`, `g(11).y + 2`); the build throws if any of its lines, estimated at 6.3 px per character, intersects a mass extent. THE SHOPFRONT's second line drops 664 → 666, off its first line's descent.
 - 2026-10-11: links — the notes link git log, the vitepress config pair and dated dirs to the repo.
 - 2026-09-11, no rev clause: the same 15 → 300 / 32 → 440 move as sheet 7, applied to this sheet's own `PLACED` table, which had carried the same overlap; asserted by `assertPlots` as well (DESIGN-REVIEW §T53).
 - 2026-09-11, cabinet refresh at origin/main @ 65e2843: this sheet's own `PLACED` takes the same three new rows as sheet 7 — 33 `@tools/bootstrap` (490, 350), 34 `@tools/eslint` (514, 530), 35 `@tools/repo-checks` (449, 385) — and the same №32 step, 440,430 → 449,462.

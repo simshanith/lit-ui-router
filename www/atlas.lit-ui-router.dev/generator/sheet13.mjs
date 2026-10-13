@@ -396,6 +396,21 @@ if (!NAV_SIZE_TXT) throw new Error(`sheet 13: navigation-location-plugin ranks $
 const HOTTEST_MULTI = D.filter((r) => r[7] && r[7][0] > 1).sort((a, b) => b[7][2] / b[7][0] - a[7][2] / a[7][0])[0][0];
 if (HOTTEST_MULTI !== 10) throw new Error('sheet 13: the notes call docs the hottest multi-file block-average, and the plate says otherwise');
 if (['pkg', 'app', 'site'].some((d) => distSloc(d) > distSloc('tool'))) throw new Error('sheet 13: the notes call the instrument yard the largest district by mass, and the plate says otherwise');
+// the examples callout stands in the air north-east of its block, keyed to the block's top edge
+const EXB = g(11);
+const EX_X = 1266, EX_Y = EXB.y - 20;
+const EX_LINES = [
+  [EX_Y - 26, 'examples/ — THE OLDEST UNTOUCHED STONE', 'lbls'],
+  [EX_Y - 12, `${NUMW[SEALED_VITE]} vite configs sealed ${days(SOLAR.last)} days,`, 'lblf'],
+  [EX_Y, `${days(HELLO.last) > SEAL ? `helloworld/main.ts sealed ${days(HELLO.last)} — ` : ''}${SEALED_WINTER ? `${SEALED_F === 2 ? 'both' : `all ${SEALED_F}`} winter-built` : 'not all of them winter stone'}`, 'lblf'],
+];
+// no bbox helper exists: each line's rect is estimated at 6.3 px per character, a margin over the data face
+const LINE_H = { lbls: 10.5, lblf: 10 };
+for (const [y, s, cls] of EX_LINES) {
+  const r = { x1: EX_X, y1: y - LINE_H[cls], x2: EX_X + s.length * 6.3, y2: y + 3 };
+  const hit = D.find(([n]) => { const b = g(n); return r.x1 < b.x2 && b.x < r.x2 && r.y1 < b.y2 && b.y1 < r.y2; });
+  if (hit) throw new Error(`sheet 13: the examples callout line "${s}" lands on №${hit[0]} ${hit[1]} — move EX_X/EX_Y`);
+}
 const callouts = `
 ${txt(60, 500, 'lit-ui-router — THE ORIGINAL MASONRY', 'lbla')}
 ${txt(60, 514, `${PORT_LUR.length} of ${g(1).src[0]} src walls laid ${SREF.first}, the first day —`, 'lblf')}
@@ -408,10 +423,8 @@ ${txt(1250, 714, 'the most-weathered wall in the city —', 'lblf')}
 ${txt(1250, 726, `${days(DCFG.first)} days old, repainted ${DCFG.touches} times, idle ${days(DCFG.last)}d`, 'lblf')}
 <line x1="1246" y1="710" x2="1188" y2="702" class="skf"/>
 
-${txt(1266, 780, 'examples/ — THE OLDEST UNTOUCHED STONE', 'lbls')}
-${txt(1266, 794, `${NUMW[SEALED_VITE]} vite configs sealed ${days(SOLAR.last)} days,`, 'lblf')}
-${txt(1266, 806, `${days(HELLO.last) > SEAL ? `helloworld/main.ts sealed ${days(HELLO.last)} — ` : ''}${SEALED_WINTER ? `${SEALED_F === 2 ? 'both' : `all ${SEALED_F}`} winter-built` : 'not all of them winter stone'}`, 'lblf')}
-<line x1="1262" y1="790" x2="1178" y2="800" class="skf"/>
+${EX_LINES.map(([y, s, cls]) => txt(EX_X, y, s, cls)).join('\n')}
+<line x1="${EX_X - 4}" y1="${(EX_Y - 16).toFixed(1)}" x2="${(EXB.x + EXB.s * 0.4).toFixed(1)}" y2="${(EXB.y + 2).toFixed(1)}" class="skf"/>
 
 ${txt(560, 1078, '@tools/typedoc-plugin — THE YARD’S ONE WINTER WALL', 'lbls')}
 ${txt(560, 1092, `index.ts laid ${SYM.first}, still under the chisel — ×${SYM.touches}, idle ${days(SYM.last)}d`, 'lblf')}
@@ -461,7 +474,7 @@ ${txt(X(570) + 6, 436, 'apps/ — THE PROVING GROUND', 'lblb')}
 ${txt(X(570) + 6, 448, 'port-born shell, summer-rebuilt interior', 'lblf')}
 
 ${txt(1250, 652, 'www/ + examples/ —', 'lblb')}
-${txt(1250, 664, 'THE SHOPFRONT', 'lblb')}
+${txt(1250, 666, 'THE SHOPFRONT', 'lblb')}
 <line x1="1246" y1="658" x2="1210" y2="668" class="skf"/>
 
 ${txt(60, 606, 'tools/ — THE INSTRUMENT YARD', 'lblb')}
