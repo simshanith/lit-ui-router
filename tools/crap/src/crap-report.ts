@@ -15,38 +15,46 @@ const sourceRoot = 'src';
 
 const coveragePath = 'coverage/coverage-final.json';
 
-const top = Number(process.argv[2] ?? 10);
+const main = (): void => {
+  const top = Number(process.argv[2] ?? 10);
 
-if (!Number.isInteger(top) || top < 0) {
-  console.error('usage: crap-report [top]');
-  process.exit(1);
-}
+  if (!Number.isInteger(top) || top < 0) {
+    console.error('usage: crap-report [top]');
+    process.exitCode = 1;
 
-if (!fs.existsSync(coveragePath)) {
-  console.error(`crap-report: no ${coveragePath}; run test:coverage first`);
-  process.exit(1);
-}
+    return;
+  }
 
-const coverage = v.parse(
-  v.record(v.string(), v.unknown()),
-  JSON.parse(fs.readFileSync(coveragePath, 'utf8')),
-);
+  if (!fs.existsSync(coveragePath)) {
+    console.error(`crap-report: no ${coveragePath}; run test:coverage first`);
+    process.exitCode = 1;
 
-const packageDir = path
-  .relative(workspaceRoot, process.cwd())
-  .split(path.sep)
-  .join('/');
+    return;
+  }
 
-const coveredFiles = new Set(
-  Object.keys(coverage).flatMap(
-    (key) => packageRelative(key, packageDir) ?? [],
-  ),
-);
+  const coverage = v.parse(
+    v.record(v.string(), v.unknown()),
+    JSON.parse(fs.readFileSync(coveragePath, 'utf8')),
+  );
 
-const report = rank(
-  analyze({ sourceRoot, coveragePath }),
-  sourceRoot,
-  coveredFiles,
-);
+  const packageDir = path
+    .relative(workspaceRoot, process.cwd())
+    .split(path.sep)
+    .join('/');
 
-console.log(formatReport(path.basename(process.cwd()), report, top));
+  const coveredFiles = new Set(
+    Object.keys(coverage).flatMap(
+      (key) => packageRelative(key, packageDir) ?? [],
+    ),
+  );
+
+  const report = rank(
+    analyze({ sourceRoot, coveragePath }),
+    sourceRoot,
+    coveredFiles,
+  );
+
+  console.log(formatReport(path.basename(process.cwd()), report, top));
+};
+
+if (import.meta.main) main();

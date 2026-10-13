@@ -126,7 +126,8 @@ X 1 failing task: @tools/repo-checks#check:task-inputs — 10 succeeded, 217 cac
 ```
 
 Each failing task gets a log excerpt and two commands, in the step summary and
-in the job log:
+in the job log. A `cache: false` task has no turbo log file, so its excerpt
+comes from the `--log-file` JSON the same runs write:
 
 ```text
 ── @tools/repo-checks#check:task-inputs (exit 1)
@@ -210,6 +211,8 @@ vitest's text reporter prints an `Uncovered Line #s` column, and the package's
 that did run shows there, not in the line column). `ui-router-server` runs
 `node --test` instead, which prints an `uncovered lines` column and writes
 `coverage/lcov.info` rewritten to repo-relative paths by `rebase-lcov`.
+`lit-ui-router-effect` also uploads `coverage-effect3/` from
+`test:effect3-compat`, where its effect 3 branches run; Codecov merges the two.
 
 To list only the files the branch touched (per file, not per line):
 
@@ -446,10 +449,19 @@ when a hunk no longer lands in the installed package. To extend a patch:
 ## Dependency audit
 
 [`dependency-audit.yml`](../.github/workflows/dependency-audit.yml) runs
-`pnpm audit --audit-level high` on every lockfile or workspace-config change to
-`main`, weekly, and on dispatch. It runs outside turbo, so a cached result never
-hides a newly published advisory. Accepted advisories go in the `audit:` section
-of `pnpm-workspace.yaml`.
+`check:audit` ([`tools/repo-checks/check-audit.ts`](../tools/repo-checks/check-audit.ts))
+on every lockfile or workspace-config change to `main`, weekly, and on dispatch.
+It runs outside turbo, so a cached result never hides a newly published
+advisory.
+
+The check runs `pnpm audit` and splits its findings by what reaches them. The
+tree the workspace ships and tests must have no finding at or above `high`.
+Findings only a `peerFloor*` catalog alias reaches are accepted: a peer floor is
+a compatibility claim, and consumers choose their own versions in the range. A
+floor finding at or above `high` with no patched version in the package's
+published peer range fails, since keeping that floor is a support decision.
+Accepted real-tree advisories go in the `audit:` section of
+`pnpm-workspace.yaml`.
 
 ## Releases
 

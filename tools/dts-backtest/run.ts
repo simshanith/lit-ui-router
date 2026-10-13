@@ -94,9 +94,12 @@ const PACKAGE_DIRS = [
   'lit-ui-router',
   'lit-ui-router-effect',
   'lit-ui-router-mobx',
+  'lit-ui-router-signals',
   'lit-ui-router-ssr',
   'navigation-location-plugin',
+  'ui-router-effect',
   'ui-router-server',
+  'ui-router-signals',
 ].map((dir) => resolve(here, '..', '..', 'packages', dir, 'dist') + sep);
 
 // A file we cannot resolve is treated as ours: it means the compiler reported
@@ -405,33 +408,39 @@ async function selftestNative() {
   return true;
 }
 
-// --versions=current runs only the repo-current (native TS 7) leg; the
-// default full matrix adds the pinned classic legs and their self-test.
-const versionsArg = process.argv
-  .find((arg) => arg.startsWith('--versions='))
-  ?.slice('--versions='.length);
+const main = async (): Promise<void> => {
+  // --versions=current runs only the repo-current (native TS 7) leg; the
+  // default full matrix adds the pinned classic legs and their self-test.
+  const versionsArg = process.argv
+    .find((arg) => arg.startsWith('--versions='))
+    ?.slice('--versions='.length);
 
-if (versionsArg !== undefined && !['current', 'full'].includes(versionsArg)) {
-  console.error(`unknown --versions=${versionsArg} (expected current|full)`);
-  process.exit(2);
-}
+  if (versionsArg !== undefined && !['current', 'full'].includes(versionsArg)) {
+    console.error(`unknown --versions=${versionsArg} (expected current|full)`);
+    process.exitCode = 2;
 
-const currentOnly = versionsArg === 'current';
+    return;
+  }
 
-let ok = currentOnly ? true : await selftest();
+  const currentOnly = versionsArg === 'current';
 
-ok = (await selftestNative()) && ok;
+  let ok = currentOnly ? true : await selftest();
 
-if (!currentOnly) {
-  for (const specifier of API_VERSIONS) {
-    for (const configFile of CONFIGS) {
-      ok = run(specifier, configFile) && ok;
+  ok = (await selftestNative()) && ok;
+
+  if (!currentOnly) {
+    for (const specifier of API_VERSIONS) {
+      for (const configFile of CONFIGS) {
+        ok = run(specifier, configFile) && ok;
+      }
     }
   }
-}
 
-for (const configFile of CONFIGS) {
-  ok = (await runNative(NATIVE_VERSION, configFile)) && ok;
-}
+  for (const configFile of CONFIGS) {
+    ok = (await runNative(NATIVE_VERSION, configFile)) && ok;
+  }
 
-process.exit(ok ? 0 : 1);
+  if (!ok) process.exitCode = 1;
+};
+
+if (import.meta.main) await main();

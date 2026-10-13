@@ -60,64 +60,70 @@ class ExtendedContext extends DefaultLitAnalyzerContext {
   }
 }
 
-process.chdir(root);
+const main = async (): Promise<void> => {
+  process.chdir(root);
 
-// The analyzer's own Program type, without a direct typescript dependency.
-type Program = Parameters<
-  NonNullable<AnalyzeGlobsContext['analyzeSourceFile']>
->[1]['program'];
+  // The analyzer's own Program type, without a direct typescript dependency.
+  type Program = Parameters<
+    NonNullable<AnalyzeGlobsContext['analyzeSourceFile']>
+  >[1]['program'];
 
-// Set by analyzeSourceFile before the analyzer ever asks for it.
-let program!: Program;
+  // Set by analyzeSourceFile before the analyzer ever asks for it.
+  let program!: Program;
 
-const context = new ExtendedContext({ getProgram: () => program });
+  const context = new ExtendedContext({ getProgram: () => program });
 
-context.updateConfig(
-  makeConfig({ ...(readLitAnalyzerConfigFromTsConfig() ?? {}) }),
-);
+  context.updateConfig(
+    makeConfig({ ...(readLitAnalyzerConfigFromTsConfig() ?? {}) }),
+  );
 
-const analyzer = new LitAnalyzer(context);
+  const analyzer = new LitAnalyzer(context);
 
-const formatter = new CodeDiagnosticFormatter();
+  const formatter = new CodeDiagnosticFormatter();
 
-const stats: AnalysisStats = {
-  diagnostics: 0,
-  errors: 0,
-  warnings: 0,
-  filesWithProblems: 0,
-  totalFiles: 0,
+  const stats: AnalysisStats = {
+    diagnostics: 0,
+    errors: 0,
+    warnings: 0,
+    filesWithProblems: 0,
+    totalFiles: 0,
+  };
+
+  await analyzeGlobs([WORKSPACE_SRC_GLOB], CLI_CONFIG, {
+    didExpandGlobs(filePaths) {
+      console.log(
+        filePaths.length === 0
+          ? "\n  ✖ Couldn't find any files to analyze"
+          : `Analyzing ${filePaths.length} file${filePaths.length === 1 ? '' : 's'}...`,
+      );
+    },
+    analyzeSourceFile(file, options) {
+      program = options.program;
+      const diagnostics = analyzer.getDiagnosticsInFile(file);
+      const text = formatter.diagnosticTextForFile(file, diagnostics);
+
+      if (text != null) console.log(text);
+      stats.diagnostics += diagnostics.length;
+      stats.totalFiles += 1;
+
+      if (diagnostics.length > 0) {
+        stats.errors += diagnostics.filter(
+          (d) => d.severity === 'error',
+        ).length;
+        stats.warnings += diagnostics.filter(
+          (d) => d.severity === 'warning',
+        ).length;
+        stats.filesWithProblems += 1;
+      }
+    },
+  });
+
+  const report = formatter.report(stats);
+
+  if (report != null) console.log(report);
+
+  // maxWarnings is 0, so a warning fails the gate exactly like an error.
+  process.exitCode = stats.errors > 0 || stats.warnings > 0 ? 1 : 0;
 };
 
-await analyzeGlobs([WORKSPACE_SRC_GLOB], CLI_CONFIG, {
-  didExpandGlobs(filePaths) {
-    console.log(
-      filePaths.length === 0
-        ? "\n  ✖ Couldn't find any files to analyze"
-        : `Analyzing ${filePaths.length} file${filePaths.length === 1 ? '' : 's'}...`,
-    );
-  },
-  analyzeSourceFile(file, options) {
-    program = options.program;
-    const diagnostics = analyzer.getDiagnosticsInFile(file);
-    const text = formatter.diagnosticTextForFile(file, diagnostics);
-
-    if (text != null) console.log(text);
-    stats.diagnostics += diagnostics.length;
-    stats.totalFiles += 1;
-
-    if (diagnostics.length > 0) {
-      stats.errors += diagnostics.filter((d) => d.severity === 'error').length;
-      stats.warnings += diagnostics.filter(
-        (d) => d.severity === 'warning',
-      ).length;
-      stats.filesWithProblems += 1;
-    }
-  },
-});
-
-const report = formatter.report(stats);
-
-if (report != null) console.log(report);
-
-// maxWarnings is 0, so a warning fails the gate exactly like an error.
-process.exitCode = stats.errors > 0 || stats.warnings > 0 ? 1 : 0;
+if (import.meta.main) await main();

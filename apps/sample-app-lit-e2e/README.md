@@ -195,7 +195,7 @@ pnpm --dir apps/sample-app-lit-e2e test:e2e:vanilla --spec src/integration/dialo
 [`scripts/cypress-suite.ts`](scripts/cypress-suite.ts) builds instead:
 
 ```bash
-pnpm --dir apps/sample-app-lit-e2e exec cypress run --config baseUrl=http://localhost:5175/app-effect/,videosFolder=cypress/videos-effect,screenshotsFolder=cypress/screenshots-effect --spec src/integration/dialog.cy.js
+pnpm --dir apps/sample-app-lit-e2e exec cypress run --browser chrome --config baseUrl=http://localhost:5175/app-effect/,videosFolder=cypress/videos-effect,screenshotsFolder=cypress/screenshots-effect --spec src/integration/dialog.cy.js
 ```
 
 Videos land in `cypress/videos*/`; screenshots only on failure or an explicit

@@ -101,63 +101,71 @@ async function ignoredFiles(
   return ignored;
 }
 
-const { members } = await loadWorkspace(workspaceRoot);
+const main = async (): Promise<void> => {
+  const { members } = await loadWorkspace(workspaceRoot);
 
-const names = [
-  ...new Set(
-    members.flatMap((member) => Object.keys(member.manifest?.scripts ?? {})),
-  ),
-].sort();
+  const names = [
+    ...new Set(
+      members.flatMap((member) => Object.keys(member.manifest?.scripts ?? {})),
+    ),
+  ].sort();
 
-const { stdout } = await defaultExec('git', ['ls-files', '-z'], {
-  cwd: workspaceRoot,
-});
+  const { stdout } = await defaultExec('git', ['ls-files', '-z'], {
+    cwd: workspaceRoot,
+  });
 
-const tracked = stdout.split('\0').filter((file) => file !== '');
+  const tracked = stdout.split('\0').filter((file) => file !== '');
 
-const trackedFiles = new Set(tracked);
+  const trackedFiles = new Set(tracked);
 
-const planned = await plannedTasks(names);
+  const planned = await plannedTasks(names);
 
-const { failures, overhashing, stale, audited } = auditTaskInputs(
-  [...planned.values()],
-  tracked,
-  EXEMPT,
-  ALLOWED,
-);
-
-if (audited === 0) {
-  // an empty plan would pass every assertion below; that's a wiring bug
-  console.error(`${CHECK}: turbo planned no cacheable task`);
-  process.exit(1);
-}
-
-for (const failure of failures) {
-  console.error(`${CHECK}: ${formatFailure(failure)}`);
-}
-
-const generated = narrowToGenerated(
-  overhashing,
-  await ignoredFiles(
-    [...new Set(overhashing.flatMap(({ untracked }) => untracked))],
-    trackedFiles,
-  ),
-);
-
-for (const over of generated) {
-  console.error(`${CHECK}: ${formatOverhash(over)}`);
-}
-
-for (const name of stale) {
-  console.error(
-    `${CHECK}: "${name}" is exempt but hashes every tracked file now; drop the row`,
+  const { failures, overhashing, stale, audited } = auditTaskInputs(
+    [...planned.values()],
+    tracked,
+    EXEMPT,
+    ALLOWED,
   );
-}
 
-if (failures.length > 0 || generated.length > 0 || stale.length > 0) {
-  process.exit(1);
-}
+  if (audited === 0) {
+    // an empty plan would pass every assertion below; that's a wiring bug
+    console.error(`${CHECK}: turbo planned no cacheable task`);
+    process.exitCode = 1;
 
-console.log(
-  `${CHECK}: ${audited} cacheable tasks hash every tracked file in their package and nothing generated (${EXEMPT.length} file-type lanes exempt, ${ALLOWED.length} generated paths allowed)`,
-);
+    return;
+  }
+
+  for (const failure of failures) {
+    console.error(`${CHECK}: ${formatFailure(failure)}`);
+  }
+
+  const generated = narrowToGenerated(
+    overhashing,
+    await ignoredFiles(
+      [...new Set(overhashing.flatMap(({ untracked }) => untracked))],
+      trackedFiles,
+    ),
+  );
+
+  for (const over of generated) {
+    console.error(`${CHECK}: ${formatOverhash(over)}`);
+  }
+
+  for (const name of stale) {
+    console.error(
+      `${CHECK}: "${name}" is exempt but hashes every tracked file now; drop the row`,
+    );
+  }
+
+  if (failures.length > 0 || generated.length > 0 || stale.length > 0) {
+    process.exitCode = 1;
+
+    return;
+  }
+
+  console.log(
+    `${CHECK}: ${audited} cacheable tasks hash every tracked file in their package and nothing generated (${EXEMPT.length} file-type lanes exempt, ${ALLOWED.length} generated paths allowed)`,
+  );
+};
+
+if (import.meta.main) await main();

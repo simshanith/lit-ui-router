@@ -96,6 +96,7 @@
         "!$TURBO_ROOT$/**/node_modules/**",
         "!$TURBO_ROOT$/**/dist/**",
         "!$TURBO_ROOT$/**/coverage/**",
+        "!$TURBO_ROOT$/**/coverage-effect3/**",
         "!$TURBO_ROOT$/**/.turbo/**",
         "!$TURBO_ROOT$/**/.probe-scratch/**",
         "!$TURBO_ROOT$/**/.rumdl_cache/**",
@@ -107,6 +108,10 @@
         "!$TURBO_ROOT$/examples/*/**",
         "$TURBO_ROOT$/pnpm-workspace.yaml"
       ]
+    },
+    "check:shared-source": {
+      // the canonical sources the consumers inline
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/packages/shared/*/src/**"]
     },
     "check:task-inputs": {
       // the audit is over every planned task, so any turbo.json or manifest

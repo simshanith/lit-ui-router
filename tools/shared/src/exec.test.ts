@@ -27,7 +27,7 @@ describe('defaultCapture', () => {
     await assert.rejects(
       defaultCapture(process.execPath, [
         '-e',
-        "process.stderr.write('nope'); process.exit(3)",
+        "process.stderr.write('nope'); process.exitCode = 3",
       ]),
       (error: Error & { stderr?: string }) => {
         assert.ok(error instanceof Error);
@@ -44,7 +44,7 @@ describe('readExecFailure', () => {
   it('reads the code and output a rejected exec carries', async () => {
     const cause = await defaultExec(process.execPath, [
       '-e',
-      "process.stdout.write('out'); process.stderr.write('err'); process.exit(3)",
+      "process.stdout.write('out'); process.stderr.write('err'); process.exitCode = 3",
     ]).catch((cause: unknown) => cause);
 
     assert.deepEqual(readExecFailure(cause), {

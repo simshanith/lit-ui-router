@@ -68,6 +68,14 @@
     "no-prototype-builtins": "error",
     "no-redeclare": "error",
     "no-regex-spaces": "error",
+    "no-restricted-properties": [
+      "error",
+      {
+        "object": "process",
+        "property": "exit",
+        "message": "it ends the process before pending stdout/stderr writes flush and skips finally blocks; set process.exitCode and return from main."
+      }
+    ],
     "no-self-assign": "error",
     "no-setter-return": "error",
     "no-shadow-restricted-names": "error",
@@ -200,6 +208,7 @@
     {
       "files": [
         "packages/lit-ui-router-effect/**",
+        "packages/ui-router-effect/**",
         "apps/sample-app-lit-effect/**",
         "examples/hellogalaxy-effect/**"
       ],
@@ -252,6 +261,7 @@
         "packages/lit-ui-router/src/**/*.ts",
         "packages/lit-ui-router-effect/src/**/*.ts",
         "packages/lit-ui-router-mobx/src/**/*.ts",
+        "packages/lit-ui-router-signals/src/**/*.ts",
         "packages/lit-ui-router-ssr/src/**/*.ts"
       ],
       "rules": {
@@ -488,6 +498,69 @@
                 "name": "@uirouter/core",
                 "allowTypeImports": true,
                 "message": "matcher tier stays core-free — a static @uirouter/core import defeats the lazy simulate boundary (the `bundleProbe.free` claims under check:bundle enforce the bundle); use `import type` or a dynamic import()."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      // Mirrors bundleProbe["."].free in packages/ui-router-effect/package.json.
+      "files": ["packages/ui-router-effect/src/**/*.ts"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "lit",
+                "message": "ui-router-effect is framework-agnostic; Lit bindings live in lit-ui-router-effect."
+              },
+              {
+                "name": "lit-ui-router",
+                "message": "ui-router-effect is framework-agnostic; Lit bindings live in lit-ui-router-effect."
+              }
+            ],
+            "patterns": [
+              {
+                "group": [
+                  "lit/**",
+                  "lit-ui-router/**",
+                  "@lit/**",
+                  "@lit-labs/**"
+                ],
+                "message": "ui-router-effect is framework-agnostic; Lit bindings live in lit-ui-router-effect."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["packages/ui-router-signals/src/**/*.ts"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "lit",
+                "message": "ui-router-signals is framework-agnostic; Lit bindings live in lit-ui-router-signals."
+              },
+              {
+                "name": "lit-ui-router",
+                "message": "ui-router-signals is framework-agnostic; Lit bindings live in lit-ui-router-signals."
+              }
+            ],
+            "patterns": [
+              {
+                "group": [
+                  "lit/**",
+                  "lit-ui-router/**",
+                  "@lit/**",
+                  "@lit-labs/**"
+                ],
+                "message": "ui-router-signals is framework-agnostic; Lit bindings live in lit-ui-router-signals."
               }
             ]
           }

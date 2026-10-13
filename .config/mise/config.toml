@@ -221,7 +221,7 @@ description = "Build the @www sites"
 usage = '''
 flag "--output-logs <mode>" help="turbo task output: full | errors-only | new-only | hash-only | none; CI sets errors-only" default="full" env="TURBO_OUTPUT_LOGS"
 '''
-run = "turbo run build --filter='@www/*' --ui=stream --log-order=stream --summarize --output-logs=\"${usage_output_logs?}\""
+run = "turbo run build --filter='@www/*' --ui=stream --log-order=stream --summarize --log-file --output-logs=\"${usage_output_logs?}\""
 
 [tasks.ci]
 # turbo's `ci` is the back-compat alias of `ci:pull_request`.
@@ -233,6 +233,8 @@ run = "turbo run build --filter='@www/*' --ui=stream --log-order=stream --summar
 # what the turbo_force_guard leg refuses outside CI.
 # --summarize writes .turbo/runs/<id>.json (gitignored), which the
 # turbo_summary task reports on every run. It changes nothing about what runs.
+# --log-file writes .turbo/logs/<timestamp>.json, the only log an uncached task
+# leaves: turbo writes a task's .turbo/turbo-*.log for the cache alone.
 # The e2e suites are a SECOND step, not part of turbo's ci graph: they need a
 # dev server, and turbo owns no server lifecycle (see test_e2e). Kept inside
 # this task rather than added as a workflow step so `mise run ci` remains the
@@ -246,7 +248,7 @@ flag "--output-logs <mode>" help="turbo task output: full | errors-only | new-on
 '''
 run = [
   "mise run //tools/build_and_test:mark_session",
-  "turbo run ci --ui=stream --log-order=stream --summarize --output-logs=\"${usage_output_logs?}\"",
+  "turbo run ci --ui=stream --log-order=stream --summarize --log-file --output-logs=\"${usage_output_logs?}\"",
   "TURBO_OUTPUT_LOGS=\"${usage_output_logs?}\" mise run test_e2e",
 ]
 
@@ -260,7 +262,7 @@ flag "--output-logs <mode>" help="turbo task output: full | errors-only | new-on
 '''
 run = [
   "mise run //tools/build_and_test:mark_session",
-  "turbo run ci:main --ui=stream --log-order=stream --summarize --output-logs=\"${usage_output_logs?}\"",
+  "turbo run ci:main --ui=stream --log-order=stream --summarize --log-file --output-logs=\"${usage_output_logs?}\"",
   "TURBO_OUTPUT_LOGS=\"${usage_output_logs?}\" mise run test_e2e",
 ]
 
@@ -275,8 +277,9 @@ run = [
 # so the serve task's build edge is off this path (a nested `mise run` would run
 # build_www twice), and a cold build stays out of the wait-on budget.
 #
-# --summarize here and in build_www: the reporter picks up every summary
-# written since `mark_session`, so these join the ci run rather than displace it.
+# --summarize and --log-file here and in build_www: the reporter picks up every
+# summary and log written since `mark_session`, so these join the ci run rather
+# than displace it.
 #
 # WWW_DEV_PORT overrides the default in dev-port.ts, which serve-and-test.ts
 # resolves. WRANGLER_LOG and CYPRESS_* reach Cypress through the tasks'

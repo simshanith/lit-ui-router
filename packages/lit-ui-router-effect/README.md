@@ -30,24 +30,27 @@ yarn add lit-ui-router-effect effect
 
 `lit-ui-router`, `lit`, `effect`, and `@uirouter/core` are peer dependencies.
 
+### Effect 3 and 4
+
+Both majors are supported (`effect@^3.22.0 || ^4.0.2`) and both are exercised in CI. The bindings' own API is identical on either. The examples below are written for Effect 4, whose `Equal.equals` compares plain objects structurally. On Effect 3 it compares them by reference, so wrap a selected object in `Data.struct(...)` for `equals: Equal.equals` to see two equal selections as unchanged.
+
 ## Quick Start
 
 ```typescript
 import { html, LitElement } from 'lit';
-import { Data, Equal } from 'effect';
+import { Equal } from 'effect';
 import { RouterRefController } from 'lit-ui-router-effect';
 
 class AppNav extends LitElement {
   // Re-renders only when a section's visibility actually flips —
-  // not on every transition. Data.struct gives the selection value
-  // equality, so Equal.equals compares it structurally.
+  // not on every transition. Equal.equals compares the selection
+  // structurally.
   private active = new RouterRefController(
     this,
-    (route) =>
-      Data.struct({
-        inbox: route.includes('inbox.**'),
-        contacts: route.includes('contacts.**'),
-      }),
+    (route) => ({
+      inbox: route.includes('inbox.**'),
+      contacts: route.includes('contacts.**'),
+    }),
     { equals: Equal.equals },
   );
 
@@ -87,7 +90,7 @@ new RouterRefController(host, selector, options?)
 - `selector: (route: RouteSnapshot) => T` — the selected expression; the result is exposed as `.value`
 - `options.router` — explicit router instance, skipping context discovery; the route is then read at construction, so `.value` is live before the host connects. A thunk (`() => UIRouter | undefined`) is resolved at construction and again on every `hostConnected`; when it returns `undefined`, the controller discovers the router as if the option were omitted. Discovery subscribes, so on a page served by `lit-ui-router-ssr` the host follows `<ui-router>` from its placeholder router to the app's when `hydrateRoot()` sets it. A `lit-ui-router` that does not hand that router to subscribers leaves the host on the placeholder; hand such a host its router here or through `setRouter()`
 - `options.onChange` — effect invoked when the selected value changes (and once on every (re)connect); useful for resetting component state from route params
-- `options.equals` — comparer for precise, value-based change detection (`Equal.equals` for `Data` values, or any `(a, b) => boolean`); defaults to `Object.is`
+- `options.equals` — comparer for precise, value-based change detection (`Equal.equals`, or any `(a, b) => boolean`); defaults to `Object.is`
 - `options.initialValue` — the value `.value` carries before the router is discovered: before `hostConnected`, and while a host has no router context
 - `options.runtime` — the runtime the subscription fiber is forked on; defaults to Effect's default runtime. It runs the controller's own fibers and provides no services: the selector stays a plain function over the snapshot. An app's `ManagedRuntime<R>` satisfies it because the controller requires nothing from `R`
 
@@ -98,14 +101,14 @@ new RouterRefController(host, selector, options?)
 The generic primitive behind `RouterRefController` — the same selector/options contract over any `SubscriptionRef`s:
 
 ```typescript
-import { Data, Equal } from 'effect';
+import { Equal } from 'effect';
 import { RefController } from 'lit-ui-router-effect';
 
 class NavHeader extends LitElement {
   private auth = new RefController(
     this,
     [Session.user$, Session.loggedIn$],
-    (user, loggedIn) => Data.struct({ user, loggedIn }),
+    (user, loggedIn) => ({ user, loggedIn }),
     { equals: Equal.equals },
   );
 

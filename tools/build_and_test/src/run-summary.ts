@@ -39,6 +39,7 @@ import {
   type OverviewContext,
   type RunReport,
   type RunSummary,
+  type StructuredLogEntry,
   annotationNote,
   buildReports,
   extractAnnotations,
@@ -50,6 +51,7 @@ import {
   sessionLines,
   sessionMarkdown,
   sessionStdoutReport,
+  structuredTaskLog,
   type ToolAnnotation,
   warnLaneEntries,
 } from './run-summary.core.ts';
@@ -58,6 +60,9 @@ import { errorCommand, warningCommand } from '@tools/shared/gha.core.ts';
 import { onActions } from '@tools/shared/gha.ts';
 
 const RUNS_DIR = process.env.TURBO_RUNS_DIR ?? '.turbo/runs';
+
+/** Where `turbo --log-file` writes by default: an uncached task's only log. */
+const LOGS_DIR = '.turbo/logs';
 
 const SESSION_FILE =
   process.env.TURBO_SUMMARY_SESSION ?? '.turbo/summary-session';
@@ -91,25 +96,25 @@ async function sessionStart(): Promise<number | undefined> {
   }
 }
 
-interface FoundSummary {
+interface FoundFile {
   path: string;
   mtimeMs: number;
 }
 
-/** Every `*.json` in the runs directory, newest first. */
-async function allSummaries(): Promise<FoundSummary[]> {
+/** Every `*.json` in `dir`, newest first. */
+async function allJson(dir: string): Promise<FoundFile[]> {
   let names: string[];
 
   try {
-    names = (await readdir(RUNS_DIR)).filter((name) => name.endsWith('.json'));
+    names = (await readdir(dir)).filter((name) => name.endsWith('.json'));
   } catch {
     return [];
   }
 
-  const found: FoundSummary[] = [];
+  const found: FoundFile[] = [];
 
   for (const name of names) {
-    const path = join(RUNS_DIR, name);
+    const path = join(dir, name);
     const { mtimeMs } = await stat(path);
     found.push({ path, mtimeMs });
   }
@@ -118,16 +123,16 @@ async function allSummaries(): Promise<FoundSummary[]> {
 }
 
 /**
- * The summaries this session wrote, oldest first — `mise run ci` invokes turbo
- * three times (the graph, the docs build, the e2e suites) and every one of them
- * is a run worth seeing.
+ * The run summaries or `--log-file` logs this session wrote under `dir`, oldest
+ * first — `mise run ci` invokes turbo three times (the graph, the docs build,
+ * the e2e suites) and every one of them is a run worth seeing.
  *
  * Selected by mtime against the session marker rather than by parsing each
  * file, so a half-written or malformed summary costs its own line and not the
  * report. With no marker this degrades to the newest single run.
  */
-async function sessionSummaries(): Promise<string[]> {
-  const found = await allSummaries();
+async function sessionFiles(dir: string): Promise<string[]> {
+  const found = await allJson(dir);
 
   if (found.length === 0) return [];
   const started = await sessionStart();
@@ -147,18 +152,45 @@ async function sessionSummaries(): Promise<string[]> {
  * their state, and all of them for tool annotations — a green lint task's
  * warnings live only in the log it printed (which turbo replays on a cache hit).
  */
-async function readLogs(summary: RunSummary): Promise<Map<string, string>> {
+async function readLogs(
+  summary: RunSummary,
+  structured: readonly StructuredLogEntry[],
+): Promise<Map<string, string>> {
   const logs = new Map<string, string>();
 
   for (const task of summary.tasks) {
-    try {
-      logs.set(task.taskId, await readFile(task.logFile, 'utf8'));
-    } catch {
-      // Left unset: buildReports renders the execution.error instead.
-    }
+    const own =
+      task.logFile === undefined
+        ? undefined
+        : await readFile(task.logFile, 'utf8').catch(() => undefined);
+
+    const log = own ?? structuredTaskLog(structured, task);
+
+    // Left unset: buildReports renders the execution.error instead.
+    if (log !== undefined) logs.set(task.taskId, log);
   }
 
   return logs;
+}
+
+/** Every entry of this session's `--log-file` logs; an unreadable one is skipped. */
+async function readStructuredLogs(): Promise<StructuredLogEntry[]> {
+  const entries: StructuredLogEntry[] = [];
+
+  for (const path of await sessionFiles(LOGS_DIR)) {
+    try {
+      // SAFETY: turbo's documented --log-file shape, a JSON array at all times
+      entries.push(
+        ...(JSON.parse(await readFile(path, 'utf8')) as StructuredLogEntry[]),
+      );
+    } catch (error: unknown) {
+      warn(
+        `skipping ${basename(path)}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  return entries;
 }
 
 async function publish(
@@ -231,7 +263,7 @@ async function publish(
 }
 
 async function main(): Promise<void> {
-  const paths = await sessionSummaries();
+  const paths = await sessionFiles(RUNS_DIR);
 
   if (paths.length === 0) {
     warn(
@@ -249,6 +281,7 @@ async function main(): Promise<void> {
   // looked up by taskId, and no task appears in two runs of one session.
   const logs = new Map<string, string>();
   const annotations: ToolAnnotation[] = [];
+  const structured = await readStructuredLogs();
 
   for (const path of paths) {
     let summary: RunSummary;
@@ -264,7 +297,7 @@ async function main(): Promise<void> {
       continue;
     }
 
-    const runLogs = await readLogs(summary);
+    const runLogs = await readLogs(summary, structured);
 
     for (const [taskId, log] of runLogs) logs.set(taskId, log);
     annotations.push(...extractAnnotations(summary, runLogs, process.cwd()));

@@ -120,20 +120,20 @@ let inflight: ChildProcess | undefined;
 // flake rate — the most misleading number this script could produce. Resolve it
 // once up front and refuse to sample rather than spend attempts on a harness
 // error. Exit 64 (EX_USAGE) so it cannot be read as a count of failed attempts.
-function assertTaskResolves(): void {
-  if (!exitsZero('mise', ['tasks', 'info', E2E_TASK])) {
-    const note = `cannot resolve \`mise run ${E2E_TASK}\` — harness error, not flake. No attempts run.`;
-    console.error(`[deflake] ${note}`);
+function taskResolves(): boolean {
+  if (exitsZero('mise', ['tasks', 'info', E2E_TASK])) return true;
 
-    if (process.env.GITHUB_STEP_SUMMARY) {
-      appendFileSync(
-        process.env.GITHUB_STEP_SUMMARY,
-        `### Deflake e2e: harness error\n\n${note}\n\n`,
-      );
-    }
+  const note = `cannot resolve \`mise run ${E2E_TASK}\` — harness error, not flake. No attempts run.`;
+  console.error(`[deflake] ${note}`);
 
-    process.exit(64);
+  if (process.env.GITHUB_STEP_SUMMARY) {
+    appendFileSync(
+      process.env.GITHUB_STEP_SUMMARY,
+      `### Deflake e2e: harness error\n\n${note}\n\n`,
+    );
   }
+
+  return false;
 }
 
 async function runAttempt(logFile: string): Promise<number> {
@@ -163,13 +163,18 @@ async function main(): Promise<void> {
   // The workflow's cancel-in-progress delivers SIGTERM/SIGINT; take the
   // in-flight test child down with us instead of orphaning a dev server.
   for (const sig of ['SIGTERM', 'SIGINT'] as const) {
-    process.on(sig, () => {
+    // once: the re-sent signal meets the default handler and ends the process
+    process.once(sig, () => {
       inflight?.kill(sig);
-      process.exit(1);
+      process.kill(process.pid, sig);
     });
   }
 
-  assertTaskResolves();
+  if (!taskResolves()) {
+    process.exitCode = 64;
+
+    return;
+  }
 
   const runs = clampRuns(process.env.DEFLAKE_RUNS);
   const port = resolveWwwDevPort();

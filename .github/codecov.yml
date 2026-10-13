@@ -46,7 +46,15 @@ component_management:
       name: lit-ui-router-mobx
       paths:
         - packages/lit-ui-router-mobx/src/**
+    - component_id: ui-router-effect
+      name: ui-router-effect
+      paths:
+        - packages/ui-router-effect/src/**
     - component_id: ui-router-server
       name: ui-router-server
       paths:
         - packages/ui-router-server/src/**
+    - component_id: route-snapshot
+      name: route-snapshot
+      paths:
+        - packages/shared/route-snapshot/src/**

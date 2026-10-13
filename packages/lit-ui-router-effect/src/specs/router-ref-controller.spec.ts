@@ -1,16 +1,7 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import {
-  Context,
-  Data,
-  Effect,
-  Equal,
-  Exit,
-  Fiber,
-  Layer,
-  ManagedRuntime,
-} from 'effect';
+import { Data, Effect, Equal, Fiber, Layer, ManagedRuntime } from 'effect';
 import { UIRouterLit, UIRouterLitElement } from 'lit-ui-router';
 import {
   ContextCallback,
@@ -20,6 +11,7 @@ import {
 } from 'lit-ui-router/context';
 
 import { RefRuntime } from '../ref-controller.js';
+import { isInterrupted, serviceKey } from './effect-compat.js';
 import { RouterRefController } from '../router-ref-controller.js';
 import { appendParentFirst } from '@tools/happy-dom/append.ts';
 import {
@@ -46,7 +38,9 @@ declare global {
   }
 }
 
-class Router extends Context.Tag('Router')<Router, UIRouterLit>() {}
+const Router = serviceKey<UIRouterLit>('Router');
+
+class RouteId extends Data.Class<{ readonly id: string | undefined }> {}
 
 const cleanups: (() => void)[] = [];
 
@@ -61,9 +55,9 @@ function createHost(): RouterRefHost {
 /** Mounts the host inside a <ui-router> providing the given router. */
 /** A default runtime that keeps every fiber it forks. */
 function recordingRuntime(): RefRuntime & {
-  readonly fibers: Fiber.RuntimeFiber<unknown, unknown>[];
+  readonly fibers: Fiber.Fiber<unknown, unknown>[];
 } {
-  const fibers: Fiber.RuntimeFiber<unknown, unknown>[] = [];
+  const fibers: Fiber.Fiber<unknown, unknown>[] = [];
 
   return {
     fibers,
@@ -78,9 +72,9 @@ function recordingRuntime(): RefRuntime & {
 }
 
 async function interrupted(
-  fiber: Fiber.RuntimeFiber<unknown, unknown>,
+  fiber: Fiber.Fiber<unknown, unknown>,
 ): Promise<boolean> {
-  return Exit.isInterrupted(await Effect.runPromise(Fiber.await(fiber)));
+  return isInterrupted(await Effect.runPromise(Fiber.await(fiber)));
 }
 
 interface UpgradingProvider {
@@ -328,7 +322,7 @@ describe('RouterRefController', () => {
     // SAFETY: state `b` declares `id` as a string param.
     const controller = new RouterRefController(
       host,
-      (route) => Data.struct({ id: route.params.id as string | undefined }),
+      (route) => new RouteId({ id: route.params.id as string | undefined }),
       { equals: Equal.equals, onChange },
     );
 
@@ -370,7 +364,7 @@ describe('RouterRefController', () => {
   it('forks the subscription on the runtime it is given', async () => {
     const router = createTestRouter(testStates);
     await routerGo(router, 'a');
-    const runtime = ManagedRuntime.make(Layer.succeed(Router, router));
+    const runtime = ManagedRuntime.make(Layer.succeed(Router)(router));
     cleanups.push(() => void runtime.dispose());
     const runFork = vi.spyOn(runtime, 'runFork');
     const host = createHost();
@@ -378,7 +372,14 @@ describe('RouterRefController', () => {
     const controller = new RouterRefController(
       host,
       (route) => route.current?.name,
-      { router: runtime.runSync(Router), runtime },
+      {
+        router: runtime.runSync(
+          Effect.gen(function* () {
+            return yield* Router;
+          }),
+        ),
+        runtime,
+      },
     );
 
     document.body.appendChild(host);
@@ -395,9 +396,9 @@ describe('RouterRefController', () => {
     host.remove();
     expect(runFork).toHaveBeenCalledTimes(1);
     const fiber = runFork.mock.results[0].value;
-    expect(
-      Exit.isInterrupted(await Effect.runPromise(Fiber.await(fiber))),
-    ).toBe(true);
+    expect(isInterrupted(await Effect.runPromise(Fiber.await(fiber)))).toBe(
+      true,
+    );
   });
 
   describe('setRouter', () => {

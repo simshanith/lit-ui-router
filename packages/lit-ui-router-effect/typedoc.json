@@ -44,7 +44,7 @@
     "effect": {
       "SubscriptionRef": "https://effect.website/docs/state-management/subscriptionref/",
       "Effect": "https://effect.website/docs/getting-started/the-effect-type/",
-      "RuntimeFiber": "https://effect.website/docs/concurrency/fibers/",
+      "Fiber": "https://effect.website/docs/concurrency/fibers/",
       "Stream": "https://effect.website/docs/stream/introduction/"
     },
     "lit-ui-router": {

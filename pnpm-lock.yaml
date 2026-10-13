@@ -33,6 +33,9 @@ catalogs:
     '@custom-elements-manifest/analyzer':
       specifier: ^0.11.0
       version: 0.11.0
+    '@lit-labs/signals':
+      specifier: ^0.3.0
+      version: 0.3.0
     '@lit-labs/ssr':
       specifier: ^4.1.0
       version: 4.1.0
@@ -115,8 +118,8 @@ catalogs:
       specifier: ^9.0.0
       version: 9.0.0
     effect:
-      specifier: ^3.22.2
-      version: 3.22.2
+      specifier: ^4.0.2
+      version: 4.0.2
     esbuild:
       specifier: ^0.28.2
       version: 0.28.2
@@ -225,6 +228,9 @@ catalogs:
     semver:
       specifier: ^7.8.5
       version: 7.8.5
+    signal-polyfill:
+      specifier: ^0.2.2
+      version: 0.2.2
     start-server-and-test:
       specifier: ^3.0.12
       version: 3.0.12
@@ -282,6 +288,10 @@ catalogs:
     yaml:
       specifier: ^2.9.0
       version: 2.9.1
+  effect3-compat:
+    effect-3:
+      specifier: npm:effect@^3.22.2
+      version: 3.22.2
   lit2-compat:
     lit-2:
       specifier: npm:lit@^2.8.0
@@ -290,6 +300,25 @@ catalogs:
     mobx-6:
       specifier: npm:mobx@^6.16.1
       version: 6.16.1
+  peerFloor:
+    '@lit-labs/ssr-client-floor':
+      specifier: npm:@lit-labs/ssr-client@1.1.0
+      version: 1.1.0
+    '@lit-labs/ssr-floor':
+      specifier: npm:@lit-labs/ssr@4.0.0
+      version: 4.0.0
+    '@uirouter/core-floor':
+      specifier: npm:@uirouter/core@6.0.8
+      version: 6.0.8
+    effect-floor:
+      specifier: npm:effect@3.22.0
+      version: 3.22.0
+    hono-floor:
+      specifier: npm:hono@4.0.0
+      version: 4.0.0
+    signal-polyfill-floor:
+      specifier: npm:signal-polyfill@0.2.0
+      version: 0.2.0
   peerFloorEffect:
     lit-ui-router-floor:
       specifier: npm:lit-ui-router@1.15.0
@@ -302,6 +331,17 @@ catalogs:
     lit-ui-router-floor:
       specifier: npm:lit-ui-router@1.15.0
       version: 1.15.0
+  peerFloorSignals:
+    lit-ui-router-floor:
+      specifier: npm:lit-ui-router@1.15.0
+      version: 1.15.0
+  peerFloorSsr:
+    lit-ui-router-floor:
+      specifier: npm:lit-ui-router@1.16.1
+      version: 1.16.1
+    ui-router-server-floor:
+      specifier: npm:ui-router-server@0.2.0
+      version: 0.2.0
   publishedDependencies:
     '@oxc-project/runtime':
       specifier: '>=0.50.0'
@@ -321,6 +361,9 @@ catalogs:
       specifier: npm:@typescript/typescript6@^6.0.2
       version: 6.0.2
   workspace:
+    '@repo/route-snapshot':
+      specifier: workspace:*
+      version: workspace:*
     '@tools/a11y':
       specifier: workspace:*
       version: workspace:*
@@ -408,6 +451,9 @@ catalogs:
     lit-ui-router-mobx:
       specifier: workspace:*
       version: workspace:*
+    lit-ui-router-signals:
+      specifier: workspace:*
+      version: workspace:*
     lit-ui-router-ssr:
       specifier: workspace:*
       version: workspace:*
@@ -426,10 +472,16 @@ catalogs:
     sample-app-shared:
       specifier: workspace:*
       version: workspace:*
+    ui-router-effect:
+      specifier: workspace:*
+      version: workspace:*
     ui-router-navigation-location-plugin:
       specifier: workspace:*
       version: workspace:*
     ui-router-server:
+      specifier: workspace:*
+      version: workspace:*
+    ui-router-signals:
       specifier: workspace:*
       version: workspace:*
 
@@ -587,7 +639,7 @@ importers:
         version: 6.1.2
       effect:
         specifier: 'catalog:'
-        version: 3.22.2
+        version: 4.0.2
       lit:
         specifier: 'catalog:'
         version: 3.3.3
@@ -662,6 +714,58 @@ importers:
       '@tools/build_and_test':
         specifier: catalog:workspace
         version: link:../../tools/build_and_test
+      '@types/dom-navigation':
+        specifier: 'catalog:'
+        version: 1.0.7
+      '@types/lodash-es':
+        specifier: 'catalog:'
+        version: 4.17.12
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.19.1
+      oxfmt:
+        specifier: 'catalog:'
+        version: 0.72.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.87.0(oxlint-tsgolint@7.0.2003)
+      typescript:
+        specifier: catalog:typescript6-compat
+        version: '@typescript/typescript6@6.0.2'
+      typescript-7:
+        specifier: 'catalog:'
+        version: typescript@7.0.2
+      vite:
+        specifier: 'catalog:'
+        version: 8.3.4(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)
+
+  apps/sample-app-lit-signals:
+    dependencies:
+      '@lit-labs/signals':
+        specifier: 'catalog:'
+        version: 0.3.0
+      '@uirouter/core':
+        specifier: 'catalog:'
+        version: 6.1.2
+      lit:
+        specifier: 'catalog:'
+        version: 3.3.3
+      lit-ui-router:
+        specifier: catalog:workspace
+        version: link:../../packages/lit-ui-router
+      lit-ui-router-signals:
+        specifier: catalog:workspace
+        version: link:../../packages/lit-ui-router-signals
+      lodash-es:
+        specifier: 'catalog:'
+        version: 4.18.1
+      sample-app-shared:
+        specifier: catalog:workspace
+        version: link:../sample-app-shared
+      signal-polyfill:
+        specifier: 'catalog:'
+        version: 0.2.2
+    devDependencies:
       '@types/dom-navigation':
         specifier: 'catalog:'
         version: 1.0.7
@@ -955,6 +1059,9 @@ importers:
       '@uirouter/core':
         specifier: 'catalog:'
         version: 6.1.2
+      '@uirouter/core-floor':
+        specifier: catalog:peerFloor
+        version: '@uirouter/core@6.0.8'
       '@vitest/browser':
         specifier: 'catalog:'
         version: 5.0.3(vite@8.3.4(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))(vitest@5.0.3)
@@ -1015,6 +1122,9 @@ importers:
       '@release-it/conventional-changelog':
         specifier: 'catalog:'
         version: 12.0.2(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.2)(release-it@21.1.1(@types/node@24.19.1)(magicast@0.5.4)(supports-color@10.2.2))
+      '@repo/route-snapshot':
+        specifier: catalog:workspace
+        version: link:../shared/route-snapshot
       '@tools/bundle-probe':
         specifier: catalog:workspace
         version: link:../../tools/bundle-probe
@@ -1045,12 +1155,21 @@ importers:
       '@uirouter/core':
         specifier: 'catalog:'
         version: 6.1.2
+      '@uirouter/core-floor':
+        specifier: catalog:peerFloor
+        version: '@uirouter/core@6.0.8'
       '@vitest/coverage-v8':
         specifier: 'catalog:'
         version: 5.0.3(@vitest/browser@5.0.3)(vitest@5.0.3)
       effect:
         specifier: 'catalog:'
-        version: 3.22.2
+        version: 4.0.2
+      effect-3:
+        specifier: catalog:effect3-compat
+        version: effect@3.22.2
+      effect-floor:
+        specifier: catalog:peerFloor
+        version: effect@3.22.0
       happy-dom:
         specifier: 'catalog:'
         version: 20.14.5
@@ -1132,6 +1251,9 @@ importers:
       '@uirouter/core':
         specifier: 'catalog:'
         version: 6.1.2
+      '@uirouter/core-floor':
+        specifier: catalog:peerFloor
+        version: '@uirouter/core@6.0.8'
       '@vitest/coverage-v8':
         specifier: 'catalog:'
         version: 5.0.3(@vitest/browser@5.0.3)(vitest@5.0.3)
@@ -1187,6 +1309,81 @@ importers:
         specifier: 'catalog:'
         version: 5.0.3(@types/node@24.19.1)(@vitest/browser-playwright@5.0.3)(@vitest/coverage-v8@5.0.3)(@vitest/ui@5.0.3)(happy-dom@20.14.5)(vite@8.3.4(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
 
+  packages/lit-ui-router-signals:
+    devDependencies:
+      '@release-it/conventional-changelog':
+        specifier: 'catalog:'
+        version: 12.0.2(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.2)(release-it@21.1.1(@types/node@24.19.1)(magicast@0.5.4)(supports-color@10.2.2))
+      '@tools/bundle-probe':
+        specifier: catalog:workspace
+        version: link:../../tools/bundle-probe
+      '@tools/compat-guards':
+        specifier: catalog:workspace
+        version: link:../../tools/compat-guards
+      '@tools/happy-dom':
+        specifier: catalog:workspace
+        version: link:../../tools/happy-dom
+      '@tools/lit-test-env':
+        specifier: catalog:workspace
+        version: link:../../tools/lit-test-env
+      '@tools/oxc-emit':
+        specifier: catalog:workspace
+        version: link:../../tools/oxc-emit
+      '@tools/release-config':
+        specifier: catalog:workspace
+        version: link:../../tools/release-config
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.19.1
+      '@uirouter/core':
+        specifier: 'catalog:'
+        version: 6.1.2
+      '@uirouter/core-floor':
+        specifier: catalog:peerFloor
+        version: '@uirouter/core@6.0.8'
+      '@vitest/coverage-v8':
+        specifier: 'catalog:'
+        version: 5.0.3(@vitest/browser@5.0.3)(vitest@5.0.3)
+      happy-dom:
+        specifier: 'catalog:'
+        version: 20.14.5
+      lit:
+        specifier: 'catalog:'
+        version: 3.3.3
+      lit-2:
+        specifier: catalog:lit2-compat
+        version: lit@2.8.0
+      lit-ui-router:
+        specifier: catalog:workspace
+        version: link:../lit-ui-router
+      lit-ui-router-floor:
+        specifier: catalog:peerFloorSignals
+        version: lit-ui-router@1.15.0(@uirouter/core@6.1.2)(lit@3.3.3)
+      oxfmt:
+        specifier: 'catalog:'
+        version: 0.72.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.87.0(oxlint-tsgolint@7.0.2003)
+      release-it:
+        specifier: 'catalog:'
+        version: 21.1.1(@types/node@24.19.1)(magicast@0.5.4)(supports-color@10.2.2)
+      signal-polyfill:
+        specifier: 'catalog:'
+        version: 0.2.2
+      typescript:
+        specifier: catalog:typescript6-compat
+        version: '@typescript/typescript6@6.0.2'
+      typescript-7:
+        specifier: 'catalog:'
+        version: typescript@7.0.2
+      ui-router-signals:
+        specifier: catalog:workspace
+        version: link:../ui-router-signals
+      vitest:
+        specifier: 'catalog:'
+        version: 5.0.3(@types/node@24.19.1)(@vitest/browser-playwright@5.0.3)(@vitest/coverage-v8@5.0.3)(@vitest/ui@5.0.3)(happy-dom@20.14.5)(vite@8.3.4(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
+
   packages/lit-ui-router-ssr:
     dependencies:
       '@oxc-project/runtime':
@@ -1199,12 +1396,21 @@ importers:
       '@lit-labs/ssr-client':
         specifier: 'catalog:'
         version: 1.1.8
+      '@lit-labs/ssr-client-floor':
+        specifier: catalog:peerFloor
+        version: '@lit-labs/ssr-client@1.1.0'
+      '@lit-labs/ssr-floor':
+        specifier: catalog:peerFloor
+        version: '@lit-labs/ssr@4.0.0(@types/node@24.19.1)'
       '@release-it/conventional-changelog':
         specifier: 'catalog:'
         version: 12.0.2(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.2)(release-it@21.1.1(@types/node@24.19.1)(magicast@0.5.4)(supports-color@10.2.2))
       '@tools/bundle-probe':
         specifier: catalog:workspace
         version: link:../../tools/bundle-probe
+      '@tools/compat-guards':
+        specifier: catalog:workspace
+        version: link:../../tools/compat-guards
       '@tools/crap':
         specifier: catalog:workspace
         version: link:../../tools/crap
@@ -1226,6 +1432,9 @@ importers:
       '@uirouter/core':
         specifier: 'catalog:'
         version: 6.1.2
+      '@uirouter/core-floor':
+        specifier: catalog:peerFloor
+        version: '@uirouter/core@6.0.8'
       '@vitest/coverage-v8':
         specifier: 'catalog:'
         version: 5.0.3(@vitest/browser@5.0.3)(vitest@5.0.3)
@@ -1238,6 +1447,9 @@ importers:
       lit-ui-router:
         specifier: catalog:workspace
         version: link:../lit-ui-router
+      lit-ui-router-floor:
+        specifier: catalog:peerFloorSsr
+        version: lit-ui-router@1.16.1(@uirouter/core@6.1.2)(lit@3.3.3)
       oxfmt:
         specifier: 'catalog:'
         version: 0.72.0
@@ -1268,6 +1480,9 @@ importers:
       ui-router-server:
         specifier: catalog:workspace
         version: link:../ui-router-server
+      ui-router-server-floor:
+        specifier: catalog:peerFloorSsr
+        version: ui-router-server@0.2.0(@uirouter/core@6.1.2)(hono@4.13.13)
       vitest:
         specifier: 'catalog:'
         version: 5.0.3(@types/node@24.19.1)(@vitest/browser-playwright@5.0.3)(@vitest/coverage-v8@5.0.3)(@vitest/ui@5.0.3)(happy-dom@20.14.5)(vite@8.3.4(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
@@ -1280,6 +1495,9 @@ importers:
       '@tools/bundle-probe':
         specifier: catalog:workspace
         version: link:../../tools/bundle-probe
+      '@tools/compat-guards':
+        specifier: catalog:workspace
+        version: link:../../tools/compat-guards
       '@tools/crap':
         specifier: catalog:workspace
         version: link:../../tools/crap
@@ -1301,6 +1519,9 @@ importers:
       '@uirouter/core':
         specifier: 'catalog:'
         version: 6.1.2
+      '@uirouter/core-floor':
+        specifier: catalog:peerFloor
+        version: '@uirouter/core@6.0.8'
       '@vitest/browser':
         specifier: 'catalog:'
         version: 5.0.3(vite@8.3.4(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))(vitest@5.0.3)
@@ -1347,6 +1568,96 @@ importers:
         specifier: 'catalog:'
         version: 5.0.3(@types/node@24.19.1)(@vitest/browser-playwright@5.0.3)(@vitest/coverage-v8@5.0.3)(@vitest/ui@5.0.3)(happy-dom@20.14.5)(vite@8.3.4(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
 
+  packages/shared/route-snapshot:
+    devDependencies:
+      '@tools/lit-test-env':
+        specifier: catalog:workspace
+        version: link:../../../tools/lit-test-env
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.19.1
+      '@uirouter/core':
+        specifier: 'catalog:'
+        version: 6.1.2
+      '@vitest/coverage-v8':
+        specifier: 'catalog:'
+        version: 5.0.3(@vitest/browser@5.0.3)(vitest@5.0.3)
+      oxfmt:
+        specifier: 'catalog:'
+        version: 0.72.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.87.0(oxlint-tsgolint@7.0.2003)
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+      vitest:
+        specifier: 'catalog:'
+        version: 5.0.3(@types/node@24.19.1)(@vitest/browser-playwright@5.0.3)(@vitest/coverage-v8@5.0.3)(@vitest/ui@5.0.3)(happy-dom@20.14.5)(vite@8.3.4(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
+
+  packages/ui-router-effect:
+    devDependencies:
+      '@release-it/conventional-changelog':
+        specifier: 'catalog:'
+        version: 12.0.2(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.2)(release-it@21.1.1(@types/node@24.19.1)(magicast@0.5.4)(supports-color@10.2.2))
+      '@repo/route-snapshot':
+        specifier: catalog:workspace
+        version: link:../shared/route-snapshot
+      '@tools/bundle-probe':
+        specifier: catalog:workspace
+        version: link:../../tools/bundle-probe
+      '@tools/compat-guards':
+        specifier: catalog:workspace
+        version: link:../../tools/compat-guards
+      '@tools/lit-test-env':
+        specifier: catalog:workspace
+        version: link:../../tools/lit-test-env
+      '@tools/oxc-emit':
+        specifier: catalog:workspace
+        version: link:../../tools/oxc-emit
+      '@tools/release-config':
+        specifier: catalog:workspace
+        version: link:../../tools/release-config
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.19.1
+      '@uirouter/core':
+        specifier: 'catalog:'
+        version: 6.1.2
+      '@uirouter/core-floor':
+        specifier: catalog:peerFloor
+        version: '@uirouter/core@6.0.8'
+      '@vitest/coverage-v8':
+        specifier: 'catalog:'
+        version: 5.0.3(@vitest/browser@5.0.3)(vitest@5.0.3)
+      effect:
+        specifier: 'catalog:'
+        version: 4.0.2
+      effect-3:
+        specifier: catalog:effect3-compat
+        version: effect@3.22.2
+      effect-floor:
+        specifier: catalog:peerFloor
+        version: effect@3.22.0
+      oxfmt:
+        specifier: 'catalog:'
+        version: 0.72.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.87.0(oxlint-tsgolint@7.0.2003)
+      release-it:
+        specifier: 'catalog:'
+        version: 21.1.1(@types/node@24.19.1)(magicast@0.5.4)(supports-color@10.2.2)
+      typescript:
+        specifier: catalog:typescript6-compat
+        version: '@typescript/typescript6@6.0.2'
+      typescript-7:
+        specifier: 'catalog:'
+        version: typescript@7.0.2
+      vitest:
+        specifier: 'catalog:'
+        version: 5.0.3(@types/node@24.19.1)(@vitest/browser-playwright@5.0.3)(@vitest/coverage-v8@5.0.3)(@vitest/ui@5.0.3)(happy-dom@20.14.5)(vite@8.3.4(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
+
   packages/ui-router-server:
     devDependencies:
       '@release-it/conventional-changelog':
@@ -1355,6 +1666,9 @@ importers:
       '@tools/bundle-probe':
         specifier: catalog:workspace
         version: link:../../tools/bundle-probe
+      '@tools/compat-guards':
+        specifier: catalog:workspace
+        version: link:../../tools/compat-guards
       '@tools/lcov-rebase':
         specifier: catalog:workspace
         version: link:../../tools/lcov-rebase
@@ -1379,9 +1693,15 @@ importers:
       '@uirouter/core':
         specifier: 'catalog:'
         version: 6.1.2
+      '@uirouter/core-floor':
+        specifier: catalog:peerFloor
+        version: '@uirouter/core@6.0.8'
       hono:
         specifier: 'catalog:'
         version: 4.13.13
+      hono-floor:
+        specifier: catalog:peerFloor
+        version: hono@4.0.0
       oxfmt:
         specifier: 'catalog:'
         version: 0.72.0
@@ -1412,6 +1732,66 @@ importers:
       vite:
         specifier: 'catalog:'
         version: 8.3.4(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)
+
+  packages/ui-router-signals:
+    devDependencies:
+      '@release-it/conventional-changelog':
+        specifier: 'catalog:'
+        version: 12.0.2(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.2)(release-it@21.1.1(@types/node@24.19.1)(magicast@0.5.4)(supports-color@10.2.2))
+      '@repo/route-snapshot':
+        specifier: catalog:workspace
+        version: link:../shared/route-snapshot
+      '@tools/bundle-probe':
+        specifier: catalog:workspace
+        version: link:../../tools/bundle-probe
+      '@tools/compat-guards':
+        specifier: catalog:workspace
+        version: link:../../tools/compat-guards
+      '@tools/lit-test-env':
+        specifier: catalog:workspace
+        version: link:../../tools/lit-test-env
+      '@tools/oxc-emit':
+        specifier: catalog:workspace
+        version: link:../../tools/oxc-emit
+      '@tools/release-config':
+        specifier: catalog:workspace
+        version: link:../../tools/release-config
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.19.1
+      '@uirouter/core':
+        specifier: 'catalog:'
+        version: 6.1.2
+      '@uirouter/core-floor':
+        specifier: catalog:peerFloor
+        version: '@uirouter/core@6.0.8'
+      '@vitest/coverage-v8':
+        specifier: 'catalog:'
+        version: 5.0.3(@vitest/browser@5.0.3)(vitest@5.0.3)
+      oxfmt:
+        specifier: 'catalog:'
+        version: 0.72.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.87.0(oxlint-tsgolint@7.0.2003)
+      release-it:
+        specifier: 'catalog:'
+        version: 21.1.1(@types/node@24.19.1)(magicast@0.5.4)(supports-color@10.2.2)
+      signal-polyfill:
+        specifier: 'catalog:'
+        version: 0.2.2
+      signal-polyfill-floor:
+        specifier: catalog:peerFloor
+        version: signal-polyfill@0.2.0
+      typescript:
+        specifier: catalog:typescript6-compat
+        version: '@typescript/typescript6@6.0.2'
+      typescript-7:
+        specifier: 'catalog:'
+        version: typescript@7.0.2
+      vitest:
+        specifier: 'catalog:'
+        version: 5.0.3(@types/node@24.19.1)(@vitest/browser-playwright@5.0.3)(@vitest/coverage-v8@5.0.3)(@vitest/ui@5.0.3)(happy-dom@20.14.5)(vite@8.3.4(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
 
   tools/a11y:
     dependencies:
@@ -1593,7 +1973,7 @@ importers:
         version: 6.1.2
       effect:
         specifier: 'catalog:'
-        version: 3.22.2
+        version: 4.0.2
       hono:
         specifier: 'catalog:'
         version: 4.13.13
@@ -1609,6 +1989,9 @@ importers:
       lit-ui-router-mobx:
         specifier: catalog:workspace
         version: link:../../packages/lit-ui-router-mobx
+      lit-ui-router-signals:
+        specifier: catalog:workspace
+        version: link:../../packages/lit-ui-router-signals
       lit-ui-router-ssr:
         specifier: catalog:workspace
         version: link:../../packages/lit-ui-router-ssr
@@ -1621,6 +2004,9 @@ importers:
       oxlint:
         specifier: 'catalog:'
         version: 1.87.0(oxlint-tsgolint@7.0.2003)
+      signal-polyfill:
+        specifier: 'catalog:'
+        version: 0.2.2
       typescript-5.0:
         specifier: 'catalog:'
         version: typescript@5.0.4
@@ -1633,12 +2019,18 @@ importers:
       typescript-7:
         specifier: 'catalog:'
         version: typescript@7.0.2
+      ui-router-effect:
+        specifier: catalog:workspace
+        version: link:../../packages/ui-router-effect
       ui-router-navigation-location-plugin:
         specifier: catalog:workspace
         version: link:../../packages/navigation-location-plugin
       ui-router-server:
         specifier: catalog:workspace
         version: link:../../packages/ui-router-server
+      ui-router-signals:
+        specifier: catalog:workspace
+        version: link:../../packages/ui-router-signals
 
   tools/embed-heights:
     dependencies:
@@ -1946,6 +2338,9 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 24.19.1
+      '@types/semver':
+        specifier: 'catalog:'
+        version: 7.8.0
       diff:
         specifier: 'catalog:'
         version: 9.0.0
@@ -1964,12 +2359,18 @@ importers:
       oxlint:
         specifier: 'catalog:'
         version: 1.87.0(oxlint-tsgolint@7.0.2003)
+      semver:
+        specifier: 'catalog:'
+        version: 7.8.5
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
       typescript-6:
         specifier: catalog:typescript6
         version: typescript@6.0.3
+      valibot:
+        specifier: 'catalog:'
+        version: 1.5.0(typescript@7.0.2)
       yaml:
         specifier: 'catalog:'
         version: 2.9.1
@@ -3042,11 +3443,26 @@ packages:
   '@lit-labs/observers@2.0.2':
     resolution: {integrity: sha512-eZb5+W9Cb0e/Y5m1DNxBSGTvGB2TAVTGMnTxL/IzFhPQEcZIAHewW1eVBhN8W07A5tirRaAmmF6fGL1V20p3gQ==}
 
+  '@lit-labs/signals@0.3.0':
+    resolution: {integrity: sha512-PfB5FLtorVfkhwTWXOPNT/rvrVdSDY8siwPyR17ztrViRbMqxy1TQBcHqJoA4303QT8yXPGxYtGKJGj7fEfEwg==}
+
+  '@lit-labs/ssr-client@1.1.0':
+    resolution: {integrity: sha512-IY2SuhIOlFhVJu0eRfpRdg9EbBtwRpuEyNPJbFlgmmb6NX2nAwgQB6fJF4SPfpGntz2oMYg4qi2TMe+7ajbu5A==}
+
   '@lit-labs/ssr-client@1.1.8':
     resolution: {integrity: sha512-PjGh81oKsoI64m3IDjTqqjhC7dr2uC/o0jrllUb5gRAyp/RlAHxapgJrjq9kWz97faCHLQ8jUlTi6tGm+8fgyA==}
 
   '@lit-labs/ssr-dom-shim@1.6.0':
     resolution: {integrity: sha512-VHb0ALPMTlgKjM6yIxxoQNnpKyUKLD04VzeQdsiXkMqkvYlAHxq9glGLmgbb889/1GsohSOAjvQYoiBppXFqrQ==}
+
+  '@lit-labs/ssr@4.0.0':
+    resolution: {integrity: sha512-pODr+t7cZVIrCRLuSLuWAACDnztEk5IrRFwFsbxyAyWcP2XP8aKuUZdVM/biXqxvIyHyCKtNZ92Gdcr+pjA5BQ==}
+    engines: {node: '>=13.9.0'}
+    peerDependencies:
+      '@types/node': '>=20.0.0 <25.0.0'
+    peerDependenciesMeta:
+      '@types/node':
+        optional: true
 
   '@lit-labs/ssr@4.1.0':
     resolution: {integrity: sha512-m0zymVVlHB1ddJQ1lastsV8ROW3whFOiHJhVPQWd04MnGTkTlUUVLQctux1QlyD9BtLXNN6iASxv388vhgKMFg==}
@@ -4630,6 +5046,10 @@ packages:
     resolution: {integrity: sha512-mbCddXd+jm7hfx7w2YU64/Av4/NqqeG3GoRZgxPcgoTxYjhrcfJRw9ULch71SS4G+Q3bOXFhRvPqjguN0Hyp5w==}
     hasBin: true
 
+  '@uirouter/core@6.0.8':
+    resolution: {integrity: sha512-Gc/BAW47i4L54p8dqYCJJZuv2s3tqlXQ0fvl6Zp2xrblELPVfxmjnc0eurx3XwfQdaqm3T6uls6tQKkof/4QMw==}
+    engines: {node: '>=4.0.0'}
+
   '@uirouter/core@6.1.2':
     resolution: {integrity: sha512-pYcg+cxVd9E9poC7AJf7ZrlQQrwAV6KVkiPvlbLJX5km+pBWrUOGQhdd87oIGc7/5iVQ7qSiAdl9QD+l55yegg==}
     engines: {node: '>=4.0.0'}
@@ -5532,8 +5952,14 @@ packages:
     engines: {node: '>=20'}
     hasBin: true
 
+  effect@3.22.0:
+    resolution: {integrity: sha512-jhYFe0zTlIRqYFrKTS+6luhmS/Tm0f+JLo0K9KUxvtFab1SUGEszQi2ehOP6QzAZvy831lDmTwwzvVDZSPNz3g==}
+
   effect@3.22.2:
     resolution: {integrity: sha512-fm1CQXCs7GTMwpadZxwU5rnAb2bN6mbQpknq/pXBGCzSKkosNYb9k0wsoL0TfB10rSa5xOEZJjo77u/KLXSANg==}
+
+  effect@4.0.2:
+    resolution: {integrity: sha512-YeYnLqSFrL4+tCOXRrfNP03w8FILoF/wDl+ukraJAGzXrjcS383W7LAAvGBbLatEyktmLxRq+9xJinx7QzXW5A==}
 
   emoji-regex@10.6.0:
     resolution: {integrity: sha512-toUI84YS5YmxW219erniWD0CIVOo46xGKColeNQRgOzDorgBi1v4D71/OFzgD9GO2UGKIv1C3Sp8DAn0+j5w7A==}
@@ -6087,6 +6513,10 @@ packages:
   hast-util-whitespace@3.0.0:
     resolution: {integrity: sha512-88JUN06ipLwsnv+dVn+OIYOvAuvBMy/Qoi6O7mQHxdPXpjy+Cd6xRkWwux7DKO+4sYILtLBRIKgsdpS2gQc7qw==}
 
+  hono@4.0.0:
+    resolution: {integrity: sha512-8dKhuBBpRZEodUttQhrSFJ6PQqHRjXHyeeegfxOf132pvgbf0tOb9qqb7q7eYwAWpOcYrsUOsWdJ0sQIIovhZg==}
+    engines: {node: '>=16.0.0'}
+
   hono@4.13.13:
     resolution: {integrity: sha512-CQ46U0ZkAGmbT/4UxdzzGJpacP2IeKgY4a5/tOI9AABbpOMfK739wfDXmv1usCk+3RkKj1hQy4/fjhiwa2xlrA==}
     engines: {node: '>=16.9.0'}
@@ -6523,6 +6953,12 @@ packages:
 
   lit-ui-router@1.15.0:
     resolution: {integrity: sha512-bSkXolXTrFvjZwRqz4P/e3qSJycvy3BnqLtlz3doM2DwYDQPBvDiHaoyJHvwjZbtYd99fUJq7HkSC/38Szz9fA==}
+    peerDependencies:
+      '@uirouter/core': ^6.0.8
+      lit: ^2.0.0 || ^3.0.0
+
+  lit-ui-router@1.16.1:
+    resolution: {integrity: sha512-RNnFGqL8H+WAkVngSqp+o3KqMHUkYVfS/95pMMQztX8aJ6AvtLhedxVt3jVJ1IrJ0ATPmniNceUZMJ/lc0jSig==}
     peerDependencies:
       '@uirouter/core': ^6.0.8
       lit: ^2.0.0 || ^3.0.0
@@ -7400,6 +7836,12 @@ packages:
     resolution: {integrity: sha512-bzyZ1e88w9O1iNJbKnOlvYTrWPDl46O1bG0D3XInv+9tkPrxrN8jUUTiFlDkkmKWgn1M6CfIA13SuGqOa9Korw==}
     engines: {node: '>=14'}
 
+  signal-polyfill@0.2.0:
+    resolution: {integrity: sha512-EbZ5L6pm0LPVZECfzfDLQ+2tWd2xQ+iG+HfuvqWjF+pl0yvdT1rsL/YgfeBakubLbnwAd1zRvap1rYqPBG8prA==}
+
+  signal-polyfill@0.2.2:
+    resolution: {integrity: sha512-p63Y4Er5/eMQ9RHg0M0Y64NlsQKpiu6MDdhBXpyywRuWiPywhJTpKJ1iB5K2hJEbFZ0BnDS7ZkJ+0AfTuL37Rg==}
+
   sigstore@5.0.0:
     resolution: {integrity: sha512-hJqJfoG/e4qFQaauQL00c6J6FrHLBGKtkFvW3JbTSIEFOhLrSjdSM/gWd/yUOfYo/gsERehTXGC1VZWX+9X4Dg==}
     engines: {node: ^22.22.2 || ^24.15.0 || >=26.0.0}
@@ -7766,6 +8208,18 @@ packages:
 
   uc.micro@2.1.0:
     resolution: {integrity: sha512-ARDJmphmdvUk6Glw7y9DQ2bFkKBHwQHLi2lsaH6PPmz/Ka9sFOBsBluozhDltWmnv9u/cF6Rt87znRTPV+yp/A==}
+
+  ui-router-server@0.2.0:
+    resolution: {integrity: sha512-oawYIyc5/Ucb3lYj1LbqJn7C3gwWwxFqh6xYfI828wj+UZKKRLRN60QKGBGyiHwd/OJiyIVhBrbZ+iK9ZqLlYQ==}
+    engines: {node: '>=22.12'}
+    peerDependencies:
+      '@uirouter/core': ^6.0.8
+      hono: ^4.0.0
+    peerDependenciesMeta:
+      '@uirouter/core':
+        optional: true
+      hono:
+        optional: true
 
   unbash@4.0.11:
     resolution: {integrity: sha512-FoSOKV7NEofQSkAefMVHam4ZPKYMxjAydxiV72UFEDNV/YofxjGfiZ2A9pZjdL/lRJzTjcu4PABo1JYJX8N5iQ==}
@@ -9049,6 +9503,17 @@ snapshots:
     dependencies:
       '@lit/reactive-element': 2.1.2
 
+  '@lit-labs/signals@0.3.0':
+    dependencies:
+      lit: 3.3.3
+      signal-polyfill: 0.2.2
+
+  '@lit-labs/ssr-client@1.1.0':
+    dependencies:
+      '@lit/reactive-element': 1.6.3
+      lit: 2.8.0
+      lit-html: 2.8.0
+
   '@lit-labs/ssr-client@1.1.8':
     dependencies:
       '@lit/reactive-element': 2.1.2
@@ -9056,6 +9521,21 @@ snapshots:
       lit-html: 3.3.3
 
   '@lit-labs/ssr-dom-shim@1.6.0': {}
+
+  '@lit-labs/ssr@4.0.0(@types/node@24.19.1)':
+    dependencies:
+      '@lit-labs/ssr-client': 1.1.8
+      '@lit-labs/ssr-dom-shim': 1.6.0
+      '@lit/reactive-element': 2.1.2
+      '@parse5/tools': 0.3.0
+      enhanced-resolve: 5.24.5
+      lit: 3.3.3
+      lit-element: 4.2.2
+      lit-html: 3.3.3
+      node-fetch: 3.3.2
+      parse5: 7.3.0
+    optionalDependencies:
+      '@types/node': 24.19.1
 
   '@lit-labs/ssr@4.1.0(@types/node@24.19.1)':
     dependencies:
@@ -10290,6 +10770,8 @@ snapshots:
     dependencies:
       '@typescript/old': typescript@6.0.3
 
+  '@uirouter/core@6.0.8': {}
+
   '@uirouter/core@6.1.2': {}
 
   '@uirouter/dsr@1.2.0(@uirouter/core@6.1.2)':
@@ -11240,10 +11722,17 @@ snapshots:
       minimatch: 10.2.5
       semver: 7.8.5
 
+  effect@3.22.0:
+    dependencies:
+      '@standard-schema/spec': 1.1.0
+      fast-check: 3.23.2
+
   effect@3.22.2:
     dependencies:
       '@standard-schema/spec': 1.1.0
       fast-check: 3.23.2
+
+  effect@4.0.2: {}
 
   emoji-regex@10.6.0: {}
 
@@ -11971,6 +12460,8 @@ snapshots:
     dependencies:
       '@types/hast': 3.0.5
 
+  hono@4.0.0: {}
+
   hono@4.13.13: {}
 
   hookable@5.5.3: {}
@@ -12369,6 +12860,12 @@ snapshots:
       '@types/trusted-types': 2.0.7
 
   lit-ui-router@1.15.0(@uirouter/core@6.1.2)(lit@3.3.3):
+    dependencies:
+      '@oxc-project/runtime': 0.153.0
+      '@uirouter/core': 6.1.2
+      lit: 3.3.3
+
+  lit-ui-router@1.16.1(@uirouter/core@6.1.2)(lit@3.3.3):
     dependencies:
       '@oxc-project/runtime': 0.153.0
       '@uirouter/core': 6.1.2
@@ -13456,6 +13953,10 @@ snapshots:
 
   signal-exit@4.1.0: {}
 
+  signal-polyfill@0.2.0: {}
+
+  signal-polyfill@0.2.2: {}
+
   sigstore@5.0.0(supports-color@10.2.2):
     dependencies:
       '@sigstore/bundle': 5.0.0
@@ -13817,6 +14318,11 @@ snapshots:
   typical@4.0.0: {}
 
   uc.micro@2.1.0: {}
+
+  ui-router-server@0.2.0(@uirouter/core@6.1.2)(hono@4.13.13):
+    optionalDependencies:
+      '@uirouter/core': 6.1.2
+      hono: 4.13.13
 
   unbash@4.0.11: {}
 

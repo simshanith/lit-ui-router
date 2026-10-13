@@ -1,7 +1,7 @@
 // axe over the docs pages in both color schemes and each sample-app mount's main routes.
 
 import { AxeBuilder } from '@axe-core/playwright';
-import type { Browser, BrowserContext, Page } from 'playwright';
+import type { Browser, BrowserContext, Page, Request } from 'playwright';
 
 /** WCAG 2.0–2.2 A and AA, plus best-practice. */
 const TAGS = [
@@ -37,8 +37,91 @@ export interface Audit {
   findings: Finding[];
 }
 
-function newContext(browser: Browser, scheme: Scheme): Promise<BrowserContext> {
-  return browser.newContext({ colorScheme: scheme, reducedMotion: 'reduce' });
+/** Stands in for the shields.io badges: an image that never answers holds the page's load event. */
+const BADGE =
+  '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="20"><rect width="80" height="20" fill="#555"/></svg>';
+
+async function newContext(
+  browser: Browser,
+  scheme: Scheme,
+): Promise<BrowserContext> {
+  const context = await browser.newContext({
+    colorScheme: scheme,
+    reducedMotion: 'reduce',
+  });
+
+  await context.route('https://img.shields.io/**', (route) =>
+    route.fulfill({ contentType: 'image/svg+xml', body: BADGE }),
+  );
+
+  return context;
+}
+
+const QUIET_MS = 500;
+
+const SETTLE_TIMEOUT_MS = 30_000;
+
+interface Requests {
+  /** Resolves once no request has been in flight for QUIET_MS; a timeout names what was. */
+  settled: () => Promise<void>;
+  /** The URLs in flight now. */
+  pending: () => string[];
+}
+
+/**
+ * The page's requests, every frame included. Stands in for networkidle, which Playwright never
+ * re-fires once a request finishes after it and an iframe commit or DOMContentLoaded follows.
+ */
+function track(page: Page): Requests {
+  const inFlight = new Set<Request>();
+  let lastChange = Date.now();
+  let documentPending = false;
+
+  const update = (change: () => void) => {
+    change();
+    lastChange = Date.now();
+  };
+
+  page.on('request', (request) =>
+    update(() => {
+      if (
+        request.isNavigationRequest() &&
+        request.frame() === page.mainFrame()
+      ) {
+        documentPending = true;
+      }
+
+      inFlight.add(request);
+    }),
+  );
+  // recount from each document commit, as networkidle does: the outgoing document's requests never report back
+  page.on('framenavigated', (frame) => {
+    if (frame !== page.mainFrame() || !documentPending) return;
+    documentPending = false;
+    update(() => inFlight.clear());
+  });
+  page.on('requestfinished', (request) =>
+    update(() => inFlight.delete(request)),
+  );
+  page.on('requestfailed', (request) => update(() => inFlight.delete(request)));
+
+  const pending = () => [...inFlight].map((request) => request.url());
+
+  const settled = async () => {
+    const deadline = Date.now() + SETTLE_TIMEOUT_MS;
+
+    while (inFlight.size > 0 || Date.now() - lastChange < QUIET_MS) {
+      if (Date.now() > deadline) {
+        throw new Error(
+          `requests unsettled after ${SETTLE_TIMEOUT_MS}ms: ${pending().join(' ')}`,
+        );
+      }
+
+      await page.waitForTimeout(100);
+    }
+  };
+
+  return { settled, pending };
 }
 
 async function scan(
@@ -69,17 +152,31 @@ async function scan(
   }
 }
 
-async function goto(page: Page, url: string): Promise<void> {
-  const response = await page.goto(url, { waitUntil: 'networkidle' });
+async function goto(
+  page: Page,
+  requests: Requests,
+  url: string,
+): Promise<void> {
+  let response;
+
+  try {
+    response = await page.goto(url, { waitUntil: 'load' });
+  } catch (error) {
+    const urls = requests.pending().join(' ');
+
+    throw new Error(`no load event; in flight: ${urls}`, { cause: error });
+  }
 
   // null is a same-document (hash) navigation
   if (response && response.status() !== 200) {
     throw new Error(`${url} answered ${response.status()}`);
   }
+
+  await requests.settled();
 }
 
 /** Lazy same-origin embeds load only on scroll; axe scans a frame only once it has loaded. */
-async function loadEmbeds(page: Page): Promise<void> {
+async function loadEmbeds(page: Page, requests: Requests): Promise<void> {
   await page.evaluate(() => {
     for (const frame of document.querySelectorAll('iframe')) {
       frame.loading = 'eager';
@@ -96,7 +193,7 @@ async function loadEmbeds(page: Page): Promise<void> {
           frame.contentDocument?.readyState === 'complete',
       ),
   );
-  await page.waitForLoadState('networkidle');
+  await requests.settled();
 }
 
 export async function auditDocs(
@@ -113,11 +210,12 @@ export async function auditDocs(
 
     const worker = async () => {
       const page = await context.newPage();
+      const requests = track(page);
 
       for (let path = queue.shift(); path; path = queue.shift()) {
         try {
-          await goto(page, origin + path);
-          await loadEmbeds(page);
+          await goto(page, requests, origin + path);
+          await loadEmbeds(page, requests);
           await scan(page, path, scheme, audit);
         } catch (error) {
           throw new Error(`${path} [${scheme}]`, { cause: error });
@@ -153,12 +251,13 @@ export async function auditApp(
 ): Promise<void> {
   const context = await newContext(browser, 'light');
   const page = await context.newPage();
+  const requests = track(page);
 
   const url = (path: string) =>
     app.hash ? `${origin}${app.mount}#${path}` : `${origin}${app.mount}${path}`;
 
   const visit = async (path: string) => {
-    await goto(page, url(path));
+    await goto(page, requests, url(path));
     await page.locator('main h1').first().waitFor({ state: 'attached' });
   };
 
@@ -166,7 +265,7 @@ export async function auditApp(
     scan(page, `${app.mount} ${label}`, 'light', audit);
 
   try {
-    await goto(page, `${origin}${app.mount}${app.query ?? ''}`);
+    await goto(page, requests, `${origin}${app.mount}${app.query ?? ''}`);
     await visit('/welcome');
     await check('welcome');
 
@@ -195,7 +294,7 @@ export async function auditApp(
     await page.locator('.details h2').waitFor();
     await check('contact');
     const contact = page.url();
-    await goto(page, `${contact}/edit`);
+    await goto(page, requests, `${contact}/edit`);
     await page.locator('main input').first().waitFor();
     await check('contact edit');
     await visit('/contacts/new');

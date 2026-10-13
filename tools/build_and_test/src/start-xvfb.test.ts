@@ -106,7 +106,7 @@ describe('start-xvfb.ts', () => {
       dir,
       [...KEYSYM_NOISE, ...REAL_LINES]
         .map((line) => `console.error(${JSON.stringify(line)});`)
-        .join('\n') + '\nprocess.exit(1);\n',
+        .join('\n') + '\nprocess.exitCode = 1;\n',
     );
 
     const run = runStartXvfb({
@@ -132,7 +132,7 @@ describe('start-xvfb.ts', () => {
       dir,
       REAL_LINES.map((line) => `console.error(${JSON.stringify(line)});`).join(
         '\n',
-      ) + '\nprocess.exit(1);\n',
+      ) + '\nprocess.exitCode = 1;\n',
     );
 
     const run = runStartXvfb({

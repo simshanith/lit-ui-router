@@ -1,6 +1,7 @@
 packages:
   - apps/*
   - packages/*
+  - packages/shared/*
   - tools/*
   - www/lit-ui-router.dev
   - examples
@@ -17,6 +18,7 @@ catalog:
   '@commitlint/config-conventional': ^21.2.3
   '@commitlint/types': ^21.2.3
   '@custom-elements-manifest/analyzer': ^0.11.0
+  '@lit-labs/signals': ^0.3.0
   '@lit-labs/ssr': ^4.1.0
   '@lit-labs/ssr-client': ^1.1.8
   '@lit/context': ^1.1.6
@@ -44,7 +46,7 @@ catalog:
   crap4ts: 2.0.0-rc.5
   cypress: ^16.1.1
   diff: ^9.0.0
-  effect: ^3.22.2
+  effect: ^4.0.2
   esbuild: ^0.28.2
   eslint: ^10.12.0
   eslint-doc-generator: ^3.7.1
@@ -80,6 +82,7 @@ catalog:
   rolldown: ^1.2.13
   screenfull: ^6.0.2
   semver: ^7.8.5
+  signal-polyfill: ^0.2.2
   start-server-and-test: ^3.0.12
   turbo: ^2.11.7
   typedoc: ^0.28.20
@@ -103,16 +106,30 @@ catalog:
 catalogMode: prefer
 
 catalogs:
+  effect3-compat:
+    effect-3: npm:effect@^3.22.2
   lit2-compat:
     lit-2: npm:lit@^2.8.0
   mobx6-compat:
     mobx-6: npm:mobx@^6.16.1
+  peerFloor:
+    '@lit-labs/ssr-client-floor': npm:@lit-labs/ssr-client@1.1.0
+    '@lit-labs/ssr-floor': npm:@lit-labs/ssr@4.0.0
+    '@uirouter/core-floor': npm:@uirouter/core@6.0.8
+    effect-floor: npm:effect@3.22.0
+    hono-floor: npm:hono@4.0.0
+    signal-polyfill-floor: npm:signal-polyfill@0.2.0
   peerFloorEffect:
     lit-ui-router-floor: npm:lit-ui-router@1.15.0
   peerFloorEslintPlugin:
     eslint-floor: npm:eslint@9.0.0
   peerFloorMobx:
     lit-ui-router-floor: npm:lit-ui-router@1.15.0
+  peerFloorSignals:
+    lit-ui-router-floor: npm:lit-ui-router@1.15.0
+  peerFloorSsr:
+    lit-ui-router-floor: npm:lit-ui-router@1.16.1
+    ui-router-server-floor: npm:ui-router-server@0.2.0
   publishedDependencies:
     '@oxc-project/runtime': '>=0.50.0'
     eslint-plugin-lit: ^2.0.0
@@ -120,15 +137,19 @@ catalogs:
     '@lit-labs/ssr': ^4.0.0
     '@lit-labs/ssr-client': ^1.1.0
     '@uirouter/core': ^6.0.8
-    effect: ^3.22.0
+    effect: '^3.22.0 || ^4.0.2'
     eslint: '^9.0.0 || ^10.0.0'
     hono: ^4.0.0
     lit: '^2.0.0 || ^3.0.0'
     mobx: '^6.0.0 || ^7.0.0'
+    signal-polyfill: ^0.2.0
   publishedPeerEffect:
     lit-ui-router: ^1.15.0
   publishedPeerMobx:
     lit-ui-router: ^1.15.0
+  publishedPeerSignals:
+    lit-ui-router: ^1.15.0
+    ui-router-signals: ^0.1.0-rc.0
   publishedPeerSsr:
     lit-ui-router: ^1.16.1
     ui-router-server: ^0.2.0
@@ -138,6 +159,7 @@ catalogs:
     typescript: ^6.0.3
     typescript-6: npm:typescript@^6.0.3
   workspace:
+    '@repo/route-snapshot': workspace:*
     '@tools/a11y': workspace:*
     '@tools/bootstrap': workspace:*
     '@tools/build_and_test': workspace:*
@@ -167,6 +189,7 @@ catalogs:
     lit-ui-router: workspace:*
     lit-ui-router-effect: workspace:*
     lit-ui-router-mobx: workspace:*
+    lit-ui-router-signals: workspace:*
     lit-ui-router-ssr: workspace:*
     sample-app-lit-effect: workspace:*
     sample-app-lit-mobx: workspace:*
@@ -174,7 +197,9 @@ catalogs:
     sample-app-routes: workspace:*
     sample-app-shared: workspace:*
     ui-router-navigation-location-plugin: workspace:*
+    ui-router-effect: workspace:*
     ui-router-server: workspace:*
+    ui-router-signals: workspace:*
 
 allowBuilds:
   cypress: true
