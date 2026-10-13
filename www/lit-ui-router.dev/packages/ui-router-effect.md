@@ -26,20 +26,50 @@ npm install ui-router-effect effect
 pnpm add ui-router-effect effect
 ```
 
-`@uirouter/core` and `effect` are peer dependencies. Both Effect majors are
-supported (`effect@^3.22.0 || ^4.0.2`).
+`@uirouter/core` and `effect` are peer dependencies.
+
+### Effect 3 and 4
+
+Both majors are supported (`effect@^3.22.0 || ^4.0.2`). `routeRef` is the
+same on either; the examples below are written for Effect 4. Two differences
+show up around it:
+
+- Effect 4 reads a ref's stream with `SubscriptionRef.changes(ref)`; on
+  Effect 3 it is the ref's own `ref.changes` property.
+- Effect 4's `Equal.equals` compares plain objects structurally. Effect 3
+  compares them by reference, so wrap a selected object in `Data.struct(...)`
+  for `Equal.equals` to see two equal selections as unchanged.
 
 ## routeRef
 
 `routeRef(router)` returns a `SubscriptionRef` of the router's current route.
-There is one ref, and one `onSuccess` transition hook, per router, attached
-lazily on first use, so every value it holds is a settled route.
+The first call for a router creates its one ref and registers one `onSuccess`
+transition hook that sets it, so every value it holds is a settled route.
+Later calls return the same ref. The ref and the hook live as long as the
+router; nothing removes the hook.
+
+Reading the ref once gives the route at that moment:
 
 ```ts
-import { Effect, Stream } from 'effect';
+import { Effect, SubscriptionRef } from 'effect';
 import { routeRef } from 'ui-router-effect';
 
-const names = routeRef(router).changes.pipe(
+const program = Effect.gen(function* () {
+  const route = yield* SubscriptionRef.get(routeRef(router));
+  yield* Effect.log(route.current?.name);
+});
+
+Effect.runFork(program);
+```
+
+Its changes stream starts with the current route and emits once per
+successful transition. `Stream.changes` drops repeats of a primitive:
+
+```ts
+import { Effect, Stream, SubscriptionRef } from 'effect';
+import { routeRef } from 'ui-router-effect';
+
+const names = SubscriptionRef.changes(routeRef(router)).pipe(
   Stream.map((route) => route.current?.name),
   Stream.changes,
 );
@@ -47,12 +77,39 @@ const names = routeRef(router).changes.pipe(
 Effect.runFork(Stream.runForEach(names, (name) => Effect.log(name)));
 ```
 
+A selection that builds an object needs `Stream.changesWith(Equal.equals)` to
+drop repeats:
+
+```ts
+import { Effect, Equal, Stream, SubscriptionRef } from 'effect';
+import { routeRef } from 'ui-router-effect';
+
+const active = SubscriptionRef.changes(routeRef(router)).pipe(
+  Stream.map((route) => ({
+    inbox: route.includes('inbox.**'),
+    contacts: route.includes('contacts.**'),
+  })),
+  Stream.changesWith(Equal.equals),
+);
+
+Effect.runFork(Stream.runForEach(active, (sections) => Effect.log(sections)));
+```
+
 ## RouteSnapshot
 
-The ref holds a `RouteSnapshot`: the current state declaration, params and
-transition. `snapshotRoute(router, transition?)` builds one directly. Its
-`includes()` evaluates `StateService.includes` against the snapshot, not the
-live router.
+The ref holds a `RouteSnapshot`, taken once per successful transition.
+`snapshotRoute(router, transition?)` builds one directly. Every field answers
+for the moment it was taken:
+
+| Field                            | Value                                                                      |
+| -------------------------------- | -------------------------------------------------------------------------- |
+| `current`                        | the current state declaration                                              |
+| `params`                         | the current parameter values, a fresh object per transition                |
+| `transition`                     | the transition that produced the snapshot; `undefined` before the first    |
+| `includes(stateOrName, params?)` | `StateService.includes` against the snapshot, globs like `'a.**'` included |
+
+`includes()` evaluates against the snapshot, not the live router, so a
+selector asking during a later transition gets the settled answer.
 
 ## Further reading
 
