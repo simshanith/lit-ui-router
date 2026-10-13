@@ -2,7 +2,7 @@
   "name": "@tools/bundle-probe",
   "version": "0.0.1",
   "private": true,
-  "description": "Dual esbuild/rolldown bundling seam for bundle invariants: declared-deps-only entry checks and per-entry codecov bundle stats",
+  "description": "Dual esbuild/rolldown bundling seam for bundle invariants: declared-deps-only entry checks, warning-free bundles against every installed peer line, and per-entry codecov bundle stats",
   "bin": {
     "check-bundle-inputs": "./src/check-bundle-inputs.ts",
     "upload-entry-bundles": "./src/upload-entry-bundles.ts"
