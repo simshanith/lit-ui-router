@@ -1,4 +1,11 @@
-import { Effect, Fiber, Predicate, Stream, SubscriptionRef } from 'effect';
+import {
+  Effect,
+  Fiber,
+  Predicate,
+  PubSub,
+  Stream,
+  SubscriptionRef,
+} from 'effect';
 import { ReactiveController, ReactiveControllerHost } from 'lit';
 
 /**
@@ -203,27 +210,25 @@ interface Effect3Ref<A> {
   readonly changes?: Stream.Stream<A>;
 }
 
-/** The change-stream accessor effect 4 exports from `SubscriptionRef`. */
-interface Effect4RefModule {
-  readonly changes: <A>(
-    self: SubscriptionRef.SubscriptionRef<A>,
-  ) => Stream.Stream<A>;
+/** The pubsub an effect 4 ref publishes its current and later values on. */
+interface Effect4Ref<A> {
+  readonly pubsub: PubSub.PubSub<A>;
 }
 
 /** The stream of a ref's current and later values. */
 function changesOf<A>(
   ref: SubscriptionRef.SubscriptionRef<A>,
 ): Stream.Stream<A> {
-  // Static read keeps effect 4 tree-shaking; effect 3 bundlers warn IMPORT_IS_UNDEFINED.
   // SAFETY: an effect 3 ref carries `changes`; on effect 4 the member is absent.
   // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- each major's types omit the other's member, so no single assertion reaches it
   const own = (ref as unknown as Effect3Ref<A>).changes;
 
   if (own) return own;
 
-  // SAFETY: effect 4 exports `SubscriptionRef.changes`; effect 3 returned above.
+  // Effect 4's own `SubscriptionRef.changes` body; reading that export makes effect 3 bundlers warn IMPORT_IS_UNDEFINED.
+  // SAFETY: an effect 4 ref carries `pubsub`; effect 3 returned above.
   // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- each major's types omit the other's member, so no single assertion reaches it
-  return (SubscriptionRef as unknown as Effect4RefModule).changes(ref);
+  return Stream.fromPubSub((ref as unknown as Effect4Ref<A>).pubsub);
 }
 
 /** A fiber's synchronous interrupt as effect 3 names it. */
