@@ -38,6 +38,7 @@
     "changelog": "release-it --changelog --git.tagMatch=\"lit-ui-router-signals@[0-9]*.[0-9]*.[0-9]*\"",
     "check:bundle": "peer-floor-guard && check-bundle-inputs",
     "check:dev-split": "oxc-emit-check-dev-split",
+    "codecov:bundle": "upload-entry-bundles",
     "format:check:oxfmt": "oxfmt --check \"**/*.{ts,js,json,md}\"",
     "format:oxfmt": "oxfmt \"**/*.{ts,js,json,md}\"",
     "lint:oxlint": "oxlint .",
