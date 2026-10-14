@@ -40,7 +40,8 @@ show up around it:
 
 ## routeRef
 
-`routeRef(router)` returns a `SubscriptionRef` of the router's current route.
+[`routeRef(router)`](/api/ui-router-effect/functions/routeRef) returns a
+`SubscriptionRef` of the router's current route.
 The first call for a router creates its one ref and registers one `onSuccess`
 transition hook that sets it, so every value it holds is a settled route.
 Later calls return the same ref. The ref and the hook live as long as the
@@ -95,8 +96,11 @@ Effect.runFork(Stream.runForEach(active, (sections) => Effect.log(sections)));
 
 ## RouteSnapshot
 
-The ref holds a `RouteSnapshot`, taken once per successful transition.
-`snapshotRoute(router, transition?)` builds one directly. Every field answers
+The ref holds a
+[`RouteSnapshot`](/api/ui-router-effect/interfaces/RouteSnapshot), taken once
+per successful transition.
+[`snapshotRoute(router, transition?)`](/api/ui-router-effect/functions/snapshotRoute)
+builds one directly. Every field answers
 for the moment it was taken:
 
 | Field                            | Value                                                                      |
@@ -111,5 +115,6 @@ selector asking during a later transition gets the settled answer.
 
 ## Further reading
 
+- [API reference](/api/ui-router-effect/)
 - [lit-ui-router-effect](/packages/lit-ui-router-effect)
 - [Effect — SubscriptionRef](https://effect.website/docs/state-management/subscriptionref/)

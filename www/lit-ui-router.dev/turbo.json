@@ -52,9 +52,12 @@
         "lit-ui-router#docs:api",
         "lit-ui-router-effect#docs:api",
         "lit-ui-router-mobx#docs:api",
+        "lit-ui-router-signals#docs:api",
         "lit-ui-router-ssr#docs:api",
+        "ui-router-effect#docs:api",
         "ui-router-navigation-location-plugin#docs:api",
         "ui-router-server#docs:api",
+        "ui-router-signals#docs:api",
         "examples#build:embeds",
         "types:worker"
       ],
@@ -80,9 +83,12 @@
         "lit-ui-router#docs:api",
         "lit-ui-router-effect#docs:api",
         "lit-ui-router-mobx#docs:api",
+        "lit-ui-router-signals#docs:api",
         "lit-ui-router-ssr#docs:api",
+        "ui-router-effect#docs:api",
         "ui-router-navigation-location-plugin#docs:api",
-        "ui-router-server#docs:api"
+        "ui-router-server#docs:api",
+        "ui-router-signals#docs:api"
       ]
     },
     "test": {
@@ -122,9 +128,12 @@
         "lit-ui-router#docs:api",
         "lit-ui-router-effect#docs:api",
         "lit-ui-router-mobx#docs:api",
+        "lit-ui-router-signals#docs:api",
         "lit-ui-router-ssr#docs:api",
+        "ui-router-effect#docs:api",
         "ui-router-navigation-location-plugin#docs:api",
         "ui-router-server#docs:api",
+        "ui-router-signals#docs:api",
         "examples#build:embeds"
       ],
       "cache": false,
