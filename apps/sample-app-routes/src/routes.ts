@@ -85,7 +85,7 @@ const hashDemo: MountConfig = {
 };
 
 /**
- * All three sample apps run the same route tree, each under its own mount
+ * All four sample apps run the same route tree, each under its own mount
  * (not-found-static); the demo mounts exhibit the not-found-spa and
  * simulated-routing rungs (not-found-naive lives worker-side — it is the
  * absence of routing config), and /app-hash the hash-location shape (shell at
@@ -95,6 +95,7 @@ export const mounts = {
   '/app': app,
   '/app-mobx': app,
   '/app-effect': app,
+  '/app-signals': app,
   '/app-hash': hashDemo,
   '/not-found-spa': notFoundSpaDemo,
   '/simulated-routing': simulatedRoutingDemo,

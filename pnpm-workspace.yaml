@@ -194,6 +194,7 @@ catalogs:
     lit-ui-router-ssr: workspace:*
     sample-app-lit-effect: workspace:*
     sample-app-lit-mobx: workspace:*
+    sample-app-lit-signals: workspace:*
     sample-app-lit-vanilla: workspace:*
     sample-app-routes: workspace:*
     sample-app-shared: workspace:*

@@ -11,7 +11,7 @@ import worker from '../index.ts';
 // bodies themselves stay covered by the docs suite's cy.visit smokes.
 const ORIGIN = 'http://docs.test';
 
-// Stand-ins for dist/: the four shell builds, the flagship 404 pages,
+// Stand-ins for dist/: the five shell builds, the flagship 404 pages,
 // and a default that plays the binding's own 404.html handling.
 interface Asset {
   body: string;
@@ -25,6 +25,10 @@ const ASSET_TABLE = {
     body: 'effect-shell',
     headers: { 'Content-Type': 'text/html' },
   },
+  '/app-signals': {
+    body: 'signals-shell',
+    headers: { 'Content-Type': 'text/html' },
+  },
   '/app-hash': { body: 'hash-shell', headers: { 'Content-Type': 'text/html' } },
   '/app/404.html': {
     body: 'vanilla-404-page',
@@ -36,6 +40,10 @@ const ASSET_TABLE = {
   },
   '/app-effect/404.html': {
     body: 'effect-404-page',
+    headers: { 'Content-Type': 'text/html; charset=utf-8' },
+  },
+  '/app-signals/404.html': {
+    body: 'signals-404-page',
     headers: { 'Content-Type': 'text/html; charset=utf-8' },
   },
 } satisfies Record<string, Asset>;
@@ -104,9 +112,11 @@ const dispatch = (
   init?: RequestInit<IncomingRequestCfProperties>,
 ) => worker.fetch(new Request(`${ORIGIN}${path}`, init), env);
 
-describe('flagship mounts (/app, /app-mobx, /app-effect)', () => {
+const FLAGSHIPS = ['/app', '/app-mobx', '/app-effect', '/app-signals'] as const;
+
+describe('flagship mounts (/app, /app-mobx, /app-effect, /app-signals)', () => {
   it('serves each mount its own shell at 200 for real routes, indexable', async () => {
-    for (const mount of ['/app', '/app-mobx', '/app-effect'] as const) {
+    for (const mount of FLAGSHIPS) {
       for (const path of ['/welcome', '/contacts/1/edit']) {
         assetCalls = [];
         const res = await dispatch(`${mount}${path}`);
@@ -123,7 +133,7 @@ describe('flagship mounts (/app, /app-mobx, /app-effect)', () => {
   });
 
   it('302s the mount root to /welcome — hash mode is not first-class there', async () => {
-    for (const mount of ['/app', '/app-mobx', '/app-effect'] as const) {
+    for (const mount of FLAGSHIPS) {
       const res = await dispatch(mount);
       assert.equal(res.status, 302, mount);
       assert.equal(res.headers.get('Location'), `${mount}/welcome`, mount);
@@ -132,7 +142,7 @@ describe('flagship mounts (/app, /app-mobx, /app-effect)', () => {
   });
 
   it('serves the per-app 404 page, re-wrapped at an honest 404', async () => {
-    for (const mount of ['/app', '/app-mobx', '/app-effect'] as const) {
+    for (const mount of FLAGSHIPS) {
       for (const path of [
         '/definitely-not-a-route',
         '/contacts/1/edit/extra',

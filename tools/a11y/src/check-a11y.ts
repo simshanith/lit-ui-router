@@ -31,6 +31,7 @@ const APPS: readonly AppMount[] = [
   },
   { mount: '/app-mobx', hash: false },
   { mount: '/app-effect', hash: false },
+  { mount: '/app-signals', hash: false },
   { mount: '/app-hash', hash: true },
 ];
 

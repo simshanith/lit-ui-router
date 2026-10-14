@@ -25,6 +25,8 @@
       "/app-mobx/*",
       "/app-effect",
       "/app-effect/*",
+      "/app-signals",
+      "/app-signals/*",
       "/app-hash",
       "/app-hash/*",
       "/not-found-naive",

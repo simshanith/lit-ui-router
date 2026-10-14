@@ -2,7 +2,7 @@
 
 This is the [Effect](https://effect.website) variant of the [vanilla sample app](../sample-app-lit-vanilla/): the
 same non-trivial ui-router lit application, with reactivity handled by Effect's
-`SubscriptionRef` instead of the zero-dependency `TransitionController`. The three apps are
+`SubscriptionRef` instead of the zero-dependency `TransitionController`. The four apps are
 intentionally behaviorally identical (the same Cypress suite runs against all of them) so the
 integration idioms can be compared file-by-file — in the spirit of
 [TodoMVC](https://todomvc.com) and the

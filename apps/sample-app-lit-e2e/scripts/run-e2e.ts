@@ -75,7 +75,12 @@ const main = async (): Promise<void> => {
   const server = `node ${JSON.stringify(join(workspaceRoot, www.dir, 'scripts/wrangler-dev.ts'))}`;
 
   // every app is mounted whichever suites run
-  serveAndTest(server, test, ['app/', 'app-mobx/', 'app-effect/']);
+  serveAndTest(server, test, [
+    'app/',
+    'app-mobx/',
+    'app-effect/',
+    'app-signals/',
+  ]);
 };
 
 if (import.meta.main) await main();

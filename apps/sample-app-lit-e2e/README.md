@@ -1,6 +1,6 @@
 # sample-app-lit-e2e
 
-One Cypress spec suite and an axe pass, run against all three sample apps and the docs site —
+One Cypress spec suite and an axe pass, run against all four sample apps and the docs site —
 this is what enforces the apps' behavioral identity and keeps every
 published location strategy exercised.
 
@@ -14,15 +14,16 @@ That production-like flow builds the docs site (which embeds every app's
 build), serves it with wrangler on port 8787, and runs the Cypress suites in
 parallel. `a11y` runs only when named; on CI it is the `acceptance (a11y)` job (`.github/workflows/acceptance.yml`):
 
-| Suite       | Target         | Covers                                                                                                                                     |
-| ----------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `vanilla`   | `/app/`        | vanilla app, default routing — the Navigation API plugin                                                                                   |
-| `mobx`      | `/app-mobx/`   | MobX app, default routing — the Navigation API plugin                                                                                      |
-| `effect`    | `/app-effect/` | Effect app, default routing — the Navigation API plugin                                                                                    |
-| `docs`      | site + mounts  | docs pages plus the mount matrix — flagships, hash demo, and the server-support exhibits (`cypress.docs.config.ts`)                        |
-| `hash`      | `/app/`        | vanilla app under the `hash` location plugin                                                                                               |
-| `a11y`      | site + mounts  | axe-core (`@tools/a11y`) over the docs pages (one API reference page per kind) in light and dark, and a walk through each sample-app mount |
-| `pushState` | `/app/`        | vanilla app under the `pushState` fallback                                                                                                 |
+| Suite       | Target          | Covers                                                                                                                                     |
+| ----------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `vanilla`   | `/app/`         | vanilla app, default routing — the Navigation API plugin                                                                                   |
+| `mobx`      | `/app-mobx/`    | MobX app, default routing — the Navigation API plugin                                                                                      |
+| `effect`    | `/app-effect/`  | Effect app, default routing — the Navigation API plugin                                                                                    |
+| `signals`   | `/app-signals/` | Signals app, default routing — the Navigation API plugin                                                                                   |
+| `docs`      | site + mounts   | docs pages plus the mount matrix — flagships, hash demo, and the server-support exhibits (`cypress.docs.config.ts`)                        |
+| `hash`      | `/app/`         | vanilla app under the `hash` location plugin                                                                                               |
+| `a11y`      | site + mounts   | axe-core (`@tools/a11y`) over the docs pages (one API reference page per kind) in light and dark, and a walk through each sample-app mount |
+| `pushState` | `/app/`         | vanilla app under the `pushState` fallback                                                                                                 |
 
 Each suite is its own turbo task (`test:e2e:<suite>`). The Cypress suites have their own cache keys,
 so rerunning one after a flake costs that suite alone rather than the whole
@@ -144,7 +145,7 @@ Passing runs carry one or two of these apiece:
 ```
 
 That is workerd reporting that the _client_ hung up before a response finished.
-The 404 and back-navigation specs abort in-flight requests by design, and six
+The 404 and back-navigation specs abort in-flight requests by design, and seven
 suites share one worker. Nothing crashes and nothing recovers; it reads as an
 ERROR only because workerd's own stderr is not gagged by `WRANGLER_LOG`. Do not
 triage on this string — measured over eight consecutive green runs it appeared
@@ -191,7 +192,7 @@ package script works:
 pnpm --dir apps/sample-app-lit-e2e test:e2e:vanilla --spec src/integration/dialog.cy.js
 ```
 
-`test:e2e:mobx` and `test:e2e:effect` don't forward `--spec`; pass the config
+`test:e2e:mobx`, `test:e2e:effect` and `test:e2e:signals` don't forward `--spec`; pass the config
 [`scripts/cypress-suite.ts`](scripts/cypress-suite.ts) builds instead:
 
 ```bash

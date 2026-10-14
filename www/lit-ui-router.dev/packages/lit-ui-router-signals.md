@@ -92,6 +92,17 @@ on the same `signal-polyfill`, so a `SignalWatcher` element tracks the
 one copy of `signal-polyfill` in the bundle; two copies keep two separate
 signal graphs.
 
+## See it in a real app
+
+The <a href="/app-signals" target="_self">Signals sample app</a> is a complete
+application built on `RouterSignalController` and `@lit-labs/signals`. It is
+behaviorally identical to the <a href="/app" target="_self">vanilla sample app</a>
+(which uses `TransitionController`), the
+<a href="/app-mobx" target="_self">MobX sample app</a> and the
+<a href="/app-effect" target="_self">Effect sample app</a>, so the
+[four codebases](https://github.com/simshanith/lit-ui-router/tree/main/apps)
+can be compared file-by-file to see exactly what the Signals idiom changes.
+
 ## Further reading
 
 - [API reference](/api/lit-ui-router-signals/)

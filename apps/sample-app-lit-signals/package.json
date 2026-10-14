@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "vite build",
+    "codecov:bundle": "upload-bundle-stats sample-app-lit-signals-esm",
     "dev": "vite",
     "format:check:oxfmt": "oxfmt --check \"**/*.{js,ts,json,md,html}\"",
     "format:oxfmt": "oxfmt \"**/*.{js,ts,json,md,html}\"",
@@ -22,6 +23,7 @@
     "signal-polyfill": "catalog:"
   },
   "devDependencies": {
+    "@tools/build_and_test": "catalog:workspace",
     "@types/dom-navigation": "catalog:",
     "@types/lodash-es": "catalog:",
     "@types/node": "catalog:",
