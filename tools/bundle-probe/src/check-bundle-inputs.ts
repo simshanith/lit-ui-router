@@ -94,10 +94,13 @@ const checkPeerLines = async (
   { name, declared, entries }: PackageProbe,
   peerLines: PeerLine[],
 ): Promise<boolean> => {
-  // a probed entry is src/*.ts or its dist/*.js emit; both are this package's own code
-  const own = ['src', 'dist'].map(
+  // a probed entry is src/*.ts or its dist/*.js emit; both are this package's own files
+  const ownDirs = ['src', 'dist'].map(
     (dir) => path.join(packageDir, dir) + path.sep,
   );
+
+  const isOwnFile = (file: string | undefined): boolean =>
+    ownDirs.some((dir) => file?.startsWith(dir) === true);
 
   let ok = true;
 
@@ -131,17 +134,15 @@ const checkPeerLines = async (
         const { warnings } = result;
 
         // a peer's own warnings are its maintainers' to fix, not this package's
-        const ownWarnings = warnings.filter((warning) =>
-          own.some((dir) => warning.file?.startsWith(dir)),
-        );
+        const own = warnings.filter((warning) => isOwnFile(warning.file));
 
-        if (ownWarnings.length === 0) continue;
+        if (own.length === 0) continue;
         ok = false;
         console.error(
           `[bundle-probe] ${name} ${label} (${bundler}) against ${line.label}: bundler warnings in this package's source`,
         );
 
-        for (const warning of ownWarnings) {
+        for (const warning of own) {
           console.error(`  ${warning.code}: ${warning.message.split('\n')[0]}`);
         }
       }
