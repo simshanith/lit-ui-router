@@ -319,6 +319,15 @@ flag "--base-url <origin>" help="Run against this served origin (e.g. a deployed
 # unquoted: a var arg arrives as one string and must word-split back into argv
 run = 'if [ -n "${usage_base_url:-}" ]; then export E2E_BASE_URL="$usage_base_url"; else unset E2E_BASE_URL; fi; TURBO_OUTPUT_LOGS="${usage_output_logs?}" node ./apps/sample-app-lit-e2e/scripts/run-e2e.ts ${usage_suite:-}'
 
+[tasks.e2e_plan]
+# env: GITHUB_OUTPUT (step-output target). Node builtins only: CI's plan job
+# runs it without `mise run setup`.
+description = "Group the default e2e suites into CI's e2e matrix"
+usage = '''
+flag "--suites-per-job <n>" help="Suites per e2e job; a positive integer" default="1" env="SUITES_PER_JOB"
+'''
+run = 'SUITES_PER_JOB="${usage_suites_per_job?}" node ./apps/sample-app-lit-e2e/scripts/e2e-plan.ts'
+
 [tasks.codecov_bundle]
 # env: CODECOV_TOKEN plus the ambient TURBO_* remote-cache config.
 depends = ["turbo_force_guard"]

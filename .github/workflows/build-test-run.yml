@@ -28,6 +28,11 @@ on:
         description: 'Record Cypress videos and upload them as a run artifact'
         type: boolean
         default: false
+      # 1 gives every suite its own `e2e (<suite>)` job.
+      suitesPerJob:
+        description: 'Default e2e suites per e2e job (a positive integer)'
+        type: number
+        default: 1
       # Only a caller whose checks a ruleset requires needs the `e2e result` job.
       aggregate:
         description: 'Report the e2e matrix as one `e2e result` check'
@@ -240,19 +245,45 @@ jobs:
           fail_ci_if_error: false
           token: ${{ secrets.CODECOV_TOKEN }}
 
+  plan:
+    # Groups the default suites (apps/sample-app-lit-e2e/scripts/suites.ts)
+    # into the e2e matrix, `suitesPerJob` at a time. No `mise run setup`:
+    # the task imports nothing from node_modules.
+    runs-on: ubuntu-26.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      groups: ${{ steps.plan.outputs.groups }}
+    steps:
+      - name: 'Checkout code'
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Setup mise
+        uses: jdx/mise-action@v5
+        with:
+          version: 2026.10.1
+      - name: Plan the e2e matrix
+        id: plan
+        run: mise run e2e_plan
+        env:
+          SUITES_PER_JOB: ${{ inputs.suitesPerJob }}
+
   e2e:
-    # One job per suite run-e2e.ts selects by default (scripts/run-e2e.test.ts
-    # holds this list to that set), each with its own dev server and runner.
-    # No `needs: run`: the two start together.
+    # One job per group, each with its own dev server and runner; a group of
+    # one reports as `e2e (<suite>)`. No `needs: run`: the two start together.
+    name: e2e (${{ join(matrix.group, ', ') }})
+    needs: plan
     runs-on: ubuntu-26.04
     timeout-minutes: 20
     permissions:
       contents: read
     strategy:
-      # Every suite reports, red or green.
+      # Every group reports, red or green.
       fail-fast: false
       matrix:
-        suite: [docs, effect, hash, mobx, pushstate, signals, vanilla]
+        group: ${{ fromJSON(needs.plan.outputs.groups) }}
 
     steps:
       - name: 'Checkout code'
@@ -286,9 +317,11 @@ jobs:
         # Same continue-on-error hand-off to the summary step as `run`.
         id: e2e
         continue-on-error: true
-        run: mise run test_e2e "$SUITE"
+        run: |
+          read -ra suites <<< "$SUITES"
+          mise run test_e2e "${suites[@]}"
         env:
-          SUITE: ${{ matrix.suite }}
+          SUITES: ${{ join(matrix.group, ' ') }}
           TURBO_OUTPUT_LOGS: errors-only
           TURBO_FORCE: ${{ inputs.force }}
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
@@ -301,13 +334,13 @@ jobs:
           # the cypressVideo dispatch input re-enables it for debugging.
           CYPRESS_video: ${{ inputs.cypressVideo == true }}
       - name: Upload turbo run summaries
-        # Same fail-open uploads as `run`, named per suite.
+        # Same fail-open uploads as `run`, named per group.
         id: run_summaries
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v7
         continue-on-error: true
         with:
-          name: turbo-run-summaries-${{ matrix.suite }}
+          name: turbo-run-summaries-${{ join(matrix.group, '-') }}
           path: .turbo/runs/
           retention-days: 30
           if-no-files-found: warn
@@ -317,7 +350,7 @@ jobs:
         uses: actions/upload-artifact@v7
         continue-on-error: true
         with:
-          name: turbo-task-logs-${{ matrix.suite }}
+          name: turbo-task-logs-${{ join(matrix.group, '-') }}
           path: |
             .turbo/turbo-*.log
             .turbo/logs/*.json
@@ -345,7 +378,7 @@ jobs:
         if: ${{ inputs.cypressVideo && !cancelled() }}
         uses: actions/upload-artifact@v7
         with:
-          name: cypress-videos-${{ matrix.suite }}
+          name: cypress-videos-${{ join(matrix.group, '-') }}
           path: apps/sample-app-lit-e2e/cypress/videos*/
           retention-days: 5
           if-no-files-found: warn
@@ -357,7 +390,7 @@ jobs:
         if: ${{ failure() }}
         uses: actions/upload-artifact@v7
         with:
-          name: wrangler-logs-${{ matrix.suite }}
+          name: wrangler-logs-${{ join(matrix.group, '-') }}
           path: ~/.config/.wrangler/logs/
           retention-days: 5
           if-no-files-found: warn
@@ -365,10 +398,10 @@ jobs:
   e2e_result:
     # One check for the whole matrix, `<caller> / e2e result`, for rulesets to
     # require beside `run`: a matrix leg's name changes with the suite list.
-    # Fails unless every leg succeeded; GitHub counts a skipped required check
-    # as passing, so a skipped or cancelled leg fails it too.
+    # Fails unless the plan and every leg succeeded; GitHub counts a skipped
+    # required check as passing, so a skipped or cancelled job fails it too.
     name: e2e result
-    needs: [e2e]
+    needs: [plan, e2e]
     if: ${{ always() && inputs.aggregate }}
     runs-on: ubuntu-26.04
     timeout-minutes: 5

@@ -3,34 +3,13 @@ import { join } from 'node:path';
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
 import { loadWorkspace } from '@tools/shared/workspace.ts';
 
-import manifest from '../package.json' with { type: 'json' };
-
 import { serveAndTest } from './serve-and-test.ts';
+import { PREFIX, defaultSuites, suites } from './suites.ts';
 
 // Suite selection for the `//:test_e2e` umbrella: turns bare suite names into
 // the `turbo run` that start-server-and-test wraps in a dev server.
 //
-// Usage: run-e2e.ts [suite]...   (no names selects every suite but NAMED_ONLY)
-
-const PREFIX = 'test:e2e:';
-
-// the suite set is this package's own `test:e2e:*` scripts, never a list
-const scripts = manifest.scripts;
-
-// sorted to keep the command string stable: it is the run's identity in the
-// summary, and an unstable one reads as a different run each time
-const suites = Object.keys(scripts)
-  .filter((name) => name.startsWith(PREFIX))
-  .map((name) => name.slice(PREFIX.length))
-  .sort();
-
-// Run only when named: the Acceptance workflow runs the axe pass on its own runner.
-const NAMED_ONLY = ['a11y'];
-
-// What a bare run selects; build-test-run.yml's e2e matrix lists the same set.
-export const defaultSuites: string[] = suites.filter(
-  (suite) => !NAMED_ONLY.includes(suite),
-);
+// Usage: run-e2e.ts [suite]...   (no names selects defaultSuites; see suites.ts)
 
 const main = async (): Promise<void> => {
   const asked = [...new Set(process.argv.slice(2))];

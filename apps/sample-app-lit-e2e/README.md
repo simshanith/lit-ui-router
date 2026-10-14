@@ -69,10 +69,11 @@ three — starting it, waiting on readiness, and tearing it down even on failure
 Only the server leaves the graph; the suites stay first-class cached tasks.
 
 `mise run ci` runs the turbo graph and then this umbrella, so `test:e2e:*`
-appear in no `ci:*` turbo task. CI runs one `mise run test_e2e <suite>` job per
-default suite, in parallel with the graph; the `e2e` matrix in
-[`build-test-run.yml`](../../.github/workflows/build-test-run.yml) lists them,
-and `scripts/run-e2e.test.ts` fails when it drifts from the default set.
+appear in no `ci:*` turbo task. CI runs one `mise run test_e2e <suites>` job per
+group of default suites, in parallel with the graph. The
+[`build-test-run.yml`](../../.github/workflows/build-test-run.yml) `plan` job
+builds that matrix from `scripts/suites.ts` (`mise run e2e_plan`), so a new
+suite joins CI with no workflow edit.
 
 ### The port
 

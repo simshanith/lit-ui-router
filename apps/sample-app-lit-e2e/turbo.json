@@ -6,15 +6,6 @@
       "dependsOn": ["^build"],
       "outputs": []
     },
-    // Node runs the script tests against sources, so they wait on no build.
-    // run-e2e.test.ts also reads build-test-run.yml's e2e matrix.
-    "test": {
-      "dependsOn": [],
-      "inputs": [
-        "$TURBO_DEFAULT$",
-        "$TURBO_ROOT$/.github/workflows/build-test-run.yml"
-      ]
-    },
     // One turbo task per suite, each with its own cache key, so a rerun
     // after a flake costs one suite instead of seven.
     //

@@ -81,6 +81,8 @@ jobs:
       # reached the gate leaves it empty, i.e. the PR graph — the run still
       # happens, it is just the smaller one.
       mainGraph: ${{ needs.signal_gate.outputs.mainGraph == 'true' }}
+      # Repo variable E2E_SUITES_PER_JOB_BRANCH overrides; 1 matches the PR lane.
+      suitesPerJob: ${{ fromJSON(vars.E2E_SUITES_PER_JOB_BRANCH || '3') }}
     secrets:
       TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
       TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}

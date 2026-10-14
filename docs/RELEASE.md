@@ -95,14 +95,16 @@ only, so neither path can release.
 The pipeline is one set of steps split across three files by trigger, so that
 neither event can instantiate the other's jobs:
 
-| File                    | Trigger                      | Reports                                                                                                    |
-| ----------------------- | ---------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `build-test.yml`        | PRs, `main` pushes, dispatch | `build_and_test / run` and `build_and_test / e2e result` — required checks                                 |
-| `build-test-branch.yml` | pushes to any other branch   | `build_and_test (signal gate)`, `build_and_test (branch) / run`, `build_and_test (branch) / e2e (<suite>)` |
-| `build-test-run.yml`    | `workflow_call` only         | the jobs both callers share: `run`, `e2e (<suite>)`, and `e2e result` when the caller passes `aggregate`   |
+| File                    | Trigger                      | Reports                                                                                                           |
+| ----------------------- | ---------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `build-test.yml`        | PRs, `main` pushes, dispatch | `build_and_test / run` and `build_and_test / e2e result` — required checks                                        |
+| `build-test-branch.yml` | pushes to any other branch   | `build_and_test (signal gate)`, `build_and_test (branch) / run`, `/ plan`, `/ e2e (<suites>)` per group           |
+| `build-test-run.yml`    | `workflow_call` only         | the jobs both callers share: `run`, `plan`, `e2e (<suites>)`, and `e2e result` when the caller passes `aggregate` |
 
-`run` is the turbo graph and each `e2e (<suite>)` job one Cypress suite on its
-own runner. `e2e result` fails unless every suite succeeded, so the rulesets
+`run` is the turbo graph. `plan` groups the default Cypress suites
+`suitesPerJob` at a time, and each `e2e (<suites>)` job runs one group on its own
+runner. PRs and `main` use one suite per job; the branch lane uses three, or the
+`E2E_SUITES_PER_JOB_BRANCH` repo variable. `e2e result` fails unless every suite succeeded, so the rulesets
 require one e2e check however many suites there are.
 
 Branch-head pushes are gated: `build_and_test (signal gate)` asks whether a

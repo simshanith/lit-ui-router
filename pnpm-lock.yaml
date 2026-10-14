@@ -640,9 +640,6 @@ importers:
       typescript-7:
         specifier: 'catalog:'
         version: typescript@7.0.2
-      yaml:
-        specifier: 'catalog:'
-        version: 2.9.1
 
   apps/sample-app-lit-effect:
     dependencies:
