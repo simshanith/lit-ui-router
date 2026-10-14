@@ -15,11 +15,17 @@ import { PLANT_RULES } from './city-plant.mjs';
 import {
   CITY_GLB, DRESS_JS, FACES, HATCH, LIT, PLANT_GLB, PX, RISE_SECONDS, TIERS, TINT, cityModel, materialPlan,
 } from './city-glb.mjs';
-import { ISO_POLAR, MV_JS, frameCss, orbitAt, partsCss, partsMarkup, pinCss } from './mv-kit.mjs';
+import { ISO_POLAR, frameCss, mvJs, orbitAt, partsCss, partsMarkup, pinCss } from './mv-kit.mjs';
 import { BASE } from '../app/src/routes.ts';
 
 export const REV = 'H';
 export const PLANT_REV = 'B';
+
+// the members panel's corners, clockwise from ENLARGE's; the top-left is the open-paper probe's
+const PARTS_CORNERS = ['ne', 'se', 'sw'];
+// the stage, not the viewport, sizes the panel: two columns uncapped on a wide stage, folded on a small one
+const PARTS_WIDE = '(min-width: 1400px) and (min-height: 700px)';
+const PARTS_FOLD = [760, 480];
 
 const PLATE = JSON.parse(readFileSync(new URL('../data/census-city.json', import.meta.url), 'utf8'));
 const BASIS = `${PLATE.ref} @ ${PLATE.sha} (${PLATE.generatedAtTime.slice(0, 10)})`;
@@ -101,6 +107,11 @@ const island = (plant) => {
 
 const json = (v) => JSON.stringify(v).replace(/</g, '\\u003c');
 
+// the members panel groups them by district in the plate's district order, each keeping its own number
+const partsItems = (data) => data.districts.map(({ d }) => ({
+  group: d, label: DIST_LABEL[d], items: data.rows.filter((b) => b.dist === d),
+}));
+
 const MASSED = CITY.filter((b) => b.tier !== 'off').length;
 const ANNEXES = CITY.filter((b) => b.sa).length;
 
@@ -150,13 +161,15 @@ const CSS = `
 .cs-ctl .touch { display: none; }
 @media (pointer: coarse) { .cs-ctl .mouse { display: none; } .cs-ctl .touch { display: inline; } }
 ${frameCss('cs', 'cs-info', ['bar', 'stage', 'read'])}
-.cs-stage { position: relative; border: 1.5px solid var(--ink); background: var(--paper); }
+/* the stage holds the viewer's height so the members panel can query its size; filled, the frame's grid sizes it */
+.cs-stage { position: relative; container: cs-stage / size; block-size: clamp(520px, 80vh, 1400px); border: 1.5px solid var(--ink); background: var(--paper); }
+.cs-frame:fullscreen .cs-stage, .cs-frame.is-filled .cs-stage { block-size: auto; }
 .cs-stage:focus-within { outline: max(2px, 0.08em) solid var(--accent); outline-offset: -2px; }
-.cs-view { display: block; width: 100%; height: clamp(520px, 80vh, 1400px); background: var(--paper);
+.cs-view { display: block; width: 100%; height: 100%; background: var(--paper);
   --poster-color: transparent; --progress-bar-color: var(--accent); }
 .cs-stage.over .cs-view { cursor: pointer; }
 ${pinCss('cs-pin', 22, 11)}
-${partsCss('cs-parts', { side: 'end', top: 40, cols: 2, font: 10.5 })}
+${partsCss('cs-parts', { side: 'end', top: 40, cols: 1, font: 10.5, fit: { container: 'cs-stage', cap: 56, wide: PARTS_WIDE } })}
 .cs-pin { --hue: var(--ink-soft); }
 @media (prefers-reduced-motion: no-preference) { .cs-pin { transition: width 0.15s, height 0.15s, transform 160ms var(--ease-out, ease-out); } }
 .cs-pin.on { background: var(--accent); border-color: var(--accent); color: var(--paper); }
@@ -219,11 +232,11 @@ ${partsCss('cs-parts', { side: 'end', top: 40, cols: 2, font: 10.5 })}
   .cs-bar { flex-direction: column; align-items: stretch; gap: 8px; }
   .cs-ctl { justify-content: flex-start; }
 }
-@media (max-width: 860px) { .cs-view { height: clamp(420px, 62vh, 620px); } }`;
+@media (max-width: 860px) { .cs-stage { block-size: clamp(420px, 62vh, 620px); } }`;
 
 // The scene, as a module for the app: handed the resolved <model-viewer> module
 // and the opening pin, it returns { dispose, select }.
-const BODY = `${FOCUS_JS}${MV_JS}  ${DRESS_JS}
+const BODY = `${FOCUS_JS}${mvJs({ corners: PARTS_CORNERS, fold: PARTS_FOLD })}  ${DRESS_JS}
   var mv = root.querySelector('#cs-viewer');
   var island = root.querySelector('#cs-city');
   if (!mv || !island || !viewer) return undefined;
@@ -672,7 +685,7 @@ ${CORNERS.map((az, i) => `          <button type="button" data-az="${az}" aria-p
 ${pins}
 ${labels}
       </model-viewer>
-${partsMarkup('cs-parts', 'Members', data.rows)}
+${partsMarkup('cs-parts', 'Members', partsItems(data), data.rows.length)}
     </div>
     <aside class="cs-info" id="cs-info" aria-live="polite"></aside>
   </div>

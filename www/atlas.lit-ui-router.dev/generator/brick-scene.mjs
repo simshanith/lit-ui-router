@@ -10,7 +10,7 @@ import { PROJECT_MARK, articleTitle } from './chrome.mjs';
 import { FOCUS_JS } from './focus.mjs';
 import { basisStrip, laneCss } from './lane-chrome.mjs';
 import { ASSEMBLE_SECONDS, assembleMotion, brickGlb, seatedBoxes, toModel } from './brick-glb.mjs';
-import { MV_JS, frameCss, orbitAt, partsCss, partsMarkup, pinCss } from './mv-kit.mjs';
+import { frameCss, mvJs, orbitAt, partsCss, partsMarkup, pinCss } from './mv-kit.mjs';
 import { BRICK_COUPLES, BRICK_MODEL, BRICK_REACHES, BRICK_ROWS, EXPLODE } from './sheet2.mjs';
 import { hueOf } from './brick-hues.mjs';
 import { BASE } from '../app/src/routes.ts';
@@ -192,7 +192,7 @@ ${CORNERS.map((c, i) => `          <button type="button" data-orbit="${c.orbit}"
 
 // The scene, as a module for the app: handed the resolved <model-viewer> module
 // and the opening pin, it returns { dispose, select }.
-const BODY = `${FOCUS_JS}${MV_JS}  var mv = root.querySelector('#bk-viewer');
+const BODY = `${FOCUS_JS}${mvJs()}  var mv = root.querySelector('#bk-viewer');
   var island = root.querySelector('#bk-model');
   if (!mv || !island || !viewer) return undefined;
   var D = JSON.parse(island.textContent);
