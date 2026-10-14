@@ -424,6 +424,7 @@
         "tools/warn-lanes/**/*.test.ts",
         "tools/workers-builds/**/*.test.ts",
         "packages/ui-router-server/test/**/*.test.ts",
+        "apps/sample-app-lit-e2e/scripts/**/*.test.ts",
         "apps/sample-app-routes/test/**/*.test.ts",
         "www/lit-ui-router.dev/worker/test/**/*.test.ts",
         "www/lit-ui-router.dev/.vitepress/test/**/*.test.ts"

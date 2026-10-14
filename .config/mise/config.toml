@@ -285,6 +285,11 @@ run = [
 # resolves. WRANGLER_LOG and CYPRESS_* reach Cypress through the tasks'
 # passThroughEnv.
 #
+# --base-url (E2E_BASE_URL) runs the suites against an already-served origin and
+# starts no server; build_www stays, since the suites' build edge reaches the
+# site build anyway. Exported only when non-empty: turbo hashes an empty var
+# apart from an unset one.
+#
 # dir is explicit: the inner `turbo run` must see the whole workspace, and a
 # task invoked from a package directory gets a silently narrowed plan.
 depends = ["build_www", "turbo_force_guard"]
@@ -293,9 +298,10 @@ description = "Run the Cypress e2e suites via turbo, around one shared dev serve
 usage = '''
 arg "[suite]" var=#true help="Suites to run (e.g. hash mobx); none runs them all"
 flag "--output-logs <mode>" help="turbo task output: full | errors-only | new-only | hash-only | none; CI sets errors-only" default="full" env="TURBO_OUTPUT_LOGS"
+flag "--base-url <origin>" help="Run against this served origin (e.g. a deployed preview) instead of a local dev server" env="E2E_BASE_URL"
 '''
 # unquoted: a var arg arrives as one string and must word-split back into argv
-run = 'TURBO_OUTPUT_LOGS="${usage_output_logs?}" node ./apps/sample-app-lit-e2e/scripts/run-e2e.ts ${usage_suite:-}'
+run = 'if [ -n "${usage_base_url:-}" ]; then export E2E_BASE_URL="$usage_base_url"; else unset E2E_BASE_URL; fi; TURBO_OUTPUT_LOGS="${usage_output_logs?}" node ./apps/sample-app-lit-e2e/scripts/run-e2e.ts ${usage_suite:-}'
 
 [tasks.codecov_bundle]
 # env: CODECOV_TOKEN plus the ambient TURBO_* remote-cache config.

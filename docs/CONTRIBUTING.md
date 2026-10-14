@@ -66,10 +66,13 @@ mise run test_e2e
 # Or hold a server open and drive individual suites against it
 mise run //www/lit-ui-router.dev:serve
 turbo run test:e2e:hash
+
+# Or run them against an already-served origin, with no local server
+mise run test_e2e --base-url https://lit-ui-router.dev
 ```
 
 See [the suite README](../apps/sample-app-lit-e2e/README.md) for suite
-selection, and for serving an already-built site without mise.
+selection, serving an already-built site without mise, and the served-origin run.
 
 `pnpm run crap` ranks each vitest package's functions by CRAP score
 (complexity against coverage) from the coverage `test:coverage` writes,

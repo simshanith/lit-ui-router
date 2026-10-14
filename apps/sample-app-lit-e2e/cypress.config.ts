@@ -1,7 +1,6 @@
-import { resolveWwwDevPort } from '@www/lit-ui-router.dev/dev-port.ts';
 import { defineConfig } from 'cypress';
 
-const port = resolveWwwDevPort();
+import { e2eUrl } from './scripts/base-url.ts';
 
 export default defineConfig({
   fileServerFolder: '.',
@@ -10,7 +9,7 @@ export default defineConfig({
   video: true,
   chromeWebSecurity: false,
   e2e: {
-    baseUrl: `http://localhost:${port}/app/`,
+    baseUrl: e2eUrl('app/'),
     specPattern: './src/integration/**/*.cy.{js,jsx,ts,tsx}',
     supportFile: './src/support/e2e.ts',
   },
