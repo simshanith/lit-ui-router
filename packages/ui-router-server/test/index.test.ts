@@ -303,6 +303,21 @@ describe('simulate strategy isolation', () => {
       ['/app/welcome', 'shell', '/app/contacts', '/app/welcome'],
     );
   });
+
+  it('leaves no timer pending once a verdict resolves', async () => {
+    const router = createServerRouter({
+      mounts: { '/app': appMount('simulate') },
+    });
+
+    const pendingTimers = () =>
+      process.getActiveResourcesInfo().filter((name) => name === 'Timeout')
+        .length;
+
+    const before = pendingTimers();
+    await router.resolve('/app/legacy');
+
+    assert.equal(pendingTimers(), before);
+  });
 });
 
 describe('mergeSearch', () => {

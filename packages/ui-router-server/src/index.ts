@@ -315,13 +315,16 @@ const buildHeadlessRouter = (simulate: SimulateModule, mount: Mount) => {
 };
 
 // Transitions settle in microtasks; the timer is only a degrade-to-shell net.
-const settledWithinTimeout = (settled: Promise<boolean>): Promise<boolean> =>
-  Promise.race([
+const settledWithinTimeout = (settled: Promise<boolean>): Promise<boolean> => {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+
+  return Promise.race([
     settled,
-    new Promise<false>((expire) =>
-      setTimeout(() => expire(false), SETTLE_TIMEOUT_MS),
-    ),
-  ]);
+    new Promise<false>((expire) => {
+      timer = setTimeout(() => expire(false), SETTLE_TIMEOUT_MS);
+    }),
+  ]).finally(() => clearTimeout(timer));
+};
 
 // --- Verdict construction --------------------------------------------------
 
