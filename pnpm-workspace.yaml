@@ -57,7 +57,7 @@ catalog:
   eslint-plugin-oxlint: 1.88.0
   eslint-plugin-package-json: ^1.10.1
   eslint-plugin-pnpm: ^1.9.1
-  eslint-plugin-turbo: ^2.11.7
+  eslint-plugin-turbo: ^2.11.8
   eslint-plugin-wc: ^3.1.0
   happy-dom: ^21.0.1
   hono: ^4.13.13
@@ -84,7 +84,7 @@ catalog:
   semver: ^7.8.5
   signal-polyfill: ^0.2.2
   start-server-and-test: ^3.0.13
-  turbo: ^2.11.7
+  turbo: ^2.11.8
   typedoc: ^0.28.20
   typedoc-plugin-markdown: ^4.13.1
   typedoc-vitepress-theme: ^1.1.4
