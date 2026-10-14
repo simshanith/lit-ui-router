@@ -320,6 +320,78 @@ describe('simulate strategy isolation', () => {
   });
 });
 
+describe('matcher strategy route scans', () => {
+  // Each successful route match decodes the captured id exactly once.
+  let decodes = 0;
+
+  const counted = {
+    name: 'counted',
+    pattern: /[^/]+/,
+    is: (val: unknown): val is string => typeof val === 'string',
+    decode: (val: string) => {
+      decodes++;
+
+      return val;
+    },
+  };
+
+  const router = createServerRouter({
+    mounts: {
+      '/app': {
+        routes: [
+          {
+            name: 'item',
+            url: '/items/:id',
+            params: { id: { type: counted } },
+          },
+        ],
+        redirects: [
+          { pattern: '/moved/:id', to: 'item' },
+          {
+            pattern: /^\/items\/self$/,
+            to: { state: 'item', params: { id: 'self' } },
+          },
+        ],
+      },
+    },
+  });
+
+  const decodesFor = async (path: string) => {
+    decodes = 0;
+    const verdict = await router.resolve(path);
+
+    return { kind: verdict.kind, decodes };
+  };
+
+  it('matches a served route once', async () => {
+    assert.deepEqual(await decodesFor('/app/items/7'), {
+      kind: 'shell',
+      decodes: 1,
+    });
+  });
+
+  it('skips route matching when a rule redirects', async () => {
+    assert.deepEqual(await decodesFor('/app/moved/7'), {
+      kind: 'redirect',
+      decodes: 0,
+    });
+  });
+
+  it('matches once after a rule that lands where it started', async () => {
+    assert.deepEqual(await decodesFor('/app/items/self'), {
+      kind: 'shell',
+      decodes: 1,
+    });
+  });
+
+  it('runs no decode for an unmatched pathname', async () => {
+    assert.deepEqual(await decodesFor('/app/nowhere'), {
+      kind: 'notFound',
+      decodes: 0,
+    });
+  });
+});
+
 describe('mergeSearch', () => {
   it('appends the request search to a bare location', () => {
     assert.equal(mergeSearch('/app/contacts', '?q=1'), '/app/contacts?q=1');

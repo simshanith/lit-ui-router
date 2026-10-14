@@ -13,9 +13,9 @@
 
 import type { RawParams, StateDeclaration } from '@uirouter/core';
 
-import { compileRedirects, compileRoutes, matchRoute } from './redirects.ts';
+import { compileResolver, matchRoute } from './redirects.ts';
 import type {
-  CompiledRoute,
+  CompiledResolver,
   RedirectRule,
   RedirectTarget,
   RouteDeclaration,
@@ -127,10 +127,7 @@ interface Mount {
   base: string;
   config: MountConfig;
   strategy: 'matcher' | 'simulate';
-  compiled: {
-    evaluate: (pathname: string) => string | null;
-    routes: CompiledRoute[];
-  };
+  compiled: CompiledResolver;
 }
 
 const isUrlText = (input: string | { pathname: string }): input is string =>
@@ -244,14 +241,11 @@ const compileMount = ([base, config]: [string, MountConfig]): Mount => {
     // Simulate mounts accept the same declaration subset, so the
     // dependency-free compilation doubles as their construction-time
     // validation (their resolve path never consults it).
-    compiled: {
-      evaluate: compileRedirects({
-        routes: config.routes,
-        rules: config.redirects,
-        config: config.config,
-      }),
-      routes: compileRoutes(config.routes, config.config),
-    },
+    compiled: compileResolver({
+      routes: config.routes,
+      rules: config.redirects,
+      config: config.config,
+    }),
   };
 };
 
@@ -356,12 +350,18 @@ const otherwiseVerdict = (mount: Mount): Verdict => ({
 // --- Per-strategy resolution -----------------------------------------------
 
 const matcherVerdict = (mount: Mount, subpath: string): Verdict => {
-  const redirected = mount.compiled.evaluate(subpath);
+  const resolution = mount.compiled.resolve(subpath);
 
-  if (redirected !== null) return redirectVerdict(mount, redirected);
+  if (resolution.redirect !== null)
+    return redirectVerdict(mount, resolution.redirect);
 
-  if (matchRoute(mount.compiled.routes, subpath) !== null)
-    return shellVerdict(mount);
+  // A when()-rule that lands where it started never reached route matching.
+  const match =
+    resolution.match === undefined
+      ? matchRoute(mount.compiled.routes, subpath)
+      : resolution.match;
+
+  if (match !== null) return shellVerdict(mount);
 
   return mount.config.otherwise
     ? otherwiseVerdict(mount)
