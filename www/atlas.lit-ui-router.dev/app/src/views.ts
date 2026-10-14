@@ -1479,7 +1479,7 @@ export const AboutView: RoutedLitTemplate<ManifestResolves> = (props) => {
             height="630"
             decoding="async"
           />
-          <figcaption>lit-ui-router.dev equals lit plus ui-router — the equation card, sheet 7's census city faded under the marks.</figcaption>
+          <figcaption>lit-ui-router.dev equals lit plus ui-router — the equation card: the lockup on a framed pane over sheet 7's census city.</figcaption>
         </figure>
         <h2>THE SET, ROUTED</h2>
         ${manifest ? html`<p>${unsafeHTML(manifest.cover.thesis)}</p>` : nothing}

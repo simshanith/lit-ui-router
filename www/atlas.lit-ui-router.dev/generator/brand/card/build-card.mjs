@@ -91,20 +91,41 @@ const smoked = (width) => `${CLEAN}.name { position: absolute; inset: 0 0 calc(6
 `;
 // the banner: the ground's gradient and wash live in the pane, the sheet outside sits on flat ground; the field is a
 // pseudo so the feather mask fades the fill and never the lettering; light lifts to paper, dark sinks as G2 did
-const banner = (feather) => `${CLEAN}.card { background: var(--ground); --pane-a: 70%; --pane-b: 1.08; --p-hi: var(--g-hi); --p-mid: var(--paper); --p-lo: var(--g-mid); }
-:root[data-theme="dark"] .card { --pane-a: 60%; --pane-b: 0.8; --p-mid: var(--g-mid); --p-lo: var(--g-lo); }
-.name { position: absolute; inset: 0 0 calc(60px + 1cqh) 0; margin: auto; inline-size: 93cqw; block-size: fit-content; padding: 56px; }
+const PANE = `.card { background: var(--ground); --pane-a: 70%; --pane-b: 1.08; --pane-w: 93cqw; --f: 48px; --p-hi: var(--g-hi); --p-mid: var(--paper); --p-lo: var(--g-mid); }
+.name { position: absolute; inset: 0 0 calc(60px + 1cqh) 0; margin: auto; inline-size: var(--pane-w); block-size: fit-content; padding: 56px; }
 .name::before { content: ''; position: absolute; inset: 0; z-index: -1;
   background:
     radial-gradient(ellipse 58% 62% at 50% 44%, var(--wash) 0%, transparent 72%),
     linear-gradient(160deg in oklch, color-mix(in oklch, var(--p-hi) var(--pane-a), transparent) 0%, color-mix(in oklch, var(--p-mid) var(--pane-a), transparent) 48%, color-mix(in oklch, var(--p-lo) var(--pane-a), transparent) 100%);
   backdrop-filter: blur(6px) brightness(var(--pane-b));
-  mask-image: linear-gradient(to right, transparent, #000 ${feather}px, #000 calc(100% - ${feather}px), transparent), linear-gradient(to bottom, transparent, #000 ${feather}px, #000 calc(100% - ${feather}px), transparent);
+  mask-image: linear-gradient(to right, transparent, #000 var(--f), #000 calc(100% - var(--f)), transparent), linear-gradient(to bottom, transparent, #000 var(--f), #000 calc(100% - var(--f)), transparent);
   mask-composite: intersect; -webkit-mask-composite: source-in; }
 `;
+const banner = (feather, dark = { a: '60%', b: 0.8, feather }) => `${CLEAN}${PANE}.card { --f: ${String(feather)}px; }
+:root[data-theme="dark"] .card { --pane-a: ${dark.a}; --pane-b: ${String(dark.b)}; --f: ${String(dark.feather)}px; --p-mid: var(--g-mid); --p-lo: var(--g-lo); }
+`;
+// the shipped card: the framed pane in both themes, the mark in the rail's lit state (glow at 1, the plain logo at 0, the
+// lit copy blended) with one glow tune per theme that the rail does not carry
+const LIGHT_GLOW = 0.4;
+const FRAMED = `${PANE}.card { --pane-w: 86cqw; }
+:root[data-theme="dark"] .card { --pane-a: 60%; --pane-b: 0.8; --p-mid: var(--g-mid); --p-lo: var(--g-lo); }
+.name::before { mask-image: none; border: 1px solid color-mix(in oklch, var(--line) 60%, transparent); border-radius: 10px; }
+.client-glow-dark { filter: brightness(1.35); }
+.client-glow-light { opacity: ${String(LIGHT_GLOW)}; }
+`;
 const VARIANTS = {
+  final: { css: FRAMED, crop: PAN },
+  'final-feather': {
+    css: `${PANE}:root[data-theme="dark"] .card { --pane-a: 60%; --pane-b: 0.8; --pane-w: 86cqw; --p-mid: var(--g-mid); --p-lo: var(--g-lo); }
+:root[data-theme="dark"] .name::before { mask-image: none; border: 1px solid color-mix(in oklch, var(--line) 60%, transparent); border-radius: 10px; }
+`,
+    crop: PAN,
+  },
+  plain: {},
   banner3: { css: banner(48), crop: PAN },
   banner3b: { css: banner(80), crop: PAN },
+  banner4: { css: banner(48, { a: '78%', b: 0.78, feather: 48 }), crop: PAN },
+  banner4b: { css: banner(48, { a: '78%', b: 0.78, feather: 24 }), crop: PAN },
   pan: { css: CLEAN, crop: PAN },
   smoked: { css: smoked('fit-content'), crop: PAN },
   'smoked-banner': { css: smoked('86cqw'), crop: PAN },
@@ -303,7 +324,7 @@ ${EXTRA}</style>
 
 function main() {
   const [out, flag, name] = process.argv.slice(2);
-  const variant = flag === '--variant' ? VARIANTS[name] : undefined;
+  const variant = flag === '--variant' ? VARIANTS[name] : VARIANTS.final;
   if (!out || (flag && !variant)) {
     console.error(`usage: node build-card.mjs <outdir> [--variant ${Object.keys(VARIANTS).join('|')}]`);
     process.exitCode = 1;
