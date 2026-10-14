@@ -227,13 +227,14 @@ run = "turbo run build --filter='@www/*' --ui=stream --log-order=stream --summar
 # The PR gate: the turbo graph, then the e2e suites, which need a dev server
 # turbo can't own (see test_e2e). A graph failure short-circuits the suites.
 # build-test-run.yml runs the same two halves as parallel jobs.
+# --skip-deps: ci_graph already ran test_e2e's build_www and turbo_force_guard.
 description = "Run the pull-request CI pipeline: the turbo graph, then the e2e suites"
 usage = '''
 flag "--output-logs <mode>" help="turbo task output: full | errors-only | new-only | hash-only | none; CI sets errors-only" default="full" env="TURBO_OUTPUT_LOGS"
 '''
 run = [
   "TURBO_OUTPUT_LOGS=\"${usage_output_logs?}\" mise run ci_graph",
-  "TURBO_OUTPUT_LOGS=\"${usage_output_logs?}\" mise run test_e2e",
+  "TURBO_OUTPUT_LOGS=\"${usage_output_logs?}\" mise run --skip-deps test_e2e",
 ]
 
 [tasks.ci_graph]
@@ -248,6 +249,8 @@ run = [
 # turbo_summary task reports on every run. It changes nothing about what runs.
 # --log-file writes .turbo/logs/<timestamp>.json, the only log an uncached task
 # leaves: turbo writes a task's .turbo/turbo-*.log for the cache alone.
+# build_www first: the CI e2e jobs restore the docs build from the remote
+# cache, and the sooner it lands the more of them hit.
 depends = ["turbo_force_guard"]
 description = "Run the pull-request turbo graph (ci without the e2e suites)"
 usage = '''
@@ -255,23 +258,26 @@ flag "--output-logs <mode>" help="turbo task output: full | errors-only | new-on
 '''
 run = [
   "mise run //tools/build_and_test:mark_session",
+  "TURBO_OUTPUT_LOGS=\"${usage_output_logs?}\" mise run build_www",
   "turbo run ci --ui=stream --log-order=stream --summarize --log-file --output-logs=\"${usage_output_logs?}\"",
 ]
 
 [tasks.ci_main]
 # Superset of `ci` (same env contract): the main graph, then the e2e suites.
+# --skip-deps as in `ci`.
 description = "Run the main-push CI pipeline: the main turbo graph, then the e2e suites"
 usage = '''
 flag "--output-logs <mode>" help="turbo task output: full | errors-only | new-only | hash-only | none; CI sets errors-only" default="full" env="TURBO_OUTPUT_LOGS"
 '''
 run = [
   "TURBO_OUTPUT_LOGS=\"${usage_output_logs?}\" mise run ci_main_graph",
-  "TURBO_OUTPUT_LOGS=\"${usage_output_logs?}\" mise run test_e2e",
+  "TURBO_OUTPUT_LOGS=\"${usage_output_logs?}\" mise run --skip-deps test_e2e",
 ]
 
 [tasks.ci_main_graph]
 # Superset of `ci_graph` (same env contract): adds the main-only guard tasks
 # (@tools/release#check:pack, @tools/dts-backtest#test:matrix) to the graph.
+# build_www first, as in ci_graph.
 depends = ["turbo_force_guard"]
 description = "Run the main-push turbo graph (ci_main without the e2e suites)"
 usage = '''
@@ -279,6 +285,7 @@ flag "--output-logs <mode>" help="turbo task output: full | errors-only | new-on
 '''
 run = [
   "mise run //tools/build_and_test:mark_session",
+  "TURBO_OUTPUT_LOGS=\"${usage_output_logs?}\" mise run build_www",
   "turbo run ci:main --ui=stream --log-order=stream --summarize --log-file --output-logs=\"${usage_output_logs?}\"",
 ]
 

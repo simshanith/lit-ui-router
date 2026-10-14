@@ -281,6 +281,8 @@ jobs:
         # Bounds the report below to this job's runs: the docs build and the suite.
         run: mise run //tools/build_and_test:mark_session
       - name: E2E
+        # The docs build restores from the remote cache once `run` uploads it;
+        # a leg that gets there first builds it itself.
         # Same continue-on-error hand-off to the summary step as `run`.
         id: e2e
         continue-on-error: true

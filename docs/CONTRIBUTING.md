@@ -80,7 +80,7 @@ flagging those over crap4ts' default threshold. It never fails and no CI
 lane runs it. With coverage already on disk, `pnpm --filter lit-ui-router
 run crap 25` prints a longer list for one package.
 
-`mise run ci` and `mise run ci_main` run what CI runs: CI splits each into its turbo graph (`ci_graph`, `ci_main_graph`) and one `mise run test_e2e <suite>` job per suite, in parallel ([`build-test-run.yml`](../.github/workflows/build-test-run.yml)). `pnpm run ci` remains as an alias for the PR pipeline's turbo graph.
+`mise run ci` and `mise run ci_main` run what CI runs: CI splits each into the docs build plus turbo graph (`ci_graph`, `ci_main_graph`) and one `mise run test_e2e <suite>` job per suite, in parallel ([`build-test-run.yml`](../.github/workflows/build-test-run.yml)). `pnpm run ci` remains as an alias for the PR pipeline's turbo graph.
 
 They are the same invocations, not the same room: CI builds from a fresh
 checkout, a local run reuses whatever `dist/` already holds. No build here
