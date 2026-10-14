@@ -10,6 +10,7 @@
     "format:check:oxfmt": "oxfmt --check \"**/*.{ts,js,json,md}\"",
     "format:oxfmt": "oxfmt \"**/*.{ts,js,json,md}\"",
     "lint:oxlint": "oxlint .",
+    "test": "node --test --test-reporter=@tools/shared/test-reporter.ts \"scripts/**/*.test.ts\"",
     "test:e2e:a11y": "node ./scripts/a11y-suite.ts",
     "test:e2e:docs": "cypress run --browser chrome --config-file cypress.docs.config.ts",
     "test:e2e:effect": "node ./scripts/cypress-suite.ts effect",

@@ -76,8 +76,8 @@ umbrella, so `test:e2e:*` appear in no `ci:*` turbo task.
 8787 is a default, not a fixture. It lives in code —
 `www/lit-ui-router.dev/dev-port.ts`, beside the server that binds it — so every
 entry point resolves it the same way, mise or no mise. Setting `WWW_DEV_PORT`
-overrides it, and the server, both Cypress configs, and the deflake sampler all
-read the override.
+overrides it, and the server, both Cypress configs, the axe suite, and the
+deflake sampler all read the override.
 
 That matters because the port is contended: a second checkout running the suite
 on 8787 tests the _first_ one's build, silently. To move a worktree off the
@@ -96,6 +96,32 @@ The checked-in `.config/mise/config.toml` deliberately does **not** declare
 `WWW_DEV_PORT`. It evaluates before `config.local.toml`, so a default there
 would already be in the environment when the local file rendered, and the local
 override would silently defer to it.
+
+## Against a served origin
+
+`E2E_BASE_URL` points the suites at a site that is already served, such as a
+deployed preview, instead of the local dev server. `--base-url` on the umbrella
+sets it:
+
+```bash
+mise run test_e2e --base-url https://lit-ui-router.dev hash
+```
+
+With it set, the umbrella starts no server and waits on nothing; the suites run
+straight against that origin. The value is a bare `http(s)` origin, with or
+without a trailing slash, because the site links its mounts by absolute path.
+Anything else fails before a suite starts. `scripts/base-url.ts` resolves it for
+every consumer: both Cypress configs, the mount launcher, the axe suite, and the
+readiness URLs of a local run.
+
+The site still builds locally: the suites' build edge reaches it, and the axe
+suite enumerates the docs pages from its `dist`, so a local build that has
+drifted from the deployed one audits the wrong page list.
+
+The Cypress suites hash `E2E_BASE_URL` (`turbo.json`), so a run against one
+origin never replays a cache entry from another, or from the local server. Two
+runs against the same origin at the same commit do share one, even when the
+deployment behind it changed; `TURBO_FORCE=1` re-runs them.
 
 ## Location plugin suites
 

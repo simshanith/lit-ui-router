@@ -1,7 +1,8 @@
-import { resolveWwwDevPort } from '@www/lit-ui-router.dev/dev-port.ts';
 import { spawn } from 'node:child_process';
 
-// The Cypress suites whose baseUrl carries the dev-server port. The others
+import { e2eUrl } from './base-url.ts';
+
+// The Cypress suites whose baseUrl is a mount other than the base config's. The others
 // (vanilla, docs, pushState) keep the base config's baseUrl and stay plain
 // package.json scripts; these needed a launcher because shell can fail on an
 // unset var but cannot supply one (#697).
@@ -25,8 +26,6 @@ const main = (): void => {
   // SAFETY: the `name in suites` check above returns otherwise
   const suite = suites[name as keyof typeof suites];
 
-  const port = resolveWwwDevPort();
-
   const child = spawn(
     'cypress',
     [
@@ -37,7 +36,7 @@ const main = (): void => {
       ...[
         '--config',
         [
-          `baseUrl=http://localhost:${port}/${suite.path}`,
+          `baseUrl=${e2eUrl(suite.path)}`,
           `videosFolder=cypress/videos-${name}`,
           `screenshotsFolder=cypress/screenshots-${name}`,
         ].join(','),

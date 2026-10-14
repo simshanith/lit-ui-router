@@ -1,7 +1,6 @@
-import { resolveWwwDevPort } from '@www/lit-ui-router.dev/dev-port.ts';
 import { defineConfig } from 'cypress';
 
-const port = resolveWwwDevPort();
+import { e2eUrl } from './scripts/base-url.ts';
 
 export default defineConfig({
   fileServerFolder: '.',
@@ -10,10 +9,10 @@ export default defineConfig({
   video: true,
   chromeWebSecurity: false,
   e2e: {
-    // Wrangler serves all of www/lit-ui-router.dev/dist; the sample-app suites
+    // The origin serves all of www/lit-ui-router.dev/dist; the sample-app suites
     // scope themselves to /app/, /app-mobx/, /app-effect/ and /app-signals/, so
     // nothing renders the docs pages.
-    baseUrl: `http://localhost:${port}/`,
+    baseUrl: e2eUrl(''),
     specPattern: './src/docs/**/*.cy.{js,jsx,ts,tsx}',
     // The sample-app support file adds feature-flag query helpers the docs
     // site has no use for.
