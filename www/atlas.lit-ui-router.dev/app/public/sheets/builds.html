@@ -1,0 +1,309 @@
+<style>
+.bd { --lane-measure: 750px; }
+.bd .nw { white-space: nowrap; }
+.bd-bar { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; justify-content: space-between;
+  border: 1.5px solid var(--ink); border-block-end: none; background: var(--paper-2); padding: 12px 22px; }
+.bd-legend { display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: center; }
+.bd-bar .lg { display: inline-flex; align-items: center; gap: 8px; font-family: var(--data); font-size: 11.5px;
+  letter-spacing: 0.06em; color: var(--ink-soft); }
+.bd-bar .lg svg { display: block; flex: none; }
+.bd-bar .lg .sw-dark { display: none; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .bd-bar .lg .sw-light { display: none; }
+  :root:not([data-theme="light"]) .bd-bar .lg .sw-dark { display: block; }
+}
+:root[data-theme="dark"] .bd-bar .lg .sw-light { display: none; }
+:root[data-theme="dark"] .bd-bar .lg .sw-dark { display: block; }
+.bd-bar .lg i { display: block; flex: none; width: 26px; height: 0; border-block-start-width: 2px; border-block-start-style: solid; }
+.bd-ctl .hints { display: inline-flex; flex-wrap: wrap; gap: 8px 12px; }
+.bd-ctl .mouse { display: inline-flex; flex-wrap: wrap; gap: 8px 12px; }
+.bd-ctl .touch { display: none; }
+@media (pointer: coarse) { .bd-ctl .mouse { display: none; } .bd-ctl .touch { display: inline; } }
+.bd-ctl { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; font-family: var(--data); font-size: 11px;
+  letter-spacing: 0.12em; color: var(--ink-soft); }
+.bd-ctl button { font: inherit; letter-spacing: inherit; color: var(--ink); background: var(--paper);
+  border: 1px solid var(--ink); padding: 6px 12px; cursor: pointer; }
+@media (hover: hover) and (pointer: fine) { .bd-ctl button:hover { background: var(--paper-2); } }
+.bd-ctl button:not(:disabled):active { transform: scale(0.97); }
+@media (prefers-reduced-motion: no-preference) { .bd-ctl button { transition: transform 160ms var(--ease-out, ease-out); } }
+.bd-ctl label { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
+.bd-ctl input[type=checkbox] { appearance: none; flex: none; width: 13px; height: 13px; margin: 0; border: 1px solid var(--ink);
+  background: var(--paper); display: grid; place-content: center; cursor: pointer; }
+.bd-ctl input[type=checkbox]:checked::before { content: ""; width: 7px; height: 7px; background: var(--ink); }
+.bd-ctl input[type=checkbox]:focus-visible { outline: max(2px, 0.08em) solid var(--accent); outline-offset: 0.25em; }
+.bd-stage { display: grid; grid-template-columns: minmax(0, 1fr) clamp(300px, 1rem + 25vw, 400px); border: 1.5px solid var(--ink);
+  background: var(--paper); }
+.bd-stage:focus-visible, .bd-cy:focus-visible { outline: max(2px, 0.08em) solid var(--accent); outline-offset: -2px; }
+.bd-cy { height: clamp(560px, 70vh, 960px); min-width: 0; touch-action: pan-y; }
+.bd-stage:fullscreen .bd-cy, .bd-stage.is-filled .bd-cy { height: 100vh; }
+.bd-stage:fullscreen .bd-info, .bd-stage.is-filled .bd-info { max-height: 100vh; }
+.bd-info { border-inline-start: 1.5px solid var(--ink); background: var(--paper-2); padding-block: 20px 22px; padding-inline: 22px;
+  font-family: var(--data); font-size: 12.5px; letter-spacing: 0.04em; line-height: 1.5; color: var(--ink);
+  overflow-y: auto; max-height: clamp(560px, 70vh, 960px); }
+.bd-info h3 { font-family: var(--code); font-size: 16px; font-weight: 600; letter-spacing: 0.04em; line-height: 1.3;
+  margin-block: 0 10px; margin-inline: 0; word-break: break-word; }
+.bd-info .f { display: block; font-size: 11px; letter-spacing: 0.14em; color: var(--ink-soft); margin-block: 16px 6px; margin-inline: 0; }
+.bd-info h3 + .f { margin-block-start: 0; }
+.bd-info ul { list-style: none; padding: 0; margin: 0; }
+.bd-info li { padding: 2px 0; line-height: 1.45; color: var(--ink-soft); word-break: break-word; }
+.bd-info .hint { font-family: var(--prose); font-size: 16px; font-style: normal; letter-spacing: 0; line-height: 1.5;
+  color: var(--ink-soft); max-width: 66ch; margin: 0; }
+.bd-basis { font-family: var(--prose); font-size: 15px; letter-spacing: 0; line-height: 1.8; color: var(--ink-soft);
+  border: 1.5px solid var(--ink); border-block-start: none; background: var(--paper-2); padding-block: 20px 24px; padding-inline: 22px;
+  margin-block: 0 22px; margin-inline: 0; }
+.bd-basis > span { max-width: var(--lane-measure); display: block; }
+.bd-basis .k { display: block; font-family: var(--data); font-size: 11px; font-weight: 600; letter-spacing: 0.16em;
+  line-height: 1; color: var(--accent); margin-block: 0 10px; margin-inline: 0; }
+.bd-basis code { font-family: var(--code); font-size: 0.9em; color: var(--ink); white-space: nowrap; }
+@media (max-width: 860px) {
+  .bd-stage { grid-template-columns: 1fr; }
+  .bd-info { border-inline-start: none; border-block-start: 1.5px solid var(--ink); max-height: 50vh;
+    mask-image: linear-gradient(to bottom, #000 calc(100% - 28px), transparent); }
+}
+
+.bd-frame { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-areas: "stage" "bar" "read"; }
+.bd-stage { grid-area: stage; min-width: 0; }
+.bd-bar { grid-area: bar; }
+.bd-frame > .bd-read { grid-area: read; }
+/* positioned inside its grid area, the button keeps the stage's corner wherever the stage stands */
+.bd-frame > .fill { grid-area: stage; }
+.bd-frame:fullscreen, .bd-frame.is-filled { box-sizing: border-box; overflow: auto; padding: 8px; grid-template-rows: minmax(min(62vh, 520px), 1fr) auto auto;
+  grid-template-areas: "stage" "bar" "read"; }
+.bd-frame:fullscreen .bd-stage, .bd-frame.is-filled .bd-stage { position: relative; min-height: 0; border: 1.5px solid var(--ink); }
+.bd-frame:fullscreen .bd-view, .bd-frame.is-filled .bd-view { position: absolute; inset: 0; height: 100%; }
+.bd-frame:fullscreen .bd-bar, .bd-frame.is-filled .bd-bar, .bd-frame:fullscreen .bd-read, .bd-frame.is-filled .bd-read { border: 1.5px solid var(--ink); border-block-start: none; }
+/* the reading holds the block size its scene reserves, so a longer one scrolls inside and the stage never reflows */
+.bd-frame:fullscreen .bd-read, .bd-frame.is-filled .bd-read { box-sizing: content-box; block-size: var(--read-reserve); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
+@media (min-width: 1100px) {
+  .bd-frame:fullscreen, .bd-frame.is-filled { grid-template-columns: minmax(0, 1fr) clamp(320px, 1rem + 29vw, 460px); grid-template-rows: minmax(0, 1fr) auto;
+    grid-template-areas: "stage stage" "bar read"; }
+  .bd-frame:fullscreen .bd-read, .bd-frame.is-filled .bd-read { border-inline-start: none; }
+}
+.bd-stage { display: block; position: relative; border: 1.5px solid var(--ink); border-block-end: none; }
+.bd-stage:focus-within { outline: max(2px, 0.08em) solid var(--accent); outline-offset: -2px; }
+.bd-view { display: block; width: 100%; height: clamp(460px, 64vh, 920px);
+  background: radial-gradient(ellipse 70% 60% at 50% 42%, var(--paper) 0%, var(--paper-2) 58%, var(--ground) 100%);
+  --poster-color: transparent; --progress-bar-color: var(--accent); }
+.bd .bd-bar { border-block-end: 1.5px solid var(--ink); }
+.bd-bar .lg i.sw { display: block; width: 20px; height: 12px; border: 1.2px solid var(--ink); }
+.bd-bar .lg i.sw-brick { background: linear-gradient(90deg, oklch(74.7% 0.133 80.8), oklch(74.7% 0.133 80.8) 33%, oklch(59.4% 0.111 138.6) 33%, oklch(59.4% 0.111 138.6) 66%, oklch(60.9% 0.115 252.3) 66%); }
+.bd-bar .lg i.sw-plate { background: repeating-linear-gradient(180deg, var(--paper) 0 3px, var(--line) 3px 4px); }
+.bd-bar .lg i.sw-stud { background: oklch(42.4% 0.077 253.0); border-radius: 50%; width: 14px; }
+.bd-bar .lg i.sw-ghost { background: oklch(95.3% 0.012 101.5 / 0.45); border-style: dashed; }
+.bd-bar .lg i.sw-tie { height: 0; border: none; border-block-start: 2px dashed var(--accent); }
+.bd-bar .lg i.sw-ground { background: oklch(92.9% 0.015 102.5); height: 7px; }
+.bd-pick { flex-basis: 100%; min-width: 0; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 12px; align-items: center;
+  font-family: var(--data); font-size: 11px; letter-spacing: 0.12em; color: var(--ink-soft); }
+.bd-pick .k { font-weight: 600; letter-spacing: 0.16em; color: var(--ink); }
+.bd-builds { display: flex; gap: 6px; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: thin; scrollbar-color: var(--line) transparent;
+  padding-block-end: 2px; }
+.bd-builds a { flex: none; font: inherit; letter-spacing: inherit; color: var(--ink); background: var(--paper); text-decoration: none;
+  border: 1px solid var(--ink); padding: 6px 12px; white-space: nowrap; }
+.bd-builds a .nm { color: var(--ink-soft); margin-inline-end: 6px; }
+.bd-builds a[aria-current="true"] { background: var(--ink); color: var(--paper); }
+.bd-builds a[aria-current="true"] .nm { color: inherit; }
+.bd-builds a[data-atlas] { border-style: dashed; border-color: var(--accent); }
+@media (hover: hover) and (pointer: fine) { .bd-builds a:not([aria-current="true"]):hover { background: var(--paper-2); } }
+.bd-builds a:focus-visible { outline: max(2px, 0.08em) solid var(--accent); outline-offset: -2px; }
+.bd-builds a:active { transform: scale(0.97); }
+@media (prefers-reduced-motion: no-preference) { .bd-builds a { transition: transform 160ms var(--ease-out, ease-out); } }
+.bd-who { grid-column: 2; font-size: 11px; letter-spacing: 0.08em; }
+.bd-ctl .grp { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+@media (max-width: 560px) { .bd-ctl .touch { white-space: normal; } .bd-pick { grid-template-columns: minmax(0, 1fr); } .bd-who { grid-column: 1; } }
+.bd-ctl button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.bd-ctl input[type=range] { flex: none; width: 150px; accent-color: var(--accent); }
+#bd-play::after { content: "ASSEMBLE"; display: block; height: 0; overflow: clip; visibility: hidden; }
+
+.bd-pin { width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--hue, var(--ink)); background: var(--paper);
+  color: var(--ink); font-family: var(--data); font-size: 12px; font-weight: 600; padding: 0; cursor: pointer;
+  display: grid; place-items: center; }
+.bd-pin.on { background: var(--hue, var(--accent)); color: oklch(95.3% 0.012 101.5); }
+.bd-pin:focus-visible { outline: max(2px, 0.08em) solid var(--accent); outline-offset: 0.25em; }
+.bd-pin:active { transform: scale(0.97); }
+@media (prefers-reduced-motion: no-preference) { .bd-pin { transition: opacity 0.3s, transform 160ms var(--ease-out, ease-out); } }
+.bd-pin[hidden], .bd-parts .pt[hidden] { display: none; }
+.bd-pin[data-kind="plate"] { border-radius: 4px; border-color: var(--accent); }
+/* a pin or chip without a hue lights in the accent, lettered in paper so the dark theme keeps its contrast */
+.bd-pin.on:not([style]), .bd-parts .pt.on:not([style]) { color: var(--paper); }
+.bd-parts .pt[data-kind="plate"] .n { border-radius: 3px; border-color: var(--accent); }
+
+.bd-parts { position: absolute; inset-block-start: 8px; inset-inline-start: 8px; z-index: 3; max-width: calc(100% - 16px);
+  max-height: calc(100% - 16px); display: flex; flex-direction: column; align-items: flex-start; }
+.bd-parts .pt-toggle { display: none; font-family: var(--data); font-size: 9.5px; font-weight: 600; letter-spacing: 0.16em; line-height: 1;
+  color: var(--ink); background: var(--paper); border: 1px solid var(--ink); padding: 6px 8px; cursor: pointer; opacity: 0.72; }
+.bd-parts .pt-toggle[aria-expanded="true"] { opacity: 1; background: var(--paper-2); }
+.bd-parts .pt-toggle:focus-visible { opacity: 1; outline: max(2px, 0.08em) solid var(--accent); outline-offset: 0.25em; }
+.bd-parts .pts { display: grid; grid-template-columns: repeat(1, auto); gap: 2px 4px; min-height: 0; overflow: auto; overscroll-behavior: contain;
+  padding: 5px; border: 1px solid var(--line); background: color-mix(in oklab, var(--paper) 70%, transparent);
+  font-family: var(--data); font-size: 11px; letter-spacing: 0.1em; }
+.bd-parts .pt { display: inline-flex; align-items: center; gap: 6px; padding-block: 2px; padding-inline: 2px 7px; border: 1px solid transparent;
+  color: var(--ink-soft); text-decoration: none; white-space: nowrap; }
+.bd-parts .pt .n { display: grid; place-items: center; width: 16px; height: 16px; border: 1.5px solid var(--hue, var(--ink-soft)); border-radius: 50%;
+  font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: 0; color: var(--ink); }
+@media (hover: hover) and (pointer: fine) { .bd-parts .pt:hover { border-color: var(--ink); background: var(--paper-2); color: var(--ink); } }
+.bd-parts .pt:focus-visible { outline: max(2px, 0.08em) solid var(--accent); outline-offset: 0; }
+.bd-parts .pt:active { transform: scale(0.97); }
+@media (prefers-reduced-motion: no-preference) { .bd-parts .pt { transition: transform 160ms var(--ease-out, ease-out); } }
+.bd-parts .pt.on { border-color: var(--hue, var(--accent)); background: var(--hue, var(--accent)); color: oklch(95.3% 0.012 101.5); }
+.bd-parts .pt.on .n { border-color: currentColor; color: inherit; }
+@media (max-width: 719px) {
+  .bd-parts { gap: 4px; }
+  .bd-parts .pt-toggle { display: block; }
+  .bd-parts:not(.open) .pts { display: none; }
+  .bd-parts .pts { grid-template-columns: auto; }
+}
+.bd-read { border: 1.5px solid var(--ink); border-block-start: none; background: var(--paper-2); padding-block: 14px 16px; padding-inline: 22px;
+  min-height: 72px; color: var(--ink); --rd-head: 16px; --rd-data: 12px; --rd-prose: 16px;
+  --read-reserve: calc(1.3 * var(--rd-head) + 3px + 2 * 1.5 * var(--rd-data) + 4px + 3 * 1.5 * var(--rd-prose)); }
+.bd-read h3 { font-family: var(--code); font-size: var(--rd-head); font-weight: 600; letter-spacing: 0.04em; line-height: 1.3;
+  margin: 0; word-break: break-word; }
+.bd-read h3 i.sw { display: inline-block; width: 18px; height: 11px; margin-inline-end: 8px; border: 1.2px solid var(--ink); vertical-align: baseline; }
+.bd-read h3 .n { font-family: var(--data); font-size: 11px; letter-spacing: 0.16em; color: var(--accent);
+  margin-inline-end: 10px; vertical-align: 0.12em; white-space: nowrap; }
+.bd-read .ledger { font-family: var(--data); font-size: var(--rd-data); letter-spacing: 0.08em; line-height: 1.5;
+  color: var(--ink-soft); margin-block: 3px 0; margin-inline: 0; }
+.bd-read .note, .bd-read .hint { font-family: var(--prose); font-size: var(--rd-prose); line-height: 1.5; max-width: 66ch;
+  margin-block: 4px 0; margin-inline: 0; color: var(--ink-soft); }
+@media (max-width: 860px) { .bd-view { height: clamp(420px, 62vh, 620px); } }</style>
+<section class="sheet bd" id="builds-scene" aria-label="The Builds in the round — each of sheet 2C's alternate builds as a three-dimensional model that explodes and reassembles">
+  <div class="sheet-head"><span class="proj"><span class="project-mark">THE ALTITUDE ATLAS</span> — INTERACTIVE PLATE</span><span class="shno"><a class="xref" data-sheet="2C" href="/sheet/2C">SHEET 2C</a> · 3D · REV A</span></div>
+  <h2 class="sheet-title"><sup class="art">the&nbsp;</sup>BUILDS, IN THE ROUND</h2>
+  <p class="sheet-sub"><a class="xref" data-sheet="2C" href="/sheet/2C">SHEET 2C</a>'S EIGHT BUILDS IN THE ROUND — VANILLA, SIGNALS, EFFECT, MOBX, NAV, SERVER, ESLINTED VANILLA and THE ATLAS · TEN OF THE BOX'S TEN BRICKS AND EIGHT OF ITS NINE PLATES BUILT · ONE GLTF BINARY PER BUILD · EACH BUILD'S EXPLOSION HALF AGAIN AS HIGH AS ITS ONE CLIP, ASSEMBLE ⇄ EXPLODE · THE CAMERA TURNS TO THREE CORNERS</p>
+  <div class="bd-frame fillable" id="bd-frame"><button type="button" class="fill" data-fill aria-label="Enlarge this figure, or leave it"></button>
+    <div class="bd-stage">
+      <model-viewer id="bd-viewer" class="bd-view" src="/models/builds/vanilla.glb" loading="eager" reveal="manual" camera-controls touch-action="pan-y" interaction-prompt="none" camera-orbit="45deg 54.736deg 88%" max-camera-orbit="Infinity 88deg auto" field-of-view="14deg" min-field-of-view="5deg" max-field-of-view="18deg" exposure="1" shadow-intensity="0" animation-name="assemble" alt="One of sheet 2C's alternate builds in three dimensions: the family bricks one group of consumers installs, in their own colours, standing on the runtime plates they peer — @uirouter/core the baseplate of every build, lit a one-stud plate beside it that lit-ui-router straddles, and each other runtime a stack of thin plates at its side, joined to the bricks that peer it by dashed ties. The explode control lifts the stacked bricks first, then the rest, each half again as high as the sheet draws it, with a dashed leader dropping from each to the stud it seats on.">
+        <button type="button" class="bd-pin" slot="hotspot-vanilla-1" data-build="vanilla" data-key="1" style="--hue:#D8A33A" data-position="1.5m 5.95m -2m" data-normal="0m 1m 0m" aria-pressed="false" aria-label="Brick 1, lit-ui-router">1</button>
+        <button type="button" class="bd-pin" data-kind="plate" slot="hotspot-vanilla-C" data-build="vanilla" data-key="C" data-position="-3m 1.15m 2.5m" data-normal="0m 1m 0m" aria-pressed="false" aria-label="Plate C, @uirouter/core">C</button>
+        <button type="button" class="bd-pin" data-kind="plate" slot="hotspot-vanilla-G" data-build="vanilla" data-key="G" data-position="3m 0.7m -1.85m" data-normal="0m 1m 0m" aria-pressed="false" aria-label="Plate G, lit">G</button>
+        <button type="button" class="bd-pin" slot="hotspot-signals-1" data-build="signals" data-key="1" style="--hue:#D8A33A" data-position="2.5m 5.95m -2.5m" data-normal="0m 1m 0m" aria-pressed="false" aria-label="Brick 1, lit-ui-router" hidden>1</button>
+        <button type="button" class="bd-pin" slot="hotspot-signals-7" data-build="signals" data-key="7" style="--hue:#B0507E" data-position="0.5m 7.15m -2m" data-normal="0m 1m 0m" aria-pressed="false" aria-label="Brick 7, lit-ui-router-signals" hidden>7</button>
+        <button type="button" class="bd-pin" slot="hotspot-signals-9" data-build="signals" data-key="9" style="--hue:#CC86A8" data-position="1.5m 1.75m 0.5m" data-normal="0m 1m 0m" aria-pressed="false" aria-label="Brick 9, ui-router-signals" hidden>9</button>
+        <button type="button" class="bd-pin" data-kind="plate" slot="hotspot-signals-C" data-build="signals" data-key="C" data-position="-3.5m 1.15m 2.5m" data-normal="0m 1m 0m" aria-pressed="false" aria-label="Plate C, @uirouter/core" hidden>C</button>
+        <button type="button" class="bd-pin" data-kind="plate" slot="hotspot-signals-G" data-build="signals" data-key="G" data-position="2.5m 0.7m -1.85m" data-normal="0m 1m 0m" aria-pressed="false" aria-label="Plate G, lit" hidden>G</button>
+        <button type="button" class="bd-pin" data-kind="plate" slot="hotspot-signals-I" data-build="signals" data-key="I" data-position="3m 1.15m 0m" data-normal="0m 1m 0m" aria-pressed="false" aria-label="Plate I, signal-polyfill" hidden>I</button>
+        <button type="button" class="bd-pin" slot="hotspot-effect-1" data-build="effect" data-key="1" style="--hue:#D8A33A" data-position="7m 5.95m -3.5m" data-normal="0m 1m 0m" aria-pressed="false" aria-label="Brick 1, lit-ui-router" hidden>1</button>
+        <button type="button" class="bd-pin" slot="hotspot-effect-5" data-build="effect" data-key="5" style="--hue:#7B5B9F" data-position="4m 7.15m -2m" data-normal="0m 1m 0m" aria-pressed="false" aria-label="Brick 5, lit-ui-router-effect" hidden>5</button>
+        <button type="button" class="bd-pin" slot="hotspot-effect-8" data-build="effect" data-key="8" style="--hue:#9C86C4" data-position="2m 1.75m 1.5m" data-normal="0m 1m 0m" aria-pressed="false" aria-label="Brick 8, ui-router-effect" hidden>8</button>
+        <button type="button" class="bd-pin" data-kind="plate" slot="hotspot-effect-C" data-build="effect" data-key="C" data-position="1m 1.15m -3.5m" data-normal="0m 1m 0m" aria-pressed="false" aria-label="Plate C, @uirouter/core" hidden>C</button>
+        <button type="button" class="bd-pin" data-kind="plate" slot="hotspot-effect-D" data-build="effect" data-key="D" data-position="-1.5m 4.15m 1.5m" data-normal="0m 1m 0m" aria-pressed="false" aria-label="Plate D, effect" hidden>D</button>
+        <button type="button" class="bd-pin" data-kind="plate" slot="hotspot-effect-G" data-build="effect" data-key="G" data-position="7m 0.7m -2.85m" data-normal="0m 1m 0m" aria-pressed="false" aria-label="Plate G, lit" hidden>G</button>
+        <button type="button" class="bd-pin" slot="hotspot-mobx-1" data-build="mobx" data-key="1" style="--hue:#D8A33A" data-position="-2.5m 5.95m -3m" data-normal="0m 1m 0m" aria-pressed="false" aria-label="Brick 1, lit-ui-router" hidden>1</button>
+        <button type="button" class="bd-pin" slot="hotspot-mobx-3" data-build="mobx" data-key="3" style="--hue:#D26E2C" data-position="-0.5m 7.15m -2.5m" data-normal="0m 1m 0m" aria-pressed="false" aria-label="Brick 3, lit-ui-router-mobx" hidden>3</button>
+        <button type="button" class="bd-pin" data-kind="plate" slot="hotspot-mobx-C" data-build="mobx" data-key="C" data-position="-5.5m 1.15m 2m" data-normal="0m 1m 0m" aria-pressed="false" aria-label="Plate C, @uirouter/core" hidden>C</button>
+        <button type="button" class="bd-pin" data-kind="plate" slot="hotspot-mobx-G" data-build="mobx" data-key="G" data-position="0.5m 0.7m -2.35m" data-normal="0m 1m 0m" aria-pressed="false" aria-label="Plate G, lit" hidden>G</button>
+        <button type="button" class="bd-pin" data-kind="plate" slot="hotspot-mobx-H" data-build="mobx" data-key="H" data-position="3m 1.15m 0.5m" data-normal="0m 1m 0m" aria-pressed="false" aria-label="Plate H, mobx" hidden>H</button>
+        <button type="button" class="bd-pin" slot="hotspot-nav-1" data-build="nav" data-key="1" style="--hue:#D8A33A" data-position="1.5m 5.95m -2m" data-normal="0m 1m 0m" aria-pressed="false" aria-label="Brick 1, lit-ui-router" hidden>1</button>
+        <button type="button" class="bd-pin" slot="hotspot-nav-2" data-build="nav" data-key="2" style="--hue:#5B8E4B" data-position="-3m 1.75m -2m" data-normal="0m 1m 0m" aria-pressed="false" aria-label="Brick 2, ui-router-navigation-location-plugin" hidden>2</button>
+        <button type="button" class="bd-pin" data-kind="plate" slot="hotspot-nav-C" data-build="nav" data-key="C" data-position="-1m 1.15m 2.5m" data-normal="0m 1m 0m" aria-pressed="false" aria-label="Plate C, @uirouter/core" hidden>C</button>
+        <button type="button" class="bd-pin" data-kind="plate" slot="hotspot-nav-G" data-build="nav" data-key="G" data-position="3m 0.7m -1.85m" data-normal="0m 1m 0m" aria-pressed="false" aria-label="Plate G, lit" hidden>G</button>
+        <button type="button" class="bd-pin" slot="hotspot-server-4" data-build="server" data-key="4" style="--hue:#3E8A8B" data-position="2m 2.95m 1m" data-normal="0m 1m 0m" aria-pressed="false" aria-label="Brick 4, ui-router-server" hidden>4</button>
+        <button type="button" class="bd-pin" data-kind="plate" slot="hotspot-server-C" data-build="server" data-key="C" data-position="-2.5m 1.15m -2.5m" data-normal="0m 1m 0m" aria-pressed="false" aria-label="Plate C, @uirouter/core" hidden>C</button>
+        <button type="button" class="bd-pin" slot="hotspot-eslinted-vanilla-1" data-build="eslinted-vanilla" data-key="1" style="--hue:#D8A33A" data-position="5.5m 5.95m -0.5m" data-normal="0m 1m 0m" aria-pressed="false" aria-label="Brick 1, lit-ui-router" hidden>1</button>
+        <button type="button" class="bd-pin" slot="hotspot-eslinted-vanilla-10" data-build="eslinted-vanilla" data-key="10" data-position="-0.5m 5.15m -0.5m" data-normal="0m 1m 0m" aria-pressed="false" aria-label="Brick 10, eslint-plugin-lit-ui-router" hidden>10</button>
+        <button type="button" class="bd-pin" data-kind="plate" slot="hotspot-eslinted-vanilla-C" data-build="eslinted-vanilla" data-key="C" data-position="1m 1.15m 4m" data-normal="0m 1m 0m" aria-pressed="false" aria-label="Plate C, @uirouter/core" hidden>C</button>
+        <button type="button" class="bd-pin" data-kind="plate" slot="hotspot-eslinted-vanilla-E" data-build="eslinted-vanilla" data-key="E" data-position="-5m 2.75m -4m" data-normal="0m 1m 0m" aria-pressed="false" aria-label="Plate E, eslint" hidden>E</button>
+        <button type="button" class="bd-pin" data-kind="plate" slot="hotspot-eslinted-vanilla-G" data-build="eslinted-vanilla" data-key="G" data-position="7m 0.7m -0.35m" data-normal="0m 1m 0m" aria-pressed="false" aria-label="Plate G, lit" hidden>G</button>
+        <button type="button" class="bd-pin" slot="hotspot-the-atlas-1" data-build="the-atlas" data-key="1" style="--hue:#D8A33A" data-position="2.5m 5.95m -2.5m" data-normal="0m 1m 0m" aria-pressed="false" aria-label="Brick 1, lit-ui-router" hidden>1</button>
+        <button type="button" class="bd-pin" slot="hotspot-the-atlas-2" data-build="the-atlas" data-key="2" style="--hue:#5B8E4B" data-position="-2.5m 1.75m -2m" data-normal="0m 1m 0m" aria-pressed="false" aria-label="Brick 2, ui-router-navigation-location-plugin" hidden>2</button>
+        <button type="button" class="bd-pin" slot="hotspot-the-atlas-4" data-build="the-atlas" data-key="4" style="--hue:#3E8A8B" data-position="0m 2.95m 1m" data-normal="0m 1m 0m" aria-pressed="false" aria-label="Brick 4, ui-router-server" hidden>4</button>
+        <button type="button" class="bd-pin" slot="hotspot-the-atlas-5" data-build="the-atlas" data-key="5" style="--hue:#7B5B9F" data-position="0.5m 7.15m -1m" data-normal="0m 1m 0m" aria-pressed="false" aria-label="Brick 5, lit-ui-router-effect" hidden>5</button>
+        <button type="button" class="bd-pin" slot="hotspot-the-atlas-6" data-build="the-atlas" data-key="6" style="--hue:#4C86C6" data-position="5m 8.35m -3m" data-normal="0m 1m 0m" aria-pressed="false" aria-label="Brick 6, lit-ui-router-ssr" hidden>6</button>
+        <button type="button" class="bd-pin" slot="hotspot-the-atlas-8" data-build="the-atlas" data-key="8" style="--hue:#9C86C4" data-position="-1.5m 1.75m 2.5m" data-normal="0m 1m 0m" aria-pressed="false" aria-label="Brick 8, ui-router-effect" hidden>8</button>
+        <button type="button" class="bd-pin" slot="hotspot-the-atlas-10" data-build="the-atlas" data-key="10" data-position="-4m 5.15m -2m" data-normal="0m 1m 0m" aria-pressed="false" aria-label="Brick 10, eslint-plugin-lit-ui-router" hidden>10</button>
+        <button type="button" class="bd-pin" data-kind="plate" slot="hotspot-the-atlas-A" data-build="the-atlas" data-key="A" data-position="0.5m 1.15m 4.5m" data-normal="0m 1m 0m" aria-pressed="false" aria-label="Plate A, @lit-labs/ssr" hidden>A</button>
+        <button type="button" class="bd-pin" data-kind="plate" slot="hotspot-the-atlas-B" data-build="the-atlas" data-key="B" data-position="-1.5m 1.15m 4m" data-normal="0m 1m 0m" aria-pressed="false" aria-label="Plate B, @lit-labs/ssr-client" hidden>B</button>
+        <button type="button" class="bd-pin" data-kind="plate" slot="hotspot-the-atlas-C" data-build="the-atlas" data-key="C" data-position="2.5m 1.15m 2.5m" data-normal="0m 1m 0m" aria-pressed="false" aria-label="Plate C, @uirouter/core" hidden>C</button>
+        <button type="button" class="bd-pin" data-kind="plate" slot="hotspot-the-atlas-D" data-build="the-atlas" data-key="D" data-position="9m 4.15m 2.5m" data-normal="0m 1m 0m" aria-pressed="false" aria-label="Plate D, effect" hidden>D</button>
+        <button type="button" class="bd-pin" data-kind="plate" slot="hotspot-the-atlas-E" data-build="the-atlas" data-key="E" data-position="-8.5m 2.75m -5.5m" data-normal="0m 1m 0m" aria-pressed="false" aria-label="Plate E, eslint" hidden>E</button>
+        <button type="button" class="bd-pin" data-kind="plate" slot="hotspot-the-atlas-G" data-build="the-atlas" data-key="G" data-position="3.5m 0.7m -1.85m" data-normal="0m 1m 0m" aria-pressed="false" aria-label="Plate G, lit" hidden>G</button>
+      </model-viewer>
+      <nav class="bd-parts" aria-label="Parts">
+        <button type="button" class="pt-toggle" aria-expanded="false" aria-controls="bd-parts-list">PARTS</button>
+        <div class="pts" id="bd-parts-list">
+          <a class="pt" href="?build=vanilla&focus=1" data-focus="1" style="--hue:#D8A33A" data-build="vanilla" data-kind="brick"><span class="n">1</span>lit-ui-router</a>
+          <a class="pt" href="?build=vanilla&focus=C" data-focus="C" data-build="vanilla" data-kind="plate"><span class="n">C</span>@uirouter/core</a>
+          <a class="pt" href="?build=vanilla&focus=G" data-focus="G" data-build="vanilla" data-kind="plate"><span class="n">G</span>lit</a>
+          <a class="pt" href="?build=signals&focus=1" data-focus="1" style="--hue:#D8A33A" data-build="signals" data-kind="brick" hidden><span class="n">1</span>lit-ui-router</a>
+          <a class="pt" href="?build=signals&focus=7" data-focus="7" style="--hue:#B0507E" data-build="signals" data-kind="brick" hidden><span class="n">7</span>lit-ui-router-signals</a>
+          <a class="pt" href="?build=signals&focus=9" data-focus="9" style="--hue:#CC86A8" data-build="signals" data-kind="brick" hidden><span class="n">9</span>ui-router-signals</a>
+          <a class="pt" href="?build=signals&focus=C" data-focus="C" data-build="signals" data-kind="plate" hidden><span class="n">C</span>@uirouter/core</a>
+          <a class="pt" href="?build=signals&focus=G" data-focus="G" data-build="signals" data-kind="plate" hidden><span class="n">G</span>lit</a>
+          <a class="pt" href="?build=signals&focus=I" data-focus="I" data-build="signals" data-kind="plate" hidden><span class="n">I</span>signal-polyfill</a>
+          <a class="pt" href="?build=effect&focus=1" data-focus="1" style="--hue:#D8A33A" data-build="effect" data-kind="brick" hidden><span class="n">1</span>lit-ui-router</a>
+          <a class="pt" href="?build=effect&focus=5" data-focus="5" style="--hue:#7B5B9F" data-build="effect" data-kind="brick" hidden><span class="n">5</span>lit-ui-router-effect</a>
+          <a class="pt" href="?build=effect&focus=8" data-focus="8" style="--hue:#9C86C4" data-build="effect" data-kind="brick" hidden><span class="n">8</span>ui-router-effect</a>
+          <a class="pt" href="?build=effect&focus=C" data-focus="C" data-build="effect" data-kind="plate" hidden><span class="n">C</span>@uirouter/core</a>
+          <a class="pt" href="?build=effect&focus=D" data-focus="D" data-build="effect" data-kind="plate" hidden><span class="n">D</span>effect</a>
+          <a class="pt" href="?build=effect&focus=G" data-focus="G" data-build="effect" data-kind="plate" hidden><span class="n">G</span>lit</a>
+          <a class="pt" href="?build=mobx&focus=1" data-focus="1" style="--hue:#D8A33A" data-build="mobx" data-kind="brick" hidden><span class="n">1</span>lit-ui-router</a>
+          <a class="pt" href="?build=mobx&focus=3" data-focus="3" style="--hue:#D26E2C" data-build="mobx" data-kind="brick" hidden><span class="n">3</span>lit-ui-router-mobx</a>
+          <a class="pt" href="?build=mobx&focus=C" data-focus="C" data-build="mobx" data-kind="plate" hidden><span class="n">C</span>@uirouter/core</a>
+          <a class="pt" href="?build=mobx&focus=G" data-focus="G" data-build="mobx" data-kind="plate" hidden><span class="n">G</span>lit</a>
+          <a class="pt" href="?build=mobx&focus=H" data-focus="H" data-build="mobx" data-kind="plate" hidden><span class="n">H</span>mobx</a>
+          <a class="pt" href="?build=nav&focus=1" data-focus="1" style="--hue:#D8A33A" data-build="nav" data-kind="brick" hidden><span class="n">1</span>lit-ui-router</a>
+          <a class="pt" href="?build=nav&focus=2" data-focus="2" style="--hue:#5B8E4B" data-build="nav" data-kind="brick" hidden><span class="n">2</span>ui-router-navigation-location-plugin</a>
+          <a class="pt" href="?build=nav&focus=C" data-focus="C" data-build="nav" data-kind="plate" hidden><span class="n">C</span>@uirouter/core</a>
+          <a class="pt" href="?build=nav&focus=G" data-focus="G" data-build="nav" data-kind="plate" hidden><span class="n">G</span>lit</a>
+          <a class="pt" href="?build=server&focus=4" data-focus="4" style="--hue:#3E8A8B" data-build="server" data-kind="brick" hidden><span class="n">4</span>ui-router-server</a>
+          <a class="pt" href="?build=server&focus=C" data-focus="C" data-build="server" data-kind="plate" hidden><span class="n">C</span>@uirouter/core</a>
+          <a class="pt" href="?build=eslinted-vanilla&focus=1" data-focus="1" style="--hue:#D8A33A" data-build="eslinted-vanilla" data-kind="brick" hidden><span class="n">1</span>lit-ui-router</a>
+          <a class="pt" href="?build=eslinted-vanilla&focus=10" data-focus="10" data-build="eslinted-vanilla" data-kind="brick" hidden><span class="n">10</span>eslint-plugin-lit-ui-router</a>
+          <a class="pt" href="?build=eslinted-vanilla&focus=C" data-focus="C" data-build="eslinted-vanilla" data-kind="plate" hidden><span class="n">C</span>@uirouter/core</a>
+          <a class="pt" href="?build=eslinted-vanilla&focus=E" data-focus="E" data-build="eslinted-vanilla" data-kind="plate" hidden><span class="n">E</span>eslint</a>
+          <a class="pt" href="?build=eslinted-vanilla&focus=G" data-focus="G" data-build="eslinted-vanilla" data-kind="plate" hidden><span class="n">G</span>lit</a>
+          <a class="pt" href="?build=the-atlas&focus=1" data-focus="1" style="--hue:#D8A33A" data-build="the-atlas" data-kind="brick" hidden><span class="n">1</span>lit-ui-router</a>
+          <a class="pt" href="?build=the-atlas&focus=2" data-focus="2" style="--hue:#5B8E4B" data-build="the-atlas" data-kind="brick" hidden><span class="n">2</span>ui-router-navigation-location-plugin</a>
+          <a class="pt" href="?build=the-atlas&focus=4" data-focus="4" style="--hue:#3E8A8B" data-build="the-atlas" data-kind="brick" hidden><span class="n">4</span>ui-router-server</a>
+          <a class="pt" href="?build=the-atlas&focus=5" data-focus="5" style="--hue:#7B5B9F" data-build="the-atlas" data-kind="brick" hidden><span class="n">5</span>lit-ui-router-effect</a>
+          <a class="pt" href="?build=the-atlas&focus=6" data-focus="6" style="--hue:#4C86C6" data-build="the-atlas" data-kind="brick" hidden><span class="n">6</span>lit-ui-router-ssr</a>
+          <a class="pt" href="?build=the-atlas&focus=8" data-focus="8" style="--hue:#9C86C4" data-build="the-atlas" data-kind="brick" hidden><span class="n">8</span>ui-router-effect</a>
+          <a class="pt" href="?build=the-atlas&focus=10" data-focus="10" data-build="the-atlas" data-kind="brick" hidden><span class="n">10</span>eslint-plugin-lit-ui-router</a>
+          <a class="pt" href="?build=the-atlas&focus=A" data-focus="A" data-build="the-atlas" data-kind="plate" hidden><span class="n">A</span>@lit-labs/ssr</a>
+          <a class="pt" href="?build=the-atlas&focus=B" data-focus="B" data-build="the-atlas" data-kind="plate" hidden><span class="n">B</span>@lit-labs/ssr-client</a>
+          <a class="pt" href="?build=the-atlas&focus=C" data-focus="C" data-build="the-atlas" data-kind="plate" hidden><span class="n">C</span>@uirouter/core</a>
+          <a class="pt" href="?build=the-atlas&focus=D" data-focus="D" data-build="the-atlas" data-kind="plate" hidden><span class="n">D</span>effect</a>
+          <a class="pt" href="?build=the-atlas&focus=E" data-focus="E" data-build="the-atlas" data-kind="plate" hidden><span class="n">E</span>eslint</a>
+          <a class="pt" href="?build=the-atlas&focus=G" data-focus="G" data-build="the-atlas" data-kind="plate" hidden><span class="n">G</span>lit</a>
+        </div>
+      </nav>
+    </div>
+    <div class="bd-bar">
+      <div class="bd-pick">
+        <span class="k">BUILD</span>
+        <nav class="bd-builds" aria-label="Build">
+          <a href="?build=vanilla" data-build="vanilla" data-src="/models/builds/vanilla.glb" aria-current="true"><span class="nm">I</span>VANILLA</a>
+          <a href="?build=signals" data-build="signals" data-src="/models/builds/signals.glb" aria-current="false"><span class="nm">II</span>SIGNALS</a>
+          <a href="?build=effect" data-build="effect" data-src="/models/builds/effect.glb" aria-current="false"><span class="nm">III</span>EFFECT</a>
+          <a href="?build=mobx" data-build="mobx" data-src="/models/builds/mobx.glb" aria-current="false"><span class="nm">IV</span>MOBX</a>
+          <a href="?build=nav" data-build="nav" data-src="/models/builds/nav.glb" aria-current="false"><span class="nm">V</span>NAV</a>
+          <a href="?build=server" data-build="server" data-src="/models/builds/server.glb" aria-current="false"><span class="nm">VI</span>SERVER</a>
+          <a href="?build=eslinted-vanilla" data-build="eslinted-vanilla" data-src="/models/builds/eslinted-vanilla.glb" aria-current="false"><span class="nm">VII</span>ESLINTED VANILLA</a>
+          <a href="?build=the-atlas" data-build="the-atlas" data-src="/models/builds/the-atlas.glb" data-atlas aria-current="false"><span class="nm">VIII</span>THE ATLAS</a>
+        </nav>
+        <span class="bd-who" id="bd-who">5 consumers · a sample app and four examples</span>
+      </div>
+      <div class="bd-legend">
+        <span class="lg"><i class="sw sw-brick"></i>a family brick, in its own colour</span>
+        <span class="lg"><i class="sw sw-plate"></i>a runtime — a stack of plates, studs on its top plate</span>
+        <span class="lg"><i class="sw sw-stud"></i>a ringed stud — a brick coupled to that plate</span>
+        <span class="lg"><i class="sw sw-ghost"></i>an optional peer</span>
+        <span class="lg"><i class="sw sw-tie"></i>a tie — a runtime a brick peers but does not stand on</span>
+        <span class="lg"><i class="sw sw-ground"></i>ground — the registry</span>
+      </div>
+      <div class="bd-ctl">
+        <span class="hints"><span class="mouse">DRAG TO ORBIT · SCROLL TO ZOOM · TAP A NUMBER OR A LETTER TO PIN <span class="nw">← → STEP THE PIN</span> <span class="nw">ESC CLEARS</span></span><span class="nw touch">A FINGER ACROSS ORBITS · PINCH TO ZOOM · TAP A NUMBER OR A LETTER TO PIN</span></span>
+        <span class="grp" role="group" aria-label="Camera corner">
+          <button type="button" data-orbit="45deg 54.736deg 88%" aria-pressed="true">DRAWING’S CORNER</button>
+          <button type="button" data-orbit="225deg 54.736deg 88%" aria-pressed="false">OPPOSITE CORNER</button>
+          <button type="button" data-orbit="135deg 54.736deg 88%" aria-pressed="false">SIDE CORNER</button>
+        </span>
+        <button type="button" id="bd-turn" aria-pressed="false" aria-label="Turn the camera with the clip">TURN</button>
+        <button type="button" id="bd-play" disabled>EXPLODE</button>
+        <label>EXPLODED <input type="range" id="bd-t" min="0" max="1.2" step="0.01" value="1.2" disabled aria-label="Assembly, from exploded to seated"> SEATED</label>
+      </div>
+    </div>
+    <aside class="bd-read" id="bd-info" aria-live="polite"></aside>
+  </div>
+  <p class="bd-basis"><span><b class="k">BASIS</b>Each model is <code>generator/<wbr>sheet2c.mjs</code>'s own layout of that build, exported seated as <code>BUILD_MODELS</code> in <a class="xref" data-sheet="2" href="/sheet/2">sheet 2</a>'s plan units and written into one glTF binary per build by <code>generator/<wbr>builds-glb.mjs</code> on <code>generator/<wbr>brick-glb.mjs</code>'s materials and studs: every brick a cuboid in its own colour edged in ink, every runtime a stack of thin plates scored plate by plate, three to a brick course, with studs on its top plate only and one ringed stud per brick coupled to it, an optional peer translucent, and the ground the page's paper, retinted from the theme's tokens on each turn. Each brick's lift in the <code>assemble</code> clip is the height <a class="xref" data-sheet="2C" href="/sheet/2C">sheet 2C</a>'s exploded panel hovers it above its seat, scaled ×1.5, a brick stacked on another at least a stud's pitch clear of it; the stacked bricks leave first and land last, every hovering brick hangs plumb over each stud it seats on by a dashed leader, a dashed accent tie runs from a brick to each runtime it reaches but does not stand on, and the plates stay put. One stud pitch is one unit; each binary stays under 100 KiB. Counted counted at origin/main @ 108456af (2026-10-14), the atlas app's build read from www/atlas.lit-ui-router.dev/app at www/atlas @ 7ba404cb; <code>@google/<wbr>model-viewer</code> 4.3.1 is fetched only when this page is entered, and the clip jumps to its end under <code>prefers-reduced-motion</code>.</span></p>
+</section>
+<script type="application/json" id="bd-model">{"end":1.2,"first":"vanilla","builds":[{"slug":"vanilla","numeral":"I","name":"VANILLA","glb":"/models/builds/vanilla.glb","who":"5 consumers · a sample app and four examples","us":[0,0.0417,0.0833,0.125,0.1667,0.2083,0.25,0.2917,0.3,0.3333,0.375,0.4167,0.4583,0.5,0.5417,0.5833,0.625,0.6667,0.7083,0.75,0.7917,0.8333,0.875,0.9167,0.9583,1],"bricks":[{"key":"1","n":1,"name":"lit-ui-router","ver":"1.16.4","hue":"#D8A33A","ledger":"22f · 2,854 sloc · 2×4 · 8 courses","note":"Seats on plate C, @uirouter/core; straddles the seam onto plate G, lit.","cap":[1.5,5.95,-2],"centre":[1.5,3.2,-2],"rise":[3.6,3.5994,3.5951,3.5833,3.5605,3.5228,3.4667,3.3883,3.3696,3.284,3.15,2.9827,2.7784,2.5333,2.2438,1.9062,1.5167,1.0716,0.5673,0,0,0,0,0,0,0]}],"plates":[{"key":"C","letter":"C","name":"@uirouter/core","ver":"6.1.2","ledger":"^6.0.8 · one build (module): 80f · 4,776 sloc · 32 studs · 1 plate · 6×6","note":"In this build it seats brick 1. Peered by bricks 1, 5, 3, 7, 6, 8, 2, 4 and 9 across the family.","cap":[-3,1.15,2.5],"centre":[-0.5,0.7,0]},{"key":"G","letter":"G","name":"lit","ver":"3.3.3","ledger":"^2.0.0 || ^3.0.0 · one build (default): 38f · 39 sloc · 1 stud · 1 plate · 1×1","note":"In this build it carries brick 1 across its seam with core. Peered by bricks 1, 5, 3, 7 and 6 across the family.","cap":[3,0.7,-1.85],"centre":[3,0.7,-2.5]}]},{"slug":"signals","numeral":"II","name":"SIGNALS","glb":"/models/builds/signals.glb","who":"3 consumers · a sample app and two examples","us":[0,0.0417,0.0833,0.125,0.1667,0.2083,0.25,0.2917,0.3,0.3333,0.375,0.4167,0.4583,0.5,0.5417,0.5833,0.625,0.6667,0.7083,0.75,0.7917,0.8333,0.875,0.9167,0.9583,1],"bricks":[{"key":"1","n":1,"name":"lit-ui-router","ver":"1.16.4","hue":"#D8A33A","ledger":"22f · 2,854 sloc · 2×4 · 8 courses","note":"Seats on plate C, @uirouter/core; straddles the seam onto plate G, lit.","cap":[2.5,5.95,-2.5],"centre":[1,3.2,-2],"rise":[3.6,3.5994,3.5951,3.5833,3.5605,3.5228,3.4667,3.3883,3.3696,3.284,3.15,2.9827,2.7784,2.5333,2.2438,1.9062,1.5167,1.0716,0.5673,0,0,0,0,0,0,0]},{"key":"7","n":7,"name":"lit-ui-router-signals","ver":"0.1.0","hue":"#B0507E","ledger":"4f · 171 sloc · 1×2 · 2 courses","note":"Seats on brick 1.","cap":[0.5,7.15,-2],"centre":[0.5,6.2,-2],"rise":[6,6,6,6,6,6,6,6,6,5.9994,5.9926,5.9722,5.9306,5.8601,5.7531,5.6021,5.3995,5.1377,4.809,4.406,3.9209,3.3463,2.6745,1.8979,1.0089,0]},{"key":"9","n":9,"name":"ui-router-signals","ver":"0.1.0","hue":"#CC86A8","ledger":"3f · 95 sloc · 1×1 · 1 course","note":"Seats on plate C, @uirouter/core; ties to plate I, signal-polyfill.","cap":[1.5,1.75,0.5],"centre":[1.5,1.1,0.5],"rise":[3.6,3.5994,3.5951,3.5833,3.5605,3.5228,3.4667,3.3883,3.3696,3.284,3.15,2.9827,2.7784,2.5333,2.2438,1.9062,1.5167,1.0716,0.5673,0,0,0,0,0,0,0]}],"plates":[{"key":"C","letter":"C","name":"@uirouter/core","ver":"6.1.2","ledger":"^6.0.8 · one build (module): 80f · 4,776 sloc · 32 studs · 1 plate · 6×6","note":"In this build it seats bricks 1 and 9. Peered by bricks 1, 5, 3, 7, 6, 8, 2, 4 and 9 across the family.","cap":[-3.5,1.15,2.5],"centre":[-1,0.7,0]},{"key":"G","letter":"G","name":"lit","ver":"3.3.3","ledger":"^2.0.0 || ^3.0.0 · one build (default): 38f · 39 sloc · 1 stud · 1 plate · 1×1","note":"In this build it carries brick 1 across its seam with core. Peered by bricks 1, 5, 3, 7 and 6 across the family.","cap":[2.5,0.7,-1.85],"centre":[2.5,0.7,-2.5]},{"key":"I","letter":"I","name":"signal-polyfill","ver":"0.2.2","ledger":"^0.2.0 · one build (main): 1f · 520 sloc · 4 studs · 1 plate · 2×2","note":"In this build it takes the tie from brick 9. Peered by brick 9 across the family.","cap":[3,1.15,0],"centre":[3,0.7,0]}]},{"slug":"effect","numeral":"III","name":"EFFECT","glb":"/models/builds/effect.glb","who":"2 consumers · a sample app and an example","us":[0,0.0417,0.0833,0.125,0.1667,0.2083,0.25,0.2917,0.3,0.3333,0.375,0.4167,0.4583,0.5,0.5417,0.5833,0.625,0.6667,0.7083,0.75,0.7917,0.8333,0.875,0.9167,0.9583,1],"bricks":[{"key":"1","n":1,"name":"lit-ui-router","ver":"1.16.4","hue":"#D8A33A","ledger":"22f · 2,854 sloc · 2×4 · 8 courses","note":"Seats on plate C, @uirouter/core; straddles the seam onto plate G, lit.","cap":[7,5.95,-3.5],"centre":[5.5,3.2,-3],"rise":[3.6,3.5994,3.5951,3.5833,3.5605,3.5228,3.4667,3.3883,3.3696,3.284,3.15,2.9827,2.7784,2.5333,2.2438,1.9062,1.5167,1.0716,0.5673,0,0,0,0,0,0,0]},{"key":"5","n":5,"name":"lit-ui-router-effect","ver":"0.4.0","hue":"#7B5B9F","ledger":"4f · 281 sloc · 1×2 · 2 courses","note":"Seats on brick 1; ties to plate D, effect.","cap":[4,7.15,-2],"centre":[4,6.2,-2],"rise":[5.25,5.25,5.25,5.25,5.25,5.25,5.25,5.25,5.25,5.2494,5.2435,5.2257,5.1892,5.1276,5.034,4.9019,4.7246,4.4955,4.2079,3.8552,3.4308,2.928,2.3402,1.6606,0.8828,0]},{"key":"8","n":8,"name":"ui-router-effect","ver":"0.1.1","hue":"#9C86C4","ledger":"2f · 21 sloc · 1×1 · 1 course","note":"Seats on plate C, @uirouter/core; ties to plate D, effect.","cap":[2,1.75,1.5],"centre":[2,1.1,1.5],"rise":[3.6,3.5994,3.5951,3.5833,3.5605,3.5228,3.4667,3.3883,3.3696,3.284,3.15,2.9827,2.7784,2.5333,2.2438,1.9062,1.5167,1.0716,0.5673,0,0,0,0,0,0,0]}],"plates":[{"key":"C","letter":"C","name":"@uirouter/core","ver":"6.1.2","ledger":"^6.0.8 · one build (module): 80f · 4,776 sloc · 32 studs · 1 plate · 6×6","note":"In this build it seats bricks 1 and 8. Peered by bricks 1, 5, 3, 7, 6, 8, 2, 4 and 9 across the family.","cap":[1,1.15,-3.5],"centre":[3.5,0.7,-1]},{"key":"D","letter":"D","name":"effect","ver":"4.0.4","ledger":"^3.22.0 || ^4.0.2 · one build (default): 516f · 110,674 sloc · 738 studs · 16 plates · 15 of 8×6 + a 4×5","note":"In this build it takes the ties from bricks 5 and 8. Peered by bricks 5 and 8 across the family.","cap":[-1.5,4.15,1.5],"centre":[-1.5,2.2,1.5]},{"key":"G","letter":"G","name":"lit","ver":"3.3.3","ledger":"^2.0.0 || ^3.0.0 · one build (default): 38f · 39 sloc · 1 stud · 1 plate · 1×1","note":"In this build it carries brick 1 across its seam with core. Peered by bricks 1, 5, 3, 7 and 6 across the family.","cap":[7,0.7,-2.85],"centre":[7,0.7,-3.5]}]},{"slug":"mobx","numeral":"IV","name":"MOBX","glb":"/models/builds/mobx.glb","who":"2 consumers · a sample app and an example","us":[0,0.0417,0.0833,0.125,0.1667,0.2083,0.25,0.2917,0.3,0.3333,0.375,0.4167,0.4583,0.5,0.5417,0.5833,0.625,0.6667,0.7083,0.75,0.7917,0.8333,0.875,0.9167,0.9583,1],"bricks":[{"key":"1","n":1,"name":"lit-ui-router","ver":"1.16.4","hue":"#D8A33A","ledger":"22f · 2,854 sloc · 2×4 · 8 courses","note":"Seats on plate C, @uirouter/core; straddles the seam onto plate G, lit.","cap":[-2.5,5.95,-3],"centre":[-1,3.2,-2.5],"rise":[3.6,3.5994,3.5951,3.5833,3.5605,3.5228,3.4667,3.3883,3.3696,3.284,3.15,2.9827,2.7784,2.5333,2.2438,1.9062,1.5167,1.0716,0.5673,0,0,0,0,0,0,0]},{"key":"3","n":3,"name":"lit-ui-router-mobx","ver":"1.1.1","hue":"#D26E2C","ledger":"5f · 205 sloc · 1×2 · 2 courses","note":"Seats on brick 1; ties to plate H, mobx.","cap":[-0.5,7.15,-2.5],"centre":[-0.5,6.2,-2.5],"rise":[7.2,7.2,7.2,7.2,7.2,7.2,7.2,7.2,7.2,7.1992,7.1911,7.1667,7.1167,7.0321,6.9037,6.7225,6.4794,6.1652,5.7708,5.2872,4.7051,4.0155,3.2094,2.2775,1.2107,0]}],"plates":[{"key":"C","letter":"C","name":"@uirouter/core","ver":"6.1.2","ledger":"^6.0.8 · one build (module): 80f · 4,776 sloc · 32 studs · 1 plate · 6×6","note":"In this build it seats brick 1. Peered by bricks 1, 5, 3, 7, 6, 8, 2, 4 and 9 across the family.","cap":[-5.5,1.15,2],"centre":[-3,0.7,-0.5]},{"key":"G","letter":"G","name":"lit","ver":"3.3.3","ledger":"^2.0.0 || ^3.0.0 · one build (default): 38f · 39 sloc · 1 stud · 1 plate · 1×1","note":"In this build it carries brick 1 across its seam with core. Peered by bricks 1, 5, 3, 7 and 6 across the family.","cap":[0.5,0.7,-2.35],"centre":[0.5,0.7,-3]},{"key":"H","letter":"H","name":"mobx","ver":"7.0.6","ledger":"^6.0.0 || ^7.0.0 · one build (import): 1f · 4,593 sloc · 31 studs · 1 plate · 6×6","note":"In this build it takes the tie from brick 3. Peered by brick 3 across the family.","cap":[3,1.15,0.5],"centre":[3,0.7,0.5]}]},{"slug":"nav","numeral":"V","name":"NAV","glb":"/models/builds/nav.glb","who":"2 consumers · a sample app and an example","us":[0,0.0417,0.0833,0.125,0.1667,0.2083,0.25,0.2917,0.3,0.3333,0.375,0.4167,0.4583,0.5,0.5417,0.5833,0.625,0.6667,0.7083,0.75,0.7917,0.8333,0.875,0.9167,0.9583,1],"bricks":[{"key":"1","n":1,"name":"lit-ui-router","ver":"1.16.4","hue":"#D8A33A","ledger":"22f · 2,854 sloc · 2×4 · 8 courses","note":"Seats on plate C, @uirouter/core; straddles the seam onto plate G, lit.","cap":[1.5,5.95,-2],"centre":[1.5,3.2,-2],"rise":[3.6,3.5994,3.5951,3.5833,3.5605,3.5228,3.4667,3.3883,3.3696,3.284,3.15,2.9827,2.7784,2.5333,2.2438,1.9062,1.5167,1.0716,0.5673,0,0,0,0,0,0,0]},{"key":"2","n":2,"name":"ui-router-navigation-location-plugin","ver":"1.1.1","hue":"#5B8E4B","ledger":"2f · 208 sloc · 1×2 · 1 course","note":"Seats on plate C, @uirouter/core.","cap":[-3,1.75,-2],"centre":[-3,1.1,-2],"rise":[3.6,3.5994,3.5951,3.5833,3.5605,3.5228,3.4667,3.3883,3.3696,3.284,3.15,2.9827,2.7784,2.5333,2.2438,1.9062,1.5167,1.0716,0.5673,0,0,0,0,0,0,0]}],"plates":[{"key":"C","letter":"C","name":"@uirouter/core","ver":"6.1.2","ledger":"^6.0.8 · one build (module): 80f · 4,776 sloc · 32 studs · 1 plate · 6×6","note":"In this build it seats bricks 1 and 2. Peered by bricks 1, 5, 3, 7, 6, 8, 2, 4 and 9 across the family.","cap":[-1,1.15,2.5],"centre":[-0.5,0.7,0]},{"key":"G","letter":"G","name":"lit","ver":"3.3.3","ledger":"^2.0.0 || ^3.0.0 · one build (default): 38f · 39 sloc · 1 stud · 1 plate · 1×1","note":"In this build it carries brick 1 across its seam with core. Peered by bricks 1, 5, 3, 7 and 6 across the family.","cap":[3,0.7,-1.85],"centre":[3,0.7,-2.5]}]},{"slug":"server","numeral":"VI","name":"SERVER","glb":"/models/builds/server.glb","who":"2 consumers · a sample app and a docs site","us":[0,0.0417,0.0833,0.125,0.1667,0.2083,0.25,0.2917,0.3,0.3333,0.375,0.4167,0.4583,0.5,0.5417,0.5833,0.625,0.6667,0.7083,0.75,0.7917,0.8333,0.875,0.9167,0.9583,1],"bricks":[{"key":"4","n":4,"name":"ui-router-server","ver":"0.2.2","hue":"#3E8A8B","ledger":"9f · 1,235 sloc · 2×4 · 3 courses","note":"Seats on plate C, @uirouter/core.","cap":[2,2.95,1],"centre":[2,1.7,1],"rise":[3.6,3.5994,3.5951,3.5833,3.5605,3.5228,3.4667,3.3883,3.3696,3.284,3.15,2.9827,2.7784,2.5333,2.2438,1.9062,1.5167,1.0716,0.5673,0,0,0,0,0,0,0]}],"plates":[{"key":"C","letter":"C","name":"@uirouter/core","ver":"6.1.2","ledger":"^6.0.8 · one build (module): 80f · 4,776 sloc · 32 studs · 1 plate · 6×6","note":"In this build it seats brick 4. Peered by bricks 1, 5, 3, 7, 6, 8, 2, 4 and 9 across the family.","cap":[-2.5,1.15,-2.5],"centre":[0,0.7,0]}]},{"slug":"eslinted-vanilla","numeral":"VII","name":"ESLINTED VANILLA","glb":"/models/builds/eslinted-vanilla.glb","who":"1 consumer · an example","us":[0,0.0417,0.0833,0.125,0.1667,0.2083,0.25,0.2917,0.3,0.3333,0.375,0.4167,0.4583,0.5,0.5417,0.5833,0.625,0.6667,0.7083,0.75,0.7917,0.8333,0.875,0.9167,0.9583,1],"bricks":[{"key":"1","n":1,"name":"lit-ui-router","ver":"1.16.4","hue":"#D8A33A","ledger":"22f · 2,854 sloc · 2×4 · 8 courses","note":"Seats on plate C, @uirouter/core; straddles the seam onto plate G, lit.","cap":[5.5,5.95,-0.5],"centre":[5.5,3.2,-0.5],"rise":[3.6,3.5994,3.5951,3.5833,3.5605,3.5228,3.4667,3.3883,3.3696,3.284,3.15,2.9827,2.7784,2.5333,2.2438,1.9062,1.5167,1.0716,0.5673,0,0,0,0,0,0,0]},{"key":"10","n":10,"name":"eslint-plugin-lit-ui-router","ver":"1.2.1","hue":null,"ledger":"12f · 1,462 sloc · 2×4 · 4 courses","note":"Seats on plate E, eslint.","cap":[-0.5,5.15,-0.5],"centre":[-0.5,3.6,-0.5],"rise":[3.6,3.5994,3.5951,3.5833,3.5605,3.5228,3.4667,3.3883,3.3696,3.284,3.15,2.9827,2.7784,2.5333,2.2438,1.9062,1.5167,1.0716,0.5673,0,0,0,0,0,0,0]}],"plates":[{"key":"C","letter":"C","name":"@uirouter/core","ver":"6.1.2","ledger":"^6.0.8 · one build (module): 80f · 4,776 sloc · 32 studs · 1 plate · 6×6","note":"In this build it seats brick 1. Peered by bricks 1, 5, 3, 7, 6, 8, 2, 4 and 9 across the family.","cap":[1,1.15,4],"centre":[3.5,0.7,1.5]},{"key":"E","letter":"E","name":"eslint","ver":"10.12.0","ledger":"^9.0.0 || ^10.0.0 · one build (default): 380f · 62,587 sloc · 418 studs · 9 plates · 8 of 8×6 + a 6×6","note":"In this build it seats brick 10. Peered by brick 10 across the family.","cap":[-5,2.75,-4],"centre":[-2.5,1.5,-1.5]},{"key":"G","letter":"G","name":"lit","ver":"3.3.3","ledger":"^2.0.0 || ^3.0.0 · one build (default): 38f · 39 sloc · 1 stud · 1 plate · 1×1","note":"In this build it carries brick 1 across its seam with core. Peered by bricks 1, 5, 3, 7 and 6 across the family.","cap":[7,0.7,-0.35],"centre":[7,0.7,-1]}]},{"slug":"the-atlas","numeral":"VIII","name":"THE ATLAS","glb":"/models/builds/the-atlas.glb","who":"1 consumer · an atlas app · eslinted effect nav ssr server","us":[0,0.0417,0.0833,0.125,0.1667,0.2083,0.25,0.2917,0.3,0.3333,0.375,0.4167,0.4583,0.5,0.5417,0.5833,0.625,0.6667,0.7083,0.75,0.7917,0.8333,0.875,0.9167,0.9583,1],"bricks":[{"key":"1","n":1,"name":"lit-ui-router","ver":"1.16.4","hue":"#D8A33A","ledger":"22f · 2,854 sloc · 2×4 · 8 courses","note":"Seats on plate C, @uirouter/core; straddles the seam onto plate G, lit.","cap":[2.5,5.95,-2.5],"centre":[2,3.2,-2],"rise":[3.6,3.5994,3.5951,3.5833,3.5605,3.5228,3.4667,3.3883,3.3696,3.284,3.15,2.9827,2.7784,2.5333,2.2438,1.9062,1.5167,1.0716,0.5673,0,0,0,0,0,0,0]},{"key":"2","n":2,"name":"ui-router-navigation-location-plugin","ver":"1.1.1","hue":"#5B8E4B","ledger":"2f · 208 sloc · 1×2 · 1 course","note":"Seats on plate C, @uirouter/core.","cap":[-2.5,1.75,-2],"centre":[-2.5,1.1,-2],"rise":[3.6,3.5994,3.5951,3.5833,3.5605,3.5228,3.4667,3.3883,3.3696,3.284,3.15,2.9827,2.7784,2.5333,2.2438,1.9062,1.5167,1.0716,0.5673,0,0,0,0,0,0,0]},{"key":"4","n":4,"name":"ui-router-server","ver":"0.2.2","hue":"#3E8A8B","ledger":"9f · 1,235 sloc · 2×4 · 3 courses","note":"Seats on plate C, @uirouter/core.","cap":[0,2.95,1],"centre":[0,1.7,1],"rise":[3.6,3.5994,3.5951,3.5833,3.5605,3.5228,3.4667,3.3883,3.3696,3.284,3.15,2.9827,2.7784,2.5333,2.2438,1.9062,1.5167,1.0716,0.5673,0,0,0,0,0,0,0]},{"key":"5","n":5,"name":"lit-ui-router-effect","ver":"0.4.0","hue":"#7B5B9F","ledger":"4f · 281 sloc · 1×2 · 2 courses","note":"Seats on brick 1; ties to plate D, effect.","cap":[0.5,7.15,-1],"centre":[0.5,6.2,-1],"rise":[5.25,5.25,5.25,5.25,5.25,5.25,5.25,5.25,5.25,5.2494,5.2435,5.2257,5.1892,5.1276,5.034,4.9019,4.7246,4.4955,4.2079,3.8552,3.4308,2.928,2.3402,1.6606,0.8828,0]},{"key":"6","n":6,"name":"lit-ui-router-ssr","ver":"0.2.1","hue":"#4C86C6","ledger":"11f · 1,117 sloc · 2×4 · 4 courses","note":"Seats on brick 1; ties to plate A, @lit-labs/ssr and ties to plate B, @lit-labs/ssr-client.","cap":[5,8.35,-3],"centre":[5,6.8,-3],"rise":[5.1,5.1,5.1,5.1,5.1,5.1,5.1,5.1,5.1,5.0994,5.0937,5.0764,5.041,4.981,4.8901,4.7618,4.5896,4.367,4.0877,3.7451,3.3328,2.8443,2.2733,1.6132,0.8576,0]},{"key":"8","n":8,"name":"ui-router-effect","ver":"0.1.1","hue":"#9C86C4","ledger":"2f · 21 sloc · 1×1 · 1 course","note":"Seats on plate C, @uirouter/core; ties to plate D, effect.","cap":[-1.5,1.75,2.5],"centre":[-1.5,1.1,2.5],"rise":[3.6,3.5994,3.5951,3.5833,3.5605,3.5228,3.4667,3.3883,3.3696,3.284,3.15,2.9827,2.7784,2.5333,2.2438,1.9062,1.5167,1.0716,0.5673,0,0,0,0,0,0,0]},{"key":"10","n":10,"name":"eslint-plugin-lit-ui-router","ver":"1.2.1","hue":null,"ledger":"12f · 1,462 sloc · 2×4 · 4 courses","note":"Seats on plate E, eslint.","cap":[-4,5.15,-2],"centre":[-4,3.6,-2],"rise":[3.6,3.5994,3.5951,3.5833,3.5605,3.5228,3.4667,3.3883,3.3696,3.284,3.15,2.9827,2.7784,2.5333,2.2438,1.9062,1.5167,1.0716,0.5673,0,0,0,0,0,0,0]}],"plates":[{"key":"A","letter":"A","name":"@lit-labs/ssr","ver":"4.1.0","ledger":"^4.0.0 · one build (main): 8f · 1,083 sloc · 8 studs · 1 plate · 3×3","note":"In this build it takes the tie from brick 6. Peered by brick 6 across the family.","cap":[0.5,1.15,4.5],"centre":[0.5,0.7,4.5]},{"key":"B","letter":"B","name":"@lit-labs/ssr-client","ver":"1.1.8","ledger":"^1.1.0 · optional · one build (development): 4f · 282 sloc · 2 studs · 1 plate · 1×2","note":"In this build it takes the tie from brick 6. Peered by brick 6 across the family, each as an optional peer.","cap":[-1.5,1.15,4],"centre":[-1.5,0.7,4]},{"key":"C","letter":"C","name":"@uirouter/core","ver":"6.1.2","ledger":"^6.0.8 · one build (module): 80f · 4,776 sloc · 32 studs · 1 plate · 6×6","note":"In this build it seats bricks 1, 2, 4 and 8. Peered by bricks 1, 5, 3, 7, 6, 8, 2, 4 and 9 across the family.","cap":[2.5,1.15,2.5],"centre":[0,0.7,0]},{"key":"D","letter":"D","name":"effect","ver":"4.0.4","ledger":"^3.22.0 || ^4.0.2 · one build (default): 516f · 110,674 sloc · 738 studs · 16 plates · 15 of 8×6 + a 4×5","note":"In this build it takes the ties from bricks 5 and 8. Peered by bricks 5 and 8 across the family.","cap":[9,4.15,2.5],"centre":[9,2.2,2.5]},{"key":"E","letter":"E","name":"eslint","ver":"10.12.0","ledger":"^9.0.0 || ^10.0.0 · one build (default): 380f · 62,587 sloc · 418 studs · 9 plates · 8 of 8×6 + a 6×6","note":"In this build it seats brick 10. Peered by brick 10 across the family.","cap":[-8.5,2.75,-5.5],"centre":[-6,1.5,-3]},{"key":"G","letter":"G","name":"lit","ver":"3.3.3","ledger":"^2.0.0 || ^3.0.0 · one build (default): 38f · 39 sloc · 1 stud · 1 plate · 1×1","note":"In this build it carries brick 1 across its seam with core. Peered by bricks 1, 5, 3, 7 and 6 across the family.","cap":[3.5,0.7,-1.85],"centre":[3.5,0.7,-2.5]}]}]}</script>

@@ -64,10 +64,10 @@ plate — `app/public/thumbs/<id>.webp` and `<id>-dark.webp`, one per theme, tra
 generated files like the fragments beside them. `generator/thumbs.mjs` draws them by
 photographing the BUILT app in headless Chromium (playwright, reached through
 `tools/embed-heights`; the lanes' cytoscape is served from `app/node_modules`): each sheet's bare plate
-at `/plate/<num>/`, and the three 3D cards (`city`, `plant`, `bricks`) from its prerendered `/city/`,
-`/plant/` and `/bricks/` pages, each `<model-viewer>` on a transparent clear, its pins hidden for the shot. The three
-models, `app/public/models/city.glb`, `plant.glb` and `bricks.glb`, are tracked generated files
-`build.mjs` writes beside the fragments (`generator/city-glb.mjs` and `brick-glb.mjs` on `glb.mjs`). `build.mjs` REFUSES to emit a manifest whose card has no picture, so a new
+at `/plate/<num>/`, and the four 3D cards (`city`, `plant`, `bricks`, `builds`) from its prerendered `/city/`,
+`/plant/`, `/bricks/` and `/builds/` pages, each `<model-viewer>` on a transparent clear, its pins hidden for the shot. The
+models, `app/public/models/city.glb`, `plant.glb`, `bricks.glb` and one `builds/<slug>.glb` per build, are tracked generated files
+`build.mjs` writes beside the fragments (`generator/city-glb.mjs`, `brick-glb.mjs` and `builds-glb.mjs` on `glb.mjs`). `build.mjs` REFUSES to emit a manifest whose card has no picture, so a new
 plate takes the full order:
 
 ```bash
@@ -88,7 +88,7 @@ canvas) and nothing else changes. To try a row without touching
 the tracked pictures: `thumbs.mjs <outdir> --only <ids> --out <dir> --tuning <file.json>`.
 
 Live at <https://atlas.lit-ui-router.dev/> — the app owns the site (`/`, `/sheet/7/`, `/city/`,
-`/plant/`, `/bricks/`, `/log`). `/plate/<num>` serves each sheet as one plate in a bare document with no
+`/plant/`, `/bricks/`, `/builds/`, `/log`). `/plate/<num>` serves each sheet as one plate in a bare document with no
 client bundle, prerendered from the same route table (`app/prerender.ts`), and every old standalone url redirects
 there; the frame audit (`generator/audit-frames.mjs`, `shoot.mjs`) and the card pictures read those bare plates
 from `app/dist/plate/`. The interactive lanes (1i, 2B, 12i, A2i) bundle cytoscape 3.31.0,
