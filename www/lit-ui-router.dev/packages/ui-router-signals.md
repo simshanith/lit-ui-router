@@ -30,7 +30,8 @@ two separate signal graphs.
 
 ## RouterSignals
 
-`RouterSignals.for(router)` returns the router's one instance, attaching a
+[`RouterSignals.for(router)`](/api/ui-router-signals/classes/RouterSignals#for)
+returns the router's one instance, attaching a
 single `onSuccess` transition hook on first use. It writes one route snapshot
 per successful transition, so every value is a settled route. Its fields are
 read-only `Signal.Computed`s over that snapshot:
@@ -55,7 +56,8 @@ signals.current.get()?.name;
 
 ## watchSelection
 
-`watchSelection(selector, equals, apply)` watches a selector through a
+[`watchSelection(selector, equals, apply)`](/api/ui-router-signals/functions/watchSelection)
+watches a selector through a
 `Signal.Computed` and hands each new value to `apply`: once synchronously, then
 in a microtask after any source changes. A watcher's notify callback may not
 read signals, so it schedules the read, and several synchronous sets deliver
@@ -75,5 +77,6 @@ const stop = watchSelection(
 
 ## Further reading
 
+- [API reference](/api/ui-router-signals/)
 - [TC39 Signals proposal](https://github.com/tc39/proposal-signals)
 - [`signal-polyfill`](https://github.com/proposal-signals/signal-polyfill)

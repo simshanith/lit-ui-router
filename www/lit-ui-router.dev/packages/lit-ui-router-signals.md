@@ -60,7 +60,8 @@ the enclosing `<ui-router>` element when the host connects, and
 
 ### RouterSignalController
 
-Watches the `RouterSignals` of a router and exposes the selector's result as
+[`RouterSignalController`](/api/lit-ui-router-signals/classes/RouterSignalController)
+watches the `RouterSignals` of a router and exposes the selector's result as
 `.value`. The router comes from the `router` option (a router or a thunk), a
 `withRouterSync` scope at construction, or the nearest provider on
 `hostConnected`, as the Effect and MobX router controllers find theirs.
@@ -68,7 +69,8 @@ Watches the `RouterSignals` of a router and exposes the selector's result as
 
 ### SignalController
 
-The generic primitive: watches any selector over signals while the host is
+[`SignalController`](/api/lit-ui-router-signals/classes/SignalController) is
+the generic primitive: it watches any selector over signals while the host is
 connected, and calls `requestUpdate()` only when the selected value changes
 under `equals` (default `Object.is`).
 
@@ -92,6 +94,7 @@ signal graphs.
 
 ## Further reading
 
+- [API reference](/api/lit-ui-router-signals/)
 - [ui-router-signals](/packages/ui-router-signals)
 - [TC39 Signals proposal](https://github.com/tc39/proposal-signals)
 - [Lit — Reactive Controllers](https://lit.dev/docs/composition/controllers/)

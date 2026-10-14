@@ -7,7 +7,10 @@ import effectSidebarItemsJson from '../api/lit-ui-router-effect/typedoc-sidebar.
 import mobxSidebarItemsJson from '../api/lit-ui-router-mobx/typedoc-sidebar.json' with { type: 'json' };
 import navigationSidebarItemsJson from '../api/navigation-location-plugin/typedoc-sidebar.json' with { type: 'json' };
 import serverSidebarItemsJson from '../api/ui-router-server/typedoc-sidebar.json' with { type: 'json' };
+import signalsSidebarItemsJson from '../api/lit-ui-router-signals/typedoc-sidebar.json' with { type: 'json' };
 import ssrSidebarItemsJson from '../api/lit-ui-router-ssr/typedoc-sidebar.json' with { type: 'json' };
+import uiRouterEffectSidebarItemsJson from '../api/ui-router-effect/typedoc-sidebar.json' with { type: 'json' };
+import uiRouterSignalsSidebarItemsJson from '../api/ui-router-signals/typedoc-sidebar.json' with { type: 'json' };
 
 // SAFETY: typedoc-vitepress-theme emits typedoc-sidebar.json as SidebarItem[]
 const typedocSidebarItems =
@@ -39,7 +42,19 @@ const navigationSidebarItemsRaw =
   navigationSidebarItemsJson as DefaultTheme.SidebarItem[];
 
 // SAFETY: as for typedocSidebarItems
+const signalsSidebarItemsRaw =
+  signalsSidebarItemsJson as DefaultTheme.SidebarItem[];
+
+// SAFETY: as for typedocSidebarItems
 const ssrSidebarItemsRaw = ssrSidebarItemsJson as DefaultTheme.SidebarItem[];
+
+// SAFETY: as for typedocSidebarItems
+const uiRouterEffectSidebarItemsRaw =
+  uiRouterEffectSidebarItemsJson as DefaultTheme.SidebarItem[];
+
+// SAFETY: as for typedocSidebarItems
+const uiRouterSignalsSidebarItemsRaw =
+  uiRouterSignalsSidebarItemsJson as DefaultTheme.SidebarItem[];
 
 const effectSidebarItems = flattenGroups(effectSidebarItemsRaw);
 
@@ -47,7 +62,15 @@ const mobxSidebarItems = flattenGroups(mobxSidebarItemsRaw);
 
 const navigationSidebarItems = flattenGroups(navigationSidebarItemsRaw);
 
+const signalsSidebarItems = flattenGroups(signalsSidebarItemsRaw);
+
 const ssrSidebarItems = flattenGroups(ssrSidebarItemsRaw);
+
+const uiRouterEffectSidebarItems = flattenGroups(uiRouterEffectSidebarItemsRaw);
+
+const uiRouterSignalsSidebarItems = flattenGroups(
+  uiRouterSignalsSidebarItemsRaw,
+);
 
 // ui-router-server is multi-entry: typedoc emits one module per subpath
 // export, so the module level is the import surface — keep it, retitle each
@@ -129,7 +152,19 @@ function makeSidebar() {
           link: '/packages/effect',
           collapsed: true,
           items: [
-            { text: 'ui-router-effect', link: '/packages/ui-router-effect' },
+            {
+              text: 'ui-router-effect',
+              link: '/packages/ui-router-effect',
+              collapsed: true,
+              items: [
+                {
+                  text: 'ui-router-effect API',
+                  link: '/api/ui-router-effect/',
+                  collapsed: false,
+                  items: uiRouterEffectSidebarItems,
+                },
+              ],
+            },
             {
               text: 'lit-ui-router-effect',
               link: '/packages/lit-ui-router-effect',
@@ -191,10 +226,31 @@ function makeSidebar() {
           link: '/packages/signals',
           collapsed: true,
           items: [
-            { text: 'ui-router-signals', link: '/packages/ui-router-signals' },
+            {
+              text: 'ui-router-signals',
+              link: '/packages/ui-router-signals',
+              collapsed: true,
+              items: [
+                {
+                  text: 'ui-router-signals API',
+                  link: '/api/ui-router-signals/',
+                  collapsed: false,
+                  items: uiRouterSignalsSidebarItems,
+                },
+              ],
+            },
             {
               text: 'lit-ui-router-signals',
               link: '/packages/lit-ui-router-signals',
+              collapsed: true,
+              items: [
+                {
+                  text: 'lit-ui-router-signals API',
+                  link: '/api/lit-ui-router-signals/',
+                  collapsed: false,
+                  items: signalsSidebarItems,
+                },
+              ],
             },
           ],
         },

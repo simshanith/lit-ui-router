@@ -1,0 +1,41 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["src/index.ts"],
+  "out": "../../www/lit-ui-router.dev/api/ui-router-effect",
+  "docsRoot": "../../www/lit-ui-router.dev",
+  "plugin": [
+    "typedoc-plugin-markdown",
+    "typedoc-vitepress-theme",
+    "@tools/typedoc-plugin-lit-ui-router/kind-indexes"
+  ],
+  "excludeExternals": true,
+  "excludeInternal": true,
+  "excludePrivate": true,
+  "readme": "none",
+  "githubPages": false,
+  "treatWarningsAsErrors": true,
+  "validation": { "notDocumented": true },
+  "entryFileName": "index",
+  "useCodeBlocks": true,
+  "expandObjects": true,
+  "parametersFormat": "table",
+  "propertiesFormat": "table",
+  "enumMembersFormat": "table",
+  "typeDeclarationFormat": "table",
+  "sort": ["alphabetical", "source-order"],
+  "externalSymbolLinkMappings": {
+    "@uirouter/core": {
+      "UIRouter": "https://ui-router.github.io/core/docs/latest/classes/_router_.uirouter.html",
+      "StateDeclaration": "https://ui-router.github.io/core/docs/latest/interfaces/_state_interface_.statedeclaration.html",
+      "Transition": "https://ui-router.github.io/core/docs/latest/classes/_transition_transition_.transition.html",
+      "RawParams": "https://ui-router.github.io/core/docs/latest/interfaces/_params_interface_.rawparams.html",
+      "StateOrName": "https://ui-router.github.io/core/docs/latest/modules/_state_interface_.html#stateorname"
+    },
+    "effect": {
+      "SubscriptionRef": "https://effect.website/docs/state-management/subscriptionref/"
+    }
+  },
+  "sidebar": {
+    "pretty": true
+  }
+}
