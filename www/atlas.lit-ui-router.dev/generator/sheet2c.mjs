@@ -242,169 +242,6 @@ const GROUND_H = CRS;
 const LIFT = 4 * CRS;
 const RING = { edge: 'ska', cap: 'fp', ring: 'ska' };
 const inside = (px, py, b) => px > b.x && px < b.x + b.w && py > b.y && py < b.y + b.d;
-const SMALL = 1.5 * U;
-// a build stands on the runtimes its consumers declare and on every required peer its parts carry, which the installer
-// adds whether or not a manifest names it; an optional peer no consumer declares stays off
-const presentIn = (build, t) => build.runtimes.includes(t) || (build.runtimesByPeer.includes(t) && !RT(t).optional);
-const LIT_NAME = 'lit';
-function seatParts(build) {
-  const names = new Set(build.parts);
-  build.plates = [];
-  build.bricks.forEach((b) => {
-    // a part stands on the part it peers when that part is in the build, as it does on sheet 2
-    const base = standsOn(b.n);
-    b.on = base !== null && names.has(FB(base).name) ? base : null;
-    // a brick seats on its binding, its one runtime peer in the build other than core and lit, and on core when none
-    // remains, as sheet 2 seats the family on core
-    const present = peersOf(b.name).filter((t) => PLATE_NAMES.includes(t) && presentIn(build, t));
-    const seats = present.filter((t) => t !== CORE && t !== LIT_NAME);
-    if (b.on === null && seats.length > 1) throw new Error(`sheet 2C: build ${build.numeral}: ${b.name} could seat on ${seats} — it seats on one`);
-    b.seat = b.on !== null ? null : seats.length ? RT(seats[0]) : present.includes(CORE) ? RT(CORE) : null;
-    if (b.on === null && !b.seat) throw new Error(`sheet 2C: build ${build.numeral}: ${b.name} seats on no plate`);
-  });
-  // the plates under this model: every runtime a part peers, within the build's union; each plate once
-  for (const b of build.bricks) for (const t of peersOf(b.name)) {
-    if (!PLATE_NAMES.includes(t) || !presentIn(build, t)) continue;
-    if (!build.plates.some((p) => p.rt.name === t)) build.plates.push({ rt: RT(t), seated: [], reached: [] });
-    const p = build.plates.find((p) => p.rt.name === t);
-    (b.seat === RT(t) ? p.seated : p.reached).push(b);
-  }
-  build.unpeered = build.runtimes.filter((t) => !build.plates.some((p) => p.rt.name === t));
-  if (!build.plates.some((p) => p.rt.name === CORE)) throw new Error(`sheet 2C: build ${build.numeral} stands on no ${CORE} plate`);
-  // the sheet-2 rule: no brick seats on lit, and the flagship seats on core wherever it is a part
-  if (build.plates.some((p) => p.rt.name === LIT_NAME && p.seated.length)) throw new Error(`sheet 2C: build ${build.numeral} seats a brick on ${LIT_NAME}`);
-  const flagship = build.bricks.find((b) => b.name === 'lit-ui-router');
-  if (flagship && flagship.seat?.name !== CORE) throw new Error(`sheet 2C: build ${build.numeral} seats lit-ui-router off ${CORE}`);
-}
-// a seated brick's spot on its plate, in studs: the one nearest the viewer that overlaps no brick seated before it,
-// a stud apart where one fits and shoulder to shoulder where none does; null when the brick is wider than the plate
-const seatSpot = (p, [ws, ds], taken) => {
-  const cols = p.w / U, rows = p.d / U, spots = [];
-  for (let i = 0; i + ws <= cols; i++) for (let j = 0; j + ds <= rows; j++) spots.push([i, j]);
-  const apart = (g) => ([i, j]) => taken.every(([ti, tj, tw, td]) => i + ws + g <= ti || ti + tw + g <= i || j + ds + g <= tj || tj + td + g <= j);
-  const near = (a, b) => b[0] + b[1] - (a[0] + a[1]) || b[1] - a[1];
-  return spots.filter(apart(1)).sort(near)[0] ?? spots.filter(apart(0)).sort(near)[0] ?? null;
-};
-// a seated brick's plan position on its plate; a brick wider than the plate alone overhangs it from the far side
-const seatAt = (build, p, b, taken) => {
-  const m = modelOf(b.n);
-  const ws = m ? m.ws : b.shape[0], ds = m ? m.ds : b.shape[1], d = ds * U;
-  const spot = seatSpot(p, [ws, ds], taken);
-  if (!spot && taken.length) throw new Error(`sheet 2C: build ${build.numeral}: brick ${b.n} finds no room on ${p.rt.name}`);
-  if (spot) taken.push([spot[0], spot[1], ws, ds]);
-  return { ws, ds, w: ws * U, x: spot ? p.x + spot[0] * U : p.x, y: spot ? p.y + spot[1] * U : d <= p.d ? p.y + p.d - d : p.y };
-};
-// the plate's stud under a seated brick: the nearest one the brick covers
-const studUnder = (p, r, part) => {
-  let stud = null;
-  for (let i = 0; i < r.topShape[0]; i++) for (let j = 0; j < r.topShape[1]; j++) {
-    const px = p.x + (r.topOff[0] + i + 0.5) * U, py = p.y + (r.topOff[1] + j + 0.5) * U;
-    if (inside(px, py, part) && (!stud || i + j > stud[0] + stud[1])) stud = [i, j, px, py];
-  }
-  return stud;
-};
-// every part of the build is placed, and nothing else; and every family peer of a drawn part is drawn in the same model
-function checkModel(build) {
-  const placed = [...build.parts_.keys()].map((n) => FB(n).name).sort();
-  if (placed.join() !== build.parts.join()) throw new Error(`sheet 2C: build ${build.numeral} draws [${placed}] for parts [${build.parts}]`);
-  for (const b of build.bricks) for (const p of peersOf(b.name)) if (FAMILY_NAMES.has(p) && !build.parts.includes(p)) throw new Error(`sheet 2C: build ${build.numeral} draws ${b.name} without its peer ${p}`);
-  for (const p of build.plates) if (![...p.seated, ...p.reached].some((b) => peersOf(b.name).includes(p.rt.name))) throw new Error(`sheet 2C: build ${build.numeral} stands on ${p.rt.name}, which no part peers`);
-}
-function layoutBuild(build) {
-  seatParts(build);
-  const own = (n) => build.bricks.find((x) => x.n === n);
-  // layout: core first, the baseplate, then the plates along x in part order, each with its seated bricks along its front
-  // edge from the near corner and the bricks standing on them
-  build.parts_ = new Map();
-  let cx = 0, dmax = 0;
-  const ordered = [...build.plates].sort((a, b) => (b.rt.name === CORE) - (a.rt.name === CORE) || Math.min(...a.seated.map((x) => x.n), 99) - Math.min(...b.seated.map((x) => x.n), 99));
-  const placeBrick = (b, x, y, z0) => {
-    const m = modelOf(b.n);
-    const ws = m ? m.ws : b.shape[0], ds = m ? m.ds : b.shape[1];
-    const part = { id: b.n, x, y, w: ws * U, d: ds * U, ws, ds, z0, h: b.courses * CRS, rings: m?.rings ?? [] };
-    build.parts_.set(b.n, part);
-    dmax = Math.max(dmax, y + part.d);
-    return part;
-  };
-  const standers = (base) => build.bricks.filter((b) => b.on === base.n);
-  const placeStanders = (base, basePart) => {
-    for (const b of standers(base)) {
-      const m = modelOf(b.n), m0 = modelOf(base.n);
-      const part = placeBrick(b, basePart.x + (m.x - m0.x) * K, basePart.y + (m.y - m0.y) * K, basePart.z0 + basePart.h + (EXPLODE.get(b.n) - EXPLODE.get(base.n)) * K);
-      if (!(part.z0 > basePart.z0 + basePart.h)) throw new Error(`sheet 2C: brick ${b.n} would sink into brick ${base.n}`);
-      const ring = basePart.rings.find((k) => {
-        const [i, j] = k.split(',').map(Number);
-        return !basePart.taken?.has(k) && inside(basePart.x + (i + 0.5) * U, basePart.y + (j + 0.5) * U, part);
-      });
-      if (!ring) throw new Error(`sheet 2C: brick ${b.n} stands over no ringed stud of brick ${base.n}`);
-      (basePart.taken ??= new Set()).add(ring);
-      const [i, j] = ring.split(',').map(Number);
-      part.drop = [basePart.x + (i + 0.5) * U, basePart.y + (j + 0.5) * U, basePart.z0 + basePart.h];
-      placeStanders(b, part);
-    }
-  };
-  for (const p of ordered) {
-    const r = p.rt;
-    p.x = cx; p.y = 0; p.w = r.shape[0] * U; p.d = r.shape[1] * U; p.z0 = GROUND_H; p.h = r.plates * PLATE_H;
-    let ext = p.w;
-    p.rings = [];
-    const taken = [];
-    // the lowest brick takes the spot nearest the viewer, so a taller one stands behind it and shows over it
-    for (const b of [...p.seated].sort((a, c) => a.courses - c.courses || a.n - c.n)) {
-      const { x, y, w, ws, ds } = seatAt(build, p, b, taken);
-      const part = placeBrick(b, x, y, p.z0 + p.h + LIFT + (ws * ds > r.topShape[0] * r.topShape[1] ? CRS : 0));
-      const stud = studUnder(p, r, part);
-      if (!stud) throw new Error(`sheet 2C: build ${build.numeral}: brick ${b.n} stands over no stud of ${r.name}`);
-      p.rings.push(`${stud[0]},${stud[1]}`);
-      part.drop = [stud[2], stud[3], p.z0 + p.h];
-      ext = Math.max(ext, x + w - p.x);
-      placeStanders(b, part);
-      for (const s of standers(b)) ext = Math.max(ext, build.parts_.get(s.n).x + build.parts_.get(s.n).w - p.x);
-    }
-    if (!p.rings.length) p.rings.push(`${r.topShape[0] - 1},${r.topShape[1] - 1}`);
-    if (new Set(p.rings).size !== p.rings.length) throw new Error(`sheet 2C: build ${build.numeral}: two bricks seat on one stud of ${r.name}`);
-    const [i, j] = p.rings[0].split(',').map(Number);
-    p.ringAt = [p.x + (r.topOff[0] + i + 0.5) * U, p.y + (r.topOff[1] + j + 0.5) * U, p.z0 + p.h];
-    dmax = Math.max(dmax, p.d);
-    cx += ext + SMALL;
-  }
-  checkModel(build);
-  // each model stands on its own slab of ground, a stud wider than the model all round
-  build.boxes = [
-    { id: `${build.numeral}:G`, ground: true, x: -U, y: -U, w: cx - SMALL + 2 * U, d: dmax + 2 * U, z0: 0, h: GROUND_H, build },
-    ...build.plates.map((p) => ({ id: `${build.numeral}:${p.rt.letter}`, x: p.x, y: p.y, w: p.w, d: p.d, z0: p.z0, h: p.h, pl: p, build })),
-    ...[...build.parts_.values()].map((part) => ({ ...part, id: `${build.numeral}:${part.id}`, brick: own(part.id), build })),
-  ];
-}
-MODELS.forEach(layoutBuild);
-// the bricks that seat on core in some model, for the notes
-const CORE_SEATED = FAMILY.filter((f) => MODELS.some((m) => m.plates.some((p) => p.rt.name === CORE && p.seated.some((b) => b.n === f.n))));
-if (!MODELS.every((m) => m.plates.some((p) => p.rt.name === CORE))) throw new Error(`sheet 2C: a model stands on no ${CORE} plate`);
-const STOOD = new Set(BUILT.flatMap((b) => b.plates.map((p) => p.rt)));
-const SPARE_PLATES = RUNTIMES.filter((r) => !STOOD.has(r));
-// a plate's builds read from a reading's rows alone, so a later reading counts without a drawing; the drawn models agree
-const buildsOn = (reading, r) => reading.builds.filter((b) => presentIn(b, r.name) && b.parts.some((p) => peersOf(p).includes(r.name)));
-const drawnOn = (r) => BUILT.filter((b) => b.plates.some((p) => p.rt === r));
-for (const r of RUNTIMES) if (buildsOn(READINGS[0], r).length !== drawnOn(r).length) throw new Error(`sheet 2C: ${r.name} is under ${drawnOn(r).length} drawn builds but ${buildsOn(READINGS[0], r).length} by the rows`);
-
-// ---- the drawing kit: drops, badges, the minis ------------------------------------------------
-const drop = (ox, oy, px, py, zFrom, zTo) => {
-  const [cx, y0] = pt(ox, oy, px, py, zFrom);
-  const [cx2, yTo] = pt(ox, oy, px, py, zTo + SH);
-  if (Math.abs(cx - cx2) > 0.25) throw new Error('sheet 2C: a drop would lean');
-  const y1 = (yTo - RY - 1).toFixed(1);
-  return `<line x1="${cx}" y1="${y0}" x2="${cx}" y2="${y1}" class="ska" stroke-dasharray="6 4"/>\n<circle cx="${cx}" cy="${y1}" r="2.2" class="fa"/>`;
-};
-const BADGE_R = 9.5;
-const badge = (x, y, s, cls = 'ska fp', num = 'lbla', r = BADGE_R) => `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r}" class="${cls}"/>${txt(x.toFixed(1), (y + 3.6).toFixed(1), String(s), num, 'middle')}`;
-const leader = (x1, y1, x2, y2) => `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="skf"/>`;
-const drawModel = (build, ox, oy) => paintOrder(build.boxes).map((i) => {
-  const b = build.boxes[i];
-  if (b.ground) return block(ox, oy, b.x, b.y, b.w, b.d, b.z0, b.h, build.atlas ? { edge: 'ska' } : {});
-  if (b.pl) return stack(ox, oy, b.pl.rt, { x: b.x, y: b.y, z0: b.z0, rings: new Set(b.pl.rings) });
-  const fall = drop(ox, oy, b.drop[0], b.drop[1], b.z0, b.drop[2]);
-  return `${fall}\n${brick(ox, oy, b.x, b.y, b.ws, b.ds, b.brick.courses, { z0: b.z0, studEdge: 'sk', ringStuds: new Set(b.rings), hue: b.brick.hue })}`;
-}).join('\n');
 const topFace = (ox, oy, x, y, w, d, z) => [[x, y], [x + w, y], [x + w, y + d], [x, y + d]].map(([px, py]) => pt(ox, oy, px, py, z));
 const groundTop = (build, ox, oy) => {
   const g = build.boxes.find((b) => b.ground);
@@ -437,18 +274,387 @@ const edgeGap = (c, poly) => Math.min(...poly.map((a, i) => segDist(c, a, poly[(
 // a circle wholly inside a convex face, or touching it at all
 const circleInside = (c, r, poly) => pointIn(c, poly) && edgeGap(c, poly) >= r;
 const circleMeets = (c, r, poly) => pointIn(c, poly) || edgeGap(c, poly) < r;
+// a tie's two screen ends: the corner of the brick's underside nearest the ring, and the ringed stud's cap
+const cornersToward = (part, to) => [[part.x, part.y], [part.x + part.w, part.y], [part.x, part.y + part.d], [part.x + part.w, part.y + part.d]]
+  .sort((a, b) => Math.hypot(a[0] - to[0], a[1] - to[1]) - Math.hypot(b[0] - to[0], b[1] - to[1]));
+const tieEnds = (ox, oy, { part, to, corner = cornersToward(part, to)[0] }) => [pt(ox, oy, corner[0], corner[1], part.z0), pt(ox, oy, to[0], to[1], to[2] + SH)];
+// the first brick or stack a tie would cross, its own two ends aside, read a unit at a time along it
+const tieCrossing = (t, parts, plates, ox = 0, oy = 0) => {
+  const [[x1, y1], [x2, y2]] = tieEnds(ox, oy, t), len = Math.hypot(x2 - x1, y2 - y1);
+  const masses = [...parts.filter((o) => o !== t.part && !(t.under ?? []).includes(o.id)).map((o) => [`brick ${o.id}`, silhouette(o, ox, oy)]), ...plates.filter((p) => p !== t.p && p.rt.plates > 1).map((p) => [p.rt.letter, silhouette(p, ox, oy)])];
+  for (let s = 4; s < len - 4; s++) {
+    const c = [x1 + ((x2 - x1) * s) / len, y1 + ((y2 - y1) * s) / len];
+    const hit = masses.find(([, m]) => pointIn(c, m));
+    if (hit) return hit[0];
+  }
+  return null;
+};
+// a build stands on the runtimes its consumers declare and on every required peer its parts carry, which the installer
+// adds whether or not a manifest names it; an optional peer no consumer declares stays off
+const presentIn = (build, t) => build.runtimes.includes(t) || (build.runtimesByPeer.includes(t) && !RT(t).optional);
+const LIT_NAME = 'lit';
+const runtimePeers = (build, b) => peersOf(b.name).filter((t) => PLATE_NAMES.includes(t) && presentIn(build, t));
+// sheet 2's client plate is 8 studs wide; core's own footprint takes its bricks at their places measured from the right
+const SHEET2_COLS = modelOf('P1').ws;
+function seatParts(build) {
+  const names = new Set(build.parts);
+  const byN = (n) => build.bricks.find((x) => x.n === n);
+  build.bricks.forEach((b) => {
+    // a part stands on the part it peers when that part is in the build, as it does on sheet 2
+    const base = standsOn(b.n);
+    b.on = base !== null && names.has(FB(base).name) ? base : null;
+  });
+  // the runtimes a brick's base already couples to: a brick on brick 1 reaches lit and core through it
+  const inherited = (b) => (b.on === null ? [] : [...runtimePeers(build, byN(b.on)), ...inherited(byN(b.on))]);
+  build.plates = [];
+  const plateOf = (r) => {
+    if (!build.plates.some((p) => p.rt === r)) build.plates.push({ rt: r, links: [], seated: [], reached: [] });
+    return build.plates.find((p) => p.rt === r);
+  };
+  for (const b of build.bricks) {
+    const present = runtimePeers(build, b);
+    // a brick seats on core when it peers core, and on its one runtime when core is not among its peers
+    b.seat = b.on !== null ? null : present.includes(CORE) ? RT(CORE) : present.length === 1 ? RT(present[0]) : null;
+    if (b.on === null && !b.seat) throw new Error(`sheet 2C: build ${build.numeral}: ${b.name} seats on no plate`);
+    // and couples to every other runtime it peers that its base does not carry: by straddling its seam or by a tie
+    b.reach = present.filter((t) => t !== b.seat?.name && !inherited(b).includes(t)).map(RT);
+    if (b.seat) plateOf(b.seat).links.push({ b, kind: 'seat' });
+    for (const r of b.reach) plateOf(r).links.push({ b, kind: 'reach' });
+  }
+  build.unpeered = build.runtimes.filter((t) => !build.plates.some((p) => p.rt.name === t));
+  if (!build.plates.some((p) => p.rt.name === CORE)) throw new Error(`sheet 2C: build ${build.numeral} stands on no ${CORE} plate`);
+  // the sheet-2 rule: no brick seats on lit, and the flagship seats on core wherever it is a part
+  if (build.bricks.some((b) => b.seat?.name === LIT_NAME)) throw new Error(`sheet 2C: build ${build.numeral} seats a brick on ${LIT_NAME}`);
+  const flagship = build.bricks.find((b) => b.name === 'lit-ui-router');
+  if (flagship && flagship.seat?.name !== CORE) throw new Error(`sheet 2C: build ${build.numeral} seats lit-ui-router off ${CORE}`);
+}
+// a seated brick's spot on its plate, in studs: the one nearest the viewer that overlaps no brick seated before it,
+// a stud apart where one fits and shoulder to shoulder where none does; null when the brick is wider than the plate
+const apartFrom = (taken, [ws, ds], g) => ([i, j]) => taken.every(([ti, tj, tw, td]) => i + ws + g <= ti || ti + tw + g <= i || j + ds + g <= tj || tj + td + g <= j);
+const seatSpots = (p, [ws, ds], taken) => {
+  const cols = p.w / U, rows = p.d / U, spots = [];
+  for (let i = 0; i + ws <= cols; i++) for (let j = 0; j + ds <= rows; j++) spots.push([i, j]);
+  const near = (a, b) => b[0] + b[1] - (a[0] + a[1]) || b[1] - a[1];
+  const apart = spots.filter(apartFrom(taken, [ws, ds], 1)).sort(near);
+  return [...apart, ...spots.filter(apartFrom(taken, [ws, ds], 0)).filter((x) => !apart.includes(x)).sort(near)];
+};
+const seatSpot = (p, shape, taken, skip = 0) => seatSpots(p, shape, taken)[skip] ?? null;
+const footprint = (b) => {
+  const m = modelOf(b.n);
+  return m ? [m.ws, m.ds] : [b.shape[0], b.shape[1]];
+};
+// the plate's stud under a seated brick: the nearest one the brick covers
+const studUnder = (p, r, part) => {
+  let stud = null;
+  for (let i = 0; i < r.topShape[0]; i++) for (let j = 0; j < r.topShape[1]; j++) {
+    const px = p.x + (r.topOff[0] + i + 0.5) * U, py = p.y + (r.topOff[1] + j + 0.5) * U;
+    if (inside(px, py, part) && (!stud || i + j > stud[0] + stud[1])) stud = [i, j, px, py];
+  }
+  return stud;
+};
+// a ring on a plate's top: the stud the brick covers, or for a tie the free stud nearest the brick
+const ringOn = (p, key, z) => {
+  const [i, j] = key.split(',').map(Number);
+  return [p.x + (p.rt.topOff[0] + i + 0.5) * U, p.y + (p.rt.topOff[1] + j + 0.5) * U, z];
+};
+// a plate's free top studs, nearest the brick first
+const tieStuds = (p, part) => {
+  const cx = part.x + part.w / 2, cy = part.y + part.d / 2, keys = [];
+  for (let i = 0; i < p.rt.topShape[0]; i++) for (let j = 0; j < p.rt.topShape[1]; j++) if (!p.rings.includes(`${i},${j}`)) keys.push(`${i},${j}`);
+  const dist = (k) => Math.hypot(ringOn(p, k, 0)[0] - cx, ringOn(p, k, 0)[1] - cy);
+  return keys.sort((a, b) => dist(a) - dist(b));
+};
+const overlap = (a, b) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.d && b.y < a.y + a.d;
+const fail = (build, msg) => {
+  throw new Error(`sheet 2C: build ${build.numeral}: ${msg}`);
+};
+// every part of the build is placed, and nothing else; and every family peer of a drawn part is drawn in the same model
+function checkParts(build) {
+  const placed = [...build.parts_.keys()].map((n) => FB(n).name).sort();
+  if (placed.join() !== build.parts.join()) fail(build, `draws [${placed}] for parts [${build.parts}]`);
+  for (const b of build.bricks) for (const p of peersOf(b.name)) if (FAMILY_NAMES.has(p) && !build.parts.includes(p)) fail(build, `draws ${b.name} without its peer ${p}`);
+  for (const p of build.plates) if (!p.links.some(({ b }) => peersOf(b.name).includes(p.rt.name))) fail(build, `stands on ${p.rt.name}, which no part peers`);
+}
+// every brick seats on, straddles or ties to every runtime it peers in the build, its base's aside; one ringed stud per
+// coupled brick, as sheet 2 rings a stud per coupling
+function checkCouplings(build) {
+  for (const b of build.bricks) for (const r of [...(b.seat ? [b.seat] : []), ...b.reach]) {
+    const link = build.plates.find((x) => x.rt === r)?.links.find((l) => l.b === b);
+    if (!['seat', 'straddle', 'tie'].includes(link?.kind)) fail(build, `brick ${b.n} does not reach ${r.name}`);
+  }
+  for (const p of build.plates) if (p.rings.length !== p.links.length || new Set(p.rings).size !== p.rings.length) fail(build, `${p.rt.name} rings ${p.rings.length} studs for ${p.links.length} couplings`);
+}
+// plates meet but never overlap, every plate abuts core, and bricks seated on one level never overlap in plan
+const abuts = (p, c) => p.x <= c.x + c.w && c.x <= p.x + p.w && p.y <= c.y + c.d && c.y <= p.y + p.d && (p.x === c.x + c.w || p.x + p.w === c.x || p.y === c.y + c.d || p.y + p.d === c.y);
+function checkPlan(build) {
+  const core = build.plates.find((p) => p.rt.name === CORE), pairs = (xs) => xs.flatMap((a, i) => xs.slice(i + 1).map((b) => [a, b]));
+  for (const [a, b] of pairs(build.plates)) if (overlap(a, b)) fail(build, `plates ${a.rt.letter} and ${b.rt.letter} overlap`);
+  for (const p of build.plates) if (p !== core && !abuts(p, core)) fail(build, `${p.rt.name} does not abut ${CORE}`);
+  const floor = [...build.parts_.values()].filter((part) => !build.bricks.find((b) => b.n === part.id).on);
+  for (const [a, b] of pairs(floor)) if (overlap(a, b) && a.z0 === b.z0) fail(build, `bricks ${a.id} and ${b.id} overlap`);
+}
+// a straddling brick stands one whole stud or more on the plate and the rest on core, both one height
+function checkStraddle(build, core, p, part) {
+  const onPlate = Math.min(part.x + part.w, p.x + p.w) - Math.max(part.x, p.x), onCore = Math.min(part.x + part.w, core.x + core.w) - Math.max(part.x, core.x);
+  if (onPlate < U || onCore < U || onPlate + onCore !== part.w || p.h !== core.h) fail(build, `brick ${part.id} straddles ${p.rt.name} badly`);
+}
+// the placing kit for one model: bricks, the bricks standing on them, and seats that drop onto a ringed stud
+function placer(build) {
+  build.parts_ = new Map();
+  build.ties = [];
+  const brickAt = (b, x, y, z0) => {
+    const [ws, ds] = footprint(b), m = modelOf(b.n);
+    const part = { id: b.n, x, y, w: ws * U, d: ds * U, ws, ds, z0, h: b.courses * CRS, rings: m?.rings ?? [], drops: [] };
+    build.parts_.set(b.n, part);
+    return part;
+  };
+  const standers = (base) => {
+    const basePart = build.parts_.get(base.n);
+    for (const b of build.bricks.filter((x) => x.on === base.n)) {
+      const m = modelOf(b.n), m0 = modelOf(base.n);
+      const part = brickAt(b, basePart.x + (m.x - m0.x) * K, basePart.y + (m.y - m0.y) * K, basePart.z0 + basePart.h + (EXPLODE.get(b.n) - EXPLODE.get(base.n)) * K);
+      if (!(part.z0 > basePart.z0 + basePart.h)) fail(build, `brick ${b.n} would sink into brick ${base.n}`);
+      const ring = basePart.rings.find((k) => {
+        const [i, j] = k.split(',').map(Number);
+        return !basePart.taken?.has(k) && inside(basePart.x + (i + 0.5) * U, basePart.y + (j + 0.5) * U, part);
+      });
+      if (!ring) fail(build, `brick ${b.n} stands over no ringed stud of brick ${base.n}`);
+      (basePart.taken ??= new Set()).add(ring);
+      const [i, j] = ring.split(',').map(Number);
+      part.drops.push([basePart.x + (i + 0.5) * U, basePart.y + (j + 0.5) * U, basePart.z0 + basePart.h]);
+      standers(b);
+    }
+  };
+  // drop a brick onto the plate's stud it covers, and ring that stud
+  const seatOn = (p, link, part) => {
+    const stud = studUnder(p, p.rt, part);
+    if (!stud) fail(build, `brick ${part.id} stands over no stud of ${p.rt.name}`);
+    p.rings.push(`${stud[0]},${stud[1]}`);
+    part.drops.push([stud[2], stud[3], p.z0 + p.h]);
+    p.seated.push(link.b);
+  };
+  return { brickAt, standers, seatOn };
+}
+const settle = (p) => Object.assign(p, { w: p.rt.shape[0] * U, d: p.rt.shape[1] * U, z0: GROUND_H, h: p.rt.plates * PLATE_H, rings: [] });
+const clampTo = (v, hi) => Math.max(0, Math.min(hi, v));
+// a core brick's spot in studs: across the right-hand seam when it straddles, at sheet 2's place measured from core's right
+// edge, or packed toward the front where that collides or where sheet 2 seats the brick off its client plate
+function coreSpot(build, core, b, via, taken, skip) {
+  const [ws, ds] = footprint(b), m = modelOf(b.n), cols = core.w / U, rows = core.d / U, onClient = m?.on === 'P1';
+  const sy = m ? clampTo(Math.round(m.y / 40), rows - ds) : 0;
+  const first = via ? [cols - ws + 1, sy] : onClient ? [clampTo(Math.round(m.x / 40) - (SHEET2_COLS - cols), cols - ws), sy] : null;
+  if (first && apartFrom(taken, [ws, ds], 0)(first)) return first;
+  if (via) fail(build, `brick ${b.n} finds no seam to straddle`);
+  return seatSpot(core, [ws, ds], taken, onClient ? 0 : skip) ?? fail(build, `brick ${b.n} finds no room on ${CORE}`);
+}
+// core is the baseplate; a brick on it straddles the right-hand seam onto a flat runtime plate it peers when it is two studs
+// wide or more, and that plate abuts core under it
+function placeCore(build, kit, core, skip) {
+  const straddleOf = (b) => (core.rt.plates === 1 && footprint(b)[0] >= 2 ? b.reach.find((r) => r.plates === 1) ?? null : null);
+  const taken = [];
+  // the straddler first, then the bricks at sheet 2's places, then the packed ones lowest first, so a low brick takes the front
+  const placedOn = (b) => modelOf(b.n)?.on === 'P1';
+  for (const link of core.links.filter((l) => l.kind === 'seat').sort((a, c) => !!straddleOf(c.b) - !!straddleOf(a.b) || placedOn(c.b) - placedOn(a.b) || a.b.courses - c.b.courses || a.b.n - c.b.n)) {
+    const b = link.b, via = straddleOf(b), spot = coreSpot(build, core, b, via, taken, skip);
+    taken.push([spot[0], spot[1], ...footprint(b)]);
+    const part = kit.brickAt(b, spot[0] * U, spot[1] * U, core.z0 + core.h + LIFT);
+    kit.seatOn(core, link, part);
+    if (via) {
+      const p = settle(build.plates.find((x) => x.rt === via)), reach = p.links.find((l) => l.b === b);
+      Object.assign(p, { x: core.w, y: part.y });
+      reach.kind = 'straddle';
+      kit.seatOn(p, reach, part);
+      checkStraddle(build, core, p, part);
+    }
+    kit.standers(b);
+  }
+}
+// a plate's places against core, never behind it: a stack taller than core along its left or right side, a flat plate along
+// the front, the right beside the seam, or the left; every stud position along those sides that still touches core
+function edgeSpots(core, p, [ax, ay]) {
+  const sides = p.rt.plates > 1 ? [['left', ax], ['right', core.w - ax]] : [['front', core.d - ay], ['right', core.w - ax], ['left', ax + core.w]];
+  const along = (len, size) => Array.from({ length: (len + size) / U - 1 }, (_, k) => (k + 1) * U - size);
+  const near = ([x, y]) => Math.hypot(x + p.w / 2 - ax, y + p.d / 2 - ay);
+  return sides.sort((a, c) => a[1] - c[1]).flatMap(([e]) => (e === 'front' ? along(core.w, p.w).map((x) => [x, core.d]) : along(core.d, p.d).map((y) => [e === 'left' ? -p.w : core.w, y])).sort((a, c) => near(a) - near(c)));
+}
+// every brick that ties to the plate finds a free stud on it that its tie reaches clear of every brick and stack
+const underOf = (build, b) => {
+  const under = [];
+  for (let on = b.on; on !== null; on = build.bricks.find((x) => x.n === on).on) under.push(on);
+  return under;
+};
+// a tie's route: the nearest free stud, and the nearest corner of the brick's underside, from which it runs clear
+const tieRoute = (build, p, part, under, placed) => {
+  for (const k of tieStuds(p, part)) {
+    const to = ringOn(p, k, p.z0 + p.h);
+    for (const corner of cornersToward(part, to)) if (!tieCrossing({ p, part, under, to, corner }, [...build.parts_.values()], placed)) return { key: k, to, corner };
+  }
+  return null;
+};
+const tieable = (build, p) => p.links.filter((l) => l.kind === 'reach' && build.parts_.has(l.b.n)).every((l) => {
+  const part = build.parts_.get(l.b.n), under = underOf(build, l.b), placed = build.plates.filter((x) => x.x !== undefined);
+  return !!tieRoute(build, p, part, under, placed);
+});
+// the place a plate takes: on the side nearest the brick that peers it, a stud clear of every placed plate where one fits
+// and meeting it where none does, nearest that brick, and only where every tie to it runs clear; null when none serves
+function placeOne(build, kit, core, p, anchor) {
+  settle(p);
+  const placed = build.plates.filter((x) => x !== p && x.x !== undefined);
+  const grown = (o, g) => ({ x: o.x - g, y: o.y - g, w: o.w + 2 * g, d: o.d + 2 * g });
+  const fits = (g) => ([x, y]) => {
+    Object.assign(p, { x, y });
+    return !placed.some((o) => overlap(grown(o, g), p)) && tieable(build, p);
+  };
+  const spots = edgeSpots(core, p, anchor), spot = spots.find(fits(U)) ?? spots.find(fits(0));
+  if (!spot) return false;
+  Object.assign(p, { x: spot[0], y: spot[1] });
+  const seated = [];
+  for (const link of p.links.filter((l) => l.kind === 'seat')) {
+    const [ws, ds] = footprint(link.b), at = seatSpot(p, [ws, ds], seated) ?? [0, Math.max(0, p.d / U - ds)];
+    seated.push([at[0], at[1], ws, ds]);
+    const part = kit.brickAt(link.b, p.x + at[0] * U, p.y + at[1] * U, p.z0 + p.h + LIFT + (ws * ds > p.rt.topShape[0] * p.rt.topShape[1] ? CRS : 0));
+    kit.seatOn(p, link, part);
+    kit.standers(link.b);
+  }
+  return true;
+}
+const orders = (xs) => (xs.length < 2 ? [xs] : xs.flatMap((x, i) => orders([...xs.slice(0, i), ...xs.slice(i + 1)]).map((o) => [x, ...o])));
+// plates that seat bricks go first, so the ties to the rest route around those bricks; the rest go nearest brick first, and
+// where one finds no place every other order of them is tried before the build stops
+function placeAround(build, kit, core) {
+  const anchorOf = (p) => {
+    const part = [...p.links].sort((a, c) => (a.b.on !== null) - (c.b.on !== null)).map((l) => build.parts_.get(l.b.n)).find(Boolean);
+    return part ? [part.x + part.w / 2, part.y + part.d / 2] : [core.w / 2, 0];
+  };
+  const seats = (p) => p.links.some((l) => l.kind === 'seat');
+  const rest = build.plates.filter((p) => p !== core && p.x === undefined).sort((a, c) => anchorOf(a)[0] - anchorOf(c)[0] || a.rt.letter.localeCompare(c.rt.letter));
+  const first = rest.filter(seats), later = rest.filter((p) => !seats(p));
+  for (const p of first) if (!placeOne(build, kit, core, p, anchorOf(p))) fail(build, `${p.rt.name} finds no place against ${CORE}`);
+  const anchors = new Map(later.map((p) => [p, anchorOf(p)]));
+  const tries = orders(later);
+  if (tries.find((order) => {
+    later.forEach((p) => delete p.x);
+    return order.every((p) => placeOne(build, kit, core, p, anchors.get(p)));
+  })) return;
+  fail(build, `${listOf(later.map((p) => p.rt.name))} find no places against ${CORE} with every tie clear, in any order`);
+}
+// a reach no seam carries is a tie: a dashed line from the brick's underside to a ringed stud of the plate
+function tieUp(build) {
+  for (const p of build.plates) for (const link of p.links.filter((l) => l.kind === 'reach')) {
+    const part = build.parts_.get(link.b.n);
+    // a tie leaves its brick over the brick it stands on, so the bricks under it are no crossing
+    const under = underOf(build, link.b);
+    const route = tieRoute(build, p, part, under, build.plates) ?? fail(build, `${p.rt.name} has no free stud brick ${link.b.n} can tie to without crossing a brick or a stack`);
+    p.rings.push(route.key);
+    link.kind = 'tie';
+    p.reached.push(link.b);
+    build.ties.push({ p, part, under, to: route.to, corner: route.corner });
+  }
+}
+// a model's layout; a brick core packs takes its first spot from which every plate still finds a place with its ties clear
+function layoutBuild(build) {
+  for (let skip = 0; skip < 36; skip++) {
+    try {
+      return layoutOnce(build, skip);
+    } catch (e) {
+      if (!/find no places|finds no room/.test(e.message)) throw e;
+    }
+  }
+  fail(build, 'no spot on core lets every tie route clear');
+}
+function layoutOnce(build, skip) {
+  seatParts(build);
+  const kit = placer(build);
+  const core = settle(build.plates.find((p) => p.rt.name === CORE));
+  Object.assign(core, { x: 0, y: 0 });
+  placeCore(build, kit, core, skip);
+  placeAround(build, kit, core);
+  tieUp(build);
+  for (const p of build.plates) p.ringAt = ringOn(p, p.rings[0], p.z0 + p.h);
+  checkParts(build);
+  checkCouplings(build);
+  checkPlan(build);
+  // each model stands on its own slab of ground, a stud wider than the model all round
+  const all = [...build.plates, ...build.parts_.values()];
+  const x0 = Math.min(...all.map((o) => o.x)), y0 = Math.min(...all.map((o) => o.y));
+  const x1 = Math.max(...all.map((o) => o.x + o.w)), y1 = Math.max(...all.map((o) => o.y + o.d));
+  build.boxes = [
+    { id: `${build.numeral}:G`, ground: true, x: x0 - U, y: y0 - U, w: x1 - x0 + 2 * U, d: y1 - y0 + 2 * U, z0: 0, h: GROUND_H, build },
+    ...build.plates.map((p) => ({ id: `${build.numeral}:${p.rt.letter}`, x: p.x, y: p.y, w: p.w, d: p.d, z0: p.z0, h: p.h, pl: p, build })),
+    ...[...build.parts_.values()].map((part) => ({ ...part, id: `${build.numeral}:${part.id}`, brick: build.bricks.find((x) => x.n === part.id), build })),
+  ];
+}
+MODELS.forEach(layoutBuild);
+if (!MODELS.every((m) => m.plates.some((p) => p.rt.name === CORE))) throw new Error(`sheet 2C: a model stands on no ${CORE} plate`);
+const STOOD = new Set(BUILT.flatMap((b) => b.plates.map((p) => p.rt)));
+const SPARE_PLATES = RUNTIMES.filter((r) => !STOOD.has(r));
+// a plate's builds read from a reading's rows alone, so a later reading counts without a drawing; the drawn models agree
+const buildsOn = (reading, r) => reading.builds.filter((b) => presentIn(b, r.name) && b.parts.some((p) => peersOf(p).includes(r.name)));
+const drawnOn = (r) => BUILT.filter((b) => b.plates.some((p) => p.rt === r));
+for (const r of RUNTIMES) if (buildsOn(READINGS[0], r).length !== drawnOn(r).length) throw new Error(`sheet 2C: ${r.name} is under ${drawnOn(r).length} drawn builds but ${buildsOn(READINGS[0], r).length} by the rows`);
+
+// ---- the drawing kit: drops, badges, the minis ------------------------------------------------
+const drop = (ox, oy, px, py, zFrom, zTo) => {
+  const [cx, y0] = pt(ox, oy, px, py, zFrom);
+  const [cx2, yTo] = pt(ox, oy, px, py, zTo + SH);
+  if (Math.abs(cx - cx2) > 0.25) throw new Error('sheet 2C: a drop would lean');
+  const y1 = (yTo - RY - 1).toFixed(1);
+  return `<line x1="${cx}" y1="${y0}" x2="${cx}" y2="${y1}" class="ska" stroke-dasharray="6 4"/>\n<circle cx="${cx}" cy="${y1}" r="2.2" class="fa"/>`;
+};
+const BADGE_R = 9.5;
+const badge = (x, y, s, cls = 'ska fp', num = 'lbla', r = BADGE_R) => `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r}" class="${cls}"/>${txt(x.toFixed(1), (y + 3.6).toFixed(1), String(s), num, 'middle')}`;
+const leader = (x1, y1, x2, y2) => `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="skf"/>`;
+// a tie: dashed in accent from the corner of the brick's underside nearest the ring, ending on the ringed stud's cap
+const tie = (ox, oy, t) => {
+  const [[x1, y1], [x2, y2]] = tieEnds(ox, oy, t);
+  return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="ska" stroke-dasharray="6 4"/>`;
+};
+// the guard: every tie drawn crosses no brick and no stack but its own two ends
+function checkTies(build, ox, oy) {
+  for (const t of build.ties) {
+    const hit = tieCrossing(t, [...build.parts_.values()], build.plates, ox, oy);
+    if (hit) throw new Error(`sheet 2C: build ${build.numeral}: the tie from brick ${t.part.id} to ${t.p.rt.letter} crosses ${hit}`);
+  }
+}
+const drawModel = (build, ox, oy) => paintOrder(build.boxes).map((i) => {
+  const b = build.boxes[i];
+  if (b.ground) return block(ox, oy, b.x, b.y, b.w, b.d, b.z0, b.h, build.atlas ? { edge: 'ska' } : {});
+  if (b.pl) return [stack(ox, oy, b.pl.rt, { x: b.x, y: b.y, z0: b.z0, rings: new Set(b.pl.rings) }), ...build.ties.filter((t) => t.p === b.pl).map((t) => tie(ox, oy, t))].join('\n');
+  const fall = b.drops.map(([x, y, z]) => drop(ox, oy, x, y, b.z0, z)).join('\n');
+  return `${fall}\n${brick(ox, oy, b.x, b.y, b.ws, b.ds, b.brick.courses, { z0: b.z0, studEdge: 'sk', ringStuds: new Set(b.rings), hue: b.brick.hue })}`;
+}).join('\n');
 // the badge spacing every badge of a model keeps from the others
 const BADGE_GAP = 24;
 // badges: a brick's number above its far roof corner, or at its near-left roof corner when a brick stands on it;
 // a plate's letter beside its ringed stud, placed by plateBadge
-const brickBadges = (build, ox, oy) => build.boxes.filter((b) => b.brick).map((b) => {
+// a badge that would crowd one placed before it takes the nearest spot that keeps the gap and meets no other brick,
+// searched outward a unit at a time
+const brickBadges = (build, ox, oy) => build.boxes.filter((b) => b.brick).reduce((marks, b) => {
   const carries = build.bricks.some((x) => x.on === b.brick.n);
   const [x, y] = carries ? pt(ox, oy, b.x, b.y + b.d, b.z0 + b.h) : pt(ox, oy, b.x, b.y, b.z0 + b.h);
-  return { id: b.id, label: b.brick.n, at: carries ? [x - 13, y - 2] : [x, y - 13] };
-});
+  const home = carries ? [x - 13, y - 2] : [x, y - 13];
+  const others = build.boxes.filter((o) => o.brick && o !== b).map((o) => silhouette(o, ox, oy));
+  const ok = (c) => marks.every((m) => Math.hypot(m.at[0] - c[0], m.at[1] - c[1]) >= BADGE_GAP) && !others.some((m) => circleMeets(c, BADGE_R + 1, m));
+  let at = null;
+  for (let d = 0; d <= 80 && !at; d++)
+    for (let k = 0; k < (d ? 24 : 1) && !at; k++) {
+      const c = [+(home[0] + d * Math.cos((k * Math.PI) / 12)).toFixed(1), +(home[1] - d * Math.sin((k * Math.PI) / 12)).toFixed(1)];
+      if (ok(c)) at = c;
+    }
+  if (!at) throw new Error(`sheet 2C: brick ${b.brick.n}'s badge in build ${build.numeral} finds no clear spot`);
+  return [...marks, { id: b.id, label: b.brick.n, at }];
+}, []);
 // a letter badge sits wholly on its own plate's roof, wholly on its ground slab's top face clear of every other mass,
-// or wholly in clear air; it never straddles a face's edge. The nearest such spot to (−16, −11) off the ringed stud
-// wins, searched outward a unit at a time, and a spot off the default takes a leader back to the ring
+// or wholly in clear air; it never straddles a face's edge. The search starts at (−16, −11) off core's ringed stud, and
+// off a runtime's ring a badge's reach further out from core's centre, so the letters spread from core's edges; the nearest
+// spot wins, searched outward a unit at a time, and a spot off the start takes a leader back to the ring
+const badgeHome = (build, b, ox, oy, [rx, ry]) => {
+  const coreBox = build.boxes.find((o) => o.pl?.rt.name === CORE);
+  if (b === coreBox) return [rx - 16, ry - 11];
+  const [cx, cy] = pt(ox, oy, coreBox.x + coreBox.w / 2, coreBox.y + coreBox.d / 2, coreBox.z0 + coreBox.h);
+  const out = Math.hypot(rx - cx, ry - cy) || 1;
+  return [+(rx + ((rx - cx) / out) * 2 * BADGE_R).toFixed(1), +(ry + ((ry - cy) / out) * 2 * BADGE_R - 6).toFixed(1)];
+};
 function plateBadge(build, b, ox, oy, taken) {
   const [rx, ry] = pt(ox, oy, ...b.pl.ringAt);
   const R = BADGE_R + 1;
@@ -464,9 +670,11 @@ function plateBadge(build, b, ox, oy, taken) {
   const masses = build.boxes.filter((o) => !o.ground).map((o) => silhouette(o, ox, oy));
   const ground = silhouette(build.boxes.find((o) => o.ground), ox, oy);
   const onRoof = (c) => circleInside(c, R, roof);
-  const seated = (c) => onRoof(c) || (!masses.some((m) => circleMeets(c, R, m)) && (circleInside(c, R, slab) || !circleMeets(c, R, ground)));
-  const ok = (c) => seated(c) && underClear(c) && c[0] + BADGE_R < rx && taken.every(([x, y]) => Math.hypot(x - c[0], y - c[1]) >= BADGE_GAP);
-  const home = [rx - 16, ry - 11];
+  const others = build.boxes.filter((o) => !o.ground && o !== b).map((o) => silhouette(o, ox, oy));
+  const seated = (c) => (onRoof(c) && !others.some((m) => circleMeets(c, R, m))) || (!masses.some((m) => circleMeets(c, R, m)) && (circleInside(c, R, slab) || !circleMeets(c, R, ground)));
+  const clearOfDrop = (c) => (b.pl.seated.length ? Math.abs(c[0] - rx) > BADGE_R + 1 : true);
+  const ok = (c) => seated(c) && underClear(c) && clearOfDrop(c) && taken.every(([x, y]) => Math.hypot(x - c[0], y - c[1]) >= BADGE_GAP);
+  const home = badgeHome(build, b, ox, oy, [rx, ry]);
   let at = null;
   for (let d = 0; d <= 120 && !at; d++)
     for (let k = 0; k < (d ? 24 : 1) && !at; k++) {
@@ -555,25 +763,26 @@ const PAD = 14, GUT = 18, MARGIN = 8, LINE = 12;
 const LOCAL = new Map(MODELS.map((b) => [b, extentOf(b, 0, 0)]));
 const PW = Math.ceil(Math.max(...BUILT.map((b) => LOCAL.get(b).w + 2 * (PAD + MARGIN)), 300));
 const spanW = (span) => span * PW + (span - 1) * GUT;
-const spanOf = (b) => Math.max(1, Math.ceil((LOCAL.get(b).w + 2 * (PAD + MARGIN) + GUT) / (PW + GUT)));
-const SPAN = new Map(MODELS.map((b) => [b, spanOf(b)]));
+const spanOf = (b, cols) => Math.min(cols, Math.max(1, Math.ceil((LOCAL.get(b).w + 2 * (PAD + MARGIN) + GUT) / (PW + GUT))));
+// the grid: four columns unless three leave fewer cells empty; panels fill row by row in build order, a span wrapping whole
+const cellsAt = (cols) => {
+  let c = 0, r = 0;
+  const at = MODELS.map((b) => {
+    if (c + spanOf(b, cols) > cols) { c = 0; r++; }
+    const cell = [c, r];
+    c += spanOf(b, cols);
+    return cell;
+  });
+  return { cols, at, rows: r + 1, empty: (r + 1) * cols - MODELS.reduce((a, b) => a + spanOf(b, cols), 0) };
+};
+const GRID = [cellsAt(4), cellsAt(3)].sort((a, b) => a.empty - b.empty || b.cols - a.cols)[0];
+const SPAN = new Map(MODELS.map((b) => [b, spanOf(b, GRID.cols)]));
+if (MODELS.some((b) => LOCAL.get(b).w + 2 * (PAD + MARGIN) > spanW(SPAN.get(b)))) throw new Error('sheet 2C: a model is wider than the row');
 const CALLOUTS = new Map(MODELS.map((b) => [b, calloutRows(calloutOf(b), spanW(SPAN.get(b)) - 2 * PAD - 2 * CALL_PAD)]));
 const HEAD_H = PAD + 13 + (Math.max(...MODELS.map((b) => headLines(b).length)) - 1) * LINE + 12;
 const CALL_H = (b) => CALLOUTS.get(b).h + 2 * CALL_PAD;
 const MODEL_TOP = (b) => HEAD_H + CALL_H(b) + 12;
 const needH = (b) => MODEL_TOP(b) + LOCAL.get(b).h + PAD + MARGIN;
-// the grid: four columns unless three leave fewer cells empty; panels fill row by row in build order, a span wrapping whole
-const cellsAt = (cols) => {
-  let c = 0, r = 0;
-  const at = MODELS.map((b) => {
-    if (c + SPAN.get(b) > cols) { c = 0; r++; }
-    const cell = [c, r];
-    c += SPAN.get(b);
-    return cell;
-  });
-  return { cols, at, rows: r + 1, empty: (r + 1) * cols - MODELS.reduce((a, b) => a + SPAN.get(b), 0) };
-};
-const GRID = [cellsAt(4), cellsAt(3)].sort((a, b) => a.empty - b.empty || b.cols - a.cols)[0];
 // each row is as tall as its tallest panel's head, callout and model; the panels in a row share it
 const ROW_H = Array.from({ length: GRID.rows }, (_, r) => Math.ceil(Math.max(...MODELS.filter((_, i) => GRID.at[i][1] === r).map(needH))));
 const ROW_Y = ROW_H.map((_, r) => ROW_H.slice(0, r).reduce((a, h) => a + h + GUT, 0));
@@ -582,7 +791,7 @@ const GRID_W = spanW(GRID.cols), GRID_H = ROW_Y.at(-1) + ROW_H.at(-1);
 // ---- the box: the parts inventory, each family part with its carrying count ----------------------------------
 const LEFT = 20, TOP = 58, LEGEND_W = 340, ROW_TEXT = 150;
 const GX = LEFT + LEGEND_W + 30, GY = TOP;
-const VW = Math.ceil(Math.max(1440, GX + GRID_W + LEFT));
+const VW = Math.ceil(Math.max(1480, GX + GRID_W + LEFT));
 // a later reading's count rides its own line under the cabinet's
 const tail = (count) => also(count).replace(/^ · /, '');
 const carriedBy = (b) => (CARRY(b) ? `carried by ${plural(CARRY(b), 'consumer')}` : 'carried by none at the cabinet’s tree');
@@ -607,12 +816,12 @@ const boxGrid = (groups, x0, y0, width, cols) => {
     }
     for (let k = 0; k < g.items.length; k += cols) {
       const row = g.items.slice(k, k + cols);
-      const rh = Math.max(...row.map((it) => Math.max(linesOf(it).length === 2 ? 34 : 12 * linesOf(it).length + 10, it.fig.h + 14)));
+      const rh = Math.max(...row.map((it) => Math.max(linesOf(it).length === 2 ? 36 : 13 * linesOf(it).length + 10, it.fig.h + 14)));
       row.forEach((it, c) => {
         const x = x0 + c * colW, cy = y + rh / 2, lines = linesOf(it);
         const svg = `${it.fig.at(x + 70, cy - it.fig.h / 2)}
 ${badge(x + 24, cy, it.badge, it.cls, it.num)}
-${lines.map(([s, cls], i) => txt(x + ROW_TEXT, cy - (lines.length - 1) * 6 + 4 + i * 12, s, cls)).join('\n')}`;
+${lines.map(([s, cls], i) => txt(x + ROW_TEXT, cy - (lines.length - 1) * 6.5 + 4 + i * 13, s, cls)).join('\n')}`;
         out.push(it.id ? `<g id="${P}-part-${it.id}" data-part="${it.id}" data-name="${it.name}">\n${svg}\n</g>` : svg);
       });
       y += rh;
@@ -662,6 +871,7 @@ const panelSvg = (panel) => {
     return `${it.fig.at(ix + (it.w - it.fig.w) / 2, cy + it.base - it.fig.h)}
 ${badge(bx, by, it.label)}${txt(ix + 24, by + 4, `×${it.count}`, 'lbl')}`;
   }).join('\n');
+  checkTies(b, ox, oy);
   const marks = badgesOf(b, ox, oy);
   for (const m of marks) ALL_BADGES.push([...m.at, `${b.numeral}:${m.label}`]);
   return `<g id="${P}-build-${b.numeral}" data-build="${b.numeral}">
@@ -696,8 +906,13 @@ const variantLines = (b) => b.pinned.filter((v) => v.length < b.parts.length).ma
 });
 // a schedule row wraps at the sheet's width, its continuation indented
 const ROW_CHARS = Math.floor((VW - 2 * LEFT - 36) / 5.4);
+// the straddles and ties a model draws, for its schedule row
+const couplingsOf = (b) => {
+  const of = (kind) => b.plates.flatMap((p) => p.links.filter((l) => l.kind === kind).map((l) => `brick ${l.b.n} to ${p.rt.letter}`));
+  return `${of('straddle').length ? ` · straddles ${listOf(of('straddle'))}` : ''}${of('tie').length ? ` · ties ${listOf(of('tie'))}` : ''}`;
+};
 const BUILD_ROWS = MODELS.flatMap((b) => [
-  ...wrapWords(`${b.numeral}  ${b.name.toUpperCase()} — ${listOf(b.bricks.map((x) => `brick ${x.n} ${x.name}`))} — on plate${b.plates.length > 1 ? 's' : ''} ${listOf(b.plates.map((p) => `${p.rt.letter} ${p.rt.name}`))}${b.unpeered.length ? ` · ${listOf(b.unpeered)} pinned by the consumer, peered by no part here` : ''}`, ROW_CHARS).map((s, i) => (i ? `      ${s}` : s)),
+  ...wrapWords(`${b.numeral}  ${b.name.toUpperCase()} — ${listOf(b.bricks.map((x) => `brick ${x.n} ${x.name}`))} — on plate${b.plates.length > 1 ? 's' : ''} ${listOf(b.plates.map((p) => `${p.rt.letter} ${p.rt.name}`))}${b.unpeered.length ? ` · ${listOf(b.unpeered)} pinned by the consumer, peered by no part here` : ''}${couplingsOf(b)}`, ROW_CHARS).map((s, i) => (i ? `      ${s}` : s)),
   ...wrap(b.consumers.map((c) => `${c} (${kindOf(c, b.reading)})`), 5).map((s, i) => `      ${i ? '' : `${plural(b.consumers.length, 'consumer')}: `}${s}`),
   ...variantLines(b),
 ]);
@@ -752,7 +967,7 @@ const svg = `<svg viewBox="0 0 ${VW} ${VH}" role="img" aria-label="${ARIA}">
 ${defs(P)}
 
 ${txt(VW - 30, 16, `SCALE — one scale, sheet 2’s: a family brick is 1 stud per ${SLOC_PER_STUD} sloc and a course per ${FILES_PER_COURSE} files · a runtime is baseplates at sheet 2’s baseplate footprint, ${shapeName(BASEPLATE)} = ${BASEPLATE_STUDS} studs, 1 stud per ${SLOC_PER_STUD} sloc of one shipped build — the development build where one is shipped`, 'lbls', 'end')}
-${txt(VW - 30, 30, `laid a plate at a time and stacked when it overflows, the remainder on top at its own size · under ${BASEPLATE_STUDS} studs, one plate at its own size · a ringed stud marks where a brick seats on a plate, or its near corner when none does, the plate lettered ${LETTERS}; a dashed plate is an optional peer · the ground is the registry, not massed`, 'lbls', 'end')}
+${txt(VW - 30, 30, `laid a plate at a time and stacked when it overflows, the remainder on top at its own size · under ${BASEPLATE_STUDS} studs, one plate at its own size · a ringed stud marks each brick coupled to a plate, the plate lettered ${LETTERS}; a dashed plate is an optional peer · the ground is the registry, not massed`, 'lbls', 'end')}
 
 ${BOX.svg}
 
@@ -772,7 +987,7 @@ export const sheet2c = {
   notes: `
 <p><strong>One box, several models.</strong> Sheet 2 draws every family brick in one assembly on ${npmLink(CORE)}. The repository's own consumers — ${plural(BUILDS.totals.consumers, 'consumer')}: the sample apps, the docs site and the examples at the cabinet's sha — pin ${WORD[BUILT.length]} distinct sets of family parts, each manifest closed over its family peers, and this plate draws each set as the model it makes: its parts at sheet 2's mould, standing on the runtime plates those parts peer. The ${ORDINAL[MODELS.length]} model, build ${ATLAS_BUILD.numeral}, is the atlas's own app: its manifest at <code>${ATLAS_APP.dir}</code>, read from <code>git archive ${ATLAS_APP.ref}</code> @ ${ATLAS_APP.sha}, off the cabinet's tree, and drawn accent-edged on its own branch the way sheet A4 draws the atlas deploy. Every count on this sheet reads both ways, the cabinet's tree first and “with the atlas app” after. Build ${MOST.numeral} is the most built, ${listOf(MOST.bricks.map((x) => npmLink(x.name)))} alone on ${listOf(MOST.plates.map((p) => npmLink(p.rt.name)))}, by ${plural(MOST.consumers.length, 'consumer')}. ${Cap(WORD[EMPTY.flatMap((e) => e.consumers).length])} consumer pins no family part at all${EMPTY.length ? ` (${listOf(EMPTY.flatMap((e) => e.consumers))})` : ''}, and is a consumer rather than a build.</p>
 <p><strong>No model mixes two reactivity runtimes.</strong> ${Cap(listOf(REACTIVITY.map((n) => npmLink(n))))} are each reached by a family binding — ${listOf(BINDINGS.map((b) => npmLink(b.name)))} — and no consumer in either reading mixes two of them; the build stops if one does. The bindings are alternates in the box, the way one set's instructions show a car or a plane, not both.</p>
-<p><strong>Ground and stacking follow the dependency.</strong> A family brick peers ${npmLink('lit')} or ${npmLink('effect')}, not the reverse, and no runtime on this plate peers another — both read from each row's own <code>peerDependencies</code> — so each runtime is a plate, the parts stand on them, and the plates lie on plain ground. ${npmLink(CORE)} is a plate like the others: ${WORD[CORE_ROW.peeredBy.length]} of the ${WORD[FAMILY.length]} family bricks peer it, and it is the baseplate of every model, laid first at the left, the way sheet 2 seats the family on it. A part stands on the part it peers when that part is in the same build, as it does on sheet 2; otherwise it seats on its binding, its one runtime peer in the build other than ${CORE} and ${npmLink('lit')}, and on core when none remains (${listOf(CORE_SEATED.map((b) => b.name))}); lit is a plate beside the model, its stud ringed under no brick. A build stands on the runtimes its consumers declare and on every required peer its parts carry, which the installer adds whether or not a manifest names it; an optional peer no consumer declares stays off the model.</p>
+<p><strong>Ground and stacking follow the dependency.</strong> A family brick peers ${npmLink('lit')} or ${npmLink('effect')}, not the reverse, and no runtime on this plate peers another — both read from each row's own <code>peerDependencies</code> — so each runtime is a plate, the parts stand on them, and the plates lie on plain ground. ${npmLink(CORE)} is a plate like the others: ${WORD[CORE_ROW.peeredBy.length]} of the ${WORD[FAMILY.length]} family bricks peer it, and it is the baseplate of every model, laid first at the left, the way sheet 2 seats the family on it. A part stands on the part it peers when that part is in the same build, as it does on sheet 2, and the rest seat on core at sheet 2's places measured from core's right edge, packed from the back where sheet 2 seats them off its client plate; a part that peers no core seats on its one runtime (${listOf(FAMILY.filter((f) => MODELS.some((m) => m.bricks.some((b) => b.n === f.n && b.seat && b.seat.name !== CORE))).map((b) => b.name))}). Every other runtime a brick peers abuts core and the brick reaches it, unless the brick it stands on already carries it: a brick on core straddles the seam onto a flat runtime plate one stud deep, the way ${npmLink('lit-ui-router')} stands on both core and ${npmLink('lit')}, and a brick that cannot straddle, one on another brick or one beside a stack, ties to a ringed stud with a dashed line. Nothing abuts core from behind: a stack taller than core stands at its left or right side, and a flat plate along its front, at the right beside the seam or at the left, wherever every tie to it runs straight and clear of every brick and stack; each plate rings one stud per brick coupled to it. The atlas app's model spans the columns its width needs. A build stands on the runtimes its consumers declare and on every required peer its parts carry, which the installer adds whether or not a manifest names it; an optional peer no consumer declares stays off the model.</p>
 <p><strong>One scale.</strong> The family keeps sheet 2's mould exactly — 1 stud per ${SLOC_PER_STUD} sloc rounded up the brick shapes, a course per ${FILES_PER_COURSE} authored files. A runtime is baseplates at sheet 2's baseplate footprint, ${shapeName(BASEPLATE)} = ${BASEPLATE_STUDS} studs, one stud per ${SLOC_PER_STUD} sloc of one shipped build — the files reachable from its <code>exports</code> entries, the <code>development</code> condition where one is shipped${DEV.length ? ` (${listOf(DEV.map((r) => npmLink(r.name)))})` : ''} — laid a plate at a time and stacked when it overflows, the remainder on top at its own size, three plates to a brick course: ${listOf(RUNTIMES.filter((r) => r.stacked).map((r) => `${npmLink(r.name)} is ${plateWord(r)}`))}. Under ${BASEPLATE_STUDS} studs a runtime is one plate at its own size, the nearest rectangle: ${listOf(RUNTIMES.filter((r) => !r.stacked).map((r) => `${npmLink(r.name)} ${shapeName(r.shape)}`))}. A package's dependencies are a number in the schedule rather than area on the plate: ${listOf(FACADES.map((r) => `${npmLink(r.name)} builds ${fmt(r.sloc)} lines over a closure of ${fmt(r.closure.sloc)}`))}. Every model on lit stands on a ${shapeName(LIT.shape)}: ${WORD[LIT_BUILDS.length]} of the ${WORD[BUILT.length]} builds, ${WORD[MODELS.filter((b) => b.plates.some((p) => p.rt === LIT)).length]} of ${WORD[MODELS.length]} with the atlas app, and the runtime they run on is in its closure.</p>
 <p><strong>What stays in the box.</strong> ${Cap(listOf(UNUSED_PARTS.map((b) => npmLink(b.name))))} ${UNUSED_PARTS.length > 1 ? 'are' : 'is'} carried by no consumer at the cabinet's tree, so no model of that reading draws ${UNUSED_PARTS.length > 1 ? 'them' : 'it'}${UNUSED_PARTS.some(IN_ATLAS) ? `; with the atlas app, ${listOf(UNUSED_PARTS.filter(IN_ATLAS).map((b) => b.name))} ${UNUSED_PARTS.filter(IN_ATLAS).length > 1 ? 'stand' : 'stands'} in build ${ATLAS_BUILD.numeral}` : ''}. ${Cap(listOf(SPARE_PLATES.map((r) => npmLink(r.name))))} ${SPARE_PLATES.length > 1 ? 'are plates' : 'is a plate'} no model stands on at the cabinet's tree — ${listOf(SPARE_PLATES.filter((r) => r.optional).map((r) => r.name))} optional and pinned by no consumer there, ${listOf(SPARE_PLATES.filter((r) => !r.optional).map((r) => r.name))} peered only by a part no consumer there carries${STOOD_BY_ATLAS.length ? `; with the atlas app, build ${ATLAS_BUILD.numeral} stands on ${listOf(STOOD_BY_ATLAS.map((r) => r.name))}, and ${SPARE_WITH.length ? `${listOf(SPARE_WITH.map((r) => r.name))} ${SPARE_WITH.length > 1 ? 'stay' : 'stays'} spare` : 'no plate stays spare'}` : ''}. They stand in the dashed register under the box, each line reading the cabinet's tree first and the atlas app after, and the spare plates are drawn there rather than on the ground.${VARIED.length ? ` ${Cap(listOf(VARIED.map((b) => `build ${b.numeral}'s manifests differ in what they pin and what they take as a peer`)))}; the schedule says which.` : ''} Every number on this sheet is read from <code>www/atlas.lit-ui-router.dev/data/census-builds.json</code>, <code>census-peers.json</code>, <code>census-bricks.json</code> and <code>census-couplings.json</code> — ${COUNTED}; the second reading adds <code>${ATLAS_APP.dir}</code> at ${ATLAS_APP.ref} @ ${ATLAS_APP.sha}.</p>`,
   key: [
@@ -780,8 +995,9 @@ export const sheet2c = {
     keyRow('<polygon points="2,9 16,2 46,9 46,15 16,8 2,15" class="sk fp"/><path d="M2,11 L16,18 L46,11" class="skf fnone"/><path d="M2,13 L16,20 L46,13" class="skf fnone"/><ellipse cx="12" cy="7" rx="3" ry="1.7" class="sk fp2"/><ellipse cx="22" cy="5" rx="3" ry="1.7" class="sk fp2"/><ellipse cx="32" cy="7" rx="3" ry="1.7" class="sk fp2"/>', `a runtime — baseplates of ${shapeName(BASEPLATE)}, 1 stud per ${SLOC_PER_STUD} sloc of one shipped build, stacked when they overflow, the remainder on top at its own size; three plates are one brick course, ${3 * BASEPLATE_STUDS} studs; under ${BASEPLATE_STUDS} studs, one plate at its own size`),
     keyRow('<polygon points="4,13 14,8 24,13 24,16 14,11 4,16" class="sk fp"/><polygon points="26,11 32,8 44,14 44,17 32,11 26,14" class="sk fp"/>', 'a build — the family parts one consumer installs together, counted from the sample apps, the docs site and the examples at the cabinet’s sha, and from the atlas app’s own manifest on its branch'),
     keyRow('<rect x="4" y="2" width="40" height="14" class="ska fnone" stroke-dasharray="5 4" opacity="0.7"/>', 'an accent-edged panel — the atlas app’s build, on its own branch, its ground edged in accent'),
-    keyRow('<ellipse cx="24" cy="9" rx="6" ry="3.5" class="ska fp"/><ellipse cx="24" cy="9" rx="11" ry="6.5" class="ska fnone"/>', `a ringed stud — where a brick seats on a plate, or the plate’s near corner stud when none does; the plate lettered ${LETTERS} beside it`),
-    keyRow('<line x1="24" y1="2" x2="24" y2="16" class="ska" stroke-dasharray="6 4"/><circle cx="24" cy="16" r="2.2" class="fa"/>', 'drop line — the brick seats on that stud'),
+    keyRow('<ellipse cx="24" cy="9" rx="6" ry="3.5" class="ska fp"/><ellipse cx="24" cy="9" rx="11" ry="6.5" class="ska fnone"/>', `a ringed stud — one per brick coupled to a plate, under a seated or straddling brick or at the end of a tie; the plate lettered ${LETTERS} beside it`),
+    keyRow('<line x1="24" y1="2" x2="24" y2="16" class="ska" stroke-dasharray="6 4"/><circle cx="24" cy="16" r="2.2" class="fa"/>', 'drop line — the brick seats on that stud; a brick straddling a seam drops onto both plates'),
+    keyRow('<line x1="6" y1="3" x2="40" y2="15" class="ska" stroke-dasharray="6 4"/><ellipse cx="40" cy="15" rx="5" ry="2.8" class="ska fnone"/>', 'tie — a brick reaches a runtime it peers but does not stand on, ending on that plate’s ringed stud'),
     keyRow('<polygon points="2,11 16,4 46,11 46,14 16,7 2,14" class="sks fp" stroke-dasharray="3 2"/>', 'a dashed plate — an optional peer'),
     keyRow('<polygon points="8,12 16,7 26,12 26,15 16,10 8,15" class="sks fp" stroke-dasharray="3 2"/>', 'not in any build — a part no consumer carries, or a plate no model stands on'),
     keyRow('<polygon points="4,8 16,2 44,9 44,15 16,8 4,14" class="sk fp"/>', 'ground — the registry, not massed'),
