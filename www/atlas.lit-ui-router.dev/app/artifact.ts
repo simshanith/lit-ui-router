@@ -35,10 +35,10 @@ const fragments: Record<string, string> = {};
 for (const row of [...manifest.sheets, ...manifest.appendix, ...manifest.extras]) {
   fragments[row.id] = readFileSync(join(SHEETS, `${row.id}.html`), 'utf8');
 }
-// The bricks plate's model has no origin to load from either: its src becomes a data: url.
+// The models in the round have no origin to load from either: each src, and each build's data-src, becomes a data: url.
 for (const [id, html] of Object.entries(fragments)) {
   fragments[id] = html.replace(
-    /src="[^"]*?(models\/[\w.-]+\.glb)"/g,
+    /src="[^"]*?(models\/[\w./-]+\.glb)"/g,
     (_match, path: string) =>
       `src="data:model/gltf-binary;base64,${readFileSync(join(PUBLIC, path)).toString('base64')}"`,
   );

@@ -7,6 +7,7 @@ import { sheet2 } from './sheet2.mjs';
 import { sheet2a, SHEET2A_VERDICT } from './sheet2a.mjs';
 import { sheet2b, sheet2bPage, SHEET2B_VERDICT } from './sheet2b.mjs';
 import { sheet2c, SHEET2C_SCALE, SHEET2C_VERDICT } from './sheet2c.mjs';
+import { BUILDS_VERDICT } from './builds-scene.mjs';
 import { sheet3 } from './sheet3.mjs';
 import { sheet3a, SHEET3A_VERDICT } from './sheet3a.mjs';
 import { sheet3b, SHEET3B_VERDICT } from './sheet3b.mjs';
@@ -102,6 +103,7 @@ const verdicts = [
 const appIdx = [
   ['plant', 'THE WORKING CITY, IN THE ROUND', 'REAL 3D CITY IN THE ROUND', "sheet 7's city as one glTF binary in Google's model-viewer, each mass crowned by a working plant sized from its own census — opaque paper walls hatched in the tier's own rake inside a girding frame, sheet 7A's test light as a second material lane, and a camera that orbits free and turns to the four true diagonals"],
   ['bricks', 'COMPANIONS, IN THE ROUND', 'REAL 3D BRICK ASSEMBLY', "sheet 2's finished model as one glTF binary in Google's model-viewer — the same parts on the same two levels of ground, turned to the sheet's three drawn corners, with the sheet's explosion, half again as high, as a clip that lifts the stacked bricks off their seats first and drops every brick back down a dashed leader to its stud"],
+  ['builds', 'ONE BOX, IN THE ROUND', 'REAL 3D BUILD INSTRUCTIONS', BUILDS_VERDICT],
 ];
 // THE APPENDIX INDEX — same four columns. These rows are NOT in the ascent:
 // `appendixIdx` is concatenated for the lookup the app reads.
@@ -220,7 +222,7 @@ const statBar = `<div class="stat-bar" role="group" aria-label="set statistics">
 const galBody = `<div class="gal-body">
     <p>The source image — an isometric block city over a strategy-breeding harness — works because of three quiet decisions, and only one of them is the city: it maps <em>roles in a mechanism</em> rather than files; it spends its one visual scalar (height) on a true quantity; and it keeps a CONDITION field that says what is currently wrong. This set keeps those three decisions and lets everything else change with altitude.</p>
     <p>The result is an argument about form: a loop where there is a genuine cycle (sheet 1), panels where packages are too small to be cities (sheet 2), the full city where the measurement thesis is actually true (sheet 3), a massed spine where the family shares one core but the limbs never touch (sheet 4), a chart where edges would be fiction (sheet 5), and mostly prose where only a definition survives (sheet 6). Fitness peaks in the middle altitudes and collapses at both ends.</p>
-    <p>Above the sixth altitude the set stops arguing about form and starts measuring. Sheets 7–10 are a survey quartet, each counting the same subject at a different boundary: what the repository holds (the monorepo by mass), what npm delivers (the sample app's <code>node_modules</code>, ${SHEET8_TIMES}× the app it serves), what the browser downloads (the docs deploy on the wire, where the prerendered prose tops the skyline and the lettering alone outweighs every routed app the site demonstrates), and who occupies the bytes after tree-shaking (the machine the router wraps is ${SHEET10_CORE_SHARE} of the bundle; the router itself, ${SHEET10_ROUTER_SHARE}). Sheet 11 cuts the same wire the other way, pricing ${DOOR_PKGS} package quarters and ${DOOR_N} doors one at a time. Sheet 12 leaves the wire and draws the monorepo as its own CI reads it, the pull-request task graph punched onto a register plate. Sheet 13 ages the city by commit date, and sheet 14 draws it among the commons it builds on: the pull requests, issues and bug reports in other projects that its own record cites, sent or watched, and the home work that cites them. Interactive lanes (1i, 2B and 12i) walk the plates they sit beside, and the routed set stands sheets 2 and 7 in the round. The appendix files plates whose subject is the atlas rather than the codebase: the sprite study behind the building sprites (appendix A1), and the survey office that turns the instrument on itself (appendix A2) — the census pipeline behind almost every number here, drawn as archive → probe stations → filed plates → drawings, introspected from the generator at build time, and walked live in its lane A2i. Appendix A3 turns sheet 7's ruler on the atlas itself: its drawing office, survey office, routed site and site build, massed beside the codebase they draw. Appendix A4 turns sheet 9's ruler on the atlas's own deploy: what the browser downloads from atlas.lit-ui-router.dev, district by district, beside the docs deploy summed by role.</p>
+    <p>Above the sixth altitude the set stops arguing about form and starts measuring. Sheets 7–10 are a survey quartet, each counting the same subject at a different boundary: what the repository holds (the monorepo by mass), what npm delivers (the sample app's <code>node_modules</code>, ${SHEET8_TIMES}× the app it serves), what the browser downloads (the docs deploy on the wire, where the prerendered prose tops the skyline and the lettering alone outweighs every routed app the site demonstrates), and who occupies the bytes after tree-shaking (the machine the router wraps is ${SHEET10_CORE_SHARE} of the bundle; the router itself, ${SHEET10_ROUTER_SHARE}). Sheet 11 cuts the same wire the other way, pricing ${DOOR_PKGS} package quarters and ${DOOR_N} doors one at a time. Sheet 12 leaves the wire and draws the monorepo as its own CI reads it, the pull-request task graph punched onto a register plate. Sheet 13 ages the city by commit date, and sheet 14 draws it among the commons it builds on: the pull requests, issues and bug reports in other projects that its own record cites, sent or watched, and the home work that cites them. Interactive lanes (1i, 2B and 12i) walk the plates they sit beside, and the routed set stands sheets 2, 2C and 7 in the round. The appendix files plates whose subject is the atlas rather than the codebase: the sprite study behind the building sprites (appendix A1), and the survey office that turns the instrument on itself (appendix A2) — the census pipeline behind almost every number here, drawn as archive → probe stations → filed plates → drawings, introspected from the generator at build time, and walked live in its lane A2i. Appendix A3 turns sheet 7's ruler on the atlas itself: its drawing office, survey office, routed site and site build, massed beside the codebase they draw. Appendix A4 turns sheet 9's ruler on the atlas's own deploy: what the browser downloads from atlas.lit-ui-router.dev, district by district, beside the docs deploy summed by role.</p>
   </div>`;
 
 const provenance = `<p class="provenance">SOURCES — module inventory & manifests read from the repo at ${link(BRANCH, 'branch www/atlas')} · npm dates from ${link(atlasFile('data/census-npm.json'), 'www/atlas.lit-ui-router.dev/data/census-npm.json')}, which prints its own registry-read date on sheet 4 · every plate in ${link(atlasFile('data', 'tree'), 'www/atlas.lit-ui-router.dev/data/')} counted at ${COUNTED_AT} in one pass — plate 7A's test light included, metered at that ref by ${link(atlasFile('generator/census-shadow.mjs'), 'www/atlas.lit-ui-router.dev/generator/census-shadow.mjs')} · cover general survey = ${COUNTED_AT}, counted ${COUNTED_ON}, imported from ${link(atlasFile('data/census-files.json'), 'www/atlas.lit-ui-router.dev/data/census-files.json')} · ${link(npmUrl('eslint-plugin-lit-ui-router'), 'eslint-plugin-lit-ui-router')} is counted on every plate and drawn or scheduled on sheets 2, 4, 7, 7A, 7B, 11, 12 and 13 · sheet 5 positions are editorial. FILES — ${link(atlasFile('app', 'tree'), 'www/atlas.lit-ui-router.dev/app/')} files every plate, routed as one ${link(npmUrl('lit-ui-router'), 'lit-ui-router')} app. DRAWN BY FABLE (${link(HOME.claude, 'CLAUDE')}, AI) FOR ${link(HOME.author, 'SHANE DANIEL')}.</p>`;
@@ -231,9 +233,9 @@ const THESIS = `Riffs on an isometric codebase-visualization form seen in the wi
 notes on each sheet argue where that form fits and where it lies.`;
 const GEN_NOTES = `Plates written by ${link(atlasFile('generator/build.mjs'), '\`node generator/build.mjs .\`')} from this directory: one chrome-less fragment
 per sheet and a manifest for ${link(atlasFile('app', 'tree'), '\`app/\`')}, the drawing set as a prerendered ${link(npmUrl('lit-ui-router'), 'lit-ui-router')} app, the glTF binaries of its
-three plates in the round (\`city\`, \`plant\`, \`bricks\`), drawn in Google's ${link(HOME.modelViewer, 'model-viewer')}. The frame audit and
+four plates in the round (\`city\`, \`plant\`, \`bricks\`, \`builds\`), drawn in Google's ${link(HOME.modelViewer, 'model-viewer')}. The frame audit and
 the card pictures read each sheet as a bare plate under \`app/dist/plate/\`, written by the prerender. The interactive
-lanes (1i, 2B, 12i and appendix A2i) bundle ${link(HOME.cytoscape, 'cytoscape')} 3.31.0. ${link(atlasFile('generator/check-scenes.mjs'), '\`generator/check-scenes.mjs\`')} checks the three
+lanes (1i, 2B, 12i and appendix A2i) bundle ${link(HOME.cytoscape, 'cytoscape')} 3.31.0. ${link(atlasFile('generator/check-scenes.mjs'), '\`generator/check-scenes.mjs\`')} checks the
 models and drives the built app's 3D plates in headless ${link(HOME.chromium, 'Chromium')}. The published site is the app alone:
 \`/\`, \`/sheet/7\`, \`/city\`.
 Light theme is graphite-on-vellum; dark is cyanotype.
@@ -288,10 +290,10 @@ plate — \`app/public/thumbs/<id>.webp\` and \`<id>-dark.webp\`, one per theme,
 generated files like the fragments beside them. \`generator/thumbs.mjs\` draws them by
 photographing the BUILT app in headless Chromium (playwright, reached through
 \`tools/embed-heights\`; the lanes' cytoscape is served from \`app/node_modules\`): each sheet's bare plate
-at \`/plate/<num>/\`, and the three 3D cards (\`city\`, \`plant\`, \`bricks\`) from its prerendered \`/city/\`,
-\`/plant/\` and \`/bricks/\` pages, each \`<model-viewer>\` on a transparent clear, its pins hidden for the shot. The three
-models, \`app/public/models/city.glb\`, \`plant.glb\` and \`bricks.glb\`, are tracked generated files
-\`build.mjs\` writes beside the fragments (\`generator/city-glb.mjs\` and \`brick-glb.mjs\` on \`glb.mjs\`). \`build.mjs\` REFUSES to emit a manifest whose card has no picture, so a new
+at \`/plate/<num>/\`, and the four 3D cards (\`city\`, \`plant\`, \`bricks\`, \`builds\`) from its prerendered \`/city/\`,
+\`/plant/\`, \`/bricks/\` and \`/builds/\` pages, each \`<model-viewer>\` on a transparent clear, its pins hidden for the shot. The
+models, \`app/public/models/city.glb\`, \`plant.glb\`, \`bricks.glb\` and one \`builds/<slug>.glb\` per build, are tracked generated files
+\`build.mjs\` writes beside the fragments (\`generator/city-glb.mjs\`, \`brick-glb.mjs\` and \`builds-glb.mjs\` on \`glb.mjs\`). \`build.mjs\` REFUSES to emit a manifest whose card has no picture, so a new
 plate takes the full order:
 
 \`\`\`bash
@@ -312,7 +314,7 @@ canvas) and nothing else changes. To try a row without touching
 the tracked pictures: \`thumbs.mjs <outdir> --only <ids> --out <dir> --tuning <file.json>\`.
 
 Live at <${SITE}/> — the app owns the site (\`/\`, \`/sheet/7/\`, \`/city/\`,
-\`/plant/\`, \`/bricks/\`, \`/log\`). \`/plate/<num>\` serves each sheet as one plate in a bare document with no
+\`/plant/\`, \`/bricks/\`, \`/builds/\`, \`/log\`). \`/plate/<num>\` serves each sheet as one plate in a bare document with no
 client bundle, prerendered from the same route table (\`app/prerender.ts\`), and every old standalone url redirects
 there; the frame audit (\`generator/audit-frames.mjs\`, \`shoot.mjs\`) and the card pictures read those bare plates
 from \`app/dist/plate/\`. The interactive lanes (1i, 2B, 12i, A2i) bundle cytoscape 3.31.0,

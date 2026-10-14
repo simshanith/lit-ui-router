@@ -101,6 +101,7 @@ const router: LitRouter = installServerLocation(new UIRouterLit(), {
 const cityRow = findExtra(manifest, 'city');
 const plantRow = findExtra(manifest, 'plant');
 const bricksRow = findExtra(manifest, 'bricks');
+const buildsRow = findExtra(manifest, 'builds');
 
 const fragmentOf = (row: { file: string }): string => readFileSync(join(PUBLIC, row.file), 'utf8');
 
@@ -126,6 +127,7 @@ const components: Record<string, LitStateDeclaration['component']> = {
   'atlas.city': views.CityView,
   'atlas.plant': views.CityView,
   'atlas.bricks': views.BricksView,
+  'atlas.builds': views.BuildsView,
   'atlas.specimen': views.SpecimenView,
   'atlas.about': views.AboutView,
   'atlas.log': views.LogView,
@@ -157,6 +159,7 @@ const serverResolves: Record<string, LitStateDeclaration['resolve']> = {
   'atlas.city': sceneResolves('city', cityRow),
   'atlas.plant': sceneResolves('plant', plantRow),
   'atlas.bricks': sceneResolves('bricks', bricksRow),
+  'atlas.builds': sceneResolves('builds', buildsRow),
   // The bench's element IS the resolve on the client (src/router.ts). The
   // server has no bench to draw — every reading on it is a measurement of a
   // live document — so a truthy token stands in and the view emits its head
@@ -262,6 +265,7 @@ const titles = new Map<string, string>([
   ...(cityRow ? ([[href.city, TITLES.city]] as [string, string][]) : []),
   ...(plantRow ? ([[href.plant, TITLES.plant]] as [string, string][]) : []),
   ...(bricksRow ? ([[href.bricks, TITLES.bricks]] as [string, string][]) : []),
+  ...(buildsRow ? ([[href.builds, TITLES.builds]] as [string, string][]) : []),
   [href.specimen, TITLES.specimen],
   ...PLATES.map((row: SheetRow): [string, string] => [href.sheet(row.num), sheetTitle(row)]),
   ...PLATES.map((row: SheetRow): [string, string] => [href.plate(row.num), sheetTitle(row)]),

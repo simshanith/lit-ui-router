@@ -56,6 +56,8 @@ import { FLAME_URL, GLOW_DARK_URL, GLOW_URL, LOGO_URL, UIROUTER_URL } from './ge
 import { initCity } from './generated/city-init.js';
 import type { CityScene } from './generated/city-init.js';
 import { initBricks } from './generated/bricks-init.js';
+import { initBuilds } from './generated/builds-init.js';
+import type { BuildsScene } from './generated/builds-init.js';
 import { ARTIFACT } from './mode.ts';
 import { readPref, setTrace, setVisualizer } from './prefs.ts';
 import type { PrefName, PrefState } from './prefs.ts';
@@ -228,9 +230,10 @@ const cityPin = (route: RouteSnapshot): string | null =>
  * `experimental/view-rendered.ts` chains, owned locally so `src/*.ts` stays
  * free of that directory. The pin is the url's `focus`, read by a
  * `RefController` over the router's one `routeRef` on the page's runtime and
- * handed to the scene on boot and on every change after it.
+ * handed to the scene on boot and on every change after it. Each plate names
+ * its pin, wires its scene and hands the pin on in its own subclass.
  */
-export class AtlasCity extends ReactiveElement {
+export abstract class AtlasScene<S extends { dispose(): void }> extends ReactiveElement {
   static override properties = {
     fragment: { attribute: false },
     lib: { attribute: false },
@@ -241,7 +244,7 @@ export class AtlasCity extends ReactiveElement {
   /** The plate's library, resolved on entry: the <model-viewer> module. */
   declare lib: unknown;
   declare router: UIRouter | undefined;
-  #scene: CityScene | null = null;
+  #scene: S | null = null;
   #seq = 0;
   #pin: RefController<[SubscriptionRef.SubscriptionRef<RouteSnapshot>], string | null> | undefined;
 
@@ -255,7 +258,7 @@ export class AtlasCity extends ReactiveElement {
   override willUpdate(): void {
     // Served, the city upgrades before hydration hands <ui-router> the app's router, and never reconnects.
     if (!this.router || this.#pin) return;
-    this.#pin = new RefController(this, [routeRef(this.router)], cityPin, {
+    this.#pin = new RefController(this, [routeRef(this.router)], (route) => this.pinOf(route), {
       runtime,
       onChange: () => this.#select(),
     });
@@ -291,19 +294,37 @@ export class AtlasCity extends ReactiveElement {
     this.#select(); // the url may have moved while the scene was raised
   }
 
-  /** Wires the plate over the adopted fragment, opening on `focus`. */
-  protected raise(focus: string | null): Promise<CityScene | undefined> {
-    return initCity(this, this.lib, focus);
-  }
+  /** The plate's pin as the route carries it; null off the plate's state. */
+  protected abstract pinOf(route: RouteSnapshot): string | null;
+
+  /** Wires the plate over the adopted fragment, opening on `pin`. */
+  protected abstract raise(pin: string | null): Promise<S | undefined>;
+
+  /** Hands a later pin to the wired scene. */
+  protected abstract apply(scene: S, pin: string | null): void;
 
   #select(): void {
-    const pin = this.#pin?.value ?? null;
-    this.#scene?.select(pin === null ? null : Number(pin));
+    if (this.#scene) this.apply(this.#scene, this.#pin?.value ?? null);
   }
 
   #teardown(): void {
     this.#scene?.dispose();
     this.#scene = null;
+  }
+}
+
+/** The city and its working twin: the pin is a member's number. */
+export class AtlasCity extends AtlasScene<CityScene> {
+  protected pinOf(route: RouteSnapshot): string | null {
+    return cityPin(route);
+  }
+
+  protected raise(focus: string | null): Promise<CityScene | undefined> {
+    return initCity(this, this.lib, focus);
+  }
+
+  protected apply(scene: CityScene, pin: string | null): void {
+    scene.select(pin === null ? null : Number(pin));
   }
 }
 customElements.define('atlas-city', AtlasCity);
@@ -315,6 +336,31 @@ export class AtlasBricks extends AtlasCity {
   }
 }
 customElements.define('atlas-bricks', AtlasBricks);
+
+const textParam = (value: unknown): string | null => (typeof value === 'string' ? value : null);
+/** The builds' pin: the build and the focus, one string so the ref's equality holds. */
+const buildsPin = (route: RouteSnapshot): string | null =>
+  route.current?.name === 'atlas.builds'
+    ? JSON.stringify([textParam(route.params.build), textParam(route.params.focus)])
+    : null;
+const buildsPair = (pin: string | null): [string | null, string | null] =>
+  pin === null ? [null, null] : (JSON.parse(pin) as [string | null, string | null]);
+
+/** Sheet 2C's builds in the round: the pin is the picked build and its part. */
+export class AtlasBuilds extends AtlasScene<BuildsScene> {
+  protected pinOf(route: RouteSnapshot): string | null {
+    return buildsPin(route);
+  }
+
+  protected raise(pin: string | null): Promise<BuildsScene | undefined> {
+    return initBuilds(this, this.lib, ...buildsPair(pin));
+  }
+
+  protected apply(scene: BuildsScene, pin: string | null): void {
+    scene.select(...buildsPair(pin));
+  }
+}
+customElements.define('atlas-builds', AtlasBuilds);
 
 // --- <atlas-themer> — the sheets' three-state theme control ----------------
 
@@ -1415,6 +1461,30 @@ export const BricksView: RoutedLitTemplate<SceneResolves> = (props) => {
   `;
 };
 
+// --- the builds: sheet 2C's models, one picked at a time, with model-viewer loaded on demand ---
+
+export const BuildsView: RoutedLitTemplate<SceneResolves> = (props) => {
+  const resolves = props?.resolves;
+  const extra = resolves?.extra;
+  if (!extra || !resolves.fragment) return html`<p class="loading">LAYING OUT THE BUILDS…</p>`;
+  return html`
+    ${utilBar(html`
+      ${indexCrumb()}
+      <span class="sh">${extra.shno}</span>
+    `,
+      copyLink(props?.router),
+    )}
+    <div class="plate-data">
+      <span>ALTITUDE · ${extra.scale}</span>
+      ${seeAlso(extra.refs)} ${keyBlock(extra.labels)}
+    </div>
+    ${verdictLine(extra.verdict)}
+    <atlas-builds .fragment=${resolves.fragment} .lib=${resolves.viewer} .router=${props?.router}
+      >${plate(resolves.fragment, false)}</atlas-builds
+    >
+  `;
+};
+
 // --- the type specimen: a design bench, with its element loaded on demand ---
 
 export const SpecimenView: RoutedLitTemplate<SpecimenResolves> = (props) => {
@@ -1546,7 +1616,7 @@ export const AboutView: RoutedLitTemplate<ManifestResolves> = (props) => {
           to it), ${pkg('effect')},
           ${pkg('cytoscape')} (the four interactive plates) and
           ${pkg('@google/model-viewer')} (the plates in the round, imported only by
-          <code>atlas.city</code>, <code>atlas.plant</code> and <code>atlas.bricks</code>); at build
+          <code>atlas.city</code>, <code>atlas.plant</code>, <code>atlas.bricks</code> and <code>atlas.builds</code>); at build
           time, ${pkg('lit-ui-router-ssr')} and ${pkg('@lit-labs/ssr')}. All from
           ${ext(HOME.npm, 'npm')}; no workspace links.
         </p>
@@ -1591,6 +1661,7 @@ declare global {
   interface HTMLElementTagNameMap {
     'atlas-city': AtlasCity;
     'atlas-bricks': AtlasBricks;
+    'atlas-builds': AtlasBuilds;
     'atlas-plate': AtlasPlate;
     'atlas-themer': AtlasThemer;
     'atlas-copy-link': AtlasCopyLink;

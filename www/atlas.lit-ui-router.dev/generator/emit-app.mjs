@@ -8,8 +8,9 @@
 //
 // Written, relative to build.mjs's OUT argument (the repo's www/atlas.lit-ui-router.dev/):
 //   app/public/sheets/<id>.html   one fragment per sheet
-//   app/public/sheets/city.html   the app-only 3D plates (city, plant, bricks), same treatment
+//   app/public/sheets/city.html   the app-only 3D plates (city, plant, bricks, builds), same treatment
 //   app/public/models/bricks.glb  sheet 2's seated model, the app-only bricks plate's glTF binary
+//   app/public/models/builds/<slug>.glb  each of sheet 2C's builds, for the builds plate (builds-glb.mjs)
 //   app/public/models/city.glb    sheet 7's city as measured, for the 3D city plate (city-glb.mjs)
 //   app/public/models/plant.glb   the same city crowned by its working plants, for the working twin
 //   app/public/sheets/atlas.css   the shared sheet chrome, lifted from chrome.mjs
@@ -20,6 +21,7 @@
 // the build here.
 //   app/src/generated/city-init.js  the city plates' wiring around <model-viewer>
 //   app/src/generated/bricks-init.js  the bricks plate's wiring around <model-viewer>
+//   app/src/generated/builds-init.js  the builds plate's wiring around <model-viewer>
 //   app/src/generated/icons.js      the icon sprite and key-id table (icons.mjs)
 //   app/src/generated/plate-page.js the bare plate's two inline scripts and the lanes' cytoscape url
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -27,6 +29,7 @@ import { join } from 'node:path';
 import { CSS, DATE, FILL_SCRIPT, PLATE_END_SCRIPT, TOTAL, chipBreaks, plateRatio, sheetSection } from './chrome.mjs';
 import { CITY_INIT_DTS, CITY_META, PLANT_META, cityInitModule, cityMarkup, plantMarkup } from './city-scene.mjs';
 import { BRICKS_GLB, BRICKS_INIT_DTS, BRICKS_META, bricksGlb, bricksInitModule, bricksMarkup } from './brick-scene.mjs';
+import { BUILDS_INIT_DTS, BUILDS_META, buildsGlbs, buildsInitModule, buildsMarkup } from './builds-scene.mjs';
 import { CITY_GLB, PLANT_GLB, cityModel } from './city-glb.mjs';
 import { ICONS_DTS, iconsModule } from './icons.mjs';
 import { BRAND_DTS, brandModule, faviconSvg } from './brand.mjs';
@@ -217,7 +220,7 @@ function issueLogOf(rows) {
     }
   }
   // each 3D plate seats after the last sheet of its own group, in the manifest's order
-  const SEAT = { city: '7B·', plant: '7B··', bricks: '2B·' };
+  const SEAT = { city: '7B·', plant: '7B··', bricks: '2B·', builds: '2C·' };
   const order = (a, b) => bySheet(SEAT[a.num] ?? a.num, SEAT[b.num] ?? b.num);
   const dated = entries.filter((e) => e.date)
     .sort((a, b) => b.date.localeCompare(a.date) || order(a, b) || b.rev.localeCompare(a.rev));
@@ -344,12 +347,12 @@ export function emitApp({ sheets, appendix = [], interactive, appendixInteractiv
   const manifest = rows.map(rowFor);
   const appManifest = appRows.map(rowFor);
 
-  // EXTRAS — the 3D plates: the city, its working twin and sheet 2's model, which
+  // EXTRAS — the 3D plates: the city, its working twin, sheet 2's model and sheet 2C's builds, which
   // only the app draws. None has a sheet number, so all are kept OUT of
   // `sheets`: the reel walk, the ascent order and the sheet mount all read that
   // array and must not see them. Each plate's wiring is an ES module rather than an
   // inline script: the app's runScripts() cannot run a <script type="module"> it inserts.
-  const scenes = [[CITY_META, cityMarkup()], [PLANT_META, plantMarkup()], [BRICKS_META, bricksMarkup()]].map(([meta, markup]) => {
+  const scenes = [[CITY_META, cityMarkup()], [PLANT_META, plantMarkup()], [BRICKS_META, bricksMarkup()], [BUILDS_META, buildsMarkup()]].map(([meta, markup]) => {
     const linked = linkRefs(markup, '', byUpper);
     writeFileSync(join(sheetsDir, `${meta.id}.html`), `${linked.html.trim()}\n`);
     return [meta, linked.refs];
@@ -361,8 +364,12 @@ export function emitApp({ sheets, appendix = [], interactive, appendixInteractiv
   writeFileSync(join(generatedDir, 'city-init.d.ts'), CITY_INIT_DTS);
   writeFileSync(join(generatedDir, 'bricks-init.js'), bricksInitModule());
   writeFileSync(join(generatedDir, 'bricks-init.d.ts'), BRICKS_INIT_DTS);
+  writeFileSync(join(generatedDir, 'builds-init.js'), buildsInitModule());
+  writeFileSync(join(generatedDir, 'builds-init.d.ts'), BUILDS_INIT_DTS);
   mkdirSync(join(publicDir, 'models'), { recursive: true });
   writeFileSync(join(publicDir, BRICKS_GLB), bricksGlb());
+  mkdirSync(join(publicDir, 'models', 'builds'), { recursive: true });
+  for (const [path, glb] of buildsGlbs()) writeFileSync(join(publicDir, path), glb);
   writeFileSync(join(publicDir, CITY_GLB), cityModel({ plant: false }).glb);
   writeFileSync(join(publicDir, PLANT_GLB), cityModel({ plant: true }).glb);
   writeFileSync(join(generatedDir, 'icons.js'), iconsModule());

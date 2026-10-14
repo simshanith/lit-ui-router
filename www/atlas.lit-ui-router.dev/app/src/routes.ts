@@ -26,6 +26,7 @@ export const href = {
   city: `${BASE}city`,
   plant: `${BASE}plant`,
   bricks: `${BASE}bricks`,
+  builds: `${BASE}builds`,
   specimen: `${BASE}specimen`,
   log: `${BASE}log`,
   sheet: (num: string): string => `${BASE}sheet/${num}`,
@@ -61,6 +62,16 @@ export const FOCUS_PARAMS: Record<string, unknown> = {
   enlarge: { value: null, dynamic: true, inherit: false },
 };
 
+/**
+ * The builds' params: the focus pair and the picked build, `?build=signals`,
+ * dynamic and inherited, so a pin's url move keeps the build it was made in.
+ * Null is the first build.
+ */
+export const BUILD_PARAMS: Record<string, unknown> = {
+  ...FOCUS_PARAMS,
+  build: { value: null, dynamic: true },
+};
+
 export const routes: RouteDeclaration[] = [
   // Abstract shell: the rail and the content ui-view. Url-less, so it
   // contributes no segment; its children's urls are the whole url.
@@ -82,6 +93,8 @@ export const routes: RouteDeclaration[] = [
   // Sheet 2's finished model in the round: its view loads @google/model-viewer
   // on entry, as the city's does.
   { name: 'atlas.bricks', url: '/bricks?focus&enlarge', params: FOCUS_PARAMS },
+  // Sheet 2C's builds in the round, one picked at a time: the same on-demand view.
+  { name: 'atlas.builds', url: '/builds?build&focus&enlarge', params: BUILD_PARAMS },
   // The type specimen: a design bench, not a plate. It is the one state whose
   // view pulls a webfont — and it pulls it on entry, so no other page's
   // payload knows the faces exist.

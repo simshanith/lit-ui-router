@@ -14,6 +14,21 @@ export const FOCUS_JS = `  function atlasFocusPush(from, focus) {
   }
 `;
 
+// The builds' second param on the same seam: a pick raises `atlas-focus` carrying `build` and clears `focus`.
+export const BUILD_JS = `  function atlasBuildPush(from, build) {
+    var ev = new CustomEvent('atlas-focus', { detail: { focus: null, build: build }, bubbles: true, composed: true, cancelable: true });
+    if (!from.dispatchEvent(ev)) return;
+    var url = new URL(location.href);
+    url.searchParams.delete('focus');
+    if (build === null) url.searchParams.delete('build');
+    else url.searchParams.set('build', build);
+    history.replaceState(history.state, '', url.pathname + url.search + url.hash);
+  }
+  function atlasBuildRead(initial) {
+    return initial !== undefined ? initial : new URLSearchParams(location.search).get('build');
+  }
+`;
+
 // A sheet's plate opens on <atlas-plate>'s data-focus ('' = none), set before its scripts run, and hears
 // each later url move as a non-bubbling `atlas-focus-set` on that host; with no host it reads the url.
 export const PLATE_FOCUS_JS = `${FOCUS_JS}  function atlasFocusHost(from, apply) {

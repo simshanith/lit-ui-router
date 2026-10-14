@@ -16,6 +16,9 @@ import { ROOT } from './basis.mjs';
 import { readGlb } from './glb.mjs';
 import { BUDGET, CITY_GLB, CROWN_FOOT, DRESS_JS, PLANT_GLB, cityModel } from './city-glb.mjs';
 import { BRICKS_GLB, bricksGlb } from './brick-scene.mjs';
+import { BUILD_GLB_BUDGET } from './builds-glb.mjs';
+import { buildsGlbs } from './builds-scene.mjs';
+import { BUILD_MODELS } from './sheet2c.mjs';
 import { CITY } from './sheet7.mjs';
 
 const [OUT, ...FLAGS] = process.argv.slice(2);
@@ -73,6 +76,19 @@ for (const plant of [false, true]) {
 }
 const bricks = readFileSync(join(PUBLIC, BRICKS_GLB));
 check(bricks.equals(bricksGlb()), `bricks.glb stable, sha256 ${createHash('sha256').update(bricks).digest('hex').slice(0, 12)}`);
+const BUILDS = buildsGlbs();
+for (const [path, glb] of BUILDS) {
+  const file = readFileSync(join(PUBLIC, path));
+  check(file.equals(glb) && file.length <= BUILD_GLB_BUDGET, `${path} is the generator's own ${file.length.toLocaleString('en-US')} bytes, inside ${BUILD_GLB_BUDGET.toLocaleString('en-US')}`);
+}
+{
+  const missing = BUILD_MODELS.flatMap((m, i) => {
+    const { json } = readGlb(BUILDS[i][1]);
+    const driven = new Set(json.animations.find((a) => a.name === 'assemble')?.channels.map((c) => json.nodes[c.target.node].name));
+    return [...m.bricks.map((b) => `brick-${b.n}`), ...m.ties.map((t) => `tie-${t.n}-${t.letter}`)].filter((n) => !driven.has(n)).map((n) => `${m.slug}:${n}`);
+  });
+  check(missing.length === 0, `each build's assemble clip drives every brick and tie of it, the plates still`, missing.join(', '));
+}
 
 // ---- the built app ------------------------------------------------------------
 const cityHtml = readFileSync(join(DIST, 'city', 'index.html'), 'utf8');
@@ -416,6 +432,90 @@ try {
     await page.close();
   }
 
+  // ---- the builds: one model at a time, picked by name, its parts pinned through the url ----
+  {
+    const builtSettled = (page) => page.evaluate(async () => {
+      await new Promise((r) => { const t = () => (window.__buildsScene ? r() : setTimeout(t, 50)); t(); });
+      await window.__buildsScene.ready;
+    });
+    const [first, second] = BUILD_MODELS, last = BUILD_MODELS.at(-1);
+    const partsOf = (m) => m.bricks.length + m.plates.length;
+    const served = readFileSync(join(DIST, 'builds', 'index.html'), 'utf8');
+    check(served.includes('<model-viewer id="bd-viewer"') && (served.match(/class="bd-pin/g) ?? []).length === BUILD_MODELS.reduce((a, m) => a + partsOf(m), 0)
+      && (served.match(/<a href="\?build=[^"]+" data-build=/g) ?? []).length === BUILD_MODELS.length && served.includes('id="bd-model"'),
+    `prerendered /builds carries the fragment, a pin per part of every build, ${BUILD_MODELS.length} picker links and the island`);
+
+    const page = await browser.newPage({ viewport: { width: 1400, height: 1000 } });
+    page.on('pageerror', (e) => errors.push(`/builds: ${e.message}`));
+    page.on('console', (m) => { if (m.type() === 'error' || /CONTEXT_LOST|WebGL: INVALID/.test(m.text())) errors.push(`/builds: ${m.text()}`); });
+    const asked = [];
+    page.on('request', (r) => asked.push(r.url()));
+    await page.goto(`${origin}/builds/`, { waitUntil: 'load' });
+    await builtSettled(page);
+    await page.waitForLoadState('networkidle');
+    const glbs = asked.filter((u) => /\.glb$/.test(u));
+    check(glbs.length === 1 && glbs[0].endsWith(`/models/builds/${first.slug}.glb`), `/builds fetches ${first.slug}.glb alone`, glbs.join(', '));
+    const opened = await page.evaluate(() => ({ build: window.__buildsScene.build(), clips: window.__buildsScene.animations(), pins: [...document.querySelectorAll('#bd-viewer .bd-pin:not([hidden])')].length }));
+    check(opened.build === first.slug && JSON.stringify(opened.clips) === '["assemble"]' && opened.pins === partsOf(first), `/builds opens on build ${first.numeral}, ${first.name}, its clip and its ${partsOf(first)} pins`, JSON.stringify(opened));
+
+    await page.click(`.bd-builds a[data-build="${second.slug}"]`);
+    await page.waitForFunction((s) => new URLSearchParams(location.search).get('build') === s, second.slug);
+    await page.evaluate(() => window.__buildsScene.settled());
+    const picked = await page.evaluate(() => ({ src: window.__buildsScene.src(), who: document.querySelector('#bd-who').textContent,
+      pins: [...document.querySelectorAll('#bd-viewer .bd-pin:not([hidden])')].length, chips: [...document.querySelectorAll('.bd-parts a.pt:not([hidden])')].length,
+      current: document.querySelector('.bd-builds a[aria-current="true"]').getAttribute('data-build') }));
+    check(picked.src.endsWith(`/models/builds/${second.slug}.glb`) && picked.current === second.slug && picked.pins === partsOf(second) && picked.chips === partsOf(second)
+      && picked.who.startsWith(`${second.consumers} consumer`), `the picker swaps to build ${second.numeral}: its src, ?build=${second.slug}, its pins, chips and consumers`, JSON.stringify(picked));
+
+    const brick = second.bricks.at(-1), plate = second.plates.at(-1);
+    await page.click(`.bd-parts a.pt[data-build="${second.slug}"][data-focus="${brick.n}"]`);
+    await page.waitForFunction((n) => new URLSearchParams(location.search).get('focus') === n, String(brick.n));
+    const pinnedBrick = await page.evaluate(() => ({ pinned: window.__buildsScene.pinned(), build: new URLSearchParams(location.search).get('build'), read: document.querySelector('#bd-info').textContent }));
+    check(pinnedBrick.pinned === String(brick.n) && pinnedBrick.build === second.slug && pinnedBrick.read.includes(brick.name), `a chip pins brick ${brick.n}, ?focus=${brick.n} beside ?build, and the reading names it`, JSON.stringify(pinnedBrick));
+    await page.click(`.bd-parts a.pt[data-build="${second.slug}"][data-focus="${plate.letter}"]`);
+    await page.waitForFunction((k) => new URLSearchParams(location.search).get('focus') === k, plate.letter);
+    const pinnedPlate = await page.evaluate(() => ({ pinned: window.__buildsScene.pinned(), read: document.querySelector('#bd-info').textContent }));
+    check(pinnedPlate.pinned === plate.letter && pinnedPlate.read.includes(`PLATE ${plate.letter}`) && pinnedPlate.read.includes(plate.range) && pinnedPlate.read.includes('Peered by'),
+      `a chip pins plate ${plate.letter}, ${plate.name}: its range, its build and its peers`, JSON.stringify(pinnedPlate));
+
+    const top = second.bricks.find((b) => b.on !== null) ?? second.bricks[0];
+    const y = () => page.evaluate((k) => document.querySelector('#bd-viewer').queryHotspot(k).position.y, `hotspot-${second.slug}-${top.n}`);
+    const seatedY = await y();
+    await page.click('#bd-play');
+    await page.waitForFunction(() => window.__buildsScene.time() === 0, null, { timeout: 8000 });
+    const liftedY = await y();
+    check(liftedY - seatedY > (top.lift / 40) * 1.4, `EXPLODE lifts brick ${top.n}'s pin by its clip, ${seatedY.toFixed(2)} → ${liftedY.toFixed(2)}`);
+
+    await page.click(`.bd-builds a[data-build="${first.slug}"]`);
+    await page.waitForFunction(() => !new URLSearchParams(location.search).has('build') && !new URLSearchParams(location.search).has('focus'));
+    await page.evaluate(() => window.__buildsScene.settled());
+    check(await page.evaluate(() => window.__buildsScene.build()) === first.slug, `picking ${first.name} again clears ?build and ?focus from the url`);
+    await page.close();
+  }
+  {
+    const deep = BUILD_MODELS.find((m) => m.slug === 'signals' && m.bricks.some((b) => b.n === 9));
+    if (!deep) throw new Error('check-scenes: no signals build with brick 9 to deep-link');
+    const page = await open('/builds/?build=signals&focus=9');
+    await page.evaluate(async () => {
+      await new Promise((r) => { const t = () => (window.__buildsScene ? r() : setTimeout(t, 50)); t(); });
+      await window.__buildsScene.ready;
+    });
+    const s = await page.evaluate(() => ({ build: window.__buildsScene.build(), pinned: window.__buildsScene.pinned(), on: document.querySelector('[slot="hotspot-signals-9"]').classList.contains('on'),
+      src: window.__buildsScene.src(), current: document.querySelector('.bd-builds a[aria-current="true"]').getAttribute('data-build') }));
+    check(s.build === 'signals' && s.pinned === '9' && s.on && s.current === 'signals' && s.src.endsWith('/models/builds/signals.glb'), '/builds?build=signals&focus=9 opens on signals with brick 9 pinned', JSON.stringify(s));
+    await page.close();
+  }
+  {
+    const page = await open('/builds/', { viewport: { width: 390, height: 844 }, phone: true });
+    await page.waitForFunction(() => window.__buildsScene);
+    const row = await page.evaluate(() => {
+      const nav = document.querySelector('.bd-builds'), links = [...nav.querySelectorAll('a')];
+      return { scroll: nav.scrollWidth > nav.clientWidth, rows: new Set(links.map((a) => Math.round(a.getBoundingClientRect().top))).size, page: document.documentElement.scrollWidth, w: window.innerWidth };
+    });
+    check(row.scroll && row.rows === 1 && row.page <= row.w, `on a phone the picker scrolls in one row and the page keeps its width (${row.page} ≤ ${row.w})`, JSON.stringify(row));
+    await page.close();
+  }
+
   // ---- the artifact raises the city offline ----
   if (artifact) {
     const file = join(OUT, 'app', 'dist-artifact', 'index.html');
@@ -428,6 +528,14 @@ try {
     await page.goto(`file://${resolve(file)}#/city`);
     await settled(page);
     check(await page.evaluate(() => window.__cityScene.animations().length === 1), '#/city in the artifact raises the city with the network blocked');
+    const last = BUILD_MODELS.at(-1);
+    await page.goto(`file://${resolve(file)}#/builds?build=${last.slug}`);
+    await page.evaluate(async () => {
+      await new Promise((r) => { const t = () => (window.__buildsScene ? r() : setTimeout(t, 50)); t(); });
+      await window.__buildsScene.ready;
+    });
+    const art = await page.evaluate(() => ({ build: window.__buildsScene.build(), clips: window.__buildsScene.animations().length, data: window.__buildsScene.src().startsWith('data:model/gltf-binary') }));
+    check(art.build === last.slug && art.clips === 1 && art.data, `#/builds?build=${last.slug} in the artifact raises that build from its inlined model`, JSON.stringify(art));
     await page.close();
   }
 

@@ -106,7 +106,7 @@ const groupCss = (cls) => `
 .${cls} .pg > summary:focus-visible { outline: max(2px, 0.08em) solid var(--accent); outline-offset: -2px; }
 .${cls} .pg-l { display: grid; gap: 2px; padding-block: 1px 6px; }`;
 
-const chip = (it, pad) => `${pad}<a class="pt" href="?focus=${it.n}" data-focus="${it.n}"${it.hue ? ` style="--hue:${it.hue}"` : ''}><span class="n">${it.n}</span>${it.name}</a>`;
+const chip = (it, pad) => `${pad}<a class="pt" href="${it.href ?? `?focus=${it.n}`}" data-focus="${it.n}"${it.hue ? ` style="--hue:${it.hue}"` : ''}${it.attrs ?? ''}><span class="n">${it.n}</span>${it.name}</a>`;
 
 const groupMarkup = (cls, g, open) => `          <details class="pg" name="${cls}-group" data-group="${g.group}"${open ? ' open' : ''}>
             <summary>${g.label} · ${g.items.length}</summary>
@@ -161,7 +161,7 @@ ${on(` .${read}`)} { box-sizing: content-box; block-size: var(--read-reserve); o
  * `corners` in that clockwise order; `fold` is the stage's [inline, block] size under which it
  * opens folded. Bare, it is the flat panel.
  */
-const partsJs = (fit) => `  // the parts panel: a chip click takes the hotspot's own tap (the href stays the no-script path); light(n) lights the pinned chip
+const partsJs = (fit, text) => `  // the parts panel: a chip click takes the hotspot's own tap (the href stays the no-script path); light(n) lights the pinned chip
   function partsPanel(root, cls, on, tap) {
     var nav = root.querySelector('.' + cls);
     if (!nav) return { light: function () {}, hide: function () {} };
@@ -180,7 +180,7 @@ ${fit ? `    var smooth = window.matchMedia('(prefers-reduced-motion: no-prefere
       var a = e.target && e.target.closest ? e.target.closest('a.pt') : null;
       if (!a || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
       e.preventDefault();
-      tap(Number(a.getAttribute('data-focus')));
+      tap(${text ? "a.getAttribute('data-focus')" : "Number(a.getAttribute('data-focus'))"});
     });
     on(toggle, 'click', function () {
       var open = !nav.classList.contains('open');
@@ -234,7 +234,7 @@ ${fit ? `    var stage = nav.parentNode, bar = nav.querySelector('.pt-bar'), mov
 ` : ''}    return {
       light: function (n) {
 ${fit ? '        var at = null;\n' : ''}        chips.forEach(function (a) {
-          var hit = Number(a.getAttribute('data-focus')) === n;
+          var hit = ${text ? "a.getAttribute('data-focus') === n" : "Number(a.getAttribute('data-focus')) === n"};
           a.classList.toggle('on', hit);
           if (hit) a.setAttribute('aria-current', 'true');
           else a.removeAttribute('aria-current');
@@ -249,9 +249,9 @@ ${fit ? `        // the group's name keeps one open, so opening this one folds t
   }
 `;
 
-// The script pieces, with the parts panel's runtime for `fit` as partsJs takes it. Each is a run of
+// The script pieces, with the parts panel's runtime for `fit` as partsJs takes it, its chips keyed by text when `text`. Each is a run of
 // function declarations, so a body can call them anywhere.
-export const mvJs = (fit) => `  // a token's colour as the page resolves it for its scheme: a probe element wears var(--name) and its computed colour is read back
+export const mvJs = (fit, text) => `  // a token's colour as the page resolves it for its scheme: a probe element wears var(--name) and its computed colour is read back
   function tokColor(name) {
     var el = document.getElementById('tok-probe');
     if (!el) { el = document.createElement('i'); el.id = 'tok-probe'; el.hidden = true; document.body.appendChild(el); }
@@ -322,7 +322,7 @@ export const mvJs = (fit) => `  // a token's colour as the page resolves it for 
     var i = order.indexOf(at);
     return order[i < 0 ? (d > 0 ? 0 : order.length - 1) : (i + d + order.length) % order.length];
   }
-${partsJs(fit)}  // captured on the way down, so the viewer's own arrow-key orbit never sees ← →; ↑ ↓ stay the viewer's;
+${partsJs(fit, text)}  // captured on the way down, so the viewer's own arrow-key orbit never sees ← →; ↑ ↓ stay the viewer's;
   // escape and enter answer whether they acted, so an unanswered key goes on to the page
   function pinKeys(stage, on, act) {
     on(stage, 'keydown', function (e) {

@@ -3,6 +3,7 @@ import { defs } from './chrome.mjs';
 import { txt, keyRow, npmUrl } from './helpers.mjs';
 import { brickKit, paintOrder } from './brick-iso.mjs';
 import { BRICK_MODEL, BRICK_ROWS, EXPLODE, STUDS, SLOC_PER_STUD, FILES_PER_COURSE } from './sheet2.mjs';
+import { hueOf } from './brick-hues.mjs';
 
 const P = 's2c';
 
@@ -181,11 +182,18 @@ const nameOf = (build) => {
   const words = [...new Set(build.bricks.map((x) => BUILD_WORDS[x.name]))].filter((w) => w !== 'eslinted' && w !== 'vanilla').sort((a, b) => WORD_RANK.indexOf(a) - WORD_RANK.indexOf(b));
   return [...(build.bricks.some((x) => BUILD_WORDS[x.name] === 'eslinted') ? ['eslinted'] : []), ...(words.length ? words : ['vanilla'])].join(' ');
 };
-for (const b of MODELS) b.name = nameOf(b);
-{
-  const dup = MODELS.find((b, i) => MODELS.findIndex((x) => x.name === b.name) !== i);
-  if (dup) throw new Error(`sheet 2C: two builds are named ${dup.name}`);
+// the words describe every build; the atlas app's own model is named THE ATLAS and carries its words as its description
+const ATLAS_NAME = 'the atlas';
+for (const b of MODELS) {
+  b.words = nameOf(b);
+  b.name = b.atlas ? ATLAS_NAME : b.words;
 }
+for (const key of ['name', 'words']) {
+  const dup = MODELS.find((b, i) => MODELS.findIndex((x) => x[key] === b[key]) !== i);
+  if (dup) throw new Error(`sheet 2C: two builds are ${key === 'name' ? 'named' : 'described'} ${dup[key]}`);
+}
+if (MODELS.filter((b) => b.name === ATLAS_NAME).length !== 1 || ATLAS_BUILD.name !== ATLAS_NAME || MODELS.some((b) => b.atlas && b !== ATLAS_BUILD))
+  throw new Error(`sheet 2C: ${ATLAS_NAME} should name the atlas app's one build, and only it`);
 for (const b of MODELS) if (new Set(b.parts).size !== b.parts.length) throw new Error(`sheet 2C: build ${b.numeral} lists a part twice`);
 const CARRY = (b) => BUILDS.totals.carrying[b.name];
 const UNUSED_PARTS = FAMILY.filter((b) => CARRY(b) === 0);
@@ -593,6 +601,41 @@ const buildsOn = (reading, r) => reading.builds.filter((b) => presentIn(b, r.nam
 const drawnOn = (r) => BUILT.filter((b) => b.plates.some((p) => p.rt === r));
 for (const r of RUNTIMES) if (buildsOn(READINGS[0], r).length !== drawnOn(r).length) throw new Error(`sheet 2C: ${r.name} is under ${drawnOn(r).length} drawn builds but ${buildsOn(READINGS[0], r).length} by the rows`);
 
+// ---- the models in the round: each layout in sheet 2's plan units (40 a stud, 24 a course), seated, with each brick's drawn lift ----
+const PLAN = (v) => +((v / U) * 40).toFixed(3);
+const slugOf = (name) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+const modelFor = (build) => {
+  const seatedZ = new Map();
+  const plateAt = (x, y, z) => build.plates.find((p) => inside(x, y, p) && Math.abs(p.z0 + p.h - z) < 1e-6) ?? fail(build, `no plate top under a drop at ${x}, ${y}`);
+  const zOf = (b) => {
+    if (!seatedZ.has(b.n)) {
+      const part = build.parts_.get(b.n), base = b.on === null ? null : build.bricks.find((x) => x.n === b.on);
+      seatedZ.set(b.n, base ? zOf(base) + build.parts_.get(base.n).h : part.drops[0][2]);
+    }
+    return seatedZ.get(b.n);
+  };
+  const bricks = build.bricks.map((b) => {
+    const part = build.parts_.get(b.n), z0 = zOf(b), lift = part.z0 - z0;
+    if (!(lift > 0)) fail(build, `brick ${b.n} hovers at ${part.z0} but seats at ${z0}`);
+    if (b.hue && b.hue !== hueOf(b.name)) fail(build, `brick ${b.n} wears ${b.hue} but brick-hues.mjs gives ${hueOf(b.name)}`);
+    const drops = part.drops.map(([x, y, z]) => ({ on: b.on ?? plateAt(x, y, z).rt.letter, x: PLAN(x), y: PLAN(y) }));
+    const linked = (kind) => build.plates.filter((p) => p.links.some((l) => l.b === b && l.kind === kind)).map((p) => p.rt.letter);
+    return { n: b.n, name: b.name, ver: b.ver, files: b.files, sloc: b.sloc, shape: b.shape, hue: b.hue ?? null, ws: part.ws, ds: part.ds, courses: b.courses,
+      x: PLAN(part.x), y: PLAN(part.y), z0: PLAN(z0), h: PLAN(part.h), lift: PLAN(lift), on: b.on, seat: b.seat?.letter ?? null,
+      straddles: linked('straddle'), ties: linked('tie'), rings: part.rings, drops };
+  });
+  const plates = [...build.plates].sort((p, q) => p.rt.letter.localeCompare(q.rt.letter)).map((p) => {
+    const r = p.rt, by = (kind) => p.links.filter((l) => l.kind === kind).map((l) => l.b.n);
+    return { letter: r.letter, name: r.name, ver: r.ver, range: r.range, optional: r.optional, build: r.build, files: r.files, sloc: r.sloc, studs: r.studs,
+      plates: r.plates, full: r.full, shape: r.shape, topShape: r.topShape, topOff: r.topOff, x: PLAN(p.x), y: PLAN(p.y), z0: PLAN(p.z0), h: PLAN(p.h),
+      rings: p.rings, peeredBy: r.peeredBy.map((name) => byName(name).n), seats: by('seat'), straddled: by('straddle'), tied: by('tie') };
+  });
+  const ties = build.ties.map((t) => ({ n: t.part.id, letter: t.p.rt.letter, from: [PLAN(t.corner[0]), PLAN(t.corner[1]), PLAN(zOf(build.bricks.find((x) => x.n === t.part.id)))], to: [PLAN(t.to[0]), PLAN(t.to[1]), PLAN(t.to[2])] }));
+  const g = build.boxes.find((o) => o.ground);
+  return { numeral: build.numeral, name: build.name, words: build.words, slug: slugOf(build.name), atlas: Boolean(build.atlas), consumers: build.consumers.length, kinds: kindsLine(build),
+    ground: { x: PLAN(g.x), y: PLAN(g.y), w: PLAN(g.w), d: PLAN(g.d), h: PLAN(g.h) }, bricks, plates, ties, unpeered: build.unpeered.map((t) => RT(t).letter) };
+};
+
 // ---- the drawing kit: drops, badges, the minis ------------------------------------------------
 const drop = (ox, oy, px, py, zFrom, zTo) => {
   const [cx, y0] = pt(ox, oy, px, py, zFrom);
@@ -730,7 +773,7 @@ const kindsLine = (b) => {
 };
 const headLines = (b) => [
   [`BUILD ${b.numeral} · ${b.name.toUpperCase()}`, b.atlas ? 'lbla' : 'lblt'],
-  [`${plural(b.consumers.length, 'consumer')} · ${kindsLine(b)}`, 'lblf'],
+  [`${plural(b.consumers.length, 'consumer')} · ${kindsLine(b)}${b.atlas ? ` · ${b.words}` : ''}`, 'lblf'],
   ...(b.unpeered.length ? [[`${listOf(b.unpeered.map((t) => RT(t).letter))} pinned, peered by no part here`, 'lblf']] : []),
 ];
 // the callout: the build's parts as the box prints them, bricks then plates, each with its badge and how many the model draws
@@ -912,7 +955,7 @@ const couplingsOf = (b) => {
   return `${of('straddle').length ? ` · straddles ${listOf(of('straddle'))}` : ''}${of('tie').length ? ` · ties ${listOf(of('tie'))}` : ''}`;
 };
 const BUILD_ROWS = MODELS.flatMap((b) => [
-  ...wrapWords(`${b.numeral}  ${b.name.toUpperCase()} — ${listOf(b.bricks.map((x) => `brick ${x.n} ${x.name}`))} — on plate${b.plates.length > 1 ? 's' : ''} ${listOf(b.plates.map((p) => `${p.rt.letter} ${p.rt.name}`))}${b.unpeered.length ? ` · ${listOf(b.unpeered)} pinned by the consumer, peered by no part here` : ''}${couplingsOf(b)}`, ROW_CHARS).map((s, i) => (i ? `      ${s}` : s)),
+  ...wrapWords(`${b.numeral}  ${b.name.toUpperCase()}${b.atlas ? ` — ${b.words}` : ''} — ${listOf(b.bricks.map((x) => `brick ${x.n} ${x.name}`))} — on plate${b.plates.length > 1 ? 's' : ''} ${listOf(b.plates.map((p) => `${p.rt.letter} ${p.rt.name}`))}${b.unpeered.length ? ` · ${listOf(b.unpeered)} pinned by the consumer, peered by no part here` : ''}${couplingsOf(b)}`, ROW_CHARS).map((s, i) => (i ? `      ${s}` : s)),
   ...wrap(b.consumers.map((c) => `${c} (${kindOf(c, b.reading)})`), 5).map((s, i) => `      ${i ? '' : `${plural(b.consumers.length, 'consumer')}: `}${s}`),
   ...variantLines(b),
 ]);
@@ -959,9 +1002,9 @@ const STOOD_BY_ATLAS = SPARE_PLATES.filter((r) => ATLAS_BUILD.plates.some((p) =>
 const countOf = (n, word) => `${WORD[n]} ${word}${n === 1 ? '' : 's'}`;
 export const SHEET2C_SCALE = `ONE BOX, ${WORD[MODELS.length].toUpperCase()} BUILDS`;
 
-export const SHEET2C_VERDICT = `alternate builds from one box: ${WORD[BUILT.length]} builds pinned by ${plural(BUILDS.totals.consumers, 'consumer')}, ${MOST.name} the most built by ${WORD[MOST.consumers.length]}, and ${anOrd(MODELS.length)} by the atlas’s own app on its own branch, none mixing two of ${listOf(REACTIVITY)}; ${listOf(UNUSED_PARTS.map((b) => b.name))} ${UNUSED_PARTS.length > 1 ? 'are' : 'is'} in no build at the cabinet’s tree${UNUSED_PARTS.some(IN_ATLAS) ? ` and in build ${ATLAS_BUILD.numeral} with the atlas app` : ''}, and ${listOf(SPARE_PLATES.map((r) => r.name))} are plates no build stands on at the cabinet’s tree, ${SPARE_WITH.length ? `${listOf(SPARE_WITH.map((r) => r.name))} with the atlas app too` : 'none with the atlas app'}`;
+export const SHEET2C_VERDICT = `alternate builds from one box: ${WORD[BUILT.length]} builds pinned by ${plural(BUILDS.totals.consumers, 'consumer')}, ${MOST.name} the most built by ${WORD[MOST.consumers.length]}, and ${anOrd(MODELS.length)}, ${ATLAS_BUILD.name}, by the atlas’s own app on its own branch, none mixing two of ${listOf(REACTIVITY)}; ${listOf(UNUSED_PARTS.map((b) => b.name))} ${UNUSED_PARTS.length > 1 ? 'are' : 'is'} in no build at the cabinet’s tree${UNUSED_PARTS.some(IN_ATLAS) ? ` and in build ${ATLAS_BUILD.numeral} with the atlas app` : ''}, and ${listOf(SPARE_PLATES.map((r) => r.name))} are plates no build stands on at the cabinet’s tree, ${SPARE_WITH.length ? `${listOf(SPARE_WITH.map((r) => r.name))} with the atlas app too` : 'none with the atlas app'}`;
 
-const ARIA = `An exploded isometric LEGO assembly: alternate builds from one box of parts, laid out as an instruction booklet's panels. Each of ${WORD[MODELS.length]} panels holds one small model on its own slab of ground under a callout of its parts: the family parts one group of consumers installs together, standing on the runtime plates those parts peer, each runtime a stack of baseplates sized from one shipped build and lettered ${LETTERS} on a ringed stud: ${listOf(MODELS.map((b) => `build ${b.numeral}, ${b.name}: ${listOf(b.bricks.map((x) => x.name))} on ${listOf(b.plates.map((p) => `${p.rt.name} (${plateWord(p.rt)})`))}, ${plural(b.consumers.length, 'consumer')}`))}. ${listOf(RUNTIMES.filter((r) => r.optional).map((r) => r.name))} are drawn dashed as optional peers. Build ${ATLAS_BUILD.numeral} is the atlas's own app, read on its own branch and drawn in an accent-edged dashed panel on accent-edged ground, spanning ${WORD[SPAN.get(ATLAS_BUILD)]} columns. A parts legend at the left is the box, each brick marked with the consumers carrying it at the cabinet's tree and with the atlas app, and a dashed register under it holds ${listOf([...UNUSED_PARTS.map((b) => b.name), ...SPARE_PLATES.map((r) => r.name)])}, in no build at the cabinet's tree. Schedules beneath give every build its consumers and every plate its build, tarball and closure.`;
+const ARIA = `An exploded isometric LEGO assembly: alternate builds from one box of parts, laid out as an instruction booklet's panels. Each of ${WORD[MODELS.length]} panels holds one small model on its own slab of ground under a callout of its parts: the family parts one group of consumers installs together, standing on the runtime plates those parts peer, each runtime a stack of baseplates sized from one shipped build and lettered ${LETTERS} on a ringed stud: ${listOf(MODELS.map((b) => `build ${b.numeral}, ${b.name}${b.atlas ? ` (${b.words})` : ''}: ${listOf(b.bricks.map((x) => x.name))} on ${listOf(b.plates.map((p) => `${p.rt.name} (${plateWord(p.rt)})`))}, ${plural(b.consumers.length, 'consumer')}`))}. ${listOf(RUNTIMES.filter((r) => r.optional).map((r) => r.name))} are drawn dashed as optional peers. Build ${ATLAS_BUILD.numeral} is the atlas's own app, read on its own branch and drawn in an accent-edged dashed panel on accent-edged ground, spanning ${WORD[SPAN.get(ATLAS_BUILD)]} columns. A parts legend at the left is the box, each brick marked with the consumers carrying it at the cabinet's tree and with the atlas app, and a dashed register under it holds ${listOf([...UNUSED_PARTS.map((b) => b.name), ...SPARE_PLATES.map((r) => r.name)])}, in no build at the cabinet's tree. Schedules beneath give every build its consumers and every plate its build, tarball and closure.`;
 
 const svg = `<svg viewBox="0 0 ${VW} ${VH}" role="img" aria-label="${ARIA}">
 ${defs(P)}
@@ -1003,3 +1046,9 @@ export const sheet2c = {
     keyRow('<polygon points="4,8 16,2 44,9 44,15 16,8 4,14" class="sk fp"/>', 'ground — the registry, not massed'),
   ].join('\n'),
 };
+
+/** Each model in MODELS order, seated in sheet 2's plan units, for the builds in the round. */
+export const BUILD_MODELS = MODELS.map(modelFor);
+if (new Set(BUILD_MODELS.map((m) => m.slug)).size !== BUILD_MODELS.length) throw new Error('sheet 2C: two builds share a slug');
+/** The box the builds come from, and the reading they are counted at. */
+export const BUILD_BOX = { bricks: FAMILY.length, plates: RUNTIMES.length, consumers: BUILDS.totals.consumers, counted: COUNTED, atlasApp: `${ATLAS_APP.dir} at ${ATLAS_APP.ref} @ ${ATLAS_APP.sha}` };

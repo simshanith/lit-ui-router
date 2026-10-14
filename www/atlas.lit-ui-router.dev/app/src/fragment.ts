@@ -30,6 +30,8 @@ export interface XrefDetail {
 /** Detail of the `atlas-focus` event an interactive plate raises when its selection changes. */
 export interface FocusDetail {
   focus: string | null;
+  /** The builds' pick, present only when the build changes; null is the first build. */
+  build?: string | null;
 }
 
 let cytoscapeLoaded: Promise<unknown> | null = null;

@@ -23,7 +23,7 @@
 //
 // It photographs the BUILT app (generator/plates.mjs serves it): the bare
 // plates the prerender writes at `/plate/<num>/`, and — for the 3D plates, which
-// only the app raises — its `/city/`, `/plant/` and `/bricks/` pages. So it
+// only the app raises — its `/city/`, `/plant/`, `/bricks/` and `/builds/` pages. So it
 // runs after build.mjs and the app build, and build.mjs runs again so the
 // manifest can assert every card has its picture:
 //
@@ -186,6 +186,7 @@ const TUNING = {
   city: { target: '#cs-viewer', zoom: 1.08, crop: { top: 0.21, bottom: 0.86 } },
   plant: { target: '#cs-viewer', zoom: 1.08, crop: { top: 0.17, bottom: 0.86 } },
   bricks: { target: '#bk-viewer', zoom: 1.12, crop: { top: 0.2, bottom: 0.9 } },
+  builds: { target: '#bd-viewer', zoom: 1.12, crop: { top: 0.2, bottom: 0.9 } },
   // plates whose whole figure reads as grey at card width, enlarged into a detail
   '3a': { zoom: 1.3, x: 0.1 },
   4: { zoom: 1.2, x: 0.45 },
@@ -366,9 +367,9 @@ async function toWebp(page, { png, dx, dy, dw, dh }) {
  * model; then the pins step aside and the loading bar has faded.
  */
 async function settleScene(page) {
-  await page.waitForFunction(() => window.__cityScene || window.__bricksScene, null, { timeout: 30000 });
+  await page.waitForFunction(() => window.__cityScene || window.__bricksScene || window.__buildsScene, null, { timeout: 30000 });
   await page.evaluate(async () => {
-    const scene = window.__cityScene ?? window.__bricksScene;
+    const scene = window.__cityScene ?? window.__bricksScene ?? window.__buildsScene;
     await scene.ready;
     scene.photo();
     await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));

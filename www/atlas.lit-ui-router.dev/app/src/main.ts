@@ -27,10 +27,11 @@ document.addEventListener('atlas-xref', (event) => {
 // A plate's pick is the url's `focus`; taking the event stops its own history write.
 document.addEventListener('atlas-focus', (event) => {
   event.preventDefault();
-  const { focus } = (event as CustomEvent<FocusDetail>).detail;
+  const { focus, build } = (event as CustomEvent<FocusDetail>).detail;
   // `enlarge` is not inherited either: a pick inside an enlarged figure keeps it open
   const { enlarge } = router.globals.params;
-  router.stateService.go('.', { focus, enlarge }, { location: 'replace' }).then(
+  const params = build === undefined ? { focus, enlarge } : { focus, enlarge, build };
+  router.stateService.go('.', params, { location: 'replace' }).then(
     () => {},
     () => {}, // an ignored or superseded pick is not an error here
   );

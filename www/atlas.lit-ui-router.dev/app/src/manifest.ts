@@ -183,7 +183,7 @@ export function allSheets(manifest: Manifest): SheetRow[] {
 /**
  * The ascent as the rail and the index file it: the numbered sheets, each 3D
  * plate seated after the last sheet of the group its head names — the city and
- * its working twin after 7B, the bricks after 2B. They are those sheets' own
+ * its working twin after 7B, the bricks and the builds after 2C. They are those sheets' own
  * plates in the round, so that is where they belong, not at the end of the list.
  */
 export type AscentRow = { kind: 'sheet'; row: SheetRow } | { kind: 'city'; row: ExtraRow };

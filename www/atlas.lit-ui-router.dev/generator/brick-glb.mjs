@@ -11,7 +11,7 @@
 
 import { bounds, box, glbWriter, packGlb, quad, rgb, segment, soup } from './glb.mjs';
 
-const PITCH = 40, CRS = 24, PT = 12, SH = 7, SR = 12, SEG = 24;
+export const PITCH = 40, CRS = 24, PT = 12, SH = 7, SR = 12, SEG = 24;
 export const ASSEMBLE_SECONDS = 1.2;
 // the sheet's lifts × SCALE, a stacked brick at least CLEAR above the brick it stands on; plate-seated bricks move in WINDOW[0], stacked ones in WINDOW[1]
 const SCALE = 1.5, CLEAR = 40, KEYS = 24, WINDOW = [[0, 0.75], [0.3, 1]];
@@ -47,7 +47,7 @@ const BASE = [
   ['cap', HEX.paper], ['flank', HEX.paper2], ['ring', HEX.accent], ['seat', HEX.red], ['edge', HEX.ink],
   ['ghost-cap', HEX.paper, GHOST], ['ghost-flank', HEX.paper2, GHOST], ['ghost-edge', HEX.ink, GHOST],
 ];
-function materialsFor(parts) {
+export function materialsFor(parts) {
   const list = parts.filter((m) => m.hue).flatMap((m) => [[`cap-${m.id}`, m.hue], [`flank-${m.id}`, shade(m.hue)]]);
   const materials = [...BASE, ...list].map(material);
   return { materials, index: Object.fromEntries(materials.map((m, i) => [m.name, i])) };
@@ -78,7 +78,7 @@ export function toModel(parts, x, y, z) {
 
 // Ink edges stand a hair proud of the faces, so a face never wins their depth test.
 const PROUD = 0.004;
-function boxEdges(e, w, h, d) {
+export function boxEdges(e, w, h, d) {
   const o = PROUD, c = [[-o, -o], [w + o, -o], [w + o, d + o], [-o, d + o]];
   for (let i = 0; i < 4; i++) {
     const [x1, z1] = c[i], [x2, z2] = c[(i + 1) % 4];
@@ -89,7 +89,7 @@ function boxEdges(e, w, h, d) {
 }
 
 // One stud at plan-local centre (cx, cz) standing on y0: a 24-gon cap and its side wall.
-function stud(cap, side, edge, cx, cz, y0) {
+export function stud(cap, side, edge, cx, cz, y0) {
   const r = SR / PITCH, t = y0 + SH / PITCH;
   const ring = Array.from({ length: SEG }, (_, k) => {
     const a = (k / SEG) * Math.PI * 2;

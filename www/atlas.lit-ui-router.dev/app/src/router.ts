@@ -9,7 +9,7 @@ import type { LitStateDeclaration } from 'lit-ui-router';
 import { navigationLocationPlugin } from 'ui-router-navigation-location-plugin';
 import type { UIRouterNavigateEvent } from 'ui-router-navigation-location-plugin';
 import { ARTIFACT } from './mode.ts';
-import { FILTER_PARAMS, FOCUS_PARAMS, SHEET_ALIASES, urlOf } from './routes.ts';
+import { BUILD_PARAMS, FILTER_PARAMS, FOCUS_PARAMS, SHEET_ALIASES, urlOf } from './routes.ts';
 import type { ExtraRow, Manifest, SheetRow } from './manifest.ts';
 import { findExtra, findSheet } from './manifest.ts';
 import { loadFragment, loadManifest } from './runtime.ts';
@@ -17,6 +17,7 @@ import { titleFor } from './titles.ts';
 import {
   AboutView,
   BricksView,
+  BuildsView,
   CityView,
   GalleryView,
   LogView,
@@ -118,6 +119,31 @@ export const states: LitStateDeclaration[] = [
         resolveFn: (manifest: Manifest): ExtraRow => {
           const row = findExtra(manifest, 'bricks');
           if (!row) throw new Error('no bricks row in the manifest');
+          return row;
+        },
+      },
+      {
+        token: 'fragment',
+        deps: ['extra'],
+        resolveFn: (extra: ExtraRow): Promise<string> => loadFragment(extra),
+      },
+      { token: 'viewer', resolveFn: (): Promise<unknown> => import('@google/model-viewer') },
+    ],
+  },
+  {
+    name: 'atlas.builds',
+    url: urlOf('atlas.builds'),
+    params: BUILD_PARAMS,
+    component: BuildsView,
+    // the bricks' resolves: the row, the fragment and the <model-viewer> module on demand;
+    // the wiring is a generated module (src/generated/builds-init.js).
+    resolve: [
+      {
+        token: 'extra',
+        deps: ['manifest'],
+        resolveFn: (manifest: Manifest): ExtraRow => {
+          const row = findExtra(manifest, 'builds');
+          if (!row) throw new Error('no builds row in the manifest');
           return row;
         },
       },

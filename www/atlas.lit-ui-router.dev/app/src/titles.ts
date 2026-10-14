@@ -13,6 +13,7 @@ export const TITLES = {
   city: `The City, in the Round — ${SET}`,
   plant: `The Working City, in the Round — ${SET}`,
   bricks: `The Brick Assembly, in the Round — ${SET}`,
+  builds: `The Builds, in the Round — ${SET}`,
   specimen: `The Type Specimen — ${SET}`,
   log: `Issue Log — ${SET}`,
   notFound: `Not in the set — ${SET}`,
@@ -37,6 +38,8 @@ export function titleFor(state: string | undefined, sheet?: SheetRow): string {
       return TITLES.plant;
     case 'atlas.bricks':
       return TITLES.bricks;
+    case 'atlas.builds':
+      return TITLES.builds;
     case 'atlas.specimen':
       return TITLES.specimen;
     case 'atlas.log':
