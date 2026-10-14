@@ -11,7 +11,7 @@ const EXT = /\.(js|mjs|cjs)$/;
 const keep = (rel) => EXT.test(rel) && !rel.split('/').slice(0, -1).includes('node_modules');
 
 const published = new Set(couplings.nodes.filter((n) => n.kind === 'published').map((n) => n.key));
-const peers = couplings.rows.filter((r) => r.kind === 'peer' && !published.has(r.to) && r.to !== '@uirouter/core');
+const peers = couplings.rows.filter((r) => r.kind === 'peer' && !published.has(r.to));
 if (!peers.length) throw new Error('census-peers: census-couplings.json has no external peer rows');
 
 const npm = (args) => JSON.parse(execFileSync('npm', ['view', ...args, '--json'], { maxBuffer: 1 << 24 }).toString('utf8'));

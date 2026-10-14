@@ -15,7 +15,7 @@ const SECTIONS = ['dependencies', 'devDependencies', 'peerDependencies'];
 const ATLAS = 'www/atlas.lit-ui-router.dev/app';
 const family = new Set(couplings.nodes.filter((n) => n.kind === 'published').map((n) => n.key));
 const peerRows = couplings.rows.filter((r) => r.kind === 'peer' && family.has(r.from));
-const runtimes = new Set(peerRows.filter((r) => !family.has(r.to) && r.to !== '@uirouter/core').map((r) => r.to));
+const runtimes = new Set(peerRows.filter((r) => !family.has(r.to)).map((r) => r.to));
 if (!family.size || !runtimes.size) throw new Error('census-builds: census-couplings.json has no published nodes or no external peers');
 const peersOf = (part) => peerRows.filter((r) => r.from === part).map((r) => r.to);
 // a pinned set closed over family-to-family peers: what the consumer's package manager installs
