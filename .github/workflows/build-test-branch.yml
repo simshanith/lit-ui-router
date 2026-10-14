@@ -3,9 +3,9 @@
 # every push, smoke-testing the main-only guards before merge rather than after.
 #
 # Split from build-test.yml by trigger so neither file instantiates the other's
-# jobs. That is what keeps the required context `build_and_test / run`
-# unforgeable: this workflow never contains a job that could emit it, and a
-# skipped job here can only report the names below.
+# jobs. That is what keeps the required contexts `build_and_test / run` and
+# `build_and_test / e2e result` unforgeable: this workflow never contains a job
+# that could emit them, and a skipped job here can only report the names below.
 #
 # Required-check contexts are workflow-agnostic — the context is the job name
 # (or `caller / inner`), and the workflow name is display only. So these job

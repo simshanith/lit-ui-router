@@ -24,6 +24,14 @@ const suites = Object.keys(scripts)
   .map((name) => name.slice(PREFIX.length))
   .sort();
 
+// Run only when named: the Acceptance workflow runs the axe pass on its own runner.
+const NAMED_ONLY = ['a11y'];
+
+// What a bare run selects; build-test-run.yml's e2e matrix lists the same set.
+export const defaultSuites: string[] = suites.filter(
+  (suite) => !NAMED_ONLY.includes(suite),
+);
+
 const main = async (): Promise<void> => {
   const asked = [...new Set(process.argv.slice(2))];
 
@@ -38,13 +46,7 @@ const main = async (): Promise<void> => {
     return;
   }
 
-  // Run only when named: the Acceptance workflow runs the axe pass on its own runner.
-  const NAMED_ONLY = ['a11y'];
-
-  const selected =
-    asked.length > 0
-      ? asked.sort()
-      : suites.filter((suite) => !NAMED_ONLY.includes(suite));
+  const selected = asked.length > 0 ? asked.sort() : defaultSuites;
 
   // --continue=dependencies-successful: one failing suite still lets the rest
   // report and turbo still exits non-zero, while a failed build cancels them all.

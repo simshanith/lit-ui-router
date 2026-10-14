@@ -3,8 +3,9 @@
 #
 # Branch-head pushes are handled by build-test-branch.yml instead. Splitting by
 # trigger keeps each event from instantiating the other's jobs, and it is what
-# makes the required context `build_and_test / run` trustworthy: no push to a
-# topic branch ever runs this file, so no push can emit that name. GitHub counts
+# makes the required contexts `build_and_test / run` and `build_and_test / e2e
+# result` trustworthy: no push to a topic branch ever runs this file, so no push
+# can emit those names. GitHub counts
 # a SKIPPED required check as PASSING, so a shared file that merely suppressed
 # this job on branch pushes would not be enough.
 name: Build and Test
@@ -37,7 +38,8 @@ concurrency:
 
 jobs:
   build_and_test:
-    # Reports the composite `build_and_test / run` — the required status check.
+    # Reports the composites `build_and_test / run` and `build_and_test / e2e
+    # result` — the required status checks.
     # A caller emits its composite name ONLY when it runs; skipping collapses it
     # to the bare caller name, so the required context cannot be satisfied by a
     # skip. That also blocks fork PRs, which skip below to protect secrets:
@@ -53,6 +55,7 @@ jobs:
       # any ref. `inputs` is null on pull_request, so PRs get the PR graph.
       mainGraph: ${{ inputs.mainGraph || (github.event_name == 'push' && github.ref == 'refs/heads/main') }}
       cypressVideo: ${{ inputs.cypressVideo || false }}
+      aggregate: true
     secrets:
       TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
       TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}

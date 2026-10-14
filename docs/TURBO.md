@@ -268,8 +268,8 @@ The GitHub Actions workflow (`.github/workflows/build-test.yml`) runs the CI pip
 
 1. **Checkout** - Clone repository
 2. **Setup** - mise installs Node.js (version pinned in `.nvmrc`) and pnpm (held equal to the `packageManager` pin); `mise run setup` installs dependencies
-3. **Install browsers** - Playwright and Cypress for e2e tests, restored from `actions/cache` keyed on the installed package versions
-4. **Build and Test** - PRs and branch pushes run `mise run ci` (turbo `ci:pull_request`); main pushes, `mainGraph` dispatches and `ci-main/` branches run `mise run ci_main` (turbo `ci:main`, adding the main-only guards)
+3. **Install browsers** - Playwright for the vitest browser specs (`run` job) and Cypress for the e2e suites (`e2e` jobs), restored from `actions/cache` keyed on the installed package versions
+4. **Build and Test** - the `run` job runs the turbo graph: PRs and branch pushes run `mise run ci_graph` (turbo `ci:pull_request`); main pushes, `mainGraph` dispatches and `ci-main/` branches run `mise run ci_main_graph` (turbo `ci:main`, adding the main-only guards). In parallel, one `e2e (<suite>)` job per suite runs `mise run test_e2e <suite>`, and the `e2e result` job is green only when every suite is. Locally, `mise run ci` and `mise run ci_main` run the graph and then every suite
 5. **Coverage reports** - Vitest coverage for PR comments, Codecov upload
 6. **Tag** (main pushes only) - a green run calls the Tag & push workflow, so release tags fire only after green main CI
 
