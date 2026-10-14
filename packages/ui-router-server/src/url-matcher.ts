@@ -165,6 +165,10 @@ const unsupportedTypes = new Set(['hash', 'json', 'any']);
  * A per-param configuration: core's ParamDeclaration members that matching
  * honors. Relaxation vs core: `type` also accepts a plain-object
  * {@link ParamType}, and `value` must be static (functions are rejected).
+ *
+ * A string `squash` is regexp source, as in core: it is spliced into the
+ * url regexp unescaped, so regexp metacharacters change what the route
+ * matches, while `format` emits it verbatim.
  */
 export interface ParamDeclaration extends Pick<
   CoreParamDeclaration,

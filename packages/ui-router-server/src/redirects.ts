@@ -192,15 +192,37 @@ const isPathPattern = (pattern: string | RegExp): pattern is string =>
   typeof pattern === 'string';
 
 /**
- * Compiles a redirect table into an evaluator: pathname in, redirected path
- * out — or null when the pathname does not redirect (no rule or redirecting
- * state matched, target params were invalid, or the redirect lands where it
- * started). Unknown or unaddressable targets and redirect cycles are
- * configuration errors and throw here, not at evaluation.
+ * What a {@link compileResolver} evaluation reports: the redirect, plus the
+ * route match whenever evaluation reached route matching.
+ *
+ * @internal
  */
-export function compileRedirects(
-  table: RedirectTable,
-): (pathname: string) => string | null {
+export interface RedirectResolution {
+  /** The redirected path, or null (see {@link compileRedirects}). */
+  redirect: string | null;
+  /** The route match; absent when a when()-rule decided before route matching ran. */
+  match?: RouteMatch | null;
+}
+
+/**
+ * {@link compileRedirects}, also reporting the compiled routes and each
+ * evaluation's route match so a caller needs no second scan.
+ *
+ * @internal
+ */
+export interface CompiledResolver {
+  /** The table's compiled routes (see {@link compileRoutes}). */
+  routes: CompiledRoute[];
+  /** Evaluates a pathname once: its redirect and, when reached, its route match. */
+  resolve: (pathname: string) => RedirectResolution;
+}
+
+/**
+ * Compiles a redirect table into a {@link CompiledResolver}.
+ *
+ * @internal
+ */
+export function compileResolver(table: RedirectTable): CompiledResolver {
   const routes = compileRoutes(table.routes, table.config);
   const byName = new Map(routes.map((route) => [route.name, route]));
   const { compile } = urlMatcherFactory(table.config);
@@ -264,34 +286,58 @@ export function compileRedirects(
     return path === null || path === pathname ? null : path;
   };
 
-  return (pathname) => {
+  const resolve = (pathname: string): RedirectResolution => {
     for (const rule of rules) {
       if (rule.regexp) {
         if (rule.regexp.test(pathname))
-          return follow(rule.to.state, rule.to.params ?? {}, pathname);
+          return {
+            redirect: follow(rule.to.state, rule.to.params ?? {}, pathname),
+          };
         continue;
       }
 
       const params = exec(rule.matcher!, pathname);
 
       if (params !== null)
-        return follow(
-          rule.to.state,
-          { ...params, ...rule.to.params },
-          pathname,
-        );
+        return {
+          redirect: follow(
+            rule.to.state,
+            { ...params, ...rule.to.params },
+            pathname,
+          ),
+        };
     }
 
     const match = matchRoute(routes, pathname);
 
-    if (match === null) return null;
+    if (match === null) return { redirect: null, match };
     const route = byName.get(match.state)!;
 
-    if (route.redirectTo === undefined) return null;
+    if (route.redirectTo === undefined) return { redirect: null, match };
     const target = toTarget(route.redirectTo);
 
-    return follow(target.state, target.params ?? match.params, pathname);
+    return {
+      redirect: follow(target.state, target.params ?? match.params, pathname),
+      match,
+    };
   };
+
+  return { routes, resolve };
+}
+
+/**
+ * Compiles a redirect table into an evaluator: pathname in, redirected path
+ * out — or null when the pathname does not redirect (no rule or redirecting
+ * state matched, target params were invalid, or the redirect lands where it
+ * started). Unknown or unaddressable targets and redirect cycles are
+ * configuration errors and throw here, not at evaluation.
+ */
+export function compileRedirects(
+  table: RedirectTable,
+): (pathname: string) => string | null {
+  const { resolve } = compileResolver(table);
+
+  return (pathname) => resolve(pathname).redirect;
 }
 
 /** One-shot convenience over {@link compileRedirects}. */
