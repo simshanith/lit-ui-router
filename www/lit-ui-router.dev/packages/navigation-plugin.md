@@ -44,8 +44,6 @@ strategy with the same clean URLs as `pushState`:
 
 ```bash
 npm install ui-router-navigation-location-plugin
-# or
-pnpm add ui-router-navigation-location-plugin
 ```
 
 The type declarations reference the global `Navigation` and `NavigateEvent`

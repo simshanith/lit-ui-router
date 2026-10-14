@@ -41,10 +41,6 @@ inside `renderShell()`.
 
 ```bash
 npm install lit-ui-router-ssr
-# or
-pnpm add lit-ui-router-ssr
-# or
-yarn add lit-ui-router-ssr
 ```
 
 `lit-ui-router`, `ui-router-server`, `@lit-labs/ssr`, `@lit-labs/ssr-client`, `lit`, and

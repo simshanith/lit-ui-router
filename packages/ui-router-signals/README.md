@@ -6,6 +6,12 @@
 
 The design is tracked in [#1157](https://github.com/simshanith/lit-ui-router/issues/1157). [`lit-ui-router-signals`](../lit-ui-router-signals/) builds Lit controllers on it.
 
+## Installation
+
+```bash
+npm install ui-router-signals signal-polyfill
+```
+
 ## Features
 
 - **`RouterSignals`**: one `RouteSnapshot` per successful transition, in a `Signal.State`. `route`, `current`, `params` and `transition` are read-only `Signal.Computed`s over it, and the tracked `includes()` answers for that settled snapshot, not the live router. One instance (and one transition hook) per router via `RouterSignals.for(router)`.

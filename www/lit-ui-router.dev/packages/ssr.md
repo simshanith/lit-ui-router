@@ -27,8 +27,6 @@ re-derives the incantation, and a template's `<ui-router>` descendants and its
 
 ```bash
 npm install lit-ui-router-ssr
-# or
-pnpm add lit-ui-router-ssr
 ```
 
 `lit-ui-router`, `ui-router-server`, `@lit-labs/ssr`, `@lit-labs/ssr-client`, `lit`,

@@ -125,8 +125,6 @@ Install from npm:
 
 ```bash
 npm install lit-ui-router
-# or
-pnpm add lit-ui-router
 ```
 
 Then start with the [Hello World tutorial](./tutorial/helloworld).

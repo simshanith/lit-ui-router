@@ -22,10 +22,6 @@ A thin wrapper on top of `lit-ui-router` — it registers no custom elements and
 
 ```bash
 npm install lit-ui-router-effect ui-router-effect effect
-# or
-pnpm add lit-ui-router-effect ui-router-effect effect
-# or
-yarn add lit-ui-router-effect ui-router-effect effect
 ```
 
 `lit-ui-router`, `ui-router-effect`, `lit`, `effect`, and `@uirouter/core` are peer dependencies.

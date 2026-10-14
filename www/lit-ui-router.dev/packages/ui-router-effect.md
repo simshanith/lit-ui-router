@@ -22,8 +22,6 @@ controllers on it and re-exports `routeRef`.
 
 ```bash
 npm install ui-router-effect effect
-# or
-pnpm add ui-router-effect effect
 ```
 
 `@uirouter/core` and `effect` are peer dependencies.

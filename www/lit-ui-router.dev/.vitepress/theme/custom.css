@@ -29,20 +29,29 @@
   }
 }
 
+/* Each logo stays with its name and sizes to the text, so a wrapped tagline keeps its line height; the underline marks the link without relying on color. */
 .VPHero .tagline a.library {
-  display: inline-flex;
-  align-items: baseline;
-  justify-content: center;
-  margin-block-end: 6px;
+  white-space: nowrap;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in oklch, currentColor 40%, transparent);
+  text-decoration-thickness: 0.06em;
+  text-underline-offset: 0.2em;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .VPHero .tagline a.library:hover {
+    text-decoration-color: currentColor;
+  }
 }
 
 .VPHero .tagline a.library>img {
-  display: inline-block;
-  margin-block: auto;
-  margin-inline: 2px 4px;
+  display: inline;
+  block-size: 1em;
+  inline-size: auto;
+  margin-inline: 0.1em 0.2em;
+  vertical-align: -0.125em;
 }
 
-.VPHero .tagline a.badge>img,
 .vp-doc .badges a.badge>img {
   display: inline-block;
   box-shadow: 0px 0px 0px 0px currentColor;
@@ -50,10 +59,36 @@
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .VPHero .tagline a.badge:hover>img,
   .vp-doc .badges a.badge:hover>img {
     box-shadow: 0px 0px 12px 0px currentColor;
   }
+}
+
+/* The CTAs: the buttons keep their natural widths and the install link spans both. */
+.VPHero.has-image .actions.actions {
+  display: grid;
+  grid-template-columns: repeat(2, auto);
+  gap: 12px;
+  inline-size: fit-content;
+  margin-inline: auto;
+  margin-block: 0;
+}
+
+/* Side by side with the logo, the hero's text is start-aligned. */
+@media (min-width: 960px) {
+  .VPHero.has-image .actions.actions {
+    margin-inline: 0;
+  }
+}
+
+.VPHero .actions .action {
+  padding: 0;
+}
+
+.VPHero .actions .VPButton {
+  display: block;
+  inline-size: 100%;
+  text-align: center;
 }
 
 /* Version badges on package pages */

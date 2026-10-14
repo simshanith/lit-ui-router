@@ -21,10 +21,6 @@ A thin wrapper on top of `lit-ui-router` — it registers no custom elements and
 
 ```bash
 npm install lit-ui-router-mobx mobx
-# or
-pnpm add lit-ui-router-mobx mobx
-# or
-yarn add lit-ui-router-mobx mobx
 ```
 
 `lit-ui-router`, `lit`, `mobx`, and `@uirouter/core` are peer dependencies.

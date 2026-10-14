@@ -30,12 +30,6 @@ writes at all, and a directive used outside the part type it accepts.
 ## Installation
 
 ```bash
-pnpm add -D eslint-plugin-lit-ui-router
-```
-
-or
-
-```bash
 npm install --save-dev eslint-plugin-lit-ui-router
 ```
 

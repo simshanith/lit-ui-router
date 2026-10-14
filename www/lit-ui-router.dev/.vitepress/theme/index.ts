@@ -8,12 +8,16 @@ import ExampleEmbed from './components/ExampleEmbed.vue';
 import LiveExample from './components/LiveExample.vue';
 import FrameworkSpectrum from './components/FrameworkSpectrum.vue';
 import FrameworkCards from './components/FrameworkCards.vue';
+import HeroInstall from './components/HeroInstall.vue';
 
 export default {
   extends: DefaultTheme,
   // The 404 layout renders no <main>; its not-found slot wraps the stock page in one.
   Layout: () =>
-    h(DefaultTheme.Layout, null, { 'not-found': () => h('main', h(NotFound)) }),
+    h(DefaultTheme.Layout, null, {
+      'not-found': () => h('main', h(NotFound)),
+      'home-hero-actions-before-actions': () => h(HeroInstall),
+    }),
   enhanceApp({ app }) {
     app.component('StackBlitzEmbed', StackBlitzEmbed);
     app.component('ExampleEmbed', ExampleEmbed);

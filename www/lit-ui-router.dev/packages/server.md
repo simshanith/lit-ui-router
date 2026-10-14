@@ -95,8 +95,6 @@ Picking one:
 
 ```bash
 npm install ui-router-server
-# or
-pnpm add ui-router-server
 ```
 
 Nothing else is required: `@uirouter/core` (only for

@@ -6,6 +6,12 @@
 
 [`lit-ui-router-effect`](../lit-ui-router-effect/) builds Lit controllers on it and re-exports `routeRef`.
 
+## Installation
+
+```bash
+npm install ui-router-effect effect
+```
+
 ## Features
 
 - **`routeRef(router)`**: a `SubscriptionRef<RouteSnapshot>` of the current state, params and transition. There is one ref, and one `onSuccess` hook, per router, attached lazily on first use. Every value it holds is a settled route.

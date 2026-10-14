@@ -10,6 +10,12 @@
 
 A [UI-Router](https://ui-router.github.io/) implementation for [Lit](https://lit.dev/).
 
+## Installation
+
+```bash
+npm install lit-ui-router
+```
+
 ## Quick Start
 
 ```ts
