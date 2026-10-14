@@ -20,17 +20,22 @@ export const provenance = (snap, script, tools = []) => ({
 });
 
 // List entries under `listKeys` render one item per line: snapshots are
-// reviewed, committed plates — their diffs must read.
-export const compactJson = (obj, listKeys) => {
+// reviewed, committed plates — their diffs must read.  A dotted key
+// (`withAtlas.rows`) lists the entries of a nested object the same way.
+export const compactJson = (obj, listKeys, indent = '  ') => {
   const parts = Object.entries(obj).map(([k, v]) => {
     if (listKeys.includes(k) && Array.isArray(v)) {
-      const items = v.map((x) => '    ' + JSON.stringify(x)).join(',\n');
-      return `  ${JSON.stringify(k)}: [\n${items}\n  ]`;
+      const items = v.map((x) => `${indent}  ` + JSON.stringify(x)).join(',\n');
+      return `${indent}${JSON.stringify(k)}: [\n${items}\n${indent}]`;
     }
-    const s = JSON.stringify(v, null, 2).split('\n').map((l, i) => (i ? '  ' + l : l)).join('\n');
-    return `  ${JSON.stringify(k)}: ${s}`;
+    const nested = listKeys.filter((l) => l.startsWith(`${k}.`)).map((l) => l.slice(k.length + 1));
+    if (nested.length && v && typeof v === 'object' && !Array.isArray(v)) {
+      return `${indent}${JSON.stringify(k)}: ${compactJson(v, nested, `${indent}  `).trimEnd()}`;
+    }
+    const s = JSON.stringify(v, null, 2).split('\n').map((l, i) => (i ? indent + l : l)).join('\n');
+    return `${indent}${JSON.stringify(k)}: ${s}`;
   });
-  return '{\n' + parts.join(',\n') + '\n}\n';
+  return '{\n' + parts.join(',\n') + `\n${indent.slice(2)}}\n`;
 };
 
 export const writeData = (file, obj, listKeys = ['rows']) => {
