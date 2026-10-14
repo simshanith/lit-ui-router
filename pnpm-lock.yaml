@@ -288,10 +288,6 @@ catalogs:
     yaml:
       specifier: ^2.9.0
       version: 2.9.1
-  dependencyFloor:
-    '@oxc-project/runtime-floor':
-      specifier: npm:@oxc-project/runtime@0.50.0
-      version: 0.50.0
   effect3-compat:
     effect-3:
       specifier: npm:effect@^3.22.2
@@ -304,6 +300,10 @@ catalogs:
     mobx-6:
       specifier: npm:mobx@^6.16.1
       version: 6.16.1
+  oxc-compat:
+    '@oxc-project/runtime-floor':
+      specifier: npm:@oxc-project/runtime@0.50.0
+      version: 0.50.0
   peerFloor:
     '@lit-labs/ssr-client-floor':
       specifier: npm:@lit-labs/ssr-client@1.1.0
@@ -1043,7 +1043,7 @@ importers:
         specifier: 'catalog:'
         version: 1.1.6
       '@oxc-project/runtime-floor':
-        specifier: catalog:dependencyFloor
+        specifier: catalog:oxc-compat
         version: '@oxc-project/runtime@0.50.0'
       '@release-it/conventional-changelog':
         specifier: 'catalog:'
@@ -1437,7 +1437,7 @@ importers:
         specifier: catalog:peerFloor
         version: '@lit-labs/ssr@4.0.0(@types/node@24.19.2)'
       '@oxc-project/runtime-floor':
-        specifier: catalog:dependencyFloor
+        specifier: catalog:oxc-compat
         version: '@oxc-project/runtime@0.50.0'
       '@release-it/conventional-changelog':
         specifier: 'catalog:'

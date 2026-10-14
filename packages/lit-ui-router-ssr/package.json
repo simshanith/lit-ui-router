@@ -70,7 +70,7 @@
     "@lit-labs/ssr-client": "catalog:",
     "@lit-labs/ssr-client-floor": "catalog:peerFloor",
     "@lit-labs/ssr-floor": "catalog:peerFloor",
-    "@oxc-project/runtime-floor": "catalog:dependencyFloor",
+    "@oxc-project/runtime-floor": "catalog:oxc-compat",
     "@release-it/conventional-changelog": "catalog:",
     "@tools/bundle-probe": "catalog:workspace",
     "@tools/compat-guards": "catalog:workspace",

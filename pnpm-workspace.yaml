@@ -106,14 +106,14 @@ catalog:
 catalogMode: prefer
 
 catalogs:
-  dependencyFloor:
-    '@oxc-project/runtime-floor': npm:@oxc-project/runtime@0.50.0
   effect3-compat:
     effect-3: npm:effect@^3.22.2
   lit2-compat:
     lit-2: npm:lit@^2.8.0
   mobx6-compat:
     mobx-6: npm:mobx@^6.16.1
+  oxc-compat:
+    '@oxc-project/runtime-floor': npm:@oxc-project/runtime@0.50.0
   peerFloor:
     '@lit-labs/ssr-client-floor': npm:@lit-labs/ssr-client@1.1.0
     '@lit-labs/ssr-floor': npm:@lit-labs/ssr@4.0.0

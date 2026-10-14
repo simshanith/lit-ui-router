@@ -92,7 +92,7 @@
     "@custom-elements-manifest/analyzer": "catalog:",
     "@lit-labs/ssr": "catalog:",
     "@lit/context": "catalog:",
-    "@oxc-project/runtime-floor": "catalog:dependencyFloor",
+    "@oxc-project/runtime-floor": "catalog:oxc-compat",
     "@release-it/conventional-changelog": "catalog:",
     "@tools/bundle-probe": "catalog:workspace",
     "@tools/compat-guards": "catalog:workspace",

@@ -29,7 +29,7 @@ const ALLOWED: SplitAllowance[] = [
   },
   {
     name: '@oxc-project/runtime',
-    why: 'catalogs.dependencyFloor pins @oxc-project/runtime-floor to 0.50.0, the published dependency floor check:bundle bundles dist against',
+    why: 'catalogs.oxc-compat pins @oxc-project/runtime-floor to 0.50.0, the published dependency floor check:bundle bundles dist against',
   },
   {
     name: '@uirouter/core',

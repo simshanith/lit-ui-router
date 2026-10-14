@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 // Each installed <peer>-floor alias must equal the floor of the <peer> range in
-// the catalog the package's peer (or, from dependencyFloor, its dependency)
-// names, or the floor lane lies.
+// the catalog the package's peer (or dependency) names, or the floor lane lies.
 // Usage (from the package dir): peer-floor-guard
 import semver from 'semver';
 
@@ -19,16 +18,18 @@ const manifest = readManifest(process.cwd());
 const catalogName = (spec: string | undefined) =>
   spec?.match(/^catalog:(\w+)$/)?.[1];
 
-const floorCatalog = (spec: string) =>
-  catalogName(spec)?.startsWith('peerFloor') === true ||
-  catalogName(spec) === 'dependencyFloor';
+const floorName = (alias: string) => alias.slice(0, -'-floor'.length);
 
-// a floor alias is a devDependency named <peer>-floor fed by a peerFloor* or dependencyFloor catalog
-const floors = Object.entries(manifest?.devDependencies ?? {}).filter(
-  ([alias, spec]) => alias.endsWith('-floor') && floorCatalog(spec),
-);
-
-const peers = floors.map(([alias]) => alias.slice(0, -'-floor'.length));
+// a floor alias is a devDependency named <name>-floor: fed by a peerFloor*
+// catalog for a peer, or by any catalog for a published dependency
+const peers = Object.entries(manifest?.devDependencies ?? {})
+  .filter(
+    ([alias, spec]) =>
+      alias.endsWith('-floor') &&
+      (catalogName(spec)?.startsWith('peerFloor') === true ||
+        floorName(alias) in (manifest?.dependencies ?? {})),
+  )
+  .map(([alias]) => floorName(alias));
 
 if (peers.length === 0) {
   g.fail(
@@ -40,12 +41,8 @@ if (peers.length === 0) {
 for (const peer of peers) {
   const alias = `${peer}-floor`;
 
-  const fromDependency =
-    catalogName(manifest?.devDependencies?.[alias]) === 'dependencyFloor';
-
-  const spec = fromDependency
-    ? manifest?.dependencies?.[peer]
-    : manifest?.peerDependencies?.[peer];
+  const spec =
+    manifest?.peerDependencies?.[peer] ?? manifest?.dependencies?.[peer];
 
   const catalog =
     catalogName(spec) ??
