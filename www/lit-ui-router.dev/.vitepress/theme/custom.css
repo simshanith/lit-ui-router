@@ -29,9 +29,19 @@
   }
 }
 
-/* Each logo stays with its name and sizes to the text, so a wrapped tagline keeps its line height. */
+/* Each logo stays with its name and sizes to the text, so a wrapped tagline keeps its line height; the underline marks the link without relying on color. */
 .VPHero .tagline a.library {
   white-space: nowrap;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in oklch, currentColor 40%, transparent);
+  text-decoration-thickness: 0.06em;
+  text-underline-offset: 0.2em;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .VPHero .tagline a.library:hover {
+    text-decoration-color: currentColor;
+  }
 }
 
 .VPHero .tagline a.library>img {
