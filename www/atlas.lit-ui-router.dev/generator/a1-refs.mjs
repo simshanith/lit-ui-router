@@ -6,11 +6,10 @@
 // and a one-line credit; the notes on sheet A1 carry the full citations.
 //
 // WHY INLINE, AND NOT A <image href="assets/…"> REFERENCE. The set is carried
-// as one document three different ways — the bare plates, the routed app's
-// fragments and the single-file claude.ai artifact — and the artifact host
-// allows no image fetches at all. A linked file would be a hole in two of the
-// three. So the jpg is read at BUILD time and inlined as a data URI: the sheet
-// stays one self-contained document wherever it is served from.
+// as one document two ways — the bare plates and the routed app's fragments —
+// and a linked file would be a hole in the bare plate served alone. So the jpg
+// is read at BUILD time and inlined as a data URI: the sheet stays one
+// self-contained document wherever it is served from.
 import { readFileSync } from 'node:fs';
 
 /** The jpg on disk, as a base64 data URI. Read once, at build time. */

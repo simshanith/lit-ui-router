@@ -95,7 +95,7 @@ const PROJECT_MARK: TemplateResult = html`<span class="project-mark">THE ALTITUD
 const articleTitle = (title: string): TemplateResult =>
   ARTICLE.test(title) ? html`${THE}${entryTitle(title)}` : html`${title}`;
 
-/** The live site — where the bare plates exist for an artifact reader. */
+/** The live site — where every page the artifact does not route lives. */
 const SITE = 'https://atlas.lit-ui-router.dev';
 const DOCS = 'https://lit-ui-router.dev';
 const GITHUB = 'https://github.com/simshanith/lit-ui-router';
@@ -125,8 +125,23 @@ const to = (path: string): string => (ARTIFACT ? `#${path}` : path);
 /** A link out to a bare plate: relative on the site, absolute in the artifact. */
 const out = (path: string): string => (ARTIFACT ? `${SITE}${path}` : path);
 
-/** Artifact-only: a bare plate is a different document, so open a new tab. */
+/** Artifact-only: a page on the live site is a different document, so open a new tab. */
 const outTarget = ARTIFACT ? '_blank' : nothing;
+
+/**
+ * A link to a page the artifact does not route — a sheet, a plate in the
+ * round, the issue log. On the site it is the router's link, active class and
+ * `aria-current`; the artifact routes only the gallery and the colophon
+ * (src/router.ts), so there it is the live site's page and neither mark.
+ */
+const goHref = (state: string, params?: { num: string }): ReturnType<typeof srefHref> | string =>
+  ARTIFACT
+    ? `${SITE}${state === 'atlas.sheet' ? href.sheet(params?.num ?? '') : `${href.gallery}${state.slice('atlas.'.length)}`}/`
+    : srefHref(state, params);
+const goClass = (options: Parameters<typeof srefActiveClass>[0]): ReturnType<typeof srefActiveClass> | string =>
+  ARTIFACT ? '' : srefActiveClass(options);
+const goCurrent = (options: Parameters<typeof srefAriaCurrent>[0]): ReturnType<typeof srefAriaCurrent> | typeof nothing =>
+  ARTIFACT ? nothing : srefAriaCurrent(options);
 
 // --- <atlas-plate> — a generated fragment, inserted and brought to life ----
 
@@ -590,7 +605,7 @@ function utilBar(
       <div class="crumb">${crumb}</div>
       <nav class="util-links" aria-label="utilities">
         <!-- The set's issue record: its own state since 2026-09-06, not a cover column. -->
-        <a class="util-log" href=${srefHref('atlas.log')}>LOG</a>
+        <a class="util-log" href=${goHref('atlas.log')} target=${outTarget}>LOG</a>
         <a class="util-docs" href="${DOCS}" target="_blank" rel="noopener">DOCS ↗</a>
         <a class="util-github" href="${GITHUB}" target="_blank" rel="noopener">GITHUB ↗</a>
         ${copy}
@@ -614,14 +629,15 @@ const closeRail = (): void => {
 
 const sheetEntry = (sheet: SheetRow): TemplateResult => html`
   <a
-    href=${srefHref('atlas.sheet', { num: sheet.num })}
+    href=${goHref('atlas.sheet', { num: sheet.num })}
+    target=${outTarget}
     @click=${closeRail}
-    class=${srefActiveClass({
+    class=${goClass({
       state: 'atlas.sheet',
       params: { num: sheet.num },
       activeClasses: ACTIVE_CLASSES,
     })}
-    aria-current=${srefAriaCurrent({ state: 'atlas.sheet', params: { num: sheet.num } })}
+    aria-current=${goCurrent({ state: 'atlas.sheet', params: { num: sheet.num } })}
   >
     <span class="n">${sheet.num}</span><span class="t">${entryTitle(sheet.title)}</span>
   </a>
@@ -635,10 +651,11 @@ const railEntry = (entry: AscentRow): TemplateResult =>
     ? sheetEntry(entry.row)
     : html`
         <a
-          href=${srefHref(sceneState(entry.row))}
+          href=${goHref(sceneState(entry.row))}
+          target=${outTarget}
           @click=${closeRail}
-          class=${srefActiveClass({ state: sceneState(entry.row), activeClasses: ACTIVE_CLASSES })}
-          aria-current=${srefAriaCurrent({ state: sceneState(entry.row) })}
+          class=${goClass({ state: sceneState(entry.row), activeClasses: ACTIVE_CLASSES })}
+          aria-current=${goCurrent({ state: sceneState(entry.row) })}
         >
           <span class="n">${railNum(entry.row)}</span><span class="t">${entryTitle(entry.row.title)}</span>
         </a>
@@ -1139,13 +1156,14 @@ const sheetCard = (sheet: SheetRow): TemplateResult => html`
       <span class="n">${isAppendix(sheet.num) ? 'APPENDIX' : 'SHEET'} ${sheet.num} · REV ${sheet.rev}</span>
       <h3>
         <a
-          href=${srefHref('atlas.sheet', { num: sheet.num })}
-          class="card-go ${srefActiveClass({
+          href=${goHref('atlas.sheet', { num: sheet.num })}
+          target=${outTarget}
+          class="card-go ${goClass({
             state: 'atlas.sheet',
             params: { num: sheet.num },
             activeClasses: ACTIVE_CLASSES,
           })}"
-          aria-current=${srefAriaCurrent({ state: 'atlas.sheet', params: { num: sheet.num } })}
+          aria-current=${goCurrent({ state: 'atlas.sheet', params: { num: sheet.num } })}
           >${articleTitle(sheet.title)}</a
         >
       </h3>
@@ -1169,9 +1187,10 @@ const cityCard = (extra: ExtraRow): TemplateResult => html`
       <span class="n">${extra.shno} · REV ${extra.rev}</span>
       <h3>
         <a
-          href=${srefHref(sceneState(extra))}
-          class="card-go ${srefActiveClass({ state: sceneState(extra), activeClasses: ACTIVE_CLASSES })}"
-          aria-current=${srefAriaCurrent({ state: sceneState(extra) })}
+          href=${goHref(sceneState(extra))}
+          target=${outTarget}
+          class="card-go ${goClass({ state: sceneState(extra), activeClasses: ACTIVE_CLASSES })}"
+          aria-current=${goCurrent({ state: sceneState(extra) })}
           >${articleTitle(extra.title)}</a
         >
       </h3>
@@ -1218,7 +1237,7 @@ export const GalleryView: RoutedLitTemplate<ManifestResolves> = (props) => {
         <!-- The key image: sheet 7's city, drawn at build time. model-viewer loads on the 3D plates and nowhere else. -->
         ${city
           ? html`
-              <a class="hero-plate" href=${srefHref('atlas.city')}>
+              <a class="hero-plate" href=${goHref('atlas.city')} target=${outTarget}>
                 ${unsafeHTML(manifest.cover.hero)}
                 <span class="hero-cap">
                   <span>${city.shno} · REV ${city.rev}</span>
@@ -1231,7 +1250,7 @@ export const GalleryView: RoutedLitTemplate<ManifestResolves> = (props) => {
       </div>
       ${latest
         ? html`<p class="cover-latest">
-            <a href=${srefHref('atlas.log')}
+            <a href=${goHref('atlas.log')} target=${outTarget}
               ><span class="k">LATEST</span><span class="d">${latest.date}</span
               ><span class="s">${latest.head} · REV ${latest.rev}</span
               ><span class="t">${latest.desc}</span><span class="go">ISSUE LOG ↗</span></a
@@ -1553,6 +1572,13 @@ export const AboutView: RoutedLitTemplate<ManifestResolves> = (props) => {
         </figure>
         <h2>THE SET, ROUTED</h2>
         ${manifest ? html`<p>${unsafeHTML(manifest.cover.thesis)}</p>` : nothing}
+        ${ARTIFACT
+          ? html`<p>
+              This file is the atlas condensed to its index and this colophon. The full atlas,
+              with its interactive plates and the plates in the round, lives at
+              ${ext(`${SITE}/`, 'atlas.lit-ui-router.dev')}; every sheet card links there.
+            </p>`
+          : nothing}
         <p>
           The atlas is ${manifest?.total ?? 14} sheets of static HTML. This is the same
           set as one ${ext(npmUrl('lit-ui-router'), html`<code>lit-ui-router</code>`)} application: an abstract
@@ -1581,7 +1607,7 @@ export const AboutView: RoutedLitTemplate<ManifestResolves> = (props) => {
         <p>
           Every REV across every plate — the set's own revision record, latest first —
           is at
-          <a href=${srefHref('atlas.log')}><code>${href.log}</code></a>.
+          <a href=${goHref('atlas.log')} target=${outTarget}><code>${href.log}</code></a>.
           It is parsed at build time out of ${ext(`${BRANCH}www/atlas.lit-ui-router.dev/HISTORY.md`, html`<code>www/atlas.lit-ui-router.dev/HISTORY.md</code>`)}, the frozen
           record, and rides the manifest as JSON, so the app fetches no markdown. The
           sheets themselves carry no revision table: each describes its present state,

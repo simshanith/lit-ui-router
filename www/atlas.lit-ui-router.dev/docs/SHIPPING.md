@@ -86,7 +86,8 @@ are done by hand between the steps.
    `/set/` URL and `/sheet/99` answer with the codes the step lists. The first fetch after a
    deploy can read the previous deploy; a stop on disagreement is rerun once, and the
    deployment's own `*.altitude-atlas.pages.dev` URL answers at once.
-9. **`artifact`** builds `app/dist-artifact/index.html`; then publish it with the Artifact tool
+9. **`artifact`** builds `app/dist-artifact/index.html`, the condensed atlas: the gallery and the
+   colophon, every plate a link out to the live site; then publish it with the Artifact tool
    by `url` (`https://claude.ai/artifact/JpLqLDXLwY8nwKByiLx5V4`), a short `label`, no icon.
    The artifact build keeps the Google font links by design ([app/README.md](../app/README.md),
    "Artifact build"); it never passes through the stager.

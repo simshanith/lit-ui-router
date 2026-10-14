@@ -232,31 +232,36 @@ checks `matchMedia('(prefers-reduced-motion: reduce)')` before doing any work.
 
 ## Artifact build
 
-`npm run build:artifact` emits `dist-artifact/index.html` — the whole atlas as ONE self-contained
-file (~12 MB) that can be published as a claude.ai Artifact. That host
-is strict in four ways, and each one is a line in the build:
+`npm run build:artifact` emits `dist-artifact/index.html`, the condensed atlas as ONE file
+(~6 MB) for a claude.ai Artifact: the gallery, with its card pictures and its key index, and the
+colophon. Every sheet card, rail entry, the hero, the issue log and the plates in the round link
+out to the live site, `https://atlas.lit-ui-router.dev/<path>/`, in a new tab. The host is strict,
+and each constraint is a line in the build:
 
 - **One file, no fetches — not even same-origin.** `artifact.ts` bakes `public/manifest.json` and
-  all twenty-eight fragments (the three plates' GLBs inlined as `data:` urls) into a
-  `<script type="application/json" id="atlas-data">` island (every
-  `<` escaped, so a fragment's own `</script>` cannot close it) and inlines `atlas.css` as a
-  `<style>`; `src/manifest.ts` reads the island when present and falls back to the fetches the site
-  uses, and the `DrawingSet` layer in `src/runtime.ts` serves both. The cytoscape and model-viewer dynamic imports are folded into the single chunk by
-  `vite-plugin-singlefile` (`useRecommendedBuildConfig`, which sets `output.codeSplitting = false`
-  on vite 8), so `#/city` raises the city with the network entirely blocked.
+  the card pictures (WebP `data:` urls) into a `<script type="application/json" id="atlas-data">`
+  island (every `<` escaped) and inlines `atlas.css` as a `<style>`; `src/manifest.ts` reads the
+  island when present and falls back to the fetches the site uses. No fragment and no model ships,
+  and `artifact.ts` throws on an inlined model or a file over 8 MB.
+- **Two routes.** In this mode `src/router.ts` registers the shell, `atlas.gallery` and
+  `atlas.about` only, and any other url is replaced by the gallery's, so `#/builds` or
+  `#/sheet/7` lands on `#/`. `goHref`, `goClass` and `goCurrent` in `src/views.ts` write a link
+  to any other page: the router's link and marks on the site, the live site's url here.
+  `vite.config.ts` resolves `@google/model-viewer`, `cytoscape` and `@uirouter/visualizer` to an
+  empty module, since only pages on the live site load them.
 - **The host owns the document skeleton.** The published file must carry no
   `<!DOCTYPE>`/`<html>`/`<head>`/`<body>` of its own, and only its first 8KB is scanned for
   `<title>`, so `artifact.ts` strips the wrapper and moves the title to byte 0.
 - **The page sits on an opaque origin path**, so path routing is out: `src/router.ts` takes
-  `hashLocationPlugin` instead of the Navigation API/pushState pair, and every url becomes
-  `#/sheet/7`. Nothing in `views.ts` knows: `srefHref` asks the router for
-  the url, so `#/sheet/7` comes out of the location plugin and not out of a string prefix. The
-  one `to()` left in `views.ts` is for the key box's `<form action>`, which is a plain GET
-  target and takes no directive.
+  `hashLocationPlugin` instead of the Navigation API/pushState pair, and the gallery's filters
+  and the colophon live at `#/?subject=city` and `#/about`. `srefHref` asks the router for the
+  url, so the hash comes out of the location plugin and not out of a string prefix. The one
+  `to()` in `views.ts` is for the key box's `<form action>`, which is a plain GET target and
+  takes no directive.
 
 `src/mode.ts` is the one flag (`import.meta.env.MODE === 'artifact'`) the readers share; analytics
-is skipped in this mode. Nothing above changes the site build, which prerenders 32 pages +
-`404.html` and 28 redirects.
+is skipped in this mode. Nothing above changes the site build, which prerenders 66 pages +
+`404.html` and 60 redirects.
 
 ## Server side
 

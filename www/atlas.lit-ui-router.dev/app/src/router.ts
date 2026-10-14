@@ -62,22 +62,33 @@ function sceneState(id: string): LitStateDeclaration {
   };
 }
 
-export const states: LitStateDeclaration[] = [
-  {
-    name: 'atlas',
-    abstract: true,
-    component: ShellView,
-    // Resolved once for the whole shell; children read it through their own
-    // deps, and the runtime's DrawingSet reads it once, so the rail costs one fetch.
-    resolve: [{ token: 'manifest', resolveFn: loadManifest }],
-  },
-  // The key index's filter rides the url: same params as the server half.
-  {
-    name: 'atlas.gallery',
-    url: urlOf('atlas.gallery'),
-    params: FILTER_PARAMS,
-    component: GalleryView,
-  },
+const shellState: LitStateDeclaration = {
+  name: 'atlas',
+  abstract: true,
+  component: ShellView,
+  // Resolved once for the whole shell; children read it through their own
+  // deps, and the runtime's DrawingSet reads it once, so the rail costs one fetch.
+  resolve: [{ token: 'manifest', resolveFn: loadManifest }],
+};
+
+// The key index's filter rides the url: same params as the server half.
+const galleryState: LitStateDeclaration = {
+  name: 'atlas.gallery',
+  url: urlOf('atlas.gallery'),
+  params: FILTER_PARAMS,
+  component: GalleryView,
+};
+
+const aboutState: LitStateDeclaration = { name: 'atlas.about', url: urlOf('atlas.about'), component: AboutView };
+
+/**
+ * The client's route table. The artifact routes the gallery and the colophon
+ * and nothing else: every other page is a link out to the live site
+ * (src/views.ts), so no plate, model or lazy library is bundled into it.
+ */
+export const states: LitStateDeclaration[] = ARTIFACT ? [shellState, galleryState, aboutState] : [
+  shellState,
+  galleryState,
   {
     name: 'atlas.sheet',
     url: urlOf('atlas.sheet'),
@@ -175,7 +186,7 @@ export const states: LitStateDeclaration[] = [
     url: urlOf('atlas.office'),
     redirectTo: { state: 'atlas.sheet', params: { num: 'A2' } },
   },
-  { name: 'atlas.about', url: urlOf('atlas.about'), component: AboutView },
+  aboutState,
   // The issue log reads the shell's already-resolved manifest — no resolve of
   // its own, and no second fetch.
   { name: 'atlas.log', url: urlOf('atlas.log'), component: LogView },
@@ -321,6 +332,7 @@ export function createRouter(): UIRouterLit {
     state: 'atlas.gallery',
     params: url?.search ?? {},
   }));
-  router.urlService.rules.otherwise({ state: 'atlas.notFound' });
+  // The artifact routes only the gallery and the colophon, so any other url is replaced by the gallery's.
+  router.urlService.rules.otherwise(ARTIFACT ? '/' : { state: 'atlas.notFound' });
   return router;
 }

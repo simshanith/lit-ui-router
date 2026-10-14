@@ -927,11 +927,12 @@ sitting); order is dependency order.
 - `manifest.sheets` is what walks the set in ascent order; `extras` (the city, the specimen)
   and `appendix` (A1) exist so a page can join the rail, the cover and the server mount
   without entering the ←/→ walk or the sheet numbering.
-- The artifact build (`npm run build:artifact` in `app/`) is the same app as ONE file: vite
-  mode `artifact` + vite-plugin-singlefile; `app/artifact.ts` strips the host-supplied
-  doctype/html/head/body, hoists `<title>` to byte 0 (only the first 8KB is scanned) and
-  bakes the manifest and every fragment into a JSON island. Nothing is fetched at runtime,
-  the router takes `hashLocationPlugin`, and `app/src/mode.ts` is the one flag.
+- The artifact build (`npm run build:artifact` in `app/`) is the condensed atlas as ONE file:
+  the gallery and the colophon, every plate a link out to the live site. Vite mode `artifact` +
+  vite-plugin-singlefile; `app/artifact.ts` strips the host-supplied doctype/html/head/body,
+  hoists `<title>` to byte 0 (only the first 8KB is scanned) and bakes the manifest and the
+  card pictures into a JSON island. Nothing is fetched at runtime, the router takes
+  `hashLocationPlugin`, and `app/src/mode.ts` is the one flag.
 - FONTS, ONE HOST PER PAGE: with `VITE_ADOBE_FONTS_KIT` set, `stage-site.mjs` injects the
   Typekit link into every staged page AND strips the Google Fonts links `app/index.html`
   carries; unset, it emits `Adobe Fonts kit: none` and the Google half draws everywhere —

@@ -40,6 +40,6 @@ export const runtime = ManagedRuntime.make(DrawingSetLive);
 export const loadManifest = (): Promise<Manifest> =>
   runtime.runPromise(Effect.flatMap(DrawingSet, (set) => set.manifest));
 
-/** A plate's fragment: the baked island in the artifact, a fetch on the site. */
+/** A plate's fragment, fetched; the artifact routes no plate. */
 export const loadFragment = (row: FragmentRow): Promise<string> =>
   runtime.runPromise(Effect.flatMap(DrawingSet, (set) => set.fragment(row)));

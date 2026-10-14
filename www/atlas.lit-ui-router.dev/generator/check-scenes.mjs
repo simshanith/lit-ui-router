@@ -516,26 +516,48 @@ try {
     await page.close();
   }
 
-  // ---- the artifact raises the city offline ----
+  // ---- the artifact: the gallery and the colophon offline, every plate a link to the live site ----
   if (artifact) {
     const file = join(OUT, 'app', 'dist-artifact', 'index.html');
     if (!existsSync(file)) throw new Error('check-scenes: no artifact build — run `npm --prefix www/atlas.lit-ui-router.dev/app run build:artifact`, or pass --no-artifact');
     const size = statSync(file).size;
-    check(size <= 16 * 1024 * 1024, `the artifact is ${(size / 1048576).toFixed(2)} MB, inside 16 MB`);
+    check(size <= 8 * 1024 * 1024 && !readFileSync(file, 'utf8').includes('data:model/gltf-binary'), `the artifact is ${(size / 1048576).toFixed(2)} MB, inside 8 MB, with no model inlined`);
+    const manifest = JSON.parse(readFileSync(join(PUBLIC, 'manifest.json'), 'utf8'));
+    const rows = manifest.sheets.length + manifest.appendix.length + manifest.extras.length;
     const page = await browser.newPage();
     page.on('pageerror', (e) => errors.push(`artifact: ${e.message}`));
-    await page.route(/^https?:/, (route) => route.abort());
-    await page.goto(`file://${resolve(file)}#/city`);
-    await settled(page);
-    check(await page.evaluate(() => window.__cityScene.animations().length === 1), '#/city in the artifact raises the city with the network blocked');
-    const last = BUILD_MODELS.at(-1);
-    await page.goto(`file://${resolve(file)}#/builds?build=${last.slug}`);
-    await page.evaluate(async () => {
-      await new Promise((r) => { const t = () => (window.__buildsScene ? r() : setTimeout(t, 50)); t(); });
-      await window.__buildsScene.ready;
+    // the Google Fonts stylesheet is the one origin the host serves; everything else leaving the file is a finding
+    const left = [];
+    page.on('request', (r) => { if (!/^(?:file|data):|^https:\/\/fonts\.(?:googleapis|gstatic)\.com\//.test(r.url())) left.push(r.url()); });
+    await page.addInitScript(() => {
+      window.__fetches = 0;
+      const own = window.fetch;
+      window.fetch = (...args) => { window.__fetches += 1; return own(...args); };
     });
-    const art = await page.evaluate(() => ({ build: window.__buildsScene.build(), clips: window.__buildsScene.animations().length, data: window.__buildsScene.src().startsWith('data:model/gltf-binary') }));
-    check(art.build === last.slug && art.clips === 1 && art.data, `#/builds?build=${last.slug} in the artifact raises that build from its inlined model`, JSON.stringify(art));
+    await page.route(/^https?:/, (route) => route.abort());
+    const at = async (hash) => {
+      await page.goto(`file://${resolve(file)}${hash}`);
+      await page.waitForSelector('.content .sheet');
+    };
+    await at('#/');
+    await page.waitForSelector('article.card');
+    const g = await page.evaluate(() => ({
+      cards: document.querySelectorAll('article.card').length,
+      pics: [...document.querySelectorAll('.card-pic img')].every((img) => img.src.startsWith('data:image/webp')),
+      out: [...document.querySelectorAll('a.card-go')].every((a) => a.href.startsWith('https://atlas.lit-ui-router.dev/') && a.target === '_blank'),
+      first: document.querySelector('a.card-go')?.getAttribute('href'),
+    }));
+    check(g.cards === rows && g.pics, `#/ in the artifact draws every card, ${rows}, each picture a data: url`, JSON.stringify(g));
+    check(g.out && g.first === `https://atlas.lit-ui-router.dev/sheet/${manifest.sheets[0].num}/`, `every card in the artifact links out to the live site, ${g.first}`, JSON.stringify(g));
+    await at('#/about');
+    const about = await page.evaluate(() => ({ hash: location.hash, head: document.querySelector('.sheet-head .shno')?.textContent.trim(), live: !!document.querySelector('.prose a[href="https://atlas.lit-ui-router.dev/"]') }));
+    check(about.hash === '#/about' && about.head === 'COLOPHON' && about.live, '#/about in the artifact renders the colophon and names the live site', JSON.stringify(about));
+    const last = BUILD_MODELS.at(-1);
+    await at(`#/builds?build=${last.slug}`);
+    await page.waitForFunction(() => location.hash === '#/');
+    check(await page.evaluate(() => document.querySelectorAll('article.card').length) === rows, `#/builds?build=${last.slug} in the artifact lands on the gallery at #/`);
+    const fetches = await page.evaluate(() => window.__fetches);
+    check(fetches === 0 && left.length === 0, 'the artifact calls no fetch and requests nothing outside the file', JSON.stringify({ fetches, left }));
     await page.close();
   }
 

@@ -125,13 +125,12 @@ export interface Manifest {
 }
 
 /**
- * The artifact build's baked-in payload (see artifact.ts): the whole set in
- * one `<script type="application/json">`, because a published Artifact may
+ * The artifact build's baked-in payload (see artifact.ts): the index and its card
+ * pictures in one `<script type="application/json">`, because a published Artifact may
  * not fetch anything. Absent on the site, where the fetches below run.
  */
 interface Island {
   manifest: Manifest;
-  fragments: Record<string, string>;
   /** `<id>` and `<id>-dark` to a data: url — the artifact may not fetch a file. */
   thumbs: Record<string, string>;
 }
@@ -381,8 +380,6 @@ export function labelledRows(manifest: Manifest): Array<{ labels: SheetLabels }>
 
 /** Either kind of row carries the two fields a fragment fetch needs. */
 export function requestFragment(sheet: { id: string; file: string }): Promise<string> {
-  const baked = readIsland()?.fragments[sheet.id];
-  if (baked !== undefined) return Promise.resolve(baked);
   return fetch(`${BASE}${sheet.file}`).then((res) => {
     if (!res.ok) throw new Error(`${sheet.file}: ${res.status}`);
     return res.text();

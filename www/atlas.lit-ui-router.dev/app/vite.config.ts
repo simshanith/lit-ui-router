@@ -36,14 +36,24 @@ const serverRouter = createServerRouter({
 });
 
 /**
- * ARTIFACT MODE — the whole atlas as ONE html file.
+ * ARTIFACT MODE — the condensed atlas as ONE html file: the gallery and the colophon.
  *
  * A claude.ai Artifact is a single page on an opaque origin with every
  * network request blocked, so nothing may be fetched at runtime: the manifest
- * and all twenty-three fragments are baked in as a JSON island by artifact.ts,
- * sheets/atlas.css is inlined beside them, the cytoscape and model-viewer dynamic
- * imports are folded into the one chunk, and the router runs on the hash.
+ * and the card pictures are baked in as a JSON island by artifact.ts,
+ * sheets/atlas.css is inlined beside them, and the router runs on the hash.
+ * Every plate, scene and the issue log is a link out to the live site, so the
+ * libraries only those pages load resolve to an empty module here.
  */
+const ARTIFACT_STUBS = new Set(['@google/model-viewer', 'cytoscape', '@uirouter/visualizer']);
+const STUB = '\0atlas:artifact-stub';
+const artifactStubPlugin: Plugin = {
+  name: 'atlas:artifact-stub',
+  enforce: 'pre',
+  resolveId: (id: string): string | undefined => (ARTIFACT_STUBS.has(id) ? STUB : undefined),
+  load: (id: string): string | undefined => (id === STUB ? 'export default undefined;' : undefined),
+};
+
 const artifactHtmlPlugin: Plugin = {
   name: 'atlas:artifact-html',
   // Pre, so vite never resolves the two references artifact mode drops: there
@@ -68,9 +78,10 @@ export default defineConfig(({ isPreview, mode }) => {
       build: { target: 'esnext', outDir: 'dist-artifact', emptyOutDir: true },
       plugins: [
         artifactHtmlPlugin,
+        artifactStubPlugin,
         viteSingleFile({
-          // On vite 8 this sets output.codeSplitting = false, which is what
-          // folds fragment.ts's `import('cytoscape')` into the one chunk.
+          // On vite 8 this sets output.codeSplitting = false, which folds every
+          // dynamic import into the one chunk.
           useRecommendedBuildConfig: true,
           inlinePattern: ['*.js', '*.css', '**/*.js', '**/*.css'],
         }),
