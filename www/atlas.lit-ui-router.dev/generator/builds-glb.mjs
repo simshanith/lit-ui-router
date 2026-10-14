@@ -204,9 +204,11 @@ export function buildGlb(model) {
   };
   for (const c of model.cords) {
     const b = byN.get(c.n), lift = motion.rise(c.n, 0), lifted = Math.max(...motion.us.map((u) => motion.rise(c.n, u)));
-    nodes[brickNode.get(c.n)].children.push(node({ name: `cord-cap-${c.n}-${c.letter}`, mesh: capMesh(), translation: [(c.from[0] - b.x) / PITCH, b.h / PITCH, (c.from[1] - b.y) / PITCH] }, false));
+    // the brick's cap rides its brick: on its top stud, or hanging from its underside with its stud up in the brick
+    const hung = Boolean(c.under), seatY = hung ? -CORD_CAP.h / PITCH : b.h / PITCH;
+    nodes[brickNode.get(c.n)].children.push(node({ name: `cord-cap-${c.n}-${c.letter}`, mesh: capMesh(), translation: [(c.from[0] - b.x) / PITCH, seatY, (c.from[1] - b.y) / PITCH] }, false));
     node({ name: `cord-cap-${c.letter}-${c.n}`, mesh: capMesh(), translation: at(...c.to) });
-    const seated = tubeOf(cordCurve(c.from, c.to)), raised = tubeOf(cordCurve([c.from[0], c.from[1], c.from[2] + lifted], c.to));
+    const seated = tubeOf(cordCurve(c.from, c.to, { under: hung })), raised = tubeOf(cordCurve([c.from[0], c.from[1], c.from[2] + lifted], c.to, { under: hung }));
     const delta = raised.map((v, k) => v - seated[k]);
     const prim = { attributes: { POSITION: accessor(new Float32Array(seated), 'VEC3', 5126, 34962, tight(seated)) }, targets: [{ POSITION: accessor(new Float32Array(delta), 'VEC3', 5126, 34962, tight(delta)) }], indices: over(accessors[tubeIndices()].bufferView, 5123, accessors[tubeIndices()].count, 'SCALAR'), material: index.edge };
     meshes.push({ name: `cord-${c.n}-${c.letter}`, primitives: [prim], weights: [0] });

@@ -6,13 +6,17 @@ export const CORD_CAP = { h: 8, r: 19, stud: { r: 12, h: 7 } };
 export const capTop = (cap = CORD_CAP) => cap.h + cap.stud.h;
 const SAG = 0.15, SAMPLES = 32;
 
-/** A cord between two stud tops [x, y, z]: a quadratic from cap stud to cap stud, its control over the plan midpoint and below the higher end by SAG of the length that runs level. */
-export function cordCurve(from, to, { sag = SAG, cap = CORD_CAP } = {}) {
-  const A = [from[0], from[1], from[2] + capTop(cap)], B = [to[0], to[1], to[2] + capTop(cap)];
+/**
+ * A cord between two stud tops [x, y, z]: a quadratic from cap stud to cap stud, its control over the plan midpoint and below
+ * the higher end by SAG of the length that runs level. Under `under`, `from` is a stud position on a brick's underside at the
+ * underside's height: the cap hangs there, its stud up in the brick, and the cord drops from the cap's plate face and bends to `to`.
+ */
+export function cordCurve(from, to, { sag = SAG, cap = CORD_CAP, under = false } = {}) {
+  const A = [from[0], from[1], from[2] + (under ? -cap.h : capTop(cap))], B = [to[0], to[1], to[2] + capTop(cap)];
   const len = Math.hypot(B[0] - A[0], B[1] - A[1], B[2] - A[2]) || 1, fall = Math.abs(A[2] - B[2]);
-  const C = [(A[0] + B[0]) / 2, (A[1] + B[1]) / 2, Math.max(A[2], B[2]) - sag * len * (1 - fall / len)];
+  const C = under ? [A[0], A[1], B[2] + 0.35 * (A[2] - B[2])] : [(A[0] + B[0]) / 2, (A[1] + B[1]) / 2, Math.max(A[2], B[2]) - sag * len * (1 - fall / len)];
   const at = (t) => [0, 1, 2].map((k) => (1 - t) ** 2 * A[k] + 2 * t * (1 - t) * C[k] + t ** 2 * B[k]);
-  return { from, to, cap, A, B, C, len, at, pts: Array.from({ length: SAMPLES + 1 }, (_, k) => at(k / SAMPLES)) };
+  return { from, to, cap, under, A, B, C, len, at, pts: Array.from({ length: SAMPLES + 1 }, (_, k) => at(k / SAMPLES)) };
 }
 
 // a span's sag: the dip a sagging quadratic between its ends takes at its middle, shaped to vanish with its slope at both ends
@@ -80,13 +84,14 @@ function hull(pts) {
   }, []);
   return [...half(s).slice(0, -1), ...half([...s].reverse()).slice(0, -1)];
 }
-/** A cord's two caps as end masses {id, poly, box, end}: each its round plate, which the cord leaves from its stud above it. */
+/** A cord's two caps as end masses {id, poly, box, end}: each its round plate, which the cord leaves from its stud above it, or, hanging (`under`), from its plate face below it, the cap painted over the cord's start. */
 export function capMasses(curve, project = (P) => iso(...P), id = 'cap') {
   const { r, h } = curve.cap;
   return [curve.from, curve.to].flatMap(([x, y, z], k) => {
     const ring = (rr, zz) => Array.from({ length: 16 }, (_, a) => project([x + rr * Math.cos((a * Math.PI) / 8), y + rr * Math.sin((a * Math.PI) / 8), zz]));
-    const drum = (rr, z0, z1, part) => ({ id: `${id} ${k ? 'at the runtime' : 'on the brick'}, its ${part}`, poly: hull([...ring(rr, z0), ...ring(rr, z1)]), box: { x: x - rr, y: y - rr, w: 2 * rr, d: 2 * rr, z0, h: z1 - z0 }, end: true });
-    return [drum(r, z, z + h, 'plate')];
+    const hung = !k && curve.under;
+    const drum = (rr, z0, z1, part) => ({ id: `${id} ${k ? 'at the runtime' : hung ? 'under the brick' : 'on the brick'}, its ${part}`, poly: hull([...ring(rr, z0), ...ring(rr, z1)]), box: { x: x - rr, y: y - rr, w: 2 * rr, d: 2 * rr, z0, h: z1 - z0 }, end: true, ...(hung ? { under: true } : {}) });
+    return [hung ? drum(r, z - h, z, 'plate') : drum(r, z, z + h, 'plate')];
   });
 }
 
@@ -108,7 +113,7 @@ export function cordHit(curve, masses, project = (P) => iso(...P)) {
   for (const P of curve.pts) {
     const c = project(P);
     for (const m of all) {
-      if (!pointIn(c, m.poly) || edgeGap(c, m.poly) < 1) continue;
+      if (m.under || !pointIn(c, m.poly) || edgeGap(c, m.poly) < 1) continue;
       const b = m.box, seen = P[0] >= b.x + b.w || P[1] >= b.y + b.d || P[2] >= b.z0 + b.h;
       if (!m.end || !seen) return m.id;
     }
@@ -122,13 +127,17 @@ export const cordClear = (curve, masses, project) => !cordHit(curve, masses, pro
 export function cordKit({ U = 40, pt }) {
   const K = U / 40, cap = { h: CORD_CAP.h * K, r: CORD_CAP.r * K, stud: { r: CORD_CAP.stud.r * K, h: CORD_CAP.stud.h * K } };
   const curve = (from, to, opts) => cordCurve(from, to, { ...opts, cap });
+  // a cap hanging from a brick's underside: its plate below the underside at (x, y, z), its stud up in the brick and unseen
+  function hungCapSvg(ox, oy, [x, y, z]) {
+    return drum(ox, oy, x, y, cap.r, z - cap.h, z, 'var(--paper-2)', 'var(--paper)');
+  }
   // an upright cylinder of plan radius r from z0 to z1 at (x, y): its wall, then its top
-  const drum = (ox, oy, x, y, r, z0, z1, wall, top) => {
+  function drum(ox, oy, x, y, r, z0, z1, wall, top) {
     const [cx, cy] = pt(ox, oy, x, y, z1), [, by] = pt(ox, oy, x, y, z0);
     const rx = +(r * Math.SQRT2 * 0.866).toFixed(2), ry = +(r * Math.SQRT2 * 0.5).toFixed(2);
     return `<path d="M${cx - rx},${cy} L${cx - rx},${by} A${rx},${ry} 0 0 0 ${cx + rx},${by} L${cx + rx},${cy} Z" class="sk" style="fill:${wall}"/>
 <ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" class="sk" style="fill:${top}"/>`;
-  };
+  }
   // a cap: a 1×1 round plate seated on its ringed stud, the ring kept round its foot, and its own stud on top, in ink on the kit's paper
   function capSvg(ox, oy, [x, y, z]) {
     const [fx, fy] = pt(ox, oy, x, y, z), g = 4 * K;
@@ -154,12 +163,13 @@ export function cordKit({ U = 40, pt }) {
     const line = (ps) => `M${ps.map((p) => p.join(',')).join(' L')}`;
     return `<path d="${line(L)} ${line(R)} ${ticks.join(' ')}" class="sk fnone" style="stroke-width:0.7"/>`;
   }
-  /** A string with end studs from stud top `from` to stud top `to`, or along a curve already routed: both caps, then the cord over them. */
+  /** A string with end studs from stud top `from` to stud top `to`, or along a curve already routed: both caps, then the cord over them; a hanging cap is painted over the cord's start. */
   function cord(ox, oy, from, to, opts = {}) {
     const c = opts.curve ?? curve(from, to, opts);
+    if (c.under) return [capSvg(ox, oy, c.to), strandSvg(ox, oy, c, opts), hungCapSvg(ox, oy, c.from)].join('\n');
     return [capSvg(ox, oy, c.from), capSvg(ox, oy, c.to), strandSvg(ox, oy, c, opts)].join('\n');
   }
   const curveVia = (from, via, to, opts) => cordCurveVia(from, via, to, { ...opts, cap });
   const route = (from, to, masses, opts) => cordRoute(from, to, masses, { pitch: U, ...opts, cap });
-  return { cap, top: capTop(cap), curve, curveVia, route, cord, capSvg, strandSvg };
+  return { cap, top: capTop(cap), curve, curveVia, route, cord, capSvg, hungCapSvg, strandSvg };
 }

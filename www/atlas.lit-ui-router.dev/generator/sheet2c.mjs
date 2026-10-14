@@ -509,6 +509,38 @@ const cordRoute = (build, p, part, under, placed) => {
   }
   return null;
 };
+// a hovering brick's free underside studs, each with its point on the underside: the cells of a brick standing on another
+// brick that stand over none of it, and none another cord hangs from
+const underStuds = (build, part, b) => {
+  if (b.on === null) return [];
+  const base = build.parts_.get(b.on), keys = [];
+  for (let i = 0; i < part.ws; i++) for (let j = 0; j < part.ds; j++) {
+    const x = part.x + (i + 0.5) * U, y = part.y + (j + 0.5) * U;
+    if (!inside(x, y, base) && !(part.hangRings ?? []).includes(`${i},${j}`)) keys.push([`${i},${j}`, [x, y, part.z0]]);
+  }
+  return keys;
+};
+// a hanging cord and its cap are drawn just before their brick, which hides what it stands in front of; the bricks under it they
+// pass only in front of, its plate only above, and every other brick and stack they miss outright
+const hangCrossing = (t, parts, plates) => {
+  const under = new Set(t.under ?? []), [x, y, z] = t.curve.from, r = cords.cap.r;
+  const cap = Array.from({ length: 8 }, (_, k) => [x + r * Math.cos((k * Math.PI) / 4), y + r * Math.sin((k * Math.PI) / 4), z - cords.cap.h]);
+  const masses = [
+    ...parts.filter((o) => o.id !== t.part.id).map((o) => ({ id: `brick ${o.id}`, poly: silhouette(o, 0, 0), box: o, end: under.has(o.id) })),
+    ...plates.filter((p) => p === t.p || p.rt.plates > 1).map((p) => ({ id: p.rt.letter, poly: silhouette(p, 0, 0), box: p, end: p === t.p })),
+  ];
+  return cordHit({ ...t.curve, pts: [...cap, ...t.curve.pts] }, masses, (q) => pt(0, 0, ...q));
+};
+// a hanging route: of every free underside stud and every free stud of the plate, the nearest pair whose cord drops clear
+const hangRoute = (build, p, part, b, under) => {
+  const gap = (r) => Math.hypot(r.from[0] - r.to[0], r.from[1] - r.to[1], r.from[2] - r.to[2]);
+  const pairs = underStuds(build, part, b).flatMap(([top, from]) => plateStuds(p, part).map((key) => ({ top, from, key, to: ringOn(p, key, p.z0 + p.h) }))).sort((a, c) => gap(a) - gap(c));
+  for (const r of pairs) {
+    const curve = cords.curve(r.from, r.to, { under: true });
+    if (!hangCrossing({ p, part, under, curve }, [...build.parts_.values()], build.plates)) return { ...r, curve, hang: true };
+  }
+  return null;
+};
 const cordable = (build, p) => p.links.filter((l) => l.kind === 'reach' && build.parts_.has(l.b.n)).every((l) => {
   const part = build.parts_.get(l.b.n), under = underOf(build, l.b), placed = build.plates.filter((x) => x.x !== undefined);
   return !!cordRoute(build, p, part, under, placed);
@@ -556,16 +588,19 @@ function placeAround(build, kit, core) {
   })) return;
   fail(build, `${listOf(later.map((p) => p.rt.name))} find no places against ${CORE} with every cord clear, in any order`);
 }
-// a reach no seam carries is a cord: a string with end studs from a free stud on the brick's top to a ringed stud of the plate
+// a reach no seam carries is a cord: a string with end studs to a ringed stud of the plate, hanging from a free stud of a hovering
+// brick's underside where its drop clears, else leaving a free stud of the brick's top
 function cordUp(build) {
   for (const p of build.plates) for (const link of p.links.filter((l) => l.kind === 'reach')) {
     const part = build.parts_.get(link.b.n), under = underOf(build, link.b);
-    const route = cordRoute(build, p, part, under, build.plates) ?? fail(build, `brick ${link.b.n} has no pair of free studs whose cord to ${p.rt.name} clears every brick and stack`);
+    const hang = hangRoute(build, p, part, link.b, under);
+    const route = hang ?? cordRoute(build, p, part, under, build.plates) ?? fail(build, `brick ${link.b.n} has no pair of free studs whose cord to ${p.rt.name} clears every brick and stack`);
     p.rings.push(route.key);
-    (part.cordRings ??= []).push(route.top);
+    if (hang) (part.hangRings ??= []).push(route.top);
+    else (part.cordRings ??= []).push(route.top);
     link.kind = 'cord';
     p.reached.push(link.b);
-    build.cords.push({ p, part, under, from: route.from, to: route.to, curve: route.curve, front: route.front });
+    build.cords.push({ p, part, under, from: route.from, to: route.to, curve: route.curve, front: route.front, hang: Boolean(hang) });
   }
 }
 // a model's layout; a brick core packs takes its first spot from which every plate still finds a place with its cords clear
@@ -631,7 +666,7 @@ const modelFor = (build) => {
     const linked = (kind) => build.plates.filter((p) => p.links.some((l) => l.b === b && l.kind === kind)).map((p) => p.rt.letter);
     return { n: b.n, name: b.name, ver: b.ver, files: b.files, sloc: b.sloc, shape: b.shape, hue: b.hue ?? null, ws: part.ws, ds: part.ds, courses: b.courses,
       x: PLAN(part.x), y: PLAN(part.y), z0: PLAN(z0), h: PLAN(part.h), lift: PLAN(lift), on: b.on, seat: b.seat?.letter ?? null,
-      straddles: linked('straddle'), cords: linked('cord'), rings: [...part.rings, ...(part.cordRings ?? [])], drops };
+      straddles: linked('straddle'), cords: linked('cord'), hangs: build.cords.filter((t) => t.hang && t.part.id === b.n).map((t) => t.p.rt.letter), rings: [...part.rings, ...(part.cordRings ?? [])], drops };
   });
   const plates = [...build.plates].sort((p, q) => p.rt.letter.localeCompare(q.rt.letter)).map((p) => {
     const r = p.rt, by = (kind) => p.links.filter((l) => l.kind === kind).map((l) => l.b.n);
@@ -639,8 +674,8 @@ const modelFor = (build) => {
       plates: r.plates, full: r.full, shape: r.shape, topShape: r.topShape, topOff: r.topOff, x: PLAN(p.x), y: PLAN(p.y), z0: PLAN(p.z0), h: PLAN(p.h),
       rings: p.rings, peeredBy: r.peeredBy.map((name) => byName(name).n), seats: by('seat'), straddled: by('straddle'), corded: by('cord') };
   });
-  // a cord's two stud tops, the brick's at its seat
-  const cordsOut = build.cords.map((t) => ({ n: t.part.id, letter: t.p.rt.letter, from: [PLAN(t.from[0]), PLAN(t.from[1]), PLAN(zOf(build.bricks.find((x) => x.n === t.part.id)) + t.part.h)], to: [PLAN(t.to[0]), PLAN(t.to[1]), PLAN(t.to[2])] }));
+  // a cord's two stud points, the brick's at its seat: its top, or its underside where the cord hangs
+  const cordsOut = build.cords.map((t) => ({ n: t.part.id, letter: t.p.rt.letter, from: [PLAN(t.from[0]), PLAN(t.from[1]), PLAN(zOf(build.bricks.find((x) => x.n === t.part.id)) + (t.hang ? 0 : t.part.h))], to: [PLAN(t.to[0]), PLAN(t.to[1]), PLAN(t.to[2])], ...(t.hang ? { under: true } : {}) }));
   const g = build.boxes.find((o) => o.ground);
   return { numeral: build.numeral, name: build.name, words: build.words, slug: slugOf(build.name), atlas: Boolean(build.atlas), consumers: build.consumers.length, kinds: kindsLine(build),
     ground: { x: PLAN(g.x), y: PLAN(g.y), w: PLAN(g.w), d: PLAN(g.d), h: PLAN(g.h) }, bricks, plates, cords: cordsOut, unpeered: build.unpeered.map((t) => RT(t).letter) };
@@ -660,22 +695,27 @@ const leader = (x1, y1, x2, y2) => `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="$
 // the guard: every cord drawn passes no brick or stack but above or in front of it, so nothing drawn over it hides it
 function checkCords(build) {
   for (const t of build.cords) {
-    const hit = cordCrossing(t, [...build.parts_.values()], build.plates, true);
+    const hit = t.hang ? hangCrossing(t, [...build.parts_.values()], build.plates) : cordCrossing(t, [...build.parts_.values()], build.plates, true);
     if (hit) throw new Error(`sheet 2C: build ${build.numeral}: the cord from brick ${t.part.id} to ${t.p.rt.letter} meets ${hit}`);
   }
 }
-// the masses back to front, then the cords over them, which the guard keeps clear of every face that would hide them
+// the masses back to front, a hanging cord just before its brick, then the other cords over them all, which the guard keeps
+// clear of every face that would hide them
 const drawModel = (build, ox, oy) => [...paintOrder(build.boxes).map((i) => {
   const b = build.boxes[i];
   if (b.ground) return block(ox, oy, b.x, b.y, b.w, b.d, b.z0, b.h, build.atlas ? { edge: 'ska' } : {});
   if (b.pl) return stack(ox, oy, b.pl.rt, { x: b.x, y: b.y, z0: b.z0, rings: new Set(b.pl.rings) });
   const fall = b.drops.map(([x, y, z]) => drop(ox, oy, x, y, b.z0, z)).join('\n');
-  return `${fall}\n${brick(ox, oy, b.x, b.y, b.ws, b.ds, b.brick.courses, { z0: b.z0, studEdge: 'sk', ringStuds: new Set([...b.rings, ...(b.cordRings ?? [])]), hue: b.brick.hue })}`;
-}), ...build.cords.map((t) => cords.cord(ox, oy, null, null, { curve: t.curve }))].join('\n');
+  const hung = build.cords.filter((t) => t.hang && t.part.id === b.brick.n).map((t) => cords.cord(ox, oy, null, null, { curve: t.curve }));
+  return `${[...hung, fall].join('\n')}\n${brick(ox, oy, b.x, b.y, b.ws, b.ds, b.brick.courses, { z0: b.z0, studEdge: 'sk', ringStuds: new Set([...b.rings, ...(b.cordRings ?? [])]), hue: b.brick.hue })}`;
+}), ...build.cords.filter((t) => !t.hang).map((t) => cords.cord(ox, oy, null, null, { curve: t.curve }))].join('\n');
 // a badge keeps clear of every cord's strands and of its round plates, foot ring and all
 const CAP_REACH = BADGE_R + (cords.cap.r + 4 * K) * Math.SQRT2 * 0.866 + 2;
 const clearOfCords = (build, ox, oy, c) => build.cords.every((t) => t.curve.pts.every((q) => Math.hypot(pt(ox, oy, ...q)[0] - c[0], pt(ox, oy, ...q)[1] - c[1]) > BADGE_R + 4)
-  && [t.curve.from, t.curve.to].every(([x, y, z]) => Math.hypot(pt(ox, oy, x, y, z + cords.cap.h)[0] - c[0], pt(ox, oy, x, y, z + cords.cap.h)[1] - c[1]) > CAP_REACH));
+  && [t.curve.from, t.curve.to].every(([x, y, z], k) => {
+    const zc = !k && t.hang ? z - cords.cap.h : z + cords.cap.h;
+    return Math.hypot(pt(ox, oy, x, y, zc)[0] - c[0], pt(ox, oy, x, y, zc)[1] - c[1]) > CAP_REACH;
+  }));
 // the badge spacing every badge of a model keeps from the others
 const BADGE_GAP = 24;
 // badges: a brick's number above its far roof corner, or at its near-left roof corner when a brick stands on it;
@@ -962,7 +1002,12 @@ const ROW_CHARS = Math.floor((VW - 2 * LEFT - 36) / 5.4);
 // the straddles and cords a model draws, for its schedule row
 const couplingsOf = (b) => {
   const of = (kind) => b.plates.flatMap((p) => p.links.filter((l) => l.kind === kind).map((l) => `brick ${l.b.n} to ${p.rt.letter}`));
-  return `${of('straddle').length ? ` · straddles ${listOf(of('straddle'))}` : ''}${of('cord').length ? ` · cords ${listOf(of('cord'))}` : ''}`;
+  const tops = b.cords.filter((t) => !t.hang).map((t) => `brick ${t.part.id} to ${t.p.rt.letter}`);
+  const hangers = [...new Set(b.cords.filter((t) => t.hang).map((t) => t.part.id))].map((n) => {
+    const to = b.cords.filter((t) => t.hang && t.part.id === n).map((t) => t.p.rt.letter);
+    return `${to.length > 1 ? 'cords hang' : 'a cord hangs'} from brick ${n} to ${listOf(to)}`;
+  });
+  return `${of('straddle').length ? ` · straddles ${listOf(of('straddle'))}` : ''}${tops.length ? ` · cords ${listOf(tops)}` : ''}${hangers.map((h) => ` · ${h}`).join('')}`;
 };
 const BUILD_ROWS = MODELS.flatMap((b) => [
   ...wrapWords(`${b.numeral}  ${b.name.toUpperCase()}${b.atlas ? ` — ${b.words}` : ''} — ${listOf(b.bricks.map((x) => `brick ${x.n} ${x.name}`))} — on plate${b.plates.length > 1 ? 's' : ''} ${listOf(b.plates.map((p) => `${p.rt.letter} ${p.rt.name}`))}${b.unpeered.length ? ` · ${listOf(b.unpeered)} pinned by the consumer, peered by no part here` : ''}${couplingsOf(b)}`, ROW_CHARS).map((s, i) => (i ? `      ${s}` : s)),
@@ -1009,6 +1054,8 @@ const IN_ATLAS = (b) => ATLAS_BUILD.parts.includes(b.name);
 const UNUSED_WITH = FAMILY.filter((b) => WITH.totals.carrying[b.name] === 0);
 const SPARE_WITH = SPARE_PLATES.filter((r) => buildsOn(WITH, r).length === 0);
 const STOOD_BY_ATLAS = SPARE_PLATES.filter((r) => ATLAS_BUILD.plates.some((p) => p.rt === r));
+// the bricks whose cords hang, by build, for the notes
+const HANGERS = MODELS.flatMap((b) => [...new Set(b.cords.filter((t) => t.hang).map((t) => t.part.id))].map((n) => `brick ${n} in build ${b.numeral}`));
 const countOf = (n, word) => `${WORD[n]} ${word}${n === 1 ? '' : 's'}`;
 export const SHEET2C_SCALE = `ONE BOX, ${WORD[MODELS.length].toUpperCase()} BUILDS`;
 
@@ -1040,7 +1087,7 @@ export const sheet2c = {
   notes: `
 <p><strong>One box, several models.</strong> Sheet 2 draws every family brick in one assembly on ${npmLink(CORE)}. The repository's own consumers — ${plural(BUILDS.totals.consumers, 'consumer')}: the sample apps, the docs site and the examples at the cabinet's sha — pin ${WORD[BUILT.length]} distinct sets of family parts, each manifest closed over its family peers, and this plate draws each set as the model it makes: its parts at sheet 2's mould, standing on the runtime plates those parts peer. The ${ORDINAL[MODELS.length]} model, build ${ATLAS_BUILD.numeral}, is the atlas's own app: its manifest at <code>${ATLAS_APP.dir}</code>, read from <code>git archive ${ATLAS_APP.ref}</code> @ ${ATLAS_APP.sha}, off the cabinet's tree, and drawn accent-edged on its own branch the way sheet A4 draws the atlas deploy. Every count on this sheet reads both ways, the cabinet's tree first and “with the atlas app” after. Build ${MOST.numeral} is the most built, ${listOf(MOST.bricks.map((x) => npmLink(x.name)))} alone on ${listOf(MOST.plates.map((p) => npmLink(p.rt.name)))}, by ${plural(MOST.consumers.length, 'consumer')}. ${Cap(WORD[EMPTY.flatMap((e) => e.consumers).length])} consumer pins no family part at all${EMPTY.length ? ` (${listOf(EMPTY.flatMap((e) => e.consumers))})` : ''}, and is a consumer rather than a build.</p>
 <p><strong>No model mixes two reactivity runtimes.</strong> ${Cap(listOf(REACTIVITY.map((n) => npmLink(n))))} are each reached by a family binding — ${listOf(BINDINGS.map((b) => npmLink(b.name)))} — and no consumer in either reading mixes two of them; the build stops if one does. The bindings are alternates in the box, the way one set's instructions show a car or a plane, not both.</p>
-<p><strong>Ground and stacking follow the dependency.</strong> A family brick peers ${npmLink('lit')} or ${npmLink('effect')}, not the reverse, and no runtime on this plate peers another — both read from each row's own <code>peerDependencies</code> — so each runtime is a plate, the parts stand on them, and the plates lie on plain ground. ${npmLink(CORE)} is a plate like the others: ${WORD[CORE_ROW.peeredBy.length]} of the ${WORD[FAMILY.length]} family bricks peer it, and it is the baseplate of every model, laid first at the left, the way sheet 2 seats the family on it. A part stands on the part it peers when that part is in the same build, as it does on sheet 2, and the rest seat on core at sheet 2's places measured from core's right edge, packed from the back where sheet 2 seats them off its client plate; a part that peers no core seats on its one runtime (${listOf(FAMILY.filter((f) => MODELS.some((m) => m.bricks.some((b) => b.n === f.n && b.seat && b.seat.name !== CORE))).map((b) => b.name))}). Every other runtime a brick peers abuts core and the brick reaches it, unless the brick it stands on already carries it: a brick on core straddles the seam onto a flat runtime plate one stud deep, the way ${npmLink('lit-ui-router')} stands on both core and ${npmLink('lit')}, and a brick that cannot straddle, one on another brick or one beside a stack, reaches it by a cord: a string with end studs, two 1×1 round plates joined by a cord, one seated on a ringed stud of the brick's top and the other on a ringed stud of the plate, the cord leaving each plate's own stud, from the nearest pair of free studs whose cord clears every brick and stack. Nothing abuts core from behind: a stack taller than core stands at its left or right side, and a flat plate along its front, at the right beside the seam or at the left, wherever every cord to it runs clear of every brick and stack; each plate rings one stud per brick coupled to it. The atlas app's model spans the columns its width needs. A build stands on the runtimes its consumers declare and on every required peer its parts carry, which the installer adds whether or not a manifest names it; an optional peer no consumer declares stays off the model.</p>
+<p><strong>Ground and stacking follow the dependency.</strong> A family brick peers ${npmLink('lit')} or ${npmLink('effect')}, not the reverse, and no runtime on this plate peers another — both read from each row's own <code>peerDependencies</code> — so each runtime is a plate, the parts stand on them, and the plates lie on plain ground. ${npmLink(CORE)} is a plate like the others: ${WORD[CORE_ROW.peeredBy.length]} of the ${WORD[FAMILY.length]} family bricks peer it, and it is the baseplate of every model, laid first at the left, the way sheet 2 seats the family on it. A part stands on the part it peers when that part is in the same build, as it does on sheet 2, and the rest seat on core at sheet 2's places measured from core's right edge, packed from the back where sheet 2 seats them off its client plate; a part that peers no core seats on its one runtime (${listOf(FAMILY.filter((f) => MODELS.some((m) => m.bricks.some((b) => b.n === f.n && b.seat && b.seat.name !== CORE))).map((b) => b.name))}). Every other runtime a brick peers abuts core and the brick reaches it, unless the brick it stands on already carries it: a brick on core straddles the seam onto a flat runtime plate one stud deep, the way ${npmLink('lit-ui-router')} stands on both core and ${npmLink('lit')}, and a brick that cannot straddle, one on another brick or one beside a stack, reaches it by a cord: a string with end studs, two 1×1 round plates joined by a cord, one seated on a ringed stud of the brick's top and the other on a ringed stud of the plate, the cord leaving each plate's own stud, from the nearest pair of free studs whose cord clears every brick and stack. A brick standing on another brick hangs its cord instead from a free stud of its underside, the round plate's stud seated in the brick as on a stud, wherever that cord drops clear of every other brick and stack${HANGERS.length ? ` — ${listOf(HANGERS)}` : ''}. Nothing abuts core from behind: a stack taller than core stands at its left or right side, and a flat plate along its front, at the right beside the seam or at the left, wherever every cord to it runs clear of every brick and stack; each plate rings one stud per brick coupled to it. The atlas app's model spans the columns its width needs. A build stands on the runtimes its consumers declare and on every required peer its parts carry, which the installer adds whether or not a manifest names it; an optional peer no consumer declares stays off the model.</p>
 <p><strong>One scale.</strong> The family keeps sheet 2's mould exactly — 1 stud per ${SLOC_PER_STUD} sloc rounded up the brick shapes, a course per ${FILES_PER_COURSE} authored files. A runtime is baseplates at sheet 2's baseplate footprint, ${shapeName(BASEPLATE)} = ${BASEPLATE_STUDS} studs, one stud per ${SLOC_PER_STUD} sloc of one shipped build — the files reachable from its <code>exports</code> entries, the <code>development</code> condition where one is shipped${DEV.length ? ` (${listOf(DEV.map((r) => npmLink(r.name)))})` : ''} — laid a plate at a time and stacked when it overflows, the remainder on top at its own size, three plates to a brick course: ${listOf(RUNTIMES.filter((r) => r.stacked).map((r) => `${npmLink(r.name)} is ${plateWord(r)}`))}. Under ${BASEPLATE_STUDS} studs a runtime is one plate at its own size, the nearest rectangle: ${listOf(RUNTIMES.filter((r) => !r.stacked).map((r) => `${npmLink(r.name)} ${shapeName(r.shape)}`))}. A package's dependencies are a number in the schedule rather than area on the plate: ${listOf(FACADES.map((r) => `${npmLink(r.name)} builds ${fmt(r.sloc)} lines over a closure of ${fmt(r.closure.sloc)}`))}. Every model on lit stands on a ${shapeName(LIT.shape)}: ${WORD[LIT_BUILDS.length]} of the ${WORD[BUILT.length]} builds, ${WORD[MODELS.filter((b) => b.plates.some((p) => p.rt === LIT)).length]} of ${WORD[MODELS.length]} with the atlas app, and the runtime they run on is in its closure.</p>
 <p><strong>What stays in the box.</strong> ${Cap(listOf(UNUSED_PARTS.map((b) => npmLink(b.name))))} ${UNUSED_PARTS.length > 1 ? 'are' : 'is'} carried by no consumer at the cabinet's tree, so no model of that reading draws ${UNUSED_PARTS.length > 1 ? 'them' : 'it'}${UNUSED_PARTS.some(IN_ATLAS) ? `; with the atlas app, ${listOf(UNUSED_PARTS.filter(IN_ATLAS).map((b) => b.name))} ${UNUSED_PARTS.filter(IN_ATLAS).length > 1 ? 'stand' : 'stands'} in build ${ATLAS_BUILD.numeral}` : ''}. ${Cap(listOf(SPARE_PLATES.map((r) => npmLink(r.name))))} ${SPARE_PLATES.length > 1 ? 'are plates' : 'is a plate'} no model stands on at the cabinet's tree — ${listOf(SPARE_PLATES.filter((r) => r.optional).map((r) => r.name))} optional and pinned by no consumer there, ${listOf(SPARE_PLATES.filter((r) => !r.optional).map((r) => r.name))} peered only by a part no consumer there carries${STOOD_BY_ATLAS.length ? `; with the atlas app, build ${ATLAS_BUILD.numeral} stands on ${listOf(STOOD_BY_ATLAS.map((r) => r.name))}, and ${SPARE_WITH.length ? `${listOf(SPARE_WITH.map((r) => r.name))} ${SPARE_WITH.length > 1 ? 'stay' : 'stays'} spare` : 'no plate stays spare'}` : ''}. They stand in the dashed register under the box, each line reading the cabinet's tree first and the atlas app after, and the spare plates are drawn there rather than on the ground.${VARIED.length ? ` ${Cap(listOf(VARIED.map((b) => `build ${b.numeral}'s manifests differ in what they pin and what they take as a peer`)))}; the schedule says which.` : ''} Every number on this sheet is read from <code>www/atlas.lit-ui-router.dev/data/census-builds.json</code>, <code>census-peers.json</code>, <code>census-bricks.json</code> and <code>census-couplings.json</code> — ${COUNTED}; the second reading adds <code>${ATLAS_APP.dir}</code> at ${ATLAS_APP.ref} @ ${ATLAS_APP.sha}.</p>`,
   key: [
@@ -1050,7 +1097,7 @@ export const sheet2c = {
     keyRow('<rect x="4" y="2" width="40" height="14" class="ska fnone" stroke-dasharray="5 4" opacity="0.7"/>', 'an accent-edged panel — the atlas app’s build, on its own branch, its ground edged in accent'),
     keyRow('<ellipse cx="24" cy="9" rx="6" ry="3.5" class="ska fp"/><ellipse cx="24" cy="9" rx="11" ry="6.5" class="ska fnone"/>', `a ringed stud — one per brick coupled to a plate, under a seated or straddling brick or under a cord's round plate, on the plate and on the brick's top; the plate lettered ${LETTERS} beside it`),
     keyRow('<line x1="24" y1="2" x2="24" y2="16" class="ska" stroke-dasharray="6 4"/><circle cx="24" cy="16" r="2.2" class="fa"/>', 'drop line — the brick seats on that stud; a brick straddling a seam drops onto both plates'),
-    keyRow('<ellipse cx="9" cy="9" rx="7" ry="3.8" class="ska fnone"/><path d="M3,6 L3,9 A6,3.4 0 0 0 15,9 L15,6 Z" class="sk fp2"/><ellipse cx="9" cy="6" rx="6" ry="3.4" class="sk fp"/><path d="M6.2,4 L6.2,5.5 A2.8,1.6 0 0 0 11.8,5.5 L11.8,4 Z" class="sk fp2"/><ellipse cx="9" cy="4" rx="2.8" ry="1.6" class="sk fp2"/><ellipse cx="39" cy="12.5" rx="7" ry="3.8" class="ska fnone"/><path d="M33,9.5 L33,12.5 A6,3.4 0 0 0 45,12.5 L45,9.5 Z" class="sk fp2"/><ellipse cx="39" cy="9.5" rx="6" ry="3.4" class="sk fp"/><path d="M36.2,7.5 L36.2,9 A2.8,1.6 0 0 0 41.8,9 L41.8,7.5 Z" class="sk fp2"/><ellipse cx="39" cy="7.5" rx="2.8" ry="1.6" class="sk fp2"/><path d="M9,3.4 Q26,3.4 39,6.9 M9,4.8 Q26,4.8 39,8.3 M14,3.5 L15,5 M19,3.8 L20,5.3 M24,4.2 L25,5.7 M29,4.8 L30,6.3 M34,5.8 L35,7.3" class="sk fnone" style="stroke-width:0.7"/>', 'a string with end studs — two 1×1 round plates joined by a cord, a coupling a footprint cannot make, drawn to fit and not massed: one plate seated on a ringed stud of the brick’s top, the other on a ringed stud of the runtime’s plate, the cord leaving each one’s own stud'),
+    keyRow('<ellipse cx="9" cy="9" rx="7" ry="3.8" class="ska fnone"/><path d="M3,6 L3,9 A6,3.4 0 0 0 15,9 L15,6 Z" class="sk fp2"/><ellipse cx="9" cy="6" rx="6" ry="3.4" class="sk fp"/><path d="M6.2,4 L6.2,5.5 A2.8,1.6 0 0 0 11.8,5.5 L11.8,4 Z" class="sk fp2"/><ellipse cx="9" cy="4" rx="2.8" ry="1.6" class="sk fp2"/><ellipse cx="39" cy="12.5" rx="7" ry="3.8" class="ska fnone"/><path d="M33,9.5 L33,12.5 A6,3.4 0 0 0 45,12.5 L45,9.5 Z" class="sk fp2"/><ellipse cx="39" cy="9.5" rx="6" ry="3.4" class="sk fp"/><path d="M36.2,7.5 L36.2,9 A2.8,1.6 0 0 0 41.8,9 L41.8,7.5 Z" class="sk fp2"/><ellipse cx="39" cy="7.5" rx="2.8" ry="1.6" class="sk fp2"/><path d="M9,3.4 Q26,3.4 39,6.9 M9,4.8 Q26,4.8 39,8.3 M14,3.5 L15,5 M19,3.8 L20,5.3 M24,4.2 L25,5.7 M29,4.8 L30,6.3 M34,5.8 L35,7.3" class="sk fnone" style="stroke-width:0.7"/>', 'a string with end studs — two 1×1 round plates joined by a cord, a coupling a footprint cannot make, drawn to fit and not massed: one plate seated on a ringed stud of the brick’s top, the other on a ringed stud of the runtime’s plate, the cord leaving each one’s own stud; a cap seats on a stud or hangs from a brick’s underside'),
     keyRow('<polygon points="2,11 16,4 46,11 46,14 16,7 2,14" class="sks fp" stroke-dasharray="3 2"/>', 'a dashed plate — an optional peer'),
     keyRow('<polygon points="8,12 16,7 26,12 26,15 16,10 8,15" class="sks fp" stroke-dasharray="3 2"/>', 'not in any build — a part no consumer carries, or a plate no model stands on'),
     keyRow('<polygon points="4,8 16,2 44,9 44,15 16,8 4,14" class="sk fp"/>', 'ground — the registry, not massed'),
