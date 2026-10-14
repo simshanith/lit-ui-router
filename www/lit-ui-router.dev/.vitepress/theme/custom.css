@@ -54,27 +54,19 @@
   }
 }
 
-/* The CTAs: the install link spans both columns over the two buttons, as wide as the hero logo (cqi of .container). */
+/* The CTAs: the buttons keep their natural widths and the install link spans both. */
 .VPHero.has-image .actions.actions {
   display: grid;
-  grid-template-columns: repeat(2, minmax(max-content, 1fr));
+  grid-template-columns: repeat(2, auto);
   gap: 12px;
-  inline-size: calc((200cqi - 1rem) / 3);
-  min-inline-size: max-content;
+  inline-size: fit-content;
   margin-inline: auto;
   margin-block: 0;
 }
 
-@media (min-width: 768px) {
-  .VPHero.has-image .actions.actions {
-    inline-size: calc((100cqi - 1rem) / 2);
-  }
-}
-
-/* One feature-card column, the logo's column. */
+/* Side by side with the logo, the hero's text is start-aligned. */
 @media (min-width: 960px) {
   .VPHero.has-image .actions.actions {
-    inline-size: calc((100cqi - 2rem) / 3);
     margin-inline: 0;
   }
 }
@@ -141,11 +133,6 @@
 
 .dark {
   --vp-home-hero-image-background-image: url(/images/hero-glow-dark.svg);
-}
-
-/* The install button (HeroInstall.vue) sizes in cqi of this box, matching the logo. */
-.VPHero.has-image .container {
-  container-type: inline-size;
 }
 
 /* The logo sizes to the hero's width, in feature-card columns; the box is the logo, so no negative margins. */
