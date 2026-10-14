@@ -2,7 +2,6 @@
   // tooling umbrella (IDE, tsgolint, typedoc): src + specs, no emit
   "extends": "./tsconfig.src.json",
   "compilerOptions": {
-    "rootDir": ".",
     "noEmit": true,
     // specs are exempt; typecheck:src enforces conformance
     "isolatedDeclarations": false,

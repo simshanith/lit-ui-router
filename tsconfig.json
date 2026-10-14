@@ -43,6 +43,7 @@
     "examples/embeds.test-d.ts",
     "examples/embeds.test.ts",
     "examples/embeds.ts",
+    "knip.config.ts",
     "tools/dts-backtest/run.ts",
     "tools/vue-check/bin.ts"
   ]

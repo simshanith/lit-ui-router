@@ -531,6 +531,9 @@ importers:
       '@commitlint/types':
         specifier: 'catalog:'
         version: 21.2.3
+      '@tools/bootstrap':
+        specifier: catalog:workspace
+        version: link:tools/bootstrap
       '@tools/compat-guards':
         specifier: catalog:workspace
         version: link:tools/compat-guards
@@ -546,6 +549,9 @@ importers:
       '@tools/oxlint-anti-slop':
         specifier: catalog:workspace
         version: link:tools/oxlint-anti-slop
+      '@tools/shared':
+        specifier: catalog:workspace
+        version: link:tools/shared
       '@types/node':
         specifier: 'catalog:'
         version: 24.19.1

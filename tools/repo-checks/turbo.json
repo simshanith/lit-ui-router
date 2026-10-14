@@ -104,7 +104,7 @@
         "!$TURBO_ROOT$/**/.cache/**",
         "!$TURBO_ROOT$/.claude/**",
         "!$TURBO_ROOT$/.config/mise/**/*.local.toml",
-        // ignored by knip.jsonc as standalone installs
+        // ignored by knip.config.ts as standalone installs
         "!$TURBO_ROOT$/examples/*/**",
         "$TURBO_ROOT$/pnpm-workspace.yaml"
       ]
