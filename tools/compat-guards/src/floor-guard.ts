@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Each installed <dep>-floor alias must equal the floor of the <dep> range in
 // the catalog the package's peer or dependency names, or the floor lane lies.
-// Usage (from the package dir): peer-floor-guard
+// Usage (from the package dir): floor-guard
 import semver from 'semver';
 
 import { readManifest } from '@tools/bootstrap/manifest.ts';
@@ -11,7 +11,7 @@ import { rangeFloor, upperLegs } from './ranges.ts';
 
 // annotated: TS only treats `g.fail` as never-returning through a dotted name
 // whose type is explicit, and the floor fallback below relies on that narrowing
-const g: Guard = guard('peer-floor-guard');
+const g: Guard = guard('floor-guard');
 
 const manifest = readManifest(process.cwd());
 

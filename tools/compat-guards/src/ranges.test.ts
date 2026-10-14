@@ -112,7 +112,7 @@ describe('rangeFloor', () => {
   });
 
   it('names only the lowest leg of a multi-leg range', () => {
-    // true but not the whole truth, which is why peer-floor-guard proves the
+    // true but not the whole truth, which is why floor-guard proves the
     // upperLegs separately
     assert.equal(rangeFloor('^1.7.0 || ^2.0.0'), '1.7.0');
   });

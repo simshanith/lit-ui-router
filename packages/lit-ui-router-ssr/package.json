@@ -49,7 +49,7 @@
     "build:js": "oxc-emit-js --development",
     "build:types": "oxc-emit-dts",
     "changelog": "release-it --changelog --git.tagMatch=\"lit-ui-router-ssr@[0-9]*.[0-9]*.[0-9]*\"",
-    "check:bundle": "peer-floor-guard && check-bundle-inputs",
+    "check:bundle": "floor-guard && check-bundle-inputs",
     "check:dev-split": "oxc-emit-check-dev-split",
     "codecov:bundle": "upload-entry-bundles",
     "crap": "crap-report",

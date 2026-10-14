@@ -184,7 +184,7 @@ effect, `publishedPeerSignals` and `peerFloorSignals` for signals.
 so `test:peer-floor` runs its rule suite on the `eslint-floor` alias in every PR.
 An eslint floor bump raises `publishedPeer.eslint` and the `peerFloorEslintPlugin`
 pin. The range's upper `||` leg is exercised by the plugin's own `eslint`
-devDependency, which `peer-floor-guard` requires to sit in it.
+devDependency, which `floor-guard` requires to sit in it.
 
 `published-diff` picks that tag from the workspace version by the same rule
 release-it publishes under: a prerelease answers to its own channel tag,

@@ -53,7 +53,7 @@
     "lint:oxlint": "oxlint --ignore-pattern test/oxlint .",
     "lint:rules": "eslint --config eslint.rules.config.js .",
     "test:oxlint": "node --test --test-reporter=@tools/shared/test-reporter.ts \"test/oxlint/*.spec.ts\"",
-    "test:peer-floor": "peer-floor-guard && node --import ./test/eslint-floor.ts --test --test-reporter=@tools/shared/test-reporter.ts \"src/**/*.spec.ts\"",
+    "test:peer-floor": "floor-guard && node --import ./test/eslint-floor.ts --test --test-reporter=@tools/shared/test-reporter.ts \"src/**/*.spec.ts\"",
     "test:unit": "node --test --test-reporter=@tools/shared/test-reporter.ts \"src/**/*.spec.ts\"",
     "typecheck:tsc": "tsc -p tsconfig.json --noEmit"
   },
