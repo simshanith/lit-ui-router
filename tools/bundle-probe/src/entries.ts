@@ -31,8 +31,9 @@ export type PackageProbe = {
 // The exports map is the single source of truth for what gets probed: a new
 // export joins the invariant checks and the codecov series without touching
 // any script. Rules: './package.json', wildcard patterns, and non-JS targets
-// are skipped; './src/*.ts' targets bundle as-is; './dist/*.js' targets map
-// back to the sibling './src/*.ts'; anything else fails loudly. Labels come
+// are skipped; './src/*.ts' and './dist/*.js' targets bundle as-is, so a dist
+// entry probes the emit consumers install (build:js runs first); anything
+// else fails loudly. Labels come
 // from the subpath ('.' labels index), naming the <prefix>-<label>-esm series.
 //
 // The optional `bundleProbe` manifest field carries the per-entry boundary
@@ -79,21 +80,17 @@ export const readPackageProbe = (packageDir: string): PackageProbe => {
 
     if (!/\.(js|ts)$/.test(target)) continue;
 
-    const source = target.startsWith('./src/')
-      ? target
-      : target.replace(/^\.\/dist\/(.+)\.js$/, './src/$1.ts');
-
-    if (!source.startsWith('./src/')) {
+    if (!/^\.\/(src|dist)\//.test(target)) {
       throw new Error(
-        `${name}: cannot map export '${subpath}' target '${target}' to a source file`,
+        `${name}: export '${subpath}' target '${target}' is outside src/ and dist/`,
       );
     }
 
-    const file = path.join(packageDir, source);
+    const file = path.join(packageDir, target);
 
     if (!existsSync(file)) {
       throw new Error(
-        `${name}: export '${subpath}' resolves to missing ${source}`,
+        `${name}: export '${subpath}' resolves to missing ${target}; run build:js first`,
       );
     }
 

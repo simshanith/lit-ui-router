@@ -36,7 +36,7 @@
     "build:js": "oxc-emit-js --development",
     "build:types": "oxc-emit-dts",
     "changelog": "release-it --changelog --git.tagMatch=\"lit-ui-router-mobx@[0-9]*.[0-9]*.[0-9]*\"",
-    "check:bundle": "peer-floor-guard && check-bundle-inputs",
+    "check:bundle": "floor-guard && check-bundle-inputs",
     "check:dev-split": "oxc-emit-check-dev-split",
     "codecov:bundle": "upload-entry-bundles",
     "crap": "crap-report",
@@ -50,7 +50,7 @@
     "test:mobx6-compat": "mobx6-compat-guard && VITE_EXPECT_MOBX_MAJOR=6 VITEST_BROWSER_API_PORT=63332 vitest run",
     "typecheck:lit2": "lit2-compat-guard && tsc -p tsconfig.lit2-compat.json --noEmit",
     "typecheck:mobx6": "mobx6-compat-guard && tsc -p tsconfig.mobx6.json --noEmit",
-    "typecheck:peer-floor": "peer-floor-guard && tsc -p tsconfig.peer-floor.json --noEmit",
+    "typecheck:peer-floor": "floor-guard && tsc -p tsconfig.peer-floor.json --noEmit",
     "typecheck:src": "tsc -p tsconfig.src.json --noEmit",
     "typecheck:tsc": "tsc -p tsconfig.json --noEmit"
   },

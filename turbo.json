@@ -429,8 +429,10 @@
         "@tools/release#check:exports"
       ]
     },
+    // Bundles each dist export the way consumers install it, so the own
+    // package's build:js runs first; workspace deps stay external.
     "check:bundle": {
-      "dependsOn": ["transit"],
+      "dependsOn": ["transit", "build:js"],
       "inputs": ["$TURBO_DEFAULT$"]
     },
     // Reader of the two-pass build:js emit: asserts the declared dev-only

@@ -87,8 +87,9 @@ const workspaces = {
       '@release-it/conventional-changelog',
       // vitest alias target for the lit 2 compat lane
       'lit-2',
-      // peer floor installs, bundled by check:bundle's peer lines
+      // peer and dependency floor installs, bundled by check:bundle's peer lines
       '@uirouter/core-floor',
+      '@oxc-project/runtime-floor',
     ],
   },
   'packages/lit-ui-router-effect': {
@@ -126,6 +127,7 @@ const workspaces = {
       '@release-it/conventional-changelog',
       '@lit-labs/ssr-floor',
       '@lit-labs/ssr-client-floor',
+      '@oxc-project/runtime-floor',
       '@uirouter/core-floor',
       'lit-ui-router-floor',
       'ui-router-server-floor',
