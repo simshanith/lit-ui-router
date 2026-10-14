@@ -14,6 +14,20 @@ import { bounds, box, glbWriter, packGlb, quad, segment, soup } from './glb.mjs'
 import { CORD_CAP, cordCurve } from './connector-iso.mjs';
 import { ASSEMBLE_SECONDS, PITCH, assembleMotion, boxEdges, materialsFor, stud } from './brick-glb.mjs';
 
+// a cord's tube: segments along the curve, sides round it, and its radius a third of a stud's
+const CORD_TUBE = { segs: 12, sides: 4, r: CORD_CAP.stud.r / 3 / PITCH };
+
+// an accessor's bounds in the shortest decimals that read back as the same float32, so the JSON carries no float64 tails
+const f32 = (v) => {
+  const x = Math.fround(v);
+  for (let p = 1; p < 10; p++) if (Math.fround(Number(x.toPrecision(p))) === x) return Number(x.toPrecision(p));
+  return x;
+};
+const tight = (flat) => {
+  const { min, max } = bounds(flat);
+  return { min: min.map(f32), max: max.map(f32) };
+};
+
 /** The budget each build's binary stays inside, asserted at build. */
 export const BUILD_GLB_BUDGET = 100 * 1024;
 
@@ -35,12 +49,12 @@ export const explodeOf = (model) => ({
 const DASH = 1 / 2;
 /** A build as a GLB, with its triangle count. */
 export function buildGlb(model) {
-  const { accessors, bufferViews, accessor, indices: indexed, bin: packed } = glbWriter();
+  const { accessors, bufferViews, accessor, over, indices: indexed, bin: packed } = glbWriter();
   const { materials, index } = materialsFor(model.bricks.map((b) => ({ id: b.n, hue: b.hue ?? undefined })));
   const meshes = [], nodes = [], roots = [], channels = [], samplers = [];
   let triangles = 0;
   const primitive = (s, mat) => {
-    const position = accessor(new Float32Array(s.pos), 'VEC3', 5126, 34962, bounds(s.pos));
+    const position = accessor(new Float32Array(s.pos), 'VEC3', 5126, 34962, tight(s.pos));
     const indices = indexed(s.idx, s.pos.length / 3);
     if (s.lines) return { attributes: { POSITION: position }, indices, material: index[mat], mode: 1 };
     triangles += s.idx.length / 3;
@@ -161,21 +175,46 @@ export function buildGlb(model) {
     drum(CORD_CAP.stud.r / PITCH, h, h + CORD_CAP.stud.h / PITCH, false);
     return mesh('cord-cap', [[top, 'cap'], [side, 'flank'], [edge, 'edge']]);
   })());
-  // a cord: the brick's cap rides its brick, the plate's stays, and the chain along the sheet's curve hangs from the plate's
-  // cap, scaled per axis so its brick end follows the lift and the chain stretches with it
+  // a cord: the brick's cap rides its brick and the plate's stays; the cord is a tube along the sheet's curve, written seated with
+  // one morph target at the full explode whose weight follows the lift, so its brick end rides up and the tube keeps its girth
+  let tubeIdx = null;
+  const tubeIndices = () => (tubeIdx ??= (() => {
+    const idx = [], { segs, sides } = CORD_TUBE;
+    for (let k = 0; k < segs; k++)
+      for (let j = 0; j < sides; j++) {
+        const p = k * sides + j, q = k * sides + ((j + 1) % sides), r = p + sides, t = q + sides;
+        idx.push(p, q, r, q, t, r);
+      }
+    return indexed(idx, (segs + 1) * sides);
+  })());
+  const tubeOf = (curve) => {
+    const { segs, sides, r } = CORD_TUBE;
+    const pts = Array.from({ length: segs + 1 }, (_, k) => at(...curve.at(k / segs)));
+    const [dx, dz] = [pts.at(-1)[0] - pts[0][0], pts.at(-1)[2] - pts[0][2]], dl = Math.hypot(dx, dz);
+    const n1 = dl > 1e-6 ? [-dz / dl, 0, dx / dl] : [1, 0, 0];
+    return pts.flatMap((p, k) => {
+      const a = pts[Math.max(0, k - 1)], b = pts[Math.min(segs, k + 1)], T = b.map((v, i) => v - a[i]);
+      const c = [T[1] * n1[2] - T[2] * n1[1], T[2] * n1[0] - T[0] * n1[2], T[0] * n1[1] - T[1] * n1[0]], cl = Math.hypot(...c) || 1;
+      const n2 = c.map((v) => v / cl);
+      return Array.from({ length: sides }, (_, j) => {
+        const th = ((j + 0.5) / sides) * Math.PI * 2;
+        return p.map((v, i) => v + r * (Math.cos(th) * n1[i] + Math.sin(th) * n2[i]));
+      }).flat();
+    });
+  };
   for (const c of model.cords) {
-    const b = byN.get(c.n), curve = cordCurve(c.from, c.to);
+    const b = byN.get(c.n), lift = motion.rise(c.n, 0), lifted = Math.max(...motion.us.map((u) => motion.rise(c.n, u)));
     nodes[brickNode.get(c.n)].children.push(node({ name: `cord-cap-${c.n}-${c.letter}`, mesh: capMesh(), translation: [(c.from[0] - b.x) / PITCH, b.h / PITCH, (c.from[1] - b.y) / PITCH] }, false));
     node({ name: `cord-cap-${c.letter}-${c.n}`, mesh: capMesh(), translation: at(...c.to) });
-    const foot = at(...curve.B), head = at(...curve.A), span0 = head.map((v, k) => v - foot[k]);
-    const norm = curve.pts.map((p) => at(...p).map((v, k) => (Math.abs(span0[k]) > 1e-6 ? (v - foot[k]) / span0[k] : 0)));
-    // one vertex per curve point, each segment indexing its two
-    const chain = lines();
-    chain.pos.push(...norm.flat());
-    for (let k = 1; k < norm.length; k++) chain.idx.push(k - 1, k);
-    const span = motion.us.map((u) => span0.map((v, k) => (Math.abs(v) > 1e-6 ? v : 1e-4) + (k === 1 ? motion.rise(c.n, u) / PITCH : 0)));
-    const i = node({ name: `cord-${c.n}-${c.letter}`, mesh: mesh(`cord-${c.n}-${c.letter}`, [[chain, 'edge']]), translation: foot, scale: span.at(-1) });
-    animate(i, 'scale', span.flat());
+    const seated = tubeOf(cordCurve(c.from, c.to)), raised = tubeOf(cordCurve([c.from[0], c.from[1], c.from[2] + lifted], c.to));
+    const delta = raised.map((v, k) => v - seated[k]);
+    const prim = { attributes: { POSITION: accessor(new Float32Array(seated), 'VEC3', 5126, 34962, tight(seated)) }, targets: [{ POSITION: accessor(new Float32Array(delta), 'VEC3', 5126, 34962, tight(delta)) }], indices: over(accessors[tubeIndices()].bufferView, 5123, accessors[tubeIndices()].count, 'SCALAR'), material: index.edge };
+    meshes.push({ name: `cord-${c.n}-${c.letter}`, primitives: [prim], weights: [0] });
+    const i = node({ name: `cord-${c.n}-${c.letter}`, mesh: meshes.length - 1 });
+    triangles += CORD_TUBE.segs * CORD_TUBE.sides * 4;
+    samplers.push({ input: times, output: accessor(new Float32Array(motion.us.map((u) => (lifted ? motion.rise(c.n, u) / lifted : 0))), 'SCALAR', 5126), interpolation: 'LINEAR' });
+    channels.push({ sampler: samplers.length - 1, target: { node: i, path: 'weights' } });
+    if (!(lift >= 0)) throw new Error(`builds-glb: brick ${c.n}'s lift is ${lift}`);
   }
   nodes.push({ name: 'model', children: roots });
 
