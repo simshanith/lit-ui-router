@@ -59,7 +59,7 @@ catalog:
   eslint-plugin-pnpm: ^1.9.1
   eslint-plugin-turbo: ^2.11.7
   eslint-plugin-wc: ^3.1.0
-  happy-dom: ^20.14.5
+  happy-dom: ^21.0.1
   hono: ^4.13.13
   husky: ^9.1.7
   jsonc-parser: ^3.3.1
