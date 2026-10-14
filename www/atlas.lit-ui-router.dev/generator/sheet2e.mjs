@@ -135,26 +135,41 @@ const nearFirst = (p, q) => Math.hypot(...p.from.map((v, k) => v - p.to[k])) - M
 const sharedArea = (r, p) => Math.max(0, Math.min(r.x + r.w, p.x + p.w) - Math.max(r.x, p.x)) * Math.max(0, Math.min(r.y + r.d, p.y + p.d) - Math.max(r.y, p.y));
 // the scene a panel seats into: its family, the consumers placed so far, the studs dropped onto, and the cords drawn
 function seatingOf(family, { lift, levels }) {
-  const st = { family, placed: [], dropTaken: new Set(), strings: [], unrouted: [], lift, levels };
+  const st = { family, placed: [], dropTaken: new Set(), strings: [], lift, levels };
   st.all = () => [...family, ...st.placed];
   st.pinBox = (c, b) => family.find((o) => o.part === b) ?? (() => { throw new Error(`sheet 2E: ${c.name} pins brick ${b.n}, which this model does not draw`); })();
   st.capped = (o) => st.strings.filter((t) => t.box === o || t.part === o);
   return st;
 }
 // a cord's route from the consumer's top to the pin's top over `scene`: the nearest pair of free studs whose cord misses every other
-// mass outright, else passes only above or in front of them; never behind or through
-function routeFor(st, part, b, scene, share = false) {
+// mass outright, else passes only above or in front of them; never behind or through. Under `wind`, where no straight cord serves,
+// the string bends and winds round what stands in its way, resting on a free stud or lifted over a top
+function routeFor(st, part, b, scene, { share = false, wind = false } = {}) {
   const box = st.family.find((o) => o.part === b);
   const tops = studsOf(part).filter((s) => !st.capped(part).some((t) => t.fromKey === s.key));
   const ends = freeStuds(box, scene).filter((s) => !st.dropTaken.has(`${b.n}:${s.key}`) && (share || !st.capped(box).some((t) => t.toKey === s.key)));
   const pairs = tops.flatMap((f) => ends.map((e) => ({ f, e, from: [f.x * K, f.y * K, top(part) * K], to: [e.x * K, e.y * K, top(box) * K] }))).sort(nearFirst);
   const masses = (front) => scene.filter((o) => !o.bare || o === part).map((o) => massOf(o, front || o === part || o === box || !!o.ground));
   for (const front of [false, true]) {
-    const route = pairs.map((r) => ({ ...r, curve: cords.curve(r.from, r.to), front })).find((r) => !hitBy(r.curve, masses(front), onScreen));
+    const route = pairs.map((r) => ({ ...r, curve: cords.curveVia(r.from, [], r.to), front })).find((r) => !hitBy(r.curve, masses(front), onScreen));
     if (route) return { ...route, box };
   }
   // a part with more cords to take than free studs takes the extra ones on a round plate another cord already seats
-  return share ? null : routeFor(st, part, b, scene, true);
+  const shared = share ? null : routeFor(st, part, b, scene, { share: true });
+  if (shared || !wind) return shared;
+  return windFor(st, part, b, scene, pairs, masses) ?? (share ? null : routeFor(st, part, b, scene, { share: true, wind: true }));
+}
+// the shortest winding route over the nearest pairs of studs: through a corner a stud out from a mass, over its top, or resting on a free stud
+function windFor(st, part, b, scene, pairs, masses) {
+  const rest = scene.filter((o) => !o.ground && !o.bare && o !== part).flatMap((o) => freeStuds(o, scene).filter((s) => !st.capped(o).some((t) => t.toKey === s.key || t.fromKey === s.key)).map((s) => [s.x * K, s.y * K, top(o) * K + SH]));
+  const around = scene.filter((o) => !o.ground).map(S);
+  const box = st.family.find((o) => o.part === b);
+  for (const front of [false, true])
+    for (const r of pairs.slice(0, 6)) {
+      const curve = cords.route(r.from, r.to, masses(front), { project: onScreen, hit: hitBy, rest, around });
+      if (curve) return { ...r, curve, front, box };
+    }
+  return null;
 }
 // a consumer that pins nothing stands on the ground beside the parts
 function seatBare(st, c) {
@@ -201,7 +216,7 @@ function rerouteRound(st, part) {
   for (const t of [...st.strings]) {
     if (t.part === part || !hitBy(t.curve, [massOf(part, true)], onScreen)) continue;
     st.strings.splice(st.strings.indexOf(t), 1);
-    const route = routeFor(st, t.part, t.b, st.all());
+    const route = routeFor(st, t.part, t.b, st.all(), { wind: true });
     if (!route) { st.strings.push(t); continue; }
     t.part.rings.delete(t.fromKey);
     t.box.rings?.delete(t.toKey);
@@ -222,38 +237,42 @@ function seatOne(st, c) {
   st.placed.push(part);
   c.seatedOn = best.seats.map(([b]) => b);
   for (const b of c.pins.filter((x) => !c.seatedOn.includes(x))) {
-    const route = routeFor(st, part, b, st.all());
-    if (!route) { st.unrouted.push({ part, b }); continue; }
+    const route = routeFor(st, part, b, st.all(), { wind: true });
+    if (!route) throw new Error(`sheet 2E: no cord, straight or winding, runs clear from ${c.name} to brick ${b.n}`);
     (route.box.rings ??= new Set()).add(route.e.key);
     (part.rings ??= new Set()).add(route.f.key);
     st.strings.push(stringOf(part, b, route));
   }
   rerouteRound(st, part);
 }
-// every cord drawn passes every mass but above or in front of it, so nothing drawn over it hides it; one that cannot is not drawn
-function dropHidden(st) {
+// every cord drawn passes every mass but above or in front of it, so nothing drawn over it hides it; one a later consumer hides
+// winds round it, and the guard throws when none can
+function rewindHidden(st) {
   for (const t of [...st.strings]) {
     if (!hitBy(t.curve, st.all().filter((o) => !o.bare || o === t.part).map((o) => massOf(o, true)), onScreen)) continue;
     st.strings.splice(st.strings.indexOf(t), 1);
-    st.unrouted.push({ part: t.part, b: t.b });
     if (!st.strings.some((o) => o.part === t.part && o.fromKey === t.fromKey)) t.part.rings.delete(t.fromKey);
     if (!st.strings.some((o) => o.box === t.box && o.toKey === t.toKey)) t.box.rings.delete(t.toKey);
+    const route = routeFor(st, t.part, t.b, st.all(), { wind: true });
+    if (!route) throw new Error(`sheet 2E: the cord from ${t.part.consumer.name} to brick ${t.b.n} passes behind or through a mass, and no winding route clears it`);
+    (route.box.rings ??= new Set()).add(route.e.key);
+    t.part.rings.add(route.f.key);
+    st.strings.push(stringOf(t.part, t.b, route));
   }
-  for (const u of st.unrouted) (u.part.unrouted ??= []).push(u.b);
 }
 function seatConsumers(family, consumers, { lift = LIFT, levels = true, turn = 0 } = {}) {
   const st = seatingOf(family, { lift, levels });
   const order = orders([...consumers].sort((a, b) => cordsOf(a) - cordsOf(b) || b.courses - a.courses || b.shape[0] * b.shape[1] - a.shape[0] * a.shape[1] || a.k - b.k))[turn];
   if (!order) throw new Error(`sheet 2E: no seating order lets every cord of ${listOf(consumers.map((c) => c.name))} run clear`);
   for (const c of order) (c.pins.length ? seatOne : seatBare)(st, c);
-  dropHidden(st);
-  return { placed: st.placed, strings: st.strings, unrouted: st.unrouted };
+  rewindHidden(st);
+  return { placed: st.placed, strings: st.strings };
 }
 
 // ---- the guards every panel keeps ----
 const DRAWN = [];
 const ringedAt = (box, x, y) => box?.rings?.has(studsOf(box).find((s) => s.x === x && s.y === y)?.key);
-// each consumer at its own mould, every pin a drop, a cord, or a cord scheduled undrawn
+// each consumer at its own mould, every pin a drop or a cord
 function guardConsumers(where, placed, strings) {
   const drawn = placed.map((p) => p.consumer.k);
   if (new Set(drawn).size !== drawn.length) throw new Error(`sheet 2E: ${where}: a consumer is drawn twice`);
@@ -261,7 +280,7 @@ function guardConsumers(where, placed, strings) {
     const c = p.consumer;
     if (![[c.shape[0], c.shape[1]], [c.shape[1], c.shape[0]]].some(([w, d]) => w === p.ws && d === p.ds) || p.h !== c.courses * CRS)
       throw new Error(`sheet 2E: ${where}: ${c.name} is drawn ${p.ws}×${p.ds} × ${p.h / CRS} but moulds ${shapeName(c.shape)} × ${c.courses}`);
-    const coupled = [...p.drops.map((d) => d[3]), ...strings.filter((t) => t.part === p).map((t) => t.b.n), ...(p.unrouted ?? []).map((b) => b.n)].sort((a, b) => a - b);
+    const coupled = [...p.drops.map((d) => d[3]), ...strings.filter((t) => t.part === p).map((t) => t.b.n)].sort((a, b) => a - b);
     if (coupled.join() !== c.pins.map((b) => b.n).join()) throw new Error(`sheet 2E: ${where}: ${c.name} pins ${c.pins.map((b) => b.n)} but couples to ${coupled}`);
   }
 }
@@ -402,22 +421,15 @@ function closeGaps(family, parts, ax, len) {
 // ---- the booklet: one panel per sheet 2C build, its family parts on a ground slab and its consumers on them ----
 // a panel seats its consumers in the first order whose cords all run clear
 function panelOf(model) {
-  let best = null;
-  for (let turn = 0; turn < 24; turn++) {
-    let pn;
+  for (let turn = 0; ; turn++) {
     try {
-      pn = panelAt(model, turn);
+      const pn = panelAt(model, turn);
+      DRAWN.push(...pn.placed.map((p) => p.consumer.k));
+      return pn;
     } catch (e) {
-      if (/no seating order/.test(e.message)) break;
-      throw e;
+      if (!/no cord|passes behind/.test(e.message)) throw e;
     }
-    if (!best || pn.unrouted.length < best.unrouted.length) best = { pn, turn, unrouted: pn.unrouted };
-    if (!pn.unrouted.length) break;
   }
-  // the first order with fewest unrouted cords, seated afresh
-  const pn = panelAt(model, best.turn);
-  DRAWN.push(...pn.placed.map((p) => p.consumer.k));
-  return pn;
 }
 function panelAt(model, turn) {
   const parts = model ? model.bricks : [];
@@ -432,17 +444,17 @@ function panelAt(model, turn) {
   } else family.push({ x: 0, y: 0, w: (Math.max(...BARE.map((c) => c.shape[0])) + 2) * STUD, d: (Math.max(...BARE.map((c) => c.shape[1])) + 2) * STUD, z0: 0, h: GROUND_H, ground: true });
   const consumers = CONSUMERS.filter((c) => c.model === model);
   for (const c of consumers) delete c.seatedOn;
-  const { placed, strings, unrouted } = seatConsumers(family, consumers, { turn });
+  const { placed, strings } = seatConsumers(family, consumers, { turn });
   guard(model ? `build ${model.numeral}` : 'no build', family, placed, strings);
-  return { model, family, placed, strings, consumers, unrouted };
+  return { model, family, placed, strings, consumers };
 }
 
 // ---- the schedule: one row per consumer ----
-// a consumer's cords as the schedule gives them: those drawn, and any pin no cord reaches clear of the masses
+// a consumer's cords as the schedule gives them, and those that wind round what stands in their way
 const cordsLine = (c) => {
-  const drawn = CORDS.filter((t) => t.part.consumer === c).map((t) => t.b.n).sort((a, b) => a - b);
-  const not = UNROUTED.filter((u) => u.part.consumer === c).map((u) => u.b.n).sort((a, b) => a - b);
-  return `${drawn.length ? ` · cords to ${listOf(drawn.map(String))}` : ''}${not.length ? ` · no clear cord to ${listOf(not.map(String))}, so none drawn` : ''}`;
+  const mine = CORDS.filter((t) => t.part.consumer === c).sort((a, b) => a.b.n - b.b.n);
+  const wound = mine.filter((t) => t.curve.via.length).map((t) => String(t.b.n));
+  return `${mine.length ? ` · cords to ${listOf(mine.map((t) => String(t.b.n)))}` : ''}${wound.length ? `, the cord${wound.length > 1 ? 's' : ''} to ${listOf(wound)} winding` : ''}`;
 };
 const wrapWords = (s, chars) => s.split(' ').reduce((ls, w) => (ls.length && (ls.at(-1) + ' ' + w).length <= chars ? [...ls.slice(0, -1), `${ls.at(-1)} ${w}`] : [...ls, ls.length ? `        ${w}` : w]), []);
 const schedRaw = () => CONSUMERS.map((c) => `${String(c.k).padStart(2)} ${c.letter}  ${c.name} (${c.kindWord}) — ${c.dir}/{${c.dirs.join(',')}} · ${plural(c.files, 'file')} · ${fmt(c.sloc)} sloc → ${plural(c.studs, 'stud')} · ${shapeName(c.shape)} × ${plural(c.courses, 'course')} · ${c.pins.length ? `pins ${listOf(c.pins.map((b) => `${b.n} ${b.name}`))}` : 'pins no family part'}${cordsLine(c)} · ${c.model ? `build ${c.model.numeral} ${c.model.name.toUpperCase()}` : 'no build'}`);
@@ -465,11 +477,10 @@ const kindCount = (cs) => listOf(KIND_RANK.map((k) => [k, cs.filter((c) => c.kin
 const SCALE_LINE = `SCALE — sheet 2’s mould for every brick: 1 stud per ${SLOC_PER_STUD} sloc rounded up to the next standard shape, a course per ${FILES_PER_COURSE} authored files · a consumer hovers over the heaviest part it pins, on a level of its own`;
 const ACCENT_LINE = 'accent marks a consumer’s pin: a drop onto the part it hovers over, a cord to each other part it pins, the ringed stud at each end · consumers are drawn plain, the atlas app edged in accent';
 const ALL_MARKS = [];
-let ART = '', VW = 1480, ART_BOTTOM = 0, ARIA_BODY = '', CORDS = [], UNROUTED = [];
+let ART = '', VW = 1480, ART_BOTTOM = 0, ARIA_BODY = '', CORDS = [];
 {
   const panels = [...BUILD_MODELS.map(panelOf), ...(BARE.length ? [panelOf(null)] : [])];
   CORDS = panels.flatMap((pn) => pn.strings);
-  UNROUTED = panels.flatMap((pn) => pn.unrouted);
   const PAD = 14, MARGIN = 10, LINE = 12, GUT = 18;
   const heads = (pn) => {
     const m = pn.model, cs = pn.consumers;
@@ -519,7 +530,7 @@ ${marks.map(markSvg).join('\n')}
   });
   ART = `${box.svg}\n${svgs.join('\n')}`;
   ART_BOTTOM = Math.max(box.bottom, GY + ROW_Y.at(-1) + ROW_H.at(-1));
-  ARIA_BODY = `An instruction booklet of ${WORD[panels.length]} panels: each of sheet 2C's ${WORD[BUILD_MODELS.length]} builds, its family bricks in their hues on a slab of ground, with that build's consumers as plain bricks hovering above, each dropping a dashed accent line onto a ringed stud of the part it pins and reaching each other part it pins by a cord where one runs clear, a 1×1 round plate seated on a ringed stud at either end, and a last panel for the consumer that pins no family part.`;
+  ARIA_BODY = `An instruction booklet of ${WORD[panels.length]} panels: each of sheet 2C's ${WORD[BUILD_MODELS.length]} builds, its family bricks in their hues on a slab of ground, with that build's consumers as plain bricks hovering above, each dropping a dashed accent line onto a ringed stud of the part it pins and reaching each other part it pins by a cord, winding round what stands in its way where it must, a 1×1 round plate seated on a ringed stud at either end, and a last panel for the consumer that pins no family part.`;
 }
 // every consumer is drawn, once
 if (DRAWN.length !== CONSUMERS.length || new Set(DRAWN).size !== CONSUMERS.length) throw new Error(`sheet 2E: ${DRAWN.length} consumer bricks drawn for ${CONSUMERS.length} consumers`);
@@ -538,7 +549,10 @@ const VH = SY + 90 + SCHED_ROWS.length * 16;
 
 // a part that takes two cords on one round plate
 const SHARED_CAPS = [...new Map(CORDS.filter((t, i) => CORDS.findIndex((o) => o.box === t.box && o.toKey === t.toKey) !== i).map((t) => [t.b.n, t.b])).values()];
-export const SHEET2E_CORDS = { drawn: CORDS.length, unrouted: UNROUTED.map((u) => `${u.part.consumer.name} → brick ${u.b.n}`) };
+const WOUND = CORDS.filter((t) => t.curve.via.length);
+// every pin past the seat is a cord: the panels' cords are exactly the consumers' pins less their seats
+if (CORDS.length !== CONSUMERS.reduce((n, c) => n + c.pins.length - (c.seatedOn?.length ?? 0), 0)) throw new Error(`sheet 2E: ${CORDS.length} cords drawn for the pins past the consumers' seats`);
+export const SHEET2E_CORDS = { drawn: CORDS.length, wound: WOUND.map((t) => ({ from: t.part.consumer.name, to: t.b.n, via: t.curve.via })) };
 export const SHEET2E_SCALE = `${WORD[CONSUMERS.length].toUpperCase()} CONSUMERS`;
 export const SHEET2E_VERDICT = `the consumers as bricks: ${WORD[CONSUMERS.length]} consumers, ${WORD[CAB.consumers]} in the cabinet’s tree and the atlas app on its own branch; ${WORD[HUB.by.length]} pin brick ${HUB.b.n}, ${HUB.b.name}, and ${listOf(BARE.map((c) => c.name))} pins none; the atlas app is the heaviest at ${plural(HEAVIEST.studs, 'stud')}, ${TALLEST.name} the tallest at ${plural(TALLEST.courses, 'course')}`;
 const ARIA = `An exploded isometric LEGO drawing of the repository's consumers as bricks. ${ARIA_BODY} A box at the left lists the ${WORD[CONSUMERS.length]} consumers by number and kind letter, and a schedule below gives each one's files, sloc, pins and build.`;
@@ -562,7 +576,7 @@ export const sheet2e = {
   notes: `
 <p><strong>Up from the family.</strong> Sheet 2 seats the family on <code>@uirouter/core</code>; sheet 2C goes down to the runtimes the family peers. This plate goes up: the sample apps, the docs site, the embedded examples and the atlas's own app, each massed at sheet 2's mould from its authored source — the city ruler's files under its <code>src/</code> (the docs site's <code>.vitepress/</code>, <code>worker/</code> and <code>src/</code>), specs aside — and seated on the parts its manifest pins.</p>
 <p><strong>One hub.</strong> ${Cap(WORD[HUB.by.length])} of the ${WORD[CONSUMERS.length]} consumers pin ${npmLink(HUB.b.name)}, and every one of them hovers over it, since it is the heaviest part each pins: the builds split the ${WORD[HUB.by.length]} into their panels, and every build but ${listOf(OFF_HUB.map((m) => m.name.toUpperCase()))} stands its consumers on brick ${HUB.b.n}. Of the other parts, ${listOf(CARRY.filter((x) => x.by.length && x !== HUB).map((x) => `${x.b.name} is pinned by ${WORD[x.by.length]}`))}${UNPINNED.length ? `, and ${listOf(UNPINNED.map((b) => b.name))} by none` : ''}.</p>
-<p><strong>Cords.</strong> A consumer seats on the heaviest part it pins and reaches each other part by a string with end studs, a 1×1 round plate seated on a ringed stud at either end and a cord between. The sheet draws ${plural(CORDS.length, 'cord')}${UNROUTED.length ? `; ${WORD[UNROUTED.length]} ${UNROUTED.length === 1 ? 'pin finds' : 'pins find'} no cord that passes every mass above or in front of it — ${listOf(UNROUTED.map((u) => `${u.part.consumer.name} to brick ${u.b.n}`))} — and the schedule lists ${UNROUTED.length === 1 ? 'it' : 'them'} undrawn` : ''}.${SHARED_CAPS.length ? ` ${Cap(listOf(SHARED_CAPS.map((x) => `brick ${x.n}`)))} ${SHARED_CAPS.length === 1 ? 'has' : 'have'} fewer free studs than cords to take, so two cords share one round plate there.` : ''}</p>
+<p><strong>Cords.</strong> A consumer seats on the heaviest part it pins and reaches each other part by a string with end studs, a 1×1 round plate seated on a ringed stud at either end and a cord between. The sheet draws ${plural(CORDS.length, 'cord')}, one for every pin past a consumer's seat${WOUND.length ? `; where no straight cord passes every mass above or in front of it, the string bends and winds round what stands in its way, as ${WORD[WOUND.length]} do — ${listOf(WOUND.map((t) => `${t.part.consumer.name} to brick ${t.b.n}`))}` : ''}.${SHARED_CAPS.length ? ` ${Cap(listOf(SHARED_CAPS.map((x) => `brick ${x.n}`)))} ${SHARED_CAPS.length === 1 ? 'has' : 'have'} fewer free studs than cords to take, so two cords share one round plate there.` : ''}</p>
 <p><strong>The examples are thin.</strong> An embedded example is a file or two under <code>examples/&lt;key&gt;/src/</code>, so most mould a single course; ${TALLEST.name}, at ${plural(TALLEST.files, 'file')}, stands ${plural(TALLEST.courses, 'course')} tall.</p>`,
   key: [
     keyRow('<polygon points="4,12 16,5 30,12 30,16 16,9 4,16" class="sk fp"/><ellipse cx="10" cy="8" rx="4" ry="2.3" class="sk fp2"/><ellipse cx="24" cy="8" rx="4" ry="2.3" class="sk fp2"/>', `a consumer brick, drawn plain — 1 stud per ${SLOC_PER_STUD} sloc, a course per ${FILES_PER_COURSE} authored files`),
