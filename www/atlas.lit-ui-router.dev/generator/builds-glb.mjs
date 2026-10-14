@@ -139,20 +139,27 @@ export function buildGlb(model) {
       animate(i, 'scale', gap.flatMap((v) => [1, v, 1]));
       if (floor.some(Boolean)) animate(i, 'translation', floor.flatMap((y) => [foot[0], foot[1] + y, foot[2]]));
     });
-  // a cord's cap: a round 1×1 a plate tall in ink, written once and seated on each stud a cord ends on
+  // a cord's cap: a 1×1 round plate with its own stud, on paper edged in ink, one mesh seated on each stud a cord ends on
   let capIndex = null;
   const capMesh = () => (capIndex ??= (() => {
-    const c = soup(), r = CORD_CAP.r / PITCH, t = CORD_CAP.h / PITCH, n = 12;
-    const ring = Array.from({ length: n }, (_, k) => [r * Math.cos((k / n) * Math.PI * 2), r * Math.sin((k / n) * Math.PI * 2)]);
-    const base = c.pos.length / 3;
-    c.pos.push(0, t, 0); c.nrm.push(0, 1, 0); c.col.push(1, 1, 1);
-    for (const [x, z] of ring) { c.pos.push(x, t, z); c.nrm.push(0, 1, 0); c.col.push(1, 1, 1); }
-    for (let k = 0; k < n; k++) c.idx.push(base, base + 1 + ((k + 1) % n), base + 1 + k);
-    for (let k = 0; k < n; k++) {
-      const [x1, z1] = ring[k], [x2, z2] = ring[(k + 1) % n];
-      quad(c, [x1, 0, z1], [x1, t, z1], [x2, t, z2], [x2, 0, z2]);
-    }
-    return mesh('cord-cap', [[c, 'edge']]);
+    const top = soup(), side = soup(), edge = lines(), n = 8;
+    const drum = (r, y0, y1, foot) => {
+      const ring = Array.from({ length: n }, (_, k) => [r * Math.cos((k / n) * Math.PI * 2), r * Math.sin((k / n) * Math.PI * 2)]);
+      const base = top.pos.length / 3;
+      top.pos.push(0, y1, 0); top.nrm.push(0, 1, 0); top.col.push(1, 1, 1);
+      for (const [x, z] of ring) { top.pos.push(x, y1, z); top.nrm.push(0, 1, 0); top.col.push(1, 1, 1); }
+      for (let k = 0; k < n; k++) top.idx.push(base, base + 1 + ((k + 1) % n), base + 1 + k);
+      for (let k = 0; k < n; k++) {
+        const [x1, z1] = ring[k], [x2, z2] = ring[(k + 1) % n];
+        quad(side, [x1, y0, z1], [x1, y1, z1], [x2, y1, z2], [x2, y0, z2]);
+        segment(edge, [x1, y1, z1], [x2, y1, z2]);
+        if (foot) segment(edge, [x1, y0, z1], [x2, y0, z2]);
+      }
+    };
+    const h = CORD_CAP.h / PITCH;
+    drum(CORD_CAP.r / PITCH, 0, h, true);
+    drum(CORD_CAP.stud.r / PITCH, h, h + CORD_CAP.stud.h / PITCH, false);
+    return mesh('cord-cap', [[top, 'cap'], [side, 'flank'], [edge, 'edge']]);
   })());
   // a cord: the brick's cap rides its brick, the plate's stays, and the chain along the sheet's curve hangs from the plate's
   // cap, scaled per axis so its brick end follows the lift and the chain stretches with it
@@ -162,8 +169,10 @@ export function buildGlb(model) {
     node({ name: `cord-cap-${c.letter}-${c.n}`, mesh: capMesh(), translation: at(...c.to) });
     const foot = at(...curve.B), head = at(...curve.A), span0 = head.map((v, k) => v - foot[k]);
     const norm = curve.pts.map((p) => at(...p).map((v, k) => (Math.abs(span0[k]) > 1e-6 ? (v - foot[k]) / span0[k] : 0)));
+    // one vertex per curve point, each segment indexing its two
     const chain = lines();
-    for (let k = 1; k < norm.length; k++) segment(chain, norm[k - 1], norm[k]);
+    chain.pos.push(...norm.flat());
+    for (let k = 1; k < norm.length; k++) chain.idx.push(k - 1, k);
     const span = motion.us.map((u) => span0.map((v, k) => (Math.abs(v) > 1e-6 ? v : 1e-4) + (k === 1 ? motion.rise(c.n, u) / PITCH : 0)));
     const i = node({ name: `cord-${c.n}-${c.letter}`, mesh: mesh(`cord-${c.n}-${c.letter}`, [[chain, 'edge']]), translation: foot, scale: span.at(-1) });
     animate(i, 'scale', span.flat());
