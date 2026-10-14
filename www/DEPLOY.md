@@ -305,6 +305,7 @@ See Cloudflare Workers Testing Docs: [Local Development](https://developers.clou
 ## [Cloudflare Pages](https://developers.cloudflare.com/pages/): The Altitude Atlas
 
 [![Build and Test - Altitude Atlas](https://img.shields.io/github/check-runs/simshanith/lit-ui-router/www%2Fatlas?nameFilter=build_and_test%20%28branch%29%20%2F%20run&label=Build%20and%20Test%20-%20Altitude%20Atlas)](https://github.com/simshanith/lit-ui-router/actions/workflows/build-test-branch.yml?query=branch%3Awww%2Fatlas)
+[![E2E - Altitude Atlas](https://img.shields.io/github/check-runs/simshanith/lit-ui-router/www%2Fatlas?nameFilter=build_and_test%20%28branch%29%20%2F%20e2e%20result&label=E2E%20-%20Altitude%20Atlas)](https://github.com/simshanith/lit-ui-router/actions/workflows/build-test-branch.yml?query=branch%3Awww%2Fatlas)
 [![Website](https://img.shields.io/website?url=https%3A%2F%2Fatlas.lit-ui-router.dev)](https://atlas.lit-ui-router.dev)
 [![Deploy - Altitude Atlas](https://img.shields.io/github/check-runs/simshanith/lit-ui-router/www%2Fatlas?nameFilter=pages-deploy%20%28altitude-atlas%29&label=Deploy%20-%20Altitude%20Atlas)](https://github.com/simshanith/lit-ui-router/actions/workflows/release-signals.yml)
 
