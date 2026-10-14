@@ -12,6 +12,7 @@ import { basisStrip, laneCss } from './lane-chrome.mjs';
 import { ASSEMBLE_SECONDS, assembleMotion, brickGlb, seatedBoxes, toModel } from './brick-glb.mjs';
 import { MV_JS, frameCss, orbitAt, partsCss, partsMarkup, pinCss } from './mv-kit.mjs';
 import { BRICK_COUPLES, BRICK_MODEL, BRICK_REACHES, BRICK_ROWS, EXPLODE } from './sheet2.mjs';
+import { hueOf } from './brick-hues.mjs';
 import { BASE } from '../app/src/routes.ts';
 
 const PLATE = JSON.parse(readFileSync(new URL('../data/census-bricks.json', import.meta.url), 'utf8'));
@@ -76,6 +77,8 @@ const DATA = {
   bricks: BRICK_ROWS.map((row) => {
     const b = SEATED.get(row.n);
     if (!b) throw new Error(`brick-scene: brick ${row.n} has no part in sheet 2's model`);
+    if (row.hue !== hueOf(row.name) || b.m.hue !== row.hue)
+      throw new Error(`brick-scene: brick ${row.n} wears ${row.hue} on the plate and ${b.m.hue} in the model, but brick-hues.mjs gives ${hueOf(row.name)}`);
     const mid = [b.x + b.w / 2, b.y + b.d / 2];
     return {
       n: row.n,

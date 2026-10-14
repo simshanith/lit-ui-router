@@ -1,7 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { defs } from './chrome.mjs';
 import { txt, lines, isoPt, keyRow, npmUrl } from './helpers.mjs';
-import { brickKit, seated } from './brick-iso.mjs';
+import { BRICK_TINT, brickKit, brickPaint, huePatterns, seated, sty } from './brick-iso.mjs';
+import { BRICK_HUES, hueOf } from './brick-hues.mjs';
 import { seatedBoxes } from './brick-glb.mjs';
 
 const P = 's2';
@@ -65,23 +66,26 @@ const shapeName = ([w, d]) => `${w}×${d}`;
 // the runtime companions this assembly seats, in drawing order — every published
 // package on the plate but the lint plugin, which takes no router stud
 const BRICKS = [
-  { n: 1, name: 'lit-ui-router', hue: '#D8A33A' },
-  { n: 2, name: 'ui-router-navigation-location-plugin', disp: 'navigation-location-plugin', hue: '#5B8E4B' },
-  { n: 3, name: 'lit-ui-router-mobx', hue: '#D26E2C' },
-  { n: 4, name: 'ui-router-server', hue: '#3E8A8B' },
-  { n: 5, name: 'lit-ui-router-effect', hue: '#7B5B9F' },
-  { n: 6, name: 'lit-ui-router-ssr', hue: '#4C86C6' },
-  { n: 7, name: 'lit-ui-router-signals', hue: '#B0507E' },
-  { n: 8, name: 'ui-router-effect', hue: '#9C86C4' },
-  { n: 9, name: 'ui-router-signals', hue: '#CC86A8' },
+  { n: 1, name: 'lit-ui-router' },
+  { n: 2, name: 'ui-router-navigation-location-plugin', disp: 'navigation-location-plugin' },
+  { n: 3, name: 'lit-ui-router-mobx' },
+  { n: 4, name: 'ui-router-server' },
+  { n: 5, name: 'lit-ui-router-effect' },
+  { n: 6, name: 'lit-ui-router-ssr' },
+  { n: 7, name: 'lit-ui-router-signals' },
+  { n: 8, name: 'ui-router-effect' },
+  { n: 9, name: 'ui-router-signals' },
 ].map((b) => {
   const r = row(b.name);
   const shape = SHAPE(STUDS(r.sloc)), courses = COURSES(r.files);
   // the quantization is this sheet's; the census moulds the same brick or the rule has drifted
   if (`${shape[0]}x${shape[1]}` !== r.shape || courses !== r.courses)
     throw new Error(`sheet2: ${b.name} moulds ${shapeName(shape)} × ${courses} here but ${r.shape} × ${r.courses} in census-bricks.json`);
-  return { disp: b.name, ...b, ver: r.version, files: r.files, sloc: r.sloc, shape, courses };
+  return { disp: b.name, ...b, hue: hueOf(b.name), ver: r.version, files: r.files, sloc: r.sloc, shape, courses };
 });
+// the hue table names the bricks on this plate and nothing else
+for (const name of Object.keys(BRICK_HUES))
+  if (!BRICKS.some((b) => b.name === name)) throw new Error(`sheet2: brick-hues.mjs colours ${name}, which is no brick on this plate`);
 // the family is every census row but the baseplate; each member is a brick or the lint plugin
 const FAMILY = PLATE.rows.filter((r) => r.name !== CORE_ROW.name);
 if (FAMILY.length !== BRICKS.length + 1)
@@ -179,7 +183,7 @@ const clientPlate = plate(OX, OY, 8, 6, { named: NAMED });
 // F (5), F (7), F (3), G (6)
 const LIT_RINGS = ['0,1', '1,1', '2,1', '3,0'];
 const litBrick = brick(OX, OY, LIT[0], LIT[1], B(1).shape[1], B(1).shape[0], B(1).courses,
-  { z0: LIT[2], studEdge: 'sk', ringStuds: new Set(LIT_RINGS) });
+  { z0: LIT[2], studEdge: 'sk', ringStuds: new Set(LIT_RINGS), hue: B(1).hue });
 
 const plateDrops = [
   drop(OX, OY, 300, 20, LIT[2], PT),                // 1 -> stud A, seat 7 — its back-right stud, the one in view
@@ -209,7 +213,7 @@ const srvZ0 = 100, srvTop = srvZ0 + B(4).courses * CRS;
 const serverIsland = `${plate(OX2, OY2, 4, 4, { edge: 'sks', dash: '6 4', named: SRV_NAMED })}
 ${drop(OX2, OY2, 60, 20, srvZ0, PT)}
 ${drop(OX2, OY2, 60, 100, srvZ0, PT)}
-${brick(OX2, OY2, 0, 0, B(4).shape[0], B(4).shape[1], B(4).courses, { z0: srvZ0, studEdge: 'sk', ringStuds: new Set(['0,3']) })}`;
+${brick(OX2, OY2, 0, 0, B(4).shape[0], B(4).shape[1], B(4).courses, { z0: srvZ0, studEdge: 'sk', ringStuds: new Set(['0,3']), hue: B(4).hue })}`;
 
 // ---- the seated model: the same parts, on the plates ------------------------------------
 // The landscape has two levels: browser ground under the client plate, and a server
@@ -256,19 +260,19 @@ const assembly = `${clientPlate}
 ${plateDrops}
 ${litBrick}
 ${capDrops}
-${brick(OX, OY, NAV[0], NAV[1], B(2).shape[0], B(2).shape[1], B(2).courses, { z0: NAV[2] })}
-${brick(OX, OY, UEF[0], UEF[1], B(8).shape[0], B(8).shape[1], B(8).courses, { z0: UEF[2], ringStuds: new Set(PEER_RING) })}
-${brick(OX, OY, USG[0], USG[1], B(9).shape[0], B(9).shape[1], B(9).courses, { z0: USG[2], ringStuds: new Set(PEER_RING) })}
-${brick(OX, OY, EFF[0], EFF[1], B(5).shape[0], B(5).shape[1], B(5).courses, { z0: EFF[2] })}
-${brick(OX, OY, SIG[0], SIG[1], B(7).shape[0], B(7).shape[1], B(7).courses, { z0: SIG[2] })}
+${brick(OX, OY, NAV[0], NAV[1], B(2).shape[0], B(2).shape[1], B(2).courses, { z0: NAV[2], hue: B(2).hue })}
+${brick(OX, OY, UEF[0], UEF[1], B(8).shape[0], B(8).shape[1], B(8).courses, { z0: UEF[2], ringStuds: new Set(PEER_RING), hue: B(8).hue })}
+${brick(OX, OY, USG[0], USG[1], B(9).shape[0], B(9).shape[1], B(9).courses, { z0: USG[2], ringStuds: new Set(PEER_RING), hue: B(9).hue })}
+${brick(OX, OY, EFF[0], EFF[1], B(5).shape[0], B(5).shape[1], B(5).courses, { z0: EFF[2], hue: B(5).hue })}
+${brick(OX, OY, SIG[0], SIG[1], B(7).shape[0], B(7).shape[1], B(7).courses, { z0: SIG[2], hue: B(7).hue })}
 ${serverIsland}
 ${dropOnto(OX, OY, ...SSR_REACH, SSR[2], OX2, OY2, ...B4_SEAT, srvTop)}
-${brick(OX, OY, SSR[0], SSR[1], B(6).shape[1], B(6).shape[0], B(6).courses, { z0: SSR[2] })}
-${brick(OX, OY, MBX[0], MBX[1], B(3).shape[0], B(3).shape[1], B(3).courses, { z0: MBX[2] })}`;
+${brick(OX, OY, SSR[0], SSR[1], B(6).shape[1], B(6).shape[0], B(6).courses, { z0: SSR[2], hue: B(6).hue })}
+${brick(OX, OY, MBX[0], MBX[1], B(3).shape[0], B(3).shape[1], B(3).courses, { z0: MBX[2], hue: B(3).hue })}`;
 
 // ---- parts callout (LEGO manual language, drafting-set lettering) --------------------
 const MU = 10, MC = 7, MRX = 3.7, MRY = 2.1, MSH = 2.4;
-function miniBrick(ox, oy, ws, ds, courses, dash = '') {
+function miniBrick(ox, oy, ws, ds, courses, dash = '', hue = null) {
   const w = ws * MU, d = ds * MU, h = courses * MC;
   const q = (px, py, pz) => {
     const [sx, sy] = isoPt(ox, oy, px, py, pz);
@@ -276,13 +280,16 @@ function miniBrick(ox, oy, ws, ds, courses, dash = '') {
   };
   const da = dash ? ` stroke-dasharray="${dash}"` : '';
   const cls = dash ? 'sks' : 'sk';
-  return `${face([q(0, d, h), q(w, d, h), q(w, d, 0), q(0, d, 0)].join(' '), cls, 'var(--paper-2)', { extra: da })}
-${face([q(w, 0, h), q(w, d, h), q(w, d, 0), q(w, 0, 0)].join(' '), cls, `url(#${P}-hx)`, { under: 'var(--paper)', extra: da })}
-<polygon points="${[q(0, 0, h), q(w, 0, h), q(w, d, h), q(0, d, h)].join(' ')}" class="${cls} fp"${da}/>
+  const pa = brickPaint(hue, BRICK_TINT, P);
+  const stroke = pa?.stroke ? `;stroke:${pa.stroke}` : '';
+  const studStyle = (fill) => sty(fill && `fill:${fill}`, pa?.stroke && `stroke:${pa.stroke}`);
+  return `${face([q(0, d, h), q(w, d, h), q(w, d, 0), q(0, d, 0)].join(' '), cls, pa?.left ?? 'var(--paper-2)', { under: pa?.leftUnder, extra: da + (pa?.leftExtra ?? ''), more: stroke })}
+${face([q(w, 0, h), q(w, d, h), q(w, d, 0), q(w, 0, 0)].join(' '), cls, pa?.right ?? `url(#${P}-hx)`, { under: pa?.rightUnder ?? 'var(--paper)', extra: da, more: stroke })}
+<polygon points="${[q(0, 0, h), q(w, 0, h), q(w, d, h), q(0, d, h)].join(' ')}" class="${cls} fp"${da}${sty(pa?.top && `fill:${pa.top}`, pa?.stroke && `stroke:${pa.stroke}`)}/>
 ${Array.from({ length: ws * ds }, (_, k) => {
   const [sx, sy] = isoPt(ox, oy, (Math.floor(k / ds) + 0.5) * MU, ((k % ds) + 0.5) * MU, h + MSH);
-  return `<path d="M${(sx - MRX).toFixed(1)},${sy.toFixed(1)} v${MSH} a${MRX},${MRY} 0 0 0 ${2 * MRX},0 v${-MSH} Z" class="${cls} fp2"${da}/>
-<ellipse cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" rx="${MRX}" ry="${MRY}" class="${cls} fp2"${da}/>`;
+  return `<path d="M${(sx - MRX).toFixed(1)},${sy.toFixed(1)} v${MSH} a${MRX},${MRY} 0 0 0 ${2 * MRX},0 v${-MSH} Z" class="${cls} fp2"${da}${studStyle(pa?.studWall)}/>
+<ellipse cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" rx="${MRX}" ry="${MRY}" class="${cls} fp2"${da}${studStyle(pa?.studTop)}/>`;
 }).join('\n')}`;
 }
 
@@ -294,7 +301,7 @@ ${txt(44, 56, `PARTS — ${BRICKS.length} BRICKS, 2 PLATES`, 'lbls')}
 ${leader(30, 64, 276, 64)}
 ${PARTS.map(([n, oy]) => {
   const b = B(n);
-  return `${miniBrick(92, oy, b.shape[0], b.shape[1], b.courses)}
+  return `${miniBrick(92, oy, b.shape[0], b.shape[1], b.courses, '', b.hue)}
 ${badge(48, oy - 4, n)}
 ${txt(120, oy - 6, b.disp, 'lbl')}
 ${txt(120, oy + 6, `x1 · ${shapeName(b.shape)} · ${b.courses} course${b.courses > 1 ? 's' : ''}`, 'lblf')}`;
@@ -614,7 +621,7 @@ if (F_LOOK.length !== 1) throw new Error(`sheet2: the aria-label gives the F bri
 F_LOOK[0] = `each ${F_LOOK[0]}`;
 const ARIA = `An exploded isometric LEGO assembly. A large flat baseplate lettered @uirouter/core carries a grid of studs; its whole back row is ringed in the accent colour and labelled A, router.plugin — the plugin rail. ${Cap(WORD[BRICKS.length])} bricks hover above it, none of them seated, each with a dashed accent drop line falling onto the exact stud it takes. ${Cap(looks(1))}, laid long side to the rail over its far seats, drops onto the rail; ${looks(2)}, drops onto the rail's first stud, ringed in red — the location seat, of which a router has exactly one, so this brick swaps core's own location plugin rather than adding to it. ${Cap(looks(8))}, drops straight onto the plate's named stud C, transitionService, under brick 2's lettering, and ${looks(9)}, onto the named stud E, globals: both peer core and nothing in this repo, and their caps carry ringed studs ${listOf(REACHES.map(([, , s]) => s))}, which bricks ${listOf(REACHES.map(([a]) => a))} peer from brick 1's cap — lettered at both ends, with no drop line. ${Cap(WORD[ON1.length])} bricks drop onto ringed studs on top of brick 1 instead of onto the plate, stepped in height so no brick hides another's fall: bricks ${listOf(ON_F)} — ${listOf(ON_F.map((n) => B(n).name))}, ${F_LOOK} — take the seam lettered F, seekRouter; ${looks(BRIDGE)}, takes the seam lettered G, the context-request protocol, and is a bridge — its far end hangs over a second, smaller baseplate drawn entirely in dashed line at the right, where a second drop line falls onto a ringed stud lettered H on brick 4, ui-router-server, createServerRouter. A dashed tie between the two plates is crossed out with a red circle and slash — the server takes no stud on the client plate, because @uirouter/core is an optional peer for it and its default matcher tier never loads a plate at all. Named studs along the front of the plate are lettered below it, and a stud schedule at the upper right explains all ${WORD[SEAMS]} seams. A parts callout at the upper left lists the ${WORD[BRICKS.length]} bricks with their shapes, and a dashed spare-parts box at the lower left shows ${WORD[SPARE.length]} ghost one-by-one bricks — visualizer, sticky-states, dsr and rx — that would register through the very same stud A. Beneath the exploded view the same parts are drawn seated: three small steps at the same corner — bricks ${listOf(ON_P1)} on the plate, bricks ${listOf(ON1.filter((n) => n !== BRIDGE))} on brick 1's cap, then brick ${BRIDGE} bridging to brick 4 — and the finished model from two more corners, the opposite one and the server side. The seated model stands on a landscape of two levels: a low slab of browser ground under the client plate, and a raised shelf of server ground under the dashed second plate, ${WORD[P2_UP]} courses higher so that brick ${BRIDGE} reads as a bridge from the tall brick across to brick 4, spanning the no-DOM line. A structure schedule beneath the drawing gives every brick its file count, line count, quantized shape and the exact API call it couples through.`;
 const svg = `<svg viewBox="0 0 1400 ${SY + 110 + ROWS.length * 17}" role="img" aria-label="${ARIA}">
-${defs(P)}
+${defs(P)}${huePatterns(P, BRICKS.map((b) => b.hue))}
 
 ${txt(1370, 16, 'SCALE — plan = whole studs (1 stud per 150 sloc, rounded up to the next standard brick shape) · height = one course per 3 authored files · the baseplate is not massed', 'lbls', 'end')}
 ${txt(1370, 30, 'COUPLING IS THE SUBJECT — accent marks a published extension point; the bricks themselves are drawn plain', 'lblf', 'end')}

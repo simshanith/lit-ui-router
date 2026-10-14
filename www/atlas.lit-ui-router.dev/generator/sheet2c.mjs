@@ -32,7 +32,7 @@ const brickRow = (name) => {
 };
 const LINT = brickRow('eslint-plugin-lit-ui-router');
 const FAMILY = [
-  ...BRICK_ROWS.map((b) => ({ n: b.n, name: b.name, disp: b.disp, ver: b.ver, files: b.files, sloc: b.sloc, shape: b.shape, courses: b.courses })),
+  ...BRICK_ROWS.map((b) => ({ n: b.n, name: b.name, disp: b.disp, ver: b.ver, files: b.files, sloc: b.sloc, shape: b.shape, courses: b.courses, hue: b.hue })),
   { n: BRICK_ROWS.length + 1, name: LINT.name, disp: LINT.name, ver: LINT.version, files: LINT.files, sloc: LINT.sloc, shape: LINT.shape.split('x').map(Number), courses: LINT.courses },
 ];
 const FAMILY_NAMES = new Set(BRICKS.rows.map((r) => r.name).filter((n) => n !== CORE));
@@ -340,7 +340,7 @@ const assembly = order.map((i) => {
   if (b.id === 'G') return block(OX, OY, b.x, b.y, b.w, b.d, b.z0, b.h);
   if (b.pl) return stack(OX, OY, b.pl.rt, { x: b.x, y: b.y, z0: b.z0, ring: b.pl.ring });
   const fall = b.onGround ? drop(b.drop[0], b.drop[1], b.z0, b.drop[2] - SH).split('\n')[0] : drop(b.drop[0], b.drop[1], b.z0, b.drop[2]);
-  return `${fall}\n${brick(OX, OY, b.x, b.y, b.ws, b.ds, b.brick.courses, { z0: b.z0, studEdge: 'sk', ringStuds: new Set(b.rings) })}`;
+  return `${fall}\n${brick(OX, OY, b.x, b.y, b.ws, b.ds, b.brick.courses, { z0: b.z0, studEdge: 'sk', ringStuds: new Set(b.rings), hue: b.brick.hue })}`;
 }).join('\n');
 // a stack draws studs on its top plate only: one footprint of studs per stack drawn
 if (STUDS_DRAWN !== BOXES.filter((b) => b.pl).reduce((a, b) => a + b.pl.rt.topShape[0] * b.pl.rt.topShape[1], 0)) throw new Error(`sheet 2C: ${STUDS_DRAWN} studs drawn — a hidden plate carries studs`);

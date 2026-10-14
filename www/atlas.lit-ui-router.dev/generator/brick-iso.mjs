@@ -1,5 +1,35 @@
 import { iso } from './helpers.mjs';
 
+// How a hued brick wears its hue on a plate: 'ink' draws it plain, 'wash' tints
+// its faces, 'stroke' tints its outline and studs, 'hatch' hatches its flanks.
+export const BRICK_TINTS = ['ink', 'wash', 'stroke', 'hatch'];
+export const BRICK_TINT = process.env.ATLAS_BRICK_TINT || 'stroke';
+if (!BRICK_TINTS.includes(BRICK_TINT)) throw new Error(`brick-iso: ATLAS_BRICK_TINT is ${BRICK_TINT}; one of ${BRICK_TINTS.join(', ')}`);
+
+/** The id of a hue's 45° hatch pattern under prefix `p`. */
+export const hueHatchId = (p, hue) => `${p}-hx-${hue.replace('#', '')}`;
+
+/** The hatch patterns the 'hatch' tint references, one per hue; empty under any other tint. */
+export const huePatterns = (p, hues, tint = BRICK_TINT) =>
+  tint === 'hatch'
+    ? [...new Set(hues)].map((hue) => `\n<pattern id="${hueHatchId(p, hue)}" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="6" stroke="${hue}" stroke-width="1"/></pattern>`).join('')
+    : '';
+
+/** An inline style attribute, or nothing when no declaration applies. */
+export const sty = (...decls) => (decls.some(Boolean) ? ` style="${decls.filter(Boolean).join(';')}"` : '');
+
+/** A brick's paint under `tint`: per-face fills and the stroke, over the theme's paper and ink; null draws it plain. */
+export function brickPaint(hue, tint = BRICK_TINT, p = 's2') {
+  if (!hue || tint === 'ink') return null;
+  // oklab keeps the hue's angle (oklch turns gold on navy green); the dark paper is navy, so a wash on it takes more of the hue
+  const mix = (light, dark, base) => `light-dark(color-mix(in oklab, ${hue} ${light}%, ${base}), color-mix(in oklab, ${hue} ${dark}%, ${base}))`;
+  if (tint === 'wash')
+    return { top: mix(22, 58, 'var(--paper)'), left: mix(30, 65, 'var(--paper-2)'), rightUnder: mix(38, 72, 'var(--paper)'), studWall: mix(30, 65, 'var(--paper-2)'), studTop: mix(22, 58, 'var(--paper)') };
+  if (tint === 'stroke') return { stroke: `light-dark(color-mix(in oklab, ${hue} 68%, var(--ink)), ${hue})` };
+  const hatch = `url(#${hueHatchId(p, hue)})`;
+  return { top: mix(16, 42, 'var(--paper)'), left: hatch, leftUnder: 'var(--paper-2)', leftExtra: ' fill-opacity="0.6"', right: hatch, rightUnder: 'var(--paper)', studTop: mix(16, 42, 'var(--paper)') };
+}
+
 // A LEGO brick kit at one stud pitch U: plates, bricks and studs projected on the
 // atlas iso, plus a painter's order for seated assemblies. Every face is drawn
 // opaque — a stroke class's fill:none outranks a fill attribute, so fills are inline.
@@ -10,26 +40,29 @@ export function brickKit({ U = 40, p = 's2' } = {}) {
   const RY = +(SR * Math.SQRT2 * 0.5).toFixed(2);
   const pt = (ox, oy, x, y, z = 0) => iso(x, y, z).map((v, i) => +((i ? oy : ox) + v).toFixed(1));
   const p2 = (ox, oy, x, y, z = 0) => pt(ox, oy, x, y, z).join(',');
-  const face = (pts, cls, fill, { under = null, extra = '' } = {}) =>
+  const face = (pts, cls, fill, { under = null, extra = '', more = '' } = {}) =>
     (under ? `<polygon points="${pts}" stroke="none" style="fill:${under}"/>\n` : '')
-    + `<polygon points="${pts}" class="${cls}"${extra} style="fill:${fill}"/>`;
+    + `<polygon points="${pts}" class="${cls}"${extra} style="fill:${fill}${more}"/>`;
 
-  // One stud: an iso cylinder — swept side wall under an ellipse cap.
-  function stud(ox, oy, x, y, z, { edge = 'sks', cap = 'fp2', ring = null, extra = '' } = {}) {
+  // One stud: an iso cylinder — swept side wall under an ellipse cap; `paint` is the brick's.
+  function stud(ox, oy, x, y, z, { edge = 'sks', cap = 'fp2', ring = null, extra = '', paint = null } = {}) {
     const [cx, cy] = pt(ox, oy, x, y, z + SH);
     const by = +(cy + SH).toFixed(1);
     const halo = ring
       ? `<ellipse cx="${cx}" cy="${cy}" rx="${(RX + 5.5 * K).toFixed(1)}" ry="${(RY + 3.2 * K).toFixed(1)}" class="${ring} fnone"/>`
       : '';
-    return `<path d="M${cx - RX},${cy} L${cx - RX},${by} A${RX},${RY} 0 0 0 ${cx + RX},${by} L${cx + RX},${cy} Z" class="${edge}"${extra} style="fill:var(--paper-2)"/>
-<ellipse cx="${cx}" cy="${cy}" rx="${RX}" ry="${RY}" class="${edge} ${cap}"${extra}/>${halo}`;
+    const stroke = paint?.stroke ? `;stroke:${paint.stroke}` : '';
+    return `<path d="M${cx - RX},${cy} L${cx - RX},${by} A${RX},${RY} 0 0 0 ${cx + RX},${by} L${cx + RX},${cy} Z" class="${edge}"${extra} style="fill:${paint?.studWall ?? 'var(--paper-2)'}${stroke}"/>
+<ellipse cx="${cx}" cy="${cy}" rx="${RX}" ry="${RY}" class="${edge} ${cap}"${extra}${sty(paint?.studTop && `fill:${paint.studTop}`, paint?.stroke && `stroke:${paint.stroke}`)}/>${halo}`;
   }
 
   // One brick body: three faces, course seams scored on both visible flanks, studs on the cap.
-  function brick(ox, oy, x, y, ws, ds, courses, { z0 = 0, edge = 'sk', cap = 'fp', side, studCap = 'fp2', studEdge, ringStuds = new Set(), dash = '' } = {}) {
+  function brick(ox, oy, x, y, ws, ds, courses, { z0 = 0, edge = 'sk', cap = 'fp', side, studCap = 'fp2', studEdge, ringStuds = new Set(), dash = '', hue = null, tint = BRICK_TINT } = {}) {
     const w = ws * U, d = ds * U, h = courses * CRS, t = z0 + h;
     const q = (px, py, pz) => p2(ox, oy, px, py, pz);
     const da = dash ? ` stroke-dasharray="${dash}"` : '';
+    const pa = brickPaint(hue, tint, p);
+    const stroke = pa?.stroke ? `;stroke:${pa.stroke}` : '';
     const top = [q(x, y, t), q(x + w, y, t), q(x + w, y + d, t), q(x, y + d, t)].join(' ');
     const left = [q(x, y + d, t), q(x + w, y + d, t), q(x + w, y + d, z0), q(x, y + d, z0)].join(' ');
     const right = [q(x + w, y, t), q(x + w, y + d, t), q(x + w, y + d, z0), q(x + w, y, z0)].join(' ');
@@ -42,10 +75,10 @@ export function brickKit({ U = 40, p = 's2' } = {}) {
     const studs = [];
     for (let i = 0; i < ws; i++)
       for (let j = 0; j < ds; j++)
-        studs.push(stud(ox, oy, x + (i + 0.5) * U, y + (j + 0.5) * U, t, ringStuds.has(`${i},${j}`) ? { edge: 'ska', cap: 'fp', ring: 'ska', extra: da } : { edge: studEdge ?? edge, cap: studCap, extra: da }));
-    return `${face(left, edge, 'var(--paper-2)', { extra: da })}
-${face(right, edge, side ?? `url(#${p}-hx)`, { under: 'var(--paper)', extra: da })}
-<polygon points="${top}" class="${edge} ${cap}"${da}/>
+        studs.push(stud(ox, oy, x + (i + 0.5) * U, y + (j + 0.5) * U, t, ringStuds.has(`${i},${j}`) ? { edge: 'ska', cap: 'fp', ring: 'ska', extra: da } : { edge: studEdge ?? edge, cap: studCap, extra: da, paint: pa }));
+    return `${face(left, edge, pa?.left ?? 'var(--paper-2)', { under: pa?.leftUnder, extra: da + (pa?.leftExtra ?? ''), more: stroke })}
+${face(right, edge, side ?? pa?.right ?? `url(#${p}-hx)`, { under: pa?.rightUnder ?? 'var(--paper)', extra: da, more: stroke })}
+<polygon points="${top}" class="${edge} ${cap}"${da}${sty(pa?.top && `fill:${pa.top}`, pa?.stroke && `stroke:${pa.stroke}`)}/>
 ${seams.join('\n')}
 ${studs.join('\n')}`;
   }
@@ -164,7 +197,7 @@ export function seated(parts, { U = 40, turn = 0, p = 's2', pad = 12 } = {}) {
         }
       out.push(kit.plate(ox, oy, b.w / 40, b.d / 40, { x: b.x * K, y: b.y * K, z0: b.z0 * K, edge: m.edge ?? 'sk', dash: m.dash ?? '', named, covered }));
     } else {
-      out.push(kit.brick(ox, oy, b.x * K, b.y * K, b.w / 40, b.d / 40, m.courses, { z0: b.z0 * K, studEdge: 'sk', ringStuds: new Set((m.rings ?? []).map(turnKey)) }));
+      out.push(kit.brick(ox, oy, b.x * K, b.y * K, b.w / 40, b.d / 40, m.courses, { z0: b.z0 * K, studEdge: 'sk', ringStuds: new Set((m.rings ?? []).map(turnKey)), hue: m.hue }));
     }
   }
   const w = +(maxx - minx + 2 * pad).toFixed(1), h = +(maxy - miny + 2 * pad).toFixed(1);
