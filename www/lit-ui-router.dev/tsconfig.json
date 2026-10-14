@@ -8,8 +8,6 @@
     // (workspace exports point at .ts), whose imports carry .ts extensions —
     // the same allowance worker/tsconfig.json already makes.
     "allowImportingTsExtensions": true,
-    "outDir": "dist",
-    "rootDir": ".",
     "noEmit": true,
     "declaration": true,
     "sourceMap": true

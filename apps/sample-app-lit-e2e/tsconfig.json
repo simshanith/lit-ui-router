@@ -6,9 +6,7 @@
     // their real .ts specifier
     "allowImportingTsExtensions": true,
     "types": ["cypress", "node"],
-    "noEmit": true,
-    "outDir": "dist",
-    "rootDir": "."
+    "noEmit": true
   },
   "include": ["src/**/*", "scripts/**/*", "cypress*.config.ts"],
   "exclude": ["node_modules", "dist"]
