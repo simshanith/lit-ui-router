@@ -90,6 +90,15 @@ export async function initCity(root, viewer, focus) {
     if (!nav) return { light: function () {}, hide: function () {} };
     var chips = Array.prototype.slice.call(nav.querySelectorAll('a.pt'));
     var toggle = nav.querySelector('.pt-toggle');
+    var smooth = window.matchMedia('(prefers-reduced-motion: no-preference)');
+    var list = nav.querySelector('.pts');
+    // the list's own scroll only, never the page's: scrollIntoView would also move the document
+    function reveal(a) {
+      if (!list.getClientRects().length) return;
+      var r = a.getBoundingClientRect(), b = list.getBoundingClientRect();
+      var d = r.top < b.top ? r.top - b.top - 6 : r.bottom > b.bottom ? r.bottom - b.bottom + 6 : 0;
+      if (d) list.scrollBy({ top: d, behavior: smooth.matches ? 'smooth' : 'auto' });
+    }
     on(nav, 'click', function (e) {
       var a = e.target && e.target.closest ? e.target.closest('a.pt') : null;
       if (!a || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
@@ -101,14 +110,64 @@ export async function initCity(root, viewer, focus) {
       nav.classList.toggle('open', open);
       toggle.setAttribute('aria-expanded', String(open));
     });
+    var stage = nav.parentNode, bar = nav.querySelector('.pt-bar'), move = nav.querySelector('.pt-move'), drag = null;
+    var CORNERS = ["ne","se","sw"];
+    // a small stage opens on the bar alone, so the model starts unobstructed
+    if (stage.clientWidth < 760 || stage.clientHeight < 480) toggle.click();
+    // FLIP: the panel lands in its corner, then glides there from where it stood
+    function place(c, from) {
+      nav.style.transition = 'none';
+      nav.style.transform = '';
+      nav.setAttribute('data-corner', c);
+      if (!from || !smooth.matches) return;
+      var to = nav.getBoundingClientRect();
+      nav.style.transform = 'translate(' + (from.left - to.left) + 'px, ' + (from.top - to.top) + 'px)';
+      nav.getBoundingClientRect();
+      nav.style.transition = 'transform 240ms var(--ease-out, ease-out)';
+      nav.style.transform = '';
+    }
+    on(nav, 'transitionend', function (e) { if (e.target === nav) nav.style.transition = ''; });
+    on(move, 'click', function () {
+      place(CORNERS[(CORNERS.indexOf(nav.getAttribute('data-corner')) + 1) % CORNERS.length], nav.getBoundingClientRect());
+    });
+    on(bar, 'pointerdown', function (e) {
+      if (e.button !== 0 || e.target.closest('button')) return;
+      bar.setPointerCapture(e.pointerId);
+      drag = { id: e.pointerId, x: e.clientX, y: e.clientY };
+      nav.style.transition = 'none';
+      nav.classList.add('drag');
+    });
+    on(bar, 'pointermove', function (e) {
+      if (drag && e.pointerId === drag.id) nav.style.transform = 'translate(' + (e.clientX - drag.x) + 'px, ' + (e.clientY - drag.y) + 'px)';
+    });
+    // on release the panel snaps to the open corner nearest its centre, never a free placement
+    function drop(e) {
+      if (!drag || e.pointerId !== drag.id) return;
+      drag = null;
+      nav.classList.remove('drag');
+      var r = nav.getBoundingClientRect(), s = stage.getBoundingClientRect(), x = (r.left + r.right) / 2 - s.left, y = (r.top + r.bottom) / 2 - s.top;
+      var best = CORNERS.reduce(function (b, c) {
+        var d = Math.hypot(x - (c.charAt(1) === 'e' ? s.width : 0), y - (c.charAt(0) === 's' ? s.height : 0));
+        return d < b.d ? { c: c, d: d } : b;
+      }, { c: nav.getAttribute('data-corner'), d: Infinity });
+      place(best.c, r);
+    }
+    on(bar, 'pointerup', drop);
+    on(bar, 'pointercancel', drop);
     return {
       light: function (n) {
+        var at = null;
         chips.forEach(function (a) {
           var hit = Number(a.getAttribute('data-focus')) === n;
           a.classList.toggle('on', hit);
           if (hit) a.setAttribute('aria-current', 'true');
           else a.removeAttribute('aria-current');
+          if (hit) at = a;
         });
+        // the group's name keeps one open, so opening this one folds the rest
+        var g = at && at.closest('details');
+        if (g && !g.open) g.open = true;
+        if (at) reveal(at);
       },
       hide: function () { nav.style.visibility = 'hidden'; },
     };

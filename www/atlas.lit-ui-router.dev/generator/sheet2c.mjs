@@ -187,7 +187,7 @@ const standsOn = (n) => {
 const modelOf = (n) => BRICK_MODEL.find((m) => m.id === n);
 const U = 14;
 const K = U / 40;
-const { CRS, SH, RY, pt, brick, block, stud } = brickKit({ U, p: P });
+const { CRS, SH, RX, RY, pt, brick, block, stud } = brickKit({ U, p: P });
 // a plate is a third of a course — the LEGO fact; brickKit's half-course PT is not used for runtime plates
 const PLATE_H = CRS / 3;
 if (3 * PLATE_H !== CRS) throw new Error('sheet 2C: three plates are one course');
@@ -354,28 +354,88 @@ const drawModel = (build, ox, oy) => paintOrder(build.boxes).map((i) => {
   const fall = b.onGround ? drop(ox, oy, b.drop[0], b.drop[1], b.z0, b.drop[2] - SH).split('\n')[0] : drop(ox, oy, b.drop[0], b.drop[1], b.z0, b.drop[2]);
   return `${fall}\n${brick(ox, oy, b.x, b.y, b.ws, b.ds, b.brick.courses, { z0: b.z0, studEdge: 'sk', ringStuds: new Set(b.rings), hue: b.brick.hue })}`;
 }).join('\n');
-// badges: a brick's number above its far roof corner, or at its near-left roof corner when a brick stands on it;
-// a plate's letter above its ringed stud, clear of its drop line and under the seated brick's underside
-const badgesOf = (build, ox, oy) => build.boxes.flatMap((b) => {
-  if (b.brick) {
-    const carries = build.bricks.some((x) => x.on === b.brick.n);
-    const [x, y] = carries ? pt(ox, oy, b.x, b.y + b.d, b.z0 + b.h) : pt(ox, oy, b.x, b.y, b.z0 + b.h);
-    return [{ id: b.id, label: b.brick.n, at: carries ? [x - 13, y - 2] : [x, y - 13] }];
-  }
-  if (!b.pl) return [];
-  const [rx, ry] = pt(ox, oy, ...b.pl.ringAt);
-  const at = [rx - 16, ry - 11];
-  if (at[0] + BADGE_R >= rx) throw new Error('sheet 2C: a letter badge sits on its drop line');
-  // read at the badge's own x on the seated brick's two lower silhouette edges
-  for (const seated of b.pl.seated) {
-    const part = build.parts_.get(seated.n);
-    const [L, N, R] = [[part.x, part.y + part.d], [part.x + part.w, part.y + part.d], [part.x + part.w, part.y]].map(([x, y]) => pt(ox, oy, x, y, part.z0));
-    const edgeY = (x) => (x < L[0] || x > R[0] ? -Infinity : x <= N[0] ? L[1] + ((x - L[0]) / (N[0] - L[0])) * (N[1] - L[1]) : N[1] + ((x - N[0]) / (R[0] - N[0])) * (R[1] - N[1]));
-    for (const x of [at[0] - BADGE_R, at[0], at[0] + BADGE_R])
-      if (at[1] - BADGE_R <= edgeY(x) + 1) throw new Error(`sheet 2C: plate ${b.pl.rt.letter}'s badge runs into brick ${seated.n}'s underside`);
-  }
-  return [{ id: b.id, label: b.pl.rt.letter, at }];
+const topFace = (ox, oy, x, y, w, d, z) => [[x, y], [x + w, y], [x + w, y + d], [x, y + d]].map(([px, py]) => pt(ox, oy, px, py, z));
+const groundTop = (build, ox, oy) => {
+  const g = build.boxes.find((b) => b.ground);
+  return topFace(ox, oy, g.x, g.y, g.w, g.d, g.z0 + g.h);
+};
+const segDist = ([px, py], [ax, ay], [bx, by]) => {
+  const dx = bx - ax, dy = by - ay, t = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy)));
+  return Math.hypot(px - ax - t * dx, py - ay - t * dy);
+};
+const pointIn = ([px, py], poly) => poly.every((a, i) => {
+  const b = poly[(i + 1) % poly.length];
+  return (b[0] - a[0]) * (py - a[1]) - (b[1] - a[1]) * (px - a[0]) >= 0;
+}) || poly.every((a, i) => {
+  const b = poly[(i + 1) % poly.length];
+  return (b[0] - a[0]) * (py - a[1]) - (b[1] - a[1]) * (px - a[0]) <= 0;
 });
+// a box's screen silhouette: the convex hull of its eight projected corners, studs included above a part's top
+const hull = (pts) => {
+  const s = [...pts].sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  const cross = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+  const half = (list) => list.reduce((h, p) => {
+    while (h.length > 1 && cross(h.at(-2), h.at(-1), p) <= 0) h.pop();
+    return [...h, p];
+  }, []);
+  return [...half(s).slice(0, -1), ...half([...s].reverse()).slice(0, -1)];
+};
+const silhouette = (o, ox, oy) => hull([[o.x, o.y], [o.x + o.w, o.y], [o.x, o.y + o.d], [o.x + o.w, o.y + o.d]]
+  .flatMap(([x, y]) => [pt(ox, oy, x, y, o.z0), pt(ox, oy, x, y, o.z0 + o.h + (o.ground ? 0 : SH + RY))]));
+const edgeGap = (c, poly) => Math.min(...poly.map((a, i) => segDist(c, a, poly[(i + 1) % poly.length])));
+// a circle wholly inside a convex face, or touching it at all
+const circleInside = (c, r, poly) => pointIn(c, poly) && edgeGap(c, poly) >= r;
+const circleMeets = (c, r, poly) => pointIn(c, poly) || edgeGap(c, poly) < r;
+// the badge spacing every badge of a model keeps from the others
+const BADGE_GAP = 24;
+// badges: a brick's number above its far roof corner, or at its near-left roof corner when a brick stands on it;
+// a plate's letter beside its ringed stud, placed by plateBadge
+const brickBadges = (build, ox, oy) => build.boxes.filter((b) => b.brick).map((b) => {
+  const carries = build.bricks.some((x) => x.on === b.brick.n);
+  const [x, y] = carries ? pt(ox, oy, b.x, b.y + b.d, b.z0 + b.h) : pt(ox, oy, b.x, b.y, b.z0 + b.h);
+  return { id: b.id, label: b.brick.n, at: carries ? [x - 13, y - 2] : [x, y - 13] };
+});
+// a letter badge sits wholly on its own plate's roof, wholly on its ground slab's top face clear of every other mass,
+// or wholly in clear air; it never straddles a face's edge. The nearest such spot to (−16, −11) off the ringed stud
+// wins, searched outward a unit at a time, and a spot off the default takes a leader back to the ring
+function plateBadge(build, b, ox, oy, taken) {
+  const [rx, ry] = pt(ox, oy, ...b.pl.ringAt);
+  const R = BADGE_R + 1;
+  // read at the badge's own x on the seated brick's two lower silhouette edges
+  const underClear = (at) => b.pl.seated.every((seated) => {
+    const part = build.parts_.get(seated.n);
+    const [L, N, Rt] = [[part.x, part.y + part.d], [part.x + part.w, part.y + part.d], [part.x + part.w, part.y]].map(([x, y]) => pt(ox, oy, x, y, part.z0));
+    const edgeY = (x) => (x < L[0] || x > Rt[0] ? -Infinity : x <= N[0] ? L[1] + ((x - L[0]) / (N[0] - L[0])) * (N[1] - L[1]) : N[1] + ((x - N[0]) / (Rt[0] - N[0])) * (Rt[1] - N[1]));
+    return [at[0] - BADGE_R, at[0], at[0] + BADGE_R].every((x) => at[1] - BADGE_R > edgeY(x) + 1);
+  });
+  const r = b.pl.rt, roof = topFace(ox, oy, b.x + r.topOff[0] * U, b.y + r.topOff[1] * U, r.topShape[0] * U, r.topShape[1] * U, b.z0 + b.h);
+  const slab = groundTop(build, ox, oy);
+  const masses = build.boxes.filter((o) => !o.ground).map((o) => silhouette(o, ox, oy));
+  const ground = silhouette(build.boxes.find((o) => o.ground), ox, oy);
+  const onRoof = (c) => circleInside(c, R, roof);
+  const seated = (c) => onRoof(c) || (!masses.some((m) => circleMeets(c, R, m)) && (circleInside(c, R, slab) || !circleMeets(c, R, ground)));
+  const ok = (c) => seated(c) && underClear(c) && c[0] + BADGE_R < rx && taken.every(([x, y]) => Math.hypot(x - c[0], y - c[1]) >= BADGE_GAP);
+  const home = [rx - 16, ry - 11];
+  let at = null;
+  for (let d = 0; d <= 120 && !at; d++)
+    for (let k = 0; k < (d ? 24 : 1) && !at; k++) {
+      const c = [+(home[0] + d * Math.cos((k * Math.PI) / 12)).toFixed(1), +(home[1] + d * Math.sin((k * Math.PI) / 12)).toFixed(1)];
+      if (ok(c)) at = c;
+    }
+  if (!at) throw new Error(`sheet 2C: plate ${r.letter}'s badge in build ${build.numeral} finds no seat within 120 units`);
+  // the guard: a letter badge on no roof of its own never straddles its ground slab's top face
+  if (!onRoof(at) && circleMeets(at, R, slab) && !circleInside(at, R, slab)) throw new Error(`sheet 2C: plate ${r.letter}'s badge in build ${build.numeral} straddles its ground slab's top face`);
+  const ring = [rx, ry - SH], gap = Math.hypot(ring[0] - at[0], ring[1] - at[1]), halo = RX + 5.5 * K;
+  const u = [(ring[0] - at[0]) / gap, (ring[1] - at[1]) / gap];
+  const lead = at === home || at.join() === home.join() || gap < BADGE_R + halo + 4 ? null
+    : [at[0] + u[0] * BADGE_R, at[1] + u[1] * BADGE_R, ring[0] - u[0] * halo, ring[1] - u[1] * halo].map((v) => +v.toFixed(1));
+  return { id: b.id, label: r.letter, at, lead };
+}
+const badgesOf = (build, ox, oy) => {
+  const marks = brickBadges(build, ox, oy);
+  for (const b of build.boxes.filter((o) => o.pl)) marks.push(plateBadge(build, b, ox, oy, marks.map((m) => m.at)));
+  return marks;
+};
 // a model's screen extents at an origin: every box corner, its studs and its badges
 const extentOf = (build, ox, oy) => {
   let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
@@ -553,13 +613,14 @@ const panelSvg = (panel) => {
 ${badge(bx, by, it.label)}${txt(ix + 24, by + 4, `×${it.count}`, 'lbl')}`;
   }).join('\n');
   const marks = badgesOf(b, ox, oy);
-  for (const m of marks) ALL_BADGES.push(m.at);
+  for (const m of marks) ALL_BADGES.push([...m.at, `${b.numeral}:${m.label}`]);
   return `<g id="${P}-build-${b.numeral}" data-build="${b.numeral}">
 <rect x="${x}" y="${y}" width="${pw}" height="${ph}" class="${b.atlas ? 'ska' : 'skf'} fnone"${b.atlas ? ' stroke-dasharray="5 4" opacity="0.7"' : ''}/>
 ${headLines(b).map(([s, cls], k) => txt(x + PAD, y + PAD + 13 + k * LINE + (k ? 3 : 0), s, cls)).join('\n')}
 <rect x="${x + PAD}" y="${y + HEAD_H}" width="${Math.ceil(call.w + 2 * CALL_PAD)}" height="${CALL_H(b)}" rx="4" class="skf fnone"/>
 ${callout}
 ${drawModel(b, ox, oy)}
+${marks.filter((m) => m.lead).map((m) => leader(...m.lead)).join('\n')}
 ${marks.map((m) => badge(m.at[0], m.at[1], m.label)).join('\n')}
 </g>`;
 };
@@ -567,7 +628,7 @@ const panels = PANELS.map(panelSvg).join('\n');
 // a stack draws studs on its top plate only: one footprint of studs per stack drawn
 if (STUDS_DRAWN !== MODELS.reduce((a, b) => a + b.plates.reduce((s, p) => s + p.rt.topShape[0] * p.rt.topShape[1], 0), 0)) throw new Error(`sheet 2C: ${STUDS_DRAWN} studs drawn — a hidden plate carries studs`);
 for (let i = 0; i < ALL_BADGES.length; i++) for (let j = i + 1; j < ALL_BADGES.length; j++)
-  if (Math.hypot(ALL_BADGES[i][0] - ALL_BADGES[j][0], ALL_BADGES[i][1] - ALL_BADGES[j][1]) < 24) throw new Error(`sheet 2C: two badges within 24px at ${ALL_BADGES[i]} and ${ALL_BADGES[j]}`);
+  if (Math.hypot(ALL_BADGES[i][0] - ALL_BADGES[j][0], ALL_BADGES[i][1] - ALL_BADGES[j][1]) < BADGE_GAP) throw new Error(`sheet 2C: two badges within ${BADGE_GAP}px at ${ALL_BADGES[i]} and ${ALL_BADGES[j]}`);
 const ART_BOTTOM = Math.max(GY + GRID_H, BOX.bottom);
 
 // ---- the schedules: one row per build, then one per plate ------------------------------------
