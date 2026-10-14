@@ -11,9 +11,11 @@
  * core, and resolve() is async so that boundary can hold.
  */
 
-import type { RawParams, StateDeclaration, UIRouter } from '@uirouter/core';
+import type { RawParams, StateDeclaration } from '@uirouter/core';
 
 import { compileResolver, matchRoute } from './redirects.ts';
+import { createRouterPool } from './router-pool.ts';
+import type { PooledRouter, RouterPool } from './router-pool.ts';
 import type {
   CompiledResolver,
   RedirectRule,
@@ -30,9 +32,6 @@ export type {
 
 // Transitions settle in microtasks; the timer is only a degrade-to-shell net.
 const SETTLE_TIMEOUT_MS = 100;
-
-// Idle headless routers kept per simulate mount; a burst past it builds extras and drops them.
-const POOL_MAX_IDLE = 16;
 
 /** One mount's routing configuration: its state tree, its redirects, and the tier that resolves them. */
 export interface MountConfig {
@@ -126,18 +125,12 @@ export interface ServerRouter {
   resolve(pathnameOrUrl: string | { pathname: string }): Promise<Verdict>;
 }
 
-// A headless router checked out by at most one request at a time.
-interface PooledRouter {
-  router: UIRouter;
-  settle: ((succeeded: boolean) => void) | null;
-}
-
 interface Mount {
   base: string;
   config: MountConfig;
   strategy: 'matcher' | 'simulate';
   compiled: CompiledResolver;
-  idle: PooledRouter[];
+  pool: RouterPool;
 }
 
 const isUrlText = (input: string | { pathname: string }): input is string =>
@@ -256,7 +249,7 @@ const compileMount = ([base, config]: [string, MountConfig]): Mount => {
       rules: config.redirects,
       config: config.config,
     }),
-    idle: [],
+    pool: createRouterPool(),
   };
 };
 
@@ -318,48 +311,6 @@ const buildHeadlessRouter = (simulate: SimulateModule, mount: Mount) => {
 
   return router;
 };
-
-const buildPooledRouter = (
-  simulate: SimulateModule,
-  mount: Mount,
-): PooledRouter => {
-  const pooled: PooledRouter = {
-    router: buildHeadlessRouter(simulate, mount),
-    settle: null,
-  };
-
-  // onceSettled's outcome, hooked once: per-request hooks would pile up on a reused router.
-  pooled.router.transitionService.onSuccess({}, () => pooled.settle?.(true));
-  pooled.router.transitionService.onError({}, (transition) => {
-    if (!transition.error().redirected) pooled.settle?.(false);
-  });
-
-  return pooled;
-};
-
-const checkOut = (simulate: SimulateModule, mount: Mount): PooledRouter =>
-  mount.idle.pop() ?? buildPooledRouter(simulate, mount);
-
-// Restores a fresh router's globals: the url-rule handler and transitionTo read them.
-const checkIn = (mount: Mount, pooled: PooledRouter): void => {
-  const { globals, stateRegistry } = pooled.router;
-  pooled.settle = null;
-
-  if (globals.transition || mount.idle.length >= POOL_MAX_IDLE) return;
-
-  globals.transitionHistory.clear();
-  globals.successfulTransitions.clear();
-  globals.$current = stateRegistry.root();
-  globals.current = globals.$current.self;
-
-  for (const key of Object.keys(globals.params)) delete globals.params[key];
-  mount.idle.push(pooled);
-};
-
-const nextSettled = (pooled: PooledRouter): Promise<boolean> =>
-  new Promise((resolve) => {
-    pooled.settle = resolve;
-  });
 
 // Transitions settle in microtasks; the timer is only a degrade-to-shell net.
 const settledWithinTimeout = (settled: Promise<boolean>): Promise<boolean> => {
@@ -431,7 +382,7 @@ const replayVerdict = async (
 
   if (!router.urlService.match({ path: subpath, search: {}, hash: '' }))
     return notFoundVerdict(mount);
-  const settled = nextSettled(pooled);
+  const settled = pooled.nextSettled();
   router.urlService.url(subpath);
   router.urlService.sync();
 
@@ -455,14 +406,17 @@ const simulateVerdict = async (
   subpath: string,
 ): Promise<Verdict> => {
   try {
-    const pooled = checkOut(simulate, mount);
+    const pooled = mount.pool.checkOut(() =>
+      buildHeadlessRouter(simulate, mount),
+    );
+
     const verdict = await replayVerdict(pooled, mount, subpath);
 
     // Failed and timed-out transitions degrade to the shell — the client
     // router re-runs them with its full configuration; never a wrong redirect.
     // Their router is dropped, never pooled.
     if (verdict === null) return shellVerdict(mount);
-    checkIn(mount, pooled);
+    pooled.release();
 
     return verdict;
   } catch {
