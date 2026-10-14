@@ -158,7 +158,7 @@ cached. `exact:` is the command turbo ran, from the directory it ran in.
 Two workflows run the same jobs: `run` for the turbo graph, `plan`, and one
 `e2e (<suites>)` job per group of Cypress suites: one suite per job on PRs and
 `main`, three on the branch lane unless the `E2E_SUITES_PER_JOB_BRANCH` repo
-variable says otherwise. `build-test.yml` adds `e2e result`, which is green only
+variable says otherwise. Both lanes also run `e2e result`, which is green only
 when every group is:
 
 - `build-test.yml` (`build_and_test / run`, `build_and_test / e2e result`) runs on pull requests and pushes to

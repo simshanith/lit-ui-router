@@ -33,11 +33,6 @@ on:
         description: 'Default e2e suites per e2e job (a positive integer)'
         type: number
         default: 1
-      # Only a caller whose checks a ruleset requires needs the `e2e result` job.
-      aggregate:
-        description: 'Report the e2e matrix as one `e2e result` check'
-        type: boolean
-        default: false
     secrets:
       TURBO_TOKEN:
         required: false
@@ -396,13 +391,14 @@ jobs:
           if-no-files-found: warn
 
   e2e_result:
-    # One check for the whole matrix, `<caller> / e2e result`, for rulesets to
-    # require beside `run`: a matrix leg's name changes with the suite list.
+    # One pass/fail for the whole matrix, `<caller> / e2e result`, on every
+    # lane; rulesets require it beside `run`, since a leg's name changes with
+    # the suite list.
     # Fails unless the plan and every leg succeeded; GitHub counts a skipped
     # required check as passing, so a skipped or cancelled job fails it too.
     name: e2e result
     needs: [plan, e2e]
-    if: ${{ always() && inputs.aggregate }}
+    if: ${{ always() }}
     runs-on: ubuntu-26.04
     timeout-minutes: 5
     permissions: {}

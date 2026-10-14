@@ -95,11 +95,11 @@ only, so neither path can release.
 The pipeline is one set of steps split across three files by trigger, so that
 neither event can instantiate the other's jobs:
 
-| File                    | Trigger                      | Reports                                                                                                           |
-| ----------------------- | ---------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `build-test.yml`        | PRs, `main` pushes, dispatch | `build_and_test / run` and `build_and_test / e2e result` — required checks                                        |
-| `build-test-branch.yml` | pushes to any other branch   | `build_and_test (signal gate)`, `build_and_test (branch) / run`, `/ plan`, `/ e2e (<suites>)` per group           |
-| `build-test-run.yml`    | `workflow_call` only         | the jobs both callers share: `run`, `plan`, `e2e (<suites>)`, and `e2e result` when the caller passes `aggregate` |
+| File                    | Trigger                      | Reports                                                                                                                 |
+| ----------------------- | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `build-test.yml`        | PRs, `main` pushes, dispatch | `build_and_test / run` and `build_and_test / e2e result` — required checks                                              |
+| `build-test-branch.yml` | pushes to any other branch   | `build_and_test (signal gate)`, `build_and_test (branch) / run`, `/ plan`, `/ e2e (<suites>)` per group, `/ e2e result` |
+| `build-test-run.yml`    | `workflow_call` only         | the jobs both callers share: `run`, `plan`, `e2e (<suites>)`, `e2e result`                                              |
 
 `run` is the turbo graph. `plan` groups the default Cypress suites
 `suitesPerJob` at a time, and each `e2e (<suites>)` job runs one group on its own

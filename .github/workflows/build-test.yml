@@ -55,7 +55,6 @@ jobs:
       # any ref. `inputs` is null on pull_request, so PRs get the PR graph.
       mainGraph: ${{ inputs.mainGraph || (github.event_name == 'push' && github.ref == 'refs/heads/main') }}
       cypressVideo: ${{ inputs.cypressVideo || false }}
-      aggregate: true
     secrets:
       TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
       TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
