@@ -1034,10 +1034,10 @@
       "id": "2c",
       "num": "2C",
       "title": "THE ALTERNATE BUILDS",
-      "sub": "ALTITUDE 2 — SIBLING PLATE, THE ECOSYSTEM: one box of ten family bricks at sheet 2’s mould and eight runtimes as stacks of baseplates sized from one shipped build at the same scale, and the seven alternate models the repository’s own consumers build from it, and an eighth the atlas’s own app builds on its own branch — each model the parts one consumer pins, on the plates they peer · rows read census-builds.json, both readings, and census-peers.json @ 108456af",
+      "sub": "ALTITUDE 2 — SIBLING PLATE, THE ECOSYSTEM: one box of ten family bricks at sheet 2’s mould and nine runtimes as stacks of baseplates sized from one shipped build at the same scale, and the seven alternate models the repository’s own consumers build from it, and an eighth the atlas’s own app builds on its own branch — each model the parts one consumer pins, on the plates they peer · rows read census-builds.json, both readings, and census-peers.json @ 108456af",
       "caption": "One box, eight models. The sample apps, the docs site and the examples pin seven distinct sets of family parts, and the atlas’s own app pins an eighth on its own branch; each set is drawn as the small assembly it makes on the runtime plates its parts peer, under a callout of its parts: effect, mobx and signal-polyfill share no model, one brick stays in the box at the cabinet’s tree and no bricks with the atlas app, and three plates carry nothing at the cabinet’s tree and one with the atlas app.",
       "scale": "ONE BOX, EIGHT BUILDS",
-      "verdict": "alternate builds from one box: seven builds pinned by 18 consumers and an eighth by the atlas’s own app on its own branch, none mixing two of effect, mobx and signal-polyfill; lit-ui-router-ssr is in no build at the cabinet’s tree and in build VIII with the atlas app, and @lit-labs/ssr, @lit-labs/ssr-client and hono are plates no build stands on at the cabinet’s tree, hono with the atlas app too",
+      "verdict": "alternate builds from one box: seven builds pinned by 18 consumers, vanilla the most built by five, and an eighth by the atlas’s own app on its own branch, none mixing two of effect, mobx and signal-polyfill; lit-ui-router-ssr is in no build at the cabinet’s tree and in build VIII with the atlas app, and @lit-labs/ssr, @lit-labs/ssr-client and hono are plates no build stands on at the cabinet’s tree, hono with the atlas app too",
       "form": "BUILD INSTRUCTIONS",
       "labels": {
         "subject": "coupling",

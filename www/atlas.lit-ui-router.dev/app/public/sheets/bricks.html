@@ -72,6 +72,8 @@
 .bk-frame:fullscreen .bk-stage, .bk-frame.is-filled .bk-stage { position: relative; min-height: 0; border: 1.5px solid var(--ink); }
 .bk-frame:fullscreen .bk-view, .bk-frame.is-filled .bk-view { position: absolute; inset: 0; height: 100%; }
 .bk-frame:fullscreen .bk-bar, .bk-frame.is-filled .bk-bar, .bk-frame:fullscreen .bk-read, .bk-frame.is-filled .bk-read { border: 1.5px solid var(--ink); border-block-start: none; }
+/* the reading holds the block size its scene reserves, so a longer one scrolls inside and the stage never reflows */
+.bk-frame:fullscreen .bk-read, .bk-frame.is-filled .bk-read { box-sizing: content-box; block-size: var(--read-reserve); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
 @media (min-width: 1100px) {
   .bk-frame:fullscreen, .bk-frame.is-filled { grid-template-columns: minmax(0, 1fr) clamp(320px, 1rem + 29vw, 460px); grid-template-rows: minmax(0, 1fr) auto;
     grid-template-areas: "stage stage" "bar read"; }
@@ -131,15 +133,17 @@
   .bk-parts .pts { grid-template-columns: auto; }
 }
 .bk-read { border: 1.5px solid var(--ink); border-block-start: none; background: var(--paper-2); padding-block: 14px 16px; padding-inline: 22px;
-  min-height: 72px; color: var(--ink); }
-.bk-read h3 { font-family: var(--code); font-size: 16px; font-weight: 600; letter-spacing: 0.04em; line-height: 1.3;
+  min-height: 72px; color: var(--ink); --rd-head: 16px; --rd-data: 12px; --rd-prose: 16px;
+  /* a name, two ledger lines and three lines of prose at the sizes below; filled, the frame holds the panel to it */
+  --read-reserve: calc(1.3 * var(--rd-head) + 3px + 2 * 1.5 * var(--rd-data) + 4px + 3 * 1.5 * var(--rd-prose)); }
+.bk-read h3 { font-family: var(--code); font-size: var(--rd-head); font-weight: 600; letter-spacing: 0.04em; line-height: 1.3;
   margin: 0; word-break: break-word; }
 .bk-read h3 i.sw { display: inline-block; width: 18px; height: 11px; margin-inline-end: 8px; border: 1.2px solid var(--ink); vertical-align: baseline; }
 .bk-read h3 .n { font-family: var(--data); font-size: 11px; letter-spacing: 0.16em; color: var(--accent);
   margin-inline-end: 10px; vertical-align: 0.12em; white-space: nowrap; }
-.bk-read .ledger { font-family: var(--data); font-size: 12px; letter-spacing: 0.08em; line-height: 1.5;
+.bk-read .ledger { font-family: var(--data); font-size: var(--rd-data); letter-spacing: 0.08em; line-height: 1.5;
   color: var(--ink-soft); margin-block: 3px 0; margin-inline: 0; }
-.bk-read .note, .bk-read .hint { font-family: var(--prose); font-size: 16px; line-height: 1.5; max-width: 66ch;
+.bk-read .note, .bk-read .hint { font-family: var(--prose); font-size: var(--rd-prose); line-height: 1.5; max-width: 66ch;
   margin-block: 4px 0; margin-inline: 0; color: var(--ink-soft); }
 @media (max-width: 860px) { .bk-view { height: clamp(420px, 62vh, 620px); } }</style>
 <section class="sheet bk" id="bricks-scene" aria-label="The Brick Assembly in the round — sheet 2's finished model as a three-dimensional model that explodes and reassembles">
