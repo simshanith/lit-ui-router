@@ -126,7 +126,7 @@ function placements(studs, ws, ds) {
 }
 // every order of a list, the given order first
 const orders = (xs) => (xs.length < 2 ? [xs] : xs.flatMap((x, i) => orders([...xs.slice(0, i), ...xs.slice(i + 1)]).map((o) => [x, ...o])));
-const stringOf = (part, b, route) => ({ part, box: route.box, b, fromKey: route.f.key, toKey: route.e.key, curve: route.curve, front: route.front, to: [route.e.x, route.e.y, top(route.box)] });
+const stringOf = (part, b, route) => ({ part, box: route.box, b, fromKey: route.f.key, toKey: route.e.key, curve: route.curve, front: route.front, hang: !!route.hang, to: [route.e.x, route.e.y, top(route.box)] });
 const S = (o) => ({ x: o.x * K, y: o.y * K, w: o.w * K, d: o.d * K, z0: o.z0 * K, h: o.h * K });
 const massOf = (o, end) => ({ id: o.consumer ? o.consumer.name : o.ground ? 'ground' : `brick ${o.part.n}`, poly: silhouette(o, 0, 0), box: S(o), end });
 const onScreen = (q) => kit.pt(0, 0, ...q);
@@ -141,23 +141,64 @@ function seatingOf(family, { lift, levels }) {
   st.capped = (o) => st.strings.filter((t) => t.box === o || t.part === o);
   return st;
 }
-// a cord's route from the consumer's top to the pin's top over `scene`: the nearest pair of free studs whose cord misses every other
-// mass outright, else passes only above or in front of them; never behind or through. Under `wind`, where no straight cord serves,
-// the string bends and winds round what stands in its way, resting on a free stud or lifted over a top
-function routeFor(st, part, b, scene, { share = false, wind = false } = {}) {
+// the free studs of the pinned part a cord may end on: none dropped onto, and, unless `share`, none another cord's plate seats on
+const endsOf = (st, box, b, scene, share) => freeStuds(box, scene).filter((s) => !st.dropTaken.has(`${b.n}:${s.key}`) && (share || !st.capped(box).some((t) => t.toKey === s.key)));
+// a consumer's free underside studs: the cells over none of the parts it seats on, and none another cord hangs from
+const underStuds = (st, part) => studsOf(part).map((s) => ({ ...s, key: `u:${s.key}` }))
+  .filter((s) => !part.drops.some(([, , , n]) => inside(s.x, s.y, st.family.find((o) => o.part?.n === n))) && !st.capped(part).some((t) => t.fromKey === s.key));
+// what a hanging cord meets: it may pass in front of the parts beneath its consumer and over its own plate's part, and misses
+// every other mass outright, or under `front` passes only above or in front of it too; the hanging plate's rim is tested with it
+function hangHit(part, box, scene, curve, front) {
+  const beneath = (o) => overlap(o, part) && top(o) <= part.z0 + 0.01;
+  const masses = scene.filter((o) => o !== part && !o.bare).map((o) => massOf(o, front || o === box || !!o.ground || beneath(o)));
+  const [x, y, z] = curve.from, r = cords.cap.r;
+  const rim = Array.from({ length: 8 }, (_, k) => [x + r * Math.cos((k * Math.PI) / 4), y + r * Math.sin((k * Math.PI) / 4), z - cords.cap.h]);
+  return hitBy({ ...curve, pts: [...rim, ...curve.pts] }, masses, onScreen);
+}
+// a hanging route: of every free underside stud and every free stud of the part, the nearest pair whose cord drops clear
+function hangFor(st, part, b, scene, share) {
+  const box = st.family.find((o) => o.part === b);
+  const pairs = underStuds(st, part).flatMap((f) => endsOf(st, box, b, scene, share).map((e) => ({ f, e, from: [f.x * K, f.y * K, part.z0 * K], to: [e.x * K, e.y * K, top(box) * K] }))).sort(nearFirst);
+  for (const front of [false, true])
+    for (const r of pairs) {
+      const curve = { ...cords.curve(r.from, r.to, { under: true }), via: [] };
+      if (!hangHit(part, box, scene, curve, front)) return { ...r, curve, front, box, hang: true };
+    }
+  return null;
+}
+// a straight cord from the consumer's top: the nearest pair of free studs whose cord misses every other mass outright, else
+// passes only above or in front of them; never behind or through
+function straightFor(st, part, b, scene, share) {
   const box = st.family.find((o) => o.part === b);
   const tops = studsOf(part).filter((s) => !st.capped(part).some((t) => t.fromKey === s.key));
-  const ends = freeStuds(box, scene).filter((s) => !st.dropTaken.has(`${b.n}:${s.key}`) && (share || !st.capped(box).some((t) => t.toKey === s.key)));
-  const pairs = tops.flatMap((f) => ends.map((e) => ({ f, e, from: [f.x * K, f.y * K, top(part) * K], to: [e.x * K, e.y * K, top(box) * K] }))).sort(nearFirst);
+  const pairs = tops.flatMap((f) => endsOf(st, box, b, scene, share).map((e) => ({ f, e, from: [f.x * K, f.y * K, top(part) * K], to: [e.x * K, e.y * K, top(box) * K] }))).sort(nearFirst);
   const masses = (front) => scene.filter((o) => !o.bare || o === part).map((o) => massOf(o, front || o === part || o === box || !!o.ground));
   for (const front of [false, true]) {
     const route = pairs.map((r) => ({ ...r, curve: cords.curveVia(r.from, [], r.to), front })).find((r) => !hitBy(r.curve, masses(front), onScreen));
     if (route) return { ...route, box };
   }
-  // a part with more cords to take than free studs takes the extra ones on a round plate another cord already seats
-  const shared = share ? null : routeFor(st, part, b, scene, { share: true });
-  if (shared || !wind) return shared;
-  return windFor(st, part, b, scene, pairs, masses) ?? (share ? null : routeFor(st, part, b, scene, { share: true, wind: true }));
+  return { pairs, masses };
+}
+// a cord's route from the consumer to the pinned part over `scene`, in order: hanging from the consumer's underside, leaving its
+// top straight, and under `wind` bending and winding round what stands in its way; each first onto a free stud of the part, then
+// onto a round plate another cord already seats where the part has fewer free studs than cords
+function routeFor(st, part, b, scene, { wind = false } = {}) {
+  for (const share of [false, true]) {
+    const hang = hangFor(st, part, b, scene, share);
+    if (hang) return hang;
+  }
+  const missed = [];
+  for (const share of [false, true]) {
+    const straight = straightFor(st, part, b, scene, share);
+    if (straight.curve) return straight;
+    missed.push(straight);
+  }
+  if (!wind) return null;
+  for (const { pairs, masses } of missed) {
+    const wound = windFor(st, part, b, scene, pairs, masses);
+    if (wound) return wound;
+  }
+  return null;
 }
 // the shortest winding route over the nearest pairs of studs: through a corner a stud out from a mass, over its top, or resting on a free stud
 function windFor(st, part, b, scene, pairs, masses) {
@@ -197,7 +238,7 @@ function heightAt(st, c, cand) {
 // a spot's score: cords that cannot route from it, cords it hides that cannot reroute, its lift, the anchor's studs it covers,
 // the plan it shares with consumers seated before it, its distance from the anchor's centre
 function scoreOf(st, c, cand) {
-  const trial = { ...cand.r, z0: heightAt(st, c, cand), h: c.courses * CRS, consumer: c }, scene = [...st.all(), trial];
+  const trial = { ...cand.r, z0: heightAt(st, c, cand), h: c.courses * CRS, consumer: c, drops: cand.seats.map(([b, s]) => [s.x, s.y, 0, b.n]) }, scene = [...st.all(), trial];
   const anchorBox = st.pinBox(c, c.anchor);
   const unroutable = c.pins.filter((x) => !cand.seats.some(([b]) => b === x)).filter((x) => !routeFor(st, trial, x, scene)).length;
   const blocks = st.strings.filter((t) => {
@@ -211,17 +252,26 @@ function scoreOf(st, c, cand) {
   const shared = st.placed.filter((p) => !p.bare).reduce((a, p) => a + sharedArea(cand.r, p), 0) / (STUD * STUD);
   return [unroutable, blocks, cand.up ?? 0, covered, shared, Math.hypot(cand.r.x + cand.r.w / 2 - anchorBox.x - anchorBox.w / 2, cand.r.y + cand.r.d / 2 - anchorBox.y - anchorBox.d / 2)];
 }
+// whether a cord is hidden by any of `masses`' boxes: a hanging one by its own test, a top one passing them only above or in front
+const hiddenBy = (t, boxes) => (t.hang ? hangHit(t.part, t.box, boxes, t.curve, true) : hitBy(t.curve, boxes.filter((o) => !o.bare || o === t.part).map((o) => massOf(o, true)), onScreen));
+// lift a cord off its rings, and seat a new route's
+const unring = (st, t) => {
+  if (!t.hang && !st.strings.some((o) => o.part === t.part && o.fromKey === t.fromKey)) t.part.rings?.delete(t.fromKey);
+  if (!st.strings.some((o) => o.box === t.box && o.toKey === t.toKey)) t.box.rings?.delete(t.toKey);
+};
+const ring = (part, route) => {
+  (route.box.rings ??= new Set()).add(route.e.key);
+  if (!route.hang) (part.rings ??= new Set()).add(route.f.key);
+};
 // a cord the new consumer would hide reroutes over the scene as it stands
 function rerouteRound(st, part) {
   for (const t of [...st.strings]) {
-    if (t.part === part || !hitBy(t.curve, [massOf(part, true)], onScreen)) continue;
+    if (t.part === part || !hiddenBy(t, [part])) continue;
     st.strings.splice(st.strings.indexOf(t), 1);
     const route = routeFor(st, t.part, t.b, st.all(), { wind: true });
     if (!route) { st.strings.push(t); continue; }
-    t.part.rings.delete(t.fromKey);
-    t.box.rings?.delete(t.toKey);
-    (route.box.rings ??= new Set()).add(route.e.key);
-    t.part.rings.add(route.f.key);
+    unring(st, t);
+    ring(t.part, route);
     st.strings.push(stringOf(t.part, t.b, route));
   }
 }
@@ -238,9 +288,8 @@ function seatOne(st, c) {
   c.seatedOn = best.seats.map(([b]) => b);
   for (const b of c.pins.filter((x) => !c.seatedOn.includes(x))) {
     const route = routeFor(st, part, b, st.all(), { wind: true });
-    if (!route) throw new Error(`sheet 2E: no cord, straight or winding, runs clear from ${c.name} to brick ${b.n}`);
-    (route.box.rings ??= new Set()).add(route.e.key);
-    (part.rings ??= new Set()).add(route.f.key);
+    if (!route) throw new Error(`sheet 2E: no cord, hanging, straight or winding, runs clear from ${c.name} to brick ${b.n}`);
+    ring(part, route);
     st.strings.push(stringOf(part, b, route));
   }
   rerouteRound(st, part);
@@ -249,14 +298,12 @@ function seatOne(st, c) {
 // winds round it, and the guard throws when none can
 function rewindHidden(st) {
   for (const t of [...st.strings]) {
-    if (!hitBy(t.curve, st.all().filter((o) => !o.bare || o === t.part).map((o) => massOf(o, true)), onScreen)) continue;
+    if (!hiddenBy(t, st.all())) continue;
     st.strings.splice(st.strings.indexOf(t), 1);
-    if (!st.strings.some((o) => o.part === t.part && o.fromKey === t.fromKey)) t.part.rings.delete(t.fromKey);
-    if (!st.strings.some((o) => o.box === t.box && o.toKey === t.toKey)) t.box.rings.delete(t.toKey);
+    unring(st, t);
     const route = routeFor(st, t.part, t.b, st.all(), { wind: true });
-    if (!route) throw new Error(`sheet 2E: the cord from ${t.part.consumer.name} to brick ${t.b.n} passes behind or through a mass, and no winding route clears it`);
-    (route.box.rings ??= new Set()).add(route.e.key);
-    t.part.rings.add(route.f.key);
+    if (!route) throw new Error(`sheet 2E: the cord from ${t.part.consumer.name} to brick ${t.b.n} passes behind or through a mass, and no other route clears it`);
+    ring(t.part, route);
     st.strings.push(stringOf(t.part, t.b, route));
   }
 }
@@ -310,11 +357,13 @@ function drawScene(ox, oy, family, placed, strings) {
     if (b.plate) return kit.plate(ox, oy, b.ws, b.ds, { x: b.x * K, y: b.y * K, z0: b.z0 * K, edge: b.edge ?? 'sk', dash: b.dash ?? '', covered: (ci, cj) => boxes.some((o) => !o.ground && o !== b && Math.abs(o.z0 - top(b)) < 0.01 && inside(b.x + (ci + 0.5) * STUD, b.y + (cj + 0.5) * STUD, o)) });
     if (b.consumer) {
       const fall = b.drops.map(([x, y, z]) => drop(ox, oy, x, y, b.z0, z + SH / K)).join('\n');
-      return `${fall}\n${kit.brick(ox, oy, b.x * K, b.y * K, b.ws, b.ds, b.consumer.courses, { z0: b.z0 * K, edge: b.consumer.atlas ? 'ska' : 'sk', studEdge: b.consumer.atlas ? 'ska' : 'sk', cap: 'fp', ringStuds: b.rings ?? new Set() })}`;
+      // a hanging cord and its caps paint just before their consumer, which hides what sits behind its faces
+      const hung = strings.filter((t) => t.hang && t.part === b).map((t) => cords.cord(ox, oy, null, null, { curve: t.curve })).join('\n');
+      return `${hung}${hung ? '\n' : ''}${fall}\n${kit.brick(ox, oy, b.x * K, b.y * K, b.ws, b.ds, b.consumer.courses, { z0: b.z0 * K, edge: b.consumer.atlas ? 'ska' : 'sk', studEdge: b.consumer.atlas ? 'ska' : 'sk', cap: 'fp', ringStuds: b.rings ?? new Set() })}`;
     }
     return kit.brick(ox, oy, b.x * K, b.y * K, b.ws, b.ds, b.part.courses, { z0: b.z0 * K, studEdge: 'sk', ringStuds: b.rings ?? new Set(), hue: b.part.hue });
-  }), ...[...new Map(strings.flatMap((t) => [t.curve.from, t.curve.to]).map((P) => [P.join(), P])).values()].map((P) => cords.capSvg(ox, oy, P)),
-  ...strings.map((t) => cords.strandSvg(ox, oy, t.curve))].join('\n');
+  }), ...[...new Map(strings.filter((t) => !t.hang).flatMap((t) => [t.curve.from, t.curve.to]).map((P) => [P.join(), P])).values()].map((P) => cords.capSvg(ox, oy, P)),
+  ...strings.filter((t) => !t.hang).map((t) => cords.strandSvg(ox, oy, t.curve))].join('\n');
 }
 // marks: a family brick's number in a circle, a consumer's number and kind letter in an accent tag; each in clear air
 // off its own roof, 24 px from every other mark, a leader back to the roof when it lands further off
@@ -331,7 +380,7 @@ function spiral(home, ok) {
 }
 // a mark keeps clear of every cord's strands and of its round plates, foot ring and all
 const clearOfCords = (ox, oy, strings, poly) => strings.every((t) => t.curve.pts.every((q) => !meets(poly, circlePoly(kit.pt(ox, oy, ...q), 4), 0))
-  && [t.curve.from, t.curve.to].every(([x, y, z]) => !meets(poly, circlePoly(kit.pt(ox, oy, x, y, z + cords.cap.h), CAP_REACH), 0)));
+  && [t.curve.from, t.curve.to].every(([x, y, z], k) => !meets(poly, circlePoly(kit.pt(ox, oy, x, y, !k && t.hang ? z - cords.cap.h : z + cords.cap.h), CAP_REACH), 0)));
 function marksOf(ox, oy, family, placed, strings = [], taken = []) {
   const boxes = [...family.filter((o) => !o.ground), ...placed];
   const sil = new Map(boxes.map((b) => [b, silhouette(b, ox, oy)]));
@@ -450,11 +499,11 @@ function panelAt(model, turn) {
 }
 
 // ---- the schedule: one row per consumer ----
-// a consumer's cords as the schedule gives them, and those that wind round what stands in their way
+// a consumer's cords as the schedule gives them: each hanging, leaving the top, or winding round what stands in its way
 const cordsLine = (c) => {
   const mine = CORDS.filter((t) => t.part.consumer === c).sort((a, b) => a.b.n - b.b.n);
-  const wound = mine.filter((t) => t.curve.via.length).map((t) => String(t.b.n));
-  return `${mine.length ? ` · cords to ${listOf(mine.map((t) => String(t.b.n)))}` : ''}${wound.length ? `, the cord${wound.length > 1 ? 's' : ''} to ${listOf(wound)} winding` : ''}`;
+  const how = (t) => (t.hang ? ' hanging' : t.curve.via.length ? ' winding' : ' from the top');
+  return mine.length ? ` · cords to ${listOf(mine.map((t) => `${t.b.n}${how(t)}`))}` : '';
 };
 const wrapWords = (s, chars) => s.split(' ').reduce((ls, w) => (ls.length && (ls.at(-1) + ' ' + w).length <= chars ? [...ls.slice(0, -1), `${ls.at(-1)} ${w}`] : [...ls, ls.length ? `        ${w}` : w]), []);
 const schedRaw = () => CONSUMERS.map((c) => `${String(c.k).padStart(2)} ${c.letter}  ${c.name} (${c.kindWord}) — ${c.dir}/{${c.dirs.join(',')}} · ${plural(c.files, 'file')} · ${fmt(c.sloc)} sloc → ${plural(c.studs, 'stud')} · ${shapeName(c.shape)} × ${plural(c.courses, 'course')} · ${c.pins.length ? `pins ${listOf(c.pins.map((b) => `${b.n} ${b.name}`))}` : 'pins no family part'}${cordsLine(c)} · ${c.model ? `build ${c.model.numeral} ${c.model.name.toUpperCase()}` : 'no build'}`);
@@ -530,7 +579,7 @@ ${marks.map(markSvg).join('\n')}
   });
   ART = `${box.svg}\n${svgs.join('\n')}`;
   ART_BOTTOM = Math.max(box.bottom, GY + ROW_Y.at(-1) + ROW_H.at(-1));
-  ARIA_BODY = `An instruction booklet of ${WORD[panels.length]} panels: each of sheet 2C's ${WORD[BUILD_MODELS.length]} builds, its family bricks in their hues on a slab of ground, with that build's consumers as plain bricks hovering above, each dropping a dashed accent line onto a ringed stud of the part it pins and reaching each other part it pins by a cord, winding round what stands in its way where it must, a 1×1 round plate seated on a ringed stud at either end, and a last panel for the consumer that pins no family part.`;
+  ARIA_BODY = `An instruction booklet of ${WORD[panels.length]} panels: each of sheet 2C's ${WORD[BUILD_MODELS.length]} builds, its family bricks in their hues on a slab of ground, with that build's consumers as plain bricks hovering above, each dropping a dashed accent line onto a ringed stud of the part it pins and reaching each other part it pins by a cord that hangs from its underside or leaves its top, winding round what stands in its way where it must, a 1×1 round plate at either end and the far one on a ringed stud, and a last panel for the consumer that pins no family part.`;
 }
 // every consumer is drawn, once
 if (DRAWN.length !== CONSUMERS.length || new Set(DRAWN).size !== CONSUMERS.length) throw new Error(`sheet 2E: ${DRAWN.length} consumer bricks drawn for ${CONSUMERS.length} consumers`);
@@ -552,7 +601,9 @@ const SHARED_CAPS = [...new Map(CORDS.filter((t, i) => CORDS.findIndex((o) => o.
 const WOUND = CORDS.filter((t) => t.curve.via.length);
 // every pin past the seat is a cord: the panels' cords are exactly the consumers' pins less their seats
 if (CORDS.length !== CONSUMERS.reduce((n, c) => n + c.pins.length - (c.seatedOn?.length ?? 0), 0)) throw new Error(`sheet 2E: ${CORDS.length} cords drawn for the pins past the consumers' seats`);
-export const SHEET2E_CORDS = { drawn: CORDS.length, wound: WOUND.map((t) => ({ from: t.part.consumer.name, to: t.b.n, via: t.curve.via })) };
+const HUNG = CORDS.filter((t) => t.hang), STRAIGHT = CORDS.filter((t) => !t.hang && !t.curve.via.length);
+if (HUNG.length + STRAIGHT.length + WOUND.length !== CORDS.length || WOUND.some((t) => t.hang)) throw new Error('sheet 2E: a cord is counted as neither hanging, straight nor winding');
+export const SHEET2E_CORDS = { drawn: CORDS.length, hung: HUNG.length, straight: STRAIGHT.map((t) => `${t.part.consumer.name} → ${t.b.n}`), wound: WOUND.map((t) => ({ from: t.part.consumer.name, to: t.b.n, via: t.curve.via })) };
 export const SHEET2E_SCALE = `${WORD[CONSUMERS.length].toUpperCase()} CONSUMERS`;
 export const SHEET2E_VERDICT = `the consumers as bricks: ${WORD[CONSUMERS.length]} consumers, ${WORD[CAB.consumers]} in the cabinet’s tree and the atlas app on its own branch; ${WORD[HUB.by.length]} pin brick ${HUB.b.n}, ${HUB.b.name}, and ${listOf(BARE.map((c) => c.name))} pins none; the atlas app is the heaviest at ${plural(HEAVIEST.studs, 'stud')}, ${TALLEST.name} the tallest at ${plural(TALLEST.courses, 'course')}`;
 const ARIA = `An exploded isometric LEGO drawing of the repository's consumers as bricks. ${ARIA_BODY} A box at the left lists the ${WORD[CONSUMERS.length]} consumers by number and kind letter, and a schedule below gives each one's files, sloc, pins and build.`;
@@ -576,16 +627,16 @@ export const sheet2e = {
   notes: `
 <p><strong>Up from the family.</strong> Sheet 2 seats the family on <code>@uirouter/core</code>; sheet 2C goes down to the runtimes the family peers. This plate goes up: the sample apps, the docs site, the embedded examples and the atlas's own app, each massed at sheet 2's mould from its authored source — the city ruler's files under its <code>src/</code> (the docs site's <code>.vitepress/</code>, <code>worker/</code> and <code>src/</code>), specs aside — and seated on the parts its manifest pins.</p>
 <p><strong>One hub.</strong> ${Cap(WORD[HUB.by.length])} of the ${WORD[CONSUMERS.length]} consumers pin ${npmLink(HUB.b.name)}, and every one of them hovers over it, since it is the heaviest part each pins: the builds split the ${WORD[HUB.by.length]} into their panels, and every build but ${listOf(OFF_HUB.map((m) => m.name.toUpperCase()))} stands its consumers on brick ${HUB.b.n}. Of the other parts, ${listOf(CARRY.filter((x) => x.by.length && x !== HUB).map((x) => `${x.b.name} is pinned by ${WORD[x.by.length]}`))}${UNPINNED.length ? `, and ${listOf(UNPINNED.map((b) => b.name))} by none` : ''}.</p>
-<p><strong>Cords.</strong> A consumer seats on the heaviest part it pins and reaches each other part by a string with end studs, a 1×1 round plate seated on a ringed stud at either end and a cord between. The sheet draws ${plural(CORDS.length, 'cord')}, one for every pin past a consumer's seat${WOUND.length ? `; where no straight cord passes every mass above or in front of it, the string bends and winds round what stands in its way, as ${WORD[WOUND.length]} do — ${listOf(WOUND.map((t) => `${t.part.consumer.name} to brick ${t.b.n}`))}` : ''}.${SHARED_CAPS.length ? ` ${Cap(listOf(SHARED_CAPS.map((x) => `brick ${x.n}`)))} ${SHARED_CAPS.length === 1 ? 'has' : 'have'} fewer free studs than cords to take, so two cords share one round plate there.` : ''}</p>
+<p><strong>Cords.</strong> A consumer seats on the heaviest part it pins and reaches each other part by a string with end studs, a 1×1 round plate at either end and a cord between. Every consumer hovers, so a string hangs from a free stud of its underside where the cord drops clear, and otherwise leaves a ringed stud of its top; the far plate seats on a ringed stud of the pinned part. The sheet draws ${plural(CORDS.length, 'cord')}, one for every pin past a consumer's seat: ${WORD[HUNG.length]} hang, ${WORD[CORDS.length - HUNG.length]} ${CORDS.length - HUNG.length === 1 ? 'leaves' : 'leave'} the top${WOUND.length ? `, and where no straight cord passes every mass above or in front of it the string bends and winds round what stands in its way, as ${WORD[WOUND.length]} do — ${listOf(WOUND.map((t) => `${t.part.consumer.name} to brick ${t.b.n}`))}` : ''}.${SHARED_CAPS.length ? ` ${Cap(listOf(SHARED_CAPS.map((x) => `brick ${x.n}`)))} ${SHARED_CAPS.length === 1 ? 'has' : 'have'} fewer free studs than cords to take, so two cords share one round plate there.` : ''}</p>
 <p><strong>The examples are thin.</strong> An embedded example is a file or two under <code>examples/&lt;key&gt;/src/</code>, so most mould a single course; ${TALLEST.name}, at ${plural(TALLEST.files, 'file')}, stands ${plural(TALLEST.courses, 'course')} tall.</p>`,
   key: [
     keyRow('<polygon points="4,12 16,5 30,12 30,16 16,9 4,16" class="sk fp"/><ellipse cx="10" cy="8" rx="4" ry="2.3" class="sk fp2"/><ellipse cx="24" cy="8" rx="4" ry="2.3" class="sk fp2"/>', `a consumer brick, drawn plain — 1 stud per ${SLOC_PER_STUD} sloc, a course per ${FILES_PER_COURSE} authored files`),
     keyRow('<polygon points="4,12 16,5 30,12 30,16 16,9 4,16" class="ska fp"/>', 'the atlas app’s brick, edged in accent — on its own branch'),
     keyRow(`<rect x="8" y="1" width="32" height="17" rx="8.5" class="ska fp"/><text x="24" y="13" class="lbla" text-anchor="middle">7 E</text>`, 'a consumer’s tag — its number and kind: S sample app, D docs site, E example, A atlas app'),
     keyRow('<circle cx="24" cy="9" r="8" class="sk fp"/><text x="24" y="12.5" class="lbl" text-anchor="middle">1</text>', 'a family brick in its sheet 2 hue, numbered as on sheet 2'),
-    keyRow('<ellipse cx="24" cy="9" rx="6" ry="3.5" class="ska fp"/><ellipse cx="24" cy="9" rx="11" ry="6.5" class="ska fnone"/>', 'a ringed stud — a consumer’s pin: under its drop, or under a cord’s round plate at either end'),
+    keyRow('<ellipse cx="24" cy="9" rx="6" ry="3.5" class="ska fp"/><ellipse cx="24" cy="9" rx="11" ry="6.5" class="ska fnone"/>', 'a ringed stud — a consumer’s pin: under its drop, or under a cord’s seated round plate; a hanging plate rings nothing'),
     keyRow('<line x1="24" y1="2" x2="24" y2="16" class="ska" stroke-dasharray="6 4"/><circle cx="24" cy="16" r="2.2" class="fa"/>', 'drop — the consumer hovers over the heaviest part it pins'),
-    keyRow('<ellipse cx="9" cy="9" rx="7" ry="3.8" class="ska fnone"/><path d="M3,6 L3,9 A6,3.4 0 0 0 15,9 L15,6 Z" class="sk fp2"/><ellipse cx="9" cy="6" rx="6" ry="3.4" class="sk fp"/><path d="M6.2,4 L6.2,5.5 A2.8,1.6 0 0 0 11.8,5.5 L11.8,4 Z" class="sk fp2"/><ellipse cx="9" cy="4" rx="2.8" ry="1.6" class="sk fp2"/><ellipse cx="39" cy="12.5" rx="7" ry="3.8" class="ska fnone"/><path d="M33,9.5 L33,12.5 A6,3.4 0 0 0 45,12.5 L45,9.5 Z" class="sk fp2"/><ellipse cx="39" cy="9.5" rx="6" ry="3.4" class="sk fp"/><path d="M36.2,7.5 L36.2,9 A2.8,1.6 0 0 0 41.8,9 L41.8,7.5 Z" class="sk fp2"/><ellipse cx="39" cy="7.5" rx="2.8" ry="1.6" class="sk fp2"/><path d="M9,3.4 Q26,3.4 39,6.9 M9,4.8 Q26,4.8 39,8.3 M14,3.5 L15,5 M19,3.8 L20,5.3 M24,4.2 L25,5.7 M29,4.8 L30,6.3 M34,5.8 L35,7.3" class="sk fnone" style="stroke-width:0.7"/>', 'a string with end studs — two 1×1 round plates joined by a cord, a coupling a footprint cannot make, drawn to fit and not massed: one plate seated on a ringed stud of the consumer’s top, the other on a ringed stud of each other part it pins, the cord leaving each one’s own stud'),
+    keyRow('<ellipse cx="9" cy="9" rx="7" ry="3.8" class="ska fnone"/><path d="M3,6 L3,9 A6,3.4 0 0 0 15,9 L15,6 Z" class="sk fp2"/><ellipse cx="9" cy="6" rx="6" ry="3.4" class="sk fp"/><path d="M6.2,4 L6.2,5.5 A2.8,1.6 0 0 0 11.8,5.5 L11.8,4 Z" class="sk fp2"/><ellipse cx="9" cy="4" rx="2.8" ry="1.6" class="sk fp2"/><ellipse cx="39" cy="12.5" rx="7" ry="3.8" class="ska fnone"/><path d="M33,9.5 L33,12.5 A6,3.4 0 0 0 45,12.5 L45,9.5 Z" class="sk fp2"/><ellipse cx="39" cy="9.5" rx="6" ry="3.4" class="sk fp"/><path d="M36.2,7.5 L36.2,9 A2.8,1.6 0 0 0 41.8,9 L41.8,7.5 Z" class="sk fp2"/><ellipse cx="39" cy="7.5" rx="2.8" ry="1.6" class="sk fp2"/><path d="M9,3.4 Q26,3.4 39,6.9 M9,4.8 Q26,4.8 39,8.3 M14,3.5 L15,5 M19,3.8 L20,5.3 M24,4.2 L25,5.7 M29,4.8 L30,6.3 M34,5.8 L35,7.3" class="sk fnone" style="stroke-width:0.7"/>', 'a string with end studs — two 1×1 round plates joined by a cord, a coupling a footprint cannot make, drawn to fit and not massed: one plate hanging from the consumer’s underside or seated on a ringed stud of its top, the other on a ringed stud of each other part it pins; a cap seats on a stud or hangs from a brick’s underside'),
     keyRow('<polygon points="4,8 16,2 44,9 44,15 16,8 4,14" class="sk fp"/>', 'ground — not massed'),
   ].join('\n'),
 };
