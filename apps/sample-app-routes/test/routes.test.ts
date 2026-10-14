@@ -11,7 +11,7 @@ import { shellMounts } from '../src/shellMounts.ts';
 // the package's tests' job; these pin the tables.
 const router = createServerRouter({ mounts });
 
-for (const mount of ['/app', '/app-mobx', '/app-effect']) {
+for (const mount of ['/app', '/app-mobx', '/app-effect', '/app-signals']) {
   describe(`${mount} verdicts`, () => {
     it('serves the shell for static and parameterized routes', async () => {
       for (const path of [
@@ -194,17 +194,23 @@ describe('/simulated-routing verdicts (the simulate-strategy exhibit)', () => {
 });
 
 describe('mounts', () => {
-  it('cover all three sample apps with the shared route table, plus the exhibits', () => {
+  it('cover all four sample apps with the shared route table, plus the exhibits', () => {
     assert.deepEqual(Object.keys(mounts), [
       '/app',
       '/app-mobx',
       '/app-effect',
+      '/app-signals',
       '/app-hash',
       '/not-found-spa',
       '/simulated-routing',
     ]);
 
-    for (const mount of ['/app', '/app-mobx', '/app-effect'] as const) {
+    for (const mount of [
+      '/app',
+      '/app-mobx',
+      '/app-effect',
+      '/app-signals',
+    ] as const) {
       assert.equal(mounts[mount].routes, routes);
     }
   });
@@ -216,7 +222,7 @@ describe('mounts', () => {
   });
 
   it("'/app' does not shadow the sibling app mounts", async () => {
-    for (const mount of ['/app-mobx', '/app-effect']) {
+    for (const mount of ['/app-mobx', '/app-effect', '/app-signals']) {
       assert.deepEqual(await router.resolve(`${mount}/welcome`), {
         kind: 'shell',
         mount,

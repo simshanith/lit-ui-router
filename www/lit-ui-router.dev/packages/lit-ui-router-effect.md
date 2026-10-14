@@ -237,9 +237,10 @@ The split the Effect sample app follows:
 The <a href="/app-effect" target="_self">Effect sample app</a> is a complete
 application built on these controllers. It is behaviorally identical to the
 <a href="/app" target="_self">vanilla sample app</a> (which uses
-`TransitionController`) and the
-<a href="/app-mobx" target="_self">MobX sample app</a>, so the
-[three codebases](https://github.com/simshanith/lit-ui-router/tree/main/apps)
+`TransitionController`), the
+<a href="/app-mobx" target="_self">MobX sample app</a> and the
+<a href="/app-signals" target="_self">Signals sample app</a>, so the
+[four codebases](https://github.com/simshanith/lit-ui-router/tree/main/apps)
 can be compared file-by-file to see exactly what the Effect idiom changes.
 
 For a smaller picture, the

@@ -143,6 +143,7 @@
         "sample-app-lit-vanilla",
         "sample-app-lit-mobx",
         "sample-app-lit-effect",
+        "sample-app-lit-signals",
       ],
     },
   },

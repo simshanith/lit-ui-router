@@ -29,6 +29,7 @@
     "examples": "catalog:workspace",
     "sample-app-lit-effect": "catalog:workspace",
     "sample-app-lit-mobx": "catalog:workspace",
+    "sample-app-lit-signals": "catalog:workspace",
     "sample-app-lit-vanilla": "catalog:workspace",
     "sample-app-routes": "catalog:workspace",
     "screenfull": "catalog:",

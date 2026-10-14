@@ -36,3 +36,6 @@ should list a single version.
 - [Hello Galaxy (Signals)](/tutorial/live-examples#hello-galaxy-signals) puts
   `@lit-labs/signals` and `lit-ui-router-signals` on one graph: a star chart
   that nested views share, and a breadcrumb built from `RouterSignals`.
+- The <a href="/app-signals" target="_self">Signals sample app</a> keeps its
+  client state in `Signal.State`s and renders it with `@lit-labs/signals`,
+  beside `RouterSignalController` for the route.

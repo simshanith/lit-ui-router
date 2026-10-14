@@ -4,9 +4,9 @@ This is the [TC39 Signals](https://github.com/tc39/proposal-signals) variant of 
 [MobX sample app](../sample-app-lit-mobx/): the same non-trivial ui-router lit application,
 with reactivity handled by [`@lit-labs/signals`](https://www.npmjs.com/package/@lit-labs/signals)
 and [`lit-ui-router-signals`](../../packages/lit-ui-router-signals/) on one shared
-[`signal-polyfill`](https://github.com/proposal-signals/signal-polyfill). It is a spike
-for [#1157](https://github.com/simshanith/lit-ui-router/issues/1157): it runs on the vite dev
-server (port 5176) and is not yet deployed or covered by the Cypress suite.
+[`signal-polyfill`](https://github.com/proposal-signals/signal-polyfill). The apps are
+intentionally behaviorally identical (the same Cypress suite runs against all of them) so the
+integration idioms can be compared file-by-file. Served at `/app-signals/`.
 
 What's different here:
 
@@ -24,7 +24,8 @@ What's different here:
   - `mymessages/Compose.ts` resets its draft from the `message` param in `onChange`, which
     also runs when the sticky component reconnects
 
-See [`sample-app-shared`](../sample-app-shared/) for everything the sample apps have in common.
+See [`apps/README.md`](../README.md) for the full side-by-side comparison, and
+[`sample-app-shared`](../sample-app-shared/) for everything the apps have in common.
 
 This sample app is intended to demonstrate a non-trivial ui-router lit application.
 

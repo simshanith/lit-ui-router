@@ -221,6 +221,7 @@ function makeSidebar() {
         { text: 'Vanilla', link: '/app', target: '_self' },
         { text: 'MobX', link: '/app-mobx', target: '_self' },
         { text: 'Effect', link: '/app-effect', target: '_self' },
+        { text: 'Signals', link: '/app-signals', target: '_self' },
         { text: 'Hash', link: '/app-hash', target: '_self' },
       ],
     },
@@ -253,7 +254,13 @@ const config = {
   title: 'Lit UI Router',
   description: 'A @uirouter implementation for Lit',
   cleanUrls: true,
-  ignoreDeadLinks: ['/app', '/app-mobx', '/app-effect', /^\/examples\//],
+  ignoreDeadLinks: [
+    '/app',
+    '/app-mobx',
+    '/app-effect',
+    '/app-signals',
+    /^\/examples\//,
+  ],
   // ignoreDeadLinks: true,
   vite: {
     configFile: './.vitepress/vite.config.ts',

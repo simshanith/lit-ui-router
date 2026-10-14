@@ -463,6 +463,9 @@ catalogs:
     sample-app-lit-mobx:
       specifier: workspace:*
       version: workspace:*
+    sample-app-lit-signals:
+      specifier: workspace:*
+      version: workspace:*
     sample-app-lit-vanilla:
       specifier: workspace:*
       version: workspace:*
@@ -766,6 +769,9 @@ importers:
         specifier: 'catalog:'
         version: 0.2.2
     devDependencies:
+      '@tools/build_and_test':
+        specifier: catalog:workspace
+        version: link:../../tools/build_and_test
       '@types/dom-navigation':
         specifier: 'catalog:'
         version: 1.0.7
@@ -2525,6 +2531,9 @@ importers:
       sample-app-lit-mobx:
         specifier: catalog:workspace
         version: link:../../apps/sample-app-lit-mobx
+      sample-app-lit-signals:
+        specifier: catalog:workspace
+        version: link:../../apps/sample-app-lit-signals
       sample-app-lit-vanilla:
         specifier: catalog:workspace
         version: link:../../apps/sample-app-lit-vanilla

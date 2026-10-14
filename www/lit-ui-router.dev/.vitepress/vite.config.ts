@@ -15,12 +15,13 @@ import { viteStaticCopy } from 'vite-plugin-static-copy';
 // derives its base from location.pathname at boot (see sample-app-shared's
 // configureRouter), so it renders real routes under /not-found-spa and
 // /simulated-routing too, mirroring the worker's shellPath aliasing.
-// /app-mobx, /app-effect and /app-hash keep their own builds (different
-// bindings / location mode).
+// /app-mobx, /app-effect, /app-signals and /app-hash keep their own builds
+// (different bindings / location mode).
 const SHELL_PATHS = new Map([
   ['/app', '/app.html'],
   ['/app-mobx', '/app-mobx.html'],
   ['/app-effect', '/app-effect.html'],
+  ['/app-signals', '/app-signals.html'],
   ['/app-hash', '/app-hash.html'],
   ['/not-found-spa', '/app.html'],
   ['/simulated-routing', '/app.html'],
@@ -105,6 +106,16 @@ export default defineConfig({
           dest: '',
           rename: { name: 'app-effect.html', stripBase: true },
         },
+        {
+          src: 'node_modules/sample-app-lit-signals/dist/assets/*',
+          dest: 'assets',
+          rename: { stripBase: true },
+        },
+        {
+          src: 'node_modules/sample-app-lit-signals/dist/index.html',
+          dest: '',
+          rename: { name: 'app-signals.html', stripBase: true },
+        },
         // The hash-location sibling shell: the vanilla app's second build
         // (`vite build --mode hash`), hash location + `/app-hash/` base baked
         // in. Its bundle is content-hashed against different env, so it
@@ -134,6 +145,11 @@ export default defineConfig({
         {
           src: 'node_modules/sample-app-lit-effect/dist/404.html',
           dest: 'app-effect',
+          rename: { stripBase: true },
+        },
+        {
+          src: 'node_modules/sample-app-lit-signals/dist/404.html',
+          dest: 'app-signals',
           rename: { stripBase: true },
         },
         // Hash deep paths (`/app-hash/foo`) never happen under a hash client,
