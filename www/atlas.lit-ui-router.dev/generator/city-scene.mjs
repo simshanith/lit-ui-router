@@ -182,16 +182,18 @@ ${partsCss('cs-parts', { side: 'end', top: 40, cols: 1, font: 10.5, fit: { conta
    block's size, and sentences in the prose face at the running text's. Two columns once
    the strip is wide enough to carry them: identity left, sentences right. */
 .cs-info { border: 1.5px solid var(--ink); border-block-start: none; background: var(--paper-2); padding-block: 14px 16px; padding-inline: 18px;
-  display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px 36px; align-items: start;
-  min-height: 92px; color: var(--ink); }
-.cs-info h3 { font-family: var(--code); font-size: 16px; font-weight: 600; letter-spacing: 0.04em;
+  display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px 36px; align-items: start; align-content: start;
+  min-height: 92px; color: var(--ink); --rd-head: 16px; --rd-data: 12px; --rd-prose: 16px;
+  /* a name, two ledger lines and four lines of prose in two paragraphs at the sizes below; filled, the frame holds the panel to it */
+  --read-reserve: calc(1.3 * var(--rd-head) + 3px + 2 * 1.5 * var(--rd-data) + 8px + 4 * 1.5 * var(--rd-prose) + 4px); }
+.cs-info h3 { font-family: var(--code); font-size: var(--rd-head); font-weight: 600; letter-spacing: 0.04em;
   line-height: 1.3; margin: 0; word-break: break-all; }
 .cs-info h3 .n { font-family: var(--data); font-size: 11px; font-weight: 600; letter-spacing: 0.16em;
   color: var(--accent); margin-inline-end: 10px; vertical-align: 0.12em; white-space: nowrap; }
-.cs-info .ledger { font-family: var(--data); font-size: 12px; letter-spacing: 0.08em; line-height: 1.5;
+.cs-info .ledger { font-family: var(--data); font-size: var(--rd-data); letter-spacing: 0.08em; line-height: 1.5;
   color: var(--ink-soft); margin-block: 3px 0; margin-inline: 0; word-break: break-word; }
 .cs-info .txt { display: grid; gap: 4px; }
-.cs-info .note, .cs-info .lamp, .cs-info .hint { font-family: var(--prose); font-size: 16px; line-height: 1.5;
+.cs-info .note, .cs-info .lamp, .cs-info .hint { font-family: var(--prose); font-size: var(--rd-prose); line-height: 1.5;
   color: var(--ink); max-width: 66ch; margin: 0; }
 .cs-info .lamp, .cs-info .hint { color: var(--ink-soft); }
 @media (min-width: 900px) {
@@ -201,9 +203,7 @@ ${partsCss('cs-parts', { side: 'end', top: 40, cols: 1, font: 10.5, fit: { conta
 /* beside the bar, the panel is one column */
 @media (min-width: 1100px) { .cs-frame:fullscreen .cs-info, .cs-frame.is-filled .cs-info { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 560px) {
-  .cs-info { padding-block: 12px 14px; padding-inline: 14px; }
-  .cs-info h3 { font-size: 15px; }
-  .cs-info .note, .cs-info .lamp, .cs-info .hint { font-size: 15px; }
+  .cs-info { padding-block: 12px 14px; padding-inline: 14px; --rd-head: 15px; --rd-prose: 15px; }
 }
 /* the plate's general notes, set to the sheets' notes measure: 18/1.8 prose in columns
    no narrower than 24em (48ch) and, because the next column lands first, never past 74ch */

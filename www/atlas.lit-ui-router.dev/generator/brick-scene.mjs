@@ -130,15 +130,17 @@ ${frameCss('bk', 'bk-read', ['stage', 'bar', 'read'])}
 ${pinCss('bk-pin', 26, 12)}
 ${partsCss('bk-parts', { side: 'start', top: 8, cols: 1, font: 11 })}
 .bk-read { border: 1.5px solid var(--ink); border-block-start: none; background: var(--paper-2); padding-block: 14px 16px; padding-inline: 22px;
-  min-height: 72px; color: var(--ink); }
-.bk-read h3 { font-family: var(--code); font-size: 16px; font-weight: 600; letter-spacing: 0.04em; line-height: 1.3;
+  min-height: 72px; color: var(--ink); --rd-head: 16px; --rd-data: 12px; --rd-prose: 16px;
+  /* a name, two ledger lines and three lines of prose at the sizes below; filled, the frame holds the panel to it */
+  --read-reserve: calc(1.3 * var(--rd-head) + 3px + 2 * 1.5 * var(--rd-data) + 4px + 3 * 1.5 * var(--rd-prose)); }
+.bk-read h3 { font-family: var(--code); font-size: var(--rd-head); font-weight: 600; letter-spacing: 0.04em; line-height: 1.3;
   margin: 0; word-break: break-word; }
 .bk-read h3 i.sw { display: inline-block; width: 18px; height: 11px; margin-inline-end: 8px; border: 1.2px solid var(--ink); vertical-align: baseline; }
 .bk-read h3 .n { font-family: var(--data); font-size: 11px; letter-spacing: 0.16em; color: var(--accent);
   margin-inline-end: 10px; vertical-align: 0.12em; white-space: nowrap; }
-.bk-read .ledger { font-family: var(--data); font-size: 12px; letter-spacing: 0.08em; line-height: 1.5;
+.bk-read .ledger { font-family: var(--data); font-size: var(--rd-data); letter-spacing: 0.08em; line-height: 1.5;
   color: var(--ink-soft); margin-block: 3px 0; margin-inline: 0; }
-.bk-read .note, .bk-read .hint { font-family: var(--prose); font-size: 16px; line-height: 1.5; max-width: 66ch;
+.bk-read .note, .bk-read .hint { font-family: var(--prose); font-size: var(--rd-prose); line-height: 1.5; max-width: 66ch;
   margin-block: 4px 0; margin-inline: 0; color: var(--ink-soft); }
 @media (max-width: 860px) { .bk-view { height: clamp(420px, 62vh, 620px); } }`;
 

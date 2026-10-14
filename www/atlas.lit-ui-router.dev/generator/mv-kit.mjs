@@ -128,7 +128,10 @@ ${items.map((it, i) => (it.group ? groupMarkup(cls, it, i === 0) : chip(it, '   
         </div>
       </nav>`;
 
-/** A model plate's `.fillable` frame: stage, bar and `read` panel in `areas` order; filled, the stage takes what the rest leave. */
+/**
+ * A model plate's `.fillable` frame: stage, bar and `read` panel in `areas` order; filled, the stage
+ * takes what the rest leave, and the `read` panel the content block size its `--read-reserve` names.
+ */
 export const frameCss = (p, read, areas) => {
   const on = (s = '') => `.${p}-frame:fullscreen${s}, .${p}-frame.is-filled${s}`;
   return `
@@ -143,6 +146,8 @@ ${on()} { box-sizing: border-box; overflow: auto; padding: 8px; grid-template-ro
 ${on(` .${p}-stage`)} { position: relative; min-height: 0; border: 1.5px solid var(--ink); }
 ${on(` .${p}-view`)} { position: absolute; inset: 0; height: 100%; }
 ${on(` .${p}-bar`)}, ${on(` .${read}`)} { border: 1.5px solid var(--ink); border-block-start: none; }
+/* the reading holds the block size its scene reserves, so a longer one scrolls inside and the stage never reflows */
+${on(` .${read}`)} { box-sizing: content-box; block-size: var(--read-reserve); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
 @media (min-width: 1100px) {
   ${on()} { grid-template-columns: minmax(0, 1fr) clamp(320px, 1rem + 29vw, 460px); grid-template-rows: minmax(0, 1fr) auto;
     grid-template-areas: "stage stage" "bar read"; }
