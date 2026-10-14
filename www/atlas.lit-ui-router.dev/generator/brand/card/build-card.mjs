@@ -14,11 +14,11 @@ const dataUri = (file) =>
   `data:image/svg+xml,${encodeURIComponent(readFileSync(join(BRAND, file), 'utf8').trim())}`;
 
 /** Sheet 7's drawing cropped to the city: the schedule and the severity ladder dropped, sliced to fill its box. */
-function city() {
+function city(viewBox = '40 0 1480 600') {
   const svg = sheet7.svg
     .replace(
       /viewBox="0 0 1560 \d+" role="img" aria-label="[^"]*"/,
-      'viewBox="40 0 1480 600" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false"',
+      `viewBox="${viewBox}" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false"`,
     )
     .replace(/<!-- severity ladder -->[\s\S]*?(?=\n<polygon)/, '');
   if (!svg.includes('preserveAspectRatio') || svg.includes('severity ladder'))
@@ -77,7 +77,37 @@ const glass = (band) => `${WSW}.client-mark { --client-glow: 0; } .client-glow {
 .name::after { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
   border: 1.5px solid var(--lead); box-shadow: inset 0 0 0 1px var(--lead-hi), inset 0 1px 0 1px var(--lead-hi);${band ? ' background: linear-gradient(to right, transparent 14px, var(--lead) 14px, var(--lead) 15.5px, transparent 15.5px);' : ''} }
 `;
+// B's mark, no halo: the plain logo with a 1px edge
+const CLEAN = `.client-mark { --client-glow: 0; } .client-glow { display: none; }
+.client-logo { filter: drop-shadow(0 0 1px color-mix(in oklch, var(--ink) 40%, transparent)); }
+`;
+// the sheet panned, not the lettering: a 17% wider window whose top-right quadrant holds the packages and apps districts
+// and whose lower-left runs out to the sheet's edge (sheet x -80..1260, y 100..803.5; the schedule starts at 828)
+const PAN = '-80 100 1340 703.5';
+// a smoked pane centred on the lockup: the default's bottom offset keeps the lockup where it is, equal padding all round
+const smoked = (width) => `${CLEAN}.name { position: absolute; inset: 0 0 calc(60px + 1cqh) 0; margin: auto; inline-size: ${width}; block-size: fit-content; padding: 44px; border-radius: 10px;
+  background: light-dark(color-mix(in oklch, var(--ink) 12%, transparent), color-mix(in oklch, var(--ground) 55%, transparent));
+  backdrop-filter: blur(6px) brightness(0.8); border: 1px solid color-mix(in oklch, var(--line) 60%, transparent); }
+`;
+// the banner: the ground's gradient and wash live in the pane, the sheet outside sits on flat ground; the field is a
+// pseudo so the feather mask fades the fill and never the lettering; light lifts to paper, dark sinks as G2 did
+const banner = (feather) => `${CLEAN}.card { background: var(--ground); --pane-a: 70%; --pane-b: 1.08; --p-hi: var(--g-hi); --p-mid: var(--paper); --p-lo: var(--g-mid); }
+:root[data-theme="dark"] .card { --pane-a: 60%; --pane-b: 0.8; --p-mid: var(--g-mid); --p-lo: var(--g-lo); }
+.name { position: absolute; inset: 0 0 calc(60px + 1cqh) 0; margin: auto; inline-size: 93cqw; block-size: fit-content; padding: 56px; }
+.name::before { content: ''; position: absolute; inset: 0; z-index: -1;
+  background:
+    radial-gradient(ellipse 58% 62% at 50% 44%, var(--wash) 0%, transparent 72%),
+    linear-gradient(160deg in oklch, color-mix(in oklch, var(--p-hi) var(--pane-a), transparent) 0%, color-mix(in oklch, var(--p-mid) var(--pane-a), transparent) 48%, color-mix(in oklch, var(--p-lo) var(--pane-a), transparent) 100%);
+  backdrop-filter: blur(6px) brightness(var(--pane-b));
+  mask-image: linear-gradient(to right, transparent, #000 ${feather}px, #000 calc(100% - ${feather}px), transparent), linear-gradient(to bottom, transparent, #000 ${feather}px, #000 calc(100% - ${feather}px), transparent);
+  mask-composite: intersect; -webkit-mask-composite: source-in; }
+`;
 const VARIANTS = {
+  banner3: { css: banner(48), crop: PAN },
+  banner3b: { css: banner(80), crop: PAN },
+  pan: { css: CLEAN, crop: PAN },
+  smoked: { css: smoked('fit-content'), crop: PAN },
+  'smoked-banner': { css: smoked('86cqw'), crop: PAN },
   'wsw-glass': { css: glass(false), halo: (CITY) => pane(false, CITY) },
   'wsw-glass2': { css: glass(true), halo: (CITY) => pane(true, CITY) },
   'wsw-lit': { css: `${WSW}.client-glow { mix-blend-mode: var(--logo-blend); }\n` },
@@ -288,7 +318,7 @@ function main() {
     UIROUTER: dataUri('ui-router.svg'),
     GLOW: dataUri('hero-glow.svg'),
     GLOW_DARK: dataUri('hero-glow-dark.svg'),
-    CITY: city(),
+    CITY: city(variant?.crop),
   });
   const file = join(out, 'card.html');
   writeFileSync(file, html);
