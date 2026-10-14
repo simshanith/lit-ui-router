@@ -65,6 +65,7 @@
     }
   },
   "scripts": {
+    "bench": "node test/resolve.bench.ts",
     "build:js": "oxc-emit-js",
     "build:types": "oxc-emit-dts",
     "changelog": "release-it --changelog --git.tagMatch=\"ui-router-server@[0-9]*.[0-9]*.[0-9]*\"",
@@ -100,6 +101,7 @@
     "oxlint": "catalog:",
     "release-it": "catalog:",
     "rimraf": "catalog:",
+    "tinybench": "catalog:",
     "typedoc": "catalog:",
     "typedoc-plugin-markdown": "catalog:",
     "typedoc-vitepress-theme": "catalog:",
