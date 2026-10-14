@@ -60,14 +60,14 @@ const plateWord = (p) => (p.full ? `${plural(p.plates, 'plate')} · ${p.full} of
 const plateRef = (m, letter) => `plate ${letter}, ${m.plates.find((p) => p.letter === letter).name}`;
 const brickNote = (m, b) => {
   const seat = b.on !== null ? `brick ${b.on}` : plateRef(m, b.seat);
-  const reach = [...b.straddles.map((l) => `straddles the seam onto ${plateRef(m, l)}`), ...b.ties.map((l) => `ties to ${plateRef(m, l)}`)];
+  const reach = [...b.straddles.map((l) => `straddles the seam onto ${plateRef(m, l)}`), ...b.cords.map((l) => `is corded to ${plateRef(m, l)}`)];
   return `Seats on ${seat}${reach.length ? `; ${listOf(reach)}` : ''}.`;
 };
 const plateNote = (p) => {
   const here = [
     ...(p.seats.length ? [`seats brick${p.seats.length > 1 ? 's' : ''} ${listOf(p.seats)}`] : []),
     ...(p.straddled.length ? [`carries brick${p.straddled.length > 1 ? 's' : ''} ${listOf(p.straddled)} across its seam with core`] : []),
-    ...(p.tied.length ? [`takes the tie${p.tied.length > 1 ? 's' : ''} from brick${p.tied.length > 1 ? 's' : ''} ${listOf(p.tied)}`] : []),
+    ...(p.corded.length ? [`takes the cord${p.corded.length > 1 ? 's' : ''} from brick${p.corded.length > 1 ? 's' : ''} ${listOf(p.corded)}`] : []),
   ];
   return `In this build it ${listOf(here)}. Peered by brick${p.peeredBy.length > 1 ? 's' : ''} ${listOf(p.peeredBy)} across the family${p.optional ? ', each as an optional peer' : ''}.`;
 };
@@ -121,7 +121,7 @@ const json = (v) => JSON.stringify(v).replace(/</g, '\\u003c');
 const BRICKS_IN = new Set(BUILD_MODELS.flatMap((m) => m.bricks.map((b) => b.n)));
 const PLATES_IN = new Set(BUILD_MODELS.flatMap((m) => m.plates.map((p) => p.letter)));
 const NAMES = BUILD_MODELS.map((m) => m.name.toUpperCase());
-const TIES = BUILD_MODELS.reduce((a, m) => a + m.ties.length, 0);
+const CORDS = BUILD_MODELS.reduce((a, m) => a + m.cords.length, 0);
 const STRADDLES = BUILD_MODELS.reduce((a, m) => a + m.bricks.reduce((s, b) => s + b.straddles.length, 0), 0);
 const CABINET = BUILD_MODELS.filter((m) => !m.atlas);
 const ATLAS = BUILD_MODELS.filter((m) => m.atlas);
@@ -136,7 +136,7 @@ export const BUILDS_META = {
 };
 
 /** The index row's verdict, derived from the models. */
-export const BUILDS_VERDICT = `sheet 2C's ${WORD[BUILD_MODELS.length]} builds as ${WORD[BUILD_MODELS.length]} glTF binaries in Google's model-viewer, picked by name — ${WORD[CABINET.length]} from the repository's own consumers and ${ATLAS[0].name} from the atlas app — each build's bricks in their hues on the runtime plates they peer, stacked plate by plate, with ${plural(STRADDLES, 'straddle')} and ${plural(TIES, 'dashed tie')} across the set, and each build's explosion, half again as high, as a clip that lifts the stacked bricks first while the plates stay put`;
+export const BUILDS_VERDICT = `sheet 2C's ${WORD[BUILD_MODELS.length]} builds as ${WORD[BUILD_MODELS.length]} glTF binaries in Google's model-viewer, picked by name — ${WORD[CABINET.length]} from the repository's own consumers and ${ATLAS[0].name} from the atlas app — each build's bricks in their hues on the runtime plates they peer, stacked plate by plate, with ${plural(STRADDLES, 'straddle')} and ${plural(CORDS, 'cord')} across the set, and each build's explosion, half again as high, as a clip that lifts the stacked bricks first while the plates stay put`;
 
 const CSS = `
 ${frameCss('bd', 'bd-read', ['stage', 'bar', 'read'])}
@@ -151,7 +151,7 @@ ${frameCss('bd', 'bd-read', ['stage', 'bar', 'read'])}
 .bd-bar .lg i.sw-plate { background: repeating-linear-gradient(180deg, var(--paper) 0 3px, var(--line) 3px 4px); }
 .bd-bar .lg i.sw-stud { background: oklch(42.4% 0.077 253.0); border-radius: 50%; width: 14px; }
 .bd-bar .lg i.sw-ghost { background: oklch(95.3% 0.012 101.5 / 0.45); border-style: dashed; }
-.bd-bar .lg i.sw-tie { height: 0; border: none; border-block-start: 2px dashed var(--accent); }
+.bd-bar .lg i.sw-cord { height: 2px; border: none; border-block: 1px solid var(--ink); background: none; }
 .bd-bar .lg i.sw-ground { background: oklch(92.9% 0.015 102.5); height: 7px; }
 .bd-pick { flex-basis: 100%; min-width: 0; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 12px; align-items: center;
   font-family: var(--data); font-size: 11px; letter-spacing: 0.12em; color: var(--ink-soft); }
@@ -200,13 +200,13 @@ const LEGEND = [
   ['plate', 'a runtime — a stack of plates, studs on its top plate'],
   ['stud', 'a ringed stud — a brick coupled to that plate'],
   ['ghost', 'an optional peer'],
-  ['tie', 'a tie — a runtime a brick peers but does not stand on'],
+  ['cord', 'a string with end studs — a coupling a footprint cannot make, drawn to fit and not massed'],
   ['ground', 'ground — the registry'],
 ];
 
-const BASIS = `Each model is <code>generator/sheet2c.mjs</code>'s own layout of that build, exported seated as <code>BUILD_MODELS</code> in sheet 2's plan units and written into one glTF binary per build by <code>generator/builds-glb.mjs</code> on <code>generator/brick-glb.mjs</code>'s materials and studs: every brick a cuboid in its own colour edged in ink, every runtime a stack of thin plates scored plate by plate, three to a brick course, with studs on its top plate only and one ringed stud per brick coupled to it, an optional peer translucent, and the ground the page's paper, retinted from the theme's tokens on each turn. Each brick's lift in the <code>assemble</code> clip is the height sheet 2C's exploded panel hovers it above its seat, scaled ×1.5, a brick stacked on another at least a stud's pitch clear of it; the stacked bricks leave first and land last, every hovering brick hangs plumb over each stud it seats on by a dashed leader, a dashed accent tie runs from a brick to each runtime it reaches but does not stand on, and the plates stay put. One stud pitch is one unit; each binary stays under ${fmt(BUILD_GLB_BUDGET / 1024)} KiB. Counted ${BUILD_BOX.counted}, the atlas app's build read from ${BUILD_BOX.atlasApp}; <code>@google/model-viewer</code> ${MV_VERSION} is fetched only when this page is entered, and the clip jumps to its end under <code>prefers-reduced-motion</code>.`;
+const BASIS = `Each model is <code>generator/sheet2c.mjs</code>'s own layout of that build, exported seated as <code>BUILD_MODELS</code> in sheet 2's plan units and written into one glTF binary per build by <code>generator/builds-glb.mjs</code> on <code>generator/brick-glb.mjs</code>'s materials and studs: every brick a cuboid in its own colour edged in ink, every runtime a stack of thin plates scored plate by plate, three to a brick course, with studs on its top plate only and one ringed stud per brick coupled to it, an optional peer translucent, and the ground the page's paper, retinted from the theme's tokens on each turn. Each brick's lift in the <code>assemble</code> clip is the height sheet 2C's exploded panel hovers it above its seat, scaled ×1.5, a brick stacked on another at least a stud's pitch clear of it; the stacked bricks leave first and land last, every hovering brick hangs plumb over each stud it seats on by a dashed leader, a cord, a string with end studs, runs from a ringed stud on a brick's top to a ringed stud of each runtime it reaches but does not stand on, its brick's cap riding the lift and its chain stretching with it, and the plates stay put. One stud pitch is one unit; each binary stays under ${fmt(BUILD_GLB_BUDGET / 1024)} KiB. Counted ${BUILD_BOX.counted}, the atlas app's build read from ${BUILD_BOX.atlasApp}; <code>@google/model-viewer</code> ${MV_VERSION} is fetched only when this page is entered, and the clip jumps to its end under <code>prefers-reduced-motion</code>.`;
 
-const ALT = `One of sheet 2C's alternate builds in three dimensions: the family bricks one group of consumers installs, in their own colours, standing on the runtime plates they peer — @uirouter/core the baseplate of every build, lit a one-stud plate beside it that lit-ui-router straddles, and each other runtime a stack of thin plates at its side, joined to the bricks that peer it by dashed ties. The explode control lifts the stacked bricks first, then the rest, each half again as high as the sheet draws it, with a dashed leader dropping from each to the stud it seats on.`;
+const ALT = `One of sheet 2C's alternate builds in three dimensions: the family bricks one group of consumers installs, in their own colours, standing on the runtime plates they peer — @uirouter/core the baseplate of every build, lit a one-stud plate beside it that lit-ui-router straddles, and each other runtime a stack of thin plates at its side, joined to the bricks that peer it by cords, each a string with a round cap seated on a stud at either end. The explode control lifts the stacked bricks first, then the rest, each half again as high as the sheet draws it, with a dashed leader dropping from each to the stud it seats on.`;
 
 /** The plate: style, section and the JSON island — no init script. */
 export function buildsMarkup() {

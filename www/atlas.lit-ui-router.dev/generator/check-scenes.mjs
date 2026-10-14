@@ -85,9 +85,9 @@ for (const [path, glb] of BUILDS) {
   const missing = BUILD_MODELS.flatMap((m, i) => {
     const { json } = readGlb(BUILDS[i][1]);
     const driven = new Set(json.animations.find((a) => a.name === 'assemble')?.channels.map((c) => json.nodes[c.target.node].name));
-    return [...m.bricks.map((b) => `brick-${b.n}`), ...m.ties.map((t) => `tie-${t.n}-${t.letter}`)].filter((n) => !driven.has(n)).map((n) => `${m.slug}:${n}`);
+    return [...m.bricks.map((b) => `brick-${b.n}`), ...m.cords.map((t) => `cord-${t.n}-${t.letter}`)].filter((n) => !driven.has(n)).map((n) => `${m.slug}:${n}`);
   });
-  check(missing.length === 0, `each build's assemble clip drives every brick and tie of it, the plates still`, missing.join(', '));
+  check(missing.length === 0, `each build's assemble clip drives every brick and cord of it, the plates still`, missing.join(', '));
 }
 
 // ---- the built app ------------------------------------------------------------
