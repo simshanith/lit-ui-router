@@ -5,7 +5,7 @@ import { requireManifest } from '@tools/bootstrap/manifest.ts';
 
 /**
  * One consumer install to bundle an entry against: the packages inlined
- * instead of external, and the peers swapped for a compat alias's older line.
+ * instead of external, and a dependency or peer swapped for an alias's older line.
  */
 export type PeerLine = {
   label: string;
@@ -45,8 +45,8 @@ const installed = (
 /**
  * The installs a consumer can pair this package with, read from what the
  * workspace installed: every registry-installed dependency and peer at its
- * installed version, then once per devDependency alias of a peer (`effect-3`
- * installing `effect`). A workspace peer stays external on the first line,
+ * installed version, then once per devDependency alias of a dependency or peer
+ * at another version (`effect-3` installing `effect`). A workspace peer stays external on the first line,
  * since only its registry floor alias has a dist without a build edge.
  */
 export const readPeerLines = (packageDir: string): PeerLine[] => {
@@ -71,7 +71,12 @@ export const readPeerLines = (packageDir: string): PeerLine[] => {
 
     if (!target?.registry || target.name === alias) continue;
 
-    if (!peers.includes(target.name)) continue;
+    if (!declared.includes(target.name)) continue;
+
+    // an exact dev pin of the installed version adds no line of its own
+    if (target.version === installed(packageDir, target.name)?.version) {
+      continue;
+    }
 
     lines.push({
       label: `${target.name}@${target.version} via ${alias}`,

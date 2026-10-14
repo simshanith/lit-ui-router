@@ -288,6 +288,10 @@ catalogs:
     yaml:
       specifier: ^2.9.0
       version: 2.9.1
+  dependencyFloor:
+    '@oxc-project/runtime-floor':
+      specifier: npm:@oxc-project/runtime@0.50.0
+      version: 0.50.0
   effect3-compat:
     effect-3:
       specifier: npm:effect@^3.22.2
@@ -1038,6 +1042,9 @@ importers:
       '@lit/context':
         specifier: 'catalog:'
         version: 1.1.6
+      '@oxc-project/runtime-floor':
+        specifier: catalog:dependencyFloor
+        version: '@oxc-project/runtime@0.50.0'
       '@release-it/conventional-changelog':
         specifier: 'catalog:'
         version: 12.0.2(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.2)(release-it@21.1.1(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2))
@@ -1429,6 +1436,9 @@ importers:
       '@lit-labs/ssr-floor':
         specifier: catalog:peerFloor
         version: '@lit-labs/ssr@4.0.0(@types/node@24.19.2)'
+      '@oxc-project/runtime-floor':
+        specifier: catalog:dependencyFloor
+        version: '@oxc-project/runtime@0.50.0'
       '@release-it/conventional-changelog':
         specifier: 'catalog:'
         version: 12.0.2(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.2)(release-it@21.1.1(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2))
@@ -3902,6 +3912,10 @@ packages:
   '@oxc-project/runtime@0.154.0':
     resolution: {integrity: sha512-cBQNGoh659BNgvA8OC/e4BNDtFkv03dJaYdkp2adgOQNtISNAPQ+nB4S8XvWtNk7Xl+0g+7aa+iRGR25Xycd1Q==}
     engines: {node: ^20.19.0 || >=22.12.0}
+
+  '@oxc-project/runtime@0.50.0':
+    resolution: {integrity: sha512-AqwnG14V06x1dSHxyPQY5+91yoyyokdsIsabNLTeeTB51xBg5c3KYgwIR+wEExuQmEKO8y7jvK6vTNCvcEZYjw==}
+    engines: {node: '>=6.9.0'}
 
   '@oxc-project/types@0.153.0':
     resolution: {integrity: sha512-jSNrRIyvPVLL5E1z/tS5zLAprosGz/FuI1PWwEOz59j3E4TTTzSpqKb/RDGqJhhW0QHYISGXxq582wGx6T11Tw==}
@@ -9884,6 +9898,8 @@ snapshots:
     optional: true
 
   '@oxc-project/runtime@0.154.0': {}
+
+  '@oxc-project/runtime@0.50.0': {}
 
   '@oxc-project/types@0.153.0': {}
 

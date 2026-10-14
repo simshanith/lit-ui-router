@@ -28,6 +28,10 @@ const ALLOWED: SplitAllowance[] = [
     why: 'catalogs.peerFloor pins @lit-labs/ssr-client-floor to 1.1.0, the ssr peer floor check:bundle bundles against',
   },
   {
+    name: '@oxc-project/runtime',
+    why: 'catalogs.dependencyFloor pins @oxc-project/runtime-floor to 0.50.0, the published dependency floor check:bundle bundles dist against',
+  },
+  {
     name: '@uirouter/core',
     why: 'catalogs.peerFloor pins @uirouter/core-floor to 6.0.8, every package peer floor check:bundle bundles against',
   },

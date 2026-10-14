@@ -37,9 +37,8 @@ console.log(
 );
 
 for (const { label, file } of entries) {
-  // annotations:false mirrors consumer reality for registration entries:
-  // sideEffects globs name dist/*.js, so probing src/*.ts would otherwise
-  // shake side-effect modules to zero bytes.
+  // annotations:false keeps registration side-effect modules in the measured
+  // bytes, the same graph check-bundle-inputs probes.
   const { chunks } = await bundleEntry(file, 'rolldown', {
     minify: true,
     external: declared,

@@ -87,6 +87,38 @@ describe('readPeerLines', () => {
   });
 });
 
+describe('readPeerLines dependency aliases', () => {
+  it('adds a line for a dependency floor and none for an exact pin of the install', () => {
+    const dir = realpathSync(
+      mkdtempSync(path.join(tmpdir(), 'bundle-probe-deps-')),
+    );
+
+    write(
+      path.join(dir, 'package.json'),
+      JSON.stringify({
+        name: 'probe-fixture',
+        dependencies: { rt: '>=1.0.0' },
+        devDependencies: {
+          'rt-floor': 'npm:rt@1.0.0',
+          'rt-pin': 'npm:rt@2.0.0',
+        },
+      }),
+    );
+    install(dir, 'rt', 'rt', '2.0.0', 'export default 1;\n');
+    install(dir, 'rt-floor', 'rt', '1.0.0', 'export default 1;\n');
+    install(dir, 'rt-pin', 'rt', '2.0.0', 'export default 1;\n');
+
+    assert.deepEqual(readPeerLines(dir), [
+      { label: 'rt@2.0.0', inline: ['rt'], alias: {} },
+      {
+        label: 'rt@1.0.0 via rt-floor',
+        inline: ['rt'],
+        alias: { rt: 'rt-floor' },
+      },
+    ]);
+  });
+});
+
 describe('bundleEntry alias', () => {
   for (const bundler of bundlers) {
     it(`${bundler} warns in the importer when the aliased line lacks an export`, async () => {

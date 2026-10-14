@@ -13,15 +13,21 @@
 // inlined:
 //
 // 3. Peer lines — fail when bundling an entry the way a consumer does warns
-//    about this package's own source, at each installed peer and each compat
-//    alias's older line (an import that is undefined on one major).
+//    about this package's own code or does not resolve, at each installed
+//    dependency and peer and each floor or compat alias's older line (an
+//    import that is undefined on one major, a subpath the floor lacks).
 //
 // Entries, claims and peer lines derive from package.json and the installed
 // node_modules (see entries.ts, peer-lines.ts); no arguments.
 // Usage (from the package dir): check-bundle-inputs
 import path from 'node:path';
 
-import { bundleEntry, bundlers, DEVELOPMENT_DEFINE } from './bundle.ts';
+import {
+  type BundleResult,
+  bundleEntry,
+  bundlers,
+  DEVELOPMENT_DEFINE,
+} from './bundle.ts';
 import { type PackageProbe, readPackageProbe } from './entries.ts';
 import { violations } from './free-of.ts';
 import { type PeerLine, readPeerLines } from './peer-lines.ts';
@@ -88,33 +94,54 @@ const checkPeerLines = async (
   { name, declared, entries }: PackageProbe,
   peerLines: PeerLine[],
 ): Promise<boolean> => {
-  const ownSource = path.join(packageDir, 'src') + path.sep;
+  // a probed entry is src/*.ts or its dist/*.js emit; both are this package's own code
+  const own = ['src', 'dist'].map(
+    (dir) => path.join(packageDir, dir) + path.sep,
+  );
 
   let ok = true;
 
   for (const { label, file } of entries) {
     for (const line of peerLines) {
       for (const bundler of bundlers) {
-        const { warnings } = await bundleEntry(file, bundler, {
-          external: declared.filter((dep) => !line.inline.includes(dep)),
-          alias: { from: packageDir, packages: line.alias },
-          // as above: sideEffects globs name dist/, so src/ bare imports would warn
-          annotations: false,
-          define: DEVELOPMENT_DEFINE,
-        });
+        let result: BundleResult;
+
+        // an import the older line cannot resolve fails the build rather than warning
+        try {
+          result = await bundleEntry(file, bundler, {
+            external: declared.filter((dep) => !line.inline.includes(dep)),
+            alias: { from: packageDir, packages: line.alias },
+            // as above: keeps side-effect modules in the graph
+            annotations: false,
+            define: DEVELOPMENT_DEFINE,
+          });
+        } catch (error) {
+          ok = false;
+          console.error(
+            `[bundle-probe] ${name} ${label} (${bundler}) against ${line.label}: does not bundle`,
+          );
+
+          for (const message of String(error).split('\n').slice(0, 4)) {
+            console.error(`  ${message}`);
+          }
+
+          continue;
+        }
+
+        const { warnings } = result;
 
         // a peer's own warnings are its maintainers' to fix, not this package's
-        const own = warnings.filter((warning) =>
-          warning.file?.startsWith(ownSource),
+        const ownWarnings = warnings.filter((warning) =>
+          own.some((dir) => warning.file?.startsWith(dir)),
         );
 
-        if (own.length === 0) continue;
+        if (ownWarnings.length === 0) continue;
         ok = false;
         console.error(
           `[bundle-probe] ${name} ${label} (${bundler}) against ${line.label}: bundler warnings in this package's source`,
         );
 
-        for (const warning of own) {
+        for (const warning of ownWarnings) {
           console.error(`  ${warning.code}: ${warning.message.split('\n')[0]}`);
         }
       }

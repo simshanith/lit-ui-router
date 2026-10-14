@@ -10,8 +10,8 @@ import { readPackageProbe, type BundleProbeClaims } from './entries.ts';
 
 const packageWith = (bundleProbe: BundleProbeClaims): string => {
   const dir = mkdtempSync(path.join(tmpdir(), 'bundle-probe-entries-'));
-  mkdirSync(path.join(dir, 'src'));
-  writeFileSync(path.join(dir, 'src', 'index.ts'), 'export const a = 1;\n');
+  mkdirSync(path.join(dir, 'dist'));
+  writeFileSync(path.join(dir, 'dist', 'index.js'), 'export const a = 1;\n');
   writeFileSync(
     path.join(dir, 'package.json'),
     JSON.stringify({
