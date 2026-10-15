@@ -324,7 +324,9 @@ built from the PR itself:
   write whatever helps reviewers, HTML comments and all.
 
 The `Semantic PR` workflow (`.github/workflows/semantic-pr.yml`) enforces the
-title on every PR. The `Commitlint` workflow
+title on every PR. It runs only when GitHub can build a merge ref, so it skips
+a conflicting PR; after resolving the conflict, change the title or description
+to re-run it. The `Commitlint` workflow
 (`.github/workflows/commitlint.yml`) lints the PR's individual commits — the
 messages that become the squash body — with
 [commitlint](https://commitlint.js.org/) via
