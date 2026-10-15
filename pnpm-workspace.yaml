@@ -151,6 +151,7 @@ catalogs:
     ui-router-effect: ^0.1.0
   publishedPeerMobx:
     lit-ui-router: ^1.15.0
+    ui-router-mobx: ^0.1.0
   publishedPeerSignals:
     lit-ui-router: ^1.15.0
     ui-router-signals: ^0.1.0
@@ -202,6 +203,7 @@ catalogs:
     sample-app-shared: workspace:*
     ui-router-navigation-location-plugin: workspace:*
     ui-router-effect: workspace:*
+    ui-router-mobx: workspace:*
     ui-router-server: workspace:*
     ui-router-signals: workspace:*
 

@@ -148,6 +148,14 @@ const workspaces = {
       '@uirouter/core-floor',
     ],
   },
+  'packages/ui-router-mobx': {
+    ignoreDependencies: [
+      '@release-it/conventional-changelog',
+      // vitest alias target for the mobx 6 compat lane
+      'mobx-6',
+      '@uirouter/core-floor',
+    ],
+  },
   'packages/ui-router-signals': {
     ignoreDependencies: [
       '@release-it/conventional-changelog',

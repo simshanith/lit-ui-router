@@ -92,6 +92,30 @@ export function toCheckRun(
   };
 }
 
+/** A signal's `$GITHUB_STEP_SUMMARY` section: a verdict table, then each non-success run's summary. */
+export function checkRunsMarkdown(
+  heading: string,
+  payloads: readonly CheckRunPayload[],
+  empty = 'No check runs posted.',
+): string {
+  if (payloads.length === 0) return [`## ${heading}`, '', empty, ''].join('\n');
+
+  return [
+    `## ${heading}`,
+    '',
+    '| Check run | Conclusion | Title |',
+    '| --- | --- | --- |',
+    ...payloads.map(
+      ({ name, conclusion, title }) =>
+        `| \`${name}\` | ${conclusion} | ${title} |`,
+    ),
+    ...payloads
+      .filter(({ conclusion }) => conclusion !== 'success')
+      .flatMap(({ name, summary }) => ['', `### ${name}`, '', summary]),
+    '',
+  ].join('\n');
+}
+
 /** argv for `gh api` creating one check run on `headSha`. */
 export function checkRunApiArgs(
   repo: string,

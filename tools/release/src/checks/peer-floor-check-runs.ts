@@ -9,18 +9,23 @@
 // in ./peer-floor-check-runs.core.ts.
 
 import { defaultExec } from '@tools/shared/exec.ts';
+import { appendStepSummary } from '@tools/shared/gha.ts';
 import { ensureGh } from '../lib/gh.ts';
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
 import { loadWorkspace } from '@tools/shared/workspace.ts';
 
 import {
+  PEER_FLOOR_SCRIPT,
   peerFloorCatalogs,
   peerFloorMembers,
   peerFloorTurboArgs,
   toPeerFloorCheckRun,
   type PeerFloorResult,
 } from './peer-floor-check-runs.core.ts';
-import { checkRunApiArgs } from './publish-check-runs.core.ts';
+import {
+  checkRunApiArgs,
+  checkRunsMarkdown,
+} from './publish-check-runs.core.ts';
 import { failMain } from '../lib/fail-main.ts';
 
 async function main() {
@@ -51,6 +56,14 @@ async function main() {
   }
 
   const payloads = results.map((result) => toPeerFloorCheckRun(result, repo));
+
+  await appendStepSummary(
+    checkRunsMarkdown(
+      'peer-floor',
+      payloads,
+      `No packages define \`${PEER_FLOOR_SCRIPT}\`.`,
+    ),
+  );
 
   if (dryRun) {
     console.log(JSON.stringify(payloads, null, 2));

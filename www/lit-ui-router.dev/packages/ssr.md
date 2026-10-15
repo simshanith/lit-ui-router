@@ -388,7 +388,7 @@ The result extends core's `UiView`, so an enclosing view adopts it as a parent.
 renderer of your own.
 
 [`lit-ui-router-effect`](/packages/lit-ui-router-effect) from 0.1.1 and
-[`lit-ui-router-mobx`](/packages/mobx) from 1.0.2 import `lit-ui-router/pure`,
+[`lit-ui-router-mobx`](/packages/lit-ui-router-mobx) from 1.0.2 import `lit-ui-router/pure`,
 so they register nothing and compose with any of the three.
 
 ## The hydration model

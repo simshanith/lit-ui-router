@@ -26,6 +26,7 @@
         "lit-ui-router-signals#build",
         "lit-ui-router-ssr#build",
         "ui-router-effect#build",
+        "ui-router-mobx#build",
         "ui-router-navigation-location-plugin#build",
         "ui-router-server#build",
         "ui-router-signals#build"

@@ -3,9 +3,9 @@ import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { UIRouterLit, UIRouterLitElement } from 'lit-ui-router';
 import { isRouterContextRequest } from 'lit-ui-router/context';
+import { RouterStore } from 'ui-router-mobx';
 
 import { RouterReactionController } from '../router-reaction-controller.js';
-import { RouterStore } from '../router-store.js';
 import { appendParentFirst } from '@tools/happy-dom/append.ts';
 import {
   createTestRouter,

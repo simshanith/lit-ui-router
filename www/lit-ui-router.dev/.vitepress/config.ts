@@ -10,6 +10,7 @@ import serverSidebarItemsJson from '../api/ui-router-server/typedoc-sidebar.json
 import signalsSidebarItemsJson from '../api/lit-ui-router-signals/typedoc-sidebar.json' with { type: 'json' };
 import ssrSidebarItemsJson from '../api/lit-ui-router-ssr/typedoc-sidebar.json' with { type: 'json' };
 import uiRouterEffectSidebarItemsJson from '../api/ui-router-effect/typedoc-sidebar.json' with { type: 'json' };
+import uiRouterMobxSidebarItemsJson from '../api/ui-router-mobx/typedoc-sidebar.json' with { type: 'json' };
 import uiRouterSignalsSidebarItemsJson from '../api/ui-router-signals/typedoc-sidebar.json' with { type: 'json' };
 
 // SAFETY: typedoc-vitepress-theme emits typedoc-sidebar.json as SidebarItem[]
@@ -53,6 +54,10 @@ const uiRouterEffectSidebarItemsRaw =
   uiRouterEffectSidebarItemsJson as DefaultTheme.SidebarItem[];
 
 // SAFETY: as for typedocSidebarItems
+const uiRouterMobxSidebarItemsRaw =
+  uiRouterMobxSidebarItemsJson as DefaultTheme.SidebarItem[];
+
+// SAFETY: as for typedocSidebarItems
 const uiRouterSignalsSidebarItemsRaw =
   uiRouterSignalsSidebarItemsJson as DefaultTheme.SidebarItem[];
 
@@ -67,6 +72,8 @@ const signalsSidebarItems = flattenGroups(signalsSidebarItemsRaw);
 const ssrSidebarItems = flattenGroups(ssrSidebarItemsRaw);
 
 const uiRouterEffectSidebarItems = flattenGroups(uiRouterEffectSidebarItemsRaw);
+
+const uiRouterMobxSidebarItems = flattenGroups(uiRouterMobxSidebarItemsRaw);
 
 const uiRouterSignalsSidebarItems = flattenGroups(
   uiRouterSignalsSidebarItemsRaw,
@@ -192,10 +199,30 @@ function makeSidebar() {
           collapsed: true,
           items: [
             {
-              text: 'lit-ui-router-mobx API',
-              link: '/api/lit-ui-router-mobx/',
-              collapsed: false,
-              items: mobxSidebarItems,
+              text: 'ui-router-mobx',
+              link: '/packages/ui-router-mobx',
+              collapsed: true,
+              items: [
+                {
+                  text: 'ui-router-mobx API',
+                  link: '/api/ui-router-mobx/',
+                  collapsed: false,
+                  items: uiRouterMobxSidebarItems,
+                },
+              ],
+            },
+            {
+              text: 'lit-ui-router-mobx',
+              link: '/packages/lit-ui-router-mobx',
+              collapsed: true,
+              items: [
+                {
+                  text: 'lit-ui-router-mobx API',
+                  link: '/api/lit-ui-router-mobx/',
+                  collapsed: false,
+                  items: mobxSidebarItems,
+                },
+              ],
             },
           ],
         },

@@ -59,6 +59,7 @@
     "lint:oxlint": "oxlint .",
     "test": "VITEST_BROWSER_API_PORT=63360 vitest run",
     "test:coverage": "VITEST_BROWSER_API_PORT=63365 vitest run --coverage",
+    "typecheck:peer-floor": "floor-guard && floor-types-guard tsconfig.peer-floor.json && tsc -p tsconfig.peer-floor.json --noEmit",
     "typecheck:src": "tsc -p tsconfig.src.json --noEmit",
     "typecheck:tsc": "tsc -p tsconfig.json --noEmit"
   },

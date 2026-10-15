@@ -197,7 +197,7 @@ and their server-side story is in
 ## See it live
 
 The same problem, solved with the
-[MobX bindings](/packages/mobx): `<app-root>` sits outside every
+[MobX bindings](/packages/lit-ui-router-mobx): `<app-root>` sits outside every
 `<ui-view>`, so it never receives fresh view props, and reaction controllers
 keep its breadcrumb and visit counter in sync. Swap
 `RouterReactionController` for `TransitionController` and the shape is
@@ -225,6 +225,6 @@ behaviorally identical <a href="/app-mobx" target="_self">MobX sample app</a>
 solves the same problems with the observable store and reaction controllers
 from [`lit-ui-router-mobx`](/packages/), one of the
 [companion packages](/packages/) — if your app already uses MobX, prefer
-[those bindings](/packages/mobx); the
+[those bindings](/packages/lit-ui-router-mobx); the
 [two codebases](https://github.com/simshanith/lit-ui-router/tree/main/apps)
 compare the idioms file-by-file.

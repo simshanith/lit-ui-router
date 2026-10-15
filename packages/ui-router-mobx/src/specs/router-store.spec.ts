@@ -110,6 +110,20 @@ describe('RouterStore', () => {
       await routerGo(router, 'b', { id: '1' });
       expect(store.transition?.to().name).toBe('b');
     });
+
+    it('keeps the settled route when a transition is cancelled', async () => {
+      const router = createTestRouter(testStates);
+      const store = RouterStore.for(router);
+      await routerGo(router, 'a');
+      const { params, transition } = store;
+      router.transitionService.onBefore({ to: 'b' }, () => false);
+
+      await router.stateService.go('b', { id: '1' }).catch(() => undefined);
+
+      expect(store.current?.name).toBe('a');
+      expect(store.params).toBe(params);
+      expect(store.transition).toBe(transition);
+    });
   });
 
   describe('observability', () => {
