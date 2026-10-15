@@ -4,10 +4,8 @@
 name: Semantic PR
 
 on:
-  # pull_request_target runs the main-branch workflow with repo secrets;
-  # checking out PR code here is forbidden - validate event payload only.
-  pull_request_target:
-    # main-targeting PRs only: a stale branch's old workflow file never runs
+  pull_request:
+    # only main-targeting titles squash onto main; a retarget fires `edited`
     branches:
       - main
     types:
@@ -25,7 +23,7 @@ concurrency:
 
 jobs:
   lint_pr_title:
-    # never run in forks' stale copies of this workflow
+    # skip PRs opened inside forks against their own main
     if: ${{ github.repository == 'simshanith/lit-ui-router' }}
     runs-on: ubuntu-26.04
     steps:
