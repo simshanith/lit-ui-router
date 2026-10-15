@@ -177,11 +177,33 @@ for (const strategy of ['matcher', 'simulate'] as const) {
 // registration, so simulate must apply it before the routes register.
 for (const strategy of ['matcher', 'simulate'] as const) {
   describe(`url config (${strategy} strategy)`, () => {
+    // An optional path param mid-url, and a redirect that formats it at its default.
+    const squashMount = (config: MountConfig['config'] = {}): MountConfig => {
+      const mount = appMount(strategy);
+
+      return {
+        ...mount,
+        config,
+        routes: [
+          ...mount.routes,
+          {
+            name: 'docs',
+            url: '/docs/:section/page',
+            params: { section: { value: 'intro' } },
+          },
+          { name: 'manual', url: '/manual', redirectTo: 'docs' },
+        ],
+      };
+    };
+
     const router = createServerRouter({
       mounts: {
         '/app': appMount(strategy),
         '/loose': { ...appMount(strategy), config: { strict: false } },
         '/nocase': { ...appMount(strategy), config: { caseInsensitive: true } },
+        '/nosquash': squashMount(),
+        '/squash': squashMount({ defaultSquashPolicy: true }),
+        '/tilde': squashMount({ defaultSquashPolicy: '~' }),
       },
     });
 
@@ -248,6 +270,63 @@ for (const strategy of ['matcher', 'simulate'] as const) {
         assert.deepEqual(
           await router.resolve('/nocase/Old-Inbox'),
           redirect('/nocase', '/nocase/inbox?page=2'),
+        );
+      }
+    });
+
+    it('writes defaulted params out by default', async () => {
+      assert.deepEqual(await router.resolve('/nosquash/docs/page'), {
+        kind: 'notFound',
+        mount: '/nosquash',
+      });
+      assert.deepEqual(
+        await router.resolve('/nosquash/docs/intro/page'),
+        shell('/nosquash'),
+      );
+      assert.deepEqual(
+        await router.resolve('/nosquash/manual'),
+        redirect('/nosquash', '/nosquash/docs/intro/page'),
+      );
+    });
+
+    it('drops defaulted params and a slash under defaultSquashPolicy: true', async () => {
+      for (let pass = 0; pass < 2; pass++) {
+        assert.deepEqual(
+          await router.resolve('/squash/docs/page'),
+          shell('/squash'),
+        );
+        assert.deepEqual(
+          await router.resolve('/squash/docs/intro/page'),
+          shell('/squash'),
+        );
+        assert.deepEqual(
+          await router.resolve('/squash/docs/guide/page'),
+          shell('/squash'),
+        );
+        assert.deepEqual(
+          await router.resolve('/squash/manual'),
+          redirect('/squash', '/squash/docs/page'),
+        );
+      }
+    });
+
+    it('spells defaulted params as the placeholder under a string defaultSquashPolicy', async () => {
+      for (let pass = 0; pass < 2; pass++) {
+        assert.deepEqual(
+          await router.resolve('/tilde/docs/~/page'),
+          shell('/tilde'),
+        );
+        assert.deepEqual(
+          await router.resolve('/tilde/docs/intro/page'),
+          shell('/tilde'),
+        );
+        assert.deepEqual(await router.resolve('/tilde/docs/page'), {
+          kind: 'notFound',
+          mount: '/tilde',
+        });
+        assert.deepEqual(
+          await router.resolve('/tilde/manual'),
+          redirect('/tilde', '/tilde/docs/~/page'),
         );
       }
     });

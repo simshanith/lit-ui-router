@@ -14,7 +14,10 @@ import type { UrlMatcherCompilerConfig } from './url-matcher.ts';
  */
 export function createHeadlessRouter(
   states: StateDeclaration[],
-  config: Pick<UrlMatcherCompilerConfig, 'strict' | 'caseInsensitive'> = {},
+  config: Pick<
+    UrlMatcherCompilerConfig,
+    'strict' | 'caseInsensitive' | 'defaultSquashPolicy'
+  > = {},
 ): UIRouter {
   const router = new UIRouter();
   router.plugin(servicesPlugin);
@@ -22,6 +25,7 @@ export function createHeadlessRouter(
   // Core reads these when register() compiles each url; undefined keeps its default.
   router.urlService.config.strictMode(config.strict);
   router.urlService.config.caseInsensitive(config.caseInsensitive);
+  router.urlService.config.defaultSquashPolicy(config.defaultSquashPolicy);
   // Callers observe outcomes through onceSettled; keep the console quiet.
   router.stateService.defaultErrorHandler(() => {});
   states.forEach((state) => router.stateRegistry.register(state));
