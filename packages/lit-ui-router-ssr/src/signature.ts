@@ -8,8 +8,6 @@
  * `prerender()` writes `state` as the name of the state the router stood on and
  * `params` as an object of that state's url parameters, each encoded by its
  * type as the url spells it. Narrow both before use.
- *
- * @category client
  */
 export interface HydrationSignature {
   /** The `lit-ui-router-ssr` version that drew the document. */

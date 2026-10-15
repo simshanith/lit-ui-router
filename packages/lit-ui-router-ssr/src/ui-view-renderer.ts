@@ -103,8 +103,6 @@ const warnElementComponent = (fqn: string): void => {
  * const page = (router: UIRouterLit) =>
  *   html`<ui-router .uiRouter=${router}><ui-view>${uiViewSlot()}</ui-view></ui-router>`;
  * ```
- *
- * @category server
  */
 export class UiViewRenderer extends ElementRenderer {
   /** Answers for `<ui-view>`, whatever class the tag is registered with. */
