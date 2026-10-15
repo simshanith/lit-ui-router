@@ -84,12 +84,14 @@
     "typedoc-vitepress-theme": "catalog:",
     "typescript": "catalog:typescript6-compat",
     "typescript-7": "catalog:",
+    "ui-router-mobx": "catalog:workspace",
     "vitest": "catalog:"
   },
   "peerDependencies": {
     "@uirouter/core": "catalog:publishedPeer",
     "lit": "catalog:publishedPeer",
     "lit-ui-router": "catalog:publishedPeerMobx",
-    "mobx": "catalog:publishedPeer"
+    "mobx": "catalog:publishedPeer",
+    "ui-router-mobx": "catalog:publishedPeerMobx"
   }
 }

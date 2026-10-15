@@ -1330,6 +1330,9 @@ importers:
       typescript-7:
         specifier: 'catalog:'
         version: typescript@7.0.2
+      ui-router-mobx:
+        specifier: catalog:workspace
+        version: link:../ui-router-mobx
       vitest:
         specifier: 'catalog:'
         version: 5.0.4(@types/node@24.19.2)(@vitest/browser-playwright@5.0.4)(@vitest/coverage-v8@5.0.4)(@vitest/ui@5.0.4)(happy-dom@21.0.1)(vite@8.3.4(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))

@@ -12,7 +12,8 @@ description: Observable router state and reaction-based controllers with lit-ui-
 
 [`lit-ui-router-mobx`](https://npmx.dev/package/lit-ui-router-mobx)
 provides [MobX](https://mobx.js.org) bindings for lit-ui-router: an observable
-mirror of the router's state and reaction-based
+mirror of the router's state, from [`ui-router-mobx`](/packages/ui-router-mobx),
+and reaction-based
 [ReactiveControllers](https://lit.dev/docs/composition/controllers/) that keep
 components in sync with it.
 
@@ -32,28 +33,24 @@ covers the same ground with transition hooks instead of observables.
 ## Installation
 
 ```bash
-npm install lit-ui-router-mobx mobx
+npm install lit-ui-router-mobx ui-router-mobx mobx
 ```
 
-`lit-ui-router`, `lit`, `mobx`, and `@uirouter/core` are peer dependencies.
+`lit-ui-router`, `ui-router-mobx`, `lit`, `mobx`, and `@uirouter/core` are
+peer dependencies.
 
 ### RouterStore without Lit
 
-`RouterStore` imports only `mobx` and `@uirouter/core`, so a project without
-Lit can import it or copy it.
+`RouterStore` lives in [`ui-router-mobx`](/packages/ui-router-mobx), which
+imports only `mobx` and `@uirouter/core`. A project without Lit installs that
+package alone:
 
-- **Import.** The package is free of side effects, so a bundler drops Lit and
-  the controllers from `import { RouterStore } from 'lit-ui-router-mobx'`.
-  Without a tree-shaking bundler, as with an import map or an unbundled dev
-  server, import the module directly:
-  `import { RouterStore } from 'lit-ui-router-mobx/dist/router-store.js'`.
-  Either way `lit` and `lit-ui-router` stay declared peers: your package
-  manager still installs them or warns about them, though none of their code
-  is loaded.
-- **Copy.** To drop the peers too, copy the shipped store into your project:
-  `dist/router-store.js` with `dist/router-store.d.ts`, or the TypeScript
-  source
-  [`src/router-store.ts`](https://github.com/simshanith/lit-ui-router/blob/main/packages/lit-ui-router-mobx/src/router-store.ts).
+```bash
+npm install ui-router-mobx mobx
+```
+
+`lit-ui-router-mobx` re-exports the same class, so code using either package
+shares one store per router.
 
 ### MobX 6 and 7
 
@@ -108,7 +105,8 @@ protocols.
 
 [`RouterStore`](/api/lit-ui-router-mobx/classes/RouterStore) is an observable
 mirror of a router's current state, updated by one
-`transitionService.onSuccess` hook per router.
+`transitionService.onSuccess` hook per router. It is `ui-router-mobx`'s
+`RouterStore`, re-exported.
 
 | Member                      | Description                                                                                                |
 | --------------------------- | ---------------------------------------------------------------------------------------------------------- |
@@ -267,5 +265,6 @@ can be compared file-by-file to see exactly what the MobX idiom changes.
 ## Further reading
 
 - [API reference](/api/lit-ui-router-mobx/)
+- [ui-router-mobx](/packages/ui-router-mobx)
 - [MobX — reactions](https://mobx.js.org/reactions.html)
 - [Lit — Reactive Controllers](https://lit.dev/docs/composition/controllers/)

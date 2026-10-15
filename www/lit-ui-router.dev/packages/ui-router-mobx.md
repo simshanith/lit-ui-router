@@ -13,8 +13,9 @@ description: A framework-agnostic MobX observable store of the router's current 
 [`ui-router-mobx`](https://npmx.dev/package/ui-router-mobx) provides
 [MobX](https://mobx.js.org) bindings for a `@uirouter/core` router: an
 observable store of its current state. It imports only `mobx` and
-`@uirouter/core`, so any MobX reaction can follow route state without Lit. The
-[Lit controllers](/packages/mobx) live in `lit-ui-router-mobx`.
+`@uirouter/core`, so any MobX reaction can follow route state without Lit.
+[`lit-ui-router-mobx`](/packages/mobx) builds its Lit controllers on it and
+re-exports `RouterStore`.
 
 ## Installation
 

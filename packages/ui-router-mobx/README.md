@@ -4,7 +4,7 @@
 
 [MobX](https://mobx.js.org) bindings for [UI-Router](https://ui-router.github.io): a framework-agnostic observable store of the router's current state. It imports only `mobx` and `@uirouter/core`.
 
-[`lit-ui-router-mobx`](../lit-ui-router-mobx/) holds the Lit controllers.
+[`lit-ui-router-mobx`](../lit-ui-router-mobx/) builds Lit controllers on it and re-exports `RouterStore`.
 
 ## Installation
 
