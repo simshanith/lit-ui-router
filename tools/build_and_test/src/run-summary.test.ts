@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import {
+  a11yScreenshotsLink,
   type RunSummary,
   type StructuredLogEntry,
   type SummaryTask,
@@ -1033,6 +1034,36 @@ describe('screenshotsLink', () => {
       '',
       '   vitest attachments: https://x/a',
       `   cypress screenshots: ${URL}`,
+    ]);
+  });
+});
+
+describe('a11yScreenshotsLink', () => {
+  const URL = 'https://github.com/o/r/actions/runs/1/artifacts/6';
+
+  it('links the axe screenshots on both lanes', () => {
+    const link = a11yScreenshotsLink({ a11yScreenshotsUrl: URL });
+    assert.ok(link?.markdown.includes(`(<${URL}>)`));
+    assert.equal(link?.line, `   axe screenshots: ${URL}`);
+  });
+
+  it('stays absent when nothing was uploaded', () => {
+    assert.equal(a11yScreenshotsLink({}), undefined);
+    assert.equal(a11yScreenshotsLink({ a11yScreenshotsUrl: '' }), undefined);
+  });
+
+  it('follows the Cypress screenshots in the stdout footer', () => {
+    const run = summary([hit(), ran('a', 100)], 0, { attempted: 2 });
+
+    const lines = overviewLines(run, {
+      screenshotsUrl: 'https://x/c',
+      a11yScreenshotsUrl: URL,
+    });
+
+    assert.deepEqual(lines.slice(-3), [
+      '',
+      '   cypress screenshots: https://x/c',
+      `   axe screenshots: ${URL}`,
     ]);
   });
 });

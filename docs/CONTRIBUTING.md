@@ -195,7 +195,9 @@ Where the `repro:` line isn't enough:
   ([the suite README](../apps/sample-app-lit-e2e/README.md)). A failed suite
   uploads `cypress-screenshots-<group>` (each failing test's screenshot) and
   `wrangler-logs-<group>` (server logs); `cypress-videos-<group>` exists only
-  when the `cypressVideo` dispatch input was set.
+  when the `cypressVideo` dispatch input was set. A failed axe pass uploads
+  `axe-screenshots-a11y` (the page of each scan that found violations) and
+  `wrangler-logs-a11y`.
 - The uncapped summaries are the `turbo-run-summaries` artifact:
   `gh run download <run-id> -n turbo-run-summaries`.
 

@@ -1,7 +1,16 @@
 // axe over the docs pages in both color schemes and each sample-app mount's main routes.
 
+import { join } from 'node:path';
+
 import { AxeBuilder } from '@axe-core/playwright';
 import type { Browser, BrowserContext, Page, Request } from 'playwright';
+
+import {
+  type Finding,
+  findingOf,
+  type Scheme,
+  screenshotName,
+} from './findings.ts';
 
 /** WCAG 2.0–2.2 A and AA, plus best-practice. */
 const TAGS = [
@@ -20,16 +29,10 @@ const DOCS_CONCURRENCY = 4;
 
 const EMAIL_ADDRESS = 'myself@angular.dev';
 
-export type Scheme = 'light' | 'dark';
+/** Where a scan with violations saves its page, relative to the working directory. */
+export const SCREENSHOT_DIR = 'a11y-screenshots';
 
-export interface Finding {
-  page: string;
-  scheme: Scheme;
-  rule: string;
-  impact: string;
-  help: string;
-  targets: string[];
-}
+const screenshotNames = new Set<string>();
 
 export interface Audit {
   axeVersion: string;
@@ -142,18 +145,29 @@ async function scan(
   audit.axeVersion = results.testEngine.version;
   audit.scans++;
 
-  for (const violation of results.violations) {
-    audit.findings.push({
-      page: label,
-      scheme,
-      rule: violation.id,
-      impact: violation.impact ?? 'unknown',
-      help: violation.help,
-      targets: violation.nodes.map((node) =>
-        node.target.map((part) => [part].flat().join(' >> ')).join(' >> '),
-      ),
-    });
+  if (results.violations.length === 0) return;
+
+  const findings = results.violations.map((violation) =>
+    findingOf(violation, label, scheme),
+  );
+
+  audit.findings.push(...findings);
+
+  const path = join(
+    SCREENSHOT_DIR,
+    screenshotName(label, scheme, screenshotNames),
+  );
+
+  try {
+    await page.screenshot({ path, fullPage: true });
+  } catch (error) {
+    // a missing screenshot must not fail the walk
+    console.error(`check-a11y: no screenshot of ${label} [${scheme}]`, error);
+
+    return;
   }
+
+  for (const finding of findings) finding.screenshot = path;
 }
 
 async function goto(
