@@ -67,7 +67,7 @@ jobs:
         uses: actions/upload-artifact@v7
         continue-on-error: true
         with:
-          name: turbo-run-summaries
+          name: turbo-run-summaries-bench
           path: .turbo/runs/
           retention-days: 30
           if-no-files-found: warn
@@ -78,7 +78,7 @@ jobs:
         uses: actions/upload-artifact@v7
         continue-on-error: true
         with:
-          name: turbo-task-logs
+          name: turbo-task-logs-bench
           path: |
             .turbo/turbo-*.log
             .turbo/logs/*.json
@@ -156,7 +156,7 @@ jobs:
         uses: actions/upload-artifact@v7
         continue-on-error: true
         with:
-          name: turbo-run-summaries
+          name: turbo-run-summaries-a11y
           path: .turbo/runs/
           retention-days: 30
           if-no-files-found: warn
@@ -167,7 +167,7 @@ jobs:
         uses: actions/upload-artifact@v7
         continue-on-error: true
         with:
-          name: turbo-task-logs
+          name: turbo-task-logs-a11y
           path: |
             .turbo/turbo-*.log
             .turbo/logs/*.json
@@ -192,7 +192,7 @@ jobs:
         if: ${{ failure() }}
         uses: actions/upload-artifact@v7
         with:
-          name: wrangler-logs
+          name: wrangler-logs-a11y
           path: ~/.config/.wrangler/logs/
           retention-days: 5
           if-no-files-found: warn
