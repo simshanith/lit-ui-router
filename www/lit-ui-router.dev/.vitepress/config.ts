@@ -70,8 +70,6 @@ const navigationSidebarItems = flattenGroups(navigationSidebarItemsRaw);
 
 const signalsSidebarItems = flattenGroups(signalsSidebarItemsRaw);
 
-const ssrSidebarItems = flattenGroups(ssrSidebarItemsRaw);
-
 const uiRouterEffectSidebarItems = flattenGroups(uiRouterEffectSidebarItemsRaw);
 
 const uiRouterMobxSidebarItems = flattenGroups(uiRouterMobxSidebarItemsRaw);
@@ -80,29 +78,36 @@ const uiRouterSignalsSidebarItems = flattenGroups(
   uiRouterSignalsSidebarItemsRaw,
 );
 
-// ui-router-server is multi-entry: typedoc emits one module per subpath
-// export, so the module level is the import surface — keep it, retitle each
-// module to its import specifier, and flatten only the kind groups within.
+// Multi-entry packages emit one typedoc module per subpath export, so the
+// module level is the import surface — keep it, retitle each module to its
+// import specifier, and flatten only the kind groups within.
+function entrySidebar(
+  pkg: string,
+  modules: DefaultTheme.SidebarItem[],
+): DefaultTheme.SidebarItem[] {
+  return (
+    modules
+      .map((module) => ({
+        ...module,
+        text: module.text === 'index' ? pkg : `${pkg}/${module.text}`,
+        collapsed: true,
+        items: module.items && flattenGroups(module.items),
+      }))
+      // root module first; stable sort keeps the subpaths in typedoc order
+      .sort((a, b) => Number(b.text === pkg) - Number(a.text === pkg))
+  );
+}
+
 // SAFETY: as for typedocSidebarItems
 const serverSidebarItemsRaw =
   serverSidebarItemsJson as DefaultTheme.SidebarItem[];
 
-const serverSidebarItems = serverSidebarItemsRaw
-  .map((module) => ({
-    ...module,
-    text:
-      module.text === 'index'
-        ? 'ui-router-server'
-        : `ui-router-server/${module.text}`,
-    collapsed: true,
-    items: module.items && flattenGroups(module.items),
-  }))
-  // root module first; stable sort keeps the subpaths in typedoc order
-  .sort(
-    (a, b) =>
-      Number(b.text === 'ui-router-server') -
-      Number(a.text === 'ui-router-server'),
-  );
+const serverSidebarItems = entrySidebar(
+  'ui-router-server',
+  serverSidebarItemsRaw,
+);
+
+const ssrSidebarItems = entrySidebar('lit-ui-router-ssr', ssrSidebarItemsRaw);
 
 const baseUrl = 'https://lit-ui-router.dev';
 
