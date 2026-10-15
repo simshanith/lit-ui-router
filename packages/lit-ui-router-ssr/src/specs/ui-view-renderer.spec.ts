@@ -46,6 +46,33 @@ const boxedRouter = (): UIRouterLit => {
   return router;
 };
 
+/** One state whose NOWAIT resolve never settles, drawn as what its view receives. */
+const pendingRouter = (): UIRouterLit => {
+  const router = installServerLocation(new UIRouterLit(), {
+    strictMode: false,
+  });
+
+  const state: LitStateDeclaration = {
+    name: 'pending',
+    url: '/pending',
+    resolve: [
+      {
+        token: 'slow',
+        resolveFn: () => new Promise<never>(() => {}),
+        policy: { async: 'NOWAIT' },
+      },
+    ],
+    component: (props) =>
+      html`<p class="slow">
+        ${props.resolves.slow instanceof Promise ? 'promise' : 'missing'}
+      </p>`,
+  };
+
+  router.stateRegistry.register(state);
+
+  return router;
+};
+
 describe('UiViewRenderer', () => {
   it('writes the routed component into the light DOM, never a shadow root', async () => {
     const markup = await at('/shell');
@@ -164,5 +191,15 @@ describe('UiViewRenderer', () => {
       '$default',
     );
     warn.mockRestore();
+  });
+
+  it('hands a NOWAIT resolve to the component as its promise, as the client does', async () => {
+    const router = pendingRouter();
+    await settle(router, '/pending');
+
+    const markup = draw(router);
+
+    expect(markup).toContain('promise');
+    expect(markup).not.toContain('missing');
   });
 });
