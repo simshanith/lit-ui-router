@@ -49,7 +49,12 @@ export interface MountConfig {
    * config widens later (e.g. an auth tier).
    */
   strategy?: 'matcher' | 'simulate';
-  /** Matcher compiler options (defaults: strict, case-sensitive, no squash); 'simulate' mounts apply all but decodeParams. */
+  /**
+   * Matcher compiler options (defaults: strict, case-sensitive, no squash);
+   * 'simulate' mounts apply all but decodeParams. Hand the same object to
+   * {@link url-config!applyUrlConfig | `applyUrlConfig`} on the client router
+   * so both sides compile urls alike.
+   */
   config?: UrlMatcherCompilerConfig;
   /**
    * Projection of the client's otherwise() rule. `state` references a

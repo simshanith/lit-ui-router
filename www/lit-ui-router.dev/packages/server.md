@@ -57,13 +57,14 @@ package tour.
 Capabilities are priced as separate entry points, measured min+gzip by the
 package's own esbuild probe:
 
-| Entry point                  | Needs `@uirouter/core`?     | Cost             | What it answers                                                                        |
-| ---------------------------- | --------------------------- | ---------------- | -------------------------------------------------------------------------------------- |
-| `ui-router-server/matcher`   | no                          | ~2.9 KiB gzip    | does this pathname match this pattern, with which params — and the inverse, `format()` |
-| `ui-router-server/redirects` | no                          | ~3.6 KiB gzip    | given routes and a redirect table, where does this pathname go                         |
-| `ui-router-server` (root)    | only for a `simulate` mount | ~4.7 KiB gzip    | mounts in, verdicts out                                                                |
-| `ui-router-server/simulate`  | yes (optional peer)         | +~27.4 KiB, lazy | what would the real router do                                                          |
-| `ui-router-server/location`  | yes (optional peer)         | ~0.3 KiB gzip    | a path-shaped in-memory location for a server-side router                              |
+| Entry point                   | Needs `@uirouter/core`?               | Cost             | What it answers                                                                        |
+| ----------------------------- | ------------------------------------- | ---------------- | -------------------------------------------------------------------------------------- |
+| `ui-router-server/matcher`    | no                                    | ~2.9 KiB gzip    | does this pathname match this pattern, with which params — and the inverse, `format()` |
+| `ui-router-server/redirects`  | no                                    | ~3.6 KiB gzip    | given routes and a redirect table, where does this pathname go                         |
+| `ui-router-server` (root)     | only for a `simulate` mount           | ~4.7 KiB gzip    | mounts in, verdicts out                                                                |
+| `ui-router-server/simulate`   | yes (optional peer)                   | +~27.4 KiB, lazy | what would the real router do                                                          |
+| `ui-router-server/location`   | yes (optional peer)                   | ~0.3 KiB gzip    | a path-shaped in-memory location for a server-side router                              |
+| `ui-router-server/url-config` | no; it configures the router you pass | ~0.4 KiB gzip    | one url config for the client router, the mounts, and a server render                  |
 
 The dependency-free tiers are a standalone port of core's matching subset,
 type-pinned to core's signatures and differential-tested against its output.
@@ -91,6 +92,10 @@ Picking one:
   default, for a [pushState](/guides/location-plugins#html5-pushstate) client,
   or `#` fragments under `html5Mode: false`.
   `installServerLocation(router, { url, baseHref, strictMode, html5Mode })`.
+- **`/url-config`** — the client router and the mounts should compile urls
+  alike. `applyUrlConfig(router, config)` applies a mount's `config` to any
+  `@uirouter/core` router before its states register, and imports no server
+  code, so the client bundle can take it.
 
 ## Installation
 
@@ -359,8 +364,10 @@ re-runs the URL with its full configuration. The simulate tier applies the
 same rule to itself, degrading failed or timed-out simulations to the shell
 rather than a wrong redirect or a spurious 404. Trailing slashes are strict
 on both sides; if your client relaxes `strictMode`, pass the same relaxation
-as the mount's `config`. A static host that serves `<subpath>/index.html` by
-redirecting onto the slashed url makes that relaxation mandatory
+as the mount's `config`, or share one object through
+[`applyUrlConfig`](/api/ui-router-server/url-config/functions/applyUrlConfig).
+A static host that serves `<subpath>/index.html` by redirecting onto the
+slashed url makes that relaxation mandatory
 ([static hosts add a trailing slash](/packages/ssr#static-hosts-add-a-trailing-slash)).
 Nor does it see which ids exist: a `:id` param
 matches any value, so narrow it to the known ids when the build can list them

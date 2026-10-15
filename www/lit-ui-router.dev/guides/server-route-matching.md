@@ -264,13 +264,14 @@ deliberately out of scope here, not at risk.
 The package prices its capabilities as separate entry points, measured
 min+gzip by its own esbuild probe:
 
-| import                       | needs `@uirouter/core`?               | cost                                | what it answers                                                                        |
-| ---------------------------- | ------------------------------------- | ----------------------------------- | -------------------------------------------------------------------------------------- |
-| `ui-router-server/matcher`   | no                                    | ~6.6 KiB min / ~2.9 KiB gzip        | does this pathname match this pattern, with which params — and the inverse, `format()` |
-| `ui-router-server/redirects` | no                                    | ~8.7 KiB min / ~3.6 KiB gzip        | given routes and a redirect table, where does this pathname go                         |
-| `ui-router-server` (root)    | only when a `simulate` mount resolves | ~11.5 KiB min / ~4.7 KiB gzip       | mounts in, verdict out                                                                 |
-| `ui-router-server/simulate`  | yes (optional peer)                   | +~92 KiB min / ~27.4 KiB gzip, lazy | what would the real router do                                                          |
-| `ui-router-server/location`  | yes (optional peer)                   | ~0.5 KiB min / ~0.3 KiB gzip        | a path-shaped in-memory location for a server-side router                              |
+| import                        | needs `@uirouter/core`?               | cost                                | what it answers                                                                        |
+| ----------------------------- | ------------------------------------- | ----------------------------------- | -------------------------------------------------------------------------------------- |
+| `ui-router-server/matcher`    | no                                    | ~6.6 KiB min / ~2.9 KiB gzip        | does this pathname match this pattern, with which params — and the inverse, `format()` |
+| `ui-router-server/redirects`  | no                                    | ~8.7 KiB min / ~3.6 KiB gzip        | given routes and a redirect table, where does this pathname go                         |
+| `ui-router-server` (root)     | only when a `simulate` mount resolves | ~11.5 KiB min / ~4.7 KiB gzip       | mounts in, verdict out                                                                 |
+| `ui-router-server/simulate`   | yes (optional peer)                   | +~92 KiB min / ~27.4 KiB gzip, lazy | what would the real router do                                                          |
+| `ui-router-server/location`   | yes (optional peer)                   | ~0.5 KiB min / ~0.3 KiB gzip        | a path-shaped in-memory location for a server-side router                              |
+| `ui-router-server/url-config` | no; it configures the router you pass | ~0.6 KiB min / ~0.4 KiB gzip        | one url config for the client router, the mounts, and a server render                  |
 
 <svg viewBox="0 0 720 300" width="100%" style="max-width: 720px" role="img" aria-label="Package tiers by size: matcher 2.9 KiB, redirects 3.6 KiB, root 4.7 KiB - all dependency-free - simulate, which adds a lazy 27.4 KiB chunk carrying @uirouter/core, and location, a 0.3 KiB eager import of the same core" xmlns="http://www.w3.org/2000/svg">
   <title>The package tiers, to scale</title>
@@ -346,6 +347,10 @@ Picking a tier:
   server render's links match what a
   [pushState](./location-plugins#html5-pushstate) client writes.
   `installServerLocation(router, { url, baseHref, strictMode })`.
+- **`/url-config`** — you want the client router and the mounts to compile
+  urls alike. `applyUrlConfig(router, config)` applies a mount's `config` to
+  any `@uirouter/core` router before its states register; it imports no
+  server code, so the client bundle can take it.
 
 ## The projection: routes as data
 
@@ -943,9 +948,12 @@ spurious 404.
 **Trailing slashes are strict on both sides.** `/app/welcome/` 404s just as
 the client would refuse to match it. If your client relaxes
 [`strictMode`](https://ui-router.github.io/core/docs/latest/interfaces/_url_interface_.urlmatcherconfig.html),
-pass the same relaxation as the mount's `config`. A static host that serves
-`<subpath>/index.html` by redirecting onto the slashed url makes that
-relaxation mandatory — see
+pass the same relaxation as the mount's `config`: keep one config object and
+hand it to both the mount and
+[`applyUrlConfig`](/api/ui-router-server/url-config/functions/applyUrlConfig)
+on the client router, which throws if a state's url already compiled. A
+static host that serves `<subpath>/index.html` by redirecting onto the
+slashed url makes that relaxation mandatory — see
 [static hosts add a trailing slash](/packages/ssr#static-hosts-add-a-trailing-slash).
 
 **The 404 UX is asymmetric — by design.** With the flagship pattern,

@@ -1,4 +1,4 @@
-import type { StateDeclaration } from '@uirouter/core';
+import type { StateDeclaration, UIRouter } from '@uirouter/core';
 import type { MiddlewareHandler } from 'hono';
 import {
   createServerRouter,
@@ -46,6 +46,10 @@ import {
 } from 'ui-router-server/redirects';
 import { createHeadlessRouter, onceSettled } from 'ui-router-server/simulate';
 import {
+  applyUrlConfig,
+  type RouterUrlConfig,
+} from 'ui-router-server/url-config';
+import {
   serverRouterPlugin,
   type ServerRouterPlugin,
 } from 'ui-router-server/vite';
@@ -67,11 +71,16 @@ const rules: RedirectRule[] = [
   { pattern: /^\/archive\//, to: 'app.contacts' },
 ];
 
-const matcherConfig: UrlMatcherCompilerConfig = {
+const urlConfig: RouterUrlConfig = {
   strict: false,
   caseInsensitive: true,
+  defaultSquashPolicy: '~',
+};
+
+// A mount's config is the router-wide options plus decodeParams.
+const matcherConfig: UrlMatcherCompilerConfig = {
+  ...urlConfig,
   decodeParams: true,
-  defaultSquashPolicy: false,
 };
 
 const mount: MountConfig = {
@@ -167,6 +176,12 @@ export function serverHref(states: StateDeclaration[]): string {
   return installServerLocation(headless, locationOptions).stateService.href(
     'app.contacts',
   );
+}
+
+// Url-config tier: one config object for a mount and any core router; the
+// router comes back at the type it went in as.
+export function sharedUrlConfig(router: UIRouter): UIRouter {
+  return applyUrlConfig(router, matcherConfig);
 }
 
 const hashLocationOptions: ServerLocationPluginOptions = { html5Mode: false };

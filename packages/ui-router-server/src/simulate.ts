@@ -2,7 +2,8 @@ import { servicesPlugin, UIRouter } from '@uirouter/core';
 import type { StateDeclaration } from '@uirouter/core';
 
 import { serverLocationPlugin } from './location.ts';
-import type { UrlMatcherCompilerConfig } from './url-matcher.ts';
+import { applyUrlConfig } from './url-config.ts';
+import type { RouterUrlConfig } from './url-config.ts';
 
 /**
  * Core's own headless recipe: vanilla $q/$injector plus an in-memory location
@@ -14,18 +15,12 @@ import type { UrlMatcherCompilerConfig } from './url-matcher.ts';
  */
 export function createHeadlessRouter(
   states: StateDeclaration[],
-  config: Pick<
-    UrlMatcherCompilerConfig,
-    'strict' | 'caseInsensitive' | 'defaultSquashPolicy'
-  > = {},
+  config?: RouterUrlConfig,
 ): UIRouter {
   const router = new UIRouter();
   router.plugin(servicesPlugin);
   router.plugin(serverLocationPlugin);
-  // Core reads these when register() compiles each url; undefined keeps its default.
-  router.urlService.config.strictMode(config.strict);
-  router.urlService.config.caseInsensitive(config.caseInsensitive);
-  router.urlService.config.defaultSquashPolicy(config.defaultSquashPolicy);
+  applyUrlConfig(router, config);
   // Callers observe outcomes through onceSettled; keep the console quiet.
   router.stateService.defaultErrorHandler(() => {});
   states.forEach((state) => router.stateRegistry.register(state));

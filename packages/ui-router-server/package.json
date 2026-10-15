@@ -59,6 +59,10 @@
       "types": "./dist/simulate.d.ts",
       "default": "./dist/simulate.js"
     },
+    "./url-config": {
+      "types": "./dist/url-config.d.ts",
+      "default": "./dist/url-config.js"
+    },
     "./vite": {
       "types": "./dist/vite.d.ts",
       "default": "./dist/vite.js"
@@ -155,6 +159,11 @@
       ]
     },
     "./redirects": {
+      "free": [
+        "@uirouter/core"
+      ]
+    },
+    "./url-config": {
       "free": [
         "@uirouter/core"
       ]
