@@ -77,6 +77,17 @@ a cold container returns `false` and the same template is rendered instead. The
 atlas is on `lit-ui-router@1.16.0` / `lit-ui-router-ssr@0.1.0`, with
 `@lit-labs/ssr-client@1.1.8` as the client half's peer.
 
+**Update, 2026-10-15.** The atlas is on `ui-router-server@0.3.0`. The
+simulate tier pools its headless routers and takes a `prewarm` count per
+mount; `prerender.ts` passes `{ strategy: 'simulate', prewarm: 1 }`, so one
+router built before the first path replays the whole slashless list, while
+`vite.config.ts` keeps the matcher tier. A probe over 18 of the app's paths
+read the two tiers identical on every slashless path and apart on every path
+with a trailing slash: the matcher serves `/sheet/7/` under the mount's
+`strict: false`, the simulate tier answers 404, because `config` is a matcher
+compiler option and the headless router is built with core's default
+`strictMode`. Ask 11 below.
+
 One thing that cutover measured:
 
 - A view whose server and client templates differ cannot be adopted: `hydrate()`
@@ -519,6 +530,18 @@ Ordered by how much each would have saved me.
     **Status, 2026-09-13.** Open, #807, nothing shipped. The atlas still
     ships `strict: false` on the mount and `strictMode(false)` in the
     browser, unchanged.
+11. **`ui-router-server`: let a simulate mount read `config`.** `MountConfig.config`
+    is documented as the matcher's compiler options, and `buildHeadlessRouter`
+    never consults it, so a mount with `strict: false` serves `/sheet/7/` on
+    the matcher tier and 404s it on the simulate tier: the parity the package
+    tests assert holds for strict mounts only. Core's own
+    `urlService.config.strictMode(false)` and `caseInsensitive(true)` are the
+    one-line replay, applied once per pooled router, and a parity test over
+    a `strict: false` mount would hold the two tiers together. Found on
+    2026-10-15, at `ui-router-server@0.3.0`, adopting `prewarm`: the atlas
+    keeps the matcher tier for dev and preview, where the slash spellings
+    Pages serves must verdict as the page, and takes the simulate tier for the
+    prerender alone, whose paths are slashless.
 
 ## 6. Verdict, in one paragraph
 

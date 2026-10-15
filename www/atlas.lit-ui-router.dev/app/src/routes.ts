@@ -147,7 +147,19 @@ const SHEET_STATES: ReadonlyArray<[state: string, segment: string, query: string
   ['plate', 'plate', ''],
 ];
 
-export function mountsFor(sheetNums?: readonly string[]): Record<string, MountConfig> {
+/**
+ * The tier a mount resolves on. The dev and preview servers take the default
+ * matcher: `config.strict` reaches only it, and the slash spellings Pages
+ * serves must verdict as the page. The prerender asks slashless paths only,
+ * so it replays them through the simulate tier's pooled headless router,
+ * prewarmed before the first path.
+ */
+export type MountTier = Pick<MountConfig, 'strategy' | 'prewarm'>;
+
+export function mountsFor(
+  sheetNums?: readonly string[],
+  tier: MountTier = { strategy: 'matcher' },
+): Record<string, MountConfig> {
   const nums = [...new Set(sheetNums ?? [])].sort();
   const narrowed = routes.map((route) => {
     const own = SHEET_STATES.find(([state]) => state === route.name);
@@ -183,10 +195,11 @@ export function mountsFor(sheetNums?: readonly string[]): Record<string, MountCo
         { pattern: /^$/, to: 'atlas.gallery' },
       ],
       otherwise: { state: 'atlas.notFound' },
-      strategy: 'matcher',
+      ...tier,
       // Cloudflare Pages serves `<subpath>/index.html` and 308s the bare
       // path onto the slash, so `/sheet/7/` must be as real a url as
       // `/sheet/7`. The client sets `strictMode(false)` for the same reason.
+      // The matcher tier alone reads this; a simulate mount 404s the slash.
       config: { strict: false },
     },
   };

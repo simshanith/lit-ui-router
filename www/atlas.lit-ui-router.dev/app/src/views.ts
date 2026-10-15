@@ -1628,7 +1628,10 @@ export const AboutView: RoutedLitTemplate<ManifestResolves> = (props) => {
           the ${ext(HOME.vite, 'Vite')} dev and preview servers, so a bad deep link answers 404 rather than 200,
           and it drives the build-time prerender: every route a
           <code>shell</code> verdict claims gets its own HTML file, redirect verdicts
-          become ${ext(HOME.redirects, html`<code>_redirects</code>`)} lines. See
+          become ${ext(HOME.redirects, html`<code>_redirects</code>`)} lines. The servers
+          take its dependency-free <code>matcher</code> tier; the prerender replays its
+          paths on the <code>simulate</code> tier, one pooled headless
+          <code>@uirouter/core</code> router prewarmed before the first path. See
           ${ext(`${BRANCH}www/atlas.lit-ui-router.dev/app/SSR-VERDICT.md`, html`<code>SSR-VERDICT.md</code>`)} for what rendered and what did not.
         </p>
         <h3>PACKAGES</h3>
