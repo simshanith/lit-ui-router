@@ -57,7 +57,7 @@ const ALLOWED: SplitAllowance[] = [
   },
   {
     name: 'mobx',
-    why: 'the mobx-6 alias (catalogs.mobx6-compat) runs test:mobx6-compat beside the mobx 7 line',
+    why: 'the mobx-6 alias (catalogs.mobx6-compat) runs test:mobx6-compat beside the mobx 7 line, and catalogs.peerFloor pins mobx-floor to 6.0.0, the mobx peer floor check:bundle bundles against',
   },
   {
     name: 'signal-polyfill',

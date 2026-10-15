@@ -107,6 +107,7 @@ const workspaces = {
       '@release-it/conventional-changelog',
       'lit-2',
       'mobx-6',
+      'mobx-floor',
       'lit-ui-router-floor',
       '@uirouter/core-floor',
     ],
@@ -153,6 +154,7 @@ const workspaces = {
       '@release-it/conventional-changelog',
       // vitest alias target for the mobx 6 compat lane
       'mobx-6',
+      'mobx-floor',
       '@uirouter/core-floor',
     ],
   },
