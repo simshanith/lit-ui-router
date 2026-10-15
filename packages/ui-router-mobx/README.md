@@ -4,7 +4,13 @@
 
 [MobX](https://mobx.js.org) bindings for [UI-Router](https://ui-router.github.io): a framework-agnostic observable store of the router's current state. It imports only `mobx` and `@uirouter/core`.
 
-Not yet published; its first release is `0.1.0`. [`lit-ui-router-mobx`](../lit-ui-router-mobx/) holds the Lit controllers.
+[`lit-ui-router-mobx`](../lit-ui-router-mobx/) holds the Lit controllers.
+
+## Installation
+
+```bash
+npm install ui-router-mobx@rc mobx
+```
 
 ## Features
 

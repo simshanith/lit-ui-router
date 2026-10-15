@@ -1,9 +1,8 @@
 {
   "name": "ui-router-mobx",
-  "version": "0.0.0",
-  "private": true,
+  "version": "0.1.0-rc.0",
   "description": "MobX bindings for UI-Router: a framework-agnostic observable store of the router's current state",
-  "homepage": "https://lit-ui-router.dev",
+  "homepage": "https://lit-ui-router.dev/packages/ui-router-mobx",
   "bugs": {
     "url": "https://github.com/simshanith/lit-ui-router/issues"
   },
@@ -35,8 +34,10 @@
   "scripts": {
     "build:js": "oxc-emit-js",
     "build:types": "oxc-emit-dts",
-    "check:bundle": "check-bundle-inputs",
+    "changelog": "release-it --changelog --git.tagMatch=\"ui-router-mobx@[0-9]*.[0-9]*.[0-9]*\"",
+    "check:bundle": "floor-guard && check-bundle-inputs",
     "codecov:bundle": "upload-entry-bundles",
+    "docs:api": "rimraf ../../www/lit-ui-router.dev/api/ui-router-mobx && typedoc",
     "format:check:oxfmt": "oxfmt --check \"**/*.{ts,js,json,md}\"",
     "format:oxfmt": "oxfmt \"**/*.{ts,js,json,md}\"",
     "lint:oxlint": "oxlint .",
@@ -48,24 +49,33 @@
     "typecheck:tsc": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
+    "@release-it/conventional-changelog": "catalog:",
     "@tools/bundle-probe": "catalog:workspace",
     "@tools/compat-guards": "catalog:workspace",
     "@tools/lit-test-env": "catalog:workspace",
     "@tools/oxc-emit": "catalog:workspace",
+    "@tools/release-config": "catalog:workspace",
+    "@tools/typedoc-plugin-lit-ui-router": "catalog:workspace",
     "@types/node": "catalog:",
     "@uirouter/core": "catalog:",
+    "@uirouter/core-floor": "catalog:peerFloor",
     "@vitest/coverage-v8": "catalog:",
     "mobx": "catalog:",
     "mobx-6": "catalog:mobx6-compat",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
+    "release-it": "catalog:",
+    "rimraf": "catalog:",
+    "typedoc": "catalog:",
+    "typedoc-plugin-markdown": "catalog:",
+    "typedoc-vitepress-theme": "catalog:",
     "typescript": "catalog:typescript6-compat",
     "typescript-7": "catalog:",
     "vitest": "catalog:"
   },
   "peerDependencies": {
-    "@uirouter/core": "catalog:",
-    "mobx": "catalog:"
+    "@uirouter/core": "catalog:publishedPeer",
+    "mobx": "catalog:publishedPeer"
   },
   "bundleProbe": {
     ".": {
