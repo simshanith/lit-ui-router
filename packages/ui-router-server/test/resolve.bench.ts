@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { join } from 'node:path';
 
-import { writeBenchReport } from '@tools/shared/bench-report.ts';
+import { benchBudget, writeBenchReport } from '@tools/shared/bench-report.ts';
 import { Bench } from 'tinybench';
 
 import { createServerRouter } from '../src/index.ts';
@@ -26,7 +26,11 @@ const assertKind = async (
     assert.equal((await router.resolve(path)).kind, kind, path);
 };
 
-const bench = new Bench({ name: 'ui-router-server resolve', throws: true });
+const bench = new Bench({
+  name: 'ui-router-server resolve',
+  throws: true,
+  ...benchBudget(),
+});
 
 for (const strategy of STRATEGIES) {
   for (const size of SIZES) {

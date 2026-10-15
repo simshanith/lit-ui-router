@@ -312,6 +312,7 @@ TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }
 | `@tools/dts-backtest#test:matrix`          | `ci:main` only; PRs run the current-TS `#test` leg                                                                                                                                       |
 | `@www/lit-ui-router.dev#check:embeds`      | Neither ci graph — manual and uncached: measures the examples' embed heights (host-dependent font metrics)                                                                               |
 | `typecheck:peer-floor`                     | Neither ci graph — Release signals check runs + bump gate                                                                                                                                |
+| `bench`                                    | Neither ci graph — a non-gating step after it (`mise run bench_pulse`: short budget, one package at a time, uncached) whose result files the run summary renders as its Bench pulse      |
 | `test:peer-floor`                          | `ci:pull_request` — eslint-plugin-lit-ui-router's rule suite on the eslint-floor alias, a leaf of that package's `test` umbrella                                                         |
 
 ## Remote Caching

@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { describe, it } from 'node:test';
 
 import {
+  benchBudget,
   benchEntries,
   benchReportPath,
   benchRun,
@@ -143,5 +144,27 @@ describe('writeBenchReport', () => {
     } finally {
       await rm(dir, { recursive: true, force: true });
     }
+  });
+});
+
+describe('benchBudget', () => {
+  it('keeps tinybench defaults when BENCH_TIME_MS is unset or empty', () => {
+    assert.deepEqual(benchBudget({}), {});
+    assert.deepEqual(benchBudget({ BENCH_TIME_MS: '' }), {});
+  });
+
+  it('sets the per-task budget with a quarter of it as warmup', () => {
+    assert.deepEqual(benchBudget({ BENCH_TIME_MS: '200' }), {
+      time: 200,
+      warmupTime: 50,
+    });
+  });
+
+  it('rejects a budget that is not a positive number', () => {
+    for (const value of ['0', '-5', 'fast'])
+      assert.throws(
+        () => benchBudget({ BENCH_TIME_MS: value }),
+        /BENCH_TIME_MS/,
+      );
   });
 });

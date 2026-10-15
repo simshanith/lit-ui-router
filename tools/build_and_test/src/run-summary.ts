@@ -35,6 +35,8 @@ import { randomUUID } from 'node:crypto';
 import { appendFile, readdir, readFile, stat } from 'node:fs/promises';
 import { basename, join } from 'node:path';
 
+import * as v from 'valibot';
+
 import {
   type OverviewContext,
   type RunReport,
@@ -54,6 +56,13 @@ import {
   structuredTaskLog,
   type ToolAnnotation,
 } from './run-summary.core.ts';
+import {
+  type BenchEntry,
+  BENCH_SOURCES,
+  BenchFileSchema,
+  benchPulse,
+  benchPulseRows,
+} from './bench-pulse.core.ts';
 import { extractTscDiagnostics } from './tsc-annotations.core.ts';
 import { errorCommand, warningCommand } from '@tools/shared/gha.core.ts';
 import { onActions } from '@tools/shared/gha.ts';
@@ -192,6 +201,34 @@ async function readStructuredLogs(): Promise<StructuredLogEntry[]> {
   return entries;
 }
 
+/** The Bench pulse rows this session wrote; a missing file is a run without the bench step. */
+async function readBenchPulse(since: number): Promise<BenchEntry[]> {
+  const files = [];
+
+  for (const source of BENCH_SOURCES) {
+    let raw: string;
+
+    try {
+      raw = await readFile(source.path, 'utf8');
+    } catch {
+      continue;
+    }
+
+    try {
+      files.push({
+        source,
+        entries: v.parse(BenchFileSchema, JSON.parse(raw)),
+      });
+    } catch (error: unknown) {
+      warn(
+        `skipping ${source.path}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  return benchPulseRows(files, since);
+}
+
 async function publish(
   runs: RunReport[],
   context: OverviewContext,
@@ -314,6 +351,10 @@ async function main(): Promise<void> {
   // whichever run of the session wrote it.
   for (const run of runs) run.reports = buildReports(run.summary, logs);
 
+  const sessionStarted = Math.min(
+    ...runs.map(({ summary }) => summary.execution.startTime),
+  );
+
   await publish(
     runs,
     {
@@ -326,6 +367,7 @@ async function main(): Promise<void> {
       fileNames: runs.map((run) => run.fileName ?? ''),
       attachmentsUrl: process.env.VITEST_ATTACHMENTS_ARTIFACT_URL,
       logsUrl: process.env.TURBO_LOGS_ARTIFACT_URL,
+      benchPulse: benchPulse(await readBenchPulse(sessionStarted)),
     },
     annotations,
   );

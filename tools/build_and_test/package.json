@@ -27,6 +27,7 @@
     "playwright": "catalog:",
     "typescript": "catalog:",
     "typescript-6": "catalog:typescript6",
+    "valibot": "catalog:",
     "vite": "catalog:"
   }
 }

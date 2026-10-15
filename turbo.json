@@ -85,6 +85,17 @@
       "dependsOn": ["test:coverage"],
       "inputs": ["$TURBO_DEFAULT$"]
     },
+    // Report-only tinybench timings into each package's .cache/; measures the
+    // host, so uncached. In no ci:* graph: CI runs it as its own non-gating
+    // step after the graph, off a runner busy with the rest of it.
+    "bench": {
+      "dependsOn": ["^build"],
+      // per-task time budget; CI shortens it
+      "env": ["BENCH_TIME_MS"],
+      // the result files' sha field; git HEAD is the fallback
+      "passThroughEnv": ["GITHUB_SHA"],
+      "cache": false
+    },
     // Firefox+WebKit full-suite pass for the vitest packages; chromium
     // correctness rides test:coverage on PRs. Runs on main push, not the
     // PR graph.
