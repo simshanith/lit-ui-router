@@ -853,6 +853,11 @@ export interface OverviewContext {
    * failed e2e suite, so a URL here always has something behind it.
    */
   screenshotsUrl?: string;
+  /**
+   * The uploaded check-a11y `a11y-screenshots/` dir. Uploaded only by a failed
+   * axe pass, so a URL here always has something behind it.
+   */
+  a11yScreenshotsUrl?: string;
   /** The uploaded per-task `.turbo/turbo-*.log` files, whatever the stream hid. */
   logsUrl?: string;
   /** `annotationNote` for the tool annotations this step re-emitted. */
@@ -915,6 +920,20 @@ export function screenshotsLink(
   return {
     markdown: `[Cypress screenshots](<${url}>) — the page as each failing e2e test left it, downloadable from this run's artifacts.`,
     line: `   cypress screenshots: ${url}`,
+  };
+}
+
+/** Link to the pages check-a11y saved when a scan found violations. */
+export function a11yScreenshotsLink(
+  context: OverviewContext,
+): { markdown: string; line: string } | undefined {
+  const url = safeArtifactUrl(context.a11yScreenshotsUrl);
+
+  if (url === undefined) return undefined;
+
+  return {
+    markdown: `[Axe screenshots](<${url}>) — each page as axe scanned it when it found violations, downloadable from this run's artifacts.`,
+    line: `   axe screenshots: ${url}`,
   };
 }
 
@@ -1069,6 +1088,7 @@ function footerMarkdown(context: OverviewContext): string[] {
   for (const link of [
     attachmentsLink(context),
     screenshotsLink(context),
+    a11yScreenshotsLink(context),
     logsLink(context),
     artifactLink(context),
   ]) {
@@ -1214,6 +1234,7 @@ function footerLines(context: OverviewContext): string[] {
   const links = [
     attachmentsLink(context),
     screenshotsLink(context),
+    a11yScreenshotsLink(context),
     logsLink(context),
     artifactLink(context),
   ].filter((link) => link !== undefined);

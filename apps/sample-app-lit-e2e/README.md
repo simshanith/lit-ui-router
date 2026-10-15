@@ -27,7 +27,7 @@ parallel. `a11y` runs only when named; on CI it is the `acceptance (a11y)` job (
 
 Each suite is its own turbo task (`test:e2e:<suite>`). The Cypress suites have their own cache keys,
 so rerunning one after a flake costs that suite alone rather than the whole
-set. `a11y` is uncached, because contrast and target size are measured on the host's rendering. Name the suites you want and the umbrella runs those, around the same
+set. `a11y` is uncached, because contrast and target size are measured on the host's rendering; a scan that finds violations saves a full-page screenshot to `a11y-screenshots/`. Name the suites you want and the umbrella runs those, around the same
 server, cached and summarized exactly like the full run:
 
 ```bash

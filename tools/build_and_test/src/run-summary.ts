@@ -31,6 +31,8 @@
 //      when a failing spec wrote a screenshot or attachment),
 //      CYPRESS_SCREENSHOTS_ARTIFACT_URL (the uploaded Cypress screenshots,
 //      linked when an e2e suite failed),
+//      A11Y_SCREENSHOTS_ARTIFACT_URL (the uploaded axe screenshots, linked
+//      when the axe pass found violations),
 //      TURBO_LOGS_ARTIFACT_URL (the uploaded per-task turbo logs).
 
 import { randomUUID } from 'node:crypto';
@@ -328,6 +330,7 @@ async function main(): Promise<void> {
       fileNames: runs.map((run) => run.fileName ?? ''),
       attachmentsUrl: process.env.VITEST_ATTACHMENTS_ARTIFACT_URL,
       screenshotsUrl: process.env.CYPRESS_SCREENSHOTS_ARTIFACT_URL,
+      a11yScreenshotsUrl: process.env.A11Y_SCREENSHOTS_ARTIFACT_URL,
       logsUrl: process.env.TURBO_LOGS_ARTIFACT_URL,
     },
     annotations,

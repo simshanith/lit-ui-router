@@ -2,7 +2,7 @@
 // Runs axe-core over the served docs site and its sample-app mounts; any violation fails.
 // Usage: check-a11y <origin> [--json]   (origin: the wrangler dev server, e.g. http://localhost:8787)
 
-import { readdir, readFile, stat } from 'node:fs/promises';
+import { readdir, readFile, rm, stat } from 'node:fs/promises';
 import { join, relative, sep } from 'node:path';
 
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
@@ -13,8 +13,9 @@ import {
   type Audit,
   auditApp,
   auditDocs,
-  type Finding,
+  SCREENSHOT_DIR,
 } from './audit.ts';
+import { formatFinding } from './findings.ts';
 import { samplePages } from './pages.ts';
 import { runsWorkerFirst, workerFirstPatterns } from './worker-first.ts';
 
@@ -94,6 +95,8 @@ const main = async (): Promise<void> => {
 
   const audit: Audit = { axeVersion: '', scans: 0, findings: [] };
 
+  await rm(SCREENSHOT_DIR, { recursive: true, force: true });
+
   const browser = await chromium.launch();
 
   let errors: unknown[];
@@ -127,15 +130,9 @@ const main = async (): Promise<void> => {
         `(light, dark) and ${APPS.length} sample-app mounts`,
     );
 
-    const print = (finding: Finding) => {
-      console.log(
-        `\n${finding.page} [${finding.scheme}] ${finding.rule} (${finding.impact}): ${finding.help}`,
-      );
-
-      for (const target of finding.targets) console.log(`  ${target}`);
-    };
-
-    findings.forEach(print);
+    for (const finding of findings) {
+      console.log(`\n${formatFinding(finding).join('\n')}`);
+    }
   }
 
   // A walk that could not reach its pages has not checked them.

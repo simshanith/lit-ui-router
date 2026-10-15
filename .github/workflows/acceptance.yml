@@ -179,6 +179,17 @@ jobs:
           include-hidden-files: true
           retention-days: 5
           if-no-files-found: warn
+      - name: Upload axe screenshots
+        # The Axe step continues on error, so `failure()` is false here.
+        id: a11y_screenshots
+        if: ${{ !cancelled() && steps.axe.outcome == 'failure' }}
+        uses: actions/upload-artifact@v7
+        continue-on-error: true
+        with:
+          name: axe-screenshots-a11y
+          path: apps/sample-app-lit-e2e/a11y-screenshots/
+          retention-days: 5
+          if-no-files-found: ignore
       - name: Turbo run summary
         # Goes red after a failed suite, so a red job opens on the report.
         if: ${{ !cancelled() }}
@@ -187,6 +198,8 @@ jobs:
           BUILD_OUTCOME: ${{ steps.axe.outcome }}
           TURBO_SUMMARY_ARTIFACT_URL: ${{ steps.run_summaries.outputs.artifact-url }}
           TURBO_LOGS_ARTIFACT_URL: ${{ steps.task_logs.outputs.artifact-url }}
+          # Empty on a green run or when no scan found a violation.
+          A11Y_SCREENSHOTS_ARTIFACT_URL: ${{ steps.a11y_screenshots.outputs.artifact-url }}
       - name: Upload wrangler logs
         # Same crash-log capture as build-test-run.yml.
         if: ${{ failure() }}
