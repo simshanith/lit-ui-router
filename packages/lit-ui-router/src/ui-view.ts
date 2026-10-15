@@ -773,13 +773,21 @@ export class UiView extends LitElement {
       return this.fallback ? nothing : html`<slot></slot>`;
     }
 
-    const { uiRouter: router, component } = this;
-    const injector = this.resolveContext.injector();
+    const { uiRouter: router, component, resolveContext: context } = this;
+    const injector = context.injector();
 
-    const resolves = this.resolveContext
+    // The injector hands a NOWAIT token's promise, which renders before it settles.
+    const resolves = context
       .getTokens()
       .filter(isString)
-      .filter((token) => this.resolveContext.getResolvable(token).resolved)
+      .filter((token) => {
+        const resolvable = context.getResolvable(token);
+
+        return (
+          resolvable.resolved ||
+          context.getPolicy(resolvable).async === 'NOWAIT'
+        );
+      })
       .map((token): [string, unknown] => [token, injector.get<unknown>(token)])
       .reduce(applyPairs, {});
 
