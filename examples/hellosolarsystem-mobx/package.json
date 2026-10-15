@@ -12,8 +12,9 @@
     "@uirouter/core": "^6.1.2",
     "lit": "^3.3.3",
     "lit-ui-router": "^1.16.5",
-    "lit-ui-router-mobx": "^1.1.1",
-    "mobx": "^7.0.3"
+    "lit-ui-router-mobx": "^1.2.0",
+    "mobx": "^7.0.3",
+    "ui-router-mobx": "^0.1.0"
   },
   "devDependencies": {
     "typescript": "^7.0.2",
