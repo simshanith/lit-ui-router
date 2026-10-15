@@ -20,7 +20,6 @@
   "devDependencies": {
     "@codecov/bundle-analyzer": "catalog:",
     "@tools/shared": "catalog:workspace",
-    "@tools/warn-lanes": "catalog:workspace",
     "@types/node": "catalog:",
     "cypress": "catalog:",
     "oxfmt": "catalog:",

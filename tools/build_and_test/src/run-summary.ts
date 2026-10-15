@@ -53,7 +53,6 @@ import {
   sessionStdoutReport,
   structuredTaskLog,
   type ToolAnnotation,
-  warnLaneEntries,
 } from './run-summary.core.ts';
 import { extractTscDiagnostics } from './tsc-annotations.core.ts';
 import { errorCommand, warningCommand } from '@tools/shared/gha.core.ts';
@@ -277,8 +276,8 @@ async function main(): Promise<void> {
   // tasks all exited 0 — turbo itself died, or the runner timed out — is a
   // case the failure section reports rather than one to bail on.
   const runs: RunReport[] = [];
-  // One map across the session: warn-lane state and failing-task logs are
-  // looked up by taskId, and no task appears in two runs of one session.
+  // One map across the session: failing-task logs are looked up by taskId,
+  // and no task appears in two runs of one session.
   const logs = new Map<string, string>();
   const annotations: ToolAnnotation[] = [];
   const structured = await readStructuredLogs();
@@ -319,7 +318,6 @@ async function main(): Promise<void> {
     runs,
     {
       onActions: onActions(),
-      warnLanes: warnLaneEntries(logs),
       // Set by the workflow from the upload step's `artifact-url` output; absent
       // locally, where the files this read are already on disk. Every file is
       // named: the artifact holds them all under one URL, and GitHub gives no

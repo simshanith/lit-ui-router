@@ -21,13 +21,6 @@ import {
   type AnnotationProperties,
   annotationCommand,
 } from '@tools/shared/gha.core.ts';
-import {
-  type WarnLaneLineOptions,
-  type WarnLaneState,
-  WARN_WATCHED_LANES,
-  findWarnLaneState,
-  warnLaneLine,
-} from '@tools/warn-lanes/warn-lanes.core.ts';
 
 /** turbo's exit codes arrive as JSON, which the cast below does not check. */
 const isExitCode = (code: number | null | undefined): code is number =>
@@ -833,37 +826,6 @@ function overviewHeadline(summary: RunSummary): string {
 }
 
 /**
- * A warn-only lane and whatever it asserted about itself this run. Warn lanes
- * exit 0, so nothing in the run summary distinguishes one carrying 36 warnings
- * from a clean one — the state comes from a marker the lane prints into its own
- * task log, and `undefined` means the lane did not run (or ran before the
- * marker existed), which is itself worth saying out loud.
- */
-export interface WarnLaneEntry {
-  task: string;
-  state?: WarnLaneState;
-}
-
-/**
- * The watched lanes, in list order — not in the order turbo happened to run
- * them, and never derived from the summary: a lane that did not run must still
- * get a line, or its absence reads as "fine".
- */
-export function warnLaneEntries(logs: Map<string, string>): WarnLaneEntry[] {
-  return WARN_WATCHED_LANES.map((task) => ({
-    task,
-    state: findWarnLaneState(stripAnsi(logs.get(task) ?? '')),
-  }));
-}
-
-export function warnLaneReport(
-  entries: readonly WarnLaneEntry[],
-  options: WarnLaneLineOptions = {},
-): string[] {
-  return entries.map(({ task, state }) => warnLaneLine(task, state, options));
-}
-
-/**
  * What the renderers need beyond the summary itself. An options object rather
  * than more positional parameters: these fields are unrelated to each other,
  * and a call site reading `(summary, true, url)` says nothing about any of them.
@@ -888,12 +850,6 @@ export interface OverviewContext {
   attachmentsUrl?: string;
   /** The uploaded per-task `.turbo/turbo-*.log` files, whatever the stream hid. */
   logsUrl?: string;
-  /**
-   * Warn-only lanes and the state each asserted. Not derivable from `summary`:
-   * these lanes exit 0, so the artifact cannot tell one carrying warnings from
-   * a clean one. Empty renders nothing.
-   */
-  warnLanes?: readonly WarnLaneEntry[];
   /** `annotationNote` for the tool annotations this step re-emitted. */
   annotations?: string;
 }
@@ -1015,7 +971,7 @@ export function overviewMarkdown(
 
 /**
  * One run's block. Shared by the single-run and session renderers so the two
- * cannot drift. The job-level parts — warn lanes, the artifact link — describe
+ * cannot drift. The job-level parts — annotations, the artifact link — describe
  * the job rather than any one run and stay with the caller.
  */
 function runBlockMarkdown(summary: RunSummary): string[] {
@@ -1086,16 +1042,6 @@ function runBlockMarkdown(summary: RunSummary): string[] {
 /** The job-level footer: facts about the job, not about any one run in it. */
 function footerMarkdown(context: OverviewContext): string[] {
   const out: string[] = [];
-  const warnLines = warnLaneReport(context.warnLanes ?? []);
-
-  if (warnLines.length > 0) {
-    out.push(
-      '**Warn-only lanes** — green by design; the floor is `tools/lint-elements/warnings.json`.',
-      '',
-      ...warnLines.map((line) => `- ${line}`),
-      '',
-    );
-  }
 
   if (context.annotations !== undefined) {
     out.push(`**Tool annotations** — ${context.annotations}`, '');
@@ -1239,11 +1185,6 @@ function runBlockLines(summary: RunSummary): string[] {
 /** The stdout twin of `footerMarkdown`. */
 function footerLines(context: OverviewContext): string[] {
   const lines: string[] = [];
-
-  // Verdict only: the breakdown is a markdown-twin luxury, and here it competes
-  // for one terminal row with the thing a reader actually needs off this line.
-  for (const line of warnLaneReport(context.warnLanes ?? [], { rules: false }))
-    lines.push(`   warn-lane: ${line}`);
 
   if (context.annotations !== undefined)
     lines.push(`   annotations: ${context.annotations}`);
