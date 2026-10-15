@@ -2,18 +2,34 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import { createRouterPool } from '../src/router-pool.ts';
+import type { PooledRouter } from '../src/router-pool.ts';
 import { createHeadlessRouter } from '../src/simulate.ts';
 
 const build = () =>
   createHeadlessRouter([
-    { name: 'a', url: '/a', redirectTo: 'b' },
+    { name: 'a', url: '/a', redirectTo: { state: 'b', params: { id: '1' } } },
     { name: 'b', url: '/b/:id' },
     {
       name: 'hang',
       url: '/hang',
       resolve: [{ token: 'never', resolveFn: () => new Promise(() => {}) }],
     },
+    {
+      name: 'boom',
+      url: '/boom',
+      resolve: [
+        { token: 'boom', resolveFn: () => Promise.reject(new Error('boom')) },
+      ],
+    },
   ]);
+
+const navigate = (pooled: PooledRouter, url: string): Promise<boolean> => {
+  const settled = pooled.nextSettled();
+  pooled.router.urlService.url(url);
+  pooled.router.urlService.sync();
+
+  return settled;
+};
 
 describe('createRouterPool', () => {
   it('hands concurrent check-outs distinct routers', () => {
@@ -27,10 +43,7 @@ describe('createRouterPool', () => {
   it('reuses a released router with fresh globals', async () => {
     const pool = createRouterPool();
     const pooled = pool.checkOut(build);
-    const settled = pooled.nextSettled();
-    pooled.router.urlService.url('/b/7');
-    pooled.router.urlService.sync();
-    assert.equal(await settled, true);
+    assert.equal(await navigate(pooled, '/b/7'), true);
     pooled.release();
 
     const reused = pool.checkOut(build);
@@ -52,6 +65,26 @@ describe('createRouterPool', () => {
     // The transition starts after core's before-hooks, a microtask later.
     await Promise.resolve();
     assert.ok(pooled.router.globals.transition);
+    pooled.release();
+
+    assert.notEqual(pool.checkOut(build), pooled);
+  });
+
+  it('settles a redirect on its successor, not the redirected rejection', async () => {
+    const pooled = createRouterPool().checkOut(build);
+
+    assert.equal(await navigate(pooled, '/a'), true);
+    assert.equal(pooled.router.globals.current.name, 'b');
+  });
+
+  it('settles a real failure as false and drops that router on release', async () => {
+    const pool = createRouterPool();
+    const pooled = pool.checkOut(build);
+
+    assert.equal(await navigate(pooled, '/boom'), false);
+    // Settled: nothing is mid-transition, so the failure alone drops it.
+    await Promise.resolve();
+    assert.equal(pooled.router.globals.transition, null);
     pooled.release();
 
     assert.notEqual(pool.checkOut(build), pooled);

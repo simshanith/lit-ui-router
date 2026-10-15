@@ -26,9 +26,8 @@ export interface PooledRouter {
    */
   nextSettled(): Promise<boolean>;
   /**
-   * Returns the router after a replay that matched nothing or settled
-   * successfully; one still mid-transition, or past the idle cap, is dropped.
-   * Never call it after a failure or a timeout.
+   * Returns the router to the pool, reset. A router still mid-transition,
+   * one whose transition failed, or one past the idle cap is dropped instead.
    */
   release(): void;
 }
@@ -56,11 +55,15 @@ const reset = (router: UIRouter): void => {
 
 const pooledRouter = (router: UIRouter, idle: PooledRouter[]): PooledRouter => {
   let settle: ((succeeded: boolean) => void) | null = null;
+  let failed = false;
 
   // onceSettled's outcome, hooked once: per-request hooks would pile up on a reused router.
   router.transitionService.onSuccess({}, () => settle?.(true));
   router.transitionService.onError({}, (transition) => {
-    if (!transition.error().redirected) settle?.(false);
+    if (transition.error().redirected) return;
+
+    failed = true;
+    settle?.(false);
   });
 
   const pooled: PooledRouter = {
@@ -72,7 +75,8 @@ const pooledRouter = (router: UIRouter, idle: PooledRouter[]): PooledRouter => {
     release() {
       settle = null;
 
-      if (router.globals.transition || idle.length >= POOL_MAX_IDLE) return;
+      if (failed || router.globals.transition || idle.length >= POOL_MAX_IDLE)
+        return;
 
       reset(router);
       idle.push(pooled);
