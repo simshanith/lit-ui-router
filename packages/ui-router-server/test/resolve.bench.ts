@@ -5,68 +5,10 @@ import { writeBenchReport } from '@tools/shared/bench-report.ts';
 import { Bench } from 'tinybench';
 
 import { createServerRouter } from '../src/index.ts';
-import type {
-  MountConfig,
-  RouteDeclaration,
-  ServerRouter,
-  Verdict,
-} from '../src/index.ts';
-
-const SIZES = [10, 100, 500] as const;
+import type { ServerRouter, Verdict } from '../src/index.ts';
+import { config, hitPaths, MISS, REDIRECTS, SIZES } from './route-tables.ts';
 
 const STRATEGIES = ['matcher', 'simulate'] as const;
-
-const MOUNT = '/app';
-
-type Strategy = (typeof STRATEGIES)[number];
-
-// Cycles static, param, inline-regexp and squashed-optional segments.
-const routeAt = (i: number): RouteDeclaration => {
-  switch (i % 4) {
-    case 0:
-      return { name: `static${i}`, url: `/static-${i}` };
-    case 1:
-      return { name: `param${i}`, url: `/param-${i}/:id` };
-    case 2:
-      return { name: `regexp${i}`, url: `/regexp-${i}/{id:[0-9]+}` };
-    default:
-      return {
-        name: `squash${i}`,
-        url: `/squash-${i}/:section`,
-        params: { section: { value: 'intro', squash: true } },
-      };
-  }
-};
-
-// `size` routes in all: the generated mix plus one redirectTo state.
-const mountConfig = (size: number, strategy: Strategy): MountConfig => ({
-  strategy,
-  routes: [
-    ...Array.from({ length: size - 1 }, (_, i) => routeAt(i)),
-    { name: 'legacy', url: '/legacy', redirectTo: 'static0' },
-  ],
-  redirects: [{ pattern: '/old/:id', to: 'param1' }],
-});
-
-// The last route of each kind, so a linear scan pays for the whole table.
-const hitPaths = (size: number): string[] => {
-  const last = (kind: number) => size - 2 - ((size - 2 - kind + 4) % 4);
-
-  return [
-    `${MOUNT}/static-${last(0)}`,
-    `${MOUNT}/param-${last(1)}/abc`,
-    `${MOUNT}/regexp-${last(2)}/42`,
-    `${MOUNT}/squash-${last(3)}`,
-  ];
-};
-
-const MISS = `${MOUNT}/no/such/route`;
-
-const REDIRECTS = [`${MOUNT}/legacy`, `${MOUNT}/old/7`];
-
-const config = (size: number, strategy: Strategy) => ({
-  mounts: { [MOUNT]: mountConfig(size, strategy) },
-});
 
 // Rotates through `paths` so no single entry is the only one measured.
 const rotating = (router: ServerRouter, paths: string[]) => {
