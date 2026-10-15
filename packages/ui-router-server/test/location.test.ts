@@ -234,4 +234,33 @@ describe('installServerLocation', () => {
       assert.equal(matches(router, '/later/'), false);
     });
   });
+
+  describe('strictMode', () => {
+    it('throws before changing a router that already has a url state', () => {
+      const router = sheetRouter();
+
+      assert.throws(
+        () =>
+          installServerLocation(router, {
+            url: '/sheet/7B/',
+            baseHref: '/app/',
+            // eslint-disable-next-line typescript/no-deprecated -- the shorthand under test
+            strictMode: false,
+          }),
+        {
+          message:
+            "applyUrlConfig: state 'sheet' is already registered, and core compiled its url under the previous config. Apply the url config before registering states or url rules.",
+        },
+      );
+      assert.equal(router.getPlugin('server.memoryLocation'), undefined);
+      router.stateRegistry.register({ name: 'later', url: '/later' });
+      assert.equal(router.urlService.match({ path: '/later/' }), null);
+    });
+
+    it('is not checked when left out', () => {
+      const router = installServerLocation(sheetRouter(), { url: '/sheet/7B' });
+
+      assert.equal(router.urlService.path(), '/sheet/7B');
+    });
+  });
 });

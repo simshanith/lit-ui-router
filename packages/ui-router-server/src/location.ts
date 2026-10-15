@@ -139,7 +139,7 @@ export interface ServerLocationOptions extends ServerLocationPluginOptions {
  * @param router - a freshly constructed router, with no location plugin yet
  * @param options - the request's url, the mount's shape, the url shape, and the url config
  * @returns `router`, for chaining
- * @throws if `urlConfig` is given and a state with a url, or a `when()` url rule, is already registered
+ * @throws if `urlConfig` or `strictMode` is given and a state with a url, or a `when()` url rule, is already registered; the router is left unchanged
  *
  * @example
  * ```ts
@@ -168,7 +168,15 @@ export const installServerLocation: <T extends UIRouter>(
   router: T,
   options: ServerLocationOptions = {},
 ): T => {
-  if (options.urlConfig) applyUrlConfig(router, options.urlConfig);
+  // eslint-disable-next-line typescript/no-deprecated -- the option still honors its shorthand
+  const { strictMode, urlConfig } = options;
+
+  // First, so the ordering guard throws before the plugin or url changes.
+  if (urlConfig || strictMode !== undefined)
+    applyUrlConfig(router, {
+      ...urlConfig,
+      strict: urlConfig?.strict ?? strictMode,
+    });
 
   router.plugin(serverLocationPlugin, { html5Mode: options.html5Mode });
 
@@ -177,12 +185,6 @@ export const installServerLocation: <T extends UIRouter>(
     // SAFETY: serverLocationPlugin, installed above, sets a ServerLocationConfig.
     (router.locationConfig as MemoryLocationConfig)._baseHref =
       options.baseHref;
-
-  // eslint-disable-next-line typescript/no-deprecated -- the option still honors its shorthand
-  const { strictMode } = options;
-
-  if (strictMode !== undefined && options.urlConfig?.strict === undefined)
-    router.urlService.config.strictMode(strictMode);
 
   if (options.url !== undefined) router.urlService.url(options.url);
 
