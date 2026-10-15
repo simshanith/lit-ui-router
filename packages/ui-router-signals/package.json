@@ -1,6 +1,6 @@
 {
   "name": "ui-router-signals",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "TC39 Signals for UI-Router: a framework-agnostic signal mirror of the router's current state",
   "homepage": "https://lit-ui-router.dev/packages/ui-router-signals",
   "bugs": {
