@@ -193,11 +193,11 @@ the static layer and should judge everything.
 
 ### fetch — the edge
 
-The representative example, and what serves this site
-([`www/lit-ui-router.dev/worker/index.ts`](https://github.com/simshanith/lit-ui-router/blob/main/www/lit-ui-router.dev/worker/index.ts)):
+A minimal Cloudflare Worker, with each mount's shell at its base and a
+`404.html` under it:
 
 ```ts
-import { mounts } from 'sample-app-routes';
+import { mounts } from './mounts';
 import { createServerRouter } from 'ui-router-server';
 import { createFetchHandler } from 'ui-router-server/fetch';
 
@@ -213,14 +213,16 @@ export default {
       serveShell: (_mount, shellRequest) => env.ASSETS.fetch(shellRequest),
       // Mount-owned miss: that app's own 404 page, at an honest 404.
       serveNotFound: async (mount, req) => {
+        // Built from the original request, so a HEAD stays a HEAD.
         const page = await env.ASSETS.fetch(
-          new URL(`${mount}/404.html`, req.url),
+          new Request(new URL(`${mount}/404.html`, req.url), req),
         );
         return new Response(page.body, {
           status: 404,
           headers: new Headers(page.headers),
         });
       },
+      // The Worker runs after the assets layer, so judge everything.
       shouldHandle: () => true,
     });
 
@@ -235,6 +237,12 @@ on redirect `Location`s, stripping validators and relabelling status'd
 shells, and the canonical `Link` header (status-less shells only — a 404 is
 not an alternate representation of anything).
 
+This site's Worker
+([`www/lit-ui-router.dev/worker/index.ts`](https://github.com/simshanith/lit-ui-router/blob/main/www/lit-ui-router.dev/worker/index.ts))
+builds on the same shape: a `shellPath` that points several pushState mounts
+at one shared shell, a pass-through when a mount has no `404.html`, and
+`noindex` on its teaching exhibits.
+
 ### vite — dev/prod parity
 
 The honest-status upgrade of Vite's built-in SPA fallback: `vite dev` and
@@ -243,6 +251,8 @@ server does, from the same mounts table. The plugin installs its middleware
 in the pre position — before Vite's always-200 HTML fallback — and its
 returned object is a structural subset of Vite's `Plugin`, so Vite stays a
 type-only peer this package never imports.
+
+In this example each mount's HTML entry is built to `<mount>.html`:
 
 ```ts
 import { createServerRouter } from 'ui-router-server';
@@ -254,14 +264,15 @@ const router = createServerRouter({ mounts });
 export default defineConfig({
   plugins: [
     serverRouterPlugin(router, {
-      // Where each mount's HTML entry actually lives, when it isn't the base.
+      // Where each mount's HTML entry lives, when it isn't the base.
       shellPath: (mount) => `${mount}.html`,
     }),
   ],
 });
 ```
 
-This site's own dev server runs it
+This site's dev server runs the plugin with its own `shellPath` table and a
+`serveNotFound` that serves each mount's 404 page
 ([`www/lit-ui-router.dev/.vitepress/vite.config.ts`](https://github.com/simshanith/lit-ui-router/blob/main/www/lit-ui-router.dev/.vitepress/vite.config.ts)).
 
 ### connect — Node servers
