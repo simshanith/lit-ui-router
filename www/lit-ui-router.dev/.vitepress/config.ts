@@ -127,6 +127,10 @@ function makeSidebar() {
         },
         { text: 'Route Guards', link: '/guides/route-guards' },
         {
+          text: 'Loading and Error Views',
+          link: '/guides/loading-and-error-views',
+        },
+        {
           text: 'Component Lifecycle Hooks',
           link: '/guides/component-lifecycle',
         },
