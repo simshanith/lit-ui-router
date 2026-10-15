@@ -1,6 +1,6 @@
 {
   "name": "ui-router-mobx",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "MobX bindings for UI-Router: a framework-agnostic observable store of the router's current state",
   "homepage": "https://lit-ui-router.dev/packages/ui-router-mobx",
   "bugs": {
