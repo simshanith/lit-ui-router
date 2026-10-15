@@ -280,6 +280,11 @@ describe that run. The run summary says which tasks ran. `.cache.status` is
 jq -r '.tasks[] | "\(.taskId) \(.cache.status) \(.cache.source // "-")"' <summaries-dir>/*.json
 ```
 
+A keyword search finds only output that names itself. To look for anything
+unusual, read each executed task's log in full beside the same task's log from a
+recent green `main` run. The logs are short: one Build and Test run's task logs
+total about 11,000 lines, most of them replays.
+
 In an `e2e` job, the `E2E` step's duration is the quick tell: seconds for a
 replay, a minute or more for a suite that ran.
 
