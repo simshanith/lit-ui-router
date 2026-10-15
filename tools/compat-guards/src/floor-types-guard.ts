@@ -65,13 +65,6 @@ function main(): void {
       devDir: realDir(peer),
     };
 
-    if (dirs.floorDir === dirs.devDir) {
-      g.fail(
-        `${peer}-floor and ${peer} install to the same ${dirs.floorDir}; ` +
-          'the floor check cannot tell them apart.',
-      );
-    }
-
     const { floor, leaked } = peerFiles(files, dirs);
 
     if (leaked.length > 0) {
@@ -89,7 +82,12 @@ function main(): void {
       );
     }
 
-    g.pass(`${peer}: ${floor.length} files from ${peer}-floor, none leaked`);
+    const shared =
+      dirs.floorDir === dirs.devDir ? `, the same install as ${peer}` : '';
+
+    g.pass(
+      `${peer}: ${floor.length} files from ${peer}-floor${shared}, none leaked`,
+    );
   }
 }
 

@@ -92,4 +92,13 @@ describe('peerFiles', () => {
       { floor: [], leaked: [] },
     );
   });
+
+  it('counts a floor that shares the dev install as the floor, not a leak', () => {
+    const shared = { ...dirs, devDir: dirs.floorDir };
+
+    assert.deepEqual(peerFiles([`${dirs.floorDir}/dist/index.d.ts`], shared), {
+      floor: [`${dirs.floorDir}/dist/index.d.ts`],
+      leaked: [],
+    });
+  });
 });

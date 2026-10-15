@@ -51,10 +51,18 @@ export interface PeerFiles {
 
 const within = (dir: string, file: string) => file.startsWith(dir + sep);
 
-/** Split the program's files into those from the floor and from the dev copy. */
+/**
+ * Split the program's files into those from the floor and from the dev copy.
+ * When both resolve to one install the dev copy is the floor, so none leak.
+ */
 export function peerFiles(files: readonly string[], dirs: PeerDirs): PeerFiles {
+  const floor = files.filter((file) => within(dirs.floorDir, file));
+
   return {
-    floor: files.filter((file) => within(dirs.floorDir, file)),
-    leaked: files.filter((file) => within(dirs.devDir, file)),
+    floor,
+    leaked:
+      dirs.devDir === dirs.floorDir
+        ? []
+        : files.filter((file) => within(dirs.devDir, file)),
   };
 }
