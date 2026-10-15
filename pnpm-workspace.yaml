@@ -156,7 +156,7 @@ catalogs:
     ui-router-signals: ^0.1.0
   publishedPeerSsr:
     lit-ui-router: ^1.16.1
-    ui-router-server: ^0.2.0
+    ui-router-server: '^0.2.0 || ^0.3.0'
   typescript6-compat:
     typescript: npm:@typescript/typescript6@^6.0.2
   typescript6:
