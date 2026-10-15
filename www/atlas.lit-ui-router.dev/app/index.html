@@ -1569,26 +1569,19 @@
           margin-block-end: 0;
         }
       }
-      /* THE COLOPHON reads at one measure, flush with its head like the cover's
-         reading column; over 1800 it runs in columns of that measure, so the
-         width is read instead of left as a canyon beside one column. */
+      /* THE COLOPHON fills the reading column: the text flows in columns of one
+         measure, as many as the width holds, and the figure spans them all. */
       .prose {
-        max-width: 72ch;
+        column-width: 60ch;
+        column-gap: 48px;
+        orphans: 3;
+        widows: 3;
       }
-      @media (min-width: 1800px) {
-        .prose {
-          max-width: none;
-          column-width: 60ch;
-          column-gap: 48px;
-          orphans: 3;
-          widows: 3;
-        }
-        .prose h2 {
-          column-span: all;
-        }
-        .prose h3 {
-          break-after: avoid;
-        }
+      .prose h2 {
+        column-span: all;
+      }
+      .prose h3 {
+        break-after: avoid;
       }
       .prose h2 {
         font-family: var(--title);
@@ -1649,11 +1642,8 @@
         font-size: 14px;
         line-height: 1.5;
       }
-      @media (min-width: 1800px) {
-        .card-figure {
-          column-span: all;
-          max-width: 72ch;
-        }
+      .card-figure {
+        column-span: all;
       }
       .plate-verdict .lead {
         font-family: var(--data);
