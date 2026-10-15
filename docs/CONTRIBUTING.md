@@ -256,11 +256,15 @@ gh run download <run-id> -n turbo-task-logs --dir <empty-dir>
 
 Each task has its own file, `<package>/.turbo/turbo-<task>.log` with `:` written
 as `$colon$`. A job that runs several suites interleaves them in its stream, but
-each suite keeps its own log. Strip ANSI codes before searching:
+each suite keeps its own log. The logs keep their ANSI colors, which wrap words
+without splitting them, so search them as they are and page the matches with
+`less -R`. [`strip-ansi-cli`](https://www.npmjs.com/package/strip-ansi-cli)
+writes a plain copy:
 
 ```bash
-find <empty-dir> -name '*.log' -exec sed -E 's/\x1b\[[0-9;]*m//g' {} + > all.log
-grep -inE 'warn|deprecat|error' all.log
+grep -rinE --include='*.log' 'warn|deprecat|error' <empty-dir> > matches.log
+less -R matches.log
+pnpm dlx strip-ansi-cli < matches.log > matches.txt
 ```
 
 Group the matches by message rather than reading them line by line. Test names

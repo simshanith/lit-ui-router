@@ -15,7 +15,9 @@ what an unattended run needs.
 2. Download each artifact with `gh run download <run-id> -n <name> --dir <dir>`
    into its own new, empty directory under `$CLAUDE_JOB_DIR/tmp`. Task logs
    expire within days; say so rather than guessing when they're gone.
-3. Strip ANSI codes into one file and search that file. Never pipe logs
+3. Search the raw logs with `grep -r` into one matches file; the ANSI codes
+   don't split words. Read it plain through `strip-ansi-cli` (stdin only, as
+   the recipe shows). Never pipe logs
    through `head` or `tail`, and never re-run a download to slice it
    differently.
 4. Before reporting a warning, banner or timing, check the run summary's cache
