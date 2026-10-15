@@ -6,11 +6,11 @@ The design is tracked in [#1157](https://github.com/simshanith/lit-ui-router/iss
 
 It registers no custom elements and adds no routing behavior. It takes the companion-adapter shape of [`lit-ui-router-mobx`](../lit-ui-router-mobx/) and [`lit-ui-router-effect`](../lit-ui-router-effect/) onto the proposal's API, through [`signal-polyfill`](https://github.com/proposal-signals/signal-polyfill):
 
-| signals                               | lit-ui-router-mobx         | lit-ui-router-effect  |
-| ------------------------------------- | -------------------------- | --------------------- |
-| `RouterSignals` (`ui-router-signals`) | `RouterStore`              | `routeRef`            |
-| `SignalController`                    | `ReactionController`       | `RefController`       |
-| `RouterSignalController`              | `RouterReactionController` | `RouterRefController` |
+| Signals                               | MobX                             | Effect                          |
+| ------------------------------------- | -------------------------------- | ------------------------------- |
+| `RouterSignals` (`ui-router-signals`) | `RouterStore` (`ui-router-mobx`) | `routeRef` (`ui-router-effect`) |
+| `SignalController`                    | `ReactionController`             | `RefController`                 |
+| `RouterSignalController`              | `RouterReactionController`       | `RouterRefController`           |
 
 ## Installation
 
