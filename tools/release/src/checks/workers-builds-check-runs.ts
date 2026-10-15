@@ -13,9 +13,12 @@ import { fileURLToPath } from 'node:url';
 import { defaultExec } from '@tools/shared/exec.ts';
 import { ensureGh } from '../lib/gh.ts';
 import { runCli } from '../lib/run-cli.ts';
-import { logWarning } from '@tools/shared/gha.ts';
+import { appendStepSummary, logWarning } from '@tools/shared/gha.ts';
 
-import { checkRunApiArgs } from './publish-check-runs.core.ts';
+import {
+  checkRunApiArgs,
+  checkRunsMarkdown,
+} from './publish-check-runs.core.ts';
 import { toWorkersBuildsCheckRun } from './workers-builds-check-runs.core.ts';
 
 // Resolved through node so the @tools/workers-builds devDependency (declared
@@ -38,6 +41,8 @@ async function main() {
   console.log(result.output);
 
   const payload = toWorkersBuildsCheckRun(result, repo);
+
+  await appendStepSummary(checkRunsMarkdown('workers-builds', [payload]));
 
   if (dryRun) {
     console.log(JSON.stringify(payload, null, 2));

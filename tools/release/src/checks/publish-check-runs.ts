@@ -10,8 +10,13 @@ import { readFile } from 'node:fs/promises';
 
 import { publishedDiffSummaryPath } from './cache-paths.ts';
 import type { PackageSummary } from './check-published-diff.core.ts';
-import { checkRunApiArgs, toCheckRun } from './publish-check-runs.core.ts';
+import {
+  checkRunApiArgs,
+  checkRunsMarkdown,
+  toCheckRun,
+} from './publish-check-runs.core.ts';
 import { defaultExec } from '@tools/shared/exec.ts';
+import { appendStepSummary } from '@tools/shared/gha.ts';
 import { ensureGh } from '../lib/gh.ts';
 import { failMain } from '../lib/fail-main.ts';
 
@@ -40,6 +45,8 @@ async function main() {
   }
 
   const payloads = summaries.map((summary) => toCheckRun(summary, repo));
+
+  await appendStepSummary(checkRunsMarkdown('published-diff', payloads));
 
   if (dryRun) {
     console.log(JSON.stringify(payloads, null, 2));

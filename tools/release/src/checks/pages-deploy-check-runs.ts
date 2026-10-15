@@ -4,11 +4,14 @@
 import { fileURLToPath } from 'node:url';
 
 import { defaultExec } from '@tools/shared/exec.ts';
-import { logWarning } from '@tools/shared/gha.ts';
+import { appendStepSummary, logWarning } from '@tools/shared/gha.ts';
 
 import { ensureGh } from '../lib/gh.ts';
 import { runCli } from '../lib/run-cli.ts';
-import { checkRunApiArgs } from './publish-check-runs.core.ts';
+import {
+  checkRunApiArgs,
+  checkRunsMarkdown,
+} from './publish-check-runs.core.ts';
 import {
   branchHeadApiArgs,
   parseBranchHead,
@@ -37,6 +40,8 @@ async function main() {
   console.log(result.output);
 
   const payload = toPagesDeployCheckRun(result);
+
+  await appendStepSummary(checkRunsMarkdown('pages-deploy', [payload]));
 
   if (dryRun) {
     console.log(JSON.stringify(payload, null, 2));
