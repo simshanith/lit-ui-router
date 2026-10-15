@@ -41,7 +41,7 @@ class EditContact extends LitElement implements UiOnExit {
 
 The pending transition is passed in, so the component can inspect where the
 user is heading — or return a
-[`TargetState`](https://ui-router.github.io/core/docs/latest/classes/state.targetstate.html)
+[`TargetState`](https://ui-router.github.io/core/docs/latest/classes/_state_targetstate_.targetstate.html)
 to redirect instead of cancel.
 
 ::: tip Async confirmation

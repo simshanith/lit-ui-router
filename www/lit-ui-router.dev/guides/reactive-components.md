@@ -119,7 +119,7 @@ class UserDetail extends LitElement {
 ```
 
 - `criteria` — a
-  [HookMatchCriteria](https://ui-router.github.io/core/docs/latest/interfaces/transition.hookmatchcriteria.html)
+  [HookMatchCriteria](https://ui-router.github.io/core/docs/latest/interfaces/_transition_interface_.hookmatchcriteria.html)
   limiting which transitions notify the host (`to`, `from`, glob patterns,
   predicate functions)
 - `callback` — invoked before `requestUpdate()` with the transition and the
@@ -130,7 +130,7 @@ class UserDetail extends LitElement {
 
 For `'onBefore'` and `'onStart'` events, the callback's return value is
 passed back to UI-Router as a
-[HookResult](https://ui-router.github.io/core/docs/latest/modules/transition.html#hookresult)
+[HookResult](https://ui-router.github.io/core/docs/latest/modules/_transition_interface_.html#hookresult)
 — so a controller can even cancel or redirect pending transitions.
 
 ## Reconnect safety

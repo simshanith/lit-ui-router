@@ -151,4 +151,4 @@ Mixins like [`MobxLitElement`](https://github.com/adobe/lit-mobx) auto-track eve
 - [lit-ui-router](https://lit-ui-router.dev)
 - [MobX — reactions](https://mobx.js.org/reactions.html)
 - [Lit — Reactive Controllers](https://lit.dev/docs/composition/controllers/)
-- [@uirouter/core — TransitionService hooks](https://ui-router.github.io/core/docs/latest/classes/transition.transitionservice.html)
+- [@uirouter/core — TransitionService hooks](https://ui-router.github.io/core/docs/latest/classes/_transition_transitionservice_.transitionservice.html)
