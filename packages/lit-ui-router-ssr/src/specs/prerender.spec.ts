@@ -22,7 +22,7 @@ import { signatureText, withoutSignature } from './markup.js';
 
 // --- fixtures ------------------------------------------------------------
 
-// The root mount projects an otherwise rule (unmatched paths become 404 shells); the /app mount has none (unmatched paths verdict notFound, nothing emitted). Both admit the trailing slash, as sheetRouter's strictMode(false) does.
+// The root mount projects an otherwise rule (unmatched paths become 404 shells); the /app mount has none (unmatched paths verdict notFound, nothing emitted). Both admit the trailing slash, as sheetRouter's urlConfig does.
 const rootMount: MountConfig = {
   routes: [
     { name: 'home', url: '/' },
@@ -48,7 +48,7 @@ const mounts = {
 
 const sheetRouter = (): UIRouterLit => {
   const router = new UIRouterLit();
-  installServerLocation(router, { strictMode: false });
+  installServerLocation(router, { urlConfig: { strict: false } });
   router.stateRegistry.register({ name: 'home', url: '/' });
   router.stateRegistry.register({ name: 'sheet', url: '/sheet/:num' });
 

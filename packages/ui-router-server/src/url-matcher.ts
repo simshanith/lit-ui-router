@@ -29,9 +29,10 @@ import type {
   ParamDeclaration as CoreParamDeclaration,
   ParamTypeDefinition,
   RawParams,
-  UrlConfig,
   UrlMatcherCompileConfig,
 } from '@uirouter/core';
+
+import type { RouterUrlConfig } from './url-config.ts';
 
 /**
  * The pieces of a ui-router ParamType that path matching and url formatting
@@ -443,16 +444,13 @@ export interface UrlMatcherCompileOptions<M = undefined> extends Pick<
   meta?: M;
 }
 
-/** Compiler-wide defaults for {@link urlMatcherFactory}, shared by every pattern it compiles. */
-export interface UrlMatcherCompilerConfig extends Pick<
-  UrlMatcherCompileConfig,
-  'strict' | 'caseInsensitive' | 'decodeParams'
-> {
-  /** Squash policy for defaulted params that don't declare one (default false); value type pinned to core's UrlConfig.defaultSquashPolicy. */
-  defaultSquashPolicy?: NonNullable<
-    Parameters<UrlConfig['defaultSquashPolicy']>[0]
-  >;
-}
+/**
+ * Compiler-wide defaults for {@link urlMatcherFactory}, shared by every
+ * pattern it compiles: the router-wide {@link url-config!RouterUrlConfig | `RouterUrlConfig`}
+ * options plus `decodeParams`, which core keeps off its public setters.
+ */
+export interface UrlMatcherCompilerConfig
+  extends RouterUrlConfig, Pick<UrlMatcherCompileConfig, 'decodeParams'> {}
 
 interface ResolvedConfig extends Required<UrlMatcherCompilerConfig> {
   params: NonNullable<UrlMatcherCompileOptions['params']>;

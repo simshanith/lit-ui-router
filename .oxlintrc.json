@@ -491,6 +491,7 @@
       "files": [
         "packages/ui-router-server/src/index.ts",
         "packages/ui-router-server/src/redirects.ts",
+        "packages/ui-router-server/src/url-config.ts",
         "packages/ui-router-server/src/url-matcher.ts"
       ],
       "rules": {
