@@ -101,6 +101,21 @@ The checked-in `.config/mise/config.toml` deliberately does **not** declare
 would already be in the environment when the local file rendered, and the local
 override would silently defer to it.
 
+### Chrome connect retries
+
+Cypress drives Chrome over CDP and logs its connection attempts once the first
+five seconds pass:
+
+```text
+Still waiting to connect to Chrome, retrying in 1 second (attempt 18/62)
+```
+
+From attempt 18 the attempts are a second apart, so a last attempt of N means
+Chrome connected about N − 12 seconds in; no such line means under five. A
+fresh runner logs a handful of these on a green run. Look closer when the count
+climbs past 40, or at `CDP_COULD_NOT_CONNECT`, which Cypress raises after the
+last attempt, around 50 seconds in.
+
 ## Against a served origin
 
 `E2E_BASE_URL` points the suites at a site that is already served, such as a
