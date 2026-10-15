@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it, mock } from 'node:test';
+import type { TestContext } from 'node:test';
 
 import { StateRegistry } from '@uirouter/core';
 
@@ -445,6 +446,78 @@ describe('mount handling', () => {
   });
 });
 
+describe('bare mount base warning', () => {
+  const warnings = (t: TestContext, mounts: Record<string, MountConfig>) => {
+    const messages: string[] = [];
+
+    const warn = t.mock.method(console, 'warn', (message: string) => {
+      messages.push(message);
+    });
+
+    createServerRouter({ mounts });
+    warn.mock.restore();
+
+    return messages;
+  };
+
+  for (const strategy of ['matcher', 'simulate'] as const) {
+    it(`warns once per mount whose bare base 404s (${strategy} strategy)`, (t) => {
+      const [message, ...rest] = warnings(t, {
+        '/app': { strategy, routes: [{ name: 'a', url: '/a' }] },
+        '/served': appMount(strategy),
+      });
+
+      assert.deepEqual(rest, []);
+      assert.match(message, /mount '\/app' answers its bare base/);
+      assert.match(message, /url: '' route/);
+      assert.match(message, /\{ pattern: \/\^\\\/\?\$\/, to: '<state>' \}/);
+    });
+  }
+
+  it('counts the otherwise shell-404 as a 404, a root redirect beside it as served', (t) => {
+    assert.equal(warnings(t, { '/app': appMountWith404('matcher') }).length, 0);
+    assert.equal(
+      warnings(t, {
+        '/app': {
+          routes: [{ name: 'a', url: '/a' }, { name: 'notFound' }],
+          otherwise: { state: 'notFound' },
+        },
+      }).length,
+      1,
+    );
+  });
+
+  it("stays quiet for a url: '' route, its strict: false slash form, and the '/' mount", (t) => {
+    assert.deepEqual(
+      warnings(t, {
+        '/app-hash': {
+          routes: [{ name: 'root', url: '' }],
+          config: { strict: false },
+        },
+        '/plain': { routes: [{ name: 'root', url: '' }] },
+        '/': { routes: [{ name: 'a', url: '/a' }] },
+      }),
+      [],
+    );
+  });
+
+  it('stays quiet when construction throws first', (t) => {
+    const warn = t.mock.method(console, 'warn', () => {});
+
+    assert.throws(
+      () =>
+        createServerRouter({
+          mounts: {
+            '/app': { routes: [] },
+            '/app/': { routes: [] },
+          },
+        }),
+      /unique/,
+    );
+    assert.equal(warn.mock.callCount(), 0);
+  });
+});
+
 describe('simulate strategy isolation', () => {
   it('resolves concurrent requests independently', async () => {
     const router = createServerRouter({
@@ -738,6 +811,7 @@ describe('matcher strategy route scans', () => {
     mounts: {
       '/app': {
         routes: [
+          { name: 'home', url: '' },
           {
             name: 'item',
             url: '/items/:id',
@@ -886,6 +960,7 @@ describe('mergeSearch', () => {
       mounts: {
         '/app': {
           routes: [
+            { name: 'home', url: '' },
             { name: 'new', url: '/new' },
             {
               name: 'old',

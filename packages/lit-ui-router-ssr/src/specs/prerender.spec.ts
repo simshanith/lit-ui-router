@@ -38,6 +38,7 @@ const appMount: MountConfig = {
     { name: 'welcome', url: '/welcome' },
     { name: 'legacy', url: '/legacy', redirectTo: 'welcome' },
   ],
+  redirects: [{ pattern: /^\/?$/, to: 'welcome' }],
   config: { strict: false },
 };
 

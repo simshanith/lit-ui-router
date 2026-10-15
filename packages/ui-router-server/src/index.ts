@@ -300,6 +300,8 @@ const compileMounts = (record: Record<string, MountConfig>): Mount[] => {
   if (new Set(mounts.map((mount) => mount.base)).size !== mounts.length)
     throw new Error('Mount bases must be unique');
 
+  for (const mount of mounts) warnUnservedBareBase(mount);
+
   return mounts;
 };
 
@@ -423,6 +425,23 @@ const matcherVerdict = (mount: Mount, subpath: string): Verdict => {
     : notFoundVerdict(mount);
 };
 
+// The matcher projection stands in for both strategies: they consume the same declaration subset.
+const warnUnservedBareBase = (mount: Mount): void => {
+  if (mount.base === '/') return;
+
+  const verdict = matcherVerdict(mount, '');
+
+  if (
+    verdict.kind === 'redirect' ||
+    (verdict.kind === 'shell' && verdict.status === undefined)
+  )
+    return;
+  console.warn(
+    `ui-router-server: mount '${mount.base}' answers its bare base ('${mount.base}') with a 404. ` +
+      `Give it a url: '' route, or a redirect rule matching the empty subpath such as { pattern: /^\\/?$/, to: '<state>' }.`,
+  );
+};
+
 // Null when the transition failed or timed out: that router may still be mid-transition.
 const replayVerdict = async (
   pooled: PooledRouter,
@@ -487,9 +506,11 @@ const simulateVerdict = async (
  * The longest matching mount base owns a pathname outright — a verdict
  * never falls through to a shorter mount.
  *
- * A bare mount base ('/app', '/app/') resolves the empty subpath, which is
- * notFound unless the mount supplies a root pattern — a rule like
- * `{ pattern: /^\/?$/, to: ... }` or a `url: ''` route.
+ * A bare mount base ('/app', '/app/') resolves the empty subpath, which
+ * 404s unless the mount supplies a root pattern — a rule like
+ * `{ pattern: /^\/?$/, to: ... }` or a `url: ''` route. Construction warns
+ * through `console.warn` for each mount other than '/' whose bare base would
+ * 404, including the shell-404 of an `otherwise` projection.
  */
 export function createServerRouter(config: {
   mounts: Record<string, MountConfig>;

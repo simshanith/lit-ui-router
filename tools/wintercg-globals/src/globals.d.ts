@@ -1,7 +1,7 @@
-// setTimeout, clearTimeout and URLSearchParams exist on every target runtime
-// (worker, node, browser) but not in the DOM-free ES2022 lib a runtime-neutral
-// src graph compiles against, so this declares the minimal surface such a
-// graph uses. Opt in through tsconfig `types`, never a `/// <reference>`: only
+// setTimeout, clearTimeout, URLSearchParams and console.warn exist on every
+// target runtime (worker, node, browser) but not in the DOM-free ES2022 lib a
+// runtime-neutral src graph compiles against, so this declares the minimal
+// surface such a graph uses. Opt in through tsconfig `types`, never a `/// <reference>`: only
 // a config-level opt-in can be withdrawn per program, which is what the
 // runtime-globals drift guard needs.
 
@@ -21,3 +21,7 @@ declare class URLSearchParams {
   forEach(callback: (value: string, key: string) => void): void;
   toString(): string;
 }
+
+declare const console: {
+  warn(message: string): void;
+};

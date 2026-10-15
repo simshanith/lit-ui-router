@@ -560,8 +560,11 @@ routes — through the real package API.
 `createServerRouter` compiles and validates every mount at construction —
 unknown redirect targets, cycles, and a bad `otherwise` target throw at
 startup, never per-request — and the longest matching mount base owns a
-pathname outright. `resolve()` accepts a pathname, an absolute URL string,
-or anything with a `pathname`:
+pathname outright. A mount's bare base (`/app`) resolves the empty subpath,
+so it 404s unless a `url: ''` route or a rule such as
+`{ pattern: /^\/?$/, to: 'welcome' }` claims it; construction warns once for
+each mount other than `/` that leaves it unclaimed. `resolve()` accepts a
+pathname, an absolute URL string, or anything with a `pathname`:
 
 ```ts
 type Verdict =
