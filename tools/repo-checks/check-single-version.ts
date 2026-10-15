@@ -20,12 +20,8 @@ const CHECK = 'check-single-version';
 // Splits the workspace asks for. A row that stops splitting fails as stale.
 const ALLOWED: SplitAllowance[] = [
   {
-    name: '@lit-labs/ssr',
-    why: 'catalogs.peerFloor pins @lit-labs/ssr-floor to 4.0.0, the ssr peer floor check:bundle bundles against',
-  },
-  {
     name: '@lit-labs/ssr-client',
-    why: 'catalogs.peerFloor pins @lit-labs/ssr-client-floor to 1.1.0, the ssr peer floor check:bundle bundles against',
+    why: 'catalogs.peerFloorSsr pins @lit-labs/ssr-client-floor to 1.1.7, the ssr peer floor check:bundle bundles against',
   },
   {
     name: '@oxc-project/runtime',

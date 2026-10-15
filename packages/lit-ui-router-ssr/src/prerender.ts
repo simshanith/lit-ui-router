@@ -246,18 +246,15 @@ const defaultProbe = (
   return `${base === '/' ? '' : base.replace(/\/+$/, '')}/${PROBE_SEGMENT}`;
 };
 
-// litServerRoot must lead: @lit-labs/ssr 4.0 and 4.1 make any other first entry its own __eventTargetParent and the composed-path walk never ends; read per call because the shim installs on import.
-const rootedStack = (root: EventTarget): RenderInfo['eventTargetStack'] => {
+// litServerRoot must lead: @lit-labs/ssr 4.1 makes any other first entry its own __eventTargetParent and the composed-path walk never ends; read per call because the shim installs on import.
+const rootedStack = (root: EventTarget): EventTarget[] => {
   // SAFETY: the @lit-labs/ssr DOM shim sets `litServerRoot` to an `EventTarget`, or leaves it unset.
   const litServerRoot = (globalThis as { litServerRoot?: EventTarget })
     .litServerRoot;
 
-  const stack =
-    litServerRoot && litServerRoot !== root ? [litServerRoot, root] : [root];
-
-  // SAFETY: @lit-labs/ssr 4.0.0 types entries as HTMLElement but only parents events through them.
-  // eslint-disable-next-line typescript/no-unnecessary-type-assertion -- needed at the 4.0.0 peer floor
-  return stack as RenderInfo['eventTargetStack'];
+  return litServerRoot && litServerRoot !== root
+    ? [litServerRoot, root]
+    : [root];
 };
 
 /** The signature as `prerender()` writes it. */
