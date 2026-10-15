@@ -83,7 +83,10 @@ const mount: MountConfig = {
 };
 
 const router: ServerRouter = createServerRouter({
-  mounts: { '/app': mount, '/admin': { routes, strategy: 'simulate' } },
+  mounts: {
+    '/app': mount,
+    '/admin': { routes, strategy: 'simulate', prewarm: 1 },
+  },
 });
 
 // The verdict union must stay exhaustively narrowable by `kind` — the whole

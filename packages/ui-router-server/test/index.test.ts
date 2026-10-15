@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
-import { describe, it } from 'node:test';
+import { describe, it, mock } from 'node:test';
+
+import { StateRegistry } from '@uirouter/core';
 
 import { createServerRouter, mergeSearch } from '../src/index.ts';
 import type { MountConfig } from '../src/index.ts';
@@ -448,6 +450,112 @@ describe('simulate strategy isolation', () => {
     release();
     assert.deepEqual(await pending, redirect);
     assert.deepEqual(await router.resolve('/app/nope'), notFound);
+  });
+});
+
+describe('simulate prewarm', () => {
+  // A headless router registers its states into its own registry, so distinct registries are builds.
+  const countBuilds = () => {
+    const register = mock.method(StateRegistry.prototype, 'register');
+
+    return {
+      register,
+      builds: () => new Set(register.mock.calls.map((call) => call.this)).size,
+    };
+  };
+
+  const prewarmed = (prewarm?: number) =>
+    createServerRouter({
+      mounts: {
+        '/app': { ...appMount('simulate'), prewarm },
+        '/static': appMount('matcher'),
+      },
+    });
+
+  it('builds the prewarm count before the first request, which builds none', async (t) => {
+    const { register, builds } = countBuilds();
+    t.after(() => register.mock.restore());
+    const router = prewarmed(3);
+
+    assert.deepEqual(await router.resolve('/app/welcome'), {
+      kind: 'shell',
+      mount: '/app',
+    });
+    assert.equal(builds(), 3);
+  });
+
+  it('serves as many concurrent requests as it prewarmed without a build', async (t) => {
+    const { register, builds } = countBuilds();
+    t.after(() => register.mock.restore());
+    const router = prewarmed(3);
+    const paths = ['/app/welcome', '/app/legacy', '/app'];
+
+    await Promise.all(paths.map((path) => router.resolve(path)));
+    assert.equal(builds(), 3);
+
+    await Promise.all([...paths, '/app'].map((path) => router.resolve(path)));
+    assert.equal(builds(), 4);
+  });
+
+  it('builds nothing at construction by default', async (t) => {
+    const { register, builds } = countBuilds();
+    t.after(() => register.mock.restore());
+
+    for (const prewarm of [undefined, 0]) {
+      const router = prewarmed(prewarm);
+      await router.resolve('/static/welcome');
+      await router.resolve('/elsewhere');
+    }
+
+    assert.equal(builds(), 0);
+  });
+
+  it('rejects an invalid count, or a positive count on a matcher mount, at construction', async () => {
+    for (const prewarm of [-1, 1.5, Number.NaN, Number.POSITIVE_INFINITY, 17])
+      assert.throws(
+        () => prewarmed(prewarm),
+        /Mount '\/app': prewarm must be an integer from 0 to 16/,
+        `${prewarm}`,
+      );
+
+    assert.throws(
+      () =>
+        createServerRouter({
+          mounts: { '/app': { ...appMount('matcher'), prewarm: 1 } },
+        }),
+      /Mount '\/app': prewarm needs the 'simulate' strategy/,
+    );
+
+    const router = createServerRouter({
+      mounts: {
+        '/app': { ...appMount(undefined), prewarm: 0 },
+        '/max': { ...appMount('simulate'), prewarm: 16 },
+      },
+    });
+
+    // Settles the prewarm here, not in a later test's spy.
+    assert.deepEqual(await router.resolve('/max/welcome'), {
+      kind: 'shell',
+      mount: '/max',
+    });
+  });
+
+  it('drops a failed prewarm build and builds on demand', async (t) => {
+    const { register, builds } = countBuilds();
+    t.after(() => register.mock.restore());
+    register.mock.mockImplementationOnce(() => {
+      throw new Error('boom');
+    });
+    const router = prewarmed(2);
+
+    assert.deepEqual(await router.resolve('/app/legacy'), {
+      kind: 'redirect',
+      mount: '/app',
+      location: '/app/contacts',
+      status: 302,
+    });
+    // The failed build stops the prewarm; the request built its own router.
+    assert.equal(builds(), 2);
   });
 });
 

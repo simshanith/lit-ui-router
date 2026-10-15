@@ -339,6 +339,8 @@ Picking a tier:
   produce identical verdicts (the package tests assert parity), so
   `strategy` stays a pure cost knob until routing that data cannot express —
   hooks, resolves, `redirectTo` functions — arrives with a wider config.
+  A simulate mount's `prewarm` count builds idle routers once core loads, so
+  its first requests skip the cold build.
 - **`/location`** — you drive a real `@uirouter/core` router yourself, on the
   server, and want its `href()`s to be paths rather than `#` fragments, so a
   server render's links match what a
