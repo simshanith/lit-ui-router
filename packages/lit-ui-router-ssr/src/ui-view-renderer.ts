@@ -180,7 +180,11 @@ export class UiViewRenderer extends ElementRenderer {
       .getTokens()
       .filter((token) => isString(token))
       .map((token) => context.getResolvable(token))
-      .filter((resolvable) => resolvable.resolved)
+      .filter(
+        (resolvable) =>
+          resolvable.resolved ||
+          context.getPolicy(resolvable).async === 'NOWAIT',
+      )
       .map(({ token }: { token: string }): [string, unknown] => [
         token,
         injector.get<unknown>(token),
