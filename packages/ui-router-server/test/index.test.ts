@@ -173,6 +173,87 @@ for (const strategy of ['matcher', 'simulate'] as const) {
   });
 }
 
+// The mount's config reaches both tiers: core compiles state urls at
+// registration, so simulate must apply it before the routes register.
+for (const strategy of ['matcher', 'simulate'] as const) {
+  describe(`url config (${strategy} strategy)`, () => {
+    const router = createServerRouter({
+      mounts: {
+        '/app': appMount(strategy),
+        '/loose': { ...appMount(strategy), config: { strict: false } },
+        '/nocase': { ...appMount(strategy), config: { caseInsensitive: true } },
+      },
+    });
+
+    const shell = (mount: string) => ({ kind: 'shell', mount });
+
+    const redirect = (mount: string, location: string) => ({
+      kind: 'redirect',
+      mount,
+      location,
+      status: 302,
+    });
+
+    it('keeps strict, case-sensitive matching by default', async () => {
+      assert.deepEqual(await router.resolve('/app/welcome/'), {
+        kind: 'notFound',
+        mount: '/app',
+      });
+      assert.deepEqual(await router.resolve('/app/WELCOME'), {
+        kind: 'notFound',
+        mount: '/app',
+      });
+    });
+
+    it('matches routes and redirects with a trailing slash under strict: false', async () => {
+      // The second pass runs on pooled routers: reset() leaves url config alone.
+      for (let pass = 0; pass < 2; pass++) {
+        assert.deepEqual(
+          await router.resolve('/loose/welcome'),
+          shell('/loose'),
+        );
+        assert.deepEqual(
+          await router.resolve('/loose/welcome/'),
+          shell('/loose'),
+        );
+        assert.deepEqual(
+          await router.resolve('/loose/contacts/3/'),
+          shell('/loose'),
+        );
+        assert.deepEqual(
+          await router.resolve('/loose/legacy/'),
+          redirect('/loose', '/loose/contacts'),
+        );
+        assert.deepEqual(
+          await router.resolve('/loose/old-inbox/'),
+          redirect('/loose', '/loose/inbox?page=2'),
+        );
+      }
+    });
+
+    it('matches routes and redirects in any case under caseInsensitive: true', async () => {
+      for (let pass = 0; pass < 2; pass++) {
+        assert.deepEqual(
+          await router.resolve('/nocase/WELCOME'),
+          shell('/nocase'),
+        );
+        assert.deepEqual(
+          await router.resolve('/nocase/Contacts/3'),
+          shell('/nocase'),
+        );
+        assert.deepEqual(
+          await router.resolve('/nocase/LEGACY'),
+          redirect('/nocase', '/nocase/contacts'),
+        );
+        assert.deepEqual(
+          await router.resolve('/nocase/Old-Inbox'),
+          redirect('/nocase', '/nocase/inbox?page=2'),
+        );
+      }
+    });
+  });
+}
+
 describe('otherwise configuration', () => {
   it('is per-mount: an undeclared mount keeps its notFound verdict', async () => {
     const router = createServerRouter({

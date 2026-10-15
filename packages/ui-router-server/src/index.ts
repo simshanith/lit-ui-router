@@ -49,7 +49,7 @@ export interface MountConfig {
    * config widens later (e.g. an auth tier).
    */
   strategy?: 'matcher' | 'simulate';
-  /** Matcher compiler options for 'matcher' mounts (defaults: strict, case-sensitive). */
+  /** Matcher compiler options (defaults: strict, case-sensitive); 'simulate' mounts apply strict and caseInsensitive. */
   config?: UrlMatcherCompilerConfig;
   /**
    * Projection of the client's otherwise() rule. `state` references a
@@ -317,7 +317,7 @@ const buildHeadlessRouter = (simulate: SimulateModule, mount: Mount) => {
     ...route,
   }));
 
-  const router = simulate.createHeadlessRouter(states);
+  const router = simulate.createHeadlessRouter(states, mount.config.config);
 
   // The real rule, replayed: otherwise() only fires when no other rule
   // matches, and the url-less target leaves the memory location unmoved.
