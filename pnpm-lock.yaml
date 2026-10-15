@@ -308,12 +308,6 @@ catalogs:
       specifier: npm:@oxc-project/runtime@0.50.0
       version: 0.50.0
   peerFloor:
-    '@lit-labs/ssr-client-floor':
-      specifier: npm:@lit-labs/ssr-client@1.1.0
-      version: 1.1.0
-    '@lit-labs/ssr-floor':
-      specifier: npm:@lit-labs/ssr@4.0.0
-      version: 4.0.0
     '@uirouter/core-floor':
       specifier: npm:@uirouter/core@6.0.8
       version: 6.0.8
@@ -346,6 +340,12 @@ catalogs:
       specifier: npm:lit-ui-router@1.15.0
       version: 1.15.0
   peerFloorSsr:
+    '@lit-labs/ssr-client-floor':
+      specifier: npm:@lit-labs/ssr-client@1.1.7
+      version: 1.1.7
+    '@lit-labs/ssr-floor':
+      specifier: npm:@lit-labs/ssr@4.1.0
+      version: 4.1.0
     lit-ui-router-floor:
       specifier: npm:lit-ui-router@1.16.1
       version: 1.16.1
@@ -1446,11 +1446,11 @@ importers:
         specifier: 'catalog:'
         version: 1.1.8
       '@lit-labs/ssr-client-floor':
-        specifier: catalog:peerFloor
-        version: '@lit-labs/ssr-client@1.1.0'
+        specifier: catalog:peerFloorSsr
+        version: '@lit-labs/ssr-client@1.1.7'
       '@lit-labs/ssr-floor':
-        specifier: catalog:peerFloor
-        version: '@lit-labs/ssr@4.0.0(@types/node@24.19.2)'
+        specifier: catalog:peerFloorSsr
+        version: '@lit-labs/ssr@4.1.0(@types/node@24.19.2)'
       '@oxc-project/runtime-floor':
         specifier: catalog:oxc-compat
         version: '@oxc-project/runtime@0.50.0'
@@ -3594,23 +3594,14 @@ packages:
   '@lit-labs/signals@0.3.0':
     resolution: {integrity: sha512-PfB5FLtorVfkhwTWXOPNT/rvrVdSDY8siwPyR17ztrViRbMqxy1TQBcHqJoA4303QT8yXPGxYtGKJGj7fEfEwg==}
 
-  '@lit-labs/ssr-client@1.1.0':
-    resolution: {integrity: sha512-IY2SuhIOlFhVJu0eRfpRdg9EbBtwRpuEyNPJbFlgmmb6NX2nAwgQB6fJF4SPfpGntz2oMYg4qi2TMe+7ajbu5A==}
+  '@lit-labs/ssr-client@1.1.7':
+    resolution: {integrity: sha512-VvqhY/iif3FHrlhkzEPsuX/7h/NqnfxLwVf0p8ghNIlKegRyRqgeaJevZ57s/u/LiFyKgqksRP5n+LmNvpxN+A==}
 
   '@lit-labs/ssr-client@1.1.8':
     resolution: {integrity: sha512-PjGh81oKsoI64m3IDjTqqjhC7dr2uC/o0jrllUb5gRAyp/RlAHxapgJrjq9kWz97faCHLQ8jUlTi6tGm+8fgyA==}
 
   '@lit-labs/ssr-dom-shim@1.6.0':
     resolution: {integrity: sha512-VHb0ALPMTlgKjM6yIxxoQNnpKyUKLD04VzeQdsiXkMqkvYlAHxq9glGLmgbb889/1GsohSOAjvQYoiBppXFqrQ==}
-
-  '@lit-labs/ssr@4.0.0':
-    resolution: {integrity: sha512-pODr+t7cZVIrCRLuSLuWAACDnztEk5IrRFwFsbxyAyWcP2XP8aKuUZdVM/biXqxvIyHyCKtNZ92Gdcr+pjA5BQ==}
-    engines: {node: '>=13.9.0'}
-    peerDependencies:
-      '@types/node': '>=20.0.0 <25.0.0'
-    peerDependenciesMeta:
-      '@types/node':
-        optional: true
 
   '@lit-labs/ssr@4.1.0':
     resolution: {integrity: sha512-m0zymVVlHB1ddJQ1lastsV8ROW3whFOiHJhVPQWd04MnGTkTlUUVLQctux1QlyD9BtLXNN6iASxv388vhgKMFg==}
@@ -9663,11 +9654,11 @@ snapshots:
       lit: 3.3.3
       signal-polyfill: 0.2.2
 
-  '@lit-labs/ssr-client@1.1.0':
+  '@lit-labs/ssr-client@1.1.7':
     dependencies:
-      '@lit/reactive-element': 1.6.3
-      lit: 2.8.0
-      lit-html: 2.8.0
+      '@lit/reactive-element': 2.1.2
+      lit: 3.3.3
+      lit-html: 3.3.3
 
   '@lit-labs/ssr-client@1.1.8':
     dependencies:
@@ -9676,21 +9667,6 @@ snapshots:
       lit-html: 3.3.3
 
   '@lit-labs/ssr-dom-shim@1.6.0': {}
-
-  '@lit-labs/ssr@4.0.0(@types/node@24.19.2)':
-    dependencies:
-      '@lit-labs/ssr-client': 1.1.8
-      '@lit-labs/ssr-dom-shim': 1.6.0
-      '@lit/reactive-element': 2.1.2
-      '@parse5/tools': 0.3.0
-      enhanced-resolve: 5.24.5
-      lit: 3.3.3
-      lit-element: 4.2.2
-      lit-html: 3.3.3
-      node-fetch: 3.3.2
-      parse5: 7.3.0
-    optionalDependencies:
-      '@types/node': 24.19.2
 
   '@lit-labs/ssr@4.1.0(@types/node@24.19.2)':
     dependencies:

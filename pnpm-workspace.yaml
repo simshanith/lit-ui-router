@@ -116,8 +116,6 @@ catalogs:
   oxc-compat:
     '@oxc-project/runtime-floor': npm:@oxc-project/runtime@0.50.0
   peerFloor:
-    '@lit-labs/ssr-client-floor': npm:@lit-labs/ssr-client@1.1.0
-    '@lit-labs/ssr-floor': npm:@lit-labs/ssr@4.0.0
     '@uirouter/core-floor': npm:@uirouter/core@6.0.8
     effect-floor: npm:effect@3.22.0
     hono-floor: npm:hono@4.0.0
@@ -132,14 +130,14 @@ catalogs:
   peerFloorSignals:
     lit-ui-router-floor: npm:lit-ui-router@1.15.0
   peerFloorSsr:
+    '@lit-labs/ssr-client-floor': npm:@lit-labs/ssr-client@1.1.7
+    '@lit-labs/ssr-floor': npm:@lit-labs/ssr@4.1.0
     lit-ui-router-floor: npm:lit-ui-router@1.16.1
     ui-router-server-floor: npm:ui-router-server@0.2.0
   publishedDependencies:
     '@oxc-project/runtime': '>=0.50.0'
     eslint-plugin-lit: ^2.0.0
   publishedPeer:
-    '@lit-labs/ssr': ^4.0.0
-    '@lit-labs/ssr-client': ^1.1.0
     '@uirouter/core': ^6.0.8
     effect: '^3.22.0 || ^4.0.2'
     eslint: '^9.0.0 || ^10.0.0'
@@ -157,6 +155,9 @@ catalogs:
     lit-ui-router: ^1.15.0
     ui-router-signals: ^0.1.0
   publishedPeerSsr:
+    '@lit-labs/ssr': ^4.1.0
+    '@lit-labs/ssr-client': ^1.1.7
+    lit: ^3.1.2
     lit-ui-router: ^1.16.1
     ui-router-server: '^0.2.0 || ^0.3.0'
   typescript6-compat:

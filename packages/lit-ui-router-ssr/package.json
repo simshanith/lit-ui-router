@@ -69,8 +69,8 @@
   "devDependencies": {
     "@lit-labs/ssr": "catalog:",
     "@lit-labs/ssr-client": "catalog:",
-    "@lit-labs/ssr-client-floor": "catalog:peerFloor",
-    "@lit-labs/ssr-floor": "catalog:peerFloor",
+    "@lit-labs/ssr-client-floor": "catalog:peerFloorSsr",
+    "@lit-labs/ssr-floor": "catalog:peerFloorSsr",
     "@oxc-project/runtime-floor": "catalog:oxc-compat",
     "@release-it/conventional-changelog": "catalog:",
     "@tools/bundle-probe": "catalog:workspace",
@@ -102,10 +102,10 @@
     "vitest": "catalog:"
   },
   "peerDependencies": {
-    "@lit-labs/ssr": "catalog:publishedPeer",
-    "@lit-labs/ssr-client": "catalog:publishedPeer",
+    "@lit-labs/ssr": "catalog:publishedPeerSsr",
+    "@lit-labs/ssr-client": "catalog:publishedPeerSsr",
     "@uirouter/core": "catalog:publishedPeer",
-    "lit": "catalog:publishedPeer",
+    "lit": "catalog:publishedPeerSsr",
     "lit-ui-router": "catalog:publishedPeerSsr",
     "ui-router-server": "catalog:publishedPeerSsr"
   },
