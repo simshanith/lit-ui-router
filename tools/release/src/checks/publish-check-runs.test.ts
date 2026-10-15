@@ -6,6 +6,7 @@ import {
   checkRunApiArgs,
   checkRunName,
   releaseWorkflowUrl,
+  stepSummaryMarkdown,
   toCheckRun,
 } from './publish-check-runs.core.ts';
 
@@ -104,6 +105,28 @@ describe('toCheckRun', () => {
     const payload = toCheckRun({ ...clean, tag: null, version: null }, REPO);
     assert.equal(payload.conclusion, 'success');
     assert.match(payload.title, /never published/);
+  });
+});
+
+describe('stepSummaryMarkdown', () => {
+  const markdown = stepSummaryMarkdown([clean, drifting], REPO);
+
+  it('tables every package with its check-run title', () => {
+    assert.match(markdown, /1 of 2 packages would ship changes if released/);
+    assert.match(
+      markdown,
+      /\| `lit-ui-router-mobx` \| up to date with latest 0\.3\.3 \|/,
+    );
+    assert.match(
+      markdown,
+      /\| `lit-ui-router` \| unreleased changes vs latest 1\.7\.0 \(2 shipped files differ\) \|/,
+    );
+  });
+
+  it('details drifting packages only, with their check-run summary', () => {
+    assert.match(markdown, /### lit-ui-router\n\nTo resolve:/);
+    assert.match(markdown, /- `dist\/core\.js`/);
+    assert.doesNotMatch(markdown, /### lit-ui-router-mobx/);
   });
 });
 

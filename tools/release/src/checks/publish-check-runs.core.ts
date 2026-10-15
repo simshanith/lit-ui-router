@@ -92,6 +92,40 @@ export function toCheckRun(
   };
 }
 
+/** The run page's `$GITHUB_STEP_SUMMARY`: a verdict table, then each drifting package's check-run summary. */
+export function stepSummaryMarkdown(
+  summaries: readonly PackageSummary[],
+  repo: string,
+): string {
+  const runs = summaries.map((summary) => ({
+    summary,
+    payload: toCheckRun(summary, repo),
+  }));
+
+  const owed = runs.filter(
+    ({ payload }) => payload.conclusion === 'action_required',
+  );
+
+  return [
+    '## published-diff',
+    '',
+    `${owed.length} of ${runs.length} packages would ship changes if released.`,
+    '',
+    '| Package | Verdict |',
+    '| --- | --- |',
+    ...runs.map(
+      ({ summary, payload }) => `| \`${summary.name}\` | ${payload.title} |`,
+    ),
+    ...owed.flatMap(({ summary, payload }) => [
+      '',
+      `### ${summary.name}`,
+      '',
+      payload.summary,
+    ]),
+    '',
+  ].join('\n');
+}
+
 /** argv for `gh api` creating one check run on `headSha`. */
 export function checkRunApiArgs(
   repo: string,
