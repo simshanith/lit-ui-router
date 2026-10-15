@@ -209,6 +209,9 @@ one job and reports one check run on the commit, named `acceptance (<suite>)`:
 
 - `acceptance (a11y)`: the axe pass (`mise run test_e2e a11y`), described in the
   [e2e README](../apps/sample-app-lit-e2e/README.md).
+- `acceptance (bench)`: ui-router-server's tinybench timings on a short budget
+  (`mise run bench_pulse`), reported as the job summary. It has no thresholds,
+  so it goes red only when a bench crashes.
 
 A red check is a real failure on that commit, unlike a release signal, but it
 gates nothing: Tag & push needs only `build_and_test`. The README badges read

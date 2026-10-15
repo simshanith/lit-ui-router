@@ -131,20 +131,6 @@ jobs:
           TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
           TURBO_API: ${{ secrets.TURBO_API }}
           TURBO_TEAM: ${{ vars.TURBO_TEAM }}
-      - name: Bench pulse
-        # Never gates: timings have no threshold, and a crashing bench must not
-        # redden a required check the count tests already guard. After the
-        # graph, so it times a quiet runner; before the summary, which renders
-        # the result files.
-        if: ${{ steps.build.outcome == 'success' || steps.build_main.outcome == 'success' }}
-        continue-on-error: true
-        run: mise run bench_pulse
-        env:
-          TURBO_OUTPUT_LOGS: errors-only
-          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
-          TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
-          TURBO_API: ${{ secrets.TURBO_API }}
-          TURBO_TEAM: ${{ vars.TURBO_TEAM }}
       - name: Upload turbo run summaries
         # Uploaded BEFORE the report so the report can link it: the report caps
         # every list it prints, and this is the uncapped copy to download when

@@ -338,8 +338,8 @@ flag "--output-logs <mode>" help="turbo task output: full | errors-only | new-on
 run = "turbo run codecov:bundle --ui=stream --log-order=stream --output-logs=\"${usage_output_logs?}\""
 
 [tasks.bench_pulse]
-# The benches one at a time on a short budget, for the run summary's Bench
-# pulse. No --summarize: it reports the result files, not this run.
+# The benches one at a time on a short budget, for the `acceptance (bench)`
+# job; //tools/build_and_test:bench_summary reports the result files.
 depends = ["turbo_force_guard"]
 description = "Run the tinybench benches on a short time budget via turbo"
 usage = '''

@@ -852,8 +852,6 @@ export interface OverviewContext {
   logsUrl?: string;
   /** `annotationNote` for the tool annotations this step re-emitted. */
   annotations?: string;
-  /** The rendered Bench pulse section (bench-pulse.core.ts), when the job wrote one. */
-  benchPulse?: { markdown: string[]; lines: string[] };
 }
 
 /**
@@ -1087,7 +1085,6 @@ export function sessionMarkdown(
     out.push('> [!WARNING]', `> ${note}`, '');
   }
 
-  out.push(...(context.benchPulse?.markdown ?? []));
   out.push(...footerMarkdown(context));
 
   return `${out.join('\n')}\n`;
@@ -1221,7 +1218,6 @@ export function sessionLines(
 
   for (const note of jobNotes(runs, context.onActions ?? false))
     lines.push(`   note: ${note}`);
-  lines.push(...(context.benchPulse?.lines ?? []));
   lines.push(...footerLines(context));
 
   return lines;

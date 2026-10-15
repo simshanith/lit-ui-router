@@ -86,8 +86,8 @@
       "inputs": ["$TURBO_DEFAULT$"]
     },
     // Report-only tinybench timings into each package's .cache/; measures the
-    // host, so uncached. In no ci:* graph: CI runs it as its own non-gating
-    // step after the graph, off a runner busy with the rest of it.
+    // host, so uncached. In no ci:* graph: the Acceptance workflow's
+    // `acceptance (bench)` job runs it.
     "bench": {
       "dependsOn": ["^build"],
       // per-task time budget; CI shortens it
