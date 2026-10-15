@@ -13,10 +13,13 @@ import {
   type BaseVerdict,
   type GateRun,
   type OpenPr,
+  PR_GRACE,
+  awaitOpenPrs,
   decide,
   distinctBases,
   mergeStateFromExit,
   parseOpenPrs,
+  shouldAwaitPr,
   summaryMarkdown,
   wantsMainGraph,
 } from './branch-ci-gate.core.ts';
@@ -126,6 +129,91 @@ describe('wantsMainGraph', () => {
     assert.equal(wantsMainGraph('feat/ci-main/thing'), false);
     assert.equal(wantsMainGraph('main'), false);
     assert.equal(wantsMainGraph(''), false);
+  });
+});
+
+describe('shouldAwaitPr', () => {
+  it('waits only on the push that created the branch', () => {
+    assert.equal(shouldAwaitPr('true', 'topic'), true);
+    assert.equal(shouldAwaitPr('false', 'topic'), false);
+    assert.equal(shouldAwaitPr('', 'topic'), false);
+    assert.equal(shouldAwaitPr(undefined, 'topic'), false);
+  });
+
+  it('never waits on the main-graph opt-in, which runs regardless', () => {
+    assert.equal(shouldAwaitPr('true', 'ci-main/topic'), false);
+  });
+});
+
+describe('awaitOpenPrs', () => {
+  function scripted(answers: OpenPr[][]) {
+    let index = 0;
+
+    return {
+      query: () =>
+        Promise.resolve(answers[Math.min(index++, answers.length - 1)] ?? []),
+      calls: () => index,
+    };
+  }
+
+  function recordingSleep() {
+    const slept: number[] = [];
+
+    return {
+      sleep: (ms: number) => {
+        slept.push(ms);
+
+        return Promise.resolve();
+      },
+      slept,
+    };
+  }
+
+  it('returns at once when the first query finds a PR', async () => {
+    const { query, calls } = scripted([[PR_ONE]]);
+    const { sleep, slept } = recordingSleep();
+
+    assert.deepEqual(await awaitOpenPrs(query, sleep), {
+      prs: [PR_ONE],
+      waitedMs: 0,
+    });
+    assert.equal(calls(), 1);
+    assert.deepEqual(slept, []);
+  });
+
+  it('stops polling as soon as a PR appears', async () => {
+    const { query, calls } = scripted([[], [], [PR_ONE]]);
+    const { sleep, slept } = recordingSleep();
+
+    assert.deepEqual(await awaitOpenPrs(query, sleep), {
+      prs: [PR_ONE],
+      waitedMs: 30_000,
+    });
+    assert.equal(calls(), 3);
+    assert.deepEqual(slept, [15_000, 15_000]);
+  });
+
+  it('gives up after the window with no PR', async () => {
+    const { query, calls } = scripted([[]]);
+    const { sleep, slept } = recordingSleep();
+
+    assert.deepEqual(await awaitOpenPrs(query, sleep), {
+      prs: [],
+      waitedMs: PR_GRACE.totalMs,
+    });
+    assert.equal(calls(), 5);
+    assert.equal(
+      slept.reduce((sum, ms) => sum + ms, 0),
+      PR_GRACE.totalMs,
+    );
+  });
+
+  it('clips the last sleep to the window', async () => {
+    const { query } = scripted([[]]);
+    const { sleep, slept } = recordingSleep();
+
+    await awaitOpenPrs(query, sleep, { totalMs: 40, intervalMs: 15 });
+    assert.deepEqual(slept, [15, 15, 10]);
   });
 });
 
@@ -280,6 +368,27 @@ describe('summaryMarkdown', () => {
       summaryMarkdown(gateRun('topic', [PR_ONE], [verdict('main', 'clean')])),
       /Graph:/,
     );
+  });
+
+  it('says how long a branch-creating push waited, and whether a PR came', () => {
+    const none = summaryMarkdown({
+      ...gateRun('topic', [], []),
+      waitedMs: 60_000,
+    });
+
+    assert.match(none, /Waited 60s for a PR .* none opened/);
+
+    const found = summaryMarkdown({
+      ...gateRun('topic', [PR_ONE], [verdict('main', 'clean')]),
+      waitedMs: 15_000,
+    });
+
+    assert.match(found, /Waited 15s for a PR/);
+    assert.doesNotMatch(found, /none opened/);
+  });
+
+  it('omits the wait line when the push did not wait', () => {
+    assert.doesNotMatch(summaryMarkdown(gateRun('topic', [], [])), /Waited/);
   });
 
   it('states the no-PR case instead of an empty table', () => {
