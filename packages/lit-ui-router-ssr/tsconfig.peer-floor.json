@@ -1,7 +1,6 @@
 {
-  // Typechecks src against the published floors of the lit-ui-router and
-  // ui-router-server peer ranges (the <peer>-floor aliases), not the linked
-  // workspace copies. Never emits.
+  // Typechecks src against the published floors of its peer ranges (the
+  // <peer>-floor aliases), not the linked workspace or dev copies. Never emits.
   "extends": "./tsconfig.src.json",
   "compilerOptions": {
     "noEmit": true,
@@ -20,7 +19,14 @@
       "ui-router-server": [
         "./node_modules/ui-router-server-floor/dist/index.d.ts"
       ],
-      "ui-router-server/*": ["./node_modules/ui-router-server-floor/*"]
+      "ui-router-server/*": ["./node_modules/ui-router-server-floor/*"],
+      "@uirouter/core": ["./node_modules/@uirouter/core-floor/lib/index.d.ts"],
+      "@lit-labs/ssr": ["./node_modules/@lit-labs/ssr-floor/index.d.ts"],
+      "@lit-labs/ssr/*": ["./node_modules/@lit-labs/ssr-floor/*"],
+      "@lit-labs/ssr-client": [
+        "./node_modules/@lit-labs/ssr-client-floor/index.d.ts"
+      ],
+      "@lit-labs/ssr-client/*": ["./node_modules/@lit-labs/ssr-client-floor/*"]
     }
   }
 }
