@@ -1,8 +1,9 @@
 /**
+ * The client half: `hydrateRoot()` hydrates the prerendered root, and each
+ * served `<ui-view>` the walk wakes adopts its markup through `uiViewSlot`.
+ *
  * @module
- * @mergeModuleWith <project>
  */
-// The adopt half: one `hydrate()` on the root, and the adopter each served `<ui-view>` the walk wakes requests to take its markup.
 import { hydrate } from '@lit-labs/ssr-client';
 import { renderLight } from '@lit-labs/ssr-client/directives/render-light.js';
 import type { RenderLightHost } from '@lit-labs/ssr-client/directives/render-light.js';
@@ -48,23 +49,17 @@ const DEFER = 'defer-hydration';
  *   into, or was lost; the view dropped the served interior and rendered cold.
  * - `none`: nothing to adopt — an empty served pair, the address no state
  *   routed, or a view the document served no markers for.
- *
- * @category client
  */
 export type AdoptOutcome = 'adopted' | 'fell-back' | 'none';
 
 /**
  * The name of the event a served `<ui-view>` dispatches once its wake's
  * outcome is known, in the `ui-view:` house style of the served markers.
- *
- * @category client
  */
 export const uiViewAdoptEventName = 'ui-view:adopt' as const;
 
 /**
  * The detail of {@link UiViewAdoptEvent}.
- *
- * @category client
  */
 export interface UiViewAdoptDetail {
   /** What the wake came to. */
@@ -76,15 +71,11 @@ export interface UiViewAdoptDetail {
 /**
  * Dispatched from a served `<ui-view>` at its wake, once per view, bubbling and
  * composed, in production as in development.
- *
- * @category client
  */
 export type UiViewAdoptEvent = CustomEvent<UiViewAdoptDetail>;
 
 /**
  * Receives each served view's outcome, as {@link HydrateRootOptions.onAdopt}.
- *
- * @category client
  */
 export type AdoptReporter = (
   view: Element,
@@ -96,8 +87,6 @@ export type AdoptReporter = (
 /**
  * {@link hydrateRoot}'s options: lit's render options, plus the outcome
  * callback.
- *
- * @category client
  */
 export interface HydrateRootOptions extends RenderOptions {
   /**
@@ -176,8 +165,6 @@ class UiViewSlotDirective extends RenderLightDirective {
  * ```ts
  * html`<ui-router .uiRouter=${router}><ui-view>${uiViewSlot()}</ui-view></ui-router>`;
  * ```
- *
- * @category client
  */
 export const uiViewSlot: typeof renderLight = directive(UiViewSlotDirective);
 
@@ -517,8 +504,6 @@ const parseSignature = (json: string): HydrationSignature | null => {
  * @param container - the element the server's markup was written into
  * @returns the signature, or `null` when the container holds none, or one that
  * does not parse to an object with a string `version`
- *
- * @category client
  */
 export function readHydrationSignature(
   container: ParentNode,
@@ -661,8 +646,6 @@ const makeCold = (container: HTMLElement): void => {
  * @param value - the same template the server rendered, with every `<ui-view>` hole empty
  * @param options - lit render options, passed on to `hydrate()`, and `onAdopt`
  * @returns the function that releases the provider, or `false`, over an emptied container, when there is nothing to adopt — no signature, as on a cold client render or a dev server, one from another release line, or one no render marker follows
- *
- * @category client
  */
 export function hydrateRoot(
   container: HTMLElement,

@@ -5,8 +5,6 @@ import type { Context } from 'lit-ui-router/context';
 /**
  * The identity of {@link adoptUiViewContext}: a plain object, so the key is
  * unique under `===` and readable in a debugger.
- *
- * @category client
  */
 export interface AdoptUiViewContextKey {
   /** Names the key for a debugger; identity, not this string, is what matches. */
@@ -16,8 +14,6 @@ export interface AdoptUiViewContextKey {
 /**
  * The waking `<ui-view>` as an adopter sees it: the element holding the served
  * nodes, with the template and render options a hydrate reads.
- *
- * @category client
  */
 export interface AdoptableView extends HTMLElement {
   /** The routed template the served nodes came from. */
@@ -31,8 +27,6 @@ export interface AdoptableView extends HTMLElement {
  * The adopt-view context key's type — {@link AdoptUiViewContextKey} branded
  * with the adopter function, so `@consume({ context: adoptUiViewContext })`
  * infers it.
- *
- * @category client
  */
 export type AdoptUiViewContext = Context<
   AdoptUiViewContextKey,
@@ -59,8 +53,6 @@ export type AdoptUiViewContext = Context<
  *   adopt(view),
  * );
  * ```
- *
- * @category client
  */
 // SAFETY: the adopter brand is type-only; the frozen key object is the whole runtime value.
 export const adoptUiViewContext: AdoptUiViewContext = Object.freeze({

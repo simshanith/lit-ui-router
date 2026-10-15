@@ -33,8 +33,6 @@ const isRenderMarker = (node: ChildNode | null): boolean => {
  * Brands the served class, so a second copy of this package recognises the one
  * already registered. `customElements` identity cannot: two copies build two
  * classes.
- *
- * @category client
  */
 export const servedViewBrand: unique symbol = Symbol.for(
   'lit-ui-router-ssr#served-view',
@@ -42,8 +40,6 @@ export const servedViewBrand: unique symbol = Symbol.for(
 
 /**
  * A `<ui-view>` that owns its side of a server render.
- *
- * @category client
  */
 export interface ServedUiView extends UiView {
   /**
@@ -61,8 +57,6 @@ export interface ServedUiView extends UiView {
 /**
  * The class {@link withServedRender} produces: a `<ui-view>` constructor,
  * branded.
- *
- * @category client
  */
 export interface ServedUiViewConstructor {
   /** Builds one served view; the element takes no constructor arguments. */
@@ -76,8 +70,6 @@ export interface ServedUiViewConstructor {
  * another copy's.
  *
  * @param constructor - the class a registry holds for a tag
- *
- * @category client
  */
 export const isServedViewClass = (
   constructor: CustomElementConstructor | undefined,
@@ -118,8 +110,6 @@ export const isServedViewClass = (
  *
  * customElements.define('app-view', withServedRender(UiView));
  * ```
- *
- * @category client
  */
 export const withServedRender = (
   Base: typeof UiView,
