@@ -184,7 +184,9 @@ renders orange, meaning a release or floor bump is owed — never a CI failure.
 A floor bump raises the catalog the adapter's `lit-ui-router` peer names and
 the matching `peerFloor*` pin in `pnpm-workspace.yaml`: `publishedPeerMobx`
 and `peerFloorMobx` for mobx, `publishedPeerEffect` and `peerFloorEffect` for
-effect, `publishedPeerSignals` and `peerFloorSignals` for signals.
+effect, `publishedPeerSignals` and `peerFloorSignals` for signals, and
+`publishedPeerSsr` and `peerFloorSsr` for ssr, which floors its
+`ui-router-server` peer the same way.
 
 These run in the `release signals (npm)` job. A separate `release signals (cloudflare)`
 job posts the `workers-builds (triggers)` and `pages-deploy (altitude-atlas)` check runs
