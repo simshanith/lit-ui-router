@@ -346,7 +346,7 @@ Picking a tier:
   server, and want its `href()`s to be paths rather than `#` fragments, so a
   server render's links match what a
   [pushState](./location-plugins#html5-pushstate) client writes.
-  `installServerLocation(router, { url, baseHref, strictMode })`.
+  `installServerLocation(router, { url, baseHref, urlConfig })`.
 - **`/url-config`** — you want the client router and the mounts to compile
   urls alike. `applyUrlConfig(router, config)` applies a mount's `config` to
   any `@uirouter/core` router before its states register; it imports no
@@ -880,7 +880,10 @@ const { provideRouter, withRouterSync } = await import('lit-ui-router/context');
 // one router per request, at the url the request asked for, query included
 const { pathname, search } = new URL(request.url);
 const router = new UIRouterLit();
-installServerLocation(router, { url: pathname + search, strictMode: false });
+installServerLocation(router, {
+  url: pathname + search,
+  urlConfig: { strict: false },
+});
 states.forEach((state) => router.stateRegistry.register(state));
 router.start();
 

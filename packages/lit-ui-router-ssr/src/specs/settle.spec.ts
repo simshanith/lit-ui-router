@@ -63,7 +63,7 @@ const states = (): LitStateDeclaration[] => [
 
 const makeRouter = (otherwise = false): UIRouterLit => {
   const router = installServerLocation(new UIRouterLit(), {
-    strictMode: false,
+    urlConfig: { strict: false },
   });
 
   // The failing specs assert the rejection; keep core's logger quiet.

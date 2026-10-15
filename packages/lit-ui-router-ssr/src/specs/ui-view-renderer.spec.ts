@@ -34,7 +34,7 @@ class BoxedView extends LitElement {}
 /** One state whose view is a `RoutedLitElement` class, which the renderer has no server render for. */
 const boxedRouter = (): UIRouterLit => {
   const router = installServerLocation(new UIRouterLit(), {
-    strictMode: false,
+    urlConfig: { strict: false },
   });
 
   const states: LitStateDeclaration[] = [
@@ -49,7 +49,7 @@ const boxedRouter = (): UIRouterLit => {
 /** One state whose NOWAIT resolve never settles, drawn as what its view receives. */
 const pendingRouter = (): UIRouterLit => {
   const router = installServerLocation(new UIRouterLit(), {
-    strictMode: false,
+    urlConfig: { strict: false },
   });
 
   const state: LitStateDeclaration = {

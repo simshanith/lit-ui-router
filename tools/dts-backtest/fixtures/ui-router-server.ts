@@ -161,21 +161,25 @@ export async function simulate(states: StateDeclaration[]): Promise<boolean> {
 }
 
 // Location tier: the memory location a server render installs, in either shape.
+// A mount's config passes as the location's urlConfig unchanged.
 const locationOptions: ServerLocationOptions = {
   url: '/app/contacts',
   baseHref: '/app/',
-  strictMode: false,
+  urlConfig: matcherConfig,
   html5Mode: true,
 };
 
-export function serverHref(states: StateDeclaration[]): string {
-  const headless = createHeadlessRouter(states);
+export function serverHref(
+  router: UIRouter,
+  states: StateDeclaration[],
+): string {
+  // A fresh router: the location and its url config go in before any state.
+  const located = installServerLocation(router, locationOptions);
+  states.forEach((state) => located.stateRegistry.register(state));
   void new ServerLocationConfig(undefined, false).html5Mode();
   void serverLocationPlugin;
 
-  return installServerLocation(headless, locationOptions).stateService.href(
-    'app.contacts',
-  );
+  return located.stateService.href('app.contacts');
 }
 
 // Url-config tier: one config object for a mount and any core router; the

@@ -91,7 +91,7 @@ Picking one:
   server, and want its `href()`s to match what the client writes: paths by
   default, for a [pushState](/guides/location-plugins#html5-pushstate) client,
   or `#` fragments under `html5Mode: false`.
-  `installServerLocation(router, { url, baseHref, strictMode, html5Mode })`.
+  `installServerLocation(router, { url, baseHref, urlConfig, html5Mode })`.
 - **`/url-config`** — the client router and the mounts should compile urls
   alike. `applyUrlConfig(router, config)` applies a mount's `config` to any
   `@uirouter/core` router before its states register, and imports no server
@@ -342,12 +342,16 @@ router.plugin(servicesPlugin);
 installServerLocation(router, {
   url: pathname + search,
   baseHref: '/app/',
-  strictMode: false,
+  urlConfig: { strict: false },
 });
 ```
 
 `baseHref` is the mount prefix: it is added to every href, and `url` is
-passed without it, exactly as a `<base href>` client matches. For a
+passed without it, exactly as a `<base href>` client matches. `urlConfig`
+takes the same object as a mount's `config` and goes through
+[`applyUrlConfig`](/api/ui-router-server/url-config/functions/applyUrlConfig)
+first, so it throws, leaving the router as it was, if a state's url already
+compiled. For a
 [hash-location](/guides/location-plugins#hash-urls) client, pass
 `html5Mode: false` and the same router builds `#/sheet/7B`. The plugin itself
 is exported as `serverLocationPlugin` — `router.plugin(serverLocationPlugin,
