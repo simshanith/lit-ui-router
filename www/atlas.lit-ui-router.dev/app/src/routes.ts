@@ -149,10 +149,9 @@ const SHEET_STATES: ReadonlyArray<[state: string, segment: string, query: string
 
 /**
  * The tier a mount resolves on. The dev and preview servers take the default
- * matcher: `config.strict` reaches only it, and the slash spellings Pages
- * serves must verdict as the page. The prerender asks slashless paths only,
- * so it replays them through the simulate tier's pooled headless router,
- * prewarmed before the first path.
+ * matcher. The prerender replays its whole list through the simulate tier's
+ * pooled headless router, prewarmed before the first path. Both tiers read
+ * the mount's `config`, so a path verdicts the same on either.
  */
 export type MountTier = Pick<MountConfig, 'strategy' | 'prewarm'>;
 
@@ -199,7 +198,6 @@ export function mountsFor(
       // Cloudflare Pages serves `<subpath>/index.html` and 308s the bare
       // path onto the slash, so `/sheet/7/` must be as real a url as
       // `/sheet/7`. The client sets `strictMode(false)` for the same reason.
-      // The matcher tier alone reads this; a simulate mount 404s the slash.
       config: { strict: false },
     },
   };

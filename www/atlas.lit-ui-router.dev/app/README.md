@@ -276,10 +276,10 @@ and is used twice:
   `src/views.ts` to `lit-ui-router-ssr`'s `prerender()`, which resolves every listed path to a
   verdict: `shell` writes `dist/<subpath>/index.html` with server-rendered markup, `redirect`
   becomes a line in `dist/_redirects` (both spellings of the path), and the `otherwise` projection
-  becomes `dist/404.html`. The mount here takes the `simulate` tier with `prewarm: 1`: every path
-  it asks is slashless, and one pooled headless `@uirouter/core` router, built before the first
-  path, replays the whole list. Dev and preview keep the `matcher` tier, the one tier that reads
-  the mount's `strict: false`; a simulate mount 404s the slash spellings Pages serves. This file supplies the shell html and the titles, registers the same
+  becomes `dist/404.html`. The mount here takes the `simulate` tier with `prewarm: 1`: one pooled
+  headless `@uirouter/core` router, built before the first path, replays the whole list. Dev and
+  preview take the default `matcher` tier; both tiers read the mount's `strict: false`, so a path
+  verdicts the same on either. This file supplies the shell html and the titles, registers the same
   route table with the client's components and its own disk-backed resolves, and drives the router
   to each path; the render is `views.page(router)`, and `UiViewRenderer` draws each `<ui-view>`'s
   routed component into the element's light DOM. Once each page's router settles, a

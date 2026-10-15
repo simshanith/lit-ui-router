@@ -77,16 +77,20 @@ a cold container returns `false` and the same template is rendered instead. The
 atlas is on `lit-ui-router@1.16.0` / `lit-ui-router-ssr@0.1.0`, with
 `@lit-labs/ssr-client@1.1.8` as the client half's peer.
 
-**Update, 2026-10-15.** The atlas is on `ui-router-server@0.3.0`. The
-simulate tier pools its headless routers and takes a `prewarm` count per
-mount; `prerender.ts` passes `{ strategy: 'simulate', prewarm: 1 }`, so one
-router built before the first path replays the whole slashless list, while
-`vite.config.ts` keeps the matcher tier. A probe over 18 of the app's paths
-read the two tiers identical on every slashless path and apart on every path
-with a trailing slash: the matcher serves `/sheet/7/` under the mount's
-`strict: false`, the simulate tier answers 404, because `config` is a matcher
-compiler option and the headless router is built with core's default
-`strictMode`. Ask 11 below.
+**Update, 2026-10-15.** The atlas is on `ui-router-server@0.3.1`,
+`lit-ui-router@1.16.5` and `lit-ui-router-ssr@0.3.0`. The simulate tier pools
+its headless routers and takes a `prewarm` count per mount; `prerender.ts`
+passes `{ strategy: 'simulate', prewarm: 1 }`, so one router built before the
+first path replays the whole list, while `vite.config.ts` keeps the matcher
+tier. At 0.3.0 a probe over 18 of the app's paths read the two tiers identical
+on every slashless path and apart on every path with a trailing slash: the
+matcher served `/sheet/7/` under the mount's `strict: false`, the simulate
+tier answered 404, because the headless router was built with core's default
+`strictMode` (ask 11 below, #1315). 0.3.1 replays the mount's `config` onto
+the headless router, and the same probe reads the two tiers identical on all
+18. The ssr package's 0.3.0 peers `ui-router-server` at `^0.2.0 || ^0.3.0`,
+so the install carries no override. Neither release changes what this app
+renders: it declares no `NOWAIT` resolve and no squash policy.
 
 One thing that cutover measured:
 
@@ -543,7 +547,9 @@ Ordered by how much each would have saved me.
     Pages serves must verdict as the page, and takes the simulate tier for the
     prerender alone, whose paths are slashless.
 
-    **Status, 2026-10-15.** Filed as #1315 on `ui-router-server@0.4`.
+    **Status, 2026-10-15.** Filed as #1315 on `ui-router-server@0.4`; shipped
+    the same day in `ui-router-server@0.3.1` (#1324), with #1329 carrying the
+    mount's `defaultSquashPolicy` across too. The probe above reads 0 diffs.
 
 ## 6. Verdict, in one paragraph
 

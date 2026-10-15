@@ -13,8 +13,8 @@
  * The verdicts come out of the same mount table the Vite dev/preview server
  * uses, so a route that 302s in development 302s on the deployed site. The
  * server replays them on the simulate tier, a pooled headless
- * `@uirouter/core` router with one prewarmed; dev and preview keep the
- * matcher tier, the one that reads the mount's `strict: false`.
+ * `@uirouter/core` router with one prewarmed; dev and preview take the
+ * default matcher tier, and both tiers read the mount's `strict: false`.
  *
  * ONE TEMPLATE SET, and one template: `views.page(router)`. `prerender()`
  * provides the router on the render root and scopes it around each render, so
@@ -294,8 +294,7 @@ const megacanvas: RedirectLine[] = [
 ];
 
 const result = await prerender({
-  // Every path below is slashless, so the simulate tier answers them as the
-  // matcher does; one pooled router serves the whole walk, built up front.
+  // One pooled router, built up front, serves the whole walk.
   mounts: mountsFor(
     PLATES.map((sheet) => sheet.num),
     { strategy: 'simulate', prewarm: 1 },
