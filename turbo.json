@@ -89,7 +89,6 @@
     // host, so uncached. In no ci:* graph: the Acceptance workflow's
     // `acceptance (bench)` job runs it.
     "bench": {
-      "dependsOn": ["^build"],
       // per-task time budget; CI shortens it
       "env": ["BENCH_TIME_MS"],
       // the result files' sha field; git HEAD is the fallback

@@ -2,6 +2,10 @@
   "$schema": "https://turborepo.com/schema.json",
   "extends": ["//"],
   "tasks": {
+    // the bench resolves through ui-router-server's dist
+    "bench": {
+      "dependsOn": ["^build"]
+    },
     "test": {
       "inputs": ["$TURBO_DEFAULT$"]
     }
