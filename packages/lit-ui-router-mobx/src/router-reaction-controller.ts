@@ -3,9 +3,9 @@ import { IReactionDisposer, reaction } from 'mobx';
 import { UIRouter } from '@uirouter/core';
 import { requestRouter } from 'lit-ui-router/context';
 import { UIRouterLitElement } from 'lit-ui-router/pure';
+import { RouterStore } from 'ui-router-mobx';
 
 import { warnMissingRouter } from './dev-warn.js';
-import { RouterStore } from './router-store.js';
 import { ReactionControllerOptions } from './reaction-controller.js';
 
 /** Options for {@link RouterReactionController}. */
