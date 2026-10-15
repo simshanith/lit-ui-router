@@ -264,7 +264,7 @@ writes a plain copy:
 ```bash
 grep -rinE --include='*.log' 'warn|deprecat|error' <empty-dir> > matches.log
 less -R matches.log
-pnpm dlx strip-ansi-cli < matches.log > matches.txt
+pnpm dlx strip-ansi-cli@4 < matches.log > matches.txt
 ```
 
 Group the matches by message rather than reading them line by line. Test names
