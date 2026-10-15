@@ -29,6 +29,9 @@ client deployed across every point on the server-support spectrum.
 - [Route Guards](./route-guards) — protect states with transition hooks: the
   `requiresAuth` pattern, redirect-to-login, and returning the user after
   authentication
+- [Loading and Error Views](./loading-and-error-views) — a pending indicator
+  while a transition runs, skeletons for `NOWAIT` resolves, and an error view
+  with retry when a transition fails
 - [Component Lifecycle Hooks](./component-lifecycle) — `uiCanExit` for
   unsaved-changes prompts and `uiOnParamsChanged` for dynamic parameters
 - [Routed Components](./routed-components) — reading a state's params
