@@ -80,7 +80,7 @@ flagging those over crap4ts' default threshold. It never fails and no CI
 lane runs it. With coverage already on disk, `pnpm --filter lit-ui-router
 run crap 25` prints a longer list for one package.
 
-`mise run ci` and `mise run ci_main` are the same invocations CI uses. `pnpm run ci` remains as an alias for the PR pipeline.
+`mise run ci` and `mise run ci_main` run what CI runs: CI splits each into its turbo graph (`ci_graph`, `ci_main_graph`) and one `mise run test_e2e <suite>` job per suite, in parallel ([`build-test-run.yml`](../.github/workflows/build-test-run.yml)). `pnpm run ci` remains as an alias for the PR pipeline's turbo graph.
 
 They are the same invocations, not the same room: CI builds from a fresh
 checkout, a local run reuses whatever `dist/` already holds. No build here
@@ -155,9 +155,13 @@ otherwise.
 report near the end. Save it to a file and search for `repro:`. Run the `repro:` line: `--force` re-runs that task while its dependencies stay
 cached. `exact:` is the command turbo ran, from the directory it ran in.
 
-Two workflows run the same job:
+Two workflows run the same jobs: `run` for the turbo graph, `plan`, and one
+`e2e (<suites>)` job per group of Cypress suites: one suite per job on PRs and
+`main`, three on the branch lane unless the `E2E_SUITES_PER_JOB_BRANCH` repo
+variable says otherwise. Both lanes also run `e2e result`, which is green only
+when every group is:
 
-- `build-test.yml` (`build_and_test / run`) runs on pull requests and pushes to
+- `build-test.yml` (`build_and_test / run`, `build_and_test / e2e result`) runs on pull requests and pushes to
   `main`. A pull-request run tests the branch merged into `main`, not the
   branch head.
 - `build-test-branch.yml` (`build_and_test (branch) / run`) runs on pushes that

@@ -95,18 +95,24 @@ only, so neither path can release.
 The pipeline is one set of steps split across three files by trigger, so that
 neither event can instantiate the other's jobs:
 
-| File                    | Trigger                      | Reports                                                         |
-| ----------------------- | ---------------------------- | --------------------------------------------------------------- |
-| `build-test.yml`        | PRs, `main` pushes, dispatch | `build_and_test / run` — the required status check              |
-| `build-test-branch.yml` | pushes to any other branch   | `build_and_test (signal gate)`, `build_and_test (branch) / run` |
-| `build-test-run.yml`    | `workflow_call` only         | the `run` job both callers share                                |
+| File                    | Trigger                      | Reports                                                                                                                 |
+| ----------------------- | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `build-test.yml`        | PRs, `main` pushes, dispatch | `build_and_test / run` and `build_and_test / e2e result` — required checks                                              |
+| `build-test-branch.yml` | pushes to any other branch   | `build_and_test (signal gate)`, `build_and_test (branch) / run`, `/ plan`, `/ e2e (<suites>)` per group, `/ e2e result` |
+| `build-test-run.yml`    | `workflow_call` only         | the jobs both callers share: `run`, `plan`, `e2e (<suites>)`, `e2e result`                                              |
+
+`run` is the turbo graph. `plan` groups the default Cypress suites
+`suitesPerJob` at a time, and each `e2e (<suites>)` job runs one group on its own
+runner. PRs and `main` use one suite per job; the branch lane uses three, or the
+`E2E_SUITES_PER_JOB_BRANCH` repo variable. `e2e result` fails unless every suite succeeded, so the rulesets
+require one e2e check however many suites there are.
 
 Branch-head pushes are gated: `build_and_test (signal gate)` asks whether a
 `pull_request` run will cover the SHA anyway, and skips the duplicate when it
 will. It cannot skip when a base conflicts (GitHub builds no merge ref) or when
 no PR is open, which are exactly the SHAs that would otherwise get no CI.
 
-The split is what makes `build_and_test / run` safe to require: a branch push
+The split is what makes `build_and_test / run` and `build_and_test / e2e result` safe to require: a branch push
 never runs `build-test.yml`, so it cannot report that name — and GitHub counts
 a _skipped_ required check as passing.
 

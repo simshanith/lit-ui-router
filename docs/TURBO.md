@@ -268,8 +268,8 @@ The GitHub Actions workflow (`.github/workflows/build-test.yml`) runs the CI pip
 
 1. **Checkout** - Clone repository
 2. **Setup** - mise installs Node.js (version pinned in `.nvmrc`) and pnpm (held equal to the `packageManager` pin); `mise run setup` installs dependencies
-3. **Install browsers** - Playwright and Cypress for e2e tests, restored from `actions/cache` keyed on the installed package versions
-4. **Build and Test** - PRs and branch pushes run `mise run ci` (turbo `ci:pull_request`); main pushes, `mainGraph` dispatches and `ci-main/` branches run `mise run ci_main` (turbo `ci:main`, adding the main-only guards)
+3. **Install browsers** - Playwright for the vitest browser specs (`run` job) and Cypress for the e2e suites (`e2e` jobs), restored from `actions/cache` keyed on the installed package versions
+4. **Build and Test** - the `run` job runs the turbo graph: PRs and branch pushes run `mise run ci_graph` (turbo `ci:pull_request`); main pushes, `mainGraph` dispatches and `ci-main/` branches run `mise run ci_main_graph` (turbo `ci:main`, adding the main-only guards). In parallel, a `plan` job groups the default e2e suites (`mise run e2e_plan`) and one `e2e (<suites>)` job per group runs `mise run test_e2e <suites>`. The `suitesPerJob` input sets the group size: PRs and main use 1, so each suite reports as `e2e (<suite>)`; the branch lane uses the `E2E_SUITES_PER_JOB_BRANCH` repo variable, or 3 when it is unset. On every lane, the `e2e result` job is green only when the plan and every group are. Locally, `mise run ci` and `mise run ci_main` run the graph and then every suite
 5. **Coverage reports** - Vitest coverage for PR comments, Codecov upload
 6. **Tag** (main pushes only) - a green run calls the Tag & push workflow, so release tags fire only after green main CI
 

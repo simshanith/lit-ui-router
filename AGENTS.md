@@ -8,7 +8,7 @@ This file is an index. The details live in [docs/CONTRIBUTING.md](docs/CONTRIBUT
 ## Setup and commands
 
 - Bootstrap with `mise trust`, `mise install`, `mise run setup` ([CONTRIBUTING: Development](docs/CONTRIBUTING.md#development)). A fresh checkout or worktree needs `mise trust` first.
-- `mise run ci` is the full local gate, the same invocation the PR lane runs (ask first; see below). A scoped `turbo run build typecheck lint test` misses `format:check`; add it.
+- `mise run ci` is the full local gate: the turbo graph the PR lane's `run` job runs, then every e2e suite, which CI runs as parallel jobs (ask first; see below). A scoped `turbo run build typecheck lint test` misses `format:check`; add it.
 - Run bare `turbo` in a mise-activated shell and `mise exec -- turbo` in a non-activated one (agent tool shells), never `pnpm turbo` or `pnpm exec turbo`. Run it in the foreground; a backgrounded run can die without an error.
 - If a failure lands in a package your diff doesn't touch, rerun that task with `--force` before believing it; an aborted examples `npm ci` leaves `node_modules` half-written.
 - `dist/` is never emptied by a build. Clear stale emit before reading `dist/` as shipped output ([CONTRIBUTING: Running Tests](docs/CONTRIBUTING.md#running-tests)).
