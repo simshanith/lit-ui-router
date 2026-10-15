@@ -15,8 +15,8 @@ This skill adds only what an unattended run needs.
    PR, start at `gh pr checks <pr>`; from a branch with no PR, or a PR with
    conflicts, `gh run list --branch <branch>` (the `Build and Test (branch)`
    workflow).
-2. Save `gh run view <run-id> --log-failed` to a file under `$CLAUDE_JOB_DIR/tmp`
-   and search it for `repro:`. Never pipe it through `head` or `tail`; the
+2. Save `gh run view <run-id> --log-failed` to a scratch file outside the
+   checkout and search it for `repro:`. Never pipe it through `head` or `tail`; the
    report sits near the end of thousands of lines.
 3. Check whether it's already fixed before setting anything up: a later green
    run on the same branch (`gh run list --branch <branch>`), a merged PR, or

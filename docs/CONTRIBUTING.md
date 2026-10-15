@@ -238,6 +238,80 @@ than a missing test, and the fix can be deleting it.
 `CODECOV_TOKEN` is an upload-only CI secret; it cannot read reports and is not
 needed locally.
 
+### Reading a green run's logs
+
+Every turbo step runs with `TURBO_OUTPUT_LOGS=errors-only`, so
+`gh run view <run-id> --log` holds no output from a passing task, warnings
+included. That output is in the task-log artifacts: `turbo-task-logs` from
+`run`, `turbo-task-logs-<group>` from each `e2e` job, and
+`turbo-task-logs-bench` and `turbo-task-logs-a11y` from the `acceptance` jobs.
+Each has a `turbo-run-summaries` counterpart with the same suffix, kept longer;
+`retention-days` in [`build-test-run.yml`](../.github/workflows/build-test-run.yml)
+has both. The other e2e artifacts are listed under
+[Reproducing a CI failure](#reproducing-a-ci-failure).
+
+Download each artifact into its own empty directory:
+
+```bash
+gh run download <run-id> -n turbo-task-logs --dir <empty-dir>
+```
+
+Each task has its own file, `<package>/.turbo/turbo-<task>.log` with `:` written
+as `$colon$`. A job that runs several suites interleaves them in its stream, but
+each suite keeps its own log. The logs keep their ANSI colors, which wrap words
+without splitting them, so search them as they are and page the matches with
+`less -R`:
+
+```bash
+grep -rinE --include='*.log' 'warn|deprecat|error' <empty-dir> > matches.log
+less -R matches.log
+```
+
+Group the matches by message rather than reading them line by line. Test names
+that mention warnings and `0 warnings` summary lines match too.
+
+A cache hit replays the log of the run that filled the cache, from another
+runner and possibly another commit: its browser banner, timings and warnings
+describe that run. The run summary says which tasks ran. `.cache.status` is
+`MISS` for an executed task and `HIT` for a replay, with `.cache.source` naming
+`LOCAL` or `REMOTE`:
+
+```bash
+jq -r '.tasks[] | "\(.taskId) \(.cache.status) \(.cache.source // "-")"' <summaries-dir>/*.json
+```
+
+A keyword search finds only output that names itself. To look for anything
+unusual, read each executed task's log in full beside the same task's log from a
+recent green `main` run. The logs are short: one Build and Test run's task logs
+total about 11,000 lines, most of them replays.
+
+In an `e2e` job, the `E2E` step's duration is the quick tell: seconds for a
+replay, a minute or more for a suite that ran.
+
+`gh api repos/simshanith/lit-ui-router/actions/runs/<run-id>/jobs` lists each
+step's start and end times. Matrix jobs in one run can land on different runner
+images, named in each job log's `Runner Image` group. Match images and browser
+versions before comparing timings, and compare a few runs before calling one
+slow step a trend.
+
+Expected on a green run:
+
+- `lint:examples` warnings from `examples/lint-eslint/src/**/violations.ts`,
+  fixtures that exist to be linted.
+- `gpg: WARNING: This key is not certified with a trusted signature!` from the
+  Codecov uploader's signature check.
+- `actions/checkout`'s `hint:` lines about the default branch name.
+- `GOOGLE_ANALYTICS_TRACKING_ID missing` from the docs build; only the
+  production deploy sets it ([www/DEPLOY.md](../www/DEPLOY.md)).
+- Cypress's Chrome connect retries and workerd's `Broken pipe`; the
+  [suite README](../apps/sample-app-lit-e2e/README.md) says when each matters.
+
+A warning that also shows in a recent `main` run predates the change. A
+`neutral` or `action_required` check from
+[`release-signals.yml`](../.github/workflows/release-signals.yml) is not a
+failure; the workflow header says what each means, and each `release signals`
+job's summary lists its verdicts ([RELEASE.md](RELEASE.md#5-release-signals-release-signalsyml)).
+
 ## TypeScript authoring
 
 The published packages support consumers on **TypeScript 5.0+**, while the

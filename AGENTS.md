@@ -135,4 +135,5 @@ Skills live in `.agents/skills/<name>/SKILL.md`. Claude Code reads only `.claude
 A skill stays thin: when to use it and what an unattended run needs, linking the doc or package README that owns the recipe.
 
 - `ci-failure-repro`: reproduce a red GitHub Actions run locally from its `repro:` line.
+- `ci-log-sweep`: sweep a green run's task-log artifacts for warnings and odd timings.
 - `cypress-sample-app`: run a sample app on a vite dev server and drive it with one Cypress spec.
