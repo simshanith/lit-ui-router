@@ -615,7 +615,7 @@ no asset exists there, so the whole prefix is the demo.
 
 The routing side stays light in production, too: the deployed worker —
 handler, fetch adapter, the `mounts` table, and the headless router behind the
-simulate mounts — gzips to a small fraction of even the free plan's Workers
+simulate mount — gzips to a small fraction of even the free plan's Workers
 size limit. The dogfood measures itself: the site package's `bundle:worker`
 task (a cached `wrangler deploy --dry-run`) prints the upload size, and
 `codecov:bundle` sends the same bundle to Codecov's size tracking as
