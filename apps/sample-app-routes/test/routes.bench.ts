@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { join } from 'node:path';
 
-import { writeBenchReport } from '@tools/shared/bench-report.ts';
+import { benchBudget, writeBenchReport } from '@tools/shared/bench-report.ts';
 import { Bench } from 'tinybench';
 import { createServerRouter } from 'ui-router-server';
 import type { ServerRouter, Verdict } from 'ui-router-server';
@@ -46,7 +46,11 @@ const assertVerdict = async (path: string, expected: Verdict) => {
   assert.deepEqual(await router.resolve(path), expected, path);
 };
 
-const bench = new Bench({ name: 'sample-app-routes resolve', throws: true });
+const bench = new Bench({
+  name: 'sample-app-routes resolve',
+  throws: true,
+  ...benchBudget(),
+});
 
 bench.add('construct', () => {
   createServerRouter({ mounts });

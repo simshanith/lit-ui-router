@@ -128,6 +128,33 @@ export async function benchRun(
   };
 }
 
+/** tinybench's time budget per task. */
+export interface BenchBudget {
+  time: number;
+  warmupTime: number;
+}
+
+/**
+ * `BENCH_TIME_MS` as tinybench options, warmup a quarter of it; empty keeps
+ * tinybench's defaults.
+ */
+export function benchBudget(
+  env: NodeJS.ProcessEnv = process.env,
+): BenchBudget | Record<string, never> {
+  const raw = env.BENCH_TIME_MS;
+
+  if (raw === undefined || raw === '') return {};
+
+  const time = Number(raw);
+
+  if (!Number.isFinite(time) || time <= 0)
+    throw new Error(
+      `BENCH_TIME_MS must be a positive number of ms, got ${raw}`,
+    );
+
+  return { time, warmupTime: time / 4 };
+}
+
 /** Options for {@link writeBenchReport}. */
 export interface BenchReportOptions {
   /** Where the file lands without `--json <path>`: the package's gitignored `.cache/`. */

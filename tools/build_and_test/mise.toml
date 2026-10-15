@@ -108,3 +108,10 @@ run = "playwright install-deps firefox webkit"
 # "first time using Cypress" verification banner.
 description = "Install and verify the Cypress binary"
 run = ["cypress install", "cypress verify"]
+
+[tasks.bench_summary]
+# env: GITHUB_STEP_SUMMARY (runner output file; prints only when unset).
+# Runs from the repo root: the bench result paths are repo-root-relative.
+description = "Report the ui-router-server bench pulse from the bench result files"
+dir = "{{config_root}}/../.."
+run = "./tools/build_and_test/src/bench-summary.ts"

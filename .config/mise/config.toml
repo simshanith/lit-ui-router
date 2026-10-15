@@ -337,6 +337,21 @@ flag "--output-logs <mode>" help="turbo task output: full | errors-only | new-on
 '''
 run = "turbo run codecov:bundle --ui=stream --log-order=stream --output-logs=\"${usage_output_logs?}\""
 
+[tasks.bench_pulse]
+# The benches one at a time on a short budget, for the `acceptance (bench)`
+# job; //tools/build_and_test:bench_summary reports the result files and
+# turbo_summary the run, as for ci_graph.
+depends = ["turbo_force_guard"]
+description = "Run the tinybench benches on a short time budget via turbo"
+usage = '''
+flag "--time-ms <time_ms>" help="tinybench time budget per bench task, in ms" default="200" env="BENCH_TIME_MS"
+flag "--output-logs <mode>" help="turbo task output: full | errors-only | new-only | hash-only | none; CI sets errors-only" default="full" env="TURBO_OUTPUT_LOGS"
+'''
+run = [
+  "mise run //tools/build_and_test:mark_session",
+  "BENCH_TIME_MS=\"${usage_time_ms?}\" turbo run bench --concurrency=1 --ui=stream --log-order=stream --summarize --log-file --output-logs=\"${usage_output_logs?}\"",
+]
+
 [tasks.dts_backtest_matrix]
 # Ad-hoc alias for the full dts-backtest TS matrix; CI runs it via ci_main.
 depends = ["turbo_force_guard"]

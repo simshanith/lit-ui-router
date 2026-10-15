@@ -24,6 +24,81 @@ concurrency:
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
+  bench:
+    # tinybench timings for ui-router-server (`bench`), rendered as the job
+    # summary. No thresholds, so only a crashing bench turns it red.
+    name: acceptance (bench)
+    runs-on: ubuntu-26.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+
+    steps:
+      - name: 'Checkout code'
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Setup mise
+        uses: jdx/mise-action@v5
+        with:
+          version: 2026.10.1
+      - name: Install dependencies
+        run: mise run setup
+      - name: Bench
+        # The builds it needs come from the remote cache. Same continue-on-error
+        # hand-off to the summary step as build-test-run.yml.
+        id: bench
+        continue-on-error: true
+        run: mise run bench_pulse
+        env:
+          TURBO_OUTPUT_LOGS: errors-only
+          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+          TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
+          TURBO_API: ${{ secrets.TURBO_API }}
+          TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+      - name: Bench summary
+        # After a crash too: it reports whichever result file was written.
+        if: ${{ !cancelled() }}
+        run: mise run //tools/build_and_test:bench_summary
+      - name: Upload turbo run summaries
+        # Same fail-open uploads as build-test-run.yml; the report links both.
+        id: run_summaries
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        continue-on-error: true
+        with:
+          name: turbo-run-summaries
+          path: .turbo/runs/
+          retention-days: 30
+          if-no-files-found: warn
+      - name: Upload turbo task logs
+        # The benches are uncached, so this is the only record of their tables.
+        id: task_logs
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7
+        continue-on-error: true
+        with:
+          name: turbo-task-logs
+          path: |
+            .turbo/turbo-*.log
+            .turbo/logs/*.json
+            apps/*/.turbo/turbo-*.log
+            examples/.turbo/turbo-*.log
+            packages/*/.turbo/turbo-*.log
+            tools/*/.turbo/turbo-*.log
+            www/*/.turbo/turbo-*.log
+          include-hidden-files: true
+          retention-days: 5
+          if-no-files-found: warn
+      - name: Turbo run summary
+        # Goes red after a crashed bench, so a red job opens on the report.
+        if: ${{ !cancelled() }}
+        run: mise run //tools/build_and_test:turbo_summary
+        env:
+          BUILD_OUTCOME: ${{ steps.bench.outcome }}
+          TURBO_SUMMARY_ARTIFACT_URL: ${{ steps.run_summaries.outputs.artifact-url }}
+          TURBO_LOGS_ARTIFACT_URL: ${{ steps.task_logs.outputs.artifact-url }}
+
   a11y:
     # axe-core over the docs pages and sample-app mounts (`test:e2e:a11y`),
     # served by `wrangler dev`.
