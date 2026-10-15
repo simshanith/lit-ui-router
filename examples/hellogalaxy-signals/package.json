@@ -14,7 +14,7 @@
     "@uirouter/core": "^6.1.2",
     "@uirouter/visualizer": "^7.2.1",
     "lit": "^3.3.3",
-    "lit-ui-router": "^1.16.4",
+    "lit-ui-router": "^1.16.5",
     "lit-ui-router-signals": "^0.1.0",
     "signal-polyfill": "^0.2.2",
     "ui-router-signals": "^0.1.0"
