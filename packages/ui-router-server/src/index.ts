@@ -14,6 +14,8 @@
 import type { RawParams, StateDeclaration } from '@uirouter/core';
 
 import { compileResolver, matchRoute } from './redirects.ts';
+import { createRouterPool } from './router-pool.ts';
+import type { PooledRouter, RouterPool } from './router-pool.ts';
 import type {
   CompiledResolver,
   RedirectRule,
@@ -128,6 +130,7 @@ interface Mount {
   config: MountConfig;
   strategy: 'matcher' | 'simulate';
   compiled: CompiledResolver;
+  pool: RouterPool;
 }
 
 const isUrlText = (input: string | { pathname: string }): input is string =>
@@ -246,6 +249,7 @@ const compileMount = ([base, config]: [string, MountConfig]): Mount => {
       rules: config.redirects,
       config: config.config,
     }),
+    pool: createRouterPool(),
   };
 };
 
@@ -368,34 +372,53 @@ const matcherVerdict = (mount: Mount, subpath: string): Verdict => {
     : notFoundVerdict(mount);
 };
 
+// Null when the transition failed or timed out: that router may still be mid-transition.
+const replayVerdict = async (
+  pooled: PooledRouter,
+  mount: Mount,
+  subpath: string,
+): Promise<Verdict | null> => {
+  const { router } = pooled;
+
+  if (!router.urlService.match({ path: subpath, search: {}, hash: '' }))
+    return notFoundVerdict(mount);
+  const settled = pooled.nextSettled();
+  router.urlService.url(subpath);
+  router.urlService.sync();
+
+  if (!(await settledWithinTimeout(settled))) return null;
+
+  // A transition that settled on the otherwise state IS the 404 page.
+  if (router.globals.current.name === mount.config.otherwise?.state)
+    return otherwiseVerdict(mount);
+  // The memory location only moves when the client's address bar would:
+  // core skips the url push for url-sourced transitions.
+  const landed = router.urlService.url();
+
+  return landed === subpath
+    ? shellVerdict(mount)
+    : redirectVerdict(mount, landed);
+};
+
 const simulateVerdict = async (
   simulate: SimulateModule,
   mount: Mount,
   subpath: string,
 ): Promise<Verdict> => {
   try {
-    const router = buildHeadlessRouter(simulate, mount);
+    const pooled = mount.pool.checkOut(() =>
+      buildHeadlessRouter(simulate, mount),
+    );
 
-    if (!router.urlService.match({ path: subpath, search: {}, hash: '' }))
-      return notFoundVerdict(mount);
-    const settled = simulate.onceSettled(router);
-    router.urlService.url(subpath);
-    router.urlService.sync();
+    const verdict = await replayVerdict(pooled, mount, subpath);
 
     // Failed and timed-out transitions degrade to the shell — the client
     // router re-runs them with its full configuration; never a wrong redirect.
-    if (!(await settledWithinTimeout(settled))) return shellVerdict(mount);
+    // Their router is dropped, never pooled.
+    if (verdict === null) return shellVerdict(mount);
+    pooled.release();
 
-    // A transition that settled on the otherwise state IS the 404 page.
-    if (router.globals.current.name === mount.config.otherwise?.state)
-      return otherwiseVerdict(mount);
-    // The memory location only moves when the client's address bar would:
-    // core skips the url push for url-sourced transitions.
-    const landed = router.urlService.url();
-
-    return landed === subpath
-      ? shellVerdict(mount)
-      : redirectVerdict(mount, landed);
+    return verdict;
   } catch {
     // Core can throw synchronously (registration, matching, sync); degrade
     // to the shell — the client router re-runs the url with its full

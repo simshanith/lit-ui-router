@@ -318,6 +318,137 @@ describe('simulate strategy isolation', () => {
 
     assert.equal(pendingTimers(), before);
   });
+
+  // Shell, redirect and 404 verdicts, plus the param-carrying states a reused
+  // router could leak into the next request through inherited params.
+  const probes = [
+    '/app',
+    '/app/welcome',
+    '/app/legacy',
+    '/app/first',
+    '/app/contacts',
+    '/app/contacts/3',
+    '/app/contacts/4',
+    '/app/inbox',
+    '/app/old-inbox',
+    '/app/nope',
+  ];
+
+  const freshVerdict = (path: string) =>
+    createServerRouter({
+      mounts: { '/app': appMountWith404('simulate') },
+    }).resolve(path);
+
+  it('resolves interleaved requests on one mount to distinct verdicts', async () => {
+    const router = createServerRouter({
+      mounts: { '/app': appMountWith404('simulate') },
+    });
+
+    const expected = await Promise.all(probes.map(freshVerdict));
+
+    // Warm the pool, then interleave three rounds in a rotated order.
+    await Promise.all(probes.map((path) => router.resolve(path)));
+
+    const rounds = [0, 1, 2].map((round) => [
+      ...probes.slice(round * 4),
+      ...probes.slice(0, round * 4),
+    ]);
+
+    const verdicts = await Promise.all(
+      rounds.flat().map((path) => router.resolve(path)),
+    );
+
+    assert.deepEqual(
+      verdicts,
+      rounds.flat().map((path) => expected[probes.indexOf(path)]),
+    );
+  });
+
+  it('leaks no state from one request into the next', async () => {
+    const router = createServerRouter({
+      mounts: { '/app': appMountWith404('simulate') },
+    });
+
+    const expected = await Promise.all(probes.map(freshVerdict));
+
+    // Sequential pairs run on the same pooled router, each after every other.
+    for (const before of probes) {
+      for (const [index, path] of probes.entries()) {
+        await router.resolve(before);
+        assert.deepEqual(
+          await router.resolve(path),
+          expected[index],
+          `${path} after ${before}`,
+        );
+      }
+    }
+  });
+
+  it('reuses a router after a redirect, an otherwise 404 and a timeout', async () => {
+    let release = (): void => {};
+
+    // Data-only declarations can't hang a transition; a core resolve can.
+    const hang = {
+      name: 'hang',
+      url: '/hang',
+      resolve: [
+        {
+          token: 'never',
+          resolveFn: () =>
+            new Promise<void>((resolve) => {
+              release = resolve;
+            }),
+        },
+      ],
+    };
+
+    const mount = appMountWith404('simulate');
+
+    const router = createServerRouter({
+      mounts: { '/app': { ...mount, routes: [...mount.routes, hang] } },
+    });
+
+    const redirect = {
+      kind: 'redirect',
+      mount: '/app',
+      location: '/app/contacts',
+      status: 302,
+    };
+
+    const notFound = { kind: 'shell', mount: '/app', status: 404 };
+
+    assert.deepEqual(await router.resolve('/app/legacy'), redirect);
+    assert.deepEqual(await router.resolve('/app/legacy'), redirect);
+    assert.deepEqual(await router.resolve('/app/nope'), notFound);
+    assert.deepEqual(await router.resolve('/app/nope'), notFound);
+    assert.deepEqual(await router.resolve('/app/old-inbox'), {
+      kind: 'redirect',
+      mount: '/app',
+      location: '/app/inbox?page=2',
+      status: 302,
+    });
+    assert.deepEqual(await router.resolve('/app/inbox'), {
+      kind: 'shell',
+      mount: '/app',
+    });
+
+    const pendingTimers = () =>
+      process.getActiveResourcesInfo().filter((name) => name === 'Timeout')
+        .length;
+
+    const timers = pendingTimers();
+
+    // The timed-out router is still mid-transition; it must never serve again.
+    assert.deepEqual(await router.resolve('/app/hang'), {
+      kind: 'shell',
+      mount: '/app',
+    });
+    assert.equal(pendingTimers(), timers);
+    const pending = router.resolve('/app/legacy');
+    release();
+    assert.deepEqual(await pending, redirect);
+    assert.deepEqual(await router.resolve('/app/nope'), notFound);
+  });
 });
 
 describe('matcher strategy route scans', () => {
