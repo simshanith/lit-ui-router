@@ -20,7 +20,7 @@
     "example:install:navigation-api": "npm ci --prefix navigation-api",
     "format:check:oxfmt": "oxfmt --check \"**/*.{ts,js,json,md,html}\"",
     "format:oxfmt": "oxfmt \"**/*.{ts,js,json,md,html}\"",
-    "postinstall": "concurrently \"npm:example:install:*\"",
+    "postinstall": "concurrently --restart-tries 1 \"npm:example:install:*\"",
     "lint:example:lint-eslint": "npm run lint --prefix lint-eslint",
     "lint:examples": "concurrently --prefix-colors auto \"npm:lint:example:*\"",
     "lint:oxlint": "oxlint .",
