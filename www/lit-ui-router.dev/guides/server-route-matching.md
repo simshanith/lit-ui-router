@@ -614,11 +614,12 @@ verdict. The exhibits list their bare paths for the same reason plus one more:
 no asset exists there, so the whole prefix is the demo.
 
 The routing side stays light in production, too: the deployed worker —
-handler, fetch adapter, both mount tables, and the headless router behind the
-simulate mount — uploads at ~268 KiB (~56 KiB gzip), around 2% of even the
-free plan's Workers size limit. That figure is the dogfood measuring itself:
-the repo's own cached wrangler dry-run produces it, and CI uploads the same
-bundle to size tracking. The site itself ships as static assets through the
+handler, fetch adapter, the `mounts` table, and the headless router behind the
+simulate mounts — gzips to a small fraction of even the free plan's Workers
+size limit. The dogfood measures itself: the site package's `bundle:worker`
+task (a cached `wrangler deploy --dry-run`) prints the upload size, and
+`codecov:bundle` sends the same bundle to Codecov's size tracking as
+`docs-worker-esm`. The site itself ships as static assets through the
 binding, outside that budget entirely.
 
 ## Redirects: data until they need code
