@@ -874,6 +874,9 @@ importers:
       oxlint:
         specifier: 'catalog:'
         version: 1.88.0(oxlint-tsgolint@7.0.2004)
+      tinybench:
+        specifier: 'catalog:'
+        version: 6.2.2
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
