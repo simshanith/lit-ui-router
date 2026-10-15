@@ -183,7 +183,6 @@ catalogs:
     '@tools/shared': workspace:*
     '@tools/typedoc-plugin-lit-ui-router': workspace:*
     '@tools/vue-check': workspace:*
-    '@tools/warn-lanes': workspace:*
     '@tools/wintercg-globals': workspace:*
     '@tools/workers-builds': workspace:*
     '@www/lit-ui-router.dev': workspace:*

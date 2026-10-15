@@ -428,9 +428,6 @@ catalogs:
     '@tools/vue-check':
       specifier: workspace:*
       version: workspace:*
-    '@tools/warn-lanes':
-      specifier: workspace:*
-      version: workspace:*
     '@tools/wintercg-globals':
       specifier: workspace:*
       version: workspace:*
@@ -1917,9 +1914,6 @@ importers:
       '@tools/shared':
         specifier: catalog:workspace
         version: link:../shared
-      '@tools/warn-lanes':
-        specifier: catalog:workspace
-        version: link:../warn-lanes
       '@types/node':
         specifier: 'catalog:'
         version: 24.19.2
@@ -2228,12 +2222,12 @@ importers:
 
   tools/lint-elements:
     devDependencies:
+      '@tools/bootstrap':
+        specifier: catalog:workspace
+        version: link:../bootstrap
       '@tools/shared':
         specifier: catalog:workspace
         version: link:../shared
-      '@tools/warn-lanes':
-        specifier: catalog:workspace
-        version: link:../warn-lanes
       '@types/node':
         specifier: 'catalog:'
         version: 24.19.2
@@ -2517,27 +2511,6 @@ importers:
       vue-tsc:
         specifier: 'catalog:'
         version: 3.3.13(typescript@6.0.3)
-
-  tools/warn-lanes:
-    devDependencies:
-      '@tools/shared':
-        specifier: catalog:workspace
-        version: link:../shared
-      '@types/node':
-        specifier: 'catalog:'
-        version: 24.19.2
-      oxfmt:
-        specifier: 'catalog:'
-        version: 0.73.0
-      oxlint:
-        specifier: 'catalog:'
-        version: 1.88.0(oxlint-tsgolint@7.0.2004)
-      typescript:
-        specifier: 'catalog:'
-        version: 7.0.2
-      valibot:
-        specifier: 'catalog:'
-        version: 1.5.0(typescript@7.0.2)
 
   tools/wintercg-globals:
     devDependencies:

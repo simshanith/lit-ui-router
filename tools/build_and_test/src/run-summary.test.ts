@@ -45,7 +45,6 @@ import {
   structuredTaskLog,
   summaryMarkdown,
   turboReproduction,
-  warnLaneEntries,
 } from './run-summary.core.ts';
 
 // The escape byte, spelled rather than embedded, so this file stays printable.
@@ -927,8 +926,7 @@ describe('the artifact link in the overview', () => {
     const lines = overviewLines(run(), { artifactUrl: URL });
     assert.equal(lines.length, overviewLines(run()).length + 2);
     // Flush against the facts, the link reads as a continuation of whichever
-    // one happened to run last — most confusingly the warn-lane line, whose
-    // own marker is JSON.
+    // one happened to run last.
     assert.equal(lines.at(-2), '');
     assert.equal(lines.at(-1), `   run summary json: ${URL}`);
   });
@@ -1070,85 +1068,6 @@ describe('savedClause', () => {
   });
 });
 
-describe('warn-only lanes', () => {
-  const marker =
-    'warn-lane: {"task":"//#lint:elements","total":36,"floor":36,"status":"at-floor","regressions":0,"rules":{"lit-a11y/anchor-is-valid":32}}';
-
-  it('reads the lane state out of a green task log', () => {
-    const entries = warnLaneEntries(
-      new Map([['//#lint:elements', `some lint output\n${marker}\n`]]),
-    );
-
-    assert.deepEqual(
-      entries.map((entry) => entry.task),
-      ['//#lint:elements'],
-    );
-    assert.equal(entries[0]?.state?.total, 36);
-  });
-
-  it('strips ANSI before parsing — task logs are coloured', () => {
-    const entries = warnLaneEntries(
-      new Map([['//#lint:elements', `${ESC}[2m${marker}${ESC}[22m\n`]]),
-    );
-
-    assert.equal(entries[0]?.state?.status, 'at-floor');
-  });
-
-  it('still emits a line for a watched lane that left no log', () => {
-    const entries = warnLaneEntries(new Map());
-    assert.equal(entries.length, 1);
-    assert.equal(entries[0]?.state, undefined);
-    assert.match(
-      overviewLines(summary([]), { warnLanes: entries }).join('\n'),
-      /warn-lane: \/\/#lint:elements — warn-only lane, no state in this run/,
-    );
-  });
-
-  it('names the lane in both overview lanes', () => {
-    const run = summary([task()]);
-    const warnLanes = warnLaneEntries(new Map([['//#lint:elements', marker]]));
-    assert.match(
-      overviewMarkdown(run, { warnLanes }),
-      /\*\*Warn-only lanes\*\* — green by design[\s\S]*- \/\/#lint:elements — 36 warnings, at the snapshot floor/,
-    );
-    assert.match(
-      overviewLines(run, { warnLanes }).join('\n'),
-      /warn-lane: \/\/#lint:elements — 36 warnings, at the snapshot floor/,
-    );
-  });
-
-  it('keeps the rule breakdown to the markdown lane', () => {
-    const run = summary([task()]);
-    const warnLanes = warnLaneEntries(new Map([['//#lint:elements', marker]]));
-    // One terminal row: the verdict is what has to survive, and the markdown
-    // twin has the room the breakdown wants.
-    const line = overviewLines(run, { warnLanes }).join('\n');
-    assert.match(
-      line,
-      /warn-lane: \/\/#lint:elements — 36 warnings, at the snapshot floor$/m,
-    );
-    assert.ok(!line.includes('anchor-is-valid'));
-    assert.match(
-      overviewMarkdown(run, { warnLanes }),
-      /at the snapshot floor — lit-a11y\/anchor-is-valid 32/,
-    );
-  });
-
-  // The overview runs on green runs too, which is the whole point: a warn lane
-  // that never fails would otherwise only ever be reported when something else broke.
-  it('reports on a green run, where no failure section renders at all', () => {
-    const warnLanes = warnLaneEntries(new Map([['//#lint:elements', marker]]));
-    assert.match(
-      overviewMarkdown(summary([task()], 0), { warnLanes }),
-      /Warn-only lanes/,
-    );
-  });
-
-  it('is absent entirely when no warn lane was passed in', () => {
-    assert.ok(!overviewMarkdown(summary([task()])).includes('Warn-only lanes'));
-  });
-});
-
 /** A run whose only hit came from the remote cache. */
 const remoteHitRun = () =>
   summary([hit({ taskId: 'remote-hit' })], 0, {
@@ -1238,9 +1157,11 @@ describe('sessionMarkdown', () => {
   });
 
   it('keeps the job-level footer out of the per-run blocks', () => {
-    const warnLanes = warnLaneEntries(new Map());
-    const md = sessionMarkdown([srun(ci()), srun(docs())], { warnLanes });
-    assert.equal(md.split('**Warn-only lanes**').length - 1, 1);
+    const md = sessionMarkdown([srun(ci()), srun(docs())], {
+      annotations: 'none',
+    });
+
+    assert.equal(md.split('**Tool annotations**').length - 1, 1);
   });
 
   // The remote-cache note is a job fact: the job's first run fills .turbo, so
