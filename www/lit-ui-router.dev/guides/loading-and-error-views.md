@@ -181,7 +181,9 @@ re-renders.
 
 A rejected NOWAIT resolve does not fail the transition, which has already
 succeeded; the component renders that failure itself, as the task's `error`
-branch does above.
+branch does above. Core still leaves the rejection unhandled on its own copies
+of the promise, so the page's `unhandledrejection` event and any error tracker
+listening to it see the failure too.
 
 ## Error views
 
@@ -269,3 +271,15 @@ const ContactsError: RoutedLitTemplate = ({ router, transition }) => {
 A component that rendered a failed NOWAIT resolve retries in place with
 [`stateService.reload(state)`](https://ui-router.github.io/core/docs/latest/classes/_state_stateservice_.stateservice.html#reload),
 which runs the resolves of that state and its descendants again.
+
+## Example
+
+The example puts the recipes together. Report and Profile wait on a slow
+resolve, so the shell shows the pending view their state's `data` names:
+`account` sets a skeleton that Profile inherits, and Report gets the shell's
+default. Activity's resolve is NOWAIT, so its view renders at once and fills in
+when the promise settles. Check _Fail requests_ to see the default error state,
+the `account.error` state that `account`'s `data` names for its subtree, and
+Activity's in-place retry with `reload`.
+
+<LiveExample name="loading-and-error-views" />

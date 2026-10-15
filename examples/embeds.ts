@@ -68,6 +68,12 @@ export const EXAMPLES = {
     height: '650px',
     file: 'src/main.ts',
   },
+  'loading-and-error-views': {
+    title: 'Loading and Error Views',
+    // check:embeds never ticks Fail requests, so this also covers the error views, which stand a few px taller.
+    height: '410px',
+    file: 'src/main.ts',
+  },
 } as const;
 
 export type ExampleName = keyof typeof EXAMPLES;
