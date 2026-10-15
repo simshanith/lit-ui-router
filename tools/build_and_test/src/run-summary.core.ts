@@ -848,6 +848,11 @@ export interface OverviewContext {
    * always has something behind it.
    */
   attachmentsUrl?: string;
+  /**
+   * The uploaded Cypress `cypress/screenshots*` dirs. Uploaded only by a
+   * failed e2e suite, so a URL here always has something behind it.
+   */
+  screenshotsUrl?: string;
   /** The uploaded per-task `.turbo/turbo-*.log` files, whatever the stream hid. */
   logsUrl?: string;
   /** `annotationNote` for the tool annotations this step re-emitted. */
@@ -896,6 +901,20 @@ export function attachmentsLink(
   return {
     markdown: `[Vitest attachments](<${url}>) — failure screenshots and \`annotate\` attachments from the failing specs, downloadable from this run's artifacts.`,
     line: `   vitest attachments: ${url}`,
+  };
+}
+
+/** Link to the screenshots Cypress took of each failing e2e test. */
+export function screenshotsLink(
+  context: OverviewContext,
+): { markdown: string; line: string } | undefined {
+  const url = safeArtifactUrl(context.screenshotsUrl);
+
+  if (url === undefined) return undefined;
+
+  return {
+    markdown: `[Cypress screenshots](<${url}>) — the page as each failing e2e test left it, downloadable from this run's artifacts.`,
+    line: `   cypress screenshots: ${url}`,
   };
 }
 
@@ -1049,6 +1068,7 @@ function footerMarkdown(context: OverviewContext): string[] {
 
   for (const link of [
     attachmentsLink(context),
+    screenshotsLink(context),
     logsLink(context),
     artifactLink(context),
   ]) {
@@ -1193,6 +1213,7 @@ function footerLines(context: OverviewContext): string[] {
   // against the facts it reads as a continuation of whichever one ran last.
   const links = [
     attachmentsLink(context),
+    screenshotsLink(context),
     logsLink(context),
     artifactLink(context),
   ].filter((link) => link !== undefined);
