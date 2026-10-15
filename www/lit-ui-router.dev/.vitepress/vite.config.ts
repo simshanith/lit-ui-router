@@ -5,6 +5,7 @@ import { mounts } from 'sample-app-routes';
 // `examples#build:embeds` (hash routing, so no SPA fallback needed).
 import { EXAMPLE_NAMES } from 'examples/embeds';
 import { fileURLToPath } from 'node:url';
+import { gzipSync } from 'node:zlib';
 import { defineConfig, Plugin } from 'vite';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 
@@ -56,8 +57,48 @@ function examplesIndexPlugin(): Plugin {
   };
 }
 
+// vite's own build.chunkSizeWarningLimit default, applied to every client chunk.
+const CHUNK_BUDGET_KB = 500;
+
+// The lazy local-search index (API pages included) measures ~666 kB.
+const SEARCH_INDEX_BUDGET_KB = 750;
+
+/** Fails the client build on a chunk over its budget and logs the search index's size. */
+function chunkBudgetPlugin(): Plugin {
+  return {
+    name: 'chunk-budget',
+    apply: (_config, { command, isSsrBuild }) =>
+      command === 'build' && !isSsrBuild,
+    generateBundle(_options, bundle) {
+      const over: string[] = [];
+
+      for (const chunk of Object.values(bundle)) {
+        if (chunk.type !== 'chunk') continue;
+        const kB = Buffer.byteLength(chunk.code) / 1000;
+        const isIndex = chunk.name.startsWith('@localSearchIndex');
+        const budget = isIndex ? SEARCH_INDEX_BUDGET_KB : CHUNK_BUDGET_KB;
+
+        if (isIndex) {
+          const gzipKB = gzipSync(chunk.code).length / 1000;
+
+          console.log(
+            `chunk-budget: ${chunk.fileName} ${kB.toFixed(1)} kB (gzip ${gzipKB.toFixed(1)} kB) of ${budget} kB`,
+          );
+        }
+
+        if (kB > budget) {
+          over.push(`${chunk.fileName} ${kB.toFixed(1)} kB > ${budget} kB`);
+        }
+      }
+
+      if (over.length) this.error(`chunks over budget: ${over.join(', ')}`);
+    },
+  };
+}
+
 export default defineConfig({
   plugins: [
+    chunkBudgetPlugin(),
     serverRouterPlugin(router, {
       shellPath: (mount) => SHELL_PATHS.get(mount) ?? mount,
       // Dev parity with the worker's mount-owned 404: serve the mount's
@@ -199,6 +240,21 @@ export default defineConfig({
         ),
       },
     ],
+  },
+
+  build: {
+    rolldownOptions: {
+      // A throw here is swallowed, so fail through the exit code instead.
+      onLog(level, log, handler) {
+        // The reporter's only warning is the chunk-size one chunk-budget replaces.
+        if (log.plugin === 'builtin:vite-reporter') return;
+        handler(level, log);
+
+        if (level !== 'warn') return;
+        process.exitCode = 1;
+        console.error('Failing the docs build on the warning above.');
+      },
+    },
   },
 
   server: {
