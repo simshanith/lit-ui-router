@@ -1,15 +1,15 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { flooredPeers, listedFiles, peerFiles } from './floor-files.ts';
+import { floorAliases, listedFiles, peerFiles } from './floor-files.ts';
 
 const showConfig = (paths?: Record<string, string[]>) =>
   JSON.stringify({ compilerOptions: { strict: true, paths } });
 
-describe('flooredPeers', () => {
-  it('names each peer whose paths target a <peer>-floor alias, once', () => {
+describe('floorAliases', () => {
+  it('names each floor alias a paths target goes through, once', () => {
     assert.deepEqual(
-      flooredPeers(
+      floorAliases(
         showConfig({
           'lit-ui-router': [
             './node_modules/lit-ui-router-floor/dist/index.d.ts',
@@ -23,13 +23,26 @@ describe('flooredPeers', () => {
           ],
         }),
       ),
-      ['@uirouter/core', 'lit-ui-router', 'ui-router-server'],
+      ['@uirouter/core-floor', 'lit-ui-router-floor', 'ui-router-server-floor'],
+    );
+  });
+
+  it('names a per-leg <peer>-<line>-floor alias', () => {
+    assert.deepEqual(
+      floorAliases(
+        showConfig({
+          'ui-router-server': [
+            './node_modules/ui-router-server-0.3-floor/dist/index.d.ts',
+          ],
+        }),
+      ),
+      ['ui-router-server-0.3-floor'],
     );
   });
 
   it('ignores targets outside a floor alias', () => {
     assert.deepEqual(
-      flooredPeers(
+      floorAliases(
         showConfig({
           '~/*': ['./src/*'],
           lit: ['./node_modules/lit-2/index.d.ts'],
@@ -41,13 +54,13 @@ describe('flooredPeers', () => {
   });
 
   it('is empty with no paths, so the guard can fail on testing nothing', () => {
-    assert.deepEqual(flooredPeers(showConfig()), []);
-    assert.deepEqual(flooredPeers('{}'), []);
+    assert.deepEqual(floorAliases(showConfig()), []);
+    assert.deepEqual(floorAliases('{}'), []);
   });
 
   it('rejects a config whose paths are not string arrays', () => {
     assert.throws(() =>
-      flooredPeers(JSON.stringify({ compilerOptions: { paths: { a: 'b' } } })),
+      floorAliases(JSON.stringify({ compilerOptions: { paths: { a: 'b' } } })),
     );
   });
 });

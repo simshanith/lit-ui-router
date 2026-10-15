@@ -198,6 +198,12 @@ An eslint floor bump raises `publishedPeer.eslint` and the `peerFloorEslintPlugi
 pin. The range's upper `||` leg is exercised by the plugin's own `eslint`
 devDependency, which `floor-guard` requires to sit in it.
 
+`floor-guard` proves a range leg by leg: the lowest by the `<dep>-floor` alias,
+the top by the dev dependency, and each leg between by its own
+`<dep>-<line>-floor` alias pinned to that leg's floor, such as
+`ui-router-server-0.3-floor` for `^0.3.0`. Each leg alias needs its own
+`typecheck:peer-floor` pass through a tsconfig that maps the dep onto it.
+
 `published-diff` picks that tag from the workspace version by the same rule
 release-it publishes under: a prerelease answers to its own channel tag,
 everything else to `latest`. A channel the registry does not carry yet falls

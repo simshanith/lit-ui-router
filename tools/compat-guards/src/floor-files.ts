@@ -12,20 +12,20 @@ const ShowConfigSchema = v.object({
 });
 
 const FLOOR_TARGET =
-  /(?:^|\/)node_modules\/((?:@[^/]+\/)?[^/]+)-floor(?:\/|$)/u;
+  /(?:^|\/)node_modules\/((?:@[^/]+\/)?[^/]+-floor)(?:\/|$)/u;
 
-/** Peers a `tsc --showConfig` maps onto a `node_modules/<peer>-floor` alias. */
-export function flooredPeers(showConfig: string): string[] {
+/** Floor aliases a `tsc --showConfig` maps paths onto, `<peer>[-<line>]-floor`. */
+export function floorAliases(showConfig: string): string[] {
   const config = v.parse(ShowConfigSchema, JSON.parse(showConfig));
   const targets = Object.values(config.compilerOptions?.paths ?? {}).flat();
 
-  const peers = targets.flatMap((target) => {
-    const peer = FLOOR_TARGET.exec(target)?.[1];
+  const aliases = targets.flatMap((target) => {
+    const alias = FLOOR_TARGET.exec(target)?.[1];
 
-    return peer === undefined ? [] : [peer];
+    return alias === undefined ? [] : [alias];
   });
 
-  return [...new Set(peers)].sort();
+  return [...new Set(aliases)].sort();
 }
 
 /** The paths `tsc --listFilesOnly` printed, one per non-empty line. */

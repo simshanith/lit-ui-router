@@ -42,22 +42,24 @@ export function rangeFloor(range: string): string | undefined {
   return semver.minVersion(normalized)?.version;
 }
 
+export interface Leg {
+  range: string;
+  floor: string;
+}
+
 /**
- * Every leg but the lowest, each as its own range; empty for a single-leg or
- * unbounded range. The floor alias proves the lowest leg; these need another proof.
+ * Every `||` leg as its own range with its floor, lowest first; empty for an
+ * unbounded range. floor-guard proves each with a floor alias or the dev copy.
  */
-export function upperLegs(range: string): string[] {
-  const floor = rangeFloor(range);
+export function rangeLegs(range: string): Leg[] {
+  if (rangeFloor(range) === undefined) return [];
 
-  if (floor === undefined) return [];
+  return new semver.Range(range).set
+    .flatMap((comparators) => {
+      const leg = comparators.map((comparator) => comparator.value).join(' ');
+      const floor = semver.minVersion(leg)?.version;
 
-  const legs = new semver.Range(range).set.map((leg) =>
-    leg.map((comparator) => comparator.value).join(' '),
-  );
-
-  const lowest = legs.findIndex(
-    (leg) => semver.minVersion(leg)?.version === floor,
-  );
-
-  return legs.filter((_, index) => index !== lowest);
+      return floor === undefined ? [] : [{ range: leg, floor }];
+    })
+    .sort((a, b) => semver.compare(a.floor, b.floor));
 }
