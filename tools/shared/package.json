@@ -2,9 +2,10 @@
   "name": "@tools/shared",
   "version": "0.0.1",
   "private": true,
-  "description": "Cross-workflow tooling helpers: the exec seam, GitHub Actions plumbing, the node:test reporter, shared source globs, and workspace enumeration",
+  "description": "Cross-workflow tooling helpers: the exec seam, GitHub Actions plumbing, the node:test reporter, bench result files, shared source globs, and workspace enumeration",
   "type": "module",
   "exports": {
+    "./bench-report.ts": "./src/bench-report.ts",
     "./exec.ts": "./src/exec.ts",
     "./execve.ts": "./src/execve.ts",
     "./gha.core.ts": "./src/gha.core.ts",

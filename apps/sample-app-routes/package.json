@@ -8,6 +8,7 @@
     "./shell-mounts": "./src/shellMounts.ts"
   },
   "scripts": {
+    "bench": "node test/routes.bench.ts",
     "format:check:oxfmt": "oxfmt --check \"**/*.{ts,json,md}\"",
     "format:oxfmt": "oxfmt \"**/*.{ts,json,md}\"",
     "lint:oxlint": "oxlint .",
@@ -23,6 +24,7 @@
     "@types/node": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
+    "tinybench": "catalog:",
     "typescript": "catalog:"
   }
 }

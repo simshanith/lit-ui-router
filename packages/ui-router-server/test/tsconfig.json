@@ -1,5 +1,5 @@
 {
-  // The node --test graph; only here do node types exist.
+  // The node graph (tests and the bench); only here do node types exist.
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "noEmit": true,
