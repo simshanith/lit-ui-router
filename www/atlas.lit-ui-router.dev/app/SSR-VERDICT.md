@@ -543,6 +543,8 @@ Ordered by how much each would have saved me.
     Pages serves must verdict as the page, and takes the simulate tier for the
     prerender alone, whose paths are slashless.
 
+    **Status, 2026-10-15.** Filed as #1315 on `ui-router-server@0.4`.
+
 ## 6. Verdict, in one paragraph
 
 `ui-router-server` did its job and did it cleanly: one route table, honest 302s
