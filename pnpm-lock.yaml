@@ -323,6 +323,9 @@ catalogs:
     hono-floor:
       specifier: npm:hono@4.0.0
       version: 4.0.0
+    mobx-floor:
+      specifier: npm:mobx@6.0.0
+      version: 6.0.0
     signal-polyfill-floor:
       specifier: npm:signal-polyfill@0.2.0
       version: 0.2.0
@@ -1303,6 +1306,9 @@ importers:
       mobx-6:
         specifier: catalog:mobx6-compat
         version: mobx@6.16.1
+      mobx-floor:
+        specifier: catalog:peerFloor
+        version: mobx@6.0.0
       oxfmt:
         specifier: 'catalog:'
         version: 0.73.0
@@ -1760,6 +1766,9 @@ importers:
       mobx-6:
         specifier: catalog:mobx6-compat
         version: mobx@6.16.1
+      mobx-floor:
+        specifier: catalog:peerFloor
+        version: mobx@6.0.0
       oxfmt:
         specifier: 'catalog:'
         version: 0.73.0
@@ -7324,6 +7333,9 @@ packages:
   minizlib@3.1.0:
     resolution: {integrity: sha512-KZxYo1BUkWD2TVFLr0MQoM8vUUigWD3LlD83a/75BqC+4qE0Hb1Vo5v1FgcfaNXvfXzr+5EhQ6ing/CaBijTlw==}
     engines: {node: '>= 18'}
+
+  mobx@6.0.0:
+    resolution: {integrity: sha512-bjwqOFkr2FebW0sul7UgbWz4/l7mNvTmE1FPhj95Jeg74v2GSCvtyLeuuiRDF/2bClD9K/P4x/RpLzupbtP7Iw==}
 
   mobx@6.16.1:
     resolution: {integrity: sha512-syNcDdX3KT+Jq3je6eGjBhuc24Z68td2VG0zNFqRswaE433D9SNH5VRy/xrGbJsUixfppLLccXhAW9JSf6n+SQ==}
@@ -13251,6 +13263,8 @@ snapshots:
   minizlib@3.1.0:
     dependencies:
       minipass: 7.1.3
+
+  mobx@6.0.0: {}
 
   mobx@6.16.1: {}
 

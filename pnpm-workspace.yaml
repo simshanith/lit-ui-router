@@ -121,6 +121,7 @@ catalogs:
     '@uirouter/core-floor': npm:@uirouter/core@6.0.8
     effect-floor: npm:effect@3.22.0
     hono-floor: npm:hono@4.0.0
+    mobx-floor: npm:mobx@6.0.0
     signal-polyfill-floor: npm:signal-polyfill@0.2.0
   peerFloorEffect:
     lit-ui-router-floor: npm:lit-ui-router@1.15.0
