@@ -60,8 +60,8 @@ function examplesIndexPlugin(): Plugin {
 // vite's own build.chunkSizeWarningLimit default, applied to every client chunk.
 const CHUNK_BUDGET_KB = 500;
 
-// The lazy local-search index (API pages included) measures ~666 kB.
-const SEARCH_INDEX_BUDGET_KB = 750;
+// The lazy local-search index (API pages included) measures ~513 kB.
+const SEARCH_INDEX_BUDGET_KB = 600;
 
 /** Fails the client build on a chunk over its budget and logs the search index's size. */
 function chunkBudgetPlugin(): Plugin {
