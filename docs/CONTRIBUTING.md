@@ -192,9 +192,10 @@ Where the `repro:` line isn't enough:
   a task (a turbo error, a runner timeout, a cancellation). The full step log
   is the only source.
 - `test:e2e:*` tasks need a server. Reproduce one with `mise run test_e2e <suite>`
-  ([the suite README](../apps/sample-app-lit-e2e/README.md)). The
-  `cypress-videos` and `wrangler-logs` artifacts hold the run's videos and
-  server logs.
+  ([the suite README](../apps/sample-app-lit-e2e/README.md)). A failed suite
+  uploads `cypress-screenshots-<group>` (each failing test's screenshot) and
+  `wrangler-logs-<group>` (server logs); `cypress-videos-<group>` exists only
+  when the `cypressVideo` dispatch input was set.
 - The uncapped summaries are the `turbo-run-summaries` artifact:
   `gh run download <run-id> -n turbo-run-summaries`.
 

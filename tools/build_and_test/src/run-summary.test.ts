@@ -34,6 +34,7 @@ import {
   remoteCacheAnomaly,
   repoRelativeFile,
   savedClause,
+  screenshotsLink,
   sessionFailureMarkdown,
   sessionHeadline,
   sessionLines,
@@ -996,6 +997,43 @@ describe('the attachments link in the overview', () => {
   it('stands alone as the stdout footer without a summary URL', () => {
     const lines = overviewLines(run(), { attachmentsUrl: URL });
     assert.deepEqual(lines.slice(-2), ['', `   vitest attachments: ${URL}`]);
+  });
+});
+
+describe('screenshotsLink', () => {
+  const URL = 'https://github.com/o/r/actions/runs/1/artifacts/5';
+
+  it('links the Cypress screenshots on both lanes', () => {
+    const link = screenshotsLink({ screenshotsUrl: URL });
+    assert.ok(link?.markdown.includes(`(<${URL}>)`));
+    assert.equal(link?.line, `   cypress screenshots: ${URL}`);
+  });
+
+  it('stays absent when nothing was uploaded', () => {
+    assert.equal(screenshotsLink({}), undefined);
+    assert.equal(screenshotsLink({ screenshotsUrl: '' }), undefined);
+  });
+
+  it('refuses anything but a plain https URL', () => {
+    assert.equal(
+      screenshotsLink({ screenshotsUrl: 'javascript:alert(1)' }),
+      undefined,
+    );
+  });
+
+  it('follows the vitest attachments in the stdout footer', () => {
+    const run = summary([hit(), ran('a', 100)], 0, { attempted: 2 });
+
+    const lines = overviewLines(run, {
+      attachmentsUrl: 'https://x/a',
+      screenshotsUrl: URL,
+    });
+
+    assert.deepEqual(lines.slice(-3), [
+      '',
+      '   vitest attachments: https://x/a',
+      `   cypress screenshots: ${URL}`,
+    ]);
   });
 });
 
