@@ -66,7 +66,7 @@ describe('docs site', () => {
   });
 
   it('mounts the MobX solar system example on the bindings page', () => {
-    cy.visit('/packages/mobx');
+    cy.visit('/packages/lit-ui-router-mobx');
     cy.get(
       '.example-embed iframe[src="/examples/hellosolarsystem-mobx/"]',
     ).should('exist');

@@ -49,7 +49,7 @@ A tour of the Sun, all 8 planets, and a beloved dwarf-planet easter egg — real
 
 ### hellosolarsystem-mobx
 
-The same states, URLs, resolves and templates as **hellosolarsystem**, rebuilt with the [MobX bindings](https://lit-ui-router.dev/packages/mobx). Resolves still arrive as `UIViewInjectedProps`; everything that outlives a single activation is observed instead.
+The same states, URLs, resolves and templates as **hellosolarsystem**, rebuilt with the [MobX bindings](https://lit-ui-router.dev/packages/lit-ui-router-mobx). Resolves still arrive as `UIViewInjectedProps`; everything that outlives a single activation is observed instead.
 
 It layers on four things, each answering a different question:
 

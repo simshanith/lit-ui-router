@@ -17,7 +17,7 @@ that watch the [`ui-router-signals`](/packages/ui-router-signals) mirror of the
 router's state and update their host when a selected value changes.
 
 It registers no custom elements and adds no routing behavior. It has the
-shape of the [Effect](/packages/lit-ui-router-effect) and [MobX](/packages/mobx) bindings:
+shape of the [Effect](/packages/lit-ui-router-effect) and [MobX](/packages/lit-ui-router-mobx) bindings:
 
 | Signals                               | MobX                             | Effect                          |
 | ------------------------------------- | -------------------------------- | ------------------------------- |
