@@ -25,6 +25,7 @@ import {
 } from '../interface.js';
 import {
   createTestRouter,
+  defer,
   mountElementInRouter,
   tick,
   waitForUpdate,
@@ -444,6 +445,118 @@ describe('UiView', () => {
       await waitForUpdate(uiView);
 
       expect(receivedProps?.resolves?.data).toEqual({ message: 'Hello' });
+    });
+
+    it('should pass a NOWAIT resolve as its promise on the first render', async () => {
+      const pending = defer<string>();
+      const received: UIViewInjectedProps[] = [];
+
+      const states: LitStateDeclaration[] = [
+        {
+          name: 'home',
+          url: '/home',
+          resolve: [
+            {
+              token: 'slow',
+              resolveFn: () => pending.promise,
+              policy: { async: 'NOWAIT' },
+            },
+          ],
+          component: (props) => {
+            received.push(props);
+
+            return html`<div>Home</div>`;
+          },
+        },
+      ];
+
+      const { uiView } = await setupRouter(states);
+
+      // The transition lands with the resolve still pending.
+      await routerGo(router, 'home');
+      await waitForUpdate(uiView);
+
+      const slow: unknown = received[0]?.resolves.slow;
+
+      expect(slow).toBeInstanceOf(Promise);
+
+      pending.resolve('done');
+
+      await expect(slow).resolves.toBe('done');
+    });
+
+    it('should wait for a WAIT resolve and pass its value', async () => {
+      const pending = defer<string>();
+      let receivedProps: UIViewInjectedProps | undefined;
+
+      const states: LitStateDeclaration[] = [
+        {
+          name: 'home',
+          url: '/home',
+          resolve: [
+            {
+              token: 'slow',
+              resolveFn: () => pending.promise,
+              policy: { async: 'WAIT' },
+            },
+          ],
+          component: (props) => {
+            receivedProps = props;
+
+            return html`<div>Home</div>`;
+          },
+        },
+      ];
+
+      const { uiView } = await setupRouter(states);
+
+      const landed = routerGo(router, 'home');
+      await tick();
+
+      expect(receivedProps).toBeUndefined();
+
+      pending.resolve('done');
+      await landed;
+      await waitForUpdate(uiView);
+
+      expect(receivedProps?.resolves.slow).toBe('done');
+    });
+
+    it('should leave out a resolve that has not settled and is not NOWAIT', async () => {
+      let receivedProps: UIViewInjectedProps | undefined;
+
+      const states: LitStateDeclaration[] = [
+        {
+          name: 'home',
+          url: '/home',
+          component: (props) => {
+            receivedProps = props;
+
+            return html`<div>Home</div>`;
+          },
+        },
+      ];
+
+      const { uiView } = await setupRouter(states, { start: false });
+
+      // Added after every resolve hook has run, so nothing resolves it before the view renders.
+      router.transitionService.onSuccess(
+        {},
+        (trans) => {
+          trans.addResolvable(
+            { token: 'late', resolveFn: () => 'late', deps: [] },
+            'home',
+          );
+        },
+        { priority: 10 },
+      );
+
+      router.start();
+      await routerGo(router, 'home');
+      await waitForUpdate(uiView);
+
+      expect(receivedProps).toBeDefined();
+      expect(receivedProps?.resolves).not.toHaveProperty('late');
     });
 
     it('should clear component when navigating away', async () => {

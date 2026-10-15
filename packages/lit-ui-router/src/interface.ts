@@ -176,7 +176,7 @@ export interface UIViewInjectedProps<
 > {
   /** The current transition (if one is in progress) */
   transition?: Transition;
-  /** Resolved data from state declarations */
+  /** Resolved data from state declarations; a `NOWAIT` resolve arrives as its promise */
   resolves: UIViewResolves<T>;
   /** The UIRouter instance for programmatic navigation */
   router: UIRouter;
