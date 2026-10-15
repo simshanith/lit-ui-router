@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { createRouterPool } from '../src/router-pool.ts';
+import { createRouterPool, POOL_MAX_IDLE } from '../src/router-pool.ts';
 import type { PooledRouter } from '../src/router-pool.ts';
 import { createHeadlessRouter } from '../src/simulate.ts';
 
@@ -88,5 +88,31 @@ describe('createRouterPool', () => {
     pooled.release();
 
     assert.notEqual(pool.checkOut(build), pooled);
+  });
+
+  it('warms idle routers up to the count, capped, and checks them out first', () => {
+    const pool = createRouterPool();
+    let builds = 0;
+
+    const counted = () => {
+      builds += 1;
+
+      return build();
+    };
+
+    pool.warm(counted, 2);
+    pool.warm(counted, 2);
+    assert.equal(builds, 2);
+
+    const first = pool.checkOut(counted);
+    const second = pool.checkOut(counted);
+    assert.notEqual(first, second);
+    assert.equal(builds, 2);
+
+    pool.checkOut(counted);
+    assert.equal(builds, 3);
+
+    pool.warm(counted, POOL_MAX_IDLE + 5);
+    assert.equal(builds, 3 + POOL_MAX_IDLE);
   });
 });

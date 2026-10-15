@@ -14,7 +14,7 @@
 import type { RawParams, StateDeclaration } from '@uirouter/core';
 
 import { compileResolver, matchRoute } from './redirects.ts';
-import { createRouterPool } from './router-pool.ts';
+import { createRouterPool, POOL_MAX_IDLE } from './router-pool.ts';
 import type { PooledRouter, RouterPool } from './router-pool.ts';
 import type {
   CompiledResolver,
@@ -65,6 +65,22 @@ export interface MountConfig {
     /** Name of the declared, url-less state unknown paths verdict as. */
     state: string;
   };
+  /**
+   * Idle headless routers a 'simulate' mount builds once @uirouter/core
+   * loads, so its first requests skip the cold build. Default 0: the pool
+   * builds on demand. An integer from 0 to 16 (the pool's idle cap); any
+   * other value, or a positive count on a 'matcher' mount, throws at
+   * construction. A failed prewarm build is dropped silently and requests
+   * build on demand.
+   *
+   * The builds chain onto the import that construction starts, ahead of
+   * every request on the mount, so the first request never races them and
+   * there is nothing extra to await. In a Cloudflare Worker that constructs
+   * its router at module scope, the builds may run during startup: they do
+   * no I/O, timers or randomness, so global scope permits them, but their
+   * CPU counts toward the Worker's startup time limit.
+   */
+  prewarm?: number;
 }
 
 /**
@@ -131,6 +147,7 @@ interface Mount {
   strategy: 'matcher' | 'simulate';
   compiled: CompiledResolver;
   pool: RouterPool;
+  prewarm: number;
 }
 
 const isUrlText = (input: string | { pathname: string }): input is string =>
@@ -234,13 +251,29 @@ const validateOtherwise = (base: string, config: MountConfig): void => {
     );
 };
 
+const validatePrewarm = (base: string, config: MountConfig): number => {
+  const prewarm = config.prewarm ?? 0;
+
+  if (!Number.isInteger(prewarm) || prewarm < 0 || prewarm > POOL_MAX_IDLE)
+    throw new Error(
+      `Mount '${base}': prewarm must be an integer from 0 to ${POOL_MAX_IDLE}`,
+    );
+
+  if (prewarm > 0 && config.strategy !== 'simulate')
+    throw new Error(`Mount '${base}': prewarm needs the 'simulate' strategy`);
+
+  return prewarm;
+};
+
 const compileMount = ([base, config]: [string, MountConfig]): Mount => {
   validateOtherwise(base, config);
+  const prewarm = validatePrewarm(base, config);
 
   return {
     base: normalizeBase(base),
     config,
     strategy: config.strategy ?? 'matcher',
+    prewarm,
     // Simulate mounts accept the same declaration subset, so the
     // dependency-free compilation doubles as their construction-time
     // validation (their resolve path never consults it).
@@ -310,6 +343,19 @@ const buildHeadlessRouter = (simulate: SimulateModule, mount: Mount) => {
   }
 
   return router;
+};
+
+const prewarmPools = (simulate: SimulateModule, mounts: Mount[]): void => {
+  for (const mount of mounts) {
+    try {
+      mount.pool.warm(
+        () => buildHeadlessRouter(simulate, mount),
+        mount.prewarm,
+      );
+    } catch {
+      // That mount's requests build on demand, as an unwarmed pool's do.
+    }
+  }
 };
 
 // Transitions settle in microtasks; the timer is only a degrade-to-shell net.
@@ -447,10 +493,14 @@ export function createServerRouter(config: {
   const loadSimulate = makeSimulateLoader();
 
   // Still lazy for matcher-only configs, but paid at construction when a
-  // simulate mount exists — not on its first request. The stray rejection is
-  // silenced here; resolve() awaits the same cached promise and rethrows.
+  // simulate mount exists — not on its first request. Prewarm chains first,
+  // so it fills the pools before any request's check-out. The stray
+  // rejection is silenced here; resolve() awaits the same cached promise and
+  // rethrows.
   if (mounts.some((mount) => mount.strategy === 'simulate'))
-    void loadSimulate().catch(() => {});
+    void loadSimulate()
+      .then((simulate) => prewarmPools(simulate, mounts))
+      .catch(() => {});
 
   return {
     async resolve(pathnameOrUrl) {

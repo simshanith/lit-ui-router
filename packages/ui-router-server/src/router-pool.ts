@@ -9,8 +9,12 @@
 
 import type { UIRouter } from '@uirouter/core';
 
-// Idle routers kept per mount; a burst past it builds extras and drops them.
-const POOL_MAX_IDLE = 16;
+/**
+ * Idle routers kept per mount; a burst past it builds extras and drops them.
+ *
+ * @internal
+ */
+export const POOL_MAX_IDLE = 16;
 
 /**
  * A checked-out router: one request owns it until {@link PooledRouter.release}.
@@ -40,6 +44,8 @@ export interface PooledRouter {
 export interface RouterPool {
   /** An idle router, or a new one from `build` when none is idle. */
   checkOut(build: () => UIRouter): PooledRouter;
+  /** Builds idle routers until `count` (at most the idle cap) sit idle; a throwing `build` stops it. */
+  warm(build: () => UIRouter, count: number): void;
 }
 
 // Restores the globals the UIRouter constructor leaves: the url-rule handler and transitionTo read them.
@@ -87,7 +93,7 @@ const pooledRouter = (router: UIRouter, idle: PooledRouter[]): PooledRouter => {
 };
 
 /**
- * A lazily grown pool, empty until the first check-out.
+ * A lazily grown pool, empty until the first check-out or warm.
  *
  * @internal
  */
@@ -96,5 +102,9 @@ export function createRouterPool(): RouterPool {
 
   return {
     checkOut: (build) => idle.pop() ?? pooledRouter(build(), idle),
+    warm(build, count) {
+      while (idle.length < Math.min(count, POOL_MAX_IDLE))
+        idle.push(pooledRouter(build(), idle));
+    },
   };
 }
