@@ -30,6 +30,21 @@ export function brickPaint(hue, tint = BRICK_TINT, p = 's2') {
   return { top: mix(16, 42, 'var(--paper)'), left: hatch, leftUnder: 'var(--paper-2)', leftExtra: ' fill-opacity="0.6"', right: hatch, rightUnder: 'var(--paper)', studTop: mix(16, 42, 'var(--paper)') };
 }
 
+/** A brick's paint resolved per face: the fills, under-fills and extras `brick` draws, plain where the paint is silent. */
+function facePaint(pa, side, p) {
+  const f = pa ?? {};
+  return {
+    left: f.left ?? 'var(--paper-2)',
+    leftUnder: f.leftUnder,
+    leftExtra: f.leftExtra ?? '',
+    right: side ?? f.right ?? `url(#${p}-hx)`,
+    rightUnder: f.rightUnder ?? 'var(--paper)',
+    top: f.top && `fill:${f.top}`,
+    topStroke: f.stroke && `stroke:${f.stroke}`,
+    stroke: f.stroke ? `;stroke:${f.stroke}` : '',
+  };
+}
+
 // A LEGO brick kit at one stud pitch U: plates, bricks and studs projected on the
 // atlas iso, plus a painter's order for seated assemblies. Every face is drawn
 // opaque — a stroke class's fill:none outranks a fill attribute, so fills are inline.
@@ -56,29 +71,41 @@ export function brickKit({ U = 40, p = 's2' } = {}) {
 <ellipse cx="${cx}" cy="${cy}" rx="${RX}" ry="${RY}" class="${edge} ${cap}"${extra}${sty(paint?.studTop && `fill:${paint.studTop}`, paint?.stroke && `stroke:${paint.stroke}`)}/>${halo}`;
   }
 
-  // One brick body: three faces, course seams scored on both visible flanks, studs on the cap.
-  function brick(ox, oy, x, y, ws, ds, courses, { z0 = 0, edge = 'sk', cap = 'fp', side, studCap = 'fp2', studEdge, ringStuds = new Set(), dash = '', hue = null, tint = BRICK_TINT } = {}) {
-    const w = ws * U, d = ds * U, h = courses * CRS, t = z0 + h;
-    const q = (px, py, pz) => p2(ox, oy, px, py, pz);
-    const da = dash ? ` stroke-dasharray="${dash}"` : '';
-    const pa = brickPaint(hue, tint, p);
-    const stroke = pa?.stroke ? `;stroke:${pa.stroke}` : '';
-    const top = [q(x, y, t), q(x + w, y, t), q(x + w, y + d, t), q(x, y + d, t)].join(' ');
-    const left = [q(x, y + d, t), q(x + w, y + d, t), q(x + w, y + d, z0), q(x, y + d, z0)].join(' ');
-    const right = [q(x + w, y, t), q(x + w, y + d, t), q(x + w, y + d, z0), q(x + w, y, z0)].join(' ');
+  // Course seams scored on both visible flanks, one path per seam.
+  function brickSeams(ox, oy, x, y, w, d, z0, courses) {
     const seams = [];
     for (let k = 1; k < courses; k++) {
       const z = z0 + k * CRS;
       const a = pt(ox, oy, x, y + d, z), b = pt(ox, oy, x + w, y + d, z), c = pt(ox, oy, x + w, y, z);
       seams.push(`<path d="M${a} L${b} L${c}" class="skf fnone"/>`);
     }
+    return seams;
+  }
+
+  // The studs on a brick's cap at height t; a ringed stud takes the accent classes over the brick's paint.
+  function brickStuds(ox, oy, x, y, ws, ds, t, { edge, cap, ringStuds, da, pa }) {
     const studs = [];
     for (let i = 0; i < ws; i++)
       for (let j = 0; j < ds; j++)
-        studs.push(stud(ox, oy, x + (i + 0.5) * U, y + (j + 0.5) * U, t, ringStuds.has(`${i},${j}`) ? { edge: 'ska', cap: 'fp', ring: 'ska', extra: da } : { edge: studEdge ?? edge, cap: studCap, extra: da, paint: pa }));
-    return `${face(left, edge, pa?.left ?? 'var(--paper-2)', { under: pa?.leftUnder, extra: da + (pa?.leftExtra ?? ''), more: stroke })}
-${face(right, edge, side ?? pa?.right ?? `url(#${p}-hx)`, { under: pa?.rightUnder ?? 'var(--paper)', extra: da, more: stroke })}
-<polygon points="${top}" class="${edge} ${cap}"${da}${sty(pa?.top && `fill:${pa.top}`, pa?.stroke && `stroke:${pa.stroke}`)}/>
+        studs.push(stud(ox, oy, x + (i + 0.5) * U, y + (j + 0.5) * U, t, ringStuds.has(`${i},${j}`) ? { edge: 'ska', cap: 'fp', ring: 'ska', extra: da } : { edge, cap, extra: da, paint: pa }));
+    return studs;
+  }
+
+  // One brick body: three faces, course seams scored on both visible flanks, studs on the cap.
+  function brick(ox, oy, x, y, ws, ds, courses, { z0 = 0, edge = 'sk', cap = 'fp', side, studCap = 'fp2', studEdge, ringStuds = new Set(), dash = '', hue = null, tint = BRICK_TINT } = {}) {
+    const w = ws * U, d = ds * U, h = courses * CRS, t = z0 + h;
+    const q = (px, py, pz) => p2(ox, oy, px, py, pz);
+    const da = dash ? ` stroke-dasharray="${dash}"` : '';
+    const pa = brickPaint(hue, tint, p);
+    const f = facePaint(pa, side, p);
+    const top = [q(x, y, t), q(x + w, y, t), q(x + w, y + d, t), q(x, y + d, t)].join(' ');
+    const left = [q(x, y + d, t), q(x + w, y + d, t), q(x + w, y + d, z0), q(x, y + d, z0)].join(' ');
+    const right = [q(x + w, y, t), q(x + w, y + d, t), q(x + w, y + d, z0), q(x + w, y, z0)].join(' ');
+    const seams = brickSeams(ox, oy, x, y, w, d, z0, courses);
+    const studs = brickStuds(ox, oy, x, y, ws, ds, t, { edge: studEdge ?? edge, cap: studCap, ringStuds, da, pa });
+    return `${face(left, edge, f.left, { under: f.leftUnder, extra: da + f.leftExtra, more: f.stroke })}
+${face(right, edge, f.right, { under: f.rightUnder, extra: da, more: f.stroke })}
+<polygon points="${top}" class="${edge} ${cap}"${da}${sty(f.top, f.topStroke)}/>
 ${seams.join('\n')}
 ${studs.join('\n')}`;
   }

@@ -58,15 +58,7 @@ for (const num of plates) {
       }
       return { overlaps: true, depth: minGap };
     };
-    const out = [];
-    [...document.querySelectorAll('.figure-wrap svg')].forEach((svg, idx) => {
-      const vb = svg.viewBox.baseVal;
-      const sbox = svg.getBoundingClientRect();
-      const scale = sbox.width / (vb.width || 1);
-      const toUser = (r) => ({
-        x: vb.x + (r.left - sbox.left) / scale, y: vb.y + (r.top - sbox.top) / scale,
-        x2: vb.x + (r.right - sbox.left) / scale, y2: vb.y + (r.bottom - sbox.top) / scale,
-      });
+    const collectEscapes = (svg, vb, toUser) => {
       const escapes = [];
       for (const el of svg.querySelectorAll('polygon, rect, path, circle, ellipse, line, text, image, polyline')) {
         const r = el.getBoundingClientRect();
@@ -80,6 +72,9 @@ for (const num of plates) {
         if (worst > 0.5)
           escapes.push({ tag: el.tagName, cls: el.getAttribute('class') ?? '', text: el.tagName === 'text' ? el.textContent.slice(0, 70) : '', over, worst: +worst.toFixed(2) });
       }
+      return escapes;
+    };
+    const collectMasses = (svg, vb, sbox, scale, toUser) => {
       const masses = [];
       for (const el of svg.querySelectorAll('polygon')) {
         if ((el.getAttribute('class') ?? '').includes('fnone')) continue;
@@ -97,6 +92,9 @@ for (const num of plates) {
         const u = toUser(el.getBoundingClientRect());
         masses.push({ cls, tag: 'rect', pts: [[u.x, u.y], [u.x2, u.y], [u.x2, u.y2], [u.x, u.y2]] });
       }
+      return masses;
+    };
+    const collectHits = (svg, masses, toUser) => {
       const hits = [];
       const labels = [];
       for (const t of svg.querySelectorAll('text')) {
@@ -113,6 +111,9 @@ for (const num of plates) {
           if (r.overlaps) hits.push({ text: label, cls: t.getAttribute('class') ?? '', rect: { x: +u.x.toFixed(1), y: +u.y.toFixed(1), x2: +u.x2.toFixed(1), y2: +u.y2.toFixed(1) }, poly: `${p.tag}.${p.cls}`, pts: p.pts.map((q) => q.map((v) => +v.toFixed(1))), depth: +r.depth.toFixed(2) });
         }
       }
+      return { hits, labels };
+    };
+    const textPairs = (labels) => {
       const texts = [];
       for (let i = 0; i < labels.length; i++) for (let j = i + 1; j < labels.length; j++) {
         const a = labels[i].u, b = labels[j].u;
@@ -120,7 +121,21 @@ for (const num of plates) {
         const h = Math.min(a.y2, b.y2) - Math.max(a.y, b.y);
         if (w > 1 && h > 1) texts.push({ a: labels[i].label, b: labels[j].label, w: +w.toFixed(1), h: +h.toFixed(1), at: `${a.x.toFixed(0)},${a.y.toFixed(0)}` });
       }
-      out.push({ idx, viewBox: [vb.x, vb.y, vb.width, vb.height], escapes, hits, texts });
+      return texts;
+    };
+    const out = [];
+    [...document.querySelectorAll('.figure-wrap svg')].forEach((svg, idx) => {
+      const vb = svg.viewBox.baseVal;
+      const sbox = svg.getBoundingClientRect();
+      const scale = sbox.width / (vb.width || 1);
+      const toUser = (r) => ({
+        x: vb.x + (r.left - sbox.left) / scale, y: vb.y + (r.top - sbox.top) / scale,
+        x2: vb.x + (r.right - sbox.left) / scale, y2: vb.y + (r.bottom - sbox.top) / scale,
+      });
+      const escapes = collectEscapes(svg, vb, toUser);
+      const masses = collectMasses(svg, vb, sbox, scale, toUser);
+      const { hits, labels } = collectHits(svg, masses, toUser);
+      out.push({ idx, viewBox: [vb.x, vb.y, vb.width, vb.height], escapes, hits, texts: textPairs(labels) });
     });
     return out;
   });

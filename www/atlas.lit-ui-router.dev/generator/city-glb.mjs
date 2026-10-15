@@ -487,6 +487,37 @@ export function cityModel({ plant }) {
 function writeCity(plant) {
   const plans = plant ? plantPlan(CITY, SURVEY_BY_N) : {};
   const M = materialPlan(plant);
+  const { nodes, riseAt } = cityNodes(plans);
+  const { materials, tiles, MAT } = wornMaterials(nodes, M);
+  const matOf = (name) => MAT.get(name);
+
+  // ---- write: positions as int16 on one strided view, scaled back by each node's own scale ----
+  const Q = 64;
+  const w = glbWriter();
+  const patterns = indexPatterns(w, nodes);
+  const live = nodes.flatMap((nd) => nd.prims.filter((p) => p.n > 0));
+  const { runs, counts } = vertexRuns(live);
+  const views = packVertices(w, live, runs, counts, tiles, Q);
+  const once = new Map();
+  const shared = (key, make) => {
+    if (!once.has(key)) once.set(key, make());
+    return once.get(key);
+  };
+  const { meshes, gNodes, parents, triangles } = meshNodes(w, shared, nodes, { patterns, runs, views, matOf, Q });
+  const { channels, samplers } = riseClip(w, shared, nodes, parents, Q);
+  gNodes.push({ name: plant ? 'the working city' : 'the city', children: parents });
+
+  for (const b of CITY) {
+    if (!gNodes.some((g) => g.name === `mass-${b.n}`)) throw new Error(`city-glb: member ${b.n} has no mass node`);
+    if (!MAT.has(`frame-${b.n}`)) throw new Error(`city-glb: member ${b.n} has no frame`);
+  }
+
+  const glb = assembleGlb(w, plant, { gNodes, meshes, materials, tiles, tileViews: views.tileViews, channels, samplers });
+  const layout = cityLayout(plant, plans, riseAt);
+  return { glb, layout, stats: { bytes: glb.length, triangles, materials: materials.length, nodes: gNodes.length } };
+}
+
+function cityNodes(plans) {
   // schedule order, district by district: each member's mass rises over RISE_EACH seconds
   const ORDER = Object.keys(DISTRICTS);
   const order = [...CITY].sort((a, c) => ORDER.indexOf(a.dist) - ORDER.indexOf(c.dist));
@@ -505,8 +536,11 @@ function writeCity(plant) {
       nodes.push({ name: `crown-${b.n}`, translation: toModel(o[0], o[2], o[1]), prims: crownPrims(b, plans[b.n], o), rise: 'crown' });
     }
   }
+  return { nodes, riseAt };
+}
 
-  // the dress, cut to the materials some primitive wears: a band no member reaches is left out
+// the dress, cut to the materials some primitive wears: a band no member reaches is left out
+function wornMaterials(nodes, M) {
   const worn = new Set(nodes.flatMap((nd) => nd.prims.filter((p) => p.n > 0).flatMap((p) => [p.mat, p.light].filter(Boolean))));
   const baked = cityDress(vellumLinear(), M, 'tier');
   const missing = [...worn].filter((name) => !baked.some(([bn]) => bn === name));
@@ -524,11 +558,10 @@ function writeCity(plant) {
   }));
   const MAT = new Map(materials.map((m, i) => [m.name, i]));
   if (MAT.size !== materials.length) throw new Error('city-glb: two materials share a name');
-  const matOf = (name) => MAT.get(name);
+  return { materials, tiles, MAT };
+}
 
-  // ---- write: positions as int16 on one strided view, scaled back by each node's own scale ----
-  const Q = 64;
-  const w = glbWriter();
+function indexPatterns(w, nodes) {
   const most = {};
   for (const nd of nodes) for (const p of nd.prims) most[p.kind] = Math.max(most[p.kind] ?? 0, p.n);
   const patterns = {};
@@ -538,8 +571,11 @@ function writeCity(plant) {
     if (count * P.verts > 65535) throw new Error(`city-glb: a ${kind} primitive outgrows 16-bit indices`);
     patterns[kind] = { view: w.view(new Uint16Array(idx), 34963), per: P.tris.length };
   }
-  const live = nodes.flatMap((nd) => nd.prims.filter((p) => p.n > 0));
-  // a grading that repeats one unit is read off one canonical run, as long as the longest primitive needs
+  return patterns;
+}
+
+// a grading that repeats one unit is read off one canonical run, as long as the longest primitive needs
+function vertexRuns(live) {
   let verts = 0, shaded = 0, tiled = 0;
   const runs = new Map();
   for (const p of live) {
@@ -555,6 +591,10 @@ function writeCity(plant) {
     }
   }
   for (const r of runs.values()) { r.at = shaded; shaded += (r.col.length / 4) * r.units; }
+  return { runs, counts: { verts, shaded, tiled } };
+}
+
+function packVertices(w, live, runs, { verts, shaded, tiled }, tiles, Q) {
   const P16 = new Int16Array(verts * 4), C8 = new Uint8Array(shaded * 4), UV = new Float32Array(tiled * 2);
   for (const r of runs.values()) for (let u = 0; u < r.units; u++) C8.set(r.col, (r.at + (u * r.col.length) / 4) * 4);
   for (const p of live) {
@@ -571,13 +611,13 @@ function writeCity(plant) {
   }
   const tileViews = Object.fromEntries(tiles.map((t) => [t, w.view(TILED[t])]));
   const posView = w.view(P16, 34962, 8), colView = shaded ? w.view(C8, 34962) : null, uvView = w.view(UV, 34962);
-  const once = new Map();
-  const shared = (key, make) => {
-    if (!once.has(key)) once.set(key, make());
-    return once.get(key);
-  };
+  return { tileViews, posView, colView, uvView };
+}
+
+function meshNodes(w, shared, nodes, { patterns, runs, views, matOf, Q }) {
+  const { posView, colView, uvView } = views;
   let triangles = 0;
-  const meshes = [], gNodes = [], channels = [], samplers = [], parents = [];
+  const meshes = [], gNodes = [], parents = [];
   const mapping = (m) => ({ KHR_materials_variants: { mappings: [{ variants: [0], material: matOf(m) }] } });
   for (const nd of nodes) {
     const primitives = nd.prims.filter((p) => p.n > 0).map((p) => {
@@ -599,9 +639,12 @@ function writeCity(plant) {
     parents.push(gNodes.length);
     gNodes.push({ name: nd.name, mesh: meshes.length - 1, translation: nd.translation, scale: [1 / Q, 1 / Q, 1 / Q] });
   }
+  return { meshes, gNodes, parents, triangles };
+}
 
-  // the rise clip: each mass and annex scales up out of the ground, the crowns last;
-  // keys ride two shared views, and a member's mass and annex share one sampler
+// the rise clip: each mass and annex scales up out of the ground, the crowns last;
+// keys ride two shared views, and a member's mass and annex share one sampler
+function riseClip(w, shared, nodes, parents, Q) {
   const frames = nodes.map((nd) => {
     if (!nd.rise) return null;
     if (nd.rise === 'crown') return [[0, CROWNS_AT, RISE_SECONDS], [[FLAT, FLAT, FLAT], [FLAT, FLAT, FLAT], [1, 1, 1]]];
@@ -615,7 +658,7 @@ function writeCity(plant) {
   };
   const placed = frames.map((f) => f && [slot(T, f[0]), slot(O, f[1].flat().map((v) => v / Q)), f[0]]);
   const tView = w.view(new Float32Array(T)), oView = w.view(new Float32Array(O));
-  const sampler = new Map();
+  const channels = [], samplers = [], sampler = new Map();
   placed.forEach((f, i) => {
     if (!f) return;
     const [ti, oi, times] = f, k = `${ti}:${oi}`;
@@ -627,13 +670,10 @@ function writeCity(plant) {
     }
     channels.push({ sampler: sampler.get(k), target: { node: parents[i], path: 'scale' } });
   });
-  gNodes.push({ name: plant ? 'the working city' : 'the city', children: parents });
+  return { channels, samplers };
+}
 
-  for (const b of CITY) {
-    if (!gNodes.some((g) => g.name === `mass-${b.n}`)) throw new Error(`city-glb: member ${b.n} has no mass node`);
-    if (!MAT.has(`frame-${b.n}`)) throw new Error(`city-glb: member ${b.n} has no frame`);
-  }
-
+function assembleGlb(w, plant, { gNodes, meshes, materials, tiles, tileViews, channels, samplers }) {
   const bin = w.bin();
   const gltf = {
     asset: { version: '2.0', generator: 'www/atlas.lit-ui-router.dev/generator/city-glb.mjs' },
@@ -656,8 +696,11 @@ function writeCity(plant) {
   const glb = packGlb(gltf, bin);
   const budget = BUDGET[plant ? 'plant' : 'city'];
   if (glb.length > budget) throw new Error(`city-glb: ${plant ? 'plant' : 'city'}.glb is ${glb.length} bytes, over its ${budget}-byte budget`);
+  return glb;
+}
 
-  const layout = {
+function cityLayout(plant, plans, riseAt) {
+  return {
     // the padded plan's half extents in model units, which the home pose frames with the members' boxes
     extent: [r3((extent.maxX - extent.minX) / 2), r3((extent.maxZ - extent.minZ) / 2)],
     end: RISE_SECONDS,
@@ -671,5 +714,4 @@ function writeCity(plant) {
       return { d, at: [r3(x1 + (x2 - x1) * 0.85), 0.5, r3(z1 + (z2 - z1) * 0.85)] };
     }).filter(Boolean),
   };
-  return { glb, layout, stats: { bytes: glb.length, triangles, materials: materials.length, nodes: gNodes.length } };
 }
