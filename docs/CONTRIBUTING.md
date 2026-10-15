@@ -258,13 +258,11 @@ Each task has its own file, `<package>/.turbo/turbo-<task>.log` with `:` written
 as `$colon$`. A job that runs several suites interleaves them in its stream, but
 each suite keeps its own log. The logs keep their ANSI colors, which wrap words
 without splitting them, so search them as they are and page the matches with
-`less -R`. [`strip-ansi-cli`](https://www.npmjs.com/package/strip-ansi-cli)
-writes a plain copy:
+`less -R`:
 
 ```bash
 grep -rinE --include='*.log' 'warn|deprecat|error' <empty-dir> > matches.log
 less -R matches.log
-pnpm dlx strip-ansi-cli@4 < matches.log > matches.txt
 ```
 
 Group the matches by message rather than reading them line by line. Test names

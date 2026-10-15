@@ -21,9 +21,9 @@ what an unattended run needs.
    recent green `main` run. "Anything weird" means this step; a keyword search
    misses output that doesn't name itself.
 5. Use the recipe's `grep -r` as a first pass, not the sweep. rg skips the
-   hidden `.turbo/` directories unless given `--hidden`. Read logs plain through
-   `strip-ansi-cli` (stdin only). Never pipe logs through `head` or `tail`, and
-   never re-run a download to slice it differently.
+   hidden `.turbo/` directories unless given `--hidden`. Read the logs with
+   their ANSI codes in place. Never pipe logs through `head` or `tail`, and never
+   re-run a download to slice it differently.
 6. Check each finding against the `main` run and the expected-noise list in the
    recipe. One slow step in one run is not a trend.
 7. Report findings; don't fix them unasked. A real problem gets the commit,
