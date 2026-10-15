@@ -130,7 +130,7 @@ Exceptions: `www/lit-ui-router.dev/api/**` (generated VitePress content, not a b
 
 That host-dependence is also why the task is uncached: the Chromium build and the font set decide the numbers, neither is nameable in `inputs`, and a cache hit would replay a measurement the current machine never took. Being uncacheable, it is not audited by `check-task-inputs` either — a task turbo will not hash-and-skip has no stale-cache failure mode.
 
-`typecheck:peer-floor` typechecks an adapter against its published peer-floor version. The floor pin can only reference published versions, so putting it in the ci graph would break atomic core-API + adapter-adoption PRs. It runs as a non-gating per-package check run on main pushes (the Release signals workflow) and as a hard gate at bump time.
+`typecheck:peer-floor` typechecks an adapter against its published peer-floor version. The floor pin can only reference published versions, so putting it in the ci graph would break atomic core-API + adapter-adoption PRs. It runs as a non-gating per-package check run on main pushes (the Release signals workflow) and as a hard gate at bump time. Before tsc runs, `floor-types-guard` (`tools/compat-guards`) fails the task when a peer that `tsconfig.peer-floor.json` maps onto its `<peer>-floor` alias loads any file from the workspace copy, or none from the alias: a `paths` target that doesn't exist falls back to normal resolution silently.
 
 `test:peer-floor` (eslint-plugin-lit-ui-router only) runs the rule suite with every `eslint` import resolved to the `eslint-floor` alias. That floor is a published eslint, never a workspace peer, so the lane gates PRs as a leaf of that package's `test` umbrella. It is a test rather than a typecheck because eslint 9.0.0 ships no types.
 
