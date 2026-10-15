@@ -683,6 +683,30 @@
       }
     },
     {
+      "files": [
+        "tools/build_and_test/src/branch-ci-gate.ts",
+        "tools/build_and_test/src/branch-ci-gate.core.ts"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "*",
+                  "!node:*",
+                  "!node:*/*",
+                  "!./branch-ci-gate.core.ts"
+                ],
+                "message": "the branch CI gate runs in build-test-branch.yml on mise-action alone, before any `pnpm install`, so every specifier has to resolve with no node_modules: node builtins and the gate's own core. Type imports count too, matching the resolution test in branch-ci-gate.test.ts, which holds the same contract at runtime."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
       "files": ["tools/bootstrap/**/*.ts"],
       "rules": {
         "no-restricted-imports": [
