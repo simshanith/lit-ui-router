@@ -13,7 +13,7 @@ what an unattended run needs.
 1. Start from `gh run view <run-id>` for the job list. The job stream holds
    errors only; passing tasks' output is in the task-log artifacts.
 2. Download each artifact with `gh run download <run-id> -n <name> --dir <dir>`
-   into its own new, empty directory under `$CLAUDE_JOB_DIR/tmp`. Task logs
+   into its own new, empty scratch directory outside the checkout. Task logs
    expire within days; say so rather than guessing when they're gone.
 3. List executed tasks from the run summary's cache status. A replayed log
    describes the run that filled the cache.
