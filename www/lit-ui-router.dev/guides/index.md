@@ -63,7 +63,7 @@ client deployed across every point on the server-support spectrum.
 
 ## Companion Packages
 
-The [MobX bindings](/packages/mobx) and the
+The [MobX bindings](/packages/lit-ui-router-mobx) and the
 [Navigation API location plugin](/packages/navigation-plugin) are optional
 [companion packages](/packages/) — each independently versioned, with its own
 guide and API reference. [`ui-router-server`](/packages/server), the

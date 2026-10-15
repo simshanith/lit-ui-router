@@ -212,10 +212,17 @@ function makeSidebar() {
               ],
             },
             {
-              text: 'lit-ui-router-mobx API',
-              link: '/api/lit-ui-router-mobx/',
-              collapsed: false,
-              items: mobxSidebarItems,
+              text: 'lit-ui-router-mobx',
+              link: '/packages/lit-ui-router-mobx',
+              collapsed: true,
+              items: [
+                {
+                  text: 'lit-ui-router-mobx API',
+                  link: '/api/lit-ui-router-mobx/',
+                  collapsed: false,
+                  items: mobxSidebarItems,
+                },
+              ],
             },
           ],
         },
