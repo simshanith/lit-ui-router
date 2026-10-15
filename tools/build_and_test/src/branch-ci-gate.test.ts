@@ -293,6 +293,7 @@ describe('summaryMarkdown', () => {
 // an install there would cost more than it saves on the runs it cannot skip.
 // That makes "resolves with no node_modules" a contract, not a preference, and
 // it lived only in a comment -- which is how a bare import got added.
+// .oxlintrc.json mirrors this contract with a no-restricted-imports override.
 describe('branch-ci-gate.ts resolution', () => {
   const GATE_FILES = ['branch-ci-gate.ts', 'branch-ci-gate.core.ts'];
 
