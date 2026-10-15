@@ -7,7 +7,7 @@
 # the www/atlas head instead and asks whether atlas.lit-ui-router.dev serves
 # it. action_required renders orange = a release, a floor-bump, a dashboard
 # apply, or an atlas deploy is owed; neutral renders grey = the check could not
-# reach a verdict. Never a CI failure — this job succeeds whatever the signals
+# reach a verdict. Never a CI failure — both jobs succeed whatever the signals
 # say.
 name: Release signals
 
@@ -78,7 +78,8 @@ concurrency:
   cancel-in-progress: ${{ github.event_name != 'schedule' }}
 
 jobs:
-  published_diff:
+  npm:
+    name: release signals (npm)
     runs-on: ubuntu-26.04
     timeout-minutes: 15
     permissions:
@@ -126,6 +127,29 @@ jobs:
           TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
           TURBO_API: ${{ secrets.TURBO_API }}
           TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+
+  # Separate from npm so a crash there never skips the Cloudflare signals.
+  cloudflare:
+    name: release signals (cloudflare)
+    runs-on: ubuntu-26.04
+    timeout-minutes: 15
+    permissions:
+      checks: write
+      contents: read
+    steps:
+      - name: 'Checkout code'
+        uses: actions/checkout@v7
+        with:
+          # Always main's head, as in the npm job.
+          ref: main
+          persist-credentials: false
+      - name: Setup mise
+        uses: jdx/mise-action@v5
+        with:
+          version: 2026.10.1
+      # The check scripts import @tools/shared and @tools/workers-builds, both in the release closure.
+      - name: Install dependencies
+        run: mise run setup --release
       # CD-pipeline signal (#280 Phase 1): the "workers-builds (triggers)"
       # check run. Read-only diff of the live Cloudflare Workers Builds
       # triggers against the repo-owned desired state — on a push to main it
