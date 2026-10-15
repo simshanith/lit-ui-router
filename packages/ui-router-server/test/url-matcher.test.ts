@@ -163,6 +163,14 @@ describe('explicit rejections (fail at compile, never diverge silently)', () => 
         }),
       /Invalid squash policy/,
     );
+    assert.throws(
+      () =>
+        urlMatcherFactory({
+          // oxlint-disable-next-line anti-slop/no-chained-type-assertions, anti-slop/require-safety-comment-for-type-assertion -- deliberately ill-typed policy exercises the runtime check
+          defaultSquashPolicy: null as unknown as boolean,
+        }),
+      /Invalid squash policy: null\./,
+    );
   });
 });
 

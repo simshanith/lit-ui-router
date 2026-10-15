@@ -779,8 +779,15 @@ export function urlMatcherFactory(config: UrlMatcherCompilerConfig = {}): {
     defaultSquashPolicy = false,
   } = config;
 
-  // Same validation as ui-router's UrlConfig.defaultSquashPolicy().
-  getSquashPolicy(defaultSquashPolicy, true, false);
+  // Same validation and message as ui-router's UrlConfig.defaultSquashPolicy().
+  if (
+    defaultSquashPolicy !== true &&
+    defaultSquashPolicy !== false &&
+    !isString(defaultSquashPolicy)
+  )
+    throw new Error(
+      `Invalid squash policy: ${String(defaultSquashPolicy)}. Valid policies: false, true, arbitrary-string`,
+    );
 
   // oxlint-disable-next-line anti-slop/no-known-value-widening -- published return shape; naming it would add a matcher export
   return {
