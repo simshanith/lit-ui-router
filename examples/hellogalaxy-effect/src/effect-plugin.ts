@@ -1,8 +1,8 @@
-// A spike of a future `ui-router-effect` plugin package, inlined in this
-// example so the whole bridge is readable in one file. It consumes `effect`
-// directly and touches only public @uirouter/core API — no core types are
-// augmented. The route ref and the controllers that follow it are the half
-// that already ships, as lit-ui-router-effect.
+// A resolve-and-scope plugin spike, inlined in this example so the whole
+// bridge is readable in one file. It consumes `effect` directly and touches
+// only public @uirouter/core API — no core types are augmented. The route ref
+// ships as ui-router-effect and the controllers that follow it as
+// lit-ui-router-effect; this plugin is in neither.
 import {
   Cause,
   Context,
