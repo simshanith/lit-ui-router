@@ -186,6 +186,10 @@ the matching `peerFloor*` pin in `pnpm-workspace.yaml`: `publishedPeerMobx`
 and `peerFloorMobx` for mobx, `publishedPeerEffect` and `peerFloorEffect` for
 effect, `publishedPeerSignals` and `peerFloorSignals` for signals.
 
+These run in the `release signals (npm)` job. A separate `release signals (cloudflare)`
+job posts the `workers-builds (triggers)` and `pages-deploy (altitude-atlas)` check runs
+([`www/DEPLOY.md`](../www/DEPLOY.md)), so a failure in one job never skips the other.
+
 `eslint-plugin-lit-ui-router` has no check run: its floor is a published eslint,
 so `test:peer-floor` runs its rule suite on the `eslint-floor` alias in every PR.
 An eslint floor bump raises `publishedPeer.eslint` and the `peerFloorEslintPlugin`

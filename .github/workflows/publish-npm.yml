@@ -140,11 +140,11 @@ jobs:
           # scoped here: only release-it's GitHub release needs it (npm auth is OIDC)
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  published_diff:
+  release_signals:
     # Refresh the per-package published-diff check runs now that `latest` has
     # moved; deliberately unscoped — a full run avoids badge gaps on the fresh
     # bump-commit head. A failure here should be visible; workflow_dispatch on
-    # Published Diff is the re-nudge.
+    # Release signals is the re-nudge.
     needs: publish_npm
     permissions:
       checks: write
