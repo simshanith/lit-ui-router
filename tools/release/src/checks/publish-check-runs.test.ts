@@ -127,7 +127,10 @@ describe('checkRunsMarkdown', () => {
   });
 
   it('expands non-success runs only, with their check-run summary', () => {
-    assert.match(markdown, /### published-diff \(lit-ui-router\)\n\nTo resolve:/);
+    assert.match(
+      markdown,
+      /### published-diff \(lit-ui-router\)\n\nTo resolve:/,
+    );
     assert.match(markdown, /- `dist\/core\.js`/);
     assert.doesNotMatch(markdown, /### published-diff \(lit-ui-router-mobx\)/);
   });
