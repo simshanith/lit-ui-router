@@ -432,11 +432,18 @@ describe('simulate strategy isolation', () => {
       mount: '/app',
     });
 
+    const pendingTimers = () =>
+      process.getActiveResourcesInfo().filter((name) => name === 'Timeout')
+        .length;
+
+    const timers = pendingTimers();
+
     // The timed-out router is still mid-transition; it must never serve again.
     assert.deepEqual(await router.resolve('/app/hang'), {
       kind: 'shell',
       mount: '/app',
     });
+    assert.equal(pendingTimers(), timers);
     const pending = router.resolve('/app/legacy');
     release();
     assert.deepEqual(await pending, redirect);
