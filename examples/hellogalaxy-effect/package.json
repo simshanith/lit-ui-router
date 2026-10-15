@@ -16,7 +16,8 @@
     "effect": "^3.22.1",
     "lit": "^3.3.3",
     "lit-ui-router": "^1.16.5",
-    "lit-ui-router-effect": "^0.2.1"
+    "lit-ui-router-effect": "^0.4.1",
+    "ui-router-effect": "^0.1.2"
   },
   "devDependencies": {
     "typescript": "^7.0.2",
