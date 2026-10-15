@@ -76,6 +76,46 @@ region as updating for assistive technology from the moment the transition
 starts. The promise is handled on both sides because a failed transition
 rejects it, and the error is the `onError` hook's to report.
 
+Inside a Lit element, a
+[`TransitionController`](/api/reference/controllers/TransitionController)
+observing `onStart` registers the same hook for as long as the element is
+connected, and hands its callback the transition:
+
+```ts
+import type { Transition } from '@uirouter/core';
+import { LitElement, html, nothing } from 'lit';
+import { state } from 'lit/decorators.js';
+import { TransitionController } from 'lit-ui-router';
+
+class AppShell extends LitElement {
+  @state() private pending?: Transition;
+
+  private transitions = new TransitionController(this, {
+    events: ['onStart'],
+    callback: (trans, reason) => {
+      if (reason !== 'onStart' || !trans) return;
+      this.pending = trans;
+
+      // Only the latest transition clears the flag.
+      const done = () => {
+        if (this.pending === trans) this.pending = undefined;
+      };
+      void trans.promise.then(done, done);
+    },
+  });
+
+  render() {
+    return html`<main aria-busy=${this.pending ? 'true' : nothing}>
+      <ui-view></ui-view>
+    </main>`;
+  }
+}
+```
+
+The callback also runs with the reason `'hostConnected'` each time the element
+connects, which the guard skips. The delay and minimum display time from the
+function above apply here unchanged, as timers around `pending`.
+
 ## Skeletons for NOWAIT resolves
 
 A resolve with the
