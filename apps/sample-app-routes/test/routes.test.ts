@@ -163,8 +163,9 @@ describe('/not-found-spa verdicts (the not-found-spa exhibit)', () => {
 });
 
 describe('/simulated-routing verdicts (the simulate-strategy exhibit)', () => {
-  it('is configured to compute verdicts by transition simulation', () => {
+  it('is configured to compute verdicts by transition simulation, prewarmed', () => {
     assert.equal(mounts['/simulated-routing'].strategy, 'simulate');
+    assert.equal(mounts['/simulated-routing'].prewarm, 1);
   });
 
   it('computes the same table-driven verdicts through a headless router', async () => {

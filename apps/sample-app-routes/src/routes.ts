@@ -68,6 +68,7 @@ const simulatedRoutingDemo: MountConfig = {
   redirects,
   strategy: 'simulate',
   otherwise: { state: 'notFound' },
+  prewarm: 1,
 };
 
 // The hash-location demo: a hash client keeps the whole route in the fragment,
