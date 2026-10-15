@@ -660,6 +660,26 @@ describe('the render root', () => {
     expect(requestRouter(root)).toBeUndefined();
   });
 
+  it("takes the shim's own litServerRoot, and context still reaches the render", async () => {
+    // SAFETY: the @lit-labs/ssr DOM shim installs `litServerRoot` as an `EventTarget` on import.
+    const root = (globalThis as { litServerRoot?: EventTarget }).litServerRoot;
+    expect(root).toBeInstanceOf(EventTarget);
+
+    const { files, result } = await run({
+      paths: ['/'],
+      notFound: false,
+      root,
+      elementRenderers: [LitElementRenderer],
+      renderShell: (): TemplateResult => html`<router-probe></router-probe>`,
+    });
+
+    const written = files.get('dist/index.html')!;
+    expect(written).toContain('/sheet/7B');
+    expect(written).not.toContain('no-router');
+    expect(result.root).toBe(root);
+    expect(requestRouter(root!)).toBeUndefined();
+  });
+
   it('uninstalls the provider even when a render throws', async () => {
     const root = new EventTarget();
 
