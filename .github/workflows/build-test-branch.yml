@@ -59,6 +59,7 @@ jobs:
         run: mise run //tools/build_and_test:branch_ci_gate
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH_CREATED: ${{ github.event.created }}
 
   build_and_test_branch:
     # `signal_gate` is 'failure' if the gate itself broke — that means run,

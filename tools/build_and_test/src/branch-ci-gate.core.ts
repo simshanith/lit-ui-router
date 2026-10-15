@@ -36,6 +36,43 @@ export function wantsMainGraph(branch: string): boolean {
   return branch.startsWith(MAIN_GRAPH_PREFIX);
 }
 
+/** How long a branch-creating push polls for its PR before deciding without one. */
+export const PR_GRACE = { totalMs: 60_000, intervalMs: 15_000 } as const;
+
+/**
+ * Whether to poll for a PR: only the push that created the branch, since
+ * `gh pr create` lands seconds after it, and never on the main-graph opt-in,
+ * which runs whatever the PR list says.
+ */
+export function shouldAwaitPr(
+  created: string | undefined,
+  branch: string,
+): boolean {
+  return created?.trim() === 'true' && !wantsMainGraph(branch);
+}
+
+/**
+ * Query until a PR appears or the window closes. `query` and `sleep` are
+ * injected so the loop runs without real timers in tests.
+ */
+export async function awaitOpenPrs(
+  query: () => Promise<OpenPr[]>,
+  sleep: (ms: number) => Promise<void>,
+  { totalMs, intervalMs }: { totalMs: number; intervalMs: number } = PR_GRACE,
+): Promise<{ prs: OpenPr[]; waitedMs: number }> {
+  let waitedMs = 0;
+  let prs = await query();
+
+  while (prs.length === 0 && waitedMs < totalMs) {
+    const step = Math.min(intervalMs, totalMs - waitedMs);
+    await sleep(step);
+    waitedMs += step;
+    prs = await query();
+  }
+
+  return { prs, waitedMs };
+}
+
 /** Whether both fields `gh pr list` was asked for arrived with their JSON types. */
 const isOpenPr = (pr: Partial<OpenPr> | null): pr is OpenPr =>
   typeof pr?.number === 'number' && typeof pr.baseRefName === 'string';
@@ -190,6 +227,8 @@ export type GateRun = {
   prs: readonly OpenPr[];
   verdicts: readonly BaseVerdict[];
   decision: Decision;
+  /** Milliseconds this branch-creating push spent polling for its PR. */
+  waitedMs?: number;
 };
 
 const STATE_MARK: Record<MergeState, string> = {
@@ -208,6 +247,7 @@ export function summaryMarkdown({
   prs,
   verdicts,
   decision,
+  waitedMs = 0,
 }: GateRun): string {
   const lines = [
     `## Branch CI gate — ${decision.run ? 'running' : 'skipping'} \`build_and_test (branch)\``,
@@ -217,6 +257,13 @@ export function summaryMarkdown({
     decision.reason,
     '',
   ];
+
+  if (waitedMs > 0) {
+    lines.push(
+      `Waited ${Math.round(waitedMs / 1000)}s for a PR on this branch-creating push${prs.length === 0 ? ' — none opened' : ''}.`,
+      '',
+    );
+  }
 
   if (decision.run) {
     lines.push(

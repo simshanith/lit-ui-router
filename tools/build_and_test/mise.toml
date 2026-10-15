@@ -31,7 +31,8 @@ description = "Start the shared CI Xvfb display and export DISPLAY"
 run = "./src/start-xvfb.ts"
 
 [tasks.branch_ci_gate]
-# env: GITHUB_REF_NAME, GH_TOKEN, GITHUB_OUTPUT, GITHUB_STEP_SUMMARY.
+# env: GITHUB_REF_NAME, GH_TOKEN, BRANCH_CREATED (`github.event.created`;
+# "true" polls up to 60s for the PR), GITHUB_OUTPUT, GITHUB_STEP_SUMMARY.
 # The one task here that runs WITHOUT `mise run setup`: its script imports
 # only node builtins, so the gate job needs no pnpm install to answer.
 description = "Decide whether this branch-head push needs its own CI run"

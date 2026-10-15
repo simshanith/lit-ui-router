@@ -18,21 +18,28 @@
 // job runs on `mise-action` alone: a gate that first paid for `mise run setup`
 // would cost more than it saves on the runs it cannot skip.
 //
+// The push that creates a branch usually lands seconds before `gh pr create`,
+// so that push alone polls for its PR (PR_GRACE in core) before deciding.
+//
 // env: GITHUB_REF_NAME (pushed branch), GH_TOKEN (gh pr list),
+//      BRANCH_CREATED (`github.event.created`; "true" polls for the PR),
 //      GITHUB_OUTPUT / GITHUB_STEP_SUMMARY (runner files; printed when unset).
 
 import { execFile } from 'node:child_process';
 import { appendFile } from 'node:fs/promises';
+import { setTimeout as sleep } from 'node:timers/promises';
 import { promisify } from 'node:util';
 
 import {
   type BaseVerdict,
   type GateRun,
   type OpenPr,
+  awaitOpenPrs,
   decide,
   distinctBases,
   mergeStateFromExit,
   parseOpenPrs,
+  shouldAwaitPr,
   summaryMarkdown,
   wantsMainGraph,
 } from './branch-ci-gate.core.ts';
@@ -114,20 +121,25 @@ async function main(): Promise<void> {
 
   const head = await capture('git', ['rev-parse', 'HEAD']);
 
-  const prs: OpenPr[] = parseOpenPrs(
-    JSON.parse(
-      await capture('gh', [
-        'pr',
-        'list',
-        '--head',
-        branch,
-        '--state',
-        'open',
-        '--json',
-        'number,baseRefName',
-      ]),
-    ),
-  );
+  const listPrs = async (): Promise<OpenPr[]> =>
+    parseOpenPrs(
+      JSON.parse(
+        await capture('gh', [
+          'pr',
+          'list',
+          '--head',
+          branch,
+          '--state',
+          'open',
+          '--json',
+          'number,baseRefName',
+        ]),
+      ),
+    );
+
+  const { prs, waitedMs } = shouldAwaitPr(process.env.BRANCH_CREATED, branch)
+    ? await awaitOpenPrs(listPrs, sleep)
+    : { prs: await listPrs(), waitedMs: 0 };
 
   const verdicts: BaseVerdict[] = [];
 
@@ -142,6 +154,7 @@ async function main(): Promise<void> {
     prs,
     verdicts,
     decision: decide(prs, verdicts, wantsMainGraph(branch)),
+    waitedMs,
   });
 }
 

@@ -724,6 +724,17 @@
           }
         ]
       }
+    },
+    {
+      "files": ["tools/build_and_test/src/branch-ci-gate.ts"],
+      "rules": {
+        "turbo/no-undeclared-env-vars": [
+          "warn",
+          {
+            "allowList": ["^BRANCH_CREATED$"]
+          }
+        ]
+      }
     }
   ]
 }
