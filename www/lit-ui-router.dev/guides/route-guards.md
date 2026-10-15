@@ -6,7 +6,7 @@ description: Protect states with transition hooks - the requiresAuth pattern
 # Route Guards (Transition Hooks)
 
 Every navigation in UI-Router is a
-[Transition](https://ui-router.github.io/core/docs/latest/classes/transition.transition-1.html),
+[Transition](https://ui-router.github.io/core/docs/latest/classes/_transition_transition_.transition.html),
 and transitions can be observed and altered with **transition hooks**. A hook
 that redirects or cancels a transition is a route guard. Because guards run
 in the router — not in components — a single hook can protect any number of
@@ -74,7 +74,7 @@ router.transitionService.onBefore(
 
 `onBefore` runs before the transition starts any work (before resolves
 fetch). Higher `priority` hooks run first. The
-[TransitionService](https://ui-router.github.io/core/docs/latest/classes/transition.transitionservice.html)
+[TransitionService](https://ui-router.github.io/core/docs/latest/classes/_transition_transitionservice_.transitionservice.html)
 offers the full lifecycle — `onBefore`, `onStart`, `onEnter`, `onRetain`,
 `onExit`, `onFinish`, `onSuccess`, `onError` — and all of them accept the
 same criteria/callback shape.

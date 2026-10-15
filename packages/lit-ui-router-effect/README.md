@@ -131,4 +131,4 @@ The development build adds one console warning here: a `RouterRefController` who
 - [ui-router-effect](https://lit-ui-router.dev/packages/ui-router-effect)
 - [Effect — SubscriptionRef](https://effect.website/docs/state-management/subscriptionref/)
 - [Lit — Reactive Controllers](https://lit.dev/docs/composition/controllers/)
-- [@uirouter/core — TransitionService hooks](https://ui-router.github.io/core/docs/latest/classes/transition.transitionservice.html)
+- [@uirouter/core — TransitionService hooks](https://ui-router.github.io/core/docs/latest/classes/_transition_transitionservice_.transitionservice.html)
