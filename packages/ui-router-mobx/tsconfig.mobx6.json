@@ -1,0 +1,12 @@
+{
+  // Typechecks src against the mobx-6 alias (the 6.x line the widened mobx
+  // peer range still covers), not the catalog's mobx 7. Never emits.
+  // mobx 6 ships no exports map and src imports only the bare specifier.
+  "extends": "./tsconfig.src.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "paths": {
+      "mobx": ["./node_modules/mobx-6/dist/mobx.d.ts"]
+    }
+  }
+}

@@ -541,6 +541,38 @@
       }
     },
     {
+      // Mirrors bundleProbe["."].free in packages/ui-router-mobx/package.json.
+      "files": ["packages/ui-router-mobx/src/**/*.ts"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "lit",
+                "message": "ui-router-mobx is framework-agnostic; Lit bindings live in lit-ui-router-mobx."
+              },
+              {
+                "name": "lit-ui-router",
+                "message": "ui-router-mobx is framework-agnostic; Lit bindings live in lit-ui-router-mobx."
+              }
+            ],
+            "patterns": [
+              {
+                "group": [
+                  "lit/**",
+                  "lit-ui-router/**",
+                  "@lit/**",
+                  "@lit-labs/**"
+                ],
+                "message": "ui-router-mobx is framework-agnostic; Lit bindings live in lit-ui-router-mobx."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
       "files": ["packages/ui-router-signals/src/**/*.ts"],
       "rules": {
         "no-restricted-imports": [
