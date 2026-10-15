@@ -49,7 +49,7 @@ export interface MountConfig {
    * config widens later (e.g. an auth tier).
    */
   strategy?: 'matcher' | 'simulate';
-  /** Matcher compiler options (defaults: strict, case-sensitive); 'simulate' mounts apply strict and caseInsensitive. */
+  /** Matcher compiler options (defaults: strict, case-sensitive, no squash); 'simulate' mounts apply all but decodeParams. */
   config?: UrlMatcherCompilerConfig;
   /**
    * Projection of the client's otherwise() rule. `state` references a
