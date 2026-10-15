@@ -6,16 +6,17 @@
 // instead of calling gh. Shaping is pure and unit-tested in
 // ./publish-check-runs.core.ts.
 
-import { appendFile, readFile } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 
 import { publishedDiffSummaryPath } from './cache-paths.ts';
 import type { PackageSummary } from './check-published-diff.core.ts';
 import {
   checkRunApiArgs,
-  stepSummaryMarkdown,
+  checkRunsMarkdown,
   toCheckRun,
 } from './publish-check-runs.core.ts';
 import { defaultExec } from '@tools/shared/exec.ts';
+import { appendStepSummary } from '@tools/shared/gha.ts';
 import { ensureGh } from '../lib/gh.ts';
 import { failMain } from '../lib/fail-main.ts';
 
@@ -45,11 +46,7 @@ async function main() {
 
   const payloads = summaries.map((summary) => toCheckRun(summary, repo));
 
-  const markdown = stepSummaryMarkdown(summaries, repo);
-  const stepSummary = process.env.GITHUB_STEP_SUMMARY;
-
-  if (stepSummary) await appendFile(stepSummary, markdown);
-  else console.log(markdown);
+  await appendStepSummary(checkRunsMarkdown('published-diff', payloads));
 
   if (dryRun) {
     console.log(JSON.stringify(payloads, null, 2));

@@ -5,8 +5,8 @@ import type { PackageSummary } from './check-published-diff.core.ts';
 import {
   checkRunApiArgs,
   checkRunName,
+  checkRunsMarkdown,
   releaseWorkflowUrl,
-  stepSummaryMarkdown,
   toCheckRun,
 } from './publish-check-runs.core.ts';
 
@@ -108,25 +108,35 @@ describe('toCheckRun', () => {
   });
 });
 
-describe('stepSummaryMarkdown', () => {
-  const markdown = stepSummaryMarkdown([clean, drifting], REPO);
+describe('checkRunsMarkdown', () => {
+  const markdown = checkRunsMarkdown('published-diff', [
+    toCheckRun(clean, REPO),
+    toCheckRun(drifting, REPO),
+  ]);
 
-  it('tables every package with its check-run title', () => {
-    assert.match(markdown, /1 of 2 packages would ship changes if released/);
+  it('tables every run with its conclusion and title', () => {
+    assert.match(markdown, /^## published-diff\n/);
     assert.match(
       markdown,
-      /\| `lit-ui-router-mobx` \| up to date with latest 0\.3\.3 \|/,
+      /\| `published-diff \(lit-ui-router-mobx\)` \| success \| up to date with latest 0\.3\.3 \|/,
     );
     assert.match(
       markdown,
-      /\| `lit-ui-router` \| unreleased changes vs latest 1\.7\.0 \(2 shipped files differ\) \|/,
+      /\| `published-diff \(lit-ui-router\)` \| action_required \| unreleased changes vs latest 1\.7\.0 \(2 shipped files differ\) \|/,
     );
   });
 
-  it('details drifting packages only, with their check-run summary', () => {
-    assert.match(markdown, /### lit-ui-router\n\nTo resolve:/);
+  it('expands non-success runs only, with their check-run summary', () => {
+    assert.match(markdown, /### published-diff \(lit-ui-router\)\n\nTo resolve:/);
     assert.match(markdown, /- `dist\/core\.js`/);
-    assert.doesNotMatch(markdown, /### lit-ui-router-mobx/);
+    assert.doesNotMatch(markdown, /### published-diff \(lit-ui-router-mobx\)/);
+  });
+
+  it('says so when no runs were posted', () => {
+    assert.equal(
+      checkRunsMarkdown('peer-floor', [], 'Nothing defines it.'),
+      '## peer-floor\n\nNothing defines it.\n',
+    );
   });
 });
 

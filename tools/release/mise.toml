@@ -111,7 +111,7 @@ run = [
 ]
 
 [tasks.publish_check_runs]
-# env: GH_TOKEN, GITHUB_REPOSITORY, GITHUB_STEP_SUMMARY (printed when unset). Reads .cache/published-diff-summary.json
+# env: GH_TOKEN, GITHUB_REPOSITORY. Reads .cache/published-diff-summary.json
 # (the check:published-diff task's output); one check run per package on the
 # current HEAD.
 description = "Create per-package published-diff check runs from the summary JSON"

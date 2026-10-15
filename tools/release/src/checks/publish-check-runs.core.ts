@@ -92,36 +92,26 @@ export function toCheckRun(
   };
 }
 
-/** The run page's `$GITHUB_STEP_SUMMARY`: a verdict table, then each drifting package's check-run summary. */
-export function stepSummaryMarkdown(
-  summaries: readonly PackageSummary[],
-  repo: string,
+/** A signal's `$GITHUB_STEP_SUMMARY` section: a verdict table, then each non-success run's summary. */
+export function checkRunsMarkdown(
+  heading: string,
+  payloads: readonly CheckRunPayload[],
+  empty = 'No check runs posted.',
 ): string {
-  const runs = summaries.map((summary) => ({
-    summary,
-    payload: toCheckRun(summary, repo),
-  }));
-
-  const owed = runs.filter(
-    ({ payload }) => payload.conclusion === 'action_required',
-  );
+  if (payloads.length === 0) return [`## ${heading}`, '', empty, ''].join('\n');
 
   return [
-    '## published-diff',
+    `## ${heading}`,
     '',
-    `${owed.length} of ${runs.length} packages would ship changes if released.`,
-    '',
-    '| Package | Verdict |',
-    '| --- | --- |',
-    ...runs.map(
-      ({ summary, payload }) => `| \`${summary.name}\` | ${payload.title} |`,
+    '| Check run | Conclusion | Title |',
+    '| --- | --- | --- |',
+    ...payloads.map(
+      ({ name, conclusion, title }) =>
+        `| \`${name}\` | ${conclusion} | ${title} |`,
     ),
-    ...owed.flatMap(({ summary, payload }) => [
-      '',
-      `### ${summary.name}`,
-      '',
-      payload.summary,
-    ]),
+    ...payloads
+      .filter(({ conclusion }) => conclusion !== 'success')
+      .flatMap(({ name, summary }) => ['', `### ${name}`, '', summary]),
     '',
   ].join('\n');
 }
