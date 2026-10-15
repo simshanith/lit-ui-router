@@ -192,6 +192,8 @@ const LINT = at('eslint-plugin-lit-ui-router', '.');
 const REG_COST = FLAG.gz - PURE.gz;
 const LINT_SHARE = Math.round((LINT.gz / FLAG.gz) * 100);
 const ELEM_SUM = EL1.gz + EL2.gz;
+// the register callout's leader lands mid-height on the umbrella door's +x face
+const UMB_FACE = isoPt(OX, OY, UMB.x + UMB.s, UMB.y + UMB.s / 2, UMB.h / 2);
 // the footnote paragraph's two comparisons, checked against the plate
 const ELEM_GAP = ELEM_SUM - UMB.gz;
 if (!(MOBX.gz < ELEM_GAP && NAV.gz < ELEM_GAP)) throw new Error('sheet 11: the notes price mobx and the plugin under the ./register element-door gap, and the plate does not');
@@ -255,7 +257,7 @@ ${all.slice(half).map((r, i) => txt(590, SY + 52 + i * 17, `${r.n} ${r.pkg} ${r.
 const svg = `<svg viewBox="0 0 1160 ${SY + 90 + half * 17}" role="img" aria-label="Every exported entry of the ${PKG_N} publishable packages drawn as an isometric city split into ${PKG_N} package quarters: ${DOOR_N} door-buildings, footprint from minified bytes, height from gzipped bytes with dependencies external. The lit-ui-router quarter shows twin flagship towers for the bare and pure entries plus three register doors and a low context door; the ui-router-server quarter is a nine-door storefront whose index tower prices ${SRV_GAP} gzipped bytes under lit-ui-router's; the effect, mobx and signals companions, the navigation-location plugin, ui-router-effect and ui-router-signals stand alone as small one-door quarters; the ssr bridge between the client and server quarters holds three doors, its index, its client half and its register entry; and a one-door quarter in the lower middle holds eslint-plugin-lit-ui-router, whose single door is the only one on the sheet no browser ever loads. A structure schedule lists every entry with exact byte counts.">
 ${defs(P)}
 
-${quarter(20, 0, 330, 200, 'lit-ui-router — six doors', 162, 426, 'end')}
+${quarter(20, 0, 330, 200, 'lit-ui-router — six doors', 640, 222)}
 ${quarter(410, 0, 730, 210, 'ui-router-server — nine doors', 1150, 430, 'end')}
 ${quarter(0, 345, 110, 415, 'lit-ui-router-effect', 176, 445, 'end')}
 ${quarter(120, 290, 260, 380, 'lit-ui-router-mobx', 240, 478, 'end')}
@@ -273,8 +275,9 @@ ${txt(150, 108, 'the price of registration', 'lbla')}
 <line x1="368" y1="102" x2="452" y2="128" class="skf"/>
 ${txt(1120, 108, `the two flagship doors: ${fmt(FLAG.gz)} · ${fmt(SRV.gz)} —`, 'lbla', 'end')}
 ${txt(1120, 120, `the client door leads the server by ${fmt(SRV_GAP)}`, 'lbla', 'end')}
-${txt(40, 340, `the one-element doors sum to ${fmt(ELEM_SUM)} gz —`, 'lbls')}
-${txt(40, 352, `«./register» ships the shared core once, at ${fmt(UMB.gz)}`, 'lbls')}
+${txt(640, 238, `the one-element doors sum to ${fmt(ELEM_SUM)} gz —`, 'lbls')}
+${txt(640, 250, `«./register» ships the shared core once, at ${fmt(UMB.gz)}`, 'lbls')}
+<line x1="636" y1="240" x2="${UMB_FACE[0].toFixed(1)}" y2="${UMB_FACE[1].toFixed(1)}" class="skf"/>
 ${txt(250, 560, `the lint plugin's one door: ${fmt(LINT.gz)} gz —`, 'lbls')}
 ${txt(250, 572, 'the only door here no browser ever opens', 'lbls')}
 ${txt(1120, 695, `four adapters within ${ADAPTER_SPREAD} bytes of one`, 'lbla', 'end')}
