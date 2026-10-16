@@ -21,6 +21,7 @@ import {
   type AnnotationProperties,
   annotationCommand,
 } from '@tools/shared/gha.core.ts';
+import { turboLogFile } from '@tools/shared/turbo-log.ts';
 
 /** turbo's exit codes arrive as JSON, which the cast below does not check. */
 const isExitCode = (code: number | null | undefined): code is number =>
@@ -48,10 +49,7 @@ export interface SummaryTask {
   package: string;
   directory: string;
   command: string;
-  /**
-   * Repo-root-relative; written as the task runs, so it survives the failure. Absent on an
-   * uncached task, whose output only turbo's `--log-file` keeps.
-   */
+  /** Repo-root-relative; written as the task runs, so it survives the failure. Not on every task: read {@link logFilePath}. */
   logFile?: string;
   cache?: TaskCache;
   execution?: TaskExecution;
@@ -67,8 +65,17 @@ export interface StructuredLogEntry {
   text: string;
 }
 
+/** The summary's `logFile`, else turbo's naming; none for an unexecuted task, whose file is stale. */
+export function logFilePath(task: SummaryTask): string | undefined {
+  if (task.logFile !== undefined) return task.logFile;
+
+  return task.execution === undefined
+    ? undefined
+    : turboLogFile(task.directory, task.task);
+}
+
 /**
- * A task's output from turbo's `--log-file` JSON, the fallback for a task with no `logFile`.
+ * A task's output from turbo's `--log-file` JSON, the fallback when its log file can't be read.
  * The execution window tells apart two runs of one session that share a taskId.
  */
 export function structuredTaskLog(

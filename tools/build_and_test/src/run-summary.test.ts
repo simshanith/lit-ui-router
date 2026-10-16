@@ -25,6 +25,7 @@ import {
   headline,
   humanDuration,
   inlineCode,
+  logFilePath,
   logsLink,
   omittedTaskCount,
   overviewLines,
@@ -377,6 +378,29 @@ describe('buildReports', () => {
 
     assert.match(report.excerpt.text, /no log for lit-ui-router#typecheck:src/);
     assert.match(report.excerpt.text, /exited \(1\)/);
+  });
+});
+
+describe('logFilePath', () => {
+  it("prefers the summary's logFile", () => {
+    assert.equal(
+      logFilePath(task({ logFile: 'elsewhere.log' })),
+      'elsewhere.log',
+    );
+  });
+
+  it('derives the file a cache: false task leaves out of the summary', () => {
+    assert.equal(
+      logFilePath(task({ logFile: undefined })),
+      'packages/lit-ui-router/.turbo/turbo-typecheck$colon$src.log',
+    );
+  });
+
+  it('is undefined for a task that never executed', () => {
+    assert.equal(
+      logFilePath(task({ logFile: undefined, execution: undefined })),
+      undefined,
+    );
   });
 });
 

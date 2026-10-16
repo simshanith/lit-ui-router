@@ -129,8 +129,8 @@ X 1 failing task: @tools/repo-checks#check:task-inputs — 10 succeeded, 217 cac
 ```
 
 Each failing task gets a log excerpt and two commands, in the step summary and
-in the job log. A `cache: false` task has no turbo log file, so its excerpt
-comes from the `--log-file` JSON the same runs write:
+in the job log. The excerpt comes from the task's `.turbo/turbo-<task>.log`,
+or from the `--log-file` JSON the same runs write when that file can't be read:
 
 ```text
 ── @tools/repo-checks#check:task-inputs (exit 1)
