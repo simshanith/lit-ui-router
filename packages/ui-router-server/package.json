@@ -28,59 +28,79 @@
     ".": {
       "types": "./dist/index.d.ts",
       "development": "./dist/development/index.js",
+      "deno": "./dist/index.js",
+      "node": "./dist/node/index.js",
       "default": "./dist/index.js"
     },
     "./connect": {
       "types": "./dist/connect.d.ts",
       "development": "./dist/development/connect.js",
+      "deno": "./dist/connect.js",
+      "node": "./dist/node/connect.js",
       "default": "./dist/connect.js"
     },
     "./dist/*": "./dist/*",
     "./fetch": {
       "types": "./dist/fetch.d.ts",
       "development": "./dist/development/fetch.js",
+      "deno": "./dist/fetch.js",
+      "node": "./dist/node/fetch.js",
       "default": "./dist/fetch.js"
     },
     "./hono": {
       "types": "./dist/hono.d.ts",
       "development": "./dist/development/hono.js",
+      "deno": "./dist/hono.js",
+      "node": "./dist/node/hono.js",
       "default": "./dist/hono.js"
     },
     "./location": {
       "types": "./dist/location.d.ts",
       "development": "./dist/development/location.js",
+      "deno": "./dist/location.js",
+      "node": "./dist/node/location.js",
       "default": "./dist/location.js"
     },
     "./matcher": {
       "types": "./dist/url-matcher.d.ts",
       "development": "./dist/development/url-matcher.js",
+      "deno": "./dist/url-matcher.js",
+      "node": "./dist/node/url-matcher.js",
       "default": "./dist/url-matcher.js"
     },
     "./package.json": "./package.json",
     "./redirects": {
       "types": "./dist/redirects.d.ts",
       "development": "./dist/development/redirects.js",
+      "deno": "./dist/redirects.js",
+      "node": "./dist/node/redirects.js",
       "default": "./dist/redirects.js"
     },
     "./simulate": {
       "types": "./dist/simulate.d.ts",
       "development": "./dist/development/simulate.js",
+      "deno": "./dist/simulate.js",
+      "node": "./dist/node/simulate.js",
       "default": "./dist/simulate.js"
     },
     "./url-config": {
       "types": "./dist/url-config.d.ts",
       "development": "./dist/development/url-config.js",
+      "deno": "./dist/url-config.js",
+      "node": "./dist/node/url-config.js",
       "default": "./dist/url-config.js"
     },
     "./vite": {
       "types": "./dist/vite.d.ts",
       "development": "./dist/development/vite.js",
+      "deno": "./dist/vite.js",
+      "node": "./dist/node/vite.js",
       "default": "./dist/vite.js"
     }
   },
   "scripts": {
     "bench": "node test/resolve.bench.ts",
-    "build:js": "oxc-emit-js --development",
+    "build:js": "oxc-emit-js --development --node",
     "build:types": "oxc-emit-dts",
     "changelog": "release-it --changelog --git.tagMatch=\"ui-router-server@[0-9]*.[0-9]*.[0-9]*\"",
     "check:bundle": "floor-guard && check-bundle-inputs",
@@ -146,42 +166,76 @@
         "lit",
         "@lit-labs/ssr",
         "lit-ui-router"
+      ],
+      "conditions": [
+        "node"
       ]
     },
     "./connect": {
       "free": [
         "@uirouter/core"
+      ],
+      "conditions": [
+        "node"
       ]
     },
     "./fetch": {
       "free": [
         "@uirouter/core"
+      ],
+      "conditions": [
+        "node"
       ]
     },
     "./hono": {
       "free": [
         "@uirouter/core",
         "hono"
+      ],
+      "conditions": [
+        "node"
+      ]
+    },
+    "./location": {
+      "conditions": [
+        "node"
       ]
     },
     "./matcher": {
       "free": [
         "@uirouter/core"
+      ],
+      "conditions": [
+        "node"
       ]
     },
     "./redirects": {
       "free": [
         "@uirouter/core"
+      ],
+      "conditions": [
+        "node"
+      ]
+    },
+    "./simulate": {
+      "conditions": [
+        "node"
       ]
     },
     "./url-config": {
       "free": [
         "@uirouter/core"
+      ],
+      "conditions": [
+        "node"
       ]
     },
     "./vite": {
       "free": [
         "@uirouter/core"
+      ],
+      "conditions": [
+        "node"
       ]
     }
   }

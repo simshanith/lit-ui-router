@@ -16,8 +16,14 @@
 
 import { createConnectMiddleware } from './connect.ts';
 import type { ConnectAdapterOptions, ConnectMiddleware } from './connect.ts';
+import { diagnoseMounts } from './index.ts';
 import type { ServerRouter } from './index.ts';
+import { compiledMounts } from './registry.ts';
 import { reportMountDiagnostics } from './report.ts';
+
+// A router createServerRouter didn't build, such as a wrapper, has nothing to diagnose.
+const findings: typeof diagnoseMounts = (router) =>
+  compiledMounts.has(router) ? diagnoseMounts(router) : [];
 
 /** The sliver of Vite's dev/preview server the plugin uses: the Connect stack. */
 export interface ViteMiddlewareServer {
@@ -65,10 +71,11 @@ export interface ServerRouterPlugin {
  * point {@link ConnectAdapterOptions.shellPath} at the mount's actual HTML entry
  * when it isn't served at the base.
  *
- * In `vite dev` only, the plugin passes each {@link ServerRouter.diagnose}
- * finding to Vite's `logger.warn`. A router built in the Vite config loads
- * the production build, which skips its construction warning; a development
- * build router that already warned is not reported twice.
+ * In `vite dev` only, the plugin passes each {@link diagnoseMounts} finding
+ * to Vite's `logger.warn`, unless construction already warned for the same
+ * router: a router built in the Vite config loads the node build, which warns
+ * unless `NODE_ENV` is `production`. A router `createServerRouter` didn't
+ * build, such as a wrapper, gets no report.
  */
 export function serverRouterPlugin(
   router: ServerRouter,
@@ -84,7 +91,7 @@ export function serverRouterPlugin(
     name: 'ui-router-server',
     configureServer(server) {
       install(server);
-      reportMountDiagnostics(router, (message) => {
+      reportMountDiagnostics(router, findings, (message) => {
         server.config.logger.warn(
           `ui-router-server: serverRouterPlugin: ${message}`,
         );

@@ -126,12 +126,9 @@ export async function statusFor(pathname: string): Promise<number> {
   return 404;
 }
 
-// Diagnostics take the table createServerRouter takes, or come from the router.
+// Diagnostics take the router createServerRouter returns.
 export function diagnosticLines(): string[] {
-  const diagnostics: MountDiagnostic[] = [
-    ...diagnoseMounts({ '/app': mount }),
-    ...router.diagnose(),
-  ];
+  const diagnostics: MountDiagnostic[] = diagnoseMounts(router);
 
   return diagnostics.map(({ kind, mount: base, message }) => {
     const code: MountDiagnosticKind = kind;

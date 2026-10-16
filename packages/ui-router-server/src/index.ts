@@ -14,6 +14,7 @@
 import type { RawParams, StateDeclaration } from '@uirouter/core';
 
 import { warnMountDiagnostics } from './dev-warn.ts';
+import { compiledMounts } from './registry.ts';
 import { compileResolver, matchRoute } from './redirects.ts';
 import { createRouterPool, POOL_MAX_IDLE } from './router-pool.ts';
 import type { PooledRouter, RouterPool } from './router-pool.ts';
@@ -158,14 +159,6 @@ export interface MountDiagnostic {
 export interface ServerRouter {
   /** Accepts a pathname, an absolute url string, or anything with a `pathname` (URL, Location). */
   resolve(pathnameOrUrl: string | { pathname: string }): Promise<Verdict>;
-  /**
-   * Checks the mounts this router was built with, returning the findings
-   * {@link diagnoseMounts} returns for the same table; computed on each call.
-   * The development build reports them at construction and
-   * `serverRouterPlugin` reports them in `vite dev`; anywhere else, log what
-   * this returns.
-   */
-  diagnose(): MountDiagnostic[];
 }
 
 interface Mount {
@@ -468,9 +461,6 @@ const bareBaseDiagnostic = (mount: Mount): MountDiagnostic | null => {
   };
 };
 
-const diagnosticsOf = (mounts: Mount[]): MountDiagnostic[] =>
-  mounts.flatMap((mount) => bareBaseDiagnostic(mount) ?? []);
-
 // Null when the transition failed or timed out: that router may still be mid-transition.
 const replayVerdict = async (
   pooled: PooledRouter,
@@ -537,10 +527,11 @@ const simulateVerdict = async (
  *
  * A bare mount base ('/app', '/app/') resolves the empty subpath, which
  * 404s unless the mount supplies a root pattern — a rule like
- * `{ pattern: /^\/?$/, to: ... }` or a `url: ''` route. In the development
- * build (the `development` export condition), construction passes each
- * {@link ServerRouter.diagnose} finding's message to `console.warn`, once per
- * router; the production build skips the check.
+ * `{ pattern: /^\/?$/, to: ... }` or a `url: ''` route. Construction passes
+ * each {@link diagnoseMounts} finding's message to `console.warn`, once per
+ * router: always in the development build (the `development` export
+ * condition), unless `NODE_ENV` is `production` in the node build (the `node`
+ * condition), never in the default build.
  */
 export function createServerRouter(config: {
   mounts: Record<string, MountConfig>;
@@ -575,40 +566,48 @@ export function createServerRouter(config: {
 
       return { kind: 'notFound' };
     },
-    diagnose: () => diagnosticsOf(declared),
   };
 
-  warnMountDiagnostics(router);
+  compiledMounts.set(router, declared);
+  warnMountDiagnostics(router, diagnoseMounts);
 
   return router;
 }
 
 /**
- * Checks a mount table for configurations that compile but misroute, without
- * logging: the findings {@link ServerRouter.diagnose} returns for a router
- * built from the same table, in both builds.
- * It takes the same mount table, compiles it the same way, and throws for
- * the same invalid configs. It reports `'bareBaseNotFound'` for a mount
- * other than '/' whose bare base (`/app`) answers 404 — `notFound`, or the
- * shell-404 of an `otherwise` projection. Findings follow the table's
- * declaration order. Assert the result is empty in a test to catch them in
- * CI.
+ * Checks the mounts a router was built with for configurations that compile
+ * but misroute, without logging: the findings the development and node
+ * builds of {@link createServerRouter} warn about, returned in every build.
+ * It reports `'bareBaseNotFound'` for a mount other than '/' whose bare base
+ * (`/app`) answers 404 — `notFound`, or the shell-404 of an `otherwise`
+ * projection. Findings follow the table's declaration order. Assert the
+ * result is empty in a test to catch them in CI.
+ *
+ * @param router - a router from this copy of the package's `createServerRouter`
+ * @throws for any other object, such as a structural fake or a router from a
+ * second copy of the package
  *
  * @example
  * ```ts
  * import assert from 'node:assert/strict';
  * import { test } from 'node:test';
- * import { diagnoseMounts } from 'ui-router-server';
+ * import { createServerRouter, diagnoseMounts } from 'ui-router-server';
  *
  * import { mounts } from './routes.ts';
  *
  * test('every mount serves its bare base', () => {
- *   assert.deepEqual(diagnoseMounts(mounts), []);
+ *   assert.deepEqual(diagnoseMounts(createServerRouter({ mounts })), []);
  * });
  * ```
  */
-export function diagnoseMounts(
-  mounts: Record<string, MountConfig>,
-): MountDiagnostic[] {
-  return diagnosticsOf(compileMounts(mounts));
+export function diagnoseMounts(router: ServerRouter): MountDiagnostic[] {
+  // SAFETY: only createServerRouter sets entries, each its compiled Mount[]
+  const mounts = compiledMounts.get(router) as Mount[] | undefined;
+
+  if (mounts === undefined)
+    throw new TypeError(
+      'diagnoseMounts: expected a router from createServerRouter in this copy of ui-router-server',
+    );
+
+  return mounts.flatMap((mount) => bareBaseDiagnostic(mount) ?? []);
 }

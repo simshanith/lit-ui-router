@@ -562,10 +562,9 @@ unknown redirect targets, cycles, and a bad `otherwise` target throw at
 startup, never per-request — and the longest matching mount base owns a
 pathname outright. A mount's bare base (`/app`) resolves the empty subpath,
 so it 404s unless a `url: ''` route or a rule such as
-`{ pattern: /^\/?$/, to: 'welcome' }` claims it. The
-[development build](./development-builds#ui-router-server), and
-`serverRouterPlugin` under `vite dev`, warn for each mount other than `/` that
-leaves it unclaimed. `resolve()` accepts a
+`{ pattern: /^\/?$/, to: 'welcome' }` claims it. Construction
+[warns in development](./development-builds#server-runtimes) for each mount
+other than `/` that leaves it unclaimed. `resolve()` accepts a
 pathname, an absolute URL string, or anything with a `pathname`:
 
 ```ts
@@ -585,11 +584,10 @@ this path but nothing matched" from "no mount at all".
 
 To catch an unclaimed bare base in CI rather than in a log, assert in a test
 that
-[`diagnoseMounts(mounts)`](/api/ui-router-server/index/functions/diagnoseMounts)
-returns an empty array. It compiles the same mount table the same way and
-returns the findings the warning prints, in both builds, as does a router's
-own `diagnose()`;
-`apps/sample-app-routes` runs that assertion over the tables above.
+[`diagnoseMounts(router)`](/api/ui-router-server/index/functions/diagnoseMounts)
+returns an empty array for a router built from the table. It returns the
+findings the warning prints, in every build; `apps/sample-app-routes` runs that
+assertion over the tables above.
 
 ## The worker: verdicts → HTTP
 

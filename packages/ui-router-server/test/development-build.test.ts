@@ -6,8 +6,9 @@ import { fileURLToPath } from 'node:url';
 
 import type { MountConfig } from '../src/index.ts';
 
-// The two emits build:js writes, imported as consumers resolve them: the
-// `development` condition picks dist/development, the default picks dist.
+// The three emits build:js writes, imported as consumers resolve them: the
+// `development` condition picks dist/development, `node` picks dist/node, the
+// default picks dist.
 type Entry = typeof import('../src/index.ts');
 
 type ViteEntry = typeof import('../src/vite.ts');
@@ -16,78 +17,145 @@ const load = async <T>(path: string): Promise<T> =>
   // SAFETY: each emit is compiled from the src module the caller names
   (await import(new URL(path, import.meta.url).href)) as T;
 
-const builds = {
-  development: await load<Entry>('../dist/development/index.js'),
-  production: await load<Entry>('../dist/index.js'),
-};
+const BUILDS = ['development', 'node', 'production'] as const;
 
-const vite = {
-  development: await load<ViteEntry>('../dist/development/vite.js'),
-  production: await load<ViteEntry>('../dist/vite.js'),
-};
+type Build = (typeof BUILDS)[number];
+
+const dir = (build: Build): string =>
+  build === 'production' ? '../dist/' : `../dist/${build}/`;
+
+// SAFETY: one [build, entries] pair per BUILDS member
+const builds = Object.fromEntries(
+  await Promise.all(
+    BUILDS.map(async (build) => [
+      build,
+      {
+        index: await load<Entry>(`${dir(build)}index.js`),
+        vite: await load<ViteEntry>(`${dir(build)}vite.js`),
+      },
+    ]),
+  ),
+) as Record<Build, { index: Entry; vite: ViteEntry }>;
 
 const mounts = {
   '/app': { routes: [{ name: 'a', url: '/a' }] },
   '/served': { routes: [{ name: 'root', url: '' }] },
 } satisfies Record<string, MountConfig>;
 
-const warnings = (t: TestContext, { createServerRouter }: Entry) => {
+const withNodeEnv = (t: TestContext, value: string | undefined): void => {
+  const previous = process.env.NODE_ENV;
+
+  t.after(() => {
+    if (previous === undefined) delete process.env.NODE_ENV;
+    else process.env.NODE_ENV = previous;
+  });
+
+  if (value === undefined) delete process.env.NODE_ENV;
+  else process.env.NODE_ENV = value;
+};
+
+const warnings = (t: TestContext, build: Build) => {
   const messages: string[] = [];
 
   const warn = t.mock.method(console, 'warn', (message: string) => {
     messages.push(message);
   });
 
-  createServerRouter({ mounts });
+  builds[build].index.createServerRouter({ mounts });
   warn.mock.restore();
 
   return messages;
 };
 
-describe('development and production builds', () => {
-  it('warns at construction in the development build only', (t) => {
-    const [{ message }] = builds.development.diagnoseMounts(mounts);
+const expected = (build: Build): string[] => {
+  const { createServerRouter, diagnoseMounts } = builds[build].index;
+  const [{ message }] = diagnoseMounts(createServerRouter({ mounts }));
 
-    assert.deepEqual(warnings(t, builds.development), [
-      `ui-router-server: createServerRouter: ${message}`,
-    ]);
-    assert.deepEqual(warnings(t, builds.production), []);
+  return [`ui-router-server: createServerRouter: ${message}`];
+};
+
+describe('development, node and production builds', () => {
+  it('warns at construction in the development build only, whatever NODE_ENV', (t) => {
+    withNodeEnv(t, 'production');
+    t.mock.method(console, 'warn', () => {});
+
+    assert.deepEqual(warnings(t, 'development'), expected('development'));
+    assert.deepEqual(warnings(t, 'production'), []);
   });
 
-  it('reports once per router when the Vite plugin wraps either build', (t) => {
-    for (const build of ['development', 'production'] as const) {
-      const consoleWarn = t.mock.method(console, 'warn', () => {});
-      const logged: string[] = [];
-      const router = builds[build].createServerRouter({ mounts });
+  for (const [nodeEnv, warns] of [
+    [undefined, true],
+    ['development', true],
+    ['test', true],
+    ['production', false],
+  ] as const) {
+    it(`warns in the node build unless NODE_ENV is production (NODE_ENV=${nodeEnv})`, (t) => {
+      withNodeEnv(t, nodeEnv);
+      const silent = t.mock.method(console, 'warn', () => {});
+      const messages = expected('node');
+      silent.mock.restore();
 
-      vite[build].serverRouterPlugin(router).configureServer({
-        middlewares: { use: () => {} },
-        config: { logger: { warn: (message) => logged.push(message) } },
-      });
-      consoleWarn.mock.restore();
+      assert.deepEqual(warnings(t, 'node'), warns ? messages : []);
+    });
+  }
 
-      assert.equal(consoleWarn.mock.callCount() + logged.length, 1, build);
-      assert.equal(logged.length, build === 'production' ? 1 : 0, build);
-    }
-  });
+  for (const nodeEnv of ['test', 'production'] as const) {
+    it(`reports once per router when the Vite plugin wraps each build (NODE_ENV=${nodeEnv})`, (t) => {
+      withNodeEnv(t, nodeEnv);
 
-  it('returns the same diagnostics from both builds', () => {
-    assert.equal(builds.production.diagnoseMounts(mounts).length, 1);
-    assert.deepEqual(
-      builds.production.diagnoseMounts(mounts),
-      builds.development.diagnoseMounts(mounts),
+      for (const build of BUILDS) {
+        const consoleWarn = t.mock.method(console, 'warn', () => {});
+        const logged: string[] = [];
+        const router = builds[build].index.createServerRouter({ mounts });
+
+        builds[build].vite.serverRouterPlugin(router).configureServer({
+          middlewares: { use: () => {} },
+          config: { logger: { warn: (message) => logged.push(message) } },
+        });
+        consoleWarn.mock.restore();
+
+        const constructionWarns =
+          build === 'development' ||
+          (build === 'node' && nodeEnv !== 'production');
+
+        assert.equal(consoleWarn.mock.callCount() + logged.length, 1, build);
+        assert.equal(logged.length, constructionWarns ? 0 : 1, build);
+      }
+    });
+  }
+
+  it('returns the same diagnostics from every build, for its own routers only', (t) => {
+    t.mock.method(console, 'warn', () => {});
+
+    const [first, ...rest] = BUILDS.map((build) => {
+      const { createServerRouter, diagnoseMounts } = builds[build].index;
+
+      return diagnoseMounts(createServerRouter({ mounts }));
+    });
+
+    assert.equal(first.length, 1);
+
+    for (const findings of rest) assert.deepEqual(findings, first);
+
+    const foreign = builds.development.index.createServerRouter({ mounts });
+    assert.throws(
+      () => builds.production.index.diagnoseMounts(foreign),
+      /this copy of ui-router-server/,
     );
   });
 
-  it('ships no console call in the production emit', () => {
-    const dist = fileURLToPath(new URL('../dist/', import.meta.url));
+  it('ships no console call in the production emit, and process only in the node emit', () => {
+    for (const build of BUILDS) {
+      const out = fileURLToPath(new URL(dir(build), import.meta.url));
 
-    for (const file of globSync('*.js', { cwd: dist })) {
-      assert.doesNotMatch(
-        readFileSync(`${dist}${file}`, 'utf8'),
-        /console/,
-        file,
-      );
+      for (const file of globSync('*.js', { cwd: out })) {
+        const code = readFileSync(`${out}${file}`, 'utf8');
+
+        if (build === 'production') assert.doesNotMatch(code, /console/, file);
+
+        if (build !== 'node')
+          assert.doesNotMatch(code, /\bprocess\b/, `${build}/${file}`);
+      }
     }
   });
 });

@@ -196,7 +196,7 @@ describe('/simulated-routing verdicts (the simulate-strategy exhibit)', () => {
 
 describe('mounts', () => {
   it('serve every bare base without a 404', () => {
-    assert.deepEqual(diagnoseMounts(mounts), []);
+    assert.deepEqual(diagnoseMounts(router), []);
   });
 
   it('cover all four sample apps with the shared route table, plus the exhibits', () => {

@@ -154,14 +154,12 @@ const verdict = await router.resolve('/app/contacts/3');
 
 The longest matching mount base owns a pathname outright. A bare mount base
 (`/app`) resolves the empty subpath, which the `/^\/?$/` rule above claims;
-the [development build](/guides/development-builds#ui-router-server), and
-`serverRouterPlugin` under `vite dev`, warn for each mount other than `/` that
-leaves it to 404. To catch that
-in CI, assert in a test that
-[`diagnoseMounts(mounts)`](/api/ui-router-server/index/functions/diagnoseMounts)
-returns an empty array: it reports, as data and in both builds, the findings
-the warning prints. Elsewhere, such as plain `wrangler dev`, log what
-`router.diagnose()` returns.
+construction [warns in development](/guides/development-builds#server-runtimes)
+for each mount other than `/` that leaves it to 404. To catch that in CI,
+assert in a test that
+[`diagnoseMounts(router)`](/api/ui-router-server/index/functions/diagnoseMounts)
+returns an empty array: it reports, as data and in every build, the findings
+the warning prints.
 
 ## The verdict
 

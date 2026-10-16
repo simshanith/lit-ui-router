@@ -11,7 +11,7 @@ import {
 } from '../src/index.ts';
 import type { MountConfig } from '../src/index.ts';
 import { warnMountDiagnostics } from '../src/dev-warn.ts';
-import { stubDev } from './import-meta-env.ts';
+import { stubDev, stubEnv } from './import-meta-env.ts';
 
 const appMount = (strategy: MountConfig['strategy']): MountConfig => ({
   strategy,
@@ -481,9 +481,20 @@ describe('mount diagnostics', () => {
     '/': { routes: [{ name: 'a', url: '/a' }] },
   } satisfies Record<string, MountConfig>;
 
+  // Built silently, so the findings come from diagnoseMounts alone.
+  const diagnosed = (mounts: Record<string, MountConfig>) => {
+    const restore = stubDev(false);
+
+    try {
+      return diagnoseMounts(createServerRouter({ mounts }));
+    } finally {
+      restore();
+    }
+  };
+
   for (const strategy of ['matcher', 'simulate'] as const) {
     it(`reports each mount whose bare base 404s, in declaration order (${strategy} strategy)`, () => {
-      const diagnostics = diagnoseMounts({
+      const diagnostics = diagnosed({
         '/b/': unserved(strategy),
         '/served': appMount(strategy),
         '/a': unserved(strategy),
@@ -504,12 +515,9 @@ describe('mount diagnostics', () => {
   }
 
   it('counts the otherwise shell-404 as a 404, a root redirect beside it as served', () => {
+    assert.deepEqual(diagnosed({ '/app': appMountWith404('matcher') }), []);
     assert.deepEqual(
-      diagnoseMounts({ '/app': appMountWith404('matcher') }),
-      [],
-    );
-    assert.deepEqual(
-      diagnoseMounts({
+      diagnosed({
         '/app': {
           routes: [{ name: 'a', url: '/a' }, { name: 'notFound' }],
           otherwise: { state: 'notFound' },
@@ -521,7 +529,7 @@ describe('mount diagnostics', () => {
 
   it("finds nothing for a url: '' route, its strict: false slash form, the root rule, and the '/' mount", () => {
     // The CI usage: an empty result is the assertion.
-    assert.deepEqual(diagnoseMounts(served), []);
+    assert.deepEqual(diagnosed(served), []);
   });
 
   const mixed = {
@@ -530,13 +538,14 @@ describe('mount diagnostics', () => {
     '/y': unserved('simulate'),
   } satisfies Record<string, MountConfig>;
 
-  it('warns at construction in development with exactly the diagnostics messages', (t) => {
-    const messages = diagnoseMounts(mixed).map(
+  const messages = () =>
+    diagnosed(mixed).map(
       ({ message }) => `ui-router-server: createServerRouter: ${message}`,
     );
 
-    assert.equal(messages.length, 2);
-    assert.deepEqual(warnings(t, mixed), messages);
+  it('warns at construction in development with exactly the diagnostics messages', (t) => {
+    assert.equal(messages().length, 2);
+    assert.deepEqual(warnings(t, mixed), messages());
     assert.deepEqual(warnings(t, served), []);
   });
 
@@ -545,50 +554,63 @@ describe('mount diagnostics', () => {
 
     assert.deepEqual(warnings(t, mixed), []);
     assert.deepEqual(
-      diagnoseMounts(mixed).map(({ mount }) => mount),
+      diagnosed(mixed).map(({ mount }) => mount),
       ['/x', '/y'],
     );
   });
 
-  it('returns the diagnoseMounts findings from router.diagnose() in both builds', (t) => {
-    t.mock.method(console, 'warn', () => {});
-    const expected = diagnoseMounts(mixed);
+  for (const [nodeEnv, warns] of [
+    [undefined, true],
+    ['development', true],
+    ['test', true],
+    ['production', false],
+  ] as const) {
+    it(`warns in the node build unless NODE_ENV is production (NODE_ENV=${nodeEnv})`, (t) => {
+      t.after(stubEnv('NODE', true));
+      const previous = process.env.NODE_ENV;
 
-    assert.deepEqual(
-      createServerRouter({ mounts: mixed }).diagnose(),
-      expected,
-    );
-    t.after(stubDev(false));
-    assert.deepEqual(
-      createServerRouter({ mounts: mixed }).diagnose(),
-      expected,
-    );
-  });
+      t.after(() => {
+        if (previous === undefined) delete process.env.NODE_ENV;
+        else process.env.NODE_ENV = previous;
+      });
+
+      if (nodeEnv === undefined) delete process.env.NODE_ENV;
+      else process.env.NODE_ENV = nodeEnv;
+
+      assert.deepEqual(warnings(t, mixed), warns ? messages() : []);
+    });
+  }
 
   it('warns once per router, and never diagnoses at construction in production', (t) => {
     const warn = t.mock.method(console, 'warn', () => {});
-    const diagnose = t.mock.fn(() => diagnoseMounts(mixed));
+    const router = createServerRouter({ mounts: mixed });
+    const diagnose = t.mock.fn(diagnoseMounts);
 
-    const router = {
-      resolve: () => Promise.reject(new Error('unused')),
-      diagnose,
-    };
-
-    warnMountDiagnostics(router);
-    warnMountDiagnostics(router);
-    assert.equal(diagnose.mock.callCount(), 1);
+    assert.equal(warn.mock.callCount(), 2);
+    warnMountDiagnostics(router, diagnose);
+    assert.equal(diagnose.mock.callCount(), 0);
     assert.equal(warn.mock.callCount(), 2);
 
     t.after(stubDev(false));
-    warnMountDiagnostics({ ...router });
-    assert.equal(diagnose.mock.callCount(), 1);
+    warnMountDiagnostics(createServerRouter({ mounts: mixed }), diagnose);
+    assert.equal(diagnose.mock.callCount(), 0);
   });
 
-  it('throws for an invalid table, and construction throws before it warns', (t) => {
+  it('throws for a router createServerRouter did not build', () => {
+    const fake = {
+      resolve: () => Promise.resolve({ kind: 'notFound' as const }),
+    };
+
+    assert.throws(
+      () => diagnoseMounts(fake),
+      /diagnoseMounts: expected a router from createServerRouter in this copy of ui-router-server/,
+    );
+  });
+
+  it('throws for an invalid table before it warns', (t) => {
     const warn = t.mock.method(console, 'warn', () => {});
     const duplicate = { '/app': { routes: [] }, '/app/': { routes: [] } };
 
-    assert.throws(() => diagnoseMounts(duplicate), /unique/);
     assert.throws(() => createServerRouter({ mounts: duplicate }), /unique/);
     assert.equal(warn.mock.callCount(), 0);
   });

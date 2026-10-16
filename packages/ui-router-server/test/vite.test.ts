@@ -10,7 +10,6 @@ import { stubDev } from './import-meta-env.ts';
 
 const routerOf = (verdict: Verdict): ServerRouter => ({
   resolve: () => Promise.resolve(verdict),
-  diagnose: () => [],
 });
 
 // A fake Vite server that captures the middleware the plugin installs and the warnings it logs.
@@ -134,8 +133,8 @@ describe('serverRouterPlugin mount diagnostics', () => {
     '/served': { routes: [{ name: 'root', url: '' }] },
   } satisfies Record<string, MountConfig>;
 
-  const pluginMessages = () =>
-    diagnoseMounts(mounts).map(
+  const pluginMessages = (router: ServerRouter) =>
+    diagnoseMounts(router).map(
       ({ message }) => `ui-router-server: serverRouterPlugin: ${message}`,
     );
 
@@ -145,7 +144,8 @@ describe('serverRouterPlugin mount diagnostics', () => {
   it('logs each finding through the dev server logger once per router, and nothing in preview', (t) => {
     t.after(stubDev(false));
     const consoleWarn = silenceConsole(t);
-    const plugin = serverRouterPlugin(createServerRouter({ mounts }));
+    const router = createServerRouter({ mounts });
+    const plugin = serverRouterPlugin(router);
     const preview = fakeServer();
     const dev = fakeServer();
     const restarted = fakeServer();
@@ -155,8 +155,8 @@ describe('serverRouterPlugin mount diagnostics', () => {
     plugin.configureServer(restarted);
 
     assert.deepEqual(preview.warned, []);
-    assert.equal(pluginMessages().length, 1);
-    assert.deepEqual(dev.warned, pluginMessages());
+    assert.equal(pluginMessages(router).length, 1);
+    assert.deepEqual(dev.warned, pluginMessages(router));
     assert.deepEqual(restarted.warned, []);
     assert.equal(consoleWarn.mock.callCount(), 0);
   });

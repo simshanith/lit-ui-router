@@ -1,11 +1,12 @@
 // node --import hook for the test scripts: every src module reads one shared
-// import.meta.env, DEV true as vite serves it in development, so specs run the
-// development branch and stubDev() flips it the way vi.stubEnv('DEV') does.
+// import.meta.env, DEV true and NODE false as dist/development defines them, so
+// specs run the development branch; stubEnv() flips either key the way
+// vi.stubEnv does.
 import { registerHooks } from 'node:module';
 
 const KEY = Symbol.for('ui-router-server.test.import-meta-env');
 
-const env = { DEV: true };
+const env = { DEV: true, NODE: false };
 
 Object.defineProperty(globalThis, KEY, { value: env });
 
@@ -27,12 +28,15 @@ registerHooks({
   },
 });
 
-/** Sets import.meta.env.DEV for every src module; returns the restore. */
-export function stubDev(value: boolean): () => void {
-  const previous = env.DEV;
-  env.DEV = value;
+/** Sets an import.meta.env key for every src module; returns the restore. */
+export function stubEnv(key: keyof typeof env, value: boolean): () => void {
+  const previous = env[key];
+  env[key] = value;
 
   return () => {
-    env.DEV = previous;
+    env[key] = previous;
   };
 }
+
+/** Sets import.meta.env.DEV for every src module; returns the restore. */
+export const stubDev = (value: boolean): (() => void) => stubEnv('DEV', value);

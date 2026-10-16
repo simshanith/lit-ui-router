@@ -14,7 +14,11 @@
     "types": ["node"]
   },
   "include": ["src/**/*.ts"],
-  // the other withdrawal: the src/*.globals.d.ts runtime shims (fetch,
-  // console); src/types/import-meta-env.d.ts is build-time and stays
-  "exclude": ["src/**/*.globals.d.ts"]
+  // the other withdrawal: the runtime shims, by name; src/types/import-meta-env.d.ts
+  // is build-time and stays
+  "exclude": [
+    "src/fetch.globals.d.ts",
+    "src/console.globals.d.ts",
+    "src/process.globals.d.ts"
+  ]
 }
