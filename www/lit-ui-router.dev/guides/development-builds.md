@@ -107,7 +107,7 @@ the production build, because reading `NODE_ENV` there needs `--allow-env`.
 Only the `node` side of `#dev-gate` mentions `process`, so a Worker or browser
 bundle never contains it.
 
-What to set:
+### What to set
 
 - **Bundling a server for production with esbuild or Rollup:** pass the
   `production` condition (esbuild `--conditions=production`, or `production`
