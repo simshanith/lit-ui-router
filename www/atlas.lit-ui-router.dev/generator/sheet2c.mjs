@@ -25,7 +25,7 @@ const shapeName = ([w, d]) => `${w}×${d}`;
 const plural = (n, word) => `${fmt(n)} ${word}${n === 1 ? '' : 's'}`;
 const courseWord = (c) => plural(c, 'course');
 
-// ---- the family: sheet 2's nine bricks at sheet 2's own mould, and the lint plugin at the census's ----
+// ---- the family: sheet 2's ten bricks at sheet 2's own mould, and the lint plugin at the census's ----
 const CORE = '@uirouter/core';
 const brickRow = (name) => {
   const r = BRICKS.rows.find((x) => x.name === name);
@@ -172,7 +172,7 @@ if (CORE_ROW.optional || CORE_ROW.peers.length) throw new Error(`sheet 2C: the n
 // 'vanilla' dropped unless no other word remains; the table's entry order is the words' rank
 const BUILD_WORDS = {
   'lit-ui-router': 'vanilla', 'lit-ui-router-signals': 'signals', 'ui-router-signals': 'signals', 'lit-ui-router-effect': 'effect', 'ui-router-effect': 'effect',
-  'lit-ui-router-mobx': 'mobx', 'ui-router-navigation-location-plugin': 'nav', 'lit-ui-router-ssr': 'ssr', 'ui-router-server': 'server', 'eslint-plugin-lit-ui-router': 'eslinted',
+  'lit-ui-router-mobx': 'mobx', 'ui-router-mobx': 'mobx', 'ui-router-navigation-location-plugin': 'nav', 'lit-ui-router-ssr': 'ssr', 'ui-router-server': 'server', 'eslint-plugin-lit-ui-router': 'eslinted',
 };
 const WORD_RANK = [...new Set(Object.values(BUILD_WORDS))];
 if (Object.values(BUILD_WORDS).some((w) => WORD_RANK.indexOf(w) < 0) || WORD_RANK.join() !== 'vanilla,signals,effect,mobx,nav,ssr,server,eslinted')

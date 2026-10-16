@@ -108,7 +108,7 @@ const M = [
   [13, 'peer-floor tier-1',         'report',  90,   338,    ...C('peer-floor tier-1'), null, null, 'reports check runs, never gates'],
   // row B's giant: it outgrows the row's y = 320 top line every refresh (the fleet
   // took the eslint plugin's growth at 1.14.1), so it sits 22 north of its row mates
-  [14, 'lint & probe fleet',        'report', 166,   298,    ...C('lint & probe fleet'), null, null, 'oxlint · elements · warn-lanes · axe · CI gate'],
+  [14, 'lint & probe fleet',        'report', 166,   298,    ...C('lint & probe fleet'), null, null, 'oxlint · elements · axe · CI gate'],
   [15, '@tools/shared',             'report', 275,   320,    ...C('@tools/shared'), null, null, 'the library under every instrument'],
   [16, 'typedoc plugin',            'report', 380,   320,    ...C('typedoc plugin'), null, null, 'builds the API pages, gates nothing'],
   // --- proving ground & shopfront (apps/ + www/) --------------------------------
@@ -267,19 +267,18 @@ ${txt(52, 55, 'mise — node-free umbrella · turbo — cached fan-out (remote R
 ${ibox(52, 74, 104, 32, 'GITHUB ACTIONS', `${HW.calling} workflows`)}
 ${ibox(254, 74, 166, 32, 'mise', `${HM.tasks} tasks · ${HM.withDepends} declare depends`)}
 ${ibox(498, 74, 126, 32, 'turbo', `ci = ${CI_NODES} task nodes`)}
-${ibox(52, 130, 200, 28, 'AQUA TOOL BELT', null)}
+${ibox(52, 128, 214, 32, 'AQUA TOOL BELT', 'rumdl · taplo · shellcheck · actionlint · zizmor')}
 
 ${iflow('M160,90 L250,90')}
 ${iflow('M424,90 L494,90')}
 ${iflow('M561,106 L561,124 L300,124 L300,107', 'ska', 'aa')}
-${iflow('M280,106 L280,144 L258,144', 'sks', 'as')}
+${iflow('M280,106 L280,144 L272,144', 'sks', 'as')}
 
 ${txt(205, 71, `${HW.callSites} call sites · ${HW.targets} distinct tasks`, 'lblf', 'middle')}
 ${txt(459, 71, '7 tasks shell turbo', 'lblf', 'middle')}
-${txt(520, 139, '7 root scripts shell mise run', 'lbls', 'middle')}
-${txt(520, 151, 'cache key over tools node never installs', 'lblf', 'middle')}
-${txt(272, 120, 'mise/aqua provisions them', 'lblf', 'end')}
-${txt(52, 172, 'rumdl · taplo · shellcheck · actionlint · zizmor', 'lblf')}`;
+${txt(540, 139, '7 root scripts shell mise run', 'lbls', 'middle')}
+${txt(540, 151, 'cache key over tools node never installs', 'lblf', 'middle')}
+${txt(272, 120, 'mise/aqua provisions them', 'lblf', 'end')}`;
 
 const svg = `<svg viewBox="0 0 1400 ${SY + 100 + half * 17}" role="img" aria-label="Isometric map of the lit-ui-router monorepo as an industrial site, re-massed from measured source. A build conveyor runs along one straight isometric lane from upper left to lower right: the packages source slab, the oxc-emit build shed, the packer, a green crate that is the one tarball, the publish hall, and the npm registry beyond a dashed boundary. Below and to the left stands the instrument yard in two rows, and below that a proving ground of sample apps, end to end tests and the docs deploy watch. Every structure is massed by its own census — footprint side proportional to the square root of its authored source lines, height one and a half pixels per authored file — so the three heaviest masses on the sheet, ${HEAVY.map((n) => `${heavyName(n)} at ${nfl(n)}`).join(', ')}, are none of them gates. Gate severity is carried entirely in colour, never in height: five small red hatched pads stop the pull request line — the vitest harness, compat-guards, dts-backtest, check exports, and Cypress end to end — one solid red block, published-diff, halts publishing outright; two accent hatched blocks gate a later stage, the version bump and the docs deploy; and the faint unhatched blocks never gate at all. A dashed trunk carries the one cached tarball from the green crate to the three checks that read it, and a long accent return runs from the registry around the front of the whole site back into published-diff, closing the loop. A structure schedule lists all ${M.length} structures with exact file and line counts and their gate tier. In the upper left corner, set apart from the isometric site, a small flat schematic shows the two task managers as a loop rather than a stack: GitHub Actions enters mise at ${HW.callSites} call sites across ${HW.calling} workflows, mise holds ${HM.tasks} tasks with only ${HM.withDepends} of them declaring dependencies, seven of those tasks shell turbo whose continuous-integration graph expands to ${CI_NODES} task nodes, and an accent arrow returns from turbo back into mise, where seven root scripts shell mise again for the aqua-provisioned linters — rumdl, taplo, shellcheck, actionlint and zizmor — that node never installs.">
 ${defs(P)}

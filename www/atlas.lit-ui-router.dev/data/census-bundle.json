@@ -1,10 +1,10 @@
 {
   "ref": "origin/main",
-  "sha": "108456af",
-  "commitDate": "2026-10-13T10:14:45-07:00",
-  "generatedAtTime": "2026-10-13T17:27:49.471Z",
+  "sha": "83225a58",
+  "commitDate": "2026-10-15T15:56:09-07:00",
+  "generatedAtTime": "2026-10-15T23:02:24.044Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-bundle.mjs",
-  "used": "git archive origin/main @ 108456af + pnpm install --frozen-lockfile --silent (mise-provisioned pnpm) + turbo run build + vite build (JS API)",
+  "used": "git archive origin/main @ 83225a58 + pnpm install --frozen-lockfile --silent (mise-provisioned pnpm) + turbo run build + vite build (JS API)",
   "wasAssociatedWith": [
     "pnpm (mise-provisioned)",
     "turbo",
@@ -14,9 +14,9 @@
   "method": "generateBundle: module renderedLength scaled by its chunk gz/rendered ratio",
   "totals": {
     "chunks": 17,
-    "kept": 691084,
-    "emitted": 385704,
-    "gz": 125137
+    "kept": 691196,
+    "emitted": 385732,
+    "gz": 125164
   },
   "otherIds": [],
   "rows": [
@@ -26,13 +26,13 @@
     {"group":"sample-app-shared","rendered":62637,"estGz":13279,"modules":39},
     {"group":"dompurify","rendered":61689,"estGz":11708,"modules":1},
     {"group":"marked","rendered":59561,"estGz":11304,"modules":1},
-    {"group":"lit-ui-router","rendered":38596,"estGz":7330,"modules":15},
+    {"group":"lit-ui-router","rendered":38691,"estGz":7354,"modules":15},
     {"group":"lit","rendered":34560,"estGz":8898,"modules":19},
     {"group":"@api-viewer","rendered":25302,"estGz":4802,"modules":12},
-    {"group":"router plugins","rendered":21434,"estGz":4308,"modules":5},
+    {"group":"router plugins","rendered":21434,"estGz":4307,"modules":5},
     {"group":"app own src","rendered":11608,"estGz":2457,"modules":8},
     {"group":"runtime helpers","rendered":5518,"estGz":1278,"modules":4},
     {"group":"lit-dialog","rendered":2836,"estGz":612,"modules":1},
-    {"group":"sample-app-routes","rendered":315,"estGz":63,"modules":1}
+    {"group":"sample-app-routes","rendered":332,"estGz":67,"modules":1}
   ]
 }

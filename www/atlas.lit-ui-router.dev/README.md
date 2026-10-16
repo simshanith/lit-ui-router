@@ -13,9 +13,9 @@ each sheet argue where that form fits and where it lies.
 | --- | --- | --- |
 | [1](https://atlas.lit-ui-router.dev/sheet/1) | ONE PACKAGE | ISO CIRCUIT |
 | [1i](https://atlas.lit-ui-router.dev/sheet/1i) | ONE PACKAGE | INTERACTIVE CIRCUIT |
-| [2](https://atlas.lit-ui-router.dev/sheet/2) | NINE PACKAGES | BRICK ASSEMBLY |
-| [2A](https://atlas.lit-ui-router.dev/sheet/2A) | NINE PACKAGES | COUPLING PLAN |
-| [2B](https://atlas.lit-ui-router.dev/sheet/2B) | 12 NODES · 21 DRAWN CONTRACTS | INTERACTIVE COUPLING GRAPH |
+| [2](https://atlas.lit-ui-router.dev/sheet/2) | TEN PACKAGES | BRICK ASSEMBLY |
+| [2A](https://atlas.lit-ui-router.dev/sheet/2A) | TEN PACKAGES | COUPLING PLAN |
+| [2B](https://atlas.lit-ui-router.dev/sheet/2B) | 13 NODES · 23 DRAWN CONTRACTS | INTERACTIVE COUPLING GRAPH |
 | [2C](https://atlas.lit-ui-router.dev/sheet/2C) | ONE BOX, EIGHT BUILDS | BUILD INSTRUCTIONS |
 | [2E](https://atlas.lit-ui-router.dev/sheet/2E) | NINETEEN CONSUMERS | BUILD INSTRUCTIONS |
 | [3](https://atlas.lit-ui-router.dev/sheet/3) | THE MONOREPO | ISOMETRIC CITY |
@@ -30,7 +30,7 @@ each sheet argue where that form fits and where it lies.
 | [8](https://atlas.lit-ui-router.dev/sheet/8) | ONE CONSUMER | DELIVERED CITY |
 | [9](https://atlas.lit-ui-router.dev/sheet/9) | ONE DEPLOY | SHIPPED CITY |
 | [10](https://atlas.lit-ui-router.dev/sheet/10) | ONE BUNDLE | BUNDLED CITY |
-| [11](https://atlas.lit-ui-router.dev/sheet/11) | TEN PACKAGES | ENTRY QUARTERS |
+| [11](https://atlas.lit-ui-router.dev/sheet/11) | ELEVEN PACKAGES | ENTRY QUARTERS |
 | [12](https://atlas.lit-ui-router.dev/sheet/12) | PR CI GRAPH | REGISTER PLATE |
 | [12i](https://atlas.lit-ui-router.dev/sheet/12i) | PR CI GRAPH | INTERACTIVE REGISTER |
 | [13](https://atlas.lit-ui-router.dev/sheet/13) | WORKSPACE × TIME | WEATHERING MAP |
@@ -98,7 +98,7 @@ lit-ui-router app (see `app/README.md`); `HISTORY.md` is the verbatim revision r
 into the app's `/log` at build time. This file is written by `build.mjs`; edit the emitter, not the output.
 
 **The cabinet.** Every figure on every plate is read from `data/*.json`, written by the
-`generator/census-*.mjs` probes at one ref — currently origin/main @ 108456af — on the scc 4.0.0
+`generator/census-*.mjs` probes at one ref — currently origin/main @ 83225a58 — on the scc 4.0.0
 `Code` basis. Lookups throw on a missing row; nothing is hand-pasted. Two plates stand outside the
 cabinet: `data/survey-self.json` and `data/survey-shipped.json`, which `generator/survey-self.mjs` and
 `generator/survey-shipped.mjs` measure from an archive of the atlas's own branch for appendices A3 and

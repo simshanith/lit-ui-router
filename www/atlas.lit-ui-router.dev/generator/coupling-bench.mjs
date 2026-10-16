@@ -23,7 +23,7 @@ import { basisStrip, laneCss, laneHints, LANE_TOK_JS } from './lane-chrome.mjs';
 import { CYTOSCAPE_URL } from './pipeline-graph.mjs';
 import { SPRITES, spriteSvg } from './sprites.mjs';
 
-export const REV = 'F';
+export const REV = 'G';
 
 const C = JSON.parse(readFileSync(new URL('../data/census-couplings.json', import.meta.url), 'utf8'));
 const B = JSON.parse(readFileSync(new URL('../data/census-bricks.json', import.meta.url), 'utf8'));
@@ -34,12 +34,13 @@ const brick = (name) => B.rows.find((r) => r.name === name) ?? null;
 // node size, `band` the note lettered beside it (`halign` says which side).
 // Five columns, read right to left the way the arrows run: the lit companions at
 // 680 with lit-ui-router-signals over the flagship, the core-only column at 400
-// (the navigation plugin and ui-router-effect), the two externals stacked at 120
+// (the navigation plugin, ui-router-effect and ui-router-mobx), the two externals stacked at 120
 // with lit lifted clear of the wall, effect, ssr and ui-router-signals at 900, and
 // the eslint bay at 1120 — a bay, not a basement. ui-router-signals stands over
 // effect, not in the core-only column: there its tie from lit-ui-router-signals
 // would cross the flagship's tie to the wall.
 // lit-ui-router-effect's second tie runs from the 900 column to ui-router-effect at 400.
+// ui-router-mobx stands under ui-router-effect in the core-only column; lit-ui-router-mobx's second tie runs from the 680 column to it.
 // effect and ssr cannot stand in the 680 column: both tie lit-ui-router, and a tie laid down that column would run straight
 // through mobx, which the guard below throws on.  The middle column is the plate's whole argument about that plugin:
 // it declares @uirouter/core and nothing else, so it sits on the wall's own
@@ -57,6 +58,7 @@ const BENCH = new Map([
   ['lit-ui-router-mobx', { x: 680, y: -160, short: 'lit-ui-router-mobx' }],
   ['ui-router-server', { x: 680, y: 260, band: 'OPTIONAL — THE TIE 2A DRAWS CROSSED OUT', short: 'ui-router-server', halign: 'right' }],
   ['ui-router-effect', { x: 400, y: 200, short: 'ui-router-effect' }],
+  ['ui-router-mobx', { x: 400, y: 300, short: 'ui-router-mobx' }],
   ['ui-router-signals', { x: 900, y: -300, short: 'ui-router-signals' }],
   ['lit-ui-router-effect', { x: 900, y: -160, short: 'lit-ui-router-effect' }],
   ['lit-ui-router-ssr', { x: 900, y: 120, band: 'THE BRIDGE — FLAGSHIP AND SERVER', short: 'lit-ui-router-ssr', halign: 'center' }],
@@ -128,6 +130,8 @@ const OFFSTAGE = C.rows.filter((r) => !r.drawn);
 const PUBLISHED = new Set(C.nodes.filter((n) => n.kind === 'published').map((n) => n.key));
 export const TWO_TIES = [...PUBLISHED].map((key) => [key, EDGES.filter((e) => e.from === key && PUBLISHED.has(e.to)).map((e) => e.to)]).filter(([, to]) => to.length > 1);
 export const BENCH_COLUMNS = COLUMNS.size;
+// the core-only column: the published nodes standing between the wall and the lit column
+export const CORE_ONLY = COLUMNS.get(400).filter((key) => PUBLISHED.has(key));
 // A band is lettered off one shoulder of its node: `left` puts the text to the
 // node's left (cytoscape's own halign names the side the LABEL takes).  `center`
 // letters it squarely over the node instead, which is how the two longest bands
@@ -441,7 +445,7 @@ export function couplingBenchSection({ caption = '' } = {}) {
     <div class="cb-cy" id="cb-cy" role="application" tabindex="0" aria-label="Interactive coupling graph: the ${C.totals.published} published packages, @uirouter/core and lit, with one edge per declared dependency or peer dependency, each labelled with its published range. ${TWO_TIES.map(([k, to]) => `${k} ties two siblings, ${to.join(' and ')}`).join('; ')}. With the graph focused, the arrow keys step the pin through the buildings and Escape clears it."></div>
     <aside class="cb-info" id="cb-info"></aside>
   </div>
-  ${basisStrip('cb', `${C.totals.contracts} contracts read from <code>packages/*/package.json</code> at ${C.ref} @ ${C.sha} · commit <span class="nw">${C.commitDate.slice(0, 10)}</span> · every <code>catalog:</code> spec resolved through the archive's own <code>pnpm-workspace.yaml</code> to the range that ships, and <code>@uirouter/core</code> and <code>lit</code> versions taken from <code>pnpm-lock.yaml</code>, by <code>generator/census-couplings.mjs</code> · massing and storeys from <code>census-bricks.json</code> · layout is sheet 2A's arrangement in ${['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven'][COLUMNS.size]} columns — the lit companions, the core-only pair, the two externals, effect, ssr and ui-router-signals, the eslint bay — computed at build and drawn with cytoscape <code>preset</code> — no physics, and no bowed ties.`)}
+  ${basisStrip('cb', `${C.totals.contracts} contracts read from <code>packages/*/package.json</code> at ${C.ref} @ ${C.sha} · commit <span class="nw">${C.commitDate.slice(0, 10)}</span> · every <code>catalog:</code> spec resolved through the archive's own <code>pnpm-workspace.yaml</code> to the range that ships, and <code>@uirouter/core</code> and <code>lit</code> versions taken from <code>pnpm-lock.yaml</code>, by <code>generator/census-couplings.mjs</code> · massing and storeys from <code>census-bricks.json</code> · layout is sheet 2A's arrangement in ${['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven'][COLUMNS.size]} columns — the lit companions, the core-only column of ${['no', 'one', 'two', 'three', 'four', 'five'][CORE_ONLY.length]}, the two externals, effect, ssr and ui-router-signals, the eslint bay — computed at build and drawn with cytoscape <code>preset</code> — no physics, and no bowed ties.`)}
   ${caption ? `<figure><figcaption><span class="figno">FIG. 2B</span>${caption}</figcaption></figure>` : ''}
 </section>
 <script type="application/json" id="cb-layout">${json(LAYOUT)}</script>

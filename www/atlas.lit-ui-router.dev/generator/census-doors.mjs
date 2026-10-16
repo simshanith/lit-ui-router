@@ -5,8 +5,10 @@
 // the repo uploads to codecov.  Measured inside a MATERIALIZED, INSTALLED
 // archive of the ref (basis.mjs), never the working tree; the repo's own
 // tools/bundle-probe is imported FROM THAT ARCHIVE, so the recipe measured is
-// the ref's recipe, resolved against the ref's rolldown.
+// the ref's recipe, resolved against the ref's rolldown.  The probe reads each
+// package's dist exports, so the members are built in the archive first.
 // Writes www/atlas.lit-ui-router.dev/data/census-doors.json.
+import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -14,9 +16,17 @@ import { gzipSync } from 'node:zlib';
 import { installDeps, materialize, refFromArgv } from './basis.mjs';
 import { loadCensus, writeData } from './census-query.mjs';
 
-const basis = materialize(refFromArgv());
+const CABINET = loadCensus();
+// Default ref is the CABINET's sha, not a branch tip: a plate filed later must
+// measure the tree its siblings measured, or census-atlas throws on the ref.
+const PINNED = !process.argv.slice(2).includes('--ref');
+const basis = materialize(PINNED ? CABINET.sha : refFromArgv());
 process.on('exit', () => basis.cleanup());
-installDeps(basis);
+const { turbo } = installDeps(basis);
+
+const members = CABINET.members.filter((m) => !m.private);
+execFileSync(turbo, ['run', 'build:js', ...members.map((m) => `--filter=${m.name}`)],
+  { cwd: basis.dir, stdio: ['ignore', 2, 2], maxBuffer: 1 << 26 });
 
 // Import the archive's own probe machinery: node 24 strips the types, and the
 // specifiers inside (@tools/shared, rolldown) resolve by walking up from these
@@ -34,8 +44,6 @@ const rolldownVersion = (() => {
   return null;
 })();
 
-const snap = loadCensus();
-const members = snap.members.filter((m) => !m.private);
 const doorOf = (label) => (label === 'index' ? '.' : `./${label}`);
 
 const rows = [];
@@ -72,12 +80,12 @@ console.log('TOTAL doors', rows.length, 'min', rows.reduce((s, r) => s + (r.min 
   'gz', rows.reduce((s, r) => s + (r.gz ?? 0), 0));
 
 writeData('census-doors.json', {
-  ref: basis.ref,
+  ref: PINNED ? CABINET.ref : basis.ref,
   sha: basis.sha,
   commitDate: basis.commitDate,
   generatedAtTime: new Date().toISOString(),
   wasGeneratedBy: 'www/atlas.lit-ui-router.dev/generator/census-doors.mjs',
-  used: `git archive ${basis.ref} @ ${basis.sha} + pnpm install --frozen-lockfile --silent (mise-provisioned pnpm) + tools/bundle-probe (rolldown, minify, declared deps+peers external, annotations off)`,
-  wasAssociatedWith: ['pnpm (mise-provisioned)', `rolldown@${rolldownVersion ?? '?'}`, 'node:zlib gzip'],
+  used: `git archive ${PINNED ? CABINET.ref : basis.ref} @ ${basis.sha} + pnpm install --frozen-lockfile --silent (mise-provisioned pnpm) + turbo run build:js --filter <each public member> + tools/bundle-probe (rolldown, minify, declared deps+peers external, annotations off)`,
+  wasAssociatedWith: ['pnpm (mise-provisioned)', 'turbo', `rolldown@${rolldownVersion ?? '?'}`, 'node:zlib gzip'],
   rows,
 });

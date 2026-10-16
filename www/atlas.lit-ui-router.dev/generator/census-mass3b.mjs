@@ -37,7 +37,7 @@ const CITES = {
   '//#format:check:toml': { mise: true, files: ['.config/mise/tasks/taplo'] },
   '//#lint:actionlint': { mise: true, files: [] },
   '//#lint:elements': {
-    files: ['tools/lint-elements/src/lint-elements.ts', 'tools/warn-lanes/src/warn-lanes.core.ts'],
+    files: ['tools/lint-elements/src/lint-elements.ts'],
   },
   '//#lint:markdown': { mise: true, files: ['.config/mise/tasks/rumdl'] },
   '//#lint:shellcheck': { mise: true, files: ['.config/mise/tasks/shellcheck'] },
@@ -54,7 +54,7 @@ const CITES = {
   '@tools/release#pack:all': { files: ['tools/release/src/steps/pack-all.ts'] },
   '@www/lit-ui-router.dev#typecheck:vue': { files: ['tools/vue-check/bin.ts'] },
   // #1002: the eslint 9.0.0 floor lane runs the guard ahead of node --test
-  'eslint-plugin-lit-ui-router#test:peer-floor': { files: ['tools/compat-guards/src/peer-floor-guard.ts'] },
+  'eslint-plugin-lit-ui-router#test:peer-floor': { files: ['tools/compat-guards/src/floor-guard.ts'] },
   'ui-router-server#test:coverage': { files: ['tools/lcov-rebase/src/rebase-lcov.ts'] },
   'examples#build:embeds': { files: ['examples/build-embeds.ts'] },
 };
@@ -62,7 +62,7 @@ const CITES = {
 const BY_TASK = {
   'build:js': ['tools/oxc-emit/src/emit-js.ts'],
   'build:types': ['tools/oxc-emit/src/emit-dts.ts'],
-  'check:bundle': ['tools/bundle-probe/src/check-bundle-inputs.ts', 'tools/compat-guards/src/peer-floor-guard.ts'],
+  'check:bundle': ['tools/bundle-probe/src/check-bundle-inputs.ts', 'tools/compat-guards/src/floor-guard.ts'],
   'check:dev-split': ['tools/oxc-emit/src/check-dev-split.ts'],
   'test:lit2-compat': ['tools/compat-guards/src/lit2-compat-guard.ts'],
   'typecheck:lit2': ['tools/compat-guards/src/lit2-compat-guard.ts'],

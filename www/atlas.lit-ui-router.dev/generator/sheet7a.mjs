@@ -253,7 +253,7 @@ const E_DEMOS = `${['no', 'one', 'two', 'three', 'four', 'five'][E_APPS.length -
 const NOTE = {
   1: 'in shadow: barrels + interface.ts',
   2: 'whole footprint fully lit',
-  3: 'in shadow: the index barrel',
+  3: SH.get(3).shadow?.join() === 'src/index.ts,src/router-store.ts' ? 'in shadow: the barrel and the router-store.ts re-export' : guardFail(3, 'the barrel and the router-store.ts re-export are in shadow'),
   4: NAV_FULL === 3 ? 'all three meters read 100' : `${['no', 'one', 'two'][NAV_FULL]} of three meters read 100`,
   5: 'tests pass · no provider in browser mode',
   6: 'lit only by the cypress rig',
@@ -279,7 +279,6 @@ const NOTE = {
   26: 'canary lights inner-html.ts, not append.ts',
   27: 'ambient types — nothing to light',
   28: 'the element lane — no suite of its own',
-  29: 'the ratchet core, metered clean',
   30: 'a one-line parser shim — nothing to light',
   31: 'vendored rules, lit wall to wall',
   32: 'reserve lit — driver + CLI in shadow',
@@ -297,6 +296,7 @@ const NOTE = {
   44: SH.get(44).shadow?.length === 0 ? 'private · the inlined snapshot, lit wall to wall' : guardFail(44, 'lit wall to wall'),
   45: SH.get(45).cat === 'n' ? 'the signals demo — no test script' : guardFail(45, 'no test script'),
   46: `${SH.get(46).shadow.map((f) => f.replace(/^src\//, '')).join(' + ')} in shadow · the rest lit`,
+  47: barrelOnly(47, 'the store'),
 };
 const ART_H = 902;
 const SY = ART_H + 16;
@@ -456,7 +456,7 @@ ${schedule}
 </svg>`;
 
 export const sheet7a = {
-  num: '7A', id: 'shadow', rev: 'E',
+  num: '7A', id: 'shadow', rev: 'F',
   title: 'THE SHADOW SURVEY',
   sub: `ALTITUDE 3½ — ALTERNATE PLATE TO SHEET 7: the measured city under its own test light · same city as sheet 7, ${M.length} members · reach = the source each suite loads, brightness = line coverage of what it loads · ${BASIS}`,
   scale: 'WHOLE WORKSPACE',

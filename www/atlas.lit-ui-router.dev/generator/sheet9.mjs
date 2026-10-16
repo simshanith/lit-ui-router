@@ -33,7 +33,7 @@ const CP = 14;
 // by file — height is gzip level 9, the honest wire measure, since the CDN
 // serves compressed.  Districts come from the probe's pattern table plus a
 // reachability walk, and a chunk shipped once but loaded by several apps counts
-// where it is FIRST claimed (vanilla → mobx → effect → hash) — the CDN ships it once, so
+// where it is FIRST claimed (vanilla → mobx → effect → hash → signals) — the CDN ships it once, so
 // does this.  Orphans are whatever the walk never reaches; this plate finds
 // none.  Placement, scale and prose stay editorial and live here.
 const PLATE = JSON.parse(readFileSync(new URL('../data/census-shipped.json', import.meta.url), 'utf8'));
@@ -54,17 +54,19 @@ const PLAN = {
   'static data': [175, 140],
   'html pages': [432, 26],
   // east of the html-pages slab and in front of it: behind, the slab hid the whole tower
-  'inter fonts': [590, 110],
+  'inter fonts': [600, 110],
   'vp framework': [600, 30],
-  // dropped south as the html-pages slab grows: it reaches 181.6 at this ref
-  'page chunks': [330, 184],
-  // east off 545 when the page-chunks slab reached 545.9 at the c1b759a4 refresh
-  'site css': [552, 200],
+  // south of the html-pages slab, which reaches 190.9 at this ref
+  'page chunks': [326, 196],
+  // east of the page-chunks slab, which reaches 554.5 at this ref
+  'site css': [560, 200],
   'app: vanilla': [560, 300],
   'app: hash': [575, 398],
   'app: mobx': [655, 345],
   // the fourth shell, /app-effect (#721) — the lot east of vanilla, inside the group
   'app: effect': [660, 295],
+  // the fifth shell, /app-signals: between vanilla and mobx, north of hash, inside the group
+  'app: signals': [612, 360],
 };
 
 // The demo corpora are not shipped; their footprint is drawn as a vacant lot so
@@ -78,7 +80,7 @@ export const ROLES = [
   { name: 'the documentation site', role: 'the documentation site', box: [320, 0, 700, 260], label: [985, OY + 113, 'start'],
     districts: ['html pages', 'inter fonts', 'vp framework', 'page chunks', 'site css'] },
   { name: 'the routed apps', role: 'the routed apps', box: [540, 290, 720, 450], label: [540, OY + 495, 'end'],
-    districts: ['app: vanilla', 'app: hash', 'app: mobx', 'app: effect'] },
+    districts: ['app: vanilla', 'app: hash', 'app: mobx', 'app: effect', 'app: signals'] },
 ];
 
 // Plate order is drawing order; a district with no plan slot is a build error.
@@ -159,6 +161,8 @@ const tenant = (p) => p.split('/').pop().replace(
 
 const APPS = all.filter((r) => r.name.startsWith('app:')).reduce((s, r) => s + r.gz, 0);
 const APP_PCT = ((APPS / PLATE.totals.gzBytes) * 100).toFixed(1);
+const APP_N = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven'][all.filter((r) => r.name.startsWith('app:')).length];
+if (!APP_N) throw new Error('sheet 9: no number word for the routed apps — extend the list');
 const INTER = row('inter fonts'), PAGES = row('html pages');
 const EXAMPLES = row('examples'), VANILLA = row('app: vanilla'), HASH = row('app: hash');
 // the examples' lead is read off the plate: the example that carries it and the chunk's unhashed name
@@ -197,7 +201,7 @@ ${all.slice(half).map((r, i) => txt(590, SY + 52 + i * 17, line(r), 'lbls')).joi
 ${txt(56, SY + 58 + half * 17, `TOTAL — ${all.length} districts · ${fmt(PLATE.totals.files)} files · ${fmt(PLATE.totals.rawBytes)} raw bytes · ${fmt(PLATE.totals.gzBytes)} gzipped · 0 orphans · ${BASIS}`, 'lbls')}
 </g>`;
 
-const svg = `<svg viewBox="0 0 ${VB_W} ${VB_H}" role="img" aria-label="The production docs-site deploy drawn as an isometric city of ${all.length} districts: footprint area from file counts, height from gzipped bytes on the wire. The three tallest towers are ${RANKED.slice(0, 3).map((r) => r.name).join(', ')}. A vacant lot at the plan's edge is the demo corpora's footprint, which the deploy does not carry. The four routed sample apps are small accent buildings totalling ${APP_PCT} percent of the deploy. There is no ghost block: the census walks backtick-quoted asset URLs too, and this deploy carries no unreachable files at all. A structure schedule lists every district with exact counts and its largest tenant.">
+const svg = `<svg viewBox="0 0 ${VB_W} ${VB_H}" role="img" aria-label="The production docs-site deploy drawn as an isometric city of ${all.length} districts: footprint area from file counts, height from gzipped bytes on the wire. The three tallest towers are ${RANKED.slice(0, 3).map((r) => r.name).join(', ')}. A vacant lot at the plan's edge is the demo corpora's footprint, which the deploy does not carry. The ${APP_N} routed sample apps are small accent buildings totalling ${APP_PCT} percent of the deploy. There is no ghost block: the census walks backtick-quoted asset URLs too, and this deploy carries no unreachable files at all. A structure schedule lists every district with exact counts and its largest tenant.">
 ${defs(P)}
 
 ${outlines}
@@ -209,10 +213,10 @@ ${lines(150, OY - 85, [`a vacant lot — ${LOT.files} files, ${KB(LOT.gz)} of Di
 <!-- east of the Inter tower's cap (x 930 at this ref), under the site outline's label -->
 ${lines(985, OY + 155, [`${KB(INTER.gz)} of Inter —`, `the lettering stands ${ORD[INTER_RANK - 1]}`, `on the wire; only ${TALLER_THAN_INTER[0]}`,
   TALLER_THAN_INTER.length > 1 ? `${TALLER_THAN_INTER.slice(1).map((t) => `and ${t}`).join(' ')} stand taller` : 'stands taller'], 'lbla', 'start', CP)}
-${lines(1120, OY + 510, [`all four apps: ${KB(APPS)} —`, `${APP_PCT}% of the deploy they exist to demonstrate`], 'lbla', 'end', CP)}
+${lines(1120, OY + 510, [`all ${APP_N} apps: ${KB(APPS)} —`, `${APP_PCT}% of the deploy they exist to demonstrate`], 'lbla', 'end', CP)}
 <line x1="937" y1="${OY + 506}" x2="878" y2="${OY + 484}" class="skf"/>
 ${lines(110, OY + 353, ['no ghost district stands on this plan:', 'the walk follows backtick-quoted asset URLs,', 'and this deploy ships ZERO unreachable files'], 'lbla', 'start', CP)}
-${lines(110, OY + 409, ['the api-viewer panel is off the critical path:', 'it arrives in a lazy api-docs chunk, and the apps', 'share one lit major, so identical chunks hash', 'alike across all four'], 'lbla', 'start', CP)}
+${lines(110, OY + 409, ['the api-viewer panel is off the critical path:', 'it arrives in a lazy api-docs chunk, and the apps', 'share one lit major, so identical chunks hash', `alike across all ${APP_N}`], 'lbla', 'start', CP)}
 ${lines(110, OY + 471, ['every district is read from the census plate —', 'first claim seats the visualizer in app: vanilla'], 'lbla', 'start', CP)}
 
 <!-- two short lines at the frame's top-right corner, east of the html-pages cap -->
@@ -230,9 +234,9 @@ export const sheet9 = {
   svg,
   caption: `The production docs deploy surveyed on the wire: ${fmt(PLATE.totals.files)} files, ${MB(PLATE.totals.gzBytes)} gzipped, drawn as ${all.length} districts — the tallest towers are prerendered prose and font files, the routed apps are ${KB(APPS)} of accent buildings in their own city, and there is no ghost block: the deploy carries no unreachable files at all.`,
   notes: `
-<p><strong>Method:</strong> every number on this sheet is read at build time from the checked-in plate <a href="${HOME.plate}"><code>www/atlas.lit-ui-router.dev/data/census-shipped.json</code></a> — ${BASIS}. The probe builds <code><a href="${HOME.siteDir}">www/lit-ui-router.dev</a>/dist</code> inside a materialized, installed archive of the ref, never the working tree, and measures it file by file: height is gzip level 9 of each file, the honest wire measure, since the CDN serves compressed. Footprint is file count, as on sheets 7 and 8. A reachability walk — every HTML shell and hashed chunk, following static asset references — sorts the assets into districts, and a shared chunk counts where it is first claimed (vanilla → mobx → effect → hash), because the CDN ships it once. This sheet extends the survey a step further: sheet 7 measures the source, sheet 8 what npm delivers, this sheet what one deploy actually ships — ${fmt(PLATE.totals.files)} files, ${MB(PLATE.totals.rawBytes)} on disk, ${MB(PLATE.totals.gzBytes)} on the wire. Sheet 10 goes one level in again and opens the bundle itself.</p>
+<p><strong>Method:</strong> every number on this sheet is read at build time from the checked-in plate <a href="${HOME.plate}"><code>www/atlas.lit-ui-router.dev/data/census-shipped.json</code></a> — ${BASIS}. The probe builds <code><a href="${HOME.siteDir}">www/lit-ui-router.dev</a>/dist</code> inside a materialized, installed archive of the ref, never the working tree, and measures it file by file: height is gzip level 9 of each file, the honest wire measure, since the CDN serves compressed. Footprint is file count, as on sheets 7 and 8. A reachability walk — every HTML shell and hashed chunk, following static asset references — sorts the assets into districts, and a shared chunk counts where it is first claimed (vanilla → mobx → effect → hash → signals), because the CDN ships it once. This sheet extends the survey a step further: sheet 7 measures the source, sheet 8 what npm delivers, this sheet what one deploy actually ships — ${fmt(PLATE.totals.files)} files, ${MB(PLATE.totals.rawBytes)} on disk, ${MB(PLATE.totals.gzBytes)} on the wire. Sheet 10 goes one level in again and opens the bundle itself.</p>
 <p><strong>The tallest building is the prose.</strong> The skyline is <a href="${HOME.site}">the site</a>'s ${PAGES.files} prerendered HTML pages at ${KB(PAGES.gz)}, with <code>${RANKED[1].name}</code> ${fmt(RUNNER_GAP)} bytes behind at ${KB(RANKED[1].gz)} — the prose outweighs the runner-up ${(PAGES.gz / RANKED[1].gz).toFixed(1)} to 1. <a href="${HOME.inter}">Inter</a>'s ${INTER.files} <code>woff2</code> faces stand ${ORD[INTER_RANK - 1]} at ${KB(INTER.gz)}: on the wire, this documentation site is still mostly prose and typography, and the one script district that outranks the lettering is the examples, led by a single galaxy. A vacant lot at the plan's edge is the demo corpora's footprint, which the deploy does not carry.</p>
-<p><strong>The product is a guest in its own city.</strong> The four routed <a href="${HOME.sampleApp}">sample apps</a> — the thing the site exists to demonstrate — total ${KB(APPS)} gzipped, ${APP_PCT}% of the deploy. First claim seats <a href="${HOME.visualizer}"><code>visualizer.esm</code></a> and the <a href="${HOME.manifest}">custom-elements manifest</a> in <code>app: vanilla</code>, which is why that district reads ${VANILLA.files} files and ${KB(VANILLA.gz)} while the hash app's whole district is ${HASH.files} files and ${KB(HASH.gz)}. Two rules shape those numbers rather than the CDN: a <a href="${HOME.overrides}">scoped override</a> holds the <a href="${HOME.apiViewer}"><code>@api-viewer</code></a>/<a href="${HOME.litDialog}"><code>lit-dialog</code></a> stack to one lit major, so identical lit chunks hash identically <em>across</em> apps and part of mobx's download is chunks vanilla already ships; and the api-viewer docs panel, which renders only behind a feature flag, arrives in a lazy <code>api-docs</code> chunk rather than the eager main one. Same bytes on the CDN, fewer on the critical path.</p>
+<p><strong>The product is a guest in its own city.</strong> The ${APP_N} routed <a href="${HOME.sampleApp}">sample apps</a> — the thing the site exists to demonstrate — total ${KB(APPS)} gzipped, ${APP_PCT}% of the deploy. First claim seats <a href="${HOME.visualizer}"><code>visualizer.esm</code></a> and the <a href="${HOME.manifest}">custom-elements manifest</a> in <code>app: vanilla</code>, which is why that district reads ${VANILLA.files} files and ${KB(VANILLA.gz)} while the hash app's whole district is ${HASH.files} files and ${KB(HASH.gz)}. Two rules shape those numbers rather than the CDN: a <a href="${HOME.overrides}">scoped override</a> holds the <a href="${HOME.apiViewer}"><code>@api-viewer</code></a>/<a href="${HOME.litDialog}"><code>lit-dialog</code></a> stack to one lit major, so identical lit chunks hash identically <em>across</em> apps and part of mobx's download is chunks vanilla already ships; and the api-viewer docs panel, which renders only behind a feature flag, arrives in a lazy <code>api-docs</code> chunk rather than the eager main one. Same bytes on the CDN, fewer on the critical path.</p>
 <p><strong>There is no ghost district.</strong> The reachability walk follows the backtick-quoted asset URLs the app chunks build by hand, so the api-viewer custom-elements manifest is reachable after all, and the orphan list on this plate is <em>empty</em> — no hatched block stands here. Read that as a statement about the instrument as much as the deploy: an orphan count is only as good as the walk that produces it, and earlier walks over an accumulated local <code>dist/</code> reported orphans that were stale build output, not shipped weight. This census builds clean, into a materialized archive of the ref, and counts what a browser can reach.</p>
 <p><strong>One example outweighs the router.</strong> The examples district — ${EXAMPLES.files} files, ${KB(EXAMPLES.gz)} — is led by the <a href="${HOME.example(LEAD_EXAMPLE)}"><code>${LEAD_EXAMPLE}</code></a> example's <a href="${HOME.modelViewer}"><code>${LEAD_CHUNK}</code></a> chunk at ${KB(LEAD.gz)} on its own, heavier than the vanilla, mobx and hash apps combined, delivered so one tutorial page can spin a galaxy.</p>`,
   key: [

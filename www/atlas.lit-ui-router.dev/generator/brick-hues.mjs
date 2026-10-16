@@ -10,6 +10,7 @@ export const BRICK_HUES = {
   'lit-ui-router-signals': '#B0507E',
   'ui-router-effect': '#9C86C4',
   'ui-router-signals': '#CC86A8',
+  'ui-router-mobx': '#E39A66',
 };
 
 /** A brick's hue; a brick the table does not name throws. */

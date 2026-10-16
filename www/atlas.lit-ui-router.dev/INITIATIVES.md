@@ -523,6 +523,38 @@ sitting); order is dependency order.
   gz; nm 173,820 lines / 41,155 d.ts; mass3b 13,307 hashes over 235 real tasks and 3,029 command
   sloc; the ci graph 864 / 235 / 3,024 edges; steam 643 commits; weather 448 dated files; 7A 11,937
   of 19,307 metered sloc lit over 25 members.
+- 2026-10-15 — THE TWENTIETH REFRESH, at `origin/main` @ 83225a58 (commit 2026-10-15), all 21
+  census plates re-run at the one ref, 76 commits past the nineteenth (108456af) and one
+  examples-only commit (#1380) past the 58a36cb6 the brief named: the 2026-10-15 release train,
+  `lit-ui-router` 1.16.5, `lit-ui-router-ssr` 0.3.0, `ui-router-server` 0.3.1, `lit-ui-router-mobx`
+  1.2.0, `lit-ui-router-effect` 0.4.1, `ui-router-effect` 0.1.2, both signals packages 0.1.1 and the
+  plugin 1.1.2, every one under `latest`. The user: "lets get started on that birth". ONE MEMBER
+  WAS BORN AND ONE DIED: `ui-router-mobx` 0.1.1, the framework-agnostic MobX store
+  `lit-ui-router-mobx` peers, and `tools/warn-lanes` (#1297), so the members hold at 46 and eleven
+  are published. The birth took a seat on every plate that draws the family — sheet 2's brick 10 and
+  ringed stud K, 2A's block 10, the bench's core-only column, sheet 4's first bay column, sheet
+  11's door 26, 2C's `BUILD_WORDS`, №47 on 7, 7A and 13, the twelfth quarter on 3B — and the death
+  took №29 off 7, 7A and 13, `@tools/warn-lanes` off 3B's `TERRACE`, its rung off sheet 12's
+  `CHAIN` and its rule off the yard.
+  NINE GUARDS THREW across 30 modules; HISTORY's cover line names them. Two plates were wrong with
+  exit 0: census-doors filed ten `ERROR … run build:js first` rows, because #1276 made
+  `tools/bundle-probe` read `dist/`, and census-shipped filed /app-signals (#1267) as
+  `unclassified`. Six hand claims had gone false with no guard to say so: sheet 7's "the docs site
+  does not serve it" for the signals demo, 7A's "in shadow: the index barrel", 3B's "heaviest
+  commands" and its `//#lint:elements` spire, sheet 4's "declares on the flagship alone" and sheet
+  2's `memoryLocationPlugin`; each derives or throws.
+  MAIN MOVED TWICE around the chain, because another session fetched: to 83225a58 before step 1,
+  and to f4701684 (#1381, docs only) between the T3 probes and the peers plate. Every plate files
+  83225a58; census-builds caught f4701684 and re-ran pinned to census-files' sha, byte-identical.
+  THE NUMBERS: scc 1,095 tracked / 1,050 classified; city 391 src files / 34,231 sloc and 191 spec
+  / 32,904; yard 354 / 28,105, 336 / 26,519 massed; doors 26 · 183,301 min / 64,694 gz; the bundle
+  125,164 gz in 17 chunks; the deploy 1,018 files / 5,931,315 gz in 13 districts; mass3b 17,022
+  hashes over 297 real tasks and 5,561 command sloc; the ci graph 1,108 / 297 / 4,561 edges
+  (deepest chain 14); couplings 35 contracts, 23 drawn on 13 nodes, 32 peers; steam 705 commits;
+  weather 582 dated files, 2,711 touches; 7A 14,423 of 24,826 metered sloc lit over 31 members; the
+  loop 30 evidence lines over 52 cites; consumers 18 in 7 builds (19 in 8 with the atlas app);
+  survey-shipped 282 files / 8,870,093 gz at www/atlas @ 506653d9. The app prerenders
+  66 pages + 404.html with 60 redirects, the scoped router 67/67 at construction; the frame audit reads escapes 0 · hits>1px 0 · text-on-text 127 over 26 plates (127 at the last full audit too); every card picture re-shot, 33 plates × 2 themes · 4,098,084 bytes; check-scenes 107 checks hold on the regenerated city, plant, bricks and build models.
 - 2026-10-13 — THE EIGHTEENTH REFRESH, at `origin/main` @ c1b759a4 (commit 2026-10-13), all 18 plates
   re-run at the one ref: 22 commits past the seventeenth. SIX MEMBERS WERE BORN: `lit-ui-router-signals` and `ui-router-signals` (#1159, #1214, #1215), `ui-router-effect`
   (#1189, #1216), the private `@repo/route-snapshot` (#1185), `sample-app-lit-signals` (#1159,
@@ -841,6 +873,30 @@ sitting); order is dependency order.
   subject moved (a task that left the graph, a cited file that left the tree, a district
   that stopped shipping) throws instead of drawing a stale figure, and the fix is a sheet
   edit, not a probe edit.
+- A PROBE FILED UNDER `--ref origin/main` SPLITS THE CABINET WHEN ANOTHER SESSION FETCHES. The
+  no-re-fetch rule above binds only the session running the chain; at the twentieth a peer
+  session's fetch moved `origin/main` to f4701684 mid-chain and census-builds measured it. Pin every
+  probe after census-scc to the cabinet's own sha: run without `--ref`, the probe materializes
+  `CABINET.sha` from `loadCensus()` and files `CABINET.ref`, the census-shadow pattern that
+  census-doors, census-shipped, census-builds and census-consumers follow.
+- AN EXIT 0 IS NOT A PLATE. `tools/bundle-probe` reads each package's `dist/` exports (#1276), and
+  an archive holds no `dist/`, so census-doors filed ten `ERROR … run build:js first` rows and
+  exited 0. It runs `turbo run build:js --filter <each public member>` in the archive before
+  bundling, the edge the repo's own `check:bundle` has. Read a T3 plate's rows for ERROR before
+  reading its exit code.
+- `npm install a b -D c` MOVES EVERY NAMED PACKAGE TO devDependencies. The flag applies to the
+  whole command, not to the name after it; install runtime and dev packages in two commands.
+- THE SHELL'S CWD DRIFTS BETWEEN CALLS. An agent's working directory is the one the last call
+  left, so a relative `--prefix` (or any relative path) lands somewhere else; pass absolute paths.
+- A BORN MEMBER TAKES A ROW IN THE SHADOW AND NOTE TABLES TOO. 7A's `NOTE` table keys by member
+  number, and the born member's shadow row can move a sibling's light: №47 took
+  `barrelOnly(47, 'the store')`, and `lit-ui-router-mobx`'s `router-store.ts` re-export of the
+  born store stood in shadow beside its barrel, which made NOTE 3's typed "in shadow: the index
+  barrel" false. NOTE 3 is guarded against the plate's shadow list; add 7A's `NOTE` to the
+  checklist above.
+- A4'S ROLE ROW HAS 7 PX OF SLACK AT SIX BLOCKS. The row closes to 1520 with the lettering floor
+  `SLOT_MIN` at 140; at 150 six blocks needed 1,527 px. A seventh role block, or a longer role
+  name, overflows it and the row guard throws; recompose the row rather than lowering the floor.
 
 **How the guards are shaped**
 

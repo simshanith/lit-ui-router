@@ -27,7 +27,7 @@ const fmt = (v) => v.toLocaleString('en-US');
 const KB = (gz) => `${(gz / 1024).toFixed(gz < 100000 ? 1 : 0)} KB`;
 const MB = (b) => `${(b / 1048576).toFixed(1)} MB`;
 const pct = (a, b) => `${Math.round((a / b) * 100)}%`;
-const WORD = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve'];
+const WORD = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen'];
 // vite hashes: an 8-char mixed-case segment, dot- or dash-joined, before the extension
 const tenant = (p) => p.split('/').pop().replace(
   /([.-])([A-Za-z0-9_-]{8})(?=(\.lean)?\.[a-z0-9]+$)/,
@@ -47,10 +47,11 @@ const selfRow = (district) => {
 const sum = (rows) => rows.reduce((a, r) => ({ f: a.f + r.f, gz: a.gz + r.gz, k: a.k + 1 }), { f: 0, gz: 0, k: 0 });
 const DOCS = { f: DOCS_PLATE.totals.files, gz: DOCS_PLATE.totals.gzBytes, k: DOCS_PLATE.rows.length };
 const AT = { f: SELF.totals.files, raw: SELF.totals.rawBytes, gz: SELF.totals.gzBytes, k: SELF.rows.length };
+if (!WORD[DOCS.k] || !WORD[AT.k]) throw new Error(`appendix A4: no number word for ${DOCS.k} or ${AT.k} districts — extend WORD`);
 
 // ---- roles: sheet 9's three for the docs deploy, and three of the atlas's, each beside its counterpart
 const ATLAS_ROLES = [
-  { name: 'the pictures', beside: 'demo payload', districts: ['card pictures', 'models', 'icons'] },
+  { name: 'the pictures', beside: 'demo payload', districts: ['card pictures', 'the share card', 'models', 'icons'] },
   { name: 'the plates', beside: 'the documentation site', districts: ['routed pages', 'bare plates', 'plate fragments'] },
   { name: 'the app and its lanes', beside: 'the routed apps', districts: ['the routed app', 'model viewer', 'cytoscape', 'manifest'] },
 ];
@@ -68,12 +69,12 @@ const roleOf = (deploy, district) => (deploy === 'docs' ? ROLES : ATLAS_ROLES).f
 const DOCS_LOTS = [
   ['html pages', 'examples', 'inter fonts', 'vp framework'],
   ['page chunks', 'images'],
-  ['app: vanilla', 'app: effect', 'app: mobx', 'app: hash', 'static data', 'site css'],
+  ['app: vanilla', 'app: signals', 'app: effect', 'app: mobx', 'app: hash', 'static data', 'site css'],
 ];
 const ATLAS_LOTS = [
   ['card pictures', 'routed pages', 'model viewer', 'bare plates'],
   ['plate fragments', 'the routed app', 'models', 'cytoscape'],
-  ['icons', 'manifest'],
+  ['the share card', 'icons', 'manifest'],
 ];
 const DOCS_M = DOCS_LOTS.flat().map(docsRow);
 const ATLAS_M = ATLAS_LOTS.flat().map(selfRow);
@@ -161,7 +162,7 @@ const place = (g, sx, gy) => {
 };
 const HEAD = 104;          // the header band's foot
 const SEAM_W = 60;         // screen px across the seam between the two deploys
-const SLOT_MIN = 150;      // a role's lettering slot, screen px, where its block is narrower
+const SLOT_MIN = 140;      // a role's lettering slot, screen px, where its block is narrower
 const ROLE_ROW = GROUPS.filter((g) => g.kind === 'role');
 const CITY_ROW = GROUPS.filter((g) => g.kind === 'city');
 const west = (row) => row.filter((g) => g.deploy === 'docs');
@@ -180,7 +181,7 @@ const layRow = (row, gy) => {
     g.slotL = sx; g.slotR = sx + slot(g);
     sx = g.slotR + GAP;
   }
-  if (row.at(-1).slotR > 1520) throw new Error(`appendix A4: the row runs to ${row.at(-1).slotR.toFixed(0)}, past the sheet's 1520`);
+  if (row.at(-1).slotR - 1520 > 1e-6) throw new Error(`appendix A4: the row runs to ${row.at(-1).slotR.toFixed(0)}, past the sheet's 1520`);
   return seam;
 };
 // lettering under a role: name, its districts wrapped to the slot, the wire, the summing line

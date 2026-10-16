@@ -75,7 +75,7 @@ const PLACED = [
   // south off the effect bindings' annex when it reached 340.4 at the 4dc0cbb7 refresh
   [2, 'ui-router-server', 'packages/ui-router-server', 'pkg', 250, 20],
   [3, 'lit-ui-router-mobx', 'packages/lit-ui-router-mobx', 'pkg', 248, 104],
-  [4, 'navigation-location-plugin', 'packages/navigation-location-plugin', 'pkg', 330, 158],
+  [4, 'navigation-location-plugin', 'packages/navigation-location-plugin', 'pkg', 332, 172],
   [5, 'sample-app-shared', 'apps/sample-app-shared', 'app', 570, 10],
   [6, 'sample-app-lit-vanilla', 'apps/sample-app-lit-vanilla', 'app', 720, 10],
   [7, 'sample-app-lit-mobx', 'apps/sample-app-lit-mobx', 'app', 720, 90],
@@ -101,7 +101,6 @@ const PLACED = [
   [27, '@tools/wintercg-globals', 'tools/wintercg-globals', 'tool', 208, 350],
   // nudged east with sheet 7, off bundle-probe's grown annex
   [28, '@tools/lint-elements', 'tools/lint-elements', 'tool', 402, 550],
-  [29, '@tools/warn-lanes', 'tools/warn-lanes', 'tool', 430, 530],
   [30, '@tools/eslint-ts-parser', 'tools/eslint-ts-parser', 'tool', 54, 350],
   // --- the fifth published package (#676): row two's west lot ---------------------
   [31, 'eslint-plugin-lit-ui-router', 'packages/eslint-plugin-lit-ui-router', 'pkg', 16, 149],
@@ -116,7 +115,7 @@ const PLACED = [
   [36, 'sample-app-lit-effect', 'apps/sample-app-lit-effect', 'app', 660, 100],
   // north off the CHURN key when its annex reached 340.4 at the 4dc0cbb7 refresh, and
   // east with 3 when the flagship's annex reached 241.5 at the 9e656ab3 refresh
-  [37, 'lit-ui-router-effect', 'packages/lit-ui-router-effect', 'pkg', 330, 101],
+  [37, 'lit-ui-router-effect', 'packages/lit-ui-router-effect', 'pkg', 330, 114],
   // --- the prerender package, born 2026-09-14 (#806): row two, between 31 and 4 ---
   [38, 'lit-ui-router-ssr', 'packages/lit-ui-router-ssr', 'pkg', 172, 156],
   // --- born 2026-10-01 (#1056): sheet 7's lot -----------------------------------
@@ -125,14 +124,16 @@ const PLACED = [
   [40, '@tools/oxlint-anti-slop', 'tools/oxlint-anti-slop', 'tool', 520, 575],
   // --- born 2026-10-12/13 (#1185): the packages lots are this sheet's own, clear of the
   //     reading box and both callouts; the bindings and the snapshot take the strip
-  //     under ssr's annex, the agnostic pair the north-east corner east of 2's annex ---
+  //     under ssr's annex, the agnostic cores the north-east corner east of 2's annex ---
   [41, 'lit-ui-router-signals', 'packages/lit-ui-router-signals', 'pkg', 184, 248],
-  [42, 'ui-router-signals', 'packages/ui-router-signals', 'pkg', 402, 40],
-  [43, 'ui-router-effect', 'packages/ui-router-effect', 'pkg', 462, 40],
+  [42, 'ui-router-signals', 'packages/ui-router-signals', 'pkg', 418, 40],
+  [43, 'ui-router-effect', 'packages/ui-router-effect', 'pkg', 474, 40],
   [44, '@repo/route-snapshot', 'packages/shared/route-snapshot', 'pkg', 270, 236],
   // --- sheet 7's lots -------------------------------------------------------------
   [45, 'sample-app-lit-signals', 'apps/sample-app-lit-signals', 'app', 590, 100],
   [46, '@tools/a11y', 'tools/a11y', 'tool', 540, 472],
+  // the north-east corner, under 43's annex
+  [47, 'ui-router-mobx', 'packages/ui-router-mobx', 'pkg', 476, 64],
 ];
 
 // [n, name, dist, x, y, srcSloc, specSloc,
@@ -411,6 +412,8 @@ for (const [y, s, cls] of EX_LINES) {
   const hit = D.find(([n]) => { const b = g(n); return r.x1 < b.x2 && b.x < r.x2 && r.y1 < b.y2 && b.y1 < r.y2; });
   if (hit) throw new Error(`sheet 13: the examples callout line "${s}" lands on №${hit[0]} ${hit[1]} — move EX_X/EX_Y`);
 }
+// the shopfront's lettering stands east of docs' annex, whichever reaches further
+const DX = Math.max(1250, Math.ceil(g(10).x2 + 8));
 const callouts = `
 ${txt(60, 500, 'lit-ui-router — THE ORIGINAL MASONRY', 'lbla')}
 ${txt(60, 514, `${PORT_LUR.length} of ${g(1).src[0]} src walls laid ${SREF.first}, the first day —`, 'lblf')}
@@ -418,10 +421,10 @@ ${txt(60, 526, `mean ×${(PORT_LUR.reduce((a, r) => a + r.touches, 0) / PORT_LUR
 ${txt(60, 538, `ui-sref.ts ×${SREF.touches}, last touched ${SREF.last}`, 'lblf')}
 <line x1="58" y1="490" x2="56" y2="242" class="skf"/>
 
-${txt(1250, 700, `www/lit-ui-router.dev/.vitepress/config.ts ×${DCFG.touches}`, 'lblr')}
-${txt(1250, 714, 'the most-weathered wall in the city —', 'lblf')}
-${txt(1250, 726, `${days(DCFG.first)} days old, repainted ${DCFG.touches} times, idle ${days(DCFG.last)}d`, 'lblf')}
-<line x1="1246" y1="710" x2="1188" y2="702" class="skf"/>
+${txt(DX, 700, `www/lit-ui-router.dev/.vitepress/config.ts ×${DCFG.touches}`, 'lblr')}
+${txt(DX, 714, 'the most-weathered wall in the city —', 'lblf')}
+${txt(DX, 726, `${days(DCFG.first)} days old, repainted ${DCFG.touches} times, idle ${days(DCFG.last)}d`, 'lblf')}
+<line x1="${DX - 4}" y1="710" x2="1188" y2="702" class="skf"/>
 
 ${EX_LINES.map(([y, s, cls]) => txt(EX_X, y, s, cls)).join('\n')}
 <line x1="${EX_X - 4}" y1="${(EX_Y - 16).toFixed(1)}" x2="${(EXB.x + EXB.s * 0.4).toFixed(1)}" y2="${(EXB.y + 2).toFixed(1)}" class="skf"/>
@@ -473,9 +476,9 @@ ${txt(X(0), Y(20) - 29, 'from all three seasons', 'lblf')}
 ${txt(X(570) + 6, 436, 'apps/ — THE PROVING GROUND', 'lblb')}
 ${txt(X(570) + 6, 448, 'port-born shell, summer-rebuilt interior', 'lblf')}
 
-${txt(1250, 652, 'www/ + examples/ —', 'lblb')}
-${txt(1250, 666, 'THE SHOPFRONT', 'lblb')}
-<line x1="1246" y1="658" x2="1210" y2="668" class="skf"/>
+${txt(DX, 652, 'www/ + examples/ —', 'lblb')}
+${txt(DX, 666, 'THE SHOPFRONT', 'lblb')}
+<line x1="${DX - 4}" y1="658" x2="1210" y2="668" class="skf"/>
 
 ${txt(60, 606, 'tools/ — THE INSTRUMENT YARD', 'lblb')}
 ${txt(60, 620, 'zero touches before 2026 · all but the typedoc plugin summer-built', 'lblf')}
@@ -491,7 +494,7 @@ const tree = (path) => `${REPO}/tree/main/${path}`;
 const blob = (path) => `${REPO}/blob/main/${path}`;
 
 export const sheet13 = {
-  num: 13, id: 'weathering', rev: 'F',
+  num: 13, id: 'weathering', rev: 'G',
   title: 'THE WEATHERING MAP',
   sub: `ALTITUDE t — the same city as sheet 7, surveyed in time · ${TOT_F} files dated from the whole history · three construction seasons, ${MONTHS.length - ALIVE} silent months · ${BASIS}`,
   scale: 'WORKSPACE × TIME',

@@ -7,6 +7,7 @@ import { materialize } from './basis.mjs';
 import { writeData } from './census-query.mjs';
 
 const AT = 'www/atlas.lit-ui-router.dev/';
+const SITE = 'https://atlas.lit-ui-router.dev/';
 const argv = process.argv.slice(2);
 const REF = argv.includes('--ref') ? argv[argv.indexOf('--ref') + 1] : 'www/atlas';
 if (!REF || REF.startsWith('--')) throw new Error('usage: node survey-shipped.mjs [--ref <atlas ref>]');
@@ -15,10 +16,11 @@ if (!REF || REF.startsWith('--')) throw new Error('usage: node survey-shipped.mj
 // archive by its own npm scripts, every file weighed raw and at gzip level 9, districts by a pattern
 // table after a reachability walk from every page.
 const PATTERNS = [
-  ['routed pages', /^(?:index\.html|404\.html|(?:about|log|city|plant|bricks|specimen)\/index\.html|sheet\/[^/]+\/index\.html)$/],
+  ['routed pages', /^(?:index\.html|404\.html|(?:about|log|city|plant|bricks|builds|specimen)\/index\.html|sheet\/[^/]+\/index\.html)$/],
   ['bare plates', /^plate\/[^/]+\/index\.html$/],
   ['card pictures', /^thumbs\/[^/]+\.webp$/],
-  ['models', /^models\/[^/]+\.glb$/],
+  ['the share card', /^brand\/card(?:-light|-dark)?\.(?:webp|png)$/],
+  ['models', /^models\/(?:builds\/)?[^/]+\.glb$/],
   ['model viewer', /^assets\/(?:model-viewer|draco_|basis_)/],
   ['cytoscape', /^assets\/cytoscape/],
   ['icons', /^images\/|^favicon\.|^apple-touch-icon\.png$/],
@@ -27,7 +29,7 @@ const PATTERNS = [
   ['plate fragments', /^sheets\/[^/]+\.html$/],
 ];
 // drawing order on appendix A4; a file the table misses lands in `unclassified`, printed, not thrown
-const ORDER = ['routed pages', 'bare plates', 'plate fragments', 'card pictures', 'models', 'model viewer',
+const ORDER = ['routed pages', 'bare plates', 'plate fragments', 'card pictures', 'the share card', 'models', 'model viewer',
   'cytoscape', 'the routed app', 'icons', 'manifest', 'orphans', 'unclassified'];
 // Addressed at runtime by computed paths, so no regex sees the edge: the fragments by the manifest's
 // `file`, the manifest by the router's base, the visualizer's icons by its stylesheet; `_redirects`
@@ -70,7 +72,9 @@ try {
     const src = readFileSync(join(DIST, f), 'utf8');
     const dir = posix.dirname(f);
     const out = new Set();
-    for (const [, spec] of src.matchAll(REFS)) {
+    for (const [, raw] of src.matchAll(REFS)) {
+      // a share image is an absolute url to the site's own origin; any other host is off the deploy
+      const spec = raw.startsWith(SITE) ? raw.slice(SITE.length - 1) : raw;
       if (/^(?:https?:)?\/\//.test(spec)) continue;
       const cands = spec.startsWith('/') ? [spec.slice(1)] : [posix.normalize(posix.join(dir, spec)), spec];
       for (const c of cands) if (present.has(c)) { out.add(c); break; }
