@@ -10,13 +10,20 @@ import type { MountConfig } from '../src/index.ts';
 // `development` condition picks dist/development, the default picks dist.
 type Entry = typeof import('../src/index.ts');
 
-const load = async (path: string): Promise<Entry> =>
-  // SAFETY: both emits are compiled from src/index.ts, whose types this names
-  (await import(new URL(path, import.meta.url).href)) as Entry;
+type ViteEntry = typeof import('../src/vite.ts');
+
+const load = async <T>(path: string): Promise<T> =>
+  // SAFETY: each emit is compiled from the src module the caller names
+  (await import(new URL(path, import.meta.url).href)) as T;
 
 const builds = {
-  development: await load('../dist/development/index.js'),
-  production: await load('../dist/index.js'),
+  development: await load<Entry>('../dist/development/index.js'),
+  production: await load<Entry>('../dist/index.js'),
+};
+
+const vite = {
+  development: await load<ViteEntry>('../dist/development/vite.js'),
+  production: await load<ViteEntry>('../dist/vite.js'),
 };
 
 const mounts = {
@@ -45,6 +52,23 @@ describe('development and production builds', () => {
       `ui-router-server: createServerRouter: ${message}`,
     ]);
     assert.deepEqual(warnings(t, builds.production), []);
+  });
+
+  it('reports once per router when the Vite plugin wraps either build', (t) => {
+    for (const build of ['development', 'production'] as const) {
+      const consoleWarn = t.mock.method(console, 'warn', () => {});
+      const logged: string[] = [];
+      const router = builds[build].createServerRouter({ mounts });
+
+      vite[build].serverRouterPlugin(router).configureServer({
+        middlewares: { use: () => {} },
+        config: { logger: { warn: (message) => logged.push(message) } },
+      });
+      consoleWarn.mock.restore();
+
+      assert.equal(consoleWarn.mock.callCount() + logged.length, 1, build);
+      assert.equal(logged.length, build === 'production' ? 1 : 0, build);
+    }
   });
 
   it('returns the same diagnostics from both builds', () => {

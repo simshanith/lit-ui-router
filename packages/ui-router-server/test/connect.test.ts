@@ -10,6 +10,7 @@ import type { ConnectRequest, ConnectResponse } from '../src/connect.ts';
 // adapter's verdict → response mechanics from the resolver under test.
 const routerOf = (verdict: Verdict): ServerRouter => ({
   resolve: () => Promise.resolve(verdict),
+  diagnose: () => [],
 });
 
 interface Harness {

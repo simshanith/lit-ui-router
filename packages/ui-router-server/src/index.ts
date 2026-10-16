@@ -158,6 +158,14 @@ export interface MountDiagnostic {
 export interface ServerRouter {
   /** Accepts a pathname, an absolute url string, or anything with a `pathname` (URL, Location). */
   resolve(pathnameOrUrl: string | { pathname: string }): Promise<Verdict>;
+  /**
+   * Checks the mounts this router was built with, returning the findings
+   * {@link diagnoseMounts} returns for the same table; computed on each call.
+   * The development build reports them at construction and
+   * `serverRouterPlugin` reports them in `vite dev`; anywhere else, log what
+   * this returns.
+   */
+  diagnose(): MountDiagnostic[];
 }
 
 interface Mount {
@@ -460,7 +468,7 @@ const bareBaseDiagnostic = (mount: Mount): MountDiagnostic | null => {
   };
 };
 
-const diagnose = (mounts: Mount[]): MountDiagnostic[] =>
+const diagnosticsOf = (mounts: Mount[]): MountDiagnostic[] =>
   mounts.flatMap((mount) => bareBaseDiagnostic(mount) ?? []);
 
 // Null when the transition failed or timed out: that router may still be mid-transition.
@@ -531,15 +539,13 @@ const simulateVerdict = async (
  * 404s unless the mount supplies a root pattern — a rule like
  * `{ pattern: /^\/?$/, to: ... }` or a `url: ''` route. In the development
  * build (the `development` export condition), construction passes each
- * {@link diagnoseMounts} finding's message to `console.warn`; the production
- * build skips the check.
+ * {@link ServerRouter.diagnose} finding's message to `console.warn`, once per
+ * router; the production build skips the check.
  */
 export function createServerRouter(config: {
   mounts: Record<string, MountConfig>;
 }): ServerRouter {
   const declared = compileMounts(config.mounts);
-
-  warnMountDiagnostics(() => diagnose(declared));
   const mounts = byLongestBase(declared);
   const loadSimulate = makeSimulateLoader();
 
@@ -553,7 +559,7 @@ export function createServerRouter(config: {
       .then((simulate) => prewarmPools(simulate, mounts))
       .catch(() => {});
 
-  return {
+  const router: ServerRouter = {
     async resolve(pathnameOrUrl) {
       const pathname = pathnameOf(pathnameOrUrl);
 
@@ -569,13 +575,18 @@ export function createServerRouter(config: {
 
       return { kind: 'notFound' };
     },
+    diagnose: () => diagnosticsOf(declared),
   };
+
+  warnMountDiagnostics(router);
+
+  return router;
 }
 
 /**
  * Checks a mount table for configurations that compile but misroute, without
- * logging: the findings the development build of {@link createServerRouter}
- * passes to `console.warn`, returned in both builds.
+ * logging: the findings {@link ServerRouter.diagnose} returns for a router
+ * built from the same table, in both builds.
  * It takes the same mount table, compiles it the same way, and throws for
  * the same invalid configs. It reports `'bareBaseNotFound'` for a mount
  * other than '/' whose bare base (`/app`) answers 404 — `notFound`, or the
@@ -599,5 +610,5 @@ export function createServerRouter(config: {
 export function diagnoseMounts(
   mounts: Record<string, MountConfig>,
 ): MountDiagnostic[] {
-  return diagnose(compileMounts(mounts));
+  return diagnosticsOf(compileMounts(mounts));
 }

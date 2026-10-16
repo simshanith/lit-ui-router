@@ -1,21 +1,28 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
+import type { TestContext } from 'node:test';
 
-import type { ServerRouter, Verdict } from '../src/index.ts';
+import { createServerRouter, diagnoseMounts } from '../src/index.ts';
+import type { MountConfig, ServerRouter, Verdict } from '../src/index.ts';
 import type { ConnectMiddleware } from '../src/connect.ts';
 import { serverRouterPlugin } from '../src/vite.ts';
+import { stubDev } from './import-meta-env.ts';
 
 const routerOf = (verdict: Verdict): ServerRouter => ({
   resolve: () => Promise.resolve(verdict),
+  diagnose: () => [],
 });
 
-// A fake Vite server that just captures whatever middleware the plugin installs.
+// A fake Vite server that captures the middleware the plugin installs and the warnings it logs.
 const fakeServer = () => {
   const installed: ConnectMiddleware[] = [];
+  const warned: string[] = [];
 
   return {
     installed,
+    warned,
     middlewares: { use: (mw: ConnectMiddleware) => installed.push(mw) },
+    config: { logger: { warn: (message: string) => warned.push(message) } },
   };
 };
 
@@ -118,5 +125,60 @@ describe('serverRouterPlugin', () => {
     });
     assert.equal(req.url, '/app'); // rewritten to the mount shell
     assert.deepEqual(link, ['</app>; rel="canonical"']);
+  });
+});
+
+describe('serverRouterPlugin mount diagnostics', () => {
+  const mounts = {
+    '/app': { routes: [{ name: 'a', url: '/a' }] },
+    '/served': { routes: [{ name: 'root', url: '' }] },
+  } satisfies Record<string, MountConfig>;
+
+  const pluginMessages = () =>
+    diagnoseMounts(mounts).map(
+      ({ message }) => `ui-router-server: serverRouterPlugin: ${message}`,
+    );
+
+  const silenceConsole = (t: TestContext) =>
+    t.mock.method(console, 'warn', () => {});
+
+  it('logs each finding through the dev server logger once per router, and nothing in preview', (t) => {
+    t.after(stubDev(false));
+    const consoleWarn = silenceConsole(t);
+    const plugin = serverRouterPlugin(createServerRouter({ mounts }));
+    const preview = fakeServer();
+    const dev = fakeServer();
+    const restarted = fakeServer();
+
+    plugin.configurePreviewServer(preview);
+    plugin.configureServer(dev);
+    plugin.configureServer(restarted);
+
+    assert.deepEqual(preview.warned, []);
+    assert.equal(pluginMessages().length, 1);
+    assert.deepEqual(dev.warned, pluginMessages());
+    assert.deepEqual(restarted.warned, []);
+    assert.equal(consoleWarn.mock.callCount(), 0);
+  });
+
+  it('stays silent for a router built in development, which already warned', (t) => {
+    const consoleWarn = silenceConsole(t);
+    const server = fakeServer();
+
+    serverRouterPlugin(createServerRouter({ mounts })).configureServer(server);
+
+    assert.equal(consoleWarn.mock.callCount(), 1);
+    assert.deepEqual(server.warned, []);
+    assert.equal(server.installed.length, 1);
+  });
+
+  it('logs nothing for clean mounts', () => {
+    const server = fakeServer();
+
+    serverRouterPlugin(
+      createServerRouter({ mounts: { '/served': mounts['/served'] } }),
+    ).configureServer(server);
+
+    assert.deepEqual(server.warned, []);
   });
 });

@@ -10,6 +10,7 @@ import {
   mergeSearch,
 } from '../src/index.ts';
 import type { MountConfig } from '../src/index.ts';
+import { warnMountDiagnostics } from '../src/dev-warn.ts';
 import { stubDev } from './import-meta-env.ts';
 
 const appMount = (strategy: MountConfig['strategy']): MountConfig => ({
@@ -547,6 +548,40 @@ describe('mount diagnostics', () => {
       diagnoseMounts(mixed).map(({ mount }) => mount),
       ['/x', '/y'],
     );
+  });
+
+  it('returns the diagnoseMounts findings from router.diagnose() in both builds', (t) => {
+    t.mock.method(console, 'warn', () => {});
+    const expected = diagnoseMounts(mixed);
+
+    assert.deepEqual(
+      createServerRouter({ mounts: mixed }).diagnose(),
+      expected,
+    );
+    t.after(stubDev(false));
+    assert.deepEqual(
+      createServerRouter({ mounts: mixed }).diagnose(),
+      expected,
+    );
+  });
+
+  it('warns once per router, and never diagnoses at construction in production', (t) => {
+    const warn = t.mock.method(console, 'warn', () => {});
+    const diagnose = t.mock.fn(() => diagnoseMounts(mixed));
+
+    const router = {
+      resolve: () => Promise.reject(new Error('unused')),
+      diagnose,
+    };
+
+    warnMountDiagnostics(router);
+    warnMountDiagnostics(router);
+    assert.equal(diagnose.mock.callCount(), 1);
+    assert.equal(warn.mock.callCount(), 2);
+
+    t.after(stubDev(false));
+    warnMountDiagnostics({ ...router });
+    assert.equal(diagnose.mock.callCount(), 1);
   });
 
   it('throws for an invalid table, and construction throws before it warns', (t) => {

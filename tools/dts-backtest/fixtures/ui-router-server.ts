@@ -55,6 +55,7 @@ import {
 import {
   serverRouterPlugin,
   type ServerRouterPlugin,
+  type ViteDevMiddlewareServer,
 } from 'ui-router-server/vite';
 
 const routes: RouteDeclaration[] = [
@@ -125,9 +126,12 @@ export async function statusFor(pathname: string): Promise<number> {
   return 404;
 }
 
-// Diagnostics take the table createServerRouter takes.
+// Diagnostics take the table createServerRouter takes, or come from the router.
 export function diagnosticLines(): string[] {
-  const diagnostics: MountDiagnostic[] = diagnoseMounts({ '/app': mount });
+  const diagnostics: MountDiagnostic[] = [
+    ...diagnoseMounts({ '/app': mount }),
+    ...router.diagnose(),
+  ];
 
   return diagnostics.map(({ kind, mount: base, message }) => {
     const code: MountDiagnosticKind = kind;
@@ -252,3 +256,8 @@ export const plugin: ServerRouterPlugin = serverRouterPlugin(
   router,
   connectOptions,
 );
+
+// The dev hook takes the middleware stack plus the logger sliver.
+export function startDev(server: ViteDevMiddlewareServer): void {
+  plugin.configureServer(server);
+}
