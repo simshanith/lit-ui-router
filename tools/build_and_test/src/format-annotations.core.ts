@@ -1,4 +1,5 @@
 // oxfmt and taplo name files, not lines; run-summary.ts diffs each against the formatter's stdout.
+// The same diffs make the step-summary previews and the `git apply` patch.
 
 import {
   type AnnotationTier,
@@ -6,6 +7,7 @@ import {
   type ToolAnnotation,
   cell,
   failedTasks,
+  fenceFor,
   inlineCode,
   repoRelativeFile,
   stripAnsi,
@@ -25,6 +27,21 @@ export const FORMAT_DIFF_LIMIT = 50;
 /** Hunk ranges listed per file in the step summary. */
 export const HUNK_LIST_LIMIT = 20;
 
+/** Files whose first hunk is previewed in the step summary; the rest list ranges only. */
+export const PREVIEW_FILE_LIMIT = 5;
+
+/** Removed and added lines shown per preview, each side. */
+export const PREVIEW_CHANGE_LIMIT = 1;
+
+/** Characters kept of each previewed line. */
+export const PREVIEW_WIDTH = 160;
+
+/** Where the reporter writes the patch, repo-root-relative. */
+export const FORMAT_PATCH = '.turbo/format.patch';
+
+/** The artifact name: `archive: false` names an upload after its file. */
+export const FORMAT_PATCH_ARTIFACT = 'format.patch';
+
 /** A changed range of the file as committed, 1-based and inclusive. */
 export interface Hunk {
   line: number;
@@ -41,6 +58,26 @@ export interface FormatFinding {
   file: string;
   /** Undefined until diffed, or when the diff could not be taken. */
   hunks?: Hunk[];
+  /** The first hunk, cut to `PREVIEW_CHANGE_LIMIT` lines a side. */
+  preview?: DiffPreview;
+  /** This file's `git apply` section, with repo-relative `a/` and `b/` paths. */
+  patch?: string;
+}
+
+export interface DiffPreview {
+  /** The `@@ -a,b +c,d @@` range, without git's function context. */
+  header: string;
+  removed: string[];
+  added: string[];
+  /** Changed lines of the hunk left out. */
+  more: number;
+}
+
+/** What the summary says about the patch the reporter wrote. */
+export interface PatchNote {
+  command: string;
+  /** Files the patch fixes; the findings past it need `pnpm format`. */
+  files: number;
 }
 
 function clean(rawLine: string): string {
@@ -129,6 +166,72 @@ export function parseHunks(diff: string): Hunk[] {
   });
 }
 
+const HUNK_RANGE = /^@@ [^@]* @@/;
+
+function clip(line: string): string {
+  return line.length > PREVIEW_WIDTH
+    ? `${line.slice(0, PREVIEW_WIDTH)}…`
+    : line;
+}
+
+/** The first hunk of a `diff -U0`, cut to `PREVIEW_CHANGE_LIMIT` changed lines a side. */
+export function parsePreview(diff: string): DiffPreview | undefined {
+  const lines = diff.split('\n');
+  const start = lines.findIndex((line) => HUNK_RANGE.test(line));
+  const header = HUNK_RANGE.exec(lines[start] ?? '')?.[0];
+
+  if (header === undefined) return undefined;
+  const removed: string[] = [];
+  const added: string[] = [];
+
+  for (const line of lines.slice(start + 1)) {
+    if (line.startsWith('@@') || line.startsWith('diff ')) break;
+
+    if (line.startsWith('-')) removed.push(clip(line));
+    else if (line.startsWith('+')) added.push(clip(line));
+  }
+
+  const shown = {
+    removed: removed.slice(0, PREVIEW_CHANGE_LIMIT),
+    added: added.slice(0, PREVIEW_CHANGE_LIMIT),
+  };
+
+  return {
+    header,
+    ...shown,
+    more:
+      removed.length + added.length - shown.removed.length - shown.added.length,
+  };
+}
+
+/** A `diff --no-index` against a temp copy, readdressed so `git apply` patches `file`. */
+export function patchSection(diff: string, file: string): string | undefined {
+  const lines = diff.split('\n');
+  const start = lines.findIndex((line) => HUNK_RANGE.test(line));
+
+  if (start === -1) return undefined;
+  const body = lines.slice(start).join('\n');
+
+  return [
+    `diff --git a/${file} b/${file}`,
+    `--- a/${file}`,
+    `+++ b/${file}`,
+    body.endsWith('\n') ? body : `${body}\n`,
+  ].join('\n');
+}
+
+/** Every diffed file's section, in finding order; empty when none was diffed. */
+export function formatPatch(findings: readonly FormatFinding[]): string {
+  return findings.flatMap(({ patch }) => patch ?? []).join('');
+}
+
+/** On Actions the patch is a run artifact; locally it is already on disk. */
+export function patchCommand(runId: string | undefined): string {
+  return runId === undefined || runId === ''
+    ? `git apply ${FORMAT_PATCH}`
+    : `gh run download ${runId} -n ${FORMAT_PATCH_ARTIFACT} && git apply ${FORMAT_PATCH_ARTIFACT}`;
+}
+
 function plural(count: number, one: string, many: string): string {
   return `${count} ${count === 1 ? one : many}`;
 }
@@ -194,8 +297,48 @@ function hunkList(finding: FormatFinding): string {
   return `${single ? 'line' : 'lines'} ${shown}${more > 0 ? `, … ${more} more` : ''}`;
 }
 
-/** The step-summary section: every file and hunk, collapsed. */
-export function formattingMarkdown(findings: readonly FormatFinding[]): string {
+/** A fenced diff, indented under its list item. */
+function previewBlock(preview: DiffPreview): string[] {
+  const lines = [
+    preview.header,
+    ...preview.removed,
+    ...preview.added,
+    ...(preview.more > 0
+      ? [`… ${plural(preview.more, 'more line', 'more lines')}`]
+      : []),
+  ];
+
+  const fence = fenceFor(lines.join('\n'));
+
+  return [
+    '',
+    ...[`${fence}diff`, ...lines, fence].map((line) => `  ${line}`),
+    '',
+  ];
+}
+
+/** The apply command, and what the patch leaves to `pnpm format`. */
+function patchSentences(
+  findings: readonly FormatFinding[],
+  patch: PatchNote,
+): string[] {
+  const left = findings.length - patch.files;
+
+  return [
+    `Apply the fix: ${inlineCode(patch.command)}`,
+    ...(left > 0
+      ? [
+          `The patch covers ${patch.files} of ${findings.length} files; run ${inlineCode(FORMAT_FIX)} for the rest.`,
+        ]
+      : []),
+  ];
+}
+
+/** The step-summary section: every file and hunk, collapsed, the first few with a diff. */
+export function formattingMarkdown(
+  findings: readonly FormatFinding[],
+  patch?: PatchNote,
+): string {
   if (findings.length === 0) return '';
 
   const out = [
@@ -203,19 +346,36 @@ export function formattingMarkdown(findings: readonly FormatFinding[]): string {
     '',
   ];
 
+  let previews = 0;
+
   for (const finding of findings) {
     out.push(
       `- ${inlineCode(cell(finding.file))} (${finding.tool}) — ${hunkList(finding)}`,
     );
+
+    if (finding.preview !== undefined && previews < PREVIEW_FILE_LIMIT) {
+      previews += 1;
+      out.push(...previewBlock(finding.preview));
+    }
   }
 
-  out.push('', '</details>', '');
+  // A preview already ends on the blank line `</details>` needs.
+  if (out.at(-1) !== '') out.push('');
+  out.push('</details>', '');
+
+  for (const sentence of patch === undefined
+    ? []
+    : patchSentences(findings, patch))
+    out.push(sentence, '');
 
   return `${out.join('\n')}\n`;
 }
 
-/** The stdout twin of `formattingMarkdown`. */
-export function formattingLines(findings: readonly FormatFinding[]): string[] {
+/** The stdout twin of `formattingMarkdown`, without the diffs. */
+export function formattingLines(
+  findings: readonly FormatFinding[],
+  patch?: PatchNote,
+): string[] {
   if (findings.length === 0) return [];
 
   return [
@@ -223,6 +383,9 @@ export function formattingLines(findings: readonly FormatFinding[]): string[] {
     ...findings.map(
       (finding) => `   ${finding.file} (${finding.tool}): ${hunkList(finding)}`,
     ),
+    ...(patch === undefined
+      ? []
+      : patchSentences(findings, patch).map((line) => `   ${line}`)),
     '',
   ];
 }

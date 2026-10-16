@@ -33,24 +33,36 @@
 //      linked when an e2e suite failed),
 //      A11Y_SCREENSHOTS_ARTIFACT_URL (the uploaded axe screenshots, linked
 //      when the axe pass found violations),
-//      TURBO_LOGS_ARTIFACT_URL (the uploaded per-task turbo logs).
+//      TURBO_LOGS_ARTIFACT_URL (the uploaded per-task turbo logs),
+//      GITHUB_RUN_ID (names the run in the format.patch download command).
 
 import { spawnSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { appendFile, readdir, readFile, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { basename, join, resolve } from 'node:path';
+import { basename, dirname, join, resolve } from 'node:path';
 
 import {
   type FormatFinding,
-  type Hunk,
+  type PatchNote,
   FORMAT_DIFF_LIMIT,
+  FORMAT_PATCH,
   extractFormatFindings,
+  formatPatch,
   formattingLines,
   formattingMarkdown,
   formattingTier,
   parseHunks,
+  parsePreview,
+  patchCommand,
+  patchSection,
 } from './format-annotations.core.ts';
 
 import {
@@ -233,8 +245,12 @@ function formatted(finding: FormatFinding): string | undefined {
   return result.status === 0 ? result.stdout : undefined;
 }
 
-/** The ranges of `file` that differ from `target`, from `git diff -U0`. */
-function hunksAgainst(file: string, target: string): Hunk[] | undefined {
+/** `git diff` of `file` against `target`, with `context` lines around each hunk. */
+function diffAgainst(
+  file: string,
+  target: string,
+  context: number,
+): string | undefined {
   const diff = spawnSync(
     'git',
     [
@@ -242,7 +258,7 @@ function hunksAgainst(file: string, target: string): Hunk[] | undefined {
       '--no-index',
       '--no-color',
       '--no-ext-diff',
-      '-U0',
+      `-U${context}`,
       '--',
       file,
       target,
@@ -251,12 +267,10 @@ function hunksAgainst(file: string, target: string): Hunk[] | undefined {
   );
 
   // 1 means the files differ, the expected case.
-  return diff.status === 0 || diff.status === 1
-    ? parseHunks(diff.stdout)
-    : undefined;
+  return diff.status === 0 || diff.status === 1 ? diff.stdout : undefined;
 }
 
-/** Each finding's hunks; one that cannot be diffed stays file-level. */
+/** Each finding's hunks, preview and patch; one that cannot be diffed stays file-level. */
 function diffFormatting(findings: readonly FormatFinding[]): void {
   if (findings.length === 0) return;
   const dir = mkdtempSync(join(tmpdir(), 'format-diff-'));
@@ -271,7 +285,15 @@ function diffFormatting(findings: readonly FormatFinding[]): void {
         if (output === undefined) continue;
         const target = join(dir, String(at));
         writeFileSync(target, output);
-        finding.hunks = hunksAgainst(finding.file, target);
+        const ranges = diffAgainst(finding.file, target, 0);
+
+        if (ranges === undefined) continue;
+        finding.hunks = parseHunks(ranges);
+        finding.preview = parsePreview(ranges);
+        const full = diffAgainst(finding.file, target, 3);
+
+        finding.patch =
+          full === undefined ? undefined : patchSection(full, finding.file);
       } catch (error: unknown) {
         warn(
           `no lines for ${finding.file}: ${error instanceof Error ? error.message : String(error)}`,
@@ -283,11 +305,36 @@ function diffFormatting(findings: readonly FormatFinding[]): void {
   }
 }
 
+/** Writes every diffed file's fix to `FORMAT_PATCH`, replacing a stale one. */
+function writePatch(findings: readonly FormatFinding[]): PatchNote | undefined {
+  rmSync(FORMAT_PATCH, { force: true });
+  const text = formatPatch(findings);
+
+  if (text === '') return undefined;
+
+  try {
+    mkdirSync(dirname(FORMAT_PATCH), { recursive: true });
+    writeFileSync(FORMAT_PATCH, text);
+  } catch (error: unknown) {
+    warn(
+      `no ${FORMAT_PATCH}: ${error instanceof Error ? error.message : String(error)}`,
+    );
+
+    return undefined;
+  }
+
+  return {
+    command: patchCommand(onActions() ? process.env.GITHUB_RUN_ID : undefined),
+    files: findings.filter(({ patch }) => patch !== undefined).length,
+  };
+}
+
 async function publish(
   runs: RunReport[],
   context: OverviewContext,
   annotations: readonly ToolAnnotation[],
   formatting: readonly FormatFinding[],
+  patch: PatchNote | undefined,
 ): Promise<void> {
   const summaries = runs.map(({ summary }) => summary);
   const allReports = runs.flatMap(({ reports }) => reports);
@@ -316,7 +363,7 @@ async function publish(
   const overview = sessionMarkdown(runs, context);
 
   const markdown = failed
-    ? `${sessionFailureMarkdown(failures)}${formattingMarkdown(formatting)}\n${overview}`
+    ? `${sessionFailureMarkdown(failures)}${formattingMarkdown(formatting, patch)}\n${overview}`
     : overview;
 
   const file = process.env.GITHUB_STEP_SUMMARY;
@@ -330,7 +377,7 @@ async function publish(
     ? [
         ...sessionStdoutReport(failures, summaries),
         '',
-        ...formattingLines(formatting),
+        ...formattingLines(formatting, patch),
         ...sessionLines(runs, context),
         '',
       ]
@@ -414,6 +461,7 @@ async function main(): Promise<void> {
   );
 
   diffFormatting(formatting);
+  const patch = writePatch(formatting);
 
   await publish(
     runs,
@@ -432,6 +480,7 @@ async function main(): Promise<void> {
     },
     annotations,
     formatting,
+    patch,
   );
 }
 

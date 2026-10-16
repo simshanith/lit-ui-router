@@ -1,17 +1,34 @@
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
+import {
+  chmodSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { describe, it } from 'node:test';
 
 import {
   type FormatFinding,
   FORMAT_FILE_LIMIT,
+  PREVIEW_FILE_LIMIT,
+  PREVIEW_WIDTH,
   extractFormatFindings,
   formatAnnotation,
+  formatPatch,
   formattingLines,
   formattingMarkdown,
   formattingTier,
   parseHunks,
   parseOxfmtFiles,
+  parsePreview,
   parseTaploFiles,
+  patchCommand,
+  patchSection,
 } from './format-annotations.core.ts';
 import {
   type RunSummary,
@@ -354,5 +371,227 @@ describe('formatting detail', () => {
       '',
     ]);
     assert.deepEqual(formattingLines([]), []);
+  });
+});
+
+// A -U0 hunk that respaces three lines into two, with git's function context.
+const multiDiff = [
+  'diff --git a/a.ts b/tmp/0',
+  '--- a/a.ts',
+  '+++ b/tmp/0',
+  '@@ -10,3 +10,2 @@ function main() {',
+  '-  let   a=1;',
+  '-  let   b=2;',
+  '-  let   c=3;',
+  '+  let a = 1;',
+  '+  let b = 2;',
+  '@@ -20 +19 @@',
+  '-x',
+  '+y',
+].join('\n');
+
+describe('diff preview', () => {
+  it('keeps the first hunk, one changed line a side', () => {
+    assert.deepEqual(parsePreview(xvfbDiff), {
+      header: '@@ -4 +4 @@',
+      removed: ['-      /^> Warning:\\s+Could not resolve keysym /;'],
+      added: ['+  /^> Warning:\\s+Could not resolve keysym /;'],
+      more: 0,
+    });
+    assert.deepEqual(parsePreview(multiDiff), {
+      header: '@@ -10,3 +10,2 @@',
+      removed: ['-  let   a=1;'],
+      added: ['+  let a = 1;'],
+      more: 3,
+    });
+  });
+
+  it('handles one-sided hunks, long lines and no hunk at all', () => {
+    assert.deepEqual(parsePreview('@@ -3,0 +4,2 @@\n+a\n+b'), {
+      header: '@@ -3,0 +4,2 @@',
+      removed: [],
+      added: ['+a'],
+      more: 1,
+    });
+    const long = `-${'x'.repeat(PREVIEW_WIDTH + 40)}`;
+
+    assert.equal(
+      parsePreview(`@@ -1 +0,0 @@\n${long}`)?.removed[0],
+      `${long.slice(0, PREVIEW_WIDTH)}…`,
+    );
+    assert.equal(parsePreview(''), undefined);
+  });
+});
+
+describe('format patch', () => {
+  it('readdresses the temp-path diff to the repo file and drops mode lines', () => {
+    const section = patchSection(
+      [
+        'diff --git a/bin/run.ts b/tmp/format-diff-x/0',
+        'old mode 100755',
+        'new mode 100644',
+        'index 1111111..2222222',
+        '--- a/bin/run.ts',
+        '+++ b/tmp/format-diff-x/0',
+        '@@ -1,3 +1,3 @@',
+        ' #!/usr/bin/env node',
+        '-let   a=1;',
+        '+let a = 1;',
+        ' export {};',
+        '',
+      ].join('\n'),
+      'bin/run.ts',
+    );
+
+    assert.equal(
+      section,
+      [
+        'diff --git a/bin/run.ts b/bin/run.ts',
+        '--- a/bin/run.ts',
+        '+++ b/bin/run.ts',
+        '@@ -1,3 +1,3 @@',
+        ' #!/usr/bin/env node',
+        '-let   a=1;',
+        '+let a = 1;',
+        ' export {};',
+        '',
+      ].join('\n'),
+    );
+    assert.equal(patchSection('', 'a.ts'), undefined);
+    assert.equal(
+      formatPatch([
+        { ...finding('a.ts'), patch: 'A\n' },
+        finding('b.ts'),
+        { ...finding('c.ts'), patch: 'C\n' },
+      ]),
+      'A\nC\n',
+    );
+  });
+
+  it('applies to the committed file and yields the formatted one', () => {
+    const repo = mkdtempSync(join(tmpdir(), 'format-patch-'));
+
+    const git = (...args: string[]) =>
+      spawnSync('git', args, { cwd: repo, encoding: 'utf8' });
+
+    try {
+      const before =
+        '#!/usr/bin/env node\nlet   a=1;\nlet b = 2;\nlet   c=3;\n';
+
+      const after = '#!/usr/bin/env node\nlet a = 1;\nlet b = 2;\nlet c = 3;\n';
+
+      writeFileSync(join(repo, 'run.ts'), before);
+      chmodSync(join(repo, 'run.ts'), 0o755);
+      writeFileSync(join(repo, 'formatted'), after);
+      assert.equal(git('init', '-q').status, 0);
+
+      const diff = git(
+        'diff',
+        '--no-index',
+        '--no-color',
+        '-U3',
+        '--',
+        'run.ts',
+        'formatted',
+      );
+
+      assert.equal(diff.status, 1);
+      const section = patchSection(diff.stdout, 'run.ts');
+
+      assert.ok(section);
+      writeFileSync(join(repo, 'format.patch'), section);
+      const check = git('apply', '--check', 'format.patch');
+
+      assert.equal(check.status, 0, check.stderr);
+      assert.equal(git('apply', 'format.patch').status, 0);
+      assert.equal(readFileSync(join(repo, 'run.ts'), 'utf8'), after);
+      assert.equal(statSync(join(repo, 'run.ts')).mode & 0o777, 0o755);
+    } finally {
+      rmSync(repo, { recursive: true, force: true });
+    }
+  });
+
+  it('downloads from the run on Actions and reads the local file otherwise', () => {
+    assert.equal(
+      patchCommand('123'),
+      'gh run download 123 -n format.patch && git apply format.patch',
+    );
+    assert.equal(patchCommand(undefined), 'git apply .turbo/format.patch');
+  });
+});
+
+describe('formatting previews', () => {
+  const previewed = (file: string): FormatFinding => ({
+    ...finding(file, parseHunks(multiDiff)),
+    preview: parsePreview(multiDiff),
+  });
+
+  it(`previews the first ${PREVIEW_FILE_LIMIT} diffed files under their entries`, () => {
+    const files = Array.from({ length: PREVIEW_FILE_LIMIT + 2 }, (_, at) =>
+      previewed(`f${at}.ts`),
+    );
+
+    const markdown = formattingMarkdown([finding('README.md'), ...files]);
+
+    assert.equal(markdown.match(/^ {2}```diff$/gm)?.length, PREVIEW_FILE_LIMIT);
+    assert.ok(
+      markdown.includes(
+        [
+          '- `f0.ts` (oxfmt) — lines 10–12, 20',
+          '',
+          '  ```diff',
+          '  @@ -10,3 +10,2 @@',
+          '  -  let   a=1;',
+          '  +  let a = 1;',
+          '  … 3 more lines',
+          '  ```',
+          '',
+          '- `f1.ts`',
+        ].join('\n'),
+      ),
+    );
+    assert.match(
+      markdown,
+      /^- `f6\.ts` \(oxfmt\) — lines 10–12, 20\n\n<\/details>/m,
+    );
+  });
+
+  it('fences past the longest backtick run in the diff', () => {
+    const fenced = formattingMarkdown([
+      {
+        ...finding('README.md', [{ line: 1, endLine: 1 }]),
+        preview: parsePreview('@@ -1 +1 @@\n-```ts\n+````ts'),
+      },
+    ]);
+
+    assert.ok(
+      fenced.includes(
+        '\n  `````diff\n  @@ -1 +1 @@\n  -```ts\n  +````ts\n  `````\n',
+      ),
+    );
+  });
+
+  it('prints the apply command, and what the patch leaves out', () => {
+    const findings = [previewed('a.ts'), finding('b.ts')];
+    const all = { command: 'git apply .turbo/format.patch', files: 2 };
+    const some = { ...all, files: 1 };
+
+    assert.match(
+      formattingMarkdown(findings, all),
+      /<\/details>\n\nApply the fix: `git apply \.turbo\/format\.patch`\n\n$/,
+    );
+    assert.doesNotMatch(formattingMarkdown(findings, all), /covers/);
+    assert.match(
+      formattingMarkdown(findings, some),
+      /^The patch covers 1 of 2 files; run `pnpm format` for the rest\.$/m,
+    );
+    assert.deepEqual(formattingLines(findings, some), [
+      '── formatting: 2 files need `pnpm format`',
+      '   a.ts (oxfmt): lines 10–12, 20',
+      '   b.ts (oxfmt): lines unknown',
+      '   Apply the fix: `git apply .turbo/format.patch`',
+      '   The patch covers 1 of 2 files; run `pnpm format` for the rest.',
+      '',
+    ]);
   });
 });

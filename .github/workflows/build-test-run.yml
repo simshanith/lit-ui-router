@@ -220,6 +220,18 @@ jobs:
           TURBO_LOGS_ARTIFACT_URL: ${{ steps.task_logs.outputs.artifact-url }}
           # Empty on a green run or when no spec wrote an attachment.
           VITEST_ATTACHMENTS_ARTIFACT_URL: ${{ steps.vitest_attachments.outputs.artifact-url }}
+      - name: Upload format patch
+        # The summary step writes it, so this follows it; the summary prints the
+        # `gh run download` command. Written only when a format check failed.
+        if: ${{ !cancelled() && (steps.build.outcome == 'failure' || steps.build_main.outcome == 'failure') }}
+        uses: actions/upload-artifact@v7
+        continue-on-error: true
+        with:
+          # One unzipped file, so the artifact is named `format.patch`.
+          path: .turbo/format.patch
+          archive: false
+          retention-days: 5
+          if-no-files-found: ignore
       - name: Upload Codecov bundle stats
         # Implicit success(): the summary step above is red after a red build.
         run: mise run codecov_bundle
