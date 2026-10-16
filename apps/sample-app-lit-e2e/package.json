@@ -29,6 +29,7 @@
     "@tools/shared": "catalog:workspace",
     "@types/node": "catalog:",
     "cypress": "catalog:",
+    "cypress-terminal-report": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
     "start-server-and-test": "catalog:",

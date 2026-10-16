@@ -120,6 +120,16 @@ fresh runner logs a handful of these on a green run. Look closer when the count
 climbs past 40, or at `CDP_COULD_NOT_CONNECT`, which Cypress raises after the
 last attempt, around 50 seconds in.
 
+### Failure logs
+
+A failing test prints the app's browser console and the Cypress command log
+under its title, through
+[cypress-terminal-report](https://github.com/archfz/cypress-terminal-report)
+(`cypress.config.ts` and `src/support/e2e.ts`). Passing tests print nothing
+extra. On CI that output lands in the job log and in the
+`turbo-task-logs-<group>` artifact. The `docs` suite runs without a support
+file, so it prints neither.
+
 ## Against a served origin
 
 `E2E_BASE_URL` points the suites at a site that is already served, such as a
