@@ -114,6 +114,9 @@ catalogs:
     cypress:
       specifier: ^16.2.0
       version: 16.2.0
+    cypress-terminal-report:
+      specifier: ^7.4.0
+      version: 7.4.0
     diff:
       specifier: ^9.0.0
       version: 9.0.0
@@ -639,6 +642,9 @@ importers:
       cypress:
         specifier: 'catalog:'
         version: 16.2.0
+      cypress-terminal-report:
+        specifier: 'catalog:'
+        version: 7.4.0(cypress@16.2.0)
       oxfmt:
         specifier: 'catalog:'
         version: 0.73.0
@@ -5895,6 +5901,9 @@ packages:
     resolution: {integrity: sha512-gk/Z852D2Wtb//0I+kRFNKKE9dIIVirjoqPoA1wJU+XePVXZfGeBpk45+A1rKO4Q43prqWBNY/MiIeRLbPWUaA==}
     engines: {node: '>=4.0.0'}
 
+  compare-versions@6.1.1:
+    resolution: {integrity: sha512-4hm4VPpIecmlg59CHXnRDnqGplJFrbLG4aFEl5vl6cK1u76ws3LLvX7ikFnTDl5vo39sjWD6AaDPYodJp/NNHg==}
+
   concat-map@0.0.1:
     resolution: {integrity: sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==}
 
@@ -5994,6 +6003,12 @@ packages:
 
   custom-elements-manifest@2.1.0:
     resolution: {integrity: sha512-4TU+YhBQpCGYWonsZVTOPx6aYJXenOiSRT7TNGvDB7ipa4SZSJKed1DYXG77XKL9JFZ86sDSDVkwgv1mqw3V3A==}
+
+  cypress-terminal-report@7.4.0:
+    resolution: {integrity: sha512-5A2eHWvukGSotW2+BtPsmXLEyDoOZAALXDGGSPdCtYubrtNQW47hDS5NkLGrwzKrVuSKsTBppuJRiG+G+5RyUQ==}
+    engines: {node: '>= 12'}
+    peerDependencies:
+      cypress: '>=10.0.0'
 
   cypress@16.2.0:
     resolution: {integrity: sha512-qWW9RTldmGDmrWHL6UnsFxuOB3bJ3Kh9Ix7nb5mggI/d2IMPbl7ROd6+iy+zLIBp7ujQOQ8a5JQ6eODUJYsXVQ==}
@@ -8196,6 +8211,9 @@ packages:
   strip-json-comments@5.0.3:
     resolution: {integrity: sha512-1tB5mhVo7U+ETBKNf92xT4hrQa3pm0MZ0PQvuDnWgAAGHDsfp4lPSpiS6psrSiet87wyGPh9ft6wmhOMQ0hDiw==}
     engines: {node: '>=14.16'}
+
+  superstruct@0.14.2:
+    resolution: {integrity: sha512-nPewA6m9mR3d6k7WkZ8N8zpTWfenFH3q9pA2PkuiZxINr9DKB2+40wEQf0ixn8VaGuJ78AB6iWOtStI+/4FKZQ==}
 
   supports-color@10.2.2:
     resolution: {integrity: sha512-SS+jx45GF1QjgEXQx4NJZV9ImqmO2NPz5FNsIHrsDjh2YsHnawpan7SNQ1o8NuhrbHZy9AZhIoCUiCeaW/C80g==}
@@ -11621,6 +11639,8 @@ snapshots:
 
   common-tags@1.8.2: {}
 
+  compare-versions@6.1.1: {}
+
   concat-map@0.0.1: {}
 
   concat-stream@2.0.0:
@@ -11734,6 +11754,13 @@ snapshots:
   custom-elements-manifest@1.0.0: {}
 
   custom-elements-manifest@2.1.0: {}
+
+  cypress-terminal-report@7.4.0(cypress@16.2.0):
+    dependencies:
+      chalk: 4.1.2
+      compare-versions: 6.1.1
+      cypress: 16.2.0
+      superstruct: 0.14.2
 
   cypress@16.2.0:
     dependencies:
@@ -14320,6 +14347,8 @@ snapshots:
   strip-json-comments@3.1.1: {}
 
   strip-json-comments@5.0.3: {}
+
+  superstruct@0.14.2: {}
 
   supports-color@10.2.2: {}
 

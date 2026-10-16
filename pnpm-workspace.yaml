@@ -45,6 +45,7 @@ catalog:
   concurrently: ^10.0.6
   crap4ts: 2.0.0-rc.5
   cypress: ^16.2.0
+  cypress-terminal-report: ^7.4.0
   diff: ^9.0.0
   effect: ^4.0.5
   esbuild: ^0.28.2

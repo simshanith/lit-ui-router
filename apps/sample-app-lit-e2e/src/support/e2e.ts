@@ -1,3 +1,13 @@
+import installLogsCollector from 'cypress-terminal-report/src/installLogsCollector.js';
+
+// specs import this module too, so it evaluates once per bundle
+if (!('TerminalReport' in Cypress)) {
+  installLogsCollector({
+    // the router dumps its whole state to console.debug on every navigation
+    filterLog: ({ type }) => type !== 'cons:debug',
+  });
+}
+
 // Suite-wide location plugin (settable via `cypress run --expose LOCATION_PLUGIN=hash`)
 export const LOCATION_PLUGIN =
   // SAFETY: Cypress.expose(key) is `any`; --expose values are strings
