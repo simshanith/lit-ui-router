@@ -14,7 +14,7 @@
 import type { RawParams, StateDeclaration } from '@uirouter/core';
 
 import { warnMountDiagnostics } from './dev-warn.ts';
-import { compileResolver, matchRoute } from './redirects.ts';
+import { compileResolver } from './redirects.ts';
 import { createRouterPool, POOL_MAX_IDLE } from './router-pool.ts';
 import type { PooledRouter, RouterPool } from './router-pool.ts';
 import type {
@@ -22,6 +22,7 @@ import type {
   RedirectRule,
   RedirectTarget,
   RouteDeclaration,
+  RouteIndex,
 } from './redirects.ts';
 import type { UrlMatcherCompilerConfig } from './url-matcher.ts';
 
@@ -29,7 +30,10 @@ export type {
   RedirectRule,
   RedirectTarget,
   RouteDeclaration,
+  RouteIndex,
 } from './redirects.ts';
+
+export { routeTrie } from './route-trie.ts';
 
 // Transitions settle in microtasks; the timer is only a degrade-to-shell net.
 const SETTLE_TIMEOUT_MS = 100;
@@ -57,6 +61,25 @@ export interface MountConfig {
    * so both sides compile urls alike.
    */
   config?: UrlMatcherCompilerConfig;
+  /**
+   * How a 'matcher' mount looks up the route a pathname matches. Default: a
+   * linear scan that tries every route. {@link routeTrie} walks a segment
+   * trie to the few routes whose spelling fits, with the same verdicts, and
+   * throws at construction for a route it can't express. Only the index a
+   * mount names is bundled. On a 'simulate' mount it throws at construction.
+   *
+   * @example
+   * ```ts
+   * import { routeTrie } from 'ui-router-server';
+   * import type { MountConfig } from 'ui-router-server';
+   *
+   * const app: MountConfig = {
+   *   routes: [{ name: 'home', url: '' }, { name: 'item', url: '/items/:id' }],
+   *   routeIndex: routeTrie,
+   * };
+   * ```
+   */
+  routeIndex?: RouteIndex;
   /**
    * Projection of the client's otherwise() rule. `state` references a
    * declared, url-less state (url-less so the unmatched url stays in the
@@ -288,6 +311,30 @@ const validateOtherwise = (base: string, config: MountConfig): void => {
     );
 };
 
+// The index's own message names the route and reason; the mount is added here.
+const mountIndex = (
+  base: string,
+  config: MountConfig,
+): RouteIndex | undefined => {
+  const index = config.routeIndex;
+
+  if (index === undefined) return undefined;
+
+  if (config.strategy === 'simulate')
+    throw new Error(`Mount '${base}': routeIndex needs the 'matcher' strategy`);
+
+  return (routes) => {
+    try {
+      return index(routes);
+    } catch (error) {
+      throw new Error(
+        `Mount '${base}': ${error instanceof Error ? error.message : String(error)}`,
+        { cause: error },
+      );
+    }
+  };
+};
+
 const validatePrewarm = (base: string, config: MountConfig): number => {
   const prewarm = config.prewarm ?? 0;
 
@@ -329,11 +376,14 @@ const compileMount = ([base, config]: [string, MountConfig]): Mount => {
     // Simulate mounts accept the same declaration subset, so the
     // dependency-free compilation doubles as their construction-time
     // validation (their resolve path never consults it).
-    compiled: compileResolver({
-      routes: config.routes,
-      rules: config.redirects,
-      config: config.config,
-    }),
+    compiled: compileResolver(
+      {
+        routes: config.routes,
+        rules: config.redirects,
+        config: config.config,
+      },
+      mountIndex(base, config),
+    ),
     pool: createRouterPool(),
   };
 };
@@ -462,7 +512,7 @@ const matcherVerdict = (mount: Mount, subpath: string): Verdict => {
   // A when()-rule that lands where it started never reached route matching.
   const match =
     resolution.match === undefined
-      ? matchRoute(mount.compiled.routes, subpath)
+      ? mount.compiled.match(subpath)
       : resolution.match;
 
   if (match !== null) return shellVerdict(mount);

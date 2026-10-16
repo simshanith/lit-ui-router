@@ -26,6 +26,8 @@ export interface BenchSource {
   /** Repo-root-relative: the bench's default `.cache/` destination. */
   path: string;
   select: (entry: BenchEntry) => boolean;
+  /** Variants timed side by side as `<task> [<variant>]`; rendered as one row per task with the second-over-first ratio. */
+  variants?: readonly [string, string];
 }
 
 /** In render order: the production table first, then the n=500 synthetic rows. */
@@ -34,6 +36,7 @@ export const BENCH_SOURCES: readonly BenchSource[] = [
     heading: 'Production docs table (`sample-app-routes`)',
     path: 'apps/sample-app-routes/.cache/routes-bench.json',
     select: ({ name }) => / (?:hit|miss)\b/.test(name),
+    variants: ['linear', 'trie'],
   },
   {
     heading: 'Synthetic table, n=500 (`ui-router-server`)',
@@ -68,18 +71,66 @@ function hosts(groups: readonly BenchGroup[]): string {
   return [...seen].join('; ');
 }
 
+const variantOf = (name: string): [task: string, variant: string] | null => {
+  const match = / \[([^\]]+)\]$/.exec(name);
+
+  return match ? [name.slice(0, match.index), match[1]] : null;
+};
+
+// One row per task timed under both variants, in first-seen order.
+function variantRows(
+  entries: readonly BenchEntry[],
+  [first, second]: readonly [string, string],
+): string[] {
+  const means = new Map<string, Map<string, number>>();
+
+  for (const { name, mean } of entries) {
+    const split = variantOf(name);
+
+    if (split === null) continue;
+    const [task, variant] = split;
+    means.set(
+      task,
+      (means.get(task) ?? new Map<string, number>()).set(variant, mean),
+    );
+  }
+
+  const rows = [...means].flatMap(([task, byVariant]) => {
+    const a = byVariant.get(first);
+    const b = byVariant.get(second);
+
+    return a === undefined || b === undefined
+      ? []
+      : [
+          `| ${inlineCode(cell(task))} | ${formatNs(a)} | ${formatNs(b)} | ${(b / a).toFixed(2)}× |`,
+        ];
+  });
+
+  if (rows.length === 0) return [];
+
+  return [
+    `| Task | ${first} | ${second} | ${second} / ${first} |`,
+    '| --- | ---: | ---: | ---: |',
+    ...rows,
+    '',
+  ];
+}
+
 function groupMarkdown({ source, entries }: BenchGroup): string[] {
   const out = [`### ${source.heading}`, ''];
 
   if (entries === undefined)
     return [...out, `No result file at ${inlineCode(source.path)}.`, ''];
 
+  const variants = source.variants;
+
   return [
     ...out,
+    ...(variants ? variantRows(entries, variants) : []),
     '| Task | Mean | ±RME | Samples |',
     '| --- | ---: | ---: | ---: |',
     ...entries
-      .filter(source.select)
+      .filter((entry) => source.select(entry) && variantOf(entry.name) === null)
       .map(
         ({ name, mean, rme, samples }) =>
           `| ${inlineCode(cell(name))} | ${formatNs(mean)} | ${rme.toFixed(2)}% | ${samples} |`,

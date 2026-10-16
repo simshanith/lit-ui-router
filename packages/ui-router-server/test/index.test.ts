@@ -8,13 +8,24 @@ import {
   createServerRouter,
   diagnoseMounts,
   mergeSearch,
+  routeTrie,
 } from '../src/index.ts';
 import type { MountConfig } from '../src/index.ts';
 import { warnMountDiagnostics } from '../src/dev-warn.ts';
 import { stubDev } from './import-meta-env.ts';
 
-const appMount = (strategy: MountConfig['strategy']): MountConfig => ({
-  strategy,
+// 'trie' is the matcher strategy over routeTrie: every tier must reach the same verdicts.
+type Tier = MountConfig['strategy'] | 'trie';
+
+const TIERS = ['matcher', 'trie', 'simulate'] as const;
+
+const tierConfig = (tier: Tier): Partial<MountConfig> =>
+  tier === 'trie'
+    ? { strategy: 'matcher', routeIndex: routeTrie }
+    : { strategy: tier };
+
+const appMount = (strategy: Tier): MountConfig => ({
+  ...tierConfig(strategy),
   routes: [
     { name: 'welcome', url: '/welcome' },
     { name: 'contacts', url: '/contacts' },
@@ -38,7 +49,7 @@ const appMount = (strategy: MountConfig['strategy']): MountConfig => ({
 // Every verdict below is asserted for BOTH strategies: the same mount config
 // must resolve identically whether it's evaluated as data or replayed
 // through a headless core router.
-for (const strategy of ['matcher', 'simulate'] as const) {
+for (const strategy of TIERS) {
   describe(`verdicts (${strategy} strategy)`, () => {
     const router = createServerRouter({
       mounts: { '/app': appMount(strategy) },
@@ -129,7 +140,7 @@ for (const strategy of ['matcher', 'simulate'] as const) {
 // The otherwise projection: the mount declares the client's otherwise()
 // mapping (a url-less notFound state), and unknown paths become shell-404
 // verdicts — the shell is the error page, at the retained path.
-const appMountWith404 = (strategy: MountConfig['strategy']): MountConfig => {
+const appMountWith404 = (strategy: Tier): MountConfig => {
   const mount = appMount(strategy);
 
   return {
@@ -139,7 +150,7 @@ const appMountWith404 = (strategy: MountConfig['strategy']): MountConfig => {
   };
 };
 
-for (const strategy of ['matcher', 'simulate'] as const) {
+for (const strategy of TIERS) {
   describe(`otherwise projection (${strategy} strategy)`, () => {
     const router = createServerRouter({
       mounts: { '/app': appMountWith404(strategy) },
@@ -182,7 +193,7 @@ for (const strategy of ['matcher', 'simulate'] as const) {
 
 // The mount's config reaches both tiers: core compiles state urls at
 // registration, so simulate must apply it before the routes register.
-for (const strategy of ['matcher', 'simulate'] as const) {
+for (const strategy of TIERS) {
   describe(`url config (${strategy} strategy)`, () => {
     // An optional path param mid-url, and a redirect that formats it at its default.
     const squashMount = (config: MountConfig['config'] = {}): MountConfig => {
@@ -207,7 +218,11 @@ for (const strategy of ['matcher', 'simulate'] as const) {
       mounts: {
         '/app': appMount(strategy),
         '/loose': { ...appMount(strategy), config: { strict: false } },
-        '/nocase': { ...appMount(strategy), config: { caseInsensitive: true } },
+        // routeTrie can't express caseInsensitive, so the trie tier scans this one.
+        '/nocase': {
+          ...appMount(strategy === 'trie' ? 'matcher' : strategy),
+          config: { caseInsensitive: true },
+        },
         '/nosquash': squashMount(),
         '/squash': squashMount({ defaultSquashPolicy: true }),
         '/tilde': squashMount({ defaultSquashPolicy: '~' }),
@@ -466,8 +481,8 @@ describe('mount diagnostics', () => {
     return messages;
   };
 
-  const unserved = (strategy: MountConfig['strategy']): MountConfig => ({
-    strategy,
+  const unserved = (strategy: Tier): MountConfig => ({
+    ...tierConfig(strategy),
     routes: [{ name: 'a', url: '/a' }],
   });
 
@@ -501,7 +516,12 @@ describe('mount diagnostics', () => {
       config: { strict: false },
     },
     '/plain': { routes: [{ name: 'root', url: '' }] },
+    '/plain-trie': {
+      routes: [{ name: 'root', url: '' }],
+      routeIndex: routeTrie,
+    },
     '/rule': appMount('matcher'),
+    '/rule-trie': appMount('trie'),
     '/': { routes: [{ name: 'a', url: '/a' }] },
   } satisfies Record<string, MountConfig>;
 
@@ -516,7 +536,7 @@ describe('mount diagnostics', () => {
     }
   };
 
-  for (const strategy of ['matcher', 'simulate'] as const) {
+  for (const strategy of TIERS) {
     it(`reports each mount whose bare base 404s, in declaration order (${strategy} strategy)`, () => {
       const diagnostics = diagnosed({
         '/b/': unserved(strategy),
@@ -974,78 +994,169 @@ describe('simulate prewarm', () => {
   });
 });
 
-describe('matcher strategy route scans', () => {
-  // Each successful route match decodes the captured id exactly once.
-  let decodes = 0;
+describe('routeTrie mounts', () => {
+  const build = (mount: MountConfig) =>
+    createServerRouter({ mounts: { '/app': mount } });
 
-  const counted = {
-    name: 'counted',
-    pattern: /[^/]+/,
-    is: (val: unknown): val is string => typeof val === 'string',
-    decode: (val: string) => {
-      decodes++;
-
-      return val;
-    },
-  };
-
-  const router = createServerRouter({
-    mounts: {
-      '/app': {
-        routes: [
-          { name: 'home', url: '' },
-          {
-            name: 'item',
-            url: '/items/:id',
-            params: { id: { type: counted } },
-          },
-        ],
-        redirects: [
-          { pattern: '/moved/:id', to: 'item' },
-          {
-            pattern: /^\/items\/self$/,
-            to: { state: 'item', params: { id: 'self' } },
-          },
-        ],
+  it('throws at construction for a case-insensitive mount, naming the mount, route and reason', () => {
+    assert.throws(
+      () => build({ ...appMount('trie'), config: { caseInsensitive: true } }),
+      {
+        message:
+          /^Mount '\/app': routeTrie can't express route 'welcome' \('\/welcome'\): it compiles caseInsensitive; route 'contacts' /,
       },
-    },
+    );
   });
 
-  const decodesFor = async (path: string) => {
-    decodes = 0;
-    const verdict = await router.resolve(path);
+  it('throws at construction for a param that may match a slash, naming it', () => {
+    assert.throws(
+      () =>
+        build({
+          routes: [
+            { name: 'home', url: '' },
+            { name: 'files', url: '/files/{path:.*}' },
+          ],
+          routeIndex: routeTrie,
+        }),
+      {
+        message:
+          "Mount '/app': routeTrie can't express route 'files' ('/files/{path:.*}'): its param 'path' may match a '/'",
+      },
+    );
+  });
 
-    return { kind: verdict.kind, decodes };
-  };
+  it('builds the same routes on the default index', async () => {
+    const router = build({
+      routes: [{ name: 'files', url: '/files/{path:.*}' }],
+    });
 
-  it('matches a served route once', async () => {
-    assert.deepEqual(await decodesFor('/app/items/7'), {
+    assert.deepEqual(await router.resolve('/app/files/a/b'), {
       kind: 'shell',
-      decodes: 1,
+      mount: '/app',
     });
   });
 
-  it('skips route matching when a rule redirects', async () => {
-    assert.deepEqual(await decodesFor('/app/moved/7'), {
-      kind: 'redirect',
-      decodes: 0,
-    });
+  it('throws on a simulate mount', () => {
+    assert.throws(
+      () => build({ ...appMount('simulate'), routeIndex: routeTrie }),
+      { message: "Mount '/app': routeIndex needs the 'matcher' strategy" },
+    );
   });
 
-  it('matches once after a rule that lands where it started', async () => {
-    assert.deepEqual(await decodesFor('/app/items/self'), {
-      kind: 'shell',
-      decodes: 1,
-    });
+  it('prefixes the mount to whatever a custom index throws', () => {
+    const cause = 'not an Error';
+
+    assert.throws(
+      () =>
+        build({
+          routes: [{ name: 'home', url: '' }],
+          routeIndex: () => {
+            // oxlint-disable-next-line typescript/only-throw-error -- the non-Error branch under test
+            throw cause;
+          },
+        }),
+      { message: "Mount '/app': not an Error", cause },
+    );
   });
 
-  it('runs no decode for an unmatched pathname', async () => {
-    assert.deepEqual(await decodesFor('/app/nowhere'), {
+  it('consults a custom index for every route match', async () => {
+    const looked: string[] = [];
+
+    const router = build({
+      routes: [{ name: 'home', url: '/home' }],
+      routeIndex: () => (pathname) => {
+        looked.push(pathname);
+
+        return null;
+      },
+      ignoreDiagnostics: ['bareBaseNotFound'],
+    });
+
+    looked.length = 0;
+
+    assert.deepEqual(await router.resolve('/app/home'), {
       kind: 'notFound',
-      decodes: 0,
+      mount: '/app',
     });
+    assert.deepEqual(looked, ['/home']);
   });
 });
+
+for (const routeIndex of [undefined, routeTrie]) {
+  describe(`matcher strategy route scans (${routeIndex ? 'routeTrie' : 'linear'})`, () => {
+    // Each successful route match decodes the captured id exactly once.
+    let decodes = 0;
+
+    const counted = {
+      name: 'counted',
+      pattern: /[^/]+/,
+      is: (val: unknown): val is string => typeof val === 'string',
+      decode: (val: string) => {
+        decodes++;
+
+        return val;
+      },
+    };
+
+    const router = createServerRouter({
+      mounts: {
+        '/app': {
+          routeIndex,
+          routes: [
+            { name: 'home', url: '' },
+            {
+              name: 'item',
+              url: '/items/:id',
+              params: { id: { type: counted } },
+            },
+          ],
+          redirects: [
+            { pattern: '/moved/:id', to: 'item' },
+            {
+              pattern: /^\/items\/self$/,
+              to: { state: 'item', params: { id: 'self' } },
+            },
+          ],
+        },
+      },
+    });
+
+    const decodesFor = async (path: string) => {
+      decodes = 0;
+      const verdict = await router.resolve(path);
+
+      return { kind: verdict.kind, decodes };
+    };
+
+    it('matches a served route once', async () => {
+      assert.deepEqual(await decodesFor('/app/items/7'), {
+        kind: 'shell',
+        decodes: 1,
+      });
+    });
+
+    it('skips route matching when a rule redirects', async () => {
+      assert.deepEqual(await decodesFor('/app/moved/7'), {
+        kind: 'redirect',
+        decodes: 0,
+      });
+    });
+
+    it('matches once after a rule that lands where it started', async () => {
+      assert.deepEqual(await decodesFor('/app/items/self'), {
+        kind: 'shell',
+        decodes: 1,
+      });
+    });
+
+    it('runs no decode for an unmatched pathname', async () => {
+      assert.deepEqual(await decodesFor('/app/nowhere'), {
+        kind: 'notFound',
+        decodes: 0,
+      });
+    });
+  });
+}
 
 describe('mergeSearch', () => {
   it('appends the request search to a bare location', () => {

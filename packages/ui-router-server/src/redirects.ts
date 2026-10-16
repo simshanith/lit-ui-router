@@ -182,6 +182,19 @@ export function matchRoute(
   return best;
 }
 
+/**
+ * Compiles a mount's routes into the lookup its 'matcher' strategy runs:
+ * a pathname in, the {@link matchRoute} result over those routes out. It may
+ * throw at compile for routes it can't serve. The default scans the routes
+ * in order; {@link index!routeTrie | `routeTrie`} walks a segment trie.
+ */
+export type RouteIndex = (
+  routes: CompiledRoute[],
+) => (pathname: string) => RouteMatch | null;
+
+const scanRoutes: RouteIndex = (routes) => (pathname) =>
+  matchRoute(routes, pathname);
+
 const isStateName = (to: string | RedirectTarget): to is string =>
   typeof to === 'string';
 
@@ -211,19 +224,24 @@ export interface RedirectResolution {
  * @internal
  */
 export interface CompiledResolver {
-  /** The table's compiled routes (see {@link compileRoutes}). */
-  routes: CompiledRoute[];
+  /** The table's route lookup: the {@link RouteIndex} over its compiled routes. */
+  match: (pathname: string) => RouteMatch | null;
   /** Evaluates a pathname once: its redirect and, when reached, its route match. */
   resolve: (pathname: string) => RedirectResolution;
 }
 
 /**
- * Compiles a redirect table into a {@link CompiledResolver}.
+ * Compiles a redirect table into a {@link CompiledResolver} whose route
+ * matching runs through `index`.
  *
  * @internal
  */
-export function compileResolver(table: RedirectTable): CompiledResolver {
+export function compileResolver(
+  table: RedirectTable,
+  index: RouteIndex = scanRoutes,
+): CompiledResolver {
   const routes = compileRoutes(table.routes, table.config);
+  const match = index(routes);
   const byName = new Map(routes.map((route) => [route.name, route]));
   const { compile } = urlMatcherFactory(table.config);
 
@@ -308,21 +326,22 @@ export function compileResolver(table: RedirectTable): CompiledResolver {
         };
     }
 
-    const match = matchRoute(routes, pathname);
+    const matched = match(pathname);
 
-    if (match === null) return { redirect: null, match };
-    const route = byName.get(match.state)!;
+    if (matched === null) return { redirect: null, match: matched };
+    const route = byName.get(matched.state)!;
 
-    if (route.redirectTo === undefined) return { redirect: null, match };
+    if (route.redirectTo === undefined)
+      return { redirect: null, match: matched };
     const target = toTarget(route.redirectTo);
 
     return {
-      redirect: follow(target.state, target.params ?? match.params, pathname),
-      match,
+      redirect: follow(target.state, target.params ?? matched.params, pathname),
+      match: matched,
     };
   };
 
-  return { routes, resolve };
+  return { match, resolve };
 }
 
 /**
