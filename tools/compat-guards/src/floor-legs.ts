@@ -64,7 +64,9 @@ export interface LegVerdict {
 /**
  * The lowest leg is proven by `<dep>-floor`, each middle leg by its own
  * `<dep>-<line>-floor`, and the top leg by the dev dependency every other lane
- * runs on. Every alias must pin its leg's floor exactly.
+ * runs on. Once the dev dependency is released past the range, the top leg
+ * falls back to its own `<dep>-<line>-floor` until the range widens. Every
+ * alias must pin its leg's floor exactly.
  */
 export function proveLegs(input: FloorLegs): LegVerdict {
   const { dep, catalog, range, floorCatalog, aliases } = input;
@@ -104,7 +106,7 @@ export function proveLegs(input: FloorLegs): LegVerdict {
 
   expect(`${dep}-floor`, lowest.range, lowest.floor);
 
-  const top = upper.pop()?.range;
+  const top = upper.pop();
   const expected = new Set([`${dep}-floor`]);
 
   for (const { range: leg, floor } of upper) {
@@ -116,13 +118,33 @@ export function proveLegs(input: FloorLegs): LegVerdict {
 
   if (top !== undefined) {
     const dev = input.dev();
+    const topAlias = legAlias(dep, top.floor);
+    const pinned = aliases[topAlias] !== undefined;
 
-    if (semver.satisfies(dev, top)) {
-      proofs.push(`dev ${dep} ${dev} runs "${top}"`);
+    if (pinned) expected.add(topAlias);
+
+    if (semver.satisfies(dev, top.range)) {
+      proofs.push(`dev ${dep} ${dev} runs "${top.range}"`);
+
+      // an alias added ahead of the release must already pin the top leg's floor
+      if (pinned) expect(topAlias, top.range, top.floor);
+    } else if (semver.gtr(dev, top.range) && pinned) {
+      expect(topAlias, top.range, top.floor);
+      proofs.push(
+        `dev ${dep} ${dev} is past "${range}"; widen the ${catalog} range to admit it`,
+      );
+    } else if (semver.gtr(dev, top.range)) {
+      failures.push(
+        `${catalog} ${dep} range "${range}" has a top leg "${top.range}" that ` +
+          `the ${dep} devDependency (${dev}) has moved past. Add ` +
+          `${topAlias}: npm:${dep}@${top.floor} to the ${floorCatalog} ` +
+          'catalog, declare it as a devDependency, and reinstall, or widen ' +
+          'the range.',
+      );
     } else {
       failures.push(
-        `${catalog} ${dep} range "${range}" has a top leg "${top}" that the ` +
-          `${dep} devDependency (${dev}) does not exercise. Move the ` +
+        `${catalog} ${dep} range "${range}" has a top leg "${top.range}" that ` +
+          `the ${dep} devDependency (${dev}) does not exercise. Move the ` +
           'devDependency into it, or narrow the range.',
       );
     }
@@ -131,7 +153,7 @@ export function proveLegs(input: FloorLegs): LegVerdict {
   for (const alias of Object.keys(aliases)) {
     if (!expected.has(alias)) {
       failures.push(
-        `${alias} proves no middle leg of ${catalog} ${dep} range "${range}". ` +
+        `${alias} proves no leg of ${catalog} ${dep} range "${range}". ` +
           `Remove it from the ${floorCatalog} catalog and the devDependencies.`,
       );
     }

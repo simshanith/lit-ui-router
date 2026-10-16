@@ -203,6 +203,10 @@ the top by the dev dependency, and each leg between by its own
 `<dep>-<line>-floor` alias pinned to that leg's floor, such as
 `ui-router-server-0.3-floor` for `^0.3.0`. Each leg alias needs its own
 `typecheck:peer-floor` pass through a tsconfig that maps the dep onto it.
+When a release moves a workspace dev dependency past a dependent's range, the
+top leg falls back to its own `<dep>-<line>-floor` alias, and the guard notes
+that the range needs widening. Adding that alias before the release keeps both
+sides of the bump green.
 
 `published-diff` picks that tag from the workspace version by the same rule
 release-it publishes under: a prerelease answers to its own channel tag,
