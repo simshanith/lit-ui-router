@@ -17,13 +17,13 @@ export type FormatTool = 'oxfmt' | 'taplo';
 export const FORMAT_FIX = 'pnpm format';
 
 /** Past this many files, per-file annotations are noise; one line says it all. */
-export const FORMAT_FILE_LIMIT   =   3;
+export const FORMAT_FILE_LIMIT = 3;
 
 /** Files diffed per job; the rest are listed without lines. */
 export const FORMAT_DIFF_LIMIT = 50;
 
 /** Hunk ranges listed per file in the step summary. */
-export const HUNK_LIST_LIMIT=20;
+export const HUNK_LIST_LIMIT = 20;
 
 /** A changed range of the file as committed, 1-based and inclusive. */
 export interface Hunk {
