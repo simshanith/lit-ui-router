@@ -17,6 +17,7 @@ import type {
   UIViewInjectedProps,
 } from 'lit-ui-router/pure';
 import { getScopedRouter } from 'lit-ui-router/context';
+import { devGate } from '#dev-gate';
 import { servedMarkerPrefix } from './served-markers.js';
 
 /** The tag this renderer answers for. */
@@ -59,8 +60,8 @@ const escapeAttribute = (value: string): string =>
   value.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
 
 const warnElementComponent = (fqn: string): void => {
-  // DEV folds away in dist/*.js; see check:dev-split and dev-warnings.json.
-  if (!import.meta.env.DEV) return;
+  // DEV folds away in dist/*.js; #dev-gate also closes it under node when NODE_ENV is production.
+  if (!import.meta.env.DEV || !devGate()) return;
   console.warn(
     'lit-ui-router-ssr: this view is a RoutedLitElement class, which has no server render, so the part was left empty for the client to fill:',
     fqn,

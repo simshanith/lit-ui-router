@@ -26,15 +26,30 @@
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "imports": {
+    "#dev-gate": {
+      "types": "./src/dev-gate.ts",
+      "production": "./dist/dev-gate.js",
+      "deno": "./dist/dev-gate.js",
+      "node": "./dist/dev-gate.node.js",
+      "default": "./dist/dev-gate.js"
+    }
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "development": "./dist/development/index.js",
+      "production": "./dist/index.js",
+      "deno": "./dist/index.js",
+      "node": "./dist/development/index.js",
       "default": "./dist/index.js"
     },
     "./client": {
       "types": "./dist/client.d.ts",
       "development": "./dist/development/client.js",
+      "production": "./dist/client.js",
+      "deno": "./dist/client.js",
+      "node": "./dist/development/client.js",
       "default": "./dist/client.js"
     },
     "./dist/*": "./dist/*",
@@ -42,6 +57,9 @@
     "./register": {
       "types": "./dist/register.d.ts",
       "development": "./dist/development/register.js",
+      "production": "./dist/register.js",
+      "deno": "./dist/register.js",
+      "node": "./dist/development/register.js",
       "default": "./dist/register.js"
     }
   },
@@ -73,6 +91,7 @@
     "@lit-labs/ssr-floor": "catalog:peerFloorSsr",
     "@oxc-project/runtime-floor": "catalog:oxc-compat",
     "@release-it/conventional-changelog": "catalog:",
+    "@repo/dev-gate": "catalog:workspace",
     "@tools/bundle-probe": "catalog:workspace",
     "@tools/compat-guards": "catalog:workspace",
     "@tools/crap": "catalog:workspace",

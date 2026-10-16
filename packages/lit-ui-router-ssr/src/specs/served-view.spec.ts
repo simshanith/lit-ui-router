@@ -10,6 +10,10 @@ import type { LitStateDeclaration, UiView } from 'lit-ui-router/pure';
 
 import { adoptUiViewContext } from '../adopt-context.js';
 import type { AdoptableView } from '../adopt-context.js';
+import {
+  warnDeferredNeverWoken,
+  warnDeferredWithoutClient,
+} from '../dev-warn.js';
 import type { ServedUiView } from '../served-view.js';
 import '../register.js';
 
@@ -583,6 +587,23 @@ describe('the served <ui-view>', () => {
       }
     });
 
+    it('should stay quiet under node when NODE_ENV is production', async () => {
+      vi.stubEnv('NODE_ENV', 'production');
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      try {
+        router = createTestRouter(homeStates);
+        mountHeld('defer-hydration', servedMarkup);
+
+        await tick();
+
+        expect(warn).not.toHaveBeenCalled();
+      } finally {
+        warn.mockRestore();
+        vi.unstubAllEnvs();
+      }
+    });
+
     it('should warn for a clone of a served view the walk already passed', async () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
       const adopt = vi.fn();
@@ -831,5 +852,20 @@ describe('the served <ui-view>', () => {
         warn.mockRestore();
       }
     });
+  });
+});
+
+describe('the served view warnings under node with NODE_ENV=production', () => {
+  it('raise nothing', () => {
+    vi.stubEnv('NODE_ENV', 'production');
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const view = makeView();
+
+    warnDeferredWithoutClient(view);
+    warnDeferredNeverWoken(view);
+
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
+    vi.unstubAllEnvs();
   });
 });

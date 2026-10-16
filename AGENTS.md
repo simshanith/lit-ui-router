@@ -15,7 +15,7 @@ This file is an index. The details live in [docs/CONTRIBUTING.md](docs/CONTRIBUT
 
 ## Layout
 
-- Everything under `packages/` ships in a registry tarball: `packages/*` are the published packages, and `packages/shared/*` is private `@repo/*` source that `@tools/oxc-emit` inlines into their `dist/` (`check:shared-source`). Code that ships in no tarball lives in other folders under other scopes: `tools/` as `@tools/*`, `www/` as `@www/*`. `.npmrc` blocks the private scopes from public npm.
+- Everything under `packages/` ships in a registry tarball: `packages/*` are the published packages, and `packages/shared/*` is private `@repo/*` source that `@tools/oxc-emit` inlines into their `dist/` ([packages/shared/README.md](packages/shared/README.md)). Code that ships in no tarball lives in other folders under other scopes: `tools/` as `@tools/*`, `www/` as `@www/*`. `.npmrc` blocks the private scopes from public npm.
 - Tooling that can't ask a package manager takes the repo root from `tools/bootstrap/src/root.ts`, never `../..` arithmetic.
 - A new docs example is one entry in `examples/embeds.ts`.
 - `www/lit-ui-router.dev` is the production docs site, deployed by Cloudflare Workers Builds ([www/DEPLOY.md](www/DEPLOY.md)).
