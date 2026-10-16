@@ -1,11 +1,13 @@
 // oxfmt and taplo name files, not lines; run-summary.ts diffs each against the formatter's stdout.
 // The same diffs make the step-summary previews and the `git apply` patch.
+// One finding per file, so the patch never holds two sections for one path.
 
 import { basename } from 'node:path';
 
 import {
   type AnnotationTier,
   type RunSummary,
+  type SectionBudget,
   type ToolAnnotation,
   cell,
   failedTasks,
@@ -18,13 +20,16 @@ import {
 
 export type FormatTool = 'oxfmt' | 'taplo';
 
+/** Formatters on one file run in this order, each on the previous output; taplo owns TOML, so it goes last. */
+export const FORMAT_TOOL_ORDER: readonly FormatTool[] = ['oxfmt', 'taplo'];
+
 /** The fix for every formatting failure, workspace-wide. */
 export const FORMAT_FIX = 'pnpm format';
 
 /** Past this many files, per-file annotations are noise; one line says it all. */
 export const FORMAT_FILE_LIMIT = 3;
 
-/** Files diffed per job; the rest are listed without lines. */
+/** Distinct files diffed per job; the rest are listed without lines. */
 export const FORMAT_DIFF_LIMIT = 50;
 
 /** Hunk ranges listed per file in the step summary. */
@@ -51,14 +56,20 @@ export interface Hunk {
   endLine: number;
 }
 
-export interface FormatFinding {
+/** One formatter's claim on a file, as its task's log named it. */
+export interface FormatSource {
   tool: FormatTool;
   /** Where the task ran, repo-root-relative; the formatter reruns there. */
   directory: string;
   /** As the tool printed it: relative to `directory`, or absolute. */
   path: string;
-  /** Repo-root-relative. */
+}
+
+export interface FormatFinding {
+  /** Repo-root-relative; no two findings share one. */
   file: string;
+  /** One per tool, in `FORMAT_TOOL_ORDER`. */
+  sources: readonly [FormatSource, ...FormatSource[]];
   /** Undefined until diffed, or when the diff could not be taken. */
   hunks?: Hunk[];
   /** The first hunk, cut to `PREVIEW_CHANGE_LIMIT` lines a side. */
@@ -116,8 +127,9 @@ export function parseOxfmtFiles(log: string): string[] {
   return [];
 }
 
+// The span prefix goes when RUST_LOG drops INFO, as the taplo mise task does.
 const TAPLO_FILE =
-  /\bERROR taplo:format_files: the file is not properly formatted path="([^"]+)"/;
+  /\bERROR (?:taplo:format_files: )?the file is not properly formatted path="([^"]+)"/;
 
 /** taplo's per-file ERROR log line; the path is absolute. */
 export function parseTaploFiles(log: string): string[] {
@@ -128,18 +140,22 @@ export function parseTaploFiles(log: string): string[] {
   });
 }
 
+interface FormatClaim extends FormatSource {
+  file: string;
+}
+
 /** Failed tasks only: a green log never names a file that needs formatting. */
-export function extractFormatFindings(
+function formatClaims(
   summary: RunSummary,
   logs: Map<string, string>,
   root?: string,
-): FormatFinding[] {
+): FormatClaim[] {
   return failedTasks(summary).flatMap((task) => {
     const log = logs.get(task.taskId);
 
     if (log === undefined) return [];
 
-    const findings = (tool: FormatTool, paths: string[]): FormatFinding[] =>
+    const claims = (tool: FormatTool, paths: string[]): FormatClaim[] =>
       paths.flatMap((path) => {
         const file = repoRelativeFile(path, task.directory, root);
 
@@ -149,10 +165,59 @@ export function extractFormatFindings(
       });
 
     return [
-      ...findings('oxfmt', parseOxfmtFiles(log)),
-      ...findings('taplo', parseTaploFiles(log)),
+      ...claims('oxfmt', parseOxfmtFiles(log)),
+      ...claims('taplo', parseTaploFiles(log)),
     ];
   });
+}
+
+/** One finding per file across the session's runs, in first-seen order; a tool keeps its first claim. */
+export function extractFormatFindings(
+  summaries: readonly RunSummary[],
+  logs: Map<string, string>,
+  root?: string,
+): FormatFinding[] {
+  const byFile = new Map<string, Map<FormatTool, FormatSource>>();
+
+  for (const summary of summaries) {
+    for (const { file, ...source } of formatClaims(summary, logs, root)) {
+      const tools = byFile.get(file) ?? new Map<FormatTool, FormatSource>();
+
+      if (!tools.has(source.tool)) tools.set(source.tool, source);
+      byFile.set(file, tools);
+    }
+  }
+
+  return [...byFile].flatMap(([file, tools]) => {
+    const [first, ...rest] = FORMAT_TOOL_ORDER.flatMap(
+      (tool) => tools.get(tool) ?? [],
+    );
+
+    return first === undefined ? [] : [{ file, sources: [first, ...rest] }];
+  });
+}
+
+/** Each source's formatter in order, on the previous one's output; undefined once one fails. */
+export function formatInSequence(
+  input: string,
+  sources: readonly FormatSource[],
+  format: (source: FormatSource, input: string) => string | undefined,
+): string | undefined {
+  let output = input;
+
+  for (const source of sources) {
+    const next = format(source, output);
+
+    if (next === undefined) return undefined;
+    output = next;
+  }
+
+  return output;
+}
+
+/** The tools that claimed the file, e.g. `oxfmt, taplo`. */
+export function formatTools(finding: FormatFinding): string {
+  return finding.sources.map(({ tool }) => tool).join(', ');
 }
 
 const HUNK_HEADER = /^@@ -(\d+)(?:,(\d+))? \+\d+(?:,\d+)? @@/;
@@ -226,9 +291,18 @@ export function patchSection(diff: string, file: string): string | undefined {
   ].join('\n');
 }
 
-/** Every diffed file's section, in finding order; empty when none was diffed. */
+/** Every diffed file's section, in finding order, the first per path; empty when none was diffed. */
 export function formatPatch(findings: readonly FormatFinding[]): string {
-  return findings.flatMap(({ patch }) => patch ?? []).join('');
+  const seen = new Set<string>();
+
+  return findings
+    .flatMap(({ file, patch }) => {
+      if (patch === undefined || seen.has(file)) return [];
+      seen.add(file);
+
+      return [patch];
+    })
+    .join('');
 }
 
 /** On Actions the patch is a run artifact; locally it is already on disk. */
@@ -260,7 +334,7 @@ export function formatAnnotation(finding: FormatFinding): ToolAnnotation {
     if (first.endLine > first.line) properties.endLine = first.endLine;
   }
 
-  properties.title = finding.tool;
+  properties.title = formatTools(finding);
 
   return { level: 'error', message, properties };
 }
@@ -341,13 +415,8 @@ function patchSentences(
   ];
 }
 
-/** The step-summary section: every file and hunk, collapsed, the first few with a diff. */
-export function formattingMarkdown(
-  findings: readonly FormatFinding[],
-  patch?: PatchNote,
-): string {
-  if (findings.length === 0) return '';
-
+/** Every file and hunk, collapsed, the first few with a diff. */
+function formattingList(findings: readonly FormatFinding[]): string[] {
   const out = [
     `<details><summary>Formatting — ${plural(findings.length, 'file needs', 'files need')} <code>${FORMAT_FIX}</code></summary>`,
     '',
@@ -357,7 +426,7 @@ export function formattingMarkdown(
 
   for (const finding of findings) {
     out.push(
-      `- ${inlineCode(cell(finding.file))} (${finding.tool}) — ${hunkList(finding)}`,
+      `- ${inlineCode(cell(finding.file))} (${formatTools(finding)}) — ${hunkList(finding)}`,
     );
 
     if (finding.preview !== undefined && previews < PREVIEW_FILE_LIMIT) {
@@ -369,6 +438,30 @@ export function formattingMarkdown(
   // A preview already ends on the blank line `</details>` needs.
   if (out.at(-1) !== '') out.push('');
   out.push('</details>', '');
+
+  return out;
+}
+
+/** The step-summary section, spent from `budget` after the task sections; past it, one line stands in for the list. */
+export function formattingMarkdown(
+  findings: readonly FormatFinding[],
+  patch?: PatchNote,
+  budget?: SectionBudget,
+): string {
+  if (findings.length === 0) return '';
+
+  const list = formattingList(findings);
+  const bytes = Buffer.byteLength(list.join('\n'), 'utf8');
+  const fits = budget === undefined || bytes <= budget.bytes;
+
+  if (budget !== undefined && fits) budget.bytes -= bytes;
+
+  const out = fits
+    ? list
+    : [
+        `Formatting — ${plural(findings.length, 'file needs', 'files need')} ${inlineCode(FORMAT_FIX)}. The file list is in the step log, over this summary's size budget.`,
+        '',
+      ];
 
   const url = safeArtifactUrl(patch?.url);
 
@@ -393,7 +486,8 @@ export function formattingLines(
   return [
     `── formatting: ${formattingSummary(findings)}`,
     ...findings.map(
-      (finding) => `   ${finding.file} (${finding.tool}): ${hunkList(finding)}`,
+      (finding) =>
+        `   ${finding.file} (${formatTools(finding)}): ${hunkList(finding)}`,
     ),
     ...(patch === undefined
       ? []

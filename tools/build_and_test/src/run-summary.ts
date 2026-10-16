@@ -54,10 +54,12 @@ import { basename, dirname, join, resolve } from 'node:path';
 
 import {
   type FormatFinding,
+  type FormatSource,
   type PatchNote,
   FORMAT_DIFF_LIMIT,
   FORMAT_PATCH,
   extractFormatFindings,
+  formatInSequence,
   formatPatch,
   formattingLines,
   formattingMarkdown,
@@ -73,6 +75,7 @@ import {
   type RunReport,
   type RunSummary,
   type StructuredLogEntry,
+  FAILURE_SECTIONS_MAX_BYTES,
   annotationNote,
   buildReports,
   extractAnnotations,
@@ -228,21 +231,21 @@ async function readStructuredLogs(): Promise<StructuredLogEntry[]> {
   return entries;
 }
 
-/** The formatter's verdict on `finding` from stdin; the checkout is never written. */
-function formatted(finding: FormatFinding): string | undefined {
-  const cwd = resolve(finding.directory || '.');
+/** The formatter's verdict on `input` from stdin; the checkout is never written. */
+function formatted(source: FormatSource, input: string): string | undefined {
+  const cwd = resolve(source.directory || '.');
 
   const [command, args] =
-    finding.tool === 'oxfmt'
+    source.tool === 'oxfmt'
       ? [
           join(cwd, 'node_modules/.bin/oxfmt'),
-          [`--stdin-filepath=${finding.path}`],
+          [`--stdin-filepath=${source.path}`],
         ]
       : ['taplo', ['fmt', '-']];
 
   const result = spawnSync(command, args, {
     cwd,
-    input: readFileSync(finding.file),
+    input,
     encoding: 'utf8',
     maxBuffer: 16 * 1024 * 1024,
     timeout: 30_000,
@@ -276,7 +279,7 @@ function diffAgainst(
   return diff.status === 0 || diff.status === 1 ? diff.stdout : undefined;
 }
 
-/** Each finding's hunks, preview and patch; one that cannot be diffed stays file-level. */
+/** Each file's hunks, preview and patch from one diff of every claiming formatter; one that cannot be diffed stays file-level. */
 function diffFormatting(findings: readonly FormatFinding[]): void {
   if (findings.length === 0) return;
   const dir = mkdtempSync(join(tmpdir(), 'format-diff-'));
@@ -286,7 +289,11 @@ function diffFormatting(findings: readonly FormatFinding[]): void {
       .slice(0, FORMAT_DIFF_LIMIT)
       .entries()) {
       try {
-        const output = formatted(finding);
+        const output = formatInSequence(
+          readFileSync(finding.file, 'utf8'),
+          finding.sources,
+          formatted,
+        );
 
         if (output === undefined) continue;
         const target = join(dir, String(at));
@@ -370,8 +377,11 @@ async function publish(
   // reader came for what broke. The overview follows as context.
   const overview = sessionMarkdown(runs, context);
 
+  // Formatting spends what the task sections leave of one budget.
+  const budget = { bytes: FAILURE_SECTIONS_MAX_BYTES };
+
   const markdown = failed
-    ? `${sessionFailureMarkdown(failures)}${formattingMarkdown(formatting, patch)}\n${overview}`
+    ? `${sessionFailureMarkdown(failures, budget)}${formattingMarkdown(formatting, patch, budget)}\n${overview}`
     : overview;
 
   const file = process.env.GITHUB_STEP_SUMMARY;
@@ -464,8 +474,10 @@ async function main(): Promise<void> {
   // whichever run of the session wrote it.
   for (const run of runs) run.reports = buildReports(run.summary, logs);
 
-  const formatting = runs.flatMap(({ summary }) =>
-    extractFormatFindings(summary, logs, process.cwd()),
+  const formatting = extractFormatFindings(
+    runs.map(({ summary }) => summary),
+    logs,
+    process.cwd(),
   );
 
   diffFormatting(formatting);

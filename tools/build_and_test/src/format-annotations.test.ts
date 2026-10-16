@@ -14,11 +14,14 @@ import { describe, it } from 'node:test';
 
 import {
   type FormatFinding,
+  type FormatSource,
+  type FormatTool,
   FORMAT_FILE_LIMIT,
   PREVIEW_FILE_LIMIT,
   PREVIEW_WIDTH,
   extractFormatFindings,
   formatAnnotation,
+  formatInSequence,
   formatPatch,
   formattingLines,
   formattingMarkdown,
@@ -88,6 +91,18 @@ const taploLog = [
   '[ELIFECYCLE] Command failed with exit code 1.',
 ].join('\n');
 
+// The same run once the taplo mise task set RUST_LOG=warn: no INFO lines, no span prefix.
+const taploQuietLog = [
+  '$ mise run format_check_toml',
+  '[//:format_check_toml] $ mise run taplo fmt --check',
+  '[//:taplo] $ ~/repo/.config/mise/tasks/taplo fmt --check',
+  'ERROR the file is not properly formatted path="/repo/tools/build_and_test/mise.toml"',
+  'ERROR operation failed error=some files were not properly formatted',
+  '[//:taplo] ERROR task failed',
+  '[//:format_check_toml] ERROR task failed',
+  '[ELIFECYCLE] Command failed with exit code 1.',
+].join('\n');
+
 // `git diff --no-index -U0` of the respaced start-xvfb.core.ts against oxfmt's stdout.
 const xvfbDiff = [
   'diff --git a/tools/build_and_test/src/start-xvfb.core.ts b/tmp/0',
@@ -131,8 +146,20 @@ function summary(tasks: SummaryTask[]): RunSummary {
   };
 }
 
-function finding(file: string, hunks?: FormatFinding['hunks']): FormatFinding {
-  return { tool: 'oxfmt', directory: '', path: file, file, hunks };
+function finding(
+  file: string,
+  hunks?: FormatFinding['hunks'],
+  tools: readonly FormatTool[] = ['oxfmt'],
+): FormatFinding {
+  const [first = 'oxfmt', ...rest] = tools;
+
+  const source = (tool: FormatTool): FormatSource => ({
+    tool,
+    directory: '',
+    path: file,
+  });
+
+  return { file, sources: [source(first), ...rest.map(source)], hunks };
 }
 
 function located(at: number): ToolAnnotation {
@@ -162,6 +189,9 @@ describe('formatting findings', () => {
     assert.deepEqual(parseTaploFiles(taploLog), [
       '/repo/tools/build_and_test/mise.toml',
     ]);
+    assert.deepEqual(parseTaploFiles(taploQuietLog), [
+      '/repo/tools/build_and_test/mise.toml',
+    ]);
   });
 
   it('extracts repo-relative files from failed tasks only', () => {
@@ -187,10 +217,10 @@ describe('formatting findings', () => {
     ]);
 
     assert.deepEqual(
-      extractFormatFindings(run, logs, '/repo').map(({ tool, file, path }) => [
-        tool,
+      extractFormatFindings([run], logs, '/repo').map(({ file, sources }) => [
+        sources.map(({ tool }) => tool).join(),
         file,
-        path,
+        sources[0].path,
       ]),
       [
         [
@@ -328,10 +358,11 @@ describe('formatting detail', () => {
       'tools/build_and_test/src/start-xvfb.core.ts',
       parseHunks(xvfbDiff),
     ),
-    {
-      ...finding('tools/build_and_test/mise.toml', [{ line: 51, endLine: 59 }]),
-      tool: 'taplo' as const,
-    },
+    finding(
+      'tools/build_and_test/mise.toml',
+      [{ line: 51, endLine: 59 }],
+      ['taplo'],
+    ),
     finding('README.md'),
     finding(
       'big.ts',
@@ -641,5 +672,217 @@ describe('formatting previews', () => {
       }),
       /^Apply the fix: `gh run download/m,
     );
+  });
+
+  it('spends the shared budget, and stands in one line past it', () => {
+    const findings = [previewed('a.ts'), finding('b.ts')];
+    const patch = { command: 'git apply .turbo/format.patch', files: 1 };
+    const full = formattingMarkdown(findings, patch);
+    const ample = { bytes: 1024 * 1024 };
+
+    assert.equal(formattingMarkdown(findings, patch, ample), full);
+    assert.ok(ample.bytes < 1024 * 1024);
+
+    const spent = { bytes: 10 };
+    const short = formattingMarkdown(findings, patch, spent);
+
+    assert.equal(spent.bytes, 10);
+    assert.doesNotMatch(short, /<details>/);
+    assert.match(
+      short,
+      /^Formatting — 2 files need `pnpm format`\. The file list is in the step log, over this summary's size budget\.$/m,
+    );
+    assert.match(short, /^Apply the fix: `git apply \.turbo\/format\.patch`$/m);
+  });
+});
+
+/** The `diff --git` paths of a patch, in order. */
+function patchPaths(patch: string): string[] {
+  return [...patch.matchAll(/^diff --git a\/(\S+) b\//gm)].map(
+    (match) => match[1] ?? '',
+  );
+}
+
+describe('one finding per file', () => {
+  const xvfb = 'tools/build_and_test/src/start-xvfb.core.ts';
+  const toml = 'tools/build_and_test/mise.toml';
+
+  it('keeps one claim when the same tool names a file twice', () => {
+    // A nested package: the root check and the package check both reach the file.
+    const run = summary([
+      task({}),
+      task({ taskId: '//#format:check:root', directory: '', package: '//' }),
+    ]);
+
+    const logs = new Map([
+      ['@tools/build_and_test#format:check:oxfmt', oxfmtOne],
+      [
+        '//#format:check:root',
+        oxfmtOne.replace('src/start-xvfb.core.ts', xvfb),
+      ],
+    ]);
+
+    const findings = extractFormatFindings([run], logs, '/repo');
+
+    assert.deepEqual(findings, [
+      {
+        file: xvfb,
+        sources: [
+          {
+            tool: 'oxfmt',
+            directory: 'tools/build_and_test',
+            path: 'src/start-xvfb.core.ts',
+          },
+        ],
+      },
+    ]);
+  });
+
+  it('dedupes a file across two summaries of one session', () => {
+    const run = summary([task({})]);
+
+    const logs = new Map([
+      ['@tools/build_and_test#format:check:oxfmt', oxfmtOne],
+    ]);
+
+    assert.deepEqual(
+      extractFormatFindings([run, run], logs, '/repo').map(({ file }) => file),
+      [xvfb],
+    );
+  });
+
+  it('chains oxfmt then taplo on a file both claim, and names both', () => {
+    // taplo first in the run: the order comes from FORMAT_TOOL_ORDER, not the log.
+    const run = summary([
+      task({ taskId: '//#format:check:toml', directory: '', package: '//' }),
+      task({}),
+    ]);
+
+    const logs = new Map([
+      ['//#format:check:toml', taploLog],
+      [
+        '@tools/build_and_test#format:check:oxfmt',
+        oxfmtOne.replace('src/start-xvfb.core.ts', 'mise.toml'),
+      ],
+    ]);
+
+    const [only, ...rest] = extractFormatFindings([run], logs, '/repo');
+
+    assert.equal(rest.length, 0);
+    assert.ok(only);
+    assert.equal(only.file, toml);
+    assert.deepEqual(
+      only.sources.map(({ tool, path }) => [tool, path]),
+      [
+        ['oxfmt', 'mise.toml'],
+        ['taplo', '/repo/tools/build_and_test/mise.toml'],
+      ],
+    );
+    assert.deepEqual(
+      planAnnotations([], {}, [
+        formattingTier([{ ...only, hunks: [{ line: 2, endLine: 2 }] }]),
+      ]).commands,
+      [
+        '::error file=tools/build_and_test/mise.toml,line=2,title=oxfmt%2C taplo::1 hunk needs formatting; run pnpm format',
+      ],
+    );
+    assert.match(
+      formattingMarkdown([only]),
+      /^- `tools\/build_and_test\/mise\.toml` \(oxfmt, taplo\) — lines unknown$/m,
+    );
+
+    const inputs: string[] = [];
+
+    assert.equal(
+      formatInSequence('a', only.sources, ({ tool }, input) => {
+        inputs.push(`${tool}:${input}`);
+
+        return `${input}+${tool}`;
+      }),
+      'a+oxfmt+taplo',
+    );
+    assert.deepEqual(inputs, ['oxfmt:a', 'taplo:a+oxfmt']);
+    assert.equal(
+      formatInSequence('a', only.sources, ({ tool }, input) =>
+        tool === 'oxfmt' ? undefined : input,
+      ),
+      undefined,
+    );
+  });
+
+  it('applies one combined section for two formatters on one file', () => {
+    const repo = mkdtempSync(join(tmpdir(), 'format-chain-'));
+
+    const git = (...args: string[]) =>
+      spawnSync('git', args, { cwd: repo, encoding: 'utf8' });
+
+    try {
+      const before = '[a]\nx   =  1\n\n\n[b]\ny=2\n';
+      const after = '[a]\nx = 1\n\n[b]\ny = 2\n';
+
+      // Stand-ins: each fixes a different part, so both must land.
+      const fakes: Record<FormatTool, (input: string) => string> = {
+        oxfmt: (input) => input.replace('\n\n\n', '\n\n'),
+        taplo: (input) =>
+          input.replace('x   =  1', 'x = 1').replace('y=2', 'y = 2'),
+      };
+
+      const sources = finding('conf.toml', undefined, [
+        'oxfmt',
+        'taplo',
+      ]).sources;
+
+      const output = formatInSequence(before, sources, ({ tool }, input) =>
+        fakes[tool](input),
+      );
+
+      assert.equal(output, after);
+      writeFileSync(join(repo, 'conf.toml'), before);
+      writeFileSync(join(repo, 'formatted'), output ?? '');
+      assert.equal(git('init', '-q').status, 0);
+
+      const diff = git(
+        'diff',
+        '--no-index',
+        '--no-color',
+        '-U3',
+        '--',
+        'conf.toml',
+        'formatted',
+      );
+
+      const section = patchSection(diff.stdout, 'conf.toml');
+
+      const patch = formatPatch([
+        { file: 'conf.toml', sources, patch: section },
+      ]);
+
+      assert.deepEqual(patchPaths(patch), ['conf.toml']);
+      writeFileSync(join(repo, 'format.patch'), patch);
+      const check = git('apply', '--check', 'format.patch');
+
+      assert.equal(check.status, 0, check.stderr);
+      assert.equal(git('apply', 'format.patch').status, 0);
+      assert.equal(readFileSync(join(repo, 'conf.toml'), 'utf8'), after);
+    } finally {
+      rmSync(repo, { recursive: true, force: true });
+    }
+  });
+
+  it('never writes two sections for one path', () => {
+    const section = (file: string, line: string): FormatFinding => ({
+      ...finding(file),
+      patch: patchSection(`@@ -1 +1 @@\n-${line}\n+${line.trim()}\n`, file),
+    });
+
+    const patch = formatPatch([
+      section('a.ts', '  a'),
+      section('b.ts', '  b'),
+      section('a.ts', '   a'),
+    ]);
+
+    assert.deepEqual(patchPaths(patch), ['a.ts', 'b.ts']);
+    assert.ok(patch.includes('-  a\n'));
+    assert.ok(!patch.includes('-   a\n'));
   });
 });
