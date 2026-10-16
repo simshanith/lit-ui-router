@@ -460,22 +460,28 @@ describe.skipIf(!hasNavigationAPI)('traversal interception', () => {
     expect(window.scrollY).toBe(1000);
   });
 
-  it('aborts a traversal superseded by another, then finishes the second once its view is back', async () => {
+  it('settles on the second of two overlapping traversals, never landing the stale one after it', async () => {
     startRouter({ interceptTraverse: true });
     await go('a');
     await go('b');
     await go('c');
+    const succeeded: (string | undefined)[] = [];
+    router.transitionService.onSuccess({}, (transition) => {
+      succeeded.push(transition.to().name);
+    });
 
     const first = window.navigation.back();
     await first.committed;
     const second = window.navigation.back();
 
-    await expect(first.finished).rejects.toMatchObject({ name: 'AbortError' });
+    // The browser aborts the first only if the second starts before its transition settles.
+    await first.finished?.catch(() => undefined);
     await second.committed;
     // WebKit rejects the second traversal's finished as well, though it commits.
     await second.finished?.catch(() => undefined);
     await vi.waitFor(() => expect(router.globals.current.name).toBe('a'));
     expect(window.location.pathname).toBe('/traverse-a');
+    expect([['a'], ['b', 'a']]).toContainEqual(succeeded);
   });
 
   it('finishes a traversal superseded by a router navigation without waiting on the stale transition', async () => {
