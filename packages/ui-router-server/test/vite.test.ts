@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
+import { createServerRouter } from '../src/index.ts';
 import type { ServerRouter, Verdict } from '../src/index.ts';
 import type { ConnectMiddleware } from '../src/connect.ts';
 import { serverRouterPlugin } from '../src/vite.ts';
@@ -118,5 +119,20 @@ describe('serverRouterPlugin', () => {
     });
     assert.equal(req.url, '/app'); // rewritten to the mount shell
     assert.deepEqual(link, ['</app>; rel="canonical"']);
+  });
+
+  it('never reports mount diagnostics; construction does', (t) => {
+    const warn = t.mock.method(console, 'warn', () => {});
+
+    const router = createServerRouter({
+      mounts: { '/app': { routes: [{ name: 'a', url: '/a' }] } },
+    });
+
+    assert.equal(warn.mock.callCount(), 1);
+
+    const plugin = serverRouterPlugin(router);
+    plugin.configureServer(fakeServer());
+    plugin.configurePreviewServer(fakeServer());
+    assert.equal(warn.mock.callCount(), 1);
   });
 });

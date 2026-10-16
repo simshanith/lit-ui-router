@@ -13,6 +13,7 @@
 
 import type { RawParams, StateDeclaration } from '@uirouter/core';
 
+import { warnMountDiagnostics } from './dev-warn.ts';
 import { compileResolver, matchRoute } from './redirects.ts';
 import { createRouterPool, POOL_MAX_IDLE } from './router-pool.ts';
 import type { PooledRouter, RouterPool } from './router-pool.ts';
@@ -86,6 +87,24 @@ export interface MountConfig {
    * CPU counts toward the Worker's startup time limit.
    */
   prewarm?: number;
+  /**
+   * Diagnostic kinds this mount means to trip, turned off for it alone: the
+   * construction warning skips them and {@link diagnoseMounts} omits them,
+   * so development and CI agree. A kind outside {@link MountDiagnosticKind}
+   * throws at construction.
+   *
+   * @example
+   * ```ts
+   * // /api owns its bare base and answers it with a 404 on purpose.
+   * const mounts = {
+   *   '/api': {
+   *     routes: [{ name: 'item', url: '/items/:id' }],
+   *     ignoreDiagnostics: ['bareBaseNotFound'],
+   *   },
+   * } satisfies Record<string, MountConfig>;
+   * ```
+   */
+  ignoreDiagnostics?: readonly MountDiagnosticKind[];
 }
 
 /**
@@ -139,6 +158,19 @@ export type Verdict =
       /** Base of the mount that owned the pathname, when one did. */
       mount?: string;
     };
+
+/** What a {@link MountDiagnostic} reports; new kinds may join the union in a minor release. */
+export type MountDiagnosticKind = 'bareBaseNotFound';
+
+/** One {@link diagnoseMounts} finding. Discriminate on `kind`. */
+export interface MountDiagnostic {
+  /** What the finding reports. */
+  kind: MountDiagnosticKind;
+  /** Base of the mount the finding is about, normalized as in a {@link Verdict}. */
+  mount: string;
+  /** What to fix, in a sentence; the development build's construction warning prints it. */
+  message: string;
+}
 
 /** The compiled resolver {@link createServerRouter} returns: a pathname in, a {@link Verdict} out. */
 export interface ServerRouter {
@@ -270,8 +302,23 @@ const validatePrewarm = (base: string, config: MountConfig): number => {
   return prewarm;
 };
 
+// A record, so adding a kind to the union fails to compile until it is listed here.
+const DIAGNOSTIC_KINDS: Record<MountDiagnosticKind, true> = {
+  bareBaseNotFound: true,
+};
+
+const validateIgnoreDiagnostics = (base: string, config: MountConfig): void => {
+  for (const kind of config.ignoreDiagnostics ?? []) {
+    if (!Object.hasOwn(DIAGNOSTIC_KINDS, kind))
+      throw new Error(
+        `Mount '${base}': ignoreDiagnostics names unknown kind '${kind}' (known: ${Object.keys(DIAGNOSTIC_KINDS).join(', ')})`,
+      );
+  }
+};
+
 const compileMount = ([base, config]: [string, MountConfig]): Mount => {
   validateOtherwise(base, config);
+  validateIgnoreDiagnostics(base, config);
   const prewarm = validatePrewarm(base, config);
 
   return {
@@ -291,17 +338,19 @@ const compileMount = ([base, config]: [string, MountConfig]): Mount => {
   };
 };
 
+// Declaration order, so diagnostics read in the order the table was written.
 const compileMounts = (record: Record<string, MountConfig>): Mount[] => {
-  const mounts = Object.entries(record)
-    .map(compileMount)
-    // The longest matching base owns a pathname outright.
-    .sort((a, b) => b.base.length - a.base.length);
+  const mounts = Object.entries(record).map(compileMount);
 
   if (new Set(mounts.map((mount) => mount.base)).size !== mounts.length)
     throw new Error('Mount bases must be unique');
 
   return mounts;
 };
+
+// The longest matching base owns a pathname outright.
+const byLongestBase = (mounts: Mount[]): Mount[] =>
+  [...mounts].sort((a, b) => b.base.length - a.base.length);
 
 // --- The simulate tier, behind its lazy boundary --------------------------
 
@@ -423,6 +472,47 @@ const matcherVerdict = (mount: Mount, subpath: string): Verdict => {
     : notFoundVerdict(mount);
 };
 
+// The matcher projection stands in for both strategies: they consume the same declaration subset.
+const bareBaseDiagnostic = (mount: Mount): MountDiagnostic | null => {
+  if (mount.base === '/') return null;
+
+  let verdict: Verdict;
+
+  try {
+    verdict = matcherVerdict(mount, '');
+  } catch {
+    // A user param callback threw: no finding, so diagnostics never break construction; requests surface the throw.
+    return null;
+  }
+
+  if (
+    verdict.kind === 'redirect' ||
+    (verdict.kind === 'shell' && verdict.status === undefined)
+  )
+    return null;
+
+  return {
+    kind: 'bareBaseNotFound',
+    mount: mount.base,
+    message:
+      `mount '${mount.base}' answers its bare base ('${mount.base}') with a 404. ` +
+      `Give it a url: '' route, or a redirect rule matching the empty subpath such as { pattern: /^\\/?$/, to: '<state>' }.`,
+  };
+};
+
+// One mount's findings, less the kinds its ignoreDiagnostics turns off.
+const diagnosticsOf = (mount: Mount): MountDiagnostic[] => {
+  const ignored = mount.config.ignoreDiagnostics ?? [];
+
+  return [bareBaseDiagnostic(mount)].filter(
+    (finding): finding is MountDiagnostic =>
+      finding !== null && !ignored.includes(finding.kind),
+  );
+};
+
+// Each createServerRouter router's mounts in declaration order, for diagnoseMounts.
+const compiledMounts = new WeakMap<ServerRouter, Mount[]>();
+
 // Null when the transition failed or timed out: that router may still be mid-transition.
 const replayVerdict = async (
   pooled: PooledRouter,
@@ -487,14 +577,19 @@ const simulateVerdict = async (
  * The longest matching mount base owns a pathname outright — a verdict
  * never falls through to a shorter mount.
  *
- * A bare mount base ('/app', '/app/') resolves the empty subpath, which is
- * notFound unless the mount supplies a root pattern — a rule like
- * `{ pattern: /^\/?$/, to: ... }` or a `url: ''` route.
+ * A bare mount base ('/app', '/app/') resolves the empty subpath, which
+ * 404s unless the mount supplies a root pattern — a rule like
+ * `{ pattern: /^\/?$/, to: ... }` or a `url: ''` route. Construction passes
+ * each {@link diagnoseMounts} finding's message to `console.warn` in the
+ * development build, which the `development` and `node` export conditions
+ * resolve; under `node`, only while `NODE_ENV` is not `production`. The
+ * default build never warns.
  */
 export function createServerRouter(config: {
   mounts: Record<string, MountConfig>;
 }): ServerRouter {
-  const mounts = compileMounts(config.mounts);
+  const declared = compileMounts(config.mounts);
+  const mounts = byLongestBase(declared);
   const loadSimulate = makeSimulateLoader();
 
   // Still lazy for matcher-only configs, but paid at construction when a
@@ -507,7 +602,7 @@ export function createServerRouter(config: {
       .then((simulate) => prewarmPools(simulate, mounts))
       .catch(() => {});
 
-  return {
+  const router: ServerRouter = {
     async resolve(pathnameOrUrl) {
       const pathname = pathnameOf(pathnameOrUrl);
 
@@ -524,4 +619,49 @@ export function createServerRouter(config: {
       return { kind: 'notFound' };
     },
   };
+
+  compiledMounts.set(router, declared);
+
+  // Folded out of dist/*.js, so a bundle that never calls diagnoseMounts drops it.
+  if (import.meta.env?.DEV) warnMountDiagnostics(router, diagnoseMounts);
+
+  return router;
+}
+
+/**
+ * Checks the mounts a router was built with for configurations that compile
+ * but misroute, without logging: the findings the development build of
+ * {@link createServerRouter} warns about, returned in every build.
+ * It reports `'bareBaseNotFound'` for a mount other than '/' whose bare base
+ * (`/app`) answers 404 — `notFound`, or the shell-404 of an `otherwise`
+ * projection. Findings follow the table's declaration order. Assert the
+ * result is empty in a test to catch them in CI.
+ *
+ * @param router - a router from this copy of the package's `createServerRouter`
+ * @throws for any other object, such as a structural fake or a router from a
+ * second copy of the package
+ *
+ * @example
+ * ```ts
+ * import assert from 'node:assert/strict';
+ * import { test } from 'node:test';
+ * import { createServerRouter, diagnoseMounts } from 'ui-router-server';
+ *
+ * // The table the server passes to createServerRouter.
+ * const mounts = { '/app': { routes: [{ name: 'home', url: '' }] } };
+ *
+ * test('every mount serves its bare base', () => {
+ *   assert.deepEqual(diagnoseMounts(createServerRouter({ mounts })), []);
+ * });
+ * ```
+ */
+export function diagnoseMounts(router: ServerRouter): MountDiagnostic[] {
+  const mounts = compiledMounts.get(router);
+
+  if (mounts === undefined)
+    throw new TypeError(
+      'diagnoseMounts: expected a router from createServerRouter in this copy of ui-router-server',
+    );
+
+  return mounts.flatMap(diagnosticsOf);
 }

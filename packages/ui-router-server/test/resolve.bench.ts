@@ -6,7 +6,11 @@ import { Bench } from 'tinybench';
 
 import { createServerRouter } from '../src/index.ts';
 import type { ServerRouter, Verdict } from '../src/index.ts';
+import { stubDev } from './import-meta-env.ts';
 import { config, hitPaths, MISS, REDIRECTS, SIZES } from './route-tables.ts';
+
+// Times what dist/*.js runs: construction diagnostics fire in development only.
+stubDev(false);
 
 const STRATEGIES = ['matcher', 'simulate'] as const;
 

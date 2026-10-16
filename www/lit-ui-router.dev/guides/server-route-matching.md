@@ -560,8 +560,12 @@ routes — through the real package API.
 `createServerRouter` compiles and validates every mount at construction —
 unknown redirect targets, cycles, and a bad `otherwise` target throw at
 startup, never per-request — and the longest matching mount base owns a
-pathname outright. `resolve()` accepts a pathname, an absolute URL string,
-or anything with a `pathname`:
+pathname outright. A mount's bare base (`/app`) resolves the empty subpath,
+so it 404s unless a `url: ''` route or a rule such as
+`{ pattern: /^\/?$/, to: 'welcome' }` claims it. Construction
+[warns in development](./development-builds#server-runtimes) for each mount
+other than `/` that leaves it unclaimed. `resolve()` accepts a
+pathname, an absolute URL string, or anything with a `pathname`:
 
 ```ts
 type Verdict =
@@ -577,6 +581,17 @@ outright, with consumer obligations covered
 [below](#shell-at-404-the-otherwise-projection). `redirect.location` is the
 mount-joined target path, and `notFound.mount` distinguishes "a mount owned
 this path but nothing matched" from "no mount at all".
+
+To catch an unclaimed bare base in CI rather than in a log, assert in a test
+that
+[`diagnoseMounts(router)`](/api/ui-router-server/index/functions/diagnoseMounts)
+returns an empty array for a router built from the table. It returns the
+findings the warning prints, in every build; `apps/sample-app-routes` runs that
+assertion over the tables above.
+
+A mount that means its bare base to 404 turns the finding off with
+[`ignoreDiagnostics`](/api/ui-router-server/index/interfaces/MountConfig#ignorediagnostics);
+the warning and `diagnoseMounts` both skip it for that mount.
 
 ## The worker: verdicts → HTTP
 

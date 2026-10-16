@@ -262,13 +262,30 @@
         "packages/lit-ui-router-effect/src/**/*.ts",
         "packages/lit-ui-router-mobx/src/**/*.ts",
         "packages/lit-ui-router-signals/src/**/*.ts",
-        "packages/lit-ui-router-ssr/src/**/*.ts"
+        "packages/lit-ui-router-ssr/src/**/*.ts",
+        "packages/ui-router-server/src/**/*.ts"
       ],
       "rules": {
         "turbo/no-undeclared-env-vars": [
           "warn",
           {
             "allowList": ["^(DEV|PACKAGE_VERSION)$"]
+          }
+        ]
+      }
+    },
+    {
+      // Every test that reaches #dev-gate's NODE_ENV read sets and restores it.
+      "files": [
+        "packages/ui-router-server/test/index.test.ts",
+        "packages/ui-router-server/test/dev-gate.test.ts",
+        "packages/ui-router-server/test/development-build.test.ts"
+      ],
+      "rules": {
+        "turbo/no-undeclared-env-vars": [
+          "warn",
+          {
+            "allowList": ["^NODE_ENV$"]
           }
         ]
       }
@@ -443,7 +460,8 @@
         "apps/sample-app-lit-e2e/scripts/**/*.test.ts",
         "apps/sample-app-routes/test/**/*.test.ts",
         "www/lit-ui-router.dev/worker/test/**/*.test.ts",
-        "www/lit-ui-router.dev/.vitepress/test/**/*.test.ts"
+        "www/lit-ui-router.dev/.vitepress/test/**/*.test.ts",
+        "www/lit-ui-router.dev/scripts/test/**/*.test.ts"
       ],
       "rules": {
         "typescript/no-floating-promises": "off"

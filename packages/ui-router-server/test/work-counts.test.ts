@@ -15,6 +15,9 @@ import {
   SIZES,
 } from './route-tables.ts';
 
+// The generated tables leave the bare mount base unserved.
+mock.method(console, 'warn', () => {});
+
 // Every generated table holds `size` url routes plus one string when()-rule.
 const compiledPatterns = (size: number) => size + 1;
 

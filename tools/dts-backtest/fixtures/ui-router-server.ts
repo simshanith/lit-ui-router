@@ -2,8 +2,11 @@ import type { StateDeclaration, UIRouter } from '@uirouter/core';
 import type { MiddlewareHandler } from 'hono';
 import {
   createServerRouter,
+  diagnoseMounts,
   mergeSearch,
   type MountConfig,
+  type MountDiagnostic,
+  type MountDiagnosticKind,
   type RedirectRule,
   type RouteDeclaration,
   type ServerRouter,
@@ -91,10 +94,18 @@ const mount: MountConfig = {
   otherwise: { state: 'app.notFound' },
 };
 
+// ignoreDiagnostics takes a readonly list of kinds.
+const quietKinds: readonly MountDiagnosticKind[] = ['bareBaseNotFound'];
+
 const router: ServerRouter = createServerRouter({
   mounts: {
     '/app': mount,
-    '/admin': { routes, strategy: 'simulate', prewarm: 1 },
+    '/admin': {
+      routes,
+      strategy: 'simulate',
+      prewarm: 1,
+      ignoreDiagnostics: quietKinds,
+    },
   },
 });
 
@@ -120,6 +131,17 @@ export async function statusFor(pathname: string): Promise<number> {
   void verdict.mount?.length;
 
   return 404;
+}
+
+// Diagnostics take the router createServerRouter returns.
+export function diagnosticLines(): string[] {
+  const diagnostics: MountDiagnostic[] = diagnoseMounts(router);
+
+  return diagnostics.map(({ kind, mount: base, message }) => {
+    const code: MountDiagnosticKind = kind;
+
+    return `${code} ${base}: ${message}`;
+  });
 }
 
 // Matcher tier: the meta type parameter must flow through compile -> matcher.

@@ -152,7 +152,14 @@ const verdict = await router.resolve('/app/contacts/3');
 // → { kind: 'shell', mount: '/app' }
 ```
 
-The longest matching mount base owns a pathname outright.
+The longest matching mount base owns a pathname outright. A bare mount base
+(`/app`) resolves the empty subpath, which the `/^\/?$/` rule above claims;
+construction [warns in development](/guides/development-builds#server-runtimes)
+for each mount other than `/` that leaves it to 404. To catch that in CI,
+assert in a test that
+[`diagnoseMounts(router)`](/api/ui-router-server/index/functions/diagnoseMounts)
+returns an empty array: it reports, as data and in every build, the findings
+the warning prints.
 
 ## The verdict
 
