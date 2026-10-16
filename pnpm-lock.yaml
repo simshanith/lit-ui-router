@@ -2068,6 +2068,28 @@ importers:
         specifier: 'catalog:'
         version: 7.0.2
 
+  tools/ci-logs:
+    dependencies:
+      '@tools/shared':
+        specifier: catalog:workspace
+        version: link:../shared
+      valibot:
+        specifier: 'catalog:'
+        version: 1.5.0(typescript@7.0.2)
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.19.2
+      oxfmt:
+        specifier: 'catalog:'
+        version: 0.73.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.88.0(oxlint-tsgolint@7.0.2004)
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+
   tools/compat-guards:
     devDependencies:
       '@tools/bootstrap':
