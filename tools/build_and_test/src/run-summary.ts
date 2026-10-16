@@ -48,6 +48,7 @@ import {
   buildReports,
   extractAnnotations,
   guardCommands,
+  logFilePath,
   parseRunSummary,
   planAnnotations,
   sessionFailureMarkdown,
@@ -64,7 +65,7 @@ import { onActions } from '@tools/shared/gha.ts';
 
 const RUNS_DIR = process.env.TURBO_RUNS_DIR ?? '.turbo/runs';
 
-/** Where `turbo --log-file` writes by default: an uncached task's only log. */
+/** Where `turbo --log-file` writes by default: the fallback when a task's own log can't be read. */
 const LOGS_DIR = '.turbo/logs';
 
 const SESSION_FILE =
@@ -162,10 +163,12 @@ async function readLogs(
   const logs = new Map<string, string>();
 
   for (const task of summary.tasks) {
+    const path = logFilePath(task);
+
     const own =
-      task.logFile === undefined
+      path === undefined
         ? undefined
-        : await readFile(task.logFile, 'utf8').catch(() => undefined);
+        : await readFile(path, 'utf8').catch(() => undefined);
 
     const log = own ?? structuredTaskLog(structured, task);
 

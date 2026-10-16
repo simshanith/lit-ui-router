@@ -246,8 +246,8 @@ run = [
 # what the turbo_force_guard leg refuses outside CI.
 # --summarize writes .turbo/runs/<id>.json (gitignored), which the
 # turbo_summary task reports on every run. It changes nothing about what runs.
-# --log-file writes .turbo/logs/<timestamp>.json, the only log an uncached task
-# leaves: turbo writes a task's .turbo/turbo-*.log for the cache alone.
+# --log-file writes .turbo/logs/<timestamp>.json, the reporter's fallback when a
+# task's own .turbo/turbo-*.log can't be read.
 depends = ["turbo_force_guard"]
 description = "Run the pull-request turbo graph (ci without the e2e suites)"
 usage = '''
