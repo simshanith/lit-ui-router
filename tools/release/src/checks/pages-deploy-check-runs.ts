@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { defaultExec } from '@tools/shared/exec.ts';
 import { appendStepSummary, logWarning } from '@tools/shared/gha.ts';
 
-import { ensureGh } from '../lib/gh.ts';
+import { ensureGh } from '@tools/shared/gh.ts';
 import { runCli } from '../lib/run-cli.ts';
 import {
   checkRunApiArgs,

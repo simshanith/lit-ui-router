@@ -17,7 +17,7 @@ import {
 } from './publish-check-runs.core.ts';
 import { defaultExec } from '@tools/shared/exec.ts';
 import { appendStepSummary } from '@tools/shared/gha.ts';
-import { ensureGh } from '../lib/gh.ts';
+import { ensureGh } from '@tools/shared/gh.ts';
 import { failMain } from '../lib/fail-main.ts';
 
 async function main() {

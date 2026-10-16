@@ -1,0 +1,106 @@
+{
+  "id": "3Kkmx0tAQ6m3Ts3NOv1DIID5EEc",
+  "version": "1",
+  "turboVersion": "2.11.8",
+  "execution": {
+    "command": "turbo run ci:main",
+    "repoPath": "",
+    "success": 3,
+    "failed": 0,
+    "cached": 299,
+    "attempted": 302,
+    "startTime": 1792110142598,
+    "endTime": 1792110182341,
+    "exitCode": 0
+  },
+  "tasks": [
+    {
+      "taskId": "@tools/dts-backtest#test:matrix",
+      "task": "test:matrix",
+      "package": "@tools/dts-backtest",
+      "hash": "6525e76ef20c9f4f",
+      "inputs": {},
+      "hashOfExternalDependencies": "16eade62b4132811",
+      "cache": {
+        "local": false,
+        "remote": false,
+        "status": "MISS",
+        "timeSaved": 0
+      },
+      "command": "node run.ts --versions=full",
+      "cliArguments": [],
+      "outputs": null,
+      "excludedOutputs": null,
+      "logFile": "tools/dts-backtest/.turbo/turbo-test$colon$matrix.log",
+      "directory": "tools/dts-backtest",
+      "dependencies": ["lit-ui-router#build"],
+      "dependents": ["@repo/route-snapshot#ci:main"],
+      "with": [],
+      "resolvedTaskDefinition": {},
+      "expandedOutputs": [],
+      "framework": "",
+      "envMode": "strict",
+      "environmentVariables": {
+        "specified": {
+          "env": [],
+          "passThroughEnv": null
+        },
+        "configured": [],
+        "inferred": [],
+        "passthrough": null
+      },
+      "execution": {
+        "startTime": 1792110146404,
+        "endTime": 1792110182339,
+        "exitCode": 0
+      }
+    },
+    {
+      "taskId": "//#format:check:root",
+      "task": "format:check:root",
+      "package": "//",
+      "hash": "b075e1f9f40fc824",
+      "inputs": {},
+      "hashOfExternalDependencies": "488efb31336e133d",
+      "cache": {
+        "local": false,
+        "remote": true,
+        "status": "HIT",
+        "source": "REMOTE",
+        "timeSaved": 0
+      },
+      "command": "oxfmt --check \"*.{md,ts,js,mjs,cjs,json,jsonc,yml,yaml}\" \"!pnpm-lock.yaml\" \"!apps/*/**\" \"!www/**\" \"!examples/**\" \"!packages/**\" \"!tools/**\"",
+      "cliArguments": [],
+      "outputs": null,
+      "excludedOutputs": null,
+      "logFile": ".turbo/turbo-format$colon$check$colon$root.log",
+      "directory": "",
+      "dependencies": [],
+      "dependents": ["@repo/route-snapshot#format:check"],
+      "with": [],
+      "resolvedTaskDefinition": {},
+      "expandedOutputs": [],
+      "framework": "vite",
+      "envMode": "strict",
+      "environmentVariables": {
+        "specified": {
+          "env": [],
+          "passThroughEnv": null
+        },
+        "configured": [],
+        "inferred": [],
+        "passthrough": null
+      },
+      "execution": {
+        "startTime": 1792110143968,
+        "endTime": 1792110144116,
+        "exitCode": 0
+      }
+    }
+  ],
+  "scm": {
+    "type": "git",
+    "sha": "b35db797f2f67702c6c826c89b57f61b297ae2a9",
+    "branch": "main"
+  }
+}

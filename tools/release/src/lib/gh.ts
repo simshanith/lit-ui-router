@@ -7,6 +7,7 @@
 
 import type { Exec } from '@tools/shared/exec.ts';
 import { defaultExec } from '@tools/shared/exec.ts';
+import { ensureGh } from '@tools/shared/gh.ts';
 import { withRetry } from './retry.ts';
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
 
@@ -29,17 +30,6 @@ export function prCreateArgs(base: string, head: string): string[] {
     '--label',
     'release',
   ];
-}
-
-/** Fail fast with guidance when gh is missing from PATH. */
-export async function ensureGh(exec: Exec = defaultExec): Promise<void> {
-  try {
-    await exec('gh', ['--version']);
-  } catch {
-    throw new Error(
-      'gh CLI not found on PATH — install GitHub CLI (https://cli.github.com) or run in CI',
-    );
-  }
 }
 
 /**
