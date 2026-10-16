@@ -242,48 +242,30 @@ needed locally.
 
 Every turbo step runs with `TURBO_OUTPUT_LOGS=errors-only`, so
 `gh run view <run-id> --log` holds no output from a passing task, warnings
-included. That output is in the task-log artifacts: `turbo-task-logs` from
-`run`, `turbo-task-logs-<group>` from each `e2e` job, and
-`turbo-task-logs-bench` and `turbo-task-logs-a11y` from the `acceptance` jobs.
-Each has a `turbo-run-summaries` counterpart with the same suffix, kept longer;
-`retention-days` in [`build-test-run.yml`](../.github/workflows/build-test-run.yml)
-has both. The other e2e artifacts are listed under
-[Reproducing a CI failure](#reproducing-a-ci-failure).
+included. That output is in each job's task-log artifacts, kept beside the run
+summaries that say which tasks executed; `retention-days` in
+[`build-test-run.yml`](../.github/workflows/build-test-run.yml) has both.
 
-Download each artifact into its own empty directory:
-
-```bash
-gh run download <run-id> -n turbo-task-logs --dir <empty-dir>
-```
-
-Each task has its own file, `<package>/.turbo/turbo-<task>.log` with `:` written
-as `$colon$`. A job that runs several suites interleaves them in its stream, but
-each suite keeps its own log. The logs keep their ANSI colors, which wrap words
-without splitting them, so search them as they are and page the matches with
-`less -R`:
+[`tools/ci-logs`](../tools/ci-logs/README.md) writes a run's task logs to one
+file, each executed task's log beside the same task's log from a baseline run.
+Take the baseline from a recent green `main` run of the same workflow, and
+write the file outside the checkout:
 
 ```bash
-grep -rinE --include='*.log' 'warn|deprecat|error' <empty-dir> > matches.log
-less -R matches.log
-```
-
-Group the matches by message rather than reading them line by line. Test names
-that mention warnings and `0 warnings` summary lines match too.
-
-A cache hit replays the log of the run that filled the cache, from another
-runner and possibly another commit: its browser banner, timings and warnings
-describe that run. The run summary says which tasks ran. `.cache.status` is
-`MISS` for an executed task and `HIT` for a replay, with `.cache.source` naming
-`LOCAL` or `REMOTE`:
-
-```bash
-jq -r '.tasks[] | "\(.taskId) \(.cache.status) \(.cache.source // "-")"' <summaries-dir>/*.json
+tools/ci-logs/src/ci-logs.ts <run-id> --baseline <main-run-id> --out <file>
 ```
 
 A keyword search finds only output that names itself. To look for anything
-unusual, read each executed task's log in full beside the same task's log from a
-recent green `main` run. The logs are short: one Build and Test run's task logs
-total about 11,000 lines, most of them replays.
+unusual, read every executed task's log in full against its baseline. A cache
+hit replays the log of the run that filled the cache, from another runner and
+possibly another commit, so its browser banner, timings and warnings describe
+that run; the tool lists replays by name only. A `task logs missing` count
+above zero means a task's log never reached the artifact.
+
+Without the tool, `gh run download <run-id> -n <artifact> --dir <empty-dir>`
+fetches one artifact. Each task log is `<package>/.turbo/turbo-<task>.log`,
+with `:` written as `$colon$`; rg skips the hidden `.turbo/` directories unless
+given `--hidden`.
 
 In an `e2e` job, the `E2E` step's duration is the quick tell: seconds for a
 replay, a minute or more for a suite that ran.
