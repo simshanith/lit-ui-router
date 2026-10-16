@@ -234,6 +234,8 @@ jobs:
         run: mise run //tools/build_and_test:turbo_summary
         env:
           BUILD_OUTCOME: ${{ inputs.mainGraph && steps.build_main.outcome || steps.build.outcome }}
+          # Presence only: the remote is off by design without a token (Dependabot, forks).
+          TURBO_SUMMARY_TOKEN_SET: ${{ secrets.TURBO_TOKEN != '' }}
           # Empty when the upload found nothing; the report then omits the link.
           TURBO_SUMMARY_ARTIFACT_URL: ${{ steps.run_summaries.outputs.artifact-url }}
           TURBO_LOGS_ARTIFACT_URL: ${{ steps.task_logs.outputs.artifact-url }}
@@ -398,6 +400,8 @@ jobs:
         run: mise run //tools/build_and_test:turbo_summary
         env:
           BUILD_OUTCOME: ${{ steps.e2e.outcome }}
+          # Presence only: the remote is off by design without a token (Dependabot, forks).
+          TURBO_SUMMARY_TOKEN_SET: ${{ secrets.TURBO_TOKEN != '' }}
           TURBO_SUMMARY_ARTIFACT_URL: ${{ steps.run_summaries.outputs.artifact-url }}
           TURBO_LOGS_ARTIFACT_URL: ${{ steps.task_logs.outputs.artifact-url }}
           # Empty on a green run or when no test took a screenshot.

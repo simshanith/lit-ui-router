@@ -235,6 +235,11 @@ vitest's text reporter prints an `Uncovered Line #s` column, and the package's
 that did run shows there, not in the line column). `ui-router-server` runs
 `node --test` instead, which prints an `uncovered lines` column and writes
 `coverage/lcov.info` rewritten to repo-relative paths by `rebase-lcov`.
+Under `node --test --experimental-test-coverage`, a `node:module` load hook
+(`registerHooks`, loaded with `--import`) that rewrites a module's source must
+append to it, never prepend: V8 records coverage as offsets into the loaded
+text and node maps them onto the file on disk, so a prefix moves every hit,
+miss and branch to a neighbouring line in each module it rewrites.
 `lit-ui-router-effect` also uploads `coverage-effect3/` from
 `test:effect3-compat`, where its effect 3 branches run; Codecov merges the two.
 

@@ -48,6 +48,8 @@ export interface SummaryTask {
   task: string;
   package: string;
   directory: string;
+  /** turbo's cache key for the task; two runs that share it share one cache entry. */
+  hash?: string;
   command: string;
   /** Repo-root-relative; written as the task runs, so it survives the failure. Not on every task: read {@link logFilePath}. */
   logFile?: string;
@@ -377,33 +379,68 @@ export function cacheTally(summary: RunSummary): CacheTally {
 }
 
 /**
+ * Non-remote hits that no earlier run of the session explains.
+ *
+ * A run's MISS writes its task's entry to `.turbo`, so a later run in the same
+ * job that hits that hash locally is reading the job's own output. Runs are
+ * taken in start order; a hit with no hash can't be matched and counts.
+ */
+export function unexplainedLocalHits(runs: readonly RunSummary[]): number {
+  const written = new Set<string>();
+  let unexplained = 0;
+
+  const ordered = [...runs].sort(
+    (a, b) => a.execution.startTime - b.execution.startTime,
+  );
+
+  for (const run of ordered) {
+    for (const task of run.tasks) {
+      if (
+        wasCacheHit(task) &&
+        task.cache?.source !== 'REMOTE' &&
+        (task.hash === undefined || !written.has(task.hash))
+      ) {
+        unexplained += 1;
+      }
+    }
+
+    for (const task of run.tasks) {
+      if (!wasCacheHit(task) && task.hash !== undefined) written.add(task.hash);
+    }
+  }
+
+  return unexplained;
+}
+
+/**
  * The remote cache did nothing, across every run of the job.
  *
  * A job fact, not a run fact: turbo serves local before remote and the job's
- * first run fills `.turbo`, so later runs in the same job legitimately hit
- * local only. Only meaningful on Actions, where no `.turbo` is restored — the
- * workflow caches browser binaries and nothing else — so the job's first hit
- * has to come from the remote. On a developer's machine local hits are the
- * whole point, which is why this is gated rather than merely worded for CI.
+ * runs fill `.turbo` as they miss, so a later run that hits what an earlier
+ * one wrote is health. Only meaningful on Actions, where no `.turbo` is
+ * restored — the workflow caches browser binaries and nothing else — so a
+ * local hit that no earlier run in the job explains has to have come through
+ * the remote, and a remote that served nothing is the fault. On a developer's
+ * machine local hits are the whole point, which is why this is gated rather
+ * than merely worded for CI.
  *
- * Silent when nothing hit at all: a change that invalidates the whole graph is
- * the ordinary reason for that, and a note that fires on legitimate runs is a
- * note people learn to skip.
+ * Silent without a token: Dependabot and fork PR runs get no `TURBO_TOKEN`, so
+ * the remote is off by design there and every hit is local. Silent too when
+ * nothing hit at all: a change that invalidates the whole graph is the
+ * ordinary reason for that. A note that fires on legitimate runs is a note
+ * people learn to skip.
  */
 export function remoteCacheAnomaly(
   runs: readonly RunSummary[],
   onActions: boolean,
+  tokenSet = true,
 ): string | undefined {
-  let hit = 0;
-  let remote = 0;
+  if (!onActions || !tokenSet) return undefined;
 
-  for (const run of runs) {
-    const tally = cacheTally(run);
-    hit += tally.hit;
-    remote += tally.remote;
-  }
+  if (runs.some((run) => cacheTally(run).remote > 0)) return undefined;
+  const hit = unexplainedLocalHits(runs);
 
-  if (!onActions || hit === 0 || remote > 0) return undefined;
+  if (hit === 0) return undefined;
   const across = runs.length === 1 ? '' : ` across ${runs.length} turbo runs`;
 
   return `${hit} cache hit${hit === 1 ? '' : 's'}${across}, none from the remote cache — CI restores no local .turbo, so the remote cache is likely misconfigured (check TURBO_TOKEN, TURBO_API, TURBO_TEAM and the signature key)`;
@@ -926,6 +963,8 @@ function overviewHeadline(summary: RunSummary): string {
 export interface OverviewContext {
   /** `GITHUB_ACTIONS`; gates the notes that only mean something on a runner. */
   onActions?: boolean;
+  /** Whether the job had a `TURBO_TOKEN`; without one the remote is off by design. Assumed when absent. */
+  remoteToken?: boolean;
   /** The uploaded `--summarize` JSONs — the uncapped copy of this report. */
   artifactUrl?: string;
   /**
@@ -1068,10 +1107,14 @@ function overviewNotes(summary: RunSummary): string[] {
 }
 
 /** The job's own notes, rendered once by both session lanes so they cannot drift. */
-function jobNotes(runs: readonly SessionRun[], onActions: boolean): string[] {
+function jobNotes(
+  runs: readonly SessionRun[],
+  context: OverviewContext,
+): string[] {
   const anomaly = remoteCacheAnomaly(
     runs.map(({ summary }) => summary),
-    onActions,
+    context.onActions ?? false,
+    context.remoteToken ?? true,
   );
 
   return anomaly === undefined ? [] : [anomaly];
@@ -1214,7 +1257,7 @@ export function sessionMarkdown(
     out.push(...block);
   }
 
-  for (const note of jobNotes(runs, context.onActions ?? false)) {
+  for (const note of jobNotes(runs, context)) {
     out.push('> [!WARNING]', `> ${note}`, '');
   }
 
@@ -1351,8 +1394,7 @@ export function sessionLines(
     lines.push(...runBlockLines(summary));
   }
 
-  for (const note of jobNotes(runs, context.onActions ?? false))
-    lines.push(`   note: ${note}`);
+  for (const note of jobNotes(runs, context)) lines.push(`   note: ${note}`);
   lines.push(...footerLines(context));
 
   return lines;

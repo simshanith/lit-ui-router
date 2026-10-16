@@ -380,6 +380,8 @@ const config = {
         _render: renderForSearch,
       },
     },
+    // A link's accessible name must contain its visible text (WCAG 2.5.3).
+    notFound: { linkLabel: 'Take me home' },
     nav: [
       { text: 'Home', link: '/' },
       {

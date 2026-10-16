@@ -700,6 +700,64 @@ describe('remoteCacheAnomaly', () => {
       /^2 cache hits across 2 turbo runs, none from the remote/,
     );
   });
+
+  const local = (taskId: string, hash: string) =>
+    hit({
+      taskId,
+      hash,
+      cache: { status: 'HIT', source: 'LOCAL', timeSaved: 1 },
+    });
+
+  const hashes = ['h1', 'h2', 'h3'];
+
+  // Acceptance run 38954534598: the docs build misses every task, then the
+  // suite hits each of them locally from the entries that build wrote.
+  const build = () =>
+    summary(
+      hashes.map((hash) => ran(`build-${hash}`, 10, { hash })),
+      0,
+      { command: 'turbo run build --filter=@www/*', startTime: 1_000 },
+    );
+
+  const suite = () =>
+    summary(
+      hashes.map((hash) => local(`build-${hash}`, hash)),
+      1,
+      { command: 'turbo run test:e2e:a11y', startTime: 2_000 },
+    );
+
+  it('stays quiet when every local hit is an earlier run’s miss', () => {
+    assert.equal(remoteCacheAnomaly([build(), suite()], true), undefined);
+  });
+
+  it('orders the runs by start time, not by argument order', () => {
+    assert.equal(remoteCacheAnomaly([suite(), build()], true), undefined);
+  });
+
+  it('counts only the local hits no earlier miss explains', () => {
+    const extra = summary([...suite().tasks, local('other', 'h9')], 1, {
+      startTime: 2_000,
+    });
+
+    assert.match(
+      remoteCacheAnomaly([build(), extra], true) ?? '',
+      /^1 cache hit across 2 turbo runs, none from the remote/,
+    );
+  });
+
+  it('warns on a first-run local hit when a token is set', () => {
+    assert.match(
+      remoteCacheAnomaly([summary([local('a', 'h1')])], true, true) ?? '',
+      /remote cache is likely misconfigured/,
+    );
+  });
+
+  it('stays quiet without a token, where the remote is off by design', () => {
+    assert.equal(
+      remoteCacheAnomaly([summary([local('a', 'h1')])], true, false),
+      undefined,
+    );
+  });
 });
 
 describe('slowestTasks', () => {
@@ -1278,6 +1336,16 @@ describe('sessionMarkdown', () => {
       md,
       /> 2 cache hits across 2 turbo runs, none from the remote/,
     );
+  });
+
+  it('says nothing about misconfiguration when the job had no token', () => {
+    const md = sessionMarkdown([srun(localHitRun()), srun(localHitRun())], {
+      onActions: true,
+      remoteToken: false,
+    });
+
+    assert.ok(!md.includes('misconfigured'));
+    assert.ok(!md.includes('TURBO_TOKEN'));
   });
 });
 
