@@ -7,7 +7,7 @@ export const TASK_LOGS = 'turbo-task-logs';
 export const RUN_SUMMARIES = 'turbo-run-summaries';
 
 /** The group the unsuffixed artifacts belong to: the `run` job's. */
-export const RUN_GROUP: number = 'run';
+export const RUN_GROUP = 'run';
 
 export const RunInfoSchema = v.object({
   databaseId: v.number(),
