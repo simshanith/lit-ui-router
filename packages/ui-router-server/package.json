@@ -27,6 +27,7 @@
   "imports": {
     "#dev-gate": {
       "types": "./src/dev-gate.ts",
+      "production": "./dist/dev-gate.js",
       "deno": "./dist/dev-gate.js",
       "node": "./dist/dev-gate.node.js",
       "default": "./dist/dev-gate.js"
@@ -36,6 +37,7 @@
     ".": {
       "types": "./dist/index.d.ts",
       "development": "./dist/development/index.js",
+      "production": "./dist/index.js",
       "deno": "./dist/index.js",
       "node": "./dist/development/index.js",
       "default": "./dist/index.js"
@@ -43,6 +45,7 @@
     "./connect": {
       "types": "./dist/connect.d.ts",
       "development": "./dist/development/connect.js",
+      "production": "./dist/connect.js",
       "deno": "./dist/connect.js",
       "node": "./dist/development/connect.js",
       "default": "./dist/connect.js"
@@ -51,6 +54,7 @@
     "./fetch": {
       "types": "./dist/fetch.d.ts",
       "development": "./dist/development/fetch.js",
+      "production": "./dist/fetch.js",
       "deno": "./dist/fetch.js",
       "node": "./dist/development/fetch.js",
       "default": "./dist/fetch.js"
@@ -58,6 +62,7 @@
     "./hono": {
       "types": "./dist/hono.d.ts",
       "development": "./dist/development/hono.js",
+      "production": "./dist/hono.js",
       "deno": "./dist/hono.js",
       "node": "./dist/development/hono.js",
       "default": "./dist/hono.js"
@@ -65,6 +70,7 @@
     "./location": {
       "types": "./dist/location.d.ts",
       "development": "./dist/development/location.js",
+      "production": "./dist/location.js",
       "deno": "./dist/location.js",
       "node": "./dist/development/location.js",
       "default": "./dist/location.js"
@@ -72,6 +78,7 @@
     "./matcher": {
       "types": "./dist/url-matcher.d.ts",
       "development": "./dist/development/url-matcher.js",
+      "production": "./dist/url-matcher.js",
       "deno": "./dist/url-matcher.js",
       "node": "./dist/development/url-matcher.js",
       "default": "./dist/url-matcher.js"
@@ -80,6 +87,7 @@
     "./redirects": {
       "types": "./dist/redirects.d.ts",
       "development": "./dist/development/redirects.js",
+      "production": "./dist/redirects.js",
       "deno": "./dist/redirects.js",
       "node": "./dist/development/redirects.js",
       "default": "./dist/redirects.js"
@@ -87,6 +95,7 @@
     "./simulate": {
       "types": "./dist/simulate.d.ts",
       "development": "./dist/development/simulate.js",
+      "production": "./dist/simulate.js",
       "deno": "./dist/simulate.js",
       "node": "./dist/development/simulate.js",
       "default": "./dist/simulate.js"
@@ -94,6 +103,7 @@
     "./url-config": {
       "types": "./dist/url-config.d.ts",
       "development": "./dist/development/url-config.js",
+      "production": "./dist/url-config.js",
       "deno": "./dist/url-config.js",
       "node": "./dist/development/url-config.js",
       "default": "./dist/url-config.js"
@@ -101,13 +111,14 @@
     "./vite": {
       "types": "./dist/vite.d.ts",
       "development": "./dist/development/vite.js",
+      "production": "./dist/vite.js",
       "deno": "./dist/vite.js",
       "node": "./dist/development/vite.js",
       "default": "./dist/vite.js"
     }
   },
   "scripts": {
-    "bench": "node test/resolve.bench.ts",
+    "bench": "node --import ./test/import-meta-env.ts test/resolve.bench.ts",
     "build:js": "oxc-emit-js --development",
     "build:types": "oxc-emit-dts",
     "changelog": "release-it --changelog --git.tagMatch=\"ui-router-server@[0-9]*.[0-9]*.[0-9]*\"",

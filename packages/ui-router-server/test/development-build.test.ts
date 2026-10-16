@@ -7,9 +7,9 @@ import { fileURLToPath } from 'node:url';
 import type { MountConfig } from '../src/index.ts';
 
 // The two emits build:js writes, imported as consumers resolve them: the
-// `development` and `node` conditions pick dist/development, the default picks
-// dist. Their #dev-gate goes through package.json#imports, so under this node
-// run it reads NODE_ENV.
+// `development` and `node` conditions pick dist/development, `production` and
+// the default pick dist. Their #dev-gate goes through package.json#imports, so
+// under this node run it reads NODE_ENV.
 type Entry = typeof import('../src/index.ts');
 
 const load = async <T>(path: string): Promise<T> =>
