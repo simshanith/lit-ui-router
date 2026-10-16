@@ -106,6 +106,12 @@ const logLines = (source: RunSource, tasks: Iterable<Task>): number => {
   return lines;
 };
 
+const replayedBlock = (task: Task, source: RunSource): string[] => [
+  '',
+  `## ${task.group} ${task.taskId} (replayed; describes the run that filled the cache)`,
+  ...logBlock(logOf(source, task)),
+];
+
 function replayLine(task: Task, source: RunSource): string {
   const result = logOf(source, task);
   const name = `${task.group} ${task.taskId}`;
@@ -121,8 +127,17 @@ const baselineTasks = (
     (task) => baseline.tasks.get(taskKey(task.group, task.taskId)) ?? [],
   );
 
-/** The whole report: header, executed logs (each beside its baseline), replay names, counts. */
-export function render(target: RunSource, baseline?: RunSource): string {
+export interface RenderOptions {
+  /** Inline replayed tasks' logs instead of listing them by name. */
+  replayed?: boolean;
+}
+
+/** The whole report: header, executed logs (each beside its baseline), replays, counts. */
+export function render(
+  target: RunSource,
+  baseline?: RunSource,
+  options: RenderOptions = {},
+): string {
   const tasks = [...target.tasks.values()].sort(compareTasks);
   const executed = tasks.filter((task) => task.executed);
   const replayed = tasks.filter((task) => !task.executed);
@@ -143,8 +158,9 @@ export function render(target: RunSource, baseline?: RunSource): string {
     ...executed.flatMap((task) => executedBlock(task, target, baseline)),
     '',
     `# REPLAYED (${replayed.length})`,
-    '',
-    ...replayed.map((task) => replayLine(task, target)),
+    ...(options.replayed === true
+      ? replayed.flatMap((task) => replayedBlock(task, target))
+      : ['', ...replayed.map((task) => replayLine(task, target))]),
   ];
 
   const counts = (out: number): string[] => [
