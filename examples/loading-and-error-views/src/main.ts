@@ -246,7 +246,7 @@ export class AppShell extends LitElement {
     nav.tabs {
       margin-block: 0 12px;
     }
-    main {
+    .region {
       min-height: 9em;
       padding: 12px 16px;
       border: 1px solid light-dark(#ccc, #444);
@@ -366,10 +366,10 @@ export class AppShell extends LitElement {
           Fail requests
         </label>
       </p>
-      <main aria-busy=${this.pending ? 'true' : nothing}>
+      <div class="region" aria-busy=${this.pending ? 'true' : nothing}>
         ${this.showPending ? pendingView() : nothing}
         <ui-view ?hidden=${this.showPending}></ui-view>
-      </main>
+      </div>
     `;
   }
 }
