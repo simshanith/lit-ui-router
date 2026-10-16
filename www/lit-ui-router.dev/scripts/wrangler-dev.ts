@@ -27,6 +27,10 @@ const main = (): void => {
   // wrangler reads wrangler.jsonc and .env from cwd, so any caller gets this package's
   process.chdir(join(import.meta.dirname, '..'));
 
+  // wrangler's own default list plus `development`; `.env` would leak it into deploy
+  process.env.WRANGLER_BUILD_CONDITIONS ??=
+    'development,workerd,worker,browser';
+
   // argv[0] is ours to set; env defaults to process.env
   execve('wrangler-dev', process.execPath, [
     process.execPath,
