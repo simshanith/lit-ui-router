@@ -1902,15 +1902,16 @@ resolved →
 
 ## Sheet 14i — THE SURVEY OFFICE — INTERACTIVE
 
-- **file** `diagrams/generator/pipeline-graph.mjs` · **id** `pipeline-interactive` · **current rev** A
+- **file** `diagrams/generator/pipeline-graph.mjs` · **id** `pipeline-interactive` · **current rev** B
 - **subject line / lead** (resolved, present-state — not history):
 
 > THE CENSUS PIPELINE AS A LIVE GRAPH · 69 NODES · 95 EDGES · 17 WRITES / 48 READS / 30 IMPORTS
 
-_No REV clauses, historical paragraphs or rev-bearing callouts: this plate has only ever been issued at its current revision._
+_No REV clauses in the copy: the sub carries the graph size only. REV B (2026-10-15) adds the RINGS control; its record is the dated line under Record notes._
 
 **Record notes**
 
+- 2026-10-15, REV B: the lane gains RINGS, a toggle beside FIT. The user: "https://atlas.lit-ui-router.dev/sheet/A2i should have a button that makes it spiral like the thumbnail". The cover card had always been shot through cytoscape's `concentric` layout (`generator/thumbs.mjs`, the lane rung out in rings around the master plate by degree) while the page drew the preset tiers alone. RINGS re-lays the visible nodes in those rings, animated 600 ms ease-out unless the reader prefers reduced motion, hides the band heads (a band names a row; rings have none), and fits; pressed again it returns every node to the preset position it was drawn at (TIERS). The tools ledger re-rings when toggled under RINGS. The button carries `aria-pressed`, and the shared lane chrome (`generator/lane-chrome.mjs`) draws a pressed control ink on paper. The glyph is Lucide `orbit`, added to the icon table. The idle panel and the basis strip name the control. The retired basis wording: "drawn with cytoscape preset — no physics."
 - 2026-10-13, cabinet refresh at origin/main @ c1b759a4: the lane re-drawn from the re-introspected pipeline at the new ref; its head reads 76 NODES · 112 EDGES · 18 WRITES / 62 READS / 32 IMPORTS (was 109 / 59).
 - 2026-10-12, cabinet refresh at origin/main @ eb72c568: the lane re-drawn from the re-introspected pipeline at the new ref.
 - 2026-10-11, cabinet refresh at origin/main @ bd10638a: the lane re-drawn from the re-introspected pipeline at the new ref.

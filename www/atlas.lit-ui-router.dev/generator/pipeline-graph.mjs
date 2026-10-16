@@ -7,7 +7,9 @@
 // (basis -> stations -> plates -> sheets), plate rows are pinned to their
 // writer's row so every «writes» edge is horizontal, and sheets are ordered by
 // the barycentre of the plates they read.  cytoscape draws it with `preset` —
-// no physics, so the picture is the same on every load.
+// no physics, so the picture is the same on every load.  RINGS re-lays the
+// same nodes in cytoscape's concentric rings by degree, the cover card's view
+// (generator/thumbs.mjs), and TIERS is the way back.
 import { ATLAS } from './census-atlas.mjs';
 import { PROJECT_MARK, articleTitle } from './chrome.mjs';
 import { LANE_KEYS_JS, LANE_TOUCH_JS, PLATE_FOCUS_JS } from './focus.mjs';
@@ -16,7 +18,7 @@ import { basisStrip, laneCss, laneHints, LANE_TOK_JS } from './lane-chrome.mjs';
 import { SPRITES, spriteSvg } from './sprites.mjs';
 
 export const CYTOSCAPE_URL = 'https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.31.0/cytoscape.min.js';
-export const REV = 'A';
+export const REV = 'B';
 
 const A = ATLAS;
 const byId = new Map(A.nodes.map((nd) => [nd.id, nd]));
@@ -265,15 +267,42 @@ ${LANE_TOK_JS}
 
   function showTools(on) {
     cy.elements('.tool').style('display', on ? 'element' : 'none');
+    if (ringed) { relayout(true); return; }
     cy.fit(cy.elements(':visible'), 34);
   }
+
+  // RINGS: the same office rung out around the master plate by degree, the
+  // cover card's view; TIERS is the preset the page was drawn with
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var tiers = {};
+  cy.nodes().forEach(function (n) { tiers[n.id()] = { x: n.position('x'), y: n.position('y') }; });
+  var ringed = false;
+  var rings = document.getElementById('pg-rings');
+  function relayout(on) {
+    ringed = on;
+    rings.setAttribute('aria-pressed', on ? 'true' : 'false');
+    cy.stop(true);
+    // a band head names a row; rings have none
+    cy.nodes('.band').style('display', on ? 'none' : 'element');
+    // the whole graph is laid, as the card lays it: a hidden tool's import edges still count toward a station's degree
+    var opts = on
+      ? { name: 'concentric', minNodeSpacing: 18 }
+      : { name: 'preset', positions: function (n) { return tiers[n.id()]; } };
+    var lay = cy.layout(Object.assign(opts, { fit: false, animate: !reduced, animationDuration: 600, animationEasing: 'ease-out' }));
+    lay.one('layoutstop', function () {
+      cy.animate({ fit: { eles: cy.elements(':visible'), padding: 34 }, duration: reduced ? 0 : 260 });
+    });
+    lay.run();
+  }
+  rings.addEventListener('click', function () { relayout(!ringed); });
   showTools(false);
 
   var info = document.getElementById('pg-info');
   var IDLE = '<h3>' + L.glyphs.rest + 'THE SURVEY OFFICE</h3><p class="hint">Hover or tap any building to light its neighbourhood: '
     + 'what wrote it, what reads it, what it imports. The wide accent fan leaving the master plate is the '
     + 'one-measurement-many-views claim, drawn. A tap pins a building and the link in the address bar carries '
-    + 'the pin; tap it again or the ground to clear it.</p>';
+    + 'the pin; tap it again or the ground to clear it. RINGS rungs the same office out around the master '
+    + 'plate, the cover card\\'s view; press it again for the tiers.</p>';
   function field(k, v) { return '<span class="f">' + k + '</span>' + v; }
   function list(k, arr) {
     if (!arr.length) return '';
@@ -323,7 +352,6 @@ ${LANE_TOK_JS}
     atlasFocusPush(stage, pinned ? pinned.data('key') : null);
   }
   // a url or keyboard pin brings its neighbourhood in, held between 0.7 and 1.2; a clear returns to the whole survey
-  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   // centre the hood at a zoom it fits, keep the pin 64px inside, and never show more than 48px of paper past the graph
   function frameOn(pin, hood, all, floor) {
     var W = cy.width(), H = cy.height(), bb = hood.boundingBox(), g = all.boundingBox();
@@ -428,6 +456,7 @@ export function pipelineSection() {
     <div class="pg-ctl">
       <span id="pg-hint" class="hints">${laneHints(`<span class="nw">${glyph('move')}DRAG TO PAN</span> <span class="nw">${glyph('mouse')}SCROLL TO ZOOM</span>`)}</span>
       <label><input type="checkbox" id="pg-tools"> <span>${glyph('wrench')}TOOLS LEDGER</span></label>
+      <button type="button" id="pg-rings" aria-pressed="false">${glyph('orbit')}RINGS</button>
       <button type="button" id="pg-fit">${glyph('scan')}FIT</button>
     </div>
   </div>
@@ -435,7 +464,7 @@ export function pipelineSection() {
     <div class="pg-cy" id="pg-cy" role="application" tabindex="0" aria-label="Interactive flow graph of the census pipeline: archive basis, ${A.stats.probes} probe stations, ${A.stats.plates} filed plates and ${A.stats.drawings} drawings. With the graph focused, the arrow keys step the pin through the buildings and Escape clears it."></div>
     <aside class="pg-info" id="pg-info"></aside>
   </div>
-  ${basisStrip('pg', `all ${A.stats.plates} plates pinned to ${A.ref} @ ${A.sha} · commit <span class="nw">${A.commitDate}</span> · ${A.stats.nodes} nodes and ${A.stats.edges} edges introspected from <code>www/atlas.lit-ui-router.dev/generator/</code> and <code>www/atlas.lit-ui-router.dev/data/</code> by <code>generator/census-atlas.mjs</code> and embedded here verbatim; layout ranked from those edges, drawn with cytoscape <code>preset</code> — no physics. The archive basis is the one node the census does not contain: it is drawn from the plates' own shared pin.`)}
+  ${basisStrip('pg', `all ${A.stats.plates} plates pinned to ${A.ref} @ ${A.sha} · commit <span class="nw">${A.commitDate}</span> · ${A.stats.nodes} nodes and ${A.stats.edges} edges introspected from <code>www/atlas.lit-ui-router.dev/generator/</code> and <code>www/atlas.lit-ui-router.dev/data/</code> by <code>generator/census-atlas.mjs</code> and embedded here verbatim; layout ranked from those edges, drawn with cytoscape <code>preset</code> — no physics; RINGS re-lays the same nodes in cytoscape's <code>concentric</code> rings by degree, the cover card's own view. The archive basis is the one node the census does not contain: it is drawn from the plates' own shared pin.`)}
 </section>
 <script type="application/json" id="pg-atlas">${json({ nodes: A.nodes, edges: A.edges })}</script>
 <script type="application/json" id="pg-layout">${json(LAYOUT)}</script>

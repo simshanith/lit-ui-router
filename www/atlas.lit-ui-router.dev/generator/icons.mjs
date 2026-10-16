@@ -93,6 +93,10 @@ const GLYPHS = {
   'chevron-left': lucide('<path d="m15 18-6-6 6-6"/>'),
   'chevron-right': lucide('<path d="m9 18 6-6-6-6"/>'),
   'rotate-ccw': lucide('<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>'),
+  // RINGS: A2i's concentric re-lay, the cover card's view
+  orbit: lucide(
+    '<circle cx="12" cy="12" r="3"/><circle cx="19" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><path d="M10.4 21.9a10 10 0 0 0 9.941-15.416"/><path d="M13.5 2.1a10 10 0 0 0-9.841 15.416"/>',
+  ),
   // FIT: the frame's four corners
   scan: lucide(
     '<path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/>',

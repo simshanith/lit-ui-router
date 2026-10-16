@@ -25,6 +25,7 @@
   border: 1px solid var(--ink); padding: 6px 12px; cursor: pointer; }
 @media (hover: hover) and (pointer: fine) { .bk-ctl button:hover { background: var(--paper-2); } }
 .bk-ctl button:not(:disabled):active { transform: scale(0.97); }
+.bk-ctl button[aria-pressed="true"] { color: var(--paper); background: var(--ink); }
 @media (prefers-reduced-motion: no-preference) { .bk-ctl button { transition: transform 160ms var(--ease-out, ease-out); } }
 .bk-ctl label { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
 .bk-ctl input[type=checkbox] { appearance: none; flex: none; width: 13px; height: 13px; margin: 0; border: 1px solid var(--ink);

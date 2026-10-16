@@ -29,6 +29,7 @@ export const laneCss = (p, wrap = 'break-word') => `
   border: 1px solid var(--ink); padding: 6px 12px; cursor: pointer; }
 @media (hover: hover) and (pointer: fine) { .${p}-ctl button:hover { background: var(--paper-2); } }
 .${p}-ctl button:not(:disabled):active { transform: scale(0.97); }
+.${p}-ctl button[aria-pressed="true"] { color: var(--paper); background: var(--ink); }
 @media (prefers-reduced-motion: no-preference) { .${p}-ctl button { transition: transform 160ms var(--ease-out, ease-out); } }
 .${p}-ctl label { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
 .${p}-ctl input[type=checkbox] { appearance: none; flex: none; width: 13px; height: 13px; margin: 0; border: 1px solid var(--ink);

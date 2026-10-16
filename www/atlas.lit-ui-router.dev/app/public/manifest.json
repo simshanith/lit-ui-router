@@ -1758,7 +1758,7 @@
         "projection": "graph",
         "mode": "interactive"
       },
-      "rev": "A",
+      "rev": "B",
       "file": "sheets/a2i.html",
       "interactive": true,
       "needsCytoscape": true,
