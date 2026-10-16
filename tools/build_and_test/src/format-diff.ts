@@ -84,7 +84,17 @@ function diffAgainst(
 /** Each file's hunks, preview and patch from one diff of every claiming formatter; one that cannot be diffed stays file-level. */
 function diffFormatting(findings: readonly FormatFinding[]): void {
   if (findings.length === 0) return;
-  const dir = mkdtempSync(join(tmpdir(), 'format-diff-'));
+  let dir: string;
+
+  try {
+    dir = mkdtempSync(join(tmpdir(), 'format-diff-'));
+  } catch (error: unknown) {
+    warn(
+      `no formatting diffs: ${error instanceof Error ? error.message : String(error)}`,
+    );
+
+    return;
+  }
 
   try {
     for (const [at, finding] of findings
@@ -125,12 +135,12 @@ export function writePatch(
   findings: readonly FormatFinding[],
   path: string = FORMAT_PATCH,
 ): PatchNote | undefined {
-  rmSync(path, { force: true });
   const text = formatPatch(findings);
 
-  if (text === '') return undefined;
-
   try {
+    rmSync(path, { force: true });
+
+    if (text === '') return undefined;
     mkdirSync(dirname(path), { recursive: true });
     writeFileSync(path, text);
   } catch (error: unknown) {

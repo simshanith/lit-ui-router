@@ -198,6 +198,7 @@ jobs:
         # Ahead of the summary, so the upload's artifact-url can link from it.
         # The summary step rewrites the same patch. Fails open, like the summary.
         if: ${{ !cancelled() && (steps.build.outcome == 'failure' || steps.build_main.outcome == 'failure') }}
+        continue-on-error: true
         run: mise run //tools/build_and_test:format_patch
       - name: Upload format patch
         # Written only when a format check failed.

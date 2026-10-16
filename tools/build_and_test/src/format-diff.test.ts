@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {
   existsSync,
+  mkdirSync,
   mkdtempSync,
   readFileSync,
   rmSync,
@@ -50,6 +51,22 @@ describe('writePatch', () => {
 
       assert.equal(writePatch([finding('a.ts')], path), undefined);
       assert.equal(existsSync(path), false);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('warns instead of throwing when the patch path is a directory', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'format-diff-'));
+    const path = join(dir, 'format.patch');
+
+    try {
+      mkdirSync(path);
+
+      assert.equal(
+        writePatch([{ ...finding('a.ts'), patch: 'A\n' }], path),
+        undefined,
+      );
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

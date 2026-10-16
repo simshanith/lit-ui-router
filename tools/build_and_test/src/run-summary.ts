@@ -45,7 +45,7 @@ import {
   formattingMarkdown,
   formattingTier,
 } from './format-annotations.core.ts';
-import { formattingFixes } from './format-diff.ts';
+import { type FormattingFixes, formattingFixes } from './format-diff.ts';
 
 import {
   type OverviewContext,
@@ -176,7 +176,17 @@ async function main(): Promise<void> {
 
   // Rewritten, not read back: a local run has no format_patch step, and one
   // session always yields the same patch.
-  const { findings: formatting, patch } = formattingFixes(session);
+  let fixes: FormattingFixes = { findings: [], patch: undefined };
+
+  try {
+    fixes = formattingFixes(session);
+  } catch (error: unknown) {
+    warn(
+      `no formatting findings: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+
+  const { findings: formatting, patch } = fixes;
 
   await publish(
     runs,
