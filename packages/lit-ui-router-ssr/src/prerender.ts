@@ -8,6 +8,7 @@ import { provideRouter, withRouterSync } from 'lit-ui-router/context';
 import { DefType, isFunction, isString } from '@uirouter/core';
 import { createServerRouter } from 'ui-router-server';
 import type { MountConfig, ServerRouter, Verdict } from 'ui-router-server';
+import { devGate } from '#dev-gate';
 
 import { packageVersion, signatureAttribute } from './signature.js';
 import { UiViewRenderer } from './ui-view-renderer.js';
@@ -319,8 +320,8 @@ export const renderPage = (
   );
 
 const warnUnclaimed = (path: string): void => {
-  // DEV folds away in dist/*.js; see check:dev-split and dev-warnings.json.
-  if (!import.meta.env.DEV) return;
+  // DEV folds away in dist/*.js; #dev-gate also closes it under node when NODE_ENV is production.
+  if (!import.meta.env.DEV || !devGate()) return;
   console.warn(
     'lit-ui-router-ssr: no route matched this path and its mount declares no otherwise projection, so no page was emitted for it:',
     path,
@@ -331,8 +332,8 @@ const warnStrictSlash = async (
   resolver: ServerRouter,
   path: string,
 ): Promise<void> => {
-  // DEV folds away in dist/*.js; see check:dev-split and dev-warnings.json.
-  if (!import.meta.env.DEV) return;
+  // DEV folds away in dist/*.js; #dev-gate also closes it under node when NODE_ENV is production.
+  if (!import.meta.env.DEV || !devGate()) return;
   const slashed = await resolver.resolve(`${path}/`);
 
   if (slashed.kind === 'shell' && slashed.status === undefined) return;
@@ -416,8 +417,8 @@ const resolverOf = (options: PrerenderOptions): ServerRouter => {
 };
 
 const warnUnregistered = (): void => {
-  // DEV folds away in dist/*.js; see check:dev-split and dev-warnings.json.
-  if (!import.meta.env.DEV) return;
+  // DEV folds away in dist/*.js; #dev-gate also closes it under node when NODE_ENV is production.
+  if (!import.meta.env.DEV || !devGate()) return;
 
   if (globalThis.customElements?.get('ui-view')) return;
   console.warn(
@@ -535,6 +536,7 @@ export async function prerender(
 
       if (
         import.meta.env.DEV &&
+        devGate() &&
         !slashProbed &&
         wantsSlashProbe(verdict, path, subpath)
       ) {

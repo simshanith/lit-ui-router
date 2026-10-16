@@ -248,6 +248,26 @@ describe('an unregistered <ui-view>', () => {
   });
 });
 
+describe('under node with NODE_ENV=production', () => {
+  it('raises none of the prerender warnings', async () => {
+    vi.stubEnv('NODE_ENV', 'production');
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.stubGlobal('customElements', new CustomElementRegistry());
+
+    const { result } = await run({
+      mounts: { ...mounts, '/': { ...rootMount, config: {} } },
+      paths: ['/sheet/7B', '/app/missing'],
+      notFound: false,
+    });
+
+    expect(result.warnings).toEqual(['/app/missing']);
+    expect(warn).not.toHaveBeenCalled();
+    vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
+    warn.mockRestore();
+  });
+});
+
 describe('the 404 document', () => {
   it('writes 404.html once, from the probe, at status 404', async () => {
     const seen: { path: string; status?: number }[] = [];

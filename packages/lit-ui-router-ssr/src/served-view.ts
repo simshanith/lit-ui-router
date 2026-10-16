@@ -4,6 +4,7 @@ import type { PropertyValues } from 'lit';
 import { property } from 'lit/decorators.js';
 import { requestContext } from 'lit-ui-router/context';
 import { UiView } from 'lit-ui-router/pure';
+import { devGate } from '#dev-gate';
 
 import { adoptUiViewContext } from './adopt-context.js';
 import {
@@ -132,7 +133,7 @@ export const withServedRender = (
       if (this.deferHydration) {
         this.deferredAtConnect = true;
 
-        if (import.meta.env.DEV) {
+        if (import.meta.env.DEV && devGate()) {
           // A macrotask: the hydrate walk clears the attribute within this task, and a pin answers on the wake update queued inside it.
           setTimeout(() => {
             if (this.isConnected && this.deferHydration && !this.hasUpdated) {

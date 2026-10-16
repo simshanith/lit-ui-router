@@ -193,6 +193,20 @@ describe('UiViewRenderer', () => {
     warn.mockRestore();
   });
 
+  it('leaves a RoutedLitElement view empty without a word under node when NODE_ENV is production', async () => {
+    vi.stubEnv('NODE_ENV', 'production');
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const router = boxedRouter();
+    await settle(router, '/boxed');
+
+    expect(draw(router)).toContain(
+      '<ui-view defer-hydration><!--lit-part--><!--/lit-part--></ui-view>',
+    );
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
+    vi.unstubAllEnvs();
+  });
+
   it('hands a NOWAIT resolve to the component as its promise, as the client does', async () => {
     const router = pendingRouter();
     await settle(router, '/pending');

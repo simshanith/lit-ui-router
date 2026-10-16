@@ -15,6 +15,7 @@ import type { PartInfo } from 'lit/directive.js';
 import { getDirectiveClass } from 'lit/directive-helpers.js';
 import { provideContext } from 'lit-ui-router/context';
 import { UiView } from 'lit-ui-router/pure';
+import { devGate } from '#dev-gate';
 import { adoptUiViewContext } from './adopt-context.js';
 import type { AdoptableView } from './adopt-context.js';
 import { servedMarkerPrefix } from './served-markers.js';
@@ -221,8 +222,8 @@ const report = (
 };
 
 const warnMismatch = (view: AdoptableView, cause: unknown): void => {
-  // DEV folds away in dist/*.js; see check:dev-split and dev-warnings.json.
-  if (!import.meta.env.DEV) return;
+  // DEV folds away in dist/*.js; #dev-gate also closes it under node when NODE_ENV is production.
+  if (!import.meta.env.DEV || !devGate()) return;
   console.warn(
     'lit-ui-router-ssr: this element could not adopt the server render, so it rendered over it instead. One static document answers a whole family of urls, so a client that boots into another state reaches this legitimately.',
     view.localName,
@@ -541,8 +542,8 @@ const releaseLine = (version: string): string => {
 };
 
 const warnVersionSkew = (served: string): void => {
-  // DEV folds away in dist/*.js; see check:dev-split and dev-warnings.json.
-  if (!import.meta.env.DEV) return;
+  // DEV folds away in dist/*.js; #dev-gate also closes it under node when NODE_ENV is production.
+  if (!import.meta.env.DEV || !devGate()) return;
   console.warn(
     'lit-ui-router-ssr: this document was prerendered by a release line this client does not adopt, so hydrateRoot() left it to a cold render. Prerender it again with the version the client ships. Prerendered by, then client:',
     served,
@@ -551,8 +552,8 @@ const warnVersionSkew = (served: string): void => {
 };
 
 const warnMarkersStripped = (): void => {
-  // DEV folds away in dist/*.js; see check:dev-split and dev-warnings.json.
-  if (!import.meta.env.DEV) return;
+  // DEV folds away in dist/*.js; #dev-gate also closes it under node when NODE_ENV is production.
+  if (!import.meta.env.DEV || !devGate()) return;
   console.warn(
     'lit-ui-router-ssr: this document carries a hydration signature but no lit-part marker follows it, so hydrateRoot() left it to a cold render. hydrate() reads html comments: serve prerendered pages without stripping them.',
   );
