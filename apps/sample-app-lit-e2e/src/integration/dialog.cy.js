@@ -39,6 +39,10 @@ describe('confirmation dialog', () => {
     cy.get('.dialog .content').as('dialog').should('be.visible');
     cy.get('@dialog').contains(`Delete contact: ${name}`);
     cy.get('@dialog').contains('Are you sure?');
+    // The card slides in; a click mid-animation can land on the overlay, which cancels.
+    cy.get('@dialog').should(($el) => {
+      expect($el[0].getAnimations()).to.have.length(0);
+    });
   };
 
   // Render/design assertions (modal `in` class, backdrop dim, centering,
