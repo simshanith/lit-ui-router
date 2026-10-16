@@ -2,10 +2,11 @@
   "name": "@repo/dev-gate",
   "version": "0.0.0",
   "private": true,
-  "description": "Canonical source of the node half of each package's #dev-gate import, inlined into its dist/ by oxc-emit",
+  "description": "Canonical source of both halves of each package's #dev-gate import, inlined into its dist/ by oxc-emit",
   "type": "module",
   "exports": {
-    ".": "./src/dev-gate.ts"
+    ".": "./src/dev-gate.ts",
+    "./node": "./src/dev-gate.node.ts"
   },
   "scripts": {
     "format:check:oxfmt": "oxfmt --check \"**/*.{ts,js,json,jsonc,md}\"",

@@ -274,6 +274,17 @@
       }
     },
     {
+      "files": ["packages/shared/dev-gate/src/dev-gate.node.ts"],
+      "rules": {
+        "turbo/no-undeclared-env-vars": [
+          "warn",
+          {
+            "allowList": ["^NODE_ENV$"]
+          }
+        ]
+      }
+    },
+    {
       "files": ["apps/sample-app-lit-e2e/scripts/**"],
       "rules": {
         "turbo/no-undeclared-env-vars": [

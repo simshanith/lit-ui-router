@@ -3,6 +3,7 @@ import { describe, it } from 'node:test';
 
 import {
   assertNoCollision,
+  exportedFiles,
   rewriteInlined,
   type InlinedSource,
 } from './inline.ts';
@@ -59,6 +60,39 @@ describe('rewriteInlined', () => {
   });
 });
 
+describe('exportedFiles', () => {
+  it('names each subpath by the specifier a consumer imports', () => {
+    assert.deepEqual(
+      exportedFiles('@repo/dev-gate', {
+        '.': './src/dev-gate.ts',
+        './node': './src/dev-gate.node.ts',
+      }),
+      [
+        ['@repo/dev-gate', './src/dev-gate.ts'],
+        ['@repo/dev-gate/node', './src/dev-gate.node.ts'],
+      ],
+    );
+  });
+
+  it('fails on a manifest without exports', () => {
+    assert.throws(
+      () => exportedFiles('@repo/none', undefined),
+      /@repo\/none: exports must name/,
+    );
+  });
+
+  it('fails on a subpath that names anything but one .ts file', () => {
+    assert.throws(
+      () =>
+        exportedFiles('@repo/dev-gate', {
+          '.': './src/dev-gate.ts',
+          './node': { node: './src/dev-gate.node.ts' },
+        }),
+      /exports\["\.\/node"\] must name one \.ts file/,
+    );
+  });
+});
+
 describe('assertNoCollision', () => {
   it('passes when no own emit shares the inlined path', () => {
     assert.doesNotThrow(() => assertNoCollision(['index'], [snapshot]));
@@ -67,7 +101,18 @@ describe('assertNoCollision', () => {
   it('fails when src/ already emits the inlined path', () => {
     assert.throws(
       () => assertNoCollision(['index', 'shared/route-snapshot'], [snapshot]),
-      /already emits/,
+      /which src\/ already emits/,
+    );
+  });
+
+  it('fails when two inlined sources share a path', () => {
+    assert.throws(
+      () =>
+        assertNoCollision(
+          ['index'],
+          [snapshot, { ...snapshot, specifier: '@repo/other' }],
+        ),
+      /@repo\/other inlines to shared\/route-snapshot, which @repo\/route-snapshot already emits/,
     );
   });
 });
