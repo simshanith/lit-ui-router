@@ -118,6 +118,48 @@ describe('development and production builds', () => {
     );
   });
 
+  it('builds a router in every build when a bare-base resolve throws', (t) => {
+    withNodeEnv(t, undefined);
+    t.mock.method(console, 'warn', () => {});
+
+    const tripped = {
+      routes: [
+        {
+          name: 'item',
+          url: '/:id',
+          params: {
+            id: {
+              type: {
+                name: 'tripped',
+                pattern: /[^/]*/,
+                is: (_value: unknown): _value is string => {
+                  throw new Error('tripped');
+                },
+                decode: (value: string) => value,
+              },
+              value: 'x',
+              squash: true,
+            },
+          },
+        },
+      ],
+    } satisfies MountConfig;
+
+    for (const build of BUILDS) {
+      const { createServerRouter, diagnoseMounts } = builds[build].index;
+
+      const router = createServerRouter({
+        mounts: { ...mounts, '/tripped': tripped },
+      });
+
+      assert.deepEqual(
+        diagnoseMounts(router).map(({ mount }) => mount),
+        ['/app'],
+        build,
+      );
+    }
+  });
+
   it('opens the default #dev-gate whatever NODE_ENV says', async (t) => {
     withNodeEnv(t, 'production');
     const gate = await load<{ devGate: () => boolean }>('../dist/dev-gate.js');

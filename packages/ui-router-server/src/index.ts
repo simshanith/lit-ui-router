@@ -476,7 +476,14 @@ const matcherVerdict = (mount: Mount, subpath: string): Verdict => {
 const bareBaseDiagnostic = (mount: Mount): MountDiagnostic | null => {
   if (mount.base === '/') return null;
 
-  const verdict = matcherVerdict(mount, '');
+  let verdict: Verdict;
+
+  try {
+    verdict = matcherVerdict(mount, '');
+  } catch {
+    // A user param callback threw: no finding, so diagnostics never break construction; requests surface the throw.
+    return null;
+  }
 
   if (
     verdict.kind === 'redirect' ||

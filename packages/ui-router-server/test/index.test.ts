@@ -471,6 +471,30 @@ describe('mount diagnostics', () => {
     routes: [{ name: 'a', url: '/a' }],
   });
 
+  // A squashed param whose `is` throws: only resolving the bare base calls it.
+  const trippedMount = {
+    routes: [
+      {
+        name: 'item',
+        url: '/:id',
+        params: {
+          id: {
+            type: {
+              name: 'tripped',
+              pattern: /[^/]*/,
+              is: (_value: unknown): _value is string => {
+                throw new Error('tripped');
+              },
+              decode: (value: string) => value,
+            },
+            value: 'x',
+            squash: true,
+          },
+        },
+      },
+    ],
+  } satisfies MountConfig;
+
   const served = {
     '/app-hash': {
       routes: [{ name: 'root', url: '' }],
@@ -524,6 +548,27 @@ describe('mount diagnostics', () => {
         },
       }).map(({ mount }) => mount),
       ['/app'],
+    );
+  });
+
+  it('skips a mount whose bare-base resolve throws, and still reports the others', (t) => {
+    const warn = t.mock.method(console, 'warn', () => {});
+
+    const table = {
+      '/tripped': trippedMount,
+      '/a': unserved('matcher'),
+    } satisfies Record<string, MountConfig>;
+
+    const router = createServerRouter({ mounts: table });
+
+    assert.deepEqual(
+      diagnoseMounts(router).map(({ mount }) => mount),
+      ['/a'],
+    );
+    assert.equal(warn.mock.callCount(), 1);
+    assert.deepEqual(
+      diagnosed(table).map(({ mount }) => mount),
+      ['/a'],
     );
   });
 
