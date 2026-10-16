@@ -108,6 +108,37 @@ would fire and stays silent for `production`; under every other condition it
 always answers yes. `deno` keeps the production build, because reading
 `NODE_ENV` there needs `--allow-env`.
 
+### The setup we run
+
+lit-ui-router.dev serves its sample apps through `ui-router-server` on
+Cloudflare Workers, and every change to this repo is tested on that path:
+
+- **Develop with Vite.** Build the router in the Vite config and hand it to
+  `serverRouterPlugin`, as the site's
+  [`.vitepress/vite.config.ts`](https://github.com/simshanith/lit-ui-router/blob/main/www/lit-ui-router.dev/.vitepress/vite.config.ts)
+  does. The config loader resolves the development build, so warnings print
+  in the terminal. Nothing to set.
+- **Assert in CI.** A unit test asserts that
+  `diagnoseMounts(createServerRouter({ mounts }))` returns `[]`, as
+  [`apps/sample-app-routes/test/routes.test.ts`](https://github.com/simshanith/lit-ui-router/blob/main/apps/sample-app-routes/test/routes.test.ts)
+  does. It reports in every build, so it catches what a dev run never reaches.
+- **Preview the Worker** with `wrangler dev` on the development build, setting
+  `WRANGLER_BUILD_CONDITIONS` on the command that starts it as
+  [below](#what-to-set). The site's
+  [`scripts/wrangler-dev.ts`](https://github.com/simshanith/lit-ui-router/blob/main/www/lit-ui-router.dev/scripts/wrangler-dev.ts)
+  launcher does this by default.
+- **Test the production build.** The e2e suites serve the Worker with the
+  conditions `wrangler deploy` uses, so they test the production build that
+  ships; see
+  [`run-e2e.ts`](https://github.com/simshanith/lit-ui-router/blob/main/apps/sample-app-lit-e2e/scripts/run-e2e.ts).
+
+Elsewhere, develop on the development build and deploy with
+`NODE_ENV=production` or a `production` condition. A Node or Bun server
+deployed with neither warns once at boot for each mount that 404s its bare
+base, as Express and React warn in the same case.
+
+### Other runtimes
+
 | Runtime or bundler                                   | Build it resolves                                                                          | Warns                                 |
 | ---------------------------------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------- |
 | plain `node`, Bun                                    | development, through `node`                                                                | unless `NODE_ENV=production`          |
