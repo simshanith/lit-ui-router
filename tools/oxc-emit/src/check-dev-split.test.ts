@@ -3,8 +3,10 @@ import { describe, it } from 'node:test';
 
 import {
   findDevSplitViolations,
+  findProcessReads,
   formatDevSplitReport,
   messagePrefix,
+  nodeImportRoots,
 } from './check-dev-split.core.ts';
 
 const prefix = messagePrefix('lit-ui-router');
@@ -89,6 +91,67 @@ describe('findDevSplitViolations', () => {
       }),
       [],
     );
+  });
+});
+
+describe('nodeImportRoots', () => {
+  it('places each node target in every emit tree', () => {
+    assert.deepEqual(
+      nodeImportRoots(
+        {
+          '#dev-gate': {
+            node: './dist/dev-gate.node.js',
+            default: './dist/dev-gate.js',
+          },
+          '#outside': { node: './src/gate.ts' },
+          '#browser': { default: './dist/plain.js' },
+        },
+        ['dist', 'dist/development'],
+      ),
+      ['dist/dev-gate.node.js', 'dist/development/dev-gate.node.js'],
+    );
+  });
+
+  it('has none without an imports map', () => {
+    assert.deepEqual(nodeImportRoots(undefined, ['dist']), []);
+  });
+});
+
+describe('findProcessReads', () => {
+  const gate =
+    'export const devGate = () => process.env.NODE_ENV !== "production";';
+
+  const files = (extra: Record<string, string> = {}) =>
+    new Map(
+      Object.entries({
+        'dist/dev-gate.node.js':
+          'export { devGate } from "./shared/dev-gate.js";',
+        'dist/shared/dev-gate.js': gate,
+        'dist/index.js': 'import { devGate } from "#dev-gate";',
+        ...extra,
+      }),
+    );
+
+  it('passes a read the node target reaches', () => {
+    assert.deepEqual(findProcessReads(files(), ['dist/dev-gate.node.js']), []);
+  });
+
+  it('fails a read no node target reaches', () => {
+    assert.deepEqual(
+      findProcessReads(
+        files({ 'dist/development/warn.js': 'if (process.env.X) {}' }),
+        ['dist/dev-gate.node.js', 'dist/development/dev-gate.node.js'],
+      ),
+      [
+        'dist/development/warn.js mentions process, which only a package.json#imports node target may read',
+      ],
+    );
+  });
+
+  it('fails every read when the package maps no node target', () => {
+    assert.deepEqual(findProcessReads(files(), []), [
+      'dist/shared/dev-gate.js mentions process, which only a package.json#imports node target may read',
+    ]);
   });
 });
 

@@ -4,7 +4,7 @@ import { describe, it } from 'node:test';
 import { statefulStatements } from './shared-source.core.ts';
 
 describe('statefulStatements', () => {
-  it('allows imports, types, functions and const functions or literals', () => {
+  it('allows imports, types, functions, ambient bindings and const functions or literals', () => {
     const source = [
       "import { a } from 'a';",
       "export { b } from 'b';",
@@ -13,6 +13,7 @@ describe('statefulStatements', () => {
       'export function f(): number { return 1; }',
       'const g = (): number => 2;',
       "export const NAME = 'x', LIMIT = -1, ON = true;",
+      'declare const process: { env: Record<string, string> };',
     ].join('\n');
 
     assert.deepEqual(statefulStatements('ok.ts', source), []);

@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Gate for the `--development` emit split: the dev-only warning messages a
 // package declares in dev-warnings.json must ship in dist/development/*.js and
-// must NOT ship in dist/*.js. Reads the built output, so it runs after build:js.
+// must NOT ship in dist/*.js, and only the graph of a package.json#imports
+// `node` target may mention `process`. Reads the built output, so it runs after build:js.
 // Usage (from the package dir): oxc-emit-check-dev-split
 import { existsSync, globSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -10,8 +11,11 @@ import { requireManifest } from '@tools/bootstrap/manifest.ts';
 
 import {
   findDevSplitViolations,
+  findProcessReads,
   formatDevSplitReport,
+  type ImportsMap,
   messagePrefix,
+  nodeImportRoots,
 } from './check-dev-split.core.ts';
 import { DEV_OUT, OUT } from './shared.ts';
 
@@ -60,17 +64,31 @@ const main = (): void => {
 
   // The undeclared-message scan keys off the package's own name, so a sibling
   // package's prefix (lit-ui-router-mobx:) is never read as lit-ui-router:.
-  const { name } = requireManifest(process.cwd());
+  const manifest = requireManifest(process.cwd());
+  const { name } = manifest;
 
   if (!name) throw new Error('package.json has no name');
 
+  // SAFETY: PackageManifest leaves imports out to stay assignable from pnpm's; ours map conditions to string targets
+  const { imports } = manifest as { imports?: ImportsMap };
+
+  const emitted = new Map(
+    globSync(join(OUT, '**', '*.js')).map((file) => [
+      file,
+      readFileSync(file, 'utf8'),
+    ]),
+  );
+
   const report = formatDevSplitReport(
-    findDevSplitViolations({
-      prefix: messagePrefix(name),
-      devOnly,
-      production,
-      development: read(DEV_OUT),
-    }),
+    [
+      ...findDevSplitViolations({
+        prefix: messagePrefix(name),
+        devOnly,
+        production,
+        development: read(DEV_OUT),
+      }),
+      ...findProcessReads(emitted, nodeImportRoots(imports, [OUT, DEV_OUT])),
+    ],
     devOnly.length,
   );
 

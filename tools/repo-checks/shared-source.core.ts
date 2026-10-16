@@ -37,6 +37,16 @@ function isStatelessStatement(statement: ts.Statement): boolean {
   }
 
   if (!ts.isVariableStatement(statement)) return false;
+
+  // ambient: types only, nothing emits
+  if (
+    statement.modifiers?.some(
+      (modifier) => modifier.kind === ts.SyntaxKind.DeclareKeyword,
+    )
+  ) {
+    return true;
+  }
+
   const { declarationList } = statement;
 
   return (
@@ -49,8 +59,8 @@ function isStatelessStatement(statement: ts.Statement): boolean {
 
 /**
  * Top-level statements that could hold module state or run a side effect:
- * anything but imports, re-exports, types, functions, and `const` bindings of
- * functions or primitive literals.
+ * anything but imports, re-exports, types, functions, ambient `declare`
+ * bindings, and `const` bindings of functions or primitive literals.
  */
 export function statefulStatements(file: string, source: string): string[] {
   const sourceFile = ts.createSourceFile(
