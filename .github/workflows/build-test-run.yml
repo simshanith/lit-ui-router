@@ -163,14 +163,16 @@ jobs:
         with:
           name: turbo-task-logs
           # The workspace globs, not `**`: that would walk node_modules.
+          # tools/repo-checks/task-logs-upload.test.ts holds them to pnpm-workspace.yaml.
           path: |
             .turbo/turbo-*.log
             .turbo/logs/*.json
             apps/*/.turbo/turbo-*.log
             examples/.turbo/turbo-*.log
             packages/*/.turbo/turbo-*.log
+            packages/shared/*/.turbo/turbo-*.log
             tools/*/.turbo/turbo-*.log
-            www/*/.turbo/turbo-*.log
+            www/lit-ui-router.dev/.turbo/turbo-*.log
           # `.turbo` is below the search root for every pattern but the first.
           include-hidden-files: true
           retention-days: 5
@@ -352,8 +354,9 @@ jobs:
             apps/*/.turbo/turbo-*.log
             examples/.turbo/turbo-*.log
             packages/*/.turbo/turbo-*.log
+            packages/shared/*/.turbo/turbo-*.log
             tools/*/.turbo/turbo-*.log
-            www/*/.turbo/turbo-*.log
+            www/lit-ui-router.dev/.turbo/turbo-*.log
           include-hidden-files: true
           retention-days: 5
           if-no-files-found: warn
