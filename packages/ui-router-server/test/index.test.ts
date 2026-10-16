@@ -581,18 +581,25 @@ describe('mount diagnostics', () => {
     });
   }
 
-  it('warns once per router, and never diagnoses at construction in production', (t) => {
-    const warn = t.mock.method(console, 'warn', () => {});
+  it('never diagnoses in production, nor in the node build under NODE_ENV=production', (t) => {
+    t.mock.method(console, 'warn', () => {});
     const router = createServerRouter({ mounts: mixed });
     const diagnose = t.mock.fn(diagnoseMounts);
+    const previous = process.env.NODE_ENV;
 
-    assert.equal(warn.mock.callCount(), 2);
+    t.after(() => {
+      if (previous === undefined) delete process.env.NODE_ENV;
+      else process.env.NODE_ENV = previous;
+    });
+
+    const restoreDev = stubDev(false);
     warnMountDiagnostics(router, diagnose);
-    assert.equal(diagnose.mock.callCount(), 0);
-    assert.equal(warn.mock.callCount(), 2);
+    restoreDev();
 
-    t.after(stubDev(false));
-    warnMountDiagnostics(createServerRouter({ mounts: mixed }), diagnose);
+    t.after(stubEnv('NODE', true));
+    process.env.NODE_ENV = 'production';
+    warnMountDiagnostics(router, diagnose);
+
     assert.equal(diagnose.mock.callCount(), 0);
   });
 

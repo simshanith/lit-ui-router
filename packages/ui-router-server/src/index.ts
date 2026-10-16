@@ -14,7 +14,6 @@
 import type { RawParams, StateDeclaration } from '@uirouter/core';
 
 import { warnMountDiagnostics } from './dev-warn.ts';
-import { compiledMounts } from './registry.ts';
 import { compileResolver, matchRoute } from './redirects.ts';
 import { createRouterPool, POOL_MAX_IDLE } from './router-pool.ts';
 import type { PooledRouter, RouterPool } from './router-pool.ts';
@@ -461,6 +460,9 @@ const bareBaseDiagnostic = (mount: Mount): MountDiagnostic | null => {
   };
 };
 
+// Each createServerRouter router's mounts in declaration order, for diagnoseMounts.
+const compiledMounts = new WeakMap<ServerRouter, Mount[]>();
+
 // Null when the transition failed or timed out: that router may still be mid-transition.
 const replayVerdict = async (
   pooled: PooledRouter,
@@ -528,10 +530,10 @@ const simulateVerdict = async (
  * A bare mount base ('/app', '/app/') resolves the empty subpath, which
  * 404s unless the mount supplies a root pattern — a rule like
  * `{ pattern: /^\/?$/, to: ... }` or a `url: ''` route. Construction passes
- * each {@link diagnoseMounts} finding's message to `console.warn`, once per
- * router: always in the development build (the `development` export
- * condition), unless `NODE_ENV` is `production` in the node build (the `node`
- * condition), never in the default build.
+ * each {@link diagnoseMounts} finding's message to `console.warn`: always in
+ * the development build (the `development` export condition), unless
+ * `NODE_ENV` is `production` in the node build (the `node` condition), never
+ * in the default build.
  */
 export function createServerRouter(config: {
   mounts: Record<string, MountConfig>;
@@ -603,8 +605,7 @@ export function createServerRouter(config: {
  * ```
  */
 export function diagnoseMounts(router: ServerRouter): MountDiagnostic[] {
-  // SAFETY: only createServerRouter sets entries, each its compiled Mount[]
-  const mounts = compiledMounts.get(router) as Mount[] | undefined;
+  const mounts = compiledMounts.get(router);
 
   if (mounts === undefined)
     throw new TypeError(

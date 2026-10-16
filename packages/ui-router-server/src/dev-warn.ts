@@ -1,12 +1,11 @@
 // The development-only warnings; folded out of dist/*.js by check:dev-split.
 
 import type { MountDiagnostic, ServerRouter } from './index.ts';
-import { reportMountDiagnostics } from './report.ts';
 
 /**
  * Passes each of a new router's mount diagnostics to `console.warn`, prefixed
- * with the package and the call that found it, unless the Vite plugin already
- * reported them. The node build skips it when `NODE_ENV` is `production`.
+ * with the package and the call that found it. The node build skips it when
+ * `NODE_ENV` is `production`.
  *
  * @param router - the router `createServerRouter` just built
  * @param diagnose - `diagnoseMounts`
@@ -24,7 +23,6 @@ export function warnMountDiagnostics(
   // oxlint-disable-next-line no-restricted-globals -- dist/node only; check:dev-split keeps process out of dist and dist/development
   if (import.meta.env?.NODE && process.env.NODE_ENV === 'production') return;
 
-  reportMountDiagnostics(router, diagnose, (message) => {
+  for (const { message } of diagnose(router))
     console.warn(`ui-router-server: createServerRouter: ${message}`);
-  });
 }

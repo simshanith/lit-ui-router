@@ -11,8 +11,6 @@ import type { MountConfig } from '../src/index.ts';
 // default picks dist.
 type Entry = typeof import('../src/index.ts');
 
-type ViteEntry = typeof import('../src/vite.ts');
-
 const load = async <T>(path: string): Promise<T> =>
   // SAFETY: each emit is compiled from the src module the caller names
   (await import(new URL(path, import.meta.url).href)) as T;
@@ -29,13 +27,10 @@ const builds = Object.fromEntries(
   await Promise.all(
     BUILDS.map(async (build) => [
       build,
-      {
-        index: await load<Entry>(`${dir(build)}index.js`),
-        vite: await load<ViteEntry>(`${dir(build)}vite.js`),
-      },
+      { index: await load<Entry>(`${dir(build)}index.js`) },
     ]),
   ),
-) as Record<Build, { index: Entry; vite: ViteEntry }>;
+) as Record<Build, { index: Entry }>;
 
 const mounts = {
   '/app': { routes: [{ name: 'a', url: '/a' }] },
@@ -96,31 +91,6 @@ describe('development, node and production builds', () => {
       silent.mock.restore();
 
       assert.deepEqual(warnings(t, 'node'), warns ? messages : []);
-    });
-  }
-
-  for (const nodeEnv of ['test', 'production'] as const) {
-    it(`reports once per router when the Vite plugin wraps each build (NODE_ENV=${nodeEnv})`, (t) => {
-      withNodeEnv(t, nodeEnv);
-
-      for (const build of BUILDS) {
-        const consoleWarn = t.mock.method(console, 'warn', () => {});
-        const logged: string[] = [];
-        const router = builds[build].index.createServerRouter({ mounts });
-
-        builds[build].vite.serverRouterPlugin(router).configureServer({
-          middlewares: { use: () => {} },
-          config: { logger: { warn: (message) => logged.push(message) } },
-        });
-        consoleWarn.mock.restore();
-
-        const constructionWarns =
-          build === 'development' ||
-          (build === 'node' && nodeEnv !== 'production');
-
-        assert.equal(consoleWarn.mock.callCount() + logged.length, 1, build);
-        assert.equal(logged.length, constructionWarns ? 0 : 1, build);
-      }
     });
   }
 

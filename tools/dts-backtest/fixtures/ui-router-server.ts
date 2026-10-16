@@ -55,7 +55,6 @@ import {
 import {
   serverRouterPlugin,
   type ServerRouterPlugin,
-  type ViteDevMiddlewareServer,
 } from 'ui-router-server/vite';
 
 const routes: RouteDeclaration[] = [
@@ -253,8 +252,3 @@ export const plugin: ServerRouterPlugin = serverRouterPlugin(
   router,
   connectOptions,
 );
-
-// The dev hook takes the middleware stack plus the logger sliver.
-export function startDev(server: ViteDevMiddlewareServer): void {
-  plugin.configureServer(server);
-}
