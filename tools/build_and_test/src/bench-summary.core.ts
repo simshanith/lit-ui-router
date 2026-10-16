@@ -6,9 +6,9 @@ import { cell, inlineCode } from './run-summary.core.ts';
 
 // A github-action-benchmark customSmallerIsBetter entry; only the keys read here.
 const BenchEntrySchema = v.object({
-  name:   v.string(),
-  unit:   v.literal( 'ns' ),
-  n:   v.number(),
+  name: v.string(),
+  unit: v.literal('ns'),
+  n: v.number(),
   mean: v.number(),
   rme: v.number(),
   samples: v.number(),

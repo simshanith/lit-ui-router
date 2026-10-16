@@ -106,8 +106,8 @@ docs
 
 **Key concepts:**
 
--   `^task`   means "run this task on dependencies first"
--   `dependsOn`   defines execution order (every edge above)
+- `^task` means "run this task on dependencies first"
+- `dependsOn` defines execution order (every edge above)
 - An umbrella has no script: turbo runs nothing for it, only its `dependsOn` (see [Umbrella and Leaf Tasks](#umbrella-and-leaf-tasks))
 - `outputs` defines cacheable artifacts
 - `inputs` scopes cache invalidation
