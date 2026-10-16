@@ -58,7 +58,6 @@ import {
   structuredTaskLog,
   type ToolAnnotation,
 } from './run-summary.core.ts';
-import { extractEslintDiagnostics } from './eslint-annotations.core.ts';
 import { extractTscDiagnostics } from './tsc-annotations.core.ts';
 import { errorCommand, warningCommand } from '@tools/shared/gha.core.ts';
 import { onActions } from '@tools/shared/gha.ts';
@@ -306,9 +305,6 @@ async function main(): Promise<void> {
     for (const [taskId, log] of runLogs) logs.set(taskId, log);
     annotations.push(...extractAnnotations(summary, runLogs, process.cwd()));
     annotations.push(...extractTscDiagnostics(summary, runLogs, process.cwd()));
-    annotations.push(
-      ...extractEslintDiagnostics(summary, runLogs, process.cwd()),
-    );
     runs.push({ summary, fileName: basename(path), reports: [] });
   }
 
