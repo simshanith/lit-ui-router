@@ -770,15 +770,17 @@
     },
     {
       "files": [
+        "tools/build_and_test/src/format-diff.ts",
         "tools/build_and_test/src/mark-summary-session.ts",
-        "tools/build_and_test/src/run-summary.ts"
+        "tools/build_and_test/src/run-summary.ts",
+        "tools/build_and_test/src/session.ts"
       ],
       "rules": {
         "turbo/no-undeclared-env-vars": [
           "warn",
           {
             "allowList": [
-              "^(TURBO_RUNS_DIR|TURBO_SUMMARY_SESSION|TURBO_SUMMARY_ARTIFACT_URL|TURBO_LOGS_ARTIFACT_URL|CYPRESS_SCREENSHOTS_ARTIFACT_URL|A11Y_SCREENSHOTS_ARTIFACT_URL|FORMAT_PATCH_ARTIFACT_URL|FORMAT_PATCH_ONLY)$"
+              "^(TURBO_RUNS_DIR|TURBO_SUMMARY_SESSION|TURBO_SUMMARY_ARTIFACT_URL|TURBO_LOGS_ARTIFACT_URL|CYPRESS_SCREENSHOTS_ARTIFACT_URL|A11Y_SCREENSHOTS_ARTIFACT_URL|FORMAT_PATCH_ARTIFACT_URL)$"
             ]
           }
         ]

@@ -71,10 +71,11 @@ run = [
 ]
 
 [tasks.format_patch]
-# The reporter's first half: CI uploads the patch before turbo_summary links it.
-description = "Write this session's formatting fixes to .turbo/format.patch, without reporting"
+# Its own step so CI can upload the patch before turbo_summary links it;
+# turbo_summary rewrites the same patch. Repo-root dir for turbo_summary's reasons.
+description = "Write this session's formatting fixes to .turbo/format.patch"
 dir = "{{config_root}}/../.."
-run = 'FORMAT_PATCH_ONLY=1 ./tools/build_and_test/src/run-summary.ts'
+run = "./tools/build_and_test/src/format-patch.ts"
 
 [tasks.playwright_version]
 # env: GITHUB_OUTPUT (step-output target). One task per browser tool so each
