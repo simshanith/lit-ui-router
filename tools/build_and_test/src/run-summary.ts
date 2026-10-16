@@ -326,6 +326,8 @@ async function main(): Promise<void> {
     runs,
     {
       onActions: onActions(),
+      // `secrets.TURBO_TOKEN != ''` from the workflow: presence only, never the value.
+      remoteToken: process.env.TURBO_SUMMARY_TOKEN_SET !== 'false',
       // Set by the workflow from the upload step's `artifact-url` output; absent
       // locally, where the files this read are already on disk. Every file is
       // named: the artifact holds them all under one URL, and GitHub gives no
