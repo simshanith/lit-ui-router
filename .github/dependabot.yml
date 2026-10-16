@@ -19,6 +19,9 @@ updates:
         update-types: ['version-update:semver-major']
       # published floor stays >=0.50.0; the dev pin is the npm: alias in the catalog, which dependabot skips
       - dependency-name: '@oxc-project/runtime'
+      # read at the typescript6 catalog's 6.x, so the bump to the default catalog's 7.x has nothing to write (NoChangeError) — bump catalogs manually
+      - dependency-name: 'typescript'
+        update-types: ['version-update:semver-major']
     commit-message:
       prefix: 'chore'
       include: 'scope'
