@@ -39,7 +39,7 @@ The release workflows use GitHub protected environments to ensure proper authori
 
 This is a [Fine-Grained Personal Access Token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#fine-grained-personal-access-tokens) with **Read** and **Write** access to [artifact metadata](https://docs.github.com/en/rest/authentication/permissions-required-for-fine-grained-personal-access-tokens?apiVersion=2022-11-28#repository-permissions-for-artifact-metadata), [attestations api](https://docs.github.com/en/rest/authentication/permissions-required-for-fine-grained-personal-access-tokens?apiVersion=2022-11-28#repository-permissions-for-attestations), [code](https://docs.github.com/en/rest/authentication/permissions-required-for-fine-grained-personal-access-tokens?apiVersion=2022-11-28#repository-permissions-for-contents), and [pull requests](https://docs.github.com/en/rest/authentication/permissions-required-for-fine-grained-personal-access-tokens?apiVersion=2022-11-28#repository-permissions-for-pull-requests)
 
-- **`CODECOV_TOKEN`** - Used for uploading coverage reports
+-   **`CODECOV_TOKEN`** - Used for uploading coverage reports
 
 The `publish` environment uses **OIDC Trusted Publishing** instead of NPM tokens. See [NPM Trusted Publishers](https://docs.npmjs.com/trusted-publishers) for setup.
 
