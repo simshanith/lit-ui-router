@@ -32,10 +32,14 @@ if (ROUTES === undefined || RESOLVE === undefined)
   throw new Error('BENCH_SOURCES lost a source');
 
 const routesFile = [
-  entry({ name: 'construct', n: 12 }),
-  entry({ name: '/app hit (12 routes)', n: 12, mean: 819.55, rme: 0.28 }),
-  entry({ name: '/app root redirect', n: 12 }),
-  entry({ name: '/app miss', n: 12, mean: 481.65 }),
+  entry({ name: '/app construct [linear]', n: 12, mean: 15_500 }),
+  entry({ name: '/app construct [trie]', n: 12, mean: 23_200 }),
+  entry({ name: '/app hit (12 routes) [linear]', n: 12, mean: 861 }),
+  entry({ name: '/app hit (12 routes) [trie]', n: 12, mean: 859 }),
+  entry({ name: '/app miss [trie]', n: 12, mean: 389 }),
+  entry({ name: '/sim hit (12 routes)', n: 12, mean: 819.55, rme: 0.28 }),
+  entry({ name: '/sim root redirect', n: 12 }),
+  entry({ name: '/sim miss', n: 12, mean: 481.65 }),
 ];
 
 const resolveFile = [
@@ -73,7 +77,7 @@ describe('formatNs', () => {
 });
 
 describe('benchSummaryMarkdown', () => {
-  it('groups the production hit and miss rows before the n=500 rows', () => {
+  it('pairs the production variants, then its other hit and miss rows, before the n=500 rows', () => {
     assert.equal(
       benchSummaryMarkdown([
         { source: ROUTES, entries: routesFile },
@@ -86,10 +90,15 @@ describe('benchSummaryMarkdown', () => {
         '',
         '### Production docs table (`sample-app-routes`)',
         '',
+        '| Task | linear | trie | trie / linear |',
+        '| --- | ---: | ---: | ---: |',
+        '| `/app construct` | 15.5 µs | 23.2 µs | 1.50× |',
+        '| `/app hit (12 routes)` | 861 ns | 859 ns | 1.00× |',
+        '',
         '| Task | Mean | ±RME | Samples |',
         '| --- | ---: | ---: | ---: |',
-        '| `/app hit (12 routes)` | 820 ns | 0.28% | 70440 |',
-        '| `/app miss` | 482 ns | 0.31% | 70440 |',
+        '| `/sim hit (12 routes)` | 820 ns | 0.28% | 70440 |',
+        '| `/sim miss` | 482 ns | 0.31% | 70440 |',
         '',
         '### Synthetic table, n=500 (`ui-router-server`)',
         '',
@@ -116,6 +125,14 @@ describe('benchSummaryMarkdown', () => {
       ),
     );
     assert.ok(markdown.includes('| `matcher hit n=500` |'));
+  });
+
+  it('renders no variant table when no task ran under both variants', () => {
+    const markdown = benchSummaryMarkdown([
+      { source: ROUTES, entries: [entry({ name: '/app miss [trie]' })] },
+    ]);
+
+    assert.ok(!markdown.includes('trie / linear'));
   });
 
   it('escapes a task name that would break the table', () => {

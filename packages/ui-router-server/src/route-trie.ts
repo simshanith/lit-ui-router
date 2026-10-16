@@ -11,7 +11,7 @@
  */
 
 import { matchRoute } from './redirects.ts';
-import type { CompiledRoute, RouteMatch } from './redirects.ts';
+import type { CompiledRoute, RouteIndex, RouteMatch } from './redirects.ts';
 
 /**
  * Why a route stays out of the trie: its compiler was `caseInsensitive`, or
@@ -174,10 +174,10 @@ const collect = (
   current: TrieNode,
   segments: string[],
   depth: number,
-  found: Set<number>,
+  found: number[],
 ): void => {
   if (depth === segments.length) {
-    for (const index of current.routes) found.add(index);
+    found.push(...current.routes);
 
     return;
   }
@@ -211,16 +211,65 @@ export function compileRouteTrie(routes: CompiledRoute[]): RouteTrie {
   });
 
   const match = (pathname: string): RouteMatch | null => {
-    const found = new Set<number>();
+    const found: number[] = [];
     collect(root, pathname.split('/'), 0, found);
 
+    if (found.length === 0) return null;
+
     // Declaration order: matchRoute breaks compare ties and throws by it.
-    const candidates = [...found]
-      .sort((a, b) => a - b)
-      .map((index) => routes[index]);
+    if (found.length > 1) found.sort((a, b) => a - b);
+
+    // Sorted, so a route that two branches reach sits next to itself.
+    const candidates: CompiledRoute[] = [];
+
+    for (let at = 0; at < found.length; at++)
+      if (found[at] !== found[at - 1]) candidates.push(routes[found[at]]);
 
     return matchRoute(candidates, pathname);
   };
 
   return Object.freeze({ match, inexpressible: Object.freeze(inexpressible) });
 }
+
+const reasonText = ({ reason, param }: InexpressibleRoute): string =>
+  reason === 'case-insensitive'
+    ? 'it compiles caseInsensitive'
+    : `its param '${param}' may match a '/'`;
+
+/**
+ * The trie {@link RouteIndex}: hand it to
+ * {@link index!MountConfig.routeIndex | `MountConfig.routeIndex`} to resolve a
+ * 'matcher' mount by segment trie instead of a linear scan. Verdicts are the
+ * linear scan's. It throws at construction, naming each route it can't
+ * express: a case-insensitive url config, or a path param whose pattern may
+ * match a `/`.
+ *
+ * @example
+ * ```ts
+ * import { createServerRouter, routeTrie } from 'ui-router-server';
+ *
+ * const router = createServerRouter({
+ *   mounts: {
+ *     '/app': {
+ *       routes: [{ name: 'home', url: '' }, { name: 'item', url: '/items/:id' }],
+ *       routeIndex: routeTrie,
+ *     },
+ *   },
+ * });
+ * ```
+ */
+export const routeTrie: RouteIndex = (routes) => {
+  const trie = compileRouteTrie(routes);
+
+  if (trie.inexpressible.length > 0)
+    throw new Error(
+      `routeTrie can't express ${trie.inexpressible
+        .map(
+          (left) =>
+            `route '${left.route.name}' ('${left.route.pattern}'): ${reasonText(left)}`,
+        )
+        .join('; ')}`,
+    );
+
+  return trie.match;
+};

@@ -3,35 +3,25 @@ import { join } from 'node:path';
 
 import { benchBudget, writeBenchReport } from '@tools/shared/bench-report.ts';
 import { Bench } from 'tinybench';
-import { createServerRouter } from 'ui-router-server';
-import type { ServerRouter, Verdict } from 'ui-router-server';
+import { createServerRouter, routeTrie } from 'ui-router-server';
+import type { MountConfig, ServerRouter, Verdict } from 'ui-router-server';
 
-import { mounts, routes } from '../src/routes.ts';
+import { mounts } from '../src/routes.ts';
+import { filled, routeUrls, withRouteIndex } from './mount-paths.ts';
 
 // Resolves through ui-router-server's dist: build it first, or this times stale emit.
-const urlOf = new Map<string, string>();
 
-// Full paths for every url-bearing state, params filled with a sample value.
-for (const route of routes) {
-  if (route.url === undefined) continue;
+// Each matcher mount runs once per index, task beside task, so the ratio is within-run.
+const INDEXES = [
+  ['linear', withRouteIndex(mounts, undefined)],
+  ['trie', withRouteIndex(mounts, routeTrie)],
+] as const;
 
-  const parent = route.name.substring(0, route.name.lastIndexOf('.'));
-  const url = `${urlOf.get(parent) ?? ''}${route.url}`;
-  urlOf.set(route.name, url);
-}
-
-const hitPaths = [...urlOf.values()].map((url) =>
-  url.replaceAll(/:\w+/g, '42'),
+const routers = INDEXES.map(
+  ([label, table]) => [label, createServerRouter({ mounts: table })] as const,
 );
 
-// The flagship matcher mount and the one simulate mount, as the worker serves them.
-const SCENARIOS = [
-  { mount: '/app', miss: { kind: 'notFound', mount: '/app' } },
-  {
-    mount: '/simulated-routing',
-    miss: { kind: 'shell', mount: '/simulated-routing', status: 404 },
-  },
-] as const;
+const [[, linear], [, trie]] = routers;
 
 // Rotates through `paths` so no single entry is the only one measured.
 const rotating = (router: ServerRouter, paths: string[]) => {
@@ -40,10 +30,8 @@ const rotating = (router: ServerRouter, paths: string[]) => {
   return () => router.resolve(paths[next++ % paths.length]);
 };
 
-const router = createServerRouter({ mounts });
-
 const assertVerdict = async (path: string, expected: Verdict) => {
-  assert.deepEqual(await router.resolve(path), expected, path);
+  assert.deepEqual(await linear.resolve(path), expected, path);
 };
 
 const bench = new Bench({
@@ -52,31 +40,66 @@ const bench = new Bench({
   ...benchBudget(),
 });
 
-bench.add('construct', () => {
-  createServerRouter({ mounts });
+const hitsUnder = (mount: string, config: MountConfig) =>
+  routeUrls(config.routes).map((url) => `${mount}${filled(url, '42')}`);
+
+for (const [mount, config] of Object.entries(mounts)) {
+  if (config.strategy === 'simulate') continue;
+
+  const hits = hitsUnder(mount, config);
+  const deepest = hits.reduce((a, b) => (b.length > a.length ? b : a));
+
+  const cases = [
+    [`hit (${hits.length} routes)`, hits],
+    ['miss, unknown first segment', [`${mount}/nope`]],
+    ['miss, under a known prefix', [`${deepest}/nope`]],
+    ['slash base', [`${mount}/`]],
+    ['bare base', [mount]],
+  ] as const;
+
+  // A trie verdict that drifted from linear would time the wrong branch.
+  for (const [, paths] of cases)
+    for (const path of paths)
+      assert.deepEqual(await trie.resolve(path), await linear.resolve(path));
+
+  for (const [label, table] of INDEXES)
+    bench.add(`${mount} construct [${label}]`, () => {
+      createServerRouter({ mounts: { [mount]: table[mount] } });
+    });
+
+  for (const [name, paths] of cases)
+    for (const [label, router] of routers)
+      bench.add(`${mount} ${name} [${label}]`, rotating(router, [...paths]));
+}
+
+// The simulate mount takes no routeIndex: its rows are linear-only.
+const simulated = '/simulated-routing';
+
+const simulatedHits = hitsUnder(simulated, mounts[simulated]);
+
+for (const hit of simulatedHits)
+  await assertVerdict(hit, { kind: 'shell', mount: simulated });
+
+await assertVerdict(`${simulated}/`, {
+  kind: 'redirect',
+  mount: simulated,
+  location: `${simulated}/welcome`,
+  status: 302,
 });
 
-for (const { mount, miss } of SCENARIOS) {
-  const hits = hitPaths.map((path) => `${mount}${path}`);
-  const missPath = `${mount}/nope`;
-  const rootPath = `${mount}/`;
+await assertVerdict(`${simulated}/nope`, {
+  kind: 'shell',
+  mount: simulated,
+  status: 404,
+});
 
-  // A drifted table would silently time the wrong branch.
-  for (const hit of hits) await assertVerdict(hit, { kind: 'shell', mount });
-
-  await assertVerdict(rootPath, {
-    kind: 'redirect',
-    mount,
-    location: `${mount}/welcome`,
-    status: 302,
-  });
-  await assertVerdict(missPath, miss);
-
-  bench
-    .add(`${mount} hit (${hits.length} routes)`, rotating(router, hits))
-    .add(`${mount} root redirect`, () => router.resolve(rootPath))
-    .add(`${mount} miss`, () => router.resolve(missPath));
-}
+bench
+  .add(
+    `${simulated} hit (${simulatedHits.length} routes)`,
+    rotating(linear, simulatedHits),
+  )
+  .add(`${simulated} root redirect`, () => linear.resolve(`${simulated}/`))
+  .add(`${simulated} miss`, () => linear.resolve(`${simulated}/nope`));
 
 await bench.run();
 
@@ -86,7 +109,7 @@ console.table(bench.table());
 
 const reportPath = await writeBenchReport(bench.tasks, {
   defaultPath: join(import.meta.dirname, '..', '.cache', 'routes-bench.json'),
-  sizeOf: () => urlOf.size,
+  sizeOf: () => routeUrls(mounts['/app'].routes).length,
 });
 
 console.log(`wrote ${reportPath}`);

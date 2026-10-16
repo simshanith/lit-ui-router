@@ -352,6 +352,18 @@ Picking a tier:
   any `@uirouter/core` router before its states register; it imports no
   server code, so the client bundle can take it.
 
+A `'matcher'` mount finds its route with a linear scan by default, trying
+every pattern. `routeIndex: routeTrie` swaps in a segment trie that tries
+only the routes whose segments fit the path, with the same verdicts, so a
+path whose first segment no route declares runs no pattern at all. The trie
+can't express a case-insensitive url config or a path param whose pattern
+may match a `/` (such as `{path:.*}`). A mount that opts in with either
+throws at construction, naming the route, and a `'simulate'` mount that
+sets `routeIndex` throws too. A bundle only carries the trie if it imports
+`routeTrie`. Whether it pays depends on the table: the `acceptance (bench)`
+job summary times each of this site's mounts both ways, and the site stays
+on the scan.
+
 ## The projection: routes as data
 
 <svg viewBox="0 0 720 340" width="100%" style="max-width: 720px" role="img" aria-label="The projection: the client app's url-bearing states are projected into a pure-data route table in sample-app-routes, which the edge worker imports; components and conditional routing deliberately stay client-side, and contract tests pin the projection on every CI run" xmlns="http://www.w3.org/2000/svg">
