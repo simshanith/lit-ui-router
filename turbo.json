@@ -202,7 +202,9 @@
     // aren't linted); disable comments don't apply
     // (tools/eslint/complexity-ceiling.ts mirrors the ignores).
     "//#lint:complexity": {
-      "inputs": ["$TURBO_DEFAULT$"]
+      "inputs": ["$TURBO_DEFAULT$"],
+      // turns on github-formatter annotations, which the turbo_summary step re-emits
+      "passThroughEnv": ["GITHUB_ACTIONS"]
     },
     // lit-analyzer over every tracked src .ts, as ONE program-wide pass (the
     // tag registry is global to the run, so cross-package `<ui-view>` usage
@@ -283,7 +285,9 @@
         "packages/eslint-plugin-lit-ui-router/src/**",
         "pnpm-workspace.yaml",
         ".oxlintrc.json"
-      ]
+      ],
+      // turns on github-formatter annotations, which the turbo_summary step re-emits
+      "passThroughEnv": ["GITHUB_ACTIONS"]
     },
     // Content lint (not config plumbing, so deliberately not under
     // //#lint:workflows): rumdl over every tracked .md. Its own cache group,

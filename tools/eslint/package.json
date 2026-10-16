@@ -2,7 +2,7 @@
   "name": "@tools/eslint",
   "version": "0.0.1",
   "private": true,
-  "description": "The repo's ESLint pieces: the local repo/ rule plugin, the oxlint disable-directive stubs, and the custom-element lane the root eslint.config.ts composes",
+  "description": "The repo's ESLint pieces: the local repo/ rule plugin, the oxlint disable-directive stubs, the custom-element lane the root eslint.config.ts composes, and the formatter that adds Actions annotations to stylish output",
   "type": "module",
   "exports": {
     "./elements.ts": "./elements.ts",
@@ -13,6 +13,7 @@
     "format:check:oxfmt": "oxfmt --check \"**/*.{ts,js,json,jsonc,md}\"",
     "format:oxfmt": "oxfmt \"**/*.{ts,js,json,jsonc,md}\"",
     "lint:oxlint": "oxlint .",
+    "test": "node --test --test-reporter=@tools/shared/test-reporter.ts \"*.test.ts\"",
     "typecheck:tsc": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
