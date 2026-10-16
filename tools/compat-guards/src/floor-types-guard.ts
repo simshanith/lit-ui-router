@@ -1,14 +1,15 @@
 #!/usr/bin/env node
 // A tsconfig `paths` target that doesn't exist falls back to normal resolution,
 // so a peer-floor typecheck can pass against the workspace copy. This asserts
-// the outcome: every peer the config maps onto a <peer>-floor alias loads at
-// least one file from the floor and none from the dev copy.
+// the outcome: every peer the config maps onto a floor alias loads at least
+// one file from that alias and none from the dev copy.
 // Usage (from the package dir): floor-types-guard <tsconfig>
 import { spawnSync } from 'node:child_process';
 import { realpathSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { flooredPeers, listedFiles, peerFiles } from './floor-files.ts';
+import { floorAliases, listedFiles, peerFiles } from './floor-files.ts';
+import { parseFloorAlias } from './floor-legs.ts';
 import { type Guard, guard } from './guard.ts';
 
 // annotated: TS only treats `g.fail` as never-returning through a dotted name
@@ -47,9 +48,9 @@ function main(): void {
     g.fail('usage: floor-types-guard <tsconfig>');
   }
 
-  const peers = flooredPeers(tsc(['-p', config, '--showConfig']));
+  const aliases = floorAliases(tsc(['-p', config, '--showConfig']));
 
-  if (peers.length === 0) {
+  if (aliases.length === 0) {
     g.fail(
       `${config} maps no paths onto a node_modules/<peer>-floor alias, so ` +
         'it typechecks against no floor.',
@@ -58,10 +59,13 @@ function main(): void {
 
   const files = listedFiles(tsc(['-p', config, '--listFilesOnly']));
 
-  for (const peer of peers) {
+  for (const alias of aliases) {
+    const peer =
+      parseFloorAlias(alias)?.dep ?? g.fail(`${alias} is not a floor alias`);
+
     const dirs = {
       peer,
-      floorDir: realDir(`${peer}-floor`),
+      floorDir: realDir(alias),
       devDir: realDir(peer),
     };
 
@@ -69,7 +73,7 @@ function main(): void {
 
     if (leaked.length > 0) {
       g.fail(
-        `${config} loads ${peer} from ${dirs.devDir}, not ${peer}-floor. ` +
+        `${config} loads ${peer} from ${dirs.devDir}, not ${alias}. ` +
           'A paths target that does not exist falls back to normal ' +
           `resolution; map the subpath explicitly:\n  ${leaked.join('\n  ')}`,
       );
@@ -77,7 +81,7 @@ function main(): void {
 
     if (floor.length === 0) {
       g.fail(
-        `${config} maps ${peer} onto ${peer}-floor, but loads no file from ` +
+        `${config} maps ${peer} onto ${alias}, but loads no file from ` +
           `${dirs.floorDir}; nothing imports ${peer}, or every mapping misses.`,
       );
     }
@@ -86,7 +90,7 @@ function main(): void {
       dirs.floorDir === dirs.devDir ? `, the same install as ${peer}` : '';
 
     g.pass(
-      `${peer}: ${floor.length} files from ${peer}-floor${shared}, none leaked`,
+      `${peer}: ${floor.length} files from ${alias}${shared}, none leaked`,
     );
   }
 }
