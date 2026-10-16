@@ -10,7 +10,7 @@
 
 import { defaultExec } from '@tools/shared/exec.ts';
 import { appendStepSummary } from '@tools/shared/gha.ts';
-import { ensureGh } from '../lib/gh.ts';
+import { ensureGh } from '@tools/shared/gh.ts';
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
 import { loadWorkspace } from '@tools/shared/workspace.ts';
 

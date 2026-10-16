@@ -6,18 +6,18 @@ import os from 'node:os';
 import path from 'node:path';
 import { parseArgs } from 'node:util';
 
-import { defaultCapture } from '@tools/shared/exec.ts';
+import { defaultCapture, type Exec } from '@tools/shared/exec.ts';
+import { ensureGh } from '@tools/shared/gh.ts';
 import * as v from 'valibot';
 
+import { downloadArtifact, listArtifacts, viewRun } from './gh.ts';
 import { countLines, render, type RunSource } from './render.ts';
 import {
-  ArtifactSchema,
   artifactName,
   mergeTasks,
   parseArtifactName,
   planArtifacts,
   RUN_SUMMARIES,
-  RunInfoSchema,
   SummarySchema,
   TASK_LOGS,
   type Summary,
@@ -26,9 +26,6 @@ import {
 const usage = 'usage: ci-logs <run-id> [--baseline <run-id>] --out <file>';
 
 const RUN_ID = /^\d+$/;
-
-const gh = async (args: readonly string[]): Promise<string> =>
-  (await defaultCapture('gh', args)).stdout;
 
 const readSummary = (file: string): Summary =>
   v.parse(SummarySchema, JSON.parse(fs.readFileSync(file, 'utf8')));
@@ -49,48 +46,22 @@ function readSummaries(runDir: string, names: readonly string[]) {
   });
 }
 
-async function fetchRun(runId: string, scratch: string): Promise<RunSource> {
-  const info = v.parse(
-    RunInfoSchema,
-    JSON.parse(
-      await gh([
-        'run',
-        'view',
-        runId,
-        '--json',
-        Object.keys(RunInfoSchema.entries).join(','),
-      ]),
-    ),
-  );
-
-  const listing = await gh([
-    'api',
-    '--paginate',
-    `repos/{owner}/{repo}/actions/runs/${runId}/artifacts`,
-    '--jq',
-    '.artifacts[] | {name, expired}',
+async function fetchRun(
+  runId: string,
+  scratch: string,
+  exec: Exec,
+): Promise<RunSource> {
+  const [info, artifacts] = await Promise.all([
+    viewRun(runId, exec),
+    listArtifacts(runId, exec),
   ]);
 
-  const plan = planArtifacts(
-    listing
-      .split('\n')
-      .filter((line) => line !== '')
-      .map((line) => v.parse(ArtifactSchema, JSON.parse(line))),
-  );
-
+  const plan = planArtifacts(artifacts);
   const runDir = path.join(scratch, runId);
 
   await Promise.all(
     plan.download.map((name) =>
-      gh([
-        'run',
-        'download',
-        runId,
-        '-n',
-        name,
-        '--dir',
-        path.join(runDir, name),
-      ]),
+      downloadArtifact(runId, name, path.join(runDir, name), exec),
     ),
   );
 
@@ -134,11 +105,15 @@ const main = async (): Promise<void> => {
     return;
   }
 
+  const exec = defaultCapture;
+
+  await ensureGh(exec);
+
   const scratch = fs.mkdtempSync(path.join(os.tmpdir(), 'ci-logs-'));
 
   const [target, baseline] = await Promise.all([
-    fetchRun(runId, scratch),
-    baselineId === undefined ? undefined : fetchRun(baselineId, scratch),
+    fetchRun(runId, scratch, exec),
+    baselineId === undefined ? undefined : fetchRun(baselineId, scratch, exec),
   ]);
 
   const report = render(target, baseline);
