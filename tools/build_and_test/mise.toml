@@ -28,7 +28,7 @@ _.path = ["{{config_root}}/node_modules/.bin"]
 # runs directly — pnpm never self-links a package's own bin onto its own
 # PATH, so a bare `start-xvfb` wouldn't resolve here.
 description = "Start the shared CI Xvfb display and export DISPLAY"
-run   =   "./src/start-xvfb.ts"
+run = "./src/start-xvfb.ts"
 
 [tasks.branch_ci_gate]
 # env: GITHUB_REF_NAME, GH_TOKEN, BRANCH_CREATED (`github.event.created`;
