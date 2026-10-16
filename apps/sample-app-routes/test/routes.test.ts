@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { createServerRouter } from 'ui-router-server';
+import { createServerRouter, diagnoseMounts } from 'ui-router-server';
 
 import { mounts, routes } from '../src/routes.ts';
 import { shellMounts } from '../src/shellMounts.ts';
@@ -195,6 +195,10 @@ describe('/simulated-routing verdicts (the simulate-strategy exhibit)', () => {
 });
 
 describe('mounts', () => {
+  it('serve every bare base without a 404', () => {
+    assert.deepEqual(diagnoseMounts(mounts), []);
+  });
+
   it('cover all four sample apps with the shared route table, plus the exhibits', () => {
     assert.deepEqual(Object.keys(mounts), [
       '/app',

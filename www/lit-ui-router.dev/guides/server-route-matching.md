@@ -581,6 +581,13 @@ outright, with consumer obligations covered
 mount-joined target path, and `notFound.mount` distinguishes "a mount owned
 this path but nothing matched" from "no mount at all".
 
+To catch an unclaimed bare base in CI rather than in a log, assert in a test
+that
+[`diagnoseMounts(mounts)`](/api/ui-router-server/index/functions/diagnoseMounts)
+returns an empty array. It compiles the same mount table the same way and
+returns the findings the warning prints; `apps/sample-app-routes` runs that
+assertion over the tables above.
+
 ## The worker: verdicts → HTTP
 
 The worker

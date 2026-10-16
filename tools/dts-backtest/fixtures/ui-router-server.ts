@@ -2,8 +2,11 @@ import type { StateDeclaration, UIRouter } from '@uirouter/core';
 import type { MiddlewareHandler } from 'hono';
 import {
   createServerRouter,
+  diagnoseMounts,
   mergeSearch,
   type MountConfig,
+  type MountDiagnostic,
+  type MountDiagnosticKind,
   type RedirectRule,
   type RouteDeclaration,
   type ServerRouter,
@@ -120,6 +123,17 @@ export async function statusFor(pathname: string): Promise<number> {
   void verdict.mount?.length;
 
   return 404;
+}
+
+// Diagnostics take the table createServerRouter takes.
+export function diagnosticLines(): string[] {
+  const diagnostics: MountDiagnostic[] = diagnoseMounts({ '/app': mount });
+
+  return diagnostics.map(({ kind, mount: base, message }) => {
+    const code: MountDiagnosticKind = kind;
+
+    return `${code} ${base}: ${message}`;
+  });
 }
 
 // Matcher tier: the meta type parameter must flow through compile -> matcher.

@@ -4,7 +4,11 @@ import type { TestContext } from 'node:test';
 
 import { StateRegistry } from '@uirouter/core';
 
-import { createServerRouter, mergeSearch } from '../src/index.ts';
+import {
+  createServerRouter,
+  diagnoseMounts,
+  mergeSearch,
+} from '../src/index.ts';
 import type { MountConfig } from '../src/index.ts';
 
 const appMount = (strategy: MountConfig['strategy']): MountConfig => ({
@@ -446,7 +450,7 @@ describe('mount handling', () => {
   });
 });
 
-describe('bare mount base warning', () => {
+describe('mount diagnostics', () => {
   const warnings = (t: TestContext, mounts: Record<string, MountConfig>) => {
     const messages: string[] = [];
 
@@ -460,60 +464,84 @@ describe('bare mount base warning', () => {
     return messages;
   };
 
+  const unserved = (strategy: MountConfig['strategy']): MountConfig => ({
+    strategy,
+    routes: [{ name: 'a', url: '/a' }],
+  });
+
+  const served = {
+    '/app-hash': {
+      routes: [{ name: 'root', url: '' }],
+      config: { strict: false },
+    },
+    '/plain': { routes: [{ name: 'root', url: '' }] },
+    '/rule': appMount('matcher'),
+    '/': { routes: [{ name: 'a', url: '/a' }] },
+  } satisfies Record<string, MountConfig>;
+
   for (const strategy of ['matcher', 'simulate'] as const) {
-    it(`warns once per mount whose bare base 404s (${strategy} strategy)`, (t) => {
-      const [message, ...rest] = warnings(t, {
-        '/app': { strategy, routes: [{ name: 'a', url: '/a' }] },
+    it(`reports each mount whose bare base 404s, in declaration order (${strategy} strategy)`, () => {
+      const diagnostics = diagnoseMounts({
+        '/b/': unserved(strategy),
         '/served': appMount(strategy),
+        '/a': unserved(strategy),
       });
 
-      assert.deepEqual(rest, []);
-      assert.match(message, /mount '\/app' answers its bare base/);
+      assert.deepEqual(
+        diagnostics.map(({ kind, mount }) => ({ kind, mount })),
+        [
+          { kind: 'bareBaseNotFound', mount: '/b' },
+          { kind: 'bareBaseNotFound', mount: '/a' },
+        ],
+      );
+      const [{ message }] = diagnostics;
+      assert.match(message, /mount '\/b' answers its bare base/);
       assert.match(message, /url: '' route/);
       assert.match(message, /\{ pattern: \/\^\\\/\?\$\/, to: '<state>' \}/);
     });
   }
 
-  it('counts the otherwise shell-404 as a 404, a root redirect beside it as served', (t) => {
-    assert.equal(warnings(t, { '/app': appMountWith404('matcher') }).length, 0);
-    assert.equal(
-      warnings(t, {
+  it('counts the otherwise shell-404 as a 404, a root redirect beside it as served', () => {
+    assert.deepEqual(
+      diagnoseMounts({ '/app': appMountWith404('matcher') }),
+      [],
+    );
+    assert.deepEqual(
+      diagnoseMounts({
         '/app': {
           routes: [{ name: 'a', url: '/a' }, { name: 'notFound' }],
           otherwise: { state: 'notFound' },
         },
-      }).length,
-      1,
+      }).map(({ mount }) => mount),
+      ['/app'],
     );
   });
 
-  it("stays quiet for a url: '' route, its strict: false slash form, and the '/' mount", (t) => {
-    assert.deepEqual(
-      warnings(t, {
-        '/app-hash': {
-          routes: [{ name: 'root', url: '' }],
-          config: { strict: false },
-        },
-        '/plain': { routes: [{ name: 'root', url: '' }] },
-        '/': { routes: [{ name: 'a', url: '/a' }] },
-      }),
-      [],
-    );
+  it("finds nothing for a url: '' route, its strict: false slash form, the root rule, and the '/' mount", () => {
+    // The CI usage: an empty result is the assertion.
+    assert.deepEqual(diagnoseMounts(served), []);
   });
 
-  it('stays quiet when construction throws first', (t) => {
+  it('warns at construction with exactly the diagnostics messages', (t) => {
+    const mounts = {
+      ...served,
+      '/x': unserved('matcher'),
+      '/y': unserved('simulate'),
+    };
+
+    const messages = diagnoseMounts(mounts).map(({ message }) => message);
+
+    assert.equal(messages.length, 2);
+    assert.deepEqual(warnings(t, mounts), messages);
+    assert.deepEqual(warnings(t, served), []);
+  });
+
+  it('throws for an invalid table, and construction throws before it warns', (t) => {
     const warn = t.mock.method(console, 'warn', () => {});
+    const duplicate = { '/app': { routes: [] }, '/app/': { routes: [] } };
 
-    assert.throws(
-      () =>
-        createServerRouter({
-          mounts: {
-            '/app': { routes: [] },
-            '/app/': { routes: [] },
-          },
-        }),
-      /unique/,
-    );
+    assert.throws(() => diagnoseMounts(duplicate), /unique/);
+    assert.throws(() => createServerRouter({ mounts: duplicate }), /unique/);
     assert.equal(warn.mock.callCount(), 0);
   });
 });

@@ -140,6 +140,19 @@ export type Verdict =
       mount?: string;
     };
 
+/** What a {@link MountDiagnostic} reports; new kinds may join the union in a minor release. */
+export type MountDiagnosticKind = 'bareBaseNotFound';
+
+/** One {@link diagnoseMounts} finding. Discriminate on `kind`. */
+export interface MountDiagnostic {
+  /** What the finding reports. */
+  kind: MountDiagnosticKind;
+  /** Base of the mount the finding is about, normalized as in a {@link Verdict}. */
+  mount: string;
+  /** The text {@link createServerRouter} passes to `console.warn`. */
+  message: string;
+}
+
 /** The compiled resolver {@link createServerRouter} returns: a pathname in, a {@link Verdict} out. */
 export interface ServerRouter {
   /** Accepts a pathname, an absolute url string, or anything with a `pathname` (URL, Location). */
@@ -291,19 +304,19 @@ const compileMount = ([base, config]: [string, MountConfig]): Mount => {
   };
 };
 
+// Declaration order, so diagnostics read in the order the table was written.
 const compileMounts = (record: Record<string, MountConfig>): Mount[] => {
-  const mounts = Object.entries(record)
-    .map(compileMount)
-    // The longest matching base owns a pathname outright.
-    .sort((a, b) => b.base.length - a.base.length);
+  const mounts = Object.entries(record).map(compileMount);
 
   if (new Set(mounts.map((mount) => mount.base)).size !== mounts.length)
     throw new Error('Mount bases must be unique');
 
-  for (const mount of mounts) warnUnservedBareBase(mount);
-
   return mounts;
 };
+
+// The longest matching base owns a pathname outright.
+const byLongestBase = (mounts: Mount[]): Mount[] =>
+  [...mounts].sort((a, b) => b.base.length - a.base.length);
 
 // --- The simulate tier, behind its lazy boundary --------------------------
 
@@ -426,8 +439,8 @@ const matcherVerdict = (mount: Mount, subpath: string): Verdict => {
 };
 
 // The matcher projection stands in for both strategies: they consume the same declaration subset.
-const warnUnservedBareBase = (mount: Mount): void => {
-  if (mount.base === '/') return;
+const bareBaseDiagnostic = (mount: Mount): MountDiagnostic | null => {
+  if (mount.base === '/') return null;
 
   const verdict = matcherVerdict(mount, '');
 
@@ -435,12 +448,19 @@ const warnUnservedBareBase = (mount: Mount): void => {
     verdict.kind === 'redirect' ||
     (verdict.kind === 'shell' && verdict.status === undefined)
   )
-    return;
-  console.warn(
-    `ui-router-server: mount '${mount.base}' answers its bare base ('${mount.base}') with a 404. ` +
+    return null;
+
+  return {
+    kind: 'bareBaseNotFound',
+    mount: mount.base,
+    message:
+      `ui-router-server: mount '${mount.base}' answers its bare base ('${mount.base}') with a 404. ` +
       `Give it a url: '' route, or a redirect rule matching the empty subpath such as { pattern: /^\\/?$/, to: '<state>' }.`,
-  );
+  };
 };
+
+const diagnose = (mounts: Mount[]): MountDiagnostic[] =>
+  mounts.flatMap((mount) => bareBaseDiagnostic(mount) ?? []);
 
 // Null when the transition failed or timed out: that router may still be mid-transition.
 const replayVerdict = async (
@@ -508,14 +528,16 @@ const simulateVerdict = async (
  *
  * A bare mount base ('/app', '/app/') resolves the empty subpath, which
  * 404s unless the mount supplies a root pattern — a rule like
- * `{ pattern: /^\/?$/, to: ... }` or a `url: ''` route. Construction warns
- * through `console.warn` for each mount other than '/' whose bare base would
- * 404, including the shell-404 of an `otherwise` projection.
+ * `{ pattern: /^\/?$/, to: ... }` or a `url: ''` route. Construction passes
+ * each {@link diagnoseMounts} finding's message to `console.warn`.
  */
 export function createServerRouter(config: {
   mounts: Record<string, MountConfig>;
 }): ServerRouter {
-  const mounts = compileMounts(config.mounts);
+  const declared = compileMounts(config.mounts);
+
+  for (const diagnostic of diagnose(declared)) console.warn(diagnostic.message);
+  const mounts = byLongestBase(declared);
   const loadSimulate = makeSimulateLoader();
 
   // Still lazy for matcher-only configs, but paid at construction when a
@@ -545,4 +567,33 @@ export function createServerRouter(config: {
       return { kind: 'notFound' };
     },
   };
+}
+
+/**
+ * Checks a mount table for configurations that compile but misroute, without
+ * logging: the findings {@link createServerRouter} passes to `console.warn`.
+ * It takes the same mount table, compiles it the same way, and throws for
+ * the same invalid configs. It reports `'bareBaseNotFound'` for a mount
+ * other than '/' whose bare base (`/app`) answers 404 — `notFound`, or the
+ * shell-404 of an `otherwise` projection. Findings follow the table's
+ * declaration order. Assert the result is empty in a test to catch them in
+ * CI.
+ *
+ * @example
+ * ```ts
+ * import assert from 'node:assert/strict';
+ * import { test } from 'node:test';
+ * import { diagnoseMounts } from 'ui-router-server';
+ *
+ * import { mounts } from './routes.ts';
+ *
+ * test('every mount serves its bare base', () => {
+ *   assert.deepEqual(diagnoseMounts(mounts), []);
+ * });
+ * ```
+ */
+export function diagnoseMounts(
+  mounts: Record<string, MountConfig>,
+): MountDiagnostic[] {
+  return diagnose(compileMounts(mounts));
 }
