@@ -148,6 +148,17 @@ test is also an `::error` annotation on its assertion line, written by vitest's
 reporter wrapper every `node --test` script uses except the dependency-free
 `@tools/bootstrap`'s.
 
+A formatting failure (oxfmt or taplo) lists each file and its changed lines in
+the step summary, found by diffing the file against the formatter's stdout. Up
+to three files get an annotation on their first changed line. Past that, or
+when located findings such as tsc errors have used the step's annotation
+slots, one line says how many files need `pnpm format`. The first few files
+also show a short diff. Each file is reported once: a file that both oxfmt and
+taplo flag is run through oxfmt, then taplo, and gets one entry and one patch
+section. The reporter writes every fix to `.turbo/format.patch`,
+which CI uploads as the `format-patch` artifact; the summary prints the
+`gh run download` and `git apply` command.
+
 A red build fails the summary step, not the build step, so the job opens on the
 report. The build step prints output only for failing tasks; the
 `turbo-task-logs` artifact holds every task's full log, and the summary links

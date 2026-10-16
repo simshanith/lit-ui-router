@@ -757,31 +757,44 @@ export const ANNOTATION_LIMIT = 10;
 
 const LEVELS: readonly AnnotationLevel[] = ['error', 'warning', 'notice'];
 
+/**
+ * Findings that rank below the located ones: annotated one by one only while
+ * there are at most `limit` of them and slots left for all; otherwise the one
+ * `collapsed` line stands in for the lot, and the step summary carries them.
+ */
+export interface AnnotationTier {
+  annotations: readonly ToolAnnotation[];
+  limit: number;
+  collapsed: { level: AnnotationLevel; message: string; title?: string };
+}
+
 export interface AnnotationPlan {
   /** The rebuilt commands to print, deduplicated and capped. */
   commands: string[];
-  /** Distinct annotations found, per level. */
+  /** Distinct located annotations found, per level. */
   found: Record<AnnotationLevel, number>;
   /** Of those, how many fit under the cap, per level. */
   emitted: Record<AnnotationLevel, number>;
+  /** Per tier, whether it went out as its collapsed line (or not at all). */
+  collapsed: boolean[];
 }
 
-/**
- * Deduplicated and capped per level. `reserved` holds slots back for the
- * step's own annotations — the failure headline takes one error.
- */
-export function planAnnotations(
+type LevelCounts = Record<AnnotationLevel, number>;
+
+/** Distinct commands per level, skipping any already planned. */
+function distinctCommands(
   annotations: readonly ToolAnnotation[],
-  reserved: Partial<Record<AnnotationLevel, number>> = {},
-): AnnotationPlan {
-  const found = { error: 0, warning: 0, notice: 0 };
-  const emitted = { error: 0, warning: 0, notice: 0 };
-  const commands: string[] = [];
-  const seen = new Set<string>();
+  seen: ReadonlySet<string>,
+): Record<AnnotationLevel, string[]> {
+  const out: Record<AnnotationLevel, string[]> = {
+    error: [],
+    warning: [],
+    notice: [],
+  };
+
+  const added = new Set(seen);
 
   for (const level of LEVELS) {
-    const cap = Math.max(0, ANNOTATION_LIMIT - (reserved[level] ?? 0));
-
     for (const annotation of annotations) {
       if (annotation.level !== level) continue;
 
@@ -791,18 +804,91 @@ export function planAnnotations(
         annotation.properties,
       );
 
-      if (seen.has(command)) continue;
-      seen.add(command);
-      found[level] += 1;
-
-      if (emitted[level] < cap) {
-        emitted[level] += 1;
-        commands.push(command);
-      }
+      if (added.has(command)) continue;
+      added.add(command);
+      out[level].push(command);
     }
   }
 
-  return { commands, found, emitted };
+  return out;
+}
+
+interface TierPlan {
+  commands: string[];
+  collapsed: boolean;
+}
+
+/** One tier's commands, whole or collapsed, taken out of `left`. */
+function planTier(
+  tier: AnnotationTier,
+  seen: Set<string>,
+  left: LevelCounts,
+): TierPlan {
+  const byLevel = distinctCommands(tier.annotations, seen);
+  const all = LEVELS.flatMap((level) => byLevel[level]);
+
+  if (all.length === 0) return { commands: [], collapsed: false };
+
+  const fits =
+    all.length <= tier.limit &&
+    LEVELS.every((level) => byLevel[level].length <= left[level]);
+
+  if (fits) {
+    for (const level of LEVELS) left[level] -= byLevel[level].length;
+
+    for (const command of all) seen.add(command);
+
+    return { commands: all, collapsed: false };
+  }
+
+  const { level, message, title } = tier.collapsed;
+
+  if (left[level] <= 0) return { commands: [], collapsed: true };
+  left[level] -= 1;
+
+  return {
+    commands: [annotationCommand(level, message, { title })],
+    collapsed: true,
+  };
+}
+
+/**
+ * Deduplicated and capped per level. `reserved` holds slots back for the
+ * step's own annotations — the failure headline takes one error. Located
+ * findings take slots first; each tier after them gets what is left, in order.
+ */
+export function planAnnotations(
+  annotations: readonly ToolAnnotation[],
+  reserved: Partial<LevelCounts> = {},
+  tiers: readonly AnnotationTier[] = [],
+): AnnotationPlan {
+  const found = { error: 0, warning: 0, notice: 0 };
+  const emitted = { error: 0, warning: 0, notice: 0 };
+  const commands: string[] = [];
+  const seen = new Set<string>();
+  const byLevel = distinctCommands(annotations, seen);
+  const left = { error: 0, warning: 0, notice: 0 };
+
+  for (const level of LEVELS) {
+    const cap = Math.max(0, ANNOTATION_LIMIT - (reserved[level] ?? 0));
+    const kept = byLevel[level].slice(0, cap);
+
+    found[level] = byLevel[level].length;
+    emitted[level] = kept.length;
+    left[level] = cap - kept.length;
+    commands.push(...kept);
+
+    for (const command of byLevel[level]) seen.add(command);
+  }
+
+  const collapsed = tiers.map((tier) => {
+    const planned = planTier(tier, seen, left);
+    commands.push(...planned.commands);
+
+    return planned.collapsed;
+  });
+
+  return { commands, found, emitted, collapsed };
 }
 
 /** The tally line both lanes print; undefined when no log carried any. */
@@ -998,7 +1084,7 @@ export function logsLink(
 }
 
 /** Plain https only, and nothing that could end an angle-bracket destination. */
-function safeArtifactUrl(url: string | undefined): string | undefined {
+export function safeArtifactUrl(url: string | undefined): string | undefined {
   if (url === undefined || !url.startsWith('https://')) return undefined;
 
   if (/[\s<>]/.test(url)) return undefined;
