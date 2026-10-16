@@ -107,6 +107,20 @@ the production build, because reading `NODE_ENV` there needs `--allow-env`.
 Only the `node` side of `#dev-gate` mentions `process`, so a Worker or browser
 bundle never contains it.
 
+What to set:
+
+- **Bundling a server for production with esbuild or Rollup:** pass the
+  `production` condition (esbuild `--conditions=production`, or `production`
+  in node-resolve's `exportConditions`). Without it, the bundle ships the
+  development build and the `NODE_ENV` read.
+- **Deploying on Node or Bun:** set `NODE_ENV=production`, or run
+  `node -C production`.
+- **Development warnings on Deno or Workers:** opt in with the `development`
+  condition: `--conditions=development`, or `development` in
+  `WRANGLER_BUILD_CONDITIONS` on the command that starts `wrangler dev`. Never
+  set it in `.env`, which `wrangler deploy` also loads.
+- **Vite, vitest, jest and webpack:** nothing to set.
+
 ## What still warns in production
 
 Two warnings are not part of the split and ship in both builds: `<ui-router>`
