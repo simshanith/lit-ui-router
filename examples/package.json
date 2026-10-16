@@ -17,6 +17,7 @@
     "example:install:hellosolarsystem-signals": "npm ci --prefix hellosolarsystem-signals",
     "example:install:helloworld": "npm ci --prefix helloworld",
     "example:install:lint-eslint": "npm ci --prefix lint-eslint",
+    "example:install:loading-and-error-views": "npm ci --prefix loading-and-error-views",
     "example:install:navigation-api": "npm ci --prefix navigation-api",
     "format:check:oxfmt": "oxfmt --check \"**/*.{ts,js,json,md,html}\"",
     "format:oxfmt": "oxfmt \"**/*.{ts,js,json,md,html}\"",
@@ -34,6 +35,7 @@
     "typecheck:example:hellosolarsystem-signals": "tsc -p hellosolarsystem-signals",
     "typecheck:example:helloworld": "tsc -p helloworld",
     "typecheck:example:lint-eslint": "tsc -p lint-eslint",
+    "typecheck:example:loading-and-error-views": "tsc -p loading-and-error-views",
     "typecheck:example:navigation-api": "tsc -p navigation-api",
     "typecheck:tsc": "concurrently --prefix-colors auto \"npm:typecheck:example:*\""
   },
