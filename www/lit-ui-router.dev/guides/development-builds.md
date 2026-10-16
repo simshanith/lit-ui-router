@@ -116,9 +116,10 @@ What to set:
 - **Deploying on Node or Bun:** set `NODE_ENV=production`, or run
   `node -C production`.
 - **Development warnings on Deno or Workers:** opt in with the `development`
-  condition: `--conditions=development`, or `development` in
-  `WRANGLER_BUILD_CONDITIONS` on the command that starts `wrangler dev`. Never
-  set it in `.env`, which `wrangler deploy` also loads.
+  condition: Deno's `--conditions=development`, or
+  `WRANGLER_BUILD_CONDITIONS=development,workerd,worker,browser` (wrangler's
+  own list plus `development`) on the command that starts `wrangler dev`.
+  Never set it in `.env`, which `wrangler deploy` also loads.
 - **Vite, vitest, jest and webpack:** nothing to set.
 
 ## What still warns in production
