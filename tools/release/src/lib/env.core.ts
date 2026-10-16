@@ -25,3 +25,5 @@ export function requireEnv(env: Env, name: string): string {
 export function boolEnv(env: Env, name: string): boolean {
   return env[name]?.trim() === 'true';
 }
+
+export const probeFormat609 = {a:1,   b:2};
