@@ -1,6 +1,8 @@
 // oxfmt and taplo name files, not lines; run-summary.ts diffs each against the formatter's stdout.
 // The same diffs make the step-summary previews and the `git apply` patch.
 
+import { basename } from 'node:path';
+
 import {
   type AnnotationTier,
   type RunSummary,
@@ -39,8 +41,8 @@ export const PREVIEW_WIDTH = 160;
 /** Where the reporter writes the patch, repo-root-relative. */
 export const FORMAT_PATCH = '.turbo/format.patch';
 
-/** The artifact name: `archive: false` names an upload after its file. */
-export const FORMAT_PATCH_ARTIFACT = 'format.patch';
+/** The run artifact that holds `format.patch`; build-test-run.yml uploads it. */
+export const FORMAT_PATCH_ARTIFACT = 'format-patch';
 
 /** A changed range of the file as committed, 1-based and inclusive. */
 export interface Hunk {
@@ -229,7 +231,7 @@ export function formatPatch(findings: readonly FormatFinding[]): string {
 export function patchCommand(runId: string | undefined): string {
   return runId === undefined || runId === ''
     ? `git apply ${FORMAT_PATCH}`
-    : `gh run download ${runId} -n ${FORMAT_PATCH_ARTIFACT} && git apply ${FORMAT_PATCH_ARTIFACT}`;
+    : `gh run download ${runId} -n ${FORMAT_PATCH_ARTIFACT} && git apply ${basename(FORMAT_PATCH)}`;
 }
 
 function plural(count: number, one: string, many: string): string {

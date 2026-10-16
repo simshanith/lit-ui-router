@@ -514,7 +514,7 @@ describe('format patch', () => {
   it('downloads from the run on Actions and reads the local file otherwise', () => {
     assert.equal(
       patchCommand('123'),
-      'gh run download 123 -n format.patch && git apply format.patch',
+      'gh run download 123 -n format-patch && git apply format.patch',
     );
     assert.equal(patchCommand(undefined), 'git apply .turbo/format.patch');
   });
