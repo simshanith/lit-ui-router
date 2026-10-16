@@ -315,6 +315,32 @@ A warning that also shows in a recent `main` run predates the change. A
 failure; the workflow header says what each means, and each `release signals`
 job's summary lists its verdicts ([RELEASE.md](RELEASE.md#5-release-signals-release-signalsyml)).
 
+### Benchmarking a change
+
+To check whether a performance change helps, time it with the
+`sample-app-routes` bench
+([`routes.bench.ts`](../apps/sample-app-routes/test/routes.bench.ts)), which
+resolves the sample app's route table through `ui-router-server`.
+
+- The bench imports `ui-router-server` from its `dist/`.
+  `mise exec -- turbo run bench --filter=sample-app-routes` builds it first;
+  `pnpm --filter sample-app-routes bench` does not, so run
+  `mise exec -- turbo run build --filter=ui-router-server` before each run or
+  it times stale code.
+- Alternate the versions on one machine (A, B, A, B) and keep every run's
+  report. Each run overwrites `apps/sample-app-routes/.cache/routes-bench.json`
+  unless given `--json <path>`; `BENCH_TIME_MS` sets tinybench's time budget
+  per task. A single run, or a CI run compared against a local one, is not
+  evidence.
+- Judge a gap against how much the same task moves between runs, not against
+  tinybench's ± RME: that margin comes from thousands of samples in one process
+  and overstates confidence. Where a task is timed both ways in one run, the
+  ratio between the two is the steadiest number to compare.
+- The advisory `acceptance (bench)` job is a short, noisy pulse that catches
+  only order-of-magnitude shifts;
+  [RELEASE.md](RELEASE.md#6-acceptance-acceptanceyml) and
+  [TURBO.md](TURBO.md) describe it.
+
 ## TypeScript authoring
 
 The published packages support consumers on **TypeScript 5.0+**, while the
