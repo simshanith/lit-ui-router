@@ -402,8 +402,19 @@ describe('diff preview', () => {
       header: '@@ -10,3 +10,2 @@',
       removed: ['-  let   a=1;'],
       added: ['+  let a = 1;'],
-      more: 3,
+      more: 2,
     });
+  });
+
+  it('counts source lines left out by the longer side, not diff lines', () => {
+    const even =
+      '@@ -9,3 +9,3 @@\n-a  =1\n-b  =2\n-c  =3\n+a = 1\n+b = 2\n+c = 3';
+
+    const split = '@@ -5 +5,3 @@\n-f(a,b)\n+f(\n+  a,\n+  b)';
+
+    assert.equal(parsePreview(even)?.more, 2);
+    assert.equal(parsePreview(split)?.more, 2);
+    assert.equal(parsePreview('@@ -1,2 +1 @@\n-a\n-b\n+ab')?.more, 1);
   });
 
   it('handles one-sided hunks, long lines and no hunk at all', () => {
@@ -543,7 +554,7 @@ describe('formatting previews', () => {
           '  @@ -10,3 +10,2 @@',
           '  -  let   a=1;',
           '  +  let a = 1;',
-          '  … 3 more lines',
+          '  … 2 more changed lines',
           '  ```',
           '',
           '- `f1.ts`',
@@ -553,6 +564,15 @@ describe('formatting previews', () => {
     assert.match(
       markdown,
       /^- `f6\.ts` \(oxfmt\) — lines 10–12, 20\n\n<\/details>/m,
+    );
+    assert.match(
+      formattingMarkdown([
+        {
+          ...finding('a.ts', [{ line: 1, endLine: 2 }]),
+          preview: parsePreview('@@ -1,2 +1 @@\n-a\n-b\n+ab'),
+        },
+      ]),
+      /^ {2}… 1 more changed line$/m,
     );
   });
 
@@ -593,5 +613,33 @@ describe('formatting previews', () => {
       '   The patch covers 1 of 2 files; run `pnpm format` for the rest.',
       '',
     ]);
+  });
+
+  it('links the uploaded patch in the summary, not on stdout', () => {
+    const url =
+      'https://github.com/simshanith/lit-ui-router/actions/runs/1/artifacts/2';
+
+    const patch = {
+      command: 'gh run download 1 -n format-patch && git apply format.patch',
+      files: 1,
+      url,
+    };
+
+    assert.match(
+      formattingMarkdown([previewed('a.ts')], patch),
+      /^Apply the fix: \[format-patch\]\(<https:\/\/github\.com\/simshanith\/lit-ui-router\/actions\/runs\/1\/artifacts\/2>\) — `gh run download 1 -n format-patch && git apply format\.patch`$/m,
+    );
+    assert.ok(
+      formattingLines([previewed('a.ts')], patch).includes(
+        '   Apply the fix: `gh run download 1 -n format-patch && git apply format.patch`',
+      ),
+    );
+    assert.match(
+      formattingMarkdown([previewed('a.ts')], {
+        ...patch,
+        url: 'javascript:alert(1)',
+      }),
+      /^Apply the fix: `gh run download/m,
+    );
   });
 });

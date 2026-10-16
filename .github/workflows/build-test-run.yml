@@ -194,6 +194,23 @@ jobs:
           include-hidden-files: true
           retention-days: 5
           if-no-files-found: ignore
+      - name: Write format patch
+        # Ahead of the summary, so the upload's artifact-url can link from it.
+        # The summary step rewrites the same patch. Fails open, like the summary.
+        if: ${{ !cancelled() && (steps.build.outcome == 'failure' || steps.build_main.outcome == 'failure') }}
+        run: mise run //tools/build_and_test:format_patch
+      - name: Upload format patch
+        # Written only when a format check failed.
+        id: format_patch
+        if: ${{ !cancelled() && (steps.build.outcome == 'failure' || steps.build_main.outcome == 'failure') }}
+        uses: actions/upload-artifact@v7
+        continue-on-error: true
+        with:
+          # Zipped: `gh run download` can't extract an `archive: false` upload.
+          name: format-patch
+          path: .turbo/format.patch
+          retention-days: 5
+          if-no-files-found: ignore
       - name: Turbo run summary
         # Reads every `--summarize` artifact this job's session wrote and
         # reports each: cache split, slowest tasks and longest dependency chain
@@ -220,18 +237,8 @@ jobs:
           TURBO_LOGS_ARTIFACT_URL: ${{ steps.task_logs.outputs.artifact-url }}
           # Empty on a green run or when no spec wrote an attachment.
           VITEST_ATTACHMENTS_ARTIFACT_URL: ${{ steps.vitest_attachments.outputs.artifact-url }}
-      - name: Upload format patch
-        # The summary step writes it, so this follows it; the summary prints the
-        # `gh run download` command. Written only when a format check failed.
-        if: ${{ !cancelled() && (steps.build.outcome == 'failure' || steps.build_main.outcome == 'failure') }}
-        uses: actions/upload-artifact@v7
-        continue-on-error: true
-        with:
-          # Zipped: `gh run download` can't extract an `archive: false` upload.
-          name: format-patch
-          path: .turbo/format.patch
-          retention-days: 5
-          if-no-files-found: ignore
+          # Empty unless a format check failed.
+          FORMAT_PATCH_ARTIFACT_URL: ${{ steps.format_patch.outputs.artifact-url }}
       - name: Upload Codecov bundle stats
         # Implicit success(): the summary step above is red after a red build.
         run: mise run codecov_bundle

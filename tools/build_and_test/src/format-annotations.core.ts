@@ -12,6 +12,7 @@ import {
   fenceFor,
   inlineCode,
   repoRelativeFile,
+  safeArtifactUrl,
   stripAnsi,
 } from './run-summary.core.ts';
 
@@ -71,7 +72,7 @@ export interface DiffPreview {
   header: string;
   removed: string[];
   added: string[];
-  /** Changed lines of the hunk left out. */
+  /** Changed source lines left out: the longer side's count, less the lines shown. */
   more: number;
 }
 
@@ -80,6 +81,8 @@ export interface PatchNote {
   command: string;
   /** Files the patch fixes; the findings past it need `pnpm format`. */
   files: number;
+  /** The uploaded artifact, linked from the step summary. */
+  url?: string;
 }
 
 function clean(rawLine: string): string {
@@ -202,7 +205,8 @@ export function parsePreview(diff: string): DiffPreview | undefined {
     header,
     ...shown,
     more:
-      removed.length + added.length - shown.removed.length - shown.added.length,
+      Math.max(removed.length, added.length) -
+      Math.max(shown.removed.length, shown.added.length),
   };
 }
 
@@ -306,7 +310,7 @@ function previewBlock(preview: DiffPreview): string[] {
     ...preview.removed,
     ...preview.added,
     ...(preview.more > 0
-      ? [`… ${plural(preview.more, 'more line', 'more lines')}`]
+      ? [`… ${plural(preview.more, 'more changed line', 'more changed lines')}`]
       : []),
   ];
 
@@ -323,11 +327,12 @@ function previewBlock(preview: DiffPreview): string[] {
 function patchSentences(
   findings: readonly FormatFinding[],
   patch: PatchNote,
+  link?: string,
 ): string[] {
   const left = findings.length - patch.files;
 
   return [
-    `Apply the fix: ${inlineCode(patch.command)}`,
+    `Apply the fix: ${link === undefined ? '' : `${link} — `}${inlineCode(patch.command)}`,
     ...(left > 0
       ? [
           `The patch covers ${patch.files} of ${findings.length} files; run ${inlineCode(FORMAT_FIX)} for the rest.`,
@@ -365,9 +370,14 @@ export function formattingMarkdown(
   if (out.at(-1) !== '') out.push('');
   out.push('</details>', '');
 
+  const url = safeArtifactUrl(patch?.url);
+
+  const link =
+    url === undefined ? undefined : `[${FORMAT_PATCH_ARTIFACT}](<${url}>)`;
+
   for (const sentence of patch === undefined
     ? []
-    : patchSentences(findings, patch))
+    : patchSentences(findings, patch, link))
     out.push(sentence, '');
 
   return `${out.join('\n')}\n`;

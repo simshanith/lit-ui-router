@@ -34,7 +34,10 @@
 //      A11Y_SCREENSHOTS_ARTIFACT_URL (the uploaded axe screenshots, linked
 //      when the axe pass found violations),
 //      TURBO_LOGS_ARTIFACT_URL (the uploaded per-task turbo logs),
-//      GITHUB_RUN_ID (names the run in the format.patch download command).
+//      GITHUB_RUN_ID (names the run in the format.patch download command),
+//      FORMAT_PATCH_ARTIFACT_URL (the uploaded format.patch, linked beside it),
+//      FORMAT_PATCH_ONLY (`1`: write format.patch and report nothing, so the
+//      workflow can upload it before the report links it).
 
 import { spawnSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
@@ -326,6 +329,7 @@ function writePatch(findings: readonly FormatFinding[]): PatchNote | undefined {
   return {
     command: patchCommand(onActions() ? process.env.GITHUB_RUN_ID : undefined),
     files: findings.filter(({ patch }) => patch !== undefined).length,
+    url: process.env.FORMAT_PATCH_ARTIFACT_URL,
   };
 }
 
@@ -462,6 +466,8 @@ async function main(): Promise<void> {
 
   diffFormatting(formatting);
   const patch = writePatch(formatting);
+
+  if (process.env.FORMAT_PATCH_ONLY === '1') return;
 
   await publish(
     runs,

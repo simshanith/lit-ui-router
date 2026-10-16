@@ -1038,7 +1038,7 @@ export function logsLink(
 }
 
 /** Plain https only, and nothing that could end an angle-bracket destination. */
-function safeArtifactUrl(url: string | undefined): string | undefined {
+export function safeArtifactUrl(url: string | undefined): string | undefined {
   if (url === undefined || !url.startsWith('https://')) return undefined;
 
   if (/[\s<>]/.test(url)) return undefined;

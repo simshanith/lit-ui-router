@@ -70,6 +70,12 @@ run = [
   'if [ "${usage_build_outcome:-}" = failure ]; then echo "turbo_summary: the build step failed; its failing tasks are reported above" >&2; exit 1; fi',
 ]
 
+[tasks.format_patch]
+# The reporter's first half: CI uploads the patch before turbo_summary links it.
+description = "Write this session's formatting fixes to .turbo/format.patch, without reporting"
+dir = "{{config_root}}/../.."
+run = 'FORMAT_PATCH_ONLY=1 ./tools/build_and_test/src/run-summary.ts'
+
 [tasks.playwright_version]
 # env: GITHUB_OUTPUT (step-output target). One task per browser tool so each
 # cache step derives its key alone.
