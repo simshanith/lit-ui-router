@@ -2,7 +2,7 @@
   "name": "@tools/wintercg-globals",
   "version": "0.0.1",
   "private": true,
-  "description": "The minimal WinterCG global surface (setTimeout, clearTimeout, URLSearchParams, console.warn) a runtime-neutral src graph compiles against, consumed through tsconfig `types` so every program names the surface it wants",
+  "description": "The minimal WinterCG global surface (setTimeout, clearTimeout, URLSearchParams) a runtime-neutral src graph compiles against, consumed through tsconfig `types` so every program names the surface it wants",
   "type": "module",
   "types": "./src/globals.d.ts",
   "exports": {

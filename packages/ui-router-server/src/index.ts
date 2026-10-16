@@ -13,6 +13,7 @@
 
 import type { RawParams, StateDeclaration } from '@uirouter/core';
 
+import { warnMountDiagnostics } from './dev-warn.ts';
 import { compileResolver, matchRoute } from './redirects.ts';
 import { createRouterPool, POOL_MAX_IDLE } from './router-pool.ts';
 import type { PooledRouter, RouterPool } from './router-pool.ts';
@@ -149,7 +150,7 @@ export interface MountDiagnostic {
   kind: MountDiagnosticKind;
   /** Base of the mount the finding is about, normalized as in a {@link Verdict}. */
   mount: string;
-  /** The text {@link createServerRouter} passes to `console.warn`. */
+  /** What to fix, in a sentence; the development build's construction warning prints it. */
   message: string;
 }
 
@@ -454,7 +455,7 @@ const bareBaseDiagnostic = (mount: Mount): MountDiagnostic | null => {
     kind: 'bareBaseNotFound',
     mount: mount.base,
     message:
-      `ui-router-server: mount '${mount.base}' answers its bare base ('${mount.base}') with a 404. ` +
+      `mount '${mount.base}' answers its bare base ('${mount.base}') with a 404. ` +
       `Give it a url: '' route, or a redirect rule matching the empty subpath such as { pattern: /^\\/?$/, to: '<state>' }.`,
   };
 };
@@ -528,15 +529,17 @@ const simulateVerdict = async (
  *
  * A bare mount base ('/app', '/app/') resolves the empty subpath, which
  * 404s unless the mount supplies a root pattern — a rule like
- * `{ pattern: /^\/?$/, to: ... }` or a `url: ''` route. Construction passes
- * each {@link diagnoseMounts} finding's message to `console.warn`.
+ * `{ pattern: /^\/?$/, to: ... }` or a `url: ''` route. In the development
+ * build (the `development` export condition), construction passes each
+ * {@link diagnoseMounts} finding's message to `console.warn`; the production
+ * build skips the check.
  */
 export function createServerRouter(config: {
   mounts: Record<string, MountConfig>;
 }): ServerRouter {
   const declared = compileMounts(config.mounts);
 
-  for (const diagnostic of diagnose(declared)) console.warn(diagnostic.message);
+  warnMountDiagnostics(() => diagnose(declared));
   const mounts = byLongestBase(declared);
   const loadSimulate = makeSimulateLoader();
 
@@ -571,7 +574,8 @@ export function createServerRouter(config: {
 
 /**
  * Checks a mount table for configurations that compile but misroute, without
- * logging: the findings {@link createServerRouter} passes to `console.warn`.
+ * logging: the findings the development build of {@link createServerRouter}
+ * passes to `console.warn`, returned in both builds.
  * It takes the same mount table, compiles it the same way, and throws for
  * the same invalid configs. It reports `'bareBaseNotFound'` for a mount
  * other than '/' whose bare base (`/app`) answers 404 — `notFound`, or the

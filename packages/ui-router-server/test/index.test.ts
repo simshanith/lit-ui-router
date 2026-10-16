@@ -10,6 +10,7 @@ import {
   mergeSearch,
 } from '../src/index.ts';
 import type { MountConfig } from '../src/index.ts';
+import { stubDev } from './import-meta-env.ts';
 
 const appMount = (strategy: MountConfig['strategy']): MountConfig => ({
   strategy,
@@ -522,18 +523,30 @@ describe('mount diagnostics', () => {
     assert.deepEqual(diagnoseMounts(served), []);
   });
 
-  it('warns at construction with exactly the diagnostics messages', (t) => {
-    const mounts = {
-      ...served,
-      '/x': unserved('matcher'),
-      '/y': unserved('simulate'),
-    };
+  const mixed = {
+    ...served,
+    '/x': unserved('matcher'),
+    '/y': unserved('simulate'),
+  } satisfies Record<string, MountConfig>;
 
-    const messages = diagnoseMounts(mounts).map(({ message }) => message);
+  it('warns at construction in development with exactly the diagnostics messages', (t) => {
+    const messages = diagnoseMounts(mixed).map(
+      ({ message }) => `ui-router-server: createServerRouter: ${message}`,
+    );
 
     assert.equal(messages.length, 2);
-    assert.deepEqual(warnings(t, mounts), messages);
+    assert.deepEqual(warnings(t, mixed), messages);
     assert.deepEqual(warnings(t, served), []);
+  });
+
+  it('stays silent in production, where diagnoseMounts still reports', (t) => {
+    t.after(stubDev(false));
+
+    assert.deepEqual(warnings(t, mixed), []);
+    assert.deepEqual(
+      diagnoseMounts(mixed).map(({ mount }) => mount),
+      ['/x', '/y'],
+    );
   });
 
   it('throws for an invalid table, and construction throws before it warns', (t) => {

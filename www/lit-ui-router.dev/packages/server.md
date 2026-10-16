@@ -154,10 +154,12 @@ const verdict = await router.resolve('/app/contacts/3');
 
 The longest matching mount base owns a pathname outright. A bare mount base
 (`/app`) resolves the empty subpath, which the `/^\/?$/` rule above claims;
-construction warns for each mount other than `/` that leaves it to 404. To
-catch that in CI, assert in a test that
+the [development build](/guides/development-builds#ui-router-server) warns at
+construction for each mount other than `/` that leaves it to 404. To catch that
+in CI, assert in a test that
 [`diagnoseMounts(mounts)`](/api/ui-router-server/index/functions/diagnoseMounts)
-returns an empty array: it reports, as data, the findings the warning prints.
+returns an empty array: it reports, as data and in both builds, the findings
+the warning prints.
 
 ## The verdict
 

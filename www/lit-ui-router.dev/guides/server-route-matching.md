@@ -562,8 +562,9 @@ unknown redirect targets, cycles, and a bad `otherwise` target throw at
 startup, never per-request — and the longest matching mount base owns a
 pathname outright. A mount's bare base (`/app`) resolves the empty subpath,
 so it 404s unless a `url: ''` route or a rule such as
-`{ pattern: /^\/?$/, to: 'welcome' }` claims it; construction warns once for
-each mount other than `/` that leaves it unclaimed. `resolve()` accepts a
+`{ pattern: /^\/?$/, to: 'welcome' }` claims it. The
+[development build](./development-builds#ui-router-server) warns at
+construction for each mount other than `/` that leaves it unclaimed. `resolve()` accepts a
 pathname, an absolute URL string, or anything with a `pathname`:
 
 ```ts
@@ -585,8 +586,8 @@ To catch an unclaimed bare base in CI rather than in a log, assert in a test
 that
 [`diagnoseMounts(mounts)`](/api/ui-router-server/index/functions/diagnoseMounts)
 returns an empty array. It compiles the same mount table the same way and
-returns the findings the warning prints; `apps/sample-app-routes` runs that
-assertion over the tables above.
+returns the findings the warning prints, in both builds;
+`apps/sample-app-routes` runs that assertion over the tables above.
 
 ## The worker: verdicts → HTTP
 

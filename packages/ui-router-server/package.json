@@ -27,60 +27,71 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
+      "development": "./dist/development/index.js",
       "default": "./dist/index.js"
     },
     "./connect": {
       "types": "./dist/connect.d.ts",
+      "development": "./dist/development/connect.js",
       "default": "./dist/connect.js"
     },
     "./dist/*": "./dist/*",
     "./fetch": {
       "types": "./dist/fetch.d.ts",
+      "development": "./dist/development/fetch.js",
       "default": "./dist/fetch.js"
     },
     "./hono": {
       "types": "./dist/hono.d.ts",
+      "development": "./dist/development/hono.js",
       "default": "./dist/hono.js"
     },
     "./location": {
       "types": "./dist/location.d.ts",
+      "development": "./dist/development/location.js",
       "default": "./dist/location.js"
     },
     "./matcher": {
       "types": "./dist/url-matcher.d.ts",
+      "development": "./dist/development/url-matcher.js",
       "default": "./dist/url-matcher.js"
     },
     "./package.json": "./package.json",
     "./redirects": {
       "types": "./dist/redirects.d.ts",
+      "development": "./dist/development/redirects.js",
       "default": "./dist/redirects.js"
     },
     "./simulate": {
       "types": "./dist/simulate.d.ts",
+      "development": "./dist/development/simulate.js",
       "default": "./dist/simulate.js"
     },
     "./url-config": {
       "types": "./dist/url-config.d.ts",
+      "development": "./dist/development/url-config.js",
       "default": "./dist/url-config.js"
     },
     "./vite": {
       "types": "./dist/vite.d.ts",
+      "development": "./dist/development/vite.js",
       "default": "./dist/vite.js"
     }
   },
   "scripts": {
     "bench": "node test/resolve.bench.ts",
-    "build:js": "oxc-emit-js",
+    "build:js": "oxc-emit-js --development",
     "build:types": "oxc-emit-dts",
     "changelog": "release-it --changelog --git.tagMatch=\"ui-router-server@[0-9]*.[0-9]*.[0-9]*\"",
     "check:bundle": "floor-guard && check-bundle-inputs",
+    "check:dev-split": "oxc-emit-check-dev-split",
     "codecov:bundle": "upload-entry-bundles",
     "docs:api": "rimraf ../../www/lit-ui-router.dev/api/ui-router-server && typedoc",
     "format:check:oxfmt": "oxfmt --check \"**/*.{ts,js,json,md}\"",
     "format:oxfmt": "oxfmt \"**/*.{ts,js,json,md}\"",
     "lint:oxlint": "oxlint .",
-    "test": "node --test --test-reporter=@tools/shared/test-reporter.ts \"test/**/*.test.ts\"",
-    "test:coverage": "mkdir -p coverage && node --test --experimental-test-coverage --test-coverage-include=\"src/**\" --test-reporter=@tools/shared/test-reporter.ts --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=coverage/lcov.info \"test/**/*.test.ts\" && rebase-lcov coverage/lcov.info",
+    "test": "node --import ./test/import-meta-env.ts --test --test-reporter=@tools/shared/test-reporter.ts \"test/**/*.test.ts\"",
+    "test:coverage": "mkdir -p coverage && node --import ./test/import-meta-env.ts --test --experimental-test-coverage --test-coverage-include=\"src/**\" --test-reporter=@tools/shared/test-reporter.ts --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=coverage/lcov.info \"test/**/*.test.ts\" && rebase-lcov coverage/lcov.info",
     "typecheck:runtime-globals": "tsc -p tsconfig.runtime-globals.json --noEmit",
     "typecheck:src": "tsc -p tsconfig.src.json --noEmit",
     "typecheck:tests": "tsc -p test/tsconfig.json --noEmit",

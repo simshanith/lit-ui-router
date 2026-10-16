@@ -262,7 +262,8 @@
         "packages/lit-ui-router-effect/src/**/*.ts",
         "packages/lit-ui-router-mobx/src/**/*.ts",
         "packages/lit-ui-router-signals/src/**/*.ts",
-        "packages/lit-ui-router-ssr/src/**/*.ts"
+        "packages/lit-ui-router-ssr/src/**/*.ts",
+        "packages/ui-router-server/src/**/*.ts"
       ],
       "rules": {
         "turbo/no-undeclared-env-vars": [
