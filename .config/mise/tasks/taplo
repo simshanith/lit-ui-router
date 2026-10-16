@@ -26,4 +26,5 @@ if [ "${#files[@]}" -eq 0 ]; then
   exit 0
 fi
 
-exec taplo "$@" "${files[@]}"
+# taplo has no log-level flag; its INFO lines dump every absolute path on success.
+RUST_LOG="${RUST_LOG:-warn}" exec taplo "$@" "${files[@]}"
