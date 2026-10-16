@@ -83,22 +83,26 @@ that renders once with its initial value and never again.
 
 Server runtimes pick a build by their own export conditions.
 `lit-ui-router-ssr` maps `node` to its development build too, so a prerender
-script run with plain `node` reports what it skipped. Each warning there also
-asks the package's `#dev-gate` import (`imports` in its `package.json`): under
-`node` it reads `process.env.NODE_ENV` when the warning would fire and stays
-silent for `production`; under every other condition it always answers yes.
-`deno` keeps the production build, because reading `NODE_ENV` there needs
-`--allow-env`.
+script run with plain `node` reports what it skipped. A `production` condition
+ahead of `node` takes the production build back, so a production server bundle
+carries no warnings. Each warning in the development build also asks the
+package's `#dev-gate` import (`imports` in its `package.json`): under `node` it
+reads `process.env.NODE_ENV` when the warning would fire and stays silent for
+`production`; under every other condition it always answers yes. `deno` keeps
+the production build, because reading `NODE_ENV` there needs `--allow-env`.
 
-| Runtime or bundler                                   | Build it resolves                                            | Warns                                                            |
-| ---------------------------------------------------- | ------------------------------------------------------------ | ---------------------------------------------------------------- |
-| plain `node`, Bun                                    | development, through `node`                                  | unless `NODE_ENV=production`                                     |
-| `node -C development`                                | development                                                  | unless `NODE_ENV=production`                                     |
-| vitest, jest                                         | development                                                  | unless `NODE_ENV=production`                                     |
-| Vite SSR dev, the Vite config loader                 | development                                                  | under `vite`, not `vite build`, which sets `NODE_ENV=production` |
-| esbuild, Rollup or webpack targeting node            | development, with the `NODE_ENV` read bundled                | as the bundle's `NODE_ENV` says                                  |
-| Deno                                                 | production, through `deno`; development under `--conditions` | only under `--conditions=development`                            |
-| Workers, browsers, esbuild or Rollup for the browser | production; development under the `development` condition    | only in the development build                                    |
+| Runtime or bundler                                   | Build it resolves                                                                          | Warns                                 |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------- |
+| plain `node`, Bun                                    | development, through `node`                                                                | unless `NODE_ENV=production`          |
+| `node -C development`                                | development                                                                                | unless `NODE_ENV=production`          |
+| `node -C production`                                 | production                                                                                 | never                                 |
+| vitest, jest                                         | development                                                                                | unless `NODE_ENV=production`          |
+| Vite SSR dev, the Vite config loader                 | development                                                                                | unless `NODE_ENV=production`          |
+| `vite build --ssr`                                   | production, through `production`                                                           | never                                 |
+| webpack targeting node                               | the build its `mode` names, through `development` or `production`                          | only in `mode: 'development'`         |
+| esbuild or Rollup targeting node                     | development, with the `NODE_ENV` read bundled; production under the `production` condition | as the bundle's `NODE_ENV` says       |
+| Deno                                                 | production, through `deno`; development under `--conditions`                               | only under `--conditions=development` |
+| Workers, browsers, esbuild or Rollup for the browser | production; development under the `development` condition                                  | only in the development build         |
 
 Only the `node` side of `#dev-gate` mentions `process`, so a Worker or browser
 bundle never contains it.
