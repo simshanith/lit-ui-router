@@ -35,9 +35,23 @@
 //      when the axe pass found violations),
 //      TURBO_LOGS_ARTIFACT_URL (the uploaded per-task turbo logs).
 
+import { spawnSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { appendFile, readdir, readFile, stat } from 'node:fs/promises';
-import { basename, join } from 'node:path';
+import { tmpdir } from 'node:os';
+import { basename, join, resolve } from 'node:path';
+
+import {
+  type FormatFinding,
+  type Hunk,
+  FORMAT_DIFF_LIMIT,
+  extractFormatFindings,
+  formattingLines,
+  formattingMarkdown,
+  formattingTier,
+  parseHunks,
+} from './format-annotations.core.ts';
 
 import {
   type OverviewContext,
@@ -196,10 +210,84 @@ async function readStructuredLogs(): Promise<StructuredLogEntry[]> {
   return entries;
 }
 
+/** The formatter's verdict on `finding` from stdin; the checkout is never written. */
+function formatted(finding: FormatFinding): string | undefined {
+  const cwd = resolve(finding.directory || '.');
+
+  const [command, args] =
+    finding.tool === 'oxfmt'
+      ? [
+          join(cwd, 'node_modules/.bin/oxfmt'),
+          [`--stdin-filepath=${finding.path}`],
+        ]
+      : ['taplo', ['fmt', '-']];
+
+  const result = spawnSync(command, args, {
+    cwd,
+    input: readFileSync(finding.file),
+    encoding: 'utf8',
+    maxBuffer: 16 * 1024 * 1024,
+    timeout: 30_000,
+  });
+
+  return result.status === 0 ? result.stdout : undefined;
+}
+
+/** The ranges of `file` that differ from `target`, from `git diff -U0`. */
+function hunksAgainst(file: string, target: string): Hunk[] | undefined {
+  const diff = spawnSync(
+    'git',
+    [
+      'diff',
+      '--no-index',
+      '--no-color',
+      '--no-ext-diff',
+      '-U0',
+      '--',
+      file,
+      target,
+    ],
+    { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 },
+  );
+
+  // 1 means the files differ, the expected case.
+  return diff.status === 0 || diff.status === 1
+    ? parseHunks(diff.stdout)
+    : undefined;
+}
+
+/** Each finding's hunks; one that cannot be diffed stays file-level. */
+function diffFormatting(findings: readonly FormatFinding[]): void {
+  if (findings.length === 0) return;
+  const dir = mkdtempSync(join(tmpdir(), 'format-diff-'));
+
+  try {
+    for (const [at, finding] of findings
+      .slice(0, FORMAT_DIFF_LIMIT)
+      .entries()) {
+      try {
+        const output = formatted(finding);
+
+        if (output === undefined) continue;
+        const target = join(dir, String(at));
+        writeFileSync(target, output);
+        finding.hunks = hunksAgainst(finding.file, target);
+      } catch (error: unknown) {
+        warn(
+          `no lines for ${finding.file}: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
+    }
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
+
 async function publish(
   runs: RunReport[],
   context: OverviewContext,
   annotations: readonly ToolAnnotation[],
+  formatting: readonly FormatFinding[],
 ): Promise<void> {
   const summaries = runs.map(({ summary }) => summary);
   const allReports = runs.flatMap(({ reports }) => reports);
@@ -217,7 +305,9 @@ async function publish(
 
   // Off Actions nothing parses them, and the note would describe nothing.
   const plan = onActions()
-    ? planAnnotations(annotations, { error: failed ? 1 : 0 })
+    ? planAnnotations(annotations, { error: failed ? 1 : 0 }, [
+        formattingTier(formatting),
+      ])
     : undefined;
 
   if (plan !== undefined) context.annotations = annotationNote(plan);
@@ -226,7 +316,7 @@ async function publish(
   const overview = sessionMarkdown(runs, context);
 
   const markdown = failed
-    ? `${sessionFailureMarkdown(failures)}\n${overview}`
+    ? `${sessionFailureMarkdown(failures)}${formattingMarkdown(formatting)}\n${overview}`
     : overview;
 
   const file = process.env.GITHUB_STEP_SUMMARY;
@@ -240,6 +330,7 @@ async function publish(
     ? [
         ...sessionStdoutReport(failures, summaries),
         '',
+        ...formattingLines(formatting),
         ...sessionLines(runs, context),
         '',
       ]
@@ -318,6 +409,12 @@ async function main(): Promise<void> {
   // whichever run of the session wrote it.
   for (const run of runs) run.reports = buildReports(run.summary, logs);
 
+  const formatting = runs.flatMap(({ summary }) =>
+    extractFormatFindings(summary, logs, process.cwd()),
+  );
+
+  diffFormatting(formatting);
+
   await publish(
     runs,
     {
@@ -334,6 +431,7 @@ async function main(): Promise<void> {
       logsUrl: process.env.TURBO_LOGS_ARTIFACT_URL,
     },
     annotations,
+    formatting,
   );
 }
 
