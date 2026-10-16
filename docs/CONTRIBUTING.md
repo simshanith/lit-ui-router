@@ -120,9 +120,12 @@ run can't collide with a turbo task. Install the browsers with
 
 A `Build and Test` job ends with the `Turbo run summary` step. It reads every
 `--summarize` JSON the job wrote (the ci graph, the docs build, the e2e suites)
-and reports only the tasks that failed; turbo's stream also prints `ELIFECYCLE`
-for every task it cancelled. Its headline is a run annotation, so
-`gh run view <run-id>` shows it:
+and reports only the tasks that failed. The ci graph and the e2e suites run with
+`--continue=dependencies-successful`, so one red run reports every independent
+failure, and a task whose dependency failed doesn't run. The docs build stops
+at the first failure, and turbo's stream also prints `ELIFECYCLE` for every task
+it cancelled. The headline is a run annotation, so `gh run view <run-id>` shows
+it:
 
 ```text
 X 1 failing task: @tools/repo-checks#check:task-inputs — 10 succeeded, 217 cached, 229 attempted

@@ -1265,16 +1265,72 @@ export function sessionLines(
   return lines;
 }
 
+/**
+ * Bytes of per-task sections (repro and excerpt) one step summary carries
+ * across every failing run. GitHub rejects a step summary over 1 MiB; the
+ * failure table and the overview sit outside this budget.
+ */
+export const FAILURE_SECTIONS_MAX_BYTES = 512 * 1024;
+
+/** What is left of the session's section budget, spent in task order. */
+export interface SectionBudget {
+  bytes: number;
+}
+
 /** The `$GITHUB_STEP_SUMMARY` lane: rendered markdown on the run page. */
 export function summaryMarkdown(
   summary: RunSummary,
   reports: FailureReport[],
+  budget: SectionBudget = { bytes: FAILURE_SECTIONS_MAX_BYTES },
 ): string {
-  return `${['## CI failure summary', '', ...failureBody(summary, reports)].join('\n')}\n`;
+  return `${['## CI failure summary', '', ...failureBody(summary, reports, budget)].join('\n')}\n`;
+}
+
+/** A failing task's repro block and log excerpt. */
+function taskSection({ task, excerpt }: FailureReport): string[] {
+  // Fenced with `fenceFor`, like the excerpt below it: the repro carries
+  // `task.command`, so a backtick run in it would otherwise close the block
+  // early and let the rest render as markdown.
+  const reproduction = [
+    turboReproduction(task),
+    '# or, exactly as CI ran it:',
+    directReproduction(task),
+  ].join('\n');
+
+  const fence = fenceFor(reproduction);
+
+  const out = [
+    `### \`${task.taskId}\``,
+    '',
+    'Reproduce:',
+    '',
+    `${fence}sh`,
+    reproduction,
+    fence,
+    '',
+  ];
+
+  if (excerpt.omittedLines > 0) {
+    out.push(
+      `<details><summary>Log excerpt — ${excerpt.omittedLines} lines omitted, full log in the step output</summary>`,
+      '',
+    );
+  }
+
+  const excerptFence = fenceFor(excerpt.text);
+  out.push(`${excerptFence}text`, excerpt.text, excerptFence, '');
+
+  if (excerpt.omittedLines > 0) out.push('</details>', '');
+
+  return out;
 }
 
 /** One failing run's detail, headingless so a session can carry several. */
-function failureBody(summary: RunSummary, reports: FailureReport[]): string[] {
+function failureBody(
+  summary: RunSummary,
+  reports: FailureReport[],
+  budget: SectionBudget,
+): string[] {
   const out: string[] = [];
 
   if (reports.length === 0) {
@@ -1305,39 +1361,39 @@ function failureBody(summary: RunSummary, reports: FailureReport[]): string[] {
 
   out.push('');
 
-  for (const { task, excerpt } of reports) {
-    // Fenced with `fenceFor`, like the excerpt below it: the repro carries
-    // `task.command`, so a backtick run in it would otherwise close the block
-    // early and let the rest render as markdown.
-    const reproduction = [
-      turboReproduction(task),
-      '# or, exactly as CI ran it:',
-      directReproduction(task),
-    ].join('\n');
-
-    const fence = fenceFor(reproduction);
+  if (
+    summary.execution.command.includes('--continue=dependencies-successful')
+  ) {
     out.push(
-      `### \`${task.taskId}\``,
-      '',
-      'Reproduce:',
-      '',
-      `${fence}sh`,
-      reproduction,
-      fence,
+      'Tasks that depend on a failing task did not run, and turbo leaves them out of these counts.',
       '',
     );
+  }
 
-    if (excerpt.omittedLines > 0) {
-      out.push(
-        `<details><summary>Log excerpt — ${excerpt.omittedLines} lines omitted, full log in the step output</summary>`,
-        '',
-      );
+  let shown = 0;
+
+  for (const report of reports) {
+    const section = taskSection(report);
+    const bytes = Buffer.byteLength(section.join('\n'), 'utf8');
+
+    if (bytes > budget.bytes) {
+      // Stop rather than skip ahead, so the shown sections stay in task order.
+      budget.bytes = 0;
+      break;
     }
 
-    const excerptFence = fenceFor(excerpt.text);
-    out.push(`${excerptFence}text`, excerpt.text, excerptFence, '');
+    budget.bytes -= bytes;
+    shown += 1;
+    out.push(...section);
+  }
 
-    if (excerpt.omittedLines > 0) out.push('</details>', '');
+  const hidden = reports.length - shown;
+
+  if (hidden > 0) {
+    out.push(
+      `… and ${hidden} more failing task${hidden === 1 ? '' : 's'} over this summary's size budget. Their repro lines and excerpts are in the step log.`,
+      '',
+    );
   }
 
   return out;
@@ -1353,11 +1409,14 @@ export interface RunReport extends SessionRun {
  * actually failed. In the `mise run ci` sequence at most one can — a failing
  * step stops the rest — but nothing here depends on that holding.
  */
-export function sessionFailureMarkdown(failures: readonly RunReport[]): string {
+export function sessionFailureMarkdown(
+  failures: readonly RunReport[],
+  budget: SectionBudget = { bytes: FAILURE_SECTIONS_MAX_BYTES },
+): string {
   const out: string[] = ['## CI failure summary', ''];
 
   for (const { summary, reports } of failures) {
-    out.push(...failureBody(summary, reports));
+    out.push(...failureBody(summary, reports, budget));
   }
 
   return `${out.join('\n')}\n`;
