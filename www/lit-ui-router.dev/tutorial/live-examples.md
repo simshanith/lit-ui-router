@@ -40,8 +40,10 @@ sample apps are where the two idioms are compared at application scale.
 
 The same states and resolves, on the [Signals bindings](/packages/signals),
 with `planetId` declared as an `int` param. The header follows the route through a
-`RouterSignalController` for previous/next links (or the arrow keys). A
-distance-unit signal reaches routed and un-routed views alike. The detail
+`RouterSignalController` for previous/next links (or the arrow keys). The
+header provides a distance-unit signal through `@lit/context`, and the routed
+views consume it: context hands over the signal once, and the signal carries
+every change. The arrow keys reach the router through `routerContext`. The detail
 view's light-travel clock ticks only while something watches it, and the tab
 title tracks the route with no component at all.
 

@@ -70,6 +70,10 @@ class UserMenu extends LitElement {
 }
 ```
 
+The [Hello Solar System (Signals)](/tutorial/live-examples#hello-solar-system-signals)
+example consumes it this way, beside a context of its own that hands routed
+views a signal.
+
 It reads both ways: a `ContextProvider` of `routerContext` on any ancestor
 satisfies `seekRouter` too. A `subscribe` request answered with the placeholder
 router `<ui-router>` creates on connect is called again when the app replaces

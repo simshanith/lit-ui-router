@@ -1,3 +1,4 @@
+import { consume, createContext, provide } from '@lit/context';
 import { html, LitElement, css, nothing, render } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { hashLocationPlugin, Transition } from '@uirouter/core';
@@ -8,6 +9,7 @@ import {
   LitStateDeclaration,
   UIViewInjectedProps,
 } from 'lit-ui-router';
+import { routerContext } from 'lit-ui-router/context';
 import {
   RouterSignalController,
   SignalController,
@@ -166,8 +168,6 @@ const SolarSystemService = {
 const dotSize = (diameterKm: number): number =>
   Math.round(Math.log2(diameterKm / 1000) * 6 + 10);
 
-// Application state the router knows nothing about: plain signals, read by
-// routed and un-routed components alike with no props or context between them.
 type Unit = 'au' | 'km' | 'light';
 
 const units: { id: Unit; label: string }[] = [
@@ -176,7 +176,11 @@ const units: { id: Unit; label: string }[] = [
   { id: 'light', label: 'light time' },
 ];
 
-const distanceUnit = new Signal.State<Unit>('au');
+// Context hands each routed view the header's unit signal once; the signal
+// carries every change after that, so the provider never re-provides.
+const distanceUnitContext = createContext<Signal.State<Unit>>(
+  Symbol('distance-unit'),
+);
 
 const KM_PER_AU = 149_597_871;
 
@@ -309,8 +313,13 @@ class PlanetListComponent extends LitElement {
     this._uiViewProps = props;
   }
 
+  @consume({ context: distanceUnitContext })
+  private readonly distanceUnit!: Signal.State<Unit>;
+
   // The resolve loads the bodies once; the unit can change any time after.
-  private readonly unit = new SignalController(this, () => distanceUnit.get());
+  private readonly unit = new SignalController(this, () =>
+    this.distanceUnit.get(),
+  );
 
   // Populated by the `planets` resolve on the list state.
   get planets(): SolarBody[] {
@@ -434,7 +443,12 @@ class PlanetDetailComponent extends LitElement {
     this._uiViewProps = props;
   }
 
-  private readonly unit = new SignalController(this, () => distanceUnit.get());
+  @consume({ context: distanceUnitContext })
+  private readonly distanceUnit!: Signal.State<Unit>;
+
+  private readonly unit = new SignalController(this, () =>
+    this.distanceUnit.get(),
+  );
 
   // Watching `now` is what starts its timer; disconnecting stops it.
   private readonly clock = new SignalController(this, () => now.get());
@@ -587,7 +601,18 @@ export class AppRoot extends LitElement {
   // the router's signals, waking only when the routed body changes.
   private readonly body = new RouterSignalController(this, routedBody);
 
-  private readonly unit = new SignalController(this, () => distanceUnit.get());
+  // <ui-router> answers this request, so no component reaches for module scope.
+  @consume({ context: routerContext })
+  private readonly router!: UIRouterLit;
+
+  // The routed views are constructed by the router, so <app-root> cannot pass
+  // them props; it provides the unit to every view rendered beneath it instead.
+  @provide({ context: distanceUnitContext })
+  private readonly distanceUnit = new Signal.State<Unit>('au');
+
+  private readonly unit = new SignalController(this, () =>
+    this.distanceUnit.get(),
+  );
 
   private readonly onKey = (event: KeyboardEvent) => {
     if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) {
@@ -599,7 +624,7 @@ export class AppRoot extends LitElement {
 
     if (!target) return;
     event.preventDefault();
-    void router.stateService.go('planet', { planetId: target.id });
+    void this.router.stateService.go('planet', { planetId: target.id });
   };
 
   private neighbor(step: number): SolarBody | undefined {
@@ -648,7 +673,7 @@ export class AppRoot extends LitElement {
               <button
                 type="button"
                 aria-pressed=${this.unit.value === id}
-                @click=${() => distanceUnit.set(id)}
+                @click=${() => this.distanceUnit.set(id)}
               >
                 ${label}
               </button>
