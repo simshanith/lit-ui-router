@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { compileRoutes } from '../src/redirects.ts';
+import { compileRoutes, matchRoute } from '../src/redirects.ts';
 import type { RouteDeclaration } from '../src/redirects.ts';
 import { compileRouteTrie } from '../src/route-trie.ts';
 import type {
@@ -243,5 +243,39 @@ describe('compileRouteTrie: squashed params', () => {
       params: { section: 'setup', page: '2' },
     });
     assert.equal(trie.match('/docs/setup/2/3'), null);
+  });
+
+  it('execs a route once when a literal and a param branch both reach it', () => {
+    let decodes = 0;
+
+    const counted: ParamType = {
+      ...slug,
+      decode: (val) => {
+        decodes++;
+
+        return val;
+      },
+    };
+
+    // '/b/b' fits both 'a present, c absent' and 'a absent, c present'.
+    const routes = compileRoutes([
+      {
+        name: 'r',
+        url: '/:a/b/:c',
+        params: {
+          a: { type: counted, value: 'x', squash: true },
+          c: { type: counted, value: 'y', squash: true },
+        },
+      },
+    ]);
+
+    const trie = compileRouteTrie(routes);
+
+    const expected = matchRoute(routes, '/b/b');
+    const linearDecodes = decodes;
+    decodes = 0;
+
+    assert.deepEqual(trie.match('/b/b'), expected);
+    assert.equal(decodes, linearDecodes);
   });
 });

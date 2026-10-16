@@ -177,8 +177,7 @@ const collect = (
   found: number[],
 ): void => {
   if (depth === segments.length) {
-    for (const index of current.routes)
-      if (!found.includes(index)) found.push(index);
+    found.push(...current.routes);
 
     return;
   }
@@ -212,7 +211,6 @@ export function compileRouteTrie(routes: CompiledRoute[]): RouteTrie {
   });
 
   const match = (pathname: string): RouteMatch | null => {
-    // An array: with a handful of candidates, includes beats a Set's allocation and hashing.
     const found: number[] = [];
     collect(root, pathname.split('/'), 0, found);
 
@@ -221,10 +219,13 @@ export function compileRouteTrie(routes: CompiledRoute[]): RouteTrie {
     // Declaration order: matchRoute breaks compare ties and throws by it.
     if (found.length > 1) found.sort((a, b) => a - b);
 
-    return matchRoute(
-      found.map((index) => routes[index]),
-      pathname,
-    );
+    // Sorted, so a route that two branches reach sits next to itself.
+    const candidates: CompiledRoute[] = [];
+
+    for (let at = 0; at < found.length; at++)
+      if (found[at] !== found[at - 1]) candidates.push(routes[found[at]]);
+
+    return matchRoute(candidates, pathname);
   };
 
   return Object.freeze({ match, inexpressible: Object.freeze(inexpressible) });
