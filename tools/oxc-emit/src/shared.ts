@@ -17,9 +17,16 @@ export const OUT = 'dist';
 // `development`, so TS resolves the one d.ts under any condition set.
 export const DEV_OUT = 'dist/development';
 
+// Third JS emit, for packages that also ship the `node` condition: development
+// warnings that read `process.env.NODE_ENV` at runtime instead of folding.
+export const NODE_OUT = 'dist/node';
+
 // The build-time constant the guarded warning sites read. Vite/vitest supply it
 // unconfigured, so specs exercise the development branch as-is.
 export const DEV_DEFINE_KEY = 'import.meta.env.DEV';
+
+// `true` only in the --node pass, so its runtime NODE_ENV checks fold out of the others.
+export const NODE_DEFINE_KEY = 'import.meta.env.NODE';
 
 // The manifest version, defined only for sources that read it.
 export const VERSION_DEFINE_KEY = 'import.meta.env.PACKAGE_VERSION';
@@ -29,6 +36,7 @@ export function passDefine(
   source: string,
   version: string | undefined,
   dev: string | undefined,
+  node?: string,
 ): Record<string, string> | undefined {
   const define: Record<string, string> = {};
 
@@ -37,6 +45,8 @@ export function passDefine(
   }
 
   if (dev !== undefined) define[DEV_DEFINE_KEY] = dev;
+
+  if (node !== undefined) define[NODE_DEFINE_KEY] = node;
 
   return Object.keys(define).length > 0 ? define : undefined;
 }

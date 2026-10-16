@@ -8,7 +8,6 @@ import { serverRouterHono } from '../src/hono.ts';
 
 const routerOf = (verdict: Verdict): ServerRouter => ({
   resolve: () => Promise.resolve(verdict),
-  diagnose: () => [],
 });
 
 // SAFETY: node's real Response, which the fetch globals shim shadows, has text().

@@ -22,7 +22,12 @@ export type DevSplitInput = {
   production: string;
   /** Concatenated `dist/development/*.js`. */
   development: string;
+  /** Concatenated `dist/node/*.js`, for a package that ships the `node` condition. */
+  node?: string;
 };
+
+// The node emit's runtime NODE_ENV read; the other two target WinterTC runtimes, which have no `process`.
+const PROCESS = /\bprocess\b/;
 
 /**
  * Violations of the split contract, as human-readable strings:
@@ -31,15 +36,37 @@ export type DevSplitInput = {
  *   otherwise the guard swallowed a warning consumers still need;
  * - none may be present in the production emit — the point of the split;
  * - any message the development emit carries and the production emit does not
- *   must be declared, so a new dev-only warning cannot land unlisted.
+ *   must be declared, so a new dev-only warning cannot land unlisted;
+ * - with a node emit, every declared message must ship there too, and neither
+ *   the production nor the development emit may mention `process`.
  */
 export function findDevSplitViolations({
   prefix,
   devOnly,
   production,
   development,
+  node,
 }: DevSplitInput): string[] {
   const violations: string[] = [];
+
+  if (node !== undefined) {
+    for (const message of devOnly) {
+      if (!node.includes(message))
+        violations.push(
+          `declared dev-only message is missing from dist/node: ${JSON.stringify(message)}`,
+        );
+    }
+
+    for (const [dir, code] of [
+      ['dist', production],
+      ['dist/development', development],
+    ] as const) {
+      if (PROCESS.test(code))
+        violations.push(
+          `${dir} mentions process, which only dist/node may read`,
+        );
+    }
+  }
 
   for (const message of devOnly) {
     if (!development.includes(message)) {
@@ -128,11 +155,12 @@ export type Report = { ok: boolean; text: string };
 export function formatDevSplitReport(
   violations: string[],
   declared: number,
+  node = false,
 ): Report {
   if (violations.length === 0) {
     return {
       ok: true,
-      text: `✓ dev/prod split holds — ${declared} dev-only messages ship in dist/development only.`,
+      text: `✓ dev/prod split holds — ${declared} dev-only messages ship in dist/development${node ? ' and dist/node' : ''} only.`,
     };
   }
 
