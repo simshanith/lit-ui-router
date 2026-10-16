@@ -569,7 +569,9 @@ export function createServerRouter(config: {
   };
 
   compiledMounts.set(router, declared);
-  warnMountDiagnostics(router, diagnoseMounts);
+
+  // Folded out of dist/*.js, so a bundle that never calls diagnoseMounts drops it.
+  if (import.meta.env?.DEV) warnMountDiagnostics(router, diagnoseMounts);
 
   return router;
 }
