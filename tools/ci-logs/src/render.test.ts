@@ -93,6 +93,44 @@ test('executed logs come in full under their group and task id; replays by name'
   assert.ok(!report.includes('\u001B'));
 });
 
+test('replayed: inlines replay logs after the executed ones, headed as replays', () => {
+  const report = render(
+    source(1, [
+      task(RUN_GROUP, 'pkg#test', true, 'executed output\n'),
+      task('docs', 'pkg#build', false, '\u001B[33mwarn\u001B[39m cached\n'),
+      task(RUN_GROUP, 'pkg#lint', false),
+    ]),
+    undefined,
+    { replayed: true },
+  );
+
+  assert.match(
+    report,
+    /^## run pkg#test\nexecuted output\n\n# REPLAYED \(2\)\n\n## run pkg#lint \(replayed; describes the run that filled the cache\)\n\(pkg\/\.turbo\/turbo-lint\.log absent from turbo-task-logs\)\n\n## docs pkg#build \(replayed; describes the run that filled the cache\)\nwarn cached$/m,
+  );
+  assert.match(report, /^task logs missing: 1$/m);
+  assert.match(report, new RegExp(`^lines out: ${countLines(report)}$`, 'm'));
+});
+
+test('replayed: baseline logs pair with executed tasks only', () => {
+  const report = render(
+    source(1, [
+      task(RUN_GROUP, 'a#test', true, 'a now'),
+      task(RUN_GROUP, 'b#test', false, 'b cached'),
+    ]),
+    source(2, [
+      task(RUN_GROUP, 'a#test', true, 'a before'),
+      task(RUN_GROUP, 'b#test', true, 'b before'),
+    ]),
+    { replayed: true },
+  );
+
+  assert.match(report, /^### baseline run 2 run a#test \(executed there\)$/m);
+  assert.match(report, /\nb cached\n/);
+  assert.doesNotMatch(report, /b before/);
+  assert.match(report, /^baseline log lines in: 1$/m);
+});
+
 test('pairs each executed log with the baseline run’s', () => {
   const report = render(
     source(1, [

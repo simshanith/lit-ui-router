@@ -14,6 +14,8 @@ run needs.
 1. Run `tools/ci-logs` on the run, with `--baseline` a recent green `main` run
    of the same workflow and `--out` a scratch file outside the checkout. Task
    logs expire within days; say so rather than guessing when they're gone.
+   A `main` run reporting 0 executed needs `--replayed`; read the `REPLAYED`
+   sections then.
 2. Read every `EXECUTED` section in full against its baseline. "Anything weird"
    means this step; a keyword search over the file is only a first pass, since
    it misses output that doesn't name itself.

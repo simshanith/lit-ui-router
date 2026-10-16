@@ -262,8 +262,10 @@ A keyword search finds only output that names itself. To look for anything
 unusual, read every executed task's log in full against its baseline. A cache
 hit replays the log of the run that filled the cache, from another runner and
 possibly another commit, so its browser banner, timings and warnings describe
-that run; the tool lists replays by name only. A `task logs missing` count
-above zero means a task's log never reached the artifact.
+that run; the tool lists replays by name only unless given `--replayed`. A
+`main` run usually replays every task its PR executed, so sweep `main` with
+`--replayed`. A `task logs missing` count above zero means a task's log never
+reached the artifact.
 
 Without the tool, `gh run download <run-id> -n <artifact> --dir <empty-dir>`
 fetches one artifact. Each task log is `<package>/.turbo/turbo-<task>.log`,

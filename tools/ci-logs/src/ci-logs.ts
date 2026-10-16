@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Write one GitHub Actions run's turbo task logs to a single readable file.
-// Usage: ci-logs <run-id> [--baseline <run-id>] --out <file>
+// Usage: ci-logs <run-id> [--baseline <run-id>] [--replayed] --out <file>
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -23,7 +23,8 @@ import {
   type Summary,
 } from './summary.ts';
 
-const usage = 'usage: ci-logs <run-id> [--baseline <run-id>] --out <file>';
+const usage =
+  'usage: ci-logs <run-id> [--baseline <run-id>] [--replayed] --out <file>';
 
 const RUN_ID = /^\d+$/;
 
@@ -86,11 +87,12 @@ const main = async (): Promise<void> => {
     options: {
       baseline: { type: 'string' },
       out: { type: 'string' },
+      replayed: { type: 'boolean' },
     },
   });
 
   const [runId] = positionals;
-  const { baseline: baselineId, out } = values;
+  const { baseline: baselineId, out, replayed } = values;
 
   if (
     runId === undefined ||
@@ -116,7 +118,7 @@ const main = async (): Promise<void> => {
     baselineId === undefined ? undefined : fetchRun(baselineId, scratch, exec),
   ]);
 
-  const report = render(target, baseline);
+  const report = render(target, baseline, { replayed: replayed === true });
   fs.writeFileSync(out, report);
 
   const executed = [...target.tasks.values()].filter((t) => t.executed).length;

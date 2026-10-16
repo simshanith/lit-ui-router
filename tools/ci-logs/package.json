@@ -2,7 +2,7 @@
   "name": "@tools/ci-logs",
   "version": "0.0.1",
   "private": true,
-  "description": "Writes one GitHub Actions run's turbo task logs to a single readable file: executed tasks in full beside a baseline run's, replays by name",
+  "description": "Writes one GitHub Actions run's turbo task logs to a single readable file: executed tasks in full beside a baseline run's, replays by name or in full",
   "bin": {
     "ci-logs": "./src/ci-logs.ts"
   },
