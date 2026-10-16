@@ -87,6 +87,24 @@ export interface MountConfig {
    * CPU counts toward the Worker's startup time limit.
    */
   prewarm?: number;
+  /**
+   * Diagnostic kinds this mount means to trip, turned off for it alone: the
+   * construction warning skips them and {@link diagnoseMounts} omits them,
+   * so development and CI agree. A kind outside {@link MountDiagnosticKind}
+   * throws at construction.
+   *
+   * @example
+   * ```ts
+   * // /api owns its bare base and answers it with a 404 on purpose.
+   * const mounts = {
+   *   '/api': {
+   *     routes: [{ name: 'item', url: '/items/:id' }],
+   *     ignoreDiagnostics: ['bareBaseNotFound'],
+   *   },
+   * } satisfies Record<string, MountConfig>;
+   * ```
+   */
+  ignoreDiagnostics?: readonly MountDiagnosticKind[];
 }
 
 /**
@@ -284,8 +302,23 @@ const validatePrewarm = (base: string, config: MountConfig): number => {
   return prewarm;
 };
 
+// A record, so adding a kind to the union fails to compile until it is listed here.
+const DIAGNOSTIC_KINDS: Record<MountDiagnosticKind, true> = {
+  bareBaseNotFound: true,
+};
+
+const validateIgnoreDiagnostics = (base: string, config: MountConfig): void => {
+  for (const kind of config.ignoreDiagnostics ?? []) {
+    if (!Object.hasOwn(DIAGNOSTIC_KINDS, kind))
+      throw new Error(
+        `Mount '${base}': ignoreDiagnostics names unknown kind '${kind}' (known: ${Object.keys(DIAGNOSTIC_KINDS).join(', ')})`,
+      );
+  }
+};
+
 const compileMount = ([base, config]: [string, MountConfig]): Mount => {
   validateOtherwise(base, config);
+  validateIgnoreDiagnostics(base, config);
   const prewarm = validatePrewarm(base, config);
 
   return {
@@ -460,6 +493,16 @@ const bareBaseDiagnostic = (mount: Mount): MountDiagnostic | null => {
   };
 };
 
+// One mount's findings, less the kinds its ignoreDiagnostics turns off.
+const diagnosticsOf = (mount: Mount): MountDiagnostic[] => {
+  const ignored = mount.config.ignoreDiagnostics ?? [];
+
+  return [bareBaseDiagnostic(mount)].filter(
+    (finding): finding is MountDiagnostic =>
+      finding !== null && !ignored.includes(finding.kind),
+  );
+};
+
 // Each createServerRouter router's mounts in declaration order, for diagnoseMounts.
 const compiledMounts = new WeakMap<ServerRouter, Mount[]>();
 
@@ -612,5 +655,5 @@ export function diagnoseMounts(router: ServerRouter): MountDiagnostic[] {
       'diagnoseMounts: expected a router from createServerRouter in this copy of ui-router-server',
     );
 
-  return mounts.flatMap((mount) => bareBaseDiagnostic(mount) ?? []);
+  return mounts.flatMap(diagnosticsOf);
 }

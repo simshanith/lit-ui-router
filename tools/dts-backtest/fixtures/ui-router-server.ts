@@ -94,10 +94,18 @@ const mount: MountConfig = {
   otherwise: { state: 'app.notFound' },
 };
 
+// ignoreDiagnostics takes a readonly list of kinds.
+const quietKinds: readonly MountDiagnosticKind[] = ['bareBaseNotFound'];
+
 const router: ServerRouter = createServerRouter({
   mounts: {
     '/app': mount,
-    '/admin': { routes, strategy: 'simulate', prewarm: 1 },
+    '/admin': {
+      routes,
+      strategy: 'simulate',
+      prewarm: 1,
+      ignoreDiagnostics: quietKinds,
+    },
   },
 });
 

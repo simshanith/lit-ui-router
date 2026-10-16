@@ -589,6 +589,10 @@ returns an empty array for a router built from the table. It returns the
 findings the warning prints, in every build; `apps/sample-app-routes` runs that
 assertion over the tables above.
 
+A mount that means its bare base to 404 turns the finding off with
+[`ignoreDiagnostics`](/api/ui-router-server/index/interfaces/MountConfig#ignorediagnostics);
+the warning and `diagnoseMounts` both skip it for that mount.
+
 ## The worker: verdicts → HTTP
 
 The worker

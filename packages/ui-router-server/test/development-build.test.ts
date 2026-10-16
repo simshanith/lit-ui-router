@@ -35,6 +35,11 @@ const builds = Object.fromEntries(
 const mounts = {
   '/app': { routes: [{ name: 'a', url: '/a' }] },
   '/served': { routes: [{ name: 'root', url: '' }] },
+  // Ignored, so no build warns about it or returns it.
+  '/quiet': {
+    routes: [{ name: 'a', url: '/a' }],
+    ignoreDiagnostics: ['bareBaseNotFound'],
+  },
 } satisfies Record<string, MountConfig>;
 
 const withNodeEnv = (t: TestContext, value: string | undefined): void => {

@@ -603,6 +603,40 @@ describe('mount diagnostics', () => {
     assert.equal(diagnose.mock.callCount(), 0);
   });
 
+  it('skips an ignored kind on its mount alone, in warnings and diagnoseMounts', (t) => {
+    const table = {
+      '/quiet': {
+        ...unserved('matcher'),
+        ignoreDiagnostics: ['bareBaseNotFound'],
+      },
+      '/loud': unserved('simulate'),
+      '/served': {
+        ...appMount('matcher'),
+        ignoreDiagnostics: ['bareBaseNotFound'],
+      },
+    } satisfies Record<string, MountConfig>;
+
+    const [finding, ...rest] = diagnosed(table);
+
+    assert.deepEqual(rest, []);
+    assert.equal(finding.mount, '/loud');
+    assert.deepEqual(warnings(t, table), [
+      `ui-router-server: createServerRouter: ${finding.message}`,
+    ]);
+  });
+
+  it('throws at construction for an unknown ignoreDiagnostics kind', () => {
+    // SAFETY: deliberately outside MountDiagnosticKind, as untyped JS could pass
+    const config = JSON.parse(
+      '{ "routes": [], "ignoreDiagnostics": ["bareBase"] }',
+    ) as MountConfig;
+
+    assert.throws(
+      () => createServerRouter({ mounts: { '/app': config } }),
+      /Mount '\/app': ignoreDiagnostics names unknown kind 'bareBase' \(known: bareBaseNotFound\)/,
+    );
+  });
+
   it('throws for a router createServerRouter did not build', () => {
     const fake = {
       resolve: () => Promise.resolve({ kind: 'notFound' as const }),
