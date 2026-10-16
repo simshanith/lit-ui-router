@@ -255,7 +255,10 @@ flag "--output-logs <mode>" help="turbo task output: full | errors-only | new-on
 '''
 run = [
   "mise run //tools/build_and_test:mark_session",
-  "turbo run ci --ui=stream --log-order=stream --summarize --log-file --output-logs=\"${usage_output_logs?}\"",
+  # --continue=dependencies-successful: one failing task still lets the rest
+  # report and turbo still exits non-zero, while a failed build skips its
+  # dependents. Bare --continue means `always`, which runs them against no output.
+  "turbo run ci --continue=dependencies-successful --ui=stream --log-order=stream --summarize --log-file --output-logs=\"${usage_output_logs?}\"",
 ]
 
 [tasks.ci_main]
@@ -279,7 +282,8 @@ flag "--output-logs <mode>" help="turbo task output: full | errors-only | new-on
 '''
 run = [
   "mise run //tools/build_and_test:mark_session",
-  "turbo run ci:main --ui=stream --log-order=stream --summarize --log-file --output-logs=\"${usage_output_logs?}\"",
+  # --continue=dependencies-successful: as in ci_graph.
+  "turbo run ci:main --continue=dependencies-successful --ui=stream --log-order=stream --summarize --log-file --output-logs=\"${usage_output_logs?}\"",
 ]
 
 [tasks.test_e2e]

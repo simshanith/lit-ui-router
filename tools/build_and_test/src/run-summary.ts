@@ -207,7 +207,8 @@ async function publish(
 
   // A run's own verdict, not `reports.length`: a red run whose tasks all
   // exited 0 still needs the failure section, which is where the "turbo died
-  // outside a task" wording lives. `--continue` would give the mirror case.
+  // outside a task" wording lives. `--continue` still exits with the highest
+  // task exit code, so a failing task with a zero run exit is not expected.
   const failures = runs.filter(
     ({ summary, reports }) =>
       summary.execution.exitCode !== 0 || reports.length > 0,
