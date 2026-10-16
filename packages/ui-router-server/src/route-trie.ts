@@ -174,11 +174,10 @@ const collect = (
   current: TrieNode,
   segments: string[],
   depth: number,
-  found: number[],
+  found: Set<number>,
 ): void => {
   if (depth === segments.length) {
-    for (const index of current.routes)
-      if (!found.includes(index)) found.push(index);
+    for (const index of current.routes) found.add(index);
 
     return;
   }
@@ -212,18 +211,17 @@ export function compileRouteTrie(routes: CompiledRoute[]): RouteTrie {
   });
 
   const match = (pathname: string): RouteMatch | null => {
-    const found: number[] = [];
+    const found = new Set<number>();
     collect(root, pathname.split('/'), 0, found);
 
-    if (found.length === 0) return null;
+    if (found.size === 0) return null;
 
     // Declaration order: matchRoute breaks compare ties and throws by it.
-    if (found.length > 1) found.sort((a, b) => a - b);
+    const candidates = [...found]
+      .sort((a, b) => a - b)
+      .map((index) => routes[index]);
 
-    return matchRoute(
-      found.map((index) => routes[index]),
-      pathname,
-    );
+    return matchRoute(candidates, pathname);
   };
 
   return Object.freeze({ match, inexpressible: Object.freeze(inexpressible) });
