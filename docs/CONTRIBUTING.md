@@ -120,17 +120,20 @@ run can't collide with a turbo task. Install the browsers with
 
 A `Build and Test` job ends with the `Turbo run summary` step. It reads every
 `--summarize` JSON the job wrote (the ci graph, the docs build, the e2e suites)
-and reports only the tasks that failed; turbo's stream also prints `ELIFECYCLE`
-for every task it cancelled. Its headline is a run annotation, so
-`gh run view <run-id>` shows it:
+and reports only the tasks that failed. The ci graph and the e2e suites run with
+`--continue=dependencies-successful`, so one red run reports every independent
+failure, and a task whose dependency failed doesn't run. The docs build stops
+at the first failure, and turbo's stream also prints `ELIFECYCLE` for every task
+it cancelled. The headline is a run annotation, so `gh run view <run-id>` shows
+it:
 
 ```text
 X 1 failing task: @tools/repo-checks#check:task-inputs — 10 succeeded, 217 cached, 229 attempted
 ```
 
 Each failing task gets a log excerpt and two commands, in the step summary and
-in the job log. A `cache: false` task has no turbo log file, so its excerpt
-comes from the `--log-file` JSON the same runs write:
+in the job log. The excerpt comes from the task's `.turbo/turbo-<task>.log`,
+or from the `--log-file` JSON the same runs write when that file can't be read:
 
 ```text
 ── @tools/repo-checks#check:task-inputs (exit 1)
@@ -268,8 +271,10 @@ A keyword search finds only output that names itself. To look for anything
 unusual, read every executed task's log in full against its baseline. A cache
 hit replays the log of the run that filled the cache, from another runner and
 possibly another commit, so its browser banner, timings and warnings describe
-that run; the tool lists replays by name only. A `task logs missing` count
-above zero means a task's log never reached the artifact.
+that run; the tool lists replays by name only unless given `--replayed`. A
+`main` run usually replays every task its PR executed, so sweep `main` with
+`--replayed`. A `task logs missing` count above zero means a task's log never
+reached the artifact.
 
 Without the tool, `gh run download <run-id> -n <artifact> --dir <empty-dir>`
 fetches one artifact. Each task log is `<package>/.turbo/turbo-<task>.log`,

@@ -1,5 +1,4 @@
-import path from 'node:path';
-
+import { turboLogFile } from '@tools/shared/turbo-log.ts';
 import * as v from 'valibot';
 
 export const TASK_LOGS = 'turbo-task-logs';
@@ -28,14 +27,6 @@ export const ArtifactSchema = v.object({
 });
 
 export type Artifact = v.InferOutput<typeof ArtifactSchema>;
-
-/** Where turbo writes a task's log, repo-relative; `:` is not portable in a filename. */
-export const turboLogFile = (directory: string, task: string): string =>
-  path.posix.join(
-    directory,
-    '.turbo',
-    `turbo-${task.replaceAll(':', '$colon$')}.log`,
-  );
 
 export const SummarySchema = v.object({
   tasks: v.array(

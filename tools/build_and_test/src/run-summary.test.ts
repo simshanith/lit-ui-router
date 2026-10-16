@@ -25,6 +25,7 @@ import {
   headline,
   humanDuration,
   inlineCode,
+  logFilePath,
   logsLink,
   omittedTaskCount,
   overviewLines,
@@ -377,6 +378,29 @@ describe('buildReports', () => {
 
     assert.match(report.excerpt.text, /no log for lit-ui-router#typecheck:src/);
     assert.match(report.excerpt.text, /exited \(1\)/);
+  });
+});
+
+describe('logFilePath', () => {
+  it("prefers the summary's logFile", () => {
+    assert.equal(
+      logFilePath(task({ logFile: 'elsewhere.log' })),
+      'elsewhere.log',
+    );
+  });
+
+  it('derives the file a cache: false task leaves out of the summary', () => {
+    assert.equal(
+      logFilePath(task({ logFile: undefined })),
+      'packages/lit-ui-router/.turbo/turbo-typecheck$colon$src.log',
+    );
+  });
+
+  it('is undefined for a task that never executed', () => {
+    assert.equal(
+      logFilePath(task({ logFile: undefined, execution: undefined })),
+      undefined,
+    );
   });
 });
 
@@ -1453,6 +1477,99 @@ describe('sessionFailureMarkdown', () => {
     assert.match(md, /`turbo run test:e2e:hash`/);
   });
 
+  function failing(count: number, prefix = 'pkg'): RunSummary {
+    return summary(
+      Array.from({ length: count }, (_, i) =>
+        task({
+          taskId: `${prefix}${i}#test`,
+          task: 'test',
+          package: `${prefix}${i}`,
+          execution: { startTime: i, endTime: i + 1, exitCode: 1 },
+        }),
+      ),
+      1,
+      { command: 'turbo run ci --continue=dependencies-successful' },
+    );
+  }
+
+  // Each excerpt at its own cap, the largest a section can be.
+  function fullLogs(run: RunSummary): Map<string, string> {
+    return new Map(
+      run.tasks.map(({ taskId }) => [taskId, 'x'.repeat(40 * 1024)]),
+    );
+  }
+
+  it('stays under the step summary limit however many tasks fail', () => {
+    const run = failing(200);
+
+    const md = sessionFailureMarkdown([
+      { summary: run, reports: buildReports(run, fullLogs(run)) },
+    ]);
+
+    assert.ok(Buffer.byteLength(md, 'utf8') < 1024 * 1024);
+    // The table still lists every failing task.
+    assert.equal(md.match(/^\| `test` \|/gm)?.length, 200);
+    const shown = md.match(/^### /gm)?.length ?? 0;
+    assert.ok(shown > 0 && shown < 200);
+    assert.match(
+      md,
+      new RegExp(
+        `… and ${200 - shown} more failing tasks over this summary's size budget`,
+      ),
+    );
+  });
+
+  it('shares the budget across runs, in order', () => {
+    const a = failing(1, 'a');
+    const b = failing(2, 'b');
+    const reportsA = buildReports(a, fullLogs(a));
+
+    const md = sessionFailureMarkdown(
+      [
+        { summary: a, reports: reportsA },
+        { summary: b, reports: buildReports(b, fullLogs(b)) },
+      ],
+      // Room for the first run's one section, not for the next.
+      { bytes: 20 * 1024 },
+    );
+
+    assert.match(md, /### `a0#test`/);
+    assert.doesNotMatch(md, /### `b0#test`/);
+    assert.match(md, /… and 2 more failing tasks over/);
+  });
+
+  it('prints no tail when every section fits', () => {
+    const run = failing(3);
+
+    const md = sessionFailureMarkdown([
+      { summary: run, reports: buildReports(run, new Map()) },
+    ]);
+
+    assert.equal(md.match(/^### /gm)?.length, 3);
+    assert.doesNotMatch(md, /more failing task/);
+  });
+
+  it('says skipped dependents are not counted, only under --continue', () => {
+    const run = failing(1);
+    const note = /depend on a failing task did not run/;
+
+    assert.match(
+      sessionFailureMarkdown([
+        { summary: run, reports: buildReports(run, new Map()) },
+      ]),
+      note,
+    );
+
+    const failFast = summary([task()], 1, { command: 'turbo run build' });
+
+    assert.doesNotMatch(
+      sessionFailureMarkdown([
+        { summary: failFast, reports: buildReports(failFast, new Map()) },
+      ]),
+      note,
+    );
+  });
+
   it('keeps the stdout twin in step, verdict last', () => {
     const red = summary([task()], 1, { command: 'turbo run ci' });
     const failures = [{ summary: red, reports: buildReports(red, new Map()) }];
@@ -1687,6 +1804,30 @@ describe('tool annotations', () => {
     assert.equal(plan.emitted.error, ANNOTATION_LIMIT - 1);
     assert.match(plan.commands[0] ?? '', /^::error /);
     assert.match(plan.commands.at(-1) ?? '', /^::warning /);
+  });
+
+  it('caps annotations from several failing tasks as one step', () => {
+    const failing = ['a#lint', 'b#lint', 'c#lint'].map((taskId) =>
+      task({ taskId, execution: { startTime: 0, endTime: 1, exitCode: 1 } }),
+    );
+
+    const logs = new Map(
+      failing.map(({ taskId }) => [
+        taskId,
+        Array.from(
+          { length: 5 },
+          (_, i) =>
+            `::error file=src/${taskId}.ts,line=${i + 1}::${taskId} ${i}`,
+        ).join('\n'),
+      ]),
+    );
+
+    const plan = planAnnotations(extractAnnotations(summary(failing), logs), {
+      error: 1,
+    });
+
+    assert.equal(plan.found.error, 15);
+    assert.equal(plan.emitted.error, ANNOTATION_LIMIT - 1);
   });
 
   it('notes nothing when no log carried an annotation', () => {

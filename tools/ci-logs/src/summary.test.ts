@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 
+import { turboLogFile } from '@tools/shared/turbo-log.ts';
 import * as v from 'valibot';
 
 import {
@@ -11,7 +12,6 @@ import {
   planArtifacts,
   RUN_GROUP,
   SummarySchema,
-  turboLogFile,
   type Summary,
 } from './summary.ts';
 
