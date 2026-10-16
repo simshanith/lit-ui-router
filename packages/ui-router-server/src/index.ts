@@ -640,7 +640,8 @@ export function createServerRouter(config: {
  * import { test } from 'node:test';
  * import { createServerRouter, diagnoseMounts } from 'ui-router-server';
  *
- * import { mounts } from './routes.ts';
+ * // The table the server passes to createServerRouter.
+ * const mounts = { '/app': { routes: [{ name: 'home', url: '' }] } };
  *
  * test('every mount serves its bare base', () => {
  *   assert.deepEqual(diagnoseMounts(createServerRouter({ mounts })), []);
