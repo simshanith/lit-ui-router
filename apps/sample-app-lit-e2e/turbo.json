@@ -33,6 +33,8 @@
     // so it is transport too — a different port is the same suite.
     // E2E_BASE_URL is env, not transport: it swaps the served site for another
     // origin's, so a remote run and a local one never share a cache entry.
+    // WWW_WORKER_BUILD and WRANGLER_BUILD_CONDITIONS are env too: they pick the
+    // build the server runs, so a development run never replays a production one.
     // Videos/screenshots stay uncached side effects.
     // axe over every docs page and sample-app mount the server serves. Uncached:
     // color-contrast and target-size read the host's rendering and fonts, which
@@ -50,7 +52,12 @@
         "$TURBO_ROOT$/www/lit-ui-router.dev/dev-port.ts",
         "$TURBO_ROOT$/www/lit-ui-router.dev/scripts/wrangler-dev.ts"
       ],
-      "env": ["CI", "E2E_BASE_URL"],
+      "env": [
+        "CI",
+        "E2E_BASE_URL",
+        "WWW_WORKER_BUILD",
+        "WRANGLER_BUILD_CONDITIONS"
+      ],
       "passThroughEnv": ["WRANGLER_LOG", "CYPRESS_*", "WWW_DEV_PORT"],
       "outputs": []
     },
@@ -62,7 +69,12 @@
         "$TURBO_ROOT$/www/lit-ui-router.dev/dev-port.ts",
         "$TURBO_ROOT$/www/lit-ui-router.dev/scripts/wrangler-dev.ts"
       ],
-      "env": ["CI", "E2E_BASE_URL"],
+      "env": [
+        "CI",
+        "E2E_BASE_URL",
+        "WWW_WORKER_BUILD",
+        "WRANGLER_BUILD_CONDITIONS"
+      ],
       "passThroughEnv": ["WRANGLER_LOG", "CYPRESS_*", "WWW_DEV_PORT"],
       "outputs": []
     },
@@ -74,7 +86,12 @@
         "$TURBO_ROOT$/www/lit-ui-router.dev/dev-port.ts",
         "$TURBO_ROOT$/www/lit-ui-router.dev/scripts/wrangler-dev.ts"
       ],
-      "env": ["CI", "E2E_BASE_URL"],
+      "env": [
+        "CI",
+        "E2E_BASE_URL",
+        "WWW_WORKER_BUILD",
+        "WRANGLER_BUILD_CONDITIONS"
+      ],
       "passThroughEnv": ["WRANGLER_LOG", "CYPRESS_*", "WWW_DEV_PORT"],
       "outputs": []
     },
@@ -86,7 +103,12 @@
         "$TURBO_ROOT$/www/lit-ui-router.dev/dev-port.ts",
         "$TURBO_ROOT$/www/lit-ui-router.dev/scripts/wrangler-dev.ts"
       ],
-      "env": ["CI", "E2E_BASE_URL"],
+      "env": [
+        "CI",
+        "E2E_BASE_URL",
+        "WWW_WORKER_BUILD",
+        "WRANGLER_BUILD_CONDITIONS"
+      ],
       "passThroughEnv": ["WRANGLER_LOG", "CYPRESS_*", "WWW_DEV_PORT"],
       "outputs": []
     },
@@ -98,7 +120,12 @@
         "$TURBO_ROOT$/www/lit-ui-router.dev/dev-port.ts",
         "$TURBO_ROOT$/www/lit-ui-router.dev/scripts/wrangler-dev.ts"
       ],
-      "env": ["CI", "E2E_BASE_URL"],
+      "env": [
+        "CI",
+        "E2E_BASE_URL",
+        "WWW_WORKER_BUILD",
+        "WRANGLER_BUILD_CONDITIONS"
+      ],
       "passThroughEnv": ["WRANGLER_LOG", "CYPRESS_*", "WWW_DEV_PORT"],
       "outputs": []
     },
@@ -110,7 +137,12 @@
         "$TURBO_ROOT$/www/lit-ui-router.dev/dev-port.ts",
         "$TURBO_ROOT$/www/lit-ui-router.dev/scripts/wrangler-dev.ts"
       ],
-      "env": ["CI", "E2E_BASE_URL"],
+      "env": [
+        "CI",
+        "E2E_BASE_URL",
+        "WWW_WORKER_BUILD",
+        "WRANGLER_BUILD_CONDITIONS"
+      ],
       "passThroughEnv": ["WRANGLER_LOG", "CYPRESS_*", "WWW_DEV_PORT"],
       "outputs": []
     },
@@ -122,7 +154,12 @@
         "$TURBO_ROOT$/www/lit-ui-router.dev/dev-port.ts",
         "$TURBO_ROOT$/www/lit-ui-router.dev/scripts/wrangler-dev.ts"
       ],
-      "env": ["CI", "E2E_BASE_URL"],
+      "env": [
+        "CI",
+        "E2E_BASE_URL",
+        "WWW_WORKER_BUILD",
+        "WRANGLER_BUILD_CONDITIONS"
+      ],
       "passThroughEnv": ["WRANGLER_LOG", "CYPRESS_*", "WWW_DEV_PORT"],
       "outputs": []
     }

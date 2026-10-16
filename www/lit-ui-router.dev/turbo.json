@@ -39,9 +39,13 @@
     },
     "wrangler:dev": {
       "dependsOn": ["build"],
-      // Override of the default in dev-port.ts; transport only, so the port
-      // must not enter a cache key.
-      "passThroughEnv": ["WWW_DEV_PORT"],
+      // Overrides of the launcher's defaults (dev-port.ts, the worker build);
+      // the task is uncached, so they pass through.
+      "passThroughEnv": [
+        "WWW_DEV_PORT",
+        "WWW_WORKER_BUILD",
+        "WRANGLER_BUILD_CONDITIONS"
+      ],
       "cache": false,
       "persistent": true
     },

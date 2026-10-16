@@ -55,6 +55,9 @@ const main = async (): Promise<void> => {
 
   const server = `node ${JSON.stringify(join(workspaceRoot, www.dir, 'scripts/wrangler-dev.ts'))}`;
 
+  // e2e verifies what deploys; set before the handover, so the suites' cache keys see it too
+  process.env.WWW_WORKER_BUILD ??= 'production';
+
   // every app is mounted whichever suites run
   serveAndTest(server, test, [
     'app/',

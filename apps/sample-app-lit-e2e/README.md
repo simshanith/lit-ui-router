@@ -61,6 +61,10 @@ through a `pnpm run` hop the mise task does not have. Bare
 `pnpm --filter @www/lit-ui-router.dev run wrangler:dev` skips the build and
 serves whatever is already in `dist`.
 
+The umbrella serves the worker's production build, the one that deploys:
+`scripts/run-e2e.ts` sets `WWW_WORKER_BUILD=production` unless it is already
+set, and the launcher reads it.
+
 The server is deliberately outside the turbo graph. No turbo lifecycle fits it:
 as a `with:` sidecar it is started but never reaped, and a top-level persistent
 run does tear down cleanly on a signal but knows nothing about readiness or

@@ -300,6 +300,10 @@ move it — for a second worktree, put it in a gitignored
 [README](../apps/sample-app-lit-e2e/README.md#the-port) covers why the port is
 contended.
 
+Both serve the development build of the worker's dependencies; set
+`WWW_WORKER_BUILD=production` for the build that deploys (see
+`lit-ui-router.dev/scripts/wrangler-dev.ts`).
+
 See Cloudflare Workers Testing Docs: [Local Development](https://developers.cloudflare.com/workers/testing/local-development/)
 
 ## [Cloudflare Pages](https://developers.cloudflare.com/pages/): The Altitude Atlas
