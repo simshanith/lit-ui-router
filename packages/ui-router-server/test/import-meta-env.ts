@@ -12,8 +12,8 @@ Object.defineProperty(globalThis, KEY, { value: env });
 
 const src = new URL('../src/', import.meta.url).href;
 
-// One line, prepended without a newline, so coverage line numbers hold.
-const prelude = `import.meta.env = globalThis[Symbol.for(${JSON.stringify(KEY.description)})];`;
+// Appended: a prefix shifts the offsets V8 coverage maps onto the file on disk.
+const postlude = `import.meta.env = globalThis[Symbol.for(${JSON.stringify(KEY.description)})];`;
 
 registerHooks({
   load(url, context, nextLoad) {
@@ -24,7 +24,7 @@ registerHooks({
     // SAFETY: node's default load reads files as bytes; decode() throws on anything else
     const text = new TextDecoder().decode(loaded.source as Uint8Array);
 
-    return { ...loaded, source: prelude + text };
+    return { ...loaded, source: `${text}\n${postlude}` };
   },
 });
 
