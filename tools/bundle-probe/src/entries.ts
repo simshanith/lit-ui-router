@@ -15,16 +15,9 @@ export type PackageEntry = {
 const isTargetPath = (target: ExportsTarget | undefined): target is string =>
   typeof target === 'string';
 
-// The `bundleProbe` manifest field: per-subpath boundary claims, and the
-// export conditions whose targets also probe, under the same claims.
+// The `bundleProbe` manifest field: per-subpath boundary claims.
 export type BundleProbeClaims = Readonly<
-  Record<
-    string,
-    {
-      readonly free?: readonly string[];
-      readonly conditions?: readonly string[];
-    }
-  >
+  Record<string, { readonly free?: readonly string[] }>
 >;
 
 export type PackageProbe = {
@@ -33,58 +26,6 @@ export type PackageProbe = {
   // dirs of the @repo/* devDependencies that @tools/oxc-emit inlines into dist/
   inlined: string[];
   entries: PackageEntry[];
-};
-
-// A conditioned target probes like a default one: a built file under dist/.
-const conditionFile = (
-  name: string,
-  packageDir: string,
-  subpath: string,
-  value: ExportsTarget,
-  condition: string,
-): string => {
-  const target =
-    value === null || Array.isArray(value) || isTargetPath(value)
-      ? undefined
-      : value[condition];
-
-  if (!isTargetPath(target) || !/^\.\/dist\/.*\.js$/.test(target)) {
-    throw new Error(
-      `${name}: bundleProbe condition '${condition}' on '${subpath}' names no dist/*.js target`,
-    );
-  }
-
-  const file = path.join(packageDir, target);
-
-  if (!existsSync(file)) {
-    throw new Error(
-      `${name}: export '${subpath}' condition '${condition}' resolves to missing ${target}; run build:js first`,
-    );
-  }
-
-  return file;
-};
-
-// The default target's entry, then one per claimed condition, all under the subpath's free claims.
-const subpathEntries = (
-  name: string,
-  packageDir: string,
-  subpath: string,
-  value: ExportsTarget,
-  file: string,
-  claim: BundleProbeClaims[string] | undefined,
-): PackageEntry[] => {
-  const free = [...(claim?.free ?? [])];
-  const label = subpath === '.' ? 'index' : subpath.slice(2);
-
-  return [
-    { label, file, free },
-    ...(claim?.conditions ?? []).map((condition) => ({
-      label: `${label}-${condition}`,
-      file: conditionFile(name, packageDir, subpath, value, condition),
-      free,
-    })),
-  ];
 };
 
 // The exports map is the single source of truth for what gets probed: a new
@@ -98,9 +39,6 @@ const subpathEntries = (
 // The optional `bundleProbe` manifest field carries the per-entry boundary
 // claims, keyed by the same subpath the exports map uses:
 //   "bundleProbe": { "./context": { "free": ["lit"] } }
-// `conditions` adds the target of each named condition as a further entry,
-// labelled <label>-<condition>:
-//   "bundleProbe": { ".": { "free": ["lit"], "conditions": ["node"] } }
 // eslint-disable-next-line complexity -- one linear pass over the exports map; splitting it scatters the mapping rules above
 export const readPackageProbe = (packageDir: string): PackageProbe => {
   const manifest = requireManifest(packageDir);
@@ -156,17 +94,13 @@ export const readPackageProbe = (packageDir: string): PackageProbe => {
       );
     }
 
+    const free = claims?.[subpath]?.free;
     bundled.add(subpath);
-    entries.push(
-      ...subpathEntries(
-        name,
-        packageDir,
-        subpath,
-        value,
-        file,
-        claims?.[subpath],
-      ),
-    );
+    entries.push({
+      label: subpath === '.' ? 'index' : subpath.slice(2),
+      file,
+      free: [...(free ?? [])],
+    });
   }
 
   if (entries.length === 0) {

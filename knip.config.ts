@@ -8,8 +8,8 @@ import type { ExportsTarget, PackageManifest } from '@tools/bootstrap/types.ts';
 import { isRootMember, loadWorkspace } from '@tools/shared/workspace.ts';
 
 // oxc-emit compiles src/<stem>.ts to dist/<stem>.js, dist/<stem>.d.ts and,
-// with --development, dist/development/<stem>.js and, with --node, dist/node/<stem>.js.
-const DIST_TARGET = /^\.\/dist\/(?:development\/|node\/)?/;
+// with --development, dist/development/<stem>.js.
+const DIST_TARGET = /^\.\/dist\/(?:development\/)?/;
 
 const EMITTED_EXTENSION = /(?:\.d)?\.(?:ts|js)$/;
 

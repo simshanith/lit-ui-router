@@ -573,10 +573,10 @@ const simulateVerdict = async (
  * A bare mount base ('/app', '/app/') resolves the empty subpath, which
  * 404s unless the mount supplies a root pattern — a rule like
  * `{ pattern: /^\/?$/, to: ... }` or a `url: ''` route. Construction passes
- * each {@link diagnoseMounts} finding's message to `console.warn`: always in
- * the development build (the `development` export condition), unless
- * `NODE_ENV` is `production` in the node build (the `node` condition), never
- * in the default build.
+ * each {@link diagnoseMounts} finding's message to `console.warn` in the
+ * development build, which the `development` and `node` export conditions
+ * resolve; under `node`, only while `NODE_ENV` is not `production`. The
+ * default build never warns.
  */
 export function createServerRouter(config: {
   mounts: Record<string, MountConfig>;
@@ -623,8 +623,8 @@ export function createServerRouter(config: {
 
 /**
  * Checks the mounts a router was built with for configurations that compile
- * but misroute, without logging: the findings the development and node
- * builds of {@link createServerRouter} warn about, returned in every build.
+ * but misroute, without logging: the findings the development build of
+ * {@link createServerRouter} warns about, returned in every build.
  * It reports `'bareBaseNotFound'` for a mount other than '/' whose bare base
  * (`/app`) answers 404 — `notFound`, or the shell-404 of an `otherwise`
  * projection. Findings follow the table's declaration order. Assert the

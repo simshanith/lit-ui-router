@@ -16,9 +16,5 @@
   "include": ["src/**/*.ts"],
   // the other withdrawal: the runtime shims, by name; src/types/import-meta-env.d.ts
   // is build-time and stays
-  "exclude": [
-    "src/fetch.globals.d.ts",
-    "src/console.globals.d.ts",
-    "src/process.globals.d.ts"
-  ]
+  "exclude": ["src/fetch.globals.d.ts", "src/console.globals.d.ts"]
 }

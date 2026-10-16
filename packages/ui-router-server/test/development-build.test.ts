@@ -6,21 +6,22 @@ import { fileURLToPath } from 'node:url';
 
 import type { MountConfig } from '../src/index.ts';
 
-// The three emits build:js writes, imported as consumers resolve them: the
-// `development` condition picks dist/development, `node` picks dist/node, the
-// default picks dist.
+// The two emits build:js writes, imported as consumers resolve them: the
+// `development` and `node` conditions pick dist/development, the default picks
+// dist. Their #dev-gate goes through package.json#imports, so under this node
+// run it reads NODE_ENV.
 type Entry = typeof import('../src/index.ts');
 
 const load = async <T>(path: string): Promise<T> =>
   // SAFETY: each emit is compiled from the src module the caller names
   (await import(new URL(path, import.meta.url).href)) as T;
 
-const BUILDS = ['development', 'node', 'production'] as const;
+const BUILDS = ['development', 'production'] as const;
 
 type Build = (typeof BUILDS)[number];
 
 const dir = (build: Build): string =>
-  build === 'production' ? '../dist/' : `../dist/${build}/`;
+  build === 'production' ? '../dist/' : '../dist/development/';
 
 // SAFETY: one [build, entries] pair per BUILDS member
 const builds = Object.fromEntries(
@@ -74,12 +75,10 @@ const expected = (build: Build): string[] => {
   return [`ui-router-server: createServerRouter: ${message}`];
 };
 
-describe('development, node and production builds', () => {
-  it('warns at construction in the development build only, whatever NODE_ENV', (t) => {
-    withNodeEnv(t, 'production');
-    t.mock.method(console, 'warn', () => {});
+describe('development and production builds', () => {
+  it('never warns at construction in the production build, whatever NODE_ENV', (t) => {
+    withNodeEnv(t, undefined);
 
-    assert.deepEqual(warnings(t, 'development'), expected('development'));
     assert.deepEqual(warnings(t, 'production'), []);
   });
 
@@ -89,13 +88,13 @@ describe('development, node and production builds', () => {
     ['test', true],
     ['production', false],
   ] as const) {
-    it(`warns in the node build unless NODE_ENV is production (NODE_ENV=${nodeEnv})`, (t) => {
+    it(`warns in the development build under node unless NODE_ENV is production (NODE_ENV=${nodeEnv})`, (t) => {
       withNodeEnv(t, nodeEnv);
       const silent = t.mock.method(console, 'warn', () => {});
-      const messages = expected('node');
+      const messages = expected('development');
       silent.mock.restore();
 
-      assert.deepEqual(warnings(t, 'node'), warns ? messages : []);
+      assert.deepEqual(warnings(t, 'development'), warns ? messages : []);
     });
   }
 
@@ -119,18 +118,22 @@ describe('development, node and production builds', () => {
     );
   });
 
-  it('ships no console call in the production emit, and process only in the node emit', () => {
-    for (const build of BUILDS) {
-      const out = fileURLToPath(new URL(dir(build), import.meta.url));
+  it('opens the default #dev-gate whatever NODE_ENV says', async (t) => {
+    withNodeEnv(t, 'production');
+    const gate = await load<{ devGate: () => boolean }>('../dist/dev-gate.js');
 
-      for (const file of globSync('*.js', { cwd: out })) {
-        const code = readFileSync(`${out}${file}`, 'utf8');
+    assert.equal(gate.devGate(), true);
+  });
 
-        if (build === 'production') assert.doesNotMatch(code, /console/, file);
+  it('ships no console call in the production emit', () => {
+    const out = fileURLToPath(new URL(dir('production'), import.meta.url));
 
-        if (build !== 'node')
-          assert.doesNotMatch(code, /\bprocess\b/, `${build}/${file}`);
-      }
+    for (const file of globSync('*.js', { cwd: out })) {
+      assert.doesNotMatch(
+        readFileSync(`${out}${file}`, 'utf8'),
+        /console/,
+        file,
+      );
     }
   });
 });

@@ -11,7 +11,7 @@ import {
 } from '../src/index.ts';
 import type { MountConfig } from '../src/index.ts';
 import { warnMountDiagnostics } from '../src/dev-warn.ts';
-import { stubDev, stubEnv } from './import-meta-env.ts';
+import { stubDev } from './import-meta-env.ts';
 
 const appMount = (strategy: MountConfig['strategy']): MountConfig => ({
   strategy,
@@ -565,8 +565,7 @@ describe('mount diagnostics', () => {
     ['test', true],
     ['production', false],
   ] as const) {
-    it(`warns in the node build unless NODE_ENV is production (NODE_ENV=${nodeEnv})`, (t) => {
-      t.after(stubEnv('NODE', true));
+    it(`warns under node unless NODE_ENV is production (NODE_ENV=${nodeEnv})`, (t) => {
       const previous = process.env.NODE_ENV;
 
       t.after(() => {
@@ -581,7 +580,7 @@ describe('mount diagnostics', () => {
     });
   }
 
-  it('never diagnoses in production, nor in the node build under NODE_ENV=production', (t) => {
+  it('never diagnoses in production, nor under node with NODE_ENV=production', (t) => {
     t.mock.method(console, 'warn', () => {});
     const router = createServerRouter({ mounts: mixed });
     const diagnose = t.mock.fn(diagnoseMounts);
@@ -596,7 +595,6 @@ describe('mount diagnostics', () => {
     warnMountDiagnostics(router, diagnose);
     restoreDev();
 
-    t.after(stubEnv('NODE', true));
     process.env.NODE_ENV = 'production';
     warnMountDiagnostics(router, diagnose);
 

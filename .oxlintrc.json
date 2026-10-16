@@ -269,27 +269,16 @@
         "turbo/no-undeclared-env-vars": [
           "warn",
           {
-            "allowList": ["^(DEV|NODE|PACKAGE_VERSION)$"]
+            "allowList": ["^(DEV|PACKAGE_VERSION)$"]
           }
         ]
       }
     },
     {
-      // dist/node reads the consumer's NODE_ENV at runtime; no task of ours takes it as input.
-      "files": ["packages/ui-router-server/src/dev-warn.ts"],
-      "rules": {
-        "turbo/no-undeclared-env-vars": [
-          "warn",
-          {
-            "allowList": ["^(DEV|NODE|NODE_ENV)$"]
-          }
-        ]
-      }
-    },
-    {
-      // Every test that reaches dist/node's NODE_ENV read sets and restores it.
+      // Every test that reaches #dev-gate's NODE_ENV read sets and restores it.
       "files": [
         "packages/ui-router-server/test/index.test.ts",
+        "packages/ui-router-server/test/dev-gate.test.ts",
         "packages/ui-router-server/test/development-build.test.ts"
       ],
       "rules": {
