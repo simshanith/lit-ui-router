@@ -205,20 +205,21 @@ export const sceneState = (row: ExtraRow): string => `atlas.${row.id}`;
 /**
  * THE RAIL'S BANDS — the ascent cut by altitude. A band opens at `from` and
  * runs to the next band's first altitude, so a plate files by its number and
- * no sheet is listed here. The labels are the index's ALTITUDE wording, save
- * sheets 7–10, which the cover calls a survey quartet.
+ * no sheet is listed here. A band's label is its opening sheet's index
+ * wording (`scale`), read from the manifest, save sheets 7–10, which the
+ * cover calls a survey quartet.
  */
-export const BANDS = [
-  { from: 1, label: 'ONE PACKAGE' },
-  { from: 2, label: 'COMPANIONS' },
-  { from: 3, label: 'MONOREPO' },
-  { from: 4, label: 'ECOSYSTEM' },
+export const BANDS: ReadonlyArray<{ from: number; label?: string }> = [
+  { from: 1 },
+  { from: 2 },
+  { from: 3 },
+  { from: 4 },
   { from: 7, label: 'SURVEY QUARTET' },
-  { from: 11, label: 'SEVEN PACKAGES' },
-  { from: 12, label: 'PR CI GRAPH' },
-  { from: 13, label: 'WORKSPACE × TIME' },
-  { from: 14, label: 'CITY × COMMONS' },
-] as const;
+  { from: 11 },
+  { from: 12 },
+  { from: 13 },
+  { from: 14 },
+];
 
 /** One band as the rail draws it: its key, its altitudes ('7–10'), its label and its plates. */
 export interface Band {
@@ -233,7 +234,11 @@ const altitudeOf = (entry: AscentRow): number =>
 
 /** The ascent in BANDS, then the appendix as one band more; a band with no plates is dropped. */
 export function bands(manifest: Manifest): Band[] {
-  const cut = BANDS.map(({ from, label }) => ({ from, label, rows: [] as AscentRow[] }));
+  const cut = BANDS.map(({ from, label }) => {
+    const opening = label ?? findSheet(manifest, String(from))?.scale;
+    if (!opening) throw new Error(`rail band ${String(from)}: no label and no sheet ${String(from)} in the manifest`);
+    return { from, label: opening, rows: [] as AscentRow[] };
+  });
   for (const entry of ascent(manifest)) {
     const altitude = altitudeOf(entry);
     cut.filter((band) => band.from <= altitude).at(-1)?.rows.push(entry);
