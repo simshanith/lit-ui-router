@@ -442,10 +442,11 @@
       ]
     },
     // Bundles each dist export the way consumers install it, so the own
-    // package's build:js runs first; workspace deps stay external.
+    // package's build:js runs first; workspace deps stay external. floor-guard
+    // runs here too and reads its ranges from the catalogs.
     "check:bundle": {
       "dependsOn": ["transit", "build:js"],
-      "inputs": ["$TURBO_DEFAULT$"]
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/pnpm-workspace.yaml"]
     },
     // Reader of the two-pass build:js emit: asserts the declared dev-only
     // warnings ship in dist/development/*.js and in no dist/*.js. Own package's

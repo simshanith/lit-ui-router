@@ -156,7 +156,60 @@ describe('proveLegs', () => {
     ]);
   });
 
-  it('fails a leg alias that proves no middle leg', () => {
+  it('fails a top leg the dev dependency sits below, even with its alias', () => {
+    const verdict = proveLegs(
+      legs({
+        aliases: {
+          'ui-router-server-floor': '0.2.0',
+          'ui-router-server-0.3-floor': '0.3.0',
+        },
+        dev: () => '0.2.2',
+      }),
+    );
+
+    assert.deepEqual(verdict.failures, [
+      'publishedPeerSsr ui-router-server range "^0.2.0 || ^0.3.0" has a top ' +
+        'leg ">=0.3.0 <0.4.0-0" that the ui-router-server devDependency ' +
+        '(0.2.2) does not exercise. Move the devDependency into it, or ' +
+        'narrow the range.',
+    ]);
+  });
+
+  it('passes a dev dependency past the range on the top-leg alias', () => {
+    const verdict = proveLegs(
+      legs({
+        aliases: {
+          'ui-router-server-floor': '0.2.0',
+          'ui-router-server-0.3-floor': '0.3.0',
+        },
+        dev: () => '0.4.0',
+      }),
+    );
+
+    assert.deepEqual(verdict, {
+      failures: [],
+      proofs: [
+        'ui-router-server-floor -> ui-router-server 0.2.0 proves ">=0.2.0 <0.3.0-0"',
+        'ui-router-server-0.3-floor -> ui-router-server 0.3.0 proves ">=0.3.0 <0.4.0-0"',
+        'dev ui-router-server 0.4.0 is past "^0.2.0 || ^0.3.0"; widen the ' +
+          'publishedPeerSsr range to admit it',
+      ],
+    });
+  });
+
+  it('fails a dev dependency past the range without the top-leg alias, naming it', () => {
+    const verdict = proveLegs(legs({ dev: () => '0.4.0' }));
+
+    assert.deepEqual(verdict.failures, [
+      'publishedPeerSsr ui-router-server range "^0.2.0 || ^0.3.0" has a top ' +
+        'leg ">=0.3.0 <0.4.0-0" that the ui-router-server devDependency ' +
+        '(0.4.0) has moved past. Add ui-router-server-0.3-floor: ' +
+        'npm:ui-router-server@0.3.0 to the peerFloorSsr catalog, declare it ' +
+        'as a devDependency, and reinstall, or widen the range.',
+    ]);
+  });
+
+  it('passes a top-leg alias added while the dev dependency still runs the leg', () => {
     const verdict = proveLegs(
       legs({
         aliases: {
@@ -166,8 +219,47 @@ describe('proveLegs', () => {
       }),
     );
 
+    assert.deepEqual(verdict, {
+      failures: [],
+      proofs: [
+        'ui-router-server-floor -> ui-router-server 0.2.0 proves ">=0.2.0 <0.3.0-0"',
+        'dev ui-router-server 0.3.1 runs ">=0.3.0 <0.4.0-0"',
+        'ui-router-server-0.3-floor -> ui-router-server 0.3.0 proves ">=0.3.0 <0.4.0-0"',
+      ],
+    });
+  });
+
+  it('fails a top-leg alias that does not pin its floor', () => {
+    const aliases = {
+      'ui-router-server-floor': '0.2.0',
+      'ui-router-server-0.3-floor': '0.3.1',
+    };
+
+    const failure =
+      'ui-router-server-0.3-floor resolves to 0.3.1, but the floor of the ' +
+      'peer range ^0.2.0 || ^0.3.0 leg ">=0.3.0 <0.4.0-0" is 0.3.0. Repin ' +
+      'the alias in the peerFloorSsr catalog in pnpm-workspace.yaml and ' +
+      'reinstall.';
+
+    assert.deepEqual(
+      proveLegs(legs({ aliases, dev: () => '0.4.0' })).failures,
+      [failure],
+    );
+    assert.deepEqual(proveLegs(legs({ aliases })).failures, [failure]);
+  });
+
+  it('fails a leg alias that proves no leg', () => {
+    const verdict = proveLegs(
+      legs({
+        aliases: {
+          'ui-router-server-floor': '0.2.0',
+          'ui-router-server-0.5-floor': '0.5.0',
+        },
+      }),
+    );
+
     assert.deepEqual(verdict.failures, [
-      'ui-router-server-0.3-floor proves no middle leg of publishedPeerSsr ' +
+      'ui-router-server-0.5-floor proves no leg of publishedPeerSsr ' +
         'ui-router-server range "^0.2.0 || ^0.3.0". Remove it from the ' +
         'peerFloorSsr catalog and the devDependencies.',
     ]);
