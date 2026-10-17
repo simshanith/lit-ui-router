@@ -46,7 +46,8 @@ npm install lit-ui-router-ssr
 `lit-ui-router`, `ui-router-server`, `@lit-labs/ssr`, `@lit-labs/ssr-client`, `lit`, and
 `@uirouter/core` are peer dependencies. `@lit-labs/ssr` is the server half and `@lit-labs/ssr-client`
 the client half, so a bundle takes one or the other, never both. `@lit-labs/ssr-client` is optional:
-install it when you import `lit-ui-router-ssr/client`.
+install it when you import `lit-ui-router-ssr/client`. The `ui-router-server` peer range is
+`^0.2.0 || ^0.3.0 || ^0.4.0`, so the 0.2, 0.3 and 0.4 lines are all supported.
 
 ## Quick Start
 
