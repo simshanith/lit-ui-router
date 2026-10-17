@@ -523,6 +523,11 @@ export { default } from '@tools/release-config';
 
 The config defaults most options to `false` so workflows can enable them explicitly via CLI flags.
 
+A package's range is the commits that touched its directory, plus commits to
+`pnpm-workspace.yaml` that changed a catalog entry its `dependencies`,
+`peerDependencies` or `optionalDependencies` resolve through `catalog:`
+(`tools/release-config/src/catalog-commits.js`).
+
 The changelog lists its commit types explicitly, with the `conventionalcommits`
 preset's section names. A package range made only of unlisted types renders
 empty, and release-it silently falls back to a flat repo-wide git log; a range

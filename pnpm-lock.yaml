@@ -2553,6 +2553,10 @@ importers:
         version: 1.5.0(typescript@7.0.2)
 
   tools/release-config:
+    dependencies:
+      yaml:
+        specifier: 'catalog:'
+        version: 2.9.1
     devDependencies:
       '@tools/shared':
         specifier: catalog:workspace
