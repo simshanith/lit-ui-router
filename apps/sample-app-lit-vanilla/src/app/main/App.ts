@@ -6,6 +6,7 @@ import {
   UIViewInjectedProps,
   RoutedLitElement,
 } from 'lit-ui-router';
+import type { TypedStateService } from 'sample-app-shared/registry/registry.js';
 
 import AuthService from '../global/authService.js';
 import './NavHeader.js';
@@ -31,7 +32,7 @@ export class App extends LitElement {
   // named ui-view visibility (displayActive) in sync with the active state.
   transitions = new TransitionController(this);
 
-  get stateService() {
+  get stateService(): TypedStateService {
     return this._uiViewProps.router.stateService;
   }
 

@@ -9,6 +9,9 @@ import MessageComponent from './Message.js';
 
 import { dsrRedirectToDefaultFromWithin } from '../util/dsr-default-redirect-within.js';
 
+// Typed so the registry reads the `message` param as a draft, not `{}`.
+const noDraft: Partial<Message> = {};
+
 /**
  * This state allows the user to compose a new message, edit a drafted message, send a message,
  * or save an unsent message as a draft.
@@ -21,7 +24,7 @@ const composeState = {
   // Declares that this state has a 'message' parameter, that defaults to an empty object.
   // Note the parameter does not appear in the URL.
   params: {
-    message: {},
+    message: noDraft,
   },
   data: { title: 'New message' },
   views: {
@@ -29,7 +32,7 @@ const composeState = {
     // Absolute targeting finds the nested ui-view in the DOM, using view names.
     '!$default.mymessages': Compose,
   },
-};
+} as const;
 
 /**
  * The mymessages state. This is the main state for the mymessages page.
@@ -60,7 +63,7 @@ const mymessagesState = {
     fn: dsrRedirectToDefaultFromWithin,
   },
   sticky: true,
-};
+} as const;
 
 /**
  * This state shows the contents of a single message.
@@ -98,7 +101,7 @@ const messageState = {
     // Or, this could also have been written using absolute ui-view addressing: '!$default.$default.messagecontent'
     '^.^.messagecontent': MessageComponent,
   },
-};
+} as const;
 
 function againable<T>(fn: () => T) {
   return function $again(): Promise<T> & { $again: () => Promise<T> } {
@@ -145,7 +148,7 @@ const messageListState = {
     // This targets the "messagelist" named UIView added to the DOM in the parent state 'mymessages'
     messagelist: MessageList,
   },
-};
+} as const;
 
 export const states = [
   composeState,

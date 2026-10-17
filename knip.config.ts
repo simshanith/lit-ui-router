@@ -71,6 +71,10 @@ const workspaces = {
     // the tutorials are standalone npm projects with their own manifests
     ignore: ['*/**'],
   },
+  'apps/sample-app-lit-vanilla': {
+    entry: ['src/**/*.test-d.ts', 'test-d/*.test-d.ts'],
+  },
+  'apps/sample-app-lit-signals': { entry: ['src/**/*.test-d.ts'] },
   'apps/sample-app-lit-e2e': {
     // reached from root mise tasks and `cypress --config-file`
     entry: ['scripts/*.ts', 'cypress*.config.ts', 'src/**/*.cy.{ts,js}'],
