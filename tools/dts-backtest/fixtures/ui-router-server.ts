@@ -19,6 +19,8 @@ import {
 } from 'ui-router-server/connect';
 import {
   createFetchHandler,
+  type DelegateContext,
+  type DelegateHandler,
   type FetchAdapterOptions,
   type FetchHandler,
 } from 'ui-router-server/fetch';
@@ -85,6 +87,7 @@ const routes: RouteDeclaration[] = [
   },
   { name: 'app.legacy', url: '/people', redirectTo: 'app.contacts' },
   { name: 'contactHelp', parent: 'app.contacts', url: '/help' },
+  { name: 'app.claims', url: '/claims/{id}', delegate: 'ledger' },
   { name: 'app.notFound' },
 ];
 
@@ -144,6 +147,14 @@ export async function statusFor(pathname: string): Promise<number> {
     void verdict.mount;
 
     return verdict.status ?? 200;
+  }
+
+  if (verdict.kind === 'delegate') {
+    void verdict.delegate.length;
+    void verdict.state.length;
+    void verdict.params;
+
+    return verdict.mount.length;
   }
 
   // `notFound` is the only arm whose `mount` is optional.
@@ -363,6 +374,12 @@ export const middleware: ConnectMiddleware = createConnectMiddleware(
   connectOptions,
 );
 
+// A delegate gets the original request and the matched state's context.
+const ledger: DelegateHandler = (request, context: DelegateContext) =>
+  new Response(`${request.method} ${context.mount} ${context.state}`, {
+    status: 202,
+  });
+
 const fetchOptions: FetchAdapterOptions = {
   shellPath: (mountBase) => mountBase,
   serveShell: (_mountBase, request) => new Response(request.url),
@@ -370,6 +387,7 @@ const fetchOptions: FetchAdapterOptions = {
   serveNotFound: (_mountBase, _request) =>
     Promise.resolve(new Response('not found', { status: 404 })),
   shouldHandle: (request) => request.method === 'GET',
+  delegates: { ledger },
 };
 
 export const handler: FetchHandler = createFetchHandler(router, fetchOptions);

@@ -163,7 +163,9 @@ const defaultServeNotFound = (
  *   downstream status relabeled, no canonical Link (a 404 is not an
  *   alternate representation of the mount root), then {@link ConnectAdapterOptions.serveShell | serveShell}.
  * - `notFound` with a mount → {@link ConnectAdapterOptions.serveNotFound | serveNotFound} (honest 404).
- * - `notFound` without a mount, or a non-navigation request → `next()`.
+ * - `notFound` without a mount, a `delegate` verdict, or a non-navigation
+ *   request → `next()`. Connect has no `delegates` option: mount the
+ *   handlers for delegating states downstream.
  */
 export function createConnectMiddleware(
   router: ServerRouter,
@@ -212,7 +214,8 @@ export function createConnectMiddleware(
         return;
       }
 
-      if (verdict.mount === undefined) {
+      // No Node request -> fetch Request bridge yet: the downstream stack serves delegating states.
+      if (verdict.kind === 'delegate' || verdict.mount === undefined) {
         next();
 
         return;

@@ -24,6 +24,16 @@ npm install ui-router-server
 dependencies. Full docs:
 [lit-ui-router.dev/packages/server](https://lit-ui-router.dev/packages/server).
 
+## Delegating states
+
+A state can name a host handler by key, `{ name: 'claims', url: '/claims', delegate: 'ledger' }`,
+and the fetch and Hono adapters map keys to fetch-shaped handlers:
+`createFetchHandler(router, { serveShell, delegates: { ledger: (request) => app.fetch(request, env) } })`.
+A request of any method that matches a delegating state gets the handler's
+`Response`, untouched. Construction throws for a key the tree names and
+`delegates` lacks. See
+[delegating states](https://lit-ui-router.dev/packages/server#delegating-states).
+
 ## Attribution
 
 URL-matching logic (`src/url-matcher.ts`) is derived from [@uirouter/core](https://github.com/ui-router/core) (MIT) — see [LICENSE](./LICENSE).

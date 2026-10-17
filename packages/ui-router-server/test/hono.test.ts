@@ -81,4 +81,39 @@ describe('serverRouterHono', () => {
     assert.equal(res.status, 200);
     assert.equal(await bodyText(res), 'downstream');
   });
+
+  it('puts the router in front of a delegated Hono app, any method', async () => {
+    const ledger = new Hono<{ Bindings: { queue: string[] } }>();
+    ledger.post('/app/claims', async (c) => {
+      c.env.queue.push(await c.req.text());
+
+      return c.body(null, 202);
+    });
+    const queue: string[] = [];
+
+    const app = appWith(
+      {
+        kind: 'delegate',
+        mount: '/app',
+        delegate: 'ledger',
+        state: 'claims',
+        params: {},
+      },
+      {
+        delegates: {
+          ledger: (request: Request) => ledger.fetch(request, { queue }),
+        },
+      },
+    );
+
+    // SAFETY: Hono builds a real node Request, which the fetch globals shim shadows, and it takes a body.
+    const res = await app.request('/app/claims', {
+      method: 'POST',
+      headers: { accept: 'application/json' },
+      body: 'claim',
+    } as RequestInit);
+
+    assert.equal(res.status, 202);
+    assert.deepEqual(queue, ['claim']);
+  });
 });

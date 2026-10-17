@@ -39,6 +39,14 @@ export interface RouteDeclaration {
    * cycles are rejected at compile.
    */
   redirectTo?: string | RedirectTarget;
+  /**
+   * Names the host handler that answers this state's url, for any method and
+   * any Accept: the verdict is `delegate` instead of `shell`. The state tree
+   * stays isomorphic because it carries only the key; the adapter's
+   * `delegates` option maps the key to a handler. A delegating state needs a
+   * url and no `redirectTo`. Child states don't inherit it.
+   */
+  delegate?: string;
 }
 
 /** A redirect target in state terms; the matcher tier formats it back into a path. */
