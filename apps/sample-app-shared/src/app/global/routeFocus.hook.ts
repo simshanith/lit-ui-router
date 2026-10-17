@@ -16,14 +16,30 @@ const isTitleResolver = (
 /** The top-level state under `app`: `contacts.contact.edit` is `contacts`. */
 const sectionOf = (state: StateDeclaration) => state.name?.split('.')[0] ?? '';
 
+interface TitleData {
+  title?: RouteTitle;
+  /** Replaces `title` in analytics where `title` reads record content. */
+  analyticsTitle?: string;
+}
+
+// SAFETY: StateDeclaration.data is `any`; the state declarations set `title` only as a RouteTitle and `analyticsTitle` only as a string
+const titleDataOf = (transition: Transition) =>
+  (transition.to().data ?? {}) as TitleData;
+
+const withAppTitle = (text: string | undefined) =>
+  text ? `${text} — ${APP_TITLE}` : APP_TITLE;
+
 function titleOf(transition: Transition) {
-  // SAFETY: StateDeclaration.data is `any`; the state declarations set `title` only as a RouteTitle
-  const title = (transition.to().data as { title?: RouteTitle } | undefined)
-    ?.title;
+  const { title } = titleDataOf(transition);
 
-  const text = isTitleResolver(title) ? title(transition) : title;
+  return withAppTitle(isTitleResolver(title) ? title(transition) : title);
+}
 
-  return text ? `${text} — ${APP_TITLE}` : APP_TITLE;
+/** The `page_title` analytics receives: never a message subject or contact name. */
+export function analyticsTitleOf(transition: Transition) {
+  const { analyticsTitle } = titleDataOf(transition);
+
+  return analyticsTitle ? withAppTitle(analyticsTitle) : titleOf(transition);
 }
 
 /** Sticky sections stay rendered under `display: none`, so skip hidden ones. */
@@ -70,7 +86,6 @@ export default function routeFocusHook(transitionService: TransitionService) {
         }
       });
     },
-    // ahead of the analytics hook, so a page_view reads the new title
     { priority: 10 },
   );
 }

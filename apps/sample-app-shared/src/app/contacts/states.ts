@@ -74,7 +74,7 @@ const viewContactState = {
         ) as Promise<Contact>,
     },
   ],
-  data: { title: contactName, keepScroll: true },
+  data: { title: contactName, analyticsTitle: 'Contact', keepScroll: true },
   component:
     ContactView satisfies LitViewDeclarationElement<ContactViewResolves>,
 } satisfies LitStateDeclaration<ContactViewResolves>;
@@ -92,6 +92,7 @@ const editContactState = {
   url: '/edit',
   data: {
     title: (transition: Transition) => `Edit ${contactName(transition)}`,
+    analyticsTitle: 'Edit contact',
   },
   views: {
     // Relatively target the grand-parent-state's $default (unnamed) ui-view
