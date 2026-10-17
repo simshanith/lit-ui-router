@@ -37,11 +37,15 @@
     "vue": "catalog:"
   },
   "devDependencies": {
+    "@lit-labs/ssr": "catalog:",
+    "@lit-labs/ssr-dom-shim": "catalog:",
     "@tools/build_and_test": "catalog:workspace",
     "@tools/embed-heights": "catalog:workspace",
     "@tools/shared": "catalog:workspace",
     "@tools/vue-check": "catalog:workspace",
     "@types/node": "catalog:",
+    "jsonc-parser": "catalog:",
+    "lit": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
     "typescript": "catalog:",

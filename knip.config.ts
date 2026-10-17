@@ -197,7 +197,8 @@ const workspaces = {
   },
   'tools/shared': { entry: ['src/**/*.test-d.ts'] },
   'www/lit-ui-router.dev': {
-    entry: ['.vitepress/vite.config.ts'],
+    // ssr-canary fixtures are bundled by wrangler from a path, never imported
+    entry: ['.vitepress/vite.config.ts', 'worker/test/ssr-canary/*.js'],
     // copied out of node_modules/<name>/dist by path in the vite config
     ignoreDependencies: [
       'sample-app-lit-vanilla',
