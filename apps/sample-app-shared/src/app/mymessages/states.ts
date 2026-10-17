@@ -89,6 +89,7 @@ const messageState = {
     title: (transition: Transition) =>
       // SAFETY: this state's `message` resolve yields a Message
       (transition.injector().get('message') as Message).subject,
+    analyticsTitle: 'Message',
     keepScroll: true,
   },
   views: {

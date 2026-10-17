@@ -1,4 +1,5 @@
 import { resolveLocationPlugin } from './featureDetection.js';
+import { analyticsTitleOf, APP_TITLE } from '../global/routeFocus.hook.js';
 
 const GOOGLE_ANALYTICS_TRACKING_ID = import.meta.env
   .VITE_GOOGLE_ANALYTICS_TRACKING_ID;
@@ -24,6 +25,8 @@ function initGoogleAnalytics() {
   };
 
   window.gtag('js', new Date());
+  // gtag.js may load after the first route sets a record-content document.title
+  window.gtag('set', { page_title: APP_TITLE });
   window.gtag('config', GOOGLE_ANALYTICS_TRACKING_ID);
 }
 
@@ -94,6 +97,14 @@ function trackPageView(event, isOurs) {
   window.gtag('event', 'page_view', event);
 }
 
+function setPageTitle(pageTitle) {
+  if (!window.gtag) {
+    return;
+  }
+
+  window.gtag('set', { page_title: pageTitle });
+}
+
 function trackException(event) {
   if (!event || !window.gtag) {
     return;
@@ -149,6 +160,14 @@ export default function googleAnalyticsHook(transitionService) {
     }
   };
 
+  // ahead of the url update (priority 9999), whose pushState fires gtag's page_view
+  transitionService.onSuccess(
+    {},
+    (trans) => setPageTitle(analyticsTitleOf(trans)),
+    {
+      priority: 10000,
+    },
+  );
   transitionService.onSuccess(
     {},
     (trans) =>
@@ -156,6 +175,7 @@ export default function googleAnalyticsHook(transitionService) {
       trackPageView(
         {
           page_location: path(trans),
+          page_title: analyticsTitleOf(trans),
         },
         pageViewIsOurs(locationPlugin, takeNavigationType),
       ),
