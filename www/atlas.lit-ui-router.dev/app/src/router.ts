@@ -9,7 +9,8 @@ import type { LitStateDeclaration } from 'lit-ui-router';
 import { navigationLocationPlugin } from 'ui-router-navigation-location-plugin';
 import type { UIRouterNavigateEvent } from 'ui-router-navigation-location-plugin';
 import { ARTIFACT } from './mode.ts';
-import { BUILD_PARAMS, FILTER_PARAMS, FOCUS_PARAMS, SHEET_ALIASES, urlOf } from './routes.ts';
+import { applyUrlConfig } from 'ui-router-server/url-config';
+import { BUILD_PARAMS, FILTER_PARAMS, FOCUS_PARAMS, SHEET_ALIASES, URL_CONFIG, urlOf } from './routes.ts';
 import type { ExtraRow, Manifest, SheetRow } from './manifest.ts';
 import { findExtra, findSheet } from './manifest.ts';
 import { loadFragment, loadManifest } from './runtime.ts';
@@ -278,11 +279,8 @@ export function createRouter(): UIRouterLit {
     });
   }
 
-  // Cloudflare Pages serves `<subpath>/index.html` and 308s `/sheet/7` onto
-  // `/sheet/7/`, so a trailing slash must match — core's default strict mode
-  // would boot every prerendered deep link into notFound. The server mount
-  // (routes.ts) is compiled with the same `strict: false`.
-  router.urlService.config.strictMode(false);
+  // The one url shape (routes.ts), before any state registers: core compiles each url as it registers.
+  applyUrlConfig(router, URL_CONFIG);
 
   for (const state of states) router.stateRegistry.register(state);
 

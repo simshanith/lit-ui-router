@@ -8,6 +8,7 @@
  * impossible by construction, which is the point of the projection.
  */
 import type { MountConfig, RedirectRule, RouteDeclaration } from 'ui-router-server';
+import type { RouterUrlConfig } from 'ui-router-server/url-config';
 
 /**
  * The mount base — THE ONE base constant. vite's `base`, `<base href>`,
@@ -18,6 +19,15 @@ export const MOUNT = '/';
 
 /** `MOUNT` with its trailing slash: the prefix every href in the app starts with. */
 export const BASE = MOUNT.endsWith('/') ? MOUNT : `${MOUNT}/`;
+
+/**
+ * The url shape both halves compile with. Cloudflare Pages serves
+ * `<subpath>/index.html` and 308s the bare path onto the slash, so `/sheet/7/`
+ * must be as real a url as `/sheet/7`. The client router takes it through
+ * `applyUrlConfig` (src/router.ts), the mount through `config`, and the
+ * prerender's router through `installServerLocation` (prerender.ts).
+ */
+export const URL_CONFIG = { strict: false } satisfies RouterUrlConfig;
 
 /** The hrefs the client templates and the server templates share. */
 export const href = {
@@ -195,10 +205,7 @@ export function mountsFor(
       ],
       otherwise: { state: 'atlas.notFound' },
       ...tier,
-      // Cloudflare Pages serves `<subpath>/index.html` and 308s the bare
-      // path onto the slash, so `/sheet/7/` must be as real a url as
-      // `/sheet/7`. The client sets `strictMode(false)` for the same reason.
-      config: { strict: false },
+      config: URL_CONFIG,
     },
   };
 }

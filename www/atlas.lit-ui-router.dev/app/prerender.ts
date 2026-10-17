@@ -40,7 +40,7 @@ import type { Transition } from '@uirouter/core';
 import type { RedirectLine } from 'lit-ui-router-ssr';
 import type { ExtraRow, Manifest, SheetRow } from './src/manifest.ts';
 import { allSheets, findExtra, findSheet } from './src/manifest.ts';
-import { BASE, MOUNT, SHEET_ALIASES, href, mountsFor, routes } from './src/routes.ts';
+import { BASE, MOUNT, SHEET_ALIASES, URL_CONFIG, href, mountsFor, routes } from './src/routes.ts';
 import { TITLES, sheetTitle } from './src/titles.ts';
 import { ICON_SPRITE } from './src/generated/icons.js';
 import { CYTOSCAPE_URL, FILL_SCRIPT, PLATE_END_SCRIPT } from './src/generated/plate-page.js';
@@ -74,6 +74,7 @@ const PLATES = allSheets(manifest);
 // imports `lit-ui-router/pure`, which registers nothing.
 await import('lit-ui-router-ssr/register');
 const { UIRouterLit } = await import('lit-ui-router/pure');
+const { createServerRouter, diagnoseMounts } = await import('ui-router-server');
 const { installServerLocation } = await import('ui-router-server/location');
 const { prerender, settle } = await import('lit-ui-router-ssr');
 const { RouterRefController } = await import('lit-ui-router-effect');
@@ -96,11 +97,8 @@ const views = await import('./src/views.ts');
  * `stateService.href()`, `srefActiveClass` and `srefAriaCurrent` read
  * `globals.$current`, so it has to have entered the page's own state.
  */
-const router: LitRouter = installServerLocation(new UIRouterLit(), {
-  // Cloudflare Pages 308s `/sheet/7` onto `/sheet/7/`; the client sets the
-  // same relaxed mode in src/router.ts and the mount compiles `strict: false`.
-  strictMode: false,
-});
+// The one url shape (src/routes.ts): the client router and the mount take the same object.
+const router: LitRouter = installServerLocation(new UIRouterLit(), { urlConfig: URL_CONFIG });
 const cityRow = findExtra(manifest, 'city');
 const plantRow = findExtra(manifest, 'plant');
 const bricksRow = findExtra(manifest, 'bricks');
@@ -292,6 +290,10 @@ const megacanvas: RedirectLine[] = [
   { from: `${BASE}megacanvas`, to: href.gallery, status: 301 },
   { from: `${BASE}megacanvas/`, to: href.gallery, status: 301 },
 ];
+
+// The route table's own diagnostics, on the matcher tier: a mount that 404s its bare base fails the build here.
+const findings = diagnoseMounts(createServerRouter({ mounts: mountsFor(PLATES.map((sheet) => sheet.num)) }));
+if (findings.length > 0) throw new Error(`prerender: ${findings.map((f) => `${f.mount} — ${f.message}`).join('; ')}`);
 
 const result = await prerender({
   // One pooled router, built up front, serves the whole walk.

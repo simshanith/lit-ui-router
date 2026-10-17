@@ -168,10 +168,11 @@ layer is meant to be liftable into `examples/` as-is.
 Three base-layer details a Playwright pass against the deployed site taught, each with a comment at
 the line:
 
-- `router.urlService.config.strictMode(false)` (`router.ts`). Cloudflare Pages serves
-  `dist/sheet/7/index.html` and 308s `/sheet/7` onto `/sheet/7/`; core's default strict matching
-  rejected the slash and booted every deep link into `atlas.notFound`. The server mount is compiled
-  with the same `strict: false`.
+- `applyUrlConfig(router, URL_CONFIG)` (`router.ts`), with `URL_CONFIG = { strict: false }` from
+  `routes.ts`. Cloudflare Pages serves `dist/sheet/7/index.html` and 308s `/sheet/7` onto
+  `/sheet/7/`; core's default strict matching rejected the slash and booted every deep link into
+  `atlas.notFound`. The server mount's `config` and the prerender's `installServerLocation` take the
+  same object, so the three compile urls alike.
 - The Navigation API plugin's `intercept` option (`router.ts`). The plugin intercepts the
   `navigation.navigate()` calls it makes, so every click is a same-document navigation; the app's
   option returns `scroll: 'manual'` and `focusReset: 'manual'` for an in-place change — a key-index

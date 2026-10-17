@@ -12,7 +12,9 @@ The package-level asks in §5 are filed on `simshanith/lit-ui-router`:
   half-delivered.** See §5.2.
 - **3** document the DOM-shim import order (the static-import finding in §3) — #808. Open.
 - **4** patterns are not existence: every `:id` route ships a soft-404 — #804. Open.
-- **5** default the bare-mount-base rule, or warn at construction — #805. Open.
+- **5** default the bare-mount-base rule, or warn at construction — #805. **Closed in
+  `ui-router-server@0.4.0` (#1383): a construction warning under node, `diagnoseMounts()` in every
+  build, `ignoreDiagnostics` per mount.** See §5.5.
 - **6** a prerender entry: mounts + `renderShell` — #806. **Closed at
   `lit-ui-router-ssr@0.1.0-rc.0`**, which owns the render call, the emit loop
   and `_redirects`. See §5.6.
@@ -23,7 +25,9 @@ The package-level asks in §5 are filed on `simshanith/lit-ui-router`:
 - **9** the Navigation API plugin's interception hazard — #750 (pre-existing).
   **Shipped in `ui-router-navigation-location-plugin@1.0.0` (#946, closing
   #945)**; #750 stays open as the docs example ask. See §5.9.
-- **10** static hosts add a trailing slash; `strict: false` on both sides — #807. Open.
+- **10** static hosts add a trailing slash; `strict: false` on both sides — #807. **Closed
+  2026-09-29 with the docs note; `ui-router-server@0.4.0` (#1335) adds `applyUrlConfig`, the one
+  object both sides compile with.** See §5.10.
 - **8** the resolves generic: a typed `RoutedLitTemplate` rejected at
   `component:` with the error pointing away from the generic — #813. Filed
   with a correction to §5's account (four shapes compiled under `--strict`):
@@ -91,6 +95,25 @@ the headless router, and the same probe reads the two tiers identical on all
 18. The ssr package's 0.3.0 peers `ui-router-server` at `^0.2.0 || ^0.3.0`,
 so the install carries no override. Neither release changes what this app
 renders: it declares no `NOWAIT` resolve and no squash policy.
+
+**Update, 2026-10-16.** The atlas is on `ui-router-server@0.4.0` and
+`lit-ui-router-ssr@0.4.0`. The one `strict: false` is `URL_CONFIG` in
+`src/routes.ts`: `applyUrlConfig` on the client router, `config` on the
+mount, `urlConfig` on the prerender's `installServerLocation` (asks 10 and
+11). `prerender.ts` asserts `diagnoseMounts()` empty on the route table (ask
+5). The trie index (`routeIndex: routeTrie`, #1412) takes the mount —
+`diagnoseMounts()` empty, zero verdict diffs against linear — and
+`test/routes.bench.ts` (`npm run bench`, tinybench, the sample app's shape)
+times both indexes on the real mount: eleven routed urls and 29 redirect
+rules. Measured on node 24, two runs: a wash on hits (trie/linear 1.01 and
+1.04, both near 1.0 µs), the trie 15% ahead on a miss at an unknown first
+segment, 6% behind on a miss under a known prefix, and 28–38% slower to
+construct. At that table size the linear scan is the plain call, so the
+mount stays on it; the bench is the evidence to revisit. Under node with
+`NODE_ENV` unset both packages resolve their development builds (#1409),
+whose warnings are conditional (a view that woke unadopted, a view never
+woken, a slash probe); this prerender trips none. The browser bundle takes
+the production build.
 
 One thing that cutover measured:
 
@@ -431,6 +454,13 @@ Ordered by how much each would have saved me.
    this app — the site moved off the `/app` mount base to the root — but the
    atlas keeps its `/^$/` redirect rule as insurance, and the ask stands for
    other consumers.
+
+   **Status, 2026-10-16.** Shipped in `ui-router-server@0.4.0` (#1383, closes
+   #805): `createServerRouter` warns under node for a mount other than `/`
+   whose bare base 404s, `diagnoseMounts(router)` returns the same findings
+   as data in every build, and `ignoreDiagnostics` turns a kind off per
+   mount. `prerender.ts` asserts `diagnoseMounts()` empty on the route table
+   and the `/^$/` rule stays.
 6. **`ui-router-server`: a prerender adapter.** `resolve()` per path is easy, but
    every consumer will then write the same loop: enumerate routes, resolve,
    write `<subpath>/index.html`, emit `_redirects` / `_headers`. An
@@ -534,6 +564,12 @@ Ordered by how much each would have saved me.
     **Status, 2026-09-13.** Open, #807, nothing shipped. The atlas still
     ships `strict: false` on the mount and `strictMode(false)` in the
     browser, unchanged.
+
+    **Status, 2026-10-16.** #807 closed 2026-09-29 with the docs note, and
+    `ui-router-server@0.4.0` (#1335) adds `applyUrlConfig` and
+    `installServerLocation`'s `urlConfig`, deprecating `strictMode`. The
+    atlas's `strict: false` is one object, `URL_CONFIG` in `src/routes.ts`,
+    that the client router, the mount and the prerender's router all take.
 11. **`ui-router-server`: let a simulate mount read `config`.** `MountConfig.config`
     is documented as the matcher's compiler options, and `buildHeadlessRouter`
     never consults it, so a mount with `strict: false` serves `/sheet/7/` on
