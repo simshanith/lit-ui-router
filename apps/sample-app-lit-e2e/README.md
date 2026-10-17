@@ -262,6 +262,11 @@ Videos land in `cypress/videos*/`; screenshots only on failure or an explicit
 `cy.screenshot()`. The specs in `src/integration/` are the reference for each
 flow (login, dialogs, location plugins); read the one nearest your change.
 
+`analytics_gtag.cy.js` loads the real gtag.js and skips unless the app was
+built with `VITE_GOOGLE_ANALYTICS_TRACKING_ID`, which no e2e build sets. To run
+it, start the dev server with the variable set and pass the spec alone, once per
+lane; its header says which ids exercise what.
+
 Load the app once before the first spec. A cold vite server transforms the
 whole module graph on the first hit, and the transition that is still running
 can leave the visualizer `<svg>` covering a `cy.click()` target — `sample_app.cy.js`
