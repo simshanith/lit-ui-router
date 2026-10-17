@@ -44,6 +44,8 @@ export default {
           { type: 'build', section: 'Build System' },
           { type: 'docs', section: 'Documentation' },
         ],
+        // Only `#<digits>` is an issue; `#dev-gate` and `package.json#imports` are not.
+        issuePrefixes: [/#(?=\d+(?![\w-]))/],
       },
       // Relative to cwd, so each package's notes stay scoped to its own dir.
       gitRawCommitsOpts: {
