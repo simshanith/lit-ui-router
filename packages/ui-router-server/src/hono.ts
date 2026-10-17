@@ -18,6 +18,12 @@
  * Hono's own asset serving. The host still supplies asset IO through
  * {@link FetchAdapterOptions.serveShell} — `(mount, request) => c.env.ASSETS.fetch(request)`
  * on Cloudflare, a `serveStatic` fetch elsewhere.
+ *
+ * {@link FetchAdapterOptions.delegates} puts the router in front of a Hono app:
+ * a request matching a delegating state goes to that app, any method, and its
+ * Response is returned. Build the middleware per request to hand the outer
+ * bindings through:
+ * `delegates: { ledger: (request) => ledger.fetch(request, c.env, c.executionCtx) }`.
  */
 
 import { createFetchHandler } from './fetch.ts';

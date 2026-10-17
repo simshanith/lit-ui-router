@@ -4,6 +4,11 @@ import { describe, it } from 'node:test';
 import { createServerRouter } from '../src/index.ts';
 import type { ServerRouter, Verdict } from '../src/index.ts';
 import { createFetchHandler } from '../src/fetch.ts';
+import type {
+  DelegateContext,
+  DelegateHandler,
+  FetchAdapterOptions,
+} from '../src/fetch.ts';
 
 // A router that answers every request with one fixed verdict — isolates the
 // adapter's verdict -> response mechanics from the resolver under test.
@@ -305,5 +310,163 @@ describe('createFetchHandler', () => {
       assert.equal(res.status, 404);
       assert.equal(res.headers.get('Link'), null);
     }
+  });
+});
+
+const claimsVerdict: Verdict = {
+  kind: 'delegate',
+  mount: '/app',
+  delegate: 'ledger',
+  state: 'claims',
+  params: { id: '7' },
+};
+
+// SAFETY: node's real Request, which the fetch globals shim shadows, takes a body.
+const post = (path: string, body: string): Request =>
+  new Request(`${ORIGIN}${path}`, {
+    method: 'POST',
+    headers: { accept: 'application/json', 'content-type': 'text/plain' },
+    body,
+  } as RequestInit);
+
+// SAFETY: node's real Request, which the fetch globals shim shadows, has text().
+const requestText = (req: Request): Promise<string> =>
+  (req as Request & { text(): Promise<string> }).text();
+
+describe('createFetchHandler delegates', () => {
+  it('hands any request to the mapped handler and returns its Response untouched', async () => {
+    const calls: Array<{ request: Request; context: DelegateContext }> = [];
+
+    const accepted = new Response('queued', {
+      status: 202,
+      headers: { 'x-ledger': '1' },
+    });
+
+    const handler = createFetchHandler(routerOf(claimsVerdict), {
+      serveShell: noShell,
+      delegates: {
+        ledger: (request, context) => {
+          calls.push({ request, context });
+
+          return accepted;
+        },
+      },
+    });
+
+    const request = post('/app/claims/7', 'claim');
+    const res = await handler(request);
+    assert.equal(res, accepted);
+    assert.equal(accepted.headers.get('Link'), null);
+    assert.equal(calls.length, 1);
+    assert.equal(calls[0].request, request);
+    assert.equal(await requestText(calls[0].request), 'claim');
+    assert.deepEqual(calls[0].context, {
+      mount: '/app',
+      state: 'claims',
+      params: { id: '7' },
+    });
+
+    // A navigation that matches a delegating state delegates too.
+    assert.equal(await handler(navigation('/app/claims/7')), accepted);
+  });
+
+  it('passes a non-navigation request that matches no delegating state as null', async () => {
+    const handler = createFetchHandler(
+      routerOf({ kind: 'shell', mount: '/app' }),
+      { serveShell: noShell, delegates: {} },
+    );
+
+    assert.equal(await handler(post('/app/about', '')), null);
+  });
+
+  it('never resolves non-navigation requests without delegates', async () => {
+    const handler = createFetchHandler(
+      { resolve: () => Promise.reject(new Error('resolved')) },
+      { serveShell: noShell },
+    );
+
+    assert.equal(await handler(post('/app/claims', '')), null);
+  });
+
+  it('throws at construction for a key the router names but delegates lacks', () => {
+    const router = createServerRouter({
+      mounts: {
+        '/app': {
+          routes: [{ name: 'claims', url: '/claims', delegate: 'ledger' }],
+        },
+      },
+    });
+
+    const unmapped: Array<FetchAdapterOptions['delegates']> = [
+      undefined,
+      {},
+      { other: noShell },
+    ];
+
+    for (const delegates of unmapped)
+      assert.throws(
+        () => createFetchHandler(router, { serveShell: noShell, delegates }),
+        /No handler in delegates for delegate key 'ledger'/,
+      );
+  });
+
+  it('throws at match for a structural router whose verdict names an unmapped key', async () => {
+    // SAFETY: Object.create's result is an object whose only key is the inherited handler.
+    const inherited = Object.create({ ledger: noShell }) as Record<
+      string,
+      DelegateHandler
+    >;
+
+    const handler = createFetchHandler(routerOf(claimsVerdict), {
+      serveShell: noShell,
+      // An inherited key is not a mapping.
+      delegates: inherited,
+    });
+
+    await assert.rejects(
+      handler(post('/app/claims', '')),
+      /No handler in delegates for delegate key 'ledger'/,
+    );
+  });
+
+  it('propagates a throwing handler to the host', async () => {
+    const handler = createFetchHandler(routerOf(claimsVerdict), {
+      serveShell: noShell,
+      delegates: {
+        ledger: () => Promise.reject(new Error('ledger down')),
+      },
+    });
+
+    await assert.rejects(handler(post('/app/claims', '')), /ledger down/);
+  });
+
+  it('routes real createServerRouter delegate verdicts end to end', async () => {
+    const router = createServerRouter({
+      mounts: {
+        '/app': {
+          routes: [
+            { name: 'about', url: '/about' },
+            { name: 'claims', url: '/claims/:id', delegate: 'ledger' },
+          ],
+        },
+      },
+    });
+
+    const shell = shellSpy(new Response('<html>shell</html>', { status: 200 }));
+
+    const handler = createFetchHandler(router, {
+      serveShell: shell.serveShell,
+      delegates: {
+        ledger: (_request, { params }) =>
+          new Response(String(params.id), { status: 202 }),
+      },
+    });
+
+    const res = await handler(post('/app/claims/9', ''));
+    assert.ok(res);
+    assert.equal(res.status, 202);
+    assert.equal(await bodyText(res), '9');
+    assert.equal(await handler(post('/app/about', '')), null);
+    assert.equal((await handler(navigation('/app/about')))?.status, 200);
   });
 });

@@ -34,11 +34,34 @@
 // dogfooding the docs worker) — and it would survive the drift guard's
 // `exclude`, turning that guard green.
 
-import { mergeSearch } from './index.ts';
-import type { ServerRouter } from './index.ts';
+import type { RawParams } from '@uirouter/core';
+
+import { delegateKeysOf, mergeSearch } from './index.ts';
+import type { ServerRouter, Verdict } from './index.ts';
 
 /** The WinterCG handler: a verdict answered, or `null` to pass to the host. */
 export type FetchHandler = (request: Request) => Promise<Response | null>;
+
+/** What a {@link DelegateHandler} learns about the route its request matched. */
+export interface DelegateContext {
+  /** Base of the mount that owned the pathname. */
+  mount: string;
+  /** Name of the matched, delegating state. */
+  state: string;
+  /** The params extracted from the pathname. */
+  params: RawParams;
+}
+
+/**
+ * Answers a request whose pathname matched a delegating state. It receives
+ * the original request, body unread, and its Response goes out untouched.
+ * A Hono app's `fetch` takes the context as its `Env`, so wrap it to pass
+ * your own bindings: `(request) => app.fetch(request, env, ctx)`.
+ */
+export type DelegateHandler = (
+  request: Request,
+  context: DelegateContext,
+) => Response | Promise<Response>;
 
 /** Host hooks for {@link createFetchHandler}: asset IO, and which requests get verdicts. */
 export interface FetchAdapterOptions {
@@ -74,9 +97,20 @@ export interface FetchAdapterOptions {
    * Connect adapter uses (and Vite's HTML fallback mirrors): GET/HEAD requests
    * whose Accept includes `text/html`. Module and asset fetches (`Accept: *​/*`)
    * pass as `null`. Override with `() => true` when the handler runs behind the
-   * static layer and should judge everything.
+   * static layer and should judge everything. Delegating states ignore it:
+   * they answer every request that matches them.
    */
   shouldHandle?: (request: Request) => boolean;
+  /**
+   * Handlers for the keys states name in {@link index!RouteDeclaration.delegate | `delegate`}.
+   * A request of any method or Accept that matches a delegating state goes
+   * to its handler, which returns the Response. Construction throws when a
+   * router from `createServerRouter` names a key missing here. A structural
+   * router is checked per request instead, so its delegate verdict throws.
+   * Without this option, requests outside {@link FetchAdapterOptions.shouldHandle | shouldHandle} pass as
+   * `null` without resolving.
+   */
+  delegates?: Readonly<Record<string, DelegateHandler>>;
 }
 
 const acceptsHtml = (request: Request): boolean => {
@@ -129,6 +163,30 @@ const defaultServeNotFound = (mount: string, request: Request): Response =>
     },
   );
 
+type Delegates = NonNullable<FetchAdapterOptions['delegates']>;
+
+const missingDelegate = (key: string): Error =>
+  new Error(`No handler in delegates for delegate key '${key}'`);
+
+// Fail fast: a key the tree names but the host never mapped is a deploy bug.
+const checkDelegates = (router: ServerRouter, delegates: Delegates): void => {
+  for (const key of delegateKeysOf(router) ?? []) {
+    if (!Object.hasOwn(delegates, key)) throw missingDelegate(key);
+  }
+};
+
+const delegateTo = (
+  delegates: Delegates,
+  verdict: Extract<Verdict, { kind: 'delegate' }>,
+  request: Request,
+): Response | Promise<Response> => {
+  const { delegate, mount, state, params } = verdict;
+
+  if (!Object.hasOwn(delegates, delegate)) throw missingDelegate(delegate);
+
+  return delegates[delegate](request, { mount, state, params });
+};
+
 /**
  * Wraps a {@link ServerRouter} as a WinterCG fetch handler. `resolve()` is always
  * async (the simulate tier's lazy boundary), which fetch absorbs naturally —
@@ -144,8 +202,14 @@ const defaultServeNotFound = (mount: string, request: Request): Response =>
  *   asset Response's status relabeled to the verdict's, no canonical Link (a
  *   404 is not an alternate representation of the mount root).
  * - `notFound` with a mount -> {@link FetchAdapterOptions.serveNotFound | serveNotFound} (honest 404).
- * - `notFound` without a mount, or a non-navigation request -> `null` (the
- *   host serves it however it would have).
+ * - `delegate`, for any request -> the handler {@link FetchAdapterOptions.delegates | delegates} maps its key to,
+ *   called with the original request; its Response goes out untouched and
+ *   its throw propagates to the host.
+ * - `notFound` without a mount, or a non-navigation request that matches no
+ *   delegating state -> `null` (the host serves it however it would have).
+ *
+ * @throws at construction when the router names a delegate key
+ * {@link FetchAdapterOptions.delegates | delegates} lacks
  */
 export function createFetchHandler(
   router: ServerRouter,
@@ -156,11 +220,23 @@ export function createFetchHandler(
     serveNotFound = defaultServeNotFound,
     shellPath = (mount) => mount,
     shouldHandle = isNavigation,
+    delegates = {},
   } = options;
 
+  const delegating = options.delegates !== undefined;
+
+  checkDelegates(router, delegates);
+
   return async (request) => {
-    if (!shouldHandle(request)) return null;
+    const navigation = shouldHandle(request);
+
+    if (!navigation && !delegating) return null;
     const verdict = await router.resolve(request.url);
+
+    if (verdict.kind === 'delegate')
+      return delegateTo(delegates, verdict, request);
+
+    if (!navigation) return null;
 
     if (verdict.kind === 'redirect') {
       return new Response(null, {

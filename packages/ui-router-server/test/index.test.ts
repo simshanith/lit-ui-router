@@ -6,6 +6,7 @@ import { StateRegistry } from '@uirouter/core';
 
 import {
   createServerRouter,
+  delegateKeysOf,
   diagnoseMounts,
   mergeSearch,
   routeTrie,
@@ -354,6 +355,122 @@ for (const strategy of TIERS) {
     });
   });
 }
+
+const delegateMount = (strategy: Tier): MountConfig => ({
+  ...tierConfig(strategy),
+  routes: [
+    { name: 'home', url: '' },
+    { name: 'claims', url: '/claims', delegate: 'ledger' },
+    // Not inherited: a child of a delegating state serves the shell.
+    { name: 'claims.detail', url: '/:claimId' },
+    { name: 'receipt', url: '/receipts/{receiptId:int}', delegate: 'ledger' },
+    { name: 'old', url: '/old-claims', redirectTo: 'claims' },
+  ],
+  redirects: [{ pattern: '/submit', to: 'claims' }],
+});
+
+for (const strategy of TIERS) {
+  describe(`delegate verdicts (${strategy} strategy)`, () => {
+    const router = createServerRouter({
+      mounts: { '/app': delegateMount(strategy) },
+    });
+
+    it('delegates a delegating state with its key, state and params', async () => {
+      assert.deepEqual(await router.resolve('/app/claims'), {
+        kind: 'delegate',
+        mount: '/app',
+        delegate: 'ledger',
+        state: 'claims',
+        params: {},
+      });
+      assert.deepEqual(await router.resolve('/app/receipts/7?x=1'), {
+        kind: 'delegate',
+        mount: '/app',
+        delegate: 'ledger',
+        state: 'receipt',
+        params: { receiptId: 7 },
+      });
+    });
+
+    it('serves the shell for a child of a delegating state', async () => {
+      assert.deepEqual(await router.resolve('/app/claims/3'), {
+        kind: 'shell',
+        mount: '/app',
+      });
+    });
+
+    it('redirects into a delegating state like any other', async () => {
+      for (const path of ['/app/old-claims', '/app/submit'])
+        assert.deepEqual(await router.resolve(path), {
+          kind: 'redirect',
+          mount: '/app',
+          location: '/app/claims',
+          status: 302,
+        });
+    });
+
+    it('counts a delegating bare base as served', () => {
+      const bare = createServerRouter({
+        mounts: {
+          '/api': {
+            ...tierConfig(strategy),
+            routes: [{ name: 'api', url: '', delegate: 'api' }],
+          },
+        },
+      });
+
+      assert.deepEqual(diagnoseMounts(bare), []);
+    });
+  });
+}
+
+describe('delegate configuration', () => {
+  const mountOf = (routes: MountConfig['routes']) => ({
+    mounts: { '/app': { routes } },
+  });
+
+  it('rejects a url-less, redirecting or empty delegate at construction', () => {
+    assert.throws(
+      () => createServerRouter(mountOf([{ name: 'cmd', delegate: 'ledger' }])),
+      /delegating state 'cmd' must declare a url/,
+    );
+    assert.throws(
+      () =>
+        createServerRouter(
+          mountOf([
+            { name: 'home', url: '/' },
+            { name: 'cmd', url: '/cmd', delegate: 'x', redirectTo: 'home' },
+          ]),
+        ),
+      /delegating state 'cmd' cannot also declare redirectTo/,
+    );
+    assert.throws(
+      () =>
+        createServerRouter(
+          mountOf([{ name: 'cmd', url: '/cmd', delegate: '' }]),
+        ),
+      /state 'cmd' delegate must not be empty/,
+    );
+  });
+
+  it('reports the keys a router names, and nothing for a foreign router', () => {
+    const router = createServerRouter({
+      mounts: {
+        '/app': delegateMount('matcher'),
+        '/api': { routes: [{ name: 'api', url: '', delegate: 'api' }] },
+      },
+    });
+
+    assert.deepEqual([...(delegateKeysOf(router) ?? [])].sort(), [
+      'api',
+      'ledger',
+    ]);
+    assert.equal(
+      delegateKeysOf({ resolve: () => Promise.reject(new Error()) }),
+      undefined,
+    );
+  });
+});
 
 describe('otherwise configuration', () => {
   it('is per-mount: an undeclared mount keeps its notFound verdict', async () => {

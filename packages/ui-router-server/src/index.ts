@@ -11,7 +11,7 @@
  * core, and resolve() is async so that boundary can hold.
  */
 
-import type { RawParams, StateDeclaration } from '@uirouter/core';
+import type { RawParams, StateDeclaration, StateRule } from '@uirouter/core';
 
 import { warnMountDiagnostics } from './dev-warn.ts';
 import { compileResolver } from './redirects.ts';
@@ -23,6 +23,7 @@ import type {
   RedirectTarget,
   RouteDeclaration,
   RouteIndex,
+  RouteMatch,
 } from './redirects.ts';
 import type { UrlMatcherCompilerConfig } from './url-matcher.ts';
 
@@ -174,6 +175,23 @@ export type Verdict =
       /** Redirect status to answer with (302 today). */
       status: number;
     }
+  /**
+   * Hand the request to the host's handler for `delegate`: the pathname
+   * matched a state that declares {@link RouteDeclaration.delegate}. Answer
+   * any method and any Accept with it, not only navigations.
+   */
+  | {
+      /** Discriminates the delegate verdict. */
+      kind: 'delegate';
+      /** Base of the mount that owned the pathname. */
+      mount: string;
+      /** The key the matched state names; the host maps it to a handler. */
+      delegate: string;
+      /** Name of the matched state. */
+      state: string;
+      /** The params extracted from the pathname. */
+      params: RawParams;
+    }
   /** `mount` is set when a mount owned the pathname but nothing matched (per-mount 404s); absent when no mount matched at all. */
   | {
       /** Discriminates the no-route verdict. */
@@ -206,6 +224,7 @@ interface Mount {
   config: MountConfig;
   strategy: 'matcher' | 'simulate';
   compiled: CompiledResolver;
+  delegates: Map<string, string>;
   pool: RouterPool;
   prewarm: number;
 }
@@ -363,16 +382,49 @@ const validateIgnoreDiagnostics = (base: string, config: MountConfig): void => {
   }
 };
 
+// State name -> delegate key. A delegating state is answered by its handler,
+// so it must be url-addressable and must not also redirect.
+const compileDelegates = (
+  base: string,
+  config: MountConfig,
+): Map<string, string> => {
+  const delegates = new Map<string, string>();
+
+  for (const route of config.routes) {
+    if (route.delegate === undefined) continue;
+
+    if (route.delegate === '')
+      throw new Error(
+        `Mount '${base}': state '${route.name}' delegate must not be empty`,
+      );
+
+    if (route.url === undefined)
+      throw new Error(
+        `Mount '${base}': delegating state '${route.name}' must declare a url`,
+      );
+
+    if (route.redirectTo !== undefined)
+      throw new Error(
+        `Mount '${base}': delegating state '${route.name}' cannot also declare redirectTo`,
+      );
+    delegates.set(route.name, route.delegate);
+  }
+
+  return delegates;
+};
+
 const compileMount = ([base, config]: [string, MountConfig]): Mount => {
   validateOtherwise(base, config);
   validateIgnoreDiagnostics(base, config);
   const prewarm = validatePrewarm(base, config);
+  const delegates = compileDelegates(base, config);
 
   return {
     base: normalizeBase(base),
     config,
     strategy: config.strategy ?? 'matcher',
     prewarm,
+    delegates,
     // Simulate mounts accept the same declaration subset, so the
     // dependency-free compilation doubles as their construction-time
     // validation (their resolve path never consults it).
@@ -493,6 +545,27 @@ const notFoundVerdict = (mount: Mount): Verdict => ({
   mount: mount.base,
 });
 
+const delegateVerdict = (
+  mount: Mount,
+  delegate: string,
+  match: RouteMatch,
+): Verdict => ({
+  kind: 'delegate',
+  mount: mount.base,
+  delegate,
+  state: match.state,
+  params: match.params,
+});
+
+// A matched route answers with the shell, or with its delegate's handler.
+const routeVerdict = (mount: Mount, match: RouteMatch): Verdict => {
+  const delegate = mount.delegates.get(match.state);
+
+  return delegate === undefined
+    ? shellVerdict(mount)
+    : delegateVerdict(mount, delegate, match);
+};
+
 // The otherwise projection: the shell is the error page, at an honest 404 —
 // never 200, the resource genuinely doesn't exist.
 const otherwiseVerdict = (mount: Mount): Verdict => ({
@@ -515,7 +588,7 @@ const matcherVerdict = (mount: Mount, subpath: string): Verdict => {
       ? mount.compiled.match(subpath)
       : resolution.match;
 
-  if (match !== null) return shellVerdict(mount);
+  if (match !== null) return routeVerdict(mount, match);
 
   return mount.config.otherwise
     ? otherwiseVerdict(mount)
@@ -537,6 +610,7 @@ const bareBaseDiagnostic = (mount: Mount): MountDiagnostic | null => {
 
   if (
     verdict.kind === 'redirect' ||
+    verdict.kind === 'delegate' ||
     (verdict.kind === 'shell' && verdict.status === undefined)
   )
     return null;
@@ -563,6 +637,35 @@ const diagnosticsOf = (mount: Mount): MountDiagnostic[] => {
 // Each createServerRouter router's mounts in declaration order, for diagnoseMounts.
 const compiledMounts = new WeakMap<ServerRouter, Mount[]>();
 
+// The state a url rule belongs to, when it is a state's own url rule.
+const ruleState = (rule: { type: string }): string | undefined =>
+  // SAFETY: core tags a state's url rule 'STATE', and only StateRule carries that tag.
+  rule.type === 'STATE' ? (rule as StateRule).state.name : undefined;
+
+// Verdicts decided by url matching alone; a delegating state never transitions, so its resolves never block it.
+const matchedVerdict = (
+  router: PooledRouter['router'],
+  mount: Mount,
+  subpath: string,
+): Verdict | null => {
+  const matched = router.urlService.match({
+    path: subpath,
+    search: {},
+    hash: '',
+  });
+
+  if (!matched) return notFoundVerdict(mount);
+  const state = ruleState(matched.rule);
+  const delegate = state === undefined ? undefined : mount.delegates.get(state);
+
+  if (state === undefined || delegate === undefined) return null;
+
+  // SAFETY: a StateRule's match is its url matcher's RawParams.
+  const params = matched.match as RawParams;
+
+  return delegateVerdict(mount, delegate, { state, params });
+};
+
 // Null when the transition failed or timed out: that router may still be mid-transition.
 const replayVerdict = async (
   pooled: PooledRouter,
@@ -570,9 +673,9 @@ const replayVerdict = async (
   subpath: string,
 ): Promise<Verdict | null> => {
   const { router } = pooled;
+  const decided = matchedVerdict(router, mount, subpath);
 
-  if (!router.urlService.match({ path: subpath, search: {}, hash: '' }))
-    return notFoundVerdict(mount);
+  if (decided !== null) return decided;
   const settled = pooled.nextSettled();
   router.urlService.url(subpath);
   router.urlService.sync();
@@ -714,4 +817,20 @@ export function diagnoseMounts(router: ServerRouter): MountDiagnostic[] {
     );
 
   return mounts.flatMap(diagnosticsOf);
+}
+
+/**
+ * The delegate keys a router's states name, for an adapter's construction-time
+ * check. Undefined for a router `createServerRouter` did not build.
+ *
+ * @internal
+ */
+export function delegateKeysOf(
+  router: ServerRouter,
+): ReadonlySet<string> | undefined {
+  const mounts = compiledMounts.get(router);
+
+  if (mounts === undefined) return undefined;
+
+  return new Set(mounts.flatMap((mount) => [...mount.delegates.values()]));
 }

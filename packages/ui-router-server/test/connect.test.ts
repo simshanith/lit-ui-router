@@ -191,6 +191,26 @@ describe('createConnectMiddleware', () => {
     assert.equal(h.ended, false);
   });
 
+  it('passes a delegate verdict through to the downstream stack', async () => {
+    const mw = createConnectMiddleware(
+      routerOf({
+        kind: 'delegate',
+        mount: '/app',
+        delegate: 'ledger',
+        state: 'claims',
+        params: {},
+      }),
+    );
+
+    const h = harness({ url: '/app/claims' });
+    mw(h.req, h.res, h.next);
+    await h.done;
+    assert.deepEqual(h.nextArgs, [[]]);
+    assert.equal(h.req.url, '/app/claims');
+    assert.equal(h.headers.Link, undefined);
+    assert.equal(h.ended, false);
+  });
+
   it('never judges non-navigation requests (module and asset fetches pass)', async () => {
     const mw = createConnectMiddleware(
       routerOf({ kind: 'shell', mount: '/app' }),

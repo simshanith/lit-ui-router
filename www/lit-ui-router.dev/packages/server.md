@@ -167,6 +167,13 @@ the warning prints.
 type Verdict =
   | { kind: 'shell'; mount: string; status?: number }
   | { kind: 'redirect'; mount: string; location: string; status: number }
+  | {
+      kind: 'delegate';
+      mount: string;
+      delegate: string;
+      state: string;
+      params: RawParams;
+    }
   | { kind: 'notFound'; mount?: string };
 ```
 
@@ -179,6 +186,8 @@ type Verdict =
   `mergeSearch(location, incoming)` rather than concatenating. Verdicts fix
   `status: 302`: a redirect table is configuration that changes with the next
   deploy, and browsers cache 301s past it.
+- **`delegate`** — the path matched a state that names a host handler by key
+  ([delegating states](#delegating-states)); the handler answers the request.
 - **`notFound`** — `mount` set means a mount owned the path but nothing
   matched (serve that app's 404 page); absent means no mount claimed it at
   all (not this router's problem).
@@ -329,6 +338,47 @@ app.use('*', (c, next) =>
   })(c, next),
 );
 ```
+
+### Delegating states
+
+A state with a `delegate` key hands its url to a host handler: a command
+endpoint, a form POST, a JSON feed. The tree carries only the key, so the
+client and the server can share it. The fetch and Hono adapters map keys to
+fetch-shaped handlers in their `delegates` option:
+
+```ts
+const routes: RouteDeclaration[] = [
+  { name: 'home', url: '' },
+  { name: 'claims', url: '/claims', delegate: 'ledger' },
+];
+
+// In the Worker's fetch(request, env, ctx):
+const handler = createFetchHandler(router, {
+  serveShell: (_mount, shellRequest) => env.ASSETS.fetch(shellRequest),
+  delegates: {
+    // A Hono app, or any (request, context) => Response.
+    ledger: (request) => ledgerApp.fetch(request, env, ctx),
+  },
+});
+```
+
+A request of any method and any `Accept` that matches a delegating state goes
+to its handler, along with `{ mount, state, params }`. The handler gets the
+original request with its body unread, and its `Response` goes out untouched.
+Requests that match no delegating state keep the navigation contract above.
+
+- A delegating state needs a url and no `redirectTo`, and its children don't
+  inherit the key; `createServerRouter` throws otherwise.
+- `createFetchHandler` throws at construction when the router names a key
+  that `delegates` doesn't map. Extra keys in `delegates` are allowed.
+- A handler that throws rejects the adapter's promise, so the host's own error
+  handling answers it.
+- Without `delegates`, requests outside `shouldHandle` pass as `null` without
+  resolving.
+- A delegating state never runs a transition, even on a `simulate` mount, so
+  its resolves don't run either.
+- The Connect adapter has no `delegates` option. It passes delegate verdicts
+  to `next()`, so mount the handlers downstream.
 
 ## Server-side hrefs
 
