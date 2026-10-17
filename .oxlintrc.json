@@ -453,6 +453,7 @@
         "tools/lit-template-lint/**/*.test.ts",
         "tools/oxc-emit/**/*.test.ts",
         "tools/release/**/*.test.ts",
+        "tools/release-config/**/*.test.ts",
         "tools/repo-checks/**/*.test.ts",
         "tools/shared/**/*.test.ts",
         "tools/workers-builds/**/*.test.ts",
