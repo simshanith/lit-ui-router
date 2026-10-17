@@ -3,6 +3,7 @@ import { styleMap } from 'lit/directives/style-map.js';
 import { customElement, property } from 'lit/decorators.js';
 import { isEqual } from 'lodash-es';
 import { UIViewInjectedProps, RoutedLitElement } from 'lit-ui-router';
+import type { TypedStateService } from 'sample-app-shared/registry/registry.js';
 
 import { RouterSignalController } from 'lit-ui-router-signals';
 
@@ -38,7 +39,7 @@ export class App extends LitElement {
     { equals: isEqual },
   );
 
-  get stateService() {
+  get stateService(): TypedStateService {
     return this._uiViewProps.router.stateService;
   }
 

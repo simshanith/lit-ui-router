@@ -1,0 +1,6 @@
+{
+  // The app's program plus the probe: its augmentation of @uirouter/core stays
+  // out of the app's own typecheck.
+  "extends": "../tsconfig.json",
+  "include": ["*.test-d.ts", "../src/**/*"]
+}

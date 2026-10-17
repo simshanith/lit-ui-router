@@ -1,4 +1,5 @@
 import { registerAppModules } from 'sample-app-shared/app/global/appModules.js';
+import type { SampleAppStates } from 'sample-app-shared/registry/states.js';
 
 import AppConfig from './app/global/appConfig.js';
 import AuthService from './app/global/authService.js';
@@ -16,3 +17,11 @@ import MessageList from './app/mymessages/MessageList.js';
 registerAppModules({ AppConfig, AuthService, App, Compose, MessageList });
 
 await import('sample-app-shared/main.js');
+
+// #1306 spike: the router this app boots registers the sample apps' states,
+// so the typed registry reads them; one augmentation feeds every typed surface.
+declare module 'sample-app-shared/registry/registry.js' {
+  interface Register {
+    states: SampleAppStates;
+  }
+}

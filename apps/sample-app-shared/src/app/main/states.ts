@@ -15,7 +15,7 @@ import NotFound from '../main/NotFound.js';
  * 2) Provide a viewport (ui-view) for a substate to plug into
  */
 export class AppState implements LitStateDeclaration {
-  name = 'app';
+  readonly name = 'app';
   redirectTo = 'welcome';
   component = App;
   static __uiRouterState = true;
@@ -31,7 +31,7 @@ const welcomeState = {
   url: '/welcome',
   component: Welcome,
   data: { title: 'Welcome' },
-};
+} as const;
 
 /**
  * This is a home screen for authenticated users.
@@ -44,7 +44,7 @@ const homeState = {
   url: '/home',
   component: Home,
   data: { title: 'Home' },
-};
+} as const;
 
 /**
  * This is the login state.  It is activated when the user navigates to /login, or if a unauthenticated
@@ -66,7 +66,7 @@ const loginState = {
       resolveFn: returnTo,
     },
   ],
-};
+} as const;
 
 /**
  * A resolve function for 'login' state which figures out what state to return to, after a successful login.
@@ -118,7 +118,7 @@ export const notFoundState = {
     },
   ],
   component: NotFound,
-};
+} as const;
 
 // Future State (Placeholder) for the contacts module
 export const contactsFutureState = {
@@ -126,7 +126,7 @@ export const contactsFutureState = {
   name: 'contacts.**',
   url: '/contacts',
   lazyLoad: () => import('../contacts/states.js'),
-};
+} as const;
 
 // Future State (Placeholder) for the prefs module
 export const prefsFutureState = {
@@ -134,7 +134,7 @@ export const prefsFutureState = {
   name: 'prefs.**',
   url: '/prefs',
   lazyLoad: () => import('../prefs/states.js'),
-};
+} as const;
 
 // Future State (Placeholder) for the mymessages module
 export const mymessagesFutureState = {
@@ -142,7 +142,7 @@ export const mymessagesFutureState = {
   name: 'mymessages.**',
   url: '/mymessages',
   lazyLoad: () => import('../mymessages/states.js'),
-};
+} as const;
 
 export default [
   AppState,

@@ -11,7 +11,7 @@
     "format:check:oxfmt": "oxfmt --check \"**/*.{js,ts,json,md,html}\"",
     "format:oxfmt": "oxfmt \"**/*.{js,ts,json,md,html}\"",
     "lint:oxlint": "oxlint .",
-    "typecheck:tsc": "tsc -p tsconfig.json --noEmit"
+    "typecheck:tsc": "tsc -p tsconfig.json --noEmit && tsc -p test-d/tsconfig.json --noEmit"
   },
   "dependencies": {
     "@uirouter/core": "catalog:",
