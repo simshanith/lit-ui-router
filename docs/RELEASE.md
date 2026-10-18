@@ -208,6 +208,13 @@ top leg falls back to its own `<dep>-<line>-floor` alias, and the guard notes
 that the range needs widening. Adding that alias before the release keeps both
 sides of the bump green.
 
+A peer range on a 0.x workspace package keeps two legs: the dep's current minor
+and the one before it. When the dep ships a new minor, the dependent's next
+release adds the new leg and drops the oldest, which narrows the range and so
+ships as a minor. A leg goes early when keeping it needs a shim or version
+branch in the dependent, or blocks a new API of the dep. `floor-guard` warns,
+without failing, on each leg outside the window.
+
 `published-diff` picks that tag from the workspace version by the same rule
 release-it publishes under: a prerelease answers to its own channel tag,
 everything else to `latest`. A channel the registry does not carry yet falls

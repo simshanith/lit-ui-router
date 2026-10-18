@@ -4,7 +4,7 @@
 // Usage (from the package dir): floor-guard
 import { readManifest } from '@tools/bootstrap/manifest.ts';
 
-import { parseFloorAlias, proveLegs } from './floor-legs.ts';
+import { legWindow, parseFloorAlias, proveLegs } from './floor-legs.ts';
 import { type Guard, guard } from './guard.ts';
 
 // annotated: TS only treats `g.fail` as never-returning through a dotted name
@@ -76,6 +76,21 @@ for (const dep of deps) {
   });
 
   if (failures.length > 0) g.fail(failures.join('\n'));
+
+  const devSpec = manifest?.devDependencies?.[dep];
+
+  for (const warning of legWindow({
+    dependent: manifest?.name ?? process.cwd(),
+    dep,
+    kind,
+    range,
+    workspace:
+      devSpec === 'catalog:workspace' ||
+      devSpec?.startsWith('workspace:') === true,
+    dev: () => g.installed(dep, dep),
+  })) {
+    g.warn(warning);
+  }
 
   g.pass(`${dep} range ${range}: ${proofs.join('; ')}`);
 }
