@@ -10,10 +10,14 @@ import type {
 
 export const SHA = '0123456789abcdef0123456789abcdef01234567';
 
+export const OTHER_SHA = 'f'.repeat(40);
+
+export const DIST_TAG = 'latest';
+
 export const NPM: NpmFacts = {
   integrity: 'sha512-AAAA',
   publishedAt: '2026-10-01T00:00:00.000Z',
-  distTag: 'latest',
+  distTag: DIST_TAG,
 };
 
 export const GH: GhReleaseFacts = {
@@ -39,6 +43,8 @@ const tagged: VersionRow = {
   version: ENVELOPE.version,
   state: 'tagged',
   state_at: '2026-10-01T00:00:00.000Z',
+  first_seen_at: '2026-10-01T00:00:00.000Z',
+  rev: 0,
   git_sha: SHA,
   npm_integrity: null,
   npm_published_at: null,
@@ -54,14 +60,16 @@ const tagged: VersionRow = {
 const published: VersionRow = {
   ...tagged,
   state: 'published.active',
+  rev: 1,
   npm_integrity: NPM.integrity,
   npm_published_at: NPM.publishedAt,
-  npm_dist_tag: NPM.distTag,
+  npm_dist_tag: DIST_TAG,
 };
 
 const released: VersionRow = {
   ...published,
   state: 'released.active',
+  rev: 2,
   gh_release_id: GH.id,
   gh_url: GH.url,
   gh_prerelease: 0,
@@ -83,9 +91,12 @@ export const ROWS: Record<State, VersionRow> = {
     state: 'released.deprecated',
     npm_deprecated: DEPRECATION,
   },
-  drifted: { ...released, state: 'drifted' },
-  abandoned: { ...tagged, state: 'abandoned' },
+  drifted: { ...released, state: 'drifted', rev: 3 },
+  abandoned: { ...tagged, state: 'abandoned', rev: 1 },
 };
+
+/** A tag moved or deleted before publish: drifted, with no npm facts. */
+export const DRIFTED_TAG: VersionRow = { ...tagged, state: 'drifted', rev: 1 };
 
 /** One event of each type, carrying the facts the fixture rows record. */
 export const EVENTS = {
@@ -96,9 +107,9 @@ export const EVENTS = {
   undeprecation_observed: { type: 'undeprecation_observed' },
   mismatch_observed: {
     type: 'mismatch_observed',
-    field: 'npm_integrity',
-    recorded: NPM.integrity,
-    observed: 'sha512-BBBB',
+    field: 'git_sha',
+    recorded: SHA,
+    observed: OTHER_SHA,
   },
   abandon: { type: 'abandon' },
   repair: { type: 'repair', tag: { sha: SHA }, npm: NPM, ghRelease: GH },
