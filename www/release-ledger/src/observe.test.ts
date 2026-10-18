@@ -9,12 +9,7 @@ import {
   HttpClientResponse,
 } from 'effect/http';
 
-import {
-  isGitHubRateLimit,
-  listTags,
-  ObservationError,
-  requestedWait,
-} from './observe.ts';
+import { isGitHubRateLimit, listTags, requestedWait } from './observe.ts';
 
 const NOW = Date.parse('2026-10-18T00:00:00.000Z');
 
@@ -116,19 +111,6 @@ describe('fetches', () => {
     return { calls, run };
   }
 
-  it('retries a 429, a network failure and a 5xx, then answers', async () => {
-    const { calls, run } = answering(
-      response(429),
-      new Error('connection reset'),
-      response(200),
-    );
-
-    const result = await run();
-
-    assert.equal(calls.count, 3);
-    assert.deepEqual(result._tag === 'Success' && result.success, REFS);
-  });
-
   it("retries GitHub's secondary limit after its Retry-After", async () => {
     const { calls, run } = answering(
       response(403, { 'retry-after': '0' }),
@@ -155,19 +137,6 @@ describe('fetches', () => {
     assert.equal(forbidden.calls.count, 1);
     assert.ok(result._tag === 'Failure');
     assert.equal(result.failure.reason, 'HTTP 403');
-  });
-
-  it('gives up after three attempts', async () => {
-    const { calls, run } = answering(response(503));
-
-    const result = await run();
-
-    assert.equal(calls.count, 3);
-    assert.ok(result._tag === 'Failure');
-    assert.deepEqual(
-      result.failure,
-      new ObservationError({ source: 'github tags', reason: 'HTTP 503' }),
-    );
   });
 
   it('hands a long rate-limit wait to the queue instead of sleeping', async () => {

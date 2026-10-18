@@ -8,14 +8,11 @@ import {
 } from './consume.ts';
 
 describe('queueDelaySeconds', () => {
-  it('doubles the ceiling per attempt up to the cap', () => {
+  it('doubles the ceiling per attempt up to the cap, jittered over its upper half', () => {
     assert.deepEqual(
       [1, 2, 3, 7, 8, 20].map(queueCeiling),
       [30, 60, 120, 1920, 3600, 3600],
     );
-  });
-
-  it('jitters over the upper half of the ceiling, in whole seconds', () => {
     assert.equal(
       queueDelaySeconds(3, undefined, () => 0),
       60,
@@ -30,15 +27,12 @@ describe('queueDelaySeconds', () => {
     );
   });
 
-  it('lets a rate limit wait win over the backoff', () => {
+  it('lets a rate limit wait win over the backoff, up to what Queues accept', () => {
     assert.equal(
       queueDelaySeconds(9, 2.2, () => 0),
       3,
     );
     assert.equal(queueDelaySeconds(1, 0), 0);
-  });
-
-  it('caps the delay at what Queues accept', () => {
     assert.equal(queueDelaySeconds(1, 10 ** 6), QUEUE_MAX_DELAY_SECONDS);
   });
 });
