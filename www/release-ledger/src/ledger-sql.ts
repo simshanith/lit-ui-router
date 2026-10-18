@@ -3,10 +3,13 @@
 import { Effect, Schema } from 'effect';
 import { SqlClient, SqlSchema } from 'effect/sql';
 
-import type {
-  FoldStatements,
-  Statement,
-  VersionRow,
+import {
+  type FoldStatements,
+  GH_STATES,
+  NPM_STATES,
+  type Statement,
+  STATUSES,
+  type VersionRow,
 } from './release-ledger.core.ts';
 
 const NullableString = Schema.NullOr(Schema.String);
@@ -37,15 +40,9 @@ const VersionRowSchema = Schema.Struct({
 /** A `versions` row with the states `version_states` derives from it. */
 const LedgerVersionSchema = Schema.Struct({
   ...VersionRowSchema.fields,
-  npm_state: Schema.Literals(['absent', 'active', 'deprecated']),
-  gh_state: Schema.Literals(['none', 'final']),
-  status: Schema.Literals([
-    'conflict',
-    'abandoned',
-    'tagged',
-    'published',
-    'released',
-  ]),
+  npm_state: Schema.Literals(NPM_STATES),
+  gh_state: Schema.Literals(GH_STATES),
+  status: Schema.Literals(STATUSES),
 });
 
 export type LedgerVersion = typeof LedgerVersionSchema.Type;
@@ -142,7 +139,7 @@ export interface PipelineEvent {
   sha: string;
   payload: string;
   outcome: FoldStatements['outcome'];
-  reason: string | null;
+  reason: FoldStatements['reason'];
 }
 
 const PIPELINE_COLUMNS = [

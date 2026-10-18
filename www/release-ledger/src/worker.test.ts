@@ -14,6 +14,7 @@ import type { SqlClient } from 'effect/sql';
 import { type ParseError, parse, printParseErrorCode } from 'jsonc-parser';
 import { createTestHarness } from 'wrangler';
 
+import { ceiling, QUEUE_BACKOFF } from './backoff.ts';
 import type { Claim } from './claim.ts';
 import {
   CLAIMS_QUEUE,
@@ -22,7 +23,6 @@ import {
   FOLD_ATTEMPTS,
   type LedgerBatch,
   type LedgerMessage,
-  NPM_LAG_DELAY_SECONDS,
 } from './consume.ts';
 import { findTagged, findVersions } from './ledger-sql.ts';
 import { ObservationError, Observer, type Sources } from './observe.ts';
@@ -57,6 +57,7 @@ const WranglerConfig = Schema.Struct({
         queue: Schema.String,
         max_batch_size: Schema.Number,
         max_concurrency: Schema.Number,
+        max_retries: Schema.Number,
         dead_letter_queue: Schema.optionalKey(Schema.String),
       }),
     ),
@@ -155,6 +156,18 @@ describe('wrangler.jsonc', () => {
     assert.equal(claims?.dead_letter_queue, DEAD_LETTER_QUEUE);
     assert.equal(dead?.queue, DEAD_LETTER_QUEUE);
   });
+
+  it('gives up on a claim before the next daily sweep', () => {
+    const [claims] = config.queues.consumers;
+    let window = 0;
+
+    for (let attempt = 1; attempt <= (claims?.max_retries ?? 0); attempt += 1) {
+      window += ceiling(attempt, QUEUE_BACKOFF);
+    }
+
+    assert.ok(window > 3600, `${window}s outlasts a GitHub rate-limit reset`);
+    assert.ok(window < 24 * 3600, `${window}s ends before the next sweep`);
+  });
 });
 
 describe('POST /claims in workerd', { timeout: 120_000 }, () => {
@@ -247,6 +260,18 @@ function messageOf(body: Claim | Partial<Claim>, id = `m${++ids}`): Recorded {
   };
 
   return message;
+}
+
+/** Not acked, and sent back once with the first backoff delay. */
+function retriedOnce(message: Recorded): void {
+  const [retry, ...rest] = message.retries;
+  const delay = retry?.delaySeconds ?? 0;
+
+  assert.deepEqual([message.acks, rest], [0, []]);
+  assert.ok(
+    delay >= QUEUE_BACKOFF.base / 2 && delay <= QUEUE_BACKOFF.base,
+    `${delay}s`,
+  );
 }
 
 const RELEASED: Sources = {
@@ -418,7 +443,7 @@ describe('queue consumer', { timeout: 120_000 }, () => {
 
     await deliver([message], bumpsRev(FOLD_ATTEMPTS));
 
-    assert.deepEqual([message.acks, message.retries], [0, [undefined]]);
+    retriedOnce(message);
     assert.deepEqual(await statuses(), [
       { status: 'tagged', rev: FOLD_ATTEMPTS },
     ]);
@@ -441,7 +466,7 @@ describe('queue consumer', { timeout: 120_000 }, () => {
 
     await deliver([message], concurrent);
 
-    assert.deepEqual([message.acks, message.retries], [0, [undefined]]);
+    retriedOnce(message);
 
     for (const table of ['pipeline_events', 'ledger_events', 'dist_tags']) {
       assert.deepEqual(await all(table), [], table);
@@ -472,7 +497,7 @@ describe('queue consumer', { timeout: 120_000 }, () => {
     await deliver([message], sees({ ...RELEASED, tag: null, distTags: {} }));
 
     assert.equal(message.acks, 1);
-    assert.deepEqual(await statuses(), [{ status: 'released', rev: 0 }]);
+    assert.deepEqual(await statuses(), [{ status: 'untagged', rev: 0 }]);
     assert.equal((await all('versions'))[0]?.git_sha, null);
     assert.deepEqual(await ledgerEvents(), ['npm observed', 'gh observed']);
   });
@@ -550,23 +575,33 @@ describe('queue consumer', { timeout: 120_000 }, () => {
 
     await deliver([message], down);
 
-    assert.deepEqual([message.acks, message.retries], [0, [undefined]]);
+    retriedOnce(message);
     assert.deepEqual(await all('pipeline_events'), []);
   });
 
-  it('waits for npm while a fresh GitHub release is ahead of it', async () => {
+  it('retries after the wait a rate limit asked for', async () => {
     const message = messageOf(claimOf());
-    await deliver([message], sees({ ...RELEASED, npm: null, distTags: {} }));
+
+    const limited = observing(() =>
+      Effect.fail(
+        new ObservationError({
+          source: 'github release',
+          reason: 'HTTP 429',
+          retryAfter: 600.5,
+        }),
+      ),
+    );
+
+    await deliver([message], limited);
 
     assert.deepEqual(
       [message.acks, message.retries],
-      [0, [{ delaySeconds: NPM_LAG_DELAY_SECONDS }]],
+      [0, [{ delaySeconds: 601 }]],
     );
-    assert.deepEqual(await all('versions'), []);
   });
 
-  it('folds the GitHub release once npm is past its deadline', async () => {
-    const message = messageOf(claimOf('2026-10-01T00:00:00.000Z'));
+  it('folds a GitHub release that is ahead of npm', async () => {
+    const message = messageOf(claimOf());
     await deliver([message], sees({ ...RELEASED, npm: null, distTags: {} }));
 
     assert.equal(message.acks, 1);
@@ -584,7 +619,7 @@ describe('queue consumer', { timeout: 120_000 }, () => {
 
     await deliver([message]);
 
-    assert.deepEqual([message.acks, message.retries], [0, [undefined]]);
+    retriedOnce(message);
 
     for (const table of [
       'versions',
@@ -601,7 +636,7 @@ describe('queue consumer', { timeout: 120_000 }, () => {
 
     await deliver([message]);
 
-    assert.deepEqual([message.acks, message.retries], [0, [undefined]]);
+    retriedOnce(message);
   });
 
   it('keeps dead letters in D1', async () => {

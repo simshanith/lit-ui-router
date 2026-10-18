@@ -1,9 +1,10 @@
 // The queue consumer, the ledger's only D1 writer: per claim, observe the tag,
 // npm and GitHub, fold the observation through the core, and write the outcome
 // in one D1 batch. A message is acked only after its batch commits.
-import { Clock, Effect, Option, Schema } from 'effect';
+import { Effect, Option, Schema } from 'effect';
 import { D1Client } from '@effect/sql-d1';
 
+import { queueDelaySeconds } from './backoff.ts';
 import { Claim } from './claim.ts';
 import {
   findClaim,
@@ -18,7 +19,6 @@ import { Observer, type Sources } from './observe.ts';
 import {
   type DistTagOutcome,
   type Envelope,
-  type Fold,
   fold,
   type FoldStatements,
   foldStatements,
@@ -32,12 +32,7 @@ export const CLAIMS_QUEUE = 'release-ledger-claims';
 
 export const DEAD_LETTER_QUEUE = 'release-ledger-claims-dlq';
 
-/** How long a GitHub release may wait for npm to list its version. */
-export const NPM_LAG_DEADLINE_MS = 15 * 60 * 1000;
-
-export const NPM_LAG_DELAY_SECONDS = 120;
-
-/** Folds per message before a row that keeps moving sends it back to the queue. */
+/** Folds per message, back to back, before a row that keeps moving sends it back to the queue. */
 export const FOLD_ATTEMPTS = 3;
 
 /** The slice of a Workers queue message the consumer uses. */
@@ -55,16 +50,15 @@ export interface LedgerBatch {
   readonly messages: readonly LedgerMessage[];
 }
 
-type Verdict = { kind: 'ack' } | { kind: 'retry'; delaySeconds?: number };
+/** `retryAfter`: seconds a rate limit asked for, which wins over the backoff. */
+type Verdict = { kind: 'ack' } | { kind: 'retry'; retryAfter?: number };
 
 const ACK: Verdict = { kind: 'ack' };
 
 const RETRY: Verdict = { kind: 'retry' };
 
-const AWAIT_NPM: Verdict = {
-  kind: 'retry',
-  delaySeconds: NPM_LAG_DELAY_SECONDS,
-};
+const retryAfter = (seconds: number | undefined): Verdict =>
+  seconds === undefined ? RETRY : { kind: 'retry', retryAfter: seconds };
 
 const decodeClaim = Schema.decodeUnknownEffect(Claim);
 
@@ -108,16 +102,10 @@ const envelopeOf = (claim: Claim): Envelope => ({
   run_url: auditOf(claim).runUrl,
 });
 
-const awaitingNpm = (sources: Sources, claim: Claim, now: number) =>
-  sources.gh !== null &&
-  sources.npm === null &&
-  now < Date.parse(claim.receivedAt) + NPM_LAG_DEADLINE_MS;
-
 function pipelineEventOf(
   message: LedgerMessage,
   claim: Claim,
-  folded: Fold,
-  outcome: FoldStatements['outcome'],
+  { outcome, reason }: Pick<FoldStatements, 'outcome' | 'reason'>,
 ): PipelineEvent {
   const audit = auditOf(claim);
 
@@ -131,7 +119,7 @@ function pipelineEventOf(
     sha: claim.origin.sha,
     payload: JSON.stringify(Schema.encodeSync(Claim)(claim)),
     outcome,
-    reason: folded.outcome === 'rejected' ? folded.reason : null,
+    reason,
   };
 }
 
@@ -187,10 +175,6 @@ const foldOnce = (message: LedgerMessage, claim: Claim) =>
 
     const sources = yield* (yield* Observer).observe(claim.name, claim.version);
 
-    if (awaitingNpm(sources, claim, yield* Clock.currentTimeMillis)) {
-      return AWAIT_NPM;
-    }
-
     const envelope = envelopeOf(claim);
     const folded = fold(before, observationOf(sources, claim), envelope);
 
@@ -209,14 +193,14 @@ const foldOnce = (message: LedgerMessage, claim: Claim) =>
             envelope,
           );
 
-    const { outcome, guard, write, distTags, ledger } = foldStatements(
+    const { guard, write, distTags, ledger, ...outcome } = foldStatements(
       folded,
       tags,
       message.id,
     );
 
     const statements = [
-      pipelineInsert(pipelineEventOf(message, claim, folded, outcome), guard),
+      pipelineInsert(pipelineEventOf(message, claim, outcome), guard),
       ...(write === undefined ? [] : [write]),
       ...distTags,
       ...ledger,
@@ -251,17 +235,22 @@ const handleClaim = (message: LedgerMessage) =>
     }
 
     return RETRY;
-  });
+  }).pipe(
+    Effect.catchTag('ObservationError', (error) =>
+      Effect.as(
+        Effect.logWarning(`${error.source}: ${error.reason}`),
+        retryAfter(error.retryAfter),
+      ),
+    ),
+  );
 
 const settle = (message: LedgerMessage, verdict: Verdict): void => {
   if (verdict.kind === 'ack') {
     message.ack();
   } else {
-    message.retry(
-      verdict.delaySeconds === undefined
-        ? undefined
-        : { delaySeconds: verdict.delaySeconds },
-    );
+    message.retry({
+      delaySeconds: queueDelaySeconds(message.attempts, verdict.retryAfter),
+    });
   }
 };
 

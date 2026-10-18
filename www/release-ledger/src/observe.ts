@@ -1,7 +1,16 @@
 // What npm and GitHub say about one `<pkg>@<version>` right now. The consumer
 // reads them through the Observer service, so tests can stand in for both.
-import { Context, Effect, Layer, Schema } from 'effect';
+import { Clock, Context, Duration, Effect, Layer, Schema } from 'effect';
 
+import {
+  type Backoff,
+  backoffSeconds,
+  FETCH_ATTEMPTS,
+  FETCH_BACKOFF,
+  FETCH_MAX_WAIT_SECONDS,
+  rateLimit,
+  retryable,
+} from './backoff.ts';
 import type { GhReleaseFacts, TagFacts } from './release-ledger.core.ts';
 
 export interface NpmVersion {
@@ -23,7 +32,12 @@ export interface Sources {
 /** A source answered with something other than the fact or a 404; worth a retry. */
 export class ObservationError extends Schema.TaggedError<ObservationError>()(
   'ObservationError',
-  { source: Schema.String, reason: Schema.String },
+  {
+    source: Schema.String,
+    reason: Schema.String,
+    /** Seconds a rate limit asked to wait, past what a fetch waits in-request. */
+    retryAfter: Schema.optionalKey(Schema.Number),
+  },
 ) {}
 
 export class Observer extends Context.Service<
@@ -77,6 +91,70 @@ const NpmTimes = Schema.Struct({
 
 const DistTags = Schema.Record(Schema.String, Schema.String);
 
+/** One fetch: an answer to return, or a failure worth another try. */
+type Attempt =
+  | { kind: 'answered'; response: Response }
+  | { kind: 'failed'; reason: string; retryAfter?: number };
+
+const attemptFetch = (url: string, headers: Record<string, string>) =>
+  Effect.gen(function* () {
+    const now = yield* Clock.currentTimeMillis;
+
+    return yield* Effect.promise(() =>
+      fetch(url, { headers }).then(
+        async (response): Promise<Attempt> => {
+          const limit = rateLimit(response, now);
+
+          if (limit === undefined && !retryable(response.status)) {
+            return { kind: 'answered', response };
+          }
+
+          // an unread body holds one of the worker's few open connections
+          await response.body?.cancel().catch(() => undefined);
+
+          return {
+            kind: 'failed',
+            reason: `HTTP ${response.status}`,
+            ...(limit?.wait !== undefined && { retryAfter: limit.wait }),
+          };
+        },
+        (cause: unknown): Attempt => ({
+          kind: 'failed',
+          reason: String(cause),
+        }),
+      ),
+    );
+  });
+
+/** The response, after in-request backoff on rate limits, server errors and network failures. */
+export const fetchWithBackoff = (
+  source: string,
+  url: string,
+  headers: Record<string, string>,
+  backoff: Backoff = FETCH_BACKOFF,
+): Effect.Effect<Response, ObservationError> =>
+  Effect.gen(function* () {
+    for (let attempt = 1; ; attempt += 1) {
+      const result = yield* attemptFetch(url, headers);
+
+      if (result.kind === 'answered') return result.response;
+
+      const { reason, retryAfter } = result;
+      const wait = retryAfter ?? backoffSeconds(attempt, backoff);
+
+      // a long rate-limit wait becomes the queue's delay instead
+      if (attempt >= FETCH_ATTEMPTS || wait > FETCH_MAX_WAIT_SECONDS) {
+        return yield* new ObservationError({
+          source,
+          reason,
+          ...(retryAfter !== undefined && { retryAfter }),
+        });
+      }
+
+      yield* Effect.sleep(Duration.seconds(wait));
+    }
+  });
+
 /** The decoded body, or null on a 404. */
 const getJson = <S extends Schema.Top>(
   source: string,
@@ -87,10 +165,7 @@ const getJson = <S extends Schema.Top>(
   Effect.gen(function* () {
     const failed = (reason: string) => new ObservationError({ source, reason });
 
-    const response = yield* Effect.tryPromise({
-      try: () => fetch(url, { headers }),
-      catch: (cause) => failed(String(cause)),
-    });
+    const response = yield* fetchWithBackoff(source, url, headers);
 
     if (response.status === 404) return null;
 
