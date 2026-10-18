@@ -109,7 +109,8 @@ const M = [
   // row B's giant: it outgrows the row's y = 320 top line every refresh (the fleet
   // took the eslint plugin's growth at 1.14.1), so it sits 22 north of its row mates
   [14, 'lint & probe fleet',        'report', 166,   298,    ...C('lint & probe fleet'), null, null, 'oxlint · elements · axe · CI gate'],
-  [15, '@tools/shared',             'report', 275,   320,    ...C('@tools/shared'), null, null, 'the library under every instrument'],
+  // east off 275 when the fleet took @tools/ci-logs at the eb1162da refresh
+  [15, '@tools/shared',             'report', 292,   320,    ...C('@tools/shared'), null, null, 'the library under every instrument'],
   [16, 'typedoc plugin',            'report', 380,   320,    ...C('typedoc plugin'), null, null, 'builds the API pages, gates nothing'],
   // --- proving ground & shopfront (apps/ + www/) --------------------------------
   [17, 'e2e — cypress',             'pr',     377.8, 420,    ...C('e2e — cypress'), null, null, 'drives the sample apps · stops the PR line'],
@@ -259,8 +260,12 @@ const ibox = (x, y, w, h, name, count) =>
 ${txt(x + w / 2, count ? y + 15 : y + h / 2 + 3.5, name, 'lbls', 'middle')}${count ? `\n${txt(x + w / 2, y + 26, count, 'lblf', 'middle')}` : ''}`;
 const iflow = (d, cls = 'sk', mk = 'ai') => arrow(P, d, mk, cls);
 
-// mass 1's cap crosses the frame's foot and climbs every refresh: the lines it reaches stand clear of it
-const inset = `<rect x="40" y="26" width="600" height="156" class="skf fnone"/>
+// mass 1's cap crosses the frame's foot and climbs every refresh: the inset stands lifted, and its box row must clear the cap
+const INSET_LIFT = 16;
+const CAP_TOP = pt(g(1).x, g(1).y, g(1).h)[1];
+if (CAP_TOP < 106 - INSET_LIFT + 6) throw new Error(`sheet 3: mass 1's cap climbs to y ${CAP_TOP.toFixed(1)}, into the inset's box row — recompose the inset`);
+const inset = `<g transform="translate(0 -${INSET_LIFT})">
+<rect x="40" y="26" width="600" height="156" class="skf fnone"/>
 ${txt(52, 43, 'TWO TASK MANAGERS, ONE RE-ENTRANT LOOP', 'lbls')}
 ${txt(52, 55, 'mise — node-free umbrella · turbo — cached fan-out (remote R2) · neither sits above the other', 'lblf')}
 
@@ -278,7 +283,8 @@ ${txt(205, 71, `${HW.callSites} call sites · ${HW.targets} distinct tasks`, 'lb
 ${txt(459, 71, '7 tasks shell turbo', 'lblf', 'middle')}
 ${txt(540, 139, '7 root scripts shell mise run', 'lbls', 'middle')}
 ${txt(540, 151, 'cache key over tools node never installs', 'lblf', 'middle')}
-${txt(272, 120, 'mise/aqua provisions them', 'lblf', 'end')}`;
+${txt(272, 120, 'mise/aqua provisions them', 'lblf', 'end')}
+</g>`;
 
 const svg = `<svg viewBox="0 0 1400 ${SY + 100 + half * 17}" role="img" aria-label="Isometric map of the lit-ui-router monorepo as an industrial site, re-massed from measured source. A build conveyor runs along one straight isometric lane from upper left to lower right: the packages source slab, the oxc-emit build shed, the packer, a green crate that is the one tarball, the publish hall, and the npm registry beyond a dashed boundary. Below and to the left stands the instrument yard in two rows, and below that a proving ground of sample apps, end to end tests and the docs deploy watch. Every structure is massed by its own census — footprint side proportional to the square root of its authored source lines, height one and a half pixels per authored file — so the three heaviest masses on the sheet, ${HEAVY.map((n) => `${heavyName(n)} at ${nfl(n)}`).join(', ')}, are none of them gates. Gate severity is carried entirely in colour, never in height: five small red hatched pads stop the pull request line — the vitest harness, compat-guards, dts-backtest, check exports, and Cypress end to end — one solid red block, published-diff, halts publishing outright; two accent hatched blocks gate a later stage, the version bump and the docs deploy; and the faint unhatched blocks never gate at all. A dashed trunk carries the one cached tarball from the green crate to the three checks that read it, and a long accent return runs from the registry around the front of the whole site back into published-diff, closing the loop. A structure schedule lists all ${M.length} structures with exact file and line counts and their gate tier. In the upper left corner, set apart from the isometric site, a small flat schematic shows the two task managers as a loop rather than a stack: GitHub Actions enters mise at ${HW.callSites} call sites across ${HW.calling} workflows, mise holds ${HM.tasks} tasks with only ${HM.withDepends} of them declaring dependencies, seven of those tasks shell turbo whose continuous-integration graph expands to ${CI_NODES} task nodes, and an accent arrow returns from turbo back into mise, where seven root scripts shell mise again for the aqua-provisioned linters — rumdl, taplo, shellcheck, actionlint and zizmor — that node never installs.">
 ${defs(P)}

@@ -73,7 +73,8 @@ const PLACED = [
   // 4 — the plugin last, so its callout's leader drops straight to the lettering;
   // nudged east off ssr's annex when #1010/#1020 grew it to 2,578 spec sloc, and
   // south off the effect bindings' annex when it reached 340.4 at the 4dc0cbb7 refresh
-  [2, 'ui-router-server', 'packages/ui-router-server', 'pkg', 250, 20],
+  // north off y 20 when its annex reached 108.4 at the eb1162da refresh: it clears the reading box's y 95 by 2.1
+  [2, 'ui-router-server', 'packages/ui-router-server', 'pkg', 250, 6],
   [3, 'lit-ui-router-mobx', 'packages/lit-ui-router-mobx', 'pkg', 248, 104],
   [4, 'navigation-location-plugin', 'packages/navigation-location-plugin', 'pkg', 332, 172],
   [5, 'sample-app-shared', 'apps/sample-app-shared', 'app', 570, 10],
@@ -84,19 +85,19 @@ const PLACED = [
   [10, 'docs', 'www/lit-ui-router.dev', 'site', 660, 340],
   [11, 'examples', 'examples', 'site', 660, 430],
   [12, '@tools/release', 'tools/release', 'tool', 20, 430],
-  [13, '@tools/typedoc-plugin', 'tools/typedoc-plugin-lit-ui-router', 'tool', 230, 430],
+  [13, '@tools/typedoc-plugin', 'tools/typedoc-plugin-lit-ui-router', 'tool', 206, 430],
   [14, '@tools/dts-backtest', 'tools/dts-backtest', 'tool', 8, 350],
-  [15, '@tools/build_and_test', 'tools/build_and_test', 'tool', 270, 430],
+  [15, '@tools/build_and_test', 'tools/build_and_test', 'tool', 241, 430],
   [16, '@tools/shared', 'tools/shared', 'tool', 20, 550],
   [17, '@tools/workers-builds', 'tools/workers-builds', 'tool', 220, 550],
   [18, '@tools/bundle-probe', 'tools/bundle-probe', 'tool', 330, 550],
   [19, '@tools/compat-guards', 'tools/compat-guards', 'tool', 130, 550],
   [20, '@tools/oxc-emit', 'tools/oxc-emit', 'tool', 230, 350],
-  [21, '@tools/release-config', 'tools/release-config', 'tool', 298, 350],
-  [22, '@tools/lit-template-lint', 'tools/lit-template-lint', 'tool', 325, 350],
+  [21, '@tools/release-config', 'tools/release-config', 'tool', 310, 350],
+  [22, '@tools/lit-template-lint', 'tools/lit-template-lint', 'tool', 368, 350],
   [23, '@tools/lit-test-env', 'tools/lit-test-env', 'tool', 85, 350],
-  [24, '@tools/vue-check', 'tools/vue-check', 'tool', 370, 350],
-  [25, '@tools/lcov-rebase', 'tools/lcov-rebase', 'tool', 415, 350],
+  [24, '@tools/vue-check', 'tools/vue-check', 'tool', 460, 350],
+  [25, '@tools/lcov-rebase', 'tools/lcov-rebase', 'tool', 418, 350],
   [26, '@tools/happy-dom', 'tools/happy-dom', 'tool', 163, 350],
   [27, '@tools/wintercg-globals', 'tools/wintercg-globals', 'tool', 208, 350],
   // nudged east with sheet 7, off bundle-probe's grown annex
@@ -126,14 +127,18 @@ const PLACED = [
   //     reading box and both callouts; the bindings and the snapshot take the strip
   //     under ssr's annex, the agnostic cores the north-east corner east of 2's annex ---
   [41, 'lit-ui-router-signals', 'packages/lit-ui-router-signals', 'pkg', 184, 248],
-  [42, 'ui-router-signals', 'packages/ui-router-signals', 'pkg', 418, 40],
-  [43, 'ui-router-effect', 'packages/ui-router-effect', 'pkg', 474, 40],
+  [42, 'ui-router-signals', 'packages/ui-router-signals', 'pkg', 440, 10],
+  [43, 'ui-router-effect', 'packages/ui-router-effect', 'pkg', 500, 10],
   [44, '@repo/route-snapshot', 'packages/shared/route-snapshot', 'pkg', 270, 236],
   // --- sheet 7's lots -------------------------------------------------------------
   [45, 'sample-app-lit-signals', 'apps/sample-app-lit-signals', 'app', 590, 100],
   [46, '@tools/a11y', 'tools/a11y', 'tool', 540, 472],
-  // the north-east corner, under 43's annex
-  [47, 'ui-router-mobx', 'packages/ui-router-mobx', 'pkg', 476, 64],
+  // the north-east corner, under 42
+  [47, 'ui-router-mobx', 'packages/ui-router-mobx', 'pkg', 440, 50],
+  // --- born 2026-10-15/16 (#1388, #1409): the tool on the yard's south edge, clear of the
+  //     winter-wall callout; the private gate beside the mobx store under 43 ----------
+  [48, '@tools/ci-logs', 'tools/ci-logs', 'tool', 300, 640],
+  [49, '@repo/dev-gate', 'packages/shared/dev-gate', 'pkg', 500, 50],
 ];
 
 // [n, name, dist, x, y, srcSloc, specSloc,
@@ -494,7 +499,7 @@ const tree = (path) => `${REPO}/tree/main/${path}`;
 const blob = (path) => `${REPO}/blob/main/${path}`;
 
 export const sheet13 = {
-  num: 13, id: 'weathering', rev: 'G',
+  num: 13, id: 'weathering', rev: 'H',
   title: 'THE WEATHERING MAP',
   sub: `ALTITUDE t — the same city as sheet 7, surveyed in time · ${TOT_F} files dated from the whole history · three construction seasons, ${MONTHS.length - ALIVE} silent months · ${BASIS}`,
   scale: 'WORKSPACE × TIME',

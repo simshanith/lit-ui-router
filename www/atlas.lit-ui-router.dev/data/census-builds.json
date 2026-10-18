@@ -1,20 +1,20 @@
 {
   "ref": "origin/main",
-  "sha": "83225a58",
-  "commitDate": "2026-10-15T15:56:09-07:00",
-  "generatedAtTime": "2026-10-15T23:10:26.581Z",
+  "sha": "eb1162da",
+  "commitDate": "2026-10-18T10:40:08-07:00",
+  "generatedAtTime": "2026-10-18T18:16:07.469Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-builds.mjs",
-  "used": "git archive origin/main @ 83225a58 — apps/*, www/lit-ui-router.dev and examples/<embeds.ts key>/package.json declarations, closed over family peers; withAtlas adds git archive www/atlas @ 506653d9 — www/atlas.lit-ui-router.dev/app/package.json; family and runtimes from census-couplings.json",
+  "used": "git archive origin/main @ eb1162da — apps/*, www/lit-ui-router.dev and examples/<embeds.ts key>/package.json declarations, closed over family peers; withAtlas adds git archive www/atlas @ 2011c945 — www/atlas.lit-ui-router.dev/app/package.json; family and runtimes from census-couplings.json",
   "wasAssociatedWith": [
     "git"
   ],
   "totals": {
-    "consumers": 18,
+    "consumers": 19,
     "builds": 8,
     "empty": 1,
     "carrying": {
       "eslint-plugin-lit-ui-router": 1,
-      "lit-ui-router": 15,
+      "lit-ui-router": 16,
       "lit-ui-router-effect": 2,
       "lit-ui-router-mobx": 2,
       "lit-ui-router-signals": 3,
@@ -44,10 +44,11 @@
     {"name":"hellogalaxy-signals","dir":"examples/hellogalaxy-signals","kind":"example","pinned":["lit-ui-router","lit-ui-router-signals","ui-router-signals"],"parts":["lit-ui-router","lit-ui-router-signals","ui-router-signals"],"runtimes":["@uirouter/core","lit","signal-polyfill"],"runtimesByPeer":["@uirouter/core","lit","signal-polyfill"]},
     {"name":"design-system-links","dir":"examples/design-system-links","kind":"example","pinned":["lit-ui-router"],"parts":["lit-ui-router"],"runtimes":["@uirouter/core","lit"],"runtimesByPeer":["@uirouter/core","lit"]},
     {"name":"lint-eslint","dir":"examples/lint-eslint","kind":"example","pinned":["eslint-plugin-lit-ui-router","lit-ui-router"],"parts":["eslint-plugin-lit-ui-router","lit-ui-router"],"runtimes":["@uirouter/core","eslint","lit"],"runtimesByPeer":["@uirouter/core","eslint","lit"]},
-    {"name":"navigation-api","dir":"examples/navigation-api","kind":"example","pinned":["lit-ui-router","ui-router-navigation-location-plugin"],"parts":["lit-ui-router","ui-router-navigation-location-plugin"],"runtimes":["@uirouter/core","lit"],"runtimesByPeer":["@uirouter/core","lit"]}
+    {"name":"navigation-api","dir":"examples/navigation-api","kind":"example","pinned":["lit-ui-router","ui-router-navigation-location-plugin"],"parts":["lit-ui-router","ui-router-navigation-location-plugin"],"runtimes":["@uirouter/core","lit"],"runtimesByPeer":["@uirouter/core","lit"]},
+    {"name":"loading-and-error-views","dir":"examples/loading-and-error-views","kind":"example","pinned":["lit-ui-router"],"parts":["lit-ui-router"],"runtimes":["@uirouter/core","lit"],"runtimesByPeer":["@uirouter/core","lit"]}
   ],
   "builds": [
-    {"parts":["lit-ui-router"],"pinned":[["lit-ui-router"]],"runtimes":["@uirouter/core","lit"],"runtimesByPeer":["@uirouter/core","lit"],"consumers":["sample-app-lit-vanilla","helloworld","hellosolarsystem","hellogalaxy","design-system-links"]},
+    {"parts":["lit-ui-router"],"pinned":[["lit-ui-router"]],"runtimes":["@uirouter/core","lit"],"runtimesByPeer":["@uirouter/core","lit"],"consumers":["sample-app-lit-vanilla","helloworld","hellosolarsystem","hellogalaxy","design-system-links","loading-and-error-views"]},
     {"parts":["lit-ui-router","lit-ui-router-signals","ui-router-signals"],"pinned":[["lit-ui-router","lit-ui-router-signals"],["lit-ui-router","lit-ui-router-signals","ui-router-signals"]],"runtimes":["@uirouter/core","lit","signal-polyfill"],"runtimesByPeer":["@uirouter/core","lit","signal-polyfill"],"consumers":["sample-app-lit-signals","hellosolarsystem-signals","hellogalaxy-signals"]},
     {"parts":["ui-router-server"],"pinned":[["ui-router-server"]],"runtimes":[],"runtimesByPeer":["@uirouter/core","hono"],"consumers":["sample-app-routes","@www/lit-ui-router.dev"]},
     {"parts":["lit-ui-router","ui-router-navigation-location-plugin"],"pinned":[["lit-ui-router","ui-router-navigation-location-plugin"]],"runtimes":["@uirouter/core","lit"],"runtimesByPeer":["@uirouter/core","lit"],"consumers":["sample-app-shared","navigation-api"]},
@@ -59,20 +60,20 @@
   "basis": {
     "atlasApp": {
       "ref": "www/atlas",
-      "sha": "506653d9",
-      "commitDate": "2026-10-15T15:49:59-07:00",
+      "sha": "2011c945",
+      "commitDate": "2026-10-17T22:04:42-07:00",
       "dir": "www/atlas.lit-ui-router.dev/app"
     },
-    "note": "www/atlas.lit-ui-router.dev/app is on www/atlas @ 506653d9, off the cabinet's tree; the second reading adds it"
+    "note": "www/atlas.lit-ui-router.dev/app is on www/atlas @ 2011c945, off the cabinet's tree; the second reading adds it"
   },
   "withAtlas": {
     "totals": {
-      "consumers": 19,
+      "consumers": 20,
       "builds": 9,
       "empty": 1,
       "carrying": {
         "eslint-plugin-lit-ui-router": 2,
-        "lit-ui-router": 16,
+        "lit-ui-router": 17,
         "lit-ui-router-effect": 3,
         "lit-ui-router-mobx": 2,
         "lit-ui-router-signals": 3,
@@ -103,10 +104,11 @@
       {"name":"design-system-links","dir":"examples/design-system-links","kind":"example","pinned":["lit-ui-router"],"parts":["lit-ui-router"],"runtimes":["@uirouter/core","lit"],"runtimesByPeer":["@uirouter/core","lit"]},
       {"name":"lint-eslint","dir":"examples/lint-eslint","kind":"example","pinned":["eslint-plugin-lit-ui-router","lit-ui-router"],"parts":["eslint-plugin-lit-ui-router","lit-ui-router"],"runtimes":["@uirouter/core","eslint","lit"],"runtimesByPeer":["@uirouter/core","eslint","lit"]},
       {"name":"navigation-api","dir":"examples/navigation-api","kind":"example","pinned":["lit-ui-router","ui-router-navigation-location-plugin"],"parts":["lit-ui-router","ui-router-navigation-location-plugin"],"runtimes":["@uirouter/core","lit"],"runtimesByPeer":["@uirouter/core","lit"]},
+      {"name":"loading-and-error-views","dir":"examples/loading-and-error-views","kind":"example","pinned":["lit-ui-router"],"parts":["lit-ui-router"],"runtimes":["@uirouter/core","lit"],"runtimesByPeer":["@uirouter/core","lit"]},
       {"name":"altitude-atlas-app","dir":"www/atlas.lit-ui-router.dev/app","kind":"atlas-app","pinned":["eslint-plugin-lit-ui-router","lit-ui-router","lit-ui-router-effect","lit-ui-router-ssr","ui-router-effect","ui-router-navigation-location-plugin","ui-router-server"],"parts":["eslint-plugin-lit-ui-router","lit-ui-router","lit-ui-router-effect","lit-ui-router-ssr","ui-router-effect","ui-router-navigation-location-plugin","ui-router-server"],"runtimes":["@lit-labs/ssr","@lit-labs/ssr-client","@uirouter/core","effect","eslint","lit"],"runtimesByPeer":["@lit-labs/ssr","@lit-labs/ssr-client","@uirouter/core","effect","eslint","hono","lit"]}
     ],
     "builds": [
-      {"parts":["lit-ui-router"],"pinned":[["lit-ui-router"]],"runtimes":["@uirouter/core","lit"],"runtimesByPeer":["@uirouter/core","lit"],"consumers":["sample-app-lit-vanilla","helloworld","hellosolarsystem","hellogalaxy","design-system-links"]},
+      {"parts":["lit-ui-router"],"pinned":[["lit-ui-router"]],"runtimes":["@uirouter/core","lit"],"runtimesByPeer":["@uirouter/core","lit"],"consumers":["sample-app-lit-vanilla","helloworld","hellosolarsystem","hellogalaxy","design-system-links","loading-and-error-views"]},
       {"parts":["lit-ui-router","lit-ui-router-signals","ui-router-signals"],"pinned":[["lit-ui-router","lit-ui-router-signals"],["lit-ui-router","lit-ui-router-signals","ui-router-signals"]],"runtimes":["@uirouter/core","lit","signal-polyfill"],"runtimesByPeer":["@uirouter/core","lit","signal-polyfill"],"consumers":["sample-app-lit-signals","hellosolarsystem-signals","hellogalaxy-signals"]},
       {"parts":["ui-router-server"],"pinned":[["ui-router-server"]],"runtimes":[],"runtimesByPeer":["@uirouter/core","hono"],"consumers":["sample-app-routes","@www/lit-ui-router.dev"]},
       {"parts":["lit-ui-router","ui-router-navigation-location-plugin"],"pinned":[["lit-ui-router","ui-router-navigation-location-plugin"]],"runtimes":["@uirouter/core","lit"],"runtimesByPeer":["@uirouter/core","lit"],"consumers":["sample-app-shared","navigation-api"]},

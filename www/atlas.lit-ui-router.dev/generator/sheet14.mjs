@@ -213,7 +213,7 @@ const place = (R) => {
 let ROWS = 1;
 while (!place(ROWS)) {
   ROWS += 1;
-  if (ROWS > 4) throw new Error(`sheet 14: the north bank cannot hold ${YARDS.length} yards in four rows`);
+  if (ROWS > 5) throw new Error(`sheet 14: the north bank cannot hold ${YARDS.length} yards in five rows`);
 }
 {
   // spread the packed bank to the river's full width

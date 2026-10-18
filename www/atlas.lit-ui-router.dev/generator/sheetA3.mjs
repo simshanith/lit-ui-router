@@ -70,7 +70,7 @@ const CLAIM_TESTS = PK.sl + PK.pl > AT.sl
   : `it outweighs the product even with the product's tests counted — ${fmt(PK.sl + PK.pl)} sloc, annex and all`;
 const CLAIM_ANNEX = AT.pf === 0
   ? 'and it carries no annex: not one spec file'
-  : `and its annex holds ${AT.pf} spec files, ${fmt(AT.pl)} sloc`;
+  : `and its annex holds ${AT.pf} spec file${AT.pf === 1 ? '' : 's'}, ${fmt(AT.pl)} sloc`;
 // the cover index's fit verdict, told from the two plates
 export const SHEETA3_VERDICT = `meta — the atlas measured on sheet 7's ruler: ${fmt(AT.sl)} sloc of generator and app against ${fmt(PK.sl)} in the packages district, ${CLAIM_PKG.startsWith('under') ? 'under' : `${RATIO}×`} the product it draws, ${AT.pf === 0 ? 'with no annex' : `with a ${AT.pf}-file annex`}`;
 
@@ -136,13 +136,15 @@ const CODEBASE = GROUPS.filter((g) => !g.atlas);
 const ATLAS = GROUPS.find((g) => g.atlas);
 const GY1 = HEAD + 22 + Math.max(...CODEBASE.map((g) => g.rise));
 let sx = 40;
-for (const g of CODEBASE) place(g, 0, GY1);
+// the main row, west to east: the shopfront ahead of the apps, so the closed-up frames interlock clear of each other's masses
+const ROW = ['pkg', 'site', 'app', 'tool'].map((k) => CODEBASE.find((g) => g.key === k));
+for (const g of ROW) place(g, 0, GY1);
 // screen px between districts: 40, closed up as far as the main row needs to fit in 1520
-const GAP = Math.min(40, (1520 - 40 - CODEBASE.reduce((a, g) => a + g.right, 0)) / (CODEBASE.length - 1));
-for (const g of CODEBASE) { place(g, sx, GY1); sx = g.right + GAP; }
+const GAP = Math.min(40, (1520 - 40 - ROW.reduce((a, g) => a + g.right, 0)) / (ROW.length - 1));
+for (const g of ROW) { place(g, sx, GY1); sx = g.right + GAP; }
 const GY2 = GY1 + LABEL_H + 40 + ATLAS.rise;
 place(ATLAS, 40, GY2);
-if (CODEBASE.at(-1).right > 1520) throw new Error(`appendix A3: the main row runs to ${CODEBASE.at(-1).right.toFixed(0)}, past the sheet's 1520`);
+if (ROW.at(-1).right > 1520) throw new Error(`appendix A3: the main row runs to ${ROW.at(-1).right.toFixed(0)}, past the sheet's 1520`);
 
 for (const g of GROUPS) for (const b of g.masses) [b.block, b.annex] = rects(b, g.ox, g.oy);
 const ALL = GROUPS.flatMap((g) => g.masses);
@@ -187,7 +189,7 @@ const frame = (g) => {
 
 // ---- lettering -----------------------------------------------------------------------
 const sloc = (m) => `${m.f} files · ${fmt(m.sl)} sloc`;
-const annexLine = (m) => (m.pf ? `annex ${m.pf} files · ${fmt(m.pl)} sloc` : 'no annex');
+const annexLine = (m) => (m.pf ? `annex ${m.pf} file${m.pf === 1 ? '' : 's'} · ${fmt(m.pl)} sloc` : 'no annex');
 const codebaseLabels = CODEBASE.map((g) => {
   const m = g.masses[0];
   const x = ((g.left + g.right) / 2).toFixed(0);

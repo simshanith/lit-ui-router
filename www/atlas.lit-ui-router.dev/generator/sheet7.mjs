@@ -96,21 +96,21 @@ export const PLACED = [
   // south-west off 20, 430, where the 150 px tower stands in front of dts-backtest,
   // eslint-ts-parser and lit-test-env on the 350 row; at y 452 it still hides none of them
   [12, '@tools/release',           'tools/release',                      'tool', 'halt',     0, 452, 'hosts published-diff — the one publish halt'],
-  [13, '@tools/typedoc-plugin',    'tools/typedoc-plugin-lit-ui-router', 'tool', 'report', 230, 430, 'builds the API pages, gates nothing'],
+  [13, '@tools/typedoc-plugin',    'tools/typedoc-plugin-lit-ui-router', 'tool', 'report', 190, 430, 'builds the API pages, gates nothing'],
   [14, '@tools/dts-backtest',      'tools/dts-backtest',                 'tool', 'pr',       8, 350, `one ${row('tools/dts-backtest').srcSloc}-line run.ts holds the TS 5.0 floor`],
-  // west off 300 when its annex grew into repo-checks and embed-heights at the 9e656ab3 refresh
-  [15, '@tools/build_and_test',   'tools/build_and_test',               'tool', 'report', 270, 430, 'the CI graph helper — and its error summary'],
+  // west off 300, then 270, as its annex grew into repo-checks and embed-heights (to 419.3 at the eb1162da refresh)
+  [15, '@tools/build_and_test',   'tools/build_and_test',               'tool', 'report', 230, 430, 'the CI graph helper — and its error summary'],
   // south of workers-builds, so road G runs west and then north between 40 and compat-guards
   [16, '@tools/shared',            'tools/shared',                       'tool', 'report', 200, 600, 'the library under the instruments'],
   [17, '@tools/workers-builds',    'tools/workers-builds',               'tool', 'late',   220, 550, 'the docs deploy watch'],
   [18, '@tools/bundle-probe',      'tools/bundle-probe',                 'tool', 'report', 330, 550, 'size probe, advisory'],
   [19, '@tools/compat-guards',     'tools/compat-guards',                'tool', 'pr',     130, 550, 'the lit 2 / mobx 6 / peer-floor lanes'],
   [20, '@tools/oxc-emit',          'tools/oxc-emit',                     'tool', 'line',   230, 350, 'both build passes, one emitter'],
-  // east off 280, then 288, as oxc-emit's annex grew (to 293.7 at the c1b759a4 refresh)
-  [21, '@tools/release-config',    'tools/release-config',               'tool', 'line',   298, 350, 'the shared release-it config'],
-  [22, '@tools/lit-template-lint', 'tools/lit-template-lint',            'tool', 'report', 325, 350, 'the lit-analyzer wrapper'],
+  // east off 280, 288, then 298, as oxc-emit's annex grew (to 302.3 at the eb1162da refresh)
+  [21, '@tools/release-config',    'tools/release-config',               'tool', 'line',   310, 350, 'the shared release-it config'],
+  [22, '@tools/lit-template-lint', 'tools/lit-template-lint',            'tool', 'report', 368, 350, 'the lit-analyzer wrapper'],
   [23, '@tools/lit-test-env',      'tools/lit-test-env',                 'tool', 'pr',      85, 350, 'the browser harness every suite loads'],
-  [24, '@tools/vue-check',         'tools/vue-check',                    'tool', 'report', 370, 350, 'vue-tsc over the docs components'],
+  [24, '@tools/vue-check',         'tools/vue-check',                    'tool', 'report', 470, 350, 'vue-tsc over the docs components'],
   // off the 350 row's east end, where repo-checks' roof and badge stand over it
   [25, '@tools/lcov-rebase',       'tools/lcov-rebase',                  'tool', 'report', 180, 395, 'coverage path rewriting'],
   // east off 125 when lit-test-env took a spec annex at the 9e656ab3 refresh
@@ -157,6 +157,11 @@ export const PLACED = [
   [46, '@tools/a11y',              'tools/a11y',                         'tool', 'report', 540, 472, 'axe over the docs pages and app mounts — acceptance, gates nothing'],
   // north-east beside the snapshot, between road A at y 45 and road F at y 115
   [47, 'ui-router-mobx',           'packages/ui-router-mobx',            'pkg',  'line',   490,  70, `the framework-agnostic MobX store · annex ${ratio('packages/ui-router-mobx')}×`],
+  // --- born 2026-10-15/16 (#1388, #1409) --------------------------------------------
+  // the yard's south row, east of @tools/shared's annex and south of bundle-probe
+  [48, '@tools/ci-logs',           'tools/ci-logs',                      'tool', 'report', 295, 600, 'a CI run\'s task logs fetched into one file — run by hand, gates nothing'],
+  // north of the route snapshot, between road A at y 45 and the snapshot
+  [49, '@repo/dev-gate',           'packages/shared/dev-gate',           'pkg',  'line',   440,  62, `private · both halves of each package's #dev-gate import, inlined by oxc-emit · annex ${ratio('packages/shared/dev-gate')}×`],
 ];
 
 // [n, name, district, tier, x, y, srcFiles, srcSloc, specFiles, specSloc, note]
@@ -174,6 +179,7 @@ const FILES = JSON.parse(readFileSync(new URL('../data/census-files.json', impor
 const MEMBER = new Map(FILES.members.map((m) => [m.dir, m]));
 const PUB = PLACED.filter((p) => p[3] === 'pkg' && MEMBER.get(p[2]) && !MEMBER.get(p[2]).private);
 const PUBLISHED_PKGS = PUB.length;
+const PRIV_PKGS = PLACED.filter((p) => p[3] === 'pkg' && MEMBER.get(p[2])?.private).length;
 // road B: oxc-emit builds every published package and nothing else in the district
 const OXC_BUILT = new Set(CIG.graphNodes.filter((n) => n.real && n.task === 'build:js').map((n) => n.pkg));
 const PUB_NAMES = PUB.map((p) => MEMBER.get(p[2]).name);
@@ -373,7 +379,7 @@ ${M.slice(0, half).map((r, i) => schedTxt(58, SY + 52 + i * 17, schedRow(r), 'lb
 ${M.slice(half).map((r, i) => schedTxt(800, SY + 52 + i * 17, schedRow(r), 'lbls')).join('\n')}
 ${txt(58, SY + 58 + half * 17, `TOTAL — ${M.length} members, ${MASSED} massed · ${TOT_SF} authored files · ${fmt(TOT_SL)} sloc · plus ${TOT_PF} spec files · ${fmt(TOT_PL)} sloc of annex · ${BASIS} (sloc = scc Code)`, 'lbls')}`;
 
-const svg = `<svg viewBox="0 0 1560 ${SY + 104 + half * 17}" role="img" aria-label="An isometric census city of the whole lit-ui-router workspace, drawn in four dashed districts. Every workspace member is a block massed by its own measured source — footprint side proportional to the square root of its authored lines, height three pixels per authored file — and every member that has tests carries a hatched annex beside it, massed the same way from its spec files. Upper left is the packages district, the product: lit-ui-router and ui-router-server each stand beside an annex with a larger footprint than the building it guards, the eslint plugin stands below them at the district's near corner, the effect bindings and the prerender bridge stand on the row south of the flagship, and the signals bindings and two framework-agnostic cores take the district's south row, and the third core stands with the private route snapshot in its north-east corner. To the right is the apps district, where sample-app-shared stands at ${g(5).sf} files and ${fmt(g(5).sl)} lines. Below it sits the shopfront of docs and examples — examples the broadest source block on the sheet at ${fmt(g(11).sl)} lines — and lower left the instrument yard of ${DT.n} tools, dominated by the tall red release block — ${g(12).sf} files and ${fmt(g(12).sl)} lines, the only structure that can halt a publish. Gate severity is carried in colour, never in height: solid red halts a publish, red hatch stops the pull request line, accent hatch gates a later stage, faint blocks never gate at all. Roads run between the districts and carry real edges from the repository: solid roads where one member builds into another, dashed soft roads where tests exercise the code they cover, and an accent road that leaves both the source block and its spec annex together, because typecheck reads both. A structure schedule below lists all ${M.length} members with exact file and line counts, their annex, and their gate tier.">
+const svg = `<svg viewBox="0 0 1560 ${SY + 104 + half * 17}" role="img" aria-label="An isometric census city of the whole lit-ui-router workspace, drawn in four dashed districts. Every workspace member is a block massed by its own measured source — footprint side proportional to the square root of its authored lines, height three pixels per authored file — and every member that has tests carries a hatched annex beside it, massed the same way from its spec files. Upper left is the packages district, the product: lit-ui-router and ui-router-server each stand beside an annex with a larger footprint than the building it guards, the eslint plugin stands below them at the district's near corner, the effect bindings and the prerender bridge stand on the row south of the flagship, and the signals bindings and two framework-agnostic cores take the district's south row, and the third core stands with the ${wordn(PRIV_PKGS)} private shared packages in its north-east corner. To the right is the apps district, where sample-app-shared stands at ${g(5).sf} files and ${fmt(g(5).sl)} lines. Below it sits the shopfront of docs and examples — examples the broadest source block on the sheet at ${fmt(g(11).sl)} lines — and lower left the instrument yard of ${DT.n} tools, dominated by the tall red release block — ${g(12).sf} files and ${fmt(g(12).sl)} lines, the only structure that can halt a publish. Gate severity is carried in colour, never in height: solid red halts a publish, red hatch stops the pull request line, accent hatch gates a later stage, faint blocks never gate at all. Roads run between the districts and carry real edges from the repository: solid roads where one member builds into another, dashed soft roads where tests exercise the code they cover, and an accent road that leaves both the source block and its spec annex together, because typecheck reads both. A structure schedule below lists all ${M.length} members with exact file and line counts, their annex, and their gate tier.">
 ${defs(P)}
 
 <rect x="40" y="26" width="520" height="42" class="skf fnone"/>
@@ -405,7 +411,7 @@ ${roads.join('\n')}
 ${bodies}
 
 <!-- road tags: each keys a row of the ROAD REGISTER below -->
-${[['A', 900, 300], ['B', 566, 366], ['C', 470, 195], ['D', 522, 262], ['E', 902, 540], ['F', 879, 498], ['G', 196, 470]]
+${[['A', 890, 262], ['B', 566, 366], ['C', 470, 195], ['D', 522, 262], ['E', 902, 540], ['F', 879, 498], ['G', 196, 470]]
   .map(([k, x, y]) => txt(x, y, k, 'lbl')).join('\n')}
 
 <!-- district lettering, off the geometry, leaders where the gap is wide -->
@@ -468,7 +474,7 @@ ${schedule}
 </svg>`;
 
 export const sheet7 = {
-  num: 7, id: 'census', rev: 'G',
+  num: 7, id: 'census', rev: 'H',
   title: 'THE MEASURED CITY',
   sub: `ALTITUDE 3½ — the same city as sheet 3, surveyed by mass · ${M.length} members in 4 districts, footprint ∝ √sloc, height ∝ authored files, spec mass drawn as an annex, gate severity in colour · ${BASIS}`,
   scale: 'WHOLE WORKSPACE',

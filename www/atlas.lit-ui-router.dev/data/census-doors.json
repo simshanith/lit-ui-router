@@ -1,14 +1,14 @@
 {
   "ref": "origin/main",
-  "sha": "83225a58",
-  "commitDate": "2026-10-15T15:56:09-07:00",
-  "generatedAtTime": "2026-10-16T00:17:18.900Z",
+  "sha": "eb1162da",
+  "commitDate": "2026-10-18T10:40:08-07:00",
+  "generatedAtTime": "2026-10-18T18:10:52.095Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-doors.mjs",
-  "used": "git archive origin/main @ 83225a58 + pnpm install --frozen-lockfile --silent (mise-provisioned pnpm) + turbo run build:js --filter <each public member> + tools/bundle-probe (rolldown, minify, declared deps+peers external, annotations off)",
+  "used": "git archive origin/main @ eb1162da + pnpm install --frozen-lockfile --silent (mise-provisioned pnpm) + turbo run build:js --filter <each public member> + tools/bundle-probe (rolldown, minify, declared deps+peers external, annotations off)",
   "wasAssociatedWith": [
     "pnpm (mise-provisioned)",
     "turbo",
-    "rolldown@1.2.13",
+    "rolldown@1.2.14",
     "node:zlib gzip"
   ],
   "rows": [
@@ -28,15 +28,16 @@
     {"pkg":"ui-router-effect","door":".","min":770,"gz":464},
     {"pkg":"ui-router-mobx","door":".","min":970,"gz":459},
     {"pkg":"ui-router-navigation-location-plugin","door":".","min":2569,"gz":1152},
-    {"pkg":"ui-router-server","door":".","min":13968,"gz":5715},
-    {"pkg":"ui-router-server","door":"./connect","min":3138,"gz":1640},
-    {"pkg":"ui-router-server","door":"./fetch","min":3298,"gz":1691},
-    {"pkg":"ui-router-server","door":"./hono","min":3368,"gz":1717},
-    {"pkg":"ui-router-server","door":"./location","min":614,"gz":329},
+    {"pkg":"ui-router-server","door":".","min":17627,"gz":7188},
+    {"pkg":"ui-router-server","door":"./connect","min":3517,"gz":1862},
+    {"pkg":"ui-router-server","door":"./fetch","min":3677,"gz":1913},
+    {"pkg":"ui-router-server","door":"./hono","min":3747,"gz":1939},
+    {"pkg":"ui-router-server","door":"./location","min":1167,"gz":626},
     {"pkg":"ui-router-server","door":"./matcher","min":6758,"gz":2918},
-    {"pkg":"ui-router-server","door":"./redirects","min":9085,"gz":3740},
-    {"pkg":"ui-router-server","door":"./simulate","min":841,"gz":446},
-    {"pkg":"ui-router-server","door":"./vite","min":3265,"gz":1697},
+    {"pkg":"ui-router-server","door":"./redirects","min":9108,"gz":3756},
+    {"pkg":"ui-router-server","door":"./simulate","min":1220,"gz":668},
+    {"pkg":"ui-router-server","door":"./url-config","min":562,"gz":363},
+    {"pkg":"ui-router-server","door":"./vite","min":3644,"gz":1919},
     {"pkg":"ui-router-signals","door":".","min":1787,"gz":804}
   ]
 }

@@ -297,6 +297,8 @@ const NOTE = {
   45: SH.get(45).cat === 'n' ? 'the signals demo — no test script' : guardFail(45, 'no test script'),
   46: `${SH.get(46).shadow.map((f) => f.replace(/^src\//, '')).join(' + ')} in shadow · the rest lit`,
   47: barrelOnly(47, 'the store'),
+  48: SH.get(48).shadow?.join() === 'src/ci-logs.ts' ? 'the CLI wrapper in shadow, the cores lit' : guardFail(48, 'only the CLI wrapper is in shadow'),
+  49: SH.get(49).shadow?.length === 0 && SH.get(49).litFiles === 2 ? 'private · both halves of the gate lit' : guardFail(49, 'both halves are lit'),
 };
 const ART_H = 902;
 const SY = ART_H + 16;
@@ -456,7 +458,7 @@ ${schedule}
 </svg>`;
 
 export const sheet7a = {
-  num: '7A', id: 'shadow', rev: 'F',
+  num: '7A', id: 'shadow', rev: 'G',
   title: 'THE SHADOW SURVEY',
   sub: `ALTITUDE 3½ — ALTERNATE PLATE TO SHEET 7: the measured city under its own test light · same city as sheet 7, ${M.length} members · reach = the source each suite loads, brightness = line coverage of what it loads · ${BASIS}`,
   scale: 'WHOLE WORKSPACE',

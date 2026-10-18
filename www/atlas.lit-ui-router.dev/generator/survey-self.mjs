@@ -14,7 +14,7 @@ const MEMBERS = [
   ['survey', 'the survey office', 'generator/census*.mjs · basis.mjs · survey-*.mjs', (p) => /^generator\/(census[\w-]*|basis|survey-[\w-]+)\.mjs$/.test(p)],
   ['drawing', 'the drawing office', 'generator/ — every other module', (p) => p.startsWith('generator/')],
   ['site', 'the routed site', 'app/src/ — not app/src/generated/', (p) => p.startsWith('app/src/')],
-  ['build', 'the site build', 'app/* — prerender, vite, artifact, lint config', (p) => /^app\/[^/]+$/.test(p)],
+  ['build', 'the site build', 'app/* · app/test/ — prerender, vite, artifact, lint config, the route bench', (p) => /^app\/([^/]+|test\/.+)$/.test(p)],
 ];
 // checked before MEMBERS: what the atlas draws, generates or writes as prose
 const EXCLUDED = [

@@ -36,14 +36,14 @@ const INSTRUMENTS = [
   ['published-diff', [/^tools\/release\/src\/checks\/(check-published-diff|published-versions|resolve-published)/]],
   ['check:exports', [/^tools\/release\/src\/checks\/check-exports/]],
   ['peer-floor tier-1', [/^tools\/release\/src\/checks\/peer-floor-check-runs/]],
-  ['peer-floor tier-2', [/^tools\/release\/src\/steps\/release-peer-floor-gate/, /^tools\/compat-guards\/src\/peer-floor-guard/]],
+  ['peer-floor tier-2', [/^tools\/release\/src\/steps\/release-peer-floor-gate/, /^tools\/compat-guards\/src\/floor-(guard|legs)\./]],
   ['docs deploy watch', [/^tools\/release\/src\/checks\/workers-builds-check-runs/, /^tools\/workers-builds\//]],
   ['publish — release-it', [/^tools\/release\//, /^tools\/release-config\//]],
   ['compat-guards', [/^tools\/compat-guards\//]],
   ['dts-backtest', [/^tools\/dts-backtest\//]],
   ['tests — vitest harness', [/^tools\/lit-test-env\//, /^tools\/happy-dom\//, /^tools\/wintercg-globals\//]],
   ['anti-slop — vendored oxlint rules', [/^tools\/oxlint-anti-slop\//]],
-  ['lint & probe fleet', [/^tools\/lit-template-lint\//, /^tools\/lint-elements\//, /^tools\/eslint\//, /^tools\/eslint-ts-parser\//, /^tools\/embed-heights\//, /^tools\/bundle-probe\//, /^tools\/vue-check\//, /^tools\/lcov-rebase\//, /^tools\/crap\//, /^tools\/build_and_test\//, /^tools\/a11y\//]],
+  ['lint & probe fleet', [/^tools\/lit-template-lint\//, /^tools\/lint-elements\//, /^tools\/eslint\//, /^tools\/eslint-ts-parser\//, /^tools\/embed-heights\//, /^tools\/bundle-probe\//, /^tools\/vue-check\//, /^tools\/lcov-rebase\//, /^tools\/crap\//, /^tools\/build_and_test\//, /^tools\/a11y\//, /^tools\/ci-logs\//]],
   ['repo checks — graph edges, task inputs, knip, patches', [/^tools\/repo-checks\//]],
   ['bootstrap — pre-install manifest reads', [/^tools\/bootstrap\//]],
   ['@tools/shared', [/^tools\/shared\//]],
@@ -51,6 +51,11 @@ const INSTRUMENTS = [
   ['e2e — cypress', [/^apps\/sample-app-lit-e2e\//]],
   ['sample apps', [/^apps\//]],
 ];
+
+// a rule that names no tracked path has rotted (a rename drops its files into a broader slab)
+for (const [n, rules] of INSTRUMENTS) for (const r of rules) {
+  if (!snap.rows.some((f) => r.test(f.path))) throw new Error(`census-yard: ${n} rule ${r} matches no tracked path — relocate it`);
+}
 
 const acc = new Map(INSTRUMENTS.map(([n]) => [n, { files: 0, sloc: 0 }]));
 const orphans = [];

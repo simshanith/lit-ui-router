@@ -1,34 +1,34 @@
 {
   "ref": "origin/main",
-  "sha": "83225a58",
-  "commitDate": "2026-10-15T15:56:09-07:00",
-  "generatedAtTime": "2026-10-15T22:57:16.144Z",
+  "sha": "eb1162da",
+  "commitDate": "2026-10-18T10:40:08-07:00",
+  "generatedAtTime": "2026-10-18T18:09:17.359Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-yard.mjs",
-  "used": "www/atlas.lit-ui-router.dev/data/census-files.json @ 83225a58",
+  "used": "www/atlas.lit-ui-router.dev/data/census-files.json @ eb1162da",
   "wasAssociatedWith": [],
   "orphans": [
 
   ],
   "rows": [
-    {"instrument":"src — packages/*/src","files":78,"sloc":7847},
-    {"instrument":"build — @tools/oxc-emit","files":6,"sloc":395},
+    {"instrument":"src — packages/*/src","files":87,"sloc":8156},
+    {"instrument":"build — @tools/oxc-emit","files":6,"sloc":487},
     {"instrument":"pack — packPublishTarball","files":12,"sloc":441},
     {"instrument":"published-diff","files":5,"sloc":471},
     {"instrument":"check:exports","files":2,"sloc":141},
     {"instrument":"peer-floor tier-1","files":2,"sloc":140},
-    {"instrument":"peer-floor tier-2","files":2,"sloc":46},
+    {"instrument":"peer-floor tier-2","files":4,"sloc":258},
     {"instrument":"docs deploy watch","files":9,"sloc":790},
-    {"instrument":"publish — release-it","files":30,"sloc":1420},
-    {"instrument":"compat-guards","files":10,"sloc":379},
+    {"instrument":"publish — release-it","files":31,"sloc":1494},
+    {"instrument":"compat-guards","files":9,"sloc":312},
     {"instrument":"dts-backtest","files":1,"sloc":301},
     {"instrument":"tests — vitest harness","files":6,"sloc":380},
     {"instrument":"anti-slop — vendored oxlint rules","files":35,"sloc":3665},
-    {"instrument":"lint & probe fleet","files":41,"sloc":4124},
-    {"instrument":"repo checks — graph edges, task inputs, knip, patches","files":15,"sloc":1528},
+    {"instrument":"lint & probe fleet","files":50,"sloc":5423},
+    {"instrument":"repo checks — graph edges, task inputs, knip, patches","files":15,"sloc":1539},
     {"instrument":"bootstrap — pre-install manifest reads","files":3,"sloc":58},
-    {"instrument":"@tools/shared","files":8,"sloc":495},
+    {"instrument":"@tools/shared","files":10,"sloc":513},
     {"instrument":"typedoc plugin","files":2,"sloc":344},
-    {"instrument":"e2e — cypress","files":11,"sloc":817},
-    {"instrument":"sample apps","files":76,"sloc":4323}
+    {"instrument":"e2e — cypress","files":11,"sloc":826},
+    {"instrument":"sample apps","files":76,"sloc":4351}
   ]
 }
