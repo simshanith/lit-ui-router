@@ -19,6 +19,7 @@ catalog:
   '@commitlint/config-conventional': ^21.2.3
   '@commitlint/types': ^21.2.3
   '@custom-elements-manifest/analyzer': ^0.11.0
+  '@effect/sql-d1': ^4.0.5
   '@lit-labs/signals': ^0.3.0
   '@lit-labs/ssr': ^4.1.0
   '@lit-labs/ssr-client': ^1.1.8
@@ -65,6 +66,7 @@ catalog:
   happy-dom: ^21.0.1
   hono: ^4.13.13
   husky: ^9.1.7
+  jose: ^6.2.12
   jsonc-parser: ^3.3.1
   knip: ^6.41.0
   lit: ^3.3.3

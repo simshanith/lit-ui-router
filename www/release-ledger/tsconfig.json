@@ -10,5 +10,7 @@
     "types": ["node"],
     "lib": ["ES2022"]
   },
-  "include": ["**/*.ts"]
+  "include": ["**/*.ts"],
+  // worker/ is the workerd graph, with its own tsconfig.
+  "exclude": ["worker", "node_modules"]
 }

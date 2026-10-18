@@ -206,6 +206,8 @@ const workspaces = {
       'sample-app-lit-signals',
     ],
   },
+  // cloudflare:workers is a workerd built-in, not a package
+  'www/release-ledger': { ignoreDependencies: ['cloudflare'] },
 } satisfies Record<string, WorkspaceProjectConfig>;
 
 export default async function config(): Promise<KnipConfiguration> {

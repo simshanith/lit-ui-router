@@ -162,6 +162,7 @@ describe('migrations', () => {
       .map((row) => `${String(row.type)} ${String(row.name)}`);
 
     assert.deepEqual(objects, [
+      'table dead_letters',
       'table dist_tags',
       'table ledger_events',
       'table pipeline_events',

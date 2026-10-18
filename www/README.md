@@ -7,7 +7,7 @@ own wrangler config; the pipeline that ships them is shared.
 | Directory                                   | Site                                                                                                              |
 | ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | [`lit-ui-router.dev/`](./lit-ui-router.dev) | [lit-ui-router.dev](https://lit-ui-router.dev) — the VitePress docs site and the Cloudflare Worker that serves it |
-| [`release-ledger/`](./release-ledger)       | No site: the release ledger's D1 migrations and the fold that records release observations in it                  |
+| [`release-ledger/`](./release-ledger)       | No site: the release-ledger worker, which takes OIDC claims from GitHub Actions and folds them into D1            |
 
 ## Adding a site
 
