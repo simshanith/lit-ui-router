@@ -5,8 +5,7 @@ import { Hono } from 'hono';
 import type { ExecutionContext } from 'hono';
 
 import type { ServerRouter, Verdict } from '../src/index.ts';
-import { delegateContext } from '../src/fetch.ts';
-import { serverRouterHono } from '../src/hono.ts';
+import { delegateContext, serverRouterHono } from '../src/hono.ts';
 
 const routerOf = (verdict: Verdict): ServerRouter => ({
   resolve: () => Promise.resolve(verdict),
@@ -112,6 +111,7 @@ describe('serverRouterHono', () => {
         routerOf({
           kind: 'delegate',
           mount: '/app',
+          subpath: '/claims/7',
           delegate: 'ledger',
           state: 'claims',
           params: { id: '7' },

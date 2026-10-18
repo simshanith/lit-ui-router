@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict';
-import { describe, it } from 'node:test';
+import { describe, it, mock } from 'node:test';
 
+import { TransitionService } from '@uirouter/core';
+
+import { registeredDelegates } from '../src/delegate-registry.ts';
 import { createServerRouter } from '../src/index.ts';
 import type { ServerRouter, Verdict } from '../src/index.ts';
 import { createFetchHandler, delegateContext } from '../src/fetch.ts';
@@ -316,6 +319,7 @@ describe('createFetchHandler', () => {
 const claimsVerdict: Verdict = {
   kind: 'delegate',
   mount: '/app',
+  subpath: '/claims/7',
   delegate: 'ledger',
   state: 'claims',
   params: { id: '7' },
@@ -365,6 +369,7 @@ describe('createFetchHandler delegates', () => {
     assert.equal(await requestText(calls[0].request), 'claim');
     assert.deepEqual(calls[0].context, {
       mount: '/app',
+      subpath: '/claims/7',
       delegate: 'ledger',
       state: 'claims',
       params: { id: '7' },
@@ -511,6 +516,94 @@ describe('createFetchHandler delegates', () => {
   });
 });
 
+describe('createFetchHandler delegate work', () => {
+  const routes = [
+    { name: 'about', url: '/about' },
+    { name: 'claims', url: '/claims/:id', delegate: 'ledger' },
+  ];
+
+  const asset = (path: string): Request =>
+    new Request(`${ORIGIN}${path}`, { headers: { accept: '*/*' } });
+
+  const transitionsDuring = async (work: () => Promise<void>) => {
+    const create = mock.method(TransitionService.prototype, 'create');
+
+    try {
+      await work();
+
+      return create.mock.callCount();
+    } finally {
+      create.mock.restore();
+    }
+  };
+
+  it('matches non-navigations on a simulate mount without starting a transition', async () => {
+    const router = createServerRouter({
+      mounts: { '/app': { routes, strategy: 'simulate' } },
+    });
+
+    const handler = createFetchHandler(router, {
+      serveShell: () => new Response('shell'),
+      delegates: { ledger: () => new Response(null, { status: 202 }) },
+    });
+
+    const nonNavigations = await transitionsDuring(async () => {
+      assert.equal(await handler(asset('/app/about')), null);
+      assert.equal(await handler(asset('/app/missing.js')), null);
+      assert.equal((await handler(post('/app/claims/9', '')))?.status, 202);
+    });
+
+    assert.equal(nonNavigations, 0);
+
+    const navigations = await transitionsDuring(async () => {
+      await handler(navigation('/app/about'));
+    });
+
+    assert.equal(navigations, 1);
+  });
+
+  it('never resolves or matches a non-navigation when the router names no keys', async () => {
+    const router = createServerRouter({
+      mounts: { '/app': { routes: [{ name: 'about', url: '/about' }] } },
+    });
+
+    const registration = registeredDelegates(router);
+    assert.ok(registration);
+    const resolve = mock.method(router, 'resolve');
+    const delegateFor = mock.method(registration, 'delegateFor');
+
+    const handler = createFetchHandler(router, {
+      serveShell: noShell,
+      delegates: { ledger: noShell },
+    });
+
+    assert.equal(await handler(asset('/app/about')), null);
+    assert.equal(await handler(post('/app/about', '')), null);
+    assert.equal(resolve.mock.callCount(), 0);
+    assert.equal(delegateFor.mock.callCount(), 0);
+  });
+
+  it('hands the delegate the in-mount subpath with the original request', async () => {
+    const router = createServerRouter({ mounts: { '/app': { routes } } });
+    const seen: Array<[Request, string]> = [];
+
+    const handler = createFetchHandler(router, {
+      serveShell: noShell,
+      delegates: {
+        ledger: (request) => {
+          seen.push([request, delegateContext(request, 'ledger').subpath]);
+
+          return new Response(null, { status: 202 });
+        },
+      },
+    });
+
+    const request = post('/app/claims/9?draft=1', '');
+    await handler(request);
+    assert.deepEqual(seen, [[request, '/claims/9']]);
+  });
+});
+
 describe('delegateContext', () => {
   const delegated = async (key: string): Promise<Request> => {
     const request = post('/app/claims', '');
@@ -538,6 +631,24 @@ describe('delegateContext', () => {
     assert.throws(
       () => delegateContext(request, 'badge'),
       /delegated to 'ledger', not 'badge'/,
+    );
+  });
+
+  it('checks the request came through the router it is given', async () => {
+    const routes = [{ name: 'claims', url: '/claims', delegate: 'ledger' }];
+    const router = createServerRouter({ mounts: { '/app': { routes } } });
+    const other = createServerRouter({ mounts: { '/app': { routes } } });
+    const request = post('/app/claims', '');
+
+    await createFetchHandler(router, {
+      serveShell: noShell,
+      delegates: { ledger: () => new Response(null, { status: 202 }) },
+    })(request);
+
+    assert.equal(delegateContext(request, 'ledger', router).state, 'claims');
+    assert.throws(
+      () => delegateContext(request, 'ledger', other),
+      /delegated by a handler built from another router/,
     );
   });
 

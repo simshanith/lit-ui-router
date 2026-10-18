@@ -38,7 +38,8 @@ export interface RouteDeclaration {
    * any Accept: the verdict is `delegate` instead of `shell`. The state tree
    * stays isomorphic because it carries only the key; the adapter's
    * `delegates` option maps the key to a handler. A delegating state needs a
-   * url and no `redirectTo`. Child states don't inherit it.
+   * url and no `redirectTo`, and no redirect may target it. Child states
+   * don't inherit it.
    */
   delegate?: string;
 }
@@ -72,7 +73,7 @@ export interface RedirectRule {
 /** The input to {@link compileRedirects}: the route set plus the rules evaluated over it. */
 export interface RedirectTable {
   /** The states whose urls the table redirects between (see {@link RouteDeclaration}). */
-  routes: RouteDeclaration[];
+  routes: readonly RouteDeclaration[];
   /** when()-style rules, evaluated in declaration order before per-state redirectTo entries. */
   rules?: RedirectRule[];
   /** Matcher compiler options (defaults: strict, case-sensitive). */
@@ -97,7 +98,7 @@ export interface CompiledRoute {
  * Url-less states contribute nothing and match nothing, as in ui-router.
  */
 export function compileRoutes(
-  routes: RouteDeclaration[],
+  routes: readonly RouteDeclaration[],
   config: UrlMatcherCompilerConfig = {},
 ): CompiledRoute[] {
   const { compile } = urlMatcherFactory(config);
