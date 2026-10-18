@@ -36,7 +36,8 @@
 
 import type { RawParams } from '@uirouter/core';
 
-import { delegateKeysOf, mergeSearch } from './index.ts';
+import { delegateKeysOf } from './delegate-keys.ts';
+import { mergeSearch } from './index.ts';
 import type { ServerRouter, Verdict } from './index.ts';
 
 /** The WinterCG handler: a verdict answered, or `null` to pass to the host. */

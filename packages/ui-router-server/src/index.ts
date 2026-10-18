@@ -13,6 +13,7 @@
 
 import type { RawParams, StateDeclaration, StateRule } from '@uirouter/core';
 
+import { registerDelegateKeys } from './delegate-keys.ts';
 import { warnMountDiagnostics } from './dev-warn.ts';
 import { compileResolver } from './redirects.ts';
 import { createRouterPool, POOL_MAX_IDLE } from './router-pool.ts';
@@ -774,6 +775,10 @@ export function createServerRouter(config: {
   };
 
   compiledMounts.set(router, declared);
+  registerDelegateKeys(
+    router,
+    new Set(declared.flatMap((mount) => [...mount.delegates.values()])),
+  );
 
   // Folded out of dist/*.js, so a bundle that never calls diagnoseMounts drops it.
   if (import.meta.env?.DEV) warnMountDiagnostics(router, diagnoseMounts);
@@ -817,20 +822,4 @@ export function diagnoseMounts(router: ServerRouter): MountDiagnostic[] {
     );
 
   return mounts.flatMap(diagnosticsOf);
-}
-
-/**
- * The delegate keys a router's states name, for an adapter's construction-time
- * check. Undefined for a router `createServerRouter` did not build.
- *
- * @internal
- */
-export function delegateKeysOf(
-  router: ServerRouter,
-): ReadonlySet<string> | undefined {
-  const mounts = compiledMounts.get(router);
-
-  if (mounts === undefined) return undefined;
-
-  return new Set(mounts.flatMap((mount) => [...mount.delegates.values()]));
 }

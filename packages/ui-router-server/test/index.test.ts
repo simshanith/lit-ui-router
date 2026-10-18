@@ -6,12 +6,12 @@ import { StateRegistry } from '@uirouter/core';
 
 import {
   createServerRouter,
-  delegateKeysOf,
   diagnoseMounts,
   mergeSearch,
   routeTrie,
 } from '../src/index.ts';
 import type { MountConfig } from '../src/index.ts';
+import { delegateKeysOf } from '../src/delegate-keys.ts';
 import { warnMountDiagnostics } from '../src/dev-warn.ts';
 import { stubDev } from './import-meta-env.ts';
 
