@@ -25,7 +25,10 @@
     },
     "lint:oxlint": {
       // Type-aware oxlint reads worker/tsconfig.json, which needs the d.ts.
-      "dependsOn": ["^build:types", "types:worker"]
+      "dependsOn": ["^build:types", "types:worker"],
+      // The root task's explicit globs would hash the gitignored d.ts, which
+      // wrangler.jsonc already keys.
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/.oxlintrc.json"]
     },
     "format:check:oxfmt": {
       // The root task's explicit glob would hash the gitignored
