@@ -2,8 +2,6 @@
 
 Typed state names and params for [UI-Router](https://ui-router.github.io): a types-only registry for `@uirouter/core`. It emits no JavaScript.
 
-Part of the lit-ui-router family, maintained in [simshanith/lit-ui-router](https://github.com/simshanith/lit-ui-router). Not affiliated with the UI-Router project.
-
 Not yet published; its first release is `0.1.0`.
 
 ## Features
