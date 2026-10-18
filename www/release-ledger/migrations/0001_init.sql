@@ -50,6 +50,8 @@ SELECT
   CASE
     WHEN coalesce(tag_conflict, npm_conflict, gh_conflict) IS NOT NULL THEN 'conflict'
     WHEN abandoned_at IS NOT NULL THEN 'abandoned'
+    -- the tag precedes publish, so npm or a release without one is never clean
+    WHEN git_sha IS NULL THEN 'untagged'
     WHEN npm_integrity IS NULL THEN 'tagged'
     WHEN gh_release_id IS NULL THEN 'published'
     ELSE 'released'

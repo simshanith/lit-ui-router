@@ -9,8 +9,10 @@ import {
   type Fold,
   fold,
   foldStatements,
+  GH_STATES,
   ghState,
   moveDistTag,
+  NPM_STATES,
   npmState,
   type Observation,
   type Region,
@@ -19,6 +21,9 @@ import {
   removeDistTag,
   repair,
   stateOf,
+  type Status,
+  statusOf,
+  STATUSES,
   type VersionRow,
 } from './release-ledger.core.ts';
 import {
@@ -118,6 +123,19 @@ describe('fold: regions', () => {
       }
     }
   }
+
+  it('names every state its edges reach', () => {
+    const named: Record<'npm' | 'gh', readonly string[]> = {
+      npm: NPM_STATES,
+      gh: GH_STATES,
+    };
+
+    for (const region of ['npm', 'gh'] as const) {
+      for (const edge of REGIONS[region].edges) {
+        for (const state of edge) assert.ok(named[region].includes(state));
+      }
+    }
+  });
 
   it('never moves npm back to absent: an unpublished version is a conflict', () => {
     const row = after(fold(ROWS.published, { npm: null }, ENVELOPE));
@@ -575,6 +593,7 @@ describe('moveDistTag', () => {
       op: 'upsert',
       row: { ...current, version: ENVELOPE.version, updated_at: ENVELOPE.at },
       expectedVersion: '0.9.0',
+      rev: ROWS.released.rev,
       event: {
         name: ENVELOPE.name,
         version: ENVELOPE.version,
@@ -686,6 +705,7 @@ describe('removeDistTag', () => {
       kind: 'applied',
       op: 'delete',
       row: current,
+      rev: ROWS.released.rev,
       event: {
         name: ENVELOPE.name,
         version: ENVELOPE.version,
@@ -754,6 +774,7 @@ describe('foldStatements', () => {
 
     assert.deepEqual(statements, {
       outcome: 'unchanged',
+      reason: null,
       guard: { sql: '1', params: [] },
       write: undefined,
       distTags: [],
@@ -761,14 +782,72 @@ describe('foldStatements', () => {
     });
   });
 
-  it('reports rejected for malformed input', () => {
-    assert.equal(
-      foldStatements(
-        fold(ROWS.published, { npm: { ...NPM, deprecated: '' } }, ENVELOPE),
-        [],
-        'message-1',
-      ).outcome,
-      'rejected',
+  it('reports rejected with the reason for malformed input', () => {
+    const statements = foldStatements(
+      fold(ROWS.published, { npm: { ...NPM, deprecated: '' } }, ENVELOPE),
+      [],
+      'message-1',
     );
+
+    assert.equal(statements.outcome, 'rejected');
+    assert.match(statements.reason ?? '', /empty deprecation message/);
+  });
+
+  it('guards the rev of another version a removed dist-tag pointed at', () => {
+    const older = { ...ROWS.published, version: '0.9.0', rev: 7 };
+
+    const removal = removeDistTag(
+      { name: older.name, tag: 'next', version: older.version, updated_at: '' },
+      older,
+      'next',
+      ENVELOPE,
+    );
+
+    const { guard } = foldStatements(
+      fold(ROWS.published, { gh: GH }, ENVELOPE),
+      [removal],
+      'message-1',
+    );
+
+    assert.match(
+      guard.sql,
+      /FROM versions WHERE name = \? AND version = \? AND rev = \?/,
+    );
+    assert.deepEqual(guard.params.slice(-3), [older.name, older.version, 7]);
+  });
+
+  it('leaves the folded row to the write guard', () => {
+    const folded = fold(ROWS.published, { gh: GH }, ENVELOPE);
+    const target = after(folded);
+
+    const { guard } = foldStatements(
+      folded,
+      [moveDistTag(undefined, target, 'next', ENVELOPE)],
+      'message-1',
+    );
+
+    assert.equal(guard.sql.match(/FROM versions/g)?.length, 1);
+  });
+});
+
+describe('statusOf', () => {
+  const cases: [Status, VersionRow][] = [
+    ['conflict', { ...ROWS.released, git_sha: null, gh_conflict: 'null' }],
+    ['conflict', { ...ROWS.abandoned, tag_conflict: 'null' }],
+    ['abandoned', { ...ROWS.abandoned, git_sha: null }],
+    ['untagged', { ...ROWS.published, git_sha: null }],
+    ['untagged', { ...ROWS.releasedFirst, git_sha: null }],
+    ['tagged', ROWS.tagged],
+    ['tagged', ROWS.releasedFirst],
+    ['published', ROWS.deprecated],
+    ['released', ROWS.released],
+  ];
+
+  for (const [status, row] of cases) {
+    it(`derives ${status}`, () => assert.equal(statusOf(row), status));
+  }
+
+  it('covers every status', () => {
+    assert.deepEqual([...new Set(cases.map(([status]) => status))], STATUSES);
   });
 });

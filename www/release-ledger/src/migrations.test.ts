@@ -13,14 +13,18 @@ import {
   type Fold,
   fold,
   foldStatements,
+  GH_STATES,
   ghState,
   moveDistTag,
+  NPM_STATES,
   npmState,
   type Observation,
   type Region,
   removeDistTag,
   repair,
   type Statement,
+  statusOf,
+  STATUSES,
   type VersionRow,
 } from './release-ledger.core.ts';
 import {
@@ -252,6 +256,13 @@ describe('migrations: version_states', () => {
     ['released before npm', ROWS.releasedFirst, 'tagged'],
     ['abandoned', ROWS.abandoned, 'abandoned'],
     ['in conflict', { ...ROWS.released, gh_conflict: 'null' }, 'conflict'],
+    ['untagged', { ...ROWS.published, git_sha: null }, 'untagged'],
+    ['released untagged', { ...ROWS.released, git_sha: null }, 'untagged'],
+    [
+      'untagged conflict',
+      { ...ROWS.released, git_sha: null, npm_conflict: 'null' },
+      'conflict',
+    ],
   ];
 
   for (const [label, row, status] of cases) {
@@ -267,8 +278,32 @@ describe('migrations: version_states', () => {
         },
         { npm_state: npmState(row), gh_state: ghState(row), status },
       );
+      assert.equal(statusOf(row), status);
     });
   }
+
+  /** The string literals one CASE of the view can yield, in order. */
+  function viewCase(column: string): string[] {
+    const sql = String(
+      migrated()
+        .prepare("SELECT sql FROM sqlite_schema WHERE name = 'version_states'")
+        .get()?.sql,
+    );
+
+    const body = sql
+      .split('CASE')
+      .find((branch) => branch.includes(`END AS ${column}`));
+
+    return [...(body ?? '').matchAll(/(?:THEN|ELSE) '(\w+)'/g)].map(
+      ([, literal]) => literal,
+    );
+  }
+
+  it('names the states and statuses the core exports', () => {
+    assert.deepEqual(viewCase('npm_state'), NPM_STATES);
+    assert.deepEqual(viewCase('gh_state'), GH_STATES);
+    assert.deepEqual(viewCase('status'), STATUSES);
+  });
 });
 
 describe('migrations: fold statements', () => {
@@ -393,6 +428,26 @@ describe('migrations: fold statements', () => {
         .map((event) => event.event),
       ['observed', 'dist_tag_moved', 'dist_tag_removed'],
     );
+  });
+
+  it('records no claim when a removed dist-tag pointed at a version that moved', () => {
+    const db = seeded();
+    const older = { ...ROWS.published, version: '0.9.0' };
+
+    insertDistTag(db, LATEST);
+
+    const removal = removeDistTag(LATEST, older, 'latest', ENVELOPE);
+
+    db.prepare(
+      "UPDATE versions SET rev = rev + 1, npm_deprecated = 'gone' WHERE version = '0.9.0'",
+    ).run();
+
+    assert.equal(
+      write(db, fold(ROWS.published, { gh: GH }, ENVELOPE), [removal]),
+      false,
+    );
+    assert.equal(count(db, 'dist_tags'), 1);
+    assert.equal(count(db, 'ledger_events'), 0);
   });
 
   const observations: Observation[] = [

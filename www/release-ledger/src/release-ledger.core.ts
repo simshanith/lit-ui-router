@@ -34,9 +34,25 @@ export const REGION_NAMES = ['tag', 'npm', 'gh'] as const satisfies Region[];
 /** npm does not record the tag a version was published under, so only the publish-npm claim sets it; the first value stays. */
 export const ADVISORY_COLUMNS = ['npm_dist_tag'] as const;
 
-export type NpmState = 'absent' | 'active' | 'deprecated';
+export const NPM_STATES = ['absent', 'active', 'deprecated'] as const;
 
-export type GhState = 'none' | 'final';
+export type NpmState = (typeof NPM_STATES)[number];
+
+export const GH_STATES = ['none', 'final'] as const;
+
+export type GhState = (typeof GH_STATES)[number];
+
+/** `version_states.status`, in the view's order of precedence. */
+export const STATUSES = [
+  'conflict',
+  'abandoned',
+  'untagged',
+  'tagged',
+  'published',
+  'released',
+] as const;
+
+export type Status = (typeof STATUSES)[number];
 
 /** One `versions` row, as D1 returns it. */
 export interface VersionRow {
@@ -164,6 +180,21 @@ export function stateOf(row: VersionRow, region: Region): string | null {
   if (region === 'npm') return npmState(row);
 
   return region === 'gh' ? ghState(row) : null;
+}
+
+/** The overall status, as `version_states` derives it; the tag precedes publish, so a row without one is never clean. */
+export function statusOf(row: VersionRow): Status {
+  if ((row.tag_conflict ?? row.npm_conflict ?? row.gh_conflict) !== null) {
+    return 'conflict';
+  }
+
+  if (row.abandoned_at !== null) return 'abandoned';
+
+  if (row.git_sha === null) return 'untagged';
+
+  if (row.npm_integrity === null) return 'tagged';
+
+  return row.gh_release_id === null ? 'published' : 'released';
 }
 
 /** On npm, so a dist-tag can point at it. */
@@ -478,6 +509,8 @@ export type DistTagOutcome =
       row: DistTagRow;
       /** The version the tag must still point at; `null` inserts it. */
       expectedVersion: string | null;
+      /** The `versions.rev` the event's state was read at. */
+      rev: number;
       event: LedgerEventRow;
     }
   | {
@@ -485,6 +518,8 @@ export type DistTagOutcome =
       op: 'delete';
       /** The row to delete, as read. */
       row: DistTagRow;
+      /** The `versions.rev` of the version it pointed at, as read. */
+      rev: number;
       event: LedgerEventRow;
     }
   | { kind: 'unchanged' }
@@ -550,6 +585,7 @@ export function moveDistTag(
       updated_at: envelope.at,
     },
     expectedVersion: current?.version ?? null,
+    rev: target.rev,
     event: distTagEvent(target, 'dist_tag_moved', envelope, {
       tag,
       from: current?.version ?? null,
@@ -580,6 +616,7 @@ export function removeDistTag(
     kind: 'applied',
     op: 'delete',
     row: current,
+    rev: pointed.rev,
     event: distTagEvent(pointed, 'dist_tag_removed', envelope, { tag }),
   };
 }
@@ -668,7 +705,10 @@ const claimed = (messageId: string): Statement => ({
   params: [messageId],
 });
 
-function versionAsRead(row: VersionRow, expectedRev: number | null): Statement {
+function versionAsRead(
+  row: Pick<VersionRow, 'name' | 'version'>,
+  expectedRev: number | null,
+): Statement {
   return expectedRev === null
     ? {
         sql: 'NOT EXISTS (SELECT 1 FROM versions WHERE name = ? AND version = ?)',
@@ -756,6 +796,27 @@ function distTagWrite(outcome: AppliedTag, claim: Statement): Statement {
   };
 }
 
+/** The rows a dist-tag event read its npm state from, other than the folded row, which `write` already guards. */
+function distTagVersionsAsRead(
+  moved: readonly AppliedTag[],
+  applied: VersionRow | undefined,
+): Statement[] {
+  const read = new Map<string, Statement>();
+
+  for (const { event, rev } of moved) {
+    if (event.name === applied?.name && event.version === applied.version) {
+      continue;
+    }
+
+    read.set(
+      JSON.stringify([event.name, event.version]),
+      versionAsRead(event, rev),
+    );
+  }
+
+  return [...read.values()];
+}
+
 // a missing claim row joins to nothing, so the event is not logged
 function ledgerInsert(event: LedgerEventRow, messageId: string): Statement {
   return {
@@ -768,8 +829,11 @@ function ledgerInsert(event: LedgerEventRow, messageId: string): Statement {
 export interface FoldStatements {
   /** `pipeline_events.outcome`: `applied` when the row or a dist-tag moves. */
   outcome: 'applied' | 'unchanged' | 'rejected';
+  /** `pipeline_events.reason`: set exactly when rejected. */
+  reason: string | null;
   /**
-   * Holds while every row the batch writes is as the fold read it. The
+   * Holds while every row the batch writes, and every row a ledger event
+   * derives its state from, is as the fold read it. The
    * consumer's `pipeline_events` insert runs first, guarded on it; every later
    * statement runs only when that insert landed. No claim row after the batch
    * means a row moved and nothing was written: re-read and fold again.
@@ -802,9 +866,11 @@ export function foldStatements(
         : applied || moved.length > 0
           ? 'applied'
           : 'unchanged',
+    reason: folded.outcome === 'rejected' ? folded.reason : null,
     guard: and([
       ...(applied ? [versionAsRead(applied.row, applied.expectedRev)] : []),
       ...moved.map(distTagAsRead),
+      ...distTagVersionsAsRead(moved, applied?.row),
     ]),
     write: applied && versionWrite(applied.row, applied.expectedRev, claim),
     distTags: moved.map((outcome) => distTagWrite(outcome, claim)),
