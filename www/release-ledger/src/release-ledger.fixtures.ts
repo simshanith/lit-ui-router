@@ -1,10 +1,9 @@
-// Shared test fixtures: one consistent row per state, and events that repeat its facts.
+// Shared test fixtures: consistent rows, and observations that repeat their facts.
 import type {
   Envelope,
   GhReleaseFacts,
   NpmFacts,
-  ReleaseEvent,
-  State,
+  Observation,
   VersionRow,
 } from './release-ledger.core.ts';
 
@@ -41,35 +40,33 @@ export const ENVELOPE: Envelope = {
 const tagged: VersionRow = {
   name: ENVELOPE.name,
   version: ENVELOPE.version,
-  state: 'tagged',
-  state_at: '2026-10-01T00:00:00.000Z',
   first_seen_at: '2026-10-01T00:00:00.000Z',
   rev: 0,
+  abandoned_at: null,
   git_sha: SHA,
+  tag_conflict: null,
   npm_integrity: null,
   npm_published_at: null,
   npm_dist_tag: null,
   npm_deprecated: null,
+  npm_conflict: null,
   gh_release_id: null,
   gh_url: null,
   gh_prerelease: null,
   gh_body: null,
   gh_published_at: null,
+  gh_conflict: null,
 };
 
 const published: VersionRow = {
   ...tagged,
-  state: 'published.active',
   rev: 1,
   npm_integrity: NPM.integrity,
   npm_published_at: NPM.publishedAt,
   npm_dist_tag: DIST_TAG,
 };
 
-const released: VersionRow = {
-  ...published,
-  state: 'released.active',
-  rev: 2,
+const ghColumns = {
   gh_release_id: GH.id,
   gh_url: GH.url,
   gh_prerelease: 0,
@@ -77,42 +74,26 @@ const released: VersionRow = {
   gh_published_at: GH.publishedAt,
 };
 
-export const ROWS: Record<State, VersionRow> = {
+export const ROWS = {
   tagged,
-  'published.active': published,
-  'published.deprecated': {
-    ...published,
-    state: 'published.deprecated',
-    npm_deprecated: DEPRECATION,
-  },
-  'released.active': released,
-  'released.deprecated': {
-    ...released,
-    state: 'released.deprecated',
-    npm_deprecated: DEPRECATION,
-  },
-  drifted: { ...released, state: 'drifted', rev: 3 },
-  abandoned: { ...tagged, state: 'abandoned', rev: 1 },
+  published,
+  deprecated: { ...published, npm_deprecated: DEPRECATION },
+  released: { ...published, ...ghColumns, rev: 2 },
+  /** A release seen before npm: valid, and reconcile's lag rule reports it. */
+  releasedFirst: { ...tagged, ...ghColumns, rev: 1 },
+  abandoned: { ...tagged, abandoned_at: '2026-10-01T12:00:00.000Z', rev: 1 },
+} satisfies Record<string, VersionRow>;
+
+/** Everything the sources say about `ROWS.released`. */
+export const OBSERVED: Required<Observation> = {
+  tag: { sha: SHA },
+  npm: NPM,
+  gh: GH,
 };
 
-/** A tag moved or deleted before publish: drifted, with no npm facts. */
-export const DRIFTED_TAG: VersionRow = { ...tagged, state: 'drifted', rev: 1 };
-
-/** One event of each type, carrying the facts the fixture rows record. */
-export const EVENTS = {
-  tag_observed: { type: 'tag_observed', sha: SHA },
-  npm_observed: { type: 'npm_observed', ...NPM },
-  gh_release_observed: { type: 'gh_release_observed', ...GH },
-  deprecation_observed: { type: 'deprecation_observed', message: DEPRECATION },
-  undeprecation_observed: { type: 'undeprecation_observed' },
-  mismatch_observed: {
-    type: 'mismatch_observed',
-    field: 'git_sha',
-    recorded: SHA,
-    observed: OTHER_SHA,
-  },
-  abandon: { type: 'abandon' },
-  repair: { type: 'repair', tag: { sha: SHA }, npm: NPM, ghRelease: GH },
-} satisfies {
-  [Type in ReleaseEvent['type']]: Extract<ReleaseEvent, { type: Type }>;
+/** What each source says about `ROWS.tagged`. */
+export const UNPUBLISHED: Required<Observation> = {
+  tag: { sha: SHA },
+  npm: null,
+  gh: null,
 };

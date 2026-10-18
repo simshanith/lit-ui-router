@@ -1,91 +1,65 @@
-// Pure logic for the release ledger: the (state, event) → state table, the fold of
-// a claim's observations into a `versions` row, and the statements that write it.
-// The queue consumer owns the IO: it reads the row, calls `fold`, and runs
-// `foldStatements` in one D1 batch after its `pipeline_events` insert.
+// Pure logic for the release ledger: fold what npm and GitHub say about one
+// `<pkg>@<version>` into its `versions` row, region by region, and describe the
+// batch that writes it. The queue consumer owns the IO: it reads the row,
+// observes the sources, calls `fold`, and runs `foldStatements` in one D1 batch.
 
-export const STATES = [
-  'tagged',
-  'published.active',
-  'published.deprecated',
-  'released.active',
-  'released.deprecated',
-  'drifted',
-  'abandoned',
-] as const;
+/**
+ * Each region's facts. Fixed facts never change once recorded; mutable facts
+ * follow the source. A region's state is derived from its facts, never stored,
+ * and `edges` are the only moves between derived states.
+ */
+export const REGIONS = {
+  tag: { fixed: ['git_sha'], mutable: [], edges: [] },
+  npm: {
+    fixed: ['npm_integrity', 'npm_published_at'],
+    mutable: ['npm_deprecated'],
+    edges: [
+      ['absent', 'active'],
+      ['absent', 'deprecated'],
+      ['active', 'deprecated'],
+      ['deprecated', 'active'],
+    ],
+  },
+  gh: {
+    fixed: ['gh_release_id', 'gh_url', 'gh_prerelease', 'gh_published_at'],
+    mutable: ['gh_body'],
+    edges: [['none', 'final']],
+  },
+} as const;
 
-export type State = (typeof STATES)[number];
+export type Region = keyof typeof REGIONS;
 
-export const EVENT_TYPES = [
-  'tag_observed',
-  'npm_observed',
-  'gh_release_observed',
-  'deprecation_observed',
-  'undeprecation_observed',
-  'mismatch_observed',
-  'abandon',
-  'repair',
-] as const;
+export const REGION_NAMES = ['tag', 'npm', 'gh'] as const satisfies Region[];
 
-export type EventType = (typeof EVENT_TYPES)[number];
+/** npm does not record the tag a version was published under, so only the publish-npm claim sets it; the first value stays. */
+export const ADVISORY_COLUMNS = ['npm_dist_tag'] as const;
 
-/** The `versions` columns that record what a source said. */
-export const FACT_COLUMNS = [
-  'git_sha',
-  'npm_integrity',
-  'npm_published_at',
-  'npm_dist_tag',
-  'npm_deprecated',
-  'gh_release_id',
-  'gh_url',
-  'gh_prerelease',
-  'gh_body',
-  'gh_published_at',
-] as const;
+export type NpmState = 'absent' | 'active' | 'deprecated';
 
-export type FactColumn = (typeof FACT_COLUMNS)[number];
-
-/** Facts that never change once recorded; a source that disagrees is drift. */
-export const IMMUTABLE_COLUMNS = [
-  'git_sha',
-  'npm_integrity',
-  'npm_published_at',
-  'gh_release_id',
-  'gh_url',
-  'gh_prerelease',
-  'gh_published_at',
-] as const satisfies readonly FactColumn[];
-
-export type ImmutableColumn = (typeof IMMUTABLE_COLUMNS)[number];
-
-/** Facts a source may legitimately change; they update in place. */
-export const MUTABLE_COLUMNS: ReadonlySet<FactColumn> = new Set([
-  'npm_deprecated',
-  'gh_body',
-]);
-
-/** Facts no source can verify later: the first value recorded stays, and nothing disagrees with it. */
-export const ADVISORY_COLUMNS: ReadonlySet<FactColumn> = new Set([
-  'npm_dist_tag',
-]);
+export type GhState = 'none' | 'final';
 
 /** One `versions` row, as D1 returns it. */
 export interface VersionRow {
   name: string;
   version: string;
-  state: State;
-  state_at: string;
   first_seen_at: string;
   rev: number;
-  git_sha: string;
+  /** A maintainer's verdict that the tag will never be published. */
+  abandoned_at: string | null;
+  git_sha: string | null;
+  /** The observation that contradicts the region's fixed facts, as JSON; `null` when clean. */
+  tag_conflict: string | null;
   npm_integrity: string | null;
   npm_published_at: string | null;
   npm_dist_tag: string | null;
   npm_deprecated: string | null;
+  npm_conflict: string | null;
   gh_release_id: number | null;
   gh_url: string | null;
   gh_prerelease: number | null;
   gh_body: string | null;
   gh_published_at: string | null;
+  gh_conflict: string | null;
 }
 
 /** One `dist_tags` row. */
@@ -100,14 +74,22 @@ export interface DistTagRow {
 export interface LedgerEventRow {
   name: string;
   version: string;
-  event: string;
-  from_state: State | null;
-  to_state: State;
+  region: Region;
+  event: LedgerEventType;
+  from_state: string | null;
+  to_state: string | null;
   payload: string;
   source: string;
   run_url: string | null;
   at: string;
 }
+
+export type LedgerEventType =
+  | 'observed'
+  | 'abandon'
+  | 'repair'
+  | 'dist_tag_moved'
+  | 'dist_tag_removed';
 
 export interface TagFacts {
   sha: string;
@@ -116,10 +98,13 @@ export interface TagFacts {
 export interface NpmFacts {
   integrity: string;
   publishedAt: string;
+  /** npm's deprecation message; absent when the version is not deprecated. */
+  deprecated?: string;
   /** The tag `publish-npm` published under; npm does not record it, so only that claim sends it. */
   distTag?: string;
 }
 
+/** A published release: a token without push access sees no drafts. */
 export interface GhReleaseFacts {
   id: number;
   url: string;
@@ -128,31 +113,16 @@ export interface GhReleaseFacts {
   publishedAt: string;
 }
 
+/** What each source says right now: `null` when it reports the fact absent, omitted when not asked. */
+export interface Observation {
+  tag?: TagFacts | null;
+  npm?: NpmFacts | null;
+  gh?: GhReleaseFacts | null;
+}
+
 export type Value = string | number | null;
 
-/** An observation about one `<pkg>@<version>`. Writers report these, never states. */
-export type ReleaseEvent =
-  | ({ type: 'tag_observed' } & TagFacts)
-  | ({ type: 'npm_observed' } & NpmFacts)
-  | ({ type: 'gh_release_observed' } & GhReleaseFacts)
-  | { type: 'deprecation_observed'; message: string }
-  | { type: 'undeprecation_observed' }
-  | {
-      type: 'mismatch_observed';
-      field: ImmutableColumn;
-      recorded: Value;
-      observed: Value;
-    }
-  | { type: 'abandon' }
-  | {
-      type: 'repair';
-      tag: TagFacts;
-      npm?: NpmFacts;
-      ghRelease?: GhReleaseFacts;
-      deprecated?: string;
-    };
-
-/** Who sent the event and when; the consumer fills it from the claim. */
+/** Who sent the observation and when; the consumer fills it from the claim. */
 export interface Envelope {
   name: string;
   version: string;
@@ -161,329 +131,156 @@ export interface Envelope {
   run_url: string | null;
 }
 
-export type Outcome =
+/** One fold of a row: the row to write and its ledger rows, no change, or why the input is malformed. */
+export type Fold =
   | {
-      kind: 'applied';
+      outcome: 'applied';
       row: VersionRow;
-      event: LedgerEventRow;
       /** The `rev` the write compares against; `null` inserts a new row. `row.rev` is the next one. */
       expectedRev: number | null;
+      events: LedgerEventRow[];
     }
-  | { kind: 'unchanged' }
-  | { kind: 'rejected'; reason: string };
+  | { outcome: 'unchanged' }
+  | { outcome: 'rejected'; reason: string };
 
-/** `repair` re-derives its target from the observations it carries. */
-export const DERIVED = 'derived';
+type Rejection = Extract<Fold, { outcome: 'rejected' }>;
 
-/** Accepted and dropped: a drifted row keeps its recorded facts until `repair`. */
-export const IGNORED = 'ignored';
+const reject = (reason: string): Rejection => ({ outcome: 'rejected', reason });
 
-type Target = State | typeof DERIVED | typeof IGNORED;
+const UNCHANGED: Fold = { outcome: 'unchanged' };
 
-type Transitions = Partial<Record<EventType, Target>>;
+export const npmState = (row: VersionRow): NpmState =>
+  row.npm_integrity === null
+    ? 'absent'
+    : row.npm_deprecated === null
+      ? 'active'
+      : 'deprecated';
 
-/** The only event that creates a row. */
-export const INITIAL = {
-  tag_observed: 'tagged',
-} as const satisfies Transitions;
+export const ghState = (row: VersionRow): GhState =>
+  row.gh_release_id === null ? 'none' : 'final';
 
-// A self-transition is a no-op on a repeated fact, an update on a changed mutable
-// fact, and a rejection on a contradicted immutable one.
-export const TRANSITIONS = {
-  tagged: {
-    tag_observed: 'tagged',
-    npm_observed: 'published.active',
-    gh_release_observed: 'drifted',
-    mismatch_observed: 'drifted',
-    abandon: 'abandoned',
-  },
-  'published.active': {
-    tag_observed: 'published.active',
-    npm_observed: 'published.active',
-    gh_release_observed: 'released.active',
-    deprecation_observed: 'published.deprecated',
-    undeprecation_observed: 'published.active',
-    mismatch_observed: 'drifted',
-  },
-  'published.deprecated': {
-    tag_observed: 'published.deprecated',
-    npm_observed: 'published.deprecated',
-    gh_release_observed: 'released.deprecated',
-    deprecation_observed: 'published.deprecated',
-    undeprecation_observed: 'published.active',
-    mismatch_observed: 'drifted',
-  },
-  'released.active': {
-    tag_observed: 'released.active',
-    npm_observed: 'released.active',
-    gh_release_observed: 'released.active',
-    deprecation_observed: 'released.deprecated',
-    undeprecation_observed: 'released.active',
-    mismatch_observed: 'drifted',
-  },
-  'released.deprecated': {
-    tag_observed: 'released.deprecated',
-    npm_observed: 'released.deprecated',
-    gh_release_observed: 'released.deprecated',
-    deprecation_observed: 'released.deprecated',
-    undeprecation_observed: 'released.active',
-    mismatch_observed: 'drifted',
-  },
-  drifted: {
-    tag_observed: IGNORED,
-    npm_observed: IGNORED,
-    gh_release_observed: IGNORED,
-    deprecation_observed: IGNORED,
-    undeprecation_observed: IGNORED,
-    mismatch_observed: IGNORED,
-    abandon: 'abandoned',
-    repair: DERIVED,
-  },
-  abandoned: {
-    tag_observed: 'abandoned',
-    npm_observed: 'drifted',
-    abandon: 'abandoned',
-    repair: DERIVED,
-  },
-} as const satisfies Record<State, Transitions>;
+/** The region's derived state; the tag has none. */
+export function stateOf(row: VersionRow, region: Region): string | null {
+  if (region === 'npm') return npmState(row);
 
-interface Guard {
-  label: string;
-  holds: (row: VersionRow) => boolean;
+  return region === 'gh' ? ghState(row) : null;
 }
 
-/** Conditions on a table entry; the pairing is rejected when one fails. */
-export const GUARDS: Partial<Record<State, Partial<Record<EventType, Guard>>>> =
-  {
-    // a tag deleted or moved before publish
-    drifted: {
-      abandon: {
-        label: 'no npm facts',
-        holds: (row) => row.npm_integrity === null,
-      },
-    },
-  };
+/** On npm, so a dist-tag can point at it. */
+export const isOnNpm = (row: VersionRow): boolean => row.npm_integrity !== null;
 
-/** The table lookup; `undefined` means the pairing is rejected. */
-export function next(
-  state: State | undefined,
-  type: EventType,
-): Target | undefined {
-  const transitions: Transitions =
-    state === undefined ? INITIAL : TRANSITIONS[state];
+type Columns = Partial<VersionRow>;
 
-  return transitions[type];
+/** The columns an observation of each region writes. */
+const COLUMNS_OF = {
+  tag: ({ tag }) => (tag ? { git_sha: tag.sha } : {}),
+  npm: ({ npm }) =>
+    npm
+      ? {
+          npm_integrity: npm.integrity,
+          npm_published_at: npm.publishedAt,
+          npm_deprecated: npm.deprecated ?? null,
+        }
+      : {},
+  gh: ({ gh }) =>
+    gh
+      ? {
+          gh_release_id: gh.id,
+          gh_url: gh.url,
+          gh_prerelease: gh.prerelease ? 1 : 0,
+          gh_body: gh.body,
+          gh_published_at: gh.publishedAt,
+        }
+      : {},
+} satisfies Record<Region, (observed: Observation) => Columns>;
+
+const columnsOf = (region: Region, observed: Observation): Columns =>
+  COLUMNS_OF[region](observed);
+
+const recorded = (row: VersionRow, region: Region): boolean =>
+  row[REGIONS[region].fixed[0]] !== null;
+
+const conflictColumn = (region: Region) => `${region}_conflict` as const;
+
+function pick(columns: Columns, keys: readonly (keyof VersionRow)[]): Columns {
+  return Object.fromEntries(
+    keys.flatMap((key) => (key in columns ? [[key, columns[key]]] : [])),
+  );
 }
 
-/** On npm, so a dist-tag can point at it. A drifted row is, if it recorded npm facts. */
-export const isOnNpm = (row: Pick<VersionRow, 'state' | 'npm_integrity'>) =>
-  row.state.startsWith('published.') ||
-  row.state.startsWith('released.') ||
-  (row.state === 'drifted' && row.npm_integrity !== null);
+/** The observed fixed facts, as the conflict column records them. */
+const conflictOf = (region: Region, observed: Observation): string =>
+  observed[region] === null
+    ? 'null'
+    : JSON.stringify(pick(columnsOf(region, observed), REGIONS[region].fixed));
 
-type FactRow = Pick<VersionRow, FactColumn>;
-
-type Facts = Partial<FactRow>;
-
-type Rejection = Extract<Outcome, { kind: 'rejected' }>;
-
-type FactsResult = { kind: 'facts'; facts: Facts } | Rejection;
-
-const reject = (reason: string): Rejection => ({ kind: 'rejected', reason });
-
-const EMPTY_FACTS: Omit<FactRow, 'git_sha'> = {
-  npm_integrity: null,
-  npm_published_at: null,
-  npm_dist_tag: null,
-  npm_deprecated: null,
-  gh_release_id: null,
-  gh_url: null,
-  gh_prerelease: null,
-  gh_body: null,
-  gh_published_at: null,
-};
-
-const npmFacts = (npm: NpmFacts): Facts => ({
-  npm_integrity: npm.integrity,
-  npm_published_at: npm.publishedAt,
-  ...(npm.distTag !== undefined && { npm_dist_tag: npm.distTag }),
-});
-
-const ghFacts = (gh: GhReleaseFacts): Facts => ({
-  gh_release_id: gh.id,
-  gh_url: gh.url,
-  gh_prerelease: gh.prerelease ? 1 : 0,
-  gh_body: gh.body,
-  gh_published_at: gh.publishedAt,
-});
-
-// npm undeprecates with an empty message
-const EMPTY_DEPRECATION =
-  'an empty deprecation message is undeprecation_observed';
-
-function repairFacts(
-  event: Extract<ReleaseEvent, { type: 'repair' }>,
-): FactsResult {
-  if (event.ghRelease !== undefined && event.npm === undefined) {
-    return reject(
-      'repair cannot derive a state: a GitHub release without npm is drift',
-    );
-  }
-
-  if (event.deprecated !== undefined && event.npm === undefined) {
-    return reject('repair cannot derive a state: a deprecation without npm');
-  }
-
-  if (event.deprecated === '') return reject(EMPTY_DEPRECATION);
-
-  return {
-    kind: 'facts',
-    facts: {
-      ...EMPTY_FACTS,
-      git_sha: event.tag.sha,
-      ...(event.npm && npmFacts(event.npm)),
-      ...(event.ghRelease && ghFacts(event.ghRelease)),
-      npm_deprecated: event.deprecated ?? null,
-    },
-  };
-}
-
-const facts = (written: Facts): FactsResult => ({
-  kind: 'facts',
-  facts: written,
-});
-
-/** The columns an event writes, or the reason it is malformed. */
-function eventFacts(event: ReleaseEvent): FactsResult {
-  switch (event.type) {
-    case 'tag_observed':
-      return facts({ git_sha: event.sha });
-    case 'npm_observed':
-      return facts(npmFacts(event));
-    case 'gh_release_observed':
-      return facts(ghFacts(event));
-    case 'deprecation_observed':
-      return event.message === ''
-        ? reject(EMPTY_DEPRECATION)
-        : facts({ npm_deprecated: event.message });
-    case 'undeprecation_observed':
-      return facts({ npm_deprecated: null });
-    case 'repair':
-      return repairFacts(event);
-    default:
-      return facts({});
-  }
-}
-
-const IMMUTABLE: ReadonlySet<string> = new Set(IMMUTABLE_COLUMNS);
-
-/** A mismatch must name an immutable fact the row records, as the row records it, and disagree. */
-function mismatchRejection(
+function contradicts(
   row: VersionRow,
-  event: Extract<ReleaseEvent, { type: 'mismatch_observed' }>,
-): Rejection | undefined {
-  const { field, recorded, observed } = event;
+  region: Region,
+  columns: Columns,
+): boolean {
+  return REGIONS[region].fixed.some(
+    (column) => row[column] !== columns[column],
+  );
+}
 
-  if (!IMMUTABLE.has(field)) {
-    return reject(`mismatch_observed names ${field}, not an immutable fact`);
+/** The first recorded dist-tag stays. */
+function advisory(row: VersionRow, observed: Observation): Columns {
+  const distTag = observed.npm?.distTag;
+
+  return row.npm_dist_tag === null && distTag !== undefined
+    ? { npm_dist_tag: distTag }
+    : {};
+}
+
+/** The columns an observation changes in one region. */
+function observeRegion(
+  row: VersionRow,
+  region: Region,
+  observed: Observation,
+): Columns {
+  if (observed[region] === undefined) return {};
+
+  const columns = columnsOf(region, observed);
+  const distTag = region === 'npm' ? advisory(row, observed) : {};
+
+  if (!recorded(row, region)) {
+    if (observed[region] === null) return {};
+
+    // npm or a release proves the abandon verdict wrong
+    return region === 'tag'
+      ? columns
+      : { ...columns, ...distTag, abandoned_at: null };
   }
 
-  if (recorded === null) {
-    return reject(`mismatch_observed on ${field} has nothing recorded`);
+  const mutable = pick(columns, REGIONS[region].mutable);
+
+  // never back to absent: a recorded fact that disappears is a conflict too
+  if (observed[region] === null || contradicts(row, region, columns)) {
+    return {
+      ...mutable,
+      ...distTag,
+      [conflictColumn(region)]: conflictOf(region, observed),
+    };
   }
 
-  if (row[field] !== recorded) {
-    return reject(
-      `mismatch_observed on ${field} is stale: the row records ${JSON.stringify(row[field])}, not ${JSON.stringify(recorded)}`,
-    );
+  return { ...mutable, ...distTag };
+}
+
+function malformed(observed: Observation): string | undefined {
+  if (observed.npm?.deprecated === '') {
+    return 'an empty deprecation message: npm undeprecates with one, so omit it';
   }
 
-  if (observed === recorded) {
-    return reject(`mismatch_observed on ${field} observed the recorded value`);
-  }
+  if (observed.npm?.distTag === '') return 'an empty dist-tag';
 
   return undefined;
 }
 
-function derive(written: Facts): State {
-  if (written.npm_integrity == null) return 'tagged';
-
-  const lifecycle = written.gh_release_id == null ? 'published' : 'released';
-
-  return written.npm_deprecated == null
-    ? `${lifecycle}.active`
-    : `${lifecycle}.deprecated`;
-}
-
-function contradiction(row: VersionRow, written: Facts): Rejection | undefined {
-  for (const column of IMMUTABLE_COLUMNS) {
-    const value = written[column];
-    const recorded = row[column];
-
-    if (value === undefined || recorded === null || recorded === value) {
-      continue;
-    }
-
-    return reject(
-      `${column} is recorded as ${JSON.stringify(recorded)}, observed ${JSON.stringify(value)}: report mismatch_observed`,
-    );
-  }
-
-  return undefined;
-}
-
-/** The first recorded dist-tag stays; `repair` sets it only alongside npm facts. */
-function advisory(
+function identity(
   row: VersionRow | undefined,
-  event: ReleaseEvent,
-  written: Facts,
-): Facts {
-  const recorded = row?.npm_dist_tag ?? null;
-
-  if (event.type === 'repair') {
-    return written.npm_integrity === null
-      ? written
-      : { ...written, npm_dist_tag: event.npm?.distTag ?? recorded };
-  }
-
-  return recorded === null ? written : { ...written, npm_dist_tag: recorded };
-}
-
-const sameFacts = (a: VersionRow, b: VersionRow): boolean =>
-  FACT_COLUMNS.every((column) => a[column] === b[column]);
-
-function payloadOf(event: ReleaseEvent): string {
-  const { type: _type, ...payload } = event;
-
-  return JSON.stringify(payload);
-}
-
-function preconditions(
-  row: VersionRow | undefined,
-  event: ReleaseEvent,
-): Rejection | undefined {
-  const guard = row && GUARDS[row.state]?.[event.type];
-
-  if (guard && !guard.holds(row)) {
-    return reject(`${event.type} in ${row.state} needs ${guard.label}`);
-  }
-
-  if (row !== undefined && event.type === 'mismatch_observed') {
-    return mismatchRejection(row, event);
-  }
-
-  return undefined;
-}
-
-/** The target state and written columns, or why the pairing is rejected. */
-function transition(
-  row: VersionRow | undefined,
-  event: ReleaseEvent,
   envelope: Envelope,
-):
-  | { kind: 'transition'; to: State; facts: Facts }
-  | { kind: 'unchanged' }
-  | Rejection {
+): Rejection | undefined {
   if (
     row !== undefined &&
     (row.name !== envelope.name || row.version !== envelope.version)
@@ -493,130 +290,185 @@ function transition(
     );
   }
 
-  const target = next(row?.state, event.type);
-
-  if (target === undefined) {
-    return reject(
-      `${event.type} is not accepted in ${row?.state ?? 'a missing row'}`,
-    );
-  }
-
-  const precondition = preconditions(row, event);
-
-  if (precondition) return precondition;
-
-  const result = eventFacts(event);
-
-  if (result.kind === 'rejected') return result;
-
-  if (target === IGNORED) return { kind: 'unchanged' };
-
-  const written = advisory(row, event, result.facts);
-
-  if (target === DERIVED) {
-    return { kind: 'transition', to: derive(written), facts: written };
-  }
-
-  const conflict = row === undefined ? undefined : contradiction(row, written);
-
-  return conflict ?? { kind: 'transition', to: target, facts: written };
+  return undefined;
 }
 
-/** Fold one event into the row, or reject the pairing. */
-export function apply(
-  row: VersionRow | undefined,
-  event: ReleaseEvent,
+// rev -1 marks a row not yet stored
+const blank = (envelope: Envelope): VersionRow => ({
+  name: envelope.name,
+  version: envelope.version,
+  first_seen_at: envelope.at,
+  rev: -1,
+  abandoned_at: null,
+  git_sha: null,
+  tag_conflict: null,
+  npm_integrity: null,
+  npm_published_at: null,
+  npm_dist_tag: null,
+  npm_deprecated: null,
+  npm_conflict: null,
+  gh_release_id: null,
+  gh_url: null,
+  gh_prerelease: null,
+  gh_body: null,
+  gh_published_at: null,
+  gh_conflict: null,
+});
+
+const changes = (row: VersionRow, columns: Columns): boolean =>
+  Object.entries(columns).some(
+    // SAFETY: the keys come from VersionRow columns
+    ([column, value]) => row[column as keyof VersionRow] !== value,
+  );
+
+/** A region's observation, as `ledger_events.payload` replays it; `abandon` carries none. */
+type Payload = Observation[Region] | null;
+
+function ledgerEvent(
+  before: VersionRow,
+  after: VersionRow,
+  region: Region,
+  event: LedgerEventType,
+  payload: Payload,
   envelope: Envelope,
-): Outcome {
-  const result = transition(row, event, envelope);
-
-  if (result.kind !== 'transition') return result;
-
-  const { to } = result;
-
-  // INITIAL only admits tag_observed, whose facts carry the sha
-  const nextRow: VersionRow = {
-    ...EMPTY_FACTS,
-    git_sha: '',
-    first_seen_at: envelope.at,
-    ...row,
-    ...result.facts,
+): LedgerEventRow {
+  return {
     name: envelope.name,
     version: envelope.version,
-    state: to,
-    state_at: envelope.at,
-    rev: row === undefined ? 0 : row.rev + 1,
-  };
-
-  if (row?.state === to && sameFacts(row, nextRow)) {
-    return { kind: 'unchanged' };
-  }
-
-  return {
-    kind: 'applied',
-    row: nextRow,
-    expectedRev: row?.rev ?? null,
-    event: {
-      name: envelope.name,
-      version: envelope.version,
-      event: event.type,
-      from_state: row?.state ?? null,
-      to_state: to,
-      payload: payloadOf(event),
-      source: envelope.source,
-      run_url: envelope.run_url,
-      at: envelope.at,
-    },
+    region,
+    event,
+    from_state: before.rev < 0 ? null : stateOf(before, region),
+    to_state: stateOf(after, region),
+    payload: JSON.stringify(payload),
+    source: envelope.source,
+    run_url: envelope.run_url,
+    at: envelope.at,
   };
 }
 
-/** One claim's observations, folded in order. */
-export interface Fold {
-  /** `rejected` when an event was rejected, even if earlier ones applied. */
-  outcome: 'applied' | 'unchanged' | 'rejected';
-  /** The row to write, or `undefined` when no event applied. */
-  row: VersionRow | undefined;
-  /** The `rev` the write compares against; `null` inserts a new row. */
-  expectedRev: number | null;
-  /** The `ledger_events` rows, one per applied event. */
-  events: LedgerEventRow[];
-  /** The first rejected event; the fold stops there and the events after it are not folded. */
-  rejected: { index: number; reason: string } | null;
-}
-
-/** Fold a claim's events in order, stopping at the first rejection; the applied prefix stands. */
-export function fold(
-  row: VersionRow | undefined,
-  events: readonly ReleaseEvent[],
+/** Applies each region's columns in turn, one ledger row per region that changed. */
+function write(
+  row: VersionRow,
+  regions: [Region, Columns, LedgerEventType, Payload][],
   envelope: Envelope,
 ): Fold {
   let current = row;
-  let rejected: Fold['rejected'] = null;
-  const applied: LedgerEventRow[] = [];
+  const events: LedgerEventRow[] = [];
 
-  for (const [index, event] of events.entries()) {
-    const outcome = apply(current, event, envelope);
+  for (const [region, columns, event, payload] of regions) {
+    if (!changes(current, columns)) continue;
 
-    if (outcome.kind === 'rejected') {
-      rejected = { index, reason: outcome.reason };
-      break;
-    }
+    const next = { ...current, ...columns };
 
-    if (outcome.kind === 'applied') {
-      current = outcome.row;
-      applied.push(outcome.event);
-    }
+    events.push(ledgerEvent(current, next, region, event, payload, envelope));
+    current = next;
   }
 
-  const changed = applied.length > 0;
+  if (events.length === 0) return UNCHANGED;
+
+  const expectedRev = row.rev < 0 ? null : row.rev;
 
   return {
-    outcome: rejected ? 'rejected' : changed ? 'applied' : 'unchanged',
-    row: changed ? current : undefined,
-    expectedRev: row?.rev ?? null,
-    events: applied,
-    rejected,
+    outcome: 'applied',
+    row: { ...current, rev: expectedRev === null ? 0 : expectedRev + 1 },
+    expectedRev,
+    events,
   };
+}
+
+/** Fold what the sources say into the row. Only malformed input is rejected. */
+export function fold(
+  row: VersionRow | undefined,
+  observed: Observation,
+  envelope: Envelope,
+): Fold {
+  const rejection = identity(row, envelope);
+
+  if (rejection) return rejection;
+
+  const reason = malformed(observed);
+
+  if (reason) return reject(reason);
+
+  const current = row ?? blank(envelope);
+
+  return write(
+    current,
+    REGION_NAMES.map((region) => [
+      region,
+      observeRegion(current, region, observed),
+      'observed',
+      observed[region],
+    ]),
+    envelope,
+  );
+}
+
+/** A maintainer's verdict: the tag will never be published. Only while npm is absent and there is no release. */
+export function abandon(row: VersionRow | undefined, envelope: Envelope): Fold {
+  const rejection = identity(row, envelope);
+
+  if (rejection) return rejection;
+
+  if (row === undefined) return reject('abandon needs a row');
+
+  if (row.npm_integrity !== null || row.gh_release_id !== null) {
+    return reject(
+      `abandon needs npm absent and no release; npm is ${npmState(row)}, gh is ${ghState(row)}`,
+    );
+  }
+
+  return write(
+    row,
+    [
+      [
+        'tag',
+        { abandoned_at: row.abandoned_at ?? envelope.at },
+        'abandon',
+        null,
+      ],
+    ],
+    envelope,
+  );
+}
+
+/** Adopt the current observation as the region's facts and clear its conflict. Never back to absent. */
+export function repair(
+  row: VersionRow | undefined,
+  region: Region,
+  observed: Observation,
+  envelope: Envelope,
+): Fold {
+  const rejection = identity(row, envelope);
+
+  if (rejection) return rejection;
+
+  if (row?.[conflictColumn(region)] == null) {
+    return reject(`repair needs a conflict on ${region}`);
+  }
+
+  if (observed[region] === undefined) {
+    return reject(`repair needs the current ${region} observation`);
+  }
+
+  if (observed[region] === null) {
+    return reject(`repair cannot erase recorded ${region} facts`);
+  }
+
+  const reason = malformed(observed);
+
+  if (reason) return reject(reason);
+
+  const columns: Columns = {
+    ...columnsOf(region, observed),
+    ...(region === 'npm' &&
+      observed.npm?.distTag !== undefined && {
+        npm_dist_tag: observed.npm.distTag,
+      }),
+    [conflictColumn(region)]: null,
+  };
+
+  return write(row, [[region, columns, 'repair', observed[region]]], envelope);
 }
 
 export type DistTagOutcome =
@@ -638,17 +490,24 @@ export type DistTagOutcome =
   | { kind: 'unchanged' }
   | { kind: 'rejected'; reason: string };
 
+const rejectTag = (reason: string): DistTagOutcome => ({
+  kind: 'rejected',
+  reason,
+});
+
 function distTagRejection(
   current: DistTagRow | undefined,
   tag: string,
   envelope: Envelope,
-): Rejection | undefined {
+): DistTagOutcome | undefined {
   if (current !== undefined && current.tag !== tag) {
-    return reject(`dist-tag row ${current.tag} is not ${tag}`);
+    return rejectTag(`dist-tag row ${current.tag} is not ${tag}`);
   }
 
   if (current !== undefined && current.name !== envelope.name) {
-    return reject(`dist-tag row for ${current.name} is not ${envelope.name}`);
+    return rejectTag(
+      `dist-tag row for ${current.name} is not ${envelope.name}`,
+    );
   }
 
   return undefined;
@@ -666,17 +525,17 @@ export function moveDistTag(
   if (rejection) return rejection;
 
   if (target === undefined) {
-    return reject(`${envelope.name}@${envelope.version} has no ledger row`);
+    return rejectTag(`${envelope.name}@${envelope.version} has no ledger row`);
   }
 
   if (target.name !== envelope.name || target.version !== envelope.version) {
-    return reject(
+    return rejectTag(
       `row ${target.name}@${target.version} is not ${envelope.name}@${envelope.version}`,
     );
   }
 
   if (!isOnNpm(target)) {
-    return reject(`${target.name}@${target.version} is ${target.state}`);
+    return rejectTag(`${target.name}@${target.version} is not on npm`);
   }
 
   if (current?.version === target.version) return { kind: 'unchanged' };
@@ -712,7 +571,7 @@ export function removeDistTag(
   if (current === undefined) return { kind: 'unchanged' };
 
   if (pointed?.name !== current.name || pointed.version !== current.version) {
-    return reject(
+    return rejectTag(
       `${current.name}@${current.version}, which ${tag} points at, has no ledger row`,
     );
   }
@@ -725,23 +584,21 @@ export function removeDistTag(
   };
 }
 
-interface DistTagPayload {
-  tag: string;
-  from?: string | null;
-}
-
 function distTagEvent(
   row: VersionRow,
   event: 'dist_tag_moved' | 'dist_tag_removed',
   envelope: Envelope,
-  payload: DistTagPayload,
+  payload: { tag: string; from?: string | null },
 ): LedgerEventRow {
+  const state = npmState(row);
+
   return {
     name: row.name,
     version: row.version,
+    region: 'npm',
     event,
-    from_state: row.state,
-    to_state: row.state,
+    from_state: state,
+    to_state: state,
     payload: JSON.stringify(payload),
     source: envelope.source,
     run_url: envelope.run_url,
@@ -749,30 +606,43 @@ function distTagEvent(
   };
 }
 
-/** One parameterised statement for a D1 `batch()`. */
+/** One parameterised statement for a D1 `batch()`, or a condition to guard one with. */
 export interface Statement {
   sql: string;
   params: Value[];
 }
 
+export const FACT_COLUMNS = [
+  'abandoned_at',
+  'git_sha',
+  'tag_conflict',
+  'npm_integrity',
+  'npm_published_at',
+  'npm_dist_tag',
+  'npm_deprecated',
+  'npm_conflict',
+  'gh_release_id',
+  'gh_url',
+  'gh_prerelease',
+  'gh_body',
+  'gh_published_at',
+  'gh_conflict',
+] as const satisfies readonly (keyof VersionRow)[];
+
 const VERSION_COLUMNS = [
   'name',
   'version',
-  'state',
-  'state_at',
   'first_seen_at',
   'rev',
   ...FACT_COLUMNS,
 ] as const;
 
-const UPDATED_COLUMNS = VERSION_COLUMNS.filter(
-  (column) =>
-    column !== 'name' && column !== 'version' && column !== 'first_seen_at',
-);
+const UPDATED_COLUMNS = ['rev', ...FACT_COLUMNS] as const;
 
 const LEDGER_COLUMNS = [
   'name',
   'version',
+  'region',
   'event',
   'from_state',
   'to_state',
@@ -785,112 +655,162 @@ const LEDGER_COLUMNS = [
 const placeholders = (count: number): string =>
   Array.from({ length: count }, () => '?').join(', ');
 
-// A 0-row write does not fail a D1 batch, so each dependent insert checks the write landed.
-function ledgerInsert(
-  event: LedgerEventRow,
-  messageId: string,
-  guard: Statement,
-): Statement {
-  return {
-    sql: `INSERT INTO ledger_events (${LEDGER_COLUMNS.join(', ')}, pipeline_event_id) SELECT ${placeholders(LEDGER_COLUMNS.length)}, (SELECT id FROM pipeline_events WHERE message_id = ?) WHERE ${guard.sql}`,
-    params: [
-      ...LEDGER_COLUMNS.map((column) => event[column]),
-      messageId,
-      ...guard.params,
-    ],
-  };
+const and = (conditions: Statement[]): Statement =>
+  conditions.length === 0
+    ? { sql: '1', params: [] }
+    : {
+        sql: conditions.map((condition) => `(${condition.sql})`).join(' AND '),
+        params: conditions.flatMap((condition) => condition.params),
+      };
+
+const claimed = (messageId: string): Statement => ({
+  sql: 'EXISTS (SELECT 1 FROM pipeline_events WHERE message_id = ?)',
+  params: [messageId],
+});
+
+function versionAsRead(row: VersionRow, expectedRev: number | null): Statement {
+  return expectedRev === null
+    ? {
+        sql: 'NOT EXISTS (SELECT 1 FROM versions WHERE name = ? AND version = ?)',
+        params: [row.name, row.version],
+      }
+    : {
+        sql: 'EXISTS (SELECT 1 FROM versions WHERE name = ? AND version = ? AND rev = ?)',
+        params: [row.name, row.version, expectedRev],
+      };
 }
 
-function versionWrite(row: VersionRow, expectedRev: number | null): Statement {
+function versionWrite(
+  row: VersionRow,
+  expectedRev: number | null,
+  claim: Statement,
+): Statement {
   if (expectedRev === null) {
     return {
-      sql: `INSERT INTO versions (${VERSION_COLUMNS.join(', ')}) VALUES (${placeholders(VERSION_COLUMNS.length)}) ON CONFLICT (name, version) DO NOTHING`,
-      params: VERSION_COLUMNS.map((column) => row[column]),
+      sql: `INSERT INTO versions (${VERSION_COLUMNS.join(', ')}) SELECT ${placeholders(VERSION_COLUMNS.length)} WHERE ${claim.sql}`,
+      params: [
+        ...VERSION_COLUMNS.map((column) => row[column]),
+        ...claim.params,
+      ],
     };
   }
 
   return {
-    sql: `UPDATE versions SET ${UPDATED_COLUMNS.map((column) => `${column} = ?`).join(', ')} WHERE name = ? AND version = ? AND rev = ?`,
+    sql: `UPDATE versions SET ${UPDATED_COLUMNS.map((column) => `${column} = ?`).join(', ')} WHERE name = ? AND version = ? AND rev = ? AND ${claim.sql}`,
     params: [
       ...UPDATED_COLUMNS.map((column) => row[column]),
       row.name,
       row.version,
       expectedRev,
+      ...claim.params,
     ],
   };
 }
 
-/**
- * The batch for a fold: the compare-and-set `versions` write, then one guarded
- * `ledger_events` insert per applied event. Runs after the consumer inserts the
- * claim's `pipeline_events` row with `messageId`. When the first result reports
- * 0 changes the row moved: re-read and fold again.
- */
-export function foldStatements(result: Fold, messageId: string): Statement[] {
-  const { row } = result;
+type AppliedTag = Extract<DistTagOutcome, { kind: 'applied' }>;
 
-  if (row === undefined) return [];
+function distTagAsRead(outcome: AppliedTag): Statement {
+  const { row } = outcome;
 
-  const landed: Statement = {
-    sql: 'EXISTS (SELECT 1 FROM versions WHERE name = ? AND version = ? AND rev = ?)',
-    params: [row.name, row.version, row.rev],
-  };
+  const expected =
+    outcome.op === 'delete' ? row.version : outcome.expectedVersion;
 
-  return [
-    versionWrite(row, result.expectedRev),
-    ...result.events.map((event) => ledgerInsert(event, messageId, landed)),
-  ];
+  return expected === null
+    ? {
+        sql: 'NOT EXISTS (SELECT 1 FROM dist_tags WHERE name = ? AND tag = ?)',
+        params: [row.name, row.tag],
+      }
+    : {
+        sql: 'EXISTS (SELECT 1 FROM dist_tags WHERE name = ? AND tag = ? AND version = ?)',
+        params: [row.name, row.tag, expected],
+      };
 }
 
-/**
- * The batch for a dist-tag outcome, compare-and-set on the version the tag
- * pointed at. When the write reports 0 changes the tag moved: re-read and retry.
- */
-export function distTagStatements(
-  outcome: DistTagOutcome,
-  messageId: string,
-): Statement[] {
-  if (outcome.kind !== 'applied') return [];
-
+function distTagWrite(outcome: AppliedTag, claim: Statement): Statement {
   const { row } = outcome;
 
   if (outcome.op === 'delete') {
-    const present: Statement = {
-      sql: 'EXISTS (SELECT 1 FROM dist_tags WHERE name = ? AND tag = ? AND version = ?)',
-      params: [row.name, row.tag, row.version],
+    return {
+      sql: `DELETE FROM dist_tags WHERE name = ? AND tag = ? AND version = ? AND ${claim.sql}`,
+      params: [row.name, row.tag, row.version, ...claim.params],
     };
-
-    // the guard reads the row before the delete removes it
-    return [
-      ledgerInsert(outcome.event, messageId, present),
-      {
-        sql: 'DELETE FROM dist_tags WHERE name = ? AND tag = ? AND version = ?',
-        params: [row.name, row.tag, row.version],
-      },
-    ];
   }
 
-  const write: Statement =
-    outcome.expectedVersion === null
-      ? {
-          sql: 'INSERT INTO dist_tags (name, tag, version, updated_at) VALUES (?, ?, ?, ?) ON CONFLICT (name, tag) DO NOTHING',
-          params: [row.name, row.tag, row.version, row.updated_at],
-        }
-      : {
-          sql: 'UPDATE dist_tags SET version = ?, updated_at = ? WHERE name = ? AND tag = ? AND version = ?',
-          params: [
-            row.version,
-            row.updated_at,
-            row.name,
-            row.tag,
-            outcome.expectedVersion,
-          ],
-        };
+  if (outcome.expectedVersion === null) {
+    return {
+      sql: `INSERT INTO dist_tags (name, tag, version, updated_at) SELECT ?, ?, ?, ? WHERE ${claim.sql}`,
+      params: [row.name, row.tag, row.version, row.updated_at, ...claim.params],
+    };
+  }
 
-  const landed: Statement = {
-    sql: 'EXISTS (SELECT 1 FROM dist_tags WHERE name = ? AND tag = ? AND version = ? AND updated_at = ?)',
-    params: [row.name, row.tag, row.version, row.updated_at],
+  return {
+    sql: `UPDATE dist_tags SET version = ?, updated_at = ? WHERE name = ? AND tag = ? AND version = ? AND ${claim.sql}`,
+    params: [
+      row.version,
+      row.updated_at,
+      row.name,
+      row.tag,
+      outcome.expectedVersion,
+      ...claim.params,
+    ],
   };
+}
 
-  return [write, ledgerInsert(outcome.event, messageId, landed)];
+// a missing claim row joins to nothing, so the event is not logged
+function ledgerInsert(event: LedgerEventRow, messageId: string): Statement {
+  return {
+    sql: `INSERT INTO ledger_events (${LEDGER_COLUMNS.join(', ')}, pipeline_event_id) SELECT ${placeholders(LEDGER_COLUMNS.length)}, id FROM pipeline_events WHERE message_id = ?`,
+    params: [...LEDGER_COLUMNS.map((column) => event[column]), messageId],
+  };
+}
+
+/** The statements for one claim, in batch order after the consumer's claim insert. */
+export interface FoldStatements {
+  /** `pipeline_events.outcome`: `applied` when the row or a dist-tag moves. */
+  outcome: 'applied' | 'unchanged' | 'rejected';
+  /**
+   * Holds while every row the batch writes is as the fold read it. The
+   * consumer's `pipeline_events` insert runs first, guarded on it; every later
+   * statement runs only when that insert landed. No claim row after the batch
+   * means a row moved and nothing was written: re-read and fold again.
+   */
+  guard: Statement;
+  /** The `versions` compare-and-set, if the row changed. */
+  write: Statement | undefined;
+  distTags: Statement[];
+  ledger: Statement[];
+}
+
+/**
+ * The batch for a claim: `[claim insert guarded on guard, write, ...distTags,
+ * ...ledger]`. The consumer skips a message `pipeline_events` already holds
+ * before folding it.
+ */
+export function foldStatements(
+  folded: Fold,
+  tags: readonly DistTagOutcome[],
+  messageId: string,
+): FoldStatements {
+  const claim = claimed(messageId);
+  const moved = tags.filter((outcome) => outcome.kind === 'applied');
+  const applied = folded.outcome === 'applied' ? folded : undefined;
+
+  return {
+    outcome:
+      folded.outcome === 'rejected'
+        ? 'rejected'
+        : applied || moved.length > 0
+          ? 'applied'
+          : 'unchanged',
+    guard: and([
+      ...(applied ? [versionAsRead(applied.row, applied.expectedRev)] : []),
+      ...moved.map(distTagAsRead),
+    ]),
+    write: applied && versionWrite(applied.row, applied.expectedRev, claim),
+    distTags: moved.map((outcome) => distTagWrite(outcome, claim)),
+    ledger: [
+      ...(applied?.events ?? []),
+      ...moved.map((outcome) => outcome.event),
+    ].map((event) => ledgerInsert(event, messageId)),
+  };
 }

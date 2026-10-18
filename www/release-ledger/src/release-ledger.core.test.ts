@@ -2,426 +2,562 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import {
+  abandon,
   ADVISORY_COLUMNS,
-  apply,
-  type EventType,
-  EVENT_TYPES,
-  type FactColumn,
+  type DistTagOutcome,
   FACT_COLUMNS,
+  type Fold,
   fold,
-  type ImmutableColumn,
-  IMMUTABLE_COLUMNS,
+  foldStatements,
+  ghState,
   moveDistTag,
-  MUTABLE_COLUMNS,
+  npmState,
+  type Observation,
+  type Region,
+  REGION_NAMES,
+  REGIONS,
   removeDistTag,
-  type Outcome,
-  type ReleaseEvent,
-  type State,
-  STATES,
+  repair,
+  stateOf,
   type VersionRow,
 } from './release-ledger.core.ts';
 import {
   DEPRECATION,
   DIST_TAG,
-  DRIFTED_TAG,
   ENVELOPE,
-  EVENTS,
   GH,
   NPM,
+  OBSERVED,
   OTHER_SHA,
   ROWS,
   SHA,
+  UNPUBLISHED,
 } from './release-ledger.fixtures.ts';
 
-type Expected = State | 'unchanged' | 'rejected';
+function applied(result: Fold): Extract<Fold, { outcome: 'applied' }> {
+  if (result.outcome !== 'applied') assert.fail(JSON.stringify(result));
 
-const R = 'rejected';
+  return result;
+}
 
-const U = 'unchanged';
+const after = (result: Fold): VersionRow => applied(result).row;
 
-// Every state × event pair, fed the fixture row and an event repeating its facts.
-const EXPECTED: Record<State | 'none', Record<EventType, Expected>> = {
-  none: {
-    tag_observed: 'tagged',
-    npm_observed: R,
-    gh_release_observed: R,
-    deprecation_observed: R,
-    undeprecation_observed: R,
-    mismatch_observed: R,
-    abandon: R,
-    repair: R,
-  },
-  tagged: {
-    tag_observed: U,
-    npm_observed: 'published.active',
-    gh_release_observed: 'drifted',
-    deprecation_observed: R,
-    undeprecation_observed: R,
-    mismatch_observed: 'drifted',
-    abandon: 'abandoned',
-    repair: R,
-  },
-  'published.active': {
-    tag_observed: U,
-    npm_observed: U,
-    gh_release_observed: 'released.active',
-    deprecation_observed: 'published.deprecated',
-    undeprecation_observed: U,
-    mismatch_observed: 'drifted',
-    abandon: R,
-    repair: R,
-  },
-  'published.deprecated': {
-    tag_observed: U,
-    npm_observed: U,
-    gh_release_observed: 'released.deprecated',
-    deprecation_observed: U,
-    undeprecation_observed: 'published.active',
-    mismatch_observed: 'drifted',
-    abandon: R,
-    repair: R,
-  },
-  'released.active': {
-    tag_observed: U,
-    npm_observed: U,
-    gh_release_observed: U,
-    deprecation_observed: 'released.deprecated',
-    undeprecation_observed: U,
-    mismatch_observed: 'drifted',
-    abandon: R,
-    repair: R,
-  },
-  'released.deprecated': {
-    tag_observed: U,
-    npm_observed: U,
-    gh_release_observed: U,
-    deprecation_observed: U,
-    undeprecation_observed: 'released.active',
-    mismatch_observed: 'drifted',
-    abandon: R,
-    repair: R,
-  },
-  drifted: {
-    tag_observed: U,
-    npm_observed: U,
-    gh_release_observed: U,
-    deprecation_observed: U,
-    undeprecation_observed: U,
-    mismatch_observed: U,
-    abandon: R,
-    repair: 'released.active',
-  },
-  abandoned: {
-    tag_observed: U,
-    npm_observed: 'drifted',
-    gh_release_observed: R,
-    deprecation_observed: R,
-    undeprecation_observed: R,
-    mismatch_observed: R,
-    abandon: U,
-    repair: 'released.active',
-  },
+function rejected(result: Fold | DistTagOutcome): string {
+  const reason = 'reason' in result ? result.reason : '';
+
+  assert.ok(reason !== '', JSON.stringify(result));
+
+  return reason;
+}
+
+const conflictColumn = (region: Region) => `${region}_conflict` as const;
+
+/** The columns a region's observation may write. */
+function regionColumns(region: Region): Set<string> {
+  const { fixed, mutable } = REGIONS[region];
+
+  return new Set<string>([
+    ...fixed,
+    ...mutable,
+    conflictColumn(region),
+    ...(region === 'npm' ? ADVISORY_COLUMNS : []),
+    ...(region === 'tag' ? [] : ['abandoned_at']),
+  ]);
+}
+
+const VARIANTS: Record<Region, ((Observation[Region] & object) | null)[]> = {
+  tag: [null, { sha: SHA }, { sha: OTHER_SHA }],
+  npm: [
+    null,
+    NPM,
+    { ...NPM, deprecated: DEPRECATION },
+    { ...NPM, integrity: 'sha512-BBBB' },
+  ],
+  gh: [null, GH, { ...GH, body: 'edited' }, { ...GH, id: 43 }],
 };
 
-const summarize = (outcome: Outcome): Expected =>
-  outcome.kind === 'applied' ? outcome.row.state : outcome.kind;
+describe('fold: regions', () => {
+  for (const [label, row] of Object.entries(ROWS)) {
+    for (const region of REGION_NAMES) {
+      for (const observed of VARIANTS[region]) {
+        const observation = { [region]: observed };
+        const name = `${label} + ${region} ${JSON.stringify(observed)}`;
 
-function applied(outcome: Outcome): VersionRow {
-  assert.equal(outcome.kind, 'applied', JSON.stringify(outcome));
+        it(`${name} moves only along the region's edges`, () => {
+          const result = fold(row, observation, ENVELOPE);
 
-  return outcome.row;
-}
+          if (result.outcome !== 'applied') {
+            assert.equal(result.outcome, 'unchanged');
 
-function rejected(outcome: { kind: string; reason?: string }): string {
-  assert.equal(outcome.kind, 'rejected', JSON.stringify(outcome));
+            return;
+          }
 
-  return outcome.reason ?? '';
-}
+          const from = stateOf(row, region);
+          const to = stateOf(result.row, region);
+          const edges: readonly (readonly string[])[] = REGIONS[region].edges;
 
-describe('apply: every state and event pair', () => {
-  for (const from of ['none', ...STATES] as const) {
-    for (const type of EVENT_TYPES) {
-      const expected = EXPECTED[from][type];
+          assert.ok(
+            from === to || edges.some(([a, b]) => a === from && b === to),
+            `${from} → ${to}`,
+          );
+        });
 
-      it(`${from} + ${type} → ${expected}`, () => {
-        const row = from === 'none' ? undefined : ROWS[from];
-        assert.equal(summarize(apply(row, EVENTS[type], ENVELOPE)), expected);
-      });
+        it(`${name} writes only the region's columns`, () => {
+          const result = fold(row, observation, ENVELOPE);
+
+          if (result.outcome !== 'applied') return;
+
+          const allowed = regionColumns(region);
+
+          for (const column of FACT_COLUMNS) {
+            if (allowed.has(column)) continue;
+
+            assert.equal(result.row[column], row[column], column);
+          }
+        });
+      }
     }
   }
 
-  it('keeps the recorded deprecation when a deprecated row drifts', () => {
-    const outcome = apply(
-      ROWS['published.deprecated'],
-      EVENTS.mismatch_observed,
-      ENVELOPE,
-    );
+  it('never moves npm back to absent: an unpublished version is a conflict', () => {
+    const row = after(fold(ROWS.published, { npm: null }, ENVELOPE));
 
-    assert.equal(applied(outcome).npm_deprecated, DEPRECATION);
+    assert.equal(npmState(row), 'active');
+    assert.equal(row.npm_conflict, 'null');
   });
 
-  it('keeps the deprecation substate in step with npm_deprecated', () => {
-    for (const from of [undefined, ...STATES]) {
-      for (const type of EVENT_TYPES) {
-        const outcome = apply(from && ROWS[from], EVENTS[type], ENVELOPE);
+  it('never moves a final release back: a deleted release is a conflict', () => {
+    const row = after(fold(ROWS.released, { gh: null }, ENVELOPE));
 
-        if (outcome.kind !== 'applied' || outcome.row.state === 'drifted') {
-          continue;
-        }
+    assert.equal(ghState(row), 'final');
+    assert.equal(row.gh_conflict, 'null');
+    assert.equal(row.npm_conflict, null);
+  });
 
-        assert.equal(
-          outcome.row.state.endsWith('.deprecated'),
-          outcome.row.npm_deprecated !== null,
-          `${from} + ${type}`,
-        );
-      }
-    }
+  it('records a deleted tag as a tag conflict', () => {
+    assert.equal(
+      after(fold(ROWS.released, { tag: null }, ENVELOPE)).tag_conflict,
+      'null',
+    );
+  });
+
+  it('is unchanged when every source repeats its facts', () => {
+    assert.deepEqual(fold(ROWS.released, OBSERVED, ENVELOPE), {
+      outcome: 'unchanged',
+    });
+    assert.deepEqual(fold(ROWS.tagged, UNPUBLISHED, ENVELOPE), {
+      outcome: 'unchanged',
+    });
   });
 });
 
-describe('apply: facts', () => {
-  it('moves a backfill that sees all three sources straight to released', () => {
-    let row: VersionRow | undefined;
+describe('fold: a new row', () => {
+  for (const region of REGION_NAMES) {
+    it(`is created by a ${region} observation alone`, () => {
+      const result = applied(
+        fold(undefined, { [region]: OBSERVED[region] }, ENVELOPE),
+      );
 
-    for (const type of [
-      'tag_observed',
-      'npm_observed',
-      'gh_release_observed',
-    ] as const) {
-      row = applied(apply(row, EVENTS[type], ENVELOPE));
-    }
-
-    assert.deepEqual(row, {
-      ...ROWS['released.active'],
-      state_at: ENVELOPE.at,
-      first_seen_at: ENVELOPE.at,
+      assert.equal(result.expectedRev, null);
+      assert.equal(result.row.rev, 0);
+      assert.equal(result.row.first_seen_at, ENVELOPE.at);
+      assert.deepEqual(
+        result.events.map((event) => [event.region, event.from_state]),
+        [[region, null]],
+      );
     });
+  }
+
+  it('is not created when every source reports the version absent', () => {
+    assert.deepEqual(
+      fold(undefined, { tag: null, npm: null, gh: null }, ENVELOPE),
+      { outcome: 'unchanged' },
+    );
   });
 
-  it('records the event, its states and the envelope in the ledger row', () => {
-    const outcome = apply(ROWS.tagged, EVENTS.npm_observed, {
-      ...ENVELOPE,
-      run_url: 'https://github.com/o/r/actions/runs/1',
-    });
+  it('records all three sources in one write, one ledger row per region', () => {
+    const result = applied(fold(undefined, OBSERVED, ENVELOPE));
 
-    assert.equal(outcome.kind, 'applied');
-    assert.deepEqual(outcome.kind === 'applied' && outcome.event, {
+    assert.deepEqual(result.row, {
+      ...ROWS.released,
+      rev: 0,
+      first_seen_at: ENVELOPE.at,
+    });
+    assert.deepEqual(
+      result.events.map((event) => [event.region, event.to_state]),
+      [
+        ['tag', null],
+        ['npm', 'active'],
+        ['gh', 'final'],
+      ],
+    );
+  });
+
+  it('logs the observation, its source and run in the ledger row', () => {
+    const [event] = applied(
+      fold(undefined, { npm: NPM }, { ...ENVELOPE, run_url: 'run' }),
+    ).events;
+
+    assert.deepEqual(event, {
       name: ENVELOPE.name,
       version: ENVELOPE.version,
-      event: 'npm_observed',
-      from_state: 'tagged',
-      to_state: 'published.active',
+      region: 'npm',
+      event: 'observed',
+      from_state: null,
+      to_state: 'active',
       payload: JSON.stringify(NPM),
       source: ENVELOPE.source,
-      run_url: 'https://github.com/o/r/actions/runs/1',
+      run_url: 'run',
       at: ENVELOPE.at,
     });
   });
+});
 
-  it('gives a new row a null from_state', () => {
-    const outcome = apply(undefined, EVENTS.tag_observed, ENVELOPE);
-    assert.equal(outcome.kind === 'applied' && outcome.event.from_state, null);
+describe('fold: out of order', () => {
+  it('accepts a final release before npm', () => {
+    const row = after(fold(ROWS.tagged, { gh: GH, npm: null }, ENVELOPE));
+
+    assert.deepEqual([npmState(row), ghState(row)], ['absent', 'final']);
+    assert.equal(row.gh_conflict, null);
   });
 
-  const contradictions: [State, ReleaseEvent][] = [
-    ['tagged', { type: 'tag_observed', sha: 'f'.repeat(40) }],
-    ['released.active', { type: 'tag_observed', sha: 'f'.repeat(40) }],
-    ['abandoned', { type: 'tag_observed', sha: 'f'.repeat(40) }],
-    ['published.active', { ...EVENTS.npm_observed, integrity: 'sha512-BBBB' }],
-    [
-      'released.active',
-      { ...EVENTS.gh_release_observed, url: 'https://example.com' },
-    ],
-    [
-      'released.deprecated',
-      { ...EVENTS.gh_release_observed, prerelease: true },
-    ],
-  ];
+  it('then records npm without a conflict', () => {
+    const row = after(fold(ROWS.releasedFirst, { npm: NPM }, ENVELOPE));
 
-  for (const [state, event] of contradictions) {
-    it(`rejects a contradicting ${event.type} in ${state}`, () => {
-      assert.match(
-        rejected(apply(ROWS[state], event, ENVELOPE)),
-        /report mismatch_observed/,
-      );
-    });
-  }
+    assert.deepEqual([npmState(row), ghState(row)], ['active', 'final']);
+    assert.equal(row.npm_conflict, null);
+  });
 
-  for (const state of ['released.active', 'released.deprecated'] as const) {
-    it(`updates an edited release body in place in ${state}`, () => {
-      const outcome = apply(
-        ROWS[state],
-        { ...EVENTS.gh_release_observed, body: 'edited' },
-        ENVELOPE,
-      );
+  it('accepts npm before the tag', () => {
+    const row = after(fold(undefined, { npm: NPM, tag: null }, ENVELOPE));
 
-      assert.equal(applied(outcome).gh_body, 'edited');
-      assert.equal(applied(outcome).state, state);
-      assert.equal(
-        outcome.kind === 'applied' && outcome.event.from_state,
-        state,
-      );
-    });
-  }
-
-  const ignored: ReleaseEvent[] = [
-    { type: 'tag_observed', sha: 'f'.repeat(40) },
-    { ...EVENTS.npm_observed, integrity: 'sha512-BBBB' },
-    { ...EVENTS.gh_release_observed, id: 7 },
-    { ...EVENTS.gh_release_observed, body: 'edited' },
-    { type: 'deprecation_observed', message: 'use 3.0' },
-    {
-      type: 'mismatch_observed',
-      field: 'npm_integrity',
-      recorded: NPM.integrity,
-      observed: null,
-    },
-  ];
-
-  for (const event of ignored) {
-    it(`keeps a drifted row's facts on a contradicting ${event.type}`, () => {
-      assert.deepEqual(apply(ROWS.drifted, event, ENVELOPE), {
-        kind: 'unchanged',
-      });
-    });
-  }
-
-  it('still rejects a malformed event on a drifted row', () => {
+    assert.equal(row.git_sha, null);
     assert.equal(
-      apply(
-        ROWS.drifted,
-        { type: 'deprecation_observed', message: '' },
-        ENVELOPE,
-      ).kind,
-      'rejected',
+      after(fold(row, { tag: { sha: SHA } }, ENVELOPE)).git_sha,
+      SHA,
     );
   });
+});
 
-  it('drifts an abandoned tag that reaches npm, recording the npm facts', () => {
-    const row = applied(apply(ROWS.abandoned, EVENTS.npm_observed, ENVELOPE));
+describe('fold: conflicts', () => {
+  const contradiction = { ...NPM, integrity: 'sha512-BBBB' };
 
-    assert.equal(row.state, 'drifted');
+  it('records the contradicting observation and keeps the recorded fact', () => {
+    const row = after(fold(ROWS.published, { npm: contradiction }, ENVELOPE));
+
     assert.equal(row.npm_integrity, NPM.integrity);
+    assert.deepEqual(JSON.parse(row.npm_conflict ?? ''), {
+      npm_integrity: 'sha512-BBBB',
+      npm_published_at: NPM.publishedAt,
+    });
   });
 
-  it('records the GitHub release that drifted a tagged row', () => {
-    const row = applied(
-      apply(ROWS.tagged, EVENTS.gh_release_observed, ENVELOPE),
+  it('flags only the contradicted region', () => {
+    const row = after(
+      fold(ROWS.released, { ...OBSERVED, tag: { sha: OTHER_SHA } }, ENVELOPE),
     );
 
-    assert.equal(row.gh_release_id, GH.id);
+    assert.deepEqual(
+      [row.tag_conflict, row.npm_conflict, row.gh_conflict],
+      [JSON.stringify({ git_sha: OTHER_SHA }), null, null],
+    );
   });
 
-  it('records a new deprecation message without leaving the substate', () => {
-    const outcome = apply(
-      ROWS['released.deprecated'],
-      { type: 'deprecation_observed', message: 'use 3.0' },
-      ENVELOPE,
+  it('keeps moving the lifecycle while in conflict', () => {
+    const conflicted = after(
+      fold(ROWS.published, { npm: contradiction }, ENVELOPE),
     );
 
-    assert.equal(outcome.kind, 'applied');
+    const row = after(
+      fold(
+        conflicted,
+        { npm: { ...contradiction, deprecated: DEPRECATION } },
+        ENVELOPE,
+      ),
+    );
+
+    assert.equal(npmState(row), 'deprecated');
+    assert.equal(row.npm_conflict, conflicted.npm_conflict);
+  });
+
+  it('keeps the conflict when the source agrees again; only repair clears it', () => {
+    const conflicted = after(
+      fold(ROWS.published, { npm: contradiction }, ENVELOPE),
+    );
+
+    assert.deepEqual(fold(conflicted, { npm: NPM }, ENVELOPE), {
+      outcome: 'unchanged',
+    });
+  });
+
+  it('records the latest contradiction', () => {
+    const conflicted = after(fold(ROWS.released, { gh: null }, ENVELOPE));
+
     assert.equal(
-      outcome.kind === 'applied' && outcome.event.from_state,
-      'released.deprecated',
+      after(fold(conflicted, { gh: { ...GH, id: 43 } }, ENVELOPE)).gh_conflict,
+      JSON.stringify({
+        gh_release_id: 43,
+        gh_url: GH.url,
+        gh_prerelease: 0,
+        gh_published_at: GH.publishedAt,
+      }),
     );
-    assert.equal(applied(outcome).npm_deprecated, 'use 3.0');
+  });
+
+  it('is unchanged on a repeated contradiction', () => {
+    const conflicted = after(fold(ROWS.released, { gh: null }, ENVELOPE));
+
+    assert.deepEqual(fold(conflicted, { gh: null }, ENVELOPE), {
+      outcome: 'unchanged',
+    });
+  });
+});
+
+describe('fold: mutable and advisory facts', () => {
+  it('updates an edited release body in place', () => {
+    const result = applied(
+      fold(ROWS.released, { gh: { ...GH, body: 'edited' } }, ENVELOPE),
+    );
+
+    assert.equal(result.row.gh_body, 'edited');
+    assert.equal(result.row.gh_conflict, null);
+    assert.deepEqual(
+      result.events.map((event) => [event.from_state, event.to_state]),
+      [['final', 'final']],
+    );
+  });
+
+  it('deprecates, rewords and undeprecates', () => {
+    const deprecated = after(
+      fold(
+        ROWS.published,
+        { npm: { ...NPM, deprecated: DEPRECATION } },
+        ENVELOPE,
+      ),
+    );
+
+    const reworded = after(
+      fold(deprecated, { npm: { ...NPM, deprecated: 'use 3.0' } }, ENVELOPE),
+    );
+
+    assert.equal(reworded.npm_deprecated, 'use 3.0');
+    assert.equal(
+      npmState(after(fold(reworded, { npm: NPM }, ENVELOPE))),
+      'active',
+    );
+  });
+
+  it('records a version first seen deprecated', () => {
+    assert.equal(
+      npmState(
+        after(
+          fold(
+            ROWS.tagged,
+            { npm: { ...NPM, deprecated: DEPRECATION } },
+            ENVELOPE,
+          ),
+        ),
+      ),
+      'deprecated',
+    );
+  });
+
+  it('records no dist-tag when the claim has none', () => {
+    const { distTag: _distTag, ...sweep } = NPM;
+
+    assert.equal(
+      after(fold(ROWS.tagged, { npm: sweep }, ENVELOPE)).npm_dist_tag,
+      null,
+    );
+  });
+
+  it('fills a missing dist-tag from a later publish-npm claim', () => {
+    const { distTag: _distTag, ...sweep } = NPM;
+    const row = after(fold(ROWS.tagged, { npm: sweep }, ENVELOPE));
+
+    assert.equal(
+      after(fold(row, { npm: NPM }, ENVELOPE)).npm_dist_tag,
+      DIST_TAG,
+    );
+  });
+
+  it('keeps the first dist-tag and never flags a different one', () => {
+    assert.deepEqual(
+      fold(ROWS.published, { npm: { ...NPM, distTag: 'next' } }, ENVELOPE),
+      { outcome: 'unchanged' },
+    );
   });
 
   it('rejects an empty deprecation message', () => {
     assert.match(
       rejected(
-        apply(
-          ROWS['published.active'],
-          { type: 'deprecation_observed', message: '' },
-          ENVELOPE,
-        ),
+        fold(ROWS.published, { npm: { ...NPM, deprecated: '' } }, ENVELOPE),
       ),
-      /undeprecation_observed/,
+      /empty deprecation/,
     );
   });
 
   it('rejects a row for another version', () => {
     assert.match(
-      rejected(
-        apply(ROWS.tagged, EVENTS.tag_observed, {
-          ...ENVELOPE,
-          version: '2.0.0',
-        }),
-      ),
+      rejected(fold(ROWS.tagged, OBSERVED, { ...ENVELOPE, version: '2.0.0' })),
       /is not lit-ui-router@2\.0\.0/,
     );
   });
+
+  it('compares against the read rev', () => {
+    const result = applied(
+      fold(ROWS.released, { gh: { ...GH, body: 'edited' } }, ENVELOPE),
+    );
+
+    assert.equal(result.expectedRev, ROWS.released.rev);
+    assert.equal(result.row.rev, ROWS.released.rev + 1);
+    assert.equal(result.row.first_seen_at, ROWS.released.first_seen_at);
+  });
 });
 
-describe('apply: repair', () => {
-  const repairs: [
-    Omit<Extract<ReleaseEvent, { type: 'repair' }>, 'type'>,
-    State,
-  ][] = [
-    [{ tag: { sha: SHA } }, 'tagged'],
-    [{ tag: { sha: SHA }, npm: NPM }, 'published.active'],
-    [
-      { tag: { sha: SHA }, npm: NPM, deprecated: DEPRECATION },
-      'published.deprecated',
-    ],
-    [{ tag: { sha: SHA }, npm: NPM, ghRelease: GH }, 'released.active'],
-    [
-      { tag: { sha: SHA }, npm: NPM, ghRelease: GH, deprecated: DEPRECATION },
-      'released.deprecated',
-    ],
-  ];
+describe('abandon', () => {
+  it('marks a tag that never reached npm or a release', () => {
+    const result = applied(abandon(ROWS.tagged, ENVELOPE));
 
-  for (const [observations, state] of repairs) {
-    it(`derives ${state}`, () => {
-      const row = applied(
-        apply(ROWS.drifted, { type: 'repair', ...observations }, ENVELOPE),
-      );
+    assert.equal(result.row.abandoned_at, ENVELOPE.at);
+    assert.deepEqual(
+      result.events.map((event) => [event.region, event.event]),
+      [['tag', 'abandon']],
+    );
+  });
 
-      assert.equal(row.state, state);
+  it('is unchanged on an abandoned row', () => {
+    assert.deepEqual(abandon(ROWS.abandoned, ENVELOPE), {
+      outcome: 'unchanged',
+    });
+  });
+
+  for (const [label, row] of [
+    ['on npm', ROWS.published],
+    ['with a release', ROWS.releasedFirst],
+  ] as const) {
+    it(`refuses a version ${label}`, () => {
+      assert.match(rejected(abandon(row, ENVELOPE)), /needs npm absent/);
     });
   }
 
-  it('overwrites every recorded fact', () => {
-    const row = applied(
-      apply(
-        ROWS.drifted,
-        { type: 'repair', tag: { sha: 'f'.repeat(40) } },
+  it('needs a row', () => {
+    assert.match(rejected(abandon(undefined, ENVELOPE)), /needs a row/);
+  });
+
+  for (const region of ['npm', 'gh'] as const) {
+    it(`is undone by ${region} facts`, () => {
+      assert.equal(
+        after(fold(ROWS.abandoned, { [region]: OBSERVED[region] }, ENVELOPE))
+          .abandoned_at,
+        null,
+      );
+    });
+  }
+
+  it('stays through a tag observation', () => {
+    assert.deepEqual(fold(ROWS.abandoned, UNPUBLISHED, ENVELOPE), {
+      outcome: 'unchanged',
+    });
+  });
+});
+
+describe('repair', () => {
+  const conflicted = after(
+    fold(
+      ROWS.released,
+      { npm: { ...NPM, integrity: 'sha512-BBBB' }, gh: null },
+      ENVELOPE,
+    ),
+  );
+
+  it('adopts the observation and clears only its region', () => {
+    const result = applied(
+      repair(
+        conflicted,
+        'npm',
+        { npm: { ...NPM, integrity: 'sha512-BBBB' } },
         ENVELOPE,
       ),
     );
 
-    assert.deepEqual(row, {
-      ...ROWS.tagged,
-      git_sha: 'f'.repeat(40),
-      state_at: ENVELOPE.at,
-      rev: ROWS.drifted.rev + 1,
-    });
-  });
-
-  it('rejects a GitHub release without npm', () => {
-    assert.match(
-      rejected(
-        apply(
-          ROWS.drifted,
-          { type: 'repair', tag: { sha: SHA }, ghRelease: GH },
-          ENVELOPE,
-        ),
-      ),
-      /GitHub release without npm/,
+    assert.equal(result.row.npm_integrity, 'sha512-BBBB');
+    assert.equal(result.row.npm_conflict, null);
+    assert.equal(result.row.gh_conflict, 'null');
+    assert.deepEqual(
+      result.events.map((event) => [event.region, event.event]),
+      [['npm', 'repair']],
     );
   });
 
-  it('rejects a deprecation without npm', () => {
+  it('ignores the other regions of the observation', () => {
+    const row = after(
+      repair(
+        conflicted,
+        'npm',
+        { ...OBSERVED, gh: { ...GH, id: 7 } },
+        ENVELOPE,
+      ),
+    );
+
+    for (const column of REGIONS.gh.fixed) {
+      assert.equal(row[column], conflicted[column], column);
+    }
+  });
+
+  it('cannot erase recorded facts', () => {
     assert.match(
-      rejected(
-        apply(
-          ROWS.drifted,
-          { type: 'repair', tag: { sha: SHA }, deprecated: DEPRECATION },
+      rejected(repair(conflicted, 'gh', { gh: null }, ENVELOPE)),
+      /cannot erase recorded gh facts/,
+    );
+  });
+
+  it('needs the current observation', () => {
+    assert.match(
+      rejected(repair(conflicted, 'npm', {}, ENVELOPE)),
+      /needs the current npm observation/,
+    );
+  });
+
+  it('needs a conflict', () => {
+    assert.match(
+      rejected(repair(ROWS.released, 'npm', OBSERVED, ENVELOPE)),
+      /needs a conflict on npm/,
+    );
+    assert.match(
+      rejected(repair(undefined, 'tag', OBSERVED, ENVELOPE)),
+      /needs a conflict on tag/,
+    );
+  });
+
+  it('sets the dist-tag it carries', () => {
+    assert.equal(
+      after(
+        repair(
+          conflicted,
+          'npm',
+          { npm: { ...NPM, distTag: 'next' } },
           ENVELOPE,
         ),
-      ),
-      /deprecation without npm/,
+      ).npm_dist_tag,
+      'next',
     );
+  });
+});
+
+describe('REGIONS', () => {
+  it('assigns every fact column to one region, as fixed, mutable, advisory or conflict', () => {
+    const assigned = [
+      'abandoned_at',
+      ...ADVISORY_COLUMNS,
+      ...REGION_NAMES.flatMap((region) => [
+        ...REGIONS[region].fixed,
+        ...REGIONS[region].mutable,
+        conflictColumn(region),
+      ]),
+    ];
+
+    assert.deepEqual([...assigned].sort(), [...FACT_COLUMNS].sort());
   });
 });
 
@@ -433,15 +569,8 @@ describe('moveDistTag', () => {
     updated_at: '2026-09-01T00:00:00.000Z',
   };
 
-  it('points the tag at the version and logs the move', () => {
-    const outcome = moveDistTag(
-      current,
-      ROWS['released.active'],
-      'latest',
-      ENVELOPE,
-    );
-
-    assert.deepEqual(outcome, {
+  it('points the tag at the version and logs the move against npm', () => {
+    assert.deepEqual(moveDistTag(current, ROWS.released, 'latest', ENVELOPE), {
       kind: 'applied',
       op: 'upsert',
       row: { ...current, version: ENVELOPE.version, updated_at: ENVELOPE.at },
@@ -449,9 +578,10 @@ describe('moveDistTag', () => {
       event: {
         name: ENVELOPE.name,
         version: ENVELOPE.version,
+        region: 'npm',
         event: 'dist_tag_moved',
-        from_state: 'released.active',
-        to_state: 'released.active',
+        from_state: 'active',
+        to_state: 'active',
         payload: JSON.stringify({ tag: 'latest', from: '0.9.0' }),
         source: ENVELOPE.source,
         run_url: null,
@@ -464,7 +594,7 @@ describe('moveDistTag', () => {
     assert.deepEqual(
       moveDistTag(
         { ...current, version: ENVELOPE.version },
-        ROWS['published.active'],
+        ROWS.published,
         'latest',
         ENVELOPE,
       ),
@@ -475,33 +605,24 @@ describe('moveDistTag', () => {
   for (const [label, row] of [
     ['tagged', ROWS.tagged],
     ['abandoned', ROWS.abandoned],
-    ['drifted without npm facts', DRIFTED_TAG],
+    ['released before npm', ROWS.releasedFirst],
   ] as const) {
     it(`rejects a version ${label}`, () => {
-      assert.equal(
-        moveDistTag(undefined, row, 'latest', ENVELOPE).kind,
-        'rejected',
+      assert.match(
+        rejected(moveDistTag(undefined, row, 'latest', ENVELOPE)),
+        /is not on npm/,
       );
     });
   }
 
-  it('points a tag at a drifted version that recorded npm facts', () => {
-    const outcome = moveDistTag(undefined, ROWS.drifted, 'next', ENVELOPE);
+  it('points a tag at a version whose npm facts are in conflict', () => {
+    const row = after(fold(ROWS.published, { npm: null }, ENVELOPE));
 
-    assert.equal(outcome.kind === 'applied' && outcome.op, 'upsert');
-    assert.equal(
-      outcome.kind === 'applied' && outcome.event.to_state,
-      'drifted',
-    );
+    assert.equal(moveDistTag(undefined, row, 'next', ENVELOPE).kind, 'applied');
   });
 
   it('inserts a new tag with no expected version', () => {
-    const outcome = moveDistTag(
-      undefined,
-      ROWS['published.active'],
-      'next',
-      ENVELOPE,
-    );
+    const outcome = moveDistTag(undefined, ROWS.published, 'next', ENVELOPE);
 
     assert.equal(
       outcome.kind === 'applied' && outcome.op === 'upsert'
@@ -513,7 +634,7 @@ describe('moveDistTag', () => {
 
   it('rejects a current row for another tag', () => {
     assert.match(
-      rejected(moveDistTag(current, ROWS['released.active'], 'next', ENVELOPE)),
+      rejected(moveDistTag(current, ROWS.released, 'next', ENVELOPE)),
       /latest is not next/,
     );
   });
@@ -523,7 +644,7 @@ describe('moveDistTag', () => {
       rejected(
         moveDistTag(
           { ...current, name: 'other' },
-          ROWS['released.active'],
+          ROWS.released,
           'latest',
           ENVELOPE,
         ),
@@ -535,7 +656,7 @@ describe('moveDistTag', () => {
   it('rejects a target row for another version', () => {
     assert.match(
       rejected(
-        moveDistTag(current, ROWS['released.active'], 'latest', {
+        moveDistTag(current, ROWS.released, 'latest', {
           ...ENVELOPE,
           version: '2.0.0',
         }),
@@ -545,293 +666,10 @@ describe('moveDistTag', () => {
   });
 
   it('rejects a version with no row', () => {
-    assert.equal(
-      moveDistTag(undefined, undefined, 'latest', ENVELOPE).kind,
-      'rejected',
-    );
-  });
-});
-
-describe('fact columns', () => {
-  it('splits every fact into immutable, mutable or advisory', () => {
-    const split = [
-      ...IMMUTABLE_COLUMNS,
-      ...MUTABLE_COLUMNS,
-      ...ADVISORY_COLUMNS,
-    ].sort();
-
-    assert.deepEqual(split, [...FACT_COLUMNS].sort());
-  });
-});
-
-describe('apply: mismatch_observed', () => {
-  const mismatch = (
-    fields: Partial<Extract<ReleaseEvent, { type: 'mismatch_observed' }>>,
-  ): ReleaseEvent => ({ ...EVENTS.mismatch_observed, ...fields });
-
-  const notImmutable: FactColumn[] = [
-    'gh_body',
-    'npm_deprecated',
-    'npm_dist_tag',
-  ];
-
-  for (const field of notImmutable) {
-    it(`rejects a mismatch on ${field}`, () => {
-      const event = mismatch({
-        // SAFETY: deliberately outside ImmutableColumn, as an untrusted claim could be
-        field: field as ImmutableColumn,
-        recorded: ROWS['released.deprecated'][field],
-        observed: 'other',
-      });
-
-      assert.match(
-        rejected(apply(ROWS['released.deprecated'], event, ENVELOPE)),
-        /not an immutable fact/,
-      );
-    });
-  }
-
-  it('rejects a mismatch with nothing recorded', () => {
     assert.match(
-      rejected(
-        apply(
-          ROWS.tagged,
-          mismatch({ field: 'npm_integrity', recorded: null }),
-          ENVELOPE,
-        ),
-      ),
-      /nothing recorded/,
+      rejected(moveDistTag(undefined, undefined, 'latest', ENVELOPE)),
+      /has no ledger row/,
     );
-  });
-
-  it('rejects a stale mismatch that names a value the row no longer records', () => {
-    assert.match(
-      rejected(
-        apply(
-          ROWS['released.active'],
-          mismatch({ field: 'gh_release_id', recorded: 7, observed: null }),
-          ENVELOPE,
-        ),
-      ),
-      /is stale/,
-    );
-  });
-
-  it('rejects a mismatch that observed the recorded value', () => {
-    assert.match(
-      rejected(
-        apply(ROWS['published.active'], mismatch({ observed: SHA }), ENVELOPE),
-      ),
-      /observed the recorded value/,
-    );
-  });
-
-  it('still validates a mismatch on a drifted row', () => {
-    assert.match(
-      rejected(
-        apply(ROWS.drifted, mismatch({ recorded: OTHER_SHA }), ENVELOPE),
-      ),
-      /is stale/,
-    );
-  });
-
-  it('drifts on a deleted GitHub release', () => {
-    const row = applied(
-      apply(
-        ROWS['released.active'],
-        mismatch({ field: 'gh_release_id', recorded: GH.id, observed: null }),
-        ENVELOPE,
-      ),
-    );
-
-    assert.equal(row.state, 'drifted');
-    assert.equal(row.gh_release_id, GH.id);
-  });
-});
-
-describe('apply: the advisory dist-tag', () => {
-  const { distTag: _distTag, ...withoutTag } = NPM;
-
-  it('records a new version without a dist-tag when the claim has none', () => {
-    const row = applied(
-      apply(ROWS.tagged, { type: 'npm_observed', ...withoutTag }, ENVELOPE),
-    );
-
-    assert.equal(row.state, 'published.active');
-    assert.equal(row.npm_dist_tag, null);
-  });
-
-  it('fills a missing dist-tag in place from a later publish-npm claim', () => {
-    const row = applied(
-      apply(
-        { ...ROWS['published.active'], npm_dist_tag: null },
-        EVENTS.npm_observed,
-        ENVELOPE,
-      ),
-    );
-
-    assert.equal(row.state, 'published.active');
-    assert.equal(row.npm_dist_tag, DIST_TAG);
-  });
-
-  for (const [label, event] of [
-    ['a missing', { type: 'npm_observed', ...withoutTag }],
-    ['another', { ...EVENTS.npm_observed, distTag: 'next' }],
-  ] satisfies [string, ReleaseEvent][]) {
-    it(`never treats ${label} dist-tag as drift`, () => {
-      assert.deepEqual(apply(ROWS['released.active'], event, ENVELOPE), {
-        kind: 'unchanged',
-      });
-    });
-  }
-
-  it('lets repair keep the recorded dist-tag', () => {
-    const row = applied(
-      apply(ROWS.drifted, { ...EVENTS.repair, npm: withoutTag }, ENVELOPE),
-    );
-
-    assert.equal(row.npm_dist_tag, DIST_TAG);
-  });
-
-  it('lets repair set the dist-tag it carries', () => {
-    const row = applied(
-      apply(
-        ROWS.drifted,
-        { ...EVENTS.repair, npm: { ...NPM, distTag: 'next' } },
-        ENVELOPE,
-      ),
-    );
-
-    assert.equal(row.npm_dist_tag, 'next');
-  });
-
-  it('clears the dist-tag when repair finds no npm version', () => {
-    const row = applied(
-      apply(ROWS.drifted, { type: 'repair', tag: { sha: SHA } }, ENVELOPE),
-    );
-
-    assert.equal(row.npm_dist_tag, null);
-  });
-});
-
-describe('apply: rev and first_seen_at', () => {
-  it('inserts a new row at rev 0', () => {
-    const outcome = apply(undefined, EVENTS.tag_observed, ENVELOPE);
-
-    assert.equal(outcome.kind === 'applied' && outcome.expectedRev, null);
-    assert.equal(applied(outcome).rev, 0);
-    assert.equal(applied(outcome).first_seen_at, ENVELOPE.at);
-  });
-
-  for (const [state, event] of [
-    ['tagged', EVENTS.npm_observed],
-    ['released.active', { ...EVENTS.gh_release_observed, body: 'edited' }],
-    ['drifted', EVENTS.repair],
-  ] satisfies [State, ReleaseEvent][]) {
-    it(`compares against the read rev on ${event.type} in ${state}`, () => {
-      const outcome = apply(ROWS[state], event, ENVELOPE);
-
-      assert.equal(
-        outcome.kind === 'applied' && outcome.expectedRev,
-        ROWS[state].rev,
-      );
-      assert.equal(applied(outcome).rev, ROWS[state].rev + 1);
-      assert.equal(applied(outcome).first_seen_at, ROWS[state].first_seen_at);
-    });
-  }
-});
-
-describe('apply: ways out', () => {
-  it('abandons a drifted tag that never reached npm', () => {
-    const row = applied(apply(DRIFTED_TAG, EVENTS.abandon, ENVELOPE));
-
-    assert.equal(row.state, 'abandoned');
-    assert.equal(row.git_sha, SHA);
-  });
-
-  it('refuses to abandon a drifted version that recorded npm facts', () => {
-    assert.match(
-      rejected(apply(ROWS.drifted, EVENTS.abandon, ENVELOPE)),
-      /needs no npm facts/,
-    );
-  });
-
-  it('repairs an abandoned tag', () => {
-    const row = applied(
-      apply(ROWS.abandoned, { type: 'repair', tag: { sha: SHA } }, ENVELOPE),
-    );
-
-    assert.equal(row.state, 'tagged');
-  });
-
-  it('rejects repair with an empty deprecation message', () => {
-    assert.match(
-      rejected(
-        apply(ROWS.drifted, { ...EVENTS.repair, deprecated: '' }, ENVELOPE),
-      ),
-      /undeprecation_observed/,
-    );
-  });
-});
-
-describe('fold', () => {
-  const BACKFILL = [
-    EVENTS.tag_observed,
-    EVENTS.npm_observed,
-    EVENTS.gh_release_observed,
-  ] satisfies ReleaseEvent[];
-
-  it('folds a claim in order into one write', () => {
-    const result = fold(undefined, BACKFILL, ENVELOPE);
-
-    assert.equal(result.outcome, 'applied');
-    assert.equal(result.expectedRev, null);
-    assert.equal(result.row?.state, 'released.active');
-    assert.equal(result.row?.rev, 2);
-    assert.deepEqual(
-      result.events.map((event) => event.event),
-      BACKFILL.map((event) => event.type),
-    );
-    assert.equal(result.rejected, null);
-  });
-
-  it('is unchanged when every event repeats a recorded fact', () => {
-    assert.deepEqual(fold(ROWS['released.active'], BACKFILL, ENVELOPE), {
-      outcome: 'unchanged',
-      row: undefined,
-      expectedRev: ROWS['released.active'].rev,
-      events: [],
-      rejected: null,
-    });
-  });
-
-  it('stops at the first rejection and keeps the applied prefix', () => {
-    const result = fold(
-      ROWS.tagged,
-      [
-        EVENTS.npm_observed,
-        { ...EVENTS.gh_release_observed, id: 7 },
-        { type: 'deprecation_observed', message: '' },
-        EVENTS.deprecation_observed,
-      ],
-      ENVELOPE,
-    );
-
-    assert.equal(result.outcome, 'rejected');
-    assert.equal(result.rejected?.index, 2);
-    assert.match(result.rejected?.reason ?? '', /undeprecation_observed/);
-    assert.equal(result.row?.state, 'released.active');
-    assert.equal(result.row?.npm_deprecated, null);
-    assert.equal(result.events.length, 2);
-    assert.equal(result.expectedRev, ROWS.tagged.rev);
-  });
-
-  it('writes nothing when the first event is rejected', () => {
-    const result = fold(undefined, [EVENTS.npm_observed], ENVELOPE);
-
-    assert.equal(result.outcome, 'rejected');
-    assert.equal(result.row, undefined);
-    assert.equal(result.rejected?.index, 0);
   });
 });
 
@@ -844,25 +682,23 @@ describe('removeDistTag', () => {
   };
 
   it('deletes the tag and logs the removal against its version', () => {
-    assert.deepEqual(
-      removeDistTag(current, ROWS['released.active'], 'next', ENVELOPE),
-      {
-        kind: 'applied',
-        op: 'delete',
-        row: current,
-        event: {
-          name: ENVELOPE.name,
-          version: ENVELOPE.version,
-          event: 'dist_tag_removed',
-          from_state: 'released.active',
-          to_state: 'released.active',
-          payload: JSON.stringify({ tag: 'next' }),
-          source: ENVELOPE.source,
-          run_url: null,
-          at: ENVELOPE.at,
-        },
+    assert.deepEqual(removeDistTag(current, ROWS.released, 'next', ENVELOPE), {
+      kind: 'applied',
+      op: 'delete',
+      row: current,
+      event: {
+        name: ENVELOPE.name,
+        version: ENVELOPE.version,
+        region: 'npm',
+        event: 'dist_tag_removed',
+        from_state: 'active',
+        to_state: 'active',
+        payload: JSON.stringify({ tag: 'next' }),
+        source: ENVELOPE.source,
+        run_url: null,
+        at: ENVELOPE.at,
       },
-    );
+    });
   });
 
   it('is a no-op when the tag is already gone', () => {
@@ -873,9 +709,7 @@ describe('removeDistTag', () => {
 
   it('rejects a current row for another tag', () => {
     assert.match(
-      rejected(
-        removeDistTag(current, ROWS['released.active'], 'latest', ENVELOPE),
-      ),
+      rejected(removeDistTag(current, ROWS.released, 'latest', ENVELOPE)),
       /next is not latest/,
     );
   });
@@ -885,12 +719,56 @@ describe('removeDistTag', () => {
       rejected(
         removeDistTag(
           { ...current, version: '0.9.0' },
-          ROWS['released.active'],
+          ROWS.released,
           'next',
           ENVELOPE,
         ),
       ),
       /has no ledger row/,
+    );
+  });
+});
+
+describe('foldStatements', () => {
+  const move = moveDistTag(undefined, ROWS.released, 'next', ENVELOPE);
+
+  it('reports applied when only a dist-tag moves', () => {
+    const statements = foldStatements(
+      fold(ROWS.released, OBSERVED, ENVELOPE),
+      [move],
+      'message-1',
+    );
+
+    assert.equal(statements.outcome, 'applied');
+    assert.equal(statements.write, undefined);
+    assert.equal(statements.distTags.length, 1);
+    assert.equal(statements.ledger.length, 1);
+  });
+
+  it('reports unchanged with nothing to write', () => {
+    const statements = foldStatements(
+      fold(ROWS.released, OBSERVED, ENVELOPE),
+      [{ kind: 'unchanged' }],
+      'message-1',
+    );
+
+    assert.deepEqual(statements, {
+      outcome: 'unchanged',
+      guard: { sql: '1', params: [] },
+      write: undefined,
+      distTags: [],
+      ledger: [],
+    });
+  });
+
+  it('reports rejected for malformed input', () => {
+    assert.equal(
+      foldStatements(
+        fold(ROWS.published, { npm: { ...NPM, deprecated: '' } }, ENVELOPE),
+        [],
+        'message-1',
+      ).outcome,
+      'rejected',
     );
   });
 });
