@@ -583,6 +583,13 @@ pathname, an absolute URL string, or anything with a `pathname`:
 type Verdict =
   | { kind: 'shell'; mount: string; status?: number }
   | { kind: 'redirect'; mount: string; location: string; status: number }
+  | {
+      kind: 'delegate';
+      mount: string;
+      delegate: string;
+      state: string;
+      params: RawParams;
+    }
   | { kind: 'notFound'; mount?: string };
 ```
 
@@ -592,7 +599,9 @@ projection today, 401/403-with-shell for a future auth tier — it wins
 outright, with consumer obligations covered
 [below](#shell-at-404-the-otherwise-projection). `redirect.location` is the
 mount-joined target path, and `notFound.mount` distinguishes "a mount owned
-this path but nothing matched" from "no mount at all".
+this path but nothing matched" from "no mount at all". `delegate` answers a
+state that hands its url to a host handler
+([delegating states](/packages/server#delegating-states)).
 
 To catch an unclaimed bare base in CI rather than in a log, assert in a test
 that

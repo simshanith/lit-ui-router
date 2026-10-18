@@ -26,8 +26,8 @@ imports the pre-1.0 renderer or re-derives the incantation.
   `<script type="application/json" data-lit-ui-router-ssr>`, naming this package's version, the
   state the router stood on, and that state's url parameter values. A page `renderShell` returns
   as a string is written as-is, without one.
-- **The emit loop.** Verdict to file name, redirect to rules line, tally, warnings for paths that
-  matched nothing.
+- **The emit loop.** Verdict to file name, redirect to rules line, delegating states skipped,
+  tally, warnings for paths that matched nothing.
 - **The host rules file.** `_redirects` by default, every generated line paired with and without a
   trailing slash. No SPA catch-all is ever written: one turns every 404 into a 200.
 - **`<ui-view>` on both sides.** `UiViewRenderer` fills the element's light DOM on the server;
@@ -66,7 +66,7 @@ const result = await prerender({
   document: (body, { path }) => fillShell(titles.get(path), body),
 });
 
-console.log(result.tally); // { shell: 2, redirect: 1, notFound: 0, document: 1 }
+console.log(result.tally); // { shell: 2, redirect: 1, notFound: 0, delegate: 0, document: 1 }
 ```
 
 `result.pages` lists every artefact in enumeration order, `result.rules` every line the host file

@@ -188,6 +188,37 @@ describe('unclaimed paths', () => {
   });
 });
 
+describe('delegating states', () => {
+  it('counts and skips them: no page, no rules line, no warning', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    const delegating = {
+      ...mounts,
+      '/app': {
+        ...appMount,
+        routes: [
+          ...appMount.routes,
+          { name: 'claims', url: '/claims', delegate: 'ledger' },
+        ],
+      },
+    };
+
+    const { files, result } = await run({
+      mounts: delegating,
+      paths: ['/app/claims', '/app/welcome'],
+      notFound: false,
+    });
+
+    expect(result.tally).toMatchObject({ shell: 1, delegate: 1, notFound: 0 });
+    expect(result.pages.map((page) => page.path)).toEqual(['/app/welcome']);
+    expect(result.rules).toEqual([]);
+    expect(result.warnings).toEqual([]);
+    expect([...files.keys()]).toEqual(['dist/welcome/index.html']);
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
+  });
+});
+
 describe('a mount that rejects the trailing slash', () => {
   const strict = { ...mounts, '/': { ...rootMount, config: {} } };
 
@@ -387,6 +418,7 @@ describe('dryRun', () => {
       shell: 1,
       redirect: 1,
       notFound: 1,
+      delegate: 0,
       document: 1,
     });
     expect(result.rules).toHaveLength(2);

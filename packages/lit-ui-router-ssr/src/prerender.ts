@@ -155,6 +155,8 @@ export interface PrerenderTally {
   redirect: number;
   /** Paths that matched nothing — see {@link PrerenderResult.warnings}. */
   notFound: number;
+  /** Paths a delegating state's host handler answers: no page, no rules line, no warning. */
+  delegate: number;
   /** The 404 document: 1 when the projection produced one, 0 otherwise. */
   document: number;
 }
@@ -429,8 +431,9 @@ const warnUnregistered = (): void => {
 
 /**
  * Emits a static site from a mount table's verdicts: a shell verdict becomes
- * `<subpath>/index.html`, a redirect becomes a rules line and no page, and the
- * `otherwise` projection becomes the 404 document.
+ * `<subpath>/index.html`, a redirect becomes a rules line and no page, a
+ * delegating state is counted and skipped, and the `otherwise` projection
+ * becomes the 404 document.
  *
  * The router is provided on the render root for `context-request` and scoped
  * with `withRouterSync` around each render, so a template's `<ui-router>`
@@ -498,6 +501,7 @@ export async function prerender(
     shell: 0,
     redirect: 0,
     notFound: 0,
+    delegate: 0,
     document: 0,
   };
 
@@ -556,9 +560,16 @@ export async function prerender(
       return;
     }
 
-    tally.notFound += 1;
-    warnings.push(path);
-    warnUnclaimed(path);
+    if (verdict.kind === 'notFound') {
+      tally.notFound += 1;
+      warnings.push(path);
+      warnUnclaimed(path);
+
+      return;
+    }
+
+    // A delegate: a host handler answers it, not a page; left implicit so the peer-floor unions without 'delegate' still typecheck.
+    tally.delegate += 1;
   };
 
   const uninstall = provideRouter(root, router);

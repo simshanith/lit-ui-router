@@ -42,8 +42,8 @@ never both. `@lit-labs/ssr-client` is optional: install it when you import
   per page — the pairing the
   [Server-Side Routing guide](/guides/server-route-matching#the-router-on-the-server)
   derives by hand, applied for you.
-- **The emit loop.** Verdict to file name, redirect to rules line, tally, and
-  a warning for every path that matched nothing.
+- **The emit loop.** Verdict to file name, redirect to rules line, delegating
+  states skipped, tally, and a warning for every path that matched nothing.
 - **The host rules file.** `_redirects` by default, every generated line
   paired with and without a trailing slash. No SPA catch-all is ever written:
   one turns every 404 into a 200.
@@ -71,7 +71,7 @@ const result = await prerender({
   document: (body, { path }) => fillShell(titles.get(path), body),
 });
 
-console.log(result.tally); // { shell: 2, redirect: 1, notFound: 0, document: 1 }
+console.log(result.tally); // { shell: 2, redirect: 1, notFound: 0, delegate: 0, document: 1 }
 ```
 
 `renderShell` returns a template and this package renders it; return a string
@@ -110,6 +110,7 @@ router, started or not.
 | `shell`               | `<subpath>/index.html`, rendered through `renderShell` and `document` |
 | `redirect`            | a rules line (`from to status`), no page                              |
 | `notFound`            | nothing, and the path is listed in `result.warnings`                  |
+| `delegate`            | nothing: a host handler answers it; counted in `tally.delegate`       |
 | the `otherwise` probe | the 404 document, `404.html` by default, rendered like any shell      |
 
 [`PrerenderResult`](/api/lit-ui-router-ssr/index/interfaces/PrerenderResult) carries
