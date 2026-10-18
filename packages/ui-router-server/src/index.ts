@@ -13,7 +13,7 @@
 
 import type { RawParams, StateDeclaration, StateRule } from '@uirouter/core';
 
-import { registerDelegateKeys } from './delegate-keys.ts';
+import { registerDelegates } from './delegate-registry.ts';
 import { warnMountDiagnostics } from './dev-warn.ts';
 import { compileResolver } from './redirects.ts';
 import { createRouterPool, POOL_MAX_IDLE } from './router-pool.ts';
@@ -37,13 +37,26 @@ export type {
 
 export { routeTrie } from './route-trie.ts';
 
+declare module '@uirouter/core' {
+  interface StateDeclaration {
+    /** The host handler key a server adapter answers this state's url with (see {@link RouteDeclaration.delegate}). */
+    delegate?: string;
+  }
+}
+
 // Transitions settle in microtasks; the timer is only a degrade-to-shell net.
 const SETTLE_TIMEOUT_MS = 100;
 
-/** One mount's routing configuration: its state tree, its redirects, and the tier that resolves them. */
-export interface MountConfig {
+/**
+ * One mount's routing configuration: its state tree, its redirects, and the
+ * tier that resolves them. `R` is the type of `routes`; an `as const` array
+ * types the router's delegate keys and state names (see {@link ServerRouter}).
+ */
+export interface MountConfig<
+  R extends readonly RouteDeclaration[] = readonly RouteDeclaration[],
+> {
   /** The mount's state tree; dotted names nest, urls append (see {@link RouteDeclaration}). */
-  routes: RouteDeclaration[];
+  routes: R;
   /** when()-style pattern rules, evaluated before per-state redirectTo entries. */
   redirects?: RedirectRule[];
   /**
@@ -186,11 +199,13 @@ export type Verdict =
       kind: 'delegate';
       /** Base of the mount that owned the pathname. */
       mount: string;
+      /** The pathname within the mount, its base removed (`''` at the bare base). */
+      subpath: string;
       /** The key the matched state names; the host maps it to a handler. */
       delegate: string;
       /** Name of the matched state. */
       state: string;
-      /** The params extracted from the pathname. */
+      /** The params the pathname alone resolves; search params hold their declared defaults. */
       params: RawParams;
     }
   /** `mount` is set when a mount owned the pathname but nothing matched (per-mount 404s); absent when no mount matched at all. */
@@ -214,11 +229,25 @@ export interface MountDiagnostic {
   message: string;
 }
 
-/** The compiled resolver {@link createServerRouter} returns: a pathname in, a {@link Verdict} out. */
-export interface ServerRouter {
+declare const routeDeclarations: unique symbol;
+
+/**
+ * The compiled resolver {@link createServerRouter} returns: a pathname in, a
+ * {@link Verdict} out. `Decls` is the union of the route declarations it was
+ * built from, inferred from `as const` routes; the fetch adapter reads its
+ * delegate keys and state names. Untyped routes keep the default,
+ * {@link RouteDeclaration}, under which keys and names are `string`.
+ */
+export interface ServerRouter<
+  Decls extends RouteDeclaration = RouteDeclaration,
+> {
   /** Accepts a pathname, an absolute url string, or anything with a `pathname` (URL, Location). */
   resolve(pathnameOrUrl: string | { pathname: string }): Promise<Verdict>;
+  /** Type-only: carries `Decls`; never set at runtime. */
+  readonly [routeDeclarations]?: Decls;
 }
+
+type DelegateVerdict = Extract<Verdict, { kind: 'delegate' }>;
 
 interface Mount {
   base: string;
@@ -383,6 +412,34 @@ const validateIgnoreDiagnostics = (base: string, config: MountConfig): void => {
   }
 };
 
+// A redirect answers navigations only, so a POST redirected onto a delegating state would never reach its handler.
+const rejectRedirectsToDelegates = (
+  base: string,
+  config: MountConfig,
+  delegates: Map<string, string>,
+): void => {
+  const sources = [
+    ...config.routes.map((route) => ({
+      to: route.redirectTo,
+      from: `state '${route.name}'`,
+    })),
+    ...(config.redirects ?? []).map((rule) => ({
+      to: rule.to,
+      from: `rule '${String(rule.pattern)}'`,
+    })),
+  ];
+
+  for (const { to, from } of sources) {
+    if (to === undefined) continue;
+    const { state } = toTarget(to);
+
+    if (delegates.has(state))
+      throw new Error(
+        `Mount '${base}': ${from} redirects to delegating state '${state}'`,
+      );
+  }
+};
+
 // State name -> delegate key. A delegating state is answered by its handler,
 // so it must be url-addressable and must not also redirect.
 const compileDelegates = (
@@ -410,6 +467,8 @@ const compileDelegates = (
       );
     delegates.set(route.name, route.delegate);
   }
+
+  rejectRedirectsToDelegates(base, config, delegates);
 
   return delegates;
 };
@@ -548,23 +607,29 @@ const notFoundVerdict = (mount: Mount): Verdict => ({
 
 const delegateVerdict = (
   mount: Mount,
+  subpath: string,
   delegate: string,
   match: RouteMatch,
-): Verdict => ({
+): DelegateVerdict => ({
   kind: 'delegate',
   mount: mount.base,
+  subpath,
   delegate,
   state: match.state,
   params: match.params,
 });
 
 // A matched route answers with the shell, or with its delegate's handler.
-const routeVerdict = (mount: Mount, match: RouteMatch): Verdict => {
+const routeVerdict = (
+  mount: Mount,
+  subpath: string,
+  match: RouteMatch,
+): Verdict => {
   const delegate = mount.delegates.get(match.state);
 
   return delegate === undefined
     ? shellVerdict(mount)
-    : delegateVerdict(mount, delegate, match);
+    : delegateVerdict(mount, subpath, delegate, match);
 };
 
 // The otherwise projection: the shell is the error page, at an honest 404 —
@@ -589,7 +654,7 @@ const matcherVerdict = (mount: Mount, subpath: string): Verdict => {
       ? mount.compiled.match(subpath)
       : resolution.match;
 
-  if (match !== null) return routeVerdict(mount, match);
+  if (match !== null) return routeVerdict(mount, subpath, match);
 
   return mount.config.otherwise
     ? otherwiseVerdict(mount)
@@ -664,7 +729,7 @@ const matchedVerdict = (
   // SAFETY: a StateRule's match is its url matcher's RawParams.
   const params = matched.match as RawParams;
 
-  return delegateVerdict(mount, delegate, { state, params });
+  return delegateVerdict(mount, subpath, delegate, { state, params });
 };
 
 // Null when the transition failed or timed out: that router may still be mid-transition.
@@ -722,6 +787,27 @@ const simulateVerdict = async (
   }
 };
 
+// Url matching only: the router is checked out, matched against and released without a transition.
+const simulateDelegate = (
+  simulate: SimulateModule,
+  mount: Mount,
+  subpath: string,
+): DelegateVerdict | null => {
+  try {
+    const pooled = mount.pool.checkOut(() =>
+      buildHeadlessRouter(simulate, mount),
+    );
+
+    const verdict = matchedVerdict(pooled.router, mount, subpath);
+    pooled.release();
+
+    return verdict?.kind === 'delegate' ? verdict : null;
+  } catch {
+    // The navigation path degrades the same throw to the shell.
+    return null;
+  }
+};
+
 // --- The public entry ------------------------------------------------------
 
 /**
@@ -738,10 +824,19 @@ const simulateVerdict = async (
  * development build, which the `development` and `node` export conditions
  * resolve; under `node`, only while `NODE_ENV` is not `production`. The
  * default build never warns.
+ *
+ * The router's `Decls` is the union of every mount's route declarations:
+ * typed when each `routes` array is `as const`, {@link RouteDeclaration}
+ * otherwise.
  */
-export function createServerRouter(config: {
-  mounts: Record<string, MountConfig>;
-}): ServerRouter {
+export function createServerRouter<
+  M extends Record<string, readonly RouteDeclaration[]> = Record<
+    string,
+    readonly RouteDeclaration[]
+  >,
+>(config: {
+  mounts: { [B in keyof M]: MountConfig<M[B]> };
+}): ServerRouter<M[keyof M][number]> {
   const declared = compileMounts(config.mounts);
   const mounts = byLongestBase(declared);
   const loadSimulate = makeSimulateLoader();
@@ -775,10 +870,28 @@ export function createServerRouter(config: {
   };
 
   compiledMounts.set(router, declared);
-  registerDelegateKeys(
-    router,
-    new Set(declared.flatMap((mount) => [...mount.delegates.values()])),
-  );
+  registerDelegates(router, {
+    keys: new Set(declared.flatMap((mount) => [...mount.delegates.values()])),
+    async delegateFor(pathnameOrUrl) {
+      const pathname = pathnameOf(pathnameOrUrl);
+
+      for (const mount of mounts) {
+        const subpath = subpathIn(mount.base, pathname);
+
+        if (subpath === null) continue;
+
+        if (mount.delegates.size === 0) return null;
+
+        if (mount.strategy === 'simulate')
+          return simulateDelegate(await loadSimulate(), mount, subpath);
+        const verdict = matcherVerdict(mount, subpath);
+
+        return verdict.kind === 'delegate' ? verdict : null;
+      }
+
+      return null;
+    },
+  });
 
   // Folded out of dist/*.js, so a bundle that never calls diagnoseMounts drops it.
   if (import.meta.env?.DEV) warnMountDiagnostics(router, diagnoseMounts);

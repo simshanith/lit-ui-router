@@ -186,6 +186,7 @@ type Verdict =
   | {
       kind: 'delegate';
       mount: string;
+      subpath: string;
       delegate: string;
       state: string;
       params: RawParams;
@@ -333,6 +334,11 @@ The request/response types are structural subsets of `http.IncomingMessage`
 and `http.ServerResponse`, so Node, Express, and Connect objects all fit
 without the package depending on Node types.
 
+Connect can't call [delegate handlers](#delegating-states), so
+`createConnectMiddleware` throws at construction for a router whose states
+name delegate keys. Pass `delegates: 'next'` to pass navigations that match a
+delegating state to the downstream stack, and serve those states there.
+
 ### hono
 
 `serverRouterHono` wraps the fetch handler in Hono's continuation: a verdict
@@ -360,73 +366,106 @@ app.use('*', (c, next) =>
 A state with a `delegate` key hands its url to a host handler: a command
 endpoint, a form POST, a JSON feed. The tree carries only the key, so the
 client and the server can share it. The fetch and Hono adapters map keys to
-fetch-shaped handlers in their `delegates` option. A handler is called with
-the request and whatever the adapter was called with, so a Hono app's `fetch`
-or a Worker handler fits bare:
+fetch-shaped handlers in their `delegates` option. Every handler is called
+with the request and whatever the adapter was called with, so all of them
+share one `(request, ...args)` signature, and a Hono app's `fetch` or a
+Worker handler fits bare:
 
 ```ts
+import { env } from 'cloudflare:workers';
 import { Hono } from 'hono';
 import { createServerRouter } from 'ui-router-server';
 import { createFetchHandler, delegateContext } from 'ui-router-server/fetch';
 
-const routes: RouteDeclaration[] = [
+const routes = [
   { name: 'home', url: '' },
-  { name: 'claims', url: '/claims', delegate: 'ledger' },
-];
+  { name: 'claims', url: '/claims/{id}', delegate: 'ledger' },
+] as const;
 
-const ledger = new Hono<{ Bindings: Env }>();
+const router = createServerRouter({ mounts: { '/app': { routes } } });
 
-ledger.post('/claims', async (c) => {
-  // The route the router matched, keyed by this exact Request.
-  const { state, params } = delegateContext(c.req.raw, 'ledger');
-  await c.env.CLAIMS.send({ state, params, claim: await c.req.json() });
+// The delegate gets the original request, '/app' prefix included.
+const ledger = new Hono<{ Bindings: Env }>().basePath('/app');
+
+ledger.post('/claims/:id', async (c) => {
+  const { params } = delegateContext(c.req.raw, 'ledger', router);
+  await c.env.CLAIMS.send({ id: params.id, claim: await c.req.json() });
   return c.body(null, 202);
 });
 
-const router = createServerRouter({ mounts: { '/': { routes } } });
+const handler = createFetchHandler(router, {
+  serveShell: (_mount, shellRequest) => env.ASSETS.fetch(shellRequest),
+  delegates: { ledger: ledger.fetch },
+});
 
 export default {
   async fetch(request, env, ctx) {
-    const handler = createFetchHandler(router, {
-      serveShell: (_mount, shellRequest) => env.ASSETS.fetch(shellRequest),
-      delegates: { ledger: ledger.fetch },
-    });
-
     // env and ctx reach ledger.fetch untouched.
     return (await handler(request, env, ctx)) ?? env.ASSETS.fetch(request);
   },
 } satisfies ExportedHandler<Env>;
 ```
 
-`serverRouterHono` forwards `c.env` and `c.executionCtx` the same way Hono's
-`app.mount()` does, so `delegates: { ledger: ledger.fetch }` works behind the
-middleware too.
+`serverRouterHono` forwards `c.env` and `c.executionCtx` after the request,
+so `delegates: { ledger: ledger.fetch }` works behind the middleware too, and
+`ui-router-server/hono` re-exports `delegateContext`.
 
 A request of any method and any `Accept` that matches a delegating state goes
-to its handler. The handler gets the original request with its body unread,
-and its `Response` goes out untouched. Requests that match no delegating state
-keep the navigation contract above.
+to its handler. The handler gets the original Request object, body unread and
+url unchanged, which is what keeps `delegateContext` working; its `Response`
+goes out untouched. Unlike Hono's `app.mount()`, nothing strips the mount
+base, so route on the context's `subpath`, give the delegate the mount base
+(`basePath('/app')` above), or put delegating states on the `/` mount.
+Requests that match no delegating state keep the navigation contract above.
 
-`delegateContext(request, key)` returns `{ mount, delegate, state, params }`
-for the match. It throws when the request wasn't delegated, or was delegated
-to a different key. The context is keyed by the Request object, so a
-`request.clone()` or a `new Request(request)` has none: read it from the
-request the handler received (`c.req.raw` in Hono). `DelegateContext<K>` is
-generic over the key; `state` is a `string` and `params` core's `RawParams`
-today.
+`delegateContext(request, key, router?)` returns
+`{ mount, subpath, delegate, state, params }` for the match. `subpath` is the
+pathname within the mount (`''` at the bare base). `params` holds what the
+pathname alone resolves: search params keep their declared defaults, so read
+the query from the request. It throws when the request wasn't delegated, was
+delegated to a different key, or came through a router other than the one
+passed. The context is keyed by the Request object, so a `request.clone()` or
+a `new Request(request)` has none: read it from the request the handler
+received (`c.req.raw` in Hono).
 
 - A delegating state needs a url and no `redirectTo`, and its children don't
-  inherit the key; `createServerRouter` throws otherwise.
+  inherit the key. A `redirectTo` or redirect rule that targets a delegating
+  state is rejected too, since redirects answer navigations only and a POST
+  would never reach the handler. `createServerRouter` throws for each.
+- A redirect rule whose pattern also matches a delegating url is ordered as
+  the tier orders any rule against a state: `matcher` mounts evaluate rules
+  first and redirect, while `simulate` mounts follow core's rule sort, where
+  an equally specific state url wins. Keep rule patterns off delegating urls.
 - `createFetchHandler` throws at construction when the router names a key
   that `delegates` doesn't map. Extra keys in `delegates` are allowed.
 - A handler that throws rejects the adapter's promise, so the host's own error
   handling answers it.
-- Without `delegates`, requests outside `shouldHandle` pass as `null` without
-  resolving.
-- A delegating state never runs a transition, even on a `simulate` mount, so
-  its resolves don't run either.
-- The Connect adapter has no `delegates` option. It passes delegate verdicts
-  to `next()`, so mount the handlers downstream.
+- Requests outside `shouldHandle` only match urls: they never run a
+  transition, even on a `simulate` mount. When the router names no delegate
+  keys they pass as `null` without matching.
+- A delegating state never runs a transition, so its resolves don't run
+  either.
+- The Connect adapter throws for delegate keys unless `delegates: 'next'`,
+  as its section above describes.
+
+#### Typing delegates
+
+Declare `routes` `as const` and the router's type carries its state names
+and delegate keys: `delegates` must then map every key the routes name, a
+missing key is a compile error, and `delegateContext(request, key, router)`
+narrows `state` to the states that name `key`. Each router is typed on its
+own, so two routers in one program can name different keys. Untyped routes
+keep `string` keys and states and core's `RawParams`.
+
+`params` reads the `DelegateSeam` interface that `ui-router-server/fetch`
+exports empty. A typed state registry augments it with a `params` member
+indexed by state name, and `DelegateParams<N>` returns that entry, or
+`RawParams` for a state it doesn't name.
+
+`ui-router-server` augments `@uirouter/core`'s `StateDeclaration` with an
+optional `delegate?: string`, so a client tree typed with core's declarations
+can carry the key. The augmentation applies in programs that import
+`ui-router-server`; a client-only program adds `import type {} from 'ui-router-server';`.
 
 ## Server-side hrefs
 
