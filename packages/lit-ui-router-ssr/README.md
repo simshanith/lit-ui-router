@@ -69,6 +69,10 @@ const result = await prerender({
 console.log(result.tally); // { shell: 2, redirect: 1, notFound: 0, delegate: 0, document: 1 }
 ```
 
+`result.delegated` lists the paths that matched a delegating state. They get no page and no rules
+line, so route them to your server; on Cloudflare, list them in the Worker's
+`assets.run_worker_first` so the asset layer doesn't answer them first.
+
 `result.pages` lists every artefact in enumeration order, `result.rules` every line the host file
 carries, and `result.warnings` the paths that matched no route and had no projection to fall back
 on. `dryRun: true` plans all of it and writes nothing.

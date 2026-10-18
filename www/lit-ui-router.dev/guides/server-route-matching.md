@@ -586,6 +586,7 @@ type Verdict =
   | {
       kind: 'delegate';
       mount: string;
+      subpath: string;
       delegate: string;
       state: string;
       params: RawParams;

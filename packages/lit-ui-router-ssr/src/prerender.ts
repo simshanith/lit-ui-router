@@ -155,7 +155,7 @@ export interface PrerenderTally {
   redirect: number;
   /** Paths that matched nothing — see {@link PrerenderResult.warnings}. */
   notFound: number;
-  /** Paths a delegating state's host handler answers: no page, no rules line, no warning. */
+  /** Paths a delegating state's host handler answers, listed in {@link PrerenderResult.delegated}. */
   delegate: number;
   /** The 404 document: 1 when the projection produced one, 0 otherwise. */
   document: number;
@@ -171,6 +171,12 @@ export interface PrerenderResult {
   rules: RedirectLine[];
   /** Paths that verdicted `notFound` with no projection — nothing was emitted for them. */
   warnings: string[];
+  /**
+   * Paths that matched a delegating state, in enumeration order: no page and
+   * no rules line, since a host handler answers them. Route them to the
+   * server, e.g. into Cloudflare's `assets.run_worker_first`.
+   */
+  delegated: string[];
   /** The root event target, created or passed through. */
   root: EventTarget;
 }
@@ -432,8 +438,9 @@ const warnUnregistered = (): void => {
 /**
  * Emits a static site from a mount table's verdicts: a shell verdict becomes
  * `<subpath>/index.html`, a redirect becomes a rules line and no page, a
- * delegating state is counted and skipped, and the `otherwise` projection
- * becomes the 404 document.
+ * delegating state is listed in `delegated` and skipped, and the `otherwise`
+ * projection becomes the 404 document. A verdict kind this package doesn't
+ * know throws rather than being counted.
  *
  * The router is provided on the render root for `context-request` and scoped
  * with `withRouterSync` around each render, so a template's `<ui-router>`
@@ -508,6 +515,7 @@ export async function prerender(
   const pages: EmittedPage[] = [];
   const generated: RedirectLine[] = [];
   const warnings: string[] = [];
+  const delegated: string[] = [];
 
   const emit = async (
     verdict: Extract<Verdict, { kind: 'shell' }>,
@@ -533,6 +541,8 @@ export async function prerender(
 
   const visit = async (path: string): Promise<void> => {
     const verdict = await resolver.resolve(path);
+    // Read before narrowing: under a peer-floor Verdict without 'delegate', the narrowed tail is never.
+    const kind: string = verdict.kind;
 
     if (verdict.kind === 'shell') {
       const subpath = subpathIn(verdict.mount, path);
@@ -568,8 +578,13 @@ export async function prerender(
       return;
     }
 
-    // A delegate: a host handler answers it, not a page; left implicit so the peer-floor unions without 'delegate' still typecheck.
+    if (kind !== 'delegate')
+      throw new Error(
+        `prerender: '${path}' resolved to verdict kind '${kind}', which this lit-ui-router-ssr does not know; upgrade it`,
+      );
+
     tally.delegate += 1;
+    delegated.push(path);
   };
 
   const uninstall = provideRouter(root, router);
@@ -592,5 +607,5 @@ export async function prerender(
 
   if (!dryRun) await writeRules(lines, rules, write, outDir);
 
-  return { tally, pages, rules: lines, warnings, root };
+  return { tally, pages, rules: lines, warnings, delegated, root };
 }

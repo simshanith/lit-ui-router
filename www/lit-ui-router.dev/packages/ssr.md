@@ -110,14 +110,20 @@ router, started or not.
 | `shell`               | `<subpath>/index.html`, rendered through `renderShell` and `document` |
 | `redirect`            | a rules line (`from to status`), no page                              |
 | `notFound`            | nothing, and the path is listed in `result.warnings`                  |
-| `delegate`            | nothing: a host handler answers it; counted in `tally.delegate`       |
+| `delegate`            | nothing: the path is listed in `result.delegated` for a host handler  |
 | the `otherwise` probe | the 404 document, `404.html` by default, rendered like any shell      |
 
 [`PrerenderResult`](/api/lit-ui-router-ssr/index/interfaces/PrerenderResult) carries
 all of it: `pages` lists every artefact in enumeration order, `rules` every
 line the host file carries, `tally` the counts by kind, `warnings` the paths
-that matched no route and had no projection to fall back on, and `root` the
-render's event target.
+that matched no route and had no projection to fall back on, `delegated` the
+paths a delegating state's host handler answers, and `root` the render's event
+target.
+
+`delegated` gets no page and no rules line, so the host must send those paths
+to the server. On Cloudflare Workers, list them in
+[`assets.run_worker_first`](https://developers.cloudflare.com/workers/static-assets/routing/worker-script/#run-worker-first-for-selective-paths)
+so the Worker sees them before static assets do.
 
 ## Where files land
 

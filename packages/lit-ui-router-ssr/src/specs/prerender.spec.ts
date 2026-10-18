@@ -9,7 +9,7 @@ import { UIRouterLit } from 'lit-ui-router';
 import { srefHref } from 'lit-ui-router';
 import { requestRouter } from 'lit-ui-router/context';
 import { createServerRouter } from 'ui-router-server';
-import type { MountConfig } from 'ui-router-server';
+import type { MountConfig, ServerRouter, Verdict } from 'ui-router-server';
 import { installServerLocation } from 'ui-router-server/location';
 
 import packageJson from '../../package.json' with { type: 'json' };
@@ -210,12 +210,31 @@ describe('delegating states', () => {
     });
 
     expect(result.tally).toMatchObject({ shell: 1, delegate: 1, notFound: 0 });
+    expect(result.delegated).toEqual(['/app/claims']);
     expect(result.pages.map((page) => page.path)).toEqual(['/app/welcome']);
     expect(result.rules).toEqual([]);
     expect(result.warnings).toEqual([]);
     expect([...files.keys()]).toEqual(['dist/welcome/index.html']);
     expect(warn).not.toHaveBeenCalled();
     warn.mockRestore();
+  });
+
+  it('throws for a verdict kind it does not know instead of counting it', async () => {
+    const kind: string = 'forbidden';
+
+    const resolver: ServerRouter = {
+      // SAFETY: a newer ui-router-server's verdict kind, which this Verdict union lacks.
+      resolve: () => Promise.resolve({ kind, mount: '/app' } as Verdict),
+    };
+
+    await expect(
+      run({
+        mounts: undefined,
+        resolver,
+        paths: ['/app/admin'],
+        notFound: false,
+      }),
+    ).rejects.toThrow(/'\/app\/admin' resolved to verdict kind 'forbidden'/);
   });
 });
 
