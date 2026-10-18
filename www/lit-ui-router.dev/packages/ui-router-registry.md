@@ -14,10 +14,6 @@ description: Typed state names and params for a @uirouter/core router with ui-ro
 state names and params of a `@uirouter/core` router from the app's own
 `as const` state declarations. It is types only and emits no JavaScript.
 
-Part of the lit-ui-router family, maintained in
-[simshanith/lit-ui-router](https://github.com/simshanith/lit-ui-router). Not
-affiliated with the UI-Router project.
-
 ## Installation
 
 ```bash
