@@ -1,4 +1,4 @@
-import { LitElement, html } from 'lit';
+import { LitElement, html, type TemplateResult } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { UIViewInjectedProps, uiSref } from 'lit-ui-router';
 import { isEqual, cloneDeep } from 'lodash-es';
@@ -91,7 +91,7 @@ export class EditContact extends LitElement {
       .catch(() => {}); // user declined
   };
 
-  render() {
+  render(): TemplateResult {
     return html`<div class="contact">
       <sample-contact-form
         .contact=${this.updatedContact}

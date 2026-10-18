@@ -292,6 +292,29 @@ export type ParamArgs<N extends StateName, Options> = IsRegistered extends true
     : [params: ParamsOf<N>, options?: Options]
   : [params?: RawParams, options?: Options];
 
+// A state's params as the leading tuple of a call: required exactly when one param is.
+type ParamsTuple<N extends StateName> = IsRegistered extends true
+  ? [RequiredKeys<ParamsOf<N>>] extends [never]
+    ? [params?: ParamsOf<N>]
+    : [params: ParamsOf<N>]
+  : [params?: RawParams];
+
+/**
+ * The registered names and params in the shape the adapters' `RouteTypes`
+ * interfaces read, built once: `args` is indexed by name, so a lookup never
+ * scans every state.
+ */
+export interface RegisteredRouteTypes {
+  /** The registered state names. */
+  names: StateName;
+  /** Keyed by name, the params tuple a target takes. */
+  args: { [N in StateName]: ParamsTuple<N> };
+  /** The relative refs whose tail ends a registered name. */
+  relative: RelativeRef;
+  /** The opt-out for targets the registry can't see. */
+  unchecked: UncheckedRef;
+}
+
 // Object targets (a `transition.from()`, a `TargetState`'s state) stay loose.
 type LooseRelative = `.${string}` | `^${string}`;
 

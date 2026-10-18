@@ -1,4 +1,4 @@
-import { RawParams, Transition, TransitionOptions } from '@uirouter/core';
+import { Transition, TransitionOptions } from '@uirouter/core';
 import { noChange, nothing, AttributePart } from 'lit';
 import {
   AttributePartInfo,
@@ -27,6 +27,7 @@ import {
   SrefStatus,
 } from './ui-sref-active.js';
 import type { ParentView } from './events.js';
+import type { SrefParams, SrefTarget } from './route-types.js';
 import { UiView } from './ui-view.js';
 
 /**
@@ -36,11 +37,11 @@ import { UiView } from './ui-view.js';
  *
  * @category types
  */
-export interface SrefTargetParams {
+export interface SrefTargetParams<T extends SrefTarget = SrefTarget> {
   /** The state name to check for active status */
-  state?: string;
+  state?: T;
   /** State parameters to match */
-  params?: RawParams;
+  params?: SrefParams<T>;
   /** Transition options; `relative` defaults to the enclosing view's state */
   options?: TransitionOptions;
 }
@@ -335,7 +336,9 @@ export abstract class SrefStatusDirective<
  *
  * @category types
  */
-export interface SrefActiveClassParams extends SrefTargetParams {
+export interface SrefActiveClassParams<
+  T extends SrefTarget = SrefTarget,
+> extends SrefTargetParams<T> {
   /** CSS classes to add when the state (or a child state) is active */
   activeClasses?: string[];
   /** CSS classes to add only when the exact state is active */
@@ -506,7 +509,9 @@ export class SrefActiveClassDirective extends SrefStatusDirective<
  *
  * @category types
  */
-export interface SrefAriaCurrentParams extends SrefTargetParams {
+export interface SrefAriaCurrentParams<
+  T extends SrefTarget = SrefTarget,
+> extends SrefTargetParams<T> {
   /**
    * The token to write while the **exact** state is active — `'page'` by
    * default — or an object that also names one for an active ancestor:
@@ -622,8 +627,8 @@ export class SrefAriaCurrentDirective extends SrefStatusDirective<
  *
  * @category directives
  */
-export const srefActiveClass: (
-  params: SrefActiveClassParams,
+export const srefActiveClass: <T extends SrefTarget = SrefTarget>(
+  params: SrefActiveClassParams<T>,
 ) => DirectiveResult<typeof SrefActiveClassDirective> = directive(
   SrefActiveClassDirective,
 );
@@ -654,8 +659,8 @@ export const srefActiveClass: (
  *
  * @category directives
  */
-export const srefAriaCurrent: (
-  params: SrefAriaCurrentParams,
+export const srefAriaCurrent: <T extends SrefTarget = SrefTarget>(
+  params: SrefAriaCurrentParams<T>,
 ) => DirectiveResult<typeof SrefAriaCurrentDirective> = directive(
   SrefAriaCurrentDirective,
 );

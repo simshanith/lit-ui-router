@@ -30,6 +30,8 @@ const REGISTRY = join(here, process.env.REGISTRY ?? '../src/registry.ts');
 
 const TAG = basename(REGISTRY, '.ts');
 
+const ROUTE_TYPES = join(here, '../../lit-ui-router/src/route-types.ts');
+
 const NARROWED = 100;
 
 const COMPILERS = {
@@ -85,8 +87,15 @@ function generate(size: number): GenState[] {
 
 // `unregistered`: the full usage with no augmentation, the fallback baseline.
 // `calls`: registered, go and href only. `relative`: `calls` plus a relative go
-// per state. `snapshot`: `calls` plus narrowing.
-const ALL_VARIANTS = ['unregistered', 'calls', 'relative', 'snapshot'] as const;
+// per state. `snapshot`: `calls` plus narrowing. `sref`: the same calls as
+// uiSref-shaped calls through lit-ui-router's RouteTypes.
+const ALL_VARIANTS = [
+  'unregistered',
+  'calls',
+  'relative',
+  'snapshot',
+  'sref',
+] as const;
 
 type Variant = (typeof ALL_VARIANTS)[number];
 
@@ -102,6 +111,7 @@ function writeFixture(dir: string, size: number, variant: Variant) {
   // Fixtures live outside the repo; this link resolves `@uirouter/core`.
   symlinkSync(join(here, '../node_modules'), join(dir, 'node_modules'));
   copyFileSync(REGISTRY, join(dir, 'registry.ts'));
+  copyFileSync(ROUTE_TYPES, join(dir, 'route-types.ts'));
 
   const states = generate(size);
 
@@ -119,17 +129,19 @@ function writeFixture(dir: string, size: number, variant: Variant) {
     join(dir, 'main.ts'),
     variant === 'unregistered'
       ? `export {};\n`
-      : `import type { states } from './states';\n\ndeclare module './registry' {\n  interface Register {\n    states: (typeof states)[number];\n  }\n}\n`,
+      : `import type { states } from './states';\n\ndeclare module './registry' {\n  interface Register {\n    states: (typeof states)[number];\n  }\n}\n${variant === 'sref' ? `\nimport type { RegisteredRouteTypes } from './registry';\n\ndeclare module './route-types' {\n  interface RouteTypes extends RegisteredRouteTypes {}\n}\n` : ''}`,
   );
 
   // One go and one href per state.
   const calls = states.flatMap((s) => {
     const args = s.required.length ? `, { ${s.required.join(', ')} }` : '';
 
-    return [
-      `void stateService.go('${s.name}'${args});`,
-      `stateService.href('${s.name}'${args});`,
-    ];
+    return variant === 'sref'
+      ? [`uiSref('${s.name}'${args});`, `srefHref('${s.name}'${args});`]
+      : [
+          `void stateService.go('${s.name}'${args});`,
+          `stateService.href('${s.name}'${args});`,
+        ];
   });
 
   // One relative go per state, by its last segment.
@@ -144,7 +156,7 @@ function writeFixture(dir: string, size: number, variant: Variant) {
   const step = Math.max(1, Math.floor(states.length / NARROWED));
 
   const narrowings =
-    variant === 'calls' || variant === 'relative'
+    variant !== 'snapshot'
       ? []
       : states
           .filter((_, i) => i % step === 0)
@@ -156,7 +168,7 @@ function writeFixture(dir: string, size: number, variant: Variant) {
 
   writeFileSync(
     join(dir, 'usage.ts'),
-    `import type { TypedRouteSnapshot, TypedStateService } from './registry';\n\ndeclare const stateService: TypedStateService;\ndeclare const snapshot: TypedRouteSnapshot;\n\n${calls.join('\n')}\n\n${relatives.join('\n')}\n\n${narrowings.join('\n')}\n`,
+    `import type { TypedRouteSnapshot, TypedStateService } from './registry';\nimport type { SrefArgs, SrefTarget } from './route-types';\n\ndeclare const stateService: TypedStateService;\ndeclare const snapshot: TypedRouteSnapshot;\ndeclare const uiSref: <T extends SrefTarget>(state: T, ...args: SrefArgs<T, object>) => void;\ndeclare const srefHref: typeof uiSref;\n\n${calls.join('\n')}\n\n${relatives.join('\n')}\n\n${narrowings.join('\n')}\n`,
   );
 
   writeFileSync(

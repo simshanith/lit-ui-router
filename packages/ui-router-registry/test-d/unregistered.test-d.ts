@@ -2,6 +2,8 @@
 // `RawParams`. `tsc --noEmit` is the assertion; nothing runs this file.
 import type { RawParams, StateDeclaration } from '@uirouter/core';
 
+import { srefHref, uiSref, uiSrefActive } from 'lit-ui-router';
+
 import type {
   ParamsOf,
   RelativeRef,
@@ -45,3 +47,11 @@ const uncheckedName = name as UncheckedRef;
 void stateService.go(uncheckedName, { anything: 1 });
 
 if (snapshot.includes(uncheckedName)) accepts<RawParams>(snapshot.params);
+
+// With ui-router-registry/lit loaded but nothing registered, lit-ui-router's
+// directives keep today's types.
+uiSref(name, { anything: 1 }, { reload: true });
+
+srefHref(name);
+
+uiSrefActive({ state: name, params: { anything: 1 } });

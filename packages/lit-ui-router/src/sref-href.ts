@@ -16,6 +16,7 @@ import {
   uiSrefTargetRemovedEvent,
 } from './sref-internals.js';
 import type { ParentView } from './events.js';
+import type { SrefArgs, SrefRelativeCheck, SrefTarget } from './route-types.js';
 import { UiView } from './ui-view.js';
 
 /**
@@ -293,8 +294,7 @@ export class SrefHrefDirective extends AsyncDirective {
  *
  * @category directives
  */
-export const srefHref: (
-  state: string,
-  params?: RawParams,
-  options?: TransitionOptions,
+export const srefHref: <T extends SrefTarget>(
+  state: T & SrefRelativeCheck<T>,
+  ...args: SrefArgs<T, TransitionOptions>
 ) => DirectiveResult<typeof SrefHrefDirective> = directive(SrefHrefDirective);
