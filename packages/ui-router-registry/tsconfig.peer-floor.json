@@ -1,0 +1,12 @@
+{
+  // Typechecks src and the type specs against the published floor of the
+  // @uirouter/core peer range (the @uirouter/core-floor alias). Never emits.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "paths": {
+      "@uirouter/core": ["./node_modules/@uirouter/core-floor/lib/index.d.ts"]
+    }
+  },
+  "include": ["src/**/*"]
+}

@@ -319,26 +319,31 @@ export interface TypedStateService extends Omit<
   StateService,
   'go' | 'transitionTo' | 'target' | 'href' | 'is' | 'includes'
 > {
+  /** `StateService.go`, with a registered name's params required as declared. */
   go<T extends StateName | LooseTarget>(
     to: T & CheckRelative<T>,
     ...args: TargetArgs<T, TransitionOptions>
   ): TransitionPromise;
 
+  /** `StateService.transitionTo`, typed as for `go`. */
   transitionTo<T extends StateName | LooseTarget>(
     to: T & CheckRelative<T>,
     ...args: TargetArgs<T, TransitionOptions>
   ): TransitionPromise;
 
+  /** `StateService.target`, typed as for `go`. */
   target<T extends StateName | LooseTarget>(
     identifier: T & CheckRelative<T>,
     ...args: TargetArgs<T, TransitionOptions>
   ): TargetState;
 
+  /** `StateService.href`, typed as for `go`. */
   href<T extends StateName | LooseTarget>(
     stateOrName: T & CheckRelative<T>,
     ...args: TargetArgs<T, HrefOptions>
   ): string;
 
+  /** `StateService.is`, over registered names and their params. */
   is<N extends StateName>(
     stateOrName: N,
     params?: Partial<ParamsOf<N>>,
@@ -350,6 +355,7 @@ export interface TypedStateService extends Omit<
     options?: { relative?: StateDeclaration | StateObject | StateName },
   ): boolean;
 
+  /** `StateService.includes`, over registered names, globs and their params. */
   includes<N extends StateName>(
     stateOrName: N | StateGlob,
     params?: Partial<ParamsOf<N>>,
@@ -377,7 +383,12 @@ interface SnapshotBase {
 }
 
 type SnapshotFor<N extends StateName> = SnapshotBase & {
-  readonly current: StateDeclaration & { readonly name: N };
+  /** The active state's declaration. */
+  readonly current: StateDeclaration & {
+    /** The active state's name. */
+    readonly name: N;
+  };
+  /** The active state's params, its ancestors' included. */
   readonly params: Readonly<ResolvedParamsOf<N>>;
 };
 
@@ -388,13 +399,20 @@ type SnapshotFor<N extends StateName> = SnapshotBase & {
  */
 export type TypedRouteSnapshot = IsRegistered extends true
   ? SnapshotBase & {
+      /** The active state's declaration, if a transition has succeeded. */
       readonly current:
-        | (StateDeclaration & { readonly name: StateName })
+        | (StateDeclaration & {
+            /** The active state's name. */
+            readonly name: StateName;
+          })
         | undefined;
+      /** No params until `includes(name)` narrows the snapshot. */
       readonly params: Readonly<Record<never, never>>;
     }
   : SnapshotBase & {
+      /** The active state's declaration, if a transition has succeeded. */
       readonly current: StateDeclaration | undefined;
+      /** The active state's params. */
       readonly params: RawParams;
     };
 

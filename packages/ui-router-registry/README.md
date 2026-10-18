@@ -2,7 +2,11 @@
 
 Typed state names and params for [UI-Router](https://ui-router.github.io): a types-only registry for `@uirouter/core`. It emits no JavaScript.
 
-Not yet published; its first release is `0.1.0`.
+## Installation
+
+```bash
+npm install --save-dev ui-router-registry@rc
+```
 
 ## Features
 

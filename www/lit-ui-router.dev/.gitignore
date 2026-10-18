@@ -9,6 +9,7 @@ api/lit-ui-router-ssr
 api/navigation-location-plugin
 api/ui-router-effect
 api/ui-router-mobx
+api/ui-router-registry
 api/ui-router-server
 api/ui-router-signals
 worker/worker-configuration.d.ts
