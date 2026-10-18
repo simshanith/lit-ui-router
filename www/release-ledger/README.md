@@ -8,7 +8,7 @@ GitHub say about each version. The design is
   never a state; the `version_states` view derives each region's state and an
   overall status.
 - [`src/release-ledger.core.ts`](./src/release-ledger.core.ts): `REGIONS`,
-  `fold`, `abandon`, `repair`, the dist-tag moves, and the statements the queue
+  `fold`, `repair`, the dist-tag moves, and the statements the queue
   consumer runs in one D1 batch.
 
 ## Regions

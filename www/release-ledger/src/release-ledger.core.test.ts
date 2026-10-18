@@ -2,7 +2,6 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import {
-  abandon,
   ADVISORY_COLUMNS,
   type DistTagOutcome,
   FACT_COLUMNS,
@@ -66,7 +65,6 @@ function regionColumns(region: Region): Set<string> {
     ...mutable,
     conflictColumn(region),
     ...(region === 'npm' ? ADVISORY_COLUMNS : []),
-    ...(region === 'tag' ? [] : ['abandoned_at']),
   ]);
 }
 
@@ -433,53 +431,6 @@ describe('fold: mutable and advisory facts', () => {
   });
 });
 
-describe('abandon', () => {
-  it('marks a tag that never reached npm or a release', () => {
-    const result = applied(abandon(ROWS.tagged, ENVELOPE));
-
-    assert.equal(result.row.abandoned_at, ENVELOPE.at);
-    assert.deepEqual(
-      result.events.map((event) => [event.region, event.event]),
-      [['tag', 'abandon']],
-    );
-  });
-
-  it('is unchanged on an abandoned row', () => {
-    assert.deepEqual(abandon(ROWS.abandoned, ENVELOPE), {
-      outcome: 'unchanged',
-    });
-  });
-
-  for (const [label, row] of [
-    ['on npm', ROWS.published],
-    ['with a release', ROWS.releasedFirst],
-  ] as const) {
-    it(`refuses a version ${label}`, () => {
-      assert.match(rejected(abandon(row, ENVELOPE)), /needs npm absent/);
-    });
-  }
-
-  it('needs a row', () => {
-    assert.match(rejected(abandon(undefined, ENVELOPE)), /needs a row/);
-  });
-
-  for (const region of ['npm', 'gh'] as const) {
-    it(`is undone by ${region} facts`, () => {
-      assert.equal(
-        after(fold(ROWS.abandoned, { [region]: OBSERVED[region] }, ENVELOPE))
-          .abandoned_at,
-        null,
-      );
-    });
-  }
-
-  it('stays through a tag observation', () => {
-    assert.deepEqual(fold(ROWS.abandoned, UNPUBLISHED, ENVELOPE), {
-      outcome: 'unchanged',
-    });
-  });
-});
-
 describe('repair', () => {
   const conflicted = after(
     fold(
@@ -566,7 +517,6 @@ describe('repair', () => {
 describe('REGIONS', () => {
   it('assigns every fact column to one region, as fixed, mutable, advisory or conflict', () => {
     const assigned = [
-      'abandoned_at',
       ...ADVISORY_COLUMNS,
       ...REGION_NAMES.flatMap((region) => [
         ...REGIONS[region].fixed,
@@ -623,7 +573,6 @@ describe('moveDistTag', () => {
 
   for (const [label, row] of [
     ['tagged', ROWS.tagged],
-    ['abandoned', ROWS.abandoned],
     ['released before npm', ROWS.releasedFirst],
   ] as const) {
     it(`rejects a version ${label}`, () => {
@@ -833,8 +782,7 @@ describe('foldStatements', () => {
 describe('statusOf', () => {
   const cases: [Status, VersionRow][] = [
     ['conflict', { ...ROWS.released, git_sha: null, gh_conflict: 'null' }],
-    ['conflict', { ...ROWS.abandoned, tag_conflict: 'null' }],
-    ['abandoned', { ...ROWS.abandoned, git_sha: null }],
+    ['conflict', { ...ROWS.tagged, tag_conflict: 'null' }],
     ['untagged', { ...ROWS.published, git_sha: null }],
     ['untagged', { ...ROWS.releasedFirst, git_sha: null }],
     ['tagged', ROWS.tagged],

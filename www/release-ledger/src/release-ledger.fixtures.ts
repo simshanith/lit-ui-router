@@ -42,7 +42,6 @@ const tagged: VersionRow = {
   version: ENVELOPE.version,
   first_seen_at: '2026-10-01T00:00:00.000Z',
   rev: 0,
-  abandoned_at: null,
   git_sha: SHA,
   tag_conflict: null,
   npm_integrity: null,
@@ -81,7 +80,6 @@ export const ROWS = {
   released: { ...published, ...ghColumns, rev: 2 },
   /** A release seen before npm: valid, and reconcile's lag rule reports it. */
   releasedFirst: { ...tagged, ...ghColumns, rev: 1 },
-  abandoned: { ...tagged, abandoned_at: '2026-10-01T12:00:00.000Z', rev: 1 },
 } satisfies Record<string, VersionRow>;
 
 /** Everything the sources say about `ROWS.released`. */

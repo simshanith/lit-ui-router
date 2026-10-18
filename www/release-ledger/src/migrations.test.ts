@@ -6,7 +6,6 @@ import { DatabaseSync } from 'node:sqlite';
 import { describe, it } from 'node:test';
 
 import {
-  abandon,
   type DistTagOutcome,
   type DistTagRow,
   FACT_COLUMNS,
@@ -254,7 +253,6 @@ describe('migrations: version_states', () => {
     ['deprecated', ROWS.deprecated, 'published'],
     ['released', ROWS.released, 'released'],
     ['released before npm', ROWS.releasedFirst, 'tagged'],
-    ['abandoned', ROWS.abandoned, 'abandoned'],
     ['in conflict', { ...ROWS.released, gh_conflict: 'null' }, 'conflict'],
     ['untagged', { ...ROWS.published, git_sha: null }, 'untagged'],
     ['released untagged', { ...ROWS.released, git_sha: null }, 'untagged'],
@@ -480,22 +478,17 @@ describe('migrations: fold statements', () => {
     }
   });
 
-  it('stores abandon and repair', () => {
+  it('stores a repair', () => {
     const row = rowOf(fold(ROWS.published, { npm: null }, ENVELOPE));
 
     assert.ok(row);
 
-    for (const [from, folded] of [
-      [ROWS.tagged, abandon(ROWS.tagged, ENVELOPE)],
-      [row, repair(row, 'npm', { npm: NPM }, ENVELOPE)],
-    ] as const) {
-      const db = migrated();
+    const db = migrated();
 
-      insertVersion(db, from);
+    insertVersion(db, row);
 
-      assert.ok(write(db, folded));
-      assert.equal(count(db, 'ledger_events'), 1);
-    }
+    assert.ok(write(db, repair(row, 'npm', { npm: NPM }, ENVELOPE)));
+    assert.equal(count(db, 'ledger_events'), 1);
   });
 });
 
