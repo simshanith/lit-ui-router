@@ -396,3 +396,6 @@ matches any value, so narrow it to the known ids when the build can list them
   pairs with
 - [Location plugins](/guides/location-plugins) — why path-location clients
   are the ones that need any of this
+- [On the Altitude Atlas](https://atlas.lit-ui-router.dev/bricks/?focus=ui-router-server) — this package as
+  a brick in sheet 2's model in the round, sized by its authored files and
+  seated on what it peers
