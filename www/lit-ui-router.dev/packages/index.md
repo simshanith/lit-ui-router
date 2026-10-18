@@ -25,6 +25,18 @@ nothing you don't.
 | [**ui-router-server**](/packages/server)                                | [![NPM Version](https://img.shields.io/npm/v/ui-router-server)](https://npmx.dev/package/ui-router-server) [![GitHub Release](https://img.shields.io/github/v/release/simshanith/lit-ui-router?filter=ui-router-server@*)](https://github.com/simshanith/lit-ui-router/releases/?q=ui-router-server)                                                                                 | Server-side routing verdicts: honest 404/302/200 HTTP for static SPAs, run at the edge with the client's own route table.                                                                                                |
 | [**ui-router-signals**](/packages/ui-router-signals)                    | [![NPM Version](https://img.shields.io/npm/v/ui-router-signals)](https://npmx.dev/package/ui-router-signals) [![GitHub Release](https://img.shields.io/github/v/release/simshanith/lit-ui-router?filter=ui-router-signals@*)](https://github.com/simshanith/lit-ui-router/releases/?q=ui-router-signals)                                                                             | [TC39 Signals](https://github.com/tc39/proposal-signals) for UI-Router: a framework-agnostic signal mirror of the router's current state, with no Lit dependency.                                                        |
 
+<figure class="atlas-thumb">
+  <a href="https://atlas.lit-ui-router.dev/bricks/" target="_blank" rel="noopener">
+    <img class="light-only" src="https://atlas.lit-ui-router.dev/thumbs/bricks.webp" width="600" height="800" loading="lazy" alt="The companion packages as LEGO bricks seated on the core's baseplate, drawn in the round" />
+    <img class="dark-only" src="https://atlas.lit-ui-router.dev/thumbs/bricks-dark.webp" width="600" height="800" loading="lazy" alt="" />
+  </a>
+  <figcaption>
+    <a href="https://atlas.lit-ui-router.dev" target="_blank" rel="noopener">The Altitude Atlas</a>
+    draws each runtime companion as a brick sized by its authored files and
+    seated on what it peers, in a model you can turn and explode.
+  </figcaption>
+</figure>
+
 Each package page has its own install snippet, guide, and — where the package
 has a runtime API — its own reference.
 
