@@ -9,7 +9,7 @@ design is [#1424](https://github.com/simshanith/lit-ui-router/issues/1424) and
   never a state; the `version_states` view derives each region's state and an
   overall status.
 - [`src/release-ledger.core.ts`](./src/release-ledger.core.ts): `REGIONS`,
-  `fold`, `abandon`, `repair`, the dist-tag moves, and the statements the queue
+  `fold`, `repair`, the dist-tag moves, and the statements the queue
   consumer runs in one D1 batch.
 - [`worker/index.ts`](./worker/index.ts): the worker's entry points.
 

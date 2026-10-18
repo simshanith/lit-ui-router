@@ -45,7 +45,6 @@ export type GhState = (typeof GH_STATES)[number];
 /** `version_states.status`, in the view's order of precedence. */
 export const STATUSES = [
   'conflict',
-  'abandoned',
   'untagged',
   'tagged',
   'published',
@@ -60,8 +59,6 @@ export interface VersionRow {
   version: string;
   first_seen_at: string;
   rev: number;
-  /** A maintainer's verdict that the tag will never be published. */
-  abandoned_at: string | null;
   git_sha: string | null;
   /** The observation that contradicts the region's fixed facts, as JSON; `null` when clean. */
   tag_conflict: string | null;
@@ -102,7 +99,6 @@ export interface LedgerEventRow {
 
 export type LedgerEventType =
   | 'observed'
-  | 'abandon'
   | 'repair'
   | 'dist_tag_moved'
   | 'dist_tag_removed';
@@ -187,8 +183,6 @@ export function statusOf(row: VersionRow): Status {
   if ((row.tag_conflict ?? row.npm_conflict ?? row.gh_conflict) !== null) {
     return 'conflict';
   }
-
-  if (row.abandoned_at !== null) return 'abandoned';
 
   if (row.git_sha === null) return 'untagged';
 
@@ -278,10 +272,7 @@ function observeRegion(
   if (!recorded(row, region)) {
     if (observed[region] === null) return {};
 
-    // npm or a release proves the abandon verdict wrong
-    return region === 'tag'
-      ? columns
-      : { ...columns, ...distTag, abandoned_at: null };
+    return { ...columns, ...distTag };
   }
 
   const mutable = pick(columns, REGIONS[region].mutable);
@@ -330,7 +321,6 @@ const blank = (envelope: Envelope): VersionRow => ({
   version: envelope.version,
   first_seen_at: envelope.at,
   rev: -1,
-  abandoned_at: null,
   git_sha: null,
   tag_conflict: null,
   npm_integrity: null,
@@ -352,7 +342,7 @@ const changes = (row: VersionRow, columns: Columns): boolean =>
     ([column, value]) => row[column as keyof VersionRow] !== value,
   );
 
-/** A region's observation, as `ledger_events.payload` replays it; `abandon` carries none. */
+/** A region's observation, as `ledger_events.payload` replays it. */
 type Payload = Observation[Region] | null;
 
 function ledgerEvent(
@@ -431,34 +421,6 @@ export function fold(
       'observed',
       observed[region],
     ]),
-    envelope,
-  );
-}
-
-/** A maintainer's verdict: the tag will never be published. Only while npm is absent and there is no release. */
-export function abandon(row: VersionRow | undefined, envelope: Envelope): Fold {
-  const rejection = identity(row, envelope);
-
-  if (rejection) return rejection;
-
-  if (row === undefined) return reject('abandon needs a row');
-
-  if (row.npm_integrity !== null || row.gh_release_id !== null) {
-    return reject(
-      `abandon needs npm absent and no release; npm is ${npmState(row)}, gh is ${ghState(row)}`,
-    );
-  }
-
-  return write(
-    row,
-    [
-      [
-        'tag',
-        { abandoned_at: row.abandoned_at ?? envelope.at },
-        'abandon',
-        null,
-      ],
-    ],
     envelope,
   );
 }
@@ -650,7 +612,6 @@ export interface Statement {
 }
 
 export const FACT_COLUMNS = [
-  'abandoned_at',
   'git_sha',
   'tag_conflict',
   'npm_integrity',

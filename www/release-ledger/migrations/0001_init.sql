@@ -6,7 +6,6 @@ CREATE TABLE versions (
   first_seen_at    TEXT NOT NULL,
   -- bumped by every write; updates compare and set on it
   rev              INTEGER NOT NULL DEFAULT 0,
-  abandoned_at     TEXT,
   git_sha          TEXT,
   -- each *_conflict holds the observation that contradicts the region's fixed facts, as JSON
   tag_conflict     TEXT,
@@ -49,7 +48,6 @@ SELECT
   CASE WHEN gh_release_id IS NULL THEN 'none' ELSE 'final' END AS gh_state,
   CASE
     WHEN coalesce(tag_conflict, npm_conflict, gh_conflict) IS NOT NULL THEN 'conflict'
-    WHEN abandoned_at IS NOT NULL THEN 'abandoned'
     -- the tag precedes publish, so npm or a release without one is never clean
     WHEN git_sha IS NULL THEN 'untagged'
     WHEN npm_integrity IS NULL THEN 'tagged'
@@ -91,7 +89,7 @@ CREATE TABLE ledger_events (
   name              TEXT NOT NULL,
   version           TEXT NOT NULL,
   region            TEXT NOT NULL CHECK (region IN ('tag', 'npm', 'gh')),
-  event             TEXT NOT NULL CHECK (event IN ('observed', 'abandon', 'repair', 'dist_tag_moved', 'dist_tag_removed')),
+  event             TEXT NOT NULL CHECK (event IN ('observed', 'repair', 'dist_tag_moved', 'dist_tag_removed')),
   -- the region's derived state; the tag has none, and a new row has no from_state
   from_state        TEXT,
   to_state          TEXT,
