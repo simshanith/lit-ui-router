@@ -47,7 +47,7 @@ const GEN = new URL('.', import.meta.url).pathname;
 // The plate list below is derived by walking these entry modules' imports, so
 // a sheet that starts reading a new census plate says so without an edit here.
 const MODULE = {
-  '1': 'sheet1.mjs', '1i': 'sheet1i.mjs', '2': 'sheet2.mjs', '2A': 'sheet2a.mjs', '2B': 'sheet2b.mjs', '2C': 'sheet2c.mjs', '2E': 'sheet2e.mjs',
+  '1': 'sheet1.mjs', '1i': 'sheet1i.mjs', '2': 'sheet2.mjs', '2A': 'sheet2a.mjs', '2B': 'sheet2b.mjs', '2C': 'sheet2c.mjs', '2E': 'sheet2e.mjs', '2F': 'sheet2f.mjs',
   '3': 'sheet3.mjs', '3A': 'sheet3a.mjs', '3B': 'sheet3b.mjs', '4': 'sheet4.mjs',
   '5': 'sheet5.mjs', '6': 'sheet6.mjs', '7': 'sheet7.mjs', '7A': 'sheet7a.mjs',
   '7B': 'sheet7b.mjs', '8': 'sheet8.mjs', '9': 'sheet9.mjs', '10': 'sheet10.mjs',

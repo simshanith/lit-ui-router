@@ -604,6 +604,8 @@ if (CORDS.length !== CONSUMERS.reduce((n, c) => n + c.pins.length - (c.seatedOn?
 const HUNG = CORDS.filter((t) => t.hang), STRAIGHT = CORDS.filter((t) => !t.hang && !t.curve.via.length);
 if (HUNG.length + STRAIGHT.length + WOUND.length !== CORDS.length || WOUND.some((t) => t.hang)) throw new Error('sheet 2E: a cord is counted as neither hanging, straight nor winding');
 export const SHEET2E_CORDS = { drawn: CORDS.length, hung: HUNG.length, straight: STRAIGHT.map((t) => `${t.part.consumer.name} → ${t.b.n}`), wound: WOUND.map((t) => ({ from: t.part.consumer.name, to: t.b.n, via: t.curve.via })) };
+/** Each consumer's tag as this sheet numbers it, in its order, for the sheets that cite a consumer by it. */
+export const SHEET2E_TAGS = CONSUMERS.map((c) => ({ k: c.k, letter: c.letter, name: c.name, kind: c.kind }));
 export const SHEET2E_SCALE = `${WORD[CONSUMERS.length].toUpperCase()} CONSUMERS`;
 export const SHEET2E_VERDICT = `the consumers as bricks: ${WORD[CONSUMERS.length]} consumers, ${WORD[CAB.consumers]} in the cabinet’s tree and the atlas app on its own branch; ${WORD[HUB.by.length]} pin brick ${HUB.b.n}, ${HUB.b.name}, and ${listOf(BARE.map((c) => c.name))} pins none; the atlas app is the heaviest at ${plural(HEAVIEST.studs, 'stud')}, ${TALLEST.name} the tallest at ${plural(TALLEST.courses, 'course')}`;
 const ARIA = `An exploded isometric LEGO drawing of the repository's consumers as bricks. ${ARIA_BODY} A box at the left lists the ${WORD[CONSUMERS.length]} consumers by number and kind letter, and a schedule below gives each one's files, sloc, pins and build.`;

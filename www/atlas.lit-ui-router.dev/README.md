@@ -1,7 +1,7 @@
 # www/atlas.lit-ui-router.dev/ — The Altitude Atlas
 
 A drawing set: one subject, the lit-ui-router monorepo, surveyed at every altitude. Fourteen altitudes
-on 24 plates — the numbered sheets, their A/B alternates and three interactive lanes —
+on 25 plates — the numbered sheets, their A/B alternates and three interactive lanes —
 each in the form that altitude earns, with sheets 2 and 7 standing in the round in the routed app, and an appendix of 5 more about the atlas itself. Sheets 7–10 are a survey
 quartet (the workspace by mass, a consumer's node_modules, a deploy on the wire, the inside of
 one bundle); 11 prices every published entry alone; appendix A2 draws the census pipeline that
@@ -18,6 +18,7 @@ each sheet argue where that form fits and where it lies.
 | [2B](https://atlas.lit-ui-router.dev/sheet/2B) | 13 NODES · 23 DRAWN CONTRACTS | INTERACTIVE COUPLING GRAPH |
 | [2C](https://atlas.lit-ui-router.dev/sheet/2C) | ONE BOX, EIGHT BUILDS | BUILD INSTRUCTIONS |
 | [2E](https://atlas.lit-ui-router.dev/sheet/2E) | TWENTY CONSUMERS | BUILD INSTRUCTIONS |
+| [2F](https://atlas.lit-ui-router.dev/sheet/2F) | TWENTY CONSUMERS, PIN BY PIN | BUILD INSTRUCTIONS |
 | [3](https://atlas.lit-ui-router.dev/sheet/3) | THE MONOREPO | ISOMETRIC CITY |
 | [3A](https://atlas.lit-ui-router.dev/sheet/3A) | TWO TASK MANAGERS | COUPLING SCHEMATIC |
 | [3B](https://atlas.lit-ui-router.dev/sheet/3B) | THE CI TASK GRAPH | ISOMETRIC GRAPH CITY |

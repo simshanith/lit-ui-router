@@ -8,6 +8,7 @@ import { sheet2a, SHEET2A_VERDICT } from './sheet2a.mjs';
 import { sheet2b, sheet2bPage, SHEET2B_VERDICT } from './sheet2b.mjs';
 import { sheet2c, SHEET2C_SCALE, SHEET2C_VERDICT } from './sheet2c.mjs';
 import { sheet2e, SHEET2E_SCALE, SHEET2E_VERDICT } from './sheet2e.mjs';
+import { sheet2f, SHEET2F_SCALE, SHEET2F_VERDICT } from './sheet2f.mjs';
 import { BUILDS_VERDICT } from './builds-scene.mjs';
 import { sheet3 } from './sheet3.mjs';
 import { sheet3a, SHEET3A_VERDICT } from './sheet3a.mjs';
@@ -40,7 +41,7 @@ const OUT = process.argv[2];
 if (!OUT) throw new Error('usage: node build.mjs <outdir>');
 mkdirSync(OUT, { recursive: true });
 
-const sheets = [sheet1, sheet2, sheet2a, sheet2c, sheet2e, sheet3, sheet3a, sheet3b, sheet4, sheet5, sheet6, sheet7, sheet7a, sheet7b, sheet8, sheet9, sheet10, sheet11, sheet12, sheet13, sheet14];
+const sheets = [sheet1, sheet2, sheet2a, sheet2c, sheet2e, sheet2f, sheet3, sheet3a, sheet3b, sheet4, sheet5, sheet6, sheet7, sheet7a, sheet7b, sheet8, sheet9, sheet10, sheet11, sheet12, sheet13, sheet14];
 // The interactive lanes with a plate of their own — the plate count on the
 // cover and in the README derives here.
 const lanes = [sheet1i, sheet2b, sheet12i];
@@ -82,6 +83,7 @@ const verdicts = [
   ['2B', 'COMPANIONS, CONTRACTED', 'COUPLING BENCH', SHEET2B_VERDICT],
   ['2C', SHEET2C_SCALE, 'BUILD INSTRUCTIONS', SHEET2C_VERDICT],
   ['2E', SHEET2E_SCALE, 'BUILD INSTRUCTIONS', SHEET2E_VERDICT],
+  ['2F', SHEET2F_SCALE, 'BUILD INSTRUCTIONS', SHEET2F_VERDICT],
   ['3', 'MONOREPO', 'ISOMETRIC CITY', 'the yard re-massed from sloc × files — gate severity in colour: the smallest blocks stop the line; the task-manager inset reads the same plates as 3A, so the two cannot disagree'],
   ['3A', 'TWO TASK MANAGERS', 'COUPLING SCHEMATIC', SHEET3A_VERDICT],
   ['3B', 'CI TASK GRAPH', 'ISOMETRIC GRAPH CITY', SHEET3B_VERDICT],

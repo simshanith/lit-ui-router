@@ -49,6 +49,7 @@ export const LABELS = {
   '2B': S('coupling', 'graph', 'interactive'),
   '2C': S('coupling', 'isometric', 'static'),
   '2E': S('coupling', 'isometric', 'static'),
+  '2F': S('coupling', 'isometric', 'static'),
   '3': S('city', 'isometric', 'static', 'isometric'),
   '3A': S('coupling', 'schematic', 'static'),
   '3B': S('city', 'isometric', 'static', 'isometric graph'),
