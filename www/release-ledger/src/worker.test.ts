@@ -14,7 +14,6 @@ import type { SqlClient } from 'effect/sql';
 import { type ParseError, parse, printParseErrorCode } from 'jsonc-parser';
 import { createTestHarness } from 'wrangler';
 
-import { ceiling, QUEUE_BACKOFF } from './backoff.ts';
 import type { Claim } from './claim.ts';
 import {
   CLAIMS_QUEUE,
@@ -23,6 +22,8 @@ import {
   FOLD_ATTEMPTS,
   type LedgerBatch,
   type LedgerMessage,
+  QUEUE_BACKOFF,
+  queueCeiling,
 } from './consume.ts';
 import { findTagged, findVersions } from './ledger-sql.ts';
 import { ObservationError, Observer, type Sources } from './observe.ts';
@@ -162,7 +163,7 @@ describe('wrangler.jsonc', () => {
     let window = 0;
 
     for (let attempt = 1; attempt <= (claims?.max_retries ?? 0); attempt += 1) {
-      window += ceiling(attempt, QUEUE_BACKOFF);
+      window += queueCeiling(attempt);
     }
 
     assert.ok(window > 3600, `${window}s outlasts a GitHub rate-limit reset`);

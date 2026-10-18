@@ -4,6 +4,7 @@
 import { WorkerEntrypoint } from 'cloudflare:workers';
 import { D1Client } from '@effect/sql-d1';
 import { Effect, Layer, Option } from 'effect';
+import { FetchHttpClient } from 'effect/http';
 
 import type { Claim } from '../src/claim.ts';
 import { consume } from '../src/consume.ts';
@@ -51,12 +52,17 @@ export default {
       sweep(env, {
         cron: controller.cron,
         scheduledAt: new Date(controller.scheduledTime).toISOString(),
-      }),
+      }).pipe(Effect.provide(FetchHttpClient.layer)),
     ),
   queue: (batch, env) =>
     Effect.runPromise(
       consume(batch).pipe(
-        Effect.provide(Layer.mergeAll(database(env), ObserverLive(env))),
+        Effect.provide(
+          Layer.mergeAll(
+            database(env),
+            ObserverLive(env).pipe(Layer.provide(FetchHttpClient.layer)),
+          ),
+        ),
       ),
     ),
 } satisfies ExportedHandler<LedgerEnv, Claim>;

@@ -1,16 +1,8 @@
 // What npm and GitHub say about one `<pkg>@<version>` right now. The consumer
 // reads them through the Observer service, so tests can stand in for both.
-import { Clock, Context, Duration, Effect, Layer, Schema } from 'effect';
+import { Clock, Context, Effect, Layer, Schedule, Schema } from 'effect';
+import { HttpClient, HttpClientError, HttpClientResponse } from 'effect/http';
 
-import {
-  type Backoff,
-  backoffSeconds,
-  FETCH_ATTEMPTS,
-  FETCH_BACKOFF,
-  FETCH_MAX_WAIT_SECONDS,
-  rateLimit,
-  retryable,
-} from './backoff.ts';
 import type { GhReleaseFacts, TagFacts } from './release-ledger.core.ts';
 
 export interface NpmVersion {
@@ -91,95 +83,104 @@ const NpmTimes = Schema.Struct({
 
 const DistTags = Schema.Record(Schema.String, Schema.String);
 
-/** One fetch: an answer to return, or a failure worth another try. */
-type Attempt =
-  | { kind: 'answered'; response: Response }
-  | { kind: 'failed'; reason: string; retryAfter?: number };
+/** The longest wait a fetch takes in-request; a longer one becomes the queue's delay. */
+const MAX_IN_REQUEST_WAIT_SECONDS = 10;
 
-const attemptFetch = (url: string, headers: Record<string, string>) =>
-  Effect.gen(function* () {
-    const now = yield* Clock.currentTimeMillis;
+/** Three attempts per fetch; `retryTransient` lets a shorter Retry-After stretch a wait. */
+const FETCH_RETRY = {
+  schedule: Schedule.exponential('500 millis').pipe(Schedule.jittered),
+  times: 2,
+};
 
-    return yield* Effect.promise(() =>
-      fetch(url, { headers }).then(
-        async (response): Promise<Attempt> => {
-          const limit = rateLimit(response, now);
+/** Seconds a response asks to wait: Retry-After, else GitHub's primary-limit reset. */
+export function requestedWait(
+  { headers }: Pick<HttpClientResponse.HttpClientResponse, 'headers'>,
+  now: number,
+) {
+  const retryAfter = headers['retry-after']?.trim();
 
-          if (limit === undefined && !retryable(response.status)) {
-            return { kind: 'answered', response };
-          }
+  if (retryAfter !== undefined) {
+    const at = /^\d+(\.\d+)?$/.test(retryAfter)
+      ? now + Number(retryAfter) * 1000
+      : Date.parse(retryAfter);
 
-          // an unread body holds one of the worker's few open connections
-          await response.body?.cancel().catch(() => undefined);
+    return Number.isNaN(at) ? undefined : Math.max(0, (at - now) / 1000);
+  }
 
-          return {
-            kind: 'failed',
-            reason: `HTTP ${response.status}`,
-            ...(limit?.wait !== undefined && { retryAfter: limit.wait }),
-          };
-        },
-        (cause: unknown): Attempt => ({
-          kind: 'failed',
-          reason: String(cause),
-        }),
-      ),
-    );
-  });
+  const reset = Number(headers['x-ratelimit-reset']);
 
-/** The response, after in-request backoff on rate limits, server errors and network failures. */
-export const fetchWithBackoff = (
-  source: string,
-  url: string,
-  headers: Record<string, string>,
-  backoff: Backoff = FETCH_BACKOFF,
-): Effect.Effect<Response, ObservationError> =>
-  Effect.gen(function* () {
-    for (let attempt = 1; ; attempt += 1) {
-      const result = yield* attemptFetch(url, headers);
+  return headers['x-ratelimit-remaining'] === '0' && Number.isFinite(reset)
+    ? Math.max(0, reset - now / 1000)
+    : undefined;
+}
 
-      if (result.kind === 'answered') return result.response;
+/** GitHub's primary and secondary limits answer 403, which `retryTransient` alone treats as final. */
+export const isGitHubRateLimit = (
+  error: HttpClientError.HttpClientError | ObservationError,
+): boolean => {
+  const response = HttpClientError.isHttpClientError(error)
+    ? error.response
+    : undefined;
 
-      const { reason, retryAfter } = result;
-      const wait = retryAfter ?? backoffSeconds(attempt, backoff);
+  return (
+    response?.status === 403 &&
+    (response.headers['retry-after'] !== undefined ||
+      response.headers['x-ratelimit-remaining'] === '0')
+  );
+};
 
-      // a long rate-limit wait becomes the queue's delay instead
-      if (attempt >= FETCH_ATTEMPTS || wait > FETCH_MAX_WAIT_SECONDS) {
+/** A 2xx or 404 passes; a wait past the in-request cap goes to the queue; other statuses fail for `retryTransient`. */
+const handOffLongWaits =
+  (source: string) => (response: HttpClientResponse.HttpClientResponse) =>
+    Effect.gen(function* () {
+      if (response.status < 300 || response.status === 404) return response;
+
+      const wait = requestedWait(response, yield* Clock.currentTimeMillis);
+
+      if (wait !== undefined && wait > MAX_IN_REQUEST_WAIT_SECONDS) {
         return yield* new ObservationError({
           source,
-          reason,
-          ...(retryAfter !== undefined && { retryAfter }),
+          reason: `HTTP ${response.status}`,
+          retryAfter: wait,
         });
       }
 
-      yield* Effect.sleep(Duration.seconds(wait));
-    }
-  });
+      return yield* HttpClientResponse.filterStatusOk(response);
+    });
 
 /** The decoded body, or null on a 404. */
 const getJson = <S extends Schema.Top>(
+  client: HttpClient.HttpClient,
   source: string,
   url: string,
   schema: S,
   headers: Record<string, string>,
 ): Effect.Effect<S['Type'] | null, ObservationError, S['DecodingServices']> =>
-  Effect.gen(function* () {
-    const failed = (reason: string) => new ObservationError({ source, reason });
-
-    const response = yield* fetchWithBackoff(source, url, headers);
-
-    if (response.status === 404) return null;
-
-    if (!response.ok) return yield* failed(`HTTP ${response.status}`);
-
-    const body = yield* Effect.tryPromise({
-      try: () => response.text(),
-      catch: () => failed('the body is unreadable'),
-    });
-
-    return yield* Schema.decodeUnknownEffect(Schema.fromJsonString(schema))(
-      body,
-    ).pipe(Effect.mapError((error) => failed(error.message)));
-  });
+  client.pipe(
+    HttpClient.transformResponse(Effect.flatMap(handOffLongWaits(source))),
+    HttpClient.retryTransient({
+      retryOn: 'errors-only',
+      while: isGitHubRateLimit,
+      ...FETCH_RETRY,
+    }),
+    (retrying) => retrying.get(url, { headers }),
+    Effect.flatMap((response) =>
+      response.status === 404
+        ? Effect.succeed(null)
+        : HttpClientResponse.schemaBodyJson(schema)(response),
+    ),
+    Effect.mapError((error) =>
+      error instanceof ObservationError
+        ? error
+        : new ObservationError({
+            source,
+            reason:
+              HttpClientError.isHttpClientError(error) && error.response
+                ? `HTTP ${error.response.status}`
+                : error.message,
+          }),
+    ),
+  );
 
 const npmPath = (name: string): string => name.replace('/', '%2f');
 
@@ -205,17 +206,23 @@ const MatchingRefs = Schema.Array(
 
 /** Every tag in the repository, as `git/matching-refs` lists them. */
 export const listTags = (env: ObserverEnv) =>
-  Effect.map(
-    getJson(
-      'github tags',
-      `${repoUrl(env)}/git/matching-refs/tags/`,
-      MatchingRefs,
-      githubHeaders(env),
+  Effect.flatMap(HttpClient.HttpClient, (client) =>
+    Effect.map(
+      getJson(
+        client,
+        'github tags',
+        `${repoUrl(env)}/git/matching-refs/tags/`,
+        MatchingRefs,
+        githubHeaders(env),
+      ),
+      (refs) => refs ?? [],
     ),
-    (refs) => refs ?? [],
   );
 
-export const makeObserver = (env: ObserverEnv): Observer['Service'] => {
+export const makeObserver = (
+  env: ObserverEnv,
+  client: HttpClient.HttpClient,
+): Observer['Service'] => {
   const github = githubHeaders(env);
   const npm = { Accept: 'application/json' };
   const repo = repoUrl(env);
@@ -223,6 +230,7 @@ export const makeObserver = (env: ObserverEnv): Observer['Service'] => {
   const tag = (name: string, version: string) =>
     Effect.gen(function* () {
       const ref = yield* getJson(
+        client,
         'github tag',
         `${repo}/git/ref/tags/${refPath(`${name}@${version}`)}`,
         GitRef,
@@ -235,6 +243,7 @@ export const makeObserver = (env: ObserverEnv): Observer['Service'] => {
 
       // An annotated tag points at a tag object; the ledger records the commit.
       const annotated = yield* getJson(
+        client,
         'github tag',
         ref.object.url,
         GitTag,
@@ -247,6 +256,7 @@ export const makeObserver = (env: ObserverEnv): Observer['Service'] => {
   const ghRelease = (name: string, version: string) =>
     Effect.map(
       getJson(
+        client,
         'github release',
         `${repo}/releases/tags/${refPath(`${name}@${version}`)}`,
         Release,
@@ -268,6 +278,7 @@ export const makeObserver = (env: ObserverEnv): Observer['Service'] => {
   const npmVersion = (name: string, version: string) =>
     Effect.gen(function* () {
       const manifest = yield* getJson(
+        client,
         'npm version',
         `${NPM_REGISTRY}/${npmPath(name)}/${version}`,
         NpmManifest,
@@ -277,6 +288,7 @@ export const makeObserver = (env: ObserverEnv): Observer['Service'] => {
       if (manifest === null) return null;
 
       const times = yield* getJson(
+        client,
         'npm packument',
         `${NPM_REGISTRY}/${npmPath(name)}`,
         NpmTimes,
@@ -303,6 +315,7 @@ export const makeObserver = (env: ObserverEnv): Observer['Service'] => {
   const distTags = (name: string) =>
     Effect.map(
       getJson(
+        client,
         'npm dist-tags',
         `${NPM_REGISTRY}/-/package/${npmPath(name)}/dist-tags`,
         DistTags,
@@ -325,5 +338,10 @@ export const makeObserver = (env: ObserverEnv): Observer['Service'] => {
   };
 };
 
-export const ObserverLive = (env: ObserverEnv): Layer.Layer<Observer> =>
-  Layer.succeed(Observer, makeObserver(env));
+export const ObserverLive = (
+  env: ObserverEnv,
+): Layer.Layer<Observer, never, HttpClient.HttpClient> =>
+  Layer.effect(
+    Observer,
+    Effect.map(HttpClient.HttpClient, (client) => makeObserver(env, client)),
+  );

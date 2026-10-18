@@ -4,7 +4,6 @@
 import { Effect, Option, Schema } from 'effect';
 import { D1Client } from '@effect/sql-d1';
 
-import { queueDelaySeconds } from './backoff.ts';
 import { Claim } from './claim.ts';
 import {
   findClaim,
@@ -243,6 +242,31 @@ const handleClaim = (message: LedgerMessage) =>
       ),
     ),
   );
+
+/** Redelivery backoff in seconds; `max_retries` in wrangler.jsonc bounds the window. */
+export const QUEUE_BACKOFF = { base: 30, cap: 3600 } as const;
+
+/** Queues reject a `delaySeconds` above 12 hours. */
+export const QUEUE_MAX_DELAY_SECONDS = 43_200;
+
+/** The ceiling for a 1-based attempt: `base` doubled per attempt, up to `cap`. */
+export const queueCeiling = (attempts: number): number =>
+  Math.min(
+    QUEUE_BACKOFF.cap,
+    QUEUE_BACKOFF.base * 2 ** Math.max(0, attempts - 1),
+  );
+
+/** Equal jitter over the ceiling's upper half; a rate limit's own wait wins. Queues only have a fixed `retry_delay`. */
+export function queueDelaySeconds(
+  attempts: number,
+  retryAfter?: number,
+  random: () => number = Math.random,
+): number {
+  const top = queueCeiling(attempts);
+  const wait = retryAfter ?? top / 2 + (random() * top) / 2;
+
+  return Math.min(QUEUE_MAX_DELAY_SECONDS, Math.ceil(wait));
+}
 
 const settle = (message: LedgerMessage, verdict: Verdict): void => {
   if (verdict.kind === 'ack') {

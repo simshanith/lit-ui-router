@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import { Effect } from 'effect';
+import { FetchHttpClient } from 'effect/http';
 
 import type { Claim } from './claim.ts';
 import { sweep, sweepClaims } from './sweep.ts';
@@ -47,15 +48,15 @@ describe('sweepClaims', () => {
 });
 
 describe('sweep', () => {
-  it('lists tags with the token and enqueues them 100 at a time', async (t) => {
+  it('lists tags with the token and enqueues them 100 at a time', async () => {
     const refs = Array.from({ length: 150 }, (_, i) => ref(`pkg@1.0.${i}`));
     const fetched: Request[] = [];
 
-    t.mock.method(globalThis, 'fetch', (input: string, init?: RequestInit) => {
+    const fetch: typeof globalThis.fetch = (input, init) => {
       fetched.push(new Request(input, init));
 
       return Promise.resolve(Response.json(refs));
-    });
+    };
 
     const batches: Claim[][] = [];
 
@@ -73,6 +74,9 @@ describe('sweep', () => {
           },
         },
         RUN,
+      ).pipe(
+        Effect.provide(FetchHttpClient.layer),
+        Effect.provideService(FetchHttpClient.Fetch, fetch),
       ),
     );
 

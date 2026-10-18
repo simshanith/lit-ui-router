@@ -27,9 +27,11 @@ design is [#1424](https://github.com/simshanith/lit-ui-router/issues/1424) and
   [`src/release-ledger.core.ts`](./src/release-ledger.core.ts), and writes the
   outcome in one D1 batch, its `pipeline_events` row first. A missing claim row
   after the batch means a row moved, so the consumer folds again. A GitHub
-  release ahead of npm is folded as seen. Fetches and redeliveries back off
-  exponentially with jitter, and a rate limit's own wait (`Retry-After`,
-  GitHub's `x-ratelimit-reset`) wins ([`src/backoff.ts`](./src/backoff.ts)).
+  release ahead of npm is folded as seen. Fetches retry through Effect's
+  `HttpClient.retryTransient`, which also takes GitHub's rate-limit 403s;
+  a wait over 10 seconds (`Retry-After`, GitHub's `x-ratelimit-reset`) becomes
+  the redelivery delay instead ([`src/observe.ts`](./src/observe.ts)).
+  Redeliveries back off exponentially with jitter.
   Claims whose retries run out land in `dead_letters`.
 - **The Cron Trigger** ([`src/sweep.ts`](./src/sweep.ts)) lists the
   repository's tags through `git/matching-refs` and enqueues an ordinary claim
