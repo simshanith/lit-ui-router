@@ -21,16 +21,31 @@
  *
  * {@link FetchAdapterOptions.delegates} puts the router in front of a Hono app:
  * a request matching a delegating state goes to that app, any method, and its
- * Response is returned. Build the middleware per request to hand the outer
- * bindings through:
- * `delegates: { ledger: (request) => ledger.fetch(request, c.env, c.executionCtx) }`.
+ * Response is returned. The middleware forwards `c.env` and `c.executionCtx`
+ * the way Hono's `app.mount()` does, so `delegates: { ledger: ledger.fetch }`
+ * fits bare and a route reads the match with `delegateContext(c.req.raw, 'ledger')`.
  */
 
 import { createFetchHandler } from './fetch.ts';
 import type { FetchAdapterOptions } from './fetch.ts';
 import type { ServerRouter } from './index.ts';
 
-import type { MiddlewareHandler } from 'hono';
+import type { Context, Env, ExecutionContext, MiddlewareHandler } from 'hono';
+
+/** What `serverRouterHono` forwards to a delegate after the request: Hono's `env` and execution context. */
+export type HonoDelegateArgs<E extends Env = Env> = [
+  env: E['Bindings'],
+  executionCtx: ExecutionContext | undefined,
+];
+
+// Hono's getter throws outside a runtime with an execution context (node, tests); app.mount() swallows it too.
+const executionCtxOf = (c: Context): ExecutionContext | undefined => {
+  try {
+    return c.executionCtx;
+  } catch {
+    return undefined;
+  }
+};
 
 /**
  * Wraps a {@link ServerRouter} as Hono middleware. The returned handler resolves
@@ -38,14 +53,14 @@ import type { MiddlewareHandler } from 'hono';
  * Response) or passes it on (`await next()`), exactly the fetch adapter's
  * `Response | null` contract expressed in Hono's continuation.
  */
-export function serverRouterHono(
+export function serverRouterHono<E extends Env = Env>(
   router: ServerRouter,
-  options: FetchAdapterOptions,
-): MiddlewareHandler {
+  options: FetchAdapterOptions<HonoDelegateArgs<E>>,
+): MiddlewareHandler<E> {
   const handler = createFetchHandler(router, options);
 
   return async (c, next) => {
-    const response = await handler(c.req.raw);
+    const response = await handler(c.req.raw, c.env, executionCtxOf(c));
 
     if (response) return response;
 
