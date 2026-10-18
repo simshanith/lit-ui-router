@@ -28,7 +28,7 @@ nothing you don't.
 <figure class="atlas-thumb">
   <a href="https://atlas.lit-ui-router.dev/bricks/" target="_blank" rel="noopener">
     <img class="light-only" src="https://atlas.lit-ui-router.dev/thumbs/bricks.webp" width="600" height="800" loading="lazy" alt="The companion packages as LEGO bricks seated on the core's baseplate, drawn in the round" />
-    <img class="dark-only" src="https://atlas.lit-ui-router.dev/thumbs/bricks-dark.webp" width="600" height="800" loading="lazy" alt="" />
+    <img class="dark-only" src="https://atlas.lit-ui-router.dev/thumbs/bricks-dark.webp" width="600" height="800" loading="lazy" alt="The companion packages as LEGO bricks seated on the core's baseplate, drawn in the round" />
   </a>
   <figcaption>
     <a href="https://atlas.lit-ui-router.dev" target="_blank" rel="noopener">The Altitude Atlas</a>
