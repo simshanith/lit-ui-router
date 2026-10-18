@@ -14,7 +14,7 @@ const Version = Schema.String.check(
 const DistTag = Schema.String.check(Schema.isPattern(/^[a-z][a-z0-9-]*$/));
 
 /** Maintainer events stay off /claims until they have their own gated path. */
-export const MAINTAINER_ACTIONS = ['abandon', 'repair'] as const;
+export const MAINTAINER_ACTIONS = ['repair'] as const;
 
 export const ClaimBody = Schema.Struct({
   name: PackageName,

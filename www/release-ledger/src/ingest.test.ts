@@ -192,20 +192,18 @@ describe('POST /claims', () => {
     assert.equal(sent.length, 0);
   });
 
-  for (const action of ['abandon', 'repair']) {
-    it(`answers 403 for ${action}, a maintainer event`, async () => {
-      const { env, sent } = envWith();
+  it('answers 403 for repair, a maintainer event', async () => {
+    const { env, sent } = envWith();
 
-      const response = await ingest(
-        post(await sign(CLAIMS), { ...BODY, action }),
-        env,
-        keys,
-      );
+    const response = await ingest(
+      post(await sign(CLAIMS), { ...BODY, action: 'repair' }),
+      env,
+      keys,
+    );
 
-      assert.equal(response.status, 403);
-      assert.equal(sent.length, 0);
-    });
-  }
+    assert.equal(response.status, 403);
+    assert.equal(sent.length, 0);
+  });
 
   const pins: [string, TokenClaims, Record<string, string>?][] = [
     ['repository', { repository: 'fork/lit-ui-router' }],

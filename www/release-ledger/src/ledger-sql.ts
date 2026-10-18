@@ -21,7 +21,6 @@ const VersionRowSchema = Schema.Struct({
   version: Schema.String,
   first_seen_at: Schema.String,
   rev: Schema.Number,
-  abandoned_at: NullableString,
   git_sha: NullableString,
   tag_conflict: NullableString,
   npm_integrity: NullableString,
