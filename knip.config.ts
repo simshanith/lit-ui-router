@@ -75,6 +75,8 @@ const workspaces = {
     entry: ['src/**/*.test-d.ts', 'test-d/*.test-d.ts'],
   },
   'apps/sample-app-lit-signals': { entry: ['src/**/*.test-d.ts'] },
+  // copied into the bench's fixtures when `REGISTRY` names it
+  'apps/sample-app-shared': { entry: ['bench/registry-v1.ts'] },
   'apps/sample-app-lit-e2e': {
     // reached from root mise tasks and `cypress --config-file`
     entry: ['scripts/*.ts', 'cypress*.config.ts', 'src/**/*.cy.{ts,js}'],

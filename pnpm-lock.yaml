@@ -966,9 +966,18 @@ importers:
       playwright:
         specifier: 'catalog:'
         version: 1.64.1
+      tinybench:
+        specifier: 'catalog:'
+        version: 6.2.2
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
+      typescript-5.0:
+        specifier: 'catalog:'
+        version: typescript@5.0.4
+      typescript-5.9:
+        specifier: 'catalog:'
+        version: typescript@5.9.3
       vite:
         specifier: 'catalog:'
         version: 8.3.4(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)

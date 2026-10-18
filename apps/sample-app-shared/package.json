@@ -9,6 +9,7 @@
     "./tooling/*.js": "./tooling/*.ts"
   },
   "scripts": {
+    "bench": "node bench/registry-types.bench.ts",
     "format:check:oxfmt": "oxfmt --check \"**/*.{js,ts,json,md,css}\"",
     "format:oxfmt": "oxfmt \"**/*.{js,ts,json,md,css}\"",
     "lint:oxlint": "oxlint .",
@@ -39,7 +40,10 @@
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
     "playwright": "catalog:",
+    "tinybench": "catalog:",
     "typescript": "catalog:",
+    "typescript-5.0": "catalog:",
+    "typescript-5.9": "catalog:",
     "vite": "catalog:",
     "vite-plugin-checker": "catalog:",
     "vite-plugin-static-copy": "catalog:",

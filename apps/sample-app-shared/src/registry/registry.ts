@@ -66,7 +66,14 @@ export type RelativeRef = `.${string}` | `^${string}`;
 /** A glob that `includes` accepts as well as a state name. */
 export type StateGlob = StateName | `${StateName}.*` | `${StateName}.**`;
 
-type DeclarationOf<N> = Extract<Declarations, { name: N }>;
+// Built once per program, so a name lookup is an index, not a scan of every declaration.
+type ByName = {
+  [
+    D in Declarations as D extends { name: infer N extends string } ? N : never
+  ]: D;
+};
+
+type DeclarationOf<N> = N extends keyof ByName ? ByName[N] : never;
 
 type DropLast<
   S extends string,
@@ -328,24 +335,29 @@ type SnapshotFor<N extends StateName> = SnapshotBase & {
   readonly params: Readonly<ResolvedParamsOf<N>>;
 };
 
-type DetachedSnapshot = SnapshotBase & {
-  readonly current: undefined;
-  readonly params: Readonly<Record<never, never>>;
-};
-
 /**
- * `@repo/route-snapshot`'s `RouteSnapshot`, as one variant per registered
- * state. `includes(name)` narrows it to that state and its descendants.
+ * `@repo/route-snapshot`'s `RouteSnapshot`. Unnarrowed it is one type, not a
+ * union per state; `includes(name)` narrows it to that state's subtree.
  */
 export type TypedRouteSnapshot = IsRegistered extends true
-  ? DetachedSnapshot | { [N in StateName]: SnapshotFor<N> }[StateName]
+  ? SnapshotBase & {
+      readonly current:
+        | (StateDeclaration & { readonly name: StateName })
+        | undefined;
+      readonly params: Readonly<Record<never, never>>;
+    }
   : SnapshotBase & {
       readonly current: StateDeclaration | undefined;
       readonly params: RawParams;
     };
 
+type EachSnapshot<N> = N extends StateName ? SnapshotFor<N> : never;
+
+// The registered states whose lineage passes through G.
+type Subtree<G extends StateName> = {
+  [N in StateName]: G extends LineageOf<N> ? N : never;
+}[StateName];
+
 type ActiveSnapshot<G extends StateName> = IsRegistered extends true
-  ? {
-      [N in StateName]: G extends LineageOf<N> ? SnapshotFor<N> : never;
-    }[StateName]
+  ? EachSnapshot<Subtree<G>>
   : TypedRouteSnapshot;
