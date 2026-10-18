@@ -141,9 +141,10 @@ export async function initBricks(root, viewer, focus) {
   var ac = new AbortController();
   var on = function (el, type, fn, capture) { el.addEventListener(type, fn, { signal: ac.signal, capture: Boolean(capture) }); };
   var END = D.end, t = END, raf = 0, pinN = null, loaded = false;
-  var byN = {}, pins = {};
+  var byN = {}, byName = {}, pins = {};
   D.bricks.forEach(function (b) {
     byN[b.n] = b;
+    byName[b.name] = b.n;
     pins[b.n] = mv.querySelector('[slot="hotspot-' + b.n + '"]');
   });
   var order = D.bricks.map(function (b) { return b.n; }).sort(function (a, b) { return a - b; });
@@ -235,7 +236,12 @@ export async function initBricks(root, viewer, focus) {
     info.innerHTML = '<h3><i class="sw" style="background:' + b.hue + '"></i><span class="n">BRICK ' + b.n + '</span>' + b.name + ' ' + b.ver + '</h3>'
       + '<p class="ledger">' + b.ledger + '</p><p class="note">Seats on ' + b.seats + (b.peers ? '; peers ' + b.peers : '') + '.</p>';
   }
-  function member(v) { return v !== null && v !== undefined && byN[v] ? Number(v) : null; }
+  // a brick by its number or its package name, so a link from outside names the package
+  function member(v) {
+    if (v === null || v === undefined) return null;
+    if (byN[v]) return Number(v);
+    return byName[v] !== undefined ? byName[v] : null;
+  }
   // idempotent, so the url's echo of a pick lands on a no-op
   function pin(n) {
     if (n === pinN) return;

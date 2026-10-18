@@ -393,6 +393,17 @@ try {
     check(s.pinned === 12 && s.on && target.every((v, i) => Math.abs(v - centre[i]) < 0.5), '/city?focus=12 opens pinned and framed on member 12', s.target);
     await page.close();
   }
+  {
+    const page = await open('/bricks/?focus=ui-router-server');
+    await page.evaluate(async () => {
+      await new Promise((r) => { const t = () => (window.__bricksScene ? r() : setTimeout(t, 50)); t(); });
+      await window.__bricksScene.ready;
+    });
+    await page.waitForTimeout(1500);
+    const s = await page.evaluate(() => ({ pinned: window.__bricksScene.pinned(), on: document.querySelector('[slot="hotspot-4"]').classList.contains('on'), url: location.search }));
+    check(s.pinned === 4 && s.on && s.url === '?focus=ui-router-server', '/bricks?focus=ui-router-server opens pinned on brick 4 and keeps the name in the url', s);
+    await page.close();
+  }
 
   // ---- reduced motion: the clip and the corners land at once ----
   {

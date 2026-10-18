@@ -42,7 +42,7 @@ the round.
 | `atlas.sheet`    | `/sheet/:num?focus`                  | `SheetView`                                                         | `sheet`, `fragment` (`focus`: the plate's pick, dynamic)           |
 | `atlas.city`     | `/city?focus`                        | `CityView`                                                          | `extra`, `fragment`, **`viewer`** (`focus`: the pinned member)     |
 | `atlas.plant`    | `/plant?focus`                       | `CityView`                                                          | the same as `atlas.city`, on the `plant` row                       |
-| `atlas.bricks`   | `/bricks?focus`                      | `BricksView`                                                        | `extra`, `fragment`, **`viewer`** (`focus`: the pinned brick, 1–6) |
+| `atlas.bricks`   | `/bricks?focus`                      | `BricksView`                                                        | `extra`, `fragment`, **`viewer`** (`focus`: the pinned brick, its number or its package name) |
 | `atlas.specimen` | `/specimen`                          | `SpecimenView`                                                      | **`specimen`** (its own element)                                   |
 | `atlas.log`      | `/log`                               | `LogView`                                                           | `manifest` (its `issueLog`)                                        |
 | `atlas.office`   | `/office`                            | — `redirectTo`                                                      | — (302 to `atlas.sheet` A2)                                        |

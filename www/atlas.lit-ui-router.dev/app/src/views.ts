@@ -56,6 +56,7 @@ import { FLAME_URL, GLOW_DARK_URL, GLOW_URL, LOGO_URL, UIROUTER_URL } from './ge
 import { initCity } from './generated/city-init.js';
 import type { CityScene } from './generated/city-init.js';
 import { initBricks } from './generated/bricks-init.js';
+import type { BricksScene } from './generated/bricks-init.js';
 import { initBuilds } from './generated/builds-init.js';
 import type { BuildsScene } from './generated/builds-init.js';
 import { ARTIFACT } from './mode.ts';
@@ -344,10 +345,18 @@ export class AtlasCity extends AtlasScene<CityScene> {
 }
 customElements.define('atlas-city', AtlasCity);
 
-/** Sheet 2's model in the round: the same seam, wiring its own <model-viewer>. */
-export class AtlasBricks extends AtlasCity {
-  protected override raise(focus: string | null): Promise<CityScene | undefined> {
+/** Sheet 2's model in the round: the same seam, the pin a brick's number or its package name. */
+export class AtlasBricks extends AtlasScene<BricksScene> {
+  protected pinOf(route: RouteSnapshot): string | null {
+    return cityPin(route);
+  }
+
+  protected raise(focus: string | null): Promise<BricksScene | undefined> {
     return initBricks(this, this.lib, focus);
+  }
+
+  protected apply(scene: BricksScene, pin: string | null): void {
+    scene.select(pin);
   }
 }
 customElements.define('atlas-bricks', AtlasBricks);

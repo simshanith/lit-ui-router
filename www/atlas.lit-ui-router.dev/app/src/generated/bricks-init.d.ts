@@ -2,8 +2,8 @@
 /** The wired model: its teardown, and the pin the url carries as `focus`. */
 export interface BricksScene {
   dispose(): void;
-  /** Pins brick `n`; null, or a number no brick carries, clears the pin. */
-  select(n: number | null): void;
+  /** Pins a brick by its number or its package name; null, or a value no brick carries, clears the pin. */
+  select(n: number | string | null): void;
 }
 /** Wires the model inside `root`, opening on the `focus` pin.
  *  Undefined when there was nothing to wire — no plate, or no viewer. */
