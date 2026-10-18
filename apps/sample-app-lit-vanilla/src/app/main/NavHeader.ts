@@ -1,7 +1,9 @@
+/* oxlint-disable lit-ui-router/anchor-is-valid -- the plugin recognises uiSref by its lit-ui-router import; drops once lit-ui-router types uiSref itself */
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { when } from 'lit/directives/when.js';
-import { TransitionController, uiSref, uiSrefActive } from 'lit-ui-router';
+import { TransitionController, uiSrefActive } from 'lit-ui-router';
+import { uiSref } from 'sample-app-shared/registry/lit.js';
 
 import 'sample-app-shared/app/main/UserMenu.js';
 import AppConfig from '../global/appConfig.js';

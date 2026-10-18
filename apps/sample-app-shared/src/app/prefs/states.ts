@@ -10,6 +10,6 @@ const prefsState = {
   component: Preferences,
   // Mark this state as requiring authentication.  See ../global/requiresAuth.hook.js.
   data: { requiresAuth: true, title: 'Preferences' },
-};
+} as const;
 
 export const states = [prefsState];
