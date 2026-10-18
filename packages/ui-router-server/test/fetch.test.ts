@@ -3,7 +3,7 @@ import { describe, it } from 'node:test';
 
 import { createServerRouter } from '../src/index.ts';
 import type { ServerRouter, Verdict } from '../src/index.ts';
-import { createFetchHandler } from '../src/fetch.ts';
+import { createFetchHandler, delegateContext } from '../src/fetch.ts';
 import type {
   DelegateContext,
   DelegateHandler,
@@ -335,7 +335,10 @@ const requestText = (req: Request): Promise<string> =>
 
 describe('createFetchHandler delegates', () => {
   it('hands any request to the mapped handler and returns its Response untouched', async () => {
-    const calls: Array<{ request: Request; context: DelegateContext }> = [];
+    const calls: Array<{
+      request: Request;
+      context: DelegateContext<'ledger'>;
+    }> = [];
 
     const accepted = new Response('queued', {
       status: 202,
@@ -345,8 +348,8 @@ describe('createFetchHandler delegates', () => {
     const handler = createFetchHandler(routerOf(claimsVerdict), {
       serveShell: noShell,
       delegates: {
-        ledger: (request, context) => {
-          calls.push({ request, context });
+        ledger: (request) => {
+          calls.push({ request, context: delegateContext(request, 'ledger') });
 
           return accepted;
         },
@@ -362,12 +365,47 @@ describe('createFetchHandler delegates', () => {
     assert.equal(await requestText(calls[0].request), 'claim');
     assert.deepEqual(calls[0].context, {
       mount: '/app',
+      delegate: 'ledger',
       state: 'claims',
       params: { id: '7' },
     });
 
     // A navigation that matches a delegating state delegates too.
     assert.equal(await handler(navigation('/app/claims/7')), accepted);
+  });
+
+  it('forwards the arguments after the request to the delegate, fetch-shaped', async () => {
+    interface Env {
+      QUEUE: string[];
+    }
+
+    interface Ctx {
+      waitUntil(promise: Promise<unknown>): void;
+    }
+
+    const seen: Array<[Env, Ctx]> = [];
+
+    // A Worker-style fetch, passed bare.
+    const ledger = {
+      fetch: (_request: Request, env: Env, ctx: Ctx): Response => {
+        seen.push([env, ctx]);
+
+        return new Response(null, { status: 202 });
+      },
+    };
+
+    const handler = createFetchHandler(routerOf(claimsVerdict), {
+      serveShell: noShell,
+      delegates: { ledger: ledger.fetch },
+    });
+
+    const env: Env = { QUEUE: [] };
+    const ctx: Ctx = { waitUntil: () => {} };
+    const res = await handler(post('/app/claims', ''), env, ctx);
+    assert.equal(res?.status, 202);
+    assert.equal(seen.length, 1);
+    assert.equal(seen[0][0], env);
+    assert.equal(seen[0][1], ctx);
   });
 
   it('passes a non-navigation request that matches no delegating state as null', async () => {
@@ -457,8 +495,10 @@ describe('createFetchHandler delegates', () => {
     const handler = createFetchHandler(router, {
       serveShell: shell.serveShell,
       delegates: {
-        ledger: (_request, { params }) =>
-          new Response(String(params.id), { status: 202 }),
+        ledger: (request) =>
+          new Response(String(delegateContext(request, 'ledger').params.id), {
+            status: 202,
+          }),
       },
     });
 
@@ -468,5 +508,50 @@ describe('createFetchHandler delegates', () => {
     assert.equal(await bodyText(res), '9');
     assert.equal(await handler(post('/app/about', '')), null);
     assert.equal((await handler(navigation('/app/about')))?.status, 200);
+  });
+});
+
+describe('delegateContext', () => {
+  const delegated = async (key: string): Promise<Request> => {
+    const request = post('/app/claims', '');
+
+    const handler = createFetchHandler(routerOf(claimsVerdict), {
+      serveShell: noShell,
+      delegates: { [key]: () => new Response(null, { status: 202 }) },
+    });
+
+    await handler(request);
+
+    return request;
+  };
+
+  it('throws for a request the adapter never delegated', () => {
+    assert.throws(
+      () => delegateContext(post('/app/claims', ''), 'ledger'),
+      /this request was not delegated \(expected 'ledger'\)/,
+    );
+  });
+
+  it('throws for a request delegated to another key', async () => {
+    const request = await delegated('ledger');
+
+    assert.throws(
+      () => delegateContext(request, 'badge'),
+      /delegated to 'ledger', not 'badge'/,
+    );
+  });
+
+  it('has no context on a clone: it is keyed by the Request object', async () => {
+    const request = await delegated('ledger');
+    assert.equal(delegateContext(request, 'ledger').state, 'claims');
+
+    // SAFETY: node's real Request, which the fetch globals shim shadows, has clone().
+    const clone = (request as Request & { clone(): Request }).clone();
+
+    assert.throws(() => delegateContext(clone, 'ledger'), /was not delegated/);
+    assert.throws(
+      () => delegateContext(new Request(request.url, request), 'ledger'),
+      /was not delegated/,
+    );
   });
 });

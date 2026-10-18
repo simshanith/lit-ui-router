@@ -344,28 +344,60 @@ app.use('*', (c, next) =>
 A state with a `delegate` key hands its url to a host handler: a command
 endpoint, a form POST, a JSON feed. The tree carries only the key, so the
 client and the server can share it. The fetch and Hono adapters map keys to
-fetch-shaped handlers in their `delegates` option:
+fetch-shaped handlers in their `delegates` option. A handler is called with
+the request and whatever the adapter was called with, so a Hono app's `fetch`
+or a Worker handler fits bare:
 
 ```ts
+import { Hono } from 'hono';
+import { createServerRouter } from 'ui-router-server';
+import { createFetchHandler, delegateContext } from 'ui-router-server/fetch';
+
 const routes: RouteDeclaration[] = [
   { name: 'home', url: '' },
   { name: 'claims', url: '/claims', delegate: 'ledger' },
 ];
 
-// In the Worker's fetch(request, env, ctx):
-const handler = createFetchHandler(router, {
-  serveShell: (_mount, shellRequest) => env.ASSETS.fetch(shellRequest),
-  delegates: {
-    // A Hono app, or any (request, context) => Response.
-    ledger: (request) => ledgerApp.fetch(request, env, ctx),
-  },
+const ledger = new Hono<{ Bindings: Env }>();
+
+ledger.post('/claims', async (c) => {
+  // The route the router matched, keyed by this exact Request.
+  const { state, params } = delegateContext(c.req.raw, 'ledger');
+  await c.env.CLAIMS.send({ state, params, claim: await c.req.json() });
+  return c.body(null, 202);
 });
+
+const router = createServerRouter({ mounts: { '/': { routes } } });
+
+export default {
+  async fetch(request, env, ctx) {
+    const handler = createFetchHandler(router, {
+      serveShell: (_mount, shellRequest) => env.ASSETS.fetch(shellRequest),
+      delegates: { ledger: ledger.fetch },
+    });
+
+    // env and ctx reach ledger.fetch untouched.
+    return (await handler(request, env, ctx)) ?? env.ASSETS.fetch(request);
+  },
+} satisfies ExportedHandler<Env>;
 ```
 
+`serverRouterHono` forwards `c.env` and `c.executionCtx` the same way Hono's
+`app.mount()` does, so `delegates: { ledger: ledger.fetch }` works behind the
+middleware too.
+
 A request of any method and any `Accept` that matches a delegating state goes
-to its handler, along with `{ mount, state, params }`. The handler gets the
-original request with its body unread, and its `Response` goes out untouched.
-Requests that match no delegating state keep the navigation contract above.
+to its handler. The handler gets the original request with its body unread,
+and its `Response` goes out untouched. Requests that match no delegating state
+keep the navigation contract above.
+
+`delegateContext(request, key)` returns `{ mount, delegate, state, params }`
+for the match. It throws when the request wasn't delegated, or was delegated
+to a different key. The context is keyed by the Request object, so a
+`request.clone()` or a `new Request(request)` has none: read it from the
+request the handler received (`c.req.raw` in Hono). `DelegateContext<K>` is
+generic over the key; `state` is a `string` and `params` core's `RawParams`
+today.
 
 - A delegating state needs a url and no `redirectTo`, and its children don't
   inherit the key; `createServerRouter` throws otherwise.

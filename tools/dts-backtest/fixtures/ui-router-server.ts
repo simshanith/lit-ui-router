@@ -1,4 +1,5 @@
-import type { StateDeclaration, UIRouter } from '@uirouter/core';
+import type { RawParams, StateDeclaration, UIRouter } from '@uirouter/core';
+import { Hono } from 'hono';
 import type { MiddlewareHandler } from 'hono';
 import {
   createServerRouter,
@@ -19,12 +20,16 @@ import {
 } from 'ui-router-server/connect';
 import {
   createFetchHandler,
+  delegateContext,
   type DelegateContext,
   type DelegateHandler,
+  type DelegateKey,
+  type DelegateParams,
+  type DelegateStates,
   type FetchAdapterOptions,
   type FetchHandler,
 } from 'ui-router-server/fetch';
-import { serverRouterHono } from 'ui-router-server/hono';
+import { serverRouterHono, type HonoDelegateArgs } from 'ui-router-server/hono';
 import {
   installServerLocation,
   ServerLocationConfig,
@@ -251,11 +256,52 @@ export const middleware: ConnectMiddleware = createConnectMiddleware(
   connectOptions,
 );
 
-// A delegate gets the original request and the matched state's context.
-const ledger: DelegateHandler = (request, context: DelegateContext) =>
-  new Response(`${request.method} ${context.mount} ${context.state}`, {
-    status: 202,
+// Unregistered, the correlated union over the seam aliases collapses to one object type.
+export function claimOf(request: Request): string {
+  const context: DelegateContext<'ledger'> = delegateContext(request, 'ledger');
+  const key: 'ledger' = context.delegate;
+  const state: string = context.state;
+  const params: Readonly<RawParams> = context.params;
+  const loose: DelegateContext = context;
+  const states: DelegateStates<'ledger'> = state;
+  const raw: DelegateParams<'claims'> = { ...params };
+  const keyed: DelegateKey = loose.delegate;
+
+  return `${key} ${context.mount} ${states} ${String(raw.id)} ${keyed}`;
+}
+
+// A delegate is fetch-shaped: the request, then whatever the adapter was called with.
+const ledger: DelegateHandler = (request) =>
+  new Response(claimOf(request), { status: 202 });
+
+interface WorkerEnv {
+  QUEUE: string;
+}
+
+const workerLedger: DelegateHandler<[env: WorkerEnv, ctx: unknown]> = (
+  request,
+  env,
+) => new Response(`${request.method} ${env.QUEUE}`, { status: 202 });
+
+export const workerHandler: FetchHandler<[env: WorkerEnv, ctx: unknown]> =
+  createFetchHandler(router, {
+    serveShell: (_mountBase, request) => new Response(request.url),
+    delegates: { ledger: workerLedger },
   });
+
+// Hono's app.fetch fits bare; the middleware forwards c.env and executionCtx.
+const ledgerApp = new Hono<{ Bindings: WorkerEnv }>();
+
+export const honoDelegating: MiddlewareHandler<{ Bindings: WorkerEnv }> =
+  serverRouterHono(router, {
+    serveShell: (_mountBase, request) => new Response(request.url),
+    delegates: { ledger: ledgerApp.fetch },
+  });
+
+export const honoArgs: HonoDelegateArgs<{ Bindings: WorkerEnv }> = [
+  { QUEUE: 'q' },
+  undefined,
+];
 
 const fetchOptions: FetchAdapterOptions = {
   shellPath: (mountBase) => mountBase,

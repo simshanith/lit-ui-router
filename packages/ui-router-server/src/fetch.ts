@@ -40,32 +40,62 @@ import { delegateKeysOf } from './delegate-keys.ts';
 import { mergeSearch } from './index.ts';
 import type { ServerRouter, Verdict } from './index.ts';
 
-/** The WinterCG handler: a verdict answered, or `null` to pass to the host. */
-export type FetchHandler = (request: Request) => Promise<Response | null>;
+/**
+ * The WinterCG handler: a verdict answered, or `null` to pass to the host.
+ * `args` (a Worker's `env` and `ctx`) are forwarded to a delegate untouched.
+ */
+export type FetchHandler<Args extends unknown[] = []> = (
+  request: Request,
+  ...args: Args
+) => Promise<Response | null>;
 
-/** What a {@link DelegateHandler} learns about the route its request matched. */
-export interface DelegateContext {
-  /** Base of the mount that owned the pathname. */
-  mount: string;
-  /** Name of the matched, delegating state. */
-  state: string;
-  /** The params extracted from the pathname. */
-  params: RawParams;
-}
+/** Typed-registry seam (#1306): the delegate keys `delegates` maps. */
+export type DelegateKey = string;
 
 /**
- * Answers a request whose pathname matched a delegating state. It receives
- * the original request, body unread, and its Response goes out untouched.
- * A Hono app's `fetch` takes the context as its `Env`, so wrap it to pass
- * your own bindings: `(request) => app.fetch(request, env, ctx)`.
+ * Typed-registry seam (#1306): the states that name delegate key `K`. Any
+ * state until a registry maps it (`Extract<never, K>` is `never`; it only
+ * keeps `K` in use).
  */
-export type DelegateHandler = (
+// oxlint-disable-next-line typescript/no-redundant-type-constituents -- the never keeps K in use until a registry maps it
+export type DelegateStates<K extends string> = string | Extract<never, K>;
+
+/** Typed-registry seam (#1306): the params of state `N`; core's RawParams until a registry maps it. */
+// oxlint-disable-next-line typescript/no-redundant-type-constituents -- the never keeps N in use until a registry maps it
+export type DelegateParams<N extends string> = RawParams | Extract<never, N>;
+
+/**
+ * The route a delegated request matched, read with {@link delegateContext}.
+ * A union over the states that name `K`, so checking `state` narrows `params`
+ * once a typed registry fills the seams; unregistered it is one object type.
+ */
+export type DelegateContext<K extends string = string> = {
+  [N in DelegateStates<K>]: {
+    /** Base of the mount that owned the pathname. */
+    mount: string;
+    /** The key the matched state names. */
+    delegate: K;
+    /** Name of the matched, delegating state. */
+    state: N;
+    /** The params extracted from the pathname. */
+    params: Readonly<DelegateParams<N>>;
+  };
+}[DelegateStates<K>];
+
+/**
+ * Answers a request whose pathname matched a delegating state: fetch-shaped,
+ * so a Hono app's `fetch` or a Worker's handler fits bare. It receives the
+ * original request, body unread, plus the arguments the adapter was called
+ * with; its Response goes out untouched. Read the matched route with
+ * {@link delegateContext}.
+ */
+export type DelegateHandler<Args extends unknown[] = []> = (
   request: Request,
-  context: DelegateContext,
+  ...args: Args
 ) => Response | Promise<Response>;
 
 /** Host hooks for {@link createFetchHandler}: asset IO, and which requests get verdicts. */
-export interface FetchAdapterOptions {
+export interface FetchAdapterOptions<Args extends unknown[] = []> {
   /**
    * Maps a shell verdict's mount to the pathname the shell Request is built
    * at (default: the mount base itself). The hook for aliased mounts whose
@@ -105,13 +135,14 @@ export interface FetchAdapterOptions {
   /**
    * Handlers for the keys states name in {@link index!RouteDeclaration.delegate | `delegate`}.
    * A request of any method or Accept that matches a delegating state goes
-   * to its handler, which returns the Response. Construction throws when a
+   * to its handler, called with the request and the arguments the adapter
+   * got (`delegates: { ledger: app.fetch }`). Construction throws when a
    * router from `createServerRouter` names a key missing here. A structural
    * router is checked per request instead, so its delegate verdict throws.
    * Without this option, requests outside {@link FetchAdapterOptions.shouldHandle | shouldHandle} pass as
    * `null` without resolving.
    */
-  delegates?: Readonly<Record<string, DelegateHandler>>;
+  delegates?: Readonly<{ [K in DelegateKey]: DelegateHandler<Args> }>;
 }
 
 const acceptsHtml = (request: Request): boolean => {
@@ -164,29 +195,73 @@ const defaultServeNotFound = (mount: string, request: Request): Response =>
     },
   );
 
-type Delegates = NonNullable<FetchAdapterOptions['delegates']>;
+type Delegates<Args extends unknown[]> = NonNullable<
+  FetchAdapterOptions<Args>['delegates']
+>;
+
+// Keyed by the Request object itself: a clone or a rebuilt Request carries no context.
+const delegatedRequests = new WeakMap<Request, DelegateContext>();
 
 const missingDelegate = (key: string): Error =>
   new Error(`No handler in delegates for delegate key '${key}'`);
 
 // Fail fast: a key the tree names but the host never mapped is a deploy bug.
-const checkDelegates = (router: ServerRouter, delegates: Delegates): void => {
+const checkDelegates = <Args extends unknown[]>(
+  router: ServerRouter,
+  delegates: Delegates<Args>,
+): void => {
   for (const key of delegateKeysOf(router) ?? []) {
     if (!Object.hasOwn(delegates, key)) throw missingDelegate(key);
   }
 };
 
-const delegateTo = (
-  delegates: Delegates,
+const delegateTo = <Args extends unknown[]>(
+  delegates: Delegates<Args>,
   verdict: Extract<Verdict, { kind: 'delegate' }>,
   request: Request,
+  args: Args,
 ): Response | Promise<Response> => {
   const { delegate, mount, state, params } = verdict;
 
   if (!Object.hasOwn(delegates, delegate)) throw missingDelegate(delegate);
+  delegatedRequests.set(request, { mount, delegate, state, params });
 
-  return delegates[delegate](request, { mount, state, params });
+  return delegates[delegate](request, ...args);
 };
+
+const isDelegatedTo = <K extends DelegateKey>(
+  context: DelegateContext,
+  key: K,
+): context is DelegateContext<K> => context.delegate === key;
+
+/**
+ * The route a request matched when the fetch adapter delegated it to `key`'s
+ * handler: `{ mount, delegate, state, params }`. Call it with the very Request
+ * the handler received (`c.req.raw` in a Hono route): the context is keyed by
+ * that object, so `request.clone()` or `new Request(request)` has none.
+ *
+ * @param request - the request a delegate handler received
+ * @param key - the delegate key the handler is mapped to
+ * @throws when the request was not delegated, or was delegated to another key
+ */
+export function delegateContext<K extends DelegateKey>(
+  request: Request,
+  key: K,
+): DelegateContext<K> {
+  const context = delegatedRequests.get(request);
+
+  if (context === undefined)
+    throw new Error(
+      `delegateContext: this request was not delegated (expected '${key}'); pass the Request the handler received, not a clone`,
+    );
+
+  if (!isDelegatedTo(context, key))
+    throw new Error(
+      `delegateContext: this request was delegated to '${context.delegate}', not '${key}'`,
+    );
+
+  return context;
+}
 
 /**
  * Wraps a {@link ServerRouter} as a WinterCG fetch handler. `resolve()` is always
@@ -204,18 +279,19 @@ const delegateTo = (
  *   404 is not an alternate representation of the mount root).
  * - `notFound` with a mount -> {@link FetchAdapterOptions.serveNotFound | serveNotFound} (honest 404).
  * - `delegate`, for any request -> the handler {@link FetchAdapterOptions.delegates | delegates} maps its key to,
- *   called with the original request; its Response goes out untouched and
- *   its throw propagates to the host.
+ *   called with the original request and the handler's own extra arguments
+ *   (`handler(request, env, ctx)` reaches `delegate(request, env, ctx)`); its
+ *   Response goes out untouched and its throw propagates to the host.
  * - `notFound` without a mount, or a non-navigation request that matches no
  *   delegating state -> `null` (the host serves it however it would have).
  *
  * @throws at construction when the router names a delegate key
  * {@link FetchAdapterOptions.delegates | delegates} lacks
  */
-export function createFetchHandler(
+export function createFetchHandler<Args extends unknown[] = []>(
   router: ServerRouter,
-  options: FetchAdapterOptions,
-): FetchHandler {
+  options: FetchAdapterOptions<Args>,
+): FetchHandler<Args> {
   const {
     serveShell,
     serveNotFound = defaultServeNotFound,
@@ -228,14 +304,14 @@ export function createFetchHandler(
 
   checkDelegates(router, delegates);
 
-  return async (request) => {
+  return async (request, ...args) => {
     const navigation = shouldHandle(request);
 
     if (!navigation && !delegating) return null;
     const verdict = await router.resolve(request.url);
 
     if (verdict.kind === 'delegate')
-      return delegateTo(delegates, verdict, request);
+      return delegateTo(delegates, verdict, request, args);
 
     if (!navigation) return null;
 
