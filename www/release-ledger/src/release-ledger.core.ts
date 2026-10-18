@@ -141,7 +141,10 @@ export type Outcome =
 /** `repair` re-derives its target from the observations it carries. */
 export const DERIVED = 'derived';
 
-type Target = State | typeof DERIVED;
+/** Accepted and dropped: a drifted row keeps its recorded facts until `repair`. */
+export const IGNORED = 'ignored';
+
+type Target = State | typeof DERIVED | typeof IGNORED;
 
 type Transitions = Partial<Record<EventType, Target>>;
 
@@ -150,7 +153,8 @@ export const INITIAL = {
   tag_observed: 'tagged',
 } as const satisfies Transitions;
 
-// A self-transition on an observation accepts it only when it repeats the recorded fact.
+// A self-transition is a no-op on a repeated fact, an update on a changed mutable
+// fact, and a rejection on a contradicted immutable one.
 export const TRANSITIONS = {
   tagged: {
     tag_observed: 'tagged',
@@ -192,10 +196,17 @@ export const TRANSITIONS = {
     mismatch_observed: 'drifted',
   },
   drifted: {
+    tag_observed: IGNORED,
+    npm_observed: IGNORED,
+    gh_release_observed: IGNORED,
+    deprecation_observed: IGNORED,
+    undeprecation_observed: IGNORED,
+    mismatch_observed: IGNORED,
     repair: DERIVED,
   },
   abandoned: {
     tag_observed: 'abandoned',
+    npm_observed: 'drifted',
     abandon: 'abandoned',
   },
 } as const satisfies Record<State, Transitions>;
@@ -215,11 +226,10 @@ export function next(
 export const isOnNpm = (state: State): boolean =>
   state.startsWith('published.') || state.startsWith('released.');
 
-// Observations of immutable facts; a different value is drift, never an update.
-const IMMUTABLE_FACT_EVENTS: ReadonlySet<EventType> = new Set([
-  'tag_observed',
-  'npm_observed',
-  'gh_release_observed',
+/** Facts a source may legitimately change; every other recorded fact that changes is drift. */
+export const MUTABLE_COLUMNS: ReadonlySet<FactColumn> = new Set([
+  'npm_deprecated',
+  'gh_body',
 ]);
 
 type FactRow = Pick<VersionRow, FactColumn>;
@@ -326,7 +336,12 @@ function contradiction(row: VersionRow, written: Facts): Rejection | undefined {
     const value = written[column];
     const recorded = row[column];
 
-    if (value === undefined || recorded === null || recorded === value) {
+    if (
+      value === undefined ||
+      recorded === null ||
+      recorded === value ||
+      MUTABLE_COLUMNS.has(column)
+    ) {
       continue;
     }
 
@@ -352,7 +367,10 @@ function transition(
   row: VersionRow | undefined,
   event: ReleaseEvent,
   envelope: Envelope,
-): { kind: 'transition'; to: State; facts: Facts } | Rejection {
+):
+  | { kind: 'transition'; to: State; facts: Facts }
+  | { kind: 'unchanged' }
+  | Rejection {
   if (
     row !== undefined &&
     (row.name !== envelope.name || row.version !== envelope.version)
@@ -374,18 +392,20 @@ function transition(
 
   if (result.kind === 'rejected') return result;
 
-  const conflict =
-    row !== undefined && IMMUTABLE_FACT_EVENTS.has(event.type)
-      ? contradiction(row, result.facts)
-      : undefined;
+  if (target === IGNORED) return { kind: 'unchanged' };
 
-  return (
-    conflict ?? {
+  if (target === DERIVED) {
+    return {
       kind: 'transition',
-      to: target === DERIVED ? derive(result.facts) : target,
+      to: derive(result.facts),
       facts: result.facts,
-    }
-  );
+    };
+  }
+
+  const conflict =
+    row === undefined ? undefined : contradiction(row, result.facts);
+
+  return conflict ?? { kind: 'transition', to: target, facts: result.facts };
 }
 
 /** Fold one event into the row, or reject the pairing. */
@@ -396,7 +416,7 @@ export function apply(
 ): Outcome {
   const result = transition(row, event, envelope);
 
-  if (result.kind === 'rejected') return result;
+  if (result.kind !== 'transition') return result;
 
   const { to } = result;
 

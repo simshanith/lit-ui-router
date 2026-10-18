@@ -91,18 +91,18 @@ const EXPECTED: Record<State | 'none', Record<EventType, Expected>> = {
     repair: R,
   },
   drifted: {
-    tag_observed: R,
-    npm_observed: R,
-    gh_release_observed: R,
-    deprecation_observed: R,
-    undeprecation_observed: R,
-    mismatch_observed: R,
+    tag_observed: U,
+    npm_observed: U,
+    gh_release_observed: U,
+    deprecation_observed: U,
+    undeprecation_observed: U,
+    mismatch_observed: U,
     abandon: R,
     repair: 'released.active',
   },
   abandoned: {
     tag_observed: U,
-    npm_observed: R,
+    npm_observed: 'drifted',
     gh_release_observed: R,
     deprecation_observed: R,
     undeprecation_observed: R,
@@ -217,7 +217,10 @@ describe('apply: facts', () => {
     ['abandoned', { type: 'tag_observed', sha: 'f'.repeat(40) }],
     ['published.active', { ...EVENTS.npm_observed, integrity: 'sha512-BBBB' }],
     ['released.active', { ...EVENTS.npm_observed, distTag: 'next' }],
-    ['released.active', { ...EVENTS.gh_release_observed, body: 'edited' }],
+    [
+      'released.active',
+      { ...EVENTS.gh_release_observed, url: 'https://example.com' },
+    ],
     [
       'released.deprecated',
       { ...EVENTS.gh_release_observed, prerelease: true },
@@ -232,6 +235,58 @@ describe('apply: facts', () => {
       );
     });
   }
+
+  for (const state of ['released.active', 'released.deprecated'] as const) {
+    it(`updates an edited release body in place in ${state}`, () => {
+      const outcome = apply(
+        ROWS[state],
+        { ...EVENTS.gh_release_observed, body: 'edited' },
+        ENVELOPE,
+      );
+
+      assert.equal(applied(outcome).gh_body, 'edited');
+      assert.equal(applied(outcome).state, state);
+      assert.equal(
+        outcome.kind === 'applied' && outcome.event.from_state,
+        state,
+      );
+    });
+  }
+
+  const ignored: ReleaseEvent[] = [
+    { type: 'tag_observed', sha: 'f'.repeat(40) },
+    { ...EVENTS.npm_observed, integrity: 'sha512-BBBB' },
+    { ...EVENTS.gh_release_observed, id: 7 },
+    { ...EVENTS.gh_release_observed, body: 'edited' },
+    { type: 'deprecation_observed', message: 'use 3.0' },
+    { ...EVENTS.mismatch_observed, field: 'git_sha' },
+  ];
+
+  for (const event of ignored) {
+    it(`keeps a drifted row's facts on a contradicting ${event.type}`, () => {
+      assert.deepEqual(apply(ROWS.drifted, event, ENVELOPE), {
+        kind: 'unchanged',
+      });
+    });
+  }
+
+  it('still rejects a malformed event on a drifted row', () => {
+    assert.equal(
+      apply(
+        ROWS.drifted,
+        { type: 'deprecation_observed', message: '' },
+        ENVELOPE,
+      ).kind,
+      'rejected',
+    );
+  });
+
+  it('drifts an abandoned tag that reaches npm, recording the npm facts', () => {
+    const row = applied(apply(ROWS.abandoned, EVENTS.npm_observed, ENVELOPE));
+
+    assert.equal(row.state, 'drifted');
+    assert.equal(row.npm_integrity, NPM.integrity);
+  });
 
   it('records the GitHub release that drifted a tagged row', () => {
     const row = applied(

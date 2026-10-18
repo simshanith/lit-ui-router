@@ -169,6 +169,49 @@ describe('migrations', () => {
     );
   });
 
+  it('updates an edited release body in place and logs it', () => {
+    const db = migrated();
+    insertVersion(db, ROWS['released.active']);
+
+    const outcome = apply(
+      ROWS['released.active'],
+      { ...EVENTS.gh_release_observed, body: 'edited' },
+      ENVELOPE,
+    );
+
+    assert.equal(outcome.kind, 'applied');
+
+    if (outcome.kind !== 'applied') return;
+
+    db.prepare(
+      'UPDATE versions SET gh_body = ?, state_at = ? WHERE name = ? AND version = ? AND state = ?',
+    ).run(
+      outcome.row.gh_body,
+      outcome.row.state_at,
+      outcome.row.name,
+      outcome.row.version,
+      ROWS['released.active'].state,
+    );
+    insertEvent(db, outcome.event);
+
+    assert.deepEqual(
+      { ...db.prepare('SELECT gh_body, state FROM versions').get() },
+      { gh_body: 'edited', state: 'released.active' },
+    );
+  });
+
+  it('stores an abandoned tag that reached npm as drifted', () => {
+    const db = migrated();
+    const outcome = apply(ROWS.abandoned, EVENTS.npm_observed, ENVELOPE);
+
+    assert.equal(outcome.kind, 'applied');
+
+    if (outcome.kind !== 'applied') return;
+
+    insertVersion(db, outcome.row);
+    insertEvent(db, outcome.event);
+  });
+
   it('stores every applied outcome of the machine', () => {
     for (const from of [undefined, ...STATES]) {
       for (const type of EVENT_TYPES) {
