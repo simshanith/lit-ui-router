@@ -62,6 +62,9 @@ jobs:
       contents: write # Required for creating GitHub releases
       attestations: write # Required for build provenance attestation
       artifact-metadata: write
+    outputs:
+      package_name: ${{ steps.info.outputs.package_name }}
+      version: ${{ steps.publish.outputs.version }}
     steps:
       - name: 'Checkout code'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -128,6 +131,7 @@ jobs:
         with:
           subject-path: ${{ steps.pack.outputs.tarball }}
       - name: Publish
+        id: publish
         # release-it publishes the attested tarball and cuts the GitHub
         # release in one invocation; the argv (and the #302 changelog-range
         # pin) is built by the engine seam — see tools/release/src/steps/release-publish.ts
@@ -139,6 +143,47 @@ jobs:
           DRY_RUN: ${{ inputs.dryRun }}
           # scoped here: only release-it's GitHub release needs it (npm auth is OIDC)
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  ledger_claim:
+    # Best-effort (#1424): the ledger's tag sweep heals a missed claim, so a failure only warns.
+    needs: publish_npm
+    if: ${{ !inputs.dryRun }}
+    continue-on-error: true
+    runs-on: ubuntu-26.04
+    timeout-minutes: 5
+    # The ledger pins the id-token's environment claim to publish.
+    environment: publish
+    permissions:
+      id-token: write
+    steps:
+      - name: Claim the release
+        env:
+          AUDIENCE: https://release-ledger.lit-ui-router.dev
+          PACKAGE_NAME: ${{ needs.publish_npm.outputs.package_name }}
+          VERSION: ${{ needs.publish_npm.outputs.version }}
+        run: |
+          set -euo pipefail
+          release="${PACKAGE_NAME}@${VERSION}"
+          warn() {
+            echo "::warning title=Release ledger claim::$release: $1"
+            printf "### Release ledger\n\nClaim for \`%s\` failed: %s. The tag sweep claims it later.\n" "$release" "$1" >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          }
+          if [ -z "$PACKAGE_NAME" ] || [ -z "$VERSION" ]; then warn 'publish_npm exported no package or version'; fi
+          # Without --retry-all-errors, curl retries timeouts, 408, 429 and 5xx, never another 4xx.
+          retry=(--retry 5 --retry-connrefused --retry-max-time 120 --connect-timeout 10 --max-time 30)
+          token=$(curl -sS --fail-with-body "${retry[@]}" \
+            -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            --url-query "audience=$AUDIENCE" "$ACTIONS_ID_TOKEN_REQUEST_URL" | jq -er .value) ||
+            warn 'no OIDC id-token'
+          echo "::add-mask::$token"
+          body=$(jq -nc --arg name "$PACKAGE_NAME" --arg version "$VERSION" '{name: $name, version: $version}')
+          response="$RUNNER_TEMP/ledger-claim.txt"
+          status=$(curl -sS --fail-with-body "${retry[@]}" -o "$response" -w '%{http_code}' \
+            -H "Authorization: Bearer $token" -H 'Content-Type: application/json' \
+            --data "$body" "$AUDIENCE/claims") || true
+          if [ "$status" != 202 ]; then warn "POST /claims answered ${status:-no response}: $(head -c 300 "$response" 2>/dev/null | tr '\n' ' ')"; fi
+          printf "### Release ledger\n\nClaimed \`%s\` (202).\n" "$release" >> "$GITHUB_STEP_SUMMARY"
 
   release_signals:
     # Refresh the per-package published-diff check runs now that `latest` has
