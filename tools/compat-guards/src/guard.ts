@@ -17,6 +17,8 @@ export interface Guard {
    */
   installed(alias: string, dep: string): string;
   pass(message: string): void;
+  /** Reports on stderr without failing the run. */
+  warn(message: string): void;
   fail(message: string): never;
 }
 
@@ -65,6 +67,9 @@ export function guard(name: string): Guard {
     },
     pass: (message) => {
       console.log(`${name}: ${message}`);
+    },
+    warn: (message) => {
+      console.warn(`${name}: WARNING: ${message}`);
     },
     fail,
   };

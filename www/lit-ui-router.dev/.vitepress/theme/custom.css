@@ -103,6 +103,57 @@
   border-radius: 4px;
 }
 
+/* The atlas thumb on the companion overview: one image per scheme, the
+   figure beside the prose from the sidebar breakpoint up. */
+.vp-doc .atlas-thumb {
+  margin-block: 24px;
+  max-inline-size: 320px;
+  margin-inline: auto;
+}
+
+.vp-doc .atlas-thumb img {
+  display: block;
+  inline-size: 100%;
+  margin-block: 0;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+  object-position: center 8%;
+  border-radius: 8px;
+  box-shadow: 0 0 0 0 currentColor;
+  transition: box-shadow 0.25s var(--ease-out);
+}
+
+.vp-doc .atlas-thumb .dark-only,
+.dark .vp-doc .atlas-thumb .light-only {
+  display: none;
+}
+
+.dark .vp-doc .atlas-thumb .dark-only {
+  display: block;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .vp-doc .atlas-thumb a:hover > img {
+    box-shadow: 0 0 12px 0 currentColor;
+  }
+}
+
+.vp-doc .atlas-thumb figcaption {
+  margin-block-start: 8px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--vp-c-text-2);
+}
+
+@media (min-width: 960px) {
+  .vp-doc .atlas-thumb {
+    float: inline-end;
+    inline-size: 220px;
+    margin-block: 0 16px;
+    margin-inline: 24px 0;
+  }
+}
+
 /* Shields badges: pin a legible height so the wide release badge doesn't
    scale down to fit a table column (it wraps to the next line instead). */
 .vp-doc img[src*="img.shields.io"] {

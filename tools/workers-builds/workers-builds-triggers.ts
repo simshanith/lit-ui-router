@@ -11,8 +11,8 @@
 // the diff and --apply to the named config keys (repeatable, or one
 // comma-separated value); an unknown key is a usage error, never an empty
 // selection. --apply PATCHes drifted triggers, then re-GETs to confirm. Exit
-// codes: 0 in sync, 1 drifted (or drift remained after --apply), 2 usage/API
-// error. Token must be USER-scoped (account-owned tokens don't cover the
+// codes: 0 in sync, 1 drifted, a configured worker not created yet, or drift
+// remaining after --apply, 2 usage/API error. Token must be USER-scoped (account-owned tokens don't cover the
 // Builds API): "Workers Builds Configuration: Read" suffices for the diff,
 // Edit is only for --apply.
 //
@@ -62,24 +62,19 @@ async function loadDesired(): Promise<DesiredWorker[]> {
   }
 }
 
+// undefined when the account has no such worker yet.
 async function workerTag(
   token: string,
   accountId: string,
   name: string,
-): Promise<string> {
+): Promise<string | undefined> {
   // SAFETY: workers/scripts results are script objects carrying id and tag
   const scripts = (await cf(token, `/${accountId}/workers/scripts`)) as {
     id?: string;
     tag?: string;
   }[];
 
-  const script = scripts.find((candidate) => candidate.id === name);
-
-  if (!script?.tag) {
-    throw new Error(`worker "${name}" not found in account's workers/scripts`);
-  }
-
-  return script.tag;
+  return scripts.find((candidate) => candidate.id === name)?.tag;
 }
 
 // Build environment variables live on a sub-resource; the trigger list may or
@@ -153,6 +148,18 @@ async function main() {
     );
 
     const tag = await workerTag(token, accountId, name);
+
+    // A configured site whose worker the dashboard hasn't created yet is
+    // drift the dashboard owes, not an observer error: it must not mask the
+    // other sites' verdicts.
+    if (tag === undefined) {
+      console.log(
+        `${index > 0 ? '\n' : ''}worker: ${name} (not found)\n\n` +
+          `✗ no worker "${name}" in the account — create it with its triggers in the dashboard (see www/DEPLOY.md, Adding a site)`,
+      );
+      ok = false;
+      continue;
+    }
 
     const { report, drifts } = diffTriggers(
       await getTriggers(token, accountId, tag),

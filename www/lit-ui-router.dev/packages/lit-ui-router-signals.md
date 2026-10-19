@@ -109,3 +109,6 @@ can be compared file-by-file to see exactly what the Signals idiom changes.
 - [ui-router-signals](/packages/ui-router-signals)
 - [TC39 Signals proposal](https://github.com/tc39/proposal-signals)
 - [Lit — Reactive Controllers](https://lit.dev/docs/composition/controllers/)
+- [On the Altitude Atlas](https://atlas.lit-ui-router.dev/bricks/?focus=lit-ui-router-signals) — this package as
+  a brick in sheet 2's model in the round, sized by its authored files and
+  seated on what it peers

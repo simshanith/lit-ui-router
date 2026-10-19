@@ -518,3 +518,6 @@ app that never prerenders carries none of it.
 - [The Altitude Atlas](https://atlas.lit-ui-router.dev) and
   [its source](https://github.com/simshanith/lit-ui-router/tree/www/atlas/www/atlas.lit-ui-router.dev)
   on `www/atlas` — the dogfood consumer whose prerender build shaped this package
+- [On the Altitude Atlas](https://atlas.lit-ui-router.dev/bricks/?focus=lit-ui-router-ssr) — this package as
+  a brick in sheet 2's model in the round, sized by its authored files and
+  seated on what it peers

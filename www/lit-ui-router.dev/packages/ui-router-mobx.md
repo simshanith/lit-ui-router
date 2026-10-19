@@ -68,3 +68,6 @@ throws if the store already mirrors a different router.
 - [API reference](/api/ui-router-mobx/)
 - [lit-ui-router-mobx](/packages/lit-ui-router-mobx)
 - [MobX — reactions](https://mobx.js.org/reactions.html)
+- [On the Altitude Atlas](https://atlas.lit-ui-router.dev/bricks/?focus=ui-router-mobx) — this package as
+  a brick in sheet 2's model in the round, sized by its authored files and
+  seated on what it peers
