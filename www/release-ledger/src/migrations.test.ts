@@ -56,7 +56,6 @@ const VERSION_COLUMNS = [
   'name',
   'version',
   'first_seen_at',
-  'rev',
   ...FACT_COLUMNS,
 ] as const;
 
@@ -66,18 +65,14 @@ function insertVersion(db: DatabaseSync, row: VersionRow): void {
   ).run(...VERSION_COLUMNS.map((column) => row[column]));
 }
 
-/** The consumer's claim insert, guarded as foldStatements asks. */
-function claimInsert(
-  guard: Statement,
-  messageId = MESSAGE_ID,
-  outcome = 'applied',
-): Statement {
+/** The consumer's claim insert. */
+function claimInsert(messageId: string, outcome: string): Statement {
   const reason = outcome === 'rejected' ? 'malformed' : null;
 
   return {
     sql: `INSERT INTO pipeline_events (message_id, received_at, repository, job_workflow_ref, run_id, run_attempt, sha, payload, outcome, reason)
-          SELECT ?, 'now', 'simshanith/lit-ui-router', 'simshanith/lit-ui-router/.github/workflows/publish-npm.yml@refs/heads/main', '1', 1, 'sha', '{}', ?, ? WHERE ${guard.sql}`,
-    params: [messageId, outcome, reason, ...guard.params],
+          VALUES (?, 'now', 'simshanith/lit-ui-router', 'simshanith/lit-ui-router/.github/workflows/publish-npm.yml@refs/heads/main', '1', 1, 'sha', '{}', ?, ?)`,
+    params: [messageId, outcome, reason],
   };
 }
 
@@ -101,27 +96,21 @@ function batch(db: DatabaseSync, statements: Statement[]): void {
   }
 }
 
-/** The consumer's batch for a fold; `true` when the claim was recorded. */
+/** The consumer's batch for a fold. */
 function write(
   db: DatabaseSync,
   folded: Fold,
   tags: DistTagOutcome[] = [],
   messageId = MESSAGE_ID,
-): boolean {
+): void {
   const statements = foldStatements(folded, tags, messageId);
 
   batch(db, [
-    claimInsert(statements.guard, messageId, statements.outcome),
+    claimInsert(messageId, statements.outcome),
     ...(statements.write ? [statements.write] : []),
     ...statements.distTags,
     ...statements.ledger,
   ]);
-
-  return (
-    db
-      .prepare('SELECT 1 FROM pipeline_events WHERE message_id = ?')
-      .get(messageId) !== undefined
-  );
 }
 
 const rowOf = (folded: Fold): VersionRow | undefined =>
@@ -308,10 +297,9 @@ describe('migrations: fold statements', () => {
   it('inserts a new row and links its ledger events to the claim', () => {
     const db = migrated();
 
-    assert.ok(write(db, fold(undefined, OBSERVED, ENVELOPE)));
+    write(db, fold(undefined, OBSERVED, ENVELOPE));
     assert.deepEqual(stored(db), {
       ...ROWS.released,
-      rev: 0,
       first_seen_at: ENVELOPE.at,
     });
     assert.deepEqual(
@@ -332,51 +320,9 @@ describe('migrations: fold statements', () => {
   it('records a rejected claim and writes nothing else', () => {
     const db = migrated();
 
-    assert.ok(
-      write(db, fold(undefined, { npm: { ...NPM, deprecated: '' } }, ENVELOPE)),
-    );
+    write(db, fold(undefined, { npm: { ...NPM, deprecated: '' } }, ENVELOPE));
+    assert.equal(count(db, 'pipeline_events'), 1);
     assert.equal(count(db, 'versions'), 0);
-  });
-
-  it('records no claim and writes nothing on a stale rev', () => {
-    const db = migrated();
-    insertVersion(db, { ...ROWS.released, rev: 9 });
-
-    const folded = fold(
-      ROWS.released,
-      { gh: { ...GH, body: 'edited' } },
-      ENVELOPE,
-    );
-
-    assert.equal(write(db, folded), false);
-    assert.equal(stored(db).gh_body, GH.body);
-    assert.equal(count(db, 'ledger_events'), 0);
-  });
-
-  it('records no claim when a new row already exists', () => {
-    const db = migrated();
-    insertVersion(db, ROWS.published);
-
-    assert.equal(write(db, fold(undefined, OBSERVED, ENVELOPE)), false);
-    assert.equal(count(db, 'ledger_events'), 0);
-  });
-
-  it('records no claim and writes nothing when a dist-tag moved since it was read', () => {
-    const db = seeded();
-
-    insertDistTag(db, { ...LATEST, version: ENVELOPE.version });
-
-    const folded = fold(
-      ROWS.published,
-      { npm: { ...NPM, deprecated: DEPRECATION } },
-      ENVELOPE,
-    );
-
-    const tags = [moveDistTag(LATEST, rowOf(folded), 'latest', ENVELOPE)];
-
-    assert.equal(write(db, folded, tags), false);
-    assert.equal(stored(db).npm_deprecated, null);
-    assert.equal(count(db, 'ledger_events'), 0);
   });
 
   it('records a claim that only moves a dist-tag as applied', () => {
@@ -386,7 +332,7 @@ describe('migrations: fold statements', () => {
 
     const tags = [moveDistTag(undefined, ROWS.published, 'next', ENVELOPE)];
 
-    assert.ok(write(db, fold(ROWS.published, { npm: NPM }, ENVELOPE), tags));
+    write(db, fold(ROWS.published, { npm: NPM }, ENVELOPE), tags);
     assert.equal(
       db.prepare('SELECT outcome FROM pipeline_events').get()?.outcome,
       'applied',
@@ -406,12 +352,10 @@ describe('migrations: fold statements', () => {
 
     const folded = fold(ROWS.published, { gh: GH }, ENVELOPE);
 
-    assert.ok(
-      write(db, folded, [
-        moveDistTag(LATEST, rowOf(folded), 'latest', ENVELOPE),
-        removeDistTag(next, rowOf(folded), 'next', ENVELOPE),
-      ]),
-    );
+    write(db, folded, [
+      moveDistTag(LATEST, rowOf(folded), 'latest', ENVELOPE),
+      removeDistTag(next, rowOf(folded), 'next', ENVELOPE),
+    ]);
     assert.deepEqual(
       db
         .prepare('SELECT tag, version FROM dist_tags')
@@ -426,26 +370,6 @@ describe('migrations: fold statements', () => {
         .map((event) => event.event),
       ['observed', 'dist_tag_moved', 'dist_tag_removed'],
     );
-  });
-
-  it('records no claim when a removed dist-tag pointed at a version that moved', () => {
-    const db = seeded();
-    const older = { ...ROWS.published, version: '0.9.0' };
-
-    insertDistTag(db, LATEST);
-
-    const removal = removeDistTag(LATEST, older, 'latest', ENVELOPE);
-
-    db.prepare(
-      "UPDATE versions SET rev = rev + 1, npm_deprecated = 'gone' WHERE version = '0.9.0'",
-    ).run();
-
-    assert.equal(
-      write(db, fold(ROWS.published, { gh: GH }, ENVELOPE), [removal]),
-      false,
-    );
-    assert.equal(count(db, 'dist_tags'), 1);
-    assert.equal(count(db, 'ledger_events'), 0);
   });
 
   const observations: Observation[] = [
@@ -472,8 +396,12 @@ describe('migrations: fold statements', () => {
 
         if (row) insertVersion(db, row);
 
-        assert.ok(write(db, folded), `${label} + ${JSON.stringify(observed)}`);
-        assert.deepEqual(stored(db), { ...folded.row });
+        write(db, folded);
+        assert.deepEqual(
+          stored(db),
+          { ...folded.row },
+          `${label} + ${JSON.stringify(observed)}`,
+        );
       }
     }
   });
@@ -487,7 +415,7 @@ describe('migrations: fold statements', () => {
 
     insertVersion(db, row);
 
-    assert.ok(write(db, repair(row, 'npm', { npm: NPM }, ENVELOPE)));
+    write(db, repair(row, 'npm', { npm: NPM }, ENVELOPE));
     assert.equal(count(db, 'ledger_events'), 1);
   });
 });
@@ -539,9 +467,6 @@ describe('migrations: replay', () => {
       replayed = rowOf(folded) ?? replayed;
     }
 
-    const { rev: _rev, ...facts } = stored(db);
-    const { rev: _replayedRev, ...rebuilt } = replayed ?? {};
-
-    assert.deepEqual(rebuilt, facts);
+    assert.deepEqual({ ...replayed }, stored(db));
   });
 });

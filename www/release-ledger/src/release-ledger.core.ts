@@ -55,7 +55,6 @@ export interface VersionRow {
   name: string;
   version: string;
   first_seen_at: string;
-  rev: number;
   git_sha: string | null;
   /** The observation that contradicts the region's fixed facts, as JSON; `null` when clean. */
   tag_conflict: string | null;
@@ -142,8 +141,8 @@ export type Fold =
   | {
       outcome: 'applied';
       row: VersionRow;
-      /** The `rev` the write compares against; `null` inserts a new row. `row.rev` is the next one. */
-      expectedRev: number | null;
+      /** No row was stored: the write inserts one. */
+      isNew: boolean;
       events: LedgerEventRow[];
     }
   | { outcome: 'unchanged' }
@@ -296,12 +295,10 @@ function identity(
   return undefined;
 }
 
-// rev -1 marks a row not yet stored
 const blank = (envelope: Envelope): VersionRow => ({
   name: envelope.name,
   version: envelope.version,
   first_seen_at: envelope.at,
-  rev: -1,
   git_sha: null,
   tag_conflict: null,
   npm_integrity: null,
@@ -327,6 +324,7 @@ type Payload = Observation[Region] | null;
 
 function ledgerEvent(
   before: VersionRow,
+  isNew: boolean,
   after: VersionRow,
   region: Region,
   event: LedgerEventType,
@@ -338,7 +336,7 @@ function ledgerEvent(
     version: envelope.version,
     region,
     event,
-    from_state: before.rev < 0 ? null : stateOf(before, region),
+    from_state: isNew ? null : stateOf(before, region),
     to_state: stateOf(after, region),
     payload: JSON.stringify(payload),
     source: envelope.source,
@@ -350,6 +348,7 @@ function ledgerEvent(
 /** Applies each region's columns in turn, one ledger row per region that changed. */
 function write(
   row: VersionRow,
+  isNew: boolean,
   regions: [Region, Columns, LedgerEventType, Payload][],
   envelope: Envelope,
 ): Fold {
@@ -361,20 +360,15 @@ function write(
 
     const next = { ...current, ...columns };
 
-    events.push(ledgerEvent(current, next, region, event, payload, envelope));
+    events.push(
+      ledgerEvent(current, isNew, next, region, event, payload, envelope),
+    );
     current = next;
   }
 
   if (events.length === 0) return UNCHANGED;
 
-  const expectedRev = row.rev < 0 ? null : row.rev;
-
-  return {
-    outcome: 'applied',
-    row: { ...current, rev: expectedRev === null ? 0 : expectedRev + 1 },
-    expectedRev,
-    events,
-  };
+  return { outcome: 'applied', row: current, isNew, events };
 }
 
 /** Fold what the sources say into the row. Only malformed input is rejected. */
@@ -395,6 +389,7 @@ export function fold(
 
   return write(
     current,
+    row === undefined,
     REGION_NAMES.map((region) => [
       region,
       observeRegion(current, region, observed),
@@ -437,7 +432,12 @@ export function repair(
     [conflictColumn(region)]: null,
   };
 
-  return write(row, [[region, columns, 'repair', observed[region]]], envelope);
+  return write(
+    row,
+    false,
+    [[region, columns, 'repair', observed[region]]],
+    envelope,
+  );
 }
 
 export type DistTagOutcome =
@@ -445,10 +445,6 @@ export type DistTagOutcome =
       kind: 'applied';
       op: 'upsert';
       row: DistTagRow;
-      /** The version the tag must still point at; `null` inserts it. */
-      expectedVersion: string | null;
-      /** The `versions.rev` the event's state was read at. */
-      rev: number;
       event: LedgerEventRow;
     }
   | {
@@ -456,8 +452,6 @@ export type DistTagOutcome =
       op: 'delete';
       /** The row to delete, as read. */
       row: DistTagRow;
-      /** The `versions.rev` of the version it pointed at, as read. */
-      rev: number;
       event: LedgerEventRow;
     }
   | { kind: 'unchanged' }
@@ -522,8 +516,6 @@ export function moveDistTag(
       version: target.version,
       updated_at: envelope.at,
     },
-    expectedVersion: current?.version ?? null,
-    rev: target.rev,
     event: distTagEvent(target, 'dist_tag_moved', envelope, {
       tag,
       from: current?.version ?? null,
@@ -554,7 +546,6 @@ export function removeDistTag(
     kind: 'applied',
     op: 'delete',
     row: current,
-    rev: pointed.rev,
     event: distTagEvent(pointed, 'dist_tag_removed', envelope, { tag }),
   };
 }
@@ -581,7 +572,7 @@ function distTagEvent(
   };
 }
 
-/** One parameterised statement for a D1 `batch()`, or a condition to guard one with. */
+/** One parameterised statement for a D1 `batch()`. */
 export interface Statement {
   sql: string;
   params: Value[];
@@ -606,11 +597,8 @@ const VERSION_COLUMNS = [
   'name',
   'version',
   'first_seen_at',
-  'rev',
   ...FACT_COLUMNS,
 ] as const;
-
-const UPDATED_COLUMNS = ['rev', ...FACT_COLUMNS] as const;
 
 const LEDGER_COLUMNS = [
   'name',
@@ -628,132 +616,41 @@ const LEDGER_COLUMNS = [
 const placeholders = (count: number): string =>
   Array.from({ length: count }, () => '?').join(', ');
 
-const and = (conditions: Statement[]): Statement =>
-  conditions.length === 0
-    ? { sql: '1', params: [] }
-    : {
-        sql: conditions.map((condition) => `(${condition.sql})`).join(' AND '),
-        params: conditions.flatMap((condition) => condition.params),
-      };
-
-const claimed = (messageId: string): Statement => ({
-  sql: 'EXISTS (SELECT 1 FROM pipeline_events WHERE message_id = ?)',
-  params: [messageId],
-});
-
-function versionAsRead(
-  row: Pick<VersionRow, 'name' | 'version'>,
-  expectedRev: number | null,
-): Statement {
-  return expectedRev === null
-    ? {
-        sql: 'NOT EXISTS (SELECT 1 FROM versions WHERE name = ? AND version = ?)',
-        params: [row.name, row.version],
-      }
-    : {
-        sql: 'EXISTS (SELECT 1 FROM versions WHERE name = ? AND version = ? AND rev = ?)',
-        params: [row.name, row.version, expectedRev],
-      };
-}
-
-function versionWrite(
-  row: VersionRow,
-  expectedRev: number | null,
-  claim: Statement,
-): Statement {
-  if (expectedRev === null) {
+function versionWrite(row: VersionRow, isNew: boolean): Statement {
+  if (isNew) {
     return {
-      sql: `INSERT INTO versions (${VERSION_COLUMNS.join(', ')}) SELECT ${placeholders(VERSION_COLUMNS.length)} WHERE ${claim.sql}`,
-      params: [
-        ...VERSION_COLUMNS.map((column) => row[column]),
-        ...claim.params,
-      ],
+      sql: `INSERT INTO versions (${VERSION_COLUMNS.join(', ')}) VALUES (${placeholders(VERSION_COLUMNS.length)})`,
+      params: VERSION_COLUMNS.map((column) => row[column]),
     };
   }
 
   return {
-    sql: `UPDATE versions SET ${UPDATED_COLUMNS.map((column) => `${column} = ?`).join(', ')} WHERE name = ? AND version = ? AND rev = ? AND ${claim.sql}`,
+    sql: `UPDATE versions SET ${FACT_COLUMNS.map((column) => `${column} = ?`).join(', ')} WHERE name = ? AND version = ?`,
     params: [
-      ...UPDATED_COLUMNS.map((column) => row[column]),
+      ...FACT_COLUMNS.map((column) => row[column]),
       row.name,
       row.version,
-      expectedRev,
-      ...claim.params,
     ],
   };
 }
 
 type AppliedTag = Extract<DistTagOutcome, { kind: 'applied' }>;
 
-function distTagAsRead(outcome: AppliedTag): Statement {
-  const { row } = outcome;
-
-  const expected =
-    outcome.op === 'delete' ? row.version : outcome.expectedVersion;
-
-  return expected === null
-    ? {
-        sql: 'NOT EXISTS (SELECT 1 FROM dist_tags WHERE name = ? AND tag = ?)',
-        params: [row.name, row.tag],
-      }
-    : {
-        sql: 'EXISTS (SELECT 1 FROM dist_tags WHERE name = ? AND tag = ? AND version = ?)',
-        params: [row.name, row.tag, expected],
-      };
-}
-
-function distTagWrite(outcome: AppliedTag, claim: Statement): Statement {
-  const { row } = outcome;
-
-  if (outcome.op === 'delete') {
+function distTagWrite({ op, row }: AppliedTag): Statement {
+  if (op === 'delete') {
     return {
-      sql: `DELETE FROM dist_tags WHERE name = ? AND tag = ? AND version = ? AND ${claim.sql}`,
-      params: [row.name, row.tag, row.version, ...claim.params],
-    };
-  }
-
-  if (outcome.expectedVersion === null) {
-    return {
-      sql: `INSERT INTO dist_tags (name, tag, version, updated_at) SELECT ?, ?, ?, ? WHERE ${claim.sql}`,
-      params: [row.name, row.tag, row.version, row.updated_at, ...claim.params],
+      sql: 'DELETE FROM dist_tags WHERE name = ? AND tag = ?',
+      params: [row.name, row.tag],
     };
   }
 
   return {
-    sql: `UPDATE dist_tags SET version = ?, updated_at = ? WHERE name = ? AND tag = ? AND version = ? AND ${claim.sql}`,
-    params: [
-      row.version,
-      row.updated_at,
-      row.name,
-      row.tag,
-      outcome.expectedVersion,
-      ...claim.params,
-    ],
+    sql: 'INSERT INTO dist_tags (name, tag, version, updated_at) VALUES (?, ?, ?, ?) ON CONFLICT (name, tag) DO UPDATE SET version = excluded.version, updated_at = excluded.updated_at',
+    params: [row.name, row.tag, row.version, row.updated_at],
   };
 }
 
-/** The rows a dist-tag event read its npm state from, other than the folded row, which `write` already guards. */
-function distTagVersionsAsRead(
-  moved: readonly AppliedTag[],
-  applied: VersionRow | undefined,
-): Statement[] {
-  const read = new Map<string, Statement>();
-
-  for (const { event, rev } of moved) {
-    if (event.name === applied?.name && event.version === applied.version) {
-      continue;
-    }
-
-    read.set(
-      JSON.stringify([event.name, event.version]),
-      versionAsRead(event, rev),
-    );
-  }
-
-  return [...read.values()];
-}
-
-// a missing claim row joins to nothing, so the event is not logged
+// the claim insert runs first in the batch, so the join finds its id
 function ledgerInsert(event: LedgerEventRow, messageId: string): Statement {
   return {
     sql: `INSERT INTO ledger_events (${LEDGER_COLUMNS.join(', ')}, pipeline_event_id) SELECT ${placeholders(LEDGER_COLUMNS.length)}, id FROM pipeline_events WHERE message_id = ?`,
@@ -767,31 +664,21 @@ export interface FoldStatements {
   outcome: 'applied' | 'unchanged' | 'rejected';
   /** `pipeline_events.reason`: set exactly when rejected. */
   reason: string | null;
-  /**
-   * Holds while every row the batch writes, and every row a ledger event
-   * derives its state from, is as the fold read it. The
-   * consumer's `pipeline_events` insert runs first, guarded on it; every later
-   * statement runs only when that insert landed. No claim row after the batch
-   * means a row moved and nothing was written: re-read and fold again.
-   */
-  guard: Statement;
-  /** The `versions` compare-and-set, if the row changed. */
+  /** The `versions` insert or update, if the row changed. */
   write: Statement | undefined;
   distTags: Statement[];
   ledger: Statement[];
 }
 
 /**
- * The batch for a claim: `[claim insert guarded on guard, write, ...distTags,
- * ...ledger]`. The consumer skips a message `pipeline_events` already holds
- * before folding it.
+ * The batch for a claim: `[claim insert, write, ...distTags, ...ledger]`. The
+ * consumer skips a message `pipeline_events` already holds before folding it.
  */
 export function foldStatements(
   folded: Fold,
   tags: readonly DistTagOutcome[],
   messageId: string,
 ): FoldStatements {
-  const claim = claimed(messageId);
   const moved = tags.filter((outcome) => outcome.kind === 'applied');
   const applied = folded.outcome === 'applied' ? folded : undefined;
 
@@ -803,13 +690,8 @@ export function foldStatements(
           ? 'applied'
           : 'unchanged',
     reason: folded.outcome === 'rejected' ? folded.reason : null,
-    guard: and([
-      ...(applied ? [versionAsRead(applied.row, applied.expectedRev)] : []),
-      ...moved.map(distTagAsRead),
-      ...distTagVersionsAsRead(moved, applied?.row),
-    ]),
-    write: applied && versionWrite(applied.row, applied.expectedRev, claim),
-    distTags: moved.map((outcome) => distTagWrite(outcome, claim)),
+    write: applied && versionWrite(applied.row, applied.isNew),
+    distTags: moved.map(distTagWrite),
     ledger: [
       ...(applied?.events ?? []),
       ...moved.map((outcome) => outcome.event),

@@ -167,8 +167,7 @@ describe('fold: a new row', () => {
         fold(undefined, { [region]: OBSERVED[region] }, ENVELOPE),
       );
 
-      assert.equal(result.expectedRev, null);
-      assert.equal(result.row.rev, 0);
+      assert.equal(result.isNew, true);
       assert.equal(result.row.first_seen_at, ENVELOPE.at);
       assert.deepEqual(
         result.events.map((event) => [event.region, event.from_state]),
@@ -189,7 +188,6 @@ describe('fold: a new row', () => {
 
     assert.deepEqual(result.row, {
       ...ROWS.released,
-      rev: 0,
       first_seen_at: ENVELOPE.at,
     });
     assert.deepEqual(
@@ -387,13 +385,12 @@ describe('fold: mutable facts', () => {
     );
   });
 
-  it('compares against the read rev', () => {
+  it('updates the stored row', () => {
     const result = applied(
       fold(ROWS.released, { gh: { ...GH, body: 'edited' } }, ENVELOPE),
     );
 
-    assert.equal(result.expectedRev, ROWS.released.rev);
-    assert.equal(result.row.rev, ROWS.released.rev + 1);
+    assert.equal(result.isNew, false);
     assert.equal(result.row.first_seen_at, ROWS.released.first_seen_at);
   });
 });
@@ -494,8 +491,6 @@ describe('moveDistTag', () => {
       kind: 'applied',
       op: 'upsert',
       row: { ...current, version: ENVELOPE.version, updated_at: ENVELOPE.at },
-      expectedVersion: '0.9.0',
-      rev: ROWS.released.rev,
       event: {
         name: ENVELOPE.name,
         version: ENVELOPE.version,
@@ -539,17 +534,6 @@ describe('moveDistTag', () => {
     const row = after(fold(ROWS.published, { npm: null }, ENVELOPE));
 
     assert.equal(moveDistTag(undefined, row, 'next', ENVELOPE).kind, 'applied');
-  });
-
-  it('inserts a new tag with no expected version', () => {
-    const outcome = moveDistTag(undefined, ROWS.published, 'next', ENVELOPE);
-
-    assert.equal(
-      outcome.kind === 'applied' && outcome.op === 'upsert'
-        ? outcome.expectedVersion
-        : 'not an upsert',
-      null,
-    );
   });
 
   it('rejects a current row for another tag', () => {
@@ -606,7 +590,6 @@ describe('removeDistTag', () => {
       kind: 'applied',
       op: 'delete',
       row: current,
-      rev: ROWS.released.rev,
       event: {
         name: ENVELOPE.name,
         version: ENVELOPE.version,
@@ -676,7 +659,6 @@ describe('foldStatements', () => {
     assert.deepEqual(statements, {
       outcome: 'unchanged',
       reason: null,
-      guard: { sql: '1', params: [] },
       write: undefined,
       distTags: [],
       ledger: [],
@@ -692,42 +674,6 @@ describe('foldStatements', () => {
 
     assert.equal(statements.outcome, 'rejected');
     assert.match(statements.reason ?? '', /empty deprecation message/);
-  });
-
-  it('guards the rev of another version a removed dist-tag pointed at', () => {
-    const older = { ...ROWS.published, version: '0.9.0', rev: 7 };
-
-    const removal = removeDistTag(
-      { name: older.name, tag: 'next', version: older.version, updated_at: '' },
-      older,
-      'next',
-      ENVELOPE,
-    );
-
-    const { guard } = foldStatements(
-      fold(ROWS.published, { gh: GH }, ENVELOPE),
-      [removal],
-      'message-1',
-    );
-
-    assert.match(
-      guard.sql,
-      /FROM versions WHERE name = \? AND version = \? AND rev = \?/,
-    );
-    assert.deepEqual(guard.params.slice(-3), [older.name, older.version, 7]);
-  });
-
-  it('leaves the folded row to the write guard', () => {
-    const folded = fold(ROWS.published, { gh: GH }, ENVELOPE);
-    const target = after(folded);
-
-    const { guard } = foldStatements(
-      folded,
-      [moveDistTag(undefined, target, 'next', ENVELOPE)],
-      'message-1',
-    );
-
-    assert.equal(guard.sql.match(/FROM versions/g)?.length, 1);
   });
 });
 
