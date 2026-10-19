@@ -81,14 +81,10 @@ const main = ([mode, ...rest]: string[]): void => {
     return;
   }
 
-  let site: Site;
+  const resolved = siteFromArgs(workspaceRoot, rest);
 
-  try {
-    site = siteFromArgs(workspaceRoot, rest);
-  } catch (error) {
-    console.error(
-      `cloudflare-deploy: ${error instanceof Error ? error.message : String(error)}\n${USAGE}`,
-    );
+  if (!resolved.ok) {
+    console.error(`cloudflare-deploy: ${resolved.error}\n${USAGE}`);
     process.exitCode = 2;
 
     return;
@@ -101,7 +97,12 @@ const main = ([mode, ...rest]: string[]): void => {
     );
   }
 
-  const { migrations, deploy } = deployCommands(workspaceRoot, mode, site);
+  const { migrations, deploy } = deployCommands(
+    workspaceRoot,
+    mode,
+    resolved.site,
+  );
+
   const npx = commandPath('npx');
 
   // execve keeps the cwd, so the migrations and the deploy share the root.

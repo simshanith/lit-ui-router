@@ -19,11 +19,19 @@ import { promisify } from 'node:util';
 
 import {
   DEFAULT_SITE,
+  type Site,
+  type SiteResult,
   buildSteps,
   pnpmSpec,
   resolveSite,
   siteFromArgs,
 } from './cloudflare-build.ts';
+
+const siteOf = (result: SiteResult): Site => {
+  if (!result.ok) assert.fail(result.error);
+
+  return result.site;
+};
 
 const rootWith = (packageManager?: string): string => {
   const dir = mkdtempSync(join(tmpdir(), 'cloudflare-build-'));
@@ -82,9 +90,12 @@ describe('resolveSite', () => {
 
   it('resolves a domain key to its www/ package', () => {
     assert.deepEqual(resolveSite(root, 'example.test'), {
-      key: 'example.test',
-      dir: 'www/example.test',
-      packageName: '@www/example.test',
+      ok: true,
+      site: {
+        key: 'example.test',
+        dir: 'www/example.test',
+        packageName: '@www/example.test',
+      },
     });
   });
 
@@ -93,26 +104,27 @@ describe('resolveSite', () => {
       buildSteps(
         root,
         '/nonexistent/bin',
-        resolveSite(root, 'example.test'),
+        siteOf(resolveSite(root, 'example.test')),
       ).at(-1),
       ['npx', ['turbo', '@www/example.test#build']],
     );
   });
 
-  it('throws on a site with no package', () => {
-    assert.throws(
-      () => resolveSite(root, 'nowhere.test'),
-      /unknown site nowhere\.test/,
-    );
+  it('fails on a site with no package', () => {
+    assert.deepEqual(resolveSite(root, 'nowhere.test'), {
+      ok: false,
+      error: 'unknown site nowhere.test: no package.json in www/nowhere.test',
+    });
   });
 
   // The convention is what the build and deploy rely on; a rename must not
   // quietly build one package and deploy another.
-  it('throws when the package name does not match the directory', () => {
-    assert.throws(
-      () => resolveSite(root, 'misnamed.test'),
-      /named "@www\/something-else", not @www\/misnamed\.test/,
-    );
+  it('fails when the package name does not match the directory', () => {
+    assert.deepEqual(resolveSite(root, 'misnamed.test'), {
+      ok: false,
+      error:
+        'www/misnamed.test/package.json is named "@www/something-else", not @www/misnamed.test',
+    });
   });
 
   it('refuses keys that are not a domain name', () => {
@@ -124,21 +136,27 @@ describe('resolveSite', () => {
       'Example.test',
       'localhost',
     ]) {
-      assert.throws(
-        () => resolveSite(root, key),
-        /not a www\/ domain name/,
+      assert.deepEqual(
+        resolveSite(root, key),
+        {
+          ok: false,
+          error: `site is not a www/ domain name: ${JSON.stringify(key)}`,
+        },
         key,
       );
     }
   });
 
   it('defaults to the docs site and refuses extra arguments', () => {
-    assert.equal(siteFromArgs(root, []).key, DEFAULT_SITE);
-    assert.equal(siteFromArgs(root, ['example.test']).key, 'example.test');
-    assert.throws(
-      () => siteFromArgs(root, ['example.test', 'extra']),
-      /unexpected argument\(s\) after the site: extra/,
+    assert.equal(siteOf(siteFromArgs(root, [])).key, DEFAULT_SITE);
+    assert.equal(
+      siteOf(siteFromArgs(root, ['example.test'])).key,
+      'example.test',
     );
+    assert.deepEqual(siteFromArgs(root, ['example.test', 'extra']), {
+      ok: false,
+      error: 'unexpected argument(s) after the site: extra',
+    });
   });
 });
 
