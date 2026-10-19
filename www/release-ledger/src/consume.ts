@@ -22,7 +22,6 @@ import {
   type FoldStatements,
   foldStatements,
   moveDistTag,
-  type Observation,
   removeDistTag,
   type VersionRow,
 } from './release-ledger.core.ts';
@@ -60,21 +59,6 @@ const retryAfter = (seconds: number | undefined): Verdict =>
   seconds === undefined ? RETRY : { kind: 'retry', retryAfter: seconds };
 
 const decodeClaim = Schema.decodeUnknownEffect(Claim);
-
-/** What the sources say, as the core folds it; a source that 404s reports `null`. */
-export function observationOf(sources: Sources, claim: Claim): Observation {
-  const { tag, npm, gh } = sources;
-
-  return {
-    tag,
-    // npm keeps no record of the dist-tag; only the publish-npm claim knows
-    npm: npm && {
-      ...npm,
-      ...(claim.distTag !== undefined && { distTag: claim.distTag }),
-    },
-    gh,
-  };
-}
 
 /** The audit columns: an Actions run, or the Cron Trigger's sweep. */
 function auditOf({ origin }: Claim) {
@@ -173,9 +157,10 @@ const foldOnce = (message: LedgerMessage, claim: Claim) =>
     );
 
     const sources = yield* (yield* Observer).observe(claim.name, claim.version);
+    const { tag, npm, gh } = sources;
 
     const envelope = envelopeOf(claim);
-    const folded = fold(before, observationOf(sources, claim), envelope);
+    const folded = fold(before, { tag, npm, gh }, envelope);
 
     if (folded.outcome === 'rejected') {
       yield* Effect.logWarning(

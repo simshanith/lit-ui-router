@@ -132,7 +132,6 @@ const enqueue = (request: Request, env: IngestEnv, keys?: JWTVerifyGetKey) =>
       receivedAt: new Date().toISOString(),
       name: body.name,
       version: body.version,
-      ...(body.distTag !== undefined && { distTag: body.distTag }),
       origin: {
         kind: 'run',
         repository: claims.repository,

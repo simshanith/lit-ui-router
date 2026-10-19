@@ -218,14 +218,10 @@ const NAME = ROWS.tagged.name;
 
 const VERSION = ROWS.tagged.version;
 
-const claimOf = (
-  receivedAt = new Date().toISOString(),
-  distTag?: string,
-): Claim => ({
+const claimOf = (receivedAt = new Date().toISOString()): Claim => ({
   receivedAt,
   name: NAME,
   version: VERSION,
-  ...(distTag !== undefined && { distTag }),
   origin: {
     kind: 'run',
     repository: 'simshanith/lit-ui-router',
@@ -363,7 +359,7 @@ describe('queue consumer', { timeout: 120_000 }, () => {
   });
 
   it('folds a release into one row, its dist-tag and its ledger events', async () => {
-    const message = messageOf(claimOf(undefined, 'latest'));
+    const message = messageOf(claimOf());
 
     await deliver([message]);
 
@@ -373,7 +369,6 @@ describe('queue consumer', { timeout: 120_000 }, () => {
     assert.equal(row?.status, 'released');
     assert.equal(row?.npm_state, 'active');
     assert.equal(row?.gh_state, 'final');
-    assert.equal(row?.npm_dist_tag, 'latest');
     assert.equal(row?.gh_release_id, GH.id);
 
     assert.deepEqual(await ledgerEvents(), [

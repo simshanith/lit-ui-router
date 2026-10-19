@@ -25,7 +25,6 @@ const VersionRowSchema = Schema.Struct({
   tag_conflict: NullableString,
   npm_integrity: NullableString,
   npm_published_at: NullableString,
-  npm_dist_tag: NullableString,
   npm_deprecated: NullableString,
   npm_conflict: NullableString,
   gh_release_id: NullableNumber,

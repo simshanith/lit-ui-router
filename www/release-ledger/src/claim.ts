@@ -11,15 +11,12 @@ const Version = Schema.String.check(
   Schema.isPattern(/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/),
 );
 
-const DistTag = Schema.String.check(Schema.isPattern(/^[a-z][a-z0-9-]*$/));
-
 /** Maintainer events stay off /claims until they have their own gated path. */
 export const MAINTAINER_ACTIONS = ['repair'] as const;
 
 export const ClaimBody = Schema.Struct({
   name: PackageName,
   version: Version,
-  distTag: Schema.optionalKey(DistTag),
   action: Schema.optionalKey(
     Schema.Literals(['observe', ...MAINTAINER_ACTIONS]),
   ),
@@ -67,7 +64,6 @@ export const Claim = Schema.Struct({
   receivedAt: Schema.String,
   name: PackageName,
   version: Version,
-  distTag: Schema.optionalKey(DistTag),
   origin: Schema.Union([RunOrigin, SweepOrigin]),
 });
 
