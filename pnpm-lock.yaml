@@ -2825,7 +2825,7 @@ importers:
         version: 7.0.2
       wrangler:
         specifier: 'catalog:'
-        version: 4.151.0(@types/node@24.19.2)
+        version: 4.151.2(@types/node@24.19.2)
 
 packages:
 
