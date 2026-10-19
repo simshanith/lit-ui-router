@@ -601,22 +601,24 @@ describe('cloudflare-deploy', () => {
   const script = join(import.meta.dirname, 'cloudflare-deploy.ts');
 
   // Runs the script with a stub `npx` first on PATH, so each wrangler command
-  // is recorded, one per line, rather than performed.
-  const runDeploy = (...args: string[]) => {
+  // is recorded, one per line, rather than performed. With FAIL_D1 set the
+  // stub fails every `wrangler d1` call.
+  const runDeploy = (args: string[], env: NodeJS.ProcessEnv = {}) => {
     const dir = mkdtempSync(join(tmpdir(), 'cloudflare-deploy-'));
     const record = join(dir, 'invoked');
 
     try {
       writeFileSync(
         join(dir, 'npx'),
-        `#!/bin/sh\nprintf '%s\\n' "$*" >> '${record}'\n`,
+        `#!/bin/sh\nprintf '%s\\n' "$*" >> '${record}'\n` +
+          `[ -n "$FAIL_D1" ] && [ "$1 $2" = 'wrangler d1' ] && exit 1\nexit 0\n`,
         { mode: 0o755 },
       );
 
       const result = spawnSync(process.execPath, [script, ...args], {
         encoding: 'utf8',
         // Only the stub on PATH: everything else the script runs is absolute.
-        env: { ...process.env, PATH: dir },
+        env: { ...process.env, ...env, PATH: dir },
       });
 
       return {
@@ -642,7 +644,7 @@ describe('cloudflare-deploy', () => {
           site,
         );
 
-        const { status, invoked } = runDeploy(mode, worker.site);
+        const { status, invoked } = runDeploy([mode, worker.site]);
         assert.equal(status, 0, `${mode} ${worker.site} exited non-zero`);
         assert.deepEqual(
           invoked,
@@ -652,8 +654,36 @@ describe('cloudflare-deploy', () => {
     }
   });
 
+  // The deploy must never run ahead of a schema it expects.
+  it('stops before the deploy when a migration fails', () => {
+    const migrated = workers.filter(
+      (worker) =>
+        deployCommands(
+          workspaceRoot,
+          'main',
+          siteAt(workspaceRoot, worker.site),
+        ).migrations.length > 0,
+    );
+
+    assert.ok(migrated.length > 0, 'no configured site migrates a database');
+
+    for (const worker of migrated) {
+      const { status, invoked } = runDeploy(['main', worker.site], {
+        FAIL_D1: '1',
+      });
+
+      assert.notEqual(status, 0);
+      assert.equal(
+        invoked?.length,
+        1,
+        `${worker.site}: ${invoked?.join('; ')}`,
+      );
+      assert.match(invoked?.[0] ?? '', /^wrangler d1 migrations apply /);
+    }
+  });
+
   it('deploys the docs site when no site is named', () => {
-    const { status, invoked } = runDeploy('main');
+    const { status, invoked } = runDeploy(['main']);
     assert.equal(status, 0);
     assert.equal(
       invoked?.at(-1),
@@ -662,7 +692,7 @@ describe('cloudflare-deploy', () => {
   });
 
   it('prints usage and exits 2 with no mode, without invoking wrangler', () => {
-    const { status, stderr, invoked } = runDeploy();
+    const { status, stderr, invoked } = runDeploy([]);
     assert.equal(status, 2);
     assert.match(
       stderr,
@@ -679,7 +709,7 @@ describe('cloudflare-deploy', () => {
       ['main', '../lit-ui-router.dev'],
       ['branch', DEFAULT_SITE, 'unexpected'],
     ]) {
-      const { status, stderr, invoked } = runDeploy(...args);
+      const { status, stderr, invoked } = runDeploy(args);
       assert.equal(status, 2, args.join(' '));
       assert.match(stderr, /usage: cloudflare-deploy\.ts <main\|branch>/);
       assert.equal(invoked, undefined);

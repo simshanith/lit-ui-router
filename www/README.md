@@ -4,10 +4,10 @@ The sites this repo publishes, one directory per domain. Each directory is a
 workspace package that owns its own content, its own Cloudflare Worker, and its
 own wrangler config; the pipeline that ships them is shared.
 
-| Directory                                                                 | Site                                                                                                                                                                        |
-| ------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`lit-ui-router.dev/`](./lit-ui-router.dev)                               | [lit-ui-router.dev](https://lit-ui-router.dev) — the VitePress docs site and the Cloudflare Worker that serves it                                                           |
-| [`release-ledger.lit-ui-router.dev/`](./release-ledger.lit-ui-router.dev) | [release-ledger.lit-ui-router.dev](https://release-ledger.lit-ui-router.dev) — the release-ledger worker, bound to its D1 database and answering 404 until the ledger lands |
+| Directory                                                                 | Site                                                                                                                                                                                                                    |
+| ------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`lit-ui-router.dev/`](./lit-ui-router.dev)                               | [lit-ui-router.dev](https://lit-ui-router.dev) — the VitePress docs site and the Cloudflare Worker that serves it                                                                                                       |
+| [`release-ledger.lit-ui-router.dev/`](./release-ledger.lit-ui-router.dev) | [release-ledger.lit-ui-router.dev](https://release-ledger.lit-ui-router.dev) — the release ledger: its D1 migrations and the SQL the queue consumer will write, behind a worker that answers 404 until the ledger lands |
 
 ## Adding a site
 
