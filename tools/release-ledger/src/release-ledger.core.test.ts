@@ -199,10 +199,8 @@ describe('fold: a new row', () => {
     );
   });
 
-  it('logs the observation, its source and run in the ledger row', () => {
-    const [event] = applied(
-      fold(undefined, { npm: NPM }, { ...ENVELOPE, run_url: 'run' }),
-    ).events;
+  it('logs the observation in the ledger row', () => {
+    const [event] = applied(fold(undefined, { npm: NPM }, ENVELOPE)).events;
 
     assert.deepEqual(event, {
       name: ENVELOPE.name,
@@ -212,9 +210,6 @@ describe('fold: a new row', () => {
       from_state: null,
       to_state: 'active',
       payload: JSON.stringify(NPM),
-      source: ENVELOPE.source,
-      run_url: 'run',
-      at: ENVELOPE.at,
     });
   });
 });
@@ -498,9 +493,6 @@ describe('moveDistTag', () => {
         from_state: 'active',
         to_state: 'active',
         payload: JSON.stringify({ tag: 'latest', from: '0.9.0' }),
-        source: ENVELOPE.source,
-        run_url: null,
-        at: ENVELOPE.at,
       },
     });
   });
@@ -597,9 +589,6 @@ describe('removeDistTag', () => {
         from_state: 'active',
         to_state: 'active',
         payload: JSON.stringify({ tag: 'next' }),
-        source: ENVELOPE.source,
-        run_url: null,
-        at: ENVELOPE.at,
       },
     });
   });

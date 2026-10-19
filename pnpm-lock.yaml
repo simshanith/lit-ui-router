@@ -33,6 +33,9 @@ catalogs:
     '@custom-elements-manifest/analyzer':
       specifier: ^0.11.0
       version: 0.11.0
+    '@effect/sql-d1':
+      specifier: ^4.0.5
+      version: 4.0.5
     '@lit-labs/signals':
       specifier: ^0.3.0
       version: 0.3.0
@@ -171,6 +174,9 @@ catalogs:
     husky:
       specifier: ^9.1.7
       version: 9.1.7
+    jose:
+      specifier: ^6.2.12
+      version: 6.2.12
     jsonc-parser:
       specifier: ^3.3.1
       version: 3.3.1
@@ -2835,9 +2841,18 @@ importers:
 
   www/release-ledger.lit-ui-router.dev:
     dependencies:
+      '@effect/sql-d1':
+        specifier: 'catalog:'
+        version: 4.0.5(effect@4.0.5)
       '@tools/release-ledger':
         specifier: catalog:workspace
         version: link:../../tools/release-ledger
+      effect:
+        specifier: 'catalog:'
+        version: 4.0.5
+      jose:
+        specifier: 'catalog:'
+        version: 6.2.12
     devDependencies:
       '@tools/shared':
         specifier: catalog:workspace
@@ -2845,6 +2860,9 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 24.19.2
+      jsonc-parser:
+        specifier: 'catalog:'
+        version: 3.3.1
       oxfmt:
         specifier: 'catalog:'
         version: 0.73.0
@@ -2991,6 +3009,9 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  '@cloudflare/workers-types@5.20261018.1':
+    resolution: {integrity: sha512-0o+tp586a2/IJELadYMnuh6kQapnwLsEpsR7yV/eFxp76QdC46ACMmLMILCTwU1hcd/y2b+bnCopuPUeas6OAg==}
+
   '@codecov/bundle-analyzer@2.0.1':
     resolution: {integrity: sha512-SkL0+Ccs6VuHIA9Bxb8/J110CffRXpqtKt7m18FTWC0P6gDKEsoieUerDdcd6K9BFKujj6gaUdTt5i4I/v8GTA==}
     engines: {node: '>=20.0.0'}
@@ -3112,6 +3133,11 @@ packages:
 
   '@docsearch/sidepanel-js@4.7.0':
     resolution: {integrity: sha512-A8r34jCU8kcIk2viECEn2msA28ojUF1BLi/3v5OWWc5G2N3jOuuumBXoeYjfr8dA0UxgFSy5R2bt12dnFJQSyA==}
+
+  '@effect/sql-d1@4.0.5':
+    resolution: {integrity: sha512-ERArvCS/qOHx52yKFePc8v5qs0y18Ld+Ha6Xkkm/I1R+zTf+flfWpsuxlxkPKlwQCqB9K+yfU6Kw1gshKGRCPQ==}
+    peerDependencies:
+      effect: ^4.0.5
 
   '@emnapi/core@1.11.2':
     resolution: {integrity: sha512-TC8MkTuZUtcTSiFeuC0ksCh9QIJ5+F21MvZ4Wn4ORfYaFJ/0dsiudv5tVkejgwZlwQ39jL9WWDe2lz8x0WglOA==}
@@ -7019,6 +7045,9 @@ packages:
     resolution: {integrity: sha512-2mD929bUVKUhOLQQEVhlf6EZ0Mlo0DeRb5MO7cViR9AXLtBauuccEtB1py9Ocxpo/P7ucnh442iY/iOwrh3IQw==}
     engines: {node: '>= 20'}
 
+  jose@6.2.12:
+    resolution: {integrity: sha512-9NiFmJEex0sy2Dk58j2UGBSHgUs2ypF9eZSu4L6vjOX3Dp96Sw1F3uL+H+D1sx02jZZdzUT0HgvCy59CuvXcWw==}
+
   js-levenshtein-esm@2.0.0:
     resolution: {integrity: sha512-1n4LEPOL4wRXY8rOQcuA7Iuaphe5xCMayvufCzlLAi+hRsnBRDbSS6XPuV58CBVJxj5D9ApFLyjQ7KzFToyHBw==}
 
@@ -9118,6 +9147,8 @@ snapshots:
   '@cloudflare/workerd-windows-64@1.20261019.1':
     optional: true
 
+  '@cloudflare/workers-types@5.20261018.1': {}
+
   '@codecov/bundle-analyzer@2.0.1':
     dependencies:
       '@codecov/bundler-plugin-core': 2.0.1
@@ -9305,6 +9336,11 @@ snapshots:
   '@docsearch/js@4.7.0': {}
 
   '@docsearch/sidepanel-js@4.7.0': {}
+
+  '@effect/sql-d1@4.0.5(effect@4.0.5)':
+    dependencies:
+      '@cloudflare/workers-types': 5.20261018.1
+      effect: 4.0.5
 
   '@emnapi/core@1.11.2':
     dependencies:
@@ -12935,6 +12971,8 @@ snapshots:
       '@hapi/tlds': 1.1.7
       '@hapi/topo': 6.0.2
       '@standard-schema/spec': 1.1.0
+
+  jose@6.2.12: {}
 
   js-levenshtein-esm@2.0.0: {}
 

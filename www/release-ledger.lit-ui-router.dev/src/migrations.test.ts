@@ -34,7 +34,13 @@ import {
   ROWS,
 } from '@tools/release-ledger/fixtures';
 
-import { foldStatements, type Statement } from './ledger-statements.ts';
+import {
+  CLAIM_OUTCOMES,
+  claimInsert,
+  type ClaimRow,
+  foldStatements,
+  type Statement,
+} from './ledger-statements.ts';
 
 const MIGRATIONS = new URL('../migrations/', import.meta.url);
 
@@ -65,16 +71,50 @@ function insertVersion(db: DatabaseSync, row: VersionRow): void {
   ).run(...VERSION_COLUMNS.map((column) => row[column]));
 }
 
-/** The consumer's claim insert. */
-function claimInsert(messageId: string, outcome: string): Statement {
-  const reason = outcome === 'rejected' ? 'malformed' : null;
+const RUN_CLAIM: ClaimRow = {
+  message_id: MESSAGE_ID,
+  received_at: 'now',
+  body: '{}',
+  outcome: 'applied',
+  reason: null,
+  attempts: 1,
+  name: ENVELOPE.name,
+  version: ENVELOPE.version,
+  origin: 'run',
+  repository: 'simshanith/lit-ui-router',
+  job_workflow_ref:
+    'simshanith/lit-ui-router/.github/workflows/publish-npm.yml@refs/heads/main',
+  run_id: '1',
+  run_attempt: 1,
+  sha: 'sha',
+};
 
-  return {
-    sql: `INSERT INTO pipeline_events (message_id, received_at, repository, job_workflow_ref, run_id, run_attempt, sha, payload, outcome, reason)
-          VALUES (?, 'now', 'simshanith/lit-ui-router', 'simshanith/lit-ui-router/.github/workflows/publish-npm.yml@refs/heads/main', '1', 1, 'sha', '{}', ?, ?)`,
-    params: [messageId, outcome, reason],
-  };
-}
+const SWEEP_CLAIM: ClaimRow = {
+  ...RUN_CLAIM,
+  origin: 'sweep',
+  job_workflow_ref: null,
+  run_id: null,
+  run_attempt: null,
+};
+
+const UNDECODABLE_CLAIM: ClaimRow = {
+  ...RUN_CLAIM,
+  outcome: 'undecodable',
+  name: null,
+  version: null,
+  origin: null,
+  repository: null,
+  job_workflow_ref: null,
+  run_id: null,
+  run_attempt: null,
+  sha: null,
+};
+
+const insertClaim = (db: DatabaseSync, row: ClaimRow): void => {
+  const { sql, params } = claimInsert(row);
+
+  db.prepare(sql).run(...params);
+};
 
 function insertDistTag(db: DatabaseSync, row: DistTagRow): void {
   db.prepare(
@@ -106,7 +146,12 @@ function write(
   const statements = foldStatements(folded, tags, messageId);
 
   batch(db, [
-    claimInsert(messageId, statements.outcome),
+    claimInsert({
+      ...RUN_CLAIM,
+      message_id: messageId,
+      outcome: statements.outcome,
+      reason: statements.reason,
+    }),
     ...(statements.write ? [statements.write] : []),
     ...statements.distTags,
     ...statements.ledger,
@@ -150,9 +195,9 @@ describe('migrations', () => {
       .map((row) => `${String(row.type)} ${String(row.name)}`);
 
     assert.deepEqual(objects, [
+      'table claims',
       'table dist_tags',
       'table ledger_events',
-      'table pipeline_events',
       'view version_states',
       'table versions',
     ]);
@@ -214,23 +259,103 @@ describe('migrations', () => {
       /FOREIGN KEY constraint failed/,
     );
   });
+});
 
-  it('requires a reason exactly when the claim was rejected', () => {
-    for (const [outcome, reason] of [
-      ['rejected', null],
-      ['applied', 'no'],
-      ['stuck', null],
-    ]) {
+describe('migrations: claims', () => {
+  const valid: [string, ClaimRow][] = [
+    ['an applied run claim', RUN_CLAIM],
+    ['an unchanged sweep claim', { ...SWEEP_CLAIM, outcome: 'unchanged' }],
+    ['a rejected claim', { ...RUN_CLAIM, outcome: 'rejected', reason: 'no' }],
+    ['an undecodable message', UNDECODABLE_CLAIM],
+    ['an exhausted run claim', { ...RUN_CLAIM, outcome: 'exhausted' }],
+    ['an exhausted sweep claim', { ...SWEEP_CLAIM, outcome: 'exhausted' }],
+  ];
+
+  for (const [label, row] of valid) {
+    it(`accepts ${label}`, () => {
+      insertClaim(migrated(), row);
+    });
+  }
+
+  const invalid: [string, ClaimRow][] = [
+    // SAFETY: deliberately mistyped, to reach the CHECKs
+    ['an unknown outcome', { ...RUN_CLAIM, outcome: 'stuck' as never }],
+    // SAFETY: deliberately mistyped, to reach the CHECKs
+    ['an unknown origin', { ...RUN_CLAIM, origin: 'cron' as never }],
+    ['a rejection without a reason', { ...RUN_CLAIM, outcome: 'rejected' }],
+    ['a reason without a rejection', { ...RUN_CLAIM, reason: 'no' }],
+    [
+      'an undecodable message with claim columns',
+      { ...RUN_CLAIM, outcome: 'undecodable' },
+    ],
+    [
+      'a decoded claim without claim columns',
+      { ...UNDECODABLE_CLAIM, outcome: 'exhausted' },
+    ],
+    ['a claim without a version', { ...RUN_CLAIM, version: null }],
+    ['a claim without an origin', { ...RUN_CLAIM, origin: null }],
+    ['a claim without a repository', { ...RUN_CLAIM, repository: null }],
+    ['a claim without a sha', { ...RUN_CLAIM, sha: null }],
+    ['a run without its workflow', { ...RUN_CLAIM, job_workflow_ref: null }],
+    ['a run without its id', { ...RUN_CLAIM, run_id: null }],
+    ['a run without its attempt', { ...RUN_CLAIM, run_attempt: null }],
+    ['a sweep with a run id', { ...SWEEP_CLAIM, run_id: '1' }],
+    [
+      'an undecodable message with run columns',
+      {
+        ...UNDECODABLE_CLAIM,
+        job_workflow_ref: 'w',
+        run_id: '1',
+        run_attempt: 1,
+      },
+    ],
+  ];
+
+  for (const [label, row] of invalid) {
+    it(`rejects ${label}`, () => {
       assert.throws(
-        () =>
-          migrated()
-            .prepare(
-              "INSERT INTO pipeline_events (message_id, received_at, repository, job_workflow_ref, run_id, run_attempt, sha, payload, outcome, reason) VALUES ('m', 'now', 'r', 'w', '1', 1, 's', '{}', ?, ?)",
-            )
-            .run(outcome, reason),
+        () => insertClaim(migrated(), row),
         /CHECK constraint failed/,
       );
-    }
+    });
+  }
+
+  it('keeps the first row for a message when asked to', () => {
+    const db = migrated();
+
+    insertClaim(db, RUN_CLAIM);
+
+    const { sql, params } = claimInsert(
+      { ...RUN_CLAIM, outcome: 'exhausted' },
+      'keep',
+    );
+
+    db.prepare(sql).run(...params);
+    assert.deepEqual(
+      db
+        .prepare('SELECT outcome FROM claims')
+        .all()
+        .map((row) => row.outcome),
+      ['applied'],
+    );
+    assert.throws(() => insertClaim(db, RUN_CLAIM), /UNIQUE constraint failed/);
+  });
+
+  it('lists the outcomes the consumer exports', () => {
+    const sql = String(
+      migrated()
+        .prepare("SELECT sql FROM sqlite_schema WHERE name = 'claims'")
+        .get()?.sql,
+    );
+
+    const list = /outcome +TEXT NOT NULL CHECK \(outcome IN \(([^)]*)\)\)/.exec(
+      sql,
+    )?.[1];
+
+    assert.deepEqual(
+      [...(list ?? '').matchAll(/'(\w+)'/g)].map(([, outcome]) => outcome),
+      CLAIM_OUTCOMES,
+    );
   });
 });
 
@@ -303,9 +428,7 @@ describe('migrations: fold statements', () => {
     });
     assert.deepEqual(
       db
-        .prepare(
-          'SELECT region, pipeline_event_id AS id FROM ledger_events ORDER BY id',
-        )
+        .prepare('SELECT region, claim_id AS id FROM ledger_events ORDER BY id')
         .all()
         .map((row) => [row.region, row.id]),
       [
@@ -320,7 +443,7 @@ describe('migrations: fold statements', () => {
     const db = migrated();
 
     write(db, fold(undefined, { npm: { ...NPM, deprecated: '' } }, ENVELOPE));
-    assert.equal(count(db, 'pipeline_events'), 1);
+    assert.equal(count(db, 'claims'), 1);
     assert.equal(count(db, 'versions'), 0);
   });
 
@@ -347,7 +470,7 @@ describe('migrations: fold statements', () => {
 
     write(db, fold(undefined, OBSERVED, ENVELOPE), tags);
     assert.equal(
-      db.prepare('SELECT outcome FROM pipeline_events').get()?.outcome,
+      db.prepare('SELECT outcome FROM claims').get()?.outcome,
       'rejected',
     );
     assert.equal(count(db, 'versions'), 0);
@@ -362,7 +485,7 @@ describe('migrations: fold statements', () => {
 
     write(db, fold(ROWS.published, { npm: NPM }, ENVELOPE), tags);
     assert.equal(
-      db.prepare('SELECT outcome FROM pipeline_events').get()?.outcome,
+      db.prepare('SELECT outcome FROM claims').get()?.outcome,
       'applied',
     );
     assert.deepEqual(
