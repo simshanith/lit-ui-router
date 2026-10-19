@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@effect/sql-d1": "catalog:",
+    "@tools/release-ledger": "catalog:workspace",
     "effect": "catalog:",
     "jose": "catalog:"
   },

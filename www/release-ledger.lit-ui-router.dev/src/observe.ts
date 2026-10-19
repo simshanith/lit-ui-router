@@ -2,8 +2,7 @@
 // reads them through the Observer service, so tests can stand in for both.
 import { Clock, Context, Effect, Layer, Schedule, Schema } from 'effect';
 import { HttpClient, HttpClientError, HttpClientResponse } from 'effect/http';
-
-import type { GhReleaseFacts, TagFacts } from './release-ledger.core.ts';
+import type { GhReleaseFacts, TagFacts } from '@tools/release-ledger';
 
 export interface NpmVersion {
   integrity: string;

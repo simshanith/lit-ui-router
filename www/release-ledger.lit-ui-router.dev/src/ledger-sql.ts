@@ -1,16 +1,15 @@
-// Reads decode through SqlSchema; the consumer's writes are the core's
+// Reads decode through SqlSchema; the consumer's writes are the fold's
 // statements, plus the claim and dead-letter rows defined here.
+import {
+  GH_STATES,
+  NPM_STATES,
+  STATUSES,
+  type VersionRow,
+} from '@tools/release-ledger';
 import { Effect, Schema } from 'effect';
 import { SqlClient, SqlSchema } from 'effect/sql';
 
-import {
-  type FoldStatements,
-  GH_STATES,
-  NPM_STATES,
-  type Statement,
-  STATUSES,
-  type VersionRow,
-} from './release-ledger.core.ts';
+import type { FoldStatements, Statement } from './ledger-statements.ts';
 
 const NullableString = Schema.NullOr(Schema.String);
 
@@ -163,7 +162,7 @@ export function pipelineInsert(event: PipelineEvent): Statement {
   };
 }
 
-/** A core statement as an Effect SQL statement, for `D1Client.batch`. */
+/** A ledger statement as an Effect SQL statement, for `D1Client.batch`. */
 export const toSql = (sql: SqlClient.SqlClient, statement: Statement) =>
   sql.unsafe(statement.sql, statement.params);
 

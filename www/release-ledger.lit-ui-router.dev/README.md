@@ -3,14 +3,15 @@
 The release ledger: a D1 database that records what the git tag, npm and
 GitHub say about each `<pkg>@<version>`, and the worker that writes it. The
 design is [#1424](https://github.com/simshanith/lit-ui-router/issues/1424) and
-[#1430](https://github.com/simshanith/lit-ui-router/issues/1430).
+[#1430](https://github.com/simshanith/lit-ui-router/issues/1430); the model it
+stores, its regions and the fold, is
+[`@tools/release-ledger`](../../tools/release-ledger/README.md).
 
 - [`migrations/`](./migrations): the D1 schema. A `versions` row stores facts,
   never a state; the `version_states` view derives each region's state and an
   overall status.
-- [`src/release-ledger.core.ts`](./src/release-ledger.core.ts): `REGIONS`,
-  `fold`, `repair`, the dist-tag moves, and the statements the queue
-  consumer runs in one D1 batch.
+- [`src/ledger-statements.ts`](./src/ledger-statements.ts): the statements
+  the queue consumer runs in one D1 batch to write a fold's outcome.
 - [`worker/index.ts`](./worker/index.ts): the worker's entry points.
 
 ## Worker
@@ -24,7 +25,7 @@ design is [#1424](https://github.com/simshanith/lit-ui-router/issues/1424) and
 - **The queue consumer** ([`src/consume.ts`](./src/consume.ts)) is the only D1
   writer. Per claim, it observes the tag, npm and GitHub, taking a 404 as the
   source reporting the fact absent, folds the observation through
-  [`src/release-ledger.core.ts`](./src/release-ledger.core.ts), and writes the
+  `@tools/release-ledger`, and writes the
   outcome in one D1 batch, its `pipeline_events` row first. A GitHub
   release ahead of npm is folded as seen. Fetches retry through Effect's
   `HttpClient.retryTransient`, which also takes GitHub's rate-limit 403s;
@@ -60,20 +61,3 @@ runs inside `sql.withTransaction`, which the D1 driver does not support.
 `pnpm test` runs `node --test`. [`src/worker.test.ts`](./src/worker.test.ts)
 runs the worker in workerd through wrangler's `createTestHarness`, and drives the
 consumer against the harness's local D1 with the observations stubbed.
-
-## Regions
-
-Generated from `REGIONS`; `src/release-ledger.readme.test.ts` fails when this
-copy differs.
-
-| Region | Lifecycle                                                                      | Fixed facts                                                   | Mutable facts    | Conflict       | Cleared by   |
-| ------ | ------------------------------------------------------------------------------ | ------------------------------------------------------------- | ---------------- | -------------- | ------------ |
-| tag    | —                                                                              | `git_sha`                                                     | —                | `tag_conflict` | `repair tag` |
-| npm    | absent → active, absent → deprecated, active → deprecated, deprecated → active | `npm_integrity`, `npm_published_at`                           | `npm_deprecated` | `npm_conflict` | `repair npm` |
-| gh     | none → final                                                                   | `gh_release_id`, `gh_url`, `gh_prerelease`, `gh_published_at` | `gh_body`        | `gh_conflict`  | `repair gh`  |
-
-Each region moves only on its own source. An observation that contradicts a
-recorded fixed fact, or reports it absent, stores itself in the region's
-conflict column and leaves the fact as recorded; mutable facts keep following
-the source. `repair` adopts the current observation for one region and clears
-its conflict, and cannot erase recorded facts.

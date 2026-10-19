@@ -3,6 +3,14 @@
 // in one D1 batch. A message is acked only after its batch commits.
 import { Effect, Option, Schema } from 'effect';
 import { D1Client } from '@effect/sql-d1';
+import {
+  type DistTagOutcome,
+  type Envelope,
+  fold,
+  moveDistTag,
+  removeDistTag,
+  type VersionRow,
+} from '@tools/release-ledger';
 
 import { Claim } from './claim.ts';
 import {
@@ -14,17 +22,8 @@ import {
   pipelineInsert,
   toSql,
 } from './ledger-sql.ts';
+import { type FoldStatements, foldStatements } from './ledger-statements.ts';
 import { Observer, type Sources } from './observe.ts';
-import {
-  type DistTagOutcome,
-  type Envelope,
-  fold,
-  type FoldStatements,
-  foldStatements,
-  moveDistTag,
-  removeDistTag,
-  type VersionRow,
-} from './release-ledger.core.ts';
 
 export const CLAIMS_QUEUE = 'release-ledger-claims';
 

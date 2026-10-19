@@ -9,6 +9,8 @@ import { after, before, beforeEach, describe, it } from 'node:test';
 
 import { D1Client } from '@effect/sql-d1';
 import type { D1ClientConfig } from '@effect/sql-d1/D1Client';
+import { FACT_COLUMNS, type VersionRow } from '@tools/release-ledger';
+import { GH, NPM, ROWS, SHA } from '@tools/release-ledger/fixtures';
 import { Effect, Layer, Option, Schema } from 'effect';
 import type { SqlClient } from 'effect/sql';
 import { type ParseError, parse, printParseErrorCode } from 'jsonc-parser';
@@ -26,8 +28,6 @@ import {
 } from './consume.ts';
 import { findTagged, findVersions } from './ledger-sql.ts';
 import { ObservationError, Observer, type Sources } from './observe.ts';
-import { FACT_COLUMNS, type VersionRow } from './release-ledger.core.ts';
-import { GH, NPM, ROWS, SHA } from './release-ledger.fixtures.ts';
 
 const ROOT = join(import.meta.dirname, '..');
 

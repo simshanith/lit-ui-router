@@ -11,7 +11,6 @@ import {
   FACT_COLUMNS,
   type Fold,
   fold,
-  foldStatements,
   GH_STATES,
   ghState,
   moveDistTag,
@@ -21,11 +20,10 @@ import {
   type Region,
   removeDistTag,
   repair,
-  type Statement,
   statusOf,
   STATUSES,
   type VersionRow,
-} from './release-ledger.core.ts';
+} from '@tools/release-ledger';
 import {
   DEPRECATION,
   ENVELOPE,
@@ -34,7 +32,9 @@ import {
   OBSERVED,
   OTHER_SHA,
   ROWS,
-} from './release-ledger.fixtures.ts';
+} from '@tools/release-ledger/fixtures';
+
+import { foldStatements, type Statement } from './ledger-statements.ts';
 
 const MIGRATIONS = new URL('../migrations/', import.meta.url);
 
