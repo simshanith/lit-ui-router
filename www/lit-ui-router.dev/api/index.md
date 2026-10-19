@@ -214,9 +214,9 @@ the directive then never writes and never takes ownership.
 The directives and `SrefStatusController` read their targets from
 [`RouteTypes`](./reference/types/RouteTypes), an interface that is empty by
 default, so a target is any `string` with `RawParams`.
-[`ui-router-registry`](https://github.com/simshanith/lit-ui-router/blob/main/packages/ui-router-registry/README.md)
-fills it in from an app's `as const` state declarations. It ships no
-JavaScript, so a devDependency is enough:
+[`ui-router-registry`](/packages/ui-router-registry) fills it in from an app's
+`as const` state declarations. It ships no JavaScript, so a devDependency is
+enough:
 
 ```ts
 import type {} from 'ui-router-registry/lit';

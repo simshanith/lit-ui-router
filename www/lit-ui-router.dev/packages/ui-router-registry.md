@@ -20,9 +20,10 @@ state names and params of a `@uirouter/core` router from the app's own
 npm install --save-dev ui-router-registry@rc
 ```
 
-`@uirouter/core` is a peer dependency, for its types only. Install one copy of
-this package per app: two copies mean two `Register`s, and the augmentation
-types only one.
+`@uirouter/core` is a peer dependency, for its types only. `lit-ui-router` is
+an optional peer, needed only by the `ui-router-registry/lit` entry point.
+Install one copy of this package per app: two copies mean two `Register`s, and
+the augmentation types only one.
 
 ## Registering states
 
@@ -54,13 +55,14 @@ const stateService: TypedStateService = router.stateService;
 stateService.go('contacts.contact', { contactId: 'c1' });
 ```
 
-| Type                              | What it holds                                                                                                                                             |
-| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Register`                        | the interface an app augments with its `as const` state declarations                                                                                      |
-| `StateName`                       | the registered state names; dotted names and `parent:` both resolve, and a future state's `name.**` placeholder is left out                               |
-| `ParamsOf` and `ResolvedParamsOf` | the params a state accepts and the params it reads back, its ancestors' included; url placeholders are required, query params are not                     |
-| `TypedStateService`               | `go`, `transitionTo`, `target`, `href`, `is` and `includes` over registered names; relative refs are checked by their tail, and object targets stay loose |
-| `TypedRouteSnapshot`              | the route snapshot the reactive packages share, whose `includes(name)` narrows `current` and `params` to that state's subtree                             |
+| Type                              | What it holds                                                                                                                                                                                                                                               |
+| --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Register`                        | the interface an app augments with its `as const` state declarations                                                                                                                                                                                        |
+| `StateName`                       | the registered state names; dotted names and `parent:` both resolve, and a future state's `name.**` placeholder and a widened `string` name are left out                                                                                                    |
+| `ParamsOf` and `ResolvedParamsOf` | the params a state accepts and the params it reads back, its ancestors' included; url placeholders are required, query params and params with a default are optional to pass, and defaults are present to read                                              |
+| `TypedStateService`               | `go`, `transitionTo`, `target`, `href`, `is` and `includes` over registered names; relative refs are checked by their tail with loose params, and object targets and `UncheckedRef` stay loose                                                              |
+| `TypedRouteSnapshot`              | the route snapshot the reactive packages share, whose `includes(name)` narrows `current` and `params` to that state's subtree                                                                                                                               |
+| `ui-router-registry/lit`          | a type-only import, `import type {} from 'ui-router-registry/lit'`, that types `lit-ui-router`'s own `uiSref`, `srefHref`, `uiSrefActive`, `srefActiveClass`, `srefAriaCurrent` and `SrefStatusController` targets by filling in its `RouteTypes` interface |
 
 ## Relative refs and unchecked targets
 
@@ -95,6 +97,17 @@ type:
 render(): TemplateResult {
   return html`<a href=${this.stateService.href('contacts.contact', { contactId })}>…</a>`;
 }
+```
+
+## JavaScript projects
+
+The package ships no runtime code, and the adapters never import it, so
+JavaScript without `checkJs` sees no change. Under `checkJs`, a `Register`
+augmentation in any TypeScript file of the program checks the JavaScript files'
+calls too; the escape is a JSDoc cast:
+
+```js
+uiSref(/** @type {import('ui-router-registry').UncheckedRef} */ (name));
 ```
 
 ## Further reading
