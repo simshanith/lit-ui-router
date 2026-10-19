@@ -22,6 +22,17 @@ import { failMain } from '../lib/fail-main.ts';
 
 async function main() {
   const dryRun = process.argv.includes('--dry-run');
+  // The resolve line's URL needs the slug too; dry runs may fall back.
+  const repo = process.env.GITHUB_REPOSITORY ?? 'simshanith/lit-ui-router';
+
+  if (!process.env.GITHUB_REPOSITORY && !dryRun) {
+    console.error(
+      'publish-check-runs: GITHUB_REPOSITORY must be set (or pass --dry-run)',
+    );
+    process.exitCode = 2;
+
+    return;
+  }
 
   // Reads the check's canonical output; a positional path overrides ad hoc.
   const summaryPath =
@@ -36,13 +47,6 @@ async function main() {
 
   // SAFETY: check-published-diff renders this file from summarizeResults()
   const summaries = parsed as PackageSummary[];
-
-  // The resolve line's URL needs the slug too; dry runs may fall back.
-  const repo = process.env.GITHUB_REPOSITORY ?? 'simshanith/lit-ui-router';
-
-  if (!process.env.GITHUB_REPOSITORY && !dryRun) {
-    throw new Error('GITHUB_REPOSITORY must be set (or pass --dry-run)');
-  }
 
   const payloads = summaries.map((summary) => toCheckRun(summary, repo));
 

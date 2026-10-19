@@ -47,7 +47,9 @@ async function sha256File(path: string): Promise<string> {
 }
 
 /** The credit ledger, or why we could not obtain one. */
-type Credit = { sha: string; outcome: CacheOutcome } | { failure: string };
+type Credit =
+  | { readonly ok: true; readonly sha: string; readonly outcome: CacheOutcome }
+  | { readonly ok: false; readonly error: string };
 
 /**
  * Restore CI's pack:all and hash the tarball it left behind. `local:rw` (not
@@ -75,7 +77,8 @@ async function restoreCredit(
 
     if (runs.length !== 1) {
       return {
-        failure: `expected exactly one turbo run summary in ${runsDir}, found ${runs.length}`,
+        ok: false,
+        error: `expected exactly one turbo run summary in ${runsDir}, found ${runs.length}`,
       };
     }
 
@@ -84,12 +87,14 @@ async function restoreCredit(
     );
 
     return {
+      ok: true,
       sha: await sha256File(creditPath),
       outcome: packCacheOutcome(summary, PACK_TASK),
     };
   } catch (error: unknown) {
     return {
-      failure: `could not restore the CI-verified pack: ${String(error)}`,
+      ok: false,
+      error: `could not restore the CI-verified pack: ${String(error)}`,
     };
   }
 }
@@ -106,12 +111,11 @@ runMain(async () => {
       // The debit is ours and must always hash — a failure here is a real bug.
       const debitSha = await sha256File(debitPath);
       const credit = await restoreCredit(creditPath, runsDir);
-      const creditSha = 'failure' in credit ? undefined : credit.sha;
+      const creditSha = credit.ok ? credit.sha : undefined;
 
-      const verdict: Verdict =
-        'failure' in credit
-          ? { kind: 'unverifiable', reason: credit.failure }
-          : reconcile(debitSha, credit.sha, credit.outcome);
+      const verdict: Verdict = credit.ok
+        ? reconcile(debitSha, credit.sha, credit.outcome)
+        : { kind: 'unverifiable', reason: credit.error };
 
       switch (verdict.kind) {
         case 'balanced':

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Posts the pages-deploy verdict on the www/atlas head; a failure is a warning, never an exit.
+// Posts the pages-deploy verdict on the www/atlas head; a failure is a warning, never an exit; only a usage error exits 2.
 
 import { fileURLToPath } from 'node:url';
 
@@ -27,7 +27,12 @@ async function main() {
   const repo = process.env.GITHUB_REPOSITORY ?? 'simshanith/lit-ui-router';
 
   if (!process.env.GITHUB_REPOSITORY && !dryRun) {
-    throw new Error('GITHUB_REPOSITORY must be set (or pass --dry-run)');
+    console.error(
+      'pages-deploy-check-runs: GITHUB_REPOSITORY must be set (or pass --dry-run)',
+    );
+    process.exitCode = 2;
+
+    return;
   }
 
   // A check run needs a head to sit on, so an unresolved head ends the run.
