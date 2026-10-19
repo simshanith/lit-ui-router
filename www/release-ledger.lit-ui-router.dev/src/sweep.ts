@@ -5,8 +5,8 @@ import { Effect, Option, Schema } from 'effect';
 import { type Claim, type LedgerQueue, Release } from './claim.ts';
 import { listTags, type ObserverEnv } from './observe.ts';
 
-/** Queues take at most 100 messages per sendBatch. */
-const SEND_BATCH_LIMIT = 100;
+/** Queues take at most 100 messages per batch. */
+export const SEND_BATCH_LIMIT = 100;
 
 export interface SweepEnv extends ObserverEnv {
   LEDGER_QUEUE: Pick<LedgerQueue, 'sendBatch'>;
@@ -17,19 +17,22 @@ export interface SweepRun {
   scheduledAt: string;
 }
 
-interface TagRef {
+export interface TagRef {
   readonly ref: string;
   readonly object: { readonly sha: string };
 }
 
+/** A release tag's `<name>@<version>` and the sha its ref points at. */
+export interface ReleaseTag {
+  readonly name: Claim['name'];
+  readonly version: Claim['version'];
+  readonly sha: string;
+}
+
 const decodeRelease = Schema.decodeUnknownOption(Release);
 
-/** One claim per tag that names a `<name>@<version>`; other tags are skipped. */
-export function sweepClaims(
-  refs: readonly TagRef[],
-  repository: string,
-  run: SweepRun,
-): Claim[] {
+/** Every tag that names a `<name>@<version>`; other tags are skipped. */
+export function releaseTags(refs: readonly TagRef[]): ReleaseTag[] {
   return refs.flatMap(({ ref, object }) => {
     const tag = ref.replace(/^refs\/tags\//, '');
     const at = tag.lastIndexOf('@');
@@ -41,20 +44,28 @@ export function sweepClaims(
 
     if (at <= 0 || Option.isNone(release)) return [];
 
-    return [
-      {
-        receivedAt: run.scheduledAt,
-        ...release.value,
-        origin: {
-          kind: 'sweep',
-          repository,
-          cron: run.cron,
-          scheduledAt: run.scheduledAt,
-          sha: object.sha,
-        },
-      } satisfies Claim,
-    ];
+    return [{ ...release.value, sha: object.sha }];
   });
+}
+
+/** One claim per release tag. */
+export function sweepClaims(
+  refs: readonly TagRef[],
+  repository: string,
+  run: SweepRun,
+): Claim[] {
+  return releaseTags(refs).map(({ name, version, sha }): Claim => ({
+    receivedAt: run.scheduledAt,
+    name,
+    version,
+    origin: {
+      kind: 'sweep',
+      repository,
+      cron: run.cron,
+      scheduledAt: run.scheduledAt,
+      sha,
+    },
+  }));
 }
 
 export const sweep = (env: SweepEnv, run: SweepRun) =>

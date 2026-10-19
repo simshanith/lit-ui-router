@@ -719,7 +719,10 @@
       }
     },
     {
-      "files": ["tools/workers-builds/**/*.ts"],
+      "files": [
+        "tools/workers-builds/**/*.ts",
+        "www/release-ledger.lit-ui-router.dev/src/enqueue.ts"
+      ],
       "rules": {
         "turbo/no-undeclared-env-vars": [
           "warn",

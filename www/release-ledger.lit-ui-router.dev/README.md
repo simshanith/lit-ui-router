@@ -48,6 +48,25 @@ stores, its regions and the fold, is
 
 The consumer reads GitHub with the `GITHUB_TOKEN` secret, a read-only token.
 
+## Backfill / manual claims
+
+[`src/enqueue.ts`](./src/enqueue.ts) publishes `manual` claims to the claims
+queue over Cloudflare's
+[Queues HTTP API](https://developers.cloudflare.com/queues/examples/publish-to-a-queue-via-http/),
+so the ledger fills without waiting for the Cron Trigger. It lists release tags
+the way the sweep does, reading GitHub with `GITHUB_TOKEN` if set. To claim
+every release tag:
+
+```sh
+CLOUDFLARE_API_TOKEN=… CLOUDFLARE_ACCOUNT_ID=… pnpm --filter @www/release-ledger.lit-ui-router.dev enqueue -- --all --actor <login>
+```
+
+Pass `<name>@<version>` releases in place of `--all` to claim only those, and
+`--dry-run` to print the claims without sending them. The token needs the
+Queues Edit permission, which is what vouches for the claim; `--actor` is a
+label recorded in `claims.actor`, not checked. `/claims` never accepts a manual
+claim: it builds every claim's origin from the verified OIDC token.
+
 ## Local development
 
 `/claims` skips token verification only when `LEDGER_DEV_SKIP_OIDC` is `true`
