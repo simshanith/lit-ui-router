@@ -16,8 +16,8 @@ export interface Sources {
   tag: TagFacts | null;
   npm: NpmVersion | null;
   gh: GhReleaseFacts | null;
-  /** Every dist-tag the package carries, pointing anywhere. */
-  distTags: Readonly<Record<string, string>>;
+  /** Every dist-tag the package carries, pointing anywhere; `null` when npm answers 404, which proves nothing. */
+  distTags: Readonly<Record<string, string>> | null;
 }
 
 /** A source answered with something other than the fact or a 404; worth a retry. */
@@ -312,15 +312,12 @@ export const makeObserver = (
     });
 
   const distTags = (name: string) =>
-    Effect.map(
-      getJson(
-        client,
-        'npm dist-tags',
-        `${NPM_REGISTRY}/-/package/${npmPath(name)}/dist-tags`,
-        DistTags,
-        npm,
-      ),
-      (tags) => tags ?? {},
+    getJson(
+      client,
+      'npm dist-tags',
+      `${NPM_REGISTRY}/-/package/${npmPath(name)}/dist-tags`,
+      DistTags,
+      npm,
     );
 
   return {

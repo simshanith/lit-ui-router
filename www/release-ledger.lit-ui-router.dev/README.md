@@ -32,7 +32,9 @@ stores, its regions and the fold, is
   a wait over 10 seconds (`Retry-After`, GitHub's `x-ratelimit-reset`) becomes
   the redelivery delay instead ([`src/observe.ts`](./src/observe.ts)).
   Redeliveries back off exponentially with jitter.
-  Claims whose retries run out land in `dead_letters`.
+  A 404 for the package's dist-tags leaves the recorded dist-tags untouched.
+  Claims whose retries run out land in `dead_letters`, and so does a message
+  that is not a claim, without retries.
 - **The Cron Trigger** ([`src/sweep.ts`](./src/sweep.ts)) lists the
   repository's tags through `git/matching-refs` and enqueues an ordinary claim
   for each release tag, so the ledger heals without an Actions run.
@@ -45,10 +47,18 @@ The consumer reads GitHub with the `GITHUB_TOKEN` secret, a read-only token.
 
 ## Local development
 
-Token verification is skipped only when `.dev.vars` sets
-`LEDGER_DEV_SKIP_OIDC=true`. The claims are still decoded and checked against the
-`OIDC_*` vars. If `OIDC_AUDIENCE` is unset and the flag is not set, `/claims`
-answers 500.
+`/claims` skips token verification only when `LEDGER_DEV_SKIP_OIDC` is `true`
+and `OIDC_AUDIENCE` is unset or empty. With an audience set, the flag is ignored
+and the token is verified. `wrangler dev` merges `.dev.vars` over the `vars` in
+`wrangler.jsonc`, which set the audience, so a local `.dev.vars` blanks it:
+
+```sh
+OIDC_AUDIENCE=""
+LEDGER_DEV_SKIP_OIDC=true
+```
+
+The claims are still decoded and checked against the other `OIDC_*` vars. If
+`OIDC_AUDIENCE` is empty and the flag is not set, `/claims` answers 500.
 
 ## Migrations
 

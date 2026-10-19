@@ -12,6 +12,7 @@ import type { D1ClientConfig } from '@effect/sql-d1/D1Client';
 import { FACT_COLUMNS, type VersionRow } from '@tools/release-ledger';
 import { GH, NPM, ROWS, SHA } from '@tools/release-ledger/fixtures';
 import { Effect, Layer, Option, Schema } from 'effect';
+import { FetchHttpClient } from 'effect/http';
 import type { SqlClient } from 'effect/sql';
 import { type ParseError, parse, printParseErrorCode } from 'jsonc-parser';
 import { createTestHarness } from 'wrangler';
@@ -27,7 +28,12 @@ import {
   queueCeiling,
 } from './consume.ts';
 import { findTagged, findVersions } from './ledger-sql.ts';
-import { ObservationError, Observer, type Sources } from './observe.ts';
+import {
+  ObservationError,
+  Observer,
+  ObserverLive,
+  type Sources,
+} from './observe.ts';
 
 const ROOT = join(import.meta.dirname, '..');
 
@@ -158,6 +164,11 @@ describe('wrangler.jsonc', () => {
     assert.equal(dead?.queue, DEAD_LETTER_QUEUE);
   });
 
+  it('deploys no LEDGER_DEV_SKIP_OIDC', () => {
+    assert.ok(!('LEDGER_DEV_SKIP_OIDC' in config.vars));
+    assert.notEqual(config.vars.OIDC_AUDIENCE ?? '', '');
+  });
+
   it('gives up on a claim before the next daily sweep', () => {
     const [claims] = config.queues.consumers;
     let window = 0;
@@ -180,6 +191,26 @@ describe('POST /claims in workerd', { timeout: 120_000 }, () => {
     assert.equal(response.status, 401);
   });
 
+  it('ignores LEDGER_DEV_SKIP_OIDC under the deployed audience', async () => {
+    await server.update({
+      root: SCRATCH,
+      workers: [
+        {
+          config: harnessConfig({
+            ...DEPLOYED_VARS,
+            LEDGER_DEV_SKIP_OIDC: 'true',
+          }),
+        },
+      ],
+    });
+
+    const response = await postClaim(
+      JSON.stringify({ name: 'lit-ui-router', version: '1.0.0' }),
+    );
+
+    assert.equal(response.status, 401);
+  });
+
   it('answers 500 when the audience is unset and no dev flag is', async () => {
     await server.update({
       root: SCRATCH,
@@ -189,13 +220,14 @@ describe('POST /claims in workerd', { timeout: 120_000 }, () => {
     assert.equal((await postClaim('{}')).status, 500);
   });
 
-  it('answers 400 and 202 under LEDGER_DEV_SKIP_OIDC', async () => {
+  it('answers 400 and 202 under the .dev.vars that blank the audience', async () => {
     await server.update({
       root: SCRATCH,
       workers: [
         {
           config: harnessConfig({
-            ...VARS_WITHOUT_AUDIENCE,
+            ...DEPLOYED_VARS,
+            OIDC_AUDIENCE: '',
             LEDGER_DEV_SKIP_OIDC: 'true',
           }),
         },
@@ -444,6 +476,66 @@ describe('queue consumer', { timeout: 120_000 }, () => {
     assert.deepEqual(await ledgerEvents(), ['npm dist_tag_removed']);
   });
 
+  it('keeps the recorded dist-tags when npm answers 404 for them', async () => {
+    await seed(ROWS.released);
+    await db
+      .prepare(
+        "INSERT INTO dist_tags (name, tag, version, updated_at) VALUES (?, 'next', ?, 'then')",
+      )
+      .bind(NAME, VERSION)
+      .run();
+    const message = messageOf(claimOf());
+
+    const answers: [RegExp, unknown][] = [
+      [/\/dist-tags$/, null],
+      [/\/git\/ref\//, { object: { sha: SHA, type: 'commit', url: '' } }],
+      [
+        /\/releases\/tags\//,
+        {
+          id: GH.id,
+          html_url: GH.url,
+          prerelease: GH.prerelease,
+          body: GH.body,
+          published_at: GH.publishedAt,
+        },
+      ],
+      [/\/[^/]+\/\d+\.\d+\.\d+$/, { dist: { integrity: NPM.integrity } }],
+      [
+        /registry\.npmjs\.org\/[^/]+$/,
+        { time: { [VERSION]: NPM.publishedAt } },
+      ],
+    ];
+
+    const fetch: typeof globalThis.fetch = (input) => {
+      const url = input instanceof Request ? input.url : String(input);
+      const answer = answers.find(([pattern]) => pattern.test(url));
+
+      assert.ok(answer, url);
+
+      return Promise.resolve(
+        answer[1] === null
+          ? new Response('{}', { status: 404 })
+          : Response.json(answer[1]),
+      );
+    };
+
+    const npm = ObserverLive({
+      OIDC_REPOSITORY: 'simshanith/lit-ui-router',
+    }).pipe(
+      Layer.provide(FetchHttpClient.layer),
+      Layer.provide(Layer.succeed(FetchHttpClient.Fetch, fetch)),
+    );
+
+    await deliver([message], npm);
+
+    assert.deepEqual([message.acks, message.retries], [1, []]);
+    assert.deepEqual(
+      (await all('dist_tags')).map(({ tag, version }) => ({ tag, version })),
+      [{ tag: 'next', version: VERSION }],
+    );
+    assert.deepEqual(await ledgerEvents(), []);
+  });
+
   it('records a contradicted npm fact as a conflict and keeps the recorded one', async () => {
     await seed(ROWS.released);
     const message = messageOf(claimOf());
@@ -556,12 +648,23 @@ describe('queue consumer', { timeout: 120_000 }, () => {
     }
   });
 
-  it('retries a message that is not a claim', async () => {
+  it('dead-letters a message that is not a claim without retrying it', async () => {
     const message = messageOf({ name: NAME });
 
     await deliver([message]);
 
-    retriedOnce(message);
+    assert.deepEqual([message.acks, message.retries], [1, []]);
+    assert.deepEqual(await all('pipeline_events'), []);
+    assert.deepEqual(await all('dead_letters'), [
+      {
+        id: 1,
+        message_id: message.id,
+        queue: CLAIMS_QUEUE,
+        attempts: 1,
+        body: JSON.stringify({ name: NAME }),
+        received_at: '2026-10-17T00:00:00.000Z',
+      },
+    ]);
   });
 
   it('keeps dead letters in D1', async () => {

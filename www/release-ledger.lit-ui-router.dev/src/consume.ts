@@ -104,16 +104,18 @@ function pipelineEventOf(
 
 /** Moves for each npm dist-tag on this version, removals for tags npm dropped. */
 const distTagChanges = (
-  sources: Sources,
+  { npm, distTags }: Sources,
   target: VersionRow | undefined,
   envelope: Envelope,
 ) =>
   Effect.gen(function* () {
+    if (distTags === null) return [];
+
     const current = yield* findDistTags({ name: envelope.name });
     const recorded = new Map(current.map((row) => [row.tag, row]));
     const outcomes: DistTagOutcome[] = [];
 
-    for (const [tag, version] of Object.entries(sources.distTags)) {
+    for (const [tag, version] of Object.entries(distTags)) {
       if (version !== envelope.version) continue;
 
       outcomes.push(moveDistTag(recorded.get(tag), target, tag, envelope));
@@ -121,9 +123,7 @@ const distTagChanges = (
 
     // without the version on npm, an empty dist-tags answer proves nothing
     const dropped =
-      sources.npm === null
-        ? []
-        : current.filter((row) => !(row.tag in sources.distTags));
+      npm === null ? [] : current.filter((row) => !(row.tag in distTags));
 
     for (const row of dropped) {
       const pointed =
@@ -145,10 +145,8 @@ const distTagChanges = (
     return outcomes;
   });
 
-const handleClaim = (message: LedgerMessage) =>
+const handleClaim = (message: LedgerMessage, claim: Claim) =>
   Effect.gen(function* () {
-    const claim = yield* decodeClaim(message.body);
-
     if (Option.isSome(yield* findClaim({ message_id: message.id }))) {
       return ACK;
     }
@@ -267,6 +265,21 @@ const bury = (queue: string, message: LedgerMessage) =>
     return ACK;
   });
 
+/** A body that is not a claim never will be; it goes to `dead_letters` without retries. */
+const decodeOrBury = (queue: string, message: LedgerMessage) =>
+  decodeClaim(message.body).pipe(
+    Effect.matchEffect({
+      onFailure: (error) =>
+        Effect.andThen(
+          Effect.logError(
+            `message ${message.id} is not a claim, dead-lettered: ${error.message}`,
+          ),
+          bury(queue, message),
+        ),
+      onSuccess: (claim) => handleClaim(message, claim),
+    }),
+  );
+
 /** One queue invocation; messages run one after another. */
 export const consume = (batch: LedgerBatch) =>
   Effect.forEach(
@@ -276,7 +289,7 @@ export const consume = (batch: LedgerBatch) =>
         message,
         batch.queue === DEAD_LETTER_QUEUE
           ? bury(batch.queue, message)
-          : handleClaim(message),
+          : decodeOrBury(batch.queue, message),
       ),
     { discard: true },
   );

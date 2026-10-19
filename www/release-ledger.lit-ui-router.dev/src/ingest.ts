@@ -25,7 +25,7 @@ export interface IngestEnv {
   OIDC_REPOSITORY_OWNER_ID: string;
   OIDC_WORKFLOWS: readonly string[];
   OIDC_ENVIRONMENT: string;
-  /** Set in .dev.vars only: skips the token's signature, issuer and audience checks. */
+  /** Skips the token's signature, issuer and audience checks, only while OIDC_AUDIENCE is empty. */
   LEDGER_DEV_SKIP_OIDC?: string;
   LEDGER_QUEUE: Pick<LedgerQueue, 'send'>;
 }
@@ -64,7 +64,10 @@ function bearerOf(request: Request): string | undefined {
 
 const readClaims = (token: string, env: IngestEnv, keys?: JWTVerifyGetKey) =>
   Effect.gen(function* () {
-    if (env.LEDGER_DEV_SKIP_OIDC === 'true') {
+    const audience = env.OIDC_AUDIENCE ?? '';
+    const skip = env.LEDGER_DEV_SKIP_OIDC === 'true';
+
+    if (audience === '' && skip) {
       yield* Effect.logWarning('LEDGER_DEV_SKIP_OIDC is set: token unverified');
 
       return yield* Effect.try({
@@ -76,10 +79,14 @@ const readClaims = (token: string, env: IngestEnv, keys?: JWTVerifyGetKey) =>
       });
     }
 
-    const audience = env.OIDC_AUDIENCE;
-
-    if (audience === undefined || audience === '') {
+    if (audience === '') {
       return yield* new Misconfigured({ reason: 'OIDC_AUDIENCE is unset' });
+    }
+
+    if (skip) {
+      yield* Effect.logWarning(
+        'LEDGER_DEV_SKIP_OIDC is ignored while OIDC_AUDIENCE is set',
+      );
     }
 
     return yield* Effect.tryPromise({

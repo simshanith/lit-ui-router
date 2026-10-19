@@ -1,13 +1,14 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { Effect } from 'effect';
+import { Clock, Effect, Fiber } from 'effect';
 import {
   FetchHttpClient,
   HttpClientError,
   HttpClientRequest,
   HttpClientResponse,
 } from 'effect/http';
+import { TestClock } from 'effect/testing';
 
 import { isGitHubRateLimit, listTags, requestedWait } from './observe.ts';
 
@@ -100,24 +101,70 @@ describe('fetches', () => {
         : Promise.resolve(next ?? response(500));
     };
 
-    const run = () =>
+    const attempt = Effect.result(listTags(ENV)).pipe(
+      Effect.provide(FetchHttpClient.layer),
+      Effect.provideService(FetchHttpClient.Fetch, fetch),
+    );
+
+    const run = () => Effect.runPromise(attempt);
+
+    /** Steps a TestClock past each backoff; `waited` is the virtual time spent. */
+    const runOnTestClock = () =>
       Effect.runPromise(
-        Effect.result(listTags(ENV)).pipe(
-          Effect.provide(FetchHttpClient.layer),
-          Effect.provideService(FetchHttpClient.Fetch, fetch),
-        ),
+        Effect.gen(function* () {
+          const fiber = yield* Effect.forkChild(attempt);
+
+          while (fiber.pollUnsafe() === undefined) {
+            yield* Effect.promise(
+              () => new Promise((resolve) => setTimeout(resolve, 0)),
+            );
+            yield* TestClock.adjust('100 millis');
+          }
+
+          const result = yield* Fiber.join(fiber);
+
+          return { result, waited: yield* Clock.currentTimeMillis };
+        }).pipe(Effect.provide(TestClock.layer())),
       );
 
-    return { calls, run };
+    return { calls, run, runOnTestClock };
   }
 
+  const retried: [string, (Response | Error)[]][] = [
+    ['a 429', [response(429, { 'retry-after': '0' })]],
+    ['a 5xx', [response(503)]],
+    ['a network failure', [new TypeError('fetch failed')]],
+  ];
+
+  for (const [what, failures] of retried) {
+    it(`retries ${what}, then succeeds`, async () => {
+      const { calls, runOnTestClock } = answering(...failures, response(200));
+
+      const { result, waited } = await runOnTestClock();
+
+      assert.equal(calls.count, 2);
+      assert.deepEqual(result._tag === 'Success' && result.success, REFS);
+      assert.ok(waited >= 400, `backed off ${waited}ms`);
+    });
+  }
+
+  it('gives up after three attempts', async () => {
+    const { calls, runOnTestClock } = answering(response(503));
+
+    const { result } = await runOnTestClock();
+
+    assert.equal(calls.count, 3);
+    assert.ok(result._tag === 'Failure');
+    assert.equal(result.failure.reason, 'HTTP 503');
+  });
+
   it("retries GitHub's secondary limit after its Retry-After", async () => {
-    const { calls, run } = answering(
+    const { calls, runOnTestClock } = answering(
       response(403, { 'retry-after': '0' }),
       response(200),
     );
 
-    const result = await run();
+    const { result } = await runOnTestClock();
 
     assert.equal(calls.count, 2);
     assert.equal(result._tag, 'Success');

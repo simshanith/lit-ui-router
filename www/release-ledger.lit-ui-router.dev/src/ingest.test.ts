@@ -39,7 +39,7 @@ let keys: JWTVerifyGetKey;
 
 let sign: (
   claims: TokenClaims,
-  options?: { audience?: string },
+  options?: { audience?: string; expires?: boolean },
 ) => Promise<string>;
 
 before(async () => {
@@ -47,14 +47,15 @@ before(async () => {
   const jwk = { ...(await exportJWK(pair.publicKey)), kid: 'k1', alg: 'RS256' };
 
   keys = createLocalJWKSet({ keys: [jwk] });
-  sign = (claims, options = {}) =>
-    new SignJWT({ ...claims })
+  sign = (claims, { audience = AUDIENCE, expires = true } = {}) => {
+    const jwt = new SignJWT({ ...claims })
       .setProtectedHeader({ alg: 'RS256', kid: 'k1' })
       .setIssuer(ISSUER)
-      .setAudience(options.audience ?? AUDIENCE)
-      .setIssuedAt()
-      .setExpirationTime('5m')
-      .sign(pair.privateKey);
+      .setAudience(audience)
+      .setIssuedAt();
+
+    return (expires ? jwt.setExpirationTime('5m') : jwt).sign(pair.privateKey);
+  };
 });
 
 function envWith(overrides: Partial<IngestEnv> = {}) {
@@ -176,6 +177,29 @@ describe('POST /claims', () => {
     assert.equal((await ingest(post(unsigned(CLAIMS)), env, keys)).status, 401);
   });
 
+  it('answers 401 for a token without an expiry', async () => {
+    const { env, sent } = envWith();
+    const endless = await sign(CLAIMS, { expires: false });
+
+    assert.equal((await ingest(post(endless), env, keys)).status, 401);
+    assert.equal(sent.length, 0);
+  });
+
+  it('answers 403 for a workflow path that only starts with the publish one', async () => {
+    const { env, sent } = envWith();
+
+    const token = await sign({
+      ...CLAIMS,
+      job_workflow_ref: `${WORKFLOW}@x.yml@refs/heads/main`,
+    });
+
+    const response = await ingest(post(token), env, keys);
+
+    assert.equal(response.status, 403);
+    assert.equal(await response.text(), 'job_workflow_ref is not allowed');
+    assert.equal(sent.length, 0);
+  });
+
   it('answers 400 for a body that is not a claim', async () => {
     const { env, sent } = envWith();
     const token = await sign(CLAIMS);
@@ -271,8 +295,24 @@ describe('POST /claims', () => {
     assert.equal(sent.length, 1);
   });
 
+  it('ignores LEDGER_DEV_SKIP_OIDC while the audience is set', async () => {
+    const { env, sent } = envWith({ LEDGER_DEV_SKIP_OIDC: 'true' });
+
+    assert.equal((await ingest(post(unsigned(CLAIMS)), env, keys)).status, 401);
+    assert.equal((await ingest(post(undefined), env, keys)).status, 401);
+    assert.equal(
+      (await ingest(post(await sign(CLAIMS)), env, keys)).status,
+      202,
+    );
+    assert.equal(sent.length, 1);
+  });
+
   it('still pins the claims under LEDGER_DEV_SKIP_OIDC', async () => {
-    const { env } = envWith({ LEDGER_DEV_SKIP_OIDC: 'true' });
+    const { env } = envWith({
+      OIDC_AUDIENCE: '',
+      LEDGER_DEV_SKIP_OIDC: 'true',
+    });
+
     const token = unsigned({ ...CLAIMS, environment: 'preview' });
 
     assert.equal((await ingest(post(token), env, keys)).status, 403);

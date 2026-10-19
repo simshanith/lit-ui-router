@@ -3,7 +3,7 @@
   "extends": ["//"],
   "tasks": {
     "test": {
-      // The workerd suite bundles src/index.ts and applies migrations/ under
+      // The workerd suite bundles worker/index.ts and applies migrations/ under
       // wrangler.jsonc's settings, none of which the root task's src/** names.
       "inputs": ["$TURBO_DEFAULT$"]
     },

@@ -47,7 +47,7 @@ function claimsOf(payload: JWTPayload): OidcClaims {
   }
 }
 
-/** Signature, issuer, audience and expiry; RS256 only. */
+/** Signature, issuer, audience, `exp` and `iat`; RS256 only. */
 export async function verifyToken(
   token: string,
   audience: string,
@@ -58,6 +58,7 @@ export async function verifyToken(
       issuer: ISSUER,
       audience,
       algorithms: ['RS256'],
+      requiredClaims: ['exp', 'iat'],
       clockTolerance: 60,
     });
 
@@ -82,7 +83,7 @@ export function unverifiedClaims(token: string): OidcClaims {
   }
 }
 
-const workflowPath = (ref: string): string => ref.split('@', 1)[0] ?? '';
+const workflowPath = (ref: string): string => ref.split('@refs/', 1)[0] ?? '';
 
 /** The reason the run may not claim `body`, or undefined when it may. */
 export function forbiddenReason(
