@@ -4,10 +4,10 @@ The sites this repo publishes, one directory per domain. Each directory is a
 workspace package that owns its own content, its own Cloudflare Worker, and its
 own wrangler config; the pipeline that ships them is shared.
 
-| Directory                                   | Site                                                                                                                                                                                             |
-| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| [`lit-ui-router.dev/`](./lit-ui-router.dev) | [lit-ui-router.dev](https://lit-ui-router.dev) — the VitePress docs site and the Cloudflare Worker that serves it                                                                                |
-| [`release-ledger/`](./release-ledger)       | [release-ledger.lit-ui-router.dev](https://release-ledger.lit-ui-router.dev) — the release-ledger worker: `POST /claims` takes OIDC claims from GitHub Actions, and its queue folds them into D1 |
+| Directory                                                                 | Site                                                                                                                                                                                             |
+| ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [`lit-ui-router.dev/`](./lit-ui-router.dev)                               | [lit-ui-router.dev](https://lit-ui-router.dev) — the VitePress docs site and the Cloudflare Worker that serves it                                                                                |
+| [`release-ledger.lit-ui-router.dev/`](./release-ledger.lit-ui-router.dev) | [release-ledger.lit-ui-router.dev](https://release-ledger.lit-ui-router.dev) — the release-ledger worker: `POST /claims` takes OIDC claims from GitHub Actions, and its queue folds them into D1 |
 
 ## Adding a site
 

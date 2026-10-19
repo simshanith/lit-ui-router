@@ -207,7 +207,9 @@ const workspaces = {
     ],
   },
   // cloudflare:workers is a workerd built-in, not a package
-  'www/release-ledger': { ignoreDependencies: ['cloudflare'] },
+  'www/release-ledger.lit-ui-router.dev': {
+    ignoreDependencies: ['cloudflare'],
+  },
 } satisfies Record<string, WorkspaceProjectConfig>;
 
 export default async function config(): Promise<KnipConfiguration> {

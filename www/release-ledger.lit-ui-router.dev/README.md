@@ -1,4 +1,4 @@
-# @www/release-ledger
+# @www/release-ledger.lit-ui-router.dev
 
 The release ledger: a D1 database that records what the git tag, npm and
 GitHub say about each `<pkg>@<version>`, and the worker that writes it. The

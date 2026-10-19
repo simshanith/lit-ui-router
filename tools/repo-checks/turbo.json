@@ -103,7 +103,7 @@
         "!$TURBO_ROOT$/**/.probe-scratch/**",
         "!$TURBO_ROOT$/**/.rumdl_cache/**",
         "!$TURBO_ROOT$/www/lit-ui-router.dev/api/**",
-        "!$TURBO_ROOT$/www/release-ledger/worker/worker-configuration.d.ts",
+        "!$TURBO_ROOT$/www/release-ledger.lit-ui-router.dev/worker/worker-configuration.d.ts",
         "!$TURBO_ROOT$/**/.cache/**",
         "!$TURBO_ROOT$/.claude/**",
         "!$TURBO_ROOT$/.config/mise/**/*.local.toml",
