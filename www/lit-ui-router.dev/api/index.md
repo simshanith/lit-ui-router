@@ -209,6 +209,26 @@ own, after which it owns the attribute and will clear it on the next inactive re
 `ariaCurrentValue: false` is the way to keep a template-authored value for good, since
 the directive then never writes and never takes ownership.
 
+#### Typed state names
+
+The directives and `SrefStatusController` read their targets from
+[`RouteTypes`](./reference/types/RouteTypes), an interface that is empty by
+default, so a target is any `string` with `RawParams`.
+[`ui-router-registry`](https://github.com/simshanith/lit-ui-router/blob/main/packages/ui-router-registry/README.md)
+fills it in from an app's `as const` state declarations. It ships no
+JavaScript, so a devDependency is enough:
+
+```ts
+import type {} from 'ui-router-registry/lit';
+import type { states } from './states';
+
+declare module 'ui-router-registry' {
+  interface Register {
+    states: (typeof states)[number];
+  }
+}
+```
+
 ### State Declaration
 
 [`LitStateDeclaration`](./reference/types/LitStateDeclaration) defines a state with its URL and component.

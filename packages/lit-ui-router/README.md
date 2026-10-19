@@ -105,6 +105,21 @@ class UserDetail extends LitElement {
 
 `uiSref` and `uiSrefActive` bind a link from the element; `srefHref`, `srefActiveClass` and `srefAriaCurrent` bind the same link from inside the attribute it writes, so the `href` is real markup a static analyser or server renderer can read — see [Attribute-part forms](https://lit-ui-router.dev/api/#attribute-part-forms).
 
+## Typed State Names
+
+Those directives and `SrefStatusController` read their targets from `RouteTypes`, an interface that is empty by default, so a target is any `string` with `RawParams`. [`ui-router-registry`](https://github.com/simshanith/lit-ui-router/blob/main/packages/ui-router-registry/README.md) fills it in from an app's `as const` state declarations. It ships no JavaScript, so a devDependency is enough:
+
+```ts
+import type {} from 'ui-router-registry/lit';
+import type { states } from './states';
+
+declare module 'ui-router-registry' {
+  interface Register {
+    states: (typeof states)[number];
+  }
+}
+```
+
 ## Documentation
 
 Visit [lit-ui-router.dev](https://lit-ui-router.dev) for full documentation, tutorials, and API reference.
