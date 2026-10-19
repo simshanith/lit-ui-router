@@ -11,8 +11,8 @@
       // runner-label.test.ts reads every workflow plus the actionlint config,
       // mise-pin.test.ts reads every workflow's mise-action pins, and
       // task-logs-upload.test.ts holds the task-log uploads to the workspace globs,
-      // and release-ledger-claim.test.ts holds publish-npm's claim job to the
-      // ledger's OIDC pins.
+      // and release-ledger-claim.test.ts holds publish-npm's claim job to its
+      // mise task and the ledger's OIDC pins.
       "inputs": [
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/package.json",
@@ -22,7 +22,8 @@
         "$TURBO_ROOT$/.config/mise/mise.lock",
         "$TURBO_ROOT$/.github/workflows/**",
         "$TURBO_ROOT$/.github/actionlint.yaml",
-        "$TURBO_ROOT$/www/release-ledger.lit-ui-router.dev/wrangler.jsonc"
+        "$TURBO_ROOT$/www/release-ledger.lit-ui-router.dev/wrangler.jsonc",
+        "$TURBO_ROOT$/.config/mise/tasks/ledger_claim"
       ]
     },
     // Every check below reads the whole repo, not just this package, so each

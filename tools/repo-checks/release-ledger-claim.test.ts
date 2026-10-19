@@ -2,7 +2,7 @@
 // must never decide the publish's result, and its id-token must pass the
 // worker's OIDC pins, which live in the ledger's wrangler.jsonc.
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { accessSync, constants, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, it } from 'node:test';
 import { parse as parseJsonc } from 'jsonc-parser';
@@ -15,8 +15,11 @@ const load = (file: string): string =>
 
 const WORKFLOW = '.github/workflows/publish-npm.yml';
 
+const TASK = '.config/mise/tasks/ledger_claim';
+
 /** As much of a job as this check reads. */
 type Job = {
+  steps?: { run?: string }[];
   needs?: string | string[];
   if?: string;
   'continue-on-error'?: boolean;
@@ -44,6 +47,13 @@ describe('publish-npm ledger claim', () => {
     assert.ok(claim, 'publish-npm.yml has no ledger_claim job');
     assert.deepEqual([claim.needs].flat(), ['publish_npm']);
     assert.match(claim.if ?? '', /!inputs\.dryRun/);
+  });
+
+  it('runs the ledger_claim mise task, which is executable', () => {
+    const runs = (claim?.steps ?? []).map(({ run }) => run?.trim());
+
+    assert.ok(runs.includes('mise run ledger_claim'), JSON.stringify(runs));
+    accessSync(join(workspaceRoot, TASK), constants.X_OK);
   });
 
   it('cannot fail the run, and nothing waits on it', () => {

@@ -154,36 +154,27 @@ jobs:
     # The ledger pins the id-token's environment claim to publish.
     environment: publish
     permissions:
+      contents: read
       id-token: write
     steps:
+      - name: 'Checkout code'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Setup mise
+        uses: jdx/mise-action@9149ea85001c7435d5a66bb127d6a1b6227cb0a5 # v5.0.0
+        with:
+          version: 2026.10.1
+          # the task needs only curl and jq from the runner image
+          install: false
+          cache: false
       - name: Claim the release
+        run: mise run ledger_claim
         env:
-          AUDIENCE: https://release-ledger.lit-ui-router.dev
+          # otherwise `mise run` installs the whole toolchain first
+          MISE_TASK_RUN_AUTO_INSTALL: 'false'
           PACKAGE_NAME: ${{ needs.publish_npm.outputs.package_name }}
           VERSION: ${{ needs.publish_npm.outputs.version }}
-        run: |
-          set -euo pipefail
-          release="${PACKAGE_NAME}@${VERSION}"
-          warn() {
-            echo "::warning title=Release ledger claim::$release: $1"
-            printf "### Release ledger\n\nClaim for \`%s\` failed: %s. The tag sweep claims it later.\n" "$release" "$1" >> "$GITHUB_STEP_SUMMARY"
-            exit 1
-          }
-          if [ -z "$PACKAGE_NAME" ] || [ -z "$VERSION" ]; then warn 'publish_npm exported no package or version'; fi
-          # Without --retry-all-errors, curl retries timeouts, 408, 429 and 5xx, never another 4xx.
-          retry=(--retry 5 --retry-connrefused --retry-max-time 120 --connect-timeout 10 --max-time 30)
-          token=$(curl -sS --fail-with-body "${retry[@]}" \
-            -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-            --url-query "audience=$AUDIENCE" "$ACTIONS_ID_TOKEN_REQUEST_URL" | jq -er .value) ||
-            warn 'no OIDC id-token'
-          echo "::add-mask::$token"
-          body=$(jq -nc --arg name "$PACKAGE_NAME" --arg version "$VERSION" '{name: $name, version: $version}')
-          response="$RUNNER_TEMP/ledger-claim.txt"
-          status=$(curl -sS --fail-with-body "${retry[@]}" -o "$response" -w '%{http_code}' \
-            -H "Authorization: Bearer $token" -H 'Content-Type: application/json' \
-            --data "$body" "$AUDIENCE/claims") || true
-          if [ "$status" != 202 ]; then warn "POST /claims answered ${status:-no response}: $(head -c 300 "$response" 2>/dev/null | tr '\n' ' ')"; fi
-          printf "### Release ledger\n\nClaimed \`%s\` (202).\n" "$release" >> "$GITHUB_STEP_SUMMARY"
 
   release_signals:
     # Refresh the per-package published-diff check runs now that `latest` has
