@@ -32,6 +32,7 @@ import {
 } from './format-annotations.core.ts';
 import { type Session, warn } from './session.ts';
 import { onActions } from '@tools/shared/gha.ts';
+import { messageOf } from '@tools/shared/errors.ts';
 
 /** The formatter's verdict on `input` from stdin; the checkout is never written. */
 function formatted(source: FormatSource, input: string): string | undefined {
@@ -89,9 +90,7 @@ function diffFormatting(findings: readonly FormatFinding[]): void {
   try {
     dir = mkdtempSync(join(tmpdir(), 'format-diff-'));
   } catch (error: unknown) {
-    warn(
-      `no formatting diffs: ${error instanceof Error ? error.message : String(error)}`,
-    );
+    warn(`no formatting diffs: ${messageOf(error)}`);
 
     return;
   }
@@ -120,9 +119,7 @@ function diffFormatting(findings: readonly FormatFinding[]): void {
         finding.patch =
           full === undefined ? undefined : patchSection(full, finding.file);
       } catch (error: unknown) {
-        warn(
-          `no lines for ${finding.file}: ${error instanceof Error ? error.message : String(error)}`,
-        );
+        warn(`no lines for ${finding.file}: ${messageOf(error)}`);
       }
     }
   } finally {
@@ -144,9 +141,7 @@ export function writePatch(
     mkdirSync(dirname(path), { recursive: true });
     writeFileSync(path, text);
   } catch (error: unknown) {
-    warn(
-      `no ${path}: ${error instanceof Error ? error.message : String(error)}`,
-    );
+    warn(`no ${path}: ${messageOf(error)}`);
 
     return undefined;
   }

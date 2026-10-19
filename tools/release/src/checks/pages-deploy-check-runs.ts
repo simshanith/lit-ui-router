@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 
 import { defaultExec } from '@tools/shared/exec.ts';
 import { appendStepSummary, logWarning } from '@tools/shared/gha.ts';
+import { messageOf } from '@tools/shared/errors.ts';
 
 import { ensureGh } from '@tools/shared/gh.ts';
 import { runCli } from '../lib/run-cli.ts';
@@ -56,8 +57,6 @@ async function main() {
 }
 
 const warn = (cause: unknown): void =>
-  logWarning(
-    `pages-deploy check run not reported: ${cause instanceof Error ? cause.message : String(cause)}`,
-  );
+  logWarning(`pages-deploy check run not reported: ${messageOf(cause)}`);
 
 if (import.meta.main) await main().catch(warn);

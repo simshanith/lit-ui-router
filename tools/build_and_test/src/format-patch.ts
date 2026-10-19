@@ -6,12 +6,13 @@
 import { FORMAT_PATCH } from './format-annotations.core.ts';
 import { formattingFixes } from './format-diff.ts';
 import { readSession, warn } from './session.ts';
+import { messageOf } from '@tools/shared/errors.ts';
 
 const failOpen = (cause: unknown): void => {
   warn(
-    `format-patch: no ${FORMAT_PATCH}, the run summary still reports the findings: ${
-      cause instanceof Error ? cause.message : String(cause)
-    }`,
+    `format-patch: no ${FORMAT_PATCH}, the run summary still reports the findings: ${messageOf(
+      cause,
+    )}`,
   );
 };
 

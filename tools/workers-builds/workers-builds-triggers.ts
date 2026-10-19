@@ -31,6 +31,7 @@ import { join } from 'node:path';
 import { parseArgs } from 'node:util';
 
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
+import { messageOf } from '@tools/shared/errors.ts';
 
 import { cf } from './cloudflare-api.ts';
 import {
@@ -56,7 +57,7 @@ async function loadDesired(): Promise<DesiredWorker[]> {
     );
   } catch (error) {
     throw new Error(
-      `cannot load desired state from ${DESIRED_CONFIG}: ${error instanceof Error ? error.message : String(error)}`,
+      `cannot load desired state from ${DESIRED_CONFIG}: ${messageOf(error)}`,
       { cause: error },
     );
   }
