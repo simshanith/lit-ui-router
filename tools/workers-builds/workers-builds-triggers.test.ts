@@ -16,7 +16,12 @@ import { describe, it } from 'node:test';
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
 import type { Json } from '@tools/bootstrap/types.ts';
 
-import { DEFAULT_SITE, buildSteps, resolveSite } from './cloudflare-build.ts';
+import {
+  DEFAULT_SITE,
+  type Site,
+  buildSteps,
+  resolveSite,
+} from './cloudflare-build.ts';
 import { DEPLOY_MODES, deployCommands } from './cloudflare-deploy.ts';
 import {
   type Drift,
@@ -29,6 +34,14 @@ import {
   selectWorkers,
   workerNameFromConfig,
 } from './workers-builds-triggers.core.ts';
+
+const siteAt = (root: string, key: string): Site => {
+  const resolved = resolveSite(root, key);
+
+  if (!resolved.ok) assert.fail(resolved.error);
+
+  return resolved.site;
+};
 
 // Expected values live in the fixture so it doubles as documentation of the
 // API trigger shape. readFile keeps the root tsconfig free of JSON-import
@@ -155,7 +168,7 @@ describe('desiredStateFromConfig', () => {
         assert.deepEqual(extra, [], `${worker.site} ${kind} build: extra args`);
         assert.equal(key, worker.site, `${worker.site} ${kind} builds ${key}`);
 
-        const site = resolveSite(workspaceRoot, key);
+        const site = siteAt(workspaceRoot, key);
         const steps = buildSteps(workspaceRoot, '/nonexistent/bin', site);
 
         assert.ok(
@@ -232,7 +245,7 @@ describe('desiredStateFromConfig', () => {
         const { migrations, deploy } = deployCommands(
           workspaceRoot,
           mode,
-          resolveSite(workspaceRoot, key),
+          siteAt(workspaceRoot, key),
         );
 
         assert.deepEqual(deploy, [...DEPLOY_MODES[mode], ...config]);
@@ -620,7 +633,7 @@ describe('cloudflare-deploy', () => {
 
   it("runs each configured site's commands for each mode, deploy last", () => {
     for (const worker of workers) {
-      const site = resolveSite(workspaceRoot, worker.site);
+      const site = siteAt(workspaceRoot, worker.site);
 
       for (const mode of ['main', 'branch'] as const) {
         const { migrations, deploy } = deployCommands(
@@ -700,7 +713,7 @@ describe('cloudflare-deploy', () => {
       });
 
       try {
-        const site = resolveSite(root, 'example.test');
+        const site = siteAt(root, 'example.test');
         assert.deepEqual(deployCommands(root, 'main', site), {
           migrations: [
             [
@@ -742,7 +755,7 @@ describe('cloudflare-deploy', () => {
 
       try {
         assert.throws(
-          () => deployCommands(root, 'main', resolveSite(root, 'example.test')),
+          () => deployCommands(root, 'main', siteAt(root, 'example.test')),
           /d1_databases\.0\.database_name/,
         );
       } finally {
