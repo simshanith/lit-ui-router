@@ -21,7 +21,7 @@ class AppRoot extends LitElement {
 
   render() {
     return html`
-      <nav aria-label="Hello World">
+      <nav aria-label="Hello World (No Build)">
         <a ${uiSrefActive({ activeClasses: ['active'] })} ${uiSref('hello')}
           >Hello</a
         >
