@@ -44,7 +44,7 @@ The smallest possible lit-ui-router app.
 
 **helloworld** in plain JavaScript, with no build step. The browser loads `public/main.js` as written.
 
-- **An import map** in `index.html` resolves `lit`, `@uirouter/core` and `lit-ui-router` to [esm.sh](https://esm.sh), at the versions the other examples install. `lit-ui-router`'s URL carries esm.sh's `*` prefix, which leaves its own imports bare for the map to resolve, so the page loads one copy of `lit`
+- **An import map** in `index.html` resolves `lit`, `@uirouter/core` and `lit-ui-router` to [esm.sh](https://esm.sh), at the exact versions its `package-lock.json` installs; `embeds.test.ts` fails when they drift apart. `lit-ui-router`'s URL carries esm.sh's `*` prefix, which leaves its own imports bare for the map to resolve, so the page loads one copy of `lit`
 - **No decorators or type annotations:** `customElements.define` registers the shell, and the state declarations are plain objects
 - **Vite only serves and copies.** `main.js` sits in `public/`, which Vite serves untransformed and copies verbatim into the build. The npm dependencies are for the editor: `tsconfig.json` checks `main.js` against the published types with `checkJs`, and nothing at runtime reads `node_modules`
 
