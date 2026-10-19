@@ -649,6 +649,23 @@ describe('foldStatements', () => {
     assert.equal(statements.ledger.length, 1);
   });
 
+  it('rejects the whole claim with a rejected dist-tag outcome, carrying its reason', () => {
+    assert.deepEqual(
+      foldStatements(
+        fold(undefined, OBSERVED, ENVELOPE),
+        [moveDistTag(undefined, ROWS.tagged, 'next', ENVELOPE)],
+        'message-1',
+      ),
+      {
+        outcome: 'rejected',
+        reason: 'lit-ui-router@1.0.0 is not on npm',
+        write: undefined,
+        distTags: [],
+        ledger: [],
+      },
+    );
+  });
+
   it('reports unchanged with nothing to write', () => {
     const statements = foldStatements(
       fold(ROWS.released, OBSERVED, ENVELOPE),

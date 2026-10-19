@@ -673,23 +673,33 @@ export interface FoldStatements {
 /**
  * The batch for a claim: `[claim insert, write, ...distTags, ...ledger]`. The
  * consumer skips a message `pipeline_events` already holds before folding it.
+ * Any rejection, the fold's or a dist-tag's, rejects the whole claim.
  */
 export function foldStatements(
   folded: Fold,
   tags: readonly DistTagOutcome[],
   messageId: string,
 ): FoldStatements {
+  const rejection = [folded, ...tags].find(
+    (outcome) => 'reason' in outcome,
+  )?.reason;
+
+  if (rejection !== undefined) {
+    return {
+      outcome: 'rejected',
+      reason: rejection,
+      write: undefined,
+      distTags: [],
+      ledger: [],
+    };
+  }
+
   const moved = tags.filter((outcome) => outcome.kind === 'applied');
   const applied = folded.outcome === 'applied' ? folded : undefined;
 
   return {
-    outcome:
-      folded.outcome === 'rejected'
-        ? 'rejected'
-        : applied || moved.length > 0
-          ? 'applied'
-          : 'unchanged',
-    reason: folded.outcome === 'rejected' ? folded.reason : null,
+    outcome: applied || moved.length > 0 ? 'applied' : 'unchanged',
+    reason: null,
     write: applied && versionWrite(applied.row, applied.isNew),
     distTags: moved.map(distTagWrite),
     ledger: [
