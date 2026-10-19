@@ -1,6 +1,6 @@
 # Examples
 
-This folder contains standalone example projects demonstrating lit-ui-router usage. The tutorial examples escalate in scope — start with **helloworld**, then work outward through the solar system and into the galaxy. **design-system-links** is not a tutorial rung: it is live documentation for one API surface, embedded in the guide that explains it. **hellosolarsystem-mobx** is not a rung either: it is the solar-system rung rebuilt on the MobX bindings, embedded in the pages that document them. Nor is **hellosolarsystem-signals**: it is the solar-system rung with app state and router state joined through [TC39 Signals](https://lit-ui-router.dev/packages/signals), and handed to routed views through [`@lit/context`](https://lit.dev/docs/data/context/). Nor is **hellogalaxy-effect**: it is the galaxy rung rebuilt on [Effect](https://effect.website) and the [Effect bindings](https://lit-ui-router.dev/packages/lit-ui-router-effect), with the resolve-and-scope plugin it also needs inlined as a spike that neither Effect package ships. Nor is **hellogalaxy-signals**: it is the galaxy rung with both Lit signal bindings, `@lit-labs/signals` and [`lit-ui-router-signals`](https://lit-ui-router.dev/packages/lit-ui-router-signals), on one signal graph. Nor is **lint-eslint**: it is the consumer wiring of [`eslint-plugin-lit-ui-router`](https://lit-ui-router.dev/packages/eslint-plugin), installed from npm exactly as a consumer would, and it renders its own lint report in the page. Nor is **navigation-api**: it is the escape hatch documented on the [Navigation API plugin page](https://lit-ui-router.dev/packages/navigation-plugin#reaching-past-the-router), a `navigate` listener for the one navigation the router does not own. Nor is **loading-and-error-views**: it is the [Loading and Error Views guide](https://lit-ui-router.dev/guides/loading-and-error-views)'s recipes in one app, built on transition hooks and state `data`.
+This folder contains standalone example projects demonstrating lit-ui-router usage. The tutorial examples escalate in scope — start with **helloworld**, then work outward through the solar system and into the galaxy. **helloworld-buildless** is the first rung again in plain JavaScript, loaded by the browser as written through an import map, with no build step. **design-system-links** is not a tutorial rung: it is live documentation for one API surface, embedded in the guide that explains it. **hellosolarsystem-mobx** is not a rung either: it is the solar-system rung rebuilt on the MobX bindings, embedded in the pages that document them. Nor is **hellosolarsystem-signals**: it is the solar-system rung with app state and router state joined through [TC39 Signals](https://lit-ui-router.dev/packages/signals), and handed to routed views through [`@lit/context`](https://lit.dev/docs/data/context/). Nor is **hellogalaxy-effect**: it is the galaxy rung rebuilt on [Effect](https://effect.website) and the [Effect bindings](https://lit-ui-router.dev/packages/lit-ui-router-effect), with the resolve-and-scope plugin it also needs inlined as a spike that neither Effect package ships. Nor is **hellogalaxy-signals**: it is the galaxy rung with both Lit signal bindings, `@lit-labs/signals` and [`lit-ui-router-signals`](https://lit-ui-router.dev/packages/lit-ui-router-signals), on one signal graph. Nor is **lint-eslint**: it is the consumer wiring of [`eslint-plugin-lit-ui-router`](https://lit-ui-router.dev/packages/eslint-plugin), installed from npm exactly as a consumer would, and it renders its own lint report in the page. Nor is **navigation-api**: it is the escape hatch documented on the [Navigation API plugin page](https://lit-ui-router.dev/packages/navigation-plugin#reaching-past-the-router), a `navigate` listener for the one navigation the router does not own. Nor is **loading-and-error-views**: it is the [Loading and Error Views guide](https://lit-ui-router.dev/guides/loading-and-error-views)'s recipes in one app, built on transition hooks and state `data`.
 
 ## StackBlitz Integration
 
@@ -17,6 +17,7 @@ See [StackBlitz Tips & Best Practices](https://developer.stackblitz.com/guides/i
 | Example                      | Description                                                                                                  | StackBlitz                                                                                                 |
 | ---------------------------- | ------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------- |
 | **helloworld**               | Ultra-minimal starter: two states with `uiSref`/`uiSrefActive` navigation                                    | [Open](https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/helloworld)               |
+| **helloworld-buildless**     | The same starter in plain JavaScript: an import map to a CDN, no TypeScript and no build step                | [Open](https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/helloworld-buildless)     |
 | **hellosolarsystem**         | Solar System tour: route parameters and async `resolve` data with a master/detail flow                       | [Open](https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/hellosolarsystem)         |
 | **hellosolarsystem-mobx**    | The same tour rebuilt on `lit-ui-router-mobx`: an observable router store, reactions, and a computed tour    | [Open](https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/hellosolarsystem-mobx)    |
 | **hellosolarsystem-signals** | The same tour with `lit-ui-router-signals` and `@lit/context`: a provided unit signal, the consumed router   | [Open](https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/hellosolarsystem-signals) |
@@ -38,6 +39,14 @@ The smallest possible lit-ui-router app.
 - Navigating with the `uiSref` directive
 - Highlighting the current route with `uiSrefActive`
 - Rendering routed content with inline `html` template components in a `<ui-view>`
+
+### helloworld-buildless
+
+**helloworld** in plain JavaScript, with no build step. The browser loads `public/main.js` as written.
+
+- **An import map** in `index.html` resolves `lit`, `@uirouter/core` and `lit-ui-router` to [esm.sh](https://esm.sh), at the exact versions its `package-lock.json` installs; `embeds.test.ts` fails when they drift apart. `lit-ui-router`'s URL carries esm.sh's `*` prefix, which leaves its own imports bare for the map to resolve, so the page loads one copy of `lit`
+- **No decorators or type annotations:** `customElements.define` registers the shell, and the state declarations are plain objects
+- **Vite only serves and copies.** `main.js` sits in `public/`, which Vite serves untransformed and copies verbatim into the build. The npm dependencies are for the editor: `tsconfig.json` checks `main.js` against the published types with `checkJs`, and nothing at runtime reads `node_modules`
 
 ### hellosolarsystem
 
@@ -182,7 +191,7 @@ It drives every state each built example's own links reach, in headless Chromium
 
 ## Project Structure
 
-Every example follows the same structure (the lint example adds `eslint.config.js`):
+Every example follows the same structure (the lint example adds `eslint.config.js`; **helloworld-buildless** has `public/main.js` and `vite.config.js` in place of `src/main.ts` and `vite.config.ts`):
 
 ```text
 <example-name>/
