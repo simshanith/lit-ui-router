@@ -5,6 +5,7 @@ import { spec, type TestEvent } from 'node:test/reporters';
 import { fileURLToPath } from 'node:url';
 import { stripVTControlCharacters } from 'node:util';
 import { annotationCommand } from './gha.core.ts';
+import { messageOf } from './errors.ts';
 
 type TestFail = Extract<TestEvent, { type: 'test:fail' }>['data'];
 
@@ -60,9 +61,7 @@ export function failureAnnotation(
     (cause instanceof Error ? frameIn(cause.stack ?? '', file) : undefined) ??
     (data.line === undefined ? {} : { line: data.line, col: data.column });
 
-  const message = stripVTControlCharacters(
-    cause instanceof Error ? cause.message : String(cause),
-  ).trim();
+  const message = stripVTControlCharacters(messageOf(cause)).trim();
 
   return annotationCommand('error', message || data.name, {
     file: relative(cwd, file),

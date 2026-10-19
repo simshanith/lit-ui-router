@@ -67,6 +67,7 @@ import { readSession, warn } from './session.ts';
 import { extractTscDiagnostics } from './tsc-annotations.core.ts';
 import { errorCommand } from '@tools/shared/gha.core.ts';
 import { onActions } from '@tools/shared/gha.ts';
+import { messageOf } from '@tools/shared/errors.ts';
 
 /** Fresh per run: a log that could guess the token could escape the guard. */
 function commandToken(): string | undefined {
@@ -181,9 +182,7 @@ async function main(): Promise<void> {
   try {
     fixes = formattingFixes(session);
   } catch (error: unknown) {
-    warn(
-      `no formatting findings: ${error instanceof Error ? error.message : String(error)}`,
-    );
+    warn(`no formatting findings: ${messageOf(error)}`);
   }
 
   const { findings: formatting, patch } = fixes;
@@ -213,8 +212,6 @@ async function main(): Promise<void> {
 
 main().catch((cause: unknown) => {
   warn(
-    `run summary failed, the full step log is unaffected: ${
-      cause instanceof Error ? cause.message : String(cause)
-    }`,
+    `run summary failed, the full step log is unaffected: ${messageOf(cause)}`,
   );
 });

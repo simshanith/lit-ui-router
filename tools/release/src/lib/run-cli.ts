@@ -4,6 +4,7 @@
 
 import { defaultExec, readExecFailure } from '@tools/shared/exec.ts';
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
+import { messageOf } from '@tools/shared/errors.ts';
 
 export type CliResult = {
   /** The CLI's exit code: 0 in sync, 1 drifted, 2 usage/API error. */
@@ -30,9 +31,7 @@ export async function runCli(
     const exitCode = failure.code ?? 2;
     const stdout = failure.stdout ?? '';
 
-    const stderr =
-      failure.stderr ??
-      (error instanceof Error ? error.message : String(error));
+    const stderr = failure.stderr ?? messageOf(error);
 
     return { exitCode, output: `${stdout}${stderr}` };
   }

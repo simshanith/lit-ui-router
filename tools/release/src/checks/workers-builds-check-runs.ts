@@ -15,6 +15,7 @@ import { defaultExec } from '@tools/shared/exec.ts';
 import { ensureGh } from '@tools/shared/gh.ts';
 import { runCli } from '../lib/run-cli.ts';
 import { appendStepSummary, logWarning } from '@tools/shared/gha.ts';
+import { messageOf } from '@tools/shared/errors.ts';
 
 import {
   checkRunApiArgs,
@@ -69,7 +70,5 @@ main().catch((cause: unknown) => {
   // Even the reporting path stays non-gating: a gh outage must not turn a
   // deploy-pipeline signal into a red CI run. A warning annotation surfaces
   // it on the run summary instead of a non-zero exit.
-  logWarning(
-    `workers-builds check run not reported: ${cause instanceof Error ? cause.message : String(cause)}`,
-  );
+  logWarning(`workers-builds check run not reported: ${messageOf(cause)}`);
 });

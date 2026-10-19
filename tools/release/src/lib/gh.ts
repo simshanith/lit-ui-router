@@ -10,6 +10,7 @@ import { defaultExec } from '@tools/shared/exec.ts';
 import { ensureGh } from '@tools/shared/gh.ts';
 import { withRetry } from './retry.ts';
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
+import { messageOf } from '@tools/shared/errors.ts';
 
 /** argv for `gh pr create`, verbatim from bump-version.yml's Create PR step. */
 export function prCreateArgs(base: string, head: string): string[] {
@@ -49,9 +50,9 @@ export async function createReleasePr(
     {
       onRetry: (error, attempt) => {
         console.error(
-          `gh pr create attempt ${attempt} failed, retrying: ${
-            error instanceof Error ? error.message : String(error)
-          }`,
+          `gh pr create attempt ${attempt} failed, retrying: ${messageOf(
+            error,
+          )}`,
         );
       },
     },
