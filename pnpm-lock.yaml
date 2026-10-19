@@ -1895,6 +1895,9 @@ importers:
       '@tools/release-config':
         specifier: catalog:workspace
         version: link:../../tools/release-config
+      '@tools/shared':
+        specifier: catalog:workspace
+        version: link:../../tools/shared
       '@tools/typedoc-plugin-lit-ui-router':
         specifier: catalog:workspace
         version: link:../../tools/typedoc-plugin-lit-ui-router

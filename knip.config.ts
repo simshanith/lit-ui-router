@@ -170,7 +170,11 @@ const workspaces = {
       '@release-it/conventional-changelog',
       '@uirouter/core-floor',
     ],
-    entry: ['src/specs/*.test-d.ts', 'test-d/*.test-d.ts'],
+    entry: [
+      'src/specs/*.test-d.ts',
+      'test-d/*.test-d.ts',
+      'test-js/**/*.{js,ts}',
+    ],
   },
   'packages/ui-router-signals': {
     ignoreDependencies: [

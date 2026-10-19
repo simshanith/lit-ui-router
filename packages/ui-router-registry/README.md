@@ -64,6 +64,14 @@ render(): TemplateResult {
 }
 ```
 
+### JavaScript projects
+
+The package ships no runtime code, and the adapters never import it, so JavaScript without `checkJs` sees no change. Under `checkJs`, a `Register` augmentation in any TypeScript file of the program checks the JavaScript files' calls too; the escape is a JSDoc cast:
+
+```javascript
+uiSref(/** @type {import('ui-router-registry').UncheckedRef} */ (name));
+```
+
 ## Dependencies
 
 `@uirouter/core` is a peer dependency, for its types only. Install one copy of this package per app: two copies mean two `Register`s, and the augmentation types only one.
