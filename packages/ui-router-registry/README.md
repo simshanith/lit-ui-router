@@ -53,6 +53,16 @@ uiSref(link.state as UncheckedRef, link.params);
 stateService.go(name as UncheckedRef);
 ```
 
+### Annotate members that call typed targets
+
+A state declaration that names a component and is checked with `satisfies` against a type that inspects the component, such as `LitStateDeclaration`, makes that component part of `Register`'s type. If one of the component's members calls a typed target (`go`, `href`) and has no declared return type, TypeScript has to infer that member from `Register` while still building `Register`, and reports a circular type (TS7022, TS7023, TS2456). Declare the member's return type:
+
+```typescript
+render(): TemplateResult {
+  return html`<a href=${this.stateService.href('contacts.contact', { contactId })}>…</a>`;
+}
+```
+
 ## Dependencies
 
 `@uirouter/core` is a peer dependency, for its types only. Install one copy of this package per app: two copies mean two `Register`s, and the augmentation types only one.

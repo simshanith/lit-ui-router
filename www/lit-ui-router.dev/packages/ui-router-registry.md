@@ -62,6 +62,22 @@ stateService.go('contacts.contact', { contactId: 'c1' });
 | `TypedStateService`               | `go`, `transitionTo`, `target`, `href`, `is` and `includes` over registered names; relative refs and object targets stay loose        |
 | `TypedRouteSnapshot`              | the route snapshot the reactive packages share, whose `includes(name)` narrows `current` and `params` to that state's subtree         |
 
+## Annotate members that call typed targets
+
+A state declaration that names a component and is checked with `satisfies`
+against a type that inspects the component, such as `LitStateDeclaration`, makes
+that component part of `Register`'s type. If one of the component's members
+calls a typed target (`go`, `href`) and has no declared return type, TypeScript
+has to infer that member from `Register` while still building `Register`, and
+reports a circular type (TS7022, TS7023, TS2456). Declare the member's return
+type:
+
+```ts
+render(): TemplateResult {
+  return html`<a href=${this.stateService.href('contacts.contact', { contactId })}>…</a>`;
+}
+```
+
 ## Further reading
 
 - [API reference](/api/ui-router-registry/)
