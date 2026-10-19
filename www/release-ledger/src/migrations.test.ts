@@ -324,6 +324,35 @@ describe('migrations: fold statements', () => {
     assert.equal(count(db, 'versions'), 0);
   });
 
+  it('writes no dist-tag move for a rejected claim', () => {
+    const db = migrated();
+
+    insertVersion(db, ROWS.published);
+
+    const tags = [moveDistTag(undefined, ROWS.published, 'next', ENVELOPE)];
+
+    write(
+      db,
+      fold(ROWS.published, { npm: { ...NPM, deprecated: '' } }, ENVELOPE),
+      tags,
+    );
+    assert.equal(count(db, 'dist_tags'), 0);
+    assert.equal(count(db, 'ledger_events'), 0);
+  });
+
+  it('rejects the claim with a rejected dist-tag move and writes nothing', () => {
+    const db = migrated();
+
+    const tags = [moveDistTag(undefined, ROWS.tagged, 'next', ENVELOPE)];
+
+    write(db, fold(undefined, OBSERVED, ENVELOPE), tags);
+    assert.equal(
+      db.prepare('SELECT outcome FROM pipeline_events').get()?.outcome,
+      'rejected',
+    );
+    assert.equal(count(db, 'versions'), 0);
+  });
+
   it('records a claim that only moves a dist-tag as applied', () => {
     const db = migrated();
 
