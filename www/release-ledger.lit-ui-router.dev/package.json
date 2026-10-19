@@ -1,5 +1,5 @@
 {
-  "name": "@www/release-ledger",
+  "name": "@www/release-ledger.lit-ui-router.dev",
   "version": "0.0.0",
   "private": true,
   "description": "The release ledger's D1 schema and the pure fold that records release observations in it",

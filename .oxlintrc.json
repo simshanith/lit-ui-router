@@ -463,7 +463,7 @@
         "www/lit-ui-router.dev/worker/test/**/*.test.ts",
         "www/lit-ui-router.dev/.vitepress/test/**/*.test.ts",
         "www/lit-ui-router.dev/scripts/test/**/*.test.ts",
-        "www/release-ledger/**/*.test.ts"
+        "www/release-ledger.lit-ui-router.dev/**/*.test.ts"
       ],
       "rules": {
         "typescript/no-floating-promises": "off"

@@ -1,4 +1,4 @@
-# @www/release-ledger
+# @www/release-ledger.lit-ui-router.dev
 
 The release ledger's D1 schema and the pure fold that records what npm and
 GitHub say about each version. The design is

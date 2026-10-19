@@ -2813,7 +2813,7 @@ importers:
         specifier: 'catalog:'
         version: 4.151.0(@types/node@24.19.2)
 
-  www/release-ledger:
+  www/release-ledger.lit-ui-router.dev:
     devDependencies:
       '@tools/shared':
         specifier: catalog:workspace
