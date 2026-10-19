@@ -31,9 +31,6 @@ export type Region = keyof typeof REGIONS;
 
 export const REGION_NAMES = ['tag', 'npm', 'gh'] as const satisfies Region[];
 
-/** npm does not record the tag a version was published under, so only the publish-npm claim sets it; the first value stays. */
-export const ADVISORY_COLUMNS = ['npm_dist_tag'] as const;
-
 export const NPM_STATES = ['absent', 'active', 'deprecated'] as const;
 
 export type NpmState = (typeof NPM_STATES)[number];
@@ -64,7 +61,6 @@ export interface VersionRow {
   tag_conflict: string | null;
   npm_integrity: string | null;
   npm_published_at: string | null;
-  npm_dist_tag: string | null;
   npm_deprecated: string | null;
   npm_conflict: string | null;
   gh_release_id: number | null;
@@ -112,8 +108,6 @@ export interface NpmFacts {
   publishedAt: string;
   /** npm's deprecation message; absent when the version is not deprecated. */
   deprecated?: string;
-  /** The tag `publish-npm` published under; npm does not record it, so only that claim sends it. */
-  distTag?: string;
 }
 
 /** A published release: a token without push access sees no drafts. */
@@ -249,15 +243,6 @@ function contradicts(
   );
 }
 
-/** The first recorded dist-tag stays. */
-function advisory(row: VersionRow, observed: Observation): Columns {
-  const distTag = observed.npm?.distTag;
-
-  return row.npm_dist_tag === null && distTag !== undefined
-    ? { npm_dist_tag: distTag }
-    : {};
-}
-
 /** The columns an observation changes in one region. */
 function observeRegion(
   row: VersionRow,
@@ -267,12 +252,11 @@ function observeRegion(
   if (observed[region] === undefined) return {};
 
   const columns = columnsOf(region, observed);
-  const distTag = region === 'npm' ? advisory(row, observed) : {};
 
   if (!recorded(row, region)) {
     if (observed[region] === null) return {};
 
-    return { ...columns, ...distTag };
+    return columns;
   }
 
   const mutable = pick(columns, REGIONS[region].mutable);
@@ -281,20 +265,17 @@ function observeRegion(
   if (observed[region] === null || contradicts(row, region, columns)) {
     return {
       ...mutable,
-      ...distTag,
       [conflictColumn(region)]: conflictOf(region, observed),
     };
   }
 
-  return { ...mutable, ...distTag };
+  return mutable;
 }
 
 function malformed(observed: Observation): string | undefined {
   if (observed.npm?.deprecated === '') {
     return 'an empty deprecation message: npm undeprecates with one, so omit it';
   }
-
-  if (observed.npm?.distTag === '') return 'an empty dist-tag';
 
   return undefined;
 }
@@ -325,7 +306,6 @@ const blank = (envelope: Envelope): VersionRow => ({
   tag_conflict: null,
   npm_integrity: null,
   npm_published_at: null,
-  npm_dist_tag: null,
   npm_deprecated: null,
   npm_conflict: null,
   gh_release_id: null,
@@ -454,10 +434,6 @@ export function repair(
 
   const columns: Columns = {
     ...columnsOf(region, observed),
-    ...(region === 'npm' &&
-      observed.npm?.distTag !== undefined && {
-        npm_dist_tag: observed.npm.distTag,
-      }),
     [conflictColumn(region)]: null,
   };
 
@@ -616,7 +592,6 @@ export const FACT_COLUMNS = [
   'tag_conflict',
   'npm_integrity',
   'npm_published_at',
-  'npm_dist_tag',
   'npm_deprecated',
   'npm_conflict',
   'gh_release_id',

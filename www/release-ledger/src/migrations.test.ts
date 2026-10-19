@@ -175,7 +175,6 @@ describe('migrations', () => {
 
   const violations: [string, VersionRow][] = [
     ['half the npm facts', { ...ROWS.published, npm_published_at: null }],
-    ['a dist-tag without npm', { ...ROWS.tagged, npm_dist_tag: 'latest' }],
     ['a deprecation without npm', { ...ROWS.tagged, npm_deprecated: 'no' }],
     ['an npm conflict without npm', { ...ROWS.tagged, npm_conflict: 'null' }],
     ['half the GitHub facts', { ...ROWS.released, gh_url: null }],
