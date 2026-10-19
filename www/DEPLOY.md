@@ -159,7 +159,7 @@ before production.
 3. In the Cloudflare dashboard, **Workers & Pages → Create → Import a repository**, with the
    Worker name matching the `name` in `wrangler.jsonc` and the build and deploy commands from the
    entry. Give its builds an API token of its own, scoped to what that site's deploy touches.
-4. Run `pnpm check:workers-builds --site <domain>`, and `--apply` for anything it reports.
+4. Run `pnpm check:workers-builds -- --site <domain>`, and `--apply` for anything it reports.
 
 ### Dashboard as Code
 
