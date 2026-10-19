@@ -1,5 +1,8 @@
 // Desired Workers Builds trigger configuration, keyed by site: one entry per
-// Worker this repo deploys, each naming the wrangler config that names it.
+// Worker this repo deploys, each naming the wrangler config that names it. The
+// key is the site's www/ directory, and the build and deploy commands take it
+// as their last argument; the docs site's commands omit it, which defaults to
+// that site.
 // `pnpm check:workers-builds --apply` updates Cloudflare
 // environment_variables: declared keys only, plaintext only — undeclared live
 // vars (TURBO_* cache config and secrets, VITE_*) stay dashboard-managed
@@ -14,9 +17,10 @@
       // change (build) or a moved wrangler.jsonc (deploy) needs different steps on
       // its branch than main has. Pinning the paths lets a branch diverge without
       // that reading as drift. The steps and why the install moved out of
-      // Cloudflare's hands live in cloudflare-build.sh; the two wrangler
-      // invocations, keyed by the trigger the argument names, in
-      // cloudflare-deploy.ts.
+      // Cloudflare's hands live in cloudflare-build.ts; the wrangler
+      // invocations, keyed by the trigger the mode argument names, in
+      // cloudflare-deploy.ts. These two stay bare because every open branch's
+      // preview runs them, including branches that predate the site argument.
       // SKIP_DEPENDENCY_INSTALL=1 is what hands the install to that script; without
       // it Cloudflare runs its own corepack-provisioned `pnpm install` first.
       // CYPRESS_INSTALL_BINARY=0 and HUSKY=0 skip install work a docs deploy never
@@ -48,15 +52,13 @@
     // is far more often a moved file than an unbuilt site — so this entry stays
     // commented out until that file lands. path_includes is the point of a
     // second entry: two sites in one repo, each building only on the pushes
-    // that touch it. Both deploy modes below are placeholders too;
-    // cloudflare-deploy.ts still knows only `main` and `branch`, which name the
-    // flagship wrangler.jsonc.
+    // that touch it.
     // "atlas.lit-ui-router.dev": {
     //   "wranglerConfig": "www/atlas.lit-ui-router.dev/wrangler.jsonc",
     //   "productionBranch": "main",
     //   "production": {
-    //     "build_command": "./tools/workers-builds/cloudflare-build.sh",
-    //     "deploy_command": "./tools/workers-builds/cloudflare-deploy.ts atlas-main",
+    //     "build_command": "./tools/workers-builds/cloudflare-build.sh atlas.lit-ui-router.dev",
+    //     "deploy_command": "./tools/workers-builds/cloudflare-deploy.ts main atlas.lit-ui-router.dev",
     //     "path_includes": ["www/atlas.lit-ui-router.dev/*"],
     //     "environment_variables": {
     //       "SKIP_DEPENDENCY_INSTALL": "1",
@@ -65,8 +67,8 @@
     //     },
     //   },
     //   "preview": {
-    //     "build_command": "./tools/workers-builds/cloudflare-build.sh",
-    //     "deploy_command": "./tools/workers-builds/cloudflare-deploy.ts atlas-branch",
+    //     "build_command": "./tools/workers-builds/cloudflare-build.sh atlas.lit-ui-router.dev",
+    //     "deploy_command": "./tools/workers-builds/cloudflare-deploy.ts branch atlas.lit-ui-router.dev",
     //     "path_includes": ["www/atlas.lit-ui-router.dev/*"],
     //     "environment_variables": {
     //       "SKIP_DEPENDENCY_INSTALL": "1",
