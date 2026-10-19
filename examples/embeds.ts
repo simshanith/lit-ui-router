@@ -13,6 +13,11 @@
 // scrollbar inside the embed.
 export const EXAMPLES = {
   helloworld: { title: 'Hello World', height: '190px', file: 'src/main.ts' },
+  'helloworld-buildless': {
+    title: 'Hello World (No Build)',
+    height: '190px',
+    file: 'public/main.js',
+  },
   hellosolarsystem: {
     title: 'Hello Solar System',
     height: '800px',

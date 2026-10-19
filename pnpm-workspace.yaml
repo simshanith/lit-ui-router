@@ -15,8 +15,8 @@ catalog:
   '@codecov/bundle-analyzer': ^2.0.1
 
   oxc-project-runtime: 'npm:@oxc-project/runtime@0.154.0'
-  '@commitlint/cli': ^21.2.3
-  '@commitlint/config-conventional': ^21.2.3
+  '@commitlint/cli': ^21.2.4
+  '@commitlint/config-conventional': ^21.2.4
   '@commitlint/types': ^21.2.3
   '@custom-elements-manifest/analyzer': ^0.11.0
   '@lit-labs/signals': ^0.3.0
@@ -51,7 +51,7 @@ catalog:
   diff: ^9.0.0
   effect: ^4.0.5
   esbuild: ^0.28.2
-  eslint: ^10.12.0
+  eslint: ^10.13.0
   eslint-doc-generator: ^3.7.1
   eslint-formatter-tap: ^9.0.1
   eslint-plugin-eslint-plugin: ^7.6.2
@@ -60,13 +60,13 @@ catalog:
   eslint-plugin-oxlint: 1.88.0
   eslint-plugin-package-json: ^1.10.1
   eslint-plugin-pnpm: ^1.9.1
-  eslint-plugin-turbo: ^2.11.8
+  eslint-plugin-turbo: ^2.11.9
   eslint-plugin-wc: ^3.1.0
-  happy-dom: ^21.0.1
+  happy-dom: ^21.0.3
   hono: ^4.13.13
   husky: ^9.1.7
   jsonc-parser: ^3.3.1
-  knip: ^6.41.0
+  knip: ^6.42.0
   lit: ^3.3.3
   lit-analyzer: ^2.0.3
   lit-dialog: ^2.0.1
@@ -88,7 +88,7 @@ catalog:
   signal-polyfill: ^0.2.2
   start-server-and-test: ^3.0.13
   tinybench: ^6.2.2
-  turbo: ^2.11.8
+  turbo: ^2.11.9
   typedoc: ^0.28.20
   typedoc-plugin-markdown: ^4.14.0
   typedoc-vitepress-theme: ^1.1.4
@@ -104,7 +104,7 @@ catalog:
   vitest: ^5.0.5
   vue: ^3.5.44
   vue-tsc: ^3.3.13
-  wrangler: ^4.151.0
+  wrangler: ^4.151.2
   yaml: ^2.9.0
 
 catalogMode: prefer
@@ -242,7 +242,6 @@ overrides:
   'js-yaml@>=4 <4.3.2': ^4.3.2
   'lit-dialog>lit': ^3.3.3
   'make-fetch-happen>http-cache-semantics': ^4.3.0
-  'oxc-parser>@oxc-project/types': 0.154.0
   'postcss@<8.5.26': ^8.5.26
   'qs@<6.16.0': ^6.16.0
   'tar@<7.5.22': ^7.5.22
@@ -281,6 +280,16 @@ patchedDependencies:
   lit-dialog: patches/lit-dialog.patch
 
 minimumReleaseAge: 1440
+
+minimumReleaseAgeExclude:
+  - '@cloudflare/workerd-darwin-64@1.20261019.1'
+  - '@cloudflare/workerd-darwin-arm64@1.20261019.1'
+  - '@cloudflare/workerd-linux-64@1.20261019.1'
+  - '@cloudflare/workerd-linux-arm64@1.20261019.1'
+  - '@cloudflare/workerd-windows-64@1.20261019.1'
+  - miniflare@5.20261019.0-beta
+  - workerd@1.20261019.1
+  - wrangler@4.151.2
 
 minimumReleaseAgeExcludePrune: true
 
