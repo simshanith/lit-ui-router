@@ -45,42 +45,55 @@ export type Site = {
   readonly packageName: string;
 };
 
+/** A site resolved from a key or argv, or why it could not be. */
+export type SiteResult =
+  | { readonly ok: true; readonly site: Site }
+  | { readonly ok: false; readonly error: string };
+
 /**
- * Resolves a site key to its package, or throws. The key becomes a path, so
- * only a domain-shaped name is accepted: nothing can climb out of www/.
+ * Resolves a site key to its package. The key becomes a path, so only a
+ * domain-shaped name is accepted: nothing can climb out of www/.
  */
-export const resolveSite = (root: string, key: string): Site => {
+export const resolveSite = (root: string, key: string): SiteResult => {
   if (!/^[a-z0-9-]+(?:\.[a-z0-9-]+)+$/.test(key)) {
-    throw new Error(`site is not a www/ domain name: ${JSON.stringify(key)}`);
+    return {
+      ok: false,
+      error: `site is not a www/ domain name: ${JSON.stringify(key)}`,
+    };
   }
 
   const dir = `www/${key}`;
   const manifest = readManifest(join(root, dir));
 
   if (manifest === undefined) {
-    throw new Error(`unknown site ${key}: no package.json in ${dir}`);
+    return {
+      ok: false,
+      error: `unknown site ${key}: no package.json in ${dir}`,
+    };
   }
 
   const packageName = `@www/${key}`;
 
   if (manifest.name !== packageName) {
-    throw new Error(
-      `${dir}/package.json is named ${JSON.stringify(manifest.name)}, not ${packageName}`,
-    );
+    return {
+      ok: false,
+      error: `${dir}/package.json is named ${JSON.stringify(manifest.name)}, not ${packageName}`,
+    };
   }
 
-  return { key, dir, packageName };
+  return { ok: true, site: { key, dir, packageName } };
 };
 
-/** The optional `[site]` both Workers Builds commands end with; anything after it throws. */
+/** The optional `[site]` both Workers Builds commands end with; anything after it fails. */
 export const siteFromArgs = (
   root: string,
   [key = DEFAULT_SITE, ...extra]: readonly string[],
-): Site => {
+): SiteResult => {
   if (extra.length > 0) {
-    throw new Error(
-      `unexpected argument(s) after the site: ${extra.join(' ')}`,
-    );
+    return {
+      ok: false,
+      error: `unexpected argument(s) after the site: ${extra.join(' ')}`,
+    };
   }
 
   return resolveSite(root, key);
@@ -142,13 +155,11 @@ export const buildSteps = (
 ];
 
 const main = (argv: readonly string[]): void => {
-  let site: Site;
+  const resolved = siteFromArgs(workspaceRoot, argv);
 
-  try {
-    site = siteFromArgs(workspaceRoot, argv);
-  } catch (error) {
+  if (!resolved.ok) {
     console.error(
-      `cloudflare-build: ${error instanceof Error ? error.message : String(error)}\nusage: cloudflare-build.ts [site]`,
+      `cloudflare-build: ${resolved.error}\nusage: cloudflare-build.ts [site]`,
     );
     process.exitCode = 2;
 
@@ -168,7 +179,7 @@ const main = (argv: readonly string[]): void => {
   for (const [command, args] of buildSteps(
     workspaceRoot,
     `${npmPrefix}/bin`,
-    site,
+    resolved.site,
   )) {
     execFileSync(command, [...args], { stdio: 'inherit', cwd: workspaceRoot });
   }
