@@ -11,12 +11,9 @@ export const SHA = '0123456789abcdef0123456789abcdef01234567';
 
 export const OTHER_SHA = 'f'.repeat(40);
 
-export const DIST_TAG = 'latest';
-
 export const NPM: NpmFacts = {
   integrity: 'sha512-AAAA',
   publishedAt: '2026-10-01T00:00:00.000Z',
-  distTag: DIST_TAG,
 };
 
 export const GH: GhReleaseFacts = {
@@ -46,7 +43,6 @@ const tagged: VersionRow = {
   tag_conflict: null,
   npm_integrity: null,
   npm_published_at: null,
-  npm_dist_tag: null,
   npm_deprecated: null,
   npm_conflict: null,
   gh_release_id: null,
@@ -62,7 +58,6 @@ const published: VersionRow = {
   rev: 1,
   npm_integrity: NPM.integrity,
   npm_published_at: NPM.publishedAt,
-  npm_dist_tag: DIST_TAG,
 };
 
 const ghColumns = {

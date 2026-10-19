@@ -2,7 +2,6 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import {
-  ADVISORY_COLUMNS,
   type DistTagOutcome,
   FACT_COLUMNS,
   type Fold,
@@ -27,7 +26,6 @@ import {
 } from './release-ledger.core.ts';
 import {
   DEPRECATION,
-  DIST_TAG,
   ENVELOPE,
   GH,
   NPM,
@@ -60,12 +58,7 @@ const conflictColumn = (region: Region) => `${region}_conflict` as const;
 function regionColumns(region: Region): Set<string> {
   const { fixed, mutable } = REGIONS[region];
 
-  return new Set<string>([
-    ...fixed,
-    ...mutable,
-    conflictColumn(region),
-    ...(region === 'npm' ? ADVISORY_COLUMNS : []),
-  ]);
+  return new Set<string>([...fixed, ...mutable, conflictColumn(region)]);
 }
 
 const VARIANTS: Record<Region, ((Observation[Region] & object) | null)[]> = {
@@ -329,7 +322,7 @@ describe('fold: conflicts', () => {
   });
 });
 
-describe('fold: mutable and advisory facts', () => {
+describe('fold: mutable facts', () => {
   it('updates an edited release body in place', () => {
     const result = applied(
       fold(ROWS.released, { gh: { ...GH, body: 'edited' } }, ENVELOPE),
@@ -375,32 +368,6 @@ describe('fold: mutable and advisory facts', () => {
         ),
       ),
       'deprecated',
-    );
-  });
-
-  it('records no dist-tag when the claim has none', () => {
-    const { distTag: _distTag, ...sweep } = NPM;
-
-    assert.equal(
-      after(fold(ROWS.tagged, { npm: sweep }, ENVELOPE)).npm_dist_tag,
-      null,
-    );
-  });
-
-  it('fills a missing dist-tag from a later publish-npm claim', () => {
-    const { distTag: _distTag, ...sweep } = NPM;
-    const row = after(fold(ROWS.tagged, { npm: sweep }, ENVELOPE));
-
-    assert.equal(
-      after(fold(row, { npm: NPM }, ENVELOPE)).npm_dist_tag,
-      DIST_TAG,
-    );
-  });
-
-  it('keeps the first dist-tag and never flags a different one', () => {
-    assert.deepEqual(
-      fold(ROWS.published, { npm: { ...NPM, distTag: 'next' } }, ENVELOPE),
-      { outcome: 'unchanged' },
     );
   });
 
@@ -498,26 +465,11 @@ describe('repair', () => {
       /needs a conflict on tag/,
     );
   });
-
-  it('sets the dist-tag it carries', () => {
-    assert.equal(
-      after(
-        repair(
-          conflicted,
-          'npm',
-          { npm: { ...NPM, distTag: 'next' } },
-          ENVELOPE,
-        ),
-      ).npm_dist_tag,
-      'next',
-    );
-  });
 });
 
 describe('REGIONS', () => {
-  it('assigns every fact column to one region, as fixed, mutable, advisory or conflict', () => {
+  it('assigns every fact column to one region, as fixed, mutable or conflict', () => {
     const assigned = [
-      ...ADVISORY_COLUMNS,
       ...REGION_NAMES.flatMap((region) => [
         ...REGIONS[region].fixed,
         ...REGIONS[region].mutable,

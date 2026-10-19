@@ -77,5 +77,4 @@ Each region moves only on its own source. An observation that contradicts a
 recorded fixed fact, or reports it absent, stores itself in the region's
 conflict column and leaves the fact as recorded; mutable facts keep following
 the source. `repair` adopts the current observation for one region and clears
-its conflict, and cannot erase recorded facts. `npm_dist_tag` is advisory: only
-the publish-npm claim sends it, and the first value stays.
+its conflict, and cannot erase recorded facts.

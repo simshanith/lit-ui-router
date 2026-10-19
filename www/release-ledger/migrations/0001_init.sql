@@ -11,8 +11,6 @@ CREATE TABLE versions (
   tag_conflict     TEXT,
   npm_integrity    TEXT,
   npm_published_at TEXT,
-  -- advisory: npm does not record it, so only the publish-npm claim sets it
-  npm_dist_tag     TEXT,
   npm_deprecated   TEXT,
   npm_conflict     TEXT,
   gh_release_id    INTEGER,
@@ -25,7 +23,7 @@ CREATE TABLE versions (
   -- each source's facts arrive together, and a conflict needs a fact to contradict
   CHECK (tag_conflict IS NULL OR git_sha IS NOT NULL),
   CHECK ((npm_integrity IS NULL) = (npm_published_at IS NULL)),
-  CHECK (npm_integrity IS NOT NULL OR (npm_dist_tag IS NULL AND npm_deprecated IS NULL AND npm_conflict IS NULL)),
+  CHECK (npm_integrity IS NOT NULL OR (npm_deprecated IS NULL AND npm_conflict IS NULL)),
   CHECK (
     (gh_release_id IS NULL) = (gh_url IS NULL)
     AND (gh_release_id IS NULL) = (gh_prerelease IS NULL)
