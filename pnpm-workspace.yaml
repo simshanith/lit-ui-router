@@ -189,6 +189,7 @@ catalogs:
     '@tools/oxc-emit': workspace:*
     '@tools/oxlint-anti-slop': workspace:*
     '@tools/release-config': workspace:*
+    '@tools/release-ledger': workspace:*
     '@tools/shared': workspace:*
     '@tools/typedoc-plugin-lit-ui-router': workspace:*
     '@tools/vue-check': workspace:*

@@ -437,6 +437,9 @@ catalogs:
     '@tools/release-config':
       specifier: workspace:*
       version: workspace:*
+    '@tools/release-ledger':
+      specifier: workspace:*
+      version: workspace:*
     '@tools/shared':
       specifier: workspace:*
       version: workspace:*
@@ -2577,6 +2580,24 @@ importers:
         specifier: 'catalog:'
         version: 7.0.2
 
+  tools/release-ledger:
+    devDependencies:
+      '@tools/shared':
+        specifier: catalog:workspace
+        version: link:../shared
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.19.2
+      oxfmt:
+        specifier: 'catalog:'
+        version: 0.73.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.88.0(oxlint-tsgolint@7.0.2004)
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+
   tools/repo-checks:
     devDependencies:
       '@tools/bootstrap':
@@ -2814,6 +2835,10 @@ importers:
         version: 4.151.0(@types/node@24.19.2)
 
   www/release-ledger.lit-ui-router.dev:
+    dependencies:
+      '@tools/release-ledger':
+        specifier: catalog:workspace
+        version: link:../../tools/release-ledger
     devDependencies:
       '@tools/shared':
         specifier: catalog:workspace
@@ -2830,6 +2855,9 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
+      wrangler:
+        specifier: 'catalog:'
+        version: 4.151.0(@types/node@24.19.2)
 
 packages:
 
