@@ -179,6 +179,8 @@ file's own comments and the schema in
 [`workers-builds-triggers.core.ts`](../tools/workers-builds/workers-builds-triggers.core.ts) — and
 not repeated here. A `wranglerConfig` that names no file is a hard error (exit 2), never a skipped
 entry, so a moved file cannot turn the check green.
+A configured worker the account does not have yet is drift (exit 1), not an error: a new site
+reads as owing its dashboard step without hiding the other sites' verdicts.
 
 Requires `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`. The token must be **user-scoped** — account-owned
 tokens do not cover the Workers Builds API — and carry two permissions: **Workers Scripts: Read**, which

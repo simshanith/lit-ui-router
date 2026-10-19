@@ -4,6 +4,7 @@ packages:
   - packages/shared/*
   - tools/*
   - www/lit-ui-router.dev
+  - www/release-ledger.lit-ui-router.dev
   - examples
 
 catalog:

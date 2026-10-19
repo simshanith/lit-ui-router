@@ -1,0 +1,20 @@
+{
+  "name": "@www/release-ledger.lit-ui-router.dev",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The release-ledger worker, bound to its D1 database and answering 404 until the ledger lands",
+  "type": "module",
+  "scripts": {
+    "format:check:oxfmt": "oxfmt --check \"**/*.{ts,json,jsonc,md}\"",
+    "format:oxfmt": "oxfmt \"**/*.{ts,json,jsonc,md}\"",
+    "lint:oxlint": "oxlint .",
+    "typecheck:worker": "tsc -p worker/tsconfig.json --noEmit",
+    "types:worker": "wrangler types worker/worker-configuration.d.ts"
+  },
+  "devDependencies": {
+    "oxfmt": "catalog:",
+    "oxlint": "catalog:",
+    "typescript": "catalog:",
+    "wrangler": "catalog:"
+  }
+}
