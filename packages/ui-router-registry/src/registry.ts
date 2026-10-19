@@ -59,8 +59,33 @@ export type StateName = IsRegistered extends true
   ? LiteralName<Declarations>
   : string;
 
-/** A relative state reference, resolved against `options.relative` or the uiSref's context. */
-export type RelativeRef = `.${string}` | `^${string}`;
+// Every dotted tail of a registered name: `a.b.c` gives `b.c | c`. Built once per program.
+type Tails<S> = S extends `${string}.${infer Rest}`
+  ? Rest | Tails<Rest>
+  : never;
+
+type RelativeTail = StateName | Tails<StateName>;
+
+type Up = '^' | '^.^' | '^.^.^';
+
+/**
+ * A relative state reference, resolved against `options.relative` or the
+ * uiSref's context. Its base isn't known statically, so once an app registers
+ * only its tail is checked: it must end some registered name. Params stay loose.
+ */
+export type RelativeRef = IsRegistered extends true
+  ? Up | `.${RelativeTail}` | `${Up}.${RelativeTail}`
+  : `.${string}` | `^${string}`;
+
+declare const unchecked: unique symbol;
+
+/**
+ * An explicit opt-out for a target the registry can't see, such as a name
+ * built at runtime or a state registered at runtime: `name as UncheckedRef`.
+ * Its params are loose. Nothing is unsafe at runtime; the target is just
+ * unverified.
+ */
+export type UncheckedRef = string & { readonly [unchecked]: true };
 
 /** A glob that `includes` accepts as well as a state name. */
 export type StateGlob = StateName | `${StateName}.*` | `${StateName}.**`;
@@ -265,7 +290,21 @@ export type ParamArgs<N extends StateName, Options> = IsRegistered extends true
   : [params?: RawParams, options?: Options];
 
 // Object targets (a `transition.from()`, a `TargetState`'s state) stay loose.
-type LooseTarget = RelativeRef | StateDeclaration | StateObject;
+type LooseRelative = `.${string}` | `^${string}`;
+
+type LooseTarget =
+  | LooseRelative
+  | UncheckedRef
+  | StateDeclaration
+  | StateObject;
+
+// Checks a relative ref's tail per call, so the constraint above stays a small
+// union. A failing ref reads as this key in the error.
+type CheckRelative<T> = T extends LooseRelative
+  ? T extends RelativeRef
+    ? unknown
+    : { readonly 'relative ref ends no registered state name': RelativeRef }
+  : unknown;
 
 /** The arguments after a target: typed for a state name, loose otherwise. */
 export type TargetArgs<T, Options> = T extends StateName
@@ -281,34 +320,44 @@ export interface TypedStateService extends Omit<
   'go' | 'transitionTo' | 'target' | 'href' | 'is' | 'includes'
 > {
   go<T extends StateName | LooseTarget>(
-    to: T,
+    to: T & CheckRelative<T>,
     ...args: TargetArgs<T, TransitionOptions>
   ): TransitionPromise;
 
   transitionTo<T extends StateName | LooseTarget>(
-    to: T,
+    to: T & CheckRelative<T>,
     ...args: TargetArgs<T, TransitionOptions>
   ): TransitionPromise;
 
   target<T extends StateName | LooseTarget>(
-    identifier: T,
+    identifier: T & CheckRelative<T>,
     ...args: TargetArgs<T, TransitionOptions>
   ): TargetState;
 
   href<T extends StateName | LooseTarget>(
-    stateOrName: T,
+    stateOrName: T & CheckRelative<T>,
     ...args: TargetArgs<T, HrefOptions>
   ): string;
 
   is<N extends StateName>(
-    stateOrName: N | StateDeclaration | StateObject,
+    stateOrName: N,
     params?: Partial<ParamsOf<N>>,
+    options?: { relative?: StateDeclaration | StateObject | StateName },
+  ): boolean;
+  is(
+    stateOrName: UncheckedRef | StateDeclaration | StateObject,
+    params?: RawParams,
     options?: { relative?: StateDeclaration | StateObject | StateName },
   ): boolean;
 
   includes<N extends StateName>(
-    stateOrName: N | StateGlob | StateDeclaration | StateObject,
+    stateOrName: N | StateGlob,
     params?: Partial<ParamsOf<N>>,
+    options?: TransitionOptions,
+  ): boolean;
+  includes(
+    stateOrName: UncheckedRef | StateDeclaration | StateObject,
+    params?: RawParams,
     options?: TransitionOptions,
   ): boolean;
 }
@@ -322,7 +371,7 @@ interface SnapshotBase {
   /** Narrows the snapshot to the states at or below `state`. */
   includes<N extends StateName>(state: N): this is ActiveSnapshot<N>;
   includes(
-    stateOrName: StateGlob | StateDeclaration | StateObject,
+    stateOrName: StateGlob | UncheckedRef | StateDeclaration | StateObject,
     params?: RawParams,
   ): boolean;
 }

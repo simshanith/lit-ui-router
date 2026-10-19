@@ -10,4 +10,5 @@ export type {
   TargetArgs,
   TypedRouteSnapshot,
   TypedStateService,
+  UncheckedRef,
 } from './registry.js';

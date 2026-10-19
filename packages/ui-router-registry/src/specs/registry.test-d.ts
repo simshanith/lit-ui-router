@@ -6,8 +6,10 @@ import type {
   ParamsOf,
   ResolvedParamsOf,
   StateName,
+  RelativeRef,
   TypedRouteSnapshot,
   TypedStateService,
+  UncheckedRef,
 } from '../index.js';
 import type { AboutState, Draft, dynamicState, states } from './states.js';
 
@@ -105,11 +107,58 @@ accepts<ResolvedParamsOf<'search'>['q']>(undefined);
 // `parent:` inherits the parent's params, as a dotted name does.
 accepts<ResolvedParamsOf<'compose'>['sort']>('date');
 
-// -- loose targets stay loose -------------------------------------------------
+// -- relative refs: the tail is checked, params stay loose ---------------------
 
 void stateService.go('.contact', { contactId: 'c1' });
 
 void stateService.go('^');
+
+void stateService.go('^.edit');
+
+void stateService.go('^.^.contact.edit', { anything: 1 });
+
+accepts<RelativeRef>('.home');
+
+// @ts-expect-error a relative tail that ends no registered name
+void stateService.go('.contcat');
+
+// @ts-expect-error a relative tail that ends no registered name
+stateService.href('^.edti');
+
+// @ts-expect-error a relative ref needs a tail or an ancestor step
+accepts<RelativeRef>('.');
+
+// -- widened and unchecked targets --------------------------------------------
+
+declare const runtimeName: string;
+
+// SAFETY: an opt-out on purpose; the name is one the registry can't see
+const uncheckedName = runtimeName as UncheckedRef;
+
+// @ts-expect-error a widened string isn't a registered name
+void stateService.go(runtimeName);
+
+// @ts-expect-error a widened string isn't a registered name
+stateService.href(runtimeName);
+
+void stateService.go(uncheckedName, { anything: 1 });
+
+stateService.href(uncheckedName);
+
+void stateService.transitionTo(uncheckedName, {}, { reload: true });
+
+void stateService.target(uncheckedName, { anything: 1 });
+
+accepts<boolean>(stateService.is(uncheckedName, { anything: 1 }));
+
+accepts<boolean>(stateService.includes(uncheckedName, { anything: 1 }));
+
+accepts<boolean>(snapshot.includes(uncheckedName));
+
+// @ts-expect-error a plain string isn't an UncheckedRef without the cast
+accepts<UncheckedRef>(runtimeName);
+
+// -- object targets stay loose --------------------------------------------------
 
 declare const fromState: StateDeclaration;
 

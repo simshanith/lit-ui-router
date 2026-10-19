@@ -83,8 +83,9 @@ function generate(size: number): GenState[] {
 }
 
 // `unregistered`: the full usage with no augmentation, the fallback baseline.
-// `calls`: registered, go and href only. `snapshot`: registered, plus narrowing.
-const ALL_VARIANTS = ['unregistered', 'calls', 'snapshot'] as const;
+// `calls`: registered, go and href only. `relative`: `calls` plus a relative go
+// per state. `snapshot`: `calls` plus narrowing.
+const ALL_VARIANTS = ['unregistered', 'calls', 'relative', 'snapshot'] as const;
 
 type Variant = (typeof ALL_VARIANTS)[number];
 
@@ -130,11 +131,19 @@ function writeFixture(dir: string, size: number, variant: Variant) {
     ];
   });
 
+  // One relative go per state, by its last segment.
+  const relatives =
+    variant === 'relative'
+      ? states.map(
+          (s) => `void stateService.go('.${s.name.split('.').at(-1)}');`,
+        )
+      : [];
+
   // `NARROWED` snapshot narrowings, spread across the tree's depths.
   const step = Math.max(1, Math.floor(states.length / NARROWED));
 
   const narrowings =
-    variant === 'calls'
+    variant === 'calls' || variant === 'relative'
       ? []
       : states
           .filter((_, i) => i % step === 0)
@@ -146,7 +155,7 @@ function writeFixture(dir: string, size: number, variant: Variant) {
 
   writeFileSync(
     join(dir, 'usage.ts'),
-    `import type { TypedRouteSnapshot, TypedStateService } from './registry';\n\ndeclare const stateService: TypedStateService;\ndeclare const snapshot: TypedRouteSnapshot;\n\n${calls.join('\n')}\n\n${narrowings.join('\n')}\n`,
+    `import type { TypedRouteSnapshot, TypedStateService } from './registry';\n\ndeclare const stateService: TypedStateService;\ndeclare const snapshot: TypedRouteSnapshot;\n\n${calls.join('\n')}\n\n${relatives.join('\n')}\n\n${narrowings.join('\n')}\n`,
   );
 
   writeFileSync(
