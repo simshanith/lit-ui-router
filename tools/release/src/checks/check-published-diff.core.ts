@@ -155,16 +155,10 @@ export function reclassifyManifest(
     return files;
   }
 
-  let manifestInert = false;
-
-  try {
-    manifestInert = isManifestDriftInert({
-      fileSetChanged: hasFileSetChange(diff),
-      driftFields: manifestDriftFields(publishedManifest, localManifest),
-    });
-  } catch {
-    // Unparsable manifest bytes stay ship-affecting.
-  }
+  const manifestInert = isManifestDriftInert({
+    fileSetChanged: hasFileSetChange(diff),
+    driftFields: manifestDriftFields(publishedManifest, localManifest),
+  });
 
   if (!manifestInert) return files;
 
@@ -194,26 +188,35 @@ export type DiffResult = {
   shipInertFiles?: string[];
 };
 
-/** Filter publishable names to a comma-separated scope; empty/unset = all, unknown names throw. */
+/** The publishable names a scope selects, or why it selects none. */
+export type ScopeResult =
+  | { readonly ok: true; readonly packages: string[] }
+  | { readonly ok: false; readonly error: string };
+
+/** Filter publishable names to a comma-separated scope; empty/unset = all, unknown names fail. */
 export function scopePackages(
   publishable: string[],
   scope: string | undefined,
-): string[] {
+): ScopeResult {
   const requested = (scope ?? '')
     .split(',')
     .map((name) => name.trim())
     .filter(Boolean);
 
-  if (requested.length === 0) return publishable;
+  if (requested.length === 0) return { ok: true, packages: publishable };
   const unknown = requested.filter((name) => !publishable.includes(name));
 
   if (unknown.length > 0) {
-    throw new Error(
-      `PUBLISHED_DIFF_PACKAGES names no publishable member: ${unknown.join(', ')} — publishable: ${publishable.join(', ')}`,
-    );
+    return {
+      ok: false,
+      error: `PUBLISHED_DIFF_PACKAGES names no publishable member: ${unknown.join(', ')} — publishable: ${publishable.join(', ')}`,
+    };
   }
 
-  return publishable.filter((name) => requested.includes(name));
+  return {
+    ok: true,
+    packages: publishable.filter((name) => requested.includes(name)),
+  };
 }
 
 /** Per-package machine verdict; `tag`/`version` name the compared dist-tag (null when unpublished). */
