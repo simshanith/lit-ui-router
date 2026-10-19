@@ -47,12 +47,14 @@ async function exampleDirs(): Promise<string[]> {
   for (const entry of entries) {
     if (!entry.isDirectory() || entry.name === 'node_modules') continue;
 
-    try {
-      await stat(join(EXAMPLES_DIR, entry.name, 'package.json'));
-      names.push(entry.name);
-    } catch {
-      // not an example
-    }
+    const isExample = await stat(
+      join(EXAMPLES_DIR, entry.name, 'package.json'),
+    ).then(
+      () => true,
+      () => false,
+    );
+
+    if (isExample) names.push(entry.name);
   }
 
   return names.sort();
@@ -87,13 +89,14 @@ const main = async (): Promise<void> => {
   }
 
   for (const name of built) {
-    try {
-      if (
-        !(await stat(join(EXAMPLES_DIR, name, 'dist', 'index.html'))).isFile()
-      ) {
-        throw new Error('not a file');
-      }
-    } catch {
+    const isBuilt = await stat(
+      join(EXAMPLES_DIR, name, 'dist', 'index.html'),
+    ).then(
+      (stats) => stats.isFile(),
+      () => false,
+    );
+
+    if (!isBuilt) {
       fail(
         `examples/${name}/dist is not built — run \`turbo run build:embeds --filter=examples\`` +
           ` (is ${name} listed in examples/embeds.ts?)`,
