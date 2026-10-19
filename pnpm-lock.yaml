@@ -2812,6 +2812,21 @@ importers:
         specifier: 'catalog:'
         version: 4.151.2(@types/node@24.19.2)
 
+  www/release-ledger.lit-ui-router.dev:
+    devDependencies:
+      oxfmt:
+        specifier: 'catalog:'
+        version: 0.73.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.88.0(oxlint-tsgolint@7.0.2004)
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+      wrangler:
+        specifier: 'catalog:'
+        version: 4.151.0(@types/node@24.19.2)
+
 packages:
 
   '@actions/core@3.0.1':

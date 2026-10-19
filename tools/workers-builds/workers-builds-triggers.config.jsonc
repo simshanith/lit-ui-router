@@ -46,6 +46,44 @@
         },
       },
     },
+    // The release ledger. Its production deploy applies the D1 migrations
+    // first (cloudflare-deploy.ts). A wildcard matches any characters, `/`
+    // included, so `<dir>/*` covers nested files. The lockfile and catalog are
+    // watched because a dependency bump changes the bundle wrangler deploys.
+    "release-ledger.lit-ui-router.dev": {
+      "wranglerConfig": "www/release-ledger.lit-ui-router.dev/wrangler.jsonc",
+      "productionBranch": "main",
+      "production": {
+        "build_command": "./tools/workers-builds/cloudflare-build.sh release-ledger.lit-ui-router.dev",
+        "deploy_command": "./tools/workers-builds/cloudflare-deploy.ts main release-ledger.lit-ui-router.dev",
+        "path_includes": [
+          "www/release-ledger.lit-ui-router.dev/*",
+          "tools/release-ledger/*",
+          "pnpm-lock.yaml",
+          "pnpm-workspace.yaml",
+        ],
+        "environment_variables": {
+          "SKIP_DEPENDENCY_INSTALL": "1",
+          "CYPRESS_INSTALL_BINARY": "0",
+          "HUSKY": "0",
+        },
+      },
+      "preview": {
+        "build_command": "./tools/workers-builds/cloudflare-build.sh release-ledger.lit-ui-router.dev",
+        "deploy_command": "./tools/workers-builds/cloudflare-deploy.ts branch release-ledger.lit-ui-router.dev",
+        "path_includes": [
+          "www/release-ledger.lit-ui-router.dev/*",
+          "tools/release-ledger/*",
+          "pnpm-lock.yaml",
+          "pnpm-workspace.yaml",
+        ],
+        "environment_variables": {
+          "SKIP_DEPENDENCY_INSTALL": "1",
+          "CYPRESS_INSTALL_BINARY": "0",
+          "HUSKY": "0",
+        },
+      },
+    },
     // The Altitude Atlas, once www/atlas.lit-ui-router.dev/wrangler.jsonc exists
     // and its Worker has triggers in the dashboard. A wranglerConfig naming a
     // file that does not exist is a hard error (exit 2), not a skip — the miss
