@@ -54,13 +54,32 @@ const stateService: TypedStateService = router.stateService;
 stateService.go('contacts.contact', { contactId: 'c1' });
 ```
 
-| Type                              | What it holds                                                                                                                         |
-| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `Register`                        | the interface an app augments with its `as const` state declarations                                                                  |
-| `StateName`                       | the registered state names; dotted names and `parent:` both resolve, and a future state's `name.**` placeholder is left out           |
-| `ParamsOf` and `ResolvedParamsOf` | the params a state accepts and the params it reads back, its ancestors' included; url placeholders are required, query params are not |
-| `TypedStateService`               | `go`, `transitionTo`, `target`, `href`, `is` and `includes` over registered names; relative refs and object targets stay loose        |
-| `TypedRouteSnapshot`              | the route snapshot the reactive packages share, whose `includes(name)` narrows `current` and `params` to that state's subtree         |
+| Type                              | What it holds                                                                                                                                             |
+| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Register`                        | the interface an app augments with its `as const` state declarations                                                                                      |
+| `StateName`                       | the registered state names; dotted names and `parent:` both resolve, and a future state's `name.**` placeholder is left out                               |
+| `ParamsOf` and `ResolvedParamsOf` | the params a state accepts and the params it reads back, its ancestors' included; url placeholders are required, query params are not                     |
+| `TypedStateService`               | `go`, `transitionTo`, `target`, `href`, `is` and `includes` over registered names; relative refs are checked by their tail, and object targets stay loose |
+| `TypedRouteSnapshot`              | the route snapshot the reactive packages share, whose `includes(name)` narrows `current` and `params` to that state's subtree                             |
+
+## Relative refs and unchecked targets
+
+A relative ref (`.child`, `^`, `^.sibling`) resolves against the `uiSref`'s
+context or `options.relative`, which types can't see. Its tail is checked
+against the registered names, so `.contcat` fails, and its params stay loose. A
+relative ref also lets a link reuse the current params instead of restating
+them: `uiSref('.edit')` from `contacts.contact` inherits `contactId`.
+
+A target the registry can't see, such as a name built at runtime or a state
+registered at runtime, is a `string` and fails once an app registers. Opt out
+explicitly with `UncheckedRef`; its params are loose:
+
+```ts
+import type { UncheckedRef } from 'ui-router-registry';
+
+uiSref(link.state as UncheckedRef, link.params);
+stateService.go(name as UncheckedRef);
+```
 
 ## Annotate members that call typed targets
 

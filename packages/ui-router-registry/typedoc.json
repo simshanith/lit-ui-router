@@ -19,6 +19,7 @@
     "notDocumented": true
   },
   "intentionallyNotExported": [
+    "CheckRelative",
     "Declarations",
     "DeclarationOf",
     "HashParam",
@@ -26,9 +27,11 @@
     "LineageParams",
     "LiteralName",
     "ParentName",
+    "RelativeTail",
     "RequiredKeys",
     "Simplify",
-    "SnapshotBase"
+    "SnapshotBase",
+    "Up"
   ],
   "entryFileName": "index",
   "useCodeBlocks": true,

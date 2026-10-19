@@ -85,7 +85,10 @@ declare const unchecked: unique symbol;
  * Its params are loose. Nothing is unsafe at runtime; the target is just
  * unverified.
  */
-export type UncheckedRef = string & { readonly [unchecked]: true };
+export type UncheckedRef = string & {
+  /** The brand that only a cast supplies. */
+  readonly [unchecked]: true;
+};
 
 /** A glob that `includes` accepts as well as a state name. */
 export type StateGlob = StateName | `${StateName}.*` | `${StateName}.**`;
@@ -349,6 +352,7 @@ export interface TypedStateService extends Omit<
     params?: Partial<ParamsOf<N>>,
     options?: { relative?: StateDeclaration | StateObject | StateName },
   ): boolean;
+  /** `StateService.is` for an {@link UncheckedRef} or an object target, with loose params. */
   is(
     stateOrName: UncheckedRef | StateDeclaration | StateObject,
     params?: RawParams,
@@ -361,6 +365,7 @@ export interface TypedStateService extends Omit<
     params?: Partial<ParamsOf<N>>,
     options?: TransitionOptions,
   ): boolean;
+  /** `StateService.includes` for an {@link UncheckedRef} or an object target, with loose params. */
   includes(
     stateOrName: UncheckedRef | StateDeclaration | StateObject,
     params?: RawParams,
