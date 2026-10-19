@@ -4,8 +4,6 @@ CREATE TABLE versions (
   name             TEXT NOT NULL,
   version          TEXT NOT NULL,
   first_seen_at    TEXT NOT NULL,
-  -- bumped by every write; updates compare and set on it
-  rev              INTEGER NOT NULL DEFAULT 0,
   git_sha          TEXT,
   -- each *_conflict holds the observation that contradicts the region's fixed facts, as JSON
   tag_conflict     TEXT,
