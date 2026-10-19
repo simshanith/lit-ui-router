@@ -2,26 +2,67 @@
 // The Workers Builds deploy command, in the repo like the build command: the
 // dashboard holds one value for every branch, so wrangler details live here.
 // Runs after cloudflare-build.sh (bash: it runs before the install) — see www/DEPLOY.md.
+//
+// Usage: cloudflare-deploy.ts <main|branch> [site] — `site` as in cloudflare-build.ts.
 import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 
-// The site's wrangler.jsonc sits in the package, not the root, and the deploy
-// runs from the root — so every mode names it. It lives here rather than in the
-// dashboard: that is what the script indirection is for (see www/DEPLOY.md).
-const SITE_CONFIG = [
-  '--config',
-  'www/lit-ui-router.dev/wrangler.jsonc',
-] as const;
+import { workspaceRoot } from '@tools/bootstrap/root.ts';
 
-// Trigger names, not git refs; the trigger test imports this map.
+import { type Site, siteFromArgs } from './cloudflare-build.ts';
+import {
+  migratedDatabasesFromConfig,
+  parseJsonc,
+} from './workers-builds-triggers.core.ts';
+
+// Trigger names, not git refs. Each names the site's wrangler.jsonc with
+// --config: the deploy runs from the root and the config sits in the package.
 export const DEPLOY_MODES = {
-  main: ['wrangler', 'deploy', ...SITE_CONFIG],
-  branch: ['wrangler', 'versions', 'upload', ...SITE_CONFIG],
+  main: ['wrangler', 'deploy'],
+  branch: ['wrangler', 'versions', 'upload'],
 } as const;
 
 export type DeployMode = keyof typeof DEPLOY_MODES;
 
 const isDeployMode = (value: string | undefined): value is DeployMode =>
   value !== undefined && Object.hasOwn(DEPLOY_MODES, value);
+
+/** A deploy's `npx` argv tails: the migrations run first, in order. */
+export type DeployCommands = {
+  readonly migrations: readonly (readonly string[])[];
+  readonly deploy: readonly string[];
+};
+
+/** Exported so the trigger test checks each site's invocation by importing it. */
+export const deployCommands = (
+  root: string,
+  mode: DeployMode,
+  site: Site,
+): DeployCommands => {
+  const config = ['--config', `${site.dir}/wrangler.jsonc`] as const;
+  const deploy = [...DEPLOY_MODES[mode], ...config];
+
+  // A branch upload shares production's databases, so it never migrates them.
+  if (mode === 'branch') return { migrations: [], deploy };
+
+  const databases = migratedDatabasesFromConfig(
+    parseJsonc(readFileSync(join(root, site.dir, 'wrangler.jsonc'), 'utf8')),
+  );
+
+  return {
+    migrations: databases.map((database) => [
+      'wrangler',
+      'd1',
+      'migrations',
+      'apply',
+      database,
+      '--remote',
+      ...config,
+    ]),
+    deploy,
+  };
+};
 
 // execve does not search PATH; the shell resolves the command, and throws if it can't.
 const commandPath = (name: string): string =>
@@ -30,10 +71,23 @@ const commandPath = (name: string): string =>
     stdio: ['ignore', 'pipe', 'inherit'],
   }).trim();
 
-const main = ([mode, ...extra]: string[]): void => {
-  if (extra.length > 0 || !isDeployMode(mode)) {
+const USAGE = `usage: cloudflare-deploy.ts <${Object.keys(DEPLOY_MODES).join('|')}> [site]`;
+
+const main = ([mode, ...rest]: string[]): void => {
+  if (!isDeployMode(mode)) {
+    console.error(USAGE);
+    process.exitCode = 2;
+
+    return;
+  }
+
+  let site: Site;
+
+  try {
+    site = siteFromArgs(workspaceRoot, rest);
+  } catch (error) {
     console.error(
-      `usage: cloudflare-deploy.ts <${Object.keys(DEPLOY_MODES).join('|')}>`,
+      `cloudflare-deploy: ${error instanceof Error ? error.message : String(error)}\n${USAGE}`,
     );
     process.exitCode = 2;
 
@@ -47,11 +101,19 @@ const main = ([mode, ...extra]: string[]): void => {
     );
   }
 
-  process.execve(
-    commandPath('npx'),
-    ['npx', ...DEPLOY_MODES[mode]],
-    process.env,
-  );
+  const { migrations, deploy } = deployCommands(workspaceRoot, mode, site);
+  const npx = commandPath('npx');
+
+  // execve keeps the cwd, so the migrations and the deploy share the root.
+  process.chdir(workspaceRoot);
+
+  // wrangler skips its confirmation prompt under WORKERS_CI or without a TTY;
+  // a failed migration throws here, so the deploy never runs.
+  for (const migration of migrations) {
+    execFileSync(npx, [...migration], { stdio: 'inherit' });
+  }
+
+  process.execve(npx, ['npx', ...deploy], process.env);
 };
 
 if (import.meta.main) main(process.argv.slice(2));

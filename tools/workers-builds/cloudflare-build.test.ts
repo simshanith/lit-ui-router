@@ -1,8 +1,8 @@
 // Fixture-only: that the derived spec agrees with the repo's other pnpm pins
 // is pnpm-pin.test.ts's job, so nothing here reads the real root.
 import assert from 'node:assert/strict';
-import { execFile } from 'node:child_process';
-import { mkdtempSync, writeFileSync } from 'node:fs';
+import { execFile, spawnSync } from 'node:child_process';
+import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import {
   copyFile,
   mkdir,
@@ -17,7 +17,13 @@ import { describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 
-import { pnpmSpec } from './cloudflare-build.ts';
+import {
+  DEFAULT_SITE,
+  buildSteps,
+  pnpmSpec,
+  resolveSite,
+  siteFromArgs,
+} from './cloudflare-build.ts';
 
 const rootWith = (packageManager?: string): string => {
   const dir = mkdtempSync(join(tmpdir(), 'cloudflare-build-'));
@@ -49,6 +55,113 @@ describe('pnpmSpec', () => {
 
   it('rejects a manifest with no packageManager at all', () => {
     assert.throws(() => pnpmSpec(rootWith()), /not a pnpm pin/);
+  });
+});
+
+// A root holding one www/ package per entry, keyed by directory name.
+const rootWithSites = (sites: Record<string, string | undefined>): string => {
+  const dir = rootWith('pnpm@12.3.4');
+
+  for (const [key, name] of Object.entries(sites)) {
+    mkdirSync(join(dir, 'www', key), { recursive: true });
+    writeFileSync(
+      join(dir, 'www', key, 'package.json'),
+      JSON.stringify(name === undefined ? {} : { name }),
+    );
+  }
+
+  return dir;
+};
+
+describe('resolveSite', () => {
+  const root = rootWithSites({
+    'lit-ui-router.dev': '@www/lit-ui-router.dev',
+    'example.test': '@www/example.test',
+    'misnamed.test': '@www/something-else',
+  });
+
+  it('resolves a domain key to its www/ package', () => {
+    assert.deepEqual(resolveSite(root, 'example.test'), {
+      key: 'example.test',
+      dir: 'www/example.test',
+      packageName: '@www/example.test',
+    });
+  });
+
+  it('builds the site package through turbo after the install', () => {
+    assert.deepEqual(
+      buildSteps(
+        root,
+        '/nonexistent/bin',
+        resolveSite(root, 'example.test'),
+      ).at(-1),
+      ['npx', ['turbo', '@www/example.test#build']],
+    );
+  });
+
+  it('throws on a site with no package', () => {
+    assert.throws(
+      () => resolveSite(root, 'nowhere.test'),
+      /unknown site nowhere\.test/,
+    );
+  });
+
+  // The convention is what the build and deploy rely on; a rename must not
+  // quietly build one package and deploy another.
+  it('throws when the package name does not match the directory', () => {
+    assert.throws(
+      () => resolveSite(root, 'misnamed.test'),
+      /named "@www\/something-else", not @www\/misnamed\.test/,
+    );
+  });
+
+  it('refuses keys that are not a domain name', () => {
+    for (const key of [
+      '',
+      '..',
+      '../www',
+      'www/example.test',
+      'Example.test',
+      'localhost',
+    ]) {
+      assert.throws(
+        () => resolveSite(root, key),
+        /not a www\/ domain name/,
+        key,
+      );
+    }
+  });
+
+  it('defaults to the docs site and refuses extra arguments', () => {
+    assert.equal(siteFromArgs(root, []).key, DEFAULT_SITE);
+    assert.equal(siteFromArgs(root, ['example.test']).key, 'example.test');
+    assert.throws(
+      () => siteFromArgs(root, ['example.test', 'extra']),
+      /unexpected argument\(s\) after the site: extra/,
+    );
+  });
+});
+
+// Arguments are checked before any step, so a bad one runs nothing. PATH names
+// no directory, so a regression reaches no real npm.
+describe('cloudflare-build.ts arguments', () => {
+  const script = fileURLToPath(
+    new URL('./cloudflare-build.ts', import.meta.url),
+  );
+
+  it('exits 2 with usage on an unknown site or an extra argument', () => {
+    for (const args of [
+      ['nowhere.lit-ui-router.dev'],
+      [DEFAULT_SITE, 'extra'],
+    ]) {
+      const result = spawnSync(process.execPath, [script, ...args], {
+        encoding: 'utf8',
+        env: { ...process.env, PATH: '/nonexistent' },
+      });
+
+      assert.equal(result.status, 2, args.join(' '));
+      assert.match(result.stderr, /usage: cloudflare-build\.ts \[site\]/);
+    }
   });
 });
 

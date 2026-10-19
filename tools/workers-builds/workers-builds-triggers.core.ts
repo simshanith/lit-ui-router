@@ -176,6 +176,27 @@ export function workerNameFromConfig(config: Json): string {
   return result.output.name;
 }
 
+// Only the D1 fields the production deploy migrates by.
+const WranglerD1Schema = v.looseObject({
+  d1_databases: v.optional(
+    v.array(
+      v.looseObject({
+        database_name: nonEmptyString,
+        migrations_dir: v.optional(nonEmptyString),
+      }),
+    ),
+  ),
+});
+
+/** The D1 databases a wrangler.jsonc gives a `migrations_dir`, by `database_name`. */
+export function migratedDatabasesFromConfig(config: Json): string[] {
+  const { d1_databases = [] } = validate(WranglerD1Schema, config);
+
+  return d1_databases
+    .filter((database) => database.migrations_dir !== undefined)
+    .map((database) => database.database_name);
+}
+
 // A trigger that builds the production branch is the production trigger;
 // everything else (branch wildcards, main excluded) deploys previews.
 export function classifyTrigger(
