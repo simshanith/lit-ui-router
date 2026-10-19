@@ -19,7 +19,6 @@ import {
   CLAIMS_QUEUE,
   consume,
   DEAD_LETTER_QUEUE,
-  FOLD_ATTEMPTS,
   type LedgerBatch,
   type LedgerMessage,
   QUEUE_BACKOFF,
@@ -147,6 +146,7 @@ const postClaim = (body: string, token = CLAIMS_TOKEN) =>
   });
 
 describe('wrangler.jsonc', () => {
+  // one consumer at a time keeps the read-to-batch window free of other writers
   it('consumes the claims queue one message at a time into the dead-letter queue', () => {
     const [claims, dead] = config.queues.consumers;
 
@@ -314,15 +314,11 @@ const VERSION_COLUMNS = [
   'name',
   'version',
   'first_seen_at',
-  'rev',
   ...FACT_COLUMNS,
 ] as const;
 
 const statuses = async () =>
-  (await run(findVersions({ name: NAME }))).map(({ status, rev }) => ({
-    status,
-    rev,
-  }));
+  (await run(findVersions({ name: NAME }))).map(({ status }) => status);
 
 const ledgerEvents = async () =>
   (await all('ledger_events')).map(
@@ -402,73 +398,6 @@ describe('queue consumer', { timeout: 120_000 }, () => {
     assert.equal((await all('ledger_events')).length, 4);
   });
 
-  const bumpsRev = (times: number) => {
-    let bumps = 0;
-
-    return observing(() =>
-      Effect.as(
-        Effect.promise(async () => {
-          if (bumps >= times) return;
-
-          bumps += 1;
-          await db.prepare('UPDATE versions SET rev = rev + 1').run();
-        }),
-        { ...RELEASED, distTags: {} },
-      ),
-    );
-  };
-
-  it('folds again when the row moves before the write', async () => {
-    await seed(ROWS.tagged);
-    const message = messageOf(claimOf());
-
-    await deliver([message], bumpsRev(1));
-
-    assert.deepEqual([message.acks, message.retries], [1, []]);
-    assert.deepEqual(await statuses(), [{ status: 'released', rev: 2 }]);
-    assert.deepEqual(
-      (await all('pipeline_events')).map(({ outcome }) => outcome),
-      ['applied'],
-    );
-    assert.deepEqual(await ledgerEvents(), ['npm observed', 'gh observed']);
-  });
-
-  it('writes nothing and retries when the row keeps moving', async () => {
-    await seed(ROWS.tagged);
-    const message = messageOf(claimOf());
-
-    await deliver([message], bumpsRev(FOLD_ATTEMPTS));
-
-    retriedOnce(message);
-    assert.deepEqual(await statuses(), [
-      { status: 'tagged', rev: FOLD_ATTEMPTS },
-    ]);
-    assert.deepEqual(await all('pipeline_events'), []);
-    assert.deepEqual(await all('ledger_events'), []);
-  });
-
-  it('aborts the batch when the row moves under a dist-tag move', async () => {
-    await seed(ROWS.tagged);
-    const message = messageOf(claimOf());
-
-    const concurrent = observing(() =>
-      Effect.as(
-        Effect.promise(() =>
-          db.prepare('UPDATE versions SET rev = rev + 1').run(),
-        ),
-        RELEASED,
-      ),
-    );
-
-    await deliver([message], concurrent);
-
-    retriedOnce(message);
-
-    for (const table of ['pipeline_events', 'ledger_events', 'dist_tags']) {
-      assert.deepEqual(await all(table), [], table);
-    }
-  });
-
   it('records a rejected claim and writes nothing', async () => {
     const message = messageOf(claimOf());
 
@@ -493,7 +422,7 @@ describe('queue consumer', { timeout: 120_000 }, () => {
     await deliver([message], sees({ ...RELEASED, tag: null, distTags: {} }));
 
     assert.equal(message.acks, 1);
-    assert.deepEqual(await statuses(), [{ status: 'untagged', rev: 0 }]);
+    assert.deepEqual(await statuses(), ['untagged']);
     assert.equal((await all('versions'))[0]?.git_sha, null);
     assert.deepEqual(await ledgerEvents(), ['npm observed', 'gh observed']);
   });
@@ -536,7 +465,7 @@ describe('queue consumer', { timeout: 120_000 }, () => {
       npm_integrity: 'sha512-BBBB',
       npm_published_at: NPM.publishedAt,
     });
-    assert.deepEqual(await statuses(), [{ status: 'conflict', rev: 3 }]);
+    assert.deepEqual(await statuses(), ['conflict']);
     // npm's pointer still moves onto the row
     assert.deepEqual(await ledgerEvents(), [
       'npm observed',
@@ -601,7 +530,7 @@ describe('queue consumer', { timeout: 120_000 }, () => {
     await deliver([message], sees({ ...RELEASED, npm: null, distTags: {} }));
 
     assert.equal(message.acks, 1);
-    assert.deepEqual(await statuses(), [{ status: 'tagged', rev: 0 }]);
+    assert.deepEqual(await statuses(), ['tagged']);
     assert.equal((await all('versions'))[0]?.gh_release_id, GH.id);
   });
 

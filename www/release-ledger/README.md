@@ -25,8 +25,7 @@ design is [#1424](https://github.com/simshanith/lit-ui-router/issues/1424) and
   writer. Per claim, it observes the tag, npm and GitHub, taking a 404 as the
   source reporting the fact absent, folds the observation through
   [`src/release-ledger.core.ts`](./src/release-ledger.core.ts), and writes the
-  outcome in one D1 batch, its `pipeline_events` row first. A missing claim row
-  after the batch means a row moved, so the consumer folds again. A GitHub
+  outcome in one D1 batch, its `pipeline_events` row first. A GitHub
   release ahead of npm is folded as seen. Fetches retry through Effect's
   `HttpClient.retryTransient`, which also takes GitHub's rate-limit 403s;
   a wait over 10 seconds (`Retry-After`, GitHub's `x-ratelimit-reset`) becomes

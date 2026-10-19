@@ -20,7 +20,6 @@ const VersionRowSchema = Schema.Struct({
   name: Schema.String,
   version: Schema.String,
   first_seen_at: Schema.String,
-  rev: Schema.Number,
   git_sha: NullableString,
   tag_conflict: NullableString,
   npm_integrity: NullableString,
@@ -153,20 +152,14 @@ const PIPELINE_COLUMNS = [
   'reason',
 ] as const;
 
-/** The claim's row, inserted only while `guard` holds; every later statement in the batch needs it. */
-export function pipelineInsert(
-  event: PipelineEvent,
-  guard: Statement,
-): Statement {
+/** The claim's row, first in the batch: the ledger events resolve their `pipeline_event_id` from it. */
+export function pipelineInsert(event: PipelineEvent): Statement {
   const columns = PIPELINE_COLUMNS.join(', ');
   const values = PIPELINE_COLUMNS.map(() => '?').join(', ');
 
   return {
-    sql: `INSERT INTO pipeline_events (${columns}) SELECT ${values} WHERE ${guard.sql}`,
-    params: [
-      ...PIPELINE_COLUMNS.map((column) => event[column]),
-      ...guard.params,
-    ],
+    sql: `INSERT INTO pipeline_events (${columns}) VALUES (${values})`,
+    params: PIPELINE_COLUMNS.map((column) => event[column]),
   };
 }
 

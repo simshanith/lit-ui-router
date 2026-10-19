@@ -30,9 +30,6 @@ export const CLAIMS_QUEUE = 'release-ledger-claims';
 
 export const DEAD_LETTER_QUEUE = 'release-ledger-claims-dlq';
 
-/** Folds per message, back to back, before a row that keeps moving sends it back to the queue. */
-export const FOLD_ATTEMPTS = 3;
-
 /** The slice of a Workers queue message the consumer uses. */
 export interface LedgerMessage {
   readonly id: string;
@@ -149,9 +146,14 @@ const distTagChanges = (
     return outcomes;
   });
 
-/** One read, observe, fold and write; `undefined` when a row moved before the write. */
-const foldOnce = (message: LedgerMessage, claim: Claim) =>
+const handleClaim = (message: LedgerMessage) =>
   Effect.gen(function* () {
+    const claim = yield* decodeClaim(message.body);
+
+    if (Option.isSome(yield* findClaim({ message_id: message.id }))) {
+      return ACK;
+    }
+
     const before = Option.getOrUndefined(
       yield* findVersion({ name: claim.name, version: claim.version }),
     );
@@ -177,14 +179,14 @@ const foldOnce = (message: LedgerMessage, claim: Claim) =>
             envelope,
           );
 
-    const { guard, write, distTags, ledger, ...outcome } = foldStatements(
+    const { write, distTags, ledger, ...outcome } = foldStatements(
       folded,
       tags,
       message.id,
     );
 
     const statements = [
-      pipelineInsert(pipelineEventOf(message, claim, outcome), guard),
+      pipelineInsert(pipelineEventOf(message, claim, outcome)),
       ...(write === undefined ? [] : [write]),
       ...distTags,
       ...ledger,
@@ -194,31 +196,7 @@ const foldOnce = (message: LedgerMessage, claim: Claim) =>
 
     yield* sql.batch(statements.map((statement) => toSql(sql, statement)));
 
-    // no claim row: a row moved after the read, and nothing was written
-    const landed = Option.isSome(yield* findClaim({ message_id: message.id }));
-
-    return landed ? ACK : undefined;
-  });
-
-const handleClaim = (message: LedgerMessage) =>
-  Effect.gen(function* () {
-    const claim = yield* decodeClaim(message.body);
-
-    if (Option.isSome(yield* findClaim({ message_id: message.id }))) {
-      return ACK;
-    }
-
-    for (let attempt = 1; attempt <= FOLD_ATTEMPTS; attempt += 1) {
-      const verdict = yield* foldOnce(message, claim);
-
-      if (verdict !== undefined) return verdict;
-
-      yield* Effect.logWarning(
-        `${claim.name}@${claim.version} moved during fold ${attempt}`,
-      );
-    }
-
-    return RETRY;
+    return ACK;
   }).pipe(
     Effect.catchTag('ObservationError', (error) =>
       Effect.as(
