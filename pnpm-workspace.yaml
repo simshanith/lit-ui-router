@@ -274,6 +274,9 @@ linkWorkspacePackages: true
 
 autoDedupe: true
 
+lockfile:
+  includeResolutionSettings: true
+
 patchedDependencies:
   '@api-viewer/docs': patches/@api-viewer__docs.patch
   '@api-viewer/tabs': patches/@api-viewer__tabs.patch
