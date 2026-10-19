@@ -5,6 +5,7 @@
   "description": "The release-ledger worker: OIDC claims in, a D1 ledger of every release out",
   "type": "module",
   "scripts": {
+    "enqueue": "node src/enqueue.ts",
     "format:check:oxfmt": "oxfmt --check \"**/*.{ts,json,jsonc,md}\"",
     "format:oxfmt": "oxfmt \"**/*.{ts,json,jsonc,md}\"",
     "lint:oxlint": "oxlint .",

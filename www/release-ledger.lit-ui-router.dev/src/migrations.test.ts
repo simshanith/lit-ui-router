@@ -35,6 +35,7 @@ import {
 } from '@tools/release-ledger/fixtures';
 
 import {
+  CLAIM_ORIGINS,
   CLAIM_OUTCOMES,
   claimInsert,
   type ClaimRow,
@@ -46,14 +47,27 @@ const MIGRATIONS = new URL('../migrations/', import.meta.url);
 
 const MESSAGE_ID = 'message-1';
 
-function migrated(): DatabaseSync {
+const MIGRATION_FILES = readdirSync(MIGRATIONS).sort();
+
+/** Runs one migration in a transaction, as `wrangler d1 migrations apply` does. */
+function migrate(db: DatabaseSync, file: string): void {
+  db.exec('BEGIN');
+
+  try {
+    db.exec(readFileSync(new URL(file, MIGRATIONS), 'utf8'));
+    db.exec('COMMIT');
+  } catch (error) {
+    db.exec('ROLLBACK');
+    throw error;
+  }
+}
+
+function migrated(files = MIGRATION_FILES): DatabaseSync {
   const db = new DatabaseSync(':memory:');
   // D1 enforces foreign keys by default; SQLite does not.
   db.exec('PRAGMA foreign_keys = ON');
 
-  for (const file of readdirSync(MIGRATIONS).sort()) {
-    db.exec(readFileSync(new URL(file, MIGRATIONS), 'utf8'));
-  }
+  for (const file of files) migrate(db, file);
 
   return db;
 }
@@ -87,6 +101,7 @@ const RUN_CLAIM: ClaimRow = {
   run_id: '1',
   run_attempt: 1,
   sha: 'sha',
+  actor: null,
 };
 
 const SWEEP_CLAIM: ClaimRow = {
@@ -95,6 +110,12 @@ const SWEEP_CLAIM: ClaimRow = {
   job_workflow_ref: null,
   run_id: null,
   run_attempt: null,
+};
+
+const MANUAL_CLAIM: ClaimRow = {
+  ...SWEEP_CLAIM,
+  origin: 'manual',
+  actor: 'simshanith',
 };
 
 const UNDECODABLE_CLAIM: ClaimRow = {
@@ -269,6 +290,8 @@ describe('migrations: claims', () => {
     ['an undecodable message', UNDECODABLE_CLAIM],
     ['an exhausted run claim', { ...RUN_CLAIM, outcome: 'exhausted' }],
     ['an exhausted sweep claim', { ...SWEEP_CLAIM, outcome: 'exhausted' }],
+    ['an applied manual claim', MANUAL_CLAIM],
+    ['an exhausted manual claim', { ...MANUAL_CLAIM, outcome: 'exhausted' }],
   ];
 
   for (const [label, row] of valid) {
@@ -300,6 +323,14 @@ describe('migrations: claims', () => {
     ['a run without its id', { ...RUN_CLAIM, run_id: null }],
     ['a run without its attempt', { ...RUN_CLAIM, run_attempt: null }],
     ['a sweep with a run id', { ...SWEEP_CLAIM, run_id: '1' }],
+    ['a manual claim without its actor', { ...MANUAL_CLAIM, actor: null }],
+    ['a manual claim with a run id', { ...MANUAL_CLAIM, run_id: '1' }],
+    ['a run with an actor', { ...RUN_CLAIM, actor: 'simshanith' }],
+    ['a sweep with an actor', { ...SWEEP_CLAIM, actor: 'simshanith' }],
+    [
+      'an undecodable message with an actor',
+      { ...UNDECODABLE_CLAIM, actor: 'simshanith' },
+    ],
     [
       'an undecodable message with run columns',
       {
@@ -341,20 +372,113 @@ describe('migrations: claims', () => {
     assert.throws(() => insertClaim(db, RUN_CLAIM), /UNIQUE constraint failed/);
   });
 
-  it('lists the outcomes the consumer exports', () => {
+  /** The string literals a column's `IN (...)` CHECK lists, in order. */
+  function checkList(column: string): string[] {
     const sql = String(
       migrated()
         .prepare("SELECT sql FROM sqlite_schema WHERE name = 'claims'")
         .get()?.sql,
     );
 
-    const list = /outcome +TEXT NOT NULL CHECK \(outcome IN \(([^)]*)\)\)/.exec(
-      sql,
-    )?.[1];
+    const list = new RegExp(
+      `${column} +TEXT(?: NOT NULL)? CHECK \\(${column} IN \\(([^)]*)\\)\\)`,
+    ).exec(sql)?.[1];
+
+    return [...(list ?? '').matchAll(/'(\w+)'/g)].map(([, literal]) => literal);
+  }
+
+  it('lists the outcomes and origins the consumer exports', () => {
+    assert.deepEqual(checkList('outcome'), CLAIM_OUTCOMES);
+    assert.deepEqual(checkList('origin'), CLAIM_ORIGINS);
+  });
+});
+
+describe('migrations: 0002_manual_claims', () => {
+  const BEFORE = MIGRATION_FILES.slice(0, 1);
+
+  const V1_COLUMNS = [
+    'message_id',
+    'received_at',
+    'body',
+    'outcome',
+    'reason',
+    'attempts',
+    'name',
+    'version',
+    'origin',
+    'repository',
+    'job_workflow_ref',
+    'run_id',
+    'run_attempt',
+    'sha',
+  ] as const satisfies readonly (keyof ClaimRow)[];
+
+  function insertV1Claim(db: DatabaseSync, id: number, row: ClaimRow): void {
+    db.prepare(
+      `INSERT INTO claims (id, ${V1_COLUMNS.join(', ')}) VALUES (?, ${V1_COLUMNS.map(() => '?').join(', ')})`,
+    ).run(id, ...V1_COLUMNS.map((column) => row[column]));
+  }
+
+  const claimsOf = (db: DatabaseSync) =>
+    db
+      .prepare('SELECT * FROM claims ORDER BY id')
+      .all()
+      .map((row) => ({ ...row }));
+
+  it('keeps every claim and its id, and the ledger events pointing at them', () => {
+    assert.deepEqual(BEFORE, ['0001_ledger.sql']);
+
+    const db = migrated(BEFORE);
+
+    const rows: [number, ClaimRow][] = [
+      [3, RUN_CLAIM],
+      [7, { ...SWEEP_CLAIM, message_id: 'message-2', outcome: 'unchanged' }],
+      [8, { ...UNDECODABLE_CLAIM, message_id: 'message-3' }],
+    ];
+
+    for (const [id, row] of rows) insertV1Claim(db, id, row);
+    insertVersion(db, ROWS.tagged);
+    db.prepare(
+      "INSERT INTO ledger_events (claim_id, name, version, region, event, payload) VALUES (7, ?, ?, 'tag', 'observed', '{}')",
+    ).run(ROWS.tagged.name, ROWS.tagged.version);
+
+    const before = claimsOf(db);
+
+    migrate(db, '0002_manual_claims.sql');
 
     assert.deepEqual(
-      [...(list ?? '').matchAll(/'(\w+)'/g)].map(([, outcome]) => outcome),
-      CLAIM_OUTCOMES,
+      claimsOf(db),
+      before.map((row) => ({ ...row, actor: null })),
+    );
+    assert.deepEqual(
+      db
+        .prepare(
+          'SELECT claims.id, claims.message_id FROM ledger_events JOIN claims ON claims.id = ledger_events.claim_id',
+        )
+        .all()
+        .map((row) => ({ ...row })),
+      [{ id: 7, message_id: 'message-2' }],
+    );
+    assert.deepEqual(db.prepare('PRAGMA foreign_key_check').all(), []);
+    assert.deepEqual(
+      db
+        .prepare(
+          "SELECT name FROM sqlite_schema WHERE type = 'index' AND tbl_name = 'claims' AND sql IS NOT NULL",
+        )
+        .all()
+        .map((row) => row.name),
+      ['claims_by_version'],
+    );
+
+    insertClaim(db, { ...MANUAL_CLAIM, message_id: 'message-4' });
+    assert.throws(
+      () =>
+        db
+          .prepare(
+            "INSERT INTO ledger_events (claim_id, name, version, region, event, payload) VALUES (99, ?, ?, 'tag', 'observed', '{}')",
+          )
+          .run(ROWS.tagged.name, ROWS.tagged.version),
+      /FOREIGN KEY constraint failed/,
     );
   });
 });

@@ -59,12 +59,21 @@ const SweepOrigin = Schema.Struct({
   sha: Schema.String,
 });
 
+/** A claim a maintainer published over the Queues HTTP API; /claims never builds one. */
+const ManualOrigin = Schema.Struct({
+  kind: Schema.Literal('manual'),
+  repository: Schema.String,
+  sha: Schema.String,
+  // self-asserted: the trust anchor is the Cloudflare API token with Queues Edit
+  actor: Schema.NonEmptyString,
+});
+
 /** The queue message: what to observe, and who asked. */
 export const Claim = Schema.Struct({
   receivedAt: Schema.String,
   name: PackageName,
   version: Version,
-  origin: Schema.Union([RunOrigin, SweepOrigin]),
+  origin: Schema.Union([RunOrigin, SweepOrigin, ManualOrigin]),
 });
 
 export type Claim = typeof Claim.Type;

@@ -52,7 +52,7 @@ const retryAfter = (seconds: number | undefined): Verdict =>
 
 const decodeClaim = Schema.decodeUnknownEffect(Claim);
 
-/** The claim's columns: an Actions run fills the OIDC run columns, a sweep leaves them null. */
+/** The claim's columns: an Actions run fills the OIDC run columns, a manual claim its actor. */
 function claimColumnsOf({ name, version, origin }: Claim) {
   return {
     name,
@@ -60,14 +60,30 @@ function claimColumnsOf({ name, version, origin }: Claim) {
     origin: origin.kind,
     repository: origin.repository,
     sha: origin.sha,
-    ...(origin.kind === 'run'
-      ? {
-          job_workflow_ref: origin.jobWorkflowRef,
-          run_id: origin.runId,
-          run_attempt: Number(origin.runAttempt),
-        }
-      : { job_workflow_ref: null, run_id: null, run_attempt: null }),
+    ...originColumnsOf(origin),
   };
+}
+
+const NO_ORIGIN_COLUMNS = {
+  job_workflow_ref: null,
+  run_id: null,
+  run_attempt: null,
+  actor: null,
+} as const;
+
+function originColumnsOf(origin: Claim['origin']) {
+  if (origin.kind === 'run') {
+    return {
+      ...NO_ORIGIN_COLUMNS,
+      job_workflow_ref: origin.jobWorkflowRef,
+      run_id: origin.runId,
+      run_attempt: Number(origin.runAttempt),
+    };
+  }
+
+  return origin.kind === 'manual'
+    ? { ...NO_ORIGIN_COLUMNS, actor: origin.actor }
+    : NO_ORIGIN_COLUMNS;
 }
 
 const NO_CLAIM_COLUMNS = {
@@ -79,6 +95,7 @@ const NO_CLAIM_COLUMNS = {
   run_id: null,
   run_attempt: null,
   sha: null,
+  actor: null,
 } as const;
 
 const messageColumnsOf = (message: LedgerMessage) => ({

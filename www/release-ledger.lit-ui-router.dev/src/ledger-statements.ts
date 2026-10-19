@@ -26,6 +26,11 @@ export const CLAIM_OUTCOMES = [
 
 export type ClaimOutcome = (typeof CLAIM_OUTCOMES)[number];
 
+/** Who asked for a claim; the `claims.origin` CHECK lists the same. */
+export const CLAIM_ORIGINS = ['run', 'sweep', 'manual'] as const;
+
+export type ClaimOrigin = (typeof CLAIM_ORIGINS)[number];
+
 /** One `claims` row, less the id D1 assigns. */
 export interface ClaimRow {
   message_id: string;
@@ -36,12 +41,13 @@ export interface ClaimRow {
   attempts: number;
   name: string | null;
   version: string | null;
-  origin: 'run' | 'sweep' | null;
+  origin: ClaimOrigin | null;
   repository: string | null;
   job_workflow_ref: string | null;
   run_id: string | null;
   run_attempt: number | null;
   sha: string | null;
+  actor: string | null;
 }
 
 const CLAIM_COLUMNS = [
@@ -59,6 +65,7 @@ const CLAIM_COLUMNS = [
   'run_id',
   'run_attempt',
   'sha',
+  'actor',
 ] as const satisfies readonly (keyof ClaimRow)[];
 
 const VERSION_COLUMNS = [

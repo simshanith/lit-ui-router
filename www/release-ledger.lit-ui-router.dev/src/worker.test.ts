@@ -678,6 +678,51 @@ describe('queue consumer', { timeout: 120_000 }, () => {
     assert.equal(claim?.body, JSON.stringify(sweepClaim));
   });
 
+  it('folds a manual claim to applied, recording its actor and no run columns', async () => {
+    const manualClaim: Claim = {
+      ...claimOf(),
+      origin: {
+        kind: 'manual',
+        repository: 'simshanith/lit-ui-router',
+        sha: SHA,
+        actor: 'simshanith',
+      },
+    };
+
+    const message = messageOf(manualClaim);
+
+    await deliver([message]);
+
+    assert.deepEqual([message.acks, message.retries], [1, []]);
+    assert.deepEqual(await statuses(), ['released']);
+
+    const [claim] = await all('claims');
+
+    assert.deepEqual(
+      {
+        outcome: claim?.outcome,
+        origin: claim?.origin,
+        repository: claim?.repository,
+        sha: claim?.sha,
+        actor: claim?.actor,
+        job_workflow_ref: claim?.job_workflow_ref,
+        run_id: claim?.run_id,
+        run_attempt: claim?.run_attempt,
+      },
+      {
+        outcome: 'applied',
+        origin: 'manual',
+        repository: 'simshanith/lit-ui-router',
+        sha: SHA,
+        actor: 'simshanith',
+        job_workflow_ref: null,
+        run_id: null,
+        run_attempt: null,
+      },
+    );
+    assert.equal(claim?.body, JSON.stringify(manualClaim));
+  });
+
   const UNDECODABLE = {
     name: null,
     version: null,
@@ -687,6 +732,7 @@ describe('queue consumer', { timeout: 120_000 }, () => {
     run_id: null,
     run_attempt: null,
     sha: null,
+    actor: null,
   };
 
   it('records a message that is not a claim as undecodable without retrying it', async () => {
@@ -736,6 +782,7 @@ describe('queue consumer', { timeout: 120_000 }, () => {
         run_id: '100',
         run_attempt: 1,
         sha: SHA,
+        actor: null,
       },
     ]);
     assert.deepEqual(await all('versions'), []);

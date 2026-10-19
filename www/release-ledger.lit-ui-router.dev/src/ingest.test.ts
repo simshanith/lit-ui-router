@@ -150,6 +150,32 @@ describe('POST /claims', () => {
     );
   });
 
+  it('builds the run origin itself, ignoring an origin in the body', async () => {
+    const { env, sent } = envWith();
+
+    const smuggled = {
+      ...BODY,
+      origin: {
+        kind: 'manual',
+        repository: CLAIMS.repository,
+        sha: CLAIMS.sha,
+        actor: 'mallory',
+      },
+    };
+
+    const response = await ingest(
+      postText(await sign(CLAIMS), JSON.stringify(smuggled)),
+      env,
+      keys,
+    );
+
+    assert.equal(response.status, 202);
+    assert.deepEqual(
+      sent.map(({ origin }) => origin.kind),
+      ['run'],
+    );
+  });
+
   it('answers 401 without a bearer token', async () => {
     const { env, sent } = envWith();
 
