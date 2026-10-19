@@ -7,7 +7,7 @@
     {
       "binding": "DB",
       "database_name": "release-ledger",
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      "database_id": "db3e9cd3-1c44-4c95-a6b2-b8faec69f3ac",
       "migrations_dir": "migrations",
     },
   ],
