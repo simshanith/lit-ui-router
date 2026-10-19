@@ -357,23 +357,27 @@ describe('selectWorkers', () => {
   ];
 
   it('returns every worker when nothing is selected', () => {
-    assert.deepEqual(selectWorkers(two, []), two);
+    assert.deepEqual(selectWorkers(two, []), { ok: true, workers: two });
   });
 
   it('keeps config order regardless of selection order', () => {
     assert.deepEqual(
       selectWorkers(two, ['atlas.lit-ui-router.dev', 'lit-ui-router.dev']),
-      two,
+      { ok: true, workers: two },
     );
-    assert.deepEqual(selectWorkers(two, ['atlas.lit-ui-router.dev']), [two[1]]);
+    assert.deepEqual(selectWorkers(two, ['atlas.lit-ui-router.dev']), {
+      ok: true,
+      workers: [two[1]],
+    });
   });
 
   // A typo must never select nothing: under --apply that reads as in sync.
-  it('throws on an unknown site, naming the configured ones', () => {
-    assert.throws(
-      () => selectWorkers(two, ['lit-ui-router.dev', 'atlas']),
-      /unknown site\(s\): atlas — configured: lit-ui-router\.dev, atlas\.lit-ui-router\.dev/,
-    );
+  it('fails on an unknown site, naming the configured ones', () => {
+    assert.deepEqual(selectWorkers(two, ['lit-ui-router.dev', 'atlas']), {
+      ok: false,
+      error:
+        'unknown site(s): atlas — configured: lit-ui-router.dev, atlas.lit-ui-router.dev',
+    });
   });
 });
 
