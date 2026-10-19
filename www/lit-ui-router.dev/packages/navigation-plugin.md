@@ -367,3 +367,6 @@ See the full [API reference](/api/navigation-location-plugin/).
 - [Chrome for Developers — Modern client-side routing: the Navigation API](https://developer.chrome.com/docs/web-platform/navigation-api)
 - [Can I Use — Navigation API](https://caniuse.com/mdn-api_navigation)
 - [@uirouter/core — LocationPlugin](https://ui-router.github.io/core/docs/latest/interfaces/_vanilla_interface_.locationplugin.html)
+- [On the Altitude Atlas](https://atlas.lit-ui-router.dev/bricks/?focus=ui-router-navigation-location-plugin) — this package as
+  a brick in sheet 2's model in the round, sized by its authored files and
+  seated on what it peers

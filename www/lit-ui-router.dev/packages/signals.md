@@ -39,3 +39,6 @@ should list a single version.
 - The <a href="/app-signals" target="_self">Signals sample app</a> keeps its
   client state in `Signal.State`s and renders it with `@lit-labs/signals`,
   beside `RouterSignalController` for the route.
+- Both stand on [the Altitude Atlas](https://atlas.lit-ui-router.dev/bricks/?focus=lit-ui-router-signals) as
+  bricks in sheet 2's model in the round, each sized by its authored files and
+  seated on what it peers.

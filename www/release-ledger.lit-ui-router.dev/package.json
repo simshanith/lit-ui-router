@@ -2,14 +2,16 @@
   "name": "@www/release-ledger.lit-ui-router.dev",
   "version": "0.0.0",
   "private": true,
-  "description": "The release ledger's D1 database: its migrations and the statements that write a fold's outcome to it",
+  "description": "The release ledger's D1 database: its migrations and the statements that write a fold's outcome to it, behind a worker that answers 404 until the ledger lands",
   "type": "module",
   "scripts": {
     "format:check:oxfmt": "oxfmt --check \"**/*.{ts,json,jsonc,md}\"",
     "format:oxfmt": "oxfmt \"**/*.{ts,json,jsonc,md}\"",
     "lint:oxlint": "oxlint .",
     "test": "node --test --test-reporter=@tools/shared/test-reporter.ts \"src/**/*.test.ts\"",
-    "typecheck:tsc": "tsc -p tsconfig.json --noEmit"
+    "typecheck:tsc": "tsc -p tsconfig.json --noEmit",
+    "typecheck:worker": "tsc -p worker/tsconfig.json --noEmit",
+    "types:worker": "wrangler types worker/worker-configuration.d.ts"
   },
   "dependencies": {
     "@tools/release-ledger": "catalog:workspace"

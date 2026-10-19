@@ -3,6 +3,14 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "release-ledger",
   "compatibility_date": "2026-07-01",
+  "main": "./worker/index.ts",
+  // Only the route serves; branch uploads get no URL of their own.
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [
+    { "pattern": "release-ledger.lit-ui-router.dev", "custom_domain": true },
+  ],
+  "observability": { "enabled": true },
   "d1_databases": [
     {
       "binding": "DB",

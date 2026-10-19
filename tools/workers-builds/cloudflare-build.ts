@@ -14,12 +14,15 @@
 // The image has node and npm; this script installs pnpm; everything past that
 // comes from `pnpm install`. It has no mise, so none of the repo's mise-managed
 // tools (taplo, shellcheck, rumdl, actionlint, zizmor) exists here — keep them
-// out of anything the turbo target below reaches. Today that closure runs 21
-// commands, all workspace binaries.
+// out of anything the turbo target below reaches.
+//
+// Usage: cloudflare-build.ts [site] — `site` is a www/ directory name; omitted,
+// the docs site, which is what the live dashboard command passes.
 import { execFileSync } from 'node:child_process';
+import { join } from 'node:path';
 
 import type { PackageManifest } from '@tools/bootstrap/types.ts';
-import { requireManifest } from '../bootstrap/src/manifest.ts';
+import { readManifest, requireManifest } from '../bootstrap/src/manifest.ts';
 import { workspaceRoot } from '../bootstrap/src/root.ts';
 
 // Pins the relative import to the package's exported type, so the workspace
@@ -28,6 +31,60 @@ requireManifest satisfies (dir: string) => PackageManifest;
 
 /** A command and its argv tail, run from the repo root. */
 export type Step = readonly [command: string, args: readonly string[]];
+
+/**
+ * The site a bare command builds and deploys: the dashboard commands that
+ * predate the argument pass none, and every open branch's preview runs them.
+ */
+export const DEFAULT_SITE = 'lit-ui-router.dev';
+
+/** A deployed Worker app: `www/<key>`, published to the workspace as `@www/<key>`. */
+export type Site = {
+  readonly key: string;
+  readonly dir: string;
+  readonly packageName: string;
+};
+
+/**
+ * Resolves a site key to its package, or throws. The key becomes a path, so
+ * only a domain-shaped name is accepted: nothing can climb out of www/.
+ */
+export const resolveSite = (root: string, key: string): Site => {
+  if (!/^[a-z0-9-]+(?:\.[a-z0-9-]+)+$/.test(key)) {
+    throw new Error(`site is not a www/ domain name: ${JSON.stringify(key)}`);
+  }
+
+  const dir = `www/${key}`;
+  const manifest = readManifest(join(root, dir));
+
+  if (manifest === undefined) {
+    throw new Error(`unknown site ${key}: no package.json in ${dir}`);
+  }
+
+  const packageName = `@www/${key}`;
+
+  if (manifest.name !== packageName) {
+    throw new Error(
+      `${dir}/package.json is named ${JSON.stringify(manifest.name)}, not ${packageName}`,
+    );
+  }
+
+  return { key, dir, packageName };
+};
+
+/** The optional `[site]` both Workers Builds commands end with; anything after it throws. */
+export const siteFromArgs = (
+  root: string,
+  [key = DEFAULT_SITE, ...extra]: readonly string[],
+): Site => {
+  if (extra.length > 0) {
+    throw new Error(
+      `unexpected argument(s) after the site: ${extra.join(' ')}`,
+    );
+  }
+
+  return resolveSite(root, key);
+};
 
 /**
  * The pnpm to install, derived from `packageManager` rather than pinned
@@ -56,7 +113,11 @@ export const pnpmSpec = (root: string): string => {
  * SKIP_DEPENDENCY_INSTALL=1 is only safe while this script installs, and the
  * steps are read rather than grepped out of this file's source.
  */
-export const buildSteps = (root: string, npmBin: string): readonly Step[] => [
+export const buildSteps = (
+  root: string,
+  npmBin: string,
+  site: Site,
+): readonly Step[] => [
   // npm refuses to overwrite a file it does not own (EEXIST), and its global
   // bin is the same node bin dir corepack's shims sit in, so clear them first
   // rather than reaching for --force.
@@ -74,11 +135,26 @@ export const buildSteps = (root: string, npmBin: string): readonly Step[] => [
 
   ['pnpm', ['install', '--frozen-lockfile']],
 
-  // turbo is a workspace devDependency, not on PATH.
-  ['npx', ['turbo', '@www/lit-ui-router.dev#build']],
+  // turbo is a workspace devDependency, not on PATH. `build` is defined at the
+  // root, so a site with no build script (wrangler bundles it at deploy) is a
+  // green no-op beyond its dependencies' builds.
+  ['npx', ['turbo', `${site.packageName}#build`]],
 ];
 
-const main = (): void => {
+const main = (argv: readonly string[]): void => {
+  let site: Site;
+
+  try {
+    site = siteFromArgs(workspaceRoot, argv);
+  } catch (error) {
+    console.error(
+      `cloudflare-build: ${error instanceof Error ? error.message : String(error)}\nusage: cloudflare-build.ts [site]`,
+    );
+    process.exitCode = 2;
+
+    return;
+  }
+
   // Ask npm where it will write: asdf puts its own shims on PATH, so resolving
   // `node` finds ~/.asdf/shims, not the installs/nodejs/<version>/bin that the
   // corepack shims and the global install both land in.
@@ -89,9 +165,13 @@ const main = (): void => {
   // The root is derived, not inherited: turbo resolves its plan from the cwd it
   // is spawned in, and a narrowed plan is silently green rather than an error —
   // a run from a package builds that package's tasks and reports success.
-  for (const [command, args] of buildSteps(workspaceRoot, `${npmPrefix}/bin`)) {
+  for (const [command, args] of buildSteps(
+    workspaceRoot,
+    `${npmPrefix}/bin`,
+    site,
+  )) {
     execFileSync(command, [...args], { stdio: 'inherit', cwd: workspaceRoot });
   }
 };
 
-if (import.meta.main) main();
+if (import.meta.main) main(process.argv.slice(2));
