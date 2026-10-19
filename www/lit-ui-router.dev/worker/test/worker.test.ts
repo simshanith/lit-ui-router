@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { beforeEach, describe, it } from 'node:test';
 
 import worker from '../index.ts';
+import { fixtureLedger } from './ledger-stub/rows.ts';
 
 // The docs worker's HTTP contract, exercised on the production code path: the
 // real module (real sample-app-routes mounts, real ui-router-server fetch
@@ -74,6 +75,9 @@ beforeEach(() => {
 const env: Env = {
   VITE_GOOGLE_ANALYTICS_TRACKING_ID: '',
   VITE_TRACE: '',
+  // SAFETY: the worker calls only the LedgerReader methods the fixture implements.
+  // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- the fixture is a plain object, not a Service
+  LEDGER: fixtureLedger as unknown as Env['LEDGER'],
   ASSETS: {
     connect: () => {
       throw new Error('the assets binding has no sockets');
@@ -296,6 +300,16 @@ describe('/simulated-routing (the simulate-strategy exhibit)', () => {
     assert.deepEqual(assetCalls, ['/app']);
     assert.equal(await res.text(), ASSET_TABLE['/app'].body);
     assert.equal(res.headers.get('X-Robots-Tag'), 'noindex');
+  });
+});
+
+describe('/gh (the release pages)', () => {
+  it('renders the pages from the ledger, never the assets binding', async () => {
+    const res = await dispatch('/gh/releases/lit-ui-router/');
+    assert.equal(res.status, 200);
+    assert.deepEqual(assetCalls, []);
+    assert.match(res.headers.get('Content-Type') ?? '', /text\/html/);
+    assert.equal(res.headers.get('X-Robots-Tag'), null);
   });
 });
 

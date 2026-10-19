@@ -198,8 +198,9 @@ const workspaces = {
   'tools/shared': { entry: ['src/**/*.test-d.ts'] },
   'www/lit-ui-router.dev': {
     entry: ['.vitepress/vite.config.ts'],
-    // copied out of node_modules/<name>/dist by path in the vite config
+    // copied out of node_modules/<name>/dist by path in the vite config; cloudflare:workers is a workerd built-in
     ignoreDependencies: [
+      'cloudflare',
       'sample-app-lit-vanilla',
       'sample-app-lit-mobx',
       'sample-app-lit-effect',

@@ -1,6 +1,11 @@
+import './dom-shim.ts';
+
 import { mounts } from 'sample-app-routes';
 import { createServerRouter } from 'ui-router-server';
 import { createFetchHandler } from 'ui-router-server/fetch';
+
+import type { LedgerReader } from './releases/ledger.ts';
+import { serveReleases } from './releases/serve.ts';
 
 // All routing intelligence lives in ui-router-server; the ./fetch adapter
 // turns a verdict into an HTTP Response. Module scope: the mount tables
@@ -50,6 +55,13 @@ const NAIVE_MOUNT = '/not-found-naive';
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+
+    // SAFETY: wrangler types the binding as an untyped Service; LedgerReader names the entrypoint's methods.
+    // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- an untyped Service shares no members with the RPC methods, so one assertion can't reach them
+    const ledger = env.LEDGER as unknown as LedgerReader;
+    const releases = await serveReleases(request, ledger);
+
+    if (releases !== null) return releases;
 
     if (
       url.pathname === NAIVE_MOUNT ||

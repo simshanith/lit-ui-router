@@ -1,0 +1,97 @@
+// The html document around a rendered page, in the docs site's colours, with no client script.
+const STYLE = `
+*, *::before, *::after { box-sizing: border-box; min-width: 0; }
+:root {
+  color-scheme: light dark;
+  --bg: light-dark(oklch(1 0 none), oklch(0.215 0.006 286));
+  --bg-soft: light-dark(oklch(0.973 0.001 286), oklch(0.235 0.01 280));
+  --text-1: light-dark(oklch(0.355 0.01 286), oklch(0.895 0.012 107));
+  --text-2: light-dark(oklch(0.51 0.008 286), oklch(0.67 0.01 286));
+  --divider: light-dark(oklch(0.91 0.002 286), oklch(0.29 0.007 286));
+  --brand: light-dark(oklch(0.47 0.16 268), oklch(0.77 0.12 278));
+  --gutter: clamp(1rem, 0.5rem + 2.5vw, 2rem);
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  line-height: 1.6;
+  text-wrap: pretty;
+  overflow-wrap: break-word;
+  -webkit-text-size-adjust: 100%;
+  background: var(--bg);
+  color: var(--text-1);
+}
+body { margin: 0; min-height: 100svh; display: flex; flex-direction: column; }
+h1 { text-wrap: balance; font-size: clamp(1.75rem, 1.4rem + 1.5vw, 2.25rem); line-height: 1.2; margin-block: 0.5rem 1rem; }
+code { font-family: ui-monospace, Menlo, Monaco, Consolas, monospace; font-size: 0.875em; }
+a { color: var(--brand); text-underline-offset: 0.2em; touch-action: manipulation; }
+a:active { color: color-mix(in oklch, var(--brand), var(--text-1) 30%); }
+:focus-visible { outline: max(2px, 0.08em) solid var(--brand); outline-offset: 0.25em; }
+img { display: block; max-width: 100%; height: auto; flex: none; }
+.content-grid {
+  --content: 56rem;
+  display: grid;
+  grid-template-columns: [full-start] minmax(var(--gutter), 1fr) [content-start] min(100% - var(--gutter) * 2, var(--content)) [content-end] minmax(var(--gutter), 1fr) [full-end];
+}
+.content-grid > * { grid-column: content; }
+.site { border-block-end: 1px solid var(--divider); padding-block: 0.75rem; }
+.site > div { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1.5rem; }
+.home { display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 600; color: var(--text-1); text-decoration: none; }
+.site nav { margin-inline-start: auto; display: flex; flex-wrap: wrap; gap: 0.25rem 1rem; }
+.site nav a { color: var(--text-1); text-decoration: none; padding-block: 0.25rem; }
+main { flex: 1; padding-block: 1.5rem 3rem; }
+.crumbs { list-style: none; display: flex; flex-wrap: wrap; gap: 0.25rem; padding: 0; margin: 0; color: var(--text-2); }
+.crumbs li + li::before { content: "/"; margin-inline-end: 0.25rem; }
+.table { overflow-x: auto; }
+table { border-collapse: collapse; inline-size: 100%; }
+th, td { text-align: start; padding: 0.5rem clamp(0.375rem, 0.2rem + 0.75vw, 0.75rem); border-block-end: 1px solid var(--divider); vertical-align: baseline; }
+thead th { color: var(--text-2); font-weight: 600; font-size: 0.875rem; }
+tbody th { font-weight: 500; }
+td, time { font-variant-numeric: tabular-nums; }
+.tag { font-size: 0.75rem; color: var(--text-2); border: 1px solid var(--divider); border-radius: 1em; padding-inline: 0.5em; }
+.facts { display: grid; grid-template-columns: minmax(8rem, max-content) 1fr; gap: 0.5rem 1.5rem; }
+.facts dt { color: var(--text-2); }
+.facts dd { margin: 0; }
+.hash { overflow-wrap: anywhere; }
+.visually-hidden { position: absolute; inline-size: 1px; block-size: 1px; overflow: clip; clip-path: inset(50%); white-space: nowrap; }
+footer { border-block-start: 1px solid var(--divider); background: var(--bg-soft); color: var(--text-2); font-size: 0.875rem; padding-block: 1rem; }
+ui-router, ui-view { display: contents; }
+@media (hover: hover) and (pointer: fine) {
+  .site nav a:hover, .home:hover { color: var(--brand); }
+  a:hover { text-decoration-thickness: 2px; }
+}
+`;
+
+const escapeHtml = (text: string): string =>
+  text
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;');
+
+/** What the document's head says about the page. */
+export interface PageHead {
+  title: string;
+  description: string;
+}
+
+/** Wraps a rendered body in the page's html document. */
+export const releaseDocument = (body: string, head: PageHead): string =>
+  `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>${escapeHtml(head.title)} | Lit UI Router</title>
+<meta name="description" content="${escapeHtml(head.description)}">
+<link rel="icon" href="/favicon.ico">
+<style>${STYLE}</style>
+</head>
+<body>
+<header class="site content-grid"><div>
+<a class="home" href="/"><img src="/images/lit-ui-router.svg" alt="" width="32" height="32">Lit UI Router</a>
+<nav aria-label="Site"><a href="/introduction">Docs</a><a href="/packages/">Packages</a><a href="/gh/releases/">Releases</a><a href="https://github.com/simshanith/lit-ui-router">GitHub</a></nav>
+</div></header>
+<main class="content-grid"><div>${body}</div></main>
+<footer class="content-grid"><p>Read from the release ledger. Release notes live on <a href="https://github.com/simshanith/lit-ui-router/releases">GitHub</a>.</p></footer>
+</body>
+</html>
+`;

@@ -100,8 +100,13 @@
     "test": {
       // The worker contract tests run the worker module in node; workspace
       // sources resolve directly (no build), but the root task's src/**
-      // inputs would miss worker/**, so over-approximate.
-      "inputs": ["$TURBO_DEFAULT$"]
+      // inputs would miss worker/**, so over-approximate. The release pages'
+      // package list is checked against every package manifest.
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/packages/*/package.json",
+        "$TURBO_ROOT$/pnpm-workspace.yaml"
+      ]
     },
     "typecheck:worker": {
       "dependsOn": ["^build:types", "types:worker"],

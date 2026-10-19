@@ -36,6 +36,17 @@
       "/not-found-spa/*",
       "/simulated-routing",
       "/simulated-routing/*",
+      // The release pages, rendered from the release ledger.
+      "/gh",
+      "/gh/*",
     ],
   },
+  // Read-only RPC into the release ledger worker; the docs worker holds no D1 binding.
+  "services": [
+    {
+      "binding": "LEDGER",
+      "service": "release-ledger",
+      "entrypoint": "LedgerReader",
+    },
+  ],
 }
