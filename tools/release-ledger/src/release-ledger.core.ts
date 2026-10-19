@@ -77,7 +77,7 @@ export interface DistTagRow {
   updated_at: string;
 }
 
-/** One `ledger_events` row, less the id D1 assigns and the `pipeline_event_id` the statements resolve. */
+/** One `ledger_events` row, less the id D1 assigns and the `claim_id` the statements resolve. */
 export interface LedgerEventRow {
   name: string;
   version: string;
@@ -86,9 +86,6 @@ export interface LedgerEventRow {
   from_state: string | null;
   to_state: string | null;
   payload: string;
-  source: string;
-  run_url: string | null;
-  at: string;
 }
 
 export type LedgerEventType =
@@ -124,13 +121,11 @@ export interface Observation {
   gh?: GhReleaseFacts | null;
 }
 
-/** Who sent the observation and when; the consumer fills it from the claim. */
+/** The version observed and when; the consumer fills it from the claim. */
 export interface Envelope {
   name: string;
   version: string;
   at: string;
-  source: string;
-  run_url: string | null;
 }
 
 /** One fold of a row: the row to write and its ledger rows, no change, or why the input is malformed. */
@@ -336,9 +331,6 @@ function ledgerEvent(
     from_state: isNew ? null : stateOf(before, region),
     to_state: stateOf(after, region),
     payload: JSON.stringify(payload),
-    source: envelope.source,
-    run_url: envelope.run_url,
-    at: envelope.at,
   };
 }
 
@@ -513,7 +505,7 @@ export function moveDistTag(
       version: target.version,
       updated_at: envelope.at,
     },
-    event: distTagEvent(target, 'dist_tag_moved', envelope, {
+    event: distTagEvent(target, 'dist_tag_moved', {
       tag,
       from: current?.version ?? null,
     }),
@@ -543,14 +535,13 @@ export function removeDistTag(
     kind: 'applied',
     op: 'delete',
     row: current,
-    event: distTagEvent(pointed, 'dist_tag_removed', envelope, { tag }),
+    event: distTagEvent(pointed, 'dist_tag_removed', { tag }),
   };
 }
 
 function distTagEvent(
   row: VersionRow,
   event: 'dist_tag_moved' | 'dist_tag_removed',
-  envelope: Envelope,
   payload: { tag: string; from?: string | null },
 ): LedgerEventRow {
   const state = npmState(row);
@@ -563,9 +554,6 @@ function distTagEvent(
     from_state: state,
     to_state: state,
     payload: JSON.stringify(payload),
-    source: envelope.source,
-    run_url: envelope.run_url,
-    at: envelope.at,
   };
 }
 

@@ -9,9 +9,11 @@ stores, its regions and the fold, is
 
 - [`migrations/`](./migrations): the D1 schema. A `versions` row stores facts,
   never a state; the `version_states` view derives each region's state and an
-  overall status.
+  overall status. `claims` holds one row per queue message with how it ended,
+  and each `ledger_events` row points at the claim that caused it.
 - [`src/ledger-statements.ts`](./src/ledger-statements.ts): the statements
-  the queue consumer runs in one D1 batch to write a fold's outcome.
+  the queue consumer runs to write a claim's row and, in one D1 batch with it,
+  a fold's outcome.
 - [`worker/index.ts`](./worker/index.ts): the worker's entry points.
 
 ## Worker
@@ -26,15 +28,16 @@ stores, its regions and the fold, is
   writer. Per claim, it observes the tag, npm and GitHub, taking a 404 as the
   source reporting the fact absent, folds the observation through
   `@tools/release-ledger`, and writes the
-  outcome in one D1 batch, its `pipeline_events` row first. A GitHub
+  outcome in one D1 batch, its `claims` row first. A GitHub
   release ahead of npm is folded as seen. Fetches retry through Effect's
   `HttpClient.retryTransient`, which also takes GitHub's rate-limit 403s;
   a wait over 10 seconds (`Retry-After`, GitHub's `x-ratelimit-reset`) becomes
   the redelivery delay instead ([`src/observe.ts`](./src/observe.ts)).
   Redeliveries back off exponentially with jitter.
   A 404 for the package's dist-tags leaves the recorded dist-tags untouched.
-  Claims whose retries run out land in `dead_letters`, and so does a message
-  that is not a claim, without retries.
+  A message that is not a claim is recorded `undecodable` without retries. The
+  dead-letter queue's consumer records a claim whose retries ran out as
+  `exhausted`, unless its message already has a row.
 - **The Cron Trigger** ([`src/sweep.ts`](./src/sweep.ts)) lists the
   repository's tags through `git/matching-refs` and enqueues an ordinary claim
   for each release tag, so the ledger heals without an Actions run.

@@ -1,5 +1,5 @@
-// Reads decode through SqlSchema; the consumer's writes are the fold's
-// statements, plus the claim and dead-letter rows defined here.
+// Reads decode through SqlSchema; the consumer's writes are the statements in
+// ledger-statements.ts.
 import {
   GH_STATES,
   NPM_STATES,
@@ -9,7 +9,7 @@ import {
 import { Effect, Schema } from 'effect';
 import { SqlClient, SqlSchema } from 'effect/sql';
 
-import type { FoldStatements, Statement } from './ledger-statements.ts';
+import type { Statement } from './ledger-statements.ts';
 
 const NullableString = Schema.NullOr(Schema.String);
 
@@ -121,62 +121,10 @@ export const findClaim = (request: typeof MessageId.Type) =>
       Request: MessageId,
       Result: Schema.Struct({ id: Schema.Number }),
       execute: ({ message_id }) =>
-        sql`SELECT id FROM pipeline_events WHERE message_id = ${message_id}`,
+        sql`SELECT id FROM claims WHERE message_id = ${message_id}`,
     })(request);
   });
-
-export interface PipelineEvent {
-  message_id: string;
-  received_at: string;
-  repository: string;
-  job_workflow_ref: string;
-  run_id: string;
-  run_attempt: number;
-  sha: string;
-  payload: string;
-  outcome: FoldStatements['outcome'];
-  reason: FoldStatements['reason'];
-}
-
-const PIPELINE_COLUMNS = [
-  'message_id',
-  'received_at',
-  'repository',
-  'job_workflow_ref',
-  'run_id',
-  'run_attempt',
-  'sha',
-  'payload',
-  'outcome',
-  'reason',
-] as const;
-
-/** The claim's row, first in the batch: the ledger events resolve their `pipeline_event_id` from it. */
-export function pipelineInsert(event: PipelineEvent): Statement {
-  const columns = PIPELINE_COLUMNS.join(', ');
-  const values = PIPELINE_COLUMNS.map(() => '?').join(', ');
-
-  return {
-    sql: `INSERT INTO pipeline_events (${columns}) VALUES (${values})`,
-    params: PIPELINE_COLUMNS.map((column) => event[column]),
-  };
-}
 
 /** A ledger statement as an Effect SQL statement, for `D1Client.batch`. */
 export const toSql = (sql: SqlClient.SqlClient, statement: Statement) =>
   sql.unsafe(statement.sql, statement.params);
-
-export interface DeadLetter {
-  message_id: string;
-  queue: string;
-  attempts: number;
-  body: string;
-  received_at: string;
-}
-
-export const insertDeadLetter = (
-  sql: SqlClient.SqlClient,
-  letter: DeadLetter,
-) =>
-  sql`INSERT INTO dead_letters ${sql.insert({ ...letter })}
-      ON CONFLICT (message_id) DO NOTHING`;

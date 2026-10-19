@@ -13,16 +13,12 @@ import {
 } from '@tools/release-ledger';
 
 import { Claim } from './claim.ts';
+import { findClaim, findDistTags, findVersion, toSql } from './ledger-sql.ts';
 import {
-  findClaim,
-  findDistTags,
-  findVersion,
-  insertDeadLetter,
-  type PipelineEvent,
-  pipelineInsert,
-  toSql,
-} from './ledger-sql.ts';
-import { type FoldStatements, foldStatements } from './ledger-statements.ts';
+  claimInsert,
+  type ClaimRow,
+  foldStatements,
+} from './ledger-statements.ts';
 import { Observer, type Sources } from './observe.ts';
 
 export const CLAIMS_QUEUE = 'release-ledger-claims';
@@ -56,51 +52,60 @@ const retryAfter = (seconds: number | undefined): Verdict =>
 
 const decodeClaim = Schema.decodeUnknownEffect(Claim);
 
-/** The audit columns: an Actions run, or the Cron Trigger's sweep. */
-function auditOf({ origin }: Claim) {
-  return origin.kind === 'run'
-    ? {
-        source: origin.jobWorkflowRef,
-        runId: origin.runId,
-        runAttempt: Number(origin.runAttempt),
-        runUrl: `https://github.com/${origin.repository}/actions/runs/${origin.runId}/attempts/${origin.runAttempt}`,
-      }
-    : {
-        source: `scheduled ${origin.cron}`,
-        runId: origin.scheduledAt,
-        runAttempt: 1,
-        runUrl: null,
-      };
+/** The claim's columns: an Actions run fills the OIDC run columns, a sweep leaves them null. */
+function claimColumnsOf({ name, version, origin }: Claim) {
+  return {
+    name,
+    version,
+    origin: origin.kind,
+    repository: origin.repository,
+    sha: origin.sha,
+    ...(origin.kind === 'run'
+      ? {
+          job_workflow_ref: origin.jobWorkflowRef,
+          run_id: origin.runId,
+          run_attempt: Number(origin.runAttempt),
+        }
+      : { job_workflow_ref: null, run_id: null, run_attempt: null }),
+  };
+}
+
+const NO_CLAIM_COLUMNS = {
+  name: null,
+  version: null,
+  origin: null,
+  repository: null,
+  job_workflow_ref: null,
+  run_id: null,
+  run_attempt: null,
+  sha: null,
+} as const;
+
+const messageColumnsOf = (message: LedgerMessage) => ({
+  message_id: message.id,
+  body: JSON.stringify(message.body),
+  attempts: message.attempts,
+});
+
+function claimRowOf(
+  message: LedgerMessage,
+  claim: Claim,
+  { outcome, reason }: Pick<ClaimRow, 'outcome' | 'reason'>,
+): ClaimRow {
+  return {
+    ...messageColumnsOf(message),
+    received_at: claim.receivedAt,
+    outcome,
+    reason,
+    ...claimColumnsOf(claim),
+  };
 }
 
 const envelopeOf = (claim: Claim): Envelope => ({
   name: claim.name,
   version: claim.version,
   at: claim.receivedAt,
-  source: auditOf(claim).source,
-  run_url: auditOf(claim).runUrl,
 });
-
-function pipelineEventOf(
-  message: LedgerMessage,
-  claim: Claim,
-  { outcome, reason }: Pick<FoldStatements, 'outcome' | 'reason'>,
-): PipelineEvent {
-  const audit = auditOf(claim);
-
-  return {
-    message_id: message.id,
-    received_at: claim.receivedAt,
-    repository: claim.origin.repository,
-    job_workflow_ref: audit.source,
-    run_id: audit.runId,
-    run_attempt: audit.runAttempt,
-    sha: claim.origin.sha,
-    payload: JSON.stringify(Schema.encodeSync(Claim)(claim)),
-    outcome,
-    reason,
-  };
-}
 
 /** Moves for each npm dist-tag on this version, removals for tags npm dropped. */
 const distTagChanges = (
@@ -183,7 +188,7 @@ const handleClaim = (message: LedgerMessage, claim: Claim) =>
     );
 
     const statements = [
-      pipelineInsert(pipelineEventOf(message, claim, outcome)),
+      claimInsert(claimRowOf(message, claim, outcome)),
       ...(write === undefined ? [] : [write]),
       ...distTags,
       ...ledger,
@@ -250,33 +255,48 @@ const settled = <E, R>(
     Effect.map((verdict) => settle(message, verdict)),
   );
 
-const bury = (queue: string, message: LedgerMessage) =>
+/** An undecodable or exhausted message's row; a row the message already has wins. */
+const bury = (message: LedgerMessage, claim: Claim | undefined) =>
   Effect.gen(function* () {
+    const row: ClaimRow =
+      claim === undefined
+        ? {
+            ...messageColumnsOf(message),
+            received_at: message.timestamp.toISOString(),
+            outcome: 'undecodable',
+            reason: null,
+            ...NO_CLAIM_COLUMNS,
+          }
+        : claimRowOf(message, claim, { outcome: 'exhausted', reason: null });
+
     const sql = yield* D1Client.D1Client;
 
-    yield* insertDeadLetter(sql, {
-      message_id: message.id,
-      queue,
-      attempts: message.attempts,
-      body: JSON.stringify(message.body),
-      received_at: message.timestamp.toISOString(),
-    });
+    yield* toSql(sql, claimInsert(row, 'keep'));
 
     return ACK;
   });
 
-/** A body that is not a claim never will be; it goes to `dead_letters` without retries. */
-const decodeOrBury = (queue: string, message: LedgerMessage) =>
+/** A body that is not a claim never will be; it is recorded `undecodable` without retries. */
+const decodeOrBury = (message: LedgerMessage) =>
   decodeClaim(message.body).pipe(
     Effect.matchEffect({
       onFailure: (error) =>
         Effect.andThen(
           Effect.logError(
-            `message ${message.id} is not a claim, dead-lettered: ${error.message}`,
+            `message ${message.id} is not a claim: ${error.message}`,
           ),
-          bury(queue, message),
+          bury(message, undefined),
         ),
       onSuccess: (claim) => handleClaim(message, claim),
+    }),
+  );
+
+/** A dead-lettered message ran out of retries; it is recorded `exhausted` if it decodes. */
+const exhaust = (message: LedgerMessage) =>
+  decodeClaim(message.body).pipe(
+    Effect.matchEffect({
+      onFailure: () => bury(message, undefined),
+      onSuccess: (claim) => bury(message, claim),
     }),
   );
 
@@ -288,8 +308,8 @@ export const consume = (batch: LedgerBatch) =>
       settled(
         message,
         batch.queue === DEAD_LETTER_QUEUE
-          ? bury(batch.queue, message)
-          : decodeOrBury(batch.queue, message),
+          ? exhaust(message)
+          : decodeOrBury(message),
       ),
     { discard: true },
   );

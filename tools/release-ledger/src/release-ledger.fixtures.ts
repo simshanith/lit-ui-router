@@ -30,8 +30,6 @@ export const ENVELOPE: Envelope = {
   name: 'lit-ui-router',
   version: '1.0.0',
   at: '2026-10-02T00:00:00.000Z',
-  source: 'test',
-  run_url: null,
 };
 
 const tagged: VersionRow = {

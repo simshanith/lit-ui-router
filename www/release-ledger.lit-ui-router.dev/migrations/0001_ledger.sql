@@ -62,37 +62,53 @@ CREATE TABLE dist_tags (
   FOREIGN KEY (name, version) REFERENCES versions (name, version)
 ) STRICT;
 
--- Claims as received, one per queue message, with how the fold ended; the OIDC claims are the audit fields.
-CREATE TABLE pipeline_events (
+-- One row per queue message: its body as received and how it ended.
+-- A body that decodes fills the claim columns, and an Actions run also fills the OIDC run columns.
+CREATE TABLE claims (
   id               INTEGER PRIMARY KEY,
   message_id       TEXT NOT NULL UNIQUE,
   received_at      TEXT NOT NULL,
-  repository       TEXT NOT NULL,
-  job_workflow_ref TEXT NOT NULL,
-  run_id           TEXT NOT NULL,
-  run_attempt      INTEGER NOT NULL,
-  sha              TEXT NOT NULL,
-  payload          TEXT NOT NULL,
-  outcome          TEXT NOT NULL CHECK (outcome IN ('applied', 'unchanged', 'rejected')),
+  body             TEXT NOT NULL,
+  outcome          TEXT NOT NULL CHECK (outcome IN ('applied', 'unchanged', 'rejected', 'undecodable', 'exhausted')),
   reason           TEXT,
+  attempts         INTEGER NOT NULL,
+  name             TEXT,
+  version          TEXT,
+  origin           TEXT CHECK (origin IN ('run', 'sweep')),
+  repository       TEXT,
+  job_workflow_ref TEXT,
+  run_id           TEXT,
+  run_attempt      INTEGER,
+  sha              TEXT,
+  CHECK ((outcome = 'undecodable') = (name IS NULL)),
+  CHECK ((name IS NULL) = (version IS NULL) AND (name IS NULL) = (origin IS NULL)),
+  CHECK ((name IS NULL) = (repository IS NULL) AND (name IS NULL) = (sha IS NULL)),
+  -- IS, not =, so an undecodable row's NULL origin counts as not a run
+  CHECK (
+    (origin IS 'run') = (job_workflow_ref IS NOT NULL)
+    AND (origin IS 'run') = (run_id IS NOT NULL)
+    AND (origin IS 'run') = (run_attempt IS NOT NULL)
+  ),
   CHECK ((outcome = 'rejected') = (reason IS NOT NULL))
 ) STRICT;
 
+CREATE INDEX claims_by_version ON claims (name, version, id);
+
 -- Append-only: one row per region a fold changed, and every dist-tag move or removal, which counts against npm.
 -- region, event and payload are the replay source: folding them in id order rebuilds versions and dist_tags.
+-- The claim gives each event its provenance and time.
 CREATE TABLE ledger_events (
-  id                INTEGER PRIMARY KEY,
-  name              TEXT NOT NULL,
-  version           TEXT NOT NULL,
-  region            TEXT NOT NULL CHECK (region IN ('tag', 'npm', 'gh')),
-  event             TEXT NOT NULL CHECK (event IN ('observed', 'repair', 'dist_tag_moved', 'dist_tag_removed')),
+  id         INTEGER PRIMARY KEY,
+  claim_id   INTEGER NOT NULL REFERENCES claims (id),
+  name       TEXT NOT NULL,
+  version    TEXT NOT NULL,
+  region     TEXT NOT NULL CHECK (region IN ('tag', 'npm', 'gh')),
+  event      TEXT NOT NULL CHECK (event IN ('observed', 'repair', 'dist_tag_moved', 'dist_tag_removed')),
   -- the region's derived state; the tag has none, and a new row has no from_state
-  from_state        TEXT,
-  to_state          TEXT,
-  payload           TEXT NOT NULL,
-  source            TEXT NOT NULL,
-  run_url           TEXT,
-  at                TEXT NOT NULL,
-  pipeline_event_id INTEGER NOT NULL REFERENCES pipeline_events (id),
+  from_state TEXT,
+  to_state   TEXT,
+  payload    TEXT NOT NULL,
   FOREIGN KEY (name, version) REFERENCES versions (name, version)
 ) STRICT;
+
+CREATE INDEX ledger_events_by_version ON ledger_events (name, version, id);

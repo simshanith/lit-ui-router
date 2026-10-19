@@ -380,8 +380,7 @@ describe('queue consumer', { timeout: 120_000 }, () => {
         'DELETE FROM ledger_events',
         'DELETE FROM dist_tags',
         'DELETE FROM versions',
-        'DELETE FROM pipeline_events',
-        'DELETE FROM dead_letters',
+        'DELETE FROM claims',
       ].map((statement) => db.prepare(statement)),
     );
   });
@@ -410,10 +409,16 @@ describe('queue consumer', { timeout: 120_000 }, () => {
       [{ tag: 'latest', version: VERSION }],
     );
 
-    const [claim] = await all('pipeline_events');
+    const [claim] = await all('claims');
     assert.equal(claim?.message_id, message.id);
+    assert.equal(claim?.origin, 'run');
     assert.equal(claim?.run_id, '100');
     assert.equal(claim?.outcome, 'applied');
+    assert.deepEqual(
+      (await db.prepare('SELECT DISTINCT claim_id FROM ledger_events').all())
+        .results,
+      [{ claim_id: claim?.id }],
+    );
 
     const tagged = await run(findTagged({ name: NAME, tag: 'latest' }));
     assert.equal(Option.getOrThrow(tagged).version, VERSION);
@@ -426,7 +431,7 @@ describe('queue consumer', { timeout: 120_000 }, () => {
     await deliver([message]);
 
     assert.equal(message.acks, 2);
-    assert.equal((await all('pipeline_events')).length, 1);
+    assert.equal((await all('claims')).length, 1);
     assert.equal((await all('ledger_events')).length, 4);
   });
 
@@ -442,7 +447,7 @@ describe('queue consumer', { timeout: 120_000 }, () => {
     assert.deepEqual(await all('versions'), []);
     assert.deepEqual(await all('dist_tags'), []);
 
-    const [claim] = await all('pipeline_events');
+    const [claim] = await all('claims');
 
     assert.equal(claim?.outcome, 'rejected');
     assert.match(String(claim?.reason), /empty deprecation message/);
@@ -563,7 +568,7 @@ describe('queue consumer', { timeout: 120_000 }, () => {
       'npm observed',
       'npm dist_tag_moved',
     ]);
-    assert.equal((await all('pipeline_events'))[0]?.outcome, 'applied');
+    assert.equal((await all('claims'))[0]?.outcome, 'applied');
   });
 
   it('records a conflict when npm reports a recorded version absent', async () => {
@@ -593,7 +598,7 @@ describe('queue consumer', { timeout: 120_000 }, () => {
     await deliver([message], down);
 
     retriedOnce(message);
-    assert.deepEqual(await all('pipeline_events'), []);
+    assert.deepEqual(await all('claims'), []);
   });
 
   it('retries after the wait a rate limit asked for', async () => {
@@ -638,51 +643,126 @@ describe('queue consumer', { timeout: 120_000 }, () => {
 
     retriedOnce(message);
 
-    for (const table of [
-      'versions',
-      'dist_tags',
-      'ledger_events',
-      'pipeline_events',
-    ]) {
+    for (const table of ['versions', 'dist_tags', 'ledger_events', 'claims']) {
       assert.deepEqual(await all(table), [], table);
     }
   });
 
-  it('dead-letters a message that is not a claim without retrying it', async () => {
-    const message = messageOf({ name: NAME });
+  it('records a sweep claim with no run columns', async () => {
+    const sweepClaim: Claim = {
+      ...claimOf(),
+      origin: {
+        kind: 'sweep',
+        repository: 'simshanith/lit-ui-router',
+        cron: '0 6 * * *',
+        scheduledAt: '2026-10-17T06:00:00.000Z',
+        sha: SHA,
+      },
+    };
+
+    const message = messageOf(sweepClaim);
 
     await deliver([message]);
 
-    assert.deepEqual([message.acks, message.retries], [1, []]);
-    assert.deepEqual(await all('pipeline_events'), []);
-    assert.deepEqual(await all('dead_letters'), [
+    const [claim] = await all('claims');
+
+    assert.deepEqual(
+      [
+        claim?.origin,
+        claim?.job_workflow_ref,
+        claim?.run_id,
+        claim?.run_attempt,
+      ],
+      ['sweep', null, null, null],
+    );
+    assert.equal(claim?.body, JSON.stringify(sweepClaim));
+  });
+
+  const UNDECODABLE = {
+    name: null,
+    version: null,
+    origin: null,
+    repository: null,
+    job_workflow_ref: null,
+    run_id: null,
+    run_attempt: null,
+    sha: null,
+  };
+
+  it('records a message that is not a claim as undecodable without retrying it', async () => {
+    const message = messageOf({ name: NAME });
+
+    await deliver([message]);
+    await deliver([message]);
+
+    assert.deepEqual([message.acks, message.retries], [2, []]);
+    assert.deepEqual(await all('claims'), [
       {
         id: 1,
         message_id: message.id,
-        queue: CLAIMS_QUEUE,
-        attempts: 1,
-        body: JSON.stringify({ name: NAME }),
         received_at: '2026-10-17T00:00:00.000Z',
+        body: JSON.stringify({ name: NAME }),
+        outcome: 'undecodable',
+        reason: null,
+        attempts: 1,
+        ...UNDECODABLE,
       },
     ]);
   });
 
-  it('keeps dead letters in D1', async () => {
-    const message = messageOf({ name: NAME });
+  it('records a dead-lettered claim as exhausted, once', async () => {
+    const claim = claimOf();
+    const message = messageOf(claim);
 
     await deliver([message], undefined, DEAD_LETTER_QUEUE);
     await deliver([message], undefined, DEAD_LETTER_QUEUE);
 
     assert.equal(message.acks, 2);
-    assert.deepEqual(await all('dead_letters'), [
+    assert.deepEqual(await all('claims'), [
       {
         id: 1,
         message_id: message.id,
-        queue: DEAD_LETTER_QUEUE,
+        received_at: claim.receivedAt,
+        body: JSON.stringify(claim),
+        outcome: 'exhausted',
+        reason: null,
         attempts: 1,
-        body: JSON.stringify({ name: NAME }),
-        received_at: '2026-10-17T00:00:00.000Z',
+        name: NAME,
+        version: VERSION,
+        origin: 'run',
+        repository: 'simshanith/lit-ui-router',
+        job_workflow_ref:
+          'simshanith/lit-ui-router/.github/workflows/publish-npm.yml@refs/tags/lit-ui-router@1.0.0',
+        run_id: '100',
+        run_attempt: 1,
+        sha: SHA,
       },
     ]);
+    assert.deepEqual(await all('versions'), []);
+  });
+
+  it('records a dead-lettered body that is not a claim as undecodable', async () => {
+    const message = messageOf({ name: NAME });
+
+    await deliver([message], undefined, DEAD_LETTER_QUEUE);
+
+    assert.equal(message.acks, 1);
+    assert.deepEqual(
+      (await all('claims')).map(({ outcome, name }) => ({ outcome, name })),
+      [{ outcome: 'undecodable', name: null }],
+    );
+  });
+
+  it('keeps the outcome a claim committed before its ack was lost to the dead-letter queue', async () => {
+    const message = messageOf(claimOf());
+
+    await deliver([message]);
+    await deliver([message], undefined, DEAD_LETTER_QUEUE);
+
+    assert.equal(message.acks, 2);
+    assert.deepEqual(
+      (await all('claims')).map(({ outcome }) => outcome),
+      ['applied'],
+    );
   });
 });
