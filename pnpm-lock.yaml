@@ -344,8 +344,8 @@ catalogs:
       version: 0.2.0
   peerFloorEffect:
     lit-ui-router-floor:
-      specifier: npm:lit-ui-router@1.15.0
-      version: 1.15.0
+      specifier: npm:lit-ui-router@1.16.0
+      version: 1.16.0
   peerFloorEslintPlugin:
     eslint-floor:
       specifier: npm:eslint@9.0.0
@@ -1243,7 +1243,7 @@ importers:
         version: link:../lit-ui-router
       lit-ui-router-floor:
         specifier: catalog:peerFloorEffect
-        version: lit-ui-router@1.15.0(@uirouter/core@6.1.2)(lit@3.3.3)
+        version: lit-ui-router@1.16.0(@uirouter/core@6.1.2)(lit@3.3.3)
       oxfmt:
         specifier: 'catalog:'
         version: 0.74.0

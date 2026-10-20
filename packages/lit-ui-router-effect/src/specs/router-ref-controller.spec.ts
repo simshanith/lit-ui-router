@@ -160,6 +160,26 @@ describe('RouterRefController', () => {
     expect(controller.value).toBe('a');
   });
 
+  it('takes the router of a <ui-view> given one directly', async () => {
+    const router = createTestRouter(testStates);
+    await routerGo(router, 'a');
+
+    const host = createHost();
+
+    const controller = new RouterRefController(
+      host,
+      (route) => route.current?.name,
+    );
+
+    const view = document.createElement('ui-view');
+    view.uiRouter = router;
+    appendParentFirst(document.body, view, host);
+    cleanups.push(() => view.remove());
+    await waitForUpdate(host);
+
+    expect(controller.value).toBe('a');
+  });
+
   it('reads an explicit router at construction, before connect', async () => {
     const router = createTestRouter(testStates);
     await routerGo(router, 'a');
