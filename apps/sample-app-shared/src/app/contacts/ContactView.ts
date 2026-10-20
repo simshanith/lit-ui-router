@@ -1,4 +1,4 @@
-import { LitElement, html, type TemplateResult } from 'lit';
+import { LitElement, html } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { RoutedLitElement, UIViewInjectedProps, uiSref } from 'lit-ui-router';
 
@@ -23,7 +23,7 @@ export class ContactView extends LitElement {
     return this._uiViewProps.resolves.contact;
   }
 
-  render(): TemplateResult {
+  render() {
     const { contact } = this;
 
     const composeButton = html`<button

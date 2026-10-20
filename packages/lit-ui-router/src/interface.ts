@@ -224,13 +224,14 @@ export type RoutedLitTemplate<
  *
  * A {@link RoutedLitTemplate} intersected with the core view declaration
  * metadata (all optional, so plain template functions remain assignable).
+ * Its return is typed `void` so checking a declaration never infers the template's return.
  *
  * @category types
  */
 export type LitViewDeclarationTemplate<
   // oxlint-disable-next-line anti-slop/no-unsafe-dictionary-type -- backwards compatible default
   T extends DefaultResolvesType = DefaultResolvesType,
-> = RoutedLitTemplate<T> & _ViewDeclaration;
+> = ((props: UIViewInjectedProps<T>) => void) & _ViewDeclaration;
 
 /**
  * A LitElement class constructor that can be used in state declarations.
@@ -284,12 +285,14 @@ export interface RoutedLitElement<
 > {
   /**
    * Construct signature. The router always passes props; classes may declare
-   * the parameter required, optional, or not at all.
+   * the parameter required, optional, or not at all. The instance is checked by
+   * LitElement's `renderOptions` brand, never by its `render()`.
    */
-  new (props: UIViewInjectedProps<T>): LitElement & {
-    /** assigned on every render; declare it reactive to re-render when reused */
-    _uiViewProps?: UIViewInjectedProps<T>;
-  };
+  new (props: UIViewInjectedProps<T>): HTMLElement &
+    Pick<LitElement, 'renderOptions'> & {
+      /** assigned on every render; declare it reactive to re-render when reused */
+      _uiViewProps?: UIViewInjectedProps<T>;
+    };
 
   /** If true, the same component instance is reused across state transitions */
   sticky?: boolean;
@@ -327,8 +330,8 @@ export interface LitViewDeclarationElement<
 export interface LitViewDeclarationObject<
   T extends DefaultResolvesType = DefaultResolvesType,
 > extends _ViewDeclaration {
-  /** the routed component: a LitElement class or a template function */
-  component: RoutedLitComponent<T>;
+  /** the routed component: a LitElement class or a template function, its return typed `void` like {@link LitViewDeclarationTemplate} */
+  component: ((props: UIViewInjectedProps<T>) => void) | RoutedLitElement<T>;
 }
 
 /**

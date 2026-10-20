@@ -47,7 +47,7 @@
     "test": "node --test --test-reporter=@tools/shared/test-reporter.ts \"test-js/*.test.js\"",
     "typecheck:peer-floor": "floor-guard && floor-types-guard tsconfig.peer-floor.json && tsc -p tsconfig.peer-floor.json --noEmit",
     "typecheck:src": "tsc -p tsconfig.src.json --noEmit",
-    "typecheck:tsc": "tsc -p tsconfig.json --noEmit && tsc -p test-d/tsconfig.json --noEmit && tsc -p test-js/unregistered/tsconfig.json && tsc -p test-js/registered/tsconfig.json"
+    "typecheck:tsc": "tsc -p tsconfig.json --noEmit && tsc -p test-d/tsconfig.json --noEmit && tsc -p test-d/routed-components/tsconfig.json --noEmit && tsc -p test-js/unregistered/tsconfig.json && tsc -p test-js/registered/tsconfig.json"
   },
   "devDependencies": {
     "@release-it/conventional-changelog": "catalog:",

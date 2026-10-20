@@ -172,7 +172,7 @@ const workspaces = {
     ],
     entry: [
       'src/specs/*.test-d.ts',
-      'test-d/*.test-d.ts',
+      'test-d/**/*.test-d.ts',
       'test-js/**/*.{js,ts}',
     ],
   },
