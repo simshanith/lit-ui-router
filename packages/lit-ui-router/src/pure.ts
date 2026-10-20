@@ -1,4 +1,3 @@
-// oxlint-disable typescript/no-deprecated -- the entry re-exports the deprecated plumbing until 2.0 stops exporting it (#873, #541)
 // Side-effect-free entry: the full API without element registration or tag-map globals.
 export type {
   DefaultResolvesType,
@@ -17,13 +16,7 @@ export type {
   UIViewResolves,
 } from './interface.js';
 
-export {
-  isLitViewDeclarationTemplate,
-  isRoutedLitElement,
-  LitViewConfig,
-  litViewsBuilder,
-  UIRouterLit,
-} from './core.js';
+export { isRoutedLitElement, LitViewConfig, UIRouterLit } from './core.js';
 
 export {
   type TransitionCallback,
@@ -33,42 +26,21 @@ export {
   type TransitionEventType,
 } from './transition-controller.js';
 
-export {
-  type UiRouterContextEvent,
-  UIRouterLitElement,
-  type UiViewContextEvent,
-} from './ui-router.js';
+export { type UiRouterContextEvent, UIRouterLitElement } from './ui-router.js';
 
-export { UiView, type UiViewAddress } from './ui-view.js';
+export { UiView } from './ui-view.js';
 
 export {
-  clickBelongsToBrowser,
-  inLitDevMode,
-  isNativeLink,
-  sameTarget,
-  srefEventLink,
-  srefTransitionOptions,
-  UI_SREF_TARGET_EVENT,
-  UI_SREF_TARGET_REMOVED_EVENT,
   uiSref,
   UiSrefDirective,
-  type UiSrefElement,
   type UiSrefOptions,
-  uiSrefTargetEvent,
-  type UiSrefTargetEvent,
-  uiSrefTargetRemovedEvent,
   type UiSrefTransitionOptions,
 } from './ui-sref.js';
 
 export {
   type AriaCurrentValue,
   type AriaCurrentValues,
-  mergeSrefStatus,
   type SrefStatus,
-  srefStatus,
-  type TransEvt,
-  TRANSITION_STATE_CHANGE_EVENT,
-  TransitionStateChange,
   uiSrefActive,
   UiSrefActiveDirective,
   type UiSrefActiveParams,
@@ -91,3 +63,35 @@ export {
   SrefStatusController,
   type SrefStatusControllerOptions,
 } from './sref-status-controller.js';
+
+// Deprecated plumbing (#873, #541): 2.0 deletes this block.
+/* oxlint-disable typescript/no-deprecated -- the entry re-exports deprecated plumbing until 2.0 */
+export { isLitViewDeclarationTemplate, litViewsBuilder } from './core.js';
+
+export { type UiViewContextEvent } from './ui-router.js';
+
+export { type UiViewAddress } from './ui-view.js';
+
+export {
+  clickBelongsToBrowser,
+  inLitDevMode,
+  isNativeLink,
+  sameTarget,
+  srefEventLink,
+  srefTransitionOptions,
+  UI_SREF_TARGET_EVENT,
+  UI_SREF_TARGET_REMOVED_EVENT,
+  type UiSrefElement,
+  uiSrefTargetEvent,
+  type UiSrefTargetEvent,
+  uiSrefTargetRemovedEvent,
+} from './ui-sref.js';
+
+export {
+  mergeSrefStatus,
+  srefStatus,
+  type TransEvt,
+  TRANSITION_STATE_CHANGE_EVENT,
+  TransitionStateChange,
+} from './ui-sref-active.js';
+/* oxlint-enable typescript/no-deprecated */
