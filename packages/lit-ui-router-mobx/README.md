@@ -13,7 +13,7 @@ A thin wrapper on top of `lit-ui-router` — it registers no custom elements and
 ## Features
 
 - **`RouterStore`** — an observable mirror of the current state, params, and transition; one store (and one transition hook) per router via `RouterStore.for(router)`
-- **`RouterReactionController`** — observes the store of the router its nearest provider supplies, requested automatically over the `context-request` protocol with the `ui-router-context` event as fallback; no prop drilling and no store wiring in router configuration
+- **`RouterReactionController`** — observes the store of the router its nearest provider supplies, requested automatically over the `context-request` protocol; no prop drilling and no store wiring in router configuration
 - **`ReactionController`** — the generic primitive: runs a MobX `reaction` over an explicit selector while the host is connected; works with any MobX observables, not just the router
 - **Lifecycle-safe** — reactions are created in `hostConnected` and disposed in `hostDisconnected`; they fire immediately on (re)connect so components that re-enter the DOM (e.g. sticky states) never render stale values
 
@@ -47,11 +47,11 @@ below is spelled `compareStructural` on 7 and `comparer.structural` on 6 —
 
 ### lit-ui-router 1.x
 
-The peer range is `lit-ui-router@^1.15.0`, the first release with the `lit-ui-router/context` entry,
-and it excludes 2.x. `RouterReactionController` finds its router through core's two discovery
-protocols, `context-request` and the `ui-router-context` event. That pair is the seam
-`lit-ui-router@2.0` revisits ([#874](https://github.com/simshanith/lit-ui-router/issues/874) keeps
-only `context-request`), so a `lit-ui-router` 2.0 carries a `lit-ui-router-mobx` 2.0.
+The peer range is `lit-ui-router@^1.16.0`, the first release where `<ui-view>` answers the
+`context-request` protocol as `<ui-router>` does, and it excludes 2.x. `RouterReactionController`
+finds its router through `context-request` alone, the one discovery protocol `lit-ui-router@2.0`
+keeps ([#874](https://github.com/simshanith/lit-ui-router/issues/874)). A `lit-ui-router` 2.0
+still carries a `lit-ui-router-mobx` 2.0.
 
 ## Quick Start
 

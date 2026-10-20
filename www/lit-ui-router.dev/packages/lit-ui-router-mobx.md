@@ -62,14 +62,14 @@ below is spelled `compareStructural` on 7 and `comparer.structural` on 6 —
 
 ### lit-ui-router 1.x
 
-The peer range is `lit-ui-router@^1.15.0`, the first release with the
-`lit-ui-router/context` entry, and it excludes 2.x. `RouterReactionController`
-finds its router through core's two
-[discovery protocols](/guides/reactive-components#router-discovery),
-`context-request` and the `ui-router-context` event. That pair is the seam
-`lit-ui-router@2.0` revisits
-([#874](https://github.com/simshanith/lit-ui-router/issues/874) keeps only
-`context-request`), so a `lit-ui-router` 2.0 carries a `lit-ui-router-mobx` 2.0.
+The peer range is `lit-ui-router@^1.16.0`, the first release where
+`<ui-view>` answers the `context-request` protocol as `<ui-router>` does, and it
+excludes 2.x. `RouterReactionController` finds its router through
+`context-request` alone, the one
+[discovery protocol](/guides/reactive-components#router-discovery)
+`lit-ui-router@2.0` keeps
+([#874](https://github.com/simshanith/lit-ui-router/issues/874)). A
+`lit-ui-router` 2.0 still carries a `lit-ui-router-mobx` 2.0.
 
 ## Quick start
 
