@@ -27,7 +27,7 @@ import {
   QUEUE_BACKOFF,
   queueCeiling,
 } from './consume.ts';
-import { findTagged, findVersions } from './ledger-sql.ts';
+import { findPackages, findTagged, findVersions } from './ledger-sql.ts';
 import {
   ObservationError,
   Observer,
@@ -786,6 +786,52 @@ describe('queue consumer', { timeout: 120_000 }, () => {
       },
     ]);
     assert.deepEqual(await all('versions'), []);
+  });
+
+  describe('findPackages', () => {
+    const tag = (name: string, tagName: string, version: string) =>
+      db
+        .prepare(
+          "INSERT INTO dist_tags (name, tag, version, updated_at) VALUES (?, ?, ?, 'then')",
+        )
+        .bind(name, tagName, version)
+        .run();
+
+    const summary = async () =>
+      (await run(findPackages)).map(({ name, latest }) => ({
+        name,
+        latest: latest && `${latest.version} ${latest.status}`,
+      }));
+
+    it('reads an empty ledger as no packages', async () => {
+      assert.deepEqual(await run(findPackages), []);
+    });
+
+    it('reads each package by name with its latest row, or null without one', async () => {
+      await seed({ ...ROWS.released, name: 'zeta' });
+      await seed({ ...ROWS.tagged, name: 'zeta', version: '2.0.0-rc.0' });
+      await tag('zeta', 'latest', VERSION);
+      await tag('zeta', 'next', '2.0.0-rc.0');
+      await seed({ ...ROWS.tagged, name: 'alpha' });
+      await tag('alpha', 'next', VERSION);
+      await seed({ ...ROWS.published, name: 'mid' });
+      await tag('mid', 'latest', VERSION);
+
+      assert.deepEqual(await summary(), [
+        { name: 'alpha', latest: null },
+        { name: 'mid', latest: `${VERSION} published` },
+        { name: 'zeta', latest: `${VERSION} released` },
+      ]);
+
+      const [, , zeta] = await run(findPackages);
+      assert.deepEqual(zeta?.latest, {
+        ...ROWS.released,
+        name: 'zeta',
+        npm_state: 'active',
+        gh_state: 'final',
+        status: 'released',
+      });
+    });
   });
 
   it('records a dead-lettered body that is not a claim as undecodable', async () => {
