@@ -11,6 +11,7 @@ import {
   StateObject,
   tail,
   TargetState,
+  Transition,
   TransitionOptions,
   UIRouter,
   unnestR,
@@ -19,10 +20,35 @@ import {
 import type {
   AriaCurrentValues,
   SrefStatus,
-  TransEvt,
   UiSrefActiveParams,
 } from './ui-sref-active.js';
 import type { ParentView } from './events.js';
+
+/** @internal */
+export interface TransEvt {
+  evt: string;
+  trans: Transition;
+  status?: SrefStatus;
+}
+
+/**
+ * Event name dispatched when a transition state changes.
+ * @internal
+ */
+export const TRANSITION_STATE_CHANGE_EVENT = 'transitionStateChange';
+
+/**
+ * Enum representing the different stages of a transition.
+ * @internal
+ */
+export enum TransitionStateChange {
+  /** Transition has started */
+  start = 'start',
+  /** Transition completed successfully */
+  success = 'success',
+  /** Transition failed with an error */
+  error = 'error',
+}
 
 /** Whether `value` is the per-state object form rather than a shorthand. */
 const isAriaCurrentValues = (

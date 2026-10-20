@@ -68,10 +68,18 @@ const isRenderMarker = (node: ChildNode | null): boolean => {
 };
 
 /** @internal */
-export interface UiViewAddress {
+interface ViewAddress {
   context: ViewContext | StateObject;
   fqn: string;
 }
+
+export type {
+  /**
+   * @internal
+   * @deprecated `<ui-view>` plumbing, not a supported import (#541).
+   */
+  ViewAddress as UiViewAddress,
+};
 
 type deregisterFn = () => void;
 
@@ -130,7 +138,7 @@ export class UiView extends LitElement {
   uiRouter!: UIRouterLit;
 
   @state()
-  private viewAddress!: UiViewAddress;
+  private viewAddress!: ViewAddress;
 
   /** Replaced only by a real view config change, so a retained view keeps its subtree. */
   @state()

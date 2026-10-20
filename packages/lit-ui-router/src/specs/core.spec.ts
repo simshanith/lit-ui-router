@@ -3,12 +3,8 @@ import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { StateObject, PathNode } from '@uirouter/core';
 
-import {
-  UIRouterLit,
-  LitViewConfig,
-  isLitViewDeclarationTemplate,
-  isRoutedLitElement,
-} from '../core.js';
+import { UIRouterLit, LitViewConfig, isRoutedLitElement } from '../core.js';
+import { isLitViewDeclarationTemplate } from '../view-builder.js';
 import { createTestRouter } from './test-utils.js';
 import {
   UIViewInjectedProps,

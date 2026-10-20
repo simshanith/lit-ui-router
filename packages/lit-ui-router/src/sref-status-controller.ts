@@ -6,15 +6,15 @@ import { subscribeRouter } from './router-subscription.js';
 import type { SrefTargetParams } from './sref-active.js';
 import { resolveAriaCurrent, SrefTargets } from './sref-status.js';
 import {
+  TransEvt,
   UI_SREF_TARGET_EVENT,
   UI_SREF_TARGET_REMOVED_EVENT,
   UiSrefTargetEvent,
-} from './ui-sref.js';
+} from './sref-internals.js';
 import {
   AriaCurrentValue,
   AriaCurrentValues,
   SrefStatus,
-  TransEvt,
 } from './ui-sref-active.js';
 import { UiView } from './ui-view.js';
 

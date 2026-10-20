@@ -9,7 +9,14 @@ import { uiRouterContextEventName, uiViewContextEventName } from './events.js';
 import type { UiRouterContextEvent, UiViewContextEvent } from './events.js';
 import { RouterSubscribers } from './router-subscription.js';
 
-export type { UiRouterContextEvent, UiViewContextEvent } from './events.js';
+export type {
+  UiRouterContextEvent,
+  /**
+   * @internal
+   * @deprecated `<ui-view>` plumbing, not a supported import (#541).
+   */
+  UiViewContextEvent,
+} from './events.js';
 
 /**
  * @hideconstructor

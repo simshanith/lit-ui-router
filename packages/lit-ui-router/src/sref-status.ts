@@ -7,13 +7,13 @@ import {
   srefEventLink,
   srefStatus,
   toAriaCurrentValues,
+  TransEvt,
   UiSrefTargetEvent,
 } from './sref-internals.js';
 import {
   AriaCurrentValue,
   AriaCurrentValues,
   SrefStatus,
-  TransEvt,
 } from './ui-sref-active.js';
 
 /**
