@@ -1340,6 +1340,7 @@ describe('UiView', () => {
       // Views below ask this one for the router, so they must be told the same.
       const nested = document.createElement('div');
       uiView.appendChild(nested);
+      // eslint-disable-next-line typescript/no-deprecated -- the house ui-router-context path under test (#874)
       expect(UIRouterLitElement.seekRouter(nested)).toBe(routerB);
     });
   });

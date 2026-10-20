@@ -1,3 +1,4 @@
+// oxlint-disable typescript/no-deprecated -- the deprecated house ui-router-context path lives here until 2.0 (#874)
 import { html, LitElement } from 'lit';
 import type { PropertyValues, TemplateResult } from 'lit';
 import { property } from 'lit/decorators.js';
@@ -35,7 +36,8 @@ export type {
  * on <code>@lit/context</code> gets the router too. The two paths coexist and
  * neither sees the other's event: {@link UIRouterLitElement.seekRouter} asks
  * on <code>ui-router-context</code> first and falls back to
- * {@link requestRouter}.
+ * {@link requestRouter}. The <code>ui-router-context</code> event is
+ * deprecated in favour of <code>context-request</code>.
  *
  * @summary
  *
@@ -50,13 +52,19 @@ export class UIRouterLitElement extends LitElement {
   @property({ attribute: false })
   uiRouter: UIRouterLit | undefined;
 
-  /** @internal */
+  /**
+   * @internal
+   * @deprecated Use the `context-request` protocol instead: `requestRouter` or `routerContext` from `lit-ui-router/context`.
+   */
   static uiRouterContextEventName: string = uiRouterContextEventName;
 
   /** @internal */
   static uiViewContextEventName: string = uiViewContextEventName;
 
-  /** @internal */
+  /**
+   * @internal
+   * @deprecated Use the `context-request` protocol instead: `requestRouter` or `routerContext` from `lit-ui-router/context`.
+   */
   static uiRouterContextEvent(uiRouter?: UIRouterLit): UiRouterContextEvent {
     return new CustomEvent(this.uiRouterContextEventName, {
       bubbles: true,
@@ -86,6 +94,8 @@ export class UIRouterLitElement extends LitElement {
    * {@link requestRouter}, so an ancestor providing {@link routerContext}
    * over the community protocol — a bare <code>@lit/context</code>
    * <code>ContextProvider</code>, say — is found as well.
+   *
+   * @deprecated Use the `context-request` protocol instead: `requestRouter` or `routerContext` from `lit-ui-router/context`.
    */
   static seekRouter(candidate: Element): UIRouterLit | undefined {
     const uiRouterContextEvent = this.uiRouterContextEvent();
@@ -94,7 +104,10 @@ export class UIRouterLitElement extends LitElement {
     return uiRouterContextEvent.detail.uiRouter ?? requestRouter(candidate);
   }
 
-  /** @internal */
+  /**
+   * @internal
+   * @deprecated Use the `context-request` protocol instead: `requestRouter` or `routerContext` from `lit-ui-router/context`.
+   */
   static onUiRouterContextEvent(
     uiRouter?: UIRouterLit,
   ): (event: UiRouterContextEvent) => void {

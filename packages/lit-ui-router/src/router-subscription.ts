@@ -140,7 +140,9 @@ export const subscribeRouter = (
     return { router, unsubscribe };
   }
 
+  // eslint-disable-next-line typescript/no-deprecated -- the house ui-router-context path stays answered until 2.0 (#874)
   const event: UiRouterContextEvent = new CustomEvent(
+    // eslint-disable-next-line typescript/no-deprecated -- the house ui-router-context path stays answered until 2.0 (#874)
     uiRouterContextEventName,
     { bubbles: true, composed: true, detail: {} },
   );

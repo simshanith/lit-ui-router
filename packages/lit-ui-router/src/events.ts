@@ -3,7 +3,10 @@ import type { ViewContext } from '@uirouter/core';
 
 import type { UIRouterLit } from './core.js';
 
-/** @internal */
+/**
+ * @internal
+ * @deprecated Use the `context-request` protocol instead: `requestRouter` or `routerContext` from `lit-ui-router/context`.
+ */
 export const uiRouterContextEventName = 'ui-router-context';
 
 /** @internal */
@@ -15,6 +18,7 @@ interface UiRouterContextEventDetail {
 
 /**
  * @internal
+ * @deprecated Use the `context-request` protocol instead: `requestRouter` or `routerContext` from `lit-ui-router/context`.
  */
 export type UiRouterContextEvent = CustomEvent<UiRouterContextEventDetail>;
 
