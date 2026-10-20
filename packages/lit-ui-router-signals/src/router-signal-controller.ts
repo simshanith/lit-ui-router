@@ -1,7 +1,6 @@
 import { ReactiveController, ReactiveControllerHost } from 'lit';
 import { isFunction, UIRouter } from '@uirouter/core';
 import { getScopedRouter, requestRouter } from 'lit-ui-router/context';
-import { UIRouterLitElement } from 'lit-ui-router/pure';
 import { RouterSignals, watchSelection } from 'ui-router-signals';
 
 import { warnMissingRouter } from './dev-warn.js';
@@ -16,11 +15,9 @@ export interface RouterSignalControllerOptions<
    * thunk returns `undefined`), the controller takes the router an enclosing
    * [`withRouterSync`](https://lit-ui-router.dev/api/reference/core/withRouterSync)
    * scoped at construction (a server render), and otherwise asks the nearest
-   * router provider on `hostConnected`: over `context-request` first (via
+   * router provider on `hostConnected` over `context-request` (via
    * [requestRouter](https://lit-ui-router.dev/api/reference/core/requestRouter)
-   * with `subscribe: true`), then over the `ui-router-context` event (via
-   * [UIRouterLitElement.seekRouter](https://lit-ui-router.dev/api/reference/components/UIRouterLitElement))
-   * when nobody answers. A discovered router is rebound when a subscribed
+   * with `subscribe: true`). A discovered router is rebound when a subscribed
    * provider hands over the router that replaces its placeholder.
    *
    * An explicit or scoped router is read at construction, so `.value` is live
@@ -170,7 +167,7 @@ export class RouterSignalController<T> implements ReactiveController {
       offered?.();
     };
 
-    return router ?? UIRouterLitElement.seekRouter(this.host);
+    return router;
   }
 
   private dropSubscription(): void {

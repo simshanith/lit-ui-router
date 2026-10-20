@@ -134,7 +134,7 @@ catalogs:
   peerFloorMobx:
     lit-ui-router-floor: npm:lit-ui-router@1.15.0
   peerFloorSignals:
-    lit-ui-router-floor: npm:lit-ui-router@1.15.0
+    lit-ui-router-floor: npm:lit-ui-router@1.16.0
   peerFloorSsr:
     '@lit-labs/ssr-client-floor': npm:@lit-labs/ssr-client@1.1.7
     '@lit-labs/ssr-floor': npm:@lit-labs/ssr@4.1.0
@@ -159,7 +159,7 @@ catalogs:
     lit-ui-router: ^1.15.0
     ui-router-mobx: ^0.1.0
   publishedPeerSignals:
-    lit-ui-router: ^1.15.0
+    lit-ui-router: ^1.16.0
     ui-router-signals: ^0.1.0
   publishedPeerSsr:
     '@lit-labs/ssr': ^4.1.0

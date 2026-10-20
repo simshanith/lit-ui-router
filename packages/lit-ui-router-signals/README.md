@@ -20,7 +20,7 @@ npm install lit-ui-router-signals ui-router-signals signal-polyfill
 
 ## Features
 
-- **`RouterSignalController`**: watches the `RouterSignals` of a router given explicitly (or by a thunk resolved on each connect), scoped by `withRouterSync` for a server render, or supplied by the nearest provider over `context-request` with the `ui-router-context` event as fallback. An explicit or scoped router is read at construction, so a host rendered on the server sees the same `.value` a browser would. `setRouter()` hands it a router later.
+- **`RouterSignalController`**: watches the `RouterSignals` of a router given explicitly (or by a thunk resolved on each connect), scoped by `withRouterSync` for a server render, or supplied by the nearest provider over `context-request`. An explicit or scoped router is read at construction, so a host rendered on the server sees the same `.value` a browser would. `setRouter()` hands it a router later.
 - **`SignalController`**: the generic primitive. A `watchSelection` over a selector while the host is connected; `requestUpdate()` only when the selected value changes under `equals`.
 - **Lifecycle-safe**: watching starts in `hostConnected` and stops in `hostDisconnected`. The selector runs on every (re)connect, so sticky components never render stale values.
 
