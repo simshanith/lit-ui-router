@@ -4,6 +4,7 @@ import { mounts } from 'sample-app-routes';
 // Examples embedded same-origin at /examples/<name>/; built by
 // `examples#build:embeds` (hash routing, so no SPA fallback needed).
 import { EXAMPLE_NAMES } from 'examples/embeds';
+import { basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { gzipSync } from 'node:zlib';
 import { defineConfig, Plugin } from 'vite';
@@ -96,9 +97,81 @@ function chunkBudgetPlugin(): Plugin {
   };
 }
 
+const RELEASE_PAGES_CSS = fileURLToPath(
+  new URL('../worker/releases/release-pages.css', import.meta.url),
+);
+
+const RELEASE_PAGES_ENTRY = '\0release-pages-entry';
+
+/** Emits the release pages' stylesheet, the theme's Inter faces first, at a stable `/<basename>`. */
+function releasePagesStylesheetPlugin(): Plugin {
+  // `?url` keeps both out of style.css; a CSS @import would skip vitepress:webfonts and load Google Fonts.
+  const sources = [
+    'vitepress/dist/client/theme-default/styles/fonts.css',
+    RELEASE_PAGES_CSS,
+  ];
+
+  return {
+    name: 'release-pages-stylesheet',
+    apply: (_config, { command, isSsrBuild }) =>
+      command === 'build' && !isSsrBuild,
+    buildStart() {
+      this.emitFile({ type: 'chunk', id: RELEASE_PAGES_ENTRY });
+    },
+    resolveId: {
+      filter: { id: /^\0release-pages-entry$/ },
+      handler: (id) => id,
+    },
+    load: {
+      filter: { id: /^\0release-pages-entry$/ },
+      handler: () =>
+        sources
+          .map(
+            (source, i) =>
+              `export { default as css${i} } from '${source}?url';`,
+          )
+          .join('\n'),
+    },
+    generateBundle(_options, bundle) {
+      const parts = sources.map((source) => {
+        const name = basename(source);
+
+        const asset = Object.values(bundle).find(
+          (file) =>
+            file.type === 'asset' &&
+            file.originalFileNames.some((original) =>
+              original.endsWith(`/${name}`),
+            ),
+        );
+
+        if (asset?.type !== 'asset') this.error(`no emitted css for ${source}`);
+        delete bundle[asset.fileName];
+
+        return asset.source.toString();
+      });
+
+      for (const file of Object.values(bundle)) {
+        if (
+          file.type === 'chunk' &&
+          file.facadeModuleId === RELEASE_PAGES_ENTRY
+        ) {
+          delete bundle[file.fileName];
+        }
+      }
+
+      this.emitFile({
+        type: 'asset',
+        fileName: basename(RELEASE_PAGES_CSS),
+        source: parts.join(''),
+      });
+    },
+  };
+}
+
 export default defineConfig({
   plugins: [
     chunkBudgetPlugin(),
+    releasePagesStylesheetPlugin(),
     serverRouterPlugin(router, {
       shellPath: (mount) => SHELL_PATHS.get(mount) ?? mount,
       // Dev parity with the worker's mount-owned 404: serve the mount's

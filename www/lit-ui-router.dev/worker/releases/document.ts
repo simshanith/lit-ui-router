@@ -2,7 +2,7 @@
 import { html, render } from '@lit-labs/ssr';
 import { collectResult } from '@lit-labs/ssr/lib/render-result.js';
 
-/** The stylesheet, a static asset from the docs site's `public/`. */
+/** The stylesheet the docs build emits from `release-pages.css` beside this module. */
 export const STYLESHEET = '/release-pages.css';
 
 /** What the document's head says about the page. */

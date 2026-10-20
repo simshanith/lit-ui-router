@@ -187,13 +187,11 @@ describe('the /gh pages', () => {
     assert.match((await response?.text()) ?? '', /<h1>Not found<\/h1>/);
   });
 
-  it('links the stylesheet the docs site serves', async () => {
+  it('links the stylesheet the docs build emits', async () => {
     const html = await page('/gh/releases/');
 
     assert.ok(html.includes(`<link rel="stylesheet" href="${STYLESHEET}">`));
-    assert.ok(
-      existsSync(join(import.meta.dirname, '../../public', STYLESHEET)),
-    );
+    assert.ok(existsSync(join(import.meta.dirname, '../releases', STYLESHEET)));
   });
 
   it('escapes the head and keeps the body as rendered', async () => {
