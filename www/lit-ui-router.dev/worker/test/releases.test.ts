@@ -1,10 +1,13 @@
 import assert from 'node:assert/strict';
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, it } from 'node:test';
 
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
 import { isPublishable, loadWorkspace } from '@tools/shared/workspace.ts';
 
 import '../dom-shim.ts';
+import { STYLESHEET } from '../releases/document.ts';
 import {
   type LedgerReader,
   latestVersionOf,
@@ -193,6 +196,15 @@ describe('the /gh pages', () => {
     const response = await serve('/gh/releases/lit-ui-router/9.9.9/');
 
     assert.match((await response?.text()) ?? '', /<h1>Not found<\/h1>/);
+  });
+
+  it('links the stylesheet the docs site serves', async () => {
+    const html = await page('/gh/releases/');
+
+    assert.ok(html.includes(`<link rel="stylesheet" href="${STYLESHEET}">`));
+    assert.ok(
+      existsSync(join(import.meta.dirname, '../../public', STYLESHEET)),
+    );
   });
 
   it('ships no client script', async () => {
