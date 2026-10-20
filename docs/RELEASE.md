@@ -165,13 +165,13 @@ The final release stage:
 5. Creates a draft GitHub Release with the tarball
 6. Marks the GitHub Release as final
 
-After a publish that is not a dry run, the `ledger_claim` job runs
+After a publish that is not a dry run, the job's last step runs
 `mise run ledger_claim` ([`.config/mise/tasks/ledger_claim`](../.config/mise/tasks/ledger_claim)),
 which posts `<pkg>@<version>` to the release ledger's `POST /claims` with an
 OIDC id-token from the `publish` environment
 ([`www/release-ledger.lit-ui-router.dev`](../www/release-ledger.lit-ui-router.dev/README.md)).
-It is `continue-on-error`: a failed claim leaves a warning annotation and a job
-summary line, and the ledger's tag sweep records the release later.
+The step is `continue-on-error`: a failed claim leaves a warning annotation and
+a job summary line, and the ledger's tag sweep records the release later.
 
 The repository has GitHub immutable releases enabled: a published release, its
 assets and the tag it points at can never be edited or deleted, and npm

@@ -62,9 +62,6 @@ jobs:
       contents: write # Required for creating GitHub releases
       attestations: write # Required for build provenance attestation
       artifact-metadata: write
-    outputs:
-      package_name: ${{ steps.info.outputs.package_name }}
-      version: ${{ steps.publish.outputs.version }}
     steps:
       - name: 'Checkout code'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -143,38 +140,15 @@ jobs:
           DRY_RUN: ${{ inputs.dryRun }}
           # scoped here: only release-it's GitHub release needs it (npm auth is OIDC)
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  ledger_claim:
-    # Best-effort (#1424): the ledger's tag sweep heals a missed claim, so a failure only warns.
-    needs: publish_npm
-    if: ${{ !inputs.dryRun }}
-    continue-on-error: true
-    runs-on: ubuntu-26.04
-    timeout-minutes: 5
-    # The ledger pins the id-token's environment claim to publish.
-    environment: publish
-    permissions:
-      contents: read
-      id-token: write
-    steps:
-      - name: 'Checkout code'
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - name: Setup mise
-        uses: jdx/mise-action@9149ea85001c7435d5a66bb127d6a1b6227cb0a5 # v5.0.0
-        with:
-          version: 2026.10.1
-          # the task needs only curl and jq from the runner image
-          install: false
-          cache: false
       - name: Claim the release
+        # Best-effort (#1424): the ledger's tag sweep heals a missed claim, so a failure only warns.
+        if: ${{ !inputs.dryRun }}
+        continue-on-error: true
+        timeout-minutes: 5
         run: mise run ledger_claim
         env:
-          # otherwise `mise run` installs the whole toolchain first
-          MISE_TASK_RUN_AUTO_INSTALL: 'false'
-          PACKAGE_NAME: ${{ needs.publish_npm.outputs.package_name }}
-          VERSION: ${{ needs.publish_npm.outputs.version }}
+          PACKAGE_NAME: ${{ steps.info.outputs.package_name }}
+          VERSION: ${{ steps.publish.outputs.version }}
 
   release_signals:
     # Refresh the per-package published-diff check runs now that `latest` has

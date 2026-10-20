@@ -23,8 +23,8 @@ stores, its regions and the fold, is
 - **`POST /claims`** ([`src/ingest.ts`](./src/ingest.ts)) takes a GitHub Actions
   OIDC id-token as a bearer token, verifies it against GitHub's JWKS, checks it
   against the `OIDC_*` vars, and enqueues the claim. It answers 202 and writes
-  nothing to D1. `repair` is refused here. `publish-npm.yml`'s `ledger_claim`
-  job posts here after each publish, through the
+  nothing to D1. `repair` is refused here. `publish-npm.yml`'s `publish_npm`
+  job posts here in its last step, through the
   [`ledger_claim`](../../.config/mise/tasks/ledger_claim) mise task.
 - **The queue consumer** ([`src/consume.ts`](./src/consume.ts)) is the only D1
   writer. Per claim, it observes the tag, npm and GitHub, taking a 404 as the
