@@ -35,6 +35,7 @@ const NARROWED = 100;
 const COMPILERS = {
   'ts5.0': require.resolve('typescript-5.0/bin/tsc'),
   'ts5.9': require.resolve('typescript-5.9/bin/tsc'),
+  ts6: require.resolve('typescript/bin/tsc6'),
   ts7: join(dirname(require.resolve('typescript-7/package.json')), 'bin/tsc'),
 } as const;
 
