@@ -17,7 +17,8 @@ each flow. This skill adds only what an unattended run needs.
    `pnpm --filter <app> dev --port <alt>`. Wait for it:
    `curl -sf --retry 30 --retry-connrefused --retry-delay 1 -o /dev/null http://localhost:<alt>/<base>/`.
 4. Run one spec per the README, with the alt port: `WWW_DEV_PORT=<alt>` for
-   vanilla, the `--config baseUrl=…` form for mobx, effect and signals.
+   vanilla, the `--config baseUrl=…` form for mobx, effect and signals. Run one
+   Cypress suite at a time per machine.
 5. If clicks fail, check the vite log for `ERROR(TypeScript)`: the checker's
    overlay blocks Cypress. A clean pass logs `[TypeScript] No errors`.
 6. Stop only the server you started: `lsof -tiTCP:<alt> -sTCP:LISTEN`, confirm

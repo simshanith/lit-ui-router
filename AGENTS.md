@@ -111,7 +111,7 @@ Agents never:
 - create labels. Label PRs by subject from the existing set;
 - force-push, except `--force-with-lease` on their own branch.
 
-Ask before running `mise run ci`, `mise run ci_main`, or e2e (Cypress, the wrangler server). Headless browser specs that turbo test tasks run need no ask.
+Ask before running `mise run ci` or `mise run ci_main`. e2e (Cypress, the wrangler server) needs no ask, only coordination with other checkouts: give the checkout its own port ([e2e README: The port](apps/sample-app-lit-e2e/README.md#the-port)) and run one e2e suite at a time per machine. Headless browser specs that turbo test tasks run need no ask.
 
 ## Conventions
 
