@@ -34,7 +34,7 @@ import {
 } from './interface.js';
 import { LitViewConfig, UIRouterLit, isRoutedLitElement } from './core.js';
 import { routedElementOf, routedLitElementRenderer } from './routed-element.js';
-import { warnMissingRouter } from './dev-warn.js';
+import { warnForeignClass, warnMissingRouter } from './dev-warn.js';
 import { UIRouterLitElement } from './ui-router.js';
 import type {
   ParentView,
@@ -257,9 +257,14 @@ export class UiView extends LitElement {
     // here is what drops the old element.
     // SAFETY: `litViewsBuilder` normalizes every view declaration of a lit state
     const { component } = config.viewDecl as NormalizedLitViewDeclaration;
-    this.component = isRoutedLitElement(component)
-      ? routedLitElementRenderer(component)
-      : component;
+
+    if (isRoutedLitElement(component)) {
+      this.component = routedLitElementRenderer(component);
+    } else {
+      warnForeignClass(component);
+      this.component = component;
+    }
+
     this.requestUpdate();
   }
 

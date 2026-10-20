@@ -112,7 +112,7 @@ uiSref(link.state as UncheckedRef, link.params);
 stateService.go(name as UncheckedRef);
 ```
 
-## Annotate members and templates that call typed targets
+## Check components that call typed targets
 
 A state declaration that names a component and is checked with `satisfies`
 against a type that inspects the component, such as `LitStateDeclaration`, makes
@@ -120,7 +120,24 @@ that component part of `Register`'s type. If one of the component's members
 calls a typed target (`go`, `href`, a typed `uiSref` wrapper) and has no
 declared return type, TypeScript has to infer that member from `Register` while
 still building `Register`, and reports a circular type (TS7022, TS7023, TS7024,
-TS2456, TS2502 or TS2313). Declare the member's return type:
+TS2456, TS2502 or TS2313).
+
+For `lit-ui-router` states, check the declarations with
+`TypedLitStateDeclaration`, which checks a LitElement class by its public
+members and a template function by its parameters, so it never infers `render()`
+or a template's body:
+
+```ts
+const contactState = {
+  name: 'contacts.contact',
+  url: '/:contactId',
+  component: ContactView,
+} as const satisfies TypedLitStateDeclaration;
+```
+
+Classes clear this way on every supported TypeScript, templates on TypeScript
+5.5 and later. A component checked against a type that inspects it, or a
+template on TypeScript before 5.5, still needs a declared return type:
 
 ```ts
 render(): TemplateResult {

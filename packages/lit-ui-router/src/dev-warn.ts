@@ -1,5 +1,6 @@
 import { isFunction } from '@uirouter/core';
 
+import type { RoutedLitTemplate } from './interface.js';
 import { UIRouterLitElement } from './ui-router.js';
 
 /**
@@ -78,5 +79,42 @@ export function warnRouterSwapped(element: Element): void {
       'The views already registered stay on the previous router, so the page is split across two. ' +
       'Set uiRouter before the element first updates, or replace the element.',
     element,
+  );
+}
+
+/** View components already reported as classes `<ui-view>` can't construct. */
+const warnedForeignClass = new WeakSet<
+  RoutedLitTemplate | CustomElementConstructor
+>();
+
+/**
+ * Warns once per component that a view's component is a class `<ui-view>`
+ * doesn't recognise as a LitElement, so it calls the class as a template and
+ * the call throws. The usual cause is a LitElement from a second copy of lit.
+ *
+ * @param component a view component that failed `isRoutedLitElement`
+ *
+ * @internal
+ */
+export function warnForeignClass(
+  component: RoutedLitTemplate | CustomElementConstructor,
+): void {
+  // DEV folds the whole body out of dist/*.js (check:dev-split); inLitDevMode() is the runtime probe.
+  if (!import.meta.env.DEV) return;
+
+  if (
+    !inLitDevMode() ||
+    warnedForeignClass.has(component) ||
+    !/^class\b/.test(Function.prototype.toString.call(component))
+  ) {
+    return;
+  }
+
+  warnedForeignClass.add(component);
+  console.warn(
+    'lit-ui-router: a view component is a class that does not extend the LitElement lit-ui-router imports, ' +
+      'so <ui-view> calls it as a template, which throws. ' +
+      'The usual cause is a second copy of lit in the app; dedupe lit to one installed copy.',
+    component,
   );
 }

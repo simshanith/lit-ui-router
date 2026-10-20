@@ -425,6 +425,88 @@ export interface LitStateDeclaration<
 }
 
 /**
+ * A routed component as a {@link TypedLitStateDeclaration} checks it, without
+ * inferring the component's own return type.
+ *
+ * - A template function returning `void`, which accepts any renderable (as
+ *   Lit's `render(): unknown` does), so the template's body is never inferred.
+ * - A LitElement class, checked against LitElement's public members, so its
+ *   protected `render()` is never inferred.
+ *
+ * @category types
+ */
+export type TypedLitViewComponent<
+  // oxlint-disable-next-line anti-slop/no-unsafe-dictionary-type -- matches LitStateDeclaration's default
+  T extends DefaultResolvesType = DefaultResolvesType,
+> =
+  | ((props: UIViewInjectedProps<T>) => void)
+  | {
+      /** The router always passes props; classes may declare the parameter or not. */
+      new (props: UIViewInjectedProps<T>): Pick<
+        LitElement,
+        keyof LitElement
+      > & {
+        /** assigned on every render; declare it reactive to re-render when reused */
+        _uiViewProps?: UIViewInjectedProps<T>;
+      };
+
+      /** If true, the same component instance is reused across state transitions */
+      sticky?: boolean;
+    };
+
+/**
+ * A view declaration as a {@link TypedLitStateDeclaration} checks it: a bare
+ * {@link TypedLitViewComponent}, or an object with one as its `component`.
+ *
+ * @category types
+ */
+export type TypedLitViewDeclaration<
+  // oxlint-disable-next-line anti-slop/no-unsafe-dictionary-type -- matches LitStateDeclaration's default
+  T extends DefaultResolvesType = DefaultResolvesType,
+> =
+  | (TypedLitViewComponent<T> & _ViewDeclaration)
+  | (_ViewDeclaration & {
+      /** the routed component: a LitElement class or a template function */
+      component: TypedLitViewComponent<T>;
+    });
+
+/**
+ * A {@link LitStateDeclaration} for state tables registered with
+ * `ui-router-registry`, whose components may call typed targets for states in
+ * the same table.
+ *
+ * Checking such a table against {@link LitStateDeclaration} infers each
+ * component's `render()` or template body, which reads the registry, which
+ * reads the table: TypeScript reports the table as circular (TS7022). This type
+ * checks components by {@link TypedLitViewComponent} instead. Classes clear on
+ * every supported TypeScript; template functions clear on TypeScript 5.5 and
+ * later, and earlier compilers still need an explicit return type on them.
+ *
+ * Checking by public members also admits a LitElement class from a second
+ * copy of lit, which `<ui-view>` cannot render; development builds warn.
+ *
+ * @example
+ * ```ts
+ * const contactState = {
+ *   name: 'contacts.contact',
+ *   url: '/:contactId',
+ *   component: ContactView,
+ * } as const satisfies TypedLitStateDeclaration;
+ * ```
+ *
+ * @category types
+ */
+export interface TypedLitStateDeclaration<
+  T extends DefaultResolvesType = DefaultResolvesType,
+> extends StateDeclaration {
+  /** The Lit component to render for this state. */
+  component?: TypedLitViewDeclaration<T>;
+
+  /** An optional object used to define multiple named views. */
+  views?: { [key: string]: TypedLitViewDeclaration<T> };
+}
+
+/**
  * The `litViewsBuilder` registered by the {@link !UIRouterLit | UIRouterLit} constructor normalizes config to this internal interface.
  *
  * @category types

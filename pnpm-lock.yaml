@@ -1922,6 +1922,12 @@ importers:
       effect:
         specifier: 'catalog:'
         version: 4.0.6
+      lit:
+        specifier: 'catalog:'
+        version: 3.3.3
+      lit-ui-router:
+        specifier: catalog:workspace
+        version: link:../lit-ui-router
       oxfmt:
         specifier: 'catalog:'
         version: 0.74.0
@@ -2336,6 +2342,9 @@ importers:
       lit:
         specifier: 'catalog:'
         version: 3.3.3
+      lit-2:
+        specifier: catalog:lit2-compat
+        version: lit@2.8.0
       lit-ui-router:
         specifier: catalog:workspace
         version: link:../../packages/lit-ui-router
