@@ -4,6 +4,8 @@
   "name": "lit-ui-router",
   "compatibility_date": "2026-07-01",
   "main": "./worker/index.ts",
+  // Resolved from this directory, where every wrangler script runs.
+  "alias": { "lit-html/is-server.js": "./worker/is-server.ts" },
   "observability": { "enabled": true },
   "assets": {
     "directory": "./dist",

@@ -7,7 +7,7 @@ import { workspaceRoot } from '@tools/bootstrap/root.ts';
 import { isPublishable, loadWorkspace } from '@tools/shared/workspace.ts';
 
 import '../dom-shim.ts';
-import { STYLESHEET } from '../releases/document.ts';
+import { releaseDocument, STYLESHEET } from '../releases/document.ts';
 import {
   type LedgerReader,
   latestVersionOf,
@@ -205,6 +205,29 @@ describe('the /gh pages', () => {
     assert.ok(
       existsSync(join(import.meta.dirname, '../../public', STYLESHEET)),
     );
+  });
+
+  it('escapes the head and keeps the body as rendered', async () => {
+    const body = '<ui-view defer-hydration><p>a &amp; b</p></ui-view>';
+
+    const html = await releaseDocument(body, {
+      title: 'a <b> & "c"',
+      description: 'd <e> & "f"',
+    });
+
+    assert.match(
+      html,
+      /<title>a &lt;b&gt; &amp; &quot;c&quot; \| Lit UI Router<\/title>/,
+    );
+    assert.ok(
+      html.includes(
+        '<meta name="description" content="d &lt;e&gt; &amp; &quot;f&quot;">',
+      ),
+    );
+    assert.ok(
+      html.includes(`<main class="content-grid"><div>${body}</div></main>`),
+    );
+    assert.ok(html.startsWith('<!doctype html>\n<html lang="en">'));
   });
 
   it('ships no client script', async () => {

@@ -18,6 +18,7 @@ const WranglerConfig = v.object({
   name: v.string(),
   compatibility_date: v.string(),
   compatibility_flags: v.optional(v.array(v.string()), []),
+  alias: v.record(v.string(), v.string()),
   services: v.tuple([
     v.object({
       binding: v.string(),
@@ -58,6 +59,13 @@ const server = createTestHarness({
         main: join(SITE, 'worker/index.ts'),
         compatibility_date: site.compatibility_date,
         compatibility_flags: site.compatibility_flags,
+        // esbuild resolves an alias from the working directory, which here is SCRATCH.
+        alias: Object.fromEntries(
+          Object.entries(site.alias).map(([from, to]) => [
+            from,
+            join(SITE, to),
+          ]),
+        ),
         services: [ledger],
       },
     },
