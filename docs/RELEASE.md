@@ -165,11 +165,13 @@ The final release stage:
 5. Creates a draft GitHub Release with the tarball
 6. Marks the GitHub Release as final
 
-After a publish that is not a dry run, the job's last step runs
+After the publish, the job's last step runs
 `mise run ledger_claim` ([`.config/mise/tasks/ledger_claim`](../.config/mise/tasks/ledger_claim)),
 which posts `<pkg>@<version>` to the release ledger's `POST /claims` with an
 OIDC id-token from the `publish` environment
 ([`www/release-ledger.lit-ui-router.dev`](../www/release-ledger.lit-ui-router.dev/README.md)).
+On a dry run it mints the token and writes the claims the ledger checks to the
+job summary, and posts nothing.
 The step is `continue-on-error`: a failed claim leaves a warning annotation and
 a job summary line, and the ledger's tag sweep records the release later.
 

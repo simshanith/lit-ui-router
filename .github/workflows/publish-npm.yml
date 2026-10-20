@@ -142,13 +142,13 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Claim the release
         # Best-effort (#1424): the ledger's tag sweep heals a missed claim, so a failure only warns.
-        if: ${{ !inputs.dryRun }}
         continue-on-error: true
         timeout-minutes: 5
         run: mise run ledger_claim
         env:
           PACKAGE_NAME: ${{ steps.info.outputs.package_name }}
           VERSION: ${{ steps.publish.outputs.version }}
+          DRY_RUN: ${{ inputs.dryRun }}
 
   release_signals:
     # Refresh the per-package published-diff check runs now that `latest` has

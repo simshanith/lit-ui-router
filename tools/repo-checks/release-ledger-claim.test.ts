@@ -24,6 +24,7 @@ type Step = {
   if?: string;
   'continue-on-error'?: boolean;
   'timeout-minutes'?: number;
+  env?: Record<string, string>;
 };
 
 /** As much of a job as this check reads. */
@@ -57,13 +58,14 @@ const { vars } = parseJsonc(
 ) as Wrangler;
 
 describe('publish-npm ledger claim', () => {
-  it('is a publish_npm step after Publish that skips dry runs', () => {
+  it('is a publish_npm step after Publish that follows its dry run', () => {
     assert.ok(claim, 'publish_npm has no `mise run ledger_claim` step');
     assert.ok(
       claimIndex > steps.findIndex(({ id }) => id === 'publish'),
       'the claim step must follow the publish step',
     );
-    assert.match(claim.if ?? '', /!inputs\.dryRun/);
+    assert.equal(claim.if, undefined);
+    assert.equal(claim.env?.DRY_RUN, '${{ inputs.dryRun }}');
   });
 
   it('has no job of its own, so a publish records one deployment', () => {
