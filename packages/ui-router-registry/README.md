@@ -54,14 +54,12 @@ uiSref(link.state as UncheckedRef, link.params);
 stateService.go(name as UncheckedRef);
 ```
 
-### Annotate members that call typed targets
+### Templates on TypeScript before 5.6
 
-A state declaration that names a component and is checked with `satisfies` against a type that inspects the component, such as `LitStateDeclaration`, makes that component part of `Register`'s type. If one of the component's members calls a typed target (`go`, `href`) and has no declared return type, TypeScript has to infer that member from `Register` while still building `Register`, and reports a circular type (TS7022, TS7023, TS2456). Declare the member's return type:
+A `satisfies LitStateDeclaration` check reads a class component through its element brand and a template through its parameters, so neither is inferred from `Register`. TypeScript before 5.6 still infers a template's return from its body, so there a template under `component` or `views` that calls a typed target (`href`, a typed `uiSref`) reports a circular type (TS7022, TS2456). Declare its return type:
 
 ```typescript
-render(): TemplateResult {
-  return html`<a href=${this.stateService.href('contacts.contact', { contactId })}>…</a>`;
-}
+component: (): TemplateResult => html`<a ${uiSref('contacts.contact', { contactId })}>…</a>`,
 ```
 
 ### JavaScript projects
