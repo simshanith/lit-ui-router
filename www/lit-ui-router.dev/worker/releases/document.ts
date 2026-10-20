@@ -1,4 +1,4 @@
-// The html document around a rendered page, in the docs site's colours, with no client script.
+// The html document around a rendered page, in the docs site's theme.
 import { html, render } from '@lit-labs/ssr';
 import { collectResult } from '@lit-labs/ssr/lib/render-result.js';
 
@@ -12,6 +12,7 @@ export interface PageHead {
 }
 
 // @lit-labs/ssr's server-only `html`: it renders a doctype and binds inside `<title>`, where hydratable templates can't.
+// The head repeats VitePress's check-dark-mode script, so the docs site's appearance toggle carries over.
 // The halves stay unformatted: the formatter would balance their open and close tags.
 // oxfmt-ignore
 const opening = (head: PageHead) => html`<!doctype html>
@@ -19,7 +20,11 @@ const opening = (head: PageHead) => html`<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="color-scheme" content="light dark">
+<script id="check-dark-mode">(() => {
+const preference = localStorage.getItem('vitepress-theme-appearance') || 'auto';
+const prefersDark = matchMedia('(prefers-color-scheme: dark)').matches;
+if (preference === 'auto' ? prefersDark : preference === 'dark') document.documentElement.classList.add('dark');
+})()</script>
 <title>${head.title} | Lit UI Router</title>
 <meta name="description" content=${head.description}>
 <link rel="icon" href="/favicon.ico">

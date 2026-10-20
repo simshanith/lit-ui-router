@@ -217,12 +217,12 @@ describe('the /gh pages', () => {
     assert.ok(html.startsWith('<!doctype html>\n<html lang="en">'));
   });
 
-  it('ships no client script', async () => {
+  it('ships only the appearance check as client script', async () => {
     const html = await page('/gh/releases/lit-ui-router/');
 
     assert.deepEqual(
-      html.match(/<script(?![^>]*type="application\/json")/g),
-      null,
+      html.match(/<script(?![^>]*type="application\/json")[^>]*>/g),
+      ['<script id="check-dark-mode">'],
     );
   });
 });

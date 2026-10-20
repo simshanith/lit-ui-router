@@ -103,11 +103,12 @@ const RELEASE_PAGES_CSS = fileURLToPath(
 
 const RELEASE_PAGES_ENTRY = '\0release-pages-entry';
 
-/** Emits the release pages' stylesheet, the theme's Inter faces first, at a stable `/<basename>`. */
+/** Emits the release pages' stylesheet, the theme's Inter faces and variables first, at a stable `/<basename>`. */
 function releasePagesStylesheetPlugin(): Plugin {
   // `?url` keeps both out of style.css; a CSS @import would skip vitepress:webfonts and load Google Fonts.
   const sources = [
     'vitepress/dist/client/theme-default/styles/fonts.css',
+    'vitepress/dist/client/theme-default/styles/vars.css',
     RELEASE_PAGES_CSS,
   ];
 
