@@ -10,8 +10,10 @@ import type { Claim } from '../src/claim.ts';
 import { consume } from '../src/consume.ts';
 import { ingest } from '../src/ingest.ts';
 import {
+  findPackages,
   findTagged,
   findVersions,
+  type LedgerPackage,
   type LedgerVersion,
 } from '../src/ledger-sql.ts';
 import { ObserverLive } from '../src/observe.ts';
@@ -41,6 +43,13 @@ export class LedgerReader extends WorkerEntrypoint<LedgerEnv> {
   versions(name: string): Promise<readonly LedgerVersion[]> {
     return Effect.runPromise(
       findVersions({ name }).pipe(Effect.provide(database(this.env))),
+    );
+  }
+
+  /** Every package with a recorded version, by name, each with its `latest` row or null. */
+  packages(): Promise<readonly LedgerPackage[]> {
+    return Effect.runPromise(
+      findPackages.pipe(Effect.provide(database(this.env))),
     );
   }
 }
