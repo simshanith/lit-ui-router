@@ -49,18 +49,22 @@ export const FIXTURE_LATEST = new Map([
   ['ui-router-server', '0.3.0'],
 ]);
 
+const latestRow = (name: string): LedgerVersion | null =>
+  FIXTURE_ROWS.find(
+    (candidate) =>
+      candidate.name === name && candidate.version === FIXTURE_LATEST.get(name),
+  ) ?? null;
+
 /** A LedgerReader over the fixture rows. */
 export const fixtureLedger: LedgerReader = {
-  tagged: (name, tag) =>
+  packages: () =>
     Promise.resolve(
-      tag === 'latest'
-        ? (FIXTURE_ROWS.find(
-            (candidate) =>
-              candidate.name === name &&
-              candidate.version === FIXTURE_LATEST.get(name),
-          ) ?? null)
-        : null,
+      [...new Set(FIXTURE_ROWS.map(({ name }) => name))]
+        .sort()
+        .map((name) => ({ name, latest: latestRow(name) })),
     ),
+  tagged: (name, tag) =>
+    Promise.resolve(tag === 'latest' ? latestRow(name) : null),
   versions: (name) =>
     Promise.resolve(
       FIXTURE_ROWS.filter((candidate) => candidate.name === name),

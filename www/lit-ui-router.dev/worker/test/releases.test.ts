@@ -3,9 +3,6 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, it } from 'node:test';
 
-import { workspaceRoot } from '@tools/bootstrap/root.ts';
-import { isPublishable, loadWorkspace } from '@tools/shared/workspace.ts';
-
 import '../dom-shim.ts';
 import { releaseDocument, STYLESHEET } from '../releases/document.ts';
 import {
@@ -15,7 +12,6 @@ import {
   versionIn,
   versionsOf,
 } from '../releases/ledger.ts';
-import { PACKAGES } from '../releases/packages.ts';
 import { serveReleases } from '../releases/serve.ts';
 import { fixtureLedger } from './ledger-stub/rows.ts';
 
@@ -25,22 +21,10 @@ const serve = (path: string, init?: RequestInit, ledger = fixtureLedger) =>
   serveReleases(new Request(`${ORIGIN}${path}`, init), ledger);
 
 const DOWN: LedgerReader = {
+  packages: () => Promise.reject(new Error('ledger down')),
   tagged: () => Promise.reject(new Error('ledger down')),
   versions: () => Promise.reject(new Error('ledger down')),
 };
-
-describe('the package list', () => {
-  it("names the workspace's publishable packages", async () => {
-    const { members } = await loadWorkspace(workspaceRoot);
-
-    const publishable = members
-      .filter(isPublishable)
-      .map(({ name }) => name)
-      .sort();
-
-    assert.deepEqual([...PACKAGES], publishable);
-  });
-});
 
 describe('the ledger queries', () => {
   it('orders versions newest first by semver precedence', async () => {
@@ -49,6 +33,10 @@ describe('the ledger queries', () => {
     assert.deepEqual(
       versions.map(({ version }) => version),
       ['1.11.0-rc.0', '1.10.0', '1.9.0', '1.2.0'],
+    );
+    await assert.rejects(
+      versionsOf(fixtureLedger)({ pkg: 'not-a-package' }),
+      NotInLedger,
     );
   });
 
@@ -85,7 +73,7 @@ describe('the /gh verdicts', () => {
     ['/gh/releases/', 200, null],
     ['/gh/releases/lit-ui-router', 308, '/gh/releases/lit-ui-router/'],
     ['/gh/releases/lit-ui-router/', 200, null],
-    ['/gh/releases/lit-ui-router-ssr/', 200, null],
+    ['/gh/releases/ui-router-server/', 200, null],
     ['/gh/releases/lit-ui-router/1.10.0/', 200, null],
     [
       '/gh/releases/lit-ui-router/latest',
@@ -99,6 +87,7 @@ describe('the /gh verdicts', () => {
     ],
     ['/gh/releases/lit-ui-router/9.9.9/', 404, null],
     ['/gh/releases/ui-router-signals/latest', 404, null],
+    ['/gh/releases/ui-router-signals/', 404, null],
     ['/gh/releases/not-a-package/', 404, null],
     ['/gh/elsewhere', 404, null],
   ] as const;
@@ -155,8 +144,8 @@ describe('the /gh pages', () => {
   it('lists every package with its latest release', async () => {
     const html = await page('/gh/releases/');
 
-    for (const pkg of PACKAGES)
-      assert.ok(html.includes(`href="/gh/releases/${pkg}/"`), pkg);
+    for (const { name } of await fixtureLedger.packages())
+      assert.ok(html.includes(`href="/gh/releases/${name}/"`), name);
     assert.ok(html.includes('href="/gh/releases/lit-ui-router/1.10.0/"'));
     assert.match(html, /<title>Releases \| Lit UI Router<\/title>/);
   });

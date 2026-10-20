@@ -4,6 +4,10 @@ import { WorkerEntrypoint } from 'cloudflare:workers';
 import { fixtureLedger } from './rows.ts';
 
 export class LedgerReader extends WorkerEntrypoint {
+  packages() {
+    return fixtureLedger.packages();
+  }
+
   tagged(name: string, tag: string) {
     return fixtureLedger.tagged(name, tag);
   }

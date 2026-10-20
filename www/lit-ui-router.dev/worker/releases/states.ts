@@ -3,14 +3,14 @@ import type { StateDeclaration, Transition } from '@uirouter/core';
 import type { LitStateDeclaration } from 'lit-ui-router/pure';
 
 import {
+  type LedgerPackage,
   type LedgerReader,
   type LedgerVersion,
-  latestOf,
   latestVersionOf,
+  packagesOf,
   versionIn,
   versionsOf,
 } from './ledger.ts';
-import { PACKAGES } from './packages.ts';
 import { routes } from './routes.ts';
 import {
   NotFoundView,
@@ -23,7 +23,7 @@ type RouteName = (typeof routes)[number]['name'];
 
 /** What each state's view reads from its resolves. */
 interface ResolvesOf {
-  releases: { latest: (LedgerVersion | null)[] };
+  releases: { packages: readonly LedgerPackage[] };
   'releases.package': { versions: LedgerVersion[] };
   'releases.package.latest': object;
   'releases.package.version': { release: LedgerVersion };
@@ -41,7 +41,7 @@ const paramsOf = (trans: Transition) =>
 const attach = (ledger: LedgerReader): Attached => ({
   releases: {
     component: ReleasesView,
-    resolve: [{ token: 'latest', resolveFn: () => latestOf(ledger)(PACKAGES) }],
+    resolve: [{ token: 'packages', resolveFn: packagesOf(ledger) }],
   },
   'releases.package': {
     component: PackageView,

@@ -45,7 +45,6 @@
     "vue": "catalog:"
   },
   "devDependencies": {
-    "@tools/bootstrap": "catalog:workspace",
     "@tools/build_and_test": "catalog:workspace",
     "@tools/embed-heights": "catalog:workspace",
     "@tools/release-ledger": "catalog:workspace",

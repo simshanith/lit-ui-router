@@ -14,8 +14,16 @@ export interface LedgerVersion extends VersionRow {
   status: Status;
 }
 
+/** A package the ledger has recorded, with the version its npm `latest` dist-tag points at. */
+export interface LedgerPackage {
+  name: string;
+  latest: LedgerVersion | null;
+}
+
 /** The RPC methods of the ledger worker's `LedgerReader` entrypoint that these pages call. */
 export interface LedgerReader {
+  /** Every package with a recorded version, by name, each with its `latest` row or null. */
+  packages(): Promise<readonly LedgerPackage[]>;
   tagged(name: string, tag: string): Promise<LedgerVersion | null>;
   versions(name: string): Promise<readonly LedgerVersion[]>;
 }
@@ -29,19 +37,21 @@ export class NotInLedger extends Error {
 export const isStable = (version: string): boolean =>
   prerelease(version) === null;
 
-/** Each package's npm `latest` row, or null where the ledger has none. */
-export const latestOf =
-  (ledger: LedgerReader) =>
-  (names: readonly string[]): Promise<(LedgerVersion | null)[]> =>
-    Promise.all(names.map((name) => ledger.tagged(name, 'latest')));
+/** Every package the ledger has recorded, with its npm `latest` row. */
+export const packagesOf =
+  (ledger: LedgerReader) => (): Promise<readonly LedgerPackage[]> =>
+    ledger.packages();
 
-/** A package's versions, newest first by semver precedence. */
+/** A package's versions, newest first by semver precedence, or a `NotInLedger` rejection for a package with none. */
 export const versionsOf =
   (ledger: LedgerReader) =>
-  async ({ pkg }: { pkg: string }): Promise<LedgerVersion[]> =>
-    [...(await ledger.versions(pkg))].sort((a, b) =>
-      rcompare(a.version, b.version),
-    );
+  async ({ pkg }: { pkg: string }): Promise<LedgerVersion[]> => {
+    const versions = await ledger.versions(pkg);
+
+    if (versions.length === 0) throw new NotInLedger(pkg);
+
+    return [...versions].sort((a, b) => rcompare(a.version, b.version));
+  };
 
 /** One version's row from its package's list, or a `NotInLedger` rejection. */
 export const versionIn = (

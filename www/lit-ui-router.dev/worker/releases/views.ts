@@ -6,8 +6,7 @@ import type { RoutedLitTemplate, UIRouterLit } from 'lit-ui-router/pure';
 import { uiViewSlot } from 'lit-ui-router-ssr/client';
 
 import { isStable } from './ledger.ts';
-import type { LedgerVersion } from './ledger.ts';
-import { PACKAGES } from './packages.ts';
+import type { LedgerPackage, LedgerVersion } from './ledger.ts';
 
 export const REPOSITORY = 'https://github.com/simshanith/lit-ui-router';
 
@@ -65,7 +64,7 @@ const crumbs = (
 
 const indexPage = (
   router: UIRouter,
-  latest: readonly (LedgerVersion | null)[],
+  packages: readonly LedgerPackage[],
 ): TemplateResult => html`
   <h1>Releases</h1>
   <p>
@@ -82,30 +81,29 @@ const indexPage = (
         </tr>
       </thead>
       <tbody>
-        ${PACKAGES.map((pkg, index) => {
-          const row = latest[index] ?? null;
-
-          return html`<tr>
-            <th scope="row">
-              <a href=${href(router, 'releases.package', { pkg })}>${pkg}</a>
-            </th>
-            <td>
-              ${
-                row
-                  ? html`<a
-                      href=${href(router, 'releases.package.version', {
-                        pkg,
-                        version: row.version,
-                      })}
-                      ><span class="visually-hidden">${pkg}@</span
-                      >${row.version}</a
-                    >`
-                  : 'None recorded'
-              }
-            </td>
-            <td>${date(row?.npm_published_at ?? null)}</td>
-          </tr>`;
-        })}
+        ${packages.map(
+          ({ name: pkg, latest: row }) =>
+            html`<tr>
+              <th scope="row">
+                <a href=${href(router, 'releases.package', { pkg })}>${pkg}</a>
+              </th>
+              <td>
+                ${
+                  row
+                    ? html`<a
+                        href=${href(router, 'releases.package.version', {
+                          pkg,
+                          version: row.version,
+                        })}
+                        ><span class="visually-hidden">${pkg}@</span
+                        >${row.version}</a
+                      >`
+                    : 'None recorded'
+                }
+              </td>
+              <td>${date(row?.npm_published_at ?? null)}</td>
+            </tr>`,
+        )}
       </tbody>
     </table>
   </div>
@@ -113,9 +111,9 @@ const indexPage = (
 
 /** `releases`: every package with its latest stable release. */
 export const ReleasesView: RoutedLitTemplate<{
-  latest: (LedgerVersion | null)[];
+  packages: readonly LedgerPackage[];
 }> = ({ router, resolves }) =>
-  isLeaf(router, 'releases') ? indexPage(router, resolves.latest) : uiView();
+  isLeaf(router, 'releases') ? indexPage(router, resolves.packages) : uiView();
 
 const packagePage = (
   router: UIRouter,
