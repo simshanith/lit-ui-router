@@ -4,7 +4,8 @@ import { mounts } from 'sample-app-routes';
 // Examples embedded same-origin at /examples/<name>/; built by
 // `examples#build:embeds` (hash routing, so no SPA fallback needed).
 import { EXAMPLE_NAMES } from 'examples/embeds';
-import { basename } from 'node:path';
+import { writeFile } from 'node:fs/promises';
+import { basename, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { gzipSync } from 'node:zlib';
 import { defineConfig, Plugin } from 'vite';
@@ -105,12 +106,14 @@ const RELEASE_PAGES_ENTRY = '\0release-pages-entry';
 
 /** Emits the release pages' stylesheet, the theme's Inter faces and variables first, at a stable `/<basename>`. */
 function releasePagesStylesheetPlugin(): Plugin {
-  // `?url` keeps both out of style.css; a CSS @import would skip vitepress:webfonts and load Google Fonts.
+  // `?url` keeps them out of style.css; a CSS @import would skip vitepress:webfonts and load Google Fonts.
   const sources = [
     'vitepress/dist/client/theme-default/styles/fonts.css',
     'vitepress/dist/client/theme-default/styles/vars.css',
     RELEASE_PAGES_CSS,
   ];
+
+  let stylesheet = '';
 
   return {
     name: 'release-pages-stylesheet',
@@ -160,11 +163,11 @@ function releasePagesStylesheetPlugin(): Plugin {
         }
       }
 
-      this.emitFile({
-        type: 'asset',
-        fileName: basename(RELEASE_PAGES_CSS),
-        source: parts.join(''),
-      });
+      stylesheet = parts.join('');
+    },
+    // Written after the bundle: vitepress links the first css asset in the output as every docs page's stylesheet.
+    async writeBundle({ dir = '' }) {
+      await writeFile(join(dir, basename(RELEASE_PAGES_CSS)), stylesheet);
     },
   };
 }
