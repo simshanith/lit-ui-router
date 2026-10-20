@@ -20,19 +20,16 @@ import type {
  *
  * @category core
  */
-export const isRoutedLitElement: <
+export function isRoutedLitElement<
   T extends DefaultResolvesType = DefaultResolvesType,
->(
-  component?: unknown,
-) => component is RoutedLitElement<T> = <
-  T extends DefaultResolvesType = DefaultResolvesType,
->(
-  component?: unknown,
-): component is RoutedLitElement<T> =>
-  (typeof component === 'object' || typeof component === 'function') &&
-  component !== null &&
-  'prototype' in component &&
-  component.prototype instanceof LitElement;
+>(component?: unknown): component is RoutedLitElement<T> {
+  return (
+    (typeof component === 'object' || typeof component === 'function') &&
+    component !== null &&
+    'prototype' in component &&
+    component.prototype instanceof LitElement
+  );
+}
 
 /**
  * Binds a routed class to a single instance for as long as the returned renderer
