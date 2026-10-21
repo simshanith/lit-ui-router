@@ -7,7 +7,7 @@ description: A framework-agnostic TC39 Signals mirror of the router's current st
 
 <p class="badges">
 <a href="https://npmx.dev/package/ui-router-signals" target="_blank" class="badge"><img alt="NPM Version" src="https://img.shields.io/npm/v/ui-router-signals" /></a>
-<a href="https://github.com/simshanith/lit-ui-router/releases/?q=ui-router-signals" target="_blank" class="badge"><img alt="GitHub Release" src="https://img.shields.io/github/v/release/simshanith/lit-ui-router?filter=ui-router-signals@*" /></a>
+<a href="https://lit-ui-router.dev/gh/releases/ui-router-signals/latest" target="_blank" class="badge"><img alt="GitHub Release" src="https://img.shields.io/github/v/release/simshanith/lit-ui-router?filter=ui-router-signals@*" /></a>
 </p>
 
 [`ui-router-signals`](https://npmx.dev/package/ui-router-signals) mirrors a

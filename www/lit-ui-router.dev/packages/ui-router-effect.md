@@ -7,7 +7,7 @@ description: A framework-agnostic Effect SubscriptionRef of the router's current
 
 <p class="badges">
 <a href="https://npmx.dev/package/ui-router-effect" target="_blank" class="badge"><img alt="NPM Version" src="https://img.shields.io/npm/v/ui-router-effect" /></a>
-<a href="https://github.com/simshanith/lit-ui-router/releases/?q=ui-router-effect" target="_blank" class="badge"><img alt="GitHub Release" src="https://img.shields.io/github/v/release/simshanith/lit-ui-router?filter=ui-router-effect@*" /></a>
+<a href="https://lit-ui-router.dev/gh/releases/ui-router-effect/latest" target="_blank" class="badge"><img alt="GitHub Release" src="https://img.shields.io/github/v/release/simshanith/lit-ui-router?filter=ui-router-effect@*" /></a>
 </p>
 
 [`ui-router-effect`](https://npmx.dev/package/ui-router-effect) provides

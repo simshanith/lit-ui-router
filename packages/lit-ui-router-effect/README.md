@@ -1,7 +1,7 @@
 # lit-ui-router-effect
 
 [![npm version](https://img.shields.io/npm/v/lit-ui-router-effect.svg)](https://npmx.dev/package/lit-ui-router-effect)
-[![GitHub Release](https://img.shields.io/github/v/release/simshanith/lit-ui-router?filter=lit-ui-router-effect@*)](https://github.com/simshanith/lit-ui-router/releases/?q=lit-ui-router-effect)
+[![GitHub Release](https://img.shields.io/github/v/release/simshanith/lit-ui-router?filter=lit-ui-router-effect@*)](https://lit-ui-router.dev/gh/releases/lit-ui-router-effect/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Website](https://img.shields.io/website?url=https%3A%2F%2Flit-ui-router.dev)](https://lit-ui-router.dev/packages/lit-ui-router-effect)
 [![codecov](https://codecov.io/gh/simshanith/lit-ui-router/graph/badge.svg?component=lit-ui-router-effect)](https://app.codecov.io/gh/simshanith/lit-ui-router?components%5B0%5D=lit-ui-router-effect)

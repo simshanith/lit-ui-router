@@ -7,7 +7,7 @@ description: Directive-aware linting with eslint-plugin-lit-ui-router — rules 
 
 <p class="badges">
 <a href="https://npmx.dev/package/eslint-plugin-lit-ui-router" target="_blank" class="badge"><img alt="NPM Version" src="https://img.shields.io/npm/v/eslint-plugin-lit-ui-router" /></a>
-<a href="https://github.com/simshanith/lit-ui-router/releases/?q=eslint-plugin-lit-ui-router" target="_blank" class="badge"><img alt="GitHub Release" src="https://img.shields.io/github/v/release/simshanith/lit-ui-router?filter=eslint-plugin-lit-ui-router@*" /></a>
+<a href="https://lit-ui-router.dev/gh/releases/eslint-plugin-lit-ui-router/latest" target="_blank" class="badge"><img alt="GitHub Release" src="https://img.shields.io/github/v/release/simshanith/lit-ui-router?filter=eslint-plugin-lit-ui-router@*" /></a>
 </p>
 
 [`eslint-plugin-lit-ui-router`](https://npmx.dev/package/eslint-plugin-lit-ui-router)
