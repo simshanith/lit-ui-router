@@ -1,0 +1,7 @@
+// A local stand-in for the release-ledger worker: its LedgerReader serves fixture rows.
+{
+  "$schema": "../../../node_modules/wrangler/config-schema.json",
+  "name": "release-ledger",
+  "compatibility_date": "2026-07-01",
+  "main": "./index.ts",
+}

@@ -10,5 +10,9 @@
     "lib": ["ES2022"],
     "types": []
   },
-  "include": ["index.ts", "worker-configuration.d.ts"]
+  "include": [
+    "index.ts",
+    "test/ledger-stub/index.ts",
+    "worker-configuration.d.ts"
+  ]
 }

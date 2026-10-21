@@ -34,11 +34,11 @@ covers the rest.
 
 All of them live in the site package, `www/lit-ui-router.dev/`:
 
-| File              | Purpose                                                                                                                                                                                                                                                                                               |
-| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `wrangler.jsonc`  | [Wrangler configuration](https://developers.cloudflare.com/workers/wrangler/configuration/) - defines worker name, entry point, assets directory, and routing                                                                                                                                         |
-| `worker/index.ts` | [Worker script](https://developers.cloudflare.com/workers/static-assets/routing/worker-script/) - serves `ui-router-server` verdicts for `/app/*` and `/app-mobx/*` (shell, 302, or 404) from the tables in `sample-app-routes`; everything else serves static assets, misses fall back to `404.html` |
-| `public/_headers` | [Headers](https://developers.cloudflare.com/pages/configuration/headers/) - sets security headers (COOP, COEP)                                                                                                                                                                                        |
+| File              | Purpose                                                                                                                                                                                                                                                                                                                                    |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `wrangler.jsonc`  | [Wrangler configuration](https://developers.cloudflare.com/workers/wrangler/configuration/) - defines worker name, entry point, assets directory, and routing                                                                                                                                                                              |
+| `worker/index.ts` | [Worker script](https://developers.cloudflare.com/workers/static-assets/routing/worker-script/) - serves `ui-router-server` verdicts for `/app/*` and `/app-mobx/*` (shell, 302, or 404) from the tables in `sample-app-routes`, and renders the `/gh` release pages; everything else serves static assets, misses fall back to `404.html` |
+| `public/_headers` | [Headers](https://developers.cloudflare.com/pages/configuration/headers/) - sets security headers (COOP, COEP)                                                                                                                                                                                                                             |
 
 ### Wrangler Setup
 
@@ -336,6 +336,20 @@ contended.
 Both serve the development build of the worker's dependencies; set
 `WWW_WORKER_BUILD=production` for the build that deploys (see
 `lit-ui-router.dev/scripts/wrangler-dev.ts`).
+
+#### The release pages
+
+The worker renders `/gh/releases/` and the pages under it from the
+[release ledger](release-ledger.lit-ui-router.dev/README.md), read through the
+`LEDGER` service binding in `wrangler.jsonc`; the route table is
+[`worker/releases/routes.ts`](lit-ui-router.dev/worker/releases/routes.ts).
+Preview uploads bind the production ledger the same way. Locally the binding
+reaches only a ledger running in another dev process, and the pages answer 503
+without one. To serve fixture rows, pass both configs, the docs worker's first:
+
+```bash
+pnpm --filter @www/lit-ui-router.dev wrangler:dev -c wrangler.jsonc -c worker/test/ledger-stub/wrangler.jsonc
+```
 
 See Cloudflare Workers Testing Docs: [Local Development](https://developers.cloudflare.com/workers/testing/local-development/)
 

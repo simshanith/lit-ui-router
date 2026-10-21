@@ -49,6 +49,9 @@ catalogs:
     '@lit-labs/ssr-client':
       specifier: ^1.1.8
       version: 1.1.8
+    '@lit-labs/ssr-dom-shim':
+      specifier: ^1.6.0
+      version: 1.6.0
     '@lit/context':
       specifier: ^1.1.6
       version: 1.1.6
@@ -2772,12 +2775,33 @@ importers:
 
   www/lit-ui-router.dev:
     dependencies:
+      '@lit-labs/ssr':
+        specifier: 'catalog:'
+        version: 4.1.0(@types/node@24.19.2)
+      '@lit-labs/ssr-client':
+        specifier: 'catalog:'
+        version: 1.1.8
+      '@lit-labs/ssr-dom-shim':
+        specifier: 'catalog:'
+        version: 1.6.0
       '@spectrum-web-components/icons-workflow':
         specifier: 'catalog:'
         version: 1.12.5
+      '@uirouter/core':
+        specifier: 'catalog:'
+        version: 6.1.2
       examples:
         specifier: catalog:workspace
         version: link:../../examples
+      lit:
+        specifier: 'catalog:'
+        version: 3.3.3
+      lit-ui-router:
+        specifier: catalog:workspace
+        version: link:../../packages/lit-ui-router
+      lit-ui-router-ssr:
+        specifier: catalog:workspace
+        version: link:../../packages/lit-ui-router-ssr
       sample-app-lit-effect:
         specifier: catalog:workspace
         version: link:../../apps/sample-app-lit-effect
@@ -2796,6 +2820,9 @@ importers:
       screenfull:
         specifier: 'catalog:'
         version: 6.0.2
+      semver:
+        specifier: 'catalog:'
+        version: 7.8.5
       ui-router-server:
         specifier: catalog:workspace
         version: link:../../packages/ui-router-server
@@ -2809,6 +2836,9 @@ importers:
       '@tools/embed-heights':
         specifier: catalog:workspace
         version: link:../../tools/embed-heights
+      '@tools/release-ledger':
+        specifier: catalog:workspace
+        version: link:../../tools/release-ledger
       '@tools/shared':
         specifier: catalog:workspace
         version: link:../../tools/shared
@@ -2818,6 +2848,12 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 24.19.2
+      '@types/semver':
+        specifier: 'catalog:'
+        version: 7.8.0
+      jsonc-parser:
+        specifier: 'catalog:'
+        version: 3.3.1
       oxfmt:
         specifier: 'catalog:'
         version: 0.73.0
