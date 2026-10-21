@@ -7,7 +7,7 @@ description: A ui-router-server mount table in, an emitted static site out, with
 
 <p class="badges">
 <a href="https://npmx.dev/package/lit-ui-router-ssr" target="_blank" class="badge"><img alt="NPM Version" src="https://img.shields.io/npm/v/lit-ui-router-ssr" /></a>
-<a href="https://github.com/simshanith/lit-ui-router/releases/?q=lit-ui-router-ssr" target="_blank" class="badge"><img alt="GitHub Release" src="https://img.shields.io/github/v/release/simshanith/lit-ui-router?filter=lit-ui-router-ssr@*" /></a>
+<a href="https://lit-ui-router.dev/gh/releases/lit-ui-router-ssr/latest" target="_blank" class="badge"><img alt="GitHub Release" src="https://img.shields.io/github/v/release/simshanith/lit-ui-router?filter=lit-ui-router-ssr@*" /></a>
 </p>
 
 [`lit-ui-router-ssr`](https://npmx.dev/package/lit-ui-router-ssr) turns a

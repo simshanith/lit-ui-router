@@ -7,7 +7,7 @@ description: A SubscriptionRef of the route and ref-following Lit controllers wi
 
 <p class="badges">
 <a href="https://npmx.dev/package/lit-ui-router-effect" target="_blank" class="badge"><img alt="NPM Version" src="https://img.shields.io/npm/v/lit-ui-router-effect" /></a>
-<a href="https://github.com/simshanith/lit-ui-router/releases/?q=lit-ui-router-effect" target="_blank" class="badge"><img alt="GitHub Release" src="https://img.shields.io/github/v/release/simshanith/lit-ui-router?filter=lit-ui-router-effect@*" /></a>
+<a href="https://lit-ui-router.dev/gh/releases/lit-ui-router-effect/latest" target="_blank" class="badge"><img alt="GitHub Release" src="https://img.shields.io/github/v/release/simshanith/lit-ui-router?filter=lit-ui-router-effect@*" /></a>
 </p>
 
 [`lit-ui-router-effect`](https://npmx.dev/package/lit-ui-router-effect)
