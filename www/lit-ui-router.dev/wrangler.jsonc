@@ -38,7 +38,9 @@
       "/not-found-spa/*",
       "/simulated-routing",
       "/simulated-routing/*",
-      // The release pages, rendered from the release ledger.
+      // The release pages and the /gh redirects, answered from the release ledger.
+      "/releases",
+      "/releases/*",
       "/gh",
       "/gh/*",
     ],

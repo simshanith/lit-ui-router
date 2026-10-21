@@ -33,7 +33,7 @@ if (preference === 'auto' ? prefersDark : preference === 'dark') document.docume
 <body>
 <header class="site content-grid"><div>
 <a class="home" href="/"><img src="/images/lit-ui-router.svg" alt="" width="32" height="32">Lit UI Router</a>
-<nav aria-label="Site"><a href="/introduction">Docs</a><a href="/packages/">Packages</a><a href="/gh/releases/">Releases</a><a href="https://github.com/simshanith/lit-ui-router">GitHub</a></nav>
+<nav aria-label="Site"><a href="/introduction">Docs</a><a href="/packages/">Packages</a><a href="/releases/">Releases</a><a href="https://github.com/simshanith/lit-ui-router">GitHub</a></nav>
 </div></header>
 <main class="content-grid"><div>`;
 

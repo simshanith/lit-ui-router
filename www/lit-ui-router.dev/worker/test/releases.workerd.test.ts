@@ -96,7 +96,7 @@ describe('the release pages in workerd', { timeout: 120_000 }, () => {
   });
 
   it('renders a known version at 200', async () => {
-    const response = await server.fetch('/gh/releases/lit-ui-router/1.10.0/');
+    const response = await server.fetch('/releases/lit-ui-router/1.10.0/');
     const body = await response.text();
 
     assert.equal(response.status, 200, body);
@@ -108,21 +108,41 @@ describe('the release pages in workerd', { timeout: 120_000 }, () => {
   });
 
   it('answers 404 for a version the ledger lacks', async () => {
-    const response = await server.fetch('/gh/releases/lit-ui-router/9.9.9/');
+    const response = await server.fetch('/releases/lit-ui-router/9.9.9/');
 
     assert.equal(response.status, 404);
     assert.match(await response.text(), /<h1>Not found<\/h1>/);
   });
 
   it('redirects latest to the newest stable version', async () => {
-    const response = await server.fetch('/gh/releases/lit-ui-router/latest', {
+    const response = await server.fetch('/releases/lit-ui-router/latest', {
       redirect: 'manual',
     });
 
     assert.equal(response.status, 302);
     assert.equal(
       response.headers.get('Location'),
-      '/gh/releases/lit-ui-router/1.10.0/',
+      '/releases/lit-ui-router/1.10.0/',
     );
+  });
+
+  it("redirects /gh latest to that version's GitHub release", async () => {
+    const response = await server.fetch(
+      '/gh/releases/ui-router-server/latest?ref=badge',
+      { redirect: 'manual' },
+    );
+
+    assert.equal(response.status, 302);
+    assert.equal(
+      response.headers.get('Location'),
+      'https://github.com/simshanith/lit-ui-router/releases/tag/ui-router-server%400.3.0',
+    );
+  });
+
+  it('answers 404 for the old /gh release pages', async () => {
+    const response = await server.fetch('/gh/releases/');
+
+    assert.equal(response.status, 404);
+    assert.match(await response.text(), /<h1>Not found<\/h1>/);
   });
 });

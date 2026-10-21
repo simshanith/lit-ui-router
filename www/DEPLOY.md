@@ -339,9 +339,11 @@ Both serve the development build of the worker's dependencies; set
 
 #### The release pages
 
-The worker renders `/gh/releases/` and the pages under it from the
+The worker renders `/releases/` and the pages under it from the
 [release ledger](release-ledger.lit-ui-router.dev/README.md), read through the
-`LEDGER` service binding in `wrangler.jsonc`; the route table is
+`LEDGER` service binding in `wrangler.jsonc`. Under `/gh` it answers only the
+urls GitHub lacks, such as `/gh/releases/<pkg>/latest`, a redirect to that
+package's latest GitHub release. The route tables are
 [`worker/releases/routes.ts`](lit-ui-router.dev/worker/releases/routes.ts).
 Preview uploads bind the production ledger the same way. Locally the binding
 reaches only a ledger running in another dev process, and the pages answer 503

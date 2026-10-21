@@ -65,13 +65,13 @@ export const versionIn = (
   return row;
 };
 
-/** The version npm's `latest` dist-tag points at, or a `NotInLedger` rejection. */
-export const latestVersionOf =
+/** The row npm's `latest` dist-tag points at, or a `NotInLedger` rejection. */
+export const latestOf =
   (ledger: LedgerReader) =>
-  async ({ pkg }: { pkg: string }): Promise<string> => {
+  async ({ pkg }: { pkg: string }): Promise<LedgerVersion> => {
     const row = await ledger.tagged(pkg, 'latest');
 
     if (!row) throw new NotInLedger(`${pkg}@latest`);
 
-    return row.version;
+    return row;
   };

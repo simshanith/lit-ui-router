@@ -7,7 +7,7 @@ import '../dom-shim.ts';
 import { releaseDocument, STYLESHEET } from '../releases/document.ts';
 import {
   type LedgerReader,
-  latestVersionOf,
+  latestOf,
   NotInLedger,
   versionIn,
   versionsOf,
@@ -55,41 +55,34 @@ describe('the ledger queries', () => {
 
   it("reads latest from npm's dist-tag", async () => {
     assert.equal(
-      await latestVersionOf(fixtureLedger)({ pkg: 'lit-ui-router' }),
+      (await latestOf(fixtureLedger)({ pkg: 'lit-ui-router' })).version,
       '1.10.0',
     );
     await assert.rejects(
-      latestVersionOf(fixtureLedger)({ pkg: 'ui-router-signals' }),
+      latestOf(fixtureLedger)({ pkg: 'ui-router-signals' }),
       NotInLedger,
     );
   });
 });
 
-describe('the /gh verdicts', () => {
+const GITHUB = 'https://github.com/simshanith/lit-ui-router/releases/tag';
+
+describe('the /releases verdicts', () => {
   const cases = [
-    ['/gh', 302, '/gh/releases/'],
-    ['/gh/', 302, '/gh/releases/'],
-    ['/gh/releases', 308, '/gh/releases/'],
-    ['/gh/releases/', 200, null],
-    ['/gh/releases/lit-ui-router', 308, '/gh/releases/lit-ui-router/'],
-    ['/gh/releases/lit-ui-router/', 200, null],
-    ['/gh/releases/ui-router-server/', 200, null],
-    ['/gh/releases/lit-ui-router/1.10.0/', 200, null],
-    [
-      '/gh/releases/lit-ui-router/latest',
-      302,
-      '/gh/releases/lit-ui-router/1.10.0/',
-    ],
-    [
-      '/gh/releases/lit-ui-router/latest/',
-      302,
-      '/gh/releases/lit-ui-router/1.10.0/',
-    ],
-    ['/gh/releases/lit-ui-router/9.9.9/', 404, null],
-    ['/gh/releases/ui-router-signals/latest', 404, null],
-    ['/gh/releases/ui-router-signals/', 404, null],
-    ['/gh/releases/not-a-package/', 404, null],
-    ['/gh/elsewhere', 404, null],
+    ['/releases', 308, '/releases/'],
+    ['/releases/', 200, null],
+    ['/releases/lit-ui-router', 308, '/releases/lit-ui-router/'],
+    ['/releases/lit-ui-router/', 200, null],
+    ['/releases/ui-router-server/', 200, null],
+    ['/releases/lit-ui-router/1.10.0', 308, '/releases/lit-ui-router/1.10.0/'],
+    ['/releases/lit-ui-router/1.10.0/', 200, null],
+    ['/releases/lit-ui-router/latest', 302, '/releases/lit-ui-router/1.10.0/'],
+    ['/releases/lit-ui-router/latest/', 302, '/releases/lit-ui-router/1.10.0/'],
+    ['/releases/lit-ui-router/9.9.9/', 404, null],
+    ['/releases/ui-router-signals/latest', 404, null],
+    ['/releases/ui-router-signals/', 404, null],
+    ['/releases/not-a-package/', 404, null],
+    ['/releases/lit-ui-router/1.10.0/elsewhere', 404, null],
   ] as const;
 
   for (const [path, status, location] of cases) {
@@ -102,35 +95,37 @@ describe('the /gh verdicts', () => {
   }
 
   it('keeps the request search on a redirect', async () => {
-    const response = await serve('/gh/releases/lit-ui-router/latest?ref=badge');
+    const response = await serve('/releases/lit-ui-router/latest?ref=badge');
 
     assert.equal(
       response?.headers.get('Location'),
-      '/gh/releases/lit-ui-router/1.10.0/?ref=badge',
+      '/releases/lit-ui-router/1.10.0/?ref=badge',
     );
+    assert.equal(response?.headers.get('Cache-Control'), 'public, max-age=300');
   });
 
-  it('passes paths outside the mount to the host', async () => {
+  it('passes paths outside the mounts to the host', async () => {
     assert.equal(await serve('/app/welcome'), null);
     assert.equal(await serve('/ghost'), null);
+    assert.equal(await serve('/releasesx/'), null);
   });
 
   it('answers only GET and HEAD', async () => {
-    const response = await serve('/gh/releases/', { method: 'POST' });
+    const response = await serve('/releases/', { method: 'POST' });
 
     assert.equal(response?.status, 405);
     assert.equal(response?.headers.get('Allow'), 'GET, HEAD');
   });
 
   it('answers HEAD with headers and no body', async () => {
-    const response = await serve('/gh/releases/', { method: 'HEAD' });
+    const response = await serve('/releases/', { method: 'HEAD' });
 
     assert.equal(response?.status, 200);
     assert.equal(response?.body, null);
   });
 
   it('answers 503 while the ledger cannot be read', async () => {
-    const response = await serve('/gh/releases/lit-ui-router/', {}, DOWN);
+    const response = await serve('/releases/lit-ui-router/', {}, DOWN);
 
     assert.equal(response?.status, 503);
     assert.equal(response?.headers.get('Cache-Control'), 'no-store');
@@ -138,23 +133,149 @@ describe('the /gh verdicts', () => {
   });
 });
 
-describe('the /gh pages', () => {
+describe('the /gh verdicts', () => {
+  const cases = [
+    [
+      '/gh/releases/lit-ui-router/latest',
+      302,
+      `${GITHUB}/lit-ui-router%401.10.0`,
+    ],
+    [
+      '/gh/releases/lit-ui-router/latest/',
+      302,
+      `${GITHUB}/lit-ui-router%401.10.0`,
+    ],
+    [
+      '/gh/releases/ui-router-server/latest',
+      302,
+      `${GITHUB}/ui-router-server%400.3.0`,
+    ],
+    ['/gh/releases/ui-router-signals/latest', 404, null],
+    ['/gh/releases/not-a-package/latest', 404, null],
+    ['/gh', 404, null],
+    ['/gh/', 404, null],
+    ['/gh/releases', 404, null],
+    ['/gh/releases/', 404, null],
+    ['/gh/releases/lit-ui-router', 404, null],
+    ['/gh/releases/lit-ui-router/', 404, null],
+    ['/gh/releases/lit-ui-router/1.10.0/', 404, null],
+    ['/gh/elsewhere', 404, null],
+  ] as const;
+
+  for (const [path, status, location] of cases) {
+    it(`answers ${path} with ${status}`, async () => {
+      const response = await serve(path);
+
+      assert.equal(response?.status, status);
+      assert.equal(response?.headers.get('Location'), location);
+    });
+  }
+
+  it('drops the request search on the way to GitHub', async () => {
+    const response = await serve('/gh/releases/lit-ui-router/latest?ref=badge');
+
+    assert.equal(
+      response?.headers.get('Location'),
+      `${GITHUB}/lit-ui-router%401.10.0`,
+    );
+    assert.equal(response?.headers.get('Cache-Control'), 'public, max-age=300');
+  });
+
+  it('falls back to the version page, search kept, when the ledger records no GitHub release', async () => {
+    const ledger: LedgerReader = {
+      ...fixtureLedger,
+      tagged: async (name, tag) => {
+        const row = await fixtureLedger.tagged(name, tag);
+
+        return row && { ...row, gh_url: null };
+      },
+    };
+
+    const response = await serve(
+      '/gh/releases/lit-ui-router/latest?ref=badge',
+      {},
+      ledger,
+    );
+
+    assert.equal(response?.status, 302);
+    assert.equal(
+      response?.headers.get('Location'),
+      '/releases/lit-ui-router/1.10.0/?ref=badge',
+    );
+  });
+
+  it('reads the ledger once', async () => {
+    const reads: string[] = [];
+
+    const ledger: LedgerReader = {
+      packages: () => {
+        reads.push('packages');
+
+        return fixtureLedger.packages();
+      },
+      tagged: (name, tag) => {
+        reads.push('tagged');
+
+        return fixtureLedger.tagged(name, tag);
+      },
+      versions: (name) => {
+        reads.push('versions');
+
+        return fixtureLedger.versions(name);
+      },
+    };
+
+    await serve('/gh/releases/lit-ui-router/latest', {}, ledger);
+
+    assert.deepEqual(reads, ['tagged']);
+  });
+
+  it('answers HEAD with the redirect and no body', async () => {
+    const response = await serve('/gh/releases/lit-ui-router/latest', {
+      method: 'HEAD',
+    });
+
+    assert.equal(response?.status, 302);
+    assert.equal(
+      response?.headers.get('Location'),
+      `${GITHUB}/lit-ui-router%401.10.0`,
+    );
+    assert.equal(response?.body, null);
+  });
+
+  it('renders the 404 page for a path GitHub already answers', async () => {
+    const response = await serve('/gh/releases/');
+
+    assert.match((await response?.text()) ?? '', /<h1>Not found<\/h1>/);
+    assert.equal(response?.headers.get('Cache-Control'), 'public, max-age=300');
+  });
+
+  it('answers 503 while the ledger cannot be read', async () => {
+    const response = await serve('/gh/releases/lit-ui-router/latest', {}, DOWN);
+
+    assert.equal(response?.status, 503);
+    assert.equal(response?.headers.get('Cache-Control'), 'no-store');
+    assert.equal(response?.headers.get('Location'), null);
+  });
+});
+
+describe('the /releases pages', () => {
   const page = async (path: string) => (await serve(path))?.text() ?? '';
 
   it('lists every package with its latest release', async () => {
-    const html = await page('/gh/releases/');
+    const html = await page('/releases/');
 
     for (const { name } of await fixtureLedger.packages())
-      assert.ok(html.includes(`href="/gh/releases/${name}/"`), name);
-    assert.ok(html.includes('href="/gh/releases/lit-ui-router/1.10.0/"'));
+      assert.ok(html.includes(`href="/releases/${name}/"`), name);
+    assert.ok(html.includes('href="/releases/lit-ui-router/1.10.0/"'));
     assert.match(html, /<title>Releases \| Lit UI Router<\/title>/);
   });
 
   it("lists a package's versions, each linking to its GitHub release", async () => {
-    const html = await page('/gh/releases/lit-ui-router/');
+    const html = await page('/releases/lit-ui-router/');
 
     const order = ['1.11.0-rc.0', '1.10.0', '1.9.0', '1.2.0'].map((version) =>
-      html.indexOf(`href="/gh/releases/lit-ui-router/${version}/"`),
+      html.indexOf(`href="/releases/lit-ui-router/${version}/"`),
     );
 
     assert.ok(
@@ -169,7 +290,7 @@ describe('the /gh pages', () => {
   });
 
   it("shows one version's facts and links out", async () => {
-    const html = await page('/gh/releases/lit-ui-router/1.9.0/');
+    const html = await page('/releases/lit-ui-router/1.9.0/');
 
     assert.match(html, /<h1>.*lit-ui-router.*@.*1\.9\.0.*<\/h1>/);
     assert.match(html, /Deprecated/);
@@ -182,13 +303,13 @@ describe('the /gh pages', () => {
   });
 
   it('renders the 404 page for a version the ledger lacks', async () => {
-    const response = await serve('/gh/releases/lit-ui-router/9.9.9/');
+    const response = await serve('/releases/lit-ui-router/9.9.9/');
 
     assert.match((await response?.text()) ?? '', /<h1>Not found<\/h1>/);
   });
 
   it('links the stylesheet the docs build emits', async () => {
-    const html = await page('/gh/releases/');
+    const html = await page('/releases/');
 
     assert.ok(html.includes(`<link rel="stylesheet" href="${STYLESHEET}">`));
     assert.ok(existsSync(join(import.meta.dirname, '../releases', STYLESHEET)));
@@ -218,7 +339,7 @@ describe('the /gh pages', () => {
   });
 
   it('ships only the appearance check as client script', async () => {
-    const html = await page('/gh/releases/lit-ui-router/');
+    const html = await page('/releases/lit-ui-router/');
 
     assert.deepEqual(
       html.match(/<script(?![^>]*type="application\/json")[^>]*>/g),
