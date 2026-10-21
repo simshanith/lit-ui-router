@@ -7,6 +7,7 @@ import { uiViewSlot } from 'lit-ui-router-ssr/client';
 
 import { isStable } from './ledger.ts';
 import type { LedgerPackage, LedgerVersion } from './ledger.ts';
+import { RELEASES_MOUNT } from './routes.ts';
 
 export const REPOSITORY = 'https://github.com/simshanith/lit-ui-router';
 
@@ -22,8 +23,8 @@ const date = (iso: string | null): TemplateResult | string =>
     ? '—'
     : html`<time datetime=${iso}>${dateFormat.format(new Date(iso))}</time>`;
 
-// Only GitHub's own release pages become links.
-const releaseUrl = (row: LedgerVersion): string | null =>
+/** A row's GitHub release page; only GitHub's own release pages count. */
+export const releaseUrl = (row: LedgerVersion): string | null =>
   row.gh_url?.startsWith(`${REPOSITORY}/releases/`) ? row.gh_url : null;
 
 const githubRelease = (row: LedgerVersion): TemplateResult | string => {
@@ -232,11 +233,11 @@ export const VersionView: RoutedLitTemplate<{ release: LedgerVersion }> = ({
 `;
 
 /** `notFound`: the mount's otherwise state, and any package or version the ledger lacks. */
-export const NotFoundView: RoutedLitTemplate = ({ router }) => html`
+export const NotFoundView: RoutedLitTemplate = () => html`
   <h1>Not found</h1>
   <p>
     No release lives at this address.
-    <a href=${href(router, 'releases')}>See every package</a>.
+    <a href=${`${RELEASES_MOUNT}/`}>See every package</a>.
   </p>
 `;
 

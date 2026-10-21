@@ -303,9 +303,9 @@ describe('/simulated-routing (the simulate-strategy exhibit)', () => {
   });
 });
 
-describe('/gh (the release pages)', () => {
+describe('/releases (the release pages)', () => {
   it('renders the pages from the ledger, never the assets binding', async () => {
-    const res = await dispatch('/gh/releases/lit-ui-router/');
+    const res = await dispatch('/releases/lit-ui-router/');
     assert.equal(res.status, 200);
     assert.deepEqual(assetCalls, []);
     assert.match(res.headers.get('Content-Type') ?? '', /text\/html/);
