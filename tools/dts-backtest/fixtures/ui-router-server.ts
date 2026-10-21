@@ -402,6 +402,7 @@ export function claimOf(request: Request): string {
   const states: DelegateState<'ledger'> = state;
   const raw: DelegateParams<'claims'> = { ...params };
   const keyed: DelegateKey = loose.delegate;
+
   const fromRouter: DelegateContext<'ledger'> = honoDelegateContext(
     request,
     'ledger',
@@ -542,8 +543,10 @@ export function feedPageOf(request: Request): number {
 
 // A typed router still fits the untyped surface.
 export const looseRouter: ServerRouter = claimsRouter;
+
 export const typedDiagnostics: MountDiagnostic[] =
   diagnoseMounts(receiptsRouter);
+
 export const typedMiddleware: ConnectMiddleware = createConnectMiddleware(
   claimsRouter,
   { delegates: 'next' },
