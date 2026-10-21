@@ -5,6 +5,8 @@ import {
   type FloorLegs,
   legAlias,
   legLine,
+  type LegWindow,
+  legWindow,
   parseFloorAlias,
   proveLegs,
 } from './floor-legs.ts';
@@ -263,5 +265,68 @@ describe('proveLegs', () => {
         'ui-router-server range "^0.2.0 || ^0.3.0". Remove it from the ' +
         'peerFloorSsr catalog and the devDependencies.',
     ]);
+  });
+});
+
+describe('legWindow', () => {
+  const span = (overrides: Partial<LegWindow>): LegWindow => ({
+    dependent: 'lit-ui-router-ssr',
+    dep: 'ui-router-server',
+    kind: 'peer',
+    range: '^0.3.0 || ^0.4.0',
+    workspace: true,
+    dev: () => '0.4.0',
+    ...overrides,
+  });
+
+  it('warns on each leg of a 0.x workspace peer below the newest two', () => {
+    assert.deepEqual(
+      legWindow(span({ range: '^0.3.0 || ^0.1.0 || ^0.4.0 || ^0.2.0' })),
+      ['^0.1.0', '^0.2.0'].map(
+        (leg) =>
+          'lit-ui-router-ssr peer ui-router-server range "^0.3.0 || ^0.1.0 || ' +
+          `^0.4.0 || ^0.2.0" keeps 4 legs. "${leg}" is outside the two-leg ` +
+          'window; drop it in the next lit-ui-router-ssr minor.',
+      ),
+    );
+  });
+
+  it('is silent on two legs, never reading the dev copy', () => {
+    assert.deepEqual(
+      legWindow(span({ dev: () => assert.fail('dev read for two legs') })),
+      [],
+    );
+  });
+
+  it('is silent for a third-party peer', () => {
+    assert.deepEqual(
+      legWindow(
+        span({
+          dep: 'lit',
+          range: '^1.0.0 || ^2.0.0 || ^3.0.0',
+          workspace: false,
+          dev: () => '0.9.0',
+        }),
+      ),
+      [],
+    );
+  });
+
+  it('is silent for a workspace peer released past 0.x', () => {
+    assert.deepEqual(
+      legWindow(
+        span({ range: '^0.4.0 || ^0.5.0 || ^1.0.0', dev: () => '1.0.0' }),
+      ),
+      [],
+    );
+  });
+
+  it('is silent for a dependency', () => {
+    assert.deepEqual(
+      legWindow(
+        span({ kind: 'dependency', range: '^0.2.0 || ^0.3.0 || ^0.4.0' }),
+      ),
+      [],
+    );
   });
 });

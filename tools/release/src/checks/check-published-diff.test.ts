@@ -459,20 +459,24 @@ describe('scopePackages', () => {
   const publishable = ['lit-ui-router', 'lit-ui-router-mobx'];
 
   it('returns all publishable names when the scope is empty or unset', () => {
-    assert.deepEqual(scopePackages(publishable, undefined), publishable);
-    assert.deepEqual(scopePackages(publishable, ''), publishable);
-    assert.deepEqual(scopePackages(publishable, ' , '), publishable);
+    const all = { ok: true, packages: publishable };
+    assert.deepEqual(scopePackages(publishable, undefined), all);
+    assert.deepEqual(scopePackages(publishable, ''), all);
+    assert.deepEqual(scopePackages(publishable, ' , '), all);
   });
 
   it('filters to the comma-separated scope, whitespace-tolerant', () => {
-    assert.deepEqual(scopePackages(publishable, ' lit-ui-router-mobx '), [
-      'lit-ui-router-mobx',
-    ]);
+    assert.deepEqual(scopePackages(publishable, ' lit-ui-router-mobx '), {
+      ok: true,
+      packages: ['lit-ui-router-mobx'],
+    });
   });
 
-  it('throws loudly on names matching no publishable member', () => {
-    assert.throws(
-      () => scopePackages(publishable, 'lit-ui-router,typo-pkg'),
+  it('fails on names matching no publishable member', () => {
+    const result = scopePackages(publishable, 'lit-ui-router,typo-pkg');
+    assert.equal(result.ok, false);
+    assert.match(
+      result.ok ? '' : result.error,
       /PUBLISHED_DIFF_PACKAGES names no publishable member: typo-pkg/,
     );
   });

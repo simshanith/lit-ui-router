@@ -3,7 +3,8 @@
 // diff against the live Cloudflare API and report its verdict as one check
 // run on the current HEAD. Phase 1 of #280, non-gating — this exits 0 for
 // every verdict, including the CLI's exit 2 and a missing credential, so the
-// signal can never fail CI.
+// signal can never fail CI. Only a usage error (no GITHUB_REPOSITORY outside
+// --dry-run) exits 2.
 //
 // The CLI runs through ../lib/run-cli.ts, never turbo. Shaping is pure and
 // unit-tested in ./workers-builds-check-runs.core.ts.
@@ -14,6 +15,7 @@ import { defaultExec } from '@tools/shared/exec.ts';
 import { ensureGh } from '@tools/shared/gh.ts';
 import { runCli } from '../lib/run-cli.ts';
 import { appendStepSummary, logWarning } from '@tools/shared/gha.ts';
+import { messageOf } from '@tools/shared/errors.ts';
 
 import {
   checkRunApiArgs,
@@ -33,7 +35,12 @@ async function main() {
   const repo = process.env.GITHUB_REPOSITORY ?? 'simshanith/lit-ui-router';
 
   if (!process.env.GITHUB_REPOSITORY && !dryRun) {
-    throw new Error('GITHUB_REPOSITORY must be set (or pass --dry-run)');
+    console.error(
+      'workers-builds-check-runs: GITHUB_REPOSITORY must be set (or pass --dry-run)',
+    );
+    process.exitCode = 2;
+
+    return;
   }
 
   const result = await runCli(CLI);
@@ -63,7 +70,5 @@ main().catch((cause: unknown) => {
   // Even the reporting path stays non-gating: a gh outage must not turn a
   // deploy-pipeline signal into a red CI run. A warning annotation surfaces
   // it on the run summary instead of a non-zero exit.
-  logWarning(
-    `workers-builds check run not reported: ${cause instanceof Error ? cause.message : String(cause)}`,
-  );
+  logWarning(`workers-builds check run not reported: ${messageOf(cause)}`);
 });

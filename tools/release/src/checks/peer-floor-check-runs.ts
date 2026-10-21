@@ -33,7 +33,12 @@ async function main() {
   const repo = process.env.GITHUB_REPOSITORY ?? 'simshanith/lit-ui-router';
 
   if (!process.env.GITHUB_REPOSITORY && !dryRun) {
-    throw new Error('GITHUB_REPOSITORY must be set (or pass --dry-run)');
+    console.error(
+      'peer-floor-check-runs: GITHUB_REPOSITORY must be set (or pass --dry-run)',
+    );
+    process.exitCode = 2;
+
+    return;
   }
 
   const { members } = await loadWorkspace(workspaceRoot);

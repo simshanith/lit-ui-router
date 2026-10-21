@@ -4,6 +4,7 @@
   "name": "lit-ui-router",
   "compatibility_date": "2026-07-01",
   "main": "./worker/index.ts",
+  "observability": { "enabled": true },
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",

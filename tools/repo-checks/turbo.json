@@ -10,7 +10,9 @@
       // keeps pnpm-lock.yaml one document, and
       // runner-label.test.ts reads every workflow plus the actionlint config,
       // mise-pin.test.ts reads every workflow's mise-action pins, and
-      // task-logs-upload.test.ts holds the task-log uploads to the workspace globs.
+      // task-logs-upload.test.ts holds the task-log uploads to the workspace globs,
+      // and release-ledger-claim.test.ts holds publish-npm's claim step to its
+      // mise task and the ledger's OIDC pins.
       "inputs": [
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/package.json",
@@ -19,7 +21,9 @@
         "$TURBO_ROOT$/.config/mise/config.toml",
         "$TURBO_ROOT$/.config/mise/mise.lock",
         "$TURBO_ROOT$/.github/workflows/**",
-        "$TURBO_ROOT$/.github/actionlint.yaml"
+        "$TURBO_ROOT$/.github/actionlint.yaml",
+        "$TURBO_ROOT$/www/release-ledger.lit-ui-router.dev/wrangler.jsonc",
+        "$TURBO_ROOT$/.config/mise/tasks/ledger_claim"
       ]
     },
     // Every check below reads the whole repo, not just this package, so each
@@ -103,6 +107,7 @@
         "!$TURBO_ROOT$/**/.probe-scratch/**",
         "!$TURBO_ROOT$/**/.rumdl_cache/**",
         "!$TURBO_ROOT$/www/lit-ui-router.dev/api/**",
+        "!$TURBO_ROOT$/www/release-ledger.lit-ui-router.dev/worker/worker-configuration.d.ts",
         "!$TURBO_ROOT$/**/.cache/**",
         "!$TURBO_ROOT$/.claude/**",
         "!$TURBO_ROOT$/.config/mise/**/*.local.toml",

@@ -1,0 +1,25 @@
+{
+  "name": "@tools/release-ledger",
+  "version": "0.0.1",
+  "private": true,
+  "description": "The release ledger's model: its regions, the pure fold that records what npm and GitHub say about each version, and the dist-tag moves",
+  "type": "module",
+  "exports": {
+    ".": "./src/release-ledger.core.ts",
+    "./fixtures": "./src/release-ledger.fixtures.ts"
+  },
+  "scripts": {
+    "format:check:oxfmt": "oxfmt --check \"**/*.{ts,json,md}\"",
+    "format:oxfmt": "oxfmt \"**/*.{ts,json,md}\"",
+    "lint:oxlint": "oxlint .",
+    "test": "node --test --test-reporter=@tools/shared/test-reporter.ts \"src/**/*.test.ts\"",
+    "typecheck:tsc": "tsc -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "@tools/shared": "catalog:workspace",
+    "@types/node": "catalog:",
+    "oxfmt": "catalog:",
+    "oxlint": "catalog:",
+    "typescript": "catalog:"
+  }
+}

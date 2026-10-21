@@ -11,8 +11,8 @@
 // the diff and --apply to the named config keys (repeatable, or one
 // comma-separated value); an unknown key is a usage error, never an empty
 // selection. --apply PATCHes drifted triggers, then re-GETs to confirm. Exit
-// codes: 0 in sync, 1 drifted (or drift remained after --apply), 2 usage/API
-// error. Token must be USER-scoped (account-owned tokens don't cover the
+// codes: 0 in sync, 1 drifted, a configured worker not created yet, or drift
+// remaining after --apply, 2 usage/API error. Token must be USER-scoped (account-owned tokens don't cover the
 // Builds API): "Workers Builds Configuration: Read" suffices for the diff,
 // Edit is only for --apply.
 //
@@ -31,10 +31,12 @@ import { join } from 'node:path';
 import { parseArgs } from 'node:util';
 
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
+import { messageOf } from '@tools/shared/errors.ts';
 
 import { cf } from './cloudflare-api.ts';
 import {
   type DesiredWorker,
+  type Drift,
   type Trigger,
   desiredWorkersFromConfig,
   diffTriggers,
@@ -56,30 +58,25 @@ async function loadDesired(): Promise<DesiredWorker[]> {
     );
   } catch (error) {
     throw new Error(
-      `cannot load desired state from ${DESIRED_CONFIG}: ${error instanceof Error ? error.message : String(error)}`,
+      `cannot load desired state from ${DESIRED_CONFIG}: ${messageOf(error)}`,
       { cause: error },
     );
   }
 }
 
+// undefined when the account has no such worker yet.
 async function workerTag(
   token: string,
   accountId: string,
   name: string,
-): Promise<string> {
+): Promise<string | undefined> {
   // SAFETY: workers/scripts results are script objects carrying id and tag
   const scripts = (await cf(token, `/${accountId}/workers/scripts`)) as {
     id?: string;
     tag?: string;
   }[];
 
-  const script = scripts.find((candidate) => candidate.id === name);
-
-  if (!script?.tag) {
-    throw new Error(`worker "${name}" not found in account's workers/scripts`);
-  }
-
-  return script.tag;
+  return scripts.find((candidate) => candidate.id === name)?.tag;
 }
 
 // Build environment variables live on a sub-resource; the trigger list may or
@@ -111,6 +108,34 @@ async function getTriggers(
   );
 }
 
+async function applyDrift(
+  token: string,
+  accountId: string,
+  drift: Drift,
+): Promise<void> {
+  if (Object.keys(drift.patch).length > 0) {
+    console.log(
+      `\nPATCHing ${drift.kind} trigger ${drift.trigger_uuid}: ${Object.keys(drift.patch).join(', ')}`,
+    );
+    await cf(token, `/${accountId}/builds/triggers/${drift.trigger_uuid}`, {
+      method: 'PATCH',
+      body: drift.patch,
+    });
+  }
+
+  // Declared keys only — undeclared live vars are never in this body.
+  if (Object.keys(drift.environmentPatch).length > 0) {
+    console.log(
+      `\nPATCHing ${drift.kind} trigger ${drift.trigger_uuid} environment_variables: ${Object.keys(drift.environmentPatch).join(', ')}`,
+    );
+    await cf(
+      token,
+      `/${accountId}/builds/triggers/${drift.trigger_uuid}/environment_variables`,
+      { method: 'PATCH', body: drift.environmentPatch },
+    );
+  }
+}
+
 async function main() {
   // strict: an unknown flag is a usage error (exit 2 via the catch below), so
   // a mistyped --apply can never fall through to a read-only run that looks
@@ -140,10 +165,18 @@ async function main() {
     return;
   }
 
-  const workers = selectWorkers(await loadDesired(), sites);
+  const selected = selectWorkers(await loadDesired(), sites);
+
+  if (!selected.ok) {
+    console.error(selected.error);
+    process.exitCode = 2;
+
+    return;
+  }
+
   let ok = true;
 
-  for (const [index, worker] of workers.entries()) {
+  for (const [index, worker] of selected.workers.entries()) {
     // The worker name comes from the same config wrangler deploys with. A
     // wranglerConfig that names no file throws, and the run exits 2.
     const name = workerNameFromConfig(
@@ -153,6 +186,18 @@ async function main() {
     );
 
     const tag = await workerTag(token, accountId, name);
+
+    // A configured site whose worker the dashboard hasn't created yet is
+    // drift the dashboard owes, not an observer error: it must not mask the
+    // other sites' verdicts.
+    if (tag === undefined) {
+      console.log(
+        `${index > 0 ? '\n' : ''}worker: ${name} (not found)\n\n` +
+          `✗ no worker "${name}" in the account — create it with its triggers in the dashboard (see www/DEPLOY.md, Adding a site)`,
+      );
+      ok = false;
+      continue;
+    }
 
     const { report, drifts } = diffTriggers(
       await getTriggers(token, accountId, tag),
@@ -167,29 +212,7 @@ async function main() {
       continue;
     }
 
-    for (const drift of drifts) {
-      if (Object.keys(drift.patch).length > 0) {
-        console.log(
-          `\nPATCHing ${drift.kind} trigger ${drift.trigger_uuid}: ${Object.keys(drift.patch).join(', ')}`,
-        );
-        await cf(token, `/${accountId}/builds/triggers/${drift.trigger_uuid}`, {
-          method: 'PATCH',
-          body: drift.patch,
-        });
-      }
-
-      // Declared keys only — undeclared live vars are never in this body.
-      if (Object.keys(drift.environmentPatch).length > 0) {
-        console.log(
-          `\nPATCHing ${drift.kind} trigger ${drift.trigger_uuid} environment_variables: ${Object.keys(drift.environmentPatch).join(', ')}`,
-        );
-        await cf(
-          token,
-          `/${accountId}/builds/triggers/${drift.trigger_uuid}/environment_variables`,
-          { method: 'PATCH', body: drift.environmentPatch },
-        );
-      }
-    }
+    for (const drift of drifts) await applyDrift(token, accountId, drift);
 
     // Re-read so the confirmation reflects what the API stored, not what we sent.
     const after = diffTriggers(

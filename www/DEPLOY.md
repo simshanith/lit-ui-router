@@ -21,6 +21,11 @@ repo config, and whether the site it deploys is up. See
 ## [Cloudflare Workers](https://developers.cloudflare.com/workers/) with [Static Assets](https://developers.cloudflare.com/workers/static-assets/)
 
 The Cloudflare [GitHub integration](https://developers.cloudflare.com/workers/ci-cd/builds/git-integration/github-integration/) deploys documentation on push.
+It deploys every Worker app under `www/` the same way: each is a package in `www/<domain>`, named
+`@www/<domain>`, with its own `wrangler.jsonc` and its own Workers Builds triggers, and the domain is
+the site key that the build and deploy commands below take as their last argument. This section
+describes the docs site, the default when that argument is omitted; [Adding a site](#adding-a-site)
+covers the rest.
 
 - Production `main` branch deploys to [lit-ui-router.dev](https://lit-ui-router.dev)
 - Development branches deploy to [preview URLs](https://developers.cloudflare.com/workers/configuration/previews/) with the `-lit-ui-router.shane-cf1.workers.dev` domain suffix
@@ -42,8 +47,8 @@ Wrangler is installed in both:
 - Root `package.json` - for deployment commands
 - `www/lit-ui-router.dev/package.json` - its scripts (`wrangler dev`, `wrangler types`, the dry-run bundle) run with the package as cwd, so wrangler finds the `wrangler.jsonc` beside them
 
-The deploy runs from the repo root, where no config lives, so it names the file with
-`--config www/lit-ui-router.dev/wrangler.jsonc` — inside
+The deploy runs from the repo root, where no config lives, so it names the site's file with
+`--config www/<site>/wrangler.jsonc` — inside
 [`cloudflare-deploy.ts`](../tools/workers-builds/cloudflare-deploy.ts), not in the dashboard
 (see [Build & Deploy Commands](#build--deploy-commands)).
 
@@ -55,6 +60,14 @@ See: [Wrangler Commands](https://developers.cloudflare.com/workers/wrangler/comm
 | ------------------------------------------------------------------------------------------------------- | -------------------------------------------- | ---------------------------------------------------- |
 | Production                                                                                              | `./tools/workers-builds/cloudflare-build.sh` | `./tools/workers-builds/cloudflare-deploy.ts main`   |
 | Preview ([Versions](https://developers.cloudflare.com/workers/configuration/versions-and-deployments/)) | `./tools/workers-builds/cloudflare-build.sh` | `./tools/workers-builds/cloudflare-deploy.ts branch` |
+
+Every other site appends its key to both commands (`cloudflare-build.sh <site>`,
+`cloudflare-deploy.ts main <site>`), as its entry in
+[`workers-builds-triggers.config.jsonc`](../tools/workers-builds/workers-builds-triggers.config.jsonc)
+records. The key resolves to `www/<site>/`, whose `package.json` must be named `@www/<site>`; an
+unknown key, a mismatched name or an extra argument exits 2 before any step runs. The docs site's
+commands stay bare because a trigger's command is shared by every branch it builds, including
+branches whose checkout predates the argument.
 
 Both commands are **repo scripts, not the steps themselves**
 ([`cloudflare-build.sh`](../tools/workers-builds/cloudflare-build.sh),
@@ -85,11 +98,13 @@ has to be a file whose own imports are node builtins all the way down — which 
 
 The build image is Ubuntu with node and npm; the script installs pnpm, and `pnpm install`
 provides everything after that. There is no mise, so none of the repo's mise-managed tools —
-`taplo`, `shellcheck`, `rumdl`, `actionlint`, `zizmor` — exists during a deploy. Anything the
-build's turbo target reaches has to run on workspace binaries alone. It does today: that
-closure is 89 tasks, 21 of which run a command, and every one of those is a package
-`devDependency`. Nothing enforces this, because nothing needs to — a violation turns the
-Workers Builds check red on the branch that introduces it, before any merge.
+`taplo`, `shellcheck`, `rumdl`, `actionlint`, `zizmor` — exists during a deploy. The build's
+turbo target is `@www/<site>#build`; `build` is defined at the root, so a site with no build
+script of its own (wrangler bundles it at deploy) builds only its dependencies and succeeds.
+Anything that target reaches has to run on workspace binaries alone. It does today: for the
+docs site that closure is 133 tasks, 39 of which run a command, and every one of those is a
+package `devDependency` or node itself. Nothing enforces this, because nothing needs to — a
+violation turns the Workers Builds check red on the branch that introduces it, before any merge.
 
 The script **derives the pnpm to bootstrap from `packageManager`** rather than restating it.
 A second pin could drift from `packageManager` with nothing to catch it, and a build on a
@@ -97,18 +112,21 @@ stale pnpm can still deploy green. Deriving is also what makes the
 per-branch divergence above free: a branch that changes the package manager gets the right
 bootstrap with no edit to this file.
 
-The deploy script takes the trigger as its one argument — `main` runs `npx wrangler
-deploy`, `branch` runs `npx wrangler versions upload`, anything else exits 2 — and both
-add `--config www/lit-ui-router.dev/wrangler.jsonc`, since the deploy runs from the repo
-root and the config lives in the site package. That flag is exactly what the indirection is
-for: on `main` before this branch the script named no `--config` at all, because
-`wrangler.jsonc` sat at the root and wrangler found it by walking up. Moving the file
-changes this script's internals and leaves the dashboard alone — no `--apply` owed, and no
-ordering against the merge.
+The deploy script takes the trigger as its first argument and the site as its optional second.
+`branch` runs `npx wrangler versions upload`; `main` runs `npx wrangler deploy`, preceded by
+`npx wrangler d1 migrations apply <database_name> --remote` for every `d1_databases` entry in the
+site's `wrangler.jsonc` that sets `migrations_dir`. Each names the site's config with `--config`,
+since the deploy runs from the repo root and the config lives in the site package. A failed
+migration stops the deploy, so production code never runs ahead of its schema. A preview upload
+never migrates: it binds the same remote databases as production. wrangler skips its migration
+confirmation prompt when `WORKERS_CI` is set (as it is in Workers Builds) or there is no TTY,
+answering yes, so the step neither waits nor skips. A moved `wrangler.jsonc` changes this
+script's internals and leaves the dashboard alone — no `--apply` owed, and no ordering against
+the merge.
 
 It is TypeScript rather than bash: by deploy time the install has run, so it is node's own
-type stripping like every other tool script, and it exports its mode map so the trigger
-test checks the wrangler invocation by importing it instead of grepping the source. The
+type stripping like every other tool script, and it exports its commands so the trigger
+test checks each site's wrangler invocations by importing them instead of grepping the source. The
 build script stays bash — it is the bootstrap, and runs before there is anything to run it
 with. `process.execve` replaces the process the way bash `exec` did, so wrangler's exit
 code and signals are the script's; execve does not search `PATH`, so the script asks the
@@ -130,6 +148,19 @@ names would leave turbo on the unusable shim.
 `build_command` and `SKIP_DEPENDENCY_INSTALL` are one state. Apply and verify preview
 before production.
 
+### Adding a site
+
+1. Add the package at `www/<domain>/`, named `@www/<domain>`, with a `wrangler.jsonc` beside its
+   `package.json`. A D1 database the production deploy should migrate sets `migrations_dir`.
+2. Add an entry keyed `<domain>` to
+   [`workers-builds-triggers.config.jsonc`](../tools/workers-builds/workers-builds-triggers.config.jsonc),
+   with both commands taking the key and `path_includes` limiting its builds to the paths it
+   reads. The trigger test checks the entry against the package.
+3. In the Cloudflare dashboard, **Workers & Pages → Create → Import a repository**, with the
+   Worker name matching the `name` in `wrangler.jsonc` and the build and deploy commands from the
+   entry. Give its builds an API token of its own, scoped to what that site's deploy touches.
+4. Run `pnpm check:workers-builds -- --site <domain>`, and `--apply` for anything it reports.
+
 ### Dashboard as Code
 
 The private [`tools/workers-builds`](../tools/workers-builds) package owns
@@ -148,6 +179,8 @@ file's own comments and the schema in
 [`workers-builds-triggers.core.ts`](../tools/workers-builds/workers-builds-triggers.core.ts) — and
 not repeated here. A `wranglerConfig` that names no file is a hard error (exit 2), never a skipped
 entry, so a moved file cannot turn the check green.
+A configured worker the account does not have yet is drift (exit 1), not an error: a new site
+reads as owing its dashboard step without hiding the other sites' verdicts.
 
 Requires `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`. The token must be **user-scoped** — account-owned
 tokens do not cover the Workers Builds API — and carry two permissions: **Workers Scripts: Read**, which

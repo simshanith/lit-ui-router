@@ -129,7 +129,6 @@ async function main() {
   const skipBuild = process.argv.includes('--no-build');
   const jsonPath = summaryPathArg();
 
-  const published = await readPublishedVersions();
   const { members } = await loadWorkspace(workspaceRoot);
   const publishable = members.filter(isPublishable);
 
@@ -139,7 +138,18 @@ async function main() {
     process.env.PUBLISHED_DIFF_PACKAGES,
   );
 
-  const targets = publishable.filter(({ name }) => scoped.includes(name));
+  if (!scoped.ok) {
+    console.error(`check-published-diff: ${scoped.error}`);
+    process.exitCode = 2;
+
+    return;
+  }
+
+  const published = await readPublishedVersions();
+
+  const targets = publishable.filter(({ name }) =>
+    scoped.packages.includes(name),
+  );
 
   if (!skipBuild && targets.length > 0) {
     // Provision the publish-shape tarballs this reads — a no-op cache hit when
