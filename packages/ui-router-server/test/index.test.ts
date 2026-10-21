@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, it, mock } from 'node:test';
 import type { TestContext } from 'node:test';
 
-import { StateRegistry } from '@uirouter/core';
+import { StateRegistry, UrlService } from '@uirouter/core';
 
 import {
   createServerRouter,
@@ -536,6 +536,33 @@ describe('delegate configuration', () => {
       registeredDelegates({ resolve: () => Promise.reject(new Error()) }),
       undefined,
     );
+  });
+
+  it('matches no delegate on a mount that names no keys', async () => {
+    const router = createServerRouter({
+      mounts: {
+        '/app': delegateMount('simulate'),
+        '/static': appMount('simulate'),
+      },
+    });
+
+    const registration = registeredDelegates(router);
+    assert.ok(registration);
+    assert.equal(await registration.delegateFor('/static/welcome'), null);
+  });
+
+  it('matches no delegate when the simulate router throws', async (t) => {
+    const router = createServerRouter({
+      mounts: { '/app': delegateMount('simulate') },
+    });
+
+    const registration = registeredDelegates(router);
+    assert.ok(registration);
+    t.mock.method(UrlService.prototype, 'match', () => {
+      throw new Error('tripped');
+    });
+
+    assert.equal(await registration.delegateFor('/app/claims'), null);
   });
 });
 
