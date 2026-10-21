@@ -41,6 +41,7 @@
       "development": "./dist/development/context.js",
       "default": "./dist/context.js"
     },
+    "./custom-elements.json": "./dist/custom-elements.json",
     "./dist/*": "./dist/*",
     "./package.json": "./package.json",
     "./pure": {

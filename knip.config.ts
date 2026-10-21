@@ -38,6 +38,9 @@ function distSourceEntries(manifest: PackageManifest): string[] {
     // a wildcard passthrough names no file, as knip itself treats `./*`
     if (!DIST_TARGET.test(target) || target.includes('*')) continue;
 
+    // a non-JS asset such as custom-elements.json compiles from no src/ file
+    if (!EMITTED_EXTENSION.test(target)) continue;
+
     const stem = target.replace(DIST_TARGET, '').replace(EMITTED_EXTENSION, '');
     entries.add(`src/${stem}.ts`);
   }

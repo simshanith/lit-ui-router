@@ -3,7 +3,7 @@ import { html, render } from 'lit';
 // type-only: keeps <api-docs> known to lit-analyzer, emits no runtime import
 import type {} from '@api-viewer/docs';
 import { UIRouterLit } from 'lit-ui-router';
-import customElementsJsonUrl from 'lit-ui-router/dist/custom-elements.json?url';
+import customElementsJsonUrl from 'lit-ui-router/custom-elements.json?url';
 
 import { configureRouter } from './router.config.js';
 import { featureFlags } from './app/util/featureDetection.js';
