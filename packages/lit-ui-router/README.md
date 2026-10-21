@@ -3,7 +3,7 @@
 <img src="https://lit-ui-router.dev/images/lit-ui-router.svg" alt="Lit UI Router" width="120" height="120" />
 
 [![npm version](https://img.shields.io/npm/v/lit-ui-router.svg)](https://npmx.dev/package/lit-ui-router)
-[![GitHub Release](https://img.shields.io/github/v/release/simshanith/lit-ui-router?filter=lit-ui-router@*)](https://lit-ui-router.dev/gh/releases/lit-ui-router/latest)
+[![GitHub Release](https://img.shields.io/github/v/release/simshanith/lit-ui-router?filter=lit-ui-router@*)](https://github.com/simshanith/lit-ui-router/releases/?q=lit-ui-router)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Website](https://img.shields.io/website?url=https%3A%2F%2Flit-ui-router.dev)](https://lit-ui-router.dev)
 [![codecov](https://codecov.io/gh/simshanith/lit-ui-router/graph/badge.svg?component=lit-ui-router)](https://app.codecov.io/gh/simshanith/lit-ui-router?components%5B0%5D=lit-ui-router)
