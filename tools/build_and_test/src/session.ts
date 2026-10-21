@@ -17,6 +17,7 @@ import {
 } from './run-summary.core.ts';
 import { warningCommand } from '@tools/shared/gha.core.ts';
 import { onActions } from '@tools/shared/gha.ts';
+import { messageOf } from '@tools/shared/errors.ts';
 
 const RUNS_DIR = process.env.TURBO_RUNS_DIR ?? '.turbo/runs';
 
@@ -141,9 +142,7 @@ async function readStructuredLogs(): Promise<StructuredLogEntry[]> {
         ...(JSON.parse(await readFile(path, 'utf8')) as StructuredLogEntry[]),
       );
     } catch (error: unknown) {
-      warn(
-        `skipping ${basename(path)}: ${error instanceof Error ? error.message : String(error)}`,
-      );
+      warn(`skipping ${basename(path)}: ${messageOf(error)}`);
     }
   }
 
@@ -187,9 +186,7 @@ export async function readSession(): Promise<Session | undefined> {
     } catch (error: unknown) {
       // One unreadable summary must not cost the report the others: a run that
       // turbo killed mid-write is exactly when the rest is worth reading.
-      warn(
-        `skipping ${basename(path)}: ${error instanceof Error ? error.message : String(error)}`,
-      );
+      warn(`skipping ${basename(path)}: ${messageOf(error)}`);
       continue;
     }
 

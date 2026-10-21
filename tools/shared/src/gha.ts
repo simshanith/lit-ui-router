@@ -13,6 +13,7 @@ import {
   outputLine,
   warningCommand,
 } from './gha.core.ts';
+import { messageOf } from './errors.ts';
 
 /** Whether this process is running on a GitHub Actions runner. */
 export function onActions(): boolean {
@@ -75,7 +76,7 @@ export async function appendStepSummary(markdown: string): Promise<void> {
 /** Uniform entry-point wrapper: annotate the failure and fail the task. */
 export function runMain(main: () => Promise<void>): void {
   main().catch((cause: unknown) => {
-    logError(cause instanceof Error ? cause.message : String(cause));
+    logError(messageOf(cause));
     process.exitCode = 1;
   });
 }

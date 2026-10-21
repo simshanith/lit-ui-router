@@ -25,3 +25,6 @@ covers the one difference the bindings' callers see.
   the galaxy tutorial on `lit-ui-router-effect`.
 - The <a href="/app-effect" target="_self">Effect sample app</a> keeps its
   client state in `SubscriptionRef`s through the same bindings.
+- Both stand on [the Altitude Atlas](https://atlas.lit-ui-router.dev/bricks/?focus=lit-ui-router-effect) as
+  bricks in sheet 2's model in the round, each sized by its authored files and
+  seated on what it peers.

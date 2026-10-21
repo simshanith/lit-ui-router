@@ -6,6 +6,7 @@
   "type": "module",
   "exports": {
     "./bench-report.ts": "./src/bench-report.ts",
+    "./errors.ts": "./src/errors.ts",
     "./exec.ts": "./src/exec.ts",
     "./execve.ts": "./src/execve.ts",
     "./gh.ts": "./src/gh.ts",

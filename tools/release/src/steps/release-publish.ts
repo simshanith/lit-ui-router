@@ -3,6 +3,7 @@
 // one task:
 //   env in: PACKAGE_NAME, TARBALL, DRY_RUN,
 //           GITHUB_TOKEN (release-it's GitHub release; npm auth is OIDC)
+//   outputs: version (the release version, for the ledger claim)
 // Absorbs the old PREV_TAG/CHANGELOG_ARGS bash wiring: the release version
 // comes from the engine seam, the previous tag of THIS package (or the repo
 // root on a first release) pins the conventional-changelog range (#302,
@@ -13,7 +14,7 @@
 // (see retry.ts); a human re-runs the workflow after a partial failure.
 
 import { boolEnv, requireEnv } from '../lib/env.core.ts';
-import { group, runMain } from '@tools/shared/gha.ts';
+import { group, runMain, setOutput } from '@tools/shared/gha.ts';
 import {
   currentReleaseVersionArgs,
   parseReleaseVersion,
@@ -50,4 +51,6 @@ runMain(async () => {
       publishArgs({ releaseVersion, tarballPath, from, dryRun }),
     ),
   );
+
+  await setOutput('version', releaseVersion);
 });

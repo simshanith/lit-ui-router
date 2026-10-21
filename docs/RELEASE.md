@@ -165,6 +165,16 @@ The final release stage:
 5. Creates a draft GitHub Release with the tarball
 6. Marks the GitHub Release as final
 
+After the publish, the job's last step runs
+`mise run ledger_claim` ([`.config/mise/tasks/ledger_claim`](../.config/mise/tasks/ledger_claim)),
+which posts `<pkg>@<version>` to the release ledger's `POST /claims` with an
+OIDC id-token from the `publish` environment
+([`www/release-ledger.lit-ui-router.dev`](../www/release-ledger.lit-ui-router.dev/README.md)).
+On a dry run it mints the token and writes the claims the ledger checks to the
+job summary, and posts nothing.
+The step is `continue-on-error`: a failed claim leaves a warning annotation and
+a job summary line, and the ledger's tag sweep records the release later.
+
 The repository has GitHub immutable releases enabled: a published release, its
 assets and the tag it points at can never be edited or deleted, and npm
 versions are equally permanent. A bad release body or a missing asset ships
@@ -207,6 +217,13 @@ When a release moves a workspace dev dependency past a dependent's range, the
 top leg falls back to its own `<dep>-<line>-floor` alias, and the guard notes
 that the range needs widening. Adding that alias before the release keeps both
 sides of the bump green.
+
+A peer range on a 0.x workspace package keeps two legs: the dep's current minor
+and the one before it. When the dep ships a new minor, the dependent's next
+release adds the new leg and drops the oldest, which narrows the range and so
+ships as a minor. A leg goes early when keeping it needs a shim or version
+branch in the dependent, or blocks a new API of the dep. `floor-guard` warns,
+without failing, on each leg outside the window.
 
 `published-diff` picks that tag from the workspace version by the same rule
 release-it publishes under: a prerelease answers to its own channel tag,

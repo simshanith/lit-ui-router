@@ -161,3 +161,46 @@ export function proveLegs(input: FloorLegs): LegVerdict {
 
   return { failures, proofs };
 }
+
+export interface LegWindow {
+  /** The package whose manifest declares the peer. */
+  dependent: string;
+  dep: string;
+  kind: 'dependency' | 'peer';
+  range: string;
+  /** Whether the dep is a workspace package. */
+  workspace: boolean;
+  /** Installed version of the `dep` devDependency; read only past two legs. */
+  dev: () => string;
+}
+
+/**
+ * Warnings for a peer range on a 0.x workspace package that keeps legs below
+ * its newest two; empty otherwise. Advisory: dropping a leg takes a release.
+ */
+export function legWindow(input: LegWindow): string[] {
+  const { dependent, dep, range } = input;
+
+  if (input.kind !== 'peer' || !input.workspace) return [];
+
+  const legs = range
+    .split('||')
+    .flatMap((text) => {
+      const leg = text.trim();
+      const floor = semver.minVersion(leg);
+
+      return floor === null ? [] : [{ leg, floor }];
+    })
+    .sort((a, b) => semver.compare(a.floor, b.floor));
+
+  if (legs.length <= 2 || semver.major(input.dev()) > 0) return [];
+
+  return legs
+    .slice(0, -2)
+    .map(
+      ({ leg }) =>
+        `${dependent} peer ${dep} range "${range}" keeps ${legs.length} ` +
+        `legs. "${leg}" is outside the two-leg window; drop it in the next ` +
+        `${dependent} minor.`,
+    );
+}

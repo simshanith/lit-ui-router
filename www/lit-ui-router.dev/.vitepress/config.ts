@@ -403,6 +403,7 @@ const config = {
           { text: 'Hash', link: '/app-hash', target: '_self' },
         ],
       },
+      { text: 'Atlas', link: 'https://atlas.lit-ui-router.dev' },
     ],
     sidebar: makeSidebar(),
     socialLinks: [

@@ -19,6 +19,8 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 
+import { messageOf } from '@tools/shared/errors.ts';
+
 const SESSION_FILE =
   process.env.TURBO_SUMMARY_SESSION ?? '.turbo/summary-session';
 
@@ -31,8 +33,8 @@ async function main(): Promise<void> {
 
 main().catch((cause: unknown) => {
   console.log(
-    `could not mark the turbo summary session, the report falls back to the newest run: ${
-      cause instanceof Error ? cause.message : String(cause)
-    }`,
+    `could not mark the turbo summary session, the report falls back to the newest run: ${messageOf(
+      cause,
+    )}`,
   );
 });

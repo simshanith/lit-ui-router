@@ -18,6 +18,14 @@ possible router. Walkthrough: [Hello World tutorial](./helloworld).
 
 <LiveExample name="helloworld" />
 
+## Hello World (No Build)
+
+The same app in plain JavaScript. It runs with an import map and no build
+step: the browser loads `main.js` as written and fetches `lit`,
+`@uirouter/core` and `lit-ui-router` from a CDN.
+
+<LiveExample name="helloworld-buildless" />
+
 ## Hello Solar System
 
 A master-detail list of the real solar system: URL parameters, async resolves,

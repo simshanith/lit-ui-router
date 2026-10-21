@@ -1,10 +1,11 @@
 #!/usr/bin/env node
-// Posts the pages-deploy verdict on the www/atlas head; a failure is a warning, never an exit.
+// Posts the pages-deploy verdict on the www/atlas head; a failure is a warning, never an exit; only a usage error exits 2.
 
 import { fileURLToPath } from 'node:url';
 
 import { defaultExec } from '@tools/shared/exec.ts';
 import { appendStepSummary, logWarning } from '@tools/shared/gha.ts';
+import { messageOf } from '@tools/shared/errors.ts';
 
 import { ensureGh } from '@tools/shared/gh.ts';
 import { runCli } from '../lib/run-cli.ts';
@@ -27,7 +28,12 @@ async function main() {
   const repo = process.env.GITHUB_REPOSITORY ?? 'simshanith/lit-ui-router';
 
   if (!process.env.GITHUB_REPOSITORY && !dryRun) {
-    throw new Error('GITHUB_REPOSITORY must be set (or pass --dry-run)');
+    console.error(
+      'pages-deploy-check-runs: GITHUB_REPOSITORY must be set (or pass --dry-run)',
+    );
+    process.exitCode = 2;
+
+    return;
   }
 
   // A check run needs a head to sit on, so an unresolved head ends the run.
@@ -56,8 +62,6 @@ async function main() {
 }
 
 const warn = (cause: unknown): void =>
-  logWarning(
-    `pages-deploy check run not reported: ${cause instanceof Error ? cause.message : String(cause)}`,
-  );
+  logWarning(`pages-deploy check run not reported: ${messageOf(cause)}`);
 
 if (import.meta.main) await main().catch(warn);

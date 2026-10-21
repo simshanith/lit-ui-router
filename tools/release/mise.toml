@@ -83,6 +83,7 @@ run = 'PACKAGE="${usage_package?}" DRY_RUN="${usage_dry_run:-}" node src/steps/r
 
 [tasks.publish]
 # env: GITHUB_TOKEN (release-it's GitHub release; npm auth is OIDC).
+# outputs: version.
 description = "Publish the packed tarball to npm and cut the GitHub release"
 usage = '''
 flag "--package-name <package_name>" help="Package to publish" required=#true env="PACKAGE_NAME"

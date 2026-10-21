@@ -128,6 +128,7 @@ jobs:
         with:
           subject-path: ${{ steps.pack.outputs.tarball }}
       - name: Publish
+        id: publish
         # release-it publishes the attested tarball and cuts the GitHub
         # release in one invocation; the argv (and the #302 changelog-range
         # pin) is built by the engine seam — see tools/release/src/steps/release-publish.ts
@@ -139,6 +140,15 @@ jobs:
           DRY_RUN: ${{ inputs.dryRun }}
           # scoped here: only release-it's GitHub release needs it (npm auth is OIDC)
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Claim the release
+        # Best-effort (#1424): the ledger's tag sweep heals a missed claim, so a failure only warns.
+        continue-on-error: true
+        timeout-minutes: 5
+        run: mise run ledger_claim
+        env:
+          PACKAGE_NAME: ${{ steps.info.outputs.package_name }}
+          VERSION: ${{ steps.publish.outputs.version }}
+          DRY_RUN: ${{ inputs.dryRun }}
 
   release_signals:
     # Refresh the per-package published-diff check runs now that `latest` has

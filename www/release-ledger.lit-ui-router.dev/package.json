@@ -1,0 +1,32 @@
+{
+  "name": "@www/release-ledger.lit-ui-router.dev",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The release-ledger worker: OIDC claims in, a D1 ledger of every release out",
+  "type": "module",
+  "scripts": {
+    "enqueue": "node src/enqueue.ts",
+    "format:check:oxfmt": "oxfmt --check \"**/*.{ts,json,jsonc,md}\"",
+    "format:oxfmt": "oxfmt \"**/*.{ts,json,jsonc,md}\"",
+    "lint:oxlint": "oxlint .",
+    "test": "node --test --test-reporter=@tools/shared/test-reporter.ts \"src/**/*.test.ts\"",
+    "typecheck:tsc": "tsc -p tsconfig.json --noEmit",
+    "typecheck:worker": "tsc -p worker/tsconfig.json --noEmit",
+    "types:worker": "wrangler types worker/worker-configuration.d.ts"
+  },
+  "dependencies": {
+    "@effect/sql-d1": "catalog:",
+    "@tools/release-ledger": "catalog:workspace",
+    "effect": "catalog:",
+    "jose": "catalog:"
+  },
+  "devDependencies": {
+    "@tools/shared": "catalog:workspace",
+    "@types/node": "catalog:",
+    "jsonc-parser": "catalog:",
+    "oxfmt": "catalog:",
+    "oxlint": "catalog:",
+    "typescript": "catalog:",
+    "wrangler": "catalog:"
+  }
+}

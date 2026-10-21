@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+#MISE description="Post a <name>@<version> claim to the release ledger with this Actions run's OIDC id-token"
+#USAGE flag "--name <name>" help="Published package name" required=#true env="PACKAGE_NAME"
+#USAGE flag "--version <version>" help="Published version" required=#true env="VERSION"
+#USAGE flag "--audience <url>" help="Ledger origin, also the id-token audience" default="https://release-ledger.lit-ui-router.dev"
+#USAGE flag "--dry-run" help="Mint the id-token and report the claims the ledger checks; post nothing" env="DRY_RUN"
+set -euo pipefail
+
+release="${usage_name?}@${usage_version?}"
+audience="${usage_audience?}"
+summary="${GITHUB_STEP_SUMMARY:-/dev/stdout}"
+response="$(mktemp)"
+
+warn() {
+  echo "::warning title=Release ledger claim::$release: $1"
+  printf "### Release ledger\n\nClaim for \`%s\` failed: %s. The tag sweep claims it later.\n" "$release" "$1" >>"$summary"
+  exit 1
+}
+
+if [ -z "${ACTIONS_ID_TOKEN_REQUEST_URL:-}" ] || [ -z "${ACTIONS_ID_TOKEN_REQUEST_TOKEN:-}" ]; then
+  warn 'no id-token request URL; the job needs id-token: write'
+fi
+
+# Without --retry-all-errors, curl retries timeouts, 408, 429 and 5xx, never another 4xx.
+retry=(--retry 5 --retry-connrefused --retry-max-time 120 --connect-timeout 10 --max-time 30)
+
+token=$(curl -sS --fail-with-body "${retry[@]}" \
+  -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+  --url-query "audience=$audience" "$ACTIONS_ID_TOKEN_REQUEST_URL" | jq -er .value) ||
+  warn 'no OIDC id-token'
+echo "::add-mask::$token"
+
+if [ "${usage_dry_run:-false}" = true ]; then
+  payload=$(cut -d. -f2 <<<"$token" | tr '_-' '/+')
+  printf "### Release ledger\n\nDry run: would claim \`%s\` with these id-token claims.\n\n\`\`\`json\n%s\n\`\`\`\n" "$release" \
+    "$(jq -R '@base64d | fromjson | {environment, job_workflow_ref, ref, event_name}' <<<"$payload")" >>"$summary"
+  exit 0
+fi
+
+body=$(jq -nc --arg name "$usage_name" --arg version "$usage_version" '{name: $name, version: $version}')
+status=$(curl -sS --fail-with-body "${retry[@]}" -o "$response" -w '%{http_code}' \
+  -H "Authorization: Bearer $token" -H 'Content-Type: application/json' \
+  --data "$body" "$audience/claims") || true
+
+if [ "$status" != 202 ]; then
+  warn "POST /claims answered ${status:-no response}: $(head -c 300 "$response" | tr '\n' ' ')"
+fi
+
+printf "### Release ledger\n\nClaimed \`%s\` (202).\n" "$release" >>"$summary"

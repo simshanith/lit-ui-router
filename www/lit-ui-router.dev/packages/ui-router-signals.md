@@ -80,3 +80,6 @@ const stop = watchSelection(
 - [API reference](/api/ui-router-signals/)
 - [TC39 Signals proposal](https://github.com/tc39/proposal-signals)
 - [`signal-polyfill`](https://github.com/proposal-signals/signal-polyfill)
+- [On the Altitude Atlas](https://atlas.lit-ui-router.dev/bricks/?focus=ui-router-signals) — this package as
+  a brick in sheet 2's model in the round, sized by its authored files and
+  seated on what it peers

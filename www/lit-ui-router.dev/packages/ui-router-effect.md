@@ -118,3 +118,6 @@ selector asking during a later transition gets the settled answer.
 - [API reference](/api/ui-router-effect/)
 - [lit-ui-router-effect](/packages/lit-ui-router-effect)
 - [Effect — SubscriptionRef](https://effect.website/docs/state-management/subscriptionref/)
+- [On the Altitude Atlas](https://atlas.lit-ui-router.dev/bricks/?focus=ui-router-effect) — this package as
+  a brick in sheet 2's model in the round, sized by its authored files and
+  seated on what it peers

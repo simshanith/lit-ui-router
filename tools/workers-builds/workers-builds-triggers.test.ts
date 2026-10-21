@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import {
   existsSync,
+  mkdirSync,
   mkdtempSync,
   readFileSync,
   rmSync,
@@ -13,9 +14,15 @@ import { join } from 'node:path';
 import { describe, it } from 'node:test';
 
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
+import type { Json } from '@tools/bootstrap/types.ts';
 
-import { buildSteps } from './cloudflare-build.ts';
-import { DEPLOY_MODES } from './cloudflare-deploy.ts';
+import {
+  DEFAULT_SITE,
+  type Site,
+  buildSteps,
+  resolveSite,
+} from './cloudflare-build.ts';
+import { DEPLOY_MODES, deployCommands } from './cloudflare-deploy.ts';
 import {
   type Drift,
   type Trigger,
@@ -27,6 +34,14 @@ import {
   selectWorkers,
   workerNameFromConfig,
 } from './workers-builds-triggers.core.ts';
+
+const siteAt = (root: string, key: string): Site => {
+  const resolved = resolveSite(root, key);
+
+  if (!resolved.ok) assert.fail(resolved.error);
+
+  return resolved.site;
+};
 
 // Expected values live in the fixture so it doubles as documentation of the
 // API trigger shape. readFile keeps the root tsconfig free of JSON-import
@@ -75,6 +90,17 @@ const declaredPreviewLive: NonNullable<Trigger['environment_variables']> =
       ([key, value]) => [key, { value, is_secret: false }],
     ),
   );
+
+// A dashboard command is `<script> [mode] [site]`; a bare one names the docs site.
+const parseCommand = (command: string | undefined) => {
+  const [path = '', ...args] = (command ?? '').split(' ');
+
+  return { path, args };
+};
+
+const BUILD_SCRIPT = './tools/workers-builds/cloudflare-build.sh';
+
+const DEPLOY_SCRIPT = './tools/workers-builds/cloudflare-deploy.ts';
 
 describe('parseJsonc', () => {
   // Every entry's wranglerConfig has to name a real file with a real name: the
@@ -128,28 +154,45 @@ describe('desiredStateFromConfig', () => {
   // (like the deploy script exports its mode map), so the install is read
   // rather than grepped out of the source.
   it('pairs the skipped install with an install in every build command', () => {
-    // the repo root, not cwd: turbo runs this from the package directory
-    const steps = buildSteps(workspaceRoot, '/nonexistent/bin');
-    assert.ok(
-      steps.some(
-        ([command, args]) =>
-          command === 'pnpm' &&
-          args[0] === 'install' &&
-          args.includes('--frozen-lockfile'),
-      ),
-      `no frozen pnpm install among the build steps: ${JSON.stringify(steps)}`,
-    );
+    for (const worker of workers) {
+      for (const kind of ['production', 'preview'] as const) {
+        const { path, args } = parseCommand(worker[kind].build_command);
+        assert.equal(path, BUILD_SCRIPT);
+        assert.equal(
+          worker[kind].environment_variables?.SKIP_DEPENDENCY_INSTALL,
+          '1',
+        );
 
-    for (const kind of ['production', 'preview'] as const) {
-      assert.equal(
-        desired[kind].environment_variables?.SKIP_DEPENDENCY_INSTALL,
-        '1',
-      );
-      assert.equal(
-        desired[kind].build_command,
-        './tools/workers-builds/cloudflare-build.sh',
-      );
+        // the repo root, not cwd: turbo runs this from the package directory
+        const [key = DEFAULT_SITE, ...extra] = args;
+        assert.deepEqual(extra, [], `${worker.site} ${kind} build: extra args`);
+        assert.equal(key, worker.site, `${worker.site} ${kind} builds ${key}`);
+
+        const site = siteAt(workspaceRoot, key);
+        const steps = buildSteps(workspaceRoot, '/nonexistent/bin', site);
+
+        assert.ok(
+          steps.some(
+            ([command, stepArgs]) =>
+              command === 'pnpm' &&
+              stepArgs[0] === 'install' &&
+              stepArgs.includes('--frozen-lockfile'),
+          ),
+          `no frozen pnpm install among the build steps: ${JSON.stringify(steps)}`,
+        );
+        assert.deepEqual(steps.at(-1), [
+          'npx',
+          ['turbo', `@www/${worker.site}#build`],
+        ]);
+      }
     }
+  });
+
+  // The docs site's dashboard commands predate the site argument and hold
+  // still for every open branch, so they must keep naming it by default.
+  it('keeps the docs site on the bare dashboard commands', () => {
+    assert.equal(flagship.production.build_command, BUILD_SCRIPT);
+    assert.equal(flagship.preview.build_command, BUILD_SCRIPT);
   });
 
   // The .sh is a shim over the .ts, kept only because `build_command` is one
@@ -173,27 +216,50 @@ describe('desiredStateFromConfig', () => {
   // moves wrangler.jsonc changes the script, not the dashboard. So follow the
   // path here as well — a pinned path that names no file would break every
   // deploy, and the indirection is what makes that invisible from the config.
-  // The script exports its mode map, so the wrangler invocation is imported
-  // rather than re-read out of the script's source. This branch is that case:
-  // the site config moved into www/lit-ui-router.dev/, so both modes name it
-  // with --config and the dashboard value is unchanged.
-  it('points both deploy commands at the deploy script and the right mode', async () => {
-    const config = [
-      '--config',
-      'www/lit-ui-router.dev/wrangler.jsonc',
-    ] as const;
+  // The script exports its commands, so the wrangler invocation is imported
+  // rather than re-read out of the script's source.
+  it('points every deploy command at the deploy script, mode and site', async () => {
+    // The pinned path must name a real file: readFile rejects if it does not.
+    await readFile(join(workspaceRoot, DEPLOY_SCRIPT), 'utf8');
 
-    for (const [kind, mode, wrangler] of [
-      ['production', 'main', ['wrangler', 'deploy', ...config]],
-      ['preview', 'branch', ['wrangler', 'versions', 'upload', ...config]],
-    ] as const) {
-      const command = desired[kind].deploy_command ?? '';
-      const [path = '', arg] = command.split(' ');
-      assert.equal(path, './tools/workers-builds/cloudflare-deploy.ts');
-      assert.equal(arg, mode, `${kind} deploy command names the wrong mode`);
-      // The pinned path must name a real file: readFile rejects if it does not.
-      await readFile(join(workspaceRoot, path), 'utf8');
-      assert.deepEqual(DEPLOY_MODES[mode], wrangler);
+    for (const worker of workers) {
+      // the deploy derives the config from the site; the check reads it here
+      assert.equal(worker.wranglerConfig, `www/${worker.site}/wrangler.jsonc`);
+      const config = ['--config', worker.wranglerConfig];
+
+      for (const [kind, mode] of [
+        ['production', 'main'],
+        ['preview', 'branch'],
+      ] as const) {
+        const { path, args } = parseCommand(worker[kind].deploy_command);
+        const [argMode, key = DEFAULT_SITE, ...extra] = args;
+        assert.equal(path, DEPLOY_SCRIPT);
+        assert.equal(
+          argMode,
+          mode,
+          `${worker.site} ${kind} names the wrong mode`,
+        );
+        assert.deepEqual(extra, []);
+        assert.equal(key, worker.site);
+
+        const { migrations, deploy } = deployCommands(
+          workspaceRoot,
+          mode,
+          siteAt(workspaceRoot, key),
+        );
+
+        assert.deepEqual(deploy, [...DEPLOY_MODES[mode], ...config]);
+
+        for (const migration of migrations) {
+          assert.deepEqual(migration.slice(0, 4), [
+            'wrangler',
+            'd1',
+            'migrations',
+            'apply',
+          ]);
+          assert.deepEqual(migration.slice(-3), ['--remote', ...config]);
+        }
+      }
     }
   });
 
@@ -291,23 +357,27 @@ describe('selectWorkers', () => {
   ];
 
   it('returns every worker when nothing is selected', () => {
-    assert.deepEqual(selectWorkers(two, []), two);
+    assert.deepEqual(selectWorkers(two, []), { ok: true, workers: two });
   });
 
   it('keeps config order regardless of selection order', () => {
     assert.deepEqual(
       selectWorkers(two, ['atlas.lit-ui-router.dev', 'lit-ui-router.dev']),
-      two,
+      { ok: true, workers: two },
     );
-    assert.deepEqual(selectWorkers(two, ['atlas.lit-ui-router.dev']), [two[1]]);
+    assert.deepEqual(selectWorkers(two, ['atlas.lit-ui-router.dev']), {
+      ok: true,
+      workers: [two[1]],
+    });
   });
 
   // A typo must never select nothing: under --apply that reads as in sync.
-  it('throws on an unknown site, naming the configured ones', () => {
-    assert.throws(
-      () => selectWorkers(two, ['lit-ui-router.dev', 'atlas']),
-      /unknown site\(s\): atlas — configured: lit-ui-router\.dev, atlas\.lit-ui-router\.dev/,
-    );
+  it('fails on an unknown site, naming the configured ones', () => {
+    assert.deepEqual(selectWorkers(two, ['lit-ui-router.dev', 'atlas']), {
+      ok: false,
+      error:
+        'unknown site(s): atlas — configured: lit-ui-router.dev, atlas.lit-ui-router.dev',
+    });
   });
 });
 
@@ -534,55 +604,197 @@ describe('diffTriggers', () => {
 describe('cloudflare-deploy', () => {
   const script = join(import.meta.dirname, 'cloudflare-deploy.ts');
 
-  // Runs the script with a stub `npx` first on PATH, so the wrangler command
-  // is recorded rather than performed.
-  const runDeploy = (...args: string[]) => {
+  // Runs the script with a stub `npx` first on PATH, so each wrangler command
+  // is recorded, one per line, rather than performed. With FAIL_D1 set the
+  // stub fails every `wrangler d1` call.
+  const runDeploy = (args: string[], env: NodeJS.ProcessEnv = {}) => {
     const dir = mkdtempSync(join(tmpdir(), 'cloudflare-deploy-'));
     const record = join(dir, 'invoked');
 
     try {
       writeFileSync(
         join(dir, 'npx'),
-        `#!/bin/sh\nprintf '%s' "$*" > '${record}'\n`,
+        `#!/bin/sh\nprintf '%s\\n' "$*" >> '${record}'\n` +
+          `[ -n "$FAIL_D1" ] && [ "$1 $2" = 'wrangler d1' ] && exit 1\nexit 0\n`,
         { mode: 0o755 },
       );
 
       const result = spawnSync(process.execPath, [script, ...args], {
         encoding: 'utf8',
         // Only the stub on PATH: everything else the script runs is absolute.
-        env: { ...process.env, PATH: dir },
+        env: { ...process.env, ...env, PATH: dir },
       });
 
       return {
         status: result.status,
         stderr: result.stderr,
-        invoked: existsSync(record) ? readFileSync(record, 'utf8') : undefined,
+        invoked: existsSync(record)
+          ? readFileSync(record, 'utf8').trimEnd().split('\n')
+          : undefined,
       };
     } finally {
       rmSync(dir, { force: true, recursive: true });
     }
   };
 
-  it("runs the mode's wrangler command", () => {
-    for (const [mode, wrangler] of Object.entries(DEPLOY_MODES)) {
-      const { status, invoked } = runDeploy(mode);
-      assert.equal(status, 0, `${mode} exited non-zero`);
-      assert.equal(invoked, wrangler.join(' '));
+  it("runs each configured site's commands for each mode, deploy last", () => {
+    for (const worker of workers) {
+      const site = siteAt(workspaceRoot, worker.site);
+
+      for (const mode of ['main', 'branch'] as const) {
+        const { migrations, deploy } = deployCommands(
+          workspaceRoot,
+          mode,
+          site,
+        );
+
+        const { status, invoked } = runDeploy([mode, worker.site]);
+        assert.equal(status, 0, `${mode} ${worker.site} exited non-zero`);
+        assert.deepEqual(
+          invoked,
+          [...migrations, deploy].map((command) => command.join(' ')),
+        );
+      }
     }
   });
 
+  // The deploy must never run ahead of a schema it expects.
+  it('stops before the deploy when a migration fails', () => {
+    const migrated = workers.filter(
+      (worker) =>
+        deployCommands(
+          workspaceRoot,
+          'main',
+          siteAt(workspaceRoot, worker.site),
+        ).migrations.length > 0,
+    );
+
+    assert.ok(migrated.length > 0, 'no configured site migrates a database');
+
+    for (const worker of migrated) {
+      const { status, invoked } = runDeploy(['main', worker.site], {
+        FAIL_D1: '1',
+      });
+
+      assert.notEqual(status, 0);
+      assert.equal(
+        invoked?.length,
+        1,
+        `${worker.site}: ${invoked?.join('; ')}`,
+      );
+      assert.match(invoked?.[0] ?? '', /^wrangler d1 migrations apply /);
+    }
+  });
+
+  it('deploys the docs site when no site is named', () => {
+    const { status, invoked } = runDeploy(['main']);
+    assert.equal(status, 0);
+    assert.equal(
+      invoked?.at(-1),
+      'wrangler deploy --config www/lit-ui-router.dev/wrangler.jsonc',
+    );
+  });
+
   it('prints usage and exits 2 with no mode, without invoking wrangler', () => {
-    const { status, stderr, invoked } = runDeploy();
+    const { status, stderr, invoked } = runDeploy([]);
     assert.equal(status, 2);
-    assert.match(stderr, /usage: cloudflare-deploy\.ts <main\|branch>/);
+    assert.match(
+      stderr,
+      /usage: cloudflare-deploy\.ts <main\|branch> \[site\]/,
+    );
     assert.equal(invoked, undefined);
   });
 
-  // A stray extra argument must not silently deploy the mode in front of it.
-  it('prints usage and exits 2 on an extra argument', () => {
-    const { status, stderr, invoked } = runDeploy('main', 'unexpected');
-    assert.equal(status, 2);
-    assert.match(stderr, /usage: cloudflare-deploy\.ts <main\|branch>/);
-    assert.equal(invoked, undefined);
+  // A stray argument must not silently deploy some other site.
+  it('prints usage and exits 2 on an unknown site or an extra argument', () => {
+    for (const args of [
+      ['main', 'unexpected'],
+      ['main', 'nowhere.lit-ui-router.dev'],
+      ['main', '../lit-ui-router.dev'],
+      ['branch', DEFAULT_SITE, 'unexpected'],
+    ]) {
+      const { status, stderr, invoked } = runDeploy(args);
+      assert.equal(status, 2, args.join(' '));
+      assert.match(stderr, /usage: cloudflare-deploy\.ts <main\|branch>/);
+      assert.equal(invoked, undefined);
+    }
+  });
+
+  describe('deployCommands', () => {
+    const fixtureRoot = (wrangler: Json): string => {
+      const root = mkdtempSync(join(tmpdir(), 'cloudflare-deploy-site-'));
+      const dir = join(root, 'www', 'example.test');
+      mkdirSync(dir, { recursive: true });
+      writeFileSync(
+        join(dir, 'package.json'),
+        JSON.stringify({ name: '@www/example.test' }),
+      );
+      writeFileSync(join(dir, 'wrangler.jsonc'), JSON.stringify(wrangler));
+
+      return root;
+    };
+
+    const config = ['--config', 'www/example.test/wrangler.jsonc'];
+
+    it('migrates each D1 database with a migrations_dir before deploying', () => {
+      const root = fixtureRoot({
+        name: 'example',
+        d1_databases: [
+          { binding: 'A', database_name: 'a', migrations_dir: 'migrations' },
+          { binding: 'B', database_name: 'b' },
+          { binding: 'C', database_name: 'c', migrations_dir: 'c-migrations' },
+        ],
+      });
+
+      try {
+        const site = siteAt(root, 'example.test');
+        assert.deepEqual(deployCommands(root, 'main', site), {
+          migrations: [
+            [
+              'wrangler',
+              'd1',
+              'migrations',
+              'apply',
+              'a',
+              '--remote',
+              ...config,
+            ],
+            [
+              'wrangler',
+              'd1',
+              'migrations',
+              'apply',
+              'c',
+              '--remote',
+              ...config,
+            ],
+          ],
+          deploy: ['wrangler', 'deploy', ...config],
+        });
+        // a branch upload must never touch a remote database
+        assert.deepEqual(deployCommands(root, 'branch', site), {
+          migrations: [],
+          deploy: ['wrangler', 'versions', 'upload', ...config],
+        });
+      } finally {
+        rmSync(root, { force: true, recursive: true });
+      }
+    });
+
+    it('rejects a migrated database with no database_name', () => {
+      const root = fixtureRoot({
+        name: 'example',
+        d1_databases: [{ binding: 'A', migrations_dir: 'migrations' }],
+      });
+
+      try {
+        assert.throws(
+          () => deployCommands(root, 'main', siteAt(root, 'example.test')),
+          /d1_databases\.0\.database_name/,
+        );
+      } finally {
+        rmSync(root, { force: true, recursive: true });
+      }
+    });
   });
 });

@@ -71,9 +71,12 @@ const main = async (): Promise<void> => {
     return;
   }
 
-  try {
-    if (!(await stat(join(DIST, 'index.html'))).isFile()) throw new Error();
-  } catch {
+  const built = await stat(join(DIST, 'index.html')).then(
+    (stats) => stats.isFile(),
+    () => false,
+  );
+
+  if (!built) {
     fail(
       'www/lit-ui-router.dev/dist is not built — run `turbo run build --filter=@www/lit-ui-router.dev`',
     );
