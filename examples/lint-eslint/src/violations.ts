@@ -12,6 +12,8 @@ import {
   uiSrefActive,
 } from 'lit-ui-router';
 import '@spectrum-web-components/link/sp-link.js';
+import { uiSref as appSref } from '#router';
+import { uiSref as relativeSref } from './router.js';
 
 // lit-ui-router/sref-assign-href
 export const assignHref = html`
@@ -72,6 +74,15 @@ export const linkElements = html`
   <sp-link ${uiSref('about')}>About</sp-link>
   <!-- ✗ BAD: 'auto' assigns nothing to a tag HTML gives no href, so the link is dead -->
   <sp-link ${uiSref('about', undefined, { assignHref: 'auto' })}>About</sp-link>
+`;
+
+// settings.litUiRouterSources — `#router` is declared in eslint.config.js, so
+// the uiSref it re-exports counts as lit-ui-router's own
+export const litUiRouterSources = html`
+  <!-- ✓ GOOD: imported from '#router', the specifier the config lists -->
+  <a ${appSref('about')}>About</a>
+  <!-- ✗ BAD: the same module as './router.js', a specifier nobody listed -->
+  <a ${relativeSref('about')}>About</a>
 `;
 
 // lit-ui-router/sref-status-aria-current — the one pair that needs a host
