@@ -184,6 +184,7 @@ describe('lit-ui-router/context with @lit/context', () => {
       host.appendChild(seeker);
 
       expect(provider.value).toBe(router);
+      // eslint-disable-next-line typescript/no-deprecated -- the house ui-router-context path under test (#874)
       expect(UIRouterLitElement.seekRouter(seeker)).toBe(router);
     });
 

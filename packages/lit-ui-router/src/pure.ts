@@ -26,7 +26,7 @@ export {
   type TransitionEventType,
 } from './transition-controller.js';
 
-export { type UiRouterContextEvent, UIRouterLitElement } from './ui-router.js';
+export { UIRouterLitElement } from './ui-router.js';
 
 export { UiView } from './ui-view.js';
 
@@ -64,11 +64,14 @@ export {
   type SrefStatusControllerOptions,
 } from './sref-status-controller.js';
 
-// Deprecated plumbing (#873, #541): 2.0 deletes this block.
+// Deprecated plumbing (#873, #541, #874): 2.0 deletes this block.
 /* oxlint-disable typescript/no-deprecated -- the entry re-exports deprecated plumbing until 2.0 */
 export { isLitViewDeclarationTemplate, litViewsBuilder } from './core.js';
 
-export { type UiViewContextEvent } from './ui-router.js';
+export {
+  type UiRouterContextEvent,
+  type UiViewContextEvent,
+} from './ui-router.js';
 
 export { type UiViewAddress } from './ui-view.js';
 

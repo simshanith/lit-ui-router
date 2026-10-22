@@ -1,3 +1,4 @@
+// oxlint-disable typescript/no-deprecated -- the house ui-router-context path under test (#874)
 import { describe, it, expect, vi } from 'vitest';
 import { html } from 'lit';
 import { fixture, fixtureSync, oneEvent } from '@tools/lit-test-env/fixture.ts';

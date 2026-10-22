@@ -292,12 +292,14 @@ export class UiView extends LitElement {
     this.parentView = this.constructor.seekParentView(this);
   }
 
+  // eslint-disable-next-line typescript/no-deprecated -- the house ui-router-context path stays answered until 2.0 (#874)
   private readonly onUiRouterContextEvent = (event: UiRouterContextEvent) => {
     // Answering our own re-seek would just hand back the router we are replacing.
     if (this.seekingProvidedRouter) {
       return;
     }
 
+    // eslint-disable-next-line typescript/no-deprecated -- the house ui-router-context path stays answered until 2.0 (#874)
     UIRouterLitElement.onUiRouterContextEvent(this.uiRouter)(event);
   };
 
@@ -331,6 +333,7 @@ export class UiView extends LitElement {
     }
 
     this.addEventListener(
+      // eslint-disable-next-line typescript/no-deprecated -- the house ui-router-context path stays answered until 2.0 (#874)
       UIRouterLitElement.uiRouterContextEventName,
       // SAFETY: only `UiRouterContextEvent`s are dispatched under this name
       this.onUiRouterContextEvent as EventListener,

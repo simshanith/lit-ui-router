@@ -1,3 +1,4 @@
+// oxlint-disable typescript/no-deprecated -- the house ui-router-context path under test (#874)
 import {
   describe,
   it,

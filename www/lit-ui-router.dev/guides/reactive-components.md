@@ -78,7 +78,8 @@ one call and a no-op unsubscribe.
 `<ui-router>` also answers the house `ui-router-context` event, which
 [`UIRouterLitElement.seekRouter(element)`](/api/reference/components/UIRouterLitElement)
 dispatches, and core's controllers and directives fall back to it when no
-`context-request` provider answers.
+`context-request` provider answers. Both are deprecated in favour of
+`context-request`.
 
 `<ui-view>` answers the same way for its own key,
 [`parentUiViewContext`](/api/reference/core/parentUiViewContext): a
