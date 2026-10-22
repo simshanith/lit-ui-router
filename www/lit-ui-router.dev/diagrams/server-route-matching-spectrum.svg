@@ -1,0 +1,67 @@
+<svg viewBox="0 0 720 414" width="100%" style="max-width: 720px" role="img" aria-label="The server-support spectrum: six levels from memory location (no server story) up to a full-stack shared router, with the live mounts on lit-ui-router.dev" xmlns="http://www.w3.org/2000/svg">
+  <title>The server-support spectrum</title>
+  <defs>
+    <marker id="arr-spectrum" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0L8 4L0 8z" fill="var(--vp-c-text-3, #929295)" />
+    </marker>
+  </defs>
+  <g font-family="var(--vp-font-family-base, ui-sans-serif, system-ui, sans-serif)">
+    <!-- legend -->
+    <rect x="404" y="6" width="10" height="10" rx="3" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" stroke="var(--vp-c-brand-1, #3451b2)" stroke-width="0.75" />
+    <text x="420" y="15" font-size="11" fill="var(--vp-c-text-2, #67676c)">= live mount on lit-ui-router.dev</text>
+    <!-- axis -->
+    <line x1="24" y1="400" x2="24" y2="34" stroke="var(--vp-c-text-3, #929295)" stroke-width="1.25" marker-end="url(#arr-spectrum)" />
+    <text x="-214" y="18" font-size="11" fill="var(--vp-c-text-2, #67676c)" transform="rotate(-90)">what the app asks of its server</text>
+    <!-- L5 -->
+    <rect x="48" y="28" width="656" height="54" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect x="60" y="41" width="28" height="28" rx="14" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="74" y="60" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">5</text>
+    <text x="102" y="49" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">Path &#183; full-stack shared router</text>
+    <text x="102" y="68" font-size="12" fill="var(--vp-c-text-2, #67676c)">a real headless router replays every URL server-side</text>
+    <rect x="559" y="44" width="133" height="20" rx="6" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" />
+    <text x="625" y="58" font-size="11" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #3451b2)" text-anchor="middle">/simulated-routing</text>
+    <!-- L4 (flagship) -->
+    <rect x="48" y="90" width="656" height="54" rx="8" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" stroke="var(--vp-c-brand-1, #3451b2)" />
+    <rect x="60" y="103" width="28" height="28" rx="14" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-brand-1, #3451b2)" />
+    <text x="74" y="122" font-size="13" font-weight="600" fill="var(--vp-c-brand-1, #3451b2)" text-anchor="middle">4</text>
+    <text x="102" y="111" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">Path &#183; route-aware server</text>
+    <text x="102" y="130" font-size="12" fill="var(--vp-c-text-2, #67676c)">the server knows the routes: shells, redirects, real 404s</text>
+    <text x="692" y="107" font-size="11" font-weight="600" fill="var(--vp-c-brand-1, #3451b2)" text-anchor="end">&#9733; flagship</text>
+    <rect x="460" y="116" width="40" height="18" rx="6" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-brand-1, #3451b2)" stroke-width="0.75" />
+    <text x="480" y="129" font-size="11" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #3451b2)" text-anchor="middle">/app</text>
+    <rect x="506" y="116" width="74" height="18" rx="6" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-brand-1, #3451b2)" stroke-width="0.75" />
+    <text x="543" y="129" font-size="11" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #3451b2)" text-anchor="middle">/app-mobx</text>
+    <rect x="586" y="116" width="106" height="18" rx="6" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="639" y="129" font-size="11" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #3451b2)" text-anchor="middle">/not-found-spa</text>
+    <!-- L3 -->
+    <rect x="48" y="152" width="656" height="54" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect x="60" y="165" width="28" height="28" rx="14" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="74" y="184" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">3</text>
+    <text x="102" y="173" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">Path &#183; static error rules</text>
+    <text x="102" y="192" font-size="12" fill="var(--vp-c-text-2, #67676c)">honest 404s, but only for asset misses &#8212; can't judge deep links</text>
+    <text x="692" y="185" font-size="11" fill="var(--vp-c-text-2, #67676c)" text-anchor="end">per-mount 404.html</text>
+    <!-- L2 -->
+    <rect x="48" y="214" width="656" height="54" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect x="60" y="227" width="28" height="28" rx="14" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="74" y="246" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">2</text>
+    <text x="102" y="235" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">Path &#183; platform-default fallback</text>
+    <text x="102" y="254" font-size="12" fill="var(--vp-c-text-2, #67676c)">every path answers 200 with the shell &#8212; HTTP lies (soft-404s)</text>
+    <rect x="572" y="224" width="120" height="20" rx="6" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" />
+    <text x="632" y="238" font-size="11" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #3451b2)" text-anchor="middle">/not-found-naive</text>
+    <text x="692" y="260" font-size="11" font-weight="600" fill="var(--vp-c-red-1, #b8272c)" text-anchor="end">200 for everything</text>
+    <!-- L1 -->
+    <rect x="48" y="276" width="656" height="54" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect x="60" y="289" width="28" height="28" rx="14" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="74" y="308" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">1</text>
+    <text x="102" y="297" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">Hash location</text>
+    <text x="102" y="316" font-size="12" fill="var(--vp-c-text-2, #67676c)">the fragment never leaves the browser &#8212; any static host suffices</text>
+    <text x="692" y="309" font-size="11" fill="var(--vp-c-text-2, #67676c)" text-anchor="end">out of scope &#8212; by design</text>
+    <!-- L0 -->
+    <rect x="48" y="338" width="656" height="54" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect x="60" y="351" width="28" height="28" rx="14" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="74" y="370" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">0</text>
+    <text x="102" y="359" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">Memory location</text>
+    <text x="102" y="378" font-size="12" fill="var(--vp-c-text-2, #67676c)">no URL, no address bar &#8212; tests, embedded widgets, headless tooling</text>
+    <text x="692" y="371" font-size="11" fill="var(--vp-c-text-2, #67676c)" text-anchor="end">no server story to need</text>
+  </g>
+</svg>
