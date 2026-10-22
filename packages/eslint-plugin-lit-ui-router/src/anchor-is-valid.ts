@@ -323,12 +323,7 @@ const anchorIsValid: RuleFor<typeof RULE_NAME> = {
       if (removals === undefined) return undefined;
 
       return (fixer) => {
-        const sibling = siblingBinding(
-          fixer,
-          context.sourceCode,
-          callee,
-          'srefHref',
-        );
+        const sibling = siblingBinding(fixer, context, callee, 'srefHref');
 
         if (sibling === undefined) return null;
 

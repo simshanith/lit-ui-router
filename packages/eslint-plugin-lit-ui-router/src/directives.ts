@@ -55,10 +55,6 @@ const ARIA_CURRENT = new Set(['aria-current', '.aria-current', '.ariacurrent']);
 /** The import is what makes a `uiSref` call *ours*. */
 const LIT_UI_ROUTER = /^lit-ui-router(\/|$)/;
 
-/** Whether an import source is this library's, subpaths included. */
-export const isOurPackage = (source: string): boolean =>
-  LIT_UI_ROUTER.test(source);
-
 // Minimal views of the two ASTs these rules cross; eslint speaks ESTree and
 // parse5 nodes arrive untyped through the analyzer's visitor.
 export interface Node {
@@ -137,6 +133,32 @@ const isBoolean = <T>(value: T): value is T & boolean =>
 /** Given `lit-html/lit-html.js`, the package name `lit-html`. */
 const packageOf = (source: string): string =>
   source.split('/', source.startsWith('@') ? 2 : 1).join('/');
+
+/** Whether `source` is `entry` or one of its subpaths. */
+const isSubpathOf = (source: string, entry: string): boolean =>
+  source === entry || source.startsWith(`${entry}/`);
+
+/**
+ * Whether an import source is this library's, subpaths included, or a module
+ * `settings.litUiRouterSources` lists, matched as written and never resolved.
+ */
+const ourSourcesOf = (
+  context: Rule.RuleContext,
+): ((source: string) => boolean) => {
+  const { litUiRouterSources } = context.settings;
+
+  const listed: readonly unknown[] = Array.isArray(litUiRouterSources)
+    ? litUiRouterSources
+    : [];
+
+  const entries = listed.filter(
+    (entry): entry is string => isString(entry) && entry !== '',
+  );
+
+  return (source) =>
+    LIT_UI_ROUTER.test(source) ||
+    entries.some((entry) => isSubpathOf(source, entry));
+};
 
 /** The definition an identifier resolves to; `undefined` when it is unbound. */
 const definitionOf = (
@@ -328,12 +350,15 @@ export const propertyNamed = (
 };
 
 /** Named specifiers of every lit-ui-router import in this file. */
-const ourSpecifiers = (source: SourceCode) =>
+const ourSpecifiers = (
+  source: SourceCode,
+  isOurs: (source: string) => boolean,
+) =>
   source.ast.body.flatMap((statement) => {
     if (statement.type !== 'ImportDeclaration') return [];
     const from = statement.source.value;
 
-    if (!isString(from) || !isOurPackage(from)) return [];
+    if (!isString(from) || !isOurs(from)) return [];
 
     return statement.specifiers.filter(
       (specifier) => specifier.type === 'ImportSpecifier',
@@ -353,10 +378,12 @@ export interface SiblingBinding {
  */
 export const siblingBinding = (
   fixer: Rule.RuleFixer,
-  source: SourceCode,
+  context: Rule.RuleContext,
   callee: Node,
   name: string,
 ): SiblingBinding | undefined => {
+  const source = context.sourceCode;
+
   if (isMemberExpression(callee)) {
     // The same namespace already carries it, so no import to add.
     return {
@@ -365,7 +392,7 @@ export const siblingBinding = (
     };
   }
 
-  const specifiers = ourSpecifiers(source);
+  const specifiers = ourSpecifiers(source, ourSourcesOf(context));
 
   const existing = specifiers.find(
     ({ imported }) => imported.type === 'Identifier' && imported.name === name,
@@ -475,7 +502,7 @@ export const createDirectiveTracker = (
   const sources = new Set<unknown>([...DEFAULT_LIT_HTML_SOURCES, ...listed]);
 
   const isLitSource = (source: string) => sources.has(packageOf(source));
-  const isOurs = isOurPackage;
+  const isOurs = ourSourcesOf(context);
   // Falsy `litHtmlSources` means analyse every bare `html` tag, imported or not.
   let analyse = !litHtmlSources;
 

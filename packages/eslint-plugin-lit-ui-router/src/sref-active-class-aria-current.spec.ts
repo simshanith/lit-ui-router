@@ -340,6 +340,34 @@ clientTester.run(
   },
 );
 
+// `settings.litUiRouterSources`: the fix reaches the wrapper the way it reaches lit-ui-router.
+const sourcesTester = new RuleTester({
+  settings: { litUiRouterSources: ['~/registry/lit'] },
+  languageOptions: { ecmaVersion: 'latest', sourceType: 'module' },
+});
+
+sourcesTester.run(
+  'sref-active-class-aria-current (litUiRouterSources)',
+  srefActiveClassAriaCurrent,
+  {
+    valid: [
+      {
+        name: 'a module the list does not name is not ours',
+        code: "import { html } from 'lit';\nimport { srefActiveClass } from '~/registry/other';\nhtml`<a href=\"/home\" class=${srefActiveClass({ state: 'home' })}>Home</a>`;",
+      },
+    ],
+    invalid: [
+      {
+        name: "the fix extends the listed module's own import",
+        code: "import { html } from 'lit';\nimport { srefActiveClass } from '~/registry/lit';\nhtml`<a href=\"/home\" class=${srefActiveClass({ state: 'home' })}>Home</a>`;",
+        errors: [{ messageId: 'missingAriaCurrent' }],
+        output:
+          "import { html } from 'lit';\nimport { srefActiveClass, srefAriaCurrent } from '~/registry/lit';\nhtml`<a href=\"/home\" class=${srefActiveClass({ state: 'home' })} aria-current=${srefAriaCurrent({ state: 'home' })}>Home</a>`;",
+      },
+    ],
+  },
+);
+
 void describe('sref-active-class-aria-current meta', () => {
   void it('is fixable and takes the shared linkElements option', () => {
     assert.equal(srefActiveClassAriaCurrent.meta?.fixable, 'code');

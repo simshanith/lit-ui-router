@@ -494,6 +494,73 @@ gatedTester.run('anchor-is-valid (litHtmlSources array)', anchorIsValid, {
   ],
 });
 
+// `settings.litUiRouterSources`: listed modules' exports count as lit-ui-router's.
+const sourcesTester = new RuleTester({
+  settings: { litUiRouterSources: ['~/registry/lit', '@acme/router', 42, ''] },
+  languageOptions: { ecmaVersion: 'latest', sourceType: 'module' },
+});
+
+sourcesTester.run('anchor-is-valid (litUiRouterSources)', anchorIsValid, {
+  valid: [
+    {
+      name: "a listed module's uiSref assigns the href",
+      code: "import { html } from 'lit';\nimport { uiSref } from '~/registry/lit';\nhtml`<a ${uiSref('home')}>Home</a>`;",
+    },
+    {
+      name: 'a renamed binding from a listed module still counts',
+      code: "import { html } from 'lit';\nimport { uiSref as sref } from '@acme/router';\nhtml`<a ${sref('home')}>Home</a>`;",
+    },
+    {
+      name: 'a namespace import of a listed module still counts',
+      code: "import { html } from 'lit';\nimport * as router from '@acme/router';\nhtml`<a ${router.uiSref('home')}>Home</a>`;",
+    },
+    {
+      name: "a listed module's subpath counts, as lit-ui-router's do",
+      code: "import { html } from 'lit';\nimport { srefHref } from '@acme/router/links.js';\nhtml`<a href=${srefHref('home')}>Home</a>`;",
+    },
+    {
+      name: 'lit-ui-router itself still counts beside the list',
+      code: `${IMPORTS}html\`<a \${uiSref('home')}>Home</a>\`;`,
+    },
+  ],
+  invalid: [
+    {
+      name: 'a module the list does not name proves nothing',
+      code: "import { html } from 'lit';\nimport { uiSref } from '~/registry/other';\nhtml`<a ${uiSref('home')}>Home</a>`;",
+      errors: [{ messageId: 'noHrefErrorMessage' }],
+    },
+    {
+      name: 'a shared prefix is not a subpath',
+      code: "import { html } from 'lit';\nimport { uiSref } from '@acme/router-extras';\nhtml`<a ${uiSref('home')}>Home</a>`;",
+      errors: [{ messageId: 'noHrefErrorMessage' }],
+    },
+    {
+      name: 'specifiers match as written, so a relative path is not resolved',
+      code: "import { html } from 'lit';\nimport { uiSref } from '../registry/lit';\nhtml`<a ${uiSref('home')}>Home</a>`;",
+      errors: [{ messageId: 'noHrefErrorMessage' }],
+    },
+    {
+      name: "the fix extends the listed module's own import",
+      code: "import { html } from 'lit';\nimport { uiSref } from '~/registry/lit';\nhtml`<a ${uiSref('home')}>Home</a>`;",
+      options: SERVED,
+      errors: [{ messageId: 'noHrefErrorMessage' }],
+      output:
+        "import { html } from 'lit';\nimport { uiSref, srefHref } from '~/registry/lit';\nhtml`<a href=${srefHref('home')}>Home</a>`;",
+    },
+  ],
+});
+
+ruleTester.run('anchor-is-valid (litUiRouterSources unset)', anchorIsValid, {
+  valid: [],
+  invalid: [
+    {
+      name: "without the setting, a wrapper's uiSref proves nothing",
+      code: "import { html } from 'lit';\nimport { uiSref } from '~/registry/lit';\nhtml`<a ${uiSref('home')}>Home</a>`;",
+      errors: [{ messageId: 'noHrefErrorMessage' }],
+    },
+  ],
+});
+
 // Parity guard: eslint-plugin-lit-a11y 5.1.1's own
 // tests/lib/rules/anchor-is-valid.js, ported verbatim. Only the rule name and
 // the tester plumbing change — every messageId stays what upstream expects.

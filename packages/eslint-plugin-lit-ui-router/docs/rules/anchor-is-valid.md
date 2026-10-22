@@ -12,7 +12,7 @@
 
 An anchor counts as navigable through `href=${srefHref('state')}` too — the attribute-part sibling binds the `href` itself, so there is no `assignHref` to opt out of — and the directive placeholder is never read as a literal `href` value by the `invalidHref` check.
 
-An anchor counts as navigable when its `uiSref` is imported from `lit-ui-router` (a foreign package's `uiSref` proves nothing) and the call doesn't opt out of href assignment — only a literal `assignHref: false` is a definite no; `'auto'` assigns on a native `<a>`, and a non-literal option is unknowable, so both stay suppressed rather than guessed.
+An anchor counts as navigable when its `uiSref` is imported from `lit-ui-router` or a module [`settings.litUiRouterSources`](../../README.md#settings) lists (a foreign package's `uiSref` proves nothing) and the call doesn't opt out of href assignment — only a literal `assignHref: false` is a definite no; `'auto'` assigns on a native `<a>`, and a non-literal option is unknowable, so both stay suppressed rather than guessed.
 
 ## Examples
 
