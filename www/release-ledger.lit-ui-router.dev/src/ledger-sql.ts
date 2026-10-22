@@ -146,6 +146,28 @@ export const findPackages = Effect.gen(function* () {
   }));
 });
 
+/** Every version with its derived states and every dist-tag, as the reconcile check reads them. */
+export const findLedger = Effect.gen(function* () {
+  const sql = yield* SqlClient.SqlClient;
+
+  const versions = yield* SqlSchema.findAll({
+    Request: Schema.Void,
+    Result: LedgerVersionSchema,
+    execute: () =>
+      sql`${sql.literal(LEDGER_VERSIONS)} ORDER BY name, first_seen_at`,
+  })(undefined);
+
+  const distTags = yield* SqlSchema.findAll({
+    Request: Schema.Void,
+    Result: DistTagRowSchema,
+    execute: () => sql`SELECT * FROM dist_tags ORDER BY name, tag`,
+  })(undefined);
+
+  return { versions, distTags };
+});
+
+export type LedgerSnapshot = Effect.Success<typeof findLedger>;
+
 export const findClaim = (request: typeof MessageId.Type) =>
   Effect.gen(function* () {
     const sql = yield* SqlClient.SqlClient;

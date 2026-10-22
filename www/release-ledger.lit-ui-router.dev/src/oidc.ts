@@ -1,4 +1,4 @@
-// Verifies a GitHub Actions OIDC id-token and pins it to the publish workflow.
+// Verifies a GitHub Actions OIDC id-token and pins it to the publish or the read workflows.
 import { Schema } from 'effect';
 import {
   createRemoteJWKSet,
@@ -15,13 +15,17 @@ export const ISSUER = 'https://token.actions.githubusercontent.com';
 // Module scope, so each isolate caches GitHub's keys across requests.
 const GITHUB_KEYS = createRemoteJWKSet(new URL(`${ISSUER}/.well-known/jwks`));
 
-export interface OidcPolicy {
-  audience: string;
+/** The repository and workflows a token's run must come from. */
+export interface RunPolicy {
   repository: string;
   repositoryId: string;
   repositoryOwnerId: string;
   /** `job_workflow_ref` paths, without the `@<ref>` suffix. */
   workflows: readonly string[];
+}
+
+export interface OidcPolicy extends RunPolicy {
+  audience: string;
   environment: string;
 }
 
@@ -85,11 +89,10 @@ export function unverifiedClaims(token: string): OidcClaims {
 
 const workflowPath = (ref: string): string => ref.split('@refs/', 1)[0] ?? '';
 
-/** The reason the run may not claim `body`, or undefined when it may. */
-export function forbiddenReason(
+/** The pin the run breaks, or undefined when it comes from the policy's repository and workflows. */
+export function runForbiddenReason(
   claims: OidcClaims,
-  body: ClaimBody,
-  policy: Omit<OidcPolicy, 'audience'>,
+  policy: RunPolicy,
 ): string | undefined {
   if (claims.repository !== policy.repository) return 'repository';
 
@@ -103,9 +106,22 @@ export function forbiddenReason(
     return 'job_workflow_ref';
   }
 
-  if (claims.environment !== policy.environment) return 'environment';
-
   if (claims.event_name.startsWith('pull_request')) return 'event_name';
+
+  return undefined;
+}
+
+/** The reason the run may not claim `body`, or undefined when it may. */
+export function forbiddenReason(
+  claims: OidcClaims,
+  body: ClaimBody,
+  policy: Omit<OidcPolicy, 'audience'>,
+): string | undefined {
+  const run = runForbiddenReason(claims, policy);
+
+  if (run !== undefined) return run;
+
+  if (claims.environment !== policy.environment) return 'environment';
 
   if (
     claims.ref.startsWith('refs/tags/') &&

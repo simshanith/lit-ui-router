@@ -1,6 +1,7 @@
-// The release-ledger worker: `fetch` enqueues verified claims, `scheduled`
-// enqueues a sweep of every release tag, `queue` folds claims into D1, and
-// LedgerReader serves reads over a service binding.
+// The release-ledger worker: `fetch` enqueues verified claims and serves the
+// reconcile check's GET /ledger, `scheduled` enqueues a sweep of every release
+// tag, `queue` folds claims into D1, and LedgerReader serves reads over a
+// service binding.
 import { WorkerEntrypoint } from 'cloudflare:workers';
 import { D1Client } from '@effect/sql-d1';
 import { Effect, Layer, Option } from 'effect';
@@ -10,6 +11,7 @@ import type { Claim } from '../src/claim.ts';
 import { consume } from '../src/consume.ts';
 import { ingest } from '../src/ingest.ts';
 import {
+  findLedger,
   findPackages,
   findTagged,
   findVersions,
@@ -17,6 +19,7 @@ import {
   type LedgerVersion,
 } from '../src/ledger-sql.ts';
 import { ObserverLive } from '../src/observe.ts';
+import { LEDGER_PATH, readLedger } from '../src/read.ts';
 import { sweep } from '../src/sweep.ts';
 
 /** Secrets and local flags `wrangler types` cannot see in wrangler.jsonc. */
@@ -55,7 +58,10 @@ export class LedgerReader extends WorkerEntrypoint<LedgerEnv> {
 }
 
 export default {
-  fetch: (request, env) => ingest(request, env),
+  fetch: (request, env) =>
+    new URL(request.url).pathname === LEDGER_PATH
+      ? readLedger(request, env, findLedger.pipe(Effect.provide(database(env))))
+      : ingest(request, env),
   scheduled: (controller, env) =>
     Effect.runPromise(
       sweep(env, {
