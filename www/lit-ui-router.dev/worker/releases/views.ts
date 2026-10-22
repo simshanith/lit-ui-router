@@ -5,7 +5,7 @@ import type { TemplateResult } from 'lit';
 import type { RoutedLitTemplate, UIRouterLit } from 'lit-ui-router/pure';
 import { uiViewSlot } from 'lit-ui-router-ssr/client';
 
-import { isStable } from './ledger.ts';
+import { isStable, previousIn } from './ledger.ts';
 import type { LedgerPackage, LedgerVersion } from './ledger.ts';
 import { RELEASES_MOUNT } from './routes.ts';
 
@@ -26,6 +26,36 @@ const date = (iso: string | null): TemplateResult | string =>
 /** A row's GitHub release page; only GitHub's own release pages count. */
 export const releaseUrl = (row: LedgerVersion): string | null =>
   row.gh_url?.startsWith(`${REPOSITORY}/releases/`) ? row.gh_url : null;
+
+const tagOf = ({ name, version }: LedgerVersion): string =>
+  `${name}@${version}`;
+
+/** DiffsHub's compare between two tagged versions; it mirrors GitHub's compare url. */
+export const diffUrl = (
+  from: LedgerVersion,
+  to: LedgerVersion,
+): string | null =>
+  from.git_sha === null || to.git_sha === null
+    ? null
+    : `${REPOSITORY.replace('//github.com/', '//diffshub.com/')}/compare/${encodeURIComponent(tagOf(from))}...${encodeURIComponent(tagOf(to))}`;
+
+const diff = (
+  versions: readonly LedgerVersion[],
+  row: LedgerVersion,
+): TemplateResult | null => {
+  const previous = previousIn(versions, row);
+  const url = previous && diffUrl(previous, row);
+
+  return previous && url
+    ? html`<a href=${url}
+        ><span class="visually-hidden">Diff </span>from ${previous.version}<span
+          class="visually-hidden"
+        >
+          to ${row.version}</span
+        ></a
+      >`
+    : null;
+};
 
 const githubRelease = (row: LedgerVersion): TemplateResult | string => {
   const url = releaseUrl(row);
@@ -136,6 +166,7 @@ const packagePage = (
           <th scope="col">Status</th>
           <th scope="col">Published</th>
           <th scope="col">Notes</th>
+          <th scope="col">Diff</th>
         </tr>
       </thead>
       <tbody>
@@ -158,6 +189,7 @@ const packagePage = (
               <td>${row.status}</td>
               <td>${date(row.npm_published_at)}</td>
               <td>${githubRelease(row)}</td>
+              <td>${diff(versions, row) ?? '—'}</td>
             </tr>`,
         )}
       </tbody>
@@ -190,7 +222,7 @@ const npmFacts = (row: LedgerVersion): TemplateResult => {
 };
 
 const tagFacts = (row: LedgerVersion): TemplateResult => {
-  const tag = `${row.name}@${row.version}`;
+  const tag = tagOf(row);
 
   return row.git_sha === null
     ? html`<dt>Git tag</dt>
@@ -204,11 +236,23 @@ const tagFacts = (row: LedgerVersion): TemplateResult => {
         </dd>`;
 };
 
-/** `releases.package.version`: one version's facts, linking out to its GitHub release. */
-export const VersionView: RoutedLitTemplate<{ release: LedgerVersion }> = ({
-  router,
-  resolves: { release: row },
-}) => html`
+const diffFacts = (
+  versions: readonly LedgerVersion[],
+  row: LedgerVersion,
+): TemplateResult | typeof nothing => {
+  const link = diff(versions, row);
+
+  return link
+    ? html`<dt>Diff</dt>
+        <dd>${link} on DiffsHub</dd>`
+    : nothing;
+};
+
+/** `releases.package.version`: one version's facts, linking out to its GitHub release and its diff. */
+export const VersionView: RoutedLitTemplate<{
+  release: LedgerVersion;
+  versions: LedgerVersion[];
+}> = ({ router, resolves: { release: row, versions } }) => html`
   ${crumbs(router, [
     {
       label: row.name,
@@ -229,6 +273,7 @@ export const VersionView: RoutedLitTemplate<{ release: LedgerVersion }> = ({
           : html`, ${date(row.gh_published_at)}`
       }
     </dd>
+    ${diffFacts(versions, row)}
   </dl>
 `;
 

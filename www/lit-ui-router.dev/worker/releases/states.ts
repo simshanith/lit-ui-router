@@ -33,7 +33,10 @@ interface ResolvesOf {
   releases: { packages: readonly LedgerPackage[] };
   'releases.package': { versions: LedgerVersion[] };
   'releases.package.latest': { latest: LedgerVersion };
-  'releases.package.version': { release: LedgerVersion };
+  'releases.package.version': {
+    release: LedgerVersion;
+    versions: LedgerVersion[];
+  };
   githubRelease: { latest: LedgerVersion };
   notFound: object;
 }

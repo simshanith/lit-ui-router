@@ -37,6 +37,27 @@ export class NotInLedger extends Error {
 export const isStable = (version: string): boolean =>
   prerelease(version) === null;
 
+/**
+ * The version `row` follows in `versions` (newest first): the next older stable for a stable
+ * version, the next older of any kind for a prerelease, or null for the first.
+ */
+export const previousIn = (
+  versions: readonly LedgerVersion[],
+  row: LedgerVersion,
+): LedgerVersion | null => {
+  const at = versions.findIndex(({ version }) => version === row.version);
+
+  if (at === -1) return null;
+
+  const older = versions.slice(at + 1);
+
+  return (
+    (isStable(row.version)
+      ? older.find(({ version }) => isStable(version))
+      : older[0]) ?? null
+  );
+};
+
 /** Every package the ledger has recorded, with its npm `latest` row. */
 export const packagesOf =
   (ledger: LedgerReader) => (): Promise<readonly LedgerPackage[]> =>
