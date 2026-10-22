@@ -71,6 +71,8 @@ state that reads the query needs the function form — see
 
 [`UIRouterLit`](./reference/core/UIRouterLit) is the main router class. It extends `@uirouter/core`'s UIRouter with Lit-specific view handling.
 
+[`viewRendered(router, transition?)`](./reference/core/viewRendered) resolves once every `<ui-view>` registered with the router, and the element each one rendered, has completed its update for the transition. It waits on `updateComplete`, never on a frame — see [Component Lifecycle](/guides/component-lifecycle#after-the-transition-waiting-for-the-view-to-render).
+
 ### Components
 
 - [**`<ui-router>`**](./reference/components/UIRouterLitElement) - Root component that provides router context to descendants

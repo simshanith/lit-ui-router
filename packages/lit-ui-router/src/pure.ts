@@ -30,6 +30,8 @@ export { UIRouterLitElement } from './ui-router.js';
 
 export { UiView } from './ui-view.js';
 
+export { viewRendered } from './view-rendered.js';
+
 export {
   uiSref,
   UiSrefDirective,
