@@ -50,4 +50,9 @@ export const seams: [
     NavigationLocationPluginOptions['intercept'],
     ((event: UIRouterNavigateEvent) => NavigationInterceptOptions) | undefined
   >,
-] = [true, true, true, true, true, true, true];
+  // A traversal handler written against the platform's zero-argument handler still fits.
+  AssignableTo<
+    (event: NavigateEvent) => NavigationInterceptOptions,
+    NavigationLocationPluginOptions['interceptTraverse']
+  >,
+] = [true, true, true, true, true, true, true, true];

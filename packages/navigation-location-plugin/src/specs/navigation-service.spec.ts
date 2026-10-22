@@ -1,7 +1,12 @@
 /// <reference types="vitest/globals" />
 /// <reference types="@types/dom-navigation" />
 
-import { type LocationPlugin, servicesPlugin, UIRouter } from '@uirouter/core';
+import {
+  type LocationPlugin,
+  servicesPlugin,
+  type Transition,
+  UIRouter,
+} from '@uirouter/core';
 import type { Mock } from 'vitest';
 import {
   NavigationLocationService,
@@ -470,6 +475,19 @@ describe('NavigationLocationService (stubbed Navigation seam)', () => {
       await expect(interceptedHandler(event)()).resolves.toBeUndefined();
     });
 
+    it('hands the option handler no transition when the traversal started none', async () => {
+      const handler = vi.fn(async () => {});
+      service = new TestableService(router, {
+        interceptTraverse: () => ({ handler }),
+      });
+      const event = fakeTraverseEvent();
+      registeredInterceptor()(event);
+
+      await interceptedHandler(event)();
+
+      expect(handler).toHaveBeenCalledExactlyOnceWith(undefined);
+    });
+
     it('merges what the option returns over a manual focusReset and runs its handler after the wait', async () => {
       const handler = vi.fn(async () => {});
 
@@ -554,9 +572,9 @@ describe('NavigationLocationService (stubbed Navigation seam)', () => {
       }
 
       it.each(['slow', 'redirecting'])(
-        'settles once the transition to %s the traversal started settles',
+        'settles once the transition to %s the traversal started settles, and hands it to the option handler',
         async (state) => {
-          const handler = vi.fn(async () => {});
+          const handler = vi.fn(async (_transition?: Transition) => {});
           router.locationService = service = new TestableService(router, {
             interceptTraverse: () => ({ handler }),
           });
@@ -572,6 +590,7 @@ describe('NavigationLocationService (stubbed Navigation seam)', () => {
           await waiting;
           expect(router.globals.current.name).toBe('slow');
           expect(handler).toHaveBeenCalledOnce();
+          expect(handler.mock.calls[0]?.[0]?.to().name).toBe('slow');
         },
       );
 
