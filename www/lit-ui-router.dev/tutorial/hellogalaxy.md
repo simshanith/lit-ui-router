@@ -358,7 +358,7 @@ The complete source — including the full ten-star catalog and the deep-space s
 
 Here's how our states form a hierarchy:
 
-<!--@include: ../diagrams/hellogalaxy-nested-views.svg-->
+<!--@include: ../public/diagrams/hellogalaxy-nested-views.svg-->
 
 When navigating to `/galaxy/stars/sirius`:
 

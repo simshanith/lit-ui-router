@@ -32,7 +32,7 @@ full-stack system where the same router executes on both sides. Each level
 is defined by what the app asks of its server; find yours, and what moving
 up would buy.
 
-<!--@include: ../diagrams/server-route-matching-spectrum.svg-->
+<!--@include: ../public/diagrams/server-route-matching-spectrum.svg-->
 
 **Level 0 — memory location: no URL.** `memoryLocationPlugin` runs the
 router with no address bar at all — tests, embedded widgets, headless
@@ -207,7 +207,7 @@ min+gzip by its own esbuild probe:
 | `ui-router-server/location`   | yes (optional peer)                   | ~0.5 KiB min / ~0.3 KiB gzip        | a path-shaped in-memory location for a server-side router                              |
 | `ui-router-server/url-config` | no; it configures the router you pass | ~0.6 KiB min / ~0.4 KiB gzip        | one url config for the client router, the mounts, and a server render                  |
 
-<!--@include: ../diagrams/server-route-matching-package-tiers.svg-->
+<!--@include: ../public/diagrams/server-route-matching-package-tiers.svg-->
 
 The tiers' shape is measured, not aesthetic. Deep-importing
 `@uirouter/core` internals carves a matching-only consumer from 43 KiB gzip
@@ -269,7 +269,7 @@ on the scan.
 
 ## The projection: routes as data
 
-<!--@include: ../diagrams/server-route-matching-projection.svg-->
+<!--@include: ../public/diagrams/server-route-matching-projection.svg-->
 
 A server runtime cannot import the client's state definitions — they import
 components, which register custom elements at module scope. Instead, the
@@ -345,7 +345,7 @@ routes — through the real package API.
 
 ## The verdict
 
-<!--@include: ../diagrams/server-route-matching-verdict-flow.svg-->
+<!--@include: ../public/diagrams/server-route-matching-verdict-flow.svg-->
 
 `createServerRouter` compiles and validates every mount at construction —
 unknown redirect targets, cycles, and a bad `otherwise` target throw at
