@@ -2709,6 +2709,9 @@ importers:
       '@tools/bootstrap':
         specifier: catalog:workspace
         version: link:../bootstrap
+      '@tools/release-ledger':
+        specifier: catalog:workspace
+        version: link:../release-ledger
       '@tools/shared':
         specifier: catalog:workspace
         version: link:../shared

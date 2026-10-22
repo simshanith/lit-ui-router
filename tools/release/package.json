@@ -21,6 +21,7 @@
     "@arethetypeswrong/core": "catalog:",
     "@pnpm/types": "catalog:",
     "@tools/bootstrap": "catalog:workspace",
+    "@tools/release-ledger": "catalog:workspace",
     "@tools/shared": "catalog:workspace",
     "@tools/workers-builds": "catalog:workspace",
     "@types/node": "catalog:",
