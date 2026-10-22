@@ -128,7 +128,7 @@ catalogs:
     mobx-floor: npm:mobx@6.0.0
     signal-polyfill-floor: npm:signal-polyfill@0.2.0
   peerFloorEffect:
-    lit-ui-router-floor: npm:lit-ui-router@1.15.0
+    lit-ui-router-floor: npm:lit-ui-router@1.16.0
   peerFloorEslintPlugin:
     eslint-floor: npm:eslint@9.0.0
   peerFloorMobx:
@@ -153,7 +153,7 @@ catalogs:
     mobx: '^6.0.0 || ^7.0.0'
     signal-polyfill: ^0.2.0
   publishedPeerEffect:
-    lit-ui-router: ^1.15.0
+    lit-ui-router: ^1.16.0
     ui-router-effect: ^0.1.0
   publishedPeerMobx:
     lit-ui-router: ^1.15.0

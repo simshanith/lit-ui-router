@@ -2,7 +2,6 @@ import { SubscriptionRef } from 'effect';
 import { ReactiveControllerHost } from 'lit';
 import { isFunction, UIRouter } from '@uirouter/core';
 import { getScopedRouter, requestRouter } from 'lit-ui-router/context';
-import { UIRouterLitElement } from 'lit-ui-router/pure';
 import { routeRef, RouteSnapshot } from 'ui-router-effect';
 
 import { warnMissingRouter } from './dev-warn.js';
@@ -15,8 +14,8 @@ export interface RouterRefControllerOptions<T> extends RefControllerOptions<T> {
    * thunk returns `undefined`), the controller takes the router an enclosing
    * [`withRouterSync`](https://lit-ui-router.dev/api/reference/core/withRouterSync)
    * scoped at construction (a server render), and otherwise requests the
-   * router from the nearest enclosing `<ui-router>` element on
-   * `hostConnected` (via
+   * router from the nearest provider on `hostConnected` over
+   * `context-request` (via
    * [requestRouter](https://lit-ui-router.dev/api/reference/core/requestRouter)
    * with `subscribe: true`), and follows the router that provider hands it
    * later, such as the app's router replacing a served page's placeholder.
@@ -170,7 +169,7 @@ function subscribe(host: Element, followed: Followed): UIRouter | undefined {
     offered?.();
   };
 
-  return router ?? UIRouterLitElement.seekRouter(host);
+  return router;
 }
 
 function unsubscribe(followed: Followed): void {
