@@ -423,6 +423,9 @@ Cloudflare's `html_handling` answers before the worker runs, shadowing that
 verdict. The exhibits list their bare paths for the same reason plus one more:
 no asset exists there, so the whole prefix is the demo.
 
+[How this site runs](../about-this-site) maps the rest of lit-ui-router.dev
+around this worker: the static assets and the release-ledger worker.
+
 The routing side stays light in production, too: the deployed worker —
 handler, fetch adapter, the `mounts` table, and the headless router behind the
 simulate mount — gzips to a small fraction of even the free plan's Workers
@@ -431,6 +434,60 @@ task (a cached `wrangler deploy --dry-run`) prints the upload size, and
 `codecov:bundle` sends the same bundle to Codecov's size tracking as
 `docs-worker-esm`. The site itself ships as static assets through the
 binding, outside that budget entirely.
+
+### One request at a time
+
+Each diagram follows one request through the four lanes in production.
+
+#### Static page <span style="margin-left: 6px; padding: 0 6px; border-radius: 4px; font-family: var(--vp-font-family-mono); font-size: 12px; font-weight: 600; vertical-align: 2px; background: var(--vp-c-green-soft, rgba(16,185,129,0.14)); color: var(--vp-c-green-1, #18794e)">200</span>
+
+Not a `run_worker_first` path, and the file exists. The worker never runs.
+
+<!--@include: ../public/diagrams/server-route-matching-seq-1-static-page.svg-->
+
+#### Static miss <span style="margin-left: 6px; padding: 0 6px; border-radius: 4px; font-family: var(--vp-font-family-mono); font-size: 12px; font-weight: 600; vertical-align: 2px; background: var(--vp-c-yellow-soft, rgba(234,179,8,0.14)); color: var(--vp-c-yellow-1, #915930)">404</span>
+
+Not a `run_worker_first` path, and no file: `not_found_handling` serves the site’s `404.html`.
+
+<!--@include: ../public/diagrams/server-route-matching-seq-2-static-miss.svg-->
+
+#### App deep link <span style="margin-left: 6px; padding: 0 6px; border-radius: 4px; font-family: var(--vp-font-family-mono); font-size: 12px; font-weight: 600; vertical-align: 2px; background: var(--vp-c-green-soft, rgba(16,185,129,0.14)); color: var(--vp-c-green-1, #18794e)">200</span>
+
+A route in a mount: the verdict is `shell`, and the worker fetches the app shell through `ASSETS`. A revalidation that gets a 304 passes it on.
+
+<!--@include: ../public/diagrams/server-route-matching-seq-3-app-deep-link.svg-->
+
+#### App redirect <span style="margin-left: 6px; padding: 0 6px; border-radius: 4px; font-family: var(--vp-font-family-mono); font-size: 12px; font-weight: 600; vertical-align: 2px; background: var(--vp-c-indigo-soft, rgba(100,108,255,0.14)); color: var(--vp-c-indigo-1, #3451b2)">302</span>
+
+A redirect rule at the mount root: the verdict is `redirect`, and nothing is fetched from assets.
+
+<!--@include: ../public/diagrams/server-route-matching-seq-4-app-redirect.svg-->
+
+#### Unknown path, mount with `otherwise` <span style="margin-left: 6px; padding: 0 6px; border-radius: 4px; font-family: var(--vp-font-family-mono); font-size: 12px; font-weight: 600; vertical-align: 2px; background: var(--vp-c-yellow-soft, rgba(234,179,8,0.14)); color: var(--vp-c-yellow-1, #915930)">404</span>
+
+`/not-found-spa` declares an `otherwise`, so the verdict is the shell with status 404. The shell request goes without validators, so assets answer with a full body, never a 304.
+
+<!--@include: ../public/diagrams/server-route-matching-seq-5-unknown-path-otherwise.svg-->
+
+#### Unknown path, mount without `otherwise` <span style="margin-left: 6px; padding: 0 6px; border-radius: 4px; font-family: var(--vp-font-family-mono); font-size: 12px; font-weight: 600; vertical-align: 2px; background: var(--vp-c-yellow-soft, rgba(234,179,8,0.14)); color: var(--vp-c-yellow-1, #915930)">404</span>
+
+The verdict is `notFound` with a mount, and the worker serves that mount’s 404 page.
+
+<!--@include: ../public/diagrams/server-route-matching-seq-6-unknown-path-no-otherwise.svg-->
+
+#### No mount <span style="margin-left: 6px; padding: 0 6px; border-radius: 4px; font-family: var(--vp-font-family-mono); font-size: 12px; font-weight: 600; vertical-align: 2px; background: var(--vp-c-default-soft, rgba(142,150,170,0.14)); color: var(--vp-c-text-1, #3c3c43)">as served</span>
+
+The pass-through, for a worker-first path no mount owns: the verdict is `notFound` without a mount, the adapter returns `null`, and the worker hands the request to `ASSETS` unchanged.
+
+<!--@include: ../public/diagrams/server-route-matching-seq-7-no-mount.svg-->
+
+`vitepress dev` sends the sample-app navigations through the same verdicts
+with the `ui-router-server/vite` plugin, Vite standing in for Cloudflare and
+the assets: the plugin answers a redirect itself, and for a shell or a
+mount-owned 404 it rewrites the request to the HTML file and lets Vite serve
+it, as the site's
+[`.vitepress/vite.config.ts`](https://github.com/simshanith/lit-ui-router/blob/main/www/lit-ui-router.dev/.vitepress/vite.config.ts)
+sets up.
 
 ## Redirects: data until they need code
 
