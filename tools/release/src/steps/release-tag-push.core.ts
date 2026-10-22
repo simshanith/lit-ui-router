@@ -25,3 +25,22 @@ export function releaseTagName(packageName: string, version: string): string {
 export function pushTagArgs(tagName: string): string[] {
   return ['push', 'origin', `refs/tags/${tagName}`];
 }
+
+/**
+ * The job-summary line for a pushed (or dry-run) tag; links the tag page
+ * when the run's repository URL is known.
+ */
+export function tagPushSummary(
+  tagName: string,
+  dryRun: boolean,
+  repoUrl?: string,
+): string {
+  const ref = `\`${tagName}\``;
+
+  const label =
+    repoUrl === undefined
+      ? ref
+      : `[${ref}](${repoUrl}/releases/tag/${encodeURIComponent(tagName)})`;
+
+  return dryRun ? `🏷️ dry-run: would push ${label}\n` : `🏷️ pushed ${label}\n`;
+}
