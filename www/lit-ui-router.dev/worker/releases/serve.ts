@@ -124,7 +124,12 @@ const render = async (
     },
     renderShell: async (verdict, { subpath }) => {
       try {
-        const trans = await settle(router, subpath);
+        // prerender passes the path alone; response states read the search.
+        const trans = await settle(
+          router,
+          subpath + new URL(request.url).search,
+        );
+
         const respond = states.get(trans.$to().name)?.respond;
 
         if (respond) {

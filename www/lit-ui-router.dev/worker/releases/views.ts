@@ -5,7 +5,7 @@ import type { TemplateResult } from 'lit';
 import type { RoutedLitTemplate, UIRouterLit } from 'lit-ui-router/pure';
 import { uiViewSlot } from 'lit-ui-router-ssr/client';
 
-import { isStable, previousIn } from './ledger.ts';
+import { isStable, pickerPair, previousIn } from './ledger.ts';
 import type { LedgerPackage, LedgerVersion } from './ledger.ts';
 import { RELEASES_MOUNT } from './routes.ts';
 
@@ -38,6 +38,15 @@ export const diffUrl = (
   from.git_sha === null || to.git_sha === null
     ? null
     : `${REPOSITORY.replace('//github.com/', '//diffshub.com/')}/compare/${encodeURIComponent(tagOf(from))}...${encodeURIComponent(tagOf(to))}`;
+
+/** npmdiff.dev's diff between two versions published to npm. */
+export const npmdiffUrl = (
+  from: LedgerVersion,
+  to: LedgerVersion,
+): string | null =>
+  from.npm_integrity === null || to.npm_integrity === null
+    ? null
+    : `https://npmdiff.dev/${encodeURIComponent(from.name)}/${encodeURIComponent(from.version)}/${encodeURIComponent(to.version)}/`;
 
 const diff = (
   versions: readonly LedgerVersion[],
@@ -146,6 +155,59 @@ export const ReleasesView: RoutedLitTemplate<{
 }> = ({ router, resolves }) =>
   isLeaf(router, 'releases') ? indexPage(router, resolves.packages) : uiView();
 
+const versionOptions = (
+  versions: readonly LedgerVersion[],
+  selected: LedgerVersion | undefined,
+): TemplateResult[] =>
+  versions.map(
+    ({ version }) =>
+      html`<option value=${version} ?selected=${version === selected?.version}>
+        ${version}
+      </option>`,
+  );
+
+/** The form `releases.package.diff` answers, starting on `pickerPair`. */
+const compareForm = (
+  router: UIRouter,
+  pkg: string,
+  versions: readonly LedgerVersion[],
+): TemplateResult | typeof nothing => {
+  const { from, to } = pickerPair(versions);
+
+  return versions.length < 2
+    ? nothing
+    : html`<form
+        class="compare"
+        method="get"
+        action=${router.stateService.href('releases.package.diff', { pkg })}
+        aria-label="Compare two versions"
+      >
+        <label
+          >From
+          <select name="from">
+            ${versionOptions(versions, from)}
+          </select></label
+        >
+        <label
+          >To
+          <select name="to">
+            ${versionOptions(versions, to)}
+          </select></label
+        >
+        <fieldset>
+          <legend>Diff on</legend>
+          <label
+            ><input type="radio" name="via" value="diffshub" checked />
+            DiffsHub</label
+          >
+          <label
+            ><input type="radio" name="via" value="npmdiff" /> npmdiff</label
+          >
+        </fieldset>
+        <button type="submit">Compare</button>
+      </form>`;
+};
+
 const packagePage = (
   router: UIRouter,
   pkg: string,
@@ -158,6 +220,7 @@ const packagePage = (
     first. Its npm page is
     <a href=${`https://www.npmjs.com/package/${pkg}`}>${pkg} on npm</a>.
   </p>
+  ${compareForm(router, pkg, versions)}
   <div class="table">
     <table>
       <thead>

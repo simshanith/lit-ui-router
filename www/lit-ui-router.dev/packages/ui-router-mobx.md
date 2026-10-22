@@ -63,6 +63,10 @@ To manage a store yourself, call
 `new RouterStore()`. It returns the hook's deregistration function, and it
 throws if the store already mirrors a different router.
 
+## Releases
+
+<ReleaseDiffPicker name="ui-router-mobx" />
+
 ## Further reading
 
 - [API reference](/api/ui-router-mobx/)

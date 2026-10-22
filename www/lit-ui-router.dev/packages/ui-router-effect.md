@@ -113,6 +113,10 @@ for the moment it was taken:
 `includes()` evaluates against the snapshot, not the live router, so a
 selector asking during a later transition gets the settled answer.
 
+## Releases
+
+<ReleaseDiffPicker name="ui-router-effect" />
+
 ## Further reading
 
 - [API reference](/api/ui-router-effect/)

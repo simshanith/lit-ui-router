@@ -381,6 +381,10 @@ faster than the prefetch finishes to see the superseded one abort. Its log is a
 
 See the full [API reference](/api/navigation-location-plugin/).
 
+## Releases
+
+<ReleaseDiffPicker name="ui-router-navigation-location-plugin" />
+
 ## Further reading
 
 - [MDN — Navigation API](https://developer.mozilla.org/en-US/docs/Web/API/Navigation_API)

@@ -9,6 +9,7 @@ import LiveExample from './components/LiveExample.vue';
 import FrameworkSpectrum from './components/FrameworkSpectrum.vue';
 import FrameworkCards from './components/FrameworkCards.vue';
 import HeroInstall from './components/HeroInstall.vue';
+import ReleaseDiffPicker from './components/ReleaseDiffPicker.vue';
 
 export default {
   extends: DefaultTheme,
@@ -24,5 +25,6 @@ export default {
     app.component('LiveExample', LiveExample);
     app.component('FrameworkSpectrum', FrameworkSpectrum);
     app.component('FrameworkCards', FrameworkCards);
+    app.component('ReleaseDiffPicker', ReleaseDiffPicker);
   },
 } satisfies Theme;

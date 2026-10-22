@@ -384,6 +384,10 @@ Nor does it see which ids exist: a `:id` param
 matches any value, so narrow it to the known ids when the build can list them
 ([parameterized routes and soft 404s](/guides/server-route-matching#parameterized-routes-and-soft-404s)).
 
+## Releases
+
+<ReleaseDiffPicker name="ui-router-server" />
+
 ## Further reading
 
 - [API reference](/api/ui-router-server/) — every entry point, one module
