@@ -6,7 +6,7 @@ import type { RoutedLitTemplate, UIRouterLit } from 'lit-ui-router/pure';
 import { uiViewSlot } from 'lit-ui-router-ssr/client';
 
 import { isStable, pickerPair, previousIn } from './ledger.ts';
-import type { LedgerPackage, LedgerVersion } from './ledger.ts';
+import type { LedgerPackage, LedgerVersion, PublishedPair } from './ledger.ts';
 import { RELEASES_MOUNT } from './routes.ts';
 
 export const REPOSITORY = 'https://github.com/simshanith/lit-ui-router';
@@ -39,6 +39,15 @@ export const diffUrl = (
     ? null
     : `${REPOSITORY.replace('//github.com/', '//diffshub.com/')}/compare/${encodeURIComponent(tagOf(from))}...${encodeURIComponent(tagOf(to))}`;
 
+/** This site's diff of the files two versions published to npm. */
+export const filesDiffPath = (
+  from: LedgerVersion,
+  to: LedgerVersion,
+): string | null =>
+  from.npm_integrity === null || to.npm_integrity === null
+    ? null
+    : `${RELEASES_MOUNT}/${encodeURIComponent(from.name)}/diff/${encodeURIComponent(from.version)}...${encodeURIComponent(to.version)}/`;
+
 // Lucide's chevron-down: a <select> takes no pseudo-element, so the caret is a sibling.
 const caret = html`<svg
   aria-hidden="true"
@@ -55,9 +64,10 @@ const caret = html`<svg
 const diff = (
   versions: readonly LedgerVersion[],
   row: LedgerVersion,
+  compare = diffUrl,
 ): TemplateResult | null => {
   const previous = previousIn(versions, row);
-  const url = previous && diffUrl(previous, row);
+  const url = previous && compare(previous, row);
 
   return previous && url
     ? html`<a href=${url}
@@ -200,6 +210,17 @@ const compareForm = (
             >${caret}</span
           ></label
         >
+        <fieldset>
+          <legend>Diff</legend>
+          <label
+            ><input type="radio" name="via" value="diffshub" checked /> Git
+            source on DiffsHub</label
+          >
+          <label
+            ><input type="radio" name="via" value="files" /> Published
+            files</label
+          >
+        </fieldset>
         <button type="submit">
           Compare <span class="visually-hidden">(opens in a new tab)</span>
         </button>
@@ -301,12 +322,20 @@ const diffFacts = (
   versions: readonly LedgerVersion[],
   row: LedgerVersion,
 ): TemplateResult | typeof nothing => {
-  const link = diff(versions, row);
+  const source = diff(versions, row);
+  const files = diff(versions, row, filesDiffPath);
 
-  return link
-    ? html`<dt>Diff</dt>
-        <dd>${link} on DiffsHub</dd>`
-    : nothing;
+  return html`${
+    source
+      ? html`<dt>Diff</dt>
+          <dd>${source} on DiffsHub</dd>`
+      : nothing
+  }${
+    files
+      ? html`<dt>Published files</dt>
+          <dd>${files}</dd>`
+      : nothing
+  }`;
 };
 
 /** `releases.package.version`: one version's facts, linking out to its GitHub release and its diff. */
@@ -337,6 +366,71 @@ export const VersionView: RoutedLitTemplate<{
     ${diffFacts(versions, row)}
   </dl>
 `;
+
+/** `releases.package.compare`: the files two versions published to npm, diffed once on the server and rendered by `release-diff.ts`. */
+export const CompareView: RoutedLitTemplate<{
+  pair: PublishedPair;
+}> = ({ router, resolves: { pair } }) => {
+  const { name: pkg } = pair.to;
+  const range = `${pair.from.version}...${pair.to.version}`;
+  const source = diffUrl(pair.from, pair.to);
+
+  return html`
+    ${crumbs(router, [
+      { label: pkg, href: href(router, 'releases.package', { pkg }) },
+      { label: range },
+    ])}
+    <h1>${pkg} ${range}</h1>
+    <p>
+      The files npm published for each version, compared as
+      <code
+        >npm diff --diff=${pkg}@${pair.from.version}
+        --diff=${pkg}@${pair.to.version}</code
+      >
+      prints
+      them.${
+        source
+          ? html` The git source compare is
+              <a href=${source}>on DiffsHub</a>.`
+          : nothing
+      }
+    </p>
+    <section
+      class="npm-diff"
+      data-npm-diff
+      data-package=${pkg}
+      data-from=${pair.from.version}
+      data-to=${pair.to.version}
+      aria-label="Changed files"
+    >
+      <p class="diff-status" role="status">Loading the diff…</p>
+      <noscript
+        ><p>
+          The diff renders with JavaScript.
+          <a href="patch" download>Download the patch</a> instead.
+        </p></noscript
+      >
+      <fieldset class="diff-filter" hidden>
+        <legend>Show</legend>
+      </fieldset>
+      <p class="diff-note" role="status"></p>
+      <div class="diff-layout">
+        <nav class="diff-nav" aria-label="Files" hidden>
+          <button
+            type="button"
+            class="diff-nav-toggle"
+            aria-expanded="false"
+            aria-controls="diff-tree"
+          >
+            Files
+          </button>
+          <div class="diff-tree" id="diff-tree"></div>
+        </nav>
+        <ol class="diff-files"></ol>
+      </div>
+    </section>
+  `;
+};
 
 /** `notFound`: the mount's otherwise state, and any package or version the ledger lacks. */
 export const NotFoundView: RoutedLitTemplate = () => html`

@@ -29,6 +29,8 @@
     "@lit-labs/ssr": "catalog:",
     "@lit-labs/ssr-client": "catalog:",
     "@lit-labs/ssr-dom-shim": "catalog:",
+    "@pierre/diffs": "catalog:",
+    "@pierre/trees": "catalog:",
     "@uirouter/core": "catalog:",
     "examples": "catalog:workspace",
     "lit": "catalog:",

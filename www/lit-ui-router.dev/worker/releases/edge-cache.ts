@@ -1,4 +1,4 @@
-// Stale-while-revalidate over the Workers Cache API, which has none; it stores nothing on workers.dev or preview urls.
+// Stale-while-revalidate over the Workers Cache API, which has none, and immutable answers kept as is; it stores nothing on workers.dev or preview urls.
 
 /** The cache an answer goes in, the hook that lets a write outlive the response, and the clock that ages entries. */
 export interface EdgeCache {
@@ -42,10 +42,16 @@ const CLIENT_CACHE_CONTROL = 'X-Edge-Client-Cache-Control';
 // The Cache API keeps an entry for its Cache-Control max-age.
 const RETENTION = `public, max-age=${KEEP_MS / 1000}`;
 
+/** An immutable answer is kept for its own max-age and never refreshed. */
+const isImmutable = (cacheControl: string | null): boolean =>
+  cacheControl?.split(',').some((part) => part.trim() === 'immutable') ?? false;
+
 const stored = (response: Response, now: number): Response => {
   const headers = new Headers(response.headers);
-  headers.set(CLIENT_CACHE_CONTROL, headers.get('Cache-Control') ?? '');
-  headers.set('Cache-Control', RETENTION);
+  const client = headers.get('Cache-Control');
+  headers.set(CLIENT_CACHE_CONTROL, client ?? '');
+
+  if (!isImmutable(client)) headers.set('Cache-Control', RETENTION);
   headers.set(STORED_AT, String(now));
 
   return new Response(response.clone().body, {
@@ -89,13 +95,17 @@ const refresh = async (
   }
 };
 
-/** The answer cached at `key`: fresh as is, stale with a refresh behind it, else looked up and written back. */
+/** The answer cached at `key`: fresh or immutable as is, stale with a refresh behind it, else looked up and written back. */
 export const cached = async (
   edge: EdgeCache,
   key: Request,
   answer: () => Promise<Answer>,
 ): Promise<Response> => {
   const hit = await edge.cache.match(key);
+
+  if (hit !== undefined && isImmutable(hit.headers.get(CLIENT_CACHE_CONTROL)))
+    return served(hit);
+
   const age = hit === undefined ? Infinity : ageOf(hit, edge.now());
 
   if (hit !== undefined && age < KEEP_MS) {

@@ -97,6 +97,9 @@ const env: Env = {
   // SAFETY: the worker calls only the LedgerReader methods the fixture implements.
   // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- the fixture is a plain object, not a Service
   LEDGER: fixtureLedger as unknown as Env['LEDGER'],
+  // SAFETY: these mounts never reach the release diffs; a call would throw on the missing method.
+  // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- an empty object shares no members with the binding
+  RELEASE_DIFFS: {} as unknown as Env['RELEASE_DIFFS'],
   ASSETS: {
     connect: () => {
       throw new Error('the assets binding has no sockets');

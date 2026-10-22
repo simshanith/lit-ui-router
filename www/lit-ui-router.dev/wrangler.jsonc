@@ -52,5 +52,7 @@
       "service": "release-ledger",
       "entrypoint": "LedgerReader",
     },
+    // The release-diffs worker's default entrypoint: each pair's npm diff, built once into R2.
+    { "binding": "RELEASE_DIFFS", "service": "release-diffs" },
   ],
 }
