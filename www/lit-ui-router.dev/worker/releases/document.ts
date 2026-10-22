@@ -5,10 +5,15 @@ import { collectResult } from '@lit-labs/ssr/lib/render-result.js';
 /** The stylesheet the docs build emits from `release-pages.css` beside this module. */
 export const STYLESHEET = '/release-pages.css';
 
+/** The script the docs build emits from `release-diff.ts` beside this module. */
+export const DIFF_SCRIPT = '/release-diff.js';
+
 /** What the document's head says about the page. */
 export interface PageHead {
   title: string;
   description: string;
+  /** A module script the page loads. */
+  script?: string;
 }
 
 // @lit-labs/ssr's server-only `html`: it renders a doctype and binds inside `<title>`, where hydratable templates can't.
@@ -29,6 +34,7 @@ if (preference === 'auto' ? prefersDark : preference === 'dark') document.docume
 <meta name="description" content=${head.description}>
 <link rel="icon" href="/favicon.ico">
 <link rel="stylesheet" href=${STYLESHEET}>
+${head.script ? html`<script type="module" src=${head.script}></script>` : ''}
 </head>
 <body>
 <header class="site content-grid"><div>

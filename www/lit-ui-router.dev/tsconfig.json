@@ -12,6 +12,12 @@
     "declaration": true,
     "sourceMap": true
   },
-  "include": [".vitepress/**/*", "dev-port.ts", "scripts/**/*"],
+  // The diff page's client is browser code; the worker tsconfig never reaches it.
+  "include": [
+    ".vitepress/**/*",
+    "dev-port.ts",
+    "scripts/**/*",
+    "worker/releases/release-diff.ts"
+  ],
   "exclude": ["node_modules", "dist", "**/*.spec.ts"]
 }

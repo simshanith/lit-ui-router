@@ -105,6 +105,13 @@
       // inputs would miss worker/**, so over-approximate.
       "inputs": ["$TURBO_DEFAULT$"]
     },
+    // The diff page's npm diff against the npm CLI, both reading the npm
+    // registry: the network and the host's npm are inputs no key can name, so
+    // uncached. In no ci:* graph: the Acceptance workflow's
+    // `acceptance (npm-diff)` job runs it.
+    "test:npm-diff": {
+      "cache": false
+    },
     "typecheck:worker": {
       "dependsOn": ["^build:types", "types:worker"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tsconfig.base.json"]

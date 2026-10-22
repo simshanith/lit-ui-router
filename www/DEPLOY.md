@@ -382,7 +382,12 @@ The worker renders `/releases/` and the pages under it from the
 urls GitHub lacks, such as `/gh/releases/<pkg>/latest`, a redirect to that
 package's latest GitHub release. The route tables are
 [`worker/releases/routes.ts`](lit-ui-router.dev/worker/releases/routes.ts).
-Preview uploads bind the production ledger the same way. Locally the binding
+`/releases/<pkg>/diff/<from>...<to>/` is a shell the worker validates against
+the ledger; its one script, `/release-diff.js`, fetches both tarballs from the
+npm registry and renders the patch `npm diff` would print. The docs build
+emits that script from
+[`worker/releases/release-diff.ts`](lit-ui-router.dev/worker/releases/release-diff.ts)
+in a Vite build of its own (`.vitepress/vite.config.ts`). Preview uploads bind the production ledger the same way. Locally the binding
 reaches only a ledger running in another dev process, and the pages answer 503
 without one. To serve fixture rows, pass both configs, the docs worker's first:
 

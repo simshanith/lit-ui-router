@@ -75,6 +75,12 @@ td, time { font-variant-numeric: tabular-nums; }
 .compare select { color: var(--vp-c-text-1); background: var(--vp-c-bg-soft); border: 1px solid var(--vp-c-divider); font-variant-numeric: tabular-nums; }
 .compare button { color: var(--vp-button-brand-text); background: var(--vp-button-brand-bg); border: 1px solid var(--vp-button-brand-border); font-weight: 600; }
 .compare button:active { background: var(--vp-button-brand-active-bg); }
+.npm-diff { margin-block-start: 1.5rem; }
+.diff-status { color: var(--vp-c-text-2); }
+.diff-files { list-style: none; padding: 0; margin: 0; display: grid; gap: 1rem; }
+.diff-files diffs-container { display: block; border: 1px solid var(--vp-c-divider); border-radius: 8px; overflow: clip; --diffs-font-family: var(--vp-font-family-mono); --diffs-header-font-family: var(--vp-font-family-base); --diffs-font-size: 13px; --diffs-fg-number-override: light-dark(#59636e, #9198a1); --diffs-fg-number-addition-override: light-dark(#116329, #7ee787); --diffs-fg-number-deletion-override: light-dark(#a40e26, #ffa198); }
+/* Light tints under which the theme's comment gray keeps 4.5:1. */
+:root:not(.dark) .diff-files diffs-container { --diffs-bg-addition-override: #f5fbf6; --diffs-bg-addition-emphasis-override: #e8f8ea; --diffs-bg-deletion-override: #fff8f7; --diffs-bg-deletion-emphasis-override: #fff1f0; }
 .visually-hidden { position: absolute; inline-size: 1px; block-size: 1px; overflow: clip; clip-path: inset(50%); white-space: nowrap; }
 footer { border-block-start: 1px solid var(--vp-c-divider); background: var(--vp-c-bg-soft); color: var(--vp-c-text-2); font-size: 0.875rem; padding-block: 1rem; }
 ui-router, ui-view { display: contents; }

@@ -7,7 +7,7 @@ import { prerender, settle } from 'lit-ui-router-ssr';
 import { createServerRouter, mergeSearch } from 'ui-router-server';
 import { installServerLocation } from 'ui-router-server/location';
 
-import { type PageHead, releaseDocument } from './document.ts';
+import { DIFF_SCRIPT, type PageHead, releaseDocument } from './document.ts';
 import { type Answer, cached, type EdgeCache } from './edge-cache.ts';
 import { type LedgerReader, NotInLedger } from './ledger.ts';
 import { mounts, urlConfig } from './routes.ts';
@@ -26,6 +26,16 @@ const headOf = (router: UIRouterLit): PageHead => {
   const { current, params } = router.globals;
   const pkg = String(params.pkg);
   const version = String(params.version);
+
+  if (current.name === 'releases.package.compare') {
+    const [from, to] = [String(params.from), String(params.to)];
+
+    return {
+      title: `${pkg} ${from}...${to}`,
+      description: `What changed in the files ${pkg} published to npm between ${from} and ${to}.`,
+      script: DIFF_SCRIPT,
+    };
+  }
 
   if (current.name === 'releases.package.version')
     return {

@@ -6,7 +6,7 @@ import type { RoutedLitTemplate, UIRouterLit } from 'lit-ui-router/pure';
 import { uiViewSlot } from 'lit-ui-router-ssr/client';
 
 import { isStable, pickerPair, previousIn } from './ledger.ts';
-import type { LedgerPackage, LedgerVersion } from './ledger.ts';
+import type { LedgerPackage, LedgerVersion, PublishedPair } from './ledger.ts';
 import { RELEASES_MOUNT } from './routes.ts';
 
 export const REPOSITORY = 'https://github.com/simshanith/lit-ui-router';
@@ -39,21 +39,22 @@ export const diffUrl = (
     ? null
     : `${REPOSITORY.replace('//github.com/', '//diffshub.com/')}/compare/${encodeURIComponent(tagOf(from))}...${encodeURIComponent(tagOf(to))}`;
 
-/** npmdiff.dev's diff between two versions published to npm. */
-export const npmdiffUrl = (
+/** This site's diff of the files two versions published to npm. */
+export const filesDiffPath = (
   from: LedgerVersion,
   to: LedgerVersion,
 ): string | null =>
   from.npm_integrity === null || to.npm_integrity === null
     ? null
-    : `https://npmdiff.dev/${encodeURIComponent(from.name)}/${encodeURIComponent(from.version)}/${encodeURIComponent(to.version)}/`;
+    : `${RELEASES_MOUNT}/${encodeURIComponent(from.name)}/diff/${encodeURIComponent(from.version)}...${encodeURIComponent(to.version)}/`;
 
 const diff = (
   versions: readonly LedgerVersion[],
   row: LedgerVersion,
+  compare = diffUrl,
 ): TemplateResult | null => {
   const previous = previousIn(versions, row);
-  const url = previous && diffUrl(previous, row);
+  const url = previous && compare(previous, row);
 
   return previous && url
     ? html`<a href=${url}
@@ -195,13 +196,14 @@ const compareForm = (
           </select></label
         >
         <fieldset>
-          <legend>Diff on</legend>
+          <legend>Diff</legend>
           <label
-            ><input type="radio" name="via" value="diffshub" checked />
-            DiffsHub</label
+            ><input type="radio" name="via" value="diffshub" checked /> Git
+            source on DiffsHub</label
           >
           <label
-            ><input type="radio" name="via" value="npmdiff" /> npmdiff</label
+            ><input type="radio" name="via" value="files" /> Published
+            files</label
           >
         </fieldset>
         <button type="submit">Compare</button>
@@ -303,12 +305,20 @@ const diffFacts = (
   versions: readonly LedgerVersion[],
   row: LedgerVersion,
 ): TemplateResult | typeof nothing => {
-  const link = diff(versions, row);
+  const source = diff(versions, row);
+  const files = diff(versions, row, filesDiffPath);
 
-  return link
-    ? html`<dt>Diff</dt>
-        <dd>${link} on DiffsHub</dd>`
-    : nothing;
+  return html`${
+    source
+      ? html`<dt>Diff</dt>
+          <dd>${source} on DiffsHub</dd>`
+      : nothing
+  }${
+    files
+      ? html`<dt>Published files</dt>
+          <dd>${files}</dd>`
+      : nothing
+  }`;
 };
 
 /** `releases.package.version`: one version's facts, linking out to its GitHub release and its diff. */
@@ -339,6 +349,51 @@ export const VersionView: RoutedLitTemplate<{
     ${diffFacts(versions, row)}
   </dl>
 `;
+
+/** `releases.package.compare`: the files two versions published to npm, diffed in the browser by `release-diff.ts`. */
+export const CompareView: RoutedLitTemplate<{
+  pair: PublishedPair;
+}> = ({ router, resolves: { pair } }) => {
+  const { name: pkg } = pair.to;
+  const range = `${pair.from.version}...${pair.to.version}`;
+  const source = diffUrl(pair.from, pair.to);
+
+  return html`
+    ${crumbs(router, [
+      { label: pkg, href: href(router, 'releases.package', { pkg }) },
+      { label: range },
+    ])}
+    <h1>${pkg} ${range}</h1>
+    <p>
+      The files npm published for each version, compared as
+      <code
+        >npm diff --diff=${pkg}@${pair.from.version}
+        --diff=${pkg}@${pair.to.version}</code
+      >
+      prints
+      them.${
+        source
+          ? html` The git source compare is
+              <a href=${source}>on DiffsHub</a>.`
+          : nothing
+      }
+    </p>
+    <section
+      class="npm-diff"
+      data-npm-diff
+      data-package=${pkg}
+      data-from=${pair.from.version}
+      data-to=${pair.to.version}
+      aria-label="Changed files"
+    >
+      <p class="diff-status" role="status">Loading both versions from npm…</p>
+      <noscript
+        ><p>The diff is built in the browser with JavaScript.</p></noscript
+      >
+      <ol class="diff-files"></ol>
+    </section>
+  `;
+};
 
 /** `notFound`: the mount's otherwise state, and any package or version the ledger lacks. */
 export const NotFoundView: RoutedLitTemplate = () => html`

@@ -11,14 +11,16 @@ import {
   latestOf,
   NotInLedger,
   packagesOf,
+  type PublishedPair,
   versionIn,
   versionsOf,
 } from './ledger.ts';
 import { GH_MOUNT, ghRoutes, RELEASES_MOUNT, releaseRoutes } from './routes.ts';
 import {
+  CompareView,
   diffUrl,
+  filesDiffPath,
   NotFoundView,
-  npmdiffUrl,
   PackageView,
   ReleasesView,
   releaseUrl,
@@ -37,6 +39,9 @@ interface ResolvesOf {
   'releases.package': { versions: LedgerVersion[] };
   'releases.package.latest': { latest: LedgerVersion };
   'releases.package.diff': { compare: string };
+  'releases.package.compare': {
+    pair: PublishedPair;
+  };
   'releases.package.version': {
     release: LedgerVersion;
     versions: LedgerVersion[];
@@ -81,7 +86,7 @@ const diffParamsOf = (trans: Transition) =>
 
 const COMPARES = new Map([
   ['diffshub', diffUrl],
-  ['npmdiff', npmdiffUrl],
+  ['files', filesDiffPath],
 ]);
 
 /** The url `via` compares `from` with `to` at, or a `NotInLedger` rejection when either is unknown or lacks what `via` needs. */
@@ -97,6 +102,22 @@ const compareIn = (
   if (!url) throw new NotInLedger(`${pkg}@${from}...${to} via ${via}`);
 
   return url;
+};
+
+/** Both versions' rows, or a `NotInLedger` rejection when either is unknown or never reached npm. */
+const publishedPairIn = (
+  versions: readonly LedgerVersion[],
+  { pkg, from, to }: ReturnType<typeof diffParamsOf>,
+): PublishedPair => {
+  const pair: PublishedPair = {
+    from: versionIn(versions, { pkg, version: from }),
+    to: versionIn(versions, { pkg, version: to }),
+  };
+
+  if (filesDiffPath(pair.from, pair.to) === null)
+    throw new NotInLedger(`${pkg}@${from}...${to} on npm`);
+
+  return pair;
 };
 
 const versionPath = ({ name, version }: LedgerVersion): string =>
@@ -148,8 +169,19 @@ const attach = (ledger: LedgerReader): Attached => ({
           compareIn(versions, diffParamsOf(trans)),
       },
     ],
-    // It leaves the site, so the search stays behind.
+    // The search only names the pair, which the target spells in its own url.
     respond: ({ resolves }) => found(resolves.compare),
+  },
+  'releases.package.compare': {
+    component: CompareView,
+    resolve: [
+      {
+        token: 'pair',
+        deps: ['versions', '$transition$'],
+        resolveFn: (versions: LedgerVersion[], trans: Transition) =>
+          publishedPairIn(versions, diffParamsOf(trans)),
+      },
+    ],
   },
   'releases.package.version': {
     component: VersionView,
