@@ -20,15 +20,13 @@ import {
 } from './sref-internals.js';
 import type { UiSrefElement } from './sref-internals.js';
 
-// re-export: `inLitDevMode` ships in the public d.ts (#541)
-export { inLitDevMode };
-
 export {
-  UI_SREF_TARGET_EVENT,
-  UI_SREF_TARGET_REMOVED_EVENT,
-} from './sref-internals.js';
-
-export type { UiSrefElement, UiSrefTargetEvent } from './sref-internals.js';
+  /**
+   * @internal
+   * @deprecated Dev-warning plumbing, not a supported import (#541).
+   */
+  inLitDevMode,
+};
 
 export {
   /**
@@ -66,6 +64,29 @@ export {
    * @deprecated Directive plumbing, not a supported import.
    */
   uiSrefTargetRemovedEvent,
+  /**
+   * @internal
+   * @deprecated Directive plumbing, not a supported import (#541).
+   */
+  UI_SREF_TARGET_EVENT,
+  /**
+   * @internal
+   * @deprecated Directive plumbing, not a supported import (#541).
+   */
+  UI_SREF_TARGET_REMOVED_EVENT,
+} from './sref-internals.js';
+
+export type {
+  /**
+   * @internal
+   * @deprecated Directive plumbing, not a supported import (#541).
+   */
+  UiSrefElement,
+  /**
+   * @internal
+   * @deprecated Directive plumbing, not a supported import (#541).
+   */
+  UiSrefTargetEvent,
 } from './sref-internals.js';
 
 /**

@@ -7,11 +7,14 @@ import {
   uiSrefActive,
   UiSrefActiveDirective,
   SrefStatus,
+} from '../ui-sref-active.js';
+import {
+  mergeSrefStatus,
   TransitionStateChange,
   TRANSITION_STATE_CHANGE_EVENT,
-} from '../ui-sref-active.js';
-import { mergeSrefStatus } from '../sref-internals.js';
-import { uiSref, UI_SREF_TARGET_EVENT } from '../ui-sref.js';
+  UI_SREF_TARGET_EVENT,
+} from '../sref-internals.js';
+import { uiSref } from '../ui-sref.js';
 import { UIRouterLitElement } from '../ui-router.js';
 import '../ui-view.register.js';
 import { UIRouterLit } from '../core.js';

@@ -3,14 +3,13 @@ import { html, render, TemplateResult } from 'lit';
 import { RejectType, TargetState, type RawParams } from '@uirouter/core';
 import { PartInfo, PartType } from 'lit/directive.js';
 
+import { uiSref, UiSrefDirective } from '../ui-sref.js';
 import {
-  uiSref,
-  UiSrefDirective,
   UiSrefElement,
   UI_SREF_TARGET_EVENT,
   UiSrefTargetEvent,
-} from '../ui-sref.js';
-import { uiSrefTargetEvent } from '../sref-internals.js';
+  uiSrefTargetEvent,
+} from '../sref-internals.js';
 import { UIRouterLitElement } from '../ui-router.js';
 import '../ui-view.register.js';
 import { UIRouterLit } from '../core.js';

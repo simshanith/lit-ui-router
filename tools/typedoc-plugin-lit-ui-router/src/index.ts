@@ -201,6 +201,17 @@ const CATEGORIZED_KINDS =
   ReflectionKind.Enum;
 
 /**
+ * Whether `@category` is on the reflection or, for a function, on a signature —
+ * where TypeDoc keeps a function declaration's comment.
+ */
+function hasCategoryTag(reflection: DeclarationReflection): boolean {
+  return [
+    reflection.comment,
+    ...reflection.getNonIndexSignatures().map((sig) => sig.comment),
+  ].some((comment) => comment?.getTag('@category'));
+}
+
+/**
  * Warn on any top-level export missing `@category`; such exports silently fall
  * into `--defaultCategory` and get their own sidebar group. With
  * `treatWarningsAsErrors` this fails the build; packages opt out by not setting it.
@@ -215,7 +226,7 @@ function checkCategoryTags(context: Context, app: Application): void {
 
       if (!child.kindOf(CATEGORIZED_KINDS)) continue;
 
-      if (!child.comment?.getTag('@category')) {
+      if (!hasCategoryTag(child)) {
         app.logger.warn(
           `[lit-ui-router] ${child.getFriendlyFullName()} has no @category tag`,
         );

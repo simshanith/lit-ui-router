@@ -17,6 +17,9 @@ import {
   mergeSrefStatus,
   srefStatus,
   toAriaCurrentValues,
+  TransEvt,
+  TRANSITION_STATE_CHANGE_EVENT,
+  TransitionStateChange,
   UiSrefElement,
   UiSrefTargetEvent,
   UI_SREF_TARGET_EVENT,
@@ -35,33 +38,25 @@ export {
    * @deprecated Directive plumbing, not a supported import.
    */
   srefStatus,
+  /**
+   * @internal
+   * @deprecated Directive plumbing, not a supported import (#541).
+   */
+  TRANSITION_STATE_CHANGE_EVENT,
+  /**
+   * @internal
+   * @deprecated Directive plumbing, not a supported import (#541).
+   */
+  TransitionStateChange,
 } from './sref-internals.js';
 
-/** @internal */
-export interface TransEvt {
-  evt: string;
-  trans: Transition;
-  status?: SrefStatus;
-}
-
-/**
- * Event name dispatched when a transition state changes.
- * @internal
- */
-export const TRANSITION_STATE_CHANGE_EVENT = 'transitionStateChange';
-
-/**
- * Enum representing the different stages of a transition.
- * @internal
- */
-export enum TransitionStateChange {
-  /** Transition has started */
-  start = 'start',
-  /** Transition completed successfully */
-  success = 'success',
-  /** Transition failed with an error */
-  error = 'error',
-}
+export type {
+  /**
+   * @internal
+   * @deprecated Directive plumbing, not a supported import (#541).
+   */
+  TransEvt,
+} from './sref-internals.js';
 
 /**
  * Status object representing the active state of a uiSref link.
