@@ -53,7 +53,7 @@ const NATIVE_LINKS = new Set(['a', 'area']);
 const ARIA_CURRENT = new Set(['aria-current', '.aria-current', '.ariacurrent']);
 
 /** The import is what makes a `uiSref` call *ours*. */
-const LIT_UI_ROUTER = /^lit-ui-router(\/|$)/;
+const LIT_UI_ROUTER = 'lit-ui-router';
 
 // Minimal views of the two ASTs these rules cross; eslint speaks ESTree and
 // parse5 nodes arrive untyped through the analyzer's visitor.
@@ -151,13 +151,14 @@ const ourSourcesOf = (
     ? litUiRouterSources
     : [];
 
-  const entries = listed.filter(
-    (entry): entry is string => isString(entry) && entry !== '',
-  );
+  const entries = [
+    LIT_UI_ROUTER,
+    ...listed.filter(
+      (entry): entry is string => isString(entry) && entry !== '',
+    ),
+  ];
 
-  return (source) =>
-    LIT_UI_ROUTER.test(source) ||
-    entries.some((entry) => isSubpathOf(source, entry));
+  return (source) => entries.some((entry) => isSubpathOf(source, entry));
 };
 
 /** The definition an identifier resolves to; `undefined` when it is unbound. */
