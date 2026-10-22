@@ -923,6 +923,9 @@ importers:
       '@api-viewer/docs':
         specifier: 'catalog:'
         version: 1.0.0-pre.10(patch_hash=c6c7a1ebb74597e0dd7dc19971feaf6f3db19f2f05b57efc350682d93a412098)
+      '@lit/context':
+        specifier: 'catalog:'
+        version: 1.1.6
       '@uirouter/core':
         specifier: 'catalog:'
         version: 6.1.2
