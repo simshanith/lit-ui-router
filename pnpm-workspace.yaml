@@ -132,7 +132,7 @@ catalogs:
   peerFloorEslintPlugin:
     eslint-floor: npm:eslint@9.0.0
   peerFloorMobx:
-    lit-ui-router-floor: npm:lit-ui-router@1.15.0
+    lit-ui-router-floor: npm:lit-ui-router@1.16.0
   peerFloorSignals:
     lit-ui-router-floor: npm:lit-ui-router@1.16.0
   peerFloorSsr:
@@ -156,7 +156,7 @@ catalogs:
     lit-ui-router: ^1.16.0
     ui-router-effect: ^0.1.0
   publishedPeerMobx:
-    lit-ui-router: ^1.15.0
+    lit-ui-router: ^1.16.0
     ui-router-mobx: ^0.1.0
   publishedPeerSignals:
     lit-ui-router: ^1.16.0

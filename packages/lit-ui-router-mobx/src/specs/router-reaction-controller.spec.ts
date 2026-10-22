@@ -281,20 +281,6 @@ class StubRouterProvider extends HTMLElement {
 
 customElements.define('stub-router-provider', StubRouterProvider);
 
-/** Answers only the house `ui-router-context` event, which cannot subscribe. */
-class HouseEventProvider extends HTMLElement {
-  constructor(router: UIRouterLit) {
-    super();
-    // SAFETY: only `ui-router-context` events, always a `UiRouterContextEvent`, reach this listener.
-    this.addEventListener(
-      UIRouterLitElement.uiRouterContextEventName,
-      UIRouterLitElement.onUiRouterContextEvent(router) as EventListener,
-    );
-  }
-}
-
-customElements.define('house-event-provider', HouseEventProvider);
-
 describe('RouterReactionController router upgrade', () => {
   // core links each declaration to its registry, so every router needs its own copies
   const createOwnRouter = () =>
@@ -448,7 +434,7 @@ describe('RouterReactionController router upgrade', () => {
     expect(controller.value).toBe('a');
   });
 
-  it('falls back to the house ui-router-context event', async () => {
+  it('takes the router of a <ui-view> given one directly', async () => {
     const router = createOwnRouter();
     await routerGo(router, 'a');
 
@@ -459,9 +445,10 @@ describe('RouterReactionController router upgrade', () => {
       (route) => route.current?.name,
     );
 
-    const provider = new HouseEventProvider(router);
-    appendParentFirst(document.body, provider, host);
-    cleanups.push(() => provider.remove());
+    const view = document.createElement('ui-view');
+    view.uiRouter = router;
+    appendParentFirst(document.body, view, host);
+    cleanups.push(() => view.remove());
     await waitForUpdate(host);
 
     expect(controller.store).toBe(RouterStore.for(router));

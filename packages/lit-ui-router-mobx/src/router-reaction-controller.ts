@@ -2,7 +2,6 @@ import { ReactiveController, ReactiveControllerHost } from 'lit';
 import { IReactionDisposer, reaction } from 'mobx';
 import { UIRouter } from '@uirouter/core';
 import { requestRouter } from 'lit-ui-router/context';
-import { UIRouterLitElement } from 'lit-ui-router/pure';
 import { RouterStore } from 'ui-router-mobx';
 
 import { warnMissingRouter } from './dev-warn.js';
@@ -14,12 +13,10 @@ export interface RouterReactionControllerOptions<
 > extends ReactionControllerOptions<T> {
   /**
    * Explicit router instance. When omitted, the controller asks the nearest
-   * router provider on `hostConnected`: over `context-request` first (via
+   * router provider on `hostConnected` over `context-request` (via
    * [requestRouter](https://lit-ui-router.dev/api/reference/core/requestRouter)
-   * with `subscribe: true`), then over the `ui-router-context` event (via
-   * [UIRouterLitElement.seekRouter](https://lit-ui-router.dev/api/reference/components/UIRouterLitElement))
-   * when nobody answers. It rebinds when a subscribed provider hands it the
-   * router that replaces its placeholder.
+   * with `subscribe: true`). It rebinds when a subscribed provider hands it
+   * the router that replaces its placeholder.
    */
   router?: UIRouter;
 }
@@ -29,9 +26,8 @@ export interface RouterReactionControllerOptions<
  * {@link RouterStore} of the router the host's nearest provider supplies.
  *
  * On `hostConnected` it requests the router over the `context-request`
- * protocol, falling back to the `ui-router-context` event, so `<ui-router>`,
- * `<ui-view>`, a `@lit/context` `ContextProvider` of `routerContext` and
- * `provideRouter` all answer. There is no prop drilling and no store wiring in
+ * protocol, so `<ui-router>`, `<ui-view>`, a `@lit/context` `ContextProvider`
+ * of `routerContext` and `provideRouter` all answer. There is no prop drilling and no store wiring in
  * router configuration: {@link RouterStore.for} attaches lazily on first use.
  * It then runs a MobX `reaction` over the selector while the host is
  * connected. When the provider hands it a new router, it rebinds to that
@@ -123,7 +119,7 @@ export class RouterReactionController<T> implements ReactiveController {
       offered?.();
     };
 
-    return router ?? UIRouterLitElement.seekRouter(this.host);
+    return router;
   }
 
   private react(router: UIRouter): void {
