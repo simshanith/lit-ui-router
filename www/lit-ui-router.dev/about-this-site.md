@@ -9,7 +9,7 @@ lit-ui-router.dev is a Cloudflare Worker with static assets. The docs are
 plain files; a worker answers only the paths that need a routing decision —
 the sample apps, through `ui-router-server`, and the release pages, from a
 second worker that keeps the release ledger.
-[Server-Side Routing](./guides/server-route-matching#the-worker-verdicts-→-http)
+[Server-Side Routing](./guides/server-route-matching#one-request-at-a-time)
 follows a single request through the docs worker.
 
 <svg viewBox="0 0 720 420" width="100%" style="max-width: 720px" role="img" aria-label="Architecture of lit-ui-router.dev. 1, readers, reach Cloudflare. 2, static assets, answer every path that is not worker-first. 3, the docs worker gets the worker-first paths: the sample apps, /releases and /gh; it fetches shells, 404 pages and pass-through requests from static assets, and reads the release ledger over RPC from 4, the ledger worker. The ledger worker enqueues claims to and consumes them from 5, Queues, and writes to 6, D1. 7, GitHub, sends claims to the ledger worker, which observes GitHub and 8, npm." xmlns="http://www.w3.org/2000/svg">
