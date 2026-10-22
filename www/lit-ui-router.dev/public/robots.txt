@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://lit-ui-router.dev/sitemap.xml

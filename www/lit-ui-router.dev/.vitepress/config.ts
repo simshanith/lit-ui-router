@@ -347,6 +347,7 @@ const config = {
   title: 'Lit UI Router',
   description: 'A @uirouter implementation for Lit',
   cleanUrls: true,
+  sitemap: { hostname: baseUrl },
   ignoreDeadLinks: [
     '/app',
     '/app-mobx',
