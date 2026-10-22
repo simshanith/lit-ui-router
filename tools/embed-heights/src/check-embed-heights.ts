@@ -6,7 +6,8 @@
 // page doesn't shift when the example paints (LiveExample's min-height,
 // ExampleEmbed's --embed-height) — so it stays a static number in the docs
 // source. This measures every built example in headless Chromium at the docs
-// content column and fails when a declared height no longer covers it.
+// content column and fails when a declared height no longer covers it, or
+// exceeds the cap past which content scrolls inside the embed.
 //
 // Usage: check-embed-heights [--json] [--verbose]
 
@@ -20,6 +21,7 @@ import { measureExamples, serveExamples, serverOrigin } from './measure.ts';
 import {
   COLUMN_WIDTH_PX,
   judge,
+  MAX_HEIGHT_PX,
   parsePx,
   type Verdict,
 } from './reserve.core.ts';
@@ -58,6 +60,21 @@ async function exampleDirs(): Promise<string[]> {
   }
 
   return names.sort();
+}
+
+function problem(name: string, verdict: Verdict): string {
+  const { status, required, declared, suggested } = verdict;
+  const fix = `Use '${suggested}px'.`;
+
+  if (status === 'over')
+    return `${name}: reserves ${declared}px, over the ${MAX_HEIGHT_PX}px cap. ${fix}`;
+
+  if (status === 'stale')
+    return `${name}: reserves ${declared}px for ${required}px of content — stale. ${fix}`;
+
+  return required > MAX_HEIGHT_PX
+    ? `${name}: reserves ${declared}px but needs ${required}px, over the ${MAX_HEIGHT_PX}px cap — reserve the cap and let the rest scroll. ${fix}`
+    : `${name}: reserves ${declared}px but needs ${required}px — the embed scrolls inside itself. ${fix}`;
 }
 
 const main = async (): Promise<void> => {
@@ -143,7 +160,9 @@ const main = async (): Promise<void> => {
     );
   } else {
     const pad = Math.max(...built.map((name) => name.length));
-    console.log(`content measured at the docs ${COLUMN_WIDTH_PX}px column\n`);
+    console.log(
+      `content measured at the docs ${COLUMN_WIDTH_PX}px column; reservations cap at ${MAX_HEIGHT_PX}px\n`,
+    );
     console.log(
       `${'example'.padEnd(pad)}  measured  required  declared  status  tallest state`,
     );
@@ -167,25 +186,17 @@ const main = async (): Promise<void> => {
     }
   }
 
-  const broken = built.filter((name) => verdicts.get(name)!.status !== 'ok');
+  const broken = built.filter((name) => {
+    const { status } = verdicts.get(name)!;
+
+    return status !== 'ok' && status !== 'capped';
+  });
 
   if (broken.length > 0) {
     console.error('');
 
-    for (const name of broken) {
-      const {
-        status,
-        required,
-        declared: value,
-        suggested,
-      } = verdicts.get(name)!;
-
-      console.error(
-        status === 'under'
-          ? `${name}: reserves ${value}px but needs ${required}px — the embed scrolls inside itself. Use '${suggested}px'.`
-          : `${name}: reserves ${value}px for ${required}px of content — stale. Use '${suggested}px'.`,
-      );
-    }
+    for (const name of broken)
+      console.error(problem(name, verdicts.get(name)!));
 
     fail(`${broken.length} height(s) out of date in examples/embeds.ts`);
   }

@@ -4,6 +4,7 @@ import { test } from 'node:test';
 import {
   FRAME_BORDER_PX,
   judge,
+  MAX_HEIGHT_PX,
   parsePx,
   requiredFor,
   suggest,
@@ -38,4 +39,26 @@ test('suggestions carry headroom and land on a round number', () => {
   assert.equal(suggest(768), 800);
   assert.equal(suggest(869), 900);
   assert.ok(suggest(768) > 768 + FRAME_BORDER_PX);
+});
+
+test('content taller than the cap is reserved at the cap', () => {
+  const tall = MAX_HEIGHT_PX * 1.5;
+  assert.ok(requiredFor(tall) > MAX_HEIGHT_PX);
+  assert.equal(judge(tall, MAX_HEIGHT_PX).status, 'capped');
+  assert.equal(judge(tall, MAX_HEIGHT_PX - 10).status, 'under');
+  assert.equal(suggest(tall), MAX_HEIGHT_PX);
+});
+
+test('a declaration above the cap fails, even when content needs it', () => {
+  assert.equal(judge(MAX_HEIGHT_PX * 1.5, MAX_HEIGHT_PX + 10).status, 'over');
+  assert.equal(judge(400, MAX_HEIGHT_PX + 10).status, 'over');
+});
+
+test('below the cap the cap changes nothing', () => {
+  const required = requiredFor(1000);
+  assert.ok(required < MAX_HEIGHT_PX);
+  assert.equal(judge(1000, required).status, 'ok');
+  assert.equal(judge(1000, required - 1).status, 'under');
+  assert.equal(judge(1000, MAX_HEIGHT_PX).status, 'ok');
+  assert.equal(suggest(1000), 1040);
 });

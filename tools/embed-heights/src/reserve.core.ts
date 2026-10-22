@@ -25,7 +25,13 @@ const STALE_FACTOR = 1.5;
 
 const STALE_SLACK_PX = 100;
 
-export type Status = 'ok' | 'under' | 'stale';
+/**
+ * The tallest reservation the docs make. Content past it scrolls inside the
+ * embed: a frame taller than a viewport can't be seen whole anyway.
+ */
+export const MAX_HEIGHT_PX = 1200;
+
+export type Status = 'ok' | 'capped' | 'under' | 'over' | 'stale';
 
 export interface Verdict {
   /** Tallest content height measured across the example's states. */
@@ -55,18 +61,23 @@ export function requiredFor(measured: number): number {
 }
 
 export function suggest(measured: number): number {
-  return Math.ceil(requiredFor(measured) / 10) * 10;
+  return Math.min(Math.ceil(requiredFor(measured) / 10) * 10, MAX_HEIGHT_PX);
+}
+
+function statusFor(required: number, declared: number): Status {
+  if (declared > MAX_HEIGHT_PX) return 'over';
+
+  if (required > MAX_HEIGHT_PX)
+    return declared === MAX_HEIGHT_PX ? 'capped' : 'under';
+
+  if (declared < required) return 'under';
+
+  return declared > required * STALE_FACTOR + STALE_SLACK_PX ? 'stale' : 'ok';
 }
 
 export function judge(measured: number, declared: number): Verdict {
   const required = requiredFor(measured);
-
-  const status: Status =
-    declared < required
-      ? 'under'
-      : declared > required * STALE_FACTOR + STALE_SLACK_PX
-        ? 'stale'
-        : 'ok';
+  const status = statusFor(required, declared);
 
   return { measured, required, declared, suggested: suggest(measured), status };
 }
