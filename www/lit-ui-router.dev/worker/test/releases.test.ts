@@ -7,6 +7,8 @@ import {
   getAllByRole,
   getByRole,
   getByText,
+  queryByRole,
+  queryByText,
   within,
 } from '@testing-library/dom';
 import { parseHtml } from '@tools/lit-test-env/parse-html.ts';
@@ -17,12 +19,14 @@ import {
   type LedgerReader,
   latestOf,
   NotInLedger,
+  previousIn,
   versionIn,
   versionsOf,
 } from '../releases/ledger.ts';
 import { FRESH_MS, KEEP_MS, STORED_AT } from '../releases/edge-cache.ts';
 import { serveReleases } from '../releases/serve.ts';
-import { fixtureLedger } from './ledger-stub/rows.ts';
+import { diffUrl } from '../releases/views.ts';
+import { FIXTURE_ROWS, fixtureLedger } from './ledger-stub/rows.ts';
 import { memoryEdge } from './memory-cache.ts';
 
 const ORIGIN = 'http://docs.test';
@@ -75,7 +79,54 @@ describe('the ledger queries', () => {
   });
 });
 
+describe('the diff links', () => {
+  const [base] = FIXTURE_ROWS;
+  assert.ok(base);
+
+  const at = (version: string) => ({ ...base, version });
+
+  // Newest first, as versionsOf orders them.
+  const versions = ['2.0.0', '2.0.0-rc.1', '2.0.0-rc.0', '1.10.0'].map(at);
+
+  const previous = (version: string) =>
+    previousIn(versions, at(version))?.version ?? null;
+
+  it('compares a stable version with the previous stable one', () => {
+    assert.equal(previous('2.0.0'), '1.10.0');
+  });
+
+  it('compares a prerelease with the version just before it', () => {
+    assert.equal(previous('2.0.0-rc.1'), '2.0.0-rc.0');
+    assert.equal(previous('2.0.0-rc.0'), '1.10.0');
+  });
+
+  it('has nothing to compare the first version, or an unlisted one, with', () => {
+    assert.equal(previous('1.10.0'), null);
+    assert.equal(previous('9.9.9'), null);
+  });
+
+  it("links DiffsHub's compare between two tags", () => {
+    assert.equal(
+      diffUrl(at('1.9.0'), at('1.10.0')),
+      'https://diffshub.com/simshanith/lit-ui-router/compare/lit-ui-router%401.9.0...lit-ui-router%401.10.0',
+    );
+  });
+
+  it('links nothing when either version has no tag recorded', () => {
+    assert.equal(
+      diffUrl({ ...at('1.9.0'), git_sha: null }, at('1.10.0')),
+      null,
+    );
+    assert.equal(
+      diffUrl(at('1.9.0'), { ...at('1.10.0'), git_sha: null }),
+      null,
+    );
+  });
+});
+
 const GITHUB = 'https://github.com/simshanith/lit-ui-router/releases/tag';
+
+const DIFFS = 'https://diffshub.com/simshanith/lit-ui-router/compare';
 
 describe('the /releases verdicts', () => {
   const cases = [
@@ -514,6 +565,18 @@ describe('the /releases pages', () => {
       'https://github.com/simshanith/lit-ui-router/releases/tag/lit-ui-router%401.10.0',
     );
     getByRole(doc.body, 'rowheader', { name: '1.11.0-rc.0 prerelease' });
+    assert.equal(
+      hrefOf(doc.body, 'Diff from 1.9.0 to 1.10.0'),
+      `${DIFFS}/lit-ui-router%401.9.0...lit-ui-router%401.10.0`,
+    );
+    assert.equal(
+      hrefOf(doc.body, 'Diff from 1.10.0 to 1.11.0-rc.0'),
+      `${DIFFS}/lit-ui-router%401.10.0...lit-ui-router%401.11.0-rc.0`,
+    );
+    assert.equal(
+      getAllByRole(doc.body, 'link', { name: /^Diff from / }).length,
+      3,
+    );
   });
 
   it("shows one version's facts and links out", async () => {
@@ -530,6 +593,36 @@ describe('the /releases pages', () => {
       hrefOf(doc.body, 'lit-ui-router@1.9.0'),
       'https://github.com/simshanith/lit-ui-router/tree/lit-ui-router%401.9.0',
     );
+    // A definition takes no accessible name from its content, so its text finds it.
+    const diff = getByText(doc.body, 'on DiffsHub', { selector: 'dd' });
+    assert.equal(
+      hrefOf(diff, 'Diff from 1.2.0 to 1.9.0'),
+      `${DIFFS}/lit-ui-router%401.2.0...lit-ui-router%401.9.0`,
+    );
+  });
+
+  it('reads the versions once for a version page and its diff', async () => {
+    const reads: string[] = [];
+
+    const ledger: LedgerReader = {
+      ...fixtureLedger,
+      versions: (name) => {
+        reads.push(name);
+
+        return fixtureLedger.versions(name);
+      },
+    };
+
+    await serve('/releases/lit-ui-router/1.10.0/', {}, ledger);
+
+    assert.deepEqual(reads, ['lit-ui-router']);
+  });
+
+  it('links no diff for the first version', async () => {
+    const doc = await page('/releases/lit-ui-router/1.2.0/');
+
+    assert.equal(queryByRole(doc.body, 'link', { name: /^Diff from / }), null);
+    assert.equal(queryByText(doc.body, 'Diff', { selector: 'dt' }), null);
   });
 
   it('renders the 404 page for a version the ledger lacks', async () => {
