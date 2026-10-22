@@ -60,6 +60,17 @@ export default [
 
 Tags resolve through scope, so a parameter or local named `html` or `uiSref` never counts as the import. This is stricter than lit-a11y in one place: once a file is gated in, lit-a11y also accepts `html` aliases and namespaces from any later import, while these rules only accept them from the listed sources — a wrapper module that re-exports `html` belongs in the array.
 
+`settings.litUiRouterSources` names the modules whose exports count as lit-ui-router's — an app's typed `uiSref` wrapper, a design system's re-export — alongside `lit-ui-router` itself, which always counts:
+
+```js
+export default [
+  ...litUiRouter.configs.recommended,
+  { settings: { litUiRouterSources: ['~/registry/lit', '@acme/router'] } },
+];
+```
+
+A listed module's exports are matched by name, as `lit-ui-router`'s are, through renamed bindings and namespace imports. Each entry matches an import specifier as written, itself or a subpath (`@acme/router/links.js`); nothing is resolved, so a relative specifier only matches its exact spelling, and a path alias or package name is the form to list. The rules assume a listed export has the signature of the lit-ui-router export it is named for.
+
 `settings.linkElements` names the tags that are link elements — a design system's `<sp-link>`, `<my-link>` — which three rules would otherwise have to guess at:
 
 ```js

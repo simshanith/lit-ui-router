@@ -183,6 +183,44 @@ declaredTester.run('sref-assign-href (linkElements setting)', srefAssignHref, {
   ],
 });
 
+// `settings.litUiRouterSources`: a listed wrapper's uiSref is checked as lit-ui-router's.
+const sourcesTester = new RuleTester({
+  settings: { litUiRouterSources: ['@acme/router'] },
+  languageOptions: { ecmaVersion: 'latest', sourceType: 'module' },
+});
+
+sourcesTester.run('sref-assign-href (litUiRouterSources)', srefAssignHref, {
+  valid: [
+    {
+      name: 'a module the list does not name is not ours',
+      code: "import { html } from 'lit';\nimport { uiSref } from '@acme/other';\nhtml`<button ${uiSref('home')}>Home</button>`;",
+    },
+  ],
+  invalid: [
+    {
+      name: "a listed module's uiSref is checked",
+      code: "import { html } from 'lit';\nimport { uiSref } from '@acme/router';\nhtml`<button ${uiSref('home')}>Home</button>`;",
+      errors: [{ messageId: 'hrefOnNonLink' }],
+      output:
+        "import { html } from 'lit';\nimport { uiSref } from '@acme/router';\nhtml`<button ${uiSref('home', {}, { assignHref: 'auto' })}>Home</button>`;",
+    },
+    {
+      name: 'a renamed binding from a listed subpath is checked',
+      code: "import { html } from 'lit';\nimport { uiSref as sref } from '@acme/router/nav';\nhtml`<button ${sref('home')}>Home</button>`;",
+      errors: [{ messageId: 'hrefOnNonLink' }],
+      output:
+        "import { html } from 'lit';\nimport { uiSref as sref } from '@acme/router/nav';\nhtml`<button ${sref('home', {}, { assignHref: 'auto' })}>Home</button>`;",
+    },
+    {
+      name: 'a namespace import of a listed module is checked',
+      code: "import { html } from 'lit';\nimport * as router from '@acme/router';\nhtml`<button ${router.uiSref('home')}>Home</button>`;",
+      errors: [{ messageId: 'hrefOnNonLink' }],
+      output:
+        "import { html } from 'lit';\nimport * as router from '@acme/router';\nhtml`<button ${router.uiSref('home', {}, { assignHref: 'auto' })}>Home</button>`;",
+    },
+  ],
+});
+
 void describe('sref-assign-href meta', () => {
   void it('is fixable and takes the shared linkElements option', () => {
     assert.equal(srefAssignHref.meta?.fixable, 'code');

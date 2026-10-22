@@ -118,11 +118,19 @@ html`<a ${uiSref('home', undefined, { assignHref: false })}>Home</a>`;
 ```
 
 An anchor counts as navigable when its `uiSref` is imported from
-`lit-ui-router` — a foreign package's `uiSref` proves nothing — and the call
+`lit-ui-router` or a module listed in `settings.litUiRouterSources` — a
+foreign package's `uiSref` proves nothing — and the call
 doesn't opt out of href assignment. Only a literal `assignHref: false` is a
 definite no: `'auto'` assigns on a native `<a>`, and a non-literal option is
 unknowable, so both stay suppressed rather than guessed. The base rule's
 options (`allowHash`, `aspects`) are carried over untouched.
+
+`settings.litUiRouterSources` adds modules whose exports count as
+lit-ui-router's, such as an app's typed `uiSref` wrapper. Entries match an
+import specifier as written, itself or a subpath, and are never resolved, so a
+path alias or package name is the form to list. The
+[settings reference](https://github.com/simshanith/lit-ui-router/blob/main/packages/eslint-plugin-lit-ui-router/README.md#settings)
+covers matching and the signature a listed export is assumed to have.
 
 `@lit-labs/ssr` never runs an element part, so a prerendered `uiSref` anchor
 is served with no `href`. With `settings.allowElementParts` false,

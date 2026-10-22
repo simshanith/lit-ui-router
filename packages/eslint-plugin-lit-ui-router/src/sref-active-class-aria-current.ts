@@ -133,7 +133,12 @@ const srefActiveClassAriaCurrent: RuleFor<typeof RULE_NAME> = {
 
           if (insert === undefined) return null;
 
-          const sibling = siblingBinding(fixer, source, call.callee, DIRECTIVE);
+          const sibling = siblingBinding(
+            fixer,
+            context,
+            call.callee,
+            DIRECTIVE,
+          );
 
           if (sibling === undefined) return null;
           const { binding, edits } = sibling;
