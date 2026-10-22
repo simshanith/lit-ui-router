@@ -1,4 +1,4 @@
-import { LitElement, html, nothing } from 'lit';
+import { LitElement, html, noChange, nothing } from 'lit';
 import type { PropertyValues, TemplateResult } from 'lit';
 import { property, state } from 'lit/decorators.js';
 import {
@@ -28,7 +28,7 @@ import {
   NormalizedLitViewDeclaration,
 } from './interface.js';
 import { LitViewConfig, UIRouterLit, isRoutedLitElement } from './core.js';
-import { routedLitElementRenderer } from './routed-element.js';
+import { routedElementOf, routedLitElementRenderer } from './routed-element.js';
 import { warnMissingRouter } from './dev-warn.js';
 import { UIRouterLitElement } from './ui-router.js';
 import type {
@@ -65,6 +65,19 @@ const isRenderMarker = (node: ChildNode | null): boolean => {
   const { data } = node as Comment;
 
   return data === '' || data.includes('lit-part');
+};
+
+/** Whether `node` sits inside `host`, across shadow roots. */
+const composedContains = (host: Node, node: Node): boolean => {
+  let current: Node | null = node;
+
+  while (current && current !== host) {
+    // SAFETY: a node with no parent is a shadow root, whose `host` leads out, or the top of its tree
+    current =
+      current.parentNode ?? (current as Partial<ShadowRoot>).host ?? null;
+  }
+
+  return current === host;
 };
 
 /** @internal */
@@ -157,6 +170,18 @@ export class UiView extends LitElement {
 
   /** Whether those nodes sit in the fragment rather than in the light DOM. */
   private fallbackParked = true;
+
+  /** The routed element this view renders, when its component is a class. */
+  private routedElement?: Element;
+
+  /**
+   * Two places for routed elements, taken in turn: an incoming element lands
+   * in the free one, so the outgoing element stands until it has rendered.
+   */
+  private readonly elementSlots: (Element | typeof nothing)[] = [
+    nothing,
+    nothing,
+  ];
 
   /** @internal */
   createRenderRoot(): this {
@@ -622,8 +647,7 @@ export class UiView extends LitElement {
    * If both are true, adds the uiCanExit component function as a hook to that singular Transition.
    */
   private _invokeUiCanExitHook(trans: Transition) {
-    const instance: (Partial<UiOnExit> & Element) | null =
-      this.firstElementChild;
+    const instance: (Partial<UiOnExit> & Element) | null = this.instance;
 
     const uiCanExitFn = instance?.uiCanExit;
 
@@ -638,13 +662,18 @@ export class UiView extends LitElement {
     }
   }
 
+  /** The routed element, not one retiring beside it; otherwise the first child. */
+  private get instance(): Element | null {
+    return this.routedElement ?? this.firstElementChild;
+  }
+
   /** @internal */
   requestUpdate(...args: Parameters<LitElement['requestUpdate']>): void {
     super.requestUpdate(...args);
 
     const instance:
       | (Partial<Pick<LitElement, 'requestUpdate'>> & Element)
-      | null = this.firstElementChild;
+      | null = this.instance;
 
     if (isFunction(instance?.requestUpdate)) {
       instance.requestUpdate();
@@ -659,7 +688,7 @@ export class UiView extends LitElement {
     this.requestUpdate();
 
     const instance: (Partial<UiOnParamsChanged> & Element) | null =
-      this.firstElementChild;
+      this.instance;
 
     if (isFunction(instance?.uiOnParamsChanged)) {
       const viewState = this.state;
@@ -778,8 +807,15 @@ export class UiView extends LitElement {
    * The routed component's template, or nothing while the fallback set stands
    * in the light DOM on its own.
    */
-  render(): TemplateResult | typeof nothing {
+  render(): TemplateResult | typeof nothing | typeof noChange {
+    // Inside an element its parent is retiring, so a config routed here is the incoming element's to render.
+    if (this.parentView instanceof UiView && this.parentView.retires(this)) {
+      return noChange;
+    }
+
     if (this.showsFallback) {
+      this.dropElements();
+
       // Nothing captured, so never connected (server render) or holding a render's nodes: an empty declarative shadow root would hide the light DOM.
       return this.fallback ? nothing : html`<slot></slot>`;
     }
@@ -806,7 +842,69 @@ export class UiView extends LitElement {
 
     const props: UIViewInjectedProps = { router, resolves, transition };
 
-    return component!(props);
+    const result = component!(props);
+    const element = routedElementOf(result);
+
+    if (!element) {
+      this.dropElements();
+
+      return result;
+    }
+
+    return this.placeElement(element);
+  }
+
+  /**
+   * Renders `element` beside the one it replaces, which stays until `element`
+   * completes its first update: lit would otherwise remove it before inserting
+   * one that has not rendered yet.
+   */
+  private placeElement(element: Element): TemplateResult {
+    const slots = this.elementSlots;
+    const outgoing = this.routedElement;
+
+    if (outgoing !== element) {
+      slots[slots[0] === outgoing ? 1 : 0] = element;
+      this.routedElement = element;
+
+      if (outgoing) {
+        const retire = () => this.retire(element);
+
+        // SAFETY: an element with no updateComplete is not a ReactiveElement, and retires its predecessor at once
+        const { updateComplete } = element as Partial<
+          Pick<LitElement, 'updateComplete'>
+        >;
+
+        void Promise.resolve(updateComplete).then(retire, retire);
+      }
+    }
+
+    return html`${slots[0]}${slots[1]}`;
+  }
+
+  /** Whether `node` sits in the element this view is retiring. */
+  private retires(node: Node): boolean {
+    const slots = this.elementSlots;
+    const outgoing = slots[slots[0] === this.routedElement ? 1 : 0];
+
+    return outgoing !== nothing && composedContains(outgoing, node);
+  }
+
+  private dropElements(): void {
+    this.routedElement = undefined;
+    this.elementSlots.fill(nothing);
+  }
+
+  /** Drops the element `incoming` replaced, unless a later swap took over. */
+  private retire(incoming: Element): void {
+    if (this.routedElement !== incoming) {
+      return;
+    }
+
+    const slots = this.elementSlots;
+    slots[slots[0] === incoming ? 1 : 0] = nothing;
+    // The routed element has nothing new to render.
+    super.requestUpdate();
   }
 }
 

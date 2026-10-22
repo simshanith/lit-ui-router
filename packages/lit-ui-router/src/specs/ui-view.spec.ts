@@ -157,6 +157,45 @@ class TestStickyComponent extends CountedElement {
   }
 }
 
+/** Nests its view in a shadow root, where light-DOM containment cannot see it. */
+@customElement('test-shadow-shell')
+class TestShadowShell extends LitElement {
+  render() {
+    return html`<ui-view></ui-view>`;
+  }
+}
+
+/** What the document held when an outgoing leaf left it; reassigned per test. */
+let onLeafLeaving: (leaving: Element) => void;
+
+@customElement('test-swap-from')
+class TestSwapFrom extends CountedElement {
+  static tag = 'test-swap-from';
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    onLeafLeaving(this);
+  }
+  render() {
+    return html`<div class="from">From</div>`;
+  }
+}
+
+/** Holds its first update open until the spec releases it. */
+let swapToGate: Promise<void> = Promise.resolve();
+
+@customElement('test-swap-to')
+class TestSwapTo extends CountedElement {
+  static tag = 'test-swap-to';
+  protected async getUpdateComplete(): Promise<boolean> {
+    await swapToGate;
+
+    return super.getUpdateComplete();
+  }
+  render() {
+    return html`<div class="to">To</div>`;
+  }
+}
+
 @customElement('test-params-receive-component')
 class TestParamsReceiveComponent
   extends LitElement
@@ -211,6 +250,9 @@ declare global {
     'test-retained-leaf': TestRetainedLeaf;
     'test-retained-other': TestRetainedOther;
     'test-sticky-component': TestStickyComponent;
+    'test-shadow-shell': TestShadowShell;
+    'test-swap-from': TestSwapFrom;
+    'test-swap-to': TestSwapTo;
   }
 }
 
@@ -226,6 +268,10 @@ describe('UiView', () => {
     paramsChanged = () => {};
 
     receiveParams = () => {};
+
+    onLeafLeaving = () => {};
+
+    swapToGate = Promise.resolve();
 
     resetCounts();
   });
@@ -1237,6 +1283,118 @@ describe('UiView', () => {
 
       expect(uiView.firstElementChild).toBe(first);
       expect(countsFor('test-sticky-component').constructed).toBe(1);
+    });
+  });
+
+  // https://github.com/simshanith/lit-ui-router/issues/757
+  describe('swapping a changed element', () => {
+    const swapStates: LitStateDeclaration[] = [
+      { name: 'from', url: '/from', component: TestSwapFrom },
+      { name: 'to', url: '/to', component: TestSwapTo },
+      { name: 'other', url: '/other', component: TestRetainedOther },
+    ];
+
+    it('should keep the outgoing element until the incoming one has rendered', async () => {
+      const { uiView } = await setupRouter(swapStates);
+      await routerGo(router, 'from');
+
+      let incoming: { standing?: boolean; rendered?: boolean } | undefined;
+      onLeafLeaving = () => {
+        const to = uiView.querySelector('test-swap-to');
+        incoming = { standing: to?.isConnected, rendered: to?.hasUpdated };
+      };
+
+      await routerGo(router, 'to');
+
+      expect(incoming).toEqual({ standing: true, rendered: true });
+      expect(uiView).toEqualDom(
+        '<ui-view><test-swap-to><div class="to">To</div></test-swap-to></ui-view>',
+      );
+      // Inserted once, never moved: the incoming element is not reconnected.
+      expect(countsFor('test-swap-to').connected).toBe(1);
+      expect(countsFor('test-swap-from').disconnected).toBe(1);
+    });
+
+    it('should hold the outgoing element while the incoming update is pending', async () => {
+      const { uiView } = await setupRouter(swapStates);
+      await routerGo(router, 'from');
+      const from = uiView.firstElementChild;
+      const gate = defer();
+      swapToGate = gate.promise;
+
+      await routerGo(router, 'to');
+
+      expect(from?.isConnected).toBe(true);
+      expect(uiView.querySelector('test-swap-to')).toBeTruthy();
+
+      gate.resolve();
+      await tick();
+
+      expect(from?.isConnected).toBe(false);
+      expect(uiView.children).toHaveLength(1);
+      expect(uiView.firstElementChild).toBeInstanceOf(TestSwapTo);
+    });
+
+    it('should drop a superseded incoming element for the next one', async () => {
+      const { uiView } = await setupRouter(swapStates);
+      await routerGo(router, 'from');
+      const gate = defer();
+      swapToGate = gate.promise;
+
+      await routerGo(router, 'to');
+      await routerGo(router, 'other');
+
+      expect(uiView.children).toHaveLength(1);
+      expect(uiView.firstElementChild).toBeInstanceOf(TestRetainedOther);
+
+      gate.resolve();
+      await tick();
+
+      expect(uiView.children).toHaveLength(1);
+      expect(uiView.firstElementChild).toBeInstanceOf(TestRetainedOther);
+      expect(countsFor('test-swap-from').disconnected).toBe(1);
+      expect(countsFor('test-swap-to').disconnected).toBe(1);
+    });
+
+    it.each([
+      ['light DOM', TestRetainedShell],
+      ['a shadow root', TestShadowShell],
+    ])(
+      'should not route into the outgoing element’s nested views in %s',
+      async (_, shell) => {
+        const { uiView } = await setupRouter([
+          { name: 'galaxy', url: '/galaxy/:id', component: shell },
+          { name: 'galaxy.star', url: '/star', component: TestRetainedLeaf },
+        ]);
+
+        await routerGo(router, 'galaxy.star', { id: 'milky-way' });
+
+        await routerGo(router, 'galaxy.star', { id: 'andromeda' });
+
+        expect(uiView.children).toHaveLength(1);
+        expect(countsFor('test-retained-leaf').constructed).toBe(2);
+        expect(countsFor('test-retained-leaf').connected).toBe(2);
+      },
+    );
+
+    it('should swap straight to a template component', async () => {
+      const { uiView } = await setupRouter([
+        ...swapStates,
+        {
+          name: 'template',
+          url: '/template',
+          component: () => html`<p class="template">Template</p>`,
+        },
+      ]);
+
+      await routerGo(router, 'from');
+
+      await routerGo(router, 'template');
+
+      expect(uiView).toEqualDom(
+        '<ui-view><p class="template">Template</p></ui-view>',
+      );
+      expect(countsFor('test-swap-from').disconnected).toBe(1);
     });
   });
 
