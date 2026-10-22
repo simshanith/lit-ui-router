@@ -5,7 +5,8 @@ import type {
   Status,
   VersionRow,
 } from '@tools/release-ledger';
-import { prerelease, rcompare } from 'semver';
+import prerelease from 'semver/functions/prerelease.js';
+import rcompare from 'semver/functions/rcompare.js';
 
 /** A `versions` row with the states the ledger's `version_states` view derives. */
 export interface LedgerVersion extends VersionRow {
@@ -41,10 +42,10 @@ export const isStable = (version: string): boolean =>
  * The version `row` follows in `versions` (newest first): the next older stable for a stable
  * version, the next older of any kind for a prerelease, or null for the first.
  */
-export const previousIn = (
-  versions: readonly LedgerVersion[],
-  row: LedgerVersion,
-): LedgerVersion | null => {
+export const previousIn = <Row extends { version: string }>(
+  versions: readonly Row[],
+  row: Row,
+): Row | null => {
   const at = versions.findIndex(({ version }) => version === row.version);
 
   if (at === -1) return null;
@@ -56,6 +57,21 @@ export const previousIn = (
       ? older.find(({ version }) => isStable(version))
       : older[0]) ?? null
   );
+};
+
+/** Two versions to compare, older first; either is absent for a package with no versions. */
+export interface VersionPair<Row> {
+  from: Row | undefined;
+  to: Row | undefined;
+}
+
+/** The pair a diff picker starts on: the newest stable version, or the newest, and the version before it, or the oldest. */
+export const pickerPair = <Row extends { version: string }>(
+  versions: readonly Row[],
+): VersionPair<Row> => {
+  const to = versions.find(({ version }) => isStable(version)) ?? versions[0];
+
+  return { from: (to && previousIn(versions, to)) ?? versions.at(-1), to };
 };
 
 /** Every package the ledger has recorded, with its npm `latest` row. */

@@ -171,6 +171,10 @@ declare module 'ui-router-effect' {
 }
 ```
 
+## Releases
+
+<ReleaseDiffPicker name="ui-router-effect" />
+
 ## Further reading
 
 - [API reference](/api/ui-router-effect/)
