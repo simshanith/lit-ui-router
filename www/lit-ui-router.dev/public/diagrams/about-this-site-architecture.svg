@@ -1,5 +1,20 @@
 <svg viewBox="0 0 720 420" width="100%" style="max-width: 720px" role="img" aria-label="Architecture of lit-ui-router.dev. 1, readers, reach Cloudflare. 2, static assets, answer every path that is not worker-first. 3, the docs worker gets the worker-first paths: the sample apps, /releases and /gh; it fetches shells, 404 pages and pass-through requests from static assets, and reads the release ledger over RPC from 4, the ledger worker. The ledger worker enqueues claims to and consumes them from 5, Queues, and writes to 6, D1. 7, GitHub, sends claims to the ledger worker, which observes GitHub and 8, npm." xmlns="http://www.w3.org/2000/svg">
   <title>lit-ui-router.dev: static assets, the docs worker and the release ledger</title>
+  <!-- dark palette applies only when this file is the document root -->
+  <style>
+    @media (prefers-color-scheme: dark) {
+      svg:root {
+        color-scheme: dark;
+        --vp-c-bg: #1b1b1f;
+        --vp-c-bg-soft: #202127;
+        --vp-c-divider: #2e2e32;
+        --vp-c-text-1: #dfdfd6;
+        --vp-c-text-2: #98989f;
+        --vp-c-text-3: #6a6a71;
+        --vp-c-indigo-1: #a8b1ff;
+      }
+    }
+  </style>
   <defs>
     <marker id="arr-site" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
       <path d="M0 0L8 4L0 8z" fill="var(--vp-c-text-3, #929295)" />

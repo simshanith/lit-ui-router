@@ -1,5 +1,20 @@
 <svg viewBox="0 0 720 236" width="100%" style="max-width: 720px" role="img" aria-label="Unknown path in a mount without otherwise, 404: the browser requests /app/nope; Cloudflare runs the worker first; the worker resolves notFound in the /app mount, fetches /app/404.html from static assets, which answer 200, and returns that page at 404." xmlns="http://www.w3.org/2000/svg">
   <title>Unknown path, mount without otherwise: 404</title>
+  <!-- dark palette applies only when this file is the document root -->
+  <style>
+    @media (prefers-color-scheme: dark) {
+      svg:root {
+        color-scheme: dark;
+        --vp-c-bg: #1b1b1f;
+        --vp-c-bg-soft: #202127;
+        --vp-c-divider: #2e2e32;
+        --vp-c-text-1: #dfdfd6;
+        --vp-c-text-2: #98989f;
+        --vp-c-brand-1: #a8b1ff;
+        --vp-c-brand-soft: rgba(100, 108, 255, 0.16);
+      }
+    }
+  </style>
   <defs>
     <marker id="arr-seq-6" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
       <path d="M0 0L8 4L0 8z" fill="var(--vp-c-text-2, #67676c)" />
