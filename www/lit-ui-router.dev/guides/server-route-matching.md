@@ -423,6 +423,9 @@ Cloudflare's `html_handling` answers before the worker runs, shadowing that
 verdict. The exhibits list their bare paths for the same reason plus one more:
 no asset exists there, so the whole prefix is the demo.
 
+[How this site runs](../about-this-site) maps the rest of lit-ui-router.dev
+around this worker: the static assets and the release-ledger worker.
+
 The routing side stays light in production, too: the deployed worker —
 handler, fetch adapter, the `mounts` table, and the headless router behind the
 simulate mount — gzips to a small fraction of even the free plan's Workers
@@ -431,6 +434,275 @@ task (a cached `wrangler deploy --dry-run`) prints the upload size, and
 `codecov:bundle` sends the same bundle to Codecov's size tracking as
 `docs-worker-esm`. The site itself ships as static assets through the
 binding, outside that budget entirely.
+
+### One request at a time
+
+Each diagram follows one request through the four lanes in production.
+
+#### Static page <span style="margin-left: 6px; padding: 0 6px; border-radius: 4px; font-family: var(--vp-font-family-mono); font-size: 12px; font-weight: 600; vertical-align: 2px; background: var(--vp-c-green-soft, rgba(16,185,129,0.14)); color: var(--vp-c-green-1, #18794e)">200</span>
+
+Not a `run_worker_first` path, and the file exists. The worker never runs.
+
+<svg viewBox="0 0 720 146" width="100%" style="max-width: 720px" role="img" aria-label="Static page, 200: the browser requests /guides/; Cloudflare finds it is not a worker-first path and static assets answer 200 with the page. The worker never runs." xmlns="http://www.w3.org/2000/svg">
+  <title>Static page: 200</title>
+  <defs>
+    <marker id="arr-seq-1" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0L8 4L0 8z" fill="var(--vp-c-text-2, #67676c)" />
+    </marker>
+  </defs>
+  <g font-family="var(--vp-font-family-base, ui-sans-serif, system-ui, sans-serif)">
+    <line x1="90" y1="32" x2="90" y2="142" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect x="28" y="6" width="124" height="26" rx="6" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="90" y="23" font-size="12" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">Browser</text>
+    <line x1="270" y1="32" x2="270" y2="142" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect x="208" y="6" width="124" height="26" rx="6" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="#f6821f" />
+    <text x="270" y="23" font-size="12" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">Cloudflare</text>
+    <line x1="450" y1="32" x2="450" y2="142" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect x="388" y="6" width="124" height="26" rx="6" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="450" y="23" font-size="12" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">Static assets</text>
+    <line x1="630" y1="32" x2="630" y2="142" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect x="568" y="6" width="124" height="26" rx="6" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="630" y="23" font-size="12" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">Worker</text>
+    <line x1="90" y1="62" x2="267" y2="62" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-seq-1)" />
+    <text x="180" y="56" font-size="11" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle" stroke="var(--vp-c-bg, #ffffff)" stroke-width="4" stroke-linejoin="round" paint-order="stroke">GET /guides/</text>
+    <line x1="270" y1="92" x2="447" y2="92" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-seq-1)" />
+    <text x="360" y="86" font-size="11" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle" stroke="var(--vp-c-bg, #ffffff)" stroke-width="4" stroke-linejoin="round" paint-order="stroke">not worker-first</text>
+    <line x1="450" y1="122" x2="93" y2="122" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" stroke-dasharray="5 4" marker-end="url(#arr-seq-1)" />
+    <text x="270" y="116" font-size="11" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle" stroke="var(--vp-c-bg, #ffffff)" stroke-width="4" stroke-linejoin="round" paint-order="stroke">200 page</text>
+  </g>
+</svg>
+
+#### Static miss <span style="margin-left: 6px; padding: 0 6px; border-radius: 4px; font-family: var(--vp-font-family-mono); font-size: 12px; font-weight: 600; vertical-align: 2px; background: var(--vp-c-yellow-soft, rgba(234,179,8,0.14)); color: var(--vp-c-yellow-1, #915930)">404</span>
+
+Not a `run_worker_first` path, and no file: `not_found_handling` serves the site’s `404.html`.
+
+<svg viewBox="0 0 720 146" width="100%" style="max-width: 720px" role="img" aria-label="Static miss, 404: the browser requests /no-such-page; Cloudflare finds it is not a worker-first path, and static assets answer 404 with the site 404.html." xmlns="http://www.w3.org/2000/svg">
+  <title>Static miss: 404</title>
+  <defs>
+    <marker id="arr-seq-2" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0L8 4L0 8z" fill="var(--vp-c-text-2, #67676c)" />
+    </marker>
+  </defs>
+  <g font-family="var(--vp-font-family-base, ui-sans-serif, system-ui, sans-serif)">
+    <line x1="90" y1="32" x2="90" y2="142" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect x="28" y="6" width="124" height="26" rx="6" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="90" y="23" font-size="12" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">Browser</text>
+    <line x1="270" y1="32" x2="270" y2="142" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect x="208" y="6" width="124" height="26" rx="6" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="#f6821f" />
+    <text x="270" y="23" font-size="12" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">Cloudflare</text>
+    <line x1="450" y1="32" x2="450" y2="142" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect x="388" y="6" width="124" height="26" rx="6" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="450" y="23" font-size="12" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">Static assets</text>
+    <line x1="630" y1="32" x2="630" y2="142" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect x="568" y="6" width="124" height="26" rx="6" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="630" y="23" font-size="12" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">Worker</text>
+    <line x1="90" y1="62" x2="267" y2="62" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-seq-2)" />
+    <text x="180" y="56" font-size="11" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle" stroke="var(--vp-c-bg, #ffffff)" stroke-width="4" stroke-linejoin="round" paint-order="stroke">GET /no-such-page</text>
+    <line x1="270" y1="92" x2="447" y2="92" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-seq-2)" />
+    <text x="360" y="86" font-size="11" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle" stroke="var(--vp-c-bg, #ffffff)" stroke-width="4" stroke-linejoin="round" paint-order="stroke">not worker-first</text>
+    <line x1="450" y1="122" x2="93" y2="122" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" stroke-dasharray="5 4" marker-end="url(#arr-seq-2)" />
+    <text x="270" y="116" font-size="11" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle" stroke="var(--vp-c-bg, #ffffff)" stroke-width="4" stroke-linejoin="round" paint-order="stroke">404 404.html</text>
+  </g>
+</svg>
+
+#### App deep link <span style="margin-left: 6px; padding: 0 6px; border-radius: 4px; font-family: var(--vp-font-family-mono); font-size: 12px; font-weight: 600; vertical-align: 2px; background: var(--vp-c-green-soft, rgba(16,185,129,0.14)); color: var(--vp-c-green-1, #18794e)">200</span>
+
+A route in a mount: the verdict is `shell`, and the worker fetches the app shell through `ASSETS`. A revalidation that gets a 304 passes it on.
+
+<svg viewBox="0 0 720 236" width="100%" style="max-width: 720px" role="img" aria-label="App deep link, 200: the browser requests /app/contacts/42; Cloudflare runs the worker first; the worker resolves a shell verdict, fetches the shell from static assets, which answer 200 or 304, and returns 200 with the shell and a canonical Link header." xmlns="http://www.w3.org/2000/svg">
+  <title>App deep link: 200</title>
+  <defs>
+    <marker id="arr-seq-3" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0L8 4L0 8z" fill="var(--vp-c-text-2, #67676c)" />
+    </marker>
+  </defs>
+  <g font-family="var(--vp-font-family-base, ui-sans-serif, system-ui, sans-serif)">
+    <line x1="90" y1="32" x2="90" y2="232" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect x="28" y="6" width="124" height="26" rx="6" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="90" y="23" font-size="12" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">Browser</text>
+    <line x1="270" y1="32" x2="270" y2="232" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect x="208" y="6" width="124" height="26" rx="6" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="#f6821f" />
+    <text x="270" y="23" font-size="12" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">Cloudflare</text>
+    <line x1="450" y1="32" x2="450" y2="232" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect x="388" y="6" width="124" height="26" rx="6" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="450" y="23" font-size="12" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">Static assets</text>
+    <line x1="630" y1="32" x2="630" y2="232" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect x="568" y="6" width="124" height="26" rx="6" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="630" y="23" font-size="12" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">Worker</text>
+    <line x1="90" y1="62" x2="267" y2="62" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-seq-3)" />
+    <text x="180" y="56" font-size="11" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle" stroke="var(--vp-c-bg, #ffffff)" stroke-width="4" stroke-linejoin="round" paint-order="stroke">GET /app/contacts/42</text>
+    <line x1="270" y1="92" x2="627" y2="92" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-seq-3)" />
+    <text x="450" y="86" font-size="11" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle" stroke="var(--vp-c-bg, #ffffff)" stroke-width="4" stroke-linejoin="round" paint-order="stroke">worker-first</text>
+    <rect x="569" y="110" width="122" height="22" rx="6" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" stroke="var(--vp-c-brand-1, #3451b2)" />
+    <text x="630" y="125" font-size="11" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #3451b2)" text-anchor="middle">resolve &#8594; shell</text>
+    <line x1="630" y1="152" x2="453" y2="152" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-seq-3)" />
+    <text x="540" y="146" font-size="11" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle" stroke="var(--vp-c-bg, #ffffff)" stroke-width="4" stroke-linejoin="round" paint-order="stroke">fetch shell</text>
+    <line x1="450" y1="182" x2="627" y2="182" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" stroke-dasharray="5 4" marker-end="url(#arr-seq-3)" />
+    <text x="540" y="176" font-size="11" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle" stroke="var(--vp-c-bg, #ffffff)" stroke-width="4" stroke-linejoin="round" paint-order="stroke">200 or 304</text>
+    <line x1="630" y1="212" x2="93" y2="212" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" stroke-dasharray="5 4" marker-end="url(#arr-seq-3)" />
+    <text x="360" y="206" font-size="11" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle" stroke="var(--vp-c-bg, #ffffff)" stroke-width="4" stroke-linejoin="round" paint-order="stroke">200 shell, canonical Link</text>
+  </g>
+</svg>
+
+#### App redirect <span style="margin-left: 6px; padding: 0 6px; border-radius: 4px; font-family: var(--vp-font-family-mono); font-size: 12px; font-weight: 600; vertical-align: 2px; background: var(--vp-c-indigo-soft, rgba(100,108,255,0.14)); color: var(--vp-c-indigo-1, #3451b2)">302</span>
+
+A redirect rule at the mount root: the verdict is `redirect`, and nothing is fetched from assets.
+
+<svg viewBox="0 0 720 176" width="100%" style="max-width: 720px" role="img" aria-label="App redirect, 302: the browser requests /app; Cloudflare runs the worker first; the worker resolves a redirect verdict and answers 302 with Location /app/welcome, fetching nothing from static assets." xmlns="http://www.w3.org/2000/svg">
+  <title>App redirect: 302</title>
+  <defs>
+    <marker id="arr-seq-4" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0L8 4L0 8z" fill="var(--vp-c-text-2, #67676c)" />
+    </marker>
+  </defs>
+  <g font-family="var(--vp-font-family-base, ui-sans-serif, system-ui, sans-serif)">
+    <line x1="90" y1="32" x2="90" y2="172" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect x="28" y="6" width="124" height="26" rx="6" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="90" y="23" font-size="12" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">Browser</text>
+    <line x1="270" y1="32" x2="270" y2="172" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect x="208" y="6" width="124" height="26" rx="6" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="#f6821f" />
+    <text x="270" y="23" font-size="12" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">Cloudflare</text>
+    <line x1="450" y1="32" x2="450" y2="172" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect x="388" y="6" width="124" height="26" rx="6" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="450" y="23" font-size="12" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">Static assets</text>
+    <line x1="630" y1="32" x2="630" y2="172" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect x="568" y="6" width="124" height="26" rx="6" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="630" y="23" font-size="12" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">Worker</text>
+    <line x1="90" y1="62" x2="267" y2="62" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-seq-4)" />
+    <text x="180" y="56" font-size="11" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle" stroke="var(--vp-c-bg, #ffffff)" stroke-width="4" stroke-linejoin="round" paint-order="stroke">GET /app</text>
+    <line x1="270" y1="92" x2="627" y2="92" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-seq-4)" />
+    <text x="450" y="86" font-size="11" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle" stroke="var(--vp-c-bg, #ffffff)" stroke-width="4" stroke-linejoin="round" paint-order="stroke">worker-first</text>
+    <rect x="559" y="110" width="142" height="22" rx="6" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" stroke="var(--vp-c-brand-1, #3451b2)" />
+    <text x="630" y="125" font-size="11" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #3451b2)" text-anchor="middle">resolve &#8594; redirect</text>
+    <line x1="630" y1="152" x2="93" y2="152" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" stroke-dasharray="5 4" marker-end="url(#arr-seq-4)" />
+    <text x="360" y="146" font-size="11" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle" stroke="var(--vp-c-bg, #ffffff)" stroke-width="4" stroke-linejoin="round" paint-order="stroke">302 Location: /app/welcome</text>
+  </g>
+</svg>
+
+#### Unknown path, mount with `otherwise` <span style="margin-left: 6px; padding: 0 6px; border-radius: 4px; font-family: var(--vp-font-family-mono); font-size: 12px; font-weight: 600; vertical-align: 2px; background: var(--vp-c-yellow-soft, rgba(234,179,8,0.14)); color: var(--vp-c-yellow-1, #915930)">404</span>
+
+`/not-found-spa` declares an `otherwise`, so the verdict is the shell with status 404. The shell request goes without validators, so assets answer with a full body, never a 304.
+
+<svg viewBox="0 0 720 236" width="100%" style="max-width: 720px" role="img" aria-label="Unknown path in a mount with otherwise, 404: the browser requests /not-found-spa/nope; Cloudflare runs the worker first; the worker resolves a shell verdict with status 404, fetches the shell without validators, static assets answer 200, and the worker returns the shell at 404." xmlns="http://www.w3.org/2000/svg">
+  <title>Unknown path, mount with otherwise: 404</title>
+  <defs>
+    <marker id="arr-seq-5" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0L8 4L0 8z" fill="var(--vp-c-text-2, #67676c)" />
+    </marker>
+  </defs>
+  <g font-family="var(--vp-font-family-base, ui-sans-serif, system-ui, sans-serif)">
+    <line x1="90" y1="32" x2="90" y2="232" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect x="28" y="6" width="124" height="26" rx="6" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="90" y="23" font-size="12" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">Browser</text>
+    <line x1="270" y1="32" x2="270" y2="232" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect x="208" y="6" width="124" height="26" rx="6" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="#f6821f" />
+    <text x="270" y="23" font-size="12" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">Cloudflare</text>
+    <line x1="450" y1="32" x2="450" y2="232" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect x="388" y="6" width="124" height="26" rx="6" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="450" y="23" font-size="12" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">Static assets</text>
+    <line x1="630" y1="32" x2="630" y2="232" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect x="568" y="6" width="124" height="26" rx="6" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="630" y="23" font-size="12" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">Worker</text>
+    <line x1="90" y1="62" x2="267" y2="62" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-seq-5)" />
+    <text x="180" y="56" font-size="11" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle" stroke="var(--vp-c-bg, #ffffff)" stroke-width="4" stroke-linejoin="round" paint-order="stroke">GET /not-found-spa/nope</text>
+    <line x1="270" y1="92" x2="627" y2="92" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-seq-5)" />
+    <text x="450" y="86" font-size="11" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle" stroke="var(--vp-c-bg, #ffffff)" stroke-width="4" stroke-linejoin="round" paint-order="stroke">worker-first</text>
+    <rect x="510" y="110" width="204" height="22" rx="6" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" stroke="var(--vp-c-brand-1, #3451b2)" />
+    <text x="612" y="125" font-size="11" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #3451b2)" text-anchor="middle">resolve &#8594; shell, status 404</text>
+    <line x1="630" y1="152" x2="453" y2="152" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-seq-5)" />
+    <text x="540" y="146" font-size="11" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle" stroke="var(--vp-c-bg, #ffffff)" stroke-width="4" stroke-linejoin="round" paint-order="stroke">fetch shell, no validators</text>
+    <line x1="450" y1="182" x2="627" y2="182" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" stroke-dasharray="5 4" marker-end="url(#arr-seq-5)" />
+    <text x="540" y="176" font-size="11" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle" stroke="var(--vp-c-bg, #ffffff)" stroke-width="4" stroke-linejoin="round" paint-order="stroke">200</text>
+    <line x1="630" y1="212" x2="93" y2="212" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" stroke-dasharray="5 4" marker-end="url(#arr-seq-5)" />
+    <text x="360" y="206" font-size="11" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle" stroke="var(--vp-c-bg, #ffffff)" stroke-width="4" stroke-linejoin="round" paint-order="stroke">404 shell</text>
+  </g>
+</svg>
+
+#### Unknown path, mount without `otherwise` <span style="margin-left: 6px; padding: 0 6px; border-radius: 4px; font-family: var(--vp-font-family-mono); font-size: 12px; font-weight: 600; vertical-align: 2px; background: var(--vp-c-yellow-soft, rgba(234,179,8,0.14)); color: var(--vp-c-yellow-1, #915930)">404</span>
+
+The verdict is `notFound` with a mount, and the worker serves that mount’s 404 page.
+
+<svg viewBox="0 0 720 236" width="100%" style="max-width: 720px" role="img" aria-label="Unknown path in a mount without otherwise, 404: the browser requests /app/nope; Cloudflare runs the worker first; the worker resolves notFound in the /app mount, fetches /app/404.html from static assets, which answer 200, and returns that page at 404." xmlns="http://www.w3.org/2000/svg">
+  <title>Unknown path, mount without otherwise: 404</title>
+  <defs>
+    <marker id="arr-seq-6" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0L8 4L0 8z" fill="var(--vp-c-text-2, #67676c)" />
+    </marker>
+  </defs>
+  <g font-family="var(--vp-font-family-base, ui-sans-serif, system-ui, sans-serif)">
+    <line x1="90" y1="32" x2="90" y2="232" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect x="28" y="6" width="124" height="26" rx="6" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="90" y="23" font-size="12" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">Browser</text>
+    <line x1="270" y1="32" x2="270" y2="232" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect x="208" y="6" width="124" height="26" rx="6" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="#f6821f" />
+    <text x="270" y="23" font-size="12" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">Cloudflare</text>
+    <line x1="450" y1="32" x2="450" y2="232" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect x="388" y="6" width="124" height="26" rx="6" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="450" y="23" font-size="12" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">Static assets</text>
+    <line x1="630" y1="32" x2="630" y2="232" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect x="568" y="6" width="124" height="26" rx="6" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="630" y="23" font-size="12" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">Worker</text>
+    <line x1="90" y1="62" x2="267" y2="62" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-seq-6)" />
+    <text x="180" y="56" font-size="11" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle" stroke="var(--vp-c-bg, #ffffff)" stroke-width="4" stroke-linejoin="round" paint-order="stroke">GET /app/nope</text>
+    <line x1="270" y1="92" x2="627" y2="92" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-seq-6)" />
+    <text x="450" y="86" font-size="11" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle" stroke="var(--vp-c-bg, #ffffff)" stroke-width="4" stroke-linejoin="round" paint-order="stroke">worker-first</text>
+    <rect x="490" y="110" width="224" height="22" rx="6" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" stroke="var(--vp-c-brand-1, #3451b2)" />
+    <text x="602" y="125" font-size="11" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #3451b2)" text-anchor="middle">resolve &#8594; notFound, mount /app</text>
+    <line x1="630" y1="152" x2="453" y2="152" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-seq-6)" />
+    <text x="540" y="146" font-size="11" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle" stroke="var(--vp-c-bg, #ffffff)" stroke-width="4" stroke-linejoin="round" paint-order="stroke">fetch /app/404.html</text>
+    <line x1="450" y1="182" x2="627" y2="182" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" stroke-dasharray="5 4" marker-end="url(#arr-seq-6)" />
+    <text x="540" y="176" font-size="11" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle" stroke="var(--vp-c-bg, #ffffff)" stroke-width="4" stroke-linejoin="round" paint-order="stroke">200</text>
+    <line x1="630" y1="212" x2="93" y2="212" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" stroke-dasharray="5 4" marker-end="url(#arr-seq-6)" />
+    <text x="360" y="206" font-size="11" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle" stroke="var(--vp-c-bg, #ffffff)" stroke-width="4" stroke-linejoin="round" paint-order="stroke">404 page</text>
+  </g>
+</svg>
+
+#### No mount <span style="margin-left: 6px; padding: 0 6px; border-radius: 4px; font-family: var(--vp-font-family-mono); font-size: 12px; font-weight: 600; vertical-align: 2px; background: var(--vp-c-default-soft, rgba(142,150,170,0.14)); color: var(--vp-c-text-1, #3c3c43)">as served</span>
+
+The pass-through, for a worker-first path no mount owns: the verdict is `notFound` without a mount, the adapter returns `null`, and the worker hands the request to `ASSETS` unchanged.
+
+<svg viewBox="0 0 720 236" width="100%" style="max-width: 720px" role="img" aria-label="No mount, as served: the browser requests a worker-first path no mount owns; the worker resolves notFound without a mount, passes the request to static assets, which answer with the asset or 404.html, and returns that response as served." xmlns="http://www.w3.org/2000/svg">
+  <title>No mount: as served</title>
+  <defs>
+    <marker id="arr-seq-7" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0L8 4L0 8z" fill="var(--vp-c-text-2, #67676c)" />
+    </marker>
+  </defs>
+  <g font-family="var(--vp-font-family-base, ui-sans-serif, system-ui, sans-serif)">
+    <line x1="90" y1="32" x2="90" y2="232" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect x="28" y="6" width="124" height="26" rx="6" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="90" y="23" font-size="12" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">Browser</text>
+    <line x1="270" y1="32" x2="270" y2="232" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect x="208" y="6" width="124" height="26" rx="6" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="#f6821f" />
+    <text x="270" y="23" font-size="12" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">Cloudflare</text>
+    <line x1="450" y1="32" x2="450" y2="232" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect x="388" y="6" width="124" height="26" rx="6" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="450" y="23" font-size="12" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">Static assets</text>
+    <line x1="630" y1="32" x2="630" y2="232" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect x="568" y="6" width="124" height="26" rx="6" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="630" y="23" font-size="12" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">Worker</text>
+    <line x1="90" y1="62" x2="267" y2="62" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-seq-7)" />
+    <text x="180" y="56" font-size="11" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle" stroke="var(--vp-c-bg, #ffffff)" stroke-width="4" stroke-linejoin="round" paint-order="stroke">GET /unowned</text>
+    <line x1="270" y1="92" x2="627" y2="92" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-seq-7)" />
+    <text x="450" y="86" font-size="11" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle" stroke="var(--vp-c-bg, #ffffff)" stroke-width="4" stroke-linejoin="round" paint-order="stroke">worker-first</text>
+    <rect x="504" y="110" width="210" height="22" rx="6" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" stroke="var(--vp-c-brand-1, #3451b2)" />
+    <text x="609" y="125" font-size="11" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #3451b2)" text-anchor="middle">resolve &#8594; notFound, no mount</text>
+    <line x1="630" y1="152" x2="453" y2="152" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-seq-7)" />
+    <text x="540" y="146" font-size="11" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle" stroke="var(--vp-c-bg, #ffffff)" stroke-width="4" stroke-linejoin="round" paint-order="stroke">fetch request</text>
+    <line x1="450" y1="182" x2="627" y2="182" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" stroke-dasharray="5 4" marker-end="url(#arr-seq-7)" />
+    <text x="540" y="176" font-size="11" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle" stroke="var(--vp-c-bg, #ffffff)" stroke-width="4" stroke-linejoin="round" paint-order="stroke">asset or 404.html</text>
+    <line x1="630" y1="212" x2="93" y2="212" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" stroke-dasharray="5 4" marker-end="url(#arr-seq-7)" />
+    <text x="360" y="206" font-size="11" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle" stroke="var(--vp-c-bg, #ffffff)" stroke-width="4" stroke-linejoin="round" paint-order="stroke">as served</text>
+  </g>
+</svg>
+
+`vitepress dev` sends the sample-app navigations through the same verdicts
+with the `ui-router-server/vite` plugin, Vite standing in for Cloudflare and
+the assets: the plugin answers a redirect itself, and for a shell or a
+mount-owned 404 it rewrites the request to the HTML file and lets Vite serve
+it, as the site's
+[`.vitepress/vite.config.ts`](https://github.com/simshanith/lit-ui-router/blob/main/www/lit-ui-router.dev/.vitepress/vite.config.ts)
+sets up.
 
 ## Redirects: data until they need code
 

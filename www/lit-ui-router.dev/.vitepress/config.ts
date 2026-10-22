@@ -115,7 +115,10 @@ function makeSidebar() {
   return [
     {
       text: 'Introduction',
-      items: [{ text: 'What is Lit UI Router?', link: '/introduction' }],
+      items: [
+        { text: 'What is Lit UI Router?', link: '/introduction' },
+        { text: 'How this site runs', link: '/about-this-site' },
+      ],
     },
     {
       text: 'Tutorial',
