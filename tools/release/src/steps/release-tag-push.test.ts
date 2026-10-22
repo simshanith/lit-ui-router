@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { pushTagArgs, releaseTagName } from './release-tag-push.core.ts';
+import {
+  pushTagArgs,
+  releaseTagName,
+  tagPushSummary,
+} from './release-tag-push.core.ts';
 
 describe('releaseTagName', () => {
   it('composes the repo tag convention <package>@<version>', () => {
@@ -30,5 +34,25 @@ describe('pushTagArgs', () => {
       'origin',
       'refs/tags/lit-ui-router@1.8.0',
     ]);
+  });
+});
+
+describe('tagPushSummary', () => {
+  it('links the pushed tag page when the repo URL is known', () => {
+    assert.equal(
+      tagPushSummary(
+        'lit-ui-router@1.8.0',
+        false,
+        'https://github.com/simshanith/lit-ui-router',
+      ),
+      '🏷️ pushed [`lit-ui-router@1.8.0`](https://github.com/simshanith/lit-ui-router/releases/tag/lit-ui-router%401.8.0)\n',
+    );
+  });
+
+  it('marks a dry run and falls back to plain code without a repo URL', () => {
+    assert.equal(
+      tagPushSummary('lit-ui-router@1.8.0', true),
+      '🏷️ dry-run: would push `lit-ui-router@1.8.0`\n',
+    );
   });
 });
