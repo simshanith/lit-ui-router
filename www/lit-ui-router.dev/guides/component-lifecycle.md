@@ -99,8 +99,11 @@ measurement — and reads it on the promise alone finds the outgoing view.
 
 `<ui-view>` is a `LitElement`, so its `updateComplete` is the promise for the
 update that does the swap. Await `transition.promise`, then `updateComplete` on
-every `<ui-view>` (nested views each swap in their own update), then on any
-element the new view rendered, whose own update lands one step later.
+every `<ui-view>` (nested views each swap in their own update), then on each
+view's [`routedElement`](./routed-components#the-routed-element), whose own
+update lands one step later. When a class component replaced another, the
+routed element's first update has the view drop the outgoing element in one
+more view update, so await the views once more.
 
 Do not wait for a frame instead. `requestAnimationFrame` does not fire while a
 View Transition snapshot is held, so a release that waits a frame hangs until
@@ -108,18 +111,21 @@ the browser's own timeout ends the transition.
 
 ```ts
 import type { ReactiveElement } from 'lit';
+import type { UiView } from 'lit-ui-router';
 
-const settle = (selector: string) =>
+const settle = (elements: (Element | null)[]) =>
   Promise.all(
-    [...document.querySelectorAll<ReactiveElement>(selector)].map(
-      (element) => element.updateComplete,
+    elements.map(
+      (element) => (element as ReactiveElement | null)?.updateComplete,
     ),
   );
 
 async function viewRendered(): Promise<void> {
   await Promise.resolve(); // lets the swap's update queue
-  await settle('ui-view');
-  await settle('contact-detail'); // the element the new view rendered
+  const views = [...document.querySelectorAll<UiView>('ui-view')];
+  await settle(views);
+  await settle(views.map((view) => view.routedElement));
+  await settle(views); // drops an element the routed one replaced
 }
 
 router.transitionService.onStart({}, (trans) => {
