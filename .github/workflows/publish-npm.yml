@@ -157,6 +157,8 @@ jobs:
         # cancels across a multi-tag release, and a called job's cancel would
         # mark this run cancelled. Manual dispatch on Release signals re-nudges.
         continue-on-error: true
-        run: gh workflow run release-signals.yml --ref main
+        run: gh workflow run release-signals.yml --ref main -f release="$RELEASE"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Empty on a dry run, so the ledger check compares no digest.
+          RELEASE: ${{ !inputs.dryRun && format('{0}@{1}', steps.info.outputs.package_name, steps.publish.outputs.version) || '' }}

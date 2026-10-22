@@ -34,16 +34,24 @@ class BadRequest extends Schema.TaggedError<BadRequest>()('BadRequest', {
   reason: Schema.String,
 }) {}
 
-class Misconfigured extends Schema.TaggedError<Misconfigured>()(
+export class Misconfigured extends Schema.TaggedError<Misconfigured>()(
   'Misconfigured',
   { reason: Schema.String },
 ) {}
 
-const text = (status: number, body: string): Response =>
+export const text = (
+  status: number,
+  body: string,
+  headers?: Record<string, string>,
+): Response =>
   new Response(body, {
     status,
-    headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+    headers: { 'Content-Type': 'text/plain; charset=utf-8', ...headers },
   });
+
+/** A 401 naming the scheme the caller must send (RFC 6750). */
+export const unauthorized = (reason: string): Response =>
+  text(401, reason, { 'WWW-Authenticate': 'Bearer' });
 
 const decodeBody = Schema.decodeUnknownEffect(Schema.fromJsonString(ClaimBody));
 
@@ -55,17 +63,28 @@ const policyOf = (env: IngestEnv): Omit<OidcPolicy, 'audience'> => ({
   environment: env.OIDC_ENVIRONMENT,
 });
 
-function bearerOf(request: Request): string | undefined {
+export function bearerOf(request: Request): string | undefined {
   const header = request.headers.get('Authorization') ?? '';
   const match = /^Bearer (\S+)$/.exec(header);
 
   return match?.[1];
 }
 
-const readClaims = (token: string, env: IngestEnv, keys?: JWTVerifyGetKey) =>
+/** Where a route's audience comes from; the flag skips verification only while the audience is empty. */
+export interface AudienceSource {
+  variable: string;
+  audience: string | undefined;
+  devSkip: string | undefined;
+}
+
+export const readClaims = (
+  token: string,
+  source: AudienceSource,
+  keys?: JWTVerifyGetKey,
+) =>
   Effect.gen(function* () {
-    const audience = env.OIDC_AUDIENCE ?? '';
-    const skip = env.LEDGER_DEV_SKIP_OIDC === 'true';
+    const audience = source.audience ?? '';
+    const skip = source.devSkip === 'true';
 
     if (audience === '' && skip) {
       yield* Effect.logWarning('LEDGER_DEV_SKIP_OIDC is set: token unverified');
@@ -80,12 +99,14 @@ const readClaims = (token: string, env: IngestEnv, keys?: JWTVerifyGetKey) =>
     }
 
     if (audience === '') {
-      return yield* new Misconfigured({ reason: 'OIDC_AUDIENCE is unset' });
+      return yield* new Misconfigured({
+        reason: `${source.variable} is unset`,
+      });
     }
 
     if (skip) {
       yield* Effect.logWarning(
-        'LEDGER_DEV_SKIP_OIDC is ignored while OIDC_AUDIENCE is set',
+        `LEDGER_DEV_SKIP_OIDC is ignored while ${source.variable} is set`,
       );
     }
 
@@ -118,9 +139,15 @@ const enqueue = (request: Request, env: IngestEnv, keys?: JWTVerifyGetKey) =>
       return yield* new InvalidToken({ reason: 'no bearer token' });
     }
 
-    const claims = yield* readClaims(token, env, keys).pipe(
-      Effect.withSpan('ledger.verify-token'),
-    );
+    const claims = yield* readClaims(
+      token,
+      {
+        variable: 'OIDC_AUDIENCE',
+        audience: env.OIDC_AUDIENCE,
+        devSkip: env.LEDGER_DEV_SKIP_OIDC,
+      },
+      keys,
+    ).pipe(Effect.withSpan('ledger.verify-token'));
 
     const body = yield* readBody(request);
 
@@ -182,7 +209,7 @@ export const respond = (
 
   return enqueue(request, env, keys).pipe(
     Effect.catchTags({
-      InvalidToken: (error) => Effect.succeed(text(401, error.reason)),
+      InvalidToken: (error) => Effect.succeed(unauthorized(error.reason)),
       ForbiddenClaim: (error) => Effect.succeed(text(403, error.reason)),
       BadRequest: (error) => Effect.succeed(text(400, error.reason)),
       Misconfigured: (error) =>

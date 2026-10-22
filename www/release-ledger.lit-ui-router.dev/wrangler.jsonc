@@ -6,7 +6,7 @@
   // cloudflare-effect-tracer imports node:async_hooks.
   "compatibility_flags": ["nodejs_compat"],
   "main": "./worker/index.ts",
-  // Only the route serves /claims; Previews get no URL of their own.
+  // Only the route serves /claims and /ledger; Previews get no URL of their own.
   "workers_dev": false,
   "preview_urls": false,
   "routes": [
@@ -26,6 +26,11 @@
       "simshanith/lit-ui-router/.github/workflows/publish-npm.yml",
     ],
     "OIDC_ENVIRONMENT": "publish",
+    // GET /ledger's policy; its audience and workflows are disjoint from /claims'.
+    "OIDC_READ_AUDIENCE": "https://release-ledger.lit-ui-router.dev/ledger",
+    "OIDC_READ_WORKFLOWS": [
+      "simshanith/lit-ui-router/.github/workflows/release-signals.yml",
+    ],
   },
   "d1_databases": [
     {

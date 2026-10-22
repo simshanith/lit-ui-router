@@ -169,6 +169,22 @@ describe('wrangler.jsonc', () => {
     assert.notEqual(config.vars.OIDC_AUDIENCE ?? '', '');
   });
 
+  it('keeps the read policy disjoint from the publish one', () => {
+    const {
+      OIDC_AUDIENCE,
+      OIDC_READ_AUDIENCE,
+      OIDC_WORKFLOWS,
+      OIDC_READ_WORKFLOWS,
+    } = config.vars;
+
+    const publish = new Set([OIDC_WORKFLOWS].flat());
+
+    assert.notEqual(OIDC_READ_AUDIENCE ?? '', '');
+    assert.notEqual(OIDC_READ_AUDIENCE, OIDC_AUDIENCE);
+    assert.ok([OIDC_READ_WORKFLOWS].flat().length > 0);
+    assert.ok([OIDC_READ_WORKFLOWS].flat().every((w) => w && !publish.has(w)));
+  });
+
   it('gives up on a claim before the next daily sweep', () => {
     const [claims] = config.queues.consumers;
     let window = 0;
@@ -857,5 +873,94 @@ describe('queue consumer', { timeout: 120_000 }, () => {
       (await all('claims')).map(({ outcome }) => outcome),
       ['applied'],
     );
+  });
+});
+
+describe('GET /ledger in workerd', { timeout: 120_000 }, () => {
+  const READ_TOKEN = [
+    { alg: 'none' },
+    {
+      repository: 'simshanith/lit-ui-router',
+      repository_id: '1025140115',
+      repository_owner_id: '135388',
+      job_workflow_ref:
+        'simshanith/lit-ui-router/.github/workflows/release-signals.yml@refs/heads/main',
+      run_id: '200',
+      run_attempt: '1',
+      sha: SHA,
+      ref: 'refs/heads/main',
+      event_name: 'schedule',
+    },
+  ]
+    .map((part) => Buffer.from(JSON.stringify(part)).toString('base64url'))
+    .join('.')
+    .concat('.');
+
+  const getLedger = () =>
+    server.fetch('/ledger', {
+      headers: { Authorization: `Bearer ${READ_TOKEN}` },
+    });
+
+  it('answers 401 for an unverifiable token under the deployed read audience', async () => {
+    await server.update({
+      root: SCRATCH,
+      workers: [{ config: harnessConfig(DEPLOYED_VARS) }],
+    });
+
+    assert.equal((await getLedger()).status, 401);
+  });
+
+  it('reads every version and dist-tag under the .dev.vars that blank the read audience', async () => {
+    await server.update({
+      root: SCRATCH,
+      workers: [
+        {
+          config: harnessConfig({
+            ...DEPLOYED_VARS,
+            OIDC_READ_AUDIENCE: '',
+            LEDGER_DEV_SKIP_OIDC: 'true',
+          }),
+        },
+      ],
+    });
+
+    const worker = server.getWorker<{ DB: DB }>();
+    await worker.applyD1Migrations('DB');
+    ({ DB: db } = await worker.getEnv());
+    await db.batch(
+      ['ledger_events', 'dist_tags', 'versions', 'claims'].map((table) =>
+        db.prepare(`DELETE FROM ${table}`),
+      ),
+    );
+    await seed(ROWS.released);
+    await db
+      .prepare(
+        "INSERT INTO dist_tags (name, tag, version, updated_at) VALUES (?, 'latest', ?, 'then')",
+      )
+      .bind(ROWS.released.name, ROWS.released.version)
+      .run();
+
+    const response = await getLedger();
+
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get('Cache-Control'), 'no-store');
+    assert.deepEqual(await response.json(), {
+      versions: [
+        {
+          ...ROWS.released,
+          npm_state: 'active',
+          gh_state: 'final',
+          status: 'released',
+        },
+      ],
+      distTags: [
+        {
+          name: ROWS.released.name,
+          tag: 'latest',
+          version: ROWS.released.version,
+          updated_at: 'then',
+        },
+      ],
+    });
   });
 });
