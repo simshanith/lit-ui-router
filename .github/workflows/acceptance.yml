@@ -157,7 +157,14 @@ jobs:
           path: |
             .turbo/turbo-*.log
             .turbo/logs/*.json
+            apps/*/.turbo/turbo-*.log
+            examples/.turbo/turbo-*.log
+            packages/*/.turbo/turbo-*.log
+            packages/shared/*/.turbo/turbo-*.log
+            tools/*/.turbo/turbo-*.log
             www/lit-ui-router.dev/.turbo/turbo-*.log
+            www/release-diffs.lit-ui-router.dev/.turbo/turbo-*.log
+            www/release-ledger.lit-ui-router.dev/.turbo/turbo-*.log
           include-hidden-files: true
           retention-days: 5
           if-no-files-found: warn
