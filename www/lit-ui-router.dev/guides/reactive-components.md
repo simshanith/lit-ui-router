@@ -36,8 +36,8 @@ class NavHeader extends LitElement {
 ```
 
 No wiring is needed: on `hostConnected` the controller discovers the router
-from the nearest `<ui-router>` (or `<ui-view>`) ancestor via the
-`ui-router-context` event, registers its transition hooks, and deregisters
+from the nearest `<ui-router>` (or `<ui-view>`) ancestor with a
+`context-request`, registers its transition hooks, and deregisters
 them all on `hostDisconnected` — nothing leaks when elements come and go
 from the DOM.
 
@@ -45,19 +45,14 @@ from the DOM.
 
 Controllers find the router. Anything else — a store, an element
 that is not a Lit host, a third-party component — asks the same provider
-directly, and `<ui-router>` answers both ways in from one listener:
-
-- The house event, `ui-router-context`, dispatched by
-  [`UIRouterLitElement.seekRouter(element)`](/api/reference/components/UIRouterLitElement).
-  Every controller and directive in this package calls it.
-- The community
-  [`context-request` protocol](https://github.com/webcomponents-cg/community-protocols/blob/main/proposals/context.md),
-  from the `lit-ui-router/context` entry.
-  [`requestRouter(target)`](/api/reference/core/requestRouter) returns the
-  router a provider answered with synchronously, or `undefined`, and takes any
-  `EventTarget`. [`routerContext`](/api/reference/core/routerContext) is the
-  key, in the protocol's branded shape, so `@lit/context` consumes it with
-  nothing in between:
+directly, over the community
+[`context-request` protocol](https://github.com/webcomponents-cg/community-protocols/blob/main/proposals/context.md)
+from the `lit-ui-router/context` entry.
+[`requestRouter(target)`](/api/reference/core/requestRouter) returns the
+router a provider answered with synchronously, or `undefined`, and takes any
+`EventTarget`. [`routerContext`](/api/reference/core/routerContext) is the
+key, in the protocol's branded shape, so `@lit/context` consumes it with
+nothing in between:
 
 ```ts
 import { consume } from '@lit/context';
@@ -74,11 +69,16 @@ The [Hello Solar System (Signals)](/tutorial/live-examples#hello-solar-system-si
 example consumes it this way, beside a context of its own that hands routed
 views a signal.
 
-It reads both ways: a `ContextProvider` of `routerContext` on any ancestor
-satisfies `seekRouter` too. A `subscribe` request answered with the placeholder
+Any `ContextProvider` of `routerContext` on an ancestor serves the controllers
+and directives too. A `subscribe` request answered with the placeholder
 router `<ui-router>` creates on connect is called again when the app replaces
 it, and `<ui-view>` passes that on to its own subscribers; any other answer is
 one call and a no-op unsubscribe.
+
+`<ui-router>` also answers the house `ui-router-context` event, which
+[`UIRouterLitElement.seekRouter(element)`](/api/reference/components/UIRouterLitElement)
+dispatches, and core's controllers and directives fall back to it when no
+`context-request` provider answers.
 
 `<ui-view>` answers the same way for its own key,
 [`parentUiViewContext`](/api/reference/core/parentUiViewContext): a
