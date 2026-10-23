@@ -9,7 +9,8 @@
     "checkJs": true,
     "strict": true,
     "skipLibCheck": true,
-    "noEmit": true
+    "noEmit": true,
+    "verbatimModuleSyntax": true
   },
   "include": ["public/**/*.js", "vite.config.js"]
 }

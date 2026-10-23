@@ -15,7 +15,7 @@ built directly on the framework-agnostic
 ```ts
 import { render, html } from 'lit';
 import { hashLocationPlugin } from '@uirouter/core';
-import { UIRouterLit, LitStateDeclaration } from 'lit-ui-router';
+import { UIRouterLit, type LitStateDeclaration } from 'lit-ui-router';
 
 const router = new UIRouterLit();
 router.plugin(hashLocationPlugin);
@@ -147,8 +147,6 @@ npm install lit-ui-router lit @uirouter/core
 The app renders into a host element, `<div id="root">` in the starter's
 [`index.html`](https://github.com/simshanith/lit-ui-router/blob/main/examples/helloworld/index.html).
 Vite's `lit-ts` template (`npm create vite@latest my-app -- --template lit-ts`)
-already sets the decorator options the tutorial uses. It also sets
-`verbatimModuleSyntax`, so import types such as `LitStateDeclaration` with
-`import type` or an inline `type` modifier.
+already sets the decorator options the tutorial uses.
 
 Then start with the [Hello World tutorial](./tutorial/helloworld).

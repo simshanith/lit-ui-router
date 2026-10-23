@@ -1,6 +1,6 @@
 import { html, LitElement, css, nothing } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { createRef, ref, Ref } from 'lit/directives/ref.js';
+import { createRef, ref, type Ref } from 'lit/directives/ref.js';
 import { hashLocationPlugin } from '@uirouter/core';
 import {
   UIRouterLit,
@@ -9,7 +9,7 @@ import {
   srefHref,
   srefActiveClass,
   srefAriaCurrent,
-  LitStateDeclaration,
+  type LitStateDeclaration,
 } from 'lit-ui-router';
 import { ColorSchemeController } from './color-scheme.js';
 import '@spectrum-web-components/theme/sp-theme.js';

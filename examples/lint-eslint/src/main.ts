@@ -2,7 +2,7 @@ import { hashLocationPlugin } from '@uirouter/core';
 import { css, html, LitElement, render } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import {
-  LitStateDeclaration,
+  type LitStateDeclaration,
   UIRouterLit,
   uiSref,
   uiSrefActive,

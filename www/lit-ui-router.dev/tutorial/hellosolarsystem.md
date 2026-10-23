@@ -106,7 +106,7 @@ When navigating to `planets`, the router:
 Components receive resolved data through `_uiViewProps`:
 
 ```typescript
-import { UIViewInjectedProps } from 'lit-ui-router';
+import type { UIViewInjectedProps } from 'lit-ui-router';
 
 @customElement('planet-list')
 class PlanetListComponent extends LitElement {

@@ -9,7 +9,6 @@ const props = withDefaults(
     src: string;
     title: string;
     height?: string;
-    sourceHref?: string;
   }>(),
   { height: '420px' },
 );
@@ -46,7 +45,6 @@ async function loadIcons() {
     import('@spectrum-web-components/icons-workflow/icons/sp-icon-full-screen-exit.js'),
     import('@spectrum-web-components/icons-workflow/icons/sp-icon-refresh.js'),
     import('@spectrum-web-components/icons-workflow/icons/sp-icon-link-out.js'),
-    import('@spectrum-web-components/icons-workflow/icons/sp-icon-code.js'),
   ]);
   iconsLoaded.value = true;
 }
@@ -101,16 +99,6 @@ onUnmounted(() => {
       <a :href="src" target="_blank" rel="noopener" class="open-btn btn">
         <sp-icon-link-out v-if="iconsLoaded" />
         Open in new tab
-      </a>
-      <a
-        v-if="sourceHref"
-        :href="sourceHref"
-        target="_blank"
-        rel="noopener"
-        class="source-btn btn"
-      >
-        <sp-icon-code v-if="iconsLoaded" />
-        Source on GitHub
       </a>
       <slot></slot>
     </div>

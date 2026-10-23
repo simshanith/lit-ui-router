@@ -95,12 +95,25 @@ onMounted(() => {
           Edit in StackBlitz
         </button>
       </div>
-      <a class="open-badge" :href="openSrc" target="_blank" rel="noopener">
-        <img
-          alt="Open in StackBlitz"
-          src="https://developer.stackblitz.com/img/open_in_stackblitz.svg"
-        />
-      </a>
+      <div class="live-example-links">
+        <a
+          class="source-link"
+          :href="sourceSrc"
+          target="_blank"
+          rel="noopener"
+          :aria-label="`${example.title} source on GitHub`"
+          title="Source on GitHub"
+        >
+          <!-- The icon class ships with the theme's github socialLinks entry. -->
+          <span class="vpi-simple-icons-github" aria-hidden="true"></span>
+        </a>
+        <a class="open-badge" :href="openSrc" target="_blank" rel="noopener">
+          <img
+            alt="Open in StackBlitz"
+            src="https://developer.stackblitz.com/img/open_in_stackblitz.svg"
+          />
+        </a>
+      </div>
     </div>
     <div
       class="live-example-panels"
@@ -117,7 +130,6 @@ onMounted(() => {
           :src="previewSrc"
           :title="`${example.title} example`"
           :height="previewHeight"
-          :source-href="sourceSrc"
         />
       </div>
       <div
@@ -209,27 +221,53 @@ onMounted(() => {
   box-shadow: 0 0 0 1px var(--vp-c-divider);
 }
 
-.open-badge {
+.live-example-links {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-inline-start: auto;
+}
+
+/* Below the tabs+links intrinsic width the bar wraps the links onto their own
+   row — align them with the tabs instead of the far edge. */
+@container (max-width: 480px) {
+  .live-example-links {
+    margin-inline-start: 0;
+  }
+}
+
+.open-badge,
+.source-link {
   display: inline-flex;
   align-items: center;
   line-height: 0;
-  margin-inline-start: auto;
   border: 1px solid var(--vp-c-divider);
   border-radius: 6px;
   overflow: clip;
   transition: border-color 0.2s var(--ease-out);
 }
 
-/* Below the tabs+badge intrinsic width the bar wraps the badge onto its own
-   row — align it with the tabs instead of the far edge. */
-@container (max-width: 420px) {
-  .open-badge {
-    margin-inline-start: 0;
-  }
+.source-link {
+  justify-content: center;
+  inline-size: 38px;
+  block-size: 38px;
+  color: var(--vp-c-text-1);
+  background: var(--vp-c-bg-soft);
+}
+
+.source-link .vpi-simple-icons-github {
+  inline-size: 20px;
+  block-size: 20px;
+}
+
+.source-link:focus-visible {
+  outline: 2px solid var(--vp-c-brand-1);
+  outline-offset: 1px;
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .open-badge:hover {
+  .open-badge:hover,
+  .source-link:hover {
     border-color: var(--vp-c-brand-1);
   }
 }

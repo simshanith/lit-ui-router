@@ -24,8 +24,8 @@ Promise to make the transition wait — the classic "unsaved changes" prompt:
 
 ```ts
 import { LitElement, html } from 'lit';
-import { Transition, HookResult } from '@uirouter/core';
-import { UiOnExit } from 'lit-ui-router';
+import { Transition, type HookResult } from '@uirouter/core';
+import type { UiOnExit } from 'lit-ui-router';
 
 class EditContact extends LitElement implements UiOnExit {
   private dirty = false;
@@ -71,8 +71,8 @@ const messagesState: LitStateDeclaration = {
 ```
 
 ```ts
-import { RawParams, Transition } from '@uirouter/core';
-import { UiOnParamsChanged } from 'lit-ui-router';
+import { type RawParams, Transition } from '@uirouter/core';
+import type { UiOnParamsChanged } from 'lit-ui-router';
 
 class MessageList extends LitElement implements UiOnParamsChanged {
   uiOnParamsChanged(newParams: RawParams, trans?: Transition) {
