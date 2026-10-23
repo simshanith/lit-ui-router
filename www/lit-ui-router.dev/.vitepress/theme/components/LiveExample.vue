@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, useId } from 'vue';
+import { VPIcon } from 'vitepress/theme';
 import ExampleEmbed from './ExampleEmbed.vue';
 import StackBlitzEmbed from './StackBlitzEmbed.vue';
 import {
   EXAMPLES,
+  githubTreeSrc,
   staticSrc,
   stackblitzEmbedSrc,
   stackblitzOpenSrc,
@@ -34,6 +36,8 @@ const embedSrc = computed(() =>
 );
 
 const openSrc = computed(() => stackblitzOpenSrc(props.name, props.file));
+
+const sourceSrc = computed(() => githubTreeSrc(props.name));
 
 const previewHeight = computed(() => props.height ?? example.value.height);
 
@@ -92,12 +96,24 @@ onMounted(() => {
           Edit in StackBlitz
         </button>
       </div>
-      <a class="open-badge" :href="openSrc" target="_blank" rel="noopener">
-        <img
-          alt="Open in StackBlitz"
-          src="https://developer.stackblitz.com/img/open_in_stackblitz.svg"
-        />
-      </a>
+      <div class="live-example-links">
+        <a
+          class="source-link"
+          :href="sourceSrc"
+          target="_blank"
+          rel="noopener"
+          :aria-label="`${example.title} source on GitHub`"
+          title="Source on GitHub"
+        >
+          <VPIcon icon="simple-icons:github" aria-hidden="true" />
+        </a>
+        <a class="open-badge" :href="openSrc" target="_blank" rel="noopener">
+          <img
+            alt="Open in StackBlitz"
+            src="https://developer.stackblitz.com/img/open_in_stackblitz.svg"
+          />
+        </a>
+      </div>
     </div>
     <div
       class="live-example-panels"
@@ -205,27 +221,49 @@ onMounted(() => {
   box-shadow: 0 0 0 1px var(--vp-c-divider);
 }
 
-.open-badge {
+.live-example-links {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-inline-start: auto;
+}
+
+/* Below the tabs+links intrinsic width the bar wraps the links onto their own
+   row — align them with the tabs instead of the far edge. */
+@container (max-width: 480px) {
+  .live-example-links {
+    margin-inline-start: 0;
+  }
+}
+
+.open-badge,
+.source-link {
   display: inline-flex;
   align-items: center;
   line-height: 0;
-  margin-inline-start: auto;
   border: 1px solid var(--vp-c-divider);
   border-radius: 6px;
   overflow: clip;
   transition: border-color 0.2s var(--ease-out);
 }
 
-/* Below the tabs+badge intrinsic width the bar wraps the badge onto its own
-   row — align it with the tabs instead of the far edge. */
-@container (max-width: 420px) {
-  .open-badge {
-    margin-inline-start: 0;
-  }
+.source-link {
+  justify-content: center;
+  inline-size: 38px;
+  block-size: 38px;
+  color: var(--vp-c-text-1);
+  font-size: 20px;
+  background: var(--vp-c-bg-soft);
+}
+
+.source-link:focus-visible {
+  outline: 2px solid var(--vp-c-brand-1);
+  outline-offset: 1px;
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .open-badge:hover {
+  .open-badge:hover,
+  .source-link:hover {
     border-color: var(--vp-c-brand-1);
   }
 }

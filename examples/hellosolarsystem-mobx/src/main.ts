@@ -6,8 +6,8 @@ import {
   UIRouterLit,
   uiSref,
   uiSrefActive,
-  LitStateDeclaration,
-  UIViewInjectedProps,
+  type LitStateDeclaration,
+  type UIViewInjectedProps,
 } from 'lit-ui-router';
 import {
   ReactionController,

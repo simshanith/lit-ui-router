@@ -11,6 +11,13 @@ export type StackBlitzView = 'default' | 'editor' | 'preview';
 const REPO_TREE =
   'https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples';
 
+const GITHUB_TREE =
+  'https://github.com/simshanith/lit-ui-router/tree/main/examples';
+
+export function githubTreeSrc(name: ExampleName): string {
+  return `${GITHUB_TREE}/${name}`;
+}
+
 export function staticSrc(name: ExampleName): string {
   return `/examples/${name}/`;
 }

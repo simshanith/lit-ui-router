@@ -14,17 +14,17 @@ import {
 } from 'effect';
 import { FetchHttpClient, HttpClient } from '@effect/platform';
 import {
-  DefaultResolvesType,
+  type DefaultResolvesType,
   UIRouterLit,
   uiSref,
   uiSrefActive,
-  UIViewInjectedProps,
+  type UIViewInjectedProps,
 } from 'lit-ui-router';
 
 import {
   CurrentTransition,
   EffectPlugin,
-  EffectStateDeclaration,
+  type EffectStateDeclaration,
   effectPlugin,
   provide,
 } from './effect-plugin.js';

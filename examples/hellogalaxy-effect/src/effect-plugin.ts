@@ -15,24 +15,24 @@ import {
   SubscriptionRef,
 } from 'effect';
 import {
-  CustomAsyncPolicy,
-  HookMatchCriteria,
-  HookRegOptions,
-  HookResult,
+  type CustomAsyncPolicy,
+  type HookMatchCriteria,
+  type HookRegOptions,
+  type HookResult,
   isFunction,
   isString,
   PathNode,
-  RawParams,
+  type RawParams,
   Resolvable,
-  ResolvePolicy,
-  ResolvableLiteral,
+  type ResolvePolicy,
+  type ResolvableLiteral,
   StateObject,
   Transition,
-  UIInjector,
+  type UIInjector,
   UIRouter,
-  UIRouterPlugin,
+  type UIRouterPlugin,
 } from '@uirouter/core';
-import { DefaultResolvesType, LitStateDeclaration } from 'lit-ui-router';
+import type { DefaultResolvesType, LitStateDeclaration } from 'lit-ui-router';
 
 /** The transition a resolve or hook effect is running inside. */
 export class CurrentTransition extends Context.Tag('CurrentTransition')<

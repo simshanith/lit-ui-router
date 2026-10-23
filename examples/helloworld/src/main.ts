@@ -6,7 +6,7 @@ import {
   UIRouterLit,
   uiSref,
   uiSrefActive,
-  LitStateDeclaration,
+  type LitStateDeclaration,
 } from 'lit-ui-router';
 
 @customElement('app-root')
