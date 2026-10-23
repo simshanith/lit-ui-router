@@ -188,6 +188,7 @@
         "!**/.turbo/**",
         "!**/.probe-scratch/**",
         "!.cache/**",
+        "!**/.vitepress/cache/**",
         "$TURBO_ROOT$/.oxlintrc.json",
         "$TURBO_DEFAULT$"
       ],
@@ -279,6 +280,7 @@
         "**/package.json",
         "!**/node_modules/**",
         "!.claude/worktrees/**",
+        "!**/.vitepress/cache/**",
         "eslint.config.ts",
         "tools/eslint/**",
         "!**/.turbo/**",
@@ -506,6 +508,7 @@
         "!**/.turbo/**",
         "!**/.probe-scratch/**",
         "!.cache/**",
+        "!**/.vitepress/cache/**",
         ".oxfmtrc.json",
         "$TURBO_ROOT$/.oxfmtrc.json"
       ]

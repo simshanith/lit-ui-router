@@ -48,6 +48,7 @@
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/**/package.json",
         "!$TURBO_ROOT$/**/node_modules/**",
+        "!$TURBO_ROOT$/**/.vitepress/cache/**",
         "!$TURBO_ROOT$/.claude/**",
         "$TURBO_ROOT$/pnpm-workspace.yaml",
         "$TURBO_ROOT$/pnpm-lock.yaml"
@@ -64,6 +65,7 @@
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/**/package.json",
         "!$TURBO_ROOT$/**/node_modules/**",
+        "!$TURBO_ROOT$/**/.vitepress/cache/**",
         "!$TURBO_ROOT$/**/dist/**",
         "!$TURBO_ROOT$/**/.turbo/**",
         "!$TURBO_ROOT$/.claude/**",
@@ -84,6 +86,7 @@
         "$TURBO_ROOT$/**/turbo.json",
         "$TURBO_ROOT$/**/package.json",
         "!$TURBO_ROOT$/**/node_modules/**",
+        "!$TURBO_ROOT$/**/.vitepress/cache/**",
         "!$TURBO_ROOT$/.claude/**",
         "$TURBO_ROOT$/pnpm-workspace.yaml",
         "$TURBO_ROOT$/tools/shared/src/**"
@@ -100,6 +103,7 @@
         "$TURBO_ROOT$/**/*.{ts,tsx,js,jsx,cjs,mjs,cts,mts}",
         "$TURBO_ROOT$/**/*.{json,jsonc,toml,yaml,yml}",
         "!$TURBO_ROOT$/**/node_modules/**",
+        "!$TURBO_ROOT$/**/.vitepress/cache/**",
         "!$TURBO_ROOT$/**/dist/**",
         "!$TURBO_ROOT$/**/coverage/**",
         "!$TURBO_ROOT$/**/coverage-effect3/**",
@@ -128,6 +132,7 @@
         "$TURBO_ROOT$/**/turbo.json",
         "$TURBO_ROOT$/**/package.json",
         "!$TURBO_ROOT$/**/node_modules/**",
+        "!$TURBO_ROOT$/**/.vitepress/cache/**",
         "!$TURBO_ROOT$/.claude/**",
         "$TURBO_ROOT$/tools/shared/src/**"
       ]
