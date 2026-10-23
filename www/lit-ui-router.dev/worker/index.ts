@@ -53,13 +53,17 @@ const withNoindex = (response: Response): Response => {
 const NAIVE_MOUNT = '/not-found-naive';
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
     // SAFETY: wrangler types the binding as an untyped Service; LedgerReader names the entrypoint's methods.
     // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- an untyped Service shares no members with the RPC methods, so one assertion can't reach them
     const ledger = env.LEDGER as unknown as LedgerReader;
-    const releases = await serveReleases(request, ledger);
+
+    const releases = await serveReleases(request, ledger, {
+      cache: caches.default,
+      waitUntil: (promise) => ctx.waitUntil(promise),
+    });
 
     if (releases !== null) return releases;
 

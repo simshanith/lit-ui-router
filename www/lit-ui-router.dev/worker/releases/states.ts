@@ -3,6 +3,7 @@ import type { StateDeclaration, Transition } from '@uirouter/core';
 import type { LitStateDeclaration, UIViewResolves } from 'lit-ui-router/pure';
 import { mergeSearch } from 'ui-router-server';
 
+import { type CacheKey, urlKey } from './edge-cache.ts';
 import {
   type LedgerPackage,
   type LedgerReader,
@@ -47,6 +48,8 @@ export interface RespondContext<Resolves = UIViewResolves> {
 export interface ReleaseState extends StateDeclaration {
   name: string;
   response?: true;
+  /** Set on a response state whose answer the edge may cache; absent, every request reaches the ledger. */
+  cacheKey?: CacheKey;
   // Method syntax: each state reads its own resolves, which the transition hands over untyped, as a view's are.
   respond?(context: RespondContext): Response;
 }
@@ -54,7 +57,10 @@ export interface ReleaseState extends StateDeclaration {
 type Attached = {
   [Name in RouteName]: Omit<LitStateDeclaration<ResolvesOf[Name]>, 'name'> &
     (Name extends ResponseName
-      ? { respond: (context: RespondContext<ResolvesOf[Name]>) => Response }
+      ? {
+          respond: (context: RespondContext<ResolvesOf[Name]>) => Response;
+          cacheKey?: CacheKey;
+        }
       : object);
 };
 
@@ -112,6 +118,7 @@ const attach = (ledger: LedgerReader): Attached => ({
   },
   githubRelease: {
     resolve: [latestResolve(ledger)],
+    cacheKey: urlKey,
     respond: ({ resolves, request }) =>
       found(
         releaseUrl(resolves.latest) ??

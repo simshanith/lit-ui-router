@@ -14,6 +14,7 @@ import {
 } from '../releases/ledger.ts';
 import { serveReleases } from '../releases/serve.ts';
 import { fixtureLedger } from './ledger-stub/rows.ts';
+import { memoryEdge } from './memory-cache.ts';
 
 const ORIGIN = 'http://docs.test';
 
@@ -256,6 +257,129 @@ describe('the /gh verdicts', () => {
     assert.equal(response?.status, 503);
     assert.equal(response?.headers.get('Cache-Control'), 'no-store');
     assert.equal(response?.headers.get('Location'), null);
+  });
+});
+
+describe('the /gh edge cache', () => {
+  const LATEST = '/gh/releases/lit-ui-router/latest';
+
+  const counting = () => {
+    let reads = 0;
+
+    const ledger: LedgerReader = {
+      packages: () => {
+        reads += 1;
+
+        return fixtureLedger.packages();
+      },
+      tagged: (name, tag) => {
+        reads += 1;
+
+        return fixtureLedger.tagged(name, tag);
+      },
+      versions: (name) => {
+        reads += 1;
+
+        return fixtureLedger.versions(name);
+      },
+    };
+
+    return { ledger, reads: () => reads };
+  };
+
+  const serveVia = (
+    memory: ReturnType<typeof memoryEdge>,
+    path: string,
+    ledger: LedgerReader,
+    init?: RequestInit,
+  ) =>
+    serveReleases(new Request(`${ORIGIN}${path}`, init), ledger, memory.edge);
+
+  it('writes a miss to the cache under the request url', async () => {
+    const memory = memoryEdge();
+    const response = await serveVia(memory, LATEST, fixtureLedger);
+    await memory.settled();
+
+    assert.equal(response?.status, 302);
+    assert.deepEqual(memory.calls, [
+      `match GET ${ORIGIN}${LATEST}`,
+      `put GET ${ORIGIN}${LATEST}`,
+    ]);
+    assert.equal(
+      memory.entries.get(`${ORIGIN}${LATEST}`)?.headers.get('Cache-Control'),
+      'public, max-age=300',
+    );
+  });
+
+  it('answers a hit without reading the ledger', async () => {
+    const memory = memoryEdge();
+    await serveVia(memory, LATEST, fixtureLedger);
+    await memory.settled();
+
+    const { ledger, reads } = counting();
+    const response = await serveVia(memory, LATEST, ledger);
+
+    assert.equal(reads(), 0);
+    assert.equal(response?.status, 302);
+    assert.equal(
+      response?.headers.get('Location'),
+      `${GITHUB}/lit-ui-router%401.10.0`,
+    );
+  });
+
+  it('shares one entry across a trailing slash, a fragment and HEAD', async () => {
+    const memory = memoryEdge();
+    await serveVia(memory, `${LATEST}/`, fixtureLedger);
+    await memory.settled();
+
+    const { ledger, reads } = counting();
+
+    const response = await serveVia(memory, `${LATEST}#top`, ledger, {
+      method: 'HEAD',
+    });
+
+    assert.equal(reads(), 0);
+    assert.equal(response?.status, 302);
+    assert.equal(response?.body, null);
+    assert.deepEqual([...memory.entries.keys()], [`${ORIGIN}${LATEST}`]);
+  });
+
+  it('keys on the search, which the fallback location keeps', async () => {
+    const memory = memoryEdge();
+    await serveVia(memory, LATEST, fixtureLedger);
+    await serveVia(memory, `${LATEST}?ref=badge`, fixtureLedger);
+    await memory.settled();
+
+    assert.deepEqual(
+      [...memory.entries.keys()],
+      [`${ORIGIN}${LATEST}`, `${ORIGIN}${LATEST}?ref=badge`],
+    );
+  });
+
+  it('keeps no 404 and no 503', async () => {
+    const memory = memoryEdge();
+
+    const missing = await serveVia(
+      memory,
+      '/gh/releases/ui-router-signals/latest',
+      fixtureLedger,
+    );
+
+    const down = await serveVia(memory, LATEST, DOWN);
+    await memory.settled();
+
+    assert.equal(missing?.status, 404);
+    assert.equal(down?.status, 503);
+    assert.equal(memory.entries.size, 0);
+  });
+
+  it('leaves the /releases pages and redirects uncached', async () => {
+    const memory = memoryEdge();
+    await serveVia(memory, '/releases/lit-ui-router/', fixtureLedger);
+    await serveVia(memory, '/releases/lit-ui-router/latest', fixtureLedger);
+    await memory.settled();
+
+    assert.deepEqual(memory.calls, []);
   });
 });
 

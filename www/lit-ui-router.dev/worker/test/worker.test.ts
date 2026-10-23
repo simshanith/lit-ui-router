@@ -3,6 +3,7 @@ import { beforeEach, describe, it } from 'node:test';
 
 import worker from '../index.ts';
 import { fixtureLedger } from './ledger-stub/rows.ts';
+import { memoryEdge } from './memory-cache.ts';
 
 // The docs worker's HTTP contract, exercised on the production code path: the
 // real module (real sample-app-routes mounts, real ui-router-server fetch
@@ -67,9 +68,27 @@ let assetCalls: string[] = [];
 
 let assetMethods: string[] = [];
 
+let memory = memoryEdge();
+
+Object.defineProperty(globalThis, 'caches', {
+  configurable: true,
+  value: {
+    get default() {
+      return memory.edge.cache;
+    },
+  },
+});
+
+// SAFETY: the worker calls only waitUntil on its context.
+// oxlint-disable-next-line anti-slop/no-chained-type-assertions -- a plain object shares too few members with ExecutionContext for one assertion
+const ctx = {
+  waitUntil: (promise: Promise<unknown>) => memory.edge.waitUntil(promise),
+} as unknown as ExecutionContext;
+
 beforeEach(() => {
   assetCalls = [];
   assetMethods = [];
+  memory = memoryEdge();
 });
 
 const env: Env = {
@@ -114,7 +133,7 @@ const env: Env = {
 const dispatch = (
   path: string,
   init?: RequestInit<IncomingRequestCfProperties>,
-) => worker.fetch(new Request(`${ORIGIN}${path}`, init), env);
+) => worker.fetch(new Request(`${ORIGIN}${path}`, init), env, ctx);
 
 const FLAGSHIPS = ['/app', '/app-mobx', '/app-effect', '/app-signals'] as const;
 
@@ -310,6 +329,25 @@ describe('/releases (the release pages)', () => {
     assert.deepEqual(assetCalls, []);
     assert.match(res.headers.get('Content-Type') ?? '', /text\/html/);
     assert.equal(res.headers.get('X-Robots-Tag'), null);
+  });
+});
+
+describe('/gh (the GitHub release redirects)', () => {
+  it('caches the redirect in caches.default through ctx.waitUntil', async () => {
+    const path = '/gh/releases/lit-ui-router/latest';
+    const first = await dispatch(path);
+    await memory.settled();
+    const second = await dispatch(path);
+
+    assert.equal(first.status, 302);
+    assert.equal(second.status, 302);
+    assert.equal(second.headers.get('Location'), first.headers.get('Location'));
+    assert.deepEqual(memory.calls, [
+      `match GET ${ORIGIN}${path}`,
+      `put GET ${ORIGIN}${path}`,
+      `match GET ${ORIGIN}${path}`,
+    ]);
+    assert.deepEqual(assetCalls, []);
   });
 });
 
