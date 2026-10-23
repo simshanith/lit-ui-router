@@ -3,7 +3,7 @@ import type { StateDeclaration, Transition } from '@uirouter/core';
 import type { LitStateDeclaration, UIViewResolves } from 'lit-ui-router/pure';
 import { mergeSearch } from 'ui-router-server';
 
-import { type CacheKey, urlKey } from './edge-cache.ts';
+import { type CacheKey, FRESH_MS, urlKey } from './edge-cache.ts';
 import {
   type LedgerPackage,
   type LedgerReader,
@@ -71,10 +71,13 @@ const paramsOf = (trans: Transition) =>
 const versionPath = ({ name, version }: LedgerVersion): string =>
   `${RELEASES_MOUNT}/${encodeURIComponent(name)}/${encodeURIComponent(version)}/`;
 
-const found = (location: string): Response =>
+const found = (location: string, maxAge = 300): Response =>
   new Response(null, {
     status: 302,
-    headers: { Location: location, 'Cache-Control': 'public, max-age=300' },
+    headers: {
+      Location: location,
+      'Cache-Control': `public, max-age=${maxAge}`,
+    },
   });
 
 const latestResolve = (ledger: LedgerReader) => ({
@@ -126,6 +129,7 @@ const attach = (ledger: LedgerReader): Attached => ({
             versionPath(resolves.latest),
             new URL(request.url).search,
           ),
+        FRESH_MS / 1000,
       ),
   },
   notFound: { component: NotFoundView },

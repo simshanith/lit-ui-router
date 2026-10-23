@@ -12,6 +12,7 @@ import {
   versionIn,
   versionsOf,
 } from '../releases/ledger.ts';
+import { FRESH_MS, KEEP_MS, STORED_AT } from '../releases/edge-cache.ts';
 import { serveReleases } from '../releases/serve.ts';
 import { fixtureLedger } from './ledger-stub/rows.ts';
 import { memoryEdge } from './memory-cache.ts';
@@ -179,7 +180,7 @@ describe('the /gh verdicts', () => {
       response?.headers.get('Location'),
       `${GITHUB}/lit-ui-router%401.10.0`,
     );
-    assert.equal(response?.headers.get('Cache-Control'), 'public, max-age=300');
+    assert.equal(response?.headers.get('Cache-Control'), 'public, max-age=60');
   });
 
   it('falls back to the version page, search kept, when the ledger records no GitHub release', async () => {
@@ -263,29 +264,43 @@ describe('the /gh verdicts', () => {
 describe('the /gh edge cache', () => {
   const LATEST = '/gh/releases/lit-ui-router/latest';
 
-  const counting = () => {
+  const counting = (base: LedgerReader = fixtureLedger) => {
     let reads = 0;
 
     const ledger: LedgerReader = {
       packages: () => {
         reads += 1;
 
-        return fixtureLedger.packages();
+        return base.packages();
       },
       tagged: (name, tag) => {
         reads += 1;
 
-        return fixtureLedger.tagged(name, tag);
+        return base.tagged(name, tag);
       },
       versions: (name) => {
         reads += 1;
 
-        return fixtureLedger.versions(name);
+        return base.versions(name);
       },
     };
 
     return { ledger, reads: () => reads };
   };
+
+  /** The fixture ledger with npm's `latest` moved to `version`. */
+  const latestAt = (version: string): LedgerReader => ({
+    ...fixtureLedger,
+    tagged: async (name) =>
+      (await fixtureLedger.versions(name)).find(
+        (row) => row.version === version,
+      ) ?? null,
+  });
+
+  const KEY = `${ORIGIN}${LATEST}`;
+
+  const storedAt = (memory: ReturnType<typeof memoryEdge>) =>
+    memory.entries.get(KEY)?.headers.get(STORED_AT);
 
   const serveVia = (
     memory: ReturnType<typeof memoryEdge>,
@@ -295,36 +310,103 @@ describe('the /gh edge cache', () => {
   ) =>
     serveReleases(new Request(`${ORIGIN}${path}`, init), ledger, memory.edge);
 
-  it('writes a miss to the cache under the request url', async () => {
+  it('writes a miss to the cache for a day, while the client keeps it 60 s', async () => {
     const memory = memoryEdge();
     const response = await serveVia(memory, LATEST, fixtureLedger);
     await memory.settled();
 
     assert.equal(response?.status, 302);
-    assert.deepEqual(memory.calls, [
-      `match GET ${ORIGIN}${LATEST}`,
-      `put GET ${ORIGIN}${LATEST}`,
-    ]);
+    assert.equal(response?.headers.get('Cache-Control'), 'public, max-age=60');
+    assert.deepEqual(memory.calls, [`match GET ${KEY}`, `put GET ${KEY}`]);
     assert.equal(
-      memory.entries.get(`${ORIGIN}${LATEST}`)?.headers.get('Cache-Control'),
-      'public, max-age=300',
+      memory.entries.get(KEY)?.headers.get('Cache-Control'),
+      'public, max-age=86400',
     );
+    assert.equal(storedAt(memory), String(memory.edge.now()));
   });
 
-  it('answers a hit without reading the ledger', async () => {
+  it('answers a fresh hit without reading the ledger, at the client max-age', async () => {
     const memory = memoryEdge();
     await serveVia(memory, LATEST, fixtureLedger);
     await memory.settled();
+    memory.advance(FRESH_MS - 1);
 
     const { ledger, reads } = counting();
     const response = await serveVia(memory, LATEST, ledger);
 
     assert.equal(reads(), 0);
+    assert.equal(memory.background(), 1);
     assert.equal(response?.status, 302);
     assert.equal(
       response?.headers.get('Location'),
       `${GITHUB}/lit-ui-router%401.10.0`,
     );
+    assert.equal(response?.headers.get('Cache-Control'), 'public, max-age=60');
+    assert.equal(response?.headers.get('X-Edge-Client-Cache-Control'), null);
+  });
+
+  it('answers a stale hit at once and refreshes it once behind the response', async () => {
+    const memory = memoryEdge();
+    await serveVia(memory, LATEST, fixtureLedger);
+    await memory.settled();
+    memory.advance(FRESH_MS);
+
+    const { ledger, reads } = counting(latestAt('1.2.0'));
+    const response = await serveVia(memory, LATEST, ledger);
+
+    assert.equal(
+      response?.headers.get('Location'),
+      `${GITHUB}/lit-ui-router%401.10.0`,
+    );
+    assert.equal(memory.background(), 2);
+
+    await memory.settled();
+
+    assert.equal(reads(), 1);
+    assert.equal(storedAt(memory), String(memory.edge.now()));
+
+    const next = await serveVia(memory, LATEST, ledger);
+
+    assert.equal(
+      next?.headers.get('Location'),
+      `${GITHUB}/lit-ui-router%401.2.0`,
+    );
+    assert.equal(reads(), 1);
+  });
+
+  it('looks an entry past the day up before answering', async () => {
+    const memory = memoryEdge();
+    await serveVia(memory, LATEST, fixtureLedger);
+    await memory.settled();
+    memory.advance(KEEP_MS);
+
+    const { ledger, reads } = counting(latestAt('1.2.0'));
+    const response = await serveVia(memory, LATEST, ledger);
+
+    assert.equal(reads(), 1);
+    assert.equal(
+      response?.headers.get('Location'),
+      `${GITHUB}/lit-ui-router%401.2.0`,
+    );
+  });
+
+  it('keeps the stale entry when its refresh fails', async () => {
+    const memory = memoryEdge();
+    await serveVia(memory, LATEST, fixtureLedger);
+    await memory.settled();
+    const before = storedAt(memory);
+    memory.advance(FRESH_MS);
+
+    const response = await serveVia(memory, LATEST, DOWN);
+    await memory.settled();
+
+    assert.equal(response?.status, 302);
+    assert.equal(storedAt(memory), before);
+    assert.deepEqual(memory.calls, [
+      `match GET ${KEY}`,
+      `put GET ${KEY}`,
+      `match GET ${KEY}`,
+    ]);
   });
 
   it('shares one entry across a trailing slash, a fragment and HEAD', async () => {

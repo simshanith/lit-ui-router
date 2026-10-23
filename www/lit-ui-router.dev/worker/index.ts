@@ -63,6 +63,7 @@ export default {
     const releases = await serveReleases(request, ledger, {
       cache: caches.default,
       waitUntil: (promise) => ctx.waitUntil(promise),
+      now: Date.now,
     });
 
     if (releases !== null) return releases;
