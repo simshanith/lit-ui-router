@@ -125,7 +125,7 @@ tool.
 ### Start a project
 
 The Hello World starter is a Vite + TypeScript app. Copy it with
-[tiged](https://github.com/tiged/tiged):
+[tiged](https://npmx.dev/package/tiged):
 
 ```bash
 npx tiged simshanith/lit-ui-router/examples/helloworld my-app
