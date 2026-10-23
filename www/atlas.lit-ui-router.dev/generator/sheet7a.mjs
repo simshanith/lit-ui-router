@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { defs } from './chrome.mjs';
 import { txt, schedTxt, keyRow } from './helpers.mjs';
 import { assertPlots, plotsOf } from './iso-hidden.mjs';
-import { PLACED } from './sheet7.mjs';
+import { DISTRICT_BOUNDS, PLACED } from './sheet7.mjs';
 
 const P = 's7a';
 
@@ -171,18 +171,10 @@ const BADGE_LIFT = {};
 // 16 stands under the release tower's south-west corner: its badge steps west of it
 const BADGE_DX = { 16: -9 };
 
-// ---- districts, same bounds rule as sheet 7 (over footprint + annex) ------------
-const DIST = [['pkg', 24], ['app', 24], ['site', 24], ['tool', 26]];
-const bounds = (d) => {
-  const bs = M.filter((r) => r[2] === d).map((r) => g(r[0]));
-  return [Math.min(...bs.map((b) => b.x)), Math.min(...bs.map((b) => Math.min(b.y, b.sa ? b.ay : b.y))),
-    Math.max(...bs.map((b) => b.x + b.s + (b.sa ? AG + b.sa : 0))), Math.max(...bs.map((b) => Math.max(b.y + b.s, b.sa ? b.ay + b.sa : 0)))];
-};
+// ---- districts: sheet 7's padded plan bounds, imported ---------------------------
 // each district's drawn edge in screen units, so lettering can key off it
-const EDGE = Object.fromEntries(DIST.map(([d, pad]) => {
-  const [x1, y1, x2, y2] = bounds(d);
-  return [d, { x1: +X(x1 - pad), y1: +Y(y1 - pad), x2: +X(x2 + pad), y2: +Y(y2 + pad) }];
-}));
+const EDGE = Object.fromEntries(Object.entries(DISTRICT_BOUNDS).map(([d, [x1, y1, x2, y2]]) =>
+  [d, { x1: +X(x1), y1: +Y(y1), x2: +X(x2), y2: +Y(y2) }]));
 const districts = Object.values(EDGE).map(({ x1, y1, x2, y2 }) =>
   `<rect x="${x1}" y="${y1}" width="${(x2 - x1).toFixed(1)}" height="${(y2 - y1).toFixed(1)}" class="skf fnone" stroke-dasharray="5 4"/>`).join('\n');
 
@@ -414,7 +406,7 @@ ${txt(1096, 397, 'live on e2e light alone · №5 tests pass with no meter', 'lb
 ${txt(1146, 560, 'www/ + examples/ — THE SHOPFRONT', 'lblb')}
 ${txt(1146, 573, `the worker: fully lit — a ${fmt(g(10).r[11])}-sloc sliver of ${fmt(g(10).r[7])}`, 'lblf')}
 ${txt(1146, 585, `examples: ${fmt(g(11).r[11] ?? 0)} of ${fmt(g(11).r[7])} sloc lit, the copies dark`, 'lblf')}
-<line x1="1140" y1="569" x2="1064" y2="560" class="skf"/>
+<line x1="1140" y1="569" x2="${EDGE.site.x2.toFixed(1)}" y2="569" class="skf"/>
 
 ${txt(96, 874, 'tools/ — THE INSTRUMENT YARD', 'lblb')}
 ${txt(96, 887, `${DT.metered} metered members: ${pct1(DT.linesHit, DT.lines)}% of ${fmt(DT.lines)} lines lit — the lamps reach ${pct1(DT.litSloc, DT.sloc)}% of the yard’s ${fmt(DT.sloc)} sloc`, 'lblf')}
@@ -430,7 +422,7 @@ ${txt(620, 106, 'and interface.ts, which is type declarations', 'lblf')}
 ${txt(1144, 349, '№5 sample-app-shared — an outline of light:', 'lbls')}
 ${txt(1144, 361, 'its unit tests pass, but browser-mode vitest cannot', 'lblf')}
 ${txt(1144, 373, 'load a meter the repo never installed', 'lblf')}
-<line x1="1138" y1="357" x2="1032" y2="270" class="skf"/>
+<line x1="1138" y1="357" x2="${(EDGE.app.x2 + 5).toFixed(1)}" y2="${Y(123.5)}" class="skf"/>
 
 ${txt(30, 430, '№26 happy-dom — a lamp with half its light on itself:', 'lblr')}
 ${txt(30, 442, 'its canary spec lights happy-dom’s ordering bug and', 'lblf')}

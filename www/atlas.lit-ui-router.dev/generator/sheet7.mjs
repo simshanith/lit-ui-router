@@ -77,21 +77,20 @@ const TIER_TEXT = {
 export const PLACED = [
   // --- packages/ — the product -------------------------------------------------
   [1,  'lit-ui-router',            'packages/lit-ui-router',             'pkg',  'line',     0,  20, `the subject of this set · annex ${ratio('packages/lit-ui-router')}× the source`],
-  // moved east off 200, 222, 226 and 240, each time lit-ui-router's annex grew into its
-  // west wall: the annex reaches 241.5 at this ref, so 250 is the first lot with air
+  // east of lit-ui-router's annex, which reaches x 244
   [2,  'ui-router-server',         'packages/ui-router-server',          'pkg',  'line',   250,  20, `the server adapter · annex ${ratio('packages/ui-router-server')}×`],
-  // dropped south of the 130 row: the flagship's annex reaches 136.6 at this ref
+  // south of the flagship's annex, which reaches y 137
   [3,  'lit-ui-router-mobx',       'packages/lit-ui-router-mobx',        'pkg',  'line',   170, 150, `the mobx companion · annex ${ratio('packages/lit-ui-router-mobx')}×`],
   [4,  'navigation-location-plugin','packages/navigation-location-plugin','pkg', 'line',   260, 130, `the location seat, core's pushStateLocation swapped out · annex ${ratio('packages/navigation-location-plugin')}×`],
   // --- apps/ — the proving ground ----------------------------------------------
-  [5,  'sample-app-shared',        'apps/sample-app-shared',             'app',  'line',   570,  10, 'the routes + views every sample app mounts'],
-  [6,  'sample-app-lit-vanilla',   'apps/sample-app-lit-vanilla',        'app',  'line',   720,  10, 'the plain-lit demo'],
-  [7,  'sample-app-lit-mobx',      'apps/sample-app-lit-mobx',           'app',  'line',   720,  90, 'the mobx demo'],
-  [8,  'sample-app-routes',        'apps/sample-app-routes',             'app',  'line',   700, 150, 'the shared route table, server-side too'],
-  [9,  'sample-app-lit-e2e',       'apps/sample-app-lit-e2e',            'app',  'pr',     580, 150, 'cypress · drives the docs build'],
+  [5,  'sample-app-shared',        'apps/sample-app-shared',             'app',  'line',   590,  10, 'the routes + views every sample app mounts'],
+  [6,  'sample-app-lit-vanilla',   'apps/sample-app-lit-vanilla',        'app',  'line',   740,  10, 'the plain-lit demo'],
+  [7,  'sample-app-lit-mobx',      'apps/sample-app-lit-mobx',           'app',  'line',   740,  90, 'the mobx demo'],
+  [8,  'sample-app-routes',        'apps/sample-app-routes',             'app',  'line',   720, 150, 'the shared route table, server-side too'],
+  [9,  'sample-app-lit-e2e',       'apps/sample-app-lit-e2e',            'app',  'pr',     600, 150, 'cypress · drives the docs build'],
   // --- www/ + examples/ — the shopfront ---------------------------------------
-  [10, 'docs',                     'www/lit-ui-router.dev',              'site', 'line',   660, 340, 'vitepress + the worker that serves it'],
-  [11, 'examples',                 'examples',                           'site', 'line',   660, 430, 'stackblitz-ready copies, own lockfiles'],
+  [10, 'docs',                     'www/lit-ui-router.dev',              'site', 'line',   680, 320, 'vitepress + the worker that serves it'],
+  [11, 'examples',                 'examples',                           'site', 'line',   680, 410, 'stackblitz-ready copies, own lockfiles'],
   // --- tools/ — the instrument yard --------------------------------------------
   // south-west off 20, 430, where the 150 px tower stands in front of dts-backtest,
   // eslint-ts-parser and lit-test-env on the 350 row; at y 452 it still hides none of them
@@ -131,9 +130,8 @@ export const PLACED = [
   [34, '@tools/eslint',            'tools/eslint',                       'tool', 'report', 514, 530, 'the repo rule plugin, the oxlint stubs and the element lane root eslint.config.ts composes'],
   [35, '@tools/repo-checks',       'tools/repo-checks',                  'tool', 'pr',     449, 385, 'graph edges, inputs, versions, coverage, patches, deps'],
   // --- the effect pair, born 2026-09-11/12 (#721, #833) ----------------------------
-  [36, 'sample-app-lit-effect',    'apps/sample-app-lit-effect',         'app',  'line',   660, 100, 'the effect demo — the fourth app shell the docs site serves'],
-  // south of the district: the only lot clear of both the x=105 harness road and
-  // sheet 13's reading box, so the two plates keep the same coordinate
+  [36, 'sample-app-lit-effect',    'apps/sample-app-lit-effect',         'app',  'line',   680, 100, 'the effect demo — the fourth app shell the docs site serves'],
+  // south of the flagship, east of road C at x 20 and west of the prerender bridge
   [37, 'lit-ui-router-effect',     'packages/lit-ui-router-effect',      'pkg',  'line',    30, 210, `the effect bindings · annex ${ratio('packages/lit-ui-router-effect')}×`],
   // --- the prerender package, born 2026-09-14 (#806) -------------------------------
   // the district's south row, east of the effect bindings: a lot with nothing tall
@@ -152,7 +150,7 @@ export const PLACED = [
   // north-east, between road A at y 45 and road F at y 115
   [44, '@repo/route-snapshot',     'packages/shared/route-snapshot',     'pkg',  'line',   440,  88, `private · inlined into each consumer's dist by oxc-emit · annex ${ratio('packages/shared/route-snapshot')}×`],
   // the gap between sample-app-shared and e2e
-  [45, 'sample-app-lit-signals',   'apps/sample-app-lit-signals',        'app',  'line',   590, 100, 'the signals demo — no test script, the fifth app shell the docs site serves'],
+  [45, 'sample-app-lit-signals',   'apps/sample-app-lit-signals',        'app',  'line',   610, 100, 'the signals demo — no test script, the fifth app shell the docs site serves'],
   // the yard's middle: south of repo-checks' annex, north-east of @tools/eslint's badge
   [46, '@tools/a11y',              'tools/a11y',                         'tool', 'report', 540, 472, 'axe over the docs pages and app mounts — acceptance, gates nothing'],
   // north-east beside the snapshot, between road A at y 45 and road F at y 115
@@ -220,6 +218,11 @@ export const CITY = [...geom.values()];
 
 const pt = (x, y, z = 0) => isoPt(OX, OY, x, y, z);
 const p2 = (x, y, z = 0) => pt(x, y, z).map((v) => v.toFixed(1)).join(',');
+// a leader runs from its lettering to a plan point, so a moved mass carries the leader's end
+const lead = (x1, y1, x, y, z = 0) => {
+  const [x2, y2] = pt(x, y, z);
+  return `<line x1="${x1}" y1="${y1}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" class="skf"/>`;
+};
 
 // A member: src block massed by its own census, plus the spec annex it carries.
 // Tier paints the src cap and flank; annexes are always the same test-mass material.
@@ -252,7 +255,7 @@ ${txt(bx.toFixed(1), (by - lift + 3.4).toFixed(1), String(n), t.num, 'middle')}`
 // badges that would land on a neighbouring roof edge get lifted into clear air
 const BADGE_LIFT = { 1: 20, 2: 30, 6: 35, 10: 28, 16: 30, 20: 26, 21: 34, 23: 34, 27: 34 };
 // badges whose air above is a neighbour's mass sit centred on their own roof instead
-const BADGE_ON_ROOF = new Set([19, 32]);
+const BADGE_ON_ROOF = new Set([16, 19, 32, 40]);
 
 // ---- roads ----------------------------------------------------------------------
 // Routed on the iso grid and trimmed in SCREEN space at both ends.  A block's roof
@@ -282,10 +285,11 @@ const roads = [
   // 1 · packages ship into the apps: sample-app-shared depends on lit-ui-router and
   //    ui-router-navigation-location-plugin; the two demos depend on lit-ui-router
   //    (+ -mobx).  turbo: build dependsOn ^build.
-  road([[g(2).x2, 45], [g(5).x, 45]], { ...BUILDS, to: 5 }),
+  //    the arrow stops where sample-app-shared's mass starts to hide the road.
+  road([[g(2).x2, 45], [g(5).x, 45]], { ...BUILDS, t1: g(5).y + g(5).s - 45 + 8 }),
   // 2 · apps ship into the shopfront: docs depends on sample-app-lit-vanilla,
   //    -mobx and -routes (and on ui-router-server).  turbo: docs dependsOn ^build.
-  road([[680, g(8).y2], [680, g(10).y]], { ...BUILDS, t0: 9, to: 10 }),
+  road([[700, g(8).y2], [700, g(10).y]], { ...BUILDS, t0: 9, to: 10 }),
   // 3 · @tools/oxc-emit is a devDependency of every packages/ member and runs both
   //    build passes (turbo build:js / build:types); drawn to the nearest of them,
   //    the prerender bridge, turning west under its annex to reach the src block.
@@ -308,25 +312,38 @@ const roads = [
   road([[105, 335], [105, g(1).ay + g(1).sa]], { ...TESTS, t0: 0, to: 1, toAnnex: true }),
   // 7 · the docs build is what cypress drives: sample-app-lit-e2e depends on docs;
   //    turbo e2e dependsOn ^build, with @www/lit-ui-router.dev#wrangler:dev.
-  road([[g(10).x, 352], [606, 352], [606, g(9).y2]], { ...TESTS, t0: 9, to: 9, toAnnex: true }),
+  road([[g(10).x, 352], [626, 352], [626, g(9).y2]], { ...TESTS, t0: 9, to: 9, toAnnex: true }),
   // 8 · @tools/shared has SHARED_IMP.length dependents; the road to the largest,
   //    run north between member 40 and compat-guards into the tower's annex.
   road([[g(16).x - 6, g(16).y + 15], [115, g(16).y + 15], [115, g(12).ay + g(12).sa]], { ...LIB, t0: 9, to: 12, toAnnex: true }),
 ];
 
 // ---- districts, derived from what was actually placed ----------------------------
-const DIST = [['pkg', 24], ['app', 24], ['site', 24], ['tool', 26]];
+// exported: plates 7A and 7B frame their districts from this plan, so the three cannot drift
+export const DISTRICT_PAD = 16;
+const DIST = ['pkg', 'app', 'site', 'tool'].map((d) => [d, DISTRICT_PAD]);
 const bounds = (d) => {
   const bs = M.filter((r) => r[2] === d).map((r) => g(r[0]));
   return [Math.min(...bs.map((b) => b.x)), Math.min(...bs.map((b) => b.y1)),
     Math.max(...bs.map((b) => b.x2)), Math.max(...bs.map((b) => b.y2))];
 };
-const districts = DIST.map(([d, pad]) => {
+export const DISTRICT_BOUNDS = Object.fromEntries(DIST.map(([d, pad]) => {
   const [x1, y1, x2, y2] = bounds(d);
-  const pts = [[x1 - pad, y1 - pad], [x2 + pad, y1 - pad], [x2 + pad, y2 + pad], [x1 - pad, y2 + pad]]
-    .map(([px, py]) => p2(px, py)).join(' ');
+  return [d, [x1 - pad, y1 - pad, x2 + pad, y2 + pad]];
+}));
+const districts = DIST.map(([d]) => {
+  const [x1, y1, x2, y2] = DISTRICT_BOUNDS[d];
+  const pts = [[x1, y1], [x2, y1], [x2, y2], [x1, y2]].map(([px, py]) => p2(px, py)).join(' ');
   return `<polygon points="${pts}" class="skf fnone" stroke-dasharray="5 4"/>`;
 }).join('\n');
+// dashed district bounds keep AIR plan units clear of each other, so a grown member stops the build
+export const DISTRICT_AIR = 16;
+const AIR = DISTRICT_AIR;
+for (const [i, [a]] of DIST.entries()) for (const [b] of DIST.slice(i + 1)) {
+  const [ax1, ay1, ax2, ay2] = DISTRICT_BOUNDS[a], [bx1, by1, bx2, by2] = DISTRICT_BOUNDS[b];
+  const ox = Math.min(ax2, bx2) - Math.max(ax1, bx1), oy = Math.min(ay2, by2) - Math.max(ay1, by1);
+  if (ox > -AIR && oy > -AIR) throw new Error(`sheet 7: the ${a} and ${b} district bounds ${ox > 0 && oy > 0 ? `overlap by ${ox.toFixed(1)} × ${oy.toFixed(1)} plan units` : `stand ${(-Math.min(ox, oy)).toFixed(1)} plan units apart`}, under the ${AIR}-unit air between districts — move a district`);
+}
 
 // ---- bodies, painted back to front ------------------------------------------------
 // Order is topological on the plan-axis separation, not a distance guess: with the
@@ -362,6 +379,10 @@ ${masses}
 </svg>`;
 }
 
+// the road register's frame stops 12 px short of examples' west corner; its longest row reaches x 680
+const REG_X2 = Math.min(740, Math.floor(pt(g(11).x, g(11).y + g(11).s)[0]) - 12);
+if (REG_X2 < 700) throw new Error(`sheet 7: examples' west corner leaves the road register ${REG_X2 - 40} px, and its rows need 660`);
+
 // ---- schedule -----------------------------------------------------------------------
 const ART_H = 812;
 const TOT_SF = M.reduce((a, r) => a + r[6], 0), TOT_SL = M.reduce((a, r) => a + r[7], 0);
@@ -392,7 +413,7 @@ ${txt(1520, 62, 'GATE SEVERITY IS COLOUR, NOT HEIGHT — tiers match sheet 3 · 
 ${txt(1520, 76, `every number on this sheet is read from www/atlas.lit-ui-router.dev/data/census-city.json — ${BASIS}`, 'lblf', 'end')}
 
 <!-- severity ladder -->
-<rect x="1090" y="104" width="430" height="${REPORT_IDS.length > REPORT_LINE ? 158 : 146}" class="skf fnone"/>
+<rect x="1090" y="104" width="430" height="${REPORT_IDS.length > REPORT_LINE ? 160 : 146}" class="skf fnone"/>
 ${txt(1106, 126, 'GATE SEVERITY — READ THE COLOUR, NOT THE HEIGHT', 'lbls')}
 ${[
   ['skr', 'fr', null, `halts a publish — ${inTier('halt')}`, 'lblr'],
@@ -401,7 +422,7 @@ ${[
   ['skf', 'fp2', null, `never gates — ${REPORT_IDS.slice(0, REPORT_LINE).join(' · ')}`, 'lbls'],
 ].map(([edge, fill, hatch, label, cls], i) => {
   const y = 150 + i * 24;
-  const more = i === 3 && REPORT_IDS.length > REPORT_LINE ? txt(1154, y + 23, `· ${REPORT_IDS.slice(REPORT_LINE).join(' · ')}`, cls) : '';
+  const more = i === 3 && REPORT_IDS.length > REPORT_LINE ? txt(1154, y + 25, `· ${REPORT_IDS.slice(REPORT_LINE).join(' · ')}`, cls) : '';
   return `${more}<rect x="1106" y="${y}" width="34" height="14" class="${fill}"/>${hatch ? `<rect x="1106" y="${y}" width="34" height="14" fill="url(#${P}-${hatch})"/>` : ''}<rect x="1106" y="${y}" width="34" height="14" class="${edge} fnone"/>
 ${txt(1154, y + 11, label, cls)}`;
 }).join('\n')}
@@ -411,51 +432,51 @@ ${roads.join('\n')}
 ${bodies}
 
 <!-- road tags: each keys a row of the ROAD REGISTER below -->
-${[['A', 890, 262], ['B', 566, 366], ['C', 470, 195], ['D', 522, 262], ['E', 902, 540], ['F', 879, 498], ['G', 196, 470]]
+${[['A', 1017, 358], ['B', 566, 366], ['C', 470, 195], ['D', 522, 262], ['E', 894, 535], ['F', 879, 498], ['G', 196, 470]]
   .map(([k, x, y]) => txt(x, y, k, 'lbl')).join('\n')}
 
 <!-- district lettering, off the geometry, leaders where the gap is wide -->
-<!-- moved east off 772, then 815: the flagship's roof reaches x 817 at this height -->
+<!-- east of the flagship annex's roof corner at this height -->
 ${txt(824, 110, 'packages/ — THE PRODUCT', 'lblb')}
 ${txt(824, 123, `${DP.n} members, ${PUBLISHED_PKGS} published · ${DP.f} files · ${fmt(DP.sl)} sloc`, 'lblf')}
-${txt(824, 135, 'every one carries a bigger annex than itself', 'lblf')}
-<line x1="818" y1="126" x2="780" y2="158" class="skf"/>
+${txt(824, 137, 'every one carries a bigger annex than itself', 'lblf')}
+${lead(818, 126, g(1).x2, g(1).ay + 0.32 * g(1).sa, 0.87 * g(1).ha)}
 
 ${txt(1540, 300, `sample-app-shared — ${g(5).sf}f · ${fmt(g(5).sl)} sloc`, 'lblb', 'end')}
 ${txt(1540, 313, 'the proving ground’s broadest block —', 'lblf', 'end')}
-${txt(1540, 325, `outbuilt by ${wordn(OVER_SAS_SRC.length)} source blocks and ${wordn(OVER_SAS_ANNEX)} spec annexes`, 'lblf', 'end')}
-<line x1="1258" y1="318" x2="1132" y2="340" class="skf"/>
+${txt(1540, 327, `outbuilt by ${wordn(OVER_SAS_SRC.length)} source blocks and ${wordn(OVER_SAS_ANNEX)} spec annexes`, 'lblf', 'end')}
+${lead(1258, 318, g(5).x + g(5).s, g(5).y + 0.32 * g(5).s, 0.8 * g(5).h)}
 
 ${txt(1540, 380, 'apps/ — THE PROVING GROUND', 'lblb', 'end')}
 ${txt(1540, 393, `${DA.n} members · ${DA.f} files · ${fmt(DA.sl)} sloc`, 'lblf', 'end')}
-${txt(1540, 405, 'the proving ground gates nothing but e2e', 'lblf', 'end')}
-<line x1="1284" y1="416" x2="1248" y2="446" class="skf"/>
+${txt(1540, 407, 'the proving ground gates nothing but e2e', 'lblf', 'end')}
+${lead(1296, 414, DISTRICT_BOUNDS.app[2], DISTRICT_BOUNDS.app[1])}
 
-${txt(1014, 656, 'www/ + examples/ — THE SHOPFRONT', 'lblb')}
-${txt(1014, 669, `${DS.n} members · ${DS.f} files · ${fmt(DS.sl)} sloc`, 'lblf')}
-<line x1="1008" y1="652" x2="986" y2="636" class="skf"/>
+${txt(1049, 656, 'www/ + examples/ — THE SHOPFRONT', 'lblb')}
+${txt(1049, 669, `${DS.n} members · ${DS.f} files · ${fmt(DS.sl)} sloc`, 'lblf')}
+${lead(1043, 652, DISTRICT_BOUNDS.site[2] - 57, DISTRICT_BOUNDS.site[1])}
 
 ${txt(60, 560, 'tools/ — THE INSTRUMENT YARD', 'lblb')}
 ${txt(60, 573, `${DT.n} members · ${DT.f} files · ${fmt(DT.sl)} sloc`, 'lblf')}
-${txt(60, 585, `${M.filter((r) => r[2] === 'tool' && S(r[7]) === MIN).length} of its masses sit on this drawing’s minimum footprint`, 'lblf')}
+${txt(60, 587, `${M.filter((r) => r[2] === 'tool' && S(r[7]) === MIN).length} of its masses sit on this drawing’s minimum footprint`, 'lblf')}
 <line x1="300" y1="552" x2="330" y2="522" class="skf"/>
 
 <!-- callouts -->
-${txt(60, 118, 'lit-ui-router — THE PACKAGE THIS SET IS ABOUT', 'lbla')}
-${txt(60, 132, `${g(1).sf} authored files · ${fmt(g(1).sl)} sloc`, 'lblf')}
-${txt(60, 144, `its annex — ${g(1).pf} files · ${fmt(g(1).pl)} sloc, ${ratio('packages/lit-ui-router')}× the source`, 'lblf')}
+${txt(60, 114, 'lit-ui-router — THE PACKAGE THIS SET IS ABOUT', 'lbla')}
+${txt(60, 128, `${g(1).sf} authored files · ${fmt(g(1).sl)} sloc`, 'lblf')}
+${txt(60, 142, `its annex — ${g(1).pf} files · ${fmt(g(1).pl)} sloc, ${ratio('packages/lit-ui-router')}× the source`, 'lblf')}
 ${txt(60, 156, 'the biggest thing this district ever built is a test', 'lblf')}
-<line x1="346" y1="126" x2="526" y2="132" class="skf"/>
+${lead(346, 122, g(1).x + 0.24 * g(1).s, g(1).y + g(1).s, 0.41 * g(1).h)}
 
 ${txt(20, 502, `@tools/release — ${g(12).sf}f · ${fmt(g(12).sl)} sloc`, 'lblr')}
 ${txt(20, 515, 'the tallest block on the sheet,', 'lblf')}
-${txt(20, 527, 'and the only publish halt', 'lblf')}
-<line x1="178" y1="497" x2="252" y2="380" class="skf"/>
+${txt(20, 529, 'and the only publish halt', 'lblf')}
+${lead(178, 497, g(12).x + g(12).s, g(12).y + g(12).s / 2, (g(12).ha + g(12).h) / 2)}
 
 <!-- road register: every road on this sheet, and the edge in the repo it stands for -->
-<rect x="40" y="646" width="700" height="162" class="skf fnone"/>
+<rect x="40" y="646" width="${REG_X2 - 40}" height="162" class="skf fnone"/>
 ${txt(58, 666, 'ROAD REGISTER — NO ROAD IS DRAWN THAT THE REPO DOES NOT CARRY', 'lbls')}
-<line x1="40" y1="674" x2="740" y2="674" class="skf"/>
+<line x1="40" y1="674" x2="${REG_X2}" y2="674" class="skf"/>
 ${[
   ['A', 'builds into', 'packages/* → the sample apps · lit-ui-router → 4 of them, ui-router-server → routes'],
   ['B', 'builds into', `@tools/oxc-emit → all ${wordn(PUBLISHED_PKGS)} published packages · devDep of each · runs build:js + build:types`],
@@ -474,7 +495,7 @@ ${schedule}
 </svg>`;
 
 export const sheet7 = {
-  num: 7, id: 'census', rev: 'H',
+  num: 7, id: 'census', rev: 'I',
   title: 'THE MEASURED CITY',
   sub: `ALTITUDE 3½ — the same city as sheet 3, surveyed by mass · ${M.length} members in 4 districts, footprint ∝ √sloc, height ∝ authored files, spec mass drawn as an annex, gate severity in colour · ${BASIS}`,
   scale: 'WHOLE WORKSPACE',

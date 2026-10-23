@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { defs } from './chrome.mjs';
 import { txt, schedTxt, arrow, isoBlock, isoPt, keyRow } from './helpers.mjs';
-import { assertPlots } from './iso-hidden.mjs';
+import { assertPlots, depthSort } from './iso-hidden.mjs';
 
 const P = 's3';
 const OX = 360, OY = 200;
@@ -100,25 +100,21 @@ const M = [
   // --- instrument yard, row A: the checks that stop a pull request --------------
   [7,  'tests — vitest harness',    'pr',     358,   215,    ...C('tests — vitest harness'), null, null, 'lit-test-env + happy-dom · 3 real browsers'],
   [8,  'compat-guards',             'pr',     399,   215,    ...C('compat-guards'), null, null, 'the lit 2 / mobx 6 / analyzer lanes'],
-  [9,  'dts-backtest',              'pr',     120,   215,    ...C('dts-backtest'), null, null, `one ${C('dts-backtest')[1]}-line run.ts holds the TS 5.0 floor`],
-  [10, 'check:exports',             'pr',     200,   215,    ...C('check:exports'), null, null, 'publint + attw over the raw pack'],
+  [9,  'dts-backtest',              'pr',     165,   215,    ...C('dts-backtest'), null, null, `one ${C('dts-backtest')[1]}-line run.ts holds the TS 5.0 floor`],
+  [10, 'check:exports',             'pr',     215,   215,    ...C('check:exports'), null, null, 'publint + attw over the raw pack'],
   [11, 'published-diff',            'halt',   313.9, 215,    ...C('published-diff'), null, null, 'vs the LIVE npm tarball · halts publishing'],
   // --- instrument yard, row B: the gates that fire later, and the reporters -----
-  [12, 'peer-floor tier-2',         'late',    40,   338,    ...C('peer-floor tier-2'), null, null, 'gates version bumps, never a PR'],
-  [13, 'peer-floor tier-1',         'report',  90,   338,    ...C('peer-floor tier-1'), null, null, 'reports check runs, never gates'],
-  // row B's giant: it outgrows the row's y = 320 top line every refresh (the fleet
-  // took the eslint plugin's growth at 1.14.1), so it sits 22 north of its row mates
-  [14, 'lint & probe fleet',        'report', 166,   298,    ...C('lint & probe fleet'), null, null, 'oxlint · elements · axe · CI gate'],
-  // east off 275 when the fleet took @tools/ci-logs at the eb1162da refresh
-  [15, '@tools/shared',             'report', 292,   320,    ...C('@tools/shared'), null, null, 'the library under every instrument'],
-  [16, 'typedoc plugin',            'report', 380,   320,    ...C('typedoc plugin'), null, null, 'builds the API pages, gates nothing'],
+  [12, 'peer-floor tier-2',         'late',   160,   330,    ...C('peer-floor tier-2'), null, null, 'gates version bumps, never a PR'],
+  [13, 'peer-floor tier-1',         'report', 205,   330,    ...C('peer-floor tier-1'), null, null, 'reports check runs, never gates'],
+  // the two big reporters (14, 20) stand west of every gate's lot, so every gate stands in front of them
+  [14, 'lint & probe fleet',        'report',  14,   180,    ...C('lint & probe fleet'), null, null, 'oxlint · elements · axe · CI gate'],
+  [15, '@tools/shared',             'report', 250,   320,    ...C('@tools/shared'), null, null, 'the library under every instrument'],
+  [16, 'typedoc plugin',            'report', 352,   320,    ...C('typedoc plugin'), null, null, 'builds the API pages, gates nothing'],
   // --- proving ground & shopfront (apps/ + www/) --------------------------------
   [17, 'e2e — cypress',             'pr',     377.8, 420,    ...C('e2e — cypress'), null, null, 'drives the sample apps · stops the PR line'],
   [18, 'sample apps',               'line',   560,   390,    ...C('sample apps'), null, null, APP_NOTE],
   [19, 'docs deploy watch',         'late',   680,   400,    ...C('docs deploy watch'), null, null, 'workers-builds triggers · gates the deploy'],
-  // the yard's west lot, which 7 and 8 left for the east end of row A: from here it
-  // stands in front of no PR gate
-  [20, 'anti-slop rules',           'report',  15,   225,    ...C('anti-slop — vendored oxlint rules'), null, null, 'vendored upstream · loaded by every oxlint lane'],
+  [20, 'anti-slop rules',           'report',  14,   304,    ...C('anti-slop — vendored oxlint rules'), null, null, 'vendored upstream · loaded by every oxlint lane'],
 ];
 const F = (n) => M.find((r) => r[0] === n);      // [.., files, sloc, ..] by structure number
 const nf = (n) => F(n)[5];                       // authored files of structure n
@@ -148,6 +144,8 @@ const BADGE_LEFT = new Set([9, 10, 11]);
 // mass 1 stands under the task-manager inset: its badge takes the far corner so the
 // site keeps clear of the inset's frame instead of pushing a label through it.
 const BADGE_RIGHT = new Set([1]);
+// the big reporters stand in front of taller masses, so their badges sit on their own roofs
+const BADGE_ON_ROOF = new Set([14, 20]);
 const pt = (x, y, z = 0) => isoPt(OX, OY, x, y, z);
 const p2 = (x, y, z = 0) => pt(x, y, z).map((v) => v.toFixed(1)).join(',');
 
@@ -160,13 +158,14 @@ function massBlock(n) {
   const top = [p2(x, y, h), p2(x + side, y, h), p2(x + side, y + side, h), p2(x, y + side, h)].join(' ');
   const wash = t.hatch ? `<polygon points="${top}" fill="url(#${P}-${t.hatch})"/>
 <polygon points="${top}" class="${t.edge} fnone"/>` : '';
+  const lift = BADGE_ON_ROOF.has(n) ? 0 : 17;
   // Readers take a stub down their centre line, so their badge moves off it.
-  const [bx, by] = BADGE_LEFT.has(n) ? pt(x, y, h)
+  const [bx, by] = BADGE_ON_ROOF.has(n) ? pt(x + side / 2, y + side / 2, h)
+    : BADGE_LEFT.has(n) ? pt(x, y, h)
     : BADGE_RIGHT.has(n) ? pt(x + side, y, h)
     : pt(x + side / 2, y, h);
-  return `${body}${wash}
-<circle cx="${bx.toFixed(1)}" cy="${(by - 17).toFixed(1)}" r="9.5" class="${t.badge}"/>
-${txt(bx.toFixed(1), (by - 13.4).toFixed(1), String(n), t.num, 'middle')}`;
+  return { body: `${body}${wash}`, badge: `<circle cx="${bx.toFixed(1)}" cy="${(by - lift).toFixed(1)}" r="9.5" class="${t.badge}"/>
+${txt(bx.toFixed(1), (by - lift + 3.6).toFixed(1), String(n), t.num, 'middle')}` };
 }
 
 // A leg routed on the iso grid and trimmed in SCREEN space at both ends.  A block's
@@ -225,16 +224,65 @@ const drive = leg(
 // ---- districts --------------------------------------------------------------------
 const district = (x1, y1, x2, y2) =>
   `<polygon points="${[[x1, y1], [x2, y1], [x2, y2], [x1, y2]].map(([px, py]) => p2(px, py)).join(' ')}" class="skf fnone" stroke-dasharray="5 4"/>`;
+const YARD = [6, 172, 445, 410];
+const YARD_MEMBERS = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 20];
+const AIR = 4;
+for (const n of YARD_MEMBERS) {
+  const { x, y, side } = g(n), [x1, y1, x2, y2] = YARD;
+  const over = [['west', x1 + AIR - x], ['north', y1 + AIR - y], ['east', x + side - (x2 - AIR)], ['south', y + side - (y2 - AIR)]]
+    .filter(([, d]) => d > 0);
+  if (over.length) throw new Error(`sheet 3: structure ${n} ${F(n)[1]} overruns the yard district [${YARD.join(' ')}] by ${over.map(([k, d]) => `${d.toFixed(1)} units ${k}`).join(', ')} (with ${AIR} units of air) — move the lot or redraw YARD`);
+}
+
+// ---- occlusion: no later-painted block may cover a gate's roof ----------------------
+// silhouette = convex hull of a block's eight projected corners, roof = projected top face; SAT depth over 0.5 px throws, so touching edges pass
+const projHull = (n, top = false) => {
+  const { x, y, side, h } = g(n);
+  const pts = [];
+  for (const [px, py] of [[x, y], [x + side, y], [x + side, y + side], [x, y + side]]) {
+    pts.push(pt(px, py, h));
+    if (!top) pts.push(pt(px, py, 0));
+  }
+  pts.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  const cross = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+  const chain = (list) => list.reduce((hull, q) => {
+    while (hull.length >= 2 && cross(hull.at(-2), hull.at(-1), q) <= 0) hull.pop();
+    hull.push(q);
+    return hull;
+  }, []);
+  const lo = chain(pts), hi = chain([...pts].reverse());
+  return [...lo.slice(0, -1), ...hi.slice(0, -1)];
+};
+const overlapDepth = (A, B) => {
+  let depth = Infinity;
+  for (const poly of [A, B]) {
+    for (let i = 0; i < poly.length; i++) {
+      const [ax, ay] = poly[i], [bx, by] = poly[(i + 1) % poly.length];
+      const nx = by - ay, ny = ax - bx, L = Math.hypot(nx, ny);
+      const span = (P) => P.map(([px, py]) => (px * nx + py * ny) / L);
+      const a = span(A), b = span(B);
+      depth = Math.min(depth, Math.min(Math.max(...a), Math.max(...b)) - Math.max(Math.min(...a), Math.min(...b)));
+    }
+  }
+  return depth;
+};
+const GATES = [...PR_GATES, 11];
 
 // ---- registry boundary --------------------------------------------------------------
 const [bx1, by1] = pt(680, -40), [bx2, by2] = pt(680, 150);
 const boundary = `<line x1="${bx1.toFixed(1)}" y1="${by1.toFixed(1)}" x2="${bx2.toFixed(1)}" y2="${by2.toFixed(1)}" class="sks" stroke-dasharray="9 5"/>`;
 
-// ---- bodies, painted back to front --------------------------------------------------
-const bodies = M.map(([n]) => n)
-  .sort((a, b) => (g(a).cx + g(a).cy) - (g(b).cx + g(b).cy))
-  .map(massBlock)
-  .join('\n');
+// ---- bodies, painted back to front, then every badge above them ----------------------
+const ORDER = depthSort(M.map(([n]) => ({ n, x: g(n).x, y: g(n).y, w: g(n).side, d: g(n).side }))).map((m) => m.n);
+for (const n of GATES) {
+  const roof = projHull(n, true);
+  for (const m of ORDER.slice(ORDER.indexOf(n) + 1)) {
+    const d = overlapDepth(roof, projHull(m));
+    if (d > 0.5) throw new Error(`sheet 3: structure ${m} ${F(m)[1]} covers gate ${n} ${F(n)[1]}'s roof by ${d.toFixed(1)} px in projection — move one lot`);
+  }
+}
+const drawn = ORDER.map(massBlock);
+const bodies = `${drawn.map((b) => b.body).join('\n')}\n${drawn.map((b) => b.badge).join('\n')}`;
 
 // ---- schedule -----------------------------------------------------------------------
 const ART_H = 930;
@@ -286,7 +334,7 @@ ${txt(540, 151, 'cache key over tools node never installs', 'lblf', 'middle')}
 ${txt(272, 120, 'mise/aqua provisions them', 'lblf', 'end')}
 </g>`;
 
-const svg = `<svg viewBox="0 0 1400 ${SY + 100 + half * 17}" role="img" aria-label="Isometric map of the lit-ui-router monorepo as an industrial site, re-massed from measured source. A build conveyor runs along one straight isometric lane from upper left to lower right: the packages source slab, the oxc-emit build shed, the packer, a green crate that is the one tarball, the publish hall, and the npm registry beyond a dashed boundary. Below and to the left stands the instrument yard in two rows, and below that a proving ground of sample apps, end to end tests and the docs deploy watch. Every structure is massed by its own census — footprint side proportional to the square root of its authored source lines, height one and a half pixels per authored file — so the three heaviest masses on the sheet, ${HEAVY.map((n) => `${heavyName(n)} at ${nfl(n)}`).join(', ')}, are none of them gates. Gate severity is carried entirely in colour, never in height: five small red hatched pads stop the pull request line — the vitest harness, compat-guards, dts-backtest, check exports, and Cypress end to end — one solid red block, published-diff, halts publishing outright; two accent hatched blocks gate a later stage, the version bump and the docs deploy; and the faint unhatched blocks never gate at all. A dashed trunk carries the one cached tarball from the green crate to the three checks that read it, and a long accent return runs from the registry around the front of the whole site back into published-diff, closing the loop. A structure schedule lists all ${M.length} structures with exact file and line counts and their gate tier. In the upper left corner, set apart from the isometric site, a small flat schematic shows the two task managers as a loop rather than a stack: GitHub Actions enters mise at ${HW.callSites} call sites across ${HW.calling} workflows, mise holds ${HM.tasks} tasks with only ${HM.withDepends} of them declaring dependencies, seven of those tasks shell turbo whose continuous-integration graph expands to ${CI_NODES} task nodes, and an accent arrow returns from turbo back into mise, where seven root scripts shell mise again for the aqua-provisioned linters — rumdl, taplo, shellcheck, actionlint and zizmor — that node never installs.">
+const svg = `<svg viewBox="0 0 1400 ${SY + 100 + half * 17}" role="img" aria-label="Isometric map of the lit-ui-router monorepo as an industrial site, re-massed from measured source. A build conveyor runs along one straight isometric lane from upper left to lower right: the packages source slab, the oxc-emit build shed, the packer, a green crate that is the one tarball, the publish hall, and the npm registry beyond a dashed boundary. Below and to the left stands the instrument yard: two big reporter masses at its left end, and the small gates and reporters in two rows to their right. Below that stands a proving ground of sample apps, end to end tests and the docs deploy watch. Every structure is massed by its own census — footprint side proportional to the square root of its authored source lines, height one and a half pixels per authored file — so the three heaviest masses on the sheet, ${HEAVY.map((n) => `${heavyName(n)} at ${nfl(n)}`).join(', ')}, are none of them gates. Gate severity is carried entirely in colour, never in height: five small red hatched pads stop the pull request line — the vitest harness, compat-guards, dts-backtest, check exports, and Cypress end to end — one solid red block, published-diff, halts publishing outright; two accent hatched blocks gate a later stage, the version bump and the docs deploy; and the faint unhatched blocks never gate at all. A dashed trunk carries the one cached tarball from the green crate to the three checks that read it, and a long accent return runs from the registry around the front of the whole site back into published-diff, closing the loop. A structure schedule lists all ${M.length} structures with exact file and line counts and their gate tier. In the upper left corner, set apart from the isometric site, a small flat schematic shows the two task managers as a loop rather than a stack: GitHub Actions enters mise at ${HW.callSites} call sites across ${HW.calling} workflows, mise holds ${HM.tasks} tasks with only ${HM.withDepends} of them declaring dependencies, seven of those tasks shell turbo whose continuous-integration graph expands to ${CI_NODES} task nodes, and an accent arrow returns from turbo back into mise, where seven root scripts shell mise again for the aqua-provisioned linters — rumdl, taplo, shellcheck, actionlint and zizmor — that node never installs.">
 ${defs(P)}
 
 ${inset}
@@ -310,7 +358,7 @@ ${txt(1014, y + 11, label, cls)}`;
 }).join('\n')}
 
 <!-- districts -->
-${district(10, 175, 445, 393)}
+${district(...YARD)}
 
 ${boundary}
 ${conveyor}

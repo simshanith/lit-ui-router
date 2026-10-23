@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { defs } from './chrome.mjs';
 import { txt, schedTxt, isoBlock, isoPt, keyRow } from './helpers.mjs';
 import { assertPlots, depthSort, plotsOf, solidFaces } from './iso-hidden.mjs';
-import { PLACED } from './sheet7.mjs';
+import { DISTRICT_BOUNDS, PLACED } from './sheet7.mjs';
 
 const P = 's7b';
 const OX = 600, OY = 96;
@@ -278,19 +278,16 @@ ${txt(bx.toFixed(1), (cy + 3.4).toFixed(1), String(n), t.num, 'middle')}`;
 // badges lifted clear of roofs AND of their own steam plumes
 const BADGE_LIFT = { 1: 46, 2: 34, 5: 40, 6: 35, 7: 52, 9: 28, 10: 44, 11: 18, 12: 20, 16: 30, 20: 26, 21: 34, 23: 34, 26: 13, 27: 34 };
 
-// ---- districts (sheet 7's) --------------------------------------------------------
-const DIST = [['pkg', 24], ['app', 24], ['site', 24], ['tool', 26]];
-const bounds = (d) => {
-  const bs = M.filter((r) => r[2] === d).map((r) => g(r[0]));
-  return [Math.min(...bs.map((b) => b.x)), Math.min(...bs.map((b) => b.y1)),
-    Math.max(...bs.map((b) => b.x2)), Math.max(...bs.map((b) => b.y2))];
-};
-const districts = DIST.map(([d, pad]) => {
-  const [x1, y1, x2, y2] = bounds(d);
-  const pts = [[x1 - pad, y1 - pad], [x2 + pad, y1 - pad], [x2 + pad, y2 + pad], [x1 - pad, y2 + pad]]
-    .map(([px, py]) => p2(px, py)).join(' ');
+// ---- districts: sheet 7's padded plan bounds, imported ---------------------------
+const districts = Object.values(DISTRICT_BOUNDS).map(([x1, y1, x2, y2]) => {
+  const pts = [[x1, y1], [x2, y1], [x2, y2], [x1, y2]].map(([px, py]) => p2(px, py)).join(' ');
   return `<polygon points="${pts}" class="skf fnone" stroke-dasharray="5 4"/>`;
 }).join('\n');
+// a leader runs from its lettering to a plan point, so a moved district carries the leader's end
+const lead = (x1, y1, x, y, z = 0) => {
+  const [x2, y2] = pt(x, y, z);
+  return `<line x1="${x1}" y1="${y1}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" class="skf"/>`;
+};
 
 // Plants and annexes are separate masses, painted back to front; badges ride last.
 const bodies = depthSort(M.flatMap(([n]) => {
@@ -396,12 +393,12 @@ ${txt(786, 99, `the lint plugin stands at rust ${RUST_T[g(31).rust]}, fully mete
 ${txt(1540, 388, 'apps/ — THE PROVING GROUND', 'lblb', 'end')}
 ${txt(1540, 401, `${dsteam('app')} commits/90d · accent lamps: real e2e light,`, 'lblf', 'end')}
 ${txt(1540, 413, `no meter reads it · rust: vanilla ${RUST_T[g(6).rust]}, mobx ${RUST_T[g(7).rust]}`, 'lblf', 'end')}
-<line x1="1284" y1="416" x2="1248" y2="446" class="skf"/>
+${lead(1292, 420, DISTRICT_BOUNDS.app[2], DISTRICT_BOUNDS.app[1])}
 
-${txt(1014, 668, 'www/ + examples/ — THE SHOPFRONT', 'lblb')}
-${txt(1014, 681, `docs: ${PUFFS(g(10).steam)} puffs (${g(10).steam}c), ${lampsNote(g(10))} — ${dimOf(10)} metered light`, 'lblf')}
-${txt(1014, 693, `examples: ${PUFFS(g(11).steam)} puffs (${g(11).steam}c), ${lampsNote(g(11))}, rust ${RUST_T[g(11).rust]} — ${PUFFS(g(11).steam) === 3 ? 'at full steam' : 'steaming'}, ${g(11).lamps ? 'barely lit' : 'unlit'}`, 'lblf')}
-<line x1="1008" y1="664" x2="986" y2="640" class="skf"/>
+${txt(1049, 668, 'www/ + examples/ — THE SHOPFRONT', 'lblb')}
+${txt(1049, 681, `docs: ${PUFFS(g(10).steam)} puffs (${g(10).steam}c), ${lampsNote(g(10))} — ${dimOf(10)} metered light`, 'lblf')}
+${txt(1049, 695, `examples: ${PUFFS(g(11).steam)} puffs (${g(11).steam}c), ${lampsNote(g(11))}, rust ${RUST_T[g(11).rust]} — ${PUFFS(g(11).steam) === 3 ? 'at full steam' : 'steaming'}, ${g(11).lamps ? 'barely lit' : 'unlit'}`, 'lblf')}
+${lead(1043, 664, DISTRICT_BOUNDS.site[2] - 57, DISTRICT_BOUNDS.site[1])}
 
 ${txt(60, 560, 'tools/ — THE INSTRUMENT YARD', 'lblb')}
 ${txt(60, 573, `${dsteam('tool')} commits/90d across ${TOOLN} machines · pipes all green`, 'lblf')}
