@@ -22,12 +22,13 @@
 // non-gating check run (#280 Phase 1) using a read-scoped token; --apply,
 // which writes production deploy configuration, stays manual.
 //
-// This file is the IO shell: env, wrangler.jsonc, and the Cloudflare API
+// This file is the IO shell: env, the worker configs, and the Cloudflare API
 // (https://developers.cloudflare.com/workers/ci-cd/builds/api-reference/).
 // All decisions live in the pure, unit-tested workers-builds-triggers.core.ts.
 
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { parseArgs } from 'node:util';
 
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
@@ -35,6 +36,9 @@ import { messageOf } from '@tools/shared/errors.ts';
 
 import { cf } from './cloudflare-api.ts';
 import {
+  CF_CONFIG,
+  type CfConfig,
+  type ConfigInput,
   type DesiredWorker,
   type Drift,
   PREVIEWS_BASE_CONFIG,
@@ -45,8 +49,22 @@ import {
   parseJsonc,
   previewsBaseTrigger,
   selectWorkers,
+  workerNameFromCfConfig,
   workerNameFromConfig,
 } from './workers-builds-triggers.core.ts';
+
+/** The worker a config file names; cloudflare.config.ts is evaluated the way cf evaluates it for a production deploy. */
+export const workerName = async (path: string): Promise<string> =>
+  path.endsWith(CF_CONFIG)
+    ? workerNameFromCfConfig(
+        // SAFETY: defineConfig's input shape; the core validates the name it resolves to
+        (
+          (await import(pathToFileURL(path).href)) as {
+            default: ConfigInput<CfConfig>;
+          }
+        ).default,
+      )
+    : workerNameFromConfig(parseJsonc(await readFile(path, 'utf8')));
 
 // The desired-state source of truth, validated at load time.
 const DESIRED_CONFIG = join(
@@ -210,13 +228,9 @@ async function main() {
   let ok = true;
 
   for (const [index, worker] of selected.workers.entries()) {
-    // The worker name comes from the same config wrangler deploys with. A
-    // wranglerConfig that names no file throws, and the run exits 2.
-    const name = workerNameFromConfig(
-      parseJsonc(
-        await readFile(join(workspaceRoot, worker.wranglerConfig), 'utf8'),
-      ),
-    );
+    // The worker name comes from the same config the deploy uses. A
+    // workerConfig that names no file throws, and the run exits 2.
+    const name = await workerName(join(workspaceRoot, worker.workerConfig));
 
     const tag = await workerTag(token, accountId, name);
 
@@ -264,7 +278,9 @@ async function main() {
   process.exitCode = 1;
 }
 
-main().catch((cause: unknown) => {
-  console.error(cause instanceof Error ? cause.message : cause);
-  process.exitCode = 2;
-});
+if (import.meta.main) {
+  main().catch((cause: unknown) => {
+    console.error(cause instanceof Error ? cause.message : cause);
+    process.exitCode = 2;
+  });
+}

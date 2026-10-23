@@ -9,7 +9,7 @@
     "format:oxfmt": "oxfmt \"**/*.{ts,json,jsonc,md}\"",
     "lint:oxlint": "oxlint .",
     "typecheck:worker": "tsc -p worker/tsconfig.json --noEmit",
-    "types:worker": "wrangler types worker/worker-configuration.d.ts"
+    "types:worker": "cf workers types"
   },
   "devDependencies": {
     "cf": "catalog:",

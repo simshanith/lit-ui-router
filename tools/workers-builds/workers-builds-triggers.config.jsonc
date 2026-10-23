@@ -1,5 +1,5 @@
 // Desired Workers Builds trigger configuration, keyed by site: one entry per
-// Worker this repo deploys, each naming the wrangler config that names it. The
+// Worker this repo deploys, each naming the worker config that names it. The
 // key is the site's www/ directory, and the build and deploy commands take it
 // as their last argument; the docs site's commands omit it, which defaults to
 // that site.
@@ -10,7 +10,7 @@
   "workers": {
     "lit-ui-router.dev": {
       // Repo-relative; the worker name is read from this file, not restated.
-      "wranglerConfig": "www/lit-ui-router.dev/wrangler.jsonc",
+      "workerConfig": "www/lit-ui-router.dev/wrangler.jsonc",
       "productionBranch": "main",
       // The build and deploy commands are repo scripts, not the steps themselves:
       // the dashboard holds one value for every branch, and a package-manager
@@ -52,7 +52,7 @@
     // included, so `<dir>/*` covers nested files. The lockfile and catalog are
     // watched because a dependency bump changes the bundle wrangler deploys.
     "release-ledger.lit-ui-router.dev": {
-      "wranglerConfig": "www/release-ledger.lit-ui-router.dev/wrangler.jsonc",
+      "workerConfig": "www/release-ledger.lit-ui-router.dev/wrangler.jsonc",
       "productionBranch": "main",
       "production": {
         "build_command": "./tools/workers-builds/cloudflare-build.sh release-ledger.lit-ui-router.dev",
@@ -86,9 +86,10 @@
       },
     },
     // The release diffs, reached only through the docs worker's service
-    // binding. Like the ledger, it builds branches as Workers Previews.
+    // binding. Like the ledger, it builds branches as Workers Previews; its
+    // config is a cloudflare.config.ts, so it deploys with cf.
     "release-diffs.lit-ui-router.dev": {
-      "wranglerConfig": "www/release-diffs.lit-ui-router.dev/wrangler.jsonc",
+      "workerConfig": "www/release-diffs.lit-ui-router.dev/cloudflare.config.ts",
       "productionBranch": "main",
       "production": {
         "build_command": "./tools/workers-builds/cloudflare-build.sh release-diffs.lit-ui-router.dev",
@@ -120,14 +121,14 @@
       },
     },
     // The Altitude Atlas, once www/atlas.lit-ui-router.dev/wrangler.jsonc exists
-    // and its Worker has triggers in the dashboard. A wranglerConfig naming a
+    // and its Worker has triggers in the dashboard. A workerConfig naming a
     // file that does not exist is a hard error (exit 2), not a skip — the miss
     // is far more often a moved file than an unbuilt site — so this entry stays
     // commented out until that file lands. path_includes is the point of a
     // second entry: two sites in one repo, each building only on the pushes
     // that touch it.
     // "atlas.lit-ui-router.dev": {
-    //   "wranglerConfig": "www/atlas.lit-ui-router.dev/wrangler.jsonc",
+    //   "workerConfig": "www/atlas.lit-ui-router.dev/wrangler.jsonc",
     //   "productionBranch": "main",
     //   "production": {
     //     "build_command": "./tools/workers-builds/cloudflare-build.sh atlas.lit-ui-router.dev",
