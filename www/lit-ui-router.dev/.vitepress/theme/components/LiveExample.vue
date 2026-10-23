@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, useId } from 'vue';
+import { VPIcon } from 'vitepress/theme';
 import ExampleEmbed from './ExampleEmbed.vue';
 import StackBlitzEmbed from './StackBlitzEmbed.vue';
 import {
@@ -104,8 +105,7 @@ onMounted(() => {
           :aria-label="`${example.title} source on GitHub`"
           title="Source on GitHub"
         >
-          <!-- The icon class ships with the theme's github socialLinks entry. -->
-          <span class="vpi-simple-icons-github" aria-hidden="true"></span>
+          <VPIcon icon="simple-icons:github" aria-hidden="true" />
         </a>
         <a class="open-badge" :href="openSrc" target="_blank" rel="noopener">
           <img
@@ -252,12 +252,8 @@ onMounted(() => {
   inline-size: 38px;
   block-size: 38px;
   color: var(--vp-c-text-1);
+  font-size: 20px;
   background: var(--vp-c-bg-soft);
-}
-
-.source-link .vpi-simple-icons-github {
-  inline-size: 20px;
-  block-size: 20px;
 }
 
 .source-link:focus-visible {
