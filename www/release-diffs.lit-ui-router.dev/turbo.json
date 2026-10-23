@@ -1,0 +1,38 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    // restates the root umbrella's list, plus this package's own leaves
+    "typecheck": {
+      "dependsOn": [
+        "typecheck:tsc",
+        "//#typecheck:root",
+        "typecheck:src",
+        "typecheck:lit2",
+        "typecheck:mobx6",
+        "typecheck:effect3",
+        "typecheck:worker"
+      ]
+    },
+    "typecheck:worker": {
+      "dependsOn": ["^build:types", "types:worker"],
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tsconfig.base.json"]
+    },
+    "lint:oxlint": {
+      // Type-aware oxlint reads worker/tsconfig.json, which needs the d.ts.
+      "dependsOn": ["^build:types", "types:worker"],
+      // The root task's explicit globs would hash the gitignored d.ts, which
+      // wrangler.jsonc already keys.
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/.oxlintrc.json"]
+    },
+    "format:check:oxfmt": {
+      // The root task's explicit glob would hash the gitignored
+      // worker-configuration.d.ts and re-key on every types:worker run.
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/.oxfmtrc.json"]
+    },
+    "types:worker": {
+      "inputs": ["$TURBO_DEFAULT$", "wrangler.jsonc"],
+      "outputs": ["worker/worker-configuration.d.ts"]
+    }
+  }
+}

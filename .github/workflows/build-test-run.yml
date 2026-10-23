@@ -173,6 +173,7 @@ jobs:
             packages/shared/*/.turbo/turbo-*.log
             tools/*/.turbo/turbo-*.log
             www/lit-ui-router.dev/.turbo/turbo-*.log
+            www/release-diffs.lit-ui-router.dev/.turbo/turbo-*.log
             www/release-ledger.lit-ui-router.dev/.turbo/turbo-*.log
           # `.turbo` is below the search root for every pattern but the first.
           include-hidden-files: true
@@ -382,6 +383,7 @@ jobs:
             packages/shared/*/.turbo/turbo-*.log
             tools/*/.turbo/turbo-*.log
             www/lit-ui-router.dev/.turbo/turbo-*.log
+            www/release-diffs.lit-ui-router.dev/.turbo/turbo-*.log
             www/release-ledger.lit-ui-router.dev/.turbo/turbo-*.log
           include-hidden-files: true
           retention-days: 5

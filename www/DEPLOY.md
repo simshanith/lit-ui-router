@@ -152,12 +152,12 @@ before production.
 
 ### Workers Previews
 
-The release ledger builds its branches as
-[Workers Previews](https://developers.cloudflare.com/workers/previews/): its preview
-`deploy_command` names the `preview` mode, and its `wrangler.jsonc` carries the `previews` block
+The release ledger and the release diffs build their branches as
+[Workers Previews](https://developers.cloudflare.com/workers/previews/): each preview
+`deploy_command` names the `preview` mode, and each `wrangler.jsonc` carries the `previews` block
 `wrangler preview` requires. A Preview binds only what that block names, so a branch reaches none
-of the ledger's production data, while each Preview gets Durable Object namespaces of its own. Its
-routes, cron trigger and queue consumers stay with production. The docs site still uploads
+of the ledger's production data, while each Preview gets Durable Object namespaces of its own. The
+ledger's routes, cron trigger and queue consumers stay with production. The docs site still uploads
 versions.
 
 Cloudflare's switch to Previews is one-way, and it replaces the Worker's preview trigger with a
@@ -168,7 +168,9 @@ predates the `preview` mode fails its preview build until it is rebased.
 ### Adding a site
 
 1. Add the package at `www/<domain>/`, named `@www/<domain>`, with a `wrangler.jsonc` beside its
-   `package.json`. A D1 database the production deploy should migrate sets `migrations_dir`.
+   `package.json`. A D1 database the production deploy should migrate sets `migrations_dir`. A
+   Worker with no hostname of its own still takes a key under `lit-ui-router.dev`, since the
+   build and deploy scripts accept only a domain-shaped one.
 2. Add an entry keyed `<domain>` to
    [`workers-builds-triggers.config.jsonc`](../tools/workers-builds/workers-builds-triggers.config.jsonc),
    with both commands taking the key and `path_includes` limiting its builds to the paths it

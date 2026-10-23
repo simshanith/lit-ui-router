@@ -85,6 +85,40 @@
         },
       },
     },
+    // The release diffs, reached only through the docs worker's service
+    // binding. Like the ledger, it builds branches as Workers Previews.
+    "release-diffs.lit-ui-router.dev": {
+      "wranglerConfig": "www/release-diffs.lit-ui-router.dev/wrangler.jsonc",
+      "productionBranch": "main",
+      "production": {
+        "build_command": "./tools/workers-builds/cloudflare-build.sh release-diffs.lit-ui-router.dev",
+        "deploy_command": "./tools/workers-builds/cloudflare-deploy.ts main release-diffs.lit-ui-router.dev",
+        "path_includes": [
+          "www/release-diffs.lit-ui-router.dev/*",
+          "pnpm-lock.yaml",
+          "pnpm-workspace.yaml",
+        ],
+        "environment_variables": {
+          "SKIP_DEPENDENCY_INSTALL": "1",
+          "CYPRESS_INSTALL_BINARY": "0",
+          "HUSKY": "0",
+        },
+      },
+      "preview": {
+        "build_command": "./tools/workers-builds/cloudflare-build.sh release-diffs.lit-ui-router.dev",
+        "deploy_command": "./tools/workers-builds/cloudflare-deploy.ts preview release-diffs.lit-ui-router.dev",
+        "path_includes": [
+          "www/release-diffs.lit-ui-router.dev/*",
+          "pnpm-lock.yaml",
+          "pnpm-workspace.yaml",
+        ],
+        "environment_variables": {
+          "SKIP_DEPENDENCY_INSTALL": "1",
+          "CYPRESS_INSTALL_BINARY": "0",
+          "HUSKY": "0",
+        },
+      },
+    },
     // The Altitude Atlas, once www/atlas.lit-ui-router.dev/wrangler.jsonc exists
     // and its Worker has triggers in the dashboard. A wranglerConfig naming a
     // file that does not exist is a hard error (exit 2), not a skip — the miss
