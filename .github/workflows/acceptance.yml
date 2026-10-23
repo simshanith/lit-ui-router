@@ -88,6 +88,7 @@ jobs:
             packages/shared/*/.turbo/turbo-*.log
             tools/*/.turbo/turbo-*.log
             www/lit-ui-router.dev/.turbo/turbo-*.log
+            www/release-diffs.lit-ui-router.dev/.turbo/turbo-*.log
             www/release-ledger.lit-ui-router.dev/.turbo/turbo-*.log
           include-hidden-files: true
           retention-days: 5
@@ -181,6 +182,7 @@ jobs:
             packages/shared/*/.turbo/turbo-*.log
             tools/*/.turbo/turbo-*.log
             www/lit-ui-router.dev/.turbo/turbo-*.log
+            www/release-diffs.lit-ui-router.dev/.turbo/turbo-*.log
             www/release-ledger.lit-ui-router.dev/.turbo/turbo-*.log
           include-hidden-files: true
           retention-days: 5
