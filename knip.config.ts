@@ -63,7 +63,8 @@ function typeTestEntries(dir: string): string[] {
 const workspaces = {
   '.': {
     ignoreDependencies: [
-      // nothing scripts it; kept so `pnpm wrangler` works at the repo root
+      // nothing scripts these; kept so `pnpm wrangler` and `pnpm cf` work at the repo root
+      'cf',
       'wrangler',
       // ad-hoc `pnpm lint:package-json --format tap` (docs/TURBO.md)
       'eslint-formatter-tap',

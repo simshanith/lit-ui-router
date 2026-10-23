@@ -55,6 +55,7 @@
     "@tools/oxlint-anti-slop": "catalog:workspace",
     "@tools/shared": "catalog:workspace",
     "@types/node": "catalog:",
+    "cf": "catalog:",
     "eslint": "catalog:",
     "eslint-formatter-tap": "catalog:",
     "eslint-plugin-lit-ui-router": "catalog:workspace",
