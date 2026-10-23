@@ -37,10 +37,13 @@ import { cf } from './cloudflare-api.ts';
 import {
   type DesiredWorker,
   type Drift,
+  PREVIEWS_BASE_CONFIG,
+  type PreviewsBaseConfig,
   type Trigger,
   desiredWorkersFromConfig,
   diffTriggers,
   parseJsonc,
+  previewsBaseTrigger,
   selectWorkers,
   workerNameFromConfig,
 } from './workers-builds-triggers.core.ts';
@@ -92,7 +95,7 @@ async function getTriggers(
     `/${accountId}/builds/workers/${tag}/triggers`,
   )) as Trigger[];
 
-  return Promise.all(
+  const withEnvironment = await Promise.all(
     triggers.map(async (trigger) =>
       trigger.environment_variables
         ? trigger
@@ -106,13 +109,43 @@ async function getTriggers(
           },
     ),
   );
+
+  // SAFETY: the Worker's build configuration; only these two fields are read
+  const worker = (await cf(token, `/${accountId}/builds/workers/${tag}`)) as {
+    previews_enabled?: boolean;
+    previews_base_config?: PreviewsBaseConfig | null;
+  };
+
+  return worker.previews_enabled && worker.previews_base_config
+    ? [...withEnvironment, previewsBaseTrigger(worker.previews_base_config)]
+    : withEnvironment;
 }
 
 async function applyDrift(
   token: string,
   accountId: string,
+  tag: string,
   drift: Drift,
 ): Promise<void> {
+  if (drift.trigger_uuid === PREVIEWS_BASE_CONFIG) {
+    console.log(
+      `\nPATCHing ${PREVIEWS_BASE_CONFIG}: ${[...Object.keys(drift.patch), ...Object.keys(drift.environmentPatch)].join(', ')}`,
+    );
+    await cf(token, `/${accountId}/builds/workers/${tag}`, {
+      method: 'PATCH',
+      body: {
+        [PREVIEWS_BASE_CONFIG]: {
+          ...drift.patch,
+          ...(Object.keys(drift.environmentPatch).length > 0 && {
+            environment_variables: drift.environmentPatch,
+          }),
+        },
+      },
+    });
+
+    return;
+  }
+
   if (Object.keys(drift.patch).length > 0) {
     console.log(
       `\nPATCHing ${drift.kind} trigger ${drift.trigger_uuid}: ${Object.keys(drift.patch).join(', ')}`,
@@ -212,7 +245,7 @@ async function main() {
       continue;
     }
 
-    for (const drift of drifts) await applyDrift(token, accountId, drift);
+    for (const drift of drifts) await applyDrift(token, accountId, tag, drift);
 
     // Re-read so the confirmation reflects what the API stored, not what we sent.
     const after = diffTriggers(

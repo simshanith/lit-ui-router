@@ -15,6 +15,7 @@ import { describe, it } from 'node:test';
 
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
 import type { Json } from '@tools/bootstrap/types.ts';
+import * as v from 'valibot';
 
 import {
   DEFAULT_SITE,
@@ -22,15 +23,21 @@ import {
   buildSteps,
   resolveSite,
 } from './cloudflare-build.ts';
-import { DEPLOY_MODES, deployCommands } from './cloudflare-deploy.ts';
+import {
+  DEPLOY_MODES,
+  type DeployMode,
+  deployCommands,
+} from './cloudflare-deploy.ts';
 import {
   type Drift,
+  PREVIEWS_BASE_CONFIG,
   type Trigger,
   classifyTrigger,
   desiredStateFromConfig,
   desiredWorkersFromConfig,
   diffTriggers,
   parseJsonc,
+  previewsBaseTrigger,
   selectWorkers,
   workerNameFromConfig,
 } from './workers-builds-triggers.core.ts';
@@ -222,25 +229,37 @@ describe('desiredStateFromConfig', () => {
     // The pinned path must name a real file: readFile rejects if it does not.
     await readFile(join(workspaceRoot, DEPLOY_SCRIPT), 'utf8');
 
+    // A legacy preview trigger uploads versions; a Previews base config previews.
+    const modesFor: Record<'production' | 'preview', readonly DeployMode[]> = {
+      production: ['main'],
+      preview: ['branch', 'preview'],
+    };
+
     for (const worker of workers) {
       // the deploy derives the config from the site; the check reads it here
       assert.equal(worker.wranglerConfig, `www/${worker.site}/wrangler.jsonc`);
       const config = ['--config', worker.wranglerConfig];
 
-      for (const [kind, mode] of [
-        ['production', 'main'],
-        ['preview', 'branch'],
-      ] as const) {
+      for (const kind of ['production', 'preview'] as const) {
         const { path, args } = parseCommand(worker[kind].deploy_command);
         const [argMode, key = DEFAULT_SITE, ...extra] = args;
+        const mode = modesFor[kind].find((allowed) => allowed === argMode);
         assert.equal(path, DEPLOY_SCRIPT);
-        assert.equal(
-          argMode,
-          mode,
-          `${worker.site} ${kind} names the wrong mode`,
-        );
+        assert.ok(mode, `${worker.site} ${kind} names the wrong mode`);
         assert.deepEqual(extra, []);
         assert.equal(key, worker.site);
+
+        // wrangler preview refuses a config without a previews block
+        if (mode === 'preview') {
+          const wrangler = parseJsonc(
+            await readFile(join(workspaceRoot, worker.wranglerConfig), 'utf8'),
+          );
+
+          assert.ok(
+            v.is(v.looseObject({ previews: v.looseObject({}) }), wrangler),
+            `${worker.wranglerConfig} has no previews block`,
+          );
+        }
 
         const { migrations, deploy } = deployCommands(
           workspaceRoot,
@@ -593,6 +612,46 @@ describe('diffTriggers', () => {
     assert.match(report.text, /wanted: \["www\/atlas.lit-ui-router.dev\/\*"\]/);
   });
 
+  // A Worker switched to Workers Previews has no preview trigger: its Previews
+  // base config takes the preview spec, and its drift PATCHes the Worker.
+  it('diffs a Previews base config as the preview trigger', () => {
+    // the base config carries a trigger's settings but no uuid or branches
+    const base = {
+      build_command: triggers.preview.build_command,
+      deploy_command: triggers.preview.deploy_command,
+      environment_variables: triggers.preview.environment_variables,
+    };
+
+    const previews = previewsBaseTrigger(base);
+
+    assert.equal(classifyTrigger(previews, 'main'), 'preview');
+    assert.equal(
+      diffTriggers([triggers.production, previews], desired).report.ok,
+      true,
+    );
+
+    const { report, drifts } = diffTriggers(
+      [
+        triggers.production,
+        previewsBaseTrigger({
+          ...base,
+          deploy_command: driftScenario.driftedDeployCommand,
+        }),
+      ],
+      desired,
+    );
+
+    assert.equal(report.ok, false);
+    assert.deepEqual(drifts, [
+      {
+        trigger_uuid: PREVIEWS_BASE_CONFIG,
+        kind: 'preview',
+        patch: { deploy_command: desired.preview.deploy_command },
+        environmentPatch: {},
+      },
+    ]);
+  });
+
   it('reports a missing trigger kind as unfixable drift', () => {
     const { report, drifts } = diffTriggers([triggers.production], desired);
     assert.equal(report.ok, false);
@@ -641,7 +700,7 @@ describe('cloudflare-deploy', () => {
     for (const worker of workers) {
       const site = siteAt(workspaceRoot, worker.site);
 
-      for (const mode of ['main', 'branch'] as const) {
+      for (const mode of ['main', 'branch', 'preview'] as const) {
         const { migrations, deploy } = deployCommands(
           workspaceRoot,
           mode,
@@ -700,7 +759,7 @@ describe('cloudflare-deploy', () => {
     assert.equal(status, 2);
     assert.match(
       stderr,
-      /usage: cloudflare-deploy\.ts <main\|branch> \[site\]/,
+      /usage: cloudflare-deploy\.ts <main\|branch\|preview> \[site\]/,
     );
     assert.equal(invoked, undefined);
   });
@@ -715,7 +774,10 @@ describe('cloudflare-deploy', () => {
     ]) {
       const { status, stderr, invoked } = runDeploy(args);
       assert.equal(status, 2, args.join(' '));
-      assert.match(stderr, /usage: cloudflare-deploy\.ts <main\|branch>/);
+      assert.match(
+        stderr,
+        /usage: cloudflare-deploy\.ts <main\|branch\|preview>/,
+      );
       assert.equal(invoked, undefined);
     }
   });
@@ -771,10 +833,14 @@ describe('cloudflare-deploy', () => {
           ],
           deploy: ['wrangler', 'deploy', ...config],
         });
-        // a branch upload must never touch a remote database
+        // a branch upload or a Preview must never touch a remote database
         assert.deepEqual(deployCommands(root, 'branch', site), {
           migrations: [],
           deploy: ['wrangler', 'versions', 'upload', ...config],
+        });
+        assert.deepEqual(deployCommands(root, 'preview', site), {
+          migrations: [],
+          deploy: ['wrangler', 'preview', ...config],
         });
       } finally {
         rmSync(root, { force: true, recursive: true });
