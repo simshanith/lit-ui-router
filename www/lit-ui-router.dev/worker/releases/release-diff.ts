@@ -342,7 +342,7 @@ const render = async (host: HTMLElement): Promise<void> => {
     note.textContent =
       filter === requested
         ? ''
-        : `No ${FILTER_LABELS[requested].toLowerCase()} files changed, so all ${count(files.length, 'file')} show.`;
+        : `${FILTER_LABELS[requested]} matches none of the changed files, so All shows.`;
     view.shown = files.filter((file) => matchesFilter(filter, file.name));
 
     for (const [path, item] of items)
