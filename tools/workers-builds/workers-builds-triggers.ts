@@ -28,17 +28,15 @@
 
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { pathToFileURL } from 'node:url';
 import { parseArgs } from 'node:util';
 
+import { loadAndParseConfig } from '@cloudflare/config';
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
 import { messageOf } from '@tools/shared/errors.ts';
 
 import { cf } from './cloudflare-api.ts';
 import {
   CF_CONFIG,
-  type CfConfig,
-  type ConfigInput,
   type DesiredWorker,
   type Drift,
   PREVIEWS_BASE_CONFIG,
@@ -49,22 +47,26 @@ import {
   parseJsonc,
   previewsBaseTrigger,
   selectWorkers,
-  workerNameFromCfConfig,
   workerNameFromConfig,
 } from './workers-builds-triggers.core.ts';
 
-/** The worker a config file names; cloudflare.config.ts is evaluated the way cf evaluates it for a production deploy. */
-export const workerName = async (path: string): Promise<string> =>
-  path.endsWith(CF_CONFIG)
-    ? workerNameFromCfConfig(
-        // SAFETY: defineConfig's input shape; the core validates the name it resolves to
-        (
-          (await import(pathToFileURL(path).href)) as {
-            default: ConfigInput<CfConfig>;
-          }
-        ).default,
-      )
-    : workerNameFromConfig(parseJsonc(await readFile(path, 'utf8')));
+/** The worker a config file names; cf's own loader evaluates a cloudflare.config.ts as a production deploy does. */
+export const workerName = async (path: string): Promise<string> => {
+  if (!path.endsWith(CF_CONFIG)) {
+    return workerNameFromConfig(parseJsonc(await readFile(path, 'utf8')));
+  }
+
+  const { result } = await loadAndParseConfig(path, {
+    isPreview: false,
+    mode: undefined,
+  });
+
+  if (!result.success) throw new Error(`${path}: ${result.error.message}`);
+
+  if (!result.data.worker) throw new Error(`${path} defines no worker`);
+
+  return result.data.worker.name;
+};
 
 // The desired-state source of truth, validated at load time.
 const DESIRED_CONFIG = join(

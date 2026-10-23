@@ -213,7 +213,9 @@ among them, which are what let two sites share one repo. Its shape is documented
 file's own comments and the schema in
 [`workers-builds-triggers.core.ts`](../tools/workers-builds/workers-builds-triggers.core.ts) — and
 not repeated here. A `workerConfig` that names no file is a hard error (exit 2), never a skipped
-entry, so a moved file cannot turn the check green.
+entry, so a moved file cannot turn the check green. A `cloudflare.config.ts` is evaluated with
+`@cloudflare/config`, the loader `cf` itself uses, at the version `cf` pins; the trigger test fails
+when the two drift apart.
 A configured worker the account does not have yet is drift (exit 1), not an error: a new site
 reads as owing its dashboard step without hiding the other sites' verdicts.
 

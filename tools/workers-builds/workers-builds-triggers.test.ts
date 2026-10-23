@@ -42,7 +42,6 @@ import {
   parseJsonc,
   previewsBaseTrigger,
   selectWorkers,
-  workerNameFromCfConfig,
   workerNameFromConfig,
 } from './workers-builds-triggers.core.ts';
 import { workerName } from './workers-builds-triggers.ts';
@@ -133,6 +132,39 @@ describe('parseJsonc', () => {
       ),
       'release-diffs',
     );
+  });
+
+  // The check must evaluate a cloudflare.config.ts with the loader cf deploys with.
+  it('loads cf configs with the @cloudflare/config that cf pins', async () => {
+    const cf = v.parse(
+      v.looseObject({
+        dependencies: v.looseObject({ '@cloudflare/config': v.string() }),
+      }),
+      parseJsonc(
+        await readFile(
+          join(
+            workspaceRoot,
+            'www/release-diffs.lit-ui-router.dev/node_modules/cf/package.json',
+          ),
+          'utf8',
+        ),
+      ),
+    );
+
+    const loader = v.parse(
+      v.looseObject({ version: v.string() }),
+      parseJsonc(
+        await readFile(
+          join(
+            import.meta.dirname,
+            'node_modules/@cloudflare/config/package.json',
+          ),
+          'utf8',
+        ),
+      ),
+    );
+
+    assert.equal(loader.version, cf.dependencies['@cloudflare/config']);
   });
 
   it('throws a clear error on malformed input', () => {
@@ -417,32 +449,6 @@ describe('workerNameFromConfig', () => {
   it('throws when name is missing', () => {
     assert.throws(() => workerNameFromConfig({}), /no "name" field/);
     assert.throws(() => workerNameFromConfig(null), /no "name" field/);
-  });
-});
-
-describe('workerNameFromCfConfig', () => {
-  it('unwraps objects, promises and functions at both levels', async () => {
-    const worker = { name: 'w', compatibilityDate: '2026-07-01' };
-
-    assert.equal(await workerNameFromCfConfig({ worker }), 'w');
-    assert.equal(
-      await workerNameFromCfConfig(Promise.resolve({ worker })),
-      'w',
-    );
-    assert.equal(
-      await workerNameFromCfConfig(({ isPreview }: { isPreview: boolean }) => ({
-        worker: () => ({ ...worker, name: isPreview ? 'preview' : 'w' }),
-      })),
-      'w',
-    );
-  });
-
-  it('throws when the worker or its name is missing', async () => {
-    await assert.rejects(workerNameFromCfConfig({}), /has no worker "name"/);
-    await assert.rejects(
-      workerNameFromCfConfig({ worker: {} }),
-      /has no worker "name"/,
-    );
   });
 });
 

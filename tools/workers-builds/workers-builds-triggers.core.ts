@@ -207,41 +207,6 @@ export function workerNameFromConfig(config: Json): string {
 /** The file name that makes a site a cf project rather than a Wrangler one. */
 export const CF_CONFIG = 'cloudflare.config.ts';
 
-/** How cf evaluates a function-form config for a production deploy. */
-const PRODUCTION_CONTEXT = { isPreview: false, mode: undefined } as const;
-
-/** A cf config value: an object, a promise of one, or a function of the evaluation context returning either. */
-export type ConfigInput<T> =
-  | T
-  | Promise<T>
-  | ((context: typeof PRODUCTION_CONTEXT) => T | Promise<T>);
-
-/** The slice of a cloudflare.config.ts default export this check reads. */
-export type CfConfig = { readonly worker?: ConfigInput<object> };
-
-const resolveConfigInput = async <T extends object>(
-  input: ConfigInput<T>,
-): Promise<T> =>
-  input instanceof Function ? input(PRODUCTION_CONTEXT) : input;
-
-/** The production Worker name a cloudflare.config.ts default export resolves to, or throw. */
-export async function workerNameFromCfConfig(
-  config: ConfigInput<CfConfig>,
-): Promise<string> {
-  const { worker } = await resolveConfigInput(config);
-
-  const result = v.safeParse(
-    NameSchema,
-    worker && (await resolveConfigInput(worker)),
-  );
-
-  if (!result.success) {
-    throw new Error(`${CF_CONFIG} has no worker "name"`);
-  }
-
-  return result.output.name;
-}
-
 // Only the D1 fields the production deploy migrates by.
 const WranglerD1Schema = v.looseObject({
   d1_databases: v.optional(
