@@ -395,8 +395,8 @@ describe.skipIf(!hasNavigationAPI)('traversal interception', () => {
     const handlerSaw: (string | undefined)[] = [];
     startRouter({
       interceptTraverse: () => ({
-        handler() {
-          handlerSaw.push(router.globals.current.name);
+        handler(transition) {
+          handlerSaw.push(router.globals.current.name, transition?.to().name);
 
           return Promise.resolve();
         },
@@ -414,7 +414,7 @@ describe.skipIf(!hasNavigationAPI)('traversal interception', () => {
       await window.navigation.back().finished;
 
       expect(seen).toEqual([undefined]);
-      expect(handlerSaw).toEqual(['a']);
+      expect(handlerSaw).toEqual(['a', 'a']);
       expect(router.globals.current.name).toBe('a');
     } finally {
       window.navigation.removeEventListener('navigate', record);

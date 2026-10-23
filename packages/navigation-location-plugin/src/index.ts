@@ -62,6 +62,25 @@ export function isUIRouterNavigateEvent(
   );
 }
 
+/**
+ * What a {@link NavigationLocationPluginOptions.interceptTraverse} function
+ * returns: `event.intercept()` options whose `handler` receives the router
+ * transition the traversal settled on.
+ */
+export interface NavigationTraverseInterceptOptions extends Omit<
+  NavigationInterceptOptions,
+  'handler'
+> {
+  /**
+   * Runs once the router transition the traversal started, including its
+   * redirects, has settled.
+   *
+   * @param transition - The last transition of that redirect chain, or
+   * `undefined` when the traversal's URL started no transition.
+   */
+  handler?: (transition: Transition | undefined) => void | PromiseLike<void>;
+}
+
 /** Options for {@link navigationLocationPlugin}. */
 export interface NavigationLocationPluginOptions {
   /**
@@ -106,19 +125,25 @@ export interface NavigationLocationPluginOptions {
    *
    * Pass `true` for the defaults, or a function whose return value is handed
    * to `event.intercept()`. The function runs at `navigate` time, before the
-   * router transition exists, so unlike {@link intercept} it cannot read the
-   * destination state's `data`. Its `handler` runs after the router
-   * transition settles, and the service forces a layout once it settles, so
-   * the browser restores scroll against the rendered view. `focusReset` and
-   * `scroll` pass through; `focusReset` defaults to `'manual'`, as for
-   * {@link intercept}.
+   * router transition exists, so `focusReset` and `scroll` are fixed before
+   * the destination state is known. Its `handler` runs after the router
+   * transition settles and receives it, so it can read the destination
+   * state's `data`; return `scroll: 'manual'` and call `event.scroll()` from
+   * the handler to restore scroll only for the states that want it. The
+   * service forces a layout once the handler settles, so the browser restores
+   * scroll against the rendered view. `focusReset` and `scroll` pass through;
+   * `focusReset` defaults to `'manual'`, as for {@link intercept}.
    *
    * @example
    * ```ts
    * router.plugin(navigationLocationPlugin, {
    *   interceptTraverse: (event) => ({
-   *     async handler() {
-   *       // the destination view has rendered
+   *     scroll: 'manual',
+   *     async handler(transition) {
+   *       if (!transition?.to().data?.keepScroll) {
+   *         await new Promise(requestAnimationFrame);
+   *         event.scroll();
+   *       }
    *     },
    *   }),
    * } satisfies NavigationLocationPluginOptions);
@@ -126,7 +151,7 @@ export interface NavigationLocationPluginOptions {
    */
   interceptTraverse?:
     | true
-    | ((event: NavigateEvent) => NavigationInterceptOptions);
+    | ((event: NavigateEvent) => NavigationTraverseInterceptOptions);
 }
 
 /**
@@ -256,7 +281,7 @@ export class NavigationLocationService extends BaseLocationServices {
       stopWatching();
 
       if (!event.signal.aborted) {
-        await handler?.();
+        await handler?.(transition);
         // Firefox, and WebKit in an iframe, restore scroll against the last layout, so the restored view must be laid out (#1193, #1194).
         void globalRoot.document.documentElement.scrollHeight;
       }

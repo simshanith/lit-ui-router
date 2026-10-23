@@ -185,14 +185,33 @@ The <a href="/app" target="_self">sample app</a> passes `interceptTraverse: true
 alongside its `intercept` in
 [`router.config.ts`](https://github.com/simshanith/lit-ui-router/blob/main/apps/sample-app-shared/src/router.config.ts).
 
-Pass a function instead of `true` to return the `NavigationInterceptOptions` for
-each traversal. The function runs at `navigate` time, before the router
-transition exists, so unlike `intercept` it cannot read the destination state's
-`data`. Its `handler` runs after the router transition settles, which is the
-place to wait for views that render later
-([#982](https://github.com/simshanith/lit-ui-router/issues/982) tracks a
-`lit-ui-router` signal for that moment), and `focusReset` defaults to
-`'manual'` as it does for `intercept`. Firefox, and WebKit in an iframe,
+Pass a function instead of `true` to return the
+`NavigationTraverseInterceptOptions` for each traversal. The function runs at
+`navigate` time, before the router transition exists, so its `focusReset` and
+`scroll` are fixed before the destination state is known. Its `handler` runs
+after the router transition settles, which is the place to wait for views that
+render later ([#982](https://github.com/simshanith/lit-ui-router/issues/982)
+tracks a `lit-ui-router` signal for that moment), and receives that transition,
+or `undefined` when the traversal's URL started none. To restore scroll only
+for some states, return `scroll: 'manual'` and call `event.scroll()` from the
+handler:
+
+```ts
+router.plugin(navigationLocationPlugin, {
+  interceptTraverse: (event) => ({
+    scroll: 'manual',
+    async handler(transition) {
+      if (!transition?.to().data?.keepScroll) {
+        await new Promise(requestAnimationFrame);
+        event.scroll();
+      }
+    },
+  }),
+});
+```
+
+`focusReset` defaults to `'manual'` as it does for `intercept`. Firefox, and
+WebKit in an iframe,
 restore scroll against the last layout, so the plugin forces a layout once
 `handler` settles. A navigation that supersedes the traversal ends the wait.
 
@@ -348,7 +367,8 @@ faster than the prefetch finishes to see the superseded one abort. Its log is a
 - **`NavigationLocationPluginOptions`** — `intercept`, which returns the
   `NavigationInterceptOptions` for each navigation the plugin starts, and
   `interceptTraverse`, which opts back/forward traversals into interception
-  that waits for the router transition they start
+  that waits for the router transition they start and hands it to the
+  returned `handler`
 - **`NavigationLocationService`** — the location service class (extends
   `BaseLocationServices` from `@uirouter/core`); handles URL reads/writes via
   the Navigation API, including `<base href>` handling for non-root

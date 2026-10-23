@@ -112,7 +112,23 @@ router.plugin(navigationLocationPlugin, { interceptTraverse: true });
 
 The sample app passes `interceptTraverse: true` alongside its `intercept` in [`router.config.ts`](https://github.com/simshanith/lit-ui-router/blob/main/apps/sample-app-shared/src/router.config.ts).
 
-Pass a function instead of `true` to return the `NavigationInterceptOptions` for each traversal. The function runs at `navigate` time, before the router transition exists, so unlike `intercept` it cannot read the destination state's `data`. Its `handler` runs after the router transition settles, which is the place to wait for views that render later, and `focusReset` defaults to `'manual'` as it does for `intercept`. Firefox, and WebKit in an iframe, restore scroll against the last layout, so the plugin forces a layout once `handler` settles. A navigation that supersedes the traversal ends the wait.
+Pass a function instead of `true` to return the `NavigationTraverseInterceptOptions` for each traversal. The function runs at `navigate` time, before the router transition exists, so its `focusReset` and `scroll` are fixed before the destination state is known. Its `handler` runs after the router transition settles, which is the place to wait for views that render later, and receives that transition, or `undefined` when the traversal's URL started none. To restore scroll only for some states, return `scroll: 'manual'` and call `event.scroll()` from the handler:
+
+```typescript
+router.plugin(navigationLocationPlugin, {
+  interceptTraverse: (event) => ({
+    scroll: 'manual',
+    async handler(transition) {
+      if (!transition?.to().data?.keepScroll) {
+        await new Promise(requestAnimationFrame);
+        event.scroll();
+      }
+    },
+  }),
+});
+```
+
+`focusReset` defaults to `'manual'` as it does for `intercept`. Firefox, and WebKit in an iframe, restore scroll against the last layout, so the plugin forces a layout once `handler` settles. A navigation that supersedes the traversal ends the wait.
 
 In WebKit, a traversal that supersedes another traversal (back, then back again) commits, but its `navigation.transition.finished` rejects with an `AbortError`; the router still ends on the state of the URL, so code that awaits `finished` should not treat that rejection as a failed navigation.
 
@@ -184,12 +200,19 @@ interface NavigationLocationPluginOptions {
   intercept?: (event: UIRouterNavigateEvent) => NavigationInterceptOptions;
   interceptTraverse?:
     | true
-    | ((event: NavigateEvent) => NavigationInterceptOptions);
+    | ((event: NavigateEvent) => NavigationTraverseInterceptOptions);
+}
+
+interface NavigationTraverseInterceptOptions extends Omit<
+  NavigationInterceptOptions,
+  'handler'
+> {
+  handler?: (transition: Transition | undefined) => void | PromiseLike<void>;
 }
 ```
 
 - `intercept` — called for each navigation the service starts, after the router transition has committed; its return value is handed to `event.intercept()`. See [Navigation Event Interception](#navigation-event-interception).
-- `interceptTraverse` — opts back/forward traversals into interception that waits for the router transition they start; a function returns the `NavigationInterceptOptions` for each. See [Back and forward](#back-and-forward).
+- `interceptTraverse` — opts back/forward traversals into interception that waits for the router transition they start; a function returns the `NavigationTraverseInterceptOptions` for each, whose `handler` receives the settled router transition. See [Back and forward](#back-and-forward).
 
 ### `NavigationLocationService`
 
