@@ -7,12 +7,8 @@
       target="_blank"
       rel="noopener"
     >
-      <span class="prompt" aria-hidden="true">$</span>
-      <!-- Narrow screens wrap between the groups, never inside a package name. -->
-      <code
-        ><span>npm install lit-ui-router</span>{{ ' '
-        }}<span>lit @uirouter/core</span></code
-      >
+      <span class="prompt" aria-hidden="true">&gt;</span>
+      <code>npm i lit-ui-router</code>
     </a>
   </div>
 </template>
@@ -27,8 +23,7 @@
   align-items: center;
   justify-content: center;
   gap: 0.6em;
-  min-block-size: 44px;
-  padding-block: 12px;
+  block-size: 44px;
   padding-inline: 18px;
   font-family: var(--vp-font-family-mono);
   font-size: 15px;
@@ -76,10 +71,5 @@
   font: inherit;
   background: none;
   padding: 0;
-  text-align: center;
-}
-
-.hero-install code span {
-  white-space: nowrap;
 }
 </style>
