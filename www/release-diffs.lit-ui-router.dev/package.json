@@ -12,6 +12,7 @@
     "types:worker": "wrangler types worker/worker-configuration.d.ts"
   },
   "devDependencies": {
+    "cf": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
     "typescript": "catalog:",
