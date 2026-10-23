@@ -1,4 +1,3 @@
-/* oxlint-disable lit-ui-router/anchor-is-valid -- the plugin recognises uiSref by its lit-ui-router import; drops once lit-ui-router types uiSref itself */
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { when } from 'lit/directives/when.js';
