@@ -37,6 +37,37 @@ render(
 );
 ```
 
+## Getting started
+
+### Start a project
+
+The Hello World starter is a Vite + TypeScript app. Copy it with
+[tiged](https://npmx.dev/package/tiged):
+
+```bash
+npx tiged simshanith/lit-ui-router/examples/helloworld my-app
+```
+
+Then run `npm install` and `npm run dev` in `my-app`. The source is
+[`examples/helloworld`](https://github.com/simshanith/lit-ui-router/tree/main/examples/helloworld)
+on GitHub, and it runs in the browser on
+[StackBlitz](https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/helloworld?file=src%2Fmain.ts).
+
+### Add to an existing project
+
+Install the router with its peers, `lit` and `@uirouter/core`:
+
+```bash
+npm install lit-ui-router lit @uirouter/core
+```
+
+The app renders into a host element, `<div id="root">` in the starter's
+[`index.html`](https://github.com/simshanith/lit-ui-router/blob/main/examples/helloworld/index.html).
+Vite's `lit-ts` template (`npm create vite@latest my-app -- --template lit-ts`)
+already sets the decorator options the tutorial uses.
+
+Then start with the [Hello World tutorial](./tutorial/helloworld).
+
 ## Why state-based routing?
 
 Most routers map **URLs to components**. UI-Router instead models your
@@ -124,34 +155,3 @@ tool.
   server configurations. The
   [source](https://github.com/simshanith/lit-ui-router/tree/main/apps) compares
   the reactivity styles file-by-file.
-
-## Getting started
-
-### Start a project
-
-The Hello World starter is a Vite + TypeScript app. Copy it with
-[tiged](https://npmx.dev/package/tiged):
-
-```bash
-npx tiged simshanith/lit-ui-router/examples/helloworld my-app
-```
-
-Then run `npm install` and `npm run dev` in `my-app`. The source is
-[`examples/helloworld`](https://github.com/simshanith/lit-ui-router/tree/main/examples/helloworld)
-on GitHub, and it runs in the browser on
-[StackBlitz](https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/helloworld?file=src%2Fmain.ts).
-
-### Add to an existing project
-
-Install the router with its peers, `lit` and `@uirouter/core`:
-
-```bash
-npm install lit-ui-router lit @uirouter/core
-```
-
-The app renders into a host element, `<div id="root">` in the starter's
-[`index.html`](https://github.com/simshanith/lit-ui-router/blob/main/examples/helloworld/index.html).
-Vite's `lit-ts` template (`npm create vite@latest my-app -- --template lit-ts`)
-already sets the decorator options the tutorial uses.
-
-Then start with the [Hello World tutorial](./tutorial/helloworld).
