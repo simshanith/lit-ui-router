@@ -32,6 +32,25 @@ export type Trigger = {
   environment_variables?: Record<string, TriggerEnvironmentVariable>;
 };
 
+/**
+ * A Worker switched to Workers Previews has no preview trigger; its preview
+ * builds run on this, the `previews_base_config` of GET /builds/workers/{tag}.
+ */
+export type PreviewsBaseConfig = Omit<
+  Trigger,
+  'trigger_uuid' | 'trigger_name' | 'branch_includes' | 'branch_excludes'
+>;
+
+/** Stands in for a trigger uuid, so the shell PATCHes the Worker rather than a trigger. */
+export const PREVIEWS_BASE_CONFIG = 'previews_base_config';
+
+/** The Previews base config as the preview trigger it replaced: no branches, so it classifies as preview. */
+export const previewsBaseTrigger = (config: PreviewsBaseConfig): Trigger => ({
+  ...config,
+  trigger_uuid: PREVIEWS_BASE_CONFIG,
+  trigger_name: 'Workers Previews base config',
+});
+
 // Scalar fields a desired spec may pin; unpinned fields are shown but never
 // drift. environment_variables is pinned per key, not whole-field — see
 // describeEnvironment.

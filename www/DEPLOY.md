@@ -113,12 +113,14 @@ per-branch divergence above free: a branch that changes the package manager gets
 bootstrap with no edit to this file.
 
 The deploy script takes the trigger as its first argument and the site as its optional second.
-`branch` runs `npx wrangler versions upload`; `main` runs `npx wrangler deploy`, preceded by
+`branch` runs `npx wrangler versions upload`; `preview` runs `npx wrangler preview`, for a site
+whose branches build as [Workers Previews](#workers-previews); `main` runs `npx wrangler deploy`, preceded by
 `npx wrangler d1 migrations apply <database_name> --remote` for every `d1_databases` entry in the
 site's `wrangler.jsonc` that sets `migrations_dir`. Each names the site's config with `--config`,
 since the deploy runs from the repo root and the config lives in the site package. A failed
-migration stops the deploy, so production code never runs ahead of its schema. A preview upload
-never migrates: it binds the same remote databases as production. wrangler skips its migration
+migration stops the deploy, so production code never runs ahead of its schema. Only `main`
+migrates: a version upload binds the same remote databases as production, and a Preview binds
+only what its `previews` block names. wrangler skips its migration
 confirmation prompt when `WORKERS_CI` is set (as it is in Workers Builds) or there is no TTY,
 answering yes, so the step neither waits nor skips. A moved `wrangler.jsonc` changes this
 script's internals and leaves the dashboard alone — no `--apply` owed, and no ordering against
@@ -147,6 +149,21 @@ names would leave turbo on the unusable shim.
 
 `build_command` and `SKIP_DEPENDENCY_INSTALL` are one state. Apply and verify preview
 before production.
+
+### Workers Previews
+
+The release ledger builds its branches as
+[Workers Previews](https://developers.cloudflare.com/workers/previews/): its preview
+`deploy_command` names the `preview` mode, and its `wrangler.jsonc` carries the `previews` block
+`wrangler preview` requires. A Preview binds only what that block names, so a branch reaches none
+of the ledger's production data, while each Preview gets Durable Object namespaces of its own. Its
+routes, cron trigger and queue consumers stay with production. The docs site still uploads
+versions.
+
+Cloudflare's switch to Previews is one-way, and it replaces the Worker's preview trigger with a
+Previews base config on the Worker itself, which `check:workers-builds` diffs and patches in the
+trigger's place. The switched command applies to every branch at once, so a branch whose checkout
+predates the `preview` mode fails its preview build until it is rebased.
 
 ### Adding a site
 

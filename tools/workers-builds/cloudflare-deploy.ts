@@ -3,7 +3,7 @@
 // dashboard holds one value for every branch, so wrangler details live here.
 // Runs after cloudflare-build.sh (bash: it runs before the install) — see www/DEPLOY.md.
 //
-// Usage: cloudflare-deploy.ts <main|branch> [site] — `site` as in cloudflare-build.ts.
+// Usage: cloudflare-deploy.ts <main|branch|preview> [site] — `site` as in cloudflare-build.ts.
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -16,11 +16,13 @@ import {
   parseJsonc,
 } from './workers-builds-triggers.core.ts';
 
-// Trigger names, not git refs. Each names the site's wrangler.jsonc with
-// --config: the deploy runs from the root and the config sits in the package.
+// Trigger names, not git refs: `branch` for a legacy preview trigger, `preview`
+// for a Worker switched to Workers Previews. Each names the site's wrangler.jsonc
+// with --config: the deploy runs from the root and the config sits in the package.
 export const DEPLOY_MODES = {
   main: ['wrangler', 'deploy'],
   branch: ['wrangler', 'versions', 'upload'],
+  preview: ['wrangler', 'preview'],
 } as const;
 
 export type DeployMode = keyof typeof DEPLOY_MODES;
@@ -43,8 +45,9 @@ export const deployCommands = (
   const config = ['--config', `${site.dir}/wrangler.jsonc`] as const;
   const deploy = [...DEPLOY_MODES[mode], ...config];
 
-  // A branch upload shares production's databases, so it never migrates them.
-  if (mode === 'branch') return { migrations: [], deploy };
+  // A branch upload binds production's databases and a Preview only its
+  // `previews` block's, so only production migrates.
+  if (mode !== 'main') return { migrations: [], deploy };
 
   const databases = migratedDatabasesFromConfig(
     parseJsonc(readFileSync(join(root, site.dir, 'wrangler.jsonc'), 'utf8')),

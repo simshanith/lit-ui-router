@@ -47,7 +47,8 @@
       },
     },
     // The release ledger. Its production deploy applies the D1 migrations
-    // first (cloudflare-deploy.ts). A wildcard matches any characters, `/`
+    // first (cloudflare-deploy.ts). It builds branches as Workers Previews, so
+    // `preview` is its Previews base config rather than a trigger. A wildcard matches any characters, `/`
     // included, so `<dir>/*` covers nested files. The lockfile and catalog are
     // watched because a dependency bump changes the bundle wrangler deploys.
     "release-ledger.lit-ui-router.dev": {
@@ -70,7 +71,7 @@
       },
       "preview": {
         "build_command": "./tools/workers-builds/cloudflare-build.sh release-ledger.lit-ui-router.dev",
-        "deploy_command": "./tools/workers-builds/cloudflare-deploy.ts branch release-ledger.lit-ui-router.dev",
+        "deploy_command": "./tools/workers-builds/cloudflare-deploy.ts preview release-ledger.lit-ui-router.dev",
         "path_includes": [
           "www/release-ledger.lit-ui-router.dev/*",
           "tools/release-ledger/*",
