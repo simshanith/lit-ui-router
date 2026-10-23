@@ -19,6 +19,7 @@ This file is an index. The details live in [docs/CONTRIBUTING.md](docs/CONTRIBUT
 - Tooling that can't ask a package manager takes the repo root from `tools/bootstrap/src/root.ts`, never `../..` arithmetic.
 - A new docs example is one entry in `examples/embeds.ts`.
 - `www/lit-ui-router.dev` is the production docs site, deployed by Cloudflare Workers Builds ([www/DEPLOY.md](www/DEPLOY.md)).
+- Cloudflare account changes go through the `cf` CLI: find the command with `cf cli search "<task>"` (no names or IDs in the query) and run it with `--dry-run` first.
 - CLI scripts under `tools/` use a flat `main` with early exits and a one-line `import.meta.main` guard; see `tools/workers-builds/cloudflare-build.ts`.
 - A module goes in `@tools/shared` only when two or more packages import it; with one consumer it lives in that package.
 - pnpm links a package's `bin` into its dependents only, never its own `.bin`. A package's own task execs the file directly (0755 plus shebang), as `tools/build_and_test/mise.toml` does.
@@ -105,7 +106,6 @@ Agents never:
 - merge PRs, or enable auto-merge;
 - mark PRs ready for review;
 - dispatch release workflows;
-- make Cloudflare account or dashboard changes;
 - push to `dependabot/*` branches; redo the bump on their own branch instead;
 - edit or delete GitHub releases, or unpublish npm versions. Releases are immutable, and canary releases stay as evidence;
 - create labels. Label PRs by subject from the existing set;
