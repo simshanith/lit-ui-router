@@ -7,6 +7,7 @@ import {
   type DistTagOutcome,
   type Envelope,
   fold,
+  isOnNpm,
   moveDistTag,
   removeDistTag,
   type VersionRow,
@@ -20,6 +21,7 @@ import {
   foldStatements,
 } from './ledger-statements.ts';
 import { Observer, type Sources } from './observe.ts';
+import { prebuild } from './prebuild.ts';
 
 export const CLAIMS_QUEUE = 'release-ledger-claims';
 
@@ -214,6 +216,13 @@ const handleClaim = (message: LedgerMessage, claim: Claim) =>
     const sql = yield* D1Client.D1Client;
 
     yield* sql.batch(statements.map((statement) => toSql(sql, statement)));
+
+    const published =
+      folded.outcome === 'applied' &&
+      isOnNpm(folded.row) &&
+      !(before && isOnNpm(before));
+
+    if (published) yield* prebuild(claim.name, claim.version);
 
     return ACK;
   }).pipe(

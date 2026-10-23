@@ -34,6 +34,7 @@ import {
   ObserverLive,
   type Sources,
 } from './observe.ts';
+import { DiffPrebuild, type PrebuildPair } from './prebuild.ts';
 
 const ROOT = join(import.meta.dirname, '..');
 
@@ -422,6 +423,53 @@ describe('queue consumer', { timeout: 120_000 }, () => {
 
     const tagged = await run(findTagged({ name: NAME, tag: 'latest' }));
     assert.equal(Option.getOrThrow(tagged).version, VERSION);
+  });
+
+  it("pre-builds the release diff into a version's first npm publish, once", async () => {
+    const builds: PrebuildPair[] = [];
+
+    const prebuilds = (fail = false) =>
+      Layer.succeed(DiffPrebuild, {
+        build: (pair) =>
+          fail
+            ? Effect.fail(new Error('object unavailable'))
+            : Effect.sync(() => {
+                builds.push(pair);
+              }),
+      });
+
+    const deliverWith = (messages: Recorded[], fail = false) =>
+      Effect.runPromise(
+        consume({ queue: CLAIMS_QUEUE, messages }).pipe(
+          Effect.provide(
+            Layer.mergeAll(
+              D1Client.layer({ db }),
+              sees(RELEASED),
+              prebuilds(fail),
+            ),
+          ),
+        ),
+      );
+
+    const older = messageOf({ ...claimOf(), version: '0.9.0' });
+
+    await deliverWith([older]);
+    assert.deepEqual(builds, [], 'the first version has nothing before it');
+
+    const newer = messageOf(claimOf());
+
+    await deliverWith([newer]);
+    await deliverWith([messageOf(claimOf())]);
+    assert.deepEqual(builds, [{ name: NAME, from: '0.9.0', to: VERSION }]);
+
+    const failing = messageOf({ ...claimOf(), version: '1.1.0' });
+
+    await deliverWith([failing], true);
+    assert.deepEqual(
+      [failing.acks, failing.retries],
+      [1, []],
+      'a failed pre-build never fails the claim',
+    );
   });
 
   it('stores a redelivered message once', async () => {

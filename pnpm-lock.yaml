@@ -2726,6 +2726,10 @@ importers:
         version: 7.0.2
 
   tools/release-ledger:
+    dependencies:
+      semver:
+        specifier: 'catalog:'
+        version: 7.8.5
     devDependencies:
       '@tools/shared':
         specifier: catalog:workspace
@@ -2733,6 +2737,9 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 24.19.2
+      '@types/semver':
+        specifier: 'catalog:'
+        version: 7.8.0
       oxfmt:
         specifier: 'catalog:'
         version: 0.74.0
@@ -2932,6 +2939,9 @@ importers:
       '@tools/npm-diff':
         specifier: catalog:workspace
         version: link:../../tools/npm-diff
+      '@tools/release-ledger':
+        specifier: catalog:workspace
+        version: link:../../tools/release-ledger
       '@uirouter/core':
         specifier: 'catalog:'
         version: 6.1.2
@@ -2981,9 +2991,6 @@ importers:
       '@tools/embed-heights':
         specifier: catalog:workspace
         version: link:../../tools/embed-heights
-      '@tools/release-ledger':
-        specifier: catalog:workspace
-        version: link:../../tools/release-ledger
       '@tools/shared':
         specifier: catalog:workspace
         version: link:../../tools/shared

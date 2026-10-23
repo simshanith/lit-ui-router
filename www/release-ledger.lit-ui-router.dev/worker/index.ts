@@ -20,6 +20,7 @@ import {
   type LedgerVersion,
 } from '../src/ledger-sql.ts';
 import { ObserverLive } from '../src/observe.ts';
+import { DiffPrebuild } from '../src/prebuild.ts';
 import { sweep } from '../src/sweep.ts';
 
 /** Secrets and local flags `wrangler types` cannot see in wrangler.jsonc. */
@@ -105,6 +106,15 @@ export class ReleaseDiff extends DurableObject<LedgerEnv> {
   }
 }
 
+/** Pre-builds a newly published version's release diff in its pair's ReleaseDiff object, within the queue invocation. */
+const prebuildLive = (env: LedgerEnv) =>
+  Layer.succeed(DiffPrebuild, {
+    build: (pair) =>
+      Effect.asVoid(
+        Effect.tryPromise(() => releaseDiffObject(env, pair).build(pair)),
+      ),
+  });
+
 export default {
   fetch: (request, env) => ingest(request, env),
   scheduled: (controller, env) =>
@@ -121,6 +131,7 @@ export default {
           Layer.mergeAll(
             database(env),
             ObserverLive(env).pipe(Layer.provide(FetchHttpClient.layer)),
+            prebuildLive(env),
           ),
         ),
       ),

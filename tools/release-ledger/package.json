@@ -6,7 +6,8 @@
   "type": "module",
   "exports": {
     ".": "./src/release-ledger.core.ts",
-    "./fixtures": "./src/release-ledger.fixtures.ts"
+    "./fixtures": "./src/release-ledger.fixtures.ts",
+    "./versions": "./src/release-ledger.versions.ts"
   },
   "scripts": {
     "format:check:oxfmt": "oxfmt --check \"**/*.{ts,json,md}\"",
@@ -15,9 +16,13 @@
     "test": "node --test --test-reporter=@tools/shared/test-reporter.ts \"src/**/*.test.ts\"",
     "typecheck:tsc": "tsc -p tsconfig.json --noEmit"
   },
+  "dependencies": {
+    "semver": "catalog:"
+  },
   "devDependencies": {
     "@tools/shared": "catalog:workspace",
     "@types/node": "catalog:",
+    "@types/semver": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
     "typescript": "catalog:"
