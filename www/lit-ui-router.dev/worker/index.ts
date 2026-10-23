@@ -4,7 +4,9 @@ import { mounts } from 'sample-app-routes';
 import { createServerRouter } from 'ui-router-server';
 import { createFetchHandler } from 'ui-router-server/fetch';
 
+import { type DiffBuilder, diffSource } from './releases/diff-data.ts';
 import type { LedgerReader } from './releases/ledger.ts';
+import { isDiffData } from './releases/routes.ts';
 import { serveReleases } from './releases/serve.ts';
 
 // All routing intelligence lives in ui-router-server; the ./fetch adapter
@@ -52,19 +54,40 @@ const withNoindex = (response: Response): Response => {
 // bypasses the router entirely rather than riding a verdict.
 const NAIVE_MOUNT = '/not-found-naive';
 
+/** A release-diff data answer from the edge cache, or the worker's answer, kept there when it never changes. */
+const cachedReleases = async (
+  request: Request,
+  env: Env,
+  ctx: ExecutionContext,
+): Promise<Response | null> => {
+  // SAFETY: wrangler types the binding as an untyped Service; LedgerReader and DiffBuilder name the entrypoint's methods.
+  // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- an untyped Service shares no members with the RPC methods, so one assertion can't reach them
+  const ledger = env.LEDGER as unknown as LedgerReader & DiffBuilder;
+  const diffs = diffSource(env.RELEASE_DIFFS, ledger);
+
+  const cacheable =
+    request.method === 'GET' && isDiffData(new URL(request.url).pathname);
+
+  const hit = cacheable ? await caches.default.match(request) : undefined;
+
+  if (hit) return hit;
+
+  const response = await serveReleases(request, ledger, diffs, {
+    cache: caches.default,
+    waitUntil: (promise) => ctx.waitUntil(promise),
+    now: Date.now,
+  });
+
+  if (cacheable && response?.status === 200)
+    ctx.waitUntil(caches.default.put(request, response.clone()));
+
+  return response;
+};
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
-
-    // SAFETY: wrangler types the binding as an untyped Service; LedgerReader names the entrypoint's methods.
-    // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- an untyped Service shares no members with the RPC methods, so one assertion can't reach them
-    const ledger = env.LEDGER as unknown as LedgerReader;
-
-    const releases = await serveReleases(request, ledger, {
-      cache: caches.default,
-      waitUntil: (promise) => ctx.waitUntil(promise),
-      now: Date.now,
-    });
+    const releases = await cachedReleases(request, env, ctx);
 
     if (releases !== null) return releases;
 

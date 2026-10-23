@@ -33,6 +33,16 @@
       "migrations_dir": "migrations",
     },
   ],
+  // Each version pair's diff: its patch, then its index. The docs worker reads it too.
+  "r2_buckets": [
+    { "binding": "RELEASE_DIFFS", "bucket_name": "release-diffs" },
+  ],
+  // One ReleaseDiff per version pair writes that pair's R2 entry.
+  "durable_objects": {
+    "bindings": [{ "name": "RELEASE_DIFF", "class_name": "ReleaseDiff" }],
+  },
+  // Applied by the production `wrangler deploy`; a branch's `versions upload` cannot carry it.
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["ReleaseDiff"] }],
   "queues": {
     "producers": [
       { "binding": "LEDGER_QUEUE", "queue": "release-ledger-claims" },

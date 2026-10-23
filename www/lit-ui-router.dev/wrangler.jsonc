@@ -45,7 +45,8 @@
       "/gh/*",
     ],
   },
-  // Read-only RPC into the release ledger worker; the docs worker holds no D1 binding.
+  // Read-only RPC into the release ledger worker; the docs worker holds no D1
+  // binding. Its releaseDiff builds a release diff's R2 entry on a miss.
   "services": [
     {
       "binding": "LEDGER",
@@ -53,4 +54,7 @@
       "entrypoint": "LedgerReader",
     },
   ],
+  // The release diffs the ledger's ReleaseDiff objects write; this worker only
+  // reads them, so previews share the bucket.
+  "r2_buckets": [{ "binding": "RELEASE_DIFFS", "bucket_name": "release-diffs" }],
 }

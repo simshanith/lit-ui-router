@@ -33,7 +33,7 @@ const ALLOWED: SplitAllowance[] = [
   },
   {
     name: 'binary-extensions',
-    why: "chokidar 3's is-binary-path pins ^2, under the cem analyzer and vite-plugin-static-copy; the docs site's npm diff follows libnpmdiff's ^3 list",
+    why: "chokidar 3's is-binary-path pins ^2, under the cem analyzer and vite-plugin-static-copy; @tools/npm-diff follows libnpmdiff's ^3 list",
   },
   {
     name: 'effect',

@@ -33,12 +33,12 @@ published; the open-wc MIT text is the one reproduced in
 
 ### libnpmdiff (npm)
 
-`www/lit-ui-router.dev/worker/releases/npm-diff/format-diff.ts` ports
+`tools/npm-diff/src/format-diff.ts` ports
 `lib/format-diff.js`, `lib/should-print-patch.js` and the file keys of
 `lib/untar.js` from
 [libnpmdiff](https://github.com/npm/cli/tree/latest/workspaces/libnpmdiff)
-8.1.12, ISC, Copyright (c) GitHub Inc. The docs site serves it to browsers;
-the ISC text:
+8.1.12, ISC, Copyright (c) GitHub Inc. The docs site's workers run it; the
+ISC text:
 
 > Permission to use, copy, modify, and/or distribute this software for any
 > purpose with or without fee is hereby granted, provided that the above

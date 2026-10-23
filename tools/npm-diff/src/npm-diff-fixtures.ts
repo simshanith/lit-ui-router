@@ -1,5 +1,5 @@
 // In-memory tarballs and package files for the npm diff port's tests.
-import type { PackageFile } from '../releases/npm-diff/format-diff.ts';
+import type { PackageFile } from './format-diff.ts';
 
 const encoder = new TextEncoder();
 

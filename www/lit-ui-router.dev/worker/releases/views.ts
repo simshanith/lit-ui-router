@@ -350,7 +350,7 @@ export const VersionView: RoutedLitTemplate<{
   </dl>
 `;
 
-/** `releases.package.compare`: the files two versions published to npm, diffed in the browser by `release-diff.ts`. */
+/** `releases.package.compare`: the files two versions published to npm, diffed once on the server and rendered by `release-diff.ts`. */
 export const CompareView: RoutedLitTemplate<{
   pair: PublishedPair;
 }> = ({ router, resolves: { pair } }) => {
@@ -386,9 +386,12 @@ export const CompareView: RoutedLitTemplate<{
       data-to=${pair.to.version}
       aria-label="Changed files"
     >
-      <p class="diff-status" role="status">Loading both versions from npm…</p>
+      <p class="diff-status" role="status">Loading the diff…</p>
       <noscript
-        ><p>The diff is built in the browser with JavaScript.</p></noscript
+        ><p>
+          The diff renders with JavaScript.
+          <a href="patch" download>Download the patch</a> instead.
+        </p></noscript
       >
       <fieldset class="diff-filter" hidden>
         <legend>Show</legend>

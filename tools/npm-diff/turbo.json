@@ -1,0 +1,13 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    // The npm diff port against the npm CLI, both reading the npm registry:
+    // the network and the host's npm are inputs no key can name, so uncached.
+    // In no ci:* graph: the Acceptance workflow's `acceptance (npm-diff)` job
+    // runs it.
+    "test:npm-diff": {
+      "cache": false
+    }
+  }
+}

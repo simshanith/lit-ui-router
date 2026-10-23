@@ -1,12 +1,8 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import {
-  formatDiff,
-  packageFiles,
-  shouldPrintPatch,
-} from '../releases/npm-diff/format-diff.ts';
-import { readTar } from '../releases/npm-diff/tar.ts';
+import { formatDiff, packageFiles, shouldPrintPatch } from './format-diff.ts';
+import { readTar } from './tar.ts';
 import { files, pax, tar } from './npm-diff-fixtures.ts';
 
 // Each expected patch is what libnpmdiff 8.1.12's format-diff.js prints for the same files.

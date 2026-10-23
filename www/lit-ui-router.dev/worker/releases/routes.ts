@@ -24,9 +24,28 @@ export const releaseRoutes = [
     response: true,
   },
   { name: 'releases.package.compare', url: '/diff/{from}...{to}' },
+  {
+    name: 'releases.package.compare.index',
+    url: '/index.json',
+    response: true,
+  },
+  {
+    name: 'releases.package.compare.files',
+    url: '/files/{preset}',
+    response: true,
+  },
+  { name: 'releases.package.compare.patch', url: '/patch', response: true },
   { name: 'releases.package.version', url: '/{version}' },
   { name: 'notFound' },
 ] as const satisfies readonly ReleaseRoute[];
+
+/** The diff page's data routes, whose answers never change: the edge cache keeps them. */
+const DIFF_DATA =
+  /^\/releases\/[^/]+\/diff\/[^/]+\/(?:index\.json|files\/[^/]+|patch)$/;
+
+/** Whether `pathname` names one of the diff page's data routes. */
+export const isDiffData = (pathname: string): boolean =>
+  DIFF_DATA.test(pathname);
 
 /** Urls GitHub ought to have, each handing off to github.com. */
 export const ghRoutes = [

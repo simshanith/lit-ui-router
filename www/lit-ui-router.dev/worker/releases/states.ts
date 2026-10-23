@@ -3,6 +3,7 @@ import type { StateDeclaration, Transition } from '@uirouter/core';
 import type { LitStateDeclaration, UIViewResolves } from 'lit-ui-router/pure';
 import { mergeSearch } from 'ui-router-server';
 
+import type { DiffSource, PairDiff } from './diff-data.ts';
 import { type CacheKey, FRESH_MS, urlKey } from './edge-cache.ts';
 import {
   type LedgerPackage,
@@ -15,6 +16,11 @@ import {
   versionIn,
   versionsOf,
 } from './ledger.ts';
+import {
+  FILE_FILTERS,
+  type FileFilter,
+  matchesFilter,
+} from './npm-diff/file-filter.ts';
 import { GH_MOUNT, ghRoutes, RELEASES_MOUNT, releaseRoutes } from './routes.ts';
 import {
   CompareView,
@@ -41,6 +47,13 @@ interface ResolvesOf {
   'releases.package.diff': { compare: string };
   'releases.package.compare': {
     pair: PublishedPair;
+  };
+  'releases.package.compare.index': { diff: PairDiff };
+  'releases.package.compare.files': { diff: PairDiff; files: string };
+  'releases.package.compare.patch': {
+    pair: PublishedPair;
+    diff: PairDiff;
+    patch: ReadableStream<Uint8Array> | Uint8Array<ArrayBuffer>;
   };
   'releases.package.version': {
     release: LedgerVersion;
@@ -138,7 +151,46 @@ const latestResolve = (ledger: LedgerReader) => ({
   resolveFn: (trans: Transition) => latestOf(ledger)(paramsOf(trans)),
 });
 
-const attach = (ledger: LedgerReader): Attached => ({
+const IMMUTABLE = 'public, max-age=31536000, immutable';
+
+const PATCH_TYPE = 'text/x-diff; charset=utf-8';
+
+/** A data route's answer: a pair's published files never change, so neither does it. */
+const data = (
+  body: string | ReadableStream<Uint8Array> | Uint8Array<ArrayBuffer>,
+  type: string,
+  headers: Record<string, string> = {},
+): Response =>
+  new Response(body, {
+    headers: { 'Content-Type': type, 'Cache-Control': IMMUTABLE, ...headers },
+  });
+
+/** The pair's diff, read or built only after the parent state found both versions in the ledger, and after `after`. */
+const diffResolve = (diffs: DiffSource, after: readonly string[] = []) => ({
+  token: 'diff',
+  deps: ['pair', ...after],
+  resolveFn: ({ from, to }: PublishedPair) =>
+    diffs({ name: to.name, from: from.version, to: to.version }),
+});
+
+// SAFETY: the url sets the preset param, a string.
+const presetParamOf = (trans: Transition) =>
+  (trans.params() as { preset: string }).preset;
+
+/** The preset the url names, or a `NotInLedger` rejection for an unknown one. */
+const presetOf = (trans: Transition): FileFilter => {
+  const preset = presetParamOf(trans);
+  const filter = FILE_FILTERS.find((candidate) => candidate === preset);
+
+  if (!filter) throw new NotInLedger(`no ${preset} preset`);
+
+  return filter;
+};
+
+const patchFilename = ({ from, to }: PublishedPair): string =>
+  `${to.name.replace('/', '-')}-${from.version}...${to.version}.patch`;
+
+const attach = (ledger: LedgerReader, diffs: DiffSource): Attached => ({
   releases: {
     component: ReleasesView,
     resolve: [{ token: 'packages', resolveFn: packagesOf(ledger) }],
@@ -183,6 +235,40 @@ const attach = (ledger: LedgerReader): Attached => ({
       },
     ],
   },
+  'releases.package.compare.index': {
+    resolve: [diffResolve(diffs)],
+    respond: ({ resolves }) =>
+      data(JSON.stringify(resolves.diff.index), 'application/json'),
+  },
+  'releases.package.compare.files': {
+    resolve: [
+      { token: 'preset', deps: ['$transition$'], resolveFn: presetOf },
+      diffResolve(diffs, ['preset']),
+      {
+        token: 'files',
+        deps: ['diff', 'preset'],
+        resolveFn: (diff: PairDiff, preset: FileFilter) =>
+          diff.files(
+            diff.index.files.filter(({ path }) => matchesFilter(preset, path)),
+          ),
+      },
+    ],
+    respond: ({ resolves }) => data(resolves.files, PATCH_TYPE),
+  },
+  'releases.package.compare.patch': {
+    resolve: [
+      diffResolve(diffs),
+      {
+        token: 'patch',
+        deps: ['diff'],
+        resolveFn: (diff: PairDiff) => diff.patch(),
+      },
+    ],
+    respond: ({ resolves }) =>
+      data(resolves.patch, PATCH_TYPE, {
+        'Content-Disposition': `attachment; filename="${patchFilename(resolves.pair)}"`,
+      }),
+  },
   'releases.package.version': {
     component: VersionView,
     resolve: [
@@ -210,12 +296,13 @@ const attach = (ledger: LedgerReader): Attached => ({
   notFound: { component: NotFoundView },
 });
 
-/** The states of the tree at `mount` for one request, reading `ledger`. */
+/** The states of the tree at `mount` for one request, reading `ledger` and, for the diff page's data, `diffs`. */
 export const releaseStates = (
   mount: string,
   ledger: LedgerReader,
+  diffs: DiffSource,
 ): ReleaseState[] => {
-  const attached = attach(ledger);
+  const attached = attach(ledger, diffs);
   const routes = mount === GH_MOUNT ? ghRoutes : releaseRoutes;
 
   return routes.map((route) => ({ ...route, ...attached[route.name] }));

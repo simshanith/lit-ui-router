@@ -245,8 +245,8 @@ one job and reports one check run on the commit, named `acceptance (<suite>)`:
 - `acceptance (bench)`: ui-router-server's tinybench timings on a short budget
   (`mise run bench_pulse`), reported as the job summary. It has no thresholds,
   so it goes red only when a bench crashes.
-- `acceptance (npm-diff)`: the docs site's release diff against `npm diff`,
-  byte for byte, for a few published version pairs (`mise run npm_diff_parity`).
+- `acceptance (npm-diff)`: the patch the release diff pages store against
+  `npm diff`, byte for byte, for a few published version pairs (`mise run npm_diff_parity`).
   Both read the npm registry.
 
 A red check is a real failure on that commit, unlike a release signal, but it

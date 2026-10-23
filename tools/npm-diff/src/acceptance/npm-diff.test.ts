@@ -1,11 +1,12 @@
-// The in-house npm diff against the real `npm diff`, byte for byte; it reads the npm registry, so it runs as `acceptance (npm-diff)`.
+// The patch the release diff store keeps against the real `npm diff`, byte for byte; it reads the npm registry, so it runs as `acceptance (npm-diff)`.
 import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { describe, it } from 'node:test';
 import { promisify } from 'node:util';
 
-import { npmDiff } from '../../releases/npm-diff/registry.ts';
+import { indexPatch } from '../diff-index.ts';
+import { buildPatch, readSections } from '../store.ts';
 
 const run = promisify(execFile);
 
@@ -37,14 +38,21 @@ const npm = async (name: string, from: string, to: string): Promise<string> => {
 describe('npm diff parity', () => {
   for (const [name, from, to] of PAIRS) {
     it(`matches npm diff for ${name}@${from}...${to}`, async () => {
-      const [ours, theirs] = await Promise.all([
-        npmDiff(name, from, to),
+      const [patch, theirs] = await Promise.all([
+        buildPatch({ name, from, to }),
         npm(name, from, to),
       ]);
 
       assert.ok(theirs.length > 0, 'npm diff printed nothing');
-      // npm prints the patch with a trailing newline.
-      assert.equal(`${ours}\n`, theirs);
+      assert.deepEqual(patch, new TextEncoder().encode(theirs));
+
+      // Every file's section, read back by its index entry, rebuilds the patch.
+      const read = (range: { offset: number; length: number }) =>
+        Promise.resolve(
+          patch.subarray(range.offset, range.offset + range.length),
+        );
+
+      assert.equal(await readSections(read, indexPatch(patch).files), theirs);
     });
   }
 });

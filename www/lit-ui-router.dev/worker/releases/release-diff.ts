@@ -1,4 +1,5 @@
-// The diff page's client: fetches both tarballs, prints npm diff's patch and renders it with @pierre/diffs.
+// The diff page's client: fetches the pair's index, then the shown preset's patch sections, and renders them with @pierre/diffs.
+import type { DiffFile, DiffIndex } from '@tools/npm-diff/diff-index';
 import {
   type FileDiffMetadata,
   FileDiff,
@@ -22,7 +23,6 @@ import {
   urlWithFilter,
 } from './npm-diff/file-filter.ts';
 import { LANGUAGES } from './npm-diff/languages.ts';
-import { npmDiff } from './npm-diff/registry.ts';
 
 const THEME = {
   light: 'github-light-high-contrast',
@@ -59,43 +59,50 @@ const languageOf = (file: FileDiffMetadata): SupportedLanguages => {
 const count = (n: number, noun: string): string =>
   `${n.toLocaleString('en')} ${noun}${n === 1 ? '' : 's'}`;
 
-const linesOf = (file: FileDiffMetadata) => ({
-  added: file.hunks.reduce((sum, hunk) => sum + hunk.additionLines, 0),
-  removed: file.hunks.reduce((sum, hunk) => sum + hunk.deletionLines, 0),
-});
-
-const summary = (files: readonly FileDiffMetadata[]): string => {
-  const lines = files.map(linesOf);
-  const added = lines.reduce((sum, file) => sum + file.added, 0);
-  const removed = lines.reduce((sum, file) => sum + file.removed, 0);
+const summary = (files: readonly DiffFile[]): string => {
+  const added = files.reduce((sum, file) => sum + file.added, 0);
+  const removed = files.reduce((sum, file) => sum + file.removed, 0);
 
   return `${count(files.length, 'file')} changed, ${count(added, 'line')} added, ${count(removed, 'line')} removed.`;
 };
 
-const download = (patch: string, filename: string): HTMLAnchorElement => {
+/** The page's data routes sit below its own, slashed url. */
+const dataUrl = (path: string): URL => new URL(path, location.href);
+
+const fetched = async (url: URL): Promise<Response> => {
+  const response = await fetch(url);
+
+  if (!response.ok)
+    throw new Error(`${url.pathname} answered ${response.status}`);
+
+  return response;
+};
+
+const indexOf = async (): Promise<DiffIndex> =>
+  // SAFETY: the worker serves the index the R2 entry stores.
+  (await (await fetched(dataUrl('index.json'))).json()) as DiffIndex;
+
+/** The files a preset shows, parsed from the patch sections the worker serves for it. */
+const presetFiles = async (filter: FileFilter): Promise<FileDiffMetadata[]> =>
+  parsePatchFiles(
+    await (await fetched(dataUrl(`files/${filter}`))).text(),
+  ).flatMap((parsed) => parsed.files);
+
+const download = (filename: string): HTMLAnchorElement => {
   const link = document.createElement('a');
 
-  link.href = URL.createObjectURL(
-    new Blob([`${patch}\n`], { type: 'text/x-diff' }),
-  );
+  link.href = dataUrl('patch').href;
   link.download = filename;
   link.textContent = 'Download the patch';
 
   return link;
 };
 
-const STATUS: Readonly<Record<FileDiffMetadata['type'], TreeFile['status']>> = {
-  change: 'modified',
-  new: 'added',
-  deleted: 'deleted',
-  'rename-pure': 'renamed',
-  'rename-changed': 'renamed',
-};
-
-const treeFileOf = (file: FileDiffMetadata): TreeFile => ({
-  path: file.name,
-  status: STATUS[file.type],
-  ...linesOf(file),
+const treeFileOf = ({ path, kind, added, removed }: DiffFile): TreeFile => ({
+  path,
+  status: kind,
+  added,
+  removed,
 });
 
 /** One radio per preset, labelled with how many changed files it shows. */
@@ -161,19 +168,19 @@ const partsOf = (host: HTMLElement): Parts | null => {
 /** One empty, hidden list item per file, keyed by path; a file's diff renders into it once it's first shown. */
 const listItems = (
   list: HTMLElement,
-  files: readonly FileDiffMetadata[],
+  files: readonly DiffFile[],
 ): Map<string, HTMLLIElement> =>
   new Map(
-    files.map((file) => {
+    files.map(({ path }) => {
       const item = document.createElement('li');
 
-      item.id = `file-${file.name}`;
+      item.id = `file-${path}`;
       item.tabIndex = -1;
       item.hidden = true;
-      item.dataset.path = file.name;
+      item.dataset.path = path;
       list.append(item);
 
-      return [file.name, item];
+      return [path, item];
     }),
   );
 
@@ -262,7 +269,7 @@ const mountTree = async (
   treeModule: Promise<typeof import('./release-diff-tree.ts')>,
   parts: Parts,
   items: ReadonlyMap<string, HTMLLIElement>,
-  shown: () => readonly FileDiffMetadata[],
+  shown: () => readonly DiffFile[],
 ): Promise<DiffTree | undefined> => {
   const { nav, toggle, treeHost } = parts;
 
@@ -286,11 +293,36 @@ const mountTree = async (
   }
 };
 
-/** The files the current preset shows, and the tree once it has loaded. */
+/** The preset shown, its files, and the tree once it has loaded. */
 interface ViewState {
-  shown: readonly FileDiffMetadata[];
+  filter?: FileFilter;
+  shown: readonly DiffFile[];
   tree?: DiffTree;
 }
+
+/** Each preset's files, fetched the first time it shows; a preset whose files another already fetched skips the fetch. */
+const presetLoader = () => {
+  const loaded = new Map<string, FileDiffMetadata>();
+  const loading = new Map<FileFilter, Promise<void>>();
+
+  return async (
+    filter: FileFilter,
+    shown: readonly DiffFile[],
+  ): Promise<FileDiffMetadata[]> => {
+    if (!shown.every(({ path }) => loaded.has(path))) {
+      const pending =
+        loading.get(filter) ??
+        presetFiles(filter).then((files) => {
+          for (const file of files) loaded.set(file.name, file);
+        });
+
+      loading.set(filter, pending);
+      await pending;
+    }
+
+    return shown.flatMap(({ path }) => loaded.get(path) ?? []);
+  };
+};
 
 const render = async (host: HTMLElement): Promise<void> => {
   const { package: name = '', from = '', to = '' } = host.dataset;
@@ -299,41 +331,52 @@ const render = async (host: HTMLElement): Promise<void> => {
   if (!parts) return;
 
   const { status, note, fieldset, toggle, list } = parts;
-  // Fetched beside the tarballs; a failure leaves the page without a tree.
+  // Fetched beside the index; a failure leaves the page without a tree.
   const treeModule = import('./release-diff-tree.ts');
 
   treeModule.catch(() => {});
 
-  let patch: string;
+  let index: DiffIndex;
 
   try {
-    patch = await npmDiff(name, from, to);
+    index = await indexOf();
   } catch (error) {
     status.textContent = `The diff could not be built: ${error instanceof Error ? error.message : String(error)}.`;
 
     return;
   }
 
-  if (patch === '') {
+  if (index.files.length === 0) {
     status.textContent = 'The two versions publish identical files.';
 
     return;
   }
 
-  const files = parsePatchFiles(patch)
-    .flatMap((parsed) => parsed.files)
-    .sort((a, b) => comparePaths(a.name, b.name));
+  const files = [...index.files].sort((a, b) => comparePaths(a.path, b.path));
 
   status.replaceChildren(
     `${summary(files)} `,
-    download(patch, `${name}-${from}...${to}.patch`),
+    download(`${name.replace('/', '-')}-${from}...${to}.patch`),
   );
 
   const items = listItems(list, files);
   const renderDiff = diffRenderer(items);
-  const counts = filterCounts(files.map((file) => file.name));
+  const load = presetLoader();
+  const counts = filterCounts(files.map(({ path }) => path));
 
   const view: ViewState = { shown: [] };
+
+  /** Renders the shown preset's diffs once its files arrive. */
+  const fill = async (filter: FileFilter): Promise<void> => {
+    try {
+      const loaded = await load(filter, view.shown);
+
+      if (view.filter === filter) for (const file of loaded) renderDiff(file);
+    } catch (error) {
+      if (view.filter === filter)
+        note.textContent = `The files could not be loaded: ${error instanceof Error ? error.message : String(error)}.`;
+    }
+  };
 
   /** Shows `requested`'s files, or every file when it matches none, and returns the preset shown. */
   const apply = (requested: FileFilter): FileFilter => {
@@ -343,12 +386,14 @@ const render = async (host: HTMLElement): Promise<void> => {
       filter === requested
         ? ''
         : `${FILTER_LABELS[requested]} matches none of the changed files, so All shows.`;
-    view.shown = files.filter((file) => matchesFilter(filter, file.name));
+    view.filter = filter;
+    view.shown = files.filter(({ path }) => matchesFilter(filter, path));
 
-    for (const [path, item] of items)
-      item.hidden = !view.shown.some((file) => file.name === path);
+    const shownPaths = new Set(view.shown.map(({ path }) => path));
 
-    for (const file of view.shown) renderDiff(file);
+    for (const [path, item] of items) item.hidden = !shownPaths.has(path);
+
+    void fill(filter);
     view.tree?.show(view.shown.map(treeFileOf));
     toggle.textContent = `Files (${view.shown.length.toLocaleString('en')})`;
 
