@@ -29,6 +29,7 @@ catalog:
   '@lit/context': ^1.1.6
   '@oxlint/plugins': 1.89.0
   '@pierre/diffs': ^1.6.1
+  '@pierre/trees': ^1.0.0-beta.6
   '@pnpm/logger': 1100.0.0
   '@pnpm/types': 1102.1.1
   '@pnpm/workspace.projects-reader': 1101.1.4
@@ -244,6 +245,7 @@ overrides:
   '@api-viewer/docs>lit': ^3.3.3
   '@cloudflare/config>zod': ^4.6.7
   '@codecov/bundler-plugin-core>zod': ^4.6.7
+  '@pierre/trees>@pierre/theming': ^1.0.2
   'brace-expansion@>=5 <5.0.9': ^5.0.9
   'd3-color@<3.1.0': ^3.1.0
   'dompurify@<3.4.13': ^3.4.13
@@ -263,6 +265,12 @@ overrides:
   'wrangler>esbuild': 0.28.2
 
 packageExtensions:
+  '@pierre/trees':
+    peerDependenciesMeta:
+      react:
+        optional: true
+      react-dom:
+        optional: true
   conventional-changelog-preset-loader:
     dependencies:
       conventional-changelog-conventionalcommits: ^10.2.1

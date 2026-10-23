@@ -390,7 +390,24 @@ export const CompareView: RoutedLitTemplate<{
       <noscript
         ><p>The diff is built in the browser with JavaScript.</p></noscript
       >
-      <ol class="diff-files"></ol>
+      <fieldset class="diff-filter" hidden>
+        <legend>Show</legend>
+      </fieldset>
+      <p class="diff-note" role="status"></p>
+      <div class="diff-layout">
+        <nav class="diff-nav" aria-label="Files" hidden>
+          <button
+            type="button"
+            class="diff-nav-toggle"
+            aria-expanded="false"
+            aria-controls="diff-tree"
+          >
+            Files
+          </button>
+          <div class="diff-tree" id="diff-tree"></div>
+        </nav>
+        <ol class="diff-files"></ol>
+      </div>
     </section>
   `;
 };

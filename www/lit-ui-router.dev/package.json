@@ -30,6 +30,7 @@
     "@lit-labs/ssr-client": "catalog:",
     "@lit-labs/ssr-dom-shim": "catalog:",
     "@pierre/diffs": "catalog:",
+    "@pierre/trees": "catalog:",
     "@spectrum-web-components/icons-workflow": "catalog:",
     "@uirouter/core": "catalog:",
     "binary-extensions": "catalog:",

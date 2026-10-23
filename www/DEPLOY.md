@@ -384,7 +384,12 @@ package's latest GitHub release. The route tables are
 [`worker/releases/routes.ts`](lit-ui-router.dev/worker/releases/routes.ts).
 `/releases/<pkg>/diff/<from>...<to>/` is a shell the worker validates against
 the ledger; its one script, `/release-diff.js`, fetches both tarballs from the
-npm registry and renders the patch `npm diff` would print. The docs build
+npm registry and renders the patch `npm diff` would print, beside a
+[`@pierre/trees`](https://www.npmjs.com/package/@pierre/trees)
+file tree. Presets narrow both to source, published JS, types or all files;
+`?files=js|types|all` names any but the default, source (the presets live in
+[`worker/releases/npm-diff/file-filter.ts`](lit-ui-router.dev/worker/releases/npm-diff/file-filter.ts)).
+The docs build
 emits that script from
 [`worker/releases/release-diff.ts`](lit-ui-router.dev/worker/releases/release-diff.ts)
 in a Vite build of its own (`.vitepress/vite.config.ts`). Preview uploads bind the production ledger the same way. Locally the binding

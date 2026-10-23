@@ -309,6 +309,7 @@ describe('the /releases/<pkg>/diff redirects', () => {
 describe('the /releases/<pkg>/diff/<from>...<to> pages', () => {
   const cases = [
     [`${FILES}/1.9.0...1.10.0/`, 200, null],
+    [`${FILES}/1.9.0...1.10.0/?files=js`, 200, null],
     [`${FILES}/1.10.0...1.11.0-rc.0/`, 200, null],
     [`${FILES}/1.10.0...1.2.0/`, 200, null],
     [`${FILES}/1.9.0...1.10.0`, 308, `${FILES}/1.9.0...1.10.0/`],
@@ -347,6 +348,8 @@ describe('the /releases/<pkg>/diff/<from>...<to> pages', () => {
       /<section\s+class="npm-diff"\s+data-npm-diff\s+data-package="lit-ui-router"\s+data-from="1\.9\.0"\s+data-to="1\.10\.0"/,
     );
     assert.match(html, /role="status"/);
+    assert.match(html, /<fieldset class="diff-filter" hidden>/);
+    assert.match(html, /<nav class="diff-nav" aria-label="Files" hidden>/);
     assert.ok(
       html.includes(
         `href="${DIFFS}/lit-ui-router%401.9.0...lit-ui-router%401.10.0"`,
