@@ -122,10 +122,33 @@ tool.
 
 ## Getting started
 
-Install from npm:
+### Start a project
+
+The Hello World starter is a Vite + TypeScript app. Copy it with
+[tiged](https://github.com/tiged/tiged):
 
 ```bash
-npm install lit-ui-router
+npx tiged simshanith/lit-ui-router/examples/helloworld my-app
 ```
+
+Then run `npm install` and `npm run dev` in `my-app`. The source is
+[`examples/helloworld`](https://github.com/simshanith/lit-ui-router/tree/main/examples/helloworld)
+on GitHub, and it runs in the browser on
+[StackBlitz](https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/helloworld?file=src%2Fmain.ts).
+
+### Add to an existing project
+
+Install the router with its peers, `lit` and `@uirouter/core`:
+
+```bash
+npm install lit-ui-router lit @uirouter/core
+```
+
+The app renders into a host element, `<div id="root">` in the starter's
+[`index.html`](https://github.com/simshanith/lit-ui-router/blob/main/examples/helloworld/index.html).
+Vite's `lit-ts` template (`npm create vite@latest my-app -- --template lit-ts`)
+already sets the decorator options the tutorial uses. It also sets
+`verbatimModuleSyntax`, so import types such as `LitStateDeclaration` with
+`import type` or an inline `type` modifier.
 
 Then start with the [Hello World tutorial](./tutorial/helloworld).

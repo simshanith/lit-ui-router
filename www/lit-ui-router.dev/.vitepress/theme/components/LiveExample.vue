@@ -4,6 +4,7 @@ import ExampleEmbed from './ExampleEmbed.vue';
 import StackBlitzEmbed from './StackBlitzEmbed.vue';
 import {
   EXAMPLES,
+  githubTreeSrc,
   staticSrc,
   stackblitzEmbedSrc,
   stackblitzOpenSrc,
@@ -34,6 +35,8 @@ const embedSrc = computed(() =>
 );
 
 const openSrc = computed(() => stackblitzOpenSrc(props.name, props.file));
+
+const sourceSrc = computed(() => githubTreeSrc(props.name));
 
 const previewHeight = computed(() => props.height ?? example.value.height);
 
@@ -114,6 +117,7 @@ onMounted(() => {
           :src="previewSrc"
           :title="`${example.title} example`"
           :height="previewHeight"
+          :source-href="sourceSrc"
         />
       </div>
       <div
