@@ -13,7 +13,7 @@ A [UI-Router](https://ui-router.github.io/) implementation for [Lit](https://lit
 ## Installation
 
 ```bash
-npm install lit-ui-router
+npm install lit-ui-router lit @uirouter/core
 ```
 
 ## Quick Start

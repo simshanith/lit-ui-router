@@ -37,6 +37,37 @@ render(
 );
 ```
 
+## Getting started
+
+### Start a project
+
+The Hello World starter is a Vite + TypeScript app. Copy it with
+[tiged](https://npmx.dev/package/tiged):
+
+```bash
+npx tiged simshanith/lit-ui-router/examples/helloworld my-app
+```
+
+Then run `npm install` and `npm run dev` in `my-app`. The source is
+[`examples/helloworld`](https://github.com/simshanith/lit-ui-router/tree/main/examples/helloworld)
+on GitHub, and it runs in the browser on
+[StackBlitz](https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/helloworld?file=src%2Fmain.ts).
+
+### Add to an existing project
+
+Install the router with its peers, `lit` and `@uirouter/core`:
+
+```bash
+npm install lit-ui-router lit @uirouter/core
+```
+
+The app renders into a host element, `<div id="root">` in the starter's
+[`index.html`](https://github.com/simshanith/lit-ui-router/blob/main/examples/helloworld/index.html).
+Vite's `lit-ts` template (`npm create vite@latest my-app -- --template lit-ts`)
+already sets the decorator options the tutorial uses.
+
+Then start with the [Hello World tutorial](./tutorial/helloworld).
+
 ## Why state-based routing?
 
 Most routers map **URLs to components**. UI-Router instead models your
@@ -89,7 +120,7 @@ you need to start; the companions are optional layers.
 | [`lit-ui-router-effect`](https://npmx.dev/package/lit-ui-router-effect)                                 | [Effect](https://effect.website) bindings: a `SubscriptionRef` of the route and ref-following controllers. [Guide →](./packages/lit-ui-router-effect)                          |
 | [`lit-ui-router-signals`](https://npmx.dev/package/lit-ui-router-signals)                               | [TC39 Signals](https://github.com/tc39/proposal-signals) bindings: watcher-based controllers over `ui-router-signals`. [Guide →](./packages/lit-ui-router-signals)             |
 | [`ui-router-navigation-location-plugin`](https://npmx.dev/package/ui-router-navigation-location-plugin) | A location plugin built on the modern browser Navigation API. [Guide →](./packages/navigation-plugin)                                                                          |
-| [`ui-router-server`](https://npmx.dev/package/ui-router-server)                                         | Server-side routing verdicts at the edge — honest 404/302/200 for static SPAs (in development). [Guide →](./packages/server)                                                   |
+| [`ui-router-server`](https://npmx.dev/package/ui-router-server)                                         | Server-side routing verdicts at the edge — honest 404/302/200 for static SPAs (early `0.x`). [Guide →](./packages/server)                                                      |
 | [`lit-ui-router-ssr`](https://npmx.dev/package/lit-ui-router-ssr)                                       | Static prerendering: a `ui-router-server` mount table in, an emitted site out. [Guide →](./packages/ssr)                                                                       |
 | [`ui-router-signals`](https://npmx.dev/package/ui-router-signals)                                       | [TC39 Signals](https://github.com/tc39/proposal-signals) for UI-Router: a framework-agnostic mirror of the router's state. [Guide →](./packages/ui-router-signals)             |
 | [`ui-router-effect`](https://npmx.dev/package/ui-router-effect)                                         | [Effect](https://effect.website) for UI-Router: a framework-agnostic `SubscriptionRef` of the router's state. [Guide →](./packages/ui-router-effect)                           |
@@ -111,42 +142,16 @@ tool.
   ([Hello Galaxy](./tutorial/hellogalaxy)). Each step runs live on StackBlitz.
 - **[Guides](./guides/)** — focused, task-oriented pages on URLs and location,
   transitions and guards, and reactivity.
-- **[API](./api/)** — an overview plus complete generated references for all
-  three packages.
-- **Sample apps** — the same non-trivial application written twice, in
-  <a href="/app" target="_self">vanilla Lit</a> and
-  <a href="/app-mobx" target="_self">MobX</a> idioms, with authentication,
-  lazy loading, sticky states, and 404 handling.
-  The [source](https://github.com/simshanith/lit-ui-router/tree/main/apps)
-  compares the two reactivity styles file-by-file.
-
-## Getting started
-
-### Start a project
-
-The Hello World starter is a Vite + TypeScript app. Copy it with
-[tiged](https://npmx.dev/package/tiged):
-
-```bash
-npx tiged simshanith/lit-ui-router/examples/helloworld my-app
-```
-
-Then run `npm install` and `npm run dev` in `my-app`. The source is
-[`examples/helloworld`](https://github.com/simshanith/lit-ui-router/tree/main/examples/helloworld)
-on GitHub, and it runs in the browser on
-[StackBlitz](https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/helloworld?file=src%2Fmain.ts).
-
-### Add to an existing project
-
-Install the router with its peers, `lit` and `@uirouter/core`:
-
-```bash
-npm install lit-ui-router lit @uirouter/core
-```
-
-The app renders into a host element, `<div id="root">` in the starter's
-[`index.html`](https://github.com/simshanith/lit-ui-router/blob/main/examples/helloworld/index.html).
-Vite's `lit-ts` template (`npm create vite@latest my-app -- --template lit-ts`)
-already sets the decorator options the tutorial uses.
-
-Then start with the [Hello World tutorial](./tutorial/helloworld).
+- **[API](./api/)** — an overview plus a generated reference for each runtime
+  package; the ESLint plugin's rules are documented on its
+  [package page](./packages/eslint-plugin).
+- **[Sample app](./sample-app)** — one non-trivial application written in four
+  reactivity idioms, <a href="/app" target="_self">vanilla Lit</a>,
+  <a href="/app-mobx" target="_self">MobX</a>,
+  <a href="/app-effect" target="_self">Effect</a> and
+  <a href="/app-signals" target="_self">Signals</a>, with authentication, lazy
+  loading, sticky states, and 404 handling. More mounts, such as
+  <a href="/app-hash" target="_self">hash location</a>, serve it behind other
+  server configurations. The
+  [source](https://github.com/simshanith/lit-ui-router/tree/main/apps) compares
+  the reactivity styles file-by-file.

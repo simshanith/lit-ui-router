@@ -20,7 +20,7 @@ controllers on it and re-exports `RouterStore`.
 ## Installation
 
 ```bash
-npm install ui-router-mobx@rc mobx
+npm install ui-router-mobx mobx
 ```
 
 `@uirouter/core` and `mobx` are peer dependencies. Both MobX majors are

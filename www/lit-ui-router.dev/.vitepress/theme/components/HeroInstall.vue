@@ -7,7 +7,7 @@
       target="_blank"
       rel="noopener"
     >
-      <span class="prompt" aria-hidden="true">$</span>
+      <span class="prompt" aria-hidden="true">&gt;</span>
       <code>npm i lit-ui-router</code>
     </a>
   </div>

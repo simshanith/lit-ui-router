@@ -65,13 +65,13 @@ application states in a transaction-like manner.
 
 - [Documentation](https://lit-ui-router.dev) - Full docs, tutorials, and API reference
 - [Examples](./examples) - Try live examples on StackBlitz
-- [Sample apps](./apps/README.md) - The same non-trivial app in two reactivity idioms (vanilla and MobX), compared side-by-side
+- [Sample apps](./apps/README.md) - The same non-trivial app in four reactivity idioms (vanilla, MobX, Effect and Signals), compared side-by-side
 - [About UI-Router](https://ui-router.github.io/about) - Core concepts
 
 The UI-Router package is distributed using [npm](https://www.npmjs.com/), the node package manager.
 
 ```bash
-npm install lit-ui-router
+npm install lit-ui-router lit @uirouter/core
 ```
 
 Import `UIRouterLit` into your project, register some states, and you're good to go!
