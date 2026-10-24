@@ -83,7 +83,7 @@ A ReactiveController that follows the route ref of the host's `<ui-router>` cont
 new RouterRefController(host, selector, options?)
 ```
 
-- `selector: (route: RouteSnapshot) => T` — the selected expression; the result is exposed as `.value`
+- `selector: (route: TypedRouteSnapshot) => T` — the selected expression; the result is exposed as `.value`. `TypedRouteSnapshot` is the snapshot `routeRef` holds: typed when an app or a registry fills in `ui-router-effect`'s `RouteTypes`, a `RouteSnapshot` otherwise
 - `options.router` — explicit router instance, skipping context discovery; the route is then read at construction, so `.value` is live before the host connects. A thunk (`() => UIRouter | undefined`) is resolved at construction and again on every `hostConnected`; when it returns `undefined`, the controller discovers the router as if the option were omitted. Discovery subscribes, so on a page served by `lit-ui-router-ssr` the host follows `<ui-router>` from its placeholder router to the app's when `hydrateRoot()` sets it. A `lit-ui-router` that does not hand that router to subscribers leaves the host on the placeholder; hand such a host its router here or through `setRouter()`
 - `options.onChange` — effect invoked when the selected value changes (and once on every (re)connect); useful for resetting component state from route params
 - `options.equals` — comparer for precise, value-based change detection (`Equal.equals`, or any `(a, b) => boolean`); defaults to `Object.is`

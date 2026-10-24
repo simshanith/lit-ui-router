@@ -1,11 +1,13 @@
 import { Effect, SubscriptionRef } from 'effect';
 import { UIRouter } from '@uirouter/core';
 
-import { RouteSnapshot, snapshotRoute } from '@repo/route-snapshot';
+import { snapshotRoute } from '@repo/route-snapshot';
+
+import type { TypedRouteSnapshot } from './route-types.js';
 
 const routeRefs = new WeakMap<
   UIRouter,
-  SubscriptionRef.SubscriptionRef<RouteSnapshot>
+  SubscriptionRef.SubscriptionRef<TypedRouteSnapshot>
 >();
 
 /**
@@ -15,10 +17,11 @@ const routeRefs = new WeakMap<
  * ref and registers the single `onSuccess` hook that feeds it, and both live
  * as long as the router does. `onSuccess` is the only hook a later transition
  * cannot supersede, so every value the ref ever holds is a settled route.
+ * Its snapshot is typed by `RouteTypes` when a registry fills it in.
  */
 export function routeRef(
   router: UIRouter,
-): SubscriptionRef.SubscriptionRef<RouteSnapshot> {
+): SubscriptionRef.SubscriptionRef<TypedRouteSnapshot> {
   const existing = routeRefs.get(router);
 
   if (existing) return existing;
