@@ -48,6 +48,7 @@ import {
   type RouteMatch,
 } from 'ui-router-server/redirects';
 import { createHeadlessRouter, onceSettled } from 'ui-router-server/simulate';
+import { settle, type SettleOptions } from 'ui-router-server/ssr';
 import {
   applyUrlConfig,
   type RouterUrlConfig,
@@ -202,6 +203,18 @@ export function serverHref(
   void serverLocationPlugin;
 
   return located.stateService.href('app.contacts');
+}
+
+// Ssr tier: a server router settled on one path, its transition handed back.
+const settleOptions: SettleOptions = { timeout: 5_000 };
+
+export async function settledState(
+  router: UIRouter,
+  path: string,
+): Promise<string> {
+  const transition = await settle(router, path, settleOptions);
+
+  return transition.to().name ?? '';
 }
 
 // Url-config tier: one config object for a mount and any core router; the
