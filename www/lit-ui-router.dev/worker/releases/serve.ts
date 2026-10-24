@@ -8,6 +8,7 @@ import { createServerRouter, mergeSearch } from 'ui-router-server';
 import { installServerLocation } from 'ui-router-server/location';
 
 import { type PageHead, releaseDocument } from './document.ts';
+import { type Answer, cached, type EdgeCache } from './edge-cache.ts';
 import { type LedgerReader, NotInLedger } from './ledger.ts';
 import { mounts, urlConfig } from './routes.ts';
 import { type ReleaseState, releaseStates } from './states.ts';
@@ -175,10 +176,30 @@ const cacheControl = (status: number): string =>
 const withoutBody = (response: Response): Response =>
   new Response(null, { status: response.status, headers: response.headers });
 
-/** Serves a /releases or /gh request, or returns null for a path neither mount owns. */
+/** A response state's answer, which the edge may keep, or the page the transition rendered, which it may not. */
+const answer = async (
+  request: Request,
+  pageRouter: PageRouter,
+): Promise<Answer> => {
+  const { outcome, html } = await render(request, pageRouter);
+
+  if (outcome.kind === 'response')
+    return { response: outcome.response, cacheable: true };
+
+  const headers = new Headers({ 'Content-Type': 'text/html; charset=utf-8' });
+  headers.set('Cache-Control', cacheControl(outcome.status));
+
+  return {
+    response: new Response(html, { status: outcome.status, headers }),
+    cacheable: false,
+  };
+};
+
+/** Serves a /releases or /gh request, or returns null for a path neither mount owns; `edge` caches the states that name a key. */
 export const serveReleases = async (
   request: Request,
   ledger: LedgerReader,
+  edge?: EdgeCache,
 ): Promise<Response | null> => {
   const url = new URL(request.url);
   const verdict = await resolver.resolve(url);
@@ -193,27 +214,23 @@ export const serveReleases = async (
     return redirect(slashed(verdict.location), verdict.status, url);
 
   const pageRouter = routerFor(mount, ledger);
-  const subpath = url.pathname.substring(mount.length);
+  const state = stateAt(pageRouter, url.pathname.substring(mount.length));
 
   if (
     verdict.kind === 'shell' &&
     verdict.status === undefined &&
     !url.pathname.endsWith('/') &&
-    stateAt(pageRouter, subpath)?.response !== true
+    state?.response !== true
   )
     return redirect(`${url.pathname}/`, 308, url);
 
-  const { outcome, html } = await render(request, pageRouter);
-  const isHead = request.method === 'HEAD';
+  const fresh = () => answer(request, pageRouter);
+  const key = state?.cacheKey?.(request);
 
-  if (outcome.kind === 'response')
-    return isHead ? withoutBody(outcome.response) : outcome.response;
+  const response =
+    edge === undefined || key === undefined
+      ? (await fresh()).response
+      : await cached(edge, key, fresh);
 
-  const headers = new Headers({ 'Content-Type': 'text/html; charset=utf-8' });
-  headers.set('Cache-Control', cacheControl(outcome.status));
-
-  return new Response(isHead ? null : html, {
-    status: outcome.status,
-    headers,
-  });
+  return request.method === 'HEAD' ? withoutBody(response) : response;
 };
