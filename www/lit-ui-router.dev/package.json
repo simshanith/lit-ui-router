@@ -60,6 +60,7 @@
     "vite": "catalog:",
     "vite-plugin-static-copy": "catalog:",
     "vitepress": "catalog:",
+    "vitepress-plugin-llms": "catalog:",
     "wrangler": "catalog:"
   }
 }

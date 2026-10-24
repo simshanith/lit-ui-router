@@ -11,6 +11,8 @@ import { gzipSync } from 'node:zlib';
 import { defineConfig, Plugin } from 'vite';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 
+import { llmsPlugins } from './llms.ts';
+
 // The mount shells as the dev server serves them. Production (worker/)
 // serves each at its bare mount via Cloudflare's html_handling; the dev server
 // serves the static-copied files, so the paths carry `.html`. The vanilla
@@ -174,6 +176,7 @@ function releasePagesStylesheetPlugin(): Plugin {
 
 export default defineConfig({
   plugins: [
+    ...llmsPlugins(),
     chunkBudgetPlugin(),
     releasePagesStylesheetPlugin(),
     serverRouterPlugin(router, {
