@@ -54,6 +54,22 @@ const signals = RouterSignals.for(router);
 signals.current.get()?.name;
 ```
 
+## Typed snapshots
+
+[`RouteTypes`](/api/ui-router-signals/interfaces/RouteTypes) is empty, and
+`route` holds a `RouteSnapshot`. Filling in its `snapshot` member by module
+augmentation types `route`: a snapshot whose `includes(name)` is a type
+predicate narrows `current` and `params` to that state. The `current`,
+`params` and `transition` fields keep their untyped shapes.
+
+```ts
+declare module 'ui-router-signals' {
+  interface RouteTypes {
+    snapshot: AppRouteSnapshot;
+  }
+}
+```
+
 ## watchSelection
 
 [`watchSelection(selector, equals, apply)`](/api/ui-router-signals/functions/watchSelection)
