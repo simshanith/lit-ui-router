@@ -12,8 +12,10 @@ import {
   versionIn,
   versionsOf,
 } from '../releases/ledger.ts';
+import { FRESH_MS, KEEP_MS, STORED_AT } from '../releases/edge-cache.ts';
 import { serveReleases } from '../releases/serve.ts';
 import { fixtureLedger } from './ledger-stub/rows.ts';
+import { memoryEdge } from './memory-cache.ts';
 
 const ORIGIN = 'http://docs.test';
 
@@ -178,7 +180,7 @@ describe('the /gh verdicts', () => {
       response?.headers.get('Location'),
       `${GITHUB}/lit-ui-router%401.10.0`,
     );
-    assert.equal(response?.headers.get('Cache-Control'), 'public, max-age=300');
+    assert.equal(response?.headers.get('Cache-Control'), 'public, max-age=60');
   });
 
   it('falls back to the version page, search kept, when the ledger records no GitHub release', async () => {
@@ -256,6 +258,210 @@ describe('the /gh verdicts', () => {
     assert.equal(response?.status, 503);
     assert.equal(response?.headers.get('Cache-Control'), 'no-store');
     assert.equal(response?.headers.get('Location'), null);
+  });
+});
+
+describe('the /gh edge cache', () => {
+  const LATEST = '/gh/releases/lit-ui-router/latest';
+
+  const counting = (base: LedgerReader = fixtureLedger) => {
+    let reads = 0;
+
+    const ledger: LedgerReader = {
+      packages: () => {
+        reads += 1;
+
+        return base.packages();
+      },
+      tagged: (name, tag) => {
+        reads += 1;
+
+        return base.tagged(name, tag);
+      },
+      versions: (name) => {
+        reads += 1;
+
+        return base.versions(name);
+      },
+    };
+
+    return { ledger, reads: () => reads };
+  };
+
+  /** The fixture ledger with npm's `latest` moved to `version`. */
+  const latestAt = (version: string): LedgerReader => ({
+    ...fixtureLedger,
+    tagged: async (name) =>
+      (await fixtureLedger.versions(name)).find(
+        (row) => row.version === version,
+      ) ?? null,
+  });
+
+  const KEY = `${ORIGIN}${LATEST}`;
+
+  const storedAt = (memory: ReturnType<typeof memoryEdge>) =>
+    memory.entries.get(KEY)?.headers.get(STORED_AT);
+
+  const serveVia = (
+    memory: ReturnType<typeof memoryEdge>,
+    path: string,
+    ledger: LedgerReader,
+    init?: RequestInit,
+  ) =>
+    serveReleases(new Request(`${ORIGIN}${path}`, init), ledger, memory.edge);
+
+  it('writes a miss to the cache for a day, while the client keeps it 60 s', async () => {
+    const memory = memoryEdge();
+    const response = await serveVia(memory, LATEST, fixtureLedger);
+    await memory.settled();
+
+    assert.equal(response?.status, 302);
+    assert.equal(response?.headers.get('Cache-Control'), 'public, max-age=60');
+    assert.deepEqual(memory.calls, [`match GET ${KEY}`, `put GET ${KEY}`]);
+    assert.equal(
+      memory.entries.get(KEY)?.headers.get('Cache-Control'),
+      'public, max-age=86400',
+    );
+    assert.equal(storedAt(memory), String(memory.edge.now()));
+  });
+
+  it('answers a fresh hit without reading the ledger, at the client max-age', async () => {
+    const memory = memoryEdge();
+    await serveVia(memory, LATEST, fixtureLedger);
+    await memory.settled();
+    memory.advance(FRESH_MS - 1);
+
+    const { ledger, reads } = counting();
+    const response = await serveVia(memory, LATEST, ledger);
+
+    assert.equal(reads(), 0);
+    assert.equal(memory.background(), 1);
+    assert.equal(response?.status, 302);
+    assert.equal(
+      response?.headers.get('Location'),
+      `${GITHUB}/lit-ui-router%401.10.0`,
+    );
+    assert.equal(response?.headers.get('Cache-Control'), 'public, max-age=60');
+    assert.equal(response?.headers.get('X-Edge-Client-Cache-Control'), null);
+  });
+
+  it('answers a stale hit at once and refreshes it once behind the response', async () => {
+    const memory = memoryEdge();
+    await serveVia(memory, LATEST, fixtureLedger);
+    await memory.settled();
+    memory.advance(FRESH_MS);
+
+    const { ledger, reads } = counting(latestAt('1.2.0'));
+    const response = await serveVia(memory, LATEST, ledger);
+
+    assert.equal(
+      response?.headers.get('Location'),
+      `${GITHUB}/lit-ui-router%401.10.0`,
+    );
+    assert.equal(memory.background(), 2);
+
+    await memory.settled();
+
+    assert.equal(reads(), 1);
+    assert.equal(storedAt(memory), String(memory.edge.now()));
+
+    const next = await serveVia(memory, LATEST, ledger);
+
+    assert.equal(
+      next?.headers.get('Location'),
+      `${GITHUB}/lit-ui-router%401.2.0`,
+    );
+    assert.equal(reads(), 1);
+  });
+
+  it('looks an entry past the day up before answering', async () => {
+    const memory = memoryEdge();
+    await serveVia(memory, LATEST, fixtureLedger);
+    await memory.settled();
+    memory.advance(KEEP_MS);
+
+    const { ledger, reads } = counting(latestAt('1.2.0'));
+    const response = await serveVia(memory, LATEST, ledger);
+
+    assert.equal(reads(), 1);
+    assert.equal(
+      response?.headers.get('Location'),
+      `${GITHUB}/lit-ui-router%401.2.0`,
+    );
+  });
+
+  it('keeps the stale entry when its refresh fails', async () => {
+    const memory = memoryEdge();
+    await serveVia(memory, LATEST, fixtureLedger);
+    await memory.settled();
+    const before = storedAt(memory);
+    memory.advance(FRESH_MS);
+
+    const response = await serveVia(memory, LATEST, DOWN);
+    await memory.settled();
+
+    assert.equal(response?.status, 302);
+    assert.equal(storedAt(memory), before);
+    assert.deepEqual(memory.calls, [
+      `match GET ${KEY}`,
+      `put GET ${KEY}`,
+      `match GET ${KEY}`,
+    ]);
+  });
+
+  it('shares one entry across a trailing slash, a fragment and HEAD', async () => {
+    const memory = memoryEdge();
+    await serveVia(memory, `${LATEST}/`, fixtureLedger);
+    await memory.settled();
+
+    const { ledger, reads } = counting();
+
+    const response = await serveVia(memory, `${LATEST}#top`, ledger, {
+      method: 'HEAD',
+    });
+
+    assert.equal(reads(), 0);
+    assert.equal(response?.status, 302);
+    assert.equal(response?.body, null);
+    assert.deepEqual([...memory.entries.keys()], [`${ORIGIN}${LATEST}`]);
+  });
+
+  it('keys on the search, which the fallback location keeps', async () => {
+    const memory = memoryEdge();
+    await serveVia(memory, LATEST, fixtureLedger);
+    await serveVia(memory, `${LATEST}?ref=badge`, fixtureLedger);
+    await memory.settled();
+
+    assert.deepEqual(
+      [...memory.entries.keys()],
+      [`${ORIGIN}${LATEST}`, `${ORIGIN}${LATEST}?ref=badge`],
+    );
+  });
+
+  it('keeps no 404 and no 503', async () => {
+    const memory = memoryEdge();
+
+    const missing = await serveVia(
+      memory,
+      '/gh/releases/ui-router-signals/latest',
+      fixtureLedger,
+    );
+
+    const down = await serveVia(memory, LATEST, DOWN);
+    await memory.settled();
+
+    assert.equal(missing?.status, 404);
+    assert.equal(down?.status, 503);
+    assert.equal(memory.entries.size, 0);
+  });
+
+  it('leaves the /releases pages and redirects uncached', async () => {
+    const memory = memoryEdge();
+    await serveVia(memory, '/releases/lit-ui-router/', fixtureLedger);
+    await serveVia(memory, '/releases/lit-ui-router/latest', fixtureLedger);
+    await memory.settled();
+
+    assert.deepEqual(memory.calls, []);
   });
 });
 

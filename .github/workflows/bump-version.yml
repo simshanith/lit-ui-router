@@ -26,6 +26,7 @@ on:
           - lit-ui-router-signals
           - ui-router-effect
           - ui-router-mobx
+          - ui-router-registry
         default: 'lit-ui-router'
       increment:
         description: 'Increment'

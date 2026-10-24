@@ -67,10 +67,6 @@ const ALLOWED: SplitAllowance[] = [
     name: 'ui-router-server',
     why: 'catalogs.peerFloorSsr pins ui-router-server-floor to 0.2.0 and ui-router-server-0.3-floor to 0.3.0, one floor per lower leg of the ssr peer range',
   },
-  {
-    name: 'zod',
-    why: '@codecov/bundler-plugin-core (under @codecov/bundle-analyzer) needs zod ^3 beside the zod 4 line the @cloudflare/config>zod override holds to one copy',
-  },
 ];
 
 const main = (): void => {

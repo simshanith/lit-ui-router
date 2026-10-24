@@ -3,6 +3,7 @@ import type { StateDeclaration, Transition } from '@uirouter/core';
 import type { LitStateDeclaration, UIViewResolves } from 'lit-ui-router/pure';
 import { mergeSearch } from 'ui-router-server';
 
+import { type CacheKey, FRESH_MS, urlKey } from './edge-cache.ts';
 import {
   type LedgerPackage,
   type LedgerReader,
@@ -47,6 +48,8 @@ export interface RespondContext<Resolves = UIViewResolves> {
 export interface ReleaseState extends StateDeclaration {
   name: string;
   response?: true;
+  /** Set on a response state whose answer the edge may cache; absent, every request reaches the ledger. */
+  cacheKey?: CacheKey;
   // Method syntax: each state reads its own resolves, which the transition hands over untyped, as a view's are.
   respond?(context: RespondContext): Response;
 }
@@ -54,7 +57,10 @@ export interface ReleaseState extends StateDeclaration {
 type Attached = {
   [Name in RouteName]: Omit<LitStateDeclaration<ResolvesOf[Name]>, 'name'> &
     (Name extends ResponseName
-      ? { respond: (context: RespondContext<ResolvesOf[Name]>) => Response }
+      ? {
+          respond: (context: RespondContext<ResolvesOf[Name]>) => Response;
+          cacheKey?: CacheKey;
+        }
       : object);
 };
 
@@ -65,10 +71,13 @@ const paramsOf = (trans: Transition) =>
 const versionPath = ({ name, version }: LedgerVersion): string =>
   `${RELEASES_MOUNT}/${encodeURIComponent(name)}/${encodeURIComponent(version)}/`;
 
-const found = (location: string): Response =>
+const found = (location: string, maxAge = 300): Response =>
   new Response(null, {
     status: 302,
-    headers: { Location: location, 'Cache-Control': 'public, max-age=300' },
+    headers: {
+      Location: location,
+      'Cache-Control': `public, max-age=${maxAge}`,
+    },
   });
 
 const latestResolve = (ledger: LedgerReader) => ({
@@ -112,6 +121,7 @@ const attach = (ledger: LedgerReader): Attached => ({
   },
   githubRelease: {
     resolve: [latestResolve(ledger)],
+    cacheKey: urlKey,
     respond: ({ resolves, request }) =>
       found(
         releaseUrl(resolves.latest) ??
@@ -119,6 +129,7 @@ const attach = (ledger: LedgerReader): Attached => ({
             versionPath(resolves.latest),
             new URL(request.url).search,
           ),
+        FRESH_MS / 1000,
       ),
   },
   notFound: { component: NotFoundView },

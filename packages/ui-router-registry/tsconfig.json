@@ -1,0 +1,12 @@
+{
+  // tooling umbrella (IDE, tsgolint): src + the registered specs + the bench, no emit
+  "extends": "./tsconfig.src.json",
+  "compilerOptions": {
+    "noEmit": true,
+    // specs are exempt; typecheck:src enforces conformance
+    "isolatedDeclarations": false,
+    "types": ["node"]
+  },
+  "include": ["src/**/*", "bench/**/*"],
+  "exclude": ["node_modules", "dist"]
+}

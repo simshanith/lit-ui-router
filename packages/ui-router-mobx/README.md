@@ -9,7 +9,7 @@
 ## Installation
 
 ```bash
-npm install ui-router-mobx@rc mobx
+npm install ui-router-mobx mobx
 ```
 
 ## Features

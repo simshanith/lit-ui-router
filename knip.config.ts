@@ -75,6 +75,8 @@ const workspaces = {
     // the tutorials are standalone npm projects with their own manifests
     ignore: ['*/**'],
   },
+  'apps/sample-app-lit-vanilla': { entry: ['src/**/*.test-d.ts'] },
+  'apps/sample-app-lit-signals': { entry: ['src/**/*.test-d.ts'] },
   'apps/sample-app-lit-e2e': {
     // reached from root mise tasks and `cypress --config-file`
     entry: ['scripts/*.ts', 'cypress*.config.ts', 'src/**/*.cy.{ts,js}'],
@@ -163,6 +165,13 @@ const workspaces = {
       '@uirouter/core-floor',
     ],
   },
+  'packages/ui-router-registry': {
+    ignoreDependencies: [
+      '@release-it/conventional-changelog',
+      '@uirouter/core-floor',
+    ],
+    entry: ['src/specs/*.test-d.ts', 'test-d/*.test-d.ts'],
+  },
   'packages/ui-router-signals': {
     ignoreDependencies: [
       '@release-it/conventional-changelog',
@@ -211,6 +220,10 @@ const workspaces = {
       'sample-app-lit-effect',
       'sample-app-lit-signals',
     ],
+  },
+  // knip has no cf plugin, and the config names its entrypoint as a string
+  'www/release-diffs.lit-ui-router.dev': {
+    entry: ['cloudflare.config.ts', 'worker/index.ts'],
   },
   // cloudflare:workers is a workerd built-in, not a package
   'www/release-ledger.lit-ui-router.dev': {

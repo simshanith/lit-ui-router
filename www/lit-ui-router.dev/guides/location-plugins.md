@@ -16,6 +16,19 @@ and what your server must do.
 | `pushState`  | `/path`    | Modern browsers                              | Rewrite URLs to `index.html` |
 | `navigation` | `/path`    | Chrome/Edge 102+, Firefox 147+, Safari 26.2+ | Rewrite URLs to `index.html` |
 
+## Which to choose
+
+For a new SPA, register `navigationLocationPlugin` where the browser has the
+Navigation API and `pushStateLocationPlugin` where it doesn't, as in the
+[Navigation API](#navigation-api) section below. The sample app boots this
+way: [`featureDetection.ts`](https://github.com/simshanith/lit-ui-router/blob/main/apps/sample-app-shared/src/app/util/featureDetection.ts)
+picks the plugin and
+[`router.config.ts`](https://github.com/simshanith/lit-ui-router/blob/main/apps/sample-app-shared/src/router.config.ts)
+registers it. Both plugins need the host to serve `index.html` for deep links
+(see [server rewrites](#html5-pushstate)). Hash URLs need no host
+configuration, which is why the [tutorial](/tutorial/helloworld) and its
+StackBlitz examples use them.
+
 ## Hash URLs
 
 The fragment (`#`) portion of a URL never reaches the server, so hash routing

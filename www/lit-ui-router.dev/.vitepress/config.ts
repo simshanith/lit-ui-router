@@ -13,6 +13,7 @@ import signalsSidebarItemsJson from '../api/lit-ui-router-signals/typedoc-sideba
 import ssrSidebarItemsJson from '../api/lit-ui-router-ssr/typedoc-sidebar.json' with { type: 'json' };
 import uiRouterEffectSidebarItemsJson from '../api/ui-router-effect/typedoc-sidebar.json' with { type: 'json' };
 import uiRouterMobxSidebarItemsJson from '../api/ui-router-mobx/typedoc-sidebar.json' with { type: 'json' };
+import uiRouterRegistrySidebarItemsJson from '../api/ui-router-registry/typedoc-sidebar.json' with { type: 'json' };
 import uiRouterSignalsSidebarItemsJson from '../api/ui-router-signals/typedoc-sidebar.json' with { type: 'json' };
 
 // SAFETY: typedoc-vitepress-theme emits typedoc-sidebar.json as SidebarItem[]
@@ -60,6 +61,10 @@ const uiRouterMobxSidebarItemsRaw =
   uiRouterMobxSidebarItemsJson as DefaultTheme.SidebarItem[];
 
 // SAFETY: as for typedocSidebarItems
+const uiRouterRegistrySidebarItemsRaw =
+  uiRouterRegistrySidebarItemsJson as DefaultTheme.SidebarItem[];
+
+// SAFETY: as for typedocSidebarItems
 const uiRouterSignalsSidebarItemsRaw =
   uiRouterSignalsSidebarItemsJson as DefaultTheme.SidebarItem[];
 
@@ -74,6 +79,10 @@ const signalsSidebarItems = flattenGroups(signalsSidebarItemsRaw);
 const uiRouterEffectSidebarItems = flattenGroups(uiRouterEffectSidebarItemsRaw);
 
 const uiRouterMobxSidebarItems = flattenGroups(uiRouterMobxSidebarItemsRaw);
+
+const uiRouterRegistrySidebarItems = flattenGroups(
+  uiRouterRegistrySidebarItemsRaw,
+);
 
 const uiRouterSignalsSidebarItems = flattenGroups(
   uiRouterSignalsSidebarItemsRaw,
@@ -246,6 +255,19 @@ function makeSidebar() {
               link: '/api/navigation-location-plugin/',
               collapsed: false,
               items: navigationSidebarItems,
+            },
+          ],
+        },
+        {
+          text: 'Registry',
+          link: '/packages/ui-router-registry',
+          collapsed: true,
+          items: [
+            {
+              text: 'ui-router-registry API',
+              link: '/api/ui-router-registry/',
+              collapsed: false,
+              items: uiRouterRegistrySidebarItems,
             },
           ],
         },

@@ -5,7 +5,7 @@ This guide provides a quick overview of the `lit-ui-router` API. For detailed ty
 ## Installation
 
 ```bash
-npm install lit-ui-router
+npm install lit-ui-router lit @uirouter/core
 ```
 
 ## Entry Points

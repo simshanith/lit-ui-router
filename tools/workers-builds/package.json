@@ -13,6 +13,7 @@
     "typecheck:tsc": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
+    "@cloudflare/config": "catalog:",
     "@tools/bootstrap": "catalog:workspace",
     "@tools/shared": "catalog:workspace",
     "@types/node": "catalog:",

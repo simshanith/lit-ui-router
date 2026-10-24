@@ -28,6 +28,7 @@
         "ui-router-effect#build",
         "ui-router-mobx#build",
         "ui-router-navigation-location-plugin#build",
+        "ui-router-registry#build",
         "ui-router-server#build",
         "ui-router-signals#build"
       ],

@@ -22,7 +22,7 @@
 // non-gating check run (#280 Phase 1) using a read-scoped token; --apply,
 // which writes production deploy configuration, stays manual.
 //
-// This file is the IO shell: env, wrangler.jsonc, and the Cloudflare API
+// This file is the IO shell: env, the worker configs, and the Cloudflare API
 // (https://developers.cloudflare.com/workers/ci-cd/builds/api-reference/).
 // All decisions live in the pure, unit-tested workers-builds-triggers.core.ts.
 
@@ -30,20 +30,43 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { parseArgs } from 'node:util';
 
+import { loadAndParseConfig } from '@cloudflare/config';
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
 import { messageOf } from '@tools/shared/errors.ts';
 
 import { cf } from './cloudflare-api.ts';
 import {
+  CF_CONFIG,
   type DesiredWorker,
   type Drift,
+  PREVIEWS_BASE_CONFIG,
+  type PreviewsBaseConfig,
   type Trigger,
   desiredWorkersFromConfig,
   diffTriggers,
   parseJsonc,
+  previewsBaseTrigger,
   selectWorkers,
   workerNameFromConfig,
 } from './workers-builds-triggers.core.ts';
+
+/** The worker a config file names; cf's own loader evaluates a cloudflare.config.ts as a production deploy does. */
+export const workerName = async (path: string): Promise<string> => {
+  if (!path.endsWith(CF_CONFIG)) {
+    return workerNameFromConfig(parseJsonc(await readFile(path, 'utf8')));
+  }
+
+  const { result } = await loadAndParseConfig(path, {
+    isPreview: false,
+    mode: undefined,
+  });
+
+  if (!result.success) throw new Error(`${path}: ${result.error.message}`);
+
+  if (!result.data.worker) throw new Error(`${path} defines no worker`);
+
+  return result.data.worker.name;
+};
 
 // The desired-state source of truth, validated at load time.
 const DESIRED_CONFIG = join(
@@ -92,7 +115,7 @@ async function getTriggers(
     `/${accountId}/builds/workers/${tag}/triggers`,
   )) as Trigger[];
 
-  return Promise.all(
+  const withEnvironment = await Promise.all(
     triggers.map(async (trigger) =>
       trigger.environment_variables
         ? trigger
@@ -106,13 +129,43 @@ async function getTriggers(
           },
     ),
   );
+
+  // SAFETY: the Worker's build configuration; only these two fields are read
+  const worker = (await cf(token, `/${accountId}/builds/workers/${tag}`)) as {
+    previews_enabled?: boolean;
+    previews_base_config?: PreviewsBaseConfig | null;
+  };
+
+  return worker.previews_enabled && worker.previews_base_config
+    ? [...withEnvironment, previewsBaseTrigger(worker.previews_base_config)]
+    : withEnvironment;
 }
 
 async function applyDrift(
   token: string,
   accountId: string,
+  tag: string,
   drift: Drift,
 ): Promise<void> {
+  if (drift.trigger_uuid === PREVIEWS_BASE_CONFIG) {
+    console.log(
+      `\nPATCHing ${PREVIEWS_BASE_CONFIG}: ${[...Object.keys(drift.patch), ...Object.keys(drift.environmentPatch)].join(', ')}`,
+    );
+    await cf(token, `/${accountId}/builds/workers/${tag}`, {
+      method: 'PATCH',
+      body: {
+        [PREVIEWS_BASE_CONFIG]: {
+          ...drift.patch,
+          ...(Object.keys(drift.environmentPatch).length > 0 && {
+            environment_variables: drift.environmentPatch,
+          }),
+        },
+      },
+    });
+
+    return;
+  }
+
   if (Object.keys(drift.patch).length > 0) {
     console.log(
       `\nPATCHing ${drift.kind} trigger ${drift.trigger_uuid}: ${Object.keys(drift.patch).join(', ')}`,
@@ -177,13 +230,9 @@ async function main() {
   let ok = true;
 
   for (const [index, worker] of selected.workers.entries()) {
-    // The worker name comes from the same config wrangler deploys with. A
-    // wranglerConfig that names no file throws, and the run exits 2.
-    const name = workerNameFromConfig(
-      parseJsonc(
-        await readFile(join(workspaceRoot, worker.wranglerConfig), 'utf8'),
-      ),
-    );
+    // The worker name comes from the same config the deploy uses. A
+    // workerConfig that names no file throws, and the run exits 2.
+    const name = await workerName(join(workspaceRoot, worker.workerConfig));
 
     const tag = await workerTag(token, accountId, name);
 
@@ -212,7 +261,7 @@ async function main() {
       continue;
     }
 
-    for (const drift of drifts) await applyDrift(token, accountId, drift);
+    for (const drift of drifts) await applyDrift(token, accountId, tag, drift);
 
     // Re-read so the confirmation reflects what the API stored, not what we sent.
     const after = diffTriggers(
@@ -231,7 +280,9 @@ async function main() {
   process.exitCode = 1;
 }
 
-main().catch((cause: unknown) => {
-  console.error(cause instanceof Error ? cause.message : cause);
-  process.exitCode = 2;
-});
+if (import.meta.main) {
+  main().catch((cause: unknown) => {
+    console.error(cause instanceof Error ? cause.message : cause);
+    process.exitCode = 2;
+  });
+}

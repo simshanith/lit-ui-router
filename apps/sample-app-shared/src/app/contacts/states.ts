@@ -52,7 +52,7 @@ const contactsState = {
       return html`<sample-contacts ._uiViewProps=${props}></sample-contacts>`;
     }) satisfies LitViewDeclarationTemplate<ContactsResolves>,
   },
-};
+} as const satisfies LitStateDeclaration<ContactsResolves>;
 
 /**
  * This state displays a single contact.
@@ -77,7 +77,7 @@ const viewContactState = {
   data: { title: contactName, analyticsTitle: 'Contact', keepScroll: true },
   component:
     ContactView satisfies LitViewDeclarationElement<ContactViewResolves>,
-} satisfies LitStateDeclaration<ContactViewResolves>;
+} as const satisfies LitStateDeclaration<ContactViewResolves>;
 
 /**
  * This state allows a user to edit a contact
@@ -100,7 +100,7 @@ const editContactState = {
     // Or, this could also have been written using absolute ui-view addressing: !$default.contacts.$default
     '^.^.$default': EditContact satisfies LitViewDeclarationElement,
   },
-};
+} as const satisfies LitStateDeclaration;
 
 /**
  * This state allows a user to create a new contact
@@ -112,12 +112,11 @@ const newContactState = {
   url: '/new',
   data: { title: 'New contact' },
   component: EditContact satisfies LitViewDeclarationElement,
-};
+} as const satisfies LitStateDeclaration;
 
 export const states = [
   contactsState,
   viewContactState,
   editContactState,
   newContactState,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generic handles narrowing
-] satisfies LitStateDeclaration<any>[];
+];

@@ -25,6 +25,7 @@
 | `lit-ui-router-signals`                | [![npm](https://img.shields.io/npm/v/lit-ui-router-signals.svg)](https://npmx.dev/package/lit-ui-router-signals)                               | [![GitHub Release](https://img.shields.io/github/v/release/simshanith/lit-ui-router?filter=lit-ui-router-signals@*)](https://lit-ui-router.dev/gh/releases/lit-ui-router-signals/latest)                               | [![lit-ui-router-signals published diff](https://img.shields.io/github/check-runs/simshanith/lit-ui-router/main?nameFilter=published-diff%20%28lit-ui-router-signals%29&label=published-diff)](https://github.com/simshanith/lit-ui-router/actions/workflows/release-signals.yml?query=branch%3Amain)                               |
 | `ui-router-effect`                     | [![npm](https://img.shields.io/npm/v/ui-router-effect.svg)](https://npmx.dev/package/ui-router-effect)                                         | [![GitHub Release](https://img.shields.io/github/v/release/simshanith/lit-ui-router?filter=ui-router-effect@*)](https://lit-ui-router.dev/gh/releases/ui-router-effect/latest)                                         | [![ui-router-effect published diff](https://img.shields.io/github/check-runs/simshanith/lit-ui-router/main?nameFilter=published-diff%20%28ui-router-effect%29&label=published-diff)](https://github.com/simshanith/lit-ui-router/actions/workflows/release-signals.yml?query=branch%3Amain)                                         |
 | `ui-router-mobx`                       | [![npm](https://img.shields.io/npm/v/ui-router-mobx.svg)](https://npmx.dev/package/ui-router-mobx)                                             | [![GitHub Release](https://img.shields.io/github/v/release/simshanith/lit-ui-router?filter=ui-router-mobx@*)](https://lit-ui-router.dev/gh/releases/ui-router-mobx/latest)                                             | [![ui-router-mobx published diff](https://img.shields.io/github/check-runs/simshanith/lit-ui-router/main?nameFilter=published-diff%20%28ui-router-mobx%29&label=published-diff)](https://github.com/simshanith/lit-ui-router/actions/workflows/release-signals.yml?query=branch%3Amain)                                             |
+| `ui-router-registry`                   | [![npm](https://img.shields.io/npm/v/ui-router-registry.svg)](https://npmx.dev/package/ui-router-registry)                                     | [![GitHub Release](https://img.shields.io/github/v/release/simshanith/lit-ui-router?filter=ui-router-registry@*)](https://lit-ui-router.dev/gh/releases/ui-router-registry/latest)                                     | [![ui-router-registry published diff](https://img.shields.io/github/check-runs/simshanith/lit-ui-router/main?nameFilter=published-diff%20%28ui-router-registry%29&label=published-diff)](https://github.com/simshanith/lit-ui-router/actions/workflows/release-signals.yml?query=branch%3Amain)                                     |
 
 ### Legend
 
@@ -65,13 +66,13 @@ application states in a transaction-like manner.
 
 - [Documentation](https://lit-ui-router.dev) - Full docs, tutorials, and API reference
 - [Examples](./examples) - Try live examples on StackBlitz
-- [Sample apps](./apps/README.md) - The same non-trivial app in two reactivity idioms (vanilla and MobX), compared side-by-side
+- [Sample apps](./apps/README.md) - The same non-trivial app in four reactivity idioms (vanilla, MobX, Effect and Signals), compared side-by-side
 - [About UI-Router](https://ui-router.github.io/about) - Core concepts
 
 The UI-Router package is distributed using [npm](https://www.npmjs.com/), the node package manager.
 
 ```bash
-npm install lit-ui-router
+npm install lit-ui-router lit @uirouter/core
 ```
 
 Import `UIRouterLit` into your project, register some states, and you're good to go!
