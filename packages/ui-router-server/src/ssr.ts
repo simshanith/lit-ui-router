@@ -1,9 +1,8 @@
 /**
- * The renderer-agnostic half of server-side rendering: moving a server router
- * to a path and waiting for its transition to land.
+ * The server side of server-side rendering, for any renderer: moving a server
+ * router to a path and waiting for its transition to land.
  *
- * It imports `@uirouter/core` eagerly and nothing else, so a browser bundle can
- * take it alongside any renderer.
+ * It imports `@uirouter/core` eagerly and no renderer.
  */
 
 // Drives a server router's url sync to a landed transition, since `start()` and `urlService.sync()` drop the promise.
