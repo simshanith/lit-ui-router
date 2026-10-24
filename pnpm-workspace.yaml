@@ -13,6 +13,7 @@ catalog:
   '@api-viewer/docs': 1.0.0-pre.10
   '@arethetypeswrong/core': ^0.18.5
   '@axe-core/playwright': 4.14.0
+  '@cloudflare/config': 0.27.0
   '@codecov/bundle-analyzer': ^2.0.1
 
   oxc-project-runtime: 'npm:@oxc-project/runtime@0.155.0'

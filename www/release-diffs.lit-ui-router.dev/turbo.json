@@ -22,17 +22,17 @@
       // Type-aware oxlint reads worker/tsconfig.json, which needs the d.ts.
       "dependsOn": ["^build:types", "types:worker"],
       // The root task's explicit globs would hash the gitignored d.ts, which
-      // wrangler.jsonc already keys.
+      // cloudflare.config.ts already keys.
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/.oxlintrc.json"]
     },
     "format:check:oxfmt": {
       // The root task's explicit glob would hash the gitignored
-      // worker-configuration.d.ts and re-key on every types:worker run.
+      // .cloudflare/types and re-key on every types:worker run.
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/.oxfmtrc.json"]
     },
     "types:worker": {
-      "inputs": ["$TURBO_DEFAULT$", "wrangler.jsonc"],
-      "outputs": ["worker/worker-configuration.d.ts"]
+      "inputs": ["$TURBO_DEFAULT$", "cloudflare.config.ts"],
+      "outputs": [".cloudflare/types/**"]
     }
   }
 }

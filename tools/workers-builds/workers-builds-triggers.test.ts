@@ -5,6 +5,7 @@ import {
   mkdirSync,
   mkdtempSync,
   readFileSync,
+  realpathSync,
   rmSync,
   writeFileSync,
 } from 'node:fs';
@@ -24,11 +25,13 @@ import {
   resolveSite,
 } from './cloudflare-build.ts';
 import {
+  CF_DEPLOY_MODES,
   DEPLOY_MODES,
   type DeployMode,
   deployCommands,
 } from './cloudflare-deploy.ts';
 import {
+  CF_CONFIG,
   type Drift,
   PREVIEWS_BASE_CONFIG,
   type Trigger,
@@ -41,6 +44,7 @@ import {
   selectWorkers,
   workerNameFromConfig,
 } from './workers-builds-triggers.core.ts';
+import { workerName } from './workers-builds-triggers.ts';
 
 const siteAt = (root: string, key: string): Site => {
   const resolved = resolveSite(root, key);
@@ -109,31 +113,58 @@ const BUILD_SCRIPT = './tools/workers-builds/cloudflare-build.sh';
 
 const DEPLOY_SCRIPT = './tools/workers-builds/cloudflare-deploy.ts';
 
-describe('parseJsonc', () => {
-  // Every entry's wranglerConfig has to name a real file with a real name: the
-  // shell reads the worker name out of it rather than restating it in config.
-  it('resolves every configured wranglerConfig to a worker name', async () => {
-    for (const worker of workers) {
-      const raw = await readFile(
-        join(workspaceRoot, worker.wranglerConfig),
-        'utf8',
-      );
+const workerNameAt = async (config: string): Promise<string> =>
+  workerName(join(workspaceRoot, config));
 
-      assert.ok(workerNameFromConfig(parseJsonc(raw)));
+describe('parseJsonc', () => {
+  // Every entry's workerConfig has to name a real file with a real name: the
+  // shell reads the worker name out of it rather than restating it in config.
+  it('resolves every configured workerConfig to a worker name', async () => {
+    for (const worker of workers) {
+      assert.ok(await workerNameAt(worker.workerConfig));
     }
 
+    assert.equal(desired.workerConfig, 'www/lit-ui-router.dev/wrangler.jsonc');
+    assert.equal(await workerNameAt(desired.workerConfig), 'lit-ui-router');
     assert.equal(
-      desired.wranglerConfig,
-      'www/lit-ui-router.dev/wrangler.jsonc',
+      await workerNameAt(
+        'www/release-diffs.lit-ui-router.dev/cloudflare.config.ts',
+      ),
+      'release-diffs',
     );
-    assert.equal(
-      workerNameFromConfig(
-        parseJsonc(
-          await readFile(join(workspaceRoot, desired.wranglerConfig), 'utf8'),
+  });
+
+  // The check must evaluate a cloudflare.config.ts with the loader cf deploys with.
+  it('loads cf configs with the @cloudflare/config that cf pins', async () => {
+    const cf = v.parse(
+      v.looseObject({
+        dependencies: v.looseObject({ '@cloudflare/config': v.string() }),
+      }),
+      parseJsonc(
+        await readFile(
+          join(
+            workspaceRoot,
+            'www/release-diffs.lit-ui-router.dev/node_modules/cf/package.json',
+          ),
+          'utf8',
         ),
       ),
-      'lit-ui-router',
     );
+
+    const loader = v.parse(
+      v.looseObject({ version: v.string() }),
+      parseJsonc(
+        await readFile(
+          join(
+            import.meta.dirname,
+            'node_modules/@cloudflare/config/package.json',
+          ),
+          'utf8',
+        ),
+      ),
+    );
+
+    assert.equal(loader.version, cf.dependencies['@cloudflare/config']);
   });
 
   it('throws a clear error on malformed input', () => {
@@ -237,8 +268,13 @@ describe('desiredStateFromConfig', () => {
 
     for (const worker of workers) {
       // the deploy derives the config from the site; the check reads it here
-      assert.equal(worker.wranglerConfig, `www/${worker.site}/wrangler.jsonc`);
-      const config = ['--config', worker.wranglerConfig];
+      const isCf = worker.workerConfig === `www/${worker.site}/${CF_CONFIG}`;
+
+      if (!isCf) {
+        assert.equal(worker.workerConfig, `www/${worker.site}/wrangler.jsonc`);
+      }
+
+      const config = ['--config', worker.workerConfig];
 
       for (const kind of ['production', 'preview'] as const) {
         const { path, args } = parseCommand(worker[kind].deploy_command);
@@ -249,24 +285,33 @@ describe('desiredStateFromConfig', () => {
         assert.deepEqual(extra, []);
         assert.equal(key, worker.site);
 
-        // wrangler preview refuses a config without a previews block
-        if (mode === 'preview') {
-          const wrangler = parseJsonc(
-            await readFile(join(workspaceRoot, worker.wranglerConfig), 'utf8'),
-          );
-
-          assert.ok(
-            v.is(v.looseObject({ previews: v.looseObject({}) }), wrangler),
-            `${worker.wranglerConfig} has no previews block`,
-          );
-        }
-
-        const { migrations, deploy } = deployCommands(
+        const { cwd, migrations, deploy } = deployCommands(
           workspaceRoot,
           mode,
           siteAt(workspaceRoot, key),
         );
 
+        // cf runs in the package, and evaluates the config with isPreview for a Preview
+        if (isCf) {
+          assert.equal(cwd, `www/${worker.site}`);
+          assert.deepEqual(deploy, CF_DEPLOY_MODES[mode]);
+          assert.deepEqual(migrations, []);
+          continue;
+        }
+
+        // wrangler preview refuses a config without a previews block
+        if (mode === 'preview') {
+          const wrangler = parseJsonc(
+            await readFile(join(workspaceRoot, worker.workerConfig), 'utf8'),
+          );
+
+          assert.ok(
+            v.is(v.looseObject({ previews: v.looseObject({}) }), wrangler),
+            `${worker.workerConfig} has no previews block`,
+          );
+        }
+
+        assert.equal(cwd, '.');
         assert.deepEqual(deploy, [...DEPLOY_MODES[mode], ...config]);
 
         for (const migration of migrations) {
@@ -298,7 +343,7 @@ describe('desiredStateFromConfig', () => {
     );
   });
 
-  it('requires the wrangler config path that names the worker', () => {
+  it('requires the worker config path that names the worker', () => {
     assert.throws(
       () =>
         desiredStateFromConfig({
@@ -306,7 +351,7 @@ describe('desiredStateFromConfig', () => {
           production: {},
           preview: {},
         }),
-      /wranglerConfig: Invalid key: Expected "wranglerConfig"/,
+      /workerConfig: Invalid key: Expected "workerConfig"/,
     );
   });
 
@@ -323,7 +368,7 @@ describe('desiredStateFromConfig', () => {
 
   it('rejects typoed or mistyped pinnable fields', () => {
     const base = {
-      wranglerConfig: 'www/lit-ui-router.dev/wrangler.jsonc',
+      workerConfig: 'www/lit-ui-router.dev/wrangler.jsonc',
       productionBranch: 'main',
       preview: {},
     };
@@ -345,7 +390,7 @@ describe('desiredStateFromConfig', () => {
 
   it('rejects invalid environment variable keys and values', () => {
     const base = {
-      wranglerConfig: 'www/lit-ui-router.dev/wrangler.jsonc',
+      workerConfig: 'www/lit-ui-router.dev/wrangler.jsonc',
       productionBranch: 'main',
       preview: {},
     };
@@ -663,17 +708,19 @@ describe('diffTriggers', () => {
 describe('cloudflare-deploy', () => {
   const script = join(import.meta.dirname, 'cloudflare-deploy.ts');
 
-  // Runs the script with a stub `npx` first on PATH, so each wrangler command
-  // is recorded, one per line, rather than performed. With FAIL_D1 set the
-  // stub fails every `wrangler d1` call.
+  // Runs the script with a stub `npx` first on PATH, so each wrangler or cf
+  // command and the dir it ran in are recorded, one per line, rather than
+  // performed. With FAIL_D1 set the stub fails every `wrangler d1` call.
   const runDeploy = (args: string[], env: NodeJS.ProcessEnv = {}) => {
     const dir = mkdtempSync(join(tmpdir(), 'cloudflare-deploy-'));
     const record = join(dir, 'invoked');
+    const cwds = join(dir, 'cwds');
 
     try {
       writeFileSync(
         join(dir, 'npx'),
         `#!/bin/sh\nprintf '%s\\n' "$*" >> '${record}'\n` +
+          `pwd -P >> '${cwds}'\n` +
           `[ -n "$FAIL_D1" ] && [ "$1 $2" = 'wrangler d1' ] && exit 1\nexit 0\n`,
         { mode: 0o755 },
       );
@@ -690,6 +737,9 @@ describe('cloudflare-deploy', () => {
         invoked: existsSync(record)
           ? readFileSync(record, 'utf8').trimEnd().split('\n')
           : undefined,
+        cwds: existsSync(cwds)
+          ? readFileSync(cwds, 'utf8').trimEnd().split('\n')
+          : undefined,
       };
     } finally {
       rmSync(dir, { force: true, recursive: true });
@@ -701,17 +751,22 @@ describe('cloudflare-deploy', () => {
       const site = siteAt(workspaceRoot, worker.site);
 
       for (const mode of ['main', 'branch', 'preview'] as const) {
-        const { migrations, deploy } = deployCommands(
+        const { cwd, migrations, deploy } = deployCommands(
           workspaceRoot,
           mode,
           site,
         );
 
-        const { status, invoked } = runDeploy([mode, worker.site]);
+        const { status, invoked, cwds } = runDeploy([mode, worker.site]);
         assert.equal(status, 0, `${mode} ${worker.site} exited non-zero`);
+        const commands = [...migrations, deploy];
         assert.deepEqual(
           invoked,
-          [...migrations, deploy].map((command) => command.join(' ')),
+          commands.map((command) => command.join(' ')),
+        );
+        assert.deepEqual(
+          cwds,
+          commands.map(() => realpathSync(join(workspaceRoot, cwd))),
         );
       }
     }
@@ -811,6 +866,7 @@ describe('cloudflare-deploy', () => {
       try {
         const site = siteAt(root, 'example.test');
         assert.deepEqual(deployCommands(root, 'main', site), {
+          cwd: '.',
           migrations: [
             [
               'wrangler',
@@ -835,13 +891,47 @@ describe('cloudflare-deploy', () => {
         });
         // a branch upload or a Preview must never touch a remote database
         assert.deepEqual(deployCommands(root, 'branch', site), {
+          cwd: '.',
           migrations: [],
           deploy: ['wrangler', 'versions', 'upload', ...config],
         });
         assert.deepEqual(deployCommands(root, 'preview', site), {
+          cwd: '.',
           migrations: [],
           deploy: ['wrangler', 'preview', ...config],
         });
+      } finally {
+        rmSync(root, { force: true, recursive: true });
+      }
+    });
+
+    // cf reads only the cloudflare.config.ts in its cwd, and has no wrangler.jsonc migrations_dir to honour.
+    it('runs cf in the package when it has a cloudflare.config.ts', () => {
+      const root = fixtureRoot({
+        name: 'example',
+        d1_databases: [
+          { binding: 'A', database_name: 'a', migrations_dir: 'migrations' },
+        ],
+      });
+
+      writeFileSync(join(root, 'www', 'example.test', CF_CONFIG), '');
+
+      try {
+        const site = siteAt(root, 'example.test');
+
+        for (const mode of ['main', 'branch', 'preview'] as const) {
+          assert.deepEqual(deployCommands(root, mode, site), {
+            cwd: 'www/example.test',
+            migrations: [],
+            deploy: CF_DEPLOY_MODES[mode],
+          });
+        }
+
+        assert.deepEqual(deployCommands(root, 'preview', site).deploy, [
+          'cf',
+          'previews',
+          'deploy',
+        ]);
       } finally {
         rmSync(root, { force: true, recursive: true });
       }

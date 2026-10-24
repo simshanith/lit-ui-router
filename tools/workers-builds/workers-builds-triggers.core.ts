@@ -1,7 +1,7 @@
 // Pure logic for the Workers Builds trigger check — no network or filesystem
 // here, so every unit is directly testable with plain fixtures (see
 // workers-builds-triggers.test.ts). The IO (env, Cloudflare API calls,
-// reading wrangler.jsonc) lives in workers-builds-triggers.ts.
+// reading the worker config) lives in workers-builds-triggers.ts.
 
 import type { Json } from '@tools/bootstrap/types.ts';
 import { type ParseError, parse, printParseErrorCode } from 'jsonc-parser';
@@ -88,9 +88,9 @@ const DesiredTriggerSchema = v.strictObject({
   v.GenericSchema
 >);
 
-// One worker: the wrangler config that names it, plus its two triggers.
+// One worker: the config that names it (wrangler.jsonc or cloudflare.config.ts), plus its two triggers.
 const DesiredStateSchema = v.strictObject({
-  wranglerConfig: nonEmptyString,
+  workerConfig: nonEmptyString,
   productionBranch: nonEmptyString,
   production: DesiredTriggerSchema,
   preview: DesiredTriggerSchema,
@@ -190,12 +190,12 @@ export function selectWorkers(
   };
 }
 
-// looseObject: wrangler.jsonc has many fields; only `name` matters here.
-const WranglerNameSchema = v.looseObject({ name: nonEmptyString });
+// looseObject: a worker config has many fields; only `name` matters here.
+const NameSchema = v.looseObject({ name: nonEmptyString });
 
 /** The `name` field of a parsed wrangler config, or throw. */
 export function workerNameFromConfig(config: Json): string {
-  const result = v.safeParse(WranglerNameSchema, config);
+  const result = v.safeParse(NameSchema, config);
 
   if (!result.success) {
     throw new Error('wrangler.jsonc has no "name" field');
@@ -203,6 +203,9 @@ export function workerNameFromConfig(config: Json): string {
 
   return result.output.name;
 }
+
+/** The file name that makes a site a cf project rather than a Wrangler one. */
+export const CF_CONFIG = 'cloudflare.config.ts';
 
 // Only the D1 fields the production deploy migrates by.
 const WranglerD1Schema = v.looseObject({

@@ -2,7 +2,7 @@
 
 The sites this repo publishes, one directory per domain. Each directory is a
 workspace package that owns its own content, its own Cloudflare Worker, and its
-own wrangler config; the pipeline that ships them is shared.
+own worker config; the pipeline that ships them is shared.
 
 | Directory                                                                 | Site                                                                                                                                                                                             |
 | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -20,7 +20,9 @@ A new site is a package under `www/<domain>/`, named for the domain it serves:
   instead of resolving to a public-npm squatter.
 - **Worker config.** Its own `wrangler.jsonc`, beside the package's `worker/`
   entry point and its static assets. The deploy runs from the repo root, so the
-  path is named explicitly rather than found by walking up.
+  path is named explicitly rather than found by walking up. A `cloudflare.config.ts`
+  in its place makes the package a `cf` project, deployed from the package
+  instead (see [`DEPLOY.md`](./DEPLOY.md#cf-setup)).
 - **Trigger config.** An entry in
   [`workers-builds-triggers.config.jsonc`](../tools/workers-builds/workers-builds-triggers.config.jsonc)
   whose `build_command` and `deploy_command` name the shared
@@ -35,7 +37,7 @@ Every site deploys through Cloudflare Workers Builds, and every trigger points a
 the two scripts in [`tools/workers-builds`](../tools/workers-builds) rather than
 holding the build and deploy steps inline. A trigger holds one command for every
 branch it matches, so inlined steps mean a branch cannot change them — and a
-package-manager change or a moved `wrangler.jsonc` is exactly a branch that needs
+package-manager change or a moved worker config is exactly a branch that needs
 to change them. Pinning the script path instead lets the steps differ per branch
 while the declared value stays constant, so divergence never reads as drift and
 never needs an `--apply` to test. The same package diffs the config against the

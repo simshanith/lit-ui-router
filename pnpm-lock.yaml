@@ -22,6 +22,9 @@ catalogs:
     '@axe-core/playwright':
       specifier: 4.14.0
       version: 4.14.0
+    '@cloudflare/config':
+      specifier: 0.27.0
+      version: 0.27.0
     '@codecov/bundle-analyzer':
       specifier: ^2.0.1
       version: 2.0.1
@@ -2758,6 +2761,9 @@ importers:
 
   tools/workers-builds:
     devDependencies:
+      '@cloudflare/config':
+        specifier: 'catalog:'
+        version: 0.27.0
       '@tools/bootstrap':
         specifier: catalog:workspace
         version: link:../bootstrap
@@ -2891,6 +2897,9 @@ importers:
 
   www/release-diffs.lit-ui-router.dev:
     devDependencies:
+      cf:
+        specifier: 'catalog:'
+        version: 1.0.0-beta.20(@types/node@24.19.2)
       oxfmt:
         specifier: 'catalog:'
         version: 0.74.0

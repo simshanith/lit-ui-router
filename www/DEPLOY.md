@@ -22,7 +22,7 @@ repo config, and whether the site it deploys is up. See
 
 The Cloudflare [GitHub integration](https://developers.cloudflare.com/workers/ci-cd/builds/git-integration/github-integration/) deploys documentation on push.
 It deploys every Worker app under `www/` the same way: each is a package in `www/<domain>`, named
-`@www/<domain>`, with its own `wrangler.jsonc` and its own Workers Builds triggers, and the domain is
+`@www/<domain>`, with its own worker config and its own Workers Builds triggers, and the domain is
 the site key that the build and deploy commands below take as their last argument. This section
 describes the docs site, the default when that argument is omitted; [Adding a site](#adding-a-site)
 covers the rest.
@@ -53,6 +53,16 @@ The deploy runs from the repo root, where no config lives, so it names the site'
 (see [Build & Deploy Commands](#build--deploy-commands)).
 
 See: [Wrangler Commands](https://developers.cloudflare.com/workers/wrangler/commands/)
+
+### cf Setup
+
+The release diffs is configured by a `cloudflare.config.ts` instead, a project for the
+[`cf` CLI](https://developers.cloudflare.com/cf/projects/) (beta). Its package declares both `cf`,
+which `cloudflare.config.ts` imports from, and `wrangler`, the bundler `cf` delegates to; each must
+be installed in the package itself. `cf` has no config flag and reads only the
+`cloudflare.config.ts` in its working directory, so every `cf` command runs with the package as
+cwd. `types:worker` runs `cf workers types`, which writes `.cloudflare/types/` (gitignored, like
+the build output beside it).
 
 ### Build & Deploy Commands
 
@@ -117,7 +127,10 @@ The deploy script takes the trigger as its first argument and the site as its op
 whose branches build as [Workers Previews](#workers-previews); `main` runs `npx wrangler deploy`, preceded by
 `npx wrangler d1 migrations apply <database_name> --remote` for every `d1_databases` entry in the
 site's `wrangler.jsonc` that sets `migrations_dir`. Each names the site's config with `--config`,
-since the deploy runs from the repo root and the config lives in the site package. A failed
+since the deploy runs from the repo root and the config lives in the site package. A site whose
+package has a `cloudflare.config.ts` deploys with `cf` instead, from the package: `branch` runs
+`npx cf workers versions create`, `preview` `npx cf previews deploy`, `main` `npx cf deploy`, and
+nothing migrates, since `cloudflare.config.ts` declares no D1 migrations. A failed
 migration stops the deploy, so production code never runs ahead of its schema. Only `main`
 migrates: a version upload binds the same remote databases as production, and a Preview binds
 only what its `previews` block names. wrangler skips its migration
@@ -154,9 +167,11 @@ before production.
 
 The release ledger and the release diffs build their branches as
 [Workers Previews](https://developers.cloudflare.com/workers/previews/): each preview
-`deploy_command` names the `preview` mode, and each `wrangler.jsonc` carries the `previews` block
-`wrangler preview` requires. A Preview binds only what that block names, so a branch reaches none
-of the ledger's production data, while each Preview gets Durable Object namespaces of its own. The
+`deploy_command` names the `preview` mode. The ledger's `wrangler.jsonc` carries the `previews`
+block `wrangler preview` requires, and a Preview binds only what that block names, so a branch
+reaches none of the ledger's production data, while each Preview gets Durable Object namespaces of
+its own. `cf previews deploy` evaluates the release diffs' `cloudflare.config.ts` with `isPreview`
+set, so that config, not a `previews` block, decides what its Previews bind. The
 ledger's routes, cron trigger and queue consumers stay with production. The docs site still uploads
 versions.
 
@@ -167,8 +182,9 @@ predates the `preview` mode fails its preview build until it is rebased.
 
 ### Adding a site
 
-1. Add the package at `www/<domain>/`, named `@www/<domain>`, with a `wrangler.jsonc` beside its
-   `package.json`. A D1 database the production deploy should migrate sets `migrations_dir`. A
+1. Add the package at `www/<domain>/`, named `@www/<domain>`, with a `wrangler.jsonc` or a
+   `cloudflare.config.ts` beside its `package.json`. A D1 database the production deploy should
+   migrate sets `migrations_dir`, which only `wrangler.jsonc` has. A
    Worker with no hostname of its own still takes a key under `lit-ui-router.dev`, since the
    build and deploy scripts accept only a domain-shaped one.
 2. Add an entry keyed `<domain>` to
@@ -176,7 +192,7 @@ predates the `preview` mode fails its preview build until it is rebased.
    with both commands taking the key and `path_includes` limiting its builds to the paths it
    reads. The trigger test checks the entry against the package.
 3. In the Cloudflare dashboard, **Workers & Pages → Create → Import a repository**, with the
-   Worker name matching the `name` in `wrangler.jsonc` and the build and deploy commands from the
+   Worker name matching the one its config names and the build and deploy commands from the
    entry. Give its builds an API token of its own, scoped to what that site's deploy touches.
 4. Run `pnpm check:workers-builds -- --site <domain>`, and `--apply` for anything it reports.
 
@@ -190,14 +206,16 @@ and diffs it against the live triggers: `pnpm check:workers-builds` is read-only
 default; `--site <key>` (repeatable, or one comma-separated value) limits the diff and the apply to
 the named entries, and an unknown key is a usage error (exit 2) rather than an empty selection.
 
-The config is keyed by site, one entry per Worker the repo deploys, each naming the `wrangler.jsonc`
-the worker is named in and pinning what it pins, the
+The config is keyed by site, one entry per Worker the repo deploys, each naming the
+`wrangler.jsonc` or `cloudflare.config.ts` the worker is named in and pinning what it pins, the
 [build watch paths](https://developers.cloudflare.com/workers/ci-cd/builds/build-watch-paths/)
 among them, which are what let two sites share one repo. Its shape is documented where it is enforced — the
 file's own comments and the schema in
 [`workers-builds-triggers.core.ts`](../tools/workers-builds/workers-builds-triggers.core.ts) — and
-not repeated here. A `wranglerConfig` that names no file is a hard error (exit 2), never a skipped
-entry, so a moved file cannot turn the check green.
+not repeated here. A `workerConfig` that names no file is a hard error (exit 2), never a skipped
+entry, so a moved file cannot turn the check green. A `cloudflare.config.ts` is evaluated with
+`@cloudflare/config`, the loader `cf` itself uses, at the version `cf` pins; the trigger test fails
+when the two drift apart.
 A configured worker the account does not have yet is drift (exit 1), not an error: a new site
 reads as owing its dashboard step without hiding the other sites' verdicts.
 
