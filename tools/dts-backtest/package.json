@@ -33,6 +33,7 @@
     "ui-router-effect": "catalog:workspace",
     "ui-router-mobx": "catalog:workspace",
     "ui-router-navigation-location-plugin": "catalog:workspace",
+    "ui-router-registry": "catalog:workspace",
     "ui-router-server": "catalog:workspace",
     "ui-router-signals": "catalog:workspace"
   }

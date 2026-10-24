@@ -163,6 +163,9 @@ const workspaces = {
       '@uirouter/core-floor',
     ],
   },
+  'packages/ui-router-registry': {
+    entry: ['src/specs/*.test-d.ts', 'test-d/*.test-d.ts'],
+  },
   'packages/ui-router-signals': {
     ignoreDependencies: [
       '@release-it/conventional-changelog',

@@ -1,0 +1,10 @@
+{
+  // A program with no augmentation: src/specs registers, so the fallback needs its own.
+  "extends": "../tsconfig.src.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "isolatedDeclarations": false
+  },
+  "include": ["../src/*.ts", "*.ts"],
+  "exclude": []
+}
