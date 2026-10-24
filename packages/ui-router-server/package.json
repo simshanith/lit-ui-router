@@ -108,6 +108,14 @@
       "node": "./dist/development/ssr.js",
       "default": "./dist/ssr.js"
     },
+    "./ssr/client": {
+      "types": "./dist/ssr-client.d.ts",
+      "development": "./dist/development/ssr-client.js",
+      "production": "./dist/ssr-client.js",
+      "deno": "./dist/ssr-client.js",
+      "node": "./dist/development/ssr-client.js",
+      "default": "./dist/ssr-client.js"
+    },
     "./url-config": {
       "types": "./dist/url-config.d.ts",
       "development": "./dist/development/url-config.js",
@@ -229,6 +237,17 @@
         "lit",
         "lit-ui-router",
         "vite"
+      ]
+    },
+    "./ssr/client": {
+      "free": [
+        "@lit-labs/ssr",
+        "hono",
+        "lit",
+        "lit-ui-router",
+        "vite",
+        "node:fs",
+        "node:path"
       ]
     },
     "./url-config": {
