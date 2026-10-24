@@ -221,9 +221,10 @@ const workspaces = {
       'sample-app-lit-signals',
     ],
   },
-  // knip has no cf plugin, and the config names its entrypoint as a string
+  // knip has no cf plugin; cloudflare:workers is a workerd built-in
   'www/release-diffs.lit-ui-router.dev': {
-    entry: ['cloudflare.config.ts', 'worker/index.ts'],
+    entry: ['cloudflare.config.ts'],
+    ignoreDependencies: ['cloudflare'],
   },
   // cloudflare:workers is a workerd built-in, not a package
   'www/release-ledger.lit-ui-router.dev': {

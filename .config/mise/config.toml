@@ -356,6 +356,20 @@ run = [
   "BENCH_TIME_MS=\"${usage_time_ms?}\" turbo run bench --concurrency=1 --ui=stream --log-order=stream --summarize --log-file --output-logs=\"${usage_output_logs?}\"",
 ]
 
+[tasks.npm_diff_parity]
+# The release-diffs worker's npm diff against the npm CLI's, byte for byte,
+# for the `acceptance (npm-diff)` job; turbo_summary reports the run, as for
+# ci_graph.
+depends = ["turbo_force_guard"]
+description = "Compare the release-diffs worker's npm diff with the npm CLI's via turbo"
+usage = '''
+flag "--output-logs <mode>" help="turbo task output: full | errors-only | new-only | hash-only | none; CI sets errors-only" default="full" env="TURBO_OUTPUT_LOGS"
+'''
+run = [
+  "mise run //tools/build_and_test:mark_session",
+  "turbo run test:npm-diff --ui=stream --log-order=stream --summarize --log-file --output-logs=\"${usage_output_logs?}\"",
+]
+
 [tasks.dts_backtest_matrix]
 # Ad-hoc alias for the full dts-backtest TS matrix; CI runs it via ci_main.
 depends = ["turbo_force_guard"]
