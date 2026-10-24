@@ -26,7 +26,11 @@ export const states = [
       meta: { type: 'json', value: null },
     },
   },
-  { name: 'search', url: '/search?q&{page:int}' },
+  {
+    name: 'search',
+    url: '/search?q&{page:int}&kv',
+    params: { kv: { value: null, squash: true }, tab: { value: null } },
+  },
   // A future state's placeholder; the lazy module registers `admin.*` itself.
   { name: 'admin.**', url: '/admin' },
 ] as const;
