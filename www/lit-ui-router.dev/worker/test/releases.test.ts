@@ -118,6 +118,8 @@ const GITHUB = 'https://github.com/simshanith/lit-ui-router/releases/tag';
 
 const DIFFS = 'https://diffshub.com/simshanith/lit-ui-router/compare';
 
+const NPMDIFF = 'https://npmdiff.dev/lit-ui-router';
+
 describe('the /releases verdicts', () => {
   const cases = [
     ['/releases', 308, '/releases/'],
@@ -181,6 +183,117 @@ describe('the /releases verdicts', () => {
     assert.equal(response?.status, 503);
     assert.equal(response?.headers.get('Cache-Control'), 'no-store');
     assert.match((await response?.text()) ?? '', /Releases are unavailable/);
+  });
+});
+
+describe('the /releases/<pkg>/diff redirects', () => {
+  const diff = '/releases/lit-ui-router/diff';
+
+  const cases = [
+    [
+      `${diff}?from=1.9.0&to=1.10.0`,
+      302,
+      `${DIFFS}/lit-ui-router%401.9.0...lit-ui-router%401.10.0`,
+    ],
+    [
+      `${diff}/?from=1.9.0&to=1.10.0&via=diffshub`,
+      302,
+      `${DIFFS}/lit-ui-router%401.9.0...lit-ui-router%401.10.0`,
+    ],
+    [
+      `${diff}?from=1.10.0&to=1.11.0-rc.0&via=npmdiff`,
+      302,
+      `${NPMDIFF}/1.10.0/1.11.0-rc.0/`,
+    ],
+    [`${diff}?from=1.9.0&to=9.9.9`, 404, null],
+    [`${diff}?from=9.9.9&to=1.10.0&via=npmdiff`, 404, null],
+    [`${diff}?from=1.9.0`, 404, null],
+    [diff, 404, null],
+    [`${diff}?from=1.9.0&to=1.10.0&via=github`, 404, null],
+    [`${diff}?from=1.9.0&from=1.2.0&to=1.10.0`, 404, null],
+    ['/releases/not-a-package/diff?from=1.9.0&to=1.10.0', 404, null],
+  ] as const;
+
+  for (const [path, status, location] of cases) {
+    it(`answers ${path} with ${status}`, async () => {
+      const response = await serve(path);
+
+      assert.equal(response?.status, status);
+      assert.equal(response?.headers.get('Location'), location);
+    });
+  }
+
+  it('drops the request search and caches like the pages', async () => {
+    const response = await serve(`${diff}?from=1.9.0&to=1.10.0&ref=form`);
+
+    assert.equal(
+      response?.headers.get('Location'),
+      `${DIFFS}/lit-ui-router%401.9.0...lit-ui-router%401.10.0`,
+    );
+    assert.equal(response?.headers.get('Cache-Control'), 'public, max-age=300');
+  });
+
+  const without = (field: 'git_sha' | 'npm_integrity'): LedgerReader => ({
+    ...fixtureLedger,
+    versions: async (name) =>
+      (await fixtureLedger.versions(name)).map((row) =>
+        row.version === '1.9.0' ? { ...row, [field]: null } : row,
+      ),
+  });
+
+  it('answers 404 for a DiffsHub compare whose tag the ledger lacks', async () => {
+    const ledger = without('git_sha');
+
+    assert.equal(
+      (await serve(`${diff}?from=1.9.0&to=1.10.0`, {}, ledger))?.status,
+      404,
+    );
+    assert.equal(
+      (await serve(`${diff}?from=1.9.0&to=1.10.0&via=npmdiff`, {}, ledger))
+        ?.status,
+      302,
+    );
+  });
+
+  it('answers 404 for an npmdiff of a version npm lacks', async () => {
+    const response = await serve(
+      `${diff}?from=1.9.0&to=1.10.0&via=npmdiff`,
+      {},
+      without('npm_integrity'),
+    );
+
+    assert.equal(response?.status, 404);
+  });
+
+  it('reads the versions once', async () => {
+    const reads: string[] = [];
+
+    const ledger: LedgerReader = {
+      ...fixtureLedger,
+      tagged: (name, tag) => {
+        reads.push('tagged');
+
+        return fixtureLedger.tagged(name, tag);
+      },
+      versions: (name) => {
+        reads.push('versions');
+
+        return fixtureLedger.versions(name);
+      },
+    };
+
+    await serve(`${diff}?from=1.9.0&to=1.10.0`, {}, ledger);
+
+    assert.deepEqual(reads, ['versions']);
+  });
+
+  it('answers HEAD with the redirect and no body', async () => {
+    const response = await serve(`${diff}?from=1.9.0&to=1.10.0`, {
+      method: 'HEAD',
+    });
+
+    assert.equal(response?.status, 302);
+    assert.equal(response?.body, null);
   });
 });
 
@@ -556,6 +669,34 @@ describe('the /releases pages', () => {
       ),
     );
     assert.equal(html.match(/href="https:\/\/diffshub\.com\//g)?.length, 3);
+  });
+
+  it('picks a diff with a form that needs no script', async () => {
+    const html = await page('/releases/lit-ui-router/');
+    const form = /<form[^>]*>.*<\/form>/s.exec(html)?.[0] ?? '';
+
+    assert.match(
+      form,
+      /<form\s+class="compare"\s+method="get"\s+action="\/releases\/lit-ui-router\/diff"/,
+    );
+    assert.match(form, /<select name="from">.*<\/select>/s);
+    assert.match(form, /<select name="to">.*<\/select>/s);
+    assert.match(form, /<option value="1\.9\.0" selected>/);
+    assert.match(form, /<option value="1\.10\.0" selected>/);
+    assert.equal(form.match(/ selected>/g)?.length, 2);
+    assert.match(
+      form,
+      /<input type="radio" name="via" value="diffshub" checked/,
+    );
+    assert.match(form, /<input type="radio" name="via" value="npmdiff"/);
+    assert.match(
+      textOf(form),
+      /From .* To .* Diff on DiffsHub npmdiff Compare/,
+    );
+  });
+
+  it('offers no diff form for a package with one version', async () => {
+    assert.ok(!(await page('/releases/ui-router-server/')).includes('<form'));
   });
 
   it("shows one version's facts and links out", async () => {

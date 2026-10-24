@@ -262,6 +262,10 @@ application built on these controllers. It is behaviorally identical to the
 [two codebases](https://github.com/simshanith/lit-ui-router/tree/main/apps)
 can be compared file-by-file to see exactly what the MobX idiom changes.
 
+## Releases
+
+<ReleaseDiffPicker name="lit-ui-router-mobx" />
+
 ## Further reading
 
 - [API reference](/api/lit-ui-router-mobx/)

@@ -9,13 +9,16 @@ import {
   type LedgerReader,
   type LedgerVersion,
   latestOf,
+  NotInLedger,
   packagesOf,
   versionIn,
   versionsOf,
 } from './ledger.ts';
 import { GH_MOUNT, ghRoutes, RELEASES_MOUNT, releaseRoutes } from './routes.ts';
 import {
+  diffUrl,
   NotFoundView,
+  npmdiffUrl,
   PackageView,
   ReleasesView,
   releaseUrl,
@@ -33,6 +36,7 @@ interface ResolvesOf {
   releases: { packages: readonly LedgerPackage[] };
   'releases.package': { versions: LedgerVersion[] };
   'releases.package.latest': { latest: LedgerVersion };
+  'releases.package.diff': { compare: string };
   'releases.package.version': {
     release: LedgerVersion;
     versions: LedgerVersion[];
@@ -70,6 +74,30 @@ type Attached = {
 // SAFETY: every param these states declare is a string, and the url sets each one.
 const paramsOf = (trans: Transition) =>
   trans.params() as { pkg: string; version: string };
+
+// SAFETY: an absent query param is undefined and a repeated one an array, neither of which names a version.
+const diffParamsOf = (trans: Transition) =>
+  trans.params() as { pkg: string; from: string; to: string; via: string };
+
+const COMPARES = new Map([
+  ['diffshub', diffUrl],
+  ['npmdiff', npmdiffUrl],
+]);
+
+/** The url `via` compares `from` with `to` at, or a `NotInLedger` rejection when either is unknown or lacks what `via` needs. */
+const compareIn = (
+  versions: readonly LedgerVersion[],
+  { pkg, from, to, via }: ReturnType<typeof diffParamsOf>,
+): string => {
+  const url = COMPARES.get(via)?.(
+    versionIn(versions, { pkg, version: from }),
+    versionIn(versions, { pkg, version: to }),
+  );
+
+  if (!url) throw new NotInLedger(`${pkg}@${from}...${to} via ${via}`);
+
+  return url;
+};
 
 const versionPath = ({ name, version }: LedgerVersion): string =>
   `${RELEASES_MOUNT}/${encodeURIComponent(name)}/${encodeURIComponent(version)}/`;
@@ -110,6 +138,18 @@ const attach = (ledger: LedgerReader): Attached => ({
       found(
         mergeSearch(versionPath(resolves.latest), new URL(request.url).search),
       ),
+  },
+  'releases.package.diff': {
+    resolve: [
+      {
+        token: 'compare',
+        deps: ['versions', '$transition$'],
+        resolveFn: (versions: LedgerVersion[], trans: Transition) =>
+          compareIn(versions, diffParamsOf(trans)),
+      },
+    ],
+    // It leaves the site, so the search stays behind.
+    respond: ({ resolves }) => found(resolves.compare),
   },
   'releases.package.version': {
     component: VersionView,

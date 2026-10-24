@@ -507,6 +507,10 @@ Lit's `defer-hydration` contract unchanged. All of it is in this package:
 `lit-ui-router-ssr/register` defines `<ui-view>` with the served class, so an
 app that never prerenders carries none of it.
 
+## Releases
+
+<ReleaseDiffPicker name="lit-ui-router-ssr" />
+
 ## Further reading
 
 - [API reference](/api/lit-ui-router-ssr/)

@@ -247,6 +247,10 @@ For a smaller picture, the
 [Hello Galaxy (Effect)](/tutorial/live-examples#hello-galaxy-effect) example
 is the galaxy tutorial rebuilt on these controllers, installed from npm.
 
+## Releases
+
+<ReleaseDiffPicker name="lit-ui-router-effect" />
+
 ## Further reading
 
 - [API reference](/api/lit-ui-router-effect/)
