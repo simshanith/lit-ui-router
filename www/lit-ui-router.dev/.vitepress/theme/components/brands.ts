@@ -37,6 +37,11 @@ export const brandMarks = {
     light: '/images/brands/svelte.svg',
     dark: '/images/brands/svelte.svg',
   },
+  tanstack: {
+    height: 28,
+    light: '/images/brands/tanstack-black.svg',
+    dark: '/images/brands/tanstack-white.svg',
+  },
   netlify: {
     height: 30,
     light: '/images/brands/netlify-monogram-light.svg',

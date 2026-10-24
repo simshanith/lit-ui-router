@@ -78,8 +78,12 @@ Not every ecosystem starts here. SSR-default ecosystems launch at the far
 end instead: Next.js and React Router's framework mode ship
 [`ssr: true` by default](https://reactrouter.com/how-to/spa), making full
 server routing the default launch state, with SPA mode as the documented
-opt-out that lands on exactly level 2's `/* /index.html 200` rule. Same
-tools, both ends of the spectrum.
+opt-out that lands on exactly level 2's `/* /index.html 200` rule.
+[TanStack Start](https://tanstack.com/start) has the same shape around
+TanStack Router's client-side matcher: server rendering by default, and an
+[SPA mode](https://tanstack.com/start/latest/docs/framework/react/guide/spa-mode)
+that prerenders the root route to a `_shell.html` and rewrites every miss to
+it. Same tools, both ends of the spectrum.
 
 <FrameworkSpectrum />
 

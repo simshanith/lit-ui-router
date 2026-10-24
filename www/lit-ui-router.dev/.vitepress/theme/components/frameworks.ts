@@ -80,6 +80,17 @@ export const frameworks: FrameworkEntry[] = [
     ],
   },
   {
+    id: 'tanstack',
+    name: 'TanStack',
+    brand: 'tanstack',
+    blurb:
+      'The Router matches in the client and deploys on level 2’s fallback; Start renders on the server by default, and its SPA mode prerenders the root route to a <code>_shell.html</code> that the host rewrites every miss to — the level-2 rule with the shell drawn at build.',
+    points: [
+      { level: 2, label: 'Router SPA · Start SPA mode' },
+      { level: 5, label: 'Start, SSR default' },
+    ],
+  },
+  {
     id: 'netlify',
     name: 'Netlify',
     brand: 'netlify',
