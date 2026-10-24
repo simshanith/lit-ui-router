@@ -19,6 +19,9 @@
   "env": {
     "builtin": true
   },
+  "settings": {
+    "litUiRouterSources": ["sample-app-shared/registry/lit.js"]
+  },
   "ignorePatterns": [
     "**/dist/**",
     "**/coverage/**",

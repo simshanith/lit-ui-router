@@ -854,6 +854,9 @@ importers:
       typescript-7:
         specifier: 'catalog:'
         version: typescript@7.0.2
+      ui-router-registry:
+        specifier: catalog:workspace
+        version: link:../../packages/ui-router-registry
       vite:
         specifier: 'catalog:'
         version: 8.3.4(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)
@@ -900,6 +903,9 @@ importers:
       typescript-7:
         specifier: 'catalog:'
         version: typescript@7.0.2
+      ui-router-registry:
+        specifier: catalog:workspace
+        version: link:../../packages/ui-router-registry
       vite:
         specifier: 'catalog:'
         version: 8.3.4(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)
@@ -1001,6 +1007,9 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
+      ui-router-registry:
+        specifier: catalog:workspace
+        version: link:../../packages/ui-router-registry
       vite:
         specifier: 'catalog:'
         version: 8.3.4(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)
