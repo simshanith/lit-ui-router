@@ -76,12 +76,14 @@ onMounted(async () => {
       />
     </label>
     <fieldset>
-      <legend>Diff on</legend>
+      <legend>Diff</legend>
       <label
-        ><input type="radio" name="via" value="diffshub" checked />
-        DiffsHub</label
+        ><input type="radio" name="via" value="diffshub" checked /> Git source
+        on DiffsHub</label
       >
-      <label><input type="radio" name="via" value="npmdiff" /> npmdiff</label>
+      <label
+        ><input type="radio" name="via" value="files" /> Published files</label
+      >
     </fieldset>
     <button type="submit">Compare</button>
   </form>

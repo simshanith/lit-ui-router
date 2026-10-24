@@ -4,11 +4,12 @@ import { mounts } from 'sample-app-routes';
 // Examples embedded same-origin at /examples/<name>/; built by
 // `examples#build:embeds` (hash routing, so no SPA fallback needed).
 import { EXAMPLE_NAMES } from 'examples/embeds';
+import { LANGUAGES } from '../worker/releases/npm-diff/languages.ts';
 import { writeFile } from 'node:fs/promises';
 import { basename, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { gzipSync } from 'node:zlib';
-import { defineConfig, Plugin } from 'vite';
+import { build, defineConfig, Plugin } from 'vite';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 
 import { llmsPlugins } from './llms.ts';
@@ -174,11 +175,107 @@ function releasePagesStylesheetPlugin(): Plugin {
   };
 }
 
+const RELEASE_DIFF_SCRIPT = fileURLToPath(
+  new URL('../worker/releases/release-diff.ts', import.meta.url),
+);
+
+/** Builds the diff page's client to a stable `/release-diff.js`, the one script the worker-rendered page loads. */
+function releaseDiffScriptPlugin(): Plugin {
+  const chunks = 'assets/release-diff/[name].[hash].js';
+
+  return {
+    name: 'release-diff-script',
+    apply: (_config, { command, isSsrBuild }) =>
+      command === 'build' && !isSsrBuild,
+    // A build of its own: in the docs build, vitepress's chunking puts the preload helper, and Vue with it, in front of the page.
+    async writeBundle({ dir = '' }) {
+      await build({
+        configFile: false,
+        root: fileURLToPath(new URL('..', import.meta.url)),
+        publicDir: false,
+        logLevel: 'warn',
+        plugins: [chunkBudgetPlugin(), diffHighlighterPlugin()],
+        worker: {
+          // The highlighter worker loads its backend lazily, which a classic worker can't.
+          format: 'es',
+          plugins: () => [diffHighlighterPlugin()],
+          rolldownOptions: {
+            output: { entryFileNames: chunks, chunkFileNames: chunks },
+          },
+        },
+        build: {
+          outDir: dir,
+          emptyOutDir: false,
+          rolldownOptions: {
+            input: RELEASE_DIFF_SCRIPT,
+            output: {
+              entryFileNames: basename(RELEASE_DIFF_SCRIPT).replace(
+                /\.ts$/,
+                '.js',
+              ),
+              chunkFileNames: chunks,
+            },
+          },
+        },
+      });
+    },
+  };
+}
+
+const DIFF_LANGUAGES = '\0diff-languages';
+
+const NO_WASM = '\0diff-no-wasm';
+
+/** Trims @pierre/diffs' lazy Shiki imports to what the diff page loads: LANGUAGES' grammars, and no wasm engine. */
+function diffHighlighterPlugin(): Plugin {
+  let catalogImporter = '';
+
+  return {
+    name: 'diff-highlighter',
+    // Ahead of vite:resolve, which would resolve the full catalogs first.
+    enforce: 'pre',
+    resolveId: {
+      filter: { id: /^shiki\/(langs|wasm)$/ },
+      handler: (id, importer) => {
+        if (!importer?.includes('/@pierre/diffs/')) return null;
+
+        if (id === 'shiki/wasm') return NO_WASM;
+        catalogImporter = importer;
+
+        return DIFF_LANGUAGES;
+      },
+    },
+    load: {
+      filter: { id: /^\0diff-(languages|no-wasm)$/ },
+      async handler(id) {
+        if (id === NO_WASM)
+          return `throw new Error('The diff page highlights with the JavaScript regex engine.');\n`;
+
+        const loaders = await Promise.all(
+          LANGUAGES.map(async (lang) => {
+            const resolved = await this.resolve(
+              `shiki/langs/${lang}.mjs`,
+              catalogImporter,
+            );
+
+            if (!resolved) this.error(`no shiki grammar for ${lang}`);
+
+            return `  ${JSON.stringify(lang)}: () => import(${JSON.stringify(resolved.id)}),`;
+          }),
+        );
+
+        return `export const bundledLanguages = {\n${loaders.join('\n')}\n};\n`;
+      },
+    },
+  };
+}
+
 export default defineConfig({
   plugins: [
     ...llmsPlugins(),
     chunkBudgetPlugin(),
     releasePagesStylesheetPlugin(),
+    releaseDiffScriptPlugin(),
     serverRouterPlugin(router, {
       shellPath: (mount) => SHELL_PATHS.get(mount) ?? mount,
       // Dev parity with the worker's mount-owned 404: serve the mount's

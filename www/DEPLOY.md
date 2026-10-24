@@ -382,9 +382,33 @@ The worker renders `/releases/` and the pages under it from the
 urls GitHub lacks, such as `/gh/releases/<pkg>/latest`, a redirect to that
 package's latest GitHub release. The route tables are
 [`worker/releases/routes.ts`](lit-ui-router.dev/worker/releases/routes.ts).
-Preview uploads bind the production ledger the same way. Locally the binding
-reaches only a ledger running in another dev process, and the pages answer 503
-without one. To serve fixture rows, pass both configs, the docs worker's first:
+`/releases/<pkg>/diff/<from>...<to>/` is a shell the worker validates against
+the ledger; its one script, `/release-diff.js`, renders the patch `npm diff`
+would print beside a
+[`@pierre/trees`](https://www.npmjs.com/package/@pierre/trees)
+file tree. Presets narrow both to source, published JS, types or all files;
+`?files=js|types|all` names any but the default, source (their labels and url
+handling live in
+[`worker/releases/npm-diff/file-filter.ts`](lit-ui-router.dev/worker/releases/npm-diff/file-filter.ts)).
+The docs build
+emits that script from
+[`worker/releases/release-diff.ts`](lit-ui-router.dev/worker/releases/release-diff.ts)
+in a Vite build of its own (`.vitepress/vite.config.ts`).
+
+The browser never fetches a tarball. The script reads the page's data routes,
+`index.json`, `files/<preset>` and `patch`, which the worker answers only for a
+pair the ledger validates. Each calls the method of the same name on the
+`RELEASE_DIFFS` service binding, the
+[release-diffs worker](release-diffs.lit-ui-router.dev/README.md)'s default
+entrypoint, which builds a pair once and keeps it in R2. The index lists the
+presets each file belongs to. The answers are immutable, so the Cache API keeps
+them without refreshing (`cacheKey` in `worker/releases/states.ts`). A failed
+call answers 503 and is never cached.
+
+Preview uploads bind the production ledger and release-diffs workers the same
+way. Locally the bindings reach only workers running in another dev process,
+and the pages answer 503 without one. To serve fixture rows, pass both configs,
+the docs worker's first; the diff pages' data routes still answer 503:
 
 ```bash
 pnpm --filter @www/lit-ui-router.dev wrangler:dev -c wrangler.jsonc -c worker/test/ledger-stub/wrangler.jsonc

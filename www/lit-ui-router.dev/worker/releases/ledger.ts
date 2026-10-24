@@ -65,6 +65,12 @@ export interface VersionPair<Row> {
   to: Row | undefined;
 }
 
+/** Two versions the ledger records as published to npm, older or newer first. */
+export interface PublishedPair {
+  from: LedgerVersion;
+  to: LedgerVersion;
+}
+
 /** The pair a diff picker starts on: the newest stable version, or the newest, and the version before it, or the oldest. */
 export const pickerPair = <Row extends { version: string }>(
   versions: readonly Row[],
