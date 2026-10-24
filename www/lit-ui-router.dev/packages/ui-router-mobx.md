@@ -63,6 +63,29 @@ To manage a store yourself, call
 `new RouterStore()`. It returns the hook's deregistration function, and it
 throws if the store already mirrors a different router.
 
+## Typed stores
+
+[`RouteTypes`](/api/ui-router-mobx/interfaces/RouteTypes) is empty, and the
+store's `current` is a `StateDeclaration`, its `params` are `RawParams`,
+and `includes` takes any `StateOrName`. Filling it in by module augmentation
+types the store:
+
+- `snapshot`: a route snapshot type. Its `current` and `params` type the
+  store's fields, and its `includes` parameter types the targets
+  `includes` takes, such as globs and state objects.
+- `snapshots`: keyed by state name, the snapshot narrowed to that state's
+  subtree. `includes(name)` with one of its names is a type predicate that
+  narrows the store's `current` and `params`.
+
+```ts
+declare module 'ui-router-mobx' {
+  interface RouteTypes {
+    snapshot: AppRouteSnapshot;
+    snapshots: { 'contacts.contact': ContactSnapshot };
+  }
+}
+```
+
 ## Further reading
 
 - [API reference](/api/ui-router-mobx/)
