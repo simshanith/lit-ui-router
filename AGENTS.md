@@ -88,7 +88,7 @@ This file is an index. The details live in [docs/CONTRIBUTING.md](docs/CONTRIBUT
 
 - Published `.d.ts` must stay valid under TypeScript 5.0 ([CONTRIBUTING: TypeScript authoring](docs/CONTRIBUTING.md#typescript-authoring)).
 - `@tools/oxc-emit` owns the JS and declaration passes. Declaration emit is syntactic: derive exported types from `as const` data, never from objects of imported values.
-- TypeScript 7 has no JS API. Members that import the compiler (typedoc, vite-plugin-checker, cypress) use the `typescript6-compat` catalog.
+- TypeScript 7 has no classic compiler API; its `typescript/sync` API is a different surface. Members that import the classic API (typedoc, vite-plugin-checker, cypress) use the `typescript6-compat` catalog.
 - TypeScript 6+ defaults `types` to `[]`; list ambient types explicitly in new tsconfigs.
 - Settle an entry's public exports before its first publish; prefer named re-exports over `export *`.
 
