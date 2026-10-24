@@ -126,6 +126,8 @@ export function elements(root: Element): void {
   const uiRouter: UIRouterLitElement = new UIRouterLitElement();
   const uiView: UiView = new UiView();
   root.append(uiRouter, uiView);
+  const routed: Element | null = uiView.routedElement;
+  void routed;
   root.addEventListener('ui-router-context', (event) => {
     // SAFETY: lit-ui-router dispatches ui-router-context only as UiRouterContextEvent
     const contextEvent = event as UiRouterContextEvent;

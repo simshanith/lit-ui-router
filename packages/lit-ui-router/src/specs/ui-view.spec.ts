@@ -157,6 +157,60 @@ class TestStickyComponent extends CountedElement {
   }
 }
 
+/** Nests its view in a shadow root, where light-DOM containment cannot see it. */
+@customElement('test-shadow-shell')
+class TestShadowShell extends LitElement {
+  render() {
+    return html`<ui-view></ui-view>`;
+  }
+}
+
+/** What the document held when an outgoing leaf left it; reassigned per test. */
+let onLeafLeaving: (leaving: Element) => void;
+
+@customElement('test-swap-from')
+class TestSwapFrom extends CountedElement {
+  static tag = 'test-swap-from';
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    onLeafLeaving(this);
+  }
+  render() {
+    return html`<div class="from">From</div>`;
+  }
+}
+
+/** Declines its updates while set, so its first update waits on the spec. */
+let swapToHeld = false;
+
+@customElement('test-swap-to')
+class TestSwapTo extends CountedElement {
+  static tag = 'test-swap-to';
+  protected shouldUpdate(): boolean {
+    return !swapToHeld;
+  }
+  render() {
+    return html`<div class="to">To</div>`;
+  }
+}
+
+/** Holds `updateComplete` open past its first update until the spec releases it. */
+let slowGate: Promise<void> = Promise.resolve();
+
+@customElement('test-swap-slow')
+class TestSwapSlow extends CountedElement {
+  static tag = 'test-swap-slow';
+  protected async getUpdateComplete(): Promise<boolean> {
+    const complete = await super.getUpdateComplete();
+    await slowGate;
+
+    return complete;
+  }
+  render() {
+    return html`<div class="slow">Slow</div>`;
+  }
+}
+
 @customElement('test-params-receive-component')
 class TestParamsReceiveComponent
   extends LitElement
@@ -211,6 +265,10 @@ declare global {
     'test-retained-leaf': TestRetainedLeaf;
     'test-retained-other': TestRetainedOther;
     'test-sticky-component': TestStickyComponent;
+    'test-shadow-shell': TestShadowShell;
+    'test-swap-from': TestSwapFrom;
+    'test-swap-to': TestSwapTo;
+    'test-swap-slow': TestSwapSlow;
   }
 }
 
@@ -226,6 +284,12 @@ describe('UiView', () => {
     paramsChanged = () => {};
 
     receiveParams = () => {};
+
+    onLeafLeaving = () => {};
+
+    swapToHeld = false;
+
+    slowGate = Promise.resolve();
 
     resetCounts();
   });
@@ -368,7 +432,7 @@ describe('UiView', () => {
       await waitForUpdate(uiView);
 
       expect(uiView).toEqualDom(
-        '<ui-view><div class="home-content">Home Content</div></ui-view>',
+        '<ui-view><div class="home-content" routed="">Home Content</div></ui-view>',
       );
     });
 
@@ -578,13 +642,13 @@ describe('UiView', () => {
       await routerGo(router, 'home');
       await waitForUpdate(uiView);
       expect(uiView).toEqualDom(
-        '<ui-view><div class="home">Home</div></ui-view>',
+        '<ui-view><div class="home" routed="">Home</div></ui-view>',
       );
 
       await routerGo(router, 'about');
       await waitForUpdate(uiView);
       expect(uiView).toEqualDom(
-        '<ui-view><div class="about">About</div></ui-view>',
+        '<ui-view><div class="about" routed="">About</div></ui-view>',
       );
     });
   });
@@ -612,10 +676,10 @@ describe('UiView', () => {
 
       expect(uiView).toMatchInlineSnapshot(`
         <ui-view>
-          <div class="parent">
+          <div class="parent" routed="">
             Parent
             <ui-view>
-              <div class="child">
+              <div class="child" routed="">
                 Child
               </div>
             </ui-view>
@@ -869,7 +933,8 @@ describe('UiView', () => {
       { name: 'blank', url: '/blank' },
     ];
 
-    const homeView = '<ui-view><div class="home">Home</div></ui-view>';
+    const homeView =
+      '<ui-view><div class="home" routed="">Home</div></ui-view>';
 
     it('should keep rendering its state after its router is re-attached', async () => {
       const { uiRouter, uiView } = await setupRouter(reconnectStates);
@@ -888,7 +953,7 @@ describe('UiView', () => {
       await routerGo(router, 'about');
       await waitForUpdate(uiView);
       expect(uiView).toEqualDom(
-        '<ui-view><div class="about">About</div></ui-view>',
+        '<ui-view><div class="about" routed="">About</div></ui-view>',
       );
     });
 
@@ -1167,7 +1232,7 @@ describe('UiView', () => {
       expect(leaf._uiViewProps?.router).toBe(router);
       expect(leaf.starId).toBe('rigel');
       expect(leaf).toEqualDom(
-        '<test-retained-leaf><div class="leaf">rigel</div></test-retained-leaf>',
+        '<test-retained-leaf routed=""><div class="leaf">rigel</div></test-retained-leaf>',
       );
       expect(leaf.propsSeen.length).toBeGreaterThan(1);
     });
@@ -1237,6 +1302,219 @@ describe('UiView', () => {
 
       expect(uiView.firstElementChild).toBe(first);
       expect(countsFor('test-sticky-component').constructed).toBe(1);
+    });
+  });
+
+  describe('routedElement', () => {
+    const routedStates: LitStateDeclaration[] = [
+      {
+        name: 'template',
+        url: '/template',
+        component: () =>
+          html`<p class="first">First</p>
+            <p>Second</p>`,
+      },
+      { name: 'from', url: '/from', component: TestSwapFrom },
+      { name: 'to', url: '/to', component: TestSwapTo },
+      { name: 'blank', url: '/blank' },
+    ];
+
+    it('should be null while the fallback set shows', async () => {
+      const { uiView } = await setupRouter(routedStates);
+
+      await routerGo(router, 'blank');
+
+      expect(uiView.routedElement).toBeNull();
+      expect(uiView.querySelector('[routed]')).toBeNull();
+    });
+
+    it('should be a template component’s first element, marked routed', async () => {
+      const { uiView } = await setupRouter(routedStates);
+
+      await routerGo(router, 'template');
+
+      const first = uiView.querySelector('.first');
+      expect(uiView.routedElement).toBe(first);
+      expect(uiView.querySelectorAll('[routed]')).toEqual(
+        uiView.querySelectorAll('.first'),
+      );
+    });
+
+    it('should be the incoming class element while the outgoing one stands', async () => {
+      const { uiView } = await setupRouter(routedStates);
+      await routerGo(router, 'from');
+      const from = uiView.routedElement;
+      expect(from?.hasAttribute('routed')).toBe(true);
+      swapToHeld = true;
+
+      await routerGo(router, 'to');
+
+      expect(uiView.routedElement).toBeInstanceOf(TestSwapTo);
+      expect(uiView.routedElement?.hasAttribute('routed')).toBe(true);
+      expect(from?.isConnected).toBe(true);
+      expect(from?.hasAttribute('routed')).toBe(false);
+    });
+
+    it('should move the mark off a class element when the fallback returns', async () => {
+      const { uiView } = await setupRouter(routedStates);
+      await routerGo(router, 'from');
+      const from = uiView.routedElement;
+
+      await routerGo(router, 'blank');
+
+      expect(uiView.routedElement).toBeNull();
+      expect(from?.hasAttribute('routed')).toBe(false);
+    });
+  });
+
+  // https://github.com/simshanith/lit-ui-router/issues/757
+  describe('swapping a changed element', () => {
+    const swapStates: LitStateDeclaration[] = [
+      { name: 'from', url: '/from', component: TestSwapFrom },
+      { name: 'to', url: '/to', component: TestSwapTo },
+      { name: 'other', url: '/other', component: TestRetainedOther },
+      { name: 'slow', url: '/slow', component: TestSwapSlow },
+    ];
+
+    it('should keep the outgoing element until the incoming one has rendered', async () => {
+      const { uiView } = await setupRouter(swapStates);
+      await routerGo(router, 'from');
+
+      let incoming: { standing?: boolean; rendered?: boolean } | undefined;
+      onLeafLeaving = () => {
+        const to = uiView.querySelector('test-swap-to');
+        incoming = { standing: to?.isConnected, rendered: to?.hasUpdated };
+      };
+
+      await routerGo(router, 'to');
+
+      expect(incoming).toEqual({ standing: true, rendered: true });
+      expect(uiView).toEqualDom(
+        '<ui-view><test-swap-to routed=""><div class="to">To</div></test-swap-to></ui-view>',
+      );
+      // Inserted once, never moved: the incoming element is not reconnected.
+      expect(countsFor('test-swap-to').connected).toBe(1);
+      expect(countsFor('test-swap-from').disconnected).toBe(1);
+    });
+
+    it('should hold the outgoing element until the incoming one’s first update', async () => {
+      const { uiView } = await setupRouter(swapStates);
+      await routerGo(router, 'from');
+      const from = uiView.routedElement;
+      swapToHeld = true;
+
+      await routerGo(router, 'to');
+
+      // SAFETY: the 'to' state renders a TestSwapTo
+      const to = uiView.routedElement as TestSwapTo;
+      expect(to).toBeInstanceOf(TestSwapTo);
+      expect(from?.isConnected).toBe(true);
+      expect(uiView.children).toHaveLength(2);
+
+      swapToHeld = false;
+      to.requestUpdate();
+      await tick();
+
+      expect(from?.isConnected).toBe(false);
+      expect(uiView.children).toHaveLength(1);
+      expect(uiView.routedElement).toBe(to);
+    });
+
+    it('should not wait out an updateComplete that outlasts the first update', async () => {
+      const { uiView } = await setupRouter(swapStates);
+      await routerGo(router, 'from');
+      const from = uiView.routedElement;
+      const gate = defer();
+      slowGate = gate.promise;
+
+      await routerGo(router, 'slow');
+
+      expect(from?.isConnected).toBe(false);
+      expect(uiView.children).toHaveLength(1);
+      expect(uiView.routedElement).toBeInstanceOf(TestSwapSlow);
+      gate.resolve();
+    });
+
+    it('should keep the rendered element when an unrendered incoming one is superseded', async () => {
+      const { uiView } = await setupRouter(swapStates);
+      await routerGo(router, 'from');
+      swapToHeld = true;
+
+      let next: { rendered?: boolean } | undefined;
+      onLeafLeaving = () => {
+        next = {
+          rendered: uiView.querySelector('test-retained-other')?.hasUpdated,
+        };
+      };
+
+      await routerGo(router, 'to');
+      await routerGo(router, 'other');
+
+      // The unrendered `to` gave way; `from` stood until `other` had rendered.
+      expect(next).toEqual({ rendered: true });
+      expect(uiView.children).toHaveLength(1);
+      expect(uiView.routedElement).toBeInstanceOf(TestRetainedOther);
+      expect(countsFor('test-swap-from').disconnected).toBe(1);
+      expect(countsFor('test-swap-to').disconnected).toBe(1);
+    });
+
+    it('should have retired the outgoing element by the view’s next updateComplete', async () => {
+      const { uiView } = await setupRouter(swapStates);
+      await routerGo(router, 'from');
+      const from = uiView.routedElement;
+      swapToHeld = true;
+      await routerGo(router, 'to');
+      // SAFETY: the 'to' state renders a TestSwapTo
+      const to = uiView.routedElement as TestSwapTo;
+
+      swapToHeld = false;
+      to.requestUpdate();
+      await to.updateComplete;
+      await uiView.updateComplete;
+
+      expect(from?.isConnected).toBe(false);
+      expect(uiView.children).toHaveLength(1);
+    });
+
+    it.each([
+      ['light DOM', TestRetainedShell],
+      ['a shadow root', TestShadowShell],
+    ])(
+      'should not route into the outgoing element’s nested views in %s',
+      async (_, shell) => {
+        const { uiView } = await setupRouter([
+          { name: 'galaxy', url: '/galaxy/:id', component: shell },
+          { name: 'galaxy.star', url: '/star', component: TestRetainedLeaf },
+        ]);
+
+        await routerGo(router, 'galaxy.star', { id: 'milky-way' });
+
+        await routerGo(router, 'galaxy.star', { id: 'andromeda' });
+
+        expect(uiView.children).toHaveLength(1);
+        expect(countsFor('test-retained-leaf').constructed).toBe(2);
+        expect(countsFor('test-retained-leaf').connected).toBe(2);
+      },
+    );
+
+    it('should swap straight to a template component', async () => {
+      const { uiView } = await setupRouter([
+        ...swapStates,
+        {
+          name: 'template',
+          url: '/template',
+          component: () => html`<p class="template">Template</p>`,
+        },
+      ]);
+
+      await routerGo(router, 'from');
+
+      await routerGo(router, 'template');
+
+      expect(uiView).toEqualDom(
+        '<ui-view><p class="template" routed="">Template</p></ui-view>',
+      );
+      expect(countsFor('test-swap-from').disconnected).toBe(1);
     });
   });
 

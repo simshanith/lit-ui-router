@@ -1,4 +1,5 @@
 import { html, LitElement } from 'lit';
+import type { TemplateResult } from 'lit';
 
 import type {
   DefaultResolvesType,
@@ -6,6 +7,18 @@ import type {
   RoutedLitTemplate,
   UIViewInjectedProps,
 } from './interface.js';
+
+/** The element each renderer result carries, for `<ui-view>` to place itself. */
+const carried = new WeakMap<TemplateResult, Element>();
+
+/**
+ * The routed element a {@link routedLitElementRenderer} result carries, if
+ * `result` is one.
+ *
+ * @internal
+ */
+export const routedElementOf = (result: TemplateResult): Element | undefined =>
+  carried.get(result);
 
 /**
  * Whether a view's `component` is a {@link RoutedLitElement} class rather than
@@ -47,7 +60,9 @@ export function routedLitElementRenderer<
   return (props: UIViewInjectedProps<T>) => {
     element ??= new Component(props);
     element._uiViewProps = props;
+    const result = html`${element}`;
+    carried.set(result, element);
 
-    return html`${element}`;
+    return result;
   };
 }
