@@ -23,6 +23,7 @@ on:
       - 'lit-ui-router-signals@*'
       - 'ui-router-effect@*'
       - 'ui-router-mobx@*'
+      - 'ui-router-registry@*'
   workflow_dispatch:
     inputs:
       package:
@@ -41,6 +42,7 @@ on:
           - lit-ui-router-signals
           - ui-router-effect
           - ui-router-mobx
+          - ui-router-registry
       dryRun:
         description: 'Dry run: log the publish/release/attestation release-it would perform without doing it'
         required: false

@@ -85,7 +85,10 @@ declare const unchecked: unique symbol;
  * Its params are loose. Nothing is unsafe at runtime; the target is just
  * unverified.
  */
-export type UncheckedRef = string & { readonly [unchecked]: true };
+export type UncheckedRef = string & {
+  /** The brand that only a cast supplies. */
+  readonly [unchecked]: true;
+};
 
 /** A glob that `includes` accepts as well as a state name. */
 export type StateGlob = StateName | `${StateName}.*` | `${StateName}.**`;
@@ -319,42 +322,50 @@ export interface TypedStateService extends Omit<
   StateService,
   'go' | 'transitionTo' | 'target' | 'href' | 'is' | 'includes'
 > {
+  /** `StateService.go`, with a registered name's params required as declared. */
   go<T extends StateName | LooseTarget>(
     to: T & CheckRelative<T>,
     ...args: TargetArgs<T, TransitionOptions>
   ): TransitionPromise;
 
+  /** `StateService.transitionTo`, typed as for `go`. */
   transitionTo<T extends StateName | LooseTarget>(
     to: T & CheckRelative<T>,
     ...args: TargetArgs<T, TransitionOptions>
   ): TransitionPromise;
 
+  /** `StateService.target`, typed as for `go`. */
   target<T extends StateName | LooseTarget>(
     identifier: T & CheckRelative<T>,
     ...args: TargetArgs<T, TransitionOptions>
   ): TargetState;
 
+  /** `StateService.href`, typed as for `go`. */
   href<T extends StateName | LooseTarget>(
     stateOrName: T & CheckRelative<T>,
     ...args: TargetArgs<T, HrefOptions>
   ): string;
 
+  /** `StateService.is`, over registered names and their params. */
   is<N extends StateName>(
     stateOrName: N,
     params?: Partial<ParamsOf<N>>,
     options?: { relative?: StateDeclaration | StateObject | StateName },
   ): boolean;
+  /** `StateService.is` for an {@link UncheckedRef} or an object target, with loose params. */
   is(
     stateOrName: UncheckedRef | StateDeclaration | StateObject,
     params?: RawParams,
     options?: { relative?: StateDeclaration | StateObject | StateName },
   ): boolean;
 
+  /** `StateService.includes`, over registered names, globs and their params. */
   includes<N extends StateName>(
     stateOrName: N | StateGlob,
     params?: Partial<ParamsOf<N>>,
     options?: TransitionOptions,
   ): boolean;
+  /** `StateService.includes` for an {@link UncheckedRef} or an object target, with loose params. */
   includes(
     stateOrName: UncheckedRef | StateDeclaration | StateObject,
     params?: RawParams,
@@ -377,7 +388,12 @@ interface SnapshotBase {
 }
 
 type SnapshotFor<N extends StateName> = SnapshotBase & {
-  readonly current: StateDeclaration & { readonly name: N };
+  /** The active state's declaration. */
+  readonly current: StateDeclaration & {
+    /** The active state's name. */
+    readonly name: N;
+  };
+  /** The active state's params, its ancestors' included. */
   readonly params: Readonly<ResolvedParamsOf<N>>;
 };
 
@@ -388,13 +404,20 @@ type SnapshotFor<N extends StateName> = SnapshotBase & {
  */
 export type TypedRouteSnapshot = IsRegistered extends true
   ? SnapshotBase & {
+      /** The active state's declaration, if a transition has succeeded. */
       readonly current:
-        | (StateDeclaration & { readonly name: StateName })
+        | (StateDeclaration & {
+            /** The active state's name. */
+            readonly name: StateName;
+          })
         | undefined;
+      /** No params until `includes(name)` narrows the snapshot. */
       readonly params: Readonly<Record<never, never>>;
     }
   : SnapshotBase & {
+      /** The active state's declaration, if a transition has succeeded. */
       readonly current: StateDeclaration | undefined;
+      /** The active state's params. */
       readonly params: RawParams;
     };
 

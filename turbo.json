@@ -228,6 +228,7 @@
         "ui-router-effect#build:types",
         "ui-router-mobx#build:types",
         "ui-router-navigation-location-plugin#build:types",
+        "ui-router-registry#build:types",
         "ui-router-server#build:types",
         "ui-router-signals#build:types"
       ],
