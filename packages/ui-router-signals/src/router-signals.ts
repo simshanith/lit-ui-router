@@ -8,6 +8,8 @@ import {
 } from '@uirouter/core';
 import { snapshotRoute, type RouteSnapshot } from '@repo/route-snapshot';
 
+import type { TypedRouteSnapshot } from './route-types.js';
+
 const detached: RouteSnapshot = {
   current: undefined,
   params: {},
@@ -33,9 +35,12 @@ const detached: RouteSnapshot = {
 export class RouterSignals {
   private readonly state = new Signal.State<RouteSnapshot>(detached);
 
-  /** The whole route as one value, replaced per transition. */
-  readonly route: Signal.Computed<RouteSnapshot> = new Signal.Computed(() =>
-    this.state.get(),
+  /**
+   * The whole route as one value, replaced per transition. Typed by
+   * {@link RouteTypes} when a registry fills it in.
+   */
+  readonly route: Signal.Computed<TypedRouteSnapshot> = new Signal.Computed(
+    () => this.state.get(),
   );
 
   /** The current state declaration (`globals.current`). */

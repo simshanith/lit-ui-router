@@ -49,7 +49,7 @@
     "typecheck:lit2": "lit2-compat-guard && tsc -p tsconfig.lit2-compat.json --noEmit",
     "typecheck:peer-floor": "floor-guard && floor-types-guard tsconfig.peer-floor.json && tsc -p tsconfig.peer-floor.json --noEmit",
     "typecheck:src": "tsc -p tsconfig.src.json --noEmit",
-    "typecheck:tsc": "tsc -p tsconfig.json --noEmit"
+    "typecheck:tsc": "tsc -p tsconfig.json --noEmit && tsc -p test-d/tsconfig.json --noEmit"
   },
   "devDependencies": {
     "@release-it/conventional-changelog": "catalog:",
