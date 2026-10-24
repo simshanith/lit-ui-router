@@ -17,7 +17,7 @@ state names and params of a `@uirouter/core` router from the app's own
 ## Installation
 
 ```bash
-npm install --save-dev ui-router-registry@rc
+npm install --save-dev ui-router-registry
 ```
 
 `@uirouter/core` is a peer dependency, for its types only. Install one copy of

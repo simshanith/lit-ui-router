@@ -5,7 +5,7 @@ Typed state names and params for [UI-Router](https://ui-router.github.io): a typ
 ## Installation
 
 ```bash
-npm install --save-dev ui-router-registry@rc
+npm install --save-dev ui-router-registry
 ```
 
 ## Features
