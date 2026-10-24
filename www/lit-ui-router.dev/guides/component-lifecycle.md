@@ -97,49 +97,34 @@ swaps in the new component in a Lit update scheduled after that. Code that
 needs the new DOM — a View Transition, a scroll restore, a focus move, a
 measurement — and reads it on the promise alone finds the outgoing view.
 
-`<ui-view>` is a `LitElement`, so its `updateComplete` is the promise for the
-update that does the swap. Await `transition.promise`, then `updateComplete` on
-every `<ui-view>` (nested views each swap in their own update), then on each
-view's [`routedElement`](./routed-components#the-routed-element), whose own
-update lands one step later. When a class component replaced another, the
-routed element's first update has the view drop the outgoing element in one
-more view update, so await the views once more.
-
-Do not wait for a frame instead. `requestAnimationFrame` does not fire while a
-View Transition snapshot is held, so a release that waits a frame hangs until
-the browser's own timeout ends the transition.
+[`viewRendered(router, transition)`](/api/reference/core/viewRendered)
+resolves once the views have rendered the transition: every `<ui-view>` the
+router knows (nested views each swap in their own update), then each view's
+[`routedElement`](./routed-components#the-routed-element), whose own update
+lands one step later, then the view update that drops an element the routed
+one replaced. It waits on `updateComplete`, never on a frame:
+`requestAnimationFrame` does not fire while a View Transition snapshot is held,
+so a release that waits a frame hangs until the browser's own timeout ends the
+transition.
 
 ```ts
-import type { ReactiveElement } from 'lit';
-import type { UiView } from 'lit-ui-router';
-
-const settle = (elements: (Element | null)[]) =>
-  Promise.all(
-    elements.map(
-      (element) => (element as ReactiveElement | null)?.updateComplete,
-    ),
-  );
-
-async function viewRendered(): Promise<void> {
-  await Promise.resolve(); // lets the swap's update queue
-  const views = [...document.querySelectorAll<UiView>('ui-view')];
-  await settle(views);
-  await settle(views.map((view) => view.routedElement));
-  await settle(views); // drops an element the routed one replaced
-}
+import { viewRendered } from 'lit-ui-router';
 
 router.transitionService.onStart({}, (trans) => {
   if (!document.startViewTransition) return;
   let captured!: () => void;
   const oldViewCaptured = new Promise<void>((resolve) => (captured = resolve));
-  document.startViewTransition(async () => {
+  document.startViewTransition(() => {
     captured();
-    await trans.promise;
-    await viewRendered();
+    return viewRendered(router, trans);
   });
   return oldViewCaptured; // the transition waits for the old snapshot
 });
 ```
+
+Without a transition, `viewRendered(router)` waits on the last successful one.
+A transition that fails renders nothing of its own, so the promise still
+resolves once the views settle; `trans.promise` carries the outcome.
 
 ## Where these fit among the other hooks
 

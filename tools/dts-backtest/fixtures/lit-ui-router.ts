@@ -19,6 +19,7 @@ import {
   uiSref,
   uiSrefActive,
   uiSrefTargetEvent,
+  viewRendered,
   type LitStateDeclaration,
   type RoutedLitTemplate,
   type SrefStatus,
@@ -136,6 +137,10 @@ export function elements(root: Element): void {
   root.dispatchEvent(
     uiSrefTargetEvent(setupRouter().stateService.target('home')),
   );
+}
+
+export async function afterRender(transition?: Transition): Promise<void> {
+  await viewRendered(setupRouter(), transition);
 }
 
 export function merge(a: SrefStatus, b: SrefStatus): SrefStatus {

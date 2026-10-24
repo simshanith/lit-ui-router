@@ -47,6 +47,7 @@ import {
   parentUiViewContext,
 } from './context.js';
 import { RouterSubscribers, subscribeRouter } from './router-subscription.js';
+import { setViewHost } from './view-rendered.js';
 
 /** @internal */
 let viewIdCounter = 0;
@@ -622,6 +623,7 @@ export class UiView extends LitElement {
 
     // SAFETY: ui-router calls `configUpdated` with a config before anything reads `config`
     this._uiViewData = registration as ActiveUIView;
+    setViewHost(this._uiViewData, this);
 
     if (!router) {
       return;
