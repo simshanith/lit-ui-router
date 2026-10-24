@@ -536,6 +536,7 @@ overrides:
   '@api-viewer/common>lit': ^3.3.3
   '@api-viewer/docs>lit': ^3.3.3
   '@cloudflare/config>zod': ^4.6.7
+  '@codecov/bundler-plugin-core>zod': ^4.6.7
   brace-expansion@>=5 <5.0.9: ^5.0.9
   d3-color@<3.1.0: ^3.1.0
   dompurify@<3.4.13: ^3.4.13
@@ -549,9 +550,9 @@ overrides:
   postcss@<8.5.26: ^8.5.26
   qs@<6.16.0: ^6.16.0
   tar@<7.5.22: ^7.5.22
-  undici@>=6 <6.28.1: ^6.28.1
-  undici@>=7 <7.29.1: ^7.29.1
-  undici@>=8 <8.10.2: ^8.10.2
+  undici@>=6 <6.29.1: ^6.29.1
+  undici@>=7 <7.30.1: ^7.30.1
+  undici@>=8 <8.12.2: ^8.12.2
   wrangler>esbuild: 0.28.2
 
 packageExtensionsChecksum: sha256-8F/PUxRGPfzeR7JNosA48W0ZCgKrtYLtVZi24XY7zcw=
@@ -8640,8 +8641,8 @@ packages:
     resolution: {integrity: sha512-EvRlUt/QqAEvXdQeRMYUfwOQsfzpDztykrG2owGEE/rBOBoYv9uF39ZzsNDh4lTFHhTr2XOZjKkYgueD12ZmGA==}
     engines: {node: '>=18.17'}
 
-  undici@7.29.1:
-    resolution: {integrity: sha512-RYONW2MeafgYlkVOKYKkA/Ag7BmXqgIWCa8t1m0JcxrQg9pI9lEqRhAOruOBCbAohOa/gkCF+iPi9hrgvTzu6Q==}
+  undici@7.30.1:
+    resolution: {integrity: sha512-03KrMbjIFDWQR5RNPrSw3bd1r12JpyFQl9/yxjUbJtqkjmllqC5lFjZh6ujeuJCKr8EOQvRW872Oy/az+nLYxg==}
     engines: {node: '>=20.18.1'}
 
   undici@8.12.3:
@@ -9085,9 +9086,6 @@ packages:
   youch@4.1.0-beta.10:
     resolution: {integrity: sha512-rLfVLB4FgQneDr0dv1oddCVZmKjcJ6yX6mS4pU82Mq/Dt9a3cLZQ62pDBL4AUO+uVrCvtWz3ZFUL2HFAFJ/BXQ==}
 
-  zod@3.25.76:
-    resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
-
   zod@4.6.7:
     resolution: {integrity: sha512-g8W2D2kU6a8untc053fX1uVBKzM7yqAxW/3zwk83+6RyF2+SKOuV+c0wBDhUwzV1PaGapmZH+rmcUzPf+3CGwg==}
 
@@ -9267,7 +9265,7 @@ snapshots:
       chalk: 4.1.2
       semver: 7.8.5
       unplugin: 1.16.1
-      zod: 3.25.76
+      zod: 4.6.7
 
   '@commitlint/cli@21.2.4(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.2)(typescript@7.0.2)':
     dependencies:
@@ -13483,7 +13481,7 @@ snapshots:
     dependencies:
       '@cspotcode/source-map-support': 0.8.1
       sharp: 0.35.5(@types/node@24.19.2)
-      undici: 7.29.1
+      undici: 7.30.1
       workerd: 1.20261019.1
       ws: 8.21.0
       youch: 4.1.0-beta.10
@@ -14194,7 +14192,7 @@ snapshots:
       os-name: 7.0.1
       proxy-agent: 8.0.2(supports-color@10.2.2)
       tinyglobby: 0.2.17
-      undici: 7.29.1
+      undici: 7.30.1
       url-join: 5.0.0
       verkit: 0.5.0
       wildcard-match: 5.1.6
@@ -14767,7 +14765,7 @@ snapshots:
 
   undici@6.29.1: {}
 
-  undici@7.29.1: {}
+  undici@7.30.1: {}
 
   undici@8.12.3: {}
 
@@ -15170,8 +15168,6 @@ snapshots:
       '@speed-highlight/core': 1.2.17
       cookie: 1.1.1
       youch-core: 0.3.3
-
-  zod@3.25.76: {}
 
   zod@4.6.7: {}
 
