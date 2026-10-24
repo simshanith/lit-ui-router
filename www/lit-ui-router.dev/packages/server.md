@@ -395,8 +395,8 @@ for (const path of ['/', '/sheet/7B']) {
 It rejects rather than hangs: on a url no rule matches, on a failed
 transition, and past its
 [`timeout`](/api/ui-router-server/ssr/interfaces/SettleOptions). The entry
-imports `@uirouter/core` and nothing else, so it runs under any renderer and
-in a browser bundle. [`lit-ui-router-ssr`](/packages/ssr) builds its
+imports `@uirouter/core` and no renderer, so it runs under any renderer.
+[`lit-ui-router-ssr`](/packages/ssr) builds its
 prerender on the same step.
 
 ## What the server can't see

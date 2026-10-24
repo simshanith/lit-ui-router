@@ -228,9 +228,7 @@
         "hono",
         "lit",
         "lit-ui-router",
-        "vite",
-        "node:fs",
-        "node:path"
+        "vite"
       ]
     },
     "./url-config": {
