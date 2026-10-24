@@ -125,8 +125,13 @@ void stateService.go('.contcat');
 // @ts-expect-error a relative tail that ends no registered name
 stateService.href('^.edti');
 
-// @ts-expect-error a relative ref needs a tail or an ancestor step
-accepts<RelativeRef>('.');
+// a bare `.` is the base state, as `go('.', params)` uses it
+void stateService.go('.', { anything: 1 }, { location: 'replace' });
+
+accepts<string>(stateService.href('.', { anything: 1 }));
+
+// @ts-expect-error a relative ref ends in a name, not a dot
+accepts<RelativeRef>('..');
 
 // -- widened and unchecked targets --------------------------------------------
 

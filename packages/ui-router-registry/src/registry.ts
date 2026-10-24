@@ -71,10 +71,11 @@ type Up = '^' | '^.^' | '^.^.^';
 /**
  * A relative state reference, resolved against `options.relative` or the
  * uiSref's context. Its base isn't known statically, so once an app registers
- * only its tail is checked: it must end some registered name. Params stay loose.
+ * only its tail is checked: it must end some registered name. A bare `.` is the
+ * base state itself. Params stay loose.
  */
 export type RelativeRef = IsRegistered extends true
-  ? Up | `.${RelativeTail}` | `${Up}.${RelativeTail}`
+  ? '.' | Up | `.${RelativeTail}` | `${Up}.${RelativeTail}`
   : `.${string}` | `^${string}`;
 
 declare const unchecked: unique symbol;
