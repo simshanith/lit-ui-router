@@ -141,6 +141,14 @@ run = "node src/checks/workers-builds-check-runs.ts"
 description = "Create the altitude-atlas Pages deploy check run (deploy signal, non-gating)"
 run = "node src/checks/pages-deploy-check-runs.ts"
 
+[tasks.ledger_check_runs]
+# env: GH_TOKEN, GITHUB_REPOSITORY, ACTIONS_ID_TOKEN_REQUEST_* (id-token: write).
+description = "Create the release-ledger reconcile check run (ledger vs GitHub and npm, non-gating)"
+usage = '''
+flag "--release <release>" help="<name>@<version> to digest-check against npm; empty skips the digest check" env="RELEASE"
+'''
+run = 'RELEASE="${usage_release:-}" node src/checks/ledger-check-runs.ts'
+
 [tasks.peer_floor_gate]
 # Tier-2 peer-floor gate: fails the bump of a package whose floor claim is
 # dishonest; no-ops for packages without the typecheck:peer-floor script.

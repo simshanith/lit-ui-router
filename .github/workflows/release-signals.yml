@@ -3,7 +3,8 @@
 # single "workers-builds (triggers)" (README badges read them all via shields'
 # check-runs endpoint). All three answer "does the outside world still match
 # main?" — npm artifacts, peer ranges, and the Cloudflare deploy pipeline that
-# ships lit-ui-router.dev. One more, "pages-deploy (altitude-atlas)", sits on
+# ships lit-ui-router.dev. "release-ledger" asks whether the D1 release ledger
+# still matches GitHub's tags and releases and npm. One more, "pages-deploy (altitude-atlas)", sits on
 # the www/atlas head instead and asks whether atlas.lit-ui-router.dev serves
 # it. action_required renders orange = a release, a floor-bump, a dashboard
 # apply, or an atlas deploy is owed; neutral renders grey = the check could not
@@ -30,6 +31,12 @@ on:
   # stale drift; the post-publish call flips the badge green. Calls always
   # run the full package set.
   workflow_call:
+    inputs:
+      release:
+        description: 'The <name>@<version> just published; the release-ledger check compares its tarball digest. Empty skips that comparison.'
+        required: false
+        default: ''
+        type: string
     secrets:
       TURBO_TOKEN:
         # Remote turbo cache; absent = local cache only.
@@ -173,3 +180,35 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+  # Separate so only this job holds id-token: write, which the ledger's read policy verifies.
+  ledger:
+    name: release signals (ledger)
+    runs-on: ubuntu-26.04
+    timeout-minutes: 15
+    permissions:
+      checks: write
+      contents: read
+      id-token: write
+    steps:
+      - name: 'Checkout code'
+        uses: actions/checkout@v7
+        with:
+          # Always main's head, as in the npm job.
+          ref: main
+          persist-credentials: false
+      - name: Setup mise
+        uses: jdx/mise-action@v5
+        with:
+          version: 2026.10.1
+      - name: Install dependencies
+        run: mise run setup --release
+      # Posts "release-ledger": action_required when the ledger and GitHub or
+      # npm disagree, neutral when a source can't be read. Report only; exits
+      # 0 on every path.
+      - name: Release ledger check run
+        run: mise run //tools/release:ledger_check_runs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Empty off workflow_call, which skips the digest comparison.
+          RELEASE: ${{ inputs.release }}
