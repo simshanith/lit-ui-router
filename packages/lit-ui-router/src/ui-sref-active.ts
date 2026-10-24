@@ -25,6 +25,7 @@ import {
   UI_SREF_TARGET_EVENT,
 } from './sref-internals.js';
 import type { ParentView } from './events.js';
+import type { SrefParams, SrefTarget } from './route-types.js';
 import { UiView } from './ui-view.js';
 
 export {
@@ -142,7 +143,7 @@ const isLinkElement = (element: Element): boolean =>
  *
  * @category types
  */
-export interface UiSrefActiveParams {
+export interface UiSrefActiveParams<T extends SrefTarget = SrefTarget> {
   /** CSS classes to add when the state (or a child state) is active */
   activeClasses: string[];
   /** CSS classes to add only when the exact state is active */
@@ -166,9 +167,9 @@ export interface UiSrefActiveParams {
    */
   ariaCurrentValue?: AriaCurrentValue | false | AriaCurrentValues;
   /** The state name to check for active status */
-  state: string;
+  state: T;
   /** State parameters to match */
-  params?: RawParams;
+  params?: SrefParams<T>;
   /** Transition options */
   options?: TransitionOptions;
   /** Target states from nested uiSref directives */
@@ -872,8 +873,8 @@ export class UiSrefActiveDirective extends AsyncDirective {
  *
  * @category directives
  */
-export const uiSrefActive: (
-  params: Partial<UiSrefActiveParams>,
+export const uiSrefActive: <T extends SrefTarget = SrefTarget>(
+  params: Partial<UiSrefActiveParams<T>>,
 ) => DirectiveResult<typeof UiSrefActiveDirective> = directive(
   UiSrefActiveDirective,
 );

@@ -15,6 +15,7 @@ npm install --save-dev ui-router-registry@rc
 - **`ParamsOf` and `ResolvedParamsOf`**: the params a state accepts and the params it reads back, its ancestors' included. Url placeholders are required, query params and params with a default are optional to pass, and defaults are present to read. `int`, `bool`, `date` and `json` placeholders and `type:`s map to TypeScript types.
 - **`TypedStateService`**: a view of core's `StateService` whose `go`, `transitionTo`, `target`, `href`, `is` and `includes` take registered names and their params. Relative refs are checked by their tail with loose params; object targets and `UncheckedRef` stay loose. Core's class is assignable to it, so a typed getter needs no cast.
 - **`TypedRouteSnapshot`**: a view of the route snapshot the reactive packages share. `includes(name)` is a type predicate that narrows `current` and `params` to that state's subtree.
+- **`ui-router-registry/lit`**: a type-only import, `import type {} from 'ui-router-registry/lit'`, that types `lit-ui-router`'s own `uiSref`, `srefHref`, `uiSrefActive`, `srefActiveClass`, `srefAriaCurrent` and `SrefStatusController` targets by filling in its `RouteTypes` interface. `lit-ui-router` is an optional peer, needed only by this entry point.
 
 ## Usage
 
@@ -53,14 +54,20 @@ uiSref(link.state as UncheckedRef, link.params);
 stateService.go(name as UncheckedRef);
 ```
 
-### Annotate members that call typed targets
+### Templates on TypeScript before 5.6
 
-A state declaration that names a component and is checked with `satisfies` against a type that inspects the component, such as `LitStateDeclaration`, makes that component part of `Register`'s type. If one of the component's members calls a typed target (`go`, `href`) and has no declared return type, TypeScript has to infer that member from `Register` while still building `Register`, and reports a circular type (TS7022, TS7023, TS2456). Declare the member's return type:
+A `satisfies LitStateDeclaration` check reads a class component through its element brand and a template through its parameters, so neither is inferred from `Register`. TypeScript before 5.6 still infers a template's return from its body, so there a template under `component` or `views` that calls a typed target (`href`, a typed `uiSref`) reports a circular type (TS7022, TS2456). Declare its return type:
 
 ```typescript
-render(): TemplateResult {
-  return html`<a href=${this.stateService.href('contacts.contact', { contactId })}>…</a>`;
-}
+component: (): TemplateResult => html`<a ${uiSref('contacts.contact', { contactId })}>…</a>`,
+```
+
+### JavaScript projects
+
+The package ships no runtime code, and the adapters never import it, so JavaScript without `checkJs` sees no change. Under `checkJs`, a `Register` augmentation in any TypeScript file of the program checks the JavaScript files' calls too; the escape is a JSDoc cast:
+
+```javascript
+uiSref(/** @type {import('ui-router-registry').UncheckedRef} */ (name));
 ```
 
 ## Dependencies

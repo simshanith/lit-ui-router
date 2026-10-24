@@ -29,6 +29,10 @@
       "default": "./dist/index.js"
     },
     "./dist/*": "./dist/*",
+    "./lit": {
+      "types": "./dist/lit.d.ts",
+      "default": "./dist/lit.js"
+    },
     "./package.json": "./package.json"
   },
   "scripts": {
@@ -40,19 +44,23 @@
     "format:check:oxfmt": "oxfmt --check \"**/*.{ts,js,json,md}\"",
     "format:oxfmt": "oxfmt \"**/*.{ts,js,json,md}\"",
     "lint:oxlint": "oxlint .",
+    "test": "node --test --test-reporter=@tools/shared/test-reporter.ts \"test-js/*.test.js\"",
     "typecheck:peer-floor": "floor-guard && floor-types-guard tsconfig.peer-floor.json && tsc -p tsconfig.peer-floor.json --noEmit",
     "typecheck:src": "tsc -p tsconfig.src.json --noEmit",
-    "typecheck:tsc": "tsc -p tsconfig.json --noEmit && tsc -p test-d/tsconfig.json --noEmit"
+    "typecheck:tsc": "tsc -p tsconfig.json --noEmit && tsc -p test-d/tsconfig.json --noEmit && tsc -p test-d/routed-components/tsconfig.json --noEmit && tsc -p test-js/unregistered/tsconfig.json && tsc -p test-js/registered/tsconfig.json"
   },
   "devDependencies": {
     "@release-it/conventional-changelog": "catalog:",
     "@tools/compat-guards": "catalog:workspace",
     "@tools/oxc-emit": "catalog:workspace",
     "@tools/release-config": "catalog:workspace",
+    "@tools/shared": "catalog:workspace",
     "@tools/typedoc-plugin-lit-ui-router": "catalog:workspace",
     "@types/node": "catalog:",
     "@uirouter/core": "catalog:",
     "@uirouter/core-floor": "catalog:peerFloor",
+    "lit": "catalog:",
+    "lit-ui-router": "catalog:workspace",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
     "release-it": "catalog:",
@@ -67,6 +75,12 @@
     "typescript-7": "catalog:"
   },
   "peerDependencies": {
-    "@uirouter/core": "catalog:publishedPeer"
+    "@uirouter/core": "catalog:publishedPeer",
+    "lit-ui-router": "catalog:publishedPeerRegistry"
+  },
+  "peerDependenciesMeta": {
+    "lit-ui-router": {
+      "optional": true
+    }
   }
 }

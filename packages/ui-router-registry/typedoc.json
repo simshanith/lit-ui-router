@@ -1,6 +1,6 @@
 {
   "$schema": "https://typedoc.org/schema.json",
-  "entryPoints": ["src/index.ts"],
+  "entryPoints": ["src/index.ts", "src/lit.ts"],
   "tsconfig": "tsconfig.src.json",
   "out": "../../www/lit-ui-router.dev/api/ui-router-registry",
   "docsRoot": "../../www/lit-ui-router.dev",

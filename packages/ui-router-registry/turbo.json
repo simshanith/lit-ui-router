@@ -4,6 +4,11 @@
   "tasks": {
     "docs:api": {
       "outputs": ["../../www/lit-ui-router.dev/api/ui-router-registry/**"]
+    },
+    // the runtime spec imports this package's own dist by name
+    "test": {
+      "dependsOn": ["^build", "build:js"],
+      "inputs": ["$TURBO_DEFAULT$"]
     }
   }
 }

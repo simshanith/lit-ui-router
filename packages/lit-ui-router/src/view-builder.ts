@@ -76,14 +76,12 @@ export function litViewsBuilder<
     // SAFETY: lit states declare `views` (or a `component`) as lit view declarations
     viewsObject as Record<string, LitViewDeclaration<T>>,
     function (config: LitViewDeclaration<T>, name: string) {
-      let normalizedConfig: NormalizedLitViewDeclaration<T>;
       name = name || '$default'; // Account for views: { "": { template... } }
 
-      if (isLitViewDeclarationTemplate<T>(config)) {
-        normalizedConfig = { component: config };
-      } else {
-        normalizedConfig = config;
-      }
+      // SAFETY: a declared template returns a TemplateResult; only its declaration types the return `void`
+      const normalizedConfig = (
+        isLitViewDeclarationTemplate<T>(config) ? { component: config } : config
+      ) as NormalizedLitViewDeclaration<T>;
 
       if (Object.keys(normalizedConfig || {}).length === 0) return;
 

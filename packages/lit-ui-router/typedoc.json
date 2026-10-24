@@ -11,6 +11,14 @@
   "excludeExternals": true,
   "excludeInternal": true,
   "excludePrivate": true,
+  "intentionallyNotExported": [
+    "Args",
+    "IsTyped",
+    "LooseRelative",
+    "Names",
+    "Relative",
+    "Unchecked"
+  ],
   "categorizeByGroup": false,
   "categoryOrder": [
     "core",

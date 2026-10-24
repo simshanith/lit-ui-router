@@ -1,7 +1,7 @@
 // Type-level spec for the app's registry wiring: `tsc --noEmit` is the assertion.
 import type { Message } from 'sample-app-shared/app/mymessages/interface.js';
 import type { TypedRouteSnapshot, TypedStateService } from 'ui-router-registry';
-import { uiSref } from 'sample-app-shared/registry/lit.js';
+import { uiSref } from 'lit-ui-router';
 
 import type { TypedRouterSignals } from './registry-signals.js';
 
