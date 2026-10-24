@@ -42,7 +42,7 @@ stateService.go('contacts.contact', { contactId: 'c1' });
 
 ### Relative refs and unchecked targets
 
-A relative ref (`.child`, `^`, `^.sibling`) resolves against the `uiSref`'s context or `options.relative`, which types can't see. Its tail is checked against the registered names, so `.contcat` fails, and its params stay loose. A relative ref also lets a link reuse the current params instead of restating them: `uiSref('.edit')` from `contacts.contact` inherits `contactId`.
+A relative ref (`.child`, `^`, `^.sibling`, or `.` for the base state itself) resolves against the `uiSref`'s context or `options.relative`, which types can't see. Its tail is checked against the registered names, so `.contcat` fails, and its params stay loose. A relative ref also lets a link reuse the current params instead of restating them: `uiSref('.edit')` from `contacts.contact` inherits `contactId`.
 
 A target the registry can't see, such as a name built at runtime or a state registered at runtime, is a `string` and fails once an app registers. Opt out explicitly with `UncheckedRef`; its params are loose:
 
