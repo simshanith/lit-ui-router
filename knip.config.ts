@@ -238,9 +238,9 @@ const workspaces = {
       '@iconify-json/lucide',
     ],
   },
-  // knip has no cf plugin, and the config names its entrypoint as a string
+  // knip has no cf plugin
   'www/release-diffs.lit-ui-router.dev': {
-    entry: ['cloudflare.config.ts', 'worker/index.ts'],
+    entry: ['cloudflare.config.ts'],
   },
 } satisfies Record<string, WorkspaceProjectConfig>;
 

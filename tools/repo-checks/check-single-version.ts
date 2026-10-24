@@ -22,6 +22,10 @@ const CHECK = 'check-single-version';
 // Splits the workspace asks for. A row that stops splitting fails as stale.
 const ALLOWED: SplitAllowance[] = [
   {
+    name: 'binary-extensions',
+    why: "chokidar 3's is-binary-path pins ^2, under the cem analyzer and vite-plugin-static-copy; the release-diffs worker's npm diff follows libnpmdiff's ^3 list",
+  },
+  {
     name: 'effect',
     why: 'the effect-3 alias (catalogs.effect3-compat) runs test:effect3-compat beside the effect 4 line',
   },
