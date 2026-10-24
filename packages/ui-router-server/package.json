@@ -100,6 +100,14 @@
       "node": "./dist/development/simulate.js",
       "default": "./dist/simulate.js"
     },
+    "./ssr": {
+      "types": "./dist/ssr.d.ts",
+      "development": "./dist/development/ssr.js",
+      "production": "./dist/ssr.js",
+      "deno": "./dist/ssr.js",
+      "node": "./dist/development/ssr.js",
+      "default": "./dist/ssr.js"
+    },
     "./url-config": {
       "types": "./dist/url-config.d.ts",
       "development": "./dist/development/url-config.js",
@@ -212,6 +220,15 @@
     "./redirects": {
       "free": [
         "@uirouter/core"
+      ]
+    },
+    "./ssr": {
+      "free": [
+        "@lit-labs/ssr",
+        "hono",
+        "lit",
+        "lit-ui-router",
+        "vite"
       ]
     },
     "./url-config": {

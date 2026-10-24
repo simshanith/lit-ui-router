@@ -1,0 +1,159 @@
+/**
+ * The server side of server-side rendering, for any renderer: moving a server
+ * router to a path and waiting for its transition to land.
+ *
+ * It imports `@uirouter/core` eagerly and no renderer.
+ */
+
+// Drives a server router's url sync to a landed transition, since `start()` and `urlService.sync()` drop the promise.
+import { RejectType } from '@uirouter/core';
+import type {
+  RawParams,
+  StateRule,
+  Transition,
+  UIRouter,
+} from '@uirouter/core';
+
+/** Options for {@link settle | `settle`}. */
+export interface SettleOptions {
+  /**
+   * How long to wait for the transition to land, in milliseconds, before
+   * rejecting. Defaults to `10_000`; `0` or `Infinity` waits without a limit.
+   */
+  timeout?: number;
+}
+
+// Bounds a chain of url rules that rewrite the url to another url.
+const maxRewrites = 10;
+
+/**
+ * Moves `router` to `path` and resolves once the transition the url starts
+ * has landed, resolves included, so a synchronous render reads the router
+ * after it.
+ *
+ * It never starts the router, which happens once per router (`start()` on a
+ * `UIRouterLit`, `urlService.listen()` on a core router): it sets the
+ * url and syncs the router to it, whether or not the router is listening.
+ * A page loop calls it once per path on the same router. A `redirectTo`
+ * chain settles on its final state, and a path the router already stands on
+ * resolves with the transition that brought it there.
+ *
+ * A failed transition still reaches `stateService.defaultErrorHandler`,
+ * which logs it unless replaced.
+ *
+ * @param router - the server router, its location installed with `installServerLocation`
+ * @param path - the url to settle on, relative to the mount, query included
+ * @param options - how long to wait
+ * @returns the transition that landed
+ * @throws an `Error` when no url rule matches `path` and the router declares no `otherwise`
+ * @throws an `Error` whose `cause` is the transition's `Rejection` when it fails, a failed resolve's error in that rejection's `detail`
+ * @throws an `Error` when nothing lands within {@link SettleOptions.timeout | `timeout`}
+ *
+ * @example
+ * ```ts
+ * import { installServerLocation } from 'ui-router-server/location';
+ * import { settle } from 'ui-router-server/ssr';
+ *
+ * installServerLocation(router, { urlConfig: { strict: false } });
+ *
+ * for (const path of ['/', '/sheet/7B']) {
+ *   await settle(router, path);
+ *   pages.set(path, render(router));
+ * }
+ * ```
+ */
+export const settle = (
+  router: UIRouter,
+  path: string,
+  options: SettleOptions = {},
+): Promise<Transition> => {
+  const { timeout = 10_000 } = options;
+  const { globals, stateService, transitionService, urlService } = router;
+
+  return new Promise<Transition>((resolve, reject) => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
+    const done = (): void => {
+      offSuccess();
+      offError();
+      clearTimeout(timer);
+    };
+
+    const land = (transition: Transition): void => {
+      done();
+      resolve(transition);
+    };
+
+    const fail = (reason: Error): void => {
+      done();
+      reject(reason);
+    };
+
+    // SAFETY: hook registration returns its deregistration function, typed only as `Function`.
+    const offSuccess = transitionService.onSuccess({}, land) as () => void;
+
+    // SAFETY: hook registration returns its deregistration function, typed only as `Function`.
+    const offError = transitionService.onError({}, (transition) => {
+      const rejection = transition.error();
+
+      if (rejection.type === RejectType.SUPERSEDED) return;
+
+      if (rejection.type === RejectType.IGNORED) {
+        // Ignored with nothing in flight: the router already stands where the url points.
+        if (!globals.transition && globals.successfulTransitions.size() > 0)
+          land(globals.successfulTransitions.peekTail());
+
+        return;
+      }
+
+      fail(new Error(rejection.message, { cause: rejection }));
+    }) as () => void;
+
+    if (timeout > 0 && timeout !== Infinity)
+      timer = setTimeout(
+        () =>
+          fail(new Error(`settle: ${path} did not land within ${timeout}ms`)),
+        timeout,
+      );
+
+    urlService.url(path);
+
+    for (let rewrites = 0; rewrites <= maxRewrites; rewrites++) {
+      const best = urlService.match({
+        path: urlService.path(),
+        search: urlService.search(),
+        hash: urlService.hash(),
+      });
+
+      if (!best)
+        return fail(
+          new Error(
+            `settle: no url rule matches ${urlService.url()} and the router declares no otherwise`,
+          ),
+        );
+
+      // Core's state rule starts nothing when the url's href is the current one.
+      // SAFETY: a `STATE` rule is core's `StateRule`, and its match is the url's param values.
+      if (
+        best.rule.type === 'STATE' &&
+        globals.successfulTransitions.size() > 0 &&
+        stateService.href(
+          (best.rule as StateRule).state,
+          best.match as RawParams,
+        ) === stateService.href(globals.current, globals.params)
+      )
+        return land(globals.successfulTransitions.peekTail());
+      const before = urlService.url();
+      urlService.sync();
+
+      // A rule that rewrote the url to another url needs its own sync when the router is not listening.
+      if (urlService.url() === before) return;
+    }
+
+    fail(
+      new Error(
+        `settle: ${path} rewrote its url more than ${maxRewrites} times`,
+      ),
+    );
+  });
+};

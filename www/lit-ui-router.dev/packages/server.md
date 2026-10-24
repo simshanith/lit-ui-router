@@ -65,6 +65,7 @@ package's own esbuild probe:
 | `ui-router-server/simulate`   | yes (optional peer)                   | +~27.4 KiB, lazy | what would the real router do                                                          |
 | `ui-router-server/location`   | yes (optional peer)                   | ~0.3 KiB gzip    | a path-shaped in-memory location for a server-side router                              |
 | `ui-router-server/url-config` | no; it configures the router you pass | ~0.4 KiB gzip    | one url config for the client router, the mounts, and a server render                  |
+| `ui-router-server/ssr`        | yes (optional peer)                   | ~0.6 KiB gzip    | when has a server router landed on this path, resolves included                        |
 
 The dependency-free tiers are a standalone port of core's matching subset,
 type-pinned to core's signatures and differential-tested against its output.
@@ -96,6 +97,9 @@ Picking one:
   alike. `applyUrlConfig(router, config)` applies a mount's `config` to any
   `@uirouter/core` router before its states register, and imports no server
   code, so the client bundle can take it.
+- **`/ssr`** — you render pages from a server router, with any renderer, and
+  need each path's transition landed before you draw it.
+  [`settle(router, path)`](#settling-a-server-router).
 
 ## Installation
 
@@ -104,7 +108,8 @@ npm install ui-router-server
 ```
 
 Nothing else is required: `@uirouter/core` (only for
-[`simulate` mounts](#the-tiers)) and `hono` are **optional** peer
+[`simulate` mounts and the `/location` and `/ssr` entries](#the-tiers)) and
+`hono` are **optional** peer
 dependencies, and every other adapter targets a host you already have.
 
 `latest` is the stable line (`0.1.0` today), and the only dist-tag — the
@@ -365,6 +370,34 @@ is exported as `serverLocationPlugin` — `router.plugin(serverLocationPlugin,
 { html5Mode: false })` — and its config as `ServerLocationConfig`, for a
 router that installs its own plugins. Simulate mounts run on the same
 location.
+
+## Settling a server router
+
+A server render reads the router only once its transition has landed.
+[`settle(router, path)`](/api/ui-router-server/ssr/functions/settle) from
+`ui-router-server/ssr` sets the url, syncs the router to it, and resolves
+with the transition that landed, resolves included, so a synchronous render
+after it reads every value. A page loop calls it once per path on the same
+router, started or not.
+
+```ts
+import { installServerLocation } from 'ui-router-server/location';
+import { settle } from 'ui-router-server/ssr';
+
+installServerLocation(router, { urlConfig: { strict: false } });
+
+for (const path of ['/', '/sheet/7B']) {
+  await settle(router, path);
+  pages.set(path, render(router));
+}
+```
+
+It rejects rather than hangs: on a url no rule matches, on a failed
+transition, and past its
+[`timeout`](/api/ui-router-server/ssr/interfaces/SettleOptions). The entry
+imports `@uirouter/core` and no renderer, so it runs under any renderer.
+[`lit-ui-router-ssr`](/packages/ssr) builds its
+prerender on the same step.
 
 ## What the server can't see
 
