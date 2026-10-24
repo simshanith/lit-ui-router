@@ -2,16 +2,27 @@
   "name": "@www/release-diffs.lit-ui-router.dev",
   "version": "0.0.0",
   "private": true,
-  "description": "The release-diffs worker, answering 404 until the ReleaseDiff Durable Object lands",
+  "description": "The release-diffs worker: each version pair's npm diff, built once by a ReleaseDiff Durable Object into R2",
   "type": "module",
   "scripts": {
     "format:check:oxfmt": "oxfmt --check \"**/*.{ts,json,jsonc,md}\"",
     "format:oxfmt": "oxfmt \"**/*.{ts,json,jsonc,md}\"",
     "lint:oxlint": "oxlint .",
+    "test": "node --test --test-reporter=@tools/shared/test-reporter.ts \"src/*.test.ts\"",
+    "test:npm-diff": "node --test --test-reporter=@tools/shared/test-reporter.ts \"src/acceptance/*.test.ts\"",
+    "typecheck:tsc": "tsc -p tsconfig.json --noEmit",
     "typecheck:worker": "tsc -p worker/tsconfig.json --noEmit",
     "types:worker": "cf workers types"
   },
+  "dependencies": {
+    "binary-extensions": "catalog:",
+    "diff": "catalog:",
+    "valibot": "catalog:"
+  },
   "devDependencies": {
+    "@cloudflare/config": "catalog:",
+    "@tools/shared": "catalog:workspace",
+    "@types/node": "catalog:",
     "cf": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
