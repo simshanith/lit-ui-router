@@ -8,7 +8,8 @@ import {
 } from '@uirouter/core';
 
 import { installServerLocation } from '../src/location.ts';
-import { dehydrate, seed, settle, type ResolvePayload } from '../src/ssr.ts';
+import { seed, type ResolvePayload } from '../src/ssr-client.ts';
+import { dehydrate, settle } from '../src/ssr.ts';
 
 interface Loop {
   self?: Loop;

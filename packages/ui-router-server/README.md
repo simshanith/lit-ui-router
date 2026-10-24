@@ -17,8 +17,8 @@ install.
 npm install ui-router-server
 ```
 
-`@uirouter/core` (only for `simulate` mounts and the `/location` and `/ssr`
-entries) and `hono` are optional peer
+`@uirouter/core` (only for `simulate` mounts and the `/location`, `/ssr` and
+`/ssr/client` entries) and `hono` are optional peer
 dependencies. Full docs:
 [lit-ui-router.dev/packages/server](https://lit-ui-router.dev/packages/server).
 

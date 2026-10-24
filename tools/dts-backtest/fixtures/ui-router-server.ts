@@ -50,13 +50,12 @@ import {
 import { createHeadlessRouter, onceSettled } from 'ui-router-server/simulate';
 import {
   dehydrate,
-  seed,
   settle,
   type DehydrateResult,
   type JsonValue,
-  type ResolvePayload,
   type SettleOptions,
 } from 'ui-router-server/ssr';
+import { seed, type ResolvePayload } from 'ui-router-server/ssr/client';
 import {
   applyUrlConfig,
   type RouterUrlConfig,

@@ -41,6 +41,25 @@ for (const bundler of bundlers) {
       assert.deepEqual(deps, [], 'matcher tier pulled in dependencies');
     });
 
+    it('bundles the ssr client without the server half', async () => {
+      const client = entries.find((entry) => entry.label === 'ssr/client');
+      assert.ok(client, 'expected an ssr/client export');
+
+      const { inputs } = await bundleEntry(client.file, bundler, {
+        external: declared,
+      });
+
+      const server = inputs.filter((input) =>
+        /[/\\](ssr|dehydrate)\.js$/.test(input),
+      );
+
+      assert.deepEqual(server, [], 'ssr/client pulled in the server entry');
+      assert.ok(
+        inputs.some((input) => input.endsWith('resolve-payload.js')),
+        'expected the shared payload module among the inputs',
+      );
+    });
+
     it('reports the remaining entry sizes (visibility, not a gate)', async (t) => {
       for (const { label, file } of reported) {
         const { entry } = await bundleEntry(file, bundler, {

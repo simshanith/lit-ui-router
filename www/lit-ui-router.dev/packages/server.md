@@ -65,7 +65,8 @@ package's own esbuild probe:
 | `ui-router-server/simulate`   | yes (optional peer)                   | +~27.4 KiB, lazy | what would the real router do                                                          |
 | `ui-router-server/location`   | yes (optional peer)                   | ~0.3 KiB gzip    | a path-shaped in-memory location for a server-side router                              |
 | `ui-router-server/url-config` | no; it configures the router you pass | ~0.4 KiB gzip    | one url config for the client router, the mounts, and a server render                  |
-| `ui-router-server/ssr`        | yes (optional peer)                   | ~1.3 KiB gzip    | when has a server router landed, and which of its resolves can the client adopt        |
+| `ui-router-server/ssr`        | yes (optional peer)                   | ~1.1 KiB gzip    | when has a server router landed, and which of its resolves can the client adopt        |
+| `ui-router-server/ssr/client` | yes (optional peer)                   | ~0.7 KiB gzip    | let the client's boot transition adopt the resolves a server render drew                |
 
 The dependency-free tiers are a standalone port of core's matching subset,
 type-pinned to core's signatures and differential-tested against its output.
@@ -99,7 +100,7 @@ Picking one:
   code, so the client bundle can take it.
 - **`/ssr`** — you render pages from a server router, with any renderer, and
   need each path's transition landed before you draw it, and its resolved
-  values handed to the client's boot.
+  values handed to the client's boot through `/ssr/client`.
   [`settle(router, path)`](#settling-a-server-router), then
   [`dehydrate` and `seed`](#handing-resolves-to-the-client).
 
@@ -110,7 +111,7 @@ npm install ui-router-server
 ```
 
 Nothing else is required: `@uirouter/core` (only for
-[`simulate` mounts and the `/location` and `/ssr` entries](#the-tiers)) and
+[`simulate` mounts and the `/location`, `/ssr` and `/ssr/client` entries](#the-tiers)) and
 `hono` are **optional** peer
 dependencies, and every other adapter targets a host you already have.
 
@@ -408,15 +409,16 @@ server already ran.
 [`dehydrate(transition)`](/api/ui-router-server/ssr/functions/dehydrate)
 draws the resolved values of a landed transition into a JSON payload, keyed by
 state and token, along with the state and url parameters it was drawn for.
-[`seed(router, payload)`](/api/ui-router-server/ssr/functions/seed), called on
-the client router before it starts, makes the boot transition adopt those
+[`seed(router, payload)`](/api/ui-router-server/ssr-client/functions/seed)
+from `ui-router-server/ssr/client`, called on the client router before it
+starts, makes the boot transition adopt those
 values instead of calling their resolve functions.
 
 ```ts
-// server, per path
+// server, per path: ui-router-server/ssr
 const { payload, unserializable } = dehydrate(await settle(router, path));
 
-// client, before the router starts
+// client, before the router starts: ui-router-server/ssr/client
 seed(router, payload);
 ```
 
@@ -434,6 +436,8 @@ the payload does not cover runs as usual:
   not drawn for adopts nothing, and neither does a missing payload.
 - **Later transitions.** The seed disarms once a transition succeeds.
 
+The client entry imports `@uirouter/core` and nothing from the server entry,
+so a browser bundle takes it alone; it exports the payload types too.
 Where the payload goes in the document is the renderer's choice.
 
 ## What the server can't see
