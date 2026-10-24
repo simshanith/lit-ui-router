@@ -216,7 +216,10 @@ const dAgg = (d) => {
 };
 const DP = dAgg('pkg'), DA = dAgg('app'), DT = dAgg('tool');
 // the spread of spec-to-source ratios across the district, read off the same rows
-const PKG_RATIOS = M.filter((r) => r[2] === 'pkg' && r[7] && r[9]).map((r) => r[9] / r[7]);
+const PKG_RATIOS = M.filter((r) => r[2] === 'pkg' && r[3] === 'm' && r[7] && r[9]).map((r) => r[9] / r[7]);
+// the product's dark corners: only a types-only package, which no runtime meter can light, may stand there
+const DARK_PKG = M.filter((r) => r[2] === 'pkg' && r[3] === 'n');
+if (DARK_PKG.some((r) => r[1] !== 'ui-router-registry')) throw new Error(`sheet 7A: the verdict calls the product's dark corners types only, and ${DARK_PKG.map((r) => r[1]).join(', ')} stand in shadow`);
 const ANNEX_RANGE = `${Math.min(...PKG_RATIOS).toFixed(1)}–${Math.max(...PKG_RATIOS).toFixed(1)}×`;
 // the yard's habit, counted rather than asserted: source a metered suite never loads
 const wrapperSloc = M.filter((r) => r[2] === 'tool' && r[3] === 'm')
@@ -291,6 +294,10 @@ const NOTE = {
   47: barrelOnly(47, 'the store'),
   48: SH.get(48).shadow?.join() === 'src/ci-logs.ts' ? 'the CLI wrapper in shadow, the cores lit' : guardFail(48, 'only the CLI wrapper is in shadow'),
   49: SH.get(49).shadow?.length === 0 && SH.get(49).litFiles === 2 ? 'private · both halves of the gate lit' : guardFail(49, 'both halves are lit'),
+  50: SH.get(50).cat === 'n' ? 'types only, dark by design — its type tests run under typecheck' : guardFail(50, 'no test script'),
+  51: SH.get(51).shadow?.length === 0 ? 'the ledger model and its fixtures, lit wall to wall' : guardFail(51, 'lit wall to wall'),
+  52: SH.get(52).cat === 'n' ? 'a 404 worker — no test script' : guardFail(52, 'no test script'),
+  53: SH.get(53).shadow?.length === 0 ? 'the ledger worker, every file lit' : guardFail(53, 'every file is lit'),
 };
 const ART_H = 902;
 const SY = ART_H + 16;
@@ -399,9 +406,10 @@ ${txt(140, 328, `${pct1(DP.linesHit, DP.lines)}% of ${fmt(DP.lines)} lines, bran
 ${txt(140, 340, `bought by sheet 7's ${ANNEX_RANGE} annexes`, 'lblf')}
 <line x1="150" y1="292" x2="160" y2="282" class="skf"/>
 
-${txt(1096, 372, 'apps/ — THE PROVING GROUND', 'lblb', 'end')}
-${txt(1096, 385, `${DA.metered} metered member${DA.metered === 1 ? '' : 's'} · ${E_DEMOS} + the rig`, 'lblf', 'end')}
-${txt(1096, 397, 'live on e2e light alone · №5 tests pass with no meter', 'lblf', 'end')}
+<!-- over the district's north edge: the shopfront's north row leaves no air under it -->
+${txt(1110, EDGE.app.y1 - 27, 'apps/ — THE PROVING GROUND', 'lblb', 'end')}
+${txt(1110, EDGE.app.y1 - 15, `${DA.metered} metered member${DA.metered === 1 ? '' : 's'} · ${E_DEMOS} + the rig`, 'lblf', 'end')}
+${txt(1110, EDGE.app.y1 - 3, 'live on e2e light alone · №5 tests pass with no meter', 'lblf', 'end')}
 
 ${txt(1146, 560, 'www/ + examples/ — THE SHOPFRONT', 'lblb')}
 ${txt(1146, 573, `the worker: fully lit — a ${fmt(g(10).r[11])}-sloc sliver of ${fmt(g(10).r[7])}`, 'lblf')}
@@ -442,7 +450,7 @@ ${txt(700, 865, 'exec.ts and workspace.ts are the worst-lit things that are lit 
 ${txt(1144, 404, 'VERDICT', 'lblb')}
 ${txt(1144, 424, 'The light reaches wall to wall in packages/:', 'lbls')}
 ${txt(1144, 438, `${pct1(T.linesHit, T.lines)}% of ${fmt(T.lines)} metered lines lit, and the`, 'lbls')}
-${txt(1144, 452, 'product district has no dark corner.', 'lbls')}
+${txt(1144, 452, DARK_PKG.length ? `product district’s ${DARK_PKG.length === 1 ? 'one dark corner is' : 'dark corners are'} types only.` : 'product district has no dark corner.', 'lbls')}
 ${txt(1144, 466, `What never sees light: ${fmt(darkToolSloc)} sloc of untested`, 'lbls')}
 ${txt(1144, 480, `instruments and ${fmt(wrapperSloc)} sloc of CLI wrappers.`, 'lbls')}
 
@@ -450,7 +458,7 @@ ${schedule}
 </svg>`;
 
 export const sheet7a = {
-  num: '7A', id: 'shadow', rev: 'G',
+  num: '7A', id: 'shadow', rev: 'H',
   title: 'THE SHADOW SURVEY',
   sub: `ALTITUDE 3½ — ALTERNATE PLATE TO SHEET 7: the measured city under its own test light · same city as sheet 7, ${M.length} members · reach = the source each suite loads, brightness = line coverage of what it loads · ${BASIS}`,
   scale: 'WHOLE WORKSPACE',
@@ -459,7 +467,7 @@ export const sheet7a = {
   caption: 'This plate asks which members of sheet 7’s city ever stand in test light. Every member’s own suite runs under a coverage meter, and its light is drawn to two rules: reach, how much of the member’s source the suite loads; brightness, the line coverage of what it loads. The finding is a repo-wide habit visible from the air: the light is bright far more often than it is wide.',
   notes: `
 <p><strong>Method — one meter per member, nothing installed by hand, nothing left behind.</strong> Footprints, annexes and districts are sheet 7's own plate (<a href="${PLATES}/census-city.json"><code>census-city.json</code></a>); the light is <a href="${PLATES}/census-shadow.json"><code>census-shadow.json</code></a>, ${BASIS}, so meter and census read one tree at one ref. ${T.metered} of the ${M.length} members carry a meter. The probe never edits a repo file: members that declare <code>test:coverage</code> are metered by the tree's own unmodified <a href="${HOME.turbo}"><code>turbo run test:coverage</code></a>; <a href="${HOME.nodeTest}"><code>node:test</code></a> members by their own <code>test</code> script re-run with <code>--experimental-test-coverage</code> and the <a href="${HOME.lcov}">lcov</a> reporter; the <a href="${HOME.vitest}"><code>vitest</code></a> members by their own script with <a href="${HOME.v8}"><code>--coverage.enabled --coverage.provider=v8</code></a>. Each meter reports lines on its own basis (v8 remaps to executable lines; node counts raw lines), so brightness percentages are per-meter and are never summed across meters in the drawing — only the schedule's grand total does, and says so. LIT means a source file the suite actually executed; extent is those files' sloc over the member's src sloc, both from the same ref. One honest wobble found by re-running the probe four times over: <code>node --test</code>'s branch <em>denominator</em> for №31 came back 213 on two runs and 215 on two more, with 191 hit either way — a 0.9-point swing on one member's branch figure and nothing else in the plate moved. Branch discovery under V8 is not perfectly repeatable, and this plate says so rather than pretending the last run is the only one.</p>
-<p><strong>The product glows wall to wall — the budget lands where the house says.</strong> The published packages meter ${pct1(DP.linesHit, DP.lines)}% of ${fmt(DP.lines)} lines over ${pct1(DP.litSloc, DP.meteredSloc)}% of their metered source. What little stays dark is entry barrels and <code>interface.ts</code> — type declarations, which no runtime meter can light. This is the priority made visible: library coverage outranks docs coverage, and the annexes sheet 7 drew at ${ANNEX_RANGE} their buildings turn out to buy near-total light.</p>
+<p><strong>The product glows wall to wall — the budget lands where the house says.</strong> The published packages meter ${pct1(DP.linesHit, DP.lines)}% of ${fmt(DP.lines)} lines over ${pct1(DP.litSloc, DP.meteredSloc)}% of their metered source. What little stays dark is entry barrels and <code>interface.ts</code> — type declarations, which no runtime meter can light.${DARK_PKG.map((r) => ` ${dirLink(PLACED.find((p) => p[0] === r[0])[2], `<code>${r[1]}</code>`)} stands dark for the same reason: it ships types only, has no test script, and its type tests run under <code>typecheck</code>, where no meter reads.`).join('')} This is the priority made visible: library coverage outranks docs coverage, and the annexes sheet 7 drew at ${ANNEX_RANGE} their buildings turn out to buy near-total light.</p>
 <p><strong>The yard's habit: bright cores, dark wrappers.</strong> The instruments repeat one pattern — ${dirLink('tools/release', '<code>@tools/release</code>')}, ${dirLink('tools/build_and_test', '<code>build_and_test</code>')}, ${dirLink('tools/workers-builds', '<code>workers-builds</code>')}, ${dirLink('tools/lcov-rebase', '<code>lcov-rebase</code>')}: the <code>.core.ts</code> logic is lit and the command-line file in front of it is not. ${fmt(wrapperSloc)} sloc across ${wrapperFiles} files of process-edge code is never loaded by any suite, while the logic behind it meters ${pct1(DT.linesHit, DT.lines)}%. ${dirLink('tools/compat-guards', '<code>compat-guards</code>')} is the pattern at its extreme: only ${srcLink('tools/compat-guards/src/ranges.ts', '<code>ranges.ts</code>')} is unit-lit; its guard lanes run for real in CI, where no meter follows. ${dirLink('tools/happy-dom', '<code>@tools/happy-dom</code>')} splits its light: its spec is a conformance canary pointed at <a href="${HOME.happyDom}">happy-dom upstream</a>, and it lights the one workaround it guards, ${srcLink('tools/happy-dom/src/inner-html.ts', '<code>inner-html.ts</code>')}, while ${srcLink('tools/happy-dom/src/append.ts', '<code>append.ts</code>')} is lit only from ${dirLink('packages/lit-ui-router', '<code>lit-ui-router</code>')}'s lamp, as borrowed light.</p>
 <p><strong>What the meter cannot say, the plate refuses to fake.</strong> The two demo apps and the <a href="${HOME.cypress}">Cypress</a> host are hatched in accent, not banded: e2e light is real — the rig drives the built docs site — but no lcov leaves it, so it is drawn as light of unknowable brightness and labelled unmetered. That judgement is the only one in the probe, and it is verified rather than assumed: the run throws if the rig has stopped being a Cypress suite. ${dirLink('apps/sample-app-shared', '<code>sample-app-shared</code>')} runs its unit tests green, yet browser-mode vitest cannot fetch a coverage provider the repo never installed; its light is an outline, and the probe proves it by running the suite a second time without the meter. The members that are dark are dark because nothing tests them, and two of them (${dirLink('tools/dts-backtest', '<code>dts-backtest</code>')}, ${dirLink('tools/lit-test-env', '<code>lit-test-env</code>')}) spend their working lives inside other members' suites.</p>`,
   key: [

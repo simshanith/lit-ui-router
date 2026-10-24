@@ -67,8 +67,8 @@ const roleOf = (deploy, district) => (deploy === 'docs' ? ROLES : ATLAS_ROLES).f
 
 // ---- the city lots, back to front: the tallest stand at the back, and a district with no lot is a build error
 const DOCS_LOTS = [
-  ['html pages', 'examples', 'inter fonts', 'vp framework'],
-  ['page chunks', 'images'],
+  ['html pages', 'markdown pages', 'examples', 'inter fonts'],
+  ['page chunks', 'images', 'vp framework', 'diagrams'],
   ['app: vanilla', 'app: signals', 'app: effect', 'app: mobx', 'app: hash', 'static data', 'site css'],
 ];
 const ATLAS_LOTS = [
@@ -127,13 +127,9 @@ export const SHEETA4_VERDICT = `meta — the atlas's own deploy on sheet 9's rul
 const C = 0.866;
 const LOT_GAP = 18;   // between a city's districts
 const PAD = 16;       // a city's frame, plan units outside its masses; a summed role is its own block
-let n = 0;
-const massOf = (m) => ({ ...m, n: ++n, s: SIDE(m.f), h: HT(m.gz) });
-for (const g of GROUPS) g.masses = g.members.map(massOf);
-
 // local plan placement inside a group: one lot for a role, lot rows for a city
-for (const g of GROUPS) {
-  if (g.kind === 'role') { g.masses[0].lx = 0; g.masses[0].ly = 0; continue; }
+const lotGroup = (g) => {
+  if (g.kind === 'role') { g.masses[0].lx = 0; g.masses[0].ly = 0; return; }
   const at = (id) => g.masses.find((b) => b.id === id);
   let y = 0;
   for (const row of g.lots) {
@@ -141,9 +137,9 @@ for (const g of GROUPS) {
     for (const id of row) { const b = at(id); b.lx = x; b.ly = y; x += b.s + LOT_GAP; }
     y += Math.max(...row.map((id) => at(id).s)) + LOT_GAP;
   }
-}
+};
 const rect = (b, ox, oy) => ({ n: b.n, name: b.name, part: 'block', x: ox + b.lx, y: oy + b.ly, w: b.s, d: b.s });
-for (const g of GROUPS) {
+const boxGroup = (g) => {
   const rs = g.masses.map((b) => rect(b, 0, 0));
   const pad = g.kind === 'city' ? PAD : 0;
   g.box = [Math.min(...rs.map((r) => r.x)) - pad, Math.min(...rs.map((r) => r.y)) - pad,
@@ -151,7 +147,13 @@ for (const g of GROUPS) {
   // how far the tallest roof rises above the frame's near corner, on screen
   const [, , x2, y2] = g.box;
   g.rise = Math.max(...rs.map((r) => (x2 + y2) * 0.5 - ((r.x + r.y) * 0.5 - g.masses.find((m) => m.n === r.n).h)));
-}
+};
+// every mass is sheet 9's SIDE() and HT() times the drawing's zoom
+const massAll = (zoom) => {
+  let n = 0;
+  for (const g of GROUPS) g.masses = g.members.map((m) => ({ ...m, n: ++n, s: zoom * SIDE(m.f), h: zoom * HT(m.gz) }));
+  for (const g of GROUPS) { lotGroup(g); boxGroup(g); }
+};
 
 // screen placement: a frame's left corner at sx, its near corner on the ground line gy
 const place = (g, sx, gy) => {
@@ -163,16 +165,30 @@ const place = (g, sx, gy) => {
 const HEAD = 104;          // the header band's foot
 const SEAM_W = 60;         // screen px across the seam between the two deploys
 const SLOT_MIN = 140;      // a role's lettering slot, screen px, where its block is narrower
+const GAP_MIN = 8;         // screen px between two slots
+const ZOOM_MIN = 0.8;      // the smallest fraction of sheet 9's ruler this sheet draws at
 const ROLE_ROW = GROUPS.filter((g) => g.kind === 'role');
 const CITY_ROW = GROUPS.filter((g) => g.kind === 'city');
 const west = (row) => row.filter((g) => g.deploy === 'docs');
 const east = (row) => row.filter((g) => g.deploy === 'atlas');
-for (const g of GROUPS) { place(g, 0, 0); g.w = g.right; }
 const slot = (g) => Math.max(g.w, g.kind === 'role' ? SLOT_MIN : 0);
+const need = (row) => row.reduce((a, g) => a + slot(g), 0) + SEAM_W + GAP_MIN * (row.length - 2) + 40;
+// the largest hundredth of sheet 9's ruler at which both rows fit 1520 with their minimum gaps and slot floors
+let ZOOM = 1;
+for (;;) {
+  massAll(ZOOM);
+  for (const g of GROUPS) { place(g, 0, 0); g.w = g.right; }
+  if (Math.max(need(ROLE_ROW), need(CITY_ROW)) <= 1520) break;
+  ZOOM = Math.round(ZOOM * 100 - 1) / 100;
+  if (ZOOM < ZOOM_MIN) throw new Error(`appendix A4: the rows need ${need(ROLE_ROW).toFixed(0)} and ${need(CITY_ROW).toFixed(0)} px even at ${ZOOM_MIN}× sheet 9's ruler, past the sheet's 1520 — the ${SLOT_MIN} px slot floors and ${GAP_MIN} px gaps leave no fit`);
+}
+const ZOOM_LINE = ZOOM === 1
+  ? `drawn at full scale: both rows fit 1,520 px with ${GAP_MIN} px gaps and ${SLOT_MIN} px lettering slots`
+  : `drawn at ${ZOOM}× that ruler, the largest hundredth at which both rows fit 1,520 px with ${GAP_MIN} px gaps and ${SLOT_MIN} px lettering slots`;
 // a row's blocks stand on one ground line under the header, or under the row above; the gap between them closes up to fit 1520
 const layRow = (row, gy) => {
   const GAP = Math.min(40, (1520 - 40 - SEAM_W - row.reduce((a, g) => a + slot(g), 0)) / (row.length - 2));
-  if (GAP < 8) throw new Error(`appendix A4: a row of ${row.length} blocks needs ${(row.reduce((a, g) => a + slot(g), 0) + SEAM_W + 8 * (row.length - 2) + 40).toFixed(0)} px, past the sheet's 1520`);
+  if (GAP < GAP_MIN) throw new Error(`appendix A4: a row of ${row.length} blocks needs ${need(row).toFixed(0)} px at ${ZOOM}× sheet 9's ruler, past the sheet's 1520`);
   let sx = 40, seam = 0;
   for (const g of row) {
     if (g.deploy === 'atlas' && !seam) { sx += SEAM_W - GAP; seam = sx - SEAM_W / 2; }
@@ -204,7 +220,7 @@ for (const g of GROUPS) for (const b of g.masses) b.block = rect(b, g.ox, g.oy);
 const ALL = GROUPS.flatMap((g) => g.masses);
 assertPlots('appendix A4', ALL.map((b) => b.block));
 // one ruler: every mass is sheet 9's SIDE() of its files and HT() of its gzipped bytes
-for (const b of ALL) if (b.s !== SIDE(b.f) || b.h !== HT(b.gz)) throw new Error(`appendix A4: ${b.name} is not massed by sheet 9's ruler`);
+for (const b of ALL) if (b.s !== ZOOM * SIDE(b.f) || b.h !== ZOOM * HT(b.gz)) throw new Error(`appendix A4: ${b.name} is not massed by sheet 9's ruler at ${ZOOM}×`);
 
 const pt = (x, y, z = 0) => isoPt(0, 0, x, y, z);
 const p2 = (x, y, z = 0) => pt(x, y, z).map((v) => v.toFixed(1)).join(',');
@@ -330,7 +346,7 @@ ${txt(52, 43, 'THE ATLAS, SHIPPED — ON THE WIRE, ON SHEET 9\'S RULER, AT TWO A
 ${txt(52, 58, `by role above, by district below · the docs deploy west, the atlas deploy east · one SIDE() and HT(), imported from sheet 9`, 'lblf')}
 
 ${txt(1520, 34, `SCALE — footprint area ∝ files (side = ${KS} · √files, floored at ${FLOOR}) · 1 px of height ≈ ${KB_PER_PX} KB gzipped, floored at ${HT_FLOOR} — sheet 9's functions, read back, not a copy`, 'lbls', 'end')}
-${txt(1520, 48, `height is gzip level 9 of every file, the honest wire measure, since the CDN serves compressed · plan areas add, so a role's block covers the ground its districts do`, 'lblf', 'end')}
+${txt(1520, 48, `${ZOOM_LINE} · height is gzip level 9 of every file, the honest wire measure`, 'lblf', 'end')}
 ${txt(1520, 62, 'the atlas deploy is app/dist built from an archive of its own branch — the routed pages, the bare plates, the fragments, the pictures, the models and the scripts', 'lblf', 'end')}
 ${txt(1520, 76, 'every number on this sheet is read from data/census-shipped.json and data/survey-shipped.json at build time', 'lblf', 'end')}
 
@@ -355,7 +371,7 @@ const HOME = {
 };
 
 export const sheetA4 = {
-  num: 'A4', id: 'self-shipped', rev: 'B',
+  num: 'A4', id: 'self-shipped', rev: 'C',
   head: 'APPENDIX A4 · META',
   appendix: true,
   title: 'THE ATLAS, SHIPPED',
@@ -366,13 +382,13 @@ export const sheetA4 = {
   caption: `The atlas's own deploy surveyed on the wire with sheet 9's instrument at two altitudes: footprint ∝ files, height ∝ gzipped bytes, from sheet 9's functions. By role, ${WORD[west(ROLE_ROW).length]} summed blocks of the docs deploy stand west of ${WORD[east(ROLE_ROW).length]} of the atlas's; by district, the docs deploy's ${WORD[DOCS.k]} stand west of the atlas's ${WORD[AT.k]} — ${CLAIM_SIZE}.`,
   notes: `
 <p><strong>Method — one ruler, two deploys, two altitudes.</strong> Every block on this plate is massed by <code>SIDE()</code> and <code>HT()</code> imported from <code>sheet9.mjs</code> — footprint side ${KS} · √files, floored at ${FLOOR}; height one pixel per ${fmt(BYTES_PER_PX)} gzipped bytes, floored at ${HT_FLOOR}, the constants read back off the functions themselves — and every file is weighed the way sheet 9 weighs it: raw bytes and gzip level 9, the honest wire measure, since the CDN serves compressed. The two halves stand on different grounds and say so. The docs deploy is <a href="${HOME.plate}"><code>data/census-shipped.json</code></a>, ${DOCS_BASIS}, the cabinet sheet 9 reads. The atlas is not on main, so it cannot be in that cabinet: it is <code>data/survey-shipped.json</code>, written by <a href="${HOME.survey}"><code>generator/survey-shipped.mjs</code></a> from a <code>git archive</code> of its own branch — ${SELF_BASIS}, committed ${SELF.commitDate.slice(0, 10)} — in which the app is built by its own <code>npm ci</code> and <code>npm run build</code>, the vite build and the prerender, and <code>app/dist</code> is measured file by file: ${fmt(AT.f)} files, ${MB(AT.raw)} on disk, ${MB(AT.gz)} on the wire. That is what <a href="${HOME.pages}">Cloudflare Pages</a> serves at <a href="${HOME.site}">atlas.lit-ui-router.dev</a>. A reachability walk from every page sorts the files into districts, and a path the app computes at runtime — a fragment by the manifest's <code>file</code>, the manifest by the router's base, the visualizer's icons by its stylesheet — is seeded rather than reported as a false orphan.</p>
-<p><strong>Two altitudes, one ruler.</strong> The sheet draws both deploys twice, at one scale. Along the top, <em>by role</em>: sheet 9's ${WORD[west(ROLE_ROW).length]} roles of the docs deploy, read from its exported <code>ROLES</code>, each summed into one block, and ${WORD[east(ROLE_ROW).length]} roles of the atlas deploy in the same order, each beside its counterpart — ${ATLAS_ROLES.map((r) => `${r.name} beside ${r.beside}`).join(', ')}. Below, <em>by district</em>: every district of each deploy on its own lot, the docs deploy's ${WORD[DOCS.k]} west of the atlas's ${WORD[AT.k]}. A role's block and a district's block are massed by the same two functions, so a block in either row reads against any other at the same altitude, and a role against its own districts. Summing is honest on this ruler for plan area — area ∝ files, so one block of a role's sum covers the same ground its districts do — and approximate for height, which reads a role's total bytes as one tower. The by-role totals reconcile each plate's own totals, every atlas district is claimed by exactly one role, and sheet 9 throws when a district on its plate is claimed by no role or two, so the two plates cannot disagree.</p>
+<p><strong>Two altitudes, one ruler.</strong> The sheet draws both deploys twice, at one scale: sheet 9's ruler ${ZOOM_LINE.replace(' that ruler', '')}.Along the top, <em>by role</em>: sheet 9's ${WORD[west(ROLE_ROW).length]} roles of the docs deploy, read from its exported <code>ROLES</code>, each summed into one block, and ${WORD[east(ROLE_ROW).length]} roles of the atlas deploy in the same order, each beside its counterpart — ${ATLAS_ROLES.map((r) => `${r.name} beside ${r.beside}`).join(', ')}. Below, <em>by district</em>: every district of each deploy on its own lot, the docs deploy's ${WORD[DOCS.k]} west of the atlas's ${WORD[AT.k]}. A role's block and a district's block are massed by the same two functions, so a block in either row reads against any other at the same altitude, and a role against its own districts. Summing is honest on this ruler for plan area — area ∝ files, so one block of a role's sum covers the same ground its districts do — and approximate for height, which reads a role's total bytes as one tower. The by-role totals reconcile each plate's own totals, every atlas district is claimed by exactly one role, and sheet 9 throws when a district on its plate is claimed by no role or two, so the two plates cannot disagree.</p>
 <p><strong>What the drawing says.</strong> The atlas deploy is ${CLAIM_SIZE}; ${CLAIM_ROLES}. ${CLAIM_TALLEST.charAt(0).toUpperCase() + CLAIM_TALLEST.slice(1)}. The pictures are the whole story of the weight: a card picture is a webp, already compressed, so ${CLAIM_WIRE} — the lettering and markup of a deploy shrink on the wire and its pictures do not. The plates themselves ship in triplicate: ${CLAIM_THRICE} — the routed page carries its plate server-rendered, the bare plate stands for a reader who opts out of the router, and the fragment feeds the client's own navigation. Below those, ${CLAIM_VIEWER}, ${CLAIM_GHOST}. Every claim in this paragraph is computed from the two plates and changes its wording when the plates change it.</p>
 <p><strong>What the pictures are for.</strong> The ${PICS.f} card pictures are the cover's cards: one per plate in each theme, ${THUMB_W}×${THUMB_H} CSS pixels drawn at ${THUMB_SCALE}×, so a card holds up on a retina display and the cyanotype theme has a picture of its own rather than an inverted one. They are ${pct(PICS.gz, AT.gz)} of the wire and arrive lazily, as the gallery scrolls; the first page a reader lands on is ${KB(PAGES.top.gz)} at most, the heaviest routed page, and a plate's own page carries nothing of the pictures at all. The weight is real and the drawing shows it; whether it is the right weight is a question for the cover, not for this ruler.</p>`,
   key: [
     keyRow('<rect x="6" y="3" width="36" height="12" class="sk fp"/>', 'a block of the docs deploy — a role summed, by role; one district, by district — footprint ∝ files, height ∝ gzipped bytes'),
     keyRow('<rect x="6" y="3" width="36" height="12" class="fp"/><rect x="6" y="3" width="36" height="12" fill="url(#sA4-ha)"/><rect x="6" y="3" width="36" height="12" class="ska fnone"/>', 'a block of the atlas deploy — the same rule, on its own branch'),
-    keyRow('<line x1="23" y1="2" x2="23" y2="16" class="sk"/><line x1="18" y1="2" x2="28" y2="2" class="sk"/><line x1="18" y1="16" x2="28" y2="16" class="sk"/>', `the ruler is sheet 9's, read back off its SIDE() and HT(): side = ${KS} · √files, floored at ${FLOOR}; 1 px of height ≈ ${KB_PER_PX} KB gzipped, floored at ${HT_FLOOR}`),
+    keyRow('<line x1="23" y1="2" x2="23" y2="16" class="sk"/><line x1="18" y1="2" x2="28" y2="2" class="sk"/><line x1="18" y1="16" x2="28" y2="16" class="sk"/>', `the ruler is sheet 9's, read back off its SIDE() and HT(): side = ${KS} · √files, floored at ${FLOOR}; 1 px of height ≈ ${KB_PER_PX} KB gzipped, floored at ${HT_FLOOR}; ${ZOOM_LINE}`),
     keyRow('<rect x="4" y="2" width="26" height="13" class="ska fnone" stroke-dasharray="4 3"/>', 'a deploy\'s frame, by district'),
     keyRow('<line x1="23" y1="1" x2="23" y2="17" class="skf" stroke-dasharray="2 5"/>', 'the seam between main\'s ground and the atlas\'s'),
   ].join('\n'),

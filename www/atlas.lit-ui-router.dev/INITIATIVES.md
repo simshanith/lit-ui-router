@@ -524,6 +524,45 @@ sitting); order is dependency order.
   gz; nm 173,820 lines / 41,155 d.ts; mass3b 13,307 hashes over 235 real tasks and 3,029 command
   sloc; the ci graph 864 / 235 / 3,024 edges; steam 643 commits; weather 448 dated files; 7A 11,937
   of 19,307 metered sloc lit over 25 members.
+- 2026-10-24 — THE TWENTY-SECOND REFRESH, at `origin/main` @ 85e0ce5c (commit 2026-10-24), the
+  census plates re-run at the one ref, 70 commits past the twenty-first (eb1162da):
+  `ui-router-registry` 0.1.0 under `latest`, the 2026-10-22 train (`lit-ui-router` 1.17.0,
+  `lit-ui-router-effect` 0.5.0, `lit-ui-router-mobx` 1.3.0, `lit-ui-router-signals` 0.2.0, the
+  plugin 1.3.0) and `ui-router-navigation-location-plugin` 1.2.0 on 2026-10-23. The user: "time for
+  census and maybe dogfood?". FOUR MEMBERS WERE BORN, so the members stand at 52 and twelve are
+  published: `ui-router-registry` (№50), `@tools/release-ledger` (№51),
+  `@www/release-diffs.lit-ui-router.dev` (№52) and `@www/release-ledger.lit-ui-router.dev` (№53).
+  The registry is a types-only package, and the sheet 2 family seats it as it seats the lint plugin:
+  a published compile-time part, scheduled on sheet 2 with a row in every family builder and never
+  massed as a brick, because it emits no JavaScript and makes no coupling, only a peer on core for
+  its types. `COMPILE_TIME` in `sheet2.mjs` lists the two parts, and 2A, 2C, 2E and 2F read it. The
+  atlas app does not adopt the registry: a read of the app found two type gaps, filed as #1582 (the
+  self ref `'.'`) and #1583 (`value: null` param typing), and a state built by a function drops out
+  of the registered names by the package's documented behaviour.
+  THE CHAIN took three probe fixes, which HISTORY's cover line details: the yard's `publish —
+  release-it` rule claims `tools/release-ledger/`; `basis.mjs` resolves pnpm from the archive's
+  `packageManager` pin and puts it first on PATH; `census-loop.mjs`'s cites were relocated by
+  content, 49 of 52. `census-shipped.mjs` files the docs site's Markdown mirrors and standalone
+  diagrams as two districts, markdown pages (286 files, 432,797 gz) and diagrams (14 files, 21,423
+  gz), with robots.txt and sitemap.xml in vp framework and release-pages.css in site css. The
+  census-consumers probe imports `sheet2.mjs`, so sheet 2's newcomer guard held that plate at
+  eb1162da and the cabinet pin guard threw in ten modules behind it. A4's role row, with 7 px of
+  slack at six blocks, overflowed by about 98 px. Budgets raised with their measurements: city.glb
+  265,536 B (272 KiB), plant.glb 496,944 B (496 KiB). Revs: 2 J, 2B H, 2C B, 2E B, 2F B, 3B K, 4 I,
+  7 J, 7A H, 8 E, 9 H, 11 J, 12 G, 13 I, 14 B.
+  THE NUMBERS: scc 1,274 tracked / 1,224 classified; city 449 src files / 40,476 sloc and 232 spec /
+  41,419; doors 28 · 190,001 min / 67,966 gz; the bundle 125,784 gz in 17 chunks; the deploy 1,402
+  files / 6,888,288 gz in 15 districts; mass3b 19,789 hashes over 331 real tasks and 5,765 command
+  sloc; the ci graph 1,251 / 331 / 5,111 edges (deepest chain 14); couplings 36 contracts, 24 drawn
+  on 14 nodes, 33 peers; steam 736 commits; weather 681 dated files, 3,071 touches; 7A 22,302 of
+  23,141 lines lit over 37 metered members; the loop 30 evidence lines over 52 cites; consumers 20
+  in 11 builds (21 in 12 with the atlas app), 38 pins (45 with the atlas), one trailing;
+  survey-shipped 287 files / 9,312,293 gz at www/atlas @ ca744f09. The app prerenders 68
+  pages + 404.html with 64 redirects, the scoped router 69/69 at
+  construction; the frame audit reads escapes 0 · hits>1px 0 ·
+  text-on-text 124 over 30 plates; every card picture re-shot,
+  34 plates × 2 themes · 4,439,284 bytes; check-scenes 112 checks
+  hold.
 - 2026-10-15 — THE TWENTIETH REFRESH, at `origin/main` @ 83225a58 (commit 2026-10-15), all 21
   census plates re-run at the one ref, 76 commits past the nineteenth (108456af) and one
   examples-only commit (#1380) past the 58a36cb6 the brief named: the 2026-10-15 release train,
@@ -902,6 +941,37 @@ sitting); order is dependency order.
   each `new URL('../data/census-….json'` written out in its module; a `read(f)` helper that builds
   the path from a template hides the read, and appendix A2 files the plate as awaiting a drawing.
   Sheet 2E reads `census-consumers.json` that way and A2 says so; sheet 2F writes each URL whole.
+- A BUILDER THAT READS "THE LAST ROW" IS A HAND COUNT. Sheet 2's family builders took the schedule's
+  last row to be the lint plugin: 2A excluded it by name, 2E's mould check and 2C's rank read the
+  final row. A second compile-time part broke the assumption on five sheets at the same commit. Name
+  the set (`COMPILE_TIME`) and have each builder read it, with a guard that every published package
+  sits in it or among the bricks.
+- A PROBE THAT IMPORTS A SHEET WAITS ON THE SHEET'S GUARDS. `census-consumers.mjs` imports
+  `sheet2.mjs`, so sheet 2's newcomer throw stops the probe, the plate stays at the last cabinet's
+  sha, and `census-atlas.mjs`'s pin guard throws in every module that reads the cabinet, masking
+  their own guards. Seat the newcomer on sheet 2 first, then run census-consumers, then the guards.
+- THE CHAIN SCRIPT DOES NOT RUN `census-pins.mjs`. The `chain.sh` each cabinet copies forward stops
+  at census-consumers; 2F reads census-pins, so run it by hand after census-builds or add it to the
+  script.
+- THE ARCHIVE'S pnpm IS ITS `packageManager` PIN, NOT THE WORKTREE'S. A worktree's mise pnpm can
+  trail main's pin, and when main's `pnpm-workspace.yaml` carries a setting the older pnpm cannot
+  parse (`lockfile: includeResolutionSettings`), every T3 install dies; the archive's `pmOnFail:
+  ignore` turns off pnpm's self-swap to the pin. `basis.mjs` resolves the pinned pnpm (`mise which
+  pnpm --tool aqua:pnpm/pnpm@<pin>`) and puts its directory first on PATH, because turbo's tasks
+  spawn `pnpm run` from PATH.
+- A REGEX WALK SEES ONLY THE EDGES IT PARSES. `census-shipped.mjs` reaches a file through a link it
+  can read; the Markdown mirrors linked from llms.txt and a Link header, the diagrams inlined by
+  `<!--@include-->` and the files a worker route serves carry no such edge, so 302 files filed as
+  orphans and llms.txt as unclassified, with exit 0. Seed each such surface by name (MIRROR,
+  `diagrams/`, PLATFORM) and give it a district; the orphan line only prints, and sheet 9's PLAN
+  guard is what throws.
+- THE ATLAS BUILD GLB STANDS 1,692 B UNDER builds-glb's 100 KiB CAP. `the-atlas.glb` carries the
+  most parts of any build (100,708 B measured in memory at 85e0ce5c), so one more part in its panel
+  overflows the cap; raising the cap is a design decision recorded with the measured bytes, as for
+  `city-glb`.
+- THE BUILD NUMERALS STAND AT THEIR LIMIT. Twelve builds with the atlas app reach 2C's ROMAN at XII,
+  where `numeral()` throws, and builds-scene's `WORD` ends at twelve; a thirteenth build needs both
+  tables extended in the same change.
 
 **How the guards are shaped**
 

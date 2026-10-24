@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { defs } from './chrome.mjs';
 import { txt, keyRow, npmUrl } from './helpers.mjs';
+import { COMPILE_TIME } from './sheet2.mjs';
 
 const P = 's2a';
 
@@ -27,10 +28,10 @@ const UMX = brick('ui-router-mobx');
 const fmt = (v) => v.toLocaleString('en-US');
 const WORD = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
 const Cap = (w) => w[0].toUpperCase() + w.slice(1);
-// every block drawn here; the plate holds every census row but the wall and the lint plugin
+// every block drawn here; the plate holds every census row but the wall and sheet 2's compile-time parts
 const DRAWN = [LIT, NAV, MBX, SRV, EFF, SSR, SIG, UEF, USG, UMX];
 {
-  const plate = B.rows.map((r) => r.name).filter((n) => n !== CORE[0] && n !== 'eslint-plugin-lit-ui-router').sort();
+  const plate = B.rows.map((r) => r.name).filter((n) => n !== CORE[0] && !COMPILE_TIME.some((c) => c.name === n)).sort();
   const drawn = DRAWN.map(([n]) => n).sort();
   if (plate.join() !== drawn.join()) throw new Error(`sheet 2A: census-bricks.json carries [${plate}] but the plan draws [${drawn}] — place the newcomer`);
 }

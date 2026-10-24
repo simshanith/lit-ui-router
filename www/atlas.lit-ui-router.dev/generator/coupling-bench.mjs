@@ -23,7 +23,7 @@ import { basisStrip, laneCss, laneHints, LANE_TOK_JS } from './lane-chrome.mjs';
 import { CYTOSCAPE_URL } from './pipeline-graph.mjs';
 import { SPRITES, spriteSvg } from './sprites.mjs';
 
-export const REV = 'G';
+export const REV = 'H';
 
 const C = JSON.parse(readFileSync(new URL('../data/census-couplings.json', import.meta.url), 'utf8'));
 const B = JSON.parse(readFileSync(new URL('../data/census-bricks.json', import.meta.url), 'utf8'));
@@ -34,13 +34,14 @@ const brick = (name) => B.rows.find((r) => r.name === name) ?? null;
 // node size, `band` the note lettered beside it (`halign` says which side).
 // Five columns, read right to left the way the arrows run: the lit companions at
 // 680 with lit-ui-router-signals over the flagship, the core-only column at 400
-// (the navigation plugin, ui-router-effect and ui-router-mobx), the two externals stacked at 120
+// (the navigation plugin, ui-router-effect, ui-router-mobx and ui-router-registry), the two externals stacked at 120
 // with lit lifted clear of the wall, effect, ssr and ui-router-signals at 900, and
 // the eslint bay at 1120 — a bay, not a basement. ui-router-signals stands over
 // effect, not in the core-only column: there its tie from lit-ui-router-signals
 // would cross the flagship's tie to the wall.
 // lit-ui-router-effect's second tie runs from the 900 column to ui-router-effect at 400.
 // ui-router-mobx stands under ui-router-effect in the core-only column; lit-ui-router-mobx's second tie runs from the 680 column to it.
+// ui-router-registry stands at the column's foot: its one tie runs to the wall under every other core-only tie.
 // effect and ssr cannot stand in the 680 column: both tie lit-ui-router, and a tie laid down that column would run straight
 // through mobx, which the guard below throws on.  The middle column is the plate's whole argument about that plugin:
 // it declares @uirouter/core and nothing else, so it sits on the wall's own
@@ -59,6 +60,7 @@ const BENCH = new Map([
   ['ui-router-server', { x: 680, y: 260, band: 'OPTIONAL — THE TIE 2A DRAWS CROSSED OUT', short: 'ui-router-server', halign: 'right' }],
   ['ui-router-effect', { x: 400, y: 200, short: 'ui-router-effect' }],
   ['ui-router-mobx', { x: 400, y: 300, short: 'ui-router-mobx' }],
+  ['ui-router-registry', { x: 400, y: 400, short: 'ui-router-registry' }],
   ['ui-router-signals', { x: 900, y: -300, short: 'ui-router-signals' }],
   ['lit-ui-router-effect', { x: 900, y: -160, short: 'lit-ui-router-effect' }],
   ['lit-ui-router-ssr', { x: 900, y: 120, band: 'THE BRIDGE — FLAGSHIP AND SERVER', short: 'lit-ui-router-ssr', halign: 'center' }],

@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { defs } from './chrome.mjs';
 import { txt, keyRow, npmUrl } from './helpers.mjs';
 import { brickKit } from './brick-iso.mjs';
-import { BRICK_ROWS } from './sheet2.mjs';
+import { BRICK_ROWS, COMPILE_TIME } from './sheet2.mjs';
 import { BUILD_MODELS } from './sheet2c.mjs';
 import { SHEET2E_TAGS } from './sheet2e.mjs';
 
@@ -20,7 +20,7 @@ if (PINS.basis.atlasApp.sha !== BUILDS.basis.atlasApp.sha) throw new Error('shee
 const ATLAS_APP = PINS.basis.atlasApp;
 const COUNTED = `counted at ${PINS.ref} @ ${PINS.sha} (${PINS.generatedAtTime.slice(0, 10)}), the atlas app at ${ATLAS_APP.ref} @ ${ATLAS_APP.sha}`;
 const fmt = (v) => v.toLocaleString('en-US');
-const WORD = ['none', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty'];
+const WORD = ['none', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty', 'twenty-one', 'twenty-two', 'twenty-three', 'twenty-four'];
 const word = (n) => {
   if (!WORD[n]) throw new Error(`sheet 2F: no number word for ${n} — extend WORD`);
   return WORD[n];
@@ -28,10 +28,9 @@ const word = (n) => {
 const listOf = (xs) => (xs.length < 2 ? xs.join('') : `${xs.slice(0, -1).join(', ')} and ${xs.at(-1)}`);
 const plural = (n, w) => `${fmt(n)} ${w}${n === 1 ? '' : 's'}`;
 
-// ---- the family: sheet 2's bricks and the lint plugin, numbered and hued as sheet 2 draws them ----
-const LINT = BRICKS.rows.find((r) => r.name === 'eslint-plugin-lit-ui-router');
-if (!LINT) throw new Error('sheet 2F: census-bricks.json has no eslint-plugin-lit-ui-router row');
-const FAMILY = [...BRICK_ROWS.map((b) => ({ n: b.n, name: b.name, hue: b.hue })), { n: BRICK_ROWS.length + 1, name: LINT.name, hue: null }];
+// ---- the family: sheet 2's bricks and its compile-time parts, numbered and hued as sheet 2 draws them ----
+for (const { name } of COMPILE_TIME) if (!BRICKS.rows.some((r) => r.name === name)) throw new Error(`sheet 2F: census-bricks.json has no ${name} row`);
+const FAMILY = [...BRICK_ROWS.map((b) => ({ n: b.n, name: b.name, hue: b.hue })), ...COMPILE_TIME.map(({ name }, i) => ({ n: BRICK_ROWS.length + 1 + i, name, hue: null }))];
 const part = (name) => FAMILY.find((b) => b.name === name) ?? (() => { throw new Error(`sheet 2F: ${name} is not a family part`); })();
 
 // ---- the consumers: the second reading, numbered and lettered as sheet 2E tags them, each in its sheet 2C build ----
@@ -220,7 +219,7 @@ ${schedule}
 </svg>`;
 
 export const sheet2f = {
-  num: '2F', id: 'companions-pins', rev: 'A',
+  num: '2F', id: 'companions-pins', rev: 'B',
   title: 'THE PINNED BUILDS',
   sub: `ALTITUDE 2 — SIBLING PLATE, THE PINS: the ${word(CAB.consumers)} consumers in the cabinet’s tree and the atlas’s own app as stacks of what they pin, a course per family part and a plate per runtime dependency, each read where its installer reads it — the tree for a pnpm member, its own lockfile for an npm consumer — against npm’s latest · rows read census-pins.json, both readings, @ ${PINS.sha}`,
   scale: SHEET2F_SCALE,

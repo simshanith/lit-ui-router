@@ -81,7 +81,7 @@ const OFF_CLAUSE = OFF_LANE.map((r) => `; <code>${r.from}</code> narrows it to <
 const OXC_CLAUSE = OXC_ALSO.length ? `; ${OXC_ALSO.map((r) => `<code>${r.from}</code>`).join(' and ')} ${OXC_ALSO.length === 1 ? 'ships' : 'ship'} the same helper at the same range` : '';
 
 export const sheet2b = {
-  num: '2B', id: 'coupling-bench', rev: 'G',
+  num: '2B', id: 'coupling-bench', rev: 'H',
   title: 'THE COUPLING BENCH',
   sub: `ALTITUDE 2 — INTERACTIVE PLATE: sheet 2A’s joints made live · ${T.nodes} nodes in ${WORD[BENCH_COLUMNS]} columns, every tie a straight run · each of the ${T.drawnContracts} drawn edges is a published contract, with its declared range under the pointer`,
   scale: `${T.nodes} NODES · ${T.drawnContracts} DRAWN CONTRACTS`,

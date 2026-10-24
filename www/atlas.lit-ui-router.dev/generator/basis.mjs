@@ -7,7 +7,7 @@
 // returns nothing for absolute paths.
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 
@@ -61,13 +61,19 @@ export const materialize = (ref) => {
 // lockfile or nothing.  Returns the turbo binary to use: the tree's own
 // devDep bin invoked DIRECTLY — bare path, never through pnpm, whose
 // relative .bin PATH breaks turbo's spawn.
-const pnpmBin = () => {
-  try { return execFileSync('mise', ['which', 'pnpm'], { encoding: 'utf8' }).trim(); }
+// The archive's own packageManager pin first: its pmOnFail: ignore turns the self-swap off.
+const pnpmBin = (dir) => {
+  const pin = JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8')).packageManager?.match(/^pnpm@([^+]+)/)?.[1];
+  const tool = pin ? ['--tool', `aqua:pnpm/pnpm@${pin}`] : [];
+  try { return execFileSync('mise', ['which', 'pnpm', ...tool], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim(); }
   catch { return 'pnpm'; }
 };
 export const installDeps = (basis) => {
-  execFileSync(pnpmBin(), ['install', '--frozen-lockfile', '--silent'],
+  const pnpm = pnpmBin(basis.dir);
+  execFileSync(pnpm, ['install', '--frozen-lockfile', '--silent'],
     { cwd: basis.dir, stdio: ['ignore', 'inherit', 'inherit'] });
+  // turbo's tasks spawn `pnpm run` off PATH: the pinned one must win there too
+  if (pnpm !== 'pnpm') process.env.PATH = `${dirname(pnpm)}:${process.env.PATH}`;
   const turbo = join(basis.dir, 'node_modules', '.bin', 'turbo');
   return { turbo: existsSync(turbo) ? turbo : 'turbo' };
 };

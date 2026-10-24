@@ -91,9 +91,11 @@ const TIER_TEXT = {
 // [n, name, tier, x, y, files, sloc, fixed side, fixed height, schedule note]
 const M = [
   // --- the conveyor (packages/), one straight lane at y = 71 --------------------
-  [1,  'src — packages/*/src',      'line',    25,    30.45, ...C('src — packages/*/src'), null, null, SRC_NOTE],
-  [2,  'build — @tools/oxc-emit',   'line',   201.1,  63,    ...C('build — @tools/oxc-emit'), null, null, 'JS pass + d.ts pass, one emitter'],
-  [3,  'pack — packPublishTarball', 'line',   296.1,  55.9,  ...C('pack — packPublishTarball'), null, null, 'the one packer (#449), cached'],
+  // east off 25 at the 85e0ce5c refresh, so its 90-file cap stays under the inset's box row
+  [1,  'src — packages/*/src',      'line',    33,    30.45, ...C('src — packages/*/src'), null, null, SRC_NOTE],
+  // east off 201.1 with the src slab at the 85e0ce5c refresh: the run between them needs 31.2 px of trims
+  [2,  'build — @tools/oxc-emit',   'line',   222,    63,    ...C('build — @tools/oxc-emit'), null, null, 'JS pass + d.ts pass, one emitter'],
+  [3,  'pack — packPublishTarball', 'line',   312,    55.9,  ...C('pack — packPublishTarball'), null, null, 'the one packer (#449), cached'],
   [4,  'THE TARBALL',               'art',    426.8,  53,     0,    0,   36,   26, 'the one artifact every check reads'],
   [5,  'publish — release-it',      'line',   578.3,  49.6,  ...C('publish — release-it'), null, null, 'bump · tag · push · publish steps'],
   [6,  'npm registry',              'off',    742.6,  36,     0,    0,   70,   32, 'immutable once crossed'],
@@ -369,10 +371,10 @@ ${drive}
 ${bodies}
 
 <!-- lettering: every label in its own pocket, leaders where the gap is wide -->
-${txt(40, 200, 'PACKAGES/* — THE MATERIAL', 'lblb')}
-${txt(40, 213, `${nf(1)} authored files · ${fmt(nl(1))} sloc`, 'lblf')}
-${txt(40, 225, `${word(PKG_MEMBERS.length - PKG_PRIVATE)} published packages enter here`, 'lblf')}
-<line x1="250" y1="212" x2="276" y2="238" class="skf"/>
+${txt(32, 200, 'PACKAGES/* — THE MATERIAL', 'lblb')}
+${txt(32, 213, `${nf(1)} authored files · ${fmt(nl(1))} sloc`, 'lblf')}
+${txt(32, 225, `${word(PKG_MEMBERS.length - PKG_PRIVATE)} published packages enter here`, 'lblf')}
+<line x1="244" y1="212" x2="276" y2="238" class="skf"/>
 
 ${txt(742, 398, 'THE TARBALL', 'lblb')}
 ${txt(742, 411, 'one packer · many readers · never re-packed', 'lblf')}
@@ -387,8 +389,8 @@ ${txt(560, 535, 'published-diff — the only halt', 'lblr')}
 ${txt(560, 548, `${nf(11)} files, ${fmt(nl(11))} sloc`, 'lblf')}
 <line x1="554" y1="532" x2="455" y2="499" class="skf"/>
 
-${txt(470, 795, 'docs deploy — gates the site', 'lbls')}
-<line x1="560" y1="789" x2="578" y2="768" class="skf"/>
+${txt(490, 806, 'docs deploy — gates the site', 'lbls')}
+<line x1="566" y1="793" x2="578" y2="768" class="skf"/>
 
 ${txt(600, 645, `SAMPLE APPS — ${nf(18)}f · ${fmt(nl(18))} sloc`, 'lblb')}
 ${txt(600, 658, `the ${rankOf(18)} mass on the sheet`, 'lblf')}

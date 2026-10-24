@@ -30,7 +30,7 @@ const ORDER = {
   registry: [
     'lodash-es', 'dompurify', 'hono', '@uirouter/core', 'marked', 'lit-html',
     '@uirouter/visualizer', '@oxc-project/runtime', '@lit/reactive-element', 'preact',
-    'd3-hierarchy', '@uirouter/dsr', 'tslib', '@uirouter/sticky-states',
+    'd3-hierarchy', '@uirouter/dsr', '@lit/context', 'tslib', '@uirouter/sticky-states',
     'd3-interpolate', 'd3-color', '@lit-labs/ssr-dom-shim', 'lit-element', 'lit',
     'lit-dialog', '@api-viewer/docs', '@api-viewer/tabs', '@api-viewer/common',
     'custom-elements-manifest', '@types/marked', '@types/dompurify', '@types/trusted-types',
@@ -195,7 +195,7 @@ export const sheet8 = {
   num: 8, id: 'delivered',
   title: 'THE DELIVERED CITY',
   sub: `ALTITUDE 1½ — what npm actually installs for one consumer · sample-app-lit-vanilla · ${DELIVERED} delivered packages, ${fmt(TOT_L)} lines of code and ${fmt(TOT_DL)} d.ts lines on disk, footprint from files and height from lines — ${BASIS}`,
-  rev: 'D',
+  rev: 'E',
   scale: 'ONE CONSUMER',
   form: 'DELIVERED CITY',
   svg,

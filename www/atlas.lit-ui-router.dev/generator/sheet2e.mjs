@@ -3,7 +3,7 @@ import { defs } from './chrome.mjs';
 import { txt, keyRow, npmUrl } from './helpers.mjs';
 import { brickKit, paintOrder } from './brick-iso.mjs';
 import { cordHit, cordKit } from './connector-iso.mjs';
-import { BRICK_ROWS, COURSES, FILES_PER_COURSE, SHAPE, SLOC_PER_STUD, STUDS } from './sheet2.mjs';
+import { BRICK_ROWS, COMPILE_TIME, COURSES, FILES_PER_COURSE, SHAPE, SLOC_PER_STUD, STUDS } from './sheet2.mjs';
 import { BUILD_MODELS } from './sheet2c.mjs';
 
 const P = 's2e';
@@ -18,20 +18,22 @@ for (const [name, plate] of [['census-builds.json', BUILDS], ['census-bricks.jso
 if (CONS.basis.atlasApp.sha !== BUILDS.basis.atlasApp.sha) throw new Error('sheet 2E: census-consumers.json and census-builds.json read the atlas app at two shas');
 const COUNTED = `counted at ${CONS.ref} @ ${CONS.sha} (${CONS.generatedAtTime.slice(0, 10)}), the atlas app at ${CONS.basis.atlasApp.ref} @ ${CONS.basis.atlasApp.sha}`;
 const fmt = (v) => v.toLocaleString('en-US');
-const WORD = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty'];
+const WORD = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty', 'twenty-one', 'twenty-two', 'twenty-three', 'twenty-four'];
 const Cap = (w) => w[0].toUpperCase() + w.slice(1);
 const listOf = (xs) => (xs.length < 2 ? xs.join('') : `${xs.slice(0, -1).join(', ')} and ${xs.at(-1)}`);
 const plural = (n, word) => `${fmt(n)} ${word}${n === 1 ? '' : 's'}`;
 const shapeName = ([w, d]) => `${w}×${d}`;
 
-// ---- the family: sheet 2's nine bricks and the lint plugin, at sheet 2's mould ----
-const LINT = BRICKS.rows.find((r) => r.name === 'eslint-plugin-lit-ui-router');
-if (!LINT) throw new Error('sheet 2E: census-bricks.json has no eslint-plugin-lit-ui-router row');
+// ---- the family: sheet 2's bricks and its compile-time parts, at sheet 2's mould ----
+const COMPILED = COMPILE_TIME.map(({ name }) => BRICKS.rows.find((r) => r.name === name) ?? (() => { throw new Error(`sheet 2E: census-bricks.json has no ${name} row`); })());
 const FAMILY = [
   ...BRICK_ROWS.map((b) => ({ n: b.n, name: b.name, disp: b.disp, files: b.files, sloc: b.sloc, shape: b.shape, courses: b.courses, hue: b.hue })),
-  { n: BRICK_ROWS.length + 1, name: LINT.name, disp: LINT.name, files: LINT.files, sloc: LINT.sloc, shape: SHAPE(STUDS(LINT.sloc)), courses: COURSES(LINT.files), hue: null },
+  ...COMPILED.map((r, i) => ({ n: BRICK_ROWS.length + 1 + i, name: r.name, disp: r.name, files: r.files, sloc: r.sloc, shape: SHAPE(STUDS(r.sloc)), courses: COURSES(r.files), hue: null })),
 ];
-if (`${FAMILY.at(-1).shape.join('x')}` !== LINT.shape || FAMILY.at(-1).courses !== LINT.courses) throw new Error('sheet 2E: the lint plugin moulds differently here than in census-bricks.json');
+for (const r of COMPILED) {
+  const b = FAMILY.find((x) => x.name === r.name);
+  if (b.shape.join('x') !== r.shape || b.courses !== r.courses) throw new Error(`sheet 2E: ${r.name} moulds differently here than in census-bricks.json`);
+}
 if (FAMILY.length !== BRICKS.rows.length - 1) throw new Error(`sheet 2E: census-bricks.json lists ${BRICKS.rows.length - 1} family parts but ${FAMILY.length} are drawn`);
 const byName = (name) => FAMILY.find((b) => b.name === name) ?? (() => { throw new Error(`sheet 2E: ${name} is not a family part`); })();
 const FB = (n) => FAMILY.find((b) => b.n === n);
@@ -619,7 +621,7 @@ ${schedule}
 </svg>`;
 
 export const sheet2e = {
-  num: '2E', id: 'companions-consumers', rev: 'A',
+  num: '2E', id: 'companions-consumers', rev: 'B',
   title: 'THE CONSUMER BUILDS',
   sub: `ALTITUDE 2 — SIBLING PLATE, THE CONSUMERS: the ${WORD[CAB.consumers]} consumers in the cabinet’s tree and the atlas’s own app as bricks at sheet 2’s mould, each seated on the family parts it pins · rows read census-consumers.json, both readings, @ ${CONS.sha}`,
   scale: SHEET2E_SCALE,

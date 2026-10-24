@@ -52,7 +52,7 @@ const peerRange = (from, to) => {
 // this repo's router limbs: the flagship and the bay, each column top to bottom
 const BAY_COLS = [
   ['ui-router-server', 'lit-ui-router-ssr', 'ui-router-mobx', 'lit-ui-router-mobx'],
-  ['ui-router-navigation-location-plugin', 'ui-router-effect', 'lit-ui-router-effect', 'ui-router-signals', 'lit-ui-router-signals'],
+  ['ui-router-navigation-location-plugin', 'ui-router-effect', 'lit-ui-router-effect', 'ui-router-signals', 'lit-ui-router-signals', 'ui-router-registry'],
 ];
 const COMP_NAMES = BAY_COLS.flat();
 const WORD = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve'];
@@ -201,12 +201,12 @@ ${txt(cx.toFixed(1), (bot + 44).toFixed(1), `quiet since ${date}`, 'lblf', 'midd
 }).join('\n');
 
 // ---- companions bay (this repo's own limbs, right of the adapters) ---------------
-const BAY_X = 1030, BAY_R = 1340, BAY_T = 26, BAY_B = 250, BAY_CX = 1185, BAY_COL = 155;
+const BAY_X = 1030, BAY_R = 1340, BAY_T = 14, BAY_B = 250, BAY_CX = 1185, BAY_COL = 155;
 // Two columns; rows stack by their own DRAWN height: name, version line, then the
-// mass block itself, and the next name clears it. The header is one line, so rows start at 60.
+// mass block itself, and the next name clears it. The header is one line, so rows start 34 under the bay's top.
 const bayY = new Map(), bayX = new Map();
 const bayRows = BAY_COLS.map((col, c) => {
-  let y = 60;
+  let y = BAY_T + 34;
   const x0 = BAY_X + c * BAY_COL;
   return col.map((n) => {
     const [name, ver, , files, sloc, , , , href] = COMPANIONS[COMP_NAMES.indexOf(n)];
@@ -311,7 +311,7 @@ ${schedule}
 </svg>`;
 
 export const sheet4 = {
-  num: 4, id: 'family', rev: 'H',
+  num: 4, id: 'family', rev: 'I',
   title: 'THE FAMILY SPINE',
   sub: `ALTITUDE 4 — one core, four living adapters, four dormant instruments, massed by authored source and gated on the core range each admits · versions ${REGISTRY}, mass ${COUNTED}`,
   scale: 'UI-ROUTER ECOSYSTEM',

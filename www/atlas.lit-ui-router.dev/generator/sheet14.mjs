@@ -188,32 +188,43 @@ for (const y of YARDS) {
   y.slot = Math.max(y.w, ...y.lines.map(([s, c]) => tw(s, c))) + 6;
 }
 // berths stand in the nearest row, so the engine note sits on the quay beneath them
+const PIER_AIR = 3;
 const place = (R) => {
-  let k = 0;
-  for (const y of YARDS) y.row = y.host === 'bugzilla' ? 0 : (k++) % R;
-  YARDS.forEach((y, i) => {
+  // a yard's westmost seat in one row, given every yard already seated
+  const seat = (y, i, row) => {
     // west to east in order; a row's lettering clears its neighbour's
     let cx = Math.max(RXS + y.slot / 2, i ? YARDS[i - 1].cx + 1 : -Infinity);
-    const mate = YARDS.slice(0, i).findLast((o) => o.row === y.row);
+    const mate = YARDS.slice(0, i).findLast((o) => o.row === row);
     if (mate) cx = Math.max(cx, mate.cx + (mate.slot + y.slot) * 0.54 + 16);
     // across rows, no pier runs through a footprint: push east until none does
     for (let moved = true; moved;) {
       moved = false;
       for (const o of YARDS.slice(0, i)) {
-        if (o.row === y.row) continue;
-        const clear = (o.row < y.row ? o.w : y.w) / 2 + 6;
+        if (o.row === row) continue;
+        const clear = (o.row < row ? o.w : y.w) / 2 + PIER_AIR;
         if (Math.abs(cx - o.cx) < clear - 0.01) { cx = o.cx + clear; moved = true; }
       }
     }
+    return cx;
+  };
+  // each yard takes the row that seats it furthest west, the nearest row on a tie
+  YARDS.forEach((y, i) => {
+    const rows = y.host === 'bugzilla' ? [0] : Array.from({ length: R }, (_, r) => r);
+    const [row, cx] = rows.map((r) => [r, seat(y, i, r)]).reduce((a, b) => (b[1] < a[1] - 0.01 ? b : a));
+    y.row = row;
     y.cx = cx;
   });
   const last = YARDS.at(-1);
+  REACH.push(Math.round(last.cx + last.slot / 2));
   return last.cx + last.slot / 2 <= RXE;
 };
+const REACH = [];
+// the bank's row budget: past four rows the piers, not the lettering, set the width
+const MAX_ROWS = 5;
 let ROWS = 1;
 while (!place(ROWS)) {
   ROWS += 1;
-  if (ROWS > 5) throw new Error(`sheet 14: the north bank cannot hold ${YARDS.length} yards in five rows`);
+  if (ROWS > MAX_ROWS) throw new Error(`sheet 14: the north bank cannot hold ${YARDS.length} yards in ${MAX_ROWS} rows — the last yard reaches x ${REACH.join(', ')} by row count, the river ends at ${RXE}`);
 }
 {
   // spread the packed bank to the river's full width
@@ -418,7 +429,7 @@ const topLine = TOP
   : 'no work takes a consignment';
 
 export const sheet14 = {
-  num: 14, id: 'upstream', rev: 'A',
+  num: 14, id: 'upstream', rev: 'B',
   title: 'THE UPSTREAM WORKS',
   sub: `ALTITUDE 14 — the city among the commons it builds on · ${consWord} to ${yardsWord} cited by the city's own record, ${fmt(SENT)} sent and ${fmt(WATCHED)} watched, ${fmt(TRACKED)} tracked, ${fmt(RETURNED)} returned home, ${fmt(OFF_RIVER)} off the river${GONE.length ? ` (${fmt(GONE.length)} missing)` : ''} · ${BASIS}`,
   scale: 'CITY × COMMONS',

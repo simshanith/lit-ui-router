@@ -1,10 +1,10 @@
 {
   "ref": "origin/main",
-  "sha": "eb1162da",
-  "commitDate": "2026-10-18T10:40:08-07:00",
-  "generatedAtTime": "2026-10-18T18:12:35.693Z",
+  "sha": "85e0ce5c",
+  "commitDate": "2026-10-24T08:56:16-07:00",
+  "generatedAtTime": "2026-10-24T16:48:47.059Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-shipped.mjs",
-  "used": "git archive origin/main @ eb1162da + pnpm install --frozen-lockfile --silent (mise-provisioned pnpm) + turbo run build -> www/lit-ui-router.dev/dist",
+  "used": "git archive origin/main @ 85e0ce5c + pnpm install --frozen-lockfile --silent (mise-provisioned pnpm) + turbo run build -> www/lit-ui-router.dev/dist",
   "wasAssociatedWith": [
     "pnpm (mise-provisioned)",
     "turbo",
@@ -14,27 +14,36 @@
   "seededTrees": [
     "images/",
     "static/",
-    "_headers"
+    "diagrams/",
+    "*.md",
+    "llms.txt",
+    "llms-full.txt",
+    "_headers",
+    "robots.txt",
+    "sitemap.xml",
+    "release-pages.css"
   ],
   "totals": {
-    "files": 1035,
-    "rawBytes": 41796569,
-    "gzBytes": 6094205
+    "files": 1402,
+    "rawBytes": 47785228,
+    "gzBytes": 6888288
   },
   "rows": [
     {"district":"inter fonts","files":16,"gz":868670,"top":{"name":"assets/inter-italic-latin-ext.Dm0n7MN1.woff2","gz":141087}},
-    {"district":"html pages","files":277,"gz":2243134,"top":{"name":"guides/server-route-matching.html","gz":37786}},
-    {"district":"examples","files":34,"gz":1588110,"top":{"name":"examples/hellogalaxy-signals/assets/model-viewer-DtzRiWcu.js","gz":281870}},
-    {"district":"page chunks","files":532,"gz":536791,"top":{"name":"assets/guides_server-route-matching.md.CyQLM6Eh.js","gz":22760}},
-    {"district":"vp framework","files":13,"gz":234121,"top":{"name":"assets/chunks/@localSearchIndexroot.MIJy8z0o.js","gz":116566}},
-    {"district":"images","files":101,"gz":147019,"top":{"name":"images/lit-ui-router.png","gz":68708}},
-    {"district":"app: vanilla","files":18,"gz":130185,"top":{"name":"assets/api-docs-CH4DSmYN.js","gz":28461}},
-    {"district":"app: mobx","files":10,"gz":72253,"top":{"name":"assets/decorate-DEOEUt-w.js","gz":26915}},
-    {"district":"app: effect","files":10,"gz":82812,"top":{"name":"assets/index-BacP3V9e.js","gz":27889}},
-    {"district":"app: hash","files":4,"gz":16789,"top":{"name":"assets/main-CaESb4-g.js","gz":8439}},
-    {"district":"app: signals","files":13,"gz":99679,"top":{"name":"assets/api-docs-PmyrLoxx.js","gz":28460}},
+    {"district":"html pages","files":297,"gz":2511963,"top":{"name":"guides/server-route-matching.html","gz":41600}},
+    {"district":"markdown pages","files":286,"gz":432797,"top":{"name":"llms-full.txt","gz":166038}},
+    {"district":"examples","files":36,"gz":1588312,"top":{"name":"examples/hellogalaxy-signals/assets/model-viewer-BPJ4VvQu.js","gz":281867}},
+    {"district":"page chunks","files":572,"gz":579259,"top":{"name":"assets/guides_server-route-matching.md.B69aVNAS.js","gz":26400}},
+    {"district":"vp framework","files":15,"gz":245029,"top":{"name":"assets/chunks/@localSearchIndexroot.l7E7rLVl.js","gz":123886}},
+    {"district":"images","files":103,"gz":157545,"top":{"name":"images/lit-ui-router.png","gz":68708}},
+    {"district":"diagrams","files":14,"gz":21423,"top":{"name":"diagrams/about-this-site-architecture.svg","gz":3495}},
+    {"district":"app: vanilla","files":18,"gz":130766,"top":{"name":"assets/api-docs-B0uYM5BR.js","gz":28849}},
+    {"district":"app: mobx","files":10,"gz":72364,"top":{"name":"assets/decorate-DEOEUt-w.js","gz":26915}},
+    {"district":"app: effect","files":10,"gz":82903,"top":{"name":"assets/index-BziyNhOk.js","gz":27867}},
+    {"district":"app: hash","files":4,"gz":16895,"top":{"name":"assets/main-CDSRYW3e.js","gz":8537}},
+    {"district":"app: signals","files":13,"gz":100188,"top":{"name":"assets/api-docs-8zboVOX-.js","gz":28848}},
     {"district":"static data","files":4,"gz":50739,"top":{"name":"static/data/messages.json","gz":47757}},
-    {"district":"site css","files":3,"gz":23903,"top":{"name":"assets/style.B30XNfLW.css","gz":21436}}
+    {"district":"site css","files":4,"gz":29435,"top":{"name":"assets/style.CdB0xDdg.css","gz":21635}}
   ],
   "orphans": [
 

@@ -1,32 +1,32 @@
 {
   "ref": "origin/main",
-  "sha": "eb1162da",
-  "commitDate": "2026-10-18T10:40:08-07:00",
-  "generatedAtTime": "2026-10-18T18:04:37.832Z",
+  "sha": "85e0ce5c",
+  "commitDate": "2026-10-24T08:56:16-07:00",
+  "generatedAtTime": "2026-10-24T16:05:32.158Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-handoff.mjs",
-  "used": "git archive origin/main @ eb1162da",
+  "used": "git archive origin/main @ 85e0ce5c",
   "wasAssociatedWith": [
     "git"
   ],
   "workflows": {
     "files": 14,
     "calling": 9,
-    "callSites": 54,
-    "targets": 35
+    "callSites": 55,
+    "targets": 36
   },
   "mise": {
-    "tasks": 61,
+    "tasks": 62,
     "homes": 4,
-    "withUsage": 31,
+    "withUsage": 32,
     "withDepends": 12,
     "dependsEdges": 16
   },
   "turbo": {
-    "files": 28,
+    "files": 31,
     "distinctNames": 96,
-    "definitions": 141,
+    "definitions": 153,
     "rootDefinitions": 53,
-    "memberDefinitions": 88,
+    "memberDefinitions": 100,
     "cacheFalse": 15,
     "rootCacheFalse": 8,
     "memberCacheFalse": 7
@@ -43,7 +43,7 @@
     {"file":"dependency-audit.yml","name":"dependency-audit","callSites":0},
     {"file":"lint-workflows.yml","name":"lint-workflows","callSites":1},
     {"file":"publish-gh.yml","name":"publish-gh","callSites":4},
-    {"file":"publish-npm.yml","name":"publish-npm","callSites":7},
+    {"file":"publish-npm.yml","name":"publish-npm","callSites":8},
     {"file":"release-signals.yml","name":"release-signals","callSites":7},
     {"file":"semantic-pr.yml","name":"semantic-pr","callSites":0}
   ],
@@ -80,13 +80,14 @@
     {"target":"ci_main_graph","calls":1},
     {"target":"codecov_bundle","calls":1},
     {"target":"e2e_plan","calls":1},
+    {"target":"ledger_claim","calls":1},
     {"target":"lint_workflows","calls":1},
     {"target":"setup","calls":10},
     {"target":"test_e2e","calls":2}
   ],
   "miseHomes": [
     {"home":"tools/build_and_test/mise.toml","label":"tools/build_and_test","count":12,"withUsage":2,"withDepends":0,"dependsEdges":0,"names":["xvfb","branch_ci_gate","mark_session","turbo_summary","format_patch","playwright_version","cypress_version","playwright","playwright_deps","playwright_deps_engines","cypress","bench_summary"]},
-    {"home":".config/mise/tasks/*","label":".config/mise/tasks/*","count":11,"withUsage":7,"withDepends":0,"dependsEdges":0,"names":["check_workers_builds","cloudflare_item_create","read_secret","rumdl","shellcheck","taplo","turbo_backfill","turbo_cache_probe","turbo_force_guard","turbo_login","turbo_pin_worktree"]},
+    {"home":".config/mise/tasks/*","label":".config/mise/tasks/*","count":12,"withUsage":8,"withDepends":0,"dependsEdges":0,"names":["check_workers_builds","cloudflare_item_create","ledger_claim","read_secret","rumdl","shellcheck","taplo","turbo_backfill","turbo_cache_probe","turbo_force_guard","turbo_login","turbo_pin_worktree"]},
     {"home":"tools/release/mise.toml","label":"tools/release","count":17,"withUsage":10,"withDepends":2,"dependsEdges":2,"names":["git_user","package_info","pack","reconcile","check_tarball","tag","tag_push","publish","check_pack","published_diff","publish_check_runs","peer_floor_check_runs","workers_builds_check_runs","pages_deploy_check_runs","peer_floor_gate","bump","check_release_closure"]},
     {"home":".config/mise/config.toml","label":"config.toml inline","count":21,"withUsage":12,"withDepends":10,"dependsEdges":14,"names":["setup","lint_actionlint","lint_zizmor","lint_toml","lint_shellcheck","lint_markdown","lint_workflows","format_toml","format_check_toml","cloudflare_login","build","build_www","ci","ci_graph","ci_main","ci_main_graph","test_e2e","e2e_plan","codecov_bundle","bench_pulse","dts_backtest_matrix"]}
   ],
@@ -107,6 +108,7 @@
     {"file":"packages/navigation-location-plugin/turbo.json","root":false,"definitions":1,"cacheFalse":0},
     {"file":"packages/ui-router-effect/turbo.json","root":false,"definitions":1,"cacheFalse":0},
     {"file":"packages/ui-router-mobx/turbo.json","root":false,"definitions":1,"cacheFalse":0},
+    {"file":"packages/ui-router-registry/turbo.json","root":false,"definitions":1,"cacheFalse":0},
     {"file":"packages/ui-router-server/turbo.json","root":false,"definitions":6,"cacheFalse":0},
     {"file":"packages/ui-router-signals/turbo.json","root":false,"definitions":1,"cacheFalse":0},
     {"file":"tools/bootstrap/turbo.json","root":false,"definitions":1,"cacheFalse":0},
@@ -118,6 +120,8 @@
     {"file":"tools/shared/turbo.json","root":false,"definitions":1,"cacheFalse":0},
     {"file":"tools/workers-builds/turbo.json","root":false,"definitions":3,"cacheFalse":1},
     {"file":"turbo.json","root":true,"definitions":53,"cacheFalse":8},
-    {"file":"www/lit-ui-router.dev/turbo.json","root":false,"definitions":16,"cacheFalse":4}
+    {"file":"www/lit-ui-router.dev/turbo.json","root":false,"definitions":16,"cacheFalse":4},
+    {"file":"www/release-diffs.lit-ui-router.dev/turbo.json","root":false,"definitions":5,"cacheFalse":0},
+    {"file":"www/release-ledger.lit-ui-router.dev/turbo.json","root":false,"definitions":6,"cacheFalse":0}
   ]
 }

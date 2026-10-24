@@ -42,8 +42,8 @@ const phantomPct = (p) => Math.round(((p.nodes - p.real) / p.nodes) * 100);
 
 // column order = pipeline stage, not fan; every fanned name in the plate must be placed here
 const COLS = [
-  'transit', 'build:types', 'build:js', 'build', 'docs:api',
-  'typecheck', 'typecheck:tsc', 'typecheck:src', 'typecheck:lit2', 'typecheck:mobx6', 'typecheck:effect3',
+  'transit', 'build:types', 'types:worker', 'build:js', 'build', 'docs:api',
+  'typecheck', 'typecheck:tsc', 'typecheck:src', 'typecheck:worker', 'typecheck:lit2', 'typecheck:mobx6', 'typecheck:effect3',
   'lint', 'lint:oxlint', 'format:check', 'format:check:oxfmt',
   'test', 'test:coverage', 'test:lit2-compat', 'test:mobx6-compat', 'test:effect3-compat', 'check:bundle', 'check:dev-split',
   'ci:pull_request', 'ci',
@@ -60,7 +60,14 @@ const ALLP = new Set(COLS.filter((n) => nm(n).real === 0));                     
 const UMBRELLAS = ['typecheck', 'lint', 'format:check'];
 if ([...ALLP].sort().join() !== ['transit', ...UMBRELLAS, 'ci:pull_request', 'ci'].sort().join()) throw new Error(`sheet 12: the all-placeholder columns are ${[...ALLP].join(', ')} — re-word the notes`);
 
-const STAGES = [[0, 0, 'GATHER'], [1, 4, 'EMIT'], [5, 14, 'CHECK'], [15, 21, 'PROVE'], [22, 23, 'ROLL-UP']];
+// the docs:api producers: every package whose docs:api cell runs, all of them named in the docs site's build dependsOn
+const UPPER = ['NO', 'ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE', 'TEN', 'ELEVEN', 'TWELVE', 'THIRTEEN', 'FOURTEEN', 'FIFTEEN', 'SIXTEEN', 'SEVENTEEN'];
+const LOWER = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen'];
+const PRODUCERS = LOWER[Object.values(CELLS).filter((c) => c['docs:api'] === 'r').length] ?? (() => { throw new Error('sheet 12: no word for the docs:api producer count — extend LOWER'); })();
+const STAGES = [[0, 0, 'GATHER'], [1, 5, 'EMIT'], [6, 16, 'CHECK'], [17, 23, 'PROVE'], [24, 25, 'ROLL-UP']];
+// each stage opens where the last closes, and the five cover every column
+if (STAGES.some(([a, b], i) => b < a || a !== (i ? STAGES[i - 1][1] + 1 : 0)) || STAGES.at(-1)[1] !== COLS.length - 1 || COLS[STAGES[1][0]] !== 'build:types' || COLS[STAGES[2][0]] !== 'typecheck' || COLS[STAGES[3][0]] !== 'test' || COLS[STAGES[4][0]] !== 'ci:pull_request')
+  throw new Error(`sheet 12: STAGES [${STAGES.map(([a, b, l]) => `${l} ${a}–${b}`)}] do not tile the ${COLS.length} columns at build:types, typecheck, test and ci:pull_request`);
 
 // row grouping: a rule per block, so a new member lands in its own block
 const APP_ORDER = ['sample-app-shared', 'sample-app-routes', 'sample-app-lit-vanilla', 'sample-app-lit-mobx', 'sample-app-lit-effect', 'sample-app-lit-signals', 'sample-app-lit-e2e'];
@@ -137,10 +144,12 @@ if (CHAIN.length !== CI.chain) throw new Error(`sheet 12: traced chain is ${CHAI
 const CHAIN_REAL = CHAIN.filter(([, r]) => r).length;
 
 // the only uncacheable task definitions in the repo — none reachable from ci,
-// so the plate cannot supply them (its cacheFalse is empty by construction)
+// so the ci plate cannot supply them; census-handoff.json counts them per turbo.json
+const HANDOFF = JSON.parse(readFileSync(new URL('../data/census-handoff.json', import.meta.url), 'utf8'));
 const UNCACHED = [
+  ['bench', 'measures the HOST'],
   ['codecov:bundle', 'reports to a third party'],
-  ['format', 'WRITER — rewrites its own inputs'],
+  ['format:oxfmt', 'WRITER — rewrites its own inputs'],
   ['//#format:root', 'WRITER'],
   ['//#format:toml', 'WRITER — taplo'],
   ['dev', 'persistent server'],
@@ -152,12 +161,16 @@ const UNCACHED = [
   ['release#resolve:published', 'reads the LIVE registry'],
   ['workers-builds#check', 'reads the LIVE deploy API'],
   ['lit-ui-router.dev#check:embeds', 'reads the HOST'],
+  ['sample-app-lit-e2e#test:e2e:a11y', 'reads the HOST'],
 ];
+const UNCACHED_ROOT = UNCACHED.filter(([n]) => !n.includes('#') || n.startsWith('//#')).length;
+if (HANDOFF.sha !== PLATE.sha || UNCACHED.length !== HANDOFF.turbo.cacheFalse || UNCACHED_ROOT !== HANDOFF.turbo.rootCacheFalse || CI.cacheFalse.length)
+  throw new Error(`sheet 12: the uncacheable list names ${UNCACHED.length} (${UNCACHED_ROOT} at root), census-handoff.json counts ${HANDOFF.turbo.cacheFalse} (${HANDOFF.turbo.rootCacheFalse} at root), and ${CI.cacheFalse.length} are reachable from ci`);
 
 const LEDGER = [
   ['ci', `the PR gate — ${PKGS} packages × ${COLS.length} fanned names`],
   ['ci:main', `+${ODN} nodes over ${OCOLS.length} names; PR graph folded in`],
-  ['build', 'the emit tier alone — four fifths placeholder'],
+  ['build', `the emit tier alone — ${phantomPct(pipe('build'))}% placeholder`],
   ['lint', `the densest real graph here — ${100 - phantomPct(pipe('lint'))}% real`],
   ['pack:all', `one real task atop a ${pipe('pack:all').nodes}-node cone`],
 ];
@@ -166,14 +179,16 @@ const LEDGER = [
 // GEOMETRY
 // ---------------------------------------------------------------------------
 const LX = 252;              // right edge of the row-label gutter
-// pitch 18 keeps the overlay frame west of the RX annotation column at 24 columns
-const CX0 = 268, CP = 18;    // first column centre, column pitch
+// the pitch keeps the overlay frame west of the RX annotation column; the guard under ox() holds it
+const CX0 = 268, CP = 17;    // first column centre, column pitch
 const RP = 16;               // row pitch
 const CW = 15, CH = 10;      // card-hole size
 const RX = 810;              // right annotation column
 const cx = (i) => CX0 + i * CP;
 const OX0 = cx(COLS.length - 1) + 32; // overlay first column centre, clear of the plate
 const ox = (j) => OX0 + j * CP;
+const OFRAME_R = OX0 - 16 + CP * (OCOLS.length - 1) + 32;
+if (OFRAME_R + 12 > RX) throw new Error(`sheet 12: the ci:main overlay frame runs to x ${OFRAME_R} at ${COLS.length} columns, inside 12 of the RX annotation column at ${RX} — narrow the pitch`);
 
 const HFY = 300;             // column-head foot: every head hangs off its own column
 const HANG = -45;            // …and rises on the slant, punchcard-fashion
@@ -290,9 +305,9 @@ ${lines(RX, CLY + CN * CRP + 26, [
 
 // clears the plate's own tally row: the right column and the plate both grew
 const UY = Math.max(CLY + CN * CRP + 118, TOTY + 40);
-const uncached = `${txt(RX, UY, 'THE UNCACHEABLE THIRTEEN', 'lbl')}
-${txt(RX, UY + 15, 'every cache:false definition in the repo — 7 at', 'lbls')}
-${txt(RX, UY + 27, 'root, 6 in member files (@tools/ and @www/ elided)', 'lbls')}
+const uncached = `${txt(RX, UY, `THE UNCACHEABLE ${UPPER[UNCACHED.length]}`, 'lbl')}
+${txt(RX, UY + 15, `every cache:false definition in the repo — ${UNCACHED_ROOT} at`, 'lbls')}
+${txt(RX, UY + 27, `root, ${UNCACHED.length - UNCACHED_ROOT} in member files (@tools/ and @www/ elided)`, 'lbls')}
 ${txt(RX, UY + 39, 'none of them reachable from ci', 'lbls')}
 ${UNCACHED.map(([n, why], i) => {
     const y = UY + 62 + i * 18;
@@ -332,7 +347,7 @@ ${txt(46, SY + SH - 16, 'No duration is encoded anywhere on this plate: CI wall-
 
 const H = SY + SH + 30;
 
-const svg = `<svg viewBox="0 78 1160 ${H - 78}" role="img" aria-label="A punchcard register plate of the pull-request CI task graph. Rows are the ${PKGS} workspace packages plus the root, grouped into publishable packages, sample apps, the docs site and examples, tools, and root. Columns are the ${COLS.length} task names that fan across packages, ordered by pipeline stage: gather, emit, check, prove, roll-up. A filled accent card-hole marks a command-bearing task node; a faintly hatched hole marks a placeholder node that runs nothing; a red crossed hole marks the ${ALLP.size} task names that are one hundred percent placeholder by design — ${[...ALLP].join(', ')}. Of ${CI.nodes} nodes only ${CI.real} run a command and only ${CI.realEdges} of ${CI.edges} dependency edges connect two real tasks. A ghosted ${OCOLS.length}-column overlay to the right shows the ${ODN} extra nodes the ci:main pipeline adds. Beside the plate, the deepest chain in the graph is drawn as a ${CHAIN.length}-rung ladder of which ${CHAIN_REAL} rungs are real, and the ${UNCACHED.length} uncacheable task definitions in the repository are listed as a tier that never appears in this graph. Below, ${TAIL.length} singleton tasks form a ragged tail, and a structure schedule totals ${LEDGER.length} pipelines.">
+const svg = `<svg viewBox="0 78 1160 ${H - 78}" role="img" aria-label="A punchcard register plate of the pull-request CI task graph. Rows are the ${PKGS} workspace packages plus the root, grouped into publishable packages, sample apps, the docs site with its release workers and examples, tools, and root. Columns are the ${COLS.length} task names that fan across packages, ordered by pipeline stage: gather, emit, check, prove, roll-up. A filled accent card-hole marks a command-bearing task node; a faintly hatched hole marks a placeholder node that runs nothing; a red crossed hole marks the ${ALLP.size} task names that are one hundred percent placeholder by design — ${[...ALLP].join(', ')}. Of ${CI.nodes} nodes only ${CI.real} run a command and only ${CI.realEdges} of ${CI.edges} dependency edges connect two real tasks. A ghosted ${OCOLS.length}-column overlay to the right shows the ${ODN} extra nodes the ci:main pipeline adds. Beside the plate, the deepest chain in the graph is drawn as a ${CHAIN.length}-rung ladder of which ${CHAIN_REAL} rungs are real, and the ${UNCACHED.length} uncacheable task definitions in the repository are listed as a tier that never appears in this graph. Below, ${TAIL.length} singleton tasks form a ragged tail, and a structure schedule totals ${LEDGER.length} pipelines.">
 ${defs(P)}
 <defs><pattern id="${P}-hp" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
   <line x1="0" y1="0" x2="0" y2="4" stroke="var(--ink-faint)" stroke-width="0.9" opacity="0.75"/>
@@ -380,7 +395,7 @@ const HOME = {
 };
 
 export const sheet12 = {
-  num: 12, id: 'graph', rev: 'F',
+  num: 12, id: 'graph', rev: 'G',
   title: 'THE REGISTER PLATE',
   sub: `ALTITUDE 3¼ — the monorepo as its CI reads it · every task node punched · ${BASIS}`,
   scale: 'PR CI GRAPH',
@@ -394,7 +409,7 @@ export const sheet12 = {
 <p><strong>Depth is mostly scaffolding too.</strong> The deepest chain is ${CI.chain} nodes and ${CHAIN_REAL} of them run anything. The longest chain counted in real nodes alone is ${CI.realChain} — ${REAL_RUN.length} build steps, from <code>${REAL_RUN.first}</code> to <code>${REAL_RUN.last}</code> — and even it climbs through placeholder hops between its real rungs, which is what a plate makes visible that a node-and-arrow render never does.</p>
 <p><strong>What the plate is not evidence for.</strong> Placeholders are cheap — turbo schedules and skips them, and the phantom share is not a runtime cost. The argument is about legibility: ${phantomPct(CI)}% of what a maintainer sees in <a href="${HOME.graph}"><code>--graph</code></a> output is scaffolding, and the two ratios worth watching are the real-node share per column and the real-edge count. Note also the one tier that never appears here at all: the repo's ${UNCACHED.length} <a href="${HOME.cache}"><code>cache:false</code></a> definitions — four writers, six persistent servers, two live-network readers and one host-bound measurement (<code>@www/lit-ui-router.dev#check:embeds</code>, <a href="${HOME.repo}/pull/703">#703</a>) — are all outside every <code>ci:*</code> graph by design. A cache hit on any of them would be wrong, and the gate depends on their read-only twins instead (<code>format:check</code> for <code>format</code>).</p>
 <p><strong>The overlay.</strong> <a href="${HOME.repo}/blob/main/turbo.json"><code>ci:main</code></a> is not a different pipeline; it swallows <code>ci:pull_request</code> whole and adds ${ODN} nodes across ${OCOLS.length} names — <code>ci:main</code>, <code>test:engines</code>, <code>test:matrix</code>, <code>check:pack</code> — of which ${ODR} are command-bearing. The main-branch graph is ${OPCT}% larger and buys ${obuy('test:engines', 'engine test')}, ${obuy('test:matrix', 'd.ts back-test')} and ${obuy('check:pack', 'pack check')}.</p>
-<p><strong>Where the real edges are, and are not.</strong> The <code>docs:api</code> column is punched in every package it stands in: <a href="${HOME.repo}/tree/main/www/lit-ui-router.dev"><code>@www/lit-ui-router.dev#build</code></a> names its four producers directly rather than walking <code>^docs:api</code> through devDependencies it never imports (<a href="${HOME.repo}/pull/693">#693</a>). That is this plate's thesis arriving from the other side — scaffolding leaves the graph and the real work stays. It is also why real→real edges are a small fraction of ${fmt(CI.edges)}: most edges land on a node that runs nothing.</p>`,
+<p><strong>Where the real edges are, and are not.</strong> The <code>docs:api</code> column is punched in every package it stands in: <a href="${HOME.repo}/tree/main/www/lit-ui-router.dev"><code>@www/lit-ui-router.dev#build</code></a> names its ${PRODUCERS} producers directly rather than walking <code>^docs:api</code> through devDependencies it never imports (<a href="${HOME.repo}/pull/693">#693</a>). That is this plate's thesis arriving from the other side — scaffolding leaves the graph and the real work stays. It is also why real→real edges are a small fraction of ${fmt(CI.edges)}: most edges land on a node that runs nothing.</p>`,
   key: [
     keyRow(`<rect x="14" y="3" width="15" height="10" class="sk fa"/>`, 'punched — the task runs a command'),
     keyRow(`<rect x="14" y="3" width="15" height="10" stroke="var(--ink-faint)" stroke-width="1" fill="url(#${P}-hp)"/>`, 'unpunched — placeholder node, runs nothing'),

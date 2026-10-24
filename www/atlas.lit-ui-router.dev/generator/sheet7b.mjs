@@ -200,6 +200,8 @@ const lampsNote = (b) => (b.lamps ? `${b.lamps} lamp${b.lamps === 1 ? '' : 's'} 
 assertPlots('plate 7B', [...geom.values()].flatMap(plotsOf));
 const pt = (x, y, z = 0) => isoPt(OX, OY, x, y, z);
 const p2 = (x, y, z = 0) => pt(x, y, z).map((v) => v.toFixed(1)).join(',');
+// the shopfront lettering stands off the district's north-east corner, clear of its north row
+const SITE_NE = pt(DISTRICT_BOUNDS.site[2], DISTRICT_BOUNDS.site[1]);
 
 // ---- the plant sprite -------------------------------------------------------------
 function plant(n) {
@@ -395,10 +397,10 @@ ${txt(1540, 401, `${dsteam('app')} commits/90d · accent lamps: real e2e light,`
 ${txt(1540, 413, `no meter reads it · rust: vanilla ${RUST_T[g(6).rust]}, mobx ${RUST_T[g(7).rust]}`, 'lblf', 'end')}
 ${lead(1292, 420, DISTRICT_BOUNDS.app[2], DISTRICT_BOUNDS.app[1])}
 
-${txt(1049, 668, 'www/ + examples/ — THE SHOPFRONT', 'lblb')}
-${txt(1049, 681, `docs: ${PUFFS(g(10).steam)} puffs (${g(10).steam}c), ${lampsNote(g(10))} — ${dimOf(10)} metered light`, 'lblf')}
-${txt(1049, 695, `examples: ${PUFFS(g(11).steam)} puffs (${g(11).steam}c), ${lampsNote(g(11))}, rust ${RUST_T[g(11).rust]} — ${PUFFS(g(11).steam) === 3 ? 'at full steam' : 'steaming'}, ${g(11).lamps ? 'barely lit' : 'unlit'}`, 'lblf')}
-${lead(1043, 664, DISTRICT_BOUNDS.site[2] - 57, DISTRICT_BOUNDS.site[1])}
+${txt(SITE_NE[0] + 14, SITE_NE[1] + 18, 'www/ + examples/ — THE SHOPFRONT', 'lblb')}
+${txt(SITE_NE[0] + 14, SITE_NE[1] + 31, `docs: ${PUFFS(g(10).steam)} puffs (${g(10).steam}c), ${lampsNote(g(10))} — ${dimOf(10)} metered light`, 'lblf')}
+${txt(SITE_NE[0] + 14, SITE_NE[1] + 45, `examples: ${PUFFS(g(11).steam)} puffs (${g(11).steam}c), ${lampsNote(g(11))}, rust ${RUST_T[g(11).rust]} — ${PUFFS(g(11).steam) === 3 ? 'at full steam' : 'steaming'}, ${g(11).lamps ? 'barely lit' : 'unlit'}`, 'lblf')}
+${lead(SITE_NE[0] + 8, SITE_NE[1] + 14, DISTRICT_BOUNDS.site[2], DISTRICT_BOUNDS.site[1])}
 
 ${txt(60, 560, 'tools/ — THE INSTRUMENT YARD', 'lblb')}
 ${txt(60, 573, `${dsteam('tool')} commits/90d across ${TOOLN} machines · pipes all green`, 'lblf')}

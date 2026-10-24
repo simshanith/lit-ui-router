@@ -1,27 +1,27 @@
 {
   "ref": "www/atlas",
-  "sha": "2011c945",
-  "commitDate": "2026-10-17T22:04:42-07:00",
-  "generatedAtTime": "2026-10-18T18:16:34.437Z",
+  "sha": "ca744f09",
+  "commitDate": "2026-10-23T15:45:46-07:00",
+  "generatedAtTime": "2026-10-24T16:23:19.528Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/survey-self.mjs",
-  "used": "git archive www/atlas @ 2011c945",
+  "used": "git archive www/atlas @ ca744f09",
   "wasAssociatedWith": [
     "scc 4.0.0 (mise x aqua:boyter/scc)",
     "git"
   ],
   "scope": "www/atlas.lit-ui-router.dev/",
-  "tracked": 307,
+  "tracked": 313,
   "rows": [
-    {"member":"survey","name":"the survey office","ground":"generator/census*.mjs · basis.mjs · survey-*.mjs","srcFiles":28,"srcSloc":2972,"specFiles":0,"specSloc":0},
-    {"member":"drawing","name":"the drawing office","ground":"generator/ — every other module","srcFiles":67,"srcSloc":17811,"specFiles":0,"specSloc":0},
+    {"member":"survey","name":"the survey office","ground":"generator/census*.mjs · basis.mjs · survey-*.mjs","srcFiles":29,"srcSloc":3164,"specFiles":0,"specSloc":0},
+    {"member":"drawing","name":"the drawing office","ground":"generator/ — every other module","srcFiles":68,"srcSloc":18112,"specFiles":0,"specSloc":0},
     {"member":"site","name":"the routed site","ground":"app/src/ — not app/src/generated/","srcFiles":19,"srcSloc":4693,"specFiles":0,"specSloc":0},
     {"member":"build","name":"the site build","ground":"app/* · app/test/ — prerender, vite, artifact, lint config, the route bench","srcFiles":4,"srcSloc":373,"specFiles":1,"specSloc":98}
   ],
   "excluded": [
-    {"rule":"data/ — the filed plates","files":23,"sloc":13529},
+    {"rule":"data/ — the filed plates","files":24,"sloc":14127},
     {"rule":"app/src/generated/ — written by build.mjs","files":12,"sloc":1203},
-    {"rule":"app/public/ — fragments, pictures, model, manifest","files":118,"sloc":21655},
-    {"rule":"*.md — README (generated), HISTORY and the other prose","files":14,"sloc":4432},
+    {"rule":"app/public/ — fragments, pictures, model, manifest","files":121,"sloc":23067},
+    {"rule":"*.md — README (generated), HISTORY and the other prose","files":14,"sloc":4483},
     {"rule":".agents/ · .claude/ · .claude-plugin/ — the skills and their manifest","files":4,"sloc":5}
   ],
   "offRuler": [
