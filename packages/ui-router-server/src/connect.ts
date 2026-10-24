@@ -22,6 +22,7 @@
  * the DOM-free compile keeps enforcing runtime-neutrality everywhere else.
  */
 
+import { registeredDelegates } from './delegate-registry.ts';
 import { mergeSearch } from './index.ts';
 import type { ServerRouter } from './index.ts';
 
@@ -104,6 +105,15 @@ export interface ConnectAdapterOptions {
    * middleware sits behind the static layer and should judge everything.
    */
   shouldHandle?: (req: ConnectRequest) => boolean;
+  /**
+   * How delegating states are served. Connect has no fetch-shaped handler
+   * bridge, so `'next'` is the only mode: a navigation that matches a
+   * delegating state passes to the downstream stack, which must serve it.
+   * Without it, construction throws for a router from `createServerRouter`
+   * that names delegate keys, and a structural router's delegate verdict
+   * fails the request through `next(error)`.
+   */
+  delegates?: 'next';
 }
 
 const isHeaderString = (
@@ -147,6 +157,11 @@ const defaultServeNotFound = (
   res.end(req.method === 'HEAD' ? undefined : `404 Not Found — ${mount}\n`);
 };
 
+const unservedDelegate = (key: string): Error =>
+  new Error(
+    `createConnectMiddleware: a delegate verdict for '${key}' needs delegates: 'next'`,
+  );
+
 /**
  * Wraps a {@link ServerRouter} as Connect middleware. Mount it BEFORE the
  * static layer; the default host serves shells by rewriting `req.url` and
@@ -164,6 +179,11 @@ const defaultServeNotFound = (
  *   alternate representation of the mount root), then {@link ConnectAdapterOptions.serveShell | serveShell}.
  * - `notFound` with a mount → {@link ConnectAdapterOptions.serveNotFound | serveNotFound} (honest 404).
  * - `notFound` without a mount, or a non-navigation request → `next()`.
+ * - `delegate` → `next()` with {@link ConnectAdapterOptions.delegates | `delegates: 'next'`}; mount the
+ *   handlers for delegating states downstream.
+ *
+ * @throws at construction when the router names delegate keys and
+ * {@link ConnectAdapterOptions.delegates | delegates} is not `'next'`
  */
 export function createConnectMiddleware(
   router: ServerRouter,
@@ -178,6 +198,14 @@ export function createConnectMiddleware(
     serveNotFound = defaultServeNotFound,
     shouldHandle = isNavigation,
   } = options;
+
+  const passDelegates = options.delegates === 'next';
+  const keys = registeredDelegates(router)?.keys ?? new Set<string>();
+
+  if (!passDelegates && keys.size > 0)
+    throw new Error(
+      `createConnectMiddleware: the router names delegate keys (${[...keys].join(', ')}); Connect cannot call them, so pass delegates: 'next' and serve those states downstream`,
+    );
 
   return (req, res, next) => {
     if (!shouldHandle(req)) {
@@ -212,7 +240,13 @@ export function createConnectMiddleware(
         return;
       }
 
-      if (verdict.mount === undefined) {
+      if (verdict.kind === 'delegate' && !passDelegates) {
+        next(unservedDelegate(verdict.delegate));
+
+        return;
+      }
+
+      if (verdict.kind === 'delegate' || verdict.mount === undefined) {
         next();
 
         return;

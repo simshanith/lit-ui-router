@@ -21,6 +21,21 @@ npm install ui-router-server
 dependencies. Full docs:
 [lit-ui-router.dev/packages/server](https://lit-ui-router.dev/packages/server).
 
+## Delegating states
+
+A state can name a host handler by key, `{ name: 'claims', url: '/claims', delegate: 'ledger' }`,
+and the fetch and Hono adapters map keys to fetch-shaped handlers, so a Hono app's `fetch` fits
+bare: `createFetchHandler(router, { serveShell, delegates: { ledger: ledgerApp.fetch } })`.
+Every handler gets the original request plus the adapter's own extra arguments
+(`handler(request, env, ctx)`), so all of them share one signature. The request keeps its url,
+mount base included: route on the `subpath` that `delegateContext(c.req.raw, 'ledger')` returns,
+or mount the delegating states at `/`. A request of any method that matches a delegating state
+gets the handler's `Response`, untouched; other non-navigations only match urls and never run a
+transition. Construction throws for a key the tree names and `delegates` lacks, and `as const`
+routes make that a compile error. The Connect adapter throws for delegate keys unless you pass
+`delegates: 'next'` and serve those states downstream. See
+[delegating states](https://lit-ui-router.dev/packages/server#delegating-states).
+
 ## Attribution
 
 URL-matching logic (`src/url-matcher.ts`) is derived from [@uirouter/core](https://github.com/ui-router/core) (MIT) — see [LICENSE](./LICENSE).
