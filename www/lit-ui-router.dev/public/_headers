@@ -1,3 +1,7 @@
 /*
   Cross-Origin-Opener-Policy: same-origin
   Cross-Origin-Embedder-Policy: credentialless
+  Link: </llms.txt>; rel="describedby", </introduction>; rel="service-doc"
+
+/assets/*
+  ! Link
