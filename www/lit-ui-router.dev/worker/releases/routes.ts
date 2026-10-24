@@ -39,14 +39,6 @@ export const releaseRoutes = [
   { name: 'notFound' },
 ] as const satisfies readonly ReleaseRoute[];
 
-/** The diff page's data routes, whose answers never change: the edge cache keeps them. */
-const DIFF_DATA =
-  /^\/releases\/[^/]+\/diff\/[^/]+\/(?:index\.json|files\/[^/]+|patch)$/;
-
-/** Whether `pathname` names one of the diff page's data routes. */
-export const isDiffData = (pathname: string): boolean =>
-  DIFF_DATA.test(pathname);
-
 /** Urls GitHub ought to have, each handing off to github.com. */
 export const ghRoutes = [
   { name: 'githubRelease', url: '/releases/{pkg}/latest', response: true },

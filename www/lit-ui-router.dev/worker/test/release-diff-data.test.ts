@@ -1,166 +1,137 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import {
-  type DiffBucket,
-  type DiffPair,
-  indexKey,
-  patchKey,
-  type StoredBody,
-} from '@tools/npm-diff';
-import { type DiffIndex, indexPatch } from '@tools/npm-diff/diff-index';
-
 import '../dom-shim.ts';
-import {
-  type DiffBuilder,
-  type DiffSource,
-  diffSource,
-} from '../releases/diff-data.ts';
-import { isDiffData } from '../releases/routes.ts';
+import type { DiffIndex, ReleaseDiffs } from '../releases/diff-data.ts';
+import type { EdgeCache } from '../releases/edge-cache.ts';
+import type { FileFilter } from '../releases/npm-diff/file-filter.ts';
 import { serveReleases } from '../releases/serve.ts';
 import { fixtureLedger } from './ledger-stub/rows.ts';
+import { memoryEdge } from './memory-cache.ts';
 
 const ORIGIN = 'http://docs.test';
 
 const PAGE = '/releases/lit-ui-router/diff/1.9.0...1.10.0';
 
-const section = (path: string, header = '', body = '@@ -1,1 +1,1 @@\n-a\n+b') =>
-  `diff --git a/${path} b/${path}\n${header}index v1.9.0..v1.10.0 100644\n--- a/${path}\n+++ b/${path}\n${body}\n`;
+const INDEX: DiffIndex = {
+  files: [
+    {
+      path: 'src/index.ts',
+      kind: 'modified',
+      added: 1,
+      removed: 1,
+      offset: 0,
+      length: 10,
+      filters: ['src', 'all'],
+    },
+  ],
+  bytes: 10,
+};
 
-const PATCH_TEXT = [
-  section('dist/index.js'),
-  section('src/index.ts'),
-  section('dist/index.d.ts'),
-  section('package.json'),
-].join('');
+const PATCH = 'diff --git a/src/index.ts b/src/index.ts\n';
 
-const PATCH = new Uint8Array(new TextEncoder().encode(PATCH_TEXT));
-
-const PAIR: DiffPair = { name: 'lit-ui-router', from: '1.9.0', to: '1.10.0' };
-
-const memoryBucket = (objects = new Map<string, Uint8Array>()) => {
-  const puts: string[] = [];
-
-  const bodyOf = (bytes: Uint8Array): StoredBody => ({
-    arrayBuffer: () => new Response(bytes.slice()).arrayBuffer(),
-    text: () => Promise.resolve(new TextDecoder().decode(bytes)),
-    body: new ReadableStream<Uint8Array>({
-      start: (controller) => {
-        controller.enqueue(bytes.slice());
-        controller.close();
-      },
-    }),
+const streamOf = (text: string): ReadableStream<Uint8Array> =>
+  new ReadableStream({
+    start: (controller) => {
+      controller.enqueue(new TextEncoder().encode(text));
+      controller.close();
+    },
   });
 
-  const bucket: DiffBucket = {
-    get: (key, options) => {
-      const stored = objects.get(key);
-      const range = options?.range;
+/** A stub of the RELEASE_DIFFS binding that records each call; `fail` makes every call reject, as a broken binding does. */
+const stubDiffs = ({ fail = false } = {}) => {
+  const calls: string[] = [];
 
-      return Promise.resolve(
-        stored === undefined
-          ? null
-          : bodyOf(
-              range
-                ? stored.subarray(range.offset, range.offset + range.length)
-                : stored,
-            ),
-      );
-    },
-    put: (key, value) => {
-      puts.push(key);
-      objects.set(key, value);
+  const call = <T>(name: string, value: () => T): Promise<T> => {
+    calls.push(name);
 
-      return Promise.resolve(null);
-    },
+    return fail
+      ? Promise.reject(new Error('NotPublished: lit-ui-router@1.10.0'))
+      : Promise.resolve(value());
   };
 
-  return { bucket, objects, puts };
+  const diffs: ReleaseDiffs = {
+    index: (pair) => call(`index ${pair.from}...${pair.to}`, () => INDEX),
+    files: (pair, filter: FileFilter) =>
+      call(`files ${pair.from}...${pair.to} ${filter}`, () =>
+        streamOf(`${filter}:${PATCH}`),
+      ),
+    patch: (pair) =>
+      call(`patch ${pair.from}...${pair.to}`, () => streamOf(PATCH)),
+  };
+
+  return { diffs, calls };
 };
 
-/** A bucket holding the pair's complete entry. */
-const storedBucket = () =>
-  memoryBucket(
-    new Map([
-      [patchKey(PAIR), PATCH],
-      [
-        indexKey(PAIR),
-        new TextEncoder().encode(JSON.stringify(indexPatch(PATCH))),
-      ],
-    ]),
+const serve = (
+  path: string,
+  diffs: ReleaseDiffs,
+  init?: RequestInit,
+  edge?: EdgeCache,
+) =>
+  serveReleases(
+    new Request(`${ORIGIN}${path}`, init),
+    fixtureLedger,
+    diffs,
+    edge,
   );
 
-/** A DiffSource over the stored entry that records each pair it is asked for. */
-const recordingSource = () => {
-  const asked: DiffPair[] = [];
-  const read = diffSource(storedBucket().bucket, unreachable);
-
-  const source: DiffSource = (pair) => {
-    asked.push(pair);
-
-    return read(pair);
-  };
-
-  return { source, asked };
-};
-
-const unreachable: DiffBuilder = {
-  releaseDiff: () => Promise.reject(new Error('no releaseDiff method')),
-};
-
-const serve = (path: string, source: DiffSource, init?: RequestInit) =>
-  serveReleases(new Request(`${ORIGIN}${path}`, init), fixtureLedger, source);
+const IMMUTABLE = 'public, max-age=31536000, immutable';
 
 describe('the diff page data routes', () => {
   it('serves the index as immutable json', async () => {
-    const { source, asked } = recordingSource();
-    const response = await serve(`${PAGE}/index.json`, source);
+    const { diffs, calls } = stubDiffs();
+    const response = await serve(`${PAGE}/index.json`, diffs);
 
     assert.equal(response?.status, 200);
     assert.equal(response?.headers.get('Content-Type'), 'application/json');
-    assert.equal(
-      response?.headers.get('Cache-Control'),
-      'public, max-age=31536000, immutable',
-    );
-    assert.deepEqual(await response?.json(), indexPatch(PATCH));
-    assert.deepEqual(asked, [PAIR]);
+    assert.equal(response?.headers.get('Cache-Control'), IMMUTABLE);
+    assert.deepEqual(await response?.json(), INDEX);
+    assert.deepEqual(calls, ['index 1.9.0...1.10.0']);
   });
 
-  it("serves only a preset's files, in patch order", async () => {
-    const { source } = recordingSource();
-
-    const text = async (preset: string) =>
-      (await serve(`${PAGE}/files/${preset}`, source))?.text();
-
-    assert.equal(
-      await text('src'),
-      section('src/index.ts') + section('package.json'),
-    );
-    assert.equal(await text('js'), section('dist/index.js'));
-    assert.equal(await text('types'), section('dist/index.d.ts'));
-    assert.equal(await text('all'), PATCH_TEXT);
-  });
-
-  it('serves the whole patch as a download', async () => {
-    const { source } = recordingSource();
-    const response = await serve(`${PAGE}/patch`, source);
+  it("serves a preset's files from the binding", async () => {
+    const { diffs, calls } = stubDiffs();
+    const response = await serve(`${PAGE}/files/types`, diffs);
 
     assert.equal(response?.status, 200);
     assert.equal(
       response?.headers.get('Content-Type'),
       'text/x-diff; charset=utf-8',
     );
+    assert.equal(response?.headers.get('Cache-Control'), IMMUTABLE);
+    assert.equal(await response?.text(), `types:${PATCH}`);
+    assert.deepEqual(calls, ['files 1.9.0...1.10.0 types']);
+  });
+
+  it('serves the whole patch as a download', async () => {
+    const { diffs, calls } = stubDiffs();
+    const response = await serve(`${PAGE}/patch`, diffs);
+
+    assert.equal(response?.status, 200);
     assert.equal(
       response?.headers.get('Content-Disposition'),
       'attachment; filename="lit-ui-router-1.9.0...1.10.0.patch"',
     );
-    assert.equal(await response?.text(), PATCH_TEXT);
+    assert.equal(await response?.text(), PATCH);
+    assert.deepEqual(calls, ['patch 1.9.0...1.10.0']);
+  });
+
+  it('asks for a reversed pair as written', async () => {
+    const { diffs, calls } = stubDiffs();
+
+    await serve(
+      '/releases/lit-ui-router/diff/1.10.0...1.9.0/index.json',
+      diffs,
+    );
+
+    assert.deepEqual(calls, ['index 1.10.0...1.9.0']);
   });
 
   it('answers HEAD without a body', async () => {
-    const { source } = recordingSource();
+    const { diffs } = stubDiffs();
 
-    const response = await serve(`${PAGE}/index.json`, source, {
+    const response = await serve(`${PAGE}/index.json`, diffs, {
       method: 'HEAD',
     });
 
@@ -176,17 +147,17 @@ describe('the diff page data routes', () => {
   ];
 
   for (const path of unknown) {
-    it(`answers 404 for ${path} before reading or building a diff`, async () => {
-      const { source, asked } = recordingSource();
-      const response = await serve(path, source);
+    it(`answers 404 for ${path} before calling the binding`, async () => {
+      const { diffs, calls } = stubDiffs();
+      const response = await serve(path, diffs);
 
       assert.equal(response?.status, 404);
-      assert.deepEqual(asked, []);
+      assert.deepEqual(calls, []);
     });
   }
 
-  it('answers 404 before reading a diff for a version npm never published', async () => {
-    const { source, asked } = recordingSource();
+  it('answers 404 before calling the binding for a version npm never published', async () => {
+    const { diffs, calls } = stubDiffs();
 
     const response = await serveReleases(
       new Request(`${ORIGIN}${PAGE}/index.json`),
@@ -197,86 +168,81 @@ describe('the diff page data routes', () => {
             row.version === '1.9.0' ? { ...row, npm_integrity: null } : row,
           ),
       },
-      source,
+      diffs,
     );
 
     assert.equal(response?.status, 404);
-    assert.deepEqual(asked, []);
+    assert.deepEqual(calls, []);
   });
 
-  it('names only the data routes as edge-cacheable', () => {
-    assert.ok(isDiffData(`${PAGE}/index.json`));
-    assert.ok(isDiffData(`${PAGE}/files/src`));
-    assert.ok(isDiffData(`${PAGE}/patch`));
-    assert.ok(isDiffData('/releases/%40scope%2Fpkg/diff/1.0.0...2.0.0/patch'));
-    assert.ok(!isDiffData(`${PAGE}/`));
-    assert.ok(!isDiffData('/releases/lit-ui-router/diff'));
-    assert.ok(!isDiffData('/releases/lit-ui-router/1.10.0/'));
-  });
+  for (const route of ['index.json', 'files/src', 'patch']) {
+    it(`answers ${route} with an uncached 503 when the binding fails`, async () => {
+      const { diffs } = stubDiffs({ fail: true });
+      const memory = memoryEdge();
+      const response = await serve(`${PAGE}/${route}`, diffs, {}, memory.edge);
+      await memory.settled();
+
+      assert.equal(response?.status, 503);
+      assert.equal(response?.headers.get('Cache-Control'), 'no-store');
+      assert.equal(memory.entries.size, 0);
+    });
+  }
 });
 
-describe('diffSource', () => {
-  /** A builder that stores the entry, as the ledger's ReleaseDiff object does, and counts its calls. */
-  const storingBuilder = (
-    bucket: DiffBucket,
-    objects: Map<string, Uint8Array>,
-  ) => {
-    let calls = 0;
+describe('the diff page data routes at the edge', () => {
+  const KEY = `${ORIGIN}${PAGE}/files/src`;
 
-    const builder: DiffBuilder = {
-      releaseDiff: (pair): Promise<DiffIndex> => {
-        calls++;
+  it('stores an answer under the GET url and serves it without the ledger or the binding', async () => {
+    const memory = memoryEdge();
+    const first = stubDiffs();
 
-        const index = indexPatch(PATCH);
+    const miss = await serve(`${PAGE}/files/src`, first.diffs, {}, memory.edge);
+    assert.equal(await miss?.text(), `src:${PATCH}`);
+    await memory.settled();
 
-        objects.set(patchKey(pair), PATCH);
-        objects.set(
-          indexKey(pair),
-          new TextEncoder().encode(JSON.stringify(index)),
-        );
-
-        return Promise.resolve(index);
-      },
-    };
-
-    return { builder, calls: () => calls, bucket };
-  };
-
-  it('reads a stored entry without asking the ledger', async () => {
-    const { bucket, objects } = storedBucket();
-    const { builder, calls } = storingBuilder(bucket, objects);
-    const diff = await diffSource(bucket, builder)(PAIR);
-
-    assert.equal(calls(), 0);
-    assert.deepEqual(diff.index, indexPatch(PATCH));
-  });
-
-  it("asks the pair's object on a miss, then reads what it stored", async () => {
-    const { bucket, objects, puts } = memoryBucket();
-    const { builder, calls } = storingBuilder(bucket, objects);
-    const diff = await diffSource(bucket, builder)(PAIR);
-
-    assert.equal(calls(), 1);
+    assert.deepEqual([...memory.entries.keys()], [KEY]);
     assert.equal(
-      await diff.files(diff.index.files.slice(1, 2)),
-      section('src/index.ts'),
+      memory.entries.get(KEY)?.headers.get('Cache-Control'),
+      IMMUTABLE,
     );
-    assert.deepEqual(puts, [], 'the docs worker never writes the bucket');
+
+    const second = stubDiffs({ fail: true });
+    memory.advance(365 * 86_400_000);
+
+    const hit = await serveReleases(
+      new Request(KEY),
+      {
+        packages: () => Promise.reject(new Error('ledger read')),
+        tagged: () => Promise.reject(new Error('ledger read')),
+        versions: () => Promise.reject(new Error('ledger read')),
+      },
+      second.diffs,
+      memory.edge,
+    );
+
+    assert.equal(hit?.status, 200);
+    assert.equal(hit?.headers.get('Cache-Control'), IMMUTABLE);
+    assert.equal(await hit?.text(), `src:${PATCH}`);
+    assert.deepEqual(second.calls, []);
+    assert.equal(memory.background(), 1, 'an immutable hit never refreshes');
   });
 
-  it('builds in place, storing nothing, when the ledger cannot', async () => {
-    const { bucket, puts } = memoryBucket();
-    const built: DiffPair[] = [];
+  it('answers HEAD from the GET entry', async () => {
+    const memory = memoryEdge();
+    const { diffs, calls } = stubDiffs();
 
-    const diff = await diffSource(bucket, unreachable, (pair) => {
-      built.push(pair);
+    await serve(`${PAGE}/index.json`, diffs, {}, memory.edge);
+    await memory.settled();
 
-      return Promise.resolve(PATCH);
-    })(PAIR);
+    const head = await serve(
+      `${PAGE}/index.json`,
+      diffs,
+      { method: 'HEAD' },
+      memory.edge,
+    );
 
-    assert.deepEqual(built, [PAIR]);
-    assert.deepEqual(diff.index, indexPatch(PATCH));
-    assert.equal(await diff.files(diff.index.files), PATCH_TEXT);
-    assert.deepEqual(puts, []);
+    assert.equal(head?.status, 200);
+    assert.equal(head?.body, null);
+    assert.deepEqual(calls, ['index 1.9.0...1.10.0']);
   });
 });

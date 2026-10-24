@@ -32,10 +32,6 @@ const ALLOWED: SplitAllowance[] = [
     why: 'catalogs.peerFloor pins @uirouter/core-floor to 6.0.8, every package peer floor check:bundle bundles against',
   },
   {
-    name: 'binary-extensions',
-    why: "chokidar 3's is-binary-path pins ^2, under the cem analyzer and vite-plugin-static-copy; @tools/npm-diff follows libnpmdiff's ^3 list",
-  },
-  {
     name: 'effect',
     why: 'the effect-3 alias (catalogs.effect3-compat) runs test:effect3-compat beside the effect 4 line, and catalogs.peerFloor pins effect-floor to 3.22.0, the effect peer floor check:bundle bundles against',
   },

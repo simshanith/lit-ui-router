@@ -133,12 +133,7 @@ package has a `cloudflare.config.ts` deploys with `cf` instead, from the package
 nothing migrates, since `cloudflare.config.ts` declares no D1 migrations. A failed
 migration stops the deploy, so production code never runs ahead of its schema. Only `main`
 migrates: a version upload binds the same remote databases as production, and a Preview binds
-only what its `previews` block names. Durable Object classes follow
-the same split: `wrangler deploy` applies a `migrations` entry, and
-[`wrangler versions upload` refuses a version that adds, renames or deletes a class](https://developers.cloudflare.com/workers/versions-and-deployments/deployment-management/#durable-object-migrations),
-so a branch that adds one fails its preview build until `main` deploys it. Only the release
-ledger, which has no Version URLs, implements a Durable Object:
-[Cloudflare generates no Version URLs for a Worker that does](https://developers.cloudflare.com/workers/configuration/previews/#limitations). wrangler skips its migration
+only what its `previews` block names. wrangler skips its migration
 confirmation prompt when `WORKERS_CI` is set (as it is in Workers Builds) or there is no TTY,
 answering yes, so the step neither waits nor skips. A moved `wrangler.jsonc` changes this
 script's internals and leaves the dashboard alone — no `--apply` owed, and no ordering against
@@ -392,7 +387,8 @@ the ledger; its one script, `/release-diff.js`, renders the patch `npm diff`
 would print beside a
 [`@pierre/trees`](https://www.npmjs.com/package/@pierre/trees)
 file tree. Presets narrow both to source, published JS, types or all files;
-`?files=js|types|all` names any but the default, source (the presets live in
+`?files=js|types|all` names any but the default, source (their labels and url
+handling live in
 [`worker/releases/npm-diff/file-filter.ts`](lit-ui-router.dev/worker/releases/npm-diff/file-filter.ts)).
 The docs build
 emits that script from
@@ -400,21 +396,19 @@ emits that script from
 in a Vite build of its own (`.vitepress/vite.config.ts`).
 
 The browser never fetches a tarball. The script reads the page's data routes,
-`index.json`, `files/<preset>` and `patch`, which the worker answers only for
-a pair the ledger validates, through the Cache API as immutable. Each pair is
-built once: the ledger worker's `ReleaseDiff` Durable Object, one per pair,
-writes the patch and then its index to the `release-diffs` R2 bucket under
-`v1/<pkg>/<from>...<to>/`
-([`@tools/npm-diff`](../tools/npm-diff/src/store.ts)). The docs worker reads
-R2 first and calls `releaseDiff` on the `LEDGER` binding on a miss. If that
-call fails, as it does against a ledger that predates the method, the worker
-builds the pair itself and stores nothing, so the production ledger stays the
-bucket's only writer and previews can share it.
+`index.json`, `files/<preset>` and `patch`, which the worker answers only for a
+pair the ledger validates. Each calls the method of the same name on the
+`RELEASE_DIFFS` service binding, the
+[release-diffs worker](release-diffs.lit-ui-router.dev/README.md)'s default
+entrypoint, which builds a pair once and keeps it in R2. The index lists the
+presets each file belongs to. The answers are immutable, so the Cache API keeps
+them without refreshing (`cacheKey` in `worker/releases/states.ts`). A failed
+call answers 503 and is never cached.
 
-Preview uploads bind the production ledger and bucket the same way. Locally the binding
-reaches only a ledger running in another dev process, and the pages answer 503
-without one. To serve fixture rows, pass both configs, the docs worker's first;
-the stub has no `releaseDiff`, so diffs build in the docs worker:
+Preview uploads bind the production ledger and release-diffs workers the same
+way. Locally the bindings reach only workers running in another dev process,
+and the pages answer 503 without one. To serve fixture rows, pass both configs,
+the docs worker's first; the diff pages' data routes still answer 503:
 
 ```bash
 pnpm --filter @www/lit-ui-router.dev wrangler:dev -c wrangler.jsonc -c worker/test/ledger-stub/wrangler.jsonc

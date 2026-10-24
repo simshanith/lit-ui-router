@@ -5,13 +5,8 @@ import type {
   Status,
   VersionRow,
 } from '@tools/release-ledger';
-import {
-  isStable,
-  newestFirst,
-  previousIn,
-} from '@tools/release-ledger/versions';
-
-export { isStable, previousIn };
+import prerelease from 'semver/functions/prerelease.js';
+import rcompare from 'semver/functions/rcompare.js';
 
 /** A `versions` row with the states the ledger's `version_states` view derives. */
 export interface LedgerVersion extends VersionRow {
@@ -38,6 +33,31 @@ export interface LedgerReader {
 export class NotInLedger extends Error {
   override name = 'NotInLedger';
 }
+
+/** Whether a version is stable: no prerelease identifiers. */
+export const isStable = (version: string): boolean =>
+  prerelease(version) === null;
+
+/**
+ * The version `row` follows in `versions` (newest first): the next older stable for a stable
+ * version, the next older of any kind for a prerelease, or null for the first.
+ */
+export const previousIn = <Row extends { version: string }>(
+  versions: readonly Row[],
+  row: Row,
+): Row | null => {
+  const at = versions.findIndex(({ version }) => version === row.version);
+
+  if (at === -1) return null;
+
+  const older = versions.slice(at + 1);
+
+  return (
+    (isStable(row.version)
+      ? older.find(({ version }) => isStable(version))
+      : older[0]) ?? null
+  );
+};
 
 /** Two versions to compare, older first; either is absent for a package with no versions. */
 export interface VersionPair<Row> {
@@ -73,7 +93,7 @@ export const versionsOf =
 
     if (versions.length === 0) throw new NotInLedger(pkg);
 
-    return newestFirst(versions);
+    return [...versions].sort((a, b) => rcompare(a.version, b.version));
   };
 
 /** One version's row from its package's list, or a `NotInLedger` rejection. */

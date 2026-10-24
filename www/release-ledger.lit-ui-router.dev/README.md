@@ -47,17 +47,6 @@ stores, its regions and the fold, is
   for other workers to read through a service binding; its rows carry the
   derived states from `version_states`. A D1 binding would give them write
   access too.
-- **`LedgerReader.releaseDiff`** serves the docs worker's release diff pages.
-  It forwards each version pair to that pair's `ReleaseDiff` Durable Object
-  ([`worker/index.ts`](./worker/index.ts)), which builds the
-  pair's `npm diff` from the registry's tarballs once and stores it in the
-  `release-diffs` R2 bucket ([`@tools/npm-diff`](../../tools/npm-diff/src/store.ts)).
-  The object keeps no storage of its own. Callers validate the pair first,
-  since each pair names an object. The production `wrangler deploy` applies the
-  class's migration. When a claim first records a version on npm, the
-  consumer has the object build the diff from the version before it, the one
-  the version's release page links ([`src/prebuild.ts`](./src/prebuild.ts));
-  a failed build is logged and the claim still lands.
 
 The consumer reads GitHub with the `GITHUB_TOKEN` secret, a read-only token.
 

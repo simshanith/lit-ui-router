@@ -1,74 +1,37 @@
-// A version pair's diff for the diff page's data routes: read from R2, built by the release ledger's ReleaseDiff object on a miss.
-import {
-  buildPatch,
-  type ByteRange,
-  type DiffBucket,
-  type DiffPair,
-  objectName,
-  patchRange,
-  readIndex,
-  readPatch,
-  readSections,
-} from '@tools/npm-diff';
-import {
-  type DiffFile,
-  type DiffIndex,
-  indexPatch,
-} from '@tools/npm-diff/diff-index';
+// The release-diffs worker's RPC surface, as the docs worker calls it through the RELEASE_DIFFS service binding.
+import type { FileFilter } from './npm-diff/file-filter.ts';
 
-/** The release-ledger `LedgerReader` method that has a pair's `ReleaseDiff` object build its entry. */
-export interface DiffBuilder {
-  releaseDiff(pair: DiffPair): Promise<DiffIndex>;
+/** Two published versions of one package, older or newer first. */
+export interface DiffPair {
+  name: string;
+  from: string;
+  to: string;
 }
 
-/** One pair's diff: its index, some files' patch sections, and the whole patch. */
-export interface PairDiff {
-  index: DiffIndex;
-  files(files: readonly DiffFile[]): Promise<string>;
-  patch(): Promise<ReadableStream<Uint8Array> | Uint8Array<ArrayBuffer>>;
+/** One file's entry in a pair's index; `offset` and `length` are UTF-8 bytes into the patch. */
+export interface DiffFile {
+  path: string;
+  kind: 'added' | 'deleted' | 'modified';
+  added: number;
+  removed: number;
+  offset: number;
+  length: number;
+  /** The presets that show this file. */
+  filters: FileFilter[];
 }
 
-/** A pair's diff, for a pair the ledger has validated. */
-export type DiffSource = (pair: DiffPair) => Promise<PairDiff>;
+/** A pair's files in patch order, and the patch's size in bytes. */
+export interface DiffIndex {
+  files: DiffFile[];
+  bytes: number;
+}
 
-const stored = (
-  bucket: DiffBucket,
-  pair: DiffPair,
-  index: DiffIndex,
-): PairDiff => ({
-  index,
-  files: (files) => readSections(patchRange(bucket, pair), files),
-  patch: () => readPatch(bucket, pair),
-});
-
-const inMemory = (patch: Uint8Array<ArrayBuffer>): PairDiff => ({
-  index: indexPatch(patch),
-  files: (files) =>
-    readSections(
-      ({ offset, length }: ByteRange) =>
-        Promise.resolve(patch.subarray(offset, offset + length)),
-      files,
-    ),
-  patch: () => Promise.resolve(patch),
-});
-
-/**
- * R2 first, then the pair's ReleaseDiff object, which builds and stores the entry. Without the object (a
- * ledger that predates `releaseDiff`, or one that fails) the pair builds here and nothing is stored: only the
- * production ledger writes the bucket that previews share.
- */
-export const diffSource =
-  (bucket: DiffBucket, builder: DiffBuilder, build = buildPatch): DiffSource =>
-  async (pair) => {
-    const index = await readIndex(bucket, pair);
-
-    if (index) return stored(bucket, pair, index);
-
-    try {
-      return stored(bucket, pair, await builder.releaseDiff(pair));
-    } catch (error) {
-      console.warn(`${objectName(pair)}: the ledger did not build it`, error);
-
-      return inMemory(await build(pair));
-    }
-  };
+/** The release-diffs worker's default entrypoint; each method builds the pair on a miss and rejects when it can't. */
+export interface ReleaseDiffs {
+  index(pair: DiffPair): Promise<DiffIndex>;
+  files(
+    pair: DiffPair,
+    filter: FileFilter,
+  ): Promise<ReadableStream<Uint8Array>>;
+  patch(pair: DiffPair): Promise<ReadableStream<Uint8Array>>;
+}

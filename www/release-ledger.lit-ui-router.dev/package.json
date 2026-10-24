@@ -16,7 +16,6 @@
   },
   "dependencies": {
     "@effect/sql-d1": "catalog:",
-    "@tools/npm-diff": "catalog:workspace",
     "@tools/release-ledger": "catalog:workspace",
     "effect": "catalog:",
     "jose": "catalog:"

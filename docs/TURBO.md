@@ -313,7 +313,6 @@ TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }
 | `@www/lit-ui-router.dev#check:embeds`      | Neither ci graph — manual and uncached: measures the examples' embed heights (host-dependent font metrics)                                                                               |
 | `typecheck:peer-floor`                     | Neither ci graph — Release signals check runs + bump gate                                                                                                                                |
 | `bench`                                    | Neither ci graph — the advisory `acceptance (bench)` job (Acceptance workflow): `mise run bench_pulse`, uncached; its job summary is the ui-router-server bench pulse                    |
-| `@tools/npm-diff#test:npm-diff`            | Neither ci graph — the advisory `acceptance (npm-diff)` job: `mise run npm_diff_parity`, uncached; reads the npm registry                                                                |
 | `test:peer-floor`                          | `ci:pull_request` — eslint-plugin-lit-ui-router's rule suite on the eslint-floor alias, a leaf of that package's `test` umbrella                                                         |
 
 ## Remote Caching

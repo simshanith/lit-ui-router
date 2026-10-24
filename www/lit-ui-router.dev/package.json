@@ -31,8 +31,6 @@
     "@pierre/diffs": "catalog:",
     "@pierre/trees": "catalog:",
     "@spectrum-web-components/icons-workflow": "catalog:",
-    "@tools/npm-diff": "catalog:workspace",
-    "@tools/release-ledger": "catalog:workspace",
     "@uirouter/core": "catalog:",
     "examples": "catalog:workspace",
     "lit": "catalog:",
@@ -51,6 +49,7 @@
   "devDependencies": {
     "@tools/build_and_test": "catalog:workspace",
     "@tools/embed-heights": "catalog:workspace",
+    "@tools/release-ledger": "catalog:workspace",
     "@tools/shared": "catalog:workspace",
     "@tools/vue-check": "catalog:workspace",
     "@types/node": "catalog:",

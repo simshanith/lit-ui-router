@@ -9,10 +9,5 @@
     "lib": ["ES2022"],
     "types": ["node"]
   },
-  "include": [
-    "*.ts",
-    "acceptance/*.ts",
-    "../index.ts",
-    "../worker-configuration.d.ts"
-  ]
+  "include": ["*.ts", "../index.ts", "../worker-configuration.d.ts"]
 }

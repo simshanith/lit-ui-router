@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { describe, it } from 'node:test';
 
 import '../dom-shim.ts';
-import type { DiffSource } from '../releases/diff-data.ts';
+import type { ReleaseDiffs } from '../releases/diff-data.ts';
 import {
   DIFF_SCRIPT,
   releaseDocument,
@@ -27,8 +27,14 @@ import { memoryEdge } from './memory-cache.ts';
 const ORIGIN = 'http://docs.test';
 
 // The pages never read a diff; the data routes have their own suite.
-const NO_DIFFS: DiffSource = (pair) =>
+const unread = (pair: { name: string; from: string; to: string }) =>
   Promise.reject(new Error(`read ${pair.name}@${pair.from}...${pair.to}`));
+
+const NO_DIFFS: ReleaseDiffs = {
+  index: unread,
+  files: unread,
+  patch: unread,
+};
 
 const serve = (path: string, init?: RequestInit, ledger = fixtureLedger) =>
   serveReleases(new Request(`${ORIGIN}${path}`, init), ledger, NO_DIFFS);

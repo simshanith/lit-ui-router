@@ -7,7 +7,7 @@ import { prerender, settle } from 'lit-ui-router-ssr';
 import { createServerRouter, mergeSearch } from 'ui-router-server';
 import { installServerLocation } from 'ui-router-server/location';
 
-import type { DiffSource } from './diff-data.ts';
+import type { ReleaseDiffs } from './diff-data.ts';
 import { DIFF_SCRIPT, type PageHead, releaseDocument } from './document.ts';
 import { type Answer, cached, type EdgeCache } from './edge-cache.ts';
 import { type LedgerReader, NotInLedger } from './ledger.ts';
@@ -72,7 +72,11 @@ const UNAVAILABLE: PageHead = {
 };
 
 /** One request's page router at `mount`, and its states by name. */
-const routerFor = (mount: string, ledger: LedgerReader, diffs: DiffSource) => {
+const routerFor = (
+  mount: string,
+  ledger: LedgerReader,
+  diffs: ReleaseDiffs,
+) => {
   const router = installServerLocation(new UIRouterLit(), {
     baseHref: `${mount}/`,
     urlConfig,
@@ -215,7 +219,7 @@ const answer = async (
 export const serveReleases = async (
   request: Request,
   ledger: LedgerReader,
-  diffs: DiffSource,
+  diffs: ReleaseDiffs,
   edge?: EdgeCache,
 ): Promise<Response | null> => {
   const url = new URL(request.url);

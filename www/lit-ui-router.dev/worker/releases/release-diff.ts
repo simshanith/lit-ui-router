@@ -1,5 +1,4 @@
 // The diff page's client: fetches the pair's index, then the shown preset's patch sections, and renders them with @pierre/diffs.
-import type { DiffFile, DiffIndex } from '@tools/npm-diff/diff-index';
 import {
   type FileDiffMetadata,
   FileDiff,
@@ -11,6 +10,7 @@ import {
 import { getOrCreateWorkerPoolSingleton } from '@pierre/diffs/worker';
 import DiffsWorker from '@pierre/diffs/worker/worker.js?worker';
 
+import type { DiffFile, DiffIndex } from './diff-data.ts';
 import type { DiffTree, TreeFile } from './release-diff-tree.ts';
 import {
   comparePaths,
@@ -19,7 +19,7 @@ import {
   FILTER_LABELS,
   filterCounts,
   filterOf,
-  matchesFilter,
+  shows,
   urlWithFilter,
 } from './npm-diff/file-filter.ts';
 import { LANGUAGES } from './npm-diff/languages.ts';
@@ -79,7 +79,7 @@ const fetched = async (url: URL): Promise<Response> => {
 };
 
 const indexOf = async (): Promise<DiffIndex> =>
-  // SAFETY: the worker serves the index the R2 entry stores.
+  // SAFETY: the worker serves the index the release-diffs worker returns.
   (await (await fetched(dataUrl('index.json'))).json()) as DiffIndex;
 
 /** The files a preset shows, parsed from the patch sections the worker serves for it. */
@@ -362,7 +362,7 @@ const render = async (host: HTMLElement): Promise<void> => {
   const items = listItems(list, files);
   const renderDiff = diffRenderer(items);
   const load = presetLoader();
-  const counts = filterCounts(files.map(({ path }) => path));
+  const counts = filterCounts(files);
 
   const view: ViewState = { shown: [] };
 
@@ -387,7 +387,7 @@ const render = async (host: HTMLElement): Promise<void> => {
         ? ''
         : `${FILTER_LABELS[requested]} matches none of the changed files, so All shows.`;
     view.filter = filter;
-    view.shown = files.filter(({ path }) => matchesFilter(filter, path));
+    view.shown = files.filter((file) => shows(filter, file));
 
     const shownPaths = new Set(view.shown.map(({ path }) => path));
 

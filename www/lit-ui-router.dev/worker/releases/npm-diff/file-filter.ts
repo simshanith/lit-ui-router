@@ -1,4 +1,4 @@
-// The diff page's file presets: which published files each one shows, and how the url names it.
+// The diff page's file presets: how the url names them; the release-diffs worker's index says which files each shows.
 
 export const FILE_FILTERS = ['src', 'js', 'types', 'all'] as const;
 
@@ -16,28 +16,11 @@ export const FILTER_LABELS: Readonly<Record<FileFilter, string>> = {
   all: 'All',
 };
 
-const isTypes = (path: string): boolean => /\.d\.[cm]?ts$/.test(path);
-
-const isJs = (path: string): boolean => /\.[cm]?js$/.test(path);
-
-/** `src/**`, and the package's root files that aren't build output: `package.json`, the readme, the license. */
-const isSource = (path: string): boolean =>
-  path.startsWith('src/') ||
-  (!path.includes('/') &&
-    !isJs(path) &&
-    !isTypes(path) &&
-    !path.endsWith('.map'));
-
-const MATCHERS: Readonly<Record<FileFilter, (path: string) => boolean>> = {
-  src: isSource,
-  js: (path) => !path.startsWith('src/') && isJs(path),
-  types: (path) => !path.startsWith('src/') && isTypes(path),
-  all: () => true,
-};
-
-/** Whether `filter` shows the published file at `path`. */
-export const matchesFilter = (filter: FileFilter, path: string): boolean =>
-  MATCHERS[filter](path);
+/** Whether `filter` shows `file`, as the release-diffs worker's index lists its presets. */
+export const shows = (
+  filter: FileFilter,
+  file: { readonly filters: readonly FileFilter[] },
+): boolean => file.filters.includes(filter);
 
 /** The preset a url's search names, or the default for a missing or unknown one. */
 export const filterOf = (search: string): FileFilter => {
@@ -56,15 +39,15 @@ export const urlWithFilter = (url: string, filter: FileFilter): string => {
   return next.href;
 };
 
-/** How many of `paths` each preset shows. */
+/** How many of `files` each preset shows. */
 export const filterCounts = (
-  paths: readonly string[],
+  files: readonly { readonly filters: readonly FileFilter[] }[],
 ): Record<FileFilter, number> =>
   // SAFETY: the entries name every preset once.
   Object.fromEntries(
     FILE_FILTERS.map((filter) => [
       filter,
-      paths.filter((path) => matchesFilter(filter, path)).length,
+      files.filter((file) => shows(filter, file)).length,
     ]),
   ) as Record<FileFilter, number>;
 
