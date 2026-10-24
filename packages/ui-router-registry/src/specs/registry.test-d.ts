@@ -95,6 +95,12 @@ accepts<ParamsOf<'search'>>({ q: 'lit', page: 2 });
 // @ts-expect-error a wrong param type: `{page:int}` is a number
 accepts<ParamsOf<'search'>>({ page: '2' });
 
+// a `value: null` default clears a url param, and an untyped non-url one is core's `any`
+void stateService.go('search', { kv: null, tab: { any: 'value' } });
+
+// @ts-expect-error a query param with a null default still takes a string
+accepts<ParamsOf<'search'>>({ kv: 1 });
+
 // -- reading back: defaults present, bare query params optional ---------------
 
 accepts<ResolvedParamsOf<'messages.list'>['folderId']>('inbox');
@@ -103,6 +109,16 @@ accepts<ResolvedParamsOf<'messages.list'>['folderId']>('inbox');
 accepts<ResolvedParamsOf<'messages.list'>['folderId']>(undefined);
 
 accepts<ResolvedParamsOf<'search'>['q']>(undefined);
+
+accepts<ResolvedParamsOf<'search'>['kv']>(null);
+
+// @ts-expect-error a null default is present, so never undefined
+accepts<ResolvedParamsOf<'search'>['kv']>(undefined);
+
+declare const tab: ResolvedParamsOf<'search'>['tab'];
+
+// @ts-expect-error an untyped non-url param reads as core's `any`, not its default's type
+accepts<string | null>(tab);
 
 // `parent:` inherits the parent's params, as a dotted name does.
 accepts<ResolvedParamsOf<'compose'>['sort']>('date');

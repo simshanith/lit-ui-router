@@ -195,11 +195,15 @@ type Widen<V> = V extends () => infer R
           ? unknown
           : V;
 
+// A `value: null` default is a legal value to pass and what an absent param reads back.
+type NullDefault<C> = null extends DefaultOf<C> ? null : never;
+
+// An untyped non-url param is core's `any`, so only its default's type is known.
 type ConfigType<C, UrlType> = C extends { type: infer T extends string }
-  ? BuiltInType<T>
+  ? BuiltInType<T> | NullDefault<C>
   : [UrlType] extends [never]
     ? Widen<DefaultOf<C>>
-    : UrlType;
+    : UrlType | NullDefault<C>;
 
 type UrlKeys<D> = PathEntries<D>[0] | QueryEntries<D>[0];
 
