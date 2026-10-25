@@ -1,11 +1,12 @@
 import { makeAutoObservable } from 'mobx';
-import {
-  RawParams,
-  StateDeclaration,
-  StateOrName,
-  Transition,
-  UIRouter,
-} from '@uirouter/core';
+import { RawParams, StateOrName, Transition, UIRouter } from '@uirouter/core';
+
+import type {
+  TypedStoreName,
+  TypedStoreNarrowing,
+  TypedStoreState,
+  TypedStoreTarget,
+} from './route-types.js';
 
 /**
  * An observable mirror of a router's current state.
@@ -22,10 +23,10 @@ import {
  */
 export class RouterStore {
   /** The current state declaration (`globals.current`). */
-  current?: StateDeclaration = undefined;
+  current?: TypedStoreState['current'] = undefined;
 
   /** The current parameter values (`globals.params`), replaced per transition. */
-  params: RawParams = {};
+  params: TypedStoreState['params'] = {};
 
   /** The most recent successful transition. */
   transition?: Transition = undefined;
@@ -122,8 +123,14 @@ export class RouterStore {
 
   /**
    * Observable version of `StateService.includes`: is the state (or glob
-   * pattern, e.g. `'admin.**'`) included in the current active state?
+   * pattern, e.g. `'admin.**'`) included in the current active state? A
+   * state name `RouteTypes` registers narrows `current` and `params`.
    */
+  includes<N extends TypedStoreName>(
+    state: N,
+    params?: RawParams,
+  ): this is TypedStoreNarrowing<N>;
+  includes(stateOrName: TypedStoreTarget, params?: RawParams): boolean;
   includes(stateOrName: StateOrName, params?: RawParams): boolean {
     // Touch the observables so MobX tracks this read in observer renders.
     void this.current;

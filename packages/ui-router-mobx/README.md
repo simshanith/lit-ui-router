@@ -17,6 +17,7 @@ npm install ui-router-mobx mobx
 - **`RouterStore.for(router)`**: the observable store for a router. There is one store, and one `onSuccess` hook, per router, attached lazily on first use.
 - **`current`, `params` and `transition`**: the current state declaration, a fresh plain copy of the params, and the most recent successful transition. Each is replaced per transition, never mutated, so reactions compare them by reference.
 - **`includes(stateOrName, params?)`**: an observable `StateService.includes`, glob patterns such as `'admin.**'` included.
+- **`RouteTypes`**: an empty interface an app or a registry fills in by module augmentation. Its `snapshot` member types `current`, `params` and the targets `includes` takes, and its `snapshots` member, keyed by state name, lets `includes(name)` narrow `current` and `params` to that state's subtree. Empty, the store's types are `StateDeclaration`, `RawParams` and `StateOrName`.
 - **`attach(router)`**: for managing a `new RouterStore()` yourself. It returns the hook's deregistration function and throws if the store already mirrors a different router.
 
 ## Usage
