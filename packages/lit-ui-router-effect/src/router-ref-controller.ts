@@ -2,10 +2,21 @@ import { SubscriptionRef } from 'effect';
 import { ReactiveControllerHost } from 'lit';
 import { isFunction, UIRouter } from '@uirouter/core';
 import { getScopedRouter, requestRouter } from 'lit-ui-router/context';
-import { routeRef, RouteSnapshot } from 'ui-router-effect';
+import { routeRef } from 'ui-router-effect';
 
 import { warnMissingRouter } from './dev-warn.js';
 import { RefController, RefControllerOptions } from './ref-controller.js';
+
+/**
+ * The snapshot {@link routeRef} holds: typed by `ui-router-effect`'s
+ * `RouteTypes` when an app or a registry fills it in, a
+ * `RouteSnapshot` otherwise.
+ */
+// Derived from routeRef so the ui-router-effect peer floor, which predates RouteTypes, still resolves.
+export type TypedRouteSnapshot =
+  ReturnType<typeof routeRef> extends SubscriptionRef.SubscriptionRef<infer S>
+    ? S
+    : never;
 
 /** Options for {@link RouterRefController}. */
 export interface RouterRefControllerOptions<T> extends RefControllerOptions<T> {
@@ -55,7 +66,7 @@ export interface RouterRefControllerOptions<T> extends RefControllerOptions<T> {
  * `options.initialValue`.
  */
 export class RouterRefController<T> extends RefController<
-  readonly [SubscriptionRef.SubscriptionRef<RouteSnapshot>],
+  readonly [SubscriptionRef.SubscriptionRef<TypedRouteSnapshot>],
   T
 > {
   // Shared with the discovery thunk, which can run before this constructor's body.
@@ -64,7 +75,7 @@ export class RouterRefController<T> extends RefController<
 
   constructor(
     host: ReactiveControllerHost & Element,
-    selector: (route: RouteSnapshot) => T,
+    selector: (route: TypedRouteSnapshot) => T,
     options: RouterRefControllerOptions<T> = {},
   ) {
     const option = options.router;
@@ -135,7 +146,7 @@ export class RouterRefController<T> extends RefController<
   }
 }
 
-type Route = readonly [SubscriptionRef.SubscriptionRef<RouteSnapshot>];
+type Route = readonly [SubscriptionRef.SubscriptionRef<TypedRouteSnapshot>];
 
 /** The router a {@link RouterRefController} follows, and its discovery subscription. */
 interface Followed {

@@ -86,7 +86,7 @@ there is no element to seek, it reads the router
 ### routeRef
 
 [`routeRef(router)`](/api/lit-ui-router-effect/functions/routeRef) is the
-`SubscriptionRef<RouteSnapshot>` for a router — memoized, one per router
+`SubscriptionRef<TypedRouteSnapshot>` for a router — memoized, one per router
 instance. The first call registers one `transitionService.onSuccess` hook that
 replaces the value per successful transition. It is `ui-router-effect`'s
 `routeRef`, re-exported, so code using either package shares one ref per
@@ -113,8 +113,12 @@ follows the route ref of the host's `<ui-router>` context:
 new RouterRefController(host, selector, options?)
 ```
 
-- `selector: (route: RouteSnapshot) => T` — the selected expression; the
-  result is exposed as `.value`
+- `selector: (route: TypedRouteSnapshot) => T` — the selected expression;
+  the result is exposed as `.value`.
+  [`TypedRouteSnapshot`](/api/lit-ui-router-effect/type-aliases/TypedRouteSnapshot)
+  is the snapshot `routeRef` holds: typed when an app or a registry fills in
+  [`ui-router-effect`'s `RouteTypes`](/packages/ui-router-effect#typed-snapshots),
+  a `RouteSnapshot` otherwise
 - `options.router` — explicit router instance, skipping context discovery;
   the route is then read at construction, so `.value` is live before the host
   connects. A thunk (`() => UIRouter | undefined`) is resolved at construction

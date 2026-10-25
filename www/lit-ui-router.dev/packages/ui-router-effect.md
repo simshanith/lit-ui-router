@@ -113,6 +113,23 @@ for the moment it was taken:
 `includes()` evaluates against the snapshot, not the live router, so a
 selector asking during a later transition gets the settled answer.
 
+## Typed snapshots
+
+[`RouteTypes`](/api/ui-router-effect/interfaces/RouteTypes) is empty, and
+`routeRef` holds a `RouteSnapshot`. Filling in its `snapshot` member by module
+augmentation types the ref's value: a snapshot whose `includes(name)` is a
+type predicate narrows `current` and `params` to that state.
+`snapshotRoute(router, transition?)` keeps returning the untyped
+`RouteSnapshot`.
+
+```ts
+declare module 'ui-router-effect' {
+  interface RouteTypes {
+    snapshot: AppRouteSnapshot;
+  }
+}
+```
+
 ## Further reading
 
 - [API reference](/api/ui-router-effect/)

@@ -107,6 +107,7 @@ const workspaces = {
       'lit-ui-router-floor',
       '@uirouter/core-floor',
     ],
+    entry: ['test-d/*.test-d.ts'],
   },
   'packages/lit-ui-router-mobx': {
     ignoreDependencies: [
