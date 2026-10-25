@@ -36,7 +36,7 @@ tools through mise shims resolves `pnpm` but not that environment; if
 through `mise exec --`. CI is unaffected: `jdx/mise-action` exports `[env]` to
 every later step.
 
-An activated shell also gets the config's `[shell_alias]` entries. `cdroot`
+An activated shell also gets the config's `[shell_alias]` entries. `cd_config_root`
 changes to the root of the checkout or worktree you are in, from any directory
 inside it.
 
