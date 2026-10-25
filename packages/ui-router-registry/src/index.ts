@@ -3,6 +3,7 @@ export type {
   ParamArgs,
   ParamsOf,
   Register,
+  RegisteredRouteTypes,
   RelativeRef,
   ResolvedParamsOf,
   StateGlob,

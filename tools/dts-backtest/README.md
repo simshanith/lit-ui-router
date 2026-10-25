@@ -17,6 +17,11 @@ matrix of:
   catalog bumps both consumers deliberately.
 - **module resolution modes**: `bundler` and `NodeNext`
 
+A module augmentation reaches the whole program, so the [registered
+consumer](./registered), which registers states and loads the
+`ui-router-registry` adapter entry points, is a second program with its own
+`tsconfig.fixture*.json` pair.
+
 The fixture compiles with `skipLibCheck: false`, so the packages' built
 `dist/*.d.ts` are themselves fully parsed **and** typechecked under each
 version — new declaration-emit syntax that an older TypeScript cannot handle

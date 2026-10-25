@@ -55,8 +55,8 @@ export class Compose extends LitElement {
   // pristine checks below do.
   messageParam = new RouterRefController(
     this,
-    // SAFETY: the non-URL `message` param is only ever set from a Message (Reply, Forward, Edit)
-    (route) => route.params.message as Partial<Message> | undefined,
+    (route) =>
+      route.includes('mymessages.compose') ? route.params.message : undefined,
     {
       equals: isEqual,
       onChange: (message) => this.resetMessage(message),

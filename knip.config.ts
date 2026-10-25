@@ -77,6 +77,8 @@ const workspaces = {
   },
   'apps/sample-app-lit-vanilla': { entry: ['src/**/*.test-d.ts'] },
   'apps/sample-app-lit-signals': { entry: ['src/**/*.test-d.ts'] },
+  'apps/sample-app-lit-effect': { entry: ['src/**/*.test-d.ts'] },
+  'apps/sample-app-lit-mobx': { entry: ['src/**/*.test-d.ts'] },
   'apps/sample-app-lit-e2e': {
     // reached from root mise tasks and `cypress --config-file`
     entry: ['scripts/*.ts', 'cypress*.config.ts', 'src/**/*.cy.{ts,js}'],
@@ -199,7 +201,7 @@ const workspaces = {
     entry: ['fixtures/*.ts'],
   },
   'tools/dts-backtest': {
-    entry: ['fixtures/*.ts'],
+    entry: ['fixtures/*.ts', 'registered/*.ts'],
     // the TS version matrix is imported by computed specifier
     ignoreDependencies: ['typescript-5.0', 'typescript-6', 'typescript-7'],
   },

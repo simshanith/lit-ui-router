@@ -436,3 +436,25 @@ type Subtree<G extends StateName> = {
 type ActiveSnapshot<G extends StateName> = IsRegistered extends true
   ? EachSnapshot<Subtree<G>>
   : TypedRouteSnapshot;
+
+// ---- the members the adapters' RouteTypes interfaces read ------------------
+
+// Keyed by registered name, the snapshot narrowed to that state's subtree.
+type Snapshots = IsRegistered extends true
+  ? { [N in StateName]: ActiveSnapshot<N> }
+  : Record<never, never>;
+
+/**
+ * The registry's types in the shape the adapters' `RouteTypes` interfaces
+ * read. The `ui-router-registry/signals`, `/effect` and `/mobx` entry points
+ * fill their package's interface from these members.
+ */
+export interface RegisteredRouteTypes {
+  /** The route snapshot, typed by the registered states. */
+  snapshot: TypedRouteSnapshot;
+  /**
+   * Keyed by registered state name, the snapshot narrowed to that state's
+   * subtree; empty until an app registers.
+   */
+  snapshots: Snapshots;
+}

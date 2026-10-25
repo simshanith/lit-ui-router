@@ -1,6 +1,11 @@
 {
   "$schema": "https://typedoc.org/schema.json",
-  "entryPoints": ["src/index.ts"],
+  "entryPoints": [
+    "src/index.ts",
+    "src/effect.ts",
+    "src/mobx.ts",
+    "src/signals.ts"
+  ],
   "tsconfig": "tsconfig.src.json",
   "out": "../../www/lit-ui-router.dev/api/ui-router-registry",
   "docsRoot": "../../www/lit-ui-router.dev",
@@ -31,6 +36,7 @@
     "RequiredKeys",
     "Simplify",
     "SnapshotBase",
+    "Snapshots",
     "Up"
   ],
   "entryFileName": "index",

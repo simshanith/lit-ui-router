@@ -87,7 +87,8 @@ const API_VERSIONS = ['typescript-5.0', 'typescript-5.9', 'typescript-6'];
 
 const NATIVE_VERSION = 'typescript-7';
 
-const CONFIGS = ['tsconfig.fixture.json', 'tsconfig.fixture.nodenext.json'];
+const distDir = (dir: string) =>
+  resolve(here, '..', '..', 'packages', dir, 'dist') + sep;
 
 // dist dirs whose .d.ts must check clean (pnpm symlinks resolve to these)
 const PACKAGE_DIRS = [
@@ -102,7 +103,29 @@ const PACKAGE_DIRS = [
   'ui-router-registry',
   'ui-router-server',
   'ui-router-signals',
-].map((dir) => resolve(here, '..', '..', 'packages', dir, 'dist') + sep);
+].map(distDir);
+
+const BASE_CONFIG = 'tsconfig.fixture.json';
+
+// An augmentation is program-wide, so the registered consumer, whose registry
+// entry points fill the adapters' RouteTypes, is a program of its own.
+const REGISTERED_DIRS = [
+  'ui-router-effect',
+  'ui-router-mobx',
+  'ui-router-registry',
+  'ui-router-signals',
+].map(distDir);
+
+// Each config is one consumer program, keyed to the dist dirs it must load.
+const CONFIGS = new Map([
+  [BASE_CONFIG, PACKAGE_DIRS],
+  ['tsconfig.fixture.nodenext.json', PACKAGE_DIRS],
+  ['registered/tsconfig.fixture.json', REGISTERED_DIRS],
+  ['registered/tsconfig.fixture.nodenext.json', REGISTERED_DIRS],
+]);
+
+const programDirs = (configFile: string) =>
+  CONFIGS.get(configFile) ?? PACKAGE_DIRS;
 
 // A file we cannot resolve is treated as ours: it means the compiler reported
 // against something we planted or mangled, which must never be tolerated.
@@ -160,7 +183,7 @@ function check(
   // guard: the packages under test must actually be in the program (built)
   const files = program.getSourceFiles().map((file) => file.fileName);
 
-  const missing = PACKAGE_DIRS.filter(
+  const missing = programDirs(configFile).filter(
     (dir) =>
       !files.some((file) =>
         resolve(ts.sys.realpath ? ts.sys.realpath(file) : file).startsWith(dir),
@@ -209,7 +232,7 @@ async function checkNative(specifier: string, configFile: string) {
 
     const files: string[] = program.getSourceFileNames();
 
-    const missing = PACKAGE_DIRS.filter(
+    const missing = programDirs(configFile).filter(
       (dir) => !files.some((file) => resolve(file).startsWith(dir)),
     );
 
@@ -344,7 +367,7 @@ function selftest() {
   const current = API_VERSIONS[API_VERSIONS.length - 1];
 
   return withProbeFile(PROBE, (probePath) => {
-    const floorRun = check(floor, CONFIGS[0], [probePath]);
+    const floorRun = check(floor, BASE_CONFIG, [probePath]);
 
     const probeCaught = floorRun.owned.some((diagnostic) =>
       probeDiagnostic(diagnostic.file?.fileName),
@@ -358,7 +381,7 @@ function selftest() {
       return false;
     }
 
-    const currentRun = check(current, CONFIGS[0], [probePath]);
+    const currentRun = check(current, BASE_CONFIG, [probePath]);
 
     if (currentRun.owned.length > 0) {
       console.error(
@@ -386,7 +409,7 @@ async function selftestNative() {
       writeFileSync(
         scratchConfig,
         JSON.stringify({
-          extends: `../../${CONFIGS[0]}`,
+          extends: `../../${BASE_CONFIG}`,
           include: ['../../fixtures/**/*.ts', './probe.d.ts'],
         }),
       );
@@ -432,13 +455,13 @@ const main = async (): Promise<void> => {
 
   if (!currentOnly) {
     for (const specifier of API_VERSIONS) {
-      for (const configFile of CONFIGS) {
+      for (const configFile of CONFIGS.keys()) {
         ok = run(specifier, configFile) && ok;
       }
     }
   }
 
-  for (const configFile of CONFIGS) {
+  for (const configFile of CONFIGS.keys()) {
     ok = (await runNative(NATIVE_VERSION, configFile)) && ok;
   }
 
