@@ -16,6 +16,7 @@ import { uiViewSlot } from 'lit-ui-router-ssr/client';
 import { RefController } from 'lit-ui-router-effect';
 import { routeRef } from 'ui-router-effect';
 import type { RouteSnapshot } from 'ui-router-effect';
+import type { TypedStateService } from 'ui-router-registry';
 import type {
   AscentRow,
   Band,
@@ -454,7 +455,8 @@ export class AtlasCopyLink extends LitElement {
   async #copy(): Promise<void> {
     const router = this.router;
     if (!router) return;
-    const url = router.stateService.href('.', router.globals.params, { absolute: true });
+    const stateService: TypedStateService = router.stateService;
+    const url = stateService.href('.', router.globals.params, { absolute: true });
     if (!url) return;
     try {
       await navigator.clipboard.writeText(url);
@@ -1074,7 +1076,8 @@ const keyIndex = (manifest: Manifest, filter: Filter, router?: UIRouter): Templa
     event.preventDefault();
     const form = event.currentTarget as HTMLFormElement;
     const value = String(new FormData(form).get('kv') ?? '').trim();
-    void router?.stateService.go('atlas.gallery', { ...filter, kv: value.length > 0 ? value : null });
+    const stateService: TypedStateService | undefined = router?.stateService;
+    void stateService?.go('atlas.gallery', { ...filter, kv: value.length > 0 ? value : null });
   };
   return html`
     <div class="keyindex" aria-label="key index">
@@ -1655,7 +1658,9 @@ export const AboutView: RoutedLitTemplate<ManifestResolves> = (props) => {
           ${pkg('cytoscape')} (the four interactive plates) and
           ${pkg('@google/model-viewer')} (the plates in the round, imported only by
           <code>atlas.city</code>, <code>atlas.plant</code>, <code>atlas.bricks</code> and <code>atlas.builds</code>); at build
-          time, ${pkg('lit-ui-router-ssr')} and ${pkg('@lit-labs/ssr')}. All from
+          time, ${pkg('lit-ui-router-ssr')}, ${pkg('@lit-labs/ssr')} and
+          ${pkg('ui-router-registry')} (types only: the route table is registered, so a
+          <code>go()</code> to a misspelled state or without a sheet number fails to compile). All from
           ${ext(HOME.npm, 'npm')}; no workspace links.
         </p>
         <h3>HOW THE SET IS DRAWN</h3>

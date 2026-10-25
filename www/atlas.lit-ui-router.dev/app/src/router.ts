@@ -8,6 +8,7 @@ import { UIRouterLit } from 'lit-ui-router/pure';
 import type { LitStateDeclaration } from 'lit-ui-router';
 import { navigationLocationPlugin } from 'ui-router-navigation-location-plugin';
 import type { UIRouterNavigateEvent } from 'ui-router-navigation-location-plugin';
+import type { TypedStateService } from 'ui-router-registry';
 import { ARTIFACT } from './mode.ts';
 import { applyUrlConfig } from 'ui-router-server/url-config';
 import { BUILD_PARAMS, FILTER_PARAMS, FOCUS_PARAMS, SHEET_ALIASES, URL_CONFIG, urlOf } from './routes.ts';
@@ -261,6 +262,7 @@ export function isInPlaceChange(transition: Transition): boolean {
 
 export function createRouter(): UIRouterLit {
   const router = new UIRouterLit();
+  const stateService: TypedStateService = router.stateService;
   if (ARTIFACT) router.plugin(hashLocationPlugin);
   else if (!NAVIGATION_API) router.plugin(pushStateLocationPlugin);
   else {
@@ -294,12 +296,12 @@ export function createRouter(): UIRouterLit {
     const num = String(transition.params().num);
     const row = findSheet(manifest, SHEET_ALIASES[num] ?? num);
     if (!row) {
-      return router.stateService.target('atlas.notFound', undefined, {
+      return stateService.target('atlas.notFound', undefined, {
         location: false,
       });
     }
     if (row.num !== num) {
-      return router.stateService.target(
+      return stateService.target(
         'atlas.sheet',
         { ...transition.params(), num: row.num },
         { location: 'replace' },

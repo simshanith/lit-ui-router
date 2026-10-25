@@ -8,6 +8,7 @@ import { createRouter } from './router.ts';
 import { installPrefs } from './prefs.ts';
 import { applyTheme, readTheme } from './theme.ts';
 import { page } from './views.ts';
+import type { TypedStateService } from 'ui-router-registry';
 // --- EXPERIMENTAL LAYER ---------------------------------------------------
 // The one line that ties the optional half in. Delete this import, the call
 // below, and src/experimental/, and the base app is untouched.
@@ -16,13 +17,14 @@ import { installExperimental } from './experimental/index.ts';
 applyTheme(readTheme());
 
 const router = createRouter();
+const stateService: TypedStateService = router.stateService;
 
 // The generated cross-references are plain <a href> (a lit directive cannot
 // be attached to inserted markup), so the SPA path is one delegated listener.
 document.addEventListener('click', onXrefClick);
 document.addEventListener('atlas-xref', (event) => {
   const { num } = (event as CustomEvent<XrefDetail>).detail;
-  void router.stateService.go('atlas.sheet', { num });
+  void stateService.go('atlas.sheet', { num });
 });
 // A plate's pick is the url's `focus`; taking the event stops its own history write.
 document.addEventListener('atlas-focus', (event) => {
@@ -31,7 +33,7 @@ document.addEventListener('atlas-focus', (event) => {
   // `enlarge` is not inherited either: a pick inside an enlarged figure keeps it open
   const { enlarge } = router.globals.params;
   const params = build === undefined ? { focus, enlarge } : { focus, enlarge, build };
-  router.stateService.go('.', params, { location: 'replace' }).then(
+  stateService.go('.', params, { location: 'replace' }).then(
     () => {},
     () => {}, // an ignored or superseded pick is not an error here
   );

@@ -13,6 +13,7 @@
  * lands on the document rather than on a stale link.
  */
 import type { UIRouterLit } from 'lit-ui-router';
+import type { TypedStateService } from 'ui-router-registry';
 import { loadManifest } from '../runtime.ts';
 import { viewRendered } from './view-rendered.ts';
 
@@ -29,6 +30,7 @@ async function focusArrivedSheet(): Promise<void> {
 }
 
 export function installKeyboardWalk(router: UIRouterLit): void {
+  const stateService: TypedStateService = router.stateService;
   document.addEventListener('keydown', (event) => {
     if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) return;
     const step = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0;
@@ -36,7 +38,7 @@ export function installKeyboardWalk(router: UIRouterLit): void {
     const active = document.activeElement;
     if (active && (TYPING.has(active.tagName) || (active as HTMLElement).isContentEditable))
       return;
-    if (!router.stateService.includes('atlas.sheet')) return;
+    if (!stateService.includes('atlas.sheet')) return;
     const here = String(router.globals.params.num).toLowerCase();
 
     void loadManifest().then((manifest) => {
@@ -44,7 +46,7 @@ export function installKeyboardWalk(router: UIRouterLit): void {
       const next = manifest.sheets[index + step];
       if (!next) return;
       event.preventDefault();
-      router.stateService.go('atlas.sheet', { num: next.num }).then(
+      stateService.go('atlas.sheet', { num: next.num }).then(
         () => focusArrivedSheet(),
         () => {}, // a superseded or rejected walk is not an error here
       );

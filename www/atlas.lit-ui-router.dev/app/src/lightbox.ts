@@ -16,6 +16,7 @@
  * closes, and a deep link opens once the page is adopted.
  */
 import type { UIRouter } from '@uirouter/core';
+import type { TypedStateService } from 'ui-router-registry';
 import { LitElement, css, html, nothing } from 'lit';
 import type { PropertyValues, TemplateResult } from 'lit';
 
@@ -650,10 +651,11 @@ export function installLightbox(router: UIRouter): AtlasLightbox {
   if (!lightbox.isConnected) document.body.append(lightbox);
   // true while the entry under this one is the same page without `?enlarge=`
   let ours = false;
+  const stateService: TypedStateService = router.stateService;
   // both params are `inherit: false`, so each move carries the other
   const go = (enlarge: string | null, location: true | 'replace'): void => {
     const { focus } = router.globals.params;
-    router.stateService.go('.', { enlarge, focus }, { location }).then(
+    stateService.go('.', { enlarge, focus }, { location }).then(
       () => {},
       () => {}, // a superseded move is not an error here
     );

@@ -261,8 +261,8 @@ and each constraint is a line in the build:
   takes no directive.
 
 `src/mode.ts` is the one flag (`import.meta.env.MODE === 'artifact'`) the readers share; analytics
-is skipped in this mode. Nothing above changes the site build, which prerenders 66 pages +
-`404.html` and 60 redirects.
+is skipped in this mode. Nothing above changes the site build, which prerenders 68 pages +
+`404.html` and 64 redirects.
 
 ## Server side
 
@@ -286,6 +286,13 @@ and is used twice:
   routed component into the element's light DOM. Once each page's router settles, a
   `RefController` over `routeRef(router)` on a host that never connects must read the same route
   as `router.globals`, or the build exits 1 (`SSR-VERDICT.md` §8).
+
+The same table is the app's type registry. `routes` is `as const`, and `src/routes.ts` augments
+`ui-router-registry`'s `Register` with it, so every `stateService.go`, `href`, `target` and
+`includes` in the app takes a registered name and that state's params: `num` required, `focus` and
+`enlarge` as `string | null`, `'.'` for the state itself. `src/registry.test-d.ts` holds the
+assertions and `npm run typecheck` runs them. The package emits no JavaScript, so the site build
+is unchanged.
 
 **The boot (`src/main.ts`).** Seat `routeRef(router)`, `router.start()`, await the ref's first
 settled snapshot on the page's runtime (`src/runtime.ts`), then `hydrateRoot(root, page(router))` from `lit-ui-router-ssr/client`: the walk

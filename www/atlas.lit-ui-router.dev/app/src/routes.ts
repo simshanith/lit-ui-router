@@ -57,32 +57,35 @@ export const SHEET_ALIASES: Readonly<Record<string, string>> = { '14i': 'A2i' };
  * and the state has no resolve of its own to pay for (the manifest is the
  * shell's, and the shell does not re-enter).
  */
-export const FILTER_KEYS = ['subject', 'projection', 'mode', 'basis', 'kv'] as const;
-export const FILTER_PARAMS: Record<string, unknown> = Object.fromEntries(
-  FILTER_KEYS.map((key) => [key, { value: null }]),
-);
+export const FILTER_PARAMS = {
+  subject: { value: null },
+  projection: { value: null },
+  mode: { value: null },
+  basis: { value: null },
+  kv: { value: null },
+} as const;
 
 /**
  * A figure page's in-place params, dynamic, never inherited, null when absent:
  * an interactive page's selection, `?focus=12`, and the enlarged figure,
  * `?enlarge=sheet-7` (src/lightbox.ts).
  */
-export const FOCUS_PARAMS: Record<string, unknown> = {
+export const FOCUS_PARAMS = {
   focus: { value: null, dynamic: true, inherit: false },
   enlarge: { value: null, dynamic: true, inherit: false },
-};
+} as const;
 
 /**
  * The builds' params: the focus pair and the picked build, `?build=signals`,
  * dynamic and inherited, so a pin's url move keeps the build it was made in.
  * Null is the first build.
  */
-export const BUILD_PARAMS: Record<string, unknown> = {
+export const BUILD_PARAMS = {
   ...FOCUS_PARAMS,
   build: { value: null, dynamic: true },
-};
+} as const;
 
-export const routes: RouteDeclaration[] = [
+export const routes = [
   // Abstract shell: the rail and the content ui-view. Url-less, so it
   // contributes no segment; its children's urls are the whole url.
   { name: 'atlas' },
@@ -127,11 +130,23 @@ export const routes: RouteDeclaration[] = [
   // and no client bundle. A top-level state, so no rail; the prerender answers
   // it from the sheet's fragment, and the client knows it as a link target.
   { name: 'plate', url: '/plate/:num' },
-];
+] as const satisfies readonly RouteDeclaration[];
+
+/**
+ * The table, registered: `ui-router-registry` reads the names and params off it,
+ * so a `stateService.go`, `href`, `target` or `includes` anywhere in the app takes a
+ * registered name and that state's params (src/registry.test-d.ts).
+ */
+declare module 'ui-router-registry' {
+  interface Register {
+    states: (typeof routes)[number];
+  }
+}
 
 /** The declared url for a state name — the client reads its urls from here. */
 export function urlOf(name: string): string | undefined {
-  return routes.find((route) => route.name === name)?.url;
+  const table: readonly RouteDeclaration[] = routes;
+  return table.find((route) => route.name === name)?.url;
 }
 
 /**
