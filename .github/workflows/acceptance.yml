@@ -49,14 +49,7 @@ jobs:
         # hand-off to the summary step as build-test-run.yml.
         id: bench
         continue-on-error: true
-        # Commands paused: turbo's own ::error:: line repeats the summary step's annotation.
-        run: |
-          token="$(uuidgen)"
-          echo "::stop-commands::${token}"
-          status=0
-          mise run bench_pulse || status=$?
-          echo "::${token}::"
-          exit "$status"
+        run: mise run bench_pulse
         env:
           TURBO_OUTPUT_LOGS: errors-only
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
@@ -151,14 +144,7 @@ jobs:
         # Same continue-on-error hand-off to the summary step as build-test-run.yml.
         id: axe
         continue-on-error: true
-        # Commands paused: turbo's own ::error:: line repeats the summary step's annotation.
-        run: |
-          token="$(uuidgen)"
-          echo "::stop-commands::${token}"
-          status=0
-          mise run test_e2e a11y || status=$?
-          echo "::${token}::"
-          exit "$status"
+        run: mise run test_e2e a11y
         env:
           # Only failing tasks print; every task's full log is uploaded below.
           TURBO_OUTPUT_LOGS: errors-only

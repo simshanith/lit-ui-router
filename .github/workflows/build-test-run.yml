@@ -103,14 +103,7 @@ jobs:
         id: build
         if: ${{ !inputs.mainGraph }}
         continue-on-error: true
-        # Commands paused: turbo's own ::error:: line repeats the summary step's annotation.
-        run: |
-          token="$(uuidgen)"
-          echo "::stop-commands::${token}"
-          status=0
-          mise run ci_graph || status=$?
-          echo "::${token}::"
-          exit "$status"
+        run: mise run ci_graph
         env:
           # Only failing tasks print; every task's full log is uploaded below.
           TURBO_OUTPUT_LOGS: errors-only
@@ -130,14 +123,7 @@ jobs:
         id: build_main
         if: ${{ inputs.mainGraph }}
         continue-on-error: true
-        # Commands paused: turbo's own ::error:: line repeats the summary step's annotation.
-        run: |
-          token="$(uuidgen)"
-          echo "::stop-commands::${token}"
-          status=0
-          mise run ci_main_graph || status=$?
-          echo "::${token}::"
-          exit "$status"
+        run: mise run ci_main_graph
         env:
           TURBO_OUTPUT_LOGS: errors-only
           TURBO_FORCE: ${{ inputs.force }}
@@ -354,15 +340,9 @@ jobs:
         # Same continue-on-error hand-off to the summary step as `run`.
         id: e2e
         continue-on-error: true
-        # Commands paused: turbo's own ::error:: line repeats the summary step's annotation.
         run: |
           read -ra suites <<< "$SUITES"
-          token="$(uuidgen)"
-          echo "::stop-commands::${token}"
-          status=0
-          mise run test_e2e "${suites[@]}" || status=$?
-          echo "::${token}::"
-          exit "$status"
+          mise run test_e2e "${suites[@]}"
         env:
           SUITES: ${{ join(matrix.group, ' ') }}
           TURBO_OUTPUT_LOGS: errors-only
