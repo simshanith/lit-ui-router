@@ -182,9 +182,9 @@ run = "mise run taplo fmt --check"
 # runs from the workspace root.
 
 # turbo_login, read_secret, turbo_pin_worktree, turbo_backfill,
-# turbo_force_guard, cloudflare_item_create and check_workers_builds are
-# file-based tasks under .config/mise/tasks/ — their shell bodies were too large
-# to sit inline. Every other task here is a one- or two-liner and stays inline.
+# turbo_force_guard, pause_commands, cloudflare_item_create and
+# check_workers_builds are file-based tasks under .config/mise/tasks/ — their
+# shell bodies were too large to sit inline. Every other task here is a one- or two-liner and stays inline.
 
 # The Cloudflare tasks wrap `op` over gitignored files whose paths are the only
 # thing worth memorizing; none is required, since the check reads plain env.
@@ -225,7 +225,7 @@ description = "Build the @www sites"
 usage = '''
 flag "--output-logs <mode>" help="turbo task output: full | errors-only | new-only | hash-only | none; CI sets errors-only" default="full" env="TURBO_OUTPUT_LOGS"
 '''
-run = "turbo run build --filter='@www/*' --ui=stream --log-order=stream --summarize --log-file --output-logs=\"${usage_output_logs?}\""
+run = "mise run pause_commands -- turbo run build --filter='@www/*' --ui=stream --log-order=stream --summarize --log-file --output-logs=\"${usage_output_logs?}\""
 
 [tasks.ci]
 # The PR gate: the turbo graph, then the e2e suites, which need a dev server
@@ -262,7 +262,7 @@ run = [
   # --continue=dependencies-successful: one failing task still lets the rest
   # report and turbo still exits non-zero, while a failed build skips its
   # dependents. Bare --continue means `always`, which runs them against no output.
-  "turbo run ci --continue=dependencies-successful --ui=stream --log-order=stream --summarize --log-file --output-logs=\"${usage_output_logs?}\"",
+  "mise run pause_commands -- turbo run ci --continue=dependencies-successful --ui=stream --log-order=stream --summarize --log-file --output-logs=\"${usage_output_logs?}\"",
 ]
 
 [tasks.ci_main]
@@ -287,7 +287,7 @@ flag "--output-logs <mode>" help="turbo task output: full | errors-only | new-on
 run = [
   "mise run //tools/build_and_test:mark_session",
   # --continue=dependencies-successful: as in ci_graph.
-  "turbo run ci:main --continue=dependencies-successful --ui=stream --log-order=stream --summarize --log-file --output-logs=\"${usage_output_logs?}\"",
+  "mise run pause_commands -- turbo run ci:main --continue=dependencies-successful --ui=stream --log-order=stream --summarize --log-file --output-logs=\"${usage_output_logs?}\"",
 ]
 
 [tasks.test_e2e]
@@ -325,7 +325,7 @@ flag "--output-logs <mode>" help="turbo task output: full | errors-only | new-on
 flag "--base-url <origin>" help="Run against this served origin (e.g. a deployed preview) instead of a local dev server" env="E2E_BASE_URL"
 '''
 # unquoted: a var arg arrives as one string and must word-split back into argv
-run = 'if [ -n "${usage_base_url:-}" ]; then export E2E_BASE_URL="$usage_base_url"; else unset E2E_BASE_URL; fi; TURBO_OUTPUT_LOGS="${usage_output_logs?}" node ./apps/sample-app-lit-e2e/scripts/run-e2e.ts ${usage_suite:-}'
+run = 'if [ -n "${usage_base_url:-}" ]; then export E2E_BASE_URL="$usage_base_url"; else unset E2E_BASE_URL; fi; TURBO_OUTPUT_LOGS="${usage_output_logs?}" mise run pause_commands -- node ./apps/sample-app-lit-e2e/scripts/run-e2e.ts ${usage_suite:-}'
 
 [tasks.e2e_plan]
 # env: GITHUB_OUTPUT (step-output target). Node builtins only: CI's plan job
@@ -357,7 +357,7 @@ flag "--output-logs <mode>" help="turbo task output: full | errors-only | new-on
 '''
 run = [
   "mise run //tools/build_and_test:mark_session",
-  "BENCH_TIME_MS=\"${usage_time_ms?}\" turbo run bench --concurrency=1 --ui=stream --log-order=stream --summarize --log-file --output-logs=\"${usage_output_logs?}\"",
+  "BENCH_TIME_MS=\"${usage_time_ms?}\" mise run pause_commands -- turbo run bench --concurrency=1 --ui=stream --log-order=stream --summarize --log-file --output-logs=\"${usage_output_logs?}\"",
 ]
 
 [tasks.dts_backtest_matrix]
