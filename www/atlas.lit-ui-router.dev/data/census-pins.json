@@ -2,9 +2,9 @@
   "ref": "origin/main",
   "sha": "85e0ce5c",
   "commitDate": "2026-10-24T08:56:16-07:00",
-  "generatedAtTime": "2026-10-24T16:25:13.967Z",
+  "generatedAtTime": "2026-10-25T02:22:08.210Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-pins.mjs",
-  "used": "git archive origin/main @ 85e0ce5c — each consumer's package.json, pnpm-workspace.yaml's catalogs, pnpm-lock.yaml's importers and examples/<key>/package-lock.json; git archive www/atlas @ ca744f09 — www/atlas.lit-ui-router.dev/app/package.json and package-lock.json; consumers and pins from census-builds.json, latest from census-npm.json, members from census-files.json @ 85e0ce5c",
+  "used": "git archive origin/main @ 85e0ce5c — each consumer's package.json, pnpm-workspace.yaml's catalogs, pnpm-lock.yaml's importers and examples/<key>/package-lock.json; git archive www/atlas @ adeec849 — www/atlas.lit-ui-router.dev/app/package.json and package-lock.json; consumers and pins from census-builds.json, latest from census-npm.json, members from census-files.json @ 85e0ce5c",
   "wasAssociatedWith": [
     "git"
   ],
@@ -81,22 +81,22 @@
   "basis": {
     "atlasApp": {
       "ref": "www/atlas",
-      "sha": "ca744f09",
-      "commitDate": "2026-10-23T15:45:46-07:00",
+      "sha": "adeec849",
+      "commitDate": "2026-10-24T19:18:52-07:00",
       "dir": "www/atlas.lit-ui-router.dev/app"
     },
-    "note": "www/atlas.lit-ui-router.dev/app is on www/atlas @ ca744f09, off the cabinet's tree; the second reading adds it"
+    "note": "www/atlas.lit-ui-router.dev/app is on www/atlas @ adeec849, off the cabinet's tree; the second reading adds it"
   },
   "withAtlas": {
     "totals": {
       "consumers": 21,
       "pnpm": 8,
       "npm": 13,
-      "pins": 45,
+      "pins": 46,
       "fromTree": 16,
-      "fromLock": 29,
+      "fromLock": 30,
       "trailing": 1,
-      "ahead": 0,
+      "ahead": 1,
       "runtime": 94
     },
     "consumers": [
@@ -120,7 +120,7 @@
       {"name":"lint-eslint","dir":"examples/lint-eslint","kind":"example","installer":"npm","lockfile":"examples/lint-eslint/package-lock.json","lockfileVersion":4,"pins":[{"name":"eslint-plugin-lit-ui-router","sections":["devDependencies"],"spec":"^1.3.0","range":"^1.3.0","resolved":"1.3.0","latest":"1.3.0","trails":false,"ahead":false},{"name":"lit-ui-router","sections":["dependencies"],"spec":"^1.17.0","range":"^1.17.0","resolved":"1.17.0","latest":"1.17.0","trails":false,"ahead":false}],"runtime":[{"name":"@spectrum-web-components/link","spec":"^1.12.2","range":"^1.12.2","resolved":"1.12.2","latest":null},{"name":"@uirouter/core","spec":"^6.1.2","range":"^6.1.2","resolved":"6.1.2","latest":"6.1.2"},{"name":"lit","spec":"^3.3.3","range":"^3.3.3","resolved":"3.3.3","latest":null}],"overrides":null,"patchedDependencies":{"braces@3.0.3":"patches/braces@3.0.3.patch"}},
       {"name":"navigation-api","dir":"examples/navigation-api","kind":"example","installer":"npm","lockfile":"examples/navigation-api/package-lock.json","lockfileVersion":3,"pins":[{"name":"lit-ui-router","sections":["dependencies"],"spec":"^1.17.0","range":"^1.17.0","resolved":"1.17.0","latest":"1.17.0","trails":false,"ahead":false},{"name":"ui-router-navigation-location-plugin","sections":["dependencies"],"spec":"^1.1.2","range":"^1.1.2","resolved":"1.1.2","latest":"1.2.0","trails":true,"ahead":false}],"runtime":[{"name":"@uirouter/core","spec":"^6.1.2","range":"^6.1.2","resolved":"6.1.2","latest":"6.1.2"},{"name":"lit","spec":"^3.3.3","range":"^3.3.3","resolved":"3.3.3","latest":null}],"overrides":null,"patchedDependencies":null},
       {"name":"loading-and-error-views","dir":"examples/loading-and-error-views","kind":"example","installer":"npm","lockfile":"examples/loading-and-error-views/package-lock.json","lockfileVersion":3,"pins":[{"name":"lit-ui-router","sections":["dependencies"],"spec":"^1.17.0","range":"^1.17.0","resolved":"1.17.0","latest":"1.17.0","trails":false,"ahead":false}],"runtime":[{"name":"@uirouter/core","spec":"^6.1.2","range":"^6.1.2","resolved":"6.1.2","latest":"6.1.2"},{"name":"lit","spec":"^3.3.3","range":"^3.3.3","resolved":"3.3.3","latest":null}],"overrides":null,"patchedDependencies":null},
-      {"name":"altitude-atlas-app","dir":"www/atlas.lit-ui-router.dev/app","kind":"atlas-app","installer":"npm","lockfile":"www/atlas.lit-ui-router.dev/app/package-lock.json","lockfileVersion":3,"pins":[{"name":"eslint-plugin-lit-ui-router","sections":["devDependencies"],"spec":"^1.3.0","range":"^1.3.0","resolved":"1.3.0","latest":"1.3.0","trails":false,"ahead":false},{"name":"lit-ui-router","sections":["dependencies"],"spec":"^1.17.0","range":"^1.17.0","resolved":"1.17.0","latest":"1.17.0","trails":false,"ahead":false},{"name":"lit-ui-router-effect","sections":["dependencies"],"spec":"^0.5.0","range":"^0.5.0","resolved":"0.5.0","latest":"0.5.0","trails":false,"ahead":false},{"name":"lit-ui-router-ssr","sections":["devDependencies"],"spec":"^0.4.0","range":"^0.4.0","resolved":"0.4.0","latest":"0.4.0","trails":false,"ahead":false},{"name":"ui-router-effect","sections":["dependencies"],"spec":"^0.1.2","range":"^0.1.2","resolved":"0.1.2","latest":"0.1.2","trails":false,"ahead":false},{"name":"ui-router-navigation-location-plugin","sections":["dependencies"],"spec":"^1.2.0","range":"^1.2.0","resolved":"1.2.0","latest":"1.2.0","trails":false,"ahead":false},{"name":"ui-router-server","sections":["dependencies"],"spec":"^0.4.0","range":"^0.4.0","resolved":"0.4.0","latest":"0.4.0","trails":false,"ahead":false}],"runtime":[{"name":"@google/model-viewer","spec":"^4.3.1","range":"^4.3.1","resolved":"4.3.1","latest":null},{"name":"@lit-labs/ssr-client","spec":"^1.1.8","range":"^1.1.8","resolved":"1.1.8","latest":null},{"name":"@uirouter/core","spec":"^6.1.2","range":"^6.1.2","resolved":"6.1.2","latest":"6.1.2"},{"name":"@uirouter/visualizer","spec":"^7.2.1","range":"^7.2.1","resolved":"7.2.1","latest":"7.2.1"},{"name":"cytoscape","spec":"^3.34.3","range":"^3.34.3","resolved":"3.34.3","latest":null},{"name":"effect","spec":"^3.22.2","range":"^3.22.2","resolved":"3.22.2","latest":null},{"name":"lit","spec":"^3.3.3","range":"^3.3.3","resolved":"3.3.3","latest":null},{"name":"three","spec":"^0.186.0","range":"^0.186.0","resolved":"0.186.0","latest":null}],"overrides":{"@google/model-viewer":{"three":"$three"}},"patchedDependencies":null}
+      {"name":"altitude-atlas-app","dir":"www/atlas.lit-ui-router.dev/app","kind":"atlas-app","installer":"npm","lockfile":"www/atlas.lit-ui-router.dev/app/package-lock.json","lockfileVersion":3,"pins":[{"name":"eslint-plugin-lit-ui-router","sections":["devDependencies"],"spec":"^1.3.0","range":"^1.3.0","resolved":"1.3.0","latest":"1.3.0","trails":false,"ahead":false},{"name":"lit-ui-router","sections":["dependencies"],"spec":"^1.17.0","range":"^1.17.0","resolved":"1.17.0","latest":"1.17.0","trails":false,"ahead":false},{"name":"lit-ui-router-effect","sections":["dependencies"],"spec":"^0.5.0","range":"^0.5.0","resolved":"0.5.0","latest":"0.5.0","trails":false,"ahead":false},{"name":"lit-ui-router-ssr","sections":["devDependencies"],"spec":"^0.4.0","range":"^0.4.0","resolved":"0.4.0","latest":"0.4.0","trails":false,"ahead":false},{"name":"ui-router-effect","sections":["dependencies"],"spec":"^0.1.2","range":"^0.1.2","resolved":"0.1.2","latest":"0.1.2","trails":false,"ahead":false},{"name":"ui-router-navigation-location-plugin","sections":["dependencies"],"spec":"^1.2.0","range":"^1.2.0","resolved":"1.2.0","latest":"1.2.0","trails":false,"ahead":false},{"name":"ui-router-registry","sections":["devDependencies"],"spec":"^0.1.1","range":"^0.1.1","resolved":"0.1.1","latest":"0.1.0","trails":false,"ahead":true},{"name":"ui-router-server","sections":["dependencies"],"spec":"^0.4.0","range":"^0.4.0","resolved":"0.4.0","latest":"0.4.0","trails":false,"ahead":false}],"runtime":[{"name":"@google/model-viewer","spec":"^4.3.1","range":"^4.3.1","resolved":"4.3.1","latest":null},{"name":"@lit-labs/ssr-client","spec":"^1.1.8","range":"^1.1.8","resolved":"1.1.8","latest":null},{"name":"@uirouter/core","spec":"^6.1.2","range":"^6.1.2","resolved":"6.1.2","latest":"6.1.2"},{"name":"@uirouter/visualizer","spec":"^7.2.1","range":"^7.2.1","resolved":"7.2.1","latest":"7.2.1"},{"name":"cytoscape","spec":"^3.34.3","range":"^3.34.3","resolved":"3.34.3","latest":null},{"name":"effect","spec":"^3.22.2","range":"^3.22.2","resolved":"3.22.2","latest":null},{"name":"lit","spec":"^3.3.3","range":"^3.3.3","resolved":"3.3.3","latest":null},{"name":"three","spec":"^0.186.0","range":"^0.186.0","resolved":"0.186.0","latest":null}],"overrides":{"@google/model-viewer":{"three":"$three"}},"patchedDependencies":null}
     ]
   }
 }

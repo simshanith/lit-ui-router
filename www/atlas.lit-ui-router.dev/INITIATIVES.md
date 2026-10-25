@@ -524,6 +524,17 @@ sitting); order is dependency order.
   gz; nm 173,820 lines / 41,155 d.ts; mass3b 13,307 hashes over 235 real tasks and 3,029 command
   sloc; the ci graph 864 / 235 / 3,024 edges; steam 643 commits; weather 448 dated files; 7A 11,937
   of 19,307 metered sloc lit over 25 members.
+- 2026-10-24, later — THE REGISTRY ADOPTED. `ui-router-registry` 0.1.1 closed #1582 and #1583 the day
+  they were filed, and the atlas app took it as a devDependency (adeec849): `src/routes.ts` registers the
+  route table `as const`, every `stateService` call site holds a `TypedStateService`, no cast anywhere,
+  and `src/registry.test-d.ts` asserts the shape under `npm run typecheck`. The user: "registry 0.1.1
+  released with fixes; dogfood". The links and the route snapshot stay loose, lit-ui-router 2.0's (#1448,
+  #1483) and #1470's. The pin moved five sheets without a rev: census-builds, census-pins and
+  census-consumers refiled with the atlas at adeec849 (2C's XII reads `typed eslinted effect nav ssr
+  server`; 2E's row 21 pins brick 11; 2F's atlas pin is the one pin ahead of latest), survey-self and
+  survey-shipped with them (A3, A4). `the-atlas.glb` 105,556 B, the build budget 112 KiB. The cabinet
+  stays at 85e0ce5c: origin/main holds three registry commits past it (the two fixes and the 0.1.1
+  release), not a refresh.
 - 2026-10-24 — THE TWENTY-SECOND REFRESH, at `origin/main` @ 85e0ce5c (commit 2026-10-24), the
   census plates re-run at the one ref, 70 commits past the twenty-first (eb1162da):
   `ui-router-registry` 0.1.0 under `latest`, the 2026-10-22 train (`lit-ui-router` 1.17.0,
@@ -972,6 +983,11 @@ sitting); order is dependency order.
 - THE BUILD NUMERALS STAND AT THEIR LIMIT. Twelve builds with the atlas app reach 2C's ROMAN at XII,
   where `numeral()` throws, and builds-scene's `WORD` ends at twelve; a thirteenth build needs both
   tables extended in the same change.
+
+- A PIN THE ATLAS TAKES CAN RUN AHEAD OF THE CABINET'S NPM PLATE. The atlas pin of `ui-router-registry`
+  0.1.1 read `ahead` of `census-npm.json`'s latest (0.1.0); re-reading npm filed 0.1.1 and sheet 11's
+  guard refused it against the cabinet tree's 0.1.0. The npm plate belongs to the cabinet's sha: restore
+  it, refile the pins, and let 2F word the pin as ahead until the next refresh.
 
 **How the guards are shaped**
 

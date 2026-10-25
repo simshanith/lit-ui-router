@@ -2,9 +2,9 @@
   "ref": "origin/main",
   "sha": "85e0ce5c",
   "commitDate": "2026-10-24T08:56:16-07:00",
-  "generatedAtTime": "2026-10-24T16:24:55.432Z",
+  "generatedAtTime": "2026-10-25T02:19:07.050Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-builds.mjs",
-  "used": "git archive origin/main @ 85e0ce5c — apps/*, www/lit-ui-router.dev and examples/<embeds.ts key>/package.json declarations, closed over family peers; withAtlas adds git archive www/atlas @ ca744f09 — www/atlas.lit-ui-router.dev/app/package.json; family and runtimes from census-couplings.json",
+  "used": "git archive origin/main @ 85e0ce5c — apps/*, www/lit-ui-router.dev and examples/<embeds.ts key>/package.json declarations, closed over family peers; withAtlas adds git archive www/atlas @ adeec849 — www/atlas.lit-ui-router.dev/app/package.json; family and runtimes from census-couplings.json",
   "wasAssociatedWith": [
     "git"
   ],
@@ -66,11 +66,11 @@
   "basis": {
     "atlasApp": {
       "ref": "www/atlas",
-      "sha": "ca744f09",
-      "commitDate": "2026-10-23T15:45:46-07:00",
+      "sha": "adeec849",
+      "commitDate": "2026-10-24T19:18:52-07:00",
       "dir": "www/atlas.lit-ui-router.dev/app"
     },
-    "note": "www/atlas.lit-ui-router.dev/app is on www/atlas @ ca744f09, off the cabinet's tree; the second reading adds it"
+    "note": "www/atlas.lit-ui-router.dev/app is on www/atlas @ adeec849, off the cabinet's tree; the second reading adds it"
   },
   "withAtlas": {
     "totals": {
@@ -87,7 +87,7 @@
         "ui-router-effect": 3,
         "ui-router-mobx": 2,
         "ui-router-navigation-location-plugin": 3,
-        "ui-router-registry": 3,
+        "ui-router-registry": 4,
         "ui-router-server": 3,
         "ui-router-signals": 3
       }
@@ -113,7 +113,7 @@
       {"name":"lint-eslint","dir":"examples/lint-eslint","kind":"example","pinned":["eslint-plugin-lit-ui-router","lit-ui-router"],"parts":["eslint-plugin-lit-ui-router","lit-ui-router"],"runtimes":["@uirouter/core","eslint","lit"],"runtimesByPeer":["@uirouter/core","eslint","lit"]},
       {"name":"navigation-api","dir":"examples/navigation-api","kind":"example","pinned":["lit-ui-router","ui-router-navigation-location-plugin"],"parts":["lit-ui-router","ui-router-navigation-location-plugin"],"runtimes":["@uirouter/core","lit"],"runtimesByPeer":["@uirouter/core","lit"]},
       {"name":"loading-and-error-views","dir":"examples/loading-and-error-views","kind":"example","pinned":["lit-ui-router"],"parts":["lit-ui-router"],"runtimes":["@uirouter/core","lit"],"runtimesByPeer":["@uirouter/core","lit"]},
-      {"name":"altitude-atlas-app","dir":"www/atlas.lit-ui-router.dev/app","kind":"atlas-app","pinned":["eslint-plugin-lit-ui-router","lit-ui-router","lit-ui-router-effect","lit-ui-router-ssr","ui-router-effect","ui-router-navigation-location-plugin","ui-router-server"],"parts":["eslint-plugin-lit-ui-router","lit-ui-router","lit-ui-router-effect","lit-ui-router-ssr","ui-router-effect","ui-router-navigation-location-plugin","ui-router-server"],"runtimes":["@lit-labs/ssr","@lit-labs/ssr-client","@uirouter/core","effect","eslint","lit"],"runtimesByPeer":["@lit-labs/ssr","@lit-labs/ssr-client","@uirouter/core","effect","eslint","hono","lit"]}
+      {"name":"altitude-atlas-app","dir":"www/atlas.lit-ui-router.dev/app","kind":"atlas-app","pinned":["eslint-plugin-lit-ui-router","lit-ui-router","lit-ui-router-effect","lit-ui-router-ssr","ui-router-effect","ui-router-navigation-location-plugin","ui-router-registry","ui-router-server"],"parts":["eslint-plugin-lit-ui-router","lit-ui-router","lit-ui-router-effect","lit-ui-router-ssr","ui-router-effect","ui-router-navigation-location-plugin","ui-router-registry","ui-router-server"],"runtimes":["@lit-labs/ssr","@lit-labs/ssr-client","@uirouter/core","effect","eslint","lit"],"runtimesByPeer":["@lit-labs/ssr","@lit-labs/ssr-client","@uirouter/core","effect","eslint","hono","lit"]}
     ],
     "builds": [
       {"parts":["lit-ui-router"],"pinned":[["lit-ui-router"]],"runtimes":["@uirouter/core","lit"],"runtimesByPeer":["@uirouter/core","lit"],"consumers":["helloworld","helloworld-buildless","hellosolarsystem","hellogalaxy","design-system-links","loading-and-error-views"]},
@@ -128,7 +128,7 @@
       {"parts":["lit-ui-router","lit-ui-router-ssr","ui-router-server"],"pinned":[["lit-ui-router","lit-ui-router-ssr","ui-router-server"]],"runtimes":["@lit-labs/ssr","@lit-labs/ssr-client","@uirouter/core","lit"],"runtimesByPeer":["@lit-labs/ssr","@lit-labs/ssr-client","@uirouter/core","hono","lit"],"consumers":["@www/lit-ui-router.dev"]},
       {"parts":["lit-ui-router","ui-router-navigation-location-plugin","ui-router-registry"],"pinned":[["lit-ui-router","ui-router-navigation-location-plugin","ui-router-registry"]],"runtimes":["@uirouter/core","lit"],"runtimesByPeer":["@uirouter/core","lit"],"consumers":["sample-app-shared"]},
       {"parts":["lit-ui-router","lit-ui-router-signals","ui-router-registry","ui-router-signals"],"pinned":[["lit-ui-router","lit-ui-router-signals","ui-router-registry"]],"runtimes":["@uirouter/core","lit","signal-polyfill"],"runtimesByPeer":["@uirouter/core","lit","signal-polyfill"],"consumers":["sample-app-lit-signals"]},
-      {"parts":["eslint-plugin-lit-ui-router","lit-ui-router","lit-ui-router-effect","lit-ui-router-ssr","ui-router-effect","ui-router-navigation-location-plugin","ui-router-server"],"pinned":[["eslint-plugin-lit-ui-router","lit-ui-router","lit-ui-router-effect","lit-ui-router-ssr","ui-router-effect","ui-router-navigation-location-plugin","ui-router-server"]],"runtimes":["@lit-labs/ssr","@lit-labs/ssr-client","@uirouter/core","effect","eslint","lit"],"runtimesByPeer":["@lit-labs/ssr","@lit-labs/ssr-client","@uirouter/core","effect","eslint","hono","lit"],"consumers":["altitude-atlas-app"]}
+      {"parts":["eslint-plugin-lit-ui-router","lit-ui-router","lit-ui-router-effect","lit-ui-router-ssr","ui-router-effect","ui-router-navigation-location-plugin","ui-router-registry","ui-router-server"],"pinned":[["eslint-plugin-lit-ui-router","lit-ui-router","lit-ui-router-effect","lit-ui-router-ssr","ui-router-effect","ui-router-navigation-location-plugin","ui-router-registry","ui-router-server"]],"runtimes":["@lit-labs/ssr","@lit-labs/ssr-client","@uirouter/core","effect","eslint","lit"],"runtimesByPeer":["@lit-labs/ssr","@lit-labs/ssr-client","@uirouter/core","effect","eslint","hono","lit"],"consumers":["altitude-atlas-app"]}
     ]
   }
 }

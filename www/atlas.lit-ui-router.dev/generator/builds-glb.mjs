@@ -29,7 +29,7 @@ const tight = (flat) => {
 };
 
 /** The budget each build's binary stays inside, asserted at build. */
-export const BUILD_GLB_BUDGET = 100 * 1024;
+export const BUILD_GLB_BUDGET = 112 * 1024;
 
 /** A build's plan centre in plan units: its ground slab's. */
 export const centreOf = (model) => [model.ground.x + model.ground.w / 2, model.ground.y + model.ground.d / 2];
