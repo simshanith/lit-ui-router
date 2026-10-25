@@ -55,14 +55,14 @@ const stateService: TypedStateService = router.stateService;
 stateService.go('contacts.contact', { contactId: 'c1' });
 ```
 
-| Type                              | What it holds                                                                                                                                             |
-| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Register`                        | the interface an app augments with its `as const` state declarations                                                                                      |
-| `StateName`                       | the registered state names; dotted names and `parent:` both resolve, and a future state's `name.**` placeholder is left out                               |
-| `ParamsOf` and `ResolvedParamsOf` | the params a state accepts and the params it reads back, its ancestors' included; url placeholders are required, query params are not                     |
-| `TypedStateService`               | `go`, `transitionTo`, `target`, `href`, `is` and `includes` over registered names; relative refs are checked by their tail, and object targets stay loose |
-| `TypedRouteSnapshot`              | the route snapshot the reactive packages share, whose `includes(name)` narrows `current` and `params` to that state's subtree                             |
-| `RegisteredRouteTypes`            | the members the `/signals`, `/effect` and `/mobx` entry points fill the adapters' `RouteTypes` interfaces from                                            |
+| Type                              | What it holds                                                                                                                                                       |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Register`                        | the interface an app augments with its `as const` state declarations                                                                                                |
+| `StateName`                       | the registered state names; dotted names and `parent:` both resolve, and a future state's `name.**` placeholder is left out                                         |
+| `ParamsOf` and `ResolvedParamsOf` | the params a state accepts and the params it reads back, its ancestors' included; url placeholders are required, query params are not                               |
+| `TypedStateService`               | `go`, `transitionTo`, `target`, `href`, `is`, `includes` and `reload` over registered names; relative refs are checked by their tail, and object targets stay loose |
+| `TypedRouteSnapshot`              | the route snapshot the reactive packages share, whose `includes(name)` narrows `current` and `params` to that state's subtree                                       |
+| `RegisteredRouteTypes`            | the members the `/signals`, `/effect` and `/mobx` entry points fill the adapters' `RouteTypes` interfaces from                                                      |
 
 ## Reactive adapters
 
