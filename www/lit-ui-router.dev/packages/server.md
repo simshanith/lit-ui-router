@@ -3,7 +3,7 @@ title: Server-Side Routing
 description: Honest HTTP verdicts for a static SPA with ui-router-server — the client's route table, running on the server or the edge
 ---
 
-# ui-router-server
+#   ui-router-server
 
 <p class="badges">
 <a href="https://npmx.dev/package/ui-router-server" target="_blank" class="badge"><img alt="NPM Version" src="https://img.shields.io/npm/v/ui-router-server" /></a>
