@@ -20,7 +20,11 @@
     "builtin": true
   },
   "settings": {
-    "litUiRouterSources": ["sample-app-shared/registry/lit.js"]
+    "litUiRouterSources": [
+      "sample-app-shared/registry/lit.js",
+      "./typed-ui-sref.js",
+      "#router"
+    ]
   },
   "ignorePatterns": [
     "**/dist/**",

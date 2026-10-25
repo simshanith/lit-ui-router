@@ -1,13 +1,14 @@
-import { html, LitElement, css, render } from 'lit';
+import { html, LitElement, css, render, type TemplateResult } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { hashLocationPlugin, Transition } from '@uirouter/core';
 import {
   UIRouterLit,
-  uiSref,
   uiSrefActive,
   type LitStateDeclaration,
   type UIViewInjectedProps,
 } from 'lit-ui-router';
+
+import { uiSref } from './typed-ui-sref.js';
 
 // Data Service
 interface SolarBody {
@@ -226,14 +227,14 @@ class PlanetListComponent extends LitElement {
     return this._uiViewProps.resolves.planets;
   }
 
-  render() {
+  render(): TemplateResult {
     return html`
       <h3>Bodies by distance from the Sun</h3>
       <ul>
         ${this.planets.map(
           (planet) => html`
             <li>
-              <a ${uiSref('planet', { planetId: planet.id })}>
+              <a ${uiSref('planet', { planetId: String(planet.id) })}>
                 <span
                   class="body"
                   style="width:${dotSize(planet.diameterKm)}px;height:${dotSize(
@@ -329,7 +330,7 @@ class PlanetDetailComponent extends LitElement {
     return this._uiViewProps.resolves.planet;
   }
 
-  render() {
+  render(): TemplateResult {
     if (!this.planet) {
       return html`<p>
         Body not found. <a class="back-link" ${uiSref('planets')}>Back</a>
@@ -413,7 +414,7 @@ export class AppRoot extends LitElement {
 }
 
 // State definitions
-const planetsState: LitStateDeclaration<{ planets: SolarBody[] }> = {
+const planetsState = {
   name: 'planets',
   url: '/planets',
   component: PlanetListComponent,
@@ -424,9 +425,9 @@ const planetsState: LitStateDeclaration<{ planets: SolarBody[] }> = {
       resolveFn: () => SolarSystemService.getAllBodies(),
     },
   ],
-};
+} as const satisfies LitStateDeclaration<{ planets: SolarBody[] }>;
 
-const planetState: LitStateDeclaration<{ planet: SolarBody | undefined }> = {
+const planetState = {
   name: 'planet',
   url: '/planets/:planetId',
   component: PlanetDetailComponent,
@@ -444,7 +445,13 @@ const planetState: LitStateDeclaration<{ planet: SolarBody | undefined }> = {
       },
     },
   ],
-};
+} as const satisfies LitStateDeclaration<{ planet: SolarBody | undefined }>;
+
+declare module 'ui-router-registry' {
+  interface Register {
+    states: typeof planetsState | typeof planetState;
+  }
+}
 
 // Router setup
 const router = new UIRouterLit();

@@ -17,11 +17,13 @@ import {
 import {
   TransitionController,
   UIRouterLit,
-  uiSref,
   uiSrefActive,
   type LitStateDeclaration,
   type RoutedLitTemplate,
 } from 'lit-ui-router';
+import type { TypedStateService, UncheckedRef } from 'ui-router-registry';
+
+import { uiSref } from './typed-ui-sref.js';
 
 const REQUEST_MS = 1200;
 
@@ -72,8 +74,10 @@ const errorView =
     // SAFETY: the onError hook is the only writer of `failed`
     const failed = transition?.params().failed as TargetState | undefined;
 
+    const stateService: TypedStateService = router.stateService;
+
     const retry = () => {
-      if (failed) void router.stateService.go(failed.state(), failed.params());
+      if (failed) void stateService.go(failed.state(), failed.params());
     };
 
     return html`<div class="error" role="alert">
@@ -104,7 +108,7 @@ const homeState = {
   component: () =>
     html`<h3>Home</h3>
       <p>No resolves, so the view changes at once.</p>`,
-} satisfies LitStateDeclaration;
+} as const satisfies LitStateDeclaration;
 
 const reportState = {
   name: 'report',
@@ -121,13 +125,13 @@ const reportState = {
         request(['Visits up 4%', 'Signups flat', 'Churn down 1%']),
     },
   ],
-} satisfies LitStateDeclaration<ReportResolves>;
+} as const satisfies LitStateDeclaration<ReportResolves>;
 
 const errorState = {
   name: 'error',
   params: { failed: null },
   component: errorView('Something went wrong'),
-} satisfies LitStateDeclaration;
+} as const satisfies LitStateDeclaration;
 
 const accountState = {
   name: 'account',
@@ -137,7 +141,7 @@ const accountState = {
     pending: accountSkeleton,
     errorState: 'account.error',
   } satisfies ViewData,
-  component: () =>
+  component: (): TemplateResult =>
     html`<h3>Account</h3>
       <nav class="tabs" aria-label="Account">
         <a
@@ -152,7 +156,7 @@ const accountState = {
         >
       </nav>
       <ui-view></ui-view>`,
-} satisfies LitStateDeclaration;
+} as const satisfies LitStateDeclaration;
 
 const profileState = {
   name: 'account.profile',
@@ -167,7 +171,7 @@ const profileState = {
       resolveFn: () => request({ name: 'Ada Lovelace', plan: 'Analytical' }),
     },
   ],
-} satisfies LitStateDeclaration<ProfileResolves>;
+} as const satisfies LitStateDeclaration<ProfileResolves>;
 
 // NOWAIT: the transition succeeds at once and the view renders the promise.
 const activityState = {
@@ -201,13 +205,26 @@ const activityState = {
     },
   ],
   resolvePolicy: { async: 'NOWAIT' },
-} satisfies LitStateDeclaration<ActivityResolves>;
+} as const satisfies LitStateDeclaration<ActivityResolves>;
 
 const accountErrorState = {
   name: 'account.error',
   params: { failed: null },
   component: errorView('Account unavailable'),
-} satisfies LitStateDeclaration;
+} as const satisfies LitStateDeclaration;
+
+declare module 'ui-router-registry' {
+  interface Register {
+    states:
+      | typeof homeState
+      | typeof reportState
+      | typeof errorState
+      | typeof accountState
+      | typeof profileState
+      | typeof activityState
+      | typeof accountErrorState;
+  }
+}
 
 @customElement('app-shell')
 export class AppShell extends LitElement {
@@ -405,8 +422,11 @@ router.transitionService.onError({}, (trans) => {
   // An error state inherits its own name, so its failure stops here.
   if (target === trans.to().name) return;
 
-  void router.stateService.go(
-    target,
+  const stateService: TypedStateService = router.stateService;
+
+  void stateService.go(
+    // SAFETY: `errorState` names a registered state; typing it StateName makes Register circular
+    target as UncheckedRef,
     { failed: trans.targetState() },
     { location: false },
   );

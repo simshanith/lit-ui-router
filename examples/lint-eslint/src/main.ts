@@ -4,9 +4,9 @@ import { customElement } from 'lit/decorators.js';
 import {
   type LitStateDeclaration,
   UIRouterLit,
-  uiSref,
   uiSrefActive,
 } from 'lit-ui-router';
+import { uiSref } from '#router';
 import { EslintHtmlView, LintReportView } from './report-views.js';
 
 // Positive control: delete `${uiSref('eslint-html')}` from the second tab and
@@ -54,17 +54,23 @@ export class AppRoot extends LitElement {
 }
 
 // The two views of one lint run are the two states: the hash picks the panel.
-const reportState: LitStateDeclaration = {
+const reportState = {
   name: 'report',
   url: '/report',
   component: LintReportView,
-};
+} as const satisfies LitStateDeclaration;
 
-const htmlState: LitStateDeclaration = {
+const htmlState = {
   name: 'eslint-html',
   url: '/eslint-html',
   component: EslintHtmlView,
-};
+} as const satisfies LitStateDeclaration;
+
+declare module 'ui-router-registry' {
+  interface Register {
+    states: typeof reportState | typeof htmlState;
+  }
+}
 
 const router = new UIRouterLit();
 

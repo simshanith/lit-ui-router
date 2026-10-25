@@ -1,14 +1,15 @@
-import { html, LitElement, css } from 'lit';
+import { html, LitElement, css, type TemplateResult } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { render } from 'lit';
 import { hashLocationPlugin, Transition } from '@uirouter/core';
 import {
   UIRouterLit,
-  uiSref,
   uiSrefActive,
   type LitStateDeclaration,
   type UIViewInjectedProps,
 } from 'lit-ui-router';
+
+import { uiSref } from './typed-ui-sref.js';
 
 // Data Service
 interface Star {
@@ -210,7 +211,7 @@ class GalaxyShellComponent extends LitElement {
     this._uiViewProps = props;
   }
 
-  render() {
+  render(): TemplateResult {
     return html`
       <nav aria-label="Hello Galaxy">
         <!-- activeClasses use stateService.includes, so Stars stays lit on the nested detail state -->
@@ -336,7 +337,7 @@ class StarsContainerComponent extends LitElement {
     return this._uiViewProps.resolves.stars;
   }
 
-  render() {
+  render(): TemplateResult {
     return html`
       <div class="container">
         <div class="list">
@@ -578,16 +579,16 @@ export class AppRoot extends LitElement {
 
 // State definitions
 // Parent shell state; owns the section nav and a nested <ui-view>
-const galaxyState: LitStateDeclaration = {
+const galaxyState = {
   name: 'galaxy',
   url: '/galaxy',
   component: GalaxyShellComponent,
   // Visiting the bare parent forwards to the star list
   redirectTo: 'galaxy.stars',
-};
+} as const satisfies LitStateDeclaration;
 
 // Child state (nested via dot notation) renders inside galaxy's <ui-view>
-const starsState: LitStateDeclaration<{ stars: Star[] }> = {
+const starsState = {
   name: 'galaxy.stars',
   url: '/stars',
   component: StarsContainerComponent,
@@ -597,10 +598,10 @@ const starsState: LitStateDeclaration<{ stars: Star[] }> = {
       resolveFn: () => StarService.getStars(),
     },
   ],
-};
+} as const satisfies LitStateDeclaration<{ stars: Star[] }>;
 
 // Grandchild state with a URL param, rendered inside galaxy.stars's <ui-view>
-const starState: LitStateDeclaration<{ star: Star | undefined }> = {
+const starState = {
   name: 'galaxy.stars.star',
   url: '/:starId',
   component: StarDetailComponent,
@@ -616,10 +617,10 @@ const starState: LitStateDeclaration<{ star: Star | undefined }> = {
       },
     },
   ],
-};
+} as const satisfies LitStateDeclaration<{ star: Star | undefined }>;
 
 // Sibling of galaxy.stars; swaps into the same nested <ui-view>
-const astronautState: LitStateDeclaration = {
+const astronautState = {
   name: 'galaxy.astronaut',
   url: '/astronaut',
   component: AstronautViewComponent,
@@ -631,7 +632,17 @@ const astronautState: LitStateDeclaration = {
       resolveFn: () => import('@google/model-viewer'),
     },
   ],
-};
+} as const satisfies LitStateDeclaration;
+
+declare module 'ui-router-registry' {
+  interface Register {
+    states:
+      | typeof galaxyState
+      | typeof starsState
+      | typeof starState
+      | typeof astronautState;
+  }
+}
 
 // Router setup
 const router = new UIRouterLit();

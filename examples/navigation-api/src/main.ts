@@ -2,7 +2,6 @@ import { html, LitElement, css } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import {
   UIRouterLit,
-  uiSref,
   uiSrefActive,
   type LitStateDeclaration,
 } from 'lit-ui-router';
@@ -11,6 +10,8 @@ import {
   navigationLocationPlugin,
   type NavigationLocationPluginOptions,
 } from 'ui-router-navigation-location-plugin';
+
+import { uiSref } from './typed-ui-sref.js';
 
 const supported = 'navigation' in window;
 
@@ -60,7 +61,7 @@ const FOLDERS = {
 };
 
 // A query parameter keeps every router URL on the one path a static host serves.
-const folderState: LitStateDeclaration = {
+const folderState = {
   name: 'folder',
   url: '/?folder',
   params: { folder: { type: 'string', value: 'inbox' } },
@@ -73,7 +74,13 @@ const folderState: LitStateDeclaration = {
     return html`<h3>${title}</h3>
       <p>${body}</p>`;
   },
-};
+} as const satisfies LitStateDeclaration;
+
+declare module 'ui-router-registry' {
+  interface Register {
+    states: typeof folderState;
+  }
+}
 
 @customElement('app-root')
 export class AppRoot extends LitElement {

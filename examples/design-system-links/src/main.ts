@@ -4,13 +4,12 @@ import { createRef, ref, type Ref } from 'lit/directives/ref.js';
 import { hashLocationPlugin } from '@uirouter/core';
 import {
   UIRouterLit,
-  uiSref,
   uiSrefActive,
-  srefHref,
   srefActiveClass,
   srefAriaCurrent,
   type LitStateDeclaration,
 } from 'lit-ui-router';
+import { srefHref, uiSref } from './typed-ui-sref.js';
 import { ColorSchemeController } from './color-scheme.js';
 import '@spectrum-web-components/theme/sp-theme.js';
 import '@spectrum-web-components/theme/scale-medium.js';
@@ -190,7 +189,7 @@ export class AppRoot extends LitElement {
   }
 }
 
-const componentsState: LitStateDeclaration = {
+const componentsState = {
   name: 'components',
   url: '/components',
   component: () =>
@@ -200,9 +199,9 @@ const componentsState: LitStateDeclaration = {
         any of them showed the URL and a middle-click would have opened it in a
         new tab.
       </p>`,
-};
+} as const satisfies LitStateDeclaration;
 
-const tokensState: LitStateDeclaration = {
+const tokensState = {
   name: 'tokens',
   url: '/tokens',
   component: () =>
@@ -211,7 +210,13 @@ const tokensState: LitStateDeclaration = {
         Both links to this state navigated on click — the option governs the
         href attribute only, never the click handler.
       </p>`,
-};
+} as const satisfies LitStateDeclaration;
+
+declare module 'ui-router-registry' {
+  interface Register {
+    states: typeof componentsState | typeof tokensState;
+  }
+}
 
 function createRouter(): UIRouterLit {
   const router = new UIRouterLit();

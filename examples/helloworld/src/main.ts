@@ -4,10 +4,11 @@ import { render } from 'lit';
 import { hashLocationPlugin } from '@uirouter/core';
 import {
   UIRouterLit,
-  uiSref,
   uiSrefActive,
   type LitStateDeclaration,
 } from 'lit-ui-router';
+
+import { uiSref } from './typed-ui-sref.js';
 
 @customElement('app-root')
 export class AppRoot extends LitElement {
@@ -43,19 +44,25 @@ export class AppRoot extends LitElement {
 }
 
 // State definitions
-const helloState: LitStateDeclaration = {
+const helloState = {
   name: 'hello',
   url: '/hello',
   component: () => html`<h3>Hello World!</h3>`,
-};
+} as const satisfies LitStateDeclaration;
 
-const aboutState: LitStateDeclaration = {
+const aboutState = {
   name: 'about',
   url: '/about',
   component: () =>
     html`<h3>About</h3>
       <p>This is a simple lit-ui-router application.</p>`,
-};
+} as const satisfies LitStateDeclaration;
+
+declare module 'ui-router-registry' {
+  interface Register {
+    states: typeof helloState | typeof aboutState;
+  }
+}
 
 // Router setup
 const router = new UIRouterLit();

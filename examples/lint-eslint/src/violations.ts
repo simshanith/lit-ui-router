@@ -77,12 +77,12 @@ export const linkElements = html`
 `;
 
 // settings.litUiRouterSources — `#router` is declared in eslint.config.js, so
-// the uiSref it re-exports counts as lit-ui-router's own
+// the uiSref it wraps counts as lit-ui-router's own
 export const litUiRouterSources = html`
   <!-- ✓ GOOD: imported from '#router', the specifier the config lists -->
-  <a ${appSref('about')}>About</a>
+  <a ${appSref('report')}>Report</a>
   <!-- ✗ BAD: the same module as './router.js', a specifier nobody listed -->
-  <a ${relativeSref('about')}>About</a>
+  <a ${relativeSref('report')}>Report</a>
 `;
 
 // lit-ui-router/sref-status-aria-current — the one pair that needs a host
