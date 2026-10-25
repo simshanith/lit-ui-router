@@ -86,7 +86,7 @@ there is no element to seek, it reads the router
 ### routeRef
 
 [`routeRef(router)`](/api/lit-ui-router-effect/functions/routeRef) is the
-`SubscriptionRef<RouteSnapshot>` for a router — memoized, one per router
+`SubscriptionRef<TypedRouteSnapshot>` for a router — memoized, one per router
 instance. The first call registers one `transitionService.onSuccess` hook that
 replaces the value per successful transition. It is `ui-router-effect`'s
 `routeRef`, re-exported, so code using either package shares one ref per

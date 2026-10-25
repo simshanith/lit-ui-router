@@ -12,7 +12,7 @@ A thin wrapper on top of `lit-ui-router` — it registers no custom elements and
 
 ## Features
 
-- **`routeRef(router)`** — a `SubscriptionRef<RouteSnapshot>` of the current state, params, and transition; one ref (and one transition hook) per router, attached lazily on first use
+- **`routeRef(router)`** — a `SubscriptionRef<TypedRouteSnapshot>` of the current state, params, and transition; one ref (and one transition hook) per router, attached lazily on first use
 - **`RouterRefController`** — follows the route ref of the nearest `<ui-router>` context, requested automatically over the `context-request` protocol; no prop drilling and no wiring in router configuration
 - **`RefController`** — the generic primitive: selects over one or more `SubscriptionRef`s while the host is connected; works with any ref, not just the router's
 - **Lifecycle-safe** — one fiber per controller, forked in `hostConnected` and interrupted in `hostDisconnected`; the value is re-read on every (re)connect so components that re-enter the DOM (e.g. sticky states) never render stale values
@@ -62,7 +62,7 @@ No router configuration is required: the controller discovers the router from th
 
 ### `routeRef(router)`
 
-The `SubscriptionRef<RouteSnapshot>` for a router — memoized, one per router instance. The first call registers one `transitionService.onSuccess` hook that replaces the value per successful transition. It is `ui-router-effect`'s `routeRef`, re-exported, so code using either package shares one ref per router.
+The `SubscriptionRef<TypedRouteSnapshot>` for a router — memoized, one per router instance. The first call registers one `transitionService.onSuccess` hook that replaces the value per successful transition. It is `ui-router-effect`'s `routeRef`, re-exported, so code using either package shares one ref per router.
 
 ### `RouteSnapshot`
 

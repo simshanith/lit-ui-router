@@ -14,7 +14,7 @@ npm install ui-router-effect effect
 
 ## Features
 
-- **`routeRef(router)`**: a `SubscriptionRef<RouteSnapshot>` of the current state, params and transition. There is one ref, and one `onSuccess` hook, per router, attached lazily on first use. Every value it holds is a settled route.
+- **`routeRef(router)`**: a `SubscriptionRef<TypedRouteSnapshot>` of the current state, params and transition. There is one ref, and one `onSuccess` hook, per router, attached lazily on first use. Every value it holds is a settled route.
 - **`RouteSnapshot`** and **`snapshotRoute(router, transition?)`**: the value the ref holds. Its `includes()` evaluates `StateService.includes` against the snapshot, not the live router.
 - **`RouteTypes`**: an empty interface an app or a registry fills in by module augmentation. Its `snapshot` member types the ref's value, so a snapshot whose `includes(name)` is a type predicate narrows `current` and `params`. Empty, the ref holds a `RouteSnapshot`. `snapshotRoute` stays untyped.
 
