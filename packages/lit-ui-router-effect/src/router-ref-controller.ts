@@ -2,21 +2,10 @@ import { SubscriptionRef } from 'effect';
 import { ReactiveControllerHost } from 'lit';
 import { isFunction, UIRouter } from '@uirouter/core';
 import { getScopedRouter, requestRouter } from 'lit-ui-router/context';
-import { routeRef } from 'ui-router-effect';
+import { routeRef, type TypedRouteSnapshot } from 'ui-router-effect';
 
 import { warnMissingRouter } from './dev-warn.js';
 import { RefController, RefControllerOptions } from './ref-controller.js';
-
-/**
- * The snapshot {@link routeRef} holds: typed by `ui-router-effect`'s
- * `RouteTypes` when an app or a registry fills it in, a
- * `RouteSnapshot` otherwise.
- */
-// Derived from routeRef so the ui-router-effect peer floor, which predates RouteTypes, still resolves.
-export type TypedRouteSnapshot =
-  ReturnType<typeof routeRef> extends SubscriptionRef.SubscriptionRef<infer S>
-    ? S
-    : never;
 
 /** Options for {@link RouterRefController}. */
 export interface RouterRefControllerOptions<T> extends RefControllerOptions<T> {

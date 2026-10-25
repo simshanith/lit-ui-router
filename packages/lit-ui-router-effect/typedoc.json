@@ -50,6 +50,9 @@
     "lit-ui-router": {
       "UIRouterLit": "/api/reference/core/UIRouterLit",
       "UIRouterLitElement": "/api/reference/components/UIRouterLitElement"
+    },
+    "ui-router-effect": {
+      "RouteTypes": "/api/ui-router-effect/interfaces/RouteTypes"
     }
   },
   "sidebar": {
