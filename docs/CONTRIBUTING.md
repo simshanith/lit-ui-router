@@ -36,6 +36,10 @@ tools through mise shims resolves `pnpm` but not that environment; if
 through `mise exec --`. CI is unaffected: `jdx/mise-action` exports `[env]` to
 every later step.
 
+An activated shell also gets the config's `[shell_alias]` entries. `cdroot`
+changes to the root of the checkout or worktree you are in, from any directory
+inside it.
+
 An `[env]` assignment overrides the inherited value, and the checked-in config
 evaluates before `config.local.toml`, so a default declared there defeats a
 per-checkout override. A value meant to be overridable keeps its default in code

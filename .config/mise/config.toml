@@ -56,6 +56,10 @@ _.file = [
 # setup here, and //tools/release:check_release_closure, which guards it.
 release_closure = "--filter @tools/release... --filter {packages/*}..."
 
+[shell_alias]
+# Activated shells only: a task runs in a child process and can't move the caller.
+cdroot = 'cd "{{config_root}}"'
+
 [settings]
 # read the node version from .nvmrc instead of pinning it here
 idiomatic_version_file_enable_tools = ["node"]
