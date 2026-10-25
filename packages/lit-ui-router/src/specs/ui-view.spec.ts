@@ -1458,6 +1458,45 @@ describe('UiView', () => {
       expect(countsFor('test-swap-to').disconnected).toBe(1);
     });
 
+    it('should not let a superseded element’s late first update retire the current one', async () => {
+      const { uiView } = await setupRouter(swapStates);
+      await routerGo(router, 'from');
+      swapToHeld = true;
+      await routerGo(router, 'to');
+      // SAFETY: the 'to' state renders a TestSwapTo
+      const to = uiView.routedElement as TestSwapTo;
+      swapToHeld = false;
+
+      // The view's update queues `to`'s, which runs after `other` superseded it.
+      await routerGo(router, 'other');
+      await uiView.updateComplete;
+
+      expect(to.hasUpdated).toBe(true);
+      expect(uiView.children).toHaveLength(1);
+      expect(uiView.routedElement).toBeInstanceOf(TestRetainedOther);
+      expect(uiView.routedElement?.isConnected).toBe(true);
+      expect(countsFor('test-swap-from').disconnected).toBe(1);
+    });
+
+    it('should keep a sticky element in place when it returns before its replacement rendered', async () => {
+      const { uiView } = await setupRouter([
+        { name: 'sticky', url: '/sticky', component: TestStickyComponent },
+        ...swapStates,
+      ]);
+
+      await routerGo(router, 'sticky');
+      const sticky = uiView.routedElement;
+      swapToHeld = true;
+      await routerGo(router, 'to');
+
+      await routerGo(router, 'sticky');
+
+      expect(uiView.routedElement).toBe(sticky);
+      expect(uiView.children).toHaveLength(1);
+      expect(countsFor('test-sticky-component').connected).toBe(1);
+      expect(countsFor('test-swap-to').disconnected).toBe(1);
+    });
+
     it('should have retired the outgoing element by the view’s next updateComplete', async () => {
       const { uiView } = await setupRouter(swapStates);
       await routerGo(router, 'from');

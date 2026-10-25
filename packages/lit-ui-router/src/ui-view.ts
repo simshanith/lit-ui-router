@@ -74,12 +74,11 @@ const isRenderMarker = (node: ChildNode | null): boolean => {
 
 /** Whether `node` sits inside `host`, across shadow roots. */
 const composedContains = (host: Node, node: Node): boolean => {
-  let current: Node | null = node;
+  let current: Node | null | undefined = node;
 
   while (current && current !== host) {
     // SAFETY: a node with no parent is a shadow root, whose `host` leads out, or the top of its tree
-    current =
-      current.parentNode ?? (current as Partial<ShadowRoot>).host ?? null;
+    current = current.parentNode ?? (current as Partial<ShadowRoot>).host;
   }
 
   return current === host;
@@ -964,21 +963,12 @@ export class UiView extends LitElement {
       return;
     }
 
-    let done = false;
-
-    const controller: ReactiveController = {
-      hostUpdated: () => {
-        if (done) return;
-        done = true;
-        retire();
-      },
-    };
+    const controller: ReactiveController = { hostUpdated: retire };
 
     element.addController(controller);
     this.pendingSwap = {
       element,
       cancel: () => {
-        done = true;
         // Deferred: lit iterates the controllers while it runs hostUpdated.
         void Promise.resolve().then(() =>
           element.removeController?.(controller),
@@ -1009,9 +999,9 @@ export class UiView extends LitElement {
     this.elementSlots.fill(nothing);
   }
 
-  /** Drops the element `incoming` replaced, unless a later swap took over. */
+  /** Drops the element `incoming` replaced, unless the swap was settled or a later one took over. */
   private retire(incoming: Element): void {
-    if (this.classElement !== incoming) {
+    if (this.pendingSwap?.element !== incoming) {
       return;
     }
 
