@@ -118,6 +118,9 @@ catalogs:
     '@vitest/coverage-v8':
       specifier: ^5.0.5
       version: 5.0.5
+    binary-extensions:
+      specifier: ^3.1.0
+      version: 3.2.0
     cf:
       specifier: 1.0.0-beta.20
       version: 1.0.0-beta.20
@@ -2981,7 +2984,26 @@ importers:
         version: 4.151.3(@types/node@24.19.2)
 
   www/release-diffs.lit-ui-router.dev:
+    dependencies:
+      binary-extensions:
+        specifier: 'catalog:'
+        version: 3.2.0
+      diff:
+        specifier: 'catalog:'
+        version: 9.0.0
+      valibot:
+        specifier: 'catalog:'
+        version: 1.5.0(typescript@7.0.2)
     devDependencies:
+      '@cloudflare/config':
+        specifier: 'catalog:'
+        version: 0.27.0
+      '@tools/shared':
+        specifier: catalog:workspace
+        version: link:../../tools/shared
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.19.2
       cf:
         specifier: 'catalog:'
         version: 1.0.0-beta.20(@types/node@24.19.2)
@@ -5948,6 +5970,10 @@ packages:
   binary-extensions@2.3.0:
     resolution: {integrity: sha512-Ceh+7ox5qe7LJuLHoY0feh3pHuUDHAcRUeyL2VYghZwfpkNIy/+8Ocg0a3UuSoYzavmylwuLWQOf3hl0jjMMIw==}
     engines: {node: '>=8'}
+
+  binary-extensions@3.2.0:
+    resolution: {integrity: sha512-DjR9rgAOMQn9TrUHzijJUtvoKviDRvFxuIyqZrubxHqRpQN9OzfXrrLivm7xb3q8oJSKsiuBor4bAS2wafLnVQ==}
+    engines: {node: '>=18.20'}
 
   birpc@2.9.0:
     resolution: {integrity: sha512-KrayHS5pBi69Xi9JmvoqrIgYGDkD6mcSe/i6YKi3w5kekCLzrX4+nawcXqrj2tIp50Kw/mT/s3p+GVK0A0sKxw==}
@@ -11857,6 +11883,8 @@ snapshots:
   before-after-hook@4.0.0: {}
 
   binary-extensions@2.3.0: {}
+
+  binary-extensions@3.2.0: {}
 
   birpc@2.9.0: {}
 

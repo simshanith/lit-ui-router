@@ -47,6 +47,7 @@ catalog:
   '@vitest/browser': ^5.0.5
   '@vitest/browser-playwright': ^5.0.5
   '@vitest/coverage-v8': ^5.0.5
+  binary-extensions: ^3.1.0
   cf: 1.0.0-beta.20
   concurrently: ^10.0.6
   conventional-changelog: ^8.1.3

@@ -30,6 +30,13 @@
       // .cloudflare/types and re-key on every types:worker run.
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/.oxfmtrc.json"]
     },
+    // The npm diff port against the npm CLI, both reading the npm registry:
+    // the network and the host's npm are inputs no key can name, so uncached.
+    // In no ci:* graph: the Acceptance workflow's `acceptance (npm-diff)` job
+    // runs it.
+    "test:npm-diff": {
+      "cache": false
+    },
     "types:worker": {
       "inputs": ["$TURBO_DEFAULT$", "cloudflare.config.ts"],
       "outputs": [".cloudflare/types/**"]
