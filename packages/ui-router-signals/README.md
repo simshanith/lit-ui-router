@@ -15,6 +15,7 @@ npm install ui-router-signals signal-polyfill
 ## Features
 
 - **`RouterSignals`**: one `RouteSnapshot` per successful transition, in a `Signal.State`. `route`, `current`, `params` and `transition` are read-only `Signal.Computed`s over it, and the tracked `includes()` answers for that settled snapshot, not the live router. One instance (and one transition hook) per router via `RouterSignals.for(router)`.
+- **`RouteTypes`**: an empty interface an app or a registry fills in by module augmentation. Its `snapshot` member types `route`, so a snapshot whose `includes(name)` is a type predicate narrows `current` and `params`. Empty, `route` holds a `RouteSnapshot`.
 - **`watchSelection`**: watches a selector through a `Signal.Computed` and hands each new value to a callback, once synchronously and then in a microtask after any source changes. A watcher's notify callback may not read signals, so it schedules the read; several synchronous sets deliver one change.
 
 ## Dependencies

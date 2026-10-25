@@ -1,0 +1,11 @@
+{
+  // its own program: the spec here fills in ui-router-signals' RouteTypes, which would type every spec in src/specs
+  "extends": "../tsconfig.src.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "isolatedDeclarations": false,
+    "types": []
+  },
+  "include": ["*.ts", "../src/types/*.d.ts"],
+  "exclude": []
+}
