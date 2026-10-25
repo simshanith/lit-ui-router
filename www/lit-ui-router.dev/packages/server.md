@@ -3,7 +3,7 @@ title: Server-Side Routing
 description: Honest HTTP verdicts for a static SPA with ui-router-server — the client's route table, running on the server or the edge
 ---
 
-#   ui-router-server
+# ui-router-server
 
 <p class="badges">
 <a href="https://npmx.dev/package/ui-router-server" target="_blank" class="badge"><img alt="NPM Version" src="https://img.shields.io/npm/v/ui-router-server" /></a>
@@ -15,7 +15,7 @@ client's route table on the server, so a static single-page app can answer
 deep links honestly: the app shell for real routes, a computed 302 for
 redirects, and a real 404 for everything else.
 
-It is a **verdict** engine, not a framework. A pathname goes in and a plain
+It is a *verdict* engine, not a framework. A pathname goes in and a plain
 object comes out — no `fetch`, no `Response`, no runtime assumptions in the
 core — and turning that verdict into HTTP is the server's one job. Adapters
 for Connect/Express, Vite, WinterCG `fetch`, and Hono ship that last step for
