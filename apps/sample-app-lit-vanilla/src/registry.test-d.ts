@@ -6,7 +6,7 @@ import type {
   StateName,
   TypedStateService,
 } from 'ui-router-registry';
-import { uiSref } from 'sample-app-shared/registry/lit.js';
+import { uiSref } from 'lit-ui-router';
 
 declare const stateService: TypedStateService;
 

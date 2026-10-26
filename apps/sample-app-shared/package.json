@@ -41,7 +41,6 @@
     "oxlint": "catalog:",
     "playwright": "catalog:",
     "typescript": "catalog:",
-    "ui-router-registry": "catalog:workspace",
     "vite": "catalog:",
     "vite-plugin-checker": "catalog:",
     "vite-plugin-static-copy": "catalog:",

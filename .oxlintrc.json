@@ -23,8 +23,7 @@
   "settings": {
     // wc otherwise resolves `lit` from cwd to spot LitElement subclasses; oxlint
     // drops `settings` from extended configs
-    "wc": { "elementBaseClasses": ["LitElement"] },
-    "litUiRouterSources": ["sample-app-shared/registry/lit.js"]
+    "wc": { "elementBaseClasses": ["LitElement"] }
   },
   "ignorePatterns": [
     "**/dist/**",
