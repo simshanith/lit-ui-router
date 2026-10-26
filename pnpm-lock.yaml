@@ -747,6 +747,9 @@ importers:
       typescript-7:
         specifier: 'catalog:'
         version: typescript@7.0.2
+      ui-router-registry:
+        specifier: catalog:workspace
+        version: link:../../packages/ui-router-registry
       vite:
         specifier: 'catalog:'
         version: 8.3.4(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)
@@ -802,6 +805,9 @@ importers:
       typescript-7:
         specifier: 'catalog:'
         version: typescript@7.0.2
+      ui-router-registry:
+        specifier: catalog:workspace
+        version: link:../../packages/ui-router-registry
       vite:
         specifier: 'catalog:'
         version: 8.3.4(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)
@@ -1913,6 +1919,9 @@ importers:
       '@uirouter/core-floor':
         specifier: catalog:peerFloor
         version: '@uirouter/core@6.0.8'
+      effect:
+        specifier: 'catalog:'
+        version: 4.0.5
       oxfmt:
         specifier: 'catalog:'
         version: 0.74.0
@@ -1949,6 +1958,15 @@ importers:
       typescript-7:
         specifier: 'catalog:'
         version: typescript@7.0.2
+      ui-router-effect:
+        specifier: catalog:workspace
+        version: link:../ui-router-effect
+      ui-router-mobx:
+        specifier: catalog:workspace
+        version: link:../ui-router-mobx
+      ui-router-signals:
+        specifier: catalog:workspace
+        version: link:../ui-router-signals
 
   packages/ui-router-server:
     devDependencies:

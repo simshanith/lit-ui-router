@@ -642,6 +642,26 @@
       }
     },
     {
+      // The subpaths import the root, so the root importing one is a cycle.
+      "files": [
+        "packages/ui-router-registry/src/index.ts",
+        "packages/ui-router-registry/src/registry.ts"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["./*", "!./registry.js"],
+                "message": "the ui-router-registry root never imports a subpath entry (./signals, ./effect, ./mobx, ...): each subpath imports the root, so this is a type cycle, and it makes the subpath's optional peer required for every app."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
       // Mirrors bundleProbe["."].free; the specs are excluded because
       // @lit-labs/ssr is a devDependency they render against.
       "files": ["packages/lit-ui-router/src/**/*.ts"],

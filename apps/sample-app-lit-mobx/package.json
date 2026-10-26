@@ -30,6 +30,7 @@
     "oxlint": "catalog:",
     "typescript": "catalog:typescript6-compat",
     "typescript-7": "catalog:",
+    "ui-router-registry": "catalog:workspace",
     "vite": "catalog:"
   }
 }

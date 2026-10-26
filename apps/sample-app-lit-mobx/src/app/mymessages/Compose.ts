@@ -53,8 +53,8 @@ export class Compose extends LitElement {
   // uiCanExit below still guards against silently discarding unsaved edits.
   messageParam = new RouterReactionController(
     this,
-    // SAFETY: the non-URL `message` param is only ever set from a Message (Reply, Forward, Edit)
-    (route) => route.params.message as Partial<Message> | undefined,
+    (route) =>
+      route.includes('mymessages.compose') ? route.params.message : undefined,
     {
       equals: compareStructural,
       onChange: (message) => this.resetMessage(message),

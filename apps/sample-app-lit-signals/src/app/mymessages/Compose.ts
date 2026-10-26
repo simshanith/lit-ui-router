@@ -3,7 +3,7 @@ import { customElement, state, property } from 'lit/decorators.js';
 import { isEqual } from 'lodash-es';
 import { UIViewInjectedProps } from 'lit-ui-router';
 
-import { TypedRouterSignalController } from '../../registry-signals.js';
+import { RouterSignalController } from 'lit-ui-router-signals';
 
 import { MessagesStorage } from 'sample-app-shared/app/global/dataSources.js';
 import AppConfig from '../global/appConfig.js';
@@ -51,7 +51,7 @@ export class Compose extends LitElement {
   //   in-progress one isn't clobbered by a reconnect or an identity-only
   //   param change.
   // uiCanExit below still guards against silently discarding unsaved edits.
-  messageParam = new TypedRouterSignalController(
+  messageParam = new RouterSignalController(
     this,
     (route) => {
       const snapshot = route.route.get();

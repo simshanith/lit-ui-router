@@ -1,13 +1,13 @@
 // Type-level spec for the app's registry wiring: `tsc --noEmit` is the assertion.
+import type { ReactiveControllerHost } from 'lit';
+import { RouterSignalController } from 'lit-ui-router-signals';
 import type { Message } from 'sample-app-shared/app/mymessages/interface.js';
 import type { TypedRouteSnapshot, TypedStateService } from 'ui-router-registry';
 import { uiSref } from 'sample-app-shared/registry/lit.js';
 
-import type { TypedRouterSignals } from './registry-signals.js';
-
 declare const stateService: TypedStateService;
 
-declare const signals: TypedRouterSignals;
+declare const host: ReactiveControllerHost & Element;
 
 declare const snapshot: TypedRouteSnapshot;
 
@@ -53,4 +53,21 @@ if (snapshot.includes('mymessages.messagelist')) {
 // Globs still answer, without narrowing.
 accepts<boolean>(snapshot.includes('contacts.**'));
 
-accepts<TypedRouteSnapshot>(signals.route.get());
+// -- and through lit-ui-router-signals' controller, typed by the subpath ----------
+
+const messageParam = new RouterSignalController(host, (route) => {
+  const current = route.route.get();
+
+  accepts<TypedRouteSnapshot>(current);
+
+  return current.includes('mymessages.compose')
+    ? current.params.message
+    : undefined;
+});
+
+accepts<Partial<Message> | undefined>(messageParam.value);
+
+new RouterSignalController(host, (route) =>
+  // @ts-expect-error a misspelled state name
+  route.route.get().includes('mymessages.compse'),
+);

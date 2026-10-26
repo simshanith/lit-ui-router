@@ -80,10 +80,6 @@ const uiRouterEffectSidebarItems = flattenGroups(uiRouterEffectSidebarItemsRaw);
 
 const uiRouterMobxSidebarItems = flattenGroups(uiRouterMobxSidebarItemsRaw);
 
-const uiRouterRegistrySidebarItems = flattenGroups(
-  uiRouterRegistrySidebarItemsRaw,
-);
-
 const uiRouterSignalsSidebarItems = flattenGroups(
   uiRouterSignalsSidebarItemsRaw,
 );
@@ -118,6 +114,11 @@ const serverSidebarItems = entrySidebar(
 );
 
 const ssrSidebarItems = entrySidebar('lit-ui-router-ssr', ssrSidebarItemsRaw);
+
+const uiRouterRegistrySidebarItems = entrySidebar(
+  'ui-router-registry',
+  uiRouterRegistrySidebarItemsRaw,
+);
 
 const baseUrl = 'https://lit-ui-router.dev';
 

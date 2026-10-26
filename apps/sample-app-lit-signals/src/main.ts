@@ -1,5 +1,7 @@
 import { registerAppModules } from 'sample-app-shared/app/global/appModules.js';
 import type { SampleAppStates } from 'sample-app-shared/registry/states.js';
+// Carries the registry into ui-router-signals' route snapshot.
+import type {} from 'ui-router-registry/signals';
 
 import AppConfig from './app/global/appConfig.js';
 import AuthService from './app/global/authService.js';
