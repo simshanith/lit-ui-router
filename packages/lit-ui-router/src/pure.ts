@@ -19,6 +19,13 @@ export type {
   UIViewResolves,
 } from './interface.js';
 
+export type {
+  SrefArgs,
+  SrefParams,
+  SrefRelativeCheck,
+  SrefTarget,
+} from './registry.js';
+
 export { isRoutedLitElement, LitViewConfig, UIRouterLit } from './core.js';
 
 export {
