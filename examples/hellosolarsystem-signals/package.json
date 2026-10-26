@@ -14,13 +14,13 @@
     "@uirouter/visualizer": "^7.2.1",
     "lit": "^3.3.3",
     "lit-ui-router": "^1.17.0",
-    "lit-ui-router-signals": "^0.2.0",
+    "lit-ui-router-signals": "^0.3.0",
     "signal-polyfill": "^0.2.2",
-    "ui-router-signals": "^0.1.1"
+    "ui-router-signals": "^0.2.0"
   },
   "devDependencies": {
     "typescript": "^7.0.2",
-    "vite": "^8.3.4"
+    "vite": "^8.3.5"
   },
   "overrides": {
     "d3-color": "3.1.0"
