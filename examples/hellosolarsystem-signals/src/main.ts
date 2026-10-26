@@ -15,6 +15,9 @@ import {
   SignalController,
 } from 'lit-ui-router-signals';
 import { Signal } from 'signal-polyfill';
+import type { TypedStateService } from 'ui-router-registry';
+// Carries the registry into ui-router-signals' route snapshot.
+import type {} from 'ui-router-registry/signals';
 import { RouterSignals, watchSelection } from 'ui-router-signals';
 
 // Data Service
@@ -235,9 +238,10 @@ const steps = new Map([
 // The body the URL names, if the planet state is active. Shared by the header
 // and the tab title, which read the same router signals.
 const routedBody = (route: RouterSignals): SolarBody | undefined => {
-  if (!route.includes('planet')) return undefined;
-  // SAFETY: `{planetId:int}` decodes to a number, and is set while `planet` is active.
-  const { planetId } = route.params.get() as { planetId: number };
+  const snapshot = route.route.get();
+
+  if (!snapshot.includes('planet')) return undefined;
+  const { planetId } = snapshot.params;
 
   return solarBodies.find((b) => b.id === planetId);
 };
@@ -624,8 +628,12 @@ export class AppRoot extends LitElement {
 
     if (!target) return;
     event.preventDefault();
-    void this.router.stateService.go('planet', { planetId: target.id });
+    void this.stateService.go('planet', { planetId: target.id });
   };
+
+  private get stateService(): TypedStateService {
+    return this.router.stateService;
+  }
 
   private neighbor(step: number): SolarBody | undefined {
     const body = this.body.value;
@@ -694,7 +702,7 @@ export class AppRoot extends LitElement {
 }
 
 // State definitions
-const planetsState: LitStateDeclaration<{ planets: SolarBody[] }> = {
+const planetsState = {
   name: 'planets',
   url: '/planets',
   component: PlanetListComponent,
@@ -705,9 +713,9 @@ const planetsState: LitStateDeclaration<{ planets: SolarBody[] }> = {
       resolveFn: () => SolarSystemService.getAllBodies(),
     },
   ],
-};
+} as const satisfies LitStateDeclaration<{ planets: SolarBody[] }>;
 
-const planetState: LitStateDeclaration<{ planet: SolarBody | undefined }> = {
+const planetState = {
   name: 'planet',
   // The `int` param type decodes to a number, and `/planets/4x` matches no state.
   url: '/planets/{planetId:int}',
@@ -724,7 +732,14 @@ const planetState: LitStateDeclaration<{ planet: SolarBody | undefined }> = {
       },
     },
   ],
-};
+} as const satisfies LitStateDeclaration<{ planet: SolarBody | undefined }>;
+
+// `as const` keeps the names and urls literal for the registry to read.
+declare module 'ui-router-registry' {
+  interface Register {
+    states: typeof planetsState | typeof planetState;
+  }
+}
 
 // Router setup
 const router = new UIRouterLit();

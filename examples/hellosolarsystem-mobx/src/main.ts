@@ -14,6 +14,8 @@ import {
   RouterReactionController,
   RouterStore,
 } from 'lit-ui-router-mobx';
+// Carries the registry into ui-router-mobx's RouterStore.
+import type {} from 'ui-router-registry/mobx';
 
 // Data Service
 interface SolarBody {
@@ -573,7 +575,7 @@ export class AppRoot extends LitElement {
 }
 
 // State definitions
-const planetsState: LitStateDeclaration<{ planets: SolarBody[] }> = {
+const planetsState = {
   name: 'planets',
   url: '/planets',
   component: PlanetListComponent,
@@ -584,9 +586,9 @@ const planetsState: LitStateDeclaration<{ planets: SolarBody[] }> = {
       resolveFn: () => SolarSystemService.getAllBodies(),
     },
   ],
-};
+} as const satisfies LitStateDeclaration<{ planets: SolarBody[] }>;
 
-const planetState: LitStateDeclaration<{ planet: SolarBody | undefined }> = {
+const planetState = {
   name: 'planet',
   url: '/planets/:planetId',
   component: PlanetDetailComponent,
@@ -606,7 +608,14 @@ const planetState: LitStateDeclaration<{ planet: SolarBody | undefined }> = {
       },
     },
   ],
-};
+} as const satisfies LitStateDeclaration<{ planet: SolarBody | undefined }>;
+
+// `as const` keeps the names and urls literal for the registry to read.
+declare module 'ui-router-registry' {
+  interface Register {
+    states: typeof planetsState | typeof planetState;
+  }
+}
 
 // Router setup
 const router = new UIRouterLit();

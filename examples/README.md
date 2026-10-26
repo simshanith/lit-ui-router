@@ -68,6 +68,8 @@ It layers on four things, each answering a different question:
 - **What is worth doing outside the component tree?** A plain MobX `reaction` over `RouterStore` drives the tab title. No host, no controller, nothing to re-render — the bindings' store is an ordinary observable, so application code can react to the router without a component in the middle
 - **What follows from all that?** `visited` is a `computed` over the trail, so revisiting the list never inflates it. `<planet-list>` selects it through a `ReactionController`; `<app-root>` selects an object off the same store with `equals: compareStructural`, so it re-renders when that selection changes rather than on every stop added
 
+The states are declared `as const` and registered with [`ui-router-registry`](https://lit-ui-router.dev/packages/ui-router-registry), whose `/mobx` entry point types `RouterStore`: `includes('planet')` takes only a registered state name.
+
 It is the minimal layering, not a rewrite: the vanilla example's plumbing stays put and MobX goes only where the router stops helping. The [sample apps](../apps) are the direct side-by-side — two complete builds of the same application, one on `TransitionController` and one on these bindings
 
 ### hellosolarsystem-signals
@@ -79,6 +81,7 @@ It is the minimal layering, not a rewrite: the vanilla example's plumbing stays 
 - `<app-root>` `@consume`s `routerContext` from `lit-ui-router/context` for the arrow keys, rather than closing over the module's router. `<ui-router>` answers the request, the same one `RouterSignalController` makes to find the router.
 - The detail view's light-travel clock is a `Signal.State` whose `watched`/`unwatched` callbacks start and stop its timer, so the clock runs only while a view reads it.
 - `document.title` follows the route through a bare `watchSelection` from `ui-router-signals`, with no component involved.
+- The states are declared `as const` and registered with [`ui-router-registry`](https://lit-ui-router.dev/packages/ui-router-registry). Its `/signals` entry point types the `RouterSignals.route` snapshot, so `includes('planet')` narrows `params.planetId` to a number with no cast, and a `TypedStateService` checks the arrow keys' `go('planet', { planetId })`.
 
 ### hellogalaxy
 
@@ -101,6 +104,8 @@ It layers on four things, each answering a different question:
 - **What happens when the user changes their mind mid-load?** The astronaut resolve is an Effect: the model-viewer import, then the ~9 MB `.glb` itself, downloaded with [`@effect/platform`](https://effect.website/docs/platform/introduction/)'s `HttpClient` under `Effect.timeout` and a short retry `Schedule`. The bytes become a blob URL the view hands to `<model-viewer src>`, so the model crosses the network once and the state's `scoped` bracket revokes it on exit. Every hook effect and every resolve for a transition is forked into a per-transition `FiberSet`, interrupted the moment another transition **starts** — a transition's own promise only rejects once its in-flight resolves settle, which is far too late to abort them, and `onStart` rather than `onCreate` because core creates a transition before deciding it duplicates the one already running. So clicking Astronaut then Stars aborts the download rather than racing it, and clicking Astronaut twice does not abort itself
 - **Where am I now?** `lit-ui-router-effect`'s `RouterRefController` in the un-routed `<app-root>`, which never receives fresh view props. It follows the package's route ref — a `SubscriptionRef` fed from one `onSuccess` hook — and selects `route.includes('galaxy.stars')` so the marker stays lit on the nested detail view — the same reasoning as the MobX rung, on a stream instead of a reaction. `<star-detail>` and `<fiber-log>` follow the example's own refs through the base `RefController`, on the app's `ManagedRuntime`
 
+The states are declared `as const` and registered with [`ui-router-registry`](https://lit-ui-router.dev/packages/ui-router-registry), whose `/effect` entry point types the route ref: `route.includes('galaxy.stars')` and the hook's `TypedStateService` redirect take only registered state names.
+
 `<fiber-log>` at the foot of the page renders the plugin's log ref, so every scope open and close, every resolve start, finish and interruption is visible in the order the fibers ran them.
 
 It is the minimal layering, not a rewrite: the vanilla rung's plumbing stays put and Effect goes only where the router stops helping
@@ -112,6 +117,7 @@ It is the minimal layering, not a rewrite: the vanilla rung's plumbing stays put
 - The `charted` set is a `signal` from [`@lit-labs/signals`](https://www.npmjs.com/package/@lit-labs/signals). The star detail's toggle writes it, and the star list reads it through a `SignalController` from [`lit-ui-router-signals`](https://lit-ui-router.dev/packages/lit-ui-router-signals). The list stays mounted while `galaxy.stars.star` changes beneath it.
 - The `galaxy` shell is a `SignalWatcher`. It binds a `computed` summary of the chart with `watch()`, so charting a star updates that text node and never re-renders the shell.
 - The shell's own view props never change while its children do. A `RouterSignalController` builds its breadcrumb from `RouterSignals.current`, and the star's crumb takes its label from the transition's resolved `star` rather than a second lookup.
+- The states are declared `as const` and registered with [`ui-router-registry`](https://lit-ui-router.dev/packages/ui-router-registry), whose `/signals` entry point types the `RouterSignals.route` snapshot by their names and params.
 
 ### design-system-links
 

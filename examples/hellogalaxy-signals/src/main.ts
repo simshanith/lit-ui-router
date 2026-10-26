@@ -14,6 +14,8 @@ import {
   RouterSignalController,
   SignalController,
 } from 'lit-ui-router-signals';
+// Carries the registry into ui-router-signals' route snapshot.
+import type {} from 'ui-router-registry/signals';
 import { RouterSignals } from 'ui-router-signals';
 
 // Data Service
@@ -732,16 +734,16 @@ export class AppRoot extends LitElement {
 
 // State definitions
 // Parent shell state; owns the section nav and a nested <ui-view>
-const galaxyState: LitStateDeclaration = {
+const galaxyState = {
   name: 'galaxy',
   url: '/galaxy',
   component: GalaxyShellComponent,
   // Visiting the bare parent forwards to the star list
   redirectTo: 'galaxy.stars',
-};
+} as const satisfies LitStateDeclaration;
 
 // Child state (nested via dot notation) renders inside galaxy's <ui-view>
-const starsState: LitStateDeclaration<{ stars: Star[] }> = {
+const starsState = {
   name: 'galaxy.stars',
   url: '/stars',
   component: StarsContainerComponent,
@@ -751,10 +753,10 @@ const starsState: LitStateDeclaration<{ stars: Star[] }> = {
       resolveFn: () => StarService.getStars(),
     },
   ],
-};
+} as const satisfies LitStateDeclaration<{ stars: Star[] }>;
 
 // Grandchild state with a URL param, rendered inside galaxy.stars's <ui-view>
-const starState: LitStateDeclaration<{ star: Star | undefined }> = {
+const starState = {
   name: 'galaxy.stars.star',
   url: '/:starId',
   component: StarDetailComponent,
@@ -770,10 +772,10 @@ const starState: LitStateDeclaration<{ star: Star | undefined }> = {
       },
     },
   ],
-};
+} as const satisfies LitStateDeclaration<{ star: Star | undefined }>;
 
 // Sibling of galaxy.stars; swaps into the same nested <ui-view>
-const astronautState: LitStateDeclaration = {
+const astronautState = {
   name: 'galaxy.astronaut',
   url: '/astronaut',
   component: AstronautViewComponent,
@@ -785,7 +787,18 @@ const astronautState: LitStateDeclaration = {
       resolveFn: () => import('@google/model-viewer'),
     },
   ],
-};
+} as const satisfies LitStateDeclaration;
+
+// `as const` keeps the names and urls literal for the registry to read.
+declare module 'ui-router-registry' {
+  interface Register {
+    states:
+      | typeof galaxyState
+      | typeof starsState
+      | typeof starState
+      | typeof astronautState;
+  }
+}
 
 // Router setup
 const router = new UIRouterLit();

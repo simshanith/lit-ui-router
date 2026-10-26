@@ -29,6 +29,9 @@ import {
   provide,
 } from './effect-plugin.js';
 import { RefController, RouterRefController } from 'lit-ui-router-effect';
+import type { TypedStateService } from 'ui-router-registry';
+// Carries the registry into ui-router-effect's route ref.
+import type {} from 'ui-router-registry/effect';
 
 // Data Service
 interface Star {
@@ -783,7 +786,7 @@ const releaseModel = (src: string | undefined) =>
 
 // State definitions
 // Parent shell state; owns the section nav and a nested <ui-view>
-const galaxyState: EffectStateDeclaration<DefaultResolvesType, AppServices> = {
+const galaxyState = {
   name: 'galaxy',
   url: '/galaxy',
   component: GalaxyShellComponent,
@@ -795,13 +798,10 @@ const galaxyState: EffectStateDeclaration<DefaultResolvesType, AppServices> = {
     Effect.acquireRelease(say('observatory session opened'), () =>
       say('observatory session closed'),
     ),
-};
+} as const satisfies EffectStateDeclaration<DefaultResolvesType, AppServices>;
 
 // Child state (nested via dot notation) renders inside galaxy's <ui-view>
-const starsState: EffectStateDeclaration<
-  { StarCatalog: StarCatalogService },
-  AppServices
-> = {
+const starsState = {
   name: 'galaxy.stars',
   url: '/stars',
   component: StarsContainerComponent,
@@ -829,10 +829,13 @@ const starsState: EffectStateDeclaration<
       }).pipe(Effect.onInterrupt(() => say('catalog: interrupted'))),
     ),
   ],
-};
+} as const satisfies EffectStateDeclaration<
+  { StarCatalog: StarCatalogService },
+  AppServices
+>;
 
 // Grandchild state with a URL param, rendered inside galaxy.stars's <ui-view>
-const starState: EffectStateDeclaration<{ star: Star }, AppServices> = {
+const starState = {
   name: 'galaxy.stars.star',
   url: '/:starId',
   component: StarDetailComponent,
@@ -876,13 +879,10 @@ const starState: EffectStateDeclaration<{ star: Star }, AppServices> = {
       ),
     );
   },
-};
+} as const satisfies EffectStateDeclaration<{ star: Star }, AppServices>;
 
 // Sibling of galaxy.stars; swaps into the same nested <ui-view>
-const astronautState: EffectStateDeclaration<
-  { modelViewer: { src: string } },
-  AppServices
-> = {
+const astronautState = {
   name: 'galaxy.astronaut',
   url: '/astronaut',
   component: AstronautViewComponent,
@@ -941,7 +941,23 @@ const astronautState: EffectStateDeclaration<
         Effect.flatMap(releaseModel),
       ),
     ),
-};
+} as const satisfies EffectStateDeclaration<
+  { modelViewer: { src: string } },
+  AppServices
+>;
+
+// `as const` keeps the names and urls literal for the registry to read.
+declare module 'ui-router-registry' {
+  interface Register {
+    states:
+      | typeof galaxyState
+      | typeof starsState
+      | typeof starState
+      | typeof astronautState;
+  }
+}
+
+const stateService: TypedStateService = router.stateService;
 
 // The typed error path, once: a bad :starId is caught before any resolve runs
 // and turned into a redirect rather than a failed transition.
@@ -957,7 +973,7 @@ effect.onBefore({ to: 'galaxy.stars.star' }, (transition) =>
   }).pipe(
     Effect.catchTag('StarNotFound', (error) =>
       say(`unknown star "${error.starId}" — redirecting to the list`).pipe(
-        Effect.as(router.stateService.target('galaxy.stars')),
+        Effect.as(stateService.target('galaxy.stars')),
       ),
     ),
   ),
