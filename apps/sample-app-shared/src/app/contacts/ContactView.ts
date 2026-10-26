@@ -1,6 +1,10 @@
 import { LitElement, html } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import { RoutedLitElement, UIViewInjectedProps, uiSref } from 'lit-ui-router';
+import {
+  TypedLitViewComponent,
+  UIViewInjectedProps,
+  uiSref,
+} from 'lit-ui-router';
 
 import type { StateResolves } from '../../registry/states.js';
 import './ContactDetail.js';
@@ -50,4 +54,4 @@ export class ContactView extends LitElement {
   }
 }
 
-export default ContactView satisfies RoutedLitElement<ContactViewResolves>;
+export default ContactView satisfies TypedLitViewComponent<ContactViewResolves>;

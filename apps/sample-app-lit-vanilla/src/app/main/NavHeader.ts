@@ -1,8 +1,7 @@
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { when } from 'lit/directives/when.js';
-import { TransitionController, uiSrefActive } from 'lit-ui-router';
-import { uiSref } from 'sample-app-shared/registry/lit.js';
+import { TransitionController, uiSref, uiSrefActive } from 'lit-ui-router';
 
 import 'sample-app-shared/app/main/UserMenu.js';
 import AppConfig from '../global/appConfig.js';
