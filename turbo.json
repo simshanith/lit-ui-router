@@ -48,7 +48,8 @@
       ]
     },
     "@tools/dts-backtest#test": {
-      "dependsOn": ["^build"],
+      // optional-peer/ checks lit-ui-router's packed tarball in a temp dir
+      "dependsOn": ["^build", "@tools/release#pack:all"],
       "inputs": [
         "$TURBO_DEFAULT$",
         "fixtures/**",
@@ -59,7 +60,8 @@
     // Full TS version matrix; distinct task name = distinct cache key from
     // the current-leg-only #test above. Runs on main push, not the PR graph.
     "@tools/dts-backtest#test:matrix": {
-      "dependsOn": ["^build"],
+      // optional-peer/ checks lit-ui-router's packed tarball in a temp dir
+      "dependsOn": ["^build", "@tools/release#pack:all"],
       "inputs": [
         "$TURBO_DEFAULT$",
         "fixtures/**",
