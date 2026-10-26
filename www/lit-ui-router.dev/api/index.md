@@ -211,6 +211,31 @@ own, after which it owns the attribute and will clear it on the next inactive re
 `ariaCurrentValue: false` is the way to keep a template-authored value for good, since
 the directive then never writes and never takes ownership.
 
+#### Typed state names
+
+The directives and `SrefStatusController` read their targets from
+[`ui-router-registry`](/packages/ui-router-registry)'s `Register`. Augment it
+once with the app's `as const` state declarations, and a misspelled name or a
+missing required param fails to compile:
+
+```ts
+import type { states } from './states';
+
+declare module 'ui-router-registry' {
+  interface Register {
+    states: (typeof states)[number];
+  }
+}
+```
+
+The registry is an optional peer that ships no JavaScript, so a devDependency
+is enough. Without it, or without the augmentation, a target is any `string`
+with `RawParams`. Augmenting `'ui-router-registry'` without installing it fails
+at the augmentation (TS2664). Relative refs (`.child`, `^.sibling`) are checked
+by their tail, and the registry's `UncheckedRef` opts a target out. A state
+table whose components call typed srefs is checked with
+[`TypedLitStateDeclaration`](./reference/types/TypedLitStateDeclaration).
+
 ### State Declaration
 
 [`LitStateDeclaration`](./reference/types/LitStateDeclaration) defines a state with its URL and component.
