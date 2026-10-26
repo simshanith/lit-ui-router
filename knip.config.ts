@@ -90,8 +90,12 @@ const workspaces = {
     entry: ['scripts/*.ts', 'cypress*.config.ts', 'src/**/*.cy.{ts,js}'],
   },
   'packages/lit-ui-router': {
-    // read by `cem analyze`, which knip has no plugin for
-    entry: ['custom-elements-manifest.config.js'],
+    entry: [
+      // read by `cem analyze`, which knip has no plugin for
+      'custom-elements-manifest.config.js',
+      // checkJs consumer programs, checked by typecheck:tsc
+      'test-js/**/*.{js,ts}',
+    ],
     ignoreDependencies: [
       // imported by the emitted dist, not by src
       '@oxc-project/runtime',

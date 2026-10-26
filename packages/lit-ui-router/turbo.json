@@ -21,6 +21,10 @@
       ],
       "outputs": ["dist/custom-elements.json"]
     },
+    // the test-d and test-js programs import this package's own dist by name
+    "typecheck:tsc": {
+      "dependsOn": ["^build:types", "build:types"]
+    },
     "docs:api": {
       "outputs": ["../../www/lit-ui-router.dev/api/reference/**"]
     }
