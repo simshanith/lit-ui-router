@@ -1,8 +1,7 @@
-// Every jdx/mise-action step pins the same mise release. Unpinned, the
-// action's cache key leaves the version out, so a restored cache carries an
-// older binary that fails its integrity check against each new release. The
-// pin has no other home (the action reads no version file), so the workflows
-// themselves are the only copies to hold together.
+// The release workflows pin one mise release; daily CI takes each new release
+// through `auto_update` and canaries it on main before the release pin moves.
+// The pin has no other home (the action reads no version file), so the
+// workflows themselves are the only copies to hold together.
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -17,6 +16,13 @@ const load = (file: string): string =>
 
 // A bare CalVer release, as the action's `version` input takes it.
 const MISE_RELEASE = /^\d{4}\.\d{1,2}\.\d+$/;
+
+// They run with `cache: false` on the publish path, so they install fresh.
+const RELEASE_WORKFLOWS = new Set(
+  ['bump-version', 'dependency-audit', 'publish-gh', 'publish-npm'].map(
+    (name) => `.github/workflows/${name}.yml`,
+  ),
+);
 
 /** A step's `with:` value as YAML parses it. */
 type StepInput = string | number | boolean | null;
@@ -52,20 +58,26 @@ const steps = workflows.flatMap((workflow) =>
         .filter(({ uses }) => uses?.startsWith('jdx/mise-action@'))
         .map((step) => ({
           where: `${workflow}#${job}`,
-          // A YAML number (`2026.10`) parses to its own shape; narrow below.
+          release: RELEASE_WORKFLOWS.has(workflow),
           version: step.with?.version,
+          autoUpdate: step.with?.auto_update,
         })),
   ),
 );
 
+const releaseSteps = steps.filter(({ release }) => release);
+
+const dailySteps = steps.filter(({ release }) => !release);
+
 describe('mise version pins', () => {
   it('finds mise-action steps', () => {
     assert.notEqual(workflows.length, 0, 'no workflows found');
-    assert.notEqual(steps.length, 0, 'no jdx/mise-action steps found');
+    assert.notEqual(releaseSteps.length, 0, 'no release mise-action steps');
+    assert.notEqual(dailySteps.length, 0, 'no daily mise-action steps');
   });
 
-  it('pins an explicit mise release on every mise-action step', () => {
-    for (const { where, version } of steps) {
+  it('pins an explicit mise release on every release step', () => {
+    for (const { where, version } of releaseSteps) {
       assert.ok(
         isReleaseText(version),
         `${where} pins no mise version: ${JSON.stringify(version)}`,
@@ -74,12 +86,19 @@ describe('mise version pins', () => {
     }
   });
 
-  it('pins one release across every workflow', () => {
-    const versions = new Set(steps.map(({ version }) => version));
+  it('pins one release across the release workflows', () => {
+    const versions = new Set(releaseSteps.map(({ version }) => version));
     assert.equal(
       versions.size,
       1,
-      `mise pins diverge: ${JSON.stringify(steps)}`,
+      `mise pins diverge: ${JSON.stringify(releaseSteps)}`,
     );
+  });
+
+  it('auto-updates mise on every daily step', () => {
+    for (const { where, version, autoUpdate } of dailySteps) {
+      assert.equal(version, undefined, `${where} pins mise ${version}`);
+      assert.equal(autoUpdate, true, `${where} sets no auto_update: true`);
+    }
   });
 });
