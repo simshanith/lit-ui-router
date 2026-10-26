@@ -41,7 +41,7 @@ jobs:
       - name: Setup mise
         uses: jdx/mise-action@9149ea85001c7435d5a66bb127d6a1b6227cb0a5 # v5.0.0
         with:
-          version: 2026.10.1
+          version: 2026.10.19
           # node and pnpm only: the check needs its own package installed
           install_args: node aqua:pnpm/pnpm
           cache: false
