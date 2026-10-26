@@ -131,6 +131,11 @@
     "lit": "catalog:publishedPeer",
     "ui-router-registry": "catalog:publishedPeerRegistry"
   },
+  "peerDependenciesMeta": {
+    "ui-router-registry": {
+      "optional": true
+    }
+  },
   "bundleProbe": {
     ".": {
       "free": [
@@ -147,10 +152,5 @@
       ]
     }
   },
-  "customElements": "dist/custom-elements.json",
-  "peerDependenciesMeta": {
-    "ui-router-registry": {
-      "optional": true
-    }
-  }
+  "customElements": "dist/custom-elements.json"
 }

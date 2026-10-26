@@ -57,14 +57,14 @@ interface UserResolves {
 
 export const userTemplate = (props?: UIViewInjectedProps<UserResolves>) => html`
   <h1>${props?.resolves.user.name}</h1>
-  <a ${uiSref('home', { id: 1 })}>home</a>
+  <a ${uiSref('item', { id: 1 })}>home</a>
   <nav ${uiSrefActive({ activeClasses: ['active'], exactClasses: ['exact'] })}>
-    <a ${uiSref('user.detail')}>detail</a>
+    <a ${uiSref('.edit')}>detail</a>
   </nav>
   <a
-    href=${srefHref('user.detail', { id: 1 }, { reload: true })}
-    class="nav-link ${srefActiveClass({ state: 'user.detail', activeClasses: ['active'] })}"
-    aria-current=${srefAriaCurrent({ state: 'user.detail', value: { exact: 'page', active: 'location' } })}
+    href=${srefHref('item', { id: 1 }, { reload: true })}
+    class="nav-link ${srefActiveClass({ state: 'item', activeClasses: ['active'] })}"
+    aria-current=${srefAriaCurrent({ state: 'item', value: { exact: 'page', active: 'location' } })}
     >detail</a
   >
 `;
@@ -149,13 +149,13 @@ export function merge(a: SrefStatus, b: SrefStatus): SrefStatus {
 
 export class NavLinkElement extends LitElement {
   private readonly status = new SrefStatusController(this, {
-    state: 'user.detail',
+    state: 'item',
     params: { id: 1 },
   } satisfies SrefStatusControllerOptions);
 
   render(): TemplateResult {
     return html`<a
-      href=${srefHref('user.detail', { id: 1 })}
+      href=${srefHref('item', { id: 1 })}
       class=${classMap({ 'nav-link': true, active: this.status.active })}
       aria-current=${this.status.ariaCurrent({
         exact: 'page',

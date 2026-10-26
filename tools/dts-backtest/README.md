@@ -31,6 +31,23 @@ more, one per table:
 - `legacy` must fail: `EXPECTED_CODES` in `run.ts` names the circularity
   errors `LitStateDeclaration` reports there.
 
+`lit-ui-router` reads `ui-router-registry` as an optional peer. Inside the
+workspace the registry always resolves through pnpm's real paths, so the
+[optional-peer consumers](./optional-peer) run from a temp dir that unpacks the
+`@tools/release#pack:all` tarballs, with or without the registry:
+
+- `absent`: no registry, no augmentation. Targets are `string` and params
+  `RawParams`, and an equality check rejects `any`.
+- `absent-augmented` must fail with TS2664 at the augmentation and nothing
+  else (`EXPECTED_ONLY`), so calls fall back to `string` without cascading.
+- `installed`: registry installed and augmented; a misspelled name and a
+  missing required param fail.
+
+The packed manifest must list the registry as an optional peer, and no
+packed `.js` file may name it. A second self-test swaps the guard in the
+packed `registry.d.ts` for an `IsAny` guard and asserts that TypeScript 5.5
+and later fail `absent` while older legs pass.
+
 The fixture compiles with `skipLibCheck: false`, so the packages' built
 `dist/*.d.ts` are themselves fully parsed **and** typechecked under each
 version — new declaration-emit syntax that an older TypeScript cannot handle

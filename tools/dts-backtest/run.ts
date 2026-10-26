@@ -16,14 +16,20 @@
 // `typescript/unstable/sync` — a different, still-unstable surface that 7.1 is
 // expected to replace.
 
+import { execFileSync } from 'node:child_process';
 import {
+  copyFileSync,
   mkdirSync,
   mkdtempSync,
+  readdirSync,
+  readFileSync,
   realpathSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from 'node:fs';
 import { createRequire } from 'node:module';
+import { tmpdir } from 'node:os';
 import { dirname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -147,6 +153,9 @@ const EXPECTED_CODES = new Map([
   ['routed/legacy/tsconfig.fixture.nodenext.json', [2502, 7022, 7023]],
 ]);
 
+// Of those, programs whose owned diagnostics must carry the expected codes and no other.
+const EXPECTED_ONLY = new Set<string>();
+
 // undefined for a program that must check clean
 function reportsExpected(
   configFile: string,
@@ -163,20 +172,208 @@ function reportsExpected(
     if (fileName?.startsWith(fixtureDir)) codes.add(code);
   }
 
+  if (EXPECTED_ONLY.has(configFile)) {
+    return (
+      diagnostics.every(({ code }) => expected.includes(code)) &&
+      expected.every((code) => codes.has(code))
+    );
+  }
+
   return expected.every((code) => codes.has(code));
+}
+
+// ---- the optional registry peer, from the packed tarballs -------------------
+
+// Inside the workspace pnpm's real paths keep ui-router-registry resolvable, so
+// the consumers of lit-ui-router's optional peer run from a temp dir holding
+// the `@tools/release#pack:all` tarballs, with or without the registry.
+const PACK_DIR = resolve(here, '..', 'release', '.cache', 'pack');
+
+// Third-party packages the staged declarations import, linked from this package.
+const STAGED_LINKS = ['@uirouter/core', 'lit'];
+
+// Fixture dir under optional-peer/, and whether its consumer installs the registry.
+const OPTIONAL_PEER_SCENARIOS = [
+  { fixture: 'absent', registry: false },
+  { fixture: 'absent-augmented', registry: false },
+  { fixture: 'installed', registry: true },
+] as const;
+
+// Staged roots own their diagnostics, as the packages' dist dirs do.
+const stagedRoots: string[] = [];
+
+// Each staged config, keyed to the staged dist dirs it must load.
+const STAGED_CONFIGS = new Map<string, string[]>();
+
+const STAGED_LABELS = new Map<string, string>();
+
+const labelOf = (configFile: string) =>
+  STAGED_LABELS.get(configFile) ?? configFile;
+
+function unpack(name: string, nodeModules: string): string {
+  const dir = join(nodeModules, name);
+  mkdirSync(dir, { recursive: true });
+  execFileSync('tar', [
+    '-xzf',
+    join(PACK_DIR, `${name}.tgz`),
+    '-C',
+    dir,
+    '--strip-components=1',
+  ]);
+
+  return dir;
+}
+
+// A dir per install shape; each scenario gets a bundler and a NodeNext config.
+function stageOptionalPeer(): string[] {
+  const root = realpathSync(mkdtempSync(join(tmpdir(), 'dts-backtest-peer-')));
+  stagedRoots.push(root + sep);
+  const configs: string[] = [];
+
+  for (const withRegistry of [false, true]) {
+    const consumer = join(root, withRegistry ? 'with' : 'without');
+    const nodeModules = join(consumer, 'node_modules');
+
+    const packages = [
+      'lit-ui-router',
+      ...(withRegistry ? ['ui-router-registry'] : []),
+    ];
+
+    const dists = packages.map(
+      (name) => join(unpack(name, nodeModules), 'dist') + sep,
+    );
+
+    for (const link of STAGED_LINKS) {
+      mkdirSync(dirname(join(nodeModules, link)), { recursive: true });
+      symlinkSync(
+        realpathSync(join(here, 'node_modules', link)),
+        join(nodeModules, link),
+      );
+    }
+
+    writeFileSync(
+      join(consumer, 'package.json'),
+      JSON.stringify({ private: true, type: 'module' }),
+    );
+
+    for (const { fixture, registry } of OPTIONAL_PEER_SCENARIOS) {
+      if (registry !== withRegistry) continue;
+      const dir = join(consumer, fixture);
+      mkdirSync(dir);
+      copyFileSync(
+        join(here, 'optional-peer', fixture, `${fixture}.ts`),
+        join(dir, `${fixture}.ts`),
+      );
+
+      for (const nodenext of [false, true]) {
+        const config = join(
+          dir,
+          nodenext ? 'tsconfig.nodenext.json' : 'tsconfig.json',
+        );
+
+        writeFileSync(
+          config,
+          JSON.stringify({
+            compilerOptions: {
+              target: 'ES2022',
+              module: nodenext ? 'NodeNext' : 'ESNext',
+              moduleResolution: nodenext ? 'NodeNext' : 'bundler',
+              lib: ['ES2022', 'DOM', 'DOM.Iterable'],
+              types: [],
+              strict: true,
+              skipLibCheck: false,
+              noEmit: true,
+            },
+            include: ['*.ts'],
+          }),
+        );
+        STAGED_CONFIGS.set(config, dists);
+        STAGED_LABELS.set(
+          config,
+          `optional-peer (${withRegistry ? 'registry installed' : 'no registry'}) · ${fixture}/${config.slice(dir.length + 1)}`,
+        );
+        configs.push(config);
+
+        if (fixture === 'absent-augmented') {
+          EXPECTED_CODES.set(config, [2664]);
+          EXPECTED_ONLY.add(config);
+        }
+      }
+    }
+  }
+
+  return configs;
+}
+
+// The packed lit-ui-router names the registry as an optional peer, and from types alone.
+function checkPackedPeer(): boolean {
+  const root = stagedRoots.at(-1);
+
+  if (!root) throw new Error('stageOptionalPeer() first');
+  const pkg = join(root, 'without', 'node_modules', 'lit-ui-router');
+
+  // SAFETY: the packed manifest is the one pack:all wrote, validated by check:pack
+  const manifest = JSON.parse(
+    readFileSync(join(pkg, 'package.json'), 'utf8'),
+  ) as {
+    peerDependencies?: Record<string, string>;
+    peerDependenciesMeta?: Record<string, { optional?: boolean }>;
+  };
+
+  const failures: string[] = [];
+
+  if (manifest.peerDependencies?.['ui-router-registry'] === undefined) {
+    failures.push('ui-router-registry is not a peer');
+  }
+
+  if (
+    manifest.peerDependenciesMeta?.['ui-router-registry']?.optional !== true
+  ) {
+    failures.push('ui-router-registry is not an optional peer');
+  }
+
+  const scripts = readdirSync(join(pkg, 'dist'), { recursive: true })
+    .map(String)
+    .filter((file) => file.endsWith('.js'));
+
+  for (const file of scripts) {
+    if (
+      readFileSync(join(pkg, 'dist', file), 'utf8').includes(
+        'ui-router-registry',
+      )
+    ) {
+      failures.push(`dist/${file} names ui-router-registry at runtime`);
+    }
+  }
+
+  if (failures.length > 0) {
+    console.error(`✖ packed lit-ui-router — ${failures.join('; ')}`);
+
+    return false;
+  }
+
+  console.log(
+    `✔ packed lit-ui-router — optional ui-router-registry peer, no runtime import in ${scripts.length} .js files`,
+  );
+
+  return true;
+}
+
+function belowVersion(version: string, floor: number[]): boolean {
+  const [major = 0, minor = 0] = version.split('.').map(Number);
+  const [floorMajor = 0, floorMinor = 0] = floor;
+
+  return major < floorMajor || (major === floorMajor && minor < floorMinor);
 }
 
 function belowFloor(version: string, configFile: string): boolean {
   const floor = MIN_VERSION.get(configFile);
 
-  if (!floor) return false;
-  const [major = 0, minor = 0] = version.split('.').map(Number);
-
-  return major < floor[0] || (major === floor[0] && minor < floor[1]);
+  return floor !== undefined && belowVersion(version, floor);
 }
 
 const programDirs = (configFile: string) =>
-  CONFIGS.get(configFile) ?? PACKAGE_DIRS;
+  STAGED_CONFIGS.get(configFile) ?? CONFIGS.get(configFile) ?? PACKAGE_DIRS;
 
 // A file we cannot resolve is treated as ours: it means the compiler reported
 // against something we planted or mangled, which must never be tolerated.
@@ -190,6 +387,8 @@ function ownsPath(fileName: string): boolean {
   }
 
   if (normalized.startsWith(here + sep)) return true;
+
+  if (stagedRoots.some((root) => normalized.startsWith(root))) return true;
 
   return PACKAGE_DIRS.some((dir) => normalized.startsWith(dir));
 }
@@ -205,7 +404,7 @@ function loadConfig(ts: ClassicApi, configFile: string): TS.ParsedCommandLine {
   };
 
   const parsed = ts.getParsedCommandLineOfConfigFile(
-    join(here, configFile),
+    resolve(here, configFile),
     undefined,
     host,
   );
@@ -332,7 +531,7 @@ async function runNative(specifier: string, configFile: string) {
     configFile,
   );
 
-  const label = `TS ${version} · ${configFile}`;
+  const label = `TS ${version} · ${labelOf(configFile)}`;
 
   const expected = reportsExpected(
     configFile,
@@ -365,14 +564,16 @@ function run(specifier: string, configFile: string) {
   const { version } = require(specifier) as ClassicApi;
 
   if (belowFloor(version, configFile)) {
-    console.log(`- TS ${version} · ${configFile} — skipped below its floor`);
+    console.log(
+      `- TS ${version} · ${labelOf(configFile)} — skipped below its floor`,
+    );
 
     return true;
   }
 
   const { ts, owned, foreign, fileCount } = check(specifier, configFile);
 
-  const label = `TS ${ts.version} · ${configFile}`;
+  const label = `TS ${ts.version} · ${labelOf(configFile)}`;
 
   const expected = reportsExpected(
     configFile,
@@ -515,6 +716,104 @@ async function selftestNative() {
   return true;
 }
 
+// Self-test for the optional peer's guard: swapped to an `IsAny` guard, an
+// absent registry types every sref as `any` from TypeScript 5.5, which the
+// `absent` fixture's equality checks must reject. Older legs still see `string`.
+const IS_ANY_GUARD = '0 extends 1 & R.Register';
+
+const ABSENT_GUARD = 'unknown extends R.Register';
+
+async function selftestGuard(currentOnly: boolean): Promise<boolean> {
+  const [config] = stageOptionalPeer();
+
+  if (!config?.includes(`${sep}absent${sep}`)) {
+    throw new Error(`expected the absent fixture first, got ${config}`);
+  }
+
+  const declaration = join(
+    dirname(dirname(config)),
+    'node_modules',
+    'lit-ui-router',
+    'dist',
+    'registry.d.ts',
+  );
+
+  const source = readFileSync(declaration, 'utf8');
+
+  if (!source.includes(ABSENT_GUARD)) {
+    console.error(
+      `✖ selftest guard — no \`${ABSENT_GUARD}\` in the packed registry.d.ts`,
+    );
+
+    return false;
+  }
+
+  writeFileSync(declaration, source.replace(ABSENT_GUARD, IS_ANY_GUARD));
+
+  const results: { version: string; failed: boolean }[] = [];
+
+  if (!currentOnly) {
+    for (const specifier of API_VERSIONS) {
+      const { ts, owned } = check(specifier, config);
+      results.push({ version: ts.version, failed: owned.length > 0 });
+    }
+  }
+
+  const native = await checkNative(NATIVE_VERSION, config);
+  results.push({ version: native.version, failed: native.owned.length > 0 });
+
+  const wrong = results.filter(
+    ({ version, failed }) => failed !== !belowVersion(version, [5, 5]),
+  );
+
+  if (wrong.length > 0) {
+    console.error(
+      `✖ selftest guard — with an IsAny guard, expected TS 5.5+ to fail the absent fixture and older TS to pass: ${wrong
+        .map(
+          ({ version, failed }) =>
+            `TS ${version} ${failed ? 'failed' : 'passed'}`,
+        )
+        .join(', ')}`,
+    );
+
+    return false;
+  }
+
+  console.log(
+    `✔ selftest guard — an IsAny guard fails the absent fixture on ${results
+      .flatMap(({ version, failed }) => (failed ? [`TS ${version}`] : []))
+      .join(', ')}`,
+  );
+
+  return true;
+}
+
+async function runAll(currentOnly: boolean): Promise<boolean> {
+  let ok = currentOnly ? true : await selftest();
+
+  ok = (await selftestNative()) && ok;
+
+  ok = (await selftestGuard(currentOnly)) && ok;
+
+  const configFiles = [...CONFIGS.keys(), ...stageOptionalPeer()];
+
+  ok = checkPackedPeer() && ok;
+
+  if (!currentOnly) {
+    for (const specifier of API_VERSIONS) {
+      for (const configFile of configFiles) {
+        ok = run(specifier, configFile) && ok;
+      }
+    }
+  }
+
+  for (const configFile of configFiles) {
+    ok = (await runNative(NATIVE_VERSION, configFile)) && ok;
+  }
+
+  return ok;
+}
+
 const main = async (): Promise<void> => {
   // --versions=current runs only the repo-current (native TS 7) leg; the
   // default full matrix adds the pinned classic legs and their self-test.
@@ -529,25 +828,13 @@ const main = async (): Promise<void> => {
     return;
   }
 
-  const currentOnly = versionsArg === 'current';
-
-  let ok = currentOnly ? true : await selftest();
-
-  ok = (await selftestNative()) && ok;
-
-  if (!currentOnly) {
-    for (const specifier of API_VERSIONS) {
-      for (const configFile of CONFIGS.keys()) {
-        ok = run(specifier, configFile) && ok;
-      }
+  try {
+    if (!(await runAll(versionsArg === 'current'))) process.exitCode = 1;
+  } finally {
+    for (const root of stagedRoots) {
+      rmSync(root, { recursive: true, force: true });
     }
   }
-
-  for (const configFile of CONFIGS.keys()) {
-    ok = (await runNative(NATIVE_VERSION, configFile)) && ok;
-  }
-
-  if (!ok) process.exitCode = 1;
 };
 
 if (import.meta.main) await main();

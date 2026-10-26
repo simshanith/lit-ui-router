@@ -205,7 +205,12 @@ const workspaces = {
     entry: ['fixtures/*.ts'],
   },
   'tools/dts-backtest': {
-    entry: ['fixtures/*.ts', 'registered/*.ts', 'routed/**/*.ts'],
+    entry: [
+      'fixtures/*.ts',
+      'registered/*.ts',
+      'routed/**/*.ts',
+      'optional-peer/**/*.ts',
+    ],
     // the TS version matrix is imported by computed specifier
     ignoreDependencies: ['typescript-5.0', 'typescript-6', 'typescript-7'],
   },
