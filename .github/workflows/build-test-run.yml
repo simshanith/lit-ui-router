@@ -70,7 +70,7 @@ jobs:
       - name: Setup mise
         uses: jdx/mise-action@v5
         with:
-          version: 2026.10.1
+          version: 2026.10.19
       - name: Install dependencies
         run: mise run setup
       - name: Resolve Playwright version
@@ -286,7 +286,7 @@ jobs:
       - name: Setup mise
         uses: jdx/mise-action@v5
         with:
-          version: 2026.10.1
+          version: 2026.10.19
       - name: Plan the e2e matrix
         id: plan
         run: mise run e2e_plan
@@ -316,7 +316,7 @@ jobs:
       - name: Setup mise
         uses: jdx/mise-action@v5
         with:
-          version: 2026.10.1
+          version: 2026.10.19
       - name: Install dependencies
         run: mise run setup
       - name: Resolve Cypress version
