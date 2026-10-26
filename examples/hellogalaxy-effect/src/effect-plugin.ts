@@ -35,10 +35,10 @@ import {
 import type { DefaultResolvesType, LitStateDeclaration } from 'lit-ui-router';
 
 /** The transition a resolve or hook effect is running inside. */
-export class CurrentTransition extends Context.Tag('CurrentTransition')<
+export class CurrentTransition extends Context.Service<
   CurrentTransition,
   Transition
->() {}
+>()('CurrentTransition') {}
 
 /**
  * A state declaration with a scope that lives exactly as long as the state is
@@ -95,7 +95,7 @@ export const EFFECT_WAIT: CustomAsyncPolicy = (data: unknown) =>
  * views still see the value under `resolves[Tag.key]`.
  */
 export function provide<I, S, E, R>(
-  tag: Context.Tag<I, S>,
+  tag: Context.Key<I, S>,
   effect: Effect.Effect<S, E, R>,
 ): ResolvableLiteral {
   serviceTags.set(tag.key, (context, injector) =>
@@ -131,7 +131,7 @@ type ResolvablesBuilder = (
 ) => Resolvable[];
 
 interface TransitionFibers {
-  scope: Scope.CloseableScope;
+  scope: Scope.Closeable;
   set: FiberSet.FiberSet;
 }
 
@@ -146,7 +146,7 @@ export class EffectPlugin<R = never, ER = never> implements UIRouterPlugin {
   readonly log: SubscriptionRef.SubscriptionRef<readonly string[]>;
 
   private readonly fibers = new Map<Transition, TransitionFibers>();
-  private readonly scopes = new Map<string, Scope.CloseableScope>();
+  private readonly scopes = new Map<string, Scope.Closeable>();
   private readonly deregister: Deregister[] = [];
   private disposed = false;
 
@@ -323,7 +323,7 @@ export class EffectPlugin<R = never, ER = never> implements UIRouterPlugin {
 
       // The transition this belonged to is already dead; rejecting here would
       // only re-report the interruption as a transition error.
-      if (Exit.isInterrupted(exit)) return new Promise<never>(() => {});
+      if (Cause.hasInterrupts(exit.cause)) return new Promise<never>(() => {});
       throw Cause.squash(exit.cause);
     });
   }

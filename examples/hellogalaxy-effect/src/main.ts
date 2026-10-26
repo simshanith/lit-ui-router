@@ -12,7 +12,7 @@ import {
   Schedule,
   SubscriptionRef,
 } from 'effect';
-import { FetchHttpClient, HttpClient } from '@effect/platform';
+import { FetchHttpClient, HttpClient } from 'effect/http';
 import {
   type DefaultResolvesType,
   UIRouterLit,
@@ -149,7 +149,9 @@ interface StarsApiService {
   readonly fetchAll: Effect.Effect<readonly Star[]>;
 }
 
-class StarsApi extends Context.Tag('StarsApi')<StarsApi, StarsApiService>() {}
+class StarsApi extends Context.Service<StarsApi, StarsApiService>()(
+  'StarsApi',
+) {}
 
 const StarsApiLive = Layer.succeed(StarsApi, {
   // An Effect, not a plain array: swapping this Layer for one that talks to a
@@ -161,7 +163,7 @@ const StarsApiLive = Layer.succeed(StarsApi, {
 // FetchHttpClient.layer is the browser HttpClient the astronaut resolve uses.
 const AppLayer = Layer.mergeAll(StarsApiLive, FetchHttpClient.layer);
 
-type AppServices = Layer.Layer.Success<typeof AppLayer>;
+type AppServices = Layer.Success<typeof AppLayer>;
 
 // A typed failure, so an unknown :starId is a value the caller must handle
 // rather than an exception nobody declared.
@@ -180,10 +182,9 @@ interface StarCatalogService {
   readonly find: (id: string) => Effect.Effect<Star, StarNotFound>;
 }
 
-class StarCatalog extends Context.Tag('StarCatalog')<
-  StarCatalog,
-  StarCatalogService
->() {}
+class StarCatalog extends Context.Service<StarCatalog, StarCatalogService>()(
+  'StarCatalog',
+) {}
 
 // Approximate real star colors by spectral class letter (O hottest, M coolest)
 const spectralColors = new Map([
@@ -781,7 +782,7 @@ const releaseModel = (src: string | undefined) =>
   src === undefined
     ? Effect.void
     : Effect.sync(() => URL.revokeObjectURL(src)).pipe(
-        Effect.zipRight(say('astronaut: model released')),
+        Effect.andThen(say('astronaut: model released')),
       );
 
 // State definitions
@@ -874,7 +875,7 @@ const starState = {
     }).pipe(
       Effect.ensuring(
         say(`star scope closed: ${starId}`).pipe(
-          Effect.zipRight(SubscriptionRef.set(observingRef, '')),
+          Effect.andThen(SubscriptionRef.set(observingRef, '')),
         ),
       ),
     );
@@ -906,10 +907,12 @@ const astronautState = {
             Effect.flatMap((response) => response.arrayBuffer),
             // The model is served from a static host that answers OPTIONS with
             // a 405, so the request has to stay preflight-free: no traceparent.
-            Effect.locally(HttpClient.currentTracerPropagation, false),
+            Effect.provideService(HttpClient.TracerPropagationEnabled, false),
             Effect.timeout(Duration.seconds(30)),
             Effect.retry(Schedule.recurs(2)),
-            Effect.catchAll((cause) => new ModelDownloadFailed({ cause })),
+            Effect.catch((cause) =>
+              Effect.fail(new ModelDownloadFailed({ cause })),
+            ),
           );
 
           const src = URL.createObjectURL(
