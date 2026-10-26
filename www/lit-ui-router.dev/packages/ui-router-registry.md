@@ -118,6 +118,10 @@ stateService.go('contacts.contact', { contactId: 'c1' });
 | `TypedRouteSnapshot`                    | the route snapshot the reactive packages share, whose `includes(name)` narrows `current` and `params` to that state's subtree                                       |
 | `RegisteredRouteTypes`                  | the members the `/signals`, `/effect` and `/mobx` entry points fill the adapters' `RouteTypes` interfaces from                                                      |
 
+`lit-ui-router`'s `uiSref`, `srefHref`, `uiSrefActive`, `srefActiveClass`,
+`srefAriaCurrent` and `SrefStatusController` read `Register` themselves, with no
+import line. `lit-ui-router` takes this package as an optional peer.
+
 ## Reactive adapters
 
 `ui-router-signals`, `ui-router-effect` and `ui-router-mobx` each declare an
@@ -171,7 +175,7 @@ stateService.go(name as UncheckedRef);
 A state declaration that names a component and is checked with `satisfies`
 against a type that inspects the component, such as `LitStateDeclaration`, makes
 that component part of the registered states' type. If one of the component's members
-calls a typed target (`go`, `href`, a typed `uiSref` wrapper) and has no
+calls a typed target (`go`, `href`, `uiSref`) and has no
 declared return type, TypeScript has to infer that member from the registry
 while still building it, and reports a circular type (TS7022, TS7023, TS7024,
 TS2456, TS2502 or TS2313).

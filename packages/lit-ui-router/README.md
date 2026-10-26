@@ -105,6 +105,22 @@ class UserDetail extends LitElement {
 
 `uiSref` and `uiSrefActive` bind a link from the element; `srefHref`, `srefActiveClass` and `srefAriaCurrent` bind the same link from inside the attribute it writes, so the `href` is real markup a static analyser or server renderer can read — see [Attribute-part forms](https://lit-ui-router.dev/api/#attribute-part-forms).
 
+## Typed State Names
+
+`uiSref`, `srefHref`, `uiSrefActive`, `srefActiveClass`, `srefAriaCurrent` and `SrefStatusController` read their targets from [`ui-router-registry`](https://github.com/simshanith/lit-ui-router/blob/main/packages/ui-router-registry/README.md)'s `Register`. Augment it once with the app's `as const` state declarations, and a misspelled name or a missing required param fails to compile:
+
+```ts
+import type { states } from './states';
+
+declare module 'ui-router-registry' {
+  interface Register {
+    states: (typeof states)[number];
+  }
+}
+```
+
+The registry is an optional peer that ships no JavaScript, so a devDependency is enough. Without it, or without the augmentation, a target is any `string` with `RawParams`. Augmenting `'ui-router-registry'` without installing it fails at the augmentation (TS2664). Relative refs (`.child`, `^.sibling`) are checked by their tail, and the registry's `UncheckedRef` opts a target out. A state table whose components call typed srefs is checked with `TypedLitStateDeclaration`; see [Check components that call typed targets](https://github.com/simshanith/lit-ui-router/blob/main/packages/ui-router-registry/README.md#check-components-that-call-typed-targets).
+
 ## Documentation
 
 Visit [lit-ui-router.dev](https://lit-ui-router.dev) for full documentation, tutorials, and API reference.
