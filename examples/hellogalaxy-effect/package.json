@@ -9,11 +9,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@effect/platform": "^0.97.2",
     "@google/model-viewer": "^4.4.0",
     "@uirouter/core": "^6.1.2",
     "@uirouter/visualizer": "^7.2.1",
-    "effect": "^3.22.4",
+    "effect": "^4.0.6",
     "lit": "^3.3.3",
     "lit-ui-router": "^1.17.0",
     "lit-ui-router-effect": "^0.6.0",
