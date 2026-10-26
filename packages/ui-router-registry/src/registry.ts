@@ -325,7 +325,7 @@ export type TargetArgs<T, Options> = T extends StateName
  */
 export interface TypedStateService extends Omit<
   StateService,
-  'go' | 'transitionTo' | 'target' | 'href' | 'is' | 'includes'
+  'go' | 'transitionTo' | 'target' | 'href' | 'is' | 'includes' | 'reload'
 > {
   /** `StateService.go`, with a registered name's params required as declared. */
   go<T extends StateName | LooseTarget>(
@@ -350,6 +350,11 @@ export interface TypedStateService extends Omit<
     stateOrName: T & CheckRelative<T>,
     ...args: TargetArgs<T, HrefOptions>
   ): string;
+
+  /** `StateService.reload`: a registered name, or an object target or {@link UncheckedRef}. */
+  reload(
+    reloadState?: StateName | UncheckedRef | StateDeclaration | StateObject,
+  ): Promise<StateObject>;
 
   /** `StateService.is`, over registered names and their params. */
   is<N extends StateName>(

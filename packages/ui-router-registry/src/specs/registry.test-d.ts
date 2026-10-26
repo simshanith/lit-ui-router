@@ -174,6 +174,15 @@ accepts<boolean>(stateService.is(uncheckedName, { anything: 1 }));
 
 accepts<boolean>(stateService.includes(uncheckedName, { anything: 1 }));
 
+void stateService.reload();
+
+void stateService.reload('contacts.contact');
+
+// @ts-expect-error a misspelled state name
+void stateService.reload('contacts.contcat');
+
+void stateService.reload(uncheckedName);
+
 accepts<boolean>(snapshot.includes(uncheckedName));
 
 // @ts-expect-error a plain string isn't an UncheckedRef without the cast
