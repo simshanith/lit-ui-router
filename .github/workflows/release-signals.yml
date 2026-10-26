@@ -97,7 +97,7 @@ jobs:
       - name: Setup mise
         uses: jdx/mise-action@v5
         with:
-          version: 2026.10.19
+          auto_update: true
       - name: Install dependencies
         run: mise run setup --release
       - name: Published diff
@@ -146,7 +146,7 @@ jobs:
       - name: Setup mise
         uses: jdx/mise-action@v5
         with:
-          version: 2026.10.19
+          auto_update: true
       # The check scripts import @tools/shared and @tools/workers-builds, both in the release closure.
       - name: Install dependencies
         run: mise run setup --release

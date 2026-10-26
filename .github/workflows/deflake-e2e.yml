@@ -56,7 +56,7 @@ jobs:
       - name: Setup mise
         uses: jdx/mise-action@v5
         with:
-          version: 2026.10.19
+          auto_update: true
       - name: Install dependencies
         run: mise run setup
       - name: Resolve Cypress version
