@@ -8,7 +8,7 @@ describe('warnForeignClass', () => {
     vi.restoreAllMocks();
   });
 
-  it('warns once per class that names a second copy of lit', () => {
+  it('warns once per class and points at a duplicate lit', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
     // Stands in for a LitElement from another lit copy: an element class, not ours.
@@ -19,7 +19,7 @@ describe('warnForeignClass', () => {
 
     expect(warn).toHaveBeenCalledTimes(1);
     expect(warn).toHaveBeenCalledWith(
-      expect.stringContaining('second copy of lit'),
+      expect.stringContaining('only one copy of lit'),
       ForeignElement,
     );
   });

@@ -112,9 +112,7 @@ export function warnForeignClass(
 
   warnedForeignClass.add(component);
   console.warn(
-    'lit-ui-router: a view component is a class that does not extend the LitElement lit-ui-router imports, ' +
-      'so <ui-view> calls it as a template, which throws. ' +
-      'The usual cause is a second copy of lit in the app; dedupe lit to one installed copy.',
+    'lit-ui-router: a view component class must extend the shared LitElement, or <ui-view> throws when it renders. Ensure only one copy of lit is installed.',
     component,
   );
 }

@@ -5,6 +5,6 @@
     "lit-ui-router: uiSrefActive is taking over an existing aria-current=",
     "lit-ui-router: ${subject} found no <ui-router> ancestor, so it ",
     "lit-ui-router: this <ui-router> was given a different uiRouter after its first update. ",
-    "lit-ui-router: a view component is a class that does not extend the LitElement lit-ui-router imports, "
+    "lit-ui-router: a view component class must extend the shared LitElement, "
   ]
 }
