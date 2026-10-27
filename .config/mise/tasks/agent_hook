@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+#MISE description="Opt this checkout's Claude Code sessions into the agent_env SessionStart hook"
+#USAGE flag "--remove" help="Remove the hook instead"
+# Why: docs/CONTRIBUTING.md#agent-shells.
+set -eu
+
+# File-based tasks are raw scripts: {{config_root}} does not render here.
+file="${MISE_CONFIG_ROOT}/.claude/settings.local.json"
+marker='//:agent_env'
+cmd='[ -z "$CLAUDE_ENV_FILE" ] || mise run -q //:agent_env "$CLAUDE_ENV_FILE"'
+
+# The repo's own .gitignore must cover it; a contributor's global excludes don't travel.
+git -C "$MISE_CONFIG_ROOT" -c core.excludesFile=/dev/null check-ignore -q "$file" || {
+  echo "agent_hook: $file is not gitignored; refusing to write it" >&2
+  exit 1
+}
+
+if [ -n "${usage_remove:-}" ]; then
+  [ -f "$file" ] || exit 0
+  program='
+    if .hooks.SessionStart then
+      .hooks.SessionStart |= (map(.hooks |= map(select(.command | contains($m) | not)))
+        | map(select(.hooks | length > 0)))
+      | if .hooks.SessionStart == [] then del(.hooks.SessionStart) else . end
+      | if .hooks == {} then del(.hooks) else . end
+    else . end'
+else
+  # Repoint a drifted entry in place; append one only when none exists.
+  program='
+    .hooks.SessionStart //= []
+    | if any(.hooks.SessionStart[].hooks[]?; .command | contains($m)) then
+        .hooks.SessionStart[].hooks[] |= (if .command | contains($m) then .command = $cmd else . end)
+      else
+        .hooks.SessionStart += [{hooks: [{type: "command", command: $cmd}]}]
+      end'
+fi
+
+current='{}'
+[ ! -f "$file" ] || current="$(jq . "$file")"
+next="$(jq --arg m "$marker" --arg cmd "$cmd" "$program" <<<"$current")"
+
+[ "$next" != "$current" ] || exit 0
+
+printf '%s\n' "$next" >"$file"
+action=updated
+[ -z "${usage_remove:-}" ] || action='removed the hook from'
+echo "agent_hook: $action $file" >&2

@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+#MISE description="Write a marked line that re-derives mise env per command in agent shells"
+#USAGE arg "<file>" help="Env file the agent shell sources before each command, e.g. $CLAUDE_ENV_FILE"
+# Agent harnesses never fire mise's prompt hook; the line stands in for it.
+# Bash builtins only, so no host grep/sed/awk flavor decides the result.
+set -eu
+
+file="${usage_file:?}"
+marker='# mise agent_env'
+
+# Single-quoted: the shell that sources the line picks its own -s flag.
+line='eval "$(mise hook-env -s ${ZSH_VERSION:+zsh}${BASH_VERSION:+bash})"'" $marker"
+
+kept=()
+current=
+stale=
+unterminated=
+if [ -f "$file" ]; then
+  while IFS= read -r l || { [ -n "$l" ] && unterminated=1; }; do
+    case "$l" in
+      "$line") [ -z "$current" ] || stale=1; current=1 ;;
+      *"$marker") stale=1 ;;
+      *) kept+=("$l") ;;
+    esac
+  done <"$file"
+fi
+
+[ -z "$current" ] || [ -n "$stale" ] || exit 0
+
+# Append: a harness may hand concurrent writers one file, and read-then-rewrite drops a sibling's lines.
+if [ -z "$stale" ]; then
+  # One write, so a sibling's append can't land between the newline and the line.
+  printf '%s%s\n' "${unterminated:+$'\n'}" "$line" >>"$file"
+else
+  # Rewrite only to collapse stale and duplicate marked lines; other hooks' lines stay.
+  printf '%s\n' ${kept[@]+"${kept[@]}"} "$line" >"$file"
+fi
