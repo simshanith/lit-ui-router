@@ -48,7 +48,14 @@ import {
   type RouteMatch,
 } from 'ui-router-server/redirects';
 import { createHeadlessRouter, onceSettled } from 'ui-router-server/simulate';
-import { settle, type SettleOptions } from 'ui-router-server/ssr';
+import {
+  dehydrate,
+  settle,
+  type DehydrateResult,
+  type JsonValue,
+  type SettleOptions,
+} from 'ui-router-server/ssr';
+import { seed, type ResolvePayload } from 'ui-router-server/ssr/client';
 import {
   applyUrlConfig,
   type RouterUrlConfig,
@@ -215,6 +222,66 @@ export async function settledState(
   const transition = await settle(router, path, settleOptions);
 
   return transition.to().name ?? '';
+}
+
+// Ssr payload: a typed resolve read back after adoption.
+type SheetSummary = {
+  readonly num: string;
+  readonly tags: readonly string[];
+};
+
+interface SheetRecord {
+  readonly num: string;
+}
+
+type IsAny<T> = 0 extends 1 & T ? true : false;
+
+type AssignableTo<From, To> = [From] extends [To] ? true : false;
+
+// A JSON-safe type alias fits the payload's value type; an interface lacks the
+// index signature, and a Date is not JSON at all.
+export const payloadValueTypes: [
+  AssignableTo<SheetSummary, JsonValue>,
+  AssignableTo<SheetRecord, JsonValue>,
+  AssignableTo<Date, JsonValue>,
+] = [true, false, false];
+
+const summaryState: StateDeclaration = {
+  name: 'sheet',
+  url: '/sheet/:num',
+  resolve: {
+    summary: (): SheetSummary => ({ num: '7B', tags: ['plate'] }),
+  },
+};
+
+export async function adoptedSummary(
+  server: UIRouter,
+  client: UIRouter,
+): Promise<SheetSummary> {
+  server.stateRegistry.register({ ...summaryState });
+  client.stateRegistry.register({ ...summaryState });
+
+  const drawn: DehydrateResult = dehydrate(await settle(server, '/sheet/7B'));
+  void drawn.unserializable.map(({ state, token }) => `${state}.${token}`);
+
+  // SAFETY: the document holds what dehydrate drew, after a JSON round trip.
+  const payload = JSON.parse(JSON.stringify(drawn.payload)) as ResolvePayload;
+  // The payload carries JSON, not the declaration's type.
+  const carried: JsonValue | undefined = payload.resolves.sheet?.summary;
+  void carried;
+
+  const disarm: () => void = seed(client, payload);
+  const transition = await settle(client, '/sheet/7B');
+  disarm();
+
+  // Core's injector reads every token as `any`, adopted or resolved alike, so
+  // the declared type reaches the reader only as the reader's own assertion.
+  // oxlint-disable-next-line typescript/no-unsafe-assignment -- the any is what this probes
+  const read = transition.injector().get('summary');
+  const readIsAny: IsAny<typeof read> = true;
+  void readIsAny;
+
+  return transition.injector().get<SheetSummary>('summary');
 }
 
 // Url-config tier: one config object for a mount and any core router; the

@@ -1,6 +1,8 @@
 /**
  * The server side of server-side rendering, for any renderer: moving a server
- * router to a path and waiting for its transition to land.
+ * router to a path and waiting for its transition to land, and drawing the
+ * resolved values it landed with for `seed` from `ui-router-server/ssr/client`
+ * to hand the client's boot transition.
  *
  * It imports `@uirouter/core` eagerly and no renderer.
  */
@@ -13,6 +15,12 @@ import type {
   Transition,
   UIRouter,
 } from '@uirouter/core';
+
+export { dehydrate } from './dehydrate.ts';
+
+export type { DehydrateResult } from './dehydrate.ts';
+
+export type { JsonValue, ResolvePayload } from './resolve-payload.ts';
 
 /** Options for {@link settle | `settle`}. */
 export interface SettleOptions {
