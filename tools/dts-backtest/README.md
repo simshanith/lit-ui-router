@@ -11,10 +11,12 @@ of `lit-ui-router`, `lit-ui-router-mobx`,
 `ui-router-navigation-location-plugin`, and `ui-router-server` — under a
 matrix of:
 
-- **TypeScript versions**: the pinned floor (`typescript-5.0` → 5.0.4) and
-  the repo's current catalog version. The 6.x leg rides the shared
-  `typescript6` catalog (also vue-check's, for Volar), so bumping that
-  catalog bumps both consumers deliberately.
+- **TypeScript versions**: the classic-API legs in `API_VERSIONS` and the
+  native TypeScript 7 leg in `NATIVE_VERSION` (`run.ts`), each a pinned
+  `typescript-*` devDependency alias in `package.json`, so no leg tracks the
+  repo's own `typescript`. The first classic leg is the consumer floor. The
+  6.x leg rides the shared `typescript6` catalog (also vue-check's, for
+  Volar), so bumping that catalog bumps both consumers deliberately.
 - **module resolution modes**: `bundler` and `NodeNext`
 
 A module augmentation reaches the whole program, so the [registered
@@ -37,11 +39,15 @@ mobx, `@uirouter/core`, hono, `lib.dom`) are counted but tolerated, matching wha
 a consumer running `skipLibCheck: true` would experience while still holding
 our own declarations to the strict bar.
 
-Every run starts with a **self-test** proving the harness can fail: it
-injects a `NoInfer<>` probe (TypeScript 5.4+ syntax) into a dist `.d.ts`,
-asserts the floor version rejects it and the current version accepts it,
-then restores the file. A green matrix therefore can't be the result of a
-broken diagnostic filter silently classifying everything as third-party.
+Every run starts with a **self-test** proving the harness can fail. It
+compiles a probe `.d.ts` from a scratch directory alongside the fixtures; the
+shipped `dist/` is never touched. The classic legs' probe uses `NoInfer<>`
+(TypeScript 5.4+ syntax): the floor must reject it and the newest classic
+version accept it. The native TypeScript 7 leg has its own ownership filter
+and its own probe, an unresolvable type name it must report as ours;
+`--versions=current` runs only this one. A green matrix therefore can't be
+the result of a broken diagnostic filter silently classifying everything as
+third-party. See `selftest` and `selftestNative` in `run.ts`.
 
 ## Running
 
@@ -70,6 +76,6 @@ see below.
 
 Bumping the supported consumer floor is a semver-major signal for the
 published packages: change the `typescript-5.0` devDependency alias (and
-`VERSIONS` in `run.ts`) and rename accordingly. If the new floor is ≥ 5.4
+`API_VERSIONS` in `run.ts`) and rename accordingly. If the new floor is ≥ 5.4
 the self-test's `NoInfer` probe no longer discriminates — swap it for a
 construct the new floor still rejects.
