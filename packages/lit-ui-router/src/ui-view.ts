@@ -1,5 +1,10 @@
-import { LitElement, html, nothing } from 'lit';
-import type { PropertyValues, TemplateResult } from 'lit';
+import { LitElement, html, noChange, nothing } from 'lit';
+import type {
+  PropertyValues,
+  ReactiveController,
+  ReactiveControllerHost,
+  TemplateResult,
+} from 'lit';
 import { property, state } from 'lit/decorators.js';
 import {
   ActiveUIView,
@@ -28,7 +33,7 @@ import {
   NormalizedLitViewDeclaration,
 } from './interface.js';
 import { LitViewConfig, UIRouterLit, isRoutedLitElement } from './core.js';
-import { routedLitElementRenderer } from './routed-element.js';
+import { routedElementOf, routedLitElementRenderer } from './routed-element.js';
 import { warnMissingRouter } from './dev-warn.js';
 import { UIRouterLitElement } from './ui-router.js';
 import type {
@@ -66,6 +71,31 @@ const isRenderMarker = (node: ChildNode | null): boolean => {
 
   return data === '' || data.includes('lit-part');
 };
+
+/** Whether `node` sits inside `host`, across shadow roots. */
+const composedContains = (host: Node, node: Node): boolean => {
+  let current: Node | null | undefined = node;
+
+  while (current && current !== host) {
+    // SAFETY: a node with no parent is a shadow root, whose `host` leads out, or the top of its tree
+    current = current.parentNode ?? (current as Partial<ShadowRoot>).host;
+  }
+
+  return current === host;
+};
+
+/** The attribute marking a view's routed element. */
+const ROUTED_ATTRIBUTE = 'routed';
+
+/** An element that may be a `ReactiveElement`, which reports its first update. */
+type MaybeReactive = Element &
+  Partial<ReactiveControllerHost & { readonly hasUpdated: boolean }>;
+
+/** The incoming element a swap waits on, and how to stop waiting. */
+interface PendingSwap {
+  element: Element;
+  cancel: () => void;
+}
 
 /** @internal */
 interface ViewAddress {
@@ -117,6 +147,9 @@ const noParentViewUnsubscribe = () => {};
  * The <code>&lt;ui-view&gt;</code> component is a viewport for routed components.
  * Routed components will be rendered inside the <code>&lt;ui-view&gt;</code> viewport.
  *
+ * Its children are internal: read the routed component's element through
+ * <code>routedElement</code>, or select it with <code>ui-view &gt; [routed]</code>.
+ *
  * Whatever the author wrote inside the element, ahead of any render, is this
  * view's fallback set: it stands in the document while no component occupies
  * the view, parks while one does, and comes back when none does.
@@ -157,6 +190,24 @@ export class UiView extends LitElement {
 
   /** Whether those nodes sit in the fragment rather than in the light DOM. */
   private fallbackParked = true;
+
+  /** The element a class component rendered; a template component leaves it unset. */
+  private classElement?: Element;
+
+  /**
+   * Two places for class elements: an incoming element takes the free one, so
+   * the element it replaces stands until the incoming one has rendered.
+   */
+  private readonly elementSlots: (Element | typeof nothing)[] = [
+    nothing,
+    nothing,
+  ];
+
+  /** The incoming element whose first update retires the one it replaces. */
+  private pendingSwap?: PendingSwap;
+
+  /** The element carrying the `routed` attribute. */
+  private markedElement?: Element;
 
   /** @internal */
   createRenderRoot(): this {
@@ -622,8 +673,7 @@ export class UiView extends LitElement {
    * If both are true, adds the uiCanExit component function as a hook to that singular Transition.
    */
   private _invokeUiCanExitHook(trans: Transition) {
-    const instance: (Partial<UiOnExit> & Element) | null =
-      this.firstElementChild;
+    const instance: (Partial<UiOnExit> & Element) | null = this.routedElement;
 
     const uiCanExitFn = instance?.uiCanExit;
 
@@ -638,13 +688,32 @@ export class UiView extends LitElement {
     }
   }
 
+  /**
+   * The element the routed component rendered: a class component's instance,
+   * or the first element a template component rendered. `null` while the
+   * fallback set shows.
+   *
+   * The view's children are internal, so read the routed element here rather
+   * than through `firstElementChild` or child selectors. While a class
+   * component replaces another, both stand until the incoming element has
+   * rendered, and this is the incoming one.
+   *
+   * The same element carries the `routed` attribute, for CSS:
+   * `ui-view > [routed]`.
+   */
+  get routedElement(): Element | null {
+    return (
+      this.classElement ?? (this.showsFallback ? null : this.firstElementChild)
+    );
+  }
+
   /** @internal */
   requestUpdate(...args: Parameters<LitElement['requestUpdate']>): void {
     super.requestUpdate(...args);
 
     const instance:
       | (Partial<Pick<LitElement, 'requestUpdate'>> & Element)
-      | null = this.firstElementChild;
+      | null = this.routedElement;
 
     if (isFunction(instance?.requestUpdate)) {
       instance.requestUpdate();
@@ -659,7 +728,7 @@ export class UiView extends LitElement {
     this.requestUpdate();
 
     const instance: (Partial<UiOnParamsChanged> & Element) | null =
-      this.firstElementChild;
+      this.routedElement;
 
     if (isFunction(instance?.uiOnParamsChanged)) {
       const viewState = this.state;
@@ -766,6 +835,25 @@ export class UiView extends LitElement {
    *
    * @internal
    */
+  /** @internal */
+  protected updated(changed: PropertyValues): void {
+    super.updated(changed);
+    this.markRoutedElement();
+  }
+
+  /** Moves the `routed` attribute onto the current routed element. */
+  private markRoutedElement(): void {
+    const element = this.routedElement ?? undefined;
+
+    if (element === this.markedElement) {
+      return;
+    }
+
+    this.markedElement?.removeAttribute(ROUTED_ATTRIBUTE);
+    element?.setAttribute(ROUTED_ATTRIBUTE, '');
+    this.markedElement = element;
+  }
+
   protected firstUpdated(changed: PropertyValues): void {
     super.firstUpdated(changed);
 
@@ -778,8 +866,15 @@ export class UiView extends LitElement {
    * The routed component's template, or nothing while the fallback set stands
    * in the light DOM on its own.
    */
-  render(): TemplateResult | typeof nothing {
+  render(): TemplateResult | typeof nothing | typeof noChange {
+    // Inside an element its parent is retiring, so a config routed here is the incoming element's to render.
+    if (this.parentView instanceof UiView && this.parentView.retires(this)) {
+      return noChange;
+    }
+
     if (this.showsFallback) {
+      this.dropElements();
+
       // Nothing captured, so never connected (server render) or holding a render's nodes: an empty declarative shadow root would hide the light DOM.
       return this.fallback ? nothing : html`<slot></slot>`;
     }
@@ -806,7 +901,115 @@ export class UiView extends LitElement {
 
     const props: UIViewInjectedProps = { router, resolves, transition };
 
-    return component!(props);
+    const result = component!(props);
+    const element = routedElementOf(result);
+
+    if (!element) {
+      this.dropElements();
+
+      return result;
+    }
+
+    return this.placeElement(element);
+  }
+
+  /**
+   * Renders `element` beside the one it replaces, which stands until
+   * `element` has rendered: lit would otherwise remove it before inserting one
+   * that has not.
+   */
+  private placeElement(element: Element): TemplateResult {
+    const slots = this.elementSlots;
+
+    if (element !== this.classElement) {
+      // An incoming element that never rendered gives way, so the one on screen stays.
+      const superseded = this.cancelPendingSwap();
+
+      if (superseded) {
+        slots[slots.indexOf(superseded)] = nothing;
+      }
+
+      this.classElement = element;
+
+      if (!slots.includes(element)) {
+        slots[slots.indexOf(nothing)] = element;
+      }
+
+      if (this.outgoingElement) {
+        this.awaitFirstUpdate(element);
+      }
+    }
+
+    return html`${slots[0]}${slots[1]}`;
+  }
+
+  /** The element standing beside the current one until that one has rendered. */
+  private get outgoingElement(): Element | undefined {
+    for (const slot of this.elementSlots) {
+      if (slot !== nothing && slot !== this.classElement) return slot;
+    }
+
+    return undefined;
+  }
+
+  /** Retires the outgoing element once `element` has completed its first update. */
+  private awaitFirstUpdate(element: MaybeReactive): void {
+    const retire = () => this.retire(element);
+
+    if (!isFunction(element.addController) || element.hasUpdated) {
+      void Promise.resolve().then(retire);
+      this.pendingSwap = { element, cancel: () => {} };
+
+      return;
+    }
+
+    const controller: ReactiveController = { hostUpdated: retire };
+
+    element.addController(controller);
+    this.pendingSwap = {
+      element,
+      cancel: () => {
+        // Deferred: lit iterates the controllers while it runs hostUpdated.
+        void Promise.resolve().then(() =>
+          element.removeController?.(controller),
+        );
+      },
+    };
+  }
+
+  /** Stops waiting on the pending incoming element, and returns it. */
+  private cancelPendingSwap(): Element | undefined {
+    const pending = this.pendingSwap;
+    this.pendingSwap = undefined;
+    pending?.cancel();
+
+    return pending?.element;
+  }
+
+  /** Whether `node` sits in the element this view is retiring. */
+  private retires(node: Node): boolean {
+    const outgoing = this.outgoingElement;
+
+    return !!outgoing && composedContains(outgoing, node);
+  }
+
+  private dropElements(): void {
+    this.cancelPendingSwap();
+    this.classElement = undefined;
+    this.elementSlots.fill(nothing);
+  }
+
+  /** Drops the element `incoming` replaced, unless the swap was settled or a later one took over. */
+  private retire(incoming: Element): void {
+    if (this.pendingSwap?.element !== incoming) {
+      return;
+    }
+
+    this.cancelPendingSwap();
+    const slots = this.elementSlots;
+    slots[slots[0] === incoming ? 1 : 0] = nothing;
+    // The routed element has nothing new to render.
+    super.requestUpdate();
   }
 }
 

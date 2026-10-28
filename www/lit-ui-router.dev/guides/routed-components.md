@@ -1,6 +1,6 @@
 ---
 title: Routed Components
-description: Read a state's params in its routed component, and code-split the component's element module with a resolve or a lazyLoad future state
+description: Read a state's params in its routed component, code-split the component's element module with a resolve or a lazyLoad future state, and reach the element a view rendered
 ---
 
 # Routed Components
@@ -8,9 +8,9 @@ description: Read a state's params in its routed component, and code-split the c
 A routed component gets its inputs from `<ui-view>`, which renders it with
 [`UIViewInjectedProps`](/api/reference/types/UIViewInjectedProps): the
 `router`, the `transition` that rendered the view, and the state's
-`resolves`. This guide covers two things every routed component meets: reading
-its state's params, and loading its own element module only when the state is
-entered.
+`resolves`. This guide covers three things every routed component meets:
+reading its state's params, loading its own element module only when the state
+is entered, and how the page reaches the element a view rendered.
 
 ## Reading params
 
@@ -132,3 +132,38 @@ const contactsFutureState = {
 The state modules import their components statically, so the elements arrive
 in the same chunk. The sample app splits contacts, prefs and messages this way
 ([main/states.ts](https://github.com/simshanith/lit-ui-router/blob/main/apps/sample-app-shared/src/app/main/states.ts)).
+
+## The routed element
+
+`<ui-view>` renders into its light DOM, so page CSS and queries reach the
+routed component. The view's own children are internal: next to the routed
+markup they hold Lit's part markers and, while one component replaces
+another, the element on its way out. Reach the routed element through the view
+instead of `firstElementChild` or child selectors:
+
+- [`routedElement`](/api/reference/components/UiView) is the
+  element the routed component rendered: a class component's instance, or the
+  first element a template component rendered. It is `null` while the view
+  shows its [fallback content](./view-fallback-content).
+- The same element carries a `routed` attribute, for CSS.
+
+```css
+ui-view > [routed] {
+  min-height: 100%;
+}
+```
+
+```ts
+const view = document.querySelector('ui-view');
+view?.routedElement?.scrollIntoView();
+```
+
+When a state change replaces one class component with another, `<ui-view>`
+inserts the incoming element next to the outgoing one, and removes the
+outgoing element once the incoming one has completed its first update. The
+view keeps its content in between, so a layout read during the swap does not
+see a collapsed page. `routedElement` and the `routed` attribute point at the
+incoming element from the moment it is inserted.
+
+The attribute is set when the view renders in the browser, so a prerendered
+page carries it once its views have hydrated.
