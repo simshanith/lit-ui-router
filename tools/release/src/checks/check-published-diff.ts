@@ -30,6 +30,7 @@
 // This file is the IO shell; verdicts and rendering live in the pure,
 // unit-tested ./check-published-diff.core.ts.
 
+import type { Json } from '@tools/bootstrap/types.ts';
 import { execFile } from 'node:child_process';
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -54,8 +55,10 @@ import { readPublishedVersions } from './published-versions.ts';
 import { requireManifest } from '@tools/bootstrap/manifest.ts';
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
 import { isPublishable, loadWorkspace } from '@tools/shared/workspace.ts';
+import { failMain } from '../lib/fail-main.ts';
 
 const run = promisify(execFile);
+
 const MAX_BUFFER = 64 * 1024 * 1024;
 
 /**
@@ -68,29 +71,34 @@ async function diffAgainstPublished(
   spec: string,
 ): Promise<{
   diff: string;
-  localManifest?: Record<string, unknown>;
-  publishedManifest?: Record<string, unknown>;
+  localManifest?: Readonly<Record<string, Json>>;
+  publishedManifest?: Readonly<Record<string, Json>>;
 }> {
   const tarball = packTarballPath(name);
+
   const { stdout } = await run(
     'npm',
     ['diff', `--diff=${spec}`, `--diff=${tarball}`],
     { cwd: workspaceRoot, maxBuffer: MAX_BUFFER },
   );
+
   if (!changedFiles(stdout).includes('package.json')) {
     return { diff: stdout };
   }
+
   // Both manifests as-shipped, read from the compared tarballs — the LOCAL
   // side must come from the pack too (pnpm substitutes catalog:/workspace:
   // refs at pack time; the on-disk manifest would false-drift). fetchTarball
   // serves from pacote's cacache — npm diff already pulled the same tarball —
   // so this costs no second download.
   const destination = await mkdtemp(join(tmpdir(), 'check-published-diff-'));
+
   try {
     const localManifest = await tarballManifest(tarball);
     const publishedTarball = join(destination, 'published.tgz');
     await fetchTarball(spec, publishedTarball);
     const publishedManifest = await tarballManifest(publishedTarball);
+
     return { diff: stdout, localManifest, publishedManifest };
   } catch {
     // Failed fetch/parse leaves the manifests undefined — package.json
@@ -105,11 +113,14 @@ async function diffAgainstPublished(
 // declared output); --json is an ad-hoc override only.
 function summaryPathArg(): string {
   const jsonFlag = process.argv.indexOf('--json');
+
   if (jsonFlag === -1) return publishedDiffSummaryPath;
   const jsonOverride = process.argv[jsonFlag + 1];
+
   if (!jsonOverride || jsonOverride.startsWith('--')) {
     throw new Error('--json requires a file path argument');
   }
+
   return jsonOverride;
 }
 
@@ -118,7 +129,6 @@ async function main() {
   const skipBuild = process.argv.includes('--no-build');
   const jsonPath = summaryPathArg();
 
-  const published = await readPublishedVersions();
   const { members } = await loadWorkspace(workspaceRoot);
   const publishable = members.filter(isPublishable);
 
@@ -127,7 +137,19 @@ async function main() {
     publishable.map(({ name }) => name),
     process.env.PUBLISHED_DIFF_PACKAGES,
   );
-  const targets = publishable.filter(({ name }) => scoped.includes(name));
+
+  if (!scoped.ok) {
+    console.error(`check-published-diff: ${scoped.error}`);
+    process.exitCode = 2;
+
+    return;
+  }
+
+  const published = await readPublishedVersions();
+
+  const targets = publishable.filter(({ name }) =>
+    scoped.packages.includes(name),
+  );
 
   if (!skipBuild && targets.length > 0) {
     // Provision the publish-shape tarballs this reads — a no-op cache hit when
@@ -141,32 +163,41 @@ async function main() {
   }
 
   const results: DiffResult[] = [];
+
   for (const { name, dir } of targets) {
     const packageDir = join(workspaceRoot, dir);
     const localVersion = requireManifest(packageDir).version;
+
     if (!(name in published)) {
       throw new Error(
         `${name} missing from published-versions.json — stale manifest; re-run the resolve:published task.`,
       );
     }
+
     const target = selectTarget(name, localVersion, published[name] ?? {});
+
     if (!target) {
       results.push({ name, dir, localVersion, status: 'unpublished' });
       continue;
     }
+
     const { tag, version } = target;
+
     const { diff, localManifest, publishedManifest } =
       await diffAgainstPublished(name, `${name}@${version}`);
+
     if (isCleanDiff(diff)) {
       results.push({ name, dir, tag, version, localVersion, status: 'clean' });
       continue;
     }
+
     const { shipAffecting, shipInert } = reclassifyManifest(
       classifyFiles(changedFiles(diff)),
       diff,
       localManifest,
       publishedManifest,
     );
+
     results.push({
       name,
       dir,
@@ -184,10 +215,8 @@ async function main() {
 
   const { ok, text } = formatReport(results, { strict });
   (ok ? console.log : console.error)(text);
+
   if (!ok) process.exitCode = 1;
 }
 
-main().catch((error: unknown) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+main().catch(failMain);

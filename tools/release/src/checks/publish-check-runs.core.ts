@@ -30,6 +30,7 @@ export function releaseWorkflowUrl(repo: string): string {
 /** Collapsed ship-inert listing appended to either verdict's summary. */
 function inertDetails({ shipInert, shipInertFiles }: PackageSummary): string[] {
   if (shipInert === 0) return [];
+
   return [
     '',
     '<details>',
@@ -47,6 +48,7 @@ export function toCheckRun(
   repo: string,
 ): CheckRunPayload {
   const name = checkRunName(summary.name);
+
   if (summary.version === null) {
     return {
       name,
@@ -55,10 +57,13 @@ export function toCheckRun(
       summary: `${summary.name} has no published dist-tag to compare against.`,
     };
   }
+
   const spec = `${summary.name}@${summary.version}`;
   const target = `${summary.tag} ${summary.version}`;
+
   if (summary.shipAffecting > 0) {
     const releaseUrl = releaseWorkflowUrl(repo);
+
     return {
       name,
       conclusion: 'action_required',
@@ -75,6 +80,7 @@ export function toCheckRun(
       // details_url: not settable — GitHub pins GITHUB_TOKEN-created check runs to their own page
     };
   }
+
   return {
     name,
     conclusion: 'success',
@@ -84,6 +90,30 @@ export function toCheckRun(
       ...inertDetails(summary),
     ].join('\n'),
   };
+}
+
+/** A signal's `$GITHUB_STEP_SUMMARY` section: a verdict table, then each non-success run's summary. */
+export function checkRunsMarkdown(
+  heading: string,
+  payloads: readonly CheckRunPayload[],
+  empty = 'No check runs posted.',
+): string {
+  if (payloads.length === 0) return [`## ${heading}`, '', empty, ''].join('\n');
+
+  return [
+    `## ${heading}`,
+    '',
+    '| Check run | Conclusion | Title |',
+    '| --- | --- | --- |',
+    ...payloads.map(
+      ({ name, conclusion, title }) =>
+        `| \`${name}\` | ${conclusion} | ${title} |`,
+    ),
+    ...payloads
+      .filter(({ conclusion }) => conclusion !== 'success')
+      .flatMap(({ name, summary }) => ['', `### ${name}`, '', summary]),
+    '',
+  ].join('\n');
 }
 
 /** argv for `gh api` creating one check run on `headSha`. */

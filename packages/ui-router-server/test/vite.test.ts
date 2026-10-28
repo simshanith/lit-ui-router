@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
+import { createServerRouter } from '../src/index.ts';
 import type { ServerRouter, Verdict } from '../src/index.ts';
 import type { ConnectMiddleware } from '../src/connect.ts';
 import { serverRouterPlugin } from '../src/vite.ts';
@@ -12,6 +13,7 @@ const routerOf = (verdict: Verdict): ServerRouter => ({
 // A fake Vite server that just captures whatever middleware the plugin installs.
 const fakeServer = () => {
   const installed: ConnectMiddleware[] = [];
+
   return {
     installed,
     middlewares: { use: (mw: ConnectMiddleware) => installed.push(mw) },
@@ -22,8 +24,8 @@ describe('serverRouterPlugin', () => {
   it('is a structural Vite plugin naming the package', () => {
     const plugin = serverRouterPlugin(routerOf({ kind: 'notFound' }));
     assert.equal(plugin.name, 'ui-router-server');
-    assert.equal(typeof plugin.configureServer, 'function');
-    assert.equal(typeof plugin.configurePreviewServer, 'function');
+    assert.ok(plugin.configureServer instanceof Function);
+    assert.ok(plugin.configurePreviewServer instanceof Function);
   });
 
   it('installs one middleware into both the dev and preview stacks', () => {
@@ -45,6 +47,7 @@ describe('serverRouterPlugin', () => {
         status: 302,
       }),
     );
+
     const server = fakeServer();
     plugin.configureServer(server);
     const middleware = server.installed[0];
@@ -52,25 +55,29 @@ describe('serverRouterPlugin', () => {
     let status = 0;
     let location = '';
     let nexted = false;
+
     const req = {
       url: '/app/legacy?ref=x',
       method: 'GET',
       headers: { accept: 'text/html' },
     };
+
     await new Promise<void>((resolve) => {
       const res = {
-        writeHead: (s: number, headers?: unknown) => {
+        writeHead: (s: number, headers?: { Location?: string }) => {
           status = s;
-          location =
-            (headers as { Location?: string } | undefined)?.Location ?? '';
+          location = headers?.Location ?? '';
+
           return res;
         },
         setHeader: () => res,
         end: () => {
           resolve();
+
           return res;
         },
       };
+
       middleware(req, res, () => {
         nexted = true;
         resolve();
@@ -85,6 +92,7 @@ describe('serverRouterPlugin', () => {
     const plugin = serverRouterPlugin(
       routerOf({ kind: 'shell', mount: '/app' }),
     );
+
     const server = fakeServer();
     plugin.configureServer(server);
     const middleware = server.installed[0];
@@ -94,19 +102,37 @@ describe('serverRouterPlugin', () => {
       method: 'GET',
       headers: { accept: 'text/html' },
     };
+
     const link: string[] = [];
     await new Promise<void>((resolve) => {
       const res = {
         writeHead: () => res,
         setHeader: (_name: string, value: string) => {
           link.push(value);
+
           return res;
         },
         end: () => res,
       };
+
       middleware(req, res, () => resolve());
     });
     assert.equal(req.url, '/app'); // rewritten to the mount shell
     assert.deepEqual(link, ['</app>; rel="canonical"']);
+  });
+
+  it('never reports mount diagnostics; construction does', (t) => {
+    const warn = t.mock.method(console, 'warn', () => {});
+
+    const router = createServerRouter({
+      mounts: { '/app': { routes: [{ name: 'a', url: '/a' }] } },
+    });
+
+    assert.equal(warn.mock.callCount(), 1);
+
+    const plugin = serverRouterPlugin(router);
+    plugin.configureServer(fakeServer());
+    plugin.configurePreviewServer(fakeServer());
+    assert.equal(warn.mock.callCount(), 1);
   });
 });

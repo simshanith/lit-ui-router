@@ -17,6 +17,7 @@ test('relativizes coverage keys from any checkout, local or CI', () => {
       'src/core.ts',
     );
   }
+
   assert.equal(
     packageRelative('/ci/packages/lit-ui-router', 'packages/lit-ui-router'),
     undefined,

@@ -1,4 +1,5 @@
 import { defineConfig } from 'vitest/config';
+import { GithubActionsReporter } from 'vitest/node';
 import { playwright } from '@vitest/browser-playwright';
 
 export default defineConfig({
@@ -6,8 +7,14 @@ export default defineConfig({
   test: {
     include: ['src/**/*.spec.ts'],
     setupFiles: ['./vitest.setup.ts'],
-    // hanging-process logs the open handles in CI
-    reporters: process.env.CI ? ['default', 'hanging-process'] : ['default'],
+    // github-actions precedes the failure banner; hanging-process logs open handles in CI
+    reporters: [
+      ...(process.env.GITHUB_ACTIONS === 'true'
+        ? [new GithubActionsReporter({ jobSummary: { enabled: false } })]
+        : []),
+      'default',
+      ...(process.env.CI ? (['hanging-process'] as const) : []),
+    ],
     api: process.env.VITEST_BROWSER_API_PORT
       ? { port: Number(process.env.VITEST_BROWSER_API_PORT) }
       : undefined,

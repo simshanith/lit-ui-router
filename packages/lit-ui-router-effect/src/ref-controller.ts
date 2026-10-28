@@ -1,25 +1,37 @@
-import { Effect, Fiber, Stream, SubscriptionRef } from 'effect';
+import {
+  Effect,
+  Fiber,
+  Predicate,
+  PubSub,
+  Scheduler,
+  Stream,
+  SubscriptionRef,
+} from 'effect';
 import { ReactiveController, ReactiveControllerHost } from 'lit';
 
 /**
  * The slice of a runtime the controllers need. `Effect.runFork` /
  * `Effect.runSync` on the default runtime unless one is given; a
- * [`ManagedRuntime`](https://effect.website/docs/runtime/#managedruntime)
- * satisfies it directly, so an app with real layers keeps its fibers on the
- * runtime it already owns.
+ * [`ManagedRuntime<R>`](https://effect.website/docs/runtime/#managedruntime)
+ * satisfies it because the controllers' effects require nothing from `R`. It runs the controllers' own fibers; it does not provide
+ * services to a selector, which stays a plain function over the values.
  */
 export interface RefRuntime {
-  /** starts an effect on a fiber the controller interrupts on disconnect */
+  /**
+   * starts an effect on a fiber the controller interrupts on disconnect, on
+   * `options.scheduler` when given
+   */
   readonly runFork: (
     effect: Effect.Effect<void>,
-  ) => Fiber.RuntimeFiber<unknown, unknown>;
+    options?: { readonly scheduler?: Scheduler.Scheduler | undefined },
+  ) => Fiber.Fiber<unknown, unknown>;
   /** runs a synchronous effect, used to read a ref's current value */
   readonly runSync: <A>(effect: Effect.Effect<A>) => A;
 }
 
 /** {@link RefRuntime} over Effect's default runtime. */
 export const defaultRefRuntime: RefRuntime = {
-  runFork: (effect) => Effect.runFork(effect),
+  runFork: (effect, options) => Effect.runFork(effect, options),
   runSync: (effect) => Effect.runSync(effect),
 };
 
@@ -43,15 +55,15 @@ export interface RefControllerOptions<T> {
 
   /**
    * Comparer deciding whether the selected value changed. Defaults to
-   * `Object.is`; pass `Equal.equals` for `Data` structs, or a structural
-   * comparer for plain objects.
+   * `Object.is`; pass `Equal.equals` for structural comparison (plain objects
+   * on effect 4, `Data` values on either major).
    */
   equals?: (a: T, b: T) => boolean;
 
   /**
    * The runtime the subscription fiber is forked on, and refs are read with.
    * Defaults to Effect's default runtime; pass the app's `ManagedRuntime` to
-   * keep everything on one.
+   * keep the fibers on one. The selector gets no services from it.
    */
   runtime?: RefRuntime;
 }
@@ -106,69 +118,161 @@ export class RefController<
   /** The selected value, for use in `render()`. */
   value: T;
 
-  private fiber?: Fiber.RuntimeFiber<unknown, unknown>;
+  private fiber?: Fiber.Fiber<unknown, unknown>;
   private initialized = false;
+  private connected = false;
   private readonly runtime: RefRuntime;
 
   constructor(
     private readonly host: ReactiveControllerHost,
-    private readonly refs: RefSource<Refs>,
+    private refs: RefSource<Refs>,
     private readonly selector: (...values: RefValues<Refs>) => T,
     private readonly options: RefControllerOptions<T> = {},
   ) {
     this.runtime = options.runtime ?? defaultRefRuntime;
-    // Undefined unless `initialValue` is given, which is the pre-connect
-    // shape either way; the cast keeps `.value` typed `T` for render code.
-    this.value =
-      typeof refs === 'function'
-        ? (options.initialValue as T)
-        : selector(...this.read(refs));
+    // SAFETY: undefined unless `initialValue` is given, the pre-connect shape either way; `.value` stays `T` for render code.
+    this.value = Predicate.isFunction(refs)
+      ? (options.initialValue as T)
+      : selector(...this.read(refs));
     host.addController(this);
   }
 
   hostConnected(): void {
-    const refs = typeof this.refs === 'function' ? this.refs() : this.refs;
+    this.connected = true;
+    this.fork();
+  }
+
+  hostDisconnected(): void {
+    this.connected = false;
+    this.interrupt();
+  }
+
+  /**
+   * Replaces the refs. A connected controller interrupts its fiber and
+   * re-seeds and re-forks on the new refs, as a reconnect does; a
+   * disconnected one only records them for its next `hostConnected`.
+   */
+  protected setRefs(refs: RefSource<Refs>): void {
+    this.refs = refs;
+
+    if (!this.connected) return;
+    this.interrupt();
+    this.fork();
+  }
+
+  private fork(): void {
+    const refs = Predicate.isFunction(this.refs) ? this.refs() : this.refs;
+
     if (!refs) return;
     // Seed before forking: a fiber's first emission is not guaranteed to land
     // synchronously, and render() must not see a stale `.value`.
     this.emit(this.read(refs));
+    const scheduler = microtaskScheduler();
+
     this.fiber = this.runtime.runFork(
       Stream.runForEach(RefController.changes(refs), (values) =>
         Effect.sync(() => this.emit(values)),
       ),
+      scheduler && { scheduler },
     );
   }
 
-  hostDisconnected(): void {
-    this.fiber?.unsafeInterruptAsFork(this.fiber.id());
+  private interrupt(): void {
+    if (this.fiber) interruptFiber(this.fiber);
     this.fiber = undefined;
     // Reconnecting re-fires onChange, as a fresh subscription would.
     this.initialized = false;
   }
 
   private read(refs: Refs): RefValues<Refs> {
-    return refs.map((ref): unknown =>
+    // SAFETY: `map` keeps tuple order, and each entry is its own ref's current value.
+    return refs.map((ref: SubscriptionRef.SubscriptionRef<unknown>) =>
       this.runtime.runSync(SubscriptionRef.get(ref)),
-    ) as unknown as RefValues<Refs>;
+    ) as RefValues<Refs>;
   }
 
   /** One stream carrying the latest value of every ref. */
   private static changes<Refs extends SubscriptionRefs>(
     refs: Refs,
   ): Stream.Stream<RefValues<Refs>> {
-    const streams = refs.map((ref) => ref.changes);
-    return Stream.zipLatestAll(...streams) as unknown as Stream.Stream<
-      RefValues<Refs>
-    >;
+    const streams = refs.map(changesOf);
+
+    // SAFETY: `zipLatestAll` emits one latest value per stream, in ref order.
+    return Stream.zipLatestAll(...streams) as Stream.Stream<RefValues<Refs>>;
   }
 
   private emit(values: RefValues<Refs>): void {
     const selected = this.selector(...values);
     const equals = this.options.equals ?? Object.is;
+
     if (this.initialized && equals(selected, this.value)) return;
     this.initialized = true;
     this.value = selected;
     this.options.onChange?.(selected);
     this.host.requestUpdate();
   }
+}
+
+/** A ref's change stream as effect 3 carries it. */
+interface Effect3Ref<A> {
+  readonly changes?: Stream.Stream<A>;
+}
+
+/** The pubsub an effect 4 ref publishes its current and later values on. */
+interface Effect4Ref<A> {
+  readonly pubsub: PubSub.PubSub<A>;
+}
+
+/** The stream of a ref's current and later values. */
+function changesOf<A>(
+  ref: SubscriptionRef.SubscriptionRef<A>,
+): Stream.Stream<A> {
+  // SAFETY: an effect 3 ref carries `changes`; on effect 4 the member is absent.
+  // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- each major's types omit the other's member, so no single assertion reaches it
+  const own = (ref as unknown as Effect3Ref<A>).changes;
+
+  if (own) return own;
+
+  // Effect 4's own `SubscriptionRef.changes` body; reading that export makes effect 3 bundlers warn IMPORT_IS_UNDEFINED.
+  // SAFETY: an effect 4 ref carries `pubsub`; effect 3 returned above.
+  // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- each major's types omit the other's member, so no single assertion reaches it
+  return Stream.fromPubSub((ref as unknown as Effect4Ref<A>).pubsub);
+}
+
+/** Effect 4's `MixedScheduler` constructor; effect 3's takes a yield depth instead. */
+interface Effect4MixedScheduler {
+  new (executionMode: 'sync'): Scheduler.Scheduler;
+}
+
+/** Effect 4's default scheduler resumes fibers a task later; this keeps them in the transition's task, as effect 3's default does. */
+function microtaskScheduler(): Scheduler.Scheduler | undefined {
+  if (!('makeDispatcher' in Scheduler.MixedScheduler.prototype)) {
+    return undefined;
+  }
+
+  // SAFETY: only effect 4's MixedScheduler has `makeDispatcher`, and its constructor takes an execution mode.
+  // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- each major's types omit the other's constructor, so no single assertion reaches it
+  const Mixed = Scheduler.MixedScheduler as unknown as Effect4MixedScheduler;
+
+  return new Mixed('sync');
+}
+
+/** A fiber's synchronous interrupt as effect 3 names it. */
+interface Effect3Fiber<Id extends object> {
+  unsafeInterruptAsFork(fiberId: Id): void;
+  id(): Id;
+}
+
+/** A fiber's synchronous interrupt as effect 4 names it. */
+interface Effect4Fiber {
+  interruptUnsafe(): void;
+}
+
+function interruptFiber(fiber: Fiber.Fiber<unknown, unknown>): void {
+  // SAFETY: every runtime fiber has one of the two interrupts; `in` picks it below.
+  // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- each major's types omit the other's member, so no single assertion reaches it
+  const live = fiber as unknown as Effect3Fiber<object> | Effect4Fiber;
+
+  if ('interruptUnsafe' in live) live.interruptUnsafe();
+  else live.unsafeInterruptAsFork(live.id());
 }

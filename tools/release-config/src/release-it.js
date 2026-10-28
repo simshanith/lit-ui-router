@@ -1,3 +1,8 @@
+import {
+  skipUnconsumedCatalogCommit,
+  WORKSPACE_FILE,
+} from './catalog-commits.js';
+
 // The one release-it config for every publishable package. Each package keeps a
 // one-line .release-it.js re-export so release-it's cwd-based config lookup (and
 // `pnpm exec release-it` run inside a package) still resolves.
@@ -44,16 +49,21 @@ export default {
           { type: 'build', section: 'Build System' },
           { type: 'docs', section: 'Documentation' },
         ],
+        // Only `#<digits>` is an issue; `#dev-gate` and `package.json#imports` are not.
+        issuePrefixes: [/#(?=\d+(?![\w-]))/],
       },
-      // Relative to cwd, so each package's notes stay scoped to its own dir.
+      // Relative to cwd, so each package's notes stay scoped to its own dir,
+      // plus the workspace file whose catalogs feed its packed manifest.
       gitRawCommitsOpts: {
-        path: '.',
+        path: ['.', `:(top)${WORKSPACE_FILE}`],
       },
       ignoreRecommendedBump: true,
       writerOpts: {
         // release-it already names the GitHub release, so the preset's
         // `## <version> (<date>)` line would only duplicate it.
         headerPartial: () => '',
+        // Workspace-file-only commits count only when they change a consumed entry.
+        skip: skipUnconsumedCatalogCommit,
       },
     },
   },

@@ -36,6 +36,10 @@ tools through mise shims resolves `pnpm` but not that environment; if
 through `mise exec --`. CI is unaffected: `jdx/mise-action` exports `[env]` to
 every later step.
 
+An activated shell also gets the config's `[shell_alias]` entries. `cd_config_root`
+changes to the root of the checkout or worktree you are in, from any directory
+inside it.
+
 An `[env]` assignment overrides the inherited value, and the checked-in config
 evaluates before `config.local.toml`, so a default declared there defeats a
 per-checkout override. A value meant to be overridable keeps its default in code
@@ -66,10 +70,13 @@ mise run test_e2e
 # Or hold a server open and drive individual suites against it
 mise run //www/lit-ui-router.dev:serve
 turbo run test:e2e:hash
+
+# Or run them against an already-served origin, with no local server
+mise run test_e2e --base-url https://lit-ui-router.dev
 ```
 
 See [the suite README](../apps/sample-app-lit-e2e/README.md) for suite
-selection, and for serving an already-built site without mise.
+selection, serving an already-built site without mise, and the served-origin run.
 
 `pnpm run crap` ranks each vitest package's functions by CRAP score
 (complexity against coverage) from the coverage `test:coverage` writes,
@@ -77,7 +84,7 @@ flagging those over crap4ts' default threshold. It never fails and no CI
 lane runs it. With coverage already on disk, `pnpm --filter lit-ui-router
 run crap 25` prints a longer list for one package.
 
-`mise run ci` and `mise run ci_main` are the same invocations CI uses. `pnpm run ci` remains as an alias for the PR pipeline.
+`mise run ci` and `mise run ci_main` run what CI runs: CI splits each into its turbo graph (`ci_graph`, `ci_main_graph`) and one `mise run test_e2e <suite>` job per suite, in parallel ([`build-test-run.yml`](../.github/workflows/build-test-run.yml)). `pnpm run ci` remains as an alias for the PR pipeline's turbo graph.
 
 They are the same invocations, not the same room: CI builds from a fresh
 checkout, a local run reuses whatever `dist/` already holds. No build here
@@ -117,16 +124,20 @@ run can't collide with a turbo task. Install the browsers with
 
 A `Build and Test` job ends with the `Turbo run summary` step. It reads every
 `--summarize` JSON the job wrote (the ci graph, the docs build, the e2e suites)
-and reports only the tasks that failed; turbo's stream also prints `ELIFECYCLE`
-for every task it cancelled. Its headline is a run annotation, so
-`gh run view <run-id>` shows it:
+and reports only the tasks that failed. The ci graph and the e2e suites run with
+`--continue=dependencies-successful`, so one red run reports every independent
+failure, and a task whose dependency failed doesn't run. The docs build stops
+at the first failure, and turbo's stream also prints `ELIFECYCLE` for every task
+it cancelled. The headline is a run annotation, so `gh run view <run-id>` shows
+it:
 
 ```text
 X 1 failing task: @tools/repo-checks#check:task-inputs — 10 succeeded, 217 cached, 229 attempted
 ```
 
 Each failing task gets a log excerpt and two commands, in the step summary and
-in the job log:
+in the job log. The excerpt comes from the task's `.turbo/turbo-<task>.log`,
+or from the `--log-file` JSON the same runs write when that file can't be read:
 
 ```text
 ── @tools/repo-checks#check:task-inputs (exit 1)
@@ -134,14 +145,41 @@ in the job log:
    exact: cd tools/repo-checks && node check-task-inputs.ts
 ```
 
-`gh run view <run-id> --log-failed` returns the whole failed job, thousands of
-lines with the report near the end. Save it to a file and search for `repro:`.
-Run the `repro:` line: `--force` re-runs that task while its dependencies stay
+A test task's excerpt starts at the runner's failure report: `✖ failing tests:`
+for `node --test`, the `Failed Tests` banner for vitest. On Actions each failing
+test is also an `::error` annotation on its assertion line, written by vitest's
+`github-actions` reporter or by `@tools/shared/test-reporter.ts`, the spec
+reporter wrapper every `node --test` script uses except the dependency-free
+`@tools/bootstrap`'s.
+
+A formatting failure (oxfmt or taplo) lists each file and its changed lines in
+the step summary, found by diffing the file against the formatter's stdout. Up
+to three files get an annotation on their first changed line. Past that, or
+when located findings such as tsc errors have used the step's annotation
+slots, one line says how many files need `pnpm format`. The first few files
+also show a short diff. Each file is reported once: a file that both oxfmt and
+taplo flag is run through oxfmt, then taplo, and gets one entry and one patch
+section. The reporter writes every fix to `.turbo/format.patch`,
+which CI uploads as the `format-patch` artifact; the summary prints the
+`gh run download` and `git apply` command.
+
+A red build fails the summary step, not the build step, so the job opens on the
+report. The build step prints output only for failing tasks; the
+`turbo-task-logs` artifact holds every task's full log, and the summary links
+it. Locally, `mise run ci` prints everything unless `TURBO_OUTPUT_LOGS` says
+otherwise.
+
+`gh run view <run-id> --log-failed` returns the whole failed job, with the
+report near the end. Save it to a file and search for `repro:`. Run the `repro:` line: `--force` re-runs that task while its dependencies stay
 cached. `exact:` is the command turbo ran, from the directory it ran in.
 
-Two workflows run the same job:
+Two workflows run the same jobs: `run` for the turbo graph, `plan`, and one
+`e2e (<suites>)` job per group of Cypress suites: one suite per job on PRs and
+`main`, three on the branch lane unless the `E2E_SUITES_PER_JOB_BRANCH` repo
+variable says otherwise. Both lanes also run `e2e result`, which is green only
+when every group is:
 
-- `build-test.yml` (`build_and_test / run`) runs on pull requests and pushes to
+- `build-test.yml` (`build_and_test / run`, `build_and_test / e2e result`) runs on pull requests and pushes to
   `main`. A pull-request run tests the branch merged into `main`, not the
   branch head.
 - `build-test-branch.yml` (`build_and_test (branch) / run`) runs on pushes that
@@ -172,9 +210,12 @@ Where the `repro:` line isn't enough:
   a task (a turbo error, a runner timeout, a cancellation). The full step log
   is the only source.
 - `test:e2e:*` tasks need a server. Reproduce one with `mise run test_e2e <suite>`
-  ([the suite README](../apps/sample-app-lit-e2e/README.md)). The
-  `cypress-videos` and `wrangler-logs` artifacts hold the run's videos and
-  server logs.
+  ([the suite README](../apps/sample-app-lit-e2e/README.md)). A failed suite
+  uploads `cypress-screenshots-<group>` (each failing test's screenshot) and
+  `wrangler-logs-<group>` (server logs); `cypress-videos-<group>` exists only
+  when the `cypressVideo` dispatch input was set. A failed axe pass uploads
+  `axe-screenshots-a11y` (the page of each scan that found violations) and
+  `wrangler-logs-a11y`.
 - The uncapped summaries are the `turbo-run-summaries` artifact:
   `gh run download <run-id> -n turbo-run-summaries`.
 
@@ -198,6 +239,13 @@ vitest's text reporter prints an `Uncovered Line #s` column, and the package's
 that did run shows there, not in the line column). `ui-router-server` runs
 `node --test` instead, which prints an `uncovered lines` column and writes
 `coverage/lcov.info` rewritten to repo-relative paths by `rebase-lcov`.
+Under `node --test --experimental-test-coverage`, a `node:module` load hook
+(`registerHooks`, loaded with `--import`) that rewrites a module's source must
+append to it, never prepend: V8 records coverage as offsets into the loaded
+text and node maps them onto the file on disk, so a prefix moves every hit,
+miss and branch to a neighbouring line in each module it rewrites.
+`lit-ui-router-effect` also uploads `coverage-effect3/` from
+`test:effect3-compat`, where its effect 3 branches run; Codecov merges the two.
 
 To list only the files the branch touched (per file, not per line):
 
@@ -212,6 +260,90 @@ reads lower than CI's. An uncovered line is often an unreachable branch rather
 than a missing test, and the fix can be deleting it.
 `CODECOV_TOKEN` is an upload-only CI secret; it cannot read reports and is not
 needed locally.
+
+### Reading a green run's logs
+
+Every turbo step runs with `TURBO_OUTPUT_LOGS=errors-only`, so
+`gh run view <run-id> --log` holds no output from a passing task, warnings
+included. That output is in each job's task-log artifacts, kept beside the run
+summaries that say which tasks executed; `retention-days` in
+[`build-test-run.yml`](../.github/workflows/build-test-run.yml) has both.
+
+[`tools/ci-logs`](../tools/ci-logs/README.md) writes a run's task logs to one
+file, each executed task's log beside the same task's log from a baseline run.
+Take the baseline from a recent green `main` run of the same workflow, and
+write the file outside the checkout:
+
+```bash
+tools/ci-logs/src/ci-logs.ts <run-id> --baseline <main-run-id> --out <file>
+```
+
+A keyword search finds only output that names itself. To look for anything
+unusual, read every executed task's log in full against its baseline. A cache
+hit replays the log of the run that filled the cache, from another runner and
+possibly another commit, so its browser banner, timings and warnings describe
+that run; the tool lists replays by name only unless given `--replayed`. A
+`main` run usually replays every task its PR executed, so sweep `main` with
+`--replayed`. A `task logs missing` count above zero means a task's log never
+reached the artifact.
+
+Without the tool, `gh run download <run-id> -n <artifact> --dir <empty-dir>`
+fetches one artifact. Each task log is `<package>/.turbo/turbo-<task>.log`,
+with `:` written as `$colon$`; rg skips the hidden `.turbo/` directories unless
+given `--hidden`.
+
+In an `e2e` job, the `E2E` step's duration is the quick tell: seconds for a
+replay, a minute or more for a suite that ran.
+
+`gh api repos/simshanith/lit-ui-router/actions/runs/<run-id>/jobs` lists each
+step's start and end times. Matrix jobs in one run can land on different runner
+images, named in each job log's `Runner Image` group. Match images and browser
+versions before comparing timings, and compare a few runs before calling one
+slow step a trend.
+
+Expected on a green run:
+
+- `lint:examples` warnings from `examples/lint-eslint/src/**/violations.ts`,
+  fixtures that exist to be linted.
+- `gpg: WARNING: This key is not certified with a trusted signature!` from the
+  Codecov uploader's signature check.
+- `actions/checkout`'s `hint:` lines about the default branch name.
+- `GOOGLE_ANALYTICS_TRACKING_ID missing` from the docs build; only the
+  production deploy sets it ([www/DEPLOY.md](../www/DEPLOY.md)).
+- Cypress's Chrome connect retries and workerd's `Broken pipe`; the
+  [suite README](../apps/sample-app-lit-e2e/README.md) says when each matters.
+
+A warning that also shows in a recent `main` run predates the change. A
+`neutral` or `action_required` check from
+[`release-signals.yml`](../.github/workflows/release-signals.yml) is not a
+failure; the workflow header says what each means, and each `release signals`
+job's summary lists its verdicts ([RELEASE.md](RELEASE.md#5-release-signals-release-signalsyml)).
+
+### Benchmarking a change
+
+To check whether a performance change helps, time it with the
+`sample-app-routes` bench
+([`routes.bench.ts`](../apps/sample-app-routes/test/routes.bench.ts)), which
+resolves the sample app's route table through `ui-router-server`.
+
+- The bench imports `ui-router-server` from its `dist/`.
+  `mise exec -- turbo run bench --filter=sample-app-routes` builds it first;
+  `pnpm --filter sample-app-routes bench` does not, so run
+  `mise exec -- turbo run build --filter=ui-router-server` before each run or
+  it times stale code.
+- Alternate the versions on one machine (A, B, A, B) and keep every run's
+  report. Each run overwrites `apps/sample-app-routes/.cache/routes-bench.json`
+  unless given `--json <path>`; `BENCH_TIME_MS` sets tinybench's time budget
+  per task. A single run, or a CI run compared against a local one, is not
+  evidence.
+- Judge a gap against how much the same task moves between runs, not against
+  tinybench's ± RME: that margin comes from thousands of samples in one process
+  and overstates confidence. Where a task is timed both ways in one run, the
+  ratio between the two is the steadiest number to compare.
+- The advisory `acceptance (bench)` job is a short, noisy pulse that catches
+  only order-of-magnitude shifts;
+  [RELEASE.md](RELEASE.md#6-acceptance-acceptanceyml) and
+  [TURBO.md](TURBO.md) describe it.
 
 ## TypeScript authoring
 
@@ -306,7 +438,9 @@ built from the PR itself:
   write whatever helps reviewers, HTML comments and all.
 
 The `Semantic PR` workflow (`.github/workflows/semantic-pr.yml`) enforces the
-title on every PR. The `Commitlint` workflow
+title on every PR. It runs only when GitHub can build a merge ref, so it skips
+a conflicting PR; after resolving the conflict, change the title or description
+to re-run it. The `Commitlint` workflow
 (`.github/workflows/commitlint.yml`) lints the PR's individual commits — the
 messages that become the squash body — with
 [commitlint](https://commitlint.js.org/) via
@@ -434,10 +568,19 @@ when a hunk no longer lands in the installed package. To extend a patch:
 ## Dependency audit
 
 [`dependency-audit.yml`](../.github/workflows/dependency-audit.yml) runs
-`pnpm audit --audit-level high` on every lockfile or workspace-config change to
-`main`, weekly, and on dispatch. It runs outside turbo, so a cached result never
-hides a newly published advisory. Accepted advisories go in the `audit:` section
-of `pnpm-workspace.yaml`.
+`check:audit` ([`tools/repo-checks/check-audit.ts`](../tools/repo-checks/check-audit.ts))
+on every lockfile or workspace-config change to `main`, weekly, and on dispatch.
+It runs outside turbo, so a cached result never hides a newly published
+advisory.
+
+The check runs `pnpm audit` and splits its findings by what reaches them. The
+tree the workspace ships and tests must have no finding at or above `high`.
+Findings only a `peerFloor*` catalog alias reaches are accepted: a peer floor is
+a compatibility claim, and consumers choose their own versions in the range. A
+floor finding at or above `high` with no patched version in the package's
+published peer range fails, since keeping that floor is a support decision.
+Accepted real-tree advisories go in the `audit:` section of
+`pnpm-workspace.yaml`.
 
 ## Releases
 

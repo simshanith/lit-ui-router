@@ -9,61 +9,184 @@
 //    static graph counts: a lazily-imported chunk is the boundary such a claim
 //    is built on (see free-of.ts).
 //
-// Entries and claims derive from package.json (see entries.ts); no arguments.
+// Plus one bundle per entry per bundler per peer line, registry installs
+// inlined:
+//
+// 3. Peer lines — fail when bundling an entry the way a consumer does warns
+//    about this package's own code or does not resolve, at each installed
+//    dependency and peer and each floor or compat alias's older line (an
+//    import that is undefined on one major, a subpath the floor lacks).
+//
+// Entries, claims and peer lines derive from package.json and the installed
+// node_modules (see entries.ts, peer-lines.ts); no arguments.
 // Usage (from the package dir): check-bundle-inputs
 import path from 'node:path';
 
-import { bundleEntry, bundlers, DEVELOPMENT_DEFINE } from './bundle.ts';
-import { readPackageProbe } from './entries.ts';
+import {
+  type BundleResult,
+  bundleEntry,
+  bundlers,
+  DEVELOPMENT_DEFINE,
+} from './bundle.ts';
+import { type PackageProbe, readPackageProbe } from './entries.ts';
 import { violations } from './free-of.ts';
+import { type PeerLine, readPeerLines } from './peer-lines.ts';
 
-const packageDir = process.cwd();
-const { name, declared, entries } = readPackageProbe(packageDir);
+/** Invariants 1 and 2; prints each violation and reports whether none were found. */
+const checkInputs = async (
+  packageDir: string,
+  { name, declared, inlined, entries }: PackageProbe,
+): Promise<boolean> => {
+  // Inputs from the package itself, or from @repo/* source oxc-emit ships inside it.
+  const shipped = [packageDir, ...inlined].map((dir) => dir + path.sep);
 
-let failed = false;
-for (const { label, file, free } of entries) {
-  for (const bundler of bundlers) {
-    // annotations:false keeps side-effect modules in the graph, so an
-    // undeclared import can't hide behind a dist-named sideEffects glob.
-    // DEVELOPMENT_DEFINE, not production: the dev branches are the larger
-    // module graph, so an undeclared import cannot hide behind a folded guard.
-    const result = await bundleEntry(file, bundler, {
-      external: declared,
-      annotations: false,
-      define: DEVELOPMENT_DEFINE,
-    });
-    const { inputs } = result;
-    const reached = free.length > 0 ? violations(result, free) : [];
-    if (reached.length > 0) {
-      failed = true;
+  let ok = true;
+
+  for (const { label, file, free } of entries) {
+    for (const bundler of bundlers) {
+      // annotations:false keeps side-effect modules in the graph, so an
+      // undeclared import can't hide behind a dist-named sideEffects glob.
+      // DEVELOPMENT_DEFINE, not production: the dev branches are the larger
+      // module graph, so an undeclared import cannot hide behind a folded guard.
+      const result = await bundleEntry(file, bundler, {
+        external: declared,
+        annotations: false,
+        define: DEVELOPMENT_DEFINE,
+      });
+
+      const { inputs } = result;
+      const reached = free.length > 0 ? violations(result, free) : [];
+
+      if (reached.length > 0) {
+        ok = false;
+        console.error(
+          `[bundle-probe] ${name} ${label} (${bundler}): static imports from [${free.join(', ')}], which this entry claims to bundle without`,
+        );
+
+        for (const specifier of reached) console.error(`  ${specifier}`);
+      }
+
+      const outside = inputs.filter((input) => {
+        const resolved = path.resolve(packageDir, input);
+
+        return (
+          !input.startsWith('\0') &&
+          !shipped.some((dir) => resolved.startsWith(dir))
+        );
+      });
+
+      if (outside.length === 0) continue;
+      ok = false;
       console.error(
-        `[bundle-probe] ${name} ${label} (${bundler}): static imports from [${free.join(', ')}], which this entry claims to bundle without`,
+        `[bundle-probe] ${name} ${label} (${bundler}): inputs outside the package — undeclared dependency?`,
       );
-      for (const specifier of reached) console.error(`  ${specifier}`);
-    }
-    const outside = inputs.filter(
-      (input) =>
-        !input.startsWith('\0') &&
-        !path.resolve(packageDir, input).startsWith(packageDir + path.sep),
-    );
-    if (outside.length === 0) continue;
-    failed = true;
-    console.error(
-      `[bundle-probe] ${name} ${label} (${bundler}): inputs outside the package — undeclared dependency?`,
-    );
-    for (const input of outside) console.error(`  ${input}`);
-  }
-}
 
-if (failed) process.exit(1);
-console.log(
-  `[bundle-probe] ${name}: exported entries [${entries
-    .map((entry) => entry.label)
-    .join(', ')}] bundle from declared deps only (${bundlers.join(', ')}).`,
-);
-const claimed = entries.filter((entry) => entry.free.length > 0);
-for (const entry of claimed) {
-  console.log(
-    `[bundle-probe] ${name}: ${entry.label} statically bundles without [${entry.free.join(', ')}].`,
+      for (const input of outside) console.error(`  ${input}`);
+    }
+  }
+
+  return ok;
+};
+
+/** Invariant 3; prints each violation and reports whether none were found. */
+const checkPeerLines = async (
+  packageDir: string,
+  { name, declared, entries }: PackageProbe,
+  peerLines: PeerLine[],
+): Promise<boolean> => {
+  // a probed entry is src/*.ts or its dist/*.js emit; both are this package's own files
+  const ownDirs = ['src', 'dist'].map(
+    (dir) => path.join(packageDir, dir) + path.sep,
   );
-}
+
+  const isOwnFile = (file: string | undefined): boolean =>
+    ownDirs.some((dir) => file?.startsWith(dir) === true);
+
+  let ok = true;
+
+  for (const { label, file } of entries) {
+    for (const line of peerLines) {
+      for (const bundler of bundlers) {
+        let result: BundleResult;
+
+        // an import the older line cannot resolve fails the build rather than warning
+        try {
+          result = await bundleEntry(file, bundler, {
+            external: declared.filter((dep) => !line.inline.includes(dep)),
+            alias: { from: packageDir, packages: line.alias },
+            // as above: keeps side-effect modules in the graph
+            annotations: false,
+            define: DEVELOPMENT_DEFINE,
+          });
+        } catch (error) {
+          ok = false;
+          console.error(
+            `[bundle-probe] ${name} ${label} (${bundler}) against ${line.label}: does not bundle`,
+          );
+
+          for (const message of String(error).split('\n').slice(0, 4)) {
+            console.error(`  ${message}`);
+          }
+
+          continue;
+        }
+
+        const { warnings } = result;
+
+        // a peer's own warnings are its maintainers' to fix, not this package's
+        const own = warnings.filter((warning) => isOwnFile(warning.file));
+
+        if (own.length === 0) continue;
+        ok = false;
+        console.error(
+          `[bundle-probe] ${name} ${label} (${bundler}) against ${line.label}: bundler warnings in this package's source`,
+        );
+
+        for (const warning of own) {
+          console.error(`  ${warning.code}: ${warning.message.split('\n')[0]}`);
+        }
+      }
+    }
+  }
+
+  return ok;
+};
+
+const main = async (): Promise<void> => {
+  const packageDir = process.cwd();
+  const probe = readPackageProbe(packageDir);
+  const peerLines = readPeerLines(packageDir);
+  const { name, entries } = probe;
+
+  // both run before the verdict, so one failure never hides the other's output
+  const inputsOk = await checkInputs(packageDir, probe);
+  const peerLinesOk = await checkPeerLines(packageDir, probe, peerLines);
+
+  if (!inputsOk || !peerLinesOk) {
+    process.exitCode = 1;
+
+    return;
+  }
+
+  console.log(
+    `[bundle-probe] ${name}: exported entries [${entries
+      .map((entry) => entry.label)
+      .join(', ')}] bundle from declared deps only (${bundlers.join(', ')}).`,
+  );
+
+  const claimed = entries.filter((entry) => entry.free.length > 0);
+
+  for (const entry of claimed) {
+    console.log(
+      `[bundle-probe] ${name}: ${entry.label} statically bundles without [${entry.free.join(', ')}].`,
+    );
+  }
+
+  for (const line of peerLines) {
+    console.log(
+      `[bundle-probe] ${name}: bundles warning-free against ${line.label}.`,
+    );
+  }
+};
+
+if (import.meta.main) await main();

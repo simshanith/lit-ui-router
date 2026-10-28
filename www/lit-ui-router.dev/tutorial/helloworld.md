@@ -11,6 +11,32 @@ This tutorial will guide you through building your first lit-ui-router applicati
 
 <LiveExample name="helloworld" />
 
+## Start a project
+
+This tutorial's app is the Hello World starter, a Vite + TypeScript project.
+Copy it with [tiged](https://github.com/tiged/tiged), then run `npm install`
+and `npm run dev` in `my-app`:
+
+```bash
+npx tiged simshanith/lit-ui-router/examples/helloworld my-app
+```
+
+The source is
+[`examples/helloworld`](https://github.com/simshanith/lit-ui-router/tree/main/examples/helloworld)
+on GitHub, and it runs in the browser on
+[StackBlitz](https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/helloworld?file=src%2Fmain.ts).
+Its [`index.html`](https://github.com/simshanith/lit-ui-router/blob/main/examples/helloworld/index.html)
+holds the `<div id="root">` host element the app renders into.
+
+To add the router to an existing Vite project, install it with its peers:
+
+```bash
+npm install lit-ui-router lit @uirouter/core
+```
+
+See [Getting started](../introduction#add-to-an-existing-project) for the
+TypeScript settings the code below needs.
+
 ## Full Source Code
 
 Here's the complete source code for this tutorial. Don't worry if it looks overwhelming - we'll break it down step by step below.
@@ -24,7 +50,7 @@ import {
   UIRouterLit,
   uiSref,
   uiSrefActive,
-  LitStateDeclaration,
+  type LitStateDeclaration,
 } from 'lit-ui-router';
 
 @customElement('app-root')
@@ -44,7 +70,7 @@ class AppRoot extends LitElement {
 
   render() {
     return html`
-      <nav>
+      <nav aria-label="Hello World">
         <a ${uiSrefActive({ activeClasses: ['active'] })} ${uiSref('hello')}
           >Hello</a
         >
@@ -108,7 +134,7 @@ import {
   UIRouterLit,
   uiSref,
   uiSrefActive,
-  LitStateDeclaration,
+  type LitStateDeclaration,
 } from 'lit-ui-router';
 ```
 
@@ -165,7 +191,7 @@ The `uiSref` directive creates navigational links to states:
 class AppRoot extends LitElement {
   render() {
     return html`
-      <nav>
+      <nav aria-label="Hello World">
         <a ${uiSrefActive({ activeClasses: ['active'] })} ${uiSref('hello')}
           >Hello</a
         >

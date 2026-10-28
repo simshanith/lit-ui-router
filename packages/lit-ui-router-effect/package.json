@@ -1,8 +1,8 @@
 {
   "name": "lit-ui-router-effect",
-  "version": "0.1.3",
+  "version": "0.6.0",
   "description": "Effect bindings for lit-ui-router: a SubscriptionRef of the route and ref-following Lit ReactiveControllers",
-  "homepage": "https://lit-ui-router.dev/packages/effect",
+  "homepage": "https://lit-ui-router.dev/packages/lit-ui-router-effect",
   "bugs": {
     "url": "https://github.com/simshanith/lit-ui-router/issues"
   },
@@ -36,7 +36,7 @@
     "build:js": "oxc-emit-js --development",
     "build:types": "oxc-emit-dts",
     "changelog": "release-it --changelog --git.tagMatch=\"lit-ui-router-effect@[0-9]*.[0-9]*.[0-9]*\"",
-    "check:bundle": "check-bundle-inputs",
+    "check:bundle": "floor-guard && check-bundle-inputs",
     "check:dev-split": "oxc-emit-check-dev-split",
     "codecov:bundle": "upload-entry-bundles",
     "crap": "crap-report",
@@ -46,11 +46,13 @@
     "lint:oxlint": "oxlint .",
     "test": "VITEST_BROWSER_API_PORT=63350 vitest run",
     "test:coverage": "VITEST_BROWSER_API_PORT=63355 vitest run --coverage",
+    "test:effect3-compat": "effect3-compat-guard && VITE_EXPECT_EFFECT_MAJOR=3 VITEST_BROWSER_API_PORT=63352 vitest run --coverage --coverage.reportsDirectory=./coverage-effect3",
     "test:lit2-compat": "lit2-compat-guard && VITE_EXPECT_LIT_MAJOR=2 VITEST_BROWSER_API_PORT=63351 vitest run",
+    "typecheck:effect3": "effect3-compat-guard && tsc -p tsconfig.effect3.json --noEmit",
     "typecheck:lit2": "lit2-compat-guard && tsc -p tsconfig.lit2-compat.json --noEmit",
-    "typecheck:peer-floor": "peer-floor-guard && tsc -p tsconfig.peer-floor.json --noEmit",
+    "typecheck:peer-floor": "floor-guard && floor-types-guard tsconfig.peer-floor.json && tsc -p tsconfig.peer-floor.json --noEmit",
     "typecheck:src": "tsc -p tsconfig.src.json --noEmit",
-    "typecheck:tsc": "tsc -p tsconfig.json --noEmit"
+    "typecheck:tsc": "tsc -p tsconfig.json --noEmit && tsc -p test-d/tsconfig.json --noEmit"
   },
   "devDependencies": {
     "@release-it/conventional-changelog": "catalog:",
@@ -64,8 +66,11 @@
     "@tools/typedoc-plugin-lit-ui-router": "catalog:workspace",
     "@types/node": "catalog:",
     "@uirouter/core": "catalog:",
+    "@uirouter/core-floor": "catalog:peerFloor",
     "@vitest/coverage-v8": "catalog:",
     "effect": "catalog:",
+    "effect-3": "catalog:effect3-compat",
+    "effect-floor": "catalog:peerFloor",
     "happy-dom": "catalog:",
     "lit": "catalog:",
     "lit-2": "catalog:lit2-compat",
@@ -80,12 +85,14 @@
     "typedoc-vitepress-theme": "catalog:",
     "typescript": "catalog:typescript6-compat",
     "typescript-7": "catalog:",
+    "ui-router-effect": "catalog:workspace",
     "vitest": "catalog:"
   },
   "peerDependencies": {
     "@uirouter/core": "catalog:publishedPeer",
     "effect": "catalog:publishedPeer",
     "lit": "catalog:publishedPeer",
-    "lit-ui-router": "catalog:publishedPeerEffect"
+    "lit-ui-router": "catalog:publishedPeerEffect",
+    "ui-router-effect": "catalog:publishedPeerEffect"
   }
 }

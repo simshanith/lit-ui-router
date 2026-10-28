@@ -1,5 +1,10 @@
-import { LitElement, html, nothing } from 'lit';
-import type { PropertyValues, TemplateResult } from 'lit';
+import { LitElement, html, noChange, nothing } from 'lit';
+import type {
+  PropertyValues,
+  ReactiveController,
+  ReactiveControllerHost,
+  TemplateResult,
+} from 'lit';
 import { property, state } from 'lit/decorators.js';
 import {
   ActiveUIView,
@@ -10,11 +15,11 @@ import {
   StateDeclaration,
   PathNode,
   trace,
-  TransitionHookFn,
   isFunction,
   isString,
   unnestR,
   Param,
+  type RawParams,
   filter,
   ViewContext,
   StateObject,
@@ -28,7 +33,7 @@ import {
   NormalizedLitViewDeclaration,
 } from './interface.js';
 import { LitViewConfig, UIRouterLit, isRoutedLitElement } from './core.js';
-import { routedLitElementRenderer } from './routed-element.js';
+import { routedElementOf, routedLitElementRenderer } from './routed-element.js';
 import { warnMissingRouter } from './dev-warn.js';
 import { UIRouterLitElement } from './ui-router.js';
 import type {
@@ -41,6 +46,8 @@ import {
   isContextRequest,
   parentUiViewContext,
 } from './context.js';
+import { RouterSubscribers, subscribeRouter } from './router-subscription.js';
+import { setViewHost } from './view-rendered.js';
 
 /** @internal */
 let viewIdCounter = 0;
@@ -59,15 +66,51 @@ const isRenderMarker = (node: ChildNode | null): boolean => {
   if (!node || node.nodeType !== COMMENT_NODE) {
     return false;
   }
+
+  // SAFETY: `nodeType` COMMENT_NODE is a Comment
   const { data } = node as Comment;
+
   return data === '' || data.includes('lit-part');
 };
 
+/** Whether `node` sits inside `host`, across shadow roots. */
+const composedContains = (host: Node, node: Node): boolean => {
+  let current: Node | null | undefined = node;
+
+  while (current && current !== host) {
+    // SAFETY: a node with no parent is a shadow root, whose `host` leads out, or the top of its tree
+    current = current.parentNode ?? (current as Partial<ShadowRoot>).host;
+  }
+
+  return current === host;
+};
+
+/** The attribute marking a view's routed element. */
+const ROUTED_ATTRIBUTE = 'routed';
+
+/** An element that may be a `ReactiveElement`, which reports its first update. */
+type MaybeReactive = Element &
+  Partial<ReactiveControllerHost & { readonly hasUpdated: boolean }>;
+
+/** The incoming element a swap waits on, and how to stop waiting. */
+interface PendingSwap {
+  element: Element;
+  cancel: () => void;
+}
+
 /** @internal */
-export interface UiViewAddress {
+interface ViewAddress {
   context: ViewContext | StateObject;
   fqn: string;
 }
+
+export type {
+  /**
+   * @internal
+   * @deprecated `<ui-view>` plumbing, not a supported import (#541).
+   */
+  ViewAddress as UiViewAddress,
+};
 
 type deregisterFn = () => void;
 
@@ -105,6 +148,9 @@ const noParentViewUnsubscribe = () => {};
  * The <code>&lt;ui-view&gt;</code> component is a viewport for routed components.
  * Routed components will be rendered inside the <code>&lt;ui-view&gt;</code> viewport.
  *
+ * Its children are internal: read the routed component's element through
+ * <code>routedElement</code>, or select it with <code>ui-view &gt; [routed]</code>.
+ *
  * Whatever the author wrote inside the element, ahead of any render, is this
  * view's fallback set: it stands in the document while no component occupies
  * the view, parks while one does, and comes back when none does.
@@ -126,7 +172,7 @@ export class UiView extends LitElement {
   uiRouter!: UIRouterLit;
 
   @state()
-  private viewAddress!: UiViewAddress;
+  private viewAddress!: ViewAddress;
 
   /** Replaced only by a real view config change, so a retained view keeps its subtree. */
   @state()
@@ -146,6 +192,24 @@ export class UiView extends LitElement {
   /** Whether those nodes sit in the fragment rather than in the light DOM. */
   private fallbackParked = true;
 
+  /** The element a class component rendered; a template component leaves it unset. */
+  private classElement?: Element;
+
+  /**
+   * Two places for class elements: an incoming element takes the free one, so
+   * the element it replaces stands until the incoming one has rendered.
+   */
+  private readonly elementSlots: (Element | typeof nothing)[] = [
+    nothing,
+    nothing,
+  ];
+
+  /** The incoming element whose first update retires the one it replaces. */
+  private pendingSwap?: PendingSwap;
+
+  /** The element carrying the `routed` attribute. */
+  private markedElement?: Element;
+
   /** @internal */
   createRenderRoot(): this {
     return this;
@@ -161,6 +225,7 @@ export class UiView extends LitElement {
     if (!config) {
       this.component = null;
       this.requestUpdate();
+
       return;
     }
 
@@ -190,6 +255,7 @@ export class UiView extends LitElement {
     this.resolveContext = new ResolveContext(config.path);
     // Past the identity gate, so the config genuinely changed: a fresh renderer
     // here is what drops the old element.
+    // SAFETY: `litViewsBuilder` normalizes every view declaration of a lit state
     const { component } = config.viewDecl as NormalizedLitViewDeclaration;
     this.component = isRoutedLitElement(component)
       ? routedLitElementRenderer(component)
@@ -205,6 +271,7 @@ export class UiView extends LitElement {
     if (event.composedPath()[0] === this) {
       return;
     }
+
     // handle event; provide self as parent
     event.stopPropagation();
     event.detail.parentView = this;
@@ -224,6 +291,7 @@ export class UiView extends LitElement {
     ) {
       return;
     }
+
     event.stopImmediatePropagation();
     event.callback(this, event.subscribe ? noParentViewUnsubscribe : undefined);
   };
@@ -233,6 +301,7 @@ export class UiView extends LitElement {
     super.connectedCallback();
     this.addEventListener(
       this.constructor.uiViewContextEventName,
+      // SAFETY: only `UiViewContextEvent`s are dispatched under this name
       this.onUiViewContextEvent as EventListener,
     );
     this.addEventListener(
@@ -240,6 +309,7 @@ export class UiView extends LitElement {
       this.onParentViewContextRequest,
     );
     this.setupUiView();
+
     if (this.hasUpdated) {
       // Re-attached under another provider: the seek above was skipped, the router it holds may no longer be the enclosing one.
       this.adoptProvidedRouter();
@@ -266,6 +336,7 @@ export class UiView extends LitElement {
   static seekParentView(candidate: Element): ParentView | null {
     const uiViewContextEvent = this.uiViewContextEvent();
     candidate.dispatchEvent(uiViewContextEvent);
+
     return uiViewContextEvent.detail.parentView;
   }
 
@@ -273,29 +344,50 @@ export class UiView extends LitElement {
     this.parentView = this.constructor.seekParentView(this);
   }
 
+  // eslint-disable-next-line typescript/no-deprecated -- the house ui-router-context path stays answered until 2.0 (#874)
   private readonly onUiRouterContextEvent = (event: UiRouterContextEvent) => {
     // Answering our own re-seek would just hand back the router we are replacing.
     if (this.seekingProvidedRouter) {
       return;
     }
+
+    // eslint-disable-next-line typescript/no-deprecated -- the house ui-router-context path stays answered until 2.0 (#874)
     UIRouterLitElement.onUiRouterContextEvent(this.uiRouter)(event);
   };
 
-  /** Answers `context-request` for the router, so a `@lit/context` consumer under this view is served too. */
+  /** Subscribers that took a router this view may still supersede. */
+  private readonly routerSubscribers = new RouterSubscribers();
+
+  /**
+   * Answers `context-request` for the router, so a `@lit/context` consumer
+   * under this view is served too.
+   *
+   * While the router this view holds is a sought one its provider may still
+   * replace, a `subscribe` request is kept and called once more with the router
+   * this view adopts.
+   */
   private readonly onContextRequest = (event: Event) => {
     if (this.seekingProvidedRouter) {
       return;
     }
-    UIRouterLitElement.onContextRequest(this.uiRouter)(event);
+
+    this.routerSubscribers.answer(
+      event,
+      this.uiRouter,
+      !!this.providerSubscription && this.uiRouter === this.soughtRouter,
+    );
   };
 
   private seekRouter() {
     if (!this.uiRouter) {
-      this.soughtRouter = UIRouterLitElement.seekRouter(this);
+      this.soughtRouter = this.seekProvidedRouter();
       this.uiRouter = this.soughtRouter!;
     }
+
     this.addEventListener(
+      // eslint-disable-next-line typescript/no-deprecated -- the house ui-router-context path stays answered until 2.0 (#874)
       UIRouterLitElement.uiRouterContextEventName,
+      // SAFETY: only `UiRouterContextEvent`s are dispatched under this name
       this.onUiRouterContextEvent as EventListener,
     );
     this.addEventListener(contextRequestEventName, this.onContextRequest);
@@ -317,6 +409,15 @@ export class UiView extends LitElement {
   /** Set only for the synchronous span of our own re-seek. */
   private seekingProvidedRouter = false;
 
+  /** Drops this view's subscription to its provider; set while the provider may still replace its router. */
+  private providerSubscription?: () => void;
+
+  /** The provider replaced the router this view sought: adopt it, and pass it on. */
+  private readonly onProvidedRouterReplaced = () => {
+    this.providerSubscription = undefined;
+    this.adoptProvidedRouter();
+  };
+
   /**
    * Seeks the provider's router, past our own answer.
    *
@@ -325,9 +426,18 @@ export class UiView extends LitElement {
    * dispatch keeps the guarantee intact for everyone else.
    */
   private seekProvidedRouter(): UIRouterLit | undefined {
+    this.providerSubscription?.();
     this.seekingProvidedRouter = true;
+
     try {
-      return UIRouterLitElement.seekRouter(this);
+      const { router, unsubscribe } = subscribeRouter(
+        this,
+        this.onProvidedRouterReplaced,
+      );
+
+      this.providerSubscription = unsubscribe;
+
+      return router;
     } finally {
       this.seekingProvidedRouter = false;
     }
@@ -362,6 +472,7 @@ export class UiView extends LitElement {
 
     const assigned = !!this.uiRouter && this.uiRouter !== this.soughtRouter;
     const router = assigned ? this.uiRouter : this.seekProvidedRouter();
+
     if (!router || router === this.registeredRouter) {
       return;
     }
@@ -369,9 +480,11 @@ export class UiView extends LitElement {
     if (!assigned) {
       this.soughtRouter = router;
     }
+
     this.deregisterAll();
     this.uiRouter = router;
     this.setupUiView();
+    this.routerSubscribers.deliver(router);
   }
 
   private deregisterAll(): void {
@@ -391,10 +504,12 @@ export class UiView extends LitElement {
    */
   private authoredPrefix(): ChildNode[] {
     const authored: ChildNode[] = [];
+
     for (const child of this.childNodes) {
       if (isRenderMarker(child)) break;
       authored.push(child);
     }
+
     return authored;
   }
 
@@ -414,6 +529,7 @@ export class UiView extends LitElement {
     if (this.captured || isRenderMarker(this.firstChild)) {
       return;
     }
+
     this.captured = true;
     this.fallback ??= document.createDocumentFragment();
     this.fallbackNodes = this.authoredPrefix();
@@ -436,10 +552,13 @@ export class UiView extends LitElement {
     if (this.captured) {
       return;
     }
+
     const authored = this.authoredPrefix();
+
     if (!authored.length) {
       return;
     }
+
     this.captured = true;
     this.fallback ??= document.createDocumentFragment();
     this.fallbackNodes = authored;
@@ -461,10 +580,13 @@ export class UiView extends LitElement {
   private placeFallback(): void {
     const fallback = this.fallback;
     const park = !this.showsFallback;
+
     if (!fallback || park === this.fallbackParked) {
       return;
     }
+
     this.fallbackParked = park;
+
     if (park) {
       fallback.append(...this.fallbackNodes);
     } else {
@@ -481,30 +603,39 @@ export class UiView extends LitElement {
     const name = this.name || '$default';
 
     const parentFqn = parentView?.fqn;
+
     const creationContext =
       parentView?.viewContext || router?.stateRegistry.root();
+
     const fqn = parentFqn ? parentFqn + '.' + name : name;
 
-    this._uiViewData = {
-      $type: 'lit',
-      id: viewId,
-      name,
-      fqn,
-      creationContext,
-      configUpdated: this._viewConfigUpdated.bind(this),
-      config: undefined as unknown as ViewConfig,
-    };
+    const registration: Omit<ActiveUIView, 'config'> & { config?: ViewConfig } =
+      {
+        $type: 'lit',
+        id: viewId,
+        name,
+        fqn,
+        creationContext,
+        configUpdated: this._viewConfigUpdated.bind(this),
+        config: undefined,
+      };
+
+    // SAFETY: ui-router calls `configUpdated` with a config before anything reads `config`
+    this._uiViewData = registration as ActiveUIView;
+    setViewHost(this._uiViewData, this);
 
     if (!router) {
       return;
     }
 
+    // SAFETY: hook registration returns its deregistration function
     this.disconnectedHandlers.push(
       router.transitionService.onBefore({}, (trans) => {
         return this._invokeUiCanExitHook(trans);
       }) as deregisterFn,
     );
 
+    // SAFETY: hook registration returns its deregistration function
     this.disconnectedHandlers.push(
       router.transitionService.onSuccess({}, (trans) =>
         this._invokeUiOnParamsChangedHook(trans),
@@ -522,6 +653,7 @@ export class UiView extends LitElement {
     super.disconnectedCallback();
     this.removeEventListener(
       this.constructor.uiViewContextEventName,
+      // SAFETY: only `UiViewContextEvent`s are dispatched under this name
       this.onUiViewContextEvent as EventListener,
     );
     this.removeEventListener(
@@ -529,6 +661,8 @@ export class UiView extends LitElement {
       this.onParentViewContextRequest,
     );
 
+    this.providerSubscription?.();
+    this.providerSubscription = undefined;
     this.deregisterAll();
   }
 
@@ -541,8 +675,10 @@ export class UiView extends LitElement {
    * If both are true, adds the uiCanExit component function as a hook to that singular Transition.
    */
   private _invokeUiCanExitHook(trans: Transition) {
-    const instance = this.firstElementChild as UiOnExit & Element;
-    const uiCanExitFn: TransitionHookFn = instance?.uiCanExit;
+    const instance: (Partial<UiOnExit> & Element) | null = this.routedElement;
+
+    const uiCanExitFn = instance?.uiCanExit;
+
     if (isFunction(uiCanExitFn)) {
       const state: StateDeclaration = this.state;
 
@@ -554,10 +690,33 @@ export class UiView extends LitElement {
     }
   }
 
+  /**
+   * The element the routed component rendered: a class component's instance,
+   * or the first element a template component rendered. `null` while the
+   * fallback set shows.
+   *
+   * The view's children are internal, so read the routed element here rather
+   * than through `firstElementChild` or child selectors. While a class
+   * component replaces another, both stand until the incoming element has
+   * rendered, and this is the incoming one.
+   *
+   * The same element carries the `routed` attribute, for CSS:
+   * `ui-view > [routed]`.
+   */
+  get routedElement(): Element | null {
+    return (
+      this.classElement ?? (this.showsFallback ? null : this.firstElementChild)
+    );
+  }
+
   /** @internal */
   requestUpdate(...args: Parameters<LitElement['requestUpdate']>): void {
     super.requestUpdate(...args);
-    const instance = this.firstElementChild as LitElement;
+
+    const instance:
+      | (Partial<Pick<LitElement, 'requestUpdate'>> & Element)
+      | null = this.routedElement;
+
     if (isFunction(instance?.requestUpdate)) {
       instance.requestUpdate();
     }
@@ -570,14 +729,16 @@ export class UiView extends LitElement {
     // Fresh resolves need a re-render; `render` reuses the element rather than rebuilding it.
     this.requestUpdate();
 
-    const instance = this.firstElementChild as UiOnParamsChanged & Element;
-    const uiOnParamsChanged: TransitionHookFn = instance?.uiOnParamsChanged;
+    const instance: (Partial<UiOnParamsChanged> & Element) | null =
+      this.routedElement;
 
-    if (isFunction(uiOnParamsChanged)) {
+    if (isFunction(instance?.uiOnParamsChanged)) {
       const viewState = this.state;
+
       const resolveContext: ResolveContext = new ResolveContext(
         this._uiViewData.config.path,
       );
+
       const viewCreationTrans: unknown =
         resolveContext.getResolvable('$transition$').data;
 
@@ -589,15 +750,17 @@ export class UiView extends LitElement {
       )
         return;
 
-      const toParams: { [paramName: string]: unknown } =
-        $transition$.params('to');
-      const fromParams: { [paramName: string]: unknown } =
-        $transition$.params('from');
+      const toParams: RawParams = $transition$.params('to');
+
+      const fromParams: RawParams = $transition$.params('from');
+
       const getNodeSchema = (node: PathNode) => node.paramSchema;
+
       const toSchema: Param[] = $transition$
         .treeChanges('to')
         .map(getNodeSchema)
         .reduce<Param[]>(unnestR, []);
+
       const fromSchema: Param[] = $transition$
         .treeChanges('from')
         .map(getNodeSchema)
@@ -606,6 +769,7 @@ export class UiView extends LitElement {
       // Find the to params that have different values than the from params
       const changedToParams = toSchema.filter((param: Param) => {
         const idx = fromSchema.indexOf(param);
+
         return (
           idx === -1 ||
           !fromSchema[idx].type.equals(toParams[param.id], fromParams[param.id])
@@ -615,10 +779,12 @@ export class UiView extends LitElement {
       // Only trigger callback if a to param has changed or is new
       if (changedToParams.length) {
         const changedKeys: string[] = changedToParams.map((x) => x.id);
+
         // Filter the params to only changed/new to params.  `$transition$.params()` may be used to get all params.
         const newValues = filter(toParams, (_, key) =>
           changedKeys.includes(key!),
         );
+
         instance.uiOnParamsChanged(newValues, $transition$);
       }
     }
@@ -636,6 +802,7 @@ export class UiView extends LitElement {
 
   /** @internal */
   public get state(): StateDeclaration {
+    // SAFETY: a lit view's `$context` is the StateObject that declared it
     return (this.viewContext as StateObject).self;
   }
 
@@ -651,9 +818,11 @@ export class UiView extends LitElement {
    */
   protected willUpdate(changed: PropertyValues<this>): void {
     super.willUpdate(changed);
+
     if (!this.hasUpdated) {
       this.adoptProvidedRouter();
     }
+
     this.placeFallback();
   }
 
@@ -668,8 +837,28 @@ export class UiView extends LitElement {
    *
    * @internal
    */
+  /** @internal */
+  protected updated(changed: PropertyValues): void {
+    super.updated(changed);
+    this.markRoutedElement();
+  }
+
+  /** Moves the `routed` attribute onto the current routed element. */
+  private markRoutedElement(): void {
+    const element = this.routedElement ?? undefined;
+
+    if (element === this.markedElement) {
+      return;
+    }
+
+    this.markedElement?.removeAttribute(ROUTED_ATTRIBUTE);
+    element?.setAttribute(ROUTED_ATTRIBUTE, '');
+    this.markedElement = element;
+  }
+
   protected firstUpdated(changed: PropertyValues): void {
     super.firstUpdated(changed);
+
     if (!this.uiRouter) {
       warnMissingRouter(this, '<ui-view>', 'will never render a routed view');
     }
@@ -679,28 +868,150 @@ export class UiView extends LitElement {
    * The routed component's template, or nothing while the fallback set stands
    * in the light DOM on its own.
    */
-  render(): TemplateResult | typeof nothing {
+  render(): TemplateResult | typeof nothing | typeof noChange {
+    // Inside an element its parent is retiring, so a config routed here is the incoming element's to render.
+    if (this.parentView instanceof UiView && this.parentView.retires(this)) {
+      return noChange;
+    }
+
     if (this.showsFallback) {
+      this.dropElements();
+
       // Nothing captured, so never connected (server render) or holding a render's nodes: an empty declarative shadow root would hide the light DOM.
       return this.fallback ? nothing : html`<slot></slot>`;
     }
 
-    const { uiRouter: router, component } = this;
-    const injector = this.resolveContext.injector();
-    const resolvables = this.resolveContext
-      .getTokens()
-      .filter((token) => isString(token))
-      .map((token) => this.resolveContext.getResolvable(token))
-      .filter((r) => r.resolved);
+    const { uiRouter: router, component, resolveContext: context } = this;
+    const injector = context.injector();
 
-    const resolves = resolvables
-      .map(({ token }) => [token as string, injector.get(token) as unknown])
+    // The injector hands a NOWAIT token's promise, which renders before it settles.
+    const resolves = context
+      .getTokens()
+      .filter(isString)
+      .filter((token) => {
+        const resolvable = context.getResolvable(token);
+
+        return (
+          resolvable.resolved ||
+          context.getPolicy(resolvable).async === 'NOWAIT'
+        );
+      })
+      .map((token): [string, unknown] => [token, injector.get<unknown>(token)])
       .reduce(applyPairs, {});
-    const transition = injector.get(Transition) as Transition;
+
+    const transition = injector.get<Transition>(Transition);
 
     const props: UIViewInjectedProps = { router, resolves, transition };
 
-    return component!(props);
+    const result = component!(props);
+    const element = routedElementOf(result);
+
+    if (!element) {
+      this.dropElements();
+
+      return result;
+    }
+
+    return this.placeElement(element);
+  }
+
+  /**
+   * Renders `element` beside the one it replaces, which stands until
+   * `element` has rendered: lit would otherwise remove it before inserting one
+   * that has not.
+   */
+  private placeElement(element: Element): TemplateResult {
+    const slots = this.elementSlots;
+
+    if (element !== this.classElement) {
+      // An incoming element that never rendered gives way, so the one on screen stays.
+      const superseded = this.cancelPendingSwap();
+
+      if (superseded) {
+        slots[slots.indexOf(superseded)] = nothing;
+      }
+
+      this.classElement = element;
+
+      if (!slots.includes(element)) {
+        slots[slots.indexOf(nothing)] = element;
+      }
+
+      if (this.outgoingElement) {
+        this.awaitFirstUpdate(element);
+      }
+    }
+
+    return html`${slots[0]}${slots[1]}`;
+  }
+
+  /** The element standing beside the current one until that one has rendered. */
+  private get outgoingElement(): Element | undefined {
+    for (const slot of this.elementSlots) {
+      if (slot !== nothing && slot !== this.classElement) return slot;
+    }
+
+    return undefined;
+  }
+
+  /** Retires the outgoing element once `element` has completed its first update. */
+  private awaitFirstUpdate(element: MaybeReactive): void {
+    const retire = () => this.retire(element);
+
+    if (!isFunction(element.addController) || element.hasUpdated) {
+      void Promise.resolve().then(retire);
+      this.pendingSwap = { element, cancel: () => {} };
+
+      return;
+    }
+
+    const controller: ReactiveController = { hostUpdated: retire };
+
+    element.addController(controller);
+    this.pendingSwap = {
+      element,
+      cancel: () => {
+        // Deferred: lit iterates the controllers while it runs hostUpdated.
+        void Promise.resolve().then(() =>
+          element.removeController?.(controller),
+        );
+      },
+    };
+  }
+
+  /** Stops waiting on the pending incoming element, and returns it. */
+  private cancelPendingSwap(): Element | undefined {
+    const pending = this.pendingSwap;
+    this.pendingSwap = undefined;
+    pending?.cancel();
+
+    return pending?.element;
+  }
+
+  /** Whether `node` sits in the element this view is retiring. */
+  private retires(node: Node): boolean {
+    const outgoing = this.outgoingElement;
+
+    return !!outgoing && composedContains(outgoing, node);
+  }
+
+  private dropElements(): void {
+    this.cancelPendingSwap();
+    this.classElement = undefined;
+    this.elementSlots.fill(nothing);
+  }
+
+  /** Drops the element `incoming` replaced, unless the swap was settled or a later one took over. */
+  private retire(incoming: Element): void {
+    if (this.pendingSwap?.element !== incoming) {
+      return;
+    }
+
+    this.cancelPendingSwap();
+    const slots = this.elementSlots;
+    slots[slots[0] === incoming ? 1 : 0] = nothing;
+    // The routed element has nothing new to render.
+    super.requestUpdate();
   }
 }
 

@@ -29,8 +29,14 @@ client deployed across every point on the server-support spectrum.
 - [Route Guards](./route-guards) — protect states with transition hooks: the
   `requiresAuth` pattern, redirect-to-login, and returning the user after
   authentication
+- [Loading and Error Views](./loading-and-error-views) — a pending indicator
+  while a transition runs, skeletons for `NOWAIT` resolves, and an error view
+  with retry when a transition fails
 - [Component Lifecycle Hooks](./component-lifecycle) — `uiCanExit` for
   unsaved-changes prompts and `uiOnParamsChanged` for dynamic parameters
+- [Routed Components](./routed-components) — reading a state's params
+  through a resolve, and code-splitting a route's element with an awaited
+  import or a `lazyLoad` future state
 
 ## Links & Markup
 
@@ -57,7 +63,7 @@ client deployed across every point on the server-support spectrum.
 
 ## Companion Packages
 
-The [MobX bindings](/packages/mobx) and the
+The [MobX bindings](/packages/lit-ui-router-mobx) and the
 [Navigation API location plugin](/packages/navigation-plugin) are optional
 [companion packages](/packages/) — each independently versioned, with its own
 guide and API reference. [`ui-router-server`](/packages/server), the

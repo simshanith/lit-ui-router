@@ -6,6 +6,7 @@ import {
   UIViewInjectedProps,
   RoutedLitElement,
 } from 'lit-ui-router';
+import type { TypedStateService } from 'ui-router-registry';
 
 import AuthService from '../global/authService.js';
 import './NavHeader.js';
@@ -31,7 +32,7 @@ export class App extends LitElement {
   // named ui-view visibility (displayActive) in sync with the active state.
   transitions = new TransitionController(this);
 
-  get stateService() {
+  get stateService(): TypedStateService {
     return this._uiViewProps.router.stateService;
   }
 
@@ -56,15 +57,17 @@ export class App extends LitElement {
         <div class="navheader">
           <sample-nav-header @logout=${this.handleLogout}></sample-nav-header>
         </div>
-        <ui-view></ui-view>
-        <ui-view
-          name="mymessages"
-          style=${this.displayActive('mymessages.**')}
-        ></ui-view>
-        <ui-view
-          name="contacts"
-          style=${this.displayActive('contacts.**')}
-        ></ui-view>
+        <main>
+          <ui-view></ui-view>
+          <ui-view
+            name="mymessages"
+            style=${this.displayActive('mymessages.**')}
+          ></ui-view>
+          <ui-view
+            name="contacts"
+            style=${this.displayActive('contacts.**')}
+          ></ui-view>
+        </main>
       </div>
     `;
   }

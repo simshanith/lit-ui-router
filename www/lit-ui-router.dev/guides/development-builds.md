@@ -5,11 +5,12 @@ description: How lit-ui-router ships a separate development build, what warnings
 
 # Development and Production Builds
 
-`lit-ui-router` and `lit-ui-router-mobx` each publish two builds of the same
-code. Your bundler picks one automatically through the `development` export
+The packages in the table below each publish two builds of the same code.
+Your bundler picks one automatically through the `development` export
 condition: a dev server or a development build resolves
 `dist/development/index.js`, a production build resolves `dist/index.js`.
-There is nothing to install, configure, or opt into.
+There is nothing to install, configure, or opt into. Server runtimes that run
+without a bundler choose differently; see [Server runtimes](#server-runtimes).
 
 The two builds behave identically except for one thing: the development build
 carries console warnings that the production build does not. Those warnings are
@@ -19,15 +20,15 @@ message strings included. A production bundle cannot be made to print them.
 
 ## Which packages ship it
 
-| Package                       | Two builds | Why                                              |
-| ----------------------------- | ---------- | ------------------------------------------------ |
-| `lit-ui-router`               | yes        | three development warnings                       |
-| `lit-ui-router-effect`        | yes        | one development warning                          |
-| `lit-ui-router-mobx`          | yes        | one development warning                          |
-| `lit-ui-router-ssr`           | yes        | one development warning                          |
-| `navigation-location-plugin`  | no         | no runtime warnings to fold out                  |
-| `ui-router-server`            | no         | no runtime warnings to fold out                  |
-| `eslint-plugin-lit-ui-router` | no         | a lint plugin — it never runs in your app bundle |
+| Package                       | Two builds | Why                                               |
+| ----------------------------- | ---------- | ------------------------------------------------- |
+| `lit-ui-router`               | yes        | three development warnings                        |
+| `lit-ui-router-effect`        | yes        | one development warning                           |
+| `lit-ui-router-mobx`          | yes        | one development warning                           |
+| `lit-ui-router-ssr`           | yes        | ten development warnings; also gated under `node` |
+| `navigation-location-plugin`  | no         | no runtime warnings to fold out                   |
+| `ui-router-server`            | yes        | one development warning; also gated under `node`  |
+| `eslint-plugin-lit-ui-router` | no         | a lint plugin — it never runs in your app bundle  |
 
 The split exists where there is something to strip. A package with a single
 build is not missing a feature.
@@ -38,7 +39,8 @@ their own `development` condition.
 
 ## The second gate: lit's own build
 
-Every warning here is gated twice. Past `import.meta.env.DEV`, it also checks
+Every warning in `lit-ui-router`, `lit-ui-router-effect`, `lit-ui-router-mobx`
+and `lit-ui-router-signals` is gated twice. Past `import.meta.env.DEV`, it also checks
 that lit itself resolved to its development build, by probing for
 `ReactiveElement.enableWarning` — a method lit declares optional precisely
 because it exists only in development.
@@ -47,6 +49,9 @@ So a development build of these packages paired with a production lit stays
 silent. That pairing is unusual, but it is what a consumer gets when their
 bundler resolves the two packages under different conditions, and a warning
 that fires there would be noise rather than signal.
+
+`lit-ui-router-ssr` skips this gate: a prerender script run with plain `node`
+resolves lit's production build, so its warnings would never fire.
 
 ## The warnings
 
@@ -74,6 +79,97 @@ observes nothing. `.value` stays at `options.initialValue` for the life of the
 host, and the host is never asked to update — so the symptom is a component
 that renders once with its initial value and never again.
 
+### `ui-router-server`
+
+| Warning                                  | Fires when                                                                                                                       | Fix                                                                                    |
+| ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| a mount answers its bare base with a 404 | `createServerRouter` compiles a mount other than `/` whose bare base (`/app`) resolves to `notFound` or an `otherwise` shell-404 | Add a `url: ''` route, or a redirect rule matching the empty subpath such as `/^\/?$/` |
+
+It is a development-only warning, but the check is not.
+[`diagnoseMounts(router)`](/api/ui-router-server/index/functions/diagnoseMounts)
+returns the same findings as data in every build, so asserting it is empty in
+a test catches the problem in CI, whichever build the test resolves. See
+[Server Route Matching](./server-route-matching).
+
+A mount that answers its bare base with a 404 on purpose lists the kind in its
+[`ignoreDiagnostics`](/api/ui-router-server/index/interfaces/MountConfig#ignorediagnostics),
+which turns it off for that mount in the warning and in `diagnoseMounts` alike.
+
+## Server runtimes
+
+Server runtimes pick a build by their own export conditions.
+`lit-ui-router-ssr` and `ui-router-server` map `node` to their development
+builds too, so a prerender script or a Node server reports what it skipped. A
+`production` condition ahead of `node` takes the production build back, so a
+production server bundle carries no warnings. Each warning in the development
+build also asks the package's `#dev-gate` import (`imports` in its
+`package.json`): under `node` it reads `process.env.NODE_ENV` when the warning
+would fire and stays silent for `production`; under every other condition it
+always answers yes. `deno` keeps the production build, because reading
+`NODE_ENV` there needs `--allow-env`.
+
+### The setup we run
+
+lit-ui-router.dev serves its sample apps through `ui-router-server` on
+Cloudflare Workers, and every change to this repo is tested on that path:
+
+- **Develop with Vite.** Build the router in the Vite config and hand it to
+  `serverRouterPlugin`, as the site's
+  [`.vitepress/vite.config.ts`](https://github.com/simshanith/lit-ui-router/blob/main/www/lit-ui-router.dev/.vitepress/vite.config.ts)
+  does. The config loader resolves the development build, so warnings print
+  in the terminal. Nothing to set.
+- **Assert in CI.** A unit test asserts that
+  `diagnoseMounts(createServerRouter({ mounts }))` returns `[]`, as
+  [`apps/sample-app-routes/test/routes.test.ts`](https://github.com/simshanith/lit-ui-router/blob/main/apps/sample-app-routes/test/routes.test.ts)
+  does. It reports in every build, so it catches what a dev run never reaches.
+- **Preview the Worker** with `wrangler dev` on the development build, setting
+  `WRANGLER_BUILD_CONDITIONS` on the command that starts it as
+  [below](#what-to-set). The site's
+  [`scripts/wrangler-dev.ts`](https://github.com/simshanith/lit-ui-router/blob/main/www/lit-ui-router.dev/scripts/wrangler-dev.ts)
+  launcher does this by default.
+- **Test the production build.** The e2e suites serve the Worker with the
+  conditions `wrangler deploy` uses, so they test the production build that
+  ships; see
+  [`run-e2e.ts`](https://github.com/simshanith/lit-ui-router/blob/main/apps/sample-app-lit-e2e/scripts/run-e2e.ts).
+
+Elsewhere, develop on the development build and deploy with
+`NODE_ENV=production` or a `production` condition. A Node or Bun server
+deployed with neither warns once at boot for each mount that 404s its bare
+base, as Express and React warn in the same case.
+
+### Other runtimes
+
+| Runtime or bundler                                   | Build it resolves                                                                          | Warns                                 |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------- |
+| plain `node`, Bun                                    | development, through `node`                                                                | unless `NODE_ENV=production`          |
+| `node -C development`                                | development                                                                                | unless `NODE_ENV=production`          |
+| `node -C production`                                 | production                                                                                 | never                                 |
+| vitest, jest                                         | development                                                                                | unless `NODE_ENV=production`          |
+| Vite SSR dev, the Vite config loader                 | development                                                                                | unless `NODE_ENV=production`          |
+| `vite build --ssr`                                   | production, through `production`                                                           | never                                 |
+| webpack targeting node                               | the build its `mode` names, through `development` or `production`                          | only in `mode: 'development'`         |
+| esbuild or Rollup targeting node                     | development, with the `NODE_ENV` read bundled; production under the `production` condition | as the bundle's `NODE_ENV` says       |
+| Deno                                                 | production, through `deno`; development under `--conditions`                               | only under `--conditions=development` |
+| Workers, browsers, esbuild or Rollup for the browser | production; development under the `development` condition                                  | only in the development build         |
+
+Only the `node` side of `#dev-gate` mentions `process`, so a Worker or browser
+bundle never contains it.
+
+### What to set
+
+- **Bundling a server for production with esbuild or Rollup:** pass the
+  `production` condition (esbuild `--conditions=production`, or `production`
+  in node-resolve's `exportConditions`). Without it, the bundle ships the
+  development build and the `NODE_ENV` read.
+- **Deploying on Node or Bun:** set `NODE_ENV=production`, or run
+  `node -C production`.
+- **Development warnings on Deno or Workers:** opt in with the `development`
+  condition: Deno's `--conditions=development`, or
+  `WRANGLER_BUILD_CONDITIONS=development,workerd,worker,browser` (wrangler's
+  own list plus `development`) on the command that starts `wrangler dev`.
+  Never set it in `.env`, which `wrangler deploy` also loads.
+- **Vite, vitest, jest and webpack:** nothing to set.
+
 ## What still warns in production
 
 Two warnings are not part of the split and ship in both builds: `<ui-router>`
@@ -97,10 +193,11 @@ development run may never reach.
 
 ## How the split is kept honest
 
-Each of the two packages declares its development-only message prefixes in a
+Each package with two builds declares its development-only message prefixes in a
 `dev-warnings.json` beside its manifest. The `check:dev-split` task
 (`@tools/oxc-emit`) reads that list after a build and asserts both directions:
 every declared prefix appears in `dist/development/*.js`, and none appears in
 `dist/*.js`. Adding a warning behind the `import.meta.env.DEV` guard without
 declaring it fails the check — so the list cannot silently drift from the code,
-in either direction.
+in either direction. The same task fails any emitted file that mentions
+`process` unless a `package.json#imports` `node` target reaches it.

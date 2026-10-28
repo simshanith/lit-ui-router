@@ -19,6 +19,11 @@ on:
       - 'eslint-plugin-lit-ui-router@*'
       - 'lit-ui-router-effect@*'
       - 'lit-ui-router-ssr@*'
+      - 'ui-router-signals@*'
+      - 'lit-ui-router-signals@*'
+      - 'ui-router-effect@*'
+      - 'ui-router-mobx@*'
+      - 'ui-router-registry@*'
   workflow_dispatch:
     inputs:
       package:
@@ -33,6 +38,11 @@ on:
           - eslint-plugin-lit-ui-router
           - lit-ui-router-effect
           - lit-ui-router-ssr
+          - ui-router-signals
+          - lit-ui-router-signals
+          - ui-router-effect
+          - ui-router-mobx
+          - ui-router-registry
       dryRun:
         description: 'Dry run: log the publish/release/attestation release-it would perform without doing it'
         required: false
@@ -64,9 +74,9 @@ jobs:
           # git commit/tag/push off, so no credentials need to persist.
           persist-credentials: false
       - name: Setup mise
-        uses: jdx/mise-action@9149ea85001c7435d5a66bb127d6a1b6227cb0a5 # v5.0.0
+        uses: jdx/mise-action@82a612c5ab8bcda7cc5db6b7e81a8e7584c3dc6e # v5.2.3
         with:
-          version: 2026.10.1
+          version: 2026.10.19
           # no restored tool cache on the publish path (zizmor cache-poisoning):
           # tools install fresh, checksum-verified against mise.lock
           cache: false
@@ -120,6 +130,7 @@ jobs:
         with:
           subject-path: ${{ steps.pack.outputs.tarball }}
       - name: Publish
+        id: publish
         # release-it publishes the attested tarball and cuts the GitHub
         # release in one invocation; the argv (and the #302 changelog-range
         # pin) is built by the engine seam — see tools/release/src/steps/release-publish.ts
@@ -131,12 +142,21 @@ jobs:
           DRY_RUN: ${{ inputs.dryRun }}
           # scoped here: only release-it's GitHub release needs it (npm auth is OIDC)
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Claim the release
+        # Best-effort (#1424): the ledger's tag sweep heals a missed claim, so a failure only warns.
+        continue-on-error: true
+        timeout-minutes: 5
+        run: mise run ledger_claim
+        env:
+          PACKAGE_NAME: ${{ steps.info.outputs.package_name }}
+          VERSION: ${{ steps.publish.outputs.version }}
+          DRY_RUN: ${{ inputs.dryRun }}
 
-  published_diff:
+  release_signals:
     # Refresh the per-package published-diff check runs now that `latest` has
     # moved; deliberately unscoped — a full run avoids badge gaps on the fresh
     # bump-commit head. A failure here should be visible; workflow_dispatch on
-    # Published Diff is the re-nudge.
+    # Release signals is the re-nudge.
     needs: publish_npm
     permissions:
       checks: write

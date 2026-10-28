@@ -9,6 +9,7 @@ export function releaseTagName(packageName: string, version: string): string {
   if (packageName.trim() === '') {
     throw new Error('packageName must be non-empty');
   }
+
   // The version comes from the package manifest; anything unversioned (or a
   // manifest field of the wrong shape) must not compose a half-formed ref.
   if (version.trim() === '' || /\s/.test(version)) {
@@ -16,10 +17,30 @@ export function releaseTagName(packageName: string, version: string): string {
       `invalid version ${JSON.stringify(version)} for ${packageName}`,
     );
   }
+
   return `${packageName}@${version}`;
 }
 
 /** argv pushing exactly the tag ref, verbatim from the workflow. */
 export function pushTagArgs(tagName: string): string[] {
   return ['push', 'origin', `refs/tags/${tagName}`];
+}
+
+/**
+ * The job-summary line for a pushed (or dry-run) tag; links the tag page
+ * when the run's repository URL is known.
+ */
+export function tagPushSummary(
+  tagName: string,
+  dryRun: boolean,
+  repoUrl?: string,
+): string {
+  const ref = `\`${tagName}\``;
+
+  const label =
+    repoUrl === undefined
+      ? ref
+      : `[${ref}](${repoUrl}/releases/tag/${encodeURIComponent(tagName)})`;
+
+  return dryRun ? `🏷️ dry-run: would push ${label}\n` : `🏷️ pushed ${label}\n`;
 }

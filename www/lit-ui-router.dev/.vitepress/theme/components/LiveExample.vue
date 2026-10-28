@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, useId } from 'vue';
+import { VPIcon } from 'vitepress/theme';
 import ExampleEmbed from './ExampleEmbed.vue';
 import StackBlitzEmbed from './StackBlitzEmbed.vue';
 import {
   EXAMPLES,
+  githubTreeSrc,
   staticSrc,
   stackblitzEmbedSrc,
   stackblitzOpenSrc,
@@ -26,16 +28,25 @@ const props = withDefaults(
 type Mode = 'preview' | 'stackblitz';
 
 const example = computed(() => EXAMPLES[props.name]);
+
 const previewSrc = computed(() => staticSrc(props.name));
+
 const embedSrc = computed(() =>
   stackblitzEmbedSrc(props.name, props.file, props.view),
 );
+
 const openSrc = computed(() => stackblitzOpenSrc(props.name, props.file));
+
+const sourceSrc = computed(() => githubTreeSrc(props.name));
+
 const previewHeight = computed(() => props.height ?? example.value.height);
 
 const uid = useId();
+
 const active = ref<Mode>('preview');
+
 const supported = ref(true);
+
 // First StackBlitz selection boots the iframe; v-show keeps it alive after.
 const stackblitzBooted = ref(false);
 
@@ -43,6 +54,7 @@ const stackblitzBooted = ref(false);
 // and WebContainers only boot on an explicit tab click.
 function selectTab(mode: Mode) {
   active.value = mode;
+
   if (mode === 'stackblitz' && supported.value) stackblitzBooted.value = true;
 }
 
@@ -84,12 +96,24 @@ onMounted(() => {
           Edit in StackBlitz
         </button>
       </div>
-      <a class="open-badge" :href="openSrc" target="_blank" rel="noopener">
-        <img
-          alt="Open in StackBlitz"
-          src="https://developer.stackblitz.com/img/open_in_stackblitz.svg"
-        />
-      </a>
+      <div class="live-example-links">
+        <a
+          class="source-link"
+          :href="sourceSrc"
+          target="_blank"
+          rel="noopener"
+          :aria-label="`${example.title} source on GitHub`"
+          title="Source on GitHub"
+        >
+          <VPIcon icon="simple-icons:github" aria-hidden="true" />
+        </a>
+        <a class="open-badge" :href="openSrc" target="_blank" rel="noopener">
+          <img
+            alt="Open in StackBlitz"
+            src="https://developer.stackblitz.com/img/open_in_stackblitz.svg"
+          />
+        </a>
+      </div>
     </div>
     <div
       class="live-example-panels"
@@ -138,7 +162,7 @@ onMounted(() => {
 
 <style scoped>
 .live-example {
-  margin: 16px 0;
+  margin-block: 16px;
   container-type: inline-size;
 }
 
@@ -147,7 +171,7 @@ onMounted(() => {
   align-items: center;
   flex-wrap: wrap;
   gap: 12px;
-  margin-bottom: 8px;
+  margin-block-end: 8px;
 }
 
 .live-example-tablist {
@@ -160,7 +184,8 @@ onMounted(() => {
 }
 
 .tab {
-  padding: 5px 12px;
+  padding-block: 5px;
+  padding-inline: 12px;
   font-size: 14px;
   font-weight: 500;
   color: var(--vp-c-text-2);
@@ -168,13 +193,26 @@ onMounted(() => {
   border: 0;
   border-radius: 6px;
   cursor: pointer;
+  touch-action: manipulation;
   transition:
-    background-color 0.2s,
-    color 0.2s;
+    background-color 0.2s var(--ease-out),
+    color 0.2s var(--ease-out),
+    transform 0.15s var(--ease-out);
 }
 
-.tab:hover {
-  color: var(--vp-c-text-1);
+@media (hover: hover) and (pointer: fine) {
+  .tab:hover {
+    color: var(--vp-c-text-1);
+  }
+}
+
+.tab:active {
+  transform: scale(0.97);
+}
+
+.tab:focus-visible {
+  outline: 2px solid var(--vp-c-brand-1);
+  outline-offset: 1px;
 }
 
 .tab.active {
@@ -183,27 +221,51 @@ onMounted(() => {
   box-shadow: 0 0 0 1px var(--vp-c-divider);
 }
 
-.open-badge {
-  display: inline-flex;
+.live-example-links {
+  display: flex;
   align-items: center;
-  line-height: 0;
-  margin-left: auto;
-  border: 1px solid var(--vp-c-divider);
-  border-radius: 6px;
-  overflow: hidden;
-  transition: border-color 0.2s;
+  gap: 8px;
+  margin-inline-start: auto;
 }
 
-/* Below the tabs+badge intrinsic width the bar wraps the badge onto its own
-   row — align it with the tabs instead of the far edge. */
-@container (max-width: 420px) {
-  .open-badge {
-    margin-left: 0;
+/* Below the tabs+links intrinsic width the bar wraps the links onto their own
+   row — align them with the tabs instead of the far edge. */
+@container (max-width: 480px) {
+  .live-example-links {
+    margin-inline-start: 0;
   }
 }
 
-.open-badge:hover {
-  border-color: var(--vp-c-brand-1);
+.open-badge,
+.source-link {
+  display: inline-flex;
+  align-items: center;
+  line-height: 0;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 6px;
+  overflow: clip;
+  transition: border-color 0.2s var(--ease-out);
+}
+
+.source-link {
+  justify-content: center;
+  inline-size: 38px;
+  block-size: 38px;
+  color: var(--vp-c-text-1);
+  font-size: 20px;
+  background: var(--vp-c-bg-soft);
+}
+
+.source-link:focus-visible {
+  outline: 2px solid var(--vp-c-brand-1);
+  outline-offset: 1px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .open-badge:hover,
+  .source-link:hover {
+    border-color: var(--vp-c-brand-1);
+  }
 }
 
 .open-badge img {
@@ -227,7 +289,8 @@ onMounted(() => {
 }
 
 .fallback-note {
-  padding: 8px 12px;
+  padding-block: 8px;
+  padding-inline: 12px;
   font-size: 14px;
   color: var(--vp-c-text-2);
   background: var(--vp-c-bg-soft);

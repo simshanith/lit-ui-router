@@ -13,16 +13,21 @@ import {
   type BaseVerdict,
   type GateRun,
   type OpenPr,
+  PR_GRACE,
+  awaitOpenPrs,
   decide,
   distinctBases,
   mergeStateFromExit,
   parseOpenPrs,
+  shouldAwaitPr,
   summaryMarkdown,
   wantsMainGraph,
 } from './branch-ci-gate.core.ts';
 
 const PR_ONE: OpenPr = { number: 1, baseRefName: 'main' };
+
 const PR_TWO: OpenPr = { number: 2, baseRefName: 'main' };
+
 const PR_STACKED: OpenPr = { number: 3, baseRefName: 'feature/base' };
 
 function verdict(
@@ -83,6 +88,7 @@ describe('mergeStateFromExit', () => {
     'Auto-merging f.txt',
     'CONFLICT (content): Merge conflict in f.txt',
   ].join('\n');
+
   const UNMERGEABLE_STDOUT = 'merge-tree: nope - not something we can merge\n';
 
   it('reads a clean merge from exit 0', () => {
@@ -126,6 +132,91 @@ describe('wantsMainGraph', () => {
   });
 });
 
+describe('shouldAwaitPr', () => {
+  it('waits only on the push that created the branch', () => {
+    assert.equal(shouldAwaitPr('true', 'topic'), true);
+    assert.equal(shouldAwaitPr('false', 'topic'), false);
+    assert.equal(shouldAwaitPr('', 'topic'), false);
+    assert.equal(shouldAwaitPr(undefined, 'topic'), false);
+  });
+
+  it('never waits on the main-graph opt-in, which runs regardless', () => {
+    assert.equal(shouldAwaitPr('true', 'ci-main/topic'), false);
+  });
+});
+
+describe('awaitOpenPrs', () => {
+  function scripted(answers: OpenPr[][]) {
+    let index = 0;
+
+    return {
+      query: () =>
+        Promise.resolve(answers[Math.min(index++, answers.length - 1)] ?? []),
+      calls: () => index,
+    };
+  }
+
+  function recordingSleep() {
+    const slept: number[] = [];
+
+    return {
+      sleep: (ms: number) => {
+        slept.push(ms);
+
+        return Promise.resolve();
+      },
+      slept,
+    };
+  }
+
+  it('returns at once when the first query finds a PR', async () => {
+    const { query, calls } = scripted([[PR_ONE]]);
+    const { sleep, slept } = recordingSleep();
+
+    assert.deepEqual(await awaitOpenPrs(query, sleep), {
+      prs: [PR_ONE],
+      waitedMs: 0,
+    });
+    assert.equal(calls(), 1);
+    assert.deepEqual(slept, []);
+  });
+
+  it('stops polling as soon as a PR appears', async () => {
+    const { query, calls } = scripted([[], [], [PR_ONE]]);
+    const { sleep, slept } = recordingSleep();
+
+    assert.deepEqual(await awaitOpenPrs(query, sleep), {
+      prs: [PR_ONE],
+      waitedMs: 30_000,
+    });
+    assert.equal(calls(), 3);
+    assert.deepEqual(slept, [15_000, 15_000]);
+  });
+
+  it('gives up after the window with no PR', async () => {
+    const { query, calls } = scripted([[]]);
+    const { sleep, slept } = recordingSleep();
+
+    assert.deepEqual(await awaitOpenPrs(query, sleep), {
+      prs: [],
+      waitedMs: PR_GRACE.totalMs,
+    });
+    assert.equal(calls(), 5);
+    assert.equal(
+      slept.reduce((sum, ms) => sum + ms, 0),
+      PR_GRACE.totalMs,
+    );
+  });
+
+  it('clips the last sleep to the window', async () => {
+    const { query } = scripted([[]]);
+    const { sleep, slept } = recordingSleep();
+
+    await awaitOpenPrs(query, sleep, { totalMs: 40, intervalMs: 15 });
+    assert.deepEqual(slept, [15, 15, 10]);
+  });
+});
+
 describe('decide', () => {
   it('runs when no open PR has this branch as its head', () => {
     const decision = decide([], []);
@@ -138,6 +229,7 @@ describe('decide', () => {
       [PR_ONE, PR_TWO],
       [verdict('main', 'clean', [1, 2])],
     );
+
     assert.equal(decision.run, false);
     assert.match(decision.reason, /already covers this SHA/);
   });
@@ -153,6 +245,7 @@ describe('decide', () => {
       [PR_ONE, PR_STACKED],
       [verdict('feature/base', 'clean', [3]), verdict('main', 'conflict')],
     );
+
     assert.equal(decision.run, true);
     assert.match(decision.reason, /conflicts with main/);
   });
@@ -162,6 +255,7 @@ describe('decide', () => {
       [PR_ONE, PR_STACKED],
       [verdict('feature/base', 'clean', [3]), verdict('main', 'clean')],
     );
+
     assert.equal(decision.run, false);
   });
 
@@ -176,6 +270,7 @@ describe('decide', () => {
       [PR_ONE, PR_STACKED],
       [verdict('feature/base', 'unknown', [3]), verdict('main', 'conflict')],
     );
+
     assert.equal(decision.run, true);
     assert.match(decision.reason, /conflicts with main/);
   });
@@ -211,6 +306,7 @@ describe('decide', () => {
       assert.equal(decision.run, true);
       assert.equal(decision.mainGraph, true);
     }
+
     const noPr = decide([], [], true);
     assert.equal(noPr.run, true);
     assert.equal(noPr.mainGraph, true);
@@ -239,6 +335,7 @@ describe('summaryMarkdown', () => {
     const markdown = summaryMarkdown(
       gateRun('topic', [PR_ONE, PR_TWO], [verdict('main', 'clean', [1, 2])]),
     );
+
     assert.match(markdown, /skipping/);
     assert.match(markdown, /`topic` @ `0123456789ab`/);
     assert.match(markdown, /\| `main` \| #1, #2 \| mergeable \|/);
@@ -248,6 +345,7 @@ describe('summaryMarkdown', () => {
     const markdown = summaryMarkdown(
       gateRun('topic', [PR_ONE], [verdict('main', 'conflict')]),
     );
+
     assert.match(markdown, /running/);
     assert.match(markdown, /CONFLICTS/);
   });
@@ -272,6 +370,27 @@ describe('summaryMarkdown', () => {
     );
   });
 
+  it('says how long a branch-creating push waited, and whether a PR came', () => {
+    const none = summaryMarkdown({
+      ...gateRun('topic', [], []),
+      waitedMs: 60_000,
+    });
+
+    assert.match(none, /Waited 60s for a PR .* none opened/);
+
+    const found = summaryMarkdown({
+      ...gateRun('topic', [PR_ONE], [verdict('main', 'clean')]),
+      waitedMs: 15_000,
+    });
+
+    assert.match(found, /Waited 15s for a PR/);
+    assert.doesNotMatch(found, /none opened/);
+  });
+
+  it('omits the wait line when the push did not wait', () => {
+    assert.doesNotMatch(summaryMarkdown(gateRun('topic', [], [])), /Waited/);
+  });
+
   it('states the no-PR case instead of an empty table', () => {
     const markdown = summaryMarkdown(gateRun('topic', [], []));
     assert.match(markdown, /No open pull requests/);
@@ -283,6 +402,7 @@ describe('summaryMarkdown', () => {
 // an install there would cost more than it saves on the runs it cannot skip.
 // That makes "resolves with no node_modules" a contract, not a preference, and
 // it lived only in a comment -- which is how a bare import got added.
+// .oxlintrc.json mirrors this contract with a no-restricted-imports override.
 describe('branch-ci-gate.ts resolution', () => {
   const GATE_FILES = ['branch-ci-gate.ts', 'branch-ci-gate.core.ts'];
 
@@ -297,17 +417,20 @@ describe('branch-ci-gate.ts resolution', () => {
 
   it('names only node builtins and relative siblings', async () => {
     const bare: string[] = [];
+
     for (const file of GATE_FILES) {
       const source = await readFile(
         new URL(`./${file}`, import.meta.url),
         'utf8',
       );
+
       for (const specifier of importsOf(source)) {
         if (!specifier.startsWith('node:') && !specifier.startsWith('./')) {
           bare.push(`${file}: ${specifier}`);
         }
       }
     }
+
     assert.deepEqual(bare, []);
   });
 
@@ -316,6 +439,7 @@ describe('branch-ci-gate.ts resolution', () => {
   // on any parent, a bare specifier is ERR_MODULE_NOT_FOUND and a failing exit.
   it('loads and fails open with no node_modules on any parent', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'branch-ci-gate-'));
+
     try {
       for (const file of GATE_FILES) {
         await copyFile(
@@ -323,6 +447,7 @@ describe('branch-ci-gate.ts resolution', () => {
           join(dir, file),
         );
       }
+
       // Dropped rather than blanked: the gate throws on a missing ref name
       // before it spawns git or gh, so the run stays hermetic. The two runner
       // files go too, or this would append to the real job's output.

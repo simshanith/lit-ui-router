@@ -22,6 +22,11 @@ on:
           - eslint-plugin-lit-ui-router
           - lit-ui-router-effect
           - lit-ui-router-ssr
+          - ui-router-signals
+          - lit-ui-router-signals
+          - ui-router-effect
+          - ui-router-mobx
+          - ui-router-registry
         default: 'lit-ui-router'
       increment:
         description: 'Increment'
@@ -80,9 +85,9 @@ jobs:
           # don't trigger downstream workflows. persist-credentials must stay on.
           token: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
       - name: Setup mise
-        uses: jdx/mise-action@9149ea85001c7435d5a66bb127d6a1b6227cb0a5 # v5.0.0
+        uses: jdx/mise-action@82a612c5ab8bcda7cc5db6b7e81a8e7584c3dc6e # v5.2.3
         with:
-          version: 2026.10.1
+          version: 2026.10.19
           # no restored tool cache (zizmor cache-poisoning): this job checks out
           # with a persisted PAT, so a poisoned cache would run adjacent to live
           # push credentials. Tools install fresh, checksum-verified against mise.lock.

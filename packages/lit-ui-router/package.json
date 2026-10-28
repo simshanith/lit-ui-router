@@ -1,6 +1,6 @@
 {
   "name": "lit-ui-router",
-  "version": "1.16.0",
+  "version": "1.17.0",
   "description": "State-based routing for Lit",
   "homepage": "https://lit-ui-router.dev",
   "license": "MIT",
@@ -41,6 +41,7 @@
       "development": "./dist/development/context.js",
       "default": "./dist/context.js"
     },
+    "./custom-elements.json": "./dist/custom-elements.json",
     "./dist/*": "./dist/*",
     "./package.json": "./package.json",
     "./pure": {
@@ -69,7 +70,7 @@
     "build:js": "oxc-emit-js --development",
     "build:types": "oxc-emit-dts",
     "changelog": "release-it --changelog --git.tagMatch=\"lit-ui-router@[0-9]*.[0-9]*.[0-9]*\"",
-    "check:bundle": "check-bundle-inputs",
+    "check:bundle": "floor-guard && check-bundle-inputs",
     "check:dev-split": "oxc-emit-check-dev-split",
     "codecov:bundle": "upload-entry-bundles",
     "crap": "crap-report",
@@ -92,6 +93,7 @@
     "@custom-elements-manifest/analyzer": "catalog:",
     "@lit-labs/ssr": "catalog:",
     "@lit/context": "catalog:",
+    "@oxc-project/runtime-floor": "catalog:oxc-compat",
     "@release-it/conventional-changelog": "catalog:",
     "@tools/bundle-probe": "catalog:workspace",
     "@tools/compat-guards": "catalog:workspace",
@@ -103,6 +105,7 @@
     "@tools/typedoc-plugin-lit-ui-router": "catalog:workspace",
     "@types/node": "catalog:",
     "@uirouter/core": "catalog:",
+    "@uirouter/core-floor": "catalog:peerFloor",
     "@vitest/browser": "catalog:",
     "@vitest/browser-playwright": "catalog:",
     "@vitest/coverage-v8": "catalog:",

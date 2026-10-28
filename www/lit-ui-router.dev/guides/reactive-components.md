@@ -36,8 +36,8 @@ class NavHeader extends LitElement {
 ```
 
 No wiring is needed: on `hostConnected` the controller discovers the router
-from the nearest `<ui-router>` (or `<ui-view>`) ancestor via the
-`ui-router-context` event, registers its transition hooks, and deregisters
+from the nearest `<ui-router>` (or `<ui-view>`) ancestor with a
+`context-request`, registers its transition hooks, and deregisters
 them all on `hostDisconnected` — nothing leaks when elements come and go
 from the DOM.
 
@@ -45,19 +45,14 @@ from the DOM.
 
 Controllers find the router. Anything else — a store, an element
 that is not a Lit host, a third-party component — asks the same provider
-directly, and `<ui-router>` answers both ways in from one listener:
-
-- The house event, `ui-router-context`, dispatched by
-  [`UIRouterLitElement.seekRouter(element)`](/api/reference/components/UIRouterLitElement).
-  Every controller and directive in this package calls it.
-- The community
-  [`context-request` protocol](https://github.com/webcomponents-cg/community-protocols/blob/main/proposals/context.md),
-  from the `lit-ui-router/context` entry.
-  [`requestRouter(target)`](/api/reference/core/requestRouter) returns the
-  router a provider answered with synchronously, or `undefined`, and takes any
-  `EventTarget`. [`routerContext`](/api/reference/core/routerContext) is the
-  key, in the protocol's branded shape, so `@lit/context` consumes it with
-  nothing in between:
+directly, over the community
+[`context-request` protocol](https://github.com/webcomponents-cg/community-protocols/blob/main/proposals/context.md)
+from the `lit-ui-router/context` entry.
+[`requestRouter(target)`](/api/reference/core/requestRouter) returns the
+router a provider answered with synchronously, or `undefined`, and takes any
+`EventTarget`. [`routerContext`](/api/reference/core/routerContext) is the
+key, in the protocol's branded shape, so `@lit/context` consumes it with
+nothing in between:
 
 ```ts
 import { consume } from '@lit/context';
@@ -70,9 +65,21 @@ class UserMenu extends LitElement {
 }
 ```
 
-It reads both ways: a `ContextProvider` of `routerContext` on any ancestor
-satisfies `seekRouter` too. `subscribe` gets one call and a no-op unsubscribe —
-`<ui-router>` takes its router on connect and does not swap it.
+The [Hello Solar System (Signals)](/tutorial/live-examples#hello-solar-system-signals)
+example consumes it this way, beside a context of its own that hands routed
+views a signal.
+
+Any `ContextProvider` of `routerContext` on an ancestor serves the controllers
+and directives too. A `subscribe` request answered with the placeholder
+router `<ui-router>` creates on connect is called again when the app replaces
+it, and `<ui-view>` passes that on to its own subscribers; any other answer is
+one call and a no-op unsubscribe.
+
+`<ui-router>` also answers the house `ui-router-context` event, which
+[`UIRouterLitElement.seekRouter(element)`](/api/reference/components/UIRouterLitElement)
+dispatches, and core's controllers and directives fall back to it when no
+`context-request` provider answers. Both are deprecated in favour of
+`context-request`.
 
 `<ui-view>` answers the same way for its own key,
 [`parentUiViewContext`](/api/reference/core/parentUiViewContext): a
@@ -117,7 +124,7 @@ class UserDetail extends LitElement {
 ```
 
 - `criteria` — a
-  [HookMatchCriteria](https://ui-router.github.io/core/docs/latest/interfaces/transition.hookmatchcriteria.html)
+  [HookMatchCriteria](https://ui-router.github.io/core/docs/latest/interfaces/_transition_interface_.hookmatchcriteria.html)
   limiting which transitions notify the host (`to`, `from`, glob patterns,
   predicate functions)
 - `callback` — invoked before `requestUpdate()` with the transition and the
@@ -128,7 +135,7 @@ class UserDetail extends LitElement {
 
 For `'onBefore'` and `'onStart'` events, the callback's return value is
 passed back to UI-Router as a
-[HookResult](https://ui-router.github.io/core/docs/latest/modules/transition.html#hookresult)
+[HookResult](https://ui-router.github.io/core/docs/latest/modules/_transition_interface_.html#hookresult)
 — so a controller can even cancel or redirect pending transitions.
 
 ## Reconnect safety
@@ -195,7 +202,7 @@ and their server-side story is in
 ## See it live
 
 The same problem, solved with the
-[MobX bindings](/packages/mobx): `<app-root>` sits outside every
+[MobX bindings](/packages/lit-ui-router-mobx): `<app-root>` sits outside every
 `<ui-view>`, so it never receives fresh view props, and reaction controllers
 keep its breadcrumb and visit counter in sync. Swap
 `RouterReactionController` for `TransitionController` and the shape is
@@ -223,6 +230,6 @@ behaviorally identical <a href="/app-mobx" target="_self">MobX sample app</a>
 solves the same problems with the observable store and reaction controllers
 from [`lit-ui-router-mobx`](/packages/), one of the
 [companion packages](/packages/) — if your app already uses MobX, prefer
-[those bindings](/packages/mobx); the
+[those bindings](/packages/lit-ui-router-mobx); the
 [two codebases](https://github.com/simshanith/lit-ui-router/tree/main/apps)
 compare the idioms file-by-file.

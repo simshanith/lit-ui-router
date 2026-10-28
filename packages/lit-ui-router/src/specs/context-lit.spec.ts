@@ -107,6 +107,7 @@ describe('lit-ui-router/context with @lit/context', () => {
     element.uiRouter = router;
     container.appendChild(element);
     await waitForUpdate(element);
+
     return element;
   }
 
@@ -143,7 +144,7 @@ describe('lit-ui-router/context with @lit/context', () => {
       expect(subscriber.calls).toHaveLength(1);
       const [value, unsubscribe] = subscriber.calls[0];
       expect(value).toBe(router);
-      expect(typeof unsubscribe).toBe('function');
+      expect(unsubscribe).toBeTypeOf('function');
       expect(subscriber.consumer.value).toBe(router);
     });
 
@@ -183,6 +184,7 @@ describe('lit-ui-router/context with @lit/context', () => {
       host.appendChild(seeker);
 
       expect(provider.value).toBe(router);
+      // eslint-disable-next-line typescript/no-deprecated -- the house ui-router-context path under test (#874)
       expect(UIRouterLitElement.seekRouter(seeker)).toBe(router);
     });
 

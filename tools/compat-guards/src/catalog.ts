@@ -18,6 +18,7 @@ export async function catalogRange(
   dep: string,
 ): Promise<string | undefined> {
   const catalogs = await selectCatalogs(loadWorkspaceManifest(workspaceRoot));
+
   return catalogs[catalog]?.[dep];
 }
 

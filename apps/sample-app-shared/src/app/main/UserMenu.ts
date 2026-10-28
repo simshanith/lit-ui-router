@@ -64,12 +64,14 @@ export class UserMenu extends LitElement {
   // Focus leaving the widget closes it, so it can't stay stuck open.
   private readonly handleFocusout = (event: FocusEvent) => {
     const next = event.relatedTarget;
+
     if (next instanceof Node && this.contains(next)) return;
     this.open = false;
   };
 
   render() {
     const chevron = this.open ? 'fa-chevron-up' : 'fa-chevron-down';
+
     return html`<button
         type="button"
         class="disclosure-toggle"

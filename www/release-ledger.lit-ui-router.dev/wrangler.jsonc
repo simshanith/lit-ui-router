@@ -1,0 +1,58 @@
+// https://developers.cloudflare.com/workers/wrangler/configuration/
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "release-ledger",
+  "compatibility_date": "2026-07-01",
+  "main": "./worker/index.ts",
+  // Only the route serves /claims; Previews get no URL of their own.
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [
+    { "pattern": "release-ledger.lit-ui-router.dev", "custom_domain": true },
+  ],
+  "observability": { "enabled": true },
+  // A Preview binds only what this block names, so branches reach no production data.
+  "previews": {},
+  // Placeholder schedule for the tag sweep.
+  "triggers": { "crons": ["0 6 * * *"] },
+  "vars": {
+    "OIDC_AUDIENCE": "https://release-ledger.lit-ui-router.dev",
+    "OIDC_REPOSITORY": "simshanith/lit-ui-router",
+    "OIDC_REPOSITORY_ID": "1025140115",
+    "OIDC_REPOSITORY_OWNER_ID": "135388",
+    "OIDC_WORKFLOWS": [
+      "simshanith/lit-ui-router/.github/workflows/publish-npm.yml",
+    ],
+    "OIDC_ENVIRONMENT": "publish",
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "release-ledger",
+      "database_id": "db3e9cd3-1c44-4c95-a6b2-b8faec69f3ac",
+      "migrations_dir": "migrations",
+    },
+  ],
+  "queues": {
+    "producers": [
+      { "binding": "LEDGER_QUEUE", "queue": "release-ledger-claims" },
+    ],
+    "consumers": [
+      {
+        "queue": "release-ledger-claims",
+        "max_batch_size": 1,
+        "max_concurrency": 1,
+        "max_retries": 10,
+        "retry_delay": 60,
+        "dead_letter_queue": "release-ledger-claims-dlq",
+      },
+      {
+        "queue": "release-ledger-claims-dlq",
+        "max_batch_size": 1,
+        "max_concurrency": 1,
+        "max_retries": 10,
+        "retry_delay": 60,
+      },
+    ],
+  },
+}

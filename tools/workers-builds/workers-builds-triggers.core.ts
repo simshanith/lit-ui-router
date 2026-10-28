@@ -1,8 +1,9 @@
 // Pure logic for the Workers Builds trigger check — no network or filesystem
 // here, so every unit is directly testable with plain fixtures (see
 // workers-builds-triggers.test.ts). The IO (env, Cloudflare API calls,
-// reading wrangler.jsonc) lives in workers-builds-triggers.ts.
+// reading the worker config) lives in workers-builds-triggers.ts.
 
+import type { Json } from '@tools/bootstrap/types.ts';
 import { type ParseError, parse, printParseErrorCode } from 'jsonc-parser';
 import * as v from 'valibot';
 
@@ -31,6 +32,25 @@ export type Trigger = {
   environment_variables?: Record<string, TriggerEnvironmentVariable>;
 };
 
+/**
+ * A Worker switched to Workers Previews has no preview trigger; its preview
+ * builds run on this, the `previews_base_config` of GET /builds/workers/{tag}.
+ */
+export type PreviewsBaseConfig = Omit<
+  Trigger,
+  'trigger_uuid' | 'trigger_name' | 'branch_includes' | 'branch_excludes'
+>;
+
+/** Stands in for a trigger uuid, so the shell PATCHes the Worker rather than a trigger. */
+export const PREVIEWS_BASE_CONFIG = 'previews_base_config';
+
+/** The Previews base config as the preview trigger it replaced: no branches, so it classifies as preview. */
+export const previewsBaseTrigger = (config: PreviewsBaseConfig): Trigger => ({
+  ...config,
+  trigger_uuid: PREVIEWS_BASE_CONFIG,
+  trigger_name: 'Workers Previews base config',
+});
+
 // Scalar fields a desired spec may pin; unpinned fields are shown but never
 // drift. environment_variables is pinned per key, not whole-field — see
 // describeEnvironment.
@@ -39,11 +59,13 @@ export const PINNABLE_FIELDS = [
   'deploy_command',
   'root_directory',
 ] as const;
+
 export type PinnableField = (typeof PINNABLE_FIELDS)[number];
 
 // Build watch paths: array-valued, so pinned and patched whole-list rather than
 // per-entry (https://developers.cloudflare.com/workers/ci-cd/builds/build-watch-paths/).
 export const PINNABLE_LIST_FIELDS = ['path_includes', 'path_excludes'] as const;
+
 export type PinnableListField = (typeof PINNABLE_LIST_FIELDS)[number];
 
 const nonEmptyString = v.pipe(v.string(), v.nonEmpty());
@@ -63,12 +85,12 @@ const DesiredTriggerSchema = v.strictObject({
   environment_variables: v.optional(v.record(environmentKey, nonEmptyString)),
 } satisfies Record<
   PinnableField | PinnableListField | 'environment_variables',
-  unknown
+  v.GenericSchema
 >);
 
-// One worker: the wrangler config that names it, plus its two triggers.
+// One worker: the config that names it (wrangler.jsonc or cloudflare.config.ts), plus its two triggers.
 const DesiredStateSchema = v.strictObject({
-  wranglerConfig: nonEmptyString,
+  workerConfig: nonEmptyString,
   productionBranch: nonEmptyString,
   production: DesiredTriggerSchema,
   preview: DesiredTriggerSchema,
@@ -80,22 +102,27 @@ const DesiredWorkersSchema = v.strictObject({
 });
 
 export type DesiredTrigger = v.InferOutput<typeof DesiredTriggerSchema>;
+
 export type DesiredState = v.InferOutput<typeof DesiredStateSchema>;
+
 export type DesiredWorker = DesiredState & { site: string };
 
 export type TriggerKind = 'production' | 'preview';
 
 // wrangler.jsonc allows comments and trailing commas, so JSON.parse alone
 // won't do; jsonc-parser is the VS Code JSONC implementation.
-export function parseJsonc(text: string): unknown {
+export function parseJsonc(text: string): Json {
   const errors: ParseError[] = [];
-  const result: unknown = parse(text, errors, { allowTrailingComma: true });
+  // SAFETY: jsonc-parser's parse builds only JSON values
+  const result = parse(text, errors, { allowTrailingComma: true }) as Json;
   const [first] = errors;
+
   if (first) {
     throw new Error(
       `invalid JSONC at offset ${first.offset}: ${printParseErrorCode(first.error)}`,
     );
   }
+
   return result;
 }
 
@@ -103,60 +130,102 @@ export function parseJsonc(text: string): unknown {
 // the config.
 function validate<Schema extends v.GenericSchema>(
   schema: Schema,
-  config: unknown,
+  config: Json,
 ): v.InferOutput<Schema> {
   const result = v.safeParse(schema, config);
+
   if (!result.success) {
     const details = result.issues.map((issue) => {
       const path = v.getDotPath(issue);
+
       return path ? `  ${path}: ${issue.message}` : `  ${issue.message}`;
     });
+
     throw new Error(['invalid config:', ...details].join('\n'));
   }
+
   return result.output;
 }
 
 /** One worker's desired state, the unit workers-builds-triggers.config.jsonc repeats. */
-export function desiredStateFromConfig(config: unknown): DesiredState {
+export function desiredStateFromConfig(config: Json): DesiredState {
   return validate(DesiredStateSchema, config);
 }
 
 /** Every worker in workers-builds-triggers.config.jsonc, tagged with its site key. */
-export function desiredWorkersFromConfig(config: unknown): DesiredWorker[] {
+export function desiredWorkersFromConfig(config: Json): DesiredWorker[] {
   const { workers } = validate(DesiredWorkersSchema, config);
+
   return Object.entries(workers).map(([site, worker]) => ({ site, ...worker }));
 }
 
+/** The workers a `--site` selection names, or why it names none. */
+export type SelectResult =
+  | { readonly ok: true; readonly workers: DesiredWorker[] }
+  | { readonly ok: false; readonly error: string };
+
 /**
  * The workers a `--site` selection names, in config order; no selection means
- * every worker. An unknown name throws rather than selecting nothing, since a
+ * every worker. An unknown name fails rather than selecting nothing, since a
  * typo under --apply would otherwise read as "in sync".
  */
 export function selectWorkers(
   workers: DesiredWorker[],
   sites: readonly string[],
-): DesiredWorker[] {
-  if (sites.length === 0) return workers;
+): SelectResult {
+  if (sites.length === 0) return { ok: true, workers };
   const known = workers.map((worker) => worker.site);
   const unknown = sites.filter((site) => !known.includes(site));
+
   if (unknown.length > 0) {
-    throw new Error(
-      `unknown site(s): ${unknown.join(', ')} — configured: ${known.join(', ')}`,
-    );
+    return {
+      ok: false,
+      error: `unknown site(s): ${unknown.join(', ')} — configured: ${known.join(', ')}`,
+    };
   }
-  return workers.filter((worker) => sites.includes(worker.site));
+
+  return {
+    ok: true,
+    workers: workers.filter((worker) => sites.includes(worker.site)),
+  };
 }
 
-// looseObject: wrangler.jsonc has many fields; only `name` matters here.
-const WranglerNameSchema = v.looseObject({ name: nonEmptyString });
+// looseObject: a worker config has many fields; only `name` matters here.
+const NameSchema = v.looseObject({ name: nonEmptyString });
 
 /** The `name` field of a parsed wrangler config, or throw. */
-export function workerNameFromConfig(config: unknown): string {
-  const result = v.safeParse(WranglerNameSchema, config);
+export function workerNameFromConfig(config: Json): string {
+  const result = v.safeParse(NameSchema, config);
+
   if (!result.success) {
     throw new Error('wrangler.jsonc has no "name" field');
   }
+
   return result.output.name;
+}
+
+/** The file name that makes a site a cf project rather than a Wrangler one. */
+export const CF_CONFIG = 'cloudflare.config.ts';
+
+// Only the D1 fields the production deploy migrates by.
+const WranglerD1Schema = v.looseObject({
+  d1_databases: v.optional(
+    v.array(
+      v.looseObject({
+        database_name: nonEmptyString,
+        migrations_dir: v.optional(nonEmptyString),
+      }),
+    ),
+  ),
+});
+
+/** The D1 databases a wrangler.jsonc gives a `migrations_dir`, by `database_name`. */
+export function migratedDatabasesFromConfig(config: Json): string[] {
+  const { d1_databases = [] } = validate(WranglerD1Schema, config);
+
+  return d1_databases
+    .filter((database) => database.migrations_dir !== undefined)
+    .map((database) => database.database_name);
 }
 
 // A trigger that builds the production branch is the production trigger;
@@ -167,6 +236,7 @@ export function classifyTrigger(
 ): TriggerKind {
   const includes = trigger.branch_includes ?? [];
   const excludes = trigger.branch_excludes ?? [];
+
   return includes.includes(productionBranch) &&
     !excludes.includes(productionBranch)
     ? 'production'
@@ -198,20 +268,30 @@ const ENV_PAD = 34;
 // Per-key management: a declared key drifts on a wrong or absent live value; an
 // undeclared live key is listed as unmanaged and never diffed or patched. A
 // declared key that is live-secret is a conflict — reported, never overwritten.
+interface EnvironmentDescription {
+  lines: string[];
+  patch: EnvironmentPatch;
+  conflicts: string[];
+}
+
 function describeEnvironment(
   live: Record<string, TriggerEnvironmentVariable>,
   declared: Record<string, string>,
-): { lines: string[]; patch: EnvironmentPatch; conflicts: string[] } {
+): EnvironmentDescription {
   const patch: EnvironmentPatch = {};
   const conflicts: string[] = [];
   const lines: string[] = [];
   const liveKeys = Object.keys(live).sort();
+
   if (liveKeys.length === 0 && Object.keys(declared).length === 0) {
     return { lines, patch, conflicts };
   }
+
   lines.push('    environment_variables');
+
   for (const [key, wanted] of Object.entries(declared)) {
     const current = live[key];
+
     if (current?.is_secret) {
       conflicts.push(key);
       lines.push(
@@ -227,12 +307,14 @@ function describeEnvironment(
       );
     }
   }
+
   // Values omitted: an unmanaged var may hold a credential this tool prints.
   for (const key of liveKeys.filter((key) => !(key in declared))) {
     lines.push(
       `      ${key.padEnd(ENV_PAD)} ${live[key]?.is_secret ? '(secret) ' : ''}(unmanaged)`,
     );
   }
+
   return { lines, patch, conflicts };
 }
 
@@ -242,9 +324,11 @@ function describePinnedFields(
   patch: Drift['patch'],
 ): string[] {
   const lines: string[] = [];
+
   for (const field of PINNABLE_FIELDS) {
     const current = trigger[field] ?? '';
     const wanted = desired[field];
+
     if (wanted === undefined) {
       lines.push(
         `    ${field.padEnd(18)} ${current || '(empty)'} (not pinned)`,
@@ -257,6 +341,7 @@ function describePinnedFields(
       lines.push(`    ${' '.repeat(18)} wanted: ${wanted}`);
     }
   }
+
   return lines;
 }
 
@@ -268,10 +353,12 @@ function describeWatchPaths(
   patch: Drift['patch'],
 ): string[] {
   const lines: string[] = [];
+
   for (const field of PINNABLE_LIST_FIELDS) {
     const current = trigger[field] ?? [];
     const wanted = desired[field];
     const shown = JSON.stringify(current);
+
     if (wanted === undefined) {
       if (current.length > 0) {
         lines.push(`    ${field.padEnd(18)} ${shown} (not pinned)`);
@@ -286,20 +373,24 @@ function describeWatchPaths(
       );
     }
   }
+
   return lines;
+}
+
+interface TriggerDescription {
+  lines: string[];
+  patch: Drift['patch'];
+  environmentPatch: EnvironmentPatch;
+  drift: boolean;
 }
 
 function describeTrigger(
   trigger: Trigger,
   kind: TriggerKind,
   desired: DesiredTrigger,
-): {
-  lines: string[];
-  patch: Drift['patch'];
-  environmentPatch: EnvironmentPatch;
-  drift: boolean;
-} {
+): TriggerDescription {
   const patch: Drift['patch'] = {};
+
   const lines = [
     `${kind} trigger ${trigger.trigger_uuid}` +
       (trigger.trigger_name ? ` (${trigger.trigger_name})` : ''),
@@ -307,11 +398,14 @@ function describeTrigger(
     ...describePinnedFields(trigger, desired, patch),
     ...describeWatchPaths(trigger, desired, patch),
   ];
+
   const environment = describeEnvironment(
     trigger.environment_variables ?? {},
     desired.environment_variables ?? {},
   );
+
   lines.push(...environment.lines);
+
   return {
     lines,
     patch,
@@ -338,14 +432,18 @@ export function diffTriggers(
   for (const trigger of triggers) {
     const kind = classifyTrigger(trigger, desired.productionBranch);
     seen[kind] += 1;
+
     const {
       lines: triggerLines,
       patch,
       environmentPatch,
       drift,
     } = describeTrigger(trigger, kind, desired[kind]);
+
     lines.push(...triggerLines, '');
+
     if (drift) drifted += 1;
+
     if (
       Object.keys(patch).length > 0 ||
       Object.keys(environmentPatch).length > 0
@@ -363,6 +461,7 @@ export function diffTriggers(
   const missing = (['production', 'preview'] as const).filter(
     (kind) => seen[kind] === 0,
   );
+
   for (const kind of missing) {
     lines.push(`  ✗ no ${kind} trigger found (create it in the dashboard)`, '');
   }
@@ -373,5 +472,6 @@ export function diffTriggers(
       ? '✓ Workers Builds triggers match the desired state.'
       : `✗ ${drifted + missing.length} trigger(s) drifted from the desired state.`,
   );
+
   return { report: { ok, text: lines.join('\n') }, drifts };
 }

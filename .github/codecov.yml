@@ -46,7 +46,31 @@ component_management:
       name: lit-ui-router-mobx
       paths:
         - packages/lit-ui-router-mobx/src/**
+    - component_id: lit-ui-router-signals
+      name: lit-ui-router-signals
+      paths:
+        - packages/lit-ui-router-signals/src/**
+    - component_id: ui-router-effect
+      name: ui-router-effect
+      paths:
+        - packages/ui-router-effect/src/**
+    - component_id: ui-router-mobx
+      name: ui-router-mobx
+      paths:
+        - packages/ui-router-mobx/src/**
     - component_id: ui-router-server
       name: ui-router-server
       paths:
         - packages/ui-router-server/src/**
+    - component_id: ui-router-signals
+      name: ui-router-signals
+      paths:
+        - packages/ui-router-signals/src/**
+    - component_id: dev-gate
+      name: dev-gate
+      paths:
+        - packages/shared/dev-gate/src/**
+    - component_id: route-snapshot
+      name: route-snapshot
+      paths:
+        - packages/shared/route-snapshot/src/**

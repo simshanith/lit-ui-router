@@ -1,6 +1,6 @@
 {
   "name": "ui-router-server",
-  "version": "0.2.0",
+  "version": "0.4.0",
   "description": "Server-side UI-Router state matching for Connect, Vite, Hono, and fetch handlers",
   "homepage": "https://lit-ui-router.dev/packages/server",
   "bugs": {
@@ -24,58 +24,113 @@
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "imports": {
+    "#dev-gate": {
+      "types": "./src/dev-gate.ts",
+      "production": "./dist/dev-gate.js",
+      "deno": "./dist/dev-gate.js",
+      "node": "./dist/dev-gate.node.js",
+      "default": "./dist/dev-gate.js"
+    }
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
+      "development": "./dist/development/index.js",
+      "production": "./dist/index.js",
+      "deno": "./dist/index.js",
+      "node": "./dist/development/index.js",
       "default": "./dist/index.js"
     },
     "./connect": {
       "types": "./dist/connect.d.ts",
+      "development": "./dist/development/connect.js",
+      "production": "./dist/connect.js",
+      "deno": "./dist/connect.js",
+      "node": "./dist/development/connect.js",
       "default": "./dist/connect.js"
     },
     "./dist/*": "./dist/*",
     "./fetch": {
       "types": "./dist/fetch.d.ts",
+      "development": "./dist/development/fetch.js",
+      "production": "./dist/fetch.js",
+      "deno": "./dist/fetch.js",
+      "node": "./dist/development/fetch.js",
       "default": "./dist/fetch.js"
     },
     "./hono": {
       "types": "./dist/hono.d.ts",
+      "development": "./dist/development/hono.js",
+      "production": "./dist/hono.js",
+      "deno": "./dist/hono.js",
+      "node": "./dist/development/hono.js",
       "default": "./dist/hono.js"
     },
     "./location": {
       "types": "./dist/location.d.ts",
+      "development": "./dist/development/location.js",
+      "production": "./dist/location.js",
+      "deno": "./dist/location.js",
+      "node": "./dist/development/location.js",
       "default": "./dist/location.js"
     },
     "./matcher": {
       "types": "./dist/url-matcher.d.ts",
+      "development": "./dist/development/url-matcher.js",
+      "production": "./dist/url-matcher.js",
+      "deno": "./dist/url-matcher.js",
+      "node": "./dist/development/url-matcher.js",
       "default": "./dist/url-matcher.js"
     },
     "./package.json": "./package.json",
     "./redirects": {
       "types": "./dist/redirects.d.ts",
+      "development": "./dist/development/redirects.js",
+      "production": "./dist/redirects.js",
+      "deno": "./dist/redirects.js",
+      "node": "./dist/development/redirects.js",
       "default": "./dist/redirects.js"
     },
     "./simulate": {
       "types": "./dist/simulate.d.ts",
+      "development": "./dist/development/simulate.js",
+      "production": "./dist/simulate.js",
+      "deno": "./dist/simulate.js",
+      "node": "./dist/development/simulate.js",
       "default": "./dist/simulate.js"
+    },
+    "./url-config": {
+      "types": "./dist/url-config.d.ts",
+      "development": "./dist/development/url-config.js",
+      "production": "./dist/url-config.js",
+      "deno": "./dist/url-config.js",
+      "node": "./dist/development/url-config.js",
+      "default": "./dist/url-config.js"
     },
     "./vite": {
       "types": "./dist/vite.d.ts",
+      "development": "./dist/development/vite.js",
+      "production": "./dist/vite.js",
+      "deno": "./dist/vite.js",
+      "node": "./dist/development/vite.js",
       "default": "./dist/vite.js"
     }
   },
   "scripts": {
-    "build:js": "oxc-emit-js",
+    "bench": "node --import ./test/import-meta-env.ts test/resolve.bench.ts",
+    "build:js": "oxc-emit-js --development",
     "build:types": "oxc-emit-dts",
     "changelog": "release-it --changelog --git.tagMatch=\"ui-router-server@[0-9]*.[0-9]*.[0-9]*\"",
-    "check:bundle": "check-bundle-inputs",
+    "check:bundle": "floor-guard && check-bundle-inputs",
+    "check:dev-split": "oxc-emit-check-dev-split",
     "codecov:bundle": "upload-entry-bundles",
     "docs:api": "rimraf ../../www/lit-ui-router.dev/api/ui-router-server && typedoc",
     "format:check:oxfmt": "oxfmt --check \"**/*.{ts,js,json,md}\"",
     "format:oxfmt": "oxfmt \"**/*.{ts,js,json,md}\"",
     "lint:oxlint": "oxlint .",
-    "test": "node --test \"test/**/*.test.ts\"",
-    "test:coverage": "mkdir -p coverage && node --test --experimental-test-coverage --test-coverage-include=\"src/**\" --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=coverage/lcov.info \"test/**/*.test.ts\" && rebase-lcov coverage/lcov.info",
+    "test": "node --import ./test/import-meta-env.ts --test --test-reporter=@tools/shared/test-reporter.ts \"test/**/*.test.ts\"",
+    "test:coverage": "mkdir -p coverage && node --import ./test/import-meta-env.ts --test --experimental-test-coverage --test-coverage-include=\"src/**\" --test-reporter=@tools/shared/test-reporter.ts --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=coverage/lcov.info \"test/**/*.test.ts\" && rebase-lcov coverage/lcov.info",
     "typecheck:runtime-globals": "tsc -p tsconfig.runtime-globals.json --noEmit",
     "typecheck:src": "tsc -p tsconfig.src.json --noEmit",
     "typecheck:tests": "tsc -p test/tsconfig.json --noEmit",
@@ -83,19 +138,25 @@
   },
   "devDependencies": {
     "@release-it/conventional-changelog": "catalog:",
+    "@repo/dev-gate": "catalog:workspace",
     "@tools/bundle-probe": "catalog:workspace",
+    "@tools/compat-guards": "catalog:workspace",
     "@tools/lcov-rebase": "catalog:workspace",
     "@tools/oxc-emit": "catalog:workspace",
     "@tools/release-config": "catalog:workspace",
+    "@tools/shared": "catalog:workspace",
     "@tools/typedoc-plugin-lit-ui-router": "catalog:workspace",
     "@tools/wintercg-globals": "catalog:workspace",
     "@types/node": "catalog:",
     "@uirouter/core": "catalog:",
+    "@uirouter/core-floor": "catalog:peerFloor",
     "hono": "catalog:",
+    "hono-floor": "catalog:peerFloor",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
     "release-it": "catalog:",
     "rimraf": "catalog:",
+    "tinybench": "catalog:",
     "typedoc": "catalog:",
     "typedoc-plugin-markdown": "catalog:",
     "typedoc-vitepress-theme": "catalog:",
@@ -149,6 +210,11 @@
       ]
     },
     "./redirects": {
+      "free": [
+        "@uirouter/core"
+      ]
+    },
+    "./url-config": {
       "free": [
         "@uirouter/core"
       ]

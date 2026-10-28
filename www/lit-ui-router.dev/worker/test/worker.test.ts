@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import { beforeEach, describe, it } from 'node:test';
 
 import worker from '../index.ts';
+import { fixtureLedger } from './ledger-stub/rows.ts';
+import { memoryEdge } from './memory-cache.ts';
 
 // The docs worker's HTTP contract, exercised on the production code path: the
 // real module (real sample-app-routes mounts, real ui-router-server fetch
@@ -11,13 +13,22 @@ import worker from '../index.ts';
 // bodies themselves stay covered by the docs suite's cy.visit smokes.
 const ORIGIN = 'http://docs.test';
 
-// Stand-ins for dist/: the four shell builds, the flagship 404 pages,
+// Stand-ins for dist/: the five shell builds, the flagship 404 pages,
 // and a default that plays the binding's own 404.html handling.
-const ASSET_TABLE: Record<string, { body: string; headers: HeadersInit }> = {
+interface Asset {
+  body: string;
+  headers: HeadersInit;
+}
+
+const ASSET_TABLE = {
   '/app': { body: 'vanilla-shell', headers: { 'Content-Type': 'text/html' } },
   '/app-mobx': { body: 'mobx-shell', headers: { 'Content-Type': 'text/html' } },
   '/app-effect': {
     body: 'effect-shell',
+    headers: { 'Content-Type': 'text/html' },
+  },
+  '/app-signals': {
+    body: 'signals-shell',
     headers: { 'Content-Type': 'text/html' },
   },
   '/app-hash': { body: 'hash-shell', headers: { 'Content-Type': 'text/html' } },
@@ -33,33 +44,72 @@ const ASSET_TABLE: Record<string, { body: string; headers: HeadersInit }> = {
     body: 'effect-404-page',
     headers: { 'Content-Type': 'text/html; charset=utf-8' },
   },
-};
+  '/app-signals/404.html': {
+    body: 'signals-404-page',
+    headers: { 'Content-Type': 'text/html; charset=utf-8' },
+  },
+} satisfies Record<string, Asset>;
+
+const assetsByPath = new Map<string, Asset>(Object.entries(ASSET_TABLE));
+
+const assetAt = (pathname: string): Asset | undefined =>
+  assetsByPath.get(pathname);
 
 // Every binding call is a Request built from the original — shell,
 // pass-through, and the 404-page probe alike — but stay tolerant of a bare
 // URL so a regression shows up as a method assertion, not a crash.
 const pathnameOf = (input: Request | URL | string): string =>
   new URL(input instanceof Request ? input.url : String(input)).pathname;
+
 const methodOf = (input: Request | URL | string): string =>
   input instanceof Request ? input.method : 'GET';
 
 let assetCalls: string[] = [];
+
 let assetMethods: string[] = [];
+
+let memory = memoryEdge();
+
+Object.defineProperty(globalThis, 'caches', {
+  configurable: true,
+  value: {
+    get default() {
+      return memory.edge.cache;
+    },
+  },
+});
+
+// SAFETY: the worker calls only waitUntil on its context.
+// oxlint-disable-next-line anti-slop/no-chained-type-assertions -- a plain object shares too few members with ExecutionContext for one assertion
+const ctx = {
+  waitUntil: (promise: Promise<unknown>) => memory.edge.waitUntil(promise),
+} as unknown as ExecutionContext;
+
 beforeEach(() => {
   assetCalls = [];
   assetMethods = [];
+  memory = memoryEdge();
 });
 
-const env = {
+const env: Env = {
+  VITE_GOOGLE_ANALYTICS_TRACKING_ID: '',
+  VITE_TRACE: '',
+  // SAFETY: the worker calls only the LedgerReader methods the fixture implements.
+  // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- the fixture is a plain object, not a Service
+  LEDGER: fixtureLedger as unknown as Env['LEDGER'],
   ASSETS: {
+    connect: () => {
+      throw new Error('the assets binding has no sockets');
+    },
     fetch: (input: Request | URL | string) => {
       const pathname = pathnameOf(input);
       const method = methodOf(input);
       assetCalls.push(pathname);
       assetMethods.push(method);
-      const asset = ASSET_TABLE[pathname];
+      const asset = assetAt(pathname);
       // Like the real binding: a HEAD answers with the headers and no body.
       const bodyOf = (body: string) => (method === 'HEAD' ? null : body);
+
       return Promise.resolve(
         asset
           ? new Response(bodyOf(asset.body), {
@@ -73,7 +123,7 @@ const env = {
       );
     },
   },
-} as unknown as Parameters<typeof worker.fetch>[1];
+};
 
 // Plain GETs, like the Cypress cy.request calls these tests replace; the
 // worker judges every request it receives (shouldHandle: () => true — it only
@@ -83,11 +133,13 @@ const env = {
 const dispatch = (
   path: string,
   init?: RequestInit<IncomingRequestCfProperties>,
-) => worker.fetch(new Request(`${ORIGIN}${path}`, init), env);
+) => worker.fetch(new Request(`${ORIGIN}${path}`, init), env, ctx);
 
-describe('flagship mounts (/app, /app-mobx, /app-effect)', () => {
+const FLAGSHIPS = ['/app', '/app-mobx', '/app-effect', '/app-signals'] as const;
+
+describe('flagship mounts (/app, /app-mobx, /app-effect, /app-signals)', () => {
   it('serves each mount its own shell at 200 for real routes, indexable', async () => {
-    for (const mount of ['/app', '/app-mobx', '/app-effect']) {
+    for (const mount of FLAGSHIPS) {
       for (const path of ['/welcome', '/contacts/1/edit']) {
         assetCalls = [];
         const res = await dispatch(`${mount}${path}`);
@@ -104,7 +156,7 @@ describe('flagship mounts (/app, /app-mobx, /app-effect)', () => {
   });
 
   it('302s the mount root to /welcome — hash mode is not first-class there', async () => {
-    for (const mount of ['/app', '/app-mobx', '/app-effect']) {
+    for (const mount of FLAGSHIPS) {
       const res = await dispatch(mount);
       assert.equal(res.status, 302, mount);
       assert.equal(res.headers.get('Location'), `${mount}/welcome`, mount);
@@ -113,7 +165,7 @@ describe('flagship mounts (/app, /app-mobx, /app-effect)', () => {
   });
 
   it('serves the per-app 404 page, re-wrapped at an honest 404', async () => {
-    for (const mount of ['/app', '/app-mobx', '/app-effect']) {
+    for (const mount of FLAGSHIPS) {
       for (const path of [
         '/definitely-not-a-route',
         '/contacts/1/edit/extra',
@@ -144,9 +196,11 @@ describe('flagship mounts (/app, /app-mobx, /app-effect)', () => {
     for (const mount of ['/app', '/app-mobx']) {
       assetCalls = [];
       assetMethods = [];
+
       const res = await dispatch(`${mount}/definitely-not-a-route`, {
         method: 'HEAD',
       });
+
       assert.equal(res.status, 404, mount);
       assert.deepEqual(assetCalls, [`${mount}/404.html`], mount);
       assert.deepEqual(assetMethods, ['HEAD'], mount);
@@ -265,6 +319,35 @@ describe('/simulated-routing (the simulate-strategy exhibit)', () => {
     assert.deepEqual(assetCalls, ['/app']);
     assert.equal(await res.text(), ASSET_TABLE['/app'].body);
     assert.equal(res.headers.get('X-Robots-Tag'), 'noindex');
+  });
+});
+
+describe('/releases (the release pages)', () => {
+  it('renders the pages from the ledger, never the assets binding', async () => {
+    const res = await dispatch('/releases/lit-ui-router/');
+    assert.equal(res.status, 200);
+    assert.deepEqual(assetCalls, []);
+    assert.match(res.headers.get('Content-Type') ?? '', /text\/html/);
+    assert.equal(res.headers.get('X-Robots-Tag'), null);
+  });
+});
+
+describe('/gh (the GitHub release redirects)', () => {
+  it('caches the redirect in caches.default through ctx.waitUntil', async () => {
+    const path = '/gh/releases/lit-ui-router/latest';
+    const first = await dispatch(path);
+    await memory.settled();
+    const second = await dispatch(path);
+
+    assert.equal(first.status, 302);
+    assert.equal(second.status, 302);
+    assert.equal(second.headers.get('Location'), first.headers.get('Location'));
+    assert.deepEqual(memory.calls, [
+      `match GET ${ORIGIN}${path}`,
+      `put GET ${ORIGIN}${path}`,
+      `match GET ${ORIGIN}${path}`,
+    ]);
+    assert.deepEqual(assetCalls, []);
   });
 });
 

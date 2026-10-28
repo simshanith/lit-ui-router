@@ -9,15 +9,21 @@
       // repo's pnpm version pins against package.json's `packageManager` and
       // keeps pnpm-lock.yaml one document, and
       // runner-label.test.ts reads every workflow plus the actionlint config,
-      // and mise-pin.test.ts reads every workflow's mise-action pins.
+      // mise-pin.test.ts reads every workflow's mise-action pins, and
+      // task-logs-upload.test.ts holds the task-log uploads to the workspace globs,
+      // and release-ledger-claim.test.ts holds publish-npm's claim step to its
+      // mise task and the ledger's OIDC pins.
       "inputs": [
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/package.json",
+        "$TURBO_ROOT$/pnpm-workspace.yaml",
         "$TURBO_ROOT$/pnpm-lock.yaml",
         "$TURBO_ROOT$/.config/mise/config.toml",
         "$TURBO_ROOT$/.config/mise/mise.lock",
         "$TURBO_ROOT$/.github/workflows/**",
-        "$TURBO_ROOT$/.github/actionlint.yaml"
+        "$TURBO_ROOT$/.github/actionlint.yaml",
+        "$TURBO_ROOT$/www/release-ledger.lit-ui-router.dev/wrangler.jsonc",
+        "$TURBO_ROOT$/.config/mise/tasks/ledger_claim"
       ]
     },
     // Every check below reads the whole repo, not just this package, so each
@@ -42,6 +48,7 @@
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/**/package.json",
         "!$TURBO_ROOT$/**/node_modules/**",
+        "!$TURBO_ROOT$/**/.vitepress/cache/**",
         "!$TURBO_ROOT$/.claude/**",
         "$TURBO_ROOT$/pnpm-workspace.yaml",
         "$TURBO_ROOT$/pnpm-lock.yaml"
@@ -51,6 +58,26 @@
       // the lock records catalogs, overrides and importers alongside resolutions
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/pnpm-lock.yaml"]
     },
+    "check:package-coverage": {
+      // //#lint:package-json's read-set (eslint resolves the config per file),
+      // plus the workspace enumeration
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/**/package.json",
+        "!$TURBO_ROOT$/**/node_modules/**",
+        "!$TURBO_ROOT$/**/.vitepress/cache/**",
+        "!$TURBO_ROOT$/**/dist/**",
+        "!$TURBO_ROOT$/**/.turbo/**",
+        "!$TURBO_ROOT$/.claude/**",
+        "$TURBO_ROOT$/**/eslint.config.*",
+        "$TURBO_ROOT$/pnpm-workspace.yaml",
+        "$TURBO_ROOT$/.oxlintrc.json",
+        "$TURBO_ROOT$/tools/eslint/**",
+        "$TURBO_ROOT$/tools/eslint-ts-parser/src/**",
+        "$TURBO_ROOT$/packages/eslint-plugin-lit-ui-router/src/**",
+        "$TURBO_ROOT$/tools/shared/src/**"
+      ]
+    },
     "check:graph-edges": {
       // any manifest can gain or lose a lane, any turbo.json an edge that
       // selects differently — or stops planning at all
@@ -59,6 +86,7 @@
         "$TURBO_ROOT$/**/turbo.json",
         "$TURBO_ROOT$/**/package.json",
         "!$TURBO_ROOT$/**/node_modules/**",
+        "!$TURBO_ROOT$/**/.vitepress/cache/**",
         "!$TURBO_ROOT$/.claude/**",
         "$TURBO_ROOT$/pnpm-workspace.yaml",
         "$TURBO_ROOT$/tools/shared/src/**"
@@ -75,19 +103,27 @@
         "$TURBO_ROOT$/**/*.{ts,tsx,js,jsx,cjs,mjs,cts,mts}",
         "$TURBO_ROOT$/**/*.{json,jsonc,toml,yaml,yml}",
         "!$TURBO_ROOT$/**/node_modules/**",
+        "!$TURBO_ROOT$/**/.vitepress/cache/**",
         "!$TURBO_ROOT$/**/dist/**",
         "!$TURBO_ROOT$/**/coverage/**",
+        "!$TURBO_ROOT$/**/coverage-effect3/**",
         "!$TURBO_ROOT$/**/.turbo/**",
         "!$TURBO_ROOT$/**/.probe-scratch/**",
         "!$TURBO_ROOT$/**/.rumdl_cache/**",
         "!$TURBO_ROOT$/www/lit-ui-router.dev/api/**",
+        "!$TURBO_ROOT$/**/.cloudflare/**",
+        "!$TURBO_ROOT$/www/release-ledger.lit-ui-router.dev/worker/worker-configuration.d.ts",
         "!$TURBO_ROOT$/**/.cache/**",
         "!$TURBO_ROOT$/.claude/**",
         "!$TURBO_ROOT$/.config/mise/**/*.local.toml",
-        // ignored by knip.jsonc as standalone installs
+        // ignored by knip.config.ts as standalone installs
         "!$TURBO_ROOT$/examples/*/**",
         "$TURBO_ROOT$/pnpm-workspace.yaml"
       ]
+    },
+    "check:shared-source": {
+      // the canonical sources the consumers inline
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/packages/shared/*/src/**"]
     },
     "check:task-inputs": {
       // the audit is over every planned task, so any turbo.json or manifest
@@ -97,6 +133,7 @@
         "$TURBO_ROOT$/**/turbo.json",
         "$TURBO_ROOT$/**/package.json",
         "!$TURBO_ROOT$/**/node_modules/**",
+        "!$TURBO_ROOT$/**/.vitepress/cache/**",
         "!$TURBO_ROOT$/.claude/**",
         "$TURBO_ROOT$/tools/shared/src/**"
       ]

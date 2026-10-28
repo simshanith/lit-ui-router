@@ -21,26 +21,44 @@ import { workspaceRoot } from '@tools/bootstrap/root.ts';
 
 const require = createRequire(import.meta.url);
 
-function fail(message: string): never {
+function fail(message: string): void {
   console.error(`vue-check: ${message}`);
   console.error('usage: vue-check <project> [...vue-tsc args]');
-  process.exit(2);
+  process.exitCode = 2;
 }
 
-const [projectArg, ...forwarded] = process.argv.slice(2);
-if (!projectArg) fail('missing <project>');
+const main = (): void => {
+  const [projectArg, ...forwarded] = process.argv.slice(2);
 
-const project = resolve(workspaceRoot, projectArg);
-if (!existsSync(project)) fail(`no such project: ${projectArg}`);
-const projectDir = statSync(project).isDirectory() ? project : dirname(project);
+  if (!projectArg) {
+    fail('missing <project>');
 
-const vueTsc = require.resolve('vue-tsc/bin/vue-tsc.js');
+    return;
+  }
 
-const result = spawnSync(
-  process.execPath,
-  [vueTsc, '--noEmit', '-p', project, ...forwarded],
-  { cwd: projectDir, stdio: 'inherit' },
-);
+  const project = resolve(workspaceRoot, projectArg);
 
-if (result.error) throw result.error;
-process.exit(result.status ?? 1);
+  if (!existsSync(project)) {
+    fail(`no such project: ${projectArg}`);
+
+    return;
+  }
+
+  const projectDir = statSync(project).isDirectory()
+    ? project
+    : dirname(project);
+
+  const vueTsc = require.resolve('vue-tsc/bin/vue-tsc.js');
+
+  const result = spawnSync(
+    process.execPath,
+    [vueTsc, '--noEmit', '-p', project, ...forwarded],
+    { cwd: projectDir, stdio: 'inherit' },
+  );
+
+  if (result.error) throw result.error;
+
+  process.exitCode = result.status ?? 1;
+};
+
+if (import.meta.main) main();

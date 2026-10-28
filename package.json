@@ -10,9 +10,11 @@
     "check:graph-edges": "turbo run @tools/repo-checks#check:graph-edges",
     "check:knip": "turbo run @tools/repo-checks#check:knip",
     "check:pack": "turbo run check:pack",
+    "check:package-coverage": "turbo run @tools/repo-checks#check:package-coverage",
     "check:patches": "turbo run @tools/repo-checks#check:patches",
     "check:published-diff": "turbo run resolve:published && turbo run check:published-diff",
     "check:release-closure": "turbo run @tools/release#check:release-closure",
+    "check:shared-source": "turbo run @tools/repo-checks#check:shared-source",
     "check:single-version": "turbo run @tools/repo-checks#check:single-version",
     "check:task-inputs": "turbo run @tools/repo-checks#check:task-inputs",
     "check:workers-builds": "turbo run @tools/workers-builds#check",
@@ -27,11 +29,10 @@
     "format:toml": "mise run format_toml",
     "lint": "turbo run lint",
     "lint:actionlint": "mise run lint_actionlint",
-    "lint:complexity": "eslint --config tools/eslint/complexity-ceiling.ts --quiet .",
+    "lint:complexity": "eslint --config tools/eslint/complexity-ceiling.ts --format ./tools/eslint/github-formatter.ts --quiet .",
     "lint:elements": "lint-elements",
-    "lint:elements:snapshot": "lint-elements --update",
     "lint:markdown": "mise run lint_markdown",
-    "lint:package-json": "eslint --format tap \"**/package.json\" pnpm-workspace.yaml",
+    "lint:package-json": "eslint --format ./tools/eslint/github-formatter.ts \"**/package.json\" pnpm-workspace.yaml",
     "lint:root": "oxlint --ignore-pattern apps --ignore-pattern tools --ignore-pattern www --ignore-pattern packages --ignore-pattern examples .",
     "lint:shellcheck": "mise run lint_shellcheck",
     "lint:templates": "lit-analyzer-ts-guard && lint-templates",
@@ -46,11 +47,15 @@
     "@commitlint/cli": "catalog:",
     "@commitlint/config-conventional": "catalog:",
     "@commitlint/types": "catalog:",
+    "@tools/bootstrap": "catalog:workspace",
     "@tools/compat-guards": "catalog:workspace",
     "@tools/eslint": "catalog:workspace",
     "@tools/lint-elements": "catalog:workspace",
     "@tools/lit-template-lint": "catalog:workspace",
+    "@tools/oxlint-anti-slop": "catalog:workspace",
+    "@tools/shared": "catalog:workspace",
     "@types/node": "catalog:",
+    "cf": "catalog:",
     "eslint": "catalog:",
     "eslint-formatter-tap": "catalog:",
     "eslint-plugin-lit-ui-router": "catalog:workspace",
@@ -69,7 +74,7 @@
     "wrangler": "catalog:"
   },
   "engines": {
-    "node": ">=24.21.0"
+    "node": ">=24.22.1"
   },
-  "packageManager": "pnpm@12.8.1+sha512.f64ba907507f5ceafe06c8d38e6052d0179444580ec1279ddd5bfc11cb48aa8a2644b66598e07e761da84872a9fc57d5f902b87fa49d024198d558612aabbe45"
+  "packageManager": "pnpm@12.15.0+sha512.b3951d6d6ff4a9f13dc7cf56cd28d2b8eb37dbcc9c68e52e1e1191873ea9f82a017287ab50baadc5ccc494f036c67c0e47eb13608c2fa36f47711b61ea128e61"
 }

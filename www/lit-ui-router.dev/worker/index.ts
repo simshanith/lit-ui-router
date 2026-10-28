@@ -1,6 +1,11 @@
+import './dom-shim.ts';
+
 import { mounts } from 'sample-app-routes';
 import { createServerRouter } from 'ui-router-server';
 import { createFetchHandler } from 'ui-router-server/fetch';
+
+import type { LedgerReader } from './releases/ledger.ts';
+import { serveReleases } from './releases/serve.ts';
 
 // All routing intelligence lives in ui-router-server; the ./fetch adapter
 // turns a verdict into an HTTP Response. Module scope: the mount tables
@@ -12,10 +17,11 @@ const router = createServerRouter({ mounts });
 // sample-app-shared's configureRouter + sample-app-routes' shellMounts), so
 // /app.html renders real routes under /not-found-spa and /simulated-routing
 // too — no per-prefix builds, no HTML templating. shellPath points those
-// mounts at the single shell; /app-mobx, /app-effect and /app-hash keep their
-// own builds (different bindings / location mode) and serve their own shells
-// at the default mount -> mount path.
+// mounts at the single shell; /app-mobx, /app-effect, /app-signals and
+// /app-hash keep their own builds (different bindings / location mode) and
+// serve their own shells at the default mount -> mount path.
 const VANILLA_SHELL = '/app';
+
 const VANILLA_SHELL_MOUNTS = new Set([
   '/app',
   '/not-found-spa',
@@ -28,12 +34,14 @@ const VANILLA_SHELL_MOUNTS = new Set([
 // layered on the adapter's OUTPUT — a redirect Response the adapter builds has
 // no host hook, so noindex rides the request path, not a per-verdict callback.
 const EXHIBITS = ['/not-found-naive', '/not-found-spa', '/simulated-routing'];
+
 const isExhibit = (pathname: string): boolean =>
   EXHIBITS.some((m) => pathname === m || pathname.startsWith(`${m}/`));
 
 const withNoindex = (response: Response): Response => {
   const headers = new Headers(response.headers);
   headers.set('X-Robots-Tag', 'noindex');
+
   return new Response(response.body, { status: response.status, headers });
 };
 
@@ -45,8 +53,21 @@ const withNoindex = (response: Response): Response => {
 const NAIVE_MOUNT = '/not-found-naive';
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url);
+
+    // SAFETY: wrangler types the binding as an untyped Service; LedgerReader names the entrypoint's methods.
+    // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- an untyped Service shares no members with the RPC methods, so one assertion can't reach them
+    const ledger = env.LEDGER as unknown as LedgerReader;
+
+    const releases = await serveReleases(request, ledger, {
+      cache: caches.default,
+      waitUntil: (promise) => ctx.waitUntil(promise),
+      now: Date.now,
+    });
+
+    if (releases !== null) return releases;
+
     if (
       url.pathname === NAIVE_MOUNT ||
       url.pathname.startsWith(`${NAIVE_MOUNT}/`)
@@ -59,6 +80,7 @@ export default {
       const shell = await env.ASSETS.fetch(
         new Request(new URL(VANILLA_SHELL, request.url), request),
       );
+
       return withNoindex(shell);
     }
 
@@ -89,6 +111,7 @@ export default {
         const page = await env.ASSETS.fetch(
           new Request(new URL(`${mount}/404.html`, req.url), req),
         );
+
         return page.status === 200
           ? new Response(page.body, {
               status: 404,
@@ -104,9 +127,11 @@ export default {
     });
 
     const response = await handler(request);
+
     // null is the adapter's pass-through: a notFound without a mount (the path
     // isn't this router's), served however the assets binding would.
     if (response === null) return env.ASSETS.fetch(request);
+
     // Quarantine the teaching exhibits from crawlers, layered on the adapter's
     // output (the redirect Response it builds has no host hook of its own).
     return isExhibit(url.pathname) ? withNoindex(response) : response;

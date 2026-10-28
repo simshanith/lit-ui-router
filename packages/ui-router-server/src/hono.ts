@@ -37,9 +37,12 @@ export function serverRouterHono(
   options: FetchAdapterOptions,
 ): MiddlewareHandler {
   const handler = createFetchHandler(router, options);
+
   return async (c, next) => {
     const response = await handler(c.req.raw);
+
     if (response) return response;
+
     return next();
   };
 }

@@ -1,6 +1,7 @@
 import { runInAction } from 'mobx';
 
 import AppConfig from './appConfig.js';
+
 /**
  * This service emulates an Authentication Service.
  */
@@ -57,4 +58,5 @@ class AuthService {
 }
 
 const instance = new AuthService();
+
 export default instance;

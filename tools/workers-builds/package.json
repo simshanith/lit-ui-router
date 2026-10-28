@@ -2,18 +2,20 @@
   "name": "@tools/workers-builds",
   "version": "0.0.1",
   "private": true,
-  "description": "Diffs the Cloudflare Workers Builds triggers against the repo-owned desired state, and applies it",
+  "description": "Diffs the Cloudflare Workers Builds triggers against the repo-owned desired state, and applies it; checks the atlas Pages deploy against its branch head",
   "type": "module",
   "scripts": {
     "check": "node workers-builds-triggers.ts",
     "format:check:oxfmt": "oxfmt --check \"**/*.{ts,js,json,jsonc,md}\"",
     "format:oxfmt": "oxfmt \"**/*.{ts,js,json,jsonc,md}\"",
     "lint:oxlint": "oxlint .",
-    "test": "node --test \"*.test.ts\"",
+    "test": "node --test --test-reporter=@tools/shared/test-reporter.ts \"*.test.ts\"",
     "typecheck:tsc": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
+    "@cloudflare/config": "catalog:",
     "@tools/bootstrap": "catalog:workspace",
+    "@tools/shared": "catalog:workspace",
     "@types/node": "catalog:",
     "jsonc-parser": "catalog:",
     "oxfmt": "catalog:",

@@ -7,13 +7,17 @@
 
 import type { Exec } from '@tools/shared/exec.ts';
 import { defaultExec } from '@tools/shared/exec.ts';
+import { ensureGh } from '@tools/shared/gh.ts';
 import { withRetry } from './retry.ts';
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
+import { messageOf } from '@tools/shared/errors.ts';
 
 /** argv for `gh pr create`, verbatim from bump-version.yml's Create PR step. */
 export function prCreateArgs(base: string, head: string): string[] {
   if (base.trim() === '') throw new Error('base must be non-empty');
+
   if (head.trim() === '') throw new Error('head must be non-empty');
+
   return [
     'pr',
     'create',
@@ -29,17 +33,6 @@ export function prCreateArgs(base: string, head: string): string[] {
   ];
 }
 
-/** Fail fast with guidance when gh is missing from PATH. */
-export async function ensureGh(exec: Exec = defaultExec): Promise<void> {
-  try {
-    await exec('gh', ['--version']);
-  } catch {
-    throw new Error(
-      'gh CLI not found on PATH — install GitHub CLI (https://cli.github.com) or run in CI',
-    );
-  }
-}
-
 /**
  * Create the release PR; the GitHub API write gets in-tool retry. Resolves
  * to the PR URL gh prints — the caller surfaces it, or the run never says
@@ -51,17 +44,19 @@ export async function createReleasePr(
   exec: Exec = defaultExec,
 ): Promise<string> {
   await ensureGh(exec);
+
   const { stdout } = await withRetry(
     () => exec('gh', prCreateArgs(base, head), { cwd: workspaceRoot }),
     {
       onRetry: (error, attempt) => {
         console.error(
-          `gh pr create attempt ${attempt} failed, retrying: ${
-            error instanceof Error ? error.message : String(error)
-          }`,
+          `gh pr create attempt ${attempt} failed, retrying: ${messageOf(
+            error,
+          )}`,
         );
       },
     },
   );
+
   return stdout.trim();
 }

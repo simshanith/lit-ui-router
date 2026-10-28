@@ -54,6 +54,7 @@ describe('lit-ui-router/context across a shadow boundary', () => {
     const host = document.createElement('test-context-shadow-host');
     parent.appendChild(host);
     await waitForUpdate(host);
+
     return host.shadowRoot!.querySelector('#inner')!;
   }
 
@@ -75,6 +76,7 @@ describe('lit-ui-router/context across a shadow boundary', () => {
   it('seekRouter falls back to that provider from inside the shadow root', async () => {
     provideRouter(container, router);
 
+    // eslint-disable-next-line typescript/no-deprecated -- the house ui-router-context path under test (#874)
     expect(UIRouterLitElement.seekRouter(await shadowChild(container))).toBe(
       router,
     );

@@ -15,6 +15,7 @@ export function missingEdges(
   resolved: readonly string[],
 ): string[] {
   const declared = new Set(resolved);
+
   return members
     .filter((name) => !declared.has(`${name}#${producerTask}`))
     .sort();
@@ -28,5 +29,6 @@ export function formatMissing(
   const lines = missing
     .map((name) => `"${name}#${rule.producerTask}"`)
     .join(', ');
+
   return `${rule.consumer} does not order on ${lines}: ${rule.why}`;
 }

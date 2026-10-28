@@ -55,18 +55,22 @@ interface NativeProgram {
   getSyntacticDiagnostics(): NativeDiagnostic[];
   getSemanticDiagnostics(): NativeDiagnostic[];
 }
+
 interface NativeSnapshot {
   getProject(configPath: string): { program: NativeProgram } | undefined;
   dispose(): void;
 }
+
 interface NativeApi {
   updateSnapshot(options: { openProjects: string[] }): NativeSnapshot;
   close(): void;
 }
+
 interface NativeSyncModule {
   API: new (options: { cwd: string }) => NativeApi;
   DiagnosticCategory: { Error: number };
 }
+
 // Every leg reports its own version from its root export, classic and native
 // alike — the classic legs read it off the API object as `ts.version`.
 interface NativeModule {
@@ -74,6 +78,7 @@ interface NativeModule {
 }
 
 const here = dirname(fileURLToPath(import.meta.url));
+
 const require = createRequire(import.meta.url);
 
 // devDependency aliases, oldest first; every leg is pinned so none tracks the
@@ -82,47 +87,82 @@ const API_VERSIONS = ['typescript-5.0', 'typescript-5.9', 'typescript-6'];
 
 const NATIVE_VERSION = 'typescript-7';
 
-const CONFIGS = ['tsconfig.fixture.json', 'tsconfig.fixture.nodenext.json'];
+const distDir = (dir: string) =>
+  resolve(here, '..', '..', 'packages', dir, 'dist') + sep;
 
 // dist dirs whose .d.ts must check clean (pnpm symlinks resolve to these)
 const PACKAGE_DIRS = [
   'lit-ui-router',
   'lit-ui-router-effect',
   'lit-ui-router-mobx',
+  'lit-ui-router-signals',
   'lit-ui-router-ssr',
   'navigation-location-plugin',
+  'ui-router-effect',
+  'ui-router-mobx',
+  'ui-router-registry',
   'ui-router-server',
-].map((dir) => resolve(here, '..', '..', 'packages', dir, 'dist') + sep);
+  'ui-router-signals',
+].map(distDir);
+
+const BASE_CONFIG = 'tsconfig.fixture.json';
+
+// An augmentation is program-wide, so the registered consumer, whose registry
+// entry points fill the adapters' RouteTypes, is a program of its own.
+const REGISTERED_DIRS = [
+  'ui-router-effect',
+  'ui-router-mobx',
+  'ui-router-registry',
+  'ui-router-signals',
+].map(distDir);
+
+// Each config is one consumer program, keyed to the dist dirs it must load.
+const CONFIGS = new Map([
+  [BASE_CONFIG, PACKAGE_DIRS],
+  ['tsconfig.fixture.nodenext.json', PACKAGE_DIRS],
+  ['registered/tsconfig.fixture.json', REGISTERED_DIRS],
+  ['registered/tsconfig.fixture.nodenext.json', REGISTERED_DIRS],
+]);
+
+const programDirs = (configFile: string) =>
+  CONFIGS.get(configFile) ?? PACKAGE_DIRS;
 
 // A file we cannot resolve is treated as ours: it means the compiler reported
 // against something we planted or mangled, which must never be tolerated.
 function ownsPath(fileName: string): boolean {
   let normalized;
+
   try {
     normalized = resolve(realpathSync(fileName));
   } catch {
     return true;
   }
+
   if (normalized.startsWith(here + sep)) return true;
+
   return PACKAGE_DIRS.some((dir) => normalized.startsWith(dir));
 }
 
 function loadConfig(ts: ClassicApi, configFile: string): TS.ParsedCommandLine {
   let fatal: string | undefined;
+
   const host = {
     ...ts.sys,
     onUnRecoverableConfigFileDiagnostic: (diagnostic: TS.Diagnostic) => {
       fatal = ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n');
     },
   };
+
   const parsed = ts.getParsedCommandLineOfConfigFile(
     join(here, configFile),
     undefined,
     host,
   );
+
   if (!parsed || fatal) {
     throw new Error(`failed to parse ${configFile}: ${fatal ?? 'unknown'}`);
   }
+
   return parsed;
 }
 
@@ -131,8 +171,10 @@ function check(
   configFile: string,
   extraRootNames: string[] = [],
 ) {
+  // SAFETY: every API_VERSIONS alias exports the classic compiler API
   const ts = require(specifier) as ClassicApi;
   const parsed = loadConfig(ts, configFile);
+
   const program = ts.createProgram({
     rootNames: [...parsed.fileNames, ...extraRootNames],
     options: parsed.options,
@@ -140,12 +182,14 @@ function check(
 
   // guard: the packages under test must actually be in the program (built)
   const files = program.getSourceFiles().map((file) => file.fileName);
-  const missing = PACKAGE_DIRS.filter(
+
+  const missing = programDirs(configFile).filter(
     (dir) =>
       !files.some((file) =>
         resolve(ts.sys.realpath ? ts.sys.realpath(file) : file).startsWith(dir),
       ),
   );
+
   if (missing.length > 0) {
     throw new Error(
       `dist .d.ts missing from program (run \`turbo run build\` first):\n  ${missing.join('\n  ')}`,
@@ -155,6 +199,7 @@ function check(
   const diagnostics = ts.getPreEmitDiagnostics(program);
   const owned: TS.Diagnostic[] = [];
   let foreign = 0;
+
   for (const diagnostic of diagnostics) {
     if (!diagnostic.file || ownsPath(diagnostic.file.fileName)) {
       owned.push(diagnostic);
@@ -169,6 +214,7 @@ function check(
 // TypeScript 7 equivalent of check(). Diagnostics come back as plain objects
 // ({ fileName, pos, end, code, category, text }) rather than ts.Diagnostic.
 async function checkNative(specifier: string, configFile: string) {
+  // SAFETY: NATIVE_VERSION ships both modules in these shapes
   const [{ API, DiagnosticCategory }, { version }] = (await Promise.all([
     import(`${specifier}/unstable/sync`),
     import(specifier),
@@ -177,15 +223,19 @@ async function checkNative(specifier: string, configFile: string) {
   const api = new API({ cwd: here });
   const configPath = resolve(here, configFile);
   const snapshot = api.updateSnapshot({ openProjects: [configPath] });
+
   try {
     const project = snapshot.getProject(configPath);
+
     if (!project) throw new Error(`no project for ${configFile}`);
     const { program } = project;
 
     const files: string[] = program.getSourceFileNames();
-    const missing = PACKAGE_DIRS.filter(
+
+    const missing = programDirs(configFile).filter(
       (dir) => !files.some((file) => resolve(file).startsWith(dir)),
     );
+
     if (missing.length > 0) {
       throw new Error(
         `dist .d.ts missing from program (run \`turbo run build\` first):\n  ${missing.join('\n  ')}`,
@@ -194,20 +244,24 @@ async function checkNative(specifier: string, configFile: string) {
 
     const owned: NativeDiagnostic[] = [];
     let foreign = 0;
+
     const diagnostics = [
       ...program.getConfigFileParsingDiagnostics(),
       ...program.getGlobalDiagnostics(),
       ...program.getSyntacticDiagnostics(),
       ...program.getSemanticDiagnostics(),
     ];
+
     for (const diagnostic of diagnostics) {
       if (diagnostic.category !== DiagnosticCategory.Error) continue;
+
       if (!diagnostic.fileName || ownsPath(diagnostic.fileName)) {
         owned.push(diagnostic);
       } else {
         foreign += 1;
       }
     }
+
     return { version, owned, foreign, fileCount: files.length };
   } finally {
     snapshot.dispose();
@@ -226,15 +280,21 @@ async function runNative(specifier: string, configFile: string) {
     specifier,
     configFile,
   );
+
   const label = `TS ${version} · ${configFile}`;
+
   if (owned.length > 0) {
     console.error(`✖ ${label}`);
     console.error(formatNative(owned));
+
     return false;
   }
+
   const foreignNote =
     foreign > 0 ? ` (${foreign} third-party diagnostics ignored)` : '';
+
   console.log(`✔ ${label} — ${fileCount} files checked${foreignNote}`);
+
   return true;
 }
 
@@ -242,19 +302,25 @@ function run(specifier: string, configFile: string) {
   const { ts, owned, foreign, fileCount } = check(specifier, configFile);
 
   const label = `TS ${ts.version} · ${configFile}`;
+
   if (owned.length > 0) {
     const formatHost: TS.FormatDiagnosticsHost = {
       getCurrentDirectory: () => here,
       getCanonicalFileName: (fileName) => fileName,
       getNewLine: () => '\n',
     };
+
     console.error(`✖ ${label}`);
     console.error(ts.formatDiagnosticsWithColorAndContext(owned, formatHost));
+
     return false;
   }
+
   const foreignNote =
     foreign > 0 ? ` (${foreign} third-party diagnostics ignored)` : '';
+
   console.log(`✔ ${label} — ${fileCount} files checked${foreignNote}`);
+
   return true;
 }
 
@@ -285,6 +351,7 @@ async function withProbeFile<T>(
   const scratchDir = mkdtempSync(join(here, '.probe-scratch', 'run-'));
   const probePath = join(scratchDir, 'probe.d.ts');
   writeFileSync(probePath, probe);
+
   try {
     return await body(probePath, scratchDir);
   } finally {
@@ -298,27 +365,36 @@ const probeDiagnostic = (fileName: string | undefined) =>
 function selftest() {
   const floor = API_VERSIONS[0];
   const current = API_VERSIONS[API_VERSIONS.length - 1];
+
   return withProbeFile(PROBE, (probePath) => {
-    const floorRun = check(floor, CONFIGS[0], [probePath]);
+    const floorRun = check(floor, BASE_CONFIG, [probePath]);
+
     const probeCaught = floorRun.owned.some((diagnostic) =>
       probeDiagnostic(diagnostic.file?.fileName),
     );
+
     if (!probeCaught) {
       console.error(
         `✖ selftest — TS ${floorRun.ts.version} did not reject the NoInfer probe in ${probePath}`,
       );
+
       return false;
     }
-    const currentRun = check(current, CONFIGS[0], [probePath]);
+
+    const currentRun = check(current, BASE_CONFIG, [probePath]);
+
     if (currentRun.owned.length > 0) {
       console.error(
         `✖ selftest — TS ${currentRun.ts.version} unexpectedly rejected the NoInfer probe`,
       );
+
       return false;
     }
+
     console.log(
       `✔ selftest — floor TS ${floorRun.ts.version} rejects the probe, current TS ${currentRun.ts.version} accepts it`,
     );
+
     return true;
   });
 }
@@ -333,45 +409,63 @@ async function selftestNative() {
       writeFileSync(
         scratchConfig,
         JSON.stringify({
-          extends: `../../${CONFIGS[0]}`,
+          extends: `../../${BASE_CONFIG}`,
           include: ['../../fixtures/**/*.ts', './probe.d.ts'],
         }),
       );
+
       return checkNative(NATIVE_VERSION, scratchConfig);
     },
   );
+
   const caught = owned.some((diagnostic) =>
     probeDiagnostic(diagnostic.fileName),
   );
+
   if (!caught) {
     console.error(`✖ selftest native — TS ${version} did not reject the probe`);
+
     return false;
   }
+
   console.log(`✔ selftest native — TS ${version} rejects the probe`);
+
   return true;
 }
 
-// --versions=current runs only the repo-current (native TS 7) leg; the
-// default full matrix adds the pinned classic legs and their self-test.
-const versionsArg = process.argv
-  .find((arg) => arg.startsWith('--versions='))
-  ?.slice('--versions='.length);
-if (versionsArg !== undefined && !['current', 'full'].includes(versionsArg)) {
-  console.error(`unknown --versions=${versionsArg} (expected current|full)`);
-  process.exit(2);
-}
-const currentOnly = versionsArg === 'current';
+const main = async (): Promise<void> => {
+  // --versions=current runs only the repo-current (native TS 7) leg; the
+  // default full matrix adds the pinned classic legs and their self-test.
+  const versionsArg = process.argv
+    .find((arg) => arg.startsWith('--versions='))
+    ?.slice('--versions='.length);
 
-let ok = currentOnly ? true : await selftest();
-ok = (await selftestNative()) && ok;
-if (!currentOnly) {
-  for (const specifier of API_VERSIONS) {
-    for (const configFile of CONFIGS) {
-      ok = run(specifier, configFile) && ok;
+  if (versionsArg !== undefined && !['current', 'full'].includes(versionsArg)) {
+    console.error(`unknown --versions=${versionsArg} (expected current|full)`);
+    process.exitCode = 2;
+
+    return;
+  }
+
+  const currentOnly = versionsArg === 'current';
+
+  let ok = currentOnly ? true : await selftest();
+
+  ok = (await selftestNative()) && ok;
+
+  if (!currentOnly) {
+    for (const specifier of API_VERSIONS) {
+      for (const configFile of CONFIGS.keys()) {
+        ok = run(specifier, configFile) && ok;
+      }
     }
   }
-}
-for (const configFile of CONFIGS) {
-  ok = (await runNative(NATIVE_VERSION, configFile)) && ok;
-}
-process.exit(ok ? 0 : 1);
+
+  for (const configFile of CONFIGS.keys()) {
+    ok = (await runNative(NATIVE_VERSION, configFile)) && ok;
+  }
+
+  if (!ok) process.exitCode = 1;
+};
+
+if (import.meta.main) await main();

@@ -8,17 +8,18 @@ This file is an index. The details live in [docs/CONTRIBUTING.md](docs/CONTRIBUT
 ## Setup and commands
 
 - Bootstrap with `mise trust`, `mise install`, `mise run setup` ([CONTRIBUTING: Development](docs/CONTRIBUTING.md#development)). A fresh checkout or worktree needs `mise trust` first.
-- `mise run ci` is the full local gate, the same invocation the PR lane runs (ask first; see below). A scoped `turbo run build typecheck lint test` misses `format:check`; add it.
-- Run bare `turbo` (on `PATH` via mise), never `pnpm turbo` or `pnpm exec turbo`. Run it in the foreground; a backgrounded run can die without an error.
+- `mise run ci` is the full local gate: the turbo graph the PR lane's `run` job runs, then every e2e suite, which CI runs as parallel jobs. Locally it, like any e2e run, holds the CPU for minutes and Cypress can take window focus; tread lightly, and check in only when you judge it matters. A scoped `turbo run build typecheck lint test` misses `format:check`; add it.
+- Run bare `turbo` in a mise-activated shell and `mise exec -- turbo` in a non-activated one (agent tool shells), never `pnpm turbo` or `pnpm exec turbo`. Run it in the foreground; a backgrounded run can die without an error.
 - If a failure lands in a package your diff doesn't touch, rerun that task with `--force` before believing it; an aborted examples `npm ci` leaves `node_modules` half-written.
 - `dist/` is never emptied by a build. Clear stale emit before reading `dist/` as shipped output ([CONTRIBUTING: Running Tests](docs/CONTRIBUTING.md#running-tests)).
 
 ## Layout
 
-- `packages/` holds the published packages. `tools/` holds private `@tools/*` packages, blocked from public npm by `.npmrc`.
+- Everything under `packages/` ships in a registry tarball: `packages/*` are the published packages, and `packages/shared/*` is private `@repo/*` source that `@tools/oxc-emit` inlines into their `dist/` ([packages/shared/README.md](packages/shared/README.md)). Code that ships in no tarball lives in other folders under other scopes: `tools/` as `@tools/*`, `www/` as `@www/*`. `.npmrc` blocks the private scopes from public npm.
 - Tooling that can't ask a package manager takes the repo root from `tools/bootstrap/src/root.ts`, never `../..` arithmetic.
 - A new docs example is one entry in `examples/embeds.ts`.
 - `www/lit-ui-router.dev` is the production docs site, deployed by Cloudflare Workers Builds ([www/DEPLOY.md](www/DEPLOY.md)).
+- Cloudflare account changes go through the `cf` CLI: find the command with `cf cli search "<task>"` (no names or IDs in the query) and run it with `--dry-run` first.
 - CLI scripts under `tools/` use a flat `main` with early exits and a one-line `import.meta.main` guard; see `tools/workers-builds/cloudflare-build.ts`.
 - A module goes in `@tools/shared` only when two or more packages import it; with one consumer it lives in that package.
 - pnpm links a package's `bin` into its dependents only, never its own `.bin`. A package's own task execs the file directly (0755 plus shebang), as `tools/build_and_test/mise.toml` does.
@@ -53,6 +54,7 @@ This file is an index. The details live in [docs/CONTRIBUTING.md](docs/CONTRIBUT
 - Keep `pnpm-workspace.yaml` bare: no comments, no YAML anchors. Rationale goes in the commit or PR.
 - Overrides name their parent (`parent>child`), never a blanket range. Exact override pins can turn from floors into vulnerable ceilings; test one by deleting it.
 - Peer floors live in the `peerFloor*` and `publishedPeer*` catalogs. A released package's peer ranges admit no prerelease line.
+- A peer range on a 0.x workspace package keeps two `||` legs; `floor-guard` warns past that ([RELEASE](docs/RELEASE.md)).
 - Dependabot edits to reject: narrowing the `@oxc-project/runtime` floor in `publishedDependencies`, `rolldown` without `vite`, and `oxlint` without `eslint-plugin-oxlint`.
 - Accepted audit advisories go under `audit:` ([CONTRIBUTING: Dependency audit](docs/CONTRIBUTING.md#dependency-audit)).
 
@@ -104,13 +106,10 @@ Agents never:
 - merge PRs, or enable auto-merge;
 - mark PRs ready for review;
 - dispatch release workflows;
-- make Cloudflare account or dashboard changes;
 - push to `dependabot/*` branches; redo the bump on their own branch instead;
 - edit or delete GitHub releases, or unpublish npm versions. Releases are immutable, and canary releases stay as evidence;
 - create labels. Label PRs by subject from the existing set;
 - force-push, except `--force-with-lease` on their own branch.
-
-Ask before running `mise run ci`, `mise run ci_main`, or e2e (Cypress, the wrangler server). Headless browser specs that turbo test tasks run need no ask.
 
 ## Conventions
 
@@ -135,4 +134,5 @@ Skills live in `.agents/skills/<name>/SKILL.md`. Claude Code reads only `.claude
 A skill stays thin: when to use it and what an unattended run needs, linking the doc or package README that owns the recipe.
 
 - `ci-failure-repro`: reproduce a red GitHub Actions run locally from its `repro:` line.
+- `ci-log-sweep`: sweep a green run's task-log artifacts for warnings and odd timings.
 - `cypress-sample-app`: run a sample app on a vite dev server and drive it with one Cypress spec.

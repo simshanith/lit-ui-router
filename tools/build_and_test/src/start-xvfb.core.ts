@@ -9,6 +9,7 @@ export async function* filterStderr(
   lines: AsyncIterable<string> | Iterable<string>,
 ): AsyncGenerator<string, number, void> {
   let filtered = 0;
+
   for await (const line of lines) {
     if (IGNORED_WARNINGS_PATTERN.test(line)) {
       filtered += 1;
@@ -16,6 +17,7 @@ export async function* filterStderr(
       yield line;
     }
   }
+
   return filtered;
 }
 

@@ -35,6 +35,7 @@ type AttwAnalysis = {
  */
 export function attwGatingProblems(analysis: AttwAnalysis): AttwProblem[] {
   if (!analysis.types) return [NO_TYPE_DECLARATIONS];
+
   return (analysis.problems ?? []).filter(
     (problem) =>
       problem.resolutionKind === undefined ||
@@ -60,20 +61,26 @@ export type PackageExportsCheck = {
 
 function formatAttwProblem(problem: AttwProblem): string {
   const entrypoint = problem.entrypoint ? ` — ${problem.entrypoint}` : '';
+
   const resolution = problem.resolutionKind
     ? ` (${problem.resolutionKind})`
     : '';
+
   return `${problem.kind}${entrypoint}${resolution}`;
 }
 
 function suggestionLines(results: PackageExportsCheck[]): string[] {
   const withSuggestions = results.filter((r) => r.suggestions.length > 0);
+
   if (withSuggestions.length === 0) return [];
   const lines = ['', 'publint suggestions (not gating):'];
+
   for (const { name, suggestions } of withSuggestions) {
     lines.push(`  ${name}`);
+
     for (const message of suggestions) lines.push(`      • ${message}`);
   }
+
   return lines;
 }
 
@@ -88,6 +95,7 @@ export function formatExportsReport(results: PackageExportsCheck[]): Report {
 
   const suggestions = suggestionLines(results);
   const bad = results.filter((r) => r.attw.length > 0 || r.publint.length > 0);
+
   if (bad.length === 0) {
     return {
       ok: true,
@@ -104,14 +112,19 @@ export function formatExportsReport(results: PackageExportsCheck[]): Report {
       '(publishing would break consumers):',
     '',
   ];
+
   for (const { name, dir, attw, publint } of bad) {
     lines.push(`  ${name} (${dir})`);
+
     for (const problem of attw) {
       lines.push(`      • attw: ${formatAttwProblem(problem)}`);
     }
+
     for (const message of publint) lines.push(`      • publint: ${message}`);
     lines.push('');
   }
+
   lines.push(...suggestions);
+
   return { ok: false, text: lines.join('\n').trimEnd() };
 }

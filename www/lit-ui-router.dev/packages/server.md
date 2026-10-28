@@ -7,7 +7,7 @@ description: Honest HTTP verdicts for a static SPA with ui-router-server — the
 
 <p class="badges">
 <a href="https://npmx.dev/package/ui-router-server" target="_blank" class="badge"><img alt="NPM Version" src="https://img.shields.io/npm/v/ui-router-server" /></a>
-<a href="https://github.com/simshanith/lit-ui-router/releases/?q=ui-router-server" target="_blank" class="badge"><img alt="GitHub Release" src="https://img.shields.io/github/v/release/simshanith/lit-ui-router?filter=ui-router-server@*" /></a>
+<a href="https://lit-ui-router.dev/gh/releases/ui-router-server/latest" target="_blank" class="badge"><img alt="GitHub Release" src="https://img.shields.io/github/v/release/simshanith/lit-ui-router?filter=ui-router-server@*" /></a>
 </p>
 
 [`ui-router-server`](https://npmx.dev/package/ui-router-server) runs the
@@ -57,13 +57,14 @@ package tour.
 Capabilities are priced as separate entry points, measured min+gzip by the
 package's own esbuild probe:
 
-| Entry point                  | Needs `@uirouter/core`?     | Cost             | What it answers                                                                        |
-| ---------------------------- | --------------------------- | ---------------- | -------------------------------------------------------------------------------------- |
-| `ui-router-server/matcher`   | no                          | ~2.9 KiB gzip    | does this pathname match this pattern, with which params — and the inverse, `format()` |
-| `ui-router-server/redirects` | no                          | ~3.6 KiB gzip    | given routes and a redirect table, where does this pathname go                         |
-| `ui-router-server` (root)    | only for a `simulate` mount | ~4.7 KiB gzip    | mounts in, verdicts out                                                                |
-| `ui-router-server/simulate`  | yes (optional peer)         | +~27.4 KiB, lazy | what would the real router do                                                          |
-| `ui-router-server/location`  | yes (optional peer)         | ~0.3 KiB gzip    | a path-shaped in-memory location for a server-side router                              |
+| Entry point                   | Needs `@uirouter/core`?               | Cost             | What it answers                                                                        |
+| ----------------------------- | ------------------------------------- | ---------------- | -------------------------------------------------------------------------------------- |
+| `ui-router-server/matcher`    | no                                    | ~2.9 KiB gzip    | does this pathname match this pattern, with which params — and the inverse, `format()` |
+| `ui-router-server/redirects`  | no                                    | ~3.6 KiB gzip    | given routes and a redirect table, where does this pathname go                         |
+| `ui-router-server` (root)     | only for a `simulate` mount           | ~4.7 KiB gzip    | mounts in, verdicts out                                                                |
+| `ui-router-server/simulate`   | yes (optional peer)                   | +~27.4 KiB, lazy | what would the real router do                                                          |
+| `ui-router-server/location`   | yes (optional peer)                   | ~0.3 KiB gzip    | a path-shaped in-memory location for a server-side router                              |
+| `ui-router-server/url-config` | no; it configures the router you pass | ~0.4 KiB gzip    | one url config for the client router, the mounts, and a server render                  |
 
 The dependency-free tiers are a standalone port of core's matching subset,
 type-pinned to core's signatures and differential-tested against its output.
@@ -84,19 +85,22 @@ Picking one:
   through a real headless router, so redirect rules and `otherwise()` run as
   actual rules. Both strategies consume the same declaration data and produce
   identical verdicts today (the package tests assert parity), so `strategy`
-  is a pure cost knob.
+  is a pure cost knob. A simulate mount's `prewarm` count builds idle routers
+  once core loads, so its first requests skip the cold build.
 - **`/location`** — you drive a real `@uirouter/core` router yourself, on the
   server, and want its `href()`s to match what the client writes: paths by
   default, for a [pushState](/guides/location-plugins#html5-pushstate) client,
   or `#` fragments under `html5Mode: false`.
-  `installServerLocation(router, { url, baseHref, strictMode, html5Mode })`.
+  `installServerLocation(router, { url, baseHref, urlConfig, html5Mode })`.
+- **`/url-config`** — the client router and the mounts should compile urls
+  alike. `applyUrlConfig(router, config)` applies a mount's `config` to any
+  `@uirouter/core` router before its states register, and imports no server
+  code, so the client bundle can take it.
 
 ## Installation
 
 ```bash
 npm install ui-router-server
-# or
-pnpm add ui-router-server
 ```
 
 Nothing else is required: `@uirouter/core` (only for
@@ -148,7 +152,14 @@ const verdict = await router.resolve('/app/contacts/3');
 // → { kind: 'shell', mount: '/app' }
 ```
 
-The longest matching mount base owns a pathname outright.
+The longest matching mount base owns a pathname outright. A bare mount base
+(`/app`) resolves the empty subpath, which the `/^\/?$/` rule above claims;
+construction [warns in development](/guides/development-builds#server-runtimes)
+for each mount other than `/` that leaves it to 404. To catch that in CI,
+assert in a test that
+[`diagnoseMounts(router)`](/api/ui-router-server/index/functions/diagnoseMounts)
+returns an empty array: it reports, as data and in every build, the findings
+the warning prints.
 
 ## The verdict
 
@@ -194,11 +205,11 @@ the static layer and should judge everything.
 
 ### fetch — the edge
 
-The representative example, and what serves this site
-([`www/lit-ui-router.dev/worker/index.ts`](https://github.com/simshanith/lit-ui-router/blob/main/www/lit-ui-router.dev/worker/index.ts)):
+A minimal Cloudflare Worker, with each mount's shell at its base and a
+`404.html` under it:
 
 ```ts
-import { mounts } from 'sample-app-routes';
+import { mounts } from './mounts';
 import { createServerRouter } from 'ui-router-server';
 import { createFetchHandler } from 'ui-router-server/fetch';
 
@@ -214,14 +225,16 @@ export default {
       serveShell: (_mount, shellRequest) => env.ASSETS.fetch(shellRequest),
       // Mount-owned miss: that app's own 404 page, at an honest 404.
       serveNotFound: async (mount, req) => {
+        // Built from the original request, so a HEAD stays a HEAD.
         const page = await env.ASSETS.fetch(
-          new URL(`${mount}/404.html`, req.url),
+          new Request(new URL(`${mount}/404.html`, req.url), req),
         );
         return new Response(page.body, {
           status: 404,
           headers: new Headers(page.headers),
         });
       },
+      // The Worker runs after the assets layer, so judge everything.
       shouldHandle: () => true,
     });
 
@@ -236,6 +249,12 @@ on redirect `Location`s, stripping validators and relabelling status'd
 shells, and the canonical `Link` header (status-less shells only — a 404 is
 not an alternate representation of anything).
 
+This site's Worker
+([`www/lit-ui-router.dev/worker/index.ts`](https://github.com/simshanith/lit-ui-router/blob/main/www/lit-ui-router.dev/worker/index.ts))
+builds on the same shape: a `shellPath` that points several pushState mounts
+at one shared shell, a pass-through when a mount has no `404.html`, and
+`noindex` on its teaching exhibits.
+
 ### vite — dev/prod parity
 
 The honest-status upgrade of Vite's built-in SPA fallback: `vite dev` and
@@ -244,6 +263,8 @@ server does, from the same mounts table. The plugin installs its middleware
 in the pre position — before Vite's always-200 HTML fallback — and its
 returned object is a structural subset of Vite's `Plugin`, so Vite stays a
 type-only peer this package never imports.
+
+In this example each mount's HTML entry is built to `<mount>.html`:
 
 ```ts
 import { createServerRouter } from 'ui-router-server';
@@ -255,14 +276,15 @@ const router = createServerRouter({ mounts });
 export default defineConfig({
   plugins: [
     serverRouterPlugin(router, {
-      // Where each mount's HTML entry actually lives, when it isn't the base.
+      // Where each mount's HTML entry lives, when it isn't the base.
       shellPath: (mount) => `${mount}.html`,
     }),
   ],
 });
 ```
 
-This site's own dev server runs it
+This site's dev server runs the plugin with its own `shellPath` table and a
+`serveNotFound` that serves each mount's 404 page
 ([`www/lit-ui-router.dev/.vitepress/vite.config.ts`](https://github.com/simshanith/lit-ui-router/blob/main/www/lit-ui-router.dev/.vitepress/vite.config.ts)).
 
 ### connect — Node servers
@@ -327,12 +349,16 @@ router.plugin(servicesPlugin);
 installServerLocation(router, {
   url: pathname + search,
   baseHref: '/app/',
-  strictMode: false,
+  urlConfig: { strict: false },
 });
 ```
 
 `baseHref` is the mount prefix: it is added to every href, and `url` is
-passed without it, exactly as a `<base href>` client matches. For a
+passed without it, exactly as a `<base href>` client matches. `urlConfig`
+takes the same object as a mount's `config` and goes through
+[`applyUrlConfig`](/api/ui-router-server/url-config/functions/applyUrlConfig)
+first, so it throws, leaving the router as it was, if a state's url already
+compiled. For a
 [hash-location](/guides/location-plugins#hash-urls) client, pass
 `html5Mode: false` and the same router builds `#/sheet/7B`. The plugin itself
 is exported as `serverLocationPlugin` — `router.plugin(serverLocationPlugin,
@@ -349,8 +375,10 @@ re-runs the URL with its full configuration. The simulate tier applies the
 same rule to itself, degrading failed or timed-out simulations to the shell
 rather than a wrong redirect or a spurious 404. Trailing slashes are strict
 on both sides; if your client relaxes `strictMode`, pass the same relaxation
-as the mount's `config`. A static host that serves `<subpath>/index.html` by
-redirecting onto the slashed url makes that relaxation mandatory
+as the mount's `config`, or share one object through
+[`applyUrlConfig`](/api/ui-router-server/url-config/functions/applyUrlConfig).
+A static host that serves `<subpath>/index.html` by redirecting onto the
+slashed url makes that relaxation mandatory
 ([static hosts add a trailing slash](/packages/ssr#static-hosts-add-a-trailing-slash)).
 Nor does it see which ids exist: a `:id` param
 matches any value, so narrow it to the known ids when the build can list them
@@ -368,3 +396,6 @@ matches any value, so narrow it to the known ids when the build can list them
   pairs with
 - [Location plugins](/guides/location-plugins) — why path-location clients
   are the ones that need any of this
+- [On the Altitude Atlas](https://atlas.lit-ui-router.dev/bricks/?focus=ui-router-server) — this package as
+  a brick in sheet 2's model in the round, sized by its authored files and
+  seated on what it peers

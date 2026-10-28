@@ -175,10 +175,13 @@ export default defineConfig(
   {
     files: ['pnpm-workspace.yaml'],
     rules: {
-      // name-only would flag the intentional publishedPeer/typescript6-compat pins.
+      // Per-adapter peer catalogs may coincide; name-only would flag the publishedPeer/typescript6-compat pins.
       'pnpm/yaml-no-duplicate-catalog-item': [
         'error',
-        { checkDuplicates: 'exact-version' },
+        {
+          checkDuplicates: 'exact-version',
+          allow: ['@lit-labs/ssr', 'lit-ui-router', 'lit-ui-router-floor'],
+        },
       ],
     },
   },

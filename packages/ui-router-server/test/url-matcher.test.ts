@@ -56,6 +56,7 @@ describe('static param defaults without any $injector', () => {
     const matcher = compile('/x/:id', {
       params: { id: { value: 'fallback', squash: true } },
     });
+
     assert.deepEqual(exec(matcher, '/x'), { id: 'fallback' });
     assert.deepEqual(exec(matcher, '/x/'), { id: 'fallback' });
     assert.deepEqual(exec(matcher, '/x/7'), { id: '7' });
@@ -66,6 +67,7 @@ describe('static param defaults without any $injector', () => {
     const matcher = compile('/page/{num:int}', {
       params: { num: { value: 1, squash: true } },
     });
+
     assert.deepEqual(exec(matcher, '/page'), { num: 1 });
     assert.deepEqual(exec(matcher, '/page/3'), { num: 3 });
   });
@@ -111,6 +113,41 @@ describe('explicit rejections (fail at compile, never diverge silently)', () => 
       () => compile('/a/:x', { params: { x: { type: 'uuid' } } }),
       /Unknown type 'uuid'/,
     );
+    // oxlint-disable-next-line anti-slop/no-chained-type-assertions, anti-slop/require-safety-comment-for-type-assertion -- deliberately ill-typed type exercises the runtime check
+    const notAType = 5 as unknown as string;
+
+    assert.throws(
+      () => compile('/a/:x', { params: { x: { type: notAType } } }),
+      /Unknown type '5'/,
+    );
+  });
+
+  it('resolves declared built-in type names', () => {
+    for (const pattern of ['/a/:x', '/a/{x:string}'])
+      assert.deepEqual(
+        exec(compile(pattern, { params: { x: { type: 'int' } } }), '/a/5'),
+        { x: 5 },
+      );
+  });
+
+  it('resolves built-in type names from own keys only', () => {
+    for (const name of ['constructor', 'toString', '__proto__']) {
+      assert.throws(
+        () => compile('/a/:x', { params: { x: { type: name } } }),
+        new RegExp(`Unknown type '${name}'`),
+      );
+      assert.deepEqual(
+        exec(
+          compile('/a/{x:string}', { params: { x: { type: name } } }),
+          '/a/v',
+        ),
+        { x: 'v' },
+      );
+      // An unknown inline name is a raw regexp.
+      assert.deepEqual(exec(compile(`/a/{x:${name}}`), `/a/${name}`), {
+        x: name,
+      });
+    }
   });
 
   it('rejects invalid squash policies', () => {
@@ -121,9 +158,18 @@ describe('explicit rejections (fail at compile, never diverge silently)', () => 
     assert.throws(
       () =>
         urlMatcherFactory({
+          // oxlint-disable-next-line anti-slop/no-chained-type-assertions, anti-slop/require-safety-comment-for-type-assertion -- deliberately ill-typed policy exercises the runtime check
           defaultSquashPolicy: 5 as unknown as boolean,
         }),
       /Invalid squash policy/,
+    );
+    assert.throws(
+      () =>
+        urlMatcherFactory({
+          // oxlint-disable-next-line anti-slop/no-chained-type-assertions, anti-slop/require-safety-comment-for-type-assertion -- deliberately ill-typed policy exercises the runtime check
+          defaultSquashPolicy: null as unknown as boolean,
+        }),
+      /Invalid squash policy: null\./,
     );
   });
 });
@@ -146,10 +192,11 @@ describe('custom ParamType objects', () => {
     const upper = {
       name: 'upper',
       pattern: /[A-Z]+/,
-      is: (val: unknown) =>
+      is: (val: unknown): val is string =>
         typeof val === 'string' && val === val.toUpperCase(),
       decode: (val: string) => val.toUpperCase(),
     };
+
     const matcher = compile('/tag/:tag', { params: { tag: { type: upper } } });
     assert.deepEqual(exec(matcher, '/tag/ABC'), { tag: 'ABC' });
     assert.equal(exec(matcher, '/tag/abc'), null);
@@ -177,10 +224,20 @@ describe('format', () => {
     const params = (squash: boolean | string) => ({
       params: { id: { value: 'fallback', squash } },
     });
+
     assert.equal(format(compile('/x/:id', params(true)), {}), '/x');
     assert.equal(format(compile('/x/:id', params(false)), {}), '/x/fallback');
     assert.equal(format(compile('/x/:id', params('~')), {}), '/x/~');
     assert.equal(format(compile('/x/:id', params(true)), { id: '7' }), '/x/7');
+  });
+
+  it('squashes a date default by calendar day', () => {
+    const matcher = compile('/x/{d:date}', {
+      params: { d: { value: new Date(2024, 0, 2), squash: true } },
+    });
+
+    assert.equal(format(matcher, { d: new Date(2024, 0, 2, 15) }), '/x');
+    assert.equal(format(matcher, { d: new Date(2024, 0, 3) }), '/x/2024-01-03');
   });
 
   it('omits absent search params and appends a hash fragment', () => {
@@ -195,7 +252,7 @@ describe('format', () => {
     const params = { folderId: 'inbox', messageId: 5 };
     const url = format(matcher, params);
     assert.equal(url, '/mymessages/inbox/5');
-    assert.deepEqual(exec(matcher, url as string), params);
+    assert.deepEqual(exec(matcher, url), params);
   });
 });
 
@@ -268,12 +325,14 @@ describe('compiled matcher surface', () => {
 
   it('cannot poison a matcher compiled after a mutation attempt', () => {
     const first = compile('/a/{num:int}');
+
     try {
       // @ts-expect-error -- readonly; sloppy-mode callers no-op instead
       first.pathParams[0].type.decode = () => 'poisoned';
     } catch {
       // strict mode: the assignment throws; either way the singleton is intact
     }
+
     const second = compile('/b/{num:int}');
     assert.deepEqual(exec(second, '/b/7'), { num: 7 });
     assert.deepEqual(exec(first, '/a/7'), { num: 7 });

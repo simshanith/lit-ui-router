@@ -14,7 +14,8 @@ export { SortMessages };
 /**
  * A component that displays a folder of messages as a table
  *
- * If a row is clicked, the details of the message is shown using a relative UISref to `.message`.
+ * Each row's subject is a link (a relative UISref to `.message`) stretched over
+ * the row by CSS, so a click anywhere on the row opens the message.
  *
  * UISrefActive is used to highlight the selected row.
  *
@@ -55,10 +56,17 @@ export class MessageTable extends LitElement {
   formattedContent = (message: Message, col: keyof Message) => {
     if (col === 'date')
       return new Date(message[col]).toISOString().slice(0, 10);
+
     if (col === 'read')
       return !message[col]
         ? html`<i class="fa fa-circle" style="font-size: 50%"></i>`
         : '';
+
+    if (col === 'subject')
+      return html`<a ${uiSref('.message', { messageId: message._id })}
+        >${message[col]}</a
+      >`;
+
     return message[col];
   };
 
@@ -68,6 +76,7 @@ export class MessageTable extends LitElement {
     const visibleColumns = tableColumns.filter((column) =>
       this.colVisible(column.name),
     );
+
     const tableHead = repeat(
       visibleColumns,
       ({ name }) => name,
@@ -82,29 +91,25 @@ export class MessageTable extends LitElement {
           ></sample-sort-messages>
         </td>`,
     );
+
     const tableBody = repeat(
       [...messages].sort(orderBy(sort)),
       ({ _id }) => _id,
       (message) =>
-        // 'auto' keeps href off a <tr>, which is no anchor; aria-current is off
-        // by default on the same shape (isLinkElement, ui-sref-active.ts) and is
-        // opted into here because a selected row is the current item in a set —
-        // 'true', not the 'location' that marks a step in a flow
+        // a selected row is the current item in a set: aria-current 'true', not 'location'
         html`<tr
           ${uiSrefActive({
             activeClasses: ['active'],
             ariaCurrentValue: 'true',
           })}
-          ${uiSref('.message', { messageId: message._id }, { assignHref: 'auto' })}
         >
           ${visibleColumns.map(
             (column) =>
-              html`<td>
-                ${this.formattedContent(message, column.name as keyof Message)}
-              </td>`,
+              html`<td>${this.formattedContent(message, column.name)}</td>`,
           )}
         </tr>`,
     );
+
     return html`<table>
       <thead>
         <tr>

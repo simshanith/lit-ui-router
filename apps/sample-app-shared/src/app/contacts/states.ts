@@ -23,6 +23,13 @@ import { dsrRedirectToDefaultFromWithin } from '../util/dsr-default-redirect-wit
  *
  * The contacts are fetched using a resolve.
  */
+function contactName(transition: Transition) {
+  // SAFETY: only contacts.contact titles with this, and its `contact` resolve yields a Contact
+  const { name } = transition.injector().get('contact') as Contact;
+
+  return `${name.first} ${name.last}`;
+}
+
 const contactsState = {
   parent: 'app', // declares that 'contacts' is a child of 'app'
   name: 'contacts',
@@ -34,7 +41,7 @@ const contactsState = {
       resolveFn: () => ContactsStorage.all(),
     },
   ],
-  data: { requiresAuth: true },
+  data: { requiresAuth: true, title: 'Contacts' },
   dsr: {
     default: 'contacts',
     fn: dsrRedirectToDefaultFromWithin,
@@ -43,9 +50,9 @@ const contactsState = {
   views: {
     contacts: ((props: UIViewInjectedProps<ContactsResolves>) => {
       return html`<sample-contacts ._uiViewProps=${props}></sample-contacts>`;
-    }) as LitViewDeclarationTemplate,
+    }) satisfies LitViewDeclarationTemplate<ContactsResolves>,
   },
-};
+} as const satisfies LitStateDeclaration<ContactsResolves>;
 
 /**
  * This state displays a single contact.
@@ -61,15 +68,16 @@ const viewContactState = {
       token: 'contact',
       deps: ['$transition$'],
       resolveFn: async ($transition$: Transition) =>
-        // The untyped SessionStorage fake-REST client resolves a Contact here.
+        // SAFETY: the untyped SessionStorage fake-REST client resolves a Contact here
         ContactsStorage.get(
           $transition$.params().contactId,
         ) as Promise<Contact>,
     },
   ],
+  data: { title: contactName, analyticsTitle: 'Contact', keepScroll: true },
   component:
     ContactView satisfies LitViewDeclarationElement<ContactViewResolves>,
-} satisfies LitStateDeclaration<ContactViewResolves>;
+} as const satisfies LitStateDeclaration<ContactViewResolves>;
 
 /**
  * This state allows a user to edit a contact
@@ -82,13 +90,17 @@ const viewContactState = {
 const editContactState = {
   name: 'contacts.contact.edit',
   url: '/edit',
+  data: {
+    title: (transition: Transition) => `Edit ${contactName(transition)}`,
+    analyticsTitle: 'Edit contact',
+  },
   views: {
     // Relatively target the grand-parent-state's $default (unnamed) ui-view
     // This could also have been written using ui-view@state addressing: $default@contacts
     // Or, this could also have been written using absolute ui-view addressing: !$default.contacts.$default
-    '^.^.$default': EditContact as LitViewDeclarationElement,
+    '^.^.$default': EditContact satisfies LitViewDeclarationElement,
   },
-};
+} as const satisfies LitStateDeclaration;
 
 /**
  * This state allows a user to create a new contact
@@ -98,13 +110,13 @@ const editContactState = {
 const newContactState = {
   name: 'contacts.new',
   url: '/new',
-  component: EditContact as LitViewDeclarationElement,
-};
+  data: { title: 'New contact' },
+  component: EditContact satisfies LitViewDeclarationElement,
+} as const satisfies LitStateDeclaration;
 
 export const states = [
   contactsState,
   viewContactState,
   editContactState,
   newContactState,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generic handles narrowing
-] satisfies LitStateDeclaration<any>[];
+];

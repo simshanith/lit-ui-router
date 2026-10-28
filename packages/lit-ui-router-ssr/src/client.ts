@@ -1,11 +1,13 @@
 /**
+ * The client half: `hydrateRoot()` hydrates the prerendered root, and each
+ * served `<ui-view>` the walk wakes adopts its markup through `uiViewSlot`.
+ *
  * @module
- * @mergeModuleWith <project>
  */
-// The adopt half: one `hydrate()` on the root, and the adopter each served `<ui-view>` the walk wakes requests to take its markup.
 import { hydrate } from '@lit-labs/ssr-client';
 import { renderLight } from '@lit-labs/ssr-client/directives/render-light.js';
 import type { RenderLightHost } from '@lit-labs/ssr-client/directives/render-light.js';
+import { isFunction } from '@uirouter/core';
 import { noChange } from 'lit';
 import type { ChildPart, RenderOptions } from 'lit';
 import { directive } from 'lit/directive.js';
@@ -13,6 +15,7 @@ import type { PartInfo } from 'lit/directive.js';
 import { getDirectiveClass } from 'lit/directive-helpers.js';
 import { provideContext } from 'lit-ui-router/context';
 import { UiView } from 'lit-ui-router/pure';
+import { devGate } from '#dev-gate';
 import { adoptUiViewContext } from './adopt-context.js';
 import type { AdoptableView } from './adopt-context.js';
 import { servedMarkerPrefix } from './served-markers.js';
@@ -25,6 +28,7 @@ export {
   type AdoptUiViewContext,
   type AdoptUiViewContextKey,
 } from './adopt-context.js';
+
 export {
   isServedViewClass,
   type ServedUiView,
@@ -32,6 +36,7 @@ export {
   servedViewBrand,
   withServedRender,
 } from './served-view.js';
+
 export type { HydrationSignature } from './signature.js';
 
 /** The attribute `@lit-labs/ssr` writes on a server-rendered custom element. */
@@ -45,23 +50,17 @@ const DEFER = 'defer-hydration';
  *   into, or was lost; the view dropped the served interior and rendered cold.
  * - `none`: nothing to adopt — an empty served pair, the address no state
  *   routed, or a view the document served no markers for.
- *
- * @category client
  */
 export type AdoptOutcome = 'adopted' | 'fell-back' | 'none';
 
 /**
  * The name of the event a served `<ui-view>` dispatches once its wake's
  * outcome is known, in the `ui-view:` house style of the served markers.
- *
- * @category client
  */
 export const uiViewAdoptEventName = 'ui-view:adopt' as const;
 
 /**
  * The detail of {@link UiViewAdoptEvent}.
- *
- * @category client
  */
 export interface UiViewAdoptDetail {
   /** What the wake came to. */
@@ -73,27 +72,22 @@ export interface UiViewAdoptDetail {
 /**
  * Dispatched from a served `<ui-view>` at its wake, once per view, bubbling and
  * composed, in production as in development.
- *
- * @category client
  */
 export type UiViewAdoptEvent = CustomEvent<UiViewAdoptDetail>;
 
 /**
  * Receives each served view's outcome, as {@link HydrateRootOptions.onAdopt}.
- *
- * @category client
  */
 export type AdoptReporter = (
   view: Element,
   outcome: AdoptOutcome,
+  // oxlint-disable-next-line anti-slop/no-unknown-parameters -- the thrown value a fallback caught, as the platform reports one
   error?: unknown,
 ) => void;
 
 /**
  * {@link hydrateRoot}'s options: lit's render options, plus the outcome
  * callback.
- *
- * @category client
  */
 export interface HydrateRootOptions extends RenderOptions {
   /**
@@ -127,10 +121,14 @@ class UiViewSlotDirective extends RenderLightDirective {
   constructor(part: PartInfo) {
     super(part);
     // The marker lit's walk wakes a custom element on is emitted only under a host-stack entry `@lit-labs/ssr` leaks for light-DOM renderers, so the wake is owned here instead.
+    // SAFETY: the directive renders only in child position, where lit passes the `ChildPart` itself.
     const view = (part as ChildPart).parentNode;
+
     if (!(view instanceof Element)) return;
+
     // The pin keys off the served pair, not the wake below: where that marker is there, lit's own walk cleared the attribute before this part was reached.
     if (servedPair(view)) pinAdopter(view, walkReporter);
+
     if (view.hasAttribute(DEFER)) view.removeAttribute(DEFER);
   }
 
@@ -140,11 +138,12 @@ class UiViewSlotDirective extends RenderLightDirective {
   }
 
   /** A host `renderLight()` answers, as it does for ssr-client's own directive; a `<ui-view>` has none and keeps its nodes. */
+  // oxlint-disable-next-line anti-slop/no-unknown-returns -- hands on a host's renderLight(), which lit types unknown
   override update(part: ChildPart): unknown {
+    // SAFETY: a host's `renderLight`, when present, is the `RenderLightHost` method ssr-client calls.
     const host = part.parentNode as Partial<RenderLightHost>;
-    return typeof host.renderLight === 'function'
-      ? host.renderLight()
-      : noChange;
+
+    return isFunction(host.renderLight) ? host.renderLight() : noChange;
   }
 }
 
@@ -167,8 +166,6 @@ class UiViewSlotDirective extends RenderLightDirective {
  * ```ts
  * html`<ui-router .uiRouter=${router}><ui-view>${uiViewSlot()}</ui-view></ui-router>`;
  * ```
- *
- * @category client
  */
 export const uiViewSlot: typeof renderLight = directive(UiViewSlotDirective);
 
@@ -182,6 +179,7 @@ const walkWith = (
 ): void => {
   const outer = walkReporter;
   walkReporter = reporter;
+
   try {
     walk();
   } finally {
@@ -189,15 +187,21 @@ const walkWith = (
   }
 };
 
-/** Reports one view's outcome: the event from the view, then the root's callback. A callback that throws does so on its own microtask, after the view's update. */
+/**
+ * Reports one view's outcome: the event from the view, then the root's
+ * callback. A callback that throws goes to `reportError`, as the platform
+ * reports a throwing event listener; without it (Node, DOM emulators) the
+ * error escapes into the view's update, after its nodes are settled.
+ */
 const report = (
   view: Element,
   reporter: AdoptReporter | undefined,
   outcome: AdoptOutcome,
-  error?: unknown,
+  cause?: unknown,
 ): void => {
   const detail: UiViewAdoptDetail =
-    outcome === 'fell-back' ? { outcome, error } : { outcome };
+    outcome === 'fell-back' ? { outcome, error: cause } : { outcome };
+
   view.dispatchEvent(
     new CustomEvent(uiViewAdoptEventName, {
       bubbles: true,
@@ -205,22 +209,25 @@ const report = (
       detail,
     }),
   );
+
   try {
-    reporter?.(view, outcome, error);
+    reporter?.(view, outcome, cause);
   } catch (thrown) {
-    queueMicrotask(() => {
+    if (!isFunction(globalThis.reportError)) {
       throw thrown;
-    });
+    }
+
+    globalThis.reportError(thrown);
   }
 };
 
-const warnMismatch = (view: AdoptableView, error: unknown): void => {
-  // DEV folds away in dist/*.js; see check:dev-split and dev-warnings.json.
-  if (!import.meta.env.DEV) return;
+const warnMismatch = (view: AdoptableView, cause: unknown): void => {
+  // DEV folds away in dist/*.js; #dev-gate also closes it under node when NODE_ENV is production.
+  if (!import.meta.env.DEV || !devGate()) return;
   console.warn(
     'lit-ui-router-ssr: this element could not adopt the server render, so it rendered over it instead. One static document answers a whole family of urls, so a client that boots into another state reaches this legitimately.',
     view.localName,
-    error,
+    cause,
     // A view with no routed component of its own is also what an unbooted router looks like.
     ...(view instanceof UiView && view.viewContext
       ? []
@@ -230,9 +237,11 @@ const warnMismatch = (view: AdoptableView, error: unknown): void => {
   );
 };
 
-const isPart = (node: Node | null | undefined, data: string): boolean =>
-  node?.nodeType === Node.COMMENT_NODE &&
-  (node as Comment).data.startsWith(data);
+const isComment = (node: Node | null | undefined): node is Comment =>
+  node?.nodeType === Node.COMMENT_NODE;
+
+const isPart = (node: Node | null | undefined, data: string): node is Comment =>
+  isComment(node) && node.data.startsWith(data);
 
 /**
  * The opening marker of the pair the server wrote around a view's routed
@@ -244,8 +253,9 @@ const isPart = (node: Node | null | undefined, data: string): boolean =>
  */
 const servedPair = (view: Element): Comment | undefined => {
   for (const child of view.childNodes) {
-    if (isPart(child, 'lit-part')) return child as Comment;
+    if (isPart(child, 'lit-part')) return child;
   }
+
   return undefined;
 };
 
@@ -253,16 +263,17 @@ const servedPair = (view: Element): Comment | undefined => {
 const hasServedMarkers = (node: Node): boolean => {
   for (const child of node.childNodes) {
     if (isPart(child, servedMarkerPrefix)) return true;
+
     if (child instanceof Element && hasServedMarkers(child)) return true;
   }
+
   return false;
 };
 
 /** Strips {@link servedMarkerPrefix} from one marker comment, leaving anything else alone. */
 const revealMarker = (node: Node | null | undefined): void => {
   if (!isPart(node, servedMarkerPrefix)) return;
-  const comment = node as Comment;
-  comment.data = comment.data.slice(servedMarkerPrefix.length);
+  node.data = node.data.slice(servedMarkerPrefix.length);
 };
 
 /** The outer pair of a nested view, whatever stands in front of it. */
@@ -270,6 +281,7 @@ const revealNestedPair = (view: Element): void => {
   const markers = [...view.childNodes].filter((node) =>
     isPart(node, servedMarkerPrefix),
   );
+
   revealMarker(markers[0]);
   revealMarker(markers.at(-1));
 };
@@ -305,18 +317,22 @@ const revealServedMarkers = (node: Node): void => {
  */
 const dropServedRender = (view: Element): void => {
   const children = [...view.childNodes];
+
   const from = children.findIndex(
     (child) =>
       isPart(child, servedMarkerPrefix) ||
       (child instanceof Element && hasServedMarkers(child)),
   );
+
   if (from < 0) return;
+
   for (const child of children.slice(from)) child.remove();
 };
 
 /** How far `node` moves the part depth: 1 opens, -1 closes, 0 is anything else. */
 const partStep = (node: Node): number => {
   if (isPart(node, 'lit-part')) return 1;
+
   return isPart(node, '/lit-part') ? -1 : 0;
 };
 
@@ -327,8 +343,10 @@ const partStep = (node: Node): number => {
  */
 const clearInterior = (open: Comment): void => {
   let depth = 0;
+
   for (let node = open.nextSibling; node; node = open.nextSibling) {
     const step = partStep(node);
+
     if (step < 0 && depth === 0) return;
     depth += step;
     node.remove();
@@ -378,25 +396,31 @@ const adopt = (
   reporter: AdoptReporter | undefined,
 ): void => {
   const open = servedPair(view);
+
   if (!open) {
     if (!hasServedMarkers(view)) return report(view, reporter, 'none');
     const error = 'the served part pair is gone';
     warnMismatch(view, error);
     dropServedRender(view);
+
     return report(view, reporter, 'fell-back', error);
   }
+
   // The address no state routed: nothing between the pair to adopt, and the element renders after it.
   if (isPart(open.nextSibling, '/lit-part')) {
     return report(view, reporter, 'none');
   }
+
   try {
     revealServedMarkers(view);
     walkWith(reporter, () => hydrate(view.render(), view, view.renderOptions));
   } catch (error) {
     warnMismatch(view, error);
     clearInterior(open);
+
     return report(view, reporter, 'fell-back', error);
   }
+
   report(view, reporter, 'adopted');
 };
 
@@ -427,6 +451,7 @@ const pinAdopter = (
   if (pinned.has(view)) return;
   pinned.add(view);
   let release = (): void => {};
+
   release = provideContext(view, adoptUiViewContext, (woken) => {
     // A descendant's request passes through this element and is answered; only this view's own spends the pin.
     if (woken === view) release();
@@ -434,14 +459,19 @@ const pinAdopter = (
   });
 };
 
+/** Whether parsed JSON is an object whose `version` is a string, the only member HydrationSignature requires. */
+const isHydrationSignature = (value: unknown): value is HydrationSignature =>
+  typeof value === 'object' &&
+  value !== null &&
+  'version' in value &&
+  typeof value.version === 'string';
+
 /** The JSON a signature block carries, or null when it does not parse to one with a version. */
 const parseSignature = (json: string): HydrationSignature | null => {
   try {
-    const signature = JSON.parse(json) as { version?: unknown } | null;
-    // Only `version` is checked, and HydrationSignature claims nothing more.
-    return typeof signature?.version === 'string'
-      ? (signature as HydrationSignature)
-      : null;
+    const signature: unknown = JSON.parse(json);
+
+    return isHydrationSignature(signature) ? signature : null;
   } catch {
     return null;
   }
@@ -475,13 +505,12 @@ const parseSignature = (json: string): HydrationSignature | null => {
  * @param container - the element the server's markup was written into
  * @returns the signature, or `null` when the container holds none, or one that
  * does not parse to an object with a string `version`
- *
- * @category client
  */
 export function readHydrationSignature(
   container: ParentNode,
 ): HydrationSignature | null {
   const block = signatureBlockIn(container);
+
   return block ? parseSignature(block.text) : null;
 }
 
@@ -496,21 +525,25 @@ const signatureBlockIn = (
 /** Whether the block is followed, past whitespace, by the opening marker of the render it precedes. */
 const precedesRender = (block: Element): boolean => {
   let node = block.nextSibling;
+
+  // SAFETY: `nodeType` is `TEXT_NODE`, checked first.
   while (node?.nodeType === Node.TEXT_NODE && !(node as Text).data.trim()) {
     node = node.nextSibling;
   }
+
   return isPart(node, 'lit-part');
 };
 
 /** The release line a version belongs to: `0.<minor>` below 1.0, where a minor breaks, and the major above it. */
 const releaseLine = (version: string): string => {
   const [major = '', minor = ''] = version.split('.');
+
   return major === '0' ? `0.${minor}` : major;
 };
 
 const warnVersionSkew = (served: string): void => {
-  // DEV folds away in dist/*.js; see check:dev-split and dev-warnings.json.
-  if (!import.meta.env.DEV) return;
+  // DEV folds away in dist/*.js; #dev-gate also closes it under node when NODE_ENV is production.
+  if (!import.meta.env.DEV || !devGate()) return;
   console.warn(
     'lit-ui-router-ssr: this document was prerendered by a release line this client does not adopt, so hydrateRoot() left it to a cold render. Prerender it again with the version the client ships. Prerendered by, then client:',
     served,
@@ -519,8 +552,8 @@ const warnVersionSkew = (served: string): void => {
 };
 
 const warnMarkersStripped = (): void => {
-  // DEV folds away in dist/*.js; see check:dev-split and dev-warnings.json.
-  if (!import.meta.env.DEV) return;
+  // DEV folds away in dist/*.js; #dev-gate also closes it under node when NODE_ENV is production.
+  if (!import.meta.env.DEV || !devGate()) return;
   console.warn(
     'lit-ui-router-ssr: this document carries a hydration signature but no lit-part marker follows it, so hydrateRoot() left it to a cold render. hydrate() reads html comments: serve prerendered pages without stripping them.',
   );
@@ -530,13 +563,18 @@ const warnMarkersStripped = (): void => {
 const isAdoptable = (container: HTMLElement): boolean => {
   const block = signatureBlockIn(container);
   const signature = block && parseSignature(block.text);
+
   if (!signature) return false;
+
   if (releaseLine(signature.version) !== releaseLine(packageVersion)) {
     warnVersionSkew(signature.version);
+
     return false;
   }
+
   if (precedesRender(block)) return true;
   warnMarkersStripped();
+
   return false;
 };
 
@@ -609,22 +647,25 @@ const makeCold = (container: HTMLElement): void => {
  * @param value - the same template the server rendered, with every `<ui-view>` hole empty
  * @param options - lit render options, passed on to `hydrate()`, and `onAdopt`
  * @returns the function that releases the provider, or `false`, over an emptied container, when there is nothing to adopt — no signature, as on a cold client render or a dev server, one from another release line, or one no render marker follows
- *
- * @category client
  */
 export function hydrateRoot(
   container: HTMLElement,
+  // oxlint-disable-next-line anti-slop/no-unknown-parameters -- any value lit renders, as lit's render() and hydrate() take it
   value: unknown,
   options: HydrateRootOptions = {},
 ): false | (() => void) {
   if (!isAdoptable(container)) {
     makeCold(container);
+
     return false;
   }
+
   const { onAdopt, ...renderOptions } = options;
+
   const release = provideContext(container, adoptUiViewContext, (view) =>
     adopt(view, onAdopt),
   );
+
   try {
     walkWith(onAdopt, () => hydrate(value, container, renderOptions));
   } catch (error) {
@@ -632,9 +673,11 @@ export function hydrateRoot(
     makeCold(container);
     throw error;
   }
+
   // `@lit-labs/ssr` defers a custom element it wrote no marker for, so the walk passed it by; a `<ui-view>` still asleep is a nested one, waiting on its parent's update.
   for (const element of container.querySelectorAll(`[${DEFER}]`)) {
     if (!(element instanceof UiView)) element.removeAttribute(DEFER);
   }
+
   return release;
 }

@@ -3,9 +3,9 @@
 # every push, smoke-testing the main-only guards before merge rather than after.
 #
 # Split from build-test.yml by trigger so neither file instantiates the other's
-# jobs. That is what keeps the required context `build_and_test / run`
-# unforgeable: this workflow never contains a job that could emit it, and a
-# skipped job here can only report the names below.
+# jobs. That is what keeps the required contexts `build_and_test / run` and
+# `build_and_test / e2e result` unforgeable: this workflow never contains a job
+# that could emit them, and a skipped job here can only report the names below.
 #
 # Required-check contexts are workflow-agnostic — the context is the job name
 # (or `caller / inner`), and the workflow name is display only. So these job
@@ -53,12 +53,13 @@ jobs:
       - name: Setup mise
         uses: jdx/mise-action@v5
         with:
-          version: 2026.10.1
+          auto_update: true
       - name: Decide whether this push needs its own run
         id: gate
         run: mise run //tools/build_and_test:branch_ci_gate
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH_CREATED: ${{ github.event.created }}
 
   build_and_test_branch:
     # `signal_gate` is 'failure' if the gate itself broke — that means run,
@@ -81,6 +82,8 @@ jobs:
       # reached the gate leaves it empty, i.e. the PR graph — the run still
       # happens, it is just the smaller one.
       mainGraph: ${{ needs.signal_gate.outputs.mainGraph == 'true' }}
+      # Repo variable E2E_SUITES_PER_JOB_BRANCH overrides; 1 matches the PR lane.
+      suitesPerJob: ${{ fromJSON(vars.E2E_SUITES_PER_JOB_BRANCH || '3') }}
     secrets:
       TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
       TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}

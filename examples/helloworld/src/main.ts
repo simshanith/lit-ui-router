@@ -6,7 +6,7 @@ import {
   UIRouterLit,
   uiSref,
   uiSrefActive,
-  LitStateDeclaration,
+  type LitStateDeclaration,
 } from 'lit-ui-router';
 
 @customElement('app-root')
@@ -29,7 +29,7 @@ export class AppRoot extends LitElement {
 
   render() {
     return html`
-      <nav>
+      <nav aria-label="Hello World">
         <a ${uiSrefActive({ activeClasses: ['active'] })} ${uiSref('hello')}
           >Hello</a
         >
@@ -59,10 +59,15 @@ const aboutState: LitStateDeclaration = {
 
 // Router setup
 const router = new UIRouterLit();
+
 router.plugin(hashLocationPlugin);
+
 router.stateRegistry.register(helloState);
+
 router.stateRegistry.register(aboutState);
+
 router.urlService.rules.initial({ state: 'hello' });
+
 router.start();
 
 // Render

@@ -1,5 +1,7 @@
 // The development-only warnings the served view raises; folded out of dist/*.js by check:dev-split.
 
+import { devGate } from '#dev-gate';
+
 /**
  * Warns that a `<ui-view>` woke from `defer-hydration` with nothing answering
  * its adopter request, so it dropped the nodes it held and rendered cold.
@@ -12,8 +14,8 @@
  * @internal
  */
 export function warnDeferredWithoutClient(element: Element): void {
-  // DEV folds the whole body out of dist/*.js; see check:dev-split and dev-warnings.json.
-  if (!import.meta.env.DEV) return;
+  // DEV folds the whole body out of dist/*.js; #dev-gate also closes it under node when NODE_ENV is production.
+  if (!import.meta.env.DEV || !devGate()) return;
   console.warn(
     'lit-ui-router-ssr: this <ui-view> woke from defer-hydration and nothing answered its adoptUiViewContext request, so its held nodes were dropped and it rendered cold. Provide an adopter before the wake.',
     element,
@@ -41,8 +43,9 @@ const warnedNeverWoken = new WeakSet<Element>();
  * @internal
  */
 export function warnDeferredNeverWoken(element: Element): void {
-  // DEV folds the whole body out of dist/*.js; see check:dev-split and dev-warnings.json.
-  if (!import.meta.env.DEV) return;
+  // DEV folds the whole body out of dist/*.js; #dev-gate also closes it under node when NODE_ENV is production.
+  if (!import.meta.env.DEV || !devGate()) return;
+
   if (warnedNeverWoken.has(element)) return;
   warnedNeverWoken.add(element);
   console.warn(

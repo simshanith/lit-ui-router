@@ -25,12 +25,14 @@ export class ContactForm extends LitElement {
 
   handleChangeFor(path: string) {
     const { contact } = this;
+
     return (event: Event) => {
       this.dispatchEvent(
         new CustomEvent('change', {
           detail: set(
             { ...contact },
             path,
+            // SAFETY: bound only to the form's <input> fields
             (event.target as HTMLInputElement).value,
           ),
         }),
@@ -40,16 +42,19 @@ export class ContactForm extends LitElement {
 
   render() {
     const { contact } = this;
+
     const inputs = formInputs.map((input) => {
       return html`<div>
-        <label>${input.label}</label>
+        <label for=${input.path}>${input.label}</label>
         <input
           type="text"
+          id=${input.path}
           value=${get(contact, input.path)}
           @change=${this.handleChangeFor(input.path)}
         />
       </div>`;
     });
+
     return html`<div class="details">${inputs}</div>`;
   }
 }

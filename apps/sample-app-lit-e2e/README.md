@@ -1,6 +1,6 @@
 # sample-app-lit-e2e
 
-One Cypress spec suite, run against all three sample apps and the docs site —
+One Cypress spec suite and an axe pass, run against all four sample apps and the docs site —
 this is what enforces the apps' behavioral identity and keeps every
 published location strategy exercised.
 
@@ -11,21 +11,23 @@ mise run test_e2e
 ```
 
 That production-like flow builds the docs site (which embeds every app's
-build), serves it with wrangler on port 8787, and runs every Cypress suite in
-parallel:
+build), serves it with wrangler on port 8787, and runs the Cypress suites in
+parallel. `a11y` runs only when named; on CI it is the `acceptance (a11y)` job (`.github/workflows/acceptance.yml`):
 
-| Suite       | Target         | Covers                                                                                                              |
-| ----------- | -------------- | ------------------------------------------------------------------------------------------------------------------- |
-| `vanilla`   | `/app/`        | vanilla app, default routing — the Navigation API plugin                                                            |
-| `mobx`      | `/app-mobx/`   | MobX app, default routing — the Navigation API plugin                                                               |
-| `effect`    | `/app-effect/` | Effect app, default routing — the Navigation API plugin                                                             |
-| `docs`      | site + mounts  | docs pages plus the mount matrix — flagships, hash demo, and the server-support exhibits (`cypress.docs.config.ts`) |
-| `hash`      | `/app/`        | vanilla app under the `hash` location plugin                                                                        |
-| `pushState` | `/app/`        | vanilla app under the `pushState` fallback                                                                          |
+| Suite       | Target          | Covers                                                                                                                                     |
+| ----------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `vanilla`   | `/app/`         | vanilla app, default routing — the Navigation API plugin                                                                                   |
+| `mobx`      | `/app-mobx/`    | MobX app, default routing — the Navigation API plugin                                                                                      |
+| `effect`    | `/app-effect/`  | Effect app, default routing — the Navigation API plugin                                                                                    |
+| `signals`   | `/app-signals/` | Signals app, default routing — the Navigation API plugin                                                                                   |
+| `docs`      | site + mounts   | docs pages plus the mount matrix — flagships, hash demo, and the server-support exhibits (`cypress.docs.config.ts`)                        |
+| `hash`      | `/app/`         | vanilla app under the `hash` location plugin                                                                                               |
+| `a11y`      | site + mounts   | axe-core (`@tools/a11y`) over the docs pages (one API reference page per kind) in light and dark, and a walk through each sample-app mount |
+| `pushState` | `/app/`         | vanilla app under the `pushState` fallback                                                                                                 |
 
-Each suite is its own turbo task (`test:e2e:<suite>`) with its own cache key,
+Each suite is its own turbo task (`test:e2e:<suite>`). The Cypress suites have their own cache keys,
 so rerunning one after a flake costs that suite alone rather than the whole
-set. Name the suites you want and the umbrella runs those, around the same
+set. `a11y` is uncached, because contrast and target size are measured on the host's rendering; a scan that finds violations saves a full-page screenshot to `a11y-screenshots/`. Name the suites you want and the umbrella runs those, around the same
 server, cached and summarized exactly like the full run:
 
 ```bash
@@ -59,6 +61,10 @@ through a `pnpm run` hop the mise task does not have. Bare
 `pnpm --filter @www/lit-ui-router.dev run wrangler:dev` skips the build and
 serves whatever is already in `dist`.
 
+The umbrella serves the worker's production build, the one that deploys:
+`scripts/run-e2e.ts` sets `WWW_WORKER_BUILD=production` unless it is already
+set, and the launcher reads it.
+
 The server is deliberately outside the turbo graph. No turbo lifecycle fits it:
 as a `with:` sidecar it is started but never reaped, and a top-level persistent
 run does tear down cleanly on a signal but knows nothing about readiness or
@@ -66,16 +72,20 @@ about stopping once something else finishes. `start-server-and-test` owns all
 three — starting it, waiting on readiness, and tearing it down even on failure.
 Only the server leaves the graph; the suites stay first-class cached tasks.
 
-The same run executes in CI: `mise run ci` runs the turbo graph and then this
-umbrella, so `test:e2e:*` appear in no `ci:*` turbo task.
+`mise run ci` runs the turbo graph and then this umbrella, so `test:e2e:*`
+appear in no `ci:*` turbo task. CI runs one `mise run test_e2e <suites>` job per
+group of default suites, in parallel with the graph. The
+[`build-test-run.yml`](../../.github/workflows/build-test-run.yml) `plan` job
+builds that matrix from `scripts/suites.ts` (`mise run e2e_plan`), so a new
+suite joins CI with no workflow edit.
 
 ### The port
 
 8787 is a default, not a fixture. It lives in code —
 `www/lit-ui-router.dev/dev-port.ts`, beside the server that binds it — so every
 entry point resolves it the same way, mise or no mise. Setting `WWW_DEV_PORT`
-overrides it, and the server, both Cypress configs, and the deflake sampler all
-read the override.
+overrides it, and the server, both Cypress configs, the axe suite, and the
+deflake sampler all read the override.
 
 That matters because the port is contended: a second checkout running the suite
 on 8787 tests the _first_ one's build, silently. To move a worktree off the
@@ -94,6 +104,57 @@ The checked-in `.config/mise/config.toml` deliberately does **not** declare
 `WWW_DEV_PORT`. It evaluates before `config.local.toml`, so a default there
 would already be in the environment when the local file rendered, and the local
 override would silently defer to it.
+
+### Chrome connect retries
+
+Cypress drives Chrome over CDP and logs its connection attempts once the first
+five seconds pass:
+
+```text
+Still waiting to connect to Chrome, retrying in 1 second (attempt 18/62)
+```
+
+From attempt 18 the attempts are a second apart, so a last attempt of N means
+Chrome connected about N − 12 seconds in; no such line means under five. A
+fresh runner logs a handful of these on a green run. Look closer when the count
+climbs past 40, or at `CDP_COULD_NOT_CONNECT`, which Cypress raises after the
+last attempt, around 50 seconds in.
+
+### Failure logs
+
+A failing test prints the app's browser console and the Cypress command log
+under its title, through
+[cypress-terminal-report](https://github.com/archfz/cypress-terminal-report)
+(`cypress.config.ts` and `src/support/e2e.ts`). Passing tests print nothing
+extra. On CI that output lands in the job log and in the
+`turbo-task-logs-<group>` artifact. The `docs` suite runs without a support
+file, so it prints neither.
+
+## Against a served origin
+
+`E2E_BASE_URL` points the suites at a site that is already served, such as a
+deployed preview, instead of the local dev server. `--base-url` on the umbrella
+sets it:
+
+```bash
+mise run test_e2e --base-url https://lit-ui-router.dev hash
+```
+
+With it set, the umbrella starts no server and waits on nothing; the suites run
+straight against that origin. The value is a bare `http(s)` origin, with or
+without a trailing slash, because the site links its mounts by absolute path.
+Anything else fails before a suite starts. `scripts/base-url.ts` resolves it for
+every consumer: both Cypress configs, the mount launcher, the axe suite, and the
+readiness URLs of a local run.
+
+The site still builds locally: the suites' build edge reaches it, and the axe
+suite enumerates the docs pages from its `dist`, so a local build that has
+drifted from the deployed one audits the wrong page list.
+
+The Cypress suites hash `E2E_BASE_URL` (`turbo.json`), so a run against one
+origin never replays a cache entry from another, or from the local server. Two
+runs against the same origin at the same commit do share one, even when the
+deployment behind it changed; `TURBO_FORCE=1` re-runs them.
 
 ## Location plugin suites
 
@@ -143,7 +204,7 @@ Passing runs carry one or two of these apiece:
 ```
 
 That is workerd reporting that the _client_ hung up before a response finished.
-The 404 and back-navigation specs abort in-flight requests by design, and six
+The 404 and back-navigation specs abort in-flight requests by design, and seven
 suites share one worker. Nothing crashes and nothing recovers; it reads as an
 ERROR only because workerd's own stderr is not gagged by `WRANGLER_LOG`. Do not
 triage on this string — measured over eight consecutive green runs it appeared
@@ -190,11 +251,11 @@ package script works:
 pnpm --dir apps/sample-app-lit-e2e test:e2e:vanilla --spec src/integration/dialog.cy.js
 ```
 
-`test:e2e:mobx` and `test:e2e:effect` don't forward `--spec`; pass the config
+`test:e2e:mobx`, `test:e2e:effect` and `test:e2e:signals` don't forward `--spec`; pass the config
 [`scripts/cypress-suite.ts`](scripts/cypress-suite.ts) builds instead:
 
 ```bash
-pnpm --dir apps/sample-app-lit-e2e exec cypress run --config baseUrl=http://localhost:5175/app-effect/,videosFolder=cypress/videos-effect,screenshotsFolder=cypress/screenshots-effect --spec src/integration/dialog.cy.js
+pnpm --dir apps/sample-app-lit-e2e exec cypress run --browser chrome --config baseUrl=http://localhost:5175/app-effect/,videosFolder=cypress/videos-effect,screenshotsFolder=cypress/screenshots-effect --spec src/integration/dialog.cy.js
 ```
 
 Videos land in `cypress/videos*/`; screenshots only on failure or an explicit

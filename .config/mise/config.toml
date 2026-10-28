@@ -56,6 +56,10 @@ _.file = [
 # setup here, and //tools/release:check_release_closure, which guards it.
 release_closure = "--filter @tools/release... --filter {packages/*}..."
 
+[shell_alias]
+# Activated shells only: a task runs in a child process and can't move the caller.
+cd_config_root = 'cd "{{config_root}}"'
+
 [settings]
 # read the node version from .nvmrc instead of pinning it here
 idiomatic_version_file_enable_tools = ["node"]
@@ -74,9 +78,9 @@ idiomatic_version_file_enable_tools = ["node"]
 # (tools/repo-checks/pnpm-pin.test.ts). Must be the aqua backend — the npm
 # `pnpm` package is a placeholder whose `preinstall` hardlinks the real binary
 # from an optional platform dep, which mise's aube installer does not run.
-"aqua:pnpm/pnpm" = "12.8.1"
+"aqua:pnpm/pnpm" = "12.15.0"
 # shadows node's bundled npm; OIDC trusted publishing needs npm >= 11.5.1
-"npm:npm" = "12.0.2"
+"npm:npm" = "12.2.1"
 # TOML formatter; oxfmt handles everything but .toml, so this owns the mise
 # configs and member mise.toml files. Pinned like the other aqua tools.
 "aqua:tamasfe/taplo" = "0.10.0"
@@ -112,7 +116,16 @@ NPM_CONFIG_FUND = "false"
 
 [tasks.lint_actionlint]
 description = "Lint GitHub Actions workflows for syntax/type errors"
-run = "actionlint"
+usage = '''
+flag "--github" help="Print GitHub workflow commands; set on Actions" env="GITHUB_ACTIONS"
+'''
+# --github: actionlint's documented workflow-command template, plus the rule as title.
+run = '''
+{% raw %}if [ "${usage_github:-}" = true ]; then
+  exec actionlint -format '{{range $err := .}}::error file={{$err.Filepath}},line={{$err.Line}},col={{$err.Column}},endColumn={{$err.EndColumn}},title={{$err.Kind}}::{{$err.Message}}%0A```%0A{{replace $err.Snippet "\\n" "%0A"}}%0A```\n{{end}}'
+fi
+exec actionlint{% endraw %}
+'''
 
 [tasks.lint_zizmor]
 # --offline: keep local and CI runs identical (online audits self-enable when a GH token is in env)
@@ -169,9 +182,9 @@ run = "mise run taplo fmt --check"
 # runs from the workspace root.
 
 # turbo_login, read_secret, turbo_pin_worktree, turbo_backfill,
-# turbo_force_guard, cloudflare_item_create and check_workers_builds are
-# file-based tasks under .config/mise/tasks/ — their shell bodies were too large
-# to sit inline. Every other task here is a one- or two-liner and stays inline.
+# turbo_force_guard, pause_commands, cloudflare_item_create and
+# check_workers_builds are file-based tasks under .config/mise/tasks/ — their
+# shell bodies were too large to sit inline. Every other task here is a one- or two-liner and stays inline.
 
 # The Cloudflare tasks wrap `op` over gitignored files whose paths are the only
 # thing worth memorizing; none is required, since the check reads plain env.
@@ -209,9 +222,25 @@ run = 'turbo run "${usage_package_name?}#build"'
 depends = ["turbo_force_guard"]
 dir = "{{config_root}}"
 description = "Build the @www sites"
-run = "turbo run build --filter='@www/*' --ui=stream --log-order=stream --summarize"
+usage = '''
+flag "--output-logs <mode>" help="turbo task output: full | errors-only | new-only | hash-only | none; CI sets errors-only" default="full" env="TURBO_OUTPUT_LOGS"
+'''
+run = "mise run pause_commands -- turbo run build --filter='@www/*' --ui=stream --log-order=stream --summarize --log-file --output-logs=\"${usage_output_logs?}\""
 
 [tasks.ci]
+# The PR gate: the turbo graph, then the e2e suites, which need a dev server
+# turbo can't own (see test_e2e). A graph failure short-circuits the suites.
+# build-test-run.yml runs the same two halves as parallel jobs.
+description = "Run the pull-request CI pipeline: the turbo graph, then the e2e suites"
+usage = '''
+flag "--output-logs <mode>" help="turbo task output: full | errors-only | new-only | hash-only | none; CI sets errors-only" default="full" env="TURBO_OUTPUT_LOGS"
+'''
+run = [
+  "TURBO_OUTPUT_LOGS=\"${usage_output_logs?}\" mise run ci_graph",
+  "TURBO_OUTPUT_LOGS=\"${usage_output_logs?}\" mise run test_e2e",
+]
+
+[tasks.ci_graph]
 # turbo's `ci` is the back-compat alias of `ci:pull_request`.
 # env: TURBO_FORCE + TURBO_TOKEN/TURBO_API/TURBO_TEAM, which turbo reads from
 # the env itself (no CLI flags), plus WRANGLER_LOG for the underlying
@@ -221,29 +250,44 @@ run = "turbo run build --filter='@www/*' --ui=stream --log-order=stream --summar
 # what the turbo_force_guard leg refuses outside CI.
 # --summarize writes .turbo/runs/<id>.json (gitignored), which the
 # turbo_summary task reports on every run. It changes nothing about what runs.
-# The e2e suites are a SECOND step, not part of turbo's ci graph: they need a
-# dev server, and turbo owns no server lifecycle (see test_e2e). Kept inside
-# this task rather than added as a workflow step so `mise run ci` remains the
-# one entry point that means "the PR gate" — a split across two steps would
-# leave a local `mise run ci` silently short of CI. Second, so a lint or
-# typecheck failure short-circuits the expensive lane.
+# --log-file writes .turbo/logs/<timestamp>.json, the reporter's fallback when a
+# task's own .turbo/turbo-*.log can't be read.
 depends = ["turbo_force_guard"]
-description = "Run the pull-request CI pipeline via turbo"
+description = "Run the pull-request turbo graph (ci without the e2e suites)"
+usage = '''
+flag "--output-logs <mode>" help="turbo task output: full | errors-only | new-only | hash-only | none; CI sets errors-only" default="full" env="TURBO_OUTPUT_LOGS"
+'''
 run = [
   "mise run //tools/build_and_test:mark_session",
-  "turbo run ci --ui=stream --log-order=stream --summarize",
-  "mise run test_e2e",
+  # --continue=dependencies-successful: one failing task still lets the rest
+  # report and turbo still exits non-zero, while a failed build skips its
+  # dependents. Bare --continue means `always`, which runs them against no output.
+  "mise run pause_commands -- turbo run ci --continue=dependencies-successful --ui=stream --log-order=stream --summarize --log-file --output-logs=\"${usage_output_logs?}\"",
 ]
 
 [tasks.ci_main]
-# Superset of `ci` (same env contract): adds the main-only guard tasks
+# Superset of `ci` (same env contract): the main graph, then the e2e suites.
+description = "Run the main-push CI pipeline: the main turbo graph, then the e2e suites"
+usage = '''
+flag "--output-logs <mode>" help="turbo task output: full | errors-only | new-only | hash-only | none; CI sets errors-only" default="full" env="TURBO_OUTPUT_LOGS"
+'''
+run = [
+  "TURBO_OUTPUT_LOGS=\"${usage_output_logs?}\" mise run ci_main_graph",
+  "TURBO_OUTPUT_LOGS=\"${usage_output_logs?}\" mise run test_e2e",
+]
+
+[tasks.ci_main_graph]
+# Superset of `ci_graph` (same env contract): adds the main-only guard tasks
 # (@tools/release#check:pack, @tools/dts-backtest#test:matrix) to the graph.
 depends = ["turbo_force_guard"]
-description = "Run the main-push CI pipeline via turbo"
+description = "Run the main-push turbo graph (ci_main without the e2e suites)"
+usage = '''
+flag "--output-logs <mode>" help="turbo task output: full | errors-only | new-only | hash-only | none; CI sets errors-only" default="full" env="TURBO_OUTPUT_LOGS"
+'''
 run = [
   "mise run //tools/build_and_test:mark_session",
-  "turbo run ci:main --ui=stream --log-order=stream --summarize",
-  "mise run test_e2e",
+  # --continue=dependencies-successful: as in ci_graph.
+  "mise run pause_commands -- turbo run ci:main --continue=dependencies-successful --ui=stream --log-order=stream --summarize --log-file --output-logs=\"${usage_output_logs?}\"",
 ]
 
 [tasks.test_e2e]
@@ -257,12 +301,18 @@ run = [
 # so the serve task's build edge is off this path (a nested `mise run` would run
 # build_www twice), and a cold build stays out of the wait-on budget.
 #
-# --summarize here and in build_www: the reporter picks up every summary
-# written since `mark_session`, so these join the ci run rather than displace it.
+# --summarize and --log-file here and in build_www: the reporter picks up every
+# summary and log written since `mark_session`, so these join the ci run rather
+# than displace it.
 #
 # WWW_DEV_PORT overrides the default in dev-port.ts, which serve-and-test.ts
 # resolves. WRANGLER_LOG and CYPRESS_* reach Cypress through the tasks'
 # passThroughEnv.
+#
+# --base-url (E2E_BASE_URL) runs the suites against an already-served origin and
+# starts no server; build_www stays, since the suites' build edge reaches the
+# site build anyway. Exported only when non-empty: turbo hashes an empty var
+# apart from an unset one.
 #
 # dir is explicit: the inner `turbo run` must see the whole workspace, and a
 # task invoked from a package directory gets a silently narrowed plan.
@@ -271,15 +321,44 @@ dir = "{{config_root}}"
 description = "Run the Cypress e2e suites via turbo, around one shared dev server"
 usage = '''
 arg "[suite]" var=#true help="Suites to run (e.g. hash mobx); none runs them all"
+flag "--output-logs <mode>" help="turbo task output: full | errors-only | new-only | hash-only | none; CI sets errors-only" default="full" env="TURBO_OUTPUT_LOGS"
+flag "--base-url <origin>" help="Run against this served origin (e.g. a deployed preview) instead of a local dev server" env="E2E_BASE_URL"
 '''
 # unquoted: a var arg arrives as one string and must word-split back into argv
-run = 'node ./apps/sample-app-lit-e2e/scripts/run-e2e.ts ${usage_suite:-}'
+run = 'if [ -n "${usage_base_url:-}" ]; then export E2E_BASE_URL="$usage_base_url"; else unset E2E_BASE_URL; fi; TURBO_OUTPUT_LOGS="${usage_output_logs?}" mise run pause_commands -- node ./apps/sample-app-lit-e2e/scripts/run-e2e.ts ${usage_suite:-}'
+
+[tasks.e2e_plan]
+# env: GITHUB_OUTPUT (step-output target). Node builtins only: CI's plan job
+# runs it without `mise run setup`.
+description = "Group the default e2e suites into CI's e2e matrix"
+usage = '''
+flag "--suites-per-job <n>" help="Suites per e2e job; a positive integer" default="1" env="SUITES_PER_JOB"
+'''
+run = 'SUITES_PER_JOB="${usage_suites_per_job?}" node ./apps/sample-app-lit-e2e/scripts/e2e-plan.ts'
 
 [tasks.codecov_bundle]
 # env: CODECOV_TOKEN plus the ambient TURBO_* remote-cache config.
 depends = ["turbo_force_guard"]
 description = "Upload bundle-analysis stats to Codecov via turbo"
-run = "turbo run codecov:bundle --ui=stream --log-order=stream"
+usage = '''
+flag "--output-logs <mode>" help="turbo task output: full | errors-only | new-only | hash-only | none; CI sets errors-only" default="full" env="TURBO_OUTPUT_LOGS"
+'''
+run = "turbo run codecov:bundle --ui=stream --log-order=stream --output-logs=\"${usage_output_logs?}\""
+
+[tasks.bench_pulse]
+# The benches one at a time on a short budget, for the `acceptance (bench)`
+# job; //tools/build_and_test:bench_summary reports the result files and
+# turbo_summary the run, as for ci_graph.
+depends = ["turbo_force_guard"]
+description = "Run the tinybench benches on a short time budget via turbo"
+usage = '''
+flag "--time-ms <time_ms>" help="tinybench time budget per bench task, in ms" default="200" env="BENCH_TIME_MS"
+flag "--output-logs <mode>" help="turbo task output: full | errors-only | new-only | hash-only | none; CI sets errors-only" default="full" env="TURBO_OUTPUT_LOGS"
+'''
+run = [
+  "mise run //tools/build_and_test:mark_session",
+  "BENCH_TIME_MS=\"${usage_time_ms?}\" mise run pause_commands -- turbo run bench --concurrency=1 --ui=stream --log-order=stream --summarize --log-file --output-logs=\"${usage_output_logs?}\"",
+]
 
 [tasks.dts_backtest_matrix]
 # Ad-hoc alias for the full dts-backtest TS matrix; CI runs it via ci_main.

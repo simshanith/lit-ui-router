@@ -13,6 +13,7 @@ test('packCacheOutcome pulls the named task cache status/source', () => {
       },
     ],
   };
+
   assert.deepEqual(packCacheOutcome(summary, '@tools/release#pack:all'), {
     status: 'HIT',
     source: 'REMOTE',
@@ -28,6 +29,7 @@ test('packCacheOutcome tolerates a missing task or shape', () => {
     status: undefined,
     source: undefined,
   });
+
   // A summary we can't read degrades to unverifiable — never throws (which
   // would fail the publish) and never reads as a balance.
   for (const summary of [null, undefined, [], 'nope', 7, { tasks: 'nope' }]) {

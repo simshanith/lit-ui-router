@@ -17,6 +17,7 @@
         "@tools/repo-checks#check:patches",
         "@tools/repo-checks#check:dedupe",
         "@tools/repo-checks#check:single-version",
+        "@tools/repo-checks#check:package-coverage",
         "@tools/repo-checks#check:graph-edges",
         "@tools/repo-checks#check:task-inputs",
         "@tools/repo-checks#check:knip",
@@ -39,7 +40,7 @@
     "test:unit": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$"],
-      "passThroughEnv": ["CI"]
+      "passThroughEnv": ["CI", "GITHUB_ACTIONS"]
     },
     // the same suite on the eslint-floor alias. Gated, unlike the adapters'
     // typecheck:peer-floor: the floor is a published eslint, never a workspace peer
@@ -48,11 +49,13 @@
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/pnpm-workspace.yaml",
         "$TURBO_ROOT$/pnpm-lock.yaml"
-      ]
+      ],
+      "passThroughEnv": ["GITHUB_ACTIONS"]
     },
     // oxlint `jsPlugins` over the fixture dir, gating at the exact catalog pin
     "test:oxlint": {
-      "inputs": ["$TURBO_DEFAULT$"]
+      "inputs": ["$TURBO_DEFAULT$"],
+      "passThroughEnv": ["GITHUB_ACTIONS"]
     }
   }
 }

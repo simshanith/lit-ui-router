@@ -11,6 +11,7 @@ import { viteStaticCopy } from 'vite-plugin-static-copy';
 const sharedRequire = createRequire(
   new URL('../package.json', import.meta.url),
 );
+
 const visualizerImages = path
   .join(
     path.dirname(sharedRequire.resolve('@uirouter/visualizer/package.json')),

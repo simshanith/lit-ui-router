@@ -5,21 +5,22 @@ This guide provides a quick overview of the `lit-ui-router` API. For detailed ty
 ## Installation
 
 ```bash
-npm install lit-ui-router
-# or
-pnpm add lit-ui-router
+npm install lit-ui-router lit @uirouter/core
 ```
 
 ## Entry Points
 
-| Import                                        | Effect                                                                                                                                                                                                     |
-| --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `import { ... } from 'lit-ui-router'`         | The router, the elements, the directives and the controllers. Any value import registers the `<ui-router>`/`<ui-view>` custom elements as a side effect.                                                   |
-| `import { ... } from 'lit-ui-router/pure'`    | The same API — element classes included — with no registration and no `HTMLElementTagNameMap` globals.                                                                                                     |
-| `import 'lit-ui-router/register'`             | Registration only: defines `<ui-router>`/`<ui-view>` and carries their `HTMLElementTagNameMap` entries.                                                                                                    |
-| `import 'lit-ui-router/ui-view.register'`     | Single-element registration: defines just that element with its tag-map entry (`ui-router.register` ditto).                                                                                                |
-| `import { ... } from 'lit-ui-router/context'` | The only home of the `context-request` key, event and request helper, and of the tree-less router hand-off — nothing from `lit` — see [Reactive Components](/guides/reactive-components#router-discovery). |
-| `import type { ... } from 'lit-ui-router'`    | Types are erased at compile time — always free, from any entry.                                                                                                                                            |
+| Import                                        | Effect                                                                                                                                                                                                             |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `import { ... } from 'lit-ui-router'`         | The router, the elements, the directives and the controllers. Any value import registers the `<ui-router>`/`<ui-view>` custom elements as a side effect.                                                           |
+| `import { ... } from 'lit-ui-router/pure'`    | The same API — element classes included — with no registration and no `HTMLElementTagNameMap` globals.                                                                                                             |
+| `import 'lit-ui-router/register'`             | Registration only: defines `<ui-router>`/`<ui-view>` and carries their `HTMLElementTagNameMap` entries.                                                                                                            |
+| `import 'lit-ui-router/ui-view.register'`     | Single-element registration: defines just that element with its tag-map entry (`ui-router.register` ditto).                                                                                                        |
+| `import { ... } from 'lit-ui-router/context'` | The only home of the `context-request` key, event and request helper, and of the tree-less router hand-off — nothing from `lit` — see [Reactive Components](/guides/reactive-components#router-discovery).         |
+| `lit-ui-router/custom-elements.json`          | The [Custom Elements Manifest](https://custom-elements-manifest.open-wc.org/) for `<ui-router>` and `<ui-view>`, also named by the `customElements` field. Bundlers load it as a URL or JSON, e.g. `?url` in Vite. |
+| `import type { ... } from 'lit-ui-router'`    | Types are erased at compile time — always free, from any entry.                                                                                                                                                    |
+
+These entries are the supported import paths. Deep `lit-ui-router/dist/...` paths still resolve, but they are unsupported and 2.0 removes them.
 
 ## Quick Start
 
@@ -69,6 +70,8 @@ state that reads the query needs the function form — see
 ### Router
 
 [`UIRouterLit`](./reference/core/UIRouterLit) is the main router class. It extends `@uirouter/core`'s UIRouter with Lit-specific view handling.
+
+[`viewRendered(router, transition?)`](./reference/core/viewRendered) resolves once every `<ui-view>` registered with the router, and the element each one rendered, has completed its update for the transition. It waits on `updateComplete`, never on a frame — see [Component Lifecycle](/guides/component-lifecycle#after-the-transition-waiting-for-the-view-to-render).
 
 ### Components
 

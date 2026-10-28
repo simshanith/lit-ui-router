@@ -17,6 +17,9 @@ import {
 } from '@uirouter/core';
 import type { LocationPlugin, UIRouter } from '@uirouter/core';
 
+import { applyUrlConfig } from './url-config.ts';
+import type { RouterUrlConfig } from './url-config.ts';
+
 /**
  * `@uirouter/core`'s `MemoryLocationConfig` with the `isHtml5` its location
  * plugin passes honored, which the shipped class ignores: it assigns
@@ -102,7 +105,18 @@ export interface ServerLocationOptions extends ServerLocationPluginOptions {
    * paths relative to the mount, exactly as a `<base href>` client does.
    */
   baseHref?: string;
-  /** Whether a trailing slash has to match exactly; most static hosts want `false`. */
+  /**
+   * The url options the router compiles its urls with, applied through
+   * {@link url-config!applyUrlConfig | `applyUrlConfig`} before anything else,
+   * so a mount's `config` passes as is. Its `strict` wins over
+   * {@link ServerLocationOptions.strictMode | `strictMode`}.
+   */
+  urlConfig?: RouterUrlConfig;
+  /**
+   * Whether a trailing slash has to match exactly; most static hosts want `false`.
+   *
+   * @deprecated Shorthand for `urlConfig: { strict }`.
+   */
   strictMode?: boolean;
 }
 
@@ -123,8 +137,9 @@ export interface ServerLocationOptions extends ServerLocationPluginOptions {
  *
  * @typeParam T - the router type, returned unchanged
  * @param router - a freshly constructed router, with no location plugin yet
- * @param options - the request's url, the mount's shape, and the url shape
+ * @param options - the request's url, the mount's shape, the url shape, and the url config
  * @returns `router`, for chaining
+ * @throws if `urlConfig` or `strictMode` is given and a state with a url, or a `when()` url rule, is already registered; the router is left unchanged
  *
  * @example
  * ```ts
@@ -134,7 +149,10 @@ export interface ServerLocationOptions extends ServerLocationPluginOptions {
  * const { pathname, search } = new URL(request.url);
  * const router = new UIRouter();
  * router.plugin(servicesPlugin);
- * installServerLocation(router, { url: pathname + search, strictMode: false });
+ * installServerLocation(router, {
+ *   url: pathname + search,
+ *   urlConfig: { strict: false },
+ * });
  * states.forEach((state) => router.stateRegistry.register(state));
  * const settled = new Promise<void>((resolve) => {
  *   router.transitionService.onSuccess({}, () => resolve());
@@ -150,13 +168,25 @@ export const installServerLocation: <T extends UIRouter>(
   router: T,
   options: ServerLocationOptions = {},
 ): T => {
+  // eslint-disable-next-line typescript/no-deprecated -- the option still honors its shorthand
+  const { strictMode, urlConfig } = options;
+
+  // First, so the ordering guard throws before the plugin or url changes.
+  if (urlConfig || strictMode !== undefined)
+    applyUrlConfig(router, {
+      ...urlConfig,
+      strict: urlConfig?.strict ?? strictMode,
+    });
+
   router.plugin(serverLocationPlugin, { html5Mode: options.html5Mode });
+
   // `urlService.config.baseHref()` only reads; the memory config holds the value
   if (options.baseHref !== undefined)
+    // SAFETY: serverLocationPlugin, installed above, sets a ServerLocationConfig.
     (router.locationConfig as MemoryLocationConfig)._baseHref =
       options.baseHref;
-  if (options.strictMode !== undefined)
-    router.urlService.config.strictMode(options.strictMode);
+
   if (options.url !== undefined) router.urlService.url(options.url);
+
   return router;
 };

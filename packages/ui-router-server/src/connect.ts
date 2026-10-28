@@ -42,14 +42,15 @@ export interface ConnectRequest {
  */
 export interface ConnectResponse {
   /** Writes the status line and headers; patched to relabel a status'd shell. */
-  writeHead(statusCode: number, ...rest: unknown[]): unknown;
+  writeHead(statusCode: number, ...rest: unknown[]): void;
   /** Sets one response header (the canonical `Link` on a shell verdict). */
-  setHeader(name: string, value: string): unknown;
+  setHeader(name: string, value: string): void;
   /** Ends the response, optionally with a body. */
-  end(body?: string): unknown;
+  end(body?: string): void;
 }
 
 /** Connect's continuation: call with no argument to pass, with an error to fail. */
+// oxlint-disable-next-line anti-slop/no-unknown-parameters -- Connect's next() takes any thrown value
 export type ConnectNext = (error?: unknown) => void;
 
 /** Connect-shaped middleware: what {@link createConnectMiddleware} returns. */
@@ -105,9 +106,14 @@ export interface ConnectAdapterOptions {
   shouldHandle?: (req: ConnectRequest) => boolean;
 }
 
+const isHeaderString = (
+  value: string | string[] | undefined,
+): value is string => typeof value === 'string';
+
 const acceptsHtml = (req: ConnectRequest): boolean => {
   const accept = req.headers.accept;
-  return typeof accept === 'string' && accept.includes('text/html');
+
+  return isHeaderString(accept) && accept.includes('text/html');
 };
 
 const isNavigation = (req: ConnectRequest): boolean =>
@@ -176,8 +182,10 @@ export function createConnectMiddleware(
   return (req, res, next) => {
     if (!shouldHandle(req)) {
       next();
+
       return;
     }
+
     const url = req.url ?? '/';
     const cut = url.indexOf('?');
     const search = cut === -1 ? '' : url.substring(cut);
@@ -187,8 +195,10 @@ export function createConnectMiddleware(
           Location: mergeSearch(verdict.location, search),
         });
         res.end();
+
         return;
       }
+
       if (verdict.kind === 'shell') {
         if (verdict.status === undefined) {
           res.setHeader('Link', `<${verdict.mount}>; rel="canonical"`);
@@ -196,13 +206,18 @@ export function createConnectMiddleware(
           stripValidators(req);
           relabel(res, verdict.status);
         }
+
         serveShell(verdict.mount, req, res, next);
+
         return;
       }
+
       if (verdict.mount === undefined) {
         next();
+
         return;
       }
+
       serveNotFound(verdict.mount, req, res, next);
     }, next);
   };

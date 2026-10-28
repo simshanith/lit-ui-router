@@ -6,7 +6,7 @@ import {
   UIRouter,
   UrlMatcher as CoreUrlMatcher,
 } from '@uirouter/core';
-import type { RawParams } from '@uirouter/core';
+import type { RawParams, UrlMatcherCompileConfig } from '@uirouter/core';
 
 import {
   compare,
@@ -24,24 +24,31 @@ import type { UrlMatcherCompileOptions } from '../src/url-matcher.ts';
 // Core-side only: core routes static param defaults through services.$injector
 // (params/param.ts) and throws without one. The standalone matcher is the
 // control group — it never touches an injector.
+// SAFETY: core's static param defaults reach the injector only through invoke().
 services.$injector = {
-  invoke: (fn: () => unknown) => fn(),
+  invoke: <T>(fn: () => T): T => fn(),
 } as typeof services.$injector;
 
 // eslint-disable-next-line typescript/no-deprecated -- the control group needs core's factory itself, not the urlService facade
 const { urlMatcherFactory: coreFactory } = new UIRouter();
+
 const { compile } = urlMatcherFactory();
 
 const coreCompile = (
   pattern: string,
   options: UrlMatcherCompileOptions = {},
+  factory = coreFactory,
 ) => {
-  const config: Record<string, unknown> = {};
+  const config: UrlMatcherCompileConfig = {};
+
   if (options.strict !== undefined) config.strict = options.strict;
+
   if (options.caseInsensitive !== undefined)
     config.caseInsensitive = options.caseInsensitive;
+
   if (options.params !== undefined) config.state = { params: options.params };
-  return coreFactory.compile(pattern, config);
+
+  return factory.compile(pattern, config);
 };
 
 interface DifferentialCase {
@@ -182,6 +189,12 @@ const featureCases: DifferentialCase[] = [
     urls: ['/n', '/n/', '/n/7', '/n/x'],
   },
   { pattern: '/s/{v:string}', urls: ['/s/abc', '/s/a/b'] },
+  // A declared built-in type replaces an inline string type
+  {
+    pattern: '/s/{v:string}',
+    options: { params: { v: { type: 'int' } } },
+    urls: ['/s/7', '/s/abc'],
+  },
   // Inline regexps
   {
     pattern: '/hex/{id:[0-9a-fA-F]{1,8}}',
@@ -253,6 +266,7 @@ const featureCases: DifferentialCase[] = [
 ];
 
 const allCases = [...appCases, ...featureCases];
+
 const comparisons = allCases.reduce((sum, c) => sum + c.urls.length, 0);
 
 describe(`differential: standalone matcher vs @uirouter/core (${allCases.length} patterns, ${comparisons} comparisons)`, () => {
@@ -261,6 +275,7 @@ describe(`differential: standalone matcher vs @uirouter/core (${allCases.length}
     it(label, () => {
       const expectedMatcher = coreCompile(pattern, options);
       const actualMatcher = compile(pattern, options);
+
       for (const url of urls) {
         const expected: unknown = expectedMatcher.exec(url);
         const actual: unknown = exec(actualMatcher, url);
@@ -294,7 +309,7 @@ const throwCases: {
     label: 'invalid squash policy',
     pattern: '/x/:id',
     options: {
-      params: { id: { value: 'v', squash: 5 as unknown as boolean } },
+      params: { id: { value: 'v', squash: 5 } },
     },
     url: '/x/1',
   },
@@ -337,6 +352,7 @@ describe('differential: standalone-only compile rejections (supported upstream)'
     const options = {
       params: { id: { value: () => 'fallback', squash: true } },
     };
+
     assert.deepStrictEqual(coreCompile('/x/:id', options).exec('/x'), {
       id: 'fallback',
     });
@@ -355,6 +371,7 @@ describe('differential: standalone-only compile rejections (supported upstream)'
     const options = {
       params: { id: { value: 'v', replace: [{ from: 'a', to: 'b' }] } },
     };
+
     assert.ok(coreCompile('/a/:id', options));
     assert.throws(
       () => compile('/a/:id', options),
@@ -534,6 +551,7 @@ describe(`differential: compare vs @uirouter/core (${specificityPatterns.length}
         const expected = sign(
           CoreUrlMatcher.compare(coreCompile(left), coreCompile(right)),
         );
+
         const actual = sign(compare(compile(left), compile(right)));
         assert.equal(actual, expected);
       });
@@ -552,6 +570,7 @@ describe(`differential: format() vs @uirouter/core (${formatCases.length} patter
     it(label, () => {
       const expectedMatcher = coreCompile(pattern, options);
       const actualMatcher = compile(pattern, options);
+
       for (const value of values) {
         const expected: unknown = expectedMatcher.format(value);
         const actual: unknown = format(actualMatcher, value);
@@ -561,6 +580,130 @@ describe(`differential: format() vs @uirouter/core (${formatCases.length} patter
           `'${pattern}'.format(${JSON.stringify(value)})`,
         );
       }
+    });
+  }
+});
+
+// Router-wide defaultSquashPolicy: a defaulted param that declares no squash
+// takes the factory's policy, in exec and format alike.
+const squashPolicies = [undefined, false, true, '~'] as const;
+
+const defaultPolicyCases: (DifferentialCase & { values: RawParams[] })[] = [
+  {
+    pattern: '/x/:id',
+    options: { params: { id: { value: 'fallback' } } },
+    urls: ['/x', '/x/', '/x/~', '/x/fallback', '/x/7'],
+    values: [{}, { id: 'fallback' }, { id: '7' }],
+  },
+  {
+    pattern: '/docs/:section/page',
+    options: { params: { section: { value: 'intro' } } },
+    urls: [
+      '/docs/page',
+      '/docs//page',
+      '/docs/~/page',
+      '/docs/intro/page',
+      '/docs/guide/page',
+    ],
+    values: [{}, { section: 'intro' }, { section: 'guide' }],
+  },
+  {
+    pattern: '/n/{id:int}',
+    options: { params: { id: { value: 42 } } },
+    urls: ['/n', '/n/', '/n/~', '/n/42', '/n/7'],
+    values: [{}, { id: 42 }, { id: 7 }],
+  },
+  {
+    pattern: '/inbox?page',
+    options: { params: { page: { value: '1' } } },
+    urls: ['/inbox'],
+    values: [{}, { page: '1' }, { page: '2' }],
+  },
+  // A declared squash outranks the router-wide policy.
+  {
+    pattern: '/x/:id',
+    options: { params: { id: { value: 'fallback', squash: false } } },
+    urls: ['/x', '/x/', '/x/~', '/x/7'],
+    values: [{}, { id: '7' }],
+  },
+  {
+    pattern: '/x/:id',
+    options: { params: { id: { value: 'fallback', squash: true } } },
+    urls: ['/x', '/x/', '/x/~', '/x/7'],
+    values: [{}, { id: '7' }],
+  },
+  {
+    pattern: '/x/:id',
+    options: { params: { id: { value: 'fallback', squash: '-' } } },
+    urls: ['/x', '/x/-', '/x/~', '/x/7'],
+    values: [{}, { id: '7' }],
+  },
+];
+
+for (const policy of squashPolicies) {
+  describe(`differential: defaultSquashPolicy ${String(policy)} vs @uirouter/core (${defaultPolicyCases.length} patterns)`, () => {
+    const router = new UIRouter();
+    router.urlService.config.defaultSquashPolicy(policy);
+    // eslint-disable-next-line typescript/no-deprecated -- the control group needs core's factory itself, not the urlService facade
+    const factory = router.urlMatcherFactory;
+
+    const policyCompile = urlMatcherFactory(
+      policy === undefined ? {} : { defaultSquashPolicy: policy },
+    ).compile;
+
+    for (const { pattern, options, urls, values } of defaultPolicyCases) {
+      it(`${pattern} ${JSON.stringify(options)}`, () => {
+        const expectedMatcher = coreCompile(pattern, options, factory);
+        const actualMatcher = policyCompile(pattern, options);
+
+        for (const url of urls) {
+          const expected: unknown = expectedMatcher.exec(url);
+          const actual: unknown = exec(actualMatcher, url);
+          assert.deepStrictEqual(actual, expected, `'${pattern}' × '${url}'`);
+        }
+
+        for (const value of values) {
+          const expected: unknown = expectedMatcher.format(value);
+          const actual: unknown = format(actualMatcher, value);
+          assert.deepStrictEqual(
+            actual,
+            expected,
+            `'${pattern}'.format(${JSON.stringify(value)})`,
+          );
+        }
+      });
+    }
+  });
+}
+
+const thrownMessage = (fn: () => void): string | undefined => {
+  try {
+    fn();
+  } catch (error) {
+    return error instanceof Error ? error.message : String(error);
+  }
+
+  return undefined;
+};
+
+describe('differential: invalid defaultSquashPolicy rejected by both implementations', () => {
+  for (const policy of [null, 5, {}]) {
+    const label = JSON.stringify(policy);
+    it(label, () => {
+      // oxlint-disable-next-line anti-slop/no-chained-type-assertions, anti-slop/require-safety-comment-for-type-assertion -- deliberately ill-typed policy exercises the runtime check
+      const invalid = policy as unknown as boolean;
+
+      const expected = thrownMessage(() =>
+        new UIRouter().urlService.config.defaultSquashPolicy(invalid),
+      );
+
+      assert.ok(expected, `core accepted: ${label}`);
+      assert.equal(
+        thrownMessage(() =>
+          urlMatcherFactory({ defaultSquashPolicy: invalid }),
+        ),
+        expected,
+      );
     });
   }
 });

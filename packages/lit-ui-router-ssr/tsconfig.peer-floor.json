@@ -1,0 +1,32 @@
+{
+  // Typechecks src against the published floors of its peer ranges (the
+  // <peer>-floor aliases), not the linked workspace or dev copies. Never emits.
+  "extends": "./tsconfig.src.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "paths": {
+      "lit-ui-router": ["./node_modules/lit-ui-router-floor/dist/index.d.ts"],
+      "lit-ui-router/pure": [
+        "./node_modules/lit-ui-router-floor/dist/pure.d.ts"
+      ],
+      "lit-ui-router/context": [
+        "./node_modules/lit-ui-router-floor/dist/context.d.ts"
+      ],
+      "lit-ui-router/ui-router.register": [
+        "./node_modules/lit-ui-router-floor/dist/ui-router.register.d.ts"
+      ],
+      "lit-ui-router/*": ["./node_modules/lit-ui-router-floor/*"],
+      "ui-router-server": [
+        "./node_modules/ui-router-server-floor/dist/index.d.ts"
+      ],
+      "ui-router-server/*": ["./node_modules/ui-router-server-floor/*"],
+      "@uirouter/core": ["./node_modules/@uirouter/core-floor/lib/index.d.ts"],
+      "@lit-labs/ssr": ["./node_modules/@lit-labs/ssr-floor/index.d.ts"],
+      "@lit-labs/ssr/*": ["./node_modules/@lit-labs/ssr-floor/*"],
+      "@lit-labs/ssr-client": [
+        "./node_modules/@lit-labs/ssr-client-floor/index.d.ts"
+      ],
+      "@lit-labs/ssr-client/*": ["./node_modules/@lit-labs/ssr-client-floor/*"]
+    }
+  }
+}

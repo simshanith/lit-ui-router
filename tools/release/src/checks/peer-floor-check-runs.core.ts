@@ -12,6 +12,13 @@ import { releaseWorkflowUrl } from './publish-check-runs.core.ts';
 
 export const PEER_FLOOR_SCRIPT = 'typecheck:peer-floor';
 
+const isScript = (script: string | undefined): script is string =>
+  typeof script === 'string';
+
+/** Whether a member opts in by defining the script. */
+export const definesPeerFloorScript = (member: Member): boolean =>
+  isScript(member.manifest?.scripts?.[PEER_FLOOR_SCRIPT]);
+
 export type PeerFloorResult = {
   name: string;
   ok: boolean;
@@ -46,9 +53,7 @@ export function peerFloorCheckRunName(packageName: string): string {
 /** Members that opt in by defining the script; root never qualifies. */
 export function peerFloorMembers(members: Member[]): Member[] {
   return members.filter(
-    (member) =>
-      !isRootMember(member) &&
-      typeof member.manifest?.scripts?.[PEER_FLOOR_SCRIPT] === 'string',
+    (member) => !isRootMember(member) && definesPeerFloorScript(member),
   );
 }
 
@@ -63,6 +68,7 @@ export function toPeerFloorCheckRun(
   repo: string,
 ): CheckRunPayload {
   const name = peerFloorCheckRunName(result.name);
+
   if (result.ok) {
     return {
       name,
@@ -73,10 +79,13 @@ export function toPeerFloorCheckRun(
         'against the pinned floor of its published peer range.',
     };
   }
+
   const peerCatalog = result.peerCatalog ?? 'peer catalog';
+
   const floorPin = result.floorCatalog
     ? `the ${result.floorCatalog} pin`
     : 'its matching peerFloor pin';
+
   return {
     name,
     conclusion: 'action_required',

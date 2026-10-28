@@ -10,6 +10,10 @@ import type { LitStateDeclaration, UiView } from 'lit-ui-router/pure';
 
 import { adoptUiViewContext } from '../adopt-context.js';
 import type { AdoptableView } from '../adopt-context.js';
+import {
+  warnDeferredNeverWoken,
+  warnDeferredWithoutClient,
+} from '../dev-warn.js';
 import type { ServedUiView } from '../served-view.js';
 import '../register.js';
 
@@ -17,6 +21,7 @@ import '../register.js';
 type View = ServedUiView;
 
 /** `document.createElement`, typed as the class `lit-ui-router-ssr/register` defined. */
+// SAFETY: `lit-ui-router-ssr/register` defines `ui-view` as the served class.
 const makeView = (): View => document.createElement('ui-view') as View;
 
 const tick = (ms = 0): Promise<void> =>
@@ -32,7 +37,9 @@ const waitForUpdate = async (element: LitElement): Promise<void> => {
 const createTestRouter = (states: LitStateDeclaration[] = []): UIRouterLit => {
   const router = new UIRouterLit();
   router.plugin(memoryLocationPlugin);
+
   for (const state of states) router.stateRegistry.register(state);
+
   return router;
 };
 
@@ -79,7 +86,8 @@ describe('the served <ui-view>', () => {
     uiRouterEl.uiRouter = router;
     container.append(uiRouterEl);
     uiRouterEl.innerHTML = `<ui-view ${attributes}>${markup}</ui-view>`;
-    return uiRouterEl.querySelector('ui-view') as View;
+
+    return uiRouterEl.querySelector<View>('ui-view')!;
   }
 
   /** Mounts one view under a `<ui-router>`, parent first, the way an upgrade order allows. */
@@ -143,7 +151,7 @@ describe('the served <ui-view>', () => {
       // Parsed with the attribute already on it, the way server output arrives.
       uiRouterEl.innerHTML =
         '<ui-view defer-hydration><p class="server">server</p></ui-view>';
-      const uiView = uiRouterEl.querySelector('ui-view') as View;
+      const uiView = uiRouterEl.querySelector<View>('ui-view')!;
       await waitForUpdate(uiView);
 
       expect(uiView.deferHydration).toBe(true);
@@ -260,6 +268,7 @@ describe('the served <ui-view>', () => {
       const { uiView } = await setupRouter([
         { name: 'home', url: '/home', component: () => html`<div>Home</div>` },
       ]);
+
       const registerUIView = vi.spyOn(router.viewService, 'registerUIView');
 
       uiView.setAttribute('defer-hydration', '');
@@ -289,13 +298,17 @@ describe('the served <ui-view>', () => {
       let seenRouter: unknown;
       let seenHasUpdated: boolean | undefined;
       let seenHeld: Element | null = null;
+
       const adopt = vi.fn((view: AdoptableView) => {
+        // SAFETY: only a waking `<ui-view>` requests the adopter.
         const woken = view as UiView;
         seenRouter = woken.uiRouter;
         seenHasUpdated = woken.hasUpdated;
         seenHeld = view.querySelector('p.held');
       });
+
       const uninstall = provideContext(container, adoptUiViewContext, adopt);
+
       try {
         uiView.removeAttribute('defer-hydration');
         await waitForUpdate(uiView);
@@ -327,11 +340,14 @@ describe('the served <ui-view>', () => {
 
       let seenHeld: Element | null = null;
       let seenNested: Element | null = null;
+
       const adopt = vi.fn((view: AdoptableView) => {
         seenHeld = view.querySelector('p.held');
         seenNested = view.querySelector('ui-view');
       });
+
       const uninstall = provideContext(container, adoptUiViewContext, adopt);
+
       try {
         // Detach, wake, re-attach in one task: the connect runs before the queued update.
         uiView.remove();
@@ -366,12 +382,15 @@ describe('the served <ui-view>', () => {
 
       let seenHeld: Element | null = null;
       let seenParent: unknown;
+
       const adopt = vi.fn((view: AdoptableView) => {
         seenHeld = view.querySelector('p.held');
         seenParent = view.parentElement;
       });
+
       const uninstall = provideContext(container, adoptUiViewContext, adopt);
       const held = uiView.querySelector('p.held');
+
       try {
         // Wake, then detach the enclosing subtree in the same task: the queued update runs detached.
         uiView.removeAttribute('defer-hydration');
@@ -405,6 +424,7 @@ describe('the served <ui-view>', () => {
       const uiView = mountHeld();
       const adopt = vi.fn();
       const uninstall = provideContext(container, adoptUiViewContext, adopt);
+
       try {
         uiView.removeAttribute('defer-hydration');
         await waitForUpdate(uiView);
@@ -427,6 +447,7 @@ describe('the served <ui-view>', () => {
       container.appendChild(elsewhere);
       const adopt = vi.fn();
       const uninstall = provideContext(elsewhere, adoptUiViewContext, adopt);
+
       try {
         router = createTestRouter(homeStates);
         const uiView = mountHeld();
@@ -447,6 +468,7 @@ describe('the served <ui-view>', () => {
       const adopt = vi.fn();
       const uninstall = provideContext(container, adoptUiViewContext, adopt);
       uninstall();
+
       try {
         router = createTestRouter(homeStates);
         const uiView = mountHeld();
@@ -463,6 +485,7 @@ describe('the served <ui-view>', () => {
 
     it('should drop the held nodes and warn when nothing answers', async () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
       try {
         router = createTestRouter(homeStates);
         router.start();
@@ -487,14 +510,17 @@ describe('the served <ui-view>', () => {
 
     it('should drop the held render and keep the authored nodes ahead of it', async () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
       try {
         router = createTestRouter(homeStates);
         router.start();
         await routerGo(router, 'home');
+
         const uiView = mountHeld(
           'defer-hydration',
           `<p class="hold">hold</p>${heldMarkup}`,
         );
+
         uiView.removeAttribute('defer-hydration');
         await waitForUpdate(uiView);
 
@@ -504,6 +530,7 @@ describe('the served <ui-view>', () => {
         expect(uiView.querySelector('.home-content')).not.toBeNull();
 
         // And what stood ahead of it is the fallback set, parked while a component renders.
+        // SAFETY: the fallback this markup authors is a lone `<p>`.
         const fallbackNodes = uiView['fallbackNodes'] as Element[];
         expect(fallbackNodes).toHaveLength(1);
         expect(fallbackNodes[0].className).toBe('hold');
@@ -541,6 +568,7 @@ describe('the served <ui-view>', () => {
 
     it('should warn once when nothing ever removes the attribute', async () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
       try {
         router = createTestRouter(homeStates);
         const uiView = mountHeld('defer-hydration', servedMarkup);
@@ -559,13 +587,32 @@ describe('the served <ui-view>', () => {
       }
     });
 
+    it('should stay quiet under node when NODE_ENV is production', async () => {
+      vi.stubEnv('NODE_ENV', 'production');
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      try {
+        router = createTestRouter(homeStates);
+        mountHeld('defer-hydration', servedMarkup);
+
+        await tick();
+
+        expect(warn).not.toHaveBeenCalled();
+      } finally {
+        warn.mockRestore();
+        vi.unstubAllEnvs();
+      }
+    });
+
     it('should warn for a clone of a served view the walk already passed', async () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
       const adopt = vi.fn();
       const uninstall = provideContext(container, adoptUiViewContext, adopt);
+
       try {
         router = createTestRouter(homeStates);
         const uiView = mountHeld('defer-hydration', servedMarkup);
+        // SAFETY: a `<ui-view>` clones through the same registered class.
         const clone = uiView.cloneNode(true) as View;
         // The walk wakes the served view in the task it connected in, and never sees the clone.
         uiView.removeAttribute('defer-hydration');
@@ -589,6 +636,7 @@ describe('the served <ui-view>', () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
       const adopt = vi.fn();
       const uninstall = provideContext(container, adoptUiViewContext, adopt);
+
       try {
         router = createTestRouter(homeStates);
         const uiView = mountHeld('defer-hydration', servedMarkup);
@@ -607,6 +655,7 @@ describe('the served <ui-view>', () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
       const adopt = vi.fn();
       const uninstall = provideContext(container, adoptUiViewContext, adopt);
+
       try {
         router = createTestRouter(homeStates);
         const uiView = mountHeld('defer-hydration', servedMarkup);
@@ -634,6 +683,7 @@ describe('the served <ui-view>', () => {
   describe('the router a sleeping view holds', () => {
     it('should keep the router the app assigned to a sleeping view', async () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
       try {
         // No router on <ui-router>, so it provides a placeholder the view latches at connect.
         const uiRouterEl = document.createElement('ui-router');
@@ -687,6 +737,7 @@ describe('the served <ui-view>', () => {
 
       const adopt = vi.fn();
       const uninstall = provideContext(container, adoptUiViewContext, adopt);
+
       try {
         uiView.removeAttribute('defer-hydration');
         await waitForUpdate(uiView);
@@ -715,12 +766,14 @@ describe('the served <ui-view>', () => {
       router = createTestRouter(holdStates);
       const uiView = mountHeld('defer-hydration', markup);
       const uninstall = provideContext(container, adoptUiViewContext, () => {});
+
       try {
         uiView.removeAttribute('defer-hydration');
         await waitForUpdate(uiView);
       } finally {
         uninstall();
       }
+
       return uiView;
     }
 
@@ -735,6 +788,7 @@ describe('the served <ui-view>', () => {
     it('should capture only what stands ahead of the render it holds', async () => {
       const uiView = await wakeHolding(`<p class="hold">hold</p>${heldMarkup}`);
 
+      // SAFETY: the fallback this markup authors is a lone `<p>`.
       const fallbackNodes = uiView['fallbackNodes'] as Element[];
       expect(fallbackNodes.map((node) => node.className)).toEqual(['hold']);
       expect(uiView.querySelector('p.held')).not.toBeNull();
@@ -761,6 +815,7 @@ describe('the served <ui-view>', () => {
       uiRouterEl.appendChild(uiView);
 
       const uninstall = provideContext(container, adoptUiViewContext, () => {});
+
       try {
         uiView.removeAttribute('defer-hydration');
         await waitForUpdate(uiView);
@@ -768,7 +823,7 @@ describe('the served <ui-view>', () => {
         uninstall();
       }
 
-      const fallbackNodes = uiView['fallbackNodes'] as Element[];
+      const fallbackNodes = uiView['fallbackNodes'];
       expect(fallbackNodes).toHaveLength(1);
       expect(fallbackNodes[0]).toBe(hold);
       expect(uiView.querySelectorAll('p.hold')).toHaveLength(1);
@@ -778,8 +833,10 @@ describe('the served <ui-view>', () => {
   describe('waking with authored hold content', () => {
     it('should keep it when nothing answers', async () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
       try {
         router = createTestRouter(homeStates);
+
         // Hand-written and markerless: no render put these here, so they are not ours to drop.
         const uiView = mountHeld(
           'defer-hydration',
@@ -795,5 +852,20 @@ describe('the served <ui-view>', () => {
         warn.mockRestore();
       }
     });
+  });
+});
+
+describe('the served view warnings under node with NODE_ENV=production', () => {
+  it('raise nothing', () => {
+    vi.stubEnv('NODE_ENV', 'production');
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const view = makeView();
+
+    warnDeferredWithoutClient(view);
+    warnDeferredNeverWoken(view);
+
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
+    vi.unstubAllEnvs();
   });
 });

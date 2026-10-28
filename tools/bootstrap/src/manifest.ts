@@ -39,15 +39,20 @@ import type { PackageManifest } from './types.ts';
 export function readManifest(dir: string): PackageManifest | undefined {
   const file = join(dir, 'package.json');
   let source: string;
+
   try {
     source = readFileSync(file, 'utf8');
   } catch (error) {
     // absent is a caller-level answer; anything else (EACCES, EISDIR) is a bug
+    // SAFETY: readFileSync throws only system errors, which carry `code`
     const code = (error as NodeJS.ErrnoException).code;
+
     if (code === 'ENOENT' || code === 'ENOTDIR') return undefined;
     throw error;
   }
+
   try {
+    // SAFETY: a package.json is a JSON object and every declared field is optional
     return JSON.parse(source) as PackageManifest;
   } catch (error) {
     throw new Error(`${file}: not valid JSON`, { cause: error });
@@ -57,8 +62,10 @@ export function readManifest(dir: string): PackageManifest | undefined {
 /** Parse `<dir>/package.json`; throws a located error when there is no such file. */
 export function requireManifest(dir: string): PackageManifest {
   const manifest = readManifest(dir);
+
   if (manifest === undefined) {
     throw new Error(`no package.json in ${dir}`);
   }
+
   return manifest;
 }

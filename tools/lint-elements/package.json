@@ -2,7 +2,7 @@
   "name": "@tools/lint-elements",
   "version": "0.0.1",
   "private": true,
-  "description": "Runs the eslint-plugin-lit / -wc / -lit-a11y pass over packages, apps and examples src, and ratchets its warnings against a committed snapshot",
+  "description": "Runs the eslint-plugin-lit / -wc / -lit-a11y pass over packages, apps and examples src, failing on any finding",
   "bin": {
     "lint-elements": "./src/lint-elements.ts"
   },
@@ -14,8 +14,8 @@
     "typecheck:tsc": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
+    "@tools/bootstrap": "catalog:workspace",
     "@tools/shared": "catalog:workspace",
-    "@tools/warn-lanes": "catalog:workspace",
     "@types/node": "catalog:",
     "eslint": "catalog:",
     "oxfmt": "catalog:",

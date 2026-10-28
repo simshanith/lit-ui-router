@@ -1,0 +1,114 @@
+---
+title: Signals Bindings
+description: Watcher-based Lit controllers over TC39 Signals of the route with lit-ui-router-signals
+---
+
+# lit-ui-router-signals
+
+<p class="badges">
+<a href="https://npmx.dev/package/lit-ui-router-signals" target="_blank" class="badge"><img alt="NPM Version" src="https://img.shields.io/npm/v/lit-ui-router-signals" /></a>
+<a href="https://lit-ui-router.dev/gh/releases/lit-ui-router-signals/latest" target="_blank" class="badge"><img alt="GitHub Release" src="https://img.shields.io/github/v/release/simshanith/lit-ui-router?filter=lit-ui-router-signals@*" /></a>
+</p>
+
+[`lit-ui-router-signals`](https://npmx.dev/package/lit-ui-router-signals)
+provides [TC39 Signals](https://github.com/tc39/proposal-signals) bindings for
+lit-ui-router: [ReactiveControllers](https://lit.dev/docs/composition/controllers/)
+that watch the [`ui-router-signals`](/packages/ui-router-signals) mirror of the
+router's state and update their host when a selected value changes.
+
+It registers no custom elements and adds no routing behavior. It has the
+shape of the [Effect](/packages/lit-ui-router-effect) and [MobX](/packages/lit-ui-router-mobx) bindings:
+
+| Signals                               | MobX                             | Effect                          |
+| ------------------------------------- | -------------------------------- | ------------------------------- |
+| `RouterSignals` (`ui-router-signals`) | `RouterStore` (`ui-router-mobx`) | `routeRef` (`ui-router-effect`) |
+| `SignalController`                    | `ReactionController`             | `RefController`                 |
+| `RouterSignalController`              | `RouterReactionController`       | `RouterRefController`           |
+
+## Installation
+
+```bash
+npm install lit-ui-router-signals ui-router-signals signal-polyfill
+```
+
+`lit-ui-router`, `ui-router-signals`, `lit`, and `@uirouter/core` are peer
+dependencies, and `signal-polyfill` is a peer of `ui-router-signals`.
+
+## Quick start
+
+```ts
+import { html, LitElement } from 'lit';
+import { RouterSignalController } from 'lit-ui-router-signals';
+
+class AppNav extends LitElement {
+  // Re-renders only when the selection flips, not on every transition.
+  private inbox = new RouterSignalController(this, (signals) =>
+    signals.route.get().includes('inbox.**'),
+  );
+
+  render() {
+    return html`...${this.inbox.value ? 'Inbox is open' : ''}...`;
+  }
+}
+```
+
+No router configuration is required: the controller discovers the router from
+the enclosing `<ui-router>` element when the host connects, and
+`RouterSignals.for` attaches its single transition hook on first use.
+
+## The pieces
+
+### RouterSignalController
+
+[`RouterSignalController`](/api/lit-ui-router-signals/classes/RouterSignalController)
+watches the `RouterSignals` of a router and exposes the selector's result as
+`.value`. The router comes from the `router` option (a router or a thunk), a
+`withRouterSync` scope at construction, or the nearest provider on
+`hostConnected`, as the Effect and MobX router controllers find theirs.
+`setRouter()` hands it a router later.
+
+### SignalController
+
+[`SignalController`](/api/lit-ui-router-signals/classes/SignalController) is
+the generic primitive: it watches any selector over signals while the host is
+connected, and calls `requestUpdate()` only when the selected value changes
+under `equals` (default `Object.is`).
+
+Both take `initialValue`, `equals` and `onChange` options. Changes arrive in a
+microtask after the source changes: a watcher's notify callback may not read
+signals, so it schedules the read.
+
+## Lifecycle safety
+
+Watching starts in `hostConnected` and stops in `hostDisconnected`. The
+selector runs on every (re)connect, so a component that re-enters the DOM
+renders current values.
+
+## `@lit-labs/signals`
+
+[`@lit-labs/signals`](https://www.npmjs.com/package/@lit-labs/signals) builds
+on the same `signal-polyfill`, so a `SignalWatcher` element tracks the
+`RouterSignals` fields it reads in `render()` without a controller. Both need
+one copy of `signal-polyfill` in the bundle; two copies keep two separate
+signal graphs.
+
+## See it in a real app
+
+The <a href="/app-signals" target="_self">Signals sample app</a> is a complete
+application built on `RouterSignalController` and `@lit-labs/signals`. It is
+behaviorally identical to the <a href="/app" target="_self">vanilla sample app</a>
+(which uses `TransitionController`), the
+<a href="/app-mobx" target="_self">MobX sample app</a> and the
+<a href="/app-effect" target="_self">Effect sample app</a>, so the
+[four codebases](https://github.com/simshanith/lit-ui-router/tree/main/apps)
+can be compared file-by-file to see exactly what the Signals idiom changes.
+
+## Further reading
+
+- [API reference](/api/lit-ui-router-signals/)
+- [ui-router-signals](/packages/ui-router-signals)
+- [TC39 Signals proposal](https://github.com/tc39/proposal-signals)
+- [Lit — Reactive Controllers](https://lit.dev/docs/composition/controllers/)
+- [On the Altitude Atlas](https://atlas.lit-ui-router.dev/bricks/?focus=lit-ui-router-signals) — this package as
+  a brick in sheet 2's model in the round, sized by its authored files and
+  seated on what it peers

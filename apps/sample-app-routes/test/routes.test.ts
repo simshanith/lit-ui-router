@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { createServerRouter } from 'ui-router-server';
+import { createServerRouter, diagnoseMounts } from 'ui-router-server';
 
 import { mounts, routes } from '../src/routes.ts';
 import { shellMounts } from '../src/shellMounts.ts';
@@ -11,7 +11,7 @@ import { shellMounts } from '../src/shellMounts.ts';
 // the package's tests' job; these pin the tables.
 const router = createServerRouter({ mounts });
 
-for (const mount of ['/app', '/app-mobx', '/app-effect']) {
+for (const mount of ['/app', '/app-mobx', '/app-effect', '/app-signals']) {
   describe(`${mount} verdicts`, () => {
     it('serves the shell for static and parameterized routes', async () => {
       for (const path of [
@@ -163,8 +163,9 @@ describe('/not-found-spa verdicts (the not-found-spa exhibit)', () => {
 });
 
 describe('/simulated-routing verdicts (the simulate-strategy exhibit)', () => {
-  it('is configured to compute verdicts by transition simulation', () => {
+  it('is configured to compute verdicts by transition simulation, prewarmed', () => {
     assert.equal(mounts['/simulated-routing'].strategy, 'simulate');
+    assert.equal(mounts['/simulated-routing'].prewarm, 1);
   });
 
   it('computes the same table-driven verdicts through a headless router', async () => {
@@ -194,16 +195,27 @@ describe('/simulated-routing verdicts (the simulate-strategy exhibit)', () => {
 });
 
 describe('mounts', () => {
-  it('cover all three sample apps with the shared route table, plus the exhibits', () => {
+  it('serve every bare base without a 404', () => {
+    assert.deepEqual(diagnoseMounts(router), []);
+  });
+
+  it('cover all four sample apps with the shared route table, plus the exhibits', () => {
     assert.deepEqual(Object.keys(mounts), [
       '/app',
       '/app-mobx',
       '/app-effect',
+      '/app-signals',
       '/app-hash',
       '/not-found-spa',
       '/simulated-routing',
     ]);
-    for (const mount of ['/app', '/app-mobx', '/app-effect']) {
+
+    for (const mount of [
+      '/app',
+      '/app-mobx',
+      '/app-effect',
+      '/app-signals',
+    ] as const) {
       assert.equal(mounts[mount].routes, routes);
     }
   });
@@ -215,7 +227,7 @@ describe('mounts', () => {
   });
 
   it("'/app' does not shadow the sibling app mounts", async () => {
-    for (const mount of ['/app-mobx', '/app-effect']) {
+    for (const mount of ['/app-mobx', '/app-effect', '/app-signals']) {
       assert.deepEqual(await router.resolve(`${mount}/welcome`), {
         kind: 'shell',
         mount,
@@ -235,6 +247,6 @@ describe('shellMounts (mount-agnostic shell base derivation)', () => {
       [...shellMounts].sort(),
       [...Object.keys(mounts), '/not-found-naive'].sort(),
     );
-    assert.equal(mounts['/not-found-naive'], undefined);
+    assert.equal(Object.hasOwn(mounts, '/not-found-naive'), false);
   });
 });

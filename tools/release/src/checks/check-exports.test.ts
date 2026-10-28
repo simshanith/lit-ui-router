@@ -21,6 +21,7 @@ describe('attwGatingProblems', () => {
         },
       ],
     };
+
     assert.deepEqual(attwGatingProblems(analysis), []);
   });
 
@@ -35,6 +36,7 @@ describe('attwGatingProblems', () => {
         },
       ],
     };
+
     assert.deepEqual(attwGatingProblems(analysis), [
       {
         kind: 'NoResolution',
@@ -51,6 +53,7 @@ describe('attwGatingProblems', () => {
         { kind: 'FalseESM', entrypoint: '.', resolutionKind: 'bundler' },
       ],
     };
+
     assert.equal(attwGatingProblems(analysis).length, 1);
   });
 
@@ -59,6 +62,7 @@ describe('attwGatingProblems', () => {
       types: {},
       problems: [{ kind: 'InternalResolutionError' }],
     };
+
     assert.deepEqual(attwGatingProblems(analysis), [
       { kind: 'InternalResolutionError' },
     ]);
@@ -99,6 +103,7 @@ describe('publintGatingMessages', () => {
       { type: 'warning', code: 'EXPORTS_VALUE_INVALID' },
       { type: 'error', code: 'FILE_DOES_NOT_EXIST' },
     ];
+
     assert.deepEqual(publintGatingMessages(messages), [
       { type: 'warning', code: 'EXPORTS_VALUE_INVALID' },
       { type: 'error', code: 'FILE_DOES_NOT_EXIST' },
@@ -120,6 +125,7 @@ describe('formatExportsReport', () => {
       clean('lit-ui-router', 'packages/lit-ui-router'),
       clean('lit-ui-router-mobx', 'packages/lit-ui-router-mobx'),
     ]);
+
     assert.equal(ok, true);
     assert.match(text, /✓ exports check passed — 2 publishable packages/);
   });
@@ -131,6 +137,7 @@ describe('formatExportsReport', () => {
         suggestions: ['use "license"'],
       },
     ]);
+
     assert.equal(ok, true);
     assert.match(text, /✓ exports check passed/);
     assert.match(text, /publint suggestions \(not gating\)/);
@@ -154,6 +161,7 @@ describe('formatExportsReport', () => {
         suggestions: [],
       },
     ]);
+
     assert.equal(ok, false);
     assert.match(text, /✗ exports check failed/);
     assert.match(text, /lit-ui-router-mobx \(packages\/lit-ui-router-mobx\)/);
@@ -171,6 +179,7 @@ describe('formatExportsReport', () => {
         suggestions: [],
       },
     ]);
+
     assert.equal(ok, false);
     assert.match(text, /publint: pkg\.exports\["\."\] is invalid/);
   });

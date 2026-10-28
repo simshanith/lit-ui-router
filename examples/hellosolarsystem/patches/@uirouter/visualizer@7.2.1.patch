@@ -1,0 +1,26 @@
+--- a/_bundles/ui-router-visualizer.esm.js	
++++ b/_bundles/ui-router-visualizer.esm.js	
+@@ -2953,9 +2953,9 @@
+     TransitionVisualizer.prototype.render = function () {
+         var _this = this;
+         var pointerEvents = this.state.pointerEvents;
+         return (v("div", { ref: function (el) { return (_this._div = el); } },
+-            v("div", { className: "uirTranVis_history", style: { pointerEvents: pointerEvents } },
++            v("div", { className: "uirTranVis_history", style: { pointerEvents: pointerEvents }, tabIndex: 0, role: "region", "aria-label": "Transition history" },
+                 this.state.transitions.map(function (trans) { return (v("div", { key: trans.$id, className: "uirTranVis_transition" },
+                     v(TransitionView, { transition: trans }),
+                     v("div", { style: { minWidth: '18em', border: '1px solid transparent' } }))); }),
+                 v("div", { style: { width: '200px', height: '1px' } }))));
+--- a/_bundles/ui-router-visualizer.js	
++++ b/_bundles/ui-router-visualizer.js	
+@@ -2959,9 +2959,9 @@
+         TransitionVisualizer.prototype.render = function () {
+             var _this = this;
+             var pointerEvents = this.state.pointerEvents;
+             return (v("div", { ref: function (el) { return (_this._div = el); } },
+-                v("div", { className: "uirTranVis_history", style: { pointerEvents: pointerEvents } },
++                v("div", { className: "uirTranVis_history", style: { pointerEvents: pointerEvents }, tabIndex: 0, role: "region", "aria-label": "Transition history" },
+                     this.state.transitions.map(function (trans) { return (v("div", { key: trans.$id, className: "uirTranVis_transition" },
+                         v(TransitionView, { transition: trans }),
+                         v("div", { style: { minWidth: '18em', border: '1px solid transparent' } }))); }),
+                     v("div", { style: { width: '200px', height: '1px' } }))));

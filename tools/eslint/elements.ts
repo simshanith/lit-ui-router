@@ -80,21 +80,6 @@ export default defineConfig(
     },
   },
   {
-    // Demo/docs surfaces, not shipped UI: a11y findings here are worth seeing
-    // but must not gate the library's lint. packages/* stay at error.
-    files: ['apps/*/src/**/*.ts', 'examples/*/src/**/*.ts'],
-    rules: {
-      ...Object.fromEntries(
-        Object.entries(litA11yRecommendedRules).map(([rule, severity]) => [
-          rule,
-          severity === 'off' ? 'off' : 'warn',
-        ]),
-      ),
-      // The map above would switch the displaced rule back on; oxlint owns it.
-      'lit-a11y/anchor-is-valid': 'off',
-    },
-  },
-  {
     // Test fixtures: elements exist to be driven, not shipped, and their
     // templates are assertion inputs rather than UI.
     files: ['**/*.spec.ts', '**/src/specs/**/*.ts'],

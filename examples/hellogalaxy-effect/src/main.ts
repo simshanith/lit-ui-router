@@ -12,22 +12,26 @@ import {
   Schedule,
   SubscriptionRef,
 } from 'effect';
-import { FetchHttpClient, HttpClient } from '@effect/platform';
+import { FetchHttpClient, HttpClient } from 'effect/http';
 import {
+  type DefaultResolvesType,
   UIRouterLit,
   uiSref,
   uiSrefActive,
-  UIViewInjectedProps,
+  type UIViewInjectedProps,
 } from 'lit-ui-router';
 
 import {
   CurrentTransition,
   EffectPlugin,
-  EffectStateDeclaration,
+  type EffectStateDeclaration,
   effectPlugin,
   provide,
 } from './effect-plugin.js';
 import { RefController, RouterRefController } from 'lit-ui-router-effect';
+import type { TypedStateService } from 'ui-router-registry';
+// Carries the registry into ui-router-effect's route ref.
+import type {} from 'ui-router-registry/effect';
 
 // Data Service
 interface Star {
@@ -144,7 +148,10 @@ const MODEL_URL =
 interface StarsApiService {
   readonly fetchAll: Effect.Effect<readonly Star[]>;
 }
-class StarsApi extends Context.Tag('StarsApi')<StarsApi, StarsApiService>() {}
+
+class StarsApi extends Context.Service<StarsApi, StarsApiService>()(
+  'StarsApi',
+) {}
 
 const StarsApiLive = Layer.succeed(StarsApi, {
   // An Effect, not a plain array: swapping this Layer for one that talks to a
@@ -155,7 +162,8 @@ const StarsApiLive = Layer.succeed(StarsApi, {
 
 // FetchHttpClient.layer is the browser HttpClient the astronaut resolve uses.
 const AppLayer = Layer.mergeAll(StarsApiLive, FetchHttpClient.layer);
-type AppServices = Layer.Layer.Success<typeof AppLayer>;
+
+type AppServices = Layer.Success<typeof AppLayer>;
 
 // A typed failure, so an unknown :starId is a value the caller must handle
 // rather than an exception nobody declared.
@@ -173,24 +181,24 @@ interface StarCatalogService {
   readonly all: readonly Star[];
   readonly find: (id: string) => Effect.Effect<Star, StarNotFound>;
 }
-class StarCatalog extends Context.Tag('StarCatalog')<
-  StarCatalog,
-  StarCatalogService
->() {}
+
+class StarCatalog extends Context.Service<StarCatalog, StarCatalogService>()(
+  'StarCatalog',
+) {}
 
 // Approximate real star colors by spectral class letter (O hottest, M coolest)
-const spectralColors: Record<string, string> = {
-  O: '#92b5ff',
-  B: '#a5c0ff',
-  A: '#cad8ff',
-  F: '#f8f7ff',
-  G: '#ffefc4',
-  K: '#ffd2a1',
-  M: '#ffab6e',
-};
+const spectralColors = new Map([
+  ['O', '#92b5ff'],
+  ['B', '#a5c0ff'],
+  ['A', '#cad8ff'],
+  ['F', '#f8f7ff'],
+  ['G', '#ffefc4'],
+  ['K', '#ffd2a1'],
+  ['M', '#ffab6e'],
+]);
 
 const spectralColor = (spectralClass: string): string =>
-  spectralColors[spectralClass[0]] ?? '#ffffff';
+  spectralColors.get(spectralClass[0]) ?? '#ffffff';
 
 // Components
 @customElement('galaxy-shell')
@@ -267,7 +275,7 @@ class GalaxyShellComponent extends LitElement {
 
   render() {
     return html`
-      <nav>
+      <nav aria-label="Hello Galaxy (Effect)">
         <!-- activeClasses use stateService.includes, so Stars stays lit on the nested detail state -->
         <a
           ${uiSrefActive({ activeClasses: ['active'] })}
@@ -308,7 +316,7 @@ class StarsContainerComponent extends LitElement {
     .list {
       flex: 0 0 220px;
     }
-    .list h3 {
+    .list h2 {
       margin: 0 0 12px;
       color: #9db2ce;
       font-size: 0.8rem;
@@ -397,7 +405,7 @@ class StarsContainerComponent extends LitElement {
     return html`
       <div class="container">
         <div class="list">
-          <h3>Milky Way stars</h3>
+          <h2>Milky Way stars</h2>
           <ul>
             ${this.stars.map(
               (star) => html`
@@ -507,7 +515,9 @@ class StarDetailComponent extends LitElement {
     // and only if it really is off-screen, otherwise this fights the visitor.
     requestAnimationFrame(() => {
       const { top, bottom, height } = this.getBoundingClientRect();
+
       if (height === 0) return;
+
       if (top >= window.innerHeight || bottom <= 0) {
         this.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       }
@@ -537,8 +547,9 @@ class StarDetailComponent extends LitElement {
 @customElement('astronaut-view')
 class AstronautViewComponent extends LitElement {
   static styles = css`
-    h3 {
+    h2 {
       margin: 0 0 12px;
+      font-size: 1.17em;
     }
     p {
       color: #9db2ce;
@@ -586,7 +597,7 @@ class AstronautViewComponent extends LitElement {
 
   render() {
     return html`
-      <h3>Someone is exploring out here too</h3>
+      <h2>Someone is exploring out here too</h2>
       <p>Drag to orbit the astronaut. Scroll to zoom.</p>
       <!-- touch-action="pan-y" keeps one-finger vertical swipes scrolling the page -->
       <!-- src is the blob the resolve already downloaded, so the viewer paints
@@ -637,7 +648,7 @@ export class FiberLogComponent extends LitElement {
       border-radius: 12px;
       padding: 12px 16px;
     }
-    h3 {
+    h2 {
       margin: 0 0 8px;
       color: #9db2ce;
       font-size: 0.75rem;
@@ -669,13 +680,14 @@ export class FiberLogComponent extends LitElement {
 
   updated() {
     const list = this.renderRoot.querySelector('ol');
+
     if (list) list.scrollTop = list.scrollHeight;
   }
 
   render() {
     return html`
       <section>
-        <h3>Fibers</h3>
+        <h2>Fibers</h2>
         <ol>
           ${this.lines.value.map((line) => html`<li>${line}</li>`)}
         </ol>
@@ -745,13 +757,17 @@ export class AppRoot extends LitElement {
 // it installs the resolve policy through a `resolvables` state-builder
 // decorator, which only sees states registered after it.
 const router = new UIRouterLit();
+
 router.plugin(hashLocationPlugin);
+
 void import('@uirouter/visualizer').then(({ Visualizer }) =>
   router.plugin(Visualizer),
 );
 
 const runtime = ManagedRuntime.make(AppLayer);
+
 const effect = router.plugin<EffectPlugin<AppServices>>(effectPlugin(runtime));
+
 const say = (line: string) => effect.append(line);
 
 // Written by the star state's scoped ticker, read by <star-detail>.
@@ -766,15 +782,12 @@ const releaseModel = (src: string | undefined) =>
   src === undefined
     ? Effect.void
     : Effect.sync(() => URL.revokeObjectURL(src)).pipe(
-        Effect.zipRight(say('astronaut: model released')),
+        Effect.andThen(say('astronaut: model released')),
       );
 
 // State definitions
 // Parent shell state; owns the section nav and a nested <ui-view>
-const galaxyState: EffectStateDeclaration<
-  Record<string, unknown>,
-  AppServices
-> = {
+const galaxyState = {
   name: 'galaxy',
   url: '/galaxy',
   component: GalaxyShellComponent,
@@ -786,13 +799,10 @@ const galaxyState: EffectStateDeclaration<
     Effect.acquireRelease(say('observatory session opened'), () =>
       say('observatory session closed'),
     ),
-};
+} as const satisfies EffectStateDeclaration<DefaultResolvesType, AppServices>;
 
 // Child state (nested via dot notation) renders inside galaxy's <ui-view>
-const starsState: EffectStateDeclaration<
-  { StarCatalog: StarCatalogService },
-  AppServices
-> = {
+const starsState = {
   name: 'galaxy.stars',
   url: '/stars',
   component: StarsContainerComponent,
@@ -806,10 +816,12 @@ const starsState: EffectStateDeclaration<
         const api = yield* StarsApi;
         const all = yield* api.fetchAll;
         yield* say(`catalog: ${all.length} stars ready`);
+
         return {
           all,
           find: (id: string) => {
             const star = all.find((s) => s.id === id);
+
             return star
               ? Effect.succeed(star)
               : Effect.fail(new StarNotFound({ starId: id }));
@@ -818,10 +830,13 @@ const starsState: EffectStateDeclaration<
       }).pipe(Effect.onInterrupt(() => say('catalog: interrupted'))),
     ),
   ],
-};
+} as const satisfies EffectStateDeclaration<
+  { StarCatalog: StarCatalogService },
+  AppServices
+>;
 
 // Grandchild state with a URL param, rendered inside galaxy.stars's <ui-view>
-const starState: EffectStateDeclaration<{ star: Star }, AppServices> = {
+const starState = {
   name: 'galaxy.stars.star',
   url: '/:starId',
   component: StarDetailComponent,
@@ -835,6 +850,7 @@ const starState: EffectStateDeclaration<{ star: Star }, AppServices> = {
           const transition = yield* CurrentTransition;
           const catalog = yield* StarCatalog;
           const { starId } = transition.params<{ starId: string }>();
+
           return yield* catalog.find(starId);
         }),
     },
@@ -844,6 +860,7 @@ const starState: EffectStateDeclaration<{ star: Star }, AppServices> = {
   scoped: (params) => {
     const starId = String(params.starId);
     let seconds = 0;
+
     return Effect.gen(function* () {
       yield* say(`star scope opened: ${starId}`);
       yield* Effect.repeat(
@@ -858,18 +875,15 @@ const starState: EffectStateDeclaration<{ star: Star }, AppServices> = {
     }).pipe(
       Effect.ensuring(
         say(`star scope closed: ${starId}`).pipe(
-          Effect.zipRight(SubscriptionRef.set(observingRef, '')),
+          Effect.andThen(SubscriptionRef.set(observingRef, '')),
         ),
       ),
     );
   },
-};
+} as const satisfies EffectStateDeclaration<{ star: Star }, AppServices>;
 
 // Sibling of galaxy.stars; swaps into the same nested <ui-view>
-const astronautState: EffectStateDeclaration<
-  { modelViewer: { src: string } },
-  AppServices
-> = {
+const astronautState = {
   name: 'galaxy.astronaut',
   url: '/astronaut',
   component: AstronautViewComponent,
@@ -884,21 +898,27 @@ const astronautState: EffectStateDeclaration<
       resolveFn: () =>
         Effect.gen(function* () {
           yield* say('astronaut: fiber started');
+
           const module = yield* Effect.promise(
             () => import('@google/model-viewer'),
           );
+
           const bytes = yield* HttpClient.get(MODEL_URL).pipe(
             Effect.flatMap((response) => response.arrayBuffer),
             // The model is served from a static host that answers OPTIONS with
             // a 405, so the request has to stay preflight-free: no traceparent.
-            Effect.locally(HttpClient.currentTracerPropagation, false),
+            Effect.provideService(HttpClient.TracerPropagationEnabled, false),
             Effect.timeout(Duration.seconds(30)),
             Effect.retry(Schedule.recurs(2)),
-            Effect.catchAll((cause) => new ModelDownloadFailed({ cause })),
+            Effect.catch((cause) =>
+              Effect.fail(new ModelDownloadFailed({ cause })),
+            ),
           );
+
           const src = URL.createObjectURL(
             new Blob([bytes], { type: 'model/gltf-binary' }),
           );
+
           // Uninterruptible, and it releases whatever the ref already held: a
           // transition superseded between here and its scope opening must not
           // orphan nine megabytes.
@@ -910,6 +930,7 @@ const astronautState: EffectStateDeclaration<
           yield* say(
             `astronaut: model downloaded (${Math.round(bytes.byteLength / 1024 / 1024)} MB)`,
           );
+
           return { module, src };
         }).pipe(Effect.onInterrupt(() => say('astronaut: fiber interrupted'))),
     },
@@ -923,7 +944,23 @@ const astronautState: EffectStateDeclaration<
         Effect.flatMap(releaseModel),
       ),
     ),
-};
+} as const satisfies EffectStateDeclaration<
+  { modelViewer: { src: string } },
+  AppServices
+>;
+
+// `as const` keeps the names and urls literal for the registry to read.
+declare module 'ui-router-registry' {
+  interface Register {
+    states:
+      | typeof galaxyState
+      | typeof starsState
+      | typeof starState
+      | typeof astronautState;
+  }
+}
+
+const stateService: TypedStateService = router.stateService;
 
 // The typed error path, once: a bad :starId is caught before any resolve runs
 // and turned into a redirect rather than a failed transition.
@@ -932,22 +969,29 @@ effect.onBefore({ to: 'galaxy.stars.star' }, (transition) =>
     const api = yield* StarsApi;
     const all = yield* api.fetchAll;
     const { starId } = transition.params<{ starId: string }>();
+
     if (all.some((s) => s.id === starId)) return undefined;
+
     return yield* Effect.fail(new StarNotFound({ starId }));
   }).pipe(
     Effect.catchTag('StarNotFound', (error) =>
       say(`unknown star "${error.starId}" — redirecting to the list`).pipe(
-        Effect.as(router.stateService.target('galaxy.stars')),
+        Effect.as(stateService.target('galaxy.stars')),
       ),
     ),
   ),
 );
 
 router.stateRegistry.register(galaxyState);
+
 router.stateRegistry.register(starsState);
+
 router.stateRegistry.register(starState);
+
 router.stateRegistry.register(astronautState);
+
 router.urlService.rules.initial({ state: 'galaxy.stars' });
+
 router.start();
 
 // Render

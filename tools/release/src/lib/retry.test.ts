@@ -7,6 +7,7 @@ import { withRetry } from './retry.ts';
 function fakeSleep(record: number[]): (ms: number) => Promise<void> {
   return (ms) => {
     record.push(ms);
+
     return Promise.resolve();
   };
 }
@@ -14,9 +15,11 @@ function fakeSleep(record: number[]): (ms: number) => Promise<void> {
 describe('withRetry', () => {
   it('returns the first success without sleeping', async () => {
     const slept: number[] = [];
+
     const result = await withRetry(() => Promise.resolve('ok'), {
       sleep: fakeSleep(slept),
     });
+
     assert.equal(result, 'ok');
     assert.deepEqual(slept, []);
   });
@@ -24,15 +27,18 @@ describe('withRetry', () => {
   it('retries with exponential backoff and succeeds', async () => {
     const slept: number[] = [];
     let calls = 0;
+
     const result = await withRetry(
       () => {
         calls += 1;
+
         return calls < 3
           ? Promise.reject(new Error(`flake ${calls}`))
           : Promise.resolve('ok');
       },
       { attempts: 3, baseDelayMs: 100, sleep: fakeSleep(slept) },
     );
+
     assert.equal(result, 'ok');
     assert.equal(calls, 3);
     assert.deepEqual(slept, [100, 200]);
@@ -45,6 +51,7 @@ describe('withRetry', () => {
       withRetry(
         () => {
           calls += 1;
+
           return Promise.reject(new Error(`flake ${calls}`));
         },
         { attempts: 3, baseDelayMs: 1, sleep: fakeSleep(slept) },

@@ -47,10 +47,13 @@ describe('resolvedTaskDeps', () => {
 
   it('runs a filtered dry-run and returns the task dependencies', async () => {
     const calls: unknown[] = [];
+
     const exec: Exec = (command, args) => {
       calls.push([command, args]);
+
       return Promise.resolve({ stdout: plan, stderr: '' });
     };
+
     assert.deepEqual(
       await resolvedTaskDeps('@www/lit-ui-router.dev#build', exec),
       ['^build', 'lit-ui-router#docs:api'],
@@ -65,10 +68,13 @@ describe('resolvedTaskDeps', () => {
 
   it('keeps the dry run off the remote cache', async () => {
     let env: NodeJS.ProcessEnv | undefined;
+
     const exec: Exec = (_command, _args, options) => {
       env = options?.env;
+
       return Promise.resolve({ stdout: plan, stderr: '' });
     };
+
     await resolvedTaskDeps('@www/lit-ui-router.dev#build', exec);
     assert.equal(env?.TURBO_CACHE, 'local:r');
     assert.equal(env?.TURBO_TOKEN, '');
@@ -108,11 +114,14 @@ describe('plannedTasks', () => {
   it('collects every planned task, keyed by task id', async () => {
     const calls: string[] = [];
     const argv: unknown[] = [];
+
     const exec: Exec = (command, args) => {
       calls.push(args[1] ?? '');
       argv.push([command, args]);
+
       return Promise.resolve({ stdout: planFor(args[1] ?? ''), stderr: '' });
     };
+
     const planned = await plannedTasks(['build', 'test'], exec, 1);
     assert.deepEqual(calls, ['build', 'test']);
     assert.deepEqual(argv, [
@@ -133,12 +142,14 @@ describe('plannedTasks', () => {
       args[1] === 'prepare'
         ? Promise.reject(undeclared('prepare'))
         : Promise.resolve({ stdout: planFor(args[1] ?? ''), stderr: '' });
+
     const planned = await plannedTasks(['prepare', 'test'], exec, 1);
     assert.deepEqual([...planned.keys()], ['@www/lit-ui-router.dev#test']);
   });
 
   it('skips a long name turbo wraps mid-name, in color', async () => {
     const name = 'typecheck:example:hellosolarsystem-mobx';
+
     const exec: Exec = (_command, args) =>
       args[1] === name
         ? Promise.reject(
@@ -150,6 +161,7 @@ describe('plannedTasks', () => {
             }),
           )
         : Promise.resolve({ stdout: planFor(args[1] ?? ''), stderr: '' });
+
     const planned = await plannedTasks([name, 'test'], exec, 1);
     assert.deepEqual([...planned.keys()], ['@www/lit-ui-router.dev#test']);
   });
@@ -161,12 +173,14 @@ describe('plannedTasks', () => {
           stderr: '× Invalid task configuration',
         }),
       );
+
     await assert.rejects(plannedTasks(['e2e'], exec, 1), /turbo failed/);
   });
 
   it('reads cacheability off the resolved definition, not the status object', async () => {
     const exec: Exec = (_command, args) =>
       Promise.resolve({ stdout: planFor(args[1] ?? ''), stderr: '' });
+
     const planned = await plannedTasks(['dev', 'build'], exec, 1);
     assert.equal(planned.get('@www/lit-ui-router.dev#dev')?.cache, false);
     assert.equal(planned.get('@www/lit-ui-router.dev#build')?.cache, true);
@@ -178,6 +192,7 @@ describe('plannedTasks', () => {
         stdout: JSON.stringify({ tasks: [{ taskId: '//#lint' }] }),
         stderr: '',
       });
+
     const planned = await plannedTasks(['lint'], exec, 1);
     assert.deepEqual(planned.get('//#lint'), {
       taskId: '//#lint',
@@ -195,6 +210,7 @@ describe('declaredLanes', () => {
       // turbo.json carries comments
       "tasks": { "build": {}, "docs#docs:api": {}, "//#lint:templates": {} }
     }`;
+
     const pkg = '{ "tasks": { "build": {}, "e2e": {} } }';
     assert.deepEqual([...declaredLanes([root, pkg])].sort(), [
       'build',
@@ -237,6 +253,7 @@ describe('nonPersistentWith', () => {
       "typecheck": { "with": ["typecheck:src"] },
       "e2e": { "with": ["docs#serve"], "persistent": true }
     } }`;
+
     const pkg = '{ "tasks": { "build": { "with": ["build:hash"] } } }';
     assert.deepEqual(
       nonPersistentWith([
@@ -261,6 +278,7 @@ describe('nonPersistentWith', () => {
   it('lets a package override opt out of persistence', () => {
     const pkg =
       '{ "tasks": { "e2e": { "with": ["serve"], "persistent": false } } }';
+
     assert.deepEqual(
       nonPersistentWith([
         { path: 'turbo.json', text: root },
@@ -281,8 +299,10 @@ describe('nonPersistentWith', () => {
 describe('plannedLanes', () => {
   it('returns the unqualified names turbo plans for the run', async () => {
     const argv: unknown[] = [];
+
     const exec: Exec = (command, args) => {
       argv.push([command, args]);
+
       return Promise.resolve({
         stdout: JSON.stringify({
           tasks: [
@@ -296,6 +316,7 @@ describe('plannedLanes', () => {
         stderr: '',
       });
     };
+
     assert.deepEqual(
       [...(await plannedLanes(['ci', 'ci:main'], exec))].sort(),
       ['build', 'lint:templates'],
@@ -309,10 +330,13 @@ describe('plannedLanes', () => {
 describe('planFailure', () => {
   it('plans the lanes in one run, without --only', async () => {
     const argv: unknown[] = [];
+
     const exec: Exec = (command, args) => {
       argv.push([command, args]);
+
       return Promise.resolve({ stdout: '{}', stderr: '' });
     };
+
     assert.equal(await planFailure(['e2e', 'dev'], exec), undefined);
     assert.deepEqual(argv, [
       ['turbo', ['run', 'e2e', 'dev', '--dry-run=json']],
@@ -329,6 +353,7 @@ describe('planFailure', () => {
             '      │ cannot depend on it',
         }),
       );
+
     assert.match((await planFailure(['e2e'], exec)) ?? '', /persistent task/);
   });
 

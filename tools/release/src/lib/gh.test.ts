@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import type { Exec } from '@tools/shared/exec.ts';
-import { createReleasePr, ensureGh, prCreateArgs } from './gh.ts';
+import { createReleasePr, prCreateArgs } from './gh.ts';
 
 // gh pr create prints the new PR's URL, newline-terminated.
 const PR_URL_STDOUT = 'https://github.com/o/r/pull/683\n';
@@ -14,14 +14,17 @@ function recordingExec(
     args: readonly string[],
     call: number,
   ) => boolean = () => false,
-): { exec: Exec; calls: string[][] } {
+) {
   const calls: string[][] = [];
+
   const exec: Exec = (command, args) => {
     calls.push([command, ...args]);
+
     return fail(command, args, calls.length)
       ? Promise.reject(new Error('scripted failure'))
       : Promise.resolve({ stdout: PR_URL_STDOUT, stderr: '' });
   };
+
   return { exec, calls };
 }
 
@@ -43,19 +46,6 @@ describe('prCreateArgs', () => {
   it('rejects blank branch names', () => {
     assert.throws(() => prCreateArgs('', 'x'), /base/);
     assert.throws(() => prCreateArgs('main', ' '), /head/);
-  });
-});
-
-describe('ensureGh', () => {
-  it('probes gh --version', async () => {
-    const { exec, calls } = recordingExec();
-    await ensureGh(exec);
-    assert.deepEqual(calls, [['gh', '--version']]);
-  });
-
-  it('maps a missing binary to install guidance', async () => {
-    const { exec } = recordingExec(() => true);
-    await assert.rejects(ensureGh(exec), /gh CLI not found/);
   });
 });
 

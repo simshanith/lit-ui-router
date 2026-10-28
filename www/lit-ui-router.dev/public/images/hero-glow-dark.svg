@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-76 -56 312 312">
+<clipPath id="disc"><circle cx="80" cy="100" r="100"/></clipPath>
+<filter id="glow" x="-76" y="-56" width="312" height="312" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feGaussianBlur stdDeviation="18"/>
+<feColorMatrix type="hueRotate" values="180"/>
+<feComponentTransfer>
+<feFuncR type="linear" slope="-0.6" intercept="0.6"/>
+<feFuncG type="linear" slope="-0.6" intercept="0.6"/>
+<feFuncB type="linear" slope="-0.6" intercept="0.6"/>
+</feComponentTransfer>
+</filter>
+<g filter="url(#glow)">
+<g clip-path="url(#disc)">
+<path fill="#00e8ff" d="M40 120l20-60l90 90l-30 50l-40-40h-20"/>
+<path fill="#283198" d="M80 160v-80l40-40v80M0 160l40 40l20-40l-20-40h-20"/>
+<path fill="#324fff" d="M40 120v-80l40-40v80M120 200v-80l40-40v80M0 160v-80l40 40"/>
+<path fill="#0ff" d="M40 200v-80l40 40"/>
+</g>
+</g>
+</svg>

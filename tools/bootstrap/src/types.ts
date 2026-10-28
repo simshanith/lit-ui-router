@@ -8,6 +8,22 @@
 // per read.
 export type DependencyMap = Record<string, string>;
 
+// A parsed JSON value.
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | Json[]
+  | { [key: string]: Json };
+
+// A subpath or condition maps to a target, nested conditions, a fallback list, or null.
+export type ExportsTarget = string | null | ExportsConditions | ExportsTarget[];
+
+export interface ExportsConditions {
+  [subpathOrCondition: string]: ExportsTarget;
+}
+
 // The slice of a package.json the tools read.
 export type PackageManifest = {
   name?: string;
@@ -16,9 +32,7 @@ export type PackageManifest = {
   // `<name>@<version>+<integrity>`; the root manifest's is the pnpm authority
   packageManager?: string;
   scripts?: Record<string, string>;
-  // the one field that is genuinely not a string map: a subpath maps to a
-  // string target or a conditions object, so the shape is caller-checked
-  exports?: Record<string, unknown>;
+  exports?: ExportsConditions;
   dependencies?: DependencyMap;
   devDependencies?: DependencyMap;
   peerDependencies?: DependencyMap;

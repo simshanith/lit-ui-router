@@ -36,23 +36,70 @@ export function wantsMainGraph(branch: string): boolean {
   return branch.startsWith(MAIN_GRAPH_PREFIX);
 }
 
+/** How long a branch-creating push polls for its PR before deciding without one. */
+export const PR_GRACE = { totalMs: 60_000, intervalMs: 15_000 } as const;
+
+/**
+ * Whether to poll for a PR: only the push that created the branch, since
+ * `gh pr create` lands seconds after it, and never on the main-graph opt-in,
+ * which runs whatever the PR list says.
+ */
+export function shouldAwaitPr(
+  created: string | undefined,
+  branch: string,
+): boolean {
+  return created?.trim() === 'true' && !wantsMainGraph(branch);
+}
+
+/**
+ * Query until a PR appears or the window closes. `query` and `sleep` are
+ * injected so the loop runs without real timers in tests.
+ */
+export async function awaitOpenPrs(
+  query: () => Promise<OpenPr[]>,
+  sleep: (ms: number) => Promise<void>,
+  { totalMs, intervalMs }: { totalMs: number; intervalMs: number } = PR_GRACE,
+): Promise<{ prs: OpenPr[]; waitedMs: number }> {
+  let waitedMs = 0;
+  let prs = await query();
+
+  while (prs.length === 0 && waitedMs < totalMs) {
+    const step = Math.min(intervalMs, totalMs - waitedMs);
+    await sleep(step);
+    waitedMs += step;
+    prs = await query();
+  }
+
+  return { prs, waitedMs };
+}
+
+/** Whether both fields `gh pr list` was asked for arrived with their JSON types. */
+const isOpenPr = (pr: Partial<OpenPr> | null): pr is OpenPr =>
+  typeof pr?.number === 'number' && typeof pr.baseRefName === 'string';
+
 /**
  * Validate `gh pr list --json number,baseRefName` output. Throws on any shape
  * surprise so the caller can fail open rather than silently read zero PRs —
  * "no PRs" is itself a run-triggering answer, so a parse failure that looked
  * like an empty list would be indistinguishable from the real thing.
  */
+// oxlint-disable-next-line anti-slop/no-unknown-parameters -- the parser over JSON.parse output
 export function parseOpenPrs(raw: unknown): OpenPr[] {
   if (!Array.isArray(raw)) {
+    // oxlint-disable-next-line anti-slop/no-runtime-typeof -- names the JSON type that arrived; this builtins-only gate has no valibot to decode with
     throw new Error(`expected a JSON array of PRs, got ${typeof raw}`);
   }
+
   return raw.map((entry, index) => {
-    const pr = entry as Partial<OpenPr>;
-    if (typeof pr?.number !== 'number' || typeof pr?.baseRefName !== 'string') {
+    // SAFETY: Partial claims no field; isOpenPr checks both before use
+    const pr = entry as Partial<OpenPr> | null;
+
+    if (!isOpenPr(pr)) {
       throw new Error(
         `PR entry ${index} is missing number/baseRefName: ${JSON.stringify(entry)}`,
       );
     }
+
     return { number: pr.number, baseRefName: pr.baseRefName };
   });
 }
@@ -66,11 +113,14 @@ export function distinctBases(
   prs: readonly OpenPr[],
 ): { baseRef: string; prs: number[] }[] {
   const byBase = new Map<string, number[]>();
+
   for (const pr of prs) {
     const existing = byBase.get(pr.baseRefName);
+
     if (existing) existing.push(pr.number);
     else byBase.set(pr.baseRefName, [pr.number]);
   }
+
   return [...byBase.entries()]
     .map(([baseRef, numbers]) => ({
       baseRef,
@@ -95,8 +145,10 @@ export function mergeStateFromExit(
   stdout = '',
 ): MergeState {
   if (code === 0) return 'clean';
+
   if (code !== 1) return 'unknown';
   const [first = ''] = stdout.trim().split('\n', 1);
+
   return TREE_OID.test(first) ? 'conflict' : 'unknown';
 }
 
@@ -119,6 +171,7 @@ export function decide(
       reason: `\`${MAIN_GRAPH_PREFIX}\` branch prefix — running ci:main`,
     };
   }
+
   if (prs.length === 0) {
     return {
       run: true,
@@ -127,6 +180,7 @@ export function decide(
         'no open PR has this branch as its head — no pull_request run will cover this push',
     };
   }
+
   if (verdicts.length === 0) {
     return {
       run: true,
@@ -134,9 +188,11 @@ export function decide(
       reason: `${prs.length} open PR(s) but no merge probe ran — running rather than assume coverage`,
     };
   }
+
   const conflicting = verdicts.filter(
     (verdict) => verdict.state === 'conflict',
   );
+
   if (conflicting.length > 0) {
     return {
       run: true,
@@ -144,9 +200,11 @@ export function decide(
       reason: `conflicts with ${listBases(conflicting)} — GitHub builds no merge ref, so the pull_request run is skipped`,
     };
   }
+
   const indeterminate = verdicts.filter(
     (verdict) => verdict.state === 'unknown',
   );
+
   if (indeterminate.length > 0) {
     return {
       run: true,
@@ -154,6 +212,7 @@ export function decide(
       reason: `mergeability with ${listBases(indeterminate)} is indeterminate — running rather than risk dropping the only signal`,
     };
   }
+
   return {
     run: false,
     mainGraph,
@@ -168,6 +227,8 @@ export type GateRun = {
   prs: readonly OpenPr[];
   verdicts: readonly BaseVerdict[];
   decision: Decision;
+  /** Milliseconds this branch-creating push spent polling for its PR. */
+  waitedMs?: number;
 };
 
 const STATE_MARK: Record<MergeState, string> = {
@@ -186,6 +247,7 @@ export function summaryMarkdown({
   prs,
   verdicts,
   decision,
+  waitedMs = 0,
 }: GateRun): string {
   const lines = [
     `## Branch CI gate — ${decision.run ? 'running' : 'skipping'} \`build_and_test (branch)\``,
@@ -195,12 +257,21 @@ export function summaryMarkdown({
     decision.reason,
     '',
   ];
+
+  if (waitedMs > 0) {
+    lines.push(
+      `Waited ${Math.round(waitedMs / 1000)}s for a PR on this branch-creating push${prs.length === 0 ? ' — none opened' : ''}.`,
+      '',
+    );
+  }
+
   if (decision.run) {
     lines.push(
       `Graph: \`${decision.mainGraph ? 'ci:main' : 'ci:pull_request'}\``,
       '',
     );
   }
+
   if (prs.length === 0) {
     lines.push('No open pull requests have this branch as their head.');
   } else {
@@ -208,11 +279,13 @@ export function summaryMarkdown({
       '| base | PRs | merge probe | detail |',
       '| --- | --- | --- | --- |',
     );
+
     for (const verdict of verdicts) {
       lines.push(
         `| \`${verdict.baseRef}\` | ${verdict.prs.map((pr) => `#${pr}`).join(', ')} | ${STATE_MARK[verdict.state]} | ${verdict.detail ?? ''} |`,
       );
     }
   }
+
   return `${lines.join('\n')}\n`;
 }

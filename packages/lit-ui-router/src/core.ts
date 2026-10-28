@@ -1,38 +1,28 @@
 import {
-  forEach,
-  isFunction,
   PathNode,
-  pick,
   servicesPlugin,
   ServicesPlugin,
-  StateObject,
   UIRouter,
   ViewConfig,
-  ViewService,
   _ViewDeclaration,
 } from '@uirouter/core';
-import { LitElement } from 'lit';
 
-import {
-  RoutedLitElement,
-  LitViewDeclaration,
-  LitViewDeclarationTemplate,
-  NormalizedLitViewDeclaration,
-  LitViewDeclarationElement,
-  DefaultResolvesType,
-} from './interface.js';
-import { routedLitElementRenderer } from './routed-element.js';
+import { litViewsBuilder } from './view-builder.js';
 
-/**
- * `@uirouter/core` types `forEach` as `any` because it resolves to
- * `angular.forEach || _forEach` at load time. Narrowed to the object-iteration
- * form used here, where the callback receives `(value, key)`.
- * @internal
- */
-const forEachValue = forEach as <V>(
-  obj: Record<string, V>,
-  cb: (value: V, key: string) => void,
-) => void;
+export { isRoutedLitElement } from './routed-element.js';
+
+export {
+  /**
+   * @internal
+   * @deprecated View-builder plumbing, not a supported import (#541).
+   */
+  isLitViewDeclarationTemplate,
+  /**
+   * @internal
+   * @deprecated View-builder plumbing, not a supported import (#541).
+   */
+  litViewsBuilder,
+} from './view-builder.js';
 
 /**
  * Internal counter for generating unique view config IDs.
@@ -41,12 +31,14 @@ const forEachValue = forEach as <V>(
 let viewConfigIdCounter = 0;
 
 /**
- * Configuration for a Lit view instance.
+ * The view config {@link UIRouterLit} builds for each lit view declaration,
+ * implementing `@uirouter/core`'s `ViewConfig`.
  *
- * This class implements the ViewConfig interface from @uirouter/core
- * and is used internally by the router to manage view configurations.
+ * `<ui-view>` renders a view only when its config is a `LitViewConfig`; a
+ * renderer that draws lit views outside `<ui-view>` makes the same
+ * `instanceof` check before it reads `viewDecl`.
  *
- * @internal
+ * @category core
  */
 export class LitViewConfig implements ViewConfig {
   /** Unique identifier for this view config */
@@ -71,102 +63,6 @@ export class LitViewConfig implements ViewConfig {
   load(): Promise<this> {
     return Promise.resolve(this);
   }
-}
-
-/**
- * Type guard to check if a view declaration is a template function.
- *
- * A template function is either:
- * - A function that returns a Lit TemplateResult
- * - A LitElement class (constructor props optional — props are also delivered
- *   via the `_uiViewProps` property; see {@link RoutedLitElement})
- *
- * @param config - The view declaration to check
- * @returns True if the config is a template function
- * @internal
- */
-export function isLitViewDeclarationTemplate<
-  T extends DefaultResolvesType = DefaultResolvesType,
->(
-  config: LitViewDeclaration<T>,
-): config is LitViewDeclarationTemplate<T> | LitViewDeclarationElement<T> {
-  return isFunction(config);
-}
-
-/**
- * Type guard to check if a component is a RoutedLitElement class.
- *
- * @param component - The component to check
- * @returns True if the component is a LitElement class
- * @internal
- */
-export function isRoutedLitElement<
-  T extends DefaultResolvesType = DefaultResolvesType,
->(component?: unknown): component is RoutedLitElement<T> {
-  return (component as { prototype: unknown })?.prototype instanceof LitElement;
-}
-
-/**
- * State builder function for Lit views.
- *
- * When the StateBuilder builds a State object from a raw StateDeclaration, this builder
- * handles the `views` property with logic specific to lit-ui-router.
- *
- * If no `views: {}` property exists on the StateDeclaration, then it creates the `views` object and
- * applies the state-level configuration to a view named `$default`.
- *
- * @param state - The state object being built
- * @returns The normalized views object
- * @internal
- */
-export function litViewsBuilder<
-  T extends DefaultResolvesType = DefaultResolvesType,
->(state: StateObject): Record<string, NormalizedLitViewDeclaration<T>> {
-  const views: Record<string, NormalizedLitViewDeclaration<T>> = {},
-    viewsObject = state.views || {
-      $default: pick(state, ['component']),
-    };
-
-  forEachValue(
-    viewsObject as Record<string, LitViewDeclaration<T>>,
-    function (config: LitViewDeclaration<T>, name: string) {
-      let normalizedConfig: NormalizedLitViewDeclaration<T>;
-      name = name || '$default'; // Account for views: { "": { template... } }
-      if (isLitViewDeclarationTemplate<T>(config)) {
-        normalizedConfig = { component: config };
-      } else {
-        normalizedConfig = config;
-      }
-      if (Object.keys(normalizedConfig || {}).length === 0) return;
-
-      normalizedConfig.$type = 'lit';
-      normalizedConfig.$context = state;
-      normalizedConfig.$name = name;
-
-      const normalizedTarget = ViewService.normalizeUIViewTarget(
-        normalizedConfig.$context,
-        normalizedConfig.$name,
-      );
-      normalizedConfig.$uiViewName = normalizedTarget.uiViewName;
-      normalizedConfig.$uiViewContextAnchor =
-        normalizedTarget.uiViewContextAnchor;
-
-      // The declaration outlives every `<ui-view>` that renders it, so a renderer
-      // held here makes a `sticky` class survive exits. Other classes are left for
-      // `<ui-view>` to bind, which resets them when the view config changes.
-      if (
-        isRoutedLitElement<T>(normalizedConfig.component) &&
-        normalizedConfig.component.sticky
-      ) {
-        normalizedConfig.component = routedLitElementRenderer<T>(
-          normalizedConfig.component,
-        );
-      }
-
-      views[name] = viewsObject[name] = normalizedConfig;
-    },
-  );
-  return views;
 }
 
 /**
@@ -263,6 +159,7 @@ export class UIRouterLit extends UIRouter {
     if (this.started) {
       throw new Error('start() called multiple times');
     }
+
     // eslint-disable-next-line typescript/no-deprecated -- $get() flushes the param-type queue; kept deliberately over the @internal flush
     this.urlMatcherFactory.$get();
     this.urlService.listen();

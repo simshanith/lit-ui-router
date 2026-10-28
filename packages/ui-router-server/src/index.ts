@@ -13,12 +13,16 @@
 
 import type { RawParams, StateDeclaration } from '@uirouter/core';
 
-import { compileRedirects, compileRoutes, matchRoute } from './redirects.ts';
+import { warnMountDiagnostics } from './dev-warn.ts';
+import { compileResolver } from './redirects.ts';
+import { createRouterPool, POOL_MAX_IDLE } from './router-pool.ts';
+import type { PooledRouter, RouterPool } from './router-pool.ts';
 import type {
-  CompiledRoute,
+  CompiledResolver,
   RedirectRule,
   RedirectTarget,
   RouteDeclaration,
+  RouteIndex,
 } from './redirects.ts';
 import type { UrlMatcherCompilerConfig } from './url-matcher.ts';
 
@@ -26,7 +30,10 @@ export type {
   RedirectRule,
   RedirectTarget,
   RouteDeclaration,
+  RouteIndex,
 } from './redirects.ts';
+
+export { routeTrie } from './route-trie.ts';
 
 // Transitions settle in microtasks; the timer is only a degrade-to-shell net.
 const SETTLE_TIMEOUT_MS = 100;
@@ -47,8 +54,32 @@ export interface MountConfig {
    * config widens later (e.g. an auth tier).
    */
   strategy?: 'matcher' | 'simulate';
-  /** Matcher compiler options for 'matcher' mounts (defaults: strict, case-sensitive). */
+  /**
+   * Matcher compiler options (defaults: strict, case-sensitive, no squash);
+   * 'simulate' mounts apply all but decodeParams. Hand the same object to
+   * {@link url-config!applyUrlConfig | `applyUrlConfig`} on the client router
+   * so both sides compile urls alike.
+   */
   config?: UrlMatcherCompilerConfig;
+  /**
+   * How a 'matcher' mount looks up the route a pathname matches. Default: a
+   * linear scan that tries every route. {@link routeTrie} walks a segment
+   * trie to the few routes whose spelling fits, with the same verdicts, and
+   * throws at construction for a route it can't express. Only the index a
+   * mount names is bundled. On a 'simulate' mount it throws at construction.
+   *
+   * @example
+   * ```ts
+   * import { routeTrie } from 'ui-router-server';
+   * import type { MountConfig } from 'ui-router-server';
+   *
+   * const app: MountConfig = {
+   *   routes: [{ name: 'home', url: '' }, { name: 'item', url: '/items/:id' }],
+   *   routeIndex: routeTrie,
+   * };
+   * ```
+   */
+  routeIndex?: RouteIndex;
   /**
    * Projection of the client's otherwise() rule. `state` references a
    * declared, url-less state (url-less so the unmatched url stays in the
@@ -63,6 +94,40 @@ export interface MountConfig {
     /** Name of the declared, url-less state unknown paths verdict as. */
     state: string;
   };
+  /**
+   * Idle headless routers a 'simulate' mount builds once @uirouter/core
+   * loads, so its first requests skip the cold build. Default 0: the pool
+   * builds on demand. An integer from 0 to 16 (the pool's idle cap); any
+   * other value, or a positive count on a 'matcher' mount, throws at
+   * construction. A failed prewarm build is dropped silently and requests
+   * build on demand.
+   *
+   * The builds chain onto the import that construction starts, ahead of
+   * every request on the mount, so the first request never races them and
+   * there is nothing extra to await. In a Cloudflare Worker that constructs
+   * its router at module scope, the builds may run during startup: they do
+   * no I/O, timers or randomness, so global scope permits them, but their
+   * CPU counts toward the Worker's startup time limit.
+   */
+  prewarm?: number;
+  /**
+   * Diagnostic kinds this mount means to trip, turned off for it alone: the
+   * construction warning skips them and {@link diagnoseMounts} omits them,
+   * so development and CI agree. A kind outside {@link MountDiagnosticKind}
+   * throws at construction.
+   *
+   * @example
+   * ```ts
+   * // /api owns its bare base and answers it with a 404 on purpose.
+   * const mounts = {
+   *   '/api': {
+   *     routes: [{ name: 'item', url: '/items/:id' }],
+   *     ignoreDiagnostics: ['bareBaseNotFound'],
+   *   },
+   * } satisfies Record<string, MountConfig>;
+   * ```
+   */
+  ignoreDiagnostics?: readonly MountDiagnosticKind[];
 }
 
 /**
@@ -117,6 +182,19 @@ export type Verdict =
       mount?: string;
     };
 
+/** What a {@link MountDiagnostic} reports; new kinds may join the union in a minor release. */
+export type MountDiagnosticKind = 'bareBaseNotFound';
+
+/** One {@link diagnoseMounts} finding. Discriminate on `kind`. */
+export interface MountDiagnostic {
+  /** What the finding reports. */
+  kind: MountDiagnosticKind;
+  /** Base of the mount the finding is about, normalized as in a {@link Verdict}. */
+  mount: string;
+  /** What to fix, in a sentence; the development build's construction warning prints it. */
+  message: string;
+}
+
 /** The compiled resolver {@link createServerRouter} returns: a pathname in, a {@link Verdict} out. */
 export interface ServerRouter {
   /** Accepts a pathname, an absolute url string, or anything with a `pathname` (URL, Location). */
@@ -127,33 +205,42 @@ interface Mount {
   base: string;
   config: MountConfig;
   strategy: 'matcher' | 'simulate';
-  compiled: {
-    evaluate: (pathname: string) => string | null;
-    routes: CompiledRoute[];
-  };
+  compiled: CompiledResolver;
+  pool: RouterPool;
+  prewarm: number;
 }
 
+const isUrlText = (input: string | { pathname: string }): input is string =>
+  typeof input === 'string';
+
 const pathnameOf = (input: string | { pathname: string }): string => {
-  if (typeof input !== 'string') return input.pathname;
+  if (!isUrlText(input)) return input.pathname;
   // Accept absolute urls without requiring a URL global (runtime-neutral).
   const path = input.replace(/^[a-z][a-z0-9+.-]*:\/\/[^/?#]*/i, '');
   const end = path.search(/[?#]/);
+
   return end === -1 ? path : path.substring(0, end);
 };
 
 // The pathname within the mount, or null when the mount doesn't own it.
 const subpathIn = (base: string, pathname: string): string | null => {
   if (base === '/') return pathname;
+
   if (pathname === base) return '';
+
   if (pathname.startsWith(`${base}/`)) return pathname.substring(base.length);
+
   return null;
 };
 
 const join = (base: string, path: string): string =>
   base === '/' ? path || '/' : base + path;
 
+const isStateName = (to: string | RedirectTarget): to is string =>
+  typeof to === 'string';
+
 const toTarget = (to: string | RedirectTarget): RedirectTarget =>
-  typeof to === 'string' ? { state: to } : to;
+  isStateName(to) ? { state: to } : to;
 
 /**
  * Merges a request's search into a redirect `location` — the correct-by-
@@ -168,6 +255,7 @@ const toTarget = (to: string | RedirectTarget): RedirectTarget =>
  */
 export function mergeSearch(location: string, incoming: string): string {
   const query = incoming.startsWith('?') ? incoming.substring(1) : incoming;
+
   if (!query) return location;
   // Split the fragment off FIRST. It terminates the url, so a '?' after it is
   // fragment text rather than a query — and merging into `pathname#frag` would
@@ -181,11 +269,15 @@ export function mergeSearch(location: string, incoming: string): string {
   const request = new URLSearchParams(query);
   const keys = new Set<string>();
   request.forEach((_value, key) => keys.add(key));
+
   for (const key of keys) {
     if (target.has(key)) continue;
+
     for (const value of request.getAll(key)) target.append(key, value);
   }
+
   const merged = target.toString();
+
   return merged ? `${pathname}?${merged}${fragment}` : `${pathname}${fragment}`;
 }
 
@@ -194,6 +286,7 @@ export function mergeSearch(location: string, incoming: string): string {
 const normalizeBase = (base: string): string => {
   if (!base.startsWith('/'))
     throw new Error(`Mount '${base}' must start with '/'`);
+
   return base !== '/' && base.endsWith('/') ? base.slice(0, -1) : base;
 };
 
@@ -202,48 +295,112 @@ const normalizeBase = (base: string): string => {
 // that is a redirect, not a shell-404 at the retained path.
 const validateOtherwise = (base: string, config: MountConfig): void => {
   if (!config.otherwise) return;
+
   const state = config.routes.find(
     (route) => route.name === config.otherwise?.state,
   );
+
   if (!state)
     throw new Error(
       `Mount '${base}': otherwise state '${config.otherwise.state}' is not declared`,
     );
+
   if (state.url !== undefined)
     throw new Error(
       `Mount '${base}': otherwise state '${config.otherwise.state}' must be url-less (the unmatched url stays in the address bar)`,
     );
 };
 
+// The index's own message names the route and reason; the mount is added here.
+const mountIndex = (
+  base: string,
+  config: MountConfig,
+): RouteIndex | undefined => {
+  const index = config.routeIndex;
+
+  if (index === undefined) return undefined;
+
+  if (config.strategy === 'simulate')
+    throw new Error(`Mount '${base}': routeIndex needs the 'matcher' strategy`);
+
+  return (routes) => {
+    try {
+      return index(routes);
+    } catch (error) {
+      throw new Error(
+        `Mount '${base}': ${error instanceof Error ? error.message : String(error)}`,
+        { cause: error },
+      );
+    }
+  };
+};
+
+const validatePrewarm = (base: string, config: MountConfig): number => {
+  const prewarm = config.prewarm ?? 0;
+
+  if (!Number.isInteger(prewarm) || prewarm < 0 || prewarm > POOL_MAX_IDLE)
+    throw new Error(
+      `Mount '${base}': prewarm must be an integer from 0 to ${POOL_MAX_IDLE}`,
+    );
+
+  if (prewarm > 0 && config.strategy !== 'simulate')
+    throw new Error(`Mount '${base}': prewarm needs the 'simulate' strategy`);
+
+  return prewarm;
+};
+
+// A record, so adding a kind to the union fails to compile until it is listed here.
+const DIAGNOSTIC_KINDS: Record<MountDiagnosticKind, true> = {
+  bareBaseNotFound: true,
+};
+
+const validateIgnoreDiagnostics = (base: string, config: MountConfig): void => {
+  for (const kind of config.ignoreDiagnostics ?? []) {
+    if (!Object.hasOwn(DIAGNOSTIC_KINDS, kind))
+      throw new Error(
+        `Mount '${base}': ignoreDiagnostics names unknown kind '${kind}' (known: ${Object.keys(DIAGNOSTIC_KINDS).join(', ')})`,
+      );
+  }
+};
+
 const compileMount = ([base, config]: [string, MountConfig]): Mount => {
   validateOtherwise(base, config);
+  validateIgnoreDiagnostics(base, config);
+  const prewarm = validatePrewarm(base, config);
+
   return {
     base: normalizeBase(base),
     config,
     strategy: config.strategy ?? 'matcher',
+    prewarm,
     // Simulate mounts accept the same declaration subset, so the
     // dependency-free compilation doubles as their construction-time
     // validation (their resolve path never consults it).
-    compiled: {
-      evaluate: compileRedirects({
+    compiled: compileResolver(
+      {
         routes: config.routes,
         rules: config.redirects,
         config: config.config,
-      }),
-      routes: compileRoutes(config.routes, config.config),
-    },
+      },
+      mountIndex(base, config),
+    ),
+    pool: createRouterPool(),
   };
 };
 
+// Declaration order, so diagnostics read in the order the table was written.
 const compileMounts = (record: Record<string, MountConfig>): Mount[] => {
-  const mounts = Object.entries(record)
-    .map(compileMount)
-    // The longest matching base owns a pathname outright.
-    .sort((a, b) => b.base.length - a.base.length);
+  const mounts = Object.entries(record).map(compileMount);
+
   if (new Set(mounts.map((mount) => mount.base)).size !== mounts.length)
     throw new Error('Mount bases must be unique');
+
   return mounts;
 };
+
+// The longest matching base owns a pathname outright.
+const byLongestBase = (mounts: Mount[]): Mount[] =>
+  [...mounts].sort((a, b) => b.base.length - a.base.length);
 
 // --- The simulate tier, behind its lazy boundary --------------------------
 
@@ -253,6 +410,7 @@ type SimulateModule = typeof import('./simulate.ts');
 // through this dynamic import, so matcher-only configs never load it.
 const makeSimulateLoader = (): (() => Promise<SimulateModule>) => {
   let loaded: Promise<SimulateModule> | null = null;
+
   return () => (loaded ??= import('./simulate.ts'));
 };
 
@@ -262,15 +420,19 @@ const buildHeadlessRouter = (simulate: SimulateModule, mount: Mount) => {
   const states: StateDeclaration[] = mount.config.routes.map((route) => ({
     ...route,
   }));
-  const router = simulate.createHeadlessRouter(states);
+
+  const router = simulate.createHeadlessRouter(states, mount.config.config);
+
   // The real rule, replayed: otherwise() only fires when no other rule
   // matches, and the url-less target leaves the memory location unmoved.
   if (mount.config.otherwise) {
     const state = mount.config.otherwise.state;
     router.urlService.rules.otherwise(() => ({ state }));
   }
+
   for (const rule of mount.config.redirects ?? []) {
     const to = toTarget(rule.to);
+
     if (rule.pattern instanceof RegExp) {
       router.urlService.rules.when(rule.pattern, () => ({
         state: to.state,
@@ -283,17 +445,34 @@ const buildHeadlessRouter = (simulate: SimulateModule, mount: Mount) => {
       }));
     }
   }
+
   return router;
 };
 
+const prewarmPools = (simulate: SimulateModule, mounts: Mount[]): void => {
+  for (const mount of mounts) {
+    try {
+      mount.pool.warm(
+        () => buildHeadlessRouter(simulate, mount),
+        mount.prewarm,
+      );
+    } catch {
+      // That mount's requests build on demand, as an unwarmed pool's do.
+    }
+  }
+};
+
 // Transitions settle in microtasks; the timer is only a degrade-to-shell net.
-const settledWithinTimeout = (settled: Promise<boolean>): Promise<boolean> =>
-  Promise.race([
+const settledWithinTimeout = (settled: Promise<boolean>): Promise<boolean> => {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+
+  return Promise.race([
     settled,
-    new Promise<false>((expire) =>
-      setTimeout(() => expire(false), SETTLE_TIMEOUT_MS),
-    ),
-  ]);
+    new Promise<false>((expire) => {
+      timer = setTimeout(() => expire(false), SETTLE_TIMEOUT_MS);
+    }),
+  ]).finally(() => clearTimeout(timer));
+};
 
 // --- Verdict construction --------------------------------------------------
 
@@ -325,13 +504,91 @@ const otherwiseVerdict = (mount: Mount): Verdict => ({
 // --- Per-strategy resolution -----------------------------------------------
 
 const matcherVerdict = (mount: Mount, subpath: string): Verdict => {
-  const redirected = mount.compiled.evaluate(subpath);
-  if (redirected !== null) return redirectVerdict(mount, redirected);
-  if (matchRoute(mount.compiled.routes, subpath) !== null)
-    return shellVerdict(mount);
+  const resolution = mount.compiled.resolve(subpath);
+
+  if (resolution.redirect !== null)
+    return redirectVerdict(mount, resolution.redirect);
+
+  // A when()-rule that lands where it started never reached route matching.
+  const match =
+    resolution.match === undefined
+      ? mount.compiled.match(subpath)
+      : resolution.match;
+
+  if (match !== null) return shellVerdict(mount);
+
   return mount.config.otherwise
     ? otherwiseVerdict(mount)
     : notFoundVerdict(mount);
+};
+
+// The matcher projection stands in for both strategies: they consume the same declaration subset.
+const bareBaseDiagnostic = (mount: Mount): MountDiagnostic | null => {
+  if (mount.base === '/') return null;
+
+  let verdict: Verdict;
+
+  try {
+    verdict = matcherVerdict(mount, '');
+  } catch {
+    // A user param callback threw: no finding, so diagnostics never break construction; requests surface the throw.
+    return null;
+  }
+
+  if (
+    verdict.kind === 'redirect' ||
+    (verdict.kind === 'shell' && verdict.status === undefined)
+  )
+    return null;
+
+  return {
+    kind: 'bareBaseNotFound',
+    mount: mount.base,
+    message:
+      `mount '${mount.base}' answers its bare base ('${mount.base}') with a 404. ` +
+      `Give it a url: '' route, or a redirect rule matching the empty subpath such as { pattern: /^\\/?$/, to: '<state>' }.`,
+  };
+};
+
+// One mount's findings, less the kinds its ignoreDiagnostics turns off.
+const diagnosticsOf = (mount: Mount): MountDiagnostic[] => {
+  const ignored = mount.config.ignoreDiagnostics ?? [];
+
+  return [bareBaseDiagnostic(mount)].filter(
+    (finding): finding is MountDiagnostic =>
+      finding !== null && !ignored.includes(finding.kind),
+  );
+};
+
+// Each createServerRouter router's mounts in declaration order, for diagnoseMounts.
+const compiledMounts = new WeakMap<ServerRouter, Mount[]>();
+
+// Null when the transition failed or timed out: that router may still be mid-transition.
+const replayVerdict = async (
+  pooled: PooledRouter,
+  mount: Mount,
+  subpath: string,
+): Promise<Verdict | null> => {
+  const { router } = pooled;
+
+  if (!router.urlService.match({ path: subpath, search: {}, hash: '' }))
+    return notFoundVerdict(mount);
+  const settled = pooled.nextSettled();
+  router.urlService.url(subpath);
+  router.urlService.sync();
+
+  if (!(await settledWithinTimeout(settled))) return null;
+
+  // A transition that settled on the otherwise state IS the 404 page.
+  if (router.globals.current.name === mount.config.otherwise?.state)
+    return otherwiseVerdict(mount);
+  // The memory location only moves when the client's address bar would:
+  // core skips the url push for url-sourced transitions.
+  const landed = router.urlService.url();
+
+  return landed === subpath
+    ? shellVerdict(mount)
+    : redirectVerdict(mount, landed);
 };
 
 const simulateVerdict = async (
@@ -340,24 +597,19 @@ const simulateVerdict = async (
   subpath: string,
 ): Promise<Verdict> => {
   try {
-    const router = buildHeadlessRouter(simulate, mount);
-    if (!router.urlService.match({ path: subpath, search: {}, hash: '' }))
-      return notFoundVerdict(mount);
-    const settled = simulate.onceSettled(router);
-    router.urlService.url(subpath);
-    router.urlService.sync();
+    const pooled = mount.pool.checkOut(() =>
+      buildHeadlessRouter(simulate, mount),
+    );
+
+    const verdict = await replayVerdict(pooled, mount, subpath);
+
     // Failed and timed-out transitions degrade to the shell — the client
     // router re-runs them with its full configuration; never a wrong redirect.
-    if (!(await settledWithinTimeout(settled))) return shellVerdict(mount);
-    // A transition that settled on the otherwise state IS the 404 page.
-    if (router.globals.current.name === mount.config.otherwise?.state)
-      return otherwiseVerdict(mount);
-    // The memory location only moves when the client's address bar would:
-    // core skips the url push for url-sourced transitions.
-    const landed = router.urlService.url();
-    return landed === subpath
-      ? shellVerdict(mount)
-      : redirectVerdict(mount, landed);
+    // Their router is dropped, never pooled.
+    if (verdict === null) return shellVerdict(mount);
+    pooled.release();
+
+    return verdict;
   } catch {
     // Core can throw synchronously (registration, matching, sync); degrade
     // to the shell — the client router re-runs the url with its full
@@ -375,31 +627,91 @@ const simulateVerdict = async (
  * The longest matching mount base owns a pathname outright — a verdict
  * never falls through to a shorter mount.
  *
- * A bare mount base ('/app', '/app/') resolves the empty subpath, which is
- * notFound unless the mount supplies a root pattern — a rule like
- * `{ pattern: /^\/?$/, to: ... }` or a `url: ''` route.
+ * A bare mount base ('/app', '/app/') resolves the empty subpath, which
+ * 404s unless the mount supplies a root pattern — a rule like
+ * `{ pattern: /^\/?$/, to: ... }` or a `url: ''` route. Construction passes
+ * each {@link diagnoseMounts} finding's message to `console.warn` in the
+ * development build, which the `development` and `node` export conditions
+ * resolve; under `node`, only while `NODE_ENV` is not `production`. The
+ * default build never warns.
  */
 export function createServerRouter(config: {
   mounts: Record<string, MountConfig>;
 }): ServerRouter {
-  const mounts = compileMounts(config.mounts);
+  const declared = compileMounts(config.mounts);
+  const mounts = byLongestBase(declared);
   const loadSimulate = makeSimulateLoader();
-  // Still lazy for matcher-only configs, but paid at construction when a
-  // simulate mount exists — not on its first request. The stray rejection is
-  // silenced here; resolve() awaits the same cached promise and rethrows.
-  if (mounts.some((mount) => mount.strategy === 'simulate'))
-    void loadSimulate().catch(() => {});
 
-  return {
+  // Still lazy for matcher-only configs, but paid at construction when a
+  // simulate mount exists — not on its first request. Prewarm chains first,
+  // so it fills the pools before any request's check-out. The stray
+  // rejection is silenced here; resolve() awaits the same cached promise and
+  // rethrows.
+  if (mounts.some((mount) => mount.strategy === 'simulate'))
+    void loadSimulate()
+      .then((simulate) => prewarmPools(simulate, mounts))
+      .catch(() => {});
+
+  const router: ServerRouter = {
     async resolve(pathnameOrUrl) {
       const pathname = pathnameOf(pathnameOrUrl);
+
       for (const mount of mounts) {
         const subpath = subpathIn(mount.base, pathname);
+
         if (subpath === null) continue;
+
         if (mount.strategy === 'matcher') return matcherVerdict(mount, subpath);
+
         return simulateVerdict(await loadSimulate(), mount, subpath);
       }
+
       return { kind: 'notFound' };
     },
   };
+
+  compiledMounts.set(router, declared);
+
+  // Folded out of dist/*.js, so a bundle that never calls diagnoseMounts drops it.
+  if (import.meta.env?.DEV) warnMountDiagnostics(router, diagnoseMounts);
+
+  return router;
+}
+
+/**
+ * Checks the mounts a router was built with for configurations that compile
+ * but misroute, without logging: the findings the development build of
+ * {@link createServerRouter} warns about, returned in every build.
+ * It reports `'bareBaseNotFound'` for a mount other than '/' whose bare base
+ * (`/app`) answers 404 — `notFound`, or the shell-404 of an `otherwise`
+ * projection. Findings follow the table's declaration order. Assert the
+ * result is empty in a test to catch them in CI.
+ *
+ * @param router - a router from this copy of the package's `createServerRouter`
+ * @throws for any other object, such as a structural fake or a router from a
+ * second copy of the package
+ *
+ * @example
+ * ```ts
+ * import assert from 'node:assert/strict';
+ * import { test } from 'node:test';
+ * import { createServerRouter, diagnoseMounts } from 'ui-router-server';
+ *
+ * // The table the server passes to createServerRouter.
+ * const mounts = { '/app': { routes: [{ name: 'home', url: '' }] } };
+ *
+ * test('every mount serves its bare base', () => {
+ *   assert.deepEqual(diagnoseMounts(createServerRouter({ mounts })), []);
+ * });
+ * ```
+ */
+export function diagnoseMounts(router: ServerRouter): MountDiagnostic[] {
+  const mounts = compiledMounts.get(router);
+
+  if (mounts === undefined)
+    throw new TypeError(
+      'diagnoseMounts: expected a router from createServerRouter in this copy of ui-router-server',
+    );
+
+  return mounts.flatMap(diagnosticsOf);
 }

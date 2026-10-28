@@ -9,30 +9,44 @@
 // in ./peer-floor-check-runs.core.ts.
 
 import { defaultExec } from '@tools/shared/exec.ts';
-import { ensureGh } from '../lib/gh.ts';
+import { appendStepSummary } from '@tools/shared/gha.ts';
+import { ensureGh } from '@tools/shared/gh.ts';
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
 import { loadWorkspace } from '@tools/shared/workspace.ts';
 
 import {
+  PEER_FLOOR_SCRIPT,
   peerFloorCatalogs,
   peerFloorMembers,
   peerFloorTurboArgs,
   toPeerFloorCheckRun,
   type PeerFloorResult,
 } from './peer-floor-check-runs.core.ts';
-import { checkRunApiArgs } from './publish-check-runs.core.ts';
+import {
+  checkRunApiArgs,
+  checkRunsMarkdown,
+} from './publish-check-runs.core.ts';
+import { failMain } from '../lib/fail-main.ts';
 
 async function main() {
   const dryRun = process.argv.includes('--dry-run');
   const repo = process.env.GITHUB_REPOSITORY ?? 'simshanith/lit-ui-router';
+
   if (!process.env.GITHUB_REPOSITORY && !dryRun) {
-    throw new Error('GITHUB_REPOSITORY must be set (or pass --dry-run)');
+    console.error(
+      'peer-floor-check-runs: GITHUB_REPOSITORY must be set (or pass --dry-run)',
+    );
+    process.exitCode = 2;
+
+    return;
   }
 
   const { members } = await loadWorkspace(workspaceRoot);
   const results: PeerFloorResult[] = [];
+
   for (const member of peerFloorMembers(members)) {
     let ok = true;
+
     try {
       await defaultExec('turbo', peerFloorTurboArgs(member.name), {
         cwd: workspaceRoot,
@@ -41,22 +55,37 @@ async function main() {
       // a stale floor is a signal, not a job failure
       ok = false;
     }
+
     console.log(`${member.name}: ${ok ? 'floor honest' : 'floor stale'}`);
     results.push({ name: member.name, ok, ...peerFloorCatalogs(member) });
   }
 
   const payloads = results.map((result) => toPeerFloorCheckRun(result, repo));
+
+  await appendStepSummary(
+    checkRunsMarkdown(
+      'peer-floor',
+      payloads,
+      `No packages define \`${PEER_FLOOR_SCRIPT}\`.`,
+    ),
+  );
+
   if (dryRun) {
     console.log(JSON.stringify(payloads, null, 2));
+
     return;
   }
+
   if (payloads.length === 0) {
     console.log('no packages define typecheck:peer-floor — nothing to report');
+
     return;
   }
+
   const { stdout } = await defaultExec('git', ['rev-parse', 'HEAD']);
   const headSha = stdout.trim();
   await ensureGh();
+
   for (const payload of payloads) {
     await defaultExec('gh', checkRunApiArgs(repo, headSha, payload));
     console.log(
@@ -65,7 +94,4 @@ async function main() {
   }
 }
 
-main().catch((error: unknown) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+main().catch(failMain);

@@ -1,5 +1,5 @@
-// IO shell for GitHub Actions structure: log groups, error annotations, and
-// step outputs. Outside Actions (a local `mise run`) the same calls degrade
+// IO shell for GitHub Actions structure: log groups, error annotations, step
+// outputs, and job summaries. Outside Actions (a local `mise run`) the same calls degrade
 // to plain logging, so tasks stay locally reproducible. The formatting
 // decisions live in the pure, unit-tested functions in ./gha.core.ts.
 
@@ -13,6 +13,7 @@ import {
   outputLine,
   warningCommand,
 } from './gha.core.ts';
+import { messageOf } from './errors.ts';
 
 /** Whether this process is running on a GitHub Actions runner. */
 export function onActions(): boolean {
@@ -25,6 +26,7 @@ export async function group<T>(
   fn: () => Promise<T>,
 ): Promise<T> {
   console.log(onActions() ? groupCommand(title) : `── ${title}`);
+
   try {
     return await fn();
   } finally {
@@ -58,14 +60,23 @@ export function logWarning(message: string): void {
 export async function setOutput(name: string, value: string): Promise<void> {
   const line = outputLine(name, value);
   const file = process.env.GITHUB_OUTPUT;
+
   if (file !== undefined && file !== '') await appendFile(file, `${line}\n`);
   else console.log(line);
 }
 
+/** Append markdown to the run page's job summary; printed locally. */
+export async function appendStepSummary(markdown: string): Promise<void> {
+  const file = process.env.GITHUB_STEP_SUMMARY;
+
+  if (file !== undefined && file !== '') await appendFile(file, markdown);
+  else console.log(markdown);
+}
+
 /** Uniform entry-point wrapper: annotate the failure and fail the task. */
 export function runMain(main: () => Promise<void>): void {
-  main().catch((error: unknown) => {
-    logError(error instanceof Error ? error.message : String(error));
+  main().catch((cause: unknown) => {
+    logError(messageOf(cause));
     process.exitCode = 1;
   });
 }

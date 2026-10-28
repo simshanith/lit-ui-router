@@ -14,12 +14,14 @@ import {
 import { UIRouterLit } from '../core.js';
 
 // The @lit-labs/ssr DOM shim: no elements, so a provider on its root answers every request.
+// SAFETY: the @lit-labs/ssr DOM shim installs `litServerRoot` on globalThis
 const litServerRoot = (globalThis as { litServerRoot?: EventTarget })
   .litServerRoot;
 
 const sheetRouter = (): UIRouterLit => {
   const router = new UIRouterLit();
   router.stateRegistry.register({ name: 'sheet', url: '/sheet/:num' });
+
   return router;
 };
 
@@ -29,6 +31,7 @@ class RouterProbeDirective extends Directive {
     const router =
       getScopedRouter() ??
       (litServerRoot ? requestRouter(litServerRoot) : undefined);
+
     return router?.stateRegistry.get('sheet')?.url ?? 'no-router';
   }
 }

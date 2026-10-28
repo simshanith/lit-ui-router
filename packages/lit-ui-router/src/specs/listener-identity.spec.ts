@@ -1,3 +1,4 @@
+// oxlint-disable typescript/no-deprecated -- the house ui-router-context path under test (#874)
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
@@ -24,6 +25,7 @@ import { createTestRouter, waitForUpdate, tick } from './test-utils.js';
 /** Reconnects an element in place, driving disconnect/connect `times` over. */
 async function reconnect(element: HTMLElement, times: number): Promise<void> {
   const parent = element.parentElement!;
+
   for (let i = 0; i < times; i++) {
     element.remove();
     parent.appendChild(element);

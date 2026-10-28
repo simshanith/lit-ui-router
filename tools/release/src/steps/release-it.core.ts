@@ -43,7 +43,9 @@ export function bumpArgs(options: {
   dryRun: boolean;
 }): string[] {
   const { version, commitMessage, dryRun } = options;
+
   if (version.trim() === '') throw new Error('version must be non-empty');
+
   return [
     ...(dryRun ? ['--dry-run'] : []),
     '--increment',
@@ -78,12 +80,15 @@ export function publishArgs(options: {
   dryRun: boolean;
 }): string[] {
   const { releaseVersion, tarballPath, from, dryRun } = options;
+
   if (releaseVersion.trim() === '') {
     throw new Error('releaseVersion must be non-empty');
   }
+
   if (tarballPath.trim() === '') {
     throw new Error('tarballPath must be non-empty');
   }
+
   return [
     '--no-increment',
     '--npm.publish',
@@ -115,9 +120,11 @@ export function changelogArgs(options: {
   from: string;
 }): string[] {
   const { packageName, from } = options;
+
   if (packageName.trim() === '') {
     throw new Error('packageName must be non-empty');
   }
+
   return [
     '--changelog',
     `--git.tagMatch=${packageName}@[0-9]*.[0-9]*.[0-9]*`,
@@ -127,6 +134,7 @@ export function changelogArgs(options: {
 
 function changelogFromArg(from: string): string {
   if (from.trim() === '') throw new Error('from must be non-empty');
+
   return `--plugins.@release-it/conventional-changelog.gitRawCommitsOpts.from=${from}`;
 }
 
@@ -138,10 +146,12 @@ function changelogFromArg(from: string): string {
  */
 export function parseReleaseVersion(stdout: string): string {
   const version = stdout.trim();
+
   if (version === '' || /\s/.test(version)) {
     throw new Error(
       `release-it --release-version printed ${JSON.stringify(stdout)}; expected a single version`,
     );
   }
+
   return version;
 }

@@ -1,7 +1,15 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "plugins": ["typescript", "unicorn"],
-  "jsPlugins": ["eslint-plugin-turbo", "eslint-plugin-lit-ui-router"],
+  "jsPlugins": [
+    "eslint-plugin-turbo",
+    "eslint-plugin-lit-ui-router",
+    { "name": "anti-slop", "specifier": "@tools/oxlint-anti-slop" },
+    {
+      "name": "anti-slop-effect",
+      "specifier": "@tools/oxlint-anti-slop/effect"
+    }
+  ],
   "options": {
     "typeAware": true
   },
@@ -11,11 +19,17 @@
   "env": {
     "builtin": true
   },
+  "settings": {
+    "litUiRouterSources": ["sample-app-shared/registry/lit.js"]
+  },
   "ignorePatterns": [
     "**/dist/**",
     "**/coverage/**",
     "**/node_modules/**",
-    "**/.vitepress/cache/**"
+    "**/.vitepress/cache/**",
+    ".agents/**",
+    ".claude/**",
+    "tools/oxlint-anti-slop/src/**"
   ],
   "rules": {
     "complexity": ["error", { "max": 15 }],
@@ -57,6 +71,14 @@
     "no-prototype-builtins": "error",
     "no-redeclare": "error",
     "no-regex-spaces": "error",
+    "no-restricted-properties": [
+      "error",
+      {
+        "object": "process",
+        "property": "exit",
+        "message": "it ends the process before pending stdout/stderr writes flush and skips finally blocks; set process.exitCode and return from main."
+      }
+    ],
     "no-self-assign": "error",
     "no-setter-return": "error",
     "no-shadow-restricted-names": "error",
@@ -164,9 +186,43 @@
     "lit-ui-router/sref-active-aria-current": "error",
     "lit-ui-router/sref-active-class-aria-current": "error",
     "lit-ui-router/sref-assign-href": "error",
-    "lit-ui-router/sref-status-aria-current": "error"
+    "lit-ui-router/sref-status-aria-current": "error",
+    "oxc/no-accumulating-spread": "error",
+    "anti-slop/no-array-filter-map": "error",
+    "anti-slop/no-chained-type-assertions": "error",
+    "anti-slop/no-reduce-accumulator-copy": "error",
+    "anti-slop/no-conditional-empty-object-spread": "error",
+    "anti-slop/no-module-mocking": "error",
+    "anti-slop/no-object-parameters": "error",
+    "anti-slop/no-reflect-apply": "error",
+    "anti-slop/no-reflect-get": "error",
+    "anti-slop/no-known-value-widening": "error",
+    "anti-slop/no-runtime-typeof": ["error", { "allowInTypeGuards": true }],
+    "anti-slop/no-shape-in-symbol-names": "error",
+    "anti-slop/no-unknown-parameters": "error",
+    "anti-slop/no-unknown-returns": "error",
+    "anti-slop/no-unknown-type-aliases": "error",
+    "anti-slop/no-unsafe-dictionary-type": "error",
+    "anti-slop/no-widen-then-assert": "error",
+    "anti-slop/require-readable-spacing": "error",
+    "anti-slop/require-safety-comment-for-type-assertion": "error"
   },
   "overrides": [
+    {
+      "files": [
+        "packages/lit-ui-router-effect/**",
+        "packages/ui-router-effect/**",
+        "apps/sample-app-lit-effect/**",
+        "examples/hellogalaxy-effect/**"
+      ],
+      "rules": {
+        "anti-slop-effect/no-manual-effect-error-tag": "error",
+        "anti-slop-effect/no-manual-tag-comparison": "error",
+        "anti-slop-effect/no-manual-tagged-construction": "error",
+        "anti-slop-effect/no-service-constructor-imports": "error",
+        "anti-slop-effect/prefer-effect-match": "error"
+      }
+    },
     {
       "files": ["**/*.ts", "**/*.tsx", "**/*.mts", "**/*.cts"],
       "rules": {
@@ -208,7 +264,9 @@
         "packages/lit-ui-router/src/**/*.ts",
         "packages/lit-ui-router-effect/src/**/*.ts",
         "packages/lit-ui-router-mobx/src/**/*.ts",
-        "packages/lit-ui-router-ssr/src/**/*.ts"
+        "packages/lit-ui-router-signals/src/**/*.ts",
+        "packages/lit-ui-router-ssr/src/**/*.ts",
+        "packages/ui-router-server/src/**/*.ts"
       ],
       "rules": {
         "turbo/no-undeclared-env-vars": [
@@ -231,12 +289,43 @@
       }
     },
     {
+      // Every test that reaches #dev-gate's NODE_ENV read sets and restores it.
+      "files": [
+        "packages/ui-router-server/test/index.test.ts",
+        "packages/ui-router-server/test/dev-gate.test.ts",
+        "packages/ui-router-server/test/development-build.test.ts"
+      ],
+      "rules": {
+        "turbo/no-undeclared-env-vars": [
+          "warn",
+          {
+            "allowList": ["^NODE_ENV$"]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["packages/shared/dev-gate/src/dev-gate.node.ts"],
+      "rules": {
+        "turbo/no-undeclared-env-vars": [
+          "warn",
+          {
+            "allowList": ["^NODE_ENV$"]
+          }
+        ]
+      }
+    },
+    {
       "files": ["apps/sample-app-lit-e2e/scripts/**"],
       "rules": {
         "turbo/no-undeclared-env-vars": [
           "warn",
           {
-            "allowList": ["^DEFLAKE_"]
+            "allowList": [
+              "^DEFLAKE_",
+              "^SUITES_PER_JOB$",
+              "^TURBO_OUTPUT_LOGS$"
+            ]
           }
         ]
       }
@@ -332,14 +421,15 @@
       }
     },
     {
+      // The example's own ESLint run reports this gallery; here it would be a standing CI warning.
       "files": ["**/lint-eslint/src/violations.ts"],
       "rules": {
-        "lit-ui-router/anchor-is-valid": "warn",
-        "lit-ui-router/directive-position": "warn",
-        "lit-ui-router/sref-active-aria-current": "warn",
-        "lit-ui-router/sref-active-class-aria-current": "warn",
-        "lit-ui-router/sref-assign-href": "warn",
-        "lit-ui-router/sref-status-aria-current": "warn"
+        "lit-ui-router/anchor-is-valid": "off",
+        "lit-ui-router/directive-position": "off",
+        "lit-ui-router/sref-active-aria-current": "off",
+        "lit-ui-router/sref-active-class-aria-current": "off",
+        "lit-ui-router/sref-assign-href": "off",
+        "lit-ui-router/sref-status-aria-current": "off"
       }
     },
     {
@@ -364,24 +454,31 @@
       "files": [
         "scripts/**/*.test.ts",
         "examples/*.test.ts",
+        "tools/a11y/**/*.test.ts",
         "tools/bootstrap/**/*.test.ts",
         "tools/build_and_test/**/*.test.ts",
         "tools/bundle-probe/**/*.test.ts",
+        "tools/ci-logs/**/*.test.ts",
         "tools/compat-guards/**/*.test.ts",
         "tools/crap/**/*.test.ts",
         "tools/embed-heights/**/*.test.ts",
+        "tools/eslint/**/*.test.ts",
         "tools/lcov-rebase/**/*.test.ts",
         "tools/lit-template-lint/**/*.test.ts",
         "tools/oxc-emit/**/*.test.ts",
         "tools/release/**/*.test.ts",
+        "tools/release-config/**/*.test.ts",
+        "tools/release-ledger/**/*.test.ts",
         "tools/repo-checks/**/*.test.ts",
         "tools/shared/**/*.test.ts",
-        "tools/warn-lanes/**/*.test.ts",
         "tools/workers-builds/**/*.test.ts",
         "packages/ui-router-server/test/**/*.test.ts",
+        "apps/sample-app-lit-e2e/scripts/**/*.test.ts",
         "apps/sample-app-routes/test/**/*.test.ts",
         "www/lit-ui-router.dev/worker/test/**/*.test.ts",
-        "www/lit-ui-router.dev/.vitepress/test/**/*.test.ts"
+        "www/lit-ui-router.dev/.vitepress/test/**/*.test.ts",
+        "www/lit-ui-router.dev/scripts/test/**/*.test.ts",
+        "www/release-ledger.lit-ui-router.dev/**/*.test.ts"
       ],
       "rules": {
         "typescript/no-floating-promises": "off"
@@ -442,6 +539,7 @@
       "files": [
         "packages/ui-router-server/src/index.ts",
         "packages/ui-router-server/src/redirects.ts",
+        "packages/ui-router-server/src/url-config.ts",
         "packages/ui-router-server/src/url-matcher.ts"
       ],
       "rules": {
@@ -453,6 +551,121 @@
                 "name": "@uirouter/core",
                 "allowTypeImports": true,
                 "message": "matcher tier stays core-free — a static @uirouter/core import defeats the lazy simulate boundary (the `bundleProbe.free` claims under check:bundle enforce the bundle); use `import type` or a dynamic import()."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      // Mirrors bundleProbe["."].free in packages/ui-router-effect/package.json.
+      "files": ["packages/ui-router-effect/src/**/*.ts"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "lit",
+                "message": "ui-router-effect is framework-agnostic; Lit bindings live in lit-ui-router-effect."
+              },
+              {
+                "name": "lit-ui-router",
+                "message": "ui-router-effect is framework-agnostic; Lit bindings live in lit-ui-router-effect."
+              }
+            ],
+            "patterns": [
+              {
+                "group": [
+                  "lit/**",
+                  "lit-ui-router/**",
+                  "@lit/**",
+                  "@lit-labs/**"
+                ],
+                "message": "ui-router-effect is framework-agnostic; Lit bindings live in lit-ui-router-effect."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      // Mirrors bundleProbe["."].free in packages/ui-router-mobx/package.json.
+      "files": ["packages/ui-router-mobx/src/**/*.ts"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "lit",
+                "message": "ui-router-mobx is framework-agnostic; Lit bindings live in lit-ui-router-mobx."
+              },
+              {
+                "name": "lit-ui-router",
+                "message": "ui-router-mobx is framework-agnostic; Lit bindings live in lit-ui-router-mobx."
+              }
+            ],
+            "patterns": [
+              {
+                "group": [
+                  "lit/**",
+                  "lit-ui-router/**",
+                  "@lit/**",
+                  "@lit-labs/**"
+                ],
+                "message": "ui-router-mobx is framework-agnostic; Lit bindings live in lit-ui-router-mobx."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["packages/ui-router-signals/src/**/*.ts"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "lit",
+                "message": "ui-router-signals is framework-agnostic; Lit bindings live in lit-ui-router-signals."
+              },
+              {
+                "name": "lit-ui-router",
+                "message": "ui-router-signals is framework-agnostic; Lit bindings live in lit-ui-router-signals."
+              }
+            ],
+            "patterns": [
+              {
+                "group": [
+                  "lit/**",
+                  "lit-ui-router/**",
+                  "@lit/**",
+                  "@lit-labs/**"
+                ],
+                "message": "ui-router-signals is framework-agnostic; Lit bindings live in lit-ui-router-signals."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      // The subpaths import the root, so the root importing one is a cycle.
+      "files": [
+        "packages/ui-router-registry/src/index.ts",
+        "packages/ui-router-registry/src/registry.ts"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["./*", "!./registry.js"],
+                "message": "the ui-router-registry root never imports a subpath entry (./signals, ./effect, ./mobx, ...): each subpath imports the root, so this is a type cycle, and it makes the subpath's optional peer required for every app."
               }
             ]
           }
@@ -540,7 +753,10 @@
       }
     },
     {
-      "files": ["tools/workers-builds/**/*.ts"],
+      "files": [
+        "tools/workers-builds/**/*.ts",
+        "www/release-ledger.lit-ui-router.dev/src/enqueue.ts"
+      ],
       "rules": {
         "turbo/no-undeclared-env-vars": [
           "warn",
@@ -571,6 +787,30 @@
       }
     },
     {
+      "files": [
+        "tools/build_and_test/src/branch-ci-gate.ts",
+        "tools/build_and_test/src/branch-ci-gate.core.ts"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "*",
+                  "!node:*",
+                  "!node:*/*",
+                  "!./branch-ci-gate.core.ts"
+                ],
+                "message": "the branch CI gate runs in build-test-branch.yml on mise-action alone, before any `pnpm install`, so every specifier has to resolve with no node_modules: node builtins and the gate's own core. Type imports count too, matching the resolution test in branch-ci-gate.test.ts, which holds the same contract at runtime."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
       "files": ["tools/bootstrap/**/*.ts"],
       "rules": {
         "no-restricted-imports": [
@@ -593,6 +833,35 @@
           "warn",
           {
             "allowList": ["^XVFB_"]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "tools/build_and_test/src/format-diff.ts",
+        "tools/build_and_test/src/mark-summary-session.ts",
+        "tools/build_and_test/src/run-summary.ts",
+        "tools/build_and_test/src/session.ts"
+      ],
+      "rules": {
+        "turbo/no-undeclared-env-vars": [
+          "warn",
+          {
+            "allowList": [
+              "^(TURBO_RUNS_DIR|TURBO_SUMMARY_SESSION|TURBO_SUMMARY_ARTIFACT_URL|TURBO_LOGS_ARTIFACT_URL|CYPRESS_SCREENSHOTS_ARTIFACT_URL|A11Y_SCREENSHOTS_ARTIFACT_URL|FORMAT_PATCH_ARTIFACT_URL|TURBO_SUMMARY_TOKEN_SET)$"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["tools/build_and_test/src/branch-ci-gate.ts"],
+      "rules": {
+        "turbo/no-undeclared-env-vars": [
+          "warn",
+          {
+            "allowList": ["^BRANCH_CREATED$"]
           }
         ]
       }

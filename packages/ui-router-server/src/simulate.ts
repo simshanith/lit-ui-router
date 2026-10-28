@@ -2,6 +2,8 @@ import { servicesPlugin, UIRouter } from '@uirouter/core';
 import type { StateDeclaration } from '@uirouter/core';
 
 import { serverLocationPlugin } from './location.ts';
+import { applyUrlConfig } from './url-config.ts';
+import type { RouterUrlConfig } from './url-config.ts';
 
 /**
  * Core's own headless recipe: vanilla $q/$injector plus an in-memory location
@@ -11,13 +13,18 @@ import { serverLocationPlugin } from './location.ts';
  * registrations ($$state), so sharing declarations across routers breaks
  * concurrent use.
  */
-export function createHeadlessRouter(states: StateDeclaration[]): UIRouter {
+export function createHeadlessRouter(
+  states: StateDeclaration[],
+  config?: RouterUrlConfig,
+): UIRouter {
   const router = new UIRouter();
   router.plugin(servicesPlugin);
   router.plugin(serverLocationPlugin);
+  applyUrlConfig(router, config);
   // Callers observe outcomes through onceSettled; keep the console quiet.
   router.stateService.defaultErrorHandler(() => {});
   states.forEach((state) => router.stateRegistry.register(state));
+
   return router;
 }
 

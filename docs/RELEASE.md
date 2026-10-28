@@ -95,18 +95,24 @@ only, so neither path can release.
 The pipeline is one set of steps split across three files by trigger, so that
 neither event can instantiate the other's jobs:
 
-| File                    | Trigger                      | Reports                                                         |
-| ----------------------- | ---------------------------- | --------------------------------------------------------------- |
-| `build-test.yml`        | PRs, `main` pushes, dispatch | `build_and_test / run` — the required status check              |
-| `build-test-branch.yml` | pushes to any other branch   | `build_and_test (signal gate)`, `build_and_test (branch) / run` |
-| `build-test-run.yml`    | `workflow_call` only         | the `run` job both callers share                                |
+| File                    | Trigger                      | Reports                                                                                                                 |
+| ----------------------- | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `build-test.yml`        | PRs, `main` pushes, dispatch | `build_and_test / run` and `build_and_test / e2e result` — required checks                                              |
+| `build-test-branch.yml` | pushes to any other branch   | `build_and_test (signal gate)`, `build_and_test (branch) / run`, `/ plan`, `/ e2e (<suites>)` per group, `/ e2e result` |
+| `build-test-run.yml`    | `workflow_call` only         | the jobs both callers share: `run`, `plan`, `e2e (<suites>)`, `e2e result`                                              |
+
+`run` is the turbo graph. `plan` groups the default Cypress suites
+`suitesPerJob` at a time, and each `e2e (<suites>)` job runs one group on its own
+runner. PRs and `main` use one suite per job; the branch lane uses three, or the
+`E2E_SUITES_PER_JOB_BRANCH` repo variable. `e2e result` fails unless every suite succeeded, so the rulesets
+require one e2e check however many suites there are.
 
 Branch-head pushes are gated: `build_and_test (signal gate)` asks whether a
 `pull_request` run will cover the SHA anyway, and skips the duplicate when it
 will. It cannot skip when a base conflicts (GitHub builds no merge ref) or when
 no PR is open, which are exactly the SHAs that would otherwise get no CI.
 
-The split is what makes `build_and_test / run` safe to require: a branch push
+The split is what makes `build_and_test / run` and `build_and_test / e2e result` safe to require: a branch push
 never runs `build-test.yml`, so it cannot report that name — and GitHub counts
 a _skipped_ required check as passing.
 
@@ -146,7 +152,7 @@ When a release PR merges and main CI is green:
 
 ### 4. Publish to NPM (`publish-npm.yml`)
 
-**Triggers:** Tag push matching a published package tag (`lit-ui-router@*`, `lit-ui-router-mobx@*`, `ui-router-navigation-location-plugin@*`, `ui-router-server@*`, `eslint-plugin-lit-ui-router@*`); manual dispatch for dry runs
+**Triggers:** Tag push matching a published package tag (the `on.push.tags` list in `publish-npm.yml`); manual dispatch for dry runs
 
 [Actions ▸ Publish to NPM ▸ **Run workflow**](https://github.com/simshanith/lit-ui-router/actions/workflows/publish-npm.yml)
 
@@ -158,6 +164,16 @@ The final release stage:
 4. Publishes to NPM using OIDC trusted publishing
 5. Creates a draft GitHub Release with the tarball
 6. Marks the GitHub Release as final
+
+After the publish, the job's last step runs
+`mise run ledger_claim` ([`.config/mise/tasks/ledger_claim`](../.config/mise/tasks/ledger_claim)),
+which posts `<pkg>@<version>` to the release ledger's `POST /claims` with an
+OIDC id-token from the `publish` environment
+([`www/release-ledger.lit-ui-router.dev`](../www/release-ledger.lit-ui-router.dev/README.md)).
+On a dry run it mints the token and writes the claims the ledger checks to the
+job summary, and posts nothing.
+The step is `continue-on-error`: a failed claim leaves a warning annotation and
+a job summary line, and the ledger's tag sweep records the release later.
 
 The repository has GitHub immutable releases enabled: a published release, its
 assets and the tag it points at can never be edited or deleted, and npm
@@ -178,18 +194,61 @@ renders orange, meaning a release or floor bump is owed — never a CI failure.
 A floor bump raises the catalog the adapter's `lit-ui-router` peer names and
 the matching `peerFloor*` pin in `pnpm-workspace.yaml`: `publishedPeerMobx`
 and `peerFloorMobx` for mobx, `publishedPeerEffect` and `peerFloorEffect` for
-effect.
+effect, `publishedPeerSignals` and `peerFloorSignals` for signals, and
+`publishedPeerSsr` and `peerFloorSsr` for ssr, which floors its
+`ui-router-server` peer the same way.
+
+These run in the `release signals (npm)` job. A separate `release signals (cloudflare)`
+job posts the `workers-builds (triggers)` and `pages-deploy (altitude-atlas)` check runs
+([`www/DEPLOY.md`](../www/DEPLOY.md)), so a failure in one job never skips the other.
 
 `eslint-plugin-lit-ui-router` has no check run: its floor is a published eslint,
 so `test:peer-floor` runs its rule suite on the `eslint-floor` alias in every PR.
 An eslint floor bump raises `publishedPeer.eslint` and the `peerFloorEslintPlugin`
 pin. The range's upper `||` leg is exercised by the plugin's own `eslint`
-devDependency, which `peer-floor-guard` requires to sit in it.
+devDependency, which `floor-guard` requires to sit in it.
+
+`floor-guard` proves a range leg by leg: the lowest by the `<dep>-floor` alias,
+the top by the dev dependency, and each leg between by its own
+`<dep>-<line>-floor` alias pinned to that leg's floor, such as
+`ui-router-server-0.3-floor` for `^0.3.0`. Each leg alias needs its own
+`typecheck:peer-floor` pass through a tsconfig that maps the dep onto it.
+When a release moves a workspace dev dependency past a dependent's range, the
+top leg falls back to its own `<dep>-<line>-floor` alias, and the guard notes
+that the range needs widening. Adding that alias before the release keeps both
+sides of the bump green.
+
+A peer range on a 0.x workspace package keeps two legs: the dep's current minor
+and the one before it. When the dep ships a new minor, the dependent's next
+release adds the new leg and drops the oldest, which narrows the range and so
+ships as a minor. A leg goes early when keeping it needs a shim or version
+branch in the dependent, or blocks a new API of the dep. `floor-guard` warns,
+without failing, on each leg outside the window.
 
 `published-diff` picks that tag from the workspace version by the same rule
 release-it publishes under: a prerelease answers to its own channel tag,
 everything else to `latest`. A channel the registry does not carry yet falls
 back to `latest`, and the run names the missing tag.
+
+### 6. Acceptance (`acceptance.yml`)
+
+**Triggers:** Pull requests; pushes to `main`; manual dispatch against any ref
+
+[Actions ▸ Acceptance ▸ **Run workflow**](https://github.com/simshanith/lit-ui-router/actions/workflows/acceptance.yml)
+
+Slower suites over the built site, on runners of their own outside
+`build_and_test`. On a PR they are advisory, not required checks. Each suite is
+one job and reports one check run on the commit, named `acceptance (<suite>)`:
+
+- `acceptance (a11y)`: the axe pass (`mise run test_e2e a11y`), described in the
+  [e2e README](../apps/sample-app-lit-e2e/README.md).
+- `acceptance (bench)`: ui-router-server's tinybench timings on a short budget
+  (`mise run bench_pulse`), reported as the job summary. It has no thresholds,
+  so it goes red only when a bench crashes.
+
+A red check is a real failure on that commit, unlike a release signal, but it
+gates nothing: Tag & push needs only `build_and_test`. The README badges read
+these check runs.
 
 ## Step-by-Step Release Process
 
@@ -257,7 +316,9 @@ Break the cycle by hand, once, before adding the package to any workflow list:
    manifest has no `workspace:` or `catalog:` specifiers, so none of the
    pack-time rewriting the pipeline relies on
    (`publishPath`, `check:pack`) has to be reproduced by hand. The seed only
-   has to make the name exist.
+   has to make the name exist. npm also records a `0.0.0-stage` version when
+   it creates the name; like every npm version it is permanent, and it holds
+   no dist-tag.
 
    **`--tag latest`, never a channel tag.** A package's first publish always
    takes `latest` regardless — npm requires that tag to exist — and npm 12
@@ -286,7 +347,9 @@ Break the cycle by hand, once, before adding the package to any workflow list:
    `npm dist-tag add <package>@<version> latest`.
 
 2. **Configure the trusted publisher** on npmjs.com for the new package,
-   pointing at `publish-npm.yml`.
+   pointing at `publish-npm.yml`. npm expires a trusted-publisher config that
+   has not validated a publish within 48 hours of its creation, so configure
+   it on release day; delete and re-add one that expired.
 
 3. **Admit the tag** on the GitHub side: add `<package>@*` to the release
    tags ruleset and to the `publish` environment's deployment tag policies.
@@ -399,6 +462,10 @@ The description says what kind of release the train is, not which issues are
 on it: a new minor copies the previous minor's wording with the version
 changed. Per-issue detail belongs on the issue.
 
+A minor's milestone closes with its x.0 train; no milestone tracks patches. A
+`fix:` that ships as a patch of the current minor files under the next minor's
+milestone, and the release, not the milestone, decides patch or minor.
+
 Work that can only happen after publish still rides the train's milestone.
 `examples/*` pin the published `lit-ui-router` range rather than
 `workspace:*`, so bumping them to the new version is the train's last item
@@ -472,6 +539,11 @@ export { default } from '@tools/release-config';
 ```
 
 The config defaults most options to `false` so workflows can enable them explicitly via CLI flags.
+
+A package's range is the commits that touched its directory, plus commits to
+`pnpm-workspace.yaml` that changed a catalog entry its `dependencies`,
+`peerDependencies` or `optionalDependencies` resolve through `catalog:`
+(`tools/release-config/src/catalog-commits.js`).
 
 The changelog lists its commit types explicitly, with the `conventionalcommits`
 preset's section names. A package range made only of unlisted types renders

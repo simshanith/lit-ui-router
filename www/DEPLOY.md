@@ -21,6 +21,11 @@ repo config, and whether the site it deploys is up. See
 ## [Cloudflare Workers](https://developers.cloudflare.com/workers/) with [Static Assets](https://developers.cloudflare.com/workers/static-assets/)
 
 The Cloudflare [GitHub integration](https://developers.cloudflare.com/workers/ci-cd/builds/git-integration/github-integration/) deploys documentation on push.
+It deploys every Worker app under `www/` the same way: each is a package in `www/<domain>`, named
+`@www/<domain>`, with its own worker config and its own Workers Builds triggers, and the domain is
+the site key that the build and deploy commands below take as their last argument. This section
+describes the docs site, the default when that argument is omitted; [Adding a site](#adding-a-site)
+covers the rest.
 
 - Production `main` branch deploys to [lit-ui-router.dev](https://lit-ui-router.dev)
 - Development branches deploy to [preview URLs](https://developers.cloudflare.com/workers/configuration/previews/) with the `-lit-ui-router.shane-cf1.workers.dev` domain suffix
@@ -29,11 +34,11 @@ The Cloudflare [GitHub integration](https://developers.cloudflare.com/workers/ci
 
 All of them live in the site package, `www/lit-ui-router.dev/`:
 
-| File              | Purpose                                                                                                                                                                                                                                                                                               |
-| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `wrangler.jsonc`  | [Wrangler configuration](https://developers.cloudflare.com/workers/wrangler/configuration/) - defines worker name, entry point, assets directory, and routing                                                                                                                                         |
-| `worker/index.ts` | [Worker script](https://developers.cloudflare.com/workers/static-assets/routing/worker-script/) - serves `ui-router-server` verdicts for `/app/*` and `/app-mobx/*` (shell, 302, or 404) from the tables in `sample-app-routes`; everything else serves static assets, misses fall back to `404.html` |
-| `public/_headers` | [Headers](https://developers.cloudflare.com/pages/configuration/headers/) - sets security headers (COOP, COEP)                                                                                                                                                                                        |
+| File              | Purpose                                                                                                                                                                                                                                                                                                                                    |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `wrangler.jsonc`  | [Wrangler configuration](https://developers.cloudflare.com/workers/wrangler/configuration/) - defines worker name, entry point, assets directory, and routing                                                                                                                                                                              |
+| `worker/index.ts` | [Worker script](https://developers.cloudflare.com/workers/static-assets/routing/worker-script/) - serves `ui-router-server` verdicts for `/app/*` and `/app-mobx/*` (shell, 302, or 404) from the tables in `sample-app-routes`, and renders the `/gh` release pages; everything else serves static assets, misses fall back to `404.html` |
+| `public/_headers` | [Headers](https://developers.cloudflare.com/pages/configuration/headers/) - sets security headers (COOP, COEP) and a `Link` header advertising `/llms.txt`                                                                                                                                                                                 |
 
 ### Wrangler Setup
 
@@ -42,12 +47,22 @@ Wrangler is installed in both:
 - Root `package.json` - for deployment commands
 - `www/lit-ui-router.dev/package.json` - its scripts (`wrangler dev`, `wrangler types`, the dry-run bundle) run with the package as cwd, so wrangler finds the `wrangler.jsonc` beside them
 
-The deploy runs from the repo root, where no config lives, so it names the file with
-`--config www/lit-ui-router.dev/wrangler.jsonc` — inside
+The deploy runs from the repo root, where no config lives, so it names the site's file with
+`--config www/<site>/wrangler.jsonc` — inside
 [`cloudflare-deploy.ts`](../tools/workers-builds/cloudflare-deploy.ts), not in the dashboard
 (see [Build & Deploy Commands](#build--deploy-commands)).
 
 See: [Wrangler Commands](https://developers.cloudflare.com/workers/wrangler/commands/)
+
+### cf Setup
+
+The release diffs is configured by a `cloudflare.config.ts` instead, a project for the
+[`cf` CLI](https://developers.cloudflare.com/cf/projects/) (beta). Its package declares both `cf`,
+which `cloudflare.config.ts` imports from, and `wrangler`, the bundler `cf` delegates to; each must
+be installed in the package itself. `cf` has no config flag and reads only the
+`cloudflare.config.ts` in its working directory, so every `cf` command runs with the package as
+cwd. `types:worker` runs `cf workers types`, which writes `.cloudflare/types/` (gitignored, like
+the build output beside it).
 
 ### Build & Deploy Commands
 
@@ -55,6 +70,14 @@ See: [Wrangler Commands](https://developers.cloudflare.com/workers/wrangler/comm
 | ------------------------------------------------------------------------------------------------------- | -------------------------------------------- | ---------------------------------------------------- |
 | Production                                                                                              | `./tools/workers-builds/cloudflare-build.sh` | `./tools/workers-builds/cloudflare-deploy.ts main`   |
 | Preview ([Versions](https://developers.cloudflare.com/workers/configuration/versions-and-deployments/)) | `./tools/workers-builds/cloudflare-build.sh` | `./tools/workers-builds/cloudflare-deploy.ts branch` |
+
+Every other site appends its key to both commands (`cloudflare-build.sh <site>`,
+`cloudflare-deploy.ts main <site>`), as its entry in
+[`workers-builds-triggers.config.jsonc`](../tools/workers-builds/workers-builds-triggers.config.jsonc)
+records. The key resolves to `www/<site>/`, whose `package.json` must be named `@www/<site>`; an
+unknown key, a mismatched name or an extra argument exits 2 before any step runs. The docs site's
+commands stay bare because a trigger's command is shared by every branch it builds, including
+branches whose checkout predates the argument.
 
 Both commands are **repo scripts, not the steps themselves**
 ([`cloudflare-build.sh`](../tools/workers-builds/cloudflare-build.sh),
@@ -85,11 +108,13 @@ has to be a file whose own imports are node builtins all the way down — which 
 
 The build image is Ubuntu with node and npm; the script installs pnpm, and `pnpm install`
 provides everything after that. There is no mise, so none of the repo's mise-managed tools —
-`taplo`, `shellcheck`, `rumdl`, `actionlint`, `zizmor` — exists during a deploy. Anything the
-build's turbo target reaches has to run on workspace binaries alone. It does today: that
-closure is 89 tasks, 21 of which run a command, and every one of those is a package
-`devDependency`. Nothing enforces this, because nothing needs to — a violation turns the
-Workers Builds check red on the branch that introduces it, before any merge.
+`taplo`, `shellcheck`, `rumdl`, `actionlint`, `zizmor` — exists during a deploy. The build's
+turbo target is `@www/<site>#build`; `build` is defined at the root, so a site with no build
+script of its own (wrangler bundles it at deploy) builds only its dependencies and succeeds.
+Anything that target reaches has to run on workspace binaries alone. It does today: for the
+docs site that closure is 133 tasks, 39 of which run a command, and every one of those is a
+package `devDependency` or node itself. Nothing enforces this, because nothing needs to — a
+violation turns the Workers Builds check red on the branch that introduces it, before any merge.
 
 The script **derives the pnpm to bootstrap from `packageManager`** rather than restating it.
 A second pin could drift from `packageManager` with nothing to catch it, and a build on a
@@ -97,18 +122,26 @@ stale pnpm can still deploy green. Deriving is also what makes the
 per-branch divergence above free: a branch that changes the package manager gets the right
 bootstrap with no edit to this file.
 
-The deploy script takes the trigger as its one argument — `main` runs `npx wrangler
-deploy`, `branch` runs `npx wrangler versions upload`, anything else exits 2 — and both
-add `--config www/lit-ui-router.dev/wrangler.jsonc`, since the deploy runs from the repo
-root and the config lives in the site package. That flag is exactly what the indirection is
-for: on `main` before this branch the script named no `--config` at all, because
-`wrangler.jsonc` sat at the root and wrangler found it by walking up. Moving the file
-changes this script's internals and leaves the dashboard alone — no `--apply` owed, and no
-ordering against the merge.
+The deploy script takes the trigger as its first argument and the site as its optional second.
+`branch` runs `npx wrangler versions upload`; `preview` runs `npx wrangler preview`, for a site
+whose branches build as [Workers Previews](#workers-previews); `main` runs `npx wrangler deploy`, preceded by
+`npx wrangler d1 migrations apply <database_name> --remote` for every `d1_databases` entry in the
+site's `wrangler.jsonc` that sets `migrations_dir`. Each names the site's config with `--config`,
+since the deploy runs from the repo root and the config lives in the site package. A site whose
+package has a `cloudflare.config.ts` deploys with `cf` instead, from the package: `branch` runs
+`npx cf workers versions create`, `preview` `npx cf previews deploy`, `main` `npx cf deploy`, and
+nothing migrates, since `cloudflare.config.ts` declares no D1 migrations. A failed
+migration stops the deploy, so production code never runs ahead of its schema. Only `main`
+migrates: a version upload binds the same remote databases as production, and a Preview binds
+only what its `previews` block names. wrangler skips its migration
+confirmation prompt when `WORKERS_CI` is set (as it is in Workers Builds) or there is no TTY,
+answering yes, so the step neither waits nor skips. A moved `wrangler.jsonc` changes this
+script's internals and leaves the dashboard alone — no `--apply` owed, and no ordering against
+the merge.
 
 It is TypeScript rather than bash: by deploy time the install has run, so it is node's own
-type stripping like every other tool script, and it exports its mode map so the trigger
-test checks the wrangler invocation by importing it instead of grepping the source. The
+type stripping like every other tool script, and it exports its commands so the trigger
+test checks each site's wrangler invocations by importing them instead of grepping the source. The
 build script stays bash — it is the bootstrap, and runs before there is anything to run it
 with. `process.execve` replaces the process the way bash `exec` did, so wrangler's exit
 code and signals are the script's; execve does not search `PATH`, so the script asks the
@@ -130,6 +163,39 @@ names would leave turbo on the unusable shim.
 `build_command` and `SKIP_DEPENDENCY_INSTALL` are one state. Apply and verify preview
 before production.
 
+### Workers Previews
+
+The release ledger and the release diffs build their branches as
+[Workers Previews](https://developers.cloudflare.com/workers/previews/): each preview
+`deploy_command` names the `preview` mode. The ledger's `wrangler.jsonc` carries the `previews`
+block `wrangler preview` requires, and a Preview binds only what that block names, so a branch
+reaches none of the ledger's production data, while each Preview gets Durable Object namespaces of
+its own. `cf previews deploy` evaluates the release diffs' `cloudflare.config.ts` with `isPreview`
+set, so that config, not a `previews` block, decides what its Previews bind. The
+ledger's routes, cron trigger and queue consumers stay with production. The docs site still uploads
+versions.
+
+Cloudflare's switch to Previews is one-way, and it replaces the Worker's preview trigger with a
+Previews base config on the Worker itself, which `check:workers-builds` diffs and patches in the
+trigger's place. The switched command applies to every branch at once, so a branch whose checkout
+predates the `preview` mode fails its preview build until it is rebased.
+
+### Adding a site
+
+1. Add the package at `www/<domain>/`, named `@www/<domain>`, with a `wrangler.jsonc` or a
+   `cloudflare.config.ts` beside its `package.json`. A D1 database the production deploy should
+   migrate sets `migrations_dir`, which only `wrangler.jsonc` has. A
+   Worker with no hostname of its own still takes a key under `lit-ui-router.dev`, since the
+   build and deploy scripts accept only a domain-shaped one.
+2. Add an entry keyed `<domain>` to
+   [`workers-builds-triggers.config.jsonc`](../tools/workers-builds/workers-builds-triggers.config.jsonc),
+   with both commands taking the key and `path_includes` limiting its builds to the paths it
+   reads. The trigger test checks the entry against the package.
+3. In the Cloudflare dashboard, **Workers & Pages → Create → Import a repository**, with the
+   Worker name matching the one its config names and the build and deploy commands from the
+   entry. Give its builds an API token of its own, scoped to what that site's deploy touches.
+4. Run `pnpm check:workers-builds -- --site <domain>`, and `--apply` for anything it reports.
+
 ### Dashboard as Code
 
 The private [`tools/workers-builds`](../tools/workers-builds) package owns
@@ -140,14 +206,18 @@ and diffs it against the live triggers: `pnpm check:workers-builds` is read-only
 default; `--site <key>` (repeatable, or one comma-separated value) limits the diff and the apply to
 the named entries, and an unknown key is a usage error (exit 2) rather than an empty selection.
 
-The config is keyed by site, one entry per Worker the repo deploys, each naming the `wrangler.jsonc`
-the worker is named in and pinning what it pins, the
+The config is keyed by site, one entry per Worker the repo deploys, each naming the
+`wrangler.jsonc` or `cloudflare.config.ts` the worker is named in and pinning what it pins, the
 [build watch paths](https://developers.cloudflare.com/workers/ci-cd/builds/build-watch-paths/)
 among them, which are what let two sites share one repo. Its shape is documented where it is enforced — the
 file's own comments and the schema in
 [`workers-builds-triggers.core.ts`](../tools/workers-builds/workers-builds-triggers.core.ts) — and
-not repeated here. A `wranglerConfig` that names no file is a hard error (exit 2), never a skipped
-entry, so a moved file cannot turn the check green.
+not repeated here. A `workerConfig` that names no file is a hard error (exit 2), never a skipped
+entry, so a moved file cannot turn the check green. A `cloudflare.config.ts` is evaluated with
+`@cloudflare/config`, the loader `cf` itself uses, at the version `cf` pins; the trigger test fails
+when the two drift apart.
+A configured worker the account does not have yet is drift (exit 1), not an error: a new site
+reads as owing its dashboard step without hiding the other sites' verdicts.
 
 Requires `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`. The token must be **user-scoped** — account-owned
 tokens do not cover the Workers Builds API — and carry two permissions: **Workers Scripts: Read**, which
@@ -300,12 +370,34 @@ move it — for a second worktree, put it in a gitignored
 [README](../apps/sample-app-lit-e2e/README.md#the-port) covers why the port is
 contended.
 
+Both serve the development build of the worker's dependencies; set
+`WWW_WORKER_BUILD=production` for the build that deploys (see
+`lit-ui-router.dev/scripts/wrangler-dev.ts`).
+
+#### The release pages
+
+The worker renders `/releases/` and the pages under it from the
+[release ledger](release-ledger.lit-ui-router.dev/README.md), read through the
+`LEDGER` service binding in `wrangler.jsonc`. Under `/gh` it answers only the
+urls GitHub lacks, such as `/gh/releases/<pkg>/latest`, a redirect to that
+package's latest GitHub release. The route tables are
+[`worker/releases/routes.ts`](lit-ui-router.dev/worker/releases/routes.ts).
+Preview uploads bind the production ledger the same way. Locally the binding
+reaches only a ledger running in another dev process, and the pages answer 503
+without one. To serve fixture rows, pass both configs, the docs worker's first:
+
+```bash
+pnpm --filter @www/lit-ui-router.dev wrangler:dev -c wrangler.jsonc -c worker/test/ledger-stub/wrangler.jsonc
+```
+
 See Cloudflare Workers Testing Docs: [Local Development](https://developers.cloudflare.com/workers/testing/local-development/)
 
 ## [Cloudflare Pages](https://developers.cloudflare.com/pages/): The Altitude Atlas
 
 [![Build and Test - Altitude Atlas](https://img.shields.io/github/check-runs/simshanith/lit-ui-router/www%2Fatlas?nameFilter=build_and_test%20%28branch%29%20%2F%20run&label=Build%20and%20Test%20-%20Altitude%20Atlas)](https://github.com/simshanith/lit-ui-router/actions/workflows/build-test-branch.yml?query=branch%3Awww%2Fatlas)
+[![E2E - Altitude Atlas](https://img.shields.io/github/check-runs/simshanith/lit-ui-router/www%2Fatlas?nameFilter=build_and_test%20%28branch%29%20%2F%20e2e%20result&label=E2E%20-%20Altitude%20Atlas)](https://github.com/simshanith/lit-ui-router/actions/workflows/build-test-branch.yml?query=branch%3Awww%2Fatlas)
 [![Website](https://img.shields.io/website?url=https%3A%2F%2Fatlas.lit-ui-router.dev)](https://atlas.lit-ui-router.dev)
+[![Deploy - Altitude Atlas](https://img.shields.io/github/check-runs/simshanith/lit-ui-router/www%2Fatlas?nameFilter=pages-deploy%20%28altitude-atlas%29&label=Deploy%20-%20Altitude%20Atlas)](https://github.com/simshanith/lit-ui-router/actions/workflows/release-signals.yml)
 
 The Altitude Atlas is a drawing set of this repository and a consumer app served by
 `lit-ui-router-ssr`. It lives in `www/atlas.lit-ui-router.dev/` on the `www/atlas` branch and
@@ -318,5 +410,6 @@ the build and deploy recipe.
   the app too. It has no PR lane: the branch takes direct pushes.
 - **Site.** [atlas.lit-ui-router.dev](https://atlas.lit-ui-router.dev) is the Cloudflare Pages
   project `altitude-atlas`, production branch `www/atlas`. A deploy is a `wrangler pages deploy`
-  direct upload from a checkout of the branch, so no GitHub check reports it; the website badge
-  is the signal.
+  direct upload from a checkout of the branch, so no build check reports it. The deploy badge is
+  the `pages-deploy (altitude-atlas)` check run that [`release-signals.yml`](../.github/workflows/release-signals.yml)
+  posts on the branch head: it compares the latest production deployment's commit with that head.

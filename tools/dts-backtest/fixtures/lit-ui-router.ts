@@ -19,6 +19,7 @@ import {
   uiSref,
   uiSrefActive,
   uiSrefTargetEvent,
+  viewRendered,
   type LitStateDeclaration,
   type RoutedLitTemplate,
   type SrefStatus,
@@ -118,6 +119,7 @@ export function setupRouter(): UIRouterLit {
   router.plugin(pushStateLocationPlugin);
   states.forEach((state) => router.stateRegistry.register(state));
   router.start();
+
   return router;
 }
 
@@ -125,13 +127,20 @@ export function elements(root: Element): void {
   const uiRouter: UIRouterLitElement = new UIRouterLitElement();
   const uiView: UiView = new UiView();
   root.append(uiRouter, uiView);
+  const routed: Element | null = uiView.routedElement;
+  void routed;
   root.addEventListener('ui-router-context', (event) => {
+    // SAFETY: lit-ui-router dispatches ui-router-context only as UiRouterContextEvent
     const contextEvent = event as UiRouterContextEvent;
     void contextEvent.detail;
   });
   root.dispatchEvent(
     uiSrefTargetEvent(setupRouter().stateService.target('home')),
   );
+}
+
+export async function afterRender(transition?: Transition): Promise<void> {
+  await viewRendered(setupRouter(), transition);
 }
 
 export function merge(a: SrefStatus, b: SrefStatus): SrefStatus {
@@ -159,11 +168,13 @@ export class NavLinkElement extends LitElement {
 
 // Both entries must expose the same declarations.
 TransitionController satisfies typeof PureTransitionController;
+
 SrefStatusController satisfies typeof PureSrefStatusController;
 
 export function pureEntry(host: LitElement): PureUIRouterLit | undefined {
   void new PureTransitionController(host);
   void new PureSrefStatusController(host, { state: 'home' });
+
   return PureUIRouterLitElement.seekRouter(host);
 }
 
@@ -173,21 +184,26 @@ export function contextEntry(target: EventTarget): UIRouterLit | undefined {
   const key: RouterContext = routerContext;
   void key;
   void new RouterContextRequestEvent(() => {}, true);
+
   const value: ContextType<RouterContext> | undefined = requestRouter(target, {
     subscribe: true,
     callback: (router) => void router,
   });
+
   return value;
 }
 
 export function handOff(root: EventTarget): string {
   const router = setupRouter();
   const uninstall = provideRouter(root, router);
+
   const href = withRouterSync(
     router,
     () => getScopedRouter()?.stateService.href('user', { id: 1 }) ?? '',
   );
+
   uninstall();
+
   return href;
 }
 

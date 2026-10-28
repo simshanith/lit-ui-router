@@ -17,6 +17,10 @@ updates:
       # vite majors change lockfile peer-keys, which the updater corrupts (dependabot-core#14794) — bump manually
       - dependency-name: 'vite'
         update-types: ['version-update:semver-major']
+      # published floor stays >=0.50.0; the dev pin is the npm: alias in the catalog, which dependabot skips
+      - dependency-name: '@oxc-project/runtime'
+      # several catalogs pin typescript at different majors, so updates fail with NoChangeError — bump catalogs manually
+      - dependency-name: 'typescript'
     commit-message:
       prefix: 'chore'
       include: 'scope'

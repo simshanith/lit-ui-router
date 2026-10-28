@@ -7,7 +7,7 @@ description: Directive-aware linting with eslint-plugin-lit-ui-router — rules 
 
 <p class="badges">
 <a href="https://npmx.dev/package/eslint-plugin-lit-ui-router" target="_blank" class="badge"><img alt="NPM Version" src="https://img.shields.io/npm/v/eslint-plugin-lit-ui-router" /></a>
-<a href="https://github.com/simshanith/lit-ui-router/releases/?q=eslint-plugin-lit-ui-router" target="_blank" class="badge"><img alt="GitHub Release" src="https://img.shields.io/github/v/release/simshanith/lit-ui-router?filter=eslint-plugin-lit-ui-router@*" /></a>
+<a href="https://lit-ui-router.dev/gh/releases/eslint-plugin-lit-ui-router/latest" target="_blank" class="badge"><img alt="GitHub Release" src="https://img.shields.io/github/v/release/simshanith/lit-ui-router?filter=eslint-plugin-lit-ui-router@*" /></a>
 </p>
 
 [`eslint-plugin-lit-ui-router`](https://npmx.dev/package/eslint-plugin-lit-ui-router)
@@ -28,12 +28,6 @@ ones they mask: an `href` written to an element that has none, an
 writes at all, and a directive used outside the part type it accepts.
 
 ## Installation
-
-```bash
-pnpm add -D eslint-plugin-lit-ui-router
-```
-
-or
 
 ```bash
 npm install --save-dev eslint-plugin-lit-ui-router
@@ -124,11 +118,19 @@ html`<a ${uiSref('home', undefined, { assignHref: false })}>Home</a>`;
 ```
 
 An anchor counts as navigable when its `uiSref` is imported from
-`lit-ui-router` — a foreign package's `uiSref` proves nothing — and the call
+`lit-ui-router` or a module listed in `settings.litUiRouterSources` — a
+foreign package's `uiSref` proves nothing — and the call
 doesn't opt out of href assignment. Only a literal `assignHref: false` is a
 definite no: `'auto'` assigns on a native `<a>`, and a non-literal option is
 unknowable, so both stay suppressed rather than guessed. The base rule's
 options (`allowHash`, `aspects`) are carried over untouched.
+
+`settings.litUiRouterSources` adds modules whose exports count as
+lit-ui-router's, such as an app's typed `uiSref` wrapper. Entries match an
+import specifier as written, itself or a subpath, and are never resolved, so a
+path alias or package name is the form to list. The
+[settings reference](https://github.com/simshanith/lit-ui-router/blob/main/packages/eslint-plugin-lit-ui-router/README.md#settings)
+covers matching and the signature a listed export is assumed to have.
 
 `@lit-labs/ssr` never runs an element part, so a prerendered `uiSref` anchor
 is served with no `href`. With `settings.allowElementParts` false,
@@ -155,8 +157,11 @@ panel and an iframe of ESLint's own `html` formatter, over the same results.
 
 `src/violations.ts` is a gallery with one deliberate violation per
 `recommended` rule, so the report is not empty: the embed below is that built
-page, and its report is static (`7 problems` — one per rule, plus the
-`settings.linkElements` pair on `<sp-link>`, each rule id linked to its docs).
+page, and its report is static (`11 problems` — one per rule, the
+`settings.linkElements` pair on `<sp-link>`, the `settings.litUiRouterSources`
+pair on a `#router` wrapper, and three from prerendered
+templates linted with `settings.allowElementParts` false, each rule id linked
+to its docs).
 Open it on StackBlitz to edit the sources and watch the report re-run.
 
 <LiveExample name="lint-eslint" />

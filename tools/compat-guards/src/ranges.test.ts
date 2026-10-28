@@ -8,7 +8,7 @@ import {
   coversMajor2,
   isBoundedRange,
   rangeFloor,
-  upperLegs,
+  rangeLegs,
 } from './ranges.ts';
 
 // Everything semver normalizes to `*`. Spelled out because the family is wider
@@ -112,8 +112,8 @@ describe('rangeFloor', () => {
   });
 
   it('names only the lowest leg of a multi-leg range', () => {
-    // true but not the whole truth, which is why peer-floor-guard proves the
-    // upperLegs separately
+    // true but not the whole truth, which is why floor-guard proves the
+    // other rangeLegs separately
     assert.equal(rangeFloor('^1.7.0 || ^2.0.0'), '1.7.0');
   });
 
@@ -130,23 +130,32 @@ describe('rangeFloor', () => {
   });
 });
 
-describe('upperLegs', () => {
-  it('names every leg but the lowest, as ranges', () => {
-    assert.deepEqual(upperLegs('^9.0.0 || ^10.0.0'), ['>=10.0.0 <11.0.0-0']);
-    assert.deepEqual(upperLegs('^10.0.0 || ^9.0.0'), ['>=10.0.0 <11.0.0-0']);
-    assert.deepEqual(upperLegs('^1.0.0 || ^2.0.0 || ^3.0.0'), [
-      '>=2.0.0 <3.0.0-0',
-      '>=3.0.0 <4.0.0-0',
+describe('rangeLegs', () => {
+  it('names every leg as a range with its floor, lowest first', () => {
+    assert.deepEqual(rangeLegs('^9.0.0 || ^10.0.0'), [
+      { range: '>=9.0.0 <10.0.0-0', floor: '9.0.0' },
+      { range: '>=10.0.0 <11.0.0-0', floor: '10.0.0' },
+    ]);
+    assert.deepEqual(rangeLegs('^10.0.0 || ^9.0.0'), [
+      { range: '>=9.0.0 <10.0.0-0', floor: '9.0.0' },
+      { range: '>=10.0.0 <11.0.0-0', floor: '10.0.0' },
+    ]);
+    assert.deepEqual(rangeLegs('^0.2.0 || ^0.4.0 || ^0.3.0'), [
+      { range: '>=0.2.0 <0.3.0-0', floor: '0.2.0' },
+      { range: '>=0.3.0 <0.4.0-0', floor: '0.3.0' },
+      { range: '>=0.4.0 <0.5.0-0', floor: '0.4.0' },
     ]);
   });
 
-  it('is empty for a single leg', () => {
-    assert.deepEqual(upperLegs('^1.7.0'), []);
+  it('is one leg for a single-leg range', () => {
+    assert.deepEqual(rangeLegs('^1.7.0'), [
+      { range: '>=1.7.0 <2.0.0-0', floor: '1.7.0' },
+    ]);
   });
 
   it('fails closed on unbounded and malformed ranges', () => {
     for (const range of [...UNBOUNDED, 'not a range']) {
-      assert.deepEqual(upperLegs(range), [], range);
+      assert.deepEqual(rangeLegs(range), [], range);
     }
   });
 });

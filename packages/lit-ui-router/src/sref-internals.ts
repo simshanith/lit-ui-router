@@ -2,7 +2,6 @@
 import {
   anyTrueR,
   equals,
-  extend,
   isNumber,
   Param,
   PathNode,
@@ -12,13 +11,62 @@ import {
   StateObject,
   tail,
   TargetState,
+  Transition,
   TransitionOptions,
   UIRouter,
   unnestR,
 } from '@uirouter/core';
 
-import type { SrefStatus, TransEvt } from './ui-sref-active.js';
+import type {
+  AriaCurrentValues,
+  SrefStatus,
+  UiSrefActiveParams,
+} from './ui-sref-active.js';
 import type { ParentView } from './events.js';
+
+/** @internal */
+export interface TransEvt {
+  evt: string;
+  trans: Transition;
+  status?: SrefStatus;
+}
+
+/**
+ * Event name dispatched when a transition state changes.
+ * @internal
+ */
+export const TRANSITION_STATE_CHANGE_EVENT = 'transitionStateChange';
+
+/**
+ * Enum representing the different stages of a transition.
+ * @internal
+ */
+export enum TransitionStateChange {
+  /** Transition has started */
+  start = 'start',
+  /** Transition completed successfully */
+  success = 'success',
+  /** Transition failed with an error */
+  error = 'error',
+}
+
+/** Whether `value` is the per-state object form rather than a shorthand. */
+const isAriaCurrentValues = (
+  value: UiSrefActiveParams['ariaCurrentValue'],
+): value is AriaCurrentValues => typeof value === 'object';
+
+/**
+ * Widens the shorthand forms to the per-state shape. A token, `false`, or
+ * nothing at all is an `exact` value; only the object form sets `active`.
+ *
+ * @internal
+ */
+export const toAriaCurrentValues = (
+  ariaCurrentValue: UiSrefActiveParams['ariaCurrentValue'],
+): AriaCurrentValues =>
+  isAriaCurrentValues(ariaCurrentValue)
+    ? ariaCurrentValue
+    : { exact: ariaCurrentValue };
 
 /**
  * Event name dispatched when a uiSref target state changes.
@@ -55,6 +103,7 @@ export interface UiSrefTargetEvent extends CustomEvent<{
  * @internal
  */
 export function uiSrefTargetEvent(targetState: TargetState): UiSrefTargetEvent {
+  // SAFETY: callers dispatch it on the link element, which becomes `target`
   return new CustomEvent(UI_SREF_TARGET_EVENT, {
     bubbles: true,
     composed: true,
@@ -86,6 +135,8 @@ export function uiSrefTargetRemovedEvent(): Event {
  */
 export function srefEventLink(event: Event): Element {
   const origin = event.composedPath()[0];
+
+  // SAFETY: sref listeners sit on elements, and a click targets an element
   return origin instanceof Element ? origin : (event.target as Element);
 }
 
@@ -95,6 +146,7 @@ export function srefEventLink(event: Event): Element {
  * structural compare (arrays, Date by `getTime`, RegExp by source, NaN).
  * @internal
  */
+// SAFETY: both `equals` implementations compare two values and return a boolean
 const paramsEqual = equals as (a: RawParams, b: RawParams) => boolean;
 
 /**
@@ -122,7 +174,8 @@ export function srefTransitionOptions(
     inherit: true,
     source: 'sref',
   };
-  return extend(defaultOpts, opts || {}) as TransitionOptions;
+
+  return { ...defaultOpts, ...opts };
 }
 
 /**
@@ -140,6 +193,7 @@ export function srefTransitionOptions(
  */
 export function isNativeLink(element: Element): boolean {
   const tag = element.localName;
+
   return tag === 'a' || tag === 'area';
 }
 
@@ -150,6 +204,7 @@ export function isNativeLink(element: Element): boolean {
  */
 function isModifiedClick(event: MouseEvent): boolean {
   const { button, ctrlKey, metaKey, shiftKey, altKey } = event;
+
   return (
     !isNumber(button) || !!button || ctrlKey || metaKey || shiftKey || altKey
   );
@@ -162,12 +217,14 @@ function isModifiedClick(event: MouseEvent): boolean {
  */
 function opensOffApp(element: Element): boolean {
   const target = element.getAttribute('target');
+
   // browsing-context keywords are ASCII case-insensitive; a name we do not
   // recognise is a frame, which is equally not ours. untrimmed on purpose —
   // the browser does not trim either, so `" _blank"` really is a frame name
   if (target && target.toLowerCase() !== '_self') {
     return true;
   }
+
   // rel is a token list: `rel="external noopener"` is still external
   return (element.getAttribute('rel') ?? '').split(/\s+/).includes('external');
 }
@@ -190,6 +247,7 @@ export function clickBelongsToBrowser(
   if (event.defaultPrevented || element.hasAttribute('download')) {
     return true;
   }
+
   return (
     isNativeLink(element) &&
     element.hasAttribute('href') &&
@@ -210,16 +268,21 @@ const pathMatches = (target: TargetState): Predicate<PathNode[]> => {
   const state: StateObject = target.$state();
   const targetParamVals = target.params();
   const targetPath: PathNode[] = PathUtils.buildPath(target);
+
   const paramSchema: Param[] = targetPath
     .map((node) => node.paramSchema)
     .reduce<Param[]>(unnestR, [])
     .filter((param: Param) =>
       Object.prototype.hasOwnProperty.call(targetParamVals, param.id),
     );
+
   return (path: PathNode[] = []) => {
     const tailNode = tail(path);
+
     if (!tailNode || tailNode.state !== state) return false;
+    // SAFETY: `paramValues` merges each node's params record
     const paramValues = PathUtils.paramValues(path) as RawParams;
+
     return Param.equals(paramSchema, paramValues, targetParamVals);
   };
 };

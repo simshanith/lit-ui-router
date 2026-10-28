@@ -2,10 +2,13 @@ import { html, LitElement, TemplateResult } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { memoryLocationPlugin, pushStateLocationPlugin } from '@uirouter/core';
 import { appendParentFirst } from '@tools/happy-dom/append.ts';
+import { waitForUpdate } from '@tools/lit-test-env/router.ts';
 import { UIRouterLit } from '../core.js';
 import { UIRouterLitElement } from '../ui-router.js';
 import '../ui-router.register.js';
 import { LitStateDeclaration } from '../interface.js';
+
+export { routerGo, tick, waitForUpdate } from '@tools/lit-test-env/router.ts';
 
 /**
  * Creates a test router instance with memory location plugin.
@@ -29,25 +32,6 @@ export function createTestRouter(
 }
 
 /**
- * Navigates to a state and waits for the transition to complete.
- */
-export async function routerGo(
-  router: UIRouterLit,
-  state: string,
-  params?: Record<string, unknown>,
-): Promise<void> {
-  await router.stateService.go(state, params);
-  await tick();
-}
-
-/**
- * Wait for microtasks and pending promises to flush.
- */
-export function tick(ms = 0): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-/**
  * Simulates a mouse click on an element.
  */
 export function clickElement(
@@ -61,15 +45,8 @@ export function clickElement(
     view: window,
     ...options,
   });
-  element.dispatchEvent(event);
-}
 
-/**
- * Waits for a LitElement to complete its update cycle.
- */
-export async function waitForUpdate(element: LitElement): Promise<void> {
-  await element.updateComplete;
-  await tick();
+  element.dispatchEvent(event);
 }
 
 /**
@@ -158,6 +135,7 @@ export async function mountElementInRouter<E extends Element>(
 }> {
   const ownsContainer = !container;
   const host = container ?? document.createElement('div');
+
   if (ownsContainer) {
     document.body.appendChild(host);
   }
@@ -168,6 +146,7 @@ export async function mountElementInRouter<E extends Element>(
   appendParentFirst(host, uiRouterEl, element);
 
   await waitForUpdate(uiRouterEl);
+
   if (element instanceof LitElement) {
     await waitForUpdate(element);
   }
@@ -202,6 +181,7 @@ export async function mountInRouter<K extends keyof HTMLElementTagNameMap>(
   Object.entries(attributes).forEach(([key, value]) => {
     element.setAttribute(key, value);
   });
+
   return mountElementInRouter(element, router);
 }
 
@@ -221,40 +201,29 @@ export function createTestComponent(
       return html`<div class="test-component">${content}</div>`;
     }
   }
+
   return TestComponent;
 }
 
-/**
- * Wait for a specific condition to be true.
- */
-export async function waitFor(
-  condition: () => boolean,
-  timeout = 1000,
-  interval = 10,
-): Promise<void> {
-  const start = Date.now();
-  while (!condition()) {
-    if (Date.now() - start > timeout) {
-      throw new Error('waitFor timeout');
-    }
-    await tick(interval);
-  }
+/** A promise with its settlers exposed. */
+export interface Deferred<T> {
+  promise: Promise<T>;
+  resolve: (value: T) => void;
+  reject: (reason: Error) => void;
 }
 
 /**
  * Creates a deferred promise that can be resolved/rejected externally.
  */
-export function defer<T = void>(): {
-  promise: Promise<T>;
-  resolve: (value: T) => void;
-  reject: (reason?: unknown) => void;
-} {
+export function defer<T = void>(): Deferred<T> {
   let resolve!: (value: T) => void;
-  let reject!: (reason?: unknown) => void;
+  let reject!: (reason: Error) => void;
+
   const promise = new Promise<T>((res, rej) => {
     resolve = res;
     reject = rej;
   });
+
   return { promise, resolve, reject };
 }
 
@@ -264,6 +233,7 @@ export function defer<T = void>(): {
 export function suppressConsoleErrors(): () => void {
   const originalError = console.error;
   console.error = () => {};
+
   return () => {
     console.error = originalError;
   };

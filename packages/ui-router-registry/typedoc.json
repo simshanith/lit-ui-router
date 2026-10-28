@@ -1,0 +1,63 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": [
+    "src/index.ts",
+    "src/effect.ts",
+    "src/mobx.ts",
+    "src/signals.ts"
+  ],
+  "tsconfig": "tsconfig.src.json",
+  "out": "../../www/lit-ui-router.dev/api/ui-router-registry",
+  "docsRoot": "../../www/lit-ui-router.dev",
+  "plugin": [
+    "typedoc-plugin-markdown",
+    "typedoc-vitepress-theme",
+    "@tools/typedoc-plugin-lit-ui-router/kind-indexes"
+  ],
+  "excludeExternals": true,
+  "excludeInternal": true,
+  "excludePrivate": true,
+  "readme": "none",
+  "githubPages": false,
+  "treatWarningsAsErrors": true,
+  "validation": {
+    "notDocumented": true
+  },
+  "intentionallyNotExported": [
+    "CheckRelative",
+    "Declarations",
+    "DeclarationOf",
+    "HashParam",
+    "IsRegistered",
+    "LineageParams",
+    "LiteralName",
+    "ParentName",
+    "RelativeTail",
+    "RequiredKeys",
+    "Simplify",
+    "SnapshotBase",
+    "Snapshots",
+    "Up"
+  ],
+  "entryFileName": "index",
+  "useCodeBlocks": true,
+  "expandObjects": true,
+  "parametersFormat": "table",
+  "propertiesFormat": "table",
+  "enumMembersFormat": "table",
+  "typeDeclarationFormat": "table",
+  "sort": ["alphabetical", "source-order"],
+  "externalSymbolLinkMappings": {
+    "@uirouter/core": {
+      "RawParams": "https://ui-router.github.io/core/docs/latest/interfaces/_params_interface_.rawparams.html",
+      "StateDeclaration": "https://ui-router.github.io/core/docs/latest/interfaces/_state_interface_.statedeclaration.html",
+      "StateService": "https://ui-router.github.io/core/docs/latest/classes/_state_stateservice_.stateservice.html",
+      "TargetState": "https://ui-router.github.io/core/docs/latest/classes/_state_targetstate_.targetstate.html",
+      "Transition": "https://ui-router.github.io/core/docs/latest/classes/_transition_transition_.transition.html",
+      "TransitionOptions": "https://ui-router.github.io/core/docs/latest/interfaces/_transition_interface_.transitionoptions.html"
+    }
+  },
+  "sidebar": {
+    "pretty": true
+  }
+}

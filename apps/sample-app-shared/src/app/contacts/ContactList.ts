@@ -26,6 +26,7 @@ export class ContactList extends LitElement {
         </span>
       </a>
     `;
+
     const contacts = repeat(
       this.contacts,
       ({ _id }) => _id,
@@ -41,6 +42,7 @@ export class ContactList extends LitElement {
           </a>
         </li>`,
     );
+
     return html`<ul class="selectlist list-unstyled flex nogrow">
       <li>${newContact}</li>
       <li>&nbsp;</li>

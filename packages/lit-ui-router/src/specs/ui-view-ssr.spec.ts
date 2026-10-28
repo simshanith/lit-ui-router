@@ -22,6 +22,8 @@ const serverMarkup =
 // Composed and painted, not merely present in the light DOM.
 function isLaidOut(element: Element): boolean {
   const { width, height } = element.getBoundingClientRect();
+
+  // SAFETY: both elements measured are HTML elements in an HTML document
   return (
     width > 0 && height > 0 && (element as HTMLElement).offsetParent !== null
   );
@@ -44,6 +46,7 @@ describe('<ui-view> server-rendered shape', () => {
         component: () => html`<div class="home-content">Home Content</div>`,
       },
     ];
+
     router = createTestRouter(states);
 
     // Parse detached so the router is set before <ui-router> upgrades and its views seek it.
@@ -83,6 +86,7 @@ describe('<ui-view> server-rendered shape', () => {
         component: () => html`<div class="home-content">Home Content</div>`,
       },
     ];
+
     router = createTestRouter(states);
 
     // An inert document never upgrades custom elements, so `uiRouter` lands as a
@@ -90,6 +94,7 @@ describe('<ui-view> server-rendered shape', () => {
     // detached parse produces in Firefox, deterministic in every engine.
     const inert = document.implementation.createHTMLDocument();
     inert.body.innerHTML = '<ui-router><ui-view></ui-view></ui-router>';
+    // SAFETY: the element it parses as, once adopted and upgraded; the spec sets props before that
     const routerElement = inert.body.firstElementChild as UIRouterLitElement;
     routerElement.uiRouter = router;
 

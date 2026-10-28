@@ -15,9 +15,9 @@ import { LitViewConfig, isRoutedLitElement } from 'lit-ui-router/pure';
 import type {
   NormalizedLitViewDeclaration,
   UIViewInjectedProps,
-  UIRouterLit,
 } from 'lit-ui-router/pure';
 import { getScopedRouter } from 'lit-ui-router/context';
+import { devGate } from '#dev-gate';
 import { servedMarkerPrefix } from './served-markers.js';
 
 /** The tag this renderer answers for. */
@@ -34,6 +34,9 @@ const openViews: UiViewRenderer[] = [];
 
 const PART_CLOSE = '<!--/lit-part-->';
 
+/** The registration a server `<ui-view>` hands core, before any config arrives. */
+type Registration = Omit<ActiveUIView, 'config'> & { config?: ViewConfig };
+
 /**
  * Hides the markers this render wrote inside the view from the walk hydrating
  * its surroundings, leaving the outer pair plain for that walk to read.
@@ -42,12 +45,14 @@ const prefixInterior = (markup: string): string => {
   // renderValue always wraps a hydratable value in the pair, so the ends are the pair by construction.
   const open = markup.indexOf('-->') + 3;
   const close = markup.length - PART_CLOSE.length;
+
   // A plain `<!--lit-part` never matches an already-prefixed `<!--ui-view:lit-part`, so a nested run's interior is prefixed once.
   const interior = markup
     .slice(open, close)
     .replaceAll('<!--lit-part', `<!--${servedMarkerPrefix}lit-part`)
     .replaceAll('<!--/lit-part', `<!--${servedMarkerPrefix}/lit-part`)
     .replaceAll('<!--lit-node', `<!--${servedMarkerPrefix}lit-node`);
+
   return markup.slice(0, open) + interior + markup.slice(close);
 };
 
@@ -55,8 +60,8 @@ const escapeAttribute = (value: string): string =>
   value.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
 
 const warnElementComponent = (fqn: string): void => {
-  // DEV folds away in dist/*.js; see check:dev-split and dev-warnings.json.
-  if (!import.meta.env.DEV) return;
+  // DEV folds away in dist/*.js; #dev-gate also closes it under node when NODE_ENV is production.
+  if (!import.meta.env.DEV || !devGate()) return;
   console.warn(
     'lit-ui-router-ssr: this view is a RoutedLitElement class, which has no server render, so the part was left empty for the client to fill:',
     fqn,
@@ -99,8 +104,6 @@ const warnElementComponent = (fqn: string): void => {
  * const page = (router: UIRouterLit) =>
  *   html`<ui-router .uiRouter=${router}><ui-view>${uiViewSlot()}</ui-view></ui-router>`;
  * ```
- *
- * @category server
  */
 export class UiViewRenderer extends ElementRenderer {
   /** Answers for `<ui-view>`, whatever class the tag is registered with. */
@@ -114,7 +117,7 @@ export class UiViewRenderer extends ElementRenderer {
   /** No element instance is created, so attributes are held here and written back verbatim. */
   private readonly attributes: Map<string, string> = new Map();
 
-  private data?: ActiveUIView;
+  private data?: Registration;
 
   private config?: LitViewConfig;
 
@@ -134,18 +137,21 @@ export class UiViewRenderer extends ElementRenderer {
   private get fqn(): string {
     const name = this.attributes.get('name') || DEFAULT_VIEW;
     const parent = openViews.at(-1)?.data?.fqn;
+
     return parent ? `${parent}.${name}` : name;
   }
 
   /** The state context the view was created in: the parent view's, or the root. */
   private creationContext(router: UIRouter): ActiveUIView['creationContext'] {
     const parent = openViews.at(-1)?.config?.viewDecl.$context;
+
     return parent ?? router.stateRegistry.root();
   }
 
   private register(router: UIRouter): () => void {
     const name = this.attributes.get('name') || DEFAULT_VIEW;
-    const data: ActiveUIView = {
+
+    const data: Registration = {
       $type: 'lit',
       id: viewIdCounter++,
       name,
@@ -154,28 +160,40 @@ export class UiViewRenderer extends ElementRenderer {
       configUpdated: (config: ViewConfig) => {
         if (config instanceof LitViewConfig) this.config = config;
       },
-      config: undefined as unknown as ViewConfig,
+      config: undefined,
     };
+
     this.data = data;
+
     // registerUIView syncs, so `configUpdated` has already run when this returns.
-    return router.viewService.registerUIView(data);
+    // SAFETY: core never reads `config`; the view takes its config from `configUpdated`.
+    return router.viewService.registerUIView(data as ActiveUIView);
   }
 
   /** The props `<ui-view>` injects: the router, the resolved tokens, the transition. */
   private props(router: UIRouter, config: LitViewConfig): UIViewInjectedProps {
     const context = new ResolveContext(config.path);
     const injector = context.injector();
+
     const resolves = context
       .getTokens()
       .filter((token) => isString(token))
       .map((token) => context.getResolvable(token))
-      .filter((resolvable) => resolvable.resolved)
-      .map(({ token }) => [token as string, injector.get(token) as unknown])
+      .filter(
+        (resolvable) =>
+          resolvable.resolved ||
+          context.getPolicy(resolvable).async === 'NOWAIT',
+      )
+      .map(({ token }: { token: string }): [string, unknown] => [
+        token,
+        injector.get<unknown>(token),
+      ])
       .reduce(applyPairs, {});
+
     return {
       router,
       resolves,
-      transition: injector.get(Transition) as Transition,
+      transition: injector.get<Transition>(Transition),
     };
   }
 
@@ -183,25 +201,35 @@ export class UiViewRenderer extends ElementRenderer {
   override renderLight(
     renderInfo: RenderInfo,
   ): ThunkedRenderResult | undefined {
-    const router = getScopedRouter() as UIRouterLit | undefined;
+    const router = getScopedRouter();
+
     if (!router) return undefined;
     const deregister = this.register(router);
     const config = this.config;
+
+    // SAFETY: a `LitViewConfig` is built only from a lit state's normalized view declaration.
     const component = (config?.viewDecl as NormalizedLitViewDeclaration)
       ?.component;
+
     if (!config || !component) {
       deregister();
+
       return undefined;
     }
+
     if (isRoutedLitElement(component)) {
       warnElementComponent(this.data!.fqn);
       deregister();
+
       return undefined;
     }
+
     const value = component(this.props(router, config));
+
     return [
       () => {
         openViews.push(this);
+
         try {
           // renderValue writes the `<!--lit-part digest-->` pair the element's own render() hydrates against; collecting it here is what lets the interior be prefixed.
           return prefixInterior(

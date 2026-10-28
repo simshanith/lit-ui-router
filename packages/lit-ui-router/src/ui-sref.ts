@@ -6,7 +6,7 @@ import { AsyncDirective } from 'lit/async-directive.js';
 
 import { UIRouterLit } from './core.js';
 import { inLitDevMode, warnMissingRouter } from './dev-warn.js';
-import { UIRouterLitElement } from './ui-router.js';
+import { subscribeRouter } from './router-subscription.js';
 import type { ParentView } from './events.js';
 import { UiView } from './ui-view.js';
 
@@ -20,13 +20,13 @@ import {
 } from './sref-internals.js';
 import type { UiSrefElement } from './sref-internals.js';
 
-// re-export: `inLitDevMode` ships in the public d.ts (#541)
-export { inLitDevMode };
 export {
-  UI_SREF_TARGET_EVENT,
-  UI_SREF_TARGET_REMOVED_EVENT,
-} from './sref-internals.js';
-export type { UiSrefElement, UiSrefTargetEvent } from './sref-internals.js';
+  /**
+   * @internal
+   * @deprecated Dev-warning plumbing, not a supported import (#541).
+   */
+  inLitDevMode,
+};
 
 export {
   /**
@@ -64,6 +64,29 @@ export {
    * @deprecated Directive plumbing, not a supported import.
    */
   uiSrefTargetRemovedEvent,
+  /**
+   * @internal
+   * @deprecated Directive plumbing, not a supported import (#541).
+   */
+  UI_SREF_TARGET_EVENT,
+  /**
+   * @internal
+   * @deprecated Directive plumbing, not a supported import (#541).
+   */
+  UI_SREF_TARGET_REMOVED_EVENT,
+} from './sref-internals.js';
+
+export type {
+  /**
+   * @internal
+   * @deprecated Directive plumbing, not a supported import (#541).
+   */
+  UiSrefElement,
+  /**
+   * @internal
+   * @deprecated Directive plumbing, not a supported import (#541).
+   */
+  UiSrefTargetEvent,
 } from './sref-internals.js';
 
 /**
@@ -158,6 +181,9 @@ export class UiSrefDirective extends AsyncDirective {
   /** @internal */
   unsubscribe: (() => void) | undefined;
 
+  /** drops the subscription to a provider that may still replace its router */
+  private _unsubscribeRouter: (() => void) | undefined;
+
   /**
    * Kept across a disconnect so {@link reconnected} can re-arm.
    * @internal
@@ -167,6 +193,7 @@ export class UiSrefDirective extends AsyncDirective {
   /** @internal */
   constructor(partInfo: PartInfo) {
     super(partInfo);
+
     if (partInfo.type !== PartType.ELEMENT) {
       throw new Error('The `uiSref` directive must be used as an element');
     }
@@ -189,10 +216,12 @@ export class UiSrefDirective extends AsyncDirective {
 
     const { uiRouter: router } = this;
     const $state = router?.stateService;
+
     if (!$state) {
       if (this._seekedRouter) {
         this.warnMissingRouter(state);
       }
+
       return noChange;
     }
 
@@ -224,6 +253,7 @@ export class UiSrefDirective extends AsyncDirective {
     if (targetChanged) {
       this.element.dispatchEvent(uiSrefTargetEvent(this.targetState));
     }
+
     return noChange;
   }
 
@@ -239,6 +269,7 @@ export class UiSrefDirective extends AsyncDirective {
     if (assignHref === 'auto') {
       return isNativeLink(element);
     }
+
     if (!assignHref) {
       return false;
     }
@@ -257,14 +288,32 @@ export class UiSrefDirective extends AsyncDirective {
           `Pass { assignHref: 'auto' } to write it only to links; 'auto' becomes the default in 2.0.`,
       );
     }
+
     return true;
   }
 
   /** @internal */
   seekRouter(): void {
-    this.uiRouter = UIRouterLitElement.seekRouter(this.element!);
+    this._unsubscribeRouter?.();
+
+    const { router, unsubscribe } = subscribeRouter(
+      this.element!,
+      this.onRouterReplaced,
+    );
+
+    this.uiRouter = router;
+    this._unsubscribeRouter = unsubscribe;
     this._seekedRouter = true;
   }
+
+  /** What a disconnect and reconnect would do, for the router that replaced the one found. */
+  private readonly onRouterReplaced = (router: UIRouterLit): void => {
+    this._unsubscribeRouter = undefined;
+    this.unsubscribe?.();
+    this.uiRouter = router;
+    this.unsubscribe = router.stateRegistry.onStatesChanged(this.doRender);
+    this.doRender();
+  };
 
   /**
    * Names this sref in the missing-provider warning. Shared by the two sites
@@ -289,6 +338,7 @@ export class UiSrefDirective extends AsyncDirective {
 
   /** @internal */
   disconnected(): void {
+    // SAFETY: a 'click' event is a MouseEvent
     this.element?.removeEventListener('click', this.onClick as EventListener);
     // lit notifies before it removes the nodes: the container still hears this
     this.element?.dispatchEvent(uiSrefTargetRemovedEvent());
@@ -298,6 +348,8 @@ export class UiSrefDirective extends AsyncDirective {
     this._ownsHref = false;
     this.unsubscribe?.();
     this.unsubscribe = undefined;
+    this._unsubscribeRouter?.();
+    this._unsubscribeRouter = undefined;
     // re-arming is what `reconnected` does; without this it would no-op
     this._firstUpdated = false;
   }
@@ -308,6 +360,7 @@ export class UiSrefDirective extends AsyncDirective {
    */
   reconnected(): void {
     this.element = this._partElement;
+
     if (this.element) {
       this.firstUpdated();
     }
@@ -318,13 +371,16 @@ export class UiSrefDirective extends AsyncDirective {
     const { uiRouter: router, state, params } = this;
     const options = this.getOptions();
     const $state = router?.stateService;
+
     if (!$state || !this.element?.isConnected || !state) {
       if (!$state && state && this.element?.isConnected) {
         this.warnMissingRouter(state);
       }
+
       return;
     }
 
+    // SAFETY: `currentTarget` is the link element this listener was added to
     if (clickBelongsToBrowser(event, event.currentTarget as Element)) {
       return;
     }
@@ -349,8 +405,10 @@ export class UiSrefDirective extends AsyncDirective {
     this.params = params;
     this.options = transitionOptions;
     this.uiSrefOptions = { assignHref };
-    const uiSrefElement = part.element as unknown as UiSrefElement;
+    // SAFETY: `updateHref` assigns `targetState` onto the element before anything reads it
+    const uiSrefElement = part.element as UiSrefElement;
     this._partElement = uiSrefElement;
+
     if (this.element !== uiSrefElement) {
       this.element = uiSrefElement;
       this._firstUpdated = false;
@@ -378,7 +436,9 @@ export class UiSrefDirective extends AsyncDirective {
 
     this.seekRouter();
     this.seekParentView();
+    // SAFETY: a 'click' event is a MouseEvent
     this.element!.addEventListener('click', this.onClick as EventListener);
+
     // no router: the subscription is the only step that needs one, and
     // `doRender` still has to run for the no-op to report itself
     if (this.uiRouter) {
@@ -386,6 +446,7 @@ export class UiSrefDirective extends AsyncDirective {
         this.doRender,
       );
     }
+
     this.doRender();
     this._firstUpdated = true;
   }

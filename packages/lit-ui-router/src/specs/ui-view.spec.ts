@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { html, LitElement, nothing } from 'lit';
 import type { PropertyValues } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { ActiveUIView, Transition } from '@uirouter/core';
+import { ActiveUIView, Transition, type RawParams } from '@uirouter/core';
 
 import { UiView } from '../ui-view.js';
 import {
@@ -25,6 +25,7 @@ import {
 } from '../interface.js';
 import {
   createTestRouter,
+  defer,
   mountElementInRouter,
   tick,
   waitForUpdate,
@@ -34,7 +35,9 @@ import {
 // Module-scope fixtures delegate to these handles, reassigned per test so each
 // test keeps its own spy/state.
 let canExit: UiOnExit['uiCanExit'];
+
 let paramsChanged: UiOnParamsChanged['uiOnParamsChanged'];
+
 let receiveParams: UiOnParamsChanged['uiOnParamsChanged'];
 
 @customElement('test-exit-component')
@@ -82,13 +85,17 @@ function resetCounts() {
 }
 
 /** Base fixture that records its own lifecycle, so specs can assert churn. */
+interface CountedElement {
+  constructor: typeof CountedElement;
+}
+
 class CountedElement extends LitElement {
   static tag = 'counted-element';
   declare _uiViewProps?: UIViewInjectedProps;
 
   constructor() {
     super();
-    countsFor((this.constructor as typeof CountedElement).tag).constructed++;
+    countsFor(this.constructor.tag).constructed++;
   }
 
   createRenderRoot() {
@@ -97,12 +104,12 @@ class CountedElement extends LitElement {
 
   connectedCallback() {
     super.connectedCallback();
-    countsFor((this.constructor as typeof CountedElement).tag).connected++;
+    countsFor(this.constructor.tag).connected++;
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
-    countsFor((this.constructor as typeof CountedElement).tag).disconnected++;
+    countsFor(this.constructor.tag).disconnected++;
   }
 }
 
@@ -120,14 +127,15 @@ class TestRetainedLeaf extends CountedElement implements UiOnParamsChanged {
   @state() starId = '';
   readonly propsSeen: (UIViewInjectedProps | undefined)[] = [];
 
-  uiOnParamsChanged(params: { [key: string]: unknown }) {
-    if (typeof params.starId === 'string') {
+  uiOnParamsChanged(params: RawParams) {
+    if (params.starId !== undefined) {
       this.starId = params.starId;
     }
   }
 
   render() {
     this.propsSeen.push(this._uiViewProps);
+
     return html`<div class="leaf">${this.starId}</div>`;
   }
 }
@@ -146,6 +154,60 @@ class TestStickyComponent extends CountedElement {
   static sticky = true;
   render() {
     return html`<div class="sticky">Sticky</div>`;
+  }
+}
+
+/** Nests its view in a shadow root, where light-DOM containment cannot see it. */
+@customElement('test-shadow-shell')
+class TestShadowShell extends LitElement {
+  render() {
+    return html`<ui-view></ui-view>`;
+  }
+}
+
+/** What the document held when an outgoing leaf left it; reassigned per test. */
+let onLeafLeaving: (leaving: Element) => void;
+
+@customElement('test-swap-from')
+class TestSwapFrom extends CountedElement {
+  static tag = 'test-swap-from';
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    onLeafLeaving(this);
+  }
+  render() {
+    return html`<div class="from">From</div>`;
+  }
+}
+
+/** Declines its updates while set, so its first update waits on the spec. */
+let swapToHeld = false;
+
+@customElement('test-swap-to')
+class TestSwapTo extends CountedElement {
+  static tag = 'test-swap-to';
+  protected shouldUpdate(): boolean {
+    return !swapToHeld;
+  }
+  render() {
+    return html`<div class="to">To</div>`;
+  }
+}
+
+/** Holds `updateComplete` open past its first update until the spec releases it. */
+let slowGate: Promise<void> = Promise.resolve();
+
+@customElement('test-swap-slow')
+class TestSwapSlow extends CountedElement {
+  static tag = 'test-swap-slow';
+  protected async getUpdateComplete(): Promise<boolean> {
+    const complete = await super.getUpdateComplete();
+    await slowGate;
+
+    return complete;
+  }
+  render() {
+    return html`<div class="slow">Slow</div>`;
   }
 }
 
@@ -203,6 +265,10 @@ declare global {
     'test-retained-leaf': TestRetainedLeaf;
     'test-retained-other': TestRetainedOther;
     'test-sticky-component': TestStickyComponent;
+    'test-shadow-shell': TestShadowShell;
+    'test-swap-from': TestSwapFrom;
+    'test-swap-to': TestSwapTo;
+    'test-swap-slow': TestSwapSlow;
   }
 }
 
@@ -216,7 +282,15 @@ describe('UiView', () => {
     // Fresh, inert defaults so no handle leaks between tests.
     canExit = () => true;
     paramsChanged = () => {};
+
     receiveParams = () => {};
+
+    onLeafLeaving = () => {};
+
+    swapToHeld = false;
+
+    slowGate = Promise.resolve();
+
     resetCounts();
   });
 
@@ -247,6 +321,7 @@ describe('UiView', () => {
 
     const uiView = document.createElement('ui-view');
     options.configure?.(uiView);
+
     const { uiRouterEl: uiRouter } = await mountElementInRouter(
       uiView,
       router,
@@ -275,6 +350,7 @@ describe('UiView', () => {
             'document.createDocumentFragment is not a function',
           );
         });
+
       try {
         const uiView = document.createElement('ui-view');
         const result = uiView.render();
@@ -301,6 +377,7 @@ describe('UiView', () => {
       const states: LitStateDeclaration[] = [
         { name: 'home', url: '/home', component: () => html`<div>Home</div>` },
       ];
+
       const { uiView } = await setupRouter(states);
 
       expect(uiView.uiRouter).toBe(router);
@@ -312,6 +389,7 @@ describe('UiView', () => {
       const states: LitStateDeclaration[] = [
         { name: 'home', url: '/home', component: () => html`<div>Home</div>` },
       ];
+
       await setupRouter(states);
 
       expect(router.viewService.available()).toContain('$default');
@@ -347,12 +425,15 @@ describe('UiView', () => {
           component: () => html`<div class="home-content">Home Content</div>`,
         },
       ];
+
       const { uiView } = await setupRouter(states);
 
       await routerGo(router, 'home');
       await waitForUpdate(uiView);
 
-      expect(uiView.innerHTML).toContain('home-content');
+      expect(uiView).toEqualDom(
+        '<ui-view><div class="home-content" routed="">Home Content</div></ui-view>',
+      );
     });
 
     it('should pass router prop to component', async () => {
@@ -364,10 +445,12 @@ describe('UiView', () => {
           url: '/home',
           component: (props) => {
             receivedProps = props;
+
             return html`<div>Home</div>`;
           },
         },
       ];
+
       const { uiView } = await setupRouter(states);
 
       await routerGo(router, 'home');
@@ -385,10 +468,12 @@ describe('UiView', () => {
           url: '/home',
           component: (props) => {
             receivedProps = props;
+
             return html`<div>Home</div>`;
           },
         },
       ];
+
       const { uiView } = await setupRouter(states);
 
       await routerGo(router, 'home');
@@ -412,16 +497,130 @@ describe('UiView', () => {
           ],
           component: (props) => {
             receivedProps = props;
+
             return html`<div>Home</div>`;
           },
         },
       ];
+
       const { uiView } = await setupRouter(states);
 
       await routerGo(router, 'home');
       await waitForUpdate(uiView);
 
       expect(receivedProps?.resolves?.data).toEqual({ message: 'Hello' });
+    });
+
+    it('should pass a NOWAIT resolve as its promise on the first render', async () => {
+      const pending = defer<string>();
+      const received: UIViewInjectedProps[] = [];
+
+      const states: LitStateDeclaration[] = [
+        {
+          name: 'home',
+          url: '/home',
+          resolve: [
+            {
+              token: 'slow',
+              resolveFn: () => pending.promise,
+              policy: { async: 'NOWAIT' },
+            },
+          ],
+          component: (props) => {
+            received.push(props);
+
+            return html`<div>Home</div>`;
+          },
+        },
+      ];
+
+      const { uiView } = await setupRouter(states);
+
+      // The transition lands with the resolve still pending.
+      await routerGo(router, 'home');
+      await waitForUpdate(uiView);
+
+      const slow: unknown = received[0]?.resolves.slow;
+
+      expect(slow).toBeInstanceOf(Promise);
+
+      pending.resolve('done');
+
+      await expect(slow).resolves.toBe('done');
+    });
+
+    it('should wait for a WAIT resolve and pass its value', async () => {
+      const pending = defer<string>();
+      let receivedProps: UIViewInjectedProps | undefined;
+
+      const states: LitStateDeclaration[] = [
+        {
+          name: 'home',
+          url: '/home',
+          resolve: [
+            {
+              token: 'slow',
+              resolveFn: () => pending.promise,
+              policy: { async: 'WAIT' },
+            },
+          ],
+          component: (props) => {
+            receivedProps = props;
+
+            return html`<div>Home</div>`;
+          },
+        },
+      ];
+
+      const { uiView } = await setupRouter(states);
+
+      const landed = routerGo(router, 'home');
+      await tick();
+
+      expect(receivedProps).toBeUndefined();
+
+      pending.resolve('done');
+      await landed;
+      await waitForUpdate(uiView);
+
+      expect(receivedProps?.resolves.slow).toBe('done');
+    });
+
+    it('should leave out a resolve that has not settled and is not NOWAIT', async () => {
+      let receivedProps: UIViewInjectedProps | undefined;
+
+      const states: LitStateDeclaration[] = [
+        {
+          name: 'home',
+          url: '/home',
+          component: (props) => {
+            receivedProps = props;
+
+            return html`<div>Home</div>`;
+          },
+        },
+      ];
+
+      const { uiView } = await setupRouter(states, { start: false });
+
+      // Added after every resolve hook has run, so nothing resolves it before the view renders.
+      router.transitionService.onSuccess(
+        {},
+        (trans) => {
+          trans.addResolvable(
+            { token: 'late', resolveFn: () => 'late', deps: [] },
+            'home',
+          );
+        },
+        { priority: 10 },
+      );
+
+      router.start();
+      await routerGo(router, 'home');
+      await waitForUpdate(uiView);
+
+      expect(receivedProps).toBeDefined();
+      expect(receivedProps?.resolves).not.toHaveProperty('late');
     });
 
     it('should clear component when navigating away', async () => {
@@ -437,16 +636,20 @@ describe('UiView', () => {
           component: () => html`<div class="about">About</div>`,
         },
       ];
+
       const { uiView } = await setupRouter(states);
 
       await routerGo(router, 'home');
       await waitForUpdate(uiView);
-      expect(uiView.innerHTML).toContain('home');
+      expect(uiView).toEqualDom(
+        '<ui-view><div class="home" routed="">Home</div></ui-view>',
+      );
 
       await routerGo(router, 'about');
       await waitForUpdate(uiView);
-      expect(uiView.innerHTML).toContain('about');
-      expect(uiView.innerHTML).not.toContain('class="home"');
+      expect(uiView).toEqualDom(
+        '<ui-view><div class="about" routed="">About</div></ui-view>',
+      );
     });
   });
 
@@ -465,13 +668,24 @@ describe('UiView', () => {
           component: () => html`<div class="child">Child</div>`,
         },
       ];
+
       const { uiView } = await setupRouter(states);
 
       await routerGo(router, 'parent.child');
       await tick(50);
 
-      expect(uiView.innerHTML).toContain('parent');
-      expect(uiView.innerHTML).toContain('child');
+      expect(uiView).toMatchInlineSnapshot(`
+        <ui-view>
+          <div class="parent" routed="">
+            Parent
+            <ui-view>
+              <div class="child" routed="">
+                Child
+              </div>
+            </ui-view>
+          </div>
+        </ui-view>
+      `);
     });
 
     it('should track parent-child view relationship', async () => {
@@ -492,6 +706,7 @@ describe('UiView', () => {
           },
         },
       ];
+
       await setupRouter(states);
 
       await routerGo(router, 'parent.child');
@@ -499,9 +714,11 @@ describe('UiView', () => {
 
       // Verify nested view is properly registered
       const views = router.viewService['_uiViews'];
+
       const nestedView = views.find(
         (v: { name: string }) => v.name === 'nested',
       );
+
       expect(nestedView).toBeDefined();
     });
   });
@@ -515,7 +732,9 @@ describe('UiView', () => {
         start: false,
       });
 
-      expect(uiView.innerHTML).toContain('fallback');
+      expect(uiView).toEqualDom(
+        '<ui-view><div class="fallback">Loading...</div></ui-view>',
+      );
     });
 
     it('should capture authored hold content when the attribute is absent', async () => {
@@ -551,6 +770,7 @@ describe('UiView', () => {
           component: () => html`<div>About</div>`,
         },
       ];
+
       const { uiView } = await setupRouter(states);
 
       await routerGo(router, 'home');
@@ -576,6 +796,7 @@ describe('UiView', () => {
           component: () => html`<div>About</div>`,
         },
       ];
+
       const { uiView } = await setupRouter(states);
 
       await routerGo(router, 'home');
@@ -587,6 +808,7 @@ describe('UiView', () => {
       } catch {
         // Transition rejected
       }
+
       await tick(50);
 
       // Should still be on home
@@ -609,6 +831,7 @@ describe('UiView', () => {
           component: TestParamsComponent,
         },
       ];
+
       const { uiView } = await setupRouter(states);
 
       await routerGo(router, 'user', { id: '1' });
@@ -622,7 +845,7 @@ describe('UiView', () => {
     });
 
     it('should pass changed params to uiOnParamsChanged', async () => {
-      let receivedParams: Record<string, unknown> | undefined;
+      let receivedParams: RawParams | undefined;
       receiveParams = (newParams) => {
         receivedParams = newParams;
       };
@@ -637,6 +860,7 @@ describe('UiView', () => {
           component: TestParamsReceiveComponent,
         },
       ];
+
       const { uiView } = await setupRouter(states);
 
       await routerGo(router, 'user', { id: '1' });
@@ -656,6 +880,7 @@ describe('UiView', () => {
       const states: LitStateDeclaration[] = [
         { name: 'home', url: '/home', component: () => html`<div>Home</div>` },
       ];
+
       const { uiView } = await setupRouter(states);
 
       const initialViewCount = router.viewService['_uiViews'].length;
@@ -671,6 +896,7 @@ describe('UiView', () => {
       const states: LitStateDeclaration[] = [
         { name: 'home', url: '/home', component: () => html`<div>Home</div>` },
       ];
+
       const { uiView } = await setupRouter(states);
 
       await routerGo(router, 'home');
@@ -685,6 +911,7 @@ describe('UiView', () => {
 
       const afterHookCount =
         router.transitionService.getHooks('onBefore').length;
+
       expect(afterHookCount).toBeLessThan(initialHookCount);
     });
   });
@@ -706,23 +933,28 @@ describe('UiView', () => {
       { name: 'blank', url: '/blank' },
     ];
 
+    const homeView =
+      '<ui-view><div class="home" routed="">Home</div></ui-view>';
+
     it('should keep rendering its state after its router is re-attached', async () => {
       const { uiRouter, uiView } = await setupRouter(reconnectStates);
 
       await routerGo(router, 'home');
       await waitForUpdate(uiView);
-      expect(uiView.innerHTML).toContain('class="home"');
+      expect(uiView).toEqualDom(homeView);
 
       uiRouter.remove();
       await tick();
       container.appendChild(uiRouter);
       await waitForUpdate(uiView);
 
-      expect(uiView.innerHTML).toContain('class="home"');
+      expect(uiView).toEqualDom(homeView);
 
       await routerGo(router, 'about');
       await waitForUpdate(uiView);
-      expect(uiView.innerHTML).toContain('class="about"');
+      expect(uiView).toEqualDom(
+        '<ui-view><div class="about" routed="">About</div></ui-view>',
+      );
     });
 
     it('should replay the hold content captured at first connect after a reconnect', async () => {
@@ -744,8 +976,7 @@ describe('UiView', () => {
       await routerGo(router, 'blank');
       await waitForUpdate(uiView);
 
-      expect(uiView.querySelectorAll('p.hold')).toHaveLength(1);
-      expect(uiView.innerHTML).not.toContain('class="home"');
+      expect(uiView).toEqualDom('<ui-view><p class="hold">hold</p></ui-view>');
     });
   });
 
@@ -763,12 +994,14 @@ describe('UiView', () => {
           component: () => html`<div class="child">Child</div>`,
         },
       ];
+
       const { uiView } = await setupRouter(states);
 
       await routerGo(router, 'parent.child');
       await tick(50);
 
       const nestedView = uiView.querySelector('ui-view');
+
       if (nestedView) {
         const parentView = UiView.seekParentView(nestedView);
         expect(parentView).toBe(uiView);
@@ -779,6 +1012,7 @@ describe('UiView', () => {
       const states: LitStateDeclaration[] = [
         { name: 'home', url: '/home', component: () => html`<div>Home</div>` },
       ];
+
       await setupRouter(states);
 
       const orphan = document.createElement('div');
@@ -811,6 +1045,7 @@ describe('UiView', () => {
       const nested = uiView.querySelector('ui-view')!;
       expect(nested).toBeTruthy();
       expect(nested['_uiViewData'].fqn).toBe('$default.$default');
+
       return { uiRouter, uiView, nested };
     }
 
@@ -823,9 +1058,8 @@ describe('UiView', () => {
     /** The re-seek hook's own path: a real router the app assigned replaces the one the view sought. */
     function adoptUpgraded(view: UiView, upgraded: UIRouterLit) {
       view.uiRouter = upgraded;
-      (
-        view as unknown as { adoptProvidedRouter(): void }
-      ).adoptProvidedRouter();
+      // oxlint-disable-next-line typescript/dot-notation -- the hook is protected; bracket access keeps it type-checked
+      view['adoptProvidedRouter']();
     }
 
     it('should not re-register a detached nested view at the root context', async () => {
@@ -868,6 +1102,7 @@ describe('UiView', () => {
   describe('missing <ui-router> ancestor', () => {
     it('should warn once when a view updates with no router', async () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
       try {
         const uiView = document.createElement('ui-view');
         uiView.textContent = 'fallback';
@@ -918,11 +1153,12 @@ describe('UiView', () => {
     it('should confirm the specs run against lit dev mode', () => {
       // the guard above is only meaningful if the suite sees dev lit; without
       // this, every warning spec could pass vacuously
-      expect(typeof UIRouterLitElement.enableWarning).toBe('function');
+      expect(UIRouterLitElement.enableWarning).toBeTypeOf('function');
     });
 
     it('should not warn when a router ancestor is present', async () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
       try {
         const { uiView } = await setupRouter([
           {
@@ -931,6 +1167,7 @@ describe('UiView', () => {
             component: () => html`<div>Home</div>`,
           },
         ]);
+
         await routerGo(router, 'home');
 
         expect(uiView.uiRouter).toBe(router);
@@ -980,6 +1217,7 @@ describe('UiView', () => {
       const { uiView } = await setupRouter([dynamicStar]);
 
       await routerGo(router, 'star', { starId: 'sun' });
+      // SAFETY: the 'star' state renders a TestRetainedLeaf as the view's child
       const leaf = uiView.firstElementChild as TestRetainedLeaf;
       const firstProps = leaf._uiViewProps;
       expect(firstProps?.router).toBe(router);
@@ -993,7 +1231,9 @@ describe('UiView', () => {
       expect(leaf._uiViewProps).not.toBe(firstProps);
       expect(leaf._uiViewProps?.router).toBe(router);
       expect(leaf.starId).toBe('rigel');
-      expect(leaf.textContent).toContain('rigel');
+      expect(leaf).toEqualDom(
+        '<test-retained-leaf routed=""><div class="leaf">rigel</div></test-retained-leaf>',
+      );
       expect(leaf.propsSeen.length).toBeGreaterThan(1);
     });
 
@@ -1001,6 +1241,7 @@ describe('UiView', () => {
       const { uiView } = await setupRouter(nestedStates);
 
       await routerGo(router, 'galaxy.star', { starId: 'sun' });
+      // SAFETY: the 'galaxy' state renders a TestRetainedShell as the view's child
       const shell = uiView.firstElementChild as TestRetainedShell;
       expect(shell).toBeInstanceOf(TestRetainedShell);
       const nestedView = shell.querySelector('ui-view');
@@ -1064,6 +1305,258 @@ describe('UiView', () => {
     });
   });
 
+  describe('routedElement', () => {
+    const routedStates: LitStateDeclaration[] = [
+      {
+        name: 'template',
+        url: '/template',
+        component: () =>
+          html`<p class="first">First</p>
+            <p>Second</p>`,
+      },
+      { name: 'from', url: '/from', component: TestSwapFrom },
+      { name: 'to', url: '/to', component: TestSwapTo },
+      { name: 'blank', url: '/blank' },
+    ];
+
+    it('should be null while the fallback set shows', async () => {
+      const { uiView } = await setupRouter(routedStates);
+
+      await routerGo(router, 'blank');
+
+      expect(uiView.routedElement).toBeNull();
+      expect(uiView.querySelector('[routed]')).toBeNull();
+    });
+
+    it('should be a template component’s first element, marked routed', async () => {
+      const { uiView } = await setupRouter(routedStates);
+
+      await routerGo(router, 'template');
+
+      const first = uiView.querySelector('.first');
+      expect(uiView.routedElement).toBe(first);
+      expect(uiView.querySelectorAll('[routed]')).toEqual(
+        uiView.querySelectorAll('.first'),
+      );
+    });
+
+    it('should be the incoming class element while the outgoing one stands', async () => {
+      const { uiView } = await setupRouter(routedStates);
+      await routerGo(router, 'from');
+      const from = uiView.routedElement;
+      expect(from?.hasAttribute('routed')).toBe(true);
+      swapToHeld = true;
+
+      await routerGo(router, 'to');
+
+      expect(uiView.routedElement).toBeInstanceOf(TestSwapTo);
+      expect(uiView.routedElement?.hasAttribute('routed')).toBe(true);
+      expect(from?.isConnected).toBe(true);
+      expect(from?.hasAttribute('routed')).toBe(false);
+    });
+
+    it('should move the mark off a class element when the fallback returns', async () => {
+      const { uiView } = await setupRouter(routedStates);
+      await routerGo(router, 'from');
+      const from = uiView.routedElement;
+
+      await routerGo(router, 'blank');
+
+      expect(uiView.routedElement).toBeNull();
+      expect(from?.hasAttribute('routed')).toBe(false);
+    });
+  });
+
+  // https://github.com/simshanith/lit-ui-router/issues/757
+  describe('swapping a changed element', () => {
+    const swapStates: LitStateDeclaration[] = [
+      { name: 'from', url: '/from', component: TestSwapFrom },
+      { name: 'to', url: '/to', component: TestSwapTo },
+      { name: 'other', url: '/other', component: TestRetainedOther },
+      { name: 'slow', url: '/slow', component: TestSwapSlow },
+    ];
+
+    it('should keep the outgoing element until the incoming one has rendered', async () => {
+      const { uiView } = await setupRouter(swapStates);
+      await routerGo(router, 'from');
+
+      let incoming: { standing?: boolean; rendered?: boolean } | undefined;
+      onLeafLeaving = () => {
+        const to = uiView.querySelector('test-swap-to');
+        incoming = { standing: to?.isConnected, rendered: to?.hasUpdated };
+      };
+
+      await routerGo(router, 'to');
+
+      expect(incoming).toEqual({ standing: true, rendered: true });
+      expect(uiView).toEqualDom(
+        '<ui-view><test-swap-to routed=""><div class="to">To</div></test-swap-to></ui-view>',
+      );
+      // Inserted once, never moved: the incoming element is not reconnected.
+      expect(countsFor('test-swap-to').connected).toBe(1);
+      expect(countsFor('test-swap-from').disconnected).toBe(1);
+    });
+
+    it('should hold the outgoing element until the incoming one’s first update', async () => {
+      const { uiView } = await setupRouter(swapStates);
+      await routerGo(router, 'from');
+      const from = uiView.routedElement;
+      swapToHeld = true;
+
+      await routerGo(router, 'to');
+
+      // SAFETY: the 'to' state renders a TestSwapTo
+      const to = uiView.routedElement as TestSwapTo;
+      expect(to).toBeInstanceOf(TestSwapTo);
+      expect(from?.isConnected).toBe(true);
+      expect(uiView.children).toHaveLength(2);
+
+      swapToHeld = false;
+      to.requestUpdate();
+      await tick();
+
+      expect(from?.isConnected).toBe(false);
+      expect(uiView.children).toHaveLength(1);
+      expect(uiView.routedElement).toBe(to);
+    });
+
+    it('should not wait out an updateComplete that outlasts the first update', async () => {
+      const { uiView } = await setupRouter(swapStates);
+      await routerGo(router, 'from');
+      const from = uiView.routedElement;
+      const gate = defer();
+      slowGate = gate.promise;
+
+      await routerGo(router, 'slow');
+
+      expect(from?.isConnected).toBe(false);
+      expect(uiView.children).toHaveLength(1);
+      expect(uiView.routedElement).toBeInstanceOf(TestSwapSlow);
+      gate.resolve();
+    });
+
+    it('should keep the rendered element when an unrendered incoming one is superseded', async () => {
+      const { uiView } = await setupRouter(swapStates);
+      await routerGo(router, 'from');
+      swapToHeld = true;
+
+      let next: { rendered?: boolean } | undefined;
+      onLeafLeaving = () => {
+        next = {
+          rendered: uiView.querySelector('test-retained-other')?.hasUpdated,
+        };
+      };
+
+      await routerGo(router, 'to');
+      await routerGo(router, 'other');
+
+      // The unrendered `to` gave way; `from` stood until `other` had rendered.
+      expect(next).toEqual({ rendered: true });
+      expect(uiView.children).toHaveLength(1);
+      expect(uiView.routedElement).toBeInstanceOf(TestRetainedOther);
+      expect(countsFor('test-swap-from').disconnected).toBe(1);
+      expect(countsFor('test-swap-to').disconnected).toBe(1);
+    });
+
+    it('should not let a superseded element’s late first update retire the current one', async () => {
+      const { uiView } = await setupRouter(swapStates);
+      await routerGo(router, 'from');
+      swapToHeld = true;
+      await routerGo(router, 'to');
+      // SAFETY: the 'to' state renders a TestSwapTo
+      const to = uiView.routedElement as TestSwapTo;
+      swapToHeld = false;
+
+      // The view's update queues `to`'s, which runs after `other` superseded it.
+      await routerGo(router, 'other');
+      await uiView.updateComplete;
+
+      expect(to.hasUpdated).toBe(true);
+      expect(uiView.children).toHaveLength(1);
+      expect(uiView.routedElement).toBeInstanceOf(TestRetainedOther);
+      expect(uiView.routedElement?.isConnected).toBe(true);
+      expect(countsFor('test-swap-from').disconnected).toBe(1);
+    });
+
+    it('should keep a sticky element in place when it returns before its replacement rendered', async () => {
+      const { uiView } = await setupRouter([
+        { name: 'sticky', url: '/sticky', component: TestStickyComponent },
+        ...swapStates,
+      ]);
+
+      await routerGo(router, 'sticky');
+      const sticky = uiView.routedElement;
+      swapToHeld = true;
+      await routerGo(router, 'to');
+
+      await routerGo(router, 'sticky');
+
+      expect(uiView.routedElement).toBe(sticky);
+      expect(uiView.children).toHaveLength(1);
+      expect(countsFor('test-sticky-component').connected).toBe(1);
+      expect(countsFor('test-swap-to').disconnected).toBe(1);
+    });
+
+    it('should have retired the outgoing element by the view’s next updateComplete', async () => {
+      const { uiView } = await setupRouter(swapStates);
+      await routerGo(router, 'from');
+      const from = uiView.routedElement;
+      swapToHeld = true;
+      await routerGo(router, 'to');
+      // SAFETY: the 'to' state renders a TestSwapTo
+      const to = uiView.routedElement as TestSwapTo;
+
+      swapToHeld = false;
+      to.requestUpdate();
+      await to.updateComplete;
+      await uiView.updateComplete;
+
+      expect(from?.isConnected).toBe(false);
+      expect(uiView.children).toHaveLength(1);
+    });
+
+    it.each([
+      ['light DOM', TestRetainedShell],
+      ['a shadow root', TestShadowShell],
+    ])(
+      'should not route into the outgoing element’s nested views in %s',
+      async (_, shell) => {
+        const { uiView } = await setupRouter([
+          { name: 'galaxy', url: '/galaxy/:id', component: shell },
+          { name: 'galaxy.star', url: '/star', component: TestRetainedLeaf },
+        ]);
+
+        await routerGo(router, 'galaxy.star', { id: 'milky-way' });
+
+        await routerGo(router, 'galaxy.star', { id: 'andromeda' });
+
+        expect(uiView.children).toHaveLength(1);
+        expect(countsFor('test-retained-leaf').constructed).toBe(2);
+        expect(countsFor('test-retained-leaf').connected).toBe(2);
+      },
+    );
+
+    it('should swap straight to a template component', async () => {
+      const { uiView } = await setupRouter([
+        ...swapStates,
+        {
+          name: 'template',
+          url: '/template',
+          component: () => html`<p class="template">Template</p>`,
+        },
+      ]);
+
+      await routerGo(router, 'from');
+
+      await routerGo(router, 'template');
+
+      expect(uiView).toEqualDom(
+        '<ui-view><p class="template" routed="">Template</p></ui-view>',
+      );
+      expect(countsFor('test-swap-from').disconnected).toBe(1);
+    });
+  });
+
   // Which router a view holds is provenance, not a value: one a seek produced
   // can be superseded by a provider that upgraded late or by the
   // `<ui-router>` the view has just been attached under, while one the app
@@ -1080,6 +1573,7 @@ describe('UiView', () => {
       container.appendChild(uiView);
       // Installed in the same task, so the provider is there by the first update.
       const uninstall = provideRouter(container, router);
+
       try {
         await waitForUpdate(uiView);
 
@@ -1100,16 +1594,21 @@ describe('UiView', () => {
       router = createTestRouter(homeStates);
       router.start();
       await routerGo(router, 'home');
+
       // lit issues each warning once per realm; forget any earlier one so a repeat here is seen.
+      // SAFETY: lit's dev build keeps the warnings it issued in this optional global set
       const issued = (globalThis as { litIssuedWarnings?: Set<string> })
         .litIssuedWarnings;
+
       for (const entry of issued ?? []) {
         if (entry.includes('change-in-update')) issued!.delete(entry);
       }
+
       const warn = vi.spyOn(console, 'warn');
       const uiView = document.createElement('ui-view');
       container.appendChild(uiView);
       const uninstall = provideRouter(container, router);
+
       try {
         expect(await uiView.updateComplete).toBe(true);
         expect(uiView.querySelector('.home-content')).not.toBeNull();
@@ -1131,6 +1630,7 @@ describe('UiView', () => {
           component: () => html`<div class="home-content">Home</div>`,
         },
       ];
+
       const routerA = createTestRouter(ownHomeStates());
       const routerB = createTestRouter(ownHomeStates());
       const elementA = document.createElement('ui-router');
@@ -1157,6 +1657,7 @@ describe('UiView', () => {
       // Views below ask this one for the router, so they must be told the same.
       const nested = document.createElement('div');
       uiView.appendChild(nested);
+      // eslint-disable-next-line typescript/no-deprecated -- the house ui-router-context path under test (#874)
       expect(UIRouterLitElement.seekRouter(nested)).toBe(routerB);
     });
   });
@@ -1164,15 +1665,18 @@ describe('UiView', () => {
   describe('parent-view seek across a shadow boundary', () => {
     /** A `ui-view-context` event as a listener outside the source's shadow root sees it: `target` retargeted to the host. */
     function retargeted(host: UiView, source: Node): UiViewContextEvent {
+      // SAFETY: the `target` and `composedPath` a UiViewContextEvent carries are defined below
       const event = new CustomEvent(UIRouterLitElement.uiViewContextEventName, {
         bubbles: true,
         composed: true,
         detail: { parentView: null },
       }) as UiViewContextEvent;
+
       Object.defineProperty(event, 'target', { value: host });
       Object.defineProperty(event, 'composedPath', {
         value: () => [source, host],
       });
+
       return event;
     }
 
@@ -1206,6 +1710,7 @@ describe('UiView', () => {
       Object.defineProperty(event, 'composedPath', {
         value: () => [source, host],
       });
+
       return event;
     }
 
@@ -1244,6 +1749,7 @@ describe('UiView', () => {
       expect(uiView.querySelector('.home-content')).not.toBeNull();
 
       // A clone carries lit's nodes and part markers with `hasUpdated` false.
+      // SAFETY: a clone of a <ui-view> upgrades to a UiView
       const clone = uiView.cloneNode(true) as UiView;
       uiRouter.appendChild(clone);
       await waitForUpdate(clone);
@@ -1275,6 +1781,7 @@ describe('UiView', () => {
 
       // One capture: the fallback set is the first attach's node, taken once,
       // and `<p class="late">` arrived too late to join it.
+      // SAFETY: the authored prefix in front of the render is a lone <p>
       const fallbackNodes = uiView['fallbackNodes'] as Element[];
       expect(fallbackNodes.map((node) => node.className)).toEqual(['hold']);
       expect(uiView.querySelectorAll('p.hold')).toHaveLength(1);
@@ -1293,7 +1800,7 @@ describe('UiView', () => {
 
       // Never deferred, so the capture is the connect's: the render's nodes and
       // markers behind the authored <p> are no part of the fallback set.
-      const fallbackNodes = uiView['fallbackNodes'] as Element[];
+      const fallbackNodes = uiView['fallbackNodes'];
       expect(fallbackNodes).toHaveLength(1);
       expect(fallbackNodes[0]).toBe(uiView.querySelector('p.hold'));
       expect(uiView.querySelector('p.held')).not.toBeNull();
@@ -1317,6 +1824,7 @@ describe('UiView', () => {
       await tick();
       const uiView = host.shadowRoot!.querySelector('ui-view')!;
       await waitForUpdate(uiView);
+
       return { host, uiView };
     }
 
@@ -1327,7 +1835,9 @@ describe('UiView', () => {
           el.innerHTML = '<p class="hold">hold</p>';
         },
       });
+
       await waitForUpdate(uiView);
+
       return uiView;
     }
 
@@ -1381,8 +1891,10 @@ describe('UiView', () => {
 
     it('should stand ahead of lit’s marker without doubling', async () => {
       const uiView = await mountAuthoredFallback();
+
       const markerAt = () =>
         [...uiView.childNodes].findIndex((node) => node.nodeType === 8);
+
       const holdAt = () =>
         [...uiView.childNodes].indexOf(uiView.querySelector('p.hold')!);
 
@@ -1407,6 +1919,7 @@ describe('UiView', () => {
       uiRouterEl.innerHTML = `<test-in-place-view>${markup}</test-in-place-view>`;
       const view = uiRouterEl.querySelector('test-in-place-view')!;
       await waitForUpdate(view);
+
       return view;
     }
 
@@ -1416,6 +1929,8 @@ describe('UiView', () => {
 
     it('should take what stands ahead of a render, and leave it standing', async () => {
       const view = await mountInPlace(`<p class="hold">hold</p>${heldMarkup}`);
+
+      // SAFETY: the authored prefix in front of the render is a lone <p>
 
       const fallbackNodes = view['fallbackNodes'] as Element[];
       expect(fallbackNodes.map((node) => node.className)).toEqual(['hold']);
@@ -1439,7 +1954,7 @@ describe('UiView', () => {
       view.requestUpdate();
       await waitForUpdate(view);
 
-      const fallbackNodes = view['fallbackNodes'] as Element[];
+      const fallbackNodes = view['fallbackNodes'];
       expect(fallbackNodes).toEqual([hold]);
     });
   });

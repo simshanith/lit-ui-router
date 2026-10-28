@@ -10,7 +10,7 @@ import {
 } from '@uirouter/core';
 import { ReactiveController, ReactiveControllerHost } from 'lit';
 
-import { UIRouterLitElement } from './ui-router.js';
+import { subscribeRouter } from './router-subscription.js';
 
 /** @internal */
 type DeregisterFn = () => void;
@@ -60,6 +60,7 @@ export type TransitionCallbackReason = TransitionEventType | 'hostConnected';
 export type TransitionCallback = (
   transition: Transition | undefined,
   reason: TransitionCallbackReason,
+  // oxlint-disable-next-line anti-slop/no-unknown-returns -- public callback type; narrowing it rejects existing callbacks
 ) => unknown;
 
 /**
@@ -72,8 +73,10 @@ export interface TransitionControllerOptions {
    * The {@link UIRouter} instance to observe.
    *
    * When omitted, the controller discovers the router from an ancestor
-   * <code>&lt;ui-router&gt;</code> (or <code>&lt;ui-view&gt;</code>) via the
-   * `ui-router-context` event when the host connects.
+   * <code>&lt;ui-router&gt;</code> (or <code>&lt;ui-view&gt;</code>) each time
+   * the host connects, and follows the placeholder router a
+   * <code>&lt;ui-router&gt;</code> mints for itself to the one that replaces
+   * it, synchronizing again with the `'hostConnected'` reason.
    */
   router?: UIRouter;
 
@@ -152,6 +155,9 @@ export class TransitionController implements ReactiveController {
 
   private readonly deregisterFns: DeregisterFn[] = [];
 
+  /** drops the subscription to a provider that may still replace its router */
+  private unsubscribe?: DeregisterFn;
+
   private _router?: UIRouter;
 
   private _transition?: Transition;
@@ -211,10 +217,30 @@ export class TransitionController implements ReactiveController {
 
   /** @internal */
   hostConnected(): void {
-    this._router ??=
-      this.options.router ?? UIRouterLitElement.seekRouter(this.host);
+    if (!this.options.router) {
+      const { router, unsubscribe } = subscribeRouter(
+        this.host,
+        this.onRouterReplaced,
+      );
 
+      // A reconnect outside any provider keeps the router it had.
+      this._router = router ?? this._router;
+      this.unsubscribe = unsubscribe;
+    }
+
+    this.watch();
+  }
+
+  /** @internal */
+  hostDisconnected(): void {
+    this.unsubscribe?.();
+    this.unsubscribe = undefined;
+    this.unwatch();
+  }
+
+  private watch(): void {
     const router = this._router;
+
     if (!router) {
       return;
     }
@@ -223,36 +249,46 @@ export class TransitionController implements ReactiveController {
     const events = this.options.events ?? ['onSuccess'];
 
     for (const event of events) {
+      // SAFETY: hook registration returns its deregistration function
       this.deregisterFns.push(
-        router.transitionService[event](
-          criteria,
-          (transition) => this.notify(transition, event) as HookResult,
+        router.transitionService[event](criteria, (transition) =>
+          this.notify(transition, event),
         ) as DeregisterFn,
       );
     }
 
     // Synchronize with the router's current state: the host may have
     // (re)connected after the transition that put it on screen succeeded.
-    this.notify(
+    void this.notify(
       router.globals.successfulTransitions.peekTail(),
       'hostConnected',
     );
   }
 
-  /** @internal */
-  hostDisconnected(): void {
+  private unwatch(): void {
     while (this.deregisterFns.length) {
       this.deregisterFns.shift()?.();
     }
   }
 
+  /** What a disconnect and reconnect would do, for the router that replaced the one found. */
+  private readonly onRouterReplaced = (router: UIRouter): void => {
+    this.unsubscribe = undefined;
+    this.unwatch();
+    this._router = router;
+    this._transition = undefined;
+    this.watch();
+  };
+
   private notify(
     transition: Transition | undefined,
     reason: TransitionCallbackReason,
-  ): unknown {
+  ): HookResult {
     this._transition = transition ?? this._transition;
     const result = this.options.callback?.(transition, reason);
     this.host.requestUpdate();
-    return result;
+
+    // SAFETY: ui-router acts only on false, a TargetState or a promise; any other value continues
+    return result as HookResult;
   }
 }

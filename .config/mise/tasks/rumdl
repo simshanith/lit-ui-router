@@ -2,6 +2,7 @@
 #MISE description="Run rumdl over the tracked *.md set (or given files)"
 #USAGE arg "<cmd>" help="rumdl subcommand: check | fmt"
 #USAGE arg "[file]…" help="Markdown files to target; default: every tracked *.md"
+#USAGE flag "--github" help="check prints GitHub workflow commands; set on Actions" env="GITHUB_ACTIONS"
 set -euo pipefail
 
 case "${usage_cmd:?}" in
@@ -10,6 +11,9 @@ case "${usage_cmd:?}" in
 esac
 
 set -- "$usage_cmd"
+if [ "$usage_cmd" = check ] && [ "${usage_github:-}" = true ]; then
+  set -- "$@" --output-format github
+fi
 
 if [ -n "${usage_file:-}" ]; then
   read -ra files <<<"$usage_file" # given files: split the mise-joined arg string

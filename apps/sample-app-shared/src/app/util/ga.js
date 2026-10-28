@@ -1,4 +1,5 @@
 import { resolveLocationPlugin } from './featureDetection.js';
+import { analyticsTitleOf, APP_TITLE } from '../global/routeFocus.hook.js';
 
 const GOOGLE_ANALYTICS_TRACKING_ID = import.meta.env
   .VITE_GOOGLE_ANALYTICS_TRACKING_ID;
@@ -18,10 +19,14 @@ function initGoogleAnalytics() {
     `https://www.googletagmanager.com/gtag/js?id=${GOOGLE_ANALYTICS_TRACKING_ID}`,
     'dataLayer',
   );
+
   window.gtag = function () {
     window.dataLayer.push(arguments);
   };
+
   window.gtag('js', new Date());
+  // gtag.js may load after the first route sets a record-content document.title
+  window.gtag('set', { page_title: APP_TITLE });
   window.gtag('config', GOOGLE_ANALYTICS_TRACKING_ID);
 }
 
@@ -43,9 +48,11 @@ function recordNavigationType() {
   window.navigation.addEventListener('navigate', (event) => {
     last = event.navigationType;
   });
+
   return () => {
     const seen = last;
     last = '';
+
     return seen;
   };
 }
@@ -60,11 +67,13 @@ function recordNavigationType() {
 function pageViewIsOurs(locationPlugin, takeNavigationType) {
   // hash: history is never touched, so every move is ours.
   if (locationPlugin === 'hash') return true;
+
   // navigation: `navigation.navigate()` bypasses the patched history methods,
   // but a traverse still fires popstate and the cold load is gtag's `config`.
   if (locationPlugin === 'navigation') {
     return UNSEEN_BY_GTAG.has(takeNavigationType());
   }
+
   // pushState: gtag already sees load, pushes and traversals.
   return false;
 }
@@ -73,27 +82,41 @@ function trackPageView(event, isOurs) {
   if (!event) {
     return;
   }
+
   if (!isOurs) {
     console.debug('manual gtag page_view tracking skipped', event);
+
     return;
   }
+
   if (!window.gtag) {
     return;
   }
+
   console.debug('gtag page_view', event);
   window.gtag('event', 'page_view', event);
+}
+
+function setPageTitle(pageTitle) {
+  if (!window.gtag) {
+    return;
+  }
+
+  window.gtag('set', { page_title: pageTitle });
 }
 
 function trackException(event) {
   if (!event || !window.gtag) {
     return;
   }
+
   console.debug('gtag exception', event);
   window.gtag('event', 'exception', event);
 }
 
 export default function googleAnalyticsHook(transitionService) {
   const locationPlugin = resolveLocationPlugin();
+
   const takeNavigationType =
     locationPlugin === 'navigation' ? recordNavigationType() : () => '';
 
@@ -102,6 +125,7 @@ export default function googleAnalyticsHook(transitionService) {
     // format; their attempted path is already in location.pathname.
     const urlMatcher = trans.$to().url;
     const formattedRoute = urlMatcher ? urlMatcher.format(trans.params()) : '';
+
     // Under hash the route lives in the fragment, so location.pathname is the
     // bare mount and the formatted route completes it. Under pushState and the
     // Navigation API the pathname already carries the route, and concatenating
@@ -110,6 +134,7 @@ export default function googleAnalyticsHook(transitionService) {
       locationPlugin === 'hash'
         ? location.pathname + formattedRoute
         : location.pathname;
+
     return `/${withSitePrefix
       .split('/')
       .filter((x) => x)
@@ -118,12 +143,15 @@ export default function googleAnalyticsHook(transitionService) {
 
   const error = (trans) => {
     const err = trans.error();
+
     const type =
       err && Object.prototype.hasOwnProperty.call(err, 'type') ? err.type : '_';
+
     const message =
       err && Object.prototype.hasOwnProperty.call(err, 'message')
         ? err.message
         : '_';
+
     if (type === 6) {
       trackException({
         error_description: message,
@@ -132,6 +160,14 @@ export default function googleAnalyticsHook(transitionService) {
     }
   };
 
+  // ahead of the url update (priority 9999), whose pushState fires gtag's page_view
+  transitionService.onSuccess(
+    {},
+    (trans) => setPageTitle(analyticsTitleOf(trans)),
+    {
+      priority: 10000,
+    },
+  );
   transitionService.onSuccess(
     {},
     (trans) =>
@@ -139,6 +175,7 @@ export default function googleAnalyticsHook(transitionService) {
       trackPageView(
         {
           page_location: path(trans),
+          page_title: analyticsTitleOf(trans),
         },
         pageViewIsOurs(locationPlugin, takeNavigationType),
       ),

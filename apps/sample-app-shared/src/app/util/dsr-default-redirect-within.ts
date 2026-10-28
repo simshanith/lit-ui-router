@@ -11,7 +11,7 @@ interface DsrTransition extends Transition {
   to(): DsrStateDeclaration;
 }
 
-// upstream's declared DSRFunction return type omits the TargetState its runtime consumes
+// SAFETY: upstream's declared DSRFunction return type omits the TargetState its runtime consumes
 export const dsrRedirectToDefaultFromWithin = ((
   transition: DsrTransition,
   redirect: TargetState,
@@ -19,12 +19,14 @@ export const dsrRedirectToDefaultFromWithin = ((
   const $state = transition.router.stateService;
   const toState = transition.to();
   const dsrDefault = toState.dsr?.default;
+
   if (
     dsrDefault &&
     $state.includes(toState, undefined, { relative: transition.from() })
   ) {
     return $state.target(dsrDefault);
   }
+
   return redirect;
 }) as DSRFunction;
 

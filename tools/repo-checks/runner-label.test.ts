@@ -13,8 +13,8 @@ import { parse } from 'yaml';
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
 import { trackedFiles } from './cli-query.ts';
 
-const load = (file: string): unknown =>
-  parse(readFileSync(join(workspaceRoot, file), 'utf8'));
+const load = (file: string): string =>
+  readFileSync(join(workspaceRoot, file), 'utf8');
 
 const actionlintConfig = join('.github', 'actionlint.yaml');
 
@@ -44,6 +44,10 @@ type Workflow = {
   >;
 };
 
+/** A plain runner label, not an expression or a matrix array. */
+const isPlainLabel = (runsOn: unknown): runsOn is string =>
+  typeof runsOn === 'string';
+
 /** As much of .github/actionlint.yaml as this check reads. */
 type ActionlintConfig = { 'self-hosted-runner'?: { labels?: string[] } };
 
@@ -53,22 +57,20 @@ const workflows = trackedFiles(
   '.github/workflows/*.yaml',
 );
 
+// SAFETY: actionlint holds workflows to the Actions schema, which Workflow subsets
 const jobs = workflows.flatMap((workflow) =>
-  Object.entries((load(workflow) as Workflow).jobs ?? {})
+  Object.entries((parse(load(workflow)) as Workflow).jobs ?? {})
     .filter(([, job]) => job.uses === undefined)
     .map(([job, { 'runs-on': runsOn }]) => ({ workflow, job, runsOn })),
 );
 
 const used = [
-  ...new Set(
-    jobs
-      .map(({ runsOn }) => runsOn)
-      .filter((runsOn): runsOn is string => typeof runsOn === 'string'),
-  ),
+  ...new Set(jobs.map(({ runsOn }) => runsOn).filter(isPlainLabel)),
 ].sort();
 
+// SAFETY: actionlint's config schema lists self-hosted labels as strings
 const declared = [
-  ...((load(actionlintConfig) as ActionlintConfig)['self-hosted-runner']
+  ...((parse(load(actionlintConfig)) as ActionlintConfig)['self-hosted-runner']
     ?.labels ?? []),
 ].sort();
 
@@ -76,9 +78,11 @@ describe('runner labels', () => {
   it('finds a runs-on on every job that runs steps', () => {
     assert.notEqual(workflows.length, 0, 'no workflows found');
     assert.notEqual(jobs.length, 0, 'no step-running jobs found');
+
     const missing = jobs
       .filter(({ runsOn }) => runsOn === null || runsOn === undefined)
       .map(({ workflow, job }) => `${workflow}#${job}`);
+
     assert.deepEqual(missing, [], 'jobs with steps but no runs-on');
   });
 
@@ -88,7 +92,7 @@ describe('runner labels', () => {
       // An expression or a matrix array is not a pin — narrow before matching,
       // so the failure names the shape rather than a stringified object.
       assert.ok(
-        typeof runsOn === 'string',
+        isPlainLabel(runsOn),
         `${where} is not a plain label: ${JSON.stringify(runsOn)}`,
       );
       assert.match(runsOn, EXPLICIT_LABEL, `${where}: ${runsOn}`);

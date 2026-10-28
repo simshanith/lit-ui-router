@@ -18,7 +18,9 @@ import { readPackageProbe } from '@tools/bundle-probe/entries';
 const { declared, entries } = readPackageProbe(
   fileURLToPath(new URL('..', import.meta.url)),
 );
+
 const matcher = entries.find((entry) => entry.label === 'matcher');
+
 const reported = entries.filter((entry) => entry !== matcher);
 
 const gzipBytes = (code: string): number => gzipSync(code).byteLength;
@@ -27,9 +29,11 @@ for (const bundler of bundlers) {
   describe(`bundle size (${bundler})`, () => {
     it('bundles the matcher tier from zero node_modules inputs', async (t) => {
       assert.ok(matcher, 'expected a matcher export');
+
       const { entry, inputs } = await bundleEntry(matcher.file, bundler, {
         minify: true,
       });
+
       t.diagnostic(
         `matcher: ${entry.bytes} B minified, ${gzipBytes(entry.code)} B gzip`,
       );
@@ -43,6 +47,7 @@ for (const bundler of bundlers) {
           minify: true,
           external: declared,
         });
+
         t.diagnostic(
           `${label}: ${entry.bytes} B minified, ${gzipBytes(entry.code)} B gzip`,
         );

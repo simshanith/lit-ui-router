@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-76 -56 312 312">
+<clipPath id="disc"><circle cx="80" cy="100" r="100"/></clipPath>
+<filter id="glow" x="-76" y="-56" width="312" height="312" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feGaussianBlur stdDeviation="18"/>
+<feComponentTransfer>
+<feFuncR type="linear" slope="2.5"/>
+<feFuncG type="linear" slope="2.5"/>
+<feFuncB type="linear" slope="2.5"/>
+</feComponentTransfer>
+</filter>
+<g filter="url(#glow)">
+<g clip-path="url(#disc)">
+<path fill="#00e8ff" d="M40 120l20-60l90 90l-30 50l-40-40h-20"/>
+<path fill="#283198" d="M80 160v-80l40-40v80M0 160l40 40l20-40l-20-40h-20"/>
+<path fill="#324fff" d="M40 120v-80l40-40v80M120 200v-80l40-40v80M0 160v-80l40 40"/>
+<path fill="#0ff" d="M40 200v-80l40 40"/>
+</g>
+</g>
+<radialGradient id="veil">
+<stop offset="0" stop-color="#fff"/>
+<stop offset="0.4" stop-color="#fff"/>
+<stop offset="0.55" stop-color="#fff" stop-opacity="0.85"/>
+<stop offset="0.7" stop-color="#fff" stop-opacity="0.55"/>
+<stop offset="0.82" stop-color="#fff" stop-opacity="0.28"/>
+<stop offset="0.92" stop-color="#fff" stop-opacity="0.09"/>
+<stop offset="1" stop-color="#fff" stop-opacity="0"/>
+</radialGradient>
+<ellipse cx="80" cy="140" rx="78" ry="40" fill="url(#veil)" fill-opacity="0.7"/>
+</svg>

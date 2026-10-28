@@ -1,5 +1,6 @@
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vitest/config';
+import { GithubActionsReporter } from 'vitest/node';
 
 // No spec here needs a real browser: everything is Lit render + synthetic
 // events, which happy-dom supports.
@@ -18,8 +19,8 @@ export default defineConfig({
   cacheDir: `node_modules/.vite-${process.env.VITEST_BROWSER_API_PORT ?? 'default'}`,
   resolve: {
     alias: [
-      // Resolve the workspace peer, root and subpaths, to its source so tests
-      // do not require a prior `lit-ui-router` build.
+      // Resolve the workspace peers, root and subpaths, to their source so
+      // tests do not require a prior `lit-ui-router` or `ui-router-mobx` build.
       {
         find: /^lit-ui-router$/,
         replacement: fileURLToPath(
@@ -30,6 +31,12 @@ export default defineConfig({
         find: /^lit-ui-router\/(.+)$/,
         replacement: fileURLToPath(
           new URL('../lit-ui-router/src/$1.ts', import.meta.url),
+        ),
+      },
+      {
+        find: /^ui-router-mobx$/,
+        replacement: fileURLToPath(
+          new URL('../ui-router-mobx/src/index.ts', import.meta.url),
         ),
       },
       ...(lit2Compat
@@ -50,8 +57,14 @@ export default defineConfig({
     // A custom-elements registry shared across spec files is a footgun;
     // keep per-file isolation.
     isolate: true,
-    // hanging-process logs the open handles in CI
-    reporters: process.env.CI ? ['default', 'hanging-process'] : ['default'],
+    // github-actions precedes the failure banner; hanging-process logs open handles in CI
+    reporters: [
+      ...(process.env.GITHUB_ACTIONS === 'true'
+        ? [new GithubActionsReporter({ jobSummary: { enabled: false } })]
+        : []),
+      'default',
+      ...(process.env.CI ? (['hanging-process'] as const) : []),
+    ],
     coverage: {
       reporter: ['text', 'json', 'lcov'],
       reportsDirectory: './coverage',

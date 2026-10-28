@@ -1,5 +1,7 @@
 // Pure logic for check-release-closure.ts, which owns the IO.
 
+import * as v from 'valibot';
+
 /** Members a release lane needs installed, and which lane needs them. */
 export type ClosureRule = {
   need: string;
@@ -12,21 +14,24 @@ export function filterArgs(filter: string): string[] {
   return filter.split(/\s+/u).filter((token) => token !== '');
 }
 
+const ListedProjectSchema = v.object({ name: v.string() });
+
 /** Project names from `pnpm ls -r --depth -1 --json`. */
 export function selectedNames(json: string): string[] {
   const parsed: unknown = JSON.parse(json);
+
   if (!Array.isArray(parsed)) {
     throw new Error('pnpm ls --json did not return an array');
   }
-  return parsed.map((project: unknown) => {
-    const name =
-      typeof project === 'object' && project !== null && 'name' in project
-        ? project.name
-        : undefined;
-    if (typeof name !== 'string') {
+
+  const projects: unknown[] = parsed;
+
+  return projects.map((project) => {
+    if (!v.is(ListedProjectSchema, project)) {
       throw new Error('pnpm ls --json project without a name');
     }
-    return name;
+
+    return project.name;
   });
 }
 
@@ -36,6 +41,7 @@ export function missingFromClosure(
   selected: readonly string[],
 ): string[] {
   const installed = new Set(selected);
+
   return required.filter((name) => !installed.has(name)).sort();
 }
 
@@ -75,8 +81,10 @@ export function unselectedWorkspaceEdges(
   const names = new Set(members.map((member) => member.name));
   const installed = new Set(selected);
   const edges = new Set<string>();
+
   for (const member of members) {
     if (!installed.has(member.name)) continue;
+
     for (const field of DEP_FIELDS) {
       for (const dep of Object.keys(member.manifest?.[field] ?? {})) {
         if (names.has(dep) && !installed.has(dep)) {
@@ -85,6 +93,7 @@ export function unselectedWorkspaceEdges(
       }
     }
   }
+
   return [...edges].sort();
 }
 
@@ -106,18 +115,27 @@ const NO_SCRIPT = '<NONEXISTENT>';
 
 type DryRunPlan = { tasks?: { package?: string; command?: string }[] };
 
+const isPackageName = (name: string | undefined): name is string =>
+  typeof name === 'string';
+
 /** Packages whose scripts a `turbo run --dry-run=json` plan would spawn, sorted. */
 export function plannedScriptPackages(json: string): string[] {
+  // SAFETY: optional fields only; `tasks` and each entry are checked below
   const { tasks } = JSON.parse(json) as DryRunPlan;
+
   if (!Array.isArray(tasks)) {
     throw new Error('turbo --dry-run=json did not return a task list');
   }
+
   const packages = new Set<string>();
+
   for (const { package: name, command } of tasks) {
-    if (typeof name !== 'string') {
+    if (!isPackageName(name)) {
       throw new Error('turbo --dry-run=json task without a package');
     }
+
     if (command !== NO_SCRIPT) packages.add(name);
   }
+
   return [...packages].sort();
 }

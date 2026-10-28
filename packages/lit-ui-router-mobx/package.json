@@ -1,8 +1,8 @@
 {
   "name": "lit-ui-router-mobx",
-  "version": "1.0.2",
+  "version": "1.4.0",
   "description": "MobX bindings for lit-ui-router: an observable router store and reaction-based Lit ReactiveControllers",
-  "homepage": "https://lit-ui-router.dev/packages/mobx",
+  "homepage": "https://lit-ui-router.dev/packages/lit-ui-router-mobx",
   "bugs": {
     "url": "https://github.com/simshanith/lit-ui-router/issues"
   },
@@ -36,7 +36,7 @@
     "build:js": "oxc-emit-js --development",
     "build:types": "oxc-emit-dts",
     "changelog": "release-it --changelog --git.tagMatch=\"lit-ui-router-mobx@[0-9]*.[0-9]*.[0-9]*\"",
-    "check:bundle": "check-bundle-inputs",
+    "check:bundle": "floor-guard && check-bundle-inputs",
     "check:dev-split": "oxc-emit-check-dev-split",
     "codecov:bundle": "upload-entry-bundles",
     "crap": "crap-report",
@@ -50,9 +50,9 @@
     "test:mobx6-compat": "mobx6-compat-guard && VITE_EXPECT_MOBX_MAJOR=6 VITEST_BROWSER_API_PORT=63332 vitest run",
     "typecheck:lit2": "lit2-compat-guard && tsc -p tsconfig.lit2-compat.json --noEmit",
     "typecheck:mobx6": "mobx6-compat-guard && tsc -p tsconfig.mobx6.json --noEmit",
-    "typecheck:peer-floor": "peer-floor-guard && tsc -p tsconfig.peer-floor.json --noEmit",
+    "typecheck:peer-floor": "floor-guard && floor-types-guard tsconfig.peer-floor.json && tsc -p tsconfig.peer-floor.json --noEmit",
     "typecheck:src": "tsc -p tsconfig.src.json --noEmit",
-    "typecheck:tsc": "tsc -p tsconfig.json --noEmit"
+    "typecheck:tsc": "tsc -p tsconfig.json --noEmit && tsc -p test-d/tsconfig.json --noEmit"
   },
   "devDependencies": {
     "@release-it/conventional-changelog": "catalog:",
@@ -66,6 +66,7 @@
     "@tools/typedoc-plugin-lit-ui-router": "catalog:workspace",
     "@types/node": "catalog:",
     "@uirouter/core": "catalog:",
+    "@uirouter/core-floor": "catalog:peerFloor",
     "@vitest/coverage-v8": "catalog:",
     "happy-dom": "catalog:",
     "lit": "catalog:",
@@ -74,6 +75,7 @@
     "lit-ui-router-floor": "catalog:peerFloorMobx",
     "mobx": "catalog:",
     "mobx-6": "catalog:mobx6-compat",
+    "mobx-floor": "catalog:peerFloor",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
     "release-it": "catalog:",
@@ -83,12 +85,14 @@
     "typedoc-vitepress-theme": "catalog:",
     "typescript": "catalog:typescript6-compat",
     "typescript-7": "catalog:",
+    "ui-router-mobx": "catalog:workspace",
     "vitest": "catalog:"
   },
   "peerDependencies": {
     "@uirouter/core": "catalog:publishedPeer",
     "lit": "catalog:publishedPeer",
     "lit-ui-router": "catalog:publishedPeerMobx",
-    "mobx": "catalog:publishedPeer"
+    "mobx": "catalog:publishedPeer",
+    "ui-router-mobx": "catalog:publishedPeerMobx"
   }
 }

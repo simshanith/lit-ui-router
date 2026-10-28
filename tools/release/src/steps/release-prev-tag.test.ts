@@ -99,6 +99,7 @@ describe('assertKnownChannel', () => {
     for (const channel of PRERELEASE_CHANNELS) {
       assert.equal(assertKnownChannel(`1.0.0-${channel}.0`, 'pkg'), channel);
     }
+
     assert.equal(assertKnownChannel('1.0.0', 'pkg'), undefined);
     assert.throws(
       () => assertKnownChannel('1.0.0-next.0', 'pkg@1.0.0-next.0'),
@@ -117,6 +118,7 @@ describe('prereleaseChannels', () => {
       'lit-ui-router@0.9.0-alpha.0',
       '',
     ].join('\n');
+
     assert.deepEqual(prereleaseChannels('lit-ui-router', tags), [
       'rc',
       'alpha',
@@ -199,6 +201,7 @@ function git(cwd: string, ...args: string[]): void {
 
 function commit(cwd: string, message: string, ...tags: string[]): void {
   git(cwd, 'commit', '--allow-empty', '-m', message);
+
   for (const tag of tags) git(cwd, 'tag', tag);
 }
 
@@ -212,7 +215,9 @@ function rootSha(cwd: string): string {
     encoding: 'utf8',
     env: GIT_ENV,
   });
+
   assert.equal(run.status, 0, run.stderr);
+
   return run.stdout.trim();
 }
 
@@ -368,6 +373,7 @@ describe('prevReleaseTag', () => {
             stderr: 'fatal: not a git repository (or any parent)',
           }),
         );
+
       await assert.rejects(
         changelogFrom('lit-ui-router', '1.2.0', { cwd: repo, exec }),
         { message: 'git failed' },

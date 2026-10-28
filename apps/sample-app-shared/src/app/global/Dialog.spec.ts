@@ -40,11 +40,13 @@ describe('confirmation dialog', () => {
     // dimmed backdrop (entrance animates opacity, so let it settle first)
     const backdrop = document.querySelector('.dialog .backdrop');
     expect(backdrop?.classList.contains('in')).toBe(true);
+
     if (!backdrop) throw new Error('backdrop not rendered');
     await settleAnimations(backdrop);
     expect(getComputedStyle(backdrop).opacity).toBe('0.5');
 
     const content = document.querySelector('.dialog .content');
+
     if (!content) throw new Error('dialog content not rendered');
     await settleAnimations(content);
     const rect = content.getBoundingClientRect();
@@ -58,6 +60,7 @@ describe('confirmation dialog', () => {
     const denyButton = [
       ...document.querySelectorAll<HTMLButtonElement>('.dialog button'),
     ].find((button) => button.textContent?.includes('No'));
+
     if (!denyButton) throw new Error('deny button not rendered');
     denyButton.click();
 

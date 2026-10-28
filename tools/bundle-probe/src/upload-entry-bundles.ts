@@ -17,7 +17,9 @@ import { bundleEntry, PRODUCTION_DEFINE } from './bundle.ts';
 import { readPackageProbe } from './entries.ts';
 
 const packageDir = process.cwd();
+
 const { name, declared, entries } = readPackageProbe(packageDir);
+
 const prefix = process.argv[2] ?? name;
 
 const uploader = fileURLToPath(
@@ -25,6 +27,7 @@ const uploader = fileURLToPath(
 );
 
 const statsRoot = path.join(packageDir, '.cache', 'bundle-stats');
+
 await rm(statsRoot, { recursive: true, force: true });
 
 console.log(
@@ -34,9 +37,8 @@ console.log(
 );
 
 for (const { label, file } of entries) {
-  // annotations:false mirrors consumer reality for registration entries:
-  // sideEffects globs name dist/*.js, so probing src/*.ts would otherwise
-  // shake side-effect modules to zero bytes.
+  // annotations:false keeps registration side-effect modules in the measured
+  // bytes, the same graph check-bundle-inputs probes.
   const { chunks } = await bundleEntry(file, 'rolldown', {
     minify: true,
     external: declared,
@@ -47,11 +49,14 @@ for (const { label, file } of entries) {
     // it would be noise.
     define: PRODUCTION_DEFINE,
   });
+
   const dir = path.join(statsRoot, label);
   await mkdir(dir, { recursive: true });
+
   for (const chunk of chunks) {
     await writeFile(path.join(dir, chunk.name), chunk.code);
   }
+
   execFileSync(
     process.execPath,
     [uploader, `${prefix}-${label}-esm`, dir, '--no-manifest'],

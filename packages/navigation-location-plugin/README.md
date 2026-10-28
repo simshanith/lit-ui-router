@@ -1,7 +1,7 @@
 # ui-router-navigation-location-plugin
 
 [![npm version](https://img.shields.io/npm/v/ui-router-navigation-location-plugin.svg)](https://npmx.dev/package/ui-router-navigation-location-plugin)
-[![GitHub Release](https://img.shields.io/github/v/release/simshanith/lit-ui-router?filter=ui-router-navigation-location-plugin@*)](https://github.com/simshanith/lit-ui-router/releases/?q=ui-router-navigation-location-plugin)
+[![GitHub Release](https://img.shields.io/github/v/release/simshanith/lit-ui-router?filter=ui-router-navigation-location-plugin@*)](https://lit-ui-router.dev/gh/releases/ui-router-navigation-location-plugin/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Website](https://img.shields.io/website?url=https%3A%2F%2Flit-ui-router.dev)](https://lit-ui-router.dev)
 [![codecov](https://codecov.io/gh/simshanith/lit-ui-router/graph/badge.svg?component=navigation-location-plugin)](https://app.codecov.io/gh/simshanith/lit-ui-router?components%5B0%5D=navigation-location-plugin)
@@ -20,10 +20,6 @@ A UI-Router location plugin that uses the modern browser Navigation API for URL 
 
 ```bash
 npm install ui-router-navigation-location-plugin
-# or
-pnpm add ui-router-navigation-location-plugin
-# or
-yarn add ui-router-navigation-location-plugin
 ```
 
 The type declarations reference the global `Navigation`, `NavigateEvent` and `NavigationInterceptOptions` types, which TypeScript ships from 6.0. On TypeScript 5.x, also install `@types/dom-navigation` and add `"dom-navigation"` to `compilerOptions.types`.
@@ -43,7 +39,7 @@ router.plugin(navigationLocationPlugin);
 
 ## Navigation Event Interception
 
-The plugin intercepts the navigations it starts, so a router transition commits as a same-document navigation. The `intercept` option returns the [`NavigationInterceptOptions`](https://developer.mozilla.org/en-US/docs/Web/API/NavigateEvent/intercept#options) for each of those navigations, with the router available as `event.info.uiRouter` — it is where the app's extra work goes: view transitions, analytics, progress UI. The function runs after the router transition has committed, so `handler` governs when `navigation.transition.finished` settles and when the browser resets focus and restores scroll, not the transition itself. `focusReset` and `scroll` pass through.
+The plugin intercepts the navigations it starts, so a router transition commits as a same-document navigation. The `intercept` option returns the [`NavigationInterceptOptions`](https://developer.mozilla.org/en-US/docs/Web/API/NavigateEvent/intercept#options) for each of those navigations, with the router available as `event.info.uiRouter` — it is where the app's extra work goes: view transitions, analytics, progress UI. The function runs after the router transition has committed, so `handler` governs when `navigation.transition.finished` settles and when the browser resets focus and restores scroll, not the transition itself.
 
 ```typescript
 import {
@@ -61,6 +57,80 @@ router.plugin(navigationLocationPlugin, {
 ```
 
 Without the option, the plugin intercepts with a handler that resolves immediately.
+
+### Focus
+
+The plugin intercepts with `focusReset: 'manual'`, so focus stays where it was across a router navigation, as it does under `pushStateLocationPlugin`. A `focusReset` returned from `intercept` takes precedence; `'after-transition'` restores the platform behaviour of moving focus to `<body>` after each navigation, as a full page load would.
+
+Keeping focus in place suits list–detail and in-page navigation. When a navigation replaces the view that held focus, the focused element leaves the document and focus falls back to `<body>`; move it yourself, for example to the new view's heading:
+
+```typescript
+router.transitionService.onSuccess({}, () => {
+  requestAnimationFrame(() =>
+    document.querySelector<HTMLElement>('main h1')?.focus(),
+  );
+});
+```
+
+The heading needs `tabindex="-1"` to take focus. See [Focus handling](https://developer.chrome.com/docs/web-platform/navigation-api#focus_handling) for the platform behaviour.
+
+### Scroll
+
+The plugin leaves `scroll` at the platform default, `'after-transition'`: once `handler` settles, the browser scrolls each router navigation to its URL's fragment, or to the top of the page. `pushStateLocationPlugin` leaves the scroll position where it was. Back and forward are traversals the plugin leaves alone unless asked (see [Back and forward](#back-and-forward)); the browser then restores their scroll position straight away under either plugin.
+
+The default handler resolves immediately, so the browser can scroll before the new view has rendered. `intercept` runs once per navigation, while the router's `globals.transition` is still the transition being committed, so the scroll behaviour can depend on the route. In this example, a state flagged `data: { keepScroll: true }` (say, a message opening beside its list) returns `scroll: 'manual'` and keeps the list where it was. Every other navigation waits a frame for the views to render, then calls `event.scroll()` before any slower work:
+
+```typescript
+router.plugin(navigationLocationPlugin, {
+  intercept: (event) => {
+    const { transition } = event.info.uiRouter.globals;
+    if (transition?.to().data?.keepScroll) {
+      return { scroll: 'manual' };
+    }
+    return {
+      async handler() {
+        await new Promise(requestAnimationFrame);
+        event.scroll();
+        // slower work: analytics, prefetching…
+      },
+    };
+  },
+} satisfies NavigationLocationPluginOptions);
+```
+
+The sample app runs this example in [`router.config.ts`](https://github.com/simshanith/lit-ui-router/blob/main/apps/sample-app-shared/src/router.config.ts), flagging its message and contact detail states with `keepScroll`.
+
+See [Scroll handling](https://developer.chrome.com/docs/web-platform/navigation-api#scroll_handling) for the platform behaviour.
+
+#### Back and forward
+
+A back or forward traversal starts a router transition only once the browser has committed it, so the browser restores the scroll position before the previous view is back, and a page that is shorter in the meantime loses it. The `interceptTraverse` option makes the plugin intercept those traversals with a handler that waits for the router transition, including its redirects, so `scroll: 'after-transition'` restores the position once the view has rendered:
+
+```typescript
+router.plugin(navigationLocationPlugin, { interceptTraverse: true });
+```
+
+The sample app passes `interceptTraverse: true` alongside its `intercept` in [`router.config.ts`](https://github.com/simshanith/lit-ui-router/blob/main/apps/sample-app-shared/src/router.config.ts).
+
+Pass a function instead of `true` to return the `NavigationTraverseInterceptOptions` for each traversal. The function runs at `navigate` time, before the router transition exists, so its `focusReset` and `scroll` are fixed before the destination state is known. Its `handler` runs after the router transition settles, which is the place to wait for views that render later, and receives that transition, or `undefined` when the traversal's URL started none. To restore scroll only for some states, return `scroll: 'manual'` and call `event.scroll()` from the handler:
+
+```typescript
+router.plugin(navigationLocationPlugin, {
+  interceptTraverse: (event) => ({
+    scroll: 'manual',
+    async handler(transition) {
+      if (!transition?.to().data?.keepScroll) {
+        await new Promise(requestAnimationFrame);
+        event.scroll();
+      }
+    },
+  }),
+});
+```
+
+`focusReset` defaults to `'manual'` as it does for `intercept`. Firefox, and WebKit in an iframe, restore scroll against the last layout, so the plugin forces a layout once `handler` settles. A navigation that supersedes the traversal ends the wait.
+
+In WebKit, a traversal that supersedes another traversal (back, then back again) commits, but its `navigation.transition.finished` rejects with an `AbortError`; the router still ends on the state of the URL, so code that awaits `finished` should not treat that rejection as a failed navigation.
 
 Listeners that only observe navigations can tell router-driven ones apart with `isUIRouterNavigateEvent`, which also narrows `event.info` to carry the router.
 
@@ -101,6 +171,10 @@ router.transitionService.onSuccess({}, () => {
 
 See [What else observes navigation](https://lit-ui-router.dev/packages/navigation-plugin#what-else-observes-navigation) for the full walkthrough.
 
+## Reaching Past the Router
+
+A `navigate` listener of the app's own is correct for a navigation the router does not own, such as a link that leaves the app while a draft is unsaved. On the router's own navigations it is a smell: guard those with transition hooks and do extra work through `intercept`. See [Reaching past the router](https://lit-ui-router.dev/packages/navigation-plugin#reaching-past-the-router) for when each applies, with a live example.
+
 ## API
 
 ### `navigationLocationPlugin`
@@ -124,10 +198,21 @@ function navigationLocationPlugin(
 ```typescript
 interface NavigationLocationPluginOptions {
   intercept?: (event: UIRouterNavigateEvent) => NavigationInterceptOptions;
+  interceptTraverse?:
+    | true
+    | ((event: NavigateEvent) => NavigationTraverseInterceptOptions);
+}
+
+interface NavigationTraverseInterceptOptions extends Omit<
+  NavigationInterceptOptions,
+  'handler'
+> {
+  handler?: (transition: Transition | undefined) => void | PromiseLike<void>;
 }
 ```
 
 - `intercept` — called for each navigation the service starts, after the router transition has committed; its return value is handed to `event.intercept()`. See [Navigation Event Interception](#navigation-event-interception).
+- `interceptTraverse` — opts back/forward traversals into interception that waits for the router transition they start; a function returns the `NavigationTraverseInterceptOptions` for each, whose `handler` receives the settled router transition. See [Back and forward](#back-and-forward).
 
 ### `NavigationLocationService`
 
@@ -196,7 +281,7 @@ The Navigation API is supported in all modern engines:
 
 Check [caniuse.com](https://caniuse.com/mdn-api_navigation) for current support status.
 
-The real round-trip specs — `index.spec.ts` and `url-shape.spec.ts`, where navigations actually commit and events actually fire — run on Chromium on every pull request via `test`/`test:coverage`, and on Firefox and WebKit on every push to `main` via `test:engines` (on demand through a `ci-main/` branch or the `mainGraph` dispatch). The Cypress end-to-end suite runs in Electron only.
+The real round-trip specs — `index.spec.ts` and `url-shape.spec.ts`, where navigations actually commit and events actually fire — run on Chromium on every pull request via `test`/`test:coverage`, and on Firefox and WebKit on every push to `main` via `test:engines` (on demand through a `ci-main/` branch or the `mainGraph` dispatch). The Cypress end-to-end suite runs in Chrome only.
 
 For older browsers, consider using:
 
@@ -218,6 +303,7 @@ For older browsers, consider using:
 - [Docs - Navigation API Plugin](https://lit-ui-router.dev/packages/navigation-plugin)
 - [Docs - Location Plugins guide](https://lit-ui-router.dev/guides/location-plugins)
 - [MDN - Navigation API](https://developer.mozilla.org/en-US/docs/Web/API/Navigation_API)
+- [Chrome for Developers - Modern client-side routing: the Navigation API](https://developer.chrome.com/docs/web-platform/navigation-api)
 - [@uirouter/core - LocationPlugin](https://ui-router.github.io/core/docs/latest/interfaces/_vanilla_interface_.locationplugin.html)
 - [@uirouter/core - LocationServices](https://ui-router.github.io/core/docs/latest/interfaces/_common_coreservices_.locationservices.html)
 - [@uirouter/core - BaseLocationServices](https://ui-router.github.io/core/docs/latest/classes/_vanilla_baselocationservice_.baselocationservices.html)

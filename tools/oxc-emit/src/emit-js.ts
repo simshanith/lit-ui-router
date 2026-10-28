@@ -12,84 +12,103 @@
 // defined, so a package can name its own release without importing package.json.
 // A pass with nothing to define passes no `define`, keeping its emit unchanged.
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { basename, dirname, join, relative } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 
 import { minifySync } from 'oxc-minify';
 import { transformSync } from 'oxc-transform';
 
 import { requireManifest } from '@tools/bootstrap/manifest.ts';
 
+import { rewriteInlined } from './inline.ts';
 import {
   DEV_OUT,
+  emitPlan,
   fail,
   OUT,
   passDefine,
-  publishableSources,
   shippedMap,
-  SRC,
 } from './shared.ts';
 
-const dual = process.argv.includes('--development');
+const main = (): void => {
+  const dual = process.argv.includes('--development');
 
-// production first, so a `--development` package's dist/*.js is byte-identical
-// to what the single-pass build emitted for it before the split
-const passes = dual
-  ? [
-      { out: OUT, dev: 'false' },
-      { out: DEV_OUT, dev: 'true' },
-    ]
-  : [{ out: OUT, dev: undefined }];
+  // production first, so a `--development` package's dist/*.js is byte-identical
+  // to what the single-pass build emitted for it before the split
+  const passes = dual
+    ? [
+        { out: OUT, dev: 'false' },
+        { out: DEV_OUT, dev: 'true' },
+      ]
+    : [{ out: OUT, dev: undefined }];
 
-// a decorator lowers to an import of this package, so the emitting one must declare it
-const RUNTIME = '@oxc-project/runtime';
-const { dependencies = {}, version } = requireManifest(process.cwd());
-const undeclaredRuntime = new Set<string>();
+  // a decorator lowers to an import of this package, so the emitting one must declare it
+  const RUNTIME = '@oxc-project/runtime';
 
-for (const file of publishableSources()) {
-  const source = readFileSync(file, 'utf8');
-  for (const { out: outDir, dev } of passes) {
-    const define = passDefine(source, version, dev);
-    const transformed = transformSync(file, source, {
-      target: 'es2022',
-      sourcemap: true,
-      // tsconfig.base parity: experimentalDecorators + useDefineForClassFields:false
-      decorator: { legacy: true },
-      assumptions: { setPublicClassFields: true },
-      typescript: {
-        removeClassFieldsWithoutInitializer: true,
-        // ui-router-server sources import with .ts specifiers so node --test
-        // can type-strip them directly; no-op for extensionless imports
-        rewriteImportExtensions: 'rewrite',
-      },
-      ...(define === undefined ? {} : { define }),
-    });
-    if (transformed.errors.length) fail(file, transformed.errors);
-    const printed = minifySync(file, transformed.code, {
-      compress: false,
-      mangle: false,
-      codegen: { removeWhitespace: false },
-      sourcemap: true,
-    });
-    if (printed.errors.length) fail(file, printed.errors);
-    if (!(RUNTIME in dependencies) && printed.code.includes(`"${RUNTIME}/`)) {
-      undeclaredRuntime.add(file);
+  const { dependencies = {}, version } = requireManifest(process.cwd());
+
+  const undeclaredRuntime = new Set<string>();
+
+  const { units, inlined } = emitPlan();
+
+  for (const { file, stem, inlined: embed } of units) {
+    const source = readFileSync(file, 'utf8');
+
+    for (const { out: outDir, dev } of passes) {
+      const define = passDefine(source, version, dev);
+
+      const transformed = transformSync(file, source, {
+        target: 'es2022',
+        sourcemap: true,
+        // tsconfig.base parity: experimentalDecorators + useDefineForClassFields:false
+        decorator: { legacy: true },
+        assumptions: { setPublicClassFields: true },
+        typescript: {
+          removeClassFieldsWithoutInitializer: true,
+          // ui-router-server sources import with .ts specifiers so node --test
+          // can type-strip them directly; no-op for extensionless imports
+          rewriteImportExtensions: 'rewrite',
+        },
+        define,
+      });
+
+      if (transformed.errors.length) fail(file, transformed.errors);
+
+      const printed = minifySync(file, transformed.code, {
+        compress: false,
+        mangle: false,
+        codegen: { removeWhitespace: false },
+        sourcemap: true,
+      });
+
+      if (printed.errors.length) fail(file, printed.errors);
+
+      if (!(RUNTIME in dependencies) && printed.code.includes(`"${RUNTIME}/`)) {
+        undeclaredRuntime.add(file);
+      }
+
+      const out = join(outDir, `${stem}.js`);
+      const code = rewriteInlined(printed.code, stem, inlined);
+      mkdirSync(dirname(out), { recursive: true });
+      writeFileSync(out, `${code}//# sourceMappingURL=${basename(out)}.map\n`);
+      writeFileSync(
+        `${out}.map`,
+        shippedMap(
+          file,
+          out,
+          printed.map!,
+          transformed.map,
+          embed ? source : undefined,
+        ),
+      );
     }
-    const out = join(outDir, relative(SRC, file)).replace(/\.ts$/, '.js');
-    mkdirSync(dirname(out), { recursive: true });
-    writeFileSync(
-      out,
-      `${printed.code}//# sourceMappingURL=${basename(out)}.map\n`,
-    );
-    writeFileSync(
-      `${out}.map`,
-      shippedMap(file, out, printed.map!, transformed.map),
-    );
   }
-}
 
-if (undeclaredRuntime.size > 0) {
-  console.error(
-    `✗ ${[...undeclaredRuntime].join(', ')} emit imports of ${RUNTIME}, which package.json does not list in dependencies.`,
-  );
-  process.exit(1);
-}
+  if (undeclaredRuntime.size > 0) {
+    console.error(
+      `✗ ${[...undeclaredRuntime].join(', ')} emit imports of ${RUNTIME}, which package.json does not list in dependencies.`,
+    );
+    process.exitCode = 1;
+  }
+};
+
+if (import.meta.main) main();

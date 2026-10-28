@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+#MISE description="Run a command with GitHub workflow commands paused, so its output can't annotate; a plain exec off Actions"
+# The turbo_summary step reports a failed run; turbo's own ::error:: line would repeat it.
+set -euo pipefail
+
+[ "${GITHUB_ACTIONS:-}" = true ] || exec "$@"
+
+# Unguessable, so the paused output can't print the resume line itself.
+token="$(uuidgen)"
+echo "::stop-commands::${token}"
+status=0
+"$@" || status=$?
+echo "::${token}::"
+exit "$status"

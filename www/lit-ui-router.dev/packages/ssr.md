@@ -7,7 +7,7 @@ description: A ui-router-server mount table in, an emitted static site out, with
 
 <p class="badges">
 <a href="https://npmx.dev/package/lit-ui-router-ssr" target="_blank" class="badge"><img alt="NPM Version" src="https://img.shields.io/npm/v/lit-ui-router-ssr" /></a>
-<a href="https://github.com/simshanith/lit-ui-router/releases/?q=lit-ui-router-ssr" target="_blank" class="badge"><img alt="GitHub Release" src="https://img.shields.io/github/v/release/simshanith/lit-ui-router?filter=lit-ui-router-ssr@*" /></a>
+<a href="https://lit-ui-router.dev/gh/releases/lit-ui-router-ssr/latest" target="_blank" class="badge"><img alt="GitHub Release" src="https://img.shields.io/github/v/release/simshanith/lit-ui-router?filter=lit-ui-router-ssr@*" /></a>
 </p>
 
 [`lit-ui-router-ssr`](https://npmx.dev/package/lit-ui-router-ssr) turns a
@@ -27,8 +27,6 @@ re-derives the incantation, and a template's `<ui-router>` descendants and its
 
 ```bash
 npm install lit-ui-router-ssr
-# or
-pnpm add lit-ui-router-ssr
 ```
 
 `lit-ui-router`, `ui-router-server`, `@lit-labs/ssr`, `@lit-labs/ssr-client`, `lit`,
@@ -83,7 +81,7 @@ and it is written as-is. `dryRun: true` plans everything and writes nothing.
 
 A server render reads the router only once its transition has landed,
 resolves included.
-[`settle(router, path)`](/api/lit-ui-router-ssr/functions/settle) sets the
+[`settle(router, path)`](/api/lit-ui-router-ssr/index/functions/settle) sets the
 url, syncs the router to it, and resolves with the transition that landed, so
 the synchronous render after it reads every resolve. A `redirectTo` chain
 settles on its final state, and a path the router already stands on resolves
@@ -98,7 +96,7 @@ A page fails to land in three ways, and each rejects rather than hangs:
   the transition's `Rejection`, the resolve's error in its `detail`. Core's
   `defaultErrorHandler` still logs it.
 - **Nothing lands in time.**
-  [`timeout`](/api/lit-ui-router-ssr/interfaces/SettleOptions) bounds the
+  [`timeout`](/api/lit-ui-router-ssr/index/interfaces/SettleOptions) bounds the
   wait, `10_000` ms by default; `0` waits without a limit.
 
 `settle()` never calls `router.start()`, which runs once per router: it drives
@@ -114,7 +112,7 @@ router, started or not.
 | `notFound`            | nothing, and the path is listed in `result.warnings`                  |
 | the `otherwise` probe | the 404 document, `404.html` by default, rendered like any shell      |
 
-[`PrerenderResult`](/api/lit-ui-router-ssr/interfaces/PrerenderResult) carries
+[`PrerenderResult`](/api/lit-ui-router-ssr/index/interfaces/PrerenderResult) carries
 all of it: `pages` lists every artefact in enumeration order, `rules` every
 line the host file carries, `tally` the counts by kind, `warnings` the paths
 that matched no route and had no projection to fall back on, and `root` the
@@ -124,7 +122,7 @@ render's event target.
 
 Files go through `node:fs`, imported lazily on first write, so the specifier
 never enters the static module graph. Pass
-[`write`](/api/lit-ui-router-ssr/type-aliases/FileWriter) to emit into memory
+[`write`](/api/lit-ui-router-ssr/index/type-aliases/FileWriter) to emit into memory
 or a virtual fs instead — it receives `outDir` already joined on.
 
 The rules file follows the same seam: `rules: '_redirects'` (the default)
@@ -156,6 +154,10 @@ from it, and the live server answers from the same table. A preview server
 such as `vite preview` serves the file without the redirect, so only the
 deployed site shows the failure. The development build warns once when the
 first page's slashed spelling does not resolve to the same shell.
+
+[The Altitude Atlas](https://atlas.lit-ui-router.dev), where `/sheet/7B` comes
+from, runs both halves on Cloudflare Pages: its client sets `strictMode(false)`
+and its mount compiles `strict: false`.
 
 ## One render at a time
 
@@ -198,7 +200,7 @@ A routed template that feeds it by property,
 `@lit-labs/ssr` writes a `.prop=${…}` binding as its part marker and nothing
 else — no attribute, no child, no value. Setting the property is an element
 renderer's job, and
-[`elementRenderers`](/api/lit-ui-router-ssr/interfaces/PrerenderOptions#elementrenderers)
+[`elementRenderers`](/api/lit-ui-router-ssr/index/interfaces/PrerenderOptions#elementrenderers)
 defaults to `[UiViewRenderer]`, which answers for `ui-view` alone. The card has
 no renderer, so nothing on the server sets `post` or runs its `render()`: the
 card first draws on the client, once hydration sets the property, and the
@@ -320,7 +322,7 @@ server, so it never needs this package on the client.
 It imports `lit-ui-router-ssr/register` in place of `lit-ui-router`, ahead of
 anything else that registers `<ui-view>`. That entry defines `<ui-router>` from
 core and `<ui-view>` with
-[`withServedRender`](/api/lit-ui-router-ssr/functions/withServedRender) applied
+[`withServedRender`](/api/lit-ui-router-ssr/client/functions/withServedRender) applied
 to core's `UiView`. Every value the app takes from the router — `UIRouterLit`,
 `srefHref`, `srefActiveClass`, `srefAriaCurrent` — comes from
 `lit-ui-router/pure`, which registers nothing; the root entry registers the
@@ -356,10 +358,14 @@ const { prerender, settle } = await import('lit-ui-router-ssr');
 const { page } = await import('./views.js');
 ```
 
+The atlas's
+[`app/prerender.ts`](https://github.com/simshanith/lit-ui-router/blob/www/atlas/www/atlas.lit-ui-router.dev/app/prerender.ts)
+is a complete entry in this shape.
+
 Preloading the shim with
 `node --import @lit-labs/ssr/lib/install-global-dom-shim.js` finishes it before
 the entry's graph starts, so static imports hold there too.
-[`UiViewRenderer`](/api/lit-ui-router-ssr/classes/UiViewRenderer) draws the
+[`UiViewRenderer`](/api/lit-ui-router-ssr/index/classes/UiViewRenderer) draws the
 served class, and a `<ui-view>` nothing defined on the server renders as an
 inert element with an empty part pair — no error, and every page's body
 missing. In development `prerender()` warns when the registry holds no
@@ -381,8 +387,8 @@ The result extends core's `UiView`, so an enclosing view adopts it as a parent.
 `UiViewRenderer` answers for the `ui-view` tag, so a tag of your own needs a
 renderer of your own.
 
-[`lit-ui-router-effect`](/packages/effect) from 0.1.1 and
-[`lit-ui-router-mobx`](/packages/mobx) from 1.0.2 import `lit-ui-router/pure`,
+[`lit-ui-router-effect`](/packages/lit-ui-router-effect) from 0.1.1 and
+[`lit-ui-router-mobx`](/packages/lit-ui-router-mobx) from 1.0.2 import `lit-ui-router/pure`,
 so they register nothing and compose with any of the three.
 
 ## The hydration model
@@ -392,7 +398,7 @@ with — arrives asleep. The render passes `deferHydration`, so
 every custom element on the page carries Lit's `defer-hydration` attribute,
 and while it is there the view renders nothing and holds the nodes the server
 drew. The client boots the router first, then calls
-[`hydrateRoot`](/api/lit-ui-router-ssr/functions/hydrateRoot), which provides
+[`hydrateRoot`](/api/lit-ui-router-ssr/client/functions/hydrateRoot), which provides
 an adopter under the container with core's
 [`provideContext`](/api/reference/core/provideContext) and runs one
 `hydrate()` walk over it:
@@ -429,17 +435,17 @@ over an emptied container when it finds nothing to adopt, so the caller's
 
 A container `hydrateRoot` adopts keeps its block.
 
-[`readHydrationSignature`](/api/lit-ui-router-ssr/functions/readHydrationSignature)
+[`readHydrationSignature`](/api/lit-ui-router-ssr/client/functions/readHydrationSignature)
 returns the parsed
-[`HydrationSignature`](/api/lit-ui-router-ssr/interfaces/HydrationSignature),
+[`HydrationSignature`](/api/lit-ui-router-ssr/client/interfaces/HydrationSignature),
 or `null` when the container holds none or one that does not parse to an
 object with a string `version`. Only `version` is typed, so a boot that compares
 the state the document was drawn for with the one it booted into narrows
 `state` and `params` first.
 
-Every [`uiViewSlot`](/api/lit-ui-router-ssr/variables/uiViewSlot) that walk
+Every [`uiViewSlot`](/api/lit-ui-router-ssr/client/variables/uiViewSlot) that walk
 reaches wakes the `<ui-view>` it sits in, and the waking view requests
-[`adoptUiViewContext`](/api/lit-ui-router-ssr/variables/adoptUiViewContext)
+[`adoptUiViewContext`](/api/lit-ui-router-ssr/client/variables/adoptUiViewContext)
 over the standard `context-request` event and hands itself to whichever provider
 answers. The mechanics — the boot sequence, the marker protocol, and what a
 view with no provider above it does — are in the
@@ -448,13 +454,13 @@ view with no provider above it does — are in the
 
 Each served view reports what its wake came to, once, parent first, in
 production as in development. The view dispatches a bubbling, composed
-[`ui-view:adopt`](/api/lit-ui-router-ssr/variables/uiViewAdoptEventName) event
-whose [`detail`](/api/lit-ui-router-ssr/interfaces/UiViewAdoptDetail) carries
-an [`AdoptOutcome`](/api/lit-ui-router-ssr/type-aliases/AdoptOutcome):
+[`ui-view:adopt`](/api/lit-ui-router-ssr/client/variables/uiViewAdoptEventName) event
+whose [`detail`](/api/lit-ui-router-ssr/client/interfaces/UiViewAdoptDetail) carries
+an [`AdoptOutcome`](/api/lit-ui-router-ssr/client/type-aliases/AdoptOutcome):
 `adopted` when its served nodes are the live ones, `fell-back` when a mismatch
 or a lost pair dropped them for a cold render, with the cause in `error`, and
 `none` when there was nothing to adopt. `hydrateRoot`'s
-[`onAdopt`](/api/lit-ui-router-ssr/interfaces/HydrateRootOptions) option
+[`onAdopt`](/api/lit-ui-router-ssr/client/interfaces/HydrateRootOptions) option
 receives the same reports for every view its walk reaches, so a consumer that
 only calls `hydrateRoot` needs no listener:
 
@@ -509,3 +515,9 @@ app that never prerenders carries none of it.
 - [`ui-router-server`](/packages/server) — the mount table and its verdicts
 - [View fallback content](/guides/view-fallback-content#prerendered-shells-and-server-rendering) —
   what a `<ui-view>` renders in a prerendered shell
+- [The Altitude Atlas](https://atlas.lit-ui-router.dev) and
+  [its source](https://github.com/simshanith/lit-ui-router/tree/www/atlas/www/atlas.lit-ui-router.dev)
+  on `www/atlas` — the dogfood consumer whose prerender build shaped this package
+- [On the Altitude Atlas](https://atlas.lit-ui-router.dev/bricks/?focus=lit-ui-router-ssr) — this package as
+  a brick in sheet 2's model in the round, sized by its authored files and
+  seated on what it peers

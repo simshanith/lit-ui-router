@@ -6,14 +6,16 @@ import {
   UIRouterLit,
   uiSref,
   uiSrefActive,
-  LitStateDeclaration,
-  UIViewInjectedProps,
+  type LitStateDeclaration,
+  type UIViewInjectedProps,
 } from 'lit-ui-router';
 import {
   ReactionController,
   RouterReactionController,
   RouterStore,
 } from 'lit-ui-router-mobx';
+// Carries the registry into ui-router-mobx's RouterStore.
+import type {} from 'ui-router-registry/mobx';
 
 // Data Service
 interface SolarBody {
@@ -203,9 +205,11 @@ class Tour {
    */
   arrive(state: string, body?: SolarBody) {
     this.active = body;
+
     const stop: TrailStop = body
       ? { state, label: body.name, bodyId: body.id }
       : { state, label: state === 'planet' ? 'Unknown body' : 'All bodies' };
+
     this.trail = [...this.trail, stop];
   }
 
@@ -418,7 +422,9 @@ class PlanetDetailComponent extends LitElement {
         Body not found. <a class="back-link" ${uiSref('planets')}>Back</a>
       </p>`;
     }
+
     const size = dotSize(this.planet.diameterKm) * 2;
+
     return html`
       <div>
         <a class="back-link top" ${uiSref('planets')}
@@ -543,9 +549,10 @@ export class AppRoot extends LitElement {
   render() {
     const onDetail = this.route.value;
     const { active, trail, visited } = this.tour.value;
+
     return html`
       <h2>Hello Solar System (MobX)</h2>
-      <nav>
+      <nav aria-label="Hello Solar System (MobX)">
         <a
           ?data-detail=${onDetail}
           ${uiSrefActive({ activeClasses: ['active'] })}
@@ -568,7 +575,7 @@ export class AppRoot extends LitElement {
 }
 
 // State definitions
-const planetsState: LitStateDeclaration<{ planets: SolarBody[] }> = {
+const planetsState = {
   name: 'planets',
   url: '/planets',
   component: PlanetListComponent,
@@ -579,9 +586,9 @@ const planetsState: LitStateDeclaration<{ planets: SolarBody[] }> = {
       resolveFn: () => SolarSystemService.getAllBodies(),
     },
   ],
-};
+} as const satisfies LitStateDeclaration<{ planets: SolarBody[] }>;
 
-const planetState: LitStateDeclaration<{ planet: SolarBody | undefined }> = {
+const planetState = {
   name: 'planet',
   url: '/planets/:planetId',
   component: PlanetDetailComponent,
@@ -594,19 +601,31 @@ const planetState: LitStateDeclaration<{ planet: SolarBody | undefined }> = {
         const planetId = parsePlanetId(
           $transition$.params<{ planetId: string }>().planetId,
         );
+
         return planetId === undefined
           ? undefined
           : SolarSystemService.getBody(planetId);
       },
     },
   ],
-};
+} as const satisfies LitStateDeclaration<{ planet: SolarBody | undefined }>;
+
+// `as const` keeps the names and urls literal for the registry to read.
+declare module 'ui-router-registry' {
+  interface Register {
+    states: typeof planetsState | typeof planetState;
+  }
+}
 
 // Router setup
 const router = new UIRouterLit();
+
 router.plugin(hashLocationPlugin);
+
 router.stateRegistry.register(planetsState);
+
 router.stateRegistry.register(planetState);
+
 router.urlService.rules.initial({ state: 'planets' });
 
 // A visit is a transition that COMPLETED. An onEnter hook fires while the
@@ -616,12 +635,16 @@ router.urlService.rules.initial({ state: 'planets' });
 // at once: where we landed, and what that state resolved.
 router.transitionService.onSuccess({}, (transition) => {
   const state = transition.to().name;
+
   if (!state) return; // the root state, which nothing navigates to
+
   // injector(<name>) scopes the lookup to that state's own resolves.
+  // SAFETY: the planet state's `planet` resolve yields a SolarBody
   const body =
     state === 'planet'
       ? (transition.injector(state).get('planet') as SolarBody | undefined)
       : undefined;
+
   TourStore.arrive(state, body);
 });
 
@@ -632,6 +655,7 @@ router.transitionService.onSuccess({}, (transition) => {
 reaction(
   () => {
     const route = RouterStore.for(router);
+
     return route.includes('planet') ? TourStore.active?.name : undefined;
   },
   (name) => {

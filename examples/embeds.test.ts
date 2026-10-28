@@ -4,7 +4,7 @@
 // built, never typechecked and never seeded with node_modules by postinstall —
 // it rots silently, so fail the build instead.
 import assert from 'node:assert/strict';
-import { readdirSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
@@ -31,5 +31,68 @@ function exampleDirs(): string[] {
 describe('embeds manifest', () => {
   it('declares every example directory, and no others', () => {
     assert.deepEqual(exampleDirs(), [...EXAMPLE_NAMES].sort());
+  });
+});
+
+/** The `<script type="importmap">` JSON in an example's index.html, if it has one. */
+function importMap(example: string): Record<string, string> | undefined {
+  const page = join(root, example, 'index.html');
+
+  if (!existsSync(page)) return undefined;
+
+  const script = /<script type="importmap">([\s\S]*?)<\/script>/.exec(
+    readFileSync(page, 'utf8'),
+  );
+
+  // SAFETY: an import map is `{ imports: { specifier: url } }`; esmShPin fails on a non-URL
+  return script
+    ? (JSON.parse(script[1]) as { imports: Record<string, string> }).imports
+    : undefined;
+}
+
+/** Package name and exact version from an esm.sh URL such as `https://esm.sh/*@scope/pkg@1.2.3/path`. */
+function esmShPin(url: string) {
+  const { host, pathname } = new URL(url);
+  const pin = /^\/\*?((?:@[^/]+\/)?[^@/]+)@([^/]+)/.exec(pathname);
+
+  assert.ok(
+    host === 'esm.sh' && pin,
+    `${url} is not an esm.sh URL with an exact version`,
+  );
+
+  return { name: pin[1], version: pin[2] };
+}
+
+describe('import maps', () => {
+  // Example bumps regenerate package-lock.json; the CDN URLs only move by hand.
+  it('pin each CDN URL to the version package-lock.json installs', () => {
+    const maps = EXAMPLE_NAMES.flatMap((example) => {
+      const imports = importMap(example);
+
+      return imports ? [{ example, imports }] : [];
+    });
+
+    assert.notDeepEqual(maps, [], 'no example has an import map to check');
+
+    const drift = maps.flatMap(({ example, imports }) => {
+      // SAFETY: npm lockfile v3 keys installed packages by `node_modules/<name>`
+      const lock = JSON.parse(
+        readFileSync(join(root, example, 'package-lock.json'), 'utf8'),
+      ) as { packages: Record<string, { version?: string }> };
+
+      return Object.values(imports).flatMap((url) => {
+        const { name, version } = esmShPin(url);
+        const locked = lock.packages[`node_modules/${name}`]?.version;
+        const fixed = url.replace(`${name}@${version}`, `${name}@${locked}`);
+
+        return locked === version
+          ? []
+          : [
+              `examples/${example}/index.html: update ${url} to ${fixed} (package-lock.json installs ${name}@${locked})`,
+            ];
+      });
+    });
+
+    assert.deepEqual(drift, []);
   });
 });

@@ -1,0 +1,45 @@
+<svg viewBox="0 0 720 176" width="100%" style="max-width: 720px" role="img" aria-label="App redirect, 302: the browser requests /app; Cloudflare runs the worker first; the worker resolves a redirect verdict and answers 302 with Location /app/welcome, fetching nothing from static assets." xmlns="http://www.w3.org/2000/svg">
+  <title>App redirect: 302</title>
+  <!-- dark palette applies only when this file is the document root -->
+  <style>
+    @media (prefers-color-scheme: dark) {
+      svg:root {
+        color-scheme: dark;
+        --vp-c-bg: #1b1b1f;
+        --vp-c-bg-soft: #202127;
+        --vp-c-divider: #2e2e32;
+        --vp-c-text-1: #dfdfd6;
+        --vp-c-text-2: #98989f;
+        --vp-c-brand-1: #a8b1ff;
+        --vp-c-brand-soft: rgba(100, 108, 255, 0.16);
+      }
+    }
+  </style>
+  <defs>
+    <marker id="arr-seq-4" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0L8 4L0 8z" fill="var(--vp-c-text-2, #67676c)" />
+    </marker>
+  </defs>
+  <g font-family="var(--vp-font-family-base, ui-sans-serif, system-ui, sans-serif)">
+    <line x1="90" y1="32" x2="90" y2="172" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect x="28" y="6" width="124" height="26" rx="6" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="90" y="23" font-size="12" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">Browser</text>
+    <line x1="270" y1="32" x2="270" y2="172" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect x="208" y="6" width="124" height="26" rx="6" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="#f6821f" />
+    <text x="270" y="23" font-size="12" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">Cloudflare</text>
+    <line x1="450" y1="32" x2="450" y2="172" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect x="388" y="6" width="124" height="26" rx="6" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="450" y="23" font-size="12" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">Static assets</text>
+    <line x1="630" y1="32" x2="630" y2="172" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect x="568" y="6" width="124" height="26" rx="6" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="630" y="23" font-size="12" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">Worker</text>
+    <line x1="90" y1="62" x2="267" y2="62" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-seq-4)" />
+    <text x="180" y="56" font-size="11" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle" stroke="var(--vp-c-bg, #ffffff)" stroke-width="4" stroke-linejoin="round" paint-order="stroke">GET /app</text>
+    <line x1="270" y1="92" x2="627" y2="92" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-seq-4)" />
+    <text x="450" y="86" font-size="11" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle" stroke="var(--vp-c-bg, #ffffff)" stroke-width="4" stroke-linejoin="round" paint-order="stroke">worker-first</text>
+    <rect x="559" y="110" width="142" height="22" rx="6" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" stroke="var(--vp-c-brand-1, #3451b2)" />
+    <text x="630" y="125" font-size="11" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #3451b2)" text-anchor="middle">resolve &#8594; redirect</text>
+    <line x1="630" y1="152" x2="93" y2="152" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" stroke-dasharray="5 4" marker-end="url(#arr-seq-4)" />
+    <text x="360" y="146" font-size="11" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle" stroke="var(--vp-c-bg, #ffffff)" stroke-width="4" stroke-linejoin="round" paint-order="stroke">302 Location: /app/welcome</text>
+  </g>
+</svg>

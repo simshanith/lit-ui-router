@@ -3,12 +3,8 @@ import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { StateObject, PathNode } from '@uirouter/core';
 
-import {
-  UIRouterLit,
-  LitViewConfig,
-  isLitViewDeclarationTemplate,
-  isRoutedLitElement,
-} from '../core.js';
+import { UIRouterLit, LitViewConfig, isRoutedLitElement } from '../core.js';
+import { isLitViewDeclarationTemplate } from '../view-builder.js';
 import { createTestRouter } from './test-utils.js';
 import {
   UIViewInjectedProps,
@@ -239,6 +235,7 @@ describe('isRoutedLitElement', () => {
 
   it('should return false for HTMLElement (non-Lit)', () => {
     class PlainElement extends HTMLElement {}
+
     expect(isRoutedLitElement(PlainElement)).toBe(false);
   });
 });
@@ -252,6 +249,7 @@ describe('litViewsBuilder', () => {
 
   it('should create default view from component property', async () => {
     const component = () => html`<div>test</div>`;
+
     const stateDecl: LitStateDeclaration = {
       name: 'test',
       url: '/test',
@@ -284,6 +282,7 @@ describe('litViewsBuilder', () => {
 
   it('should normalize template function to component object', async () => {
     const component = () => html`<div>test</div>`;
+
     const stateDecl: LitStateDeclaration = {
       name: 'test',
       url: '/test',
@@ -408,7 +407,7 @@ describe('litViewsBuilder', () => {
       name: 'test',
       url: '/test',
       views: {
-        // runtime skips empty view configs; LitViewDeclaration requires a component
+        // oxlint-disable-next-line anti-slop/require-safety-comment-for-type-assertion -- deliberately invalid: runtime skips empty view configs; LitViewDeclaration requires a component
         empty: {} as LitViewDeclaration,
       },
     };
@@ -458,7 +457,8 @@ describe('litViewsBuilder', () => {
       router.stateRegistry.register(stateDecl);
     });
     const state = router.stateRegistry.get('test').$$state?.();
-    // litViewsBuilder normalizes views; core's StateObject.views typing cannot express it
+
+    // SAFETY: litViewsBuilder normalizes views; core's StateObject.views typing cannot express it
     const views = state?.views as
       | Record<string, NormalizedLitViewDeclaration>
       | undefined;
@@ -478,10 +478,12 @@ describe('litViewsBuilder', () => {
     router.stateRegistry.register(stateDecl);
 
     const state = router.stateRegistry.get('sticky').$$state?.();
-    // litViewsBuilder normalizes views; core's StateObject.views typing cannot express it
+
+    // SAFETY: litViewsBuilder normalizes views; core's StateObject.views typing cannot express it
     const views = state?.views as
       | Record<string, NormalizedLitViewDeclaration>
       | undefined;
+
     const component = views?.$default.component;
 
     // A sticky instance must outlive the `<ui-view>` elements that render it,
@@ -489,9 +491,13 @@ describe('litViewsBuilder', () => {
     expect(component).not.toBe(TestElementSticky);
     expect(isRoutedLitElement(component)).toBe(false);
 
-    const first = (component as RoutedLitTemplate)({} as UIViewInjectedProps);
-    const props = {} as UIViewInjectedProps;
-    const second = (component as RoutedLitTemplate)(props);
+    // SAFETY: not a RoutedLitElement (asserted above), so the template form
+    const template = component as RoutedLitTemplate;
+    const first = template({ router, resolves: {} });
+    const props: UIViewInjectedProps = { router, resolves: {} };
+    const second = template(props);
+
+    // SAFETY: the sticky template interpolates its cached element as its one value
     const instance = second.values[0] as TestElementSticky & {
       _uiViewProps?: UIViewInjectedProps;
     };
@@ -527,7 +533,8 @@ describe('litViewsBuilder', () => {
       router.stateRegistry.register(stateDecl);
     });
     const state = router.stateRegistry.get('argless').$$state?.();
-    // litViewsBuilder normalizes views; core's StateObject.views typing cannot express it
+
+    // SAFETY: litViewsBuilder normalizes views; core's StateObject.views typing cannot express it
     const views = state?.views as
       | Record<string, NormalizedLitViewDeclaration>
       | undefined;
@@ -545,6 +552,7 @@ describe('typings regressions', () => {
     // Assignability half lives in ./typings-regressions.types.ts (typecheck).
     const template = (props: UIViewInjectedProps) =>
       html`<div>${props.transition?.from().name}</div>`;
+
     expect(isLitViewDeclarationTemplate(template)).toBe(true);
   });
 });

@@ -4,6 +4,9 @@
   "name": "lit-ui-router",
   "compatibility_date": "2026-07-01",
   "main": "./worker/index.ts",
+  // Resolved from this directory, where every wrangler script runs.
+  "alias": { "lit-html/is-server.js": "./worker/is-server.ts" },
+  "observability": { "enabled": true },
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",
@@ -25,6 +28,8 @@
       "/app-mobx/*",
       "/app-effect",
       "/app-effect/*",
+      "/app-signals",
+      "/app-signals/*",
       "/app-hash",
       "/app-hash/*",
       "/not-found-naive",
@@ -33,6 +38,19 @@
       "/not-found-spa/*",
       "/simulated-routing",
       "/simulated-routing/*",
+      // The release pages and the /gh redirects, answered from the release ledger.
+      "/releases",
+      "/releases/*",
+      "/gh",
+      "/gh/*",
     ],
   },
+  // Read-only RPC into the release ledger worker; the docs worker holds no D1 binding.
+  "services": [
+    {
+      "binding": "LEDGER",
+      "service": "release-ledger",
+      "entrypoint": "LedgerReader",
+    },
+  ],
 }

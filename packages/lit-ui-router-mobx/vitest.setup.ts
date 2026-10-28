@@ -10,15 +10,20 @@ silenceLitDevModeBanner();
 // import.meta.env where it is read in-module (browser projects included).
 // Typed by vitest.env.d.ts, not vite/client.
 const expectedLitMajor = import.meta.env.VITE_EXPECT_LIT_MAJOR ?? '3';
+
 await import('lit');
+
 assertLitMajor(expectedLitMajor);
 
 // Guards the mobx6-compat alias swap in both directions. mobx publishes no
 // version global, but the majors are cleanly discriminated by the namespaced
 // -> named export split: 7 has `compareStructural`, 6 has `comparer`.
 const expectedMobxMajor = import.meta.env.VITE_EXPECT_MOBX_MAJOR ?? '7';
+
 const mobx = await import('mobx');
+
 const actualMobxMajor = 'compareStructural' in mobx ? '7' : '6';
+
 if (actualMobxMajor !== expectedMobxMajor) {
   throw new Error(
     `vitest.setup: expected mobx major ${expectedMobxMajor}, saw ${actualMobxMajor}`,

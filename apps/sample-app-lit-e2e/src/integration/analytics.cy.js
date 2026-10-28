@@ -26,6 +26,7 @@ const EXPECTED = {
 
 // unseeded lanes run the app default, which is the Navigation API (#656)
 const lane = LOCATION_PLUGIN || 'navigation';
+
 const expected = EXPECTED[lane];
 
 describe(`gtag page_view under the ${lane} location plugin`, () => {

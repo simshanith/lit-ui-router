@@ -28,6 +28,11 @@ on:
         description: 'Record Cypress videos and upload them as a run artifact'
         type: boolean
         default: false
+      # 1 gives every suite its own `e2e (<suite>)` job.
+      suitesPerJob:
+        description: 'Default e2e suites per e2e job (a positive integer)'
+        type: number
+        default: 1
     secrets:
       TURBO_TOKEN:
         required: false
@@ -48,8 +53,9 @@ env:
   HUSKY: 0
 
 jobs:
-  # Named for what it does, not for the role one of its callers plays: the
-  # UI's own "Required" badge already says which composite gates merging.
+  # The turbo graph and coverage. Named for what it does, not for the role
+  # one of its callers plays: the UI's own "Required" badge already says which
+  # composite gates merging.
   run:
     runs-on: ubuntu-26.04
     timeout-minutes: 30
@@ -64,18 +70,14 @@ jobs:
       - name: Setup mise
         uses: jdx/mise-action@v5
         with:
-          version: 2026.10.1
+          auto_update: true
       - name: Install dependencies
         run: mise run setup
       - name: Resolve Playwright version
-        # Cache keys derive from the installed packages, so they bust exactly
-        # on a version bump and nothing else; one step per tool keeps the two
-        # caches independent.
+        # The cache key derives from the installed package, so it busts
+        # exactly on a version bump and nothing else.
         id: playwright-version
         run: mise run //tools/build_and_test:playwright_version
-      - name: Resolve Cypress version
-        id: cypress-version
-        run: mise run //tools/build_and_test:cypress_version
       - name: Cache Playwright browsers
         # The runner image is in the key: browser builds are per-Ubuntu-release.
         id: playwright-cache
@@ -83,50 +85,33 @@ jobs:
         with:
           path: ~/.cache/ms-playwright
           key: ${{ runner.os }}-${{ steps.playwright-version.outputs.image }}-playwright-${{ steps.playwright-version.outputs.playwright }}
-      - name: Cache Cypress binary
-        uses: actions/cache@v6
-        with:
-          path: ~/.cache/Cypress
-          key: ${{ runner.os }}-cypress-${{ steps.cypress-version.outputs.cypress }}
       - name: Install Playwright Browsers
         if: ${{ steps.playwright-cache.outputs.cache-hit != 'true' }}
         run: mise run //tools/build_and_test:playwright
       - name: Install Playwright OS deps (firefox+webkit)
         # Browsers came from the cache; only test:engines (main graph) needs
         # the firefox+webkit apt libs — the PR graph is chromium-only, and
-        # chromium and Cypress ride the runner image's preinstalled set.
+        # chromium rides the runner image's preinstalled set.
         if: ${{ steps.playwright-cache.outputs.cache-hit == 'true' && inputs.mainGraph }}
         run: mise run //tools/build_and_test:playwright_deps_engines
-      - name: Install Cypress
-        # `cypress install` is a near-no-op when the binary is cached; verify
-        # still runs so the parallel suites skip the first-use banner.
-        run: mise run //tools/build_and_test:cypress
-      - name: Start shared Xvfb display
-        # Cypress spawns its own Xvfb when there is no DISPLAY, so any two
-        # suites running at once race ("Fatal server error") — and turbo runs
-        # the `test:e2e:*` suites in parallel. One shared display serves
-        # however many of them there are.
-        # https://docs.cypress.io/app/continuous-integration/overview#Xvfb
-        # The task captures Xvfb's stderr (routine xkbcomp keysym noise on
-        # the runner image) and prints it, filtered, only on startup failure.
-        run: mise run //tools/build_and_test:xvfb
       - name: Build and Test
         # TURBO_FORCE carries the deflake input through env (never `${{ }}`
         # in run lines); turbo parses ""/"false" as cache-respecting.
-        # Exact complement of the ci_main step below: one of the two runs.
+        # Exact complement of the ci_main_graph step below: one of the two runs.
+        # continue-on-error: the Turbo run summary step fails in its place, so
+        # a red job opens on the report rather than this stream.
+        id: build
         if: ${{ !inputs.mainGraph }}
-        run: mise run ci
+        continue-on-error: true
+        run: mise run ci_graph
         env:
+          # Only failing tasks print; every task's full log is uploaded below.
+          TURBO_OUTPUT_LOGS: errors-only
           TURBO_FORCE: ${{ inputs.force }}
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
           TURBO_API: ${{ secrets.TURBO_API }}
           TURBO_TEAM: ${{ vars.TURBO_TEAM }}
-          # Silence per-request [wrangler:info] logging from the e2e dev server.
-          WRANGLER_LOG: warn
-          # Cypress video off in CI (configs keep video:true for local runs);
-          # the cypressVideo dispatch input re-enables it for debugging.
-          CYPRESS_video: ${{ inputs.cypressVideo == true }}
       - name: Build and Test (main)
         # ci:main = the PR graph plus the main-only guards (check:pack,
         # dts-backtest full TS matrix) in one parallel turbo invocation; a
@@ -134,19 +119,18 @@ jobs:
         # Future main-only guards join ci:main's dependsOn, not new steps.
         # Main pushes, mainGraph dispatches and ci-main/ branches all land here;
         # tag_push stays push-only, so none of the others can tag.
+        # Same continue-on-error hand-off to the summary step as above.
+        id: build_main
         if: ${{ inputs.mainGraph }}
-        run: mise run ci_main
+        continue-on-error: true
+        run: mise run ci_main_graph
         env:
+          TURBO_OUTPUT_LOGS: errors-only
           TURBO_FORCE: ${{ inputs.force }}
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
           TURBO_API: ${{ secrets.TURBO_API }}
           TURBO_TEAM: ${{ vars.TURBO_TEAM }}
-          # Silence per-request [wrangler:info] logging from the e2e dev server.
-          WRANGLER_LOG: warn
-          # Cypress video off in CI (configs keep video:true for local runs);
-          # the cypressVideo dispatch input re-enables it for debugging.
-          CYPRESS_video: ${{ inputs.cypressVideo == true }}
       - name: Upload turbo run summaries
         # Uploaded BEFORE the report so the report can link it: the report caps
         # every list it prints, and this is the uncapped copy to download when
@@ -169,9 +153,36 @@ jobs:
           path: .turbo/runs/
           retention-days: 30
           if-no-files-found: warn
+      - name: Upload turbo task logs
+        # The full output the errors-only stream hid, one file per task.
+        # `always()`: a timed-out job is when the stream says least.
+        id: task_logs
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7
+        continue-on-error: true
+        with:
+          name: turbo-task-logs
+          # The workspace globs, not `**`: that would walk node_modules.
+          # tools/repo-checks/task-logs-upload.test.ts holds them to pnpm-workspace.yaml.
+          path: |
+            .turbo/turbo-*.log
+            .turbo/logs/*.json
+            apps/*/.turbo/turbo-*.log
+            examples/.turbo/turbo-*.log
+            packages/*/.turbo/turbo-*.log
+            packages/shared/*/.turbo/turbo-*.log
+            tools/*/.turbo/turbo-*.log
+            www/lit-ui-router.dev/.turbo/turbo-*.log
+            www/release-diffs.lit-ui-router.dev/.turbo/turbo-*.log
+            www/release-ledger.lit-ui-router.dev/.turbo/turbo-*.log
+          # `.turbo` is below the search root for every pattern but the first.
+          include-hidden-files: true
+          retention-days: 5
+          if-no-files-found: warn
       - name: Upload vitest attachments
+        # The build steps continue on error, so `failure()` is false here.
         id: vitest_attachments
-        if: ${{ failure() }}
+        if: ${{ !cancelled() && (steps.build.outcome == 'failure' || steps.build_main.outcome == 'failure') }}
         uses: actions/upload-artifact@v7
         continue-on-error: true
         with:
@@ -185,14 +196,33 @@ jobs:
           include-hidden-files: true
           retention-days: 5
           if-no-files-found: ignore
+      - name: Write format patch
+        # Ahead of the summary, so the upload's artifact-url can link from it.
+        # The summary step rewrites the same patch. Fails open, like the summary.
+        if: ${{ !cancelled() && (steps.build.outcome == 'failure' || steps.build_main.outcome == 'failure') }}
+        continue-on-error: true
+        run: mise run //tools/build_and_test:format_patch
+      - name: Upload format patch
+        # Written only when a format check failed.
+        id: format_patch
+        if: ${{ !cancelled() && (steps.build.outcome == 'failure' || steps.build_main.outcome == 'failure') }}
+        uses: actions/upload-artifact@v7
+        continue-on-error: true
+        with:
+          # Zipped: `gh run download` can't extract an `archive: false` upload.
+          name: format-patch
+          path: .turbo/format.patch
+          retention-days: 5
+          if-no-files-found: ignore
       - name: Turbo run summary
-        # Reads every `--summarize` artifact the ci/ci_main step wrote — the
-        # graph, the docs build, the e2e suites are three turbo runs — and
+        # Reads every `--summarize` artifact this job's session wrote and
         # reports each: cache split, slowest tasks and longest dependency chain
         # every run, plus the failing tasks when one was red. On a red run
-        # it republishes only the tasks that really failed — turbo's stream
-        # also prints ELIFECYCLE for every task it CANCELLED, which the run
-        # summary omits entirely.
+        # it republishes only the tasks that really failed. The ci graphs and
+        # e2e suites run --continue=dependencies-successful, so a red run holds
+        # every independent failure and never starts a failed task's
+        # dependents; a fail-fast run (build_www) also prints ELIFECYCLE for
+        # every task it CANCELLED. The run summary omits both.
         #
         # `!cancelled()` rather than `always()`: a cancelled job is exactly
         # when the artifact lies, since the tasks turbo killed are missing from
@@ -200,21 +230,187 @@ jobs:
         # start, not its end, so a later `turbo run` would join it. It fails
         # open, as before: a broken reporter
         # warns, never adds a red step of its own.
+        #
+        # BUILD_OUTCOME: this step goes red after a failed build, so a red job
+        # opens here and the steps below see `failure()` as before.
         if: ${{ !cancelled() }}
         run: mise run //tools/build_and_test:turbo_summary
         env:
+          BUILD_OUTCOME: ${{ inputs.mainGraph && steps.build_main.outcome || steps.build.outcome }}
+          # Presence only: the remote is off by design without a token (Dependabot, forks).
+          TURBO_SUMMARY_TOKEN_SET: ${{ secrets.TURBO_TOKEN != '' }}
           # Empty when the upload found nothing; the report then omits the link.
           TURBO_SUMMARY_ARTIFACT_URL: ${{ steps.run_summaries.outputs.artifact-url }}
+          TURBO_LOGS_ARTIFACT_URL: ${{ steps.task_logs.outputs.artifact-url }}
           # Empty on a green run or when no spec wrote an attachment.
           VITEST_ATTACHMENTS_ARTIFACT_URL: ${{ steps.vitest_attachments.outputs.artifact-url }}
+          # Empty unless a format check failed.
+          FORMAT_PATCH_ARTIFACT_URL: ${{ steps.format_patch.outputs.artifact-url }}
       - name: Upload Codecov bundle stats
+        # Implicit success(): the summary step above is red after a red build.
         run: mise run codecov_bundle
         env:
+          # Runs after the task-log upload, so a failing upload is the only output kept.
+          TURBO_OUTPUT_LOGS: errors-only
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
           TURBO_API: ${{ secrets.TURBO_API }}
           TURBO_TEAM: ${{ vars.TURBO_TEAM }}
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      - name: Upload to Codecov
+        # Branch-head runs skip upload; merge-head/main covers the same SHA.
+        if: ${{ github.event_name != 'push' || github.ref == 'refs/heads/main' }}
+        uses: codecov/codecov-action@v7
+        with:
+          files: packages/lit-ui-router/coverage/lcov.info,packages/lit-ui-router/coverage/coverage-final.json,packages/lit-ui-router-effect/coverage/lcov.info,packages/lit-ui-router-effect/coverage/coverage-final.json,packages/lit-ui-router-effect/coverage-effect3/lcov.info,packages/lit-ui-router-effect/coverage-effect3/coverage-final.json,packages/lit-ui-router-mobx/coverage/lcov.info,packages/lit-ui-router-mobx/coverage/coverage-final.json,packages/lit-ui-router-signals/coverage/lcov.info,packages/lit-ui-router-signals/coverage/coverage-final.json,packages/lit-ui-router-ssr/coverage/lcov.info,packages/lit-ui-router-ssr/coverage/coverage-final.json,packages/navigation-location-plugin/coverage/lcov.info,packages/navigation-location-plugin/coverage/coverage-final.json,packages/ui-router-effect/coverage/lcov.info,packages/ui-router-effect/coverage/coverage-final.json,packages/ui-router-mobx/coverage/lcov.info,packages/ui-router-mobx/coverage/coverage-final.json,packages/ui-router-server/coverage/lcov.info,packages/ui-router-signals/coverage/lcov.info,packages/ui-router-signals/coverage/coverage-final.json,packages/shared/dev-gate/coverage/lcov.info,packages/shared/dev-gate/coverage/coverage-final.json,packages/shared/route-snapshot/coverage/lcov.info,packages/shared/route-snapshot/coverage/coverage-final.json
+          disable_search: true
+          plugins: noop
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  plan:
+    # Groups the default suites (apps/sample-app-lit-e2e/scripts/suites.ts)
+    # into the e2e matrix, `suitesPerJob` at a time. No `mise run setup`:
+    # the task imports nothing from node_modules.
+    runs-on: ubuntu-26.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      groups: ${{ steps.plan.outputs.groups }}
+    steps:
+      - name: 'Checkout code'
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Setup mise
+        uses: jdx/mise-action@v5
+        with:
+          auto_update: true
+      - name: Plan the e2e matrix
+        id: plan
+        run: mise run e2e_plan
+        env:
+          SUITES_PER_JOB: ${{ inputs.suitesPerJob }}
+
+  e2e:
+    # One job per group, each with its own dev server and runner; a group of
+    # one reports as `e2e (<suite>)`. No `needs: run`: the two start together.
+    name: e2e (${{ join(matrix.group, ', ') }})
+    needs: plan
+    runs-on: ubuntu-26.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    strategy:
+      # Every group reports, red or green.
+      fail-fast: false
+      matrix:
+        group: ${{ fromJSON(needs.plan.outputs.groups) }}
+
+    steps:
+      - name: 'Checkout code'
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Setup mise
+        uses: jdx/mise-action@v5
+        with:
+          auto_update: true
+      - name: Install dependencies
+        run: mise run setup
+      - name: Resolve Cypress version
+        id: cypress-version
+        run: mise run //tools/build_and_test:cypress_version
+      - name: Cache Cypress binary
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/Cypress
+          key: ${{ runner.os }}-cypress-${{ steps.cypress-version.outputs.cypress }}
+      - name: Install Cypress
+        # `cypress install` is a near-no-op when the binary is cached; verify
+        # still runs so the suite skips the first-use banner.
+        run: mise run //tools/build_and_test:cypress
+      - name: Mark summary session
+        # Bounds the report below to this job's runs: the docs build and the suite.
+        run: mise run //tools/build_and_test:mark_session
+      - name: E2E
+        # The docs build is a remote-cache hit once any job of this commit has
+        # uploaded it; on a cold commit every leg reaches it before `run` does.
+        # Same continue-on-error hand-off to the summary step as `run`.
+        id: e2e
+        continue-on-error: true
+        run: |
+          read -ra suites <<< "$SUITES"
+          mise run test_e2e "${suites[@]}"
+        env:
+          SUITES: ${{ join(matrix.group, ' ') }}
+          TURBO_OUTPUT_LOGS: errors-only
+          TURBO_FORCE: ${{ inputs.force }}
+          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+          TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
+          TURBO_API: ${{ secrets.TURBO_API }}
+          TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+          # Silence per-request [wrangler:info] logging from the e2e dev server.
+          WRANGLER_LOG: warn
+          # Cypress video off in CI (configs keep video:true for local runs);
+          # the cypressVideo dispatch input re-enables it for debugging.
+          CYPRESS_video: ${{ inputs.cypressVideo == true }}
+      - name: Upload turbo run summaries
+        # Same fail-open uploads as `run`, named per group.
+        id: run_summaries
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        continue-on-error: true
+        with:
+          name: turbo-run-summaries-${{ join(matrix.group, '-') }}
+          path: .turbo/runs/
+          retention-days: 30
+          if-no-files-found: warn
+      - name: Upload turbo task logs
+        id: task_logs
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7
+        continue-on-error: true
+        with:
+          name: turbo-task-logs-${{ join(matrix.group, '-') }}
+          path: |
+            .turbo/turbo-*.log
+            .turbo/logs/*.json
+            apps/*/.turbo/turbo-*.log
+            examples/.turbo/turbo-*.log
+            packages/*/.turbo/turbo-*.log
+            packages/shared/*/.turbo/turbo-*.log
+            tools/*/.turbo/turbo-*.log
+            www/lit-ui-router.dev/.turbo/turbo-*.log
+            www/release-diffs.lit-ui-router.dev/.turbo/turbo-*.log
+            www/release-ledger.lit-ui-router.dev/.turbo/turbo-*.log
+          include-hidden-files: true
+          retention-days: 5
+          if-no-files-found: warn
+      - name: Upload Cypress screenshots
+        # The E2E step continues on error, so `failure()` is false here.
+        id: cypress_screenshots
+        if: ${{ !cancelled() && steps.e2e.outcome == 'failure' }}
+        uses: actions/upload-artifact@v7
+        continue-on-error: true
+        with:
+          name: cypress-screenshots-${{ join(matrix.group, '-') }}
+          path: apps/sample-app-lit-e2e/cypress/screenshots*/
+          retention-days: 5
+          if-no-files-found: ignore
+      - name: Turbo run summary
+        # Goes red after a failed suite, so a red job opens on the report.
+        if: ${{ !cancelled() }}
+        run: mise run //tools/build_and_test:turbo_summary
+        env:
+          BUILD_OUTCOME: ${{ steps.e2e.outcome }}
+          # Presence only: the remote is off by design without a token (Dependabot, forks).
+          TURBO_SUMMARY_TOKEN_SET: ${{ secrets.TURBO_TOKEN != '' }}
+          TURBO_SUMMARY_ARTIFACT_URL: ${{ steps.run_summaries.outputs.artifact-url }}
+          TURBO_LOGS_ARTIFACT_URL: ${{ steps.task_logs.outputs.artifact-url }}
+          # Empty on a green run or when no test took a screenshot.
+          CYPRESS_SCREENSHOTS_ARTIFACT_URL: ${{ steps.cypress_screenshots.outputs.artifact-url }}
       - name: Upload Cypress videos
         # Videos exist only when the dispatch input turned recording on — no
         # other caller passes cypressVideo, so the input alone is the condition.
@@ -223,7 +419,7 @@ jobs:
         if: ${{ inputs.cypressVideo && !cancelled() }}
         uses: actions/upload-artifact@v7
         with:
-          name: cypress-videos
+          name: cypress-videos-${{ join(matrix.group, '-') }}
           path: apps/sample-app-lit-e2e/cypress/videos*/
           retention-days: 5
           if-no-files-found: warn
@@ -235,17 +431,25 @@ jobs:
         if: ${{ failure() }}
         uses: actions/upload-artifact@v7
         with:
-          name: wrangler-logs
+          name: wrangler-logs-${{ join(matrix.group, '-') }}
           path: ~/.config/.wrangler/logs/
           retention-days: 5
           if-no-files-found: warn
-      - name: Upload to Codecov
-        # Branch-head runs skip upload; merge-head/main covers the same SHA.
-        if: ${{ github.event_name != 'push' || github.ref == 'refs/heads/main' }}
-        uses: codecov/codecov-action@v7
+
+  e2e_result:
+    # One pass/fail for the whole matrix, `<caller> / e2e result`, on every
+    # lane; rulesets require it beside `run`, since a leg's name changes with
+    # the suite list.
+    # Fails unless the plan and every leg succeeded; GitHub counts a skipped
+    # required check as passing, so a skipped or cancelled job fails it too.
+    name: e2e result
+    needs: [plan, e2e]
+    if: ${{ always() }}
+    runs-on: ubuntu-26.04
+    timeout-minutes: 5
+    permissions: {}
+    steps:
+      - name: Require every suite to succeed
+        uses: re-actors/alls-green@b5b5b37504aa4183270bd3d855c52a67f212be35 # v1.3.0
         with:
-          files: packages/lit-ui-router/coverage/lcov.info,packages/lit-ui-router/coverage/coverage-final.json,packages/lit-ui-router-effect/coverage/lcov.info,packages/lit-ui-router-effect/coverage/coverage-final.json,packages/lit-ui-router-mobx/coverage/lcov.info,packages/lit-ui-router-mobx/coverage/coverage-final.json,packages/lit-ui-router-ssr/coverage/lcov.info,packages/lit-ui-router-ssr/coverage/coverage-final.json,packages/navigation-location-plugin/coverage/lcov.info,packages/navigation-location-plugin/coverage/coverage-final.json,packages/ui-router-server/coverage/lcov.info
-          disable_search: true
-          plugins: noop
-          fail_ci_if_error: false
-          token: ${{ secrets.CODECOV_TOKEN }}
+          jobs: ${{ toJSON(needs) }}

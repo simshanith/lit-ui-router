@@ -1,6 +1,8 @@
 /**
+ * The server half: `prerender()` emits a static site from a `ui-router-server`
+ * mount table, and `UiViewRenderer` draws `<ui-view>` inside the `@lit-labs/ssr` render.
+ *
  * @module
- * @mergeModuleWith <project>
  */
 export {
   type EmittedPage,
@@ -12,5 +14,7 @@ export {
   type RedirectLine,
   type RenderContext,
 } from './prerender.js';
+
 export { settle, type SettleOptions } from './settle.js';
+
 export { UiViewRenderer } from './ui-view-renderer.js';

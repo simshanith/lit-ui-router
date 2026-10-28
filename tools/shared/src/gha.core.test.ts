@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import {
+  annotationCommand,
   endGroupCommand,
   errorCommand,
   groupCommand,
@@ -33,6 +34,37 @@ describe('workflow commands', () => {
     );
     assert.equal(noticeCommand('a\nb'), '::notice::a%0Ab');
     assert.equal(groupCommand('a\nb'), '::group::a%0Ab');
+  });
+});
+
+describe('annotationCommand', () => {
+  it('emits the level, properties in order, and the message', () => {
+    assert.equal(
+      annotationCommand('warning', 'unused', {
+        file: 'src/a.ts',
+        line: 3,
+        col: 7,
+        title: 'eslint(no-unused-vars)',
+      }),
+      '::warning file=src/a.ts,line=3,col=7,title=eslint(no-unused-vars)::unused',
+    );
+  });
+
+  it('omits undefined properties and the separator when none remain', () => {
+    assert.equal(
+      annotationCommand('notice', 'hi', { file: undefined }),
+      '::notice::hi',
+    );
+  });
+
+  it('escapes the property delimiters in values, and data in the message', () => {
+    assert.equal(
+      annotationCommand('error', 'a\n::add-mask::x', {
+        file: 'a,b.ts',
+        title: 'x::y\n',
+      }),
+      '::error file=a%2Cb.ts,title=x%3A%3Ay%0A::a%0A::add-mask::x',
+    );
   });
 });
 

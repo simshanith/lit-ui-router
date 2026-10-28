@@ -5,11 +5,13 @@ import type { PackageSummary } from './check-published-diff.core.ts';
 import {
   checkRunApiArgs,
   checkRunName,
+  checkRunsMarkdown,
   releaseWorkflowUrl,
   toCheckRun,
 } from './publish-check-runs.core.ts';
 
 const REPO = 'simshanith/lit-ui-router';
+
 const RELEASE_URL = `https://github.com/${REPO}/actions/workflows/bump-version.yml`;
 
 const clean: PackageSummary = {
@@ -94,6 +96,7 @@ describe('toCheckRun', () => {
       { ...clean, name: 'lit-ui-router-ssr', tag: 'rc', version: '0.1.0-rc.0' },
       REPO,
     );
+
     assert.equal(payload.title, 'up to date with rc 0.1.0-rc.0');
     assert.match(payload.summary, /match lit-ui-router-ssr@0\.1\.0-rc\.0/);
   });
@@ -102,6 +105,41 @@ describe('toCheckRun', () => {
     const payload = toCheckRun({ ...clean, tag: null, version: null }, REPO);
     assert.equal(payload.conclusion, 'success');
     assert.match(payload.title, /never published/);
+  });
+});
+
+describe('checkRunsMarkdown', () => {
+  const markdown = checkRunsMarkdown('published-diff', [
+    toCheckRun(clean, REPO),
+    toCheckRun(drifting, REPO),
+  ]);
+
+  it('tables every run with its conclusion and title', () => {
+    assert.match(markdown, /^## published-diff\n/);
+    assert.match(
+      markdown,
+      /\| `published-diff \(lit-ui-router-mobx\)` \| success \| up to date with latest 0\.3\.3 \|/,
+    );
+    assert.match(
+      markdown,
+      /\| `published-diff \(lit-ui-router\)` \| action_required \| unreleased changes vs latest 1\.7\.0 \(2 shipped files differ\) \|/,
+    );
+  });
+
+  it('expands non-success runs only, with their check-run summary', () => {
+    assert.match(
+      markdown,
+      /### published-diff \(lit-ui-router\)\n\nTo resolve:/,
+    );
+    assert.match(markdown, /- `dist\/core\.js`/);
+    assert.doesNotMatch(markdown, /### published-diff \(lit-ui-router-mobx\)/);
+  });
+
+  it('says so when no runs were posted', () => {
+    assert.equal(
+      checkRunsMarkdown('peer-floor', [], 'Nothing defines it.'),
+      '## peer-floor\n\nNothing defines it.\n',
+    );
   });
 });
 

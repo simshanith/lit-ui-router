@@ -4,9 +4,7 @@ import { RuleTester } from 'eslint';
 import { anchorIsValid } from './anchor-is-valid.ts';
 
 // RuleTester runs cases through these statics, which eslint's types omit.
-const hooks = RuleTester as unknown as Record<string, unknown>;
-hooks.describe = describe;
-hooks.it = it;
+Object.assign(RuleTester, { describe, it });
 
 const ruleTester = new RuleTester({
   languageOptions: { ecmaVersion: 'latest', sourceType: 'module' },
@@ -109,6 +107,7 @@ ruleTester.run('anchor-is-valid', anchorIsValid, {
 // `allowElementParts: false`: a server render never runs an element part, so
 // only an href in the markup counts, and a lone uiSref is fixed to srefHref.
 const SERVED = [{ allowElementParts: false }];
+
 const SREF_ONLY = `
 import { html } from 'lit';
 import { uiSref } from 'lit-ui-router';
@@ -490,6 +489,73 @@ gatedTester.run('anchor-is-valid (litHtmlSources array)', anchorIsValid, {
     {
       name: "the user's own source gates the file in",
       code: "import { html } from 'my-lit';\nhtml`<a></a>`;",
+      errors: [{ messageId: 'noHrefErrorMessage' }],
+    },
+  ],
+});
+
+// `settings.litUiRouterSources`: listed modules' exports count as lit-ui-router's.
+const sourcesTester = new RuleTester({
+  settings: { litUiRouterSources: ['~/registry/lit', '@acme/router', 42, ''] },
+  languageOptions: { ecmaVersion: 'latest', sourceType: 'module' },
+});
+
+sourcesTester.run('anchor-is-valid (litUiRouterSources)', anchorIsValid, {
+  valid: [
+    {
+      name: "a listed module's uiSref assigns the href",
+      code: "import { html } from 'lit';\nimport { uiSref } from '~/registry/lit';\nhtml`<a ${uiSref('home')}>Home</a>`;",
+    },
+    {
+      name: 'a renamed binding from a listed module still counts',
+      code: "import { html } from 'lit';\nimport { uiSref as sref } from '@acme/router';\nhtml`<a ${sref('home')}>Home</a>`;",
+    },
+    {
+      name: 'a namespace import of a listed module still counts',
+      code: "import { html } from 'lit';\nimport * as router from '@acme/router';\nhtml`<a ${router.uiSref('home')}>Home</a>`;",
+    },
+    {
+      name: "a listed module's subpath counts, as lit-ui-router's do",
+      code: "import { html } from 'lit';\nimport { srefHref } from '@acme/router/links.js';\nhtml`<a href=${srefHref('home')}>Home</a>`;",
+    },
+    {
+      name: 'lit-ui-router itself still counts beside the list',
+      code: `${IMPORTS}html\`<a \${uiSref('home')}>Home</a>\`;`,
+    },
+  ],
+  invalid: [
+    {
+      name: 'a module the list does not name proves nothing',
+      code: "import { html } from 'lit';\nimport { uiSref } from '~/registry/other';\nhtml`<a ${uiSref('home')}>Home</a>`;",
+      errors: [{ messageId: 'noHrefErrorMessage' }],
+    },
+    {
+      name: 'a shared prefix is not a subpath',
+      code: "import { html } from 'lit';\nimport { uiSref } from '@acme/router-extras';\nhtml`<a ${uiSref('home')}>Home</a>`;",
+      errors: [{ messageId: 'noHrefErrorMessage' }],
+    },
+    {
+      name: 'specifiers match as written, so a relative path is not resolved',
+      code: "import { html } from 'lit';\nimport { uiSref } from '../registry/lit';\nhtml`<a ${uiSref('home')}>Home</a>`;",
+      errors: [{ messageId: 'noHrefErrorMessage' }],
+    },
+    {
+      name: "the fix extends the listed module's own import",
+      code: "import { html } from 'lit';\nimport { uiSref } from '~/registry/lit';\nhtml`<a ${uiSref('home')}>Home</a>`;",
+      options: SERVED,
+      errors: [{ messageId: 'noHrefErrorMessage' }],
+      output:
+        "import { html } from 'lit';\nimport { uiSref, srefHref } from '~/registry/lit';\nhtml`<a href=${srefHref('home')}>Home</a>`;",
+    },
+  ],
+});
+
+ruleTester.run('anchor-is-valid (litUiRouterSources unset)', anchorIsValid, {
+  valid: [],
+  invalid: [
+    {
+      name: "without the setting, a wrapper's uiSref proves nothing",
+      code: "import { html } from 'lit';\nimport { uiSref } from '~/registry/lit';\nhtml`<a ${uiSref('home')}>Home</a>`;",
       errors: [{ messageId: 'noHrefErrorMessage' }],
     },
   ],

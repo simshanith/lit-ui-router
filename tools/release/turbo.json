@@ -23,9 +23,14 @@
         "lit-ui-router#build",
         "lit-ui-router-effect#build",
         "lit-ui-router-mobx#build",
+        "lit-ui-router-signals#build",
         "lit-ui-router-ssr#build",
+        "ui-router-effect#build",
+        "ui-router-mobx#build",
         "ui-router-navigation-location-plugin#build",
-        "ui-router-server#build"
+        "ui-router-registry#build",
+        "ui-router-server#build",
+        "ui-router-signals#build"
       ],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/pnpm-workspace.yaml"],
       "outputs": [".cache/pack/*.tgz"]
@@ -48,6 +53,7 @@
         // $TURBO_ROOT$ globs are not gitignore-pruned, so the line above
         // otherwise hashes every installed dependency's manifest too
         "!$TURBO_ROOT$/**/node_modules/**",
+        "!$TURBO_ROOT$/**/.vitepress/cache/**",
         "!$TURBO_ROOT$/.claude/**",
         "$TURBO_ROOT$/pnpm-workspace.yaml",
         "$TURBO_ROOT$/**/turbo.json",

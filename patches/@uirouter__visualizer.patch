@@ -1,0 +1,26 @@
+diff --git a/_bundles/ui-router-visualizer.esm.js b/_bundles/ui-router-visualizer.esm.js
+index abcb202fd26ceaadacdf376b095cdcbcf1a93619..69533c9c59756d672d9d3f787ccab72a082439b7 100644
+--- a/_bundles/ui-router-visualizer.esm.js
++++ b/_bundles/ui-router-visualizer.esm.js
+@@ -2954,7 +2954,7 @@ var TransitionVisualizer = /** @class */ (function (_super) {
+         var _this = this;
+         var pointerEvents = this.state.pointerEvents;
+         return (v("div", { ref: function (el) { return (_this._div = el); } },
+-            v("div", { className: "uirTranVis_history", style: { pointerEvents: pointerEvents } },
++            v("div", { className: "uirTranVis_history", style: { pointerEvents: pointerEvents }, tabIndex: 0, role: "region", "aria-label": "Transition history" },
+                 this.state.transitions.map(function (trans) { return (v("div", { key: trans.$id, className: "uirTranVis_transition" },
+                     v(TransitionView, { transition: trans }),
+                     v("div", { style: { minWidth: '18em', border: '1px solid transparent' } }))); }),
+diff --git a/_bundles/ui-router-visualizer.js b/_bundles/ui-router-visualizer.js
+index 8d8a3f70c6e0d41f0aab44dcf7ad3e771eadc495..fdaedb5e815f2be4f2304d445d2a7faddf7fe57f 100644
+--- a/_bundles/ui-router-visualizer.js
++++ b/_bundles/ui-router-visualizer.js
+@@ -2960,7 +2960,7 @@
+             var _this = this;
+             var pointerEvents = this.state.pointerEvents;
+             return (v("div", { ref: function (el) { return (_this._div = el); } },
+-                v("div", { className: "uirTranVis_history", style: { pointerEvents: pointerEvents } },
++                v("div", { className: "uirTranVis_history", style: { pointerEvents: pointerEvents }, tabIndex: 0, role: "region", "aria-label": "Transition history" },
+                     this.state.transitions.map(function (trans) { return (v("div", { key: trans.$id, className: "uirTranVis_transition" },
+                         v(TransitionView, { transition: trans }),
+                         v("div", { style: { minWidth: '18em', border: '1px solid transparent' } }))); }),

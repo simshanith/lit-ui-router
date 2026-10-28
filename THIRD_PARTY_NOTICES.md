@@ -15,6 +15,14 @@ so it ships in the tarball.
 package manifest declares ISC; both are permissive. Full text in
 [`packages/eslint-plugin-lit-ui-router/LICENSE`](./packages/eslint-plugin-lit-ui-router/LICENSE).
 
+### @open-wc/semantic-dom-diff
+
+`tools/lit-test-env/src/dom.ts` adapts `getDiffableHTML` from
+[@open-wc/semantic-dom-diff](https://github.com/open-wc/open-wc/tree/master/packages/semantic-dom-diff)
+0.21.0, MIT, Copyright (c) 2018 open-wc. The package is private and never
+published; the open-wc MIT text is the one reproduced in
+[`packages/eslint-plugin-lit-ui-router/LICENSE`](./packages/eslint-plugin-lit-ui-router/LICENSE).
+
 ### @uirouter/core
 
 `packages/ui-router-server/src/url-matcher.ts` derives its `UrlMatcher`,
@@ -41,10 +49,12 @@ The files under [`patches/`](./patches/) are small diffs applied to installed
 dependencies at install time; each is a modification of the named package and
 is offered under that package's license.
 
-| Patch                             | Package                      | License |
-| --------------------------------- | ---------------------------- | ------- |
-| `patches/@api-viewer__docs.patch` | `@api-viewer/docs` (open-wc) | MIT     |
-| `patches/lit-dialog.patch`        | `lit-dialog` (magethle)      | ISC     |
+| Patch                                 | Package                            | License |
+| ------------------------------------- | ---------------------------------- | ------- |
+| `patches/@api-viewer__docs.patch`     | `@api-viewer/docs` (open-wc)       | MIT     |
+| `patches/@api-viewer__tabs.patch`     | `@api-viewer/tabs` (open-wc)       | MIT     |
+| `patches/@uirouter__visualizer.patch` | `@uirouter/visualizer` (UI-Router) | MIT     |
+| `patches/lit-dialog.patch`            | `lit-dialog` (magethle)            | ISC     |
 
 ## Brand marks
 

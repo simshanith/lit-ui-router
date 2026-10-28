@@ -11,6 +11,13 @@ export type StackBlitzView = 'default' | 'editor' | 'preview';
 const REPO_TREE =
   'https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples';
 
+const GITHUB_TREE =
+  'https://github.com/simshanith/lit-ui-router/tree/main/examples';
+
+export function githubTreeSrc(name: ExampleName): string {
+  return `${GITHUB_TREE}/${name}`;
+}
+
 export function staticSrc(name: ExampleName): string {
   return `/examples/${name}/`;
 }
@@ -23,7 +30,9 @@ export function stackblitzEmbedSrc(
   const url = new URL(`${REPO_TREE}/${name}`);
   url.searchParams.set('embed', '1');
   url.searchParams.set('file', file);
+
   if (view) url.searchParams.set('view', view);
+
   return url.toString();
 }
 
@@ -33,5 +42,6 @@ export function stackblitzOpenSrc(
 ): string {
   const url = new URL(`${REPO_TREE}/${name}`);
   url.searchParams.set('file', file);
+
   return url.toString();
 }

@@ -18,7 +18,9 @@ export function interceptNavigations(): () => void {
     if (!event.canIntercept) return;
     event.intercept({ handler: () => Promise.resolve() });
   };
+
   window.navigation.addEventListener('navigate', handler);
+
   return () => window.navigation.removeEventListener('navigate', handler);
 }
 
@@ -29,6 +31,7 @@ export function interceptNavigations(): () => void {
 export async function restoreUrl(href: string): Promise<void> {
   if (window.location.href === href) return;
   const stop = interceptNavigations();
+
   try {
     await window.navigation.navigate(href, { history: 'replace' }).finished;
   } catch {

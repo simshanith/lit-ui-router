@@ -7,6 +7,7 @@ import lintReport, {
 import './lint-report.js';
 
 let report: LintReport = lintReport;
+
 let reportHtml = lintHtml;
 
 /** Connected views, so an HMR re-lint can push new results into them. */
@@ -91,15 +92,19 @@ export class EslintHtmlView extends ReportView {
   // let the report's own layout size the frame, and keep observing it so a
   // collapse or a re-lint resizes it too.
   private fitFrame(event: Event) {
+    // SAFETY: fitFrame is bound only as the report <iframe>'s @load listener
     const doc = (event.target as HTMLIFrameElement).contentDocument;
+
     if (!doc) return;
     const root = doc.documentElement;
+
     const measure = () => {
       this.frameHeight = Math.max(
         MIN_FRAME_HEIGHT,
         Math.ceil(root.getBoundingClientRect().height),
       );
     };
+
     this.frameObserver?.disconnect();
     this.frameObserver = new ResizeObserver(measure);
     this.frameObserver.observe(root);
@@ -125,8 +130,11 @@ export class EslintHtmlView extends ReportView {
 if (import.meta.hot) {
   import.meta.hot.accept('virtual:lint-report', (mod) => {
     if (!mod) return;
+    // SAFETY: the lint-report plugin's virtual module exports the LintReport and its html
     report = mod.default as LintReport;
+    // SAFETY: as for mod.default
     reportHtml = mod.html as string;
+
     for (const view of live) view.requestUpdate();
   });
 }

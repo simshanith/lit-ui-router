@@ -6,15 +6,15 @@ import type { Rule } from 'eslint';
 import type { RuleFor } from './rule-shape.ts';
 import { TemplateAnalyzer } from 'eslint-plugin-lit/lib/template-analyzer.js';
 import {
-  type CallNode,
+  asNode,
+  asNodes,
   createDirectiveTracker,
   elementPartIndex,
   hasSpread,
+  isCallExpression,
+  isObjectExpression,
   LINK_ELEMENTS_SCHEMA,
   linkElementsOf,
-  type Node,
-  type ObjectNode,
-  type Parse5Element,
   propertyNamed,
 } from './directives.ts';
 
@@ -49,8 +49,11 @@ const srefAssignHref: RuleFor<typeof RULE_NAME> = {
 
   create(context) {
     const tracker = createDirectiveTracker(context);
+
     const { linkElements: option } =
+      // SAFETY: the linter validates options against meta.schema before create runs
       (context.options[0] as { linkElements?: string[] } | undefined) ?? {};
+
     const linkElements = linkElementsOf(context, option);
 
     return {
@@ -60,18 +63,19 @@ const srefAssignHref: RuleFor<typeof RULE_NAME> = {
 
       TaggedTemplateExpression(node) {
         if (!tracker.shouldAnalyse) return;
-        if (!tracker.isLitTemplate(node.tag as unknown as Node)) return;
 
-        const expressions = node.quasi.expressions as unknown as Node[];
+        if (!tracker.isLitTemplate(asNode(node.tag))) return;
+
+        const expressions = asNodes(node.quasi.expressions);
         const analyzer = TemplateAnalyzer.create(node);
 
         analyzer.traverse({
           // eslint-disable-next-line complexity -- a guard-clause table over uiSref's argument shapes; one fix per row
-          enterElement(rawElement) {
-            const element = rawElement as unknown as Parse5Element;
+          enterElement(element) {
             // probably a tree correction node
             if (element.sourceCodeLocation === undefined) return;
             const tag = element.name;
+
             // Declared links keep the `true` default, as native links keep 'auto'.
             if (
               tag.includes('-') ||
@@ -83,15 +87,19 @@ const srefAssignHref: RuleFor<typeof RULE_NAME> = {
 
             for (const attribute of Object.keys(element.attribs)) {
               const index = elementPartIndex(attribute);
+
               if (index === undefined) continue;
               const expression = expressions[index];
+
               if (
-                expression === undefined ||
+                !isCallExpression(expression) ||
                 tracker.directiveOf(expression) !== 'uiSref'
               ) {
                 continue;
               }
-              const call = expression as CallNode;
+
+              const call = expression;
+
               const report = (fix: Rule.ReportFixer): void => {
                 context.report({
                   node: call,
@@ -102,8 +110,10 @@ const srefAssignHref: RuleFor<typeof RULE_NAME> = {
               };
 
               const options = call.arguments[2];
+
               if (options === undefined) {
                 const previous = call.arguments[1] ?? call.arguments[0];
+
                 // `uiSref()` has no argument to append after; report unfixed.
                 if (previous === undefined) {
                   context.report({
@@ -113,6 +123,7 @@ const srefAssignHref: RuleFor<typeof RULE_NAME> = {
                   });
                   continue;
                 }
+
                 const filler = call.arguments.length === 1 ? ', {}' : '';
                 report((fixer) =>
                   fixer.insertTextAfter(previous, `${filler}, ${AUTO}`),
@@ -120,8 +131,9 @@ const srefAssignHref: RuleFor<typeof RULE_NAME> = {
                 continue;
               }
 
-              if (options.type !== 'ObjectExpression') continue;
-              const object = options as ObjectNode;
+              if (!isObjectExpression(options)) continue;
+              const object = options;
+
               if (hasSpread(object)) continue;
               const property = propertyNamed(object, 'assignHref');
 
@@ -136,7 +148,9 @@ const srefAssignHref: RuleFor<typeof RULE_NAME> = {
               }
 
               const { value } = property;
+
               if (value.type !== 'Literal') continue;
+
               if (value.value === 'auto' || value.value === false) continue;
               report((fixer) => fixer.replaceText(value, "'auto'"));
             }

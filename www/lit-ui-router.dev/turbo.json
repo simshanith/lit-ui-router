@@ -39,9 +39,13 @@
     },
     "wrangler:dev": {
       "dependsOn": ["build"],
-      // Override of the default in dev-port.ts; transport only, so the port
-      // must not enter a cache key.
-      "passThroughEnv": ["WWW_DEV_PORT"],
+      // Overrides of the launcher's defaults (dev-port.ts, the worker build);
+      // the task is uncached, so they pass through.
+      "passThroughEnv": [
+        "WWW_DEV_PORT",
+        "WWW_WORKER_BUILD",
+        "WRANGLER_BUILD_CONDITIONS"
+      ],
       "cache": false,
       "persistent": true
     },
@@ -52,9 +56,14 @@
         "lit-ui-router#docs:api",
         "lit-ui-router-effect#docs:api",
         "lit-ui-router-mobx#docs:api",
+        "lit-ui-router-signals#docs:api",
         "lit-ui-router-ssr#docs:api",
+        "ui-router-effect#docs:api",
+        "ui-router-mobx#docs:api",
         "ui-router-navigation-location-plugin#docs:api",
+        "ui-router-registry#docs:api",
         "ui-router-server#docs:api",
+        "ui-router-signals#docs:api",
         "examples#build:embeds",
         "types:worker"
       ],
@@ -68,6 +77,7 @@
         "typecheck:src",
         "typecheck:lit2",
         "typecheck:mobx6",
+        "typecheck:effect3",
         "typecheck:vue",
         "typecheck:worker",
         "typecheck:worker:tests"
@@ -79,9 +89,14 @@
         "lit-ui-router#docs:api",
         "lit-ui-router-effect#docs:api",
         "lit-ui-router-mobx#docs:api",
+        "lit-ui-router-signals#docs:api",
         "lit-ui-router-ssr#docs:api",
+        "ui-router-effect#docs:api",
+        "ui-router-mobx#docs:api",
         "ui-router-navigation-location-plugin#docs:api",
-        "ui-router-server#docs:api"
+        "ui-router-registry#docs:api",
+        "ui-router-server#docs:api",
+        "ui-router-signals#docs:api"
       ]
     },
     "test": {
@@ -121,9 +136,14 @@
         "lit-ui-router#docs:api",
         "lit-ui-router-effect#docs:api",
         "lit-ui-router-mobx#docs:api",
+        "lit-ui-router-signals#docs:api",
         "lit-ui-router-ssr#docs:api",
+        "ui-router-effect#docs:api",
+        "ui-router-mobx#docs:api",
         "ui-router-navigation-location-plugin#docs:api",
+        "ui-router-registry#docs:api",
         "ui-router-server#docs:api",
+        "ui-router-signals#docs:api",
         "examples#build:embeds"
       ],
       "cache": false,

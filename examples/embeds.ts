@@ -10,9 +10,16 @@
 // every state each built example reaches at this column and fails when one
 // outgrows what is reserved here. Slack above the measurement is fine (and
 // wanted — text wraps at engine-specific metrics); slack below it is a
-// scrollbar inside the embed.
+// scrollbar inside the embed. Reservations cap at 1200px (`MAX_HEIGHT_PX` in
+// tools/embed-heights): an example taller than that reserves the cap and
+// scrolls inside the embed.
 export const EXAMPLES = {
   helloworld: { title: 'Hello World', height: '190px', file: 'src/main.ts' },
+  'helloworld-buildless': {
+    title: 'Hello World (No Build)',
+    height: '190px',
+    file: 'public/main.js',
+  },
   hellosolarsystem: {
     title: 'Hello Solar System',
     height: '800px',
@@ -21,6 +28,11 @@ export const EXAMPLES = {
   'hellosolarsystem-mobx': {
     title: 'Hello Solar System (MobX)',
     height: '880px',
+    file: 'src/main.ts',
+  },
+  'hellosolarsystem-signals': {
+    title: 'Hello Solar System (Signals)',
+    height: '810px',
     file: 'src/main.ts',
   },
   hellogalaxy: {
@@ -35,6 +47,11 @@ export const EXAMPLES = {
     height: '1120px',
     file: 'src/main.ts',
   },
+  'hellogalaxy-signals': {
+    title: 'Hello Galaxy (Signals)',
+    height: '930px',
+    file: 'src/main.ts',
+  },
   'design-system-links': {
     title: 'Design System Links',
     height: '540px',
@@ -42,17 +59,25 @@ export const EXAMPLES = {
   },
   'lint-eslint': {
     title: 'ESLint Plugin',
-    // Reserves the open report, the tallest state the embed reaches: 1127px
-    // at the 686px column, which `check:embeds` turns into 1170px with the
-    // frame's border and wrap slack. Seven warnings now, not five — the
-    // reservation moves with the plugin's recommended ruleset. The report
-    // rewraps taller as the column narrows, so a column much under the doc
-    // default scrolls instead of being reserved for.
-    height: '1170px',
+    // Capped: the open report outgrows the cap and scrolls inside the embed.
+    height: '1200px',
+    file: 'src/main.ts',
+  },
+  'navigation-api': {
+    title: 'Navigation API',
+    // check:embeds walks hash links only, so it measures the initial state; every other state keeps that height.
+    height: '650px',
+    file: 'src/main.ts',
+  },
+  'loading-and-error-views': {
+    title: 'Loading and Error Views',
+    // check:embeds never ticks Fail requests, so this also covers the error views, which stand a few px taller.
+    height: '410px',
     file: 'src/main.ts',
   },
 } as const;
 
 export type ExampleName = keyof typeof EXAMPLES;
 
+// SAFETY: EXAMPLES is a const literal, so its own keys are exactly ExampleName
 export const EXAMPLE_NAMES = Object.keys(EXAMPLES) as ExampleName[];

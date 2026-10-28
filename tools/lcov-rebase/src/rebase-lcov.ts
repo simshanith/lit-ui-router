@@ -10,17 +10,27 @@ import { workspaceRoot } from '@tools/bootstrap/root.ts';
 
 import { rebaseLcov } from './rebase.ts';
 
-const files = process.argv.slice(2);
-if (files.length === 0) {
-  console.error('usage: rebase-lcov <lcov-file> [...]');
-  process.exit(1);
-}
+const main = (): void => {
+  const files = process.argv.slice(2);
 
-const packageDir = path
-  .relative(workspaceRoot, process.cwd())
-  .split(path.sep)
-  .join('/');
+  if (files.length === 0) {
+    console.error('usage: rebase-lcov <lcov-file> [...]');
+    process.exitCode = 1;
 
-for (const file of files) {
-  fs.writeFileSync(file, rebaseLcov(fs.readFileSync(file, 'utf8'), packageDir));
-}
+    return;
+  }
+
+  const packageDir = path
+    .relative(workspaceRoot, process.cwd())
+    .split(path.sep)
+    .join('/');
+
+  for (const file of files) {
+    fs.writeFileSync(
+      file,
+      rebaseLcov(fs.readFileSync(file, 'utf8'), packageDir),
+    );
+  }
+};
+
+if (import.meta.main) main();

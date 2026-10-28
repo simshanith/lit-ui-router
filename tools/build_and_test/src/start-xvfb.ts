@@ -16,57 +16,82 @@ import { setTimeout as delay } from 'node:timers/promises';
 import { filterStderr, formatFilteredCount } from './start-xvfb.core.ts';
 
 const display = ':99';
+
 const xvfbBin = process.env.XVFB_BIN ?? 'Xvfb';
+
 const socketPath =
   process.env.XVFB_SOCKET ?? `/tmp/.X11-unix/X${display.slice(1)}`;
+
 const timeoutMs = Number(process.env.XVFB_TIMEOUT_MS ?? 5000);
 
-const stderrPath = path.join(os.tmpdir(), `xvfb-stderr-${process.pid}`);
-const stderrFd = fs.openSync(stderrPath, 'w+');
-fs.unlinkSync(stderrPath);
+const main = async (): Promise<void> => {
+  const stderrPath = path.join(os.tmpdir(), `xvfb-stderr-${process.pid}`);
 
-const xvfb = spawn(xvfbBin, [display, '-screen', '0', '1280x720x24'], {
-  detached: true,
-  stdio: ['ignore', 'ignore', stderrFd],
-});
-xvfb.unref();
+  const stderrFd = fs.openSync(stderrPath, 'w+');
 
-let spawnError;
-let exited = false;
-xvfb.on('error', (error) => {
-  spawnError = error;
-});
-xvfb.on('exit', () => {
-  exited = true;
-});
+  fs.unlinkSync(stderrPath);
 
-let ready = false;
-const deadline = Date.now() + timeoutMs;
-while (Date.now() < deadline) {
-  if (spawnError || exited) break;
-  if (fs.existsSync(socketPath)) {
-    ready = true;
-    break;
-  }
-  await delay(100);
-}
-
-if (!ready) {
-  if (spawnError) console.error(String(spawnError));
-  const captured = readline.createInterface({
-    // Read from the fd, not a path — the '' path is ignored when `fd` is set.
-    input: fs.createReadStream('', { fd: stderrFd, start: 0 }),
+  const xvfb = spawn(xvfbBin, [display, '-screen', '0', '1280x720x24'], {
+    detached: true,
+    stdio: ['ignore', 'ignore', stderrFd],
   });
-  console.error('Xvfb failed to start:');
-  const kept = filterStderr(captured);
-  let next;
-  while (!(next = await kept.next()).done) console.error(next.value);
-  if (next.value > 0) console.error(formatFilteredCount(next.value));
-  process.exit(1);
-}
 
-fs.closeSync(stderrFd);
-if (process.env.GITHUB_ENV) {
-  fs.appendFileSync(process.env.GITHUB_ENV, `DISPLAY=${display}\n`);
-}
-console.log(`Xvfb ready on ${display}`);
+  xvfb.unref();
+
+  let spawnError;
+
+  let exited = false;
+
+  xvfb.on('error', (error) => {
+    spawnError = error;
+  });
+
+  xvfb.on('exit', () => {
+    exited = true;
+  });
+
+  let ready = false;
+
+  const deadline = Date.now() + timeoutMs;
+
+  while (Date.now() < deadline) {
+    if (spawnError || exited) break;
+
+    if (fs.existsSync(socketPath)) {
+      ready = true;
+      break;
+    }
+
+    await delay(100);
+  }
+
+  if (!ready) {
+    if (spawnError) console.error(String(spawnError));
+
+    const captured = readline.createInterface({
+      // Read from the fd, not a path — the '' path is ignored when `fd` is set.
+      input: fs.createReadStream('', { fd: stderrFd, start: 0 }),
+    });
+
+    console.error('Xvfb failed to start:');
+    const kept = filterStderr(captured);
+    let next;
+
+    while (!(next = await kept.next()).done) console.error(next.value);
+
+    if (next.value > 0) console.error(formatFilteredCount(next.value));
+    process.exitCode = 1;
+
+    return;
+  }
+
+  fs.closeSync(stderrFd);
+
+  if (process.env.GITHUB_ENV) {
+    fs.appendFileSync(process.env.GITHUB_ENV, `DISPLAY=${display}\n`);
+  }
+
+  console.log(`Xvfb ready on ${display}`);
+};
+
+if (import.meta.main) await main();

@@ -1,33 +1,41 @@
 # lit-ui-router-mobx
 
 [![npm version](https://img.shields.io/npm/v/lit-ui-router-mobx.svg)](https://npmx.dev/package/lit-ui-router-mobx)
-[![GitHub Release](https://img.shields.io/github/v/release/simshanith/lit-ui-router?filter=lit-ui-router-mobx@*)](https://github.com/simshanith/lit-ui-router/releases/?q=lit-ui-router-mobx)
+[![GitHub Release](https://img.shields.io/github/v/release/simshanith/lit-ui-router?filter=lit-ui-router-mobx@*)](https://lit-ui-router.dev/gh/releases/lit-ui-router-mobx/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![Website](https://img.shields.io/website?url=https%3A%2F%2Flit-ui-router.dev)](https://lit-ui-router.dev/packages/mobx)
+[![Website](https://img.shields.io/website?url=https%3A%2F%2Flit-ui-router.dev)](https://lit-ui-router.dev/packages/lit-ui-router-mobx)
 [![codecov](https://codecov.io/gh/simshanith/lit-ui-router/graph/badge.svg?component=lit-ui-router-mobx)](https://app.codecov.io/gh/simshanith/lit-ui-router?components%5B0%5D=lit-ui-router-mobx)
 
-[MobX](https://mobx.js.org) bindings for [lit-ui-router](https://lit-ui-router.dev): an observable router store and reaction-based Lit ReactiveControllers.
+[MobX](https://mobx.js.org) bindings for [lit-ui-router](https://lit-ui-router.dev): an observable router store, from [`ui-router-mobx`](https://lit-ui-router.dev/packages/ui-router-mobx), and reaction-based Lit ReactiveControllers.
 
 A thin wrapper on top of `lit-ui-router` — it registers no custom elements and adds no routing behavior. It mirrors the router's state into MobX observables and gives components a declarative, lifecycle-safe way to observe them (and any other MobX state) with automatic `requestUpdate()` — no manual refresh plumbing.
 
 ## Features
 
 - **`RouterStore`** — an observable mirror of the current state, params, and transition; one store (and one transition hook) per router via `RouterStore.for(router)`
-- **`RouterReactionController`** — observes the store of the nearest `<ui-router>` context, discovered automatically through the `ui-router-context` event; no prop drilling and no store wiring in router configuration
+- **`RouterReactionController`** — observes the store of the router its nearest provider supplies, requested automatically over the `context-request` protocol; no prop drilling and no store wiring in router configuration
 - **`ReactionController`** — the generic primitive: runs a MobX `reaction` over an explicit selector while the host is connected; works with any MobX observables, not just the router
 - **Lifecycle-safe** — reactions are created in `hostConnected` and disposed in `hostDisconnected`; they fire immediately on (re)connect so components that re-enter the DOM (e.g. sticky states) never render stale values
 
 ## Installation
 
 ```bash
-npm install lit-ui-router-mobx mobx
-# or
-pnpm add lit-ui-router-mobx mobx
-# or
-yarn add lit-ui-router-mobx mobx
+npm install lit-ui-router-mobx ui-router-mobx mobx
 ```
 
-`lit-ui-router`, `lit`, `mobx`, and `@uirouter/core` are peer dependencies.
+`lit-ui-router`, `ui-router-mobx`, `lit`, `mobx`, and `@uirouter/core` are peer dependencies.
+
+### RouterStore without Lit
+
+`RouterStore` lives in [`ui-router-mobx`](https://lit-ui-router.dev/packages/ui-router-mobx),
+which imports only `mobx` and `@uirouter/core`. A project without Lit installs that package alone:
+
+```bash
+npm install ui-router-mobx mobx
+```
+
+`lit-ui-router-mobx` re-exports the same class, so code using either package shares one store per
+router.
 
 ### MobX 6 and 7
 
@@ -36,6 +44,14 @@ CI. The bindings' own API is identical on either. Note that MobX 7 replaced the
 namespaced comparers with named exports, so the `equals` option in the examples
 below is spelled `compareStructural` on 7 and `comparer.structural` on 6 —
 `equals` accepts any `(a, b) => boolean`, so either works.
+
+### lit-ui-router 1.x
+
+The peer range is `lit-ui-router@^1.16.0`, the first release where `<ui-view>` answers the
+`context-request` protocol as `<ui-router>` does, and it excludes 2.x. `RouterReactionController`
+finds its router through `context-request` alone, the one discovery protocol `lit-ui-router@2.0`
+keeps ([#874](https://github.com/simshanith/lit-ui-router/issues/874)). A `lit-ui-router` 2.0
+still carries a `lit-ui-router-mobx` 2.0.
 
 ## Quick Start
 
@@ -57,13 +73,13 @@ class AppNav extends LitElement {
 }
 ```
 
-No router configuration is required: the controller discovers the router from the enclosing `<ui-router>` element on `hostConnected`, and `RouterStore.for(router)` lazily attaches the store's single transition hook on first use.
+No router configuration is required: on `hostConnected` the controller requests the router from the nearest provider — `<ui-router>`, `<ui-view>`, a `ContextProvider` of `routerContext`, or `provideRouter(target, router)` — and rebinds whenever that provider hands it a new one, and `RouterStore.for(router)` lazily attaches the store's single transition hook on first use. [Router discovery](https://lit-ui-router.dev/guides/reactive-components#router-discovery) covers both protocols.
 
 ## API
 
 ### `RouterStore`
 
-An observable mirror of a router's current state, updated by one `transitionService.onSuccess` hook.
+An observable mirror of a router's current state, updated by one `transitionService.onSuccess` hook. It is `ui-router-mobx`'s `RouterStore`, re-exported.
 
 | Member                      | Description                                                                                                |
 | --------------------------- | ---------------------------------------------------------------------------------------------------------- |
@@ -76,7 +92,7 @@ An observable mirror of a router's current state, updated by one `transitionServ
 
 ### `RouterReactionController`
 
-A ReactiveController that observes the `RouterStore` of the host's `<ui-router>` context:
+A ReactiveController that observes the `RouterStore` of the router the host's nearest provider supplies:
 
 ```typescript
 new RouterReactionController(host, selector, options?)
@@ -114,7 +130,7 @@ class NavHeader extends LitElement {
 
 `dist/development/index.js` is published alongside `dist/index.js` and picked by the `development` export condition, which bundlers resolve automatically in development; production builds get the default. Nothing to configure. `lit-ui-router` ships the same split — see the [Development & Production Builds guide](https://lit-ui-router.dev/guides/development-builds) for the mechanism and the warnings both packages carry.
 
-The development build adds one console warning here: a `RouterReactionController` whose host has no `<ui-router>` ancestor warns once, naming that host, and observes nothing — `.value` stays at `options.initialValue`, so the host renders once and never again. Wrap the subtree in `<ui-router>`, or pass `options.router` for a host outside the router's DOM. Production builds drop the warning and its message text, and lit's own production build silences it as well.
+The development build adds one console warning here: a `RouterReactionController` whose host finds no router provider warns once, naming that host, and observes nothing — `.value` stays at `options.initialValue`, so the host renders once and never again. Wrap the subtree in `<ui-router>`, or pass `options.router` for a host outside the router's DOM. Production builds drop the warning and its message text, and lit's own production build silences it as well.
 
 ## Why selectors instead of render auto-tracking?
 
@@ -127,9 +143,10 @@ Mixins like [`MobxLitElement`](https://github.com/adobe/lit-mobx) auto-track eve
 
 ## Links
 
-- [Docs - MobX Bindings](https://lit-ui-router.dev/packages/mobx)
+- [Docs - MobX Bindings](https://lit-ui-router.dev/packages/lit-ui-router-mobx)
 - [Docs - Reactive Components guide](https://lit-ui-router.dev/guides/reactive-components)
 - [lit-ui-router](https://lit-ui-router.dev)
+- [ui-router-mobx](https://lit-ui-router.dev/packages/ui-router-mobx)
 - [MobX — reactions](https://mobx.js.org/reactions.html)
 - [Lit — Reactive Controllers](https://lit.dev/docs/composition/controllers/)
-- [@uirouter/core — TransitionService hooks](https://ui-router.github.io/core/docs/latest/classes/transition.transitionservice.html)
+- [@uirouter/core — TransitionService hooks](https://ui-router.github.io/core/docs/latest/classes/_transition_transitionservice_.transitionservice.html)

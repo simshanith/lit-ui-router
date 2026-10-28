@@ -95,6 +95,7 @@ const PUBLISHED_MANIFEST = {
   files: ['dist/**'],
   exports: './dist/index.js',
 };
+
 const LOCAL_MANIFEST_417 = {
   name: 'lit-ui-router',
   version: '1.7.1',
@@ -136,6 +137,7 @@ describe('manifestDriftFields', () => {
       name: 'lit-ui-router',
       files: ['dist/**'],
     };
+
     assert.deepEqual(manifestDriftFields(PUBLISHED_MANIFEST, reordered), []);
   });
 
@@ -323,6 +325,7 @@ describe('formatReport', () => {
     localVersion: '1.7.0',
     status: 'clean' as const,
   };
+
   const drift = {
     name: 'lit-ui-router-mobx',
     dir: 'packages/lit-ui-router-mobx',
@@ -369,6 +372,7 @@ describe('formatReport', () => {
     const { text } = formatReport([
       { ...drift, shipInertFiles: ['src/router-store.ts'] },
     ]);
+
     assert.match(
       text,
       /SHIPS CHANGES vs latest 0\.3\.2 — 2 ship-affecting file\(s\):/,
@@ -397,6 +401,7 @@ describe('formatReport', () => {
     const { text } = formatReport([
       { ...clean, localVersion: '1.7.1', status: 'drift', files: [] },
     ]);
+
     assert.match(
       text,
       /local 1\.7\.1 ahead of published — release in flight\?/,
@@ -407,6 +412,7 @@ describe('formatReport', () => {
     const { text } = formatReport([
       { ...clean, localVersion: '1.16.0-rc.0', version: '1.15.0' },
     ]);
+
     assert.match(
       text,
       /local 1\.16\.0-rc\.0 has no rc tag yet — compared against latest 1\.15\.0/,
@@ -423,6 +429,7 @@ describe('formatReport', () => {
         localVersion: '0.1.0-rc.0',
       },
     ]);
+
     assert.match(text, /lit-ui-router-ssr: clean vs rc 0\.1\.0-rc\.0/);
   });
 
@@ -436,6 +443,7 @@ describe('formatReport', () => {
         status: 'unpublished' as const,
       },
     ]);
+
     assert.equal(ok, true);
     assert.match(text, /ui-router-server: never published — skipped/);
   });
@@ -451,20 +459,24 @@ describe('scopePackages', () => {
   const publishable = ['lit-ui-router', 'lit-ui-router-mobx'];
 
   it('returns all publishable names when the scope is empty or unset', () => {
-    assert.deepEqual(scopePackages(publishable, undefined), publishable);
-    assert.deepEqual(scopePackages(publishable, ''), publishable);
-    assert.deepEqual(scopePackages(publishable, ' , '), publishable);
+    const all = { ok: true, packages: publishable };
+    assert.deepEqual(scopePackages(publishable, undefined), all);
+    assert.deepEqual(scopePackages(publishable, ''), all);
+    assert.deepEqual(scopePackages(publishable, ' , '), all);
   });
 
   it('filters to the comma-separated scope, whitespace-tolerant', () => {
-    assert.deepEqual(scopePackages(publishable, ' lit-ui-router-mobx '), [
-      'lit-ui-router-mobx',
-    ]);
+    assert.deepEqual(scopePackages(publishable, ' lit-ui-router-mobx '), {
+      ok: true,
+      packages: ['lit-ui-router-mobx'],
+    });
   });
 
-  it('throws loudly on names matching no publishable member', () => {
-    assert.throws(
-      () => scopePackages(publishable, 'lit-ui-router,typo-pkg'),
+  it('fails on names matching no publishable member', () => {
+    const result = scopePackages(publishable, 'lit-ui-router,typo-pkg');
+    assert.equal(result.ok, false);
+    assert.match(
+      result.ok ? '' : result.error,
       /PUBLISHED_DIFF_PACKAGES names no publishable member: typo-pkg/,
     );
   });
@@ -574,6 +586,7 @@ describe('renderSummary', () => {
         shipInertFiles: [],
       },
     ]);
+
     assert.equal(rendered.endsWith('\n'), true);
     assert.deepEqual(JSON.parse(rendered), [
       {

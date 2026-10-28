@@ -15,12 +15,14 @@ import { join } from 'node:path';
 import { describe, it } from 'node:test';
 
 import { requireManifest } from '@tools/bootstrap/manifest.ts';
+import type { Json } from '@tools/bootstrap/types.ts';
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
 import { taploGet } from './cli-query.ts';
 
 // `pnpm@<version>+sha512.<hash>` — the integrity hash rides along, the version
 // ahead of it is what the other files have to match.
 const packageManager = requireManifest(workspaceRoot).packageManager ?? '';
+
 const pinned = /^pnpm@([^+]+)\+sha512\./.exec(packageManager)?.[1];
 
 // The mise files are TOML, so query them instead of matching their text (see
@@ -31,7 +33,7 @@ const MISE_TOOL = 'tools."aqua:pnpm/pnpm"';
 // whose download URLs carries that version in its path.
 type LockedTool = {
   version: string;
-  [platform: string]: unknown;
+  [platform: string]: Json;
 };
 
 describe('pnpm version pins', () => {
@@ -44,10 +46,12 @@ describe('pnpm version pins', () => {
   });
 
   it('.config/mise/mise.lock locks it, on every platform it covers', () => {
+    // SAFETY: `taplo get` on a mise.lock tool path yields its array of tables
     const [tool, ...extra] = taploGet(
       '.config/mise/mise.lock',
       MISE_TOOL,
     ) as LockedTool[];
+
     assert.equal(extra.length, 0, 'pnpm is locked more than once');
     assert.ok(tool, 'pnpm is not in the lockfile');
     assert.equal(tool.version, pinned);
@@ -56,10 +60,13 @@ describe('pnpm version pins', () => {
     // platforms belong here is `mise lock`'s business, not this test's: pnpm
     // publishes no macos-x64 asset, so it locks six where every other tool
     // gets seven.
+    // SAFETY: mise.lock writes every platforms.* key as a table with a url
     const platforms = Object.entries(tool).filter(([key]) =>
       key.startsWith('platforms.'),
     ) as [string, { url: string }][];
+
     assert.notEqual(platforms.length, 0, 'pnpm is locked for no platform');
+
     for (const [platform, { url }] of platforms) {
       assert.match(url, new RegExp(`/v${pinned}/`), `${platform} url: ${url}`);
     }

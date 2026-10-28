@@ -1,11 +1,12 @@
 import { visitWithFeatures } from '../support/e2e';
 
 const EMAIL_ADDRESS = 'myself@angular.dev';
+
 const CONTACT = 'Delia Hunter';
 
 /**
  * Navigation controls are anchors and carry an href; plain actions, and the
- * three controls that cannot be links, stay buttons and carry none.
+ * two controls that cannot be links, stay buttons and carry none.
  *
  * The button/anchor split is the point — asserting `contains(...)` alone would
  * pass either way, so every assertion here names the element.
@@ -95,10 +96,11 @@ describe('link semantics', () => {
     cy.url().should('not.include', 'edit');
   });
 
-  it('keeps message rows as <tr> with no href, and they still navigate', () => {
+  it('links each message row by its subject, and the row still navigates', () => {
     visitWithFeatures('/mymessages');
     cy.url().should('include', '/mymessages/inbox');
     cy.get('table tbody tr').first().should('not.have.attr', 'href');
+    cy.get('table tbody tr').first().find('a').should('have.attr', 'href');
     cy.get('table tbody tr').first().click();
     cy.url().should('match', /\/inbox\/.+/);
     cy.screenshot('message-list');

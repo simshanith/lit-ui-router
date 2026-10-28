@@ -18,7 +18,7 @@ const members: Member[] = [
     manifest: {
       scripts: {
         'typecheck:peer-floor':
-          'peer-floor-guard && tsc -p tsconfig.peer-floor.json --noEmit',
+          'floor-guard && tsc -p tsconfig.peer-floor.json --noEmit',
       },
     },
   },

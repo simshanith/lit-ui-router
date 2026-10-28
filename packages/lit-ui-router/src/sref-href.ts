@@ -7,7 +7,7 @@ import { AsyncDirective } from 'lit/async-directive.js';
 import { getScopedRouter } from './context.js';
 import { UIRouterLit } from './core.js';
 import { warnMissingRouter } from './dev-warn.js';
-import { UIRouterLitElement } from './ui-router.js';
+import { subscribeRouter } from './router-subscription.js';
 import {
   clickBelongsToBrowser,
   sameTarget,
@@ -62,9 +62,13 @@ export class SrefHrefDirective extends AsyncDirective {
   /** @internal */
   unsubscribe: (() => void) | undefined;
 
+  /** drops the subscription to a provider that may still replace its router */
+  private _unsubscribeRouter: (() => void) | undefined;
+
   /** @internal */
   constructor(partInfo: PartInfo) {
     super(partInfo);
+
     if (
       partInfo.type !== PartType.ATTRIBUTE ||
       partInfo.strings !== undefined
@@ -94,10 +98,12 @@ export class SrefHrefDirective extends AsyncDirective {
     options?: TransitionOptions,
   ): string | typeof nothing | typeof noChange {
     const $state = (this.uiRouter ?? getScopedRouter())?.stateService;
+
     if (!$state) {
       if (this._seekedRouter) {
         this.warnMissingRouter(state);
       }
+
       return noChange;
     }
 
@@ -113,6 +119,7 @@ export class SrefHrefDirective extends AsyncDirective {
     if (targetChanged && this.element) {
       this.element.dispatchEvent(uiSrefTargetEvent(targetState));
     }
+
     return this.href ?? nothing;
   }
 
@@ -146,25 +153,46 @@ export class SrefHrefDirective extends AsyncDirective {
     if (this._firstUpdated || !this.isConnected) {
       return;
     }
+
     const element = this.element!;
-    this.uiRouter = UIRouterLitElement.seekRouter(element);
+
+    const { router, unsubscribe } = subscribeRouter(
+      element,
+      this.onRouterReplaced,
+    );
+
+    this.uiRouter = router;
+    this._unsubscribeRouter = unsubscribe;
     this._seekedRouter = true;
     this.parentView = UiView.seekParentView(element);
+    // SAFETY: a 'click' event is a MouseEvent
     element.addEventListener('click', this.onClick as EventListener);
+
     if (this.uiRouter) {
       this.unsubscribe = this.uiRouter.stateRegistry.onStatesChanged(
         this.doRender,
       );
     }
+
     // the update that scheduled this rendered before the seek: push the value
     // it could not, or let the no-op report itself
     this.doRender();
     this._firstUpdated = true;
   }
 
+  /** What a disconnect and reconnect would do, for the router that replaced the one found. */
+  private readonly onRouterReplaced = (router: UIRouterLit): void => {
+    this._unsubscribeRouter = undefined;
+    this.unsubscribe?.();
+    this.uiRouter = router;
+    this.unsubscribe = router.stateRegistry.onStatesChanged(this.doRender);
+    this.doRender();
+  };
+
   /** @internal */
   doRender = (): void => {
     const value = this.render(this.state!, this.params, this.options);
+
     if (value !== noChange && this.isConnected) {
       this.setValue(value);
     }
@@ -174,15 +202,20 @@ export class SrefHrefDirective extends AsyncDirective {
   onClick = (event: MouseEvent): void => {
     const { uiRouter: router, state, params } = this;
     const $state = router?.stateService;
+
     if (!$state || !this.element?.isConnected || !state) {
       if (!$state && state && this.element?.isConnected) {
         this.warnMissingRouter(state);
       }
+
       return;
     }
+
+    // SAFETY: `currentTarget` is the link element this listener was added to
     if (clickBelongsToBrowser(event, event.currentTarget as Element)) {
       return;
     }
+
     // fire-and-forget: @uirouter/core handles transition promise rejections
     void $state.go(state, params, this.getOptions());
     event.preventDefault();
@@ -190,6 +223,7 @@ export class SrefHrefDirective extends AsyncDirective {
 
   private warnMissingRouter(state: string): void {
     const element = this.element;
+
     if (!element) return;
     warnMissingRouter(
       element,
@@ -200,6 +234,7 @@ export class SrefHrefDirective extends AsyncDirective {
 
   /** @internal */
   disconnected(): void {
+    // SAFETY: a 'click' event is a MouseEvent
     this.element?.removeEventListener('click', this.onClick as EventListener);
     // lit notifies before it removes the nodes: the container still hears this
     this.element?.dispatchEvent(uiSrefTargetRemovedEvent());
@@ -207,6 +242,8 @@ export class SrefHrefDirective extends AsyncDirective {
     this.targetState = null;
     this.unsubscribe?.();
     this.unsubscribe = undefined;
+    this._unsubscribeRouter?.();
+    this._unsubscribeRouter = undefined;
     this._firstUpdated = false;
   }
 

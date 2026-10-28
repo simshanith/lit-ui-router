@@ -1,0 +1,6 @@
+{
+  // The registered consumer: its Register and the registry entry points it
+  // loads augment the whole program, so it gets one of its own.
+  "extends": "../tsconfig.fixture.json",
+  "include": ["*.ts"]
+}

@@ -1,5 +1,6 @@
 import { fileURLToPath } from 'node:url';
 import { configDefaults, defineConfig } from 'vitest/config';
+import { GithubActionsReporter } from 'vitest/node';
 import packageJson from './package.json' with { type: 'json' };
 
 // Two lanes: the server half runs in plain node under the @lit-labs/ssr DOM
@@ -54,6 +55,12 @@ const peerAliases = [
   },
 ];
 
+// package.json#imports maps #dev-gate into dist/; specs read the node source, which vi.stubEnv drives.
+const devGate = {
+  find: /^#dev-gate$/,
+  replacement: source('./src/dev-gate.node.ts'),
+};
+
 // Vitest resolves the `development` condition, so the published build is reached by path.
 const renderLightProd = {
   find: /^@lit-labs\/ssr-client\/directives\/render-light\.js$/,
@@ -66,12 +73,18 @@ const cacheKey = process.env.VITEST_BROWSER_API_PORT ?? 'default';
 
 export default defineConfig({
   cacheDir: `node_modules/.vite-${cacheKey}`,
-  resolve: { alias: peerAliases },
+  resolve: { alias: [devGate, ...peerAliases] },
   test: {
     // What oxc-emit-js defines as `import.meta.env.PACKAGE_VERSION` in dist/.
     env: { PACKAGE_VERSION: packageJson.version },
-    // hanging-process logs the open handles in CI
-    reporters: process.env.CI ? ['default', 'hanging-process'] : ['default'],
+    // github-actions precedes the failure banner; hanging-process logs open handles in CI
+    reporters: [
+      ...(process.env.GITHUB_ACTIONS === 'true'
+        ? [new GithubActionsReporter({ jobSummary: { enabled: false } })]
+        : []),
+      'default',
+      ...(process.env.CI ? (['hanging-process'] as const) : []),
+    ],
     coverage: {
       reporter: ['text', 'json', 'lcov'],
       reportsDirectory: './coverage',
@@ -93,7 +106,7 @@ export default defineConfig({
       {
         cacheDir: `node_modules/.vite-${cacheKey}-prod`,
         // The lane that reads the published build of `@lit-labs/ssr-client`, where the renderLight flag carries a minified name.
-        resolve: { alias: [renderLightProd, ...peerAliases] },
+        resolve: { alias: [renderLightProd, devGate, ...peerAliases] },
         test: {
           name: 'prod-conditions',
           globals: true,

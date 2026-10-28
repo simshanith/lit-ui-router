@@ -1,35 +1,94 @@
+:root {
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* Doc prose wrapping; overflow-wrap breaks only a word that would overflow. */
+.vp-doc {
+  overflow-wrap: break-word;
+}
+
+.vp-doc :is(h1, h2, h3, h4) {
+  text-wrap: balance;
+}
+
+.vp-doc :is(p, li) {
+  text-wrap: pretty;
+}
+
 /* Style links in the homepage tagline */
 .VPHero .tagline a {
   color: var(--vp-c-brand-1);
   text-decoration: none;
-  transition: color 0.25s, text-decoration 0.25s;
+  transition: color 0.25s var(--ease-out);
 }
 
-.VPHero .tagline a:hover {
-  color: var(--vp-c-brand-2);
-  text-decoration: underline;
+@media (hover: hover) and (pointer: fine) {
+  .VPHero .tagline a:hover {
+    color: var(--vp-c-brand-2);
+    text-decoration: underline;
+  }
 }
 
+/* Each logo stays with its name and sizes to the text, so a wrapped tagline keeps its line height; the underline marks the link without relying on color. */
 .VPHero .tagline a.library {
-  display: inline-flex;
-  align-items: baseline;
-  justify-content: center;
-  margin-bottom: 6px;
+  white-space: nowrap;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in oklch, currentColor 40%, transparent);
+  text-decoration-thickness: 0.06em;
+  text-underline-offset: 0.2em;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .VPHero .tagline a.library:hover {
+    text-decoration-color: currentColor;
+  }
 }
 
 .VPHero .tagline a.library>img {
-  display: inline-block;
-  margin: auto 4px auto 2px;
+  display: inline;
+  block-size: 1em;
+  inline-size: auto;
+  margin-inline: 0.1em 0.2em;
+  vertical-align: -0.125em;
 }
 
-.VPHero .tagline a.badge>img {
-  transition: box-shadow 0.25s ease-in-out;
+.vp-doc .badges a.badge>img {
   display: inline-block;
   box-shadow: 0px 0px 0px 0px currentColor;
+  transition: box-shadow 0.25s var(--ease-out);
 }
 
-.VPHero .tagline a.badge:hover>img {
-  box-shadow: 0px 0px 12px 0px currentColor;
+@media (hover: hover) and (pointer: fine) {
+  .vp-doc .badges a.badge:hover>img {
+    box-shadow: 0px 0px 12px 0px currentColor;
+  }
+}
+
+/* The CTAs: the buttons keep their natural widths and the install link spans both. */
+.VPHero.has-image .actions.actions {
+  display: grid;
+  grid-template-columns: repeat(2, auto);
+  gap: 12px;
+  inline-size: fit-content;
+  margin-inline: auto;
+  margin-block: 0;
+}
+
+/* Side by side with the logo, the hero's text is start-aligned. */
+@media (min-width: 960px) {
+  .VPHero.has-image .actions.actions {
+    margin-inline: 0;
+  }
+}
+
+.VPHero .actions .action {
+  padding: 0;
+}
+
+.VPHero .actions .VPButton {
+  display: block;
+  inline-size: 100%;
+  text-align: center;
 }
 
 /* Version badges on package pages */
@@ -37,19 +96,62 @@
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 16px;
-  margin-bottom: 24px;
+  margin-block: 16px 24px;
 }
 
 .vp-doc .badges a.badge>img {
-  display: inline-block;
   border-radius: 4px;
-  box-shadow: 0px 0px 0px 0px currentColor;
-  transition: box-shadow 0.25s ease-in-out;
 }
 
-.vp-doc .badges a.badge:hover>img {
-  box-shadow: 0px 0px 12px 0px currentColor;
+/* The atlas thumb on the companion overview: one image per scheme, the
+   figure beside the prose from the sidebar breakpoint up. */
+.vp-doc .atlas-thumb {
+  margin-block: 24px;
+  max-inline-size: 320px;
+  margin-inline: auto;
+}
+
+.vp-doc .atlas-thumb img {
+  display: block;
+  inline-size: 100%;
+  margin-block: 0;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+  object-position: center 8%;
+  border-radius: 8px;
+  box-shadow: 0 0 0 0 currentColor;
+  transition: box-shadow 0.25s var(--ease-out);
+}
+
+.vp-doc .atlas-thumb .dark-only,
+.dark .vp-doc .atlas-thumb .light-only {
+  display: none;
+}
+
+.dark .vp-doc .atlas-thumb .dark-only {
+  display: block;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .vp-doc .atlas-thumb a:hover > img {
+    box-shadow: 0 0 12px 0 currentColor;
+  }
+}
+
+.vp-doc .atlas-thumb figcaption {
+  margin-block-start: 8px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--vp-c-text-2);
+}
+
+@media (min-width: 960px) {
+  .vp-doc .atlas-thumb {
+    float: inline-end;
+    inline-size: 220px;
+    margin-block: 0 16px;
+    margin-inline: 24px 0;
+  }
 }
 
 /* Shields badges: pin a legible height so the wide release badge doesn't
@@ -76,45 +178,84 @@
      320px, giving the deep API identifiers room to sit on one line. The
      ≥1440px width formula derives from this variable too. */
   --vp-sidebar-width: 320px;
-  --vp-home-hero-image-background-image: url(/images/lit-flame.svg);
-  --vp-home-hero-image-filter-blur: 24px;
-  --vp-home-hero-image-filter-hue-rotate: 0;
-  --vp-home-hero-image-filter-invert: 0;
-  --vp-home-hero-image-filter-brightness: 250%;
-  --vp-home-hero-image-filter: blur(var(--vp-home-hero-image-filter-blur)) hue-rotate(var(--vp-home-hero-image-filter-hue-rotate)) invert(var(--vp-home-hero-image-filter-invert)) brightness(var(--vp-home-hero-image-filter-brightness));
-  --vp-home-hero-image-transform: translate3D(-50%, -55%, 0) scale(1, 1);
-  --vp-home-hero-image-width: 80%;
-  --vp-home-hero-image-height: 80%;
+  --vp-home-hero-image-background-image: url(/images/hero-glow.svg);
+}
+
+/* Brand tokens hold 4.5:1 for white button text and for brand link text. */
+:root:not(.dark) {
+  --vp-c-brand-3: #4a67ca;
 }
 
 .dark {
-  --vp-home-hero-image-filter-hue-rotate: 180deg;
-  --vp-home-hero-image-filter-invert: 1;
-  --vp-home-hero-image-filter-brightness: 60%;
+  --vp-c-brand-2: #7a8cf0;
+  --vp-button-brand-hover-bg: #4f6ad0;
+  --vp-button-brand-active-bg: #3a5ccc;
 }
 
+.dark {
+  --vp-home-hero-image-background-image: url(/images/hero-glow-dark.svg);
+}
+
+/* The logo sizes to the hero's width, in feature-card columns; the box is the logo, so no negative margins. */
+.VPHero.has-image .image {
+  margin: 0 0 2rem;
+  container-type: inline-size;
+}
+
+/* One grid cell stacks the glow under the logo; both centre on it. Stacked, the logo is 2/3 of the width, then 1/2 from 768px. */
+.VPHero.has-image .image-container {
+  --hero-logo-size: calc((200cqi - 1rem) / 3);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  place-items: center;
+  inline-size: auto;
+  block-size: auto;
+  transform: none;
+  /* Bounds the logo's blend to the glow; blending against the page left Safari painting stale glow tiles. */
+  isolation: isolate;
+}
+
+.VPHero.has-image :is(.image-bg, .image-src) {
+  grid-area: 1 / 1;
+  position: static;
+  transform: none;
+  aspect-ratio: 1;
+  block-size: auto;
+}
+
+.VPHero.has-image .image-src {
+  inline-size: var(--hero-logo-size);
+  max-inline-size: none;
+  max-block-size: none;
+}
+
+/* The glow SVG bakes in its blur, since Safari's composited CSS filters blur and brighten differently; it overhangs the logo without growing the hero. */
 .VPHero.has-image .image-bg {
+  inline-size: calc(var(--hero-logo-size) * 1.95);
+  margin: calc(var(--hero-logo-size) * -0.475);
   background-image: var(--vp-home-hero-image-background-image);
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
-  width: var(--vp-home-hero-image-width);
-  height: var(--vp-home-hero-image-height);
-  filter: var(--vp-home-hero-image-filter);
-  border-radius: 50%;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: var(--vp-home-hero-image-transform);
-  transition: width 0.5s, height 0.5s, transform 0.5s, filter 0.5s;
 }
 
+/* The home page has no footer to clear; VitePress's 6–8rem bottom margin only adds scroll. */
+.VPHome.VPHome {
+  margin-block-end: 1.5rem;
+}
 
-html.chrome .VPHero .VPImage {
+@media (min-width: 768px) {
+    .VPHero.has-image .image-container {
+      --hero-logo-size: calc((100cqi - 1rem) / 2);
+    }
+}
+
+/* The blend also makes the logo a stacking context, so it paints over the filtered glow. */
+.VPHero .VPImage {
   mix-blend-mode: multiply;
 }
 
-html.chrome.dark .VPHero .VPImage {
+.dark .VPHero .VPImage {
   mix-blend-mode: plus-lighter;
 }
 
@@ -123,32 +264,28 @@ html.chrome.dark .VPHero .VPImage {
   border-radius: 6px;
 }
 
-@media (min-width: 640px) {
-    :root {
-        --vp-home-hero-image-width: 80%;
-        --vp-home-hero-image-height: 80%;
-        --vp-home-hero-image-transform: translate3D(-50%, -52.5%, 0) scale(0.75, 0.75);
-        --vp-home-hero-image-filter-blur: 36px;
-    }
-}
-
 @media (min-width: 960px) {
-    :root {
-        --vp-home-hero-image-width: 100%;
-        --vp-home-hero-image-height: 100%;
-        --vp-home-hero-image-transform: translate3D(-50%, -60%, 0) scale(0.8, 0.8);
-        --vp-home-hero-image-filter-blur: 42px;
+    /* The feature cards' three columns and 1rem gutter: text spans two, the logo fills the third. */
+    .VPHero.has-image .container {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      column-gap: 1rem;
     }
 
     .VPHero.has-image .main.main {
-      max-width: 640px;
+      grid-column: span 2;
+      inline-size: auto;
+      max-inline-size: none;
+    }
+
+    .VPHero.has-image .image {
+      margin: 0;
+    }
+
+    .VPHero.has-image .image-container {
+      --hero-logo-size: 100cqi;
+      place-items: center end;
+      block-size: 100%;
     }
 }
 
-@media (min-width: 1280px) {
-    :root {
-        --vp-home-hero-image-width: 100%;
-        --vp-home-hero-image-height: 100%;
-        --vp-home-hero-image-transform: translate3D(-50%, -60%, 0) scale(1, 1);
-    }
-}

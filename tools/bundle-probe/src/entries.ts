@@ -1,7 +1,8 @@
-import { existsSync } from 'node:fs';
+import { existsSync, realpathSync } from 'node:fs';
 import path from 'node:path';
 
 import { requireManifest } from '@tools/bootstrap/manifest.ts';
+import type { ExportsTarget } from '@tools/bootstrap/types.ts';
 
 export type PackageEntry = {
   label: string;
@@ -10,17 +11,29 @@ export type PackageEntry = {
   free: string[];
 };
 
+/** An exports target that is a path, not conditions, a fallback list, or null. */
+const isTargetPath = (target: ExportsTarget | undefined): target is string =>
+  typeof target === 'string';
+
+// The `bundleProbe` manifest field: per-subpath boundary claims.
+export type BundleProbeClaims = Readonly<
+  Record<string, { readonly free?: readonly string[] }>
+>;
+
 export type PackageProbe = {
   name: string;
   declared: string[];
+  // dirs of the @repo/* devDependencies that @tools/oxc-emit inlines into dist/
+  inlined: string[];
   entries: PackageEntry[];
 };
 
 // The exports map is the single source of truth for what gets probed: a new
 // export joins the invariant checks and the codecov series without touching
 // any script. Rules: './package.json', wildcard patterns, and non-JS targets
-// are skipped; './src/*.ts' targets bundle as-is; './dist/*.js' targets map
-// back to the sibling './src/*.ts'; anything else fails loudly. Labels come
+// are skipped; './src/*.ts' and './dist/*.js' targets bundle as-is, so a dist
+// entry probes the emit consumers install (build:js runs first); anything
+// else fails loudly. Labels come
 // from the subpath ('.' labels index), naming the <prefix>-<label>-esm series.
 //
 // The optional `bundleProbe` manifest field carries the per-entry boundary
@@ -30,52 +43,70 @@ export type PackageProbe = {
 export const readPackageProbe = (packageDir: string): PackageProbe => {
   const manifest = requireManifest(packageDir);
   const name = manifest.name;
+
   if (name === undefined) {
     throw new Error(`${packageDir}: package.json has no name`);
   }
+
   const declared = [
     ...Object.keys(manifest.dependencies ?? {}),
     ...Object.keys(manifest.peerDependencies ?? {}),
   ];
-  const claims = (manifest as { bundleProbe?: Record<string, unknown> })
-    .bundleProbe;
+
+  const inlined = Object.keys(manifest.devDependencies ?? {})
+    .filter((dependency) => dependency.startsWith('@repo/'))
+    .map((dependency) =>
+      realpathSync(path.join(packageDir, 'node_modules', dependency)),
+    );
+
+  // SAFETY: bundleProbe, when present, is hand-authored as BundleProbeClaims
+  const claims = (manifest as { bundleProbe?: BundleProbeClaims }).bundleProbe;
+
   const entries: PackageEntry[] = [];
   const bundled = new Set<string>();
+
   for (const [subpath, value] of Object.entries(manifest.exports ?? {})) {
     if (subpath === './package.json' || subpath.includes('*')) continue;
-    const target =
-      typeof value === 'string'
-        ? value
-        : (value as Record<string, unknown>).default;
-    if (typeof target !== 'string') {
+
+    const target = isTargetPath(value)
+      ? value
+      : value === null || Array.isArray(value)
+        ? undefined
+        : value.default;
+
+    if (!isTargetPath(target)) {
       throw new Error(`${name}: export '${subpath}' has no default target`);
     }
+
     if (!/\.(js|ts)$/.test(target)) continue;
-    const source = target.startsWith('./src/')
-      ? target
-      : target.replace(/^\.\/dist\/(.+)\.js$/, './src/$1.ts');
-    if (!source.startsWith('./src/')) {
+
+    if (!/^\.\/(src|dist)\//.test(target)) {
       throw new Error(
-        `${name}: cannot map export '${subpath}' target '${target}' to a source file`,
+        `${name}: export '${subpath}' target '${target}' is outside src/ and dist/`,
       );
     }
-    const file = path.join(packageDir, source);
+
+    const file = path.join(packageDir, target);
+
     if (!existsSync(file)) {
       throw new Error(
-        `${name}: export '${subpath}' resolves to missing ${source}`,
+        `${name}: export '${subpath}' resolves to missing ${target}; run build:js first`,
       );
     }
-    const free = (claims?.[subpath] as { free?: string[] } | undefined)?.free;
+
+    const free = claims?.[subpath]?.free;
     bundled.add(subpath);
     entries.push({
       label: subpath === '.' ? 'index' : subpath.slice(2),
       file,
-      free: free ?? [],
+      free: [...(free ?? [])],
     });
   }
+
   if (entries.length === 0) {
     throw new Error(`${name}: no bundleable exports found`);
   }
+
   // A claim on an export the loop skipped would otherwise pass unchecked.
   for (const subpath of Object.keys(claims ?? {})) {
     if (!bundled.has(subpath)) {
@@ -84,5 +115,6 @@ export const readPackageProbe = (packageDir: string): PackageProbe => {
       );
     }
   }
-  return { name, declared, entries };
+
+  return { name, declared, inlined, entries };
 };

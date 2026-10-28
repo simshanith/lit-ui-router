@@ -32,73 +32,7 @@ full-stack system where the same router executes on both sides. Each level
 is defined by what the app asks of its server; find yours, and what moving
 up would buy.
 
-<svg viewBox="0 0 720 414" width="100%" style="max-width: 720px" role="img" aria-label="The server-support spectrum: six levels from memory location (no server story) up to a full-stack shared router, with the live mounts on lit-ui-router.dev" xmlns="http://www.w3.org/2000/svg">
-  <title>The server-support spectrum</title>
-  <defs>
-    <marker id="arr-spectrum" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M0 0L8 4L0 8z" fill="var(--vp-c-text-3, #929295)" />
-    </marker>
-  </defs>
-  <g font-family="var(--vp-font-family-base, ui-sans-serif, system-ui, sans-serif)">
-    <!-- legend -->
-    <rect x="404" y="6" width="10" height="10" rx="3" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" stroke="var(--vp-c-brand-1, #3451b2)" stroke-width="0.75" />
-    <text x="420" y="15" font-size="11" fill="var(--vp-c-text-3, #929295)">= live mount on lit-ui-router.dev</text>
-    <!-- axis -->
-    <line x1="24" y1="400" x2="24" y2="34" stroke="var(--vp-c-text-3, #929295)" stroke-width="1.25" marker-end="url(#arr-spectrum)" />
-    <text x="-214" y="18" font-size="11" fill="var(--vp-c-text-3, #929295)" transform="rotate(-90)">what the app asks of its server</text>
-    <!-- L5 -->
-    <rect x="48" y="28" width="656" height="54" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
-    <rect x="60" y="41" width="28" height="28" rx="14" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-divider, #e2e2e3)" />
-    <text x="74" y="60" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">5</text>
-    <text x="102" y="49" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">Path &#183; full-stack shared router</text>
-    <text x="102" y="68" font-size="12" fill="var(--vp-c-text-2, #67676c)">a real headless router replays every URL server-side</text>
-    <rect x="559" y="44" width="133" height="20" rx="6" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" />
-    <text x="625" y="58" font-size="11" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #3451b2)" text-anchor="middle">/simulated-routing</text>
-    <!-- L4 (flagship) -->
-    <rect x="48" y="90" width="656" height="54" rx="8" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" stroke="var(--vp-c-brand-1, #3451b2)" />
-    <rect x="60" y="103" width="28" height="28" rx="14" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-brand-1, #3451b2)" />
-    <text x="74" y="122" font-size="13" font-weight="600" fill="var(--vp-c-brand-1, #3451b2)" text-anchor="middle">4</text>
-    <text x="102" y="111" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">Path &#183; route-aware server</text>
-    <text x="102" y="130" font-size="12" fill="var(--vp-c-text-2, #67676c)">the server knows the routes: shells, redirects, real 404s</text>
-    <text x="692" y="107" font-size="11" font-weight="600" fill="var(--vp-c-brand-1, #3451b2)" text-anchor="end">&#9733; flagship</text>
-    <rect x="460" y="116" width="40" height="18" rx="6" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-brand-1, #3451b2)" stroke-width="0.75" />
-    <text x="480" y="129" font-size="11" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #3451b2)" text-anchor="middle">/app</text>
-    <rect x="506" y="116" width="74" height="18" rx="6" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-brand-1, #3451b2)" stroke-width="0.75" />
-    <text x="543" y="129" font-size="11" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #3451b2)" text-anchor="middle">/app-mobx</text>
-    <rect x="586" y="116" width="106" height="18" rx="6" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-divider, #e2e2e3)" />
-    <text x="639" y="129" font-size="11" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #3451b2)" text-anchor="middle">/not-found-spa</text>
-    <!-- L3 -->
-    <rect x="48" y="152" width="656" height="54" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
-    <rect x="60" y="165" width="28" height="28" rx="14" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-divider, #e2e2e3)" />
-    <text x="74" y="184" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">3</text>
-    <text x="102" y="173" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">Path &#183; static error rules</text>
-    <text x="102" y="192" font-size="12" fill="var(--vp-c-text-2, #67676c)">honest 404s, but only for asset misses &#8212; can't judge deep links</text>
-    <text x="692" y="185" font-size="11" fill="var(--vp-c-text-3, #929295)" text-anchor="end">per-mount 404.html</text>
-    <!-- L2 -->
-    <rect x="48" y="214" width="656" height="54" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
-    <rect x="60" y="227" width="28" height="28" rx="14" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-divider, #e2e2e3)" />
-    <text x="74" y="246" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">2</text>
-    <text x="102" y="235" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">Path &#183; platform-default fallback</text>
-    <text x="102" y="254" font-size="12" fill="var(--vp-c-text-2, #67676c)">every path answers 200 with the shell &#8212; HTTP lies (soft-404s)</text>
-    <rect x="572" y="224" width="120" height="20" rx="6" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" />
-    <text x="632" y="238" font-size="11" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #3451b2)" text-anchor="middle">/not-found-naive</text>
-    <text x="692" y="260" font-size="11" font-weight="600" fill="var(--vp-c-red-1, #b8272c)" text-anchor="end">200 for everything</text>
-    <!-- L1 -->
-    <rect x="48" y="276" width="656" height="54" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
-    <rect x="60" y="289" width="28" height="28" rx="14" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-divider, #e2e2e3)" />
-    <text x="74" y="308" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">1</text>
-    <text x="102" y="297" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">Hash location</text>
-    <text x="102" y="316" font-size="12" fill="var(--vp-c-text-2, #67676c)">the fragment never leaves the browser &#8212; any static host suffices</text>
-    <text x="692" y="309" font-size="11" fill="var(--vp-c-text-3, #929295)" text-anchor="end">out of scope &#8212; by design</text>
-    <!-- L0 -->
-    <rect x="48" y="338" width="656" height="54" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
-    <rect x="60" y="351" width="28" height="28" rx="14" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-divider, #e2e2e3)" />
-    <text x="74" y="370" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">0</text>
-    <text x="102" y="359" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">Memory location</text>
-    <text x="102" y="378" font-size="12" fill="var(--vp-c-text-2, #67676c)">no URL, no address bar &#8212; tests, embedded widgets, headless tooling</text>
-    <text x="692" y="371" font-size="11" fill="var(--vp-c-text-3, #929295)" text-anchor="end">no server story to need</text>
-  </g>
-</svg>
+<!--@include: ../public/diagrams/server-route-matching-spectrum.svg-->
 
 **Level 0 — memory location: no URL.** `memoryLocationPlugin` runs the
 router with no address bar at all — tests, embedded widgets, headless
@@ -144,8 +78,12 @@ Not every ecosystem starts here. SSR-default ecosystems launch at the far
 end instead: Next.js and React Router's framework mode ship
 [`ssr: true` by default](https://reactrouter.com/how-to/spa), making full
 server routing the default launch state, with SPA mode as the documented
-opt-out that lands on exactly level 2's `/* /index.html 200` rule. Same
-tools, both ends of the spectrum.
+opt-out that lands on exactly level 2's `/* /index.html 200` rule.
+[TanStack Start](https://tanstack.com/start) has the same shape around
+TanStack Router's client-side matcher: server rendering by default, and an
+[SPA mode](https://tanstack.com/start/latest/docs/framework/react/guide/spa-mode)
+that prerenders the root route to a `_shell.html` and rewrites every miss to
+it. Same tools, both ends of the spectrum.
 
 <FrameworkSpectrum />
 
@@ -199,13 +137,13 @@ cannot express (hooks, resolves, auth-aware verdicts) will live.
 Every level from 1 up runs behind lit-ui-router.dev — same worker, same
 `wrangler.jsonc`, the differences are configuration:
 
-| Level | Mount(s)             | Behavior                                                                                                                                  |
-| ----- | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| 1     | `/app-hash`          | Hash routing done right: the mount root serves the shell at **200** with no redirect, so the fragment survives entry; deep paths stay 404 |
-| 2     | `/not-found-naive`   | Every path serves the shell at **200**, no route matching — the platform-default fallback, reproduced                                     |
-| 3+4   | `/app`, `/app-mobx`  | Route-aware verdicts: shell, 302, or a **real 404** with a per-mount static 404 page (the flagship)                                       |
-| 4     | `/not-found-spa`     | Route-aware, shell-at-404: real routes serve **200**; a miss serves the shell at **404** and the client renders its in-app 404 view       |
-| 5     | `/simulated-routing` | Every verdict computed by a **real headless router** replaying the URL                                                                    |
+| Level | Mount(s)                                           | Behavior                                                                                                                                  |
+| ----- | -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| 1     | `/app-hash`                                        | Hash routing done right: the mount root serves the shell at **200** with no redirect, so the fragment survives entry; deep paths stay 404 |
+| 2     | `/not-found-naive`                                 | Every path serves the shell at **200**, no route matching — the platform-default fallback, reproduced                                     |
+| 3+4   | `/app`, `/app-mobx`, `/app-effect`, `/app-signals` | Route-aware verdicts: shell, 302, or a **real 404** with a per-mount static 404 page (the flagship)                                       |
+| 4     | `/not-found-spa`                                   | Route-aware, shell-at-404: real routes serve **200**; a miss serves the shell at **404** and the client renders its in-app 404 view       |
+| 5     | `/simulated-routing`                               | Every verdict computed by a **real headless router** replaying the URL                                                                    |
 
 Try them on a URL that matches nothing:
 <a href="/not-found-naive/no-such-page" target="_self">`/not-found-naive/no-such-page`</a>
@@ -227,15 +165,15 @@ Two honesty notes about the exhibits. Every **exhibit** response
 (`/not-found-naive`, `/not-found-spa`, `/simulated-routing`) carries
 `X-Robots-Tag: noindex`: the level-2 exhibit deliberately manufactures
 soft-404s, and the site must not be penalized by its own teaching material.
-And each exhibit mount ships its **own** build — the vanilla sample app rebuilt
-with `VITE_SAMPLE_APP_BASE_URL` set to the mount's prefix (`/not-found-spa/`,
-`/simulated-routing/`, `/not-found-naive/`), the same per-mount `--mode` build
-`/app-hash` uses — so the client router strips that prefix and renders real
-routes under the mount, exactly like the flagship. What makes them exhibits is
+And every exhibit mount serves the vanilla sample app's **one** shell, which
+derives its base from `location.pathname` at boot against the prefix list in
+[`shellMounts.ts`](https://github.com/simshanith/lit-ui-router/blob/main/apps/sample-app-routes/src/shellMounts.ts)
+— so the client router strips that prefix and renders real routes under the
+mount, exactly like the flagship. What makes them exhibits is
 the **server** verdict each demonstrates (the soft-404 lie, shell-at-404, the
 headless replay), not any client limitation; `noindex` simply keeps the
-teaching material out of the search index. `/app-hash` is the same mechanism
-pointed at hash mode: its `--mode hash` build bakes `<base href="/app-hash/">`
+teaching material out of the search index. `/app-hash` keeps a build of its
+own for hash mode: its `--mode hash` build bakes `<base href="/app-hash/">`
 and the hash location plugin, so it is a fully working, indexable hash client
 rather than an exhibit.
 
@@ -264,46 +202,16 @@ deliberately out of scope here, not at risk.
 The package prices its capabilities as separate entry points, measured
 min+gzip by its own esbuild probe:
 
-| import                       | needs `@uirouter/core`?               | cost                                | what it answers                                                                        |
-| ---------------------------- | ------------------------------------- | ----------------------------------- | -------------------------------------------------------------------------------------- |
-| `ui-router-server/matcher`   | no                                    | ~6.6 KiB min / ~2.9 KiB gzip        | does this pathname match this pattern, with which params — and the inverse, `format()` |
-| `ui-router-server/redirects` | no                                    | ~8.7 KiB min / ~3.6 KiB gzip        | given routes and a redirect table, where does this pathname go                         |
-| `ui-router-server` (root)    | only when a `simulate` mount resolves | ~11.5 KiB min / ~4.7 KiB gzip       | mounts in, verdict out                                                                 |
-| `ui-router-server/simulate`  | yes (optional peer)                   | +~92 KiB min / ~27.4 KiB gzip, lazy | what would the real router do                                                          |
-| `ui-router-server/location`  | yes (optional peer)                   | ~0.5 KiB min / ~0.3 KiB gzip        | a path-shaped in-memory location for a server-side router                              |
+| import                        | needs `@uirouter/core`?               | cost                                | what it answers                                                                        |
+| ----------------------------- | ------------------------------------- | ----------------------------------- | -------------------------------------------------------------------------------------- |
+| `ui-router-server/matcher`    | no                                    | ~6.6 KiB min / ~2.9 KiB gzip        | does this pathname match this pattern, with which params — and the inverse, `format()` |
+| `ui-router-server/redirects`  | no                                    | ~8.7 KiB min / ~3.6 KiB gzip        | given routes and a redirect table, where does this pathname go                         |
+| `ui-router-server` (root)     | only when a `simulate` mount resolves | ~11.5 KiB min / ~4.7 KiB gzip       | mounts in, verdict out                                                                 |
+| `ui-router-server/simulate`   | yes (optional peer)                   | +~92 KiB min / ~27.4 KiB gzip, lazy | what would the real router do                                                          |
+| `ui-router-server/location`   | yes (optional peer)                   | ~0.5 KiB min / ~0.3 KiB gzip        | a path-shaped in-memory location for a server-side router                              |
+| `ui-router-server/url-config` | no; it configures the router you pass | ~0.6 KiB min / ~0.4 KiB gzip        | one url config for the client router, the mounts, and a server render                  |
 
-<svg viewBox="0 0 720 300" width="100%" style="max-width: 720px" role="img" aria-label="Package tiers by size: matcher 2.9 KiB, redirects 3.6 KiB, root 4.7 KiB - all dependency-free - simulate, which adds a lazy 27.4 KiB chunk carrying @uirouter/core, and location, a 0.3 KiB eager import of the same core" xmlns="http://www.w3.org/2000/svg">
-  <title>The package tiers, to scale</title>
-  <g font-family="var(--vp-font-family-base, ui-sans-serif, system-ui, sans-serif)">
-    <!-- dependency-free group -->
-    <rect x="8" y="10" width="704" height="138" rx="8" fill="none" stroke="var(--vp-c-divider, #e2e2e3)" />
-    <text x="700" y="27" font-size="11" font-weight="600" fill="var(--vp-c-text-2, #67676c)" text-anchor="end">no @uirouter/core needed</text>
-    <text x="700" y="41" font-size="10" fill="var(--vp-c-text-3, #929295)" text-anchor="end">a differential-tested port of core's matching subset</text>
-    <text x="20" y="60" font-size="12" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-1, #3c3c43)">ui-router-server/matcher</text>
-    <rect x="230" y="50" width="42" height="16" rx="4" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" stroke="var(--vp-c-brand-1, #3451b2)" stroke-width="0.75" />
-    <text x="280" y="63" font-size="11" fill="var(--vp-c-text-2, #67676c)"><tspan font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">2.9 KiB</tspan> &#183; does this path match, with which params &#8212; and format()</text>
-    <text x="20" y="92" font-size="12" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-1, #3c3c43)">ui-router-server/redirects</text>
-    <rect x="230" y="82" width="52" height="16" rx="4" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" stroke="var(--vp-c-brand-1, #3451b2)" stroke-width="0.75" />
-    <text x="290" y="95" font-size="11" fill="var(--vp-c-text-2, #67676c)"><tspan font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">3.6 KiB</tspan> &#183; + declarative redirect evaluation over a route table</text>
-    <text x="20" y="124" font-size="12" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-1, #3c3c43)">ui-router-server</text>
-    <rect x="230" y="114" width="68" height="16" rx="4" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" stroke="var(--vp-c-brand-1, #3451b2)" stroke-width="0.75" />
-    <text x="306" y="127" font-size="11" fill="var(--vp-c-text-2, #67676c)"><tspan font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">4.7 KiB</tspan> &#183; mounts in, verdicts out &#8212; the default</text>
-    <!-- needs-core group: simulate (lazy) and location (eager) -->
-    <rect x="8" y="158" width="704" height="118" rx="8" fill="none" stroke="var(--vp-c-divider, #e2e2e3)" />
-    <text x="700" y="174" font-size="11" font-weight="600" fill="var(--vp-c-purple-1, #8e18aa)" text-anchor="end">needs @uirouter/core &#8212; optional peer</text>
-    <text x="700" y="187" font-size="10" fill="var(--vp-c-text-3, #929295)" text-anchor="end">a lazy chunk, or your own eager import</text>
-    <text x="20" y="206" font-size="12" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-1, #3c3c43)">ui-router-server/simulate</text>
-    <rect x="230" y="196" width="68" height="16" rx="4" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" stroke="var(--vp-c-brand-1, #3451b2)" stroke-width="0.75" />
-    <rect x="300" y="196" width="397" height="16" rx="4" fill="var(--vp-c-purple-soft, rgba(159,122,234,0.14))" stroke="var(--vp-c-purple-1, #8e18aa)" stroke-width="0.75" stroke-dasharray="5 3" />
-    <text x="498" y="209" font-size="11" font-weight="600" fill="var(--vp-c-purple-1, #8e18aa)" text-anchor="middle">+27.4 KiB &#183; lazy chunk &#8212; core, whole</text>
-    <text x="230" y="226" font-size="10" fill="var(--vp-c-text-3, #929295)">loads only when a simulate mount resolves &#8212; a matcher-only configuration never fetches it</text>
-    <text x="20" y="252" font-size="12" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-1, #3c3c43)">ui-router-server/location</text>
-    <rect x="230" y="242" width="10" height="16" rx="4" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" stroke="var(--vp-c-brand-1, #3451b2)" stroke-width="0.75" />
-    <text x="250" y="255" font-size="11" fill="var(--vp-c-text-2, #67676c)"><tspan font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">0.3 KiB</tspan> own code &#183; eager import, for a server that already runs a real router</text>
-    <!-- scale note -->
-    <text x="712" y="292" font-size="10" fill="var(--vp-c-text-3, #929295)" text-anchor="end">min+gzip, measured by the package's own esbuild probe &#183; linear scale</text>
-  </g>
-</svg>
+<!--@include: ../public/diagrams/server-route-matching-package-tiers.svg-->
 
 The tiers' shape is measured, not aesthetic. Deep-importing
 `@uirouter/core` internals carves a matching-only consumer from 43 KiB gzip
@@ -339,81 +247,33 @@ Picking a tier:
   produce identical verdicts (the package tests assert parity), so
   `strategy` stays a pure cost knob until routing that data cannot express —
   hooks, resolves, `redirectTo` functions — arrives with a wider config.
+  A simulate mount's `prewarm` count builds idle routers once core loads, so
+  its first requests skip the cold build.
 - **`/location`** — you drive a real `@uirouter/core` router yourself, on the
   server, and want its `href()`s to be paths rather than `#` fragments, so a
   server render's links match what a
   [pushState](./location-plugins#html5-pushstate) client writes.
-  `installServerLocation(router, { url, baseHref, strictMode })`.
+  `installServerLocation(router, { url, baseHref, urlConfig })`.
+- **`/url-config`** — you want the client router and the mounts to compile
+  urls alike. `applyUrlConfig(router, config)` applies a mount's `config` to
+  any `@uirouter/core` router before its states register; it imports no
+  server code, so the client bundle can take it.
+
+A `'matcher'` mount finds its route with a linear scan by default, trying
+every pattern. `routeIndex: routeTrie` swaps in a segment trie that tries
+only the routes whose segments fit the path, with the same verdicts, so a
+path whose first segment no route declares runs no pattern at all. The trie
+can't express a case-insensitive url config or a path param whose pattern
+may match a `/` (such as `{path:.*}`). A mount that opts in with either
+throws at construction, naming the route, and a `'simulate'` mount that
+sets `routeIndex` throws too. A bundle only carries the trie if it imports
+`routeTrie`. Whether it pays depends on the table: the `acceptance (bench)`
+job summary times each of this site's mounts both ways, and the site stays
+on the scan.
 
 ## The projection: routes as data
 
-<svg viewBox="0 0 720 340" width="100%" style="max-width: 720px" role="img" aria-label="The projection: the client app's url-bearing states are projected into a pure-data route table in sample-app-routes, which the edge worker imports; components and conditional routing deliberately stay client-side, and contract tests pin the projection on every CI run" xmlns="http://www.w3.org/2000/svg">
-  <title>Routes as data: the projection</title>
-  <defs>
-    <marker id="arr-proj" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M0 0L8 4L0 8z" fill="var(--vp-c-text-3, #929295)" />
-    </marker>
-  </defs>
-  <g font-family="var(--vp-font-family-base, ui-sans-serif, system-ui, sans-serif)">
-    <!-- client panel -->
-    <rect x="16" y="28" width="216" height="230" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
-    <text x="32" y="52" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">Client app</text>
-    <text x="32" y="68" font-size="10" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-3, #929295)">sample-app &#183; states.ts</text>
-    <!-- projected rows -->
-    <rect x="28" y="80" width="192" height="22" rx="5" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" />
-    <text x="36" y="95" font-size="11" fill="var(--vp-c-brand-1, #3451b2)">url-bearing states</text>
-    <rect x="28" y="106" width="192" height="22" rx="5" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" />
-    <text x="36" y="121" font-size="11" fill="var(--vp-c-brand-1, #3451b2)">root redirect &#8212; when(/^\/?$/)</text>
-    <line x1="28" y1="140" x2="220" y2="140" stroke="var(--vp-c-divider, #e2e2e3)" />
-    <text x="220" y="154" font-size="10" font-style="italic" fill="var(--vp-c-text-3, #929295)" text-anchor="end">deliberately stays client-side</text>
-    <text x="36" y="174" font-size="11" fill="var(--vp-c-text-2, #67676c)">components &#8212; register custom</text>
-    <text x="36" y="188" font-size="11" fill="var(--vp-c-text-2, #67676c)">elements at module scope</text>
-    <text x="36" y="208" font-size="11" fill="var(--vp-c-text-2, #67676c)">conditional routing &#8212; DSR</text>
-    <text x="36" y="222" font-size="11" fill="var(--vp-c-text-2, #67676c)">defaults, requiresAuth hook</text>
-    <text x="36" y="242" font-size="11" fill="var(--vp-c-text-2, #67676c)">otherwise() &#8212; a level choice</text>
-    <!-- projection arrow -->
-    <line x1="232" y1="104" x2="284" y2="104" stroke="var(--vp-c-text-3, #929295)" stroke-width="1.25" marker-end="url(#arr-proj)" />
-    <text x="258" y="94" font-size="10" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">projected</text>
-    <text x="258" y="118" font-size="10" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">as data</text>
-    <!-- data panel -->
-    <rect x="288" y="28" width="188" height="230" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-brand-1, #3451b2)" />
-    <text x="304" y="52" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">Pure data</text>
-    <text x="304" y="68" font-size="10" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-3, #929295)">sample-app-routes</text>
-    <g font-family="var(--vp-font-family-mono, ui-monospace, monospace)" font-size="11" fill="var(--vp-c-text-1, #3c3c43)">
-      <text x="304" y="94">routes: [</text>
-      <text x="312" y="110">{ name, url },</text>
-      <text x="312" y="126">&#8230;</text>
-      <text x="304" y="142">]</text>
-      <text x="304" y="166">redirects: [</text>
-      <text x="312" y="182">{ pattern, to },</text>
-      <text x="304" y="198">]</text>
-    </g>
-    <text x="304" y="226" font-size="10" fill="var(--vp-c-text-3, #929295)">no imports, no components &#8212;</text>
-    <text x="304" y="240" font-size="10" fill="var(--vp-c-text-3, #929295)">safe in any server runtime</text>
-    <!-- import arrow -->
-    <line x1="476" y1="104" x2="528" y2="104" stroke="var(--vp-c-text-3, #929295)" stroke-width="1.25" marker-end="url(#arr-proj)" />
-    <text x="502" y="94" font-size="10" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">imported</text>
-    <!-- worker panel -->
-    <rect x="532" y="28" width="172" height="230" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
-    <text x="548" y="52" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">Edge worker</text>
-    <text x="548" y="68" font-size="10" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-3, #929295)">www/…/worker/index.ts</text>
-    <g font-family="var(--vp-font-family-mono, ui-monospace, monospace)" font-size="11" fill="var(--vp-c-text-1, #3c3c43)">
-      <text x="548" y="98">createServerRouter(</text>
-      <text x="556" y="114">{ mounts })</text>
-      <text x="548" y="142">resolve(url)</text>
-      <text x="556" y="158">&#8594; verdict</text>
-    </g>
-    <text x="548" y="186" font-size="11" fill="var(--vp-c-text-2, #67676c)">its one job:</text>
-    <text x="548" y="202" font-size="11" fill="var(--vp-c-text-2, #67676c)">verdict &#8594; HTTP</text>
-    <!-- contract-test seam -->
-    <rect x="16" y="278" width="460" height="46" rx="8" fill="none" stroke="var(--vp-c-green-1, #18794e)" stroke-dasharray="5 4" />
-    <line x1="382" y1="278" x2="382" y2="262" stroke="var(--vp-c-green-1, #18794e)" stroke-dasharray="5 4" />
-    <text x="32" y="298" font-size="11" font-weight="600" fill="var(--vp-c-green-1, #18794e)">contract tests pin the seam &#8212; every CI run</text>
-    <text x="32" y="314" font-size="11" fill="var(--vp-c-text-2, #67676c)">every verdict the worker will serve, resolved through the real package API</text>
-    <text x="548" y="302" font-size="10" font-style="italic" fill="var(--vp-c-text-3, #929295)">drift-resistant through a</text>
-    <text x="548" y="316" font-size="10" font-style="italic" fill="var(--vp-c-text-3, #929295)">test-pinned seam</text>
-  </g>
-</svg>
+<!--@include: ../public/diagrams/server-route-matching-projection.svg-->
 
 A server runtime cannot import the client's state definitions — they import
 components, which register custom elements at module scope. Instead, the
@@ -489,72 +349,17 @@ routes — through the real package API.
 
 ## The verdict
 
-<svg viewBox="0 0 720 292" width="100%" style="max-width: 720px" role="img" aria-label="Verdict flow: an incoming request pathname goes through createServerRouter's resolve, which returns one of three verdicts - shell, redirect, or notFound - and the worker turns each into HTTP: 200, 302, or 404" xmlns="http://www.w3.org/2000/svg">
-  <title>Request to verdict to HTTP</title>
-  <defs>
-    <marker id="arr-verdict" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M0 0L8 4L0 8z" fill="var(--vp-c-text-3, #929295)" />
-    </marker>
-  </defs>
-  <g font-family="var(--vp-font-family-base, ui-sans-serif, system-ui, sans-serif)">
-    <!-- column headings -->
-    <text x="540" y="18" font-size="11" fill="var(--vp-c-text-3, #929295)" text-anchor="middle">verdict &#8212; a plain object</text>
-    <text x="660" y="18" font-size="11" fill="var(--vp-c-text-3, #929295)" text-anchor="middle">HTTP</text>
-    <!-- request -->
-    <rect x="16" y="110" width="152" height="64" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
-    <text x="92" y="136" font-size="12" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">incoming request</text>
-    <text x="92" y="156" font-size="12" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">/app/contacts/3</text>
-    <line x1="168" y1="142" x2="214" y2="142" stroke="var(--vp-c-text-3, #929295)" stroke-width="1.25" marker-end="url(#arr-verdict)" />
-    <!-- resolve -->
-    <rect x="218" y="102" width="196" height="80" rx="8" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" stroke="var(--vp-c-brand-1, #3451b2)" />
-    <text x="316" y="132" font-size="12" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #3451b2)" text-anchor="middle">createServerRouter(&#8230;)</text>
-    <text x="316" y="150" font-size="12" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #3451b2)" text-anchor="middle">.resolve(url)</text>
-    <text x="316" y="169" font-size="11" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">longest mount base wins</text>
-    <text x="316" y="202" font-size="11" fill="var(--vp-c-text-3, #929295)" text-anchor="middle">no fetch, no Response &#8212;</text>
-    <text x="316" y="217" font-size="11" fill="var(--vp-c-text-3, #929295)" text-anchor="middle">mounts validate at construction</text>
-    <!-- fan-out arrows -->
-    <line x1="414" y1="128" x2="466" y2="58" stroke="var(--vp-c-text-3, #929295)" stroke-width="1.25" marker-end="url(#arr-verdict)" />
-    <line x1="414" y1="142" x2="466" y2="142" stroke="var(--vp-c-text-3, #929295)" stroke-width="1.25" marker-end="url(#arr-verdict)" />
-    <line x1="414" y1="156" x2="466" y2="226" stroke="var(--vp-c-text-3, #929295)" stroke-width="1.25" marker-end="url(#arr-verdict)" />
-    <!-- verdict: shell -->
-    <rect x="470" y="30" width="140" height="52" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
-    <text x="540" y="52" font-size="12" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">kind: 'shell'</text>
-    <text x="540" y="70" font-size="11" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">mount, status?</text>
-    <!-- verdict: redirect -->
-    <rect x="470" y="116" width="140" height="52" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
-    <text x="540" y="138" font-size="12" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">kind: 'redirect'</text>
-    <text x="540" y="156" font-size="11" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">location, status</text>
-    <!-- verdict: notFound -->
-    <rect x="470" y="200" width="140" height="52" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
-    <text x="540" y="222" font-size="12" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">kind: 'notFound'</text>
-    <text x="540" y="240" font-size="11" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">mount?</text>
-    <!-- verdict -> HTTP -->
-    <line x1="610" y1="56" x2="634" y2="56" stroke="var(--vp-c-text-3, #929295)" stroke-width="1.25" marker-end="url(#arr-verdict)" />
-    <line x1="610" y1="142" x2="634" y2="142" stroke="var(--vp-c-text-3, #929295)" stroke-width="1.25" marker-end="url(#arr-verdict)" />
-    <line x1="610" y1="226" x2="634" y2="226" stroke="var(--vp-c-text-3, #929295)" stroke-width="1.25" marker-end="url(#arr-verdict)" />
-    <!-- HTTP: 200 -->
-    <rect x="638" y="34" width="44" height="22" rx="11" fill="var(--vp-c-green-soft, rgba(16,185,129,0.14))" />
-    <text x="660" y="49" font-size="12" font-weight="600" fill="var(--vp-c-green-1, #18794e)" text-anchor="middle">200</text>
-    <text x="663" y="72" font-size="10" fill="var(--vp-c-text-3, #929295)" text-anchor="middle">app shell (304s ok);</text>
-    <text x="663" y="84" font-size="10" fill="var(--vp-c-text-3, #929295)" text-anchor="middle">status'd shell: 404</text>
-    <!-- HTTP: 302 -->
-    <rect x="638" y="120" width="44" height="22" rx="11" fill="var(--vp-c-yellow-soft, rgba(234,179,8,0.14))" />
-    <text x="660" y="135" font-size="12" font-weight="600" fill="var(--vp-c-yellow-1, #915930)" text-anchor="middle">302</text>
-    <text x="663" y="158" font-size="10" fill="var(--vp-c-text-3, #929295)" text-anchor="middle">Location: computed</text>
-    <text x="663" y="170" font-size="10" fill="var(--vp-c-text-3, #929295)" text-anchor="middle">by format()</text>
-    <!-- HTTP: 404 -->
-    <rect x="638" y="204" width="44" height="22" rx="11" fill="var(--vp-c-red-soft, rgba(244,63,94,0.14))" />
-    <text x="660" y="219" font-size="12" font-weight="600" fill="var(--vp-c-red-1, #b8272c)" text-anchor="middle">404</text>
-    <text x="663" y="242" font-size="10" fill="var(--vp-c-text-3, #929295)" text-anchor="middle">per-mount 404.html,</text>
-    <text x="663" y="254" font-size="10" fill="var(--vp-c-text-3, #929295)" text-anchor="middle">a real status</text>
-  </g>
-</svg>
+<!--@include: ../public/diagrams/server-route-matching-verdict-flow.svg-->
 
 `createServerRouter` compiles and validates every mount at construction —
 unknown redirect targets, cycles, and a bad `otherwise` target throw at
 startup, never per-request — and the longest matching mount base owns a
-pathname outright. `resolve()` accepts a pathname, an absolute URL string,
-or anything with a `pathname`:
+pathname outright. A mount's bare base (`/app`) resolves the empty subpath,
+so it 404s unless a `url: ''` route or a rule such as
+`{ pattern: /^\/?$/, to: 'welcome' }` claims it. Construction
+[warns in development](./development-builds#server-runtimes) for each mount
+other than `/` that leaves it unclaimed. `resolve()` accepts a
+pathname, an absolute URL string, or anything with a `pathname`:
 
 ```ts
 type Verdict =
@@ -571,123 +376,34 @@ outright, with consumer obligations covered
 mount-joined target path, and `notFound.mount` distinguishes "a mount owned
 this path but nothing matched" from "no mount at all".
 
+To catch an unclaimed bare base in CI rather than in a log, assert in a test
+that
+[`diagnoseMounts(router)`](/api/ui-router-server/index/functions/diagnoseMounts)
+returns an empty array for a router built from the table. It returns the
+findings the warning prints, in every build; `apps/sample-app-routes` runs that
+assertion over the tables above.
+
+A mount that means its bare base to 404 turns the finding off with
+[`ignoreDiagnostics`](/api/ui-router-server/index/interfaces/MountConfig#ignorediagnostics);
+the warning and `diagnoseMounts` both skip it for that mount.
+
 ## The worker: verdicts → HTTP
 
-The whole handler
-([`www/lit-ui-router.dev/worker/index.ts`](https://github.com/simshanith/lit-ui-router/blob/main/www/lit-ui-router.dev/worker/index.ts)):
-
-```ts
-import { mounts } from 'sample-app-routes';
-import { createServerRouter } from 'ui-router-server';
-import { createFetchHandler } from 'ui-router-server/fetch';
-
-// All routing intelligence lives in ui-router-server; the ./fetch adapter
-// turns a verdict into an HTTP Response. Module scope: the mount tables
-// compile once per isolate.
-const router = createServerRouter({ mounts });
-
-// The 404-pattern exhibit mounts have no shell asset of their own — they serve
-// the vanilla app's (its asset urls are absolute, so the shell works under any
-// prefix). Mounts without an alias serve the shell at their own base, which is
-// the adapter's shellPath default.
-const SHELL_PATHS: Record<string, string> = {
-  '/not-found-spa': '/app',
-  '/simulated-routing': '/app',
-};
-
-// Every exhibit response carries noindex: the naive rung deliberately serves
-// soft-404s, and the site must not be penalized by its own teaching material.
-// The generic adapter owns verdict -> HTTP; SEO policy stays the site's,
-// layered on the adapter's OUTPUT — a redirect Response the adapter builds has
-// no host hook, so noindex rides the request path, not a per-verdict callback.
-const EXHIBITS = ['/not-found-naive', '/not-found-spa', '/simulated-routing'];
-const isExhibit = (pathname: string): boolean =>
-  EXHIBITS.some((m) => pathname === m || pathname.startsWith(`${m}/`));
-
-const withNoindex = (response: Response): Response => {
-  const headers = new Headers(response.headers);
-  headers.set('X-Robots-Tag', 'noindex');
-  return new Response(response.body, { status: response.status, headers });
-};
-
-// The not-found-naive exhibit: the classic SPA-host fallback — every path
-// serves the shell at 200, no route matching at all (the soft-404 anti-pattern
-// baseline, and what this site shipped before this stack). It has no mounts
-// entry BY DESIGN: the rung demonstrates the ABSENCE of server routing, so it
-// bypasses the router entirely rather than riding a verdict.
-const NAIVE_MOUNT = '/not-found-naive';
-
-export default {
-  async fetch(request, env) {
-    const url = new URL(request.url);
-    if (
-      url.pathname === NAIVE_MOUNT ||
-      url.pathname.startsWith(`${NAIVE_MOUNT}/`)
-    ) {
-      // Construct the shell request from the original so its conditional
-      // headers ride along and a repeat load can still 304.
-      const shell = await env.ASSETS.fetch(
-        new Request(new URL('/app', request.url), request),
-      );
-      return withNoindex(shell);
-    }
-
-    // The fetch adapter fronts every routed mount: it owns status mapping,
-    // mergeSearch on redirect Locations, validator stripping + status relabel
-    // on status'd shells, and the canonical Link header. The host supplies the
-    // asset IO (env.ASSETS) and the two policies the adapter can't know: shell
-    // aliasing (SHELL_PATHS) and the real 404 page.
-    const handler = createFetchHandler(router, {
-      shellPath: (mount) => SHELL_PATHS[mount] ?? mount,
-      // The adapter hands over a shell Request already rewritten to shellPath
-      // and (for a status'd shell) stripped of validators — the host's job is
-      // the raw asset fetch; the adapter owns the relabel and Link on the way
-      // out. Deep-link revalidations still 304: a non-status'd shell request
-      // carries the conditional headers along from the original.
-      serveShell: (_mount, shellRequest) => env.ASSETS.fetch(shellRequest),
-      // Mount-owned miss: serve that app's 404 page re-wrapped at an honest
-      // 404; anything but the page itself (or an asset with no 404.html) falls
-      // through to the assets binding's own 404.html handling.
-      serveNotFound: async (mount, req) => {
-        const page = await env.ASSETS.fetch(
-          new URL(`${mount}/404.html`, req.url),
-        );
-        return page.status === 200
-          ? new Response(page.body, {
-              status: 404,
-              headers: new Headers(page.headers),
-            })
-          : env.ASSETS.fetch(request);
-      },
-      // The worker runs FIRST for the mount prefixes (wrangler
-      // run_worker_first) and real assets live at /assets, never under a
-      // mount — so it judges every request that reaches it, not just
-      // navigations.
-      shouldHandle: () => true,
-    });
-
-    const response = await handler(request);
-    // null is the adapter's pass-through: a notFound without a mount (the path
-    // isn't this router's), served however the assets binding would.
-    if (response === null) return env.ASSETS.fetch(request);
-    // Quarantine the teaching exhibits from crawlers, layered on the adapter's
-    // output (the redirect Response it builds has no host hook of its own).
-    return isExhibit(url.pathname) ? withNoindex(response) : response;
-  },
-} satisfies ExportedHandler<Env>;
-```
-
-The flagship path is now a single call: `createFetchHandler` turns the router
-into a `(Request) => Promise<Response | null>`, and the worker shrinks to
-supplying what the generic adapter can't know. The adapter owns the
+The worker
+([`www/lit-ui-router.dev/worker/index.ts`](https://github.com/simshanith/lit-ui-router/blob/main/www/lit-ui-router.dev/worker/index.ts))
+builds the router from the `mounts` table once per isolate and fronts every
+routed mount with a single call: `createFetchHandler` turns the router into a
+`(Request) => Promise<Response | null>`, and the worker supplies only what the
+generic adapter can't know. The adapter owns the
 verdict → HTTP mechanics — status mapping, `mergeSearch` on redirect
 `Location`s, stripping validators and relabelling status'd shells, and the
 canonical `Link` header (status-less shells only — a 404 is not an alternate
 representation of anything). The worker supplies the host IO (`serveShell` /
 `serveNotFound` over `env.ASSETS`) and the site policy the adapter has no seam
 for: the level-2 exhibit bypasses the adapter entirely (it demonstrates the
-_absence_ of server routing), `SHELL_PATHS` aliases the vanilla shell under the
-exhibit prefixes, and `withNoindex` quarantines the exhibits on the way out. A
+_absence_ of server routing), `shellPath` points the vanilla pushState mounts
+at the one base-agnostic vanilla shell while every other mount serves its own,
+and `withNoindex` quarantines the exhibits on the way out. A
 `null` return is the adapter's pass-through — a path this router doesn't own —
 served however the assets binding would. `Env` is generated by `wrangler types`
 from the config's bindings, so the handler needs no hand-written environment
@@ -697,45 +413,8 @@ Cloudflare Workers
 [static assets](https://developers.cloudflare.com/workers/static-assets/)
 serve the built site; the worker script runs only where a routing decision is
 needed ([`wrangler.jsonc`](https://github.com/simshanith/lit-ui-router/blob/main/www/lit-ui-router.dev/wrangler.jsonc)):
-
-```jsonc
-// https://developers.cloudflare.com/workers/static-assets/configuration/
-{
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "lit-ui-router",
-  "compatibility_date": "2026-07-01",
-  "main": "./worker/index.ts",
-  "assets": {
-    "directory": "./dist",
-    "binding": "ASSETS",
-    "not_found_handling": "404-page",
-    // Sample-app deep links and the 404-pattern exhibits invoke the worker;
-    // other misses serve 404.html. EVERY mount lists its bare path too, not
-    // just the `/*` wildcard: a `/*` pattern matches `/app/foo` but NOT the
-    // bare mount root `/app`, and the root is exactly where the verdict that
-    // differs from the plain asset lives — the flagship's `/` -> welcome 302,
-    // and /app-hash's shell-at-200 (its own `app-hash.html`, not the vanilla
-    // shell html_handling would serve at `/app-hash`). Omit the bare path and
-    // html_handling answers before the worker runs, shadowing that verdict.
-    // The exhibits also need their bare paths because no asset exists there —
-    // the whole prefix is the demo.
-    "run_worker_first": [
-      "/app",
-      "/app/*",
-      "/app-mobx",
-      "/app-mobx/*",
-      "/app-hash",
-      "/app-hash/*",
-      "/not-found-naive",
-      "/not-found-naive/*",
-      "/not-found-spa",
-      "/not-found-spa/*",
-      "/simulated-routing",
-      "/simulated-routing/*",
-    ],
-  },
-}
-```
+it binds the built site as `ASSETS` with `not_found_handling: "404-page"` and
+lists every mount prefix under `run_worker_first`.
 
 `run_worker_first` sends every request under the mounts through the worker —
 it has to see misses like `/app/definitely-not` to judge them — while
@@ -748,13 +427,71 @@ Cloudflare's `html_handling` answers before the worker runs, shadowing that
 verdict. The exhibits list their bare paths for the same reason plus one more:
 no asset exists there, so the whole prefix is the demo.
 
+[How this site runs](../about-this-site) maps the rest of lit-ui-router.dev
+around this worker: the static assets and the release-ledger worker.
+
 The routing side stays light in production, too: the deployed worker —
-handler, fetch adapter, both mount tables, and the headless router behind the
-simulate mount — uploads at ~268 KiB (~56 KiB gzip), around 2% of even the
-free plan's Workers size limit. That figure is the dogfood measuring itself:
-the repo's own cached wrangler dry-run produces it, and CI uploads the same
-bundle to size tracking. The site itself ships as static assets through the
+handler, fetch adapter, the `mounts` table, and the headless router behind the
+simulate mount — gzips to a small fraction of even the free plan's Workers
+size limit. The dogfood measures itself: the site package's `bundle:worker`
+task (a cached `wrangler deploy --dry-run`) prints the upload size, and
+`codecov:bundle` sends the same bundle to Codecov's size tracking as
+`docs-worker-esm`. The site itself ships as static assets through the
 binding, outside that budget entirely.
+
+### One request at a time
+
+Each diagram follows one request through the four lanes in production.
+
+#### Static page <span style="margin-left: 6px; padding: 0 6px; border-radius: 4px; font-family: var(--vp-font-family-mono); font-size: 12px; font-weight: 600; vertical-align: 2px; background: var(--vp-c-green-soft, rgba(16,185,129,0.14)); color: var(--vp-c-green-1, #18794e)">200</span>
+
+Not a `run_worker_first` path, and the file exists. The worker never runs.
+
+<!--@include: ../public/diagrams/server-route-matching-seq-1-static-page.svg-->
+
+#### Static miss <span style="margin-left: 6px; padding: 0 6px; border-radius: 4px; font-family: var(--vp-font-family-mono); font-size: 12px; font-weight: 600; vertical-align: 2px; background: var(--vp-c-yellow-soft, rgba(234,179,8,0.14)); color: var(--vp-c-yellow-1, #915930)">404</span>
+
+Not a `run_worker_first` path, and no file: `not_found_handling` serves the site’s `404.html`.
+
+<!--@include: ../public/diagrams/server-route-matching-seq-2-static-miss.svg-->
+
+#### App deep link <span style="margin-left: 6px; padding: 0 6px; border-radius: 4px; font-family: var(--vp-font-family-mono); font-size: 12px; font-weight: 600; vertical-align: 2px; background: var(--vp-c-green-soft, rgba(16,185,129,0.14)); color: var(--vp-c-green-1, #18794e)">200</span>
+
+A route in a mount: the verdict is `shell`, and the worker fetches the app shell through `ASSETS`. A revalidation that gets a 304 passes it on.
+
+<!--@include: ../public/diagrams/server-route-matching-seq-3-app-deep-link.svg-->
+
+#### App redirect <span style="margin-left: 6px; padding: 0 6px; border-radius: 4px; font-family: var(--vp-font-family-mono); font-size: 12px; font-weight: 600; vertical-align: 2px; background: var(--vp-c-indigo-soft, rgba(100,108,255,0.14)); color: var(--vp-c-indigo-1, #3451b2)">302</span>
+
+A redirect rule at the mount root: the verdict is `redirect`, and nothing is fetched from assets.
+
+<!--@include: ../public/diagrams/server-route-matching-seq-4-app-redirect.svg-->
+
+#### Unknown path, mount with `otherwise` <span style="margin-left: 6px; padding: 0 6px; border-radius: 4px; font-family: var(--vp-font-family-mono); font-size: 12px; font-weight: 600; vertical-align: 2px; background: var(--vp-c-yellow-soft, rgba(234,179,8,0.14)); color: var(--vp-c-yellow-1, #915930)">404</span>
+
+`/not-found-spa` declares an `otherwise`, so the verdict is the shell with status 404. The shell request goes without validators, so assets answer with a full body, never a 304.
+
+<!--@include: ../public/diagrams/server-route-matching-seq-5-unknown-path-otherwise.svg-->
+
+#### Unknown path, mount without `otherwise` <span style="margin-left: 6px; padding: 0 6px; border-radius: 4px; font-family: var(--vp-font-family-mono); font-size: 12px; font-weight: 600; vertical-align: 2px; background: var(--vp-c-yellow-soft, rgba(234,179,8,0.14)); color: var(--vp-c-yellow-1, #915930)">404</span>
+
+The verdict is `notFound` with a mount, and the worker serves that mount’s 404 page.
+
+<!--@include: ../public/diagrams/server-route-matching-seq-6-unknown-path-no-otherwise.svg-->
+
+#### No mount <span style="margin-left: 6px; padding: 0 6px; border-radius: 4px; font-family: var(--vp-font-family-mono); font-size: 12px; font-weight: 600; vertical-align: 2px; background: var(--vp-c-default-soft, rgba(142,150,170,0.14)); color: var(--vp-c-text-1, #3c3c43)">as served</span>
+
+The pass-through, for a worker-first path no mount owns: the verdict is `notFound` without a mount, the adapter returns `null`, and the worker hands the request to `ASSETS` unchanged.
+
+<!--@include: ../public/diagrams/server-route-matching-seq-7-no-mount.svg-->
+
+`vitepress dev` sends the sample-app navigations through the same verdicts
+with the `ui-router-server/vite` plugin, Vite standing in for Cloudflare and
+the assets: the plugin answers a redirect itself, and for a shell or a
+mount-owned 404 it rewrites the request to the HTML file and lets Vite serve
+it, as the site's
+[`.vitepress/vite.config.ts`](https://github.com/simshanith/lit-ui-router/blob/main/www/lit-ui-router.dev/.vitepress/vite.config.ts)
+sets up.
 
 ## Redirects: data until they need code
 
@@ -805,23 +542,10 @@ client entered with.
 ## Shell-at-404: the `otherwise` projection
 
 The `/not-found-spa` exhibit is the flagship `app` config plus one field:
-`MountConfig.otherwise` projects the client's `otherwise()` rule
-([`routes.ts`](https://github.com/simshanith/lit-ui-router/blob/main/apps/sample-app-routes/src/routes.ts)):
-
-```ts
-// The not-found-spa exhibit: an honest-404 SPA. It is the flagship mount plus
-// one difference — the miss. Real routes and the root redirect earn a shell-200
-// (its own base-baked build, VITE_SAMPLE_APP_BASE_URL /not-found-spa/, lets the
-// client match deep links at this prefix), while the `otherwise` projection
-// serves the app shell at an honest 404 for genuine misses; the client boots at
-// the retained url and renders the rich in-app notFound state. The flagship
-// carries no `otherwise`, so its miss is a static 404 page instead (see the
-// fetch adapter's verdict mapping: an `otherwise` state is a status'd shell).
-const notFoundSpaDemo: MountConfig = {
-  ...app,
-  otherwise: { state: 'notFound' },
-};
-```
+`MountConfig.otherwise` projects the client's `otherwise()` rule, so its
+entry in
+[`routes.ts`](https://github.com/simshanith/lit-ui-router/blob/main/apps/sample-app-routes/src/routes.ts)
+spreads the flagship config and adds `otherwise: { state: 'notFound' }`.
 
 The semantics mirror the client rule they project. The target must be a
 **declared, url-less** state — enforced at construction — for the same
@@ -835,8 +559,8 @@ verdict as `{ kind: 'shell', status: 404 }` — the shell IS the error page,
 never a 200 — and the client boots at the retained URL, where its own
 `otherwise()` rule renders the rich notFound view.
 
-A status'd shell puts two obligations on the consumer, both visible in the
-worker above: strip the request's validators (`If-None-Match`,
+A status'd shell puts two obligations on the server, both handled by the
+fetch adapter: strip the request's validators (`If-None-Match`,
 `If-Modified-Since`) before the assets fetch so it returns a 200 body to
 relabel — never relabel a bare 304, which has no body (a 404 with a null
 body is malformed) and would let a probe read cache freshness for a path
@@ -845,51 +569,19 @@ that doesn't exist — and emit no canonical `Link`.
 ## A real router per request
 
 The far end of the spectrum swaps the evaluation engine while keeping the
-same data, plus the mount table that puts every level side by side:
+same data: the `/simulated-routing` mount is the flagship route and redirect
+tables plus the `otherwise` projection, with `strategy: 'simulate'`.
 
-```ts
-// The simulated-routing exhibit: full router semantics server-side — the
-// same tables, but every verdict computed by replaying the url through a
-// headless @uirouter/core router (redirect rules, otherwise, and one day
-// hooks/resolves all ride). Its own base-baked build (VITE_SAMPLE_APP_BASE_URL
-// /simulated-routing/) lets the client render the very route the server
-// computed; noindex (worker) still quarantines the exhibit from crawlers.
-const simulatedRoutingDemo: MountConfig = {
-  routes,
-  redirects,
-  strategy: 'simulate',
-  otherwise: { state: 'notFound' },
-};
-
-// The hash-location demo: a hash client keeps the whole route in the fragment,
-// so the server only ever sees the bare mount — and it MUST serve the shell at
-// 200 there. A redirect at the root (the flagship's `/` -> welcome rule) would
-// 302 the mount, and a 302 sends the browser to a new path, stripping the
-// route the hash client entered with; that is exactly why hash mode is not
-// first-class at the flagship mounts. A single url-less-prefix root route
-// (`url: ''`) matches the empty subpath to a shell verdict with no redirect;
-// `strict: false` extends it to the trailing-slash form (`/app-hash/`). Deep
-// paths never occur under a hash client, so they stay honest 404s.
-const hashDemo: MountConfig = {
-  routes: [{ name: 'root', url: '' }],
-  config: { strict: false },
-};
-
-/**
- * Both sample apps run the same route tree, each under its own mount
- * (not-found-static); the demo mounts exhibit the not-found-spa and
- * simulated-routing rungs (not-found-naive lives worker-side — it is the
- * absence of routing config), and /app-hash the hash-location shape (shell at
- * the root, no redirect, so the fragment survives entry).
- */
-export const mounts: Record<string, MountConfig> = {
-  '/app': app,
-  '/app-mobx': app,
-  '/app-hash': hashDemo,
-  '/not-found-spa': notFoundSpaDemo,
-  '/simulated-routing': simulatedRoutingDemo,
-};
-```
+The `mounts` table in
+[`routes.ts`](https://github.com/simshanith/lit-ui-router/blob/main/apps/sample-app-routes/src/routes.ts)
+puts every level side by side: the flagship config mounted once per sample
+app, plus the demo mounts — `/not-found-spa`, `/simulated-routing`, and
+`/app-hash`. The hash demo is a single url-less root route (`url: ''`) with
+`strict: false`: a hash client keeps its whole route in the fragment, so the
+server only ever sees the bare mount (with or without a trailing slash) and
+must serve the shell there at 200 with no redirect. Deep paths never occur
+under a hash client, so they stay honest 404s. `/not-found-naive` has no
+entry; it is the absence of routing config, served worker-side.
 
 On a simulate mount nothing is approximated: the redirect table registers as
 real `when()` rules, `otherwise` as a real `otherwise()` rule, and a
@@ -1030,9 +722,9 @@ letting a directive own the `class` attribute — see
 
 A router is easy to build on the server; handing it to the code that renders is
 the hard part. In a browser every binding finds the router by asking its own
-element — `<ui-router>` answers a `ui-router-context` event, or the
+element — `<ui-router>` answers a
 [`context-request`](/guides/reactive-components#router-discovery)
-protocol, on the way up the tree. A server render has no tree to walk: the
+on the way up the tree. A server render has no tree to walk: the
 renderer calls a directive's `render()` with no element behind it, so there is
 nothing to dispatch from and nothing to listen on.
 
@@ -1054,7 +746,10 @@ const { provideRouter, withRouterSync } = await import('lit-ui-router/context');
 // one router per request, at the url the request asked for, query included
 const { pathname, search } = new URL(request.url);
 const router = new UIRouterLit();
-installServerLocation(router, { url: pathname + search, strictMode: false });
+installServerLocation(router, {
+  url: pathname + search,
+  urlConfig: { strict: false },
+});
 states.forEach((state) => router.stateRegistry.register(state));
 router.start();
 
@@ -1093,7 +788,9 @@ hand.
 [`lit-ui-router-ssr`](/packages/ssr) packages this hand-off: it owns the
 `@lit-labs/ssr` call, the `provideRouter`/`withRouterSync` pairing, and the
 `finally` — so a build that prerenders a whole mount table writes none of the
-above by hand.
+above by hand. [The Altitude Atlas](https://atlas.lit-ui-router.dev) prerenders
+every page this way, and on each render reads a `lit-ui-router-effect`
+`RouterRefController` under `withRouterSync` to check it sees the settled route.
 
 **The attribute directives read the slot.** `srefHref`, `srefActiveClass` and
 `srefAriaCurrent` have no element to seek from, so they take the router
@@ -1120,9 +817,12 @@ spurious 404.
 **Trailing slashes are strict on both sides.** `/app/welcome/` 404s just as
 the client would refuse to match it. If your client relaxes
 [`strictMode`](https://ui-router.github.io/core/docs/latest/interfaces/_url_interface_.urlmatcherconfig.html),
-pass the same relaxation as the mount's `config`. A static host that serves
-`<subpath>/index.html` by redirecting onto the slashed url makes that
-relaxation mandatory — see
+pass the same relaxation as the mount's `config`: keep one config object and
+hand it to both the mount and
+[`applyUrlConfig`](/api/ui-router-server/url-config/functions/applyUrlConfig)
+on the client router, which throws if a state's url already compiled. A
+static host that serves `<subpath>/index.html` by redirecting onto the
+slashed url makes that relaxation mandatory — see
 [static hosts add a trailing slash](/packages/ssr#static-hosts-add-a-trailing-slash).
 
 **The 404 UX is asymmetric — by design.** With the flagship pattern,

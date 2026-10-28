@@ -1,6 +1,13 @@
-import { LitElement } from 'lit';
 import { memoryLocationPlugin } from '@uirouter/core';
 import { UIRouterLit, LitStateDeclaration } from 'lit-ui-router';
+import {
+  tick,
+  type GoParams,
+  type GoRouter,
+  type Updatable,
+} from '@tools/lit-test-env/router.ts';
+
+export { testStates, tick } from '@tools/lit-test-env/router.ts';
 
 /**
  * Creates a test router instance with memory location plugin.
@@ -11,42 +18,34 @@ export function createTestRouter(
 ): UIRouterLit {
   const router = new UIRouterLit();
   router.plugin(memoryLocationPlugin);
-  states.forEach((state) => router.stateRegistry.register(state));
+  // Copies: registration binds a declaration to one router, and specs share testStates.
+  states.forEach((state) => router.stateRegistry.register({ ...state }));
+
   return router;
 }
-
-/**
- * States shared by the specs.
- */
-export const testStates: LitStateDeclaration[] = [
-  { name: 'a', url: '/a' },
-  { name: 'b', url: '/b/:id' },
-  { name: 'b.child', url: '/child' },
-];
 
 /**
  * Navigates to a state and waits for the transition to complete.
  */
 export async function routerGo(
-  router: UIRouterLit,
+  router: GoRouter,
   state: string,
-  params?: Record<string, unknown>,
+  params?: GoParams,
 ): Promise<void> {
   await router.stateService.go(state, params);
-  await tick();
-}
-
-/**
- * Wait for microtasks and pending promises to flush.
- */
-export function tick(ms = 0): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+  await settle();
 }
 
 /**
  * Waits for a LitElement to complete its update cycle.
  */
-export async function waitForUpdate(element: LitElement): Promise<void> {
+export async function waitForUpdate(element: Updatable): Promise<void> {
+  await settle();
   await element.updateComplete;
   await tick();
+}
+
+/** Lets forked fibers run: effect 4 schedules on macrotasks, effect 3 on microtasks. */
+async function settle(turns = 10): Promise<void> {
+  for (let turn = 0; turn < turns; turn++) await tick();
 }

@@ -6,12 +6,12 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { describe, it } from 'node:test';
 
-import { readPackageProbe } from './entries.ts';
+import { readPackageProbe, type BundleProbeClaims } from './entries.ts';
 
-const packageWith = (bundleProbe: Record<string, unknown>): string => {
+const packageWith = (bundleProbe: BundleProbeClaims): string => {
   const dir = mkdtempSync(path.join(tmpdir(), 'bundle-probe-entries-'));
-  mkdirSync(path.join(dir, 'src'));
-  writeFileSync(path.join(dir, 'src', 'index.ts'), 'export const a = 1;\n');
+  mkdirSync(path.join(dir, 'dist'));
+  writeFileSync(path.join(dir, 'dist', 'index.js'), 'export const a = 1;\n');
   writeFileSync(
     path.join(dir, 'package.json'),
     JSON.stringify({
@@ -24,6 +24,7 @@ const packageWith = (bundleProbe: Record<string, unknown>): string => {
       bundleProbe,
     }),
   );
+
   return dir;
 };
 
@@ -32,6 +33,7 @@ describe('readPackageProbe claims', () => {
     const { entries } = readPackageProbe(
       packageWith({ '.': { free: ['lit'] } }),
     );
+
     assert.deepEqual(
       entries.map(({ label, free }) => ({ label, free })),
       [{ label: 'index', free: ['lit'] }],

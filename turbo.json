@@ -3,6 +3,8 @@
   "ui": "tui",
   "remoteCache": { "signature": true },
   "agentGuidance": false,
+  // errors-only output still prints a start and finish line per task
+  "futureFlags": { "errorsOnlyShowHash": true },
   "tasks": {
     "transit": {
       "dependsOn": ["^transit"]
@@ -36,9 +38,14 @@
       "env": ["VITEST_BROWSER_API_PORT", "VITE_EXPECT_LIT_MAJOR"],
       // CYPRESS_video: CI disables Cypress recording (build-test.yml);
       // strict env mode would scrub the override before it reaches Cypress.
-      // CI: the vitest configs only pick a reporter from it, so the artifact is
-      // identical either way — hashing it would wall laptops off from CI's cache.
-      "passThroughEnv": ["WRANGLER_LOG", "CYPRESS_video", "CI"]
+      // CI, GITHUB_ACTIONS: they only pick reporters, so the artifact is
+      // identical either way — hashing them would wall laptops off from CI's cache.
+      "passThroughEnv": [
+        "WRANGLER_LOG",
+        "CYPRESS_video",
+        "CI",
+        "GITHUB_ACTIONS"
+      ]
     },
     "@tools/dts-backtest#test": {
       "dependsOn": ["^build"],
@@ -69,7 +76,7 @@
         "vitest.setup.ts"
       ],
       "env": ["VITEST_BROWSER_API_PORT", "VITE_EXPECT_LIT_MAJOR"],
-      "passThroughEnv": ["CI"],
+      "passThroughEnv": ["CI", "GITHUB_ACTIONS"],
       "outputs": ["coverage/**"]
     },
     // Report-only CRAP hotspots from this package's coverage-final.json; in no
@@ -77,6 +84,16 @@
     "crap": {
       "dependsOn": ["test:coverage"],
       "inputs": ["$TURBO_DEFAULT$"]
+    },
+    // Report-only tinybench timings into each package's .cache/; measures the
+    // host, so uncached. In no ci:* graph: the Acceptance workflow's
+    // `acceptance (bench)` job runs it.
+    "bench": {
+      // per-task time budget; CI shortens it
+      "env": ["BENCH_TIME_MS"],
+      // the result files' sha field; git HEAD is the fallback
+      "passThroughEnv": ["GITHUB_SHA"],
+      "cache": false
     },
     // Firefox+WebKit full-suite pass for the vitest packages; chromium
     // correctness rides test:coverage on PRs. Runs on main push, not the
@@ -90,7 +107,7 @@
         "vitest.setup.ts"
       ],
       "env": ["VITEST_BROWSER_API_PORT", "VITE_EXPECT_LIT_MAJOR"],
-      "passThroughEnv": ["CI"]
+      "passThroughEnv": ["CI", "GITHUB_ACTIONS"]
     },
     // Same unit suites resolved against the lit-2 alias (the 2.x line the
     // published lit peer range covers); cheap enough for the PR graph — no
@@ -103,7 +120,7 @@
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/pnpm-workspace.yaml"],
       "env": ["VITEST_BROWSER_API_PORT", "VITE_EXPECT_LIT_MAJOR"],
-      "passThroughEnv": ["CI"]
+      "passThroughEnv": ["CI", "GITHUB_ACTIONS"]
     },
     // Same unit suites resolved against the mobx-6 alias (the 6.x line the
     // widened mobx peer range still covers). Mirrors test:lit2-compat: no
@@ -115,7 +132,18 @@
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/pnpm-workspace.yaml"],
       "env": ["VITEST_BROWSER_API_PORT", "VITE_EXPECT_MOBX_MAJOR"],
-      "passThroughEnv": ["CI"]
+      "passThroughEnv": ["CI", "GITHUB_ACTIONS"]
+    },
+    // Same unit suites resolved against the effect-3 alias (the 3.x line the
+    // widened effect peer range still covers). Mirrors test:mobx6-compat, but
+    // uploads coverage-effect3/ beside coverage/: the per-major shims in src
+    // take their effect 3 branches only here.
+    "test:effect3-compat": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/pnpm-workspace.yaml"],
+      "env": ["VITEST_BROWSER_API_PORT", "VITE_EXPECT_EFFECT_MAJOR"],
+      "passThroughEnv": ["CI", "GITHUB_ACTIONS"],
+      "outputs": ["coverage-effect3/**"]
     },
     // Umbrellas (no script) fan out via dependsOn to the leaves that carry the
     // scripts and cache keys; `with` is only for persistent sidecars. A package
@@ -131,8 +159,10 @@
         "//#lint:workflows",
         "//#lint:templates",
         "@tools/repo-checks#check:patches",
+        "@tools/repo-checks#check:shared-source",
         "@tools/repo-checks#check:dedupe",
         "@tools/repo-checks#check:single-version",
+        "@tools/repo-checks#check:package-coverage",
         "@tools/repo-checks#check:graph-edges",
         "@tools/repo-checks#check:task-inputs",
         "@tools/repo-checks#check:knip",
@@ -154,21 +184,28 @@
         "!**/node_modules/**",
         "!**/dist/**",
         "!**/coverage/**",
+        "!**/coverage-effect3/**",
         "!**/.turbo/**",
         "!**/.probe-scratch/**",
         "!.cache/**",
+        "!**/.vitepress/cache/**",
         "$TURBO_ROOT$/.oxlintrc.json",
         "$TURBO_DEFAULT$"
-      ]
+      ],
+      // selects github output, which the turbo_summary step re-emits
+      "passThroughEnv": ["GITHUB_ACTIONS"]
     },
     "//#lint:root": {
-      "inputs": [".oxlintrc.json", "$TURBO_DEFAULT$"]
+      "inputs": [".oxlintrc.json", "$TURBO_DEFAULT$"],
+      "passThroughEnv": ["GITHUB_ACTIONS"]
     },
     // Hard complexity ceiling over JS/TS outside gitignored paths (.vue files
     // aren't linted); disable comments don't apply
     // (tools/eslint/complexity-ceiling.ts mirrors the ignores).
     "//#lint:complexity": {
-      "inputs": ["$TURBO_DEFAULT$"]
+      "inputs": ["$TURBO_DEFAULT$"],
+      // turns on github-formatter annotations, which the turbo_summary step re-emits
+      "passThroughEnv": ["GITHUB_ACTIONS"]
     },
     // lit-analyzer over every tracked src .ts, as ONE program-wide pass (the
     // tag registry is global to the run, so cross-package `<ui-view>` usage
@@ -186,9 +223,14 @@
         "lit-ui-router#build:types",
         "lit-ui-router-effect#build:types",
         "lit-ui-router-mobx#build:types",
+        "lit-ui-router-signals#build:types",
         "lit-ui-router-ssr#build:types",
+        "ui-router-effect#build:types",
+        "ui-router-mobx#build:types",
         "ui-router-navigation-location-plugin#build:types",
-        "ui-router-server#build:types"
+        "ui-router-registry#build:types",
+        "ui-router-server#build:types",
+        "ui-router-signals#build:types"
       ],
       "inputs": [
         "$TURBO_DEFAULT$",
@@ -226,9 +268,6 @@
         "!**/.turbo/**",
         "!**/node_modules/**",
         "tools/lint-elements/src/**",
-        // the committed warning floor: raising or lowering it re-runs the lane
-        "tools/lint-elements/warnings.json",
-        "tools/warn-lanes/src/**",
         // feeds both the oxlint-disable layer and the disable-directive stubs
         ".oxlintrc.json",
         "tools/eslint-ts-parser/src/**"
@@ -242,13 +281,16 @@
         "**/package.json",
         "!**/node_modules/**",
         "!.claude/worktrees/**",
+        "!**/.vitepress/cache/**",
         "eslint.config.ts",
         "tools/eslint/**",
         "!**/.turbo/**",
         "packages/eslint-plugin-lit-ui-router/src/**",
         "pnpm-workspace.yaml",
         ".oxlintrc.json"
-      ]
+      ],
+      // turns on github-formatter annotations, which the turbo_summary step re-emits
+      "passThroughEnv": ["GITHUB_ACTIONS"]
     },
     // Content lint (not config plumbing, so deliberately not under
     // //#lint:workflows): rumdl over every tracked .md. Its own cache group,
@@ -264,7 +306,8 @@
         "$TURBO_ROOT$/.config/rumdl.toml",
         "$TURBO_ROOT$/.config/mise/tasks/rumdl",
         "$TURBO_ROOT$/.config/mise/mise.lock"
-      ]
+      ],
+      "passThroughEnv": ["GITHUB_ACTIONS"]
     },
     // Config-plumbing lint: one //# cache group per tool, aggregated by the
     // //#lint:workflows umbrella (which the lint task pulls in). The
@@ -285,7 +328,8 @@
         ".github/**",
         "$TURBO_ROOT$/.config/mise/config.toml",
         "$TURBO_ROOT$/.config/mise/mise.lock"
-      ]
+      ],
+      "passThroughEnv": ["GITHUB_ACTIONS"]
     },
     "//#lint:zizmor": {
       "inputs": [
@@ -325,7 +369,8 @@
         "//#typecheck:root",
         "typecheck:src",
         "typecheck:lit2",
-        "typecheck:mobx6"
+        "typecheck:mobx6",
+        "typecheck:effect3"
       ]
     },
     "typecheck:tsc": {
@@ -358,10 +403,21 @@
         "$TURBO_ROOT$/pnpm-workspace.yaml"
       ]
     },
+    // src against the effect-3 alias's types; mirrors typecheck:mobx6.
+    "typecheck:effect3": {
+      "dependsOn": ["^build:types"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/tsconfig.base.json",
+        "$TURBO_ROOT$/pnpm-workspace.yaml"
+      ]
+    },
     "typecheck:peer-floor": {
       // manual-only: not in ci — the floor pin can only reference published
       // versions, so gating would break atomic core-API + mobx-adoption PRs
       // floor comes from the catalog; the aliased package is pinned by the lockfile
+      // workspace peers without a floor alias resolve to their built d.ts
+      "dependsOn": ["^build:types"],
       "inputs": [
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/tsconfig.base.json",
@@ -379,6 +435,7 @@
         "test:coverage",
         "test:lit2-compat",
         "test:mobx6-compat",
+        "test:effect3-compat",
         "lint",
         "typecheck",
         "format:check",
@@ -387,9 +444,12 @@
         "@tools/release#check:exports"
       ]
     },
+    // Bundles each dist export the way consumers install it, so the own
+    // package's build:js runs first; workspace deps stay external. floor-guard
+    // runs here too and reads its ranges from the catalogs.
     "check:bundle": {
-      "dependsOn": ["transit"],
-      "inputs": ["$TURBO_DEFAULT$"]
+      "dependsOn": ["transit", "build:js"],
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/pnpm-workspace.yaml"]
     },
     // Reader of the two-pass build:js emit: asserts the declared dev-only
     // warnings ship in dist/development/*.js and in no dist/*.js. Own package's
@@ -445,9 +505,11 @@
         "!**/node_modules/**",
         "!**/dist/**",
         "!**/coverage/**",
+        "!**/coverage-effect3/**",
         "!**/.turbo/**",
         "!**/.probe-scratch/**",
         "!.cache/**",
+        "!**/.vitepress/cache/**",
         ".oxfmtrc.json",
         "$TURBO_ROOT$/.oxfmtrc.json"
       ]
@@ -481,7 +543,8 @@
       "with": ["@www/lit-ui-router.dev#wrangler:dev"],
       // Override of the default in www/lit-ui-router.dev/dev-port.ts; both the
       // server and the Cypress config read it, so it must reach both.
-      "passThroughEnv": ["WWW_DEV_PORT"],
+      // E2E_BASE_URL points the Cypress config at another origin instead.
+      "passThroughEnv": ["WWW_DEV_PORT", "E2E_BASE_URL"],
       "cache": false,
       "persistent": true
     },

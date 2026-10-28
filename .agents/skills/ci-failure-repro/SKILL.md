@@ -15,8 +15,8 @@ This skill adds only what an unattended run needs.
    PR, start at `gh pr checks <pr>`; from a branch with no PR, or a PR with
    conflicts, `gh run list --branch <branch>` (the `Build and Test (branch)`
    workflow).
-2. Save `gh run view <run-id> --log-failed` to a file under `$CLAUDE_JOB_DIR/tmp`
-   and search it for `repro:`. Never pipe it through `head` or `tail`; the
+2. Save `gh run view <run-id> --log-failed` to a scratch file outside the
+   checkout and search it for `repro:`. Never pipe it through `head` or `tail`; the
    report sits near the end of thousands of lines.
 3. Check whether it's already fixed before setting anything up: a later green
    run on the same branch (`gh run list --branch <branch>`), a merged PR, or
@@ -30,8 +30,7 @@ This skill adds only what an unattended run needs.
 6. Skip `ELIFECYCLE` lines in the raw stream; cancelled tasks print them too.
 7. A failure in a package the diff doesn't touch gets a `--force` rerun before
    anyone believes it.
-8. Ask before running e2e or Cypress; headless browser test tasks need no ask. A `wrangler dev` crash is
-   a known flake; suggest a rerun first.
+8. A `wrangler dev` crash is a known flake; suggest a rerun first.
 9. If the repro passes, look for what CI has that the checkout lacks: a fresh
    checkout with no stale `dist/`, `main`'s newer commits, `CI=true`. A timeout
    can need CI's parallel load; one rerun with `CI=true` under load is enough.

@@ -1,0 +1,273 @@
+---
+title: MobX Bindings
+description: Observable router state and reaction-based controllers with lit-ui-router-mobx
+---
+
+# lit-ui-router-mobx
+
+<p class="badges">
+<a href="https://npmx.dev/package/lit-ui-router-mobx" target="_blank" class="badge"><img alt="NPM Version" src="https://img.shields.io/npm/v/lit-ui-router-mobx" /></a>
+<a href="https://lit-ui-router.dev/gh/releases/lit-ui-router-mobx/latest" target="_blank" class="badge"><img alt="GitHub Release" src="https://img.shields.io/github/v/release/simshanith/lit-ui-router?filter=lit-ui-router-mobx@*" /></a>
+</p>
+
+[`lit-ui-router-mobx`](https://npmx.dev/package/lit-ui-router-mobx)
+provides [MobX](https://mobx.js.org) bindings for lit-ui-router: an observable
+mirror of the router's state, from [`ui-router-mobx`](/packages/ui-router-mobx),
+and reaction-based
+[ReactiveControllers](https://lit.dev/docs/composition/controllers/) that keep
+components in sync with it.
+
+It is a thin wrapper on top of `lit-ui-router` — it registers no custom
+elements and adds no routing behavior. If your application already uses MobX
+for its own state, these bindings let route state participate in the same
+reactivity system, with automatic `requestUpdate()` and no manual refresh
+plumbing.
+
+::: tip Not using MobX?
+You don't need this package to react to route changes. The core package's
+zero-dependency
+[`TransitionController`](/api/reference/controllers/TransitionController)
+covers the same ground with transition hooks instead of observables.
+:::
+
+## Installation
+
+```bash
+npm install lit-ui-router-mobx ui-router-mobx mobx
+```
+
+`lit-ui-router`, `ui-router-mobx`, `lit`, `mobx`, and `@uirouter/core` are
+peer dependencies.
+
+### RouterStore without Lit
+
+`RouterStore` lives in [`ui-router-mobx`](/packages/ui-router-mobx), which
+imports only `mobx` and `@uirouter/core`. A project without Lit installs that
+package alone:
+
+```bash
+npm install ui-router-mobx mobx
+```
+
+`lit-ui-router-mobx` re-exports the same class, so code using either package
+shares one store per router.
+
+### MobX 6 and 7
+
+Both majors are supported (`mobx@^6.0.0 || ^7.0.0`) and both are exercised in
+CI. The bindings' own API is identical on either. Note that MobX 7 replaced the
+namespaced comparers with named exports, so the `equals` option in the examples
+below is spelled `compareStructural` on 7 and `comparer.structural` on 6 —
+`equals` accepts any `(a, b) => boolean`, so either works.
+
+### lit-ui-router 1.x
+
+The peer range is `lit-ui-router@^1.16.0`, the first release where
+`<ui-view>` answers the `context-request` protocol as `<ui-router>` does, and it
+excludes 2.x. `RouterReactionController` finds its router through
+`context-request` alone, the one
+[discovery protocol](/guides/reactive-components#router-discovery)
+`lit-ui-router@2.0` keeps
+([#874](https://github.com/simshanith/lit-ui-router/issues/874)). A
+`lit-ui-router` 2.0 still carries a `lit-ui-router-mobx` 2.0.
+
+## Quick start
+
+```ts
+import { html, LitElement } from 'lit';
+import { RouterReactionController } from 'lit-ui-router-mobx';
+
+class AppNav extends LitElement {
+  // Re-renders only when the section's visibility actually flips —
+  // not on every transition.
+  private active = new RouterReactionController(this, (route) => ({
+    inbox: route.includes('inbox.**'),
+    contacts: route.includes('contacts.**'),
+  }));
+
+  render() {
+    return html`...${this.active.value.inbox ? 'Inbox is open' : ''}...`;
+  }
+}
+```
+
+No router configuration is required: when the host connects, the controller
+requests the router from the nearest provider — `<ui-router>`, `<ui-view>`, a
+`ContextProvider` of `routerContext`, or `provideRouter(target, router)` — and
+rebinds whenever that provider hands it a new one, and the store lazily
+attaches its single transition hook on first use.
+[Router discovery](/guides/reactive-components#router-discovery) covers both
+protocols.
+
+## The pieces
+
+### RouterStore
+
+[`RouterStore`](/api/lit-ui-router-mobx/classes/RouterStore) is an observable
+mirror of a router's current state, updated by one
+`transitionService.onSuccess` hook per router. It is `ui-router-mobx`'s
+`RouterStore`, re-exported.
+
+| Member                      | Description                                                                                                |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `RouterStore.for(router)`   | The store for a router — memoized, one per router instance                                                 |
+| `current`                   | The current `StateDeclaration` (`globals.current`)                                                         |
+| `params`                    | The current `RawParams` (`globals.params`), replaced per transition                                        |
+| `transition`                | The most recent successful `Transition`                                                                    |
+| `includes(stateOrName, p?)` | Observable version of `StateService.includes` (supports globs like `'a.**'`)                               |
+| `attach(router)`            | Manual attachment, for self-managed store instances — idempotent per router, and returns a detach function |
+
+### RouterReactionController
+
+[`RouterReactionController`](/api/lit-ui-router-mobx/classes/RouterReactionController)
+observes the `RouterStore` of the router the host's nearest provider supplies:
+
+```ts
+new RouterReactionController(host, selector, options?)
+```
+
+- `selector: (store: RouterStore) => T` — the observed expression; the result
+  is exposed as `.value`
+- `options.router` — explicit router instance, skipping context discovery
+- `options.onChange` — effect invoked when the selected value changes (and
+  once on every (re)connect); useful for resetting component state from route
+  params
+- `options.equals` — MobX comparer (e.g. `compareStructural`) for precise,
+  value-based change detection
+- `options.initialValue` — the value `.value` carries before the first
+  reaction run: before `hostConnected`, and while a host has no router
+  context
+
+### ReactionController
+
+[`ReactionController`](/api/lit-ui-router-mobx/classes/ReactionController) is
+the generic primitive behind `RouterReactionController` — the same
+selector/options contract over **any** MobX observables, not just the router:
+
+```ts
+import { compareStructural } from 'mobx';
+import { ReactionController } from 'lit-ui-router-mobx';
+
+class NavHeader extends LitElement {
+  private auth = new ReactionController(
+    this,
+    () => ({ user: SessionStore.user, loggedIn: SessionStore.loggedIn }),
+    { equals: compareStructural },
+  );
+
+  render() {
+    const { user, loggedIn } = this.auth.value;
+    // ...
+  }
+}
+```
+
+## Lifecycle safety
+
+Reactions are created in `hostConnected` and disposed in `hostDisconnected`,
+so nothing leaks when elements come and go from the DOM. They also fire
+immediately on every (re)connect, so components that re-enter the DOM — for
+example under
+[sticky states](https://github.com/ui-router/sticky-states) — never render
+stale values.
+
+## Development and production builds
+
+Like `lit-ui-router`, this package ships two builds and bundlers pick between
+them through the `development` export condition — see
+[Development & Production Builds](/guides/development-builds) for the mechanism
+and the full warning inventory across packages.
+
+One warning exists here. A `RouterReactionController` whose host finds no
+router provider logs a one-time console warning naming that host, and
+then observes nothing: `.value` stays at `options.initialValue` and the host is
+never asked to update, so the component renders once with its initial value and
+never again. Wrap the subtree in `<ui-router>`, or pass the router yourself with
+`options.router` for a host that lives outside the router's DOM.
+
+## Why selectors instead of render auto-tracking?
+
+Mixins like [`MobxLitElement`](https://github.com/adobe/lit-mobx) auto-track
+every observable read in `render()`. The controllers here are the
+composition-friendly alternative:
+
+- No base class required — controllers attach to any `LitElement` (or any
+  `ReactiveControllerHost`)
+- Dependencies are explicit: the selector names exactly which observables
+  drive the host
+- `equals: compareStructural` avoids re-renders when a recomputed value is
+  structurally unchanged
+- The reaction lifecycle is bound to the host's connection lifecycle
+  automatically
+
+## Resolves stay on view props
+
+`RouterStore` mirrors `current`, `params` and `transition` — not resolves.
+Resolved data reaches a routed component exactly as it does without these
+bindings: as [`UIViewInjectedProps`](/api/reference/types/UIViewInjectedProps)
+on `_uiViewProps`, scoped to that component's own view.
+
+There is no resolve accessor on the store, and
+`store.transition?.injector().get(token)` is not a substitute: that is the
+transition's _root_ injector, not the view's resolve context, so it resolves
+a different token set than the component's own view sees.
+
+The split both the live example below and the MobX sample app follow:
+
+- resolved data → `_uiViewProps.resolves`
+- active state, and anything that outlives a single activation → the store,
+  selected by reaction controllers
+
+Route params reach a component the same way: through the resolve that reads
+them. A component re-deriving a param the resolve already derived is how the
+two drift apart.
+
+## Try it live
+
+The [Hello Solar System](/tutorial/hellosolarsystem) tutorial rebuilt on these
+controllers: same states, same URLs, same resolves. `<app-root>` is not
+routed, so it never receives fresh view props — a `RouterReactionController`
+selects what the URL says, while a plain `ReactionController` selects what the
+app remembers, from a tour store the router knows nothing about.
+
+Neither controller writes anything. A single `onSuccess` hook records the
+arrival — where the router landed, and what that state resolved — because both
+are facts about the same completed transition. `onSuccess` rather than an
+entering hook on purpose: `onEnter` fires while the transition is still in
+flight, and a later hook can still redirect or fail it, so history built on it
+can record arrivals that never happened. The id is parsed once, in the resolve,
+and no component ever reads a route param.
+
+Everything else derives. The visited set and its count are `computed` over that
+history, and the tab title comes from a plain `reaction` over `RouterStore`
+with no host and no controller at all — which is the part worth stealing: the
+store these bindings give you is an ordinary MobX observable, so application
+code can react to the router without a component in the middle.
+
+<LiveExample name="hellosolarsystem-mobx" />
+
+The Edit in StackBlitz tab boots the workspace from the published
+`lit-ui-router-mobx` package, so it doubles as an install check.
+
+Read it as the minimal case: the vanilla tutorial with the store layered in,
+not a rewrite. The sample apps below are where the two idioms are compared
+directly, at the scale of a whole application.
+
+## See it in a real app
+
+The <a href="/app-mobx" target="_self">MobX sample app</a> is a complete
+application built on these controllers. It is behaviorally identical to the
+<a href="/app" target="_self">vanilla sample app</a> (which uses
+`TransitionController`), so the
+[two codebases](https://github.com/simshanith/lit-ui-router/tree/main/apps)
+can be compared file-by-file to see exactly what the MobX idiom changes.
+
+## Further reading
+
+- [API reference](/api/lit-ui-router-mobx/)
+- [ui-router-mobx](/packages/ui-router-mobx)
+- [MobX — reactions](https://mobx.js.org/reactions.html)
+- [Lit — Reactive Controllers](https://lit.dev/docs/composition/controllers/)
+- [On the Altitude Atlas](https://atlas.lit-ui-router.dev/bricks/?focus=lit-ui-router-mobx) — this package as
+  a brick in sheet 2's model in the round, sized by its authored files and
+  seated on what it peers

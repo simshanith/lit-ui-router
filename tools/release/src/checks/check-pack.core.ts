@@ -24,21 +24,28 @@ export function findUnsubstitutedRefs(
   manifest: PackageManifest | undefined,
 ): UnsubstitutedRef[] {
   const refs: UnsubstitutedRef[] = [];
+
   for (const field of DEP_FIELDS) {
     for (const [dep, spec] of Object.entries(manifest?.[field] ?? {})) {
       // The type says string; the bytes come from a tarball, so say which
       // declaration disagreed rather than dying inside String.prototype.trim.
-      if (typeof spec !== 'string') {
+      // oxlint-disable-next-line anti-slop/no-runtime-typeof -- the error names the JSON type that arrived where the manifest type promises a string
+      const kind = typeof spec;
+
+      if (kind !== 'string') {
         throw new TypeError(
-          `${field}.${dep}: specifier is ${typeof spec}, not a string`,
+          `${field}.${dep}: specifier is ${kind}, not a string`,
         );
       }
+
       if (!UNSUBSTITUTED_PREFIXES.some((p) => spec.trim().startsWith(p))) {
         continue;
       }
+
       refs.push({ field, dep, spec });
     }
   }
+
   return refs;
 }
 
@@ -58,6 +65,7 @@ export function formatReport(results: PackResult[]): Report {
   }
 
   const bad = results.filter((result) => result.refs.length > 0);
+
   if (bad.length === 0) {
     return {
       ok: true,
@@ -72,13 +80,17 @@ export function formatReport(results: PackResult[]): Report {
       `refs npm cannot resolve (publishing would break consumers):`,
     '',
   ];
+
   for (const { name, dir, refs } of bad) {
     lines.push(`  ${name} (${dir})`);
+
     for (const { field, dep, spec } of refs) {
       lines.push(`      • ${field.padEnd(20)} ${dep.padEnd(30)} ${spec}`);
     }
+
     lines.push('');
   }
+
   return { ok: false, text: lines.join('\n') };
 }
 
@@ -104,19 +116,23 @@ export function findPackedManifestViolations(
   manifest: PackageManifest,
 ): string[] {
   const violations: string[] = [];
+
   for (const field of STRIPPED_MANIFEST_FIELDS) {
     if (manifest[field]) {
       violations.push(`${field} leaked into packed manifest`);
     }
   }
+
   const runtime = JSON.stringify([
     manifest.dependencies,
     manifest.peerDependencies,
     manifest.optionalDependencies,
   ]);
+
   if (/catalog:|workspace:/.test(runtime)) {
     violations.push('unsubstituted refs in packed manifest');
   }
+
   return violations;
 }
 
@@ -125,9 +141,137 @@ export function formatPackedManifestReport(violations: string[]): Report {
   if (violations.length === 0) {
     return { ok: true, text: '✓ packed manifest clean' };
   }
+
   const lines = [
     '✗ packed manifest check failed — this tarball must not be published:',
     ...violations.map((violation) => `  • ${violation}`),
   ];
+
+  return { ok: false, text: lines.join('\n') };
+}
+
+// ── Packed-file graph ───────────────────────────────────────────────────────
+// @tools/oxc-emit inlines private @repo/* source into dist/ and rewrites the
+// imports. These checks prove the tarball holds what its emitted files reach.
+
+// Emitted code and declarations; src/*.ts ships only as sourcemap referents.
+const EMITTED = /\.(?:js|mjs|cjs|d\.ts|d\.mts|d\.cts)$/;
+
+// Static `from "x"`, bare `import "x"`, and dynamic `import("x")`.
+const SPECIFIER = /(?:\bfrom|\bimport)\s*\(?\s*["']([^"']+)["']/g;
+
+/** A sourcemap's sources and embedded contents, as the packed bytes hold them. */
+export interface PackedMap {
+  readonly sources?: readonly (string | null)[];
+  readonly sourcesContent?: readonly (string | null)[];
+}
+
+/** One packed text file, by its path under `package/`. */
+export interface PackedFile {
+  readonly path: string;
+  readonly text: string;
+}
+
+const posixJoin = (from: string, to: string): string => {
+  const parts: string[] = [];
+
+  for (const part of `${from}/${to}`.split('/')) {
+    if (part === '..') parts.pop();
+    else if (part !== '.' && part !== '') parts.push(part);
+  }
+
+  return parts.join('/');
+};
+
+const dirOf = (path: string): string => path.split('/').slice(0, -1).join('/');
+
+/** A relative specifier resolves when its target, or a declaration for it, is packed. */
+function resolves(packed: ReadonlySet<string>, from: string, spec: string) {
+  const target = posixJoin(dirOf(from), spec);
+  const declaration = target.replace(/\.(m|c)?js$/, '.d.$1ts');
+
+  return packed.has(target) || packed.has(declaration);
+}
+
+function importProblems(
+  file: PackedFile,
+  packed: ReadonlySet<string>,
+): string[] {
+  const problems: string[] = [];
+
+  for (const [, spec] of file.text.matchAll(SPECIFIER)) {
+    if (spec === undefined) continue;
+
+    if (spec.startsWith('@repo/')) {
+      problems.push(`${file.path}: imports private ${spec}`);
+    } else if (spec.startsWith('.') && !resolves(packed, file.path, spec)) {
+      problems.push(`${file.path}: imports ${spec}, which is not packed`);
+    }
+  }
+
+  return problems;
+}
+
+function mapProblems(
+  path: string,
+  map: PackedMap,
+  packed: ReadonlySet<string>,
+): string[] {
+  return (map.sources ?? []).flatMap((source, index) => {
+    if (source === null) return [];
+
+    const embedded = (map.sourcesContent?.[index] ?? null) !== null;
+
+    return embedded || packed.has(posixJoin(dirOf(path), source))
+      ? []
+      : [`${path}: source ${source} is neither packed nor embedded`];
+  });
+}
+
+/**
+ * Packed files whose imports or sourcemaps reach outside the tarball.
+ * `paths` lists every packed file; `files` the text of the ones to scan.
+ * `maps` holds each parsed `.map` by path.
+ */
+export function findPackedFileProblems(
+  paths: readonly string[],
+  files: readonly PackedFile[],
+  maps: ReadonlyMap<string, PackedMap>,
+): string[] {
+  const packed = new Set(paths);
+
+  return [
+    ...files
+      .filter((file) => EMITTED.test(file.path))
+      .flatMap((file) => importProblems(file, packed)),
+    ...[...maps].flatMap(([path, map]) => mapProblems(path, map, packed)),
+  ];
+}
+
+/** Render the packed-file report: one block per package with problems. */
+export function formatFileReport(
+  results: readonly { name: string; problems: readonly string[] }[],
+): Report {
+  const bad = results.filter((result) => result.problems.length > 0);
+
+  if (bad.length === 0) {
+    return {
+      ok: true,
+      text: `✓ packed files check passed — every emitted import and sourcemap source resolves inside its tarball.`,
+    };
+  }
+
+  const lines = [
+    '✗ packed files check failed — emitted files reach outside their tarball:',
+    '',
+  ];
+
+  for (const { name, problems } of bad) {
+    lines.push(`  ${name}`);
+
+    for (const problem of problems) lines.push(`      • ${problem}`);
+    lines.push('');
+  }
+
   return { ok: false, text: lines.join('\n') };
 }

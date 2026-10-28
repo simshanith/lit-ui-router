@@ -1,21 +1,23 @@
+// oxlint-disable typescript/no-deprecated -- the deprecated house ui-router-context path lives here until 2.0 (#874)
 import { html, LitElement } from 'lit';
 import type { PropertyValues, TemplateResult } from 'lit';
 import { property } from 'lit/decorators.js';
 
-import {
-  contextRequestEventName,
-  isRouterContextRequest,
-  requestRouter,
-} from './context.js';
+import { contextRequestEventName, requestRouter } from './context.js';
 import { UIRouterLit } from './core.js';
 import { warnRouterSwapped } from './dev-warn.js';
 import { uiRouterContextEventName, uiViewContextEventName } from './events.js';
 import type { UiRouterContextEvent, UiViewContextEvent } from './events.js';
+import { RouterSubscribers } from './router-subscription.js';
 
-export type { UiRouterContextEvent, UiViewContextEvent } from './events.js';
-
-/** The router never changes under a subscriber, so there is nothing to undo. */
-const noUnsubscribe = () => {};
+export type {
+  UiRouterContextEvent,
+  /**
+   * @internal
+   * @deprecated `<ui-view>` plumbing, not a supported import (#541).
+   */
+  UiViewContextEvent,
+} from './events.js';
 
 /**
  * @hideconstructor
@@ -34,7 +36,8 @@ const noUnsubscribe = () => {};
  * on <code>@lit/context</code> gets the router too. The two paths coexist and
  * neither sees the other's event: {@link UIRouterLitElement.seekRouter} asks
  * on <code>ui-router-context</code> first and falls back to
- * {@link requestRouter}.
+ * {@link requestRouter}. The <code>ui-router-context</code> event is
+ * deprecated in favour of <code>context-request</code>.
  *
  * @summary
  *
@@ -49,13 +52,19 @@ export class UIRouterLitElement extends LitElement {
   @property({ attribute: false })
   uiRouter: UIRouterLit | undefined;
 
-  /** @internal */
+  /**
+   * @internal
+   * @deprecated Use the `context-request` protocol instead: `requestRouter` or `routerContext` from `lit-ui-router/context`.
+   */
   static uiRouterContextEventName: string = uiRouterContextEventName;
 
   /** @internal */
   static uiViewContextEventName: string = uiViewContextEventName;
 
-  /** @internal */
+  /**
+   * @internal
+   * @deprecated Use the `context-request` protocol instead: `requestRouter` or `routerContext` from `lit-ui-router/context`.
+   */
   static uiRouterContextEvent(uiRouter?: UIRouterLit): UiRouterContextEvent {
     return new CustomEvent(this.uiRouterContextEventName, {
       bubbles: true,
@@ -85,14 +94,20 @@ export class UIRouterLitElement extends LitElement {
    * {@link requestRouter}, so an ancestor providing {@link routerContext}
    * over the community protocol — a bare <code>@lit/context</code>
    * <code>ContextProvider</code>, say — is found as well.
+   *
+   * @deprecated Use the `context-request` protocol instead: `requestRouter` or `routerContext` from `lit-ui-router/context`.
    */
   static seekRouter(candidate: Element): UIRouterLit | undefined {
     const uiRouterContextEvent = this.uiRouterContextEvent();
     candidate.dispatchEvent(uiRouterContextEvent);
+
     return uiRouterContextEvent.detail.uiRouter ?? requestRouter(candidate);
   }
 
-  /** @internal */
+  /**
+   * @internal
+   * @deprecated Use the `context-request` protocol instead: `requestRouter` or `routerContext` from `lit-ui-router/context`.
+   */
   static onUiRouterContextEvent(
     uiRouter?: UIRouterLit,
   ): (event: UiRouterContextEvent) => void {
@@ -106,27 +121,23 @@ export class UIRouterLitElement extends LitElement {
     this.constructor.onUiRouterContextEvent(this.uiRouter)(event);
   };
 
+  /** Subscribers that took the placeholder, owed the app's router. */
+  private readonly routerSubscribers = new RouterSubscribers();
+
   /**
    * Answers a `context-request` for the router context.
    *
-   * `subscribe` gets one call and a no-op unsubscribe: the element takes its
-   * router on connect and does not swap it afterwards.
-   *
-   * @internal
+   * While the placeholder minted on connect stands, a `subscribe` request is
+   * kept and called once more with the router that replaces it, and gets an
+   * unsubscribe that drops it. Any other answer is final: one call and a no-op
+   * unsubscribe, since a later swap is unsupported and only warns.
    */
-  static onContextRequest(uiRouter?: UIRouterLit): (event: Event) => void {
-    return (event: Event) => {
-      if (!uiRouter || !isRouterContextRequest(event)) {
-        return;
-      }
-      // stopped first: a throwing consumer must not leak the request outward
-      event.stopImmediatePropagation();
-      event.callback(uiRouter, event.subscribe ? noUnsubscribe : undefined);
-    };
-  }
-
   private readonly onContextRequest = (event: Event) => {
-    this.constructor.onContextRequest(this.uiRouter)(event);
+    this.routerSubscribers.answer(
+      event,
+      this.uiRouter,
+      !!this.ownRouter && this.uiRouter === this.ownRouter,
+    );
   };
 
   /**
@@ -146,6 +157,7 @@ export class UIRouterLitElement extends LitElement {
   /** @internal */
   connectedCallback(): void {
     super.connectedCallback();
+
     if (!this.uiRouter) {
       this.ownRouter = new UIRouterLit();
       this.uiRouter = this.ownRouter;
@@ -153,11 +165,13 @@ export class UIRouterLitElement extends LitElement {
 
     this.addEventListener(
       this.constructor.uiRouterContextEventName,
+      // SAFETY: only `UiRouterContextEvent`s are dispatched under this name
       this.onUiRouterContextEvent as EventListener,
     );
     this.addEventListener(contextRequestEventName, this.onContextRequest);
     this.addEventListener(
       this.constructor.uiViewContextEventName,
+      // SAFETY: only `UiViewContextEvent`s are dispatched under this name
       this.onUiViewContextEvent as EventListener,
     );
 
@@ -170,6 +184,7 @@ export class UIRouterLitElement extends LitElement {
   /** @internal */
   protected willUpdate(changed: PropertyValues<this>): void {
     super.willUpdate(changed);
+
     // Registered views keep the router they took, so a swap splits the page; replacing the placeholder minted above is the sanctioned upgrade.
     if (
       this.hasUpdated &&
@@ -177,6 +192,11 @@ export class UIRouterLitElement extends LitElement {
       changed.get('uiRouter') !== this.ownRouter
     ) {
       warnRouterSwapped(this);
+    }
+
+    // Only a placeholder's answers are kept, so this reaches subscribers on the upgrade alone.
+    if (this.uiRouter && this.uiRouter !== this.ownRouter) {
+      this.routerSubscribers.deliver(this.uiRouter);
     }
   }
 

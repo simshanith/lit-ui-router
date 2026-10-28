@@ -24,6 +24,7 @@ const draw = (router: UIRouterLit): string =>
 const at = async (path: string): Promise<string> => {
   const router = makeRouter();
   await settle(router, path);
+
   return draw(router);
 };
 
@@ -33,12 +34,42 @@ class BoxedView extends LitElement {}
 /** One state whose view is a `RoutedLitElement` class, which the renderer has no server render for. */
 const boxedRouter = (): UIRouterLit => {
   const router = installServerLocation(new UIRouterLit(), {
-    strictMode: false,
+    urlConfig: { strict: false },
   });
+
   const states: LitStateDeclaration[] = [
     { name: 'boxed', url: '/boxed', component: BoxedView },
   ];
+
   for (const state of states) router.stateRegistry.register(state);
+
+  return router;
+};
+
+/** One state whose NOWAIT resolve never settles, drawn as what its view receives. */
+const pendingRouter = (): UIRouterLit => {
+  const router = installServerLocation(new UIRouterLit(), {
+    urlConfig: { strict: false },
+  });
+
+  const state: LitStateDeclaration = {
+    name: 'pending',
+    url: '/pending',
+    resolve: [
+      {
+        token: 'slow',
+        resolveFn: () => new Promise<never>(() => {}),
+        policy: { async: 'NOWAIT' },
+      },
+    ],
+    component: (props) =>
+      html`<p class="slow">
+        ${props.resolves.slow instanceof Promise ? 'promise' : 'missing'}
+      </p>`,
+  };
+
+  router.stateRegistry.register(state);
+
   return router;
 };
 
@@ -68,6 +99,7 @@ describe('UiViewRenderer', () => {
     const interior = markup.slice(
       markup.indexOf('<!--lit-part HRwFDUbdJU8=-->'),
     );
+
     // the pair itself is the only plain marker left in the view's own run
     expect(interior.match(/<!--\/?lit-(part|node)/g)).toEqual([
       '<!--lit-part',
@@ -159,5 +191,29 @@ describe('UiViewRenderer', () => {
       '$default',
     );
     warn.mockRestore();
+  });
+
+  it('leaves a RoutedLitElement view empty without a word under node when NODE_ENV is production', async () => {
+    vi.stubEnv('NODE_ENV', 'production');
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const router = boxedRouter();
+    await settle(router, '/boxed');
+
+    expect(draw(router)).toContain(
+      '<ui-view defer-hydration><!--lit-part--><!--/lit-part--></ui-view>',
+    );
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
+    vi.unstubAllEnvs();
+  });
+
+  it('hands a NOWAIT resolve to the component as its promise, as the client does', async () => {
+    const router = pendingRouter();
+    await settle(router, '/pending');
+
+    const markup = draw(router);
+
+    expect(markup).toContain('promise');
+    expect(markup).not.toContain('missing');
   });
 });

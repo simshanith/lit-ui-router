@@ -4,6 +4,7 @@ import type { PropertyValues } from 'lit';
 import { property } from 'lit/decorators.js';
 import { requestContext } from 'lit-ui-router/context';
 import { UiView } from 'lit-ui-router/pure';
+import { devGate } from '#dev-gate';
 
 import { adoptUiViewContext } from './adopt-context.js';
 import {
@@ -23,7 +24,9 @@ const COMMENT_NODE = 8 satisfies Node['COMMENT_NODE'];
  */
 const isRenderMarker = (node: ChildNode | null): boolean => {
   if (!node || node.nodeType !== COMMENT_NODE) return false;
+  // SAFETY: `nodeType` is `COMMENT_NODE`, checked above.
   const { data } = node as Comment;
+
   return data === '' || data.includes('lit-part');
 };
 
@@ -31,8 +34,6 @@ const isRenderMarker = (node: ChildNode | null): boolean => {
  * Brands the served class, so a second copy of this package recognises the one
  * already registered. `customElements` identity cannot: two copies build two
  * classes.
- *
- * @category client
  */
 export const servedViewBrand: unique symbol = Symbol.for(
   'lit-ui-router-ssr#served-view',
@@ -40,8 +41,6 @@ export const servedViewBrand: unique symbol = Symbol.for(
 
 /**
  * A `<ui-view>` that owns its side of a server render.
- *
- * @category client
  */
 export interface ServedUiView extends UiView {
   /**
@@ -59,8 +58,6 @@ export interface ServedUiView extends UiView {
 /**
  * The class {@link withServedRender} produces: a `<ui-view>` constructor,
  * branded.
- *
- * @category client
  */
 export interface ServedUiViewConstructor {
   /** Builds one served view; the element takes no constructor arguments. */
@@ -74,14 +71,13 @@ export interface ServedUiViewConstructor {
  * another copy's.
  *
  * @param constructor - the class a registry holds for a tag
- *
- * @category client
  */
 export const isServedViewClass = (
   constructor: CustomElementConstructor | undefined,
 ): boolean =>
   !!constructor &&
-  (constructor as Partial<ServedUiViewConstructor>)[servedViewBrand] === true;
+  servedViewBrand in constructor &&
+  constructor[servedViewBrand] === true;
 
 /**
  * Adds the served-render side of `<ui-view>` to `Base`.
@@ -115,8 +111,6 @@ export const isServedViewClass = (
  *
  * customElements.define('app-view', withServedRender(UiView));
  * ```
- *
- * @category client
  */
 export const withServedRender = (
   Base: typeof UiView,
@@ -134,10 +128,12 @@ export const withServedRender = (
     /** @internal */
     override connectedCallback(): void {
       super.connectedCallback();
+
       // A deferred view holds a render's nodes behind whatever the author wrote ahead of them.
       if (this.deferHydration) {
         this.deferredAtConnect = true;
-        if (import.meta.env.DEV) {
+
+        if (import.meta.env.DEV && devGate()) {
           // A macrotask: the hydrate walk clears the attribute within this task, and a pin answers on the wake update queued inside it.
           setTimeout(() => {
             if (this.isConnected && this.deferHydration && !this.hasUpdated) {
@@ -178,8 +174,10 @@ export const withServedRender = (
     protected override shouldUpdate(changed: PropertyValues<this>): boolean {
       // Asleep: nothing renders, and `hasUpdated` stays false, so `firstUpdated` still fires on the real first render.
       if (this.deferHydration) return false;
+
       // Detached before the wake ran: `willUpdate` is skipped too, so the held nodes and the wake survive until a re-attach.
       if (this.deferredAtConnect && !this.isConnected) return false;
+
       return super.shouldUpdate(changed);
     }
 
@@ -190,6 +188,7 @@ export const withServedRender = (
         // The wake is this view's first look at its children.
         this.captureContentInPlace();
       }
+
       super.willUpdate(changed);
     }
 
@@ -198,6 +197,7 @@ export const withServedRender = (
       this.deferredAtConnect = false;
       this.adoptProvidedRouter();
       const adopt = requestContext(this, adoptUiViewContext);
+
       if (adopt) return adopt(this);
       // Rendering over a render's nodes doubles the markup; what the author wrote ahead of them is the capture's.
       this.dropHeldRender();
@@ -208,7 +208,9 @@ export const withServedRender = (
     private dropHeldRender(): void {
       const children = [...this.childNodes];
       const from = children.findIndex((child) => isRenderMarker(child));
+
       if (from < 0) return;
+
       // Optionally called: the @lit-labs/ssr DOM shim gives its nodes no `remove`.
       for (const child of children.slice(from)) child.remove?.();
     }
@@ -218,5 +220,6 @@ export const withServedRender = (
       return noChange;
     }
   }
+
   return ServedView;
 };

@@ -12,7 +12,7 @@ import {
   Converter,
   Context,
   DeclarationReflection,
-  Reflection,
+  ContainerReflection,
   Comment,
   CommentTag,
   ReflectionKind,
@@ -29,14 +29,17 @@ interface SidebarItem {
 }
 
 /** Categories the `router: "category"` output is organized into. */
-type Category =
-  | 'core'
-  | 'components'
-  | 'directives'
-  | 'controllers'
-  | 'hooks'
-  | 'types'
-  | 'other';
+const CATEGORIES = [
+  'core',
+  'components',
+  'directives',
+  'controllers',
+  'hooks',
+  'types',
+  'other',
+] as const;
+
+type Category = (typeof CATEGORIES)[number];
 
 /** Titles and blurbs for the generated category index pages. */
 const CATEGORY_META: Record<Category, { title: string; description: string }> =
@@ -90,25 +93,30 @@ export function load(app: Application): void {
 
 /** Generate an index.md for each category folder. */
 function generateCategoryIndexFiles(outDir: string, app: Application): void {
-  for (const category of Object.keys(CATEGORY_META) as Category[]) {
+  for (const category of CATEGORIES) {
     const categoryDir = path.join(outDir, category);
+
     if (!fs.existsSync(categoryDir)) continue;
 
     const files = fs
       .readdirSync(categoryDir)
       .filter((f: string) => f.endsWith('.md') && f !== 'index.md')
       .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+
     if (files.length === 0) continue;
 
     const meta = CATEGORY_META[category];
+
     const items = files
       .map((f: string) => {
         const name = path.basename(f, '.md');
+
         return `- [\`${name}\`](./${name})`;
       })
       .join('\n');
 
     const next = path.basename(files[0], '.md');
+
     const indexContent = `---
 next:
   text: ${next}
@@ -157,16 +165,19 @@ function formatCemTagContent(text: string): string {
 
   let type = '';
   const typeMatch = /^\{([^}]+)\}\s*/.exec(rest);
+
   if (typeMatch) {
     type = typeMatch[1];
     rest = rest.slice(typeMatch[0].length).trim();
   }
 
   let name = '';
+
   if (rest.startsWith('-')) {
     rest = rest.replace(/^-\s*/, '');
   } else {
     const nameMatch = /^(\S+)\s*(?:-\s*)?/.exec(rest);
+
     if (nameMatch) {
       name = nameMatch[1];
       rest = rest.slice(nameMatch[0].length);
@@ -176,6 +187,7 @@ function formatCemTagContent(text: string): string {
   const description = rest.replace(/\s+/g, ' ').trim();
   const label = name ? `<code>${name}</code>` : '<em>default</em>';
   const typeSuffix = type ? ` (<code>${type}</code>)` : '';
+
   return `- ${label}${typeSuffix} — ${description}`;
 }
 
@@ -189,20 +201,32 @@ const CATEGORIZED_KINDS =
   ReflectionKind.Enum;
 
 /**
+ * Whether `@category` is on the reflection or, for a function, on a signature —
+ * where TypeDoc keeps a function declaration's comment.
+ */
+function hasCategoryTag(reflection: DeclarationReflection): boolean {
+  return [
+    reflection.comment,
+    ...reflection.getNonIndexSignatures().map((sig) => sig.comment),
+  ].some((comment) => comment?.getTag('@category'));
+}
+
+/**
  * Warn on any top-level export missing `@category`; such exports silently fall
  * into `--defaultCategory` and get their own sidebar group. With
  * `treatWarningsAsErrors` this fails the build; packages opt out by not setting it.
  */
 function checkCategoryTags(context: Context, app: Application): void {
-  const visit = (reflection: Reflection): void => {
-    for (const child of (reflection as { children?: Reflection[] }).children ??
-      []) {
+  const visit = (reflection: ContainerReflection): void => {
+    for (const child of reflection.children ?? []) {
       if (child.kindOf(ReflectionKind.Module)) {
         visit(child);
         continue;
       }
+
       if (!child.kindOf(CATEGORIZED_KINDS)) continue;
-      if (!child.comment?.getTag('@category')) {
+
+      if (!hasCategoryTag(child)) {
         app.logger.warn(
           `[lit-ui-router] ${child.getFriendlyFullName()} has no @category tag`,
         );
@@ -217,18 +241,13 @@ function checkCategoryTags(context: Context, app: Application): void {
  * Rewrite CEM tags on every reflection comment into aggregate list tags.
  */
 function handleCemTags(context: Context): void {
-  const visitReflection = (reflection: Reflection): void => {
+  const visitReflection = (reflection: ContainerReflection): void => {
     if (reflection instanceof DeclarationReflection && reflection.comment) {
       aggregateCemTags(reflection.comment);
     }
 
-    if ('children' in reflection) {
-      const withChildren = reflection as { children?: Reflection[] };
-      if (withChildren.children) {
-        for (const child of withChildren.children) {
-          visitReflection(child);
-        }
-      }
+    for (const child of reflection.children ?? []) {
+      visitReflection(child);
     }
   };
 
@@ -241,6 +260,7 @@ function handleCemTags(context: Context): void {
 function aggregateCemTags(comment: Comment): void {
   for (const { tag, groupTag } of CEM_TAG_GROUPS) {
     const matches = comment.blockTags.filter((t) => t.tag === tag);
+
     if (matches.length === 0) continue;
 
     const items = matches.map((t) =>
@@ -257,19 +277,28 @@ function aggregateCemTags(comment: Comment): void {
 /** Retitle and relink the sidebar's category entries. */
 function updateSidebarJson(outDir: string, app: Application): void {
   const sidebarPath = path.join(outDir, 'typedoc-sidebar.json');
+
   if (!fs.existsSync(sidebarPath)) return;
+
+  // SAFETY: typedoc-plugin-markdown writes the sidebar as a SidebarItem array
   const sidebar = JSON.parse(
     fs.readFileSync(sidebarPath, 'utf-8'),
   ) as SidebarItem[];
+
+  const metaByCategory = new Map<string, { title: string }>(
+    Object.entries(CATEGORY_META),
+  );
+
   for (const item of sidebar) {
-    const category = item.text as Category;
+    const category = item.text;
     // Fall back to title-casing so an uncharted @category tag renders
     // instead of crashing the docs build.
     item.text =
-      CATEGORY_META[category]?.title ??
+      metaByCategory.get(category)?.title ??
       category.charAt(0).toUpperCase() + category.slice(1);
     item.link = `/api/reference/${category}`;
     delete item.collapsed;
+
     if (category === 'types') {
       item.collapsed = true;
     }

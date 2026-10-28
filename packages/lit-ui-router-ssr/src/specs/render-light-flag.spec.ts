@@ -2,6 +2,7 @@ import {
   isRenderLightDirective,
   renderLight,
 } from '@lit-labs/ssr-client/directives/render-light.js';
+import type { RenderLightHost } from '@lit-labs/ssr-client/directives/render-light.js';
 import { noChange } from 'lit';
 import { PartType } from 'lit/directive.js';
 import type { ChildPart } from 'lit/directive.js';
@@ -15,6 +16,7 @@ describe('the renderLight flag', () => {
   it('inherits the flag from the class ssr-client itself carries it on', () => {
     const light = getDirectiveClass(renderLight());
     const slot = getDirectiveClass(uiViewSlot());
+
     if (!light || !slot) throw new Error('a directive result carried no class');
     expect(slot.prototype instanceof light).toBe(true);
   });
@@ -25,10 +27,16 @@ describe('the renderLight flag', () => {
 
   // `@lit-labs/ssr` patches a rendered class to resolve through `render()`, so the update lit's own walk calls is reached here by hand.
   describe('the update lit calls on the client', () => {
-    const slotOn = (parentNode: object) => {
+    /** The part's parent, as the slot's update reads it. */
+    type SlotHost = Partial<RenderLightHost>;
+
+    const slotOn = (parentNode: SlotHost) => {
       const Slot = getDirectiveClass(uiViewSlot());
+
       if (!Slot) throw new Error('a directive result carried no class');
-      const part = { type: PartType.CHILD, parentNode } as unknown as ChildPart;
+      // SAFETY: the slot reads only `type` and `parentNode` off its part.
+      const part = { type: PartType.CHILD, parentNode } as ChildPart;
+
       return { slot: new Slot(part), part };
     };
 

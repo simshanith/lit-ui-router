@@ -6,14 +6,15 @@ import type { Rule } from 'eslint';
 import type { RuleFor } from './rule-shape.ts';
 import { TemplateAnalyzer } from 'eslint-plugin-lit/lib/template-analyzer.js';
 import {
-  type CallNode,
+  asNode,
+  asNodes,
   createDirectiveTracker,
   elementPartIndex,
   hasSpread,
-  type Node,
-  type ObjectNode,
-  type Parse5Element,
+  isCallExpression,
+  isObjectExpression,
   propertyNamed,
+  toEstree,
 } from './directives.ts';
 
 const OPT_OUT = 'ariaCurrentValue: false';
@@ -52,31 +53,36 @@ const srefActiveAriaCurrent: RuleFor<typeof RULE_NAME> = {
 
       TaggedTemplateExpression(node) {
         if (!tracker.shouldAnalyse) return;
-        if (!tracker.isLitTemplate(node.tag as unknown as Node)) return;
+
+        if (!tracker.isLitTemplate(asNode(node.tag))) return;
 
         const source = context.sourceCode;
-        const expressions = node.quasi.expressions as unknown as Node[];
+        const expressions = asNodes(node.quasi.expressions);
         const analyzer = TemplateAnalyzer.create(node);
 
         analyzer.traverse({
-          enterElement(rawElement) {
-            const element = rawElement as unknown as Parse5Element;
+          enterElement(element) {
             // probably a tree correction node
             if (element.sourceCodeLocation === undefined) return;
             const attributes = Object.keys(element.attribs);
+
             if (!attributes.includes('aria-current')) return;
 
             for (const attribute of attributes) {
               const index = elementPartIndex(attribute);
+
               if (index === undefined) continue;
               const expression = expressions[index];
+
               if (
-                expression === undefined ||
+                !isCallExpression(expression) ||
                 tracker.directiveOf(expression) !== 'uiSrefActive'
               ) {
                 continue;
               }
-              const call = expression as CallNode;
+
+              const call = expression;
+
               const report = (fix: Rule.ReportFixer): void => {
                 context.report({
                   node: call,
@@ -87,8 +93,10 @@ const srefActiveAriaCurrent: RuleFor<typeof RULE_NAME> = {
               };
 
               const params = call.arguments[0];
+
               if (params === undefined) {
-                const close = source.getLastToken(call as never);
+                const close = source.getLastToken(toEstree(call));
+
                 if (close === null) continue;
                 report((fixer) =>
                   fixer.insertTextBefore(close, `{ ${OPT_OUT} }`),
@@ -96,8 +104,9 @@ const srefActiveAriaCurrent: RuleFor<typeof RULE_NAME> = {
                 continue;
               }
 
-              if (params.type !== 'ObjectExpression') continue;
-              const object = params as ObjectNode;
+              if (!isObjectExpression(params)) continue;
+              const object = params;
+
               if (hasSpread(object)) continue;
               const property = propertyNamed(object, 'ariaCurrentValue');
 
@@ -112,6 +121,7 @@ const srefActiveAriaCurrent: RuleFor<typeof RULE_NAME> = {
               }
 
               const { value } = property;
+
               // Non-literal is unknowable, so it stays suppressed.
               if (value.type !== 'Literal' || value.value === false) continue;
               // An explicit value still takes the attribute over; rewriting
