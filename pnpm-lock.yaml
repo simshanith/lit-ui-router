@@ -182,8 +182,8 @@ catalogs:
       specifier: ^21.0.4
       version: 21.0.4
     hono:
-      specifier: ^4.13.13
-      version: 4.13.13
+      specifier: ^4.13.14
+      version: 4.13.14
     husky:
       specifier: ^9.1.7
       version: 9.1.7
@@ -1603,10 +1603,10 @@ importers:
         version: link:../ui-router-server
       ui-router-server-0.3-floor:
         specifier: catalog:peerFloorSsr
-        version: ui-router-server@0.3.0(@uirouter/core@6.1.2)(hono@4.13.13)
+        version: ui-router-server@0.3.0(@uirouter/core@6.1.2)(hono@4.13.14)
       ui-router-server-floor:
         specifier: catalog:peerFloorSsr
-        version: ui-router-server@0.2.0(@uirouter/core@6.1.2)(hono@4.13.13)
+        version: ui-router-server@0.2.0(@uirouter/core@6.1.2)(hono@4.13.14)
       vitest:
         specifier: 'catalog:'
         version: 5.0.5(@types/node@24.19.2)(@vitest/browser-playwright@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(happy-dom@21.0.4)(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
@@ -2011,7 +2011,7 @@ importers:
         version: '@uirouter/core@6.0.8'
       hono:
         specifier: 'catalog:'
-        version: 4.13.13
+        version: 4.13.14
       hono-floor:
         specifier: catalog:peerFloor
         version: hono@4.0.0
@@ -2332,7 +2332,7 @@ importers:
         version: 4.0.6
       hono:
         specifier: 'catalog:'
-        version: 4.13.13
+        version: 4.13.14
       lit:
         specifier: 'catalog:'
         version: 3.3.3
@@ -7042,8 +7042,8 @@ packages:
     resolution: {integrity: sha512-8dKhuBBpRZEodUttQhrSFJ6PQqHRjXHyeeegfxOf132pvgbf0tOb9qqb7q7eYwAWpOcYrsUOsWdJ0sQIIovhZg==}
     engines: {node: '>=16.0.0'}
 
-  hono@4.13.13:
-    resolution: {integrity: sha512-CQ46U0ZkAGmbT/4UxdzzGJpacP2IeKgY4a5/tOI9AABbpOMfK739wfDXmv1usCk+3RkKj1hQy4/fjhiwa2xlrA==}
+  hono@4.13.14:
+    resolution: {integrity: sha512-yhRLQ21U6qa9Hsu2N7Qcbh8tE+WKEcoErjIo56LeSGiGXGp9sA7UpE86Ui9uexb61KakiGwuHMn2QdV7w6i6kQ==}
     engines: {node: '>=16.9.0'}
 
   hookable@5.5.3:
@@ -13180,7 +13180,7 @@ snapshots:
 
   hono@4.0.0: {}
 
-  hono@4.13.13: {}
+  hono@4.13.14: {}
 
   hookable@5.5.3: {}
 
@@ -15276,15 +15276,15 @@ snapshots:
 
   uc.micro@2.1.0: {}
 
-  ui-router-server@0.2.0(@uirouter/core@6.1.2)(hono@4.13.13):
+  ui-router-server@0.2.0(@uirouter/core@6.1.2)(hono@4.13.14):
     optionalDependencies:
       '@uirouter/core': 6.1.2
-      hono: 4.13.13
+      hono: 4.13.14
 
-  ui-router-server@0.3.0(@uirouter/core@6.1.2)(hono@4.13.13):
+  ui-router-server@0.3.0(@uirouter/core@6.1.2)(hono@4.13.14):
     optionalDependencies:
       '@uirouter/core': 6.1.2
-      hono: 4.13.13
+      hono: 4.13.14
 
   unbash@6.0.1: {}
 

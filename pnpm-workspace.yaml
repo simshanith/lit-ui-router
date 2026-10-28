@@ -68,7 +68,7 @@ catalog:
   eslint-plugin-turbo: ^2.11.10
   eslint-plugin-wc: ^3.1.0
   happy-dom: ^21.0.4
-  hono: ^4.13.13
+  hono: ^4.13.14
   husky: ^9.1.7
   jose: ^6.2.13
   jsonc-parser: ^3.3.1
