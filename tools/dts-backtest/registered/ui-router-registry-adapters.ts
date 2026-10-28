@@ -25,7 +25,6 @@ declare const accountStates: readonly [
 ];
 
 declare module 'ui-router-registry' {
-  // oxlint-disable-next-line typescript/no-empty-interface, typescript/no-empty-object-type -- the members come from StatesOf
   interface RegisteredStates extends StatesOf<typeof accountStates> {}
 }
 
