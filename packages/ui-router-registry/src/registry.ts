@@ -47,7 +47,7 @@ type NameKey<D> =
  * A class-declared state can be registered by hand:
  * `interface RegisteredStates { about: typeof AboutState }`.
  */
-// oxlint-disable-next-line typescript/no-empty-interface, typescript/no-empty-object-type -- filled in by module augmentation
+// oxlint-disable-next-line typescript/no-empty-object-type -- filled in by module augmentation
 export interface RegisteredStates {}
 
 /** A table of state declarations keyed by name, for {@link RegisteredStates} to extend. */
@@ -72,7 +72,7 @@ export type StatesOf<
  * }
  * ```
  */
-// oxlint-disable-next-line typescript/no-empty-interface, typescript/no-empty-object-type -- filled in by module augmentation
+// oxlint-disable-next-line typescript/no-empty-object-type -- filled in by module augmentation
 export interface Register {}
 
 type Registered =
