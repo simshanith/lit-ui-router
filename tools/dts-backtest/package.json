@@ -17,6 +17,7 @@
     "effect": "catalog:",
     "hono": "catalog:",
     "lit": "catalog:",
+    "lit-2": "catalog:lit2-compat",
     "lit-ui-router": "catalog:workspace",
     "lit-ui-router-effect": "catalog:workspace",
     "lit-ui-router-mobx": "catalog:workspace",

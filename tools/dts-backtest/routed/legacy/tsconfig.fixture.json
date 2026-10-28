@@ -1,0 +1,5 @@
+{
+  // A routed consumer, LitStateDeclaration, still circular. Its Register is its own, so is its program.
+  "extends": "../../tsconfig.fixture.json",
+  "include": ["*.ts"]
+}

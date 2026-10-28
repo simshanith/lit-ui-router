@@ -20,7 +20,14 @@ matrix of:
 A module augmentation reaches the whole program, so the [registered
 consumer](./registered), which registers states and loads the
 `ui-router-registry` adapter entry points, is a second program with its own
-`tsconfig.fixture*.json` pair.
+`tsconfig.fixture*.json` pair. The [routed consumers](./routed), whose
+`lit-ui-router` components read the registry they're registered in, are three
+more, one per table:
+
+- `classes` and `templates` check `TypedLitStateDeclaration`. `MIN_VERSION`
+  in `run.ts` skips `templates` on legs older than TypeScript 5.5.
+- `legacy` must fail: `EXPECTED_CODES` in `run.ts` names the circularity
+  errors `LitStateDeclaration` reports there.
 
 The fixture compiles with `skipLibCheck: false`, so the packages' built
 `dist/*.d.ts` are themselves fully parsed **and** typechecked under each
