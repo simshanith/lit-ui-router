@@ -16,6 +16,8 @@ declare module 'ui-router-registry' {
 
 declare const name: string;
 
+declare const either: 'home' | 'item';
+
 export const links = [
   uiSref('home'),
   uiSref('item', { id: 1 }, { reload: true }),
@@ -32,6 +34,13 @@ export const links = [
   srefHref('item.edit', { id: '2' }),
   // @ts-expect-error a relative tail that ends no registered name
   uiSref('.edti'),
+  uiSref('^.item'),
+  // @ts-expect-error a parent-relative tail that ends no registered name
+  uiSref('^.itme'),
+  // Either name's params: `item`'s here.
+  uiSrefActive({ state: either, params: { id: 1 } }),
+  // @ts-expect-error neither name's params: `{id:int}` is a number
+  uiSrefActive({ state: either, params: { id: '1' } }),
   // @ts-expect-error a misspelled state name
   srefActiveClass({ state: 'hom', activeClasses: ['active'] }),
 ];
