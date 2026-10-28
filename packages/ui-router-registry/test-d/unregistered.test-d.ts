@@ -1,6 +1,7 @@
 // Until an app registers, every type falls back to core's `string` and
 // `RawParams`. `tsc --noEmit` is the assertion; nothing runs this file.
-import type { RawParams, StateDeclaration } from '@uirouter/core';
+import type { RawParams, StateDeclaration, StateService } from '@uirouter/core';
+import { UIRouter } from '@uirouter/core';
 import type { TypedRouteSnapshot as EffectSnapshot } from 'ui-router-effect';
 import type { RouterStore, TypedStoreName } from 'ui-router-mobx';
 import type { TypedRouteSnapshot as SignalsSnapshot } from 'ui-router-signals';
@@ -38,6 +39,18 @@ accepts<RawParams>(snapshot.params);
 accepts<StateDeclaration | undefined>(snapshot.current);
 
 if (snapshot.includes('anything')) accepts<RawParams>(snapshot.params);
+
+accepts<StateService>(stateService);
+
+accepts<TypedStateService>(new UIRouter().stateService);
+
+interface TypedRouter extends UIRouter {
+  stateService: TypedStateService;
+}
+
+declare const typedRouter: TypedRouter;
+
+accepts<UIRouter>(typedRouter);
 
 accepts<RelativeRef>('.anything.at.all');
 

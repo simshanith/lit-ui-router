@@ -44,8 +44,10 @@ Until an app registers, every type falls back to core's `string` and
 
 ## Typed calls
 
-Annotate where the router is used. Core's `StateService` is assignable to
-`TypedStateService`, so the annotation needs no cast:
+Annotate where the router is used. `TypedStateService` extends core's
+`StateService`, so the two are assignable both ways: the annotation needs no
+cast, and the view, or a `UIRouter` whose `stateService` is typed with it,
+passes wherever core's type is expected:
 
 ```ts
 import type { TypedStateService } from 'ui-router-registry';

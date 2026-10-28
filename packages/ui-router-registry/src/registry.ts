@@ -320,13 +320,11 @@ export type TargetArgs<T, Options> = T extends StateName
   : [params?: RawParams, options?: Options];
 
 /**
- * A typed view of core's `StateService`. Core's own class is assignable to it,
- * so a typed getter or field needs no cast and emits nothing.
+ * A typed view of core's `StateService`. It is assignable both ways: core's
+ * class fills a typed getter or field with no cast and emits nothing, and the
+ * view passes wherever a `StateService` is expected.
  */
-export interface TypedStateService extends Omit<
-  StateService,
-  'go' | 'transitionTo' | 'target' | 'href' | 'is' | 'includes' | 'reload'
-> {
+export interface TypedStateService extends StateService {
   /** `StateService.go`, with a registered name's params required as declared. */
   go<T extends StateName | LooseTarget>(
     to: T & CheckRelative<T>,
