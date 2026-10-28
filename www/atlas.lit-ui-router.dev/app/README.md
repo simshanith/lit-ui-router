@@ -290,9 +290,11 @@ and is used twice:
 The same table is the app's type registry. `routes` is `as const`, and `src/routes.ts` augments
 `ui-router-registry`'s `Register` with it, so every `stateService.go`, `href`, `target` and
 `includes` in the app takes a registered name and that state's params: `num` required, `focus` and
-`enlarge` as `string | null`, `'.'` for the state itself. `src/registry.test-d.ts` holds the
-assertions and `npm run typecheck` runs them. The package emits no JavaScript, so the site build
-is unchanged.
+`enlarge` as `string | null`, `'.'` for the state itself. Its `ui-router-registry/effect` entry
+fills `ui-router-effect`'s `RouteTypes`, so the route ref's snapshot narrows on `includes` to a
+state's params: the city's pin reads `params.focus` as `string | null` when the route is one of
+its states. `src/registry.test-d.ts` holds the assertions and `npm run typecheck` runs them. The
+package emits no JavaScript, so the site build is unchanged.
 
 **The boot (`src/main.ts`).** Seat `routeRef(router)`, `router.start()`, await the ref's first
 settled snapshot on the page's runtime (`src/runtime.ts`), then `hydrateRoot(root, page(router))` from `lit-ui-router-ssr/client`: the walk

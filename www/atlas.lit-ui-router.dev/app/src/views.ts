@@ -15,7 +15,7 @@ import type { RoutedLitTemplate, UIRouterLit } from 'lit-ui-router';
 import { uiViewSlot } from 'lit-ui-router-ssr/client';
 import { RefController } from 'lit-ui-router-effect';
 import { routeRef } from 'ui-router-effect';
-import type { RouteSnapshot } from 'ui-router-effect';
+import type { TypedRouteSnapshot } from 'ui-router-effect';
 import type { TypedStateService } from 'ui-router-registry';
 import type {
   AscentRow,
@@ -227,8 +227,8 @@ const SCENE_STATES: ReadonlySet<string | undefined> = new Set([
   'atlas.plant',
   'atlas.bricks',
 ]);
-const cityPin = (route: RouteSnapshot): string | null =>
-  SCENE_STATES.has(route.current?.name) && typeof route.params.focus === 'string'
+const cityPin = (route: TypedRouteSnapshot): string | null =>
+  route.includes('atlas.city') || route.includes('atlas.plant') || route.includes('atlas.bricks')
     ? route.params.focus
     : null;
 
@@ -263,7 +263,7 @@ export abstract class AtlasScene<S extends { dispose(): void }> extends Reactive
   declare router: UIRouter | undefined;
   #scene: S | null = null;
   #seq = 0;
-  #pin: RefController<[SubscriptionRef.SubscriptionRef<RouteSnapshot>], string | null> | undefined;
+  #pin: RefController<[SubscriptionRef.SubscriptionRef<TypedRouteSnapshot>], string | null> | undefined;
 
   constructor() {
     super();
@@ -312,7 +312,7 @@ export abstract class AtlasScene<S extends { dispose(): void }> extends Reactive
   }
 
   /** The plate's pin as the route carries it; null off the plate's state. */
-  protected abstract pinOf(route: RouteSnapshot): string | null;
+  protected abstract pinOf(route: TypedRouteSnapshot): string | null;
 
   /** Wires the plate over the adopted fragment, opening on `pin`. */
   protected abstract raise(pin: string | null): Promise<S | undefined>;
@@ -332,7 +332,7 @@ export abstract class AtlasScene<S extends { dispose(): void }> extends Reactive
 
 /** The city and its working twin: the pin is a member's number. */
 export class AtlasCity extends AtlasScene<CityScene> {
-  protected pinOf(route: RouteSnapshot): string | null {
+  protected pinOf(route: TypedRouteSnapshot): string | null {
     return cityPin(route);
   }
 
@@ -348,7 +348,7 @@ customElements.define('atlas-city', AtlasCity);
 
 /** Sheet 2's model in the round: the same seam, the pin a brick's number or its package name. */
 export class AtlasBricks extends AtlasScene<BricksScene> {
-  protected pinOf(route: RouteSnapshot): string | null {
+  protected pinOf(route: TypedRouteSnapshot): string | null {
     return cityPin(route);
   }
 
@@ -362,18 +362,15 @@ export class AtlasBricks extends AtlasScene<BricksScene> {
 }
 customElements.define('atlas-bricks', AtlasBricks);
 
-const textParam = (value: unknown): string | null => (typeof value === 'string' ? value : null);
 /** The builds' pin: the build and the focus, one string so the ref's equality holds. */
-const buildsPin = (route: RouteSnapshot): string | null =>
-  route.current?.name === 'atlas.builds'
-    ? JSON.stringify([textParam(route.params.build), textParam(route.params.focus)])
-    : null;
+const buildsPin = (route: TypedRouteSnapshot): string | null =>
+  route.includes('atlas.builds') ? JSON.stringify([route.params.build, route.params.focus]) : null;
 const buildsPair = (pin: string | null): [string | null, string | null] =>
   pin === null ? [null, null] : (JSON.parse(pin) as [string | null, string | null]);
 
 /** Sheet 2C's builds in the round: the pin is the picked build and its part. */
 export class AtlasBuilds extends AtlasScene<BuildsScene> {
-  protected pinOf(route: RouteSnapshot): string | null {
+  protected pinOf(route: TypedRouteSnapshot): string | null {
     return buildsPin(route);
   }
 
@@ -1660,7 +1657,8 @@ export const AboutView: RoutedLitTemplate<ManifestResolves> = (props) => {
           <code>atlas.city</code>, <code>atlas.plant</code>, <code>atlas.bricks</code> and <code>atlas.builds</code>); at build
           time, ${pkg('lit-ui-router-ssr')}, ${pkg('@lit-labs/ssr')} and
           ${pkg('ui-router-registry')} (types only: the route table is registered, so a
-          <code>go()</code> to a misspelled state or without a sheet number fails to compile). All from
+          <code>go()</code> to a misspelled state or without a sheet number fails to compile, and the
+          route ref's snapshot narrows to a state's params). All from
           ${ext(HOME.npm, 'npm')}; no workspace links.
         </p>
         <h3>HOW THE SET IS DRAWN</h3>

@@ -10,13 +10,13 @@ export interface FragmentRow {
 }
 
 /** The index, read once per runtime, and any plate's fragment. */
-export class DrawingSet extends Context.Tag('atlas/DrawingSet')<
+export class DrawingSet extends Context.Service<
   DrawingSet,
   {
     readonly manifest: Effect.Effect<Manifest, Error>;
     readonly fragment: (row: FragmentRow) => Effect.Effect<string, Error>;
   }
->() {}
+>()('atlas/DrawingSet') {}
 
 const asError = (error: unknown): Error =>
   error instanceof Error ? error : new Error(String(error));

@@ -240,6 +240,7 @@ const checkRouteRef = (path: string): void => {
   const { value } = withRouterSync(router, () => new RouterRefController(host, (route) => route));
   const { current, params } = router.globals;
   const sheet = sheetOf.get(path);
+  const num = value.includes('atlas.sheet') ? value.params.num : undefined;
   const misses = [
     value.current?.name === current.name
       ? ''
@@ -247,9 +248,7 @@ const checkRouteRef = (path: string): void => {
     isDeepStrictEqual(value.params, Object.fromEntries(Object.entries(params)))
       ? ''
       : 'params differ from globals.params',
-    sheet === undefined || value.params.num === sheet
-      ? ''
-      : `reads sheet ${String(value.params.num)}, page is ${sheet}`,
+    sheet === undefined || num === sheet ? '' : `reads sheet ${String(num)}, page is ${sheet}`,
   ].filter(Boolean);
   routeRefReads += 1;
   if (sheet !== undefined) routeRefSheets += 1;

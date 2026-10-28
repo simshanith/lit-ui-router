@@ -1,7 +1,10 @@
 // Type-level spec for the app's registry wiring: `npm run typecheck` is the assertion.
 import type { ParamsOf, ResolvedParamsOf, StateName, TypedStateService } from 'ui-router-registry';
+import type { TypedRouteSnapshot } from 'ui-router-effect';
 
 declare const stateService: TypedStateService;
+
+declare const snapshot: TypedRouteSnapshot;
 
 /** Assignability probe: the call typechecks iff the argument satisfies T. */
 declare function accepts<T>(value: T): T;
@@ -63,3 +66,26 @@ stateService.href('.', {}, { absolute: true });
 void stateService.target('atlas.notFound', undefined, { location: false });
 
 accepts<boolean>(stateService.includes('atlas.sheet'));
+
+// -- the route ref's snapshot, typed by ui-router-registry/effect ----------------
+
+// @ts-expect-error a misspelled state name
+snapshot.includes('atlas.sheets');
+
+// @ts-expect-error params aren't readable until the snapshot is narrowed
+accepts<keyof typeof snapshot.params>('num');
+
+if (snapshot.includes('atlas.sheet')) {
+  accepts<string>(snapshot.params.num);
+  accepts<string | null>(snapshot.params.focus);
+  accepts<'atlas.sheet'>(snapshot.current.name);
+  // @ts-expect-error a url placeholder is a string
+  accepts<number>(snapshot.params.num);
+}
+
+// The pin's three states share the focus param, so the union narrows to it.
+if (snapshot.includes('atlas.city') || snapshot.includes('atlas.bricks')) {
+  accepts<string | null>(snapshot.params.focus);
+  // @ts-expect-error neither state declares a sheet number
+  accepts<keyof typeof snapshot.params>('num');
+}

@@ -135,8 +135,11 @@ export const routes = [
 /**
  * The table, registered: `ui-router-registry` reads the names and params off it,
  * so a `stateService.go`, `href`, `target` or `includes` anywhere in the app takes a
- * registered name and that state's params (src/registry.test-d.ts).
+ * registered name and that state's params, and its effect entry fills
+ * `ui-router-effect`'s `RouteTypes`, so the route ref's snapshot narrows on
+ * `includes` to a state's params (src/registry.test-d.ts).
  */
+import type {} from 'ui-router-registry/effect';
 declare module 'ui-router-registry' {
   interface Register {
     states: (typeof routes)[number];
