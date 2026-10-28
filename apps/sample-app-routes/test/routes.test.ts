@@ -222,15 +222,30 @@ describe('the shared state table', () => {
     }
   });
 
-  it('names only url-less parents, since the matcher nests urls by dotted name', () => {
-    const urlOf = new Map<string, string | undefined>(
-      stateTable.map((row) => [row.name, 'url' in row ? row.url : undefined]),
+  it('keeps every parent chain url-less, since the matcher nests urls by dotted name', () => {
+    const byName = new Map<string, (typeof stateTable)[number]>(
+      stateTable.map((row) => [row.name, row]),
     );
 
     for (const row of stateTable) {
       if (!('parent' in row)) continue;
-      assert.ok(urlOf.has(row.parent), `${row.name}: unknown parent`);
-      assert.equal(urlOf.get(row.parent), undefined, `${row.name}'s parent`);
+
+      // Each state up the chain, through its own `parent:` or its dotted name.
+      for (let name: string | undefined = row.parent; name;) {
+        const ancestor = byName.get(name);
+
+        assert.ok(ancestor, `${row.name}: unknown ancestor '${name}'`);
+        assert.ok(
+          !('url' in ancestor) || !ancestor.url,
+          `${row.name}: '${name}' has a url`,
+        );
+        name =
+          'parent' in ancestor
+            ? ancestor.parent
+            : name.includes('.')
+              ? name.slice(0, name.lastIndexOf('.'))
+              : undefined;
+      }
     }
   });
 });

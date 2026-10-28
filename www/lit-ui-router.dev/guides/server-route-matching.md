@@ -340,9 +340,18 @@ Two omissions to copy:
   server cannot see. The server serves the shell and lets the client's full
   configuration run.
 
-The matcher ignores `parent` and nests urls by dotted name, which holds here
-because every `parent` is the url-less `app`; the app pins that, and every
-verdict the worker serves, with
+The matcher builds a state's url from its dotted name and ignores
+`parent`: `contacts.contact` appends `/:contactId` to `contacts`'s
+`/contacts`, while a state declared with `parent:` starts from the root.
+So the matcher agrees with the client only while every state on a
+`parent:` chain is url-less, as `app` is here. When one isn't, a deep link
+to the child's real url gets a 404 verdict, its url without the parent's
+segment gets a shell, and nothing warns. To check it, walk each `parent:`
+chain for a `url`, or resolve each state's `href` through the matcher and
+expect the same state back. To fix it, name the state with dots, or give
+that mount `strategy: 'simulate'`, which follows `parent` as the client does.
+
+The app pins that property, and every verdict the worker serves, with
 [contract tests](https://github.com/simshanith/lit-ui-router/blob/main/apps/sample-app-routes/test/routes.test.ts)
 that resolve shells, the root redirect, real 404s, and the
 shell-not-redirect verdicts for the client-conditional routes through the
