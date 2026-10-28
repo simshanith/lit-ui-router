@@ -78,12 +78,15 @@ const rowOf = (name: SampleAppStateName) => {
   return row;
 };
 
+// Computed once; a generic parameter inferring the names doubled the sample apps' check cost.
+type BindingMap = { [N in SampleAppStateName]: Binding<N> };
+
 /** The table rows for each named state, with their bindings applied. */
-export function bindStates<N extends SampleAppStateName>(bindings: {
-  [K in N]: Binding<K>;
-}): BoundState<N>[] {
-  // SAFETY: the keys are exactly N, as the parameter's mapped type requires
-  const names = Object.keys(bindings) as N[];
+export function bindStates(
+  bindings: Partial<BindingMap>,
+): BoundState<SampleAppStateName>[] {
+  // SAFETY: Partial<BindingMap>'s keys are state names
+  const names = Object.keys(bindings) as SampleAppStateName[];
 
   return names.map((name) => {
     // SAFETY: each key's binding was checked against its own state above
@@ -96,7 +99,7 @@ export function bindStates<N extends SampleAppStateName>(bindings: {
     const declaration = { ...rowOf(name), ...rest, name, resolve: resolvables };
 
     // SAFETY: each component was checked against its state's resolves above, which LitStateDeclaration's default can't express
-    return declaration as BoundState<N>;
+    return declaration as BoundState<SampleAppStateName>;
   });
 }
 
