@@ -21,7 +21,6 @@ export const states = bindStates(prefsTable, {
 type Rows = RegisteredRows<typeof prefsTable>;
 
 declare module 'ui-router-registry' {
-  // oxlint-disable-next-line typescript/no-empty-interface, typescript/no-empty-object-type -- the members come from StatesOf
   interface RegisteredStates extends StatesOf<Rows> {}
 }
 

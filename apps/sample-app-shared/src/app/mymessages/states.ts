@@ -137,7 +137,6 @@ export const states = bindStates(mymessagesTable, {
 type Rows = RegisteredRows<typeof mymessagesTable>;
 
 declare module 'ui-router-registry' {
-  // oxlint-disable-next-line typescript/no-empty-interface, typescript/no-empty-object-type -- the members come from StatesOf
   interface RegisteredStates extends StatesOf<Rows> {}
 }
 
