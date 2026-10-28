@@ -74,10 +74,15 @@ export type BoundState<N extends SampleAppStateName> = LitStateDeclaration & {
 // Computed once; a generic parameter inferring the names doubled the sample apps' check cost.
 type BindingMap = { [N in SampleAppStateName]: Binding<N> };
 
+// A name from another module's table must be absent, so a binding can't land on the wrong module.
+type OutsideTable<T extends readonly TableRow[]> = {
+  [N in Exclude<SampleAppStateName, T[number]['name']>]?: never;
+};
+
 /** A module's table rows for each named state, with their bindings applied. */
-export function bindStates(
-  table: readonly TableRow[],
-  bindings: Partial<BindingMap>,
+export function bindStates<const T extends readonly TableRow[]>(
+  table: T,
+  bindings: NoInfer<Partial<BindingMap> & OutsideTable<T>>,
 ): BoundState<SampleAppStateName>[] {
   // SAFETY: Partial<BindingMap>'s keys are state names
   const names = Object.keys(bindings) as SampleAppStateName[];

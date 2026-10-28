@@ -21,6 +21,11 @@ bindStates(appTable, {
   welcom: {},
 });
 
+bindStates(appTable, {
+  // @ts-expect-error a state from another module's table
+  'contacts.new': {},
+});
+
 // -- components: checked by the resolves their state provides -----------------
 
 bindStates(contactsTable, {
