@@ -504,16 +504,17 @@ try {
     await page.close();
   }
   {
-    const deep = BUILD_MODELS.find((m) => m.slug === 'signals' && m.bricks.some((b) => b.n === 9));
+    // the signals build is whichever one names signals and carries brick 9, read off sheet 2C rather than typed
+    const deep = BUILD_MODELS.find((m) => m.words.split(' ').includes('signals') && m.bricks.some((b) => b.n === 9));
     if (!deep) throw new Error('check-scenes: no signals build with brick 9 to deep-link');
-    const page = await open('/builds/?build=signals&focus=9');
+    const page = await open(`/builds/?build=${deep.slug}&focus=9`);
     await page.evaluate(async () => {
       await new Promise((r) => { const t = () => (window.__buildsScene ? r() : setTimeout(t, 50)); t(); });
       await window.__buildsScene.ready;
     });
-    const s = await page.evaluate(() => ({ build: window.__buildsScene.build(), pinned: window.__buildsScene.pinned(), on: document.querySelector('[slot="hotspot-signals-9"]').classList.contains('on'),
-      src: window.__buildsScene.src(), current: document.querySelector('.bd-builds a[aria-current="true"]').getAttribute('data-build') }));
-    check(s.build === 'signals' && s.pinned === '9' && s.on && s.current === 'signals' && s.src.endsWith('/models/builds/signals.glb'), '/builds?build=signals&focus=9 opens on signals with brick 9 pinned', JSON.stringify(s));
+    const s = await page.evaluate((slug) => ({ build: window.__buildsScene.build(), pinned: window.__buildsScene.pinned(), on: document.querySelector(`[slot="hotspot-${slug}-9"]`).classList.contains('on'),
+      src: window.__buildsScene.src(), current: document.querySelector('.bd-builds a[aria-current="true"]').getAttribute('data-build') }), deep.slug);
+    check(s.build === deep.slug && s.pinned === '9' && s.on && s.current === deep.slug && s.src.endsWith(`/models/builds/${deep.slug}.glb`), `/builds?build=${deep.slug}&focus=9 opens on ${deep.slug} with brick 9 pinned`, JSON.stringify(s));
     await page.close();
   }
   {

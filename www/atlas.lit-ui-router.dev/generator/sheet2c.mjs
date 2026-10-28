@@ -90,12 +90,13 @@ const PLATE_SHAPE = (studs) => {
 const RUNTIMES = [...PEERS.rows].sort((a, b) => a.name.localeCompare(b.name)).map((r, i) => {
   const studs = STUDS(r.sloc);
   const stacked = studs >= BASEPLATE_STUDS;
-  const full = stacked ? Math.floor(studs / BASEPLATE_STUDS) : 0, rem = studs - full * BASEPLATE_STUDS;
-  const topShape = stacked ? (rem ? PLATE_SHAPE(rem) : BASEPLATE) : PLATE_SHAPE(studs);
+  // the top plate always carries the remainder, a whole baseplate when the studs divide evenly
+  const full = stacked ? Math.floor((studs - 1) / BASEPLATE_STUDS) : 0, rem = studs - full * BASEPLATE_STUDS;
+  const topShape = stacked ? (rem === BASEPLATE_STUDS ? BASEPLATE : PLATE_SHAPE(rem)) : PLATE_SHAPE(studs);
   const shape = stacked ? BASEPLATE : topShape;
   return { letter: String.fromCharCode(65 + i), name: r.name, ver: r.version, range: r.range, optional: r.optional, published: r.published,
     files: r.files, sloc: r.sloc, build: r.build, shippedFiles: r.shippedFiles, shippedSloc: r.shippedSloc, closure: r.closure, peeredBy: r.peeredBy, studs,
-    stacked, full, rem, plates: full + (rem ? 1 : 0), shape, topShape, topOff: [shape[0] - topShape[0], shape[1] - topShape[1]] };
+    stacked, full, rem, plates: full + 1, shape, topShape, topOff: [shape[0] - topShape[0], shape[1] - topShape[1]] };
 });
 for (const r of RUNTIMES) {
   if (r.plates !== Math.ceil(r.studs / BASEPLATE_STUDS)) throw new Error(`sheet 2C: ${r.name} stacks ${r.plates} plates for ${r.studs} studs`);
@@ -104,7 +105,7 @@ for (const r of RUNTIMES) {
   if (held < r.studs || held - r.studs >= r.topShape[1]) throw new Error(`sheet 2C: ${r.name} holds ${held} studs on its plates for ${r.studs}`);
   if (!r.stacked && (r.plates !== 1 || r.topShape[0] * r.topShape[1] >= BASEPLATE_STUDS + r.topShape[1])) throw new Error(`sheet 2C: ${r.name} is one plate of ${shapeName(r.shape)} for ${r.studs} studs`);
 }
-const plateWord = (r) => (r.stacked ? `${plural(r.plates, 'plate')} · ${r.full} of ${shapeName(BASEPLATE)}${r.rem ? ` + a ${shapeName(r.topShape)}` : ''}` : `1 plate · ${shapeName(r.shape)}`);
+const plateWord = (r) => (r.stacked ? `${plural(r.plates, 'plate')} · ${r.topShape === BASEPLATE ? `${r.plates} of ${shapeName(BASEPLATE)}` : `${r.full} of ${shapeName(BASEPLATE)} + a ${shapeName(r.topShape)}`}` : `1 plate · ${shapeName(r.shape)}`);
 const RT = (name) => {
   const r = RUNTIMES.find((x) => x.name === name);
   if (!r) throw new Error(`sheet 2C: no runtime ${name}`);
@@ -208,10 +209,12 @@ const UNUSED_PARTS = FAMILY.filter((b) => CARRY(b) === 0);
 
 // ---- the reactivity claim: no build mixes two of the reactivity runtimes ------------------
 const REACTIVITY = ['effect', 'mobx', 'signal-polyfill'].map((n) => RT(n).name);
+// a part reaches the family parts it peers outright; an optional peer is one an install may skip
+const requiredPeersOf = (name) => COUPLINGS.rows.filter((r) => r.kind === 'peer' && !r.optional && r.from === name).map((r) => r.to);
 const reaches = (name, seen = new Set()) => {
   if (seen.has(name)) return seen;
   seen.add(name);
-  for (const p of peersOf(name)) if (FAMILY_NAMES.has(p)) reaches(p, seen);
+  for (const p of requiredPeersOf(name)) if (FAMILY_NAMES.has(p)) reaches(p, seen);
   return seen;
 };
 const reactivityOf = (build) => [...new Set(build.parts.flatMap((p) => [...reaches(p)].flatMap(peersOf).filter((t) => REACTIVITY.includes(t))))].sort();
@@ -384,7 +387,7 @@ const fail = (build, msg) => {
 function checkParts(build) {
   const placed = [...build.parts_.keys()].map((n) => FB(n).name).sort();
   if (placed.join() !== build.parts.join()) fail(build, `draws [${placed}] for parts [${build.parts}]`);
-  for (const b of build.bricks) for (const p of peersOf(b.name)) if (FAMILY_NAMES.has(p) && !build.parts.includes(p)) fail(build, `draws ${b.name} without its peer ${p}`);
+  for (const b of build.bricks) for (const p of requiredPeersOf(b.name)) if (FAMILY_NAMES.has(p) && !build.parts.includes(p)) fail(build, `draws ${b.name} without its peer ${p}`);
   for (const p of build.plates) if (!p.links.some(({ b }) => peersOf(b.name).includes(p.rt.name))) fail(build, `stands on ${p.rt.name}, which no part peers`);
 }
 // every brick seats on, straddles or is corded to every runtime it peers in the build, its base's aside; one ringed stud per

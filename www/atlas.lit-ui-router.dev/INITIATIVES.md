@@ -524,6 +524,24 @@ sitting); order is dependency order.
   gz; nm 173,820 lines / 41,155 d.ts; mass3b 13,307 hashes over 235 real tasks and 3,029 command
   sloc; the ci graph 864 / 235 / 3,024 edges; steam 643 commits; weather 448 dated files; 7A 11,937
   of 19,307 metered sloc lit over 25 members.
+- 2026-10-27 — THE TWENTY-THIRD REFRESH, at `origin/main` @ b499e2a5 (commit 2026-10-27), the
+  census plates re-run at the one ref, 31 commits past the twenty-second (85e0ce5c): the adapters'
+  route types (`ui-router-effect`, `ui-router-mobx` and `ui-router-signals` 0.2.0, their Lit
+  bindings 0.6.0, 1.4.0 and 0.3.0) and `ui-router-registry` 0.2.0 with `./effect`, `./mobx` and
+  `./signals`, each an optional peer on its adapter; `lit-ui-router`'s `viewRendered()` and
+  `routedElement`, unreleased. The user: "let's kick off refresh + dependency updates". NO MEMBER WAS
+  BORN. What the refresh taught: an OPTIONAL family peer is the new shape, and three readers had
+  assumed every family peer installs. census-builds closed each build over all of them and folded the
+  three adapters into every registry build; it closes over required peers only (10 builds, 11 with the
+  atlas app). 2C's reactivity and draw checks follow the same rule, sheet 4 draws no bridge for an
+  optional peer, and the bench seats the registry between effect and mobx (2B REV I). Two drawings
+  were recomposed: 2B, and 2E (REV C), whose seating found no clear cord for the atlas app once the
+  registry's 2×2 moved the server under it. Probe fixes: census-builds' closure and census-loop's 27
+  `ui-view.ts` cites relocated (the render cite re-texted). The pnpm pin (12.15.0) resolved without an
+  install. THE NUMBERS: city 456 src files / 40,837 sloc and 233 spec / 41,833; doors 31 at 197,769
+  min / 70,491 gz; the bundle 126,332 gz; the deploy 1,474 files / 7,162,208 gz; couplings 39
+  contracts, 27 drawn; upstream 39 yards; pins 44 (52 with the atlas), none trailing; audit escapes 0,
+  hits 0, text-on-text 124, the twenty-second's pairs.
 - 2026-10-24, later — THE REGISTRY ADOPTED. `ui-router-registry` 0.1.1 closed #1582 and #1583 the day
   they were filed, and the atlas app took it as a devDependency (adeec849): `src/routes.ts` registers the
   route table `as const`, every `stateService` call site holds a `TypedStateService`, no cast anywhere,
@@ -988,6 +1006,17 @@ sitting); order is dependency order.
   0.1.1 read `ahead` of `census-npm.json`'s latest (0.1.0); re-reading npm filed 0.1.1 and sheet 11's
   guard refused it against the cabinet tree's 0.1.0. The npm plate belongs to the cabinet's sha: restore
   it, refile the pins, and let 2F word the pin as ahead until the next refresh.
+- AN OPTIONAL PEER IS NOT AN INSTALL. `census-couplings.json` files `optional` on every row, and a
+  reader that closes over family peers must skip the optional ones, or every consumer of the registry
+  reads as carrying the three adapters it only types. census-builds' `close()`, 2C's `reaches` and
+  draw check, and sheet 4's `BRIDGES` read required peers; a new reader of the peer graph picks a side
+  on purpose.
+- A STACK THAT DIVIDES EVENLY. effect 4 filed 816 studs, exactly 17 of 2C's 48-stud baseplates, and the
+  stack counted 17 full plates plus a full top one. The top plate carries the remainder, a whole
+  baseplate when the division is even; any ruler that stacks by a remainder needs its even case.
+- check-scenes names a build by its slug, and a slug is the build's words. The signals examples and the
+  sample app all took the registry, so `signals` became `typed signals`; the deep-link check finds
+  its build by words and brick, never by a typed slug.
 
 **How the guards are shaped**
 

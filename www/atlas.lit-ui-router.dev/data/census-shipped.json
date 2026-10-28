@@ -1,10 +1,10 @@
 {
   "ref": "origin/main",
-  "sha": "85e0ce5c",
-  "commitDate": "2026-10-24T08:56:16-07:00",
-  "generatedAtTime": "2026-10-24T16:48:47.059Z",
+  "sha": "b499e2a5",
+  "commitDate": "2026-10-27T22:30:20-07:00",
+  "generatedAtTime": "2026-10-28T05:54:18.205Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-shipped.mjs",
-  "used": "git archive origin/main @ 85e0ce5c + pnpm install --frozen-lockfile --silent (mise-provisioned pnpm) + turbo run build -> www/lit-ui-router.dev/dist",
+  "used": "git archive origin/main @ b499e2a5 + pnpm install --frozen-lockfile --silent (mise-provisioned pnpm) + turbo run build -> www/lit-ui-router.dev/dist",
   "wasAssociatedWith": [
     "pnpm (mise-provisioned)",
     "turbo",
@@ -24,26 +24,26 @@
     "release-pages.css"
   ],
   "totals": {
-    "files": 1402,
-    "rawBytes": 47785228,
-    "gzBytes": 6888288
+    "files": 1474,
+    "rawBytes": 55645455,
+    "gzBytes": 7162208
   },
   "rows": [
-    {"district":"inter fonts","files":16,"gz":868670,"top":{"name":"assets/inter-italic-latin-ext.Dm0n7MN1.woff2","gz":141087}},
-    {"district":"html pages","files":297,"gz":2511963,"top":{"name":"guides/server-route-matching.html","gz":41600}},
-    {"district":"markdown pages","files":286,"gz":432797,"top":{"name":"llms-full.txt","gz":166038}},
-    {"district":"examples","files":36,"gz":1588312,"top":{"name":"examples/hellogalaxy-signals/assets/model-viewer-BPJ4VvQu.js","gz":281867}},
-    {"district":"page chunks","files":572,"gz":579259,"top":{"name":"assets/guides_server-route-matching.md.B69aVNAS.js","gz":26400}},
-    {"district":"vp framework","files":15,"gz":245029,"top":{"name":"assets/chunks/@localSearchIndexroot.l7E7rLVl.js","gz":123886}},
+    {"district":"inter fonts","files":16,"gz":869033,"top":{"name":"assets/inter-italic-latin-ext.DvFXn_K6.woff2","gz":141152}},
+    {"district":"html pages","files":315,"gz":2769494,"top":{"name":"guides/server-route-matching.html","gz":41994}},
+    {"district":"markdown pages","files":304,"gz":447857,"top":{"name":"llms-full.txt","gz":171512}},
+    {"district":"examples","files":36,"gz":1551228,"top":{"name":"examples/hellogalaxy-signals/assets/model-viewer-D_3WFnsa.js","gz":282317}},
+    {"district":"page chunks","files":608,"gz":606707,"top":{"name":"assets/guides_server-route-matching.md.BUj7IEqX.js","gz":26409}},
+    {"district":"vp framework","files":15,"gz":249727,"top":{"name":"assets/chunks/@localSearchIndexroot.BaDbMiRu.js","gz":127530}},
     {"district":"images","files":103,"gz":157545,"top":{"name":"images/lit-ui-router.png","gz":68708}},
     {"district":"diagrams","files":14,"gz":21423,"top":{"name":"diagrams/about-this-site-architecture.svg","gz":3495}},
-    {"district":"app: vanilla","files":18,"gz":130766,"top":{"name":"assets/api-docs-B0uYM5BR.js","gz":28849}},
-    {"district":"app: mobx","files":10,"gz":72364,"top":{"name":"assets/decorate-DEOEUt-w.js","gz":26915}},
-    {"district":"app: effect","files":10,"gz":82903,"top":{"name":"assets/index-BziyNhOk.js","gz":27867}},
-    {"district":"app: hash","files":4,"gz":16895,"top":{"name":"assets/main-CDSRYW3e.js","gz":8537}},
-    {"district":"app: signals","files":13,"gz":100188,"top":{"name":"assets/api-docs-8zboVOX-.js","gz":28848}},
+    {"district":"app: vanilla","files":18,"gz":132065,"top":{"name":"assets/api-docs-CDKq9JyV.js","gz":28854}},
+    {"district":"app: mobx","files":10,"gz":72934,"top":{"name":"assets/decorate-DEOEUt-w.js","gz":26915}},
+    {"district":"app: effect","files":10,"gz":86093,"top":{"name":"assets/index-VooJs8f_.js","gz":30492}},
+    {"district":"app: hash","files":4,"gz":16889,"top":{"name":"assets/main-jydGgfsJ.js","gz":8535}},
+    {"district":"app: signals","files":13,"gz":100744,"top":{"name":"assets/api-docs-DAY78tpm.js","gz":28853}},
     {"district":"static data","files":4,"gz":50739,"top":{"name":"static/data/messages.json","gz":47757}},
-    {"district":"site css","files":4,"gz":29435,"top":{"name":"assets/style.CdB0xDdg.css","gz":21635}}
+    {"district":"site css","files":4,"gz":29730,"top":{"name":"assets/style.C_zoz-Nk.css","gz":21855}}
   ],
   "orphans": [
 

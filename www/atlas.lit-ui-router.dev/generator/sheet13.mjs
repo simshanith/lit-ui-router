@@ -74,8 +74,10 @@ const PLACED = [
   // nudged east off ssr's annex when #1010/#1020 grew it to 2,578 spec sloc, and
   // south off the effect bindings' annex when it reached 340.4 at the 4dc0cbb7 refresh
   // north off y 20 when its annex reached 108.4 at the eb1162da refresh: it clears the reading box's y 95 by 2.1
-  [2, 'ui-router-server', 'packages/ui-router-server', 'pkg', 250, 6],
-  [3, 'lit-ui-router-mobx', 'packages/lit-ui-router-mobx', 'pkg', 248, 104],
+  // east off 250 at the b499e2a5 refresh, when the flagship's annex reached its west wall
+  [2, 'ui-router-server', 'packages/ui-router-server', 'pkg', 255, 6],
+  // east off 248 at the b499e2a5 refresh, with the server, off the flagship's annex
+  [3, 'lit-ui-router-mobx', 'packages/lit-ui-router-mobx', 'pkg', 255, 104],
   [4, 'navigation-location-plugin', 'packages/navigation-location-plugin', 'pkg', 332, 172],
   [5, 'sample-app-shared', 'apps/sample-app-shared', 'app', 570, 10],
   [6, 'sample-app-lit-vanilla', 'apps/sample-app-lit-vanilla', 'app', 720, 10],
@@ -105,7 +107,8 @@ const PLACED = [
   [28, '@tools/lint-elements', 'tools/lint-elements', 'tool', 408, 550],
   [30, '@tools/eslint-ts-parser', 'tools/eslint-ts-parser', 'tool', 54, 350],
   // --- the fifth published package (#676): row two's west lot ---------------------
-  [31, 'eslint-plugin-lit-ui-router', 'packages/eslint-plugin-lit-ui-router', 'pkg', 16, 149],
+  // south off 149 at the b499e2a5 refresh, off the flagship's grown annex
+  [31, 'eslint-plugin-lit-ui-router', 'packages/eslint-plugin-lit-ui-router', 'pkg', 16, 153],
   // moved with sheet 7 when the hygiene block took the yard's east end
   [32, '@tools/embed-heights', 'tools/embed-heights', 'tool', 449, 462],
   // --- the hygiene block, born 2026-09-07/08 (#738, #741, #771) — sheet 7's slots ---
@@ -119,7 +122,8 @@ const PLACED = [
   // east with 3 when the flagship's annex reached 241.5 at the 9e656ab3 refresh
   [37, 'lit-ui-router-effect', 'packages/lit-ui-router-effect', 'pkg', 330, 114],
   // --- the prerender package, born 2026-09-14 (#806): row two, between 31 and 4 ---
-  [38, 'lit-ui-router-ssr', 'packages/lit-ui-router-ssr', 'pkg', 172, 156],
+  // south off 156 at the b499e2a5 refresh, off the flagship's grown annex
+  [38, 'lit-ui-router-ssr', 'packages/lit-ui-router-ssr', 'pkg', 172, 160],
   // --- born 2026-10-01 (#1056): sheet 7's lot -----------------------------------
   [39, '@tools/crap', 'tools/crap', 'tool', 584, 430],
   // --- born 2026-10-09 (#1143): sheet 7's lot -----------------------------------

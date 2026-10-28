@@ -29,7 +29,8 @@ const SHARED_IMP = [...new Set(CIG.graphEdges
   .map(([, t]) => CIG.graphNodes[t].pkg))];
 const SHARED_TOOLS = SHARED_IMP.filter((p) => p.startsWith('@tools/')).length;
 if (!SHARED_IMP.includes('@tools/release')) throw new Error('sheet 7: road G runs to @tools/release, which no longer depends on @tools/shared');
-if (row('tools/dts-backtest').srcFiles !== 1) throw new Error('sheet 7: №14\'s note says one file, the plate says otherwise');
+const DTS = row('tools/dts-backtest');
+if (DTS.srcFiles < 1) throw new Error('sheet 7: №14\'s note counts the files that hold the TS 5.0 floor, and the plate carries none');
 const SHIPPED_APPS = JSON.parse(readFileSync(new URL('../data/census-shipped.json', import.meta.url), 'utf8')).rows.map((r) => r.district).filter((d) => d.startsWith('app: '));
 if (SHIPPED_APPS.length !== 5 || SHIPPED_APPS.at(-1) !== 'app: signals') throw new Error(`sheet 7: №45's note calls the signals demo the fifth app shell the docs site serves, and census-shipped files ${SHIPPED_APPS.join(', ')}`);
 const ratio = (dir) => (row(dir).specSloc / row(dir).srcSloc).toFixed(1);
@@ -77,10 +78,10 @@ const TIER_TEXT = {
 export const PLACED = [
   // --- packages/ — the product -------------------------------------------------
   [1,  'lit-ui-router',            'packages/lit-ui-router',             'pkg',  'line',     0,  20, `the subject of this set · annex ${ratio('packages/lit-ui-router')}× the source`],
-  // east of lit-ui-router's annex, which reaches x 244
-  [2,  'ui-router-server',         'packages/ui-router-server',          'pkg',  'line',   250,  20, `the server adapter · annex ${ratio('packages/ui-router-server')}×`],
-  // south of the flagship's annex, which reaches y 137
-  [3,  'lit-ui-router-mobx',       'packages/lit-ui-router-mobx',        'pkg',  'line',   170, 150, `the mobx companion · annex ${ratio('packages/lit-ui-router-mobx')}×`],
+  // east of lit-ui-router's annex, which reaches x 251.3 at the b499e2a5 refresh
+  [2,  'ui-router-server',         'packages/ui-router-server',          'pkg',  'line',   255,  20, `the server adapter · annex ${ratio('packages/ui-router-server')}×`],
+  // south of the flagship's annex, which reaches y 140.6 at the b499e2a5 refresh
+  [3,  'lit-ui-router-mobx',       'packages/lit-ui-router-mobx',        'pkg',  'line',   170, 153, `the mobx companion · annex ${ratio('packages/lit-ui-router-mobx')}×`],
   [4,  'navigation-location-plugin','packages/navigation-location-plugin','pkg', 'line',   260, 130, `the location seat, core's pushStateLocation swapped out · annex ${ratio('packages/navigation-location-plugin')}×`],
   // --- apps/ — the proving ground ----------------------------------------------
   [5,  'sample-app-shared',        'apps/sample-app-shared',             'app',  'line',   590,  10, 'the routes + views every sample app mounts'],
@@ -96,7 +97,7 @@ export const PLACED = [
   // eslint-ts-parser and lit-test-env on the 350 row; at y 452 it still hides none of them
   [12, '@tools/release',           'tools/release',                      'tool', 'halt',     0, 452, 'hosts published-diff — the one publish halt'],
   [13, '@tools/typedoc-plugin',    'tools/typedoc-plugin-lit-ui-router', 'tool', 'report', 190, 430, 'builds the API pages, gates nothing'],
-  [14, '@tools/dts-backtest',      'tools/dts-backtest',                 'tool', 'pr',       8, 350, `one ${row('tools/dts-backtest').srcSloc}-line run.ts holds the TS 5.0 floor`],
+  [14, '@tools/dts-backtest',      'tools/dts-backtest',                 'tool', 'pr',       8, 350, `${DTS.srcFiles} file${DTS.srcFiles === 1 ? '' : 's'} · ${DTS.srcSloc} lines hold the TS 5.0 floor`],
   // west off 300, then 270, as its annex grew into repo-checks and embed-heights (to 419.3 at the eb1162da refresh)
   [15, '@tools/build_and_test',   'tools/build_and_test',               'tool', 'report', 230, 430, 'the CI graph helper — and its error summary'],
   // south of workers-builds, so road G runs west and then north between 40 and compat-guards
@@ -454,11 +455,11 @@ ${[['A', 1017, 358], ['B', 566, 366], ['C', 470, 195], ['D', 522, 262], ['E', 89
   .map(([k, x, y]) => txt(x, y, k, 'lbl')).join('\n')}
 
 <!-- district lettering, off the geometry, leaders where the gap is wide -->
-<!-- east of the flagship annex's roof corner at this height -->
-${txt(824, 110, 'packages/ — THE PRODUCT', 'lblb')}
-${txt(824, 123, `${DP.n} members, ${PUBLISHED_PKGS} published · ${DP.f} files · ${fmt(DP.sl)} sloc`, 'lblf')}
-${txt(824, 137, BIG_ANNEX === DP.n ? 'every one carries a bigger annex than itself' : `${BIG_ANNEX} of ${DP.n} carry a bigger annex than themselves`, 'lblf')}
-${lead(818, 126, g(1).x2, g(1).ay + 0.32 * g(1).sa, 0.87 * g(1).ha)}
+<!-- east of the flagship annex's roof corner at this height, off 824 at the b499e2a5 refresh with the server's cap -->
+${txt(832, 110, 'packages/ — THE PRODUCT', 'lblb')}
+${txt(832, 123, `${DP.n} members, ${PUBLISHED_PKGS} published · ${DP.f} files · ${fmt(DP.sl)} sloc`, 'lblf')}
+${txt(832, 137, BIG_ANNEX === DP.n ? 'every one carries a bigger annex than itself' : `${BIG_ANNEX} of ${DP.n} carry a bigger annex than themselves`, 'lblf')}
+${lead(826, 126, g(1).x2, g(1).ay + 0.32 * g(1).sa, 0.87 * g(1).ha)}
 
 ${txt(1540, 300, `sample-app-shared — ${g(5).sf}f · ${fmt(g(5).sl)} sloc`, 'lblb', 'end')}
 ${txt(1540, 313, 'the proving ground’s broadest block —', 'lblf', 'end')}

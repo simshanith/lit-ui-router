@@ -1,16 +1,16 @@
 {
   "ref": "origin/main",
-  "sha": "85e0ce5c",
-  "commitDate": "2026-10-24T08:56:16-07:00",
-  "generatedAtTime": "2026-10-24T16:09:03.969Z",
+  "sha": "b499e2a5",
+  "commitDate": "2026-10-27T22:30:20-07:00",
+  "generatedAtTime": "2026-10-28T05:46:04.185Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-yard.mjs",
-  "used": "www/atlas.lit-ui-router.dev/data/census-files.json @ 85e0ce5c",
+  "used": "www/atlas.lit-ui-router.dev/data/census-files.json @ b499e2a5",
   "wasAssociatedWith": [],
   "orphans": [
 
   ],
   "rows": [
-    {"instrument":"src — packages/*/src","files":90,"sloc":8564},
+    {"instrument":"src — packages/*/src","files":97,"sloc":8839},
     {"instrument":"build — @tools/oxc-emit","files":6,"sloc":487},
     {"instrument":"pack — packPublishTarball","files":12,"sloc":441},
     {"instrument":"published-diff","files":5,"sloc":481},
@@ -20,7 +20,7 @@
     {"instrument":"docs deploy watch","files":9,"sloc":1000},
     {"instrument":"publish — release-it","files":33,"sloc":2041},
     {"instrument":"compat-guards","files":9,"sloc":312},
-    {"instrument":"dts-backtest","files":1,"sloc":302},
+    {"instrument":"dts-backtest","files":2,"sloc":350},
     {"instrument":"tests — vitest harness","files":6,"sloc":380},
     {"instrument":"anti-slop — vendored oxlint rules","files":35,"sloc":3665},
     {"instrument":"lint & probe fleet","files":50,"sloc":5427},
@@ -29,6 +29,6 @@
     {"instrument":"@tools/shared","files":11,"sloc":516},
     {"instrument":"typedoc plugin","files":2,"sloc":350},
     {"instrument":"e2e — cypress","files":11,"sloc":826},
-    {"instrument":"sample apps","files":79,"sloc":4417}
+    {"instrument":"sample apps","files":78,"sloc":4412}
   ]
 }

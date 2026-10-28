@@ -240,6 +240,9 @@ const guardFail = (n, said) => { throw new Error(`sheet 7A: №${n}'s note says 
 // a package whose only dark file is its barrel
 const barrelOnly = (n, lit) => (SH.get(n).shadow?.length === 1 && SH.get(n).shadow[0] === 'src/index.ts'
   ? `${lit} lit; the barrel in shadow` : guardFail(n, 'only the barrel is in shadow'));
+// a renderer-free package whose dark files are its barrel and its route-types module
+const barrelAndTypes = (n, lit) => (SH.get(n).shadow?.join() === 'src/index.ts,src/route-types.ts'
+  ? `${lit} lit; barrel and route types in shadow` : guardFail(n, 'only the barrel and the route types are in shadow'));
 // the apps lettering names what lives on e2e light alone: the rig and the demos it drives
 const E_APPS = M.filter((r) => r[2] === 'app' && r[3] === 'e');
 if (!E_APPS.some((r) => r[0] === 9)) throw new Error('sheet 7A: the apps lettering says the rig lives on e2e light alone, and the plate says otherwise');
@@ -286,12 +289,12 @@ const NOTE = {
   39: 'report.ts lit, the crap-report CLI in shadow',
   40: 'vendored rules with no suite of their own',
   41: barrelOnly(41, 'the bindings'),
-  42: barrelOnly(42, 'the signal mirror'),
-  43: barrelOnly(43, 'the SubscriptionRef'),
+  42: barrelAndTypes(42, 'the signal mirror'),
+  43: barrelAndTypes(43, 'the SubscriptionRef'),
   44: SH.get(44).shadow?.length === 0 ? 'private · the inlined snapshot, lit wall to wall' : guardFail(44, 'lit wall to wall'),
   45: SH.get(45).cat === 'n' ? 'the signals demo — no test script' : guardFail(45, 'no test script'),
   46: `${SH.get(46).shadow.map((f) => f.replace(/^src\//, '')).join(' + ')} in shadow · the rest lit`,
-  47: barrelOnly(47, 'the store'),
+  47: barrelAndTypes(47, 'the store'),
   48: SH.get(48).shadow?.join() === 'src/ci-logs.ts' ? 'the CLI wrapper in shadow, the cores lit' : guardFail(48, 'only the CLI wrapper is in shadow'),
   49: SH.get(49).shadow?.length === 0 && SH.get(49).litFiles === 2 ? 'private · both halves of the gate lit' : guardFail(49, 'both halves are lit'),
   50: SH.get(50).cat === 'n' ? 'types only, dark by design — its type tests run under typecheck' : guardFail(50, 'no test script'),

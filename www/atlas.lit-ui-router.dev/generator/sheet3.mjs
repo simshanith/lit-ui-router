@@ -91,25 +91,26 @@ const TIER_TEXT = {
 // [n, name, tier, x, y, files, sloc, fixed side, fixed height, schedule note]
 const M = [
   // --- the conveyor (packages/), one straight lane at y = 71 --------------------
-  // east off 25 at the 85e0ce5c refresh, so its 90-file cap stays under the inset's box row
-  [1,  'src — packages/*/src',      'line',    33,    30.45, ...C('src — packages/*/src'), null, null, SRC_NOTE],
-  // east off 201.1 with the src slab at the 85e0ce5c refresh: the run between them needs 31.2 px of trims
-  [2,  'build — @tools/oxc-emit',   'line',   222,    63,    ...C('build — @tools/oxc-emit'), null, null, 'JS pass + d.ts pass, one emitter'],
-  [3,  'pack — packPublishTarball', 'line',   312,    55.9,  ...C('pack — packPublishTarball'), null, null, 'the one packer (#449), cached'],
+  // east off 25, then 33 at the b499e2a5 refresh, so its 97-file cap stays under the inset's box row
+  [1,  'src — packages/*/src',      'line',    55,    30.45, ...C('src — packages/*/src'), null, null, SRC_NOTE],
+  // east off 201.1, then 222, with the src slab: the run between them needs 31.2 px of trims
+  [2,  'build — @tools/oxc-emit',   'line',   244,    63,    ...C('build — @tools/oxc-emit'), null, null, 'JS pass + d.ts pass, one emitter'],
+  [3,  'pack — packPublishTarball', 'line',   334,    55.9,  ...C('pack — packPublishTarball'), null, null, 'the one packer (#449), cached'],
   [4,  'THE TARBALL',               'art',    426.8,  53,     0,    0,   36,   26, 'the one artifact every check reads'],
   [5,  'publish — release-it',      'line',   578.3,  49.6,  ...C('publish — release-it'), null, null, 'bump · tag · push · publish steps'],
   [6,  'npm registry',              'off',    742.6,  36,     0,    0,   70,   32, 'immutable once crossed'],
   // --- instrument yard, row A: the checks that stop a pull request --------------
   [7,  'tests — vitest harness',    'pr',     358,   215,    ...C('tests — vitest harness'), null, null, 'lit-test-env + happy-dom · 3 real browsers'],
   [8,  'compat-guards',             'pr',     399,   215,    ...C('compat-guards'), null, null, 'the lit 2 / mobx 6 / analyzer lanes'],
-  [9,  'dts-backtest',              'pr',     165,   215,    ...C('dts-backtest'), null, null, `one ${C('dts-backtest')[1]}-line run.ts holds the TS 5.0 floor`],
+  [9,  'dts-backtest',              'pr',     165,   215,    ...C('dts-backtest'), null, null, `${C('dts-backtest')[0]} file${C('dts-backtest')[0] === 1 ? '' : 's'} · ${C('dts-backtest')[1]} lines hold the TS 5.0 floor`],
   [10, 'check:exports',             'pr',     215,   215,    ...C('check:exports'), null, null, 'publint + attw over the raw pack'],
   [11, 'published-diff',            'halt',   313.9, 215,    ...C('published-diff'), null, null, 'vs the LIVE npm tarball · halts publishing'],
   // --- instrument yard, row B: the gates that fire later, and the reporters -----
   [12, 'peer-floor tier-2',         'late',   160,   330,    ...C('peer-floor tier-2'), null, null, 'gates version bumps, never a PR'],
   [13, 'peer-floor tier-1',         'report', 205,   330,    ...C('peer-floor tier-1'), null, null, 'reports check runs, never gates'],
-  // the two big reporters (14, 20) stand west of every gate's lot, so every gate stands in front of them
-  [14, 'lint & probe fleet',        'report',  14,   180,    ...C('lint & probe fleet'), null, null, 'oxlint · elements · axe · CI gate'],
+  // the two big reporters (14, 20) stand west of every gate's lot, so every gate stands in front of them;
+  // the fleet south off 180 at the b499e2a5 refresh, as the src slab grew to 97 files
+  [14, 'lint & probe fleet',        'report',  14,   182,    ...C('lint & probe fleet'), null, null, 'oxlint · elements · axe · CI gate'],
   [15, '@tools/shared',             'report', 250,   320,    ...C('@tools/shared'), null, null, 'the library under every instrument'],
   [16, 'typedoc plugin',            'report', 352,   320,    ...C('typedoc plugin'), null, null, 'builds the API pages, gates nothing'],
   // --- proving ground & shopfront (apps/ + www/) --------------------------------

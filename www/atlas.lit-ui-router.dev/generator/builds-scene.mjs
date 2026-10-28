@@ -56,7 +56,7 @@ const openStud = (box, riders) => {
   }
   return best ? [best[0], best[1]] : null;
 };
-const plateWord = (p) => (p.full ? `${plural(p.plates, 'plate')} · ${p.full} of ${shapeName(p.shape)}${p.topShape.join() !== p.shape.join() ? ` + a ${shapeName(p.topShape)}` : ''}` : `1 plate · ${shapeName(p.shape)}`);
+const plateWord = (p) => (p.full ? `${plural(p.plates, 'plate')} · ${p.topShape.join() !== p.shape.join() ? `${p.full} of ${shapeName(p.shape)} + a ${shapeName(p.topShape)}` : `${p.plates} of ${shapeName(p.shape)}`}` : `1 plate · ${shapeName(p.shape)}`);
 const plateRef = (m, letter) => `plate ${letter}, ${m.plates.find((p) => p.letter === letter).name}`;
 const brickNote = (m, b) => {
   const seat = b.on !== null ? `brick ${b.on}` : plateRef(m, b.seat);

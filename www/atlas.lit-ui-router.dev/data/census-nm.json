@@ -1,10 +1,10 @@
 {
   "ref": "origin/main",
-  "sha": "85e0ce5c",
-  "commitDate": "2026-10-24T08:56:16-07:00",
-  "generatedAtTime": "2026-10-24T16:17:19.832Z",
+  "sha": "b499e2a5",
+  "commitDate": "2026-10-27T22:30:20-07:00",
+  "generatedAtTime": "2026-10-28T05:51:14.425Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-nm.mjs",
-  "used": "git archive origin/main @ 85e0ce5c + pnpm install --frozen-lockfile --silent (mise-provisioned pnpm) + turbo run build",
+  "used": "git archive origin/main @ b499e2a5 + pnpm install --frozen-lockfile --silent (mise-provisioned pnpm) + turbo run build",
   "wasAssociatedWith": [
     "pnpm (mise-provisioned)",
     "turbo"
@@ -13,7 +13,7 @@
   "rows": [
     {"name":"dompurify","version":"3.4.17","ws":false,"measured":"pkg","f":12,"l":39121,"df":2,"dl":888},
     {"name":"@uirouter/core","version":"6.1.2","ws":false,"measured":"pkg","f":162,"l":26255,"df":160,"dl":15854},
-    {"name":"hono","version":"4.13.13","ws":false,"measured":"pkg","f":380,"l":25081,"df":189,"dl":7703},
+    {"name":"hono","version":"4.13.14","ws":false,"measured":"pkg","f":380,"l":25125,"df":189,"dl":7718},
     {"name":"lodash-es","version":"4.18.1","ws":false,"measured":"pkg","f":644,"l":22193,"df":0,"dl":0},
     {"name":"marked","version":"4.3.0","ws":false,"measured":"pkg","f":16,"l":11676,"df":0,"dl":0},
     {"name":"lit-html","version":"3.3.3","ws":false,"measured":"pkg","f":120,"l":8701,"df":60,"dl":4002},
@@ -22,7 +22,7 @@
     {"name":"@oxc-project/runtime","version":"0.155.0","ws":false,"measured":"pkg","f":232,"l":5198,"df":0,"dl":0},
     {"name":"@lit/reactive-element","version":"2.1.2","ws":false,"measured":"pkg","f":58,"l":4084,"df":30,"dl":2682},
     {"name":"preact","version":"10.4.8","ws":false,"measured":"pkg","f":61,"l":3786,"df":11,"dl":1832},
-    {"name":"lit-ui-router","version":"1.17.0","ws":true,"measured":"dist/","f":46,"l":3300,"df":23,"dl":3166},
+    {"name":"lit-ui-router","version":"1.17.0","ws":true,"measured":"dist/","f":48,"l":3530,"df":24,"dl":3293},
     {"name":"d3-hierarchy","version":"2.0.0","ws":false,"measured":"pkg","f":35,"l":2688,"df":0,"dl":0},
     {"name":"ui-router-server","version":"0.4.0","ws":true,"measured":"dist/","f":34,"l":2132,"df":17,"dl":1040},
     {"name":"@uirouter/dsr","version":"1.2.0","ws":false,"measured":"pkg","f":45,"l":2053,"df":8,"dl":236},

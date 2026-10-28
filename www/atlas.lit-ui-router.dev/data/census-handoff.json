@@ -1,10 +1,10 @@
 {
   "ref": "origin/main",
-  "sha": "85e0ce5c",
-  "commitDate": "2026-10-24T08:56:16-07:00",
-  "generatedAtTime": "2026-10-24T16:05:32.158Z",
+  "sha": "b499e2a5",
+  "commitDate": "2026-10-27T22:30:20-07:00",
+  "generatedAtTime": "2026-10-28T05:46:07.366Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-handoff.mjs",
-  "used": "git archive origin/main @ 85e0ce5c",
+  "used": "git archive origin/main @ b499e2a5",
   "wasAssociatedWith": [
     "git"
   ],
@@ -15,7 +15,7 @@
     "targets": 36
   },
   "mise": {
-    "tasks": 62,
+    "tasks": 63,
     "homes": 4,
     "withUsage": 32,
     "withDepends": 12,
@@ -87,7 +87,7 @@
   ],
   "miseHomes": [
     {"home":"tools/build_and_test/mise.toml","label":"tools/build_and_test","count":12,"withUsage":2,"withDepends":0,"dependsEdges":0,"names":["xvfb","branch_ci_gate","mark_session","turbo_summary","format_patch","playwright_version","cypress_version","playwright","playwright_deps","playwright_deps_engines","cypress","bench_summary"]},
-    {"home":".config/mise/tasks/*","label":".config/mise/tasks/*","count":12,"withUsage":8,"withDepends":0,"dependsEdges":0,"names":["check_workers_builds","cloudflare_item_create","ledger_claim","read_secret","rumdl","shellcheck","taplo","turbo_backfill","turbo_cache_probe","turbo_force_guard","turbo_login","turbo_pin_worktree"]},
+    {"home":".config/mise/tasks/*","label":".config/mise/tasks/*","count":13,"withUsage":8,"withDepends":0,"dependsEdges":0,"names":["check_workers_builds","cloudflare_item_create","ledger_claim","pause_commands","read_secret","rumdl","shellcheck","taplo","turbo_backfill","turbo_cache_probe","turbo_force_guard","turbo_login","turbo_pin_worktree"]},
     {"home":"tools/release/mise.toml","label":"tools/release","count":17,"withUsage":10,"withDepends":2,"dependsEdges":2,"names":["git_user","package_info","pack","reconcile","check_tarball","tag","tag_push","publish","check_pack","published_diff","publish_check_runs","peer_floor_check_runs","workers_builds_check_runs","pages_deploy_check_runs","peer_floor_gate","bump","check_release_closure"]},
     {"home":".config/mise/config.toml","label":"config.toml inline","count":21,"withUsage":12,"withDepends":10,"dependsEdges":14,"names":["setup","lint_actionlint","lint_zizmor","lint_toml","lint_shellcheck","lint_markdown","lint_workflows","format_toml","format_check_toml","cloudflare_login","build","build_www","ci","ci_graph","ci_main","ci_main_graph","test_e2e","e2e_plan","codecov_bundle","bench_pulse","dts_backtest_matrix"]}
   ],

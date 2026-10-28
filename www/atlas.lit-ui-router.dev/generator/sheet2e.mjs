@@ -114,8 +114,9 @@ const freeStuds = (b, all) => studsOf(b).filter((s) => !all.some((o) => o !== b 
 
 // ---- seating: each consumer hovers over the family part it pins and drops onto a ringed stud ----
 // A consumer pinning two parts whose tops are coplanar straddles them, dropping onto each; otherwise it drops onto its heaviest
-// pin and reaches each other pin by a cord. It hovers at the lowest height clear of everything under its plan, and its
-// stud is under no consumer seated before it, so no drop passes through a brick.
+// pin, or onto another pin where from over the heaviest no cord runs clear, and reaches each other pin by a cord. It hovers at
+// the lowest height clear of everything under its plan, and its stud is under no consumer seated before it, so no drop passes
+// through a brick.
 function placements(studs, ws, ds) {
   const out = [];
   for (const [w, d] of ws === ds ? [[ws, ds]] : [[ws, ds], [ds, ws]])
@@ -221,12 +222,15 @@ function seatBare(st, c) {
   if (r.x + r.w > g.x + g.w || r.y + r.d > g.y + g.d) throw new Error(`sheet 2E: ${c.name} is wider than its ground`);
   st.placed.push({ ...r, z0: top(g), h: c.courses * CRS, consumer: c, drops: [], bare: true });
 }
-// the spots a consumer may take: a straddle over a free stud of two coplanar pins, else over a free stud of its heaviest pin
-function candidatesOf(st, c) {
+// the spots a consumer may take: a straddle over a free stud of two coplanar pins, else over a free stud of its heaviest pin,
+// or, `wide`, of any part it pins
+function candidatesOf(st, c, wide = false) {
   const free = (b) => freeStuds(st.pinBox(c, b), st.all()).filter((s) => !st.dropTaken.has(`${b.n}:${s.key}`) && !st.placed.some((p) => inside(s.x, s.y, p)));
-  const coplanar = c.pins.flatMap((a, i) => c.pins.slice(i + 1).map((b) => [a, b])).filter(([a, b]) => Math.abs(top(st.pinBox(c, a)) - top(st.pinBox(c, b))) < 0.01);
+  // a straddle never drops onto a one-stud part: its sole stud stays free for the cords other consumers run to it
+  const many = (b) => st.pinBox(c, b).ws * st.pinBox(c, b).ds > 1;
+  const coplanar = c.pins.flatMap((a, i) => c.pins.slice(i + 1).map((b) => [a, b])).filter(([a, b]) => many(a) && many(b) && Math.abs(top(st.pinBox(c, a)) - top(st.pinBox(c, b))) < 0.01);
   let out = coplanar.flatMap(([a, b]) => free(a).flatMap((sa) => free(b).flatMap((sb) => placements([sa, sb], c.shape[0], c.shape[1]).map((r) => ({ r, seats: [[a, sa], [b, sb]], straddle: true })))));
-  if (!out.length) out = free(c.anchor).flatMap((s) => placements([s], c.shape[0], c.shape[1]).map((r) => ({ r, seats: [[c.anchor, s]], straddle: false })));
+  if (!out.length || wide) out = (wide ? c.pins : [c.anchor]).flatMap((b) => free(b).flatMap((s) => placements([s], c.shape[0], c.shape[1]).map((r) => ({ r, seats: [[b, s]], straddle: false }))));
   if (!out.length) throw new Error(`sheet 2E: ${c.name} finds no free stud on brick ${c.anchor.n} that no consumer covers`);
   // a corded consumer may hover higher, a course at a time, where that lets its cords and the others' run clear
   return cordsOf(c) ? [...out, ...out.flatMap((cand) => [1, 2, 3, 4].map((k) => ({ ...cand, up: k * CRS })))] : out;
@@ -277,9 +281,23 @@ function rerouteRound(st, part) {
     st.strings.push(stringOf(t.part, t.b, route));
   }
 }
-// seat one consumer at its best spot, drop it onto its seats, and cord it to each other pin
+// seat one consumer at its best spot, drop it onto its seats, and cord it to each other pin; where no seat over its heaviest pin
+// lets every cord run clear, it seats over whichever part it pins does
 function seatOne(st, c) {
-  const best = candidatesOf(st, c).map((cand) => ({ cand, s: scoreOf(st, c, cand) })).sort((p, q) => p.s.reduce((d, v, k) => d || v - q.s[k], 0))[0].cand;
+  const snap = { dropTaken: new Set(st.dropTaken), placed: st.placed.length, strings: [...st.strings], rings: new Map(st.all().map((o) => [o, o.rings && new Set(o.rings)])) };
+  try {
+    seatAt(st, c, false);
+  } catch (e) {
+    if (!/no cord/.test(e.message)) throw e;
+    st.dropTaken = snap.dropTaken;
+    st.placed.length = snap.placed;
+    st.strings = snap.strings;
+    for (const [o, r] of snap.rings) if (r) o.rings = r; else delete o.rings;
+    seatAt(st, c, true);
+  }
+}
+function seatAt(st, c, wide) {
+  const best = candidatesOf(st, c, wide).map((cand) => ({ cand, s: scoreOf(st, c, cand) })).sort((p, q) => p.s.reduce((d, v, k) => d || v - q.s[k], 0))[0].cand;
   const part = { ...best.r, z0: heightAt(st, c, best), h: c.courses * CRS, consumer: c, drops: [], straddle: best.straddle };
   for (const [b, s] of best.seats) {
     st.dropTaken.add(`${b.n}:${s.key}`);
@@ -448,7 +466,7 @@ ${tagAt(x + 30, mid, c)}
 ${fig.at(x + 58 + (40 - fig.w) / 2, mid - fig.h / 2)}
 ${txt(x + 112, mid - 9, c.name, 'lbl')}
 ${txt(x + 112, mid + 4, `${c.kindWord} · ${shapeName(c.shape)} · ${plural(c.courses, 'course')}`, 'lblf')}
-${txt(x + 112, mid + 16, `${pinsWord(c)}${c.anchor ? ` · on ${c.anchor.n}` : ''}`, 'lblf')}
+${txt(x + 112, mid + 16, `${pinsWord(c)}${c.anchor ? ` · on ${seatOf(c).n}` : ''}`, 'lblf')}
 </g>`);
     cy += rh;
   }
@@ -518,14 +536,18 @@ const TALLEST = [...CONSUMERS].sort((a, b) => b.courses - a.courses)[0];
 const UNPINNED = CARRY.filter((x) => !x.by.length).map((x) => x.b);
 const CAB = CONS.totals, ALL = CONS.withAtlas.totals;
 const ON_ANCHOR = (b) => CONSUMERS.filter((c) => c.anchor === b);
+// the part a consumer drops onto: its heaviest pin, unless a straddle or a clear cord seats it on another
+const seatOf = (c) => (c.seatedOn && !c.seatedOn.includes(c.anchor) ? c.seatedOn[0] : c.anchor);
 // the notes name lit-ui-router the hub, and every consumer that pins it hovers over it
 if (HUB.b.name !== 'lit-ui-router' || ON_ANCHOR(HUB.b).length !== HUB.by.length || HUB.by.length * 2 <= CONSUMERS.length) throw new Error(`sheet 2E: the notes call lit-ui-router the hub its ${HUB.by.length} consumers hover over, but the plate says otherwise`);
-const OFF_HUB = BUILD_MODELS.filter((m) => !CONSUMERS.some((c) => c.model === m && c.anchor === HUB.b));
+// read once the panels seat: the builds with no consumer on the hub, and the hub's consumers seated elsewhere
+const OFF_HUB = () => BUILD_MODELS.filter((m) => !CONSUMERS.some((c) => c.model === m && seatOf(c) === HUB.b));
+const OFF_SEAT = () => HUB.by.filter((c) => seatOf(c) !== HUB.b);
 if (HEAVIEST !== ATLAS_C) throw new Error(`sheet 2E: the notes call the atlas app the heaviest consumer, but ${HEAVIEST.name} is`);
 const kindCount = (cs) => listOf(KIND_RANK.map((k) => [k, cs.filter((c) => c.kind === k).length]).filter(([, n]) => n).map(([k, n]) => `${WORD[n]} ${KIND[k][1]}${n > 1 ? 's' : ''} (${KIND[k][0]})`));
 
 // ---- compose the booklet ----
-const SCALE_LINE = `SCALE — sheet 2’s mould for every brick: 1 stud per ${SLOC_PER_STUD} sloc rounded up to the next standard shape, a course per ${FILES_PER_COURSE} authored files · a consumer hovers over the heaviest part it pins, on a level of its own`;
+const SCALE_LINE = `SCALE — sheet 2’s mould for every brick: 1 stud per ${SLOC_PER_STUD} sloc rounded up to the next standard shape, a course per ${FILES_PER_COURSE} authored files · a consumer hovers over the heaviest part it pins where its cords run clear from there, on a level of its own`;
 const ACCENT_LINE = 'accent marks a consumer’s pin: a drop onto the part it hovers over, a cord to each other part it pins, the ringed stud at each end · consumers are drawn plain, the atlas app edged in accent';
 const ALL_MARKS = [];
 let ART = '', VW = 1480, ART_BOTTOM = 0, ARIA_BODY = '', CORDS = [];
@@ -536,7 +558,7 @@ let ART = '', VW = 1480, ART_BOTTOM = 0, ARIA_BODY = '', CORDS = [];
   const heads = (pn) => {
     const m = pn.model, cs = pn.consumers;
     if (!m) return [['NO BUILD', 'lblt'], [`${plural(cs.length, 'consumer')} · ${kindCount(cs)}`, 'lblf'], ['pins no family part: on the ground', 'lblf']];
-    const anchors = [...new Set(cs.map((c) => c.anchor.n))];
+    const anchors = [...new Set(cs.map((c) => seatOf(c).n))];
     return [[`BUILD ${m.numeral} · ${m.name.toUpperCase()}`, m.atlas ? 'lbla' : 'lblt'], [`${plural(cs.length, 'consumer')} · ${kindCount(cs)}`, 'lblf'],
       [`${m.atlas ? `${m.words} · ` : ''}seated on brick ${listOf(anchors)}`, 'lblf']];
   };
@@ -621,7 +643,7 @@ ${schedule}
 </svg>`;
 
 export const sheet2e = {
-  num: '2E', id: 'companions-consumers', rev: 'B',
+  num: '2E', id: 'companions-consumers', rev: 'C',
   title: 'THE CONSUMER BUILDS',
   sub: `ALTITUDE 2 — SIBLING PLATE, THE CONSUMERS: the ${WORD[CAB.consumers]} consumers in the cabinet’s tree and the atlas’s own app as bricks at sheet 2’s mould, each seated on the family parts it pins · rows read census-consumers.json, both readings, @ ${CONS.sha}`,
   scale: SHEET2E_SCALE,
@@ -630,8 +652,8 @@ export const sheet2e = {
   caption: `The repository's own consumers drawn as bricks on the family they pin. ${Cap(WORD[HUB.by.length])} of ${WORD[CONSUMERS.length]} pin ${HUB.b.name}, brick ${HUB.b.n}; ${listOf(BARE.map((c) => c.name))} pins no family part; the atlas app, on its own branch, is the heaviest at ${plural(HEAVIEST.studs, 'stud')}.`,
   notes: `
 <p><strong>Up from the family.</strong> Sheet 2 seats the family on <code>@uirouter/core</code>; sheet 2C goes down to the runtimes the family peers. This plate goes up: the sample apps, the docs site, the embedded examples and the atlas's own app, each massed at sheet 2's mould from its authored source — the city ruler's files under its <code>src/</code> (the docs site's <code>.vitepress/</code>, <code>worker/</code> and <code>src/</code>), specs aside — and seated on the parts its manifest pins.</p>
-<p><strong>One hub.</strong> ${Cap(WORD[HUB.by.length])} of the ${WORD[CONSUMERS.length]} consumers pin ${npmLink(HUB.b.name)}, and every one of them hovers over it, since it is the heaviest part each pins: the builds split the ${WORD[HUB.by.length]} into their panels, and every build but ${listOf(OFF_HUB.map((m) => m.name.toUpperCase()))} stands its consumers on brick ${HUB.b.n}. Of the other parts, ${listOf(CARRY.filter((x) => x.by.length && x !== HUB).map((x) => `${x.b.name} is pinned by ${WORD[x.by.length]}`))}${UNPINNED.length ? `, and ${listOf(UNPINNED.map((b) => b.name))} by none` : ''}.</p>
-<p><strong>Cords.</strong> A consumer seats on the heaviest part it pins and reaches each other part by a string with end studs, a 1×1 round plate at either end and a cord between. Every consumer hovers, so a string hangs from a free stud of its underside where the cord drops clear, and otherwise leaves a ringed stud of its top; the far plate seats on a ringed stud of the pinned part. The sheet draws ${plural(CORDS.length, 'cord')}, one for every pin past a consumer's seat: ${WORD[HUNG.length]} hang, ${WORD[CORDS.length - HUNG.length]} ${CORDS.length - HUNG.length === 1 ? 'leaves' : 'leave'} the top${WOUND.length ? `, and where no straight cord passes every mass above or in front of it the string bends and winds round what stands in its way, as ${WORD[WOUND.length]} do — ${listOf(WOUND.map((t) => `${t.part.consumer.name} to brick ${t.b.n}`))}` : ''}.${SHARED_CAPS.length ? ` ${Cap(listOf(SHARED_CAPS.map((x) => `brick ${x.n}`)))} ${SHARED_CAPS.length === 1 ? 'has' : 'have'} fewer free studs than cords to take, so two cords share one round plate there.` : ''}</p>
+<p><strong>One hub.</strong> ${Cap(WORD[HUB.by.length])} of the ${WORD[CONSUMERS.length]} consumers pin ${npmLink(HUB.b.name)}, ${OFF_SEAT().length ? `it is the heaviest part each pins, and ${WORD[HUB.by.length - OFF_SEAT().length]} of them hover over it; ${listOf(OFF_SEAT().map((c) => `${c.name} hovers over brick ${seatOf(c).n}, ${seatOf(c).name}, since from over brick ${HUB.b.n} no cord to it runs clear`))}` : 'and every one of them hovers over it, since it is the heaviest part each pins'}: the builds split the ${WORD[HUB.by.length]} into their panels, and every build but ${listOf(OFF_HUB().map((m) => m.name.toUpperCase()))} stands its consumers on brick ${HUB.b.n}. Of the other parts, ${listOf(CARRY.filter((x) => x.by.length && x !== HUB).map((x) => `${x.b.name} is pinned by ${WORD[x.by.length]}`))}${UNPINNED.length ? `, and ${listOf(UNPINNED.map((b) => b.name))} by none` : ''}.</p>
+<p><strong>Cords.</strong> A consumer seats on the heaviest part it pins — or, where no cord runs clear from over it, on the pinned part that lets every cord run — and reaches each other part by a string with end studs, a 1×1 round plate at either end and a cord between. Every consumer hovers, so a string hangs from a free stud of its underside where the cord drops clear, and otherwise leaves a ringed stud of its top; the far plate seats on a ringed stud of the pinned part. The sheet draws ${plural(CORDS.length, 'cord')}, one for every pin past a consumer's seat: ${WORD[HUNG.length]} hang, ${WORD[CORDS.length - HUNG.length]} ${CORDS.length - HUNG.length === 1 ? 'leaves' : 'leave'} the top${WOUND.length ? `, and where no straight cord passes every mass above or in front of it the string bends and winds round what stands in its way, as ${WORD[WOUND.length]} do — ${listOf(WOUND.map((t) => `${t.part.consumer.name} to brick ${t.b.n}`))}` : ''}.${SHARED_CAPS.length ? ` ${Cap(listOf(SHARED_CAPS.map((x) => `brick ${x.n}`)))} ${SHARED_CAPS.length === 1 ? 'has' : 'have'} fewer free studs than cords to take, so two cords share one round plate there.` : ''}</p>
 <p><strong>The examples are thin.</strong> An embedded example is a file or two under <code>examples/&lt;key&gt;/src/</code>, so most mould a single course; ${TALLEST.name}, at ${plural(TALLEST.files, 'file')}, stands ${plural(TALLEST.courses, 'course')} tall.</p>`,
   key: [
     keyRow('<polygon points="4,12 16,5 30,12 30,16 16,9 4,16" class="sk fp"/><ellipse cx="10" cy="8" rx="4" ry="2.3" class="sk fp2"/><ellipse cx="24" cy="8" rx="4" ry="2.3" class="sk fp2"/>', `a consumer brick, drawn plain — 1 stud per ${SLOC_PER_STUD} sloc, a course per ${FILES_PER_COURSE} authored files`),
@@ -639,7 +661,7 @@ export const sheet2e = {
     keyRow(`<rect x="8" y="1" width="32" height="17" rx="8.5" class="ska fp"/><text x="24" y="13" class="lbla" text-anchor="middle">7 E</text>`, 'a consumer’s tag — its number and kind: S sample app, D docs site, E example, A atlas app'),
     keyRow('<circle cx="24" cy="9" r="8" class="sk fp"/><text x="24" y="12.5" class="lbl" text-anchor="middle">1</text>', 'a family brick in its sheet 2 hue, numbered as on sheet 2'),
     keyRow('<ellipse cx="24" cy="9" rx="6" ry="3.5" class="ska fp"/><ellipse cx="24" cy="9" rx="11" ry="6.5" class="ska fnone"/>', 'a ringed stud — a consumer’s pin: under its drop, or under a cord’s seated round plate; a hanging plate rings nothing'),
-    keyRow('<line x1="24" y1="2" x2="24" y2="16" class="ska" stroke-dasharray="6 4"/><circle cx="24" cy="16" r="2.2" class="fa"/>', 'drop — the consumer hovers over the heaviest part it pins'),
+    keyRow('<line x1="24" y1="2" x2="24" y2="16" class="ska" stroke-dasharray="6 4"/><circle cx="24" cy="16" r="2.2" class="fa"/>', 'drop — the consumer hovers over the heaviest part it pins, or another where only there its cords run clear'),
     keyRow('<ellipse cx="9" cy="9" rx="7" ry="3.8" class="ska fnone"/><path d="M3,6 L3,9 A6,3.4 0 0 0 15,9 L15,6 Z" class="sk fp2"/><ellipse cx="9" cy="6" rx="6" ry="3.4" class="sk fp"/><path d="M6.2,4 L6.2,5.5 A2.8,1.6 0 0 0 11.8,5.5 L11.8,4 Z" class="sk fp2"/><ellipse cx="9" cy="4" rx="2.8" ry="1.6" class="sk fp2"/><ellipse cx="39" cy="12.5" rx="7" ry="3.8" class="ska fnone"/><path d="M33,9.5 L33,12.5 A6,3.4 0 0 0 45,12.5 L45,9.5 Z" class="sk fp2"/><ellipse cx="39" cy="9.5" rx="6" ry="3.4" class="sk fp"/><path d="M36.2,7.5 L36.2,9 A2.8,1.6 0 0 0 41.8,9 L41.8,7.5 Z" class="sk fp2"/><ellipse cx="39" cy="7.5" rx="2.8" ry="1.6" class="sk fp2"/><path d="M9,3.4 Q26,3.4 39,6.9 M9,4.8 Q26,4.8 39,8.3 M14,3.5 L15,5 M19,3.8 L20,5.3 M24,4.2 L25,5.7 M29,4.8 L30,6.3 M34,5.8 L35,7.3" class="sk fnone" style="stroke-width:0.7"/>', 'a string with end studs — two 1×1 round plates joined by a cord, a coupling a footprint cannot make, drawn to fit and not massed: one plate hanging from the consumer’s underside or seated on a ringed stud of its top, the other on a ringed stud of each other part it pins; a cap seats on a stud or hangs from a brick’s underside'),
     keyRow('<polygon points="4,8 16,2 44,9 44,15 16,8 4,14" class="sk fp"/>', 'ground — not massed'),
   ].join('\n'),

@@ -1,38 +1,38 @@
 {
   "ref": "origin/main",
-  "sha": "85e0ce5c",
-  "commitDate": "2026-10-24T08:56:16-07:00",
-  "generatedAtTime": "2026-10-24T16:17:57.718Z",
+  "sha": "b499e2a5",
+  "commitDate": "2026-10-27T22:30:20-07:00",
+  "generatedAtTime": "2026-10-28T05:51:51.734Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-bundle.mjs",
-  "used": "git archive origin/main @ 85e0ce5c + pnpm install --frozen-lockfile --silent (mise-provisioned pnpm) + turbo run build + vite build (JS API)",
+  "used": "git archive origin/main @ b499e2a5 + pnpm install --frozen-lockfile --silent (mise-provisioned pnpm) + turbo run build + vite build (JS API)",
   "wasAssociatedWith": [
     "pnpm (mise-provisioned)",
     "turbo",
-    "vite 8.3.4"
+    "vite 8.3.5"
   ],
   "app": "apps/sample-app-lit-vanilla",
   "method": "generateBundle: module renderedLength scaled by its chunk gz/rendered ratio",
   "totals": {
     "chunks": 17,
-    "kept": 696496,
-    "emitted": 387382,
-    "gz": 125784
+    "kept": 693315,
+    "emitted": 389071,
+    "gz": 126332
   },
   "otherIds": [],
   "rows": [
-    {"group":"@uirouter/core","rendered":179874,"estGz":26636,"modules":64},
-    {"group":"@uirouter/visualizer","rendered":119642,"estGz":24744,"modules":1},
-    {"group":"lodash-es","rendered":67512,"estGz":7724,"modules":135},
-    {"group":"dompurify","rendered":65475,"estGz":12285,"modules":1},
-    {"group":"sample-app-shared","rendered":63517,"estGz":13443,"modules":40},
-    {"group":"marked","rendered":59561,"estGz":11176,"modules":1},
-    {"group":"lit-ui-router","rendered":38870,"estGz":7358,"modules":16},
-    {"group":"lit","rendered":35005,"estGz":8982,"modules":20},
-    {"group":"@api-viewer","rendered":25302,"estGz":4747,"modules":12},
-    {"group":"router plugins","rendered":21444,"estGz":4290,"modules":5},
-    {"group":"app own src","rendered":11608,"estGz":2441,"modules":8},
-    {"group":"runtime helpers","rendered":5518,"estGz":1275,"modules":4},
-    {"group":"lit-dialog","rendered":2836,"estGz":616,"modules":1},
-    {"group":"sample-app-routes","rendered":332,"estGz":66,"modules":1}
+    {"group":"@uirouter/core","rendered":178594,"estGz":26646,"modules":64},
+    {"group":"@uirouter/visualizer","rendered":119622,"estGz":24734,"modules":1},
+    {"group":"dompurify","rendered":65455,"estGz":12312,"modules":1},
+    {"group":"lodash-es","rendered":64812,"estGz":7698,"modules":135},
+    {"group":"sample-app-shared","rendered":62717,"estGz":13439,"modules":40},
+    {"group":"marked","rendered":59541,"estGz":11200,"modules":1},
+    {"group":"lit-ui-router","rendered":41549,"estGz":7931,"modules":17},
+    {"group":"lit","rendered":34605,"estGz":8953,"modules":20},
+    {"group":"@api-viewer","rendered":25062,"estGz":4714,"modules":12},
+    {"group":"router plugins","rendered":21344,"estGz":4309,"modules":5},
+    {"group":"app own src","rendered":11448,"estGz":2447,"modules":8},
+    {"group":"runtime helpers","rendered":5438,"estGz":1269,"modules":4},
+    {"group":"lit-dialog","rendered":2816,"estGz":617,"modules":1},
+    {"group":"sample-app-routes","rendered":312,"estGz":63,"modules":1}
   ]
 }

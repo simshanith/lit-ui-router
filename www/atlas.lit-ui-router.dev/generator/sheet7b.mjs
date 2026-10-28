@@ -386,11 +386,11 @@ ${districts}
 ${bodies}
 
 <!-- district lettering -->
-<!-- east off 772: the flagship's roof reaches x 780 at the third line -->
-${txt(786, 74, 'packages/ — THE PRODUCT LINE', 'lblb')}
-${txt(786, 87, `all metered lamps lit (90–100% light) · ${dsteam('pkg')} commits/90d`, 'lblf')}
-${txt(786, 99, `the lint plugin stands at rust ${RUST_T[g(31).rust]}, fully metered — ${g(31).lamps} lamps (${g(31).eff}% lit)`, 'lblf')}
-<line x1="780" y1="90" x2="742" y2="168" class="skf"/>
+<!-- east off 772, then 786 at the b499e2a5 refresh: the server's cap reaches x 788 at the third line -->
+${txt(794, 74, 'packages/ — THE PRODUCT LINE', 'lblb')}
+${txt(794, 87, `all metered lamps lit (90–100% light) · ${dsteam('pkg')} commits/90d`, 'lblf')}
+${txt(794, 99, `the lint plugin stands at rust ${RUST_T[g(31).rust]}, fully metered — ${g(31).lamps} lamps (${g(31).eff}% lit)`, 'lblf')}
+<line x1="788" y1="90" x2="742" y2="168" class="skf"/>
 
 ${txt(1540, 388, 'apps/ — THE PROVING GROUND', 'lblb', 'end')}
 ${txt(1540, 401, `${dsteam('app')} commits/90d · accent lamps: real e2e light,`, 'lblf', 'end')}

@@ -18,11 +18,12 @@ const peerRows = couplings.rows.filter((r) => r.kind === 'peer' && family.has(r.
 const runtimes = new Set(peerRows.filter((r) => !family.has(r.to)).map((r) => r.to));
 if (!family.size || !runtimes.size) throw new Error('census-builds: census-couplings.json has no published nodes or no external peers');
 const peersOf = (part) => peerRows.filter((r) => r.from === part).map((r) => r.to);
-// a pinned set closed over family-to-family peers: what the consumer's package manager installs
+// a pinned set closed over required family-to-family peers: what the consumer's package manager installs
+const requiredFamilyPeersOf = (part) => peerRows.filter((r) => r.from === part && !r.optional && family.has(r.to)).map((r) => r.to);
 const close = (pinned) => {
   const seen = new Set(pinned);
   const queue = [...pinned];
-  while (queue.length) for (const p of peersOf(queue.shift())) if (family.has(p) && !seen.has(p)) { seen.add(p); queue.push(p); }
+  while (queue.length) for (const p of requiredFamilyPeersOf(queue.shift())) if (!seen.has(p)) { seen.add(p); queue.push(p); }
   return [...seen].sort();
 };
 const runtimePeers = (parts) => [...new Set(parts.flatMap(peersOf).filter((p) => runtimes.has(p)))].sort();
