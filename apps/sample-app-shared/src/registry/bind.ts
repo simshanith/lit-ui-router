@@ -79,10 +79,17 @@ type OutsideTable<T extends readonly TableRow[]> = {
   [N in Exclude<SampleAppStateName, T[number]['name']>]?: never;
 };
 
+// Every row but a future state's must be bound, so the client registers each state the server serves.
+type EveryRow<T extends readonly TableRow[]> = {
+  [N in Exclude<T[number]['name'], `${string}.**`>]: N extends keyof BindingMap
+    ? BindingMap[N]
+    : never;
+};
+
 /** A module's table rows for each named state, with their bindings applied. */
 export function bindStates<const T extends readonly TableRow[]>(
   table: T,
-  bindings: NoInfer<Partial<BindingMap> & OutsideTable<T>>,
+  bindings: NoInfer<Partial<BindingMap> & OutsideTable<T> & EveryRow<T>>,
 ): BoundState<SampleAppStateName>[] {
   // SAFETY: Partial<BindingMap>'s keys are state names
   const names = Object.keys(bindings) as SampleAppStateName[];
