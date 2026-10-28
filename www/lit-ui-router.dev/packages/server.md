@@ -143,8 +143,11 @@ const app: MountConfig = {
 export const mounts: Record<string, MountConfig> = { '/app': app };
 ```
 
-Dotted names nest and urls append, exactly as states do in the router:
-`contacts.contact` folds to `/contacts/:contactId`.
+Urls append along each state's parent, exactly as states do in the router:
+the parent is the state's `parent:`, otherwise its name minus the last dotted
+segment. `contacts.contact` folds to `/contacts/:contactId`, and
+`{ name: 'contactHelp', parent: 'contacts', url: '/help' }` to
+`/contacts/help`.
 
 Then compile the mounts once and resolve pathnames against them:
 
