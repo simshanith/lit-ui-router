@@ -59,6 +59,9 @@ jobs:
     # Ref restriction, not an approval gate: the deployment branch policy
     # admits only main and the release tag globs.
     environment: publish
+    outputs:
+      # Empty on a dry run, so release signals compares no digest.
+      release: ${{ !inputs.dryRun && format('{0}@{1}', steps.info.outputs.package_name, steps.publish.outputs.version) || '' }}
     permissions:
       id-token: write # Required for OIDC trusted publishing to NPM
       contents: write # Required for creating GitHub releases
@@ -161,7 +164,11 @@ jobs:
     permissions:
       checks: write
       contents: read
+      # The called ledger job reads the release ledger with its OIDC id-token.
+      id-token: write
     uses: ./.github/workflows/release-signals.yml
+    with:
+      release: ${{ needs.publish_npm.outputs.release }}
     secrets:
       TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
       TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}

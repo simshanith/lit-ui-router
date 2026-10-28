@@ -182,7 +182,7 @@ for good, and test or canary publishes stay as evidence rather than cleanup.
 
 ### 5. Release signals (`release-signals.yml`)
 
-**Triggers:** Pushes to `main`; called by Publish to NPM after a publish; manual dispatch
+**Triggers:** Pushes to `main`; called by Publish to NPM after a publish; a weekly schedule; manual dispatch
 
 [Actions ▸ Release signals ▸ **Run workflow**](https://github.com/simshanith/lit-ui-router/actions/workflows/release-signals.yml)
 
@@ -201,6 +201,15 @@ effect, `publishedPeerSignals` and `peerFloorSignals` for signals, and
 These run in the `release signals (npm)` job. A separate `release signals (cloudflare)`
 job posts the `workers-builds (triggers)` and `pages-deploy (altitude-atlas)` check runs
 ([`www/DEPLOY.md`](../www/DEPLOY.md)), so a failure in one job never skips the other.
+
+A third job, `release signals (ledger)`, posts the `release-ledger` check run. It
+reads the release ledger's `GET /ledger` with its OIDC id-token
+([`www/release-ledger.lit-ui-router.dev`](../www/release-ledger.lit-ui-router.dev/README.md))
+and compares every version against GitHub's tags and releases and npm. It only
+reports: `action_required` when a source disagrees with the ledger or a step lags
+past an hour, `neutral` when a source can't be read. A deprecation is a note in
+the summary. On the post-publish call it also compares the new release's `.tgz`
+asset with npm's tarball.
 
 `eslint-plugin-lit-ui-router` has no check run: its floor is a published eslint,
 so `test:peer-floor` runs its rule suite on the `eslint-floor` alias in every PR.
