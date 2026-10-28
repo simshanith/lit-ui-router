@@ -29,7 +29,8 @@ export const signalsId: number | undefined = signalsRoute.includes('item')
 
 const effectRoute = Effect.runSync(SubscriptionRef.get(routeRef(router)));
 
-export const effectName: 'item' | 'item.edit' | undefined =
+// `item.edit.help` is a `RegisteredStates` row under `Register`'s `item.edit`.
+export const effectName: 'item' | 'item.edit' | 'item.edit.help' | undefined =
   effectRoute.includes('item') ? effectRoute.current.name : undefined;
 
 const store = RouterStore.for(router);
