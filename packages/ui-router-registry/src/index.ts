@@ -1,4 +1,6 @@
 export type {
+  AssertNoCollisions,
+  CollisionsOf,
   LineageOf,
   ParamArgs,
   ParamsOf,

@@ -2,6 +2,7 @@ import { Effect, SubscriptionRef } from 'effect';
 import { UIRouter } from '@uirouter/core';
 import { routeRef } from 'ui-router-effect';
 import { RouterStore } from 'ui-router-mobx';
+import type { AssertNoCollisions, StatesOf } from 'ui-router-registry';
 import type {} from 'ui-router-registry/effect';
 import type {} from 'ui-router-registry/mobx';
 import type {} from 'ui-router-registry/signals';
@@ -18,6 +19,22 @@ declare module 'ui-router-registry' {
     states: (typeof states)[number];
   }
 }
+
+declare const accountStates: readonly [
+  { readonly name: 'account'; readonly url: '/account' },
+];
+
+declare module 'ui-router-registry' {
+  // oxlint-disable-next-line typescript/no-empty-interface, typescript/no-empty-object-type -- the members come from StatesOf
+  interface RegisteredStates extends StatesOf<typeof accountStates> {}
+}
+
+export type AccountStates = AssertNoCollisions<typeof accountStates>;
+
+export type StaleAccountStates = AssertNoCollisions<
+  // @ts-expect-error a second row under a registered name collides
+  readonly [{ readonly name: 'account'; readonly url: '/me' }]
+>;
 
 const router = new UIRouter();
 

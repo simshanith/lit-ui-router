@@ -60,6 +60,55 @@ export type StatesOf<
   [R in T[number] as NameKey<R>]: R;
 };
 
+// A row's name, unless the row is the one registered under it.
+type Collision<R> = R extends unknown
+  ? NameKey<R> extends infer N extends keyof RegisteredStates
+    ? [R, RegisteredStates[N]] extends [RegisteredStates[N], R]
+      ? never
+      : N
+    : NameKey<R>
+  : never;
+
+/**
+ * The names in `T` whose rows aren't the ones registered under them; `never`
+ * when every row in `T` is. A table that never augmented
+ * {@link RegisteredStates} collides on every name. {@link AssertNoCollisions}
+ * asserts it.
+ */
+export type CollisionsOf<
+  T extends readonly {
+    /** The state's name, or `Function.name` for a class-declared state. */
+    name: string;
+  }[],
+> = Collision<T[number]>;
+
+/**
+ * `T` itself, when every row in it is the one registered under its name.
+ * Two modules that register one name with different rows keep only the first,
+ * and on TypeScript 5 `skipLibCheck` hides the error, so a module can assert
+ * its table where it registers it:
+ *
+ * ```ts
+ * export type ContactsStates = AssertNoCollisions<typeof contactsStates>;
+ * ```
+ *
+ * A row that collides fails the constraint at that line, keyed
+ * `'not the row registered under'` with the state's name.
+ */
+export type AssertNoCollisions<
+  T extends readonly {
+    /** The state's name, or `Function.name` for a class-declared state. */
+    name: string;
+  }[] & {
+    readonly [I in keyof T]: [Collision<T[I]>] extends [never]
+      ? T[I]
+      : {
+          /** The name the row collides on. */
+          readonly 'not the row registered under': Collision<T[I]>;
+        };
+  },
+> = T;
+
 /**
  * The app's state declarations at one augmentation site, read alongside
  * {@link RegisteredStates}:

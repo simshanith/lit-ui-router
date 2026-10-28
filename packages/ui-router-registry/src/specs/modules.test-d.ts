@@ -2,6 +2,8 @@
 // alongside `registry.test-d.ts`' `Register`. `tsc --noEmit` is the assertion;
 // nothing runs this file.
 import type {
+  AssertNoCollisions,
+  CollisionsOf,
   RegisteredStates,
   ResolvedParamsOf,
   StateName,
@@ -78,37 +80,43 @@ void widened.anything;
 
 // -- collisions ---------------------------------------------------------------
 
-// The names in T whose rows aren't the ones registered under them.
-type Collisions<T extends readonly { name: string }[]> = {
-  [K in keyof StatesOf<T>]: K extends keyof RegisteredStates
-    ? [StatesOf<T>[K], RegisteredStates[K]] extends [
-        RegisteredStates[K],
-        StatesOf<T>[K],
-      ]
-      ? never
-      : K
-    : K;
-}[keyof StatesOf<T>];
+// The admin module's class-declared and future-state rows are the registered ones.
+export type AdminStates = AssertNoCollisions<typeof adminStates>;
 
-declare function noCollisions<T extends readonly { name: string }[]>(
-  ...ok: [Collisions<T>] extends [never] ? [] : [collisions: Collisions<T>]
-): void;
+declare const adminCollisions: CollisionsOf<typeof adminStates>;
 
-noCollisions<typeof adminStates>();
+accepts<never>(adminCollisions);
 
 declare const conflicting: readonly [
   { readonly name: 'admin.users'; readonly url: '/members' },
   { readonly name: 'admin'; readonly url: '/admin' },
 ];
 
-noCollisions<typeof conflicting>('admin.users');
-
 // @ts-expect-error the conflicting module's row lost
-noCollisions<typeof conflicting>();
+export type ConflictingStates = AssertNoCollisions<typeof conflicting>;
+
+declare const conflictingCollisions: CollisionsOf<typeof conflicting>;
+
+// Its other row is the registered one.
+accepts<'admin.users'>(conflictingCollisions);
+
+accepts<typeof conflictingCollisions>('admin.users');
 
 declare const unregistered: readonly [
   { readonly name: 'billing'; readonly url: '/billing' },
+  { readonly name: 'billing.invoices'; readonly url: '/invoices' },
 ];
 
-// A table that never augmented reads as colliding on every name.
-noCollisions<typeof unregistered>('billing');
+// @ts-expect-error a table that never augmented collides on every name
+export type UnregisteredStates = AssertNoCollisions<typeof unregistered>;
+
+declare const unregisteredCollisions: CollisionsOf<typeof unregistered>;
+
+accepts<'billing' | 'billing.invoices'>(unregisteredCollisions);
+
+accepts<typeof unregisteredCollisions>('billing.invoices');
+
+// A widened name registers no key, so it can't collide.
+export type WidenedStates = AssertNoCollisions<
+  readonly [{ name: string }, (typeof adminStates)[0]]
+>;
