@@ -5,7 +5,8 @@
   "type": "module",
   "exports": {
     ".": "./src/routes.ts",
-    "./shell-mounts": "./src/shellMounts.ts"
+    "./shell-mounts": "./src/shellMounts.ts",
+    "./state-table": "./src/stateTable.ts"
   },
   "scripts": {
     "bench": "node test/routes.bench.ts",

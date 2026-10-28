@@ -277,27 +277,23 @@ on the scan.
 
 A server runtime cannot import the client's state definitions — they import
 components, which register custom elements at module scope. Instead, the
-sample apps project their url-bearing states into pure data
+sample apps keep their state tree's data in one dependency-free table
+([`stateTable.ts`](https://github.com/simshanith/lit-ui-router/blob/main/apps/sample-app-routes/src/stateTable.ts)),
+which the client binds its components and resolves to by state name and the
+server reads as its route table
 ([`sample-app-routes`](https://github.com/simshanith/lit-ui-router/blob/main/apps/sample-app-routes/src/routes.ts)):
 
 ```ts
-export const routes: RouteDeclaration[] = [
-  { name: 'welcome', url: '/welcome' },
-  { name: 'home', url: '/home' },
-  { name: 'login', url: '/login' },
-  { name: 'contacts', url: '/contacts' },
-  { name: 'contacts.contact', url: '/:contactId' },
-  { name: 'contacts.contact.edit', url: '/edit' },
-  { name: 'contacts.new', url: '/new' },
-  { name: 'mymessages', url: '/mymessages' },
-  { name: 'mymessages.compose', url: '/compose' },
-  { name: 'mymessages.messagelist', url: '/:folderId' },
-  { name: 'mymessages.messagelist.message', url: '/:messageId' },
-  { name: 'prefs', url: '/prefs' },
-  // Url-less, as in main/states.ts: structural only — never matched, never a
-  // redirect target — but declarable as an otherwise projection.
-  { name: 'notFound' },
-];
+export const stateTable = [
+  { name: 'app', redirectTo: 'welcome' },
+  { name: 'welcome', parent: 'app', url: '/welcome' },
+  // …
+  { name: 'contacts', parent: 'app', url: '/contacts', resolves: ['contacts'] },
+  { name: 'contacts.contact', url: '/:contactId', resolves: ['contact'] },
+  // …
+] as const;
+
+export const routes: RouteDeclaration[] = [...stateTable];
 ```
 
 Dotted names nest and urls append, exactly as states do in the router:
@@ -321,7 +317,7 @@ export const redirects: RedirectRule[] = [{ pattern: /^\/?$/, to: 'welcome' }];
 const app: MountConfig = { routes, redirects, strategy: 'matcher' };
 ```
 
-Three omissions to copy:
+Two omissions to copy:
 
 - **The client's `otherwise()` rule is a level choice.** The flagships don't
   project it, so unknown paths stay `notFound` verdicts and misses serve the
@@ -335,17 +331,14 @@ Three omissions to copy:
   [`requiresAuth` hook](./route-guards)) — both decided by client state the
   server cannot see. The server serves the shell and lets the client's full
   configuration run.
-- **Param defaults the projection doesn't need.** `RouteDeclaration` accepts
-  `params`, but the client's `folderId: 'inbox'` default only matters once
-  the app is running; `/mymessages` already matches its parent state's
-  pattern. Audit yours.
 
-The projection mirrors the client's states rather than importing them, so it
-can drift; the app pins it with
+The matcher ignores `parent` and nests urls by dotted name, which holds here
+because every `parent` is the url-less `app`; the app pins that, and every
+verdict the worker serves, with
 [contract tests](https://github.com/simshanith/lit-ui-router/blob/main/apps/sample-app-routes/test/routes.test.ts)
-that resolve every verdict the worker will serve — shells, the root redirect,
-real 404s, and the shell-not-redirect verdicts for the client-conditional
-routes — through the real package API.
+that resolve shells, the root redirect, real 404s, and the
+shell-not-redirect verdicts for the client-conditional routes through the
+real package API.
 
 ## The verdict
 

@@ -9,32 +9,26 @@ import type {
   RouteDeclaration,
 } from 'ui-router-server';
 
-// Mirrors the url-bearing states registered in sample-app-shared
-// (src/app/*/states.ts); dotted names nest, urls append.
-export const routes: RouteDeclaration[] = [
-  { name: 'welcome', url: '/welcome' },
-  { name: 'home', url: '/home' },
-  { name: 'login', url: '/login' },
-  { name: 'contacts', url: '/contacts' },
-  { name: 'contacts.contact', url: '/:contactId' },
-  { name: 'contacts.contact.edit', url: '/edit' },
-  { name: 'contacts.new', url: '/new' },
-  { name: 'mymessages', url: '/mymessages' },
-  { name: 'mymessages.compose', url: '/compose' },
-  { name: 'mymessages.messagelist', url: '/:folderId' },
-  { name: 'mymessages.messagelist.message', url: '/:messageId' },
-  { name: 'prefs', url: '/prefs' },
-  // Url-less, as in main/states.ts: structural only — never matched, never a
-  // redirect target — but declarable as an otherwise projection.
-  { name: 'notFound' },
-];
+import { stateTable } from './stateTable.ts';
+
+// The client's own state table: the matcher nests urls by dotted name and
+// ignores `parent`, which holds here because every `parent` is the url-less
+// 'app' (the routes test pins that).
+export const routes: RouteDeclaration[] = [...stateTable];
+
+// MountConfig takes any string; these narrow the mounts' targets to table states.
+type StateName = (typeof stateTable)[number]['name'];
+
+const notFound = { state: 'notFound' } as const satisfies { state: StateName };
 
 // Mirrors router.config.ts: the app root has no state url; a when(/^\/?$/)
 // rule routes it to welcome. Its otherwise() -> notFound rule is deliberately
 // NOT projected for the flagship mounts: unknown paths stay notFound verdicts
 // (the not-found-static pattern) — 404 views stay out of entrance analytics
 // and scanners get a few bytes; shell-at-404 is the /not-found-spa exhibit.
-export const redirects: RedirectRule[] = [{ pattern: /^\/?$/, to: 'welcome' }];
+export const redirects: (RedirectRule & { to: StateName })[] = [
+  { pattern: /^\/?$/, to: 'welcome' },
+];
 
 // 'matcher': the tables above are pure data, so the dependency-free tier
 // suffices. Routing the client decides conditionally (mymessages' DSR
@@ -54,7 +48,7 @@ const app: MountConfig = { routes, redirects, strategy: 'matcher' };
 // mapping: an `otherwise` state is a status'd shell).
 const notFoundSpaDemo: MountConfig = {
   ...app,
-  otherwise: { state: 'notFound' },
+  otherwise: notFound,
 };
 
 // The simulated-routing exhibit: full router semantics server-side — the
@@ -67,7 +61,7 @@ const simulatedRoutingDemo: MountConfig = {
   routes,
   redirects,
   strategy: 'simulate',
-  otherwise: { state: 'notFound' },
+  otherwise: notFound,
   prewarm: 1,
 };
 

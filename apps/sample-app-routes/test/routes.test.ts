@@ -5,6 +5,7 @@ import { createServerRouter, diagnoseMounts } from 'ui-router-server';
 
 import { mounts, routes } from '../src/routes.ts';
 import { shellMounts } from '../src/shellMounts.ts';
+import { stateTable } from '../src/stateTable.ts';
 
 // The app's contract tests: its own tables, resolved through the package
 // API, produce the verdicts the worker will serve. Matching mechanics are
@@ -191,6 +192,24 @@ describe('/simulated-routing verdicts (the simulate-strategy exhibit)', () => {
       mount: '/simulated-routing',
       status: 404,
     });
+  });
+});
+
+describe('the shared state table', () => {
+  it('is the flagship route table', () => {
+    assert.deepEqual(routes, stateTable);
+  });
+
+  it('names only url-less parents, since the matcher nests urls by dotted name', () => {
+    const urlOf = new Map<string, string | undefined>(
+      stateTable.map((row) => [row.name, 'url' in row ? row.url : undefined]),
+    );
+
+    for (const row of stateTable) {
+      if (!('parent' in row)) continue;
+      assert.ok(urlOf.has(row.parent), `${row.name}: unknown parent`);
+      assert.equal(urlOf.get(row.parent), undefined, `${row.name}'s parent`);
+    }
   });
 });
 

@@ -38,6 +38,16 @@ There is no build step: apps consume the TypeScript sources directly via the
 package `exports` (`sample-app-shared/app/...js` resolves to
 `./src/app/....ts`).
 
+## The state table
+
+The states' names, urls, params, parents and resolve tokens live in one
+data-only table, `sample-app-routes/state-table`, which the server mounts
+read as their routes too. Beside it, `src/registry/states.ts` holds the
+types: the `Register` entry each app augments `'ui-router-registry'` with,
+and each resolve token's value type. `src/registry/bind.ts` binds
+components, resolve functions and client-only config to the table by state
+name, and checks each component against the resolves its state provides.
+
 ## Adding to the shared surface
 
 If a module is identical in both apps, move it here and keep relative

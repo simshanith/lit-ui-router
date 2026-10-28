@@ -1,72 +1,11 @@
 import { Transition } from '@uirouter/core';
-import { LitStateDeclaration } from 'lit-ui-router';
 
 import { App } from '../global/appModules.js';
+import { bindStates, futureState } from '../../registry/bind.js';
 import Welcome from '../main/Welcome.js';
 import Login from '../main/Login.js';
 import Home from '../main/Home.js';
 import NotFound from '../main/NotFound.js';
-
-/**
- * This is the parent state for the entire application.
- *
- * This state's primary purposes are:
- * 1) Shows the outermost chrome (including the navigation and logout for authenticated users)
- * 2) Provide a viewport (ui-view) for a substate to plug into
- */
-export class AppState implements LitStateDeclaration {
-  readonly name = 'app';
-  redirectTo = 'welcome';
-  component = App;
-  static __uiRouterState = true;
-}
-
-/**
- * This is the 'welcome' state.  It is the default state (as defined by app.js) if no other state
- * can be matched to the URL.
- */
-const welcomeState = {
-  parent: 'app',
-  name: 'welcome',
-  url: '/welcome',
-  component: Welcome,
-  data: { title: 'Welcome' },
-} as const;
-
-/**
- * This is a home screen for authenticated users.
- *
- * It shows giant buttons which activate their respective submodules: Messages, Contacts, Preferences
- */
-const homeState = {
-  parent: 'app',
-  name: 'home',
-  url: '/home',
-  component: Home,
-  data: { title: 'Home' },
-} as const;
-
-/**
- * This is the login state.  It is activated when the user navigates to /login, or if a unauthenticated
- * user attempts to access a protected state (or substate) which requires authentication. (see routerhooks/requiresAuth.js)
- *
- * It shows a fake login dialog and prompts the user to authenticate.  Once the user authenticates, it then
- * reactivates the state that the user originally came from.
- */
-const loginState = {
-  parent: 'app',
-  name: 'login',
-  url: '/login',
-  component: Login,
-  data: { title: 'Log in' },
-  resolve: [
-    {
-      token: 'returnTo',
-      deps: ['$transition$'],
-      resolveFn: returnTo,
-    },
-  ],
-} as const;
 
 /**
  * A resolve function for 'login' state which figures out what state to return to, after a successful login.
@@ -95,62 +34,69 @@ function returnTo($transition$: Transition) {
 }
 
 /**
- * This is the 404 state. The `urlService.rules.otherwise` rule in
- * router.config.ts targets it when no other URL rule matches — including the
- * future states' wildcard rules below, so lazy loading still wins when a URL
- * matches a future state's prefix.
- *
- * It intentionally declares no `url`: the unmatched URL stays in the address
- * bar (like a server 404) and the state can only be activated by the rule.
+ * The eagerly registered states. Their names, urls, params and parents come
+ * from the shared state table (`sample-app-routes/state-table`); everything
+ * else binds here by name. Built at boot, after the app registers `App`.
  */
-export const notFoundState = {
-  parent: 'app',
-  name: 'notFound',
-  params: { attemptedPath: null },
-  data: { title: 'Page not found' },
-  resolve: [
-    {
-      token: 'attemptedPath',
-      deps: ['$transition$'],
-      resolveFn: ($transition$: Transition) =>
-        // SAFETY: attemptedPath is declared `null` above and only set to a path string
-        $transition$.params().attemptedPath as string | null,
-    },
-  ],
-  component: NotFound,
-} as const;
-
-// Future State (Placeholder) for the contacts module
-export const contactsFutureState = {
-  parent: 'app',
-  name: 'contacts.**',
-  url: '/contacts',
-  lazyLoad: () => import('../contacts/states.js'),
-} as const;
-
-// Future State (Placeholder) for the prefs module
-export const prefsFutureState = {
-  parent: 'app',
-  name: 'prefs.**',
-  url: '/prefs',
-  lazyLoad: () => import('../prefs/states.js'),
-} as const;
-
-// Future State (Placeholder) for the mymessages module
-export const mymessagesFutureState = {
-  parent: 'app',
-  name: 'mymessages.**',
-  url: '/mymessages',
-  lazyLoad: () => import('../mymessages/states.js'),
-} as const;
-
-export default [
-  AppState,
-  welcomeState,
-  homeState,
-  loginState,
-  notFoundState,
-  contactsFutureState,
-  prefsFutureState,
-  mymessagesFutureState,
-];
+export default function appStates() {
+  return [
+    ...bindStates({
+      /**
+       * This is the parent state for the entire application.
+       *
+       * This state's primary purposes are:
+       * 1) Shows the outermost chrome (including the navigation and logout for authenticated users)
+       * 2) Provide a viewport (ui-view) for a substate to plug into
+       */
+      app: { component: App },
+      /**
+       * This is the 'welcome' state.  It is the default state (as defined by app.js) if no other state
+       * can be matched to the URL.
+       */
+      welcome: { component: Welcome, data: { title: 'Welcome' } },
+      /**
+       * This is a home screen for authenticated users.
+       *
+       * It shows giant buttons which activate their respective submodules: Messages, Contacts, Preferences
+       */
+      home: { component: Home, data: { title: 'Home' } },
+      /**
+       * This is the login state.  It is activated when the user navigates to /login, or if a unauthenticated
+       * user attempts to access a protected state (or substate) which requires authentication. (see routerhooks/requiresAuth.js)
+       *
+       * It shows a fake login dialog and prompts the user to authenticate.  Once the user authenticates, it then
+       * reactivates the state that the user originally came from.
+       */
+      login: {
+        component: Login,
+        data: { title: 'Log in' },
+        resolve: { returnTo: { deps: ['$transition$'], resolveFn: returnTo } },
+      },
+      /**
+       * This is the 404 state. The `urlService.rules.otherwise` rule in
+       * router.config.ts targets it when no other URL rule matches — including the
+       * future states' wildcard rules below, so lazy loading still wins when a URL
+       * matches a future state's prefix.
+       *
+       * The table gives it no `url`: the unmatched URL stays in the address
+       * bar (like a server 404) and the state can only be activated by the rule.
+       */
+      notFound: {
+        data: { title: 'Page not found' },
+        resolve: {
+          attemptedPath: {
+            deps: ['$transition$'],
+            resolveFn: ($transition$: Transition) =>
+              // SAFETY: the table declares attemptedPath `null`; the otherwise rule sets a path string
+              $transition$.params().attemptedPath as string | null,
+          },
+        },
+        component: NotFound,
+      },
+    }),
+    // Future State (Placeholder) for each lazily loaded module
+    futureState('contacts', () => import('../contacts/states.js')),
+    futureState('prefs', () => import('../prefs/states.js')),
+    futureState('mymessages', () => import('../mymessages/states.js')),
+  ];
+}

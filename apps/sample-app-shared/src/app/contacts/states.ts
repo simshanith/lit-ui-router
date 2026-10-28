@@ -1,28 +1,18 @@
 import { html } from 'lit';
 import { Transition } from '@uirouter/core';
-import {
-  UIViewInjectedProps,
-  LitStateDeclaration,
-  LitViewDeclarationElement,
-  LitViewDeclarationTemplate,
-} from 'lit-ui-router';
 
 import { ContactsStorage } from '../global/dataSources.js';
+import { bindStates } from '../../registry/bind.js';
+import type { StateResolves } from '../../registry/states.js';
+import type { UIViewInjectedProps } from 'lit-ui-router';
 
 import './Contacts.js';
-import { type ContactsResolves } from './Contacts.js';
-import ContactView, { type ContactViewResolves } from './ContactView.js';
+import ContactView from './ContactView.js';
 import { type Contact } from './interface.js';
 import EditContact from './EditContact.js';
 
 import { dsrRedirectToDefaultFromWithin } from '../util/dsr-default-redirect-within.js';
 
-/**
- * This state displays the contact list.
- * It also provides a nested ui-view (viewport) for child states to fill in.
- *
- * The contacts are fetched using a resolve.
- */
 function contactName(transition: Transition) {
   // SAFETY: only contacts.contact titles with this, and its `contact` resolve yields a Contact
   const { name } = transition.injector().get('contact') as Contact;
@@ -30,93 +20,77 @@ function contactName(transition: Transition) {
   return `${name.first} ${name.last}`;
 }
 
-const contactsState = {
-  parent: 'app', // declares that 'contacts' is a child of 'app'
-  name: 'contacts',
-  url: '/contacts',
-  resolve: [
-    // Resolve all the contacts. The resolved contacts are injected as props into the Contacts component.
-    {
-      token: 'contacts',
-      resolveFn: () => ContactsStorage.all(),
+/** The contacts module's states, bound by name to the shared state table. */
+export const states = bindStates({
+  /**
+   * This state displays the contact list.
+   * It also provides a nested ui-view (viewport) for child states to fill in.
+   *
+   * The contacts are fetched using a resolve.
+   */
+  contacts: {
+    resolve: {
+      // Resolve all the contacts. The resolved contacts are injected as props into the Contacts component.
+      contacts: { resolveFn: () => ContactsStorage.all() },
     },
-  ],
-  data: { requiresAuth: true, title: 'Contacts' },
-  dsr: {
-    default: 'contacts',
-    fn: dsrRedirectToDefaultFromWithin,
-  },
-  sticky: true,
-  views: {
-    contacts: ((props: UIViewInjectedProps<ContactsResolves>) => {
-      return html`<sample-contacts ._uiViewProps=${props}></sample-contacts>`;
-    }) satisfies LitViewDeclarationTemplate<ContactsResolves>,
-  },
-} as const satisfies LitStateDeclaration<ContactsResolves>;
-
-/**
- * This state displays a single contact.
- * The contact to display is fetched using a resolve, based on the `contactId` parameter.
- */
-const viewContactState = {
-  name: 'contacts.contact',
-  url: '/:contactId',
-  resolve: [
-    // Resolve the contact, based on the contactId parameter value.
-    // The resolved contact is provided to the contactComponent's contact binding
-    {
-      token: 'contact',
-      deps: ['$transition$'],
-      resolveFn: async ($transition$: Transition) =>
-        // SAFETY: the untyped SessionStorage fake-REST client resolves a Contact here
-        ContactsStorage.get(
-          $transition$.params().contactId,
-        ) as Promise<Contact>,
+    data: { requiresAuth: true, title: 'Contacts' },
+    dsr: {
+      default: 'contacts',
+      fn: dsrRedirectToDefaultFromWithin,
     },
-  ],
-  data: { title: contactName, analyticsTitle: 'Contact', keepScroll: true },
-  component:
-    ContactView satisfies LitViewDeclarationElement<ContactViewResolves>,
-} as const satisfies LitStateDeclaration<ContactViewResolves>;
-
-/**
- * This state allows a user to edit a contact
- *
- * The contact data to edit is injected from the parent state's resolve.
- *
- * This state uses view targeting to replace the parent ui-view (which would normally be filled
- * by 'contacts.contact') with the edit contact template/controller
- */
-const editContactState = {
-  name: 'contacts.contact.edit',
-  url: '/edit',
-  data: {
-    title: (transition: Transition) => `Edit ${contactName(transition)}`,
-    analyticsTitle: 'Edit contact',
+    sticky: true,
+    views: {
+      contacts: (props: UIViewInjectedProps<StateResolves<'contacts'>>) =>
+        html`<sample-contacts ._uiViewProps=${props}></sample-contacts>`,
+    },
   },
-  views: {
-    // Relatively target the grand-parent-state's $default (unnamed) ui-view
-    // This could also have been written using ui-view@state addressing: $default@contacts
-    // Or, this could also have been written using absolute ui-view addressing: !$default.contacts.$default
-    '^.^.$default': EditContact satisfies LitViewDeclarationElement,
+  /**
+   * This state displays a single contact.
+   * The contact to display is fetched using a resolve, based on the `contactId` parameter.
+   */
+  'contacts.contact': {
+    resolve: {
+      // Resolve the contact, based on the contactId parameter value.
+      // The resolved contact is provided to the contactComponent's contact binding
+      contact: {
+        deps: ['$transition$'],
+        resolveFn: async ($transition$: Transition) =>
+          // SAFETY: the untyped SessionStorage fake-REST client resolves a Contact here
+          ContactsStorage.get(
+            $transition$.params().contactId,
+          ) as Promise<Contact>,
+      },
+    },
+    data: { title: contactName, analyticsTitle: 'Contact', keepScroll: true },
+    component: ContactView,
   },
-} as const satisfies LitStateDeclaration;
-
-/**
- * This state allows a user to create a new contact
- *
- * The contact data to edit is injected into the component from the parent state's resolve.
- */
-const newContactState = {
-  name: 'contacts.new',
-  url: '/new',
-  data: { title: 'New contact' },
-  component: EditContact satisfies LitViewDeclarationElement,
-} as const satisfies LitStateDeclaration;
-
-export const states = [
-  contactsState,
-  viewContactState,
-  editContactState,
-  newContactState,
-];
+  /**
+   * This state allows a user to edit a contact
+   *
+   * The contact data to edit is injected from the parent state's resolve.
+   *
+   * This state uses view targeting to replace the parent ui-view (which would normally be filled
+   * by 'contacts.contact') with the edit contact template/controller
+   */
+  'contacts.contact.edit': {
+    data: {
+      title: (transition: Transition) => `Edit ${contactName(transition)}`,
+      analyticsTitle: 'Edit contact',
+    },
+    views: {
+      // Relatively target the grand-parent-state's $default (unnamed) ui-view
+      // This could also have been written using ui-view@state addressing: $default@contacts
+      // Or, this could also have been written using absolute ui-view addressing: !$default.contacts.$default
+      '^.^.$default': EditContact,
+    },
+  },
+  /**
+   * This state allows a user to create a new contact
+   *
+   * The contact data to edit is injected into the component from the parent state's resolve.
+   */
+  'contacts.new': {
+    data: { title: 'New contact' },
+    component: EditContact,
+  },
+});

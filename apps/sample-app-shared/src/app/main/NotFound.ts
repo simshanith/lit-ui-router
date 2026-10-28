@@ -2,7 +2,7 @@ import { html } from 'lit';
 import { uiSref, UIViewInjectedProps } from 'lit-ui-router';
 
 export interface NotFoundResolves {
-  attemptedPath: string;
+  attemptedPath: string | null;
 }
 
 /**

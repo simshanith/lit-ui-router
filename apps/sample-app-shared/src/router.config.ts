@@ -9,7 +9,7 @@ import {
 import { StickyStatesPlugin } from '@uirouter/sticky-states';
 import { DSRPlugin } from '@uirouter/dsr';
 
-import { UIRouterLit, LitStateDeclaration } from 'lit-ui-router';
+import { UIRouterLit } from 'lit-ui-router';
 import {
   navigationLocationPlugin,
   type NavigationLocationPluginOptions,
@@ -147,10 +147,7 @@ export function configureRouter(router = new UIRouterLit()) {
     }
   });
 
-  appStates.forEach((state) =>
-    // SAFETY: every entry is a state declaration or class; typed resolves only fail to widen to the default
-    stateRegistry.register(state as LitStateDeclaration),
-  );
+  appStates().forEach((state) => stateRegistry.register(state));
 
   // The app root ('' or '/') has no state url. rules.initial() stops matching
   // once a transition has run, so Back to the base href would fall through to
