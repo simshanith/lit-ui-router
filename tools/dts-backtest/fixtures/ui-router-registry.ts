@@ -1,3 +1,4 @@
+import { UIRouter, type StateService } from '@uirouter/core';
 import type {
   ParamsOf,
   ResolvedParamsOf,
@@ -41,3 +42,13 @@ export const id: number | undefined = snapshot.includes('item')
   : undefined;
 
 export const resolved: ResolvedParamsOf<'item'> = { id: 3 };
+
+export const service: StateService = stateService;
+
+export class TypedUIRouter extends UIRouter {
+  declare stateService: TypedStateService;
+}
+
+export const router: UIRouter = new TypedUIRouter();
+
+export const typed: TypedStateService = new UIRouter().stateService;

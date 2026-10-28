@@ -1,6 +1,7 @@
 // `tsc --noEmit` is the assertion, so this file rides typecheck:tsc. Nothing
 // imports it, and its `declare`d values would throw if it ever ran.
-import type { StateDeclaration } from '@uirouter/core';
+import type { StateDeclaration, StateService } from '@uirouter/core';
+import { UIRouter } from '@uirouter/core';
 
 import type {
   ParamsOf,
@@ -225,3 +226,40 @@ if (snapshot.includes('messages')) {
 
 // Globs still answer, without narrowing.
 accepts<boolean>(snapshot.includes('contacts.**'));
+
+// -- assignable to core's types -------------------------------------------------
+
+// An Omit-based view would drop core's private members and fail here.
+accepts<StateService>(stateService);
+
+interface TypedRouter extends UIRouter {
+  stateService: TypedStateService;
+}
+
+declare const typedRouter: TypedRouter;
+
+accepts<UIRouter>(typedRouter);
+
+accepts<TypedStateService>(new UIRouter().stateService);
+
+class TypedUIRouter extends UIRouter {
+  declare stateService: TypedStateService;
+}
+
+declare const typedSubclass: TypedUIRouter;
+
+accepts<UIRouter>(typedSubclass);
+
+void typedRouter.stateService.go('contacts.contact', { contactId: 'c1' });
+
+// @ts-expect-error a misspelled state name through the extended interface
+void typedRouter.stateService.go('contcts');
+
+// @ts-expect-error a missing required param through the extended interface
+void typedRouter.stateService.go('contacts.contact');
+
+// @ts-expect-error a wrong param type through the subclass
+void typedSubclass.stateService.go('contacts.contact', { contactId: 1 });
+
+// @ts-expect-error a misspelled state name through the subclass
+typedSubclass.stateService.href('contcts');
