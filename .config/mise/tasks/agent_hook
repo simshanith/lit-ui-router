@@ -2,6 +2,7 @@
 #MISE description="Opt this checkout's Claude Code sessions into the agent_env SessionStart hook"
 #USAGE flag "--remove" help="Remove the hook instead"
 # Why: docs/CONTRIBUTING.md#agent-shells.
+# shellcheck disable=SC2016 # the hook command and jq programs are literal; jq and the hook shell expand them
 set -eu
 
 # File-based tasks are raw scripts: {{config_root}} does not render here.

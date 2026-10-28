@@ -3,6 +3,7 @@
 #USAGE arg "<file>" help="Env file the agent shell sources before each command, e.g. $CLAUDE_ENV_FILE"
 # Agent harnesses never fire mise's prompt hook; the line stands in for it.
 # Bash builtins only, so no host grep/sed/awk flavor decides the result.
+# shellcheck disable=SC2016 # the line is written verbatim, expanded by the shell that sources it
 set -eu
 
 file="${usage_file:?}"
