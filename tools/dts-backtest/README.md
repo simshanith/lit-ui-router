@@ -11,10 +11,12 @@ of `lit-ui-router`, `lit-ui-router-mobx`,
 `ui-router-navigation-location-plugin`, and `ui-router-server` — under a
 matrix of:
 
-- **TypeScript versions**: the pinned floor (`typescript-5.0` → 5.0.4) and
-  the repo's current catalog version. The 6.x leg rides the shared
-  `typescript6` catalog (also vue-check's, for Volar), so bumping that
-  catalog bumps both consumers deliberately.
+- **TypeScript versions**: the classic-API legs in `API_VERSIONS` and the
+  native TypeScript 7 leg in `NATIVE_VERSION` (`run.ts`), each a pinned
+  `typescript-*` devDependency alias in `package.json`, so no leg tracks the
+  repo's own `typescript`. The first classic leg is the consumer floor. The
+  6.x leg rides the shared `typescript6` catalog (also vue-check's, for
+  Volar), so bumping that catalog bumps both consumers deliberately.
 - **module resolution modes**: `bundler` and `NodeNext`
 
 A module augmentation reaches the whole program, so the [registered
@@ -74,6 +76,6 @@ see below.
 
 Bumping the supported consumer floor is a semver-major signal for the
 published packages: change the `typescript-5.0` devDependency alias (and
-`VERSIONS` in `run.ts`) and rename accordingly. If the new floor is ≥ 5.4
+`API_VERSIONS` in `run.ts`) and rename accordingly. If the new floor is ≥ 5.4
 the self-test's `NoInfer` probe no longer discriminates — swap it for a
 construct the new floor still rejects.
