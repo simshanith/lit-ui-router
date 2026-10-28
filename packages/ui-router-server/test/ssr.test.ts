@@ -126,6 +126,15 @@ describe('settle', () => {
     });
   });
 
+  it('rejects a url rule loop at the maxRewrites it is given', async () => {
+    const router = makeRouter();
+    router.urlService.rules.when('/ping', '/pong');
+    router.urlService.rules.when('/pong', '/ping');
+    await assert.rejects(settle(router, '/ping', { maxRewrites: 3 }), {
+      message: /rewrote its url more than 3 times/,
+    });
+  });
+
   it('resolves at once on the path the router already stands on', async () => {
     const router = makeRouter();
     const first = await settle(router, '/sheet/7B');

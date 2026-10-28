@@ -21,10 +21,12 @@ export interface SettleOptions {
    * rejecting. Defaults to `10_000`; `0` or `Infinity` waits without a limit.
    */
   timeout?: number;
+  /**
+   * How many times a chain of url rules may rewrite the url to another url
+   * before rejecting. Defaults to `10`.
+   */
+  maxRewrites?: number;
 }
-
-// Bounds a chain of url rules that rewrite the url to another url.
-const maxRewrites = 10;
 
 /**
  * Moves `router` to `path` and resolves once the transition the url starts
@@ -43,11 +45,12 @@ const maxRewrites = 10;
  *
  * @param router - the server router, its location installed with `installServerLocation`
  * @param path - the url to settle on, relative to the mount, query included
- * @param options - how long to wait
+ * @param options - how long to wait, and how many url rewrites to follow
  * @returns the transition that landed
  * @throws an `Error` when no url rule matches `path` and the router declares no `otherwise`
  * @throws an `Error` whose `cause` is the transition's `Rejection` when it fails, a failed resolve's error in that rejection's `detail`
  * @throws an `Error` when nothing lands within {@link SettleOptions.timeout | `timeout`}
+ * @throws an `Error` when url rules rewrite the url more than {@link SettleOptions.maxRewrites | `maxRewrites`} times
  *
  * @example
  * ```ts
@@ -67,7 +70,7 @@ export const settle = (
   path: string,
   options: SettleOptions = {},
 ): Promise<Transition> => {
-  const { timeout = 10_000 } = options;
+  const { timeout = 10_000, maxRewrites = 10 } = options;
   const { globals, stateService, transitionService, urlService } = router;
 
   return new Promise<Transition>((resolve, reject) => {
