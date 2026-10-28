@@ -1,7 +1,7 @@
 /**
- * Binds components, resolve functions and client-only config to the shared
- * state table by state name. Nothing here feeds `Register`, so a component can
- * be typed by its state without a cycle.
+ * Binds components, resolve functions and client-only config to a module's
+ * state table by state name. Nothing here feeds `RegisteredStates`, so a
+ * component can be typed by its state without a cycle.
  */
 import type {
   LazyLoadResult,
@@ -9,13 +9,14 @@ import type {
   StateDeclaration,
 } from '@uirouter/core';
 import type { LitStateDeclaration, UIViewInjectedProps } from 'lit-ui-router';
-import { stateTable } from 'sample-app-routes/state-table';
+import { appTable } from 'sample-app-routes/state-table/app';
 
 import type {
   OwnTokens,
   ResolveValues,
   SampleAppStateName,
   StateResolves,
+  TableRow,
 } from './states.js';
 
 type Props<N extends SampleAppStateName> = UIViewInjectedProps<
@@ -70,25 +71,22 @@ export type BoundState<N extends SampleAppStateName> = LitStateDeclaration & {
   name: N;
 };
 
-const rowOf = (name: SampleAppStateName) => {
-  const row = stateTable.find((entry) => entry.name === name);
-
-  if (!row) throw new Error(`No state '${name}' in the state table`);
-
-  return row;
-};
-
 // Computed once; a generic parameter inferring the names doubled the sample apps' check cost.
 type BindingMap = { [N in SampleAppStateName]: Binding<N> };
 
-/** The table rows for each named state, with their bindings applied. */
+/** A module's table rows for each named state, with their bindings applied. */
 export function bindStates(
+  table: readonly TableRow[],
   bindings: Partial<BindingMap>,
 ): BoundState<SampleAppStateName>[] {
   // SAFETY: Partial<BindingMap>'s keys are state names
   const names = Object.keys(bindings) as SampleAppStateName[];
 
   return names.map((name) => {
+    const row = table.find((entry) => entry.name === name);
+
+    if (!row) throw new Error(`No state '${name}' in the module's table`);
+
     // SAFETY: each key's binding was checked against its own state above
     const { resolve, ...rest } = bindings[name] as Binding<SampleAppStateName>;
 
@@ -96,19 +94,23 @@ export function bindStates(
       ([token, resolver]) => ({ token, ...resolver }),
     );
 
-    const declaration = { ...rowOf(name), ...rest, name, resolve: resolvables };
+    const declaration = { ...row, ...rest, name, resolve: resolvables };
 
     // SAFETY: each component was checked against its state's resolves above, which LitStateDeclaration's default can't express
     return declaration as BoundState<SampleAppStateName>;
   });
 }
 
-/** A future state for `name`'s subtree, at the url the table gives `name`. */
+type FutureRow = Extract<(typeof appTable)[number], { name: `${string}.**` }>;
+
+/** The `app` table's future state `name`, loading its module's states. */
 export function futureState(
-  name: SampleAppStateName,
+  name: FutureRow['name'],
   lazyLoad: () => Promise<LazyLoadResult>,
 ): StateDeclaration {
-  const { parent, url } = { parent: undefined, url: undefined, ...rowOf(name) };
+  const row = appTable.find((entry): entry is FutureRow => entry.name === name);
 
-  return { name: `${name}.**`, parent, url, lazyLoad };
+  if (!row) throw new Error(`No future state '${name}' in the app table`);
+
+  return { ...row, lazyLoad };
 }

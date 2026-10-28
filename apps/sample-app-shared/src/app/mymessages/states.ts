@@ -4,7 +4,11 @@ import MessageListUI from './messageListUIService.js';
 import { Folder, Message } from './interface.js';
 
 import { Compose, MessageList } from '../global/appModules.js';
+import { mymessagesTable } from 'sample-app-routes/state-table/mymessages';
+import type { AssertNoCollisions, StatesOf } from 'ui-router-registry';
+
 import { bindStates } from '../../registry/bind.js';
+import type { RegisteredRows } from '../../registry/states.js';
 import MyMessages from './MyMessages.js';
 import MessageComponent from './Message.js';
 
@@ -20,8 +24,8 @@ function againable<T>(fn: () => T) {
   };
 }
 
-/** The mymessages module's states, bound by name to the shared state table. */
-export const states = bindStates({
+/** The mymessages module's states, bound by name to its table. */
+export const states = bindStates(mymessagesTable, {
   /**
    * This state allows the user to compose a new message, edit a drafted message, send a message,
    * or save an unsent message as a draft.
@@ -128,3 +132,14 @@ export const states = bindStates({
     sticky: true,
   },
 });
+
+// Registered here, not in the table package, which can't name the param types RegisteredRows adds.
+type Rows = RegisteredRows<typeof mymessagesTable>;
+
+declare module 'ui-router-registry' {
+  // oxlint-disable-next-line typescript/no-empty-interface, typescript/no-empty-object-type -- the members come from StatesOf
+  interface RegisteredStates extends StatesOf<Rows> {}
+}
+
+/** The mymessages module's rows, each the one registered under its name. */
+export type MyMessagesStates = AssertNoCollisions<Rows>;

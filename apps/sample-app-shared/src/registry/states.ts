@@ -1,16 +1,30 @@
 /**
- * The types that sit beside the shared state table (`sample-app-routes/state-table`):
- * the `Register` entry the apps augment, and each resolve token's value type.
+ * The types that sit beside the per-module state tables
+ * (`sample-app-routes/state-table/*`): the rows each module registers, and
+ * each resolve token's value type.
  */
 import type { TargetState } from '@uirouter/core';
-import type { stateTable } from 'sample-app-routes/state-table';
+import type { appTable } from 'sample-app-routes/state-table/app';
+import type { contactsTable } from 'sample-app-routes/state-table/contacts';
+import type { mymessagesTable } from 'sample-app-routes/state-table/mymessages';
+import type { prefsTable } from 'sample-app-routes/state-table/prefs';
 
 import type { Contact } from '../app/contacts/interface.js';
 import type { Folder, Message } from '../app/mymessages/interface.js';
 
-type Row = (typeof stateTable)[number];
+/** A row from any module's table. */
+// The subpaths, not the index: the apps' programs reject the index's `.ts` imports.
+export type TableRow = (
+  | typeof appTable
+  | typeof contactsTable
+  | typeof mymessagesTable
+  | typeof prefsTable
+)[number];
 
-/** A state name from the shared table. */
+// A future state is data for the server and the placeholder; nothing binds to it.
+type Row = Exclude<TableRow, { name: `${string}.**` }>;
+
+/** A state name from the shared tables, future states excluded. */
 export type SampleAppStateName = Row['name'];
 
 /** Param value types the runtime-neutral table can't name, by state. */
@@ -22,8 +36,9 @@ type WithParamTypes<R> = R extends { name: infer N extends keyof ParamTypes }
   ? Omit<R, 'params'> & { readonly params: ParamTypes[N] }
   : R;
 
-/** Every state the sample apps register: the shared table, data only. */
-export type SampleAppStates = WithParamTypes<Row>;
+/** A module's table as it registers, with the param types the table can't name. */
+export type RegisteredRows<T extends readonly TableRow[]> =
+  readonly WithParamTypes<T[number]>[];
 
 /** What each resolve token in the table resolves to. */
 export interface ResolveValues {

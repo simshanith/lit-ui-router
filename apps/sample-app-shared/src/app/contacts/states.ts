@@ -2,8 +2,11 @@ import { html } from 'lit';
 import { Transition } from '@uirouter/core';
 
 import { ContactsStorage } from '../global/dataSources.js';
+import { contactsTable } from 'sample-app-routes/state-table/contacts';
+import type { AssertNoCollisions, StatesOf } from 'ui-router-registry';
+
 import { bindStates } from '../../registry/bind.js';
-import type { StateResolves } from '../../registry/states.js';
+import type { RegisteredRows, StateResolves } from '../../registry/states.js';
 import type { UIViewInjectedProps } from 'lit-ui-router';
 
 import './Contacts.js';
@@ -20,8 +23,8 @@ function contactName(transition: Transition) {
   return `${name.first} ${name.last}`;
 }
 
-/** The contacts module's states, bound by name to the shared state table. */
-export const states = bindStates({
+/** The contacts module's states, bound by name to its table. */
+export const states = bindStates(contactsTable, {
   /**
    * This state displays the contact list.
    * It also provides a nested ui-view (viewport) for child states to fill in.
@@ -94,3 +97,14 @@ export const states = bindStates({
     component: EditContact,
   },
 });
+
+// Registered here, not in the table package, which can't name the param types RegisteredRows adds.
+type Rows = RegisteredRows<typeof contactsTable>;
+
+declare module 'ui-router-registry' {
+  // oxlint-disable-next-line typescript/no-empty-interface, typescript/no-empty-object-type -- the members come from StatesOf
+  interface RegisteredStates extends StatesOf<Rows> {}
+}
+
+/** The contacts module's rows, each the one registered under its name. */
+export type ContactsStates = AssertNoCollisions<Rows>;

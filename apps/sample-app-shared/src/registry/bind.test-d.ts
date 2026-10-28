@@ -2,6 +2,9 @@
 import { html } from 'lit';
 import type { UIViewInjectedProps } from 'lit-ui-router';
 
+import { appTable } from 'sample-app-routes/state-table/app';
+import { contactsTable } from 'sample-app-routes/state-table/contacts';
+
 import type { Contact } from '../app/contacts/interface.js';
 import ContactView from '../app/contacts/ContactView.js';
 import { bindStates } from './bind.js';
@@ -11,30 +14,30 @@ declare const contact: Contact;
 
 // -- names: a binding's key is a table state ----------------------------------
 
-bindStates({ welcome: {} });
+bindStates(appTable, { welcome: {} });
 
-bindStates({
+bindStates(appTable, {
   // @ts-expect-error a misspelled state name
   welcom: {},
 });
 
 // -- components: checked by the resolves their state provides -----------------
 
-bindStates({
+bindStates(contactsTable, {
   'contacts.contact': {
     component: ContactView,
     resolve: { contact: { resolveFn: () => contact } },
   },
 });
 
-bindStates({
+bindStates(contactsTable, {
   'contacts.contact.edit': {
     // a child state's views also receive its ancestors' resolves
     component: ContactView,
   },
 });
 
-bindStates({
+bindStates(contactsTable, {
   contacts: {
     // @ts-expect-error a state-typed component on a state without its resolves
     component: ContactView,
@@ -42,7 +45,7 @@ bindStates({
   },
 });
 
-bindStates({
+bindStates(appTable, {
   welcome: {
     // @ts-expect-error a template reading a resolve the state doesn't provide
     component: (props: UIViewInjectedProps<StateResolves<'contacts'>>) =>
@@ -52,19 +55,19 @@ bindStates({
 
 // -- resolves: every token the table names, with its value type ----------------
 
-bindStates({
+bindStates(contactsTable, {
   // @ts-expect-error a missing resolve function for the table's `contacts` token
   contacts: {},
 });
 
-bindStates({
+bindStates(contactsTable, {
   contacts: {
     // @ts-expect-error a resolve function returning the wrong value type
     resolve: { contacts: { resolveFn: () => contact } },
   },
 });
 
-bindStates({
+bindStates(appTable, {
   welcome: {
     // @ts-expect-error a resolve the table doesn't name
     resolve: { contacts: { resolveFn: () => [contact] } },
@@ -73,7 +76,7 @@ bindStates({
 
 // -- table data stays in the table ---------------------------------------------
 
-bindStates({
+bindStates(appTable, {
   // @ts-expect-error a url belongs to the table, not the binding
   welcome: { url: '/hello' },
 });

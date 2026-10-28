@@ -38,15 +38,25 @@ There is no build step: apps consume the TypeScript sources directly via the
 package `exports` (`sample-app-shared/app/...js` resolves to
 `./src/app/....ts`).
 
-## The state table
+## The state tables
 
-The states' names, urls, params, parents and resolve tokens live in one
-data-only table, `sample-app-routes/state-table`, which the server mounts
-read as their routes too. Beside it, `src/registry/states.ts` holds the
-types: the `Register` entry each app augments `'ui-router-registry'` with,
-and each resolve token's value type. `src/registry/bind.ts` binds
-components, resolve functions and client-only config to the table by state
-name, and checks each component against the resolves its state provides.
+The states' names, urls, params, parents and resolve tokens live in
+data-only tables, one per module on its own subpath
+(`sample-app-routes/state-table/app`, `/contacts`, `/mymessages`,
+`/prefs`). The `app` table also holds each lazy module's future state. The
+server mounts read all of them, through `sample-app-routes/state-table`, as
+their routes.
+
+Each `src/app/*/states.ts` binds components, resolve functions and
+client-only config to its own table by state name (`src/registry/bind.ts`),
+so a lazy chunk carries only its own rows. The same file registers the
+table's rows with `'ui-router-registry'` (`RegisteredStates`) and asserts
+they don't collide (`AssertNoCollisions`), so no app augments the registry.
+The registration sits here rather than in the table package because one
+row's param type (`mymessages.compose`'s `Partial<Message>` draft) names a
+domain type the runtime-neutral tables can't import.
+`src/registry/states.ts` holds those param types, each resolve token's
+value type, and the resolves each state's views receive.
 
 ## Adding to the shared surface
 

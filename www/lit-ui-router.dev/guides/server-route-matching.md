@@ -277,23 +277,31 @@ on the scan.
 
 A server runtime cannot import the client's state definitions — they import
 components, which register custom elements at module scope. Instead, the
-sample apps keep their state tree's data in one dependency-free table
-([`stateTable.ts`](https://github.com/simshanith/lit-ui-router/blob/main/apps/sample-app-routes/src/stateTable.ts)),
-which the client binds its components and resolves to by state name and the
-server reads as its route table
+sample apps keep their state tree's data in dependency-free tables, one per
+module
+([`stateTable/`](https://github.com/simshanith/lit-ui-router/tree/main/apps/sample-app-routes/src/stateTable)).
+Each module binds its components and resolves to its own table by state
+name, so a lazy module's rows load with it. The server reads all of them,
+less the future states, as its route table
 ([`sample-app-routes`](https://github.com/simshanith/lit-ui-router/blob/main/apps/sample-app-routes/src/routes.ts)):
 
 ```ts
-export const stateTable = [
-  { name: 'app', redirectTo: 'welcome' },
-  { name: 'welcome', parent: 'app', url: '/welcome' },
-  // …
+export const contactsTable = [
   { name: 'contacts', parent: 'app', url: '/contacts', resolves: ['contacts'] },
   { name: 'contacts.contact', url: '/:contactId', resolves: ['contact'] },
   // …
 ] as const;
 
-export const routes: RouteDeclaration[] = [...stateTable];
+export const stateTable = [
+  ...appTable,
+  ...contactsTable,
+  ...mymessagesTable,
+  ...prefsTable,
+] as const;
+
+export const routes: RouteDeclaration[] = stateTable.filter(
+  (row): row is Extract<Row, { name: StateName }> => !row.name.endsWith('.**'),
+);
 ```
 
 Dotted names nest and urls append, exactly as states do in the router:

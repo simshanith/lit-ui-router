@@ -1,7 +1,11 @@
 import { Transition } from '@uirouter/core';
 
 import { App } from '../global/appModules.js';
+import { appTable } from 'sample-app-routes/state-table/app';
+import type { AssertNoCollisions, StatesOf } from 'ui-router-registry';
+
 import { bindStates, futureState } from '../../registry/bind.js';
+import type { RegisteredRows } from '../../registry/states.js';
 import Welcome from '../main/Welcome.js';
 import Login from '../main/Login.js';
 import Home from '../main/Home.js';
@@ -35,12 +39,12 @@ function returnTo($transition$: Transition) {
 
 /**
  * The eagerly registered states. Their names, urls, params and parents come
- * from the shared state table (`sample-app-routes/state-table`); everything
- * else binds here by name. Built at boot, after the app registers `App`.
+ * from the app table (`sample-app-routes/state-table/app`), as do the future
+ * states'; everything else binds here by name. Built at boot, after the app registers `App`.
  */
 export default function appStates() {
   return [
-    ...bindStates({
+    ...bindStates(appTable, {
       /**
        * This is the parent state for the entire application.
        *
@@ -95,8 +99,19 @@ export default function appStates() {
       },
     }),
     // Future State (Placeholder) for each lazily loaded module
-    futureState('contacts', () => import('../contacts/states.js')),
-    futureState('prefs', () => import('../prefs/states.js')),
-    futureState('mymessages', () => import('../mymessages/states.js')),
+    futureState('contacts.**', () => import('../contacts/states.js')),
+    futureState('prefs.**', () => import('../prefs/states.js')),
+    futureState('mymessages.**', () => import('../mymessages/states.js')),
   ];
 }
+
+// Registered here, not in the table package, which can't name the param types RegisteredRows adds.
+type Rows = RegisteredRows<typeof appTable>;
+
+declare module 'ui-router-registry' {
+  // oxlint-disable-next-line typescript/no-empty-interface, typescript/no-empty-object-type -- the members come from StatesOf
+  interface RegisteredStates extends StatesOf<Rows> {}
+}
+
+/** The app module's rows, each the one registered under its name. */
+export type AppStates = AssertNoCollisions<Rows>;
