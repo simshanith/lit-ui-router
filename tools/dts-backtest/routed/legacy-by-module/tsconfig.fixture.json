@@ -1,0 +1,5 @@
+{
+  // A routed consumer registered per module, LitStateDeclaration, still circular. Its RegisteredStates is its own, so is its program.
+  "extends": "../../tsconfig.fixture.json",
+  "include": ["*.ts"]
+}

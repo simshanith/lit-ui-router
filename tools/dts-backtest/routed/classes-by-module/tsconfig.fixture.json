@@ -1,0 +1,5 @@
+{
+  // Routed consumers, TypedLitStateDeclaration with LitElement classes, registered per module. Its RegisteredStates is its own, so is its program.
+  "extends": "../../tsconfig.fixture.json",
+  "include": ["*.ts"]
+}
