@@ -35,6 +35,9 @@ accepts<StateName>('compose');
 
 accepts<StateName>('about');
 
+// Registered through `RegisteredStates` by a module this file doesn't import.
+accepts<StateName>('admin.users.user');
+
 // @ts-expect-error a misspelled state name
 accepts<StateName>('contcts');
 

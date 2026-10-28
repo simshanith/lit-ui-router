@@ -31,6 +31,7 @@
     "IsRegistered",
     "LineageParams",
     "LiteralName",
+    "NameKey",
     "ParentName",
     "RelativeTail",
     "RequiredKeys",

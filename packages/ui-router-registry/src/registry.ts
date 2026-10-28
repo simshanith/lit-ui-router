@@ -1,9 +1,10 @@
 /**
  * A typed state registry for `@uirouter/core`.
  *
- * An app fills in {@link Register} by module augmentation with its `as const`
- * state declarations; every type here derives state names and params from
- * them. Until an app registers, each type falls back to core's loose
+ * An app fills in {@link RegisteredStates} by module augmentation, one module
+ * at a time, with its `as const` state declarations; every type here derives
+ * state names and params from them; {@link Register} takes them at one site
+ * instead. Until an app registers, each type falls back to core's loose
  * `string` and `RawParams`. Nothing here emits JavaScript.
  */
 /* oxlint-disable typescript/no-redundant-type-constituents -- StateName is `string` until an app registers; the unions are written for the registered case */
@@ -19,8 +20,49 @@ import type {
   StateService,
 } from '@uirouter/core';
 
+// A class-declared state (`static __uiRouterState`) contributes its instance.
+type Declaration<D> = D extends abstract new (...args: never) => infer I
+  ? I
+  : D;
+
+// A widened `string` name would index every string, so it registers no key.
+type NameKey<D> =
+  Declaration<D> extends { name: infer N extends string }
+    ? string extends N
+      ? never
+      : N
+    : never;
+
 /**
- * The app's state declarations, filled in by module augmentation:
+ * The app's state declarations keyed by name, filled in by module
+ * augmentation. Each module registers its own `as const` table, lazy modules
+ * included, and a file that imports none of them still sees every name:
+ *
+ * ```ts
+ * declare module 'ui-router-registry' {
+ *   interface RegisteredStates extends StatesOf<typeof contactsStates> {}
+ * }
+ * ```
+ *
+ * A class-declared state can be registered by hand:
+ * `interface RegisteredStates { about: typeof AboutState }`.
+ */
+// oxlint-disable-next-line typescript/no-empty-interface, typescript/no-empty-object-type -- filled in by module augmentation
+export interface RegisteredStates {}
+
+/** A table of state declarations keyed by name, for {@link RegisteredStates} to extend. */
+export type StatesOf<
+  T extends readonly {
+    /** The state's name, or `Function.name` for a class-declared state. */
+    name: string;
+  }[],
+> = {
+  [R in T[number] as NameKey<R>]: R;
+};
+
+/**
+ * The app's state declarations at one augmentation site, read alongside
+ * {@link RegisteredStates}:
  *
  * ```ts
  * declare module 'ui-router-registry' {
@@ -33,14 +75,11 @@ import type {
 // oxlint-disable-next-line typescript/no-empty-interface, typescript/no-empty-object-type -- filled in by module augmentation
 export interface Register {}
 
-type Registered = Register extends { states: infer S } ? S : never;
+type Registered =
+  | (Register extends { states: infer S } ? S : never)
+  | RegisteredStates[keyof RegisteredStates];
 
 type IsRegistered = [Registered] extends [never] ? false : true;
-
-// A class-declared state (`static __uiRouterState`) contributes its instance.
-type Declaration<D> = D extends abstract new (...args: never) => infer I
-  ? I
-  : D;
 
 type Declarations = Declaration<Registered>;
 
