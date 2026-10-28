@@ -26,10 +26,13 @@ import { createRequire } from 'node:module';
 import { dirname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { createFileSystemLayer } from 'typescript-7/fs';
+
 // The classic (6.x-and-earlier) compiler API. Every API leg is a `typescript`
 // aliased to a fixed version, all sharing this surface, so one namespace types
 // them all. The native 7 leg (checkNative) uses `typescript/sync` instead.
 import type * as TS from 'typescript-5.9';
+import type { RequestFileSystem } from 'typescript-7/proto';
 import type { Diagnostic as NativeDiagnostic } from 'typescript-7/sync';
 
 type ClassicApi = typeof import('typescript-5.9');
@@ -225,7 +228,11 @@ function check(
 
 // TypeScript 7 equivalent of check(). Diagnostics come back as plain objects
 // ({ fileName, pos, end, code, category, text }) rather than ts.Diagnostic.
-async function checkNative(specifier: string, configFile: string) {
+async function checkNative(
+  specifier: string,
+  configFile: string,
+  fileSystem?: RequestFileSystem,
+) {
   // SAFETY: NATIVE_VERSION ships both modules in these shapes
   const [{ API, DiagnosticCategory }, { version }] = (await Promise.all([
     import(`${specifier}/sync`),
@@ -234,7 +241,11 @@ async function checkNative(specifier: string, configFile: string) {
 
   const api = new API({ cwd: here });
   const configPath = resolve(here, configFile);
-  const snapshot = api.createSnapshot({ openProjects: [configPath] });
+
+  const snapshot = api.createSnapshot({
+    openProjects: [configPath],
+    fileSystem,
+  });
 
   try {
     const project = snapshot.getConfiguredProject(configPath);
@@ -386,20 +397,17 @@ const PROBE = 'export type __dtsBacktestProbe = NoInfer<string>;\n';
 const NATIVE_PROBE =
   'export type __dtsBacktestNativeProbe = __NoSuchTypeExists__;\n';
 
-// Under `here` (not os.tmpdir()) so ownsPath() owns the probe diagnostics and
-// relative tsconfig paths resolve; outside this task's turbo `inputs` so the
-// scratch lifecycle never dirties the cache hash.
-async function withProbeFile<T>(
-  probe: string,
-  body: (probePath: string, scratchDir: string) => T | Promise<T>,
-): Promise<T> {
+// Under `here` (not os.tmpdir()) so ownsPath() owns the probe diagnostics;
+// outside this task's turbo `inputs` so the scratch lifecycle never dirties
+// the cache hash.
+function withProbeFile<T>(probe: string, body: (probePath: string) => T): T {
   mkdirSync(join(here, '.probe-scratch'), { recursive: true });
   const scratchDir = mkdtempSync(join(here, '.probe-scratch', 'run-'));
   const probePath = join(scratchDir, 'probe.d.ts');
   writeFileSync(probePath, probe);
 
   try {
-    return await body(probePath, scratchDir);
+    return body(probePath);
   } finally {
     rmSync(scratchDir, { recursive: true, force: true });
   }
@@ -446,22 +454,25 @@ function selftest() {
 }
 
 async function selftestNative() {
-  // The native API takes only a tsconfig; relative `include` paths resolve
-  // against the declaring config, so the scratch dir gets its own.
-  const { version, owned } = await withProbeFile(
-    NATIVE_PROBE,
-    (_probePath, scratchDir) => {
-      const scratchConfig = join(scratchDir, 'tsconfig.json');
-      writeFileSync(
-        scratchConfig,
-        JSON.stringify({
-          extends: `../../${BASE_CONFIG}`,
-          include: ['../../fixtures/**/*.ts', './probe.d.ts'],
-        }),
-      );
+  // in-memory overlay under `here`: relative paths resolve as on disk
+  const probeDir = join(here, '.probe-native');
+  const probeConfig = join(probeDir, 'tsconfig.json');
 
-      return checkNative(NATIVE_VERSION, scratchConfig);
-    },
+  const fileSystem = createFileSystemLayer([
+    [
+      probeConfig,
+      JSON.stringify({
+        extends: `../${BASE_CONFIG}`,
+        include: ['../fixtures/**/*.ts', './probe.d.ts'],
+      }),
+    ],
+    [join(probeDir, 'probe.d.ts'), NATIVE_PROBE],
+  ]);
+
+  const { version, owned } = await checkNative(
+    NATIVE_VERSION,
+    probeConfig,
+    fileSystem,
   );
 
   const caught = owned.some((diagnostic) =>
@@ -495,7 +506,7 @@ const main = async (): Promise<void> => {
 
   const currentOnly = versionsArg === 'current';
 
-  let ok = currentOnly ? true : await selftest();
+  let ok = currentOnly ? true : selftest();
 
   ok = (await selftestNative()) && ok;
 
