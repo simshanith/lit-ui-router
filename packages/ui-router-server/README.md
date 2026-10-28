@@ -8,6 +8,8 @@
 
 Server-side routing for ui-router state trees. Given per-mount routing config and a request URL, it resolves the path against the registered states and returns a plain routing verdict (render, redirect, or miss) — runtime-agnostic, with no fetch/Response or workers types in the core. Adapters turn verdicts into HTTP for Connect/Vite middleware and fetch/Hono handlers. Matcher-only mounts are dependency-free; `simulate` mounts lazily replay the path through a headless `@uirouter/core` router (an optional peer dependency).
 
+The matcher composes each state's url along its parent as `@uirouter/core` does: a state's parent is its `parent:`, otherwise its name minus the last dotted segment.
+
 **Status: early `0.x`** — published to npm and dogfooded in production by
 [lit-ui-router.dev](https://lit-ui-router.dev), but young: the API is covered
 by tests and can still move in a minor release before `1.0`, so pin what you

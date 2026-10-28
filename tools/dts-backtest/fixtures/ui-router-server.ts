@@ -74,6 +74,7 @@ const routes: RouteDeclaration[] = [
     params: { id: { squash: false } },
   },
   { name: 'app.legacy', url: '/people', redirectTo: 'app.contacts' },
+  { name: 'contactHelp', parent: 'app.contacts', url: '/help' },
   { name: 'app.notFound' },
 ];
 
