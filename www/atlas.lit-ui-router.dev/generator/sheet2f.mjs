@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { defs } from './chrome.mjs';
-import { txt, keyRow, npmUrl } from './helpers.mjs';
+import { txt, keyRow, npmUrl, schedule } from './helpers.mjs';
 import { brickKit } from './brick-iso.mjs';
 import { BRICK_ROWS, COMPILE_TIME } from './sheet2.mjs';
 import { BUILD_MODELS } from './sheet2c.mjs';
@@ -157,7 +157,7 @@ const headsOf = (pn) => [
   [`${plural(pn.consumers.length, 'consumer')} · ${kindCount(pn.consumers)} · ${installCount(pn.consumers)}`, 'lblf'],
   ...(pn.model?.atlas ? [[`${pn.model.words} · on its own branch`, 'lblf']] : []),
 ];
-const VW = 1480, LEFT = 20, TOP = 58, GUT = 18, COLS = 3, PAD = 14, STRIP_GAP = 12;
+const VW = 1480, LEFT = 20, TOP = 20, GUT = 18, COLS = 3, PAD = 14, STRIP_GAP = 12;
 const PW = Math.floor((VW - 2 * LEFT - (COLS - 1) * GUT) / COLS);
 const laid = PANELS.map((pn) => {
   const heads = headsOf(pn), headH = PAD + 13 + (heads.length - 1) * LINE + 14;
@@ -190,16 +190,13 @@ const DRAWN = laid.flatMap((pn) => pn.strips.map((s) => s.c.k));
 if (DRAWN.length !== CONSUMERS.length || new Set(DRAWN).size !== CONSUMERS.length) throw new Error(`sheet 2F: ${DRAWN.length} strips drawn for ${CONSUMERS.length} consumers`);
 
 // ---- the schedule: one row per consumer ----
-const wrapWords = (s, chars) => s.split(' ').reduce((ls, w) => (ls.length && (ls.at(-1) + ' ' + w).length <= chars ? [...ls.slice(0, -1), `${ls.at(-1)} ${w}`] : [...ls, ls.length ? `        ${w}` : w]), []);
-const schedRow = (c) => `${String(c.k).padStart(2)} ${c.letter}  ${c.name} (${c.kindWord}) — ${c.dir} · ${installLine(c)} · ${c.pins.length ? `pins ${c.pins.map((p) => `${p.part.n} ${p.name} ${pinValues(p)}`).join('; ')}` : 'pins no family part'} · runtime ${c.runtime.length ? c.runtime.map((d) => runtimeLabel(c, d)).join(', ') : 'none'}${extrasLine(c) ? ` · ${extrasLine(c)}` : ''}`;
-const SCHED_ROWS = CONSUMERS.flatMap((c) => wrapWords(schedRow(c), Math.floor((VW - 2 * LEFT - 36) / 5.6)));
-const SY = ART_BOTTOM + 40;
-const schedule = `<rect x="${LEFT}" y="${SY}" width="${VW - 2 * LEFT}" height="${80 + SCHED_ROWS.length * 16}" class="sk fp"/>
-${txt(LEFT + 18, SY + 22, 'PIN SCHEDULE — one row per consumer, numbered as sheet 2E tags it · range as declared → resolved · npm’s latest · S sample app · D docs site · E example · A atlas app', 'lbls')}
-<line x1="${LEFT}" y1="${SY + 32}" x2="${VW - LEFT}" y2="${SY + 32}" class="skf"/>
-${SCHED_ROWS.map((r, i) => txt(LEFT + 18, SY + 52 + i * 16, r, 'lbls')).join('\n')}
-${txt(LEFT + 18, SY + 60 + SCHED_ROWS.length * 16, `TOTAL — ${plural(CAB.consumers, 'consumer')} · ${plural(CAB.pins, 'family pin')}, ${fmt(CAB.fromTree)} from the tree and ${fmt(CAB.fromLock)} from a lockfile · ${deps(CAB.runtime)} · ${fmt(ALL.consumers)} · ${fmt(ALL.pins)}, ${fmt(ALL.fromTree)} and ${fmt(ALL.fromLock)} · ${fmt(ALL.runtime)} with the atlas app · trailing latest: ${word(ALL.trailing)} · ${COUNTED}`, 'lbls')}`;
-const VH = SY + 90 + SCHED_ROWS.length * 16;
+const SCHEDULE = schedule(
+  'PIN SCHEDULE — one row per consumer, numbered as sheet 2E tags it · range as declared → resolved · npm’s latest · S sample app · D docs site · E example · A atlas app',
+  ['#', 'consumer', 'kind', 'directory', 'install', 'family pins', 'runtime', 'overrides · patches'],
+  CONSUMERS.map((c) => [c.k, c.name, `${c.letter} ${c.kindWord}`, c.dir, installLine(c), c.pins.length ? c.pins.map((p) => `${p.part.n} ${p.name} ${pinValues(p)}`).join('; ') : 'no family part', c.runtime.length ? c.runtime.map((d) => runtimeLabel(c, d)).join(', ') : 'none', extrasLine(c) || '—']),
+  `TOTAL — ${plural(CAB.consumers, 'consumer')} · ${plural(CAB.pins, 'family pin')}, ${fmt(CAB.fromTree)} from the tree and ${fmt(CAB.fromLock)} from a lockfile · ${deps(CAB.runtime)} · ${fmt(ALL.consumers)} · ${fmt(ALL.pins)}, ${fmt(ALL.fromTree)} and ${fmt(ALL.fromLock)} · ${fmt(ALL.runtime)} with the atlas app · trailing latest: ${word(ALL.trailing)} · ${COUNTED}`,
+);
+const VH = ART_BOTTOM + 20;
 
 // ---- the findings, derived ----
 const partedLine = (d) => `${d.name} resolves ${listOf(d.tree)} from the tree and ${listOf(d.npm)} in the npm layer`;
@@ -208,23 +205,21 @@ const TRAIL_WORDS = TRAILING.length ? `${word(TRAILING.length)} — ${listOf(TRA
 
 export const SHEET2F_SCALE = `${word(CONSUMERS.length).toUpperCase()} CONSUMERS, PIN BY PIN`;
 export const SHEET2F_VERDICT = `the consumers’ pins, layer by layer: ${word(PNPM.length)} pnpm members read ${fmt(ALL.fromTree)} family pins from the tree and ${word(NPM.length)} npm consumers, the atlas app among them, read ${fmt(ALL.fromLock)} from their own lockfiles; pins trailing npm’s latest: ${word(TRAILING.length)}${PARTED.length ? `; ${listOf(PARTED.map(partedLine))}` : ''}`;
-const ARIA = `An isometric drawing of the repository's consumers as stacks of pins, in panels by sheet 2C's builds. Each of the ${word(CONSUMERS.length)} consumers is one stack on a two-by-one footprint: a thin plate for each of its runtime dependencies, then a brick course for each family part it pins, in the part's sheet 2 hue, each course lettered at its right with its range, the version it resolves and npm's latest, and each plate with the version it resolves. A pnpm member's family courses are dashed, read from the tree; an npm consumer's are solid, read from its own lockfile. A schedule below gives every consumer's pins, runtime and overrides.`;
+const ARIA = `An isometric drawing of the repository's consumers as stacks of pins, in panels by sheet 2C's builds. Each of the ${word(CONSUMERS.length)} consumers is one stack on a two-by-one footprint: a thin plate for each of its runtime dependencies, then a brick course for each family part it pins, in the part's sheet 2 hue, each course lettered at its right with its range, the version it resolves and npm's latest, and each plate with the version it resolves. A pnpm member's family courses are dashed, read from the tree; an npm consumer's are solid, read from its own lockfile. A schedule below the drawing lists every consumer's pins, runtime and overrides.`;
 
 const svg = `<svg viewBox="0 0 ${VW} ${VH}" role="img" aria-label="${ARIA}">
 ${defs(P)}
-${txt(VW - 30, 16, `SCALE — one 2×1 footprint for every consumer: a course per family pin, a plate per runtime dependency · a pnpm member reads its pins from the tree, an npm consumer from its own lockfile`, 'lbls', 'end')}
-${txt(VW - 30, 30, 'each course lettered range → resolved · latest, each plate its resolved version · a dashed layer is the tree’s own build, linked · a red-hatched course trails npm’s latest · the atlas app’s panel is edged in accent', 'lblf', 'end')}
 ${laid.map(panelSvg).join('\n')}
-${schedule}
 </svg>`;
 
 export const sheet2f = {
-  num: '2F', id: 'companions-pins', rev: 'B',
+  num: '2F', id: 'companions-pins', rev: 'C',
   title: 'THE PINNED BUILDS',
   sub: `ALTITUDE 2 — SIBLING PLATE, THE PINS: the ${word(CAB.consumers)} consumers in the cabinet’s tree and the atlas’s own app as stacks of what they pin, a course per family part and a plate per runtime dependency, each read where its installer reads it — the tree for a pnpm member, its own lockfile for an npm consumer — against npm’s latest · rows read census-pins.json, both readings, @ ${PINS.sha}`,
   scale: SHEET2F_SCALE,
   form: 'BUILD INSTRUCTIONS',
   svg,
+  schedule: SCHEDULE,
   caption: `The consumers' pins, layer by layer, in sheet 2C's builds. The ${word(PNPM.length)} pnpm members read their ${fmt(ALL.fromTree)} family pins from the tree; the ${word(NPM.length)} npm consumers, the examples and the atlas app, read their ${fmt(ALL.fromLock)} from their own lockfiles. Pins trailing npm's latest: ${word(TRAILING.length)}.`,
   notes: `
 <p><strong>Two altitudes.</strong> Sheet 2E seats each consumer on the family parts it pins; this plate opens the pin itself. A pnpm member — the sample apps and the docs site — names a family part <code>catalog:workspace</code>, which the workspace's catalog reads <code>workspace:*</code>, and resolves it to the tree: the part's own build at the ref, linked, its version the member's own. An embedded example under <code>examples/&lt;key&gt;/</code> and the atlas's own app install with npm from the registry, each through its own <code>package-lock.json</code>, so each pin is a published version. Of ${plural(ALL.pins, 'family pin')}, ${fmt(ALL.fromTree)} read from the tree and ${fmt(ALL.fromLock)} from a lockfile, ${fmt(CAB.fromLock)} of them in the cabinet's tree and ${fmt(ALL.fromLock - CAB.fromLock)} the atlas app's, read from <code>git archive ${ATLAS_APP.ref}</code> @ ${ATLAS_APP.sha}.</p>

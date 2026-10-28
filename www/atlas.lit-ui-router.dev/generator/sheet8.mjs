@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { defs } from './chrome.mjs';
-import { txt, isoBlock, isoPt, keyRow, npmUrl } from './helpers.mjs';
+import { txt, isoBlock, isoPt, keyRow, npmUrl, schedule, leader } from './helpers.mjs';
 import { depthSort, solidFaces } from './iso-hidden.mjs';
 
 const P = 's8';
@@ -142,22 +142,13 @@ function districtOutline(x1, y1, x2, y2, label, lx, ly) {
 ${txt(lx, ly, label, 'lblf')}`;
 }
 
-const schedRow = ({ it, n, district }) => {
-  const ws = district === 'workspace' ? ' (ws)' : district === 'consumer' ? ' (the app, src)' : '';
-  const dts = it.dl ? ` · dts ${fmt(it.dl)}` : '';
-  return `${n} ${it.label}${ws} — ${it.f}f ${fmt(it.l)}${dts}`;
-};
-const half = Math.ceil(all.length / 2);
-const colA = all.slice(0, half), colB = all.slice(half);
-const SY = 950;
-const schedule = `<g>
-<rect x="40" y="${SY}" width="1080" height="${74 + half * 17}" class="sk fp"/>
-${txt(56, SY + 22, 'STRUCTURE SCHEDULE — delivered files (f) · lines of code on disk · d.ts lines', 'lbls')}
-<line x1="40" y1="${SY + 32}" x2="1120" y2="${SY + 32}" class="skf"/>
-${colA.map((r, i) => txt(56, SY + 52 + i * 17, schedRow(r), 'lbls')).join('\n')}
-${colB.map((r, i) => txt(590, SY + 52 + i * 17, schedRow(r), 'lbls')).join('\n')}
-${txt(56, SY + 58 + half * 17, `TOTAL — ${DELIVERED} delivered packages · ${fmt(TOT_L)} lines of code · ${fmt(TOT_DL)} d.ts lines · ${BASIS}`, 'lbls')}
-</g>`;
+const DISTRICT = { registry: 'registry', workspace: 'workspace', consumer: 'the app, src' };
+const SCHEDULE = schedule(
+  'STRUCTURE SCHEDULE — delivered files · lines of code on disk · d.ts lines',
+  ['#', 'package', 'district', 'files', 'lines', 'd.ts lines'],
+  all.map(({ it, n, district }) => [n, it.label, DISTRICT[district], it.f, it.l, it.dl || '—']),
+  `TOTAL — ${DELIVERED} delivered packages · ${fmt(TOT_L)} lines of code · ${fmt(TOT_DL)} d.ts lines · ${BASIS}`,
+);
 
 // Callouts
 const app = all.find((a) => a.district === 'consumer');
@@ -165,7 +156,11 @@ const [cx2, cy2] = isoPt(OX, OY, app.x + app.s + 4, app.y + app.s, 0);
 const lod = all.find((a) => a.it.name === 'lodash-es');
 const [lx2, ly2] = isoPt(OX, OY, lod.x, lod.y + lod.s, HT(lod.it.l) * 0.72);
 
-const svg = `<svg viewBox="0 0 1160 ${SY + 90 + half * 17}" role="img" aria-label="The production node_modules of one sample app drawn as an isometric city: ${DELIVERED} delivered packages plus the app's own building, footprint area from delivered file counts, height from lines of code on disk, hatched annexes for type declarations. The app's own ${APP_L}-line building stands in a city of ${fmt(TOT_L)} delivered lines; lodash-es delivers ${fmt(pkg('lodash-es').l)} of them for four imports. One lit major stands here — lit, lit-html, lit-element and reactive-element, one copy each. Every count is imported from the checked-in census plate. A structure schedule lists every package with exact counts.">
+// the consumer district's near corner is the plate's lowest point
+const VB_H = Math.ceil(isoPt(OX, OY, 690, 640)[1]) + 20;
+if (cy2 + 80 > VB_H - 20) throw new Error(`sheet 8: the app's callout at y ${(cy2 + 80).toFixed(1)} runs past the ${VB_H} frame`);
+
+const svg = `<svg viewBox="0 0 1160 ${VB_H}" role="img" aria-label="The production node_modules of one sample app drawn as an isometric city: ${DELIVERED} delivered packages plus the app's own building, footprint area from delivered file counts, height from lines of code on disk, hatched annexes for type declarations. The app's own ${APP_L}-line building stands in a city of ${fmt(TOT_L)} delivered lines; lodash-es delivers ${fmt(pkg('lodash-es').l)} of them for four imports. One lit major stands here — lit, lit-html, lit-element and reactive-element, one copy each. Every count is imported from the checked-in census plate. A schedule below the drawing lists every package with exact counts.">
 ${defs(P)}
 
 ${districtOutline(160, 0, 760, 490, `registry-delivered — ${ORDER.registry.length} packages`, 30, 90)}
@@ -175,30 +170,29 @@ ${districtOutline(545, 520, 690, 640, 'the consumer', 638, 764)}
 ${bodies}
 
 ${txt(cx2 + 140, cy2 + 80, `the entire application: ${APP_F} files, ${APP_L} lines`, 'lbla')}
-<line x1="${(cx2 + 134).toFixed(1)}" y1="${(cy2 + 76).toFixed(1)}" x2="${cx2.toFixed(1)}" y2="${cy2.toFixed(1)}" class="skf"/>
+${leader(cx2 + 134, cy2 + 76, cx2, cy2)}
 ${txt(40, 200, 'delivered for four imports:', 'lbla')}
-${txt(40, 212, 'isEqual · cloneDeep · get · set', 'lbla')}
-${txt(40, 226, `${fmt(pkg('lodash-es').l)} lines across ${pkg('lodash-es').f} files`, 'lbls')}
-<line x1="272" y1="230" x2="${(lx2 - 6).toFixed(1)}" y2="${ly2.toFixed(1)}" class="skf" stroke-dasharray="3 3"/>
+${txt(40, 214, 'isEqual · cloneDeep · get · set', 'lbla')}
+${txt(40, 229, `${fmt(pkg('lodash-es').l)} lines across ${pkg('lodash-es').f} files`, 'lbls')}
+${leader(272, 230, lx2 - 6, ly2)}
 
-${txt(1120, 48, 'one lit major stands in this city: lit 3.3.3,', 'lbla', 'end')}
-${txt(1120, 60, 'lit-html, lit-element and @lit/reactive-element', 'lbla', 'end')}
-${txt(1120, 72, '— one copy each, held by scoped overrides', 'lbla', 'end')}
+${txt(1120, 48, 'one lit major stands in this city: lit 3.3.3,', 'lbl', 'end')}
+${txt(1120, 62, 'lit-html, lit-element and @lit/reactive-element', 'lbl', 'end')}
+${txt(1120, 76, '— one copy each, held by scoped overrides', 'lbl', 'end')}
 
-${txt(1120, 26, 'SCALE — footprint area ∝ delivered files · 1 px of height ≈ 250 lines (sheet 7: ≈ 34)', 'lbls', 'end')}
+${txt(1120, 26, 'SCALE — 1 px of height ≈ 250 lines (sheet 7: ≈ 34)', 'lbls', 'end')}
 ${txt(1120, 90, `every number on this sheet is read from www/atlas.lit-ui-router.dev/data/census-nm.json — ${BASIS}`, 'lblf', 'end')}
-
-${schedule}
 </svg>`;
 
 export const sheet8 = {
   num: 8, id: 'delivered',
   title: 'THE DELIVERED CITY',
   sub: `ALTITUDE 1½ — what npm actually installs for one consumer · sample-app-lit-vanilla · ${DELIVERED} delivered packages, ${fmt(TOT_L)} lines of code and ${fmt(TOT_DL)} d.ts lines on disk, footprint from files and height from lines — ${BASIS}`,
-  rev: 'E',
+  rev: 'F',
   scale: 'ONE CONSUMER',
   form: 'DELIVERED CITY',
   svg,
+  schedule: SCHEDULE,
   caption: `The production dependency closure of one sample app, surveyed on disk: every delivered package as a building — footprint from file count, height from lines — with the consumer’s own ${APP_L}-line building standing in the city it summoned.`,
   notes: `
 <p><strong>Method:</strong> the production closure of <a href="${REPO}/tree/main/${PLATE.app}"><code>${PLATE.app}</code></a> (dependencies plus installed peers — pnpm <a href="${HOME.pnpmPeers}">auto-installs peers</a>, so they are genuinely on disk), resolved through the pnpm store and measured as delivered: lines of <code>.js/.ts/.css/.html</code> per package directory, source maps and prose excluded, <code>.d.ts</code> drawn separately as the hatched annex. Workspace-linked members are measured by their built <code>dist/</code> — the shape a registry install would deliver. Plenty of prior art measures this differently — <a href="${HOME.bundlephobia}">bundlephobia</a> and <a href="${HOME.packagephobia}">packagephobia</a> weigh tarballs and install bytes, <a href="${HOME.npmgraph}">npmgraph</a> draws the dependency graph — but this sheet measures what actually lands on disk, in files and lines, and stages it as a city with the consumer's own building standing in it for scale. Every count on the drawing and in these notes is read at build time from the plate <a href="${HOME.plate}"><code>www/atlas.lit-ui-router.dev/data/census-nm.json</code></a> — ${BASIS} — written after installing and building the ref itself, never the working tree. A package the drawing places that the plate does not carry, or a package the plate carries that no district draws, is a build error rather than a stale constant.</p>

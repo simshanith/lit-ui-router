@@ -159,12 +159,13 @@ ${on(` .${read}`)} { box-sizing: content-box; block-size: var(--read-reserve); o
  * The parts panel's runtime. A `fit` panel brings the lit chip into its list's view and opens
  * the group holding it, and wires the header bar's fold, corner step and drag, snapping to
  * `corners` in that clockwise order; `fold` is the stage's [inline, block] size under which it
- * opens folded. Bare, it is the flat panel.
+ * opens folded, and the corner it opens in there. Open on a stage at least `fold[0]` wide, it writes its own width to the stage's
+ * `--parts-start` or `--parts-end`, so the viewer can stand clear of it. Bare, it is the flat panel.
  */
 const partsJs = (fit, text) => `  // the parts panel: a chip click takes the hotspot's own tap (the href stays the no-script path); light(n) lights the pinned chip
   function partsPanel(root, cls, on, tap) {
     var nav = root.querySelector('.' + cls);
-    if (!nav) return { light: function () {}, hide: function () {} };
+    if (!nav) return { light: function () {}, hide: function () {}, dispose: function () {} };
     var chips = Array.prototype.slice.call(nav.querySelectorAll('a.pt'));
     var toggle = nav.querySelector('.pt-toggle');
 ${fit ? `    var smooth = window.matchMedia('(prefers-reduced-motion: no-preference)');
@@ -182,20 +183,34 @@ ${fit ? `    var smooth = window.matchMedia('(prefers-reduced-motion: no-prefere
       e.preventDefault();
       tap(${text ? "a.getAttribute('data-focus')" : "Number(a.getAttribute('data-focus'))"});
     });
-    on(toggle, 'click', function () {
+${fit ? `    var stage = nav.parentNode, bar = nav.querySelector('.pt-bar'), move = nav.querySelector('.pt-move'), drag = null, shown = true;
+    var CORNERS = ${JSON.stringify(fit.corners)};
+    // an open panel on a stage past the fold keeps its own strip: the stage's --parts-start or --parts-end, which the viewer's margin takes
+    function reserve() {
+      var w = shown && nav.classList.contains('open') && stage.clientWidth >= ${fit.fold[0]} ? Math.ceil(nav.getBoundingClientRect().width) + 16 : 0;
+      var west = (nav.getAttribute('data-corner') || '').charAt(1) === 'w';
+      stage.style.setProperty('--parts-start', (west ? w : 0) + 'px');
+      stage.style.setProperty('--parts-end', (west ? 0 : w) + 'px');
+    }
+    var sized = new ResizeObserver(reserve);
+    sized.observe(nav);
+    sized.observe(stage);
+` : ''}    on(toggle, 'click', function () {
       var open = !nav.classList.contains('open');
       nav.classList.toggle('open', open);
       toggle.setAttribute('aria-expanded', String(open));
-    });
-${fit ? `    var stage = nav.parentNode, bar = nav.querySelector('.pt-bar'), move = nav.querySelector('.pt-move'), drag = null;
-    var CORNERS = ${JSON.stringify(fit.corners)};
-    // a small stage opens on the bar alone, so the model starts unobstructed
-    if (stage.clientWidth < ${fit.fold[0]} || stage.clientHeight < ${fit.fold[1]}) toggle.click();
+${fit ? '      reserve();\n' : ''}    });
+${fit ? `    // a small stage opens on the bar alone in the fold's corner, so the model starts unobstructed
+    if (stage.clientWidth < ${fit.fold[0]} || stage.clientHeight < ${fit.fold[1]}) {
+      nav.setAttribute('data-corner', '${fit.fold[2]}');
+      toggle.click();
+    }
     // FLIP: the panel lands in its corner, then glides there from where it stood
     function place(c, from) {
       nav.style.transition = 'none';
       nav.style.transform = '';
       nav.setAttribute('data-corner', c);
+      reserve();
       if (!from || !smooth.matches) return;
       var to = nav.getBoundingClientRect();
       nav.style.transform = 'translate(' + (from.left - to.left) + 'px, ' + (from.top - to.top) + 'px)';
@@ -244,7 +259,12 @@ ${fit ? `        // the group's name keeps one open, so opening this one folds t
         if (g && !g.open) g.open = true;
         if (at) reveal(at);
 ` : ''}      },
-      hide: function () { nav.style.visibility = 'hidden'; },
+      hide: function () {
+        nav.style.visibility = 'hidden';
+${fit ? `        shown = false;
+        reserve();
+` : ''}      },
+      dispose: function () {${fit ? ' sized.disconnect(); ' : ''}},
     };
   }
 `;

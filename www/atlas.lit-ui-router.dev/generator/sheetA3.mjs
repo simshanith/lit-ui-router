@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { defs } from './chrome.mjs';
-import { txt, schedTxt, isoBlock, isoPt, keyRow } from './helpers.mjs';
+import { txt, schedTxt, isoBlock, isoPt, keyRow, schedule } from './helpers.mjs';
 import { assertPlots, depthSort, solidFaces } from './iso-hidden.mjs';
 import { AG, CITY, H, S } from './sheet7.mjs';
 
@@ -231,46 +231,42 @@ ${txt(AX, AY + 15, `${WORD[AT.k]} members · ${AT.f} files · ${fmt(AT.sl)} sloc
 ${ATLAS.masses.map((b, i) => schedTxt(AX, AY + 38 + i * 15, [b.n, `${b.name} — ${sloc(b)} · ${b.ground}`], 'lblf')).join('\n')}
 ${[CLAIM_PKG, CLAIM_DRAWING, CLAIM_DISTRICTS, `${SHARE}% of the codebase's own authored source, ${fmt(REST.sl)} sloc across its ${WORD[DISTRICTS.length]} districts`, CLAIM_TESTS, CLAIM_ANNEX]
   .map((s, i) => txt(AX, AY + 118 + i * 16, s, i ? 'lbls' : 'lblb')).join('\n')}`;
-const ART_H = Math.max(GY2 + 40, AY + 118 + 6 * 16 + 10);
+// the drawing ends at the atlas's near corner or the panel's last line, with 20 px of air
+const VB_H = Math.ceil(Math.max(GY2, AY + 118 + 5 * 16 + 4)) + 20;
 
 // ---- schedule ------------------------------------------------------------------------
-const schedRows = [
-  ...CODEBASE.map((g) => { const m = g.masses[0]; return [m.n, `${g.dir} ${g.role.toLowerCase()} — ${sloc(m)} · ${annexLine(m)} · sheet 7's ${m.k} members, summed`]; }),
-  ...ATLAS.masses.map((b) => [b.n, `${b.name} — ${sloc(b)} · ${annexLine(b)} · ${b.ground}`]),
-];
 const offRuler = SELF.offRuler.filter((o) => o.code > 0);
 const unclassified = SELF.offRuler.filter((o) => o.code === 0);
-const exRows = [
-  ...SELF.excluded.map((e) => `${e.rule} — ${e.files} files · ${fmt(e.sloc)} lines scc counts`),
-  ...Array.from({ length: Math.ceil(offRuler.length / 3) }, (_, i) =>
-    `${i ? '' : 'off the ruler, on a member\'s ground: '}${offRuler.slice(i * 3, i * 3 + 3).map((o) => `${o.path} (${o.lang} ${fmt(o.code)})`).join(' · ')}`),
-  `and ${unclassified.length} files scc names no language for: ${[...new Set(unclassified.map((o) => o.path.replace(/[^/]+$/, '')))].join(' · ')}`,
+const SCHEDULES = [
+  schedule(
+    'STRUCTURE SCHEDULE — files · sloc on sheet 7\'s ruler · spec annex',
+    ['#', 'block', 'files', 'sloc', 'annex', 'ground'],
+    [
+      ...CODEBASE.map((g) => { const m = g.masses[0]; return [m.n, `${g.dir} ${g.role.toLowerCase()}`, m.f, m.sl, annexLine(m), `sheet 7's ${m.k} members, summed`]; }),
+      ...ATLAS.masses.map((b) => [b.n, b.name, b.f, b.sl, annexLine(b), b.ground]),
+    ],
+    `TOTAL — the codebase ${REST.f} files · ${fmt(REST.sl)} sloc (+ ${REST.pf} spec · ${fmt(REST.pl)}) at ${CITY_BASIS} · the atlas ${AT.f} files · ${fmt(AT.sl)} sloc (+ ${AT.pf} spec) at ${SELF_BASIS} · sloc = scc Code`,
+  ),
+  schedule(
+    'EXCLUDED — what the atlas draws, generates or writes as prose',
+    ['#', 'rule or path', 'why it stands outside', 'files', 'lines scc counts'],
+    [
+      ...SELF.excluded.map((e) => [e.rule, 'excluded', e.files, e.sloc]),
+      ...offRuler.map((o) => [o.path, `off the ruler, on a member's ground · ${o.lang}`, 1, o.code]),
+      [[...new Set(unclassified.map((o) => o.path.replace(/[^/]+$/, '')))].join(' · '), 'scc names no language', unclassified.length, '—'],
+    ].map((r, i) => [i + 1, ...r]),
+  ),
 ];
-const SY = ART_H + 16;
-const ROWS = Math.max(schedRows.length, exRows.length);
-const SH = 74 + ROWS * 17;
-const schedule = `<rect x="40" y="${SY}" width="1480" height="${SH}" class="sk fp"/>
-${txt(58, SY + 22, 'STRUCTURE SCHEDULE — files (f) · sloc on sheet 7\'s ruler · spec annex', 'lbls')}
-${txt(800, SY + 22, 'EXCLUDED — what the atlas draws, generates or writes as prose', 'lbls')}
-<line x1="40" y1="${SY + 32}" x2="1520" y2="${SY + 32}" class="skf"/>
-<line x1="782" y1="${SY + 32}" x2="782" y2="${SY + 40 + ROWS * 17}" class="skf"/>
-${schedRows.map((r, i) => schedTxt(58, SY + 52 + i * 17, r, 'lbls')).join('\n')}
-${exRows.map((r, i) => txt(800, SY + 52 + i * 17, r, 'lblf')).join('\n')}
-${txt(58, SY + 58 + ROWS * 17, `TOTAL — the codebase ${REST.f} files · ${fmt(REST.sl)} sloc (+ ${REST.pf} spec · ${fmt(REST.pl)}) at ${CITY_BASIS} · the atlas ${AT.f} files · ${fmt(AT.sl)} sloc (+ ${AT.pf} spec) at ${SELF_BASIS} · sloc = scc Code`, 'lbls')}`;
 
 const ARIA = `An isometric census of the atlas itself, standing beside the codebase it draws, on sheet 7's ruler: footprint side ${KS} times the square root of source lines, height ${KH} pixels per authored file. `
   + `Along the top, on main's ground at ${CITY_BASIS}, sheet 7's four districts each stand as one summed block with its spec annex beside it: `
   + CODEBASE.map((g) => `${g.dir}, ${sloc(g.masses[0])}, ${annexLine(g.masses[0])}`).join('; ') + '. '
   + `Below a dotted seam, on the atlas's own branch at ${SELF_BASIS}, the atlas stands as a fifth district of ${WORD[AT.k]} accent-edged members: `
   + ATLAS.masses.map((b) => `${b.name}, ${sloc(b)}`).join('; ') + `. `
-  + `${CLAIM_PKG}; ${CLAIM_DRAWING}; ${CLAIM_TESTS}; ${CLAIM_ANNEX}. A structure schedule lists every block, and beside it every path the survey excludes.`;
+  + `${CLAIM_PKG}; ${CLAIM_DRAWING}; ${CLAIM_TESTS}; ${CLAIM_ANNEX}. A schedule below the drawing lists every block, and a second every path the survey excludes.`;
 
-const svg = `<svg viewBox="0 0 1560 ${SY + SH + 30}" role="img" aria-label="${ARIA}">
+const svg = `<svg viewBox="0 0 1560 ${VB_H}" role="img" aria-label="${ARIA}">
 ${defs(P)}
-
-<rect x="40" y="26" width="520" height="42" class="skf fnone"/>
-${txt(52, 43, 'THE ATLAS, MEASURED — ON THE CITY\'S OWN RULER', 'lbls')}
-${txt(52, 58, `the codebase's ${WORD[DISTRICTS.length]} districts above · the atlas's ${WORD[AT.k]} members below · one S() and H(), imported from sheet 7`, 'lblf')}
 
 ${txt(1520, 34, `SCALE — footprint side = ${KS} · √sloc (plan area ∝ sloc) · height = ${KH} px per authored file — sheet 7's functions, not a copy`, 'lbls', 'end')}
 ${txt(1520, 48, `${ZOOM_LINE} · footprint floored at ${FLOOR} plan units`, 'lblf', 'end')}
@@ -283,8 +279,6 @@ ${ALL.map(badge).join('\n')}
 ${codebaseLabels}
 ${seam}
 ${atlasPanel}
-
-${schedule}
 </svg>`;
 
 // the homes the notes name: git's archive reference and the scc release the cabinet pins
@@ -294,7 +288,7 @@ const HOME = {
 };
 
 export const sheetA3 = {
-  num: 'A3', id: 'self', rev: 'B',
+  num: 'A3', id: 'self', rev: 'C',
   head: 'APPENDIX A3 · META',
   appendix: true,
   title: 'THE ATLAS, MEASURED',
@@ -302,6 +296,7 @@ export const sheetA3 = {
   scale: 'THE ATLAS ITSELF',
   form: 'ISOMETRIC CITY',
   svg,
+  schedules: SCHEDULES,
   caption: `The atlas turned on itself with the census city's own instrument: footprint ∝ √sloc, height ∝ files, from sheet 7's functions. Sheet 7's four districts stand along the top as one block each; the atlas stands below them as a fifth district of ${WORD[AT.k]} members — ${CLAIM_PKG}.`,
   notes: `
 <p><strong>Method — one ruler, two grounds.</strong> Every block on this plate is massed by <code>S()</code> and <code>H()</code> imported from <code>sheet7.mjs</code> — footprint side ${KS} · √sloc, height ${KH} px per authored file, floor ${FLOOR} — and every file is admitted by the same predicate the city census uses, <code>onCityRuler</code> in <code>census-query.mjs</code>: authored <code>.ts/.tsx/.js/.jsx/.mjs</code>, no <code>*.d.ts</code>, spec files split into an annex. The two halves stand on different grounds and say so. The codebase is <code>data/census-city.json</code>, ${CITY_BASIS}, the cabinet every numbered sheet reads. The atlas is not on main, so it cannot be in that cabinet: it is <code>data/survey-self.json</code>, written by <code>generator/survey-self.mjs</code> from a <a href="${HOME.archive}"><code>git archive</code></a> of its own branch — ${SELF_BASIS}, committed ${SELF.commitDate.slice(0, 10)} — through the same <a href="${HOME.scc}">scc 4.0.0</a> the cabinet uses. The probe is named <code>survey-</code>, not <code>census-</code>, so appendix A2's one-ref check stays a claim about main alone. The plate is ${ZOOM_LINE.replace('that ruler', 'sheet 7\'s ruler')}, so the codebase and the atlas shrink together and still read against each other.</p>

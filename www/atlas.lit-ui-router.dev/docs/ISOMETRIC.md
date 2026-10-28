@@ -115,14 +115,21 @@ Arrow markers come from `defs(p)` in `chrome.mjs` (`ai`, `aa`, `ar`, `as`).
 - **Classes.** Lettering uses `txt()` from [`helpers.mjs`](../generator/helpers.mjs) with the `text.lbl*`
   classes in `chrome.mjs`: `lbl` body, `lblb` heading, `lbls` soft, `lblf` faint, `lbla` accent,
   `lblr` red, `lblt` title. All of them set in the data face with tabular figures.
-- **Schedules.** Schedule rows use `schedTxt()`: an end-anchored number gutter (`SCHED_NUM`) and a body at
-  `SCHED_BODY`.
+- **Schedules.** A schedule is a table, never SVG text: the sheet's `schedule` (or `schedules`) is built
+  with `schedule(title, head, rows, total)` from `helpers.mjs`, and `sheetSection()` in `chrome.mjs` sets
+  it under the figure as an HTML table at 12 px in the data face. A row's first cell is its number, the
+  badge's; numeric cells are passed as numbers so the table groups them. A register over sixteen rows is
+  split in two tables side by side.
 - **Keys.** Key rows use `keyRow(swatchSvg, desc)`, a 48 × 18 swatch drawn from the same classes and
   patterns as the plate. Sheet 3B's key sets the order: block, its size encodings, the other kinds,
-  then edges.
-- **Where text goes.** Lettering lives in the drawing: title block, district names, callouts and the
-  schedule. It sits in clear air, never on a mass face. Badges are the exception and sit on or above
-  their own roof (`BADGE_LIFT`, `BADGE_ON_ROOF` in `sheet7.mjs`).
+  then edges. The key is the plate's one legend; the drawing carries no legend box of its own.
+- **Where text goes.** Lettering in the drawing is district names, badges and callouts. It sits in
+  clear air, never on a mass face. Badges are the exception and sit on or above their own roof
+  (`BADGE_LIFT`, `BADGE_ON_ROOF` in `sheet7.mjs`). The sheet title, the subtitle and the key say what
+  the drawing is; the drawing does not say it again in a title box.
+- **Callout leaders.** A callout's leader is `leader(x1, y1, x2, y2)` from `helpers.mjs`: faint,
+  dashed `4 3`, with a 2 px landing dot on the thing it names. A solid hairline reads as a road.
+  Accent lettering is editorial, two elements a plate at most; district names are headings, not accents.
 - **FORM.** A sheet's FORM phrase is a compound of the keys in
   [`labels.mjs`](../generator/labels.mjs) (subject, projection, mode, basis). `assertLabels()` fails the
   build on an unknown value, or on a `mode` that disagrees with whether the sheet is interactive.

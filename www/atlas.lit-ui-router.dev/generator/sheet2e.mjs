@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { defs } from './chrome.mjs';
-import { txt, keyRow, npmUrl } from './helpers.mjs';
+import { txt, keyRow, npmUrl, schedule } from './helpers.mjs';
 import { brickKit, paintOrder } from './brick-iso.mjs';
 import { cordHit, cordKit } from './connector-iso.mjs';
 import { BRICK_ROWS, COMPILE_TIME, COURSES, FILES_PER_COURSE, SHAPE, SLOC_PER_STUD, STUDS } from './sheet2.mjs';
@@ -63,8 +63,6 @@ const CONSUMERS = [...ROWS].sort((a, b) => rank(a) - rank(b) || KIND_RANK.indexO
 });
 const ATLAS_C = CONSUMERS.find((c) => c.atlas);
 const BARE = CONSUMERS.filter((c) => !c.pins.length);
-const pinsWord = (c) => (c.pins.length ? `pins ${c.pins.map((b) => b.n).join(' · ')}` : 'pins none');
-const buildName = (c) => (c.model ? `${c.model.numeral} ${c.model.name.toUpperCase()}` : 'NO BUILD');
 
 // ---- the drawing kit: geometry in sheet 2's plan units, 40 a stud and 24 a course, drawn at the panels' pitch ----
 const U = 18;
@@ -438,43 +436,7 @@ const extentOf = (ox, oy, family, placed, marks) => {
   for (const m of marks) for (const p of m.shape) see(p);
   return { x0, y0, x1, y1, w: x1 - x0, h: y1 - y0 };
 };
-
-// ---- the box: the consumers legend, one row per consumer ----
-const MU = brickKit({ U: 9, p: P });
-const miniBrick = (c) => {
-  const [ws, ds] = c.shape, w = ws * MU.U, d = ds * MU.U, h = c.courses * MU.CRS;
-  const corners = [[0, 0], [w, 0], [0, d], [w, d]].flatMap(([x, y]) => [MU.pt(0, 0, x, y, 0), MU.pt(0, 0, x, y, h + MU.SH * 2)]);
-  const mx = Math.min(...corners.map(([x]) => x)), my = Math.min(...corners.map(([, y]) => y));
-  return { w: Math.max(...corners.map(([x]) => x)) - mx, h: Math.max(...corners.map(([, y]) => y)) - my,
-    at: (x, y) => MU.brick(x - mx, y - my, 0, 0, ws, ds, c.courses, { edge: c.atlas ? 'ska' : 'sk', studEdge: c.atlas ? 'ska' : 'sk' }) };
-};
-const LEFT = 20, TOP = 58, LEGEND_W = 360;
-const tagAt = (x, y, c) => `<rect x="${x - TAG_W / 2}" y="${y - TAG_H / 2}" width="${TAG_W}" height="${TAG_H}" rx="8.5" class="ska fp"${c.atlas ? ' stroke-width="2"' : ''}/>${txt(x, y + 3.8, `${c.k} ${c.letter}`, 'lbla', 'middle')}`;
-function legendBox(x, y, width) {
-  const out = [];
-  let cy = y + 46, group = null;
-  for (const c of CONSUMERS) {
-    const g = buildName(c);
-    if (g !== group) {
-      group = g;
-      out.push(`${txt(x + 14, cy + 10, c.atlas ? `${g} — ON ITS OWN BRANCH` : g, c.atlas ? 'lbla' : 'lbls')}`);
-      cy += 22;
-    }
-    const fig = miniBrick(c), rh = Math.max(fig.h + 8, 44), mid = cy + rh / 2;
-    out.push(`<g id="${P}-consumer-${c.k}" data-consumer="${c.k}" data-name="${c.name}">
-${tagAt(x + 30, mid, c)}
-${fig.at(x + 58 + (40 - fig.w) / 2, mid - fig.h / 2)}
-${txt(x + 112, mid - 9, c.name, 'lbl')}
-${txt(x + 112, mid + 4, `${c.kindWord} · ${shapeName(c.shape)} · ${plural(c.courses, 'course')}`, 'lblf')}
-${txt(x + 112, mid + 16, `${pinsWord(c)}${c.anchor ? ` · on ${seatOf(c).n}` : ''}`, 'lblf')}
-</g>`);
-    cy += rh;
-  }
-  const h = cy - y + 10;
-  return { svg: `<rect x="${x}" y="${y}" width="${width}" height="${h}" class="skf fnone"/>
-${txt(x + 14, y + 22, `THE CONSUMERS — ${WORD[CONSUMERS.length].toUpperCase()} BRICKS AT SHEET 2’S MOULD`, 'lbls')}
-${out.join('\n')}`, bottom: y + h };
-}
+const LEFT = 20, TOP = 20;
 
 // sheet 2C's runtime plates are not drawn here, so the gaps they leave between its parts close to one stud along each axis;
 // a part standing on another moves with the part under it
@@ -525,8 +487,7 @@ const cordsLine = (c) => {
   const how = (t) => (t.hang ? ' hanging' : t.curve.via.length ? ' winding' : ' from the top');
   return mine.length ? ` · cords to ${listOf(mine.map((t) => `${t.b.n}${how(t)}`))}` : '';
 };
-const wrapWords = (s, chars) => s.split(' ').reduce((ls, w) => (ls.length && (ls.at(-1) + ' ' + w).length <= chars ? [...ls.slice(0, -1), `${ls.at(-1)} ${w}`] : [...ls, ls.length ? `        ${w}` : w]), []);
-const schedRaw = () => CONSUMERS.map((c) => `${String(c.k).padStart(2)} ${c.letter}  ${c.name} (${c.kindWord}) — ${c.dir}/{${c.dirs.join(',')}} · ${plural(c.files, 'file')} · ${fmt(c.sloc)} sloc → ${plural(c.studs, 'stud')} · ${shapeName(c.shape)} × ${plural(c.courses, 'course')} · ${c.pins.length ? `pins ${listOf(c.pins.map((b) => `${b.n} ${b.name}`))}` : 'pins no family part'}${cordsLine(c)} · ${c.model ? `build ${c.model.numeral} ${c.model.name.toUpperCase()}` : 'no build'}`);
+const schedNote = (c) => `${c.dir}/{${c.dirs.join(',')}} · ${c.pins.length ? `pins ${listOf(c.pins.map((b) => `${b.n} ${b.name}`))} · on ${seatOf(c).n}` : 'pins no family part'}${cordsLine(c)}`;
 
 // ---- the findings, derived ----
 const CARRY = FAMILY.map((b) => ({ b, by: CONSUMERS.filter((c) => c.pins.includes(b)) })).sort((x, y) => y.by.length - x.by.length || x.b.n - y.b.n);
@@ -547,8 +508,6 @@ if (HEAVIEST !== ATLAS_C) throw new Error(`sheet 2E: the notes call the atlas ap
 const kindCount = (cs) => listOf(KIND_RANK.map((k) => [k, cs.filter((c) => c.kind === k).length]).filter(([, n]) => n).map(([k, n]) => `${WORD[n]} ${KIND[k][1]}${n > 1 ? 's' : ''} (${KIND[k][0]})`));
 
 // ---- compose the booklet ----
-const SCALE_LINE = `SCALE — sheet 2’s mould for every brick: 1 stud per ${SLOC_PER_STUD} sloc rounded up to the next standard shape, a course per ${FILES_PER_COURSE} authored files · a consumer hovers over the heaviest part it pins where its cords run clear from there, on a level of its own`;
-const ACCENT_LINE = 'accent marks a consumer’s pin: a drop onto the part it hovers over, a cord to each other part it pins, the ringed stud at each end · consumers are drawn plain, the atlas app edged in accent';
 const ALL_MARKS = [];
 let ART = '', VW = 1480, ART_BOTTOM = 0, ARIA_BODY = '', CORDS = [];
 {
@@ -578,9 +537,8 @@ let ART = '', VW = 1480, ART_BOTTOM = 0, ARIA_BODY = '', CORDS = [];
   const needH = (i) => HEAD_H + local[i].h + PAD + MARGIN;
   const ROW_H = Array.from({ length: rows }, (_, r) => Math.ceil(Math.max(...panels.map((_, i) => (cells[i][1] === r ? needH(i) : 0)))));
   const ROW_Y = ROW_H.map((_, r) => ROW_H.slice(0, r).reduce((a, h) => a + h + GUT, 0));
-  const GX = LEFT + LEGEND_W + 30, GY = TOP;
-  VW = Math.ceil(Math.max(1480, GX + COLS * PW + (COLS - 1) * GUT + LEFT));
-  const box = legendBox(LEFT, TOP, LEGEND_W);
+  const GX = LEFT, GY = TOP;
+  VW = Math.ceil(GX + COLS * PW + (COLS - 1) * GUT + LEFT);
   const taken = [];
   const svgs = panels.map((pn, i) => {
     const w = spanOf(i) * PW + (spanOf(i) - 1) * GUT, h = ROW_H[cells[i][1]];
@@ -601,8 +559,8 @@ ${marks.filter((m) => m.lead).map((m) => leaderTo(m.lead)).join('\n')}
 ${marks.map(markSvg).join('\n')}
 </g>`;
   });
-  ART = `${box.svg}\n${svgs.join('\n')}`;
-  ART_BOTTOM = Math.max(box.bottom, GY + ROW_Y.at(-1) + ROW_H.at(-1));
+  ART = svgs.join('\n');
+  ART_BOTTOM = GY + ROW_Y.at(-1) + ROW_H.at(-1);
   ARIA_BODY = `An instruction booklet of ${WORD[panels.length]} panels: each of sheet 2C's ${WORD[BUILD_MODELS.length]} builds, its family bricks in their hues on a slab of ground, with that build's consumers as plain bricks hovering above, each dropping a dashed accent line onto a ringed stud of the part it pins and reaching each other part it pins by a cord that hangs from its underside or leaves its top, winding round what stands in its way where it must, a 1×1 round plate at either end and the far one on a ringed stud, and a last panel for the consumer that pins no family part.`;
 }
 // every consumer is drawn, once
@@ -611,14 +569,13 @@ if (DRAWN.length !== CONSUMERS.length || new Set(DRAWN).size !== CONSUMERS.lengt
 for (let i = 0; i < ALL_MARKS.length; i++) for (let j = i + 1; j < ALL_MARKS.length; j++)
   if (Math.hypot(ALL_MARKS[i].at[0] - ALL_MARKS[j].at[0], ALL_MARKS[i].at[1] - ALL_MARKS[j].at[1]) < MARK_GAP) throw new Error(`sheet 2E: two marks within ${MARK_GAP}px at ${ALL_MARKS[i].at} and ${ALL_MARKS[j].at}`);
 
-const SCHED_ROWS = schedRaw().flatMap((r) => wrapWords(r, Math.floor((VW - 2 * LEFT - 36) / 5.6)));
-const SY = ART_BOTTOM + 40;
-const schedule = `<rect x="${LEFT}" y="${SY}" width="${VW - 2 * LEFT}" height="${80 + SCHED_ROWS.length * 16}" class="sk fp"/>
-${txt(LEFT + 18, SY + 22, `CONSUMER SCHEDULE — one row per consumer, numbered by sheet 2C’s build order, the atlas app last · authored files and sloc by the city ruler, specs aside · S sample app · D docs site · E example · A atlas app`, 'lbls')}
-<line x1="${LEFT}" y1="${SY + 32}" x2="${VW - LEFT}" y2="${SY + 32}" class="skf"/>
-${SCHED_ROWS.map((r, i) => txt(LEFT + 18, SY + 52 + i * 16, r, 'lbls')).join('\n')}
-${txt(LEFT + 18, SY + 60 + SCHED_ROWS.length * 16, `TOTAL — ${plural(CAB.consumers, 'consumer')} · ${plural(CAB.files, 'authored file')} · ${fmt(CAB.sloc)} sloc · ${plural(CAB.studs, 'stud')} · ${fmt(ALL.consumers)} · ${fmt(ALL.files)} · ${fmt(ALL.sloc)} · ${fmt(ALL.studs)} with the atlas app · ${COUNTED}`, 'lbls')}`;
-const VH = SY + 90 + SCHED_ROWS.length * 16;
+const SCHEDULE = schedule(
+  'CONSUMER SCHEDULE — one row per consumer, numbered by sheet 2C’s build order, the atlas app last · authored files and sloc by the city ruler, specs aside · S sample app · D docs site · E example · A atlas app',
+  ['#', 'consumer', 'kind', 'authored files', 'sloc', 'studs', 'mould', 'build', 'note'],
+  CONSUMERS.map((c) => [c.k, c.name, `${c.letter} ${c.kindWord}`, c.files, c.sloc, c.studs, `${shapeName(c.shape)} × ${plural(c.courses, 'course')}`, c.model ? `${c.model.numeral} ${c.model.name.toUpperCase()}` : 'no build', schedNote(c)]),
+  `TOTAL — ${plural(CAB.consumers, 'consumer')} · ${plural(CAB.files, 'authored file')} · ${fmt(CAB.sloc)} sloc · ${plural(CAB.studs, 'stud')} · ${fmt(ALL.consumers)} · ${fmt(ALL.files)} · ${fmt(ALL.sloc)} · ${fmt(ALL.studs)} with the atlas app · ${COUNTED}`,
+);
+const VH = Math.ceil(ART_BOTTOM + 20);
 
 // a part that takes two cords on one round plate
 const SHARED_CAPS = [...new Map(CORDS.filter((t, i) => CORDS.findIndex((o) => o.box === t.box && o.toKey === t.toKey) !== i).map((t) => [t.b.n, t.b])).values()];
@@ -632,23 +589,21 @@ export const SHEET2E_CORDS = { drawn: CORDS.length, hung: HUNG.length, straight:
 export const SHEET2E_TAGS = CONSUMERS.map((c) => ({ k: c.k, letter: c.letter, name: c.name, kind: c.kind }));
 export const SHEET2E_SCALE = `${WORD[CONSUMERS.length].toUpperCase()} CONSUMERS`;
 export const SHEET2E_VERDICT = `the consumers as bricks: ${WORD[CONSUMERS.length]} consumers, ${WORD[CAB.consumers]} in the cabinet’s tree and the atlas app on its own branch; ${WORD[HUB.by.length]} pin brick ${HUB.b.n}, ${HUB.b.name}, and ${listOf(BARE.map((c) => c.name))} pins none; the atlas app is the heaviest at ${plural(HEAVIEST.studs, 'stud')}, ${TALLEST.name} the tallest at ${plural(TALLEST.courses, 'course')}`;
-const ARIA = `An exploded isometric LEGO drawing of the repository's consumers as bricks. ${ARIA_BODY} A box at the left lists the ${WORD[CONSUMERS.length]} consumers by number and kind letter, and a schedule below gives each one's files, sloc, pins and build.`;
+const ARIA = `An exploded isometric LEGO drawing of the repository's consumers as bricks. ${ARIA_BODY} A schedule below the drawing lists the ${WORD[CONSUMERS.length]} consumers by number and kind letter, with each one's files, sloc, pins and build.`;
 
 const svg = `<svg viewBox="0 0 ${VW} ${VH}" role="img" aria-label="${ARIA}">
 ${defs(P)}
-${txt(VW - 30, 16, SCALE_LINE, 'lbls', 'end')}
-${txt(VW - 30, 30, ACCENT_LINE, 'lblf', 'end')}
 ${ART}
-${schedule}
 </svg>`;
 
 export const sheet2e = {
-  num: '2E', id: 'companions-consumers', rev: 'C',
+  num: '2E', id: 'companions-consumers', rev: 'D',
   title: 'THE CONSUMER BUILDS',
   sub: `ALTITUDE 2 — SIBLING PLATE, THE CONSUMERS: the ${WORD[CAB.consumers]} consumers in the cabinet’s tree and the atlas’s own app as bricks at sheet 2’s mould, each seated on the family parts it pins · rows read census-consumers.json, both readings, @ ${CONS.sha}`,
   scale: SHEET2E_SCALE,
   form: 'BUILD INSTRUCTIONS',
   svg,
+  schedule: SCHEDULE,
   caption: `The repository's own consumers drawn as bricks on the family they pin. ${Cap(WORD[HUB.by.length])} of ${WORD[CONSUMERS.length]} pin ${HUB.b.name}, brick ${HUB.b.n}; ${listOf(BARE.map((c) => c.name))} pins no family part; the atlas app, on its own branch, is the heaviest at ${plural(HEAVIEST.studs, 'stud')}.`,
   notes: `
 <p><strong>Up from the family.</strong> Sheet 2 seats the family on <code>@uirouter/core</code>; sheet 2C goes down to the runtimes the family peers. This plate goes up: the sample apps, the docs site, the embedded examples and the atlas's own app, each massed at sheet 2's mould from its authored source — the city ruler's files under its <code>src/</code> (the docs site's <code>.vitepress/</code>, <code>worker/</code> and <code>src/</code>), specs aside — and seated on the parts its manifest pins.</p>

@@ -212,8 +212,9 @@ const jointMouth = (x, cy) => `<path d="M${x},${cy - 16} h-22 v7 h15 v18 h-15 v7
 
 // The three right-face arms are nested L's: the highest stud's arm turns down farthest out.
 const VW = 1620;
-const SSR_Y = 175, EFF_Y = 290, SIG_Y = 324;
-const SIG_COL = 1236, EFF_COL = 1440, SSR_COL = 1546;
+const SSR_Y = 175, EFF_Y = 270, SIG_Y = 324;
+// parallel rails keep RAIL_MIN apart, 12 screen px at the 1107 px measure
+const SIG_COL = 1236, EFF_COL = 1440, SSR_COL = 1556, RAIL_MIN = Math.ceil((12 * VW) / 1107);
 // each Lit binding stands over the renderer-free block it plugs: [x, y, w, h]
 const SIG_B = [1160, 446, 140, 74], USG_B = [1160, 600, 140, 74];
 const EFF_B = [1356, 446, 140, 74], UEF_B = [1356, 600, 158, 74];
@@ -236,12 +237,14 @@ ${lines.map(([s, cls], i) => txt(x + 12, y + 22 + i * 14 + (i > 1 ? 2 : 0), s, c
     ['effect arm', [1178, EFF_Y - 8, EFF_COL + 16 - 1178, 16], [1, 5]], ['effect column', [EFF_COL, EFF_Y - 8, 16, EFF_B[1] - EFF_Y + 8], [1, 5]],
     ['signals arm', [1178, SIG_Y - 8, SIG_COL + 16 - 1178, 16], [1, 7]], ['signals column', [SIG_COL, SIG_Y - 8, 16, SIG_B[1] - SIG_Y + 8], [1, 7]],
     ['mobx joint', [UMX_B[0] + UMX_B[2], MBX_JOINT_Y - 9, MBX_B[0] - UMX_B[0] - UMX_B[2], 18], [3, 10]],
+    ...[['ssr', SSR_Y, 6], ['effect', EFF_Y, 5], ['signals', SIG_Y, 7]].map(([name, cy, n]) => [`${name} mouth`, [1156, cy - 16, 22, 32], [1, n]]),
   ];
   const cut = (a, b) => Math.min(a[2], b[2]) - Math.max(a[0], b[0]) > 0 && Math.min(a[3], b[3]) - Math.max(a[1], b[1]) > 0;
   const box = ([x, y, w, h]) => [x, y, x + w, y + h];
+  const clear = ([x, y, w, h]) => [x - RAIL_MIN, y - RAIL_MIN, x + w + RAIL_MIN, y + h + RAIL_MIN];
   for (const [name, r, ends] of ARMS) {
-    for (const [n, m] of Object.entries(MASS)) if (!ends.includes(+n) && cut(box(r), env(m))) throw new Error(`sheet 2A: the ${name} runs through block ${n}`);
-    for (const [other, o, oends] of ARMS) if (oends.join() !== ends.join() && cut(box(r), box(o))) throw new Error(`sheet 2A: the ${name} crosses the ${other}`);
+    for (const [n, m] of Object.entries(MASS)) if (!ends.includes(+n) && cut(clear(r), env(m))) throw new Error(`sheet 2A: the ${name} runs within ${RAIL_MIN} of block ${n}`);
+    for (const [other, o, oends] of ARMS) if (oends.join() !== ends.join() && cut(clear(r), box(o))) throw new Error(`sheet 2A: the ${name} runs within ${RAIL_MIN} of the ${other}`);
   }
 }
 
@@ -332,7 +335,6 @@ const svg = `<svg viewBox="0 0 ${VW} 960" role="img" aria-label="A coupling plan
 ${defs(P)}
 
 ${txt(VW - 30, 16, `SCALE — front-face area ≈ 35 px² per sloc (census-bricks.json @ ${B.sha}) · the two smallest companions (${SMALL_SHAPES}) are held to a legible minimum · depth is constant and carries no data`, 'lbls', 'end')}
-${txt(VW - 30, 30, 'THE COUPLINGS ARE THE SUBJECT — every plug drawn just short of seated · sheet 2 shows this same assembly exploded', 'lblf', 'end')}
 
 ${context}
 ${coreBlock}
@@ -351,7 +353,7 @@ ${taps}
 </svg>`;
 
 export const sheet2a = {
-  num: '2A', id: 'companions-couplings', rev: 'H',
+  num: '2A', id: 'companions-couplings', rev: 'I',
   title: 'THE COUPLING PLAN',
   sub: `ALTITUDE 2 — ALTERNATE PLATE: the ${WORD[DRAWN.length]} companions sheet 2 schedules, laid out for reading — core central as a socket wall, companions at its right, the server below the no-DOM line — with every coupling drawn disengaged and lettered to its API call · rows read census-bricks.json @ ${B.sha}`,
   scale: `${WORD[DRAWN.length].toUpperCase()} PACKAGES`,

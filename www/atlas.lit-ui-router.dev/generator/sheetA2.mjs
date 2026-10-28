@@ -1,5 +1,5 @@
 import { defs } from './chrome.mjs';
-import { txt, lines, box, arrow, keyRow } from './helpers.mjs';
+import { txt, lines, box, arrow, keyRow, schedule } from './helpers.mjs';
 import { ATLAS } from './census-atlas.mjs';
 
 const P = 'sA2';
@@ -76,6 +76,8 @@ const LASTROW = Math.max(...ROWY.values());
 const OVY = LASTROW + 44;                           // the query station that files nothing
 const RELICY = OVY + 32;                            // the old regime's last instrument
 const TABY = (i) => 272 + i * 36;                   // rack pitch, independent of the cabinet
+// the rail's label sits level under its foot, below the last struck-through station
+const RAIL_LABEL_Y = RELICY + 11 + Math.max(0, A.unwired.length - 1) * 30 + 22;
 
 // ---------------------------------------------------------------------------
 // THE BASIS BLOCK + THE MASTER ROW
@@ -90,7 +92,7 @@ ${lines(SX + 10, 130, [
 ], 'lbl', 'start', 13.5)}`;
 
 const rail = `<path d="M${SX + 4},180 L${RAILX},180 L${RAILX},${RELICY + 6}" class="sks" stroke-dasharray="4 4" opacity="0.65" fill="none"/>
-${txt(RAILX - 6, (180 + RELICY) / 2, 'ONE BASIS — EVERY STATION RE-MATERIALIZES THIS REF', 'lbls', 'middle', `transform="rotate(-90 ${RAILX - 6} ${(180 + RELICY) / 2})"`)}`;
+${txt(RAILX, RAIL_LABEL_Y, 'ONE BASIS — EVERY STATION RE-MATERIALIZES THIS REF', 'lbls')}`;
 
 const masterRow = `${arrow(P, `M${SX + 120},180 L${SX + 120},${MY - 11}`)}
 ${box(SX, MY - 11, SW, RH, 'ska fp')}
@@ -192,48 +194,17 @@ ${A.tools.map((t, i) => txt(RX + 10, TLY + 50 + i * 15, t.label.length > TOOL_CH
 // ---------------------------------------------------------------------------
 // THE SCHEDULE — plate | tier | writer | basis | readers
 // ---------------------------------------------------------------------------
-// The schedule starts below the DEEPER of the two columns above it: the rack
-// grew past the station column once the drawing count hit 19, and the tools
-// ledger hangs off the rack — without the max() the table climbs into it.
-const SY = Math.max(RELICY + 70, TLY + 44 + toolHalf * 15 + 26);
-const SCOL = [46, 250, 292, 448, 604];
-// READ BY can outgrow its column (the master plate is read by everything), so
-// long reader lists wrap and the row takes as many 17px lines as it needs.
-const wrapReaders = (s) => {
-  const lines = [];
-  let cur = '';
-  for (const w of s.split(', ')) {
-    const next = cur ? `${cur}, ${w}` : w;
-    if (next.length > 80 && cur) { lines.push(`${cur},`); cur = w; } else { cur = next; }
-  }
-  lines.push(cur);
-  return lines;
-};
-const SROWS = A.rows.map((r) => {
-  const readers = [...r.readers.map((d) => (d.num === null ? 'gallery cover' : `sheet ${d.num}`)),
-    ...r.queriedBy.map((f) => f.replace('census-', '').replace('.mjs', ''))].join(', ')
-    || 'filed, awaiting a drawing';
-  return { r, lines: wrapReaders(readers) };
-});
-const SH = 60 + SROWS.reduce((s, x) => s + x.lines.length, 0) * 17 + 46;
-const scheduleRows = (() => {
-  let y = SY + 68;
-  return SROWS.map(({ r, lines }) => {
-    const cells = [r.file, r.tier, r.writer, r.basis]
-      .map((v, k) => txt(SCOL[k], y, v, k === 0 && r.file === A.master ? 'lbla' : k < 3 ? 'lbl' : 'lbls')).join('');
-    const readBy = lines.map((ln, j) => txt(SCOL[4], y + j * 17, ln, 'lbls')).join('');
-    y += lines.length * 17;
-    return cells + readBy;
-  }).join('\n');
-})();
-const schedule = `${box(30, SY, 1100, SH, 'sk fnone')}
-${txt(46, SY + 22, 'PLATE SCHEDULE — EVERY FILED PLATE, ITS ONE WRITER, AND EVERY DRAWING THAT READS IT', 'lbl')}
-<line x1="30" y1="${SY + 32}" x2="1130" y2="${SY + 32}" class="sks" opacity="0.7"/>
-${['PLATE', 'TIER', 'WRITER', 'BASIS', 'READ BY'].map((h, i) => txt(SCOL[i], SY + 48, h, 'lbls')).join('\n')}
-${scheduleRows}
-${txt(46, SY + SH - 18, `TOTALS — ${S.plates} plates · ${S.probes} probes (T1 ${S.byTier.T1} · T2 ${S.byTier.T2} · T3 ${S.byTier.T3}) · ${S.writes} writes · ${S.reads} reads · ${A.unread.length} plates unread · every plate pinned to ${BASIS} · graph: ${S.nodes} nodes / ${S.edges} edges`, 'lblf')}`;
+const SCHEDULE = schedule(
+  'PLATE SCHEDULE — EVERY FILED PLATE, ITS ONE WRITER, AND EVERY DRAWING THAT READS IT',
+  ['#', 'plate', 'tier', 'writer', 'basis', 'read by'],
+  A.rows.map((r, i) => [i + 1, r.file, r.tier, r.writer, r.basis,
+    [...r.readers.map((d) => (d.num === null ? 'gallery cover' : `sheet ${d.num}`)),
+      ...r.queriedBy.map((f) => f.replace('census-', '').replace('.mjs', ''))].join(', ') || 'filed, awaiting a drawing']),
+  `TOTALS — ${S.plates} plates · ${S.probes} probes (T1 ${S.byTier.T1} · T2 ${S.byTier.T2} · T3 ${S.byTier.T3}) · ${S.writes} writes · ${S.reads} reads · ${A.unread.length} plates unread · every plate pinned to ${BASIS} · graph: ${S.nodes} nodes / ${S.edges} edges`,
+);
 
-const H = SY + SH + 30;
+// the drawing ends at the deeper of the station column's foot and the tools ledger
+const H = Math.max(RAIL_LABEL_Y + 6, TLY + 44 + toolHalf * 15) + 20;
 
 const ARIA = `The census pipeline drawn as a left-to-right flow of dataflow, not containment. `
   + `At far left one basis station: git archive ${A.ref} at ${A.sha} extracted to a temporary directory, ${fmt(A.tracked)} tracked paths, `
@@ -245,7 +216,7 @@ const ARIA = `The census pipeline drawn as a left-to-right flow of dataflow, not
   + `Each station writes exactly one drawer of the plate cabinet in the middle column, so every writes edge is horizontal and none of them cross. `
   + `From the cabinet, ${readsN} thin read curves fan into a rack of ${SHEETS.length} numbered atlas sheets at the right. `
   + `Two stations file nothing: the overview query, which only prints, and ${A.unwired.join(', ')}, drawn struck through — a working-tree walker imported by nothing, the old regime's last instrument. `
-  + `A plate schedule below lists all ${A.plates.length} plates with writer, tier, basis and readers.`;
+  + `A plate schedule below the drawing lists all ${A.plates.length} plates with writer, tier, basis and readers.`;
 
 const svg = `<svg viewBox="0 20 1160 ${H - 20}" role="img" aria-label="${ARIA}">
 ${defs(P)}
@@ -267,8 +238,6 @@ ${readEdges}
 ${readLabel}
 ${rack}
 ${toolsBox}
-
-${schedule}
 </svg>`;
 
 // the homes the notes name: the instruments the probes run, and the repo's workspace file
@@ -285,7 +254,7 @@ const HOME = {
 };
 
 export const sheetA2 = {
-  num: 'A2', id: 'pipeline', rev: 'D',
+  num: 'A2', id: 'pipeline', rev: 'E',
   // Appendix chrome: the office measures the atlas, so it stands at no altitude.
   head: 'APPENDIX A2 · META',
   appendix: true,
@@ -294,6 +263,7 @@ export const sheetA2 = {
   scale: 'THE CENSUS PIPELINE',
   form: 'FLOW GRAPH',
   svg,
+  schedule: SCHEDULE,
   caption: `The instrument drawn by its own instrument: ${S.probes} probe stations over three tiers write ${S.plates} filed plates, which ${S.drawings} drawings read — and the one that matters most is read ${word(MASTER_QUERIES.length + 1)} times over. Nothing here is hand-listed: the stations are the generator files that write a plate, the tiers are the basis primitive each one calls, and the edges are the plate URLs the sheets construct.`,
   notes: `
 <p><strong>Method — the plate surveys its own drawer.</strong> Every station, drawer, tab and edge on this plate is introspected at build time by <code>www/atlas.lit-ui-router.dev/generator/census-atlas.mjs</code>: a probe is any <code>census-*.mjs</code> that <em>writes</em> a plate; a shared instrument is one the probes <em>import</em> (there are ${word(S.instruments)} — <code>basis.mjs</code> and <code>census-query.mjs</code>); a tier is decided by which basis primitive the source actually calls — <code>materialize</code> alone is T1, <code>historyLog</code> is T2, <code>installDeps</code> is T3; and a reader is any generator file that constructs the plate's URL. The introspection <em>throws</em> rather than draws if a plate has anything but exactly one writer, if a probe names a plate that is not filed, if a drawing reads a plate nothing writes, or — the claim this sheet makes loudest — if the ${S.plates} filed plates disagree about the ref they were measured at. They do not: all ${S.plates} are pinned to ${BASIS}. What is editorial here is what is editorial on every sheet: placement, the short basis labels, and this prose.</p>

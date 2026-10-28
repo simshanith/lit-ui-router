@@ -17,6 +17,198 @@
   },
   "issueLog": [
     {
+      "date": "2026-10-28",
+      "num": "2",
+      "head": "SHEET 2",
+      "title": "THE BRICK ASSEMBLY",
+      "rev": "K",
+      "desc": "the structure and stud schedules set as tables under the drawing, and the drawing ends at the finished band"
+    },
+    {
+      "date": "2026-10-28",
+      "num": "2A",
+      "head": "SHEET 2A",
+      "title": "THE COUPLING PLAN",
+      "rev": "I",
+      "desc": "the peer rails and plug mouths spaced at 18 units, the ssr column clear of block 8"
+    },
+    {
+      "date": "2026-10-28",
+      "num": "2C",
+      "head": "SHEET 2C",
+      "title": "THE ALTERNATE BUILDS",
+      "rev": "C",
+      "desc": "the box, the spare register and the build and plate schedules set as tables under the drawing, and the grid draws a quarter larger at the same measure"
+    },
+    {
+      "date": "2026-10-28",
+      "num": "2E",
+      "head": "SHEET 2E",
+      "title": "THE CONSUMER BUILDS",
+      "rev": "D",
+      "desc": "the consumer schedule set as a table under the drawing, and the grid starts at the sheet’s corner"
+    },
+    {
+      "date": "2026-10-28",
+      "num": "2F",
+      "head": "SHEET 2F",
+      "title": "THE PINNED BUILDS",
+      "rev": "C",
+      "desc": "the pin schedule set as a table under the drawing"
+    },
+    {
+      "date": "2026-10-28",
+      "num": "3",
+      "head": "SHEET 3",
+      "title": "THE INSTRUMENT YARD",
+      "rev": "I",
+      "desc": "the structure schedule set as a table under the drawing, the task-manager inset at the top right clear of block 1, and the gate-severity box gone"
+    },
+    {
+      "date": "2026-10-28",
+      "num": "3A",
+      "head": "SHEET 3A",
+      "title": "THE HANDOFF WORKS",
+      "rev": "F",
+      "desc": "the seam schedule set as a table under the drawing, and the title box and the one-line summaries gone"
+    },
+    {
+      "date": "2026-10-28",
+      "num": "3B",
+      "head": "SHEET 3B",
+      "title": "THE WATCHED CITY",
+      "rev": "L",
+      "desc": "the blocks drawn in ink with the one tier stated in the key, the schedule set as a table under the drawing, and the title box gone"
+    },
+    {
+      "date": "2026-10-28",
+      "num": "4",
+      "head": "SHEET 4",
+      "title": "THE FAMILY SPINE",
+      "rev": "J",
+      "desc": "the structure schedule set as a table under the drawing"
+    },
+    {
+      "date": "2026-10-28",
+      "num": "7",
+      "head": "SHEET 7",
+      "title": "THE MEASURED CITY",
+      "rev": "K",
+      "desc": "the structure schedule and the road register set as tables under the drawing, the title box and the gate-severity box gone, and every leader dashed with a landing dot"
+    },
+    {
+      "date": "2026-10-28",
+      "num": "7A",
+      "head": "SHEET 7A",
+      "title": "THE SHADOW SURVEY",
+      "rev": "I",
+      "desc": "the shadow schedule set as a table under the drawing, the title box, the brightness ladder and the verdict box gone with the key carrying every band, and every leader dashed with a…"
+    },
+    {
+      "date": "2026-10-28",
+      "num": "7B",
+      "head": "SHEET 7B",
+      "title": "THE WORKING CITY",
+      "rev": "J",
+      "desc": "the plant schedule set as a table under the drawing with the telemetry printed in the key, the title box gone, and every leader dashed with a landing dot"
+    },
+    {
+      "date": "2026-10-28",
+      "num": "8",
+      "head": "SHEET 8",
+      "title": "THE DELIVERED CITY",
+      "rev": "F",
+      "desc": "the structure schedule set as a table under the drawing, and the leaders dashed with a landing dot"
+    },
+    {
+      "date": "2026-10-28",
+      "num": "9",
+      "head": "SHEET 9",
+      "title": "THE SHIPPED CITY",
+      "rev": "I",
+      "desc": "the district schedule set as a table under the drawing, the three leaderless callouts folded into the notes, and the leaders dashed with a landing dot"
+    },
+    {
+      "date": "2026-10-28",
+      "num": "10",
+      "head": "SHEET 10",
+      "title": "THE BUNDLED CITY",
+      "rev": "F",
+      "desc": "the package-group schedule set as a table under the drawing, and every callout leader dashed with a landing dot"
+    },
+    {
+      "date": "2026-10-28",
+      "num": "11",
+      "head": "SHEET 11",
+      "title": "THE ENTRY QUARTERS",
+      "rev": "K",
+      "desc": "the door schedule set as a table under the drawing, and every callout leader dashed with a landing dot"
+    },
+    {
+      "date": "2026-10-28",
+      "num": "13",
+      "head": "SHEET 13",
+      "title": "THE WEATHERING MAP",
+      "rev": "J",
+      "desc": "the structure schedule set as a table under the drawing, the title box and the reading box gone with the key carrying the seasons, and every leader dashed with a landing dot"
+    },
+    {
+      "date": "2026-10-28",
+      "num": "14",
+      "head": "SHEET 14",
+      "title": "THE UPSTREAM WORKS",
+      "rev": "C",
+      "desc": "the consignment register set as three tables under the drawing, and the title box gone"
+    },
+    {
+      "date": "2026-10-28",
+      "num": "A1",
+      "head": "APPENDIX A1",
+      "title": "THE SPRITE STUDY",
+      "rev": "B",
+      "desc": "the in-figure title box gone"
+    },
+    {
+      "date": "2026-10-28",
+      "num": "A2",
+      "head": "APPENDIX A2",
+      "title": "THE SURVEY OFFICE",
+      "rev": "E",
+      "desc": "the plate schedule set as a table under the drawing, and the ONE BASIS label set level"
+    },
+    {
+      "date": "2026-10-28",
+      "num": "A3",
+      "head": "APPENDIX A3",
+      "title": "THE ATLAS, MEASURED",
+      "rev": "C",
+      "desc": "both registers set as tables under the drawing, and the title box gone"
+    },
+    {
+      "date": "2026-10-28",
+      "num": "A4",
+      "head": "APPENDIX A4",
+      "title": "THE ATLAS, SHIPPED",
+      "rev": "D",
+      "desc": "both structure schedules and the wire set as tables under the drawing, WHAT THE DRAWING SAYS cut to its headline, and the title box gone"
+    },
+    {
+      "date": "2026-10-27",
+      "num": "2B",
+      "head": "SHEET 2B",
+      "title": "THE COUPLING BENCH",
+      "rev": "I",
+      "desc": "ui-router-registry stands between ui-router-effect and ui-router-mobx in the core-only column, its three optional ties to the renderer-free packages drawn in red"
+    },
+    {
+      "date": "2026-10-27",
+      "num": "2E",
+      "head": "SHEET 2E",
+      "title": "THE CONSUMER BUILDS",
+      "rev": "C",
+      "desc": "a consumer seats over another part it pins where from over its heaviest pin no cord runs clear, and a straddle never takes a one-stud part's only stud"
+    },
+    {
       "date": "2026-10-24",
       "num": "2",
       "head": "SHEET 2",
@@ -1176,7 +1368,7 @@
         "projection": "isometric",
         "mode": "static"
       },
-      "rev": "J",
+      "rev": "K",
       "file": "sheets/2.html",
       "interactive": false,
       "needsCytoscape": false,
@@ -1189,6 +1381,7 @@
         "dark": "thumbs/2-dark.webp"
       },
       "refs": [
+        "3",
         "4"
       ]
     },
@@ -1206,7 +1399,7 @@
         "projection": "plan",
         "mode": "static"
       },
-      "rev": "H",
+      "rev": "I",
       "file": "sheets/2a.html",
       "interactive": false,
       "needsCytoscape": false,
@@ -1268,7 +1461,7 @@
         "projection": "isometric",
         "mode": "static"
       },
-      "rev": "B",
+      "rev": "C",
       "file": "sheets/2c.html",
       "interactive": false,
       "needsCytoscape": false,
@@ -1301,7 +1494,7 @@
         "projection": "isometric",
         "mode": "static"
       },
-      "rev": "C",
+      "rev": "D",
       "file": "sheets/2e.html",
       "interactive": false,
       "needsCytoscape": false,
@@ -1334,7 +1527,7 @@
         "projection": "isometric",
         "mode": "static"
       },
-      "rev": "B",
+      "rev": "C",
       "file": "sheets/2f.html",
       "interactive": false,
       "needsCytoscape": false,
@@ -1370,7 +1563,7 @@
         "mode": "static",
         "basis": "isometric"
       },
-      "rev": "H",
+      "rev": "I",
       "file": "sheets/3.html",
       "interactive": false,
       "needsCytoscape": false,
@@ -1403,7 +1596,7 @@
         "projection": "schematic",
         "mode": "static"
       },
-      "rev": "E",
+      "rev": "F",
       "file": "sheets/3a.html",
       "interactive": false,
       "needsCytoscape": false,
@@ -1434,7 +1627,7 @@
         "mode": "static",
         "basis": "isometric graph"
       },
-      "rev": "K",
+      "rev": "L",
       "file": "sheets/3b.html",
       "interactive": false,
       "needsCytoscape": false,
@@ -1466,7 +1659,7 @@
         "projection": "isometric",
         "mode": "static"
       },
-      "rev": "I",
+      "rev": "J",
       "file": "sheets/4.html",
       "interactive": false,
       "needsCytoscape": false,
@@ -1553,7 +1746,7 @@
         "mode": "static",
         "basis": "measured"
       },
-      "rev": "J",
+      "rev": "K",
       "file": "sheets/7.html",
       "interactive": false,
       "needsCytoscape": false,
@@ -1585,7 +1778,7 @@
         "projection": "plan",
         "mode": "static"
       },
-      "rev": "H",
+      "rev": "I",
       "file": "sheets/7a.html",
       "interactive": false,
       "needsCytoscape": false,
@@ -1619,7 +1812,7 @@
         "mode": "static",
         "basis": "working"
       },
-      "rev": "I",
+      "rev": "J",
       "file": "sheets/7b.html",
       "interactive": false,
       "needsCytoscape": false,
@@ -1656,7 +1849,7 @@
         "mode": "static",
         "basis": "delivered"
       },
-      "rev": "E",
+      "rev": "F",
       "file": "sheets/8.html",
       "interactive": false,
       "needsCytoscape": false,
@@ -1687,7 +1880,7 @@
         "mode": "static",
         "basis": "shipped"
       },
-      "rev": "H",
+      "rev": "I",
       "file": "sheets/9.html",
       "interactive": false,
       "needsCytoscape": false,
@@ -1719,7 +1912,7 @@
         "mode": "static",
         "basis": "bundled"
       },
-      "rev": "E",
+      "rev": "F",
       "file": "sheets/10.html",
       "interactive": false,
       "needsCytoscape": false,
@@ -1752,7 +1945,7 @@
         "projection": "isometric",
         "mode": "static"
       },
-      "rev": "J",
+      "rev": "K",
       "file": "sheets/11.html",
       "interactive": false,
       "needsCytoscape": false,
@@ -1847,7 +2040,7 @@
         "projection": "plan",
         "mode": "static"
       },
-      "rev": "I",
+      "rev": "J",
       "file": "sheets/13.html",
       "interactive": false,
       "needsCytoscape": false,
@@ -1879,7 +2072,7 @@
         "projection": "plan",
         "mode": "static"
       },
-      "rev": "B",
+      "rev": "C",
       "file": "sheets/14.html",
       "interactive": false,
       "needsCytoscape": false,
@@ -1909,7 +2102,7 @@
         "projection": "isometric",
         "mode": "static"
       },
-      "rev": "A",
+      "rev": "B",
       "file": "sheets/a1.html",
       "interactive": false,
       "needsCytoscape": false,
@@ -1941,7 +2134,7 @@
         "projection": "graph",
         "mode": "static"
       },
-      "rev": "D",
+      "rev": "E",
       "file": "sheets/a2.html",
       "interactive": false,
       "needsCytoscape": false,
@@ -1951,11 +2144,34 @@
         "dark": "thumbs/a2-dark.webp"
       },
       "refs": [
+        "1",
+        "1i",
+        "2",
+        "2A",
+        "2B",
+        "2C",
         "2E",
+        "2F",
         "3",
+        "3A",
+        "3B",
+        "4",
         "5",
         "6",
-        "A1"
+        "7",
+        "7A",
+        "7B",
+        "8",
+        "9",
+        "10",
+        "11",
+        "12",
+        "12i",
+        "13",
+        "14",
+        "A1",
+        "A3",
+        "A4"
       ]
     },
     {
@@ -1998,7 +2214,7 @@
         "mode": "static",
         "basis": "measured"
       },
-      "rev": "B",
+      "rev": "C",
       "file": "sheets/a3.html",
       "interactive": false,
       "needsCytoscape": false,
@@ -2033,7 +2249,7 @@
         "mode": "static",
         "basis": "measured"
       },
-      "rev": "C",
+      "rev": "D",
       "file": "sheets/a4.html",
       "interactive": false,
       "needsCytoscape": false,

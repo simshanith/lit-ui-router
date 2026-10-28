@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { defs } from './chrome.mjs';
-import { txt, lines, isoPt, keyRow, npmUrl } from './helpers.mjs';
+import { txt, lines, isoPt, keyRow, npmUrl, schedule } from './helpers.mjs';
 import { BRICK_TINT, brickKit, brickPaint, huePatterns, seated, sty } from './brick-iso.mjs';
 import { BRICK_HUES, hueOf } from './brick-hues.mjs';
 import { seatedBoxes } from './brick-glb.mjs';
@@ -309,6 +309,8 @@ ${Array.from({ length: ws * ds }, (_, k) => {
 }).join('\n')}`;
 }
 
+const mouldOf = (b) => `${shapeName(b.shape)} · ${b.courses} course${b.courses > 1 ? 's' : ''}`;
+
 // [brick, row y] — shape and courses come from the brick itself
 const PARTS = [[1, 118], [2, 160], [3, 192], [4, 234], [5, 272], [6, 312], [7, 348], [8, 380], [9, 406], [10, 432]];
 if (PARTS.length !== BRICKS.length) throw new Error('sheet2: the parts callout lists a row per brick');
@@ -320,7 +322,7 @@ ${PARTS.map(([n, oy]) => {
   return `${miniBrick(92, oy, b.shape[0], b.shape[1], b.courses, '', b.hue)}
 ${badge(48, oy - 4, n)}
 ${txt(120, oy - 6, b.disp, 'lbl')}
-${txt(120, oy + 6, `x1 · ${shapeName(b.shape)} · ${b.courses} course${b.courses > 1 ? 's' : ''}`, 'lblf')}`;
+${txt(120, oy + 6, `x1 · ${mouldOf(b)}`, 'lblf')}`;
 }).join('\n')}`;
 
 // ---- spare parts: the same stud, not in this set --------------------------------------
@@ -362,22 +364,22 @@ const STUDROWS = [
   ['', `brick ${REACH('K')[1]}’s observable store — brick ${REACH('K')[0]} reacts to it on a Lit host`],
 ];
 const SEAMS = STUDROWS.filter(([k]) => /^[A-Z]$/.test(k)).length;
-const STX = 980, STW = 390, STY = 44;
-// the brick seams sit under a rule of their own, a half row below core's
-const STUD_Y = STUDROWS.reduce((ys, [k], i) => [...ys, (i ? ys[i - 1] + 14 : STY + 48) + (k === '-' ? 8 : 0)], []);
-const studBox = `<rect x="${STX}" y="${STY}" width="${STW}" height="${STUD_Y.at(-1) + 12 - STY}" class="skf fnone"/>
-${txt(STX + 14, STY + 22, 'STUD SCHEDULE — the published surface each brick seats on', 'lbls')}
-${leader(STX, STY + 30, STX + STW, STY + 30)}
-${STUDROWS.map(([k, s], i) => {
-  const y = STUD_Y[i];
-  if (k === '-') return `${leader(STX + 14, y - 13, STX + STW - 14, y - 13)}${txt(STX + 32, y, s, 'lblf')}`;
-  return k ? `${txt(STX + 14, y, k, 'lbla')}${txt(STX + 32, y, s, 'lbl')}` : txt(STX + 32, y, s, 'lblf');
-}).join('\n')}`;
+// a lettered row opens a seam, an unlettered one continues it, and the '-' rule turns from core's seams to the bricks'
+const STUD_SCHED = [];
+let studOn = 'core — the plate';
+for (const [k, s] of STUDROWS) {
+  if (k === '-') studOn = 'a brick, for the ones above it';
+  else if (k) STUD_SCHED.push([k, studOn, s, '']);
+  else STUD_SCHED.at(-1)[3] = `${STUD_SCHED.at(-1)[3]} ${s}`.trim();
+}
+const PLATE_SEAMS = STUD_SCHED.filter(([, on]) => on.startsWith('core')).length;
+const STUDS_TABLE = schedule('STUD SCHEDULE — the published surface each brick seats on', ['stud', 'published on', 'seam', 'who seats on it'], STUD_SCHED,
+  `TOTAL — ${SEAMS} seams: ${PLATE_SEAMS} on core, ${SEAMS - PLATE_SEAMS} on the bricks`);
 
 // ---- lettering ---------------------------------------------------------------------------
 // the client bricks' blocks stand at the tower's left, right-aligned against it,
 // each badge between its block and its mass; the bridge and brick 4 letter at the right
-const stats = (b) => `${b.files}f · ${fmt(b.sloc)} sloc · ${shapeName(b.shape)} · ${b.courses} course${b.courses > 1 ? 's' : ''}`;
+const stats = (b) => `${b.files}f · ${fmt(b.sloc)} sloc · ${mouldOf(b)}`;
 const lettering = `
 ${badge(562, 54, 3, 'ska fp', 'lbla')}
 ${txt(546, 58, `${B(3).name} ${B(3).ver}`, 'lblb', 'end')}
@@ -554,82 +556,83 @@ ${wholes}
 ${grounds}`;
 
 // ---- structure schedule ------------------------------------------------------------------
-const ART_H = ROW2_BOTTOM + 56;
 const row5 = B(5), row6 = B(6);
+const bhead = (n, studs) => [n, B(n).name, B(n).ver, B(n).files, B(n).sloc, mouldOf(B(n)), studs];
 const SCHED = [
   [
-    ` 0  ${CORE[0]} ${CORE[1]} — THE BASEPLATE · ${CORE[2]}f · ${fmt(CORE[3])} sloc · NOT MASSED (a plate is ground) · studs A–E are its published API`,
+    [0, CORE[0], CORE[1], CORE[2], CORE[3], 'baseplate, not massed — a plate is ground', 'A–E, its published API'],
     `    every brick on this sheet declares it as a peerDependency; the only joints from one brick to another are ${listOf(BRICK_JOINTS)}`,
   ],
   [
-    ` 1  ${B(1).name} ${B(1).ver} · ${stats(B(1))} · studs A · B · D · carries F · G`,
+    bhead(1, `studs A · B · D · carries F · G`),
     '    class UIRouterLit extends UIRouter — moulded, not snapped; everything lit-specific enters through published seams:',
     '    this.plugin(servicesPlugin) · this.stateRegistry.decorator(‘views’, litViewsBuilder) · urlService.listen()/sync() · viewService._pluginapi._viewConfigFactory(‘lit’, …) (internal)   [src/core.ts]',
     '    and publishes two of its own: F UIRouterLitElement.seekRouter(host), the ui-router-context event; G lit-ui-router/context, the context-request protocol   [src/ui-router.ts, src/context.ts]',
   ],
   [
-    ` 2  ${B(2).name} ${B(2).ver} · ${stats(B(2))} · stud A (LOCATION SEAT)`,
+    bhead(2, `stud A (LOCATION SEAT)`),
     '    navigationLocationPlugin = locationPluginFactory(‘vanilla.navigationLocation’, true, NavigationLocationService, BrowserLocationConfig)',
     '    a router holds exactly one location plugin, so this brick SWAPS core’s pushStateLocation; it peers core only — it has never heard of Lit   [src/index.ts]',
   ],
   [
-    ` 3  ${B(3).name} ${B(3).ver} · ${stats(B(3))} · seats on brick 1 (F) · peers brick ${REACH('K')[1]} (K)`,
+    bhead(3, `seats on brick 1 (F) · peers brick ${REACH('K')[1]} (K)`),
     `    RouterStore.for(router) comes from ${B(REACH('K')[1]).name} ${peerRange(B(3).name, B(REACH('K')[1]).name)}, stud K on brick ${REACH('K')[1]}, which registers the one onSuccess per router — this brick holds no hook of its own; src/router-store.ts re-exports it   [src/router-reaction-controller.ts, src/router-store.ts]`,
     '    RouterReactionController → requestRouter(host, { subscribe: true }) over stud G, then UIRouterLitElement.seekRouter(host), the ui-router-context event — stud F on brick 1   [src/router-reaction-controller.ts]',
   ],
   [
-    ` 4  ${B(4).name} ${B(4).ver} · ${stats(B(4))} · NO STUD on this plate · carries H`,
+    bhead(4, `NO STUD on this plate · carries H`),
     '    peerDependenciesMeta: { ‘@uirouter/core’: { optional: true } } — the ‘matcher’ tier is dependency-free pattern matching',
     '    the ‘simulate’ tier reaches plates of its own behind a lazy import(): createHeadlessRouter(states, config) — new UIRouter() + plugin(servicesPlugin) + plugin(serverLocationPlugin), the mount’s strict / caseInsensitive / defaultSquashPolicy replayed   [src/simulate.ts]',
     '    a pool of them per mount, each held by one request at a time — prewarm builds them ahead, release() resets one for the next request   [src/index.ts, src/router-pool.ts]',
   ],
   [
-    ` 5  ${row5.name} ${row5.ver} · ${stats(row5)} · seats on brick 1 (F) · peers brick ${REACH('I')[1]} (I)`,
+    bhead(5, `seats on brick 1 (F) · peers brick ${REACH('I')[1]} (I)`),
     `    routeRef(router) and snapshotRoute() come from ${B(REACH('I')[1]).name} ${peerRange(row5.name, B(REACH('I')[1]).name)}, stud I on brick ${REACH('I')[1]}, which registers the one onSuccess per router — this brick holds no hook of its own   [src/router-ref-controller.ts, src/index.ts]`,
     `    RouterRefController → getScopedRouter() under a server render, else requestRouter(host, { subscribe: true }) over stud G, then seekRouter(host) on stud F; RefController forks one Effect fiber per host · peers effect ${peerRange(row5.name, 'effect')}   [src/router-ref-controller.ts, src/ref-controller.ts]`,
   ],
   [
-    ` 6  ${row6.name} ${row6.ver} · ${stats(row6)} · seats on brick 1 (G) AND on brick 4 (H) — the one part with a drop line onto each plate’s assembly`,
+    bhead(6, `seats on brick 1 (G) AND on brick 4 (H) — the one part with a drop line onto each plate’s assembly`),
     '    prerender() → createServerRouter({ mounts }).resolve(path) per path · provideRouter(root, router) + withRouterSync(router, …) around @lit-labs/ssr render()   [src/prerender.ts]',
     '    UiViewRenderer → getScopedRouter() + router.viewService.registerUIView(); withServedRender(UiView) extends brick 1’s view, which wakes on requestContext(adoptUiViewContext)   [src/ui-view-renderer.ts, src/served-view.ts, src/register.ts]',
     `    client half: hydrateRoot() → provideContext(container, adoptUiViewContext, adopt) + hydrate(); uiViewSlot() marks each view’s hole · peers @lit-labs/ssr ${peerRange(row6.name, '@lit-labs/ssr')} and ssr-client ${peerRange(row6.name, '@lit-labs/ssr-client')} — a render table, not a router plate   [src/client.ts]`,
   ],
   [
-    ` 7  ${B(7).name} ${B(7).ver} · ${stats(B(7))} · seats on brick 1 (F) · peers brick ${REACH('J')[1]} (J)`,
+    bhead(7, `seats on brick 1 (F) · peers brick ${REACH('J')[1]} (J)`),
     '    RouterSignalController → getScopedRouter() under a server render, else requestRouter(host, { subscribe: true }) over stud G, then UIRouterLitElement.seekRouter(host), stud F on brick 1   [src/router-signal-controller.ts]',
     `    RouterSignals.for(router) + watchSelection() from ${SIG_PEER} ${peerRange(B(7).name, SIG_PEER)} — it holds no hook of its own; brick ${REACH('J')[1]} registers the one onSuccess per router   [src/router-signal-controller.ts, src/signal-controller.ts]`,
   ],
   [
-    ` 8  ${B(8).name} ${B(8).ver} · ${stats(B(8))} · studs C · E on the plate · carries I · peers core and nothing in this repo`,
+    bhead(8, `studs C · E on the plate · carries I · peers core and nothing in this repo`),
     `    routeRef(router) → router.transitionService.onSuccess({}, …), one SubscriptionRef per router; snapshotRoute() reads globals.current/.params/.successfulTransitions — no Lit host, no brick under it · peers effect ${peerRange(B(8).name, 'effect')}   [src/route-ref.ts]`,
   ],
   [
-    ` 9  ${B(9).name} ${B(9).ver} · ${stats(B(9))} · studs C · E on the plate · carries J · peers core and nothing in this repo`,
+    bhead(9, `studs C · E on the plate · carries J · peers core and nothing in this repo`),
     `    RouterSignals.for(router) → attach(): one transitionService.onSuccess({}, …) hook writes a Signal.State; route · current · params · transition are Signal.Computed over it — no Lit host, no brick under it · peers signal-polyfill ${peerRange(B(9).name, 'signal-polyfill')}   [src/router-signals.ts]`,
   ],
   [
-    `10  ${B(10).name} ${B(10).ver} · ${stats(B(10))} · the C rail’s far seat · carries K · peers core and nothing in this repo`,
+    bhead(10, `the C rail’s far seat · carries K · peers core and nothing in this repo`),
     `    RouterStore.for(router) → attach(): one transitionService.onSuccess({}, update) hook writes MobX observables; update() reads globals.current/.params/.successfulTransitions — no Lit host, no brick under it · peers mobx ${peerRange(B(10).name, 'mobx')}   [src/router-store.ts]`,
   ],
   [
-    `${String(BRICKS.length + 1).padStart(2)}  ${REGISTRY.name} ${REGISTRY.version} · ${REGISTRY.files}f · ${fmt(REGISTRY.sloc)} sloc · NOT A BRICK — no stud on any router plate · peers core ${peerRange(REGISTRY.name, '@uirouter/core')} for its types`,
+    [BRICKS.length + 1, REGISTRY.name, REGISTRY.version, REGISTRY.files, REGISTRY.sloc, 'not a brick', `no stud on any router plate · peers core ${peerRange(REGISTRY.name, '@uirouter/core')} for its types`],
     '    a types package: an app fills in interface Register by module augmentation, and StateName · ParamsOf · TypedStateService narrow to its states — it emits no JavaScript   [src/registry.ts]',
   ],
   [
-    `${String(BRICKS.length + 2).padStart(2)}  ${LINT.name} ${LINT.version} · ${LINT.files}f · ${fmt(LINT.sloc)} sloc · NOT A BRICK — no stud on any router plate`,
+    [BRICKS.length + 2, LINT.name, LINT.version, LINT.files, LINT.sloc, 'not a brick', 'no stud on any router plate'],
     `    a lint package: it plugs into ESLint/oxlint hosts, never into @uirouter/core — rows ${BRICKS.length + 1} and ${BRICKS.length + 2} are the ${WORD[COMPILE_TIME.length]} published parts of ${WORD[FAMILY.length]} that live on a different table — ${COMPILE_TIME.map((r) => TABLE[r.name]).join(' and ')}`,
   ],
 ];
 if (COMPILE_TIME.some((r) => !TABLE[r.name])) throw new Error('sheet2: every compile-time part names its table');
-const ROWS = SCHED.flat();
 const TOT_F = BRICKS.reduce((a, b) => a + b.files, 0);
 const TOT_L = BRICKS.reduce((a, b) => a + b.sloc, 0);
-const SY = ART_H + 16;
-const schedule = `<rect x="40" y="${SY}" width="1320" height="${74 + ROWS.length * 17}" class="sk fp"/>
-${txt(58, SY + 22, 'STRUCTURE SCHEDULE — one row per brick · quantized plan · courses · the exact coupling, with its source', 'lbls')}
-${leader(40, SY + 32, 1360, SY + 32)}
-${ROWS.map((r, i) => txt(58, SY + 52 + i * 17, r, 'lbls')).join('\n')}
-${txt(58, SY + 60 + ROWS.length * 17, `TOTAL — ${BRICKS.length} bricks drawn · ${TOT_F} authored files · ${fmt(TOT_L)} sloc, standing on one ${CORE[2]}-file, ${fmt(CORE[3])}-line baseplate · ${COUNTED}, same basis as sheets 3 and 4`, 'lbls')}`;
+const STRUCTURE = schedule(
+  'STRUCTURE SCHEDULE — one row per brick · quantized plan · courses · the exact coupling, with its source',
+  ['#', 'package', 'version', 'files', 'sloc', 'mould', 'studs', 'coupling, with its source'],
+  SCHED.map(([head, ...ls]) => [...head, ls.map((l) => l.trim().replace(/ {2,}/g, ' ')).join(' ')]),
+  `TOTAL — ${BRICKS.length} bricks drawn · ${TOT_F} authored files · ${fmt(TOT_L)} sloc, standing on one ${CORE[2]}-file, ${fmt(CORE[3])}-line baseplate · ${COUNTED}, same basis as sheets 3 and 4`,
+);
+// the finished band's lowest lettering: the wholes' captions and the grounds' last line
+const VH = Math.ceil(Math.max(ROW2_BOTTOM + 16 + (Math.max(...WHOLES.map((w) => w.cap.length)) - 1) * 12, ROW2_TOP + 180) + 20);
 
 // ---- the massing finding, derived --------------------------------------------------------
 const TILES = BRICKS.filter((b) => b.shape[0] * b.shape[1] <= 2).sort((a, b) => a.sloc - b.sloc);
@@ -656,31 +659,29 @@ for (const n of ON_F) {
 if ([...F_LOOKS.values()].flat().length !== ON_F.length) throw new Error('sheet2: the aria-label gives every F brick a look');
 const F_GROUPS = [...F_LOOKS].map(([look, names]) => `${listOf(names)}, ${names.length > 1 ? `each ${look}` : look}`);
 const F_LOOK = F_GROUPS.length < 2 ? F_GROUPS.join('') : `${F_GROUPS.slice(0, -1).join(', ')}, and ${F_GROUPS.at(-1)}`;
-const ARIA = `An exploded isometric LEGO assembly. A large flat baseplate lettered @uirouter/core carries a grid of studs; its whole back row is ringed in the accent colour and labelled A, router.plugin — the plugin rail. ${Cap(WORD[BRICKS.length])} bricks hover above it, none of them seated, each with a dashed accent drop line falling onto the exact stud it takes. ${Cap(looks(1))}, laid long side to the rail over its far seats, drops onto the rail; ${looks(2)}, drops onto the rail's first stud, ringed in red — the location seat, of which a router has exactly one, so this brick swaps core's own location plugin rather than adding to it. ${Cap(looks(8))}, drops straight onto the plate's named stud C, transitionService, under brick 2's lettering, ${looks(9)}, onto the named stud E, globals, and ${looks(10)}, onto the far seat of stud C's front rail: all ${WORD[PLATE_SEATED.length]} peer core and nothing in this repo, and their caps carry ringed studs ${listOf(REACHES.map(([, , s]) => s))}, which bricks ${listOf(REACHES.map(([a]) => a))} peer from brick 1's cap — lettered at both ends, with no drop line. ${Cap(WORD[ON1.length])} bricks drop onto ringed studs on top of brick 1 instead of onto the plate, stepped in height so no brick hides another's fall: bricks ${listOf(ON_F)} — ${F_LOOK} — take the seam lettered F, seekRouter; ${looks(BRIDGE)}, takes the seam lettered G, the context-request protocol, and is a bridge — its far end hangs over a second, smaller baseplate drawn entirely in dashed line at the right, where a second drop line falls onto a ringed stud lettered H on brick 4, ui-router-server, createServerRouter. A dashed tie between the two plates is crossed out with a red circle and slash — the server takes no stud on the client plate, because @uirouter/core is an optional peer for it and its default matcher tier never loads a plate at all. Named studs along the front of the plate are lettered below it, and a stud schedule at the upper right explains all ${WORD[SEAMS]} seams. A parts callout at the upper left lists the ${WORD[BRICKS.length]} bricks with their shapes, and a dashed spare-parts box at the lower left shows ${WORD[SPARE.length]} ghost one-by-one bricks — visualizer, sticky-states, dsr and rx — that would register through the very same stud A. Beneath the exploded view the same parts are drawn seated: three small steps at the same corner — bricks ${listOf(ON_P1)} on the plate, bricks ${listOf(ON1.filter((n) => n !== BRIDGE))} on brick 1's cap, then brick ${BRIDGE} bridging to brick 4 — and the finished model from two more corners, the opposite one and the server side. The seated model stands on a landscape of two levels: a low slab of browser ground under the client plate, and a raised shelf of server ground under the dashed second plate, ${WORD[P2_UP]} courses higher so that brick ${BRIDGE} reads as a bridge from the tall brick across to brick 4, spanning the no-DOM line. A structure schedule beneath the drawing gives every brick its file count, line count, quantized shape and the exact API call it couples through.`;
-const svg = `<svg viewBox="0 0 1400 ${SY + 110 + ROWS.length * 17}" role="img" aria-label="${ARIA}">
+const ARIA = `An exploded isometric LEGO assembly. A large flat baseplate lettered @uirouter/core carries a grid of studs; its whole back row is ringed in the accent colour and labelled A, router.plugin — the plugin rail. ${Cap(WORD[BRICKS.length])} bricks hover above it, none of them seated, each with a dashed accent drop line falling onto the exact stud it takes. ${Cap(looks(1))}, laid long side to the rail over its far seats, drops onto the rail; ${looks(2)}, drops onto the rail's first stud, ringed in red — the location seat, of which a router has exactly one, so this brick swaps core's own location plugin rather than adding to it. ${Cap(looks(8))}, drops straight onto the plate's named stud C, transitionService, under brick 2's lettering, ${looks(9)}, onto the named stud E, globals, and ${looks(10)}, onto the far seat of stud C's front rail: all ${WORD[PLATE_SEATED.length]} peer core and nothing in this repo, and their caps carry ringed studs ${listOf(REACHES.map(([, , s]) => s))}, which bricks ${listOf(REACHES.map(([a]) => a))} peer from brick 1's cap — lettered at both ends, with no drop line. ${Cap(WORD[ON1.length])} bricks drop onto ringed studs on top of brick 1 instead of onto the plate, stepped in height so no brick hides another's fall: bricks ${listOf(ON_F)} — ${F_LOOK} — take the seam lettered F, seekRouter; ${looks(BRIDGE)}, takes the seam lettered G, the context-request protocol, and is a bridge — its far end hangs over a second, smaller baseplate drawn entirely in dashed line at the right, where a second drop line falls onto a ringed stud lettered H on brick 4, ui-router-server, createServerRouter. A dashed tie between the two plates is crossed out with a red circle and slash — the server takes no stud on the client plate, because @uirouter/core is an optional peer for it and its default matcher tier never loads a plate at all. Named studs along the front of the plate are lettered below it, and a stud schedule below the drawing explains all ${WORD[SEAMS]} seams. A parts callout at the upper left lists the ${WORD[BRICKS.length]} bricks with their shapes, and a dashed spare-parts box at the lower left shows ${WORD[SPARE.length]} ghost one-by-one bricks — visualizer, sticky-states, dsr and rx — that would register through the very same stud A. Beneath the exploded view the same parts are drawn seated: three small steps at the same corner — bricks ${listOf(ON_P1)} on the plate, bricks ${listOf(ON1.filter((n) => n !== BRIDGE))} on brick 1's cap, then brick ${BRIDGE} bridging to brick 4 — and the finished model from two more corners, the opposite one and the server side. The seated model stands on a landscape of two levels: a low slab of browser ground under the client plate, and a raised shelf of server ground under the dashed second plate, ${WORD[P2_UP]} courses higher so that brick ${BRIDGE} reads as a bridge from the tall brick across to brick 4, spanning the no-DOM line. A structure schedule below the drawing gives every brick its file count, line count, quantized shape and the exact API call it couples through.`;
+const svg = `<svg viewBox="0 0 1400 ${VH}" role="img" aria-label="${ARIA}">
 ${defs(P)}${huePatterns(P, BRICKS.map((b) => b.hue))}
 
 ${txt(1370, 16, 'SCALE — plan = whole studs (1 stud per 150 sloc, rounded up to the next standard brick shape) · height = one course per 3 authored files · the baseplate is not massed', 'lbls', 'end')}
-${txt(1370, 30, 'COUPLING IS THE SUBJECT — accent marks a published extension point; the bricks themselves are drawn plain', 'lblf', 'end')}
 
 ${partsBox}
 ${spareBox}
-${studBox}
 
 ${assembly}
 ${lettering}
 ${finishedBand}
 
-${schedule}
 </svg>`;
 
 export const sheet2 = {
-  num: 2, id: 'companions', rev: 'J',
+  num: 2, id: 'companions', rev: 'K',
   title: 'THE BRICK ASSEMBLY',
   sub: `ALTITUDE 2 — one baseplate, ${WORD[BRICKS.length]} bricks, ${TOT_F} authored files · an exploded LEGO assembly with every coupling named to the API call that makes it, brick and stud faces drawn opaque so nothing reads through a mass in front of it · REV J 2026-10-24: ${REGISTRY.name} takes schedule row ${BRICKS.length + 1}, a compile-time part beside the lint plugin — types only, no stud, not drawn · source ${COUNTED}`,
   scale: `${WORD[BRICKS.length].toUpperCase()} PACKAGES`,
   form: 'BRICK ASSEMBLY',
   svg,
+  schedules: [STRUCTURE, STUDS_TABLE],
   caption: `Every companion drawn here enters through a published stud — on @uirouter/core, or on a brick that publishes one of its own. Drawn exploded, the sheet answers the only question that matters about a plugin architecture: pull any brick off and what breaks? Only what stands on it or peers it — ${WORD[ON1.length]} bricks seat on lit-ui-router, ${WORD[ON4.length]} of them on the server too, ${WORD[REACHES.length]} of them peering a brick on the plate — and the plate’s studs stay where they are.`,
   notes: `
 <p><strong>Why bricks.</strong> The mechanism these packages share is a <em>standardised coupling</em>: each companion attaches through a published extension point — on ${npmLink('@uirouter/core')}, or on a brick below it that publishes one — and any brick nothing stands on can be left in the box without disturbing the rest. That is a stud, and a stud is worth drawing. So this is an exploded isometric — the LEGO instruction manual's own idiom — with a numbered part per package, a drop line onto the exact stud it takes, and a parts callout. The exploded view seats nothing, because a seated assembly hides the undersides, and the undersides are the argument; the finished model under it is drawn seated for the other half of the reading — the shape the parts make — in three steps at the drawing's own corner and then whole from two more, on a landscape of two levels: browser ground under the client plate, and a server shelf under the headless one.</p>

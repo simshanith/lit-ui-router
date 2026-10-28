@@ -2,6 +2,7 @@
 // Light = graphite on vellum; dark = cyanotype. One token set in light-dark(); color-scheme picks the side.
 
 import { readFileSync } from 'node:fs';
+import { esc } from './helpers.mjs';
 
 // Title-block date = the census basis ref's commit date, never a hard-coded day
 const PLATE = JSON.parse(readFileSync(new URL('../data/census-files.json', import.meta.url), 'utf8'));
@@ -390,6 +391,50 @@ code, kbd, samp { font-family: var(--code); }
 .keyblock td:first-child { width: 58px; }
 .keyblock svg { display: block; }
 
+/* THE SCHEDULE IS A TABLE. A plate's register sits under the drawing as HTML
+   at 12px, never as SVG text scaled down with the figure. A long register is
+   split in two tables side by side where the measure allows. */
+.schedules { margin-block: 10px 28px; margin-inline: 0; border: 1.5px solid var(--ink); background: var(--paper); }
+.schedule-title, .schedule-total {
+  font-family: var(--data);
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  color: var(--ink-soft);
+  padding-block: 8px 7px;
+  padding-inline: 14px;
+  background: var(--paper-2);
+}
+.schedule-title { font-weight: 600; border-block-end: 1.5px solid var(--ink); }
+.schedule-total { border-block-start: 1.5px solid var(--ink); font-variant-numeric: tabular-nums; }
+.schedule-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 520px), 1fr)); gap: 0 24px; overflow-x: auto; }
+.schedule { width: 100%; border-collapse: collapse; align-self: start; }
+.schedule th {
+  font-family: var(--data);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  color: var(--ink-soft);
+  text-align: start;
+  padding-block: 7px 6px;
+  padding-inline: 14px;
+  border-block-end: 1px solid var(--line);
+  white-space: nowrap;
+}
+.schedule td {
+  font-family: var(--data);
+  font-size: 12px;
+  letter-spacing: 0.03em;
+  line-height: 1.35;
+  padding-block: 4px;
+  padding-inline: 14px;
+  border-block-end: 1px solid var(--line);
+  vertical-align: top;
+  font-variant-numeric: tabular-nums;
+}
+.schedule th.num, .schedule td.num { text-align: end; white-space: nowrap; }
+.schedule td.n { text-align: end; color: var(--ink-soft); padding-inline-end: 0; width: 2.4em; }
+.schedule tr:last-child td { border-block-end: none; }
+
 .titleblock {
   margin-block-start: 20px;
   margin-inline-start: auto;
@@ -592,14 +637,37 @@ export function plateRatio(svg) {
   return m && Number(m[2]) > 0 ? (Number(m[1]) / Number(m[2])).toFixed(4) : null;
 }
 
+/** Rows past this count split a schedule into two tables side by side. */
+const SCHEDULE_SPLIT = 16;
+const cell = (v, tag = 'td') =>
+  typeof v === 'number'
+    ? `<${tag} class="num">${v.toLocaleString('en-US')}</${tag}>`
+    : `<${tag}>${esc(String(v))}</${tag}>`;
+
+/**
+ * One schedule as a table: `{ title, head, rows, total }` from `schedule()` in
+ * helpers.mjs. A row's first cell is its number; a numeric cell is set as a
+ * figure, end-aligned and grouped. The title and the total ride outside the
+ * grid so a split register reads as one.
+ */
+export function scheduleTable({ title, head, rows, total }) {
+  if (!head?.length || !rows?.length) throw new Error(`schedule "${title}": a head and rows are owed`);
+  for (const r of rows) if (r.length !== head.length) throw new Error(`schedule "${title}": row ${String(r[0])} has ${r.length} cells for ${head.length} columns`);
+  const parts = rows.length > SCHEDULE_SPLIT ? [rows.slice(0, Math.ceil(rows.length / 2)), rows.slice(Math.ceil(rows.length / 2))] : [rows];
+  const thead = `<thead><tr>${head.map((h, i) => (i === 0 ? `<th class="n">${esc(String(h))}</th>` : cell(h, 'th'))).join('')}</tr></thead>`;
+  const table = (part) => `<table class="schedule">${thead}<tbody>${part.map((r) => `<tr><td class="n">${esc(String(r[0]))}</td>${r.slice(1).map((v) => cell(v)).join('')}</tr>`).join('\n')}</tbody></table>`;
+  return `<div class="schedules"><p class="schedule-title">${esc(title)}</p><div class="schedule-grid">${parts.map(table).join('\n')}</div>${total ? `<p class="schedule-total">${esc(total)}</p>` : ''}</div>`;
+}
+
 export function sheetSection(sheet, { headline = true } = {}) {
   const ar = plateRatio(sheet.svg);
+  const schedules = sheet.schedules ?? (sheet.schedule ? [sheet.schedule] : []);
   return `<section class="sheet" id="sheet-${sheet.num}" aria-label="${sheet.appendix ? 'Appendix' : 'Sheet'} ${sheet.num}: ${sheet.title}">
   <div class="sheet-head"><span class="proj">${PROJECT_MARK} — DRAWING SET</span><span class="shno">${sheet.head ?? `SHEET ${sheet.num} / ${TOTAL}`}</span></div>
   ${headline ? `<h2 class="sheet-title">${articleTitle(sheet.title)}</h2>\n  <p class="sheet-sub">${sheet.sub}</p>` : ''}
   <figure>
     <div class="plate fillable"${ar ? ` style="--plate-ar:${ar}"` : ''}>${fillButton()}<div class="figure-wrap" tabindex="0" role="group" aria-label="Fig. ${sheet.num}, the drawing; scrolls sideways">${sheet.svg}</div></div>
-    <figcaption><span class="figno">FIG. ${sheet.num}</span>${sheet.caption}</figcaption>
+    ${schedules.map((sc) => `${scheduleTable(sc)}\n    `).join('')}<figcaption><span class="figno">FIG. ${sheet.num}</span>${sheet.caption}</figcaption>
   </figure>
   <div class="notes-grid">
     <div class="notes">

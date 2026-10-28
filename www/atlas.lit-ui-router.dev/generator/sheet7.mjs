@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { defs } from './chrome.mjs';
-import { txt, schedTxt, arrow, isoBlock, isoPt, keyRow } from './helpers.mjs';
+import { txt, schedule, leader, arrow, isoBlock, isoPt, keyRow } from './helpers.mjs';
 import { assertPlots, depthSort, plotsOf, solidFaces } from './iso-hidden.mjs';
 
 const P = 's7';
@@ -207,10 +207,6 @@ const SAS_RANK = ORDW[SRC_RANK.findIndex((r) => r[0] === 5)];
 const OVER_EX = M.filter((r) => r[9] > SRC_RANK[0][7]).map((r) => r[1]);
 const OVER_SAS_SRC = SRC_RANK.filter((r) => r[0] !== 5 && r[7] > M.find((q) => q[0] === 5)[7]).map((r) => r[1]);
 const OVER_SAS_ANNEX = M.filter((r) => r[9] > M.find((q) => q[0] === 5)[7]).length;
-const inTier = (t) => M.filter((r) => r[3] === t).map((r) => r[0]).join(' · ');
-// the never-gates row wraps inside the severity box rather than running past its frame
-const REPORT_IDS = M.filter((r) => r[3] === 'report').map((r) => r[0]);
-const REPORT_LINE = 10;
 // the smallest structure that can stop a pull request — the node-side DOM harness
 const HARNESS = M.find((r) => r[1] === '@tools/happy-dom');
 if (!HARNESS) throw new Error('sheet 7: the harness member is missing from PLACED');
@@ -234,10 +230,7 @@ export const CITY = [...geom.values()];
 const pt = (x, y, z = 0) => isoPt(OX, OY, x, y, z);
 const p2 = (x, y, z = 0) => pt(x, y, z).map((v) => v.toFixed(1)).join(',');
 // a leader runs from its lettering to a plan point, so a moved mass carries the leader's end
-const lead = (x1, y1, x, y, z = 0) => {
-  const [x2, y2] = pt(x, y, z);
-  return `<line x1="${x1}" y1="${y1}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" class="skf"/>`;
-};
+const lead = (x1, y1, x, y, z = 0) => leader(x1, y1, ...pt(x, y, z));
 
 // A member: src block massed by its own census, plus the spec annex it carries.
 // Tier paints the src cap and flank; annexes are always the same test-mass material.
@@ -398,59 +391,44 @@ ${masses}
 const SITE_NE = pt(DISTRICT_BOUNDS.site[2], DISTRICT_BOUNDS.site[1]);
 const RELEASE_WORKERS = PLACED.filter((p) => p[3] === 'site' && p[0] !== 10 && p[0] !== 11);
 if (RELEASE_WORKERS.some((p) => !p[2].startsWith('www/release-'))) throw new Error('sheet 7: the shopfront lettering calls every site member beside docs and examples a release worker, and PLACED says otherwise');
-// the road register's frame stops 12 px short of examples' west corner; its longest row reaches x 680
-const REG_X2 = Math.min(740, Math.floor(pt(g(11).x, g(11).y + g(11).s)[0]) - 12);
-if (REG_X2 < 700) throw new Error(`sheet 7: examples' west corner leaves the road register ${REG_X2 - 40} px, and its rows need 660`);
-
-// ---- schedule -----------------------------------------------------------------------
-const ART_H = 812;
+// ---- schedules, set as tables under the figure ----------------------------------------
 const TOT_SF = M.reduce((a, r) => a + r[6], 0), TOT_SL = M.reduce((a, r) => a + r[7], 0);
 const TOT_PF = M.reduce((a, r) => a + r[8], 0), TOT_PL = M.reduce((a, r) => a + r[9], 0);
-const schedRow = ([n, name, , tier, , , sf, sl, pf, pl, note]) => [n,
-  `${name} — ${sf ? `${sf}f · ${fmt(sl)}` : 'no source'}`
-  + `${pf ? ` · annex ${pf}f · ${fmt(pl)}` : ''} · ${TIER_TEXT[tier]} · ${note}`];
 const MASSED = M.filter((r) => r[6]).length;
-const half = Math.ceil(M.length / 2);
-const SY = ART_H + 16;
-const schedule = `<rect x="40" y="${SY}" width="1480" height="${74 + half * 17}" class="sk fp"/>
-${txt(58, SY + 22, 'STRUCTURE SCHEDULE — authored source per member · files (f) · sloc · spec annex · gate tier', 'lbls')}
-<line x1="40" y1="${SY + 32}" x2="1520" y2="${SY + 32}" class="skf"/>
-${M.slice(0, half).map((r, i) => schedTxt(58, SY + 52 + i * 17, schedRow(r), 'lbls')).join('\n')}
-${M.slice(half).map((r, i) => schedTxt(800, SY + 52 + i * 17, schedRow(r), 'lbls')).join('\n')}
-${txt(58, SY + 58 + half * 17, `TOTAL — ${M.length} members, ${MASSED} massed · ${TOT_SF} authored files · ${fmt(TOT_SL)} sloc · plus ${TOT_PF} spec files · ${fmt(TOT_PL)} sloc of annex · ${BASIS} (sloc = scc Code)`, 'lbls')}`;
+const SCHEDULES = [
+  schedule('STRUCTURE SCHEDULE — authored source per member · files · sloc · spec annex · gate tier',
+    ['#', 'member', 'files', 'sloc', 'annex files', 'annex sloc', 'gate tier', 'note'],
+    M.map(([n, name, , tier, , , sf, sl, pf, pl, note]) => [n, name, sf || '—', sf ? sl : '—', pf || '—', pf ? pl : '—', TIER_TEXT[tier], note]),
+    `TOTAL — ${M.length} members, ${MASSED} massed · ${TOT_SF} authored files · ${fmt(TOT_SL)} sloc · plus ${TOT_PF} spec files · ${fmt(TOT_PL)} sloc of annex · ${BASIS} (sloc = scc Code)`),
+  schedule('ROAD REGISTER — NO ROAD IS DRAWN THAT THE REPO DOES NOT CARRY',
+    ['road', 'kind', 'the edge in the repo'],
+    [
+      ['A', 'builds into', 'packages/* → the sample apps · lit-ui-router → 4 of them, ui-router-server → routes'],
+      ['B', 'builds into', `@tools/oxc-emit → all ${wordn(PUBLISHED_PKGS)} published packages · devDep of each · runs build:js + build:types`],
+      ['C', 'tests exercise', '@tools/dts-backtest → the runtime packages it deps on, and ui-router-registry · #test dependsOn ^build'],
+      ['D', 'tests exercise', '@tools/lit-test-env + @tools/happy-dom → the annex · devDep of lit-ui-router + -mobx'],
+      ['E', 'tests exercise', 'sample-app-lit-e2e → docs · workspace dep · e2e dependsOn ^build, with @www/lit-ui-router.dev#wrangler:dev'],
+      ['F', 'typecheck reads', 'lit-ui-router src AND specs → docs · tsconfig include src/** · turbo dependsOn ^build:types'],
+      ['G', 'library under', `@tools/shared → @tools/release · one of ${SHARED_IMP.length} dependents; only this road is drawn`],
+    ],
+    'apps → docs is road A continued: docs depends on three sample apps and on ui-router-server'),
+];
 
-const svg = `<svg viewBox="0 0 1560 ${SY + 104 + half * 17}" role="img" aria-label="An isometric census city of the whole lit-ui-router workspace, drawn in four dashed districts. Every workspace member is a block massed by its own measured source — footprint side proportional to the square root of its authored lines, height three pixels per authored file — and every member that has tests carries a hatched annex beside it, massed the same way from its spec files. Upper left is the packages district, the product: lit-ui-router and ui-router-server each stand beside an annex with a larger footprint than the building it guards, the eslint plugin stands below them at the district's near corner, the effect bindings and the prerender bridge stand on the row south of the flagship, and the signals bindings and two framework-agnostic cores take the district's south row, and the third core stands with the ${wordn(PRIV_PKGS)} private shared packages in its north-east corner, with the types-only registry on the district's east edge above the plugin's annex. To the right is the apps district, where sample-app-shared stands at ${g(5).sf} files and ${fmt(g(5).sl)} lines. Below it sits the shopfront of docs, its two release workers and examples — examples the broadest source block on the sheet at ${fmt(g(11).sl)} lines — and lower left the instrument yard of ${DT.n} tools, dominated by the tall red release block — ${g(12).sf} files and ${fmt(g(12).sl)} lines, the only structure that can halt a publish. Gate severity is carried in colour, never in height: solid red halts a publish, red hatch stops the pull request line, accent hatch gates a later stage, faint blocks never gate at all. Roads run between the districts and carry real edges from the repository: solid roads where one member builds into another, dashed soft roads where tests exercise the code they cover, and an accent road that leaves both the source block and its spec annex together, because typecheck reads both. A structure schedule below lists all ${M.length} members with exact file and line counts, their annex, and their gate tier.">
+// the figure ends 24 px under the nearest district corner; the yard's lettering must stand above it
+const VH = Math.ceil(Math.max(...Object.values(DISTRICT_BOUNDS).map(([, , x2, y2]) => pt(x2, y2)[1]))) + 24;
+if (VH < 600) throw new Error(`sheet 7: the figure ends at y ${VH}, above the yard's lettering at 587`);
+
+const svg = `<svg viewBox="0 0 1560 ${VH}" role="img" aria-label="An isometric census city of the whole lit-ui-router workspace, drawn in four dashed districts. Every workspace member is a block massed by its own measured source — footprint side proportional to the square root of its authored lines, height three pixels per authored file — and every member that has tests carries a hatched annex beside it, massed the same way from its spec files. Upper left is the packages district, the product: lit-ui-router and ui-router-server each stand beside an annex with a larger footprint than the building it guards, the eslint plugin stands below them at the district's near corner, the effect bindings and the prerender bridge stand on the row south of the flagship, and the signals bindings and two framework-agnostic cores take the district's south row, and the third core stands with the ${wordn(PRIV_PKGS)} private shared packages in its north-east corner, with the types-only registry on the district's east edge above the plugin's annex. To the right is the apps district, where sample-app-shared stands at ${g(5).sf} files and ${fmt(g(5).sl)} lines. Below it sits the shopfront of docs, its two release workers and examples — examples the broadest source block on the sheet at ${fmt(g(11).sl)} lines — and lower left the instrument yard of ${DT.n} tools, dominated by the tall red release block — ${g(12).sf} files and ${fmt(g(12).sl)} lines, the only structure that can halt a publish. Gate severity is carried in colour, never in height: solid red halts a publish, red hatch stops the pull request line, accent hatch gates a later stage, faint blocks never gate at all. Roads run between the districts and carry real edges from the repository: solid roads where one member builds into another, dashed soft roads where tests exercise the code they cover, and an accent road that leaves both the source block and its spec annex together, because typecheck reads both. A structure schedule below the drawing lists all ${M.length} members with exact file and line counts, their annex, and their gate tier, and a road register names the repository edge behind each lettered road.">
 ${defs(P)}
-
-<rect x="40" y="26" width="520" height="42" class="skf fnone"/>
-${txt(52, 43, 'THE CENSUS CITY — WHO IS ACTUALLY HERE', 'lbls')}
-${txt(52, 58, `${M.length} workspace members · 4 districts · every road below is a real edge in the repo`, 'lblf')}
 
 ${txt(1520, 34, 'SCALE — footprint side = 1.6 · √sloc (plan area ∝ sloc) · height = 3 px per authored file · mass = sloc × files', 'lbls', 'end')}
 ${txt(1520, 48, 'footprint floored at 12 plan units so the smallest instruments stay visible · annexes massed on the same rule from spec files', 'lblf', 'end')}
-${txt(1520, 62, 'GATE SEVERITY IS COLOUR, NOT HEIGHT — tiers match sheet 3 · the tallest block on the sheet is also the only publish halt', 'lblf', 'end')}
-${txt(1520, 76, `every number on this sheet is read from www/atlas.lit-ui-router.dev/data/census-city.json — ${BASIS}`, 'lblf', 'end')}
-
-<!-- severity ladder -->
-<rect x="1090" y="104" width="430" height="${REPORT_IDS.length > REPORT_LINE ? 160 : 146}" class="skf fnone"/>
-${txt(1106, 126, 'GATE SEVERITY — READ THE COLOUR, NOT THE HEIGHT', 'lbls')}
-${[
-  ['skr', 'fr', null, `halts a publish — ${inTier('halt')}`, 'lblr'],
-  ['skr', 'fp', 'hr', `stops the PR line — ${inTier('pr')}`, 'lblr'],
-  ['ska', 'fp', 'ha', `gates a later stage — ${inTier('late')}`, 'lbla'],
-  ['skf', 'fp2', null, `never gates — ${REPORT_IDS.slice(0, REPORT_LINE).join(' · ')}`, 'lbls'],
-].map(([edge, fill, hatch, label, cls], i) => {
-  const y = 150 + i * 24;
-  const more = i === 3 && REPORT_IDS.length > REPORT_LINE ? txt(1154, y + 25, `· ${REPORT_IDS.slice(REPORT_LINE).join(' · ')}`, cls) : '';
-  return `${more}<rect x="1106" y="${y}" width="34" height="14" class="${fill}"/>${hatch ? `<rect x="1106" y="${y}" width="34" height="14" fill="url(#${P}-${hatch})"/>` : ''}<rect x="1106" y="${y}" width="34" height="14" class="${edge} fnone"/>
-${txt(1154, y + 11, label, cls)}`;
-}).join('\n')}
 
 ${districts}
 ${roads.join('\n')}
 ${bodies}
 
-<!-- road tags: each keys a row of the ROAD REGISTER below -->
+<!-- road tags: each keys a row of the road register under the figure -->
 ${[['A', 1017, 358], ['B', 566, 366], ['C', 470, 195], ['D', 522, 262], ['E', 894, 535], ['F', 879, 498], ['G', 196, 470]]
   .map(([k, x, y]) => txt(x, y, k, 'lbl')).join('\n')}
 
@@ -479,7 +457,7 @@ ${lead(SITE_NE[0] + 18, SITE_NE[1] + 10, DISTRICT_BOUNDS.site[2], DISTRICT_BOUND
 ${txt(60, 560, 'tools/ — THE INSTRUMENT YARD', 'lblb')}
 ${txt(60, 573, `${DT.n} members · ${DT.f} files · ${fmt(DT.sl)} sloc`, 'lblf')}
 ${txt(60, 587, `${M.filter((r) => r[2] === 'tool' && S(r[7]) === MIN).length} of its masses sit on this drawing’s minimum footprint`, 'lblf')}
-<line x1="300" y1="552" x2="330" y2="522" class="skf"/>
+${leader(300, 552, 330, 522)}
 
 <!-- callouts -->
 ${txt(60, 114, 'lit-ui-router — THE PACKAGE THIS SET IS ABOUT', 'lbla')}
@@ -492,35 +470,16 @@ ${txt(20, 502, `@tools/release — ${g(12).sf}f · ${fmt(g(12).sl)} sloc`, 'lblr
 ${txt(20, 515, 'the tallest block on the sheet,', 'lblf')}
 ${txt(20, 529, 'and the only publish halt', 'lblf')}
 ${lead(178, 497, g(12).x + g(12).s, g(12).y + g(12).s / 2, (g(12).ha + g(12).h) / 2)}
-
-<!-- road register: every road on this sheet, and the edge in the repo it stands for -->
-<rect x="40" y="646" width="${REG_X2 - 40}" height="162" class="skf fnone"/>
-${txt(58, 666, 'ROAD REGISTER — NO ROAD IS DRAWN THAT THE REPO DOES NOT CARRY', 'lbls')}
-<line x1="40" y1="674" x2="${REG_X2}" y2="674" class="skf"/>
-${[
-  ['A', 'builds into', 'packages/* → the sample apps · lit-ui-router → 4 of them, ui-router-server → routes'],
-  ['B', 'builds into', `@tools/oxc-emit → all ${wordn(PUBLISHED_PKGS)} published packages · devDep of each · runs build:js + build:types`],
-  ['C', 'tests exercise', '@tools/dts-backtest → the runtime packages it deps on, and ui-router-registry · #test dependsOn ^build'],
-  ['D', 'tests exercise', '@tools/lit-test-env + @tools/happy-dom → the annex · devDep of lit-ui-router + -mobx'],
-  ['E', 'tests exercise', 'sample-app-lit-e2e → docs · workspace dep · e2e dependsOn ^build, with @www/lit-ui-router.dev#wrangler:dev'],
-  ['F', 'typecheck reads', 'lit-ui-router src AND specs → docs · tsconfig include src/** · turbo dependsOn ^build:types'],
-  ['G', 'library under', `@tools/shared → @tools/release · one of ${SHARED_IMP.length} dependents; only this road is drawn`],
-].map(([k, cls, ev], i) => {
-  const y = 692 + i * 15;
-  return `${txt(58, y, k, 'lbl')}${txt(78, y, cls, 'lbls')}${txt(190, y, ev, 'lblf')}`;
-}).join('\n')}
-${txt(58, 798, 'apps → docs is road A continued: docs depends on three sample apps and on ui-router-server', 'lblf')}
-
-${schedule}
 </svg>`;
 
 export const sheet7 = {
-  num: 7, id: 'census', rev: 'J',
+  num: 7, id: 'census', rev: 'K',
   title: 'THE MEASURED CITY',
   sub: `ALTITUDE 3½ — the same city as sheet 3, surveyed by mass · ${M.length} members in 4 districts, footprint ∝ √sloc, height ∝ authored files, spec mass drawn as an annex, gate severity in colour · ${BASIS}`,
   scale: 'WHOLE WORKSPACE',
   form: 'MEASURED CITY',
   svg,
+  schedules: SCHEDULES,
   caption: 'Sheet 3 drew the monorepo as a process; this sheet counts who lives in it. Footprint ∝ √sloc, height ∝ authored files, tests drawn as annexes rather than deleted — and over that census the two things a census alone cannot say: which district each member belongs to, and which roads run between them. Every road is a workspace dependency or a turbo task edge, never an impression.',
   notes: `
 <p><strong>Method — one basis, two series.</strong> Every count on this sheet is read at build time from the checked-in plate <a href="${HOME.plate}"><code>www/atlas.lit-ui-router.dev/data/census-city.json</code></a>, ${BASIS}: <code>.ts/.tsx/.js/.jsx/.mjs</code> under each member's source directory, excluding <code>*.d.ts</code>, <code>*.test-d.ts</code>, fixtures, <code>dist/</code> and <code>node_modules/</code>; <em>sloc</em> is <a href="${HOME.scc}"><code>scc</code></a>'s <code>Code</code> count — string-aware, so the interior of a template literal counts as code rather than as one line. Sheet 3 throws test code away; this sheet does not — anything matching <code>*.{spec,test,cy}.*</code> or living under <code>specs/ test/ tests/ __tests__/ cypress/</code> is counted into a second series and drawn as that member's annex. ${M.length} members: ${TOT_SF} authored files and ${fmt(TOT_SL)} sloc of source, plus ${TOT_PF} files and ${fmt(TOT_PL)} sloc of spec. The packages district's ${DP.n} buildings reconcile exactly with sheet 3's source slab — ${DP.f} files, ${fmt(DP.sl)} lines — because both are queries over one census rather than two hand counts.</p>

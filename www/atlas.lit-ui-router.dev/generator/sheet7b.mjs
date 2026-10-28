@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { defs } from './chrome.mjs';
-import { txt, schedTxt, isoBlock, isoPt, keyRow } from './helpers.mjs';
+import { txt, schedule, leader, isoBlock, isoPt, keyRow } from './helpers.mjs';
 import { assertPlots, depthSort, plotsOf, solidFaces } from './iso-hidden.mjs';
 import { DISTRICT_BOUNDS, PLACED } from './sheet7.mjs';
 
@@ -114,7 +114,7 @@ const TURBO_RUN = 'https://turborepo.dev/docs/reference/run';
 //   3. the three cuts below come from the three widest remaining joints, each cut
 //      at the joint's LOWER lip (a step reads "≤ lip"); ties go to the lower lip.
 // A step label therefore does NOT mean the same thing across cabinets — the plate
-// says so in the telemetry box, the key and the notes, and the cuts are printed
+// says so in the key and the notes, and the cuts are printed
 // so a reader can check them against sheet 13's own idle column.
 const IDLE = new Map(WEATHER.members.map((m) => [m.member, typeof m.medIdle === 'number' ? m.medIdle : null]));
 const idleOf = (dir) => {
@@ -286,10 +286,7 @@ const districts = Object.values(DISTRICT_BOUNDS).map(([x1, y1, x2, y2]) => {
   return `<polygon points="${pts}" class="skf fnone" stroke-dasharray="5 4"/>`;
 }).join('\n');
 // a leader runs from its lettering to a plan point, so a moved district carries the leader's end
-const lead = (x1, y1, x, y, z = 0) => {
-  const [x2, y2] = pt(x, y, z);
-  return `<line x1="${x1}" y1="${y1}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" class="skf"/>`;
-};
+const lead = (x1, y1, x, y, z = 0) => leader(x1, y1, ...pt(x, y, z));
 
 // Plants and annexes are separate masses, painted back to front; badges ride last.
 const bodies = depthSort(M.flatMap(([n]) => {
@@ -300,7 +297,7 @@ const bodies = depthSort(M.flatMap(([n]) => {
 })).map((m) => m.svg).join('\n')
   + '\n' + M.map(([n]) => badge(n)).join('\n');
 
-// the flagship callout stands under the title box, north-west of №12's badge, at a 14 px pitch
+// the flagship callout stands at the plate's top left, north-west of №12's badge, at a 14 px pitch
 const FLAG_X = 60, FLAG_Y = 100;
 const FLAG_LINES = [
   [FLAG_Y, 'lit-ui-router — THE FLAGSHIP PLANT', 'lbla'],
@@ -320,31 +317,12 @@ for (const [y, s, cls] of FLAG_LINES) {
   if (hit) throw new Error(`sheet 7B: the flagship callout line "${s}" lands on №${hit[0]} ${hit[1]}'s badge — move FLAG_X/FLAG_Y or BADGE_LIFT[${hit[0]}]`);
 }
 
-// ---- telemetry (reading) box ------------------------------------------------------
-// The rust ladder outgrew the wall it was drawn to, so the reading takes a
-// continuation line and the box is re-cut to the widest line that remains
-// (PIPES) and hung on the plate's right margin, clear of the packages lettering.
-const TB = `
-<rect x="1152" y="96" width="388" height="182" class="sk fp"/>
-${txt(1168, 116, 'PLANT TELEMETRY — FOUR CHANNELS, ALL INDEPENDENT', 'lbls')}
-<line x1="1152" y1="124" x2="1540" y2="124" class="skf"/>
-${txt(1168, 142, 'RUST (speckle) — median idle, cut on this cabinet’s', 'lbls')}
-${txt(1180, 156, `own distribution: ${STEPS_TXT}`, 'lbls')}
-${txt(1180, 170, `R4 >${CUTS[3]} — ${R4_OPEN ? 'CRACKED' : 'RESERVED, UNOCCUPIED HERE'}`, 'lbls')}
-${txt(1168, 188, 'STEAM (puffs) — commits/90d: 0 ≤2 · 1: 3–8 · 2: 9–15 · 3: ≥16', 'lbls')}
-${txt(1168, 206, 'LAMPS — 7A lit share: 3 ≥90 · 2 ≥50 · 1 >0 · accent = unmetered e2e', 'lbls')}
-${txt(1168, 224, `PIPES — turbo run build graph: ${BUILD.real} real of ${BUILD.nodes} nodes, last green 08-17`, 'lbls')}
-${txt(1168, 242, 'the rust steps are RE-CUT every cabinet: an R2 here is not', 'lblf')}
-${txt(1168, 254, `last cabinet’s R2 · idle read at ${WEATHER.ref} @ ${WEATHER.sha}`, 'lblf')}
-${txt(1168, 268, `steam window ${WINDOW} — ${PLATE.ref} @ ${PLATE.sha}`, 'lblf')}`;
-
 // ---- schedule --------------------------------------------------------------------
-const ART_H = 812;
 const schedRow = ([n, name, , , , , sf, , , , rust, steam, lamps, eff]) => {
-  if (!sf) return [n, `${name} — ambient types · no machine on the pad`];
+  if (!sf) return [n, name, '—', '—', '—', 'none — ambient types, no machine on the pad', '—'];
   const lampS = lamps === 'e' ? 'e2e (accent)' : lamps == null ? 'no mass — no slots'
     : eff != null ? `${lamps} (${eff}%)` : `${lamps}`;
-  return [n, `${name} — rust ${RUST_T[rust]} · steam ${steam}c/90d = ${PUFFS(steam)} puff${PUFFS(steam) === 1 ? '' : 's'} · lamps ${lampS} · pipes OK`];
+  return [n, name, RUST_T[rust], steam, PUFFS(steam), lampS, 'OK'];
 };
 const RUNNING = M.filter((r) => r[6]).length;
 const TOT_STEAM = M.reduce((a, r) => a + r[11], 0);
@@ -352,17 +330,13 @@ const METERED = M.filter((r) => typeof r[12] === 'number' && r[12] > 0).length;
 const ACCENT = M.filter((r) => r[12] === 'e').length;
 // the cover index's fit verdict, told from the plate's own channels
 export const SHEET7B_VERDICT = `the synthesis plate — rust, steam, lamps and pipes on one city: ${RUNNING} plants run and every pipe connects on ${BUILD.real} green build tasks, ${METERED} carry metered lamps, and the alert channel stands empty — no gate is red at HEAD`;
-const half = Math.ceil(M.length / 2);
-const SY = ART_H + 16;
-const schedule = `<rect x="40" y="${SY}" width="1480" height="${91 + half * 17}" class="sk fp"/>
-${txt(58, SY + 22, `PLANT SCHEDULE — per member: rust step (median idle, ladder ${LADDER}) · steam (commits ${WINDOW} = puffs) · lamps (lit share from plate 7A) · pipe state`, 'lbls')}
-<line x1="40" y1="${SY + 32}" x2="1520" y2="${SY + 32}" class="skf"/>
-${M.slice(0, half).map((r, i) => schedTxt(58, SY + 52 + i * 17, schedRow(r), 'lbls')).join('\n')}
-${M.slice(half).map((r, i) => schedTxt(800, SY + 52 + i * 17, schedRow(r), 'lbls')).join('\n')}
-${txt(58, SY + 58 + half * 17, `TOTAL — ${RUNNING} plants running, 0 seized · steam ${TOT_STEAM} member-touches from ${PLATE.windowCommits} window commits (${WINDOW}) · ${METERED} metered-lamp plants + ${ACCENT} accent · rust ${[0, 1, 2, 3, 4].map((st) => rustN(st)).join('/')} across 0–R4, idle at ${WEATHER.ref} @ ${WEATHER.sha}`, 'lbls')}
-${txt(58, SY + 75 + half * 17, `steam ${BASIS}; lamps carry 7A's own base`, 'lbls')}`;
+const SCHEDULE = schedule(`PLANT SCHEDULE — per member: rust step (median idle, ladder ${LADDER}) · steam (commits ${WINDOW} = puffs) · lamps (lit share from plate 7A) · pipe state`,
+  ['#', 'member', 'rust', 'commits/90d', 'puffs', 'lamps', 'pipes'], M.map(schedRow),
+  `TOTAL — ${RUNNING} plants running, 0 seized · steam ${TOT_STEAM} member-touches from ${PLATE.windowCommits} window commits (${WINDOW}) · ${METERED} metered-lamp plants + ${ACCENT} accent · rust ${[0, 1, 2, 3, 4].map((st) => rustN(st)).join('/')} across 0–R4, idle at ${WEATHER.ref} @ ${WEATHER.sha} · steam ${BASIS}; lamps carry 7A's own base`);
+// the figure ends 20 px under the nearest district corner or the typedoc-plugin callout, whichever is lower
+const VH = Math.ceil(Math.max(...Object.values(DISTRICT_BOUNDS).map(([, , x2, y2]) => pt(x2, y2)[1]), 668)) + 20;
 
-const svg = `<svg viewBox="0 0 1560 ${SY + 121 + half * 17}" role="img" aria-label="Sheet 7's isometric census city redrawn as a working industrial plant, every workspace member a machine on the line. Massing is unchanged — footprint proportional to the square root of source lines, height three pixels per authored file, the same four dashed districts. Each machine broadcasts its state the way a Factorio building does: red rust speckle on the flanks where a member has gone untouched, on a five-step ladder the plate cuts from its own idle distribution at build time — ${rustN(0)} ${rustN(0) === 1 ? 'plant stands' : 'plants stand'} clean, ${names(atStep(DEEPEST))} ${atStep(DEEPEST).length === 1 ? 'carries' : 'carry'} the deepest rust in the city at ${RUST_T[DEEPEST]}, and the top step stands empty so no flank on the plate is cracked; steam puffs rising from roof vents where commits touched the member in the last ninety days, six accent puffs over lit-ui-router, sample-app-shared, the Cypress host, docs, examples and the release tool; up to three green module lamps low on each front face showing how much of the member its own test suite lights, read straight from plate 7A's own filed snapshot, with accent lamps on the sample apps whose only light is the unmetered end-to-end rig; and outlet pipes that all connect, because the build graph's ${BUILD.real} real tasks last ran green. No alert triangle stands over the city at all: no gate task in the workspace is failing at HEAD, and the key's struck triangle is the channel's legend rather than an alarm. A plant schedule lists every member's channel values.">
+const svg = `<svg viewBox="0 0 1560 ${VH}" role="img" aria-label="Sheet 7's isometric census city redrawn as a working industrial plant, every workspace member a machine on the line. Massing is unchanged — footprint proportional to the square root of source lines, height three pixels per authored file, the same four dashed districts. Each machine broadcasts its state the way a Factorio building does: red rust speckle on the flanks where a member has gone untouched, on a five-step ladder the plate cuts from its own idle distribution at build time — ${rustN(0)} ${rustN(0) === 1 ? 'plant stands' : 'plants stand'} clean, ${names(atStep(DEEPEST))} ${atStep(DEEPEST).length === 1 ? 'carries' : 'carry'} the deepest rust in the city at ${RUST_T[DEEPEST]}, and the top step stands empty so no flank on the plate is cracked; steam puffs rising from roof vents where commits touched the member in the last ninety days, six accent puffs over lit-ui-router, sample-app-shared, the Cypress host, docs, examples and the release tool; up to three green module lamps low on each front face showing how much of the member its own test suite lights, read straight from plate 7A's own filed snapshot, with accent lamps on the sample apps whose only light is the unmetered end-to-end rig; and outlet pipes that all connect, because the build graph's ${BUILD.real} real tasks last ran green. No alert triangle stands over the city at all: no gate task in the workspace is failing at HEAD, and the key's struck triangle is the channel's legend rather than an alarm. A plant schedule below the drawing lists every member's channel values.">
 ${defs(P)}
 <defs>
   <!-- rust: dotted speckle, deliberately unlike every house line hatch -->
@@ -373,15 +347,8 @@ ${defs(P)}
   </pattern>
 </defs>
 
-<rect x="40" y="26" width="520" height="42" class="skf fnone"/>
-${txt(52, 43, 'THE WORKING CITY — SHEET 7’S CENSUS, RUNNING', 'lbls')}
-${txt(52, 58, 'massing, districts, gates unchanged · sprite = state: rust, steam, lamps, pipes', 'lblf')}
-
 ${txt(1520, 34, 'SPRITE RULE — decoration is state, never texture: every mark on a plant is a measured channel', 'lbls', 'end')}
-${txt(1520, 48, `rust = weathering census (sheet 13) · steam = commits ${WINDOW}, from data/census-steam.json · lamps = plate 7A light · pipes = live turbo`, 'lblf', 'end')}
-${txt(1520, 62, 'massing and gate severity are sheet 7’s, unchanged — a sprite may decorate a block, never re-mass it', 'lblf', 'end')}
 
-${TB}
 ${districts}
 ${bodies}
 
@@ -390,7 +357,7 @@ ${bodies}
 ${txt(794, 74, 'packages/ — THE PRODUCT LINE', 'lblb')}
 ${txt(794, 87, `all metered lamps lit (90–100% light) · ${dsteam('pkg')} commits/90d`, 'lblf')}
 ${txt(794, 99, `the lint plugin stands at rust ${RUST_T[g(31).rust]}, fully metered — ${g(31).lamps} lamps (${g(31).eff}% lit)`, 'lblf')}
-<line x1="788" y1="90" x2="742" y2="168" class="skf"/>
+${leader(788, 90, 742, 168)}
 
 ${txt(1540, 388, 'apps/ — THE PROVING GROUND', 'lblb', 'end')}
 ${txt(1540, 401, `${dsteam('app')} commits/90d · accent lamps: real e2e light,`, 'lblf', 'end')}
@@ -405,46 +372,46 @@ ${lead(SITE_NE[0] + 8, SITE_NE[1] + 14, DISTRICT_BOUNDS.site[2], DISTRICT_BOUNDS
 ${txt(60, 560, 'tools/ — THE INSTRUMENT YARD', 'lblb')}
 ${txt(60, 573, `${dsteam('tool')} commits/90d across ${TOOLN} machines · pipes all green`, 'lblf')}
 ${txt(60, 585, `rust: ${TOOLRUST} of the ${TOOLN} carry any at all, the rest stand at ${RUST_T[0]}`, 'lblf')}
-<line x1="300" y1="552" x2="330" y2="522" class="skf"/>
+${leader(300, 552, 330, 522)}
 
 <!-- callouts -->
 ${FLAG_LINES.map(([y, s, cls]) => txt(FLAG_X, y, s, cls)).join('\n')}
-<line x1="388" y1="${FLAG_Y + 9}" x2="526" y2="132" class="skf"/>
+${leader(388, FLAG_Y + 9, 526, 132)}
 
 <!-- west of the plant row the caption passes under, whose bases reach y 646 -->
 ${txt(356, 652, `@tools/typedoc-plugin — rust ${RUST_T[g(13).rust]}, ${PUFFS(g(13).steam)} puffs:`, 'lblr')}
 ${txt(356, 664, TDP_SPLIT ? `${TDP.files} files: index.ts live, ${TDP.idlestFile.split('/').pop()} idle ${TDP.idlestDays}d` : `${TDP.files} files, each touched within ${TDP.idlestDays}d`, 'lblf')}
-<line x1="372" y1="638" x2="440" y2="492" class="skf"/>
+${leader(372, 638, 440, 492)}
 
-${txt(20, 620, '@tools/happy-dom — a spec annex lit by its own canary:', 'lblr')}
+${txt(20, 620, '@tools/happy-dom — a spec annex lit by its own canary:', 'lbls')}
 ${txt(20, 633, `it lights the workaround it guards, ${g(26).eff}% of its ${g(26).sl} lines`, 'lblf')}
-<line x1="20" y1="606" x2="146" y2="418" class="skf"/>
+${leader(20, 606, 146, 418)}
 
-${schedule}
 </svg>`;
 
 export const sheet7b = {
-  num: '7B', id: 'working', rev: 'I',
+  num: '7B', id: 'working', rev: 'J',
   title: 'THE WORKING CITY',
   sub: `ALTITUDE 3½ — SYNTHESIS PLATE TO SHEET 7: the census city as a working plant · weathering (13) × test light (7A) × gates (7) × live build, one sprite per member · steam window ${WINDOW} · ${BASIS}`,
   scale: 'WHOLE WORKSPACE',
   form: 'WORKING CITY',
   svg,
+  schedule: SCHEDULE,
   caption: `Sheet 7 counted the city, sheet 13 dated its stone, plate 7A metered its test light. This plate turns the same city on: every member becomes a Working Plant sprite in the Factorio sense — a machine whose state is broadcast, not implied. The alert channel is drawn and empty: no gate in the city is red at HEAD.`,
   notes: `
 <p><strong>The sprite decorates; the census governs.</strong> Every block is sheet 7's, unchanged: footprint 1.6·√sloc, height 3 px per authored file, spec annexes beside their buildings, gate severity in the same colours with the same uniform hatch including the cap. The Working Plant sprite (concept 3 of the sprite studies) adds four state channels as overlays. The design guard from the study is enforced: rust is a dotted <em>speckle</em> at partial opacity on the flanks only — never the cap, never a 45° line hatch — so a red-gated pristine plant (uniform hatch, cap included) and a rusting never-gating plant cannot be confused, in either theme.</p>
-<p><strong>Every channel is measured, and every threshold comes from a distribution.</strong> RUST is sheet 13's weathering census, read from ${plateLink('census-weather.json')} at ${WEATHER.ref} @ ${WEATHER.sha}: the member's median idle days — the very number sheet 13's schedule prints as "idle Nd" — stepped by a ladder this build <em>cuts for itself</em>. The rust ladder is not written down: it is re-cut from the idle distribution every cabinet, so a step means only what this plate’s own key says it means. The rule is the plate's stated method, mechanised: sort the distinct readings, measure the joints between them, and cut at the widest. The top step is reserved for a true outlier and opens only when the topmost joint is also the widest in the distribution; otherwise R4 is pinned above the highest reading and stands EMPTY. ${R4_OPEN ? `At this cabinet it opens: the topmost joint, ${TOP_JOINT.lip}d to ${IDLE_MAX}d, is the widest in the distribution` : `At this cabinet it stays shut: the topmost joint, ${TOP_JOINT.lip}d to ${IDLE_MAX}d, is not the widest joint in the distribution, so R4 sits above the highest idle on the plate and nothing occupies it`}. The ladder cuts ${STEPS_TXT} · R4 &gt;${CUTS[3]}, the deepest rust in the city is ${RUST_T[DEEPEST]} (${codes(atStep(DEEPEST))}), ${rustN(0)} of the ${DATED} dated plants ${rustN(0) === 1 ? 'stands' : 'stand'} clean at ${RUST_T[0]}, ${rustN(4) ? `and ${codes(atStep(4))} ${rustN(4) === 1 ? 'wears' : 'wear'} the cracked flanks the key draws` : 'and the cracked flanks the key draws stand unworn'}. <strong>A step label therefore means nothing across cabinets</strong> — the cuts move with the distribution, which is why they are printed in the telemetry box rather than remembered. STEAM is distinct commits touching the member in a trailing 90-day window, read from ${plateLink('census-steam.json')} — window ${WINDOW}, ${BASIS} — banded 0 puffs ≤2 · 1: 3–8 · 2: 9–15 · 3: ≥16. Those edges are editorial: ${EDGE_EMPTY.length ? `${[3, 9, 16].filter((e) => !EDGE_EMPTY.includes(e)).join(' and ') || 'none of 3, 9 and 16'} ${EDGE_EMPTY.length === 2 ? 'is' : 'are'} occupied on this window and ${EDGE_EMPTY.join(' and ')} ${EDGE_EMPTY.length === 1 ? 'is' : 'are'} not` : '3, 9 and 16 are all occupied on this window, so they sit in traffic rather than in empty air'}. ${TOP_STEAM_NOTE} LAMPS compress plate 7A's meter to one number — lit share = extent × line coverage — read from ${plateLink('census-shadow.json')}, metered at ${SHADOW.ref} @ ${SHADOW.sha}: three lamps at ${'≥'}90, two at ${'≥'}50, one above zero, and the accent lamp is 7A's honest category for light no meter reads. PIPES are the <a href="${TURBO_RUN}"><code>turbo run build</code></a> graph from ${plateLink('census-plate.json')}: ${BUILD.real} real tasks in ${BUILD.nodes} nodes, last run green on 2026-08-17 (all cache hits — a replay of green, stated as such), so every pipe on the sheet connects and the key says so rather than inventing a broken one.</p>
+<p><strong>Every channel is measured, and every threshold comes from a distribution.</strong> RUST is sheet 13's weathering census, read from ${plateLink('census-weather.json')} at ${WEATHER.ref} @ ${WEATHER.sha}: the member's median idle days — the very number sheet 13's schedule prints as "idle Nd" — stepped by a ladder this build <em>cuts for itself</em>. The rust ladder is not written down: it is re-cut from the idle distribution every cabinet, so a step means only what this plate’s own key says it means. The rule is the plate's stated method, mechanised: sort the distinct readings, measure the joints between them, and cut at the widest. The top step is reserved for a true outlier and opens only when the topmost joint is also the widest in the distribution; otherwise R4 is pinned above the highest reading and stands EMPTY. ${R4_OPEN ? `At this cabinet it opens: the topmost joint, ${TOP_JOINT.lip}d to ${IDLE_MAX}d, is the widest in the distribution` : `At this cabinet it stays shut: the topmost joint, ${TOP_JOINT.lip}d to ${IDLE_MAX}d, is not the widest joint in the distribution, so R4 sits above the highest idle on the plate and nothing occupies it`}. The ladder cuts ${STEPS_TXT} · R4 &gt;${CUTS[3]}, the deepest rust in the city is ${RUST_T[DEEPEST]} (${codes(atStep(DEEPEST))}), ${rustN(0)} of the ${DATED} dated plants ${rustN(0) === 1 ? 'stands' : 'stand'} clean at ${RUST_T[0]}, ${rustN(4) ? `and ${codes(atStep(4))} ${rustN(4) === 1 ? 'wears' : 'wear'} the cracked flanks the key draws` : 'and the cracked flanks the key draws stand unworn'}. <strong>A step label therefore means nothing across cabinets</strong> — the cuts move with the distribution, which is why they are printed in the key rather than remembered. STEAM is distinct commits touching the member in a trailing 90-day window, read from ${plateLink('census-steam.json')} — window ${WINDOW}, ${BASIS} — banded 0 puffs ≤2 · 1: 3–8 · 2: 9–15 · 3: ≥16. Those edges are editorial: ${EDGE_EMPTY.length ? `${[3, 9, 16].filter((e) => !EDGE_EMPTY.includes(e)).join(' and ') || 'none of 3, 9 and 16'} ${EDGE_EMPTY.length === 2 ? 'is' : 'are'} occupied on this window and ${EDGE_EMPTY.join(' and ')} ${EDGE_EMPTY.length === 1 ? 'is' : 'are'} not` : '3, 9 and 16 are all occupied on this window, so they sit in traffic rather than in empty air'}. ${TOP_STEAM_NOTE} LAMPS compress plate 7A's meter to one number — lit share = extent × line coverage — read from ${plateLink('census-shadow.json')}, metered at ${SHADOW.ref} @ ${SHADOW.sha}: three lamps at ${'≥'}90, two at ${'≥'}50, one above zero, and the accent lamp is 7A's honest category for light no meter reads. PIPES are the <a href="${TURBO_RUN}"><code>turbo run build</code></a> graph from ${plateLink('census-plate.json')}: ${BUILD.real} real tasks in ${BUILD.nodes} nodes, last run green on 2026-08-17 (all cache hits — a replay of green, stated as such), so every pipe on the sheet connects and the key says so rather than inventing a broken one.</p>
 <p><strong>The channels disagree, which is the point.</strong> The channels are independent on purpose, and the city proves they must be: the flagship stands at rust ${RUST_T[g(1).rust]} under full steam and every lamp, and the deepest rust in the city, ${RUST_T[DEEPEST]}, stands on ${codes(atStep(DEEPEST))}${RUSTY_HOT.length ? ` — where ${codes(RUSTY_HOT)} ${RUSTY_HOT.length === 1 ? 'is' : 'are'} still steaming` : ', none of them steaming'}. A single wreck-to-splendor axis would have to average these stories away. ${dirLink('packages/lit-ui-router', '<code>lit-ui-router</code>')} is the oldest masonry in the city <em>and</em> its hottest steam <em>and</em> fully lamped — old and running. ${TDP_SPLIT ? `The ${dirLink('tools/typedoc-plugin-lit-ui-router', 'typedoc plugin')} rusts at ${RUST_T[g(13).rust]} on ${TDP.files} files and still steams, because <code>index.ts</code> takes the commits while <code>${TDP.idlestFile.split('/').pop()}</code>, the other half of the plugin, idles its ${TDP_DAYS}.` : `The ${dirLink('tools/typedoc-plugin-lit-ui-router', 'typedoc plugin')} stands at rust ${RUST_T[g(13).rust]} on ${TDP.files} files and steams at ${PUFFS(g(13).steam)} puffs, every file of it touched within ${TDP_DAYS}.`} ${dirLink('examples', '<code>examples</code>')} steams at ${PUFFS(g(11).steam)} puffs with ${lampsNote(g(11))} at rust ${RUST_T[g(11).rust]} — worked on, ${g(11).lamps ? 'barely tested' : 'untested'}, barely aging — while ${dirLink('www/lit-ui-router.dev', '<code>docs</code>')} steams at ${PUFFS(g(10).steam)} puffs under ${dimOf(10)} metered light in the city (${g(10).eff}% lit). And ${dirLink('tools/happy-dom', '<code>@tools/happy-dom</code>')} keeps plate 7A's oddest light: a plant whose spec annex is a canary pointed upstream, lighting only the workaround it guards (${g(26).eff}% lit).</p>
 <p><strong>Every channel by import, and the ladder cuts itself.</strong> Placements, districts and gate tiers are <em>imported</em> from sheet 7's own placement table, and the masses from ${plateLink('census-city.json')}, so the two sheets cannot drift building for building. Rust, steam, lamps and pipes are each looked up by member directory in their own filed plate, and a member this sheet draws that a plate does not carry is a build error rather than a stale number. Rust was the last channel drawn by hand — an editorial step per member, keyed by badge — and it is not any more: the step is the ladder above applied to the weather plate's own <code>medIdle</code>, so 7B and sheet 13 cannot disagree about how long a member has stood idle, and a member with no dated source (${dirLink('tools/wintercg-globals', '<code>@tools/wintercg-globals</code>')}) carries no step rather than a guessed zero. The steam total — ${TOT_STEAM} member-touches from ${PLATE.windowCommits} window commits — double-counts commits touching several members, as any per-member count must, so the window commit count is printed beside it.</p>`,
   key: [
     keyRow('<rect x="6" y="3" width="36" height="12" class="sk fp"/>', 'a member, massed by sheet 7’s census — unchanged'),
-    keyRow(`<rect x="6" y="3" width="36" height="12" class="sk fp"/><rect x="6" y="3" width="36" height="12" fill="url(#${P}-rust)" opacity="0.5"/>`, `rust speckle (flanks only) — median idle, 5 steps re-cut each cabinet`),
+    keyRow(`<rect x="6" y="3" width="36" height="12" class="sk fp"/><rect x="6" y="3" width="36" height="12" fill="url(#${P}-rust)" opacity="0.5"/>`, `rust speckle (flanks only) — median idle on this cabinet’s own cut, re-cut each cabinet: ${STEPS_TXT}`),
     keyRow('<path d="M8,15 L12,10 L10,4" class="skr" fill="none"/><path d="M20,15 L23,11 L21,5" class="skr" fill="none"/>', `cracks — top step only: ${R4_OPEN ? `idle past the ${CUTS[3]}-day gap` : `R4 is reserved above ${CUTS[3]}d and unoccupied at this ref`}`),
-    keyRow('<ellipse cx="12" cy="12" rx="4" ry="2.5" class="sks fnone"/><ellipse cx="16" cy="7" rx="6" ry="3" class="sks fnone" opacity="0.6"/>', 'steam — 0–3 puffs = commits trailing 90 days'),
+    keyRow('<ellipse cx="12" cy="12" rx="4" ry="2.5" class="sks fnone"/><ellipse cx="16" cy="7" rx="6" ry="3" class="sks fnone" opacity="0.6"/>', 'steam — puffs = commits/90d: 0 ≤2 · 1: 3–8 · 2: 9–15 · 3: ≥16'),
     keyRow('<ellipse cx="12" cy="12" rx="4" ry="2.5" class="ska fnone"/><ellipse cx="16" cy="7" rx="6" ry="3" class="ska fnone" opacity="0.6"/>', 'accent plume — top steam band (≥16 commits)'),
-    keyRow('<rect x="8" y="6" width="5" height="5" class="skg fg"/><rect x="16" y="6" width="5" height="5" class="skg fg"/><rect x="24" y="6" width="5" height="5" class="sks fnone"/>', 'module lamps — lit share of plate 7A’s test light'),
+    keyRow('<rect x="8" y="6" width="5" height="5" class="skg fg"/><rect x="16" y="6" width="5" height="5" class="skg fg"/><rect x="24" y="6" width="5" height="5" class="sks fnone"/>', 'module lamps — lit share of plate 7A’s test light: 3 ≥90% · 2 ≥50% · 1 &gt;0'),
     keyRow('<rect x="8" y="6" width="5" height="5" class="ska fa"/><rect x="16" y="6" width="5" height="5" class="sks fnone"/><rect x="24" y="6" width="5" height="5" class="sks fnone"/>', 'accent lamp — e2e light, real but unmetered'),
-    keyRow('<path d="M4,9 L30,9 L30,16" class="sks" fill="none"/><circle cx="4" cy="9" r="2" class="sks fp2"/>', `pipe, connected — the build graph\u2019s ${BUILD.real} real tasks, last green`),
+    keyRow('<path d="M4,9 L30,9 L30,16" class="sks" fill="none"/><circle cx="4" cy="9" r="2" class="sks fp2"/>', `pipe, connected — turbo run build: ${BUILD.real} real of ${BUILD.nodes} graph nodes, last green 08-17`),
     keyRow('<polygon points="24,2 17,15 31,15" class="sks fnone"/><line x1="14" y1="17" x2="34" y2="1" class="sks"/>', 'alert, struck — the legend: no gate is red at HEAD'),
     keyRow('<rect x="6" y="3" width="36" height="12" class="fr"/><rect x="6" y="3" width="36" height="12" class="skr fnone"/>', 'gate severity — sheet 7’s, uniform hatch incl. cap'),
   ].join('\n'),

@@ -87,7 +87,7 @@ export async function initCity(root, viewer, focus) {
   // the parts panel: a chip click takes the hotspot's own tap (the href stays the no-script path); light(n) lights the pinned chip
   function partsPanel(root, cls, on, tap) {
     var nav = root.querySelector('.' + cls);
-    if (!nav) return { light: function () {}, hide: function () {} };
+    if (!nav) return { light: function () {}, hide: function () {}, dispose: function () {} };
     var chips = Array.prototype.slice.call(nav.querySelectorAll('a.pt'));
     var toggle = nav.querySelector('.pt-toggle');
     var smooth = window.matchMedia('(prefers-reduced-motion: no-preference)');
@@ -105,20 +105,35 @@ export async function initCity(root, viewer, focus) {
       e.preventDefault();
       tap(Number(a.getAttribute('data-focus')));
     });
+    var stage = nav.parentNode, bar = nav.querySelector('.pt-bar'), move = nav.querySelector('.pt-move'), drag = null, shown = true;
+    var CORNERS = ["ne","se","sw"];
+    // an open panel on a stage past the fold keeps its own strip: the stage's --parts-start or --parts-end, which the viewer's margin takes
+    function reserve() {
+      var w = shown && nav.classList.contains('open') && stage.clientWidth >= 900 ? Math.ceil(nav.getBoundingClientRect().width) + 16 : 0;
+      var west = (nav.getAttribute('data-corner') || '').charAt(1) === 'w';
+      stage.style.setProperty('--parts-start', (west ? w : 0) + 'px');
+      stage.style.setProperty('--parts-end', (west ? 0 : w) + 'px');
+    }
+    var sized = new ResizeObserver(reserve);
+    sized.observe(nav);
+    sized.observe(stage);
     on(toggle, 'click', function () {
       var open = !nav.classList.contains('open');
       nav.classList.toggle('open', open);
       toggle.setAttribute('aria-expanded', String(open));
+      reserve();
     });
-    var stage = nav.parentNode, bar = nav.querySelector('.pt-bar'), move = nav.querySelector('.pt-move'), drag = null;
-    var CORNERS = ["ne","se","sw"];
-    // a small stage opens on the bar alone, so the model starts unobstructed
-    if (stage.clientWidth < 760 || stage.clientHeight < 480) toggle.click();
+    // a small stage opens on the bar alone in the fold's corner, so the model starts unobstructed
+    if (stage.clientWidth < 900 || stage.clientHeight < 480) {
+      nav.setAttribute('data-corner', 'sw');
+      toggle.click();
+    }
     // FLIP: the panel lands in its corner, then glides there from where it stood
     function place(c, from) {
       nav.style.transition = 'none';
       nav.style.transform = '';
       nav.setAttribute('data-corner', c);
+      reserve();
       if (!from || !smooth.matches) return;
       var to = nav.getBoundingClientRect();
       nav.style.transform = 'translate(' + (from.left - to.left) + 'px, ' + (from.top - to.top) + 'px)';
@@ -169,7 +184,12 @@ export async function initCity(root, viewer, focus) {
         if (g && !g.open) g.open = true;
         if (at) reveal(at);
       },
-      hide: function () { nav.style.visibility = 'hidden'; },
+      hide: function () {
+        nav.style.visibility = 'hidden';
+        shown = false;
+        reserve();
+      },
+      dispose: function () { sized.disconnect(); },
     };
   }
   // captured on the way down, so the viewer's own arrow-key orbit never sees ← →; ↑ ↓ stay the viewer's;
@@ -228,6 +248,8 @@ export async function initCity(root, viewer, focus) {
   var ac = new AbortController();
   var on = function (el, type, fn, capture) { el.addEventListener(type, fn, { signal: ac.signal, capture: Boolean(capture) }); };
   var END = D.end, t = END, clock = 0, loaded = false, lane = 'tier', litN = null, pinN = null, pal = null, homeR = 0, homeFov = D.home.fov, raf = 0;
+  // homed while the camera stands at the home fit; fitAt is the viewer size that fit was measured at
+  var homed = false, fitAt = '', refits = 0, fitting = Promise.resolve();
   var byN = {}, pins = {};
   D.rows.forEach(function (b) {
     byN[b.n] = b;
@@ -315,6 +337,7 @@ export async function initCity(root, viewer, focus) {
       mv.cameraTarget = "auto 0m auto";
       mv.fieldOfView = D.home.fov + 'deg';
     } else {
+      homed = false;
       mv.cameraTarget = vec(byN[n].centre);
       mv.fieldOfView = Math.min(mv.getFieldOfView(), D.home.pin) + 'deg';
     }
@@ -328,9 +351,28 @@ export async function initCity(root, viewer, focus) {
   // the home radius frames the plan's diagonal at this stage's aspect; the viewer widens a narrow stage's field itself
   function home() {
     var r = mv.getBoundingClientRect(), tv = Math.tan(homeFov * Math.PI / 360);
+    fitAt = sizeOf();
     homeR = Math.max(D.home.span[0] / ((r.width / r.height) * tv), D.home.span[1] / tv);
     mv.cameraOrbit = "45deg 54.736deg " + homeR + 'm';
     settle();
+  }
+  function sizeOf() { return mv.clientWidth + 'x' + mv.clientHeight; }
+  // the viewer widens the field itself on a narrow stage, so the home field is read back at this size before the radius is fit
+  function refit(jump) {
+    var k = ++refits;
+    fitting = nextFrames(2).then(function () {
+      if (k !== refits) return undefined;
+      mv.fieldOfView = D.home.fov + 'deg';
+      mv.jumpCameraToGoal();
+      return nextFrames(2);
+    }).then(function () {
+      if (k !== refits) return;
+      homeFov = mv.getFieldOfView();
+      home();
+      homed = true;
+      if (jump) mv.jumpCameraToGoal();
+    });
+    return fitting;
   }
   // how large the city stands against its home pose: the radius and the field of view both zoom
   function scale() {
@@ -484,8 +526,10 @@ export async function initCity(root, viewer, focus) {
   wheelGate(stage, on);
   corners.forEach(function (c) { on(c, 'click', function () { turnTo(Number(c.getAttribute('data-az'))); }); });
   on(reset, 'click', function () {
-    home();
     frame(null);
+    if (sizeOf() !== fitAt) { void refit(false); return; }
+    home();
+    homed = true;
   });
   on(laneBox, 'change', function () {
     lane = laneBox.checked ? 'light' : 'tier';
@@ -496,7 +540,15 @@ export async function initCity(root, viewer, focus) {
   });
   on(play, 'click', function () { run(t >= END ? 0 : END); });
   on(slider, 'input', function () { stop(); pose(Number(slider.value)); });
-  on(mv, 'camera-change', onCamera);
+  on(mv, 'camera-change', function (e) {
+    if (e.detail && e.detail.source === 'user-interaction') homed = false;
+    onCamera();
+  });
+  // a stage that changes size, the parts panel's strip included, refits a camera still at home
+  var resized = new ResizeObserver(function () {
+    if (loaded && homed && sizeOf() !== fitAt) void refit(true);
+  });
+  resized.observe(mv);
   on(window, 'resize', onCamera);
   var themeOff = onTheme(retint, on);
 
@@ -505,6 +557,7 @@ export async function initCity(root, viewer, focus) {
       loaded = true;
       homeFov = mv.getFieldOfView();
       home();
+      homed = pinN === null;
       mv.jumpCameraToGoal();
       // LoopOnce, so the clip's last frame is the raised city rather than a wrap to the ground
       mv.play({ repetitions: 1 });
@@ -540,9 +593,11 @@ export async function initCity(root, viewer, focus) {
     animations: function () { return mv.availableAnimations; },
     time: function () { return t; },
     pose: function (v) { stop(); pose(v); },
+    // hidden, the panel gives its strip back; the promise settles when the camera has refit the full stage
     photo: function () {
       Array.prototype.forEach.call(mv.querySelectorAll('[slot^="hotspot-"]'), function (el) { el.style.visibility = 'hidden'; });
       parts.hide();
+      return nextFrames(2).then(function () { return fitting; }).then(function () { return nextFrames(3); });
     },
   };
 
@@ -550,6 +605,9 @@ export async function initCity(root, viewer, focus) {
     select: function (n) { if (pin(member(n))) frame(pinN); },
     dispose: function () {
       stop();
+      refits += 1;
+      resized.disconnect();
+      parts.dispose();
       if (raf) cancelAnimationFrame(raf);
       themeOff();
       ac.abort();

@@ -3,7 +3,7 @@
   <h2 class="sheet-title"><sup class="art">the&nbsp;</sup>INSTRUMENT YARD</h2>
   <p class="sheet-sub">ALTITUDE 3 — 12 publishable packages · 27 tools · 96 turbo task names · one packer, many readers · every mass counted at origin/main @ b499e2a5 (2026-10-28) from www/atlas.lit-ui-router.dev/data/census-yard.json on scc Code lines — 374 authored files and 30,070 sloc across 18 massed structures, with the task-manager inset reading the same two plates <a class="xref" data-sheet="3A" href="/sheet/3A">sheet 3A</a> draws</p>
   <figure>
-    <div class="plate fillable" style="--plate-ar:1.1532"><button type="button" class="fill" data-fill aria-label="Enlarge this figure, or leave it"></button><div class="figure-wrap" tabindex="0" role="group" aria-label="Fig. 3, the drawing; scrolls sideways"><svg viewBox="0 0 1400 1214" role="img" aria-label="Isometric map of the lit-ui-router monorepo as an industrial site, re-massed from measured source. A build conveyor runs along one straight isometric lane from upper left to lower right: the packages source slab, the oxc-emit build shed, the packer, a green crate that is the one tarball, the publish hall, and the npm registry beyond a dashed boundary. Below and to the left stands the instrument yard: two big reporter masses at its left end, and the small gates and reporters in two rows to their right. Below that stands a proving ground of sample apps, end to end tests and the docs deploy watch. Every structure is massed by its own census — footprint side proportional to the square root of its authored source lines, height one and a half pixels per authored file — so the three heaviest masses on the sheet, packages/*/src at 97 files, 8,839 lines, sample apps at 78 files, 4,412 lines, lint &amp; probe fleet at 50 files, 5,427 lines, are none of them gates. Gate severity is carried entirely in colour, never in height: five small red hatched pads stop the pull request line — the vitest harness, compat-guards, dts-backtest, check exports, and Cypress end to end — one solid red block, published-diff, halts publishing outright; two accent hatched blocks gate a later stage, the version bump and the docs deploy; and the faint unhatched blocks never gate at all. A dashed trunk carries the one cached tarball from the green crate to the three checks that read it, and a long accent return runs from the registry around the front of the whole site back into published-diff, closing the loop. A structure schedule lists all 20 structures with exact file and line counts and their gate tier. In the upper left corner, set apart from the isometric site, a small flat schematic shows the two task managers as a loop rather than a stack: GitHub Actions enters mise at 55 call sites across 9 workflows, mise holds 63 tasks with only 12 of them declaring dependencies, seven of those tasks shell turbo whose continuous-integration graph expands to 1251 task nodes, and an accent arrow returns from turbo back into mise, where seven root scripts shell mise again for the aqua-provisioned linters — rumdl, taplo, shellcheck, actionlint and zizmor — that node never installs.">
+    <div class="plate fillable" style="--plate-ar:1.5217"><button type="button" class="fill" data-fill aria-label="Enlarge this figure, or leave it"></button><div class="figure-wrap" tabindex="0" role="group" aria-label="Fig. 3, the drawing; scrolls sideways"><svg viewBox="0 0 1400 920" role="img" aria-label="Isometric map of the lit-ui-router monorepo as an industrial site, re-massed from measured source. A build conveyor runs along one straight isometric lane from upper left to lower right: the packages source slab, the oxc-emit build shed, the packer, a green crate that is the one tarball, the publish hall, and the npm registry beyond a dashed boundary. Below and to the left stands the instrument yard: two big reporter masses at its left end, and the small gates and reporters in two rows to their right. Below that stands a proving ground of sample apps, end to end tests and the docs deploy watch. Every structure is massed by its own census — footprint side proportional to the square root of its authored source lines, height one and a half pixels per authored file — so the three heaviest masses on the sheet, packages/*/src at 97 files, 8,839 lines, sample apps at 78 files, 4,412 lines, lint &amp; probe fleet at 50 files, 5,427 lines, are none of them gates. Gate severity is carried entirely in colour, never in height: five small red hatched pads stop the pull request line — the vitest harness, compat-guards, dts-backtest, check exports, and Cypress end to end — one solid red block, published-diff, halts publishing outright; two accent hatched blocks gate a later stage, the version bump and the docs deploy; and the faint unhatched blocks never gate at all. A dashed trunk carries the one cached tarball from the green crate to the three checks that read it, and a long accent return runs from the registry around the front of the whole site back into published-diff, closing the loop. A structure schedule below the drawing lists all 20 structures with exact file and line counts and their gate tier. In the upper right corner, set apart from the isometric site, a small flat schematic shows the two task managers as a loop rather than a stack: GitHub Actions enters mise at 55 call sites across 9 workflows, mise holds 63 tasks with only 12 of them declaring dependencies, seven of those tasks shell turbo whose continuous-integration graph expands to 1251 task nodes, and an accent arrow returns from turbo back into mise, where seven root scripts shell mise again for the aqua-provisioned linters — rumdl, taplo, shellcheck, actionlint and zizmor — that node never installs.">
 <defs>
   <marker id="s3-ai" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
     <path d="M0,0 L10,4 L0,8 z" class="fi"/>
@@ -31,7 +31,7 @@
   </pattern>
 </defs>
 
-<g transform="translate(0 -16)">
+<g transform="translate(700 58)">
 <rect x="40" y="26" width="600" height="156" class="skf fnone"/>
 <text x="52" y="43" class="lbls" text-anchor="start" >TWO TASK MANAGERS, ONE RE-ENTRANT LOOP</text>
 <text x="52" y="55" class="lblf" text-anchor="start" >mise — node-free umbrella · turbo — cached fan-out (remote R2) · neither sits above the other</text>
@@ -62,20 +62,7 @@
 </g>
 
 <text x="1360" y="34" class="lbls" text-anchor="end" >SCALE — footprint side = 1.6 · √sloc (plan area ∝ sloc) · height = 1.5 px per authored file · mass = sloc × files</text>
-<text x="1360" y="48" class="lblf" text-anchor="end" >GATE SEVERITY IS COLOUR, NOT HEIGHT — red stops the line, accent gates a later stage, faint never gates</text>
-<text x="1360" y="62" class="lblf" text-anchor="end" >the tarball, the registry and the boundary are diagrammatic, not to scale</text>
-
-<!-- severity ladder: the encoding, on the drawing -->
-<rect x="950" y="130" width="410" height="146" class="skf fnone"/>
-<text x="966" y="152" class="lbls" text-anchor="start" >GATE SEVERITY — READ THE COLOUR, NOT THE HEIGHT</text>
-<rect x="966" y="176" width="34" height="14" class="fr"/><rect x="966" y="176" width="34" height="14" class="skr fnone"/>
-<text x="1014" y="187" class="lblr" text-anchor="start" >halts a publish — published-diff (11)</text>
-<rect x="966" y="200" width="34" height="14" class="fp"/><rect x="966" y="200" width="34" height="14" fill="url(#s3-hr)"/><rect x="966" y="200" width="34" height="14" class="skr fnone"/>
-<text x="1014" y="211" class="lblr" text-anchor="start" >stops the PR line — 7 · 8 · 9 · 10 · 17</text>
-<rect x="966" y="224" width="34" height="14" class="fp"/><rect x="966" y="224" width="34" height="14" fill="url(#s3-ha)"/><rect x="966" y="224" width="34" height="14" class="ska fnone"/>
-<text x="1014" y="235" class="lbla" text-anchor="start" >gates a later stage — 12 · 19</text>
-<rect x="966" y="248" width="34" height="14" class="fp2"/><rect x="966" y="248" width="34" height="14" class="skf fnone"/>
-<text x="1014" y="259" class="lbls" text-anchor="start" >never gates — 13 · 14 · 15 · 16 · 20</text>
+<text x="1360" y="48" class="lblf" text-anchor="end" >the tarball, the registry and the boundary are diagrammatic, not to scale</text>
 
 <!-- districts -->
 <polygon points="216.2,289.0 596.4,508.5 390.3,627.5 10.1,408.0" class="skf fnone" stroke-dasharray="5 4"/>
@@ -339,51 +326,27 @@
 <text x="40" y="532" class="lblf" text-anchor="start" >27 packages, mostly measurement</text>
 <text x="700" y="830" class="lblf" text-anchor="start" >apps/ + www/ — proving ground &amp; shopfront</text>
 
-<rect x="40" y="944" width="1320" height="242" class="sk fp"/>
-<text x="58" y="966" class="lbls" text-anchor="start" >STRUCTURE SCHEDULE — authored source per structure · files (f) · sloc · gate tier</text>
-<line x1="40" y1="976" x2="1360" y2="976" class="skf"/>
-<text x="72" y="996" class="lbls" text-anchor="end" >1</text>
-<text x="83" y="996" class="lbls" text-anchor="start" >src — packages/*/src — 97f · 8,839 sloc · the line itself · twelve published + two private — the material</text>
-<text x="72" y="1013" class="lbls" text-anchor="end" >2</text>
-<text x="83" y="1013" class="lbls" text-anchor="start" >build — @tools/oxc-emit — 6f · 487 sloc · the line itself · JS pass + d.ts pass, one emitter</text>
-<text x="72" y="1030" class="lbls" text-anchor="end" >3</text>
-<text x="83" y="1030" class="lbls" text-anchor="start" >pack — packPublishTarball — 12f · 441 sloc · the line itself · the one packer (#449), cached</text>
-<text x="72" y="1047" class="lbls" text-anchor="end" >4</text>
-<text x="83" y="1047" class="lbls" text-anchor="start" >THE TARBALL — not massed · the artifact · the one artifact every check reads</text>
-<text x="72" y="1064" class="lbls" text-anchor="end" >5</text>
-<text x="83" y="1064" class="lbls" text-anchor="start" >publish — release-it — 33f · 2,041 sloc · the line itself · bump · tag · push · publish steps</text>
-<text x="72" y="1081" class="lbls" text-anchor="end" >6</text>
-<text x="83" y="1081" class="lbls" text-anchor="start" >npm registry — not massed · not massed · immutable once crossed</text>
-<text x="72" y="1098" class="lbls" text-anchor="end" >7</text>
-<text x="83" y="1098" class="lbls" text-anchor="start" >tests — vitest harness — 6f · 380 sloc · STOPS THE PR LINE · lit-test-env + happy-dom · 3 real browsers</text>
-<text x="72" y="1115" class="lbls" text-anchor="end" >8</text>
-<text x="83" y="1115" class="lbls" text-anchor="start" >compat-guards — 9f · 312 sloc · STOPS THE PR LINE · the lit 2 / mobx 6 / analyzer lanes</text>
-<text x="72" y="1132" class="lbls" text-anchor="end" >9</text>
-<text x="83" y="1132" class="lbls" text-anchor="start" >dts-backtest — 2f · 350 sloc · STOPS THE PR LINE · 2 files · 350 lines hold the TS 5.0 floor</text>
-<text x="72" y="1149" class="lbls" text-anchor="end" >10</text>
-<text x="83" y="1149" class="lbls" text-anchor="start" >check:exports — 2f · 141 sloc · STOPS THE PR LINE · publint + attw over the raw pack</text>
-<text x="724" y="996" class="lbls" text-anchor="end" >11</text>
-<text x="735" y="996" class="lbls" text-anchor="start" >published-diff — 5f · 481 sloc · HALTS A PUBLISH · vs the LIVE npm tarball · halts publishing</text>
-<text x="724" y="1013" class="lbls" text-anchor="end" >12</text>
-<text x="735" y="1013" class="lbls" text-anchor="start" >peer-floor tier-2 — 4f · 258 sloc · gates a later stage · gates version bumps, never a PR</text>
-<text x="724" y="1030" class="lbls" text-anchor="end" >13</text>
-<text x="735" y="1030" class="lbls" text-anchor="start" >peer-floor tier-1 — 2f · 144 sloc · never gates · reports check runs, never gates</text>
-<text x="724" y="1047" class="lbls" text-anchor="end" >14</text>
-<text x="735" y="1047" class="lbls" text-anchor="start" >lint &amp; probe fleet — 50f · 5,427 sloc · never gates · oxlint · elements · axe · CI gate</text>
-<text x="724" y="1064" class="lbls" text-anchor="end" >15</text>
-<text x="735" y="1064" class="lbls" text-anchor="start" >@tools/shared — 11f · 516 sloc · never gates · the library under every instrument</text>
-<text x="724" y="1081" class="lbls" text-anchor="end" >16</text>
-<text x="735" y="1081" class="lbls" text-anchor="start" >typedoc plugin — 2f · 350 sloc · never gates · builds the API pages, gates nothing</text>
-<text x="724" y="1098" class="lbls" text-anchor="end" >17</text>
-<text x="735" y="1098" class="lbls" text-anchor="start" >e2e — cypress — 11f · 826 sloc · STOPS THE PR LINE · drives the sample apps · stops the PR line</text>
-<text x="724" y="1115" class="lbls" text-anchor="end" >18</text>
-<text x="735" y="1115" class="lbls" text-anchor="start" >sample apps — 78f · 4,412 sloc · the line itself · effect + mobx + signals + vanilla + routes + shared</text>
-<text x="724" y="1132" class="lbls" text-anchor="end" >19</text>
-<text x="735" y="1132" class="lbls" text-anchor="start" >docs deploy watch — 9f · 1,000 sloc · gates a later stage · workers-builds triggers · gates the deploy</text>
-<text x="724" y="1149" class="lbls" text-anchor="end" >20</text>
-<text x="735" y="1149" class="lbls" text-anchor="start" >anti-slop rules — 35f · 3,665 sloc · never gates · vendored upstream · loaded by every oxlint lane</text>
-<text x="58" y="1172" class="lbls" text-anchor="start" >TOTAL — 18 massed structures · 374 authored files · 30,070 sloc · counted at origin/main @ b499e2a5 (2026-10-28) · gate tier is colour, never height</text>
 </svg></div></div>
+    <div class="schedules"><p class="schedule-title">STRUCTURE SCHEDULE — authored source per structure · files (f) · sloc · gate tier</p><div class="schedule-grid"><table class="schedule"><thead><tr><th class="n">#</th><th>structure</th><th>files</th><th>sloc</th><th>gate tier</th><th>note</th></tr></thead><tbody><tr><td class="n">1</td><td>src — packages/*/src</td><td class="num">97</td><td class="num">8,839</td><td>the line itself</td><td>twelve published + two private — the material</td></tr>
+<tr><td class="n">2</td><td>build — @tools/oxc-emit</td><td class="num">6</td><td class="num">487</td><td>the line itself</td><td>JS pass + d.ts pass, one emitter</td></tr>
+<tr><td class="n">3</td><td>pack — packPublishTarball</td><td class="num">12</td><td class="num">441</td><td>the line itself</td><td>the one packer (#449), cached</td></tr>
+<tr><td class="n">4</td><td>THE TARBALL</td><td>—</td><td>—</td><td>the artifact</td><td>the one artifact every check reads</td></tr>
+<tr><td class="n">5</td><td>publish — release-it</td><td class="num">33</td><td class="num">2,041</td><td>the line itself</td><td>bump · tag · push · publish steps</td></tr>
+<tr><td class="n">6</td><td>npm registry</td><td>—</td><td>—</td><td>not massed</td><td>immutable once crossed</td></tr>
+<tr><td class="n">7</td><td>tests — vitest harness</td><td class="num">6</td><td class="num">380</td><td>STOPS THE PR LINE</td><td>lit-test-env + happy-dom · 3 real browsers</td></tr>
+<tr><td class="n">8</td><td>compat-guards</td><td class="num">9</td><td class="num">312</td><td>STOPS THE PR LINE</td><td>the lit 2 / mobx 6 / analyzer lanes</td></tr>
+<tr><td class="n">9</td><td>dts-backtest</td><td class="num">2</td><td class="num">350</td><td>STOPS THE PR LINE</td><td>2 files · 350 lines hold the TS 5.0 floor</td></tr>
+<tr><td class="n">10</td><td>check:exports</td><td class="num">2</td><td class="num">141</td><td>STOPS THE PR LINE</td><td>publint + attw over the raw pack</td></tr></tbody></table>
+<table class="schedule"><thead><tr><th class="n">#</th><th>structure</th><th>files</th><th>sloc</th><th>gate tier</th><th>note</th></tr></thead><tbody><tr><td class="n">11</td><td>published-diff</td><td class="num">5</td><td class="num">481</td><td>HALTS A PUBLISH</td><td>vs the LIVE npm tarball · halts publishing</td></tr>
+<tr><td class="n">12</td><td>peer-floor tier-2</td><td class="num">4</td><td class="num">258</td><td>gates a later stage</td><td>gates version bumps, never a PR</td></tr>
+<tr><td class="n">13</td><td>peer-floor tier-1</td><td class="num">2</td><td class="num">144</td><td>never gates</td><td>reports check runs, never gates</td></tr>
+<tr><td class="n">14</td><td>lint &amp; probe fleet</td><td class="num">50</td><td class="num">5,427</td><td>never gates</td><td>oxlint · elements · axe · CI gate</td></tr>
+<tr><td class="n">15</td><td>@tools/shared</td><td class="num">11</td><td class="num">516</td><td>never gates</td><td>the library under every instrument</td></tr>
+<tr><td class="n">16</td><td>typedoc plugin</td><td class="num">2</td><td class="num">350</td><td>never gates</td><td>builds the API pages, gates nothing</td></tr>
+<tr><td class="n">17</td><td>e2e — cypress</td><td class="num">11</td><td class="num">826</td><td>STOPS THE PR LINE</td><td>drives the sample apps · stops the PR line</td></tr>
+<tr><td class="n">18</td><td>sample apps</td><td class="num">78</td><td class="num">4,412</td><td>the line itself</td><td>effect + mobx + signals + vanilla + routes + shared</td></tr>
+<tr><td class="n">19</td><td>docs deploy watch</td><td class="num">9</td><td class="num">1,000</td><td>gates a later stage</td><td>workers-builds triggers · gates the deploy</td></tr>
+<tr><td class="n">20</td><td>anti-slop rules</td><td class="num">35</td><td class="num">3,665</td><td>never gates</td><td>vendored upstream · loaded by every oxlint lane</td></tr></tbody></table></div><p class="schedule-total">TOTAL — 18 massed structures · 374 authored files · 30,070 sloc · counted at origin/main @ b499e2a5 (2026-10-28) · gate tier is colour, never height</p></div>
     <figcaption><span class="figno">FIG. 3</span>The monorepo drawn as what it functionally is: a short conveyor that turns source into one tarball, inside a yard of instruments built to measure that tarball. Every structure carries its measured mass — footprint ∝ √sloc, height ∝ authored files — and gate severity is colour rather than height, because the two do not correlate: the blocks that stop the line are among the smallest on the sheet.</figcaption>
   </figure>
   <div class="notes-grid">
@@ -394,7 +357,7 @@
 <p><strong>Mass is volume; volume does not predict authority.</strong> Footprint side is <code>1.6 · √sloc</code>, so plan area tracks lines; height is <code>1.5 px</code> per authored file, so a block's volume is its <code>sloc × files</code>. The three heaviest masses on the sheet gate nothing: packages/*/src (97 files, 8,839 lines), sample apps (78 files, 4,412 lines), lint &amp; probe fleet (50 files, 5,427 lines). The 5 structures that can stop a pull request total 30 files between them, and one of them — <a href="https://github.com/simshanith/lit-ui-router/tree/main/tools/dts-backtest"><code>dts-backtest</code></a> — is a single 350-line <code>run.ts</code>. Encoding severity as height would imply the opposite; the census says a gate's authority has nothing to do with how much code it is.</p>
 <p><strong>Severity in colour.</strong> Red hatch across cap and flank marks a check that stops the PR line: the <a href="https://vitest.dev/">vitest</a> harness (7), <a href="https://github.com/simshanith/lit-ui-router/tree/main/tools/compat-guards"><code>compat-guards</code></a> (8), <code>dts-backtest</code> (9), <code>check:exports</code> (10) and <a href="https://www.cypress.io/">Cypress</a> <code>e2e</code> (17). One block is solid red — <code>published-diff</code> (11) — because it is the only structure that halts publishing itself, and it closes the loop by pulling the <em>live</em> npm tarball back for comparison, which makes the registry part of the circuit rather than a destination. Accent hatch marks the gates that fire later rather than on a PR: <code>peer-floor</code> tier-2 (12) gates version bumps, the workers-builds watch (19) gates the docs deploy. Faint, unhatched blocks never gate at all — <code>peer-floor</code> tier-1 reports check runs, the lint &amp; probe fleet is advisory, <a href="https://github.com/simshanith/lit-ui-router/tree/main/tools/shared"><code>@tools/<wbr>shared</code></a>, <a href="https://github.com/simshanith/lit-ui-router/tree/main/tools/typedoc-plugin-lit-ui-router">the typedoc plugin</a> and the vendored anti-slop rules (20) are libraries. The tiers survive both themes because they differ in hatch as well as hue: solid red, red hatch, accent hatch, no hatch.</p>
 <p><strong>One packer, many readers (<a href="https://github.com/simshanith/lit-ui-router/pull/449">#449</a>).</strong> The dashed trunk leaving the green crate is literal: <code>check:exports</code> (<a href="https://publint.dev/">publint</a> + <a href="https://arethetypeswrong.github.io/">attw</a>), <code>dts-backtest</code> and <code>published-diff</code> all read the same cached <code>packPublishTarball</code> output. No check re-packs, so a drift verdict is always about the artifact that would actually ship. Known failure mode, drawn nowhere but real: a poisoned remote cache entry can replay a stale verdict — <code>--force</code> is the remediation.</p>
-<p><strong>Two task managers, one re-entrant loop.</strong> The inset at top left is drawn flat, not isometric, because a task manager is not a place — and because the relationship is not the clean layering it sounds like. <a href="https://docs.github.com/en/actions">GitHub Actions</a> enters <a href="https://mise.jdx.dev/">mise</a> at 55 call sites across 9 workflows (36 distinct tasks); mise itself is almost graphless — 63 tasks with exactly 12 of them declaring <code>depends</code> (16 edges), among them <code>lint_workflows</code> → its four linters and <code>setup</code> → <code>turbo_pin_worktree</code> — because it delegates fan-out rather than modelling it. Seven mise tasks shell <a href="https://turborepo.dev/">turbo</a>, whose <code>ci</code> graph alone expands to 1251 task nodes. Then the loop closes back on itself: seven root <code>package.json</code> scripts shell <code>mise run</code> again, so turbo's <code>/<wbr>/<wbr>#lint:markdown</code> node literally runs <code>mise run lint_markdown</code>. That return is the whole point — mise/<a href="https://aquaproj.github.io/">aqua</a> owns the versions of the non-node tools (<a href="https://github.com/rvben/rumdl">rumdl</a>, <a href="https://taplo.tamasfe.dev/">taplo</a>, <a href="https://www.shellcheck.net/">shellcheck</a>, <a href="https://github.com/rhysd/actionlint">actionlint</a>, <a href="https://docs.zizmor.sh/">zizmor</a>), and turbo climbs back out to it to get a cache key over tools node never installs. Neither gantry is above the other.</p>
+<p><strong>Two task managers, one re-entrant loop.</strong> The inset at top right is drawn flat, not isometric, because a task manager is not a place — and because the relationship is not the clean layering it sounds like. <a href="https://docs.github.com/en/actions">GitHub Actions</a> enters <a href="https://mise.jdx.dev/">mise</a> at 55 call sites across 9 workflows (36 distinct tasks); mise itself is almost graphless — 63 tasks with exactly 12 of them declaring <code>depends</code> (16 edges), among them <code>lint_workflows</code> → its four linters and <code>setup</code> → <code>turbo_pin_worktree</code> — because it delegates fan-out rather than modelling it. Seven mise tasks shell <a href="https://turborepo.dev/">turbo</a>, whose <code>ci</code> graph alone expands to 1251 task nodes. Then the loop closes back on itself: seven root <code>package.json</code> scripts shell <code>mise run</code> again, so turbo's <code>/<wbr>/<wbr>#lint:markdown</code> node literally runs <code>mise run lint_markdown</code>. That return is the whole point — mise/<a href="https://aquaproj.github.io/">aqua</a> owns the versions of the non-node tools (<a href="https://github.com/rvben/rumdl">rumdl</a>, <a href="https://taplo.tamasfe.dev/">taplo</a>, <a href="https://www.shellcheck.net/">shellcheck</a>, <a href="https://github.com/rhysd/actionlint">actionlint</a>, <a href="https://docs.zizmor.sh/">zizmor</a>), and turbo climbs back out to it to get a cache key over tools node never installs. Neither gantry is above the other.</p>
     </div>
     <div class="keyblock">
       <h3>KEY</h3>
@@ -412,7 +375,7 @@
   <div><span class="fld">SCALE</span>THE MONOREPO</div>
   <div><span class="fld">FORM</span>ISOMETRIC CITY</div>
   <div><span class="fld">CLIENT</span>lit-ui-router · simshanith</div>
-  <div><span class="fld">DATE / REV</span>2026-10-27 · H</div>
+  <div><span class="fld">DATE / REV</span>2026-10-27 · I</div>
   <div><span class="fld">DRAWN BY</span><span class="hand">Fable (Claude, AI)</span></div>
   <div class="sh"><span><span class="fld">SHEET</span>3 OF 14</span><span class="chop" aria-hidden="true"></span></div>
 </div>

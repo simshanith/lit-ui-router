@@ -291,6 +291,11 @@ try {
     await idle(page);
     const counts = await page.evaluate(() => ({ pins: document.querySelectorAll('#cs-viewer .cs-pin').length, labels: document.querySelectorAll('#cs-viewer .cs-dist').length }));
     check(counts.pins === CITY.length && counts.labels === 4, `${counts.pins} pins and ${counts.labels} district labels as hotspots`);
+    const strip = await page.evaluate(() => {
+      const nav = document.querySelector('.cs-parts'), v = document.querySelector('#cs-viewer').getBoundingClientRect(), n = nav.getBoundingClientRect();
+      return { open: nav.classList.contains('open'), viewer: Math.round(v.right), panel: Math.round(n.left) };
+    });
+    check(strip.open && strip.viewer <= strip.panel, `the open members panel keeps its own strip: the viewer ends at ${strip.viewer}px, the panel starts at ${strip.panel}px`, JSON.stringify(strip));
     await page.click('[slot="hotspot-2"]');
     await page.waitForFunction(() => new URLSearchParams(location.search).get('focus') === '2');
     const after = await page.evaluate(() => ({
@@ -521,10 +526,11 @@ try {
     const page = await open('/builds/', { viewport: { width: 390, height: 844 }, phone: true });
     await page.waitForFunction(() => window.__buildsScene);
     const row = await page.evaluate(() => {
-      const nav = document.querySelector('.bd-builds'), links = [...nav.querySelectorAll('a')];
-      return { scroll: nav.scrollWidth > nav.clientWidth, rows: new Set(links.map((a) => Math.round(a.getBoundingClientRect().top))).size, page: document.documentElement.scrollWidth, w: window.innerWidth };
+      const nav = document.querySelector('.bd-builds'), links = [...nav.querySelectorAll('a')], r = nav.getBoundingClientRect();
+      return { scroll: nav.scrollWidth > nav.clientWidth, rows: new Set(links.map((a) => Math.round(a.getBoundingClientRect().top))).size,
+        inside: links.every((a) => { const b = a.getBoundingClientRect(); return b.left >= r.left - 0.5 && b.right <= r.right + 0.5; }), page: document.documentElement.scrollWidth, w: window.innerWidth };
     });
-    check(row.scroll && row.rows === 1 && row.page <= row.w, `on a phone the picker scrolls in one row and the page keeps its width (${row.page} ≤ ${row.w})`, JSON.stringify(row));
+    check(!row.scroll && row.inside && row.rows > 1 && row.page <= row.w, `on a phone the picker wraps every build onto ${row.rows} rows inside its width and the page keeps its own (${row.page} ≤ ${row.w})`, JSON.stringify(row));
     await page.close();
   }
 

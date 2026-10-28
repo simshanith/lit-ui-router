@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { defs } from './chrome.mjs';
-import { txt, schedTxt, keyRow } from './helpers.mjs';
+import { txt, schedule, leader, keyRow } from './helpers.mjs';
 import { assertPlots, plotsOf } from './iso-hidden.mjs';
 
 const P = 's13';
@@ -73,7 +73,7 @@ const PLACED = [
   // 4 — the plugin last, so its callout's leader drops straight to the lettering;
   // nudged east off ssr's annex when #1010/#1020 grew it to 2,578 spec sloc, and
   // south off the effect bindings' annex when it reached 340.4 at the 4dc0cbb7 refresh
-  // north off y 20 when its annex reached 108.4 at the eb1162da refresh: it clears the reading box's y 95 by 2.1
+  // north off y 20 when its annex reached 108.4 at the eb1162da refresh
   // east off 250 at the b499e2a5 refresh, when the flagship's annex reached its west wall
   [2, 'ui-router-server', 'packages/ui-router-server', 'pkg', 255, 6],
   // east off 248 at the b499e2a5 refresh, with the server, off the flagship's annex
@@ -254,7 +254,7 @@ const districts = DIST.map(([d, pad]) => {
   return `<rect x="${x1.toFixed(1)}" y="${y1.toFixed(1)}" width="${(x2 - x1).toFixed(1)}" height="${(y2 - y1).toFixed(1)}" class="skf fnone" stroke-dasharray="5 4"/>`;
 }).join('\n');
 
-// ---- city-wide roll-ups the prose and the reading box quote ----------------------
+// ---- city-wide roll-ups the prose and the schedule quote ----------------------
 const SEASON_N = [0, 1, 2].map((s) => PLATE.rows.filter((r) => season(r.first) === s).length);
 const SEASON_TPF = [0, 1, 2].map((s) => {
   const rs = PLATE.rows.filter((r) => season(r.first) === s);
@@ -286,38 +286,6 @@ const IDLE_GAP = [IDLE_SORTED.filter((d) => d < SEAL).at(-1), IDLE_SORTED.find((
 const distSloc = (d) => D.filter((r) => r[2] === d).reduce((a, r) => a + r[5], 0);
 const tpf = (n) => (g(n).src[2] / g(n).src[0]).toFixed(1);
 const row = (n) => D.find((r) => r[0] === n);
-
-// ---- the reading box, in the void sheet 7 spent on roads --------------------------
-// set at 722,262: the packages annexes reach x 717.3, and apps №5 stands down to y 253
-const RB = `<g transform="translate(54 74)">
-<rect x="668" y="188" width="238" height="332" class="sk fp"/>
-${txt(686, 212, 'READING THE WEATHER', 'lbls')}
-<line x1="668" y1="222" x2="906" y2="222" class="skf"/>
-${txt(686, 244, 'AGE — masonry courses, oldest at the base', 'lbl')}
-${[
-  [`url(#${P}-w1)`, `SEASON I · THE PORT · 2025-07 · ${SEASON_N[0]}f`],
-  [`url(#${P}-w2)`, `SEASON II · WINTER · 2026-01 · ${SEASON_N[1]}f`],
-  [null, `SEASON III · SUMMER · ${SEASON_FIRST[2].slice(5)} on · ${SEASON_N[2]}f`],
-].map(([fill, label], i) => {
-  const y = 256 + i * 24;
-  return `<rect x="686" y="${y}" width="30" height="14" class="fp"/>${fill ? `<rect x="686" y="${y}" width="30" height="14" fill="${fill}"/>` : ''}<rect x="686" y="${y}" width="30" height="14" class="sk fnone"/>
-${txt(728, y + 11, label, 'lbls')}`;
-}).join('\n')}
-${txt(686, 350, 'CHURN — ticks: one per touch per file', 'lbl')}
-${[
-  ['skr', 8, 7, `HOT · ≥${HOT}/file · red edge · ${HOT_BLOCKS} blocks`, 'lblr'],
-  ['sks', 6, 3, `MID · ${COLD}–${HOT - 1} · the working stock`, 'lbls'],
-  ['skf', 4, 1, `COLD · <${COLD} · touched once, left`, 'lbls'],
-].map(([cls, th, nn, label, lcls], i) => {
-  const y = 362 + i * 24;
-  return Array.from({ length: nn }, (_, j) => `<line x1="${688 + j * 5}" y1="${y}" x2="${688 + j * 5}" y2="${y + th}" class="${cls}"/>`).join('')
-    + txt(728, y + 9, label, lcls);
-}).join('\n')}
-${txt(686, 448, 'THE GRADIENT THE MAP ARGUES', 'lbl')}
-${txt(686, 466, 'mean touches per file, by birth season:', 'lbls')}
-${txt(686, 482, `I ×${SEASON_TPF[0]} · II ×${SEASON_TPF[1]} · III ×${SEASON_TPF[2]}`, 'lbla')}
-${txt(686, 500, 'the older the wall, the more it is chiselled', 'lbls')}
-</g>`;
 
 // ---- timeline: every calendar month the plate spans, most of them silent ----------
 const monthRange = () => {
@@ -366,9 +334,9 @@ ${txt(TLX + i * TLW + 8 + (TLW - 32) / 2, (by - h - 4).toFixed(1), String(v), 'l
 }).join('\n')}
 <line x1="${TLX}" y1="${TLY + 5 * ROWH + 4}" x2="${TLX + MONTHS.length * TLW - 16}" y2="${TLY + 5 * ROWH + 4}" class="sk"/>
 ${MONTHS.map((mo, i) => txt(TLX + i * TLW + 8, TLY + 5 * ROWH + 20, mo.replace('20', "'"), 'lblf')).join('')}
-${txt(TLX + MONTHS.indexOf('2025-07') * TLW + 8, TLY + 5 * ROWH + 38, 'THE PORT', 'lbla')}
-${txt(TLX + MONTHS.indexOf('2026-01') * TLW + 8, TLY + 5 * ROWH + 38, 'WINTER WORKS', 'lbla')}
-${txt(TLX + MONTHS.indexOf('2026-07') * TLW + 8, TLY + 5 * ROWH + 38, 'THE SUMMER', 'lbla')}`;
+${txt(TLX + MONTHS.indexOf('2025-07') * TLW + 8, TLY + 5 * ROWH + 38, 'THE PORT', 'lbls')}
+${txt(TLX + MONTHS.indexOf('2026-01') * TLW + 8, TLY + 5 * ROWH + 38, 'WINTER WORKS', 'lbls')}
+${txt(TLX + MONTHS.indexOf('2026-07') * TLW + 8, TLY + 5 * ROWH + 38, 'THE SUMMER', 'lbls')}`;
 
 // ---- schedule --------------------------------------------------------------------
 const seasonsOf = (r) => {
@@ -379,19 +347,13 @@ const filesOf = (r) => (r[7]?.[0] ?? 0) + (r[8]?.[0] ?? 0);
 const touchesOf = (r) => (r[7]?.[2] ?? 0) + (r[8]?.[2] ?? 0);
 const schedRow = (r) => {
   const [n, name, , , , , , src, , born, medIdle, hot, sealed] = r;
-  if (!src) return [n, `${name} — no dated source (ambient types only)`];
+  if (!src) return [n, name, '—', '—', '—', '—', '—', '—', '—', 'no dated source (ambient types only)'];
   const f = filesOf(r), t = touchesOf(r);
-  return [n, `${name} — ${f}f · ${born} · ${seasonsOf(r)} · ×${t} (${(t / f).toFixed(1)}/f) · idle ${medIdle}d`
-    + `${sealed ? ` · ${sealed} SEALED` : ''} · ${hot}`];
+  return [n, name, f, born, seasonsOf(r), t, (t / f).toFixed(1), medIdle, sealed ? `${sealed} SEALED` : '—', hot];
 };
-const half = Math.ceil(D.length / 2);
-const SY = TLY + 5 * ROWH + 58;
-const schedule = `<rect x="40" y="${SY}" width="1480" height="${74 + half * 17}" class="sk fp"/>
-${txt(58, SY + 22, 'STRUCTURE SCHEDULE — weathering per member · files · first-commit date · files born per season I/II/III · touches (per file) · median days since last touch', 'lbls')}
-<line x1="40" y1="${SY + 32}" x2="1520" y2="${SY + 32}" class="skf"/>
-${D.slice(0, half).map((r, i) => schedTxt(58, SY + 52 + i * 17, schedRow(r), 'lbls')).join('\n')}
-${D.slice(half).map((r, i) => schedTxt(800, SY + 52 + i * 17, schedRow(r), 'lbls')).join('\n')}
-${txt(58, SY + 58 + half * 17, `TOTAL — ${TOT_F} dated files (sheet 7's plate counts the same ${TOT_F}) · ${fmt(TOT_T)} touches · seasons ${SEASON_N.join(' / ')} · TODAY = ${TODAY} · ${BASIS}`, 'lbls')}`;
+const SCHEDULE = schedule('STRUCTURE SCHEDULE — weathering per member · files · first-commit date · files born per season I/II/III · touches (per file) · median days since last touch',
+  ['#', 'member', 'files', 'first commit', 'born I/II/III', 'touches', 'per file', 'idle (d)', 'sealed', 'hottest file'], D.map(schedRow),
+  `TOTAL — ${TOT_F} dated files (sheet 7's plate counts the same ${TOT_F}) · ${fmt(TOT_T)} touches · seasons ${SEASON_N.join(' / ')} · mean touches per file by birth season I ×${SEASON_TPF[0]} · II ×${SEASON_TPF[1]} · III ×${SEASON_TPF[2]} · TODAY = ${TODAY} · ${BASIS}`);
 
 // ---- callouts --------------------------------------------------------------------
 const SREF = file('packages/lit-ui-router/src/ui-sref.ts');
@@ -440,32 +402,33 @@ ${txt(60, 500, 'lit-ui-router — THE ORIGINAL MASONRY', 'lbla')}
 ${txt(60, 514, `${PORT_LUR.length} of ${g(1).src[0]} src walls laid ${SREF.first}, the first day —`, 'lblf')}
 ${txt(60, 526, `mean ×${(PORT_LUR.reduce((a, r) => a + r.touches, 0) / PORT_LUR.length).toFixed(1)} touches each, and still under the chisel:`, 'lblf')}
 ${txt(60, 538, `ui-sref.ts ×${SREF.touches}, last touched ${SREF.last}`, 'lblf')}
-<line x1="58" y1="490" x2="56" y2="242" class="skf"/>
+${leader(58, 490, 56, 242)}
 
 ${txt(DX, 700, `www/lit-ui-router.dev/.vitepress/config.ts ×${DCFG.touches}`, 'lblr')}
 ${txt(DX, 714, 'the most-weathered wall in the city —', 'lblf')}
 ${txt(DX, 726, `${days(DCFG.first)} days old, repainted ${DCFG.touches} times, idle ${days(DCFG.last)}d`, 'lblf')}
-<line x1="${DX - 4}" y1="710" x2="1188" y2="702" class="skf"/>
+${leader(DX - 4, 710, 1188, 702)}
 
 ${EX_LINES.map(([y, s, cls]) => txt(EX_X, y, s, cls)).join('\n')}
-<line x1="${EX_X - 4}" y1="${(EX_Y - 16).toFixed(1)}" x2="${(EXB.x + EXB.s * 0.4).toFixed(1)}" y2="${(EXB.y + 2).toFixed(1)}" class="skf"/>
+${leader(EX_X - 4, EX_Y - 16, EXB.x + EXB.s * 0.4, EXB.y + 2)}
 
 ${txt(584, 1078, '@tools/typedoc-plugin — THE YARD’S ONE WINTER WALL', 'lbls')}
 ${txt(584, 1092, `index.ts laid ${SYM.first}, still under the chisel — ×${SYM.touches}, idle ${days(SYM.last)}d`, 'lblf')}
-<line x1="580" y1="1080" x2="470" y2="1058" class="skf"/>
+${leader(580, 1080, 470, 1058)}
 
 ${txt(60, 1078, `@tools/release — ${filesOf(row(12))} walls, every one summer-built`, 'lbl')}
 ${txt(60, 1092, `the yard’s largest building is ${days(row(12)[9])} days old`, 'lblf')}
-<line x1="130" y1="1064" x2="146" y2="1044" class="skf"/>
+${leader(130, 1064, 146, 1044)}
 
-${txt(526, 548, `navigation-location-plugin — ×${tpf(4)}/f`, 'lblr')}
+${txt(526, 548, `navigation-location-plugin — ×${tpf(4)}/f`, 'lbls')}
 ${txt(526, 562, `its ${MONTH(NAV_IDX.first)} index.ts chiselled ${NAV_IDX.touches} times;`, 'lblf')}
 ${txt(526, 574, NAV_REST.length === 1 ? `one ${MONTH(NAV_REST[0].first)} wall beside it, touched ${NAV_REST[0].touches}×` : `${NAV_REST.length} younger walls beside it`, 'lblf')}
-<line x1="530" y1="536" x2="${(g(4).x + g(4).s / 2).toFixed(1)}" y2="${(g(4).y + g(4).s + 16).toFixed(1)}" class="skf"/>`;
+${leader(530, 536, g(4).x + g(4).s / 2, g(4).y + g(4).s + 16)}`;
 
 // ---- assemble --------------------------------------------------------------------
-const H = SY + 104 + half * 17;
-const svg = `<svg viewBox="0 0 1560 ${H}" role="img" aria-label="A flat plan-view weathering map of the lit-ui-router workspace: the same city as sheet 7, same four dashed districts and same footprints, but every building is coloured by when its files were first committed and edged by how often they are touched. Each footprint is striped like masonry courses, oldest at the base: dense ink hatch for Season One, the July 2025 port; accent hatch for Season Two, the January 2026 winter works; plain paper for Season Three, the summer campaign that built ${SEASON_N[2]} of the ${TOT_F} files since July fourth. Under each building a tick gauge counts touches per file; ${HOT_BLOCKS} buildings carry red hot edges at six or more touches per file, and buildings touched less than twice are drawn faint. Dashed crosses seal ${SEALED_BLOCKS.length === 1 ? `the ${SEALED_BLOCKS[0]} slab` : `${NUMW[SEALED_BLOCKS.length]} slabs`}, where ${NUMW[SEALED_F] ?? SEALED_F} files stand untouched for over ${SEAL} days. A ${MONTHS.length}-month timeline below shows all activity concentrated in ${ALIVE} months separated by silence, and a structure schedule dates every member. The reading box states the verdict: mean touches per file falls from ${SEASON_TPF[0]} for the port cohort to ${SEASON_TPF[2]} for the summer cohort — the oldest walls are the most chiselled.">
+// the figure ends 20 px under the timeline's season lettering
+const H = TLY + 5 * ROWH + 58;
+const svg = `<svg viewBox="0 0 1560 ${H}" role="img" aria-label="A flat plan-view weathering map of the lit-ui-router workspace: the same city as sheet 7, same four dashed districts and same footprints, but every building is coloured by when its files were first committed and edged by how often they are touched. Each footprint is striped like masonry courses, oldest at the base: dense ink hatch for Season One, the July 2025 port; accent hatch for Season Two, the January 2026 winter works; plain paper for Season Three, the summer campaign that built ${SEASON_N[2]} of the ${TOT_F} files since July fourth. Under each building a tick gauge counts touches per file; ${HOT_BLOCKS} buildings carry red hot edges at six or more touches per file, and buildings touched less than twice are drawn faint. Dashed crosses seal ${SEALED_BLOCKS.length === 1 ? `the ${SEALED_BLOCKS[0]} slab` : `${NUMW[SEALED_BLOCKS.length]} slabs`}, where ${NUMW[SEALED_F] ?? SEALED_F} files stand untouched for over ${SEAL} days. A ${MONTHS.length}-month timeline below shows all activity concentrated in ${ALIVE} months separated by silence, and a structure schedule below the drawing dates every member. Mean touches per file falls from ${SEASON_TPF[0]} for the port cohort to ${SEASON_TPF[2]} for the summer cohort — the oldest walls are the most chiselled.">
 ${defs(P)}
 <defs>
   <pattern id="${P}-w1" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
@@ -476,17 +439,10 @@ ${defs(P)}
   </pattern>
 </defs>
 
-<rect x="40" y="26" width="700" height="42" class="skf fnone"/>
-${txt(52, 43, 'THE WEATHERING MAP — WHEN EVERY WALL WAS LAID, AND HOW OFTEN IT IS TOUCHED', 'lbls')}
-${txt(52, 58, 'same city, same footprints as sheet 7 · fills date the stone · edges and ticks carry the churn', 'lblf')}
-
 ${txt(1520, 34, 'DATING — first-commit and last-touch per file from one pass over the history behind the measured ref, renames followed', 'lbls', 'end')}
-${txt(1520, 48, `footprints reused from sheet 7's plate as pure geometry (side = 1.6·√sloc) · TODAY = ${TODAY} · ${BASIS}`, 'lblf', 'end')}
-${txt(1520, 62, 'AGE IS FILL, CHURN IS EDGE — the two disagree: the oldest stone carries the hottest edges', 'lblf', 'end')}
 
 ${districts}
 ${bodies}
-${RB}
 ${callouts}
 
 <!-- the district's north wall reaches x 187 now, so the note takes two short lines -->
@@ -499,13 +455,12 @@ ${txt(X(570) + 6, 448, 'port-born shell, summer-rebuilt interior', 'lblf')}
 
 ${txt(DX, 652, 'www/ + examples/ —', 'lblb')}
 ${txt(DX, 666, 'THE SHOPFRONT', 'lblb')}
-<line x1="${DX - 4}" y1="658" x2="1210" y2="668" class="skf"/>
+${leader(DX - 4, 658, 1210, 668)}
 
 ${txt(60, 606, 'tools/ — THE INSTRUMENT YARD', 'lblb')}
 ${txt(60, 620, 'zero touches before 2026 · all but the typedoc plugin summer-built', 'lblf')}
 
 ${timeline}
-${schedule}
 </svg>`;
 
 // the homes the notes name: git's log reference and this repository's paths
@@ -515,12 +470,13 @@ const tree = (path) => `${REPO}/tree/main/${path}`;
 const blob = (path) => `${REPO}/blob/main/${path}`;
 
 export const sheet13 = {
-  num: 13, id: 'weathering', rev: 'I',
+  num: 13, id: 'weathering', rev: 'J',
   title: 'THE WEATHERING MAP',
   sub: `ALTITUDE t — the same city as sheet 7, surveyed in time · ${TOT_F} files dated from the whole history · three construction seasons, ${MONTHS.length - ALIVE} silent months · ${BASIS}`,
   scale: 'WORKSPACE × TIME',
   form: 'WEATHERING MAP',
   svg,
+  schedule: SCHEDULE,
   caption: `Every sheet so far has drawn the city as it stands; this one dates the stone. Same districts and footprints as sheet 7, but the fills now say when each file was first committed and the edges how often it is touched. The history is three construction campaigns separated by silent months, and the two encodings disagree on purpose: ${Math.round((SEASON_N[2] / TOT_F) * 100)}% of the city is summer-built and barely weathered, while the port’s original masonry carries the hottest edges on the map.`,
   notes: `
 <p><strong>Method — one pass, renames followed.</strong> Every date on this sheet is read at build time from the checked-in plate <code>www/atlas.lit-ui-router.dev/data/census-weather.json</code>, ${BASIS}. Each file in the shared city universe was dated from a single <a href="${GIT_LOG}"><code>git log --name-status -M</code></a> pass over the history behind that ref, walked newest to oldest with rename chains followed backwards — equivalent to per-file <code>--follow</code> (spot-verified against it, including <code>tools/shared/workspace.ts</code>, which the plain path log mis-dates by a week) but one process instead of ${TOT_F}. Per file: first-commit date, last-touch date, touch count. Merge commits list no files under the default log, so a touch is a non-merge commit — the standard convention. <code>TODAY</code> is not a wall-clock date: it is the measured ref's own commit date, ${TODAY}, so every age and idle figure below is reproducible from the sha rather than from the day the sheet was drawn. Footprints come from sheet 7's plate, <code>www/atlas.lit-ui-router.dev/data/census-city.json</code>, reused as pure geometry so the two sheets reconcile by eye — and by count: ${TOT_F} dated files here against the same ${TOT_F} there.</p>
@@ -530,11 +486,12 @@ export const sheet13 = {
 <p><strong>See also — appendix A1, THE SPRITE STUDY.</strong> This map draws age and churn <em>flat</em>, as fills and edges, so the dating stays readable at city scale. The sprited reading of the same two measurements — wreck &amp; ruin ↔ shine &amp; splendor on the building itself — is the research filed as appendix A1, and its recommendation is what sheet 7B draws.</p>
 <p><strong>Approximations, so the numbers stay honest.</strong> Dates are author dates (<a href="${GIT_LOG}"><code>%as</code></a>); on this repo's squash-merge convention they equal the merge day of the PR that landed the change. Rename detection is git's <code>-M</code> heuristic: a file moved <em>and</em> rewritten in one commit can read as a fresh birth — the July 2026 <code>scripts/ → tools/</code> graduations are dated to that graduation where git saw no rename, which the yard's notes above already state as its story. Generated and vendored trees were never in the universe (the shared city rules); nothing else was excluded.</p>`,
   key: [
-    keyRow(`<rect x="6" y="3" width="36" height="12" class="fp"/><rect x="6" y="3" width="36" height="12" fill="url(#${P}-w1)"/><rect x="6" y="3" width="36" height="12" class="sk fnone"/>`, 'SEASON I stone — born 2025-07, the port'),
-    keyRow(`<rect x="6" y="3" width="36" height="12" class="fp"/><rect x="6" y="3" width="36" height="12" fill="url(#${P}-w2)"/><rect x="6" y="3" width="36" height="12" class="sk fnone"/>`, 'SEASON II stone — born 2026-01, winter works'),
-    keyRow('<rect x="6" y="3" width="36" height="12" class="sk fp"/>', `SEASON III stone — born since ${SEASON_FIRST[2]}`),
+    keyRow(`<rect x="6" y="3" width="36" height="12" class="fp"/><rect x="6" y="3" width="36" height="12" fill="url(#${P}-w1)"/><rect x="6" y="3" width="36" height="12" class="sk fnone"/>`, `SEASON I stone — born 2025-07, the port · ${SEASON_N[0]} files`),
+    keyRow(`<rect x="6" y="3" width="36" height="12" class="fp"/><rect x="6" y="3" width="36" height="12" fill="url(#${P}-w2)"/><rect x="6" y="3" width="36" height="12" class="sk fnone"/>`, `SEASON II stone — born 2026-01, winter works · ${SEASON_N[1]} files`),
+    keyRow('<rect x="6" y="3" width="36" height="12" class="sk fp"/>', `SEASON III stone — born since ${SEASON_FIRST[2]}, the summer · ${SEASON_N[2]} files`),
     keyRow('<rect x="6" y="3" width="36" height="12" class="skr fnone"/><line x1="10" y1="15" x2="10" y2="17" class="skr"/><line x1="15" y1="15" x2="15" y2="17" class="skr"/><line x1="20" y1="15" x2="20" y2="17" class="skr"/>', `HOT — ≥${HOT} touches/file · red edge + tall ticks`),
     keyRow('<rect x="6" y="3" width="36" height="12" class="skf fnone"/><line x1="10" y1="15" x2="10" y2="16" class="skf"/>', `COLD — <${COLD} touches/file · faint edge, short tick`),
+    keyRow('<rect x="6" y="3" width="36" height="12" class="sk fnone"/><line x1="10" y1="15" x2="10" y2="17" class="sks"/><line x1="15" y1="15" x2="15" y2="17" class="sks"/>', `MID — ${COLD}–${HOT - 1} touches/file · ink edge, the working stock`),
     keyRow('<rect x="6" y="3" width="36" height="12" class="sks fnone"/><line x1="6" y1="3" x2="42" y2="15" class="sks" stroke-dasharray="3 2"/><line x1="42" y1="3" x2="6" y2="15" class="sks" stroke-dasharray="3 2"/>', `SEALED — contains files idle >${SEAL} days`),
     keyRow('<rect x="8" y="3" width="18" height="12" class="sks fnone"/>', 'spec annex — same strata, own weather'),
     keyRow('<rect x="6" y="3" width="14" height="12" class="fp2"/><rect x="6" y="3" width="14" height="12" class="sks fnone"/><rect x="24" y="6" width="14" height="9" class="fa"/>', 'timeline bars — district touches · all four together'),

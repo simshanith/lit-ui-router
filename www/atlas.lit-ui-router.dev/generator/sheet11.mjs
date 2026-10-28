@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { defs } from './chrome.mjs';
-import { txt, isoBlock, isoPt, keyRow, npmUrl } from './helpers.mjs';
+import { txt, isoBlock, isoPt, keyRow, npmUrl, schedule, leader } from './helpers.mjs';
 import { assertPlots } from './iso-hidden.mjs';
 import { COMPILE_TIME } from './sheet2.mjs';
 
@@ -231,12 +231,6 @@ const SIG = at('lit-ui-router-signals', '.');
 const USG = at('ui-router-signals', '.');
 const UEF = at('ui-router-effect', '.');
 const UMX = at('ui-router-mobx', '.');
-// the one-door companions the footnote line prices, every index door but the flagship's, the server's and the compile-time doors
-const FOOT = [['mobx', MOBX], ['effect', EFF], ['ssr', SSR], ['nav', NAV], ['lit-signals', SIG], ['signals', USG], ['ui-effect', UEF], ['ui-mobx', UMX]];
-{
-  const want = PLATE.rows.filter((r) => r.door === '.' && !['lit-ui-router', 'ui-router-server'].includes(r.pkg) && !COMPILED.some((c) => c.pkg === r.pkg)).length;
-  if (FOOT.length !== want) throw new Error(`sheet 11: the footnote line prices ${FOOT.length} companion index doors, the plate carries ${want}`);
-}
 if (![SIG, USG, UEF, UMX].every((d) => d.gz < ELEM_GAP)) throw new Error('sheet 11: the notes price the four one-door quarters under the ./register element-door gap, and the plate does not');
 // the notes tell every quarter once: the flagship, the storefront, a pair, the lone four, the plugins, the compile-time doors
 const TOLD = {
@@ -302,17 +296,20 @@ const NOTE = {
   'eslint-plugin-lit-ui-router|.': 'the lint plugin — editor-side, never shipped',
 };
 for (const r of all) if (!NOTE[`${r.pkg}|${r.door}`]) throw new Error(`sheet 11: door ${r.n}, ${r.pkg} ${r.door}, has no NOTE`);
-const half = Math.ceil(all.length / 2);
-const SY = 740;
-const schedule = `<g>
-<rect x="40" y="${SY}" width="1080" height="${52 + half * 17}" class="sk fp"/>
-${txt(56, SY + 22, 'STRUCTURE SCHEDULE — minified bytes → gzipped bytes, deps external · note', 'lbls')}
-<line x1="40" y1="${SY + 32}" x2="1120" y2="${SY + 32}" class="skf"/>
-${all.slice(0, half).map((r, i) => txt(56, SY + 52 + i * 17, `${r.n} ${r.pkg} ${r.door} — ${fmt(r.m)} → ${fmt(r.gz)} gz · ${NOTE[`${r.pkg}|${r.door}`]}`, 'lbls')).join('\n')}
-${all.slice(half).map((r, i) => txt(590, SY + 52 + i * 17, `${r.n} ${r.pkg} ${r.door} — ${fmt(r.m)} → ${fmt(r.gz)} gz · ${NOTE[`${r.pkg}|${r.door}`]}`, 'lbls')).join('\n')}
-</g>`;
+const SCHEDULE = schedule(
+  'STRUCTURE SCHEDULE — minified bytes → gzipped bytes, deps external · note',
+  ['#', 'package', 'door', 'minified', 'gzipped', 'note'],
+  all.map((r) => [r.n, r.pkg, r.door, r.m, r.gz, NOTE[`${r.pkg}|${r.door}`]]),
+);
+// the ssr quarter's label is the plate's lowest lettering
+const VB_H = 740;
+// leaders land on the door each callout names: the server's index tower and the lint plugin's door, mid-face
+const SRV_FACE = isoPt(OX, OY, SRV.x + SRV.s, SRV.y + SRV.s / 2, SRV.h * 0.7);
+const LINT_FACE = isoPt(OX, OY, LINT.x + LINT.s / 2, LINT.y + LINT.s, LINT.h * 0.15);
+const HONO = at('ui-router-server', './hono');
+const HONO_FACE = isoPt(OX, OY, HONO.x + HONO.s, HONO.y + HONO.s / 2, HONO.h / 2);
 
-const svg = `<svg viewBox="0 0 1160 ${SY + 90 + half * 17}" role="img" aria-label="Every exported entry of the ${PKG_N} publishable packages drawn as an isometric city split into ${PKG_N} package quarters: ${DOOR_N} door-buildings, footprint from minified bytes, height from gzipped bytes with dependencies external. The lit-ui-router quarter shows twin flagship towers for the bare and pure entries plus three register doors and a low context door; the ui-router-server quarter is a ${word(SRV_DOORS.length)}-door storefront whose index tower prices ${SRV_GAP} gzipped bytes under lit-ui-router's; the effect, mobx and signals companions, the navigation-location plugin, ui-router-effect, ui-router-signals and ui-router-mobx stand alone as small one-door quarters; the ssr bridge between the client and server quarters holds three doors, its index, its client half and its register entry; a one-door quarter in the lower middle holds eslint-plugin-lit-ui-router, and a ${word(REG_DOORS.length)}-door quarter in the open ground north of the server storefront holds ui-router-registry, whose doors are empty emits drawn at the sheet's smallest lot; those ${word(COMPILED.length)} doors are the only ones on the sheet no browser ever loads. A structure schedule lists every entry with exact byte counts.">
+const svg = `<svg viewBox="0 0 1160 ${VB_H}" role="img" aria-label="Every exported entry of the ${PKG_N} publishable packages drawn as an isometric city split into ${PKG_N} package quarters: ${DOOR_N} door-buildings, footprint from minified bytes, height from gzipped bytes with dependencies external. The lit-ui-router quarter shows twin flagship towers for the bare and pure entries plus three register doors and a low context door; the ui-router-server quarter is a ${word(SRV_DOORS.length)}-door storefront whose index tower prices ${SRV_GAP} gzipped bytes under lit-ui-router's; the effect, mobx and signals companions, the navigation-location plugin, ui-router-effect, ui-router-signals and ui-router-mobx stand alone as small one-door quarters; the ssr bridge between the client and server quarters holds three doors, its index, its client half and its register entry; a one-door quarter in the lower middle holds eslint-plugin-lit-ui-router, and a ${word(REG_DOORS.length)}-door quarter in the open ground north of the server storefront holds ui-router-registry, whose doors are empty emits drawn at the sheet's smallest lot; those ${word(COMPILED.length)} doors are the only ones on the sheet no browser ever loads. A schedule below the drawing lists every entry with exact byte counts.">
 ${defs(P)}
 
 ${quarter(20, 0, 330, 200, `lit-ui-router — ${doorsOf('lit-ui-router')}`, 640, 222)}
@@ -330,39 +327,38 @@ ${quarter(424, -272, 502, -194, 'ui-router-registry', 1016, 324, 'end')}
 
 ${bodies}
 
-<!-- a callout's lines stand 14 apart: at 12 they touch once the schedule lengthens the frame -->
+<!-- a callout's lines stand 14 apart: at 12 they touch -->
 ${txt(150, 96, `«.» and «./pure»: ${REG_COST} bytes gz apart —`, 'lbla')}
 ${txt(150, 110, 'the price of registration', 'lbla')}
-<line x1="368" y1="102" x2="452" y2="128" class="skf"/>
-${txt(1120, 108, `the two flagship doors: ${fmt(FLAG.gz)} · ${fmt(SRV.gz)} —`, 'lbla', 'end')}
-${txt(1120, 122, `the client door leads the server by ${fmt(SRV_GAP)}`, 'lbla', 'end')}
+${leader(368, 102, 452, 128)}
+${txt(1120, 108, `the two flagship doors: ${fmt(FLAG.gz)} · ${fmt(SRV.gz)} —`, 'lbl', 'end')}
+${txt(1120, 122, `the client door leads the server by ${fmt(SRV_GAP)}`, 'lbl', 'end')}
+${leader(960, 128, ...SRV_FACE)}
 ${txt(640, 238, `the one-element doors sum to ${fmt(ELEM_SUM)} gz —`, 'lbls')}
 ${txt(640, 252, '«./register» ships the shared core', 'lbls')}
 ${txt(640, 266, `once, at ${fmt(UMB.gz)}`, 'lbls')}
-<line x1="636" y1="240" x2="${UMB_FACE[0].toFixed(1)}" y2="${UMB_FACE[1].toFixed(1)}" class="skf"/>
+${leader(636, 240, ...UMB_FACE)}
 ${txt(250, 560, `the lint plugin's door, ${fmt(LINT.gz)} gz, and the`, 'lbls')}
 ${txt(250, 574, `registry's ${word(REG_DOORS.length)}: the ${word(COMPILED.length)} no browser ever opens`, 'lbls')}
+${leader(456, 556, ...LINT_FACE)}
 ${txt(1120, 695, `four adapters within ${ADAPTER_SPREAD} bytes of one`, 'lbla', 'end')}
 ${txt(1120, 709, 'another — thin skins on one server core', 'lbla', 'end')}
-${txt(100, 665, `the ${word(FOOT.length)} companion index doors price like footnotes:`, 'lbls')}
-${txt(100, 679, FOOT.slice(0, 4).map(([k, d]) => `${k} ${fmt(d.gz)}`).join(' · '), 'lbls')}
-${txt(100, 693, `${FOOT.slice(4).map(([k, d]) => `${k} ${fmt(d.gz)}`).join(' · ')} gz`, 'lbls')}
+${leader(1000, 684, ...HONO_FACE)}
 
-${txt(1120, 26, 'SCALE — footprint area ∝ minified bytes · 1 px of height ≈ 40 gz bytes', 'lbls', 'end')}
+${txt(1120, 26, 'SCALE — 1 px of height ≈ 40 gz bytes', 'lbls', 'end')}
 <!-- the recipe outgrew one line and ran across the tallest door's cap: it reads
      as its own stages instead, each hung on the plate's right margin -->
 ${PLATE.used.split(' + ').map((stage, i) => txt(1120, 40 + i * 14, i ? `+ ${stage}` : `PROBE — ${stage}`, 'lblf', 'end')).join('\n')}
-
-${schedule}
 </svg>`;
 
 export const sheet11 = {
-  num: 11, id: 'entries', rev: 'J',
+  num: 11, id: 'entries', rev: 'K',
   title: 'THE ENTRY QUARTERS',
   sub: `ALTITUDE 2⅞ — the same wire, cut by published package · every exported entry priced alone · ${DOOR_N} doors in ${PKG_N} package quarters, footprint from minified bytes and height from gzipped, dependencies external — ${BASIS}`,
   scale: `${word(PKG_N).toUpperCase()} PACKAGES`,
   form: 'ENTRY QUARTERS',
   svg,
+  schedule: SCHEDULE,
   caption: `The split view to sheet 10’s unified city: every exported entry of every publishable package bundled alone and priced — ${PKG_N} package quarters, ${DOOR_N} doors, the codecov bundle-analysis series drawn as skylines.`,
   notes: `
 <p><strong>Method:</strong> the same probe as sheet 10's doors strip, run to completion: every exported entry of the ${PKG_N} publishable packages bundled alone with <a href="${HOME.rolldown}">rolldown</a> — minified, declared dependencies and peers external — which is the price a consumer's bundler pays at that door, and byte-for-byte the <code>&lt;pkg&gt;-&lt;label&gt;-esm</code> series CI uploads to <a href="${HOME.codecov}">codecov</a>. Footprint is minified bytes, height gzipped. Every number is read at build time from the checked-in plate <code>www/atlas.lit-ui-router.dev/data/census-doors.json</code> — ${BASIS}, probed as <code>${PLATE.used}</code> — and a door the plate carries that the drawing does not place is a build error, not a stale constant. Sheet 10 is the unified view — one real app's bundle with all of these mixed by the bundler; this sheet cuts the same machinery by published package and entry point. The quarters don't sum and shouldn't: doors overlap (<code>./pure</code> is <code>.</code> minus registration), which is exactly what the split view exists to show.</p>

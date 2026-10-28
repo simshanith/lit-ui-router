@@ -24,6 +24,21 @@ export function schedTxt(x, y, [n, body], cls = 'lbls') {
     + '\n' + txt(x + SCHED_BODY, y, body, cls);
 }
 
+// ---- schedules ----
+// A plate's register is a table under the drawing (chrome.mjs `scheduleTable`),
+// never SVG text: head = column names, each row's first cell its number, a
+// numeric cell passed as a number so the table sets it as a figure.
+export function schedule(title, head, rows, total = '') {
+  return { title, head, rows, total };
+}
+
+// A callout leader: dashed and faint from the lettering's edge, a landing dot
+// on the thing it names — never a solid hairline, which reads as a road.
+export function leader(x1, y1, x2, y2) {
+  const f = (v) => Number(v).toFixed(1);
+  return `<line x1="${f(x1)}" y1="${f(y1)}" x2="${f(x2)}" y2="${f(y2)}" class="skf" stroke-dasharray="4 3"/><circle cx="${f(x2)}" cy="${f(y2)}" r="2" class="fis"/>`;
+}
+
 export function lines(x, y, arr, cls = 'lbl', anchor = 'start', lh = 13) {
   return arr.map((s, i) => txt(x, y + i * lh, s, cls, anchor)).join('\n');
 }

@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { defs } from './chrome.mjs';
-import { txt, lines, isoBlock, isoPt, keyRow, npmUrl } from './helpers.mjs';
+import { txt, lines, isoBlock, isoPt, keyRow, npmUrl, schedule, leader } from './helpers.mjs';
 import { assertPlots, depthSort, solidFaces } from './iso-hidden.mjs';
 
 const P = 's9';
@@ -117,9 +117,8 @@ ${txt(bx.toFixed(1), (by - 10.6).toFixed(1), String(n), 'lbls', 'middle')}`;
 
 const bodies = depthSort(masses).map((m) => m.svg).join('\n') + '\n' + badges;
 
-const half = Math.ceil(all.length / 2);
-const SY = OY + 585;
-const VB_H = SY + 108 + half * 17;
+// the role outlines' near corners are the plate's lowest points
+const VB_H = Math.ceil(Math.max(...ROLES.map(({ box: [, , x2, y2] }) => isoPt(OX, OY, x2, y2)[1]))) + 20;
 // every cap corner and badge stays inside the frame: a grown district cannot ship cut off
 for (const { name, x, y, s, h } of all) {
   const [bx, by] = isoPt(OX, OY, x + s / 2, y, h);
@@ -188,22 +187,24 @@ const rank = (name) => {
 const ORD = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth'];
 const INTER_RANK = rank('inter fonts');
 const TALLER_THAN_INTER = RANKED.slice(0, INTER_RANK - 1).map((r) => r.name);
+if (TALLER_THAN_INTER.join() !== [PAGES.district, EXAMPLES.district].join()) throw new Error(`sheet 9: the notes say only the prose and the examples outrank the lettering, and the plate ranks [${TALLER_THAN_INTER}] above it`);
 const RUNNER_GAP = RANKED[0].gz - RANKED[1].gz;
 if (RANKED[0].name !== PAGES.district) throw new Error(`sheet 9: the notes say the prose is the tallest district, and the plate ranks ${RANKED[0].name} first`);
 // the cover index's fit verdict, told from the plate's own ranking
 export const SHEET9_VERDICT = `the wire survey — the deploy's tallest district is ${RANKED[0].name} at ${KB(RANKED[0].gz)}, and the lettering alone outweighs every routed app the site exists to demonstrate (${KB(INTER.gz)} against ${KB(APPS)})`;
 
-const line = (r) => `${r.n} ${r.name} — ${r.f}f ${KB(r.gz)} · ${tenant(r.top.name)} ${KB(r.top.gz)}`;
-const schedule = `<g>
-<rect x="40" y="${SY}" width="1080" height="${70 + half * 17}" class="sk fp"/>
-${txt(56, SY + 22, 'STRUCTURE SCHEDULE — files · gzipped wire bytes · largest tenant', 'lbls')}
-<line x1="40" y1="${SY + 32}" x2="1120" y2="${SY + 32}" class="skf"/>
-${all.slice(0, half).map((r, i) => txt(56, SY + 52 + i * 17, line(r), 'lbls')).join('\n')}
-${all.slice(half).map((r, i) => txt(590, SY + 52 + i * 17, line(r), 'lbls')).join('\n')}
-${txt(56, SY + 58 + half * 17, `TOTAL — ${all.length} districts · ${fmt(PLATE.totals.files)} files · ${fmt(PLATE.totals.rawBytes)} raw bytes · ${fmt(PLATE.totals.gzBytes)} gzipped · 0 orphans · ${BASIS}`, 'lbls')}
-</g>`;
+// the apps callout lands mid-height on the effect app's +x face, the app nearest its lettering
+const EFFECT = all.find((r) => r.name === 'app: effect');
+const EFFECT_FACE = isoPt(OX, OY, EFFECT.x + EFFECT.s, EFFECT.y + EFFECT.s / 2, EFFECT.h / 2);
 
-const svg = `<svg viewBox="0 0 ${VB_W} ${VB_H}" role="img" aria-label="The production docs-site deploy drawn as an isometric city of ${all.length} districts: footprint area from file counts, height from gzipped bytes on the wire. The three tallest towers are ${RANKED.slice(0, 3).map((r) => r.name).join(', ')}. A vacant lot at the plan's edge is the demo corpora's footprint, which the deploy does not carry. The ${APP_N} routed sample apps are small accent buildings totalling ${APP_PCT} percent of the deploy. There is no ghost block: the census walks backtick-quoted asset URLs too, and this deploy carries no unreachable files at all. A structure schedule lists every district with exact counts and its largest tenant.">
+const SCHEDULE = schedule(
+  'STRUCTURE SCHEDULE — files · gzipped wire bytes · largest tenant',
+  ['#', 'district', 'files', 'gzipped', 'largest tenant', 'tenant gzipped'],
+  all.map((r) => [r.n, r.name, r.f, KB(r.gz), tenant(r.top.name), KB(r.top.gz)]),
+  `TOTAL — ${all.length} districts · ${fmt(PLATE.totals.files)} files · ${fmt(PLATE.totals.rawBytes)} raw bytes · ${fmt(PLATE.totals.gzBytes)} gzipped · 0 orphans · ${BASIS}`,
+);
+
+const svg = `<svg viewBox="0 0 ${VB_W} ${VB_H}" role="img" aria-label="The production docs-site deploy drawn as an isometric city of ${all.length} districts: footprint area from file counts, height from gzipped bytes on the wire. The three tallest towers are ${RANKED.slice(0, 3).map((r) => r.name).join(', ')}. A vacant lot at the plan's edge is the demo corpora's footprint, which the deploy does not carry. The ${APP_N} routed sample apps are small accent buildings totalling ${APP_PCT} percent of the deploy. There is no ghost block: the census walks backtick-quoted asset URLs too, and this deploy carries no unreachable files at all. A schedule below the drawing lists every district with exact counts and its largest tenant.">
 ${defs(P)}
 
 ${outlines}
@@ -211,29 +212,22 @@ ${outlines}
 ${bodies}
 
 ${lines(150, OY - 85, [`a vacant lot — ${LOT.files} files, ${KB(LOT.gz)} of Dickens,`, 'Beowulf and an RFC the site does not ship'], 'lbla', 'start', CP)}
-<line x1="442" y1="${OY - 85 + CP}" x2="502" y2="${OY + 43}" class="skf"/>
-<!-- east of the html tower and over the Markdown mirror's roof, under the site outline's label -->
-${lines(985, OY + 85, [`${KB(INTER.gz)} of Inter —`, `the lettering stands ${ORD[INTER_RANK - 1]}`, `on the wire; only ${TALLER_THAN_INTER[0]}`,
-  TALLER_THAN_INTER.length > 1 ? `${TALLER_THAN_INTER.slice(1).map((t) => `and ${t}`).join(' ')} stand taller` : 'stands taller'], 'lbla', 'start', CP)}
+${leader(442, OY - 85 + CP, 502, OY + 43)}
 ${lines(1120, OY + 510, [`all ${APP_N} apps: ${KB(APPS)} —`, `${APP_PCT}% of the deploy they exist to demonstrate`], 'lbla', 'end', CP)}
-<line x1="937" y1="${OY + 506}" x2="878" y2="${OY + 484}" class="skf"/>
-${lines(100, OY + 353, ['no ghost district stands on this plan:', 'the walk follows backtick-quoted asset URLs,', 'and this deploy ships ZERO unreachable files'], 'lbla', 'start', CP)}
-${lines(100, OY + 409, ['the api-viewer panel is off the critical path:', 'it arrives in a lazy api-docs chunk, and the apps', 'share one lit major, so identical chunks hash', `alike across all ${APP_N}`], 'lbla', 'start', CP)}
-${lines(100, OY + 471, ['every district is read from the census plate —', 'first claim seats the visualizer in app: vanilla'], 'lbla', 'start', CP)}
+${leader(972, OY + 506, ...EFFECT_FACE)}
 
-<!-- two short lines at the frame's top-right corner, east of the html-pages cap -->
-${lines(1120, 26, ['SCALE — footprint area ∝ files', '1 px of height ≈ 4.2 KB gzipped'], 'lbls', 'end', CP)}
-
-${schedule}
+<!-- one short line at the frame's top-right corner, east of the html-pages cap -->
+${txt(1120, 26, 'SCALE — 1 px of height ≈ 4.2 KB gzipped', 'lbls', 'end')}
 </svg>`;
 
 export const sheet9 = {
-  num: 9, id: 'shipped', rev: 'H',
+  num: 9, id: 'shipped', rev: 'I',
   title: 'THE SHIPPED CITY',
   sub: `ALTITUDE 2¾ — what the browser downloads · lit-ui-router.dev, one deploy · ${fmt(PLATE.totals.files)} files in ${all.length} districts, ${MB(PLATE.totals.gzBytes)} on the wire, footprint from file count and height from gzipped bytes — ${BASIS}`,
   scale: 'ONE DEPLOY',
   form: 'SHIPPED CITY',
   svg,
+  schedule: SCHEDULE,
   caption: `The production docs deploy surveyed on the wire: ${fmt(PLATE.totals.files)} files, ${MB(PLATE.totals.gzBytes)} gzipped, drawn as ${all.length} districts — the tallest towers are prerendered prose and font files, the routed apps are ${KB(APPS)} of accent buildings in their own city, and there is no ghost block: the deploy carries no unreachable files at all.`,
   notes: `
 <p><strong>Method:</strong> every number on this sheet is read at build time from the checked-in plate <a href="${HOME.plate}"><code>www/atlas.lit-ui-router.dev/data/census-shipped.json</code></a> — ${BASIS}. The probe builds <code><a href="${HOME.siteDir}">www/lit-ui-router.dev</a>/dist</code> inside a materialized, installed archive of the ref, never the working tree, and measures it file by file: height is gzip level 9 of each file, the honest wire measure, since the CDN serves compressed. Footprint is file count, as on sheets 7 and 8. A reachability walk — every HTML shell and hashed chunk, following static asset references — sorts the assets into districts, and a shared chunk counts where it is first claimed (vanilla → mobx → effect → hash → signals), because the CDN ships it once. This sheet extends the survey a step further: sheet 7 measures the source, sheet 8 what npm delivers, this sheet what one deploy actually ships — ${fmt(PLATE.totals.files)} files, ${MB(PLATE.totals.rawBytes)} on disk, ${MB(PLATE.totals.gzBytes)} on the wire. Sheet 10 goes one level in again and opens the bundle itself.</p>

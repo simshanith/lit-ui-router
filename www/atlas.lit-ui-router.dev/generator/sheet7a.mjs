@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { defs } from './chrome.mjs';
-import { txt, schedTxt, keyRow } from './helpers.mjs';
+import { txt, schedule, leader, keyRow } from './helpers.mjs';
 import { assertPlots, plotsOf } from './iso-hidden.mjs';
 import { DISTRICT_BOUNDS, PLACED } from './sheet7.mjs';
 
@@ -200,8 +200,6 @@ const furn = M.map(([n]) => furniture(n)).join('\n');
 
 // ---- aggregates, all derived from the two plates --------------------------------
 const T = SHADOW.totals;
-const inCat = (c) => M.filter((r) => r[3] === c).map((r) => r[0]);
-const inBand = (k) => M.filter((r) => r[3] === 'm' && BAND(r[13]) === k).map((r) => r[0]);
 const dRows = (d) => M.filter((r) => r[2] === d);
 const dAgg = (d) => {
   const rows = dRows(d), met = rows.filter((r) => r[3] === 'm');
@@ -219,16 +217,13 @@ const DP = dAgg('pkg'), DA = dAgg('app'), DT = dAgg('tool');
 const PKG_RATIOS = M.filter((r) => r[2] === 'pkg' && r[3] === 'm' && r[7] && r[9]).map((r) => r[9] / r[7]);
 // the product's dark corners: only a types-only package, which no runtime meter can light, may stand there
 const DARK_PKG = M.filter((r) => r[2] === 'pkg' && r[3] === 'n');
-if (DARK_PKG.some((r) => r[1] !== 'ui-router-registry')) throw new Error(`sheet 7A: the verdict calls the product's dark corners types only, and ${DARK_PKG.map((r) => r[1]).join(', ')} stand in shadow`);
+if (DARK_PKG.some((r) => r[1] !== 'ui-router-registry')) throw new Error(`sheet 7A: the notes call the product's dark corners types only, and ${DARK_PKG.map((r) => r[1]).join(', ')} stand in shadow`);
 const ANNEX_RANGE = `${Math.min(...PKG_RATIOS).toFixed(1)}–${Math.max(...PKG_RATIOS).toFixed(1)}×`;
 // the yard's habit, counted rather than asserted: source a metered suite never loads
 const wrapperSloc = M.filter((r) => r[2] === 'tool' && r[3] === 'm')
   .reduce((a, r) => a + (r[7] - (r[11] ?? 0)), 0);
-const darkToolSloc = M.filter((r) => r[2] === 'tool' && (r[3] === 'n' || r[3] === 'u'))
-  .reduce((a, r) => a + r[7], 0);
 const wrapperFiles = M.filter((r) => r[2] === 'tool' && r[3] === 'm')
   .reduce((a, r) => a + (r[6] - (r[10] ?? 0)), 0);
-const numList = (ns) => (ns.length ? `№${ns.join(' ')}` : 'none this survey');
 
 // ---- schedule --------------------------------------------------------------------
 const CAT_TEXT = {
@@ -302,8 +297,6 @@ const NOTE = {
   52: SH.get(52).cat === 'n' ? 'a 404 worker — no test script' : guardFail(52, 'no test script'),
   53: SH.get(53).shadow?.length === 0 ? 'the ledger worker, every file lit' : guardFail(53, 'every file is lit'),
 };
-const ART_H = 902;
-const SY = ART_H + 16;
 const pctS = (v) => (v == null ? '—' : `${v}%`);
 // №12's callout stands under the shopfront district and east of the yard's edge; its leader ends on the lamp's east face
 const C12 = { x: EDGE.tool.x2 + 8, y: [14, 27, 39, 51].map((d) => EDGE.site.y2 + d) };
@@ -315,26 +308,21 @@ C12.lines = [
 ];
 assertClear('№12', C12.x, C12.y, C12.lines);
 const schedRow = ([n, name, , cat, , , sf, sl, , , lf, ls, ext, line, br, fn]) => {
-  const meat = cat === 'm'
-    ? `${lf}/${sf}f · ${fmt(ls)}/${fmt(sl)} (${pctS(ext)}) · L ${pctS(line)} B ${pctS(br)} F ${pctS(fn)}`
-    : CAT_TEXT[cat];
   if (!NOTE[n]) throw new Error(`sheet 7A: member ${n} has no NOTE row`);
-  return [n, `${name} — ${meat} · ${NOTE[n]}`];
+  return cat === 'm'
+    ? [n, name, `${lf} / ${sf}`, `${fmt(ls)} / ${fmt(sl)}`, pctS(ext), pctS(line), pctS(br), pctS(fn), NOTE[n]]
+    : [n, name, '—', '—', '—', '—', '—', '—', `${CAT_TEXT[cat]} · ${NOTE[n]}`];
 };
-const half = Math.ceil(M.length / 2);
 const TOTAL_LINE = `TOTAL — ${T.metered} members metered: ${fmt(T.linesHit)} of ${fmt(T.lines)} metered lines lit (${pct1(T.linesHit, T.lines)}%)`
   + ` · branches ${fmt(T.branchesHit)}/${fmt(T.branches)} (${pct1(T.branchesHit, T.branches)}%)`
   + ` · functions ${fmt(T.funcsHit)}/${fmt(T.funcs)} (${pct1(T.funcsHit, T.funcs)}%)`
   + ` · lit extent ${fmt(T.litSloc)}/${fmt(T.meteredSrcSloc)} sloc (${pct1(T.litSloc, T.meteredSrcSloc)}%) · ${BASIS}`;
-const schedule = `<rect x="40" y="${SY}" width="1480" height="${91 + half * 17}" class="sk fp"/>
-${txt(58, SY + 22, 'SHADOW SCHEDULE — per member: files and sloc the suite lights / authored · L line · B branch · F function coverage of the lit files', 'lbls')}
-<line x1="40" y1="${SY + 32}" x2="1520" y2="${SY + 32}" class="skf"/>
-${M.slice(0, half).map((r, i) => schedTxt(58, SY + 52 + i * 17, schedRow(r), 'lbls')).join('\n')}
-${M.slice(half).map((r, i) => schedTxt(800, SY + 52 + i * 17, schedRow(r), 'lbls')).join('\n')}
-${txt(58, SY + 56 + half * 17, TOTAL_LINE, 'lbls')}
-${txt(58, SY + 72 + half * 17, `light and footprint are measured at the SAME ref, so no member's meter and its own census can disagree · every figure above is read from www/atlas.lit-ui-router.dev/data/census-shadow.json and www/atlas.lit-ui-router.dev/data/census-city.json`, 'lblf')}`;
+const SCHEDULE = schedule('SHADOW SCHEDULE — per member: files and sloc the suite lights / authored · L line · B branch · F function coverage of the lit files',
+  ['#', 'member', 'files lit', 'sloc lit', 'extent', 'L', 'B', 'F', 'note'], M.map(schedRow), TOTAL_LINE);
+// the figure ends 20 px under the lowest of the district edges, the yard's lettering and №12's callout
+const VH = Math.ceil(Math.max(...Object.values(EDGE).map((d) => d.y2), 899, C12.y.at(-1))) + 20;
 
-const svg = `<svg viewBox="0 0 1560 ${SY + 121 + half * 17}" role="img" aria-label="A plan view of sheet 7's census city — the same ${M.length} workspace members in the same four dashed districts, seen from straight above — where each member's spec annex is drawn as a lamp and the light of its own test suite falls onto the building. The lit strip of every footprint is the share of the member's source its suite actually loads, glowing from the lamp side; how bright that strip reads is the line coverage of what the suite loaded; everything the suite never imports stays in dense shadow hatch. ${T.metered} members are metered in all. The packages district glows nearly wall to wall. In the instrument yard the light is bright but narrow: release, build_and_test, workers-builds and lcov-rebase light their .core.ts files fully and leave their command-line wrapper files in shadow. Members with no suite at all are marked with red badges and stand entirely dark. The two sample-app demos and the Cypress host carry an accent hatch — real light from the end-to-end rig, which no meter reads. One building, tools/happy-dom, is lit by a canary spec pointed at happy-dom itself, which lights only the workaround it guards and leaves the rest in shadow. A shadow schedule below gives exact per-member figures.">
+const svg = `<svg viewBox="0 0 1560 ${VH}" role="img" aria-label="A plan view of sheet 7's census city — the same ${M.length} workspace members in the same four dashed districts, seen from straight above — where each member's spec annex is drawn as a lamp and the light of its own test suite falls onto the building. The lit strip of every footprint is the share of the member's source its suite actually loads, glowing from the lamp side; how bright that strip reads is the line coverage of what the suite loaded; everything the suite never imports stays in dense shadow hatch. ${T.metered} members are metered in all. The packages district glows nearly wall to wall. In the instrument yard the light is bright but narrow: release, build_and_test, workers-builds and lcov-rebase light their .core.ts files fully and leave their command-line wrapper files in shadow. Members with no suite at all are marked with red badges and stand entirely dark. The two sample-app demos and the Cypress host carry an accent hatch — real light from the end-to-end rig, which no meter reads. One building, tools/happy-dom, is lit by a canary spec pointed at happy-dom itself, which lights only the workaround it guards and leaves the rest in shadow. A shadow schedule below the drawing gives exact per-member figures.">
 ${defs(P)}
 <defs>
   <!-- shadow must darken in BOTH themes: a black wash (never ink, which is light
@@ -359,44 +347,7 @@ ${defs(P)}
   </pattern>
 </defs>
 
-<rect x="40" y="26" width="628" height="42" class="skf fnone"/>
-${txt(52, 43, 'THE SHADOW SURVEY — WHO STANDS IN TEST LIGHT, AND WHAT STAYS DARK', 'lbls')}
-${txt(52, 58, 'sheet 7’s city from straight above · every lamp is a spec annex · the light is a plate, metered at the census’s own ref', 'lblf')}
-
 ${txt(1520, 34, 'LIGHT RULE — lit strip = side · (sloc the suite loads ÷ src sloc), from the lamp side · brightness = line coverage of what it loads', 'lbls', 'end')}
-${txt(1520, 48, 'footprints and annexes are sheet 7’s census, unchanged · a file the suite never imports stays in shadow — darkness is data', 'lblf', 'end')}
-${txt(1520, 62, 'e2e light (cypress) is drawn, not metered — no lcov leaves the rig · the tests are the light, shadow is what no suite loads', 'lblf', 'end')}
-
-<!-- brightness ladder: the full-bright band names most of the city, and its roll
-     outgrew the ladder's wall — a row too long for the box carries its numbers on a
-     continuation line, and the ladder is cut to whatever height that leaves -->
-${(() => {
-  const ROWS = [
-    ['var(--halo)', 'sk', '', '≥ 95% — full bright', numList(inBand('b1'))],
-    [`url(#${P}-g2)`, 'sk', '', '85–95% — bright', numList(inBand('b2'))],
-    [`url(#${P}-g3)`, 'skr', '', '70–85% — pale', numList(inBand('b3'))],
-    [`url(#${P}-g4)`, 'skr', '', 'below 70% — guttering', numList(inBand('b4'))],
-    [`url(#${P}-se)`, 'ska', '5 4', 'e2e light — real, unmetered', numList(inCat('e'))],
-    ['none', 'sks', '2 4', 'tests run, no meter attaches', numList(inCat('u'))],
-    [`url(#${P}-sh)`, 'sk', '', 'SHADOW — source no suite ever loads', ''],
-  ];
-  let y = 138;
-  const rows = ROWS.map(([fill, edge, dash, head, list]) => {
-    const cls = edge === 'skr' ? 'lblr' : edge === 'ska' ? 'lbla' : 'lbls';
-    const one = list ? `${head} · ${list}` : head;
-    const wrap = one.length > 52;
-    // the continuation itself breaks at 52 characters, one more line per break
-    const cont = wrap ? list.split(' ').reduce((ls, w) => ((ls.at(-1) + ' ' + w).length > 52 ? [...ls, w] : [...ls.slice(0, -1), `${ls.at(-1)} ${w}`.trim()]), ['']) : [];
-    const top = y;
-    y += wrap ? 22 + 12 * cont.length : 22;
-    return `<rect x="1144" y="${top}" width="34" height="14" fill="${fill}"/><rect x="1144" y="${top}" width="34" height="14" class="${edge} fnone" ${dash ? `stroke-dasharray="${dash}"` : ''}/>
-${txt(1192, top + 11, wrap ? head : one, cls)}${cont.map((l, i) => `\n${txt(1192, top + 24 + 12 * i, l, cls)}`).join('')}`;
-  }).join('\n');
-  return `<rect x="1128" y="96" width="392" height="${y - 78}" class="skf fnone"/>
-${txt(1144, 118, 'BRIGHTNESS — LINE COVERAGE OF WHAT THE SUITE LIGHTS', 'lbls')}
-${rows}`;
-})()}
-
 ${districts}
 ${bodies}
 ${furn}
@@ -407,7 +358,7 @@ ${txt(140, 304, 'packages/ — THE PRODUCT', 'lblb')}
 ${txt(140, 316, `lit ${pct1(DP.litSloc, DP.meteredSloc)}% of metered district sloc`, 'lblf')}
 ${txt(140, 328, `${pct1(DP.linesHit, DP.lines)}% of ${fmt(DP.lines)} lines, branches ${pct1(DP.branchesHit, DP.branches)}%`, 'lblf')}
 ${txt(140, 340, `bought by sheet 7's ${ANNEX_RANGE} annexes`, 'lblf')}
-<line x1="150" y1="292" x2="160" y2="282" class="skf"/>
+${leader(150, 292, 160, 282)}
 
 <!-- over the district's north edge: the shopfront's north row leaves no air under it -->
 ${txt(1110, EDGE.app.y1 - 27, 'apps/ — THE PROVING GROUND', 'lblb', 'end')}
@@ -417,56 +368,47 @@ ${txt(1110, EDGE.app.y1 - 3, 'live on e2e light alone · №5 tests pass with no
 ${txt(1146, 560, 'www/ + examples/ — THE SHOPFRONT', 'lblb')}
 ${txt(1146, 573, `the worker: fully lit — a ${fmt(g(10).r[11])}-sloc sliver of ${fmt(g(10).r[7])}`, 'lblf')}
 ${txt(1146, 585, `examples: ${fmt(g(11).r[11] ?? 0)} of ${fmt(g(11).r[7])} sloc lit, the copies dark`, 'lblf')}
-<line x1="1140" y1="569" x2="${EDGE.site.x2.toFixed(1)}" y2="569" class="skf"/>
+${leader(1140, 569, EDGE.site.x2, 569)}
 
 ${txt(96, 874, 'tools/ — THE INSTRUMENT YARD', 'lblb')}
 ${txt(96, 887, `${DT.metered} metered members: ${pct1(DT.linesHit, DT.lines)}% of ${fmt(DT.lines)} lines lit — the lamps reach ${pct1(DT.litSloc, DT.sloc)}% of the yard’s ${fmt(DT.sloc)} sloc`, 'lblf')}
 ${txt(96, 899, 'the habit, visible from the air: every .core.ts lit, every CLI wrapper left in shadow', 'lblf')}
-<line x1="140" y1="840" x2="152" y2="826" class="skf"/>
+${leader(140, 840, 152, 826)}
 
 <!-- callouts -->
 ${txt(620, 82, `№1 lit-ui-router — ${pctS(g(1).r[12])} of the footprint lit, ${pctS(g(1).r[13])} bright`, 'lbla')}
 ${txt(620, 94, `in shadow: ${g(1).r[6] - g(1).r[10]} files, ${fmt(g(1).r[7] - g(1).r[11])} sloc — the barrels`, 'lblf')}
 ${txt(620, 106, 'and interface.ts, which is type declarations', 'lblf')}
-<line x1="612" y1="110" x2="305" y2="136" class="skf"/>
+${leader(612, 110, 305, 136)}
 
 ${txt(1144, 349, '№5 sample-app-shared — an outline of light:', 'lbls')}
 ${txt(1144, 361, 'its unit tests pass, but browser-mode vitest cannot', 'lblf')}
 ${txt(1144, 373, 'load a meter the repo never installed', 'lblf')}
-<line x1="1138" y1="357" x2="${(EDGE.app.x2 + 5).toFixed(1)}" y2="${Y(123.5)}" class="skf"/>
+${leader(1138, 357, EDGE.app.x2 + 5, Y(123.5))}
 
-${txt(30, 430, '№26 happy-dom — a lamp with half its light on itself:', 'lblr')}
+${txt(30, 430, '№26 happy-dom — a lamp with half its light on itself:', 'lbls')}
 ${txt(30, 442, 'its canary spec lights happy-dom’s ordering bug and', 'lblf')}
 ${txt(30, 454, `the innerHTML workaround it guards — ${g(26).r[11]} of ${g(26).r[7]} sloc;`, 'lblf')}
 ${txt(30, 466, 'append.ts is lit from №1’s lamp instead', 'lblf')}
-<line x1="250" y1="474" x2="272" y2="522" class="skf"/>
+${leader(250, 474, 272, 522)}
 
 ${C12.lines.map(([s, cls], i) => txt(C12.x, C12.y[i], s, cls)).join('\n')}
-<line x1="${C12.x - 6}" y1="${C12.y[1] + 5}" x2="${X(g(12).ax + g(12).sa)}" y2="${Y(g(12).ay + g(12).sa / 2)}" class="skf"/>
+${leader(C12.x - 6, C12.y[1] + 5, X(g(12).ax + g(12).sa), Y(g(12).ay + g(12).sa / 2))}
 
-${txt(700, 852, `№16 @tools/shared — ${PALE_W} light thrown: ${pctS(g(16).r[13])} line, ${pctS(g(16).r[15])} function`, 'lblr')}
+${txt(700, 852, `№16 @tools/shared — ${PALE_W} light thrown: ${pctS(g(16).r[13])} line, ${pctS(g(16).r[15])} function`, 'lbls')}
 ${txt(700, 865, 'exec.ts and workspace.ts are the worst-lit things that are lit at all', 'lblf')}
-<line x1="694" y1="850" x2="125" y2="772" class="skf"/>
+${leader(694, 850, 125, 772)}
 
-<!-- verdict -->
-<rect x="1128" y="382" width="392" height="118" class="sk fp"/>
-${txt(1144, 404, 'VERDICT', 'lblb')}
-${txt(1144, 424, 'The light reaches wall to wall in packages/:', 'lbls')}
-${txt(1144, 438, `${pct1(T.linesHit, T.lines)}% of ${fmt(T.lines)} metered lines lit, and the`, 'lbls')}
-${txt(1144, 452, DARK_PKG.length ? `product district’s ${DARK_PKG.length === 1 ? 'one dark corner is' : 'dark corners are'} types only.` : 'product district has no dark corner.', 'lbls')}
-${txt(1144, 466, `What never sees light: ${fmt(darkToolSloc)} sloc of untested`, 'lbls')}
-${txt(1144, 480, `instruments and ${fmt(wrapperSloc)} sloc of CLI wrappers.`, 'lbls')}
-
-${schedule}
 </svg>`;
 
 export const sheet7a = {
-  num: '7A', id: 'shadow', rev: 'H',
+  num: '7A', id: 'shadow', rev: 'I',
   title: 'THE SHADOW SURVEY',
   sub: `ALTITUDE 3½ — ALTERNATE PLATE TO SHEET 7: the measured city under its own test light · same city as sheet 7, ${M.length} members · reach = the source each suite loads, brightness = line coverage of what it loads · ${BASIS}`,
   scale: 'WHOLE WORKSPACE',
   form: 'SHADOW PLAN',
   svg,
+  schedule: SCHEDULE,
   caption: 'This plate asks which members of sheet 7’s city ever stand in test light. Every member’s own suite runs under a coverage meter, and its light is drawn to two rules: reach, how much of the member’s source the suite loads; brightness, the line coverage of what it loads. The finding is a repo-wide habit visible from the air: the light is bright far more often than it is wide.',
   notes: `
 <p><strong>Method — one meter per member, nothing installed by hand, nothing left behind.</strong> Footprints, annexes and districts are sheet 7's own plate (<a href="${PLATES}/census-city.json"><code>census-city.json</code></a>); the light is <a href="${PLATES}/census-shadow.json"><code>census-shadow.json</code></a>, ${BASIS}, so meter and census read one tree at one ref. ${T.metered} of the ${M.length} members carry a meter. The probe never edits a repo file: members that declare <code>test:coverage</code> are metered by the tree's own unmodified <a href="${HOME.turbo}"><code>turbo run test:coverage</code></a>; <a href="${HOME.nodeTest}"><code>node:test</code></a> members by their own <code>test</code> script re-run with <code>--experimental-test-coverage</code> and the <a href="${HOME.lcov}">lcov</a> reporter; the <a href="${HOME.vitest}"><code>vitest</code></a> members by their own script with <a href="${HOME.v8}"><code>--coverage.enabled --coverage.provider=v8</code></a>. Each meter reports lines on its own basis (v8 remaps to executable lines; node counts raw lines), so brightness percentages are per-meter and are never summed across meters in the drawing — only the schedule's grand total does, and says so. LIT means a source file the suite actually executed; extent is those files' sloc over the member's src sloc, both from the same ref. One honest wobble found by re-running the probe four times over: <code>node --test</code>'s branch <em>denominator</em> for №31 came back 213 on two runs and 215 on two more, with 191 hit either way — a 0.9-point swing on one member's branch figure and nothing else in the plate moved. Branch discovery under V8 is not perfectly repeatable, and this plate says so rather than pretending the last run is the only one.</p>
@@ -477,7 +419,9 @@ export const sheet7a = {
     keyRow('<rect x="6" y="3" width="36" height="12" class="sk fp"/>', 'a member’s footprint — sheet 7’s census, plan view'),
     keyRow('<rect x="14" y="3" width="18" height="12" class="sks fhalo"/>', 'its spec annex — the LAMP: the light falls from the tests'),
     keyRow('<rect x="6" y="3" width="36" height="12" fill="var(--halo)"/><rect x="6" y="3" width="36" height="12" class="sk fnone"/>', 'lit ≥95% line — full bright'),
+    keyRow('<rect x="6" y="3" width="36" height="12" fill="url(#s7a-g2)"/><rect x="6" y="3" width="36" height="12" class="sk fnone"/>', 'lit 85–95% — bright, faint accent hatch'),
     keyRow('<rect x="6" y="3" width="36" height="12" fill="url(#s7a-g3)"/><rect x="6" y="3" width="36" height="12" class="skr fnone"/>', 'lit 70–85% — pale, red hatch'),
+    keyRow('<rect x="6" y="3" width="36" height="12" fill="url(#s7a-g4)"/><rect x="6" y="3" width="36" height="12" class="skr fnone"/>', 'lit below 70% — guttering, dense red'),
     keyRow('<rect x="6" y="3" width="36" height="12" fill="url(#s7a-se)"/><rect x="6" y="3" width="36" height="12" class="ska fnone" stroke-dasharray="5 4"/>', 'e2e light — real, no meter reads it'),
     keyRow('<line x1="4" y1="4" x2="44" y2="4" class="sks" stroke-dasharray="2 4"/><line x1="4" y1="14" x2="44" y2="14" class="sks" stroke-dasharray="2 4"/>', 'an outline of light — tests run, no meter attaches'),
     keyRow('<rect x="6" y="3" width="36" height="12" fill="url(#s7a-sh)"/><rect x="6" y="3" width="36" height="12" class="sk fnone"/>', 'SHADOW — source no suite ever loads'),

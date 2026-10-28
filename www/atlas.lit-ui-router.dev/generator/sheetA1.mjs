@@ -451,10 +451,6 @@ const H_TOTAL = 1530;
 const svg = `<svg viewBox="0 0 1560 ${H_TOTAL}" role="group" aria-label="An appendix plate of sprite studies: three rows of five isometric blocks each, showing one demo workspace member drawn from wreck to splendor under three competing sprite treatments. Row one, the reclaimed machine, is Horizon Zero Dawn leaning: the wrecked block has a breached parapet, rubble and green vines climbing both flanks, and each block to the right carries less vegetation until the last stands crisp with a ground halo, an accent trace along its roof edge and a survey flag. Row two, the ledger roof, is SimCity 2000 leaning: every roof is a four by four grid of tiles, one per authored file, collapsing and darkening on the left with a boarded door, clearing tile by tile to the right, with an accent construction crane on the fourth block and air-conditioner cubes, a water tower and an antenna on the last. Row three, the working plant, is Factorio leaning: the left machine is covered in red rust hatch with cracks, its outlet pipes dashed and dripping, its conveyor belt stopped and a red alert triangle floating above it; rightward the rust thins, the pipes reconnect, green module lamps light one by one and a steam plume grows from the roof vent. Beside each row a table maps every visual channel to the git measurement that would drive it, and a cost note prices the treatment across twenty-seven buildings. A recommendation panel at the foot ranks the three: build the working plant first, layer the vines second, park the ledger roof for a close-up plate; beside it a design guard states that rust red must never be confused with gate red. A reference strip across the foot of the plate carries the six photographs the studies were argued from, framed as thumbnails and grouped by study: a Horizon Zero Dawn landscape and an overgrown temple doorway at Angkor; a SimCity 2000 cityscape and a SimCity Urban Renewal Kit tile palette; and two Factorio Friday Facts screenshots, machine remnants and redrawn turrets. Each thumbnail carries the one sentence it teaches and a credit naming its source.">
 ${defs(P)}
 
-<rect x="40" y="26" width="760" height="42" class="skf fnone"/>
-${txt(52, 43, 'THE SPRITE STUDY — HOW A MEMBER SHOULD BE DRAWN WHEN IT IS DRAWN AS A BUILDING', 'lbls')}
-${txt(52, 58, 'META — the subject of this plate is the atlas, not the codebase · three worked directions, one recommendation', 'lblf')}
-
 ${txt(1520, 34, 'ONE DEMO MEMBER — 16 files · 1,900 sloc — drawn fifteen times · footprint 1.6·√sloc ≈ 70, height 3 px/file = 48, the house rules', 'lbls', 'end')}
 ${txt(1520, 48, 'HORIZON ZERO DAWN × SIMCITY 2000 × FACTORIO · the gauge is WRECK & RUIN ↔ SHINE & SPLENDOR, driven by git age × churn', 'lblf', 'end')}
 ${txt(1520, 62, 'NO CENSUS PLATE — this appendix measures nothing; it argues a drawing convention · SEE ALSO sheets 7, 7B and 13', 'lblf', 'end')}
@@ -465,7 +461,7 @@ ${refStrip}
 </svg>`;
 
 export const sheetA1 = {
-  num: 'A1', id: 'sprites', rev: 'A',
+  num: 'A1', id: 'sprites', rev: 'B',
   // Appendix chrome: no altitude, no "OF n" — this plate is not in the ascent.
   head: 'APPENDIX A1 · META',
   // The one flag the shared chrome reads: no "OF n", and the title block's

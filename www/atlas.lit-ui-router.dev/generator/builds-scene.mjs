@@ -156,10 +156,9 @@ ${frameCss('bd', 'bd-read', ['stage', 'bar', 'read'])}
 .bd-pick { flex-basis: 100%; min-width: 0; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 12px; align-items: center;
   font-family: var(--data); font-size: 11px; letter-spacing: 0.12em; color: var(--ink-soft); }
 .bd-pick .k { font-weight: 600; letter-spacing: 0.16em; color: var(--ink); }
-.bd-builds { display: flex; gap: 6px; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: thin; scrollbar-color: var(--line) transparent;
-  padding-block-end: 2px; }
-.bd-builds a { flex: none; font: inherit; letter-spacing: inherit; color: var(--ink); background: var(--paper); text-decoration: none;
-  border: 1px solid var(--ink); padding: 6px 12px; white-space: nowrap; }
+.bd-builds { display: flex; flex-wrap: wrap; gap: 6px; min-width: 0; }
+.bd-builds a { flex: none; max-inline-size: 100%; overflow-wrap: anywhere; font: inherit; letter-spacing: inherit; color: var(--ink); background: var(--paper); text-decoration: none;
+  border: 1px solid var(--ink); padding-block: 6px; padding-inline: 12px; }
 .bd-builds a .nm { color: var(--ink-soft); margin-inline-end: 6px; }
 .bd-builds a[aria-current="true"] { background: var(--ink); color: var(--paper); }
 .bd-builds a[aria-current="true"] .nm { color: inherit; }
@@ -170,7 +169,7 @@ ${frameCss('bd', 'bd-read', ['stage', 'bar', 'read'])}
 @media (prefers-reduced-motion: no-preference) { .bd-builds a { transition: transform 160ms var(--ease-out, ease-out); } }
 .bd-who { grid-column: 2; font-size: 11px; letter-spacing: 0.08em; }
 .bd-ctl .grp { display: inline-flex; flex-wrap: wrap; gap: 6px; }
-@media (max-width: 560px) { .bd-ctl .touch { white-space: normal; } .bd-pick { grid-template-columns: minmax(0, 1fr); } .bd-who { grid-column: 1; } }
+@media (max-width: 560px) { .bd-ctl .touch { white-space: normal; } .bd-pick { grid-template-columns: minmax(0, 1fr); } .bd-who { grid-column: 1; } .bd-builds a { padding-block: 5px; padding-inline: 8px; } }
 .bd-ctl button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
 .bd-ctl input[type=range] { flex: none; width: 150px; accent-color: var(--accent); }
 #bd-play::after { content: "ASSEMBLE"; display: block; height: 0; overflow: clip; visibility: hidden; }

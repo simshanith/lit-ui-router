@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { defs } from './chrome.mjs';
-import { txt, schedTxt, keyRow, arrow } from './helpers.mjs';
+import { txt, keyRow, arrow, schedule } from './helpers.mjs';
 import { assertPlots } from './iso-hidden.mjs';
 
 const P = 's14';
@@ -290,7 +290,7 @@ const glyphOf = (kind, fate, x, y) => {
 // lettering stands on a paper placard, so a pier from a farther row passes behind it
 const placard = (cx, top, rows) => {
   const w = Math.max(...rows.map(([s, c]) => tw(s, c))) * 1.08 + 10;
-  return `<rect x="${(cx - w / 2).toFixed(1)}" y="${(top - 10).toFixed(1)}" width="${w.toFixed(1)}" height="${rows.length * LINE + 1}" class="fp"/>`;
+  return `<rect x="${(cx - w / 2).toFixed(1)}" y="${(top - 12).toFixed(1)}" width="${w.toFixed(1)}" height="${rows.length * LINE + 3}" class="fp"/>`;
 };
 const piers = YARDS.filter((y) => y.cons.length)
   .map((y) => `<line x1="${y.cx.toFixed(1)}" y1="${(y.y + YH).toFixed(1)}" x2="${y.cx.toFixed(1)}" y2="${RT}" class="sk"/>`).join('\n');
@@ -355,58 +355,37 @@ ${txt(BANK_X, WY + 14, 'SOUTH BANK', 'lblb')}
 ${txt(BANK_X, WY + 28, 'the city’s wharf', 'lblf')}`;
 
 // ---- schedule ---------------------------------------------------------------------
-const COL = { yard: 160, kind: 330, num: 372, author: 440, sent: 560, title: 630, state: 1170, ret: 1230 };
-const TITLE_W = COL.state - COL.title - 14;
-const SY = WY + WH + 40;
-const ROWH = 17;
-const schedRow = (c, y) => {
-  const y0 = yardOf(c);
-  return [
-    schedTxt(58, y, [c.n, c.createdAt ? day(c.createdAt) : '—'], 'lbls'),
-    txt(COL.yard, y, fit(work(y0), COL.kind - COL.yard - 10), 'lbls'),
-    txt(COL.kind, y, KIND_SHORT[c.kind], 'lbls'),
-    txt(COL.num, y, `#${c.number}`, 'lbls'),
-    txt(COL.author, y, fit(c.author?.login ?? '—', COL.sent - COL.author - 10), 'lbls'),
-    txt(COL.sent, y, c.sent ? 'SENT' : 'WATCHED', c.sent ? 'lbla' : 'lbls'),
-    txt(COL.title, y, fit(c.title, TITLE_W), 'lbls'),
-    txt(COL.state, y, c.state, c.fate === 'landed' ? 'lbl' : 'lbls'),
-    txt(COL.ret, y, c.home.length ? fit(`→ ${c.home.map((r) => r.ref).join(', ')}`, RXE - 10 - COL.ret) : '—', 'lbls'),
-  ].join('');
-};
+const HEAD = ['#', 'filed', 'work', 'kind', 'number', 'author', 'sent or watched', 'title', 'state', 'returns home'];
+const schedRow = (c) => [
+  c.n, c.createdAt ? day(c.createdAt) : '—', work(yardOf(c)), KIND_SHORT[c.kind], `#${c.number}`, c.author?.login ?? '—',
+  c.sent ? 'SENT' : 'WATCHED', c.title, c.state, c.home.length ? c.home.map((r) => r.ref).join(', ') : '—',
+];
 const OFF_HEAD = OFF.length
   ? `CITED FROM BEFORE THE FIRST COMMIT (${day(SINCE)}) — ${nplural(OFF.length, 'item')}, filed ${day(OFF.find((c) => c.createdAt)?.createdAt ?? '—')} to ${day(OFF.findLast((c) => c.createdAt)?.createdAt ?? '—')}, drawn in the river's west mouth`
   : '';
-const GONE_HEAD = GONE.length ? `NO LONGER READABLE UPSTREAM — ${nplural(GONE.length, 'item')} the city cites, drawn nowhere on the river` : '';
-const OFF_Y = SY + 52 + CONS.length * ROWH + 8;
-const GONE_Y = OFF_Y + (OFF.length ? (OFF.length + 1) * ROWH + 14 : 0);
-const SH = 74 + CONS.length * ROWH + (OFF.length ? 8 + (OFF.length + 1) * ROWH + 6 : 0) + (GONE.length ? 8 + (GONE.length + 1) * ROWH + 6 : 0);
-const schedule = `<rect x="40" y="${SY}" width="${RXE - 40}" height="${SH}" class="sk fp"/>
-${txt(58, SY + 22, 'CONSIGNMENT SCHEDULE — date filed · work · kind · number in its tracker · author · sent or watched · title · state · returns home', 'lbls')}
-<line x1="40" y1="${SY + 32}" x2="${RXE}" y2="${SY + 32}" class="skf"/>
-${CONS.map((c, i) => schedRow(c, SY + 52 + i * ROWH)).join('\n')}
-${OFF.length ? `<line x1="58" y1="${OFF_Y - 6}" x2="${RXE - 18}" y2="${OFF_Y - 6}" class="skf"/>
-${txt(58, OFF_Y + 10, OFF_HEAD, 'lbls')}
-${OFF.map((c, i) => schedRow(c, OFF_Y + 10 + (i + 1) * ROWH)).join('\n')}` : ''}
-${GONE.length ? `<line x1="58" y1="${GONE_Y - 6}" x2="${RXE - 18}" y2="${GONE_Y - 6}" class="skf"/>
-${txt(58, GONE_Y + 10, GONE_HEAD, 'lbls')}
-${GONE.map((c, i) => schedRow(c, GONE_Y + 10 + (i + 1) * ROWH)).join('\n')}` : ''}
-${txt(58, SY + SH - 16, `TOTAL — ${nplural(EVERY.length, 'consignment')} · ${fmt(SENT)} sent, ${fmt(WATCHED)} watched, ${fmt(TRACKED)} tracked · ${nplural(BYKIND.pr, 'PR')} · ${nplural(BYKIND.issue, 'issue')} · ${nplural(BYKIND.bug, 'bug')} · ${LANDED} merged or fixed, ${CLOSED} closed, ${OPEN} open${MISSING ? `, ${MISSING} missing` : ''} · ${nplural(RETURNS.length, 'block')} on the wharf · window ${day(SINCE)} → ${day(UNTIL)} · ${BASIS}`, 'lbls')}`;
+const GONE_HEAD = GONE.length ? `UNREADABLE UPSTREAM — ${nplural(GONE.length, 'item')} the city cites, drawn nowhere on the river` : '';
+const SCHEDULES = [
+  schedule(
+    'CONSIGNMENT SCHEDULE — date filed · work · kind · number in its tracker · author · sent or watched · title · state · returns home',
+    HEAD, CONS.map(schedRow),
+    `TOTAL — ${nplural(EVERY.length, 'consignment')} · ${fmt(SENT)} sent, ${fmt(WATCHED)} watched, ${fmt(TRACKED)} tracked · ${nplural(BYKIND.pr, 'PR')} · ${nplural(BYKIND.issue, 'issue')} · ${nplural(BYKIND.bug, 'bug')} · ${LANDED} merged or fixed, ${CLOSED} closed, ${OPEN} open${MISSING ? `, ${MISSING} missing` : ''} · ${nplural(RETURNS.length, 'block')} on the wharf · window ${day(SINCE)} → ${day(UNTIL)} · ${BASIS}`,
+  ),
+  ...(OFF.length ? [schedule(OFF_HEAD, HEAD, OFF.map(schedRow))] : []),
+  ...(GONE.length ? [schedule(GONE_HEAD, HEAD, GONE.map(schedRow))] : []),
+];
 
 // ---- assemble ---------------------------------------------------------------------
-const H = SY + SH + 30;
+// the wharf is the plate's lowest structure
+const H = WY + WH + 20;
 const yardsWord = plural(WORKS.length, 'work');
 const consWord = plural(EVERY.length, 'consignment');
 export const SHEET14_VERDICT = `${nplural(EVERY.length, 'consignment')} to ${nplural(WORKS.length, 'work')}, ${fmt(SENT)} sent and ${fmt(WATCHED)} watched, ${fmt(TRACKED)} tracked, ${fmt(RETURNED)} returned home`;
 
-const svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="A plan map of the open-source commons around lit-ui-router, drawn as a river of time. A river band runs west to east across the plate from ${day(SINCE)}, the repository's first commit, to ${day(UNTIL)}, with month ticks lettered along its south bank. On the north bank stand ${plural(YARDS.length, 'yard')}${ROWS > 1 ? ` in ${plural(ROWS, 'row')}` : ''}, one per upstream work, in the order of their first consignment; a yard's footprint grows with the logarithm of its GitHub stars, and ${BERTHS.length ? `${plural(BERTHS.length, 'browser bug tracker')}, ${BERTHS.map((b) => b.name).join(' and ')}, stand at the east end as dashed berths at the minimum footprint, each lettered ${BERTHS.map((b) => `${nplural(b.cons.length, 'report')} filed`).join(' and ')}` : 'no bug tracker stands among them'}. On the river float ${consWord} the city's own record cites, each a crate at the day it was filed and moored by a line to its yard: a rectangle for a pull request, a circle for an issue, a hexagon for a bug report; filled in ink where it merged, outlined where it closed, dashed where it stands open. ${fmt(SENT)} fly the city's accent pennant, filed by one of its own committers; ${fmt(WATCHED)} fly none, filed by someone else and watched; ${fmt(TRACKED)} wear a red tag, cited by a home item labelled external.${OFF.length ? ` ${cap(plural(OFF.length, 'crate'))} older than the first commit ${OFF.length === 1 ? 'stands' : 'stand'} in the river's west mouth, off the time axis.` : ''} On the south bank the city's wharf carries ${plural(RETURNS.length, 'block')}, one per home pull request, issue or commit that cites a consignment, and a faint road with an arrowhead crosses the river from each consignment to each of its returns${MOST && MOST.home.length > 1 ? `; the roads from ${yardOf(MOST).name} #${MOST.number} cross ${times(MOST.home.length)}` : ''}. A schedule below lists every consignment.">
+const svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="A plan map of the open-source commons around lit-ui-router, drawn as a river of time. A river band runs west to east across the plate from ${day(SINCE)}, the repository's first commit, to ${day(UNTIL)}, with month ticks lettered along its south bank. On the north bank stand ${plural(YARDS.length, 'yard')}${ROWS > 1 ? ` in ${plural(ROWS, 'row')}` : ''}, one per upstream work, in the order of their first consignment; a yard's footprint grows with the logarithm of its GitHub stars, and ${BERTHS.length ? `${plural(BERTHS.length, 'browser bug tracker')}, ${BERTHS.map((b) => b.name).join(' and ')}, stand at the east end as dashed berths at the minimum footprint, each lettered ${BERTHS.map((b) => `${nplural(b.cons.length, 'report')} filed`).join(' and ')}` : 'no bug tracker stands among them'}. On the river float ${consWord} the city's own record cites, each a crate at the day it was filed and moored by a line to its yard: a rectangle for a pull request, a circle for an issue, a hexagon for a bug report; filled in ink where it merged, outlined where it closed, dashed where it stands open. ${fmt(SENT)} fly the city's accent pennant, filed by one of its own committers; ${fmt(WATCHED)} fly none, filed by someone else and watched; ${fmt(TRACKED)} wear a red tag, cited by a home item labelled external.${OFF.length ? ` ${cap(plural(OFF.length, 'crate'))} older than the first commit ${OFF.length === 1 ? 'stands' : 'stand'} in the river's west mouth, off the time axis.` : ''} On the south bank the city's wharf carries ${plural(RETURNS.length, 'block')}, one per home pull request, issue or commit that cites a consignment, and a faint road with an arrowhead crosses the river from each consignment to each of its returns${MOST && MOST.home.length > 1 ? `; the roads from ${yardOf(MOST).name} #${MOST.number} cross ${times(MOST.home.length)}` : ''}. A schedule below the drawing lists every consignment.">
 ${defs(P)}
 
-<rect x="40" y="24" width="640" height="42" class="skf fnone"/>
-${txt(52, 41, 'THE UPSTREAM WORKS — WHAT THE CITY SENDS AND WATCHES ACROSS THE RIVER, AND WHAT COMES HOME', 'lbls')}
-${txt(52, 56, 'north bank, the works the city builds on · the river, time · south bank, the city', 'lblf')}
-
 ${txt(RXE, 34, `TIME RUNS EAST — ${day(SINCE)}, the first commit, to ${day(UNTIL)} · one crate per consignment, at the day it was filed`, 'lbls', 'end')}
-${txt(RXE, 48, `yard footprint grows with log₁₀ of stars · ★ GitHub stars · npm downloads per week · ${BASIS}`, 'lblf', 'end')}
+${txt(RXE, 48, 'yard footprint grows with log₁₀ of stars · ★ GitHub stars · npm downloads per week', 'lblf', 'end')}
 ${txt(RXE, 62, 'pennant = sent by the city · a road across the river = a return: a home PR, issue or commit that cites it', 'lblf', 'end')}
 
 ${river}
@@ -418,7 +397,6 @@ ${yardSvg}
 ${engineNote}
 ${wharf}
 ${banks}
-${schedule}
 </svg>`;
 
 const L = once();
@@ -429,17 +407,18 @@ const topLine = TOP
   : 'no work takes a consignment';
 
 export const sheet14 = {
-  num: 14, id: 'upstream', rev: 'B',
+  num: 14, id: 'upstream', rev: 'C',
   title: 'THE UPSTREAM WORKS',
   sub: `ALTITUDE 14 — the city among the commons it builds on · ${consWord} to ${yardsWord} cited by the city's own record, ${fmt(SENT)} sent and ${fmt(WATCHED)} watched, ${fmt(TRACKED)} tracked, ${fmt(RETURNED)} returned home, ${fmt(OFF_RIVER)} off the river${GONE.length ? ` (${fmt(GONE.length)} missing)` : ''} · ${BASIS}`,
   scale: 'CITY × COMMONS',
   form: 'UPSTREAM WORKS',
   svg,
+  schedules: SCHEDULES,
   caption: `Every other sheet draws the city; this one draws the commons the city's own record cites. Across a river of time from the first commit, ${consWord} — pull requests, issues and bug reports in other projects' trackers — sit at the day they were filed, moored to the works on the north bank; the ${fmt(SENT)} the city sent fly its pennant and the ${fmt(WATCHED)} it watches fly none, and roads cross back to the ${plural(RETURNS.length, 'home pull request, issue or commit', 'home pull requests, issues and commits')} that cite them on the city's wharf.`,
   notes: `
 <p><strong>Method — one probe, one plate.</strong> Every figure on this sheet is read at build time from <code>www/atlas.lit-ui-router.dev/data/census-upstream.json</code>, ${BASIS}. The probe reads the city's own record — <a href="${REPO}">this repository</a>'s pull requests, issues, comments, reviews and commit messages, bot text excluded — and files every issue or pull request in another GitHub project, and every bug on the browser engines' Bugzillas, that the record cites. A <em>consignment</em> is one of those cited items. It is <em>sent</em> when its author is one of the city's own committers, and <em>watched</em> when someone else filed it and the city follows it. A <em>return</em> is a pull request, issue or commit of this repository that cites a consignment: the place the upstream work comes back into the city. The city points at an upstream item deliberately with its <a href="${REPO}/labels/external"><code>external</code></a> label — “cites or tracks an issue or PR in another project, outside this repository's scope” — and a consignment is <em>tracked</em> when a home item carrying that label cites it. Stars and weekly npm downloads are read from GitHub and the npm registry for each work the plate carries. The berths' note is read from <code>census-plate.json</code>, the ci graph plate: the packages whose <code>ci:main</code> graph runs a real ${ENGINE_TASKS.map((t) => `<code>${t}</code>`).join(', ')} task.</p>
 <p><strong>The river is time.</strong> The river's x axis runs from ${day(SINCE)}, the first commit, at the west to ${day(UNTIL)} at the east, one tick per calendar month, and every crate and every wharf block sits at its own day: a crate at the day the consignment was filed, a block at the day its return was written. Where days crowd, crates stack across the river and blocks along the wharf, so nothing moves off its date.${OFF.length ? ` A cited item filed before the first commit has no day on the axis: ${OFF.length === 1 ? 'it stands' : `the ${word(OFF.length)} of them stand`} in the river's west mouth, west of a dashed line, and the schedule lists ${OFF.length === 1 ? 'it' : 'them'} under their own heading.` : ''} The yards on the north bank stand in the order of their first consignment, not by size, so the bank reads west to east in the same order as the river${ROWS > 1 ? `, in ${plural(ROWS, 'row')} where one row cannot hold them` : ''}; a yard's footprint grows with the base-ten logarithm of its stars. A crate's shape is its kind and its fill its state: ink where it merged or was fixed, an outline where it closed unmerged, a dashed outline where it stands open. A sent crate flies the city's pennant in the accent colour; a watched crate flies none. A tracked crate, and a wharf block whose item carries the <code>external</code> label, wear a red tag on the north-east corner.</p>
-<p><strong>What the plate reads.</strong> ${cap(consWord)} to ${yardsWord}: ${nplural(BYKIND.pr, 'pull request')}, ${nplural(BYKIND.issue, 'issue')} and ${nplural(BYKIND.bug, 'bug report')}. ${fmt(SENT)} sent and ${fmt(WATCHED)} watched${AUTHORS.length ? `, the watched filed by ${nplural(AUTHORS.length, 'other author')}` : ''}. ${cap(plural(LABELLED, 'home item'))} ${LABELLED === 1 ? 'carries' : 'carry'} the <code>external</code> label, so ${plural(TRACKED, 'consignment')} ${TRACKED === 1 ? 'is' : 'are'} tracked. ${fmt(LANDED)} merged or fixed, ${fmt(CLOSED)} closed and ${fmt(OPEN)} open${MISSING ? `, and ${plural(MISSING, 'item')} the city cites ${MISSING === 1 ? 'is' : 'are'} no longer readable upstream, listed in the schedule and drawn nowhere on the river` : ''}. ${topLine}. ${RETURNED === EVERY.length ? `Every consignment has come home: the plate holds only what the city's record cites` : `${fmt(RETURNED)} of the ${fmt(EVERY.length)} have come home`}${EVERY.length - RETURNED ? `, and ${nplural(EVERY.length - RETURNED, 'consignment')} ${EVERY.length - RETURNED === 1 ? 'has' : 'have'} no return: ${EVERY.filter((c) => !c.home.length).map((c) => L(c.url, `${work(yardOf(c))} #${c.number}`)).join(', ')}` : ''}. The wharf holds ${plural(RETURNS.length, 'block')} for ${plural(ITEMS.size, 'home item')} — ${nplural(ITEM_KINDS.pr, 'pull request')} and ${nplural(ITEM_KINDS.issue, 'issue')}${ITEM_KINDS.commit ? `, and ${nplural(ITEM_KINDS.commit, 'commit')} lettered by sha` : ''}${RELEASES ? `; ${plural(RELEASES, 'block')} ${RELEASES === 1 ? 'is a release pull request, drawn' : 'are release pull requests, drawn'} as a narrow unlettered post` : ''}. A squash commit whose subject ends in a pull request's number folds into that pull request's block when the same consignment cites both: ${nplural(FOLDED, 'commit')} ${FOLDED === 1 ? 'folds' : 'fold'} this way. ${MOST ? `${L(MOST.url, `${work(yardOf(MOST))} #${MOST.number}`)} comes home the most, ${times(MOST.home.length)}, from ${day(MOST.home[0].date)} to ${day(MOST.home.at(-1).date)}` : ''}${CITED && CITED.from.size > 1 && !CITED.tied ? `; ${L(homeUrl(CITED), CITED.ref)}, ${CITED.title}, cites ${plural(CITED.from.size, 'consignment')}, the most of any home item` : ''}.${EARLY.length ? ` A return is dated by the citing text's own day, so a road can run west: ${EARLY.map(([c, r]) => `${L(homeUrl(r), r.ref)} (${day(r.date)}) cites ${L(c.url, `${work(yardOf(c))} #${c.number}`)} (${day(c.createdAt)})`).join('; ')} — in each the home text is the older one, and the upstream filing is named in it.` : ''}</p>
+<p><strong>What the plate reads.</strong> ${cap(consWord)} to ${yardsWord}: ${nplural(BYKIND.pr, 'pull request')}, ${nplural(BYKIND.issue, 'issue')} and ${nplural(BYKIND.bug, 'bug report')}. ${fmt(SENT)} sent and ${fmt(WATCHED)} watched${AUTHORS.length ? `, the watched filed by ${nplural(AUTHORS.length, 'other author')}` : ''}. ${cap(plural(LABELLED, 'home item'))} ${LABELLED === 1 ? 'carries' : 'carry'} the <code>external</code> label, so ${plural(TRACKED, 'consignment')} ${TRACKED === 1 ? 'is' : 'are'} tracked. ${fmt(LANDED)} merged or fixed, ${fmt(CLOSED)} closed and ${fmt(OPEN)} open${MISSING ? `, and ${plural(MISSING, 'item')} the city cites ${MISSING === 1 ? 'is' : 'are'} unreadable upstream, listed in the schedule and drawn nowhere on the river` : ''}. ${topLine}. ${RETURNED === EVERY.length ? `Every consignment has come home: the plate holds only what the city's record cites` : `${fmt(RETURNED)} of the ${fmt(EVERY.length)} have come home`}${EVERY.length - RETURNED ? `, and ${nplural(EVERY.length - RETURNED, 'consignment')} ${EVERY.length - RETURNED === 1 ? 'has' : 'have'} no return: ${EVERY.filter((c) => !c.home.length).map((c) => L(c.url, `${work(yardOf(c))} #${c.number}`)).join(', ')}` : ''}. The wharf holds ${plural(RETURNS.length, 'block')} for ${plural(ITEMS.size, 'home item')} — ${nplural(ITEM_KINDS.pr, 'pull request')} and ${nplural(ITEM_KINDS.issue, 'issue')}${ITEM_KINDS.commit ? `, and ${nplural(ITEM_KINDS.commit, 'commit')} lettered by sha` : ''}${RELEASES ? `; ${plural(RELEASES, 'block')} ${RELEASES === 1 ? 'is a release pull request, drawn' : 'are release pull requests, drawn'} as a narrow unlettered post` : ''}. A squash commit whose subject ends in a pull request's number folds into that pull request's block when the same consignment cites both: ${nplural(FOLDED, 'commit')} ${FOLDED === 1 ? 'folds' : 'fold'} this way. ${MOST ? `${L(MOST.url, `${work(yardOf(MOST))} #${MOST.number}`)} comes home the most, ${times(MOST.home.length)}, from ${day(MOST.home[0].date)} to ${day(MOST.home.at(-1).date)}` : ''}${CITED && CITED.from.size > 1 && !CITED.tied ? `; ${L(homeUrl(CITED), CITED.ref)}, ${CITED.title}, cites ${plural(CITED.from.size, 'consignment')}, the most of any home item` : ''}.${EARLY.length ? ` A return is dated by the citing text's own day, so a road can run west: ${EARLY.map(([c, r]) => `${L(homeUrl(r), r.ref)} (${day(r.date)}) cites ${L(c.url, `${work(yardOf(c))} #${c.number}`)} (${day(c.createdAt)})`).join('; ')} — in each the home text is the older one, and the upstream filing is named in it.` : ''}</p>
 ${BERTHS.length ? `<p><strong>The berths.</strong> ${BERTHS.map((b) => `${b.name} (${link(yardUrl(b), b.id)}) reads ${nplural(b.cons.length, 'report')}, ${fmt(b.cons.filter((c) => c.sent).length)} sent and ${fmt(b.cons.filter((c) => !c.sent).length)} watched`).join(', and ')}. They stand on the bank because the suite runs on these engines: ${ENGINE_TASKS.map((t) => `<code>${t}</code>`).join(', ')} is a real task in ${plural(ENGINE_PKGS.length, 'package')} of the <code>ci:main</code> graph — ${ENGINE_PKGS.map((p) => `<code>${p}</code>`).join(', ')}.</p>` : ''}`,
   key: [
     keyRow('<rect x="6" y="3" width="36" height="12" class="fp2"/><rect x="6" y="3" width="36" height="12" fill="url(#s14-hx)"/><rect x="6" y="3" width="36" height="12" class="sk fnone"/>', 'yard — one upstream work · width grows with log₁₀ stars'),

@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { defs } from './chrome.mjs';
-import { txt, schedTxt, arrow, isoBlock, isoPt, keyRow } from './helpers.mjs';
+import { txt, schedule, arrow, isoBlock, isoPt, keyRow } from './helpers.mjs';
 import { assertPlots, depthSort } from './iso-hidden.mjs';
 
 const P = 's3';
@@ -91,7 +91,7 @@ const TIER_TEXT = {
 // [n, name, tier, x, y, files, sloc, fixed side, fixed height, schedule note]
 const M = [
   // --- the conveyor (packages/), one straight lane at y = 71 --------------------
-  // east off 25, then 33 at the b499e2a5 refresh, so its 97-file cap stays under the inset's box row
+  // east off 25, then 33 at the b499e2a5 refresh
   [1,  'src — packages/*/src',      'line',    55,    30.45, ...C('src — packages/*/src'), null, null, SRC_NOTE],
   // east off 201.1, then 222, with the src slab: the run between them needs 31.2 px of trims
   [2,  'build — @tools/oxc-emit',   'line',   244,    63,    ...C('build — @tools/oxc-emit'), null, null, 'JS pass + d.ts pass, one emitter'],
@@ -144,8 +144,7 @@ const g = (n) => geom.get(n);
 assertPlots('sheet 3', M.map(([n, name]) => ({ n, name, part: 'block', x: g(n).x, y: g(n).y, w: g(n).side, d: g(n).side })));
 
 const BADGE_LEFT = new Set([9, 10, 11]);
-// mass 1 stands under the task-manager inset: its badge takes the far corner so the
-// site keeps clear of the inset's frame instead of pushing a label through it.
+// mass 1's badge takes its roof's far corner
 const BADGE_RIGHT = new Set([1]);
 // the big reporters stand in front of taller masses, so their badges sit on their own roofs
 const BADGE_ON_ROOF = new Set([14, 20]);
@@ -287,21 +286,16 @@ for (const n of GATES) {
 const drawn = ORDER.map(massBlock);
 const bodies = `${drawn.map((b) => b.body).join('\n')}\n${drawn.map((b) => b.badge).join('\n')}`;
 
-// ---- schedule -----------------------------------------------------------------------
-const ART_H = 930;
+// ---- schedule, set as a table under the figure ---------------------------------------
 const massed = M.filter((r) => r[6] > 0);
 const TOT_F = massed.reduce((a, r) => a + r[5], 0);
 const TOT_L = massed.reduce((a, r) => a + r[6], 0);
-const schedRow = ([n, name, tier, , , files, sloc, , , note]) => [n,
-  `${name} — ${sloc > 0 ? `${files}f · ${fmt(sloc)} sloc` : 'not massed'} · ${TIER_TEXT[tier]} · ${note}`];
-const half = Math.ceil(M.length / 2);
-const SY = ART_H + 14;
-const schedule = `<rect x="40" y="${SY}" width="1320" height="${72 + half * 17}" class="sk fp"/>
-${txt(58, SY + 22, 'STRUCTURE SCHEDULE — authored source per structure · files (f) · sloc · gate tier', 'lbls')}
-<line x1="40" y1="${SY + 32}" x2="1360" y2="${SY + 32}" class="skf"/>
-${M.slice(0, half).map((r, i) => schedTxt(58, SY + 52 + i * 17, schedRow(r), 'lbls')).join('\n')}
-${M.slice(half).map((r, i) => schedTxt(710, SY + 52 + i * 17, schedRow(r), 'lbls')).join('\n')}
-${txt(58, SY + 58 + half * 17, `TOTAL — ${massed.length} massed structures · ${TOT_F} authored files · ${fmt(TOT_L)} sloc · ${COUNTED} · gate tier is colour, never height`, 'lbls')}`;
+const schedRow = ([n, name, tier, , , files, sloc, , , note]) => [n, name, sloc > 0 ? files : '—', sloc > 0 ? sloc : '—', TIER_TEXT[tier], note];
+const SCHEDULE = schedule('STRUCTURE SCHEDULE — authored source per structure · files (f) · sloc · gate tier',
+  ['#', 'structure', 'files', 'sloc', 'gate tier', 'note'], M.map(schedRow),
+  `TOTAL — ${massed.length} massed structures · ${TOT_F} authored files · ${fmt(TOT_L)} sloc · ${COUNTED} · gate tier is colour, never height`);
+// the return's lettering is the lowest line on the plate; the figure ends 20 px under it
+const RETURN_Y = 900, VH = RETURN_Y + 20;
 
 // ---- inset: the two task managers, drawn FLAT because the shape is a loop --------
 // Every figure read from the same two plates sheet 3A draws: census-handoff.json
@@ -311,11 +305,14 @@ const ibox = (x, y, w, h, name, count) =>
 ${txt(x + w / 2, count ? y + 15 : y + h / 2 + 3.5, name, 'lbls', 'middle')}${count ? `\n${txt(x + w / 2, y + 26, count, 'lblf', 'middle')}` : ''}`;
 const iflow = (d, cls = 'sk', mk = 'ai') => arrow(P, d, mk, cls);
 
-// mass 1's cap crosses the frame's foot and climbs every refresh: the inset stands lifted, and its box row must clear the cap
-const INSET_LIFT = 16;
-const CAP_TOP = pt(g(1).x, g(1).y, g(1).h)[1];
-if (CAP_TOP < 106 - INSET_LIFT + 6) throw new Error(`sheet 3: mass 1's cap climbs to y ${CAP_TOP.toFixed(1)}, into the inset's box row — recompose the inset`);
-const inset = `<g transform="translate(0 -${INSET_LIFT})">
+// the inset hangs top right, where the conveyor leaves air: its frame, with 8 px of margin, may cover no mass
+const INSET_DX = 700, INSET_DY = 58;
+const INSET_FRAME = [[32, 18], [648, 18], [648, 190], [32, 190]].map(([x, y]) => [x + INSET_DX, y + INSET_DY]);
+for (const [n] of M) {
+  const d = overlapDepth(INSET_FRAME, projHull(n));
+  if (d > 0) throw new Error(`sheet 3: structure ${n} ${F(n)[1]} stands ${d.toFixed(1)} px into the task-manager inset's frame — move the inset`);
+}
+const inset = `<g transform="translate(${INSET_DX} ${INSET_DY})">
 <rect x="40" y="26" width="600" height="156" class="skf fnone"/>
 ${txt(52, 43, 'TWO TASK MANAGERS, ONE RE-ENTRANT LOOP', 'lbls')}
 ${txt(52, 55, 'mise — node-free umbrella · turbo — cached fan-out (remote R2) · neither sits above the other', 'lblf')}
@@ -337,28 +334,13 @@ ${txt(540, 151, 'cache key over tools node never installs', 'lblf', 'middle')}
 ${txt(272, 120, 'mise/aqua provisions them', 'lblf', 'end')}
 </g>`;
 
-const svg = `<svg viewBox="0 0 1400 ${SY + 100 + half * 17}" role="img" aria-label="Isometric map of the lit-ui-router monorepo as an industrial site, re-massed from measured source. A build conveyor runs along one straight isometric lane from upper left to lower right: the packages source slab, the oxc-emit build shed, the packer, a green crate that is the one tarball, the publish hall, and the npm registry beyond a dashed boundary. Below and to the left stands the instrument yard: two big reporter masses at its left end, and the small gates and reporters in two rows to their right. Below that stands a proving ground of sample apps, end to end tests and the docs deploy watch. Every structure is massed by its own census — footprint side proportional to the square root of its authored source lines, height one and a half pixels per authored file — so the three heaviest masses on the sheet, ${HEAVY.map((n) => `${heavyName(n)} at ${nfl(n)}`).join(', ')}, are none of them gates. Gate severity is carried entirely in colour, never in height: five small red hatched pads stop the pull request line — the vitest harness, compat-guards, dts-backtest, check exports, and Cypress end to end — one solid red block, published-diff, halts publishing outright; two accent hatched blocks gate a later stage, the version bump and the docs deploy; and the faint unhatched blocks never gate at all. A dashed trunk carries the one cached tarball from the green crate to the three checks that read it, and a long accent return runs from the registry around the front of the whole site back into published-diff, closing the loop. A structure schedule lists all ${M.length} structures with exact file and line counts and their gate tier. In the upper left corner, set apart from the isometric site, a small flat schematic shows the two task managers as a loop rather than a stack: GitHub Actions enters mise at ${HW.callSites} call sites across ${HW.calling} workflows, mise holds ${HM.tasks} tasks with only ${HM.withDepends} of them declaring dependencies, seven of those tasks shell turbo whose continuous-integration graph expands to ${CI_NODES} task nodes, and an accent arrow returns from turbo back into mise, where seven root scripts shell mise again for the aqua-provisioned linters — rumdl, taplo, shellcheck, actionlint and zizmor — that node never installs.">
+const svg = `<svg viewBox="0 0 1400 ${VH}" role="img" aria-label="Isometric map of the lit-ui-router monorepo as an industrial site, re-massed from measured source. A build conveyor runs along one straight isometric lane from upper left to lower right: the packages source slab, the oxc-emit build shed, the packer, a green crate that is the one tarball, the publish hall, and the npm registry beyond a dashed boundary. Below and to the left stands the instrument yard: two big reporter masses at its left end, and the small gates and reporters in two rows to their right. Below that stands a proving ground of sample apps, end to end tests and the docs deploy watch. Every structure is massed by its own census — footprint side proportional to the square root of its authored source lines, height one and a half pixels per authored file — so the three heaviest masses on the sheet, ${HEAVY.map((n) => `${heavyName(n)} at ${nfl(n)}`).join(', ')}, are none of them gates. Gate severity is carried entirely in colour, never in height: five small red hatched pads stop the pull request line — the vitest harness, compat-guards, dts-backtest, check exports, and Cypress end to end — one solid red block, published-diff, halts publishing outright; two accent hatched blocks gate a later stage, the version bump and the docs deploy; and the faint unhatched blocks never gate at all. A dashed trunk carries the one cached tarball from the green crate to the three checks that read it, and a long accent return runs from the registry around the front of the whole site back into published-diff, closing the loop. A structure schedule below the drawing lists all ${M.length} structures with exact file and line counts and their gate tier. In the upper right corner, set apart from the isometric site, a small flat schematic shows the two task managers as a loop rather than a stack: GitHub Actions enters mise at ${HW.callSites} call sites across ${HW.calling} workflows, mise holds ${HM.tasks} tasks with only ${HM.withDepends} of them declaring dependencies, seven of those tasks shell turbo whose continuous-integration graph expands to ${CI_NODES} task nodes, and an accent arrow returns from turbo back into mise, where seven root scripts shell mise again for the aqua-provisioned linters — rumdl, taplo, shellcheck, actionlint and zizmor — that node never installs.">
 ${defs(P)}
 
 ${inset}
 
 ${txt(1360, 34, 'SCALE — footprint side = 1.6 · √sloc (plan area ∝ sloc) · height = 1.5 px per authored file · mass = sloc × files', 'lbls', 'end')}
-${txt(1360, 48, 'GATE SEVERITY IS COLOUR, NOT HEIGHT — red stops the line, accent gates a later stage, faint never gates', 'lblf', 'end')}
-${txt(1360, 62, 'the tarball, the registry and the boundary are diagrammatic, not to scale', 'lblf', 'end')}
-
-<!-- severity ladder: the encoding, on the drawing -->
-<rect x="950" y="130" width="410" height="146" class="skf fnone"/>
-${txt(966, 152, 'GATE SEVERITY — READ THE COLOUR, NOT THE HEIGHT', 'lbls')}
-${[
-  ['skr', 'fr', null, 'halts a publish — published-diff (11)', 'lblr'],
-  ['skr', 'fp', 'hr', 'stops the PR line — 7 · 8 · 9 · 10 · 17', 'lblr'],
-  ['ska', 'fp', 'ha', 'gates a later stage — 12 · 19', 'lbla'],
-  ['skf', 'fp2', null, 'never gates — 13 · 14 · 15 · 16 · 20', 'lbls'],
-].map(([edge, fill, hatch, label, cls], i) => {
-  const y = 176 + i * 24;
-  return `<rect x="966" y="${y}" width="34" height="14" class="${fill}"/>${hatch ? `<rect x="966" y="${y}" width="34" height="14" fill="url(#${P}-${hatch})"/>` : ''}<rect x="966" y="${y}" width="34" height="14" class="${edge} fnone"/>
-${txt(1014, y + 11, label, cls)}`;
-}).join('\n')}
+${txt(1360, 48, 'the tarball, the registry and the boundary are diagrammatic, not to scale', 'lblf', 'end')}
 
 <!-- districts -->
 ${district(...YARD)}
@@ -402,7 +384,7 @@ ${txt(90, 555, 'e2e — cypress · stops the line', 'lblr')}
 ${txt(90, 568, 'and drives the apps beside it', 'lblf')}
 <line x1="278" y1="559" x2="300" y2="588" class="skf"/>
 
-${txt(620, 900, 'the return: published-diff reads the LIVE npm tarball — the registry is inside the circuit, not at the end of it', 'lbla', 'middle')}
+${txt(620, RETURN_Y, 'the return: published-diff reads the LIVE npm tarball — the registry is inside the circuit, not at the end of it', 'lbla', 'middle')}
 
 <!-- district lettering -->
 ${txt(700, 300, 'packages/ — the conveyor: source in, one tarball out', 'lblf')}
@@ -410,23 +392,23 @@ ${txt(40, 520, 'tools/ — the instrument yard', 'lblf')}
 ${txt(40, 532, `${TOOLS} packages, mostly measurement`, 'lblf')}
 ${txt(700, 830, 'apps/ + www/ — proving ground & shopfront', 'lblf')}
 
-${schedule}
 </svg>`;
 
 export const sheet3 = {
-  num: 3, id: 'monorepo', rev: 'H',
+  num: 3, id: 'monorepo', rev: 'I',
   title: 'THE INSTRUMENT YARD',
   sub: `ALTITUDE 3 — ${PUBLISHED} publishable packages · ${TOOLS} tools · ${HANDOFF.turbo.distinctNames} turbo task names · one packer, many readers · every mass ${COUNTED} from www/atlas.lit-ui-router.dev/data/census-yard.json on scc Code lines — ${TOT_F} authored files and ${fmt(TOT_L)} sloc across ${massed.length} massed structures, with the task-manager inset reading the same two plates sheet 3A draws`,
   scale: 'THE MONOREPO',
   form: 'ISOMETRIC CITY',
   svg,
+  schedule: SCHEDULE,
   caption: 'The monorepo drawn as what it functionally is: a short conveyor that turns source into one tarball, inside a yard of instruments built to measure that tarball. Every structure carries its measured mass — footprint ∝ √sloc, height ∝ authored files — and gate severity is colour rather than height, because the two do not correlate: the blocks that stop the line are among the smallest on the sheet.',
   notes: `
 <p><strong>Method — one basis, shared with sheet 4.</strong> Every massed structure was counted from this repo's authored source, ${COUNTED} and read from <code>www/atlas.lit-ui-router.dev/data/census-yard.json</code>: <code>.ts/.tsx/.js/.mjs</code> under each member's source directory, excluding <code>*.d.ts</code>, <code>*.test-d.ts</code>, <code>*.spec.*</code> and <code>*.test.*</code>, <code>specs/</code>, <code>__tests__/</code> and fixtures. <em>sloc</em> is <a href="${HOME.scc}"><code>scc</code></a>'s <code>Code</code> count — string-aware, so the interior of a template literal counts as code rather than as one line. <a href="${HOME.release}"><code>@tools/release</code></a> hosts several instruments at once, so it is attributed by module prefix — <code>check-published-diff*</code> to structure 11, <code>check-exports*</code> to 10, the pack modules to 3, the release steps to 5 — with every file landing in exactly one structure and none counted twice. ${M.length} structures, ${massed.length} of them massed: ${TOT_F} authored files, ${fmt(TOT_L)} lines. One member is massed nowhere: <a href="${HOME.wintercg}"><code>@tools/wintercg-globals</code></a> is a single <code>globals.d.ts</code>, and declaration files are outside this basis. The tarball, the registry and the boundary are diagrammatic.</p>
 <p><strong>Mass is volume; volume does not predict authority.</strong> Footprint side is <code>1.6 · √sloc</code>, so plan area tracks lines; height is <code>1.5 px</code> per authored file, so a block's volume is its <code>sloc × files</code>. The three heaviest masses on the sheet gate nothing: ${HEAVY.map((n) => `${heavyName(n)} (${nfl(n)})`).join(', ')}. The ${PR_GATES.length} structures that can stop a pull request total ${PR_GATES.reduce((a, n) => a + nf(n), 0)} files between them, and one of them — <a href="${HOME.dtsBacktest}"><code>dts-backtest</code></a> — is a single ${nl(9)}-line <code>run.ts</code>. Encoding severity as height would imply the opposite; the census says a gate's authority has nothing to do with how much code it is.</p>
 <p><strong>Severity in colour.</strong> Red hatch across cap and flank marks a check that stops the PR line: the <a href="${HOME.vitest}">vitest</a> harness (7), <a href="${HOME.compatGuards}"><code>compat-guards</code></a> (8), <code>dts-backtest</code> (9), <code>check:exports</code> (10) and <a href="${HOME.cypress}">Cypress</a> <code>e2e</code> (17). One block is solid red — <code>published-diff</code> (11) — because it is the only structure that halts publishing itself, and it closes the loop by pulling the <em>live</em> npm tarball back for comparison, which makes the registry part of the circuit rather than a destination. Accent hatch marks the gates that fire later rather than on a PR: <code>peer-floor</code> tier-2 (12) gates version bumps, the workers-builds watch (19) gates the docs deploy. Faint, unhatched blocks never gate at all — <code>peer-floor</code> tier-1 reports check runs, the lint &amp; probe fleet is advisory, <a href="${HOME.shared}"><code>@tools/shared</code></a>, <a href="${HOME.typedocPlugin}">the typedoc plugin</a> and the vendored anti-slop rules (20) are libraries. The tiers survive both themes because they differ in hatch as well as hue: solid red, red hatch, accent hatch, no hatch.</p>
 <p><strong>One packer, many readers (<a href="${HOME.pr449}">#449</a>).</strong> The dashed trunk leaving the green crate is literal: <code>check:exports</code> (<a href="${HOME.publint}">publint</a> + <a href="${HOME.attw}">attw</a>), <code>dts-backtest</code> and <code>published-diff</code> all read the same cached <code>packPublishTarball</code> output. No check re-packs, so a drift verdict is always about the artifact that would actually ship. Known failure mode, drawn nowhere but real: a poisoned remote cache entry can replay a stale verdict — <code>--force</code> is the remediation.</p>
-<p><strong>Two task managers, one re-entrant loop.</strong> The inset at top left is drawn flat, not isometric, because a task manager is not a place — and because the relationship is not the clean layering it sounds like. <a href="${HOME.actions}">GitHub Actions</a> enters <a href="${HOME.mise}">mise</a> at ${HW.callSites} call sites across ${HW.calling} workflows (${HW.targets} distinct tasks); mise itself is almost graphless — ${HM.tasks} tasks with exactly ${HM.withDepends} of them declaring <code>depends</code> (${HM.dependsEdges} edges), among them <code>lint_workflows</code> → its four linters and <code>setup</code> → <code>turbo_pin_worktree</code> — because it delegates fan-out rather than modelling it. Seven mise tasks shell <a href="${HOME.turbo}">turbo</a>, whose <code>ci</code> graph alone expands to ${CI_NODES} task nodes. Then the loop closes back on itself: seven root <code>package.json</code> scripts shell <code>mise run</code> again, so turbo's <code>//#lint:markdown</code> node literally runs <code>mise run lint_markdown</code>. That return is the whole point — mise/<a href="${HOME.aqua}">aqua</a> owns the versions of the non-node tools (<a href="${HOME.rumdl}">rumdl</a>, <a href="${HOME.taplo}">taplo</a>, <a href="${HOME.shellcheck}">shellcheck</a>, <a href="${HOME.actionlint}">actionlint</a>, <a href="${HOME.zizmor}">zizmor</a>), and turbo climbs back out to it to get a cache key over tools node never installs. Neither gantry is above the other.</p>`,
+<p><strong>Two task managers, one re-entrant loop.</strong> The inset at top right is drawn flat, not isometric, because a task manager is not a place — and because the relationship is not the clean layering it sounds like. <a href="${HOME.actions}">GitHub Actions</a> enters <a href="${HOME.mise}">mise</a> at ${HW.callSites} call sites across ${HW.calling} workflows (${HW.targets} distinct tasks); mise itself is almost graphless — ${HM.tasks} tasks with exactly ${HM.withDepends} of them declaring <code>depends</code> (${HM.dependsEdges} edges), among them <code>lint_workflows</code> → its four linters and <code>setup</code> → <code>turbo_pin_worktree</code> — because it delegates fan-out rather than modelling it. Seven mise tasks shell <a href="${HOME.turbo}">turbo</a>, whose <code>ci</code> graph alone expands to ${CI_NODES} task nodes. Then the loop closes back on itself: seven root <code>package.json</code> scripts shell <code>mise run</code> again, so turbo's <code>//#lint:markdown</code> node literally runs <code>mise run lint_markdown</code>. That return is the whole point — mise/<a href="${HOME.aqua}">aqua</a> owns the versions of the non-node tools (<a href="${HOME.rumdl}">rumdl</a>, <a href="${HOME.taplo}">taplo</a>, <a href="${HOME.shellcheck}">shellcheck</a>, <a href="${HOME.actionlint}">actionlint</a>, <a href="${HOME.zizmor}">zizmor</a>), and turbo climbs back out to it to get a cache key over tools node never installs. Neither gantry is above the other.</p>`,
   key: [
     keyRow('<rect x="6" y="3" width="36" height="12" class="fr"/><rect x="6" y="3" width="36" height="12" class="skr fnone"/>', 'halts a publish (published-diff alone)'),
     keyRow('<rect x="6" y="3" width="36" height="12" class="fp"/><rect x="6" y="3" width="36" height="12" fill="url(#s3-hr)"/><rect x="6" y="3" width="36" height="12" class="skr fnone"/>', 'stops the PR line'),

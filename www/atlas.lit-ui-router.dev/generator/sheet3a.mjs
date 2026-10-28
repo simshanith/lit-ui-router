@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { defs } from './chrome.mjs';
-import { txt, box, arrow, keyRow } from './helpers.mjs';
+import { txt, box, arrow, keyRow, schedule } from './helpers.mjs';
 
 const P = 's3a';
 
@@ -308,33 +308,25 @@ ${lf(DX + 10, BAND_Y + 18, [
 ])}`;
 
 // ---- seam schedule --------------------------------------------------------------
-const SCHED = [
-  `A   workflow → mise — ${W.callSites} call sites · ${W.targets} targets · crossing: env, never argv (no \${{ }} in run lines) · buys: pinned tools + node-free bootstrap · ${W.calling} workflow files`,
-  'B   mise → turbo — 7 tasks · 8 invocations · crossing: TURBO_* ambient env · buys: remote cache + --summarize · config.toml:201-231 · tools/release/mise.toml:100,108-111',
-  'C   turbo → mise — 7 root scripts + 1 member script (7 in ci) · crossing: script body `mise run …` · buys: TURBO CACHES MISE — inputs hash the task files + mise.lock · turbo.json:327-362 · tools/release/turbo.json:50-62',
-  'D   mise → pnpm → turbo — 1 (check_workers_builds, manual) · turbo leg is cache:false, so the crossing buys only env passthrough + addressing · tasks file :21',
-  `D2  mise → mise — 8 edges · ${M.dependsEdges} depends (setup · lint_workflows ×4, from ${M.withDepends} declaring tasks) + run-line delegations · cutest: turbo_login → mise run read_secret · tasks/turbo_login:44`,
-  'E   bypasses — 3, all deliberate · deflake-e2e.yml:75 (bare turbo) · :89 (pnpm outside turbo) · cloudflare-build.ts:71-76 (npm -g pnpm + npx turbo, no mise — production)',
-];
-const SY = BAND_Y + 156;
-const schedule = `${box(40, SY, 1320, 170, 'sk fp')}
-${txt(58, SY + 22, 'SEAM SCHEDULE — every crossing between the two machines · what crosses · what the boundary buys · cite', 'lbls')}
-<line x1="40" y1="${SY + 32}" x2="1360" y2="${SY + 32}" class="skf"/>
-${SCHED.map((s, i) => txt(58, SY + 52 + i * 17, s, 'lbls')).join('\n')}
-${txt(58, SY + 58 + SCHED.length * 17, `TOTALS — ${M.tasks} mise tasks · ${M.withUsage} with $usage_* specs · ${T.definitions} turbo definitions · ci ${CI.nodes} nodes / ${CI.real} real · 1 dead task (playwright_deps) · ${BASIS} · graph via ${TURBO_V}`, 'lblf')}`;
+const SCHEDULE = schedule('SEAM SCHEDULE — every crossing between the two machines · what crosses · what the boundary buys · cite',
+  ['seam', 'crossing', 'count', 'what crosses', 'what the boundary buys', 'cite'],
+  [
+    ['A', 'workflow → mise', `${W.callSites} call sites · ${W.targets} targets · ${W.calling} workflow files`, 'env, never argv (no ${{ }} in run lines)', 'pinned tools + node-free bootstrap', '—'],
+    ['B', 'mise → turbo', '7 tasks · 8 invocations', 'TURBO_* ambient env', 'remote cache + --summarize', 'config.toml:201-231 · tools/release/mise.toml:100,108-111'],
+    ['C', 'turbo → mise', '7 root scripts + 1 member script (7 in ci)', 'script body `mise run …`', 'TURBO CACHES MISE — inputs hash the task files + mise.lock', 'turbo.json:327-362 · tools/release/turbo.json:50-62'],
+    ['D', 'mise → pnpm → turbo', '1 (check_workers_builds, manual)', '—', 'only env passthrough + addressing — the turbo leg is cache:false', 'tasks file :21'],
+    ['D2', 'mise → mise', `8 edges · ${M.dependsEdges} depends (setup · lint_workflows ×4, from ${M.withDepends} declaring tasks) + run-line delegations`, '—', '—', 'cutest: turbo_login → mise run read_secret · tasks/turbo_login:44'],
+    ['E', 'bypasses', '3, all deliberate', '—', '—', 'deflake-e2e.yml:75 (bare turbo) · :89 (pnpm outside turbo) · cloudflare-build.ts:71-76 (npm -g pnpm + npx turbo, no mise — production)'],
+  ],
+  `TOTALS — ${M.tasks} mise tasks · ${M.withUsage} with $usage_* specs · ${T.definitions} turbo definitions · ci ${CI.nodes} nodes / ${CI.real} real · 1 dead task (playwright_deps) · ${BASIS} · graph via ${TURBO_V}`);
+// the figure ends 20 px under the service doors' box, the lowest frame on the plate
+const VH = BAND_Y + 156;
 
 // ---- assemble -------------------------------------------------------------------
-const svg = `<svg viewBox="0 0 1400 ${SY + 190}" role="img" aria-label="Flat coupling schematic of the two task managers in the lit-ui-router monorepo, promoted from the small inset on sheet 3. On the left a GitHub Actions panel lists ${W.files} workflows, ${W.calling} of which call mise for a total of ${W.callSites} call sites. A trunk crosses a bolted gasket labeled seam A into the mise machine, drawn as a node-free umbrella housing ${M.tasks} tasks in four compartments: a tool belt of aqua-pinned binaries, nine build-and-test tasks including one dead task drawn in red, nine file tasks, sixteen release tasks, and fifteen inline tasks. Seven tasks marked with stars shell out to turbo; eight marked with return arrows are re-entered from turbo, and the two sets never overlap. A second gasket, seam B, crosses into the turbo machine, drawn as a real core of ${CI.real} tasks inside a hatched phantom shroud representing the ${PHANTOM} nodes that run nothing, cross-referenced to sheet twelve. Six root re-entrant ports at the bottom of the core return through a duct fitted with the featured cache gasket: turbo caches mise, because the lint tasks hash the mise task files and lockfile. The deepest chain, six hops from workflow YAML to the pinned taplo binary, is traced with circled digits and an accent thread. A red dashed service-door route arcs over the umbrella for the one bare-turbo bypass, and a red box catalogues all three deliberate bypasses including the mise-free production docs deploy. A seam schedule at the bottom lists every crossing with counts and citations.">
+const svg = `<svg viewBox="0 0 1400 ${VH}" role="img" aria-label="Flat coupling schematic of the two task managers in the lit-ui-router monorepo, promoted from the small inset on sheet 3. On the left a GitHub Actions panel lists ${W.files} workflows, ${W.calling} of which call mise for a total of ${W.callSites} call sites. A trunk crosses a bolted gasket labeled seam A into the mise machine, drawn as a node-free umbrella housing ${M.tasks} tasks in four compartments: a tool belt of aqua-pinned binaries, nine build-and-test tasks including one dead task drawn in red, nine file tasks, sixteen release tasks, and fifteen inline tasks. Seven tasks marked with stars shell out to turbo; eight marked with return arrows are re-entered from turbo, and the two sets never overlap. A second gasket, seam B, crosses into the turbo machine, drawn as a real core of ${CI.real} tasks inside a hatched phantom shroud representing the ${PHANTOM} nodes that run nothing, cross-referenced to sheet twelve. Six root re-entrant ports at the bottom of the core return through a duct fitted with the featured cache gasket: turbo caches mise, because the lint tasks hash the mise task files and lockfile. The deepest chain, six hops from workflow YAML to the pinned taplo binary, is traced with circled digits and an accent thread. A red dashed service-door route arcs over the umbrella for the one bare-turbo bypass, and a red box catalogues all three deliberate bypasses including the mise-free production docs deploy. A seam schedule below the drawing lists every crossing with counts and citations.">
 ${defs(P)}
 
-<rect x="40" y="24" width="414" height="58" class="skf fnone"/>
-${txt(52, 42, 'PLATE 3A — THE SHEET-3 INSET, PROMOTED TO A FULL SHEET', 'lbls')}
-${txt(52, 56, 'same spine as the sheet-3 top-left inset: Actions → mise → turbo → back again', 'lblf')}
-${txt(52, 70, 'the inset stays on sheet 3; this plate is the full treatment it points to', 'lblf')}
-
 ${txt(1360, 34, 'READ LEFT TO RIGHT — every PR enters at a workflow, crosses two gaskets, and returns through the cache gasket', 'lbls', 'end')}
-${txt(1360, 48, 'EMPHASIS — circled digits ①–⑥ + accent thread = the deepest chain · red + hatch = the service doors', 'lblf', 'end')}
-${txt(1360, 62, `THE MACHINE IN ONE LINE — mise ${M.tasks} tasks / ${W.callSites} call sites, fan-out delegated rather than modelled · turbo ${T.definitions} definitions in ${T.files} files · ci ${CI.nodes} nodes, ${CI.real} real`, 'lblf', 'end')}
 
 ${door1}
 ${ghPanel}
@@ -347,19 +339,19 @@ ${twins}
 ${chainCap}
 ${cacheCap}
 ${doorsBox}
-${schedule}
 </svg>`;
 
 // the cover index's fit verdict, told from the plate's own tallies
 export const SHEET3A_VERDICT = `turbo caches mise — and the loop is a DAG in a loop costume: the ${SHELLS} tasks that shell turbo and the ${REENTERS} turbo re-enters never touch; every count imported, turbo at ${T.definitions} definitions in ${T.files} files`;
 
 export const sheet3a = {
-  num: '3A', id: 'handoff', rev: 'E',
+  num: '3A', id: 'handoff', rev: 'F',
   title: 'THE HANDOFF WORKS',
   sub: `ALTITUDE 3 · ALTERNATE PLATE — the sheet-3 task-manager inset at full size: ${W.calling} of ${W.files} workflows · ${M.tasks} mise tasks in ${M.homes} homes · turbo ci ${CI.nodes} nodes, ${CI.real} real · 4 seam types · 3 service doors · every frame sized to the widest DIN line it holds, so the spine is computed rather than hand-set · every count imported from www/atlas.lit-ui-router.dev/data/census-handoff.json + census-plate.json · ${BASIS}`,
   scale: 'TWO TASK MANAGERS',
   form: 'COUPLING SCHEMATIC',
   svg,
+  schedule: SCHEDULE,
   caption: 'The two task managers drawn as the two machines they are — mise the node-free umbrella, turbo the cached fan-out — with the seams as the featured parts: every crossing is a bolted gasket labeled with what crosses it and what the boundary buys. The star fitting is the cache gasket on the return duct: turbo caches mise, because the six re-entrant lint lanes hash the mise task files and mise.lock, so a tool-pin bump invalidates exactly its own lane.',
   notes: `
 <p><strong>Method — one census, cited throughout.</strong> Every count on this plate is imported: <code>www/atlas.lit-ui-router.dev/data/census-handoff.json</code> for the workflows, the mise tasks and the turbo definitions, <code>census-plate.json</code> for the graph. Both are written by probes that read a materialized archive of the ref — the ${W.files} workflow files, the ${T.files} <code>turbo.json</code> files, <a href="${HOME.miseConfig}"><code>.config/mise/**</code></a> and both member <code>mise.toml</code> files — with the graph figures from a bare <code>turbo run ci --dry=json</code> on an installed archive. No mise or turbo runs on this machine to draw it, and nothing numeric here is hand-pasted: the task-name lists, the cited <code>file:line</code>s and this prose are the editorial part. Basis: ${BASIS}; graph ${GRAPH_BASIS}.</p>

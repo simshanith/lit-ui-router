@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { defs } from './chrome.mjs';
-import { txt, schedTxt, isoBlock, isoPt, keyRow } from './helpers.mjs';
+import { txt, isoBlock, isoPt, keyRow, schedule } from './helpers.mjs';
 import { assertPlots, depthSort, solidFaces } from './iso-hidden.mjs';
 import { HT, ROLES, SIDE } from './sheet9.mjs';
 import { THUMB_H, THUMB_SCALE, THUMB_W } from './thumb-spec.mjs';
@@ -285,14 +285,15 @@ ${txt(40, GY2 + LABEL_H2 - 8, `BY DISTRICT · WEST — THE DOCS DEPLOY, sheet 9'
 ${txt(1520, GY2 + LABEL_H2 - 8, `EAST — THE ATLAS DEPLOY, ${WORD[AT.k]} districts on their own lots, outside the cabinet`, 'lblf', 'end')}`;
 
 const AY = GY2 + LABEL_H2 + 34;
-const CLAIMS = [CLAIM_SIZE, CLAIM_ROLES, CLAIM_TALLEST, CLAIM_WIRE, CLAIM_THRICE, CLAIM_VIEWER, CLAIM_GHOST];
+// the headline only: the other claims are the notes' "What the drawing says"
 const claims = `${txt(40, AY, 'WHAT THE DRAWING SAYS — every line computed from the two plates', 'lblb')}
-${CLAIMS.map((s, i) => txt(40, AY + 18 + i * 16, s, i ? 'lbls' : 'lblb')).join('\n')}`;
-const ART_H = AY + 18 + CLAIMS.length * 16 + 4;
+${txt(40, AY + 18, CLAIM_SIZE, 'lblb')}`;
+const VB_H = Math.ceil(AY + 18 + 24);
 
 // ---- schedule ----------------------------------------------------------------------------------------
-const roleRow = (g) => { const m = g.masses[0]; return [m.n, `${g.name} — ${wire(m)} · ${g.deploy === 'docs' ? `sheet 9's ${m.k}` : m.k} districts, summed${g.beside ? ` · beside ${g.beside}` : ''}`]; };
-const districtRow = (b) => [b.n, `${b.name} — ${b.f}f ${KB(b.gz)} · ${tenant(b.top.name)} ${KB(b.top.gz)} · ${roleOf(b.deploy, b.id)}`];
+const HEAD_ROW = ['#', 'block', 'files', 'gzipped', 'largest tenant', 'tenant gzipped', 'role'];
+const roleRow = (g) => { const m = g.masses[0]; return [m.n, g.name, m.f, KB(m.gz), '—', '—', `${g.deploy === 'docs' ? `sheet 9's ${m.k}` : m.k} districts, summed${g.beside ? ` · beside ${g.beside}` : ''}`]; };
+const districtRow = (b) => [b.n, b.name, b.f, KB(b.gz), tenant(b.top.name), KB(b.top.gz), roleOf(b.deploy, b.id)];
 const leftRows = [...ROLE_ROW.map(roleRow), ...west(CITY_ROW)[0].masses.map(districtRow)];
 const wireRows = [
   `every file under app/dist, raw and at gzip level 9: ${fmt(AT.raw)} raw bytes, ${fmt(AT.gz)} on the wire`,
@@ -303,21 +304,12 @@ const wireRows = [
   `the docs deploy: ${fmt(DOCS.f)} files · ${MB(DOCS.gz)} · ${DOCS.k} districts at ${DOCS_BASIS}, read from sheet 9's own plate`,
 ];
 const rightRows = east(CITY_ROW)[0].masses.map(districtRow);
-const SY = ART_H + 16;
-const WIRE_Y = 52 + (rightRows.length + 1) * 17;
-const ROWS = Math.max(leftRows.length, rightRows.length + 2 + wireRows.length);
-const SH = 74 + ROWS * 17;
-const schedule = `<rect x="40" y="${SY}" width="1480" height="${SH}" class="sk fp"/>
-${txt(58, SY + 22, 'STRUCTURE SCHEDULE — files · gzipped wire bytes · largest tenant · role', 'lbls')}
-${txt(800, SY + 22, 'STRUCTURE SCHEDULE, EAST — the atlas deploy\'s districts', 'lbls')}
-<line x1="40" y1="${SY + 32}" x2="1520" y2="${SY + 32}" class="skf"/>
-<line x1="782" y1="${SY + 32}" x2="782" y2="${SY + 40 + ROWS * 17}" class="skf"/>
-${leftRows.map((r, i) => schedTxt(58, SY + 52 + i * 17, r, 'lbls')).join('\n')}
-${rightRows.map((r, i) => schedTxt(800, SY + 52 + i * 17, r, 'lbls')).join('\n')}
-${txt(800, SY + WIRE_Y, 'THE WIRE — what is measured, what is seeded', 'lbls')}
-${wireRows.map((r, i) => txt(800, SY + WIRE_Y + 17 + i * 17, r, 'lblf')).join('\n')}
-${txt(58, SY + 58 + ROWS * 17, `TOTAL — the docs deploy ${fmt(DOCS.f)} files · ${MB(DOCS.gz)} gzipped at ${DOCS_BASIS} · the atlas deploy ${fmt(AT.f)} files · ${MB(AT.gz)} gzipped at ${SELF_BASIS} · ${SELF.wasAssociatedWith.at(-1)}`, 'lbls')}`;
-const VB_H = SY + SH + 30;
+const SCHEDULES = [
+  schedule('STRUCTURE SCHEDULE — files · gzipped wire bytes · largest tenant · role', HEAD_ROW, leftRows,
+    `TOTAL — the docs deploy ${fmt(DOCS.f)} files · ${MB(DOCS.gz)} gzipped at ${DOCS_BASIS} · the atlas deploy ${fmt(AT.f)} files · ${MB(AT.gz)} gzipped at ${SELF_BASIS} · ${SELF.wasAssociatedWith.at(-1)}`),
+  schedule('STRUCTURE SCHEDULE, EAST — the atlas deploy\'s districts', HEAD_ROW, rightRows),
+  schedule('THE WIRE — what is measured, what is seeded', ['#', 'reading'], wireRows.map((r, i) => [i + 1, r])),
+];
 
 // every cap corner and badge stays inside the frame: a grown district cannot ship cut off
 for (const b of ALL) {
@@ -336,14 +328,10 @@ const ARIA = `An isometric survey of the atlas's own deploy, standing beside the
   + ROLE_ROW.map((g) => `${g.name}, ${wire(g.masses[0])}`).join('; ') + '. '
   + `Below, by district, the docs deploy stands west as ${WORD[DOCS.k]} districts in one frame on main's ground at ${DOCS_BASIS}, and the atlas deploy east as ${WORD[AT.k]} accent-edged districts in one frame on its own branch at ${SELF_BASIS}: `
   + ATLAS_M.map((b) => `${b.name}, ${wire(b)}`).join('; ') + `. `
-  + `${CLAIM_SIZE}; ${CLAIM_ROLES}; ${CLAIM_TALLEST}; ${CLAIM_THRICE}; ${CLAIM_GHOST}. A structure schedule lists every block, and beside it what the survey measures and seeds.`;
+  + `${CLAIM_SIZE}; ${CLAIM_ROLES}; ${CLAIM_TALLEST}; ${CLAIM_THRICE}; ${CLAIM_GHOST}. Schedules below the drawing list every block, and what the survey measures and seeds.`;
 
 const svg = `<svg viewBox="0 0 ${VB_W} ${VB_H}" role="img" aria-label="${ARIA}">
 ${defs(P)}
-
-<rect x="40" y="26" width="520" height="42" class="skf fnone"/>
-${txt(52, 43, 'THE ATLAS, SHIPPED — ON THE WIRE, ON SHEET 9\'S RULER, AT TWO ALTITUDES', 'lbls')}
-${txt(52, 58, `by role above, by district below · the docs deploy west, the atlas deploy east · one SIDE() and HT(), imported from sheet 9`, 'lblf')}
 
 ${txt(1520, 34, `SCALE — footprint area ∝ files (side = ${KS} · √files, floored at ${FLOOR}) · 1 px of height ≈ ${KB_PER_PX} KB gzipped, floored at ${HT_FLOOR} — sheet 9's functions, read back, not a copy`, 'lbls', 'end')}
 ${txt(1520, 48, `${ZOOM_LINE} · height is gzip level 9 of every file, the honest wire measure`, 'lblf', 'end')}
@@ -357,8 +345,6 @@ ${roleLabels}
 ${cityLabels}
 ${seams}
 ${claims}
-
-${schedule}
 </svg>`;
 
 // the homes the notes name: sheet 9's filed plate, the survey, and the deploy itself
@@ -371,7 +357,7 @@ const HOME = {
 };
 
 export const sheetA4 = {
-  num: 'A4', id: 'self-shipped', rev: 'C',
+  num: 'A4', id: 'self-shipped', rev: 'D',
   head: 'APPENDIX A4 · META',
   appendix: true,
   title: 'THE ATLAS, SHIPPED',
@@ -379,6 +365,7 @@ export const sheetA4 = {
   scale: 'THE ATLAS ITSELF',
   form: 'SHIPPED CITY',
   svg,
+  schedules: SCHEDULES,
   caption: `The atlas's own deploy surveyed on the wire with sheet 9's instrument at two altitudes: footprint ∝ files, height ∝ gzipped bytes, from sheet 9's functions. By role, ${WORD[west(ROLE_ROW).length]} summed blocks of the docs deploy stand west of ${WORD[east(ROLE_ROW).length]} of the atlas's; by district, the docs deploy's ${WORD[DOCS.k]} stand west of the atlas's ${WORD[AT.k]} — ${CLAIM_SIZE}.`,
   notes: `
 <p><strong>Method — one ruler, two deploys, two altitudes.</strong> Every block on this plate is massed by <code>SIDE()</code> and <code>HT()</code> imported from <code>sheet9.mjs</code> — footprint side ${KS} · √files, floored at ${FLOOR}; height one pixel per ${fmt(BYTES_PER_PX)} gzipped bytes, floored at ${HT_FLOOR}, the constants read back off the functions themselves — and every file is weighed the way sheet 9 weighs it: raw bytes and gzip level 9, the honest wire measure, since the CDN serves compressed. The two halves stand on different grounds and say so. The docs deploy is <a href="${HOME.plate}"><code>data/census-shipped.json</code></a>, ${DOCS_BASIS}, the cabinet sheet 9 reads. The atlas is not on main, so it cannot be in that cabinet: it is <code>data/survey-shipped.json</code>, written by <a href="${HOME.survey}"><code>generator/survey-shipped.mjs</code></a> from a <code>git archive</code> of its own branch — ${SELF_BASIS}, committed ${SELF.commitDate.slice(0, 10)} — in which the app is built by its own <code>npm ci</code> and <code>npm run build</code>, the vite build and the prerender, and <code>app/dist</code> is measured file by file: ${fmt(AT.f)} files, ${MB(AT.raw)} on disk, ${MB(AT.gz)} on the wire. That is what <a href="${HOME.pages}">Cloudflare Pages</a> serves at <a href="${HOME.site}">atlas.lit-ui-router.dev</a>. A reachability walk from every page sorts the files into districts, and a path the app computes at runtime — a fragment by the manifest's <code>file</code>, the manifest by the router's base, the visualizer's icons by its stylesheet — is seeded rather than reported as a false orphan.</p>

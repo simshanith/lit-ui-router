@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { defs } from './chrome.mjs';
-import { txt, schedTxt, lines, keyRow, npmUrl, link } from './helpers.mjs';
+import { txt, lines, keyRow, npmUrl, link, schedule } from './helpers.mjs';
 import { BRICK_ROWS } from './sheet2.mjs';
 
 const P = 's4';
@@ -273,21 +273,17 @@ ${txt(CORE_X, 432, `${CORE_SHARE}% of the family’s authored mass`, 'lblf')}
 ${txt(CORE_X, 444, 'states · registry · transitions', 'lblf')}`;
 
 // ---- schedule -------------------------------------------------------------------
-const schedRow = (r, i) => {
-  const [name, ver, , files, sloc, range, kind] = r;
-  const g = kind === 'spine' ? 'the spine itself' : kind === 'dep' ? `gate ${range} (dependency)` : `gate ${range}`;
-  return [i + 1, `${name} ${ver} — ${files}f · ${fmt(sloc)} sloc · ${Math.round(sloc / files)} l/f · ${g}`];
-};
-const SY = 580, half = Math.ceil(ALL.length / 2);
-const schedule = `<rect x="40" y="${SY}" width="1270" height="${88 + half * 17}" class="sk fp"/>
-${txt(56, SY + 22, 'STRUCTURE SCHEDULE — authored source per member · files (f) · sloc · mean lines per file · core gate', 'lbls')}
-<line x1="40" y1="${SY + 32}" x2="1310" y2="${SY + 32}" class="skf"/>
-${ALL.slice(0, half).map((r, i) => schedTxt(56, SY + 52 + i * 17, schedRow(r, i), 'lbls')).join('\n')}
-${ALL.slice(half).map((r, i) => schedTxt(700, SY + 52 + i * 17, schedRow(r, i + half), 'lbls')).join('\n')}
-${txt(56, SY + 58 + half * 17, `TOTAL — ${ALL.length} packages · ${TOT_F} authored files · ${fmt(TOT_L)} sloc · versions and dates ${REGISTRY} · this repo + core ${COUNTED} · upstream family ${CLONED}`, 'lbls')}
-${txt(56, SY + 75 + half * 17, `NOT MASSED — ${LINT.name} ${LINT.version} on npm (published ${LINT.published}) · ${brickRow(LINT.name).version} in the repo: the one of this repo's ${word(COUPLINGS.totals.published)} published packages that is not a router limb — it declares no gate on the spine.`, 'lblf')}`;
+const gateOf = ([, , , , , range, kind]) => (kind === 'spine' ? 'the spine itself' : kind === 'dep' ? `${range} (dependency)` : range);
+const SCHEDULE = schedule(
+  'STRUCTURE SCHEDULE — authored source per member · files · sloc · mean lines per file · core gate',
+  ['#', 'package', 'version', 'files', 'sloc', 'lines / file', 'core gate'],
+  ALL.map((r, i) => [i + 1, r[0], r[1], r[3], r[4], Math.round(r[4] / r[3]), gateOf(r)]),
+  `TOTAL — ${ALL.length} packages · ${TOT_F} authored files · ${fmt(TOT_L)} sloc · versions and dates ${REGISTRY} · this repo + core ${COUNTED} · upstream family ${CLONED} · NOT MASSED — ${LINT.name} ${LINT.version} on npm (published ${LINT.published}) · ${brickRow(LINT.name).version} in the repo: the one of this repo's ${word(COUPLINGS.totals.published)} published packages that is not a router limb — it declares no gate on the spine.`,
+);
+const VUE_NOTE = ['no @uirouter/vue was ever published:', 'the vue seat has zero mass —', 'the one name absent from the registry plate'];
+const VH = 540 + (VUE_NOTE.length - 1) * 12 + 20;
 
-const svg = `<svg viewBox="0 0 1350 ${SY + 148 + half * 17}" role="img" aria-label="The ui-router family drawn as a spine, massed from measured source: @uirouter/core is a hatched block astride a horizontal rail, four framework adapters stand on the rail above it and four dormant instruments hang below, each drawn as a block whose width is proportional to the square root of its authored source lines and whose height is proportional to its file count. Core is by far the largest mass at ${CORE[3]} files and ${fmt(CORE[4])} lines, ${CORE_SHARE} percent of the family; the visualizer is the next largest at 2,018 lines; sticky-states is a two-file sliver. Every limb's stem crosses a gate — a hatched tablet in the accent colour naming the @uirouter/core version range that limb admits — and the gates disagree: floors of greater-or-equal 5.0.0, 5.0.1 and 6.0.1, carets on 6.1.2 and 6.0.8, and one red gate on @uirouter/react, which pins core exactly at 6.1.2 and ships it as a dependency instead of a peer. A dashed bay at the right holds this repo's ${word(COMPANIONS.length)} companion packages in two columns behind a single shared gate; ${word(LIT_PEERS.size)} of them take a second dashed arrow from lit-ui-router, and ${listOf(BRIDGES.map(([a, b]) => `${a} takes a third from ${b}`))} — the companions that bridge two others. A structure schedule lists every member with exact file and line counts.">
+const svg = `<svg viewBox="0 0 1350 ${VH}" role="img" aria-label="The ui-router family drawn as a spine, massed from measured source: @uirouter/core is a hatched block astride a horizontal rail, four framework adapters stand on the rail above it and four dormant instruments hang below, each drawn as a block whose width is proportional to the square root of its authored source lines and whose height is proportional to its file count. Core is by far the largest mass at ${CORE[3]} files and ${fmt(CORE[4])} lines, ${CORE_SHARE} percent of the family; the visualizer is the next largest at 2,018 lines; sticky-states is a two-file sliver. Every limb's stem crosses a gate — a hatched tablet in the accent colour naming the @uirouter/core version range that limb admits — and the gates disagree: floors of greater-or-equal 5.0.0, 5.0.1 and 6.0.1, carets on 6.1.2 and 6.0.8, and one red gate on @uirouter/react, which pins core exactly at 6.1.2 and ships it as a dependency instead of a peer. A dashed bay at the right holds this repo's ${word(COMPANIONS.length)} companion packages in two columns behind a single shared gate; ${word(LIT_PEERS.size)} of them take a second dashed arrow from lit-ui-router, and ${listOf(BRIDGES.map(([a, b]) => `${a} takes a third from ${b}`))} — the companions that bridge two others. A structure schedule below the drawing lists every member with exact file and line counts.">
 ${defs(P)}
 
 ${txt(70, 96, 'ADAPTERS — one per renderer, standing on the spine', 'lbls')}
@@ -300,7 +296,7 @@ ${instrumentArt}
 ${bay}
 
 ${txt(70, 520, 'PLUGINS & INSTRUMENTS — hanging below the spine', 'lbls')}
-${lines(70, 540, ['no @uirouter/vue was ever published:', 'the vue seat has zero mass —', 'the one name absent from the registry plate'], 'lblf', 'start', 12)}
+${lines(70, 540, VUE_NOTE, 'lblf', 'start', 12)}
 
 ${txt(1016, 26, 'SCALE — block width = 2.7 · √sloc · block height = 2.2 px per authored file · gates and rail not to scale', 'lbls', 'end')}
 ${txt(1016, 40, 'mass ranks by code volume, not downloads · authored src, tests and d.ts excluded', 'lblf', 'end')}
@@ -310,17 +306,16 @@ ${txt(1310, 522, `every version and last-publish date on this sheet: census-npm.
 ${txt(1310, 534, `@uirouter/core and this repo — files and sloc: census-bricks.json · ${COUNTED}`, 'lblf', 'end')}
 ${txt(1310, 558, `this repo's gates: census-couplings.json · ${COUPLINGS.ref} @ ${COUPLINGS.sha}`, 'lblf', 'end')}
 ${txt(1310, 546, `upstream adapters and instruments — files and sloc: no plate · ${CLONED} of the ui-router org repos`, 'lblf', 'end')}
-
-${schedule}
 </svg>`;
 
 export const sheet4 = {
-  num: 4, id: 'family', rev: 'I',
+  num: 4, id: 'family', rev: 'J',
   title: 'THE FAMILY SPINE',
   sub: `ALTITUDE 4 — one core, four living adapters, four dormant instruments, massed by authored source and gated on the core range each admits · versions ${REGISTRY}, mass ${COUNTED}`,
   scale: 'UI-ROUTER ECOSYSTEM',
   form: 'MASSED SPINE',
   svg,
+  schedule: SCHEDULE,
   caption: `Not a loop and not a city: a spine. Every limb shares @uirouter/core and no limb talks to another, so the honest drawing is radial. Each block is massed from its own authored source and each stem crosses a gate naming the core range that limb admits — and the gates do not agree.`,
   notes: `
 <p><strong>Method — four provenances, kept apart.</strong> <a href="${HOME}">This repo</a>'s own gates — the core range its ${word(COMPANIONS.length + 1)} router packages share and the ${word(LIT_PEERS.size)} ranges declared on <code>lit-ui-router</code> itself — are read from <code>www/atlas.lit-ui-router.dev/data/census-couplings.json</code> (${COUPLINGS.ref} @ ${COUPLINGS.sha}); the upstream limbs' gates are read from their manifests by hand. Versions and last-publish dates are not typed on this sheet: every one is read by name from <code>www/atlas.lit-ui-router.dev/data/census-npm.json</code> (<code>npm view</code>, ${REGISTRY}), and a drawn package missing from that plate throws the build. Mass has two sources. ${npmLink('@uirouter/core')} and this repo's own packages are read from <code>www/atlas.lit-ui-router.dev/data/census-bricks.json</code> — scc <code>Code</code> over authored <code>.ts/.tsx/.js/.mjs</code> under each source dir, <code>*.d.ts</code>, specs and typedoc stubs excluded, ${COUNTED}. The upstream adapters and instruments have no plate at all: their file and line counts are ${CLONED} of the <a href="${ORG}"><code>ui-router</code></a> org repositories, carried in this file by hand and labelled as such. ${ALL.length} packages, ${TOT_F} authored files, ${fmt(TOT_L)} lines.</p>

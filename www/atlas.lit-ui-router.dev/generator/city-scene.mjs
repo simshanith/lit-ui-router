@@ -23,9 +23,10 @@ export const PLANT_REV = 'B';
 
 // the members panel's corners, clockwise from ENLARGE's; the top-left is the open-paper probe's
 const PARTS_CORNERS = ['ne', 'se', 'sw'];
-// the stage, not the viewport, sizes the panel: two columns uncapped on a wide stage, folded on a small one
+// the stage, not the viewport, sizes the panel: two columns uncapped on a wide stage, folded into the plan's empty
+// south-west corner on a small one; open past the fold, it keeps its own strip beside the viewer
 const PARTS_WIDE = '(min-width: 1400px) and (min-height: 700px)';
-const PARTS_FOLD = [760, 480];
+const PARTS_FOLD = [900, 480, 'sw'];
 
 const PLATE = JSON.parse(readFileSync(new URL('../data/census-city.json', import.meta.url), 'utf8'));
 const BASIS = `${PLATE.ref} @ ${PLATE.sha} (${PLATE.generatedAtTime.slice(0, 10)})`;
@@ -75,6 +76,8 @@ const homeSpan = ({ extent: [hx, hz], members }) => {
   return [+(right / 0.94).toFixed(2), +(up / 0.92).toFixed(2)];
 };
 const PIN_FOV = HOME_FOV / 1.8;
+// the plan's width over its height at home, with a sixth more height for the stage's corner controls
+const planAspect = ([right, up]) => +((right / up) / 1.16).toFixed(3);
 // below this share of the plan's home scale on a desktop stage, the unpinned pins fold to dots
 const DOTS = 0.62;
 
@@ -165,7 +168,7 @@ ${frameCss('cs', 'cs-info', ['bar', 'stage', 'read'])}
 .cs-stage { position: relative; container: cs-stage / size; block-size: clamp(520px, 80vh, 1400px); border: 1.5px solid var(--ink); background: var(--paper); }
 .cs-frame:fullscreen .cs-stage, .cs-frame.is-filled .cs-stage { block-size: auto; }
 .cs-stage:focus-within { outline: max(2px, 0.08em) solid var(--accent); outline-offset: -2px; }
-.cs-view { display: block; width: 100%; height: 100%; background: var(--paper);
+.cs-view { display: block; width: auto; height: 100%; margin-inline: var(--parts-start, 0px) var(--parts-end, 0px); background: var(--paper);
   --poster-color: transparent; --progress-bar-color: var(--accent); }
 .cs-stage.over .cs-view { cursor: pointer; }
 ${pinCss('cs-pin', 22, 11)}
@@ -232,7 +235,9 @@ ${partsCss('cs-parts', { side: 'end', top: 40, cols: 1, font: 10.5, fit: { conta
   .cs-bar { flex-direction: column; align-items: stretch; gap: 8px; }
   .cs-ctl { justify-content: flex-start; }
 }
-@media (max-width: 860px) { .cs-stage { block-size: clamp(420px, 62vh, 620px); } }`;
+/* a narrow stage takes the plan's own proportion of the frame's width, so the city fills it without a band of empty paper */
+.cs-frame { container: cs-frame / inline-size; }
+@media (max-width: 860px) { .cs-stage { block-size: clamp(240px, 100cqi / var(--plan-aspect, 1), clamp(420px, 62vh, 620px)); } }`;
 
 // The scene, as a module for the app: handed the resolved <model-viewer> module
 // and the opening pin, it returns { dispose, select }.
@@ -253,6 +258,8 @@ const BODY = `${FOCUS_JS}${mvJs({ corners: PARTS_CORNERS, fold: PARTS_FOLD })}  
   var ac = new AbortController();
   var on = function (el, type, fn, capture) { el.addEventListener(type, fn, { signal: ac.signal, capture: Boolean(capture) }); };
   var END = D.end, t = END, clock = 0, loaded = false, lane = 'tier', litN = null, pinN = null, pal = null, homeR = 0, homeFov = D.home.fov, raf = 0;
+  // homed while the camera stands at the home fit; fitAt is the viewer size that fit was measured at
+  var homed = false, fitAt = '', refits = 0, fitting = Promise.resolve();
   var byN = {}, pins = {};
   D.rows.forEach(function (b) {
     byN[b.n] = b;
@@ -340,6 +347,7 @@ const BODY = `${FOCUS_JS}${mvJs({ corners: PARTS_CORNERS, fold: PARTS_FOLD })}  
       mv.cameraTarget = ${JSON.stringify(HOME_TARGET)};
       mv.fieldOfView = D.home.fov + 'deg';
     } else {
+      homed = false;
       mv.cameraTarget = vec(byN[n].centre);
       mv.fieldOfView = Math.min(mv.getFieldOfView(), D.home.pin) + 'deg';
     }
@@ -353,9 +361,28 @@ const BODY = `${FOCUS_JS}${mvJs({ corners: PARTS_CORNERS, fold: PARTS_FOLD })}  
   // the home radius frames the plan's diagonal at this stage's aspect; the viewer widens a narrow stage's field itself
   function home() {
     var r = mv.getBoundingClientRect(), tv = Math.tan(homeFov * Math.PI / 360);
+    fitAt = sizeOf();
     homeR = Math.max(D.home.span[0] / ((r.width / r.height) * tv), D.home.span[1] / tv);
     mv.cameraOrbit = ${JSON.stringify(`${CORNERS[0]}deg ${ISO_POLAR}deg `)} + homeR + 'm';
     settle();
+  }
+  function sizeOf() { return mv.clientWidth + 'x' + mv.clientHeight; }
+  // the viewer widens the field itself on a narrow stage, so the home field is read back at this size before the radius is fit
+  function refit(jump) {
+    var k = ++refits;
+    fitting = nextFrames(2).then(function () {
+      if (k !== refits) return undefined;
+      mv.fieldOfView = D.home.fov + 'deg';
+      mv.jumpCameraToGoal();
+      return nextFrames(2);
+    }).then(function () {
+      if (k !== refits) return;
+      homeFov = mv.getFieldOfView();
+      home();
+      homed = true;
+      if (jump) mv.jumpCameraToGoal();
+    });
+    return fitting;
   }
   // how large the city stands against its home pose: the radius and the field of view both zoom
   function scale() {
@@ -509,8 +536,10 @@ const BODY = `${FOCUS_JS}${mvJs({ corners: PARTS_CORNERS, fold: PARTS_FOLD })}  
   wheelGate(stage, on);
   corners.forEach(function (c) { on(c, 'click', function () { turnTo(Number(c.getAttribute('data-az'))); }); });
   on(reset, 'click', function () {
-    home();
     frame(null);
+    if (sizeOf() !== fitAt) { void refit(false); return; }
+    home();
+    homed = true;
   });
   on(laneBox, 'change', function () {
     lane = laneBox.checked ? 'light' : 'tier';
@@ -521,7 +550,15 @@ const BODY = `${FOCUS_JS}${mvJs({ corners: PARTS_CORNERS, fold: PARTS_FOLD })}  
   });
   on(play, 'click', function () { run(t >= END ? 0 : END); });
   on(slider, 'input', function () { stop(); pose(Number(slider.value)); });
-  on(mv, 'camera-change', onCamera);
+  on(mv, 'camera-change', function (e) {
+    if (e.detail && e.detail.source === 'user-interaction') homed = false;
+    onCamera();
+  });
+  // a stage that changes size, the parts panel's strip included, refits a camera still at home
+  var resized = new ResizeObserver(function () {
+    if (loaded && homed && sizeOf() !== fitAt) void refit(true);
+  });
+  resized.observe(mv);
   on(window, 'resize', onCamera);
   var themeOff = onTheme(retint, on);
 
@@ -530,6 +567,7 @@ const BODY = `${FOCUS_JS}${mvJs({ corners: PARTS_CORNERS, fold: PARTS_FOLD })}  
       loaded = true;
       homeFov = mv.getFieldOfView();
       home();
+      homed = pinN === null;
       mv.jumpCameraToGoal();
       // LoopOnce, so the clip's last frame is the raised city rather than a wrap to the ground
       mv.play({ repetitions: 1 });
@@ -565,9 +603,11 @@ const BODY = `${FOCUS_JS}${mvJs({ corners: PARTS_CORNERS, fold: PARTS_FOLD })}  
     animations: function () { return mv.availableAnimations; },
     time: function () { return t; },
     pose: function (v) { stop(); pose(v); },
+    // hidden, the panel gives its strip back; the promise settles when the camera has refit the full stage
     photo: function () {
       Array.prototype.forEach.call(mv.querySelectorAll('[slot^="hotspot-"]'), function (el) { el.style.visibility = 'hidden'; });
       parts.hide();
+      return nextFrames(2).then(function () { return fitting; }).then(function () { return nextFrames(3); });
     },
   };
 
@@ -575,6 +615,9 @@ const BODY = `${FOCUS_JS}${mvJs({ corners: PARTS_CORNERS, fold: PARTS_FOLD })}  
     select: function (n) { if (pin(member(n))) frame(pinN); },
     dispose: function () {
       stop();
+      refits += 1;
+      resized.disconnect();
+      parts.dispose();
       if (raf) cancelAnimationFrame(raf);
       themeOff();
       ac.abort();
@@ -680,7 +723,7 @@ ${CORNERS.map((az, i) => `          <button type="button" data-az="${az}" aria-p
         <button type="button" id="cs-reset">RESET</button>
       </div>
     </div>
-    <div class="cs-stage">
+    <div class="cs-stage" style="--plan-aspect: ${planAspect(data.home.span)}">
       <model-viewer id="cs-viewer" class="cs-view" src="${BASE}${plant ? PLANT_GLB : CITY_GLB}" loading="eager" reveal="manual" camera-controls disable-tap touch-action="pan-y" interaction-prompt="none" camera-orbit="${orbitAt(CORNERS[0])}" camera-target="${HOME_TARGET}" max-camera-orbit="Infinity 88deg 160%" field-of-view="${HOME_FOV}deg" min-field-of-view="4deg" max-field-of-view="20deg" tone-mapping="none" exposure="1" shadow-intensity="0" animation-name="rise" alt="${alt}">
 ${pins}
 ${labels}

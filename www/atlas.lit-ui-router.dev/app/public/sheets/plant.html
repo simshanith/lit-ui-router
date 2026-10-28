@@ -45,7 +45,7 @@
 .cs-stage { position: relative; container: cs-stage / size; block-size: clamp(520px, 80vh, 1400px); border: 1.5px solid var(--ink); background: var(--paper); }
 .cs-frame:fullscreen .cs-stage, .cs-frame.is-filled .cs-stage { block-size: auto; }
 .cs-stage:focus-within { outline: max(2px, 0.08em) solid var(--accent); outline-offset: -2px; }
-.cs-view { display: block; width: 100%; height: 100%; background: var(--paper);
+.cs-view { display: block; width: auto; height: 100%; margin-inline: var(--parts-start, 0px) var(--parts-end, 0px); background: var(--paper);
   --poster-color: transparent; --progress-bar-color: var(--accent); }
 .cs-stage.over .cs-view { cursor: pointer; }
 
@@ -190,7 +190,9 @@
   .cs-bar { flex-direction: column; align-items: stretch; gap: 8px; }
   .cs-ctl { justify-content: flex-start; }
 }
-@media (max-width: 860px) { .cs-stage { block-size: clamp(420px, 62vh, 620px); } }
+/* a narrow stage takes the plan's own proportion of the frame's width, so the city fills it without a band of empty paper */
+.cs-frame { container: cs-frame / inline-size; }
+@media (max-width: 860px) { .cs-stage { block-size: clamp(240px, 100cqi / var(--plan-aspect, 1), clamp(420px, 62vh, 620px)); } }
 .cs-legend .sw-halt { background: repeating-linear-gradient(45deg, color-mix(in srgb, var(--red-hatch) 55%, transparent) 0 1px, transparent 1px 6px), var(--red); }
 .cs-legend .sw-pr { background: repeating-linear-gradient(45deg, color-mix(in srgb, var(--red-hatch) 55%, transparent) 0 1px, transparent 1px 6px), color-mix(in srgb, var(--red) 7%, var(--paper)); }
 .cs-legend .sw-late { background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--accent) 50%, transparent) 0 1px, transparent 1px 6px), color-mix(in srgb, var(--accent) 7%, var(--paper)); }
@@ -231,7 +233,7 @@
         <button type="button" id="cs-reset">RESET</button>
       </div>
     </div>
-    <div class="cs-stage">
+    <div class="cs-stage" style="--plan-aspect: 1.116">
       <model-viewer id="cs-viewer" class="cs-view" src="/models/plant.glb" loading="eager" reveal="manual" camera-controls disable-tap touch-action="pan-y" interaction-prompt="none" camera-orbit="45deg 54.736deg auto" camera-target="auto 0m auto" max-camera-orbit="Infinity 88deg 160%" field-of-view="14deg" min-field-of-view="4deg" max-field-of-view="20deg" tone-mapping="none" exposure="1" shadow-intensity="0" animation-name="rise" alt="Sheet 7's census city in three dimensions: 51 massed workspace members in four districts, each crowned by a working plant of stacks, tanks, vents and pipes sized from its own census, and each an opaque paper box inside its girding frame, its right-hand wall hatched in the rake its gate tier is hatched in on the flat plate, footprint proportional to the square root of its authored lines and height three units per authored file, with 40 dashed spec annexes beside them. Each member carries a numbered pin matching sheet 7's schedule. A TEST LIGHT switch relights the same city from sheet 7A's shadow survey: each metered member's mass splits along its footprint, the share its own suite loads lit from the annex side and the rest washed toward black, with the spec annexes burning as the lamps that throw the light.">
         <button type="button" class="cs-pin" slot="hotspot-1" data-position="-384.704m 123.7m -249.452m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 1, lit-ui-router">1</button>
         <button type="button" class="cs-pin" slot="hotspot-2" data-position="-141.747m 95.7m -261.495m" data-normal="0m 1m 0m" aria-pressed="false" tabindex="-1" aria-label="Member 2, ui-router-server">2</button>

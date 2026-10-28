@@ -375,6 +375,50 @@ code, kbd, samp { font-family: var(--code); }
 .keyblock td:first-child { width: 58px; }
 .keyblock svg { display: block; }
 
+/* THE SCHEDULE IS A TABLE. A plate's register sits under the drawing as HTML
+   at 12px, never as SVG text scaled down with the figure. A long register is
+   split in two tables side by side where the measure allows. */
+.schedules { margin-block: 10px 28px; margin-inline: 0; border: 1.5px solid var(--ink); background: var(--paper); }
+.schedule-title, .schedule-total {
+  font-family: var(--data);
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  color: var(--ink-soft);
+  padding-block: 8px 7px;
+  padding-inline: 14px;
+  background: var(--paper-2);
+}
+.schedule-title { font-weight: 600; border-block-end: 1.5px solid var(--ink); }
+.schedule-total { border-block-start: 1.5px solid var(--ink); font-variant-numeric: tabular-nums; }
+.schedule-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 520px), 1fr)); gap: 0 24px; overflow-x: auto; }
+.schedule { width: 100%; border-collapse: collapse; align-self: start; }
+.schedule th {
+  font-family: var(--data);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  color: var(--ink-soft);
+  text-align: start;
+  padding-block: 7px 6px;
+  padding-inline: 14px;
+  border-block-end: 1px solid var(--line);
+  white-space: nowrap;
+}
+.schedule td {
+  font-family: var(--data);
+  font-size: 12px;
+  letter-spacing: 0.03em;
+  line-height: 1.35;
+  padding-block: 4px;
+  padding-inline: 14px;
+  border-block-end: 1px solid var(--line);
+  vertical-align: top;
+  font-variant-numeric: tabular-nums;
+}
+.schedule th.num, .schedule td.num { text-align: end; white-space: nowrap; }
+.schedule td.n { text-align: end; color: var(--ink-soft); padding-inline-end: 0; width: 2.4em; }
+.schedule tr:last-child td { border-block-end: none; }
+
 .titleblock {
   margin-block-start: 20px;
   margin-inline-start: auto;

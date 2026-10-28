@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { defs } from './chrome.mjs';
-import { txt, schedTxt, arrow, isoBlock, isoPt, keyRow, npmUrl } from './helpers.mjs';
+import { txt, schedule, arrow, isoBlock, isoPt, keyRow, npmUrl } from './helpers.mjs';
 import { assertPlots, depthSort, solidFaces } from './iso-hidden.mjs';
 
 const P = 's3b';
@@ -222,16 +222,11 @@ assertPlots('sheet 3B', M.map(([n, name]) => ({ n, name, part: 'block', x: g(n).
 const pt = (x, y, z = 0) => isoPt(OX, OY, x, y, z);
 const p2 = (x, y, z = 0) => pt(x, y, z).map((v) => v.toFixed(1)).join(',');
 
-// One gate tier only: everything the ci graph runs stops the PR (sheet 3's "pr"
-// red-hatch vocabulary), so severity is uniform by construction — the finding.
-function massBlock(n) {
+// one gate tier only: every block stops the PR, so the blocks stand in ink and the key states the tier
+const massBlock = (n) => {
   const { x, y, side, h } = g(n);
-  const body = solidFaces(isoBlock(P, OX, OY, x, y, side, side, h, { capCls: 'fp', edge: 'skr', sideFill: `url(#${P}-hr)` }));
-  const top = [p2(x, y, h), p2(x + side, y, h), p2(x + side, y + side, h), p2(x, y + side, h)].join(' ');
-  const wash = `<polygon points="${top}" fill="url(#${P}-hr)"/>
-<polygon points="${top}" class="skr fnone"/>`;
-  return `${body}${wash}`;
-}
+  return solidFaces(isoBlock(P, OX, OY, x, y, side, side, h, { capCls: 'fp', edge: 'sk', sideFill: `url(#${P}-hx)` }));
+};
 
 function massBadge(n) {
   const { x, y, side, h } = g(n);
@@ -247,8 +242,8 @@ function massBadge(n) {
   else { [bx, by] = pt(x + side, y + side / 2, h / 2); bx += 14; }
   const [ax, ay] = ADJ[n] ?? [0, 0];
   bx += ax; by += ay;
-  return `<circle cx="${bx.toFixed(1)}" cy="${by.toFixed(1)}" r="9" class="skr fp"/>
-${txt(bx.toFixed(1), (by + 3.6).toFixed(1), String(n), 'lblr', 'middle')}`;
+  return `<circle cx="${bx.toFixed(1)}" cy="${by.toFixed(1)}" r="9" class="sk fp"/>
+${txt(bx.toFixed(1), (by + 3.6).toFixed(1), String(n), 'lbl', 'middle')}`;
 }
 
 // Ghost pad: a vacant lot — outline + faint hatch, never massed.
@@ -306,7 +301,7 @@ const bodies = depthSort(M.map(([n]) => {
 })).map((m) => m.svg).join('\n')
   + '\n' + M.map(([n]) => massBadge(n)).join('\n');
 
-// ---- structure schedule ---------------------------------------------------------
+// ---- structure schedule, set as a table under the figure ---------------------------------------------------------
 const TOT_I = PLATE.rows.reduce((a, r) => a + r.inputs, 0);
 const TOT_M = PLATE.rows.reduce((a, r) => a + r.mass, 0);
 const FLAT = PLATE.rows.filter((r) => r.mass === 1).length;
@@ -319,35 +314,20 @@ const EAST_Q = M.filter(([, , , , sel]) => typeof sel === 'string' && FILES_PKGS
 export const SHEET3B_VERDICT = `footprint = watched files, height = command sloc — ${FLAT} of ${PLATE.rows.length} tasks are one-line pads; the tallest is the ${TALLEST.mass}-sloc ${TALLEST.id} tower`;
 const schedRow = ([n, name, , , , note]) => {
   const { tasks, inputs, mass } = CELL.get(n);
-  return [n, `${name} — ${tasks}t · ${fmt(inputs)} files · ${fmt(mass)} sloc · ${note}`];
+  return [n, name, tasks, inputs, mass, note];
 };
-const half = Math.ceil(M.length / 2);
-const ART_H = 770;
-const SY = ART_H + 14;
-// The two halves split the band's spare measure evenly — 40px of gutter, 40px
-// of right margin — so the right column squares with the longest //# row.
-const schedule = `<rect x="40" y="${SY}" width="1320" height="${106 + half * 16}" class="sk fp"/>
-${txt(58, SY + 22, 'STRUCTURE SCHEDULE — tasks (t) · watched files (per-task inputs, summed) · command sloc · every mass cited in data/census-mass3b.json', 'lbls')}
-<line x1="40" y1="${SY + 32}" x2="1360" y2="${SY + 32}" class="skf"/>
-${M.slice(0, half).map((r, i) => schedTxt(58, SY + 50 + i * 16, schedRow(r), 'lbls')).join('\n')}
-${M.slice(half).map((r, i) => schedTxt(752, SY + 50 + i * 16, schedRow(r), 'lbls')).join('\n')}
-${txt(58, SY + 56 + half * 16, `TOTALS — ${M.length} massed structures reconcile all ${CI.real} real tasks · ${fmt(TOT_I)} task-file hashes · ${fmt(TOT_M)} command sloc · +1 vacant twin lot (//#lint:workflows, phantom) · ${fmt(PHANTOM)} phantom plots · ${BASIS}`, 'lbls')}
-${txt(58, SY + 72 + half * 16, `ROADS — five district arteries drawn, the graph's heaviest degrees: @www/lit-ui-router.dev#build waits on ${deg('@www/lit-ui-router.dev#build', 'deps')} nodes · typedoc-plugin#build:types unblocks ${deg('@tools/typedoc-plugin-lit-ui-router#build:types', 'dependents')} · lit-ui-router#build:types ${deg('lit-ui-router#build:types', 'dependents')} · release#check:exports ${deg('@tools/release#check:exports', 'dependents')};`, 'lblf')}
-${txt(58, SY + 86 + half * 16, `${fmt(CI.realEdges)} of the graph's ${fmt(CI.edges)} edges join two real tasks, the rest are local streets itemised in the dry-run JSON`, 'lblf')}`;
+const SCHEDULE = schedule('STRUCTURE SCHEDULE — tasks (t) · watched files (per-task inputs, summed) · command sloc · every mass cited in data/census-mass3b.json',
+  ['#', 'structure', 'tasks', 'watched files', 'command sloc', 'note'], M.map(schedRow),
+  `TOTALS — ${M.length} massed structures reconcile all ${CI.real} real tasks · ${fmt(TOT_I)} task-file hashes · ${fmt(TOT_M)} command sloc · +1 vacant twin lot (//#lint:workflows, phantom) · ${fmt(PHANTOM)} phantom plots · ${BASIS} · ROADS — five district arteries drawn, the graph's heaviest degrees: @www/lit-ui-router.dev#build waits on ${deg('@www/lit-ui-router.dev#build', 'deps')} nodes · typedoc-plugin#build:types unblocks ${deg('@tools/typedoc-plugin-lit-ui-router#build:types', 'dependents')} · lit-ui-router#build:types ${deg('lit-ui-router#build:types', 'dependents')} · release#check:exports ${deg('@tools/release#check:exports', 'dependents')}; ${fmt(CI.realEdges)} of the graph's ${fmt(CI.edges)} edges join two real tasks, the rest are local streets itemised in the dry-run JSON`);
+// the examples plain lettering is the lowest line on the plate; the figure ends 20 px under its second line
+const PLAIN_Y = 738, VH = PLAIN_Y + 13 + 20;
 
 // ---- assemble -------------------------------------------------------------------
-const svg = `<svg viewBox="0 0 1400 ${SY + 126 + half * 16}" role="img" aria-label="Isometric city of the lit-ui-router pull-request CI task graph, the second alternate plate at altitude three. Behind the city lies a long hatched vacant field: ${fmt(PHANTOM)} phantom plots, the ${PHPCT} percent of the graph that runs nothing. The root yard at the north-west holds every root-scoped task as its own pad: ${numw(SLABS.length)} equal slabs that each watch the same ${fmt(SURFACE)} root files and a cluster of small pads including the taplo pad the deepest chain enters. One vacant lot among them is the phantom lint:workflows twin. Off the yard's west edge stands the guard house: @tools/repo-checks, one block for all ${CELL.get(NO('repo-checks')).tasks} of its tasks, ${CELL.get(NO('repo-checks')).mass} sloc of command over ${fmt(CELL.get(NO('repo-checks')).inputs)} watched files, ${LINT_WITH.length} of them checks the lint umbrella depends on. The ${numw(QUARTERS.length)} package quarters stand in a center row, massed by their watched files and the guard and emitter scripts behind their tasks; the easternmost is ${EAST_Q[1]}. To the east, the instrument end of town: the release works, the typedoc plugin annotated with its fan-out, a terrace of ${TERRACE.length} small tools, and the city's landmark — the dts-backtest tower, ${slocOf('@tools/dts-backtest#test')} lines of run dot ts standing on a ${TOWER}-file footprint. South of the river sit the apps block, the harbour ${numw(DOCS_API.length)} quarters ship API docs into, and the defining horizontal feature: the examples plain, ${fmt(CELL.get(NO('examples — the plain')).inputs)} watched files under ${CELL.get(NO('examples — the plain')).mass} lines of command. Every massed block carries the same red hatch because every one stops the PR — severity is uniform by construction. Roads trace the dependency arteries with degree counts; an accent dashed road marks where the six-hop deepest chain of plate 3A passes through. A structure schedule reconciles all ${CI.real} real tasks, their ${fmt(TOT_I)} task-file hashes and ${fmt(TOT_M)} command sloc.">
+const svg = `<svg viewBox="0 0 1400 ${VH}" role="img" aria-label="Isometric city of the lit-ui-router pull-request CI task graph, the second alternate plate at altitude three. Behind the city lies a long hatched vacant field: ${fmt(PHANTOM)} phantom plots, the ${PHPCT} percent of the graph that runs nothing. The root yard at the north-west holds every root-scoped task as its own pad: ${numw(SLABS.length)} equal slabs that each watch the same ${fmt(SURFACE)} root files and a cluster of small pads including the taplo pad the deepest chain enters. One vacant lot among them is the phantom lint:workflows twin. Off the yard's west edge stands the guard house: @tools/repo-checks, one block for all ${CELL.get(NO('repo-checks')).tasks} of its tasks, ${CELL.get(NO('repo-checks')).mass} sloc of command over ${fmt(CELL.get(NO('repo-checks')).inputs)} watched files, ${LINT_WITH.length} of them checks the lint umbrella depends on. The ${numw(QUARTERS.length)} package quarters stand in a center row, massed by their watched files and the guard and emitter scripts behind their tasks; the easternmost is ${EAST_Q[1]}. To the east, the instrument end of town: the release works, the typedoc plugin annotated with its fan-out, a terrace of ${TERRACE.length} small tools, and the city's landmark — the dts-backtest tower, ${slocOf('@tools/dts-backtest#test')} lines of run dot ts standing on a ${TOWER}-file footprint. South of the river sit the apps block, the harbour ${numw(DOCS_API.length)} quarters ship API docs into, and the defining horizontal feature: the examples plain, ${fmt(CELL.get(NO('examples — the plain')).inputs)} watched files under ${CELL.get(NO('examples — the plain')).mass} lines of command. Every massed block is drawn in ink: every one stops the PR, so severity is uniform by construction and the key states the tier. Roads trace the dependency arteries with degree counts; an accent dashed road marks where the six-hop deepest chain of plate 3A passes through. A structure schedule reconciles all ${CI.real} real tasks, their ${fmt(TOT_I)} task-file hashes and ${fmt(TOT_M)} command sloc.">
 ${defs(P)}
 
-<rect x="40" y="24" width="420" height="72" class="skf fnone"/>
-${txt(52, 42, 'PLATE 3B — THE SAME TWO MACHINES, CITY SIDE', 'lbls')}
-${txt(52, 56, 'plate 3A drew the seams flat; this plate walks through seam B', 'lblf')}
-${txt(52, 70, 'and surveys what turbo actually schedules on every PR', 'lblf')}
-${txt(52, 84, `source: bare \`turbo run ci --dry=json\` · ${PLATE.sha} · ${CI.nodes}/${CI.real}`, 'lblf')}
-
 ${txt(1360, 34, 'SCALE — footprint side = 1.2·√(files the task hashes) · height = 0.45 px per command sloc (floor 3)', 'lbls', 'end')}
-${txt(1360, 48, 'ONE TIER ONLY — every massed block stops the PR line: sheet-3 red hatch throughout, by construction', 'lblf', 'end')}
-${txt(1360, 62, 'wall-clock and cache-rate excluded by design — run-confounded; the drawing is static and citable', 'lblf', 'end')}
+${txt(1360, 48, 'wall-clock and cache-rate excluded by design — run-confounded; the drawing is static and citable', 'lblf', 'end')}
 
 ${field}
 ${ghostPad(198, 112, 12, 12)}
@@ -362,7 +342,7 @@ ${txt(1030, 150, `PHANTOM FLATS — ${fmt(PHANTOM)} vacant plots (${PHPCT}%)`, '
 ${txt(1030, 163, 'no command — hash carriers for script-less', 'lblf')}
 ${txt(1030, 176, 'packages · punched hole-by-hole on SHEET 12', 'lblf')}
 
-${txt(1100, 300, 'THE TOWER — @tools/dts-backtest#test', 'lblr')}
+${txt(1100, 300, 'THE TOWER — @tools/dts-backtest#test', 'lbls')}
 ${txt(1100, 313, `${slocOf('@tools/dts-backtest#test')}-sloc run.ts on a ${TOWER}-file footprint:`, 'lblf')}
 ${txt(1100, 326, `the tallest command in the city (${NO('@tools/dts-backtest')})`, 'lblf')}
 
@@ -391,32 +371,32 @@ ${txt(1030, 233, 'the dependsOn umbrella (plate 3A’s twin):', 'lblf')}
 ${txt(1030, 246, 'a plot with no building, even here', 'lblf')}
 <path d="M1024,232 L760,232 L496,330" class="skf" fill="none"/>
 
-${txt(430, 738, `THE EXAMPLES PLAIN — ${fmt(CELL.get(NO('examples — the plain')).inputs)} files watched by ${CELL.get(NO('examples — the plain')).mass} sloc of command (${NO('examples — the plain')}):`, 'lblb')}
-${txt(430, 751, `format:check:oxfmt hashes ${fmt(row('examples#format:check:oxfmt').inputs)} files, lint:oxlint ${fmt(row('examples#lint:oxlint').inputs)} — the examples file set, watched as CI surface`, 'lblf')}
+${txt(430, PLAIN_Y, `THE EXAMPLES PLAIN — ${fmt(CELL.get(NO('examples — the plain')).inputs)} files watched by ${CELL.get(NO('examples — the plain')).mass} sloc of command (${NO('examples — the plain')}):`, 'lblb')}
+${txt(430, PLAIN_Y + 13, `format:check:oxfmt hashes ${fmt(row('examples#format:check:oxfmt').inputs)} files, lint:oxlint ${fmt(row('examples#lint:oxlint').inputs)} — the examples file set, watched as CI surface`, 'lblf')}
 
 ${txt(560, 660, `the harbour (${NO('www — the harbour')}): the site's build waits on ${deg('@www/lit-ui-router.dev#build', 'deps')} nodes — where the city drains`, 'lblf')}
 
-${schedule}
 </svg>`;
 
 export const sheet3b = {
-  num: '3B', id: 'graphcity', rev: 'K',
+  num: '3B', id: 'graphcity', rev: 'L',
   title: 'THE WATCHED CITY',
   sub: `ALTITUDE 3 · ALTERNATE PLATE B — the PR ci graph as a city: ${CI.real} real tasks in ${M.length} massed structures · footprint = watched files (${fmt(TOT_I)} task-file hashes) · height = command sloc (${fmt(TOT_M)}) · ${fmt(PHANTOM)} phantom plots · every number imported from www/atlas.lit-ui-router.dev/data/census-mass3b.json, ${BASIS}`,
   scale: 'THE CI TASK GRAPH',
   form: 'ISOMETRIC GRAPH CITY',
   svg,
+  schedule: SCHEDULE,
   caption: `The pull-request graph that plate 3A traced as plumbing, surveyed here as ground: every real task massed by what it watches (footprint) and what it actually executes (height). The survey’s verdict is flatness — ${FLAT} of ${CI.real} blocks are a single script line riding an external binary — which makes the exceptions legible at a glance: a ${slocOf('@tools/dts-backtest#test')}-line test tower on a ${TOWER}-file lot, and a ${fmt(CELL.get(NO('examples — the plain')).inputs)}-file plain patrolled by ${CELL.get(NO('examples — the plain')).mass} lines of command.`,
   notes: `
 <p><strong>Method — the graph, imported.</strong> Every mass and footprint on this plate is read from <code>www/atlas.lit-ui-router.dev/data/census-mass3b.json</code>, the checked-in snapshot <code>census-mass3b.mjs</code> writes from a bare <a href="${HOME.dryRun}"><code>turbo run ci --dry=json</code></a> on an installed archive of the ref — ${BASIS}, ${TURBO}: ${CI.nodes} nodes, ${CI.real} real, ${fmt(CI.edges)} edges, ${CI.realEdges} real→real. Nothing below is hand-pasted; a structure whose tasks have left the plate throws at build time rather than drawing a stale number, and the schedule totals are the plate's own sums. <em>Footprint</em> is the per-task <code>inputs</code> map — the files whose hashes decide that task's cache key — at 1.2·√files per side. <em>Height</em> is command mass: the package.json script line plus the repo script or bin file it executes, sloc-counted by <code>census-mass3b.mjs</code> on <a href="${HOME.scc}"><code>scc</code></a> 4.0.0's <code>Code</code> basis (guards, emitters and mise task files each cited in the schedule; external binaries like <a href="${HOME.tsc}"><code>tsc</code></a> and <a href="${HOME.oxlint}"><code>oxlint</code></a> contribute only their one line, because that is all this repo wrote). Wall-clock and cache-hit rates are excluded as geometry by design: they are properties of runs, not of the graph.</p>
 <p><strong>The city is flat, and that is the finding.</strong> ${FLAT} of ${CI.real} real tasks have command mass 1 — one script line handing the work to a pinned binary. The whole city executes ${fmt(TOT_M)} sloc of repo-written command while watching ${fmt(TOT_I)} task-file hashes. The skyline is inverted from intuition: <a href="${HOME.dtsBacktest}"><code>@tools/dts-backtest#test</code></a>, the tallest command in the city, is a ${slocOf('@tools/dts-backtest#test')}-line <code>run.ts</code> on a ${TOWER}-file lot — sheet 3 calls it "one ${slocOf('@tools/dts-backtest#test')}-line run.ts holds the TS 5.0 floor", and the graph survey agrees to the line — while the largest footprint, the examples plain, watches ${fmt(CELL.get(NO('examples — the plain')).inputs)} files (format:check:oxfmt ${fmt(row('examples#format:check:oxfmt').inputs)} + lint:oxlint ${fmt(row('examples#lint:oxlint').inputs)} alone) under ${CELL.get(NO('examples — the plain')).mass} lines of command. The eslint-plugin quarter is ${EP_HEAVY.length ? 'nearly flat' : 'flat throughout'}: <a href="${HOME.eslintPlugin}"><code>eslint-plugin-lit-ui-router</code></a> brings ${CELL.get(NO('eslint-plugin')).tasks} tasks and ${CELL.get(NO('eslint-plugin')).mass} sloc, and ${EP_NOTE}.</p>
 <p><strong>The root yard repays the walk.</strong> All ${ROOT.length + 1} <code>//#</code> plots are drawn individually, and ${numw(SLABS.length)} of them — ${andList(SLABS.map(([, , , , sel]) => `<code>${sel.slice(3)}</code>`))} — are equal slabs watching one identical root surface of ${fmt(SURFACE)} files. ${capW(SLABS.length)} tasks, one surface, one number: it is the plate's cleanest finding. The guards that patrol that surface are not root tasks: <a href="${HOME.repoChecks}"><code>@tools/repo-checks</code></a> is a package, drawn whole as the guard house (${NO('repo-checks')}) standing apart, south-west of the yard, and ${numw(LINT_WITH.length)} of its ${CELL.get(NO('repo-checks')).tasks} tasks — ${andList(LINT_WITH.map((r) => `<code>${r.task}</code>`))} — are named in the <code>dependsOn</code> list of the <code>lint</code> umbrella, so a lint run takes them along wherever it starts. ${capW(LINT_WITH_GUARDS.length)} of the ${numw(LINT_WITH.length)} are the city's tall one-file guards, ${andList(LINT_WITH_GUARDS.map((t) => slocOf(`@tools/repo-checks#${t}`)))} lines of TypeScript apiece; the other ${numw(LINT_WITH_LINES.length)} are one script line each — <a href="${HOME.knip}"><code>knip</code></a> hashing ${fmt(row('@tools/repo-checks#check:knip').inputs)} files, the widest lot in the block, <a href="${HOME.dedupe}"><code>pnpm dedupe --check</code></a> hashing ${fmt(row('@tools/repo-checks#check:dedupe').inputs)}, and <code>check:shared-source</code> hashing ${fmt(row('@tools/repo-checks#check:shared-source').inputs)}. The <a href="${HOME.taplo}">taplo</a> pad (${NO('//#lint:toml')}) is where plate 3A's six-hop chain touches ground: hops ①–② arrive from <code>mise run ci</code>, hop ③ is this block, and ④–⑥ leave immediately to run back inside mise through the cache gasket. And one lot in the yard is vacant on purpose — <code>//#lint:workflows</code>, an umbrella with no script of its own, has no command even here.</p>
-<p><strong>One tier, uniformly red.</strong> Sheet 3's severity vocabulary survives, but at this altitude it degenerates truthfully: every real node in the <code>ci</code> graph stops the PR when it fails, so every massed block wears the same red hatch, and the drawing spends its information elsewhere. The ${MAIN.real - CI.real} ci:main-only tasks (test:engines ×3, check:pack, test:matrix) sit outside this survey on an unmassed accent annex — ${MAIN.nodes}/${MAIN.real} nodes when they are included; the ${fmt(PHANTOM)} phantom plots — ${PHPCT}% of the graph, transit and ^build hash carriers and the script-less <code>lint</code>, <code>typecheck</code> and <code>format:check</code> umbrellas — are the vacant field behind the city, inventoried hole-by-hole on sheet 12.</p>
+<p><strong>One tier, stated in the key.</strong> Sheet 3's severity vocabulary survives, but at this altitude it degenerates truthfully: every real node in the <code>ci</code> graph stops the PR when it fails, so the tier is a constant: the blocks stand in ink, the key states the tier, and the drawing spends its information elsewhere. The ${MAIN.real - CI.real} ci:main-only tasks (test:engines ×3, check:pack, test:matrix) sit outside this survey on an unmassed accent annex — ${MAIN.nodes}/${MAIN.real} nodes when they are included; the ${fmt(PHANTOM)} phantom plots — ${PHPCT}% of the graph, transit and ^build hash carriers and the script-less <code>lint</code>, <code>typecheck</code> and <code>format:check</code> umbrellas — are the vacant field behind the city, inventoried hole-by-hole on sheet 12.</p>
 <p><strong>Roads and reach.</strong> Five arteries are drawn, one per district pair, and the plate labels them with degree rather than with an edge tally it cannot cite: <code>@www/lit-ui-router.dev#build</code> waits on ${deg('@www/lit-ui-router.dev#build', 'deps')} nodes (${numw(DOCS_API.length)} quarters ship <code>docs:api</code> there, plus worker types and app fixtures — it is the city's sink), <code>@tools/typedoc-plugin-lit-ui-router#build:types</code> unblocks ${deg('@tools/typedoc-plugin-lit-ui-router#build:types', 'dependents')}, <code>@tools/release#check:exports</code> ${deg('@tools/release#check:exports', 'dependents')} (<code>pack:all</code> and <code>check:exports</code> read every published quarter), and the widest fan-out in the graph is <code>lit-ui-router#build:types</code> at ${deg('lit-ui-router#build:types', 'dependents')}. Of the graph's ${fmt(CI.edges)} edges only ${CI.realEdges} join two real tasks; the rest hang off phantom transit nodes, which is why the roads are drawn as districts and not as a wire count.</p>`,
   key: [
-    keyRow(`<polygon points="6,10 24,2 42,10 24,18" class="skr fp"/><polygon points="6,10 24,2 42,10 24,18" fill="url(#${P}-hr)"/>`, 'massed task block — stops the PR (all of them do)'),
-    keyRow('<polygon points="6,12 24,4 42,12 24,20" class="skr fp"/><rect x="21" y="1" width="6" height="8" class="skr fp"/>', 'height = command sloc — script line + the file behind it'),
-    keyRow('<polygon points="2,14 24,4 46,14 24,24" class="skr fp"/>', 'footprint = watched files — the task’s hashed inputs'),
+    keyRow(`<polygon points="6,10 24,2 42,10 24,18" class="sk fp"/><polygon points="6,10 24,2 42,10 24,18" fill="url(#${P}-hx)"/>`, 'massed task block, in ink — every one stops the PR line, one tier'),
+    keyRow('<polygon points="6,12 24,4 42,12 24,20" class="sk fp"/><rect x="21" y="1" width="6" height="8" class="sk fp"/>', 'height = command sloc — script line + the file behind it'),
+    keyRow('<polygon points="2,14 24,4 46,14 24,24" class="sk fp"/>', 'footprint = watched files — the task’s hashed inputs'),
     keyRow(`<polygon points="6,10 24,2 42,10 24,18" class="ska fp"/><polygon points="6,10 24,2 42,10 24,18" fill="url(#${P}-ha)"/>`, 'ci:main annex — gates main, not the PR; unmassed'),
     keyRow('<polygon points="6,10 24,2 42,10 24,18" class="sks fnone" stroke-dasharray="4 3"/>', 'vacant plot — phantom node, runs nothing'),
     keyRow(`<rect x="6" y="4" width="36" height="10" fill="url(#${P}-hd)" opacity="0.35"/><rect x="6" y="4" width="36" height="10" class="sks fnone" stroke-dasharray="5 4"/>`, `the phantom flats — ${fmt(PHANTOM)} plots (see sheet 12)`),

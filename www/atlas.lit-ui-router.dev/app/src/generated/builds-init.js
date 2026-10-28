@@ -99,7 +99,7 @@ export async function initBuilds(root, viewer, build, focus) {
   // the parts panel: a chip click takes the hotspot's own tap (the href stays the no-script path); light(n) lights the pinned chip
   function partsPanel(root, cls, on, tap) {
     var nav = root.querySelector('.' + cls);
-    if (!nav) return { light: function () {}, hide: function () {} };
+    if (!nav) return { light: function () {}, hide: function () {}, dispose: function () {} };
     var chips = Array.prototype.slice.call(nav.querySelectorAll('a.pt'));
     var toggle = nav.querySelector('.pt-toggle');
     on(nav, 'click', function (e) {
@@ -122,7 +122,10 @@ export async function initBuilds(root, viewer, build, focus) {
           else a.removeAttribute('aria-current');
         });
       },
-      hide: function () { nav.style.visibility = 'hidden'; },
+      hide: function () {
+        nav.style.visibility = 'hidden';
+      },
+      dispose: function () {},
     };
   }
   // captured on the way down, so the viewer's own arrow-key orbit never sees ← →; ↑ ↓ stay the viewer's;
