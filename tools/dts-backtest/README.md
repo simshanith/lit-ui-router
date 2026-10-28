@@ -37,11 +37,15 @@ mobx, `@uirouter/core`, hono, `lib.dom`) are counted but tolerated, matching wha
 a consumer running `skipLibCheck: true` would experience while still holding
 our own declarations to the strict bar.
 
-Every run starts with a **self-test** proving the harness can fail: it
-injects a `NoInfer<>` probe (TypeScript 5.4+ syntax) into a dist `.d.ts`,
-asserts the floor version rejects it and the current version accepts it,
-then restores the file. A green matrix therefore can't be the result of a
-broken diagnostic filter silently classifying everything as third-party.
+Every run starts with a **self-test** proving the harness can fail. It
+compiles a probe `.d.ts` from a scratch directory alongside the fixtures; the
+shipped `dist/` is never touched. The classic legs' probe uses `NoInfer<>`
+(TypeScript 5.4+ syntax): the floor must reject it and the newest classic
+version accept it. The native TypeScript 7 leg has its own ownership filter
+and its own probe, an unresolvable type name it must report as ours;
+`--versions=current` runs only this one. A green matrix therefore can't be
+the result of a broken diagnostic filter silently classifying everything as
+third-party. See `selftest` and `selftestNative` in `run.ts`.
 
 ## Running
 
