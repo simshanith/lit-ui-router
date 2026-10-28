@@ -125,7 +125,13 @@ const REGISTERED_DIRS = [
 // The routed consumers register states whose components read the registry.
 const ROUTED_DIRS = ['lit-ui-router', 'ui-router-registry'].map(distDir);
 
-const ROUTED_PROGRAMS = ['classes', 'templates', 'legacy'].flatMap((dir) => [
+const ROUTED_PROGRAMS = [
+  'classes',
+  'classes-by-module',
+  'templates',
+  'legacy',
+  'legacy-by-module',
+].flatMap((dir) => [
   `routed/${dir}/tsconfig.fixture.json`,
   `routed/${dir}/tsconfig.fixture.nodenext.json`,
 ]);
@@ -147,10 +153,16 @@ const CONFIGS = new Map([
 ]);
 
 // Programs that must fail, by the codes their own fixture must report: the
-// legacy routed consumer proves LitStateDeclaration still infers render().
+// legacy routed consumers prove LitStateDeclaration still infers render(). A
+// RegisteredStates base reports the cycle as TS2310 where Register's is TS2502.
 const EXPECTED_CODES = new Map([
   ['routed/legacy/tsconfig.fixture.json', [2502, 7022, 7023]],
   ['routed/legacy/tsconfig.fixture.nodenext.json', [2502, 7022, 7023]],
+  ['routed/legacy-by-module/tsconfig.fixture.json', [2310, 7022, 7023]],
+  [
+    'routed/legacy-by-module/tsconfig.fixture.nodenext.json',
+    [2310, 7022, 7023],
+  ],
 ]);
 
 // Of those, programs whose owned diagnostics must carry the expected codes and no other.
@@ -196,7 +208,9 @@ const STAGED_LINKS = ['@uirouter/core', 'lit'];
 const OPTIONAL_PEER_SCENARIOS = [
   { fixture: 'absent', registry: false },
   { fixture: 'absent-augmented', registry: false },
+  { fixture: 'absent-augmented-by-module', registry: false },
   { fixture: 'installed', registry: true },
+  { fixture: 'installed-by-module', registry: true },
 ] as const;
 
 // Staged roots own their diagnostics, as the packages' dist dirs do.
@@ -294,7 +308,7 @@ function stageOptionalPeer(): string[] {
         );
         configs.push(config);
 
-        if (fixture === 'absent-augmented') {
+        if (fixture.startsWith('absent-augmented')) {
           EXPECTED_CODES.set(config, [2664]);
           EXPECTED_ONLY.add(config);
         }

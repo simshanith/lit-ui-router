@@ -89,6 +89,8 @@ const workspaces = {
       'custom-elements-manifest.config.js',
       // checkJs consumer programs, checked by typecheck:tsc
       'test-js/**/*.{js,ts}',
+      // modules a test-d program reaches by augmentation, not by import
+      'test-d/registered-by-module/*.ts',
     ],
     ignoreDependencies: [
       // imported by the emitted dist, not by src

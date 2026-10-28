@@ -20,8 +20,9 @@ type LooseRelative = `.${string}` | `^${string}`;
 /**
  * A state an sref can target: a registered name, a relative ref (`.child`,
  * `^.sibling`) resolved against the enclosing view, or the registry's
- * `UncheckedRef` opt-out. Any `string` until an app augments
- * `ui-router-registry`'s `Register`.
+ * `UncheckedRef` opt-out. Any `string` until an app registers states with
+ * `ui-router-registry`, per module through `RegisteredStates` or at one site
+ * through `Register`.
  *
  * @category types
  */

@@ -119,8 +119,8 @@ stateService.go('contacts.contact', { contactId: 'c1' });
 | `RegisteredRouteTypes`                  | the members the `/signals`, `/effect` and `/mobx` entry points fill the adapters' `RouteTypes` interfaces from                                                      |
 
 `lit-ui-router`'s `uiSref`, `srefHref`, `uiSrefActive`, `srefActiveClass`,
-`srefAriaCurrent` and `SrefStatusController` read `Register` themselves, with no
-import line. `lit-ui-router` takes this package as an optional peer.
+`srefAriaCurrent` and `SrefStatusController` read the registered states
+themselves, from `RegisteredStates`, `Register` or both, with no import line. `lit-ui-router` takes this package as an optional peer.
 
 ## Reactive adapters
 
@@ -174,11 +174,12 @@ stateService.go(name as UncheckedRef);
 
 A state declaration that names a component and is checked with `satisfies`
 against a type that inspects the component, such as `LitStateDeclaration`, makes
-that component part of the registered states' type. If one of the component's members
-calls a typed target (`go`, `href`, `uiSref`) and has no
-declared return type, TypeScript has to infer that member from the registry
-while still building it, and reports a circular type (TS7022, TS7023, TS7024,
-TS2456, TS2502 or TS2313).
+that component part of the registered states' type, whether a module registers
+it through `RegisteredStates` or `Register` takes it. If one of the component's
+members calls a typed target (`go`, `href`, `uiSref`) and has no declared return
+type, TypeScript has to infer that member from the registry while still building
+it, and reports a circular type (TS7022, TS7023, TS7024, TS2456, TS2502, TS2313,
+or TS2310 at a `RegisteredStates` augmentation).
 
 For `lit-ui-router` states, check the declarations with
 `TypedLitStateDeclaration`, which checks a LitElement class by its public
