@@ -2,6 +2,7 @@
 import { LitElementRenderer } from '@lit-labs/ssr/lib/lit-element-renderer.js';
 import { html, LitElement } from 'lit';
 import type { TemplateResult } from 'lit';
+import type { Transition } from '@uirouter/core';
 import { UIRouterLit } from 'lit-ui-router/pure';
 import type {
   LitStateDeclaration,
@@ -26,6 +27,15 @@ export const OtherView: RoutedLitTemplate = () =>
 export const LeadView: RoutedLitTemplate = () =>
   html`${'lead'}
     <p class="plate" id="plate">plate</p>`;
+
+/** A leaf holding a bindingless custom element, which the server defers and writes no marker for. */
+export const MarkView: RoutedLitTemplate = () =>
+  html`<plain-mark class="routed"></plain-mark>
+    <section><plain-mark class="wrapped"></plain-mark></section>`;
+
+/** A leaf drawn from its url parameter, on a state that also declares a config parameter the url never carries. */
+export const ItemView: RoutedLitTemplate = (props) =>
+  html`<p class="item">${String(props.resolves.item ?? '')}</p>`;
 
 /** A routed view whose one node is a shadow-DOM element, so the reveal has to reach into its shadow root. */
 export const BadgeView: RoutedLitTemplate = () =>
@@ -101,8 +111,8 @@ export const badgeRootTemplate = (router: Router): TemplateResult =>
     ><shadow-badge></shadow-badge>${uiView()}</ui-router
   >`;
 
-/** Two states: `shell`, and `shell.detail` filling the nested view. */
-export const makeRouter = (): Router => {
+/** Two states: `shell`, and `shell.detail` filling the nested view from `detail`. */
+export const makeRouter = (detail: () => string = () => 'leaf'): Router => {
   const router = installServerLocation(new UIRouterLit(), {
     urlConfig: { strict: false },
   });
@@ -118,7 +128,7 @@ export const makeRouter = (): Router => {
       name: 'shell.detail',
       url: '/detail',
       component: DetailView,
-      resolve: { detail: () => 'leaf' },
+      resolve: { detail },
     },
     {
       name: 'shell.other',
@@ -126,6 +136,20 @@ export const makeRouter = (): Router => {
       component: OtherView,
     },
     { name: 'shell.lead', url: '/lead', component: LeadView },
+    { name: 'shell.mark', url: '/mark', component: MarkView },
+    {
+      name: 'shell.item',
+      url: '/item/:id',
+      params: { mode: 'list' },
+      component: ItemView,
+      resolve: [
+        {
+          token: 'item',
+          deps: ['$transition$'],
+          resolveFn: (transition: Transition) => String(transition.params().id),
+        },
+      ],
+    },
     { name: 'badge', url: '/badge', component: BadgeView },
     { name: 'bare', url: '/bare' },
   ];

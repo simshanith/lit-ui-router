@@ -5,7 +5,7 @@ import { collectResultSync } from '@lit-labs/ssr/lib/render-result.js';
 import type { TemplateResult } from 'lit';
 import type { UIRouterLit } from 'lit-ui-router';
 import { provideRouter, withRouterSync } from 'lit-ui-router/context';
-import { DefType, isString } from '@uirouter/core';
+import { isString } from '@uirouter/core';
 import type { Verdict } from 'ui-router-server';
 import { prerender as prerenderSite } from 'ui-router-server/prerender';
 import type {
@@ -16,7 +16,7 @@ import type {
 } from 'ui-router-server/prerender';
 import { devGate } from '#dev-gate';
 
-import { packageVersion, signatureAttribute } from './signature.js';
+import { packageVersion, routeOf, signatureAttribute } from './signature.js';
 import { UiViewRenderer } from './ui-view-renderer.js';
 
 export type {
@@ -134,20 +134,11 @@ interface WrittenSignature {
   readonly params: Readonly<Record<string, string | string[]>>;
 }
 
-/** The signature of the page `router` currently stands on; config params never reach the url, so they stay out. */
+/** The signature of the page `router` currently stands on, encoded as the client compares it. */
 export const signatureOf = (router: UIRouterLit): WrittenSignature => {
-  const { $current, params } = router.globals;
+  const [state, params] = routeOf(router.globals);
 
-  return {
-    version: packageVersion,
-    state: $current.name,
-    params: Object.fromEntries(
-      $current
-        .parameters()
-        .filter((param) => param.location !== DefType.CONFIG)
-        .map((param) => [param.id, param.type.encode(params[param.id])]),
-    ),
-  };
+  return { version: packageVersion, state, params };
 };
 
 /**

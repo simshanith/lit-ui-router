@@ -61,6 +61,10 @@ const peerAliases = [
     find: /^ui-router-server\/ssr$/,
     replacement: source('../ui-router-server/src/ssr.ts'),
   },
+  {
+    find: /^ui-router-server\/ssr\/client$/,
+    replacement: source('../ui-router-server/src/ssr-client.ts'),
+  },
 ];
 
 // package.json#imports maps #dev-gate into dist/; specs read the node source, which vi.stubEnv drives.

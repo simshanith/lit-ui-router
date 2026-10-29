@@ -335,16 +335,14 @@ to core's `UiView`. Every value the app takes from the router — `UIRouterLit`,
 `srefHref`, `srefActiveClass`, `srefAriaCurrent` — comes from
 `lit-ui-router/pure`, which registers nothing; the root entry registers the
 plain `<ui-view>` as a side effect, and imported after this one it warns that
-the tag is already defined. Then the router boots and one call adopts the page:
+the tag is already defined. Then one call boots the router and adopts the page:
 
 ```ts
 import 'lit-ui-router-ssr/register';
 import { UIRouterLit, srefHref } from 'lit-ui-router/pure';
-import { hydrateRoot } from 'lit-ui-router-ssr/client';
+import { bootstrap } from 'lit-ui-router-ssr/client';
 
-router.start();
-await booted; // the first successful transition
-const release = hydrateRoot(root, page(router));
+await bootstrap(router, root, page(router));
 ```
 
 A `<ui-view>` another class already defined throws, naming both ways out.
@@ -405,17 +403,29 @@ A served `<ui-view>` — the class `lit-ui-router-ssr/register` defines the tag
 with — arrives asleep. The render passes `deferHydration`, so
 every custom element on the page carries Lit's `defer-hydration` attribute,
 and while it is there the view renders nothing and holds the nodes the server
-drew. The client boots the router first, then calls
+drew. One call boots the client:
+[`bootstrap`](/api/lit-ui-router-ssr/client/functions/bootstrap) starts the
+router, waits for the boot transition to land, then calls
 [`hydrateRoot`](/api/lit-ui-router-ssr/client/functions/hydrateRoot), which provides
 an adopter under the container with core's
 [`provideContext`](/api/reference/core/provideContext) and runs one
-`hydrate()` walk over it:
+`hydrate()` walk over it. It resolves once every awake view has updated:
 
 ```ts
-import { hydrateRoot } from 'lit-ui-router-ssr/client';
+import { bootstrap } from 'lit-ui-router-ssr/client';
 
-const release = hydrateRoot(root, page(router));
+const { outcome, signature } = await bootstrap(router, root, page(router));
 ```
+
+`signature` is a
+[`BootstrapSignature`](/api/lit-ui-router-ssr/client/type-aliases/BootstrapSignature):
+`matched`, `elsewhere` or `absent`, comparing the state the boot landed on with
+the one the document was drawn for.
+
+The cold path is the same call: a container with nothing to adopt, a boot
+transition that fails, and a walk that throws all end in a cold render. The
+boot also decides mismatches once, against the state it landed on, rather than
+once per view.
 
 `prerender()` opens every page it renders from a template on a hydration
 signature: a JSON data block ahead of the render, carrying this package's
@@ -429,8 +439,8 @@ It never executes, `hydrate()` walks comments only and reads past it, and every
 ```
 
 `hydrateRoot` reads it before it touches the document, and returns `false`
-over an emptied container when it finds nothing to adopt, so the caller's
-`render()` draws the page once:
+over an emptied container when it finds nothing to adopt, so `bootstrap`, or the
+caller's own `render()`, draws the page once:
 
 - **No signature.** A cold client render, a dev server, a page from an earlier
   `prerender()`, or a page whose `renderShell` returned a string.
@@ -467,13 +477,13 @@ whose [`detail`](/api/lit-ui-router-ssr/client/interfaces/UiViewAdoptDetail) car
 an [`AdoptOutcome`](/api/lit-ui-router-ssr/client/type-aliases/AdoptOutcome):
 `adopted` when its served nodes are the live ones, `fell-back` when a mismatch
 or a lost pair dropped them for a cold render, with the cause in `error`, and
-`none` when there was nothing to adopt. `hydrateRoot`'s
-[`onAdopt`](/api/lit-ui-router-ssr/client/interfaces/HydrateRootOptions) option
-receives the same reports for every view its walk reaches, so a consumer that
-only calls `hydrateRoot` needs no listener:
+`none` when there was nothing to adopt. The
+[`onAdopt`](/api/lit-ui-router-ssr/client/interfaces/HydrateRootOptions) option of
+`bootstrap` and `hydrateRoot` receives the same reports for every view the walk
+reaches, so a consumer needs no listener:
 
 ```ts
-hydrateRoot(root, page(router), {
+await bootstrap(router, root, page(router), {
   onAdopt: (view, outcome, error) => {
     if (outcome === 'fell-back') report(view, error);
   },
@@ -504,7 +514,7 @@ Qwik is the outlier on both axes. It resumes rather than hydrates, so there is
 no wake pass at all: the served markup and the serialized state both survive
 into the client, and a handler is fetched when its event fires. This package
 keeps only the markup; the router rebuilds its state on the first transition,
-which is what booting before `hydrateRoot()` waits for.
+which is what `bootstrap()` waits for before it hydrates.
 
 In that grid `lit-ui-router-ssr` sits in the per-boundary, provided cell. Each
 `<ui-view>` is an island whose trigger is a route match rather than viewport
