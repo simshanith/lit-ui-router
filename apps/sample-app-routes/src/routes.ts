@@ -16,9 +16,7 @@ type Row = (typeof stateTable)[number];
 // MountConfig takes any string; these narrow the mounts' targets to table states.
 type StateName = Exclude<Row['name'], `${string}.**`>;
 
-// The client's own state table, less the future states its modules replace:
-// the matcher nests urls by dotted name and ignores `parent`, which holds here
-// because every `parent` is the url-less 'app' (the routes test pins that).
+// The client's own state table, less the future states its modules replace.
 export const routes: RouteDeclaration[] = stateTable.filter(
   (row): row is Extract<Row, { name: StateName }> => !row.name.endsWith('.**'),
 );

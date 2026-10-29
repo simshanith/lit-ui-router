@@ -221,33 +221,6 @@ describe('the shared state table', () => {
       assert.deepEqual(placement(future), placement(root), future.name);
     }
   });
-
-  it('keeps every parent chain url-less, since the matcher nests urls by dotted name', () => {
-    const byName = new Map<string, (typeof stateTable)[number]>(
-      stateTable.map((row) => [row.name, row]),
-    );
-
-    for (const row of stateTable) {
-      if (!('parent' in row)) continue;
-
-      // Each state up the chain, through its own `parent:` or its dotted name.
-      for (let name: string | undefined = row.parent; name;) {
-        const ancestor = byName.get(name);
-
-        assert.ok(ancestor, `${row.name}: unknown ancestor '${name}'`);
-        assert.ok(
-          !('url' in ancestor) || !ancestor.url,
-          `${row.name}: '${name}' has a url`,
-        );
-        name =
-          'parent' in ancestor
-            ? ancestor.parent
-            : name.includes('.')
-              ? name.slice(0, name.lastIndexOf('.'))
-              : undefined;
-      }
-    }
-  });
 });
 
 describe('mounts', () => {
