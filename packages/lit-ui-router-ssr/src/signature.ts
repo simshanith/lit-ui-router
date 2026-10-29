@@ -44,8 +44,9 @@ export const packageVersion: string = import.meta.env.PACKAGE_VERSION;
 
 /**
  * The state the router stands on and its url parameters, each encoded as the
- * url spells it, in the order the signature writes them; config params never
- * reach the url, so they stay out.
+ * url spells it: what `prerender()` writes into the signature and what the
+ * client compares it against. Config params never reach the url, so they stay
+ * out.
  *
  * @internal
  */
