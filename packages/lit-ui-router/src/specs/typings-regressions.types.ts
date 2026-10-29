@@ -9,7 +9,7 @@ import type {
   UIViewInjectedProps,
 } from '../interface.js';
 import * as pure from '../pure.js';
-import { isRoutedLitElement, LitViewConfig } from '../pure.js';
+import { LitViewConfig } from '../pure.js';
 
 // Type-level regressions — the compile is the assertion (package `typecheck`;
 // umbrella tsconfig covers src/specs); never executed. Runtime half
@@ -28,21 +28,26 @@ export const stateDecl: LitStateDeclaration = {
   },
 };
 
-// The served renderer (#1528) feature-detects the helper through a namespace
-// import and calls it with a plain UIRouter, as getScopedRouter hands it one.
+// The served renderer (#1528) feature-detects the helpers through a namespace
+// import and calls them with a plain UIRouter, as getScopedRouter hands it one,
+// for a template, a class or a sticky class's bound renderer alike.
 export const servedTemplate = (
   router: UIRouter,
   config: LitViewConfig,
-): TemplateResult | undefined => {
+): { template: TemplateResult; element?: Element } | undefined => {
   const detected: Partial<typeof pure> = pure;
   // SAFETY: a `LitViewConfig` is built only from a lit state's normalized view declaration
   const { component } = config.viewDecl as NormalizedLitViewDeclaration;
 
-  return detected.routedViewTemplate && !isRoutedLitElement(component)
-    ? detected.routedViewTemplate(
-        component,
-        router,
-        new ResolveContext(config.path),
-      )
-    : undefined;
+  if (!detected.routedViewTemplate || !detected.routedElementOf) {
+    return undefined;
+  }
+
+  const template = detected.routedViewTemplate(
+    component,
+    router,
+    new ResolveContext(config.path),
+  );
+
+  return { template, element: detected.routedElementOf(template) };
 };

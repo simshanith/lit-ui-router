@@ -51,10 +51,12 @@ import { setViewHost } from './view-rendered.js';
 let viewIdCounter = 0;
 
 /**
- * Spelled out because the @lit-labs/ssr DOM shim has no `Node`. The type keeps
- * it the platform's value, checked against `Node` without referencing one.
+ * Spelled out because the @lit-labs/ssr DOM shim has no `Node`. The types keep
+ * them the platform's values, checked against `Node` without referencing one.
  */
 const COMMENT_NODE = 8 satisfies Node['COMMENT_NODE'];
+
+const ELEMENT_NODE = 1 satisfies Node['ELEMENT_NODE'];
 
 /**
  * Whether `node` opens another render's output: lit's own empty child-part
@@ -85,6 +87,9 @@ const composedContains = (host: Node, node: Node): boolean => {
 
 /** The attribute marking a view's routed element. */
 const ROUTED_ATTRIBUTE = 'routed';
+
+/** The attribute `@lit-labs/ssr` writes on a server-rendered custom element. */
+const DEFER_HYDRATION_ATTRIBUTE = 'defer-hydration';
 
 /** An element that may be a `ReactiveElement`, which reports its first update. */
 type MaybeReactive = Element &
@@ -208,6 +213,9 @@ export class UiView extends LitElement {
   /** The element carrying the `routed` attribute. */
   private markedElement?: Element;
 
+  /** A served element this view adopted, whose deferred hydration its first commit releases. */
+  private adoptedElement?: Element;
+
   /** @internal */
   createRenderRoot(): this {
     return this;
@@ -256,7 +264,6 @@ export class UiView extends LitElement {
     // SAFETY: `litViewsBuilder` normalizes every view declaration of a lit state
     const { component } = config.viewDecl as NormalizedLitViewDeclaration;
 
-    // TODO(#1527): the class case stays outside routedViewTemplate until the prerender probe reports.
     if (isRoutedLitElement(component)) {
       this.component = routedLitElementRenderer(component);
     } else {
@@ -845,6 +852,13 @@ export class UiView extends LitElement {
   protected updated(changed: PropertyValues): void {
     super.updated(changed);
     this.markRoutedElement();
+    this.releaseAdoptedElement();
+  }
+
+  /** Lets an adopted element hydrate, now that its props are assigned. */
+  private releaseAdoptedElement(): void {
+    this.adoptedElement?.removeAttribute(DEFER_HYDRATION_ATTRIBUTE);
+    this.adoptedElement = undefined;
   }
 
   /** Moves the `routed` attribute onto the current routed element. */
@@ -885,13 +899,20 @@ export class UiView extends LitElement {
       return this.fallback ? nothing : html`<slot></slot>`;
     }
 
+    const served = this.hasUpdated ? undefined : this.servedElement();
+
     const result = routedViewTemplate(
       this.component!,
       this.uiRouter,
       this.resolveContext,
+      served,
     );
 
     const element = routedElementOf(result);
+
+    if (element && element === served) {
+      this.adoptedElement = element;
+    }
 
     if (!element) {
       this.dropElements();
@@ -900,6 +921,27 @@ export class UiView extends LitElement {
     }
 
     return this.placeElement(element);
+  }
+
+  /**
+   * The element a server rendered in the first element slot: the first element
+   * after the render marker the held markup opens with, or none.
+   *
+   * Read only ahead of the first render, when any marker is a served view's.
+   */
+  private servedElement(): Element | undefined {
+    let held = false;
+
+    for (const child of this.childNodes) {
+      held ||= isRenderMarker(child);
+
+      if (!held || child.nodeType !== ELEMENT_NODE) continue;
+
+      // SAFETY: `nodeType` ELEMENT_NODE is an Element
+      return child as Element;
+    }
+
+    return undefined;
   }
 
   /**
