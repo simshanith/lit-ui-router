@@ -36,7 +36,11 @@ or mount the delegating states at `/`. A request of any method that matches a de
 gets the handler's `Response`, untouched; other non-navigations only match urls and never run a
 transition. Construction throws for a key the tree names and `delegates` lacks, and `as const`
 routes make that a compile error. The Connect adapter throws for delegate keys unless you pass
-`delegates: 'next'` and serve those states downstream. See
+`delegates: 'next'` and serve those states downstream. `prerender()` from
+`ui-router-server/prerender` writes no page and no rules line for a delegating state: it counts
+the path in `result.tally.delegate` and lists it in `result.delegated`, so route those paths to
+your server; on Cloudflare, list them in the Worker's `assets.run_worker_first` so the asset layer
+doesn't answer them first. See
 [delegating states](https://lit-ui-router.dev/packages/server#delegating-states).
 
 ## Attribution

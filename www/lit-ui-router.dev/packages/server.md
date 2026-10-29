@@ -577,7 +577,10 @@ becomes `<subpath>/index.html`, holding whatever `render` returns for it. A
 redirect becomes a `_redirects` line, paired with and without the trailing
 slash, and no page. The `otherwise` projection becomes `404.html`. A path that
 matches nothing is counted, listed in `result.warnings`, and warned about in
-development.
+development. A path that matches a [delegating state](#delegating-states)
+gets no page and no rules line: it is counted in `result.tally.delegate` and
+listed in `result.delegated`, in enumeration order. A verdict kind the loop
+doesn't know throws instead of being counted.
 
 ```ts
 import { mkdir, writeFile } from 'node:fs/promises';
@@ -605,6 +608,11 @@ The loop never touches a filesystem itself: `write` receives each file with
 a `Map`, under any runtime.
 [`lit-ui-router-ssr`](/packages/ssr)'s `prerender` is this loop with a lit
 render, and writes through `node:fs` by default.
+
+A delegated path has no static file, so the host must send it to the server.
+On Cloudflare Workers, list `result.delegated` in
+[`assets.run_worker_first`](https://developers.cloudflare.com/workers/static-assets/routing/worker-script/#run-worker-first-for-selective-paths)
+so the Worker sees those paths before static assets do.
 
 ## What the server can't see
 
