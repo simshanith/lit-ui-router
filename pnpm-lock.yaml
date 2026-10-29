@@ -380,6 +380,9 @@ catalogs:
     ui-router-server-0.3-floor:
       specifier: npm:ui-router-server@0.3.0
       version: 0.3.0
+    ui-router-server-0.4-floor:
+      specifier: npm:ui-router-server@0.4.0
+      version: 0.4.0
     ui-router-server-floor:
       specifier: npm:ui-router-server@0.2.0
       version: 0.2.0
@@ -1604,6 +1607,9 @@ importers:
       ui-router-server-0.3-floor:
         specifier: catalog:peerFloorSsr
         version: ui-router-server@0.3.0(@uirouter/core@6.1.2)(hono@4.13.14)
+      ui-router-server-0.4-floor:
+        specifier: catalog:peerFloorSsr
+        version: ui-router-server@0.4.0(@uirouter/core@6.1.2)(hono@4.13.14)
       ui-router-server-floor:
         specifier: catalog:peerFloorSsr
         version: ui-router-server@0.2.0(@uirouter/core@6.1.2)(hono@4.13.14)
@@ -8893,6 +8899,18 @@ packages:
       hono:
         optional: true
 
+  ui-router-server@0.4.0:
+    resolution: {integrity: sha512-tBEsRNQbnfoyaIRPZGLfX3gihZTc5WVZ5hVLuuXBJmIoS6w6UNakriNSdcj9uCUf1db+chgkPMFpzf4LKm+kMg==}
+    engines: {node: '>=22.12'}
+    peerDependencies:
+      '@uirouter/core': ^6.0.8
+      hono: ^4.0.0
+    peerDependenciesMeta:
+      '@uirouter/core':
+        optional: true
+      hono:
+        optional: true
+
   unbash@6.0.1:
     resolution: {integrity: sha512-0db9eS5iqybux41zLkX69nk90KTci7F7eZ+gXzEG/Q7E0tAqEBhRh5fkZvk1N7jT7QkGWqq34i8SFGPFEe1V8A==}
     engines: {node: '>=14'}
@@ -15295,6 +15313,11 @@ snapshots:
       hono: 4.13.14
 
   ui-router-server@0.3.0(@uirouter/core@6.1.2)(hono@4.13.14):
+    optionalDependencies:
+      '@uirouter/core': 6.1.2
+      hono: 4.13.14
+
+  ui-router-server@0.4.0(@uirouter/core@6.1.2)(hono@4.13.14):
     optionalDependencies:
       '@uirouter/core': 6.1.2
       hono: 4.13.14
