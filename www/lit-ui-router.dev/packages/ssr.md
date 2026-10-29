@@ -207,8 +207,9 @@ A routed template that feeds it by property,
 else — no attribute, no child, no value. Setting the property is an element
 renderer's job, and
 [`elementRenderers`](/api/lit-ui-router-ssr/index/interfaces/PrerenderOptions#elementrenderers)
-defaults to `[UiViewRenderer]`, which answers for `ui-view` alone. The card has
-no renderer, so nothing on the server sets `post` or runs its `render()`: the
+defaults to `[UiViewRenderer, LightElementRenderer]`, which answer for
+`ui-view` and for opted-in [light-DOM elements](#light-dom-elements) alone. The
+card has no renderer, so nothing on the server sets `post` or runs its `render()`: the
 card first draws on the client, once hydration sets the property, and the
 served page shows an empty tag where it stands.
 
@@ -275,11 +276,16 @@ server and draws the card's `render()` into a declarative shadow root:
 
 ```ts
 import { LitElementRenderer } from '@lit-labs/ssr';
-import { prerender, UiViewRenderer } from 'lit-ui-router-ssr';
+import {
+  LightElementRenderer,
+  prerender,
+  UiViewRenderer,
+} from 'lit-ui-router-ssr';
 
 await prerender({
   // …
-  elementRenderers: [UiViewRenderer, LitElementRenderer],
+  // The list replaces the default; LightElementRenderer stays ahead of the shadow-root renderer.
+  elementRenderers: [UiViewRenderer, LightElementRenderer, LitElementRenderer],
 });
 ```
 
@@ -496,7 +502,7 @@ A consumer's own `LitElement` that renders into its light DOM opts in to the
 same sleep-then-adopt cycle with
 [`LightDomHydrating`](/api/lit-ui-router-ssr/client/functions/LightDomHydrating).
 [`LightElementRenderer`](/api/lit-ui-router-ssr/index/classes/LightElementRenderer)
-draws it on the server, and
+draws it on the server as one of `prerender()`'s default renderers, and
 [`lightSlot`](/api/lit-ui-router-ssr/client/variables/lightSlot) marks the hole
 at the use site:
 
@@ -517,24 +523,12 @@ export const card = (label: string) =>
   html`<app-card .label=${label}>${lightSlot()}</app-card>`;
 ```
 
-```ts
-import {
-  LightElementRenderer,
-  prerender,
-  UiViewRenderer,
-} from 'lit-ui-router-ssr';
-
-await prerender({
-  // …
-  elementRenderers: [UiViewRenderer, LightElementRenderer],
-});
-```
-
 The mixin brands the class it returns, so a subclass stays opted in and the
 base class does not; an element that did not opt in is served empty and renders
 cold. The renderer builds the element as `LitElementRenderer` does, then writes
 its `render()` where a shadow root would go, with custom elements inside it,
-`<ui-view>` included, drawn too. List it ahead of any `LitElementRenderer`.
+`<ui-view>` included, drawn too. An explicit `elementRenderers` replaces the
+default, so keep it in that list, ahead of any `LitElementRenderer`.
 
 `lightSlot` is `uiViewSlot` under a name that does not read as a view. On the
 client it wakes the element, parent first, and the element hands itself to the
