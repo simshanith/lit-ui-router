@@ -1,0 +1,36 @@
+{
+  "name": "@tools/md-content-mapper",
+  "version": "0.0.1",
+  "private": true,
+  "description": "TypeScript 7.1 content mapper that type-checks the ts fences in the repo's Markdown, one module per fence",
+  "type": "module",
+  "scripts": {
+    "check": "./src/check.ts",
+    "format:check:oxfmt": "oxfmt --check \"**/*.{ts,json,jsonc,md}\"",
+    "format:oxfmt": "oxfmt \"**/*.{ts,json,jsonc,md}\"",
+    "lint:oxlint": "oxlint .",
+    "test": "node --test --test-reporter=@tools/shared/test-reporter.ts \"src/**/*.test.ts\"",
+    "typecheck:tsc": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@tools/bootstrap": "catalog:workspace",
+    "markdown-it": "catalog:",
+    "valibot": "catalog:"
+  },
+  "devDependencies": {
+    "@tools/shared": "catalog:workspace",
+    "@types/markdown-it": "catalog:",
+    "@types/node": "catalog:",
+    "oxfmt": "catalog:",
+    "oxlint": "catalog:",
+    "typescript": "catalog:"
+  },
+  "typescript": {
+    "contentMapper": {
+      "exec": [
+        "node",
+        "src/server.ts"
+      ]
+    }
+  }
+}

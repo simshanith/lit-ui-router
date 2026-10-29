@@ -1,0 +1,5 @@
+{
+  // The docs check with a shared prelude of the names fences use unimported.
+  "extends": "./tsconfig.json",
+  "files": ["prelude.d.ts"]
+}
