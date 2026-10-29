@@ -16,6 +16,7 @@ npm install --save-dev ui-router-registry
 - **`ParamsOf` and `ResolvedParamsOf`**: the params a state accepts and the params it reads back, its ancestors' included. Url placeholders are required, query params and params with a default are optional to pass, and defaults are present to read. A `value: null` default adds `null` to a url or typed param; an untyped non-url param is core's `any` and reads as its default's type, `unknown` for `null`. `int`, `bool`, `date` and `json` placeholders and `type:`s map to TypeScript types.
 - **`TypedStateService`**: a view of core's `StateService` whose `go`, `transitionTo`, `target`, `href`, `is`, `includes` and `reload` take registered names and their params. Relative refs are checked by their tail with loose params; object targets and `UncheckedRef` stay loose. It extends `StateService`, so the two are assignable both ways: a typed getter needs no cast, and the view, or a `UIRouter` whose `stateService` is typed with it, passes wherever core's type is expected.
 - **`TypedRouteSnapshot`**: a view of the route snapshot the reactive packages share. `includes(name)` is a type predicate that narrows `current` and `params` to that state's subtree.
+- **`lit-ui-router`'s sref directives**: `uiSref`, `srefHref`, `uiSrefActive`, `srefActiveClass`, `srefAriaCurrent` and `SrefStatusController` read the registered states themselves, from `RegisteredStates`, `Register` or both, with no import line. `lit-ui-router` takes this package as an optional peer.
 - **`ui-router-registry/signals`, `/effect` and `/mobx`**: type-only entry points that fill the `RouteTypes` interface of `ui-router-signals`, `ui-router-effect` and `ui-router-mobx` from the registry, so their route snapshots are `TypedRouteSnapshot`s. `RegisteredRouteTypes` holds the members they fill in.
 
 ## Usage
@@ -118,7 +119,7 @@ stateService.go(name as UncheckedRef);
 
 ### Check components that call typed targets
 
-A state declaration that names a component and is checked with `satisfies` against a type that inspects the component, such as `LitStateDeclaration`, makes that component part of the registered states' type. If one of the component's members calls a typed target (`go`, `href`, a typed `uiSref` wrapper) and has no declared return type, TypeScript has to infer that member from the registry while still building it, and reports a circular type (TS7022, TS7023, TS7024, TS2456, TS2502 or TS2313).
+A state declaration that names a component and is checked with `satisfies` against a type that inspects the component, such as `LitStateDeclaration`, makes that component part of the registered states' type, whether a module registers it through `RegisteredStates` or `Register` takes it. If one of the component's members calls a typed target (`go`, `href`, `uiSref`) and has no declared return type, TypeScript has to infer that member from the registry while still building it, and reports a circular type (TS7022, TS7023, TS7024, TS2456, TS2502, TS2313, or TS2310 at a `RegisteredStates` augmentation).
 
 For `lit-ui-router` states, check the declarations with `TypedLitStateDeclaration`, which checks a LitElement class by its public members and a template function by its parameters, so it never infers `render()` or a template's body:
 

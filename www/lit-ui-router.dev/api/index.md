@@ -211,6 +211,49 @@ own, after which it owns the attribute and will clear it on the next inactive re
 `ariaCurrentValue: false` is the way to keep a template-authored value for good, since
 the directive then never writes and never takes ownership.
 
+#### Typed state names
+
+The directives and `SrefStatusController` read their targets from the states
+registered with [`ui-router-registry`](/packages/ui-router-registry). Register
+each module's `as const` declarations next to its state table, and a misspelled
+name or a missing required param fails to compile:
+
+```ts
+import type { StatesOf } from 'ui-router-registry';
+
+export const contactsStates = [
+  { name: 'contacts', url: '/contacts' },
+  { name: 'contacts.contact', url: '/:contactId' },
+] as const;
+
+declare module 'ui-router-registry' {
+  interface RegisteredStates extends StatesOf<typeof contactsStates> {}
+}
+```
+
+Each module, lazy ones included, adds its own line, and every file sees every
+module's names. The registry's `Register` takes every declaration at one site
+instead:
+
+```ts
+import type { appStates, lazyStates } from './states';
+
+declare module 'ui-router-registry' {
+  interface Register {
+    states: (typeof appStates)[number] | (typeof lazyStates)[number];
+  }
+}
+```
+
+The registry reads both, so the two forms mix. It is an optional peer that
+ships no JavaScript, so a devDependency is enough. Without it, or without a
+registration, a target is any `string` with `RawParams`. Registering with
+`'ui-router-registry'` without installing it fails at the registration: TS2664
+at the augmentation, and TS2307 at a `StatesOf` import. Relative refs (`.child`, `^.sibling`) are checked
+by their tail, and the registry's `UncheckedRef` opts a target out. A state
+table whose components call typed srefs is checked with
+[`TypedLitStateDeclaration`](./reference/types/TypedLitStateDeclaration).
+
 ### State Declaration
 
 [`LitStateDeclaration`](./reference/types/LitStateDeclaration) defines a state with its URL and component.

@@ -84,7 +84,7 @@
     "test:lit2-compat": "lit2-compat-guard && VITE_EXPECT_LIT_MAJOR=2 VITEST_BROWSER_API_PORT=63322 vitest run --project=happy-dom --project=chrome",
     "typecheck:lit2": "lit2-compat-guard && tsc -p tsconfig.lit2-compat.json --noEmit",
     "typecheck:src": "tsc -p tsconfig.src.json --noEmit",
-    "typecheck:tsc": "tsc -p tsconfig.json --noEmit"
+    "typecheck:tsc": "tsc -p tsconfig.json --noEmit && tsc -p test-d/registered/tsconfig.json && tsc -p test-d/registered-by-module/tsconfig.json && tsc -p test-d/unregistered/tsconfig.json && tsc -p test-d/routed-components/tsconfig.json && tsc -p test-js/registered/tsconfig.json && tsc -p test-js/unregistered/tsconfig.json"
   },
   "dependencies": {
     "@oxc-project/runtime": "catalog:publishedDependencies"
@@ -123,11 +123,18 @@
     "typedoc-vitepress-theme": "catalog:",
     "typescript": "catalog:typescript6-compat",
     "typescript-7": "catalog:",
+    "ui-router-registry": "catalog:workspace",
     "vitest": "catalog:"
   },
   "peerDependencies": {
     "@uirouter/core": "catalog:publishedPeer",
-    "lit": "catalog:publishedPeer"
+    "lit": "catalog:publishedPeer",
+    "ui-router-registry": "catalog:publishedPeerRegistry"
+  },
+  "peerDependenciesMeta": {
+    "ui-router-registry": {
+      "optional": true
+    }
   },
   "bundleProbe": {
     ".": {

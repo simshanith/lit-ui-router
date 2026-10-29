@@ -3,6 +3,7 @@ import { nothing, ReactiveController, ReactiveControllerHost } from 'lit';
 
 import { warnMissingRouter } from './dev-warn.js';
 import { subscribeRouter } from './router-subscription.js';
+import type { SrefTarget } from './registry.js';
 import type { SrefTargetParams } from './sref-active.js';
 import { resolveAriaCurrent, SrefTargets } from './sref-status.js';
 import {
@@ -225,7 +226,9 @@ export class SrefStatusController implements ReactiveController {
    * as a property. Replaces `state`, `params` and `options` wholesale, keeps
    * the router, and refreshes.
    */
-  retarget(params: SrefTargetParams): void {
+  retarget<T extends SrefTarget = SrefTarget>(
+    params: SrefTargetParams<T>,
+  ): void {
     this.options = { router: this.options.router, ...params };
     this.targets.params = this.options;
     this.targets.setExplicit();

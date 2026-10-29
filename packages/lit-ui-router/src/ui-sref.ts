@@ -8,6 +8,7 @@ import { UIRouterLit } from './core.js';
 import { inLitDevMode, warnMissingRouter } from './dev-warn.js';
 import { subscribeRouter } from './router-subscription.js';
 import type { ParentView } from './events.js';
+import type { SrefArgs, SrefRelativeCheck, SrefTarget } from './registry.js';
 import { UiView } from './ui-view.js';
 
 import {
@@ -506,8 +507,8 @@ export class UiSrefDirective extends AsyncDirective {
  *
  * @category directives
  */
-export const uiSref: (
-  state: string,
-  params?: RawParams,
-  options?: UiSrefTransitionOptions,
+export const uiSref: <T extends SrefTarget>(
+  // oxlint-disable-next-line typescript/no-redundant-type-constituents -- the check is `unknown` until an app registers
+  state: T & SrefRelativeCheck<T>,
+  ...args: SrefArgs<T, UiSrefTransitionOptions>
 ) => DirectiveResult<typeof UiSrefDirective> = directive(UiSrefDirective);

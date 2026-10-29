@@ -23,13 +23,36 @@ A module augmentation reaches the whole program, so the [registered
 consumer](./registered), which registers states and loads the
 `ui-router-registry` adapter entry points, is a second program with its own
 `tsconfig.fixture*.json` pair. The [routed consumers](./routed), whose
-`lit-ui-router` components read the registry they're registered in, are three
+`lit-ui-router` components read the registry they're registered in, are five
 more, one per table:
 
 - `classes` and `templates` check `TypedLitStateDeclaration`. `MIN_VERSION`
   in `run.ts` skips `templates` on legs older than TypeScript 5.5.
-- `legacy` must fail: `EXPECTED_CODES` in `run.ts` names the circularity
-  errors `LitStateDeclaration` reports there.
+- `classes-by-module` registers two modules through `RegisteredStates`, each
+  component linking into the other module.
+- `legacy` and `legacy-by-module` must fail: `EXPECTED_CODES` in `run.ts` names
+  the circularity errors `LitStateDeclaration` reports through `Register` and
+  through `RegisteredStates`.
+
+`lit-ui-router` reads `ui-router-registry` as an optional peer. Inside the
+workspace the registry always resolves through pnpm's real paths, so the
+[optional-peer consumers](./optional-peer) run from a temp dir that unpacks the
+`@tools/release#pack:all` tarballs, with or without the registry:
+
+- `absent`: no registry, no augmentation. Targets are `string` and params
+  `RawParams`, and an equality check rejects `any`.
+- `absent-augmented` and `absent-augmented-by-module` augment `Register` and
+  `RegisteredStates`. Each must fail with TS2664 at the augmentation and
+  nothing else (`EXPECTED_ONLY`), so calls fall back to `string` without
+  cascading.
+- `installed` and `installed-by-module`: registry installed, with `Register`
+  or two `RegisteredStates` augmentations; a misspelled name and a missing
+  required param fail.
+
+The packed manifest must list the registry as an optional peer, and no
+packed `.js` file may name it. A second self-test swaps the guard in the
+packed `registry.d.ts` for an `IsAny` guard and asserts that TypeScript 5.5
+and later fail `absent` while older legs pass.
 
 The fixture compiles with `skipLibCheck: false`, so the packages' built
 `dist/*.d.ts` are themselves fully parsed **and** typechecked under each

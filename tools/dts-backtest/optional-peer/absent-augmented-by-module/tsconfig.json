@@ -1,0 +1,5 @@
+{
+  // For lint/IDE tooling only: run.ts checks this fixture against the packed tarballs in a temp dir.
+  "extends": "../../tsconfig.fixture.json",
+  "include": ["*.ts"]
+}

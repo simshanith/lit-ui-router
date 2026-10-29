@@ -11,6 +11,7 @@
   "excludeExternals": true,
   "excludeInternal": true,
   "excludePrivate": true,
+  "intentionallyNotExported": ["LooseRelative", "Untyped"],
   "categorizeByGroup": false,
   "categoryOrder": [
     "core",
