@@ -18,7 +18,8 @@
     "@effect/sql-d1": "catalog:",
     "@tools/release-ledger": "catalog:workspace",
     "effect": "catalog:",
-    "jose": "catalog:"
+    "jose": "catalog:",
+    "ui-router-server": "catalog:workspace"
   },
   "devDependencies": {
     "@tools/shared": "catalog:workspace",

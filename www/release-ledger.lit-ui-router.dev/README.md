@@ -20,12 +20,17 @@ stores, its regions and the fold, is
 
 [`wrangler.jsonc`](./wrangler.jsonc) holds the bindings, vars and queue settings.
 
+- **Requests** go through a [`ui-router-server`](../../packages/ui-router-server/README.md)
+  router built once per isolate in [`worker/index.ts`](./worker/index.ts). Its
+  tree is one delegating state, `claims` at `/claims`, whose handler is bound
+  to `ingest` by name. Any other path gets a plain-text 404.
 - **`POST /claims`** ([`src/ingest.ts`](./src/ingest.ts)) takes a GitHub Actions
   OIDC id-token as a bearer token, verifies it against GitHub's JWKS, checks it
   against the `OIDC_*` vars, and enqueues the claim. It answers 202 and writes
   nothing to D1. `repair` is refused here. `publish-npm.yml`'s `publish_npm`
   job posts here in its last step, through the
-  [`ledger_claim`](../../.config/mise/tasks/ledger_claim) mise task.
+  [`ledger_claim`](../../.config/mise/tasks/ledger_claim) mise task. Another
+  method on `/claims` gets a 405 with `Allow: POST`.
 - **The queue consumer** ([`src/consume.ts`](./src/consume.ts)) is the only D1
   writer. Per claim, it observes the tag, npm and GitHub, taking a 404 as the
   source reporting the fact absent, folds the observation through

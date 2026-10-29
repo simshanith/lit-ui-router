@@ -182,6 +182,41 @@ describe('wrangler.jsonc', () => {
   });
 });
 
+describe('the claims state in workerd', { timeout: 120_000 }, () => {
+  it('delegates a JSON POST /claims to ingest', async () => {
+    const response = await server.fetch('/claims', {
+      method: 'POST',
+      headers: { Accept: 'application/json' },
+      body: '{}',
+    });
+
+    assert.equal(response.status, 401);
+    assert.equal(await response.text(), 'no bearer token');
+  });
+
+  it('answers 405 with Allow: POST for GET /claims', async () => {
+    const response = await server.fetch('/claims', {
+      headers: { Accept: 'text/html' },
+    });
+
+    assert.equal(response.status, 405);
+    assert.equal(response.headers.get('Allow'), 'POST');
+  });
+
+  it('answers a plain-text 404 off /claims', async () => {
+    for (const [path, init] of [
+      ['/', { headers: { Accept: 'text/html' } }],
+      ['/claims/1', { method: 'POST', body: '{}' }],
+      ['/other', { method: 'POST', body: '{}' }],
+    ] as const) {
+      const response = await server.fetch(path, init);
+
+      assert.equal(response.status, 404, path);
+      assert.equal(await response.text(), 'not found', path);
+    }
+  });
+});
+
 describe('POST /claims in workerd', { timeout: 120_000 }, () => {
   it('answers 401 for an unverifiable token under the deployed audience', async () => {
     const response = await postClaim(

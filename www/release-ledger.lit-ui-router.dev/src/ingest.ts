@@ -1,5 +1,5 @@
-// POST /claims: verify the caller's GitHub OIDC token, decode the body, and
-// enqueue the claim. Nothing here writes to D1; the queue consumer does.
+// The `claims` delegate: verify the caller's GitHub OIDC token, decode the
+// body, and enqueue the claim. Nothing here writes to D1; the queue consumer does.
 import { Effect, Schema } from 'effect';
 import type { JWTVerifyGetKey } from 'jose';
 
@@ -160,10 +160,6 @@ export const ingest = (
   env: IngestEnv,
   keys?: JWTVerifyGetKey,
 ): Promise<Response> => {
-  const { pathname } = new URL(request.url);
-
-  if (pathname !== '/claims') return Promise.resolve(text(404, 'not found'));
-
   if (request.method !== 'POST') {
     return Promise.resolve(
       new Response('method not allowed', {

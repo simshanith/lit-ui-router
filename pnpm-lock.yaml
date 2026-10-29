@@ -3055,6 +3055,9 @@ importers:
       jose:
         specifier: 'catalog:'
         version: 6.2.13
+      ui-router-server:
+        specifier: catalog:workspace
+        version: link:../../packages/ui-router-server
     devDependencies:
       '@tools/shared':
         specifier: catalog:workspace

@@ -344,17 +344,16 @@ describe('POST /claims', () => {
     assert.equal((await ingest(post(token), env, keys)).status, 403);
   });
 
-  it('answers 404 off /claims and 405 for other methods', async () => {
+  it('answers 405 with Allow: POST for other methods', async () => {
     const { env } = envWith();
 
-    assert.equal(
-      (await ingest(new Request('https://ledger.test/'), env, keys)).status,
-      404,
+    const response = await ingest(
+      new Request('https://ledger.test/claims'),
+      env,
+      keys,
     );
-    assert.equal(
-      (await ingest(new Request('https://ledger.test/claims'), env, keys))
-        .status,
-      405,
-    );
+
+    assert.equal(response.status, 405);
+    assert.equal(response.headers.get('Allow'), 'POST');
   });
 });

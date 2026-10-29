@@ -1,10 +1,12 @@
-// The release-ledger worker: `fetch` enqueues verified claims, `scheduled`
+// The release-ledger worker: `fetch` routes /claims to ingest, `scheduled`
 // enqueues a sweep of every release tag, `queue` folds claims into D1, and
 // LedgerReader serves reads over a service binding.
 import { WorkerEntrypoint } from 'cloudflare:workers';
 import { D1Client } from '@effect/sql-d1';
 import { Effect, Layer, Option } from 'effect';
 import { FetchHttpClient } from 'effect/http';
+import { createServerRouter } from 'ui-router-server';
+import { createFetchHandler } from 'ui-router-server/fetch';
 
 import type { Claim } from '../src/claim.ts';
 import { consume } from '../src/consume.ts';
@@ -26,6 +28,29 @@ type LedgerEnv = Env & {
 };
 
 const database = (env: LedgerEnv) => D1Client.layer({ db: env.DB });
+
+const routes = [
+  { name: 'claims', url: '/claims', delegate: 'claims' },
+] as const;
+
+const router = createServerRouter({ mounts: { '/': { routes } } });
+
+// No request is a navigation here, so only delegating states answer.
+const route = createFetchHandler(router, {
+  shouldHandle: () => false,
+  serveShell: () => {
+    throw new Error('the release ledger serves no shell');
+  },
+  delegates: {
+    claims: (request: Request, env: LedgerEnv) => ingest(request, env),
+  },
+});
+
+const notFound = (): Response =>
+  new Response('not found', {
+    status: 404,
+    headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+  });
 
 /** Read-only access for other workers; a D1 binding would grant writes too. */
 export class LedgerReader extends WorkerEntrypoint<LedgerEnv> {
@@ -55,7 +80,7 @@ export class LedgerReader extends WorkerEntrypoint<LedgerEnv> {
 }
 
 export default {
-  fetch: (request, env) => ingest(request, env),
+  fetch: async (request, env) => (await route(request, env)) ?? notFound(),
   scheduled: (controller, env) =>
     Effect.runPromise(
       sweep(env, {
