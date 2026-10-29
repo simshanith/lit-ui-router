@@ -2,11 +2,9 @@
   "name": "@tools/eslint",
   "version": "0.0.1",
   "private": true,
-  "description": "The repo's ESLint pieces: the local repo/ rule plugin, the oxlint disable-directive stubs, the custom-element lane the root eslint.config.ts composes, and the formatter that adds Actions annotations to stylish output",
+  "description": "The repo's ESLint pieces: the local repo/ rule plugin, the complexity ceiling config, and the formatter that adds Actions annotations to stylish output",
   "type": "module",
   "exports": {
-    "./elements.ts": "./elements.ts",
-    "./oxlint-directives.ts": "./oxlint-directives.ts",
     "./rules/index.ts": "./rules/index.ts"
   },
   "scripts": {
@@ -22,10 +20,6 @@
     "@tools/shared": "catalog:workspace",
     "@types/node": "catalog:",
     "eslint": "catalog:",
-    "eslint-plugin-lit": "catalog:",
-    "eslint-plugin-lit-a11y": "catalog:",
-    "eslint-plugin-wc": "catalog:",
-    "jsonc-parser": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
     "typescript": "catalog:"

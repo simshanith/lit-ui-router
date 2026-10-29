@@ -1,0 +1,110 @@
+{
+  "$schema": "../../node_modules/oxlint/configuration_schema.json",
+  // an omitted list means oxlint's defaults, which would join the root's
+  "plugins": [],
+  "jsPlugins": [
+    { "name": "lit", "specifier": "eslint-plugin-lit" },
+    { "name": "wc", "specifier": "eslint-plugin-wc" },
+    { "name": "lit-a11y", "specifier": "eslint-plugin-lit-a11y" }
+  ],
+  "settings": {
+    // wc otherwise resolves `lit` from cwd to spot LitElement subclasses
+    "wc": { "elementBaseClasses": ["LitElement"] }
+  },
+  "overrides": [
+    {
+      // eslint-plugin-lit / -wc / -lit-a11y over WORKSPACE_SRC_GLOB
+      // (@tools/shared). oxlint cannot extend plugin configs, so this spells
+      // out lit flat/recommended, wc flat/best-practice and lit-a11y
+      // recommended, plus lit/lifecycle-super and lit/no-legacy-imports, minus
+      // lit/attribute-names and lit/no-native-attributes (lit-analyzer owns
+      // them), lit-a11y/anchor-is-valid (lit-ui-router/anchor-is-valid), and
+      // the declined wc/guard-super-call, wc/no-constructor-params and
+      // wc/no-exports-with-element.
+      "files": [
+        "packages/*/src/**/*.ts",
+        "apps/*/src/**/*.ts",
+        "examples/*/src/**/*.ts"
+      ],
+      // the example demonstrates its own ESLint setup
+      "excludeFiles": ["examples/lint-eslint/**"],
+      "rules": {
+        "lit/attribute-value-entities": "error",
+        "lit/binding-positions": "error",
+        "lit/lifecycle-super": "error",
+        "lit/no-duplicate-template-bindings": "error",
+        "lit/no-invalid-html": "error",
+        "lit/no-legacy-imports": "error",
+        "lit/no-legacy-template-syntax": "error",
+        "lit/no-property-change-update": "error",
+        "wc/attach-shadow-constructor": "error",
+        "wc/no-child-traversal-in-attributechangedcallback": "error",
+        "wc/no-child-traversal-in-connectedcallback": "error",
+        "wc/no-closed-shadow-root": "error",
+        "wc/no-constructor-attributes": "error",
+        "wc/no-customized-built-in-elements": "error",
+        "wc/no-invalid-element-name": "error",
+        "wc/no-invalid-extends": "error",
+        "wc/no-self-class": "error",
+        "wc/no-typos": "error",
+        "wc/require-listener-teardown": "error",
+        "lit-a11y/accessible-name": "error",
+        "lit-a11y/alt-text": "error",
+        "lit-a11y/aria-activedescendant-has-tabindex": "error",
+        "lit-a11y/aria-attr-valid-value": "error",
+        "lit-a11y/aria-attrs": "error",
+        "lit-a11y/aria-role": "error",
+        "lit-a11y/aria-unsupported-elements": "error",
+        "lit-a11y/autocomplete-valid": "error",
+        "lit-a11y/click-events-have-key-events": "error",
+        "lit-a11y/definition-list": "error",
+        "lit-a11y/heading-hidden": "error",
+        "lit-a11y/iframe-title": "error",
+        "lit-a11y/img-redundant-alt": "error",
+        "lit-a11y/list": "error",
+        "lit-a11y/mouse-events-have-key-events": "error",
+        "lit-a11y/no-access-key": "error",
+        "lit-a11y/no-aria-slot": "error",
+        "lit-a11y/no-autofocus": "error",
+        "lit-a11y/no-distracting-elements": "error",
+        "lit-a11y/no-redundant-role": "error",
+        "lit-a11y/obj-alt": "error",
+        "lit-a11y/role-has-required-aria-attrs": "error",
+        "lit-a11y/role-supports-aria-attr": "error",
+        "lit-a11y/scope": "error",
+        "lit-a11y/tabindex-no-positive": "error"
+      }
+    },
+    {
+      // test fixtures: their templates are assertion inputs, not UI
+      "files": ["**/*.spec.ts", "**/src/specs/**"],
+      "rules": {
+        "lit-a11y/accessible-name": "off",
+        "lit-a11y/alt-text": "off",
+        "lit-a11y/aria-activedescendant-has-tabindex": "off",
+        "lit-a11y/aria-attr-valid-value": "off",
+        "lit-a11y/aria-attrs": "off",
+        "lit-a11y/aria-role": "off",
+        "lit-a11y/aria-unsupported-elements": "off",
+        "lit-a11y/autocomplete-valid": "off",
+        "lit-a11y/click-events-have-key-events": "off",
+        "lit-a11y/definition-list": "off",
+        "lit-a11y/heading-hidden": "off",
+        "lit-a11y/iframe-title": "off",
+        "lit-a11y/img-redundant-alt": "off",
+        "lit-a11y/list": "off",
+        "lit-a11y/mouse-events-have-key-events": "off",
+        "lit-a11y/no-access-key": "off",
+        "lit-a11y/no-aria-slot": "off",
+        "lit-a11y/no-autofocus": "off",
+        "lit-a11y/no-distracting-elements": "off",
+        "lit-a11y/no-redundant-role": "off",
+        "lit-a11y/obj-alt": "off",
+        "lit-a11y/role-has-required-aria-attrs": "off",
+        "lit-a11y/role-supports-aria-attr": "off",
+        "lit-a11y/scope": "off",
+        "lit-a11y/tabindex-no-positive": "off"
+      }
+    }
+  ]
+}

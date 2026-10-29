@@ -2440,18 +2440,6 @@ importers:
       eslint:
         specifier: 'catalog:'
         version: 10.13.0(jiti@2.7.0)(supports-color@10.2.2)
-      eslint-plugin-lit:
-        specifier: 'catalog:'
-        version: 2.3.1(eslint@10.13.0(jiti@2.7.0)(supports-color@10.2.2))
-      eslint-plugin-lit-a11y:
-        specifier: 'catalog:'
-        version: 5.1.3(eslint@10.13.0(jiti@2.7.0)(supports-color@10.2.2))
-      eslint-plugin-wc:
-        specifier: 'catalog:'
-        version: 3.1.0(eslint@10.13.0(jiti@2.7.0)(supports-color@10.2.2))
-      jsonc-parser:
-        specifier: 'catalog:'
-        version: 3.3.1
       oxfmt:
         specifier: 'catalog:'
         version: 0.75.0
@@ -2536,9 +2524,18 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 24.19.2
-      eslint:
+      eslint-plugin-lit:
         specifier: 'catalog:'
-        version: 10.13.0(jiti@2.7.0)(supports-color@10.2.2)
+        version: 2.3.1(eslint@10.13.0(jiti@2.7.0)(supports-color@10.2.2))
+      eslint-plugin-lit-a11y:
+        specifier: 'catalog:'
+        version: 5.1.3(eslint@10.13.0(jiti@2.7.0)(supports-color@10.2.2))
+      eslint-plugin-wc:
+        specifier: 'catalog:'
+        version: 3.1.0(eslint@10.13.0(jiti@2.7.0)(supports-color@10.2.2))
+      jsonc-parser:
+        specifier: 'catalog:'
+        version: 3.3.1
       oxfmt:
         specifier: 'catalog:'
         version: 0.75.0

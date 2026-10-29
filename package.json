@@ -30,7 +30,6 @@
     "lint": "turbo run lint",
     "lint:actionlint": "mise run lint_actionlint",
     "lint:complexity": "eslint --config tools/eslint/complexity-ceiling.ts --format ./tools/eslint/github-formatter.ts --quiet .",
-    "lint:elements": "lint-elements",
     "lint:markdown": "mise run lint_markdown",
     "lint:package-json": "eslint --format ./tools/eslint/github-formatter.ts \"**/package.json\" pnpm-workspace.yaml",
     "lint:root": "oxlint --ignore-pattern apps --ignore-pattern tools --ignore-pattern www --ignore-pattern packages --ignore-pattern examples .",

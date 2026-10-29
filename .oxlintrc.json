@@ -1,5 +1,6 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "extends": ["./tools/lint-elements/elements.oxlintrc.json"],
   "plugins": ["typescript", "unicorn"],
   "jsPlugins": [
     "eslint-plugin-turbo",
@@ -20,6 +21,9 @@
     "builtin": true
   },
   "settings": {
+    // wc otherwise resolves `lit` from cwd to spot LitElement subclasses; oxlint
+    // drops `settings` from extended configs
+    "wc": { "elementBaseClasses": ["LitElement"] },
     "litUiRouterSources": ["sample-app-shared/registry/lit.js"]
   },
   "ignorePatterns": [
@@ -456,6 +460,7 @@
         "tools/embed-heights/**/*.test.ts",
         "tools/eslint/**/*.test.ts",
         "tools/lcov-rebase/**/*.test.ts",
+        "tools/lint-elements/**/*.test.ts",
         "tools/lit-template-lint/**/*.test.ts",
         "tools/oxc-emit/**/*.test.ts",
         "tools/release/**/*.test.ts",
