@@ -203,6 +203,15 @@ describe('the claims state in workerd', { timeout: 120_000 }, () => {
     assert.equal(response.headers.get('Allow'), 'POST');
   });
 
+  it('answers a plain-text 404 to an HTML navigation off /claims', async () => {
+    const response = await server.fetch('/releases', {
+      headers: { Accept: 'text/html' },
+    });
+
+    assert.equal(response.status, 404);
+    assert.equal(await response.text(), 'not found');
+  });
+
   it('answers a plain-text 404 off /claims', async () => {
     for (const [path, init] of [
       ['/', { headers: { Accept: 'text/html' } }],

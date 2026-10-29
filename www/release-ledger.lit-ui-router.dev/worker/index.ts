@@ -35,14 +35,8 @@ const routes = [
 
 const router = createServerRouter({ mounts: { '/': { routes } } });
 
-// No request is a navigation here, so only delegating states answer.
-const route = createFetchHandler(router, {
-  shouldHandle: () => false,
-  serveShell: () => {
-    throw new Error('the release ledger serves no shell');
-  },
-  delegates: { claims: ingest },
-});
+// A mount of delegating states only claims their urls; the rest pass as null.
+const route = createFetchHandler(router, { delegates: { claims: ingest } });
 
 const notFound = (): Response =>
   new Response('not found', {
