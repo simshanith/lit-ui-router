@@ -23,21 +23,45 @@ npm install --save-dev ui-router-registry
 `@uirouter/core` is a peer dependency, for its types only. `ui-router-signals`,
 `ui-router-effect` and `ui-router-mobx` are optional peers at `^0.2.0`, each
 needed only by its entry point. Install one copy of this package per app: two
-copies mean two `Register`s, and the augmentation types only one.
+copies mean two registries, and the augmentations type only one.
 
 ## Registering states
 
-Register the app's declarations once:
+Register each module's declarations next to its state table:
 
 ```ts
-import type { states } from './states';
+import type { StatesOf } from 'ui-router-registry';
+
+export const contactsStates = [
+  { name: 'contacts', url: '/contacts' },
+  { name: 'contacts.contact', url: '/:contactId' },
+] as const;
+
+declare module 'ui-router-registry' {
+  interface RegisteredStates extends StatesOf<typeof contactsStates> {}
+}
+```
+
+Each module, lazy ones included, adds its own line, and every file sees every
+module's names. A class-declared state can sit in the table or be registered by
+hand: `interface RegisteredStates { about: typeof AboutState }`. Two modules
+that register one name with different rows are a TS2320 error in the
+registry's declarations; on TypeScript 5 `skipLibCheck` hides it and the first
+row wins.
+
+`Register` takes every declaration at one site instead:
+
+```ts
+import type { appStates, lazyStates } from './states';
 
 declare module 'ui-router-registry' {
   interface Register {
-    states: (typeof states)[number];
+    states: (typeof appStates)[number] | (typeof lazyStates)[number];
   }
 }
 ```
+
+The registry reads both, so the two forms mix.
 
 Until an app registers, every type falls back to core's `string` and
 `RawParams`, so existing calls compile unchanged.
@@ -59,7 +83,8 @@ stateService.go('contacts.contact', { contactId: 'c1' });
 
 | Type                              | What it holds                                                                                                                                                       |
 | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Register`                        | the interface an app augments with its `as const` state declarations                                                                                                |
+| `RegisteredStates` and `StatesOf` | the interface each module augments with its `as const` state declarations, keyed by name                                                                            |
+| `Register`                        | the interface that takes every state declaration at one augmentation site                                                                                           |
 | `StateName`                       | the registered state names; dotted names and `parent:` both resolve, and a future state's `name.**` placeholder is left out                                         |
 | `ParamsOf` and `ResolvedParamsOf` | the params a state accepts and the params it reads back, its ancestors' included; url placeholders are required, query params are not                               |
 | `TypedStateService`               | `go`, `transitionTo`, `target`, `href`, `is`, `includes` and `reload` over registered names; relative refs are checked by their tail, and object targets stay loose |
@@ -70,7 +95,7 @@ stateService.go('contacts.contact', { contactId: 'c1' });
 
 `ui-router-signals`, `ui-router-effect` and `ui-router-mobx` each declare an
 empty `RouteTypes` interface. A type-only import of the matching entry point,
-next to the `Register` augmentation, fills it in:
+next to an augmentation, fills it in:
 
 ```ts
 import type {} from 'ui-router-registry/signals';
@@ -118,10 +143,10 @@ stateService.go(name as UncheckedRef);
 
 A state declaration that names a component and is checked with `satisfies`
 against a type that inspects the component, such as `LitStateDeclaration`, makes
-that component part of `Register`'s type. If one of the component's members
+that component part of the registered states' type. If one of the component's members
 calls a typed target (`go`, `href`, a typed `uiSref` wrapper) and has no
-declared return type, TypeScript has to infer that member from `Register` while
-still building `Register`, and reports a circular type (TS7022, TS7023, TS7024,
+declared return type, TypeScript has to infer that member from the registry
+while still building it, and reports a circular type (TS7022, TS7023, TS7024,
 TS2456, TS2502 or TS2313).
 
 For `lit-ui-router` states, check the declarations with
