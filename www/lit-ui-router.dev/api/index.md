@@ -131,6 +131,7 @@ the status to the host instead of writing an attribute, and the template
 composes it freely:
 
 ```ts
+@property({ type: Boolean }) locked = false;
 private users = new SrefStatusController(this, { state: 'users' });
 // class=${classMap({ 'nav-link': true, active: this.users.active, disabled: this.locked })}
 // aria-current=${this.users.ariaCurrent()}
