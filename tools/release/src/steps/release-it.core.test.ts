@@ -67,6 +67,8 @@ describe('bumpArgs', () => {
         'true',
         '--git.commitMessage',
         'Release 1.8.0\n\n* fix: things',
+        '--hooks.after:bump',
+        'pnpm install --lockfile-only --fix-lockfile && git add ":(top)pnpm-lock.yaml"',
       ],
     );
   });
