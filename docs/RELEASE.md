@@ -273,9 +273,10 @@ these check runs.
    - Merge with squash commit
    - The merge runs main CI (including the main-only guards); a green run
      triggers tagging automatically
-   - Merge it on its own and let its main run reach tagging before merging
-     anything else — a queued main run can be evicted by a later push, which
-     silently skips the tag (see [Tag workflow not running](#tag-workflow-not-running))
+   - Release PRs for several packages can merge back to back. Each green main
+     run tags every package at the version main carries, so a run evicted by
+     a later push is tagged by the next green one (see
+     [Tag workflow not running](#tag-workflow-not-running))
 
 4. **Verify the release:**
    - Check Actions for tag-release workflow
