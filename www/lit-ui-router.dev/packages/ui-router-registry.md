@@ -47,7 +47,7 @@ module's names. A class-declared state can sit in the table or be registered by
 hand: `interface RegisteredStates { about: typeof AboutState }`. Two modules
 that register one name with different rows are a TS2320 error in the
 registry's declarations; on TypeScript 5 `skipLibCheck` hides it and the first
-row wins.
+row wins, which [`AssertNoCollisions`](#collisions-across-modules) checks for.
 
 `Register` takes every declaration at one site instead:
 
@@ -66,6 +66,32 @@ The registry reads both, so the two forms mix.
 Until an app registers, every type falls back to core's `string` and
 `RawParams`, so existing calls compile unchanged.
 
+## Collisions across modules
+
+When two modules register one name with different rows, the first row wins.
+TypeScript 7 reports TS2320 at each module's augmentation, and core throws
+`State '…' is already defined` when the second module registers. On TypeScript 5
+the error lands in the registry's declarations, where `skipLibCheck` hides it.
+The check is opt-in: `AssertNoCollisions` takes a module's table and fails
+unless every row in it is the one registered under its name. Assert it next to
+the module's augmentation:
+
+```ts
+import type { AssertNoCollisions, StatesOf } from 'ui-router-registry';
+
+declare module 'ui-router-registry' {
+  interface RegisteredStates extends StatesOf<typeof contactsStates> {}
+}
+
+export type ContactsStates = AssertNoCollisions<typeof contactsStates>;
+```
+
+A row that collides fails at that line, as a missing
+`'not the row registered under'` key holding the state's name. The assertion is
+a type, so it emits nothing; the `export` keeps `noUnusedLocals` quiet. A table
+that never augmented `RegisteredStates` collides on every name. `CollisionsOf`
+gives the colliding names as a union, `never` when there are none.
+
 ## Typed calls
 
 Annotate where the router is used. `TypedStateService` extends core's
@@ -81,15 +107,16 @@ const stateService: TypedStateService = router.stateService;
 stateService.go('contacts.contact', { contactId: 'c1' });
 ```
 
-| Type                              | What it holds                                                                                                                                                       |
-| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `RegisteredStates` and `StatesOf` | the interface each module augments with its `as const` state declarations, keyed by name                                                                            |
-| `Register`                        | the interface that takes every state declaration at one augmentation site                                                                                           |
-| `StateName`                       | the registered state names; dotted names and `parent:` both resolve, and a future state's `name.**` placeholder is left out                                         |
-| `ParamsOf` and `ResolvedParamsOf` | the params a state accepts and the params it reads back, its ancestors' included; url placeholders are required, query params are not                               |
-| `TypedStateService`               | `go`, `transitionTo`, `target`, `href`, `is`, `includes` and `reload` over registered names; relative refs are checked by their tail, and object targets stay loose |
-| `TypedRouteSnapshot`              | the route snapshot the reactive packages share, whose `includes(name)` narrows `current` and `params` to that state's subtree                                       |
-| `RegisteredRouteTypes`            | the members the `/signals`, `/effect` and `/mobx` entry points fill the adapters' `RouteTypes` interfaces from                                                      |
+| Type                                    | What it holds                                                                                                                                                       |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `RegisteredStates` and `StatesOf`       | the interface each module augments with its `as const` state declarations, keyed by name                                                                            |
+| `AssertNoCollisions` and `CollisionsOf` | the check that a module's table is the one registered under each of its names, and the names that collide                                                           |
+| `Register`                              | the interface that takes every state declaration at one augmentation site                                                                                           |
+| `StateName`                             | the registered state names; dotted names and `parent:` both resolve, and a future state's `name.**` placeholder is left out                                         |
+| `ParamsOf` and `ResolvedParamsOf`       | the params a state accepts and the params it reads back, its ancestors' included; url placeholders are required, query params are not                               |
+| `TypedStateService`                     | `go`, `transitionTo`, `target`, `href`, `is`, `includes` and `reload` over registered names; relative refs are checked by their tail, and object targets stay loose |
+| `TypedRouteSnapshot`                    | the route snapshot the reactive packages share, whose `includes(name)` narrows `current` and `params` to that state's subtree                                       |
+| `RegisteredRouteTypes`                  | the members the `/signals`, `/effect` and `/mobx` entry points fill the adapters' `RouteTypes` interfaces from                                                      |
 
 ## Reactive adapters
 
