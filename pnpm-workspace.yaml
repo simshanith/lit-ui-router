@@ -144,6 +144,7 @@ catalogs:
     '@lit-labs/ssr-floor': npm:@lit-labs/ssr@4.1.0
     lit-ui-router-floor: npm:lit-ui-router@1.16.1
     ui-router-server-0.3-floor: npm:ui-router-server@0.3.0
+    ui-router-server-0.4-floor: npm:ui-router-server@0.4.0
     ui-router-server-floor: npm:ui-router-server@0.2.0
   publishedDependencies:
     '@oxc-project/runtime': '>=0.50.0'

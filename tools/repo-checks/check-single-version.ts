@@ -65,7 +65,7 @@ const ALLOWED: SplitAllowance[] = [
   },
   {
     name: 'ui-router-server',
-    why: 'catalogs.peerFloorSsr pins ui-router-server-floor to 0.2.0 and ui-router-server-0.3-floor to 0.3.0, one floor per lower leg of the ssr peer range',
+    why: 'catalogs.peerFloorSsr pins ui-router-server-floor to 0.2.0, ui-router-server-0.3-floor to 0.3.0 and ui-router-server-0.4-floor to 0.4.0, one floor per lower leg of the ssr peer range',
   },
 ];
 
