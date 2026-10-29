@@ -84,6 +84,14 @@
       "default": "./dist/url-matcher.js"
     },
     "./package.json": "./package.json",
+    "./prerender": {
+      "types": "./dist/prerender.d.ts",
+      "development": "./dist/development/prerender.js",
+      "production": "./dist/prerender.js",
+      "deno": "./dist/prerender.js",
+      "node": "./dist/development/prerender.js",
+      "default": "./dist/prerender.js"
+    },
     "./redirects": {
       "types": "./dist/redirects.d.ts",
       "development": "./dist/development/redirects.js",
@@ -223,6 +231,18 @@
     "./matcher": {
       "free": [
         "@uirouter/core"
+      ]
+    },
+    "./prerender": {
+      "free": [
+        "@uirouter/core",
+        "@lit-labs/ssr",
+        "hono",
+        "lit",
+        "lit-ui-router",
+        "vite",
+        "node:fs",
+        "node:path"
       ]
     },
     "./redirects": {

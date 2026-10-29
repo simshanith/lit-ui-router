@@ -39,6 +39,16 @@ import {
   type UrlMatcherCompilerConfig,
 } from 'ui-router-server/matcher';
 import {
+  prerender,
+  type EmittedPage,
+  type FileWriter,
+  type PrerenderOptions,
+  type PrerenderResult,
+  type PrerenderTally,
+  type RedirectLine,
+  type RenderContext,
+} from 'ui-router-server/prerender';
+import {
   compileRedirects,
   compileRoutes,
   evaluateRedirects,
@@ -223,6 +233,38 @@ export async function settledState(
   const transition = await settle(router, path, settleOptions);
 
   return transition.to().name ?? '';
+}
+
+// Ssr static tier: the loop with a string render, no renderer behind it.
+const emitted = new Map<string, string>();
+
+const writeEmitted: FileWriter = (file, body) => void emitted.set(file, body);
+
+const legacyRules: RedirectLine[] = [
+  { from: '/megacanvas', to: '/megacanvas.html', status: 301 },
+];
+
+const staticSite: PrerenderOptions = {
+  mounts: { '/app': mount },
+  outDir: 'dist',
+  paths: ['/app/contacts', '/app/people'],
+  render: (verdict, context: RenderContext) =>
+    `<main data-file=${context.file}>${verdict.status ?? 200}</main>`,
+  notFound: { file: '404.html' },
+  rules: '_redirects',
+  extraRules: legacyRules,
+  trailingSlash: 'exact',
+  write: writeEmitted,
+  dryRun: true,
+};
+
+export async function staticTally(): Promise<{
+  tally: PrerenderTally;
+  first: EmittedPage | undefined;
+}> {
+  const result: PrerenderResult = await prerender(staticSite);
+
+  return { tally: result.tally, first: result.pages[0] };
 }
 
 // Ssr payload: a typed resolve read back after adoption.
