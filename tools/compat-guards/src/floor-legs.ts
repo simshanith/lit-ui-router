@@ -52,6 +52,8 @@ export interface FloorLegs {
   floorCatalog: string;
   /** Installed version of each floor alias of `dep` the package declares. */
   aliases: Readonly<Record<string, string>>;
+  /** The aliases pnpm linked to the workspace package instead of the registry. */
+  linked?: ReadonlySet<string>;
   /** Installed version of the `dep` devDependency; read only for 2+ legs. */
   dev: () => string;
 }
@@ -81,6 +83,14 @@ export function proveLegs(input: FloorLegs): LegVerdict {
         `${catalog} ${dep} range "${range}" has a leg "${leg}" that no alias ` +
           `proves. Add ${alias}: npm:${dep}@${floor} to the ${floorCatalog} ` +
           `catalog, declare it as a devDependency, and reinstall.`,
+      );
+    } else if (installed !== floor && input.linked?.has(alias) === true) {
+      failures.push(
+        `${alias} is linked to the workspace ${dep} (${installed}), not the ` +
+          `registry ${dep}@${floor} the ${input.kind} range ${range} leg ` +
+          `"${leg}" needs: pnpm-lock.yaml recorded it as link: while the ` +
+          `workspace sat at ${floor}. Run pnpm install --lockfile-only ` +
+          '--fix-lockfile and commit pnpm-lock.yaml.',
       );
     } else if (installed !== floor) {
       failures.push(

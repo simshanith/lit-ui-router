@@ -216,7 +216,14 @@ the top by the dev dependency, and each leg between by its own
 When a release moves a workspace dev dependency past a dependent's range, the
 top leg falls back to its own `<dep>-<line>-floor` alias, and the guard notes
 that the range needs widening. Adding that alias before the release keeps both
-sides of the bump green.
+sides of the bump green. While the workspace package sits at the alias's exact
+version, `linkWorkspacePackages` records the alias in `pnpm-lock.yaml` as a
+`link:` to the workspace package, and installs keep that link after the bump.
+The bump commit carries a lockfile re-resolved by
+`pnpm install --lockfile-only --fix-lockfile` (a release-it `after:bump` hook
+in `bumpArgs`, `tools/release/src/steps/release-it.core.ts`), which fetches the
+alias from the registry. On a bump made by hand, `floor-guard` names a
+still-linked alias and that command.
 
 A peer range on a 0.x workspace package keeps two legs: the dep's current minor
 and the one before it. When the dep ships a new minor, the dependent's next

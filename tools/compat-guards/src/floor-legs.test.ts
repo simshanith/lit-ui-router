@@ -250,6 +250,42 @@ describe('proveLegs', () => {
     assert.deepEqual(proveLegs(legs({ aliases })).failures, [failure]);
   });
 
+  it('passes a top-leg alias linked to the workspace package at its floor', () => {
+    const verdict = proveLegs(
+      legs({
+        aliases: {
+          'ui-router-server-floor': '0.2.0',
+          'ui-router-server-0.3-floor': '0.3.0',
+        },
+        linked: new Set(['ui-router-server-0.3-floor']),
+        dev: () => '0.3.0',
+      }),
+    );
+
+    assert.deepEqual(verdict.failures, []);
+  });
+
+  it('fails a top-leg alias still linked to the workspace after the bump, naming the fix', () => {
+    const verdict = proveLegs(
+      legs({
+        aliases: {
+          'ui-router-server-floor': '0.2.0',
+          'ui-router-server-0.3-floor': '0.4.0',
+        },
+        linked: new Set(['ui-router-server-0.3-floor']),
+        dev: () => '0.4.0',
+      }),
+    );
+
+    assert.deepEqual(verdict.failures, [
+      'ui-router-server-0.3-floor is linked to the workspace ui-router-server ' +
+        '(0.4.0), not the registry ui-router-server@0.3.0 the peer range ' +
+        '^0.2.0 || ^0.3.0 leg ">=0.3.0 <0.4.0-0" needs: pnpm-lock.yaml ' +
+        'recorded it as link: while the workspace sat at 0.3.0. Run pnpm ' +
+        'install --lockfile-only --fix-lockfile and commit pnpm-lock.yaml.',
+    ]);
+  });
+
   it('fails a leg alias that proves no leg', () => {
     const verdict = proveLegs(
       legs({
