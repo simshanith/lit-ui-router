@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { describe, it } from 'node:test';
@@ -192,11 +192,11 @@ describe('prerender', () => {
       paths: ['/sheet/7B'],
       notFound: false,
       dryRun: true,
-      render: () => 'aé€😀\uD800',
+      render: () => 'aé€😀',
     });
 
     assert.equal(files.size, 0);
-    assert.equal(result.pages[0]?.bytes, 1 + 2 + 3 + 4 + 3);
+    assert.equal(result.pages[0]?.bytes, 1 + 2 + 3 + 4);
   });
 
   it('takes a compiled resolver, and refuses what it cannot probe', async () => {
@@ -217,7 +217,7 @@ describe('prerender', () => {
     );
   });
 
-  it('writes through node:fs by default', async (t) => {
+  it('writes through a caller-supplied node:fs writer', async (t) => {
     const outDir = await mkdtemp(path.join(tmpdir(), 'ui-router-server-'));
     t.after(() => rm(outDir, { recursive: true, force: true }));
 
@@ -227,6 +227,10 @@ describe('prerender', () => {
       paths: ['/sheet/7B', '/app/legacy'],
       notFound: false,
       render: () => '<p>7B</p>',
+      write: async (file, body) => {
+        await mkdir(path.dirname(file), { recursive: true });
+        await writeFile(file, body);
+      },
     });
 
     assert.equal(

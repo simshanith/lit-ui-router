@@ -456,6 +456,8 @@ matches nothing is counted, listed in `result.warnings`, and warned about in
 development.
 
 ```ts
+import { mkdir, writeFile } from 'node:fs/promises';
+import { dirname } from 'node:path';
 import { prerender, settle } from 'ui-router-server/ssr';
 
 const result = await prerender({
@@ -466,13 +468,18 @@ const result = await prerender({
     await settle(router, path);
     return page(router);
   },
+  write: async (file, body) => {
+    await mkdir(dirname(file), { recursive: true });
+    await writeFile(file, body);
+  },
 });
 ```
 
-Files go through `node:fs`, imported lazily on first write, so the entry never
-names a `node:` specifier statically; pass `write` to emit anywhere else.
+The loop never touches a filesystem itself: `write` receives each file with
+`outDir` joined on, so the same call emits through `node:fs`, a virtual fs, or
+a `Map`, under any runtime.
 [`lit-ui-router-ssr`](/packages/ssr)'s `prerender` is this loop with a lit
-render.
+render, and writes through `node:fs` by default.
 
 ## What the server can't see
 

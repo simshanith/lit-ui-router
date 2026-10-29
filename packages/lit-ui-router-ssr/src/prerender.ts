@@ -9,6 +9,7 @@ import { DefType, isString } from '@uirouter/core';
 import type { Verdict } from 'ui-router-server';
 import { prerender as prerenderSite } from 'ui-router-server/ssr';
 import type {
+  FileWriter,
   PrerenderOptions as SitePrerenderOptions,
   PrerenderResult as SitePrerenderResult,
   RenderContext as SiteRenderContext,
@@ -27,6 +28,33 @@ export type {
 
 type ShellVerdict = Extract<Verdict, { kind: 'shell' }>;
 
+// Built at runtime so no node: specifier enters the static module graph; a supplied `write` needs none.
+const NODE_FS = 'node:fs/promises';
+
+// Typed structurally so src never pulls in @types/node.
+interface NodeFsPromises {
+  mkdir(
+    path: string,
+    options: { recursive: boolean },
+  ): Promise<string | undefined>;
+  writeFile(path: string, data: string, encoding: string): Promise<void>;
+}
+
+const dirOf = (file: string): string => {
+  const cut = file.lastIndexOf('/');
+
+  return cut === -1 ? '' : file.slice(0, cut);
+};
+
+const nodeWrite: FileWriter = async (file, body) => {
+  // SAFETY: `NODE_FS` names `node:fs/promises`, whose `mkdir` and `writeFile` take these shapes.
+  const { mkdir, writeFile } = (await import(NODE_FS)) as NodeFsPromises;
+  const dir = dirOf(file);
+
+  if (dir) await mkdir(dir, { recursive: true });
+  await writeFile(file, body, 'utf8');
+};
+
 /** What a render hook is handed besides the verdict. */
 export interface RenderContext extends SiteRenderContext {
   /** The render's root event target — the one the router was provided on. */
@@ -37,7 +65,10 @@ export interface RenderContext extends SiteRenderContext {
  * Options for {@link prerender}: those of `ui-router-server/ssr`'s loop, with
  * a lit render in place of its `render`.
  */
-export interface PrerenderOptions extends Omit<SitePrerenderOptions, 'render'> {
+export interface PrerenderOptions extends Omit<
+  SitePrerenderOptions,
+  'render' | 'write'
+> {
   /**
    * The router the render reads: provided on {@link PrerenderOptions.root | root}
    * for `context-request` and scoped with `withRouterSync` around every render,
@@ -75,6 +106,8 @@ export interface PrerenderOptions extends Omit<SitePrerenderOptions, 'render'> {
    * Pass `[]` for a render with no `<ui-view>` to fill.
    */
   elementRenderers?: RenderInfo['elementRenderers'];
+  /** Writes a file. Defaults to `node:fs`, imported lazily on first write. */
+  write?: FileWriter;
 }
 
 /** What {@link prerender} did. */
@@ -220,6 +253,7 @@ export async function prerender(
     document,
     elementRenderers = [UiViewRenderer],
     root = new EventTarget(),
+    write = nodeWrite,
     ...site
   } = options;
 
@@ -242,7 +276,7 @@ export async function prerender(
   const uninstall = provideRouter(root, router);
 
   try {
-    const result = await prerenderSite({ ...site, render: renderLit });
+    const result = await prerenderSite({ ...site, render: renderLit, write });
 
     return { ...result, root };
   } finally {

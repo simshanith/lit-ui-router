@@ -5,7 +5,6 @@ import { devGate } from '#dev-gate';
 import { warnStrictSlash, warnUnclaimed } from './dev-warn.ts';
 import { createServerRouter } from './index.ts';
 import type { MountConfig, ServerRouter, Verdict } from './index.ts';
-import { nodeWrite } from './node-write.ts';
 
 /** One emitted artefact, as {@link prerender} planned it. */
 export interface EmittedPage {
@@ -15,7 +14,7 @@ export interface EmittedPage {
   file: string;
   /** The verdict that produced it; `status` carries the otherwise projection's 404. */
   verdict: Verdict;
-  /** Bytes written, or planned under `dryRun`, counted as UTF-8. */
+  /** Bytes written, or planned under `dryRun`. */
   bytes: number;
 }
 
@@ -40,9 +39,9 @@ export interface RenderContext {
 }
 
 /**
- * Where {@link prerender} writes. Supply one to emit into memory or a virtual
- * fs. `file` arrives with `outDir` already joined on, so a hook writes it
- * verbatim.
+ * Where {@link prerender} writes: over `node:fs`, a virtual fs, or memory.
+ * `file` arrives with `outDir` already joined on, so a hook writes it
+ * verbatim, creating its directory as needed.
  */
 export type FileWriter = (file: string, body: string) => void | Promise<void>;
 
@@ -104,8 +103,8 @@ export interface PrerenderOptions {
    * `config: { strict: false }` must both admit it.
    */
   trailingSlash?: 'both' | 'exact';
-  /** Writes a file. Defaults to `node:fs`, imported lazily on first write. */
-  write?: FileWriter;
+  /** Writes each file; pass one over `node:fs`, a virtual fs, or memory. */
+  write: FileWriter;
   /** Plans everything and writes nothing — neither pages nor the rules file. */
   dryRun?: boolean;
 }
@@ -143,22 +142,6 @@ const PROBE_SEGMENT = '__ui-router-server-probe__';
 
 const joinPath = (dir: string, file: string): string =>
   dir === '' ? file : `${dir.replace(/\/+$/, '')}/${file}`;
-
-// UTF-8 length without TextEncoder, which the runtime-neutral graph doesn't declare; a lone surrogate counts as U+FFFD.
-const utf8Length = (text: string): number => {
-  let bytes = 0;
-
-  for (const char of text) {
-    const code = char.codePointAt(0) ?? 0;
-
-    if (code < 0x80) bytes += 1;
-    else if (code < 0x800) bytes += 2;
-    else if (code < 0x10000) bytes += 3;
-    else bytes += 4;
-  }
-
-  return bytes;
-};
 
 // The mount-relative path: '' at the mount root, '/sheet/7B' below it.
 const subpathIn = (mount: string, path: string): string => {
@@ -287,11 +270,17 @@ const resolverOf = (options: PrerenderOptions): ServerRouter => {
  *
  * @example
  * ```ts
+ * import { mkdir, writeFile } from 'node:fs/promises';
+ * import { dirname } from 'node:path';
  * import { prerender, settle } from 'ui-router-server/ssr';
  *
  * const result = await prerender({
  *   mounts,
  *   outDir: 'dist',
+ *   write: async (file, body) => {
+ *     await mkdir(dirname(file), { recursive: true });
+ *     await writeFile(file, body);
+ *   },
  *   paths: ['/', '/sheet/7B', '/legacy'],
  *   render: async (verdict, { path }) => {
  *     await settle(router, path);
@@ -312,7 +301,7 @@ export async function prerender(
     rules = '_redirects',
     extraRules = [],
     trailingSlash = 'both',
-    write = nodeWrite,
+    write,
     dryRun = false,
   } = options;
 
@@ -338,7 +327,12 @@ export async function prerender(
     const html = await render(verdict, { path, subpath, file });
 
     if (!dryRun) await write(joinPath(outDir, file), html);
-    pages.push({ path, file, verdict, bytes: utf8Length(html) });
+    pages.push({
+      path,
+      file,
+      verdict,
+      bytes: new TextEncoder().encode(html).length,
+    });
   };
 
   let slashProbed = false;
