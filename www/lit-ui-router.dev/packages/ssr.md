@@ -494,7 +494,7 @@ await bootstrap(router, root, page(router), {
 
 A consumer's own `LitElement` that renders into its light DOM opts in to the
 same sleep-then-adopt cycle with
-[`LightDomHydrating`](/api/lit-ui-router-ssr/client/variables/LightDomHydrating).
+[`LightDomHydrating`](/api/lit-ui-router-ssr/client/functions/LightDomHydrating).
 [`LightElementRenderer`](/api/lit-ui-router-ssr/index/classes/LightElementRenderer)
 draws it on the server, and
 [`lightSlot`](/api/lit-ui-router-ssr/client/variables/lightSlot) marks the hole
