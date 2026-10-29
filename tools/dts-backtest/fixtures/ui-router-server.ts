@@ -39,6 +39,16 @@ import {
   type UrlMatcherCompilerConfig,
 } from 'ui-router-server/matcher';
 import {
+  prerender,
+  type EmittedPage,
+  type FileWriter,
+  type PrerenderOptions,
+  type PrerenderResult,
+  type PrerenderTally,
+  type RedirectLine,
+  type RenderContext,
+} from 'ui-router-server/prerender';
+import {
   compileRedirects,
   compileRoutes,
   evaluateRedirects,
@@ -50,17 +60,9 @@ import {
 import { createHeadlessRouter, onceSettled } from 'ui-router-server/simulate';
 import {
   dehydrate,
-  prerender,
   settle,
   type DehydrateResult,
-  type EmittedPage,
-  type FileWriter,
   type JsonValue,
-  type PrerenderOptions,
-  type PrerenderResult,
-  type PrerenderTally,
-  type RedirectLine,
-  type RenderContext,
   type SettleOptions,
 } from 'ui-router-server/ssr';
 import { seed, type ResolvePayload } from 'ui-router-server/ssr/client';

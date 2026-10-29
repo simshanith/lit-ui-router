@@ -1,5 +1,12 @@
+/**
+ * A static site from a mount table: each path's verdict becomes a page the
+ * caller renders, a host rules line, or a warning, written through the
+ * caller's `write`.
+ *
+ * It imports no renderer and no filesystem, so it runs under any runtime.
+ */
+
 // Verdicts turned into files and host rules; the page body comes from the caller's render.
-import { isFunction } from '@uirouter/core';
 import { devGate } from '#dev-gate';
 
 import { warnStrictSlash, warnUnclaimed } from './dev-warn.ts';
@@ -226,7 +233,7 @@ const writeRules = async (
 ): Promise<void> => {
   if (rules === 'none') return;
 
-  if (isFunction(rules)) {
+  if (rules !== '_redirects') {
     await rules(lines);
 
     return;
@@ -272,7 +279,8 @@ const resolverOf = (options: PrerenderOptions): ServerRouter => {
  * ```ts
  * import { mkdir, writeFile } from 'node:fs/promises';
  * import { dirname } from 'node:path';
- * import { prerender, settle } from 'ui-router-server/ssr';
+ * import { prerender } from 'ui-router-server/prerender';
+ * import { settle } from 'ui-router-server/ssr';
  *
  * const result = await prerender({
  *   mounts,

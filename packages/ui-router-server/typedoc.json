@@ -4,6 +4,7 @@
     "src/index.ts",
     "src/url-matcher.ts",
     "src/redirects.ts",
+    "src/prerender.ts",
     "src/simulate.ts",
     "src/location.ts",
     "src/url-config.ts",

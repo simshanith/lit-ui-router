@@ -57,16 +57,17 @@ package tour.
 Capabilities are priced as separate entry points, measured min+gzip by the
 package's own esbuild probe:
 
-| Entry point                   | Needs `@uirouter/core`?               | Cost                                     | What it answers                                                                                                        |
-| ----------------------------- | ------------------------------------- | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `ui-router-server/matcher`    | no                                    | ~2.9 KiB gzip                            | does this pathname match this pattern, with which params — and the inverse, `format()`                                 |
-| `ui-router-server/redirects`  | no                                    | ~3.6 KiB gzip                            | given routes and a redirect table, where does this pathname go                                                         |
-| `ui-router-server` (root)     | only for a `simulate` mount           | ~4.7 KiB gzip                            | mounts in, verdicts out                                                                                                |
-| `ui-router-server/simulate`   | yes (optional peer)                   | +~27.4 KiB, lazy                         | what would the real router do                                                                                          |
-| `ui-router-server/location`   | yes (optional peer)                   | ~0.3 KiB gzip                            | a path-shaped in-memory location for a server-side router                                                              |
-| `ui-router-server/url-config` | no; it configures the router you pass | ~0.4 KiB gzip                            | one url config for the client router, the mounts, and a server render                                                  |
-| `ui-router-server/ssr`        | yes (optional peer)                   | ~1.1 KiB gzip; ~7.3 KiB with `prerender` | when has a server router landed, which of its resolves can the client adopt, and what static site do its verdicts make |
-| `ui-router-server/ssr/client` | yes (optional peer)                   | ~0.7 KiB gzip                            | let the client's boot transition adopt the resolves a server render drew                                               |
+| Entry point                   | Needs `@uirouter/core`?               | Cost             | What it answers                                                                        |
+| ----------------------------- | ------------------------------------- | ---------------- | -------------------------------------------------------------------------------------- |
+| `ui-router-server/matcher`    | no                                    | ~2.9 KiB gzip    | does this pathname match this pattern, with which params — and the inverse, `format()` |
+| `ui-router-server/redirects`  | no                                    | ~3.6 KiB gzip    | given routes and a redirect table, where does this pathname go                         |
+| `ui-router-server` (root)     | only for a `simulate` mount           | ~4.7 KiB gzip    | mounts in, verdicts out                                                                |
+| `ui-router-server/simulate`   | yes (optional peer)                   | +~27.4 KiB, lazy | what would the real router do                                                          |
+| `ui-router-server/location`   | yes (optional peer)                   | ~0.3 KiB gzip    | a path-shaped in-memory location for a server-side router                              |
+| `ui-router-server/url-config` | no; it configures the router you pass | ~0.4 KiB gzip    | one url config for the client router, the mounts, and a server render                  |
+| `ui-router-server/prerender`  | only for a `simulate` mount           | ~6.3 KiB gzip    | which files and host rules does this mount table make, around your render              |
+| `ui-router-server/ssr`        | yes (optional peer)                   | ~1.1 KiB gzip    | when has a server router landed, and which of its resolves can the client adopt        |
+| `ui-router-server/ssr/client` | yes (optional peer)                   | ~0.7 KiB gzip    | let the client's boot transition adopt the resolves a server render drew               |
 
 The dependency-free tiers are a standalone port of core's matching subset,
 type-pinned to core's signatures and differential-tested against its output.
@@ -103,8 +104,10 @@ Picking one:
   values handed to the client's boot through `/ssr/client`.
   [`settle(router, path)`](#settling-a-server-router), then
   [`dehydrate` and `seed`](#handing-resolves-to-the-client).
-  [`prerender`](#emitting-a-static-site) writes the mount table out as a
-  static site around your render.
+- **`/prerender`** — you want the mount table written out as a static site:
+  a page per shell verdict from your render, a `_redirects` line per
+  redirect, and the 404 document.
+  [`prerender(options)`](#emitting-a-static-site).
 
 ## Installation
 
@@ -445,9 +448,9 @@ The client entry imports `@uirouter/core` and nothing from the server entry,
 so a browser bundle takes it alone; it exports the payload types too.
 Where the payload goes in the document is the renderer's choice.
 
-### Emitting a static site
+## Emitting a static site
 
-[`prerender(options)`](/api/ui-router-server/ssr/functions/prerender) asks
+[`prerender(options)`](/api/ui-router-server/prerender/functions/prerender) asks
 the mount table for a verdict per path and writes the site. A shell verdict
 becomes `<subpath>/index.html`, holding whatever `render` returns for it. A
 redirect becomes a `_redirects` line, paired with and without the trailing
@@ -458,7 +461,8 @@ development.
 ```ts
 import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
-import { prerender, settle } from 'ui-router-server/ssr';
+import { prerender } from 'ui-router-server/prerender';
+import { settle } from 'ui-router-server/ssr';
 
 const result = await prerender({
   mounts,

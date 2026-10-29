@@ -7,13 +7,13 @@ import type { TestContext } from 'node:test';
 
 import { createServerRouter } from '../src/index.ts';
 import type { MountConfig } from '../src/index.ts';
-import { prerender } from '../src/ssr.ts';
+import { prerender } from '../src/prerender.ts';
 import type {
   FileWriter,
   PrerenderOptions,
   RedirectLine,
   RenderContext,
-} from '../src/ssr.ts';
+} from '../src/prerender.ts';
 import { stubDev } from './import-meta-env.ts';
 
 // The root mount projects an otherwise rule; the /app mount has none, so its unmatched paths verdict notFound.

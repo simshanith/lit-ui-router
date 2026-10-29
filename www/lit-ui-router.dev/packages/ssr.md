@@ -46,7 +46,7 @@ never both. `@lit-labs/ssr-client` is optional: install it when you import
   name, redirect to rules line, the `_redirects` file, tally, and a warning
   for every path that matched nothing — is
   [`prerender`](/packages/server#emitting-a-static-site) from
-  `ui-router-server/ssr`, which takes any render. This package's `prerender`
+  `ui-router-server/prerender`, which takes any render. This package's `prerender`
   supplies the lit one and takes the same options, plus `router`,
   `renderShell`, `document`, `root` and `elementRenderers`. No SPA catch-all
   is ever written: one turns every 404 into a 200.
@@ -304,7 +304,7 @@ them through the `development` export condition — see
 mechanism.
 
 Three warnings come from `prerender()`. The first two come from the
-`ui-router-server/ssr` loop, prefixed `ui-router-server: prerender:`, and
+`ui-router-server/prerender` loop, prefixed `ui-router-server: prerender:`, and
 follow that package's build. A path that verdicts `notFound` with
 no `otherwise` projection to fall back on logs a console warning naming that
 path, because nothing was emitted for it; `result.warnings` carries the same

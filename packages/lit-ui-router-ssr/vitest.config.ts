@@ -54,6 +54,10 @@ const peerAliases = [
     replacement: source('../ui-router-server/src/location.ts'),
   },
   {
+    find: /^ui-router-server\/prerender$/,
+    replacement: source('../ui-router-server/src/prerender.ts'),
+  },
+  {
     find: /^ui-router-server\/ssr$/,
     replacement: source('../ui-router-server/src/ssr.ts'),
   },

@@ -28,7 +28,7 @@ imports the pre-1.0 renderer or re-derives the incantation.
   as a string is written as-is, without one.
 - **The lit render inside the emit loop.** The loop itself — verdict to file name, redirect to
   rules line, the `_redirects` file, tally, warnings for paths that matched nothing — is
-  `prerender` from `ui-router-server/ssr`, which takes any render. This package's `prerender`
+  `prerender` from `ui-router-server/prerender`, which takes any render. This package's `prerender`
   supplies the lit one and takes the same options, plus `router`, `renderShell`, `document`,
   `root` and `elementRenderers`. No SPA catch-all is ever written: one turns every 404 into a 200.
 - **`<ui-view>` on both sides.** `UiViewRenderer` fills the element's light DOM on the server;

@@ -7,13 +7,13 @@ import type { UIRouterLit } from 'lit-ui-router';
 import { provideRouter, withRouterSync } from 'lit-ui-router/context';
 import { DefType, isString } from '@uirouter/core';
 import type { Verdict } from 'ui-router-server';
-import { prerender as prerenderSite } from 'ui-router-server/ssr';
+import { prerender as prerenderSite } from 'ui-router-server/prerender';
 import type {
   FileWriter,
   PrerenderOptions as SitePrerenderOptions,
   PrerenderResult as SitePrerenderResult,
   RenderContext as SiteRenderContext,
-} from 'ui-router-server/ssr';
+} from 'ui-router-server/prerender';
 import { devGate } from '#dev-gate';
 
 import { packageVersion, signatureAttribute } from './signature.js';
@@ -24,7 +24,7 @@ export type {
   FileWriter,
   PrerenderTally,
   RedirectLine,
-} from 'ui-router-server/ssr';
+} from 'ui-router-server/prerender';
 
 type ShellVerdict = Extract<Verdict, { kind: 'shell' }>;
 
@@ -62,7 +62,7 @@ export interface RenderContext extends SiteRenderContext {
 }
 
 /**
- * Options for {@link prerender}: those of `ui-router-server/ssr`'s loop, with
+ * Options for {@link prerender}: those of `ui-router-server/prerender`'s loop, with
  * a lit render in place of its `render`.
  */
 export interface PrerenderOptions extends Omit<
@@ -203,7 +203,7 @@ const warnUnregistered = (): void => {
  * Emits a static site from a mount table's verdicts: a shell verdict becomes
  * `<subpath>/index.html`, a redirect becomes a rules line and no page, and the
  * `otherwise` projection becomes the 404 document. The loop is
- * `ui-router-server/ssr`'s `prerender`; this supplies its lit render.
+ * `ui-router-server/prerender`'s `prerender`; this supplies its lit render.
  *
  * The router is provided on the render root for `context-request` and scoped
  * with `withRouterSync` around each render, so a template's `<ui-router>`
