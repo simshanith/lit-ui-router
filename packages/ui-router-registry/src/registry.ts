@@ -1,9 +1,10 @@
 /**
  * A typed state registry for `@uirouter/core`.
  *
- * An app fills in {@link Register} by module augmentation with its `as const`
- * state declarations; every type here derives state names and params from
- * them. Until an app registers, each type falls back to core's loose
+ * An app fills in {@link RegisteredStates} by module augmentation, one module
+ * at a time, with its `as const` state declarations; every type here derives
+ * state names and params from them; {@link Register} takes them at one site
+ * instead. Until an app registers, each type falls back to core's loose
  * `string` and `RawParams`. Nothing here emits JavaScript.
  */
 /* oxlint-disable typescript/no-redundant-type-constituents -- StateName is `string` until an app registers; the unions are written for the registered case */
@@ -19,8 +20,98 @@ import type {
   StateService,
 } from '@uirouter/core';
 
+// A class-declared state (`static __uiRouterState`) contributes its instance.
+type Declaration<D> = D extends abstract new (...args: never) => infer I
+  ? I
+  : D;
+
+// A widened `string` name would index every string, so it registers no key.
+type NameKey<D> =
+  Declaration<D> extends { name: infer N extends string }
+    ? string extends N
+      ? never
+      : N
+    : never;
+
 /**
- * The app's state declarations, filled in by module augmentation:
+ * The app's state declarations keyed by name, filled in by module
+ * augmentation. Each module registers its own `as const` table, lazy modules
+ * included, and a file that imports none of them still sees every name:
+ *
+ * ```ts
+ * declare module 'ui-router-registry' {
+ *   interface RegisteredStates extends StatesOf<typeof contactsStates> {}
+ * }
+ * ```
+ *
+ * A class-declared state can be registered by hand:
+ * `interface RegisteredStates { about: typeof AboutState }`.
+ */
+// oxlint-disable-next-line typescript/no-empty-object-type -- filled in by module augmentation
+export interface RegisteredStates {}
+
+/** A table of state declarations keyed by name, for {@link RegisteredStates} to extend. */
+export type StatesOf<
+  T extends readonly {
+    /** The state's name, or `Function.name` for a class-declared state. */
+    name: string;
+  }[],
+> = {
+  [R in T[number] as NameKey<R>]: R;
+};
+
+// A row's name, unless the row is the one registered under it.
+type Collision<R> = R extends unknown
+  ? NameKey<R> extends infer N extends keyof RegisteredStates
+    ? [R, RegisteredStates[N]] extends [RegisteredStates[N], R]
+      ? never
+      : N
+    : NameKey<R>
+  : never;
+
+/**
+ * The names in `T` whose rows aren't the ones registered under them; `never`
+ * when every row in `T` is. A table that never augmented
+ * {@link RegisteredStates} collides on every name. {@link AssertNoCollisions}
+ * asserts it.
+ */
+export type CollisionsOf<
+  T extends readonly {
+    /** The state's name, or `Function.name` for a class-declared state. */
+    name: string;
+  }[],
+> = Collision<T[number]>;
+
+/**
+ * `T` itself, when every row in it is the one registered under its name.
+ * Two modules that register one name with different rows keep only the first,
+ * and on TypeScript 5 `skipLibCheck` hides the error, so a module can assert
+ * its table where it registers it:
+ *
+ * ```ts
+ * export type ContactsStates = AssertNoCollisions<typeof contactsStates>;
+ * ```
+ *
+ * A row that collides fails the constraint at that line, keyed
+ * `'not the row registered under'` with the state's name.
+ */
+export type AssertNoCollisions<
+  T extends readonly {
+    /** The state's name, or `Function.name` for a class-declared state. */
+    name: string;
+  }[] & {
+    readonly [I in keyof T]: [Collision<T[I]>] extends [never]
+      ? T[I]
+      : {
+          /** The name the row collides on. */
+          readonly 'not the row registered under': Collision<T[I]>;
+        };
+  },
+> = T;
+
+/**
+ * The app's state declarations at one augmentation site, read alongside
+ * {@link RegisteredStates}:
  *
  * ```ts
  * declare module 'ui-router-registry' {
@@ -30,17 +121,14 @@ import type {
  * }
  * ```
  */
-// oxlint-disable-next-line typescript/no-empty-interface, typescript/no-empty-object-type -- filled in by module augmentation
+// oxlint-disable-next-line typescript/no-empty-object-type -- filled in by module augmentation
 export interface Register {}
 
-type Registered = Register extends { states: infer S } ? S : never;
+type Registered =
+  | (Register extends { states: infer S } ? S : never)
+  | RegisteredStates[keyof RegisteredStates];
 
 type IsRegistered = [Registered] extends [never] ? false : true;
-
-// A class-declared state (`static __uiRouterState`) contributes its instance.
-type Declaration<D> = D extends abstract new (...args: never) => infer I
-  ? I
-  : D;
 
 type Declarations = Declaration<Registered>;
 
@@ -320,13 +408,11 @@ export type TargetArgs<T, Options> = T extends StateName
   : [params?: RawParams, options?: Options];
 
 /**
- * A typed view of core's `StateService`. Core's own class is assignable to it,
- * so a typed getter or field needs no cast and emits nothing.
+ * A typed view of core's `StateService`. It is assignable both ways: core's
+ * class fills a typed getter or field with no cast and emits nothing, and the
+ * view passes wherever a `StateService` is expected.
  */
-export interface TypedStateService extends Omit<
-  StateService,
-  'go' | 'transitionTo' | 'target' | 'href' | 'is' | 'includes' | 'reload'
-> {
+export interface TypedStateService extends StateService {
   /** `StateService.go`, with a registered name's params required as declared. */
   go<T extends StateName | LooseTarget>(
     to: T & CheckRelative<T>,

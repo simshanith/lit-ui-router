@@ -145,7 +145,6 @@ const workspaces = {
       '@uirouter/core-floor',
       'lit-ui-router-floor',
       'ui-router-server-floor',
-      'ui-router-server-0.3-floor',
     ],
   },
   'packages/navigation-location-plugin': {
@@ -177,7 +176,7 @@ const workspaces = {
       '@release-it/conventional-changelog',
       '@uirouter/core-floor',
     ],
-    entry: ['src/specs/*.test-d.ts', 'test-d/*.test-d.ts'],
+    entry: ['src/specs/*.test-d.ts', 'test-d/**/*.test-d.ts'],
   },
   'packages/ui-router-signals': {
     ignoreDependencies: [
@@ -203,7 +202,7 @@ const workspaces = {
     entry: ['fixtures/*.ts'],
   },
   'tools/dts-backtest': {
-    entry: ['fixtures/*.ts', 'registered/*.ts'],
+    entry: ['fixtures/*.ts', 'registered/*.ts', 'routed/**/*.ts'],
     // the TS version matrix is imported by computed specifier
     ignoreDependencies: ['typescript-5.0', 'typescript-6', 'typescript-7'],
   },

@@ -1,5 +1,4 @@
 import { registerAppModules } from 'sample-app-shared/app/global/appModules.js';
-import type { SampleAppStates } from 'sample-app-shared/registry/states.js';
 
 import AppConfig from './app/global/appConfig.js';
 import AuthService from './app/global/authService.js';
@@ -12,10 +11,3 @@ import MessageList from './app/mymessages/MessageList.js';
 registerAppModules({ AppConfig, AuthService, App, Compose, MessageList });
 
 await import('sample-app-shared/main.js');
-
-// One augmentation types every registry surface in this app.
-declare module 'ui-router-registry' {
-  interface Register {
-    states: SampleAppStates;
-  }
-}

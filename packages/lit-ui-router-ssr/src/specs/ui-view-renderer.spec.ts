@@ -6,10 +6,10 @@ import { withRouterSync } from 'lit-ui-router/context';
 import { UIRouterLit } from 'lit-ui-router/pure';
 import type { LitStateDeclaration } from 'lit-ui-router/pure';
 import { installServerLocation } from 'ui-router-server/location';
+import { settle } from 'ui-router-server/ssr';
 import { describe, expect, it, vi } from 'vitest';
 
 import { UiViewRenderer } from '../ui-view-renderer.js';
-import { settle } from '../settle.js';
 import { makeRouter, rootTemplate } from './fixture.js';
 
 const draw = (router: UIRouterLit): string =>

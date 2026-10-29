@@ -105,7 +105,10 @@
     "turbo/no-undeclared-env-vars": "warn",
     "typescript/ban-ts-comment": "error",
     "typescript/no-duplicate-enum-values": "error",
-    "typescript/no-empty-object-type": "error",
+    "typescript/no-empty-object-type": [
+      "error",
+      { "allowInterfaces": "with-single-extends" }
+    ],
     "typescript/no-explicit-any": "error",
     "typescript/no-extra-non-null-assertion": "error",
     "typescript/no-misused-new": "error",

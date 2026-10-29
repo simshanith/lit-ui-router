@@ -30,10 +30,16 @@ export function tagArgs(dryRun: boolean): string[] {
   ];
 }
 
+// only --fix-lockfile unlinks a floor alias pnpm linked while the workspace sat at its version
+const BUMP_LOCKFILE_HOOK =
+  'pnpm install --lockfile-only --fix-lockfile && ' +
+  'git add ":(top)pnpm-lock.yaml"';
+
 /**
  * bump-version.yml Bump version step: set the exact computed version,
- * commit, and push the release branch. `--dry-run` makes release-it log
- * every git/github/npm write instead of performing it.
+ * re-resolve pnpm-lock.yaml against it, commit, and push the release
+ * branch. `--dry-run` makes release-it log every git/github/npm write (and
+ * the hook) instead of performing it.
  */
 // The commit message is passed whole, built from the pinned `changelogArgs`
 // run; release-it's own changelog here is unpinned and unused (no infile).
@@ -56,6 +62,8 @@ export function bumpArgs(options: {
     'true',
     '--git.commitMessage',
     commitMessage,
+    '--hooks.after:bump',
+    BUMP_LOCKFILE_HOOK,
   ];
 }
 

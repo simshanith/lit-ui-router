@@ -12,8 +12,8 @@ import type {
 import { installServerLocation } from 'ui-router-server/location';
 import { describe, expect, it } from 'vitest';
 
+import { settle } from '../index.js';
 import { prerender } from '../prerender.js';
-import { settle } from '../settle.js';
 import { UiViewRenderer } from '../ui-view-renderer.js';
 import { rootTemplate } from './fixture.js';
 

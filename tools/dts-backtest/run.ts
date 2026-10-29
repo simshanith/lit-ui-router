@@ -116,13 +116,64 @@ const REGISTERED_DIRS = [
   'ui-router-signals',
 ].map(distDir);
 
+// The routed consumers register states whose components read the registry.
+const ROUTED_DIRS = ['lit-ui-router', 'ui-router-registry'].map(distDir);
+
+const ROUTED_PROGRAMS = ['classes', 'templates', 'legacy'].flatMap((dir) => [
+  `routed/${dir}/tsconfig.fixture.json`,
+  `routed/${dir}/tsconfig.fixture.nodenext.json`,
+]);
+
+// Programs a leg older than their floor skips: void-typed templates stop the
+// circularity only from TypeScript 5.5.
+const MIN_VERSION = new Map([
+  ['routed/templates/tsconfig.fixture.json', [5, 5]],
+  ['routed/templates/tsconfig.fixture.nodenext.json', [5, 5]],
+]);
+
 // Each config is one consumer program, keyed to the dist dirs it must load.
 const CONFIGS = new Map([
   [BASE_CONFIG, PACKAGE_DIRS],
   ['tsconfig.fixture.nodenext.json', PACKAGE_DIRS],
   ['registered/tsconfig.fixture.json', REGISTERED_DIRS],
   ['registered/tsconfig.fixture.nodenext.json', REGISTERED_DIRS],
+  ...ROUTED_PROGRAMS.map((config): [string, string[]] => [config, ROUTED_DIRS]),
 ]);
+
+// Programs that must fail, by the codes their own fixture must report: the
+// legacy routed consumer proves LitStateDeclaration still infers render().
+const EXPECTED_CODES = new Map([
+  ['routed/legacy/tsconfig.fixture.json', [2502, 7022, 7023]],
+  ['routed/legacy/tsconfig.fixture.nodenext.json', [2502, 7022, 7023]],
+]);
+
+// undefined for a program that must check clean
+function reportsExpected(
+  configFile: string,
+  diagnostics: { code: number; fileName: string | undefined }[],
+): boolean | undefined {
+  const expected = EXPECTED_CODES.get(configFile);
+
+  if (!expected) return undefined;
+  const fixtureDir = resolve(here, dirname(configFile)) + sep;
+
+  const codes = new Set<number>();
+
+  for (const { code, fileName } of diagnostics) {
+    if (fileName?.startsWith(fixtureDir)) codes.add(code);
+  }
+
+  return expected.every((code) => codes.has(code));
+}
+
+function belowFloor(version: string, configFile: string): boolean {
+  const floor = MIN_VERSION.get(configFile);
+
+  if (!floor) return false;
+  const [major = 0, minor = 0] = version.split('.').map(Number);
+
+  return major < floor[0] || (major === floor[0] && minor < floor[1]);
+}
 
 const programDirs = (configFile: string) =>
   CONFIGS.get(configFile) ?? PACKAGE_DIRS;
@@ -283,7 +334,18 @@ async function runNative(specifier: string, configFile: string) {
 
   const label = `TS ${version} · ${configFile}`;
 
-  if (owned.length > 0) {
+  const expected = reportsExpected(
+    configFile,
+    owned.map(({ code, fileName }) => ({ code, fileName })),
+  );
+
+  if (expected) {
+    console.log(`✔ ${label} — reports the expected errors`);
+
+    return true;
+  }
+
+  if (expected === false || owned.length > 0) {
     console.error(`✖ ${label}`);
     console.error(formatNative(owned));
 
@@ -299,11 +361,31 @@ async function runNative(specifier: string, configFile: string) {
 }
 
 function run(specifier: string, configFile: string) {
+  // SAFETY: every API_VERSIONS alias exports the classic compiler API
+  const { version } = require(specifier) as ClassicApi;
+
+  if (belowFloor(version, configFile)) {
+    console.log(`- TS ${version} · ${configFile} — skipped below its floor`);
+
+    return true;
+  }
+
   const { ts, owned, foreign, fileCount } = check(specifier, configFile);
 
   const label = `TS ${ts.version} · ${configFile}`;
 
-  if (owned.length > 0) {
+  const expected = reportsExpected(
+    configFile,
+    owned.map(({ code, file }) => ({ code, fileName: file?.fileName })),
+  );
+
+  if (expected) {
+    console.log(`✔ ${label} — reports the expected errors`);
+
+    return true;
+  }
+
+  if (expected === false || owned.length > 0) {
     const formatHost: TS.FormatDiagnosticsHost = {
       getCurrentDirectory: () => here,
       getCanonicalFileName: (fileName) => fileName,

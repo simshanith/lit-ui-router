@@ -100,11 +100,12 @@ first page's slashed spelling does not resolve to the same shell.
 ## Settling the router on each path
 
 A server render reads the router only once its transition has landed, resolves included.
-`settle(router, path)` sets the url, syncs the router to it, and resolves with the transition that
-landed, so the synchronous render after it reads every resolve. A `redirectTo` chain settles on its
-final state, and a path the router already stands on resolves at once.
+`settle(router, path)`, the `ui-router-server/ssr` step this package re-exports, sets the url, syncs
+the router to it, and resolves with the transition that landed, so the synchronous render after it
+reads every resolve. A `redirectTo` chain settles on its final state, and a path the router already
+stands on resolves at once.
 
-A page fails to land in three ways, and each rejects rather than hangs:
+A page fails to land in four ways, and each rejects rather than hangs:
 
 - **No rule matches.** A url no state claims, on a router with no `otherwise` rule, rejects with an
   `Error` naming it. An `otherwise` rule is itself a match and settles on its state.
@@ -112,6 +113,8 @@ A page fails to land in three ways, and each rejects rather than hangs:
   `Rejection`, the resolve's error in its `detail`. Core's `defaultErrorHandler` still logs it.
 - **Nothing lands in time.** `{ timeout }` bounds the wait, `10_000` ms by default; `0` waits without
   a limit.
+- **The url keeps rewriting.** `{ maxRewrites }` bounds a chain of url rules that rewrite the url to
+  another url, `10` by default.
 
 `settle()` never calls `router.start()`, which runs once per router: it drives `urlService`
 directly, so a page loop calls it once per path on the same router, started or not.

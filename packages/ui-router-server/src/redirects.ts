@@ -20,6 +20,12 @@ import type {
 export interface RouteDeclaration {
   /** The state name; dotted names nest under their parent, as in ui-router. */
   name: string;
+  /**
+   * The parent state's name, as core's `StateDeclaration.parent`: the state
+   * nests under it instead of under its dotted prefix. A dotted name with a
+   * `parent` is rejected at compile, as core rejects it at registration.
+   */
+  parent?: string;
   /** Url segment appended to the ancestors' segments; a url-less state is structural only (never matched, never a redirect target). */
   url?: string;
   /** Param declarations for this state's own placeholders (shorthand defaults or {@link matcher!ParamDeclaration | ParamDeclaration}s). */
@@ -83,10 +89,25 @@ export interface CompiledRoute {
   redirectTo?: string | RedirectTarget;
 }
 
+// Core's StateBuilder.parentName: the `parent`, else the dotted prefix.
+const parentName = (route: RouteDeclaration): string => {
+  const dot = route.name.lastIndexOf('.');
+
+  if (dot === -1) return route.parent ?? '';
+
+  if (route.parent)
+    throw new Error(
+      `Route '${route.name}': a route with 'parent' cannot have a '.' in its name`,
+    );
+
+  return route.name.slice(0, dot);
+};
+
 /**
  * Compiles the url-addressable routes of a declaration set: each state's url
- * appended to its ancestors' (dotted names nest), params merged rootward.
- * Url-less states contribute nothing and match nothing, as in ui-router.
+ * appended to its ancestors' (a state's parent is its `parent`, else its
+ * dotted prefix, as in ui-router), params merged rootward. Url-less states
+ * contribute nothing and match nothing, as in ui-router.
  */
 export function compileRoutes(
   routes: RouteDeclaration[],
@@ -94,6 +115,7 @@ export function compileRoutes(
 ): CompiledRoute[] {
   const { compile } = urlMatcherFactory(config);
   const byName = new Map<string, RouteDeclaration>();
+  const parents = new Map<RouteDeclaration, string>();
 
   for (const route of routes) {
     if (byName.has(route.name))
@@ -106,29 +128,54 @@ export function compileRoutes(
         `Route '${route.name}': url '${route.url}' must start with '/' or '?'`,
       );
     byName.set(route.name, route);
+    parents.set(route, parentName(route));
   }
+
+  // The route and its ancestors, leaf first.
+  const chainOf = (route: RouteDeclaration): RouteDeclaration[] => {
+    const chain = [route];
+    let step = route;
+    let name = parents.get(step)!;
+
+    while (name) {
+      const ancestor = byName.get(name);
+
+      if (!ancestor)
+        throw new Error(
+          step.parent
+            ? `Route '${step.name}' has unknown parent '${name}'`
+            : `Route '${route.name}' has no ancestor '${name}'`,
+        );
+
+      if (chain.includes(ancestor))
+        throw new Error(
+          `Route '${route.name}': parent cycle through '${ancestor.name}'`,
+        );
+      chain.push(ancestor);
+      step = ancestor;
+      name = parents.get(step)!;
+    }
+
+    return chain;
+  };
 
   const compiled: CompiledRoute[] = [];
 
   for (const route of routes) {
     if (route.url === undefined) continue;
-    const segments = route.name.split('.');
+    const chain = chainOf(route);
     let pattern = '';
     let params: NonNullable<RouteDeclaration['params']> = {};
 
-    for (let depth = 1; depth <= segments.length; depth++) {
-      const name = segments.slice(0, depth).join('.');
-      const ancestor = byName.get(name);
-
-      if (!ancestor)
-        throw new Error(`Route '${route.name}' has no ancestor '${name}'`);
+    for (let depth = chain.length - 1; depth >= 0; depth--) {
+      const ancestor = chain[depth];
 
       if (ancestor.url) {
         // Naive concatenation cannot splice a child into a parent's search
         // part (core's UrlMatcher.append can); fail rather than diverge.
         if (pattern.includes('?'))
           throw new Error(
-            `Route '${route.name}': ancestor '${name}' cannot extend a pattern that already has search params`,
+            `Route '${route.name}': ancestor '${ancestor.name}' cannot extend a pattern that already has search params`,
           );
         pattern += ancestor.url;
       }

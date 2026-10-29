@@ -5,6 +5,7 @@ import { createServerRouter, diagnoseMounts } from 'ui-router-server';
 
 import { mounts, routes } from '../src/routes.ts';
 import { shellMounts } from '../src/shellMounts.ts';
+import { stateTable } from '../src/stateTable/index.ts';
 
 // The app's contract tests: its own tables, resolved through the package
 // API, produce the verdicts the worker will serve. Matching mechanics are
@@ -191,6 +192,34 @@ describe('/simulated-routing verdicts (the simulate-strategy exhibit)', () => {
       mount: '/simulated-routing',
       status: 404,
     });
+  });
+});
+
+describe('the shared state table', () => {
+  it('is the flagship route table, less the future states', () => {
+    assert.deepEqual(
+      routes,
+      stateTable.filter((row) => !row.name.endsWith('.**')),
+    );
+  });
+
+  it("places each future state at its module root's url and parent", () => {
+    const placement = (row: (typeof stateTable)[number]) => ({
+      url: 'url' in row ? row.url : undefined,
+      parent: 'parent' in row ? row.parent : undefined,
+    });
+
+    const futures = stateTable.filter((row) => row.name.endsWith('.**'));
+
+    assert.notEqual(futures.length, 0);
+
+    for (const future of futures) {
+      const name = future.name.slice(0, -'.**'.length);
+      const root = stateTable.find((row) => row.name === name);
+
+      assert.ok(root, `${future.name}: no '${name}' row`);
+      assert.deepEqual(placement(future), placement(root), future.name);
+    }
   });
 });
 

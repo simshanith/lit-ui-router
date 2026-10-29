@@ -23,29 +23,81 @@ npm install --save-dev ui-router-registry
 `@uirouter/core` is a peer dependency, for its types only. `ui-router-signals`,
 `ui-router-effect` and `ui-router-mobx` are optional peers at `^0.2.0`, each
 needed only by its entry point. Install one copy of this package per app: two
-copies mean two `Register`s, and the augmentation types only one.
+copies mean two registries, and the augmentations type only one.
 
 ## Registering states
 
-Register the app's declarations once:
+Register each module's declarations next to its state table:
 
 ```ts
-import type { states } from './states';
+import type { StatesOf } from 'ui-router-registry';
+
+export const contactsStates = [
+  { name: 'contacts', url: '/contacts' },
+  { name: 'contacts.contact', url: '/:contactId' },
+] as const;
+
+declare module 'ui-router-registry' {
+  interface RegisteredStates extends StatesOf<typeof contactsStates> {}
+}
+```
+
+Each module, lazy ones included, adds its own line, and every file sees every
+module's names. A class-declared state can sit in the table or be registered by
+hand: `interface RegisteredStates { about: typeof AboutState }`. Two modules
+that register one name with different rows are a TS2320 error in the
+registry's declarations; on TypeScript 5 `skipLibCheck` hides it and the first
+row wins, which [`AssertNoCollisions`](#collisions-across-modules) checks for.
+
+`Register` takes every declaration at one site instead:
+
+```ts
+import type { appStates, lazyStates } from './states';
 
 declare module 'ui-router-registry' {
   interface Register {
-    states: (typeof states)[number];
+    states: (typeof appStates)[number] | (typeof lazyStates)[number];
   }
 }
 ```
 
+The registry reads both, so the two forms mix.
+
 Until an app registers, every type falls back to core's `string` and
 `RawParams`, so existing calls compile unchanged.
 
+## Collisions across modules
+
+When two modules register one name with different rows, the first row wins.
+TypeScript 7 reports TS2320 at each module's augmentation, and core throws
+`State '…' is already defined` when the second module registers. On TypeScript 5
+the error lands in the registry's declarations, where `skipLibCheck` hides it.
+The check is opt-in: `AssertNoCollisions` takes a module's table and fails
+unless every row in it is the one registered under its name. Assert it next to
+the module's augmentation:
+
+```ts
+import type { AssertNoCollisions, StatesOf } from 'ui-router-registry';
+
+declare module 'ui-router-registry' {
+  interface RegisteredStates extends StatesOf<typeof contactsStates> {}
+}
+
+export type ContactsStates = AssertNoCollisions<typeof contactsStates>;
+```
+
+A row that collides fails at that line, as a missing
+`'not the row registered under'` key holding the state's name. The assertion is
+a type, so it emits nothing; the `export` keeps `noUnusedLocals` quiet. A table
+that never augmented `RegisteredStates` collides on every name. `CollisionsOf`
+gives the colliding names as a union, `never` when there are none.
+
 ## Typed calls
 
-Annotate where the router is used. Core's `StateService` is assignable to
-`TypedStateService`, so the annotation needs no cast:
+Annotate where the router is used. `TypedStateService` extends core's
+`StateService`, so the two are assignable both ways: the annotation needs no
+cast, and the view, or a `UIRouter` whose `stateService` is typed with it,
+passes wherever core's type is expected:
 
 ```ts
 import type { TypedStateService } from 'ui-router-registry';
@@ -55,20 +107,22 @@ const stateService: TypedStateService = router.stateService;
 stateService.go('contacts.contact', { contactId: 'c1' });
 ```
 
-| Type                              | What it holds                                                                                                                                                       |
-| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Register`                        | the interface an app augments with its `as const` state declarations                                                                                                |
-| `StateName`                       | the registered state names; dotted names and `parent:` both resolve, and a future state's `name.**` placeholder is left out                                         |
-| `ParamsOf` and `ResolvedParamsOf` | the params a state accepts and the params it reads back, its ancestors' included; url placeholders are required, query params are not                               |
-| `TypedStateService`               | `go`, `transitionTo`, `target`, `href`, `is`, `includes` and `reload` over registered names; relative refs are checked by their tail, and object targets stay loose |
-| `TypedRouteSnapshot`              | the route snapshot the reactive packages share, whose `includes(name)` narrows `current` and `params` to that state's subtree                                       |
-| `RegisteredRouteTypes`            | the members the `/signals`, `/effect` and `/mobx` entry points fill the adapters' `RouteTypes` interfaces from                                                      |
+| Type                                    | What it holds                                                                                                                                                       |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `RegisteredStates` and `StatesOf`       | the interface each module augments with its `as const` state declarations, keyed by name                                                                            |
+| `AssertNoCollisions` and `CollisionsOf` | the check that a module's table is the one registered under each of its names, and the names that collide                                                           |
+| `Register`                              | the interface that takes every state declaration at one augmentation site                                                                                           |
+| `StateName`                             | the registered state names; dotted names and `parent:` both resolve, and a future state's `name.**` placeholder is left out                                         |
+| `ParamsOf` and `ResolvedParamsOf`       | the params a state accepts and the params it reads back, its ancestors' included; url placeholders are required, query params are not                               |
+| `TypedStateService`                     | `go`, `transitionTo`, `target`, `href`, `is`, `includes` and `reload` over registered names; relative refs are checked by their tail, and object targets stay loose |
+| `TypedRouteSnapshot`                    | the route snapshot the reactive packages share, whose `includes(name)` narrows `current` and `params` to that state's subtree                                       |
+| `RegisteredRouteTypes`                  | the members the `/signals`, `/effect` and `/mobx` entry points fill the adapters' `RouteTypes` interfaces from                                                      |
 
 ## Reactive adapters
 
 `ui-router-signals`, `ui-router-effect` and `ui-router-mobx` each declare an
 empty `RouteTypes` interface. A type-only import of the matching entry point,
-next to the `Register` augmentation, fills it in:
+next to an augmentation, fills it in:
 
 ```ts
 import type {} from 'ui-router-registry/signals';
@@ -112,15 +166,32 @@ uiSref(link.state as UncheckedRef, link.params);
 stateService.go(name as UncheckedRef);
 ```
 
-## Annotate members and templates that call typed targets
+## Check components that call typed targets
 
 A state declaration that names a component and is checked with `satisfies`
 against a type that inspects the component, such as `LitStateDeclaration`, makes
-that component part of `Register`'s type. If one of the component's members
+that component part of the registered states' type. If one of the component's members
 calls a typed target (`go`, `href`, a typed `uiSref` wrapper) and has no
-declared return type, TypeScript has to infer that member from `Register` while
-still building `Register`, and reports a circular type (TS7022, TS7023, TS7024,
-TS2456, TS2502 or TS2313). Declare the member's return type:
+declared return type, TypeScript has to infer that member from the registry
+while still building it, and reports a circular type (TS7022, TS7023, TS7024,
+TS2456, TS2502 or TS2313).
+
+For `lit-ui-router` states, check the declarations with
+`TypedLitStateDeclaration`, which checks a LitElement class by its public
+members and a template function by its parameters, so it never infers `render()`
+or a template's body:
+
+```ts
+const contactState = {
+  name: 'contacts.contact',
+  url: '/:contactId',
+  component: ContactView,
+} as const satisfies TypedLitStateDeclaration;
+```
+
+Classes clear this way on every supported TypeScript, templates on TypeScript
+5.5 and later. A component checked against a type that inspects it, or a
+template on TypeScript before 5.5, still needs a declared return type:
 
 ```ts
 render(): TemplateResult {

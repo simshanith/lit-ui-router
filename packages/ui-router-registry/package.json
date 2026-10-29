@@ -1,6 +1,6 @@
 {
   "name": "ui-router-registry",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Typed state names and params for UI-Router: a types-only registry for @uirouter/core",
   "homepage": "https://lit-ui-router.dev/packages/ui-router-registry",
   "bugs": {
@@ -54,7 +54,7 @@
     "lint:oxlint": "oxlint .",
     "typecheck:peer-floor": "floor-guard && floor-types-guard tsconfig.peer-floor.json && tsc -p tsconfig.peer-floor.json --noEmit",
     "typecheck:src": "tsc -p tsconfig.src.json --noEmit",
-    "typecheck:tsc": "tsc -p tsconfig.json --noEmit && tsc -p test-d/tsconfig.json --noEmit"
+    "typecheck:tsc": "tsc -p tsconfig.json --noEmit && tsc -p test-d/tsconfig.json --noEmit && tsc -p test-d/routed-components/tsconfig.json --noEmit"
   },
   "devDependencies": {
     "@release-it/conventional-changelog": "catalog:",
@@ -66,6 +66,8 @@
     "@uirouter/core": "catalog:",
     "@uirouter/core-floor": "catalog:peerFloor",
     "effect": "catalog:",
+    "lit": "catalog:",
+    "lit-ui-router": "catalog:workspace",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
     "release-it": "catalog:",

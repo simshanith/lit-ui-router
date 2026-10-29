@@ -2,6 +2,9 @@
 // Each installed floor alias must equal the floor of its leg of the <dep> range
 // in the catalog the package's peer or dependency names, or the floor lane lies.
 // Usage (from the package dir): floor-guard
+import { realpathSync } from 'node:fs';
+import { join, sep } from 'node:path';
+
 import { readManifest } from '@tools/bootstrap/manifest.ts';
 
 import { legWindow, parseFloorAlias, proveLegs } from './floor-legs.ts';
@@ -35,6 +38,12 @@ const aliases = Object.entries(manifest?.devDependencies ?? {}).flatMap(
 );
 
 const deps = [...new Set(aliases.map(({ dep }) => dep))];
+
+// a registry install lives under some node_modules; a linked workspace package does not
+const isLinked = (alias: string) =>
+  !realpathSync(join(process.cwd(), 'node_modules', alias))
+    .split(sep)
+    .includes('node_modules');
 
 if (deps.length === 0) {
   g.fail(
@@ -72,6 +81,7 @@ for (const dep of deps) {
     aliases: Object.fromEntries(
       own.map(({ alias }) => [alias, g.installed(alias, dep)]),
     ),
+    linked: new Set(own.map(({ alias }) => alias).filter(isLinked)),
     dev: () => g.installed(dep, dep),
   });
 

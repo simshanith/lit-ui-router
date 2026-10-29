@@ -63,10 +63,6 @@ const ALLOWED: SplitAllowance[] = [
     name: 'typescript',
     why: 'dts-backtest and the typescript6/7 catalogs alias one compiler per line; attw, the cem analyzer and web-component-analyzer pin their own',
   },
-  {
-    name: 'ui-router-server',
-    why: 'catalogs.peerFloorSsr pins ui-router-server-floor to 0.2.0 and ui-router-server-0.3-floor to 0.3.0, one floor per lower leg of the ssr peer range',
-  },
 ];
 
 const main = (): void => {

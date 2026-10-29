@@ -2,7 +2,12 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import { isString } from '@uirouter/core';
-import type { RawParams, StateDeclaration, UIRouter } from '@uirouter/core';
+import type {
+  RawParams,
+  StateDeclaration,
+  StateRule,
+  UIRouter,
+} from '@uirouter/core';
 
 import {
   compileRedirects,
@@ -10,9 +15,9 @@ import {
   evaluateRedirects,
   matchRoute,
 } from '../src/redirects.ts';
-import type { RedirectTable } from '../src/redirects.ts';
+import type { RedirectTable, RouteDeclaration } from '../src/redirects.ts';
 import { createHeadlessRouter, onceSettled } from '../src/simulate.ts';
-import { exec } from '../src/url-matcher.ts';
+import { exec, format } from '../src/url-matcher.ts';
 
 describe('compileRoutes', () => {
   it('appends nested urls along dotted names and merges params rootward', () => {
@@ -70,6 +75,172 @@ describe('compileRoutes', () => {
       /already has search params/,
     );
   });
+});
+
+describe('compileRoutes: parent', () => {
+  const patterns = (routes: RouteDeclaration[]) =>
+    compileRoutes(routes).map(({ name, pattern }) => [name, pattern]);
+
+  it('nests a parent: state under its parent url', () => {
+    assert.deepEqual(
+      patterns([
+        { name: 'contacts', url: '/contacts' },
+        { name: 'contactHelp', parent: 'contacts', url: '/help' },
+      ]),
+      [
+        ['contacts', '/contacts'],
+        ['contactHelp', '/contacts/help'],
+      ],
+    );
+  });
+
+  it('nests dotted children of a parent: state', () => {
+    assert.deepEqual(
+      patterns([
+        { name: 'contacts', url: '/contacts' },
+        { name: 'contactHelp', parent: 'contacts', url: '/help' },
+        { name: 'contactHelp.topic', url: '/:topic' },
+      ]).at(-1),
+      ['contactHelp.topic', '/contacts/help/:topic'],
+    );
+  });
+
+  it('follows a parent: chain through a url-less state', () => {
+    assert.deepEqual(
+      patterns([
+        { name: 'app', url: '/app' },
+        { name: 'shell', parent: 'app' },
+        { name: 'shell.layout' },
+        { name: 'inbox', parent: 'shell.layout', url: '/inbox' },
+      ]),
+      [
+        ['app', '/app'],
+        ['inbox', '/app/inbox'],
+      ],
+    );
+  });
+
+  it('merges params across a parent: link', () => {
+    const [, help] = compileRoutes([
+      {
+        name: 'contacts',
+        url: '/contacts/:section',
+        params: { section: 'all' },
+      },
+      {
+        name: 'contactHelp',
+        parent: 'contacts',
+        url: '/help/:topic',
+        params: { topic: 'intro' },
+      },
+    ]);
+
+    assert.deepEqual(exec(help.matcher, '/contacts/vip/help/search'), {
+      section: 'vip',
+      topic: 'search',
+    });
+    assert.equal(
+      format(help.matcher, { section: 'all', topic: 'intro' }),
+      '/contacts/all/help/intro',
+    );
+  });
+
+  it('rejects an unknown parent, a cycle, and a dotted name with parent', () => {
+    assert.throws(
+      () => compileRoutes([{ name: 'help', parent: 'nope', url: '/help' }]),
+      /Route 'help' has unknown parent 'nope'/,
+    );
+    assert.throws(
+      () =>
+        compileRoutes([
+          { name: 'a', parent: 'b', url: '/a' },
+          { name: 'b', parent: 'a', url: '/b' },
+        ]),
+      /parent cycle through 'a'/,
+    );
+    assert.throws(
+      () => compileRoutes([{ name: 'a', parent: 'a', url: '/a' }]),
+      /parent cycle through 'a'/,
+    );
+    assert.throws(
+      () =>
+        compileRoutes([
+          { name: 'a', url: '/a' },
+          { name: 'b', url: '/b' },
+          { name: 'a.c', parent: 'b', url: '/c' },
+        ]),
+      /cannot have a '\.' in its name/,
+    );
+  });
+
+  it('rejects a dotted name with parent, as core does', () => {
+    const router = createHeadlessRouter([{ name: 'b', url: '/b' }]);
+
+    assert.throws(
+      () =>
+        router.stateRegistry.register({ name: 'a.c', parent: 'b', url: '/c' }),
+      /should not have a '\.' in their name/,
+    );
+  });
+
+  it('redirects to a parent: state at its composed url', () => {
+    const evaluate = compileRedirects({
+      routes: [
+        { name: 'contacts', url: '/contacts' },
+        { name: 'contactHelp', parent: 'contacts', url: '/help/:topic' },
+        { name: 'oldHelp', url: '/help/:topic', redirectTo: 'contactHelp' },
+      ],
+    });
+
+    assert.equal(evaluate('/help/search'), '/contacts/help/search');
+    assert.equal(evaluate('/contacts/help/search'), null);
+  });
+});
+
+// Every url-bearing state's href from a headless core router must match back
+// to that state through the matcher tier.
+describe('differential: core href vs matcher, along parent', () => {
+  const fixtures: [RouteDeclaration, RawParams][] = [
+    [{ name: 'app', url: '' }, {}],
+    [{ name: 'contacts', parent: 'app', url: '/contacts' }, {}],
+    [{ name: 'contacts.contact', url: '/:contactId' }, { contactId: '7' }],
+    [{ name: 'contactHelp', parent: 'contacts', url: '/help' }, {}],
+    [{ name: 'contactHelp.topic', url: '/:topic' }, { topic: 'search' }],
+    [{ name: 'shell', parent: 'app' }, {}],
+    [{ name: 'shell.layout' }, {}],
+    [{ name: 'inbox', parent: 'shell.layout', url: '/inbox' }, {}],
+    [
+      {
+        name: 'folder',
+        parent: 'inbox',
+        url: '/:folderId',
+        params: { folderId: { value: 'all', squash: true } },
+      },
+      { folderId: 'sent' },
+    ],
+    [{ name: 'message', parent: 'folder', url: '/m/:id' }, { id: '3' }],
+    [{ name: 'prefs', parent: 'app', url: '/prefs?tab' }, { tab: 'mail' }],
+  ];
+
+  const routes = fixtures.map(([route]) => route);
+  // Fresh declarations: core mutates registrations.
+  const router = createHeadlessRouter(routes.map((route) => ({ ...route })));
+  const compiled = compileRoutes(routes);
+
+  for (const [route, params] of fixtures) {
+    if (route.url === undefined) continue;
+
+    it(route.name, () => {
+      const href = router.stateService.href(route.name, params);
+      const [path] = href.split('?');
+
+      assert.equal(matchRoute(compiled, path)?.state, route.name, href);
+      // SAFETY: every fixture url is a state url, so core's matching rule is a StateRule.
+      const rule = router.urlService.match({ path })?.rule as StateRule;
+
+      assert.equal(rule.state.name, route.name, href);
+    });
+  }
 });
 
 describe('matchRoute', () => {
@@ -245,6 +416,8 @@ describe('differential: evaluator vs headless simulation', () => {
       { name: 'contacts', url: '/contacts' },
       { name: 'contacts.detail', url: '/:contactId' },
       { name: 'contacts.new', url: '/new' },
+      { name: 'contactHelp', parent: 'contacts', url: '/help' },
+      { name: 'oldHelp', url: '/help', redirectTo: 'contactHelp' },
       { name: 'old', url: '/old/:contactId', redirectTo: 'contacts.detail' },
       { name: 'chain', url: '/chain', redirectTo: 'legacy' },
       {
@@ -268,6 +441,8 @@ describe('differential: evaluator vs headless simulation', () => {
     '/contacts',
     '/contacts/3',
     '/contacts/new',
+    '/contacts/help',
+    '/help',
     '/old/3',
     '/moved/3',
     '/chain',

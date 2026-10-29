@@ -8,7 +8,7 @@ import { Message } from './interface.js';
 
 interface MessageResolves {
   message: Message;
-  nextMessageGetter: (_id: string) => string;
+  nextMessageGetter: (_id: string) => string | undefined;
   folder: { actions: string[] };
 }
 

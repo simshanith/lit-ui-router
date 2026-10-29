@@ -1,6 +1,6 @@
 {
   "name": "ui-router-server",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Server-side UI-Router state matching for Connect, Vite, Hono, and fetch handlers",
   "homepage": "https://lit-ui-router.dev/packages/server",
   "bugs": {
@@ -99,6 +99,22 @@
       "deno": "./dist/simulate.js",
       "node": "./dist/development/simulate.js",
       "default": "./dist/simulate.js"
+    },
+    "./ssr": {
+      "types": "./dist/ssr.d.ts",
+      "development": "./dist/development/ssr.js",
+      "production": "./dist/ssr.js",
+      "deno": "./dist/ssr.js",
+      "node": "./dist/development/ssr.js",
+      "default": "./dist/ssr.js"
+    },
+    "./ssr/client": {
+      "types": "./dist/ssr-client.d.ts",
+      "development": "./dist/development/ssr-client.js",
+      "production": "./dist/ssr-client.js",
+      "deno": "./dist/ssr-client.js",
+      "node": "./dist/development/ssr-client.js",
+      "default": "./dist/ssr-client.js"
     },
     "./url-config": {
       "types": "./dist/url-config.d.ts",
@@ -212,6 +228,26 @@
     "./redirects": {
       "free": [
         "@uirouter/core"
+      ]
+    },
+    "./ssr": {
+      "free": [
+        "@lit-labs/ssr",
+        "hono",
+        "lit",
+        "lit-ui-router",
+        "vite"
+      ]
+    },
+    "./ssr/client": {
+      "free": [
+        "@lit-labs/ssr",
+        "hono",
+        "lit",
+        "lit-ui-router",
+        "vite",
+        "node:fs",
+        "node:path"
       ]
     },
     "./url-config": {

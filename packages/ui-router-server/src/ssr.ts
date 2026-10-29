@@ -1,3 +1,12 @@
+/**
+ * The server side of server-side rendering, for any renderer: moving a server
+ * router to a path and waiting for its transition to land, and drawing the
+ * resolved values it landed with for `seed` from `ui-router-server/ssr/client`
+ * to hand the client's boot transition.
+ *
+ * It imports `@uirouter/core` eagerly and no renderer.
+ */
+
 // Drives a server router's url sync to a landed transition, since `start()` and `urlService.sync()` drop the promise.
 import { RejectType } from '@uirouter/core';
 import type {
@@ -7,6 +16,12 @@ import type {
   UIRouter,
 } from '@uirouter/core';
 
+export { dehydrate } from './dehydrate.ts';
+
+export type { DehydrateResult } from './dehydrate.ts';
+
+export type { JsonValue, ResolvePayload } from './resolve-payload.ts';
+
 /** Options for {@link settle | `settle`}. */
 export interface SettleOptions {
   /**
@@ -14,17 +29,20 @@ export interface SettleOptions {
    * rejecting. Defaults to `10_000`; `0` or `Infinity` waits without a limit.
    */
   timeout?: number;
+  /**
+   * How many times a chain of url rules may rewrite the url to another url
+   * before rejecting. Defaults to `10`.
+   */
+  maxRewrites?: number;
 }
-
-// Bounds a chain of url rules that rewrite the url to another url.
-const maxRewrites = 10;
 
 /**
  * Moves `router` to `path` and resolves once the transition the url starts
  * has landed, resolves included, so a synchronous render reads the router
  * after it.
  *
- * It never calls `router.start()`, which runs once per router: it sets the
+ * It never starts the router, which happens once per router (`start()` on a
+ * `UIRouterLit`, `urlService.listen()` on a core router): it sets the
  * url and syncs the router to it, whether or not the router is listening.
  * A page loop calls it once per path on the same router. A `redirectTo`
  * chain settles on its final state, and a path the router already stands on
@@ -35,26 +53,24 @@ const maxRewrites = 10;
  *
  * @param router - the server router, its location installed with `installServerLocation`
  * @param path - the url to settle on, relative to the mount, query included
- * @param options - how long to wait
+ * @param options - how long to wait, and how many url rewrites to follow
  * @returns the transition that landed
  * @throws an `Error` when no url rule matches `path` and the router declares no `otherwise`
  * @throws an `Error` whose `cause` is the transition's `Rejection` when it fails, a failed resolve's error in that rejection's `detail`
  * @throws an `Error` when nothing lands within {@link SettleOptions.timeout | `timeout`}
+ * @throws an `Error` when url rules rewrite the url more than {@link SettleOptions.maxRewrites | `maxRewrites`} times
  *
  * @example
  * ```ts
- * import { prerender, settle } from 'lit-ui-router-ssr';
+ * import { installServerLocation } from 'ui-router-server/location';
+ * import { settle } from 'ui-router-server/ssr';
  *
- * await prerender({
- *   mounts,
- *   router,
- *   outDir: 'dist',
- *   paths: ['/', '/sheet/7B'],
- *   renderShell: async (verdict, { path }) => {
- *     await settle(router, path);
- *     return page();
- *   },
- * });
+ * installServerLocation(router, { urlConfig: { strict: false } });
+ *
+ * for (const path of ['/', '/sheet/7B']) {
+ *   await settle(router, path);
+ *   pages.set(path, render(router));
+ * }
  * ```
  */
 export const settle = (
@@ -62,7 +78,7 @@ export const settle = (
   path: string,
   options: SettleOptions = {},
 ): Promise<Transition> => {
-  const { timeout = 10_000 } = options;
+  const { timeout = 10_000, maxRewrites = 10 } = options;
   const { globals, stateService, transitionService, urlService } = router;
 
   return new Promise<Transition>((resolve, reject) => {

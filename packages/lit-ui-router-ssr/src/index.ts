@@ -15,6 +15,6 @@ export {
   type RenderContext,
 } from './prerender.js';
 
-export { settle, type SettleOptions } from './settle.js';
+export { settle, type SettleOptions } from 'ui-router-server/ssr';
 
 export { UiViewRenderer } from './ui-view-renderer.js';

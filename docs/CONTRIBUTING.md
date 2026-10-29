@@ -50,6 +50,21 @@ When you remove a dependency, a script that still calls its binary can resolve
 the global copy locally and pass, then fail in CI with `not found`; hide the
 global binary before trusting a local run.
 
+### Agent shells
+
+Agent tool shells are never mise-activated. Claude Code, for one, runs each
+command in a fresh shell built from a snapshot of `PATH` taken at session start,
+and mise's prompt hook never fires, so `node_modules/.bin` (bare `turbo`) and
+the `[env]` block are missing. Without setup, run commands through
+`mise exec -- <cmd>`.
+
+To opt a checkout's Claude Code sessions in, run `mise run agent_hook` once. It
+adds a SessionStart hook to the gitignored `.claude/settings.local.json` that
+calls [`agent_env`](../.config/mise/tasks/agent_env), which has the shell
+re-derive mise's environment before every command, for that command's starting
+directory. New sessions pick it up; `mise run agent_hook --remove` takes it out.
+The settings file is per checkout, so run it in each worktree you use.
+
 ## Running Tests
 
 ```bash
