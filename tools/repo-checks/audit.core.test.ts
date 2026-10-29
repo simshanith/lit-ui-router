@@ -95,7 +95,7 @@ const projects: ListedProject[] = [
 const advisory = (
   module_name: string,
   version: string,
-  patched_versions: string,
+  patched_versions: string | null,
   severity: Advisory['severity'] = 'high',
 ): Advisory => ({
   module_name,
@@ -196,6 +196,7 @@ describe('classify', () => {
     const verdict = run(
       advisory('hono', '4.0.0', '>=5.0.0'),
       advisory('hono', '4.0.0', '<0.0.0', 'low'),
+      advisory('hono', '4.0.0', null, 'low'),
     );
 
     assert.deepEqual(
@@ -209,6 +210,7 @@ describe('classify', () => {
       [
         ['>=5.0.0', 'packages/server', '^4.0.0'],
         ['<0.0.0', 'packages/server', '^4.0.0'],
+        [null, 'packages/server', '^4.0.0'],
       ],
     );
   });

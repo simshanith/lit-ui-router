@@ -21,7 +21,8 @@ export const SeveritySchema = v.picklist(SEVERITIES);
 const AdvisorySchema = v.object({
   module_name: v.string(),
   severity: SeveritySchema,
-  patched_versions: v.string(),
+  // null when no version fixes it yet
+  patched_versions: v.nullable(v.string()),
   github_advisory_id: v.string(),
   title: v.string(),
   url: v.string(),
@@ -296,7 +297,8 @@ export function classify(
         if (
           target.name === advisory.module_name &&
           target.version === version &&
-          !semver.intersects(advisory.patched_versions, target.peerRange)
+          (advisory.patched_versions === null ||
+            !semver.intersects(advisory.patched_versions, target.peerRange))
         ) {
           verdict.unfixedInRange.push({ ...finding, floor: target });
         }
@@ -343,7 +345,7 @@ export function floorSummary(floorOnly: readonly FloorFinding[]): string[] {
 }
 
 export const formatFinding = ({ id, advisory }: Finding) =>
-  `${advisory.severity} ${id} ${advisory.github_advisory_id} ${advisory.title} (patched ${advisory.patched_versions})`;
+  `${advisory.severity} ${id} ${advisory.github_advisory_id} ${advisory.title} (patched ${advisory.patched_versions ?? 'nowhere'})`;
 
 export const formatUnfixed = ({ floor, ...finding }: UnfixedFinding) =>
   `${formatFinding(finding)}: no patched version in ${floor.importer}'s published ${floor.name} peer range ${floor.peerRange}`;
