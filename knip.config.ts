@@ -202,7 +202,7 @@ const workspaces = {
   'tools/dts-backtest': {
     entry: ['fixtures/*.ts', 'registered/*.ts', 'routed/**/*.ts'],
     // the TS version matrix is imported by computed specifier
-    ignoreDependencies: ['typescript-5.0', 'typescript-6', 'typescript-7'],
+    ignoreDependencies: ['typescript-5.0', 'typescript-6'],
   },
   'tools/oxc-emit': {
     // reached via createRequire(), which knip does not follow

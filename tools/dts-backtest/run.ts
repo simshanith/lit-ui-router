@@ -13,8 +13,7 @@
 //
 // Legs through 6.x drive the classic `ts.createProgram` API. TypeScript 7
 // dropped that API, so its leg drives the native compiler through
-// `typescript/unstable/sync` — a different, still-unstable surface that 7.1 is
-// expected to replace.
+// `typescript/sync`.
 
 import {
   mkdirSync,
@@ -27,55 +26,20 @@ import { createRequire } from 'node:module';
 import { dirname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { createFileSystemLayer } from 'typescript-7/fs';
+
 // The classic (6.x-and-earlier) compiler API. Every API leg is a `typescript`
 // aliased to a fixed version, all sharing this surface, so one namespace types
-// them all. The native 7 leg (checkNative) uses plain objects instead.
+// them all. The native 7 leg (checkNative) uses `typescript/sync` instead.
 import type * as TS from 'typescript-5.9';
+import type { RequestFileSystem } from 'typescript-7/proto';
+import type { Diagnostic as NativeDiagnostic } from 'typescript-7/sync';
 
 type ClassicApi = typeof import('typescript-5.9');
 
-// A native (TS 7) diagnostic, as `typescript/unstable/sync` hands them back:
-// plain objects rather than ts.Diagnostic instances.
-type NativeDiagnostic = {
-  fileName?: string;
-  code: number;
-  category: number;
-  text: string;
-  pos?: number;
-  end?: number;
-};
+type NativeSyncModule = typeof import('typescript-7/sync');
 
-// TypeScript 7 ships no types for its unstable `typescript/unstable/sync`
-// surface, so describe exactly the slice checkNative drives and assert the
-// dynamic import to it.
-interface NativeProgram {
-  getSourceFileNames(): string[];
-  getConfigFileParsingDiagnostics(): NativeDiagnostic[];
-  getGlobalDiagnostics(): NativeDiagnostic[];
-  getSyntacticDiagnostics(): NativeDiagnostic[];
-  getSemanticDiagnostics(): NativeDiagnostic[];
-}
-
-interface NativeSnapshot {
-  getProject(configPath: string): { program: NativeProgram } | undefined;
-  dispose(): void;
-}
-
-interface NativeApi {
-  updateSnapshot(options: { openProjects: string[] }): NativeSnapshot;
-  close(): void;
-}
-
-interface NativeSyncModule {
-  API: new (options: { cwd: string }) => NativeApi;
-  DiagnosticCategory: { Error: number };
-}
-
-// Every leg reports its own version from its root export, classic and native
-// alike — the classic legs read it off the API object as `ts.version`.
-interface NativeModule {
-  version: string;
-}
+type NativeModule = typeof import('typescript-7');
 
 const here = dirname(fileURLToPath(import.meta.url));
 
@@ -264,24 +228,32 @@ function check(
 
 // TypeScript 7 equivalent of check(). Diagnostics come back as plain objects
 // ({ fileName, pos, end, code, category, text }) rather than ts.Diagnostic.
-async function checkNative(specifier: string, configFile: string) {
+async function checkNative(
+  specifier: string,
+  configFile: string,
+  fileSystem?: RequestFileSystem,
+) {
   // SAFETY: NATIVE_VERSION ships both modules in these shapes
   const [{ API, DiagnosticCategory }, { version }] = (await Promise.all([
-    import(`${specifier}/unstable/sync`),
+    import(`${specifier}/sync`),
     import(specifier),
   ])) as [NativeSyncModule, NativeModule];
 
   const api = new API({ cwd: here });
   const configPath = resolve(here, configFile);
-  const snapshot = api.updateSnapshot({ openProjects: [configPath] });
+
+  const snapshot = api.createSnapshot({
+    openProjects: [configPath],
+    fileSystem,
+  });
 
   try {
-    const project = snapshot.getProject(configPath);
+    const project = snapshot.getConfiguredProject(configPath);
 
     if (!project) throw new Error(`no project for ${configFile}`);
     const { program } = project;
 
-    const files: string[] = program.getSourceFileNames();
+    const files = program.getSourceFileNames();
 
     const missing = programDirs(configFile).filter(
       (dir) => !files.some((file) => resolve(file).startsWith(dir)),
@@ -303,8 +275,11 @@ async function checkNative(specifier: string, configFile: string) {
       ...program.getSemanticDiagnostics(),
     ];
 
+    // the protocol types `category` as a bare number, not the enum
+    const errorCategory: number = DiagnosticCategory.Error;
+
     for (const diagnostic of diagnostics) {
-      if (diagnostic.category !== DiagnosticCategory.Error) continue;
+      if (diagnostic.category !== errorCategory) continue;
 
       if (!diagnostic.fileName || ownsPath(diagnostic.fileName)) {
         owned.push(diagnostic);
@@ -422,20 +397,17 @@ const PROBE = 'export type __dtsBacktestProbe = NoInfer<string>;\n';
 const NATIVE_PROBE =
   'export type __dtsBacktestNativeProbe = __NoSuchTypeExists__;\n';
 
-// Under `here` (not os.tmpdir()) so ownsPath() owns the probe diagnostics and
-// relative tsconfig paths resolve; outside this task's turbo `inputs` so the
-// scratch lifecycle never dirties the cache hash.
-async function withProbeFile<T>(
-  probe: string,
-  body: (probePath: string, scratchDir: string) => T | Promise<T>,
-): Promise<T> {
+// Under `here` (not os.tmpdir()) so ownsPath() owns the probe diagnostics;
+// outside this task's turbo `inputs` so the scratch lifecycle never dirties
+// the cache hash.
+function withProbeFile<T>(probe: string, body: (probePath: string) => T): T {
   mkdirSync(join(here, '.probe-scratch'), { recursive: true });
   const scratchDir = mkdtempSync(join(here, '.probe-scratch', 'run-'));
   const probePath = join(scratchDir, 'probe.d.ts');
   writeFileSync(probePath, probe);
 
   try {
-    return await body(probePath, scratchDir);
+    return body(probePath);
   } finally {
     rmSync(scratchDir, { recursive: true, force: true });
   }
@@ -482,22 +454,25 @@ function selftest() {
 }
 
 async function selftestNative() {
-  // The native API takes only a tsconfig; relative `include` paths resolve
-  // against the declaring config, so the scratch dir gets its own.
-  const { version, owned } = await withProbeFile(
-    NATIVE_PROBE,
-    (_probePath, scratchDir) => {
-      const scratchConfig = join(scratchDir, 'tsconfig.json');
-      writeFileSync(
-        scratchConfig,
-        JSON.stringify({
-          extends: `../../${BASE_CONFIG}`,
-          include: ['../../fixtures/**/*.ts', './probe.d.ts'],
-        }),
-      );
+  // in-memory overlay under `here`: relative paths resolve as on disk
+  const probeDir = join(here, '.probe-native');
+  const probeConfig = join(probeDir, 'tsconfig.json');
 
-      return checkNative(NATIVE_VERSION, scratchConfig);
-    },
+  const fileSystem = createFileSystemLayer([
+    [
+      probeConfig,
+      JSON.stringify({
+        extends: `../${BASE_CONFIG}`,
+        include: ['../fixtures/**/*.ts', './probe.d.ts'],
+      }),
+    ],
+    [join(probeDir, 'probe.d.ts'), NATIVE_PROBE],
+  ]);
+
+  const { version, owned } = await checkNative(
+    NATIVE_VERSION,
+    probeConfig,
+    fileSystem,
   );
 
   const caught = owned.some((diagnostic) =>
@@ -531,7 +506,7 @@ const main = async (): Promise<void> => {
 
   const currentOnly = versionsArg === 'current';
 
-  let ok = currentOnly ? true : await selftest();
+  let ok = currentOnly ? true : selftest();
 
   ok = (await selftestNative()) && ok;
 
