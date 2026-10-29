@@ -39,7 +39,12 @@ import type { RawParams } from '@uirouter/core';
 import { registeredDelegates, sharedWeakMap } from './delegate-registry.ts';
 import type { DelegateRegistration } from './delegate-registry.ts';
 import { mergeSearch } from './index.ts';
-import type { RouteDeclaration, ServerRouter, Verdict } from './index.ts';
+import type {
+  RouteDeclaration,
+  ServerRouter,
+  ServerRouterDeclarations,
+  Verdict,
+} from './index.ts';
 
 /**
  * The WinterCG handler: a verdict answered, or `null` to pass to the host.
@@ -163,6 +168,40 @@ export type RequiredDelegates<
           delegates: DelegateHandlers<Args, Decls>;
         };
 
+/** Serves a mount's shell asset; see {@link FetchAdapterOptions.serveShell}. */
+export type ShellServer = (
+  mount: string,
+  request: Request,
+) => Response | Promise<Response>;
+
+/** The states of `Decls` that can answer with the shell: a url and no delegate. */
+export type PageState<Decls extends RouteDeclaration = RouteDeclaration> =
+  Decls extends {
+    /** A delegating state's key. */
+    readonly delegate: string;
+  }
+    ? never
+    : Decls extends {
+          /** A url-addressable state's url. */
+          readonly url: string;
+        }
+      ? Decls
+      : never;
+
+/**
+ * Makes `serveShell` required when a typed router has a {@link PageState}.
+ * An untyped router can't tell, so construction checks it instead.
+ */
+export type RequiredShell<Decls extends RouteDeclaration = RouteDeclaration> =
+  string extends Decls['name']
+    ? unknown
+    : [PageState<Decls>] extends [never]
+      ? unknown
+      : {
+          /** Serves the shell the router's page states answer with. */
+          serveShell: ShellServer;
+        };
+
 /** Host hooks for {@link createFetchHandler}: asset IO, which requests get verdicts, and delegate handlers. */
 export interface FetchAdapterOptions<
   Args extends unknown[] = [],
@@ -180,10 +219,15 @@ export interface FetchAdapterOptions<
    * already rewritten to {@link FetchAdapterOptions.shellPath | shellPath} and, for a status'd shell, already
    * stripped of conditional validators — so the host returns the RAW asset
    * Response (`(mount, request) => env.ASSETS.fetch(request)`) and the adapter
-   * owns the status relabel and Link header on the way out. REQUIRED: asset IO
-   * is the one thing a runtime-neutral adapter cannot default.
+   * owns the status relabel and Link header on the way out. Asset IO is the
+   * one thing a runtime-neutral adapter cannot default, so it is required
+   * whenever the router can answer with the shell: a mount has a state with
+   * a url and no delegate, or an `otherwise`. A typed router checks that at
+   * compile time ({@link RequiredShell}); construction throws for a router
+   * from `createServerRouter`, and a structural router's shell verdict throws.
+   * A router made only of delegating states needs none.
    */
-  serveShell: (mount: string, request: Request) => Response | Promise<Response>;
+  serveShell?: ShellServer;
   /**
    * Serve a mount-owned miss (`notFound` with a mount: the mount owned the
    * pathname but no route matched). The default answers a minimal `text/plain`
@@ -282,6 +326,11 @@ interface DelegatedRequest {
 const delegatedRequests = sharedWeakMap<Request, DelegatedRequest>(
   'ui-router-server/delegate',
 );
+
+const missingShell = (): Error =>
+  new Error(
+    'createFetchHandler: the router can answer with the shell (a state with a url and no delegate, or an otherwise), so pass serveShell',
+  );
 
 const missingDelegate = (key: string): Error =>
   new Error(`No handler in delegates for delegate key '${key}'`);
@@ -383,15 +432,25 @@ export function delegateContext<
  *   Non-navigations only match urls, never a transition, and skip matching
  *   when the router names no delegate keys.
  *
+ * A mount without pages claims only its delegating states' urls, so the
+ * handler returns `null` for any other request under it, navigations
+ * included. `R` is the router's type and `Args` the host's extra handler
+ * arguments; write both (`createFetchHandler<typeof router, [Env]>`) or
+ * annotate the result (`const handle: FetchHandler<[Env]> = …`), so the
+ * router's delegate keys stay checked.
+ *
  * @throws at construction when the router names a delegate key
- * {@link FetchAdapterOptions.delegates | delegates} lacks
+ * {@link FetchAdapterOptions.delegates | delegates} lacks, or can answer with
+ * the shell and {@link FetchAdapterOptions.serveShell | serveShell} is absent
  */
 export function createFetchHandler<
+  R extends ServerRouter,
   Args extends unknown[] = [],
-  Decls extends RouteDeclaration = RouteDeclaration,
 >(
-  router: ServerRouter<Decls>,
-  options: FetchAdapterOptions<Args, Decls> & RequiredDelegates<Args, Decls>,
+  router: R,
+  options: FetchAdapterOptions<Args, ServerRouterDeclarations<R>> &
+    RequiredDelegates<Args, ServerRouterDeclarations<R>> &
+    RequiredShell<ServerRouterDeclarations<R>>,
 ): FetchHandler<Args> {
   const {
     serveShell,
@@ -407,6 +466,9 @@ export function createFetchHandler<
 
   const registration = registeredDelegates(router);
   checkDelegates(registration, delegates);
+
+  if (serveShell === undefined && registration?.pages === true)
+    throw missingShell();
 
   const delegating =
     registration === undefined
@@ -451,6 +513,8 @@ export function createFetchHandler<
       );
 
       if (verdict.status !== undefined) stripValidators(shellRequest);
+
+      if (serveShell === undefined) throw missingShell();
       const asset = await serveShell(verdict.mount, shellRequest);
       const headers = new Headers(asset.headers);
 

@@ -27,8 +27,12 @@
  */
 
 import { createFetchHandler } from './fetch.ts';
-import type { FetchAdapterOptions, RequiredDelegates } from './fetch.ts';
-import type { RouteDeclaration, ServerRouter } from './index.ts';
+import type {
+  FetchAdapterOptions,
+  RequiredDelegates,
+  RequiredShell,
+} from './fetch.ts';
+import type { ServerRouter, ServerRouterDeclarations } from './index.ts';
 
 import type { Context, Env, ExecutionContext, MiddlewareHandler } from 'hono';
 
@@ -53,17 +57,20 @@ const executionCtxOf = (c: Context): ExecutionContext | undefined => {
  * Wraps a {@link ServerRouter} as Hono middleware. The returned handler resolves
  * the request to a verdict and either answers it (`return`ing the verdict
  * Response) or passes it on (`await next()`), exactly the fetch adapter's
- * `Response | null` contract expressed in Hono's continuation.
+ * `Response | null` contract expressed in Hono's continuation. Write the
+ * router's type before the app's env (`serverRouterHono<typeof router, AppEnv>`)
+ * so its delegate keys stay checked.
  */
-export function serverRouterHono<
-  E extends Env = Env,
-  Decls extends RouteDeclaration = RouteDeclaration,
->(
-  router: ServerRouter<Decls>,
-  options: FetchAdapterOptions<HonoDelegateArgs<E>, Decls> &
-    RequiredDelegates<HonoDelegateArgs<E>, Decls>,
+export function serverRouterHono<R extends ServerRouter, E extends Env = Env>(
+  router: R,
+  options: FetchAdapterOptions<
+    HonoDelegateArgs<E>,
+    ServerRouterDeclarations<R>
+  > &
+    RequiredDelegates<HonoDelegateArgs<E>, ServerRouterDeclarations<R>> &
+    RequiredShell<ServerRouterDeclarations<R>>,
 ): MiddlewareHandler<E> {
-  const handler = createFetchHandler(router, options);
+  const handler = createFetchHandler<R, HonoDelegateArgs<E>>(router, options);
 
   return async (c, next) => {
     const response = await handler(c.req.raw, c.env, executionCtxOf(c));

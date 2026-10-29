@@ -29,13 +29,19 @@ dependencies. Full docs:
 A state can name a host handler by key, `{ name: 'claims', url: '/claims', delegate: 'ledger' }`,
 and the fetch and Hono adapters map keys to fetch-shaped handlers, so a Hono app's `fetch` fits
 bare: `createFetchHandler(router, { serveShell, delegates: { ledger: ledgerApp.fetch } })`.
-Every handler gets the original request plus the adapter's own extra arguments
-(`handler(request, env, ctx)`), so all of them share one signature. The request keeps its url,
+A delegate receives exactly the host's handler arguments: `(request, env, ctx)` on Workers,
+`(request, c.env, c.executionCtx)` behind `serverRouterHono`, as Hono's `app.fetch` takes them,
+and Connect's own `(req, res, next)` downstream. Wrap or bind a handler whose extra parameters are
+optional, so a host argument never lands in one. The request keeps its url,
 mount base included: route on the `subpath` that `delegateContext(c.req.raw, 'ledger')` returns,
 or mount the delegating states at `/`. A request of any method that matches a delegating state
 gets the handler's `Response`, untouched; other non-navigations only match urls and never run a
-transition. Construction throws for a key the tree names and `delegates` lacks, and `as const`
-routes make that a compile error. The Connect adapter throws for delegate keys unless you pass
+transition. A mount without pages (every state with a url delegates, and no `otherwise`) claims
+only its delegating urls, so every other request under it passes through, navigations included,
+and a router made only of such mounts needs no `serveShell`. Construction throws for a key the
+tree names and `delegates` lacks, or for a missing `serveShell` the router needs, and `as const`
+routes make both compile errors, whether the host's arguments are inferred, written out
+(`createFetchHandler<typeof router, [Env]>`) or annotated on the result. The Connect adapter throws for delegate keys unless you pass
 `delegates: 'next'` and serve those states downstream. `prerender()` from
 `ui-router-server/prerender` writes no page and no rules line for a delegating state: it counts
 the path in `result.tally.delegate` and lists it in `result.delegated`, so route those paths to
