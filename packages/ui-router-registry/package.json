@@ -1,6 +1,6 @@
 {
   "name": "ui-router-registry",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Typed state names and params for UI-Router: a types-only registry for @uirouter/core",
   "homepage": "https://lit-ui-router.dev/packages/ui-router-registry",
   "bugs": {
