@@ -191,6 +191,24 @@ describe('createConnectMiddleware', () => {
     assert.equal(h.ended, false);
   });
 
+  it('passes a navigation a mount without pages does not claim', async () => {
+    const router = createServerRouter({
+      mounts: {
+        '/': {
+          routes: [{ name: 'claims', url: '/claims', delegate: 'ledger' }],
+        },
+      },
+    });
+
+    const mw = createConnectMiddleware(router, { delegates: 'next' });
+
+    const h = harness({ url: '/missing' });
+    mw(h.req, h.res, h.next);
+    await h.done;
+    assert.deepEqual(h.nextArgs, [[]]);
+    assert.equal(h.writeHead.length, 0);
+  });
+
   const claims: Verdict = {
     kind: 'delegate',
     mount: '/app',

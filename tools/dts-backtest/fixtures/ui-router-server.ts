@@ -11,6 +11,7 @@ import {
   type RedirectRule,
   type RouteDeclaration,
   type ServerRouter,
+  type ServerRouterDeclarations,
   type Verdict,
 } from 'ui-router-server';
 import {
@@ -29,7 +30,10 @@ import {
   type DelegateState,
   type FetchAdapterOptions,
   type FetchHandler,
+  type PageState,
   type RequiredDelegates,
+  type RequiredShell,
+  type ShellServer,
 } from 'ui-router-server/fetch';
 import {
   delegateContext as honoDelegateContext,
@@ -540,6 +544,101 @@ export function typedClaimOf(request: Request): string {
 export function feedPageOf(request: Request): number {
   return delegateContext(request, 'feed', claimsRouter).params.page;
 }
+
+// A router made only of delegating states serves no shell.
+const commandRoutes = [
+  { name: 'api' },
+  { name: 'api.claims', url: '/claims', delegate: 'claims' },
+] as const;
+
+const commandRouter = createServerRouter({
+  mounts: { '/': { routes: commandRoutes } },
+});
+
+export const commandDecls: ServerRouterDeclarations<typeof commandRouter> =
+  commandRoutes[1];
+
+export const noPages: [PageState<(typeof commandRoutes)[number]>] extends [
+  never,
+]
+  ? RequiredShell<(typeof commandRoutes)[number]>
+  : never = {};
+
+export const pageShell: RequiredShell<(typeof claimRoutes)[number]> = {
+  serveShell: (_mountBase, request) => new Response(request.url),
+};
+
+const claimsHandler = (request: Request, env: WorkerEnv): Response =>
+  new Response(`${request.method} ${env.QUEUE}`, { status: 202 });
+
+export const commandHandler = createFetchHandler(commandRouter, {
+  delegates: { claims: claimsHandler },
+});
+
+export const commandCalled: Promise<Response | null> = commandHandler(
+  new Request('https://ledger.test/claims'),
+  { QUEUE: 'q' },
+);
+
+export const commandAnnotated: FetchHandler<[env: WorkerEnv]> =
+  createFetchHandler(commandRouter, {
+    delegates: { claims: (request, env) => claimsHandler(request, env) },
+  });
+
+export const commandExplicit = createFetchHandler<
+  typeof commandRouter,
+  [env: WorkerEnv]
+>(commandRouter, {
+  delegates: { claims: (request, env) => claimsHandler(request, env) },
+});
+
+// The key check holds whether `Args` is inferred, annotated or written out.
+export const misspelledInferred = createFetchHandler(commandRouter, {
+  // @ts-expect-error 'claim' is not the key the router names
+  delegates: { claim: claimsHandler },
+});
+
+export const misspelledAnnotated: FetchHandler<[env: WorkerEnv]> =
+  createFetchHandler(commandRouter, {
+    // @ts-expect-error 'claim' is not the key the router names
+    delegates: { claim: (request, env) => claimsHandler(request, env) },
+  });
+
+export const misspelledExplicit = createFetchHandler<
+  typeof commandRouter,
+  [env: WorkerEnv]
+>(commandRouter, {
+  // @ts-expect-error 'claim' is not the key the router names
+  delegates: { claim: (request, env) => claimsHandler(request, env) },
+});
+
+// @ts-expect-error the router's type comes first; `Args` alone no longer drops the key check
+export const argsOnly = createFetchHandler<[env: WorkerEnv]>(commandRouter, {
+  delegates: { claims: claimsHandler },
+});
+
+// @ts-expect-error a typed router with page states requires serveShell
+export const missingShell: FetchHandler = createFetchHandler(claimsRouter, {
+  delegates: { ledger, feed: ledger },
+});
+
+// An untyped router can't tell, so construction checks serveShell instead.
+export const untypedNoShell: FetchHandler = createFetchHandler(router, {});
+
+const shellServer: ShellServer = (_mountBase, request) =>
+  new Response(request.url);
+
+export const honoCommands: MiddlewareHandler<{ Bindings: WorkerEnv }> =
+  serverRouterHono(commandRouter, { delegates: { claims: ledgerApp.fetch } });
+
+export const honoExplicit = serverRouterHono<
+  typeof commandRouter,
+  { Bindings: WorkerEnv }
+>(commandRouter, {
+  serveShell: shellServer,
+  // @ts-expect-error 'claim' is not the key the router names
+  delegates: { claim: ledgerApp.fetch },
+});
 
 // A typed router still fits the untyped surface.
 export const looseRouter: ServerRouter = claimsRouter;

@@ -458,6 +458,27 @@ for (const strategy of TIERS) {
 
       assert.deepEqual(diagnoseMounts(bare), []);
     });
+
+    it('claims only its delegating urls on a mount without pages', async () => {
+      const api = createServerRouter({
+        mounts: {
+          '/': {
+            ...tierConfig(strategy),
+            routes: [
+              { name: 'api' },
+              { name: 'api.claims', url: '/claims/:id', delegate: 'ledger' },
+            ],
+          },
+        },
+      });
+
+      assert.equal((await api.resolve('/claims/9')).kind, 'delegate');
+
+      for (const path of ['/', '/missing', '/claims/9/extra'])
+        assert.deepEqual(await api.resolve(path), { kind: 'notFound' });
+      assert.equal(registeredDelegates(api)?.pages, false);
+      assert.deepEqual(diagnoseMounts(api), []);
+    });
   });
 }
 
@@ -536,6 +557,40 @@ describe('delegate configuration', () => {
       registeredDelegates({ resolve: () => Promise.reject(new Error()) }),
       undefined,
     );
+  });
+
+  it('counts a page state or an otherwise projection as pages', async () => {
+    const delegating = { name: 'claims', url: '/claims', delegate: 'ledger' };
+
+    const withOtherwise = createServerRouter({
+      mounts: {
+        '/app': {
+          routes: [delegating, { name: 'notFound' }],
+          otherwise: { state: 'notFound' },
+        },
+      },
+    });
+
+    assert.deepEqual(await withOtherwise.resolve('/app/missing'), {
+      kind: 'shell',
+      mount: '/app',
+      status: 404,
+    });
+    assert.equal(registeredDelegates(withOtherwise)?.pages, true);
+
+    const mixed = createServerRouter({
+      mounts: {
+        '/api': { routes: [delegating] },
+        '/app': { routes: [{ name: 'home', url: '' }] },
+      },
+    });
+
+    assert.equal(registeredDelegates(mixed)?.pages, true);
+    assert.deepEqual(await mixed.resolve('/api/missing'), { kind: 'notFound' });
+    assert.deepEqual(await mixed.resolve('/app/missing'), {
+      kind: 'notFound',
+      mount: '/app',
+    });
   });
 
   it('matches no delegate on a mount that names no keys', async () => {
