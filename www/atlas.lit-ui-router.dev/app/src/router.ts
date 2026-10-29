@@ -5,7 +5,7 @@
 import { hashLocationPlugin, pushStateLocationPlugin } from '@uirouter/core';
 import type { Transition } from '@uirouter/core';
 import { UIRouterLit } from 'lit-ui-router/pure';
-import type { LitStateDeclaration } from 'lit-ui-router';
+import type { LitStateDeclaration, TypedLitStateDeclaration } from 'lit-ui-router';
 import { navigationLocationPlugin } from 'ui-router-navigation-location-plugin';
 import type { UIRouterNavigateEvent } from 'ui-router-navigation-location-plugin';
 import type { TypedStateService } from 'ui-router-registry';
@@ -33,7 +33,7 @@ import {
  * A 3D plate's state, `atlas.<id>`: the city and its working twin share the
  * view, the element and the generated wiring, and differ only in their row.
  */
-function sceneState(id: string): LitStateDeclaration {
+function sceneState(id: string) {
   const name = `atlas.${id}`;
   return {
     name,
@@ -61,27 +61,31 @@ function sceneState(id: string): LitStateDeclaration {
       },
       { token: 'viewer', resolveFn: (): Promise<unknown> => import('@google/model-viewer') },
     ],
-  };
+  } satisfies TypedLitStateDeclaration;
 }
 
-const shellState: LitStateDeclaration = {
+const shellState = {
   name: 'atlas',
   abstract: true,
   component: ShellView,
   // Resolved once for the whole shell; children read it through their own
   // deps, and the runtime's DrawingSet reads it once, so the rail costs one fetch.
   resolve: [{ token: 'manifest', resolveFn: loadManifest }],
-};
+} satisfies TypedLitStateDeclaration;
 
 // The key index's filter rides the url: same params as the server half.
-const galleryState: LitStateDeclaration = {
+const galleryState = {
   name: 'atlas.gallery',
   url: urlOf('atlas.gallery'),
   params: FILTER_PARAMS,
   component: GalleryView,
-};
+} satisfies TypedLitStateDeclaration;
 
-const aboutState: LitStateDeclaration = { name: 'atlas.about', url: urlOf('atlas.about'), component: AboutView };
+const aboutState = {
+  name: 'atlas.about',
+  url: urlOf('atlas.about'),
+  component: AboutView,
+} satisfies TypedLitStateDeclaration;
 
 /**
  * The client's route table. The artifact routes the gallery and the colophon
@@ -114,7 +118,7 @@ export const states: LitStateDeclaration[] = ARTIFACT ? [shellState, galleryStat
         resolveFn: (sheet: SheetRow): Promise<string> => loadFragment(sheet),
       },
     ],
-  },
+  } satisfies TypedLitStateDeclaration,
   sceneState('city'),
   sceneState('plant'),
   {
@@ -142,7 +146,7 @@ export const states: LitStateDeclaration[] = ARTIFACT ? [shellState, galleryStat
       },
       { token: 'viewer', resolveFn: (): Promise<unknown> => import('@google/model-viewer') },
     ],
-  },
+  } satisfies TypedLitStateDeclaration,
   {
     name: 'atlas.builds',
     url: urlOf('atlas.builds'),
@@ -167,7 +171,7 @@ export const states: LitStateDeclaration[] = ARTIFACT ? [shellState, galleryStat
       },
       { token: 'viewer', resolveFn: (): Promise<unknown> => import('@google/model-viewer') },
     ],
-  },
+  } satisfies TypedLitStateDeclaration,
   {
     name: 'atlas.specimen',
     url: urlOf('atlas.specimen'),
@@ -182,19 +186,19 @@ export const states: LitStateDeclaration[] = ARTIFACT ? [shellState, galleryStat
         resolveFn: (): Promise<unknown> => import('./specimen.ts'),
       },
     ],
-  },
+  } satisfies TypedLitStateDeclaration,
   {
     name: 'atlas.office',
     url: urlOf('atlas.office'),
     redirectTo: { state: 'atlas.sheet', params: { num: 'A2' } },
-  },
+  } satisfies TypedLitStateDeclaration,
   aboutState,
   // The issue log reads the shell's already-resolved manifest — no resolve of
   // its own, and no second fetch.
-  { name: 'atlas.log', url: urlOf('atlas.log'), component: LogView },
+  { name: 'atlas.log', url: urlOf('atlas.log'), component: LogView } satisfies TypedLitStateDeclaration,
   // Url-less: an unmatched path keeps its own url, exactly as a server 404
   // does — the shape ui-router-server projects as `otherwise`.
-  { name: 'atlas.notFound', component: NotFoundView },
+  { name: 'atlas.notFound', component: NotFoundView } satisfies TypedLitStateDeclaration,
 ];
 
 /**

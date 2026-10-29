@@ -1,6 +1,7 @@
 // Type-level spec for the app's registry wiring: `npm run typecheck` is the assertion.
-import type { ParamsOf, ResolvedParamsOf, StateName, TypedStateService } from 'ui-router-registry';
+import type { CollisionsOf, ParamsOf, ResolvedParamsOf, StateName, TypedStateService } from 'ui-router-registry';
 import type { TypedRouteSnapshot } from 'ui-router-effect';
+import type { routes } from './routes.ts';
 
 declare const stateService: TypedStateService;
 
@@ -89,3 +90,9 @@ if (snapshot.includes('atlas.city') || snapshot.includes('atlas.bricks')) {
   // @ts-expect-error neither state declares a sheet number
   accepts<keyof typeof snapshot.params>('num');
 }
+
+// -- the table is the one registered under each of its names --------------------
+
+type IsNever<T> = [T] extends [never] ? true : false;
+
+accepts<IsNever<CollisionsOf<typeof routes>>>(true);

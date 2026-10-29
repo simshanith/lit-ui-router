@@ -9,6 +9,7 @@
  */
 import type { MountConfig, RedirectRule, RouteDeclaration } from 'ui-router-server';
 import type { RouterUrlConfig } from 'ui-router-server/url-config';
+import type { AssertNoCollisions, StatesOf } from 'ui-router-registry';
 
 /**
  * The mount base — THE ONE base constant. vite's `base`, `<base href>`,
@@ -133,18 +134,19 @@ export const routes = [
 ] as const satisfies readonly RouteDeclaration[];
 
 /**
- * The table, registered: `ui-router-registry` reads the names and params off it,
- * so a `stateService.go`, `href`, `target` or `includes` anywhere in the app takes a
- * registered name and that state's params, and its effect entry fills
+ * The table, registered: `RegisteredStates` takes its rows keyed by name, so a
+ * `stateService.go`, `href`, `target` or `includes` anywhere in the app takes a
+ * registered name and that state's params, and the effect entry fills
  * `ui-router-effect`'s `RouteTypes`, so the route ref's snapshot narrows on
  * `includes` to a state's params (src/registry.test-d.ts).
  */
 import type {} from 'ui-router-registry/effect';
 declare module 'ui-router-registry' {
-  interface Register {
-    states: (typeof routes)[number];
-  }
+  interface RegisteredStates extends StatesOf<typeof routes> {}
 }
+
+/** Fails to compile when a row here is not the one registered under its name. */
+export type AtlasStates = AssertNoCollisions<typeof routes>;
 
 /** The declared url for a state name — the client reads its urls from here. */
 export function urlOf(name: string): string | undefined {

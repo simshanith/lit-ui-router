@@ -20,14 +20,14 @@
     "@uirouter/core": "^6.1.2",
     "@uirouter/visualizer": "^7.2.1",
     "cytoscape": "^3.34.4",
-    "effect": "^4.0.7",
+    "effect": "^4.1.0",
     "lit": "^3.3.3",
-    "lit-ui-router": "^1.17.0",
+    "lit-ui-router": "^1.18.0",
     "lit-ui-router-effect": "^0.6.0",
     "three": "^0.186.1",
     "ui-router-effect": "^0.2.0",
     "ui-router-navigation-location-plugin": "^1.2.0",
-    "ui-router-server": "^0.4.0"
+    "ui-router-server": "^0.5.0"
   },
   "devDependencies": {
     "@lit-labs/ssr": "^4.1.0",
@@ -36,11 +36,11 @@
     "eslint-plugin-lit-a11y": "^5.1.3",
     "eslint-plugin-lit-ui-router": "^1.3.0",
     "eslint-plugin-oxlint": "1.89.0",
-    "lit-ui-router-ssr": "^0.4.0",
+    "lit-ui-router-ssr": "^0.5.0",
     "oxlint": "1.89.0",
     "tinybench": "^6.2.2",
     "typescript": "npm:@typescript/typescript6@^6.0.2",
-    "ui-router-registry": "^0.2.0",
+    "ui-router-registry": "^0.3.0",
     "vite": "^8.3.5",
     "vite-plugin-singlefile": "^2.3.4",
     "vite-plugin-static-copy": "^4.1.1"

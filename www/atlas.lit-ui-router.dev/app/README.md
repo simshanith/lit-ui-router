@@ -287,17 +287,21 @@ and is used twice:
   `RefController` over `routeRef(router)` on a host that never connects must read the same route
   as `router.globals`, or the build exits 1 (`SSR-VERDICT.md` §8).
 
-The same table is the app's type registry. `routes` is `as const`, and `src/routes.ts` augments
-`ui-router-registry`'s `Register` with it, so every `stateService.go`, `href`, `target` and
+The same table is the app's type registry. `routes` is `as const`, and `src/routes.ts` extends
+`ui-router-registry`'s `RegisteredStates` with `StatesOf<typeof routes>`, and
+`AssertNoCollisions` (`AtlasStates`) fails the typecheck if a row is not the one registered
+under its name. Every `stateService.go`, `href`, `target` and
 `includes` in the app takes a registered name and that state's params: `num` required, `focus` and
 `enlarge` as `string | null`, `'.'` for the state itself. Its `ui-router-registry/effect` entry
 fills `ui-router-effect`'s `RouteTypes`, so the route ref's snapshot narrows on `includes` to a
 state's params: the city's pin reads `params.focus` as `string | null` when the route is one of
-its states. `src/registry.test-d.ts` holds the assertions and `npm run typecheck` runs them. The
-package emits no JavaScript, so the site build is unchanged.
+its states. `src/router.ts` checks each client state with `satisfies TypedLitStateDeclaration`
+from `lit-ui-router`, which checks a component without inferring its template, and registers
+them as `LitStateDeclaration[]`. `src/registry.test-d.ts` holds the assertions and
+`npm run typecheck` runs them. The package emits no JavaScript, so the site build is unchanged.
 
-**The boot (`src/main.ts`).** Seat `routeRef(router)`, `router.start()`, await the ref's first
-settled snapshot on the page's runtime (`src/runtime.ts`), then `hydrateRoot(root, page(router))` from `lit-ui-router-ssr/client`: the walk
+**The boot (`src/main.ts`).** Register a one-shot `onSuccess` hook, `router.start()`, await the
+first successful transition, then `hydrateRoot(root, page(router))` from `lit-ui-router-ssr/client`: the walk
 wakes every served `<ui-view>`, which adopts the nodes it already holds. A cold container — the dev server, the
 artifact build — returns `false` and the same template is rendered instead.
 
