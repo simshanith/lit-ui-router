@@ -14,14 +14,14 @@
     "@uirouter/core": "^6.1.2",
     "@uirouter/visualizer": "^7.2.1",
     "lit": "^3.3.3",
-    "lit-ui-router": "^1.17.0",
+    "lit-ui-router": "^1.18.0",
     "lit-ui-router-signals": "^0.3.0",
     "signal-polyfill": "^0.2.2",
     "ui-router-signals": "^0.2.0"
   },
   "devDependencies": {
     "typescript": "^7.0.2",
-    "ui-router-registry": "^0.2.0",
+    "ui-router-registry": "^0.3.0",
     "vite": "^8.3.5"
   },
   "overrides": {
