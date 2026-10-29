@@ -232,6 +232,9 @@ catalogs:
     pacote:
       specifier: ^22.0.1
       version: 22.0.1
+    parse5:
+      specifier: ^8.0.1
+      version: 8.0.1
     playwright:
       specifier: ^1.64.1
       version: 1.64.1
@@ -2550,6 +2553,30 @@ importers:
       oxlint:
         specifier: 'catalog:'
         version: 1.89.0(oxlint-tsgolint@7.0.2005)
+      typescript:
+        specifier: 'catalog:'
+        version: 7.1.0-beta
+
+  tools/lit-template-check:
+    devDependencies:
+      '@tools/bootstrap':
+        specifier: catalog:workspace
+        version: link:../bootstrap
+      '@tools/shared':
+        specifier: catalog:workspace
+        version: link:../shared
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.19.2
+      oxfmt:
+        specifier: 'catalog:'
+        version: 0.74.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.89.0(oxlint-tsgolint@7.0.2005)
+      parse5:
+        specifier: 'catalog:'
+        version: 8.0.1
       typescript:
         specifier: 'catalog:'
         version: 7.1.0-beta

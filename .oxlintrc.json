@@ -453,6 +453,7 @@
         "tools/embed-heights/**/*.test.ts",
         "tools/eslint/**/*.test.ts",
         "tools/lcov-rebase/**/*.test.ts",
+        "tools/lit-template-check/**/*.test.ts",
         "tools/lit-template-lint/**/*.test.ts",
         "tools/oxc-emit/**/*.test.ts",
         "tools/release/**/*.test.ts",
