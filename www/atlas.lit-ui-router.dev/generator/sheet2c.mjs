@@ -235,8 +235,22 @@ const cords = cordKit({ U, pt });
 const PLATE_H = CRS / 3;
 if (3 * PLATE_H !== CRS) throw new Error('sheet 2C: three plates are one course');
 // a stack of baseplates: full plates as one body scored at every plate (every third heavier — a course),
-// the remainder on top at its own size, and studs on the top plate only
-let STUDS_DRAWN = 0;
+// the remainder on top at its own size, and studs on the top plate, but for a ringed stud the top plate leaves bare on the plate under it
+let STUDS_DRAWN = 0, BARE_DRAWN = 0;
+// a ring key counts from the top plate's corner; a key off the top plate is a bare stud of the full plate under it
+const onTop = (rt, key) => {
+  const [i, j] = key.split(',').map(Number);
+  return i >= 0 && j >= 0 && i < rt.topShape[0] && j < rt.topShape[1];
+};
+const bareStuds = (rt) => {
+  if (!rt.full) return [];
+  const keys = [];
+  for (let I = 0; I < rt.shape[0]; I++) for (let J = 0; J < rt.shape[1]; J++) {
+    const key = `${I - rt.topOff[0]},${J - rt.topOff[1]}`;
+    if (!onTop(rt, key)) keys.push(key);
+  }
+  return keys;
+};
 function stack(ox, oy, r, { x, y, z0, rings }) {
   const w = r.shape[0] * U, d = r.shape[1] * U;
   const edge = r.optional ? 'sks' : 'sk', da = r.optional ? ' stroke-dasharray="6 4"' : '';
@@ -251,6 +265,11 @@ function stack(ox, oy, r, { x, y, z0, rings }) {
     }
   }
   const tz = z0 + r.full * PLATE_H, tx = x + r.topOff[0] * U, ty = y + r.topOff[1] * U;
+  for (const key of [...rings].filter((k) => !onTop(r, k))) {
+    const [i, j] = key.split(',').map(Number);
+    out.push(stud(ox, oy, tx + (i + 0.5) * U, ty + (j + 0.5) * U, tz, { ...RING, extra: da }));
+    BARE_DRAWN++;
+  }
   out.push(dashed(block(ox, oy, tx, ty, r.topShape[0] * U, r.topShape[1] * U, tz, PLATE_H, { edge })));
   for (let i = 0; i < r.topShape[0]; i++) for (let j = 0; j < r.topShape[1]; j++) {
     out.push(stud(ox, oy, tx + (i + 0.5) * U, ty + (j + 0.5) * U, tz + PLATE_H, rings.has(`${i},${j}`) ? { ...RING, extra: da } : { edge, cap: 'fp2', extra: da }));
@@ -370,12 +389,13 @@ const studUnder = (p, r, part) => {
 // a ring on a plate's top: the stud the brick covers, or the stud a cord ends on
 const ringOn = (p, key, z) => {
   const [i, j] = key.split(',').map(Number);
-  return [p.x + (p.rt.topOff[0] + i + 0.5) * U, p.y + (p.rt.topOff[1] + j + 0.5) * U, z];
+  return [p.x + (p.rt.topOff[0] + i + 0.5) * U, p.y + (p.rt.topOff[1] + j + 0.5) * U, onTop(p.rt, key) ? z : z - PLATE_H];
 };
-// a plate's free top studs, nearest the brick first
+// a plate's free top studs, nearest the brick first; when the top plate has none free, the bare studs of the plate under it
 const plateStuds = (p, part) => {
   const cx = part.x + part.w / 2, cy = part.y + part.d / 2, keys = [];
   for (let i = 0; i < p.rt.topShape[0]; i++) for (let j = 0; j < p.rt.topShape[1]; j++) if (!p.rings.includes(`${i},${j}`)) keys.push(`${i},${j}`);
+  if (!keys.length) keys.push(...bareStuds(p.rt).filter((k) => !p.rings.includes(k)));
   const dist = (k) => Math.hypot(ringOn(p, k, 0)[0] - cx, ringOn(p, k, 0)[1] - cy);
   return keys.sort((a, b) => dist(a) - dist(b));
 };
@@ -945,8 +965,11 @@ ${marks.map((m) => badge(m.at[0], m.at[1], m.label)).join('\n')}
 </g>`;
 };
 const panels = PANELS.map(panelSvg).join('\n');
-// a stack draws studs on its top plate only: one footprint of studs per stack drawn
+// a stack draws studs on its top plate: one footprint of studs per stack drawn, and a bare ringed stud only where every top stud is ringed
 if (STUDS_DRAWN !== MODELS.reduce((a, b) => a + b.plates.reduce((s, p) => s + p.rt.topShape[0] * p.rt.topShape[1], 0), 0)) throw new Error(`sheet 2C: ${STUDS_DRAWN} studs drawn — a hidden plate carries studs`);
+for (const p of MODELS.flatMap((b) => b.plates))
+  if (p.rings.some((k) => !onTop(p.rt, k)) && p.rings.filter((k) => onTop(p.rt, k)).length < p.rt.topShape[0] * p.rt.topShape[1]) throw new Error(`sheet 2C: ${p.rt.name} rings a bare stud beside a free top stud`);
+if (BARE_DRAWN !== MODELS.reduce((a, b) => a + b.plates.reduce((s, p) => s + p.rings.filter((k) => !onTop(p.rt, k)).length, 0), 0)) throw new Error(`sheet 2C: ${BARE_DRAWN} bare studs drawn for the bare rings`);
 for (let i = 0; i < ALL_BADGES.length; i++) for (let j = i + 1; j < ALL_BADGES.length; j++)
   if (Math.hypot(ALL_BADGES[i][0] - ALL_BADGES[j][0], ALL_BADGES[i][1] - ALL_BADGES[j][1]) < BADGE_GAP) throw new Error(`sheet 2C: two badges within ${BADGE_GAP}px at ${ALL_BADGES[i]} and ${ALL_BADGES[j]}`);
 const ART_BOTTOM = GY + GRID_H;
@@ -1026,7 +1049,7 @@ ${panels}
 </svg>`;
 
 export const sheet2c = {
-  num: '2C', id: 'companions-runtimes', rev: 'C',
+  num: '2C', id: 'companions-runtimes', rev: 'D',
   title: 'THE ALTERNATE BUILDS',
   sub: `ALTITUDE 2 — SIBLING PLATE, THE ECOSYSTEM: one box of ${WORD[FAMILY.length]} family bricks at sheet 2’s mould and ${WORD[RUNTIMES.length]} runtimes as stacks of baseplates sized from one shipped build at the same scale, and the ${WORD[BUILT.length]} alternate models the repository’s own consumers build from it, and ${anOrd(MODELS.length)} the atlas’s own app builds on its own branch — each model the parts one consumer pins, on the plates they peer · rows read census-builds.json, both readings, and census-peers.json @ ${PEERS.sha}`,
   scale: SHEET2C_SCALE,

@@ -132,18 +132,19 @@ const PLACED = [
   //     reading box and both callouts; the bindings and the snapshot take the strip
   //     under ssr's annex, the agnostic cores the north-east corner east of 2's annex ---
   [41, 'lit-ui-router-signals', 'packages/lit-ui-router-signals', 'pkg', 184, 248],
-  [42, 'ui-router-signals', 'packages/ui-router-signals', 'pkg', 440, 10],
-  [43, 'ui-router-effect', 'packages/ui-router-effect', 'pkg', 500, 10],
+  // east off 440 with 47 at the 8dfa5311 refresh, when the server's annex reached 457, and 43 and 49 east off 500 with them
+  [42, 'ui-router-signals', 'packages/ui-router-signals', 'pkg', 460, 10],
+  [43, 'ui-router-effect', 'packages/ui-router-effect', 'pkg', 514, 10],
   [44, '@repo/route-snapshot', 'packages/shared/route-snapshot', 'pkg', 270, 236],
   // --- sheet 7's lots -------------------------------------------------------------
   [45, 'sample-app-lit-signals', 'apps/sample-app-lit-signals', 'app', 590, 100],
   [46, '@tools/a11y', 'tools/a11y', 'tool', 540, 472],
   // the north-east corner, under 42
-  [47, 'ui-router-mobx', 'packages/ui-router-mobx', 'pkg', 440, 50],
+  [47, 'ui-router-mobx', 'packages/ui-router-mobx', 'pkg', 460, 50],
   // --- born 2026-10-15/16 (#1388, #1409): the tool on the yard's south edge, clear of the
   //     winter-wall callout; the private gate beside the mobx store under 43 ----------
   [48, '@tools/ci-logs', 'tools/ci-logs', 'tool', 300, 640],
-  [49, '@repo/dev-gate', 'packages/shared/dev-gate', 'pkg', 500, 50],
+  [49, '@repo/dev-gate', 'packages/shared/dev-gate', 'pkg', 514, 50],
   // --- born 2026-10-22/24: the registry east of the snapshot, clear of the plugin callout's leader;
   //     the ledger model on the yard's south edge east of ci-logs; the two workers north of docs ---
   [50, 'ui-router-registry', 'packages/ui-router-registry', 'pkg', 324, 229],

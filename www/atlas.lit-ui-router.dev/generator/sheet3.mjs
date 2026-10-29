@@ -109,8 +109,8 @@ const M = [
   [12, 'peer-floor tier-2',         'late',   160,   330,    ...C('peer-floor tier-2'), null, null, 'gates version bumps, never a PR'],
   [13, 'peer-floor tier-1',         'report', 205,   330,    ...C('peer-floor tier-1'), null, null, 'reports check runs, never gates'],
   // the two big reporters (14, 20) stand west of every gate's lot, so every gate stands in front of them;
-  // the fleet south off 180 at the b499e2a5 refresh, as the src slab grew to 97 files
-  [14, 'lint & probe fleet',        'report',  14,   182,    ...C('lint & probe fleet'), null, null, 'oxlint · elements · axe · CI gate'],
+  // the fleet south off 182 at the 8dfa5311 refresh, as the src slab grew to 100 files
+  [14, 'lint & probe fleet',        'report',  14,   184,    ...C('lint & probe fleet'), null, null, 'oxlint · elements · axe · CI gate'],
   [15, '@tools/shared',             'report', 250,   320,    ...C('@tools/shared'), null, null, 'the library under every instrument'],
   [16, 'typedoc plugin',            'report', 352,   320,    ...C('typedoc plugin'), null, null, 'builds the API pages, gates nothing'],
   // --- proving ground & shopfront (apps/ + www/) --------------------------------

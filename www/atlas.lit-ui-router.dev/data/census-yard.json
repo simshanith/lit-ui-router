@@ -1,34 +1,34 @@
 {
   "ref": "origin/main",
-  "sha": "b499e2a5",
-  "commitDate": "2026-10-27T22:30:20-07:00",
-  "generatedAtTime": "2026-10-28T05:46:04.185Z",
+  "sha": "8dfa5311",
+  "commitDate": "2026-10-29T02:35:16Z",
+  "generatedAtTime": "2026-10-29T04:56:30.620Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-yard.mjs",
-  "used": "www/atlas.lit-ui-router.dev/data/census-files.json @ b499e2a5",
+  "used": "www/atlas.lit-ui-router.dev/data/census-files.json @ 8dfa5311",
   "wasAssociatedWith": [],
   "orphans": [
 
   ],
   "rows": [
-    {"instrument":"src — packages/*/src","files":97,"sloc":8839},
+    {"instrument":"src — packages/*/src","files":100,"sloc":9101},
     {"instrument":"build — @tools/oxc-emit","files":6,"sloc":487},
     {"instrument":"pack — packPublishTarball","files":12,"sloc":441},
     {"instrument":"published-diff","files":5,"sloc":481},
     {"instrument":"check:exports","files":2,"sloc":141},
     {"instrument":"peer-floor tier-1","files":2,"sloc":144},
-    {"instrument":"peer-floor tier-2","files":4,"sloc":258},
+    {"instrument":"peer-floor tier-2","files":4,"sloc":274},
     {"instrument":"docs deploy watch","files":9,"sloc":1000},
-    {"instrument":"publish — release-it","files":33,"sloc":2041},
+    {"instrument":"publish — release-it","files":33,"sloc":2046},
     {"instrument":"compat-guards","files":9,"sloc":312},
-    {"instrument":"dts-backtest","files":2,"sloc":350},
+    {"instrument":"dts-backtest","files":9,"sloc":619},
     {"instrument":"tests — vitest harness","files":6,"sloc":380},
     {"instrument":"anti-slop — vendored oxlint rules","files":35,"sloc":3665},
     {"instrument":"lint & probe fleet","files":50,"sloc":5427},
-    {"instrument":"repo checks — graph edges, task inputs, knip, patches","files":15,"sloc":1539},
+    {"instrument":"repo checks — graph edges, task inputs, knip, patches","files":15,"sloc":1536},
     {"instrument":"bootstrap — pre-install manifest reads","files":3,"sloc":58},
     {"instrument":"@tools/shared","files":11,"sloc":516},
     {"instrument":"typedoc plugin","files":2,"sloc":350},
     {"instrument":"e2e — cypress","files":11,"sloc":826},
-    {"instrument":"sample apps","files":78,"sloc":4412}
+    {"instrument":"sample apps","files":84,"sloc":4502}
   ]
 }

@@ -524,6 +524,23 @@ sitting); order is dependency order.
   gz; nm 173,820 lines / 41,155 d.ts; mass3b 13,307 hashes over 235 real tasks and 3,029 command
   sloc; the ci graph 864 / 235 / 3,024 edges; steam 643 commits; weather 448 dated files; 7A 11,937
   of 19,307 metered sloc lit over 25 members.
+- 2026-10-29 — THE TWENTY-FOURTH REFRESH, at `origin/main` @ 8dfa5311 (commit 2026-10-29), the
+  census plates re-run at the one ref, 20 commits past the twenty-third (b499e2a5): `lit-ui-router`
+  1.18.0, `ui-router-registry` 0.3.0, `ui-router-server` 0.5.0 with `./ssr` and `./ssr/client`,
+  and `lit-ui-router-ssr` 0.5.0 on the server's `^0.5.0` alone. NO MEMBER WAS BORN; the upstream
+  plate took four yards (rust, mdBook, vitepress, minisearch) and six consignments, all through #1340.
+  What the refresh taught: A STACK'S TOP PLATE CAN BE SMALLER THAN ITS COUPLINGS. effect 4.1.0 is 865
+  studs, one past eighteen baseplates, so its top is a 1×1 and holds one ring where builds III and XI
+  need two; the plate under it carries the second, drawn as one ringed stud on the body (2C REV D).
+  A PIXEL PROBE AT A FIXED OFFSET ROTS LIKE A LINE CITATION: check-scenes' crown sample under member
+  1's pin landed on a 2 px sliver between two crown parts; it reads a run of 5 px or more.
+  MORE ROWS DO NOT HOLD MORE YARDS past five: at 43 yards six to ten rows reach 1,641–1,636, and sheet
+  14 widens to 1700 (REV D). Sheet 11 takes the server's two ssr doors (REV L). Lots moved with air on
+  3, 7, 9 (`OY` 505 → 546), 13 and 11's callout. census-loop's 23 cites rebased by +5, none
+  re-texted. THE NUMBERS: city 472 src files / 41,476 sloc and 238 spec / 42,569; doors 33 at 200,858
+  min / 72,053 gz; the bundle 126,752 gz in 18 chunks; the deploy 1,539 files / 7,424,760 gz; upstream
+  43 yards, 96 consignments; pins 44 (52 with the atlas), none trailing; audit escapes 0, hits 0,
+  text-on-text 121; check-scenes 112; 26 card pictures × 2 themes.
 - 2026-10-27 — THE TWENTY-THIRD REFRESH, at `origin/main` @ b499e2a5 (commit 2026-10-27), the
   census plates re-run at the one ref, 31 commits past the twenty-second (85e0ce5c): the adapters'
   route types (`ui-router-effect`, `ui-router-mobx` and `ui-router-signals` 0.2.0, their Lit

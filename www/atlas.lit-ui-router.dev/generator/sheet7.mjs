@@ -148,8 +148,8 @@ export const PLACED = [
   [41, 'lit-ui-router-signals',    'packages/lit-ui-router-signals',     'pkg',  'line',   350, 262, `the signals bindings · annex ${ratio('packages/lit-ui-router-signals')}×`],
   [42, 'ui-router-signals',        'packages/ui-router-signals',         'pkg',  'line',   440, 262, `the framework-agnostic signal mirror · annex ${ratio('packages/ui-router-signals')}×`],
   [43, 'ui-router-effect',         'packages/ui-router-effect',          'pkg',  'line',   494, 262, `the framework-agnostic SubscriptionRef · annex ${ratio('packages/ui-router-effect')}×`],
-  // north-east, between road A at y 45 and road F at y 115
-  [44, '@repo/route-snapshot',     'packages/shared/route-snapshot',     'pkg',  'line',   440,  88, `private · inlined into each consumer's dist by oxc-emit · annex ${ratio('packages/shared/route-snapshot')}×`],
+  // north-east, between road A at y 45 and road F at y 115; east off 440 as the server's annex grew (to 450.6 at the 8dfa5311 refresh)
+  [44, '@repo/route-snapshot',     'packages/shared/route-snapshot',     'pkg',  'line',   454,  88, `private · inlined into each consumer's dist by oxc-emit · annex ${ratio('packages/shared/route-snapshot')}×`],
   // the gap between sample-app-shared and e2e
   [45, 'sample-app-lit-signals',   'apps/sample-app-lit-signals',        'app',  'line',   610, 100, 'the signals demo — no test script, the fifth app shell the docs site serves'],
   // the yard's middle: south of repo-checks' annex, north-east of @tools/eslint's badge
@@ -159,8 +159,8 @@ export const PLACED = [
   // --- born 2026-10-15/16 (#1388, #1409) --------------------------------------------
   // the yard's south row, east of @tools/shared's annex and south of bundle-probe
   [48, '@tools/ci-logs',           'tools/ci-logs',                      'tool', 'report', 295, 603, 'a CI run\'s task logs fetched into one file — run by hand, gates nothing'],
-  // north of the route snapshot, between road A at y 45 and the snapshot
-  [49, '@repo/dev-gate',           'packages/shared/dev-gate',           'pkg',  'line',   440,  62, `private · both halves of each package's #dev-gate import, inlined by oxc-emit · annex ${ratio('packages/shared/dev-gate')}×`],
+  // north of the route snapshot, between road A at y 45 and the snapshot; east off 440 with it
+  [49, '@repo/dev-gate',           'packages/shared/dev-gate',           'pkg',  'line',   454,  62, `private · both halves of each package's #dev-gate import, inlined by oxc-emit · annex ${ratio('packages/shared/dev-gate')}×`],
   // --- born 2026-10-22/24: the registry east of the plugin's annex, south of road F at y 115 ---
   [50, 'ui-router-registry',       'packages/ui-router-registry',        'pkg',  'line',   455, 125, `typed state names and params · types only · annex ${ratio('packages/ui-router-registry')}×`],
   // the yard's south-east lot, east of ci-logs' annex and south of bundle-probe's

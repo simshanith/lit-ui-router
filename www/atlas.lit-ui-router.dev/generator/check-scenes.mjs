@@ -207,13 +207,24 @@ const lum = (p) => 0.2126 * p[0] + 0.7152 * p[1] + 0.0722 * p[2];
 // the pixel under a point is its material's factor through the sRGB output, graded by COLOR_0
 // between `foot` and 1; `want` names the material the point must land on
 async function probePixel(page, tag, x, y, want, dress, foot = 1) {
-  const name = await materialAt(page, x, y);
+  // a run under 5 px is a sliver between parts: step down to the next run of a wanted material, within 16 px
+  const runOf = async (at) => {
+    const name = await materialAt(page, x, at);
+    let y0 = at, y1 = at;
+    while (y0 > at - 8 && (await materialAt(page, x, y0 - 1)) === name) y0 -= 1;
+    while (y1 < at + 8 && (await materialAt(page, x, y1 + 1)) === name) y1 += 1;
+    return { name, y0, y1 };
+  };
+  let run = await runOf(y);
+  for (let at = run.y1 + 1; run.y1 - run.y0 < 4 && at <= y + 16;) {
+    const next = await runOf(at);
+    at = next.y1 + 1;
+    if (want.test(next.name ?? '')) run = next;
+  }
+  const { name, y0, y1 } = run;
   check(want.test(name ?? ''), `${tag} lands on ${name}`, `wanted ${want}`);
   const factor = dress.find((r) => r[0] === name)[1];
   // read the pixel mid-run of the material's rows within 8 px, never on a part's antialiased edge
-  let y0 = y, y1 = y;
-  while (y0 > y - 8 && (await materialAt(page, x, y0 - 1)) === name) y0 -= 1;
-  while (y1 < y + 8 && (await materialAt(page, x, y1 + 1)) === name) y1 += 1;
   const got = await pixel(page, x, Math.round((y0 + y1) / 2));
   const hi = factor.map(srgb), lo = factor.map((v) => srgb(v * foot));
   check(got.slice(0, 3).every((v, i) => v <= hi[i] + 2 && v >= lo[i] - 2), `${tag}: its pixel is ${name}'s factor in sRGB ±2${foot < 1 ? `, shaded down to ${foot}` : ''}`, `${got} vs ${lo}..${hi}`);

@@ -97,6 +97,8 @@ const ORDER = [
   ['ui-router-server', './simulate'],
   ['ui-router-server', './location'],
   ['ui-router-server', './url-config'],
+  ['ui-router-server', './ssr'],
+  ['ui-router-server', './ssr/client'],
   ['ui-router-effect', '.'],
   ['ui-router-signals', '.'],
   ['ui-router-mobx', '.'],
@@ -148,6 +150,9 @@ const PLAN = {
   'ui-router-server|./simulate': [645, 180],
   'ui-router-server|./location': [690, 195],
   'ui-router-server|./url-config': [705, 60],
+  // the renderer-free ssr pair on the quarter's east edge, between the url config and the location door
+  'ui-router-server|./ssr': [690, 100],
+  'ui-router-server|./ssr/client': [705, 140],
   // recentred in its quarter: the door grew 9.7 → 16.9 KB min at the 1.14.1 ref and
   // its old lot pushed the block's base through the quarter's south-east dashes
   'eslint-plugin-lit-ui-router|.': [320, 258],
@@ -289,6 +294,8 @@ const NOTE = {
   'ui-router-server|./simulate': `the headless-router recipe the pool builds — ${SIM.gz} b`,
   'ui-router-server|./location': 'the server location service',
   'ui-router-server|./url-config': 'the mount\'s url config, shared with any router',
+  'ui-router-server|./ssr': 'settle and dehydrate, for any renderer',
+  'ui-router-server|./ssr/client': 'seed the boot transition, for any renderer',
   'ui-router-registry|.': 'an empty emit, types only',
   'ui-router-registry|./effect': 'the effect adapter types, empty emit',
   'ui-router-registry|./mobx': 'the mobx adapter types, empty emit',
@@ -312,7 +319,7 @@ const HONO_FACE = isoPt(OX, OY, HONO.x + HONO.s, HONO.y + HONO.s / 2, HONO.h / 2
 const svg = `<svg viewBox="0 0 1160 ${VB_H}" role="img" aria-label="Every exported entry of the ${PKG_N} publishable packages drawn as an isometric city split into ${PKG_N} package quarters: ${DOOR_N} door-buildings, footprint from minified bytes, height from gzipped bytes with dependencies external. The lit-ui-router quarter shows twin flagship towers for the bare and pure entries plus three register doors and a low context door; the ui-router-server quarter is a ${word(SRV_DOORS.length)}-door storefront whose index tower prices ${SRV_GAP} gzipped bytes under lit-ui-router's; the effect, mobx and signals companions, the navigation-location plugin, ui-router-effect, ui-router-signals and ui-router-mobx stand alone as small one-door quarters; the ssr bridge between the client and server quarters holds three doors, its index, its client half and its register entry; a one-door quarter in the lower middle holds eslint-plugin-lit-ui-router, and a ${word(REG_DOORS.length)}-door quarter in the open ground north of the server storefront holds ui-router-registry, whose doors are empty emits drawn at the sheet's smallest lot; those ${word(COMPILED.length)} doors are the only ones on the sheet no browser ever loads. A schedule below the drawing lists every entry with exact byte counts.">
 ${defs(P)}
 
-${quarter(20, 0, 330, 200, `lit-ui-router — ${doorsOf('lit-ui-router')}`, 640, 222)}
+${quarter(20, 0, 330, 200, `lit-ui-router — ${doorsOf('lit-ui-router')}`, 628, 222)}
 ${quarter(410, 0, 730, 210, `ui-router-server — ${doorsOf('ui-router-server')}`, 1150, 430, 'end')}
 ${quarter(0, 345, 110, 415, 'lit-ui-router-effect', 176, 445, 'end')}
 ${quarter(120, 290, 260, 380, 'lit-ui-router-mobx', 240, 478, 'end')}
@@ -334,10 +341,10 @@ ${leader(368, 102, 452, 128)}
 ${txt(1120, 108, `the two flagship doors: ${fmt(FLAG.gz)} · ${fmt(SRV.gz)} —`, 'lbl', 'end')}
 ${txt(1120, 122, `the client door leads the server by ${fmt(SRV_GAP)}`, 'lbl', 'end')}
 ${leader(960, 128, ...SRV_FACE)}
-${txt(640, 238, `the one-element doors sum to ${fmt(ELEM_SUM)} gz —`, 'lbls')}
-${txt(640, 252, '«./register» ships the shared core', 'lbls')}
-${txt(640, 266, `once, at ${fmt(UMB.gz)}`, 'lbls')}
-${leader(636, 240, ...UMB_FACE)}
+${txt(628, 238, `the one-element doors sum to ${fmt(ELEM_SUM)} gz —`, 'lbls')}
+${txt(628, 252, '«./register» ships the shared core', 'lbls')}
+${txt(628, 266, `once, at ${fmt(UMB.gz)}`, 'lbls')}
+${leader(624, 240, ...UMB_FACE)}
 ${txt(250, 560, `the lint plugin's door, ${fmt(LINT.gz)} gz, and the`, 'lbls')}
 ${txt(250, 574, `registry's ${word(REG_DOORS.length)}: the ${word(COMPILED.length)} no browser ever opens`, 'lbls')}
 ${leader(456, 556, ...LINT_FACE)}
@@ -352,7 +359,7 @@ ${PLATE.used.split(' + ').map((stage, i) => txt(1120, 40 + i * 14, i ? `+ ${stag
 </svg>`;
 
 export const sheet11 = {
-  num: 11, id: 'entries', rev: 'K',
+  num: 11, id: 'entries', rev: 'L',
   title: 'THE ENTRY QUARTERS',
   sub: `ALTITUDE 2⅞ — the same wire, cut by published package · every exported entry priced alone · ${DOOR_N} doors in ${PKG_N} package quarters, footprint from minified bytes and height from gzipped, dependencies external — ${BASIS}`,
   scale: `${word(PKG_N).toUpperCase()} PACKAGES`,

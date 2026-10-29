@@ -22,7 +22,7 @@ const HOME = {
   modelViewer: 'https://modelviewer.dev',
 };
 // the origin keeps the tallest cap and its badge 24 px inside the frame's top; the frame guard below holds every district there
-const OX = 480, OY = 505;
+const OX = 480, OY = 546;
 const VB_W = 1160;
 // callout pitch: an 11 px lbla line's box is 13.1 px tall, so 12 px stacks touch
 const CP = 14;
@@ -56,7 +56,7 @@ const PLAN = {
   'html pages': [330, 10],
   // the mirror north off 20 at the b499e2a5 refresh, when its 304 pages reached the chunks' lot
   'markdown pages': [520, 12],
-  'page chunks': [310, 190],
+  'page chunks': [305, 194],
   // the small towers in a row between the mirror and the apps' outline
   'inter fonts': [560, 200],
   'vp framework': [610, 200],

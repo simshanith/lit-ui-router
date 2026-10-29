@@ -1,10 +1,10 @@
 {
   "ref": "origin/main",
-  "sha": "b499e2a5",
-  "commitDate": "2026-10-27T22:30:20-07:00",
-  "generatedAtTime": "2026-10-28T06:01:15.747Z",
+  "sha": "8dfa5311",
+  "commitDate": "2026-10-29T02:35:16Z",
+  "generatedAtTime": "2026-10-29T05:11:01.997Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-consumers.mjs",
-  "used": "www/atlas.lit-ui-router.dev/data/census-files.json @ b499e2a5 for the cabinet's consumers; git archive www/atlas @ 7523ff1d + scc --by-file for www/atlas.lit-ui-router.dev/app; consumers, pins and builds from census-builds.json @ b499e2a5",
+  "used": "www/atlas.lit-ui-router.dev/data/census-files.json @ 8dfa5311 for the cabinet's consumers; git archive www/atlas @ e3229754 + scc --by-file for www/atlas.lit-ui-router.dev/app; consumers, pins and builds from census-builds.json @ 8dfa5311",
   "wasAssociatedWith": [
     "scc 4.0.0 (mise x aqua:boyter/scc)",
     "git"
@@ -12,19 +12,19 @@
   "rule": "authored = the city ruler (census-query.mjs onCityRuler, specs aside) over the consumer's CITY_DIRS entry, else src/, else its root; www/atlas.lit-ui-router.dev/app/src/generated/ aside · sloc = scc Code · studs = 1 per 150 sloc rounded up, shape = sheet 2's SHAPE, courses = 1 per 3 files rounded up",
   "totals": {
     "consumers": 20,
-    "files": 128,
-    "sloc": 12648,
+    "files": 134,
+    "sloc": 12738,
     "studs": 94,
     "builds": 10
   },
   "rows": [
     {"name":"sample-app-lit-e2e","dir":"apps/sample-app-lit-e2e","kind":"sample-app","dirs":["src","scripts"],"pinned":[],"parts":[],"build":null,"files":9,"sloc":425,"studs":3,"shape":"2x2","courses":3},
-    {"name":"sample-app-lit-effect","dir":"apps/sample-app-lit-effect","kind":"sample-app","dirs":["src"],"pinned":["lit-ui-router","lit-ui-router-effect","ui-router-registry"],"parts":["lit-ui-router","lit-ui-router-effect","ui-router-effect","ui-router-registry"],"build":"lit-ui-router + lit-ui-router-effect + ui-router-effect + ui-router-registry","files":9,"sloc":479,"studs":4,"shape":"2x2","courses":3},
-    {"name":"sample-app-lit-mobx","dir":"apps/sample-app-lit-mobx","kind":"sample-app","dirs":["src"],"pinned":["lit-ui-router","lit-ui-router-mobx","ui-router-registry"],"parts":["lit-ui-router","lit-ui-router-mobx","ui-router-mobx","ui-router-registry"],"build":"lit-ui-router + lit-ui-router-mobx + ui-router-mobx + ui-router-registry","files":8,"sloc":456,"studs":4,"shape":"2x2","courses":3},
-    {"name":"sample-app-lit-signals","dir":"apps/sample-app-lit-signals","kind":"sample-app","dirs":["src"],"pinned":["lit-ui-router","lit-ui-router-signals","ui-router-registry"],"parts":["lit-ui-router","lit-ui-router-signals","ui-router-registry","ui-router-signals"],"build":"lit-ui-router + lit-ui-router-signals + ui-router-registry + ui-router-signals","files":8,"sloc":471,"studs":4,"shape":"2x2","courses":3},
-    {"name":"sample-app-lit-vanilla","dir":"apps/sample-app-lit-vanilla","kind":"sample-app","dirs":["src"],"pinned":["lit-ui-router","ui-router-registry"],"parts":["lit-ui-router","ui-router-registry"],"build":"lit-ui-router + ui-router-registry","files":8,"sloc":434,"studs":3,"shape":"2x2","courses":3},
-    {"name":"sample-app-routes","dir":"apps/sample-app-routes","kind":"sample-app","dirs":["src","test"],"pinned":["ui-router-server"],"parts":["ui-router-server"],"build":"ui-router-server","files":2,"sloc":56,"studs":1,"shape":"1x1","courses":1},
-    {"name":"sample-app-shared","dir":"apps/sample-app-shared","kind":"sample-app","dirs":["src"],"pinned":["lit-ui-router","ui-router-navigation-location-plugin","ui-router-registry"],"parts":["lit-ui-router","ui-router-navigation-location-plugin","ui-router-registry"],"build":"lit-ui-router + ui-router-navigation-location-plugin + ui-router-registry","files":43,"sloc":2516,"studs":17,"shape":"2x4","courses":15},
+    {"name":"sample-app-lit-effect","dir":"apps/sample-app-lit-effect","kind":"sample-app","dirs":["src"],"pinned":["lit-ui-router","lit-ui-router-effect","ui-router-registry"],"parts":["lit-ui-router","lit-ui-router-effect","ui-router-effect","ui-router-registry"],"build":"lit-ui-router + lit-ui-router-effect + ui-router-effect + ui-router-registry","files":9,"sloc":473,"studs":4,"shape":"2x2","courses":3},
+    {"name":"sample-app-lit-mobx","dir":"apps/sample-app-lit-mobx","kind":"sample-app","dirs":["src"],"pinned":["lit-ui-router","lit-ui-router-mobx","ui-router-registry"],"parts":["lit-ui-router","lit-ui-router-mobx","ui-router-mobx","ui-router-registry"],"build":"lit-ui-router + lit-ui-router-mobx + ui-router-mobx + ui-router-registry","files":8,"sloc":450,"studs":3,"shape":"2x2","courses":3},
+    {"name":"sample-app-lit-signals","dir":"apps/sample-app-lit-signals","kind":"sample-app","dirs":["src"],"pinned":["lit-ui-router","lit-ui-router-signals","ui-router-registry"],"parts":["lit-ui-router","lit-ui-router-signals","ui-router-registry","ui-router-signals"],"build":"lit-ui-router + lit-ui-router-signals + ui-router-registry + ui-router-signals","files":8,"sloc":465,"studs":4,"shape":"2x2","courses":3},
+    {"name":"sample-app-lit-vanilla","dir":"apps/sample-app-lit-vanilla","kind":"sample-app","dirs":["src"],"pinned":["lit-ui-router","ui-router-registry"],"parts":["lit-ui-router","ui-router-registry"],"build":"lit-ui-router + ui-router-registry","files":8,"sloc":428,"studs":3,"shape":"2x2","courses":3},
+    {"name":"sample-app-routes","dir":"apps/sample-app-routes","kind":"sample-app","dirs":["src","test"],"pinned":["ui-router-server"],"parts":["ui-router-server"],"build":"ui-router-server","files":7,"sloc":104,"studs":1,"shape":"1x1","courses":3},
+    {"name":"sample-app-shared","dir":"apps/sample-app-shared","kind":"sample-app","dirs":["src"],"pinned":["lit-ui-router","ui-router-navigation-location-plugin","ui-router-registry"],"parts":["lit-ui-router","ui-router-navigation-location-plugin","ui-router-registry"],"build":"lit-ui-router + ui-router-navigation-location-plugin + ui-router-registry","files":44,"sloc":2582,"studs":18,"shape":"2x4","courses":15},
     {"name":"@www/lit-ui-router.dev","dir":"www/lit-ui-router.dev","kind":"docs-site","dirs":[".vitepress","worker","src"],"pinned":["lit-ui-router","lit-ui-router-ssr","ui-router-server"],"parts":["lit-ui-router","lit-ui-router-ssr","ui-router-server"],"build":"lit-ui-router + lit-ui-router-ssr + ui-router-server","files":21,"sloc":2146,"studs":15,"shape":"2x4","courses":7},
     {"name":"helloworld","dir":"examples/helloworld","kind":"example","dirs":["src"],"pinned":["lit-ui-router"],"parts":["lit-ui-router"],"build":"lit-ui-router","files":1,"sloc":67,"studs":1,"shape":"1x1","courses":1},
     {"name":"helloworld-buildless","dir":"examples/helloworld-buildless","kind":"example","dirs":["."],"pinned":["lit-ui-router"],"parts":["lit-ui-router"],"build":"lit-ui-router","files":2,"sloc":66,"studs":1,"shape":"1x1","courses":1},
@@ -42,28 +42,28 @@
   "basis": {
     "atlasApp": {
       "ref": "www/atlas",
-      "sha": "7523ff1d",
-      "commitDate": "2026-10-27T22:48:54-07:00",
+      "sha": "e3229754",
+      "commitDate": "2026-10-28T22:05:59-07:00",
       "dir": "www/atlas.lit-ui-router.dev/app"
     },
-    "note": "www/atlas.lit-ui-router.dev/app is on www/atlas @ 7523ff1d, off the cabinet's tree; the second reading adds it"
+    "note": "www/atlas.lit-ui-router.dev/app is on www/atlas @ e3229754, off the cabinet's tree; the second reading adds it"
   },
   "withAtlas": {
     "totals": {
       "consumers": 21,
-      "files": 147,
-      "sloc": 17362,
+      "files": 153,
+      "sloc": 17456,
       "studs": 126,
       "builds": 11
     },
     "rows": [
       {"name":"sample-app-lit-e2e","dir":"apps/sample-app-lit-e2e","kind":"sample-app","dirs":["src","scripts"],"pinned":[],"parts":[],"build":null,"files":9,"sloc":425,"studs":3,"shape":"2x2","courses":3},
-      {"name":"sample-app-lit-effect","dir":"apps/sample-app-lit-effect","kind":"sample-app","dirs":["src"],"pinned":["lit-ui-router","lit-ui-router-effect","ui-router-registry"],"parts":["lit-ui-router","lit-ui-router-effect","ui-router-effect","ui-router-registry"],"build":"lit-ui-router + lit-ui-router-effect + ui-router-effect + ui-router-registry","files":9,"sloc":479,"studs":4,"shape":"2x2","courses":3},
-      {"name":"sample-app-lit-mobx","dir":"apps/sample-app-lit-mobx","kind":"sample-app","dirs":["src"],"pinned":["lit-ui-router","lit-ui-router-mobx","ui-router-registry"],"parts":["lit-ui-router","lit-ui-router-mobx","ui-router-mobx","ui-router-registry"],"build":"lit-ui-router + lit-ui-router-mobx + ui-router-mobx + ui-router-registry","files":8,"sloc":456,"studs":4,"shape":"2x2","courses":3},
-      {"name":"sample-app-lit-signals","dir":"apps/sample-app-lit-signals","kind":"sample-app","dirs":["src"],"pinned":["lit-ui-router","lit-ui-router-signals","ui-router-registry"],"parts":["lit-ui-router","lit-ui-router-signals","ui-router-registry","ui-router-signals"],"build":"lit-ui-router + lit-ui-router-signals + ui-router-registry + ui-router-signals","files":8,"sloc":471,"studs":4,"shape":"2x2","courses":3},
-      {"name":"sample-app-lit-vanilla","dir":"apps/sample-app-lit-vanilla","kind":"sample-app","dirs":["src"],"pinned":["lit-ui-router","ui-router-registry"],"parts":["lit-ui-router","ui-router-registry"],"build":"lit-ui-router + ui-router-registry","files":8,"sloc":434,"studs":3,"shape":"2x2","courses":3},
-      {"name":"sample-app-routes","dir":"apps/sample-app-routes","kind":"sample-app","dirs":["src","test"],"pinned":["ui-router-server"],"parts":["ui-router-server"],"build":"ui-router-server","files":2,"sloc":56,"studs":1,"shape":"1x1","courses":1},
-      {"name":"sample-app-shared","dir":"apps/sample-app-shared","kind":"sample-app","dirs":["src"],"pinned":["lit-ui-router","ui-router-navigation-location-plugin","ui-router-registry"],"parts":["lit-ui-router","ui-router-navigation-location-plugin","ui-router-registry"],"build":"lit-ui-router + ui-router-navigation-location-plugin + ui-router-registry","files":43,"sloc":2516,"studs":17,"shape":"2x4","courses":15},
+      {"name":"sample-app-lit-effect","dir":"apps/sample-app-lit-effect","kind":"sample-app","dirs":["src"],"pinned":["lit-ui-router","lit-ui-router-effect","ui-router-registry"],"parts":["lit-ui-router","lit-ui-router-effect","ui-router-effect","ui-router-registry"],"build":"lit-ui-router + lit-ui-router-effect + ui-router-effect + ui-router-registry","files":9,"sloc":473,"studs":4,"shape":"2x2","courses":3},
+      {"name":"sample-app-lit-mobx","dir":"apps/sample-app-lit-mobx","kind":"sample-app","dirs":["src"],"pinned":["lit-ui-router","lit-ui-router-mobx","ui-router-registry"],"parts":["lit-ui-router","lit-ui-router-mobx","ui-router-mobx","ui-router-registry"],"build":"lit-ui-router + lit-ui-router-mobx + ui-router-mobx + ui-router-registry","files":8,"sloc":450,"studs":3,"shape":"2x2","courses":3},
+      {"name":"sample-app-lit-signals","dir":"apps/sample-app-lit-signals","kind":"sample-app","dirs":["src"],"pinned":["lit-ui-router","lit-ui-router-signals","ui-router-registry"],"parts":["lit-ui-router","lit-ui-router-signals","ui-router-registry","ui-router-signals"],"build":"lit-ui-router + lit-ui-router-signals + ui-router-registry + ui-router-signals","files":8,"sloc":465,"studs":4,"shape":"2x2","courses":3},
+      {"name":"sample-app-lit-vanilla","dir":"apps/sample-app-lit-vanilla","kind":"sample-app","dirs":["src"],"pinned":["lit-ui-router","ui-router-registry"],"parts":["lit-ui-router","ui-router-registry"],"build":"lit-ui-router + ui-router-registry","files":8,"sloc":428,"studs":3,"shape":"2x2","courses":3},
+      {"name":"sample-app-routes","dir":"apps/sample-app-routes","kind":"sample-app","dirs":["src","test"],"pinned":["ui-router-server"],"parts":["ui-router-server"],"build":"ui-router-server","files":7,"sloc":104,"studs":1,"shape":"1x1","courses":3},
+      {"name":"sample-app-shared","dir":"apps/sample-app-shared","kind":"sample-app","dirs":["src"],"pinned":["lit-ui-router","ui-router-navigation-location-plugin","ui-router-registry"],"parts":["lit-ui-router","ui-router-navigation-location-plugin","ui-router-registry"],"build":"lit-ui-router + ui-router-navigation-location-plugin + ui-router-registry","files":44,"sloc":2582,"studs":18,"shape":"2x4","courses":15},
       {"name":"@www/lit-ui-router.dev","dir":"www/lit-ui-router.dev","kind":"docs-site","dirs":[".vitepress","worker","src"],"pinned":["lit-ui-router","lit-ui-router-ssr","ui-router-server"],"parts":["lit-ui-router","lit-ui-router-ssr","ui-router-server"],"build":"lit-ui-router + lit-ui-router-ssr + ui-router-server","files":21,"sloc":2146,"studs":15,"shape":"2x4","courses":7},
       {"name":"helloworld","dir":"examples/helloworld","kind":"example","dirs":["src"],"pinned":["lit-ui-router"],"parts":["lit-ui-router"],"build":"lit-ui-router","files":1,"sloc":67,"studs":1,"shape":"1x1","courses":1},
       {"name":"helloworld-buildless","dir":"examples/helloworld-buildless","kind":"example","dirs":["."],"pinned":["lit-ui-router"],"parts":["lit-ui-router"],"build":"lit-ui-router","files":2,"sloc":66,"studs":1,"shape":"1x1","courses":1},
@@ -77,7 +77,7 @@
       {"name":"lint-eslint","dir":"examples/lint-eslint","kind":"example","dirs":["src"],"pinned":["eslint-plugin-lit-ui-router","lit-ui-router"],"parts":["eslint-plugin-lit-ui-router","lit-ui-router"],"build":"eslint-plugin-lit-ui-router + lit-ui-router","files":6,"sloc":413,"studs":3,"shape":"2x2","courses":2},
       {"name":"navigation-api","dir":"examples/navigation-api","kind":"example","dirs":["src"],"pinned":["lit-ui-router","ui-router-navigation-location-plugin"],"parts":["lit-ui-router","ui-router-navigation-location-plugin"],"build":"lit-ui-router + ui-router-navigation-location-plugin","files":1,"sloc":319,"studs":3,"shape":"2x2","courses":1},
       {"name":"loading-and-error-views","dir":"examples/loading-and-error-views","kind":"example","dirs":["src"],"pinned":["lit-ui-router"],"parts":["lit-ui-router"],"build":"lit-ui-router","files":1,"sloc":372,"studs":3,"shape":"2x2","courses":1},
-      {"name":"altitude-atlas-app","dir":"www/atlas.lit-ui-router.dev/app","kind":"atlas-app","dirs":["src"],"pinned":["eslint-plugin-lit-ui-router","lit-ui-router","lit-ui-router-effect","lit-ui-router-ssr","ui-router-effect","ui-router-navigation-location-plugin","ui-router-registry","ui-router-server"],"parts":["eslint-plugin-lit-ui-router","lit-ui-router","lit-ui-router-effect","lit-ui-router-ssr","ui-router-effect","ui-router-navigation-location-plugin","ui-router-registry","ui-router-server"],"build":"eslint-plugin-lit-ui-router + lit-ui-router + lit-ui-router-effect + lit-ui-router-ssr + ui-router-effect + ui-router-navigation-location-plugin + ui-router-registry + ui-router-server","files":19,"sloc":4714,"studs":32,"shape":"2x4","courses":7}
+      {"name":"altitude-atlas-app","dir":"www/atlas.lit-ui-router.dev/app","kind":"atlas-app","dirs":["src"],"pinned":["eslint-plugin-lit-ui-router","lit-ui-router","lit-ui-router-effect","lit-ui-router-ssr","ui-router-effect","ui-router-navigation-location-plugin","ui-router-registry","ui-router-server"],"parts":["eslint-plugin-lit-ui-router","lit-ui-router","lit-ui-router-effect","lit-ui-router-ssr","ui-router-effect","ui-router-navigation-location-plugin","ui-router-registry","ui-router-server"],"build":"eslint-plugin-lit-ui-router + lit-ui-router + lit-ui-router-effect + lit-ui-router-ssr + ui-router-effect + ui-router-navigation-location-plugin + ui-router-registry + ui-router-server","files":19,"sloc":4718,"studs":32,"shape":"2x4","courses":7}
     ]
   }
 }

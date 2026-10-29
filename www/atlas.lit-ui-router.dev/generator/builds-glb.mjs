@@ -1,6 +1,6 @@
 // One glTF binary per sheet 2C build, on brick-glb.mjs's materials, studs and clip:
 // the ground slab, each runtime a stack of thin plates scored per plate with studs on
-// its top plate only, each brick in its hue, and one clip, `assemble`, that lifts every
+// its top plate and any ringed stud it leaves bare, each brick in its hue, and one clip, `assemble`, that lifts every
 // brick off its seat along assembleMotion while the plates stay put. A dashed leader
 // hangs from each lifted brick to every stud it seats on, and a cord, a string with end
 // studs, runs from a ringed stud on a brick's top to a ringed stud of each runtime it
@@ -117,7 +117,11 @@ export function buildGlb(model) {
         segment(s, [w, y, d], [0, y, d]);
         segment(s, [0, y, d], [0, y, 0]);
       }
-      node({ name: `plate-${p.letter}-body`, mesh: cuboid(`plate-${p.letter}-body`, w, (p.full * one) / PITCH, d, mats, [[faint, 'ghost-edge'], [course, mats[2]]]), translation: at(p.x, p.y, p.z0) });
+      const body = node({ name: `plate-${p.letter}-body`, mesh: cuboid(`plate-${p.letter}-body`, w, (p.full * one) / PITCH, d, mats, [[faint, 'ghost-edge'], [course, mats[2]]]), translation: at(p.x, p.y, p.z0) });
+      // a ringed stud the top plate leaves bare stands on the body's top
+      const bare = p.rings.map((k) => k.split(',').map(Number)).filter(([i, j]) => i < 0 || j < 0 || i >= p.topShape[0] || j >= p.topShape[1]);
+      triangles += bare.length * studTris;
+      if (bare.length) nodes[body].children = bare.map(([i, j]) => node({ mesh: studMesh(['ring', mats[1], mats[2]]), translation: [p.topOff[0] + i + 0.5, (p.full * one) / PITCH, p.topOff[1] + j + 0.5] }, false));
     }
     const [tw, td] = p.topShape, th = one / PITCH;
     const top = node({ name: `plate-${p.letter}`, mesh: cuboid(`plate-${p.letter}`, tw, th, td, mats), translation: at(p.x + p.topOff[0] * PITCH, p.y + p.topOff[1] * PITCH, p.z0 + p.full * one) });
