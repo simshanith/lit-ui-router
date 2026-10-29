@@ -21,7 +21,7 @@ catalog:
   '@commitlint/config-conventional': ^21.2.4
   '@commitlint/types': ^21.2.3
   '@custom-elements-manifest/analyzer': ^0.11.0
-  '@effect/sql-d1': ^4.0.6
+  '@effect/sql-d1': ^4.0.7
   '@lit-labs/signals': ^0.3.0
   '@lit-labs/ssr': ^4.1.0
   '@lit-labs/ssr-client': ^1.1.8
@@ -51,10 +51,10 @@ catalog:
   concurrently: ^10.0.6
   conventional-changelog: ^8.1.3
   crap4ts: 2.0.0-rc.5
-  cypress: ^16.2.0
+  cypress: ^16.2.1
   cypress-terminal-report: ^7.4.0
   diff: ^9.0.0
-  effect: ^4.0.6
+  effect: ^4.0.7
   esbuild: ^0.28.2
   eslint: ^10.13.0
   eslint-doc-generator: ^3.7.1
