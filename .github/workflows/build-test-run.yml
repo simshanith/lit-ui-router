@@ -331,6 +331,9 @@ jobs:
         # `cypress install` is a near-no-op when the binary is cached; verify
         # still runs so the suite skips the first-use banner.
         run: mise run //tools/build_and_test:cypress
+      - name: Start shared Xvfb display
+        # Concurrent Cypress runs without DISPLAY race for one Xvfb display number.
+        run: mise run //tools/build_and_test:xvfb
       - name: Mark summary session
         # Bounds the report below to this job's runs: the docs build and the suite.
         run: mise run //tools/build_and_test:mark_session
