@@ -338,8 +338,10 @@ const { outcome } = await bootstrap(router, root, page(router));
   each `<ui-view>` re-seeks the router before its own first render, so every view finds the settled
   router rather than the placeholder it registered against. The call waits for every awake
   `<ui-view>`, nested ones included, to finish updating, then releases the adopter. It resolves with
-  `outcome` — `adopted` or `cold` — and `drawnFor`, whether the boot landed on the state and url
-  parameters the signature names. Nothing constrains when `lit-ui-router-ssr/register` is imported.
+  `outcome` — `adopted` or `cold` — and `signature` (`BootstrapSignature`): `matched` when the boot
+  landed on the state and url parameters the signature names, `elsewhere` when the document carried
+  a signature and the boot landed somewhere else or landed no transition, and `absent` when it
+  carried none. Nothing constrains when `lit-ui-router-ssr/register` is imported.
 - **The cold path is the same call.** A container with nothing to adopt is emptied and `value`
   rendered into it before the router starts. A boot transition that fails, a url that starts none,
   and a root `hydrate()` that throws over a mutated document all empty the container and render

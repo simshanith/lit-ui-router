@@ -533,7 +533,7 @@ const parseSignature = (json: string): HydrationSignature | null => {
  *
  * await booted;
  * const { state } = readHydrationSignature(root) ?? {};
- * const drawnForBoot = state === router.globals.current.name;
+ * const bootedWhereDrawn = state === router.globals.current.name;
  * const release = hydrateRoot(root, page(router));
  * ```
  *
@@ -731,6 +731,23 @@ const adoptRoot = (
 /** What {@link bootstrap} came to, once the page is live. */
 export type BootstrapOutcome = 'adopted' | 'cold';
 
+/**
+ * How a boot compares with the {@link readHydrationSignature | hydration
+ * signature} the document carried.
+ *
+ * - `matched`: the boot transition landed on the state and url parameters the
+ *   signature names.
+ * - `elsewhere`: the document carried a signature, and the boot landed on
+ *   another state or other parameters — a redirect, or a static host serving
+ *   one document for a family of urls. A signed document whose boot landed no
+ *   transition reports this too, beside `outcome: 'cold'` and its `error`.
+ * - `absent`: the document carried no signature.
+ *
+ * A signature from another release line, or one no render marker follows, is
+ * still compared, though the container renders cold.
+ */
+export type BootstrapSignature = 'matched' | 'elsewhere' | 'absent';
+
 /** What {@link bootstrap} resolves with. */
 export interface BootstrapResult {
   /**
@@ -739,12 +756,8 @@ export interface BootstrapResult {
    * template rendered into it.
    */
   readonly outcome: BootstrapOutcome;
-  /**
-   * Whether the boot transition landed on the state and url parameters the
-   * document's signature names; `false` when there was no signature to adopt,
-   * or no transition landed.
-   */
-  readonly drawnFor: boolean;
+  /** How the boot compares with the document's hydration signature; see {@link BootstrapSignature}. */
+  readonly signature: BootstrapSignature;
   /**
    * The boot transition's `Rejection`, or what the root `hydrate()` threw;
    * present only on a cold boot that one of them caused.
@@ -814,7 +827,7 @@ const startBoot = (router: UIRouterLit): Promise<BootLanding> =>
   });
 
 /** Whether the router stands where the signature says the document was drawn. */
-const isDrawnFor = (
+const signatureMatches = (
   signature: HydrationSignature,
   router: UIRouterLit,
 ): boolean =>
@@ -926,12 +939,17 @@ export async function bootstrap(
   const signature = readAdoptable(container);
 
   if (!signature) {
+    const served = readHydrationSignature(container);
     renderCold(container, value, renderOptions);
     const landing = await startBoot(router);
     disarm();
     await settleViews(container);
 
-    return { outcome: 'cold', drawnFor: false, ...pickError(landing) };
+    return {
+      outcome: 'cold',
+      signature: compareSignature(served, landing, router),
+      ...pickError(landing),
+    };
   }
 
   const landing = await startBoot(router);
@@ -941,10 +959,11 @@ export async function bootstrap(
     renderCold(container, value, renderOptions);
     await settleViews(container);
 
-    return { outcome: 'cold', drawnFor: false, ...pickError(landing) };
+    return { outcome: 'cold', signature: 'elsewhere', ...pickError(landing) };
   }
 
-  const drawnFor = isDrawnFor(signature, router);
+  const compared = compareSignature(signature, landing, router);
+  const drawn = compared === 'matched';
   let fellBack = 0;
 
   const reporter: AdoptReporter = (view, outcome, error) => {
@@ -957,22 +976,35 @@ export async function bootstrap(
   try {
     release = adoptRoot(container, value, renderOptions, {
       reporter,
-      quiet: !drawnFor,
+      quiet: !drawn,
     });
   } catch (error) {
     render(value, container, renderOptions);
     await settleViews(container);
 
-    return { outcome: 'cold', drawnFor, error };
+    return { outcome: 'cold', signature: compared, error };
   }
 
   await settleViews(container);
   release();
 
-  if (!drawnFor && fellBack > 0) warnBootElsewhere(signature, router, fellBack);
+  if (!drawn && fellBack > 0) warnBootElsewhere(signature, router, fellBack);
 
-  return { outcome: 'adopted', drawnFor };
+  return { outcome: 'adopted', signature: compared };
 }
+
+/** How the boot that came to `landing` compares with the document's signature, `null` when it carried none. */
+const compareSignature = (
+  signature: HydrationSignature | null,
+  landing: BootLanding,
+  router: UIRouterLit,
+): BootstrapSignature => {
+  if (!signature) return 'absent';
+
+  return 'transition' in landing && signatureMatches(signature, router)
+    ? 'matched'
+    : 'elsewhere';
+};
 
 /** The landing's error, as a result member, when it carries one. */
 const pickError = (landing: BootLanding): { error?: unknown } =>

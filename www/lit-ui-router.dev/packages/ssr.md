@@ -409,8 +409,13 @@ an adopter under the container with core's
 ```ts
 import { bootstrap } from 'lit-ui-router-ssr/client';
 
-const { outcome, drawnFor } = await bootstrap(router, root, page(router));
+const { outcome, signature } = await bootstrap(router, root, page(router));
 ```
+
+`signature` is a
+[`BootstrapSignature`](/api/lit-ui-router-ssr/client/type-aliases/BootstrapSignature):
+`matched`, `elsewhere` or `absent`, comparing the state the boot landed on with
+the one the document was drawn for.
 
 The cold path is the same call: a container with nothing to adopt, a boot
 transition that fails, and a walk that throws all end in a cold render. The

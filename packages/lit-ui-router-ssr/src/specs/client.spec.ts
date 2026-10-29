@@ -1,6 +1,14 @@
 import { nothing, render } from 'lit';
 import type { TemplateResult } from 'lit';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  expectTypeOf,
+  it,
+  vi,
+} from 'vitest';
 import { requestContext } from 'lit-ui-router/context';
 import { UiView } from 'lit-ui-router/pure';
 import { settle } from 'ui-router-server/ssr';
@@ -16,6 +24,8 @@ import {
 } from '../client.js';
 import type {
   AdoptOutcome,
+  BootstrapResult,
+  BootstrapSignature,
   HydrateRootOptions,
   UiViewAdoptEvent,
 } from '../client.js';
@@ -176,7 +186,7 @@ describe('bootstrap', () => {
 
     expect(result).toEqual({
       outcome: 'adopted',
-      drawnFor: true,
+      signature: 'matched',
       router: result.router,
     });
     expect(
@@ -205,13 +215,16 @@ describe('bootstrap', () => {
     const container = document.createElement('div');
     document.body.append(container);
 
-    const { outcome, drawnFor } = await bootAt(
+    const { outcome, signature } = await bootAt(
       container,
       rootTemplate,
       '/shell/detail',
     );
 
-    expect({ outcome, drawnFor }).toEqual({ outcome: 'cold', drawnFor: false });
+    expect({ outcome, signature }).toEqual({
+      outcome: 'cold',
+      signature: 'absent',
+    });
     expect(container.querySelector('h1')?.textContent).toContain('shell hello');
     expect(container.querySelector('.detail')?.textContent).toBe('leaf');
     expect(warn).not.toHaveBeenCalled();
@@ -222,11 +235,53 @@ describe('bootstrap', () => {
       withoutSignature(await drawShell('/shell/detail')),
     );
 
-    const { outcome } = await bootAt(container, rootTemplate, '/shell/detail');
+    const { outcome, signature } = await bootAt(
+      container,
+      rootTemplate,
+      '/shell/detail',
+    );
 
-    expect(outcome).toBe('cold');
+    expect({ outcome, signature }).toEqual({
+      outcome: 'cold',
+      signature: 'absent',
+    });
     expect(served.some((element) => container.contains(element))).toBe(false);
     expect(container.querySelectorAll('.detail')).toHaveLength(1);
+  });
+
+  it('types the signature as exactly the three comparisons', () => {
+    type Compared = 'matched' | 'elsewhere' | 'absent';
+
+    expectTypeOf<BootstrapResult['signature']>().toEqualTypeOf<Compared>();
+    expectTypeOf<BootstrapSignature>().toEqualTypeOf<Compared>();
+  });
+
+  it('still compares a signature from another release line, over the cold render', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const version = import.meta.env.PACKAGE_VERSION;
+
+    const markup = (await drawShell('/shell/detail')).replace(
+      `"version":"${version}"`,
+      '"version":"99.0.0"',
+    );
+
+    const { container, served } = serve(markup);
+
+    const matched = await bootAt(container, rootTemplate, '/shell/detail');
+
+    expect(matched).toMatchObject({ outcome: 'cold', signature: 'matched' });
+    expect(served.some((element) => container.contains(element))).toBe(false);
+
+    const elsewhere = await bootAt(
+      serve(markup).container,
+      rootTemplate,
+      '/shell',
+    );
+
+    expect(elsewhere).toMatchObject({
+      outcome: 'cold',
+      signature: 'elsewhere',
+    });
   });
 
   it('seeds the boot transition with the payload it is handed', async () => {
@@ -261,16 +316,16 @@ describe('bootstrap', () => {
       const { container, served } = serve(await drawShell('/shell/item/7'));
       expect(readHydrationSignature(container)?.params).toEqual({ id: '7' });
 
-      const { outcome, drawnFor, router } = await bootAt(
+      const { outcome, signature, router } = await bootAt(
         container,
         rootTemplate,
         '/shell/item/7',
       );
 
       expect(router.globals.params.mode).toBe('list');
-      expect({ outcome, drawnFor }).toEqual({
+      expect({ outcome, signature }).toEqual({
         outcome: 'adopted',
-        drawnFor: true,
+        signature: 'matched',
       });
       expect(
         served.filter((element) => container.contains(element)),
@@ -281,15 +336,15 @@ describe('bootstrap', () => {
     it('tells a boot into other url parameter values from the drawn ones', async () => {
       const { container } = serve(await drawShell('/shell/item/7'));
 
-      const { outcome, drawnFor } = await bootAt(
+      const { outcome, signature } = await bootAt(
         container,
         rootTemplate,
         '/shell/item/8',
       );
 
-      expect({ outcome, drawnFor }).toEqual({
+      expect({ outcome, signature }).toEqual({
         outcome: 'adopted',
-        drawnFor: false,
+        signature: 'elsewhere',
       });
     });
   });
@@ -305,11 +360,11 @@ describe('bootstrap', () => {
       const { container } = serve(await drawShell('/shell/detail'));
       const onAdopt = vi.fn();
 
-      const { drawnFor } = await bootAt(container, rootTemplate, '/shell', {
+      const { signature } = await bootAt(container, rootTemplate, '/shell', {
         onAdopt,
       });
 
-      expect(drawnFor).toBe(false);
+      expect(signature).toBe('elsewhere');
       expect(onAdopt.mock.calls.map(([, outcome]) => outcome)).toContain(
         'fell-back',
       );
@@ -322,15 +377,15 @@ describe('bootstrap', () => {
       const { container, served } = serve(await drawShell('/shell/detail'));
       const shell = container.querySelector('h1');
 
-      const { outcome, drawnFor } = await bootAt(
+      const { outcome, signature } = await bootAt(
         container,
         rootTemplate,
         '/shell',
       );
 
-      expect({ outcome, drawnFor }).toEqual({
+      expect({ outcome, signature }).toEqual({
         outcome: 'adopted',
-        drawnFor: false,
+        signature: 'elsewhere',
       });
       expect(warn).toHaveBeenCalledTimes(1);
       expect(warn.mock.calls[0]).toEqual([
@@ -353,13 +408,13 @@ describe('bootstrap', () => {
       // The empty pair carries no render to adopt, so the view renders cold in silence.
       const { container } = serve(await drawShell('/shell'));
 
-      const { drawnFor } = await bootAt(
+      const { signature } = await bootAt(
         container,
         rootTemplate,
         '/shell/detail',
       );
 
-      expect(drawnFor).toBe(false);
+      expect(signature).toBe('elsewhere');
       expect(warn).not.toHaveBeenCalled();
       expect(container.querySelector('.detail')?.textContent).toBe('leaf');
     });
@@ -411,7 +466,10 @@ describe('bootstrap', () => {
     );
 
     expect(router.globals.current.name).toBe('shell.other');
-    expect(result).toMatchObject({ outcome: 'adopted', drawnFor: false });
+    expect(result).toMatchObject({
+      outcome: 'adopted',
+      signature: 'elsewhere',
+    });
     expect(result).not.toHaveProperty('error');
     expect(warn).toHaveBeenCalledTimes(1);
     expect(warn.mock.calls[0].slice(1)).toEqual([
@@ -439,7 +497,7 @@ describe('bootstrap', () => {
       router,
     );
 
-    expect(result).toMatchObject({ outcome: 'cold', drawnFor: false });
+    expect(result).toMatchObject({ outcome: 'cold', signature: 'elsewhere' });
     expect(result.error).toMatchObject({ type: RejectType.ABORTED });
     expect(served.some((element) => container.contains(element))).toBe(false);
     expect(container.querySelector('ui-router')).not.toBeNull();
@@ -452,7 +510,7 @@ describe('bootstrap', () => {
 
     const result = await bootAt(container, rootTemplate, '/nowhere');
 
-    expect(result).toMatchObject({ outcome: 'cold', drawnFor: false });
+    expect(result).toMatchObject({ outcome: 'cold', signature: 'elsewhere' });
     expect(result).not.toHaveProperty('error');
     expect(served.some((element) => container.contains(element))).toBe(false);
   });
@@ -466,7 +524,7 @@ describe('bootstrap', () => {
       '/shell/detail',
     );
 
-    expect(result).toMatchObject({ outcome: 'cold', drawnFor: true });
+    expect(result).toMatchObject({ outcome: 'cold', signature: 'matched' });
     expect(result.error).toBeInstanceOf(Error);
     expect(container.querySelectorAll('ui-router')).toHaveLength(1);
     expect(container.querySelector('.tail')?.textContent).toBe('first');
