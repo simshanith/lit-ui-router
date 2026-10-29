@@ -10,6 +10,7 @@ import { settle } from 'ui-router-server/ssr';
 import { describe, expect, it, vi } from 'vitest';
 
 import { UiViewRenderer } from '../ui-view-renderer.js';
+import { constructed, makeClassRouter } from './class-fixture.js';
 import { makeRouter, rootTemplate } from './fixture.js';
 
 const draw = (router: UIRouterLit): string =>
@@ -28,10 +29,10 @@ const at = async (path: string): Promise<string> => {
   return draw(router);
 };
 
-/** A view declared as a `RoutedLitElement` class rather than a template function. */
+/** A view declared as a `RoutedLitElement` class with no tag, so there is no element to write. */
 class BoxedView extends LitElement {}
 
-/** One state whose view is a `RoutedLitElement` class, which the renderer has no server render for. */
+/** One state whose view is a `RoutedLitElement` class with no tag, which the renderer has no server render for. */
 const boxedRouter = (): UIRouterLit => {
   const router = installServerLocation(new UIRouterLit(), {
     urlConfig: { strict: false },
@@ -173,7 +174,7 @@ describe('UiViewRenderer', () => {
     expect(markup).not.toContain('data-note="Tom & "Jerry""');
   });
 
-  it('leaves a RoutedLitElement view empty and warns once', async () => {
+  it('leaves an unregistered RoutedLitElement view empty and warns once', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const router = boxedRouter();
     await settle(router, '/boxed');
@@ -186,14 +187,14 @@ describe('UiViewRenderer', () => {
     expect(warn).toHaveBeenCalledOnce();
     expect(warn).toHaveBeenCalledWith(
       expect.stringContaining(
-        'lit-ui-router-ssr: this view is a RoutedLitElement class',
+        'lit-ui-router-ssr: this view is a RoutedLitElement class with no tag',
       ),
       '$default',
     );
     warn.mockRestore();
   });
 
-  it('leaves a RoutedLitElement view empty without a word under node when NODE_ENV is production', async () => {
+  it('leaves an unregistered RoutedLitElement view empty without a word under node when NODE_ENV is production', async () => {
     vi.stubEnv('NODE_ENV', 'production');
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const router = boxedRouter();
@@ -215,5 +216,82 @@ describe('UiViewRenderer', () => {
 
     expect(markup).toContain('promise');
     expect(markup).not.toContain('missing');
+  });
+});
+
+describe('UiViewRenderer, for a routed LitElement class', () => {
+  const classAt = async (path: string): Promise<string> => {
+    const router = makeClassRouter();
+    await settle(router, path);
+
+    return draw(router);
+  };
+
+  it('writes the element into the first of the two slots core renders a class into', async () => {
+    const markup = await classAt('/card');
+
+    // `BRUAAAUVAAA=` digests any all-empty strings, so the part count is what matches core's `${slots[0]}${slots[1]}`
+    expect(markup).toContain(
+      '<ui-view defer-hydration><!--lit-part BRUAAAUVAAA=-->' +
+        '<!--ui-view:lit-part--><routed-card defer-hydration>',
+    );
+    expect(markup).toContain(
+      '</routed-card><!--ui-view:/lit-part-->' +
+        '<!--ui-view:lit-part--><!--ui-view:/lit-part--><?><!--/lit-part--></ui-view>',
+    );
+  });
+
+  it('renders the element’s shadow root from the props the router built', async () => {
+    const markup = await classAt('/card');
+
+    expect(markup).toContain(
+      '<template shadowroot="open" shadowrootmode="open">',
+    );
+    expect(markup).toContain(
+      '<p class="card"><!--ui-view:lit-part-->card leaf<!--ui-view:/lit-part--></p>',
+    );
+    expect(markup).not.toContain('unrouted');
+  });
+
+  it('writes no node marker inside the slot, since the client reads the element as a leaf value', async () => {
+    const markup = await classAt('/card');
+    const slot = markup.slice(markup.indexOf('BRUAAAUVAAA='));
+
+    expect(slot).not.toMatch(/lit-node/);
+  });
+
+  it('hands the props through the constructor, and LitElementRenderer builds one more without', async () => {
+    constructed.length = 0;
+    await classAt('/card');
+
+    expect(constructed).toHaveLength(2);
+    expect(constructed[0]?.resolves).toMatchObject({ detail: 'card leaf' });
+    // `LitElementRenderer` constructs its own instance with no arguments before this renderer seats the router's
+    expect(constructed[1]).toBeUndefined();
+  });
+
+  it('writes a sticky class as its element rather than as text', async () => {
+    const markup = await classAt('/sticky');
+
+    expect(markup).toContain('<sticky-card defer-hydration>');
+    expect(markup).toContain('sticky leaf');
+    expect(markup).not.toContain('&lt;');
+    expect(markup).not.toContain('[object');
+  });
+
+  it('writes a light-DOM class into a declarative shadow root, which is all LitElementRenderer writes', async () => {
+    const markup = await classAt('/light');
+
+    expect(markup).toContain(
+      '<light-card defer-hydration><template shadowroot="open" shadowrootmode="open">',
+    );
+  });
+
+  it('leaves the view service as it found it', async () => {
+    const router = makeClassRouter();
+    await settle(router, '/card');
+    draw(router);
+
+    expect(router.viewService.available()).toEqual([]);
   });
 });

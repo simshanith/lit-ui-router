@@ -1,5 +1,5 @@
 // The server half of `<ui-view>`: the element's own registration and resolve reads, run against the scoped router and written into the light DOM.
-import { ElementRenderer } from '@lit-labs/ssr';
+import { ElementRenderer, LitElementRenderer } from '@lit-labs/ssr';
 import type { RenderInfo } from '@lit-labs/ssr';
 import type { ThunkedRenderResult } from '@lit-labs/ssr/lib/render-result.js';
 import { collectResultSync } from '@lit-labs/ssr/lib/render-result.js';
@@ -11,9 +11,14 @@ import {
   isString,
 } from '@uirouter/core';
 import type { ActiveUIView, UIRouter, ViewConfig } from '@uirouter/core';
+import { html, LitElement, nothing } from 'lit';
+import type { TemplateResult } from 'lit';
+import { isTemplateResult, TemplateResultType } from 'lit/directive-helpers.js';
+import { html as staticHtml, unsafeStatic } from 'lit/static-html.js';
 import { LitViewConfig, isRoutedLitElement } from 'lit-ui-router/pure';
 import type {
   NormalizedLitViewDeclaration,
+  RoutedLitElement,
   UIViewInjectedProps,
 } from 'lit-ui-router/pure';
 import { getScopedRouter } from 'lit-ui-router/context';
@@ -63,10 +68,87 @@ const warnElementComponent = (fqn: string): void => {
   // DEV folds away in dist/*.js; #dev-gate also closes it under node when NODE_ENV is production.
   if (!import.meta.env.DEV || !devGate()) return;
   console.warn(
-    'lit-ui-router-ssr: this view is a RoutedLitElement class, which has no server render, so the part was left empty for the client to fill:',
+    'lit-ui-router-ssr: this view is a RoutedLitElement class with no tag on the customElements registry, so the part was left empty for the client to fill:',
     fqn,
   );
 };
+
+/** Stands in for the element's markup while lit writes the slots' markers around it. */
+const SLOT_SENTINEL = 'ui-view-routed-element-slot';
+
+/** `<ui-view>`'s class render on the client, two element slots, with the sentinel where the routed element goes. */
+const elementSlots = (): TemplateResult => html`${SLOT_SENTINEL}${nothing}`;
+
+const NODE_MARKER = /<!--lit-node \d+-->/g;
+
+/**
+ * The element a sticky class's renderer result carries: core binds a sticky
+ * class in its declaration, so the view sees a template function whose result
+ * is the element alone.
+ */
+const carriedElement = (value: TemplateResult): LitElement | undefined => {
+  if (!isTemplateResult(value, TemplateResultType.HTML)) return undefined;
+
+  if (value.values.length !== 1) return undefined;
+
+  if (value.strings.some((text) => text !== '')) return undefined;
+
+  const [element] = value.values;
+
+  return element instanceof LitElement ? element : undefined;
+};
+
+/**
+ * Writes `element` itself through `LitElementRenderer`: the renderer's own
+ * instance is replaced by the one the router built, so the props it was
+ * handed are the ones its render reads.
+ */
+const renderElement = (element: LitElement, renderInfo: RenderInfo): string => {
+  const tag = element.localName;
+
+  class Seated extends LitElementRenderer {
+    static override matchesClass(ctor: typeof HTMLElement): boolean {
+      return ctor === element.constructor;
+    }
+
+    constructor(tagName: string) {
+      super(tagName);
+      this.element = element;
+    }
+  }
+
+  const name = unsafeStatic(tag);
+
+  const markup = collectResultSync(
+    renderValue(staticHtml`<${name}></${name}>`, {
+      ...renderInfo,
+      elementRenderers: [Seated, ...renderInfo.elementRenderers],
+    }),
+  );
+
+  // The element is a leaf value of the client's slot part: its own pair and node marker belong to a template the client never renders.
+  return markup
+    .slice(markup.indexOf('-->') + 3, markup.length - PART_CLOSE.length)
+    .replace(NODE_MARKER, '');
+};
+
+/** Builds a routed class the way core's renderer does: props through the constructor, then `_uiViewProps`. */
+const construct = (
+  Component: RoutedLitElement,
+  props: UIViewInjectedProps,
+): LitElement => {
+  const element = new Component(props);
+  element._uiViewProps = props;
+
+  return element;
+};
+
+/** The served markup of a routed element: the client's two slots, the element written into the first. */
+const renderSlots = (element: LitElement, renderInfo: RenderInfo): string =>
+  collectResultSync(renderValue(elementSlots(), renderInfo)).replace(
+    SLOT_SENTINEL,
+    () => renderElement(element, renderInfo),
+  );
 
 /**
  * Renders the routed component of a `<ui-view>` into the element's light DOM,
@@ -87,6 +169,12 @@ const warnElementComponent = (fqn: string): void => {
  *
  * An address no state routes renders nothing between its markers, which is what
  * the client's own first render of that view produces.
+ *
+ * A routed `LitElement` class is built the way core builds it, with the props
+ * through its constructor and then `_uiViewProps`, and written through
+ * `LitElementRenderer` into the first of the two element slots `<ui-view>`
+ * renders a class into; a `sticky` class is the element its bound renderer
+ * carries. A class with no tag on the registry is left empty.
  *
  * The pair around the component is written plain, so the walk hydrating the
  * view's surroundings reads it as the `uiViewSlot()` child part and stops
@@ -217,14 +305,24 @@ export class UiViewRenderer extends ElementRenderer {
       return undefined;
     }
 
-    if (isRoutedLitElement(component)) {
-      warnElementComponent(this.data!.fqn);
-      deregister();
+    const props = this.props(router, config);
+    let value: LitElement | TemplateResult;
 
-      return undefined;
+    if (isRoutedLitElement(component)) {
+      // A class with no tag has no element for the server to write.
+      if (!customElements.getName(component)) {
+        warnElementComponent(this.data!.fqn);
+        deregister();
+
+        return undefined;
+      }
+
+      value = construct(component, props);
+    } else {
+      value = component(props);
     }
 
-    const value = component(this.props(router, config));
+    const element = value instanceof LitElement ? value : carriedElement(value);
 
     return [
       () => {
@@ -233,7 +331,9 @@ export class UiViewRenderer extends ElementRenderer {
         try {
           // renderValue writes the `<!--lit-part digest-->` pair the element's own render() hydrates against; collecting it here is what lets the interior be prefixed.
           return prefixInterior(
-            collectResultSync(renderValue(value, renderInfo)),
+            element
+              ? renderSlots(element, renderInfo)
+              : collectResultSync(renderValue(value, renderInfo)),
           );
         } finally {
           openViews.pop();
