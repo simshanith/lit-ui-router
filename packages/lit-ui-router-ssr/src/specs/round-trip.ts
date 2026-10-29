@@ -2,9 +2,9 @@
 import type { RenderInfo } from '@lit-labs/ssr';
 import type { TemplateResult } from 'lit';
 import type { UIRouterLit } from 'lit-ui-router/pure';
+import { settle } from 'ui-router-server/ssr';
 import { hydrateRoot } from '../client.js';
 import { renderPage } from '../prerender.js';
-import { settle } from '../settle.js';
 import { makeRouter } from './fixture.js';
 
 export { stripComments, withoutSignature } from './markup.js';

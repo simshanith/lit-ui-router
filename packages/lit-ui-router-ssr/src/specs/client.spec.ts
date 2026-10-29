@@ -3,6 +3,7 @@ import type { TemplateResult } from 'lit';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { requestContext } from 'lit-ui-router/context';
 import { UiView } from 'lit-ui-router/pure';
+import { settle } from 'ui-router-server/ssr';
 import { adoptUiViewContext } from '../adopt-context.js';
 import '../register.js';
 
@@ -16,7 +17,6 @@ import type {
   HydrateRootOptions,
   UiViewAdoptEvent,
 } from '../client.js';
-import { settle } from '../settle.js';
 import { signatureBlock } from '../prerender.js';
 import { signatureAttribute, signatureSelector } from '../signature.js';
 import { UiViewRenderer } from '../ui-view-renderer.js';

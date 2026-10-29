@@ -143,8 +143,6 @@ const workspaces = {
       '@uirouter/core-floor',
       'lit-ui-router-floor',
       'ui-router-server-floor',
-      'ui-router-server-0.3-floor',
-      'ui-router-server-0.4-floor',
     ],
   },
   'packages/navigation-location-plugin': {

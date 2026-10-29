@@ -81,13 +81,14 @@ and it is written as-is. `dryRun: true` plans everything and writes nothing.
 
 A server render reads the router only once its transition has landed,
 resolves included.
-[`settle(router, path)`](/api/lit-ui-router-ssr/index/functions/settle) sets the
-url, syncs the router to it, and resolves with the transition that landed, so
-the synchronous render after it reads every resolve. A `redirectTo` chain
-settles on its final state, and a path the router already stands on resolves
-at once.
+[`settle(router, path)`](/api/ui-router-server/ssr/functions/settle), the
+[`ui-router-server/ssr`](/packages/server#settling-a-server-router) step this
+package re-exports, sets the url, syncs the router to it, and resolves with the
+transition that landed, so the synchronous render after it reads every resolve.
+A `redirectTo` chain settles on its final state, and a path the router already
+stands on resolves at once.
 
-A page fails to land in three ways, and each rejects rather than hangs:
+A page fails to land in four ways, and each rejects rather than hangs:
 
 - **No rule matches.** A url no state claims, on a router with no `otherwise`
   rule, rejects with an `Error` naming it. An `otherwise` rule is itself a
@@ -96,8 +97,10 @@ A page fails to land in three ways, and each rejects rather than hangs:
   the transition's `Rejection`, the resolve's error in its `detail`. Core's
   `defaultErrorHandler` still logs it.
 - **Nothing lands in time.**
-  [`timeout`](/api/lit-ui-router-ssr/index/interfaces/SettleOptions) bounds the
+  [`timeout`](/api/ui-router-server/ssr/interfaces/SettleOptions) bounds the
   wait, `10_000` ms by default; `0` waits without a limit.
+- **The url keeps rewriting.** `maxRewrites` bounds a chain of url rules that
+  rewrite the url to another url, `10` by default.
 
 `settle()` never calls `router.start()`, which runs once per router: it drives
 `urlService` directly, so a page loop calls it once per path on the same
