@@ -11,12 +11,10 @@ import {
   ResolveContext,
   Transition,
   ViewConfig,
-  applyPairs,
   StateDeclaration,
   PathNode,
   trace,
   isFunction,
-  isString,
   unnestR,
   Param,
   type RawParams,
@@ -27,13 +25,13 @@ import {
 
 import {
   RoutedLitTemplate,
-  UIViewInjectedProps,
   UiOnExit,
   UiOnParamsChanged,
   NormalizedLitViewDeclaration,
 } from './interface.js';
 import { LitViewConfig, UIRouterLit, isRoutedLitElement } from './core.js';
 import { routedElementOf, routedLitElementRenderer } from './routed-element.js';
+import { routedViewTemplate } from './routed-view.js';
 import { warnForeignClass, warnMissingRouter } from './dev-warn.js';
 import { UIRouterLitElement } from './ui-router.js';
 import type {
@@ -258,6 +256,7 @@ export class UiView extends LitElement {
     // SAFETY: `litViewsBuilder` normalizes every view declaration of a lit state
     const { component } = config.viewDecl as NormalizedLitViewDeclaration;
 
+    // TODO(#1527): the class case stays outside routedViewTemplate until the prerender probe reports.
     if (isRoutedLitElement(component)) {
       this.component = routedLitElementRenderer(component);
     } else {
@@ -886,29 +885,12 @@ export class UiView extends LitElement {
       return this.fallback ? nothing : html`<slot></slot>`;
     }
 
-    const { uiRouter: router, component, resolveContext: context } = this;
-    const injector = context.injector();
+    const result = routedViewTemplate(
+      this.component!,
+      this.uiRouter,
+      this.resolveContext,
+    );
 
-    // The injector hands a NOWAIT token's promise, which renders before it settles.
-    const resolves = context
-      .getTokens()
-      .filter(isString)
-      .filter((token) => {
-        const resolvable = context.getResolvable(token);
-
-        return (
-          resolvable.resolved ||
-          context.getPolicy(resolvable).async === 'NOWAIT'
-        );
-      })
-      .map((token): [string, unknown] => [token, injector.get<unknown>(token)])
-      .reduce(applyPairs, {});
-
-    const transition = injector.get<Transition>(Transition);
-
-    const props: UIViewInjectedProps = { router, resolves, transition };
-
-    const result = component!(props);
     const element = routedElementOf(result);
 
     if (!element) {
