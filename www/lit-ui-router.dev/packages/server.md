@@ -183,6 +183,14 @@ the warning prints.
 type Verdict =
   | { kind: 'shell'; mount: string; status?: number }
   | { kind: 'redirect'; mount: string; location: string; status: number }
+  | {
+      kind: 'delegate';
+      mount: string;
+      subpath: string;
+      delegate: string;
+      state: string;
+      params: RawParams;
+    }
   | { kind: 'notFound'; mount?: string };
 ```
 
@@ -195,6 +203,8 @@ type Verdict =
   `mergeSearch(location, incoming)` rather than concatenating. Verdicts fix
   `status: 302`: a redirect table is configuration that changes with the next
   deploy, and browsers cache 301s past it.
+- **`delegate`** — the path matched a state that names a host handler by key
+  ([delegating states](#delegating-states)); the handler answers the request.
 - **`notFound`** — `mount` set means a mount owned the path but nothing
   matched (serve that app's 404 page); absent means no mount claimed it at
   all (not this router's problem).
@@ -324,6 +334,11 @@ The request/response types are structural subsets of `http.IncomingMessage`
 and `http.ServerResponse`, so Node, Express, and Connect objects all fit
 without the package depending on Node types.
 
+Connect can't call [delegate handlers](#delegating-states), so
+`createConnectMiddleware` throws at construction for a router whose states
+name delegate keys. Pass `delegates: 'next'` to pass navigations that match a
+delegating state to the downstream stack, and serve those states there.
+
 ### hono
 
 `serverRouterHono` wraps the fetch handler in Hono's continuation: a verdict
@@ -345,6 +360,112 @@ app.use('*', (c, next) =>
   })(c, next),
 );
 ```
+
+### Delegating states
+
+A state with a `delegate` key hands its url to a host handler: a command
+endpoint, a form POST, a JSON feed. The tree carries only the key, so the
+client and the server can share it. The fetch and Hono adapters map keys to
+fetch-shaped handlers in their `delegates` option. Every handler is called
+with the request and whatever the adapter was called with, so all of them
+share one `(request, ...args)` signature, and a Hono app's `fetch` or a
+Worker handler fits bare:
+
+```ts
+import { env } from 'cloudflare:workers';
+import { Hono } from 'hono';
+import { createServerRouter } from 'ui-router-server';
+import { createFetchHandler, delegateContext } from 'ui-router-server/fetch';
+
+const routes = [
+  { name: 'home', url: '' },
+  { name: 'claims', url: '/claims/{id}', delegate: 'ledger' },
+] as const;
+
+const router = createServerRouter({ mounts: { '/app': { routes } } });
+
+// The delegate gets the original request, '/app' prefix included.
+const ledger = new Hono<{ Bindings: Env }>().basePath('/app');
+
+ledger.post('/claims/:id', async (c) => {
+  const { params } = delegateContext(c.req.raw, 'ledger', router);
+  await c.env.CLAIMS.send({ id: params.id, claim: await c.req.json() });
+  return c.body(null, 202);
+});
+
+const handler = createFetchHandler(router, {
+  serveShell: (_mount, shellRequest) => env.ASSETS.fetch(shellRequest),
+  delegates: { ledger: ledger.fetch },
+});
+
+export default {
+  async fetch(request, env, ctx) {
+    // env and ctx reach ledger.fetch untouched.
+    return (await handler(request, env, ctx)) ?? env.ASSETS.fetch(request);
+  },
+} satisfies ExportedHandler<Env>;
+```
+
+`serverRouterHono` forwards `c.env` and `c.executionCtx` after the request,
+so `delegates: { ledger: ledger.fetch }` works behind the middleware too, and
+`ui-router-server/hono` re-exports `delegateContext`.
+
+A request of any method and any `Accept` that matches a delegating state goes
+to its handler. The handler gets the original Request object, body unread and
+url unchanged, which is what keeps `delegateContext` working; its `Response`
+goes out untouched. Unlike Hono's `app.mount()`, nothing strips the mount
+base, so route on the context's `subpath`, give the delegate the mount base
+(`basePath('/app')` above), or put delegating states on the `/` mount.
+Requests that match no delegating state keep the navigation contract above.
+
+`delegateContext(request, key, router?)` returns
+`{ mount, subpath, delegate, state, params }` for the match. `subpath` is the
+pathname within the mount (`''` at the bare base). `params` holds what the
+pathname alone resolves: search params keep their declared defaults, so read
+the query from the request. It throws when the request wasn't delegated, was
+delegated to a different key, or came through a router other than the one
+passed. The context is keyed by the Request object, so a `request.clone()` or
+a `new Request(request)` has none: read it from the request the handler
+received (`c.req.raw` in Hono).
+
+- A delegating state needs a url and no `redirectTo`, and its children don't
+  inherit the key. A `redirectTo` or redirect rule that targets a delegating
+  state is rejected too, since redirects answer navigations only and a POST
+  would never reach the handler. `createServerRouter` throws for each.
+- A redirect rule whose pattern also matches a delegating url is ordered as
+  the tier orders any rule against a state: `matcher` mounts evaluate rules
+  first and redirect, while `simulate` mounts follow core's rule sort, where
+  an equally specific state url wins. Keep rule patterns off delegating urls.
+- `createFetchHandler` throws at construction when the router names a key
+  that `delegates` doesn't map. Extra keys in `delegates` are allowed.
+- A handler that throws rejects the adapter's promise, so the host's own error
+  handling answers it.
+- Requests outside `shouldHandle` only match urls: they never run a
+  transition, even on a `simulate` mount. When the router names no delegate
+  keys they pass as `null` without matching.
+- A delegating state never runs a transition, so its resolves don't run
+  either.
+- The Connect adapter throws for delegate keys unless `delegates: 'next'`,
+  as its section above describes.
+
+#### Typing delegates
+
+Declare `routes` `as const` and the router's type carries its state names
+and delegate keys: `delegates` must then map every key the routes name, a
+missing key is a compile error, and `delegateContext(request, key, router)`
+narrows `state` to the states that name `key`. Each router is typed on its
+own, so two routers in one program can name different keys. Untyped routes
+keep `string` keys and states and core's `RawParams`.
+
+`params` reads the `DelegateSeam` interface that `ui-router-server/fetch`
+exports empty. A typed state registry augments it with a `params` member
+indexed by state name, and `DelegateParams<N>` returns that entry, or
+`RawParams` for a state it doesn't name.
+
+`ui-router-server` augments `@uirouter/core`'s `StateDeclaration` with an
+optional `delegate?: string`, so a client tree typed with core's declarations
+can carry the key. The augmentation applies in programs that import
+`ui-router-server`; a client-only program adds `import type {} from 'ui-router-server';`.
 
 ## Server-side hrefs
 
@@ -456,7 +577,10 @@ becomes `<subpath>/index.html`, holding whatever `render` returns for it. A
 redirect becomes a `_redirects` line, paired with and without the trailing
 slash, and no page. The `otherwise` projection becomes `404.html`. A path that
 matches nothing is counted, listed in `result.warnings`, and warned about in
-development.
+development. A path that matches a [delegating state](#delegating-states)
+gets no page and no rules line: it is counted in `result.tally.delegate` and
+listed in `result.delegated`, in enumeration order. A verdict kind the loop
+doesn't know throws instead of being counted.
 
 ```ts
 import { mkdir, writeFile } from 'node:fs/promises';
@@ -484,6 +608,11 @@ The loop never touches a filesystem itself: `write` receives each file with
 a `Map`, under any runtime.
 [`lit-ui-router-ssr`](/packages/ssr)'s `prerender` is this loop with a lit
 render, and writes through `node:fs` by default.
+
+A delegated path has no static file, so the host must send it to the server.
+On Cloudflare Workers, list `result.delegated` in
+[`assets.run_worker_first`](https://developers.cloudflare.com/workers/static-assets/routing/worker-script/#run-worker-first-for-selective-paths)
+so the Worker sees those paths before static assets do.
 
 ## What the server can't see
 

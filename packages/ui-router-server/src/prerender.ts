@@ -1,7 +1,7 @@
 /**
  * A static site from a mount table: each path's verdict becomes a page the
- * caller renders, a host rules line, or a warning, written through the
- * caller's `write`.
+ * caller renders, a host rules line, a warning, or a delegated path for the
+ * host's server, written through the caller's `write`.
  *
  * It imports no renderer and no filesystem, so it runs under any runtime.
  */
@@ -124,6 +124,8 @@ export interface PrerenderTally {
   redirect: number;
   /** Paths that matched nothing — see {@link PrerenderResult.warnings}. */
   notFound: number;
+  /** Paths a delegating state's host handler answers — see {@link PrerenderResult.delegated}. */
+  delegate: number;
   /** The 404 document: 1 when the projection produced one, 0 otherwise. */
   document: number;
 }
@@ -138,6 +140,12 @@ export interface PrerenderResult {
   rules: RedirectLine[];
   /** Paths that verdicted `notFound` with no projection — nothing was emitted for them. */
   warnings: string[];
+  /**
+   * Paths that matched a delegating state, in enumeration order: no page and
+   * no rules line, since a host handler answers them. Route them to the
+   * server, e.g. into Cloudflare's `assets.run_worker_first`.
+   */
+  delegated: string[];
 }
 
 type ShellVerdict = Extract<Verdict, { kind: 'shell' }>;
@@ -263,8 +271,10 @@ const resolverOf = (options: PrerenderOptions): ServerRouter => {
 /**
  * Emits a static site from a mount table's verdicts: a shell verdict becomes
  * `<subpath>/index.html` holding whatever `render` returns, a redirect
- * becomes a rules line and no page, and the `otherwise` projection becomes
- * the 404 document.
+ * becomes a rules line and no page, a delegating state is listed in
+ * `delegated` and skipped, and the `otherwise` projection becomes the 404
+ * document. A verdict kind this package doesn't know throws rather than being
+ * counted.
  *
  * It knows no renderer: `render` turns each shell verdict into the file's
  * text, so any template engine, or a `settle` and a string, can fill it.
@@ -274,6 +284,7 @@ const resolverOf = (options: PrerenderOptions): ServerRouter => {
  * @returns what was emitted, planned or written
  * @throws an `Error` when neither `mounts` nor `resolver` is supplied
  * @throws an `Error` when the 404 document needs a default probe and only a `resolver` is supplied
+ * @throws an `Error` when a path resolves to a verdict kind this package doesn't know
  *
  * @example
  * ```ts
@@ -319,12 +330,14 @@ export async function prerender(
     shell: 0,
     redirect: 0,
     notFound: 0,
+    delegate: 0,
     document: 0,
   };
 
   const pages: EmittedPage[] = [];
   const generated: RedirectLine[] = [];
   const warnings: string[] = [];
+  const delegated: string[] = [];
 
   const emit = async (
     verdict: ShellVerdict,
@@ -347,6 +360,8 @@ export async function prerender(
 
   const visit = async (path: string): Promise<void> => {
     const verdict = await resolver.resolve(path);
+    // Read before narrowing: a structural resolver may return a kind the Verdict union lacks.
+    const kind: string = verdict.kind;
 
     if (verdict.kind === 'shell') {
       const subpath = subpathIn(verdict.mount, path);
@@ -374,9 +389,22 @@ export async function prerender(
       return;
     }
 
-    tally.notFound += 1;
-    warnings.push(path);
-    warnUnclaimed(path);
+    if (verdict.kind === 'notFound') {
+      tally.notFound += 1;
+      warnings.push(path);
+      warnUnclaimed(path);
+
+      return;
+    }
+
+    if (kind !== 'delegate') {
+      throw new Error(
+        `prerender: '${path}' resolved to verdict kind '${kind}', which this ui-router-server does not know; upgrade it`,
+      );
+    }
+
+    tally.delegate += 1;
+    delegated.push(path);
   };
 
   for await (const path of paths) await visit(path);
@@ -393,5 +421,5 @@ export async function prerender(
 
   if (!dryRun) await writeRules(lines, rules, write, outDir);
 
-  return { tally, pages, rules: lines, warnings };
+  return { tally, pages, rules: lines, warnings, delegated };
 }

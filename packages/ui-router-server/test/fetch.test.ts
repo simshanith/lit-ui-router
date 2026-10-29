@@ -1,9 +1,17 @@
 import assert from 'node:assert/strict';
-import { describe, it } from 'node:test';
+import { describe, it, mock } from 'node:test';
 
+import { TransitionService } from '@uirouter/core';
+
+import { registeredDelegates } from '../src/delegate-registry.ts';
 import { createServerRouter } from '../src/index.ts';
 import type { ServerRouter, Verdict } from '../src/index.ts';
-import { createFetchHandler } from '../src/fetch.ts';
+import { createFetchHandler, delegateContext } from '../src/fetch.ts';
+import type {
+  DelegateContext,
+  DelegateHandler,
+  FetchAdapterOptions,
+} from '../src/fetch.ts';
 
 // A router that answers every request with one fixed verdict — isolates the
 // adapter's verdict -> response mechanics from the resolver under test.
@@ -305,5 +313,356 @@ describe('createFetchHandler', () => {
       assert.equal(res.status, 404);
       assert.equal(res.headers.get('Link'), null);
     }
+  });
+});
+
+const claimsVerdict: Verdict = {
+  kind: 'delegate',
+  mount: '/app',
+  subpath: '/claims/7',
+  delegate: 'ledger',
+  state: 'claims',
+  params: { id: '7' },
+};
+
+// SAFETY: node's real Request, which the fetch globals shim shadows, takes a body.
+const post = (path: string, body: string): Request =>
+  new Request(`${ORIGIN}${path}`, {
+    method: 'POST',
+    headers: { accept: 'application/json', 'content-type': 'text/plain' },
+    body,
+  } as RequestInit);
+
+// SAFETY: node's real Request, which the fetch globals shim shadows, has text().
+const requestText = (req: Request): Promise<string> =>
+  (req as Request & { text(): Promise<string> }).text();
+
+describe('createFetchHandler delegates', () => {
+  it('hands any request to the mapped handler and returns its Response untouched', async () => {
+    const calls: Array<{
+      request: Request;
+      context: DelegateContext<'ledger'>;
+    }> = [];
+
+    const accepted = new Response('queued', {
+      status: 202,
+      headers: { 'x-ledger': '1' },
+    });
+
+    const handler = createFetchHandler(routerOf(claimsVerdict), {
+      serveShell: noShell,
+      delegates: {
+        ledger: (request) => {
+          calls.push({ request, context: delegateContext(request, 'ledger') });
+
+          return accepted;
+        },
+      },
+    });
+
+    const request = post('/app/claims/7', 'claim');
+    const res = await handler(request);
+    assert.equal(res, accepted);
+    assert.equal(accepted.headers.get('Link'), null);
+    assert.equal(calls.length, 1);
+    assert.equal(calls[0].request, request);
+    assert.equal(await requestText(calls[0].request), 'claim');
+    assert.deepEqual(calls[0].context, {
+      mount: '/app',
+      subpath: '/claims/7',
+      delegate: 'ledger',
+      state: 'claims',
+      params: { id: '7' },
+    });
+
+    // A navigation that matches a delegating state delegates too.
+    assert.equal(await handler(navigation('/app/claims/7')), accepted);
+  });
+
+  it('forwards the arguments after the request to the delegate, fetch-shaped', async () => {
+    interface Env {
+      QUEUE: string[];
+    }
+
+    interface Ctx {
+      waitUntil(promise: Promise<unknown>): void;
+    }
+
+    const seen: Array<[Env, Ctx]> = [];
+
+    // A Worker-style fetch, passed bare.
+    const ledger = {
+      fetch: (_request: Request, env: Env, ctx: Ctx): Response => {
+        seen.push([env, ctx]);
+
+        return new Response(null, { status: 202 });
+      },
+    };
+
+    const handler = createFetchHandler(routerOf(claimsVerdict), {
+      serveShell: noShell,
+      delegates: { ledger: ledger.fetch },
+    });
+
+    const env: Env = { QUEUE: [] };
+    const ctx: Ctx = { waitUntil: () => {} };
+    const res = await handler(post('/app/claims', ''), env, ctx);
+    assert.equal(res?.status, 202);
+    assert.equal(seen.length, 1);
+    assert.equal(seen[0][0], env);
+    assert.equal(seen[0][1], ctx);
+  });
+
+  it('passes a non-navigation request that matches no delegating state as null', async () => {
+    const handler = createFetchHandler(
+      routerOf({ kind: 'shell', mount: '/app' }),
+      { serveShell: noShell, delegates: {} },
+    );
+
+    assert.equal(await handler(post('/app/about', '')), null);
+  });
+
+  it('never resolves non-navigation requests without delegates', async () => {
+    const handler = createFetchHandler(
+      { resolve: () => Promise.reject(new Error('resolved')) },
+      { serveShell: noShell },
+    );
+
+    assert.equal(await handler(post('/app/claims', '')), null);
+  });
+
+  it('throws at construction for a key the router names but delegates lacks', () => {
+    const router = createServerRouter({
+      mounts: {
+        '/app': {
+          routes: [{ name: 'claims', url: '/claims', delegate: 'ledger' }],
+        },
+      },
+    });
+
+    const unmapped: Array<FetchAdapterOptions['delegates']> = [
+      undefined,
+      {},
+      { other: noShell },
+    ];
+
+    for (const delegates of unmapped)
+      assert.throws(
+        () => createFetchHandler(router, { serveShell: noShell, delegates }),
+        /No handler in delegates for delegate key 'ledger'/,
+      );
+  });
+
+  it('throws at match for a structural router whose verdict names an unmapped key', async () => {
+    // SAFETY: Object.create's result is an object whose only key is the inherited handler.
+    const inherited = Object.create({ ledger: noShell }) as Record<
+      string,
+      DelegateHandler
+    >;
+
+    const handler = createFetchHandler(routerOf(claimsVerdict), {
+      serveShell: noShell,
+      // An inherited key is not a mapping.
+      delegates: inherited,
+    });
+
+    await assert.rejects(
+      handler(post('/app/claims', '')),
+      /No handler in delegates for delegate key 'ledger'/,
+    );
+  });
+
+  it('propagates a throwing handler to the host', async () => {
+    const handler = createFetchHandler(routerOf(claimsVerdict), {
+      serveShell: noShell,
+      delegates: {
+        ledger: () => Promise.reject(new Error('ledger down')),
+      },
+    });
+
+    await assert.rejects(handler(post('/app/claims', '')), /ledger down/);
+  });
+
+  it('routes real createServerRouter delegate verdicts end to end', async () => {
+    const router = createServerRouter({
+      mounts: {
+        '/app': {
+          routes: [
+            { name: 'about', url: '/about' },
+            { name: 'claims', url: '/claims/:id', delegate: 'ledger' },
+          ],
+        },
+      },
+    });
+
+    const shell = shellSpy(new Response('<html>shell</html>', { status: 200 }));
+
+    const handler = createFetchHandler(router, {
+      serveShell: shell.serveShell,
+      delegates: {
+        ledger: (request) =>
+          new Response(String(delegateContext(request, 'ledger').params.id), {
+            status: 202,
+          }),
+      },
+    });
+
+    const res = await handler(post('/app/claims/9', ''));
+    assert.ok(res);
+    assert.equal(res.status, 202);
+    assert.equal(await bodyText(res), '9');
+    assert.equal(await handler(post('/app/about', '')), null);
+    assert.equal((await handler(navigation('/app/about')))?.status, 200);
+  });
+});
+
+describe('createFetchHandler delegate work', () => {
+  const routes = [
+    { name: 'about', url: '/about' },
+    { name: 'claims', url: '/claims/:id', delegate: 'ledger' },
+  ];
+
+  const asset = (path: string): Request =>
+    new Request(`${ORIGIN}${path}`, { headers: { accept: '*/*' } });
+
+  const transitionsDuring = async (work: () => Promise<void>) => {
+    const create = mock.method(TransitionService.prototype, 'create');
+
+    try {
+      await work();
+
+      return create.mock.callCount();
+    } finally {
+      create.mock.restore();
+    }
+  };
+
+  it('matches non-navigations on a simulate mount without starting a transition', async () => {
+    const router = createServerRouter({
+      mounts: { '/app': { routes, strategy: 'simulate' } },
+    });
+
+    const handler = createFetchHandler(router, {
+      serveShell: () => new Response('shell'),
+      delegates: { ledger: () => new Response(null, { status: 202 }) },
+    });
+
+    const nonNavigations = await transitionsDuring(async () => {
+      assert.equal(await handler(asset('/app/about')), null);
+      assert.equal(await handler(asset('/app/missing.js')), null);
+      assert.equal((await handler(post('/app/claims/9', '')))?.status, 202);
+    });
+
+    assert.equal(nonNavigations, 0);
+
+    const navigations = await transitionsDuring(async () => {
+      await handler(navigation('/app/about'));
+    });
+
+    assert.equal(navigations, 1);
+  });
+
+  it('never resolves or matches a non-navigation when the router names no keys', async () => {
+    const router = createServerRouter({
+      mounts: { '/app': { routes: [{ name: 'about', url: '/about' }] } },
+    });
+
+    const registration = registeredDelegates(router);
+    assert.ok(registration);
+    const resolve = mock.method(router, 'resolve');
+    const delegateFor = mock.method(registration, 'delegateFor');
+
+    const handler = createFetchHandler(router, {
+      serveShell: noShell,
+      delegates: { ledger: noShell },
+    });
+
+    assert.equal(await handler(asset('/app/about')), null);
+    assert.equal(await handler(post('/app/about', '')), null);
+    assert.equal(resolve.mock.callCount(), 0);
+    assert.equal(delegateFor.mock.callCount(), 0);
+  });
+
+  it('hands the delegate the in-mount subpath with the original request', async () => {
+    const router = createServerRouter({ mounts: { '/app': { routes } } });
+    const seen: Array<[Request, string]> = [];
+
+    const handler = createFetchHandler(router, {
+      serveShell: noShell,
+      delegates: {
+        ledger: (request) => {
+          seen.push([request, delegateContext(request, 'ledger').subpath]);
+
+          return new Response(null, { status: 202 });
+        },
+      },
+    });
+
+    const request = post('/app/claims/9?draft=1', '');
+    await handler(request);
+    assert.deepEqual(seen, [[request, '/claims/9']]);
+  });
+});
+
+describe('delegateContext', () => {
+  const delegated = async (key: string): Promise<Request> => {
+    const request = post('/app/claims', '');
+
+    const handler = createFetchHandler(routerOf(claimsVerdict), {
+      serveShell: noShell,
+      delegates: { [key]: () => new Response(null, { status: 202 }) },
+    });
+
+    await handler(request);
+
+    return request;
+  };
+
+  it('throws for a request the adapter never delegated', () => {
+    assert.throws(
+      () => delegateContext(post('/app/claims', ''), 'ledger'),
+      /this request was not delegated \(expected 'ledger'\)/,
+    );
+  });
+
+  it('throws for a request delegated to another key', async () => {
+    const request = await delegated('ledger');
+
+    assert.throws(
+      () => delegateContext(request, 'badge'),
+      /delegated to 'ledger', not 'badge'/,
+    );
+  });
+
+  it('checks the request came through the router it is given', async () => {
+    const routes = [{ name: 'claims', url: '/claims', delegate: 'ledger' }];
+    const router = createServerRouter({ mounts: { '/app': { routes } } });
+    const other = createServerRouter({ mounts: { '/app': { routes } } });
+    const request = post('/app/claims', '');
+
+    await createFetchHandler(router, {
+      serveShell: noShell,
+      delegates: { ledger: () => new Response(null, { status: 202 }) },
+    })(request);
+
+    assert.equal(delegateContext(request, 'ledger', router).state, 'claims');
+    assert.throws(
+      () => delegateContext(request, 'ledger', other),
+      /delegated by a handler built from another router/,
+    );
+  });
+
+  it('has no context on a clone: it is keyed by the Request object', async () => {
+    const request = await delegated('ledger');
+    assert.equal(delegateContext(request, 'ledger').state, 'claims');
+
+    // SAFETY: node's real Request, which the fetch globals shim shadows, has clone().
+    const clone = (request as Request & { clone(): Request }).clone();
+
+    assert.throws(() => delegateContext(clone, 'ledger'), /was not delegated/);
+    assert.throws(
+      () => delegateContext(new Request(request.url, request), 'ledger'),
+      /was not delegated/,
+    );
   });
 });

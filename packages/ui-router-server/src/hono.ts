@@ -18,13 +18,36 @@
  * Hono's own asset serving. The host still supplies asset IO through
  * {@link FetchAdapterOptions.serveShell} — `(mount, request) => c.env.ASSETS.fetch(request)`
  * on Cloudflare, a `serveStatic` fetch elsewhere.
+ *
+ * {@link FetchAdapterOptions.delegates} puts the router in front of a Hono app:
+ * a request matching a delegating state goes to that app, any method, and its
+ * Response is returned. The middleware forwards `c.env` and `c.executionCtx`
+ * after the original request, its url unchanged, so `delegates: { ledger: ledger.fetch }`
+ * fits bare and a route reads the match with `delegateContext(c.req.raw, 'ledger')`.
  */
 
 import { createFetchHandler } from './fetch.ts';
-import type { FetchAdapterOptions } from './fetch.ts';
-import type { ServerRouter } from './index.ts';
+import type { FetchAdapterOptions, RequiredDelegates } from './fetch.ts';
+import type { RouteDeclaration, ServerRouter } from './index.ts';
 
-import type { MiddlewareHandler } from 'hono';
+import type { Context, Env, ExecutionContext, MiddlewareHandler } from 'hono';
+
+export { delegateContext } from './fetch.ts';
+
+/** What `serverRouterHono` forwards to a delegate after the request: Hono's `env` and execution context. */
+export type HonoDelegateArgs<E extends Env = Env> = [
+  env: E['Bindings'],
+  executionCtx: ExecutionContext | undefined,
+];
+
+// Hono's getter throws outside a runtime with an execution context (node, tests).
+const executionCtxOf = (c: Context): ExecutionContext | undefined => {
+  try {
+    return c.executionCtx;
+  } catch {
+    return undefined;
+  }
+};
 
 /**
  * Wraps a {@link ServerRouter} as Hono middleware. The returned handler resolves
@@ -32,14 +55,18 @@ import type { MiddlewareHandler } from 'hono';
  * Response) or passes it on (`await next()`), exactly the fetch adapter's
  * `Response | null` contract expressed in Hono's continuation.
  */
-export function serverRouterHono(
-  router: ServerRouter,
-  options: FetchAdapterOptions,
-): MiddlewareHandler {
+export function serverRouterHono<
+  E extends Env = Env,
+  Decls extends RouteDeclaration = RouteDeclaration,
+>(
+  router: ServerRouter<Decls>,
+  options: FetchAdapterOptions<HonoDelegateArgs<E>, Decls> &
+    RequiredDelegates<HonoDelegateArgs<E>, Decls>,
+): MiddlewareHandler<E> {
   const handler = createFetchHandler(router, options);
 
   return async (c, next) => {
-    const response = await handler(c.req.raw);
+    const response = await handler(c.req.raw, c.env, executionCtxOf(c));
 
     if (response) return response;
 

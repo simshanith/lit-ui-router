@@ -6,7 +6,7 @@ import { describe, it } from 'node:test';
 import type { TestContext } from 'node:test';
 
 import { createServerRouter } from '../src/index.ts';
-import type { MountConfig } from '../src/index.ts';
+import type { MountConfig, ServerRouter, Verdict } from '../src/index.ts';
 import { prerender } from '../src/prerender.ts';
 import type {
   FileWriter,
@@ -89,6 +89,7 @@ describe('prerender', () => {
       shell: 2,
       redirect: 1,
       notFound: 0,
+      delegate: 0,
       document: 1,
     });
     assert.deepEqual(contexts[1], {
@@ -154,6 +155,63 @@ describe('prerender', () => {
       /^ui-router-server: prerender: .*no otherwise projection/,
     );
     assert.equal(warn.mock.calls[0]?.arguments[1], '/app/missing');
+  });
+
+  it('counts and lists a delegating state, emitting no page, rule or warning', async (t) => {
+    const warn = silenceWarn(t);
+
+    const delegating = {
+      ...mounts,
+      '/app': {
+        ...appMount,
+        routes: [
+          ...appMount.routes,
+          { name: 'claims', url: '/claims', delegate: 'ledger' },
+        ],
+      },
+    };
+
+    const { files, result } = await run({
+      mounts: delegating,
+      paths: ['/app/claims', '/app/welcome'],
+      notFound: false,
+    });
+
+    assert.deepEqual(result.tally, {
+      shell: 1,
+      redirect: 0,
+      notFound: 0,
+      delegate: 1,
+      document: 0,
+    });
+    assert.deepEqual(result.delegated, ['/app/claims']);
+    assert.deepEqual(
+      result.pages.map((page) => page.path),
+      ['/app/welcome'],
+    );
+    assert.deepEqual(result.rules, []);
+    assert.deepEqual(result.warnings, []);
+    assert.deepEqual([...files.keys()], ['dist/welcome/index.html']);
+    assert.equal(warn.mock.callCount(), 0);
+  });
+
+  it('throws for a verdict kind it does not know instead of counting it', async () => {
+    const kind: string = 'forbidden';
+
+    const resolver: ServerRouter = {
+      // SAFETY: a newer ui-router-server's verdict kind, which this Verdict union lacks.
+      resolve: () => Promise.resolve({ kind, mount: '/app' } as Verdict),
+    };
+
+    await assert.rejects(
+      run({
+        mounts: undefined,
+        resolver,
+        paths: ['/app/admin'],
+        notFound: false,
+      }),
+      /'\/app\/admin' resolved to verdict kind 'forbidden'/,
+    );
   });
 
   it('warns once when a mount rejects the trailing slash a static host adds', async (t) => {
