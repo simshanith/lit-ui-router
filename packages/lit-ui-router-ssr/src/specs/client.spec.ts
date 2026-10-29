@@ -118,7 +118,7 @@ describe('the round trip', () => {
     await boot(container, rootTemplate, '/shell/detail');
 
     expect(
-      comments(container).filter((data) => data.startsWith('ui-view:')),
+      comments(container).filter((data) => data.startsWith('served:')),
     ).toEqual([]);
   });
 
@@ -155,7 +155,7 @@ describe('the round trip', () => {
     ).toHaveLength(served.length);
     expect(warn).not.toHaveBeenCalled();
     expect(
-      comments(container).filter((data) => data.startsWith('ui-view:')),
+      comments(container).filter((data) => data.startsWith('served:')),
     ).toEqual([]);
   });
 
@@ -549,13 +549,13 @@ describe('bootstrap', () => {
  */
 const SERVED_SHELL = [
   '<!--lit-part SHELL-->',
-  '<h1>shell <!--ui-view:lit-part-->hello<!--ui-view:/lit-part--></h1>',
+  '<h1>shell <!--served:lit-part-->hello<!--served:/lit-part--></h1>',
   '<ui-view defer-hydration>',
-  '<!--ui-view:lit-part DETAIL-->',
-  '<!--ui-view:lit-part-->',
+  '<!--served:lit-part DETAIL-->',
+  '<!--served:lit-part-->',
   '<p class="detail">leaf</p>',
-  '<!--ui-view:/lit-part-->',
-  '<!--ui-view:/lit-part-->',
+  '<!--served:/lit-part-->',
+  '<!--served:/lit-part-->',
   '</ui-view>',
   '<!--/lit-part-->',
 ].join('');
@@ -619,8 +619,8 @@ describe('the adopter hydrateRoot provides', () => {
       'lit-part',
       '/lit-part',
       'lit-part DETAIL',
-      'ui-view:lit-part',
-      'ui-view:/lit-part',
+      'served:lit-part',
+      'served:/lit-part',
       '/lit-part',
       '/lit-part',
     ]);
@@ -641,13 +641,13 @@ describe('the adopter hydrateRoot provides', () => {
     // The pair's interior as the renderer writes it: the view's template pair plain, everything inside prefixed.
     const interiors = {
       'opens on a nested part':
-        '<!--ui-view:lit-part--><div class="util" id="util">util</div><!--ui-view:/lit-part-->' +
+        '<!--served:lit-part--><div class="util" id="util">util</div><!--served:/lit-part-->' +
         '<p class="plate" id="plate">plate</p><p class="caption">caption</p>',
       'holds a nested part in the middle':
-        '<p class="lead">lead</p><!--ui-view:lit-part--><span>mid</span><!--ui-view:/lit-part-->' +
+        '<p class="lead">lead</p><!--served:lit-part--><span>mid</span><!--served:/lit-part-->' +
         '<p class="plate" id="plate">plate</p>',
       'holds a node marker beside a nested part':
-        '<!--ui-view:lit-part-->lead<!--ui-view:/lit-part--><!--ui-view:lit-node 0-->' +
+        '<!--served:lit-part-->lead<!--served:/lit-part--><!--served:lit-node 0-->' +
         '<p class="plate" id="plate">plate</p>',
       'holds no nested part': '<p class="plate" id="plate">plate</p>',
     };
@@ -703,7 +703,7 @@ describe('the adopter hydrateRoot provides', () => {
 
     // Prefixed markers under no plain pair: a render's nodes with nothing left to hydrate against.
     const view = servedView(
-      '<!--ui-view:lit-part--><p class="detail">leaf</p><!--ui-view:/lit-part-->',
+      '<!--served:lit-part--><p class="detail">leaf</p><!--served:/lit-part-->',
       container,
     );
 
@@ -718,7 +718,7 @@ describe('the adopter hydrateRoot provides', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
     const view = servedView(
-      '<p class="hold">hold</p><!--ui-view:lit-part--><p class="detail">leaf</p><!--ui-view:/lit-part-->',
+      '<p class="hold">hold</p><!--served:lit-part--><p class="detail">leaf</p><!--served:/lit-part-->',
       container,
     );
 
@@ -906,7 +906,7 @@ describe('a view this cannot adopt', () => {
     expect(container.querySelectorAll('h1')).toHaveLength(1);
     expect(container.querySelectorAll('.detail')).toHaveLength(1);
     expect(
-      comments(container).filter((data) => data.startsWith('ui-view:')),
+      comments(container).filter((data) => data.startsWith('served:')),
     ).toEqual([]);
 
     for (const view of views(container)) {
@@ -928,7 +928,7 @@ const servedDetail = async (): Promise<string> => {
   );
 
   for (const marker of [markers[0], markers.at(-1)!]) {
-    marker.data = marker.data.slice('ui-view:'.length);
+    marker.data = marker.data.slice('served:'.length);
   }
 
   const markup = nested.innerHTML;
@@ -1001,7 +1001,7 @@ describe('the pin the walk leaves on a served view', () => {
     expect(guest.querySelector('.detail')).toBe(detail);
     expect(guest.querySelector('.detail')?.textContent).toBe('leaf');
     expect(
-      comments(guest).filter((data) => data.startsWith('ui-view:')),
+      comments(guest).filter((data) => data.startsWith('served:')),
     ).toEqual([]);
 
     guest.remove();
@@ -1350,7 +1350,7 @@ describe('the hydration outcome', () => {
       vi.spyOn(console, 'warn').mockImplementation(() => {});
 
       const view = servedView(
-        '<!--ui-view:lit-part--><p class="detail">leaf</p><!--ui-view:/lit-part-->',
+        '<!--served:lit-part--><p class="detail">leaf</p><!--served:/lit-part-->',
         container,
       );
 

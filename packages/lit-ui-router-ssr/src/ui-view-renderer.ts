@@ -51,7 +51,7 @@ export const prefixInterior = (markup: string): string => {
   const open = markup.indexOf('-->') + 3;
   const close = markup.length - PART_CLOSE.length;
 
-  // A plain `<!--lit-part` never matches an already-prefixed `<!--ui-view:lit-part`, so a nested run's interior is prefixed once.
+  // A plain `<!--lit-part` never matches an already-prefixed `<!--served:lit-part`, so a nested run's interior is prefixed once.
   const interior = markup
     .slice(open, close)
     .replaceAll('<!--lit-part', `<!--${servedMarkerPrefix}lit-part`)

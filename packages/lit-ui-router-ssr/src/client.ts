@@ -68,7 +68,7 @@ export type AdoptOutcome = 'adopted' | 'fell-back' | 'none';
 
 /**
  * The name of the event a served `<ui-view>` dispatches once its wake's
- * outcome is known, in the `ui-view:` house style of the served markers.
+ * outcome is known.
  */
 export const uiViewAdoptEventName = 'ui-view:adopt' as const;
 

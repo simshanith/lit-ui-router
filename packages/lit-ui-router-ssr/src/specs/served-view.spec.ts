@@ -796,7 +796,7 @@ describe('the served <ui-view>', () => {
 
     it('should capture nothing from a view holding another render’s prefixed markers', async () => {
       const uiView = await wakeHolding(
-        '<!--ui-view:lit-part--><p class="held">held</p><!--ui-view:/lit-part-->',
+        '<!--served:lit-part--><p class="held">held</p><!--served:/lit-part-->',
       );
 
       expect(uiView['fallback']).toBeUndefined();
