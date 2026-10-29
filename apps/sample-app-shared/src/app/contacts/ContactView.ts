@@ -2,12 +2,11 @@ import { LitElement, html } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { RoutedLitElement, UIViewInjectedProps, uiSref } from 'lit-ui-router';
 
+import type { StateResolves } from '../../registry/states.js';
 import './ContactDetail.js';
-import { Contact } from './interface.js';
 
-export interface ContactViewResolves {
-  contact: Contact;
-}
+/** Typed by its state: the resolves `contacts.contact` and its ancestors provide. */
+export type ContactViewResolves = StateResolves<'contacts.contact'>;
 
 @customElement('sample-contact-view')
 export class ContactView extends LitElement {

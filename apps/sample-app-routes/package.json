@@ -5,7 +5,12 @@
   "type": "module",
   "exports": {
     ".": "./src/routes.ts",
-    "./shell-mounts": "./src/shellMounts.ts"
+    "./shell-mounts": "./src/shellMounts.ts",
+    "./state-table": "./src/stateTable/index.ts",
+    "./state-table/app": "./src/stateTable/app.ts",
+    "./state-table/contacts": "./src/stateTable/contacts.ts",
+    "./state-table/mymessages": "./src/stateTable/mymessages.ts",
+    "./state-table/prefs": "./src/stateTable/prefs.ts"
   },
   "scripts": {
     "bench": "node test/routes.bench.ts",

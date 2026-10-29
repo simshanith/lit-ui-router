@@ -277,27 +277,31 @@ on the scan.
 
 A server runtime cannot import the client's state definitions — they import
 components, which register custom elements at module scope. Instead, the
-sample apps project their url-bearing states into pure data
+sample apps keep their state tree's data in dependency-free tables, one per
+module
+([`stateTable/`](https://github.com/simshanith/lit-ui-router/tree/main/apps/sample-app-routes/src/stateTable)).
+Each module binds its components and resolves to its own table by state
+name, so a lazy module's rows load with it. The server reads all of them,
+less the future states, as its route table
 ([`sample-app-routes`](https://github.com/simshanith/lit-ui-router/blob/main/apps/sample-app-routes/src/routes.ts)):
 
 ```ts
-export const routes: RouteDeclaration[] = [
-  { name: 'welcome', url: '/welcome' },
-  { name: 'home', url: '/home' },
-  { name: 'login', url: '/login' },
-  { name: 'contacts', url: '/contacts' },
-  { name: 'contacts.contact', url: '/:contactId' },
-  { name: 'contacts.contact.edit', url: '/edit' },
-  { name: 'contacts.new', url: '/new' },
-  { name: 'mymessages', url: '/mymessages' },
-  { name: 'mymessages.compose', url: '/compose' },
-  { name: 'mymessages.messagelist', url: '/:folderId' },
-  { name: 'mymessages.messagelist.message', url: '/:messageId' },
-  { name: 'prefs', url: '/prefs' },
-  // Url-less, as in main/states.ts: structural only — never matched, never a
-  // redirect target — but declarable as an otherwise projection.
-  { name: 'notFound' },
-];
+export const contactsTable = [
+  { name: 'contacts', parent: 'app', url: '/contacts', resolves: ['contacts'] },
+  { name: 'contacts.contact', url: '/:contactId', resolves: ['contact'] },
+  // …
+] as const;
+
+export const stateTable = [
+  ...appTable,
+  ...contactsTable,
+  ...mymessagesTable,
+  ...prefsTable,
+] as const;
+
+export const routes: RouteDeclaration[] = stateTable.filter(
+  (row): row is Extract<Row, { name: StateName }> => !row.name.endsWith('.**'),
+);
 ```
 
 Dotted names nest and urls append, exactly as states do in the router:
@@ -321,7 +325,7 @@ export const redirects: RedirectRule[] = [{ pattern: /^\/?$/, to: 'welcome' }];
 const app: MountConfig = { routes, redirects, strategy: 'matcher' };
 ```
 
-Three omissions to copy:
+Two omissions to copy:
 
 - **The client's `otherwise()` rule is a level choice.** The flagships don't
   project it, so unknown paths stay `notFound` verdicts and misses serve the
@@ -335,17 +339,23 @@ Three omissions to copy:
   [`requiresAuth` hook](./route-guards)) — both decided by client state the
   server cannot see. The server serves the shell and lets the client's full
   configuration run.
-- **Param defaults the projection doesn't need.** `RouteDeclaration` accepts
-  `params`, but the client's `folderId: 'inbox'` default only matters once
-  the app is running; `/mymessages` already matches its parent state's
-  pattern. Audit yours.
 
-The projection mirrors the client's states rather than importing them, so it
-can drift; the app pins it with
+The matcher builds a state's url from its dotted name and ignores
+`parent`: `contacts.contact` appends `/:contactId` to `contacts`'s
+`/contacts`, while a state declared with `parent:` starts from the root.
+So the matcher agrees with the client only while every state on a
+`parent:` chain is url-less, as `app` is here. When one isn't, a deep link
+to the child's real url gets a 404 verdict, its url without the parent's
+segment gets a shell, and nothing warns. To check it, walk each `parent:`
+chain for a `url`, or resolve each state's `href` through the matcher and
+expect the same state back. To fix it, name the state with dots, or give
+that mount `strategy: 'simulate'`, which follows `parent` as the client does.
+
+The app pins that property, and every verdict the worker serves, with
 [contract tests](https://github.com/simshanith/lit-ui-router/blob/main/apps/sample-app-routes/test/routes.test.ts)
-that resolve every verdict the worker will serve — shells, the root redirect,
-real 404s, and the shell-not-redirect verdicts for the client-conditional
-routes — through the real package API.
+that resolve shells, the root redirect, real 404s, and the
+shell-not-redirect verdicts for the client-conditional routes through the
+real package API.
 
 ## The verdict
 
