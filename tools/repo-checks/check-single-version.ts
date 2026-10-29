@@ -38,12 +38,16 @@ const ALLOWED: SplitAllowance[] = [
     why: 'the mobx-6 alias (catalogs.mobx6-compat) runs test:mobx6-compat beside the mobx 7 line',
   },
   {
+    name: 'parse5',
+    why: "@tools/lit-template-check takes eslint-plugin-lit's 8.x line; lit-analyzer, eslint-plugin-lit-a11y (and its dom5) and @lit-labs/ssr pin their own",
+  },
+  {
     name: 'vite',
     why: 'the vite-7 alias (catalogs.vite7-compat) runs test:vite7-compat beside the vite 8 line',
   },
   {
     name: 'typescript',
-    why: 'dts-backtest and the typescript6/7 catalogs alias one compiler per line; attw, the cem analyzer and web-component-analyzer pin their own',
+    why: 'dts-backtest and the typescript6/7 catalogs alias one compiler per line, and @tools/lit-template-check takes the typescript-7.1 beta alias; attw, the cem analyzer and web-component-analyzer pin their own',
   },
 ];
 
