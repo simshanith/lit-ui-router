@@ -1,13 +1,11 @@
 import type { TemplateResult } from 'lit';
-import {
-  applyPairs,
-  isString,
-  ResolveContext,
-  Transition,
-  UIRouter,
-} from '@uirouter/core';
+import { isString, ResolveContext, Transition, UIRouter } from '@uirouter/core';
 
-import type { RoutedLitComponent, UIViewInjectedProps } from './interface.js';
+import type {
+  RoutedLitComponent,
+  UIViewInjectedProps,
+  UIViewResolves,
+} from './interface.js';
 import {
   isRoutedLitElement,
   renderRoutedView,
@@ -27,16 +25,22 @@ const routedViewProps = (
   // The injector hands a NOWAIT token's promise, which renders before it settles.
   const resolves = context
     .getTokens()
-    .filter(isString)
-    .filter((token) => {
+    .reduce<UIViewResolves>((pairs, token) => {
+      if (!isString(token)) {
+        return pairs;
+      }
+
       const resolvable = context.getResolvable(token);
 
-      return (
-        resolvable.resolved || context.getPolicy(resolvable).async === 'NOWAIT'
-      );
-    })
-    .map((token): [string, unknown] => [token, injector.get<unknown>(token)])
-    .reduce(applyPairs, {});
+      if (
+        resolvable.resolved ||
+        context.getPolicy(resolvable).async === 'NOWAIT'
+      ) {
+        pairs[token] = injector.get<unknown>(token);
+      }
+
+      return pairs;
+    }, {});
 
   const transition = injector.get<Transition>(Transition);
 

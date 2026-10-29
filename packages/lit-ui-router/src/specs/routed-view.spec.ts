@@ -48,6 +48,16 @@ class RoutedViewSticky extends DeferredCard {
   static sticky = true;
 }
 
+/** Renders into its light DOM, as a class applying `LightDomHydrating` from lit-ui-router-ssr does. */
+@customElement('routed-view-light')
+class RoutedViewLight extends DeferredCard {
+  static tag = 'routed-view-light';
+
+  protected createRenderRoot(): HTMLElement {
+    return this;
+  }
+}
+
 @customElement('routed-view-other')
 class RoutedViewOther extends LitElement {
   static tag = 'routed-view-other';
@@ -61,10 +71,17 @@ declare global {
     'routed-view-card': RoutedViewCard;
     'routed-view-sticky': RoutedViewSticky;
     'routed-view-other': RoutedViewOther;
+    'routed-view-light': RoutedViewLight;
   }
 }
 
 const states: LitStateDeclaration[] = [
+  {
+    name: 'light',
+    url: '/light',
+    component: RoutedViewLight,
+    resolve: [{ token: 'detail', resolveFn: () => 'light leaf' }],
+  },
   {
     name: 'card',
     url: '/card',
@@ -86,9 +103,9 @@ const states: LitStateDeclaration[] = [
 ];
 
 /** What the server writes for a class view: the element in slot 0's pair, slot 1 empty. */
-const servedView = (tag: string): string =>
+const servedView = (tag: string, inner = ''): string =>
   '<ui-view><!--lit-part BRUAAAUVAAA=--><!--lit-part-->' +
-  `<${tag} defer-hydration></${tag}>` +
+  `<${tag} defer-hydration>${inner}</${tag}>` +
   '<!--/lit-part--><!--lit-part--><!--/lit-part--><!--/lit-part--></ui-view>';
 
 let router: UIRouterLit;
@@ -110,13 +127,14 @@ const wake = async (
   handOver:
     | ((view: UiView, served: Element) => void)
     | null = adoptServedElement,
+  inner = '',
 ): Promise<{ view: UiView; served: Element }> => {
   router = createTestRouter(states);
   router.start();
   await routerGo(router, state);
 
   container = document.createElement('div');
-  container.innerHTML = servedView(tag);
+  container.innerHTML = servedView(tag, inner);
   const view = container.querySelector('ui-view')!;
   const served = view.querySelector(tag)!;
   view.uiRouter = router;
@@ -246,6 +264,30 @@ describe('<ui-view> handed a served class element', () => {
 
     expect(view.routedElement).toBeInstanceOf(RoutedViewOther);
     expect(served.isConnected).toBe(false);
+  });
+
+  it('adopts a light-DOM class without reaching into its render root', async () => {
+    const { view, served } = await wake(
+      'light',
+      'routed-view-light',
+      adoptServedElement,
+      '<p class="served">light leaf</p>',
+    );
+
+    // SAFETY: the served tag is a RoutedViewLight
+    const light = served as RoutedViewLight;
+    const leaf = light.querySelector('.served');
+
+    expect(view.routedElement).toBe(light);
+    expect(light.shadowRoot).toBeNull();
+    expect(light.hasUpdated).toBe(false);
+    // the served nodes are the element's to hydrate; the view leaves them in place
+    expect(light.firstElementChild).toBe(leaf);
+
+    await release(light);
+
+    expect(light.propsAtFirstUpdate?.resolves.detail).toBe('light leaf');
+    expect(light.hasAttribute('routed')).toBe(true);
   });
 
   it('refuses an element of another class', async () => {
