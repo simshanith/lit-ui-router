@@ -27,11 +27,7 @@
  */
 
 import { createFetchHandler } from './fetch.ts';
-import type {
-  FetchAdapterOptions,
-  RequiredDelegates,
-  RequiredShell,
-} from './fetch.ts';
+import type { FetchAdapterOptions, RequiredDelegates } from './fetch.ts';
 import type { ServerRouter, ServerRouterDeclarations } from './index.ts';
 
 import type { Context, Env, ExecutionContext, MiddlewareHandler } from 'hono';
@@ -67,8 +63,7 @@ export function serverRouterHono<R extends ServerRouter, E extends Env = Env>(
     HonoDelegateArgs<E>,
     ServerRouterDeclarations<R>
   > &
-    RequiredDelegates<HonoDelegateArgs<E>, ServerRouterDeclarations<R>> &
-    RequiredShell<ServerRouterDeclarations<R>>,
+    RequiredDelegates<HonoDelegateArgs<E>, ServerRouterDeclarations<R>>,
 ): MiddlewareHandler<E> {
   const handler = createFetchHandler<R, HonoDelegateArgs<E>>(router, options);
 

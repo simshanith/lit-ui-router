@@ -208,7 +208,7 @@ export type Verdict =
       /** The params the pathname alone resolves; search params hold their declared defaults. */
       params: RawParams;
     }
-  /** `mount` is set when a mount owned the pathname but nothing matched (per-mount 404s); absent when no mount matched at all, or the mount has no pages and no delegating state matched. */
+  /** `mount` is set when a mount owned the pathname but nothing matched (per-mount 404s); absent when no mount matched at all. */
   | {
       /** Discriminates the no-route verdict. */
       kind: 'notFound';
@@ -259,8 +259,6 @@ interface Mount {
   strategy: 'matcher' | 'simulate';
   compiled: CompiledResolver;
   delegates: Map<string, string>;
-  /** Whether a state here can answer with the shell: a url and no delegate, or an otherwise projection. */
-  pages: boolean;
   pool: RouterPool;
   prewarm: number;
 }
@@ -491,11 +489,6 @@ const compileMount = ([base, config]: [string, MountConfig]): Mount => {
     strategy: config.strategy ?? 'matcher',
     prewarm,
     delegates,
-    pages:
-      config.otherwise !== undefined ||
-      config.routes.some(
-        (route) => route.url !== undefined && route.delegate === undefined,
-      ),
     // Simulate mounts accept the same declaration subset, so the
     // dependency-free compilation doubles as their construction-time
     // validation (their resolve path never consults it).
@@ -674,7 +667,7 @@ const matcherVerdict = (mount: Mount, subpath: string): Verdict => {
 
 // The matcher projection stands in for both strategies: they consume the same declaration subset.
 const bareBaseDiagnostic = (mount: Mount): MountDiagnostic | null => {
-  if (mount.base === '/' || !mount.pages) return null;
+  if (mount.base === '/') return null;
 
   let verdict: Verdict;
 
@@ -819,21 +812,6 @@ const simulateDelegate = (
   }
 };
 
-// The delegate verdict a pathname under this mount matches, by url matching alone.
-const mountDelegate = async (
-  loadSimulate: () => Promise<SimulateModule>,
-  mount: Mount,
-  subpath: string,
-): Promise<DelegateVerdict | null> => {
-  if (mount.delegates.size === 0) return null;
-
-  if (mount.strategy === 'simulate')
-    return simulateDelegate(await loadSimulate(), mount, subpath);
-  const verdict = matcherVerdict(mount, subpath);
-
-  return verdict.kind === 'delegate' ? verdict : null;
-};
-
 // --- The public entry ------------------------------------------------------
 
 /**
@@ -841,10 +819,7 @@ const mountDelegate = async (
  * table compile (and validate) at construction, whatever its strategy; a
  * config with 'simulate' mounts also starts loading @uirouter/core here.
  * The longest matching mount base owns a pathname outright — a verdict
- * never falls through to a shorter mount. A mount without pages (every
- * state with a url delegates, and no `otherwise`) claims only its
- * delegating states' urls: any other pathname under it resolves as
- * `notFound` without a mount, so the host serves it.
+ * never falls through to a shorter mount.
  *
  * A bare mount base ('/app', '/app/') resolves the empty subpath, which
  * 404s unless the mount supplies a root pattern — a rule like
@@ -889,14 +864,6 @@ export function createServerRouter<
 
         if (subpath === null) continue;
 
-        // A mount without pages claims only its delegating states' urls.
-        if (!mount.pages)
-          return (
-            (await mountDelegate(loadSimulate, mount, subpath)) ?? {
-              kind: 'notFound',
-            }
-          );
-
         if (mount.strategy === 'matcher') return matcherVerdict(mount, subpath);
 
         return simulateVerdict(await loadSimulate(), mount, subpath);
@@ -909,15 +876,21 @@ export function createServerRouter<
   compiledMounts.set(router, declared);
   registerDelegates(router, {
     keys: new Set(declared.flatMap((mount) => [...mount.delegates.values()])),
-    pages: declared.some((mount) => mount.pages),
     async delegateFor(pathnameOrUrl) {
       const pathname = pathnameOf(pathnameOrUrl);
 
       for (const mount of mounts) {
         const subpath = subpathIn(mount.base, pathname);
 
-        if (subpath !== null)
-          return mountDelegate(loadSimulate, mount, subpath);
+        if (subpath === null) continue;
+
+        if (mount.delegates.size === 0) return null;
+
+        if (mount.strategy === 'simulate')
+          return simulateDelegate(await loadSimulate(), mount, subpath);
+        const verdict = matcherVerdict(mount, subpath);
+
+        return verdict.kind === 'delegate' ? verdict : null;
       }
 
       return null;
