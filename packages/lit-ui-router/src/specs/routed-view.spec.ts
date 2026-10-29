@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest';
-import { html, LitElement } from 'lit';
+import { html, LitElement, nothing } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { ResolveContext } from '@uirouter/core';
 
@@ -7,6 +7,7 @@ import '../ui-view.register.js';
 import { UiView } from '../ui-view.js';
 import { UIRouterLit } from '../core.js';
 import type { LitStateDeclaration, UIViewInjectedProps } from '../interface.js';
+import { routedLitElementRenderer } from '../routed-element.js';
 import {
   adoptServedElement,
   routedElementOf,
@@ -101,12 +102,14 @@ afterEach(() => {
 
 /**
  * Mounts a served view for `state`, with the router already settled there, as
- * a wake finds it, handing the view the served element unless told not to.
+ * a wake finds it, handing the view the served element through `handOver`.
  */
 const wake = async (
   state: string,
   tag: string,
-  handOver = true,
+  handOver:
+    | ((view: UiView, served: Element) => void)
+    | null = adoptServedElement,
 ): Promise<{ view: UiView; served: Element }> => {
   router = createTestRouter(states);
   router.start();
@@ -118,9 +121,7 @@ const wake = async (
   const served = view.querySelector(tag)!;
   view.uiRouter = router;
 
-  if (handOver) {
-    adoptServedElement(view, served);
-  }
+  handOver?.(view, served);
 
   document.body.append(container);
   await waitForUpdate(view);
@@ -255,9 +256,66 @@ describe('<ui-view> handed a served class element', () => {
   });
 
   it('adopts nothing when no element is handed over', async () => {
-    const { view, served } = await wake('card', 'routed-view-card', false);
+    const { view, served } = await wake('card', 'routed-view-card', null);
 
     expect(view.routedElement).toBeInstanceOf(RoutedViewCard);
     expect(view.routedElement).not.toBe(served);
+  });
+});
+
+// Another copy of lit-ui-router shares only the `Symbol.for` keys, never this copy's constants.
+const foreignRoutedClass: unique symbol = Symbol.for(
+  'lit-ui-router#routed-class',
+);
+
+const foreignServedElement: unique symbol = Symbol.for(
+  'lit-ui-router#served-element',
+);
+
+describe('brands read across copies of lit-ui-router', () => {
+  it('stamps a bound renderer with its class', () => {
+    const renderer = routedLitElementRenderer(RoutedViewCard);
+
+    expect(foreignRoutedClass in renderer && renderer[foreignRoutedClass]).toBe(
+      RoutedViewCard,
+    );
+  });
+
+  it('adopts through a renderer another copy bound', async () => {
+    router = createTestRouter(states);
+    router.start();
+    await routerGo(router, 'card');
+
+    const context = new ResolveContext(
+      router.globals.successfulTransitions.peekTail().treeChanges('to'),
+    );
+
+    const served = new RoutedViewCard();
+    let element: RoutedViewCard | undefined;
+
+    const foreign = Object.assign(
+      (props: UIViewInjectedProps, adopted?: Element) => {
+        element ??=
+          adopted instanceof RoutedViewCard ? adopted : new RoutedViewCard();
+        element._uiViewProps = props;
+
+        return html`${element}${nothing}`;
+      },
+      { [foreignRoutedClass]: RoutedViewCard },
+    );
+
+    const result = routedViewTemplate(foreign, router, context, served);
+
+    expect(routedElementOf(result)).toBe(served);
+    expect(served._uiViewProps?.resolves.detail).toBe('card leaf');
+  });
+
+  it('adopts an element another copy handed over, and clears it', async () => {
+    const { view, served } = await wake('card', 'routed-view-card', (v, s) => {
+      Object.assign(v, { [foreignServedElement]: s });
+    });
+
+    expect(view.routedElement).toBe(served);
+    expect(foreignServedElement in view).toBe(false);
   });
 });

@@ -96,8 +96,17 @@ interface PendingSwap {
   cancel: () => void;
 }
 
-/** The element a server rendered for each view, handed over ahead of its first render. */
-const servedElements = new WeakMap<UiView, Element>();
+/**
+ * Holds, on a view, the element a server rendered for it until its first
+ * render. A `Symbol.for` key, so a view built by one copy of `lit-ui-router`
+ * takes an element handed over by another.
+ */
+const servedElement: unique symbol = Symbol.for('lit-ui-router#served-element');
+
+/** A view as {@link adoptServedElement} writes it; `UiView` declares no such member. */
+interface ServedSlot {
+  [servedElement]?: Element;
+}
 
 /**
  * Hands `view` the element a server rendered for its routed class, ahead of
@@ -115,7 +124,8 @@ const servedElements = new WeakMap<UiView, Element>();
  * @internal
  */
 export const adoptServedElement = (view: UiView, element: Element): void => {
-  servedElements.set(view, element);
+  // SAFETY: the slot is a symbol-keyed expando no `UiView` member declares
+  (view as UiView & ServedSlot)[servedElement] = element;
 };
 
 /** @internal */
@@ -906,7 +916,10 @@ export class UiView extends LitElement {
       return this.fallback ? nothing : html`<slot></slot>`;
     }
 
-    const served = this.hasUpdated ? undefined : servedElements.get(this);
+    // SAFETY: the slot is a symbol-keyed expando no `UiView` member declares
+    const slot = this as UiView & ServedSlot;
+    const served = this.hasUpdated ? undefined : slot[servedElement];
+    delete slot[servedElement];
 
     const result = routedViewTemplate(
       this.component!,

@@ -3,28 +3,59 @@ import type { TemplateResult } from 'lit';
 
 import type {
   DefaultResolvesType,
+  RoutedLitComponent,
   RoutedLitElement,
   RoutedLitTemplate,
   UIViewInjectedProps,
 } from './interface.js';
 
-/** The element each renderer result carries, for `<ui-view>` to place itself. */
+/** The element each class result carries, recorded by the copy of this module that rendered it. */
 const carried = new WeakMap<TemplateResult, Element>();
 
-/** Each renderer {@link routedLitElementRenderer} built, keyed by itself as its view holds it, taking an element to adopt. */
-const adopting = new WeakMap<RoutedLitTemplate, RoutedViewRenderer>();
-
 /**
- * A routed view's renderer: a template component, or a class bound by
- * {@link routedLitElementRenderer}, which also takes the element a server
- * rendered for it to adopt.
+ * Brands a renderer {@link routedLitElementRenderer} bound with its class.
+ *
+ * A `Symbol.for` key, not a module-local map: a renderer bound by one copy of
+ * `lit-ui-router` is read by whichever copy `lit-ui-router-ssr` resolves.
  *
  * @internal
  */
-export type RoutedViewRenderer = (
-  props: UIViewInjectedProps,
-  adopted?: Element,
-) => TemplateResult;
+export const routedClass: unique symbol = Symbol.for(
+  'lit-ui-router#routed-class',
+);
+
+/**
+ * A routed class bound to a single instance: a template function that also
+ * takes the element a server rendered for it to adopt, branded with its class.
+ *
+ * @typeParam T - the resolves the routed element receives
+ *
+ * @internal
+ */
+export interface RoutedClassRenderer<
+  T extends DefaultResolvesType = DefaultResolvesType,
+> {
+  (props: UIViewInjectedProps<T>, adopted?: Element): TemplateResult;
+  /** The class this renderer builds its element from. */
+  readonly [routedClass]: RoutedLitElement<T>;
+}
+
+/**
+ * Whether `component` is a renderer bound to a routed class, by this copy of
+ * `lit-ui-router` or another.
+ *
+ * @typeParam T - the resolves the routed element receives
+ * @param component - a normalized view declaration's `component`
+ * @returns whether `component` carries the {@link routedClass} brand
+ *
+ * @internal
+ */
+export const isRoutedClassRenderer = <
+  T extends DefaultResolvesType = DefaultResolvesType,
+>(
+  component: RoutedLitComponent<T> | RoutedClassRenderer<T>,
+): component is RoutedClassRenderer<T> =>
+  typeof component === 'function' && routedClass in component;
 
 /**
  * Calls `renderer`, offering `adopted` only to a bound class: a template
@@ -37,9 +68,15 @@ export const renderRoutedView = (
   props: UIViewInjectedProps,
   adopted?: Element,
 ): TemplateResult => {
-  const adopt = adopting.get(renderer);
+  if (!isRoutedClassRenderer(renderer)) {
+    return renderer(props);
+  }
 
-  return adopt ? adopt(props, adopted) : renderer(props);
+  const result = renderer(props, adopted);
+  // SAFETY: a bound class renders its element as the template's first value
+  carried.set(result, result.values[0] as Element);
+
+  return result;
 };
 
 /**
@@ -101,20 +138,16 @@ export function isRoutedLitElement<
  */
 export function routedLitElementRenderer<
   T extends DefaultResolvesType = DefaultResolvesType,
->(Component: RoutedLitElement<T>): RoutedLitTemplate<T> {
+>(Component: RoutedLitElement<T>): RoutedClassRenderer<T> {
   let element: InstanceType<RoutedLitElement<T>> | undefined;
 
-  const renderer = (props: UIViewInjectedProps<T>, adopted?: Element) => {
-    element ??= adopted instanceof Component ? adopted : new Component(props);
-    element._uiViewProps = props;
-    const result = html`${element}${nothing}`;
-    carried.set(result, element);
+  return Object.assign(
+    (props: UIViewInjectedProps<T>, adopted?: Element) => {
+      element ??= adopted instanceof Component ? adopted : new Component(props);
+      element._uiViewProps = props;
 
-    return result;
-  };
-
-  // SAFETY: the renderer reads only the props its class was declared with, which a view's resolves supply
-  adopting.set(renderer as RoutedLitTemplate, renderer as RoutedViewRenderer);
-
-  return renderer;
+      return html`${element}${nothing}`;
+    },
+    { [routedClass]: Component },
+  );
 }

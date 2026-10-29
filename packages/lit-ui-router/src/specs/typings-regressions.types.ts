@@ -58,3 +58,33 @@ export const handOver = (view: pure.UiView, element: Element): void => {
 
   detected.adoptServedElement?.(view, element);
 };
+
+// A normalized component narrows by compiler to its three kinds.
+export const componentKind = (
+  component: NormalizedLitViewDeclaration['component'],
+): 'class' | 'bound class' | 'template' => {
+  if (pure.isRoutedLitElement(component)) {
+    const routed: pure.RoutedLitElement = component;
+    void routed;
+
+    return 'class';
+  }
+
+  if (pure.isRoutedClassRenderer(component)) {
+    const bound: pure.RoutedLitElement = component[pure.routedClass];
+    void bound;
+
+    return 'bound class';
+  }
+
+  const template: pure.RoutedLitTemplate = component;
+  // @ts-expect-error a plain template carries no class brand
+  void template[pure.routedClass];
+
+  return 'template';
+};
+
+// A 1.x consumer reading the normalized component as before still type-checks.
+export const readAsBefore = (
+  declaration: NormalizedLitViewDeclaration,
+): pure.RoutedLitComponent => declaration.component;
