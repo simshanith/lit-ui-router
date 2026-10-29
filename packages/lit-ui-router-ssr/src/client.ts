@@ -1,25 +1,30 @@
 /**
- * The client half: `hydrateRoot()` hydrates the prerendered root, and each
- * served `<ui-view>` the walk wakes adopts its markup through `uiViewSlot`.
+ * The client half: `bootRoot()` starts the router and hydrates the prerendered
+ * root, or renders it cold, and each served `<ui-view>` the walk wakes adopts
+ * its markup through `uiViewSlot`.
  *
  * @module
  */
 import { hydrate } from '@lit-labs/ssr-client';
 import { renderLight } from '@lit-labs/ssr-client/directives/render-light.js';
 import type { RenderLightHost } from '@lit-labs/ssr-client/directives/render-light.js';
-import { isFunction } from '@uirouter/core';
-import { noChange } from 'lit';
+import { isFunction, RejectType } from '@uirouter/core';
+import type { Transition } from '@uirouter/core';
+import { noChange, render } from 'lit';
 import type { ChildPart, RenderOptions } from 'lit';
 import { directive } from 'lit/directive.js';
 import type { PartInfo } from 'lit/directive.js';
 import { getDirectiveClass } from 'lit/directive-helpers.js';
 import { provideContext } from 'lit-ui-router/context';
 import { UiView } from 'lit-ui-router/pure';
+import type { UIRouterLit } from 'lit-ui-router/pure';
+import { seed } from 'ui-router-server/ssr/client';
+import type { ResolvePayload } from 'ui-router-server/ssr/client';
 import { devGate } from '#dev-gate';
 import { adoptUiViewContext } from './adopt-context.js';
 import type { AdoptableView } from './adopt-context.js';
 import { servedMarkerPrefix } from './served-markers.js';
-import { packageVersion, signatureSelector } from './signature.js';
+import { packageVersion, routeOf, signatureSelector } from './signature.js';
 import type { HydrationSignature } from './signature.js';
 
 export {
@@ -127,7 +132,7 @@ class UiViewSlotDirective extends RenderLightDirective {
     if (!(view instanceof Element)) return;
 
     // The pin keys off the served pair, not the wake below: where that marker is there, lit's own walk cleared the attribute before this part was reached.
-    if (servedPair(view)) pinAdopter(view, walkReporter);
+    if (servedPair(view)) pinAdopter(view, walkPolicy);
 
     if (view.hasAttribute(DEFER)) view.removeAttribute(DEFER);
   }
@@ -169,21 +174,25 @@ class UiViewSlotDirective extends RenderLightDirective {
  */
 export const uiViewSlot: typeof renderLight = directive(UiViewSlotDirective);
 
-/** The `onAdopt` of the walk in progress, which the pins it sets carry. */
-let walkReporter: AdoptReporter | undefined;
+/** How one walk's adoptions report: the walk's `onAdopt`, and whether a view's mismatch warns. */
+interface AdoptPolicy {
+  readonly reporter?: AdoptReporter;
+  /** Set by a boot that already warned the document was drawn for another state. */
+  readonly quiet?: boolean;
+}
 
-/** Runs `walk` with `reporter` as the one the pins it sets carry. */
-const walkWith = (
-  reporter: AdoptReporter | undefined,
-  walk: () => void,
-): void => {
-  const outer = walkReporter;
-  walkReporter = reporter;
+/** The policy of the walk in progress, which the pins it sets carry. */
+let walkPolicy: AdoptPolicy = {};
+
+/** Runs `walk` with `policy` as the one the pins it sets carry. */
+const walkWith = (policy: AdoptPolicy, walk: () => void): void => {
+  const outer = walkPolicy;
+  walkPolicy = policy;
 
   try {
     walk();
   } finally {
-    walkReporter = outer;
+    walkPolicy = outer;
   }
 };
 
@@ -221,9 +230,13 @@ const report = (
   }
 };
 
-const warnMismatch = (view: AdoptableView, cause: unknown): void => {
+const warnMismatch = (
+  view: AdoptableView,
+  cause: unknown,
+  policy: AdoptPolicy,
+): void => {
   // DEV folds away in dist/*.js; #dev-gate also closes it under node when NODE_ENV is production.
-  if (!import.meta.env.DEV || !devGate()) return;
+  if (!import.meta.env.DEV || !devGate() || policy.quiet) return;
   console.warn(
     'lit-ui-router-ssr: this element could not adopt the server render, so it rendered over it instead. One static document answers a whole family of urls, so a client that boots into another state reaches this legitimately.',
     view.localName,
@@ -232,7 +245,7 @@ const warnMismatch = (view: AdoptableView, cause: unknown): void => {
     ...(view instanceof UiView && view.viewContext
       ? []
       : [
-          'lit-ui-router-ssr: this view had no routed component to adopt against, which is also what a router that never started, or whose first transition was not awaited, looks like: call router.start(), await its first successful transition, then hydrateRoot().',
+          'lit-ui-router-ssr: this view had no routed component to adopt against, which is also what a router that never started, or whose first transition was not awaited, looks like: boot with bootRoot(), or call router.start(), await its first successful transition, then hydrateRoot().',
         ]),
   );
 };
@@ -386,21 +399,19 @@ const clearInterior = (open: Comment): void => {
  * guard: the reveal and the hydrate sit in the fallback together, and nothing
  * escapes into the view's update.
  *
- * Every exit reports the outcome once, from the view and to `reporter`, after
+ * Every exit reports the outcome once, from the view and to the policy's reporter, after
  * the view's nodes are settled: `adopted` once hydrated, `fell-back` with the
  * cause once the served render is dropped, `none` when there was nothing to
  * adopt.
  */
-const adopt = (
-  view: AdoptableView,
-  reporter: AdoptReporter | undefined,
-): void => {
+const adopt = (view: AdoptableView, policy: AdoptPolicy): void => {
+  const { reporter } = policy;
   const open = servedPair(view);
 
   if (!open) {
     if (!hasServedMarkers(view)) return report(view, reporter, 'none');
     const error = 'the served part pair is gone';
-    warnMismatch(view, error);
+    warnMismatch(view, error, policy);
     dropServedRender(view);
 
     return report(view, reporter, 'fell-back', error);
@@ -413,9 +424,9 @@ const adopt = (
 
   try {
     revealServedMarkers(view);
-    walkWith(reporter, () => hydrate(view.render(), view, view.renderOptions));
+    walkWith(policy, () => hydrate(view.render(), view, view.renderOptions));
   } catch (error) {
-    warnMismatch(view, error);
+    warnMismatch(view, error, policy);
     clearInterior(open);
 
     return report(view, reporter, 'fell-back', error);
@@ -441,13 +452,10 @@ const pinned = new WeakSet<Element>();
  * element adds nothing; an element that never wakes carries its listener to the
  * garbage collector. A descendant view whose request passes through on its way
  * out is adopted too, and leaves the pin armed for the view it belongs to.
- * The pin carries the `onAdopt` of the walk that set it, so the view reports to
- * it wherever and whenever it wakes.
+ * The pin carries the policy of the walk that set it, so the view reports to
+ * its `onAdopt` wherever and whenever it wakes.
  */
-const pinAdopter = (
-  view: Element,
-  reporter: AdoptReporter | undefined,
-): void => {
+const pinAdopter = (view: Element, policy: AdoptPolicy): void => {
   if (pinned.has(view)) return;
   pinned.add(view);
   let release = (): void => {};
@@ -455,7 +463,7 @@ const pinAdopter = (
   release = provideContext(view, adoptUiViewContext, (woken) => {
     // A descendant's request passes through this element and is answered; only this view's own spends the pin.
     if (woken === view) release();
-    adopt(woken, reporter);
+    adopt(woken, policy);
   });
 };
 
@@ -559,23 +567,23 @@ const warnMarkersStripped = (): void => {
   );
 };
 
-/** Whether the container carries a signature this build adopts, ahead of a render with its markers; either miss warns in development. */
-const isAdoptable = (container: HTMLElement): boolean => {
+/** The container's signature when this build adopts it, ahead of a render with its markers; either miss warns in development. */
+const readAdoptable = (container: HTMLElement): HydrationSignature | null => {
   const block = signatureBlockIn(container);
   const signature = block && parseSignature(block.text);
 
-  if (!signature) return false;
+  if (!signature) return null;
 
   if (releaseLine(signature.version) !== releaseLine(packageVersion)) {
     warnVersionSkew(signature.version);
 
-    return false;
+    return null;
   }
 
-  if (precedesRender(block)) return true;
+  if (precedesRender(block)) return signature;
   warnMarkersStripped();
 
-  return false;
+  return null;
 };
 
 /** Empties the container, so a cold render draws the page once and no served view wakes without an adopter. */
@@ -627,7 +635,8 @@ const makeCold = (container: HTMLElement): void => {
  * A `hydrate()` that throws is rethrown, over a container emptied the same
  * way. The caller renders into it.
  *
- * The boot is the router first: `router.start()`, await its first successful
+ * {@link bootRoot} runs the whole boot around this call. Called directly, the
+ * boot is the router first: `router.start()`, await its first successful
  * transition, then this call. The walk commits `.uiRouter` onto `<ui-router>`
  * and each woken `<ui-view>` re-seeks the router before its own first render,
  * so the views find the settled router rather than the placeholder they
@@ -654,20 +663,31 @@ export function hydrateRoot(
   value: unknown,
   options: HydrateRootOptions = {},
 ): false | (() => void) {
-  if (!isAdoptable(container)) {
+  const { onAdopt, ...renderOptions } = options;
+
+  if (!readAdoptable(container)) {
     makeCold(container);
 
     return false;
   }
 
-  const { onAdopt, ...renderOptions } = options;
+  return adoptRoot(container, value, renderOptions, { reporter: onAdopt });
+}
 
+/** {@link hydrateRoot} past its signature check: provide the adopter, walk, and wake what the walk passed by. */
+const adoptRoot = (
+  container: HTMLElement,
+  // oxlint-disable-next-line anti-slop/no-unknown-parameters -- any value lit renders, as lit's render() and hydrate() take it
+  value: unknown,
+  renderOptions: RenderOptions,
+  policy: AdoptPolicy,
+): (() => void) => {
   const release = provideContext(container, adoptUiViewContext, (view) =>
-    adopt(view, onAdopt),
+    adopt(view, policy),
   );
 
   try {
-    walkWith(onAdopt, () => hydrate(value, container, renderOptions));
+    walkWith(policy, () => hydrate(value, container, renderOptions));
   } catch (error) {
     release();
     makeCold(container);
@@ -680,4 +700,254 @@ export function hydrateRoot(
   }
 
   return release;
+};
+
+/** What {@link bootRoot} came to, once the page is live. */
+export type BootOutcome = 'adopted' | 'cold';
+
+/** What {@link bootRoot} resolves with. */
+export interface BootRootResult {
+  /**
+   * `adopted`: the served document was hydrated, and each served view reported
+   * its own {@link AdoptOutcome}. `cold`: the container was emptied and the
+   * template rendered into it.
+   */
+  readonly outcome: BootOutcome;
+  /**
+   * Whether the boot transition landed on the state and url parameters the
+   * document's signature names; `false` when there was no signature to adopt,
+   * or no transition landed.
+   */
+  readonly drawnFor: boolean;
+  /**
+   * The boot transition's `Rejection`, or what the root `hydrate()` threw;
+   * present only on a cold boot that one of them caused.
+   */
+  readonly error?: unknown;
 }
+
+/** {@link bootRoot}'s options: {@link HydrateRootOptions}, plus the boot transition's seed. */
+export interface BootRootOptions extends HydrateRootOptions {
+  /**
+   * Resolved values the document was drawn with, handed to `seed` from
+   * `ui-router-server/ssr/client` before the router starts, so the boot
+   * transition adopts them in place of running their resolve functions.
+   */
+  readonly payload?: ResolvePayload;
+}
+
+/** How the boot transition ended: the transition that succeeded, the rejection that failed it, or neither when the url started none. */
+type BootLanding =
+  | { readonly transition: Transition }
+  | { readonly error: unknown }
+  | Record<string, never>;
+
+/** Starts `router` and settles on its boot transition, following redirects and supersessions to the one that lands. */
+const startBoot = (router: UIRouterLit): Promise<BootLanding> =>
+  new Promise<BootLanding>((resolve) => {
+    const { transitionService } = router;
+    let created = false;
+
+    const off = (): void => {
+      offCreate();
+      offSuccess();
+      offError();
+    };
+
+    const land = (landing: BootLanding): void => {
+      off();
+      resolve(landing);
+    };
+
+    // SAFETY: hook registration returns its deregistration function, typed only as `Function`.
+    const offCreate = transitionService.onCreate({}, () => {
+      created = true;
+    }) as () => void;
+
+    // SAFETY: hook registration returns its deregistration function, typed only as `Function`.
+    const offSuccess = transitionService.onSuccess({}, (transition) =>
+      land({ transition }),
+    ) as () => void;
+
+    // SAFETY: hook registration returns its deregistration function, typed only as `Function`.
+    const offError = transitionService.onError({}, (transition) => {
+      const error = transition.error();
+
+      // A redirect or a newer transition took over; the boot lands with whichever succeeds.
+      if (error.type !== RejectType.SUPERSEDED) land({ error });
+    }) as () => void;
+
+    try {
+      router.start();
+    } catch (error) {
+      off();
+      throw error;
+    }
+
+    if (!created) land({});
+  });
+
+/** Whether the router stands where the signature says the document was drawn. */
+const isDrawnFor = (
+  signature: HydrationSignature,
+  router: UIRouterLit,
+): boolean =>
+  JSON.stringify([signature.state, signature.params]) ===
+  JSON.stringify(routeOf(router.globals));
+
+const warnBootElsewhere = (
+  signature: HydrationSignature,
+  router: UIRouterLit,
+  fellBack: number,
+): void => {
+  // DEV folds away in dist/*.js; #dev-gate also closes it under node when NODE_ENV is production.
+  if (!import.meta.env.DEV || !devGate()) return;
+  console.warn(
+    'lit-ui-router-ssr: this document was drawn for another state than the one the client booted into, so bootRoot() rendered the views that differ cold and adopted the rest. One static document answers a whole family of urls, and a boot transition can redirect, so this is legitimate. Drawn for, booted into, views rendered cold:',
+    signature.state,
+    router.globals.current.name,
+    fellBack,
+  );
+};
+
+/** Resolves once every awake, connected `<ui-view>` under `container` has updated, including those an update woke; a view that cannot update is not waited for. */
+const settleViews = async (container: HTMLElement): Promise<void> => {
+  const settled = new Set<Element>();
+
+  for (;;) {
+    const awake = [...container.querySelectorAll('*')].filter(
+      (element): element is UiView =>
+        element instanceof UiView &&
+        element.isConnected &&
+        !element.hasAttribute(DEFER) &&
+        !settled.has(element),
+    );
+
+    if (awake.length === 0) return;
+
+    for (const view of awake) settled.add(view);
+    await Promise.all(awake.map((view) => view.updateComplete));
+  }
+};
+
+/** Empties the container and renders `value` into it. */
+const renderCold = (
+  container: HTMLElement,
+  // oxlint-disable-next-line anti-slop/no-unknown-parameters -- any value lit renders, as lit's render() takes it
+  value: unknown,
+  renderOptions: RenderOptions,
+): void => {
+  makeCold(container);
+  render(value, container, renderOptions);
+};
+
+/**
+ * Boots `router` into the page `container` holds, and resolves once that page
+ * is live.
+ *
+ * It owns the whole client boot. `options.payload`, when given, seeds the boot
+ * transition first. The container's {@link readHydrationSignature | signature}
+ * is read before anything else touches the document; a container {@link
+ * hydrateRoot} would not adopt — no signature, another release line, stripped
+ * markers — is emptied and `value` rendered into it at once, and the router
+ * then starts. Otherwise the router starts, the call waits for the boot
+ * transition to land, following redirects to the one that succeeds, and then
+ * hydrates the container with `value`.
+ *
+ * The boot decides once what the page does:
+ *
+ * - The boot lands where the signature says the document was drawn: every
+ *   served view adopts, and a view that still mismatches warns in development,
+ *   since that is a template the two halves render differently.
+ * - The boot lands elsewhere — a static host serving one document for a
+ *   family of urls, or a redirect: the views that match adopt, and the views
+ *   that differ render cold without a warning of their own. Once the page is
+ *   live, one development warning names both states and how many views
+ *   rendered cold, when any did.
+ * - The boot fails, or the url starts no transition: the container is emptied
+ *   and `value` rendered cold. The root `hydrate()` throwing, as over a
+ *   mutated document, does the same. The call resolves rather than rejects.
+ *
+ * Every served view still reports its own {@link AdoptOutcome}, as a {@link
+ * UiViewAdoptEvent} and to `options.onAdopt`. The call waits for each awake
+ * `<ui-view>` to finish updating, nested views included, then releases the
+ * adopter `hydrateRoot()` provided; a view the app detached keeps its pin.
+ *
+ * @example
+ * ```ts
+ * import { bootRoot } from 'lit-ui-router-ssr/client';
+ *
+ * const { outcome } = await bootRoot(router, root, page(router));
+ * ```
+ *
+ * @param router - the client router, its states registered and not yet started
+ * @param container - the element the server's markup was written into, or an empty one
+ * @param value - the same template the server rendered, with every `<ui-view>` hole empty
+ * @param options - lit render options, `onAdopt`, and the boot transition's `payload`
+ * @returns what the boot came to, once every awake view has updated
+ * @throws what `router.start()` throws, as on a router already started
+ * @throws the `TypeError` `seed` throws on a payload with no `resolves`, before the router starts
+ */
+export async function bootRoot(
+  router: UIRouterLit,
+  container: HTMLElement,
+  // oxlint-disable-next-line anti-slop/no-unknown-parameters -- any value lit renders, as lit's render() and hydrate() take it
+  value: unknown,
+  options: BootRootOptions = {},
+): Promise<BootRootResult> {
+  const { onAdopt, payload, ...renderOptions } = options;
+  const disarm = seed(router, payload);
+  const signature = readAdoptable(container);
+
+  if (!signature) {
+    renderCold(container, value, renderOptions);
+    const landing = await startBoot(router);
+    disarm();
+    await settleViews(container);
+
+    return { outcome: 'cold', drawnFor: false, ...pickError(landing) };
+  }
+
+  const landing = await startBoot(router);
+  disarm();
+
+  if (!('transition' in landing)) {
+    renderCold(container, value, renderOptions);
+    await settleViews(container);
+
+    return { outcome: 'cold', drawnFor: false, ...pickError(landing) };
+  }
+
+  const drawnFor = isDrawnFor(signature, router);
+  let fellBack = 0;
+
+  const reporter: AdoptReporter = (view, outcome, error) => {
+    if (outcome === 'fell-back') fellBack += 1;
+    onAdopt?.(view, outcome, error);
+  };
+
+  let release: () => void;
+
+  try {
+    release = adoptRoot(container, value, renderOptions, {
+      reporter,
+      quiet: !drawnFor,
+    });
+  } catch (error) {
+    render(value, container, renderOptions);
+    await settleViews(container);
+
+    return { outcome: 'cold', drawnFor, error };
+  }
+
+  await settleViews(container);
+  release();
+
+  if (!drawnFor && fellBack > 0) warnBootElsewhere(signature, router, fellBack);
+
+  return { outcome: 'adopted', drawnFor };
+}
+
+/** The landing's error, as a result member, when it carries one. */
+const pickError = (landing: BootLanding): { error?: unknown } =>
+  'error' in landing ? { error: landing.error } : {};

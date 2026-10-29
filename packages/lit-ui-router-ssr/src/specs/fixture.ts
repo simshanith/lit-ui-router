@@ -101,8 +101,8 @@ export const badgeRootTemplate = (router: Router): TemplateResult =>
     ><shadow-badge></shadow-badge>${uiView()}</ui-router
   >`;
 
-/** Two states: `shell`, and `shell.detail` filling the nested view. */
-export const makeRouter = (): Router => {
+/** Two states: `shell`, and `shell.detail` filling the nested view from `detail`. */
+export const makeRouter = (detail: () => string = () => 'leaf'): Router => {
   const router = installServerLocation(new UIRouterLit(), {
     urlConfig: { strict: false },
   });
@@ -118,7 +118,7 @@ export const makeRouter = (): Router => {
       name: 'shell.detail',
       url: '/detail',
       component: DetailView,
-      resolve: { detail: () => 'leaf' },
+      resolve: { detail },
     },
     {
       name: 'shell.other',

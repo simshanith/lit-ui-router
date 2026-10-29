@@ -7,7 +7,9 @@ import { settle } from 'ui-router-server/ssr';
 import { adoptUiViewContext } from '../adopt-context.js';
 import '../register.js';
 
+import { RejectType } from '@uirouter/core';
 import {
+  bootRoot,
   hydrateRoot,
   readHydrationSignature,
   uiViewAdoptEventName,
@@ -32,6 +34,7 @@ import {
 import type { Page } from './round-trip.js';
 import {
   boot,
+  bootAt,
   comments,
   draw,
   dropViewNodeMarkers,
@@ -164,51 +167,259 @@ describe('the round trip', () => {
   });
 });
 
-describe('a document drawn for another state', () => {
-  it('warns once, renders that view cold, and keeps its ancestors', async () => {
+describe('bootRoot', () => {
+  it('adopts a document drawn for the state it boots into', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    // Drawn with the nested view routed; the client boots into the parent state.
     const { container, served } = serve(await drawShell('/shell/detail'));
-    const shell = container.querySelector('h1');
 
-    await boot(container, rootTemplate, '/shell');
+    const result = await bootAt(container, rootTemplate, '/shell/detail');
 
-    expect(warn).toHaveBeenCalledTimes(1);
-    expect(warn.mock.calls[0][0]).toContain(
-      'could not adopt the server render',
-    );
-    // the view the document was not drawn for dropped the server's nodes
-    expect(container.querySelector('.detail')).toBeNull();
-    // the shell's own nodes were hydrated, not thrown away with the mismatch
-    expect(container.querySelector('h1')).toBe(shell);
-    expect(served.filter((element) => container.contains(element))).toContain(
-      shell,
-    );
-  });
-
-  it('says nothing when the document drew that view empty', async () => {
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    // The empty pair carries no render to adopt, so the view renders cold in silence.
-    const { container } = serve(await drawShell('/shell'));
-
-    await boot(container, rootTemplate, '/shell/detail');
-
+    expect(result).toEqual({
+      outcome: 'adopted',
+      drawnFor: true,
+      router: result.router,
+    });
+    expect(
+      served.filter((element) => container.contains(element)),
+    ).toHaveLength(served.length);
+    expect(container.querySelectorAll('[defer-hydration]')).toHaveLength(0);
+    expect(container.querySelector('.detail')?.textContent).toBe('leaf');
     expect(warn).not.toHaveBeenCalled();
-    expect(container.querySelector('.detail')?.textContent).toBe('leaf');
   });
 
-  it('renders once over a served view that opens on a nested part', async () => {
+  it('resolves once the nested view is live, and releases the adopter', async () => {
+    const { container } = serve(await drawShell('/shell/detail'));
+
+    await bootAt(container, rootTemplate, '/shell/detail');
+
+    for (const view of views(container)) {
+      expect(view.hasUpdated).toBe(true);
+      expect(view.isUpdatePending).toBe(false);
+    }
+
+    expect(requestContext(container, adoptUiViewContext)).toBeUndefined();
+  });
+
+  it('renders cold into a container with nothing to adopt', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    const { container } = serve(await drawShell('/shell/lead'));
-    expect(container.querySelectorAll('#plate')).toHaveLength(1);
+    const container = document.createElement('div');
+    document.body.append(container);
 
-    await boot(container, rootTemplate, '/shell/detail');
+    const { outcome, drawnFor } = await bootAt(
+      container,
+      rootTemplate,
+      '/shell/detail',
+    );
 
-    expect(warn).toHaveBeenCalledTimes(1);
-    // Every served sibling after the nested pair went with it, not only that pair.
-    expect(container.querySelector('#plate')).toBeNull();
-    expect(container.querySelectorAll('.detail')).toHaveLength(1);
+    expect({ outcome, drawnFor }).toEqual({ outcome: 'cold', drawnFor: false });
+    expect(container.querySelector('h1')?.textContent).toContain('shell hello');
     expect(container.querySelector('.detail')?.textContent).toBe('leaf');
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it('renders the page once over a document with no signature', async () => {
+    const { container, served } = serve(
+      withoutSignature(await drawShell('/shell/detail')),
+    );
+
+    const { outcome } = await bootAt(container, rootTemplate, '/shell/detail');
+
+    expect(outcome).toBe('cold');
+    expect(served.some((element) => container.contains(element))).toBe(false);
+    expect(container.querySelectorAll('.detail')).toHaveLength(1);
+  });
+
+  it('seeds the boot transition with the payload it is handed', async () => {
+    const detail = vi.fn(() => 'leaf');
+    const { container, served } = serve(await drawShell('/shell/detail'));
+
+    const { outcome } = await bootAt(
+      container,
+      rootTemplate,
+      '/shell/detail',
+      {
+        payload: {
+          state: 'shell.detail',
+          params: {},
+          resolves: { 'shell.detail': { detail: 'leaf' } },
+        },
+      },
+      makeRouter(detail),
+    );
+
+    expect(outcome).toBe('adopted');
+    expect(detail).not.toHaveBeenCalled();
+    expect(
+      served.filter((element) => container.contains(element)),
+    ).toHaveLength(served.length);
+  });
+
+  describe('over a document drawn for another state', () => {
+    it('warns once for the boot, renders that view cold, and keeps its ancestors', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      // Drawn with the nested view routed; the client boots into the parent state.
+      const { container, served } = serve(await drawShell('/shell/detail'));
+      const shell = container.querySelector('h1');
+
+      const { outcome, drawnFor } = await bootAt(
+        container,
+        rootTemplate,
+        '/shell',
+      );
+
+      expect({ outcome, drawnFor }).toEqual({
+        outcome: 'adopted',
+        drawnFor: false,
+      });
+      expect(warn).toHaveBeenCalledTimes(1);
+      expect(warn.mock.calls[0]).toEqual([
+        expect.stringContaining('drawn for another state'),
+        'shell.detail',
+        'shell',
+        1,
+      ]);
+      // the view the document was not drawn for dropped the server's nodes
+      expect(container.querySelector('.detail')).toBeNull();
+      // the shell's own nodes were hydrated, not thrown away with the mismatch
+      expect(container.querySelector('h1')).toBe(shell);
+      expect(served.filter((element) => container.contains(element))).toContain(
+        shell,
+      );
+    });
+
+    it('says nothing when the document drew that view empty', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      // The empty pair carries no render to adopt, so the view renders cold in silence.
+      const { container } = serve(await drawShell('/shell'));
+
+      const { drawnFor } = await bootAt(
+        container,
+        rootTemplate,
+        '/shell/detail',
+      );
+
+      expect(drawnFor).toBe(false);
+      expect(warn).not.toHaveBeenCalled();
+      expect(container.querySelector('.detail')?.textContent).toBe('leaf');
+    });
+
+    it('renders once over a served view that opens on a nested part', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const { container } = serve(await drawShell('/shell/lead'));
+      expect(container.querySelectorAll('#plate')).toHaveLength(1);
+
+      await bootAt(container, rootTemplate, '/shell/detail');
+
+      expect(warn).toHaveBeenCalledTimes(1);
+      // Every served sibling after the nested pair went with it, not only that pair.
+      expect(container.querySelector('#plate')).toBeNull();
+      expect(container.querySelectorAll('.detail')).toHaveLength(1);
+      expect(container.querySelector('.detail')?.textContent).toBe('leaf');
+    });
+
+    it('still reports each view’s own outcome', async () => {
+      vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const { container } = serve(await drawShell('/shell/detail'));
+      const onAdopt = vi.fn();
+
+      await bootAt(container, rootTemplate, '/shell/other', { onAdopt });
+
+      expect(onAdopt.mock.calls.map(([, outcome]) => outcome)).toEqual([
+        'adopted',
+        'fell-back',
+      ]);
+      expect(container.querySelector('.other')?.textContent).toBe('other');
+    });
+  });
+
+  it('decides a boot that redirects once, against the state it lands on', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const { container } = serve(await drawShell('/shell/detail'));
+    const shell = container.querySelector('h1');
+    const router = makeRouter();
+    router.transitionService.onBefore({ to: 'shell.detail' }, (transition) =>
+      transition.router.stateService.target('shell.other'),
+    );
+
+    const result = await bootAt(
+      container,
+      rootTemplate,
+      '/shell/detail',
+      {},
+      router,
+    );
+
+    expect(router.globals.current.name).toBe('shell.other');
+    expect(result).toMatchObject({ outcome: 'adopted', drawnFor: false });
+    expect(result).not.toHaveProperty('error');
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0].slice(1)).toEqual([
+      'shell.detail',
+      'shell.other',
+      1,
+    ]);
+    expect(container.querySelector('h1')).toBe(shell);
+    expect(container.querySelector('.detail')).toBeNull();
+    expect(container.querySelector('.other')?.textContent).toBe('other');
+  });
+
+  it('renders cold, and resolves with the rejection, when the boot transition fails', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const { container, served } = serve(await drawShell('/shell/detail'));
+    const router = makeRouter();
+    router.transitionService.onBefore({ to: 'shell.detail' }, () => false);
+
+    const result = await bootAt(
+      container,
+      rootTemplate,
+      '/shell/detail',
+      {},
+      router,
+    );
+
+    expect(result).toMatchObject({ outcome: 'cold', drawnFor: false });
+    expect(result.error).toMatchObject({ type: RejectType.ABORTED });
+    expect(served.some((element) => container.contains(element))).toBe(false);
+    expect(container.querySelector('ui-router')).not.toBeNull();
+    expect(container.querySelector('.detail')).toBeNull();
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it('renders cold when the url starts no transition', async () => {
+    const { container, served } = serve(await drawShell('/shell/detail'));
+
+    const result = await bootAt(container, rootTemplate, '/nowhere');
+
+    expect(result).toMatchObject({ outcome: 'cold', drawnFor: false });
+    expect(result).not.toHaveProperty('error');
+    expect(served.some((element) => container.contains(element))).toBe(false);
+  });
+
+  it('renders cold, and resolves with what the root walk threw, over a template the document was not drawn from', async () => {
+    const { container } = serve(await drawShell('/shell/detail'));
+
+    const result = await bootAt(
+      container,
+      (router) => tailRootTemplate(router, 'first'),
+      '/shell/detail',
+    );
+
+    expect(result).toMatchObject({ outcome: 'cold', drawnFor: true });
+    expect(result.error).toBeInstanceOf(Error);
+    expect(container.querySelectorAll('ui-router')).toHaveLength(1);
+    expect(container.querySelector('.tail')?.textContent).toBe('first');
+    expect(container.querySelectorAll('.detail')).toHaveLength(1);
+  });
+
+  it('throws what router.start() throws on a router already started', async () => {
+    const container = document.createElement('div');
+    const router = makeRouter();
+    router.start();
+
+    await expect(
+      bootRoot(router, container, rootTemplate(router)),
+    ).rejects.toThrow('start() called multiple times');
   });
 });
 

@@ -270,16 +270,14 @@ registers `<ui-view>`. That entry defines `<ui-router>` from core and `<ui-view>
 `withServedRender(UiView)`. Every value the app takes from the router — `UIRouterLit`, `srefHref`,
 `srefActiveClass`, `srefAriaCurrent` — comes from `lit-ui-router/pure`, which registers nothing;
 the root entry registers the plain `<ui-view>` as a side effect, and imported after this one it
-warns that the tag is already defined. Then the router boots and one call adopts the page:
+warns that the tag is already defined. Then one call boots the router and adopts the page:
 
 ```typescript
 import 'lit-ui-router-ssr/register';
 import { UIRouterLit, srefHref } from 'lit-ui-router/pure';
-import { hydrateRoot } from 'lit-ui-router-ssr/client';
+import { bootRoot } from 'lit-ui-router-ssr/client';
 
-router.start();
-await booted; // the first successful transition
-const release = hydrateRoot(root, page(router));
+await bootRoot(router, root, page(router));
 ```
 
 A `<ui-view>` another class already defined throws, naming both ways out.
@@ -325,29 +323,39 @@ The result still extends core's `UiView`, so an enclosing view adopts it as a pa
 
 ## The client half
 
-`lit-ui-router-ssr/client` is the adopt side — no import side effects. The router boots
-first, and one call adopts the page:
+`lit-ui-router-ssr/client` is the adopt side — no import side effects. One call boots the router
+and adopts the page, or renders it cold, and resolves once the page is live:
 
 ```typescript
-import { hydrateRoot, uiViewSlot } from 'lit-ui-router-ssr/client';
+import { bootRoot } from 'lit-ui-router-ssr/client';
 
-const booted = new Promise<void>((resolve) => {
-  const off = router.transitionService.onSuccess({}, () => {
-    off();
-    resolve();
-  });
-});
-router.start();
-await booted;
-
-const release = hydrateRoot(root, page(router));
-if (!release) render(page(router), root);
+const { outcome } = await bootRoot(router, root, page(router));
 ```
 
-- **The sequence is the contract.** `router.start()`, await its first successful transition, then
-  `hydrateRoot()`. The walk commits `.uiRouter` onto `<ui-router>` and each `<ui-view>` re-seeks the
-  router before its own first render, so every view finds the settled router rather than the
-  placeholder it registered against. Nothing constrains when `lit-ui-router-ssr/register` is imported.
+- **`bootRoot(router, container, value, options?)` owns the boot.** It reads the container's
+  signature, starts the router, waits for the boot transition to land — following redirects to the
+  one that succeeds — then runs `hydrateRoot()`. The walk commits `.uiRouter` onto `<ui-router>` and
+  each `<ui-view>` re-seeks the router before its own first render, so every view finds the settled
+  router rather than the placeholder it registered against. The call waits for every awake
+  `<ui-view>`, nested ones included, to finish updating, then releases the adopter. It resolves with
+  `outcome` — `adopted` or `cold` — and `drawnFor`, whether the boot landed on the state and url
+  parameters the signature names. Nothing constrains when `lit-ui-router-ssr/register` is imported.
+- **The cold path is the same call.** A container with nothing to adopt is emptied and `value`
+  rendered into it before the router starts. A boot transition that fails, a url that starts none,
+  and a root `hydrate()` that throws over a mutated document all empty the container and render
+  `value` cold too, and the call resolves with the cause in `error` rather than rejecting.
+- **The boot decides mismatches once.** A boot that lands where the document was drawn adopts every
+  view, and a view that still mismatches warns in development: the two halves render that template
+  differently. A boot that lands elsewhere — one static document served for a family of urls, or a
+  redirect — adopts the views that match and renders the rest cold without a warning each; once the
+  page is live, the development build warns once, naming both states and how many views rendered
+  cold.
+- **The boot transition takes a seed.** `options.payload` is handed to `seed()` from
+  `ui-router-server/ssr/client` before the router starts, so the boot transition adopts the
+  resolved values a server render drew in place of running their resolve functions.
+- **`hydrateRoot()` is the step underneath.** An app that owns its own boot calls `router.start()`,
+  awaits the first successful transition, then `hydrateRoot(root, page(router))`, and renders
+  `page(router)` itself when that returns `false`.
 - **The signature decides first.** `hydrateRoot()` reads the container's hydration signature before
   it touches the document, and returns `false` over an emptied container when there is none — a
   cold client render, a dev server, a page from an earlier `prerender()`, a string `renderShell` —
@@ -392,7 +400,7 @@ if (!release) render(page(router), root);
   (`uiViewAdoptEventName`), bubbling and composed, with `detail.outcome` one of `adopted` — its
   served nodes are the live ones — `fell-back` — a mismatch or a lost pair, with `detail.error`
   carrying the cause — or `none`, nothing to adopt. It fires once per view, parent first, in
-  production as in development. `hydrateRoot()`'s `onAdopt(view, outcome, error)` option receives
+  production as in development. The `onAdopt(view, outcome, error)` option of `bootRoot()` and `hydrateRoot()` receives
   the same reports for every view its walk reaches, a view the pin adopts after the release included.
 - **A mutated document throws.** `hydrateRoot()` rethrows what `hydrate()` threw, over a container it
   first empties. The caller renders into it.
