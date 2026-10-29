@@ -1,7 +1,7 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "extends": ["./tools/lint-elements/elements.oxlintrc.json"],
-  "plugins": ["typescript", "unicorn"],
+  "plugins": ["typescript", "unicorn", "oxc"],
   "jsPlugins": [
     "eslint-plugin-turbo",
     "eslint-plugin-lit-ui-router",

@@ -120,6 +120,18 @@ describe('compileRoutes: parent', () => {
     );
   });
 
+  it('lets a descendant param declaration win over an ancestor one', () => {
+    const appParams = Object.freeze({ lang: 'en' });
+
+    const [, child] = compileRoutes([
+      { name: 'app', url: '/:lang', params: appParams },
+      { name: 'app.docs', url: '/docs', params: { lang: 'fr' } },
+    ]);
+
+    assert.equal(format(child.matcher, {}), '/fr/docs');
+    assert.deepEqual(appParams, { lang: 'en' });
+  });
+
   it('merges params across a parent: link', () => {
     const [, help] = compileRoutes([
       {
