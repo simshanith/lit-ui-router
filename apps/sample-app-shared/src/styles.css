@@ -278,11 +278,13 @@ api-docs {
 
 .messagelist thead td.st-sort-ascent:after {
   content: ' \f0de';
+  /* stylelint-disable-next-line font-family-no-missing-generic-family-keyword -- icon font, no generic fallback */
   font-family: 'FontAwesome';
 }
 
 .messagelist thead td.st-sort-descent:after {
   content: ' \f0dd';
+  /* stylelint-disable-next-line font-family-no-missing-generic-family-keyword -- icon font, no generic fallback */
   font-family: 'FontAwesome';
 }
 
@@ -498,12 +500,14 @@ api-docs {
 /* The elements above are lit-dialog's Bootstrap modal markup, aliased by
    Dialog.ts with the class names the react/angular sample apps share.
    These rules flatten Bootstrap's own modal skin underneath. */
+/* stylelint-disable-next-line no-duplicate-selectors -- the Bootstrap overrides stay grouped */
 .dialog .wrapper {
   /* .modal-dialog: undo Bootstrap's fixed 600px width + 30px margins */
   width: auto;
   margin: 0;
 }
 
+/* stylelint-disable-next-line no-duplicate-selectors -- the Bootstrap overrides stay grouped */
 .dialog .content {
   /* .modal-content: flat card, no Bootstrap border/radius/shadow */
   border: 0;

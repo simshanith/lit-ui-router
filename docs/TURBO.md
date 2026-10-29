@@ -50,6 +50,7 @@ ci:pull_request
 │   ├── //#lint:package-json
 │   ├── //#lint:markdown
 │   ├── //#lint:templates
+│   ├── //#lint:css
 │   ├── //#lint:workflows                 (umbrella)
 │   │   ├── //#lint:actionlint
 │   │   ├── //#lint:zizmor
@@ -438,6 +439,7 @@ fans out via `dependsOn`:
 
 - `//#lint:root` - lints root-level files (workspace directories excluded)
 - `//#lint:package-json` - lints every `package.json` and `pnpm-workspace.yaml`
+- `//#lint:css` - stylelint over `.css` files, `.vue` `<style>` blocks and lit `css` templates; [`stylelint.config.mjs`](../stylelint.config.mjs) maps each to its syntax
 - `//#lint:workflows` - umbrella (no script) over the four per-tool tasks below
 - `//#lint:actionlint` - actionlint over GitHub Actions workflows
 - `//#lint:zizmor` - zizmor security audit over GitHub Actions workflows
