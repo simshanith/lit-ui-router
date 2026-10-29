@@ -14,13 +14,13 @@
     "@uirouter/visualizer": "^7.2.1",
     "effect": "^4.0.6",
     "lit": "^3.3.3",
-    "lit-ui-router": "^1.17.0",
+    "lit-ui-router": "^1.18.0",
     "lit-ui-router-effect": "^0.6.0",
     "ui-router-effect": "^0.2.0"
   },
   "devDependencies": {
     "typescript": "^7.0.2",
-    "ui-router-registry": "^0.2.0",
+    "ui-router-registry": "^0.3.0",
     "vite": "^8.3.5"
   },
   "overrides": {
