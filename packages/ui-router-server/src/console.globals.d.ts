@@ -4,7 +4,7 @@
 // so node's real console checks the same call site there.
 
 interface Console {
-  warn(message: string): void;
+  warn(message: string, ...details: string[]): void;
 }
 
 // oxlint-disable-next-line no-var -- merges with node's own `var console` in the test graph

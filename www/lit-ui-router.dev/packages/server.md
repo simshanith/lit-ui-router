@@ -65,6 +65,7 @@ package's own esbuild probe:
 | `ui-router-server/simulate`   | yes (optional peer)                   | +~27.4 KiB, lazy | what would the real router do                                                          |
 | `ui-router-server/location`   | yes (optional peer)                   | ~0.3 KiB gzip    | a path-shaped in-memory location for a server-side router                              |
 | `ui-router-server/url-config` | no; it configures the router you pass | ~0.4 KiB gzip    | one url config for the client router, the mounts, and a server render                  |
+| `ui-router-server/prerender`  | only for a `simulate` mount           | ~6.3 KiB gzip    | which files and host rules does this mount table make, around your render              |
 | `ui-router-server/ssr`        | yes (optional peer)                   | ~1.1 KiB gzip    | when has a server router landed, and which of its resolves can the client adopt        |
 | `ui-router-server/ssr/client` | yes (optional peer)                   | ~0.7 KiB gzip    | let the client's boot transition adopt the resolves a server render drew               |
 
@@ -103,6 +104,10 @@ Picking one:
   values handed to the client's boot through `/ssr/client`.
   [`settle(router, path)`](#settling-a-server-router), then
   [`dehydrate` and `seed`](#handing-resolves-to-the-client).
+- **`/prerender`** — you want the mount table written out as a static site:
+  a page per shell verdict from your render, a `_redirects` line per
+  redirect, and the 404 document.
+  [`prerender(options)`](#emitting-a-static-site).
 
 ## Installation
 
@@ -442,6 +447,43 @@ the payload does not cover runs as usual:
 The client entry imports `@uirouter/core` and nothing from the server entry,
 so a browser bundle takes it alone; it exports the payload types too.
 Where the payload goes in the document is the renderer's choice.
+
+## Emitting a static site
+
+[`prerender(options)`](/api/ui-router-server/prerender/functions/prerender) asks
+the mount table for a verdict per path and writes the site. A shell verdict
+becomes `<subpath>/index.html`, holding whatever `render` returns for it. A
+redirect becomes a `_redirects` line, paired with and without the trailing
+slash, and no page. The `otherwise` projection becomes `404.html`. A path that
+matches nothing is counted, listed in `result.warnings`, and warned about in
+development.
+
+```ts
+import { mkdir, writeFile } from 'node:fs/promises';
+import { dirname } from 'node:path';
+import { prerender } from 'ui-router-server/prerender';
+import { settle } from 'ui-router-server/ssr';
+
+const result = await prerender({
+  mounts,
+  outDir: 'dist',
+  paths: ['/', '/sheet/7B', '/legacy'],
+  render: async (verdict, { path }) => {
+    await settle(router, path);
+    return page(router);
+  },
+  write: async (file, body) => {
+    await mkdir(dirname(file), { recursive: true });
+    await writeFile(file, body);
+  },
+});
+```
+
+The loop never touches a filesystem itself: `write` receives each file with
+`outDir` joined on, so the same call emits through `node:fs`, a virtual fs, or
+a `Map`, under any runtime.
+[`lit-ui-router-ssr`](/packages/ssr)'s `prerender` is this loop with a lit
+render, and writes through `node:fs` by default.
 
 ## What the server can't see
 

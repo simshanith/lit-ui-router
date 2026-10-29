@@ -2,22 +2,23 @@
   "name": "@tools/lint-elements",
   "version": "0.0.1",
   "private": true,
-  "description": "Runs the eslint-plugin-lit / -wc / -lit-a11y pass over packages, apps and examples src, failing on any finding",
-  "bin": {
-    "lint-elements": "./src/lint-elements.ts"
-  },
+  "description": "The oxlint config for the eslint-plugin-lit / -wc / -lit-a11y rules over packages, apps and examples src, which the root .oxlintrc.json extends",
   "type": "module",
   "scripts": {
     "format:check:oxfmt": "oxfmt --check \"**/*.{ts,js,json,jsonc,md}\"",
     "format:oxfmt": "oxfmt \"**/*.{ts,js,json,jsonc,md}\"",
     "lint:oxlint": "oxlint .",
+    "test": "node --test --test-reporter=@tools/shared/test-reporter.ts \"src/**/*.test.ts\"",
     "typecheck:tsc": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
     "@tools/bootstrap": "catalog:workspace",
     "@tools/shared": "catalog:workspace",
     "@types/node": "catalog:",
-    "eslint": "catalog:",
+    "eslint-plugin-lit": "catalog:",
+    "eslint-plugin-lit-a11y": "catalog:",
+    "eslint-plugin-wc": "catalog:",
+    "jsonc-parser": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
     "typescript": "catalog:"

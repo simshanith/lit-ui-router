@@ -12,7 +12,7 @@
     "@google/model-viewer": "^4.4.0",
     "@uirouter/core": "^6.1.2",
     "@uirouter/visualizer": "^7.2.1",
-    "effect": "^4.0.6",
+    "effect": "^4.0.7",
     "lit": "^3.3.3",
     "lit-ui-router": "^1.18.0",
     "lit-ui-router-effect": "^0.6.0",

@@ -1,9 +1,9 @@
 // Rule-authoring hygiene (#659): eslint-plugin-eslint-plugin over the plugin's
-// own source, package-local so the root custom-element lane stays on theme.
+// own source, package-local so the root config stays on manifests.
 // Deliberately NOT named eslint.config.*: eslint 10 resolves config per file
 // from the nearest eslint.config.*, and a discoverable one here would shadow
-// the root config for this whole directory — the package-json and elements
-// lanes would silently skip the package. lint:rules passes it via --config.
+// the root config for this whole directory — the package-json lane would
+// silently skip the package. lint:rules passes it via --config.
 import tsParser from '@tools/eslint-ts-parser';
 import eslintPluginPlugin from 'eslint-plugin-eslint-plugin';
 
