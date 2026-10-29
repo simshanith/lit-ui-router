@@ -165,7 +165,7 @@ export function compileRoutes(
     if (route.url === undefined) continue;
     const chain = chainOf(route);
     let pattern = '';
-    let params: NonNullable<RouteDeclaration['params']> = {};
+    const params: NonNullable<RouteDeclaration['params']> = {};
 
     for (let depth = chain.length - 1; depth >= 0; depth--) {
       const ancestor = chain[depth];
@@ -180,7 +180,7 @@ export function compileRoutes(
         pattern += ancestor.url;
       }
 
-      if (ancestor.params) params = { ...params, ...ancestor.params };
+      if (ancestor.params) Object.assign(params, ancestor.params);
     }
 
     compiled.push({
