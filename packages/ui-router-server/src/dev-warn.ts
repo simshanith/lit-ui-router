@@ -24,3 +24,44 @@ export function warnMountDiagnostics(
   for (const { message } of diagnose(router))
     console.warn(`ui-router-server: createServerRouter: ${message}`);
 }
+
+/**
+ * Warns that `prerender` emitted nothing for `path`: no route matched it and
+ * its mount declares no `otherwise` projection.
+ *
+ * @param path - the unclaimed path
+ *
+ * @internal
+ */
+export function warnUnclaimed(path: string): void {
+  // DEV folds the whole body out of dist/*.js (`?.`: node --test runs src unbundled); #dev-gate also closes it under node when NODE_ENV is production.
+  if (!import.meta.env?.DEV || !devGate()) return;
+  console.warn(
+    'ui-router-server: prerender: no route matched this path and its mount declares no otherwise projection, so no page was emitted for it:',
+    path,
+  );
+}
+
+/**
+ * Warns when `path`'s mount rejects the trailing slash a static host adds
+ * when it serves `<subpath>/index.html`.
+ *
+ * @param resolver - the resolver `prerender` asks for verdicts
+ * @param path - a shell path below its mount root, without a trailing slash
+ *
+ * @internal
+ */
+export async function warnStrictSlash(
+  resolver: ServerRouter,
+  path: string,
+): Promise<void> {
+  // DEV folds the whole body out of dist/*.js (`?.`: node --test runs src unbundled); #dev-gate also closes it under node when NODE_ENV is production.
+  if (!import.meta.env?.DEV || !devGate()) return;
+  const slashed = await resolver.resolve(`${path}/`);
+
+  if (slashed.kind === 'shell' && slashed.status === undefined) return;
+  console.warn(
+    'ui-router-server: prerender: this page is written as <subpath>/index.html, which static hosts serve by redirecting <subpath> to <subpath>/, and its mount rejects the trailing slash. Pass `config: { strict: false }` on the mount and call `router.urlService.config.strictMode(false)` on the client:',
+    path,
+  );
+}

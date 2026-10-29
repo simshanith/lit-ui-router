@@ -42,11 +42,14 @@ never both. `@lit-labs/ssr-client` is optional: install it when you import
   per page — the pairing the
   [Server-Side Routing guide](/guides/server-route-matching#the-router-on-the-server)
   derives by hand, applied for you.
-- **The emit loop.** Verdict to file name, redirect to rules line, tally, and
-  a warning for every path that matched nothing.
-- **The host rules file.** `_redirects` by default, every generated line
-  paired with and without a trailing slash. No SPA catch-all is ever written:
-  one turns every 404 into a 200.
+- **The lit render inside the emit loop.** The loop itself — verdict to file
+  name, redirect to rules line, the `_redirects` file, tally, and a warning
+  for every path that matched nothing — is
+  [`prerender`](/packages/server#emitting-a-static-site) from
+  `ui-router-server/ssr`, which takes any render. This package's `prerender`
+  supplies the lit one and takes the same options, plus `router`,
+  `renderShell`, `document`, `root` and `elementRenderers`. No SPA catch-all
+  is ever written: one turns every 404 into a 200.
 
 Path enumeration, the html document, and `<title>` stay with the caller —
 `paths`, `document()`, and an async `renderShell()` are the seams for them.
@@ -300,7 +303,9 @@ them through the `development` export condition — see
 [Development & Production Builds](/guides/development-builds) for the
 mechanism.
 
-Three warnings come from `prerender()`. A path that verdicts `notFound` with
+Three warnings come from `prerender()`. The first two come from the
+`ui-router-server/ssr` loop, prefixed `ui-router-server: prerender:`, and
+follow that package's build. A path that verdicts `notFound` with
 no `otherwise` projection to fall back on logs a console warning naming that
 path, because nothing was emitted for it; `result.warnings` carries the same
 list in both builds. A mount that refuses the first page's trailing-slash

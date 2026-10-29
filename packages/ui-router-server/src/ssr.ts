@@ -1,8 +1,10 @@
 /**
- * The server side of server-side rendering, for any renderer: moving a server
- * router to a path and waiting for its transition to land, and drawing the
- * resolved values it landed with for `seed` from `ui-router-server/ssr/client`
- * to hand the client's boot transition.
+ * The server side of server-side rendering, for any renderer: `settle` moves a
+ * server router to a path and waits for its transition to land, `dehydrate`
+ * draws the resolved values it landed with for `seed` from
+ * `ui-router-server/ssr/client` to hand the client's boot transition, and
+ * `prerender` emits a static site from a mount table's verdicts through the
+ * caller's render.
  *
  * It imports `@uirouter/core` eagerly and no renderer.
  */
@@ -19,6 +21,18 @@ import type {
 export { dehydrate } from './dehydrate.ts';
 
 export type { DehydrateResult } from './dehydrate.ts';
+
+export { prerender } from './prerender.ts';
+
+export type {
+  EmittedPage,
+  FileWriter,
+  PrerenderOptions,
+  PrerenderResult,
+  PrerenderTally,
+  RedirectLine,
+  RenderContext,
+} from './prerender.ts';
 
 export type { JsonValue, ResolvePayload } from './resolve-payload.ts';
 
