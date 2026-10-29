@@ -72,6 +72,8 @@ export {
 // @internal plumbing shared with lit-ui-router-ssr (#1638), outside the documented API.
 export { routedElementOf } from './routed-element.js';
 
+export { adoptServedElement } from './ui-view.js';
+
 export { routedViewTemplate } from './routed-view.js';
 
 // Deprecated plumbing (#873, #541, #874): 2.0 deletes this block.

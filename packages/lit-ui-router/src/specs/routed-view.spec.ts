@@ -7,7 +7,11 @@ import '../ui-view.register.js';
 import { UiView } from '../ui-view.js';
 import { UIRouterLit } from '../core.js';
 import type { LitStateDeclaration, UIViewInjectedProps } from '../interface.js';
-import { routedElementOf, routedViewTemplate } from '../pure.js';
+import {
+  adoptServedElement,
+  routedElementOf,
+  routedViewTemplate,
+} from '../pure.js';
 import { createTestRouter, routerGo, waitForUpdate } from './test-utils.js';
 
 /** Waits out `defer-hydration` the way lit's hydrate support does, and records what its first update saw. */
@@ -95,10 +99,14 @@ afterEach(() => {
   router?.dispose();
 });
 
-/** Mounts a served view for `state`, with the router already settled there, as a wake finds it. */
+/**
+ * Mounts a served view for `state`, with the router already settled there, as
+ * a wake finds it, handing the view the served element unless told not to.
+ */
 const wake = async (
   state: string,
   tag: string,
+  handOver = true,
 ): Promise<{ view: UiView; served: Element }> => {
   router = createTestRouter(states);
   router.start();
@@ -109,10 +117,21 @@ const wake = async (
   const view = container.querySelector('ui-view')!;
   const served = view.querySelector(tag)!;
   view.uiRouter = router;
+
+  if (handOver) {
+    adoptServedElement(view, served);
+  }
+
   document.body.append(container);
   await waitForUpdate(view);
 
   return { view, served };
+};
+
+/** Releases a served element after its view's hydrate, as `lit-ui-router-ssr/client` does. */
+const release = async (element: DeferredCard): Promise<void> => {
+  element.removeAttribute('defer-hydration');
+  await element.updateComplete;
 };
 
 describe('routedViewTemplate', () => {
@@ -179,18 +198,20 @@ describe('routedViewTemplate', () => {
   });
 });
 
-describe('<ui-view> waking over a served class view', () => {
-  it('adopts the served element, with its props before its first update', async () => {
+describe('<ui-view> handed a served class element', () => {
+  it('adopts it, with its props before its first update', async () => {
     const { view, served } = await wake('card', 'routed-view-card');
     // SAFETY: the served tag is a RoutedViewCard
     const card = served as RoutedViewCard;
-    await card.updateComplete;
 
     expect(view.routedElement).toBe(card);
-    expect(card.isConnected).toBe(true);
-    expect(view.querySelectorAll('routed-view-card')).toHaveLength(1);
+    expect(card.hasUpdated).toBe(false);
+    // the release is the client's, after the view's hydrate
+    expect(card.hasAttribute('defer-hydration')).toBe(true);
+
+    await release(card);
+
     expect(card.propsAtFirstUpdate?.resolves.detail).toBe('card leaf');
-    expect(card.hasAttribute('defer-hydration')).toBe(false);
     expect(card.hasAttribute('routed')).toBe(true);
   });
 
@@ -198,7 +219,7 @@ describe('<ui-view> waking over a served class view', () => {
     const { view, served } = await wake('sticky', 'routed-view-sticky');
     // SAFETY: the served tag is a RoutedViewSticky
     const card = served as RoutedViewSticky;
-    await card.updateComplete;
+    await release(card);
 
     expect(view.routedElement).toBe(card);
     expect(card.propsAtFirstUpdate?.resolves.detail).toBe('sticky leaf');
@@ -213,6 +234,8 @@ describe('<ui-view> waking over a served class view', () => {
 
   it('replaces the adopted element on a later swap', async () => {
     const { view, served } = await wake('card', 'routed-view-card');
+    // SAFETY: the served tag is a RoutedViewCard
+    await release(served as RoutedViewCard);
 
     await routerGo(router, 'other');
     await waitForUpdate(view);
@@ -224,8 +247,15 @@ describe('<ui-view> waking over a served class view', () => {
     expect(served.isConnected).toBe(false);
   });
 
-  it('constructs a fresh element when the served one is another class', async () => {
+  it('refuses an element of another class', async () => {
     const { view, served } = await wake('card', 'routed-view-other');
+
+    expect(view.routedElement).toBeInstanceOf(RoutedViewCard);
+    expect(view.routedElement).not.toBe(served);
+  });
+
+  it('adopts nothing when no element is handed over', async () => {
+    const { view, served } = await wake('card', 'routed-view-card', false);
 
     expect(view.routedElement).toBeInstanceOf(RoutedViewCard);
     expect(view.routedElement).not.toBe(served);

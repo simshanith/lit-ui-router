@@ -51,12 +51,10 @@ import { setViewHost } from './view-rendered.js';
 let viewIdCounter = 0;
 
 /**
- * Spelled out because the @lit-labs/ssr DOM shim has no `Node`. The types keep
- * them the platform's values, checked against `Node` without referencing one.
+ * Spelled out because the @lit-labs/ssr DOM shim has no `Node`. The type keeps
+ * it the platform's value, checked against `Node` without referencing one.
  */
 const COMMENT_NODE = 8 satisfies Node['COMMENT_NODE'];
-
-const ELEMENT_NODE = 1 satisfies Node['ELEMENT_NODE'];
 
 /**
  * Whether `node` opens another render's output: lit's own empty child-part
@@ -88,9 +86,6 @@ const composedContains = (host: Node, node: Node): boolean => {
 /** The attribute marking a view's routed element. */
 const ROUTED_ATTRIBUTE = 'routed';
 
-/** The attribute `@lit-labs/ssr` writes on a server-rendered custom element. */
-const DEFER_HYDRATION_ATTRIBUTE = 'defer-hydration';
-
 /** An element that may be a `ReactiveElement`, which reports its first update. */
 type MaybeReactive = Element &
   Partial<ReactiveControllerHost & { readonly hasUpdated: boolean }>;
@@ -100,6 +95,28 @@ interface PendingSwap {
   element: Element;
   cancel: () => void;
 }
+
+/** The element a server rendered for each view, handed over ahead of its first render. */
+const servedElements = new WeakMap<UiView, Element>();
+
+/**
+ * Hands `view` the element a server rendered for its routed class, ahead of
+ * the view's first render.
+ *
+ * That render assigns the element its props and places it, instead of
+ * constructing one, when it is an instance of the routed class; any other
+ * element is ignored. A view that has already rendered ignores it.
+ *
+ * Plumbing for `lit-ui-router-ssr`'s served view, not a supported import.
+ *
+ * @param view - the served `<ui-view>`, before its first render
+ * @param element - the element the server wrote in the view's class slot
+ *
+ * @internal
+ */
+export const adoptServedElement = (view: UiView, element: Element): void => {
+  servedElements.set(view, element);
+};
 
 /** @internal */
 interface ViewAddress {
@@ -212,9 +229,6 @@ export class UiView extends LitElement {
 
   /** The element carrying the `routed` attribute. */
   private markedElement?: Element;
-
-  /** A served element this view adopted, whose deferred hydration its first commit releases. */
-  private adoptedElement?: Element;
 
   /** @internal */
   createRenderRoot(): this {
@@ -852,13 +866,6 @@ export class UiView extends LitElement {
   protected updated(changed: PropertyValues): void {
     super.updated(changed);
     this.markRoutedElement();
-    this.releaseAdoptedElement();
-  }
-
-  /** Lets an adopted element hydrate, now that its props are assigned. */
-  private releaseAdoptedElement(): void {
-    this.adoptedElement?.removeAttribute(DEFER_HYDRATION_ATTRIBUTE);
-    this.adoptedElement = undefined;
   }
 
   /** Moves the `routed` attribute onto the current routed element. */
@@ -899,7 +906,7 @@ export class UiView extends LitElement {
       return this.fallback ? nothing : html`<slot></slot>`;
     }
 
-    const served = this.hasUpdated ? undefined : this.servedElement();
+    const served = this.hasUpdated ? undefined : servedElements.get(this);
 
     const result = routedViewTemplate(
       this.component!,
@@ -910,10 +917,6 @@ export class UiView extends LitElement {
 
     const element = routedElementOf(result);
 
-    if (element && element === served) {
-      this.adoptedElement = element;
-    }
-
     if (!element) {
       this.dropElements();
 
@@ -921,27 +924,6 @@ export class UiView extends LitElement {
     }
 
     return this.placeElement(element);
-  }
-
-  /**
-   * The element a server rendered in the first element slot: the first element
-   * after the render marker the held markup opens with, or none.
-   *
-   * Read only ahead of the first render, when any marker is a served view's.
-   */
-  private servedElement(): Element | undefined {
-    let held = false;
-
-    for (const child of this.childNodes) {
-      held ||= isRenderMarker(child);
-
-      if (!held || child.nodeType !== ELEMENT_NODE) continue;
-
-      // SAFETY: `nodeType` ELEMENT_NODE is an Element
-      return child as Element;
-    }
-
-    return undefined;
   }
 
   /**

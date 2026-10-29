@@ -51,3 +51,10 @@ export const servedTemplate = (
 
   return { template, element: detected.routedElementOf(template) };
 };
+
+// The served view (#1528) hands its element over through the same namespace.
+export const handOver = (view: pure.UiView, element: Element): void => {
+  const detected: Partial<typeof pure> = pure;
+
+  detected.adoptServedElement?.(view, element);
+};
