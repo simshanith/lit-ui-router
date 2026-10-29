@@ -254,7 +254,68 @@ describe('bootstrap', () => {
     ).toHaveLength(served.length);
   });
 
+  describe('comparing the url parameters the document was drawn with', () => {
+    it('leaves a config parameter out, so a document drawn for the url adopts', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      // `shell.item` declares a `mode` config parameter the signature never carries.
+      const { container, served } = serve(await drawShell('/shell/item/7'));
+      expect(readHydrationSignature(container)?.params).toEqual({ id: '7' });
+
+      const { outcome, drawnFor, router } = await bootAt(
+        container,
+        rootTemplate,
+        '/shell/item/7',
+      );
+
+      expect(router.globals.params.mode).toBe('list');
+      expect({ outcome, drawnFor }).toEqual({
+        outcome: 'adopted',
+        drawnFor: true,
+      });
+      expect(
+        served.filter((element) => container.contains(element)),
+      ).toHaveLength(served.length);
+      expect(warn).not.toHaveBeenCalled();
+    });
+
+    it('tells a boot into other url parameter values from the drawn ones', async () => {
+      const { container } = serve(await drawShell('/shell/item/7'));
+
+      const { outcome, drawnFor } = await bootAt(
+        container,
+        rootTemplate,
+        '/shell/item/8',
+      );
+
+      expect({ outcome, drawnFor }).toEqual({
+        outcome: 'adopted',
+        drawnFor: false,
+      });
+    });
+  });
+
   describe('over a document drawn for another state', () => {
+    afterEach(() => {
+      vi.unstubAllEnvs();
+    });
+
+    it('says nothing of the boot in production, where the warning is folded away', async () => {
+      vi.stubEnv('DEV', false);
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const { container } = serve(await drawShell('/shell/detail'));
+      const onAdopt = vi.fn();
+
+      const { drawnFor } = await bootAt(container, rootTemplate, '/shell', {
+        onAdopt,
+      });
+
+      expect(drawnFor).toBe(false);
+      expect(onAdopt.mock.calls.map(([, outcome]) => outcome)).toContain(
+        'fell-back',
+      );
+      expect(warn).not.toHaveBeenCalled();
+    });
+
     it('warns once for the boot, renders that view cold, and keeps its ancestors', async () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
       // Drawn with the nested view routed; the client boots into the parent state.
@@ -928,8 +989,10 @@ describe('the guard on what there is to adopt', () => {
   it('leaves an element inside a sleeping view deferred until that view wakes', async () => {
     const { container } = serve(await drawShell('/shell/mark'));
     const mark = container.querySelector('plain-mark.routed')!;
+    const wrapped = container.querySelector('plain-mark.wrapped')!;
     const nested = views(container).at(-1)!;
     expect(mark.hasAttribute('defer-hydration')).toBe(true);
+    expect(wrapped.hasAttribute('defer-hydration')).toBe(true);
     const router = makeRouter();
     await settle(router, '/shell/mark');
 
@@ -938,6 +1001,8 @@ describe('the guard on what there is to adopt', () => {
     // The walk has returned and the nested view has not woken: its interior is still its own.
     expect(nested.hasAttribute('defer-hydration')).toBe(true);
     expect(mark.hasAttribute('defer-hydration')).toBe(true);
+    // Markup between the element and its view does not hand it to the root sweep.
+    expect(wrapped.hasAttribute('defer-hydration')).toBe(true);
 
     await drain(container);
     release();
@@ -945,6 +1010,8 @@ describe('the guard on what there is to adopt', () => {
     expect(nested.hasAttribute('defer-hydration')).toBe(false);
     expect(container.querySelector('plain-mark.routed')).toBe(mark);
     expect(mark.hasAttribute('defer-hydration')).toBe(false);
+    expect(container.querySelector('plain-mark.wrapped')).toBe(wrapped);
+    expect(wrapped.hasAttribute('defer-hydration')).toBe(false);
   });
 
   it('wakes a custom element the render wrote no marker for', async () => {
