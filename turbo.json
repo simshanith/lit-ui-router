@@ -189,13 +189,18 @@
         "!.cache/**",
         "!**/.vitepress/cache/**",
         "$TURBO_ROOT$/.oxlintrc.json",
+        "$TURBO_ROOT$/tools/lint-elements/elements.oxlintrc.json",
         "$TURBO_DEFAULT$"
       ],
       // selects github output, which the turbo_summary step re-emits
       "passThroughEnv": ["GITHUB_ACTIONS"]
     },
     "//#lint:root": {
-      "inputs": [".oxlintrc.json", "$TURBO_DEFAULT$"],
+      "inputs": [
+        ".oxlintrc.json",
+        "tools/lint-elements/elements.oxlintrc.json",
+        "$TURBO_DEFAULT$"
+      ],
       "passThroughEnv": ["GITHUB_ACTIONS"]
     },
     // Hard complexity ceiling over JS/TS outside gitignored paths (.vue files
@@ -243,6 +248,7 @@
         "examples/*/package-lock.json",
         "tools/lit-template-lint/src/**",
         "tools/compat-guards/src/**",
+        "tools/shared/src/**",
         // carries the `ts-lit-plugin` ruleset lit-analyzer reads from cwd
         "tsconfig.json",
         "pnpm-workspace.yaml"

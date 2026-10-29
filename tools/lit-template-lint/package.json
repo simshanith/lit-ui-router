@@ -15,10 +15,8 @@
     "typecheck:tsc": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
-    "@tools/bootstrap": "catalog:workspace",
     "@tools/shared": "catalog:workspace",
     "@types/node": "catalog:",
-    "jsonc-parser": "catalog:",
     "lit-analyzer": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",

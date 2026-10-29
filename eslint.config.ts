@@ -1,8 +1,8 @@
 // The lane split. ESLint owns manifests (package.json via
 // eslint-plugin-package-json and eslint-plugin-pnpm, pnpm-workspace.yaml via
 // eslint-plugin-pnpm). oxlint (.oxlintrc.json) owns JS/TS, including the
-// eslint-plugin-lit / -wc / -lit-a11y and lit-ui-router rules it runs as
-// jsPlugins.
+// lit-ui-router rules and, extended from @tools/lint-elements, the
+// eslint-plugin-lit / -wc / -lit-a11y rules, all run as jsPlugins.
 //
 // This file stays at the root because ESLint resolves the nearest
 // eslint.config.* per file, and the tutorials under examples/ ride it

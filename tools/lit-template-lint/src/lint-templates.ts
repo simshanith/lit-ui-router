@@ -18,7 +18,7 @@
 // Usage (from anywhere in the workspace): lint-templates
 import { fileURLToPath } from 'node:url';
 
-import { WORKSPACE_SRC_GLOB } from './globs.ts';
+import { WORKSPACE_SRC_GLOB } from '@tools/shared/globs.ts';
 import {
   DefaultLitAnalyzerContext,
   LitAnalyzer,

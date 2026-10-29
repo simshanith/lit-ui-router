@@ -3,20 +3,21 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, it } from 'node:test';
 
-import { workspaceRoot } from '@tools/bootstrap/root.ts';
 import type { Json } from '@tools/bootstrap/types.ts';
+import { WORKSPACE_SRC_GLOB } from '@tools/shared/globs.ts';
 import { parse } from 'jsonc-parser';
-
-import { WORKSPACE_SRC_GLOB } from './globs.ts';
 
 interface Override {
   files: string[];
   rules?: Record<string, Json>;
 }
 
-// SAFETY: oxlint validates .oxlintrc.json against its schema, which this subsets
+// SAFETY: oxlint validates the config against its schema, which this subsets
 const { overrides } = parse(
-  readFileSync(join(workspaceRoot, '.oxlintrc.json'), 'utf8'),
+  readFileSync(
+    join(import.meta.dirname, '..', 'elements.oxlintrc.json'),
+    'utf8',
+  ),
 ) as { overrides: Override[] };
 
 function expandBraces(glob: string): string[] {
@@ -30,7 +31,7 @@ function expandBraces(glob: string): string[] {
 }
 
 describe('WORKSPACE_SRC_GLOB', () => {
-  it('matches the files of the oxlint custom-element override', () => {
+  it('matches the files of the custom-element override', () => {
     const elements = overrides.filter(
       (o) => o.rules?.['lit/no-invalid-html'] === 'error',
     );

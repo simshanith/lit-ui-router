@@ -2,7 +2,7 @@
   "name": "@tools/shared",
   "version": "0.0.1",
   "private": true,
-  "description": "Cross-workflow tooling helpers: the exec seam, the gh CLI guard, GitHub Actions plumbing, the node:test reporter, bench result files, turbo task log paths, and workspace enumeration",
+  "description": "Cross-workflow tooling helpers: the exec seam, the gh CLI guard, GitHub Actions plumbing, the node:test reporter, bench result files, shared source globs, turbo task log paths, and workspace enumeration",
   "type": "module",
   "exports": {
     "./bench-report.ts": "./src/bench-report.ts",
@@ -12,6 +12,7 @@
     "./gh.ts": "./src/gh.ts",
     "./gha.core.ts": "./src/gha.core.ts",
     "./gha.ts": "./src/gha.ts",
+    "./globs.ts": "./src/globs.ts",
     "./test-reporter.ts": "./src/test-reporter.ts",
     "./turbo-log.ts": "./src/turbo-log.ts",
     "./workspace.ts": "./src/workspace.ts"
