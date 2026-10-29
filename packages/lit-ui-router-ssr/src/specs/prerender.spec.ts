@@ -11,13 +11,13 @@ import { requestRouter } from 'lit-ui-router/context';
 import { createServerRouter } from 'ui-router-server';
 import type { MountConfig } from 'ui-router-server';
 import { installServerLocation } from 'ui-router-server/location';
+import { settle } from 'ui-router-server/ssr';
 
 import packageJson from '../../package.json' with { type: 'json' };
 
 import { prerender } from '../prerender.js';
 import type { HydrationSignature } from '../client.js';
 import type { FileWriter, RedirectLine } from '../prerender.js';
-import { settle } from '../settle.js';
 import { signatureText, withoutSignature } from './markup.js';
 
 // --- fixtures ------------------------------------------------------------
