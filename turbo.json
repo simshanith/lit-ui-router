@@ -157,6 +157,7 @@
         "//#lint:markdown",
         "//#lint:workflows",
         "//#lint:templates",
+        "//#lint:css",
         "@tools/repo-checks#check:patches",
         "@tools/repo-checks#check:shared-source",
         "@tools/repo-checks#check:dedupe",
@@ -253,6 +254,24 @@
         // carries the `ts-lit-plugin` ruleset lit-analyzer reads from cwd
         "tsconfig.json",
         "pnpm-workspace.yaml"
+      ]
+    },
+    // stylelint over .css, .vue <style> and lit `css` blocks;
+    // stylelint.config.mjs maps each to its syntax and owns the ignores.
+    "//#lint:css": {
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        // not gitignore-pruned, so the generated trees come off by hand
+        "{apps,examples,packages,tools,www}/**/*.{css,vue,ts,mts,cts,js,mjs,cjs}",
+        "!**/node_modules/**",
+        "!**/dist/**",
+        "!**/coverage/**",
+        "!**/coverage-effect3/**",
+        "!**/.turbo/**",
+        "!**/.probe-scratch/**",
+        "!**/.vitepress/cache/**",
+        "!**/.cloudflare/**",
+        "!**/worker-configuration.d.ts"
       ]
     },
     "//#lint:package-json": {

@@ -1,5 +1,10 @@
 :root {
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  /* Widen the desktop sidebar (default 272px) to match the mobile drawer's
+     320px, giving the deep API identifiers room to sit on one line. The
+     ≥1440px width formula derives from this variable too. */
+  --vp-sidebar-width: 320px;
+  --vp-home-hero-image-background-image: url(/images/hero-glow.svg);
 }
 
 /* Doc prose wrapping; overflow-wrap breaks only a word that would overflow. */
@@ -54,6 +59,7 @@
 
 .vp-doc .badges a.badge>img {
   display: inline-block;
+  border-radius: 4px;
   box-shadow: 0px 0px 0px 0px currentColor;
   transition: box-shadow 0.25s var(--ease-out);
 }
@@ -97,10 +103,6 @@
   flex-wrap: wrap;
   gap: 8px;
   margin-block: 16px 24px;
-}
-
-.vp-doc .badges a.badge>img {
-  border-radius: 4px;
 }
 
 /* The atlas thumb on the companion overview: one image per scheme, the
@@ -173,14 +175,6 @@
   }
 }
 
-:root {
-  /* Widen the desktop sidebar (default 272px) to match the mobile drawer's
-     320px, giving the deep API identifiers room to sit on one line. The
-     ≥1440px width formula derives from this variable too. */
-  --vp-sidebar-width: 320px;
-  --vp-home-hero-image-background-image: url(/images/hero-glow.svg);
-}
-
 /* Brand tokens hold 4.5:1 for white button text and for brand link text. */
 :root:not(.dark) {
   --vp-c-brand-3: #4a67ca;
@@ -190,9 +184,6 @@
   --vp-c-brand-2: #7a8cf0;
   --vp-button-brand-hover-bg: #4f6ad0;
   --vp-button-brand-active-bg: #3a5ccc;
-}
-
-.dark {
   --vp-home-hero-image-background-image: url(/images/hero-glow-dark.svg);
 }
 

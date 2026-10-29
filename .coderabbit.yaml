@@ -126,6 +126,8 @@ reviews:
       enabled: false
     yamllint:
       enabled: false
+    stylelint:
+      enabled: false
     gitleaks:
       enabled: true
 

@@ -421,8 +421,8 @@ is retired.
 Its behaviour lives in [`.coderabbit.yaml`](../.coderabbit.yaml), read from the
 PR's own branch, so a PR may adjust its own review — and a long-lived branch
 keeps the rules it was cut with until it picks up `main`. The static analysers this
-repo already gates (oxlint, ESLint, actionlint, zizmor, shellcheck, rumdl,
-yamllint) are switched off there to avoid a second, weaker copy of CI; secret
+repo already gates (oxlint, ESLint, stylelint, actionlint, zizmor, shellcheck,
+rumdl, yamllint) are switched off there to avoid a second, weaker copy of CI; secret
 scanning is left on because nothing else covers it.
 
 Because the config is read from the PR branch, a PR can also disable its own
