@@ -2,7 +2,7 @@ import { LitElement } from 'lit';
 
 import { LightDomHydrating } from './light-dom-api.js';
 
-// Type-level checks on #904's mixin: the compile is the assertion (package `typecheck`; the umbrella tsconfig covers src/specs), and nothing here runs. `light-dom-api.ts` types the mixin as the shipped export once `client.ts` has one.
+// Type-level checks on #904's mixin: the compile is the assertion (package `typecheck`; the umbrella tsconfig covers src/specs), and nothing here runs.
 
 class Base extends LitElement {
   static readonly kind: string = 'base';

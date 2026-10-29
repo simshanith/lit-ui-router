@@ -6,7 +6,9 @@ import { requestContext } from 'lit-ui-router/context';
 
 import { adoptUiViewContext } from './adopt-context.js';
 import type { AdoptableView } from './adopt-context.js';
+import { warnLightWithoutClient } from './dev-warn.js';
 import { lightDomBrand } from './light-dom-brand.js';
+import { connectServed, dropHeldRender, sleepsThrough } from './served-view.js';
 
 /** The attribute `@lit-labs/ssr` writes on a server-rendered custom element. */
 const DEFER = 'defer-hydration';
@@ -21,8 +23,8 @@ export interface LightDomHydratingElement extends LitElement {
    */
   deferHydration: boolean;
   /**
-   * Answers the use site's `renderLight()` part with `noChange`, so the render
-   * that reaches it leaves this element's own nodes where they stand.
+   * Answers the use site's `lightSlot()` part with `noChange`, so the
+   * render that reaches it leaves this element's own nodes where they stand.
    */
   renderLight(): typeof noChange;
 }
@@ -43,15 +45,19 @@ export interface LightDomHydratingConstructor {
 /**
  * Adds the light-DOM side of a server render to a consumer's `LitElement`.
  *
- * The element renders into its own light DOM. It sleeps while
- * `defer-hydration` is on it and holds the nodes the server drew; removing the
- * attribute wakes it, and its first update requests the adopter `hydrateRoot()`
- * provides and calls it, which hydrates the element's `render()` against those
- * nodes in place. With no adopter it renders cold.
+ * The element renders into its own light DOM, and `static styles` do not apply
+ * to it: there is no shadow root to adopt them, so it takes the document's
+ * styles. It sleeps while `defer-hydration` is on it and holds the nodes the
+ * server drew. The use site's `lightSlot()` part removes the attribute when
+ * the enclosing walk reaches it, parent first, and pins the adopter to the
+ * element. Its first update then requests the adopter and calls it, which
+ * hydrates the element's `render()` against those nodes in place and wakes the
+ * elements inside it. A hydrate that throws drops the served nodes and renders
+ * cold, warning in development; with no adopter at all it does the same.
  *
- * `LightElementRenderer` from `lit-ui-router-ssr` is the server half: it
- * matches a class this produced. The use site writes `${renderLight()}` inside
- * the element.
+ * The brand is a static on the class this returns, so subclasses stay opted in
+ * and `Base` stays as it was. `LightElementRenderer` from `lit-ui-router-ssr`
+ * is the server half: it matches the brand.
  *
  * @param Base - the consumer's `LitElement` class
  * @returns the class, branded
@@ -81,7 +87,6 @@ export const LightDomHydrating = <T extends LitElementConstructor>(
     /** Set at connect on a deferred element, so the first update that runs is known to be the wake. */
     private deferredAtConnect = false;
 
-    // TODO(#904 research): forcing light DOM here, versus requiring the consumer's own createRenderRoot.
     /** @internal */
     protected override createRenderRoot(): HTMLElement {
       return this;
@@ -90,21 +95,12 @@ export const LightDomHydrating = <T extends LitElementConstructor>(
     /** @internal */
     override connectedCallback(): void {
       super.connectedCallback();
-
-      // TODO(#904 research): a top-level light element gets no `defer-hydration` from @lit-labs/ssr, so it wakes on connect and renders over the served nodes.
-      if (this.deferHydration) {
-        this.deferredAtConnect = true;
-      } else if (this.deferredAtConnect) {
-        this.requestUpdate();
-      }
+      this.deferredAtConnect = connectServed(this, this.deferredAtConnect);
     }
 
     /** @internal */
     protected override shouldUpdate(changed: PropertyValues): boolean {
-      if (this.deferHydration) return false;
-
-      // Detached before the wake ran: the held nodes and the wake survive until a re-attach.
-      if (this.deferredAtConnect && !this.isConnected) return false;
+      if (sleepsThrough(this, this.deferredAtConnect)) return false;
 
       return super.shouldUpdate(changed);
     }
@@ -121,9 +117,11 @@ export const LightDomHydrating = <T extends LitElementConstructor>(
       this.deferredAtConnect = false;
       const adopt = requestContext(this, adoptUiViewContext);
 
-      // TODO(#904 research): the adopter reports `ui-view:adopt` from this element and reveals nested light elements' interiors with its own; a light-element outcome may want its own event.
       if (!adopt) {
-        // TODO(#904 research): drop the held render as served-view.ts's `dropHeldRender` does; sharing it means touching served-view.ts.
+        // Rendering over a render's nodes doubles the markup; what the author wrote ahead of them stays.
+        dropHeldRender(this);
+        warnLightWithoutClient(this);
+
         return;
       }
 

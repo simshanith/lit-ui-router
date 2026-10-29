@@ -19,8 +19,7 @@ afterEach(() => {
 });
 
 describe('light-DOM elements alongside lit’s own hydrate support', () => {
-  // Waits on #904's `LightDomHydrating` and light-DOM renderer, read through `light-dom-api.ts`.
-  it.fails('hydrates an opted-in element with 0 nodes removed', async () => {
+  it('hydrates an opted-in element with 0 nodes removed', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     expect(globalThis).toHaveProperty('litElementHydrateSupport');
 

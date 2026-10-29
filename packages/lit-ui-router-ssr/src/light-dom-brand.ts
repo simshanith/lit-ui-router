@@ -1,7 +1,7 @@
 // The brand both halves of light-DOM hydration read, in a module neither entry reaches through the other.
 
 /**
- * Brands a class {@link LightDomHydrating} produced, so the server renderer and
+ * Brands a class `LightDomHydrating` produced, so the server renderer and
  * a second copy of this package recognise it. `customElements` identity cannot:
  * two copies build two classes.
  */
@@ -21,3 +21,14 @@ export const isLightDomClass = (
   !!constructor &&
   lightDomBrand in constructor &&
   constructor[lightDomBrand] === true;
+
+/**
+ * Whether `element` is an instance of a light-DOM hydrating class.
+ *
+ * @param element - the node a walk is passing
+ */
+export const isLightDomElement = (element: Node): boolean => {
+  const { constructor } = element;
+
+  return lightDomBrand in constructor && constructor[lightDomBrand] === true;
+};

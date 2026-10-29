@@ -10,8 +10,6 @@ import {
   plainPage,
 } from './light-dom-fixture.js';
 
-// Specs marked `it.fails` wait on #904's light-DOM element renderer, read through `light-dom-api.ts`. Flip each to `it` as it passes.
-
 /** The markup between `<tag id="id" …>` and its close tag. */
 const inside = (markup: string, tag: string, id: string): string => {
   const open = new RegExp(`<${tag}\\s[^>]*id="${id}"[^>]*>`).exec(markup);
@@ -24,7 +22,7 @@ const inside = (markup: string, tag: string, id: string): string => {
 
 describe('the server render of a light-DOM element', () => {
   // The elements carry no `isServer` branch; their render reaches the page through the renderer alone.
-  it.fails('draws an opted-in element’s render into its light DOM, from its bound property', async () => {
+  it('draws an opted-in element’s render into its light DOM, from its bound property', async () => {
     const markup = await drawLight(cardPage('served'), '/bare');
     const card = inside(markup, 'light-card', 'top');
 
@@ -40,7 +38,7 @@ describe('the server render of a light-DOM element', () => {
     expect(markup).toMatch(/<plain-light-card\s+id="plain" defer-hydration>/);
   });
 
-  it.fails('draws the element’s render after the children its use site wrote', async () => {
+  it('draws the element’s render after the children its use site wrote', async () => {
     const markup = await drawLight(panelPage, '/bare');
     const panel = inside(markup, 'light-panel', 'panel');
 
@@ -51,14 +49,14 @@ describe('the server render of a light-DOM element', () => {
     expect(panel.match(/class="authored"/g)).toHaveLength(1);
   });
 
-  it.fails('draws a light-DOM element a routed view holds', async () => {
+  it('draws a light-DOM element a routed view holds', async () => {
     const markup = await drawLight(rootTemplate, '/card');
 
     expect(inside(markup, 'light-card', 'routed')).toContain('routed');
     expect(markup).not.toContain('shadowroot');
   });
 
-  it.fails('draws a <ui-view> and its routed content inside a light-DOM element’s own render', async () => {
+  it('draws a <ui-view> and its routed content inside a light-DOM element’s own render', async () => {
     const markup = await drawLight(framePage, '/card');
     const frame = inside(markup, 'light-frame', 'frame');
 
@@ -67,7 +65,7 @@ describe('the server render of a light-DOM element', () => {
     expect(inside(markup, 'light-card', 'routed')).toContain('routed');
   });
 
-  it.fails('draws two levels of light-DOM elements, each from its bound property', async () => {
+  it('draws two levels of light-DOM elements, each from its bound property', async () => {
     const markup = await drawLight(outerPage, '/bare');
 
     expect(inside(markup, 'light-outer', 'outer')).toContain(

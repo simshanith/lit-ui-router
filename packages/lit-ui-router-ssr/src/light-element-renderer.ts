@@ -9,31 +9,40 @@ import { isLightDomClass } from './light-dom-brand.js';
 import { prefixInterior } from './ui-view-renderer.js';
 
 /**
- * Renders a {@link LightDomHydrating} element's `render()` into its light DOM,
+ * Renders a `LightDomHydrating` element's `render()` into its light DOM,
  * between the part markers its client-side hydrate reads, and writes no shadow
- * root.
+ * root. `LightDomHydrating` ships from `lit-ui-router-ssr/client`, and its
+ * brand is what this matches.
  *
  * `LitElementRenderer` does the rest: it builds the element, sets its
  * attributes and properties, and runs `willUpdate`. List this ahead of it in
  * `elementRenderers`, since the first renderer that matches a class wins.
  *
- * The use site writes `${renderLight()}` inside the element: that is the only
- * part `@lit-labs/ssr` reaches `renderLight()` through. The pair around the
- * render is written plain and every marker inside it carries the served-marker
+ * The use site writes `${lightSlot()}` inside the element: `@lit-labs/ssr`
+ * reaches `renderLight()` only through that part. The pair around the render
+ * is written plain and every marker inside it carries the served-marker
  * prefix, as {@link UiViewRenderer} writes a view, so the walk hydrating the
  * surroundings reads past the interior and the element's own wake reveals it.
+ * Custom elements inside the render, `<ui-view>` included, are drawn by their
+ * own renderers. Collecting the render to prefix it is synchronous, so a
+ * render that awaits is not served. `static styles` are not written: a
+ * light-DOM element takes the document's styles.
  *
  * @example
  * ```ts
- * import { renderLight } from '@lit-labs/ssr-client/directives/render-light.js';
- * import { LightElementRenderer, UiViewRenderer } from 'lit-ui-router-ssr';
+ * import { lightSlot } from 'lit-ui-router-ssr/client';
+ * import { LightElementRenderer, prerender, UiViewRenderer } from 'lit-ui-router-ssr';
  *
- * const page = html`<app-card .title=${title}>${renderLight()}</app-card>`;
- * prerender(mounts, { elementRenderers: [UiViewRenderer, LightElementRenderer] });
+ * const card = html`<app-card .label=${label}>${lightSlot()}</app-card>`;
+ *
+ * await prerender({
+ *   // …
+ *   elementRenderers: [UiViewRenderer, LightElementRenderer],
+ * });
  * ```
  */
 export class LightElementRenderer extends LitElementRenderer {
-  /** Answers for a class {@link LightDomHydrating} branded, whatever its tag. */
+  /** Answers for a class `LightDomHydrating` branded, whatever its tag. */
   static override matchesClass(ceClass: typeof HTMLElement): boolean {
     return isLightDomClass(ceClass);
   }
@@ -45,8 +54,6 @@ export class LightElementRenderer extends LitElementRenderer {
 
   /** @internal */
   override renderLight(renderInfo: RenderInfo): ThunkedRenderResult {
-    // TODO(#904 research): author children written alongside `${renderLight()}` at the use site, versus the rendered content; the client's adopter keeps what stands ahead of the pair.
-    // TODO(#904 research): `elementStyles` are not written; a light-DOM element's styles belong to the document.
     // Element access reaches the protected `render()`, the call LitElementRenderer's own renderShadow makes.
     // oxlint-disable-next-line typescript/dot-notation -- dot access to a protected member does not typecheck
     const value = this.element['render']();

@@ -490,6 +490,66 @@ await bootstrap(router, root, page(router), {
 });
 ```
 
+### Light-DOM elements
+
+A consumer's own `LitElement` that renders into its light DOM opts in to the
+same sleep-then-adopt cycle with
+[`LightDomHydrating`](/api/lit-ui-router-ssr/client/variables/LightDomHydrating).
+[`LightElementRenderer`](/api/lit-ui-router-ssr/index/classes/LightElementRenderer)
+draws it on the server, and
+[`lightSlot`](/api/lit-ui-router-ssr/client/variables/lightSlot) marks the hole
+at the use site:
+
+```ts
+import { html, LitElement } from 'lit';
+import { property } from 'lit/decorators.js';
+import { LightDomHydrating, lightSlot } from 'lit-ui-router-ssr/client';
+
+export class AppCard extends LightDomHydrating(LitElement) {
+  @property() label = '';
+
+  render() {
+    return html`<p>${this.label}</p>`;
+  }
+}
+
+export const card = (label: string) =>
+  html`<app-card .label=${label}>${lightSlot()}</app-card>`;
+```
+
+```ts
+import {
+  LightElementRenderer,
+  prerender,
+  UiViewRenderer,
+} from 'lit-ui-router-ssr';
+
+await prerender({
+  // …
+  elementRenderers: [UiViewRenderer, LightElementRenderer],
+});
+```
+
+The mixin brands the class it returns, so a subclass stays opted in and the
+base class does not; an element that did not opt in is served empty and renders
+cold. The renderer builds the element as `LitElementRenderer` does, then writes
+its `render()` where a shadow root would go, with custom elements inside it,
+`<ui-view>` included, drawn too. List it ahead of any `LitElementRenderer`.
+
+`lightSlot` is `uiViewSlot` under a name that does not read as a view. On the
+client it wakes the element, parent first, and the element hands itself to the
+same adopter a view does, which hydrates its `render()` in place. Each opted-in
+element reports a bubbling, composed
+[`light-dom:adopt`](/api/lit-ui-router-ssr/client/variables/lightDomAdoptEventName)
+event with the same detail as `ui-view:adopt`; `onAdopt` reports views only.
+
+A hydrate that throws drops that element's served nodes for a cold render,
+warning in development. A child the use site writes beside `lightSlot` with
+bindings of its own does that every time, because its markers come ahead of
+the element's own; static author children are kept. `static styles` do not
+apply: a light-DOM element has no shadow root to adopt them into, so it takes
+the document's styles.
+
 ## How this compares
 
 Two axes separate the hydration models in circulation: where the code that

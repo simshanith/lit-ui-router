@@ -1,12 +1,18 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import '../register.js';
+import { settle } from 'ui-router-server/ssr';
+
+import { hydrateRoot, lightDomAdoptEventName } from '../client.js';
+import type { LightDomAdoptEvent } from '../client.js';
 
 import { rootTemplate } from './fixture.js';
 import {
+  boundPanelPage,
   cardPage,
   drawLight,
   framePage,
   hydrateLight,
+  makeLightRouter,
   outerPage,
   panelPage,
   plainPage,
@@ -20,8 +26,6 @@ import type {
 } from './light-dom-fixture.js';
 import type { Page } from './round-trip.js';
 import { drain, serve } from './round-trip.js';
-
-// Specs marked `it.fails` wait on #904: `LightDomHydrating` from `lit-ui-router-ssr/client` and a light-DOM element renderer from `lit-ui-router-ssr`, both read through `light-dom-api.ts`. Flip each to `it` as it passes.
 
 /** Draws `page` for `path`, serves it, and boots a client into it, counting what the boot removed. */
 const roundTrip = async (
@@ -60,7 +64,7 @@ afterEach(() => {
 
 describe('a light-DOM element that opted in', () => {
   // The acceptance line of #904.
-  it.fails('renders on the server and hydrates with 0 nodes removed', async () => {
+  it('renders on the server and hydrates with 0 nodes removed', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
     const { container, served } = serve(
@@ -83,14 +87,14 @@ describe('a light-DOM element that opted in', () => {
     expect(warn).not.toHaveBeenCalled();
   });
 
-  it.fails('has its bound property before its first update', async () => {
+  it('has its bound property before its first update', async () => {
     const { container } = await roundTrip(cardPage('served'), '/bare');
     const card = container.querySelector<LightCard>('#top')!;
 
     expect(card.labelAtFirstUpdate).toBe('served');
   });
 
-  it.fails('answers an @event listener on the served node', async () => {
+  it('answers an @event listener on the served node', async () => {
     const { container, served } = serve(
       await drawLight(cardPage('served'), '/bare'),
     );
@@ -111,7 +115,7 @@ describe('a light-DOM element that opted in', () => {
     expect(kept(container, served)).toHaveLength(served.length);
   });
 
-  it.fails('updates the served node in place on a later property change', async () => {
+  it('updates the served node in place on a later property change', async () => {
     const { container } = serve(await drawLight(cardPage('served'), '/bare'));
     const label = container.querySelector('#top .card-label');
     expect(label).not.toBeNull();
@@ -150,7 +154,7 @@ describe('a light-DOM element that did not opt in', () => {
 });
 
 describe('author children beside the element’s own render', () => {
-  it.fails('keeps both, once each, in the order the server wrote them', async () => {
+  it('keeps both, once each, in the order the server wrote them', async () => {
     const { container, served } = serve(await drawLight(panelPage, '/bare'));
     const authored = container.querySelector('#panel .authored');
     const heading = container.querySelector('#panel .panel-heading');
@@ -176,9 +180,36 @@ describe('author children beside the element’s own render', () => {
   });
 });
 
+describe('an author child with bindings of its own', () => {
+  // The documented limit: the element's hydrate meets the child's markers ahead of its own pair, so it falls back.
+  it('makes the element fall back cold, once, keeping the child', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const adoptions: string[] = [];
+
+    const record = (event: Event): void => {
+      // SAFETY: only `light-dom:adopt` reaches this listener, which carries the outcome detail.
+      adoptions.push((event as LightDomAdoptEvent).detail.outcome);
+    };
+
+    document.addEventListener(lightDomAdoptEventName, record);
+    const { container } = await roundTrip(boundPanelPage, '/bare');
+    document.removeEventListener(lightDomAdoptEventName, record);
+    const panel = container.querySelector<LightPanel>('#panel')!;
+
+    expect(adoptions).toEqual(['fell-back']);
+    expect(warn).toHaveBeenCalledOnce();
+    expect(warn.mock.calls[0][0]).toContain('this light-DOM element');
+    expect(warn.mock.calls[0][0]).not.toContain('router.start()');
+    expect(panel.querySelectorAll('.authored')).toHaveLength(1);
+    expect(panel.querySelector('.authored')?.textContent).toBe('mine');
+    expect(panel.querySelectorAll('.panel-heading')).toHaveLength(1);
+    expect(panel.querySelector('.panel-heading')?.textContent).toBe('Panel');
+  });
+});
+
 describe('nesting', () => {
   // A routed card wakes inside its view's adoption; on main `hydrateRoot` also clears `defer-hydration` inside views still asleep, which #1654's per-view sweep stops.
-  it.fails('wakes a light-DOM element inside a <ui-view> after that view adopts', async () => {
+  it('wakes a light-DOM element inside a <ui-view> after that view adopts', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
     const { container, served, removed } = await roundTrip(
@@ -196,12 +227,17 @@ describe('nesting', () => {
     expect(warn).not.toHaveBeenCalled();
   });
 
-  it.fails('leaves a light-DOM element inside a sleeping view deferred until that view wakes', async () => {
+  it('leaves a light-DOM element inside a sleeping view deferred until that view wakes', async () => {
     const { container } = serve(await drawLight(rootTemplate, '/card'));
     const card = container.querySelector('#routed');
     expect(card?.querySelector('.card-label')).not.toBeNull();
 
-    const release = await hydrateLight(container, rootTemplate, '/card');
+    const router = makeLightRouter();
+    await settle(router, '/card');
+    // Called directly, not through the async `hydrateLight`, whose own await would let the view's update run first.
+    const release = hydrateRoot(container, rootTemplate(router));
+
+    if (!release) throw new Error('hydrateRoot left the container cold');
 
     // The view is woken but has not updated, so the card inside it still sleeps.
     expect(card?.hasAttribute('defer-hydration')).toBe(true);
@@ -212,7 +248,7 @@ describe('nesting', () => {
     expect(wakes).toEqual(['ui-view', 'light-card#routed']);
   });
 
-  it.fails('wakes a <ui-view> inside a light-DOM element’s own render after that element', async () => {
+  it('wakes a <ui-view> inside a light-DOM element’s own render after that element', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const { container, served, removed } = await roundTrip(framePage, '/card');
 
@@ -232,7 +268,7 @@ describe('nesting', () => {
     expect(warn).not.toHaveBeenCalled();
   });
 
-  it.fails('wakes two levels of light-DOM elements parent first', async () => {
+  it('wakes two levels of light-DOM elements parent first', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const { container, served, removed } = await roundTrip(outerPage, '/bare');
     const inner = container.querySelector<LightCard>('#inner');
@@ -250,7 +286,7 @@ describe('nesting', () => {
 
 describe('a server and client render that disagree', () => {
   // Matches `<ui-view>`'s fallback in client.ts: one development warning naming the element, the element's served nodes dropped, a cold render, and nothing thrown.
-  it.fails('renders that element cold, warns once, and keeps its surroundings', async () => {
+  it('renders that element cold, warns once, and keeps its surroundings', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const errors = vi.fn();
     window.addEventListener('error', errors);

@@ -1,5 +1,5 @@
 // Consumer light-DOM elements for #904, and the router and pages that draw them, shared by the node and client lanes.
-import { renderLight } from '@lit-labs/ssr-client/directives/render-light.js';
+import { hydrateRoot, lightSlot } from '../client.js';
 import { html, LitElement } from 'lit';
 import type { PropertyValues, TemplateResult } from 'lit';
 import { property } from 'lit/decorators.js';
@@ -9,7 +9,6 @@ import type {
   UIRouterLit,
 } from 'lit-ui-router/pure';
 import { settle } from 'ui-router-server/ssr';
-import { hydrateRoot } from '../client.js';
 import { renderPage } from '../prerender.js';
 import { LightDomHydrating, lightRenderers } from './light-dom-api.js';
 import { makeRouter, uiView } from './fixture.js';
@@ -128,7 +127,7 @@ export class LightOuter extends LightDomHydrating(LitElement) {
   override render(): TemplateResult {
     return html`<h2 class="outer-heading">${this.heading}</h2>
       <light-card id="inner" .label=${`${this.heading ?? ''} inner`}
-        >${renderLight()}</light-card
+        >${lightSlot()}</light-card
       >`;
   }
 }
@@ -138,7 +137,7 @@ customElements.define('light-outer', LightOuter);
 /** A routed template whose one element is an opted-in card, labelled from a resolve. */
 export const CardView: RoutedLitTemplate = (props) =>
   html`<light-card id="routed" .label=${String(props.resolves.label ?? '')}
-    >${renderLight()}</light-card
+    >${lightSlot()}</light-card
   >`;
 
 /** The fixture's router, plus `card`, which routes {@link CardView} into the root view. */
@@ -163,33 +162,40 @@ export const cardPage =
   () =>
     html`<p class="sibling">sibling</p>
       <light-card id="top" .label=${label} .compact=${compact}
-        >${renderLight()}</light-card
+        >${lightSlot()}</light-card
       >`;
 
 /** An unopted card beside an opted-in one. */
 export const plainPage: Page = () =>
   html`<plain-light-card id="plain" .label=${'plain'}></plain-light-card>
-    <light-card id="top" .label=${'opted'}>${renderLight()}</light-card>`;
+    <light-card id="top" .label=${'opted'}>${lightSlot()}</light-card>`;
 
 /** A panel whose use site writes a child ahead of the element's own render. */
 export const panelPage: Page = () =>
   html`<light-panel id="panel" .heading=${'Panel'}
     ><p class="authored">mine</p>
-    ${renderLight()}</light-panel
+    ${lightSlot()}</light-panel
+  >`;
+
+/** A panel whose authored child carries a binding of its own, which the element's hydrate cannot read past. */
+export const boundPanelPage: Page = () =>
+  html`<light-panel id="panel" .heading=${'Panel'}
+    ><p class="authored">${'mine'}</p>
+    ${lightSlot()}</light-panel
   >`;
 
 /** A light-DOM element whose own render holds the root `<ui-view>`. */
 export const framePage: Page = (router) =>
   html`<ui-router .uiRouter=${router}
     ><light-frame id="frame" .heading=${'Frame'}
-      >${renderLight()}</light-frame
+      >${lightSlot()}</light-frame
     ></ui-router
   >`;
 
 /** Two levels of light-DOM elements. */
 export const outerPage: Page = () =>
   html`<light-outer id="outer" .heading=${'Outer'}
-    >${renderLight()}</light-outer
+    >${lightSlot()}</light-outer
   >`;
 
 /** The document a build would emit for `path`, drawn with {@link lightRenderers}. */
@@ -197,7 +203,12 @@ export const drawLight = async (page: Page, path: string): Promise<string> => {
   const router = makeLightRouter();
   await settle(router, path);
 
-  return renderPage(page(router), router, new EventTarget(), lightRenderers);
+  try {
+    return renderPage(page(router), router, new EventTarget(), lightRenderers);
+  } finally {
+    // The server render runs each element's `willUpdate` too; the log is the client's.
+    wakes.length = 0;
+  }
 };
 
 /** Hydrates `container` with a fresh client router on `path`, leaving the provider live. */
