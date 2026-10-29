@@ -1,5 +1,5 @@
 /**
- * The client half: `bootRoot()` starts the router and hydrates the prerendered
+ * The client half: `bootstrap()` starts the router and hydrates the prerendered
  * root, or renders it cold, and each served `<ui-view>` the walk wakes adopts
  * its markup through `uiViewSlot`.
  *
@@ -245,7 +245,7 @@ const warnMismatch = (
     ...(view instanceof UiView && view.viewContext
       ? []
       : [
-          'lit-ui-router-ssr: this view had no routed component to adopt against, which is also what a router that never started, or whose first transition was not awaited, looks like: boot with bootRoot(), or call router.start(), await its first successful transition, then hydrateRoot().',
+          'lit-ui-router-ssr: this view had no routed component to adopt against, which is also what a router that never started, or whose first transition was not awaited, looks like: boot with bootstrap(), or call router.start(), await its first successful transition, then hydrateRoot().',
         ]),
   );
 };
@@ -425,6 +425,7 @@ const adopt = (view: AdoptableView, policy: AdoptPolicy): void => {
   try {
     revealServedMarkers(view);
     walkWith(policy, () => hydrate(view.render(), view, view.renderOptions));
+    wakeUnmarked(view);
   } catch (error) {
     warnMismatch(view, error, policy);
     clearInterior(open);
@@ -433,6 +434,32 @@ const adopt = (view: AdoptableView, policy: AdoptPolicy): void => {
   }
 
   report(view, reporter, 'adopted');
+};
+
+/** Whether `element` sits inside a `<ui-view>` below `root`. */
+const isInNestedView = (element: Element, root: Element): boolean => {
+  for (
+    let parent = element.parentElement;
+    parent && parent !== root;
+    parent = parent.parentElement
+  ) {
+    if (parent instanceof UiView) return true;
+  }
+
+  return false;
+};
+
+/**
+ * Wakes what `@lit-labs/ssr` deferred under `root` and wrote no marker for, so
+ * no walk reaches it: every deferred element but a `<ui-view>` and what one
+ * holds, since each view's interior wakes with that view's own adoption.
+ */
+const wakeUnmarked = (root: Element): void => {
+  for (const element of root.querySelectorAll(`[${DEFER}]`)) {
+    if (!(element instanceof UiView) && !isInNestedView(element, root)) {
+      element.removeAttribute(DEFER);
+    }
+  }
 };
 
 /** The views this walk, or an earlier one, already pinned. */
@@ -617,7 +644,9 @@ const makeCold = (container: HTMLElement): void => {
  * outside `container`, or one whose attribute the app cleared itself after the
  * release — is answered by nobody: core drops its held nodes and warns in
  * development. An element the render deferred and wrote no marker for is woken
- * once the walk has finished, since nothing in the walk reaches it.
+ * once the walk has finished, since nothing in the walk reaches it — except
+ * one inside a `<ui-view>`, which wakes once that view has hydrated its own
+ * render, so a routed element never wakes ahead of the view that routes it.
  *
  * The provider answers synchronously and stops immediate propagation, so an
  * outer provider never answers the same request twice. It outlives this call,
@@ -635,7 +664,7 @@ const makeCold = (container: HTMLElement): void => {
  * A `hydrate()` that throws is rethrown, over a container emptied the same
  * way. The caller renders into it.
  *
- * {@link bootRoot} runs the whole boot around this call. Called directly, the
+ * {@link bootstrap} runs the whole boot around this call. Called directly, the
  * boot is the router first: `router.start()`, await its first successful
  * transition, then this call. The walk commits `.uiRouter` onto `<ui-router>`
  * and each woken `<ui-view>` re-seeks the router before its own first render,
@@ -694,25 +723,22 @@ const adoptRoot = (
     throw error;
   }
 
-  // `@lit-labs/ssr` defers a custom element it wrote no marker for, so the walk passed it by; a `<ui-view>` still asleep is a nested one, waiting on its parent's update.
-  for (const element of container.querySelectorAll(`[${DEFER}]`)) {
-    if (!(element instanceof UiView)) element.removeAttribute(DEFER);
-  }
+  wakeUnmarked(container);
 
   return release;
 };
 
-/** What {@link bootRoot} came to, once the page is live. */
-export type BootOutcome = 'adopted' | 'cold';
+/** What {@link bootstrap} came to, once the page is live. */
+export type BootstrapOutcome = 'adopted' | 'cold';
 
-/** What {@link bootRoot} resolves with. */
-export interface BootRootResult {
+/** What {@link bootstrap} resolves with. */
+export interface BootstrapResult {
   /**
    * `adopted`: the served document was hydrated, and each served view reported
    * its own {@link AdoptOutcome}. `cold`: the container was emptied and the
    * template rendered into it.
    */
-  readonly outcome: BootOutcome;
+  readonly outcome: BootstrapOutcome;
   /**
    * Whether the boot transition landed on the state and url parameters the
    * document's signature names; `false` when there was no signature to adopt,
@@ -726,8 +752,8 @@ export interface BootRootResult {
   readonly error?: unknown;
 }
 
-/** {@link bootRoot}'s options: {@link HydrateRootOptions}, plus the boot transition's seed. */
-export interface BootRootOptions extends HydrateRootOptions {
+/** {@link bootstrap}'s options: {@link HydrateRootOptions}, plus the boot transition's seed. */
+export interface BootstrapOptions extends HydrateRootOptions {
   /**
    * Resolved values the document was drawn with, handed to `seed` from
    * `ui-router-server/ssr/client` before the router starts, so the boot
@@ -803,7 +829,7 @@ const warnBootElsewhere = (
   // DEV folds away in dist/*.js; #dev-gate also closes it under node when NODE_ENV is production.
   if (!import.meta.env.DEV || !devGate()) return;
   console.warn(
-    'lit-ui-router-ssr: this document was drawn for another state than the one the client booted into, so bootRoot() rendered the views that differ cold and adopted the rest. One static document answers a whole family of urls, and a boot transition can redirect, so this is legitimate. Drawn for, booted into, views rendered cold:',
+    'lit-ui-router-ssr: this document was drawn for another state than the one the client booted into, so bootstrap() rendered the views that differ cold and adopted the rest. One static document answers a whole family of urls, and a boot transition can redirect, so this is legitimate. Drawn for, booted into, views rendered cold:',
     signature.state,
     router.globals.current.name,
     fellBack,
@@ -875,9 +901,9 @@ const renderCold = (
  *
  * @example
  * ```ts
- * import { bootRoot } from 'lit-ui-router-ssr/client';
+ * import { bootstrap } from 'lit-ui-router-ssr/client';
  *
- * const { outcome } = await bootRoot(router, root, page(router));
+ * const { outcome } = await bootstrap(router, root, page(router));
  * ```
  *
  * @param router - the client router, its states registered and not yet started
@@ -888,13 +914,13 @@ const renderCold = (
  * @throws what `router.start()` throws, as on a router already started
  * @throws the `TypeError` `seed` throws on a payload with no `resolves`, before the router starts
  */
-export async function bootRoot(
+export async function bootstrap(
   router: UIRouterLit,
   container: HTMLElement,
   // oxlint-disable-next-line anti-slop/no-unknown-parameters -- any value lit renders, as lit's render() and hydrate() take it
   value: unknown,
-  options: BootRootOptions = {},
-): Promise<BootRootResult> {
+  options: BootstrapOptions = {},
+): Promise<BootstrapResult> {
   const { onAdopt, payload, ...renderOptions } = options;
   const disarm = seed(router, payload);
   const signature = readAdoptable(container);

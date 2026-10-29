@@ -3,8 +3,8 @@ import type { RenderInfo } from '@lit-labs/ssr';
 import type { TemplateResult } from 'lit';
 import type { UIRouterLit } from 'lit-ui-router/pure';
 import { settle } from 'ui-router-server/ssr';
-import { bootRoot, hydrateRoot } from '../client.js';
-import type { BootRootOptions, BootRootResult } from '../client.js';
+import { bootstrap, hydrateRoot } from '../client.js';
+import type { BootstrapOptions, BootstrapResult } from '../client.js';
 import { renderPage } from '../prerender.js';
 import { makeRouter } from './fixture.js';
 
@@ -154,17 +154,17 @@ export const boot = async (
 
 /**
  * The boot a client writes: a fresh router whose url is `path`, booted into
- * `container` by `bootRoot()`.
+ * `container` by `bootstrap()`.
  */
 export const bootAt = async (
   container: HTMLElement,
   page: Page,
   path: string,
-  options?: BootRootOptions,
+  options?: BootstrapOptions,
   router: UIRouterLit = makeRouter(),
-): Promise<BootRootResult & { router: UIRouterLit }> => {
+): Promise<BootstrapResult & { router: UIRouterLit }> => {
   router.urlService.url(path);
-  const result = await bootRoot(router, container, page(router), options);
+  const result = await bootstrap(router, container, page(router), options);
 
   return { ...result, router };
 };

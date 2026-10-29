@@ -27,6 +27,10 @@ export const LeadView: RoutedLitTemplate = () =>
   html`${'lead'}
     <p class="plate" id="plate">plate</p>`;
 
+/** A leaf holding a bindingless custom element, which the server defers and writes no marker for. */
+export const MarkView: RoutedLitTemplate = () =>
+  html`<plain-mark class="routed"></plain-mark>`;
+
 /** A routed view whose one node is a shadow-DOM element, so the reveal has to reach into its shadow root. */
 export const BadgeView: RoutedLitTemplate = () =>
   html`<shadow-badge></shadow-badge>`;
@@ -126,6 +130,7 @@ export const makeRouter = (detail: () => string = () => 'leaf'): Router => {
       component: OtherView,
     },
     { name: 'shell.lead', url: '/lead', component: LeadView },
+    { name: 'shell.mark', url: '/mark', component: MarkView },
     { name: 'badge', url: '/badge', component: BadgeView },
     { name: 'bare', url: '/bare' },
   ];

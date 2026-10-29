@@ -9,7 +9,7 @@ import '../register.js';
 
 import { RejectType } from '@uirouter/core';
 import {
-  bootRoot,
+  bootstrap,
   hydrateRoot,
   readHydrationSignature,
   uiViewAdoptEventName,
@@ -167,7 +167,7 @@ describe('the round trip', () => {
   });
 });
 
-describe('bootRoot', () => {
+describe('bootstrap', () => {
   it('adopts a document drawn for the state it boots into', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const { container, served } = serve(await drawShell('/shell/detail'));
@@ -418,7 +418,7 @@ describe('bootRoot', () => {
     router.start();
 
     await expect(
-      bootRoot(router, container, rootTemplate(router)),
+      bootstrap(router, container, rootTemplate(router)),
     ).rejects.toThrow('start() called multiple times');
   });
 });
@@ -923,6 +923,28 @@ describe('the guard on what there is to adopt', () => {
     await boot(container, rootTemplate, '/shell/detail');
 
     expect(container.querySelector('.detail')?.textContent).toBe('leaf');
+  });
+
+  it('leaves an element inside a sleeping view deferred until that view wakes', async () => {
+    const { container } = serve(await drawShell('/shell/mark'));
+    const mark = container.querySelector('plain-mark.routed')!;
+    const nested = views(container).at(-1)!;
+    expect(mark.hasAttribute('defer-hydration')).toBe(true);
+    const router = makeRouter();
+    await settle(router, '/shell/mark');
+
+    const release = hydrated(container, rootTemplate(router));
+
+    // The walk has returned and the nested view has not woken: its interior is still its own.
+    expect(nested.hasAttribute('defer-hydration')).toBe(true);
+    expect(mark.hasAttribute('defer-hydration')).toBe(true);
+
+    await drain(container);
+    release();
+
+    expect(nested.hasAttribute('defer-hydration')).toBe(false);
+    expect(container.querySelector('plain-mark.routed')).toBe(mark);
+    expect(mark.hasAttribute('defer-hydration')).toBe(false);
   });
 
   it('wakes a custom element the render wrote no marker for', async () => {

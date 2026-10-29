@@ -275,9 +275,9 @@ warns that the tag is already defined. Then one call boots the router and adopts
 ```typescript
 import 'lit-ui-router-ssr/register';
 import { UIRouterLit, srefHref } from 'lit-ui-router/pure';
-import { bootRoot } from 'lit-ui-router-ssr/client';
+import { bootstrap } from 'lit-ui-router-ssr/client';
 
-await bootRoot(router, root, page(router));
+await bootstrap(router, root, page(router));
 ```
 
 A `<ui-view>` another class already defined throws, naming both ways out.
@@ -327,12 +327,12 @@ The result still extends core's `UiView`, so an enclosing view adopts it as a pa
 and adopts the page, or renders it cold, and resolves once the page is live:
 
 ```typescript
-import { bootRoot } from 'lit-ui-router-ssr/client';
+import { bootstrap } from 'lit-ui-router-ssr/client';
 
-const { outcome } = await bootRoot(router, root, page(router));
+const { outcome } = await bootstrap(router, root, page(router));
 ```
 
-- **`bootRoot(router, container, value, options?)` owns the boot.** It reads the container's
+- **`bootstrap(router, container, value, options?)` owns the boot.** It reads the container's
   signature, starts the router, waits for the boot transition to land — following redirects to the
   one that succeeds — then runs `hydrateRoot()`. The walk commits `.uiRouter` onto `<ui-router>` and
   each `<ui-view>` re-seeks the router before its own first render, so every view finds the settled
@@ -376,7 +376,9 @@ const { outcome } = await bootRoot(router, root, page(router));
   before that update stays asleep, holding its nodes, until it is attached again. The walk pins the
   adopter to every served view it passes, so that view is adopted on its return even once the root
   provider is released. A view the walk never reached drops those nodes, renders cold, and warns in
-  development.
+  development. A deferred element no walk reaches — one the render wrote no marker for — wakes
+  with the adoption of the view that holds it, after that view's hydrate, or with the root walk when
+  no view holds it.
 - **The prefix is the protocol, and both halves are here.** `UiViewRenderer` writes a plain outer
   part pair around each view's routed markup and prefixes every marker between them; `hydrate()`
   reads past a prefixed comment, so the walk hydrating a view's surroundings stops at that pair. The
@@ -400,7 +402,7 @@ const { outcome } = await bootRoot(router, root, page(router));
   (`uiViewAdoptEventName`), bubbling and composed, with `detail.outcome` one of `adopted` — its
   served nodes are the live ones — `fell-back` — a mismatch or a lost pair, with `detail.error`
   carrying the cause — or `none`, nothing to adopt. It fires once per view, parent first, in
-  production as in development. The `onAdopt(view, outcome, error)` option of `bootRoot()` and `hydrateRoot()` receives
+  production as in development. The `onAdopt(view, outcome, error)` option of `bootstrap()` and `hydrateRoot()` receives
   the same reports for every view its walk reaches, a view the pin adopts after the release included.
 - **A mutated document throws.** `hydrateRoot()` rethrows what `hydrate()` threw, over a container it
   first empties. The caller renders into it.
