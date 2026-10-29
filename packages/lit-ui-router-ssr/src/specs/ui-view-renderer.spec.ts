@@ -64,7 +64,22 @@ class StickyView extends LitElement {
 customElements.define('x-sticky', StickyView);
 
 /** One state whose view is a `sticky` class. */
-const stickyRouter = (): UIRouterLit => {
+/** A `sticky` class that counts its instances. */
+class CountedStickyView extends LitElement {
+  static sticky = true;
+  static built = 0;
+
+  constructor() {
+    super();
+    CountedStickyView.built++;
+  }
+}
+
+customElements.define('x-counted-sticky', CountedStickyView);
+
+const stickyRouter = (
+  component: typeof StickyView = StickyView,
+): UIRouterLit => {
   const router = installServerLocation(new UIRouterLit(), {
     urlConfig: { strict: false },
   });
@@ -72,7 +87,7 @@ const stickyRouter = (): UIRouterLit => {
   const state: LitStateDeclaration = {
     name: 'sticky',
     url: '/sticky',
-    component: StickyView,
+    component,
   };
 
   router.stateRegistry.register(state);
@@ -247,6 +262,20 @@ describe('UiViewRenderer', () => {
     warn.mockRestore();
   });
 
+  it('recognises a sticky class by the core brand, without building its element', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const router = stickyRouter(CountedStickyView);
+    await settle(router, '/sticky');
+    const built = CountedStickyView.built;
+
+    expect(draw(router)).toContain(
+      '<ui-view defer-hydration><!--lit-part--><!--/lit-part--></ui-view>',
+    );
+    expect(CountedStickyView.built).toBe(built);
+    expect(warn).toHaveBeenCalledOnce();
+    warn.mockRestore();
+  });
+
   it('leaves a RoutedLitElement view empty without a word under node when NODE_ENV is production', async () => {
     vi.stubEnv('NODE_ENV', 'production');
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
@@ -311,13 +340,27 @@ describe('sticky class detection', () => {
     expect(calls).toBe(0);
   });
 
-  it('falls back to the result shape for a renderer without the brand', () => {
+  // A `lit-ui-router` older than the class-renderer brand has no guard to read.
+  const olderCore: ClassRendererProbe = {
+    isRoutedLitElement: pure.isRoutedLitElement,
+  };
+
+  it('reads the brand on the sticky renderer the workspace core binds', () => {
+    const component = stickyComponent(stickyRouter());
+
+    expect(isStickyRenderer(component)).toBe(true);
+  });
+
+  it('falls back to the result shape against a core without the brand', () => {
     const router = stickyRouter();
     const component = stickyComponent(router);
 
-    expect(isStickyRenderer(component)).toBe(false);
-    expect(isStickyRenderer(component, brandedCore)).toBe(false);
+    expect(isStickyRenderer(component, olderCore)).toBe(false);
     expect(carriesElement(component({ router, resolves: {} }))).toBe(true);
+  });
+
+  it('takes a lone element as a class result, as an older core renders it', () => {
+    expect(carriesElement(html`${new StickyView()}`)).toBe(true);
   });
 
   it('takes the element followed by nothing as a class result', () => {
