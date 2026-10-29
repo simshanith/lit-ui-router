@@ -154,33 +154,46 @@ const enqueue = (request: Request, env: IngestEnv, keys?: JWTVerifyGetKey) =>
     return text(202, 'accepted');
   });
 
-/** Answers one request; `keys` replaces GitHub's JWKS in tests. */
-export const ingest = (
+/** The slice of a Worker's ExecutionContext the handler's signature admits. */
+export interface IngestContext {
+  waitUntil(promise: Promise<unknown>): void;
+}
+
+/** Fetch-shaped, so it binds to the `claims` delegate bare; it reads no `ctx`. */
+export type IngestHandler = (
   request: Request,
   env: IngestEnv,
-  keys?: JWTVerifyGetKey,
-): Promise<Response> => {
-  if (request.method !== 'POST') {
-    return Promise.resolve(
-      new Response('method not allowed', {
-        status: 405,
-        headers: { Allow: 'POST' },
-      }),
-    );
-  }
+  ctx?: IngestContext,
+) => Promise<Response>;
 
-  return Effect.runPromise(
-    enqueue(request, env, keys).pipe(
-      Effect.catchTags({
-        InvalidToken: (error) => Effect.succeed(text(401, error.reason)),
-        ForbiddenClaim: (error) => Effect.succeed(text(403, error.reason)),
-        BadRequest: (error) => Effect.succeed(text(400, error.reason)),
-        Misconfigured: (error) =>
-          Effect.as(
-            Effect.logError(error.reason),
-            text(500, 'the ledger is misconfigured'),
-          ),
-      }),
-    ),
-  );
-};
+/** Builds the handler; `keys` replaces GitHub's JWKS in tests. */
+export const makeIngest =
+  ({ keys }: { keys?: JWTVerifyGetKey } = {}): IngestHandler =>
+  (request, env) => {
+    if (request.method !== 'POST') {
+      return Promise.resolve(
+        new Response('method not allowed', {
+          status: 405,
+          headers: { Allow: 'POST' },
+        }),
+      );
+    }
+
+    return Effect.runPromise(
+      enqueue(request, env, keys).pipe(
+        Effect.catchTags({
+          InvalidToken: (error) => Effect.succeed(text(401, error.reason)),
+          ForbiddenClaim: (error) => Effect.succeed(text(403, error.reason)),
+          BadRequest: (error) => Effect.succeed(text(400, error.reason)),
+          Misconfigured: (error) =>
+            Effect.as(
+              Effect.logError(error.reason),
+              text(500, 'the ledger is misconfigured'),
+            ),
+        }),
+      ),
+    );
+  };
+
+/** Answers one request against GitHub's JWKS. */
+export const ingest: IngestHandler = makeIngest();

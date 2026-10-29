@@ -11,7 +11,7 @@ import {
 } from 'jose';
 
 import type { Claim, OidcClaims } from './claim.ts';
-import { type IngestEnv, ingest } from './ingest.ts';
+import { type IngestEnv, type IngestHandler, makeIngest } from './ingest.ts';
 import { ISSUER, verifyToken } from './oidc.ts';
 
 const AUDIENCE = 'https://release-ledger.test';
@@ -37,6 +37,8 @@ type TokenClaims = Partial<OidcClaims>;
 
 let keys: JWTVerifyGetKey;
 
+let ingest: IngestHandler;
+
 let sign: (
   claims: TokenClaims,
   options?: { audience?: string; expires?: boolean },
@@ -47,6 +49,7 @@ before(async () => {
   const jwk = { ...(await exportJWK(pair.publicKey)), kid: 'k1', alg: 'RS256' };
 
   keys = createLocalJWKSet({ keys: [jwk] });
+  ingest = makeIngest({ keys });
   sign = (claims, { audience = AUDIENCE, expires = true } = {}) => {
     const jwt = new SignJWT({ ...claims })
       .setProtectedHeader({ alg: 'RS256', kid: 'k1' })
@@ -128,7 +131,7 @@ describe('verifyToken', () => {
 describe('POST /claims', () => {
   it('enqueues a verified claim and answers 202', async () => {
     const { env, sent } = envWith();
-    const response = await ingest(post(await sign(CLAIMS)), env, keys);
+    const response = await ingest(post(await sign(CLAIMS)), env);
 
     assert.equal(response.status, 202);
     assert.equal(sent.length, 1);
@@ -166,7 +169,6 @@ describe('POST /claims', () => {
     const response = await ingest(
       postText(await sign(CLAIMS), JSON.stringify(smuggled)),
       env,
-      keys,
     );
 
     assert.equal(response.status, 202);
@@ -179,7 +181,7 @@ describe('POST /claims', () => {
   it('answers 401 without a bearer token', async () => {
     const { env, sent } = envWith();
 
-    assert.equal((await ingest(post(undefined), env, keys)).status, 401);
+    assert.equal((await ingest(post(undefined), env)).status, 401);
     assert.equal(sent.length, 0);
   });
 
@@ -194,20 +196,20 @@ describe('POST /claims', () => {
       .setExpirationTime('5m')
       .sign(other.privateKey);
 
-    assert.equal((await ingest(post(forged), env, keys)).status, 401);
+    assert.equal((await ingest(post(forged), env)).status, 401);
   });
 
   it('answers 401 for an unsigned token when the audience is set', async () => {
     const { env } = envWith();
 
-    assert.equal((await ingest(post(unsigned(CLAIMS)), env, keys)).status, 401);
+    assert.equal((await ingest(post(unsigned(CLAIMS)), env)).status, 401);
   });
 
   it('answers 401 for a token without an expiry', async () => {
     const { env, sent } = envWith();
     const endless = await sign(CLAIMS, { expires: false });
 
-    assert.equal((await ingest(post(endless), env, keys)).status, 401);
+    assert.equal((await ingest(post(endless), env)).status, 401);
     assert.equal(sent.length, 0);
   });
 
@@ -219,7 +221,7 @@ describe('POST /claims', () => {
       job_workflow_ref: `${WORKFLOW}@x.yml@refs/heads/main`,
     });
 
-    const response = await ingest(post(token), env, keys);
+    const response = await ingest(post(token), env);
 
     assert.equal(response.status, 403);
     assert.equal(await response.text(), 'job_workflow_ref is not allowed');
@@ -230,12 +232,9 @@ describe('POST /claims', () => {
     const { env, sent } = envWith();
     const token = await sign(CLAIMS);
 
+    assert.equal((await ingest(postText(token, 'not json'), env)).status, 400);
     assert.equal(
-      (await ingest(postText(token, 'not json'), env, keys)).status,
-      400,
-    );
-    assert.equal(
-      (await ingest(post(token, { name: '../x', version: '1.0.0' }), env, keys))
+      (await ingest(post(token, { name: '../x', version: '1.0.0' }), env))
         .status,
       400,
     );
@@ -248,7 +247,6 @@ describe('POST /claims', () => {
     const response = await ingest(
       post(await sign(CLAIMS), { ...BODY, action: 'repair' }),
       env,
-      keys,
     );
 
     assert.equal(response.status, 403);
@@ -278,7 +276,6 @@ describe('POST /claims', () => {
       const response = await ingest(
         post(await sign({ ...CLAIMS, ...claims }), body),
         env,
-        keys,
       );
 
       assert.equal(response.status, 403);
@@ -298,8 +295,7 @@ describe('POST /claims', () => {
     });
 
     assert.equal(
-      (await ingest(post(token, { ...BODY, version: '2.0.0' }), env, keys))
-        .status,
+      (await ingest(post(token, { ...BODY, version: '2.0.0' }), env)).status,
       202,
     );
   });
@@ -307,7 +303,7 @@ describe('POST /claims', () => {
   it('answers 500, and never skips verification, when the audience is unset', async () => {
     const { env, sent } = envWith({ OIDC_AUDIENCE: undefined });
 
-    assert.equal((await ingest(post(unsigned(CLAIMS)), env, keys)).status, 500);
+    assert.equal((await ingest(post(unsigned(CLAIMS)), env)).status, 500);
     assert.equal(sent.length, 0);
   });
 
@@ -317,19 +313,16 @@ describe('POST /claims', () => {
       LEDGER_DEV_SKIP_OIDC: 'true',
     });
 
-    assert.equal((await ingest(post(unsigned(CLAIMS)), env, keys)).status, 202);
+    assert.equal((await ingest(post(unsigned(CLAIMS)), env)).status, 202);
     assert.equal(sent.length, 1);
   });
 
   it('ignores LEDGER_DEV_SKIP_OIDC while the audience is set', async () => {
     const { env, sent } = envWith({ LEDGER_DEV_SKIP_OIDC: 'true' });
 
-    assert.equal((await ingest(post(unsigned(CLAIMS)), env, keys)).status, 401);
-    assert.equal((await ingest(post(undefined), env, keys)).status, 401);
-    assert.equal(
-      (await ingest(post(await sign(CLAIMS)), env, keys)).status,
-      202,
-    );
+    assert.equal((await ingest(post(unsigned(CLAIMS)), env)).status, 401);
+    assert.equal((await ingest(post(undefined), env)).status, 401);
+    assert.equal((await ingest(post(await sign(CLAIMS)), env)).status, 202);
     assert.equal(sent.length, 1);
   });
 
@@ -341,7 +334,7 @@ describe('POST /claims', () => {
 
     const token = unsigned({ ...CLAIMS, environment: 'preview' });
 
-    assert.equal((await ingest(post(token), env, keys)).status, 403);
+    assert.equal((await ingest(post(token), env)).status, 403);
   });
 
   it('answers 405 with Allow: POST for other methods', async () => {
@@ -350,7 +343,6 @@ describe('POST /claims', () => {
     const response = await ingest(
       new Request('https://ledger.test/claims'),
       env,
-      keys,
     );
 
     assert.equal(response.status, 405);

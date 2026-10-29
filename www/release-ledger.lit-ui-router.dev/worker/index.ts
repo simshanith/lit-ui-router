@@ -41,9 +41,7 @@ const route = createFetchHandler(router, {
   serveShell: () => {
     throw new Error('the release ledger serves no shell');
   },
-  delegates: {
-    claims: (request: Request, env: LedgerEnv) => ingest(request, env),
-  },
+  delegates: { claims: ingest },
 });
 
 const notFound = (): Response =>
@@ -80,7 +78,8 @@ export class LedgerReader extends WorkerEntrypoint<LedgerEnv> {
 }
 
 export default {
-  fetch: async (request, env) => (await route(request, env)) ?? notFound(),
+  fetch: async (request, env, ctx) =>
+    (await route(request, env, ctx)) ?? notFound(),
   scheduled: (controller, env) =>
     Effect.runPromise(
       sweep(env, {
