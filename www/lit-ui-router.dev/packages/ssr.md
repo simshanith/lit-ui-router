@@ -43,8 +43,8 @@ never both. `@lit-labs/ssr-client` is optional: install it when you import
   [Server-Side Routing guide](/guides/server-route-matching#the-router-on-the-server)
   derives by hand, applied for you.
 - **The lit render inside the emit loop.** The loop itself — verdict to file
-  name, redirect to rules line, the `_redirects` file, tally, and a warning
-  for every path that matched nothing — is
+  name, redirect to rules line, the `_redirects` file, delegating states
+  skipped, tally, and a warning for every path that matched nothing — is
   [`prerender`](/packages/server#emitting-a-static-site) from
   `ui-router-server/prerender`, which takes any render. This package's `prerender`
   supplies the lit one and takes the same options, plus `router`,
@@ -74,7 +74,7 @@ const result = await prerender({
   document: (body, { path }) => fillShell(titles.get(path), body),
 });
 
-console.log(result.tally); // { shell: 2, redirect: 1, notFound: 0, document: 1 }
+console.log(result.tally); // { shell: 2, redirect: 1, notFound: 0, delegate: 0, document: 1 }
 ```
 
 `renderShell` returns a template and this package renders it; return a string
@@ -116,13 +116,20 @@ router, started or not.
 | `shell`               | `<subpath>/index.html`, rendered through `renderShell` and `document` |
 | `redirect`            | a rules line (`from to status`), no page                              |
 | `notFound`            | nothing, and the path is listed in `result.warnings`                  |
+| `delegate`            | nothing: the path is listed in `result.delegated` for a host handler  |
 | the `otherwise` probe | the 404 document, `404.html` by default, rendered like any shell      |
 
 [`PrerenderResult`](/api/lit-ui-router-ssr/index/interfaces/PrerenderResult) carries
 all of it: `pages` lists every artefact in enumeration order, `rules` every
 line the host file carries, `tally` the counts by kind, `warnings` the paths
-that matched no route and had no projection to fall back on, and `root` the
-render's event target.
+that matched no route and had no projection to fall back on, `delegated` the
+paths a delegating state's host handler answers, and `root` the render's event
+target.
+
+`delegated` gets no page and no rules line, so the host must send those paths
+to the server. On Cloudflare Workers, list them in
+[`assets.run_worker_first`](/packages/server#emitting-a-static-site) so the
+Worker sees them before static assets do.
 
 ## Where files land
 

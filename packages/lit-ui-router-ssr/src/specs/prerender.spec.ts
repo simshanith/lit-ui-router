@@ -192,6 +192,36 @@ describe('unclaimed paths', () => {
   });
 });
 
+describe('delegating states', () => {
+  it("passes the loop's delegate count and list through, emitting nothing for them", async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    const delegating = {
+      ...mounts,
+      '/app': {
+        ...appMount,
+        routes: [
+          ...appMount.routes,
+          { name: 'claims', url: '/claims', delegate: 'ledger' },
+        ],
+      },
+    };
+
+    const { files, result } = await run({
+      mounts: delegating,
+      paths: ['/app/claims', '/app/welcome'],
+      notFound: false,
+    });
+
+    expect(result.tally).toMatchObject({ shell: 1, delegate: 1, notFound: 0 });
+    expect(result.delegated).toEqual(['/app/claims']);
+    expect(result.pages.map((page) => page.path)).toEqual(['/app/welcome']);
+    expect([...files.keys()]).toEqual(['dist/welcome/index.html']);
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
+  });
+});
+
 describe('a mount that rejects the trailing slash', () => {
   const strict = { ...mounts, '/': { ...rootMount, config: {} } };
 
