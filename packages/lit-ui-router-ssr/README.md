@@ -27,7 +27,8 @@ imports the pre-1.0 renderer or re-derives the incantation.
   state the router stood on, and that state's url parameter values. A page `renderShell` returns
   as a string is written as-is, without one.
 - **The lit render inside the emit loop.** The loop itself — verdict to file name, redirect to
-  rules line, the `_redirects` file, tally, warnings for paths that matched nothing — is
+  rules line, the `_redirects` file, delegating states skipped, tally, warnings for paths that
+  matched nothing — is
   `prerender` from `ui-router-server/prerender`, which takes any render. This package's `prerender`
   supplies the lit one and takes the same options, plus `router`, `renderShell`, `document`,
   `root` and `elementRenderers`. No SPA catch-all is ever written: one turns every 404 into a 200.
@@ -67,8 +68,12 @@ const result = await prerender({
   document: (body, { path }) => fillShell(titles.get(path), body),
 });
 
-console.log(result.tally); // { shell: 2, redirect: 1, notFound: 0, document: 1 }
+console.log(result.tally); // { shell: 2, redirect: 1, notFound: 0, delegate: 0, document: 1 }
 ```
+
+`result.delegated` lists the paths that matched a delegating state. They get no page and no rules
+line, so route them to your server; on Cloudflare, list them in the Worker's
+`assets.run_worker_first` so the asset layer doesn't answer them first.
 
 `result.pages` lists every artefact in enumeration order, `result.rules` every line the host file
 carries, and `result.warnings` the paths that matched no route and had no projection to fall back
