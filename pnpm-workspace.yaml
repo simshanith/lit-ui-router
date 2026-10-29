@@ -84,6 +84,7 @@ catalog:
   oxlint: 1.89.0
   oxlint-tsgolint: 7.0.2005
   pacote: ^22.0.1
+  parse5: ^8.0.1
   playwright: ^1.64.1
   publint: ^0.3.25
   release-it: ^21.1.1

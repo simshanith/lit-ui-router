@@ -56,6 +56,10 @@ const ALLOWED: SplitAllowance[] = [
     why: 'the mobx-6 alias (catalogs.mobx6-compat) runs test:mobx6-compat beside the mobx 7 line, and catalogs.peerFloor pins mobx-floor to 6.0.0, the mobx peer floor check:bundle bundles against',
   },
   {
+    name: 'parse5',
+    why: "@tools/lit-template-check takes eslint-plugin-lit's 8.x line; lit-analyzer, eslint-plugin-lit-a11y (and its dom5) and @lit-labs/ssr pin their own",
+  },
+  {
     name: 'signal-polyfill',
     why: 'catalogs.peerFloor pins signal-polyfill-floor to 0.2.0, the ui-router-signals peer floor check:bundle bundles against',
   },
