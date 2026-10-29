@@ -59,7 +59,7 @@ export const handOver = (view: pure.UiView, element: Element): void => {
   detected.adoptServedElement?.(view, element);
 };
 
-// A normalized component narrows by compiler to its three kinds.
+// A normalized component keeps its 1.x type; the guards narrow it to its three kinds.
 export const componentKind = (
   component: NormalizedLitViewDeclaration['component'],
 ): 'class' | 'bound class' | 'template' => {

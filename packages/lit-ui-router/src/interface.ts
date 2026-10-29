@@ -8,8 +8,6 @@ import {
 } from '@uirouter/core';
 import { TemplateResult, LitElement } from 'lit';
 
-import type { RoutedClassRenderer } from './routed-element.js';
-
 /**
  * Interface for components that respond to parameter changes.
  *
@@ -521,5 +519,5 @@ export interface NormalizedLitViewDeclaration<
    * `<ui-view>` instantiates and owns. `sticky` classes are normalized to a
    * template function so their single instance outlives any one `<ui-view>`.
    */
-  component: RoutedLitComponent<T> | RoutedClassRenderer<T>;
+  component: RoutedLitComponent<T>;
 }

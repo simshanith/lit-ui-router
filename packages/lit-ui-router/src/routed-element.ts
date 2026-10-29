@@ -53,7 +53,7 @@ export interface RoutedClassRenderer<
 export const isRoutedClassRenderer = <
   T extends DefaultResolvesType = DefaultResolvesType,
 >(
-  component: RoutedLitComponent<T> | RoutedClassRenderer<T>,
+  component: RoutedLitComponent<T>,
 ): component is RoutedClassRenderer<T> =>
   typeof component === 'function' && routedClass in component;
 
