@@ -17,4 +17,6 @@ export {
 
 export { settle, type SettleOptions } from 'ui-router-server/ssr';
 
+export { LightElementRenderer } from './light-element-renderer.js';
+
 export { UiViewRenderer } from './ui-view-renderer.js';

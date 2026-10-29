@@ -42,6 +42,13 @@ export {
   withServedRender,
 } from './served-view.js';
 
+export {
+  LightDomHydrating,
+  type LightDomHydratingConstructor,
+  type LightDomHydratingElement,
+  type LitElementConstructor,
+} from './light-dom.js';
+
 export type { HydrationSignature } from './signature.js';
 
 /** The attribute `@lit-labs/ssr` writes on a server-rendered custom element. */
