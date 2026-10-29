@@ -106,7 +106,7 @@ export const dropViewNodeMarkers = (container: HTMLElement): number => {
     // SAFETY: a `SHOW_COMMENT` walker yields only comments.
     const comment = node as Comment;
 
-    if (!/^(ui-view:)?lit-node \d+$/.test(comment.data)) continue;
+    if (!/^(served:)?lit-node \d+$/.test(comment.data)) continue;
 
     if (comment.nextElementSibling?.localName === 'ui-view') {
       doomed.push(comment);

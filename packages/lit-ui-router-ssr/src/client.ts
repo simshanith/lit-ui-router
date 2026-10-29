@@ -23,6 +23,7 @@ import type { ResolvePayload } from 'ui-router-server/ssr/client';
 import { devGate } from '#dev-gate';
 import { adoptUiViewContext } from './adopt-context.js';
 import type { AdoptableView } from './adopt-context.js';
+import { isLightDomElement } from './light-dom-brand.js';
 import { servedMarkerPrefix } from './served-markers.js';
 import { packageVersion, routeOf, signatureSelector } from './signature.js';
 import type { HydrationSignature } from './signature.js';
@@ -42,6 +43,13 @@ export {
   withServedRender,
 } from './served-view.js';
 
+export {
+  LightDomHydrating,
+  type LightDomHydratingConstructor,
+  type LightDomHydratingElement,
+  type LitElementConstructor,
+} from './light-dom.js';
+
 export type { HydrationSignature } from './signature.js';
 
 /** The attribute `@lit-labs/ssr` writes on a server-rendered custom element. */
@@ -60,7 +68,7 @@ export type AdoptOutcome = 'adopted' | 'fell-back' | 'none';
 
 /**
  * The name of the event a served `<ui-view>` dispatches once its wake's
- * outcome is known, in the `ui-view:` house style of the served markers.
+ * outcome is known.
  */
 export const uiViewAdoptEventName = 'ui-view:adopt' as const;
 
@@ -79,6 +87,16 @@ export interface UiViewAdoptDetail {
  * composed, in production as in development.
  */
 export type UiViewAdoptEvent = CustomEvent<UiViewAdoptDetail>;
+
+/**
+ * The event a light-DOM hydrating element dispatches from itself at its wake,
+ * once its outcome is known. It carries the same detail as {@link
+ * uiViewAdoptEventName}, and it does not reach `onAdopt`, which reports views.
+ */
+export const lightDomAdoptEventName = 'light-dom:adopt' as const;
+
+/** A light-DOM hydrating element's hydration outcome. */
+export type LightDomAdoptEvent = CustomEvent<UiViewAdoptDetail>;
 
 /**
  * Receives each served view's outcome, as {@link HydrateRootOptions.onAdopt}.
@@ -107,6 +125,8 @@ declare global {
   interface HTMLElementEventMap {
     /** A served `<ui-view>`'s hydration outcome; see {@link UiViewAdoptEvent}. */
     'ui-view:adopt': UiViewAdoptEvent;
+    /** A light-DOM hydrating element's hydration outcome; see {@link LightDomAdoptEvent}. */
+    'light-dom:adopt': LightDomAdoptEvent;
   }
 }
 
@@ -174,6 +194,22 @@ class UiViewSlotDirective extends RenderLightDirective {
  */
 export const uiViewSlot: typeof renderLight = directive(UiViewSlotDirective);
 
+/**
+ * The hole a `LightDomHydrating` element fills, written at the use site: the
+ * {@link uiViewSlot} directive under a name that does not read as a view.
+ *
+ * On the server it reaches `LightElementRenderer`'s `renderLight()`, so the
+ * element's own render goes where the template puts it. On the client it wakes
+ * the element when the enclosing walk reaches it, parent first, and pins the
+ * adopter to it.
+ *
+ * @example
+ * ```ts
+ * html`<app-card .title=${title}>${lightSlot()}</app-card>`;
+ * ```
+ */
+export const lightSlot: typeof renderLight = uiViewSlot;
+
 /** How one walk's adoptions report: the walk's `onAdopt`, and whether a view's mismatch warns. */
 interface AdoptPolicy {
   readonly reporter?: AdoptReporter;
@@ -211,13 +247,18 @@ const report = (
   const detail: UiViewAdoptDetail =
     outcome === 'fell-back' ? { outcome, error: cause } : { outcome };
 
+  const light = isLightDomElement(view);
+
   view.dispatchEvent(
-    new CustomEvent(uiViewAdoptEventName, {
+    new CustomEvent(light ? lightDomAdoptEventName : uiViewAdoptEventName, {
       bubbles: true,
       composed: true,
       detail,
     }),
   );
+
+  // `onAdopt` reports views; a light element's outcome is its event alone.
+  if (light) return;
 
   try {
     reporter?.(view, outcome, cause);
@@ -237,6 +278,17 @@ const warnMismatch = (
 ): void => {
   // DEV folds away in dist/*.js; #dev-gate also closes it under node when NODE_ENV is production.
   if (!import.meta.env.DEV || !devGate() || policy.quiet) return;
+
+  if (isLightDomElement(view)) {
+    console.warn(
+      'lit-ui-router-ssr: this light-DOM element could not adopt the server render, so it rendered over it instead. Its server and client render() disagree, or a child its use site wrote beside lightSlot() carries bindings of its own.',
+      view.localName,
+      cause,
+    );
+
+    return;
+  }
+
   console.warn(
     'lit-ui-router-ssr: this element could not adopt the server render, so it rendered over it instead. One static document answers a whole family of urls, so a client that boots into another state reaches this legitimately.',
     view.localName,
@@ -289,7 +341,11 @@ const revealMarker = (node: Node | null | undefined): void => {
   node.data = node.data.slice(servedMarkerPrefix.length);
 };
 
-/** The outer pair of a nested view, whatever stands in front of it. */
+/** Whether `element` keeps its own served interior until its own wake: a `<ui-view>` or a light-DOM hydrating element. */
+const isServedBoundary = (element: Element): boolean =>
+  element instanceof UiView || isLightDomElement(element);
+
+/** The outer pair of a nested view or light element, whatever stands in front of it. */
 const revealNestedPair = (view: Element): void => {
   const markers = [...view.childNodes].filter((node) =>
     isPart(node, servedMarkerPrefix),
@@ -302,9 +358,10 @@ const revealNestedPair = (view: Element): void => {
 /**
  * Renames one view's served markers back to the ones `hydrate()` reads.
  *
- * A nested `<ui-view>` is left closed: only the outer pair this view's template
- * wrote around it is renamed, because everything inside is that view's own
- * served content and stays hidden until its own wake. A declarative shadow root
+ * A nested `<ui-view>` or light-DOM hydrating element is left closed: only the
+ * outer pair this view's template wrote around it is renamed, because
+ * everything inside is that element's own served content and stays hidden
+ * until its own wake. A declarative shadow root
  * is not closed that way — the same render prefixed its markers, and the
  * element's own hydrate reads them at this wake.
  */
@@ -312,7 +369,7 @@ const revealServedMarkers = (node: Node): void => {
   for (const child of node.childNodes) {
     if (child.nodeType === Node.COMMENT_NODE) {
       revealMarker(child);
-    } else if (child instanceof UiView) {
+    } else if (child instanceof Element && isServedBoundary(child)) {
       revealNestedPair(child);
     } else if (child instanceof Element) {
       if (child.shadowRoot) revealServedMarkers(child.shadowRoot);
@@ -436,14 +493,14 @@ const adopt = (view: AdoptableView, policy: AdoptPolicy): void => {
   report(view, reporter, 'adopted');
 };
 
-/** Whether `element` sits inside a `<ui-view>` below `root`. */
+/** Whether `element` sits inside a `<ui-view>` or a light-DOM hydrating element below `root`. */
 const isInNestedView = (element: Element, root: Element): boolean => {
   for (
     let parent = element.parentElement;
     parent && parent !== root;
     parent = parent.parentElement
   ) {
-    if (parent instanceof UiView) return true;
+    if (isServedBoundary(parent)) return true;
   }
 
   return false;
@@ -451,8 +508,9 @@ const isInNestedView = (element: Element, root: Element): boolean => {
 
 /**
  * Wakes what `@lit-labs/ssr` deferred under `root` and wrote no marker for, so
- * no walk reaches it: every deferred element but a `<ui-view>` and what one
- * holds, since each view's interior wakes with that view's own adoption.
+ * no walk reaches it: every deferred element but a `<ui-view>`, and nothing a
+ * view or a light-DOM hydrating element holds, since each one's interior wakes
+ * with its own adoption.
  */
 const wakeUnmarked = (root: Element): void => {
   for (const element of root.querySelectorAll(`[${DEFER}]`)) {

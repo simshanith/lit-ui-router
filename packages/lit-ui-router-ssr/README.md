@@ -122,8 +122,10 @@ directly, so a page loop calls it once per path on the same router, started or n
 
 ## The routed view, drawn on the server
 
-`elementRenderers` defaults to `[UiViewRenderer]` — not `@lit-labs/ssr`'s `[LitElementRenderer]`,
-which wraps every custom element in a declarative shadow root it never asked for. `UiViewRenderer`
+`elementRenderers` defaults to `[UiViewRenderer, LightElementRenderer]` — not `@lit-labs/ssr`'s
+`[LitElementRenderer]`, which wraps every custom element in a declarative shadow root it never asked
+for. `LightElementRenderer` answers only for an element that opted in (see
+[Light-DOM elements](#light-dom-elements)). `UiViewRenderer`
 answers for `ui-view`: it registers the view at the address its `name` attribute and enclosing
 `<ui-view>`s spell, takes the `ViewConfig` the registration syncs back, and writes the routed
 component into the element's light DOM between the part markers the element's own `render()`
@@ -173,8 +175,8 @@ card empty:
 ```
 
 `@lit-labs/ssr` writes a `.prop=${…}` binding as its part marker and nothing else — no attribute, no
-child, no value. Setting the property is an element renderer's job, and `elementRenderers` defaults
-to `[UiViewRenderer]`, which answers for `ui-view` alone. The card has no renderer, so nothing on
+child, no value. Setting the property is an element renderer's job, and the default `elementRenderers`
+answer for `ui-view` and for opted-in light-DOM elements alone. The card has no renderer, so nothing on
 the server sets `post` or runs its `render()`: the card first draws on the client, once hydration
 sets the property, and the served page shows an empty tag where it stands.
 
@@ -234,11 +236,16 @@ shadow root:
 
 ```typescript
 import { LitElementRenderer } from '@lit-labs/ssr';
-import { prerender, UiViewRenderer } from 'lit-ui-router-ssr';
+import {
+  LightElementRenderer,
+  prerender,
+  UiViewRenderer,
+} from 'lit-ui-router-ssr';
 
 await prerender({
   // …
-  elementRenderers: [UiViewRenderer, LitElementRenderer],
+  // The list replaces the default; LightElementRenderer stays ahead of the shadow-root renderer.
+  elementRenderers: [UiViewRenderer, LightElementRenderer, LitElementRenderer],
 });
 ```
 
@@ -409,6 +416,62 @@ const { outcome } = await bootstrap(router, root, page(router));
   the same reports for every view its walk reaches, a view the pin adopts after the release included.
 - **A mutated document throws.** `hydrateRoot()` rethrows what `hydrate()` threw, over a container it
   first empties. The caller renders into it.
+
+### Light-DOM elements
+
+A consumer's own `LitElement` that renders into its light DOM opts in to the same sleep-then-adopt
+cycle with `LightDomHydrating(Base)` from `lit-ui-router-ssr/client`. `LightElementRenderer` from
+`lit-ui-router-ssr`, one of `prerender()`'s default renderers, draws it on the server, and
+`lightSlot()` marks the hole at the use site:
+
+```typescript
+import { html, LitElement } from 'lit';
+import { property } from 'lit/decorators.js';
+import { LightDomHydrating, lightSlot } from 'lit-ui-router-ssr/client';
+
+export class AppCard extends LightDomHydrating(LitElement) {
+  @property() label = '';
+
+  render() {
+    return html`<p>${this.label}</p>`;
+  }
+}
+
+export const card = (label: string) =>
+  html`<app-card .label=${label}>${lightSlot()}</app-card>`;
+```
+
+- **Each class opts in.** The mixin stamps a `Symbol.for` brand on the class it returns, and the
+  renderer matches that brand, so a subclass stays opted in, the base class does not, and a second
+  copy of this package recognises it. An element that did not opt in is served empty and renders
+  cold.
+- **The server writes `render()` into the light DOM.** `LightElementRenderer` extends
+  `@lit-labs/ssr`'s `LitElementRenderer`: it builds the element, sets its attributes and properties,
+  runs `willUpdate`, and writes the render where a shadow root would go, prefixing its markers as
+  `UiViewRenderer` prefixes a view's. Custom elements inside it, `<ui-view>` included, render too.
+  An explicit `elementRenderers` replaces the default, so keep it in that list, ahead of any
+  `LitElementRenderer`: the first renderer that matches a class wins. A render that awaits is not
+  served.
+- **`lightSlot()` is the hole.** It is `uiViewSlot()` under a name that does not read as a view: the
+  server reaches the renderer through it, and on the client it wakes the element when the
+  enclosing walk reaches it, parent first, and pins the adopter to it.
+- **The element wakes through the adopter.** It sleeps under `defer-hydration`, which `prerender()`
+  writes on every custom element, and its first update requests `adoptUiViewContext`. The adopter
+  hydrates `render()` against the served nodes in place, then wakes the elements inside it. A view's
+  reveal stops at a light-DOM element and the element's stops at a view or another light-DOM
+  element, so each interior waits for its own wake. With no adopter, the element drops the served
+  nodes and renders cold, warning in development.
+- **It reports through its own event.** Each opted-in element dispatches `light-dom:adopt`
+  (`lightDomAdoptEventName`) with the same `detail` as `ui-view:adopt`. `onAdopt`, and the count of
+  views `bootstrap()` rendered cold, report views only.
+- **A mismatch falls back.** A hydrate that throws drops the element's served nodes, and it renders
+  cold, warning in development; its surroundings keep theirs.
+- **An author child with bindings of its own falls back every time.** A child the use site writes
+  beside `lightSlot()` keeps its markers ahead of the element's pair, and the element's hydrate
+  meets them first. Static author children are kept, ahead of the render, as they are in a
+  `<ui-view>`.
+- **`static styles` do not apply.** A light-DOM element has no shadow root to adopt them into; it
+  takes the document's styles.
 
 ### How this compares
 

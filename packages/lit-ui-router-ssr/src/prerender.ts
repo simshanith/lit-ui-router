@@ -16,6 +16,7 @@ import type {
 } from 'ui-router-server/prerender';
 import { devGate } from '#dev-gate';
 
+import { LightElementRenderer } from './light-element-renderer.js';
 import { packageVersion, routeOf, signatureAttribute } from './signature.js';
 import { UiViewRenderer } from './ui-view-renderer.js';
 
@@ -101,9 +102,13 @@ export interface PrerenderOptions extends Omit<
   root?: EventTarget;
   /**
    * Element renderers passed through to `@lit-labs/ssr`, verbatim. Defaults to
-   * `[UiViewRenderer]` — not `@lit-labs/ssr`'s `[LitElementRenderer]`, which
-   * wraps every custom element in a declarative shadow root it never asked for.
-   * Pass `[]` for a render with no `<ui-view>` to fill.
+   * `[UiViewRenderer, LightElementRenderer]` — not `@lit-labs/ssr`'s
+   * `[LitElementRenderer]`, which wraps every custom element in a declarative
+   * shadow root it never asked for. `LightElementRenderer` answers only for a
+   * class `LightDomHydrating` branded. A list passed here replaces the default,
+   * so keep `LightElementRenderer` in it, ahead of any renderer that writes a
+   * shadow root, to draw those elements. Pass `[]` for a render with no
+   * `<ui-view>` to fill.
    */
   elementRenderers?: RenderInfo['elementRenderers'];
   /** Writes a file. Defaults to `node:fs`, imported lazily on first write. */
@@ -242,7 +247,7 @@ export async function prerender(
     router,
     renderShell,
     document,
-    elementRenderers = [UiViewRenderer],
+    elementRenderers = [UiViewRenderer, LightElementRenderer],
     root = new EventTarget(),
     write = nodeWrite,
     ...site

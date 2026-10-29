@@ -4,6 +4,7 @@ import path from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 import { LitElementRenderer } from '@lit-labs/ssr';
 import { html, LitElement } from 'lit';
+import { property } from 'lit/decorators.js';
 import type { TemplateResult } from 'lit';
 import { UIRouterLit } from 'lit-ui-router';
 import { srefHref } from 'lit-ui-router';
@@ -15,7 +16,10 @@ import { settle } from 'ui-router-server/ssr';
 
 import packageJson from '../../package.json' with { type: 'json' };
 
+import { lightSlot } from '../client.js';
+import { LightDomHydrating } from '../light-dom.js';
 import { prerender } from '../prerender.js';
+import { UiViewRenderer } from '../ui-view-renderer.js';
 import type { HydrationSignature } from '../client.js';
 import type { FileWriter, RedirectLine } from '../prerender.js';
 import { signatureText, withoutSignature } from './markup.js';
@@ -532,7 +536,7 @@ describe('the render composition', () => {
     expect(written).not.toContain('no-router');
   });
 
-  it('defaults to UiViewRenderer, so no element gets a shadow root it never asked for', async () => {
+  it('defaults to the light-DOM renderers, so no element gets a shadow root it never asked for', async () => {
     const { files } = await run({
       paths: ['/'],
       notFound: false,
@@ -552,6 +556,71 @@ describe('the render composition', () => {
     });
 
     expect(files.get('dist/index.html')).toContain('<ui-view defer-hydration>');
+  });
+});
+
+/** A branded light-DOM element, drawn by the default renderers. */
+class DefaultCard extends LightDomHydrating(LitElement) {
+  @property()
+  label = '';
+
+  override render(): TemplateResult {
+    return html`<p class="default-card">${this.label}</p>`;
+  }
+}
+
+customElements.define('default-card', DefaultCard);
+
+/** The same render, unbranded. */
+class PlainCard extends LitElement {
+  @property()
+  label = '';
+
+  override createRenderRoot(): this {
+    return this;
+  }
+
+  override render(): TemplateResult {
+    return html`<p class="plain-card">${this.label}</p>`;
+  }
+}
+
+customElements.define('plain-card', PlainCard);
+
+describe('the default element renderers', () => {
+  const cards = (): TemplateResult =>
+    html`<default-card .label=${'drawn'}>${lightSlot()}</default-card
+      ><plain-card .label=${'plain'}>${lightSlot()}</plain-card>`;
+
+  it('draws a branded light-DOM element into its light DOM', async () => {
+    const { files } = await run({ notFound: false, renderShell: cards });
+    const written = files.get('dist/index.html')!;
+
+    expect(written).toMatch(
+      /<default-card[^>]*>(<!--[^>]*-->)*<p class="default-card">(<!--[^>]*-->)*drawn/,
+    );
+    expect(written).not.toContain('shadowroot');
+  });
+
+  it('serves an unbranded element empty', async () => {
+    const { files } = await run({ notFound: false, renderShell: cards });
+
+    expect(files.get('dist/index.html')).toMatch(
+      /<plain-card\s+defer-hydration><!--lit-part--><!--\/lit-part--><\/plain-card>/,
+    );
+  });
+
+  it('gives way to an explicit elementRenderers list', async () => {
+    const { files } = await run({
+      notFound: false,
+      renderShell: cards,
+      elementRenderers: [UiViewRenderer],
+    });
+
+    const written = files.get('dist/index.html')!;
+
+    expect(written).not.toContain('default-card"');
+    expect(written).not.toContain('drawn');
   });
 });
 
