@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "noEmit": true,
+    "strict": true,
+    "module": "nodenext",
+    "moduleDetection": "force",
+    "types": []
+  },
+  "contentMappers": [{ "package": "..", "extensions": [".md"] }],
+  "include": ["*.md"]
+}
