@@ -11,9 +11,10 @@ import {
   isString,
 } from '@uirouter/core';
 import type { ActiveUIView, UIRouter, ViewConfig } from '@uirouter/core';
-import { LitElement } from 'lit';
+import { LitElement, nothing } from 'lit';
 import type { TemplateResult } from 'lit';
 import { isTemplateResult, TemplateResultType } from 'lit/directive-helpers.js';
+import * as pure from 'lit-ui-router/pure';
 import { LitViewConfig, isRoutedLitElement } from 'lit-ui-router/pure';
 import type {
   NormalizedLitViewDeclaration,
@@ -73,16 +74,32 @@ const warnElementComponent = (fqn: string): void => {
   );
 };
 
+/** The `lit-ui-router/pure` namespace as this renderer probes it: the class-renderer brand guard arrived in 1.19. */
+export type ClassRendererProbe = Pick<typeof pure, 'isRoutedLitElement'> & {
+  isRoutedClassRenderer?(
+    component: NormalizedLitViewDeclaration['component'],
+  ): boolean;
+};
+
 /**
- * Whether `value` is a sticky class's renderer result: core binds a sticky
- * class in its declaration, so the view sees a template function whose result
- * is the element alone.
+ * Whether a view's `component` is a sticky class's renderer, by the class
+ * brand core 1.19 stamps on it, so it is recognised without being called.
  */
-const carriesElement = (value: TemplateResult): boolean =>
+export const isStickyRenderer = (
+  component: NormalizedLitViewDeclaration['component'],
+  probe: ClassRendererProbe = pure,
+): boolean => probe.isRoutedClassRenderer?.(component) === true;
+
+/**
+ * Whether `value` is a sticky class's renderer result, for a `lit-ui-router`
+ * without the brand: the element first, then nothing but `nothing`, between
+ * empty strings.
+ */
+export const carriesElement = (value: TemplateResult): boolean =>
   isTemplateResult(value, TemplateResultType.HTML) &&
-  value.values.length === 1 &&
   value.strings.every((text) => text === '') &&
-  value.values[0] instanceof LitElement;
+  value.values[0] instanceof LitElement &&
+  value.values.slice(1).every((part) => part === nothing);
 
 /**
  * Renders the routed component of a `<ui-view>` into the element's light DOM,
@@ -234,7 +251,7 @@ export class UiViewRenderer extends ElementRenderer {
       return undefined;
     }
 
-    if (isRoutedLitElement(component)) {
+    if (isRoutedLitElement(component) || isStickyRenderer(component)) {
       warnElementComponent(this.data!.fqn);
       deregister();
 

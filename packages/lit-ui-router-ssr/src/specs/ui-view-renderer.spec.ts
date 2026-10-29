@@ -1,15 +1,25 @@
 import '../register.js';
 import { render } from '@lit-labs/ssr';
 import { collectResultSync } from '@lit-labs/ssr/lib/render-result.js';
-import { html, LitElement } from 'lit';
+import { html, LitElement, nothing } from 'lit';
 import { withRouterSync } from 'lit-ui-router/context';
 import { UIRouterLit } from 'lit-ui-router/pure';
-import type { LitStateDeclaration } from 'lit-ui-router/pure';
+import type {
+  LitStateDeclaration,
+  NormalizedLitViewDeclaration,
+  RoutedLitTemplate,
+} from 'lit-ui-router/pure';
+import * as pure from 'lit-ui-router/pure';
 import { installServerLocation } from 'ui-router-server/location';
 import { settle } from 'ui-router-server/ssr';
 import { describe, expect, it, vi } from 'vitest';
 
-import { UiViewRenderer } from '../ui-view-renderer.js';
+import {
+  carriesElement,
+  isStickyRenderer,
+  UiViewRenderer,
+} from '../ui-view-renderer.js';
+import type { ClassRendererProbe } from '../ui-view-renderer.js';
 import { makeRouter, rootTemplate } from './fixture.js';
 
 const draw = (router: UIRouterLit): string =>
@@ -259,5 +269,65 @@ describe('UiViewRenderer', () => {
 
     expect(markup).toContain('promise');
     expect(markup).not.toContain('missing');
+  });
+});
+
+describe('sticky class detection', () => {
+  /** The `$default` view component core normalized a sticky class to. */
+  const stickyComponent = (router: UIRouterLit): RoutedLitTemplate => {
+    // SAFETY: a lit state's views are normalized lit view declarations
+    const view = router.stateRegistry.get('sticky')?.$$state?.().views
+      ?.$default as NormalizedLitViewDeclaration;
+
+    if (pure.isRoutedLitElement(view.component)) {
+      throw new Error('core binds a sticky class to a renderer');
+    }
+
+    return view.component;
+  };
+
+  // The key a core with the class brand stamps on a sticky class's renderer.
+  const routedClass: unique symbol = Symbol.for('lit-ui-router#routed-class');
+
+  // A `lit-ui-router` with the brand, as its `pure` namespace reads to this renderer.
+  const brandedCore: ClassRendererProbe = {
+    isRoutedLitElement: pure.isRoutedLitElement,
+    isRoutedClassRenderer: (component) => routedClass in component,
+  };
+
+  it('reads the brand without calling the renderer', () => {
+    let calls = 0;
+
+    const renderer = Object.assign(
+      () => {
+        calls++;
+
+        return html`${new StickyView()}`;
+      },
+      { [routedClass]: StickyView },
+    );
+
+    expect(isStickyRenderer(renderer, brandedCore)).toBe(true);
+    expect(calls).toBe(0);
+  });
+
+  it('falls back to the result shape for a renderer without the brand', () => {
+    const router = stickyRouter();
+    const component = stickyComponent(router);
+
+    expect(isStickyRenderer(component)).toBe(false);
+    expect(isStickyRenderer(component, brandedCore)).toBe(false);
+    expect(carriesElement(component({ router, resolves: {} }))).toBe(true);
+  });
+
+  it('takes the element followed by nothing as a class result', () => {
+    expect(carriesElement(html`${new StickyView()}${nothing}`)).toBe(true);
+  });
+
+  it('reads a template component as neither', () => {
+    const component = () => html`<p>template</p>`;
+
+    expect(isStickyRenderer(component)).toBe(false);
+    expect(carriesElement(component())).toBe(false);
   });
 });
