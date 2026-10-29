@@ -189,7 +189,6 @@ catalogs:
     '@tools/eslint-ts-parser': workspace:*
     '@tools/happy-dom': workspace:*
     '@tools/lcov-rebase': workspace:*
-    '@tools/lint-elements': workspace:*
     '@tools/lit-template-lint': workspace:*
     '@tools/lit-test-env': workspace:*
     '@tools/oxc-emit': workspace:*

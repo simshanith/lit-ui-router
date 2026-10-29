@@ -9,7 +9,6 @@
         "lint:examples",
         "//#lint:root",
         "//#lint:package-json",
-        "//#lint:elements",
         "//#lint:markdown",
         "//#lint:workflows",
         "//#lint:templates",

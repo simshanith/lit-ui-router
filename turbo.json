@@ -154,7 +154,6 @@
         "//#lint:root",
         "//#lint:complexity",
         "//#lint:package-json",
-        "//#lint:elements",
         "//#lint:markdown",
         "//#lint:workflows",
         "//#lint:templates",
@@ -244,33 +243,9 @@
         "examples/*/package-lock.json",
         "tools/lit-template-lint/src/**",
         "tools/compat-guards/src/**",
-        "tools/shared/src/**",
         // carries the `ts-lit-plugin` ruleset lit-analyzer reads from cwd
         "tsconfig.json",
         "pnpm-workspace.yaml"
-      ]
-    },
-    // eslint-plugin-lit / -wc / -lit-a11y over the same src the //#lint:templates
-    // gate sees. Syntax-only (no project service, no ^build:types), so it stays
-    // off the build path — the class AST is all these rules read.
-    "//#lint:elements": {
-      "inputs": [
-        "$TURBO_DEFAULT$",
-        // over-approximate, as //#lint:templates does: `**/*.ts` would skip
-        // files sitting directly in `src/`
-        "packages/*/src/**",
-        "apps/*/src/**",
-        "examples/*/src/**",
-        "eslint.config.ts",
-        "tools/eslint/**",
-        // the glob above is explicit, so it is not gitignore-pruned and would
-        // otherwise hash that package's own run logs and .bin shims
-        "!**/.turbo/**",
-        "!**/node_modules/**",
-        "tools/lint-elements/src/**",
-        // feeds both the oxlint-disable layer and the disable-directive stubs
-        ".oxlintrc.json",
-        "tools/eslint-ts-parser/src/**"
       ]
     },
     "//#lint:package-json": {
