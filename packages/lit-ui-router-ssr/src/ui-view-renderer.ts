@@ -11,6 +11,9 @@ import {
   isString,
 } from '@uirouter/core';
 import type { ActiveUIView, UIRouter, ViewConfig } from '@uirouter/core';
+import { LitElement } from 'lit';
+import type { TemplateResult } from 'lit';
+import { isTemplateResult, TemplateResultType } from 'lit/directive-helpers.js';
 import { LitViewConfig, isRoutedLitElement } from 'lit-ui-router/pure';
 import type {
   NormalizedLitViewDeclaration,
@@ -69,6 +72,17 @@ const warnElementComponent = (fqn: string): void => {
 };
 
 /**
+ * Whether `value` is a sticky class's renderer result: core binds a sticky
+ * class in its declaration, so the view sees a template function whose result
+ * is the element alone.
+ */
+const carriesElement = (value: TemplateResult): boolean =>
+  isTemplateResult(value, TemplateResultType.HTML) &&
+  value.values.length === 1 &&
+  value.strings.every((text) => text === '') &&
+  value.values[0] instanceof LitElement;
+
+/**
  * Renders the routed component of a `<ui-view>` into the element's light DOM,
  * between the part markers its client-side `render()` hydrates against.
  *
@@ -86,7 +100,8 @@ const warnElementComponent = (fqn: string): void => {
  * `elementRenderers` as a class.
  *
  * An address no state routes renders nothing between its markers, which is what
- * the client's own first render of that view produces.
+ * the client's own first render of that view produces. A `RoutedLitElement`
+ * class, `sticky` or not, is left empty the same way for the client to render.
  *
  * The pair around the component is written plain, so the walk hydrating the
  * view's surroundings reads it as the `uiViewSlot()` child part and stops
@@ -225,6 +240,13 @@ export class UiViewRenderer extends ElementRenderer {
     }
 
     const value = component(this.props(router, config));
+
+    if (carriesElement(value)) {
+      warnElementComponent(this.data!.fqn);
+      deregister();
+
+      return undefined;
+    }
 
     return [
       () => {

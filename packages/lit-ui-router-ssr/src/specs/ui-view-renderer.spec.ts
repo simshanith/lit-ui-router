@@ -46,6 +46,30 @@ const boxedRouter = (): UIRouterLit => {
   return router;
 };
 
+/** A `sticky` class, which core binds to a renderer in its declaration. */
+class StickyView extends LitElement {
+  static sticky = true;
+}
+
+customElements.define('x-sticky', StickyView);
+
+/** One state whose view is a `sticky` class. */
+const stickyRouter = (): UIRouterLit => {
+  const router = installServerLocation(new UIRouterLit(), {
+    urlConfig: { strict: false },
+  });
+
+  const state: LitStateDeclaration = {
+    name: 'sticky',
+    url: '/sticky',
+    component: StickyView,
+  };
+
+  router.stateRegistry.register(state);
+
+  return router;
+};
+
 /** One state whose NOWAIT resolve never settles, drawn as what its view receives. */
 const pendingRouter = (): UIRouterLit => {
   const router = installServerLocation(new UIRouterLit(), {
@@ -177,6 +201,26 @@ describe('UiViewRenderer', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const router = boxedRouter();
     await settle(router, '/boxed');
+
+    const markup = draw(router);
+
+    expect(markup).toContain(
+      '<ui-view defer-hydration><!--lit-part--><!--/lit-part--></ui-view>',
+    );
+    expect(warn).toHaveBeenCalledOnce();
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining(
+        'lit-ui-router-ssr: this view is a RoutedLitElement class',
+      ),
+      '$default',
+    );
+    warn.mockRestore();
+  });
+
+  it('leaves a sticky RoutedLitElement view empty and warns once', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const router = stickyRouter();
+    await settle(router, '/sticky');
 
     const markup = draw(router);
 
