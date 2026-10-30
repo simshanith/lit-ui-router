@@ -309,6 +309,45 @@ describe('bootstrap', () => {
     ).toHaveLength(served.length);
   });
 
+  describe('over a form the visitor typed into before boot', () => {
+    /** Types into a served input the way a visitor does: its value changes, its attribute doesn't. */
+    const typeInto = (container: HTMLElement, selector: string): void => {
+      const input = container.querySelector<HTMLInputElement>(selector)!;
+      input.value = 'typed';
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    };
+
+    it('keeps the text in an input whose value is bound as an attribute', async () => {
+      const { container } = serve(await drawShell('/shell/form'));
+      const input = container.querySelector('.by-attribute');
+      typeInto(container, '.by-attribute');
+
+      const { signature } = await bootAt(
+        container,
+        rootTemplate,
+        '/shell/form',
+      );
+
+      expect(signature).toBe('matched');
+      expect(container.querySelector('.by-attribute')).toBe(input);
+      expect(
+        container.querySelector<HTMLInputElement>('.by-attribute')?.value,
+      ).toBe('typed');
+    });
+
+    // Hydrate commits property parts, so a `.value` binding overwrites what the visitor typed: bind `value=` instead.
+    it('overwrites the text in an input whose value is bound as a property', async () => {
+      const { container } = serve(await drawShell('/shell/form'));
+      typeInto(container, '.by-property');
+
+      await bootAt(container, rootTemplate, '/shell/form');
+
+      expect(
+        container.querySelector<HTMLInputElement>('.by-property')?.value,
+      ).toBe('drawn');
+    });
+  });
+
   describe('comparing the url parameters the document was drawn with', () => {
     it('leaves a config parameter out, so a document drawn for the url adopts', async () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
