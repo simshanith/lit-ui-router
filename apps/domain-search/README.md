@@ -63,6 +63,9 @@ Two more specs measure this repo's page against itself, under the same condition
   with Google's [`web-vitals`](https://github.com/GoogleChrome/web-vitals), and **Long Animation
   Frame** blocking from navigation start to the typed query in results (`harness/vitals.ts`). An
   init script injects both, so the app's bundle never carries them. INP covers the typing.
+- Typing ends LCP before the largest paint on most runs, so the spec also loads each path untouched
+  and, once it has booted and the network is idle, hides the page to report its LCP, FCP, CLS and
+  LoAF blocking.
 
 It writes its tables to `$GITHUB_STEP_SUMMARY`, or prints them locally. They record numbers only,
 with no thresholds.
