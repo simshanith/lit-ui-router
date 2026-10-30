@@ -9,7 +9,12 @@ import {
 
 import { installServerLocation } from '../src/location.ts';
 import { seed, type ResolvePayload } from '../src/ssr-client.ts';
-import { dehydrate, settle } from '../src/ssr.ts';
+import {
+  dehydrate,
+  settle,
+  type DehydrateCandidate,
+  type DehydrateOptions,
+} from '../src/ssr.ts';
 
 interface Loop {
   self?: Loop;
@@ -112,10 +117,10 @@ const parse = (text: string): ResolvePayload =>
 const roundTrip = (payload: ResolvePayload): ResolvePayload =>
   parse(JSON.stringify(payload));
 
-const drawn = async (path: string) => {
+const drawn = async (path: string, options?: DehydrateOptions) => {
   const { router } = makeRouter();
 
-  return dehydrate(await settle(router, path));
+  return dehydrate(await settle(router, path), options);
 };
 
 const total = (calls: ReadonlyMap<string, number>): number =>
@@ -204,6 +209,81 @@ describe('dehydrate', () => {
   });
 });
 
+describe('dehydrate with shouldDehydrate', () => {
+  it('keeps out the resolves it declines and draws the rest', async () => {
+    const { payload, unserializable } = await drawn('/app/sheet/7B', {
+      shouldDehydrate: ({ token }) => token !== 'user',
+    });
+
+    assert.deepEqual(payload.resolves, {
+      'app.sheet': { title: 'Ada: sheet 7B', count: 7, empty: null },
+    });
+    assert.equal(
+      unserializable.some(({ token }) => token === 'user'),
+      false,
+    );
+  });
+
+  it('tells one token apart by the state that declares it', async () => {
+    const router = new UIRouter();
+    router.plugin(servicesPlugin);
+    installServerLocation(router);
+    router.stateRegistry.register({
+      name: 'site',
+      url: '/site',
+      resolve: { data: () => 'shared' },
+    });
+    router.stateRegistry.register({
+      name: 'site.page',
+      url: '/page',
+      resolve: { data: () => 'own' },
+    });
+
+    const { payload } = dehydrate(await settle(router, '/site/page'), {
+      shouldDehydrate: ({ state }) => state !== 'site',
+    });
+
+    assert.deepEqual(payload.resolves, { 'site.page': { data: 'own' } });
+  });
+
+  it('runs before the JSON check, so a declined value is not listed', async () => {
+    const seen: DehydrateCandidate[] = [];
+
+    const { unserializable } = await drawn('/app/sheet/7B', {
+      shouldDehydrate: (candidate) => {
+        seen.push(candidate);
+
+        return candidate.token !== 'drawnAt';
+      },
+    });
+
+    assert.deepEqual(unserializable, [{ state: 'app.sheet', token: 'sheet' }]);
+    assert.ok(
+      seen.find(({ token }) => token === 'drawnAt')?.value instanceof Date,
+    );
+  });
+
+  it('is asked only about drawn candidates: not NOWAIT, not undeclared tokens', async () => {
+    const seen: string[] = [];
+    await drawn('/app/sheet/7B', {
+      shouldDehydrate: ({ state, token }) => {
+        seen.push(`${state}.${token}`);
+
+        return true;
+      },
+    });
+
+    assert.deepEqual(seen, [
+      'app.user',
+      'app.sheet.title',
+      'app.sheet.count',
+      'app.sheet.empty',
+      'app.sheet.drawnAt',
+      'app.sheet.sheet',
+    ]);
+  });
+});
+
 describe('seed', () => {
   it('boots with zero resolve calls for the states the payload was drawn for', async () => {
     const { payload } = await drawn('/app/sheet/7B');
@@ -235,6 +315,23 @@ describe('seed', () => {
     assert.equal(calls.get('app.sheet.sheet'), 1);
     assert.ok(transition.injector().get('drawnAt') instanceof Date);
     assert.ok(transition.injector().get('sheet') instanceof Sheet);
+  });
+
+  it('re-runs only the resolve shouldDehydrate kept out', async () => {
+    const { payload } = await drawn('/app/sheet/7B', {
+      shouldDehydrate: ({ token }) => token !== 'count',
+    });
+
+    const { router, calls } = makeRouter();
+    seed(router, roundTrip(payload));
+
+    const transition = await settle(router, '/app/sheet/7B');
+
+    assert.equal(calls.get('app.sheet.count'), 1);
+    assert.equal(transition.injector().get('count'), 7);
+    assert.equal(calls.get('app.user'), undefined);
+    assert.equal(calls.get('app.sheet.title'), undefined);
+    assert.equal(calls.get('app.sheet.empty'), undefined);
   });
 
   it('runs a NOWAIT resolve on the client', async () => {

@@ -18,7 +18,11 @@ import type {
 
 export { dehydrate } from './dehydrate.ts';
 
-export type { DehydrateResult } from './dehydrate.ts';
+export type {
+  DehydrateCandidate,
+  DehydrateOptions,
+  DehydrateResult,
+} from './dehydrate.ts';
 
 export type { JsonValue, ResolvePayload } from './resolve-payload.ts';
 

@@ -622,6 +622,11 @@ the payload does not cover runs as usual:
   resolve.
 - **A `NOWAIT` resolve.** `dehydrate` neither awaits nor draws it; it stays
   with the client.
+- **A resolve the call keeps out.**
+  [`shouldDehydrate`](/api/ui-router-server/ssr/interfaces/DehydrateOptions)
+  decides per state and token, such as for data every page shares that the
+  client loads once from a cacheable file. A resolve it declines is not
+  listed in `unserializable`.
 - **Another target.** A boot to a state, or url parameters, the payload was
   not drawn for adopts nothing, and neither does a missing payload.
 - **Later transitions.** The seed disarms once a transition succeeds.
