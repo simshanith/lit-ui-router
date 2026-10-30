@@ -47,8 +47,9 @@ leaves the ones before it unchanged:
    with [`lit-ui-router-ssr`](/packages/ssr) on
    [`settle`](#settling-a-server-router) and
    [`prerender`](#emitting-a-static-site).
-3. **Representations of a state.** A state whose answer is its own `Response`
-   (a redirect, JSON, a badge) built from its resolves once `settle` lands it.
+3. **Representations of a state.** [Response states](#response-states)
+   answer with their own `Response` (a redirect, JSON, a badge) built from
+   their resolves once `settle` lands them.
 4. **Commands whose url the tree defines.**
    [Delegating states](#delegating-states) hand a url to a host handler.
    Delegate when the tree is the authority for the url: a command that shares
@@ -243,6 +244,13 @@ type Verdict =
       state: string;
       params: RawParams;
     }
+  | {
+      kind: 'response';
+      mount: string;
+      subpath: string;
+      state: string;
+      params: RawParams;
+    }
   | { kind: 'notFound'; mount?: string };
 ```
 
@@ -257,6 +265,8 @@ type Verdict =
   deploy, and browsers cache 301s past it.
 - **`delegate`** — the path matched a state that names a host handler by key
   ([delegating states](#delegating-states)); the handler answers the request.
+- **`response`** — the path matched a [response state](#response-states); the
+  handler bound to its name answers with a `Response`, never the shell.
 - **`notFound`** — `mount` set means a mount owned the path but nothing
   matched (serve that app's 404 page); absent means no mount claimed it at
   all (not this router's problem).
@@ -390,6 +400,9 @@ Connect can't call [delegate handlers](#delegating-states), so
 `createConnectMiddleware` throws at construction for a router whose states
 name delegate keys. Pass `delegates: 'next'` to pass navigations that match a
 delegating state to the downstream stack, and serve those states there.
+[Response states](#response-states) work the same way: it throws for a router
+that declares them unless you pass `responses: 'next'`, and answer them
+downstream.
 
 ### hono
 
@@ -528,6 +541,53 @@ optional `delegate?: string`, so a client tree typed with core's declarations
 can carry the key. The augmentation applies in programs that import
 `ui-router-server`; a client-only program adds `import type {} from 'ui-router-server';`.
 
+### Response states
+
+A state marked `response: true` answers with a `Response` built from its
+resolves (a redirect, JSON, a badge) instead of a page. The tree carries only
+the marker; the host binds a handler to the state's name, so client bundles
+never import server code. Its verdict is `response`, decided by url matching
+alone with no transition, so a host can tell it from a page before rendering
+anything, for example to skip a trailing-slash redirect it gives pages.
+
+```ts
+import type { ResponseHandlers } from 'ui-router-server/ssr';
+
+const routes = [
+  { name: 'home', url: '' },
+  { name: 'badge', url: '/{pkg}/badge.svg', response: true },
+] as const;
+
+const responses = {
+  badge: ({ resolves }) =>
+    new Response(resolves.svg, {
+      headers: { 'Content-Type': 'image/svg+xml' },
+    }),
+} satisfies ResponseHandlers<
+  (typeof routes)[number],
+  { badge: { svg: string } }
+>;
+```
+
+A handler receives `{ resolves, request }`: the values the state's
+transition landed with, inherited ones included, and the request it answers.
+`ResponseHandlers` requires a handler for exactly the states the routes mark,
+and its second parameter types each handler's resolves by state name.
+
+- A response state needs a url and no `redirectTo`, can't also delegate, and
+  its children don't inherit the marker. `createServerRouter` throws for each,
+  and `as const` routes make a row with both markers a compile error. A
+  redirect may target a response state.
+- The fetch and Hono adapters pass a GET or HEAD of any `Accept` that matches
+  a response state to `serveResponse(verdict, request, ...args)`, so an
+  `<img>` reaches its badge, and answer other methods with a 405. The host
+  settles the state there and runs its handler; the `Response` goes out
+  untouched. A typed router that declares response states requires
+  `serveResponse` at compile time, and construction throws without it.
+- The Connect adapter throws for response states unless `responses: 'next'`.
+- `ui-router-server` augments core's `StateDeclaration` with
+  `response?: true`, as it does with `delegate`.
+
 ## Server-side hrefs
 
 `installServerLocation` puts a real `@uirouter/core` router on an in-memory
@@ -645,8 +705,13 @@ slash, and no page. The `otherwise` projection becomes `404.html`. A path that
 matches nothing is counted, listed in `result.warnings`, and warned about in
 development. A path that matches a [delegating state](#delegating-states)
 gets no page and no rules line: it is counted in `result.tally.delegate` and
-listed in `result.delegated`, in enumeration order. A verdict kind the loop
-doesn't know throws instead of being counted.
+listed in `result.delegated`, in enumeration order. A path that matches a
+[response state](#response-states) is answered by the `respond` hook: a 2xx
+body, read as text, is written at the path its url spells (`badge.svg`), its
+headers dropped, and a 3xx becomes a `_redirects` line to its `Location`.
+Either is counted in `result.tally.response`; another status throws, as does
+a response state with no `respond`. A verdict kind the loop doesn't know
+throws instead of being counted.
 
 ```ts
 import { mkdir, writeFile } from 'node:fs/promises';

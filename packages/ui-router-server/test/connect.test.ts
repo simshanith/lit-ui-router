@@ -243,6 +243,55 @@ describe('createConnectMiddleware', () => {
     assert.equal(h.ended, false);
   });
 
+  const badge: Verdict = {
+    kind: 'response',
+    mount: '/app',
+    subpath: '/badge.svg',
+    state: 'badge',
+    params: {},
+  };
+
+  it('throws at construction for a router that declares response states, unless responses is next', () => {
+    const router = createServerRouter({
+      mounts: {
+        '/app': {
+          routes: [{ name: 'badge', url: '/badge.svg', response: true }],
+        },
+      },
+    });
+
+    assert.throws(
+      () => createConnectMiddleware(router),
+      /declares response states \(badge\); Connect cannot answer them, so pass responses: 'next'/,
+    );
+    assert.doesNotThrow(() =>
+      createConnectMiddleware(router, { responses: 'next' }),
+    );
+  });
+
+  it('fails a structural response verdict through next(error) without the opt-in', async () => {
+    const mw = createConnectMiddleware(routerOf(badge));
+    const h = harness({ url: '/app/badge.svg' });
+    mw(h.req, h.res, h.next);
+    await h.done;
+    assert.match(
+      String(h.nextArgs[0][0]),
+      /a response verdict for 'badge' needs responses: 'next'/,
+    );
+    assert.equal(h.ended, false);
+  });
+
+  it('passes a response verdict through to the downstream stack with responses next', async () => {
+    const mw = createConnectMiddleware(routerOf(badge), { responses: 'next' });
+
+    const h = harness({ url: '/app/badge.svg' });
+    mw(h.req, h.res, h.next);
+    await h.done;
+    assert.deepEqual(h.nextArgs, [[]]);
+    assert.equal(h.req.url, '/app/badge.svg');
+    assert.equal(h.headers.Link, undefined);
+  });
+
   it('never judges non-navigation requests (module and asset fetches pass)', async () => {
     const mw = createConnectMiddleware(
       routerOf({ kind: 'shell', mount: '/app' }),

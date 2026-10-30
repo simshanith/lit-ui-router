@@ -40,6 +40,7 @@ import { registeredDelegates, sharedWeakMap } from './delegate-registry.ts';
 import type { DelegateRegistration } from './delegate-registry.ts';
 import { mergeSearch } from './index.ts';
 import type {
+  ResponseState,
   RouteDeclaration,
   ServerRouter,
   ServerRouterDeclarations,
@@ -168,7 +169,33 @@ export type RequiredDelegates<
           delegates: DelegateHandlers<Args, Decls>;
         };
 
-/** Host hooks for {@link createFetchHandler}: asset IO, which requests get verdicts, and delegate handlers. */
+/**
+ * Answers a request whose pathname matched a response state, handed the
+ * verdict, the original request and the arguments the adapter was called
+ * with. Run the state's transition and its bound handler here (for example
+ * through `lit-ui-router-ssr`); its Response goes out untouched.
+ */
+export type ServeResponse<Args extends unknown[] = []> = (
+  verdict: Extract<Verdict, { kind: 'response' }>,
+  request: Request,
+  ...args: Args
+) => Response | Promise<Response>;
+
+/** Makes `serveResponse` required when a typed router declares response states. */
+export type RequiredServeResponse<
+  Args extends unknown[] = [],
+  Decls extends RouteDeclaration = RouteDeclaration,
+> =
+  string extends ResponseState<Decls>
+    ? unknown
+    : [ResponseState<Decls>] extends [never]
+      ? unknown
+      : {
+          /** Answers the router's response states. */
+          serveResponse: ServeResponse<Args>;
+        };
+
+/** Host hooks for {@link createFetchHandler}: asset IO, which requests get verdicts, delegate handlers, and response states. */
 export interface FetchAdapterOptions<
   Args extends unknown[] = [],
   Decls extends RouteDeclaration = RouteDeclaration,
@@ -224,6 +251,15 @@ export interface FetchAdapterOptions<
    * no keys (or, for a structural router, when this option is absent).
    */
   delegates?: DelegateHandlers<Args, Decls>;
+  /**
+   * Answers the states marked {@link index!RouteDeclaration.response | `response`}.
+   * A GET or HEAD of any Accept that matches one comes here, so an `<img>`
+   * reaches its badge; other methods get a 405. A typed router that declares
+   * response states requires it at compile time; construction throws when a
+   * router from `createServerRouter` declares one and it is absent. A
+   * structural router's response verdict throws per request instead.
+   */
+  serveResponse?: ServeResponse<Args>;
 }
 
 const acceptsHtml = (request: Request): boolean => {
@@ -278,6 +314,10 @@ const defaultServeNotFound = (mount: string, request: Request): Response =>
 
 type DelegateVerdict = Extract<Verdict, { kind: 'delegate' }>;
 
+type ResponseVerdict = Extract<Verdict, { kind: 'response' }>;
+
+type MarkedVerdict = DelegateVerdict | ResponseVerdict;
+
 interface DelegatedRequest {
   context: DelegateContext;
   router: ServerRouter;
@@ -291,6 +331,9 @@ const delegatedRequests = sharedWeakMap<Request, DelegatedRequest>(
 const missingDelegate = (key: string): Error =>
   new Error(`No handler in delegates for delegate key '${key}'`);
 
+const missingServeResponse = (state: string): Error =>
+  new Error(`No serveResponse for response state '${state}'`);
+
 // Fail fast: a key the tree names but the host never mapped is a deploy bug.
 const checkDelegates = <Args extends unknown[]>(
   registration: DelegateRegistration | undefined,
@@ -301,19 +344,33 @@ const checkDelegates = <Args extends unknown[]>(
   }
 };
 
-// Non-navigations only ever reach a delegate, so a registered router matches urls and never replays a transition.
-const delegateMatcher = (
+const checkServeResponse = (
+  registration: DelegateRegistration | undefined,
+  served: boolean,
+): void => {
+  const [state] = registration?.responses ?? [];
+
+  if (state !== undefined && !served) throw missingServeResponse(state);
+};
+
+// Non-navigations only ever reach a marked state, so a registered router matches urls and never replays a transition.
+const markedMatcher = (
   router: ServerRouter,
   registration: DelegateRegistration | undefined,
-): ((url: string) => Promise<DelegateVerdict | null>) => {
-  if (registration !== undefined) return (url) => registration.delegateFor(url);
+): ((url: string) => Promise<MarkedVerdict | null>) => {
+  if (registration !== undefined) return (url) => registration.markedFor(url);
 
   return async (url) => {
     const verdict = await router.resolve(url);
 
-    return verdict.kind === 'delegate' ? verdict : null;
+    return verdict.kind === 'delegate' || verdict.kind === 'response'
+      ? verdict
+      : null;
   };
 };
+
+const methodNotAllowed = (): Response =>
+  new Response(null, { status: 405, headers: { Allow: 'GET, HEAD' } });
 
 const isDelegatedTo = <K extends string>(
   context: DelegateContext,
@@ -383,10 +440,12 @@ export function delegateContext<
  *   called with the original request and the handler's own extra arguments
  *   (`handler(request, env, ctx)` reaches `delegate(request, env, ctx)`); its
  *   Response goes out untouched and its throw propagates to the host.
+ * - `response`, for a GET or HEAD of any Accept -> {@link FetchAdapterOptions.serveResponse | serveResponse},
+ *   its Response untouched; any other method -> 405.
  * - `notFound` without a mount, or a non-navigation request that matches no
- *   delegating state -> `null` (the host serves it however it would have).
- *   Non-navigations only match urls, never a transition, and skip matching
- *   when the router names no delegate keys.
+ *   delegating or response state -> `null` (the host serves it however it
+ *   would have). Non-navigations only match urls, never a transition, and
+ *   skip matching when the router names no delegate keys or response states.
  *
  * `R` is the router's type and `Args` the host's extra handler arguments;
  * write both (`createFetchHandler<typeof router, [Env]>`) or annotate the
@@ -394,7 +453,8 @@ export function delegateContext<
  * keys stay checked.
  *
  * @throws at construction when the router names a delegate key
- * {@link FetchAdapterOptions.delegates | delegates} lacks
+ * {@link FetchAdapterOptions.delegates | delegates} lacks, or declares a
+ * response state without {@link FetchAdapterOptions.serveResponse | serveResponse}
  */
 export function createFetchHandler<
   R extends ServerRouter,
@@ -402,13 +462,15 @@ export function createFetchHandler<
 >(
   router: R,
   options: FetchAdapterOptions<Args, ServerRouterDeclarations<R>> &
-    RequiredDelegates<Args, ServerRouterDeclarations<R>>,
+    RequiredDelegates<Args, ServerRouterDeclarations<R>> &
+    RequiredServeResponse<Args, ServerRouterDeclarations<R>>,
 ): FetchHandler<Args> {
   const {
     serveShell,
     serveNotFound = defaultServeNotFound,
     shellPath = (mount) => mount,
     shouldHandle = isNavigation,
+    serveResponse,
   } = options;
 
   // SAFETY: a DelegateHandlers record keyed by string; the key check below covers the typed keys at runtime.
@@ -418,13 +480,14 @@ export function createFetchHandler<
 
   const registration = registeredDelegates(router);
   checkDelegates(registration, delegates);
+  checkServeResponse(registration, serveResponse !== undefined);
 
-  const delegating =
+  const marking =
     registration === undefined
-      ? options.delegates !== undefined
-      : registration.keys.size > 0;
+      ? options.delegates !== undefined || serveResponse !== undefined
+      : registration.keys.size > 0 || registration.responses.size > 0;
 
-  const delegateFor = delegateMatcher(router, registration);
+  const markedFor = markedMatcher(router, registration);
 
   const delegateTo = (
     verdict: DelegateVerdict,
@@ -442,8 +505,30 @@ export function createFetchHandler<
     return delegates[delegate](request, ...args);
   };
 
+  const respondTo = (
+    verdict: ResponseVerdict,
+    request: Request,
+    args: Args,
+  ): Response | Promise<Response> => {
+    if (request.method !== 'GET' && request.method !== 'HEAD')
+      return methodNotAllowed();
+
+    if (serveResponse === undefined) throw missingServeResponse(verdict.state);
+
+    return serveResponse(verdict, request, ...args);
+  };
+
+  const answerMarked = (
+    verdict: MarkedVerdict,
+    request: Request,
+    args: Args,
+  ): Response | Promise<Response> =>
+    verdict.kind === 'delegate'
+      ? delegateTo(verdict, request, args)
+      : respondTo(verdict, request, args);
+
   const answer = async (
-    verdict: Exclude<Verdict, DelegateVerdict>,
+    verdict: Exclude<Verdict, MarkedVerdict>,
     request: Request,
   ): Promise<Response | null> => {
     if (verdict.kind === 'redirect') {
@@ -483,15 +568,16 @@ export function createFetchHandler<
 
   return async (request, ...args) => {
     if (!shouldHandle(request)) {
-      if (!delegating) return null;
-      const verdict = await delegateFor(request.url);
+      if (!marking) return null;
+      const verdict = await markedFor(request.url);
 
-      return verdict === null ? null : delegateTo(verdict, request, args);
+      return verdict === null ? null : answerMarked(verdict, request, args);
     }
 
     const verdict = await router.resolve(request.url);
 
-    if (verdict.kind === 'delegate') return delegateTo(verdict, request, args);
+    if (verdict.kind === 'delegate' || verdict.kind === 'response')
+      return answerMarked(verdict, request, args);
 
     return answer(verdict, request);
   };

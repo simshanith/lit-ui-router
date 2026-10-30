@@ -21,17 +21,20 @@ export function sharedWeakMap<K extends object, V>(
 }
 
 /**
- * The delegate keys a router's states name, and its delegate-only matcher.
+ * The delegate keys and response states a router's states name, and its
+ * matcher for those marked states.
  *
  * @internal
  */
 export interface DelegateRegistration {
   /** Every key the router's states name. */
   readonly keys: ReadonlySet<string>;
-  /** The delegate verdict for a pathname or url, or null; url matching only, never a transition. */
-  delegateFor(
+  /** Every response state's name. */
+  readonly responses: ReadonlySet<string>;
+  /** The delegate or response verdict for a pathname or url, or null; url matching only, never a transition. */
+  markedFor(
     pathnameOrUrl: string,
-  ): Promise<Extract<Verdict, { kind: 'delegate' }> | null>;
+  ): Promise<Extract<Verdict, { kind: 'delegate' | 'response' }> | null>;
 }
 
 const registrations = sharedWeakMap<ServerRouter, DelegateRegistration>(

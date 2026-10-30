@@ -114,6 +114,14 @@ export interface ConnectAdapterOptions {
    * fails the request through `next(error)`.
    */
   delegates?: 'next';
+  /**
+   * How response states are served, as for {@link ConnectAdapterOptions.delegates | delegates}:
+   * `'next'` passes a navigation that matches one to the downstream stack,
+   * which must answer it. Without it, construction throws for a router from
+   * `createServerRouter` that declares response states, and a structural
+   * router's response verdict fails the request through `next(error)`.
+   */
+  responses?: 'next';
 }
 
 const isHeaderString = (
@@ -162,6 +170,11 @@ const unservedDelegate = (key: string): Error =>
     `createConnectMiddleware: a delegate verdict for '${key}' needs delegates: 'next'`,
   );
 
+const unservedResponse = (state: string): Error =>
+  new Error(
+    `createConnectMiddleware: a response verdict for '${state}' needs responses: 'next'`,
+  );
+
 /**
  * Wraps a {@link ServerRouter} as Connect middleware. Mount it BEFORE the
  * static layer; the default host serves shells by rewriting `req.url` and
@@ -181,9 +194,12 @@ const unservedDelegate = (key: string): Error =>
  * - `notFound` without a mount, or a non-navigation request → `next()`.
  * - `delegate` → `next()` with {@link ConnectAdapterOptions.delegates | `delegates: 'next'`}; mount the
  *   handlers for delegating states downstream.
+ * - `response` → `next()` with {@link ConnectAdapterOptions.responses | `responses: 'next'`}; answer
+ *   response states downstream.
  *
  * @throws at construction when the router names delegate keys and
- * {@link ConnectAdapterOptions.delegates | delegates} is not `'next'`
+ * {@link ConnectAdapterOptions.delegates | delegates} is not `'next'`, or
+ * declares response states and {@link ConnectAdapterOptions.responses | responses} is not `'next'`
  */
 export function createConnectMiddleware(
   router: ServerRouter,
@@ -200,11 +216,19 @@ export function createConnectMiddleware(
   } = options;
 
   const passDelegates = options.delegates === 'next';
-  const keys = registeredDelegates(router)?.keys ?? new Set<string>();
+  const passResponses = options.responses === 'next';
+  const registration = registeredDelegates(router);
+  const keys = registration?.keys ?? new Set<string>();
+  const responses = registration?.responses ?? new Set<string>();
 
   if (!passDelegates && keys.size > 0)
     throw new Error(
       `createConnectMiddleware: the router names delegate keys (${[...keys].join(', ')}); Connect cannot call them, so pass delegates: 'next' and serve those states downstream`,
+    );
+
+  if (!passResponses && responses.size > 0)
+    throw new Error(
+      `createConnectMiddleware: the router declares response states (${[...responses].join(', ')}); Connect cannot answer them, so pass responses: 'next' and answer those states downstream`,
     );
 
   return (req, res, next) => {
@@ -246,7 +270,17 @@ export function createConnectMiddleware(
         return;
       }
 
-      if (verdict.kind === 'delegate' || verdict.mount === undefined) {
+      if (verdict.kind === 'response' && !passResponses) {
+        next(unservedResponse(verdict.state));
+
+        return;
+      }
+
+      if (
+        verdict.kind === 'delegate' ||
+        verdict.kind === 'response' ||
+        verdict.mount === undefined
+      ) {
         next();
 
         return;
