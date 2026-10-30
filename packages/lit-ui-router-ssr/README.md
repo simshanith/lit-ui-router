@@ -31,7 +31,10 @@ imports the pre-1.0 renderer or re-derives the incantation.
   matched nothing — is
   `prerender` from `ui-router-server/prerender`, which takes any render. This package's `prerender`
   supplies the lit one and takes the same options, plus `router`, `renderShell`, `document`,
-  `root`, `elementRenderers` and `payload`. No SPA catch-all is ever written: one turns every 404 into a 200.
+  `root`, `elementRenderers`, `payload` and `responses`. No SPA catch-all is ever written: one
+  turns every 404 into a 200.
+- **Response states after settle.** `responder` runs the handler bound to a response state's name
+  with the resolves its transition landed with.
 - **`<ui-view>` on both sides.** `UiViewRenderer` fills the element's light DOM on the server;
   `lit-ui-router-ssr/client` adopts what it drew.
 
@@ -127,6 +130,17 @@ A page fails to land in four ways, and each rejects rather than hangs:
 
 `settle()` never calls `router.start()`, which runs once per router: it drives `urlService`
 directly, so a page loop calls it once per path on the same router, started or not.
+
+## Response states
+
+A [response state](https://lit-ui-router.dev/packages/server#response-states) answers with a
+`Response` built from its resolves instead of a page. `responder(router, responses)` settles
+`router` on the verdict's subpath, query included, runs the handler bound to the landed state's
+name with that transition's resolves (inherited ones included) and the request, and returns the
+`Response` as built; a HEAD gets it without its body. A resolve that throws rejects before any
+handler runs. It fits the fetch adapter's `serveResponse`, and `prerender` takes the same handlers
+as `responses`, writing a 2xx body at the path its url spells or a 3xx as a rules line. See
+[response states](https://lit-ui-router.dev/packages/ssr#response-states).
 
 ## Adopting the resolves on boot
 

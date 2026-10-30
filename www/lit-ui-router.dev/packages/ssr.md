@@ -52,8 +52,11 @@ to the view it wakes.
   [`prerender`](/packages/server#emitting-a-static-site) from
   `ui-router-server/prerender`, which takes any render. This package's `prerender`
   supplies the lit one and takes the same options, plus `router`,
-  `renderShell`, `document`, `root`, `elementRenderers` and `payload`. No SPA catch-all
-  is ever written: one turns every 404 into a 200.
+  `renderShell`, `document`, `root`, `elementRenderers`, `payload` and
+  `responses`. No SPA catch-all is ever written: one turns every 404 into a 200.
+- **Response states after settle.** [`responder`](#response-states) runs
+  the handler bound to a response state's name with the resolves its
+  transition landed with.
 
 Path enumeration, the html document, and `<title>` stay with the caller —
 `paths`, `document()`, and an async `renderShell()` are the seams for them.
@@ -159,6 +162,7 @@ values it leaves out, is in
 | `redirect`            | a rules line (`from to status`), no page                              |
 | `notFound`            | nothing, and the path is listed in `result.warnings`                  |
 | `delegate`            | nothing: the path is listed in `result.delegated` for a host handler  |
+| `response`            | the handler's 2xx body at its url, or its 3xx as a rules line         |
 | the `otherwise` probe | the 404 document, `404.html` by default, rendered like any shell      |
 
 [`PrerenderResult`](/api/lit-ui-router-ssr/index/interfaces/PrerenderResult) carries
@@ -172,6 +176,42 @@ target.
 to the server. On Cloudflare Workers, list them in
 [`assets.run_worker_first`](/packages/server#emitting-a-static-site) so the
 Worker sees them before static assets do.
+
+## Response states
+
+A [response state](/packages/server#response-states) answers with a `Response`
+built from its resolves instead of a page. `responder(router, responses)`
+serves one: it settles `router` on the verdict's subpath, the request's query
+included, runs the handler bound to the landed state's name with that
+transition's resolves (inherited ones included) and the request, and returns
+the `Response` as the handler built it. A HEAD gets it without its body. A
+resolve that throws rejects before any handler runs, as `settle` rejects for
+a page.
+
+```ts
+import { responder, type ResponseHandlers } from 'lit-ui-router-ssr';
+
+const responses = {
+  badge: ({ resolves }) =>
+    new Response(resolves.svg, {
+      headers: { 'Content-Type': 'image/svg+xml' },
+    }),
+} satisfies ResponseHandlers<
+  (typeof routes)[number],
+  { badge: { svg: string } }
+>;
+
+const handler = createFetchHandler(router, {
+  serveShell,
+  serveResponse: (verdict, request) =>
+    responder(pageRouter(), responses)(verdict, request),
+});
+```
+
+`prerender` takes the same handlers as `responses`: a path that matches a
+response state is written as its handler's 2xx body at the path its url
+spells, or its 3xx as a rules line. The handler's request is a GET for the
+path at `http://localhost`.
 
 ## Where files land
 

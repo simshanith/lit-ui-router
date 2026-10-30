@@ -19,6 +19,8 @@ import type { ResolvePayload } from 'ui-router-server/ssr';
 import { devGate } from '#dev-gate';
 
 import { LightElementRenderer } from './light-element-renderer.js';
+import { responder } from './respond.js';
+import type { BoundResponses } from './respond.js';
 import { packageVersion, routeOf, signatureAttribute } from './signature.js';
 import { UiViewRenderer } from './ui-view-renderer.js';
 
@@ -30,6 +32,8 @@ export type {
 } from 'ui-router-server/prerender';
 
 type ShellVerdict = Extract<Verdict, { kind: 'shell' }>;
+
+type ResponseVerdict = Extract<Verdict, { kind: 'response' }>;
 
 // Built at runtime so no node: specifier enters the static module graph; a supplied `write` needs none.
 const NODE_FS = 'node:fs/promises';
@@ -70,7 +74,7 @@ export interface RenderContext extends SiteRenderContext {
  */
 export interface PrerenderOptions extends Omit<
   SitePrerenderOptions,
-  'render' | 'write'
+  'render' | 'respond' | 'write'
 > {
   /**
    * The router the render reads: provided on {@link PrerenderOptions.root | root}
@@ -113,6 +117,15 @@ export interface PrerenderOptions extends Omit<
    * `<ui-view>` to fill.
    */
   elementRenderers?: RenderInfo['elementRenderers'];
+  /**
+   * Handlers for the router's response states, keyed by state name, as
+   * {@link responder} takes them. A path that matches one settles
+   * {@link PrerenderOptions.router | router} on it and writes what its
+   * handler answers: a 2xx body at the path its url spells, or a 3xx as a
+   * rules line. The handler's request is a GET for the path at
+   * `http://localhost`. Without this option, a response state throws.
+   */
+  responses?: BoundResponses;
   /** Writes a file. Defaults to `node:fs`, imported lazily on first write. */
   write?: FileWriter;
   /**
@@ -231,8 +244,10 @@ const warnUnregistered = (): void => {
 
 /**
  * Emits a static site from a mount table's verdicts: a shell verdict becomes
- * `<subpath>/index.html`, a redirect becomes a rules line and no page, and the
- * `otherwise` projection becomes the 404 document. The loop is
+ * `<subpath>/index.html`, a response state becomes the body or rules line its
+ * handler in {@link PrerenderOptions.responses | responses} answers, a
+ * redirect becomes a rules line and no page, and the `otherwise` projection
+ * becomes the 404 document. The loop is
  * `ui-router-server/prerender`'s `prerender`; this supplies its lit render.
  *
  * The router is provided on the render root for `context-request` and scoped
@@ -287,6 +302,7 @@ export async function prerender(
     root = new EventTarget(),
     write = nodeWrite,
     payload,
+    responses,
     ...site
   } = options;
 
@@ -326,7 +342,27 @@ export async function prerender(
   const uninstall = provideRouter(root, router);
 
   try {
-    const result = await prerenderSite({ ...site, render: renderLit, write });
+    const respond = (
+      verdict: ResponseVerdict,
+      { path }: SiteRenderContext,
+    ): Promise<Response> => {
+      if (responses === undefined)
+        throw new Error(
+          `prerender: '${path}' matched response state '${verdict.state}'; pass \`responses\` to answer it`,
+        );
+
+      return responder(router, responses)(
+        verdict,
+        new Request(new URL(path, 'http://localhost')),
+      );
+    };
+
+    const result = await prerenderSite({
+      ...site,
+      render: renderLit,
+      respond,
+      write,
+    });
 
     return { ...result, root };
   } finally {
