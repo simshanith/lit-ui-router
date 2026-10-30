@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "build": "node --eval \"fs.cpSync('public', 'dist', { recursive: true })\" --",
-    "dev": "serve public",
-    "preview": "serve dist"
+    "dev": "serve --no-clipboard public",
+    "preview": "serve --no-clipboard dist"
   },
   "devDependencies": {
     "@uirouter/core": "^6.1.2",
