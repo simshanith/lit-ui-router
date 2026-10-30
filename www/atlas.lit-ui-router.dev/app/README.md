@@ -331,6 +331,17 @@ served markup in place. The server draws the defaults (`auto`, both switches off
 theme and switches land in the first client `willUpdate`, after the wake has adopted, since a
 hydrate keeps the served attribute values.
 
+**The theme before first paint (`src/theme.ts`, `test/theme.test.ts`).** A module script runs
+after the document has parsed, and the browser can paint before then, so the stored theme is also
+applied by one classic inline script in `<head>`, ahead of the stylesheets that read `data-theme`:
+`vite.config.ts` puts `prepaintTheme` there with `toString()`, at the `theme:prepaint` marker in
+`index.html`, in the site and the artifact build alike. It takes the storage key as its argument
+and reads nothing but `document` and `localStorage`: a stored `light` or `dark` is set, a stored
+`auto` is removed, and with nothing stored a `data-theme` the host stamped is kept, which is how
+the claude.ai Artifact pins the viewer's theme. `npm test` runs the inline text with only those
+two names in scope and `readTheme` + `applyTheme` over the same stored values and stamps, and
+asserts the one attribute; the ship `app` step runs it after the typecheck.
+
 **Enlarge (`src/lightbox.ts`).** Every figure — a plate, a lane's stage, the frame of the city,
 the plant or the bricks — is a `.fillable` box with one `.fill` button reading ENLARGE, and the
 document's one `<atlas-lightbox>`, seated on `<body>` by `installLightbox()`, answers them all

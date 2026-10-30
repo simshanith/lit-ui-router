@@ -11,6 +11,7 @@ import { viteStaticCopy } from 'vite-plugin-static-copy';
 import { allSheets } from './src/manifest.ts';
 import type { Manifest } from './src/manifest.ts';
 import { BASE, mountsFor } from './src/routes.ts';
+import { prepaintScript } from './src/theme.ts';
 
 const HERE = fileURLToPath(new URL('.', import.meta.url));
 const DIST = join(HERE, 'dist');
@@ -54,6 +55,20 @@ const artifactStubPlugin: Plugin = {
   load: (id: string): string | undefined => (id === STUB ? 'export default undefined;' : undefined),
 };
 
+// The stored theme lands before first paint: the marker line in index.html
+// becomes src/theme.ts's prepaintTheme, a classic inline script.
+const THEME_MARKER = /<!-- theme:prepaint[^>]*-->/;
+const themePrepaintPlugin: Plugin = {
+  name: 'atlas:theme-prepaint',
+  transformIndexHtml: {
+    order: 'pre',
+    handler: (html: string): string => {
+      if (!THEME_MARKER.test(html)) throw new Error('index.html has no theme:prepaint marker');
+      return html.replace(THEME_MARKER, () => `<script>${prepaintScript()}</script>`);
+    },
+  },
+};
+
 const artifactHtmlPlugin: Plugin = {
   name: 'atlas:artifact-html',
   // Pre, so vite never resolves the two references artifact mode drops: there
@@ -78,6 +93,7 @@ export default defineConfig(({ isPreview, mode }) => {
       publicDir: false as const,
       build: { target: 'esnext', outDir: 'dist-artifact', emptyOutDir: true },
       plugins: [
+        themePrepaintPlugin,
         artifactHtmlPlugin,
         artifactStubPlugin,
         viteSingleFile({
@@ -95,6 +111,7 @@ export default defineConfig(({ isPreview, mode }) => {
       target: 'esnext',
     },
     plugins: [
+      themePrepaintPlugin,
       viteStaticCopy({
         targets: [
           {

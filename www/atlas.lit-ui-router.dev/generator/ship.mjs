@@ -4,7 +4,7 @@
 //   mise exec -- node www/atlas.lit-ui-router.dev/generator/ship.mjs <step> [options]
 //
 //   build                 the generator: fragments, models, manifest and the README
-//   app                   typecheck, then the vite build and prerender; the two count
+//   app                   typecheck and the node tests, then the vite build and prerender; the two count
 //                         lines are compared with the last run's (--accept to lower them)
 //   audit <tag> [--only ids]   frame audit of the bare plates under app/dist/plate/, then light
 //                         and dark photographs under tmp/shots/<tag>; needs `app` to have run.
@@ -66,6 +66,7 @@ const STEPS = {
 
   app() {
     run('npm', ['--prefix', APP, 'run', 'typecheck'], ROOT);
+    run('npm', ['--prefix', APP, 'run', 'test'], ROOT);
     const out = read('npm', ['--prefix', APP, 'run', 'build'], ROOT);
     const pages = Number(/prerendered (\d+) pages/.exec(out)?.[1]);
     const scoped = /scoped router at construction: (\d+)\/(\d+)/.exec(out);

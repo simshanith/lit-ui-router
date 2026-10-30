@@ -12,6 +12,7 @@
     "prerender": "node prerender.ts",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
+    "test": "node --test test/theme.test.ts",
     "bench": "node test/routes.bench.ts"
   },
   "dependencies": {

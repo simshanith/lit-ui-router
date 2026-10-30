@@ -28,6 +28,8 @@
     <link rel="icon" href="%BASE_URL%favicon.ico" sizes="any" />
     <link rel="icon" href="%BASE_URL%favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="%BASE_URL%apple-touch-icon.png" />
+    <!-- theme:prepaint — vite.config.ts puts src/theme.ts's prepaintTheme here as a
+         classic inline script, ahead of the stylesheets that read data-theme -->
     <link rel="stylesheet" href="%BASE_URL%sheets/atlas.css" />
     <link rel="preload" as="fetch" href="%BASE_URL%manifest.json" crossorigin />
     <!-- THE TYPE, stand-in half. atlas.css names the Adobe family first in
