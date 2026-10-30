@@ -14,7 +14,7 @@
     "@uirouter/visualizer": "^7.2.1",
     "effect": "^4.0.7",
     "lit": "^3.3.3",
-    "lit-ui-router": "^1.18.0",
+    "lit-ui-router": "^1.19.0",
     "lit-ui-router-effect": "^0.6.0",
     "ui-router-effect": "^0.2.0"
   },
