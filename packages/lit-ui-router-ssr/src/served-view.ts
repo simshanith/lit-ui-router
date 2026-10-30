@@ -289,10 +289,12 @@ export const withServedRender = (
       if (adopt) {
         // Core places the element only when it is an instance of the routed class, so a template view's first element is ignored.
         const served = heldElement(this);
+
         if (served) adoptServedElement(this, served);
 
         return adopt(this);
       }
+
       // Rendering over a render's nodes doubles the markup; what the author wrote ahead of them is the capture's.
       dropHeldRender(this);
       warnDeferredWithoutClient(this);

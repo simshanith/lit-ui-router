@@ -271,11 +271,13 @@ export class UiViewRenderer extends ElementRenderer {
       new ResolveContext(config.path),
     );
 
-    const element =
-      isRoutedLitElement(component) || isRoutedClassRenderer(component)
-        ? // SAFETY: core renders a routed class as a LitElement subclass's instance
-          (routedElementOf(result) as LitElement | undefined)
-        : undefined;
+    const isClass =
+      isRoutedLitElement(component) || isRoutedClassRenderer(component);
+
+    // SAFETY: core renders a routed class as an instance of that LitElement subclass
+    const element = isClass
+      ? (routedElementOf(result) as LitElement | undefined)
+      : undefined;
 
     return [
       () => {
