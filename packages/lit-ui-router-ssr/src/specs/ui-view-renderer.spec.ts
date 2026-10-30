@@ -7,7 +7,7 @@ import { UIRouterLit } from 'lit-ui-router/pure';
 import type { LitStateDeclaration } from 'lit-ui-router/pure';
 import { installServerLocation } from 'ui-router-server/location';
 import { settle } from 'ui-router-server/ssr';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { UiViewRenderer } from '../ui-view-renderer.js';
 import { constructed, makeClassRouter } from './class-fixture.js';
