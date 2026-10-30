@@ -489,6 +489,9 @@ catalogs:
     '@www/lit-ui-router.dev':
       specifier: workspace:*
       version: workspace:*
+    domain-search:
+      specifier: workspace:*
+      version: workspace:*
     eslint-plugin-lit-ui-router:
       specifier: workspace:*
       version: workspace:*
@@ -681,6 +684,52 @@ importers:
         specifier: 'catalog:'
         version: 4.154.0(@types/node@24.19.2)
 
+  apps/domain-search:
+    dependencies:
+      '@lit-labs/ssr':
+        specifier: 'catalog:'
+        version: 4.1.0(@types/node@24.19.2)
+      '@lit-labs/ssr-client':
+        specifier: 'catalog:'
+        version: 1.1.8
+      '@uirouter/core':
+        specifier: 'catalog:'
+        version: 6.1.2
+      lit:
+        specifier: 'catalog:'
+        version: 3.3.3
+      lit-ui-router:
+        specifier: catalog:workspace
+        version: link:../../packages/lit-ui-router
+      lit-ui-router-ssr:
+        specifier: catalog:workspace
+        version: link:../../packages/lit-ui-router-ssr
+      ui-router-server:
+        specifier: catalog:workspace
+        version: link:../../packages/ui-router-server
+    devDependencies:
+      '@tools/shared':
+        specifier: catalog:workspace
+        version: link:../../tools/shared
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.19.2
+      oxfmt:
+        specifier: 'catalog:'
+        version: 0.75.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.90.0(oxlint-tsgolint@7.0.2005)
+      playwright:
+        specifier: 'catalog:'
+        version: 1.64.1
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+      vite:
+        specifier: 'catalog:'
+        version: 8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)
+
   apps/sample-app-lit-e2e:
     dependencies:
       '@www/lit-ui-router.dev':
@@ -705,6 +754,9 @@ importers:
       cypress-terminal-report:
         specifier: 'catalog:'
         version: 7.4.0(cypress@16.2.1)
+      domain-search:
+        specifier: catalog:workspace
+        version: link:../domain-search
       oxfmt:
         specifier: 'catalog:'
         version: 0.75.0
@@ -2931,6 +2983,9 @@ importers:
       '@uirouter/core':
         specifier: 'catalog:'
         version: 6.1.2
+      domain-search:
+        specifier: catalog:workspace
+        version: link:../../apps/domain-search
       examples:
         specifier: catalog:workspace
         version: link:../../examples

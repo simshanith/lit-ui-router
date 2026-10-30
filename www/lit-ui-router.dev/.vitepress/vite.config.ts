@@ -1,5 +1,6 @@
 import { createServerRouter } from 'ui-router-server';
 import { serverRouterPlugin } from 'ui-router-server/vite';
+import { mounts as domainSearchMounts } from 'domain-search/routes';
 import { mounts } from 'sample-app-routes';
 // Examples embedded same-origin at /examples/<name>/; built by
 // `examples#build:embeds` (hash routing, so no SPA fallback needed).
@@ -30,6 +31,7 @@ const SHELL_PATHS = new Map([
   ['/app-hash', '/app-hash.html'],
   ['/not-found-spa', '/app.html'],
   ['/simulated-routing', '/app.html'],
+  ['/domain-search', '/domain-search.html'],
 ]);
 
 // The dev-server twin of the docs worker: the SAME mounts table, resolved by
@@ -39,7 +41,9 @@ const SHELL_PATHS = new Map([
 // this file used to hand-roll. The plugin installs its middleware in the pre
 // position (before Vite's own HTML fallback); asset/module fetches pass
 // through its navigation gate untouched.
-const router = createServerRouter({ mounts });
+const router = createServerRouter({
+  mounts: { ...mounts, ...domainSearchMounts },
+});
 
 /**
  * Directory requests for the embedded tutorial examples resolve to their
@@ -250,6 +254,18 @@ export default defineConfig({
           src: 'node_modules/sample-app-lit-vanilla/dist/hash/index.html',
           dest: '',
           rename: { name: 'app-hash.html', stripBase: true },
+        },
+        // The domain-search page's one prerendered shell; it has no 404 page,
+        // since every query answers with the shell.
+        {
+          src: 'node_modules/domain-search/dist/assets/*',
+          dest: 'assets',
+          rename: { stripBase: true },
+        },
+        {
+          src: 'node_modules/domain-search/dist/index.html',
+          dest: '',
+          rename: { name: 'domain-search.html', stripBase: true },
         },
         // Per-mount 404 pages: the worker (worker/index.ts) serves
         // <mount>/404.html with status 404 for unmatched paths in a mount.

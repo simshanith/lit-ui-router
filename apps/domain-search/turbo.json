@@ -1,0 +1,14 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      // the prerender imports lit-ui-router-ssr's and ui-router-server's dist
+      "dependsOn": ["^build", "^transit"],
+      "outputs": ["dist/**"]
+    },
+    "typecheck:tsc": {
+      "dependsOn": ["^build:types", "^transit"]
+    }
+  }
+}

@@ -32,6 +32,10 @@ const ASSET_TABLE = {
     headers: { 'Content-Type': 'text/html' },
   },
   '/app-hash': { body: 'hash-shell', headers: { 'Content-Type': 'text/html' } },
+  '/domain-search': {
+    body: 'domain-search-shell',
+    headers: { 'Content-Type': 'text/html' },
+  },
   '/app/404.html': {
     body: 'vanilla-404-page',
     headers: { 'Content-Type': 'text/html; charset=utf-8' },
@@ -318,6 +322,29 @@ describe('/simulated-routing (the simulate-strategy exhibit)', () => {
     assert.equal(res.status, 404);
     assert.deepEqual(assetCalls, ['/app']);
     assert.equal(await res.text(), ASSET_TABLE['/app'].body);
+    assert.equal(res.headers.get('X-Robots-Tag'), 'noindex');
+  });
+});
+
+describe('/domain-search (the frame-0 search page)', () => {
+  it('serves its one shell at 200 for every query, noindexed', async () => {
+    for (const path of [
+      '/domain-search',
+      '/domain-search/',
+      '/domain-search?q=lit',
+    ]) {
+      assetCalls = [];
+      const res = await dispatch(path);
+      assert.equal(res.status, 200, path);
+      assert.deepEqual(assetCalls, ['/domain-search'], path);
+      assert.equal(await res.text(), ASSET_TABLE['/domain-search'].body);
+      assert.equal(res.headers.get('X-Robots-Tag'), 'noindex', path);
+    }
+  });
+
+  it('answers an honest 404 below the mount', async () => {
+    const res = await dispatch('/domain-search/no/such/page');
+    assert.equal(res.status, 404);
     assert.equal(res.headers.get('X-Robots-Tag'), 'noindex');
   });
 });

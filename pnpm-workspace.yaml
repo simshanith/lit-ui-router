@@ -206,6 +206,7 @@ catalogs:
     '@tools/wintercg-globals': workspace:*
     '@tools/workers-builds': workspace:*
     '@www/lit-ui-router.dev': workspace:*
+    domain-search: workspace:*
     eslint-plugin-lit-ui-router: workspace:*
     examples: workspace:*
     lit-ui-router: workspace:*
