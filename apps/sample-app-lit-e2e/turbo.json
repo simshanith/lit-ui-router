@@ -44,6 +44,13 @@
       "cache": false,
       "passThroughEnv": ["WWW_DEV_PORT", "E2E_BASE_URL"]
     },
+    // The domain-search frame-0 harness: throttled Chrome on the served page.
+    // Uncached for the reason a11y is: it measures the host.
+    "test:e2e:domain-search": {
+      "dependsOn": ["build"],
+      "cache": false,
+      "passThroughEnv": ["WWW_DEV_PORT", "E2E_BASE_URL", "DOMAIN_SEARCH_RUNS"]
+    },
     "test:e2e:docs": {
       "dependsOn": ["build"],
       "inputs": [

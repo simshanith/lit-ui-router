@@ -4,12 +4,17 @@ import { describe, it } from 'node:test';
 import { defaultSuites, groupSuites, suites } from './suites.ts';
 
 describe('defaultSuites', () => {
-  it('is every suite but the named-only axe pass', () => {
-    assert.ok(suites.includes('a11y'));
-    assert.ok(!defaultSuites.includes('a11y'));
+  it('is every suite but the named-only axe pass and domain-search harness', () => {
+    const namedOnly = ['a11y', 'domain-search'];
+
+    for (const suite of namedOnly) {
+      assert.ok(suites.includes(suite));
+      assert.ok(!defaultSuites.includes(suite));
+    }
+
     assert.deepEqual(
       defaultSuites,
-      suites.filter((suite) => suite !== 'a11y'),
+      suites.filter((suite) => !namedOnly.includes(suite)),
     );
   });
 });

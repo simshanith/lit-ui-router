@@ -1,0 +1,19 @@
+{
+  // One graph: the browser src, and the prerender, specs and harness node runs by type stripping.
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": ["node", "vite/client"]
+  },
+  "include": [
+    "src/**/*",
+    "scripts/**/*",
+    "test/**/*",
+    "harness/**/*",
+    "vite.config.ts"
+  ]
+}

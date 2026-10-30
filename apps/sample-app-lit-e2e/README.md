@@ -12,20 +12,21 @@ mise run test_e2e
 
 That production-like flow builds the docs site (which embeds every app's
 build), serves it with wrangler on port 8787, and runs the Playwright suites in
-parallel. `a11y` runs only when named; on CI it is the `acceptance (a11y)` job (`.github/workflows/acceptance.yml`):
+parallel. `a11y` and `domain-search` run only when named. On CI, `a11y` is the `acceptance (a11y)` job (`.github/workflows/acceptance.yml`), and `domain-search` runs in no workflow:
 
-| Suite       | Target          | Covers                                                                                                                                     |
-| ----------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `vanilla`   | `/app/`         | vanilla app, default routing — the Navigation API plugin                                                                                   |
-| `mobx`      | `/app-mobx/`    | MobX app, default routing — the Navigation API plugin                                                                                      |
-| `effect`    | `/app-effect/`  | Effect app, default routing — the Navigation API plugin                                                                                    |
-| `signals`   | `/app-signals/` | Signals app, default routing — the Navigation API plugin                                                                                   |
-| `docs`      | site + mounts   | docs pages plus the mount matrix — flagships, hash demo, and the server-support exhibits                                                   |
-| `hash`      | `/app-hash/`    | vanilla app under the `hash` location plugin                                                                                               |
-| `a11y`      | site + mounts   | axe-core (`@tools/a11y`) over the docs pages (one API reference page per kind) in light and dark, and a walk through each sample-app mount |
-| `pushstate` | `/app/`         | vanilla app under the `pushState` fallback                                                                                                 |
+| Suite | Target | Covers |
+| --- | --- | --- |
+| `vanilla` | `/app/` | vanilla app, default routing — the Navigation API plugin |
+| `mobx` | `/app-mobx/` | MobX app, default routing — the Navigation API plugin |
+| `effect` | `/app-effect/` | Effect app, default routing — the Navigation API plugin |
+| `signals` | `/app-signals/` | Signals app, default routing — the Navigation API plugin |
+| `docs` | site + mounts | docs pages plus the mount matrix — flagships, hash demo, and the server-support exhibits |
+| `domain-search` | `/domain-search` | the frame-0 harness from [`domain-search`](../domain-search/README.md) in throttled Chrome; uncached, like `a11y` |
+| `hash` | `/app-hash/` | vanilla app under the `hash` location plugin |
+| `a11y` | site + mounts | axe-core (`@tools/a11y`) over the docs pages (one API reference page per kind) in light and dark, and a walk through each sample-app mount |
+| `pushstate` | `/app/` | vanilla app under the `pushState` fallback |
 
-Every suite but `a11y` is a project in `playwright.config.ts`, and each suite is its own turbo task (`test:e2e:<suite>`). The Playwright suites have their own cache keys,
+Every suite but `a11y` and `domain-search` is a project in `playwright.config.ts`, and each suite is its own turbo task (`test:e2e:<suite>`). The Playwright suites have their own cache keys,
 so rerunning one after a flake costs that suite alone rather than the whole
 set. `a11y` is uncached, because contrast and target size are measured on the host's rendering; a scan that finds violations saves a full-page screenshot to `a11y-screenshots/`. Name the suites you want and the umbrella runs those, around the same
 server, cached and summarized exactly like the full run:

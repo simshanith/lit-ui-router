@@ -33,6 +33,7 @@
     "@pierre/trees": "catalog:",
     "@uirouter/core": "catalog:",
     "@www/release-diffs.lit-ui-router.dev": "catalog:workspace",
+    "domain-search": "catalog:workspace",
     "examples": "catalog:workspace",
     "lit": "catalog:",
     "lit-ui-router": "catalog:workspace",
