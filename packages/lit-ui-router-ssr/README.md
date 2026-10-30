@@ -31,7 +31,7 @@ imports the pre-1.0 renderer or re-derives the incantation.
   matched nothing — is
   `prerender` from `ui-router-server/prerender`, which takes any render. This package's `prerender`
   supplies the lit one and takes the same options, plus `router`, `renderShell`, `document`,
-  `root`, `elementRenderers`, `payload` and `responses`. No SPA catch-all is ever written: one
+  `root`, `elementRenderers`, `payload`, `responses` and `origin`. No SPA catch-all is ever written: one
   turns every 404 into a 200.
 - **Response states after settle.** `responder` runs the handler bound to a response state's name
   with the resolves its transition landed with.

@@ -161,6 +161,27 @@ describe('prerender responses', () => {
     ]);
   });
 
+  it("hands the handler a request at the site's origin", async () => {
+    const badge = vi.spyOn(responses, 'pkg.badge');
+
+    await prerender({
+      mounts: { '/': { routes, config: { strict: false } } },
+      router: serverRouter(),
+      outDir: 'dist',
+      paths: ['/lit/badge.svg'],
+      notFound: false,
+      elementRenderers: [],
+      renderShell: () => '',
+      responses,
+      origin: 'https://lit-ui-router.dev',
+      write: () => {},
+    });
+
+    expect(badge.mock.calls[0]?.[0].request.url).toBe(
+      'https://lit-ui-router.dev/lit/badge.svg',
+    );
+  });
+
   it('throws for a response state without responses', async () => {
     await expect(
       prerender({

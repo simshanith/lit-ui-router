@@ -123,9 +123,16 @@ export interface PrerenderOptions extends Omit<
    * {@link PrerenderOptions.router | router} on it and writes what its
    * handler answers: a 2xx body at the path its url spells, or a 3xx as a
    * rules line. The handler's request is a GET for the path at
-   * `http://localhost`. Without this option, a response state throws.
+   * {@link PrerenderOptions.origin | origin}. Without this option, a response
+   * state throws.
    */
   responses?: BoundResponses;
+  /**
+   * The origin of the request a response handler gets, such as
+   * `https://example.com`, so a handler that builds absolute urls from
+   * `request.url` writes the site's own. Defaults to `http://localhost`.
+   */
+  origin?: string;
   /** Writes a file. Defaults to `node:fs`, imported lazily on first write. */
   write?: FileWriter;
   /**
@@ -303,6 +310,7 @@ export async function prerender(
     write = nodeWrite,
     payload,
     responses,
+    origin = 'http://localhost',
     ...site
   } = options;
 
@@ -353,7 +361,7 @@ export async function prerender(
 
       return responder(router, responses)(
         verdict,
-        new Request(new URL(path, 'http://localhost')),
+        new Request(new URL(path, origin)),
       );
     };
 
