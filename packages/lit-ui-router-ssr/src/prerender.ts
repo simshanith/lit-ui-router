@@ -129,8 +129,10 @@ export interface PrerenderOptions extends Omit<
   responses?: BoundResponses;
   /**
    * The origin of the request a response handler gets, such as
-   * `https://example.com`, so a handler that builds absolute urls from
-   * `request.url` writes the site's own. Defaults to `http://localhost`.
+   * `https://example.com`. Defaults to `http://lit-ui-router-ssr`, a host that
+   * names this package so a url built from it stands out in the output. A
+   * handler that answers with paths needs none; pass the site's own origin
+   * when a handler builds absolute urls from `request.url`.
    */
   origin?: string;
   /** Writes a file. Defaults to `node:fs`, imported lazily on first write. */
@@ -310,7 +312,7 @@ export async function prerender(
     write = nodeWrite,
     payload,
     responses,
-    origin = 'http://localhost',
+    origin = 'http://lit-ui-router-ssr',
     ...site
   } = options;
 

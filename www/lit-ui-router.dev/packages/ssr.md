@@ -211,8 +211,10 @@ const handler = createFetchHandler(router, {
 `prerender` takes the same handlers as `responses`: a path that matches a
 response state is written as its handler's 2xx body at the path its url
 spells, or its 3xx as a rules line. The handler's request is a GET for the
-path at `origin`, which defaults to `http://localhost`; pass the site's own so
-a handler that builds absolute urls from `request.url` writes it.
+path at `origin`. It defaults to `http://lit-ui-router-ssr`, a host that names
+the package, so a url built from it stands out in the output. A handler that
+answers with paths needs none; pass the site's own origin when a handler builds
+absolute urls from `request.url`.
 
 ## Where files land
 
