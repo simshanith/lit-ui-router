@@ -476,7 +476,8 @@ the one the document was drawn for.
 The cold path is the same call: a container with nothing to adopt, a boot
 transition that fails, and a walk that throws all end in a cold render. The
 boot also decides mismatches once, against the state it landed on, rather than
-once per view.
+once per view. A boot that lands elsewhere adopts the views that match; a view
+whose state or url parameters differ from the drawn ones renders cold.
 
 `prerender()` opens every page it renders from a template on a hydration
 signature: a JSON data block ahead of the render, carrying this package's

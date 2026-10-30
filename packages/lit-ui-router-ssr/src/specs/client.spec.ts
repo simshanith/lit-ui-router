@@ -355,6 +355,47 @@ describe('bootstrap', () => {
       expect(container.querySelector('.search')?.textContent).toBe('foo');
     });
 
+    it.each([
+      ['path parameter', '/shell/item/7', '/shell/item/8', '.item', '8'],
+      ['query', '/shell/search', '/shell/search?q=foo', '.search', 'foo'],
+    ])(
+      'renders the view cold over another %s, keeping its ancestors',
+      async (_, drawnAt, bootedAt, selector, shown) => {
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        // A CDN-cached search page is drawn once, without a query, and served for every query.
+        const { container } = serve(await drawShell(drawnAt));
+        const shell = container.querySelector('h1');
+        const leaf = container.querySelector(selector);
+        const onAdopt = vi.fn();
+
+        const { outcome, signature } = await bootAt(
+          container,
+          rootTemplate,
+          bootedAt,
+          { onAdopt },
+        );
+
+        expect({ outcome, signature }).toEqual({
+          outcome: 'adopted',
+          signature: 'elsewhere',
+        });
+        expect(container.querySelector(selector)?.textContent).toBe(shown);
+        expect(container.querySelector(selector)).not.toBe(leaf);
+        expect(container.querySelector('h1')).toBe(shell);
+        expect(
+          onAdopt.mock.calls.map(([, out, error]) => [out, error]),
+        ).toEqual([
+          ['adopted', undefined],
+          [
+            'fell-back',
+            'the view was drawn for another state or other url parameters',
+          ],
+        ]);
+        // One state drawn for every value of its url parameters is a shared shell's normal case.
+        expect(warn).not.toHaveBeenCalled();
+      },
+    );
+
     it('tells a boot into other url parameter values from the drawn ones', async () => {
       const { container } = serve(await drawShell('/shell/item/7'));
 

@@ -393,9 +393,11 @@ const { outcome } = await bootstrap(router, root, page(router));
 - **The boot decides mismatches once.** A boot that lands where the document was drawn adopts every
   view, and a view that still mismatches warns in development: the two halves render that template
   differently. A boot that lands elsewhere — one static document served for a family of urls, or a
-  redirect — adopts the views that match and renders the rest cold without a warning each; once the
-  page is live, the development build warns once, naming both states and how many views rendered
-  cold.
+  redirect — adopts the views that match and renders the rest cold without a warning each. A view
+  whose state, or whose url parameters (its own and inherited), differ from the drawn ones renders
+  cold. Once the page is live, a boot into another state warns once in development, naming both
+  states and how many views rendered cold; a boot into other url parameters of the drawn state is
+  silent.
 - **The boot transition is seeded.** The payload the signature carries is handed to `seed()` from
   `ui-router-server/ssr/client` before the router starts, so the boot transition adopts the
   resolved values the prerender drew in place of running their resolve functions.
