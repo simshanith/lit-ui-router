@@ -106,7 +106,8 @@ jobs:
 
   a11y:
     # axe-core over the docs pages and sample-app mounts (`test:e2e:a11y`),
-    # served by `wrangler dev`.
+    # served by `wrangler dev`, then the advisory domain-search harness, which
+    # shares its Playwright browsers.
     name: acceptance (a11y)
     runs-on: ubuntu-26.04
     timeout-minutes: 20
@@ -153,6 +154,21 @@ jobs:
           TURBO_API: ${{ secrets.TURBO_API }}
           TURBO_TEAM: ${{ vars.TURBO_TEAM }}
           # Silence per-request [wrangler:info] logging from the e2e dev server.
+          WRANGLER_LOG: warn
+      - name: Domain search
+        # The #1698 harness (`test:e2e:domain-search`) on the browsers installed
+        # above: its tables go to this job's summary, and BUILD_OUTCOME below
+        # stays the Axe step's, so only axe turns the job red.
+        id: domain_search
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        run: mise run test_e2e domain-search
+        env:
+          TURBO_OUTPUT_LOGS: errors-only
+          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+          TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
+          TURBO_API: ${{ secrets.TURBO_API }}
+          TURBO_TEAM: ${{ vars.TURBO_TEAM }}
           WRANGLER_LOG: warn
       - name: Upload turbo run summaries
         # Same fail-open uploads as build-test-run.yml; the report links both.

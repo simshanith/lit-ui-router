@@ -7,6 +7,7 @@ import { chromium } from 'playwright';
 import type { Browser, Page, Route } from 'playwright';
 
 import { CONDITIONS, frameZero, throttledPage } from './conditions.ts';
+import { median } from './report.ts';
 import { ours, vercel } from './targets.ts';
 import type { Target } from './targets.ts';
 
@@ -51,12 +52,6 @@ const isFocused = (selector: string): boolean => {
 
 const whenBooted = async (page: Page): Promise<void> => {
   await page.waitForFunction(target.booted, undefined, { timeout: 120_000 });
-};
-
-const median = (values: number[]): number => {
-  const sorted = [...values].sort((a, b) => a - b);
-
-  return sorted[Math.floor(sorted.length / 2)];
 };
 
 const report = (t: TestContext, metric: string, values: number[]): void => {

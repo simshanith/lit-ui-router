@@ -12,8 +12,8 @@ export const suites: string[] = Object.keys(manifest.scripts)
   .map((name) => name.slice(PREFIX.length))
   .sort();
 
-// Run only when named: the Acceptance workflow runs the axe pass on its own runner, and
-// the domain-search harness needs the Playwright browsers the e2e jobs don't install.
+// Run only when named: both need the Playwright browsers the e2e jobs don't install, so the
+// Acceptance workflow's a11y job runs them.
 const NAMED_ONLY = ['a11y', 'domain-search'];
 
 /** What a bare run selects, and what CI's e2e matrix covers. */

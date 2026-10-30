@@ -2,7 +2,7 @@ import { spawn } from 'node:child_process';
 
 import { resolveE2eTarget } from './base-url.ts';
 
-// The domain-search frame-0 harness against the origin the Cypress suites share, as a11y-suite.ts launches check-a11y.
+// The domain-search harness against the origin the Cypress suites share, as a11y-suite.ts launches check-a11y.
 
 const child = spawn('measure-domain-search', [resolveE2eTarget().origin], {
   stdio: 'inherit',
