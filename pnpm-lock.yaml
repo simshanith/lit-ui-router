@@ -390,8 +390,8 @@ catalogs:
       specifier: npm:lit-ui-router@1.16.1
       version: 1.16.1
     ui-router-server-floor:
-      specifier: npm:ui-router-server@0.5.0
-      version: npm:ui-router-server@0.5.0
+      specifier: npm:ui-router-server@0.6.0
+      version: npm:ui-router-server@0.6.0
   publishedDependencies:
     '@oxc-project/runtime':
       specifier: '>=0.50.0'
