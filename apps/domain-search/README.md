@@ -59,13 +59,15 @@ Two more specs measure this repo's page against itself, under the same condition
   the same response with `#root` emptied (`harness/boot.ts`), where `bootstrap()` has nothing to
   adopt and renders. CDP pauses both documents after the throttled response and fulfills them, so
   they pay the same.
-- `harness/lighthouse.e2e.ts`, **Lighthouse lab metrics** (FCP, LCP, TBT, CLS, TTI) for both paths,
-  run in the same Chrome with DevTools throttling at the same CPU and network numbers.
+- On the loads where it types, the same spec collects **Web Vitals** (LCP, CLS, INP, FCP, TTFB)
+  with Google's [`web-vitals`](https://github.com/GoogleChrome/web-vitals), and **Long Animation
+  Frame** blocking from navigation start to the typed query in results (`harness/vitals.ts`). An
+  init script injects both, so the app's bundle never carries them. INP covers the typing.
 
-Both write their tables to `$GITHUB_STEP_SUMMARY`, or print them locally. They record numbers only,
+It writes its tables to `$GITHUB_STEP_SUMMARY`, or prints them locally. They record numbers only,
 with no thresholds.
 
-The `measure-domain-search` bin runs all three. The `domain-search` suite in
+The `measure-domain-search` bin runs both specs. The `domain-search` suite in
 [`sample-app-lit-e2e`](../sample-app-lit-e2e/README.md) points it at the local docs worker. It runs
 only when named, and in CI as an advisory step of the `acceptance (a11y)` job:
 
@@ -78,3 +80,20 @@ mise run test_e2e domain-search
 
 One check, that a boot at `?q=` moves the input to the bar, is marked `expectFailure`: `bootstrap`
 keeps the drawn `data-view` when a boot differs from the drawn page in its query alone.
+
+## Lighthouse
+
+Lighthouse isn't a dependency. For its score, TBT and diagnostics, run it ad hoc from outside the
+workspace, against the deployed page or a local `wrangler dev`:
+
+```bash
+npx lighthouse 'https://lit-ui-router.dev/domain-search?q=lituirouter' --view \
+  --only-categories=performance --preset=desktop --throttling-method=devtools \
+  --throttling.cpuSlowdownMultiplier=4 --throttling.requestLatencyMs=562.5 \
+  --throttling.downloadThroughputKbps=1474.56 --throttling.uploadThroughputKbps=675 \
+  --screenEmulation.width=1280 --screenEmulation.height=800
+```
+
+Those flags match the harness's CPU 4x and Slow 4G. Lighthouse loads the page without typing, so
+it has no INP, and it sees the prerendered path only. Its results are for exploration; the harness
+holds the tracked numbers.

@@ -10,6 +10,8 @@ import type { BootPath } from './boot.ts';
 import { CONDITIONS, frameZero, throttledPage } from './conditions.ts';
 import { ms, withRuns, writeSection } from './report.ts';
 import { ours } from './targets.ts';
+import { VITALS, flushVitals, installVitals, readBlocking } from './vitals.ts';
+import type { Blocking, Vital } from './vitals.ts';
 
 const QUERY = 'lituirouter';
 
@@ -35,6 +37,48 @@ const timings: Record<BootPath, Timings> = {
   prerendered: { fcp: [], focused: [], reflected: [] },
   cold: { fcp: [], focused: [], reflected: [] },
 };
+
+type Load = Record<Vital | keyof Blocking, (number | undefined)[]>;
+
+const load = (): Load => ({
+  LCP: [],
+  CLS: [],
+  INP: [],
+  FCP: [],
+  TTFB: [],
+  total: [],
+  longest: [],
+});
+
+// Web Vitals and LoAF blocking from the typing load, per path.
+const loads: Record<BootPath, Load> = { prerendered: load(), cold: load() };
+
+const cls = (value: number): string => value.toFixed(3);
+
+// Runs without a value (LCP, when typing beat the largest paint) are counted, not dropped.
+const present = (
+  values: (number | undefined)[],
+  format: (value: number) => string,
+): string => {
+  const measured = values.filter((value) => value !== undefined);
+  const none = values.length - measured.length;
+
+  if (measured.length === 0) return `none [${values.length} runs]`;
+
+  return none === 0
+    ? withRuns(measured, format)
+    : `${withRuns(measured, format)}, none in ${none}`;
+};
+
+const LOAD_ROWS: [string, keyof Load, (value: number) => string][] = [
+  ...VITALS.map((name): [string, Vital, (value: number) => string] => [
+    name,
+    name,
+    name === 'CLS' ? cls : ms,
+  ]),
+  ['LoAF blocking, navigation start → typed query in results', 'total', ms],
+  ['Longest animation frame, same window', 'longest', ms],
+];
 
 const ROWS: [string, keyof Timings][] = [
   ['First contentful paint (`?q=`)', 'fcp'],
@@ -64,6 +108,21 @@ after(async () => {
     rows: ROWS.map(([label, key]) => [
       label,
       ...BOOT_PATHS.map((path) => withRuns(timings[path][key], ms)),
+    ]),
+  });
+  await writeSection({
+    title: 'domain-search: Web Vitals and Long Animation Frames',
+    lead: [
+      `${target.idle}, typing \`${QUERY}\`, the same loads as the keystroke row above; median [runs].`,
+      '',
+      '- [web-vitals](https://github.com/GoogleChrome/web-vitals) with `reportAllChanges`, injected by the harness. INP covers the typing. Chrome stops LCP at the first input, so a run that types before the largest paint has none.',
+      '- The page is hidden after the typed query shows, so each metric reports its final value.',
+      "- LoAF blocking sums `blockingDuration` over the long animation frames that start before the typed query shows. It stands in for Lighthouse's TBT.",
+    ],
+    header: ['Metric', 'prerendered', 'cold'],
+    rows: LOAD_ROWS.map(([label, key, format]) => [
+      label,
+      ...BOOT_PATHS.map((path) => present(loads[path][key], format)),
     ]),
   });
 });
@@ -121,6 +180,7 @@ const firstKeystroke = async (path: BootPath): Promise<void> => {
   const { page, close } = await open(path);
 
   try {
+    await installVitals(page);
     await page.goto(target.idle, { waitUntil: 'commit' });
 
     timings[path].focused.push(await page.evaluate(focusedFrame, target.input));
@@ -134,13 +194,22 @@ const firstKeystroke = async (path: BootPath): Promise<void> => {
       { timeout: 120_000, polling: 'raf' },
     );
 
-    timings[path].reflected.push(Number(await shown.jsonValue()));
+    const reflected = Number(await shown.jsonValue());
+
+    timings[path].reflected.push(reflected);
     await page.waitForFunction(target.booted, undefined, { timeout: 60_000 });
     assert.equal(
       await page.getAttribute('html', 'data-domain-search-booted'),
       OUTCOME[path],
       `booted ${path}`,
     );
+
+    const blocking = await readBlocking(page, reflected);
+    const vitals = await flushVitals(page);
+
+    for (const name of VITALS) loads[path][name].push(vitals[name]);
+    loads[path].total.push(blocking.total);
+    loads[path].longest.push(blocking.longest);
   } finally {
     await close();
   }
@@ -153,7 +222,7 @@ describe(`prerendered vs cold, ${CONDITIONS}`, () => {
     }
   });
 
-  test('time to the first useful keystroke, booted as each path', async () => {
+  test('time to the first useful keystroke, with Web Vitals and LoAF, booted as each path', async () => {
     for (let run = 0; run < RUNS; run += 1) {
       for (const path of BOOT_PATHS) await firstKeystroke(path);
     }

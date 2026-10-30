@@ -32,12 +32,11 @@
   "devDependencies": {
     "@tools/shared": "catalog:workspace",
     "@types/node": "catalog:",
-    "lighthouse": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
     "playwright": "catalog:",
-    "puppeteer-core": "catalog:",
     "typescript": "catalog:",
-    "vite": "catalog:"
+    "vite": "catalog:",
+    "web-vitals": "catalog:"
   }
 }

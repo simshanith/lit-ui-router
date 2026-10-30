@@ -44,7 +44,7 @@
       "cache": false,
       "passThroughEnv": ["WWW_DEV_PORT", "E2E_BASE_URL"]
     },
-    // The domain-search harness: throttled Chrome and Lighthouse on the served page.
+    // The domain-search harness: throttled Chrome and web-vitals on the served page.
     // Uncached for the reason a11y is: it measures the host. GITHUB_STEP_SUMMARY
     // is where its tables go.
     "test:e2e:domain-search": {

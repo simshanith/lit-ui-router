@@ -14,17 +14,17 @@ That production-like flow builds the docs site (which embeds every app's
 build), serves it with wrangler on port 8787, and runs the Playwright suites in
 parallel. `a11y` and `domain-search` run only when named. On CI, both run in the `acceptance (a11y)` job (`.github/workflows/acceptance.yml`), `domain-search` as an advisory step after axe:
 
-| Suite | Target | Covers |
-| --- | --- | --- |
-| `vanilla` | `/app/` | vanilla app, default routing — the Navigation API plugin |
-| `mobx` | `/app-mobx/` | MobX app, default routing — the Navigation API plugin |
-| `effect` | `/app-effect/` | Effect app, default routing — the Navigation API plugin |
-| `signals` | `/app-signals/` | Signals app, default routing — the Navigation API plugin |
-| `docs` | site + mounts | docs pages plus the mount matrix — flagships, hash demo, and the server-support exhibits |
-| `domain-search` | `/domain-search` | the frame-0, boot-path and Lighthouse harness from [`domain-search`](../domain-search/README.md) in throttled Chrome; uncached, like `a11y` |
-| `hash` | `/app-hash/` | vanilla app under the `hash` location plugin |
-| `a11y` | site + mounts | axe-core (`@tools/a11y`) over the docs pages (one API reference page per kind) in light and dark, and a walk through each sample-app mount |
-| `pushstate` | `/app/` | vanilla app under the `pushState` fallback |
+| Suite           | Target           | Covers                                                                                                                                      |
+| --------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vanilla`       | `/app/`          | vanilla app, default routing — the Navigation API plugin                                                                                    |
+| `mobx`          | `/app-mobx/`     | MobX app, default routing — the Navigation API plugin                                                                                       |
+| `effect`        | `/app-effect/`   | Effect app, default routing — the Navigation API plugin                                                                                     |
+| `signals`       | `/app-signals/`  | Signals app, default routing — the Navigation API plugin                                                                                    |
+| `docs`          | site + mounts    | docs pages plus the mount matrix — flagships, hash demo, and the server-support exhibits                                                    |
+| `domain-search` | `/domain-search` | the frame-0, boot-path and web-vitals harness from [`domain-search`](../domain-search/README.md) in throttled Chrome; uncached, like `a11y` |
+| `hash`          | `/app-hash/`     | vanilla app under the `hash` location plugin                                                                                                |
+| `a11y`          | site + mounts    | axe-core (`@tools/a11y`) over the docs pages (one API reference page per kind) in light and dark, and a walk through each sample-app mount  |
+| `pushstate`     | `/app/`          | vanilla app under the `pushState` fallback                                                                                                  |
 
 Every suite but `a11y` and `domain-search` is a project in `playwright.config.ts`, and each suite is its own turbo task (`test:e2e:<suite>`). The Playwright suites have their own cache keys,
 so rerunning one after a flake costs that suite alone rather than the whole
