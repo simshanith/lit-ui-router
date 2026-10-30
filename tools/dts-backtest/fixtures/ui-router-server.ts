@@ -78,16 +78,25 @@ import {
 import { createHeadlessRouter, onceSettled } from 'ui-router-server/simulate';
 import {
   dehydrate,
+  jsonCodec,
   settle,
   type DehydrateCandidate,
+  type DehydrateOptions,
   type DehydrateResult,
   type JsonValue,
+  type ResolveCodec,
   type ResponseContext,
   type ResponseHandler,
   type ResponseHandlers,
   type SettleOptions,
 } from 'ui-router-server/ssr';
-import { seed, type ResolvePayload } from 'ui-router-server/ssr/client';
+import {
+  jsonCodec as clientJsonCodec,
+  seed,
+  type ResolveCodec as ClientResolveCodec,
+  type ResolvePayload,
+  type SeedOptions,
+} from 'ui-router-server/ssr/client';
 import {
   applyUrlConfig,
   type RouterUrlConfig,
@@ -370,6 +379,49 @@ export async function adoptedSummary(
   void readIsAny;
 
   return transition.injector().get<SheetSummary>('summary');
+}
+
+// Ssr codec: one codec object fits both entries' options, and encode answers in JSON.
+const dateCodec: ResolveCodec = {
+  name: 'date',
+  encode: (value) =>
+    value instanceof Date
+      ? { $date: value.toISOString() }
+      : jsonCodec.encode(value),
+  decode: (value) => value,
+};
+
+export const codecOptions: [DehydrateOptions, SeedOptions] = [
+  { codec: dateCodec },
+  { codec: clientJsonCodec },
+];
+
+export const sameCodecType: [
+  AssignableTo<ResolveCodec, ClientResolveCodec>,
+  AssignableTo<ClientResolveCodec, ResolveCodec>,
+  AssignableTo<ReturnType<ResolveCodec['encode']>, JsonValue>,
+  AssignableTo<Parameters<ResolveCodec['decode']>[0], JsonValue>,
+] = [true, true, true, true];
+
+export const recordedCodec = (payload: ResolvePayload): string | undefined =>
+  payload.codec;
+
+// @ts-expect-error encode answers with JSON data, not a Date
+export const dateOut: ResolveCodec = { ...dateCodec, encode: () => new Date() };
+
+// @ts-expect-error a codec carries its name
+export const unnamed: ResolveCodec = {
+  encode: jsonCodec.encode,
+  decode: jsonCodec.decode,
+};
+
+export async function adoptedWithCodec(
+  client: UIRouter,
+  payload: ResolvePayload,
+): Promise<void> {
+  const disarm: () => void = seed(client, payload, { codec: dateCodec });
+  await settle(client, '/sheet/7B');
+  disarm();
 }
 
 // Url-config tier: one config object for a mount and any core router; the

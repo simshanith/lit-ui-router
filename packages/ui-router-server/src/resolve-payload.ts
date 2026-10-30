@@ -28,11 +28,53 @@ export interface ResolvePayload {
    * they stay out, and so does a parameter without a value.
    */
   readonly params: Readonly<Record<string, JsonValue>>;
-  /** Resolved values keyed by state name, then by resolve token. */
+  /** Resolved values keyed by state name, then by resolve token, each as its codec encoded it. */
   readonly resolves: Readonly<
     Record<string, Readonly<Record<string, JsonValue>>>
   >;
+  /**
+   * The name of the codec that encoded the values. Absent when it is
+   * `jsonCodec`.
+   */
+  readonly codec?: string;
 }
+
+/**
+ * Turns a resolved value into plain JSON data for the payload, and back.
+ * `dehydrate` from `ui-router-server/ssr` encodes each value it draws with
+ * it, and `seed` from `ui-router-server/ssr/client` decodes each value it
+ * adopts, so the payload itself stays plain JSON data.
+ */
+export interface ResolveCodec {
+  /**
+   * Written into the payload. `seed` adopts nothing from a payload whose
+   * codec name differs from its own.
+   */
+  readonly name: string;
+  /**
+   * Encodes a resolved value. It throws for a value it can't carry, and
+   * `dehydrate` lists that resolve in `unserializable`.
+   */
+  // oxlint-disable-next-line anti-slop/no-unknown-parameters -- any value a resolve function returns, as core types it
+  encode(value: unknown): JsonValue;
+  /** Decodes a value `encode` returned, after a JSON round trip. */
+  // oxlint-disable-next-line anti-slop/no-unknown-returns -- the value a resolve adopts, which core's injector reads untyped
+  decode(value: JsonValue): unknown;
+}
+
+/**
+ * The default codec, named `json`: it carries plain JSON data as it is and
+ * throws for anything else, such as a `Date`, a `Map` or a class instance.
+ */
+export const jsonCodec: ResolveCodec = {
+  name: 'json',
+  encode: (value) => {
+    if (isJsonValue(value)) return value;
+
+    throw new TypeError('jsonCodec: the value is not plain JSON data');
+  },
+  decode: (value) => value,
+};
 
 /**
  * Plain data only: a value JSON would convert (a Date, a Map, NaN, -0) comes back changed.

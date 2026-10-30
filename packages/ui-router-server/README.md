@@ -91,6 +91,32 @@ response state to its `respond` hook and writes a 2xx body at the path its url s
 (`badge.svg`), or a 3xx as a `_redirects` line, counting it in `result.tally.response`. See
 [response states](https://lit-ui-router.dev/packages/server#response-states).
 
+## Values beyond plain JSON
+
+`dehydrate` from `ui-router-server/ssr` and `seed` from `ui-router-server/ssr/client` take a
+`codec`: `encode` turns each drawn resolve value into plain JSON data, throwing for one it can't
+carry, and `decode` turns it back on the client. The payload stays plain JSON, so its `state` and
+`params` read the same with any codec. The default, `jsonCodec`, carries plain JSON data as it is.
+A library such as devalue fits as it ships:
+
+```ts
+import { parse, stringify } from 'devalue';
+import type { ResolveCodec } from 'ui-router-server/ssr';
+
+export const codec: ResolveCodec = {
+  name: 'devalue',
+  encode: (value) => stringify(value),
+  decode: (value) => parse(value as string),
+};
+
+// server: dehydrate(transition, { codec }); client: seed(router, payload, { codec })
+```
+
+The payload records the codec's name, and `seed` adopts nothing from a payload drawn with another,
+warning in development. See
+[values beyond plain JSON](https://lit-ui-router.dev/packages/server#values-beyond-plain-json)
+and [`dehydrate`](https://lit-ui-router.dev/api/ui-router-server/ssr/functions/dehydrate).
+
 ## Attribution
 
 URL-matching logic (`src/url-matcher.ts`) is derived from [@uirouter/core](https://github.com/ui-router/core) (MIT) — see [LICENSE](./LICENSE).

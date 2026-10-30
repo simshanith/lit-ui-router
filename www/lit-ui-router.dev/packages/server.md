@@ -679,7 +679,7 @@ the payload does not cover runs as usual:
   [plain JSON data](/api/ui-router-server/ssr/type-aliases/JsonValue).** A
   `Date`, a `Map`, a class instance or `undefined` would come back changed, so
   `dehydrate` lists it in `unserializable` instead, and the client runs its
-  resolve.
+  resolve. A [codec](#values-beyond-plain-json) can carry more.
 - **A `NOWAIT` resolve.** `dehydrate` neither awaits nor draws it; it stays
   with the client.
 - **A resolve the call keeps out.**
@@ -688,12 +688,39 @@ the payload does not cover runs as usual:
   client loads once from a cacheable file. A resolve it declines is not
   listed in `unserializable`.
 - **Another target.** A boot to a state, or url parameters, the payload was
-  not drawn for adopts nothing, and neither does a missing payload.
+  not drawn for adopts nothing, and neither does a missing payload or one
+  drawn with another codec.
 - **Later transitions.** The seed disarms once a transition succeeds.
 
 The client entry imports `@uirouter/core` and nothing from the server entry,
 so a browser bundle takes it alone; it exports the payload types too.
 Where the payload goes in the document is the renderer's choice.
+
+#### Values beyond plain JSON
+
+`dehydrate` and `seed` take a
+[`codec`](/api/ui-router-server/ssr/interfaces/ResolveCodec): `encode` turns
+each drawn value into plain JSON data, throwing for one it can't carry, and
+`decode` turns it back on the client. The payload stays plain JSON, so its
+`state` and `params` read the same with any codec. The default, `jsonCodec`,
+carries plain JSON data as it is. A library such as devalue fits as it ships:
+
+```ts
+import { parse, stringify } from 'devalue';
+import type { ResolveCodec } from 'ui-router-server/ssr';
+
+export const codec: ResolveCodec = {
+  name: 'devalue',
+  encode: (value) => stringify(value),
+  decode: (value) => parse(value as string),
+};
+
+// server: dehydrate(transition, { codec }); client: seed(router, payload, { codec })
+```
+
+The payload records the codec's name, and `seed` adopts nothing from a payload
+drawn with another, warning in development. See
+[`dehydrate`](/api/ui-router-server/ssr/functions/dehydrate).
 
 ## Emitting a static site
 

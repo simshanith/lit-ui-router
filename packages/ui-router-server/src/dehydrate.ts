@@ -1,8 +1,12 @@
 import { isString } from '@uirouter/core';
 import type { Transition } from '@uirouter/core';
 
-import { isJsonValue, isNowait, urlParams } from './resolve-payload.ts';
-import type { JsonValue, ResolvePayload } from './resolve-payload.ts';
+import { isNowait, jsonCodec, urlParams } from './resolve-payload.ts';
+import type {
+  JsonValue,
+  ResolveCodec,
+  ResolvePayload,
+} from './resolve-payload.ts';
 
 /**
  * A resolve {@link dehydrate | `dehydrate`} would draw, as
@@ -13,7 +17,7 @@ export interface DehydrateCandidate {
   readonly state: string;
   /** The resolve's token. */
   readonly token: string;
-  /** The value the server resolved, not yet checked for plain JSON data. */
+  /** The value the server resolved, not yet encoded. */
   readonly value: unknown;
 }
 
@@ -27,6 +31,12 @@ export interface DehydrateOptions {
    * as it would without a payload. Without it, every such resolve is drawn.
    */
   readonly shouldDehydrate?: (candidate: DehydrateCandidate) => boolean;
+  /**
+   * Encodes each value the payload carries. A resolve whose value it throws
+   * for is listed in {@link DehydrateResult.unserializable | `unserializable`}.
+   * Defaults to {@link jsonCodec | `jsonCodec`}; `seed` takes the same codec.
+   */
+  readonly codec?: ResolveCodec;
 }
 
 /** What {@link dehydrate | `dehydrate`} returns. */
@@ -34,8 +44,8 @@ export interface DehydrateResult {
   /** The payload to write into the document. */
   readonly payload: ResolvePayload;
   /**
-   * The resolves left out of the payload because their value is not plain
-   * JSON data. Each one re-runs on the client.
+   * The resolves left out of the payload because the codec can't encode
+   * their value. Each one re-runs on the client.
    */
   readonly unserializable: readonly {
     /** The name of the state that declares the resolve. */
@@ -51,25 +61,27 @@ export interface DehydrateResult {
  * on its path, keyed by state name and token, and the state and url
  * parameters it was drawn for.
  *
- * Only the resolves a state declares with a string token are drawn. A value
- * goes in when it is {@link JsonValue | plain JSON data}: `null`, a boolean, a
- * string, a finite number, or an array or plain object of those, with no
- * cycle. Anything else (a `Date`, a `Map`, a class instance, `undefined`,
- * `NaN`) is listed in
+ * Only the resolves a state declares with a string token are drawn. Each
+ * value goes in as {@link DehydrateOptions.codec | `codec`} encodes it. The
+ * default, {@link jsonCodec | `jsonCodec`}, carries a value when it is
+ * {@link JsonValue | plain JSON data}: `null`, a boolean, a string, a finite
+ * number, or an array or plain object of those, with no cycle. Anything else
+ * (a `Date`, a `Map`, a class instance, `undefined`, `NaN`) is listed in
  * {@link DehydrateResult.unserializable | `unserializable`} instead and
  * re-runs on the client, so an adopted value never differs from the one the
- * server resolved.
+ * server resolved. A codec of the app's own carries more, such as a `Date`;
+ * the payload records its name, and `seed` decodes with the same codec.
  *
  * A `NOWAIT` resolve stays with the client: it is neither awaited nor drawn,
  * nor listed, and the client runs it as it would without a payload.
  *
  * {@link DehydrateOptions.shouldDehydrate | `shouldDehydrate`} keeps a resolve
  * out by choice, such as data every page shares that the client loads once
- * from a cacheable file. It runs before the JSON check, so a resolve it keeps
+ * from a cacheable file. It runs before the codec, so a resolve it keeps
  * out is not listed in `unserializable`; the client re-runs it on boot.
  *
  * @param transition - a transition that has landed
- * @param options - which resolves the payload carries
+ * @param options - which resolves the payload carries, and how it encodes them
  * @returns the payload, and the resolves left out of it
  *
  * @example
@@ -92,10 +104,26 @@ export interface DehydrateResult {
  *   shouldDehydrate: ({ token }) => token !== 'manifest',
  * });
  * ```
+ *
+ * @example
+ * Carry the values devalue can, such as a `Date` or a `Map`, and pass the same
+ * codec to `seed` on the client:
+ * ```ts
+ * import { parse, stringify } from 'devalue';
+ * import { dehydrate, settle, type ResolveCodec } from 'ui-router-server/ssr';
+ *
+ * export const codec: ResolveCodec = {
+ *   name: 'devalue',
+ *   encode: (value) => stringify(value),
+ *   decode: (value) => parse(value as string),
+ * };
+ *
+ * const { payload } = dehydrate(await settle(router, path), { codec });
+ * ```
  */
 export const dehydrate = (
   transition: Transition,
-  { shouldDehydrate }: DehydrateOptions = {},
+  { shouldDehydrate, codec = jsonCodec }: DehydrateOptions = {},
 ): DehydrateResult => {
   const resolves: Record<string, Record<string, JsonValue>> = {};
   const unserializable: { state: string; token: string }[] = [];
@@ -120,8 +148,11 @@ export const dehydrate = (
       )
         continue;
 
-      if (isJsonValue(data)) values[token] = data;
-      else unserializable.push({ state: state.name, token });
+      try {
+        values[token] = codec.encode(data);
+      } catch {
+        unserializable.push({ state: state.name, token });
+      }
     }
 
     if (Object.keys(values).length > 0) resolves[state.name] = values;
@@ -129,12 +160,15 @@ export const dehydrate = (
 
   const to = transition.$to();
 
+  const drawn: ResolvePayload = {
+    state: to.name,
+    params: urlParams(to, transition.params()),
+    resolves,
+  };
+
   return {
-    payload: {
-      state: to.name,
-      params: urlParams(to, transition.params()),
-      resolves,
-    },
+    payload:
+      codec.name === jsonCodec.name ? drawn : { ...drawn, codec: codec.name },
     unserializable,
   };
 };

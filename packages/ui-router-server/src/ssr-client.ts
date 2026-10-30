@@ -10,10 +10,27 @@
 import { Resolvable } from '@uirouter/core';
 import type { Transition, UIRouter } from '@uirouter/core';
 
-import { drawnFor, isNowait, urlParams } from './resolve-payload.ts';
-import type { ResolvePayload } from './resolve-payload.ts';
+import { warnCodecMismatch } from './dev-warn.ts';
+import { drawnFor, isNowait, jsonCodec, urlParams } from './resolve-payload.ts';
+import type { ResolveCodec, ResolvePayload } from './resolve-payload.ts';
 
-export type { JsonValue, ResolvePayload } from './resolve-payload.ts';
+export { jsonCodec } from './resolve-payload.ts';
+
+export type {
+  JsonValue,
+  ResolveCodec,
+  ResolvePayload,
+} from './resolve-payload.ts';
+
+/** Options for {@link seed | `seed`}. */
+export interface SeedOptions {
+  /**
+   * Decodes each value the payload carries. It must be the codec `dehydrate`
+   * drew the payload with: a payload whose codec name differs is not adopted
+   * at all. Defaults to {@link jsonCodec | `jsonCodec`}.
+   */
+  readonly codec?: ResolveCodec;
+}
 
 /**
  * Seeds `router` with a resolve payload, so the transition it was drawn for
@@ -29,12 +46,19 @@ export type { JsonValue, ResolvePayload } from './resolve-payload.ts';
  * parameters, and every resolve when `payload` is `undefined`. A transition
  * that redirects is checked against the payload again as its successor.
  *
+ * Each value is decoded with {@link SeedOptions.codec | `codec`} before it is
+ * adopted. A payload drawn with a codec of another name adopts nothing, so a
+ * value never decodes with the wrong codec: every resolve runs its function,
+ * and in development `seed` warns.
+ *
  * The seed disarms itself once a transition succeeds.
  *
  * @param router - the client router, its states registered
  * @param payload - the payload `dehydrate` drew, as parsed from the document, or `undefined` when there is none
+ * @param options - the codec the payload was drawn with
  * @returns a function that disarms the seed
  * @throws a `TypeError`, before any hook is registered, when `payload.resolves` or a state's entry in it is `null` or missing
+ * @throws what `codec.decode` throws, before any hook is registered
  *
  * @example
  * ```ts
@@ -47,13 +71,24 @@ export type { JsonValue, ResolvePayload } from './resolve-payload.ts';
 export const seed = (
   router: UIRouter,
   payload: ResolvePayload | undefined,
+  { codec = jsonCodec }: SeedOptions = {},
 ): (() => void) => {
   if (payload === undefined) return () => {};
+
+  const drawnWith = payload.codec ?? jsonCodec.name;
+
+  if (drawnWith !== codec.name) {
+    warnCodecMismatch(drawnWith, codec.name);
+
+    return () => {};
+  }
 
   const values = new Map(
     Object.entries(payload.resolves).map(([state, tokens]) => [
       state,
-      Object.entries(tokens),
+      Object.entries(tokens).map(
+        ([token, value]) => [token, codec.decode(value)] as const,
+      ),
     ]),
   );
 

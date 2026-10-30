@@ -65,3 +65,20 @@ export async function warnStrictSlash(
     path,
   );
 }
+
+/**
+ * Warns that `seed` adopted nothing because the payload was drawn with
+ * another codec.
+ *
+ * @param drawnWith - the codec name the payload records
+ * @param seededWith - the codec name `seed` was given
+ *
+ * @internal
+ */
+export function warnCodecMismatch(drawnWith: string, seededWith: string): void {
+  // DEV folds the whole body out of dist/*.js (`?.`: node --test runs src unbundled); #dev-gate also closes it under node when NODE_ENV is production.
+  if (!import.meta.env?.DEV || !devGate()) return;
+  console.warn(
+    `ui-router-server: seed: the payload was drawn with the ${JSON.stringify(drawnWith)} codec and seed was given ${JSON.stringify(seededWith)}, so it adopts nothing and every resolve runs its function`,
+  );
+}

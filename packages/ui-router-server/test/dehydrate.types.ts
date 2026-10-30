@@ -1,10 +1,12 @@
 import type { Transition } from '@uirouter/core';
 
-import { dehydrate } from '../src/ssr.ts';
+import type { SeedOptions } from '../src/ssr-client.ts';
+import { dehydrate, jsonCodec } from '../src/ssr.ts';
 import type {
   DehydrateCandidate,
   DehydrateOptions,
   DehydrateResult,
+  ResolveCodec,
 } from '../src/ssr.ts';
 
 // Pure type-level: the `.types.ts` name keeps it out of the node --test glob; the compile is the assertion.
@@ -40,3 +42,14 @@ export const sameKey: Equal<
 
 // @ts-expect-error the predicate answers with a boolean, not a truthy value
 export const truthy: DehydrateOptions = { shouldDehydrate: () => 'yes' };
+
+// One codec object fits both sides.
+export const codec: ResolveCodec = jsonCodec;
+
+export const withCodec: [DehydrateOptions, SeedOptions] = [
+  { codec },
+  { codec },
+];
+
+// @ts-expect-error encode answers with JSON data, not undefined
+export const loose: ResolveCodec = { ...jsonCodec, encode: () => undefined };

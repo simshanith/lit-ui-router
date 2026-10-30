@@ -27,7 +27,13 @@ export type {
   DehydrateResult,
 } from './dehydrate.ts';
 
-export type { JsonValue, ResolvePayload } from './resolve-payload.ts';
+export { jsonCodec } from './resolve-payload.ts';
+
+export type {
+  JsonValue,
+  ResolveCodec,
+  ResolvePayload,
+} from './resolve-payload.ts';
 
 /** Resolved values by token, as a transition hands them over: any value a resolve returns. */
 // oxlint-disable-next-line anti-slop/no-unsafe-dictionary-type -- a resolve returns any value

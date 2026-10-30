@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { describe, it } from 'node:test';
+import { describe, it, type TestContext } from 'node:test';
 
 import {
   servicesPlugin,
@@ -8,13 +8,20 @@ import {
 } from '@uirouter/core';
 
 import { installServerLocation } from '../src/location.ts';
-import { seed, type ResolvePayload } from '../src/ssr-client.ts';
+import {
+  jsonCodec,
+  seed,
+  type JsonValue,
+  type ResolveCodec,
+  type ResolvePayload,
+} from '../src/ssr-client.ts';
 import {
   dehydrate,
   settle,
   type DehydrateCandidate,
   type DehydrateOptions,
 } from '../src/ssr.ts';
+import { stubDev } from './import-meta-env.ts';
 
 interface Loop {
   self?: Loop;
@@ -470,5 +477,154 @@ describe('seed', () => {
     await settle(router, '/app/sheet/7B');
 
     assert.equal(calls.get('app.sheet.title'), 1);
+  });
+});
+
+// Carries a top-level Date as { $date: iso }; everything else as jsonCodec does.
+const dateCodec: ResolveCodec = {
+  name: 'date',
+  encode: (value) =>
+    value instanceof Date
+      ? { $date: value.toISOString() }
+      : jsonCodec.encode(value),
+  decode: (value) =>
+    value instanceof Object && !Array.isArray(value) && '$date' in value
+      ? // SAFETY: only encode writes a $date member, and it writes an ISO string.
+        new Date(value.$date as string)
+      : value,
+};
+
+const silenceWarn = (t: TestContext) =>
+  t.mock.method(console, 'warn', () => {});
+
+describe('resolve codec', () => {
+  it('draws the same payload with jsonCodec as without a codec', async () => {
+    const bare = await drawn('/app/sheet/7B');
+    const explicit = await drawn('/app/sheet/7B', { codec: jsonCodec });
+
+    assert.equal(JSON.stringify(explicit), JSON.stringify(bare));
+    assert.equal('codec' in bare.payload, false);
+    assert.deepEqual(bare.unserializable, [
+      { state: 'app.sheet', token: 'drawnAt' },
+      { state: 'app.sheet', token: 'sheet' },
+    ]);
+  });
+
+  it('round-trips a Date through a codec of its own, its resolve never run', async () => {
+    const { payload, unserializable } = await drawn('/app/sheet/7B', {
+      codec: dateCodec,
+    });
+
+    assert.equal(payload.codec, 'date');
+    assert.deepEqual(payload.resolves['app.sheet']?.drawnAt, {
+      $date: '1970-01-01T00:00:00.000Z',
+    });
+    assert.deepEqual(unserializable, [{ state: 'app.sheet', token: 'sheet' }]);
+
+    const { router, calls } = makeRouter();
+    seed(router, roundTrip(payload), { codec: dateCodec });
+
+    const transition = await settle(router, '/app/sheet/7B');
+    const drawnAt: unknown = transition.injector().get('drawnAt');
+
+    assert.equal(calls.get('app.sheet.drawnAt'), undefined);
+    assert.ok(drawnAt instanceof Date);
+    assert.equal(drawnAt.getTime(), 0);
+    assert.equal(calls.get('app.sheet.title'), undefined);
+    assert.equal(calls.get('app.sheet.sheet'), 1);
+  });
+
+  it('lists a resolve whose value the codec throws for', async () => {
+    const strict: ResolveCodec = {
+      ...jsonCodec,
+      name: 'strict',
+      encode: (value) => {
+        if (Number.isFinite(value)) throw new RangeError('no numbers');
+
+        return jsonCodec.encode(value);
+      },
+    };
+
+    const { payload, unserializable } = await drawn('/app/sheet/7B', {
+      codec: strict,
+    });
+
+    assert.equal('count' in (payload.resolves['app.sheet'] ?? {}), false);
+    assert.deepEqual(unserializable, [
+      { state: 'app.sheet', token: 'count' },
+      { state: 'app.sheet', token: 'drawnAt' },
+      { state: 'app.sheet', token: 'sheet' },
+    ]);
+  });
+
+  it('never encodes a resolve shouldDehydrate keeps out', async () => {
+    const encoded: unknown[] = [];
+
+    const { unserializable } = await drawn('/app/sheet/7B', {
+      shouldDehydrate: ({ token }) => token !== 'drawnAt',
+      codec: {
+        ...dateCodec,
+        encode: (value) => {
+          encoded.push(value);
+
+          return dateCodec.encode(value);
+        },
+      },
+    });
+
+    assert.equal(
+      encoded.some((value) => value instanceof Date),
+      false,
+    );
+    assert.deepEqual(unserializable, [{ state: 'app.sheet', token: 'sheet' }]);
+  });
+
+  it('adopts nothing from a payload drawn with another codec, and warns', async (t) => {
+    const custom = await drawn('/app/sheet/7B', { codec: dateCodec });
+    const plain = await drawn('/app/sheet/7B');
+
+    for (const [payload, codec] of [
+      [custom.payload, undefined],
+      [plain.payload, dateCodec],
+    ] as const) {
+      const warn = silenceWarn(t);
+      const { router, calls } = makeRouter();
+      const decoded: JsonValue[] = [];
+
+      seed(router, roundTrip(payload), {
+        codec: codec && {
+          ...codec,
+          decode: (value) => {
+            decoded.push(value);
+
+            return codec.decode(value);
+          },
+        },
+      });
+
+      await settle(router, '/app/sheet/7B');
+
+      assert.equal(total(calls), 7);
+      assert.deepEqual(decoded, []);
+      assert.equal(warn.mock.callCount(), 1);
+      assert.match(
+        String(warn.mock.calls[0]?.arguments[0]),
+        /^ui-router-server: seed: /,
+      );
+      warn.mock.restore();
+    }
+  });
+
+  it('adopts nothing from a mismatched payload without warning outside development', async (t) => {
+    const { payload } = await drawn('/app/sheet/7B', { codec: dateCodec });
+    const warn = silenceWarn(t);
+    t.after(stubDev(false));
+    const { router, calls } = makeRouter();
+
+    seed(router, roundTrip(payload));
+    await settle(router, '/app/sheet/7B');
+
+    assert.equal(total(calls), 7);
+    assert.equal(warn.mock.callCount(), 0);
   });
 });
