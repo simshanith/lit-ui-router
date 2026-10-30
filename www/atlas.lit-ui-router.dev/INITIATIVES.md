@@ -524,6 +524,24 @@ sitting); order is dependency order.
   gz; nm 173,820 lines / 41,155 d.ts; mass3b 13,307 hashes over 235 real tasks and 3,029 command
   sloc; the ci graph 864 / 235 / 3,024 edges; steam 643 commits; weather 448 dated files; 7A 11,937
   of 19,307 metered sloc lit over 25 members.
+- 2026-10-29 — THE TWENTY-FIFTH REFRESH, at `origin/main` @ 08ee3c27 (commit 2026-10-29), the
+  census plates re-run at the one ref, 27 commits past the twenty-fourth (8dfa5311): `lit-ui-router`
+  1.19.0, `ui-router-server` 0.6.0 with `./prerender`, and `lit-ui-router-ssr` 0.6.0 on the
+  server's `^0.6.0`. NO MEMBER WAS BORN; upstream took one consignment, jdx/mise#15140.
+  What the refresh taught: A MEMBER CAN GO SOURCE-LESS AND STAY. #1662 moved the element lane into
+  oxlint jsPlugins, so `@tools/lint-elements` holds a config and a glob test, `//#lint:elements`
+  left the graph, and three tables named it: census-mass3b's CITES row, 3B's №5 (now `//#lint:css`)
+  and the 7 / 7A captions, which are guarded on zero source files. A NEW TASK CAN ARRIVE AS DRIFT:
+  `//#lint:css` runs `stylelint`, which census-mass3b does not recognise, so the plate carries a
+  second DRIFT line; it is a slab on the shared surface, not rot. A REFACTOR CAN MOVE A CITE ACROSS
+  FILES: #1653 took the props out of `render()`, and census-loop reads an eighth file,
+  `routed-view.ts`, with two cites re-texted. A NEW DOOR TALL ENOUGH TO HIDE LETTERING: `./prerender`
+  (18,955 min) is door 26 in the server quarter's back row (11 REV M). Sheet 2's ninth course lowered
+  brick 1's hover a course instead of lifting the cap bricks into their lettering. Lots moved with air
+  on 3, 3B, 7, 7B, 9 (`OY` 546 → 647) and 13. THE NUMBERS: city 474 src files / 42,254 sloc and 248
+  spec / 44,913; doors 34 at 228,401 min / 82,628 gz; the bundle 126,866 gz in 18 chunks; the deploy
+  1,671 files / 7,971,884 gz; upstream 43 yards, 97 consignments; pins 44 (52 with the atlas), none
+  trailing; audit escapes 0, hits 0, text-on-text 121; check-scenes 112; 34 card pictures × 2 themes.
 - 2026-10-29 — THE TWENTY-FOURTH REFRESH, at `origin/main` @ 8dfa5311 (commit 2026-10-29), the
   census plates re-run at the one ref, 20 commits past the twenty-third (b499e2a5): `lit-ui-router`
   1.18.0, `ui-router-registry` 0.3.0, `ui-router-server` 0.5.0 with `./ssr` and `./ssr/client`,

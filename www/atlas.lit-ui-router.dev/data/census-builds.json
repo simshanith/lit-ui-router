@@ -1,10 +1,10 @@
 {
   "ref": "origin/main",
-  "sha": "8dfa5311",
-  "commitDate": "2026-10-29T02:35:16Z",
-  "generatedAtTime": "2026-10-29T05:11:00.858Z",
+  "sha": "08ee3c27",
+  "commitDate": "2026-10-29T20:26:10-07:00",
+  "generatedAtTime": "2026-10-30T04:02:50.885Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-builds.mjs",
-  "used": "git archive origin/main @ 8dfa5311 — apps/*, www/lit-ui-router.dev and examples/<embeds.ts key>/package.json declarations, closed over family peers; withAtlas adds git archive www/atlas @ e3229754 — www/atlas.lit-ui-router.dev/app/package.json; family and runtimes from census-couplings.json",
+  "used": "git archive origin/main @ 08ee3c27 — apps/*, www/lit-ui-router.dev and examples/<embeds.ts key>/package.json declarations, closed over family peers; withAtlas adds git archive www/atlas @ 867de4fc — www/atlas.lit-ui-router.dev/app/package.json; family and runtimes from census-couplings.json",
   "wasAssociatedWith": [
     "git"
   ],
@@ -65,11 +65,11 @@
   "basis": {
     "atlasApp": {
       "ref": "www/atlas",
-      "sha": "e3229754",
-      "commitDate": "2026-10-28T22:05:59-07:00",
+      "sha": "867de4fc",
+      "commitDate": "2026-10-29T21:00:50-07:00",
       "dir": "www/atlas.lit-ui-router.dev/app"
     },
-    "note": "www/atlas.lit-ui-router.dev/app is on www/atlas @ e3229754, off the cabinet's tree; the second reading adds it"
+    "note": "www/atlas.lit-ui-router.dev/app is on www/atlas @ 867de4fc, off the cabinet's tree; the second reading adds it"
   },
   "withAtlas": {
     "totals": {

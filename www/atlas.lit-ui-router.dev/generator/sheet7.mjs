@@ -31,6 +31,8 @@ const SHARED_TOOLS = SHARED_IMP.filter((p) => p.startsWith('@tools/')).length;
 if (!SHARED_IMP.includes('@tools/release')) throw new Error('sheet 7: road G runs to @tools/release, which no longer depends on @tools/shared');
 const DTS = row('tools/dts-backtest');
 if (DTS.srcFiles < 1) throw new Error('sheet 7: №14\'s note counts the files that hold the TS 5.0 floor, and the plate carries none');
+// №28's note calls the member a config with no source of its own
+if (row('tools/lint-elements').srcFiles !== 0) throw new Error('sheet 7: №28\'s note says @tools/lint-elements is a config with no source, and the plate carries source');
 const SHIPPED_APPS = JSON.parse(readFileSync(new URL('../data/census-shipped.json', import.meta.url), 'utf8')).rows.map((r) => r.district).filter((d) => d.startsWith('app: '));
 if (SHIPPED_APPS.length !== 5 || SHIPPED_APPS.at(-1) !== 'app: signals') throw new Error(`sheet 7: №45's note calls the signals demo the fifth app shell the docs site serves, and census-shipped files ${SHIPPED_APPS.join(', ')}`);
 const ratio = (dir) => (row(dir).specSloc / row(dir).srcSloc).toFixed(1);
@@ -79,7 +81,7 @@ export const PLACED = [
   // --- packages/ — the product -------------------------------------------------
   [1,  'lit-ui-router',            'packages/lit-ui-router',             'pkg',  'line',     0,  20, `the subject of this set · annex ${ratio('packages/lit-ui-router')}× the source`],
   // east of lit-ui-router's annex, which reaches x 251.3 at the b499e2a5 refresh
-  [2,  'ui-router-server',         'packages/ui-router-server',          'pkg',  'line',   255,  20, `the server adapter · annex ${ratio('packages/ui-router-server')}×`],
+  [2,  'ui-router-server',         'packages/ui-router-server',          'pkg',  'line',   257,  20, `the server adapter · annex ${ratio('packages/ui-router-server')}×`],
   // south of the flagship's annex, which reaches y 140.6 at the b499e2a5 refresh
   [3,  'lit-ui-router-mobx',       'packages/lit-ui-router-mobx',        'pkg',  'line',   170, 153, `the mobx companion · annex ${ratio('packages/lit-ui-router-mobx')}×`],
   [4,  'navigation-location-plugin','packages/navigation-location-plugin','pkg', 'line',   260, 130, `the location seat, core's pushStateLocation swapped out · annex ${ratio('packages/navigation-location-plugin')}×`],
@@ -118,7 +120,7 @@ export const PLACED = [
   [27, '@tools/wintercg-globals',  'tools/wintercg-globals',             'tool', 'off',    208, 350,'ambient types only — nothing to mass'],
   // --- born 2026-08-31 (#639) and 2026-08-16 (#557) --------------------------------
   // east off 380, 388 and 394 as bundle-probe's annex grew (to 398.2 at the c1b759a4 refresh)
-  [28, '@tools/lint-elements',     'tools/lint-elements',                'tool', 'pr',     408, 550, 'the shared custom-element lint lane (#655)'],
+  [28, '@tools/lint-elements',     'tools/lint-elements',                'tool', 'pr',     408, 550, 'the custom-element rules as an oxlint jsPlugins config the root extends'],
   [30, '@tools/eslint-ts-parser',  'tools/eslint-ts-parser',             'tool', 'report',  54, 350, 'a one-line parser shim — the smallest thing in the yard'],
   // --- the fifth published package (#676) — first drawn here --------------------
   [31, 'eslint-plugin-lit-ui-router', 'packages/eslint-plugin-lit-ui-router', 'pkg', 'line', 350, 170, `vendored uiSref lint rules · annex ${ratio('packages/eslint-plugin-lit-ui-router')}×`],
@@ -128,7 +130,7 @@ export const PLACED = [
   [32, '@tools/embed-heights',     'tools/embed-heights',                'tool', 'report', 449, 462, 'docs embed heights, measured in Chromium — outside ci'],
   // --- the hygiene block, born 2026-09-07/08 (#738, #741, #771) --------------------
   [33, '@tools/bootstrap',         'tools/bootstrap',                    'tool', 'report', 490, 350, 'zero-dep manifest reads — the one thing that runs before pnpm install'],
-  [34, '@tools/eslint',            'tools/eslint',                       'tool', 'report', 514, 530, 'the repo rule plugin, the oxlint stubs and the element lane root eslint.config.ts composes'],
+  [34, '@tools/eslint',            'tools/eslint',                       'tool', 'report', 514, 530, 'the repo rule plugin, the complexity ceiling and the Actions formatter root eslint.config.ts composes'],
   [35, '@tools/repo-checks',       'tools/repo-checks',                  'tool', 'pr',     449, 385, 'graph edges, inputs, versions, coverage, patches, deps'],
   // --- the effect pair, born 2026-09-11/12 (#721, #833) ----------------------------
   [36, 'sample-app-lit-effect',    'apps/sample-app-lit-effect',         'app',  'line',   680, 100, 'the effect demo — the fourth app shell the docs site serves'],
@@ -149,7 +151,7 @@ export const PLACED = [
   [42, 'ui-router-signals',        'packages/ui-router-signals',         'pkg',  'line',   440, 262, `the framework-agnostic signal mirror · annex ${ratio('packages/ui-router-signals')}×`],
   [43, 'ui-router-effect',         'packages/ui-router-effect',          'pkg',  'line',   494, 262, `the framework-agnostic SubscriptionRef · annex ${ratio('packages/ui-router-effect')}×`],
   // north-east, between road A at y 45 and road F at y 115; east off 440 as the server's annex grew (to 450.6 at the 8dfa5311 refresh)
-  [44, '@repo/route-snapshot',     'packages/shared/route-snapshot',     'pkg',  'line',   454,  88, `private · inlined into each consumer's dist by oxc-emit · annex ${ratio('packages/shared/route-snapshot')}×`],
+  [44, '@repo/route-snapshot',     'packages/shared/route-snapshot',     'pkg',  'line',   476,  88, `private · inlined into each consumer's dist by oxc-emit · annex ${ratio('packages/shared/route-snapshot')}×`],
   // the gap between sample-app-shared and e2e
   [45, 'sample-app-lit-signals',   'apps/sample-app-lit-signals',        'app',  'line',   610, 100, 'the signals demo — no test script, the fifth app shell the docs site serves'],
   // the yard's middle: south of repo-checks' annex, north-east of @tools/eslint's badge
@@ -160,7 +162,7 @@ export const PLACED = [
   // the yard's south row, east of @tools/shared's annex and south of bundle-probe
   [48, '@tools/ci-logs',           'tools/ci-logs',                      'tool', 'report', 295, 603, 'a CI run\'s task logs fetched into one file — run by hand, gates nothing'],
   // north of the route snapshot, between road A at y 45 and the snapshot; east off 440 with it
-  [49, '@repo/dev-gate',           'packages/shared/dev-gate',           'pkg',  'line',   454,  62, `private · both halves of each package's #dev-gate import, inlined by oxc-emit · annex ${ratio('packages/shared/dev-gate')}×`],
+  [49, '@repo/dev-gate',           'packages/shared/dev-gate',           'pkg',  'line',   476,  48, `private · both halves of each package's #dev-gate import, inlined by oxc-emit · annex ${ratio('packages/shared/dev-gate')}×`],
   // --- born 2026-10-22/24: the registry east of the plugin's annex, south of road F at y 115 ---
   [50, 'ui-router-registry',       'packages/ui-router-registry',        'pkg',  'line',   455, 125, `typed state names and params · types only · annex ${ratio('packages/ui-router-registry')}×`],
   // the yard's south-east lot, east of ci-logs' annex and south of bundle-probe's

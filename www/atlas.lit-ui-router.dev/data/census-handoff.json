@@ -1,17 +1,17 @@
 {
   "ref": "origin/main",
-  "sha": "8dfa5311",
-  "commitDate": "2026-10-29T02:35:16Z",
-  "generatedAtTime": "2026-10-29T04:56:32.876Z",
+  "sha": "08ee3c27",
+  "commitDate": "2026-10-29T20:26:10-07:00",
+  "generatedAtTime": "2026-10-30T03:40:01.414Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-handoff.mjs",
-  "used": "git archive origin/main @ 8dfa5311",
+  "used": "git archive origin/main @ 08ee3c27",
   "wasAssociatedWith": [
     "git"
   ],
   "workflows": {
     "files": 14,
     "calling": 9,
-    "callSites": 55,
+    "callSites": 56,
     "targets": 36
   },
   "mise": {
@@ -34,7 +34,7 @@
   "workflowRows": [
     {"file":"acceptance.yml","name":"acceptance","callSites":10},
     {"file":"build-test-branch.yml","name":"build-test-branch","callSites":1},
-    {"file":"build-test-run.yml","name":"build-test-run","callSites":16},
+    {"file":"build-test-run.yml","name":"build-test-run","callSites":17},
     {"file":"build-test.yml","name":"build-test","callSites":0},
     {"file":"bump-version.yml","name":"bump-version","callSites":4},
     {"file":"coderabbit-oneshot.yml","name":"coderabbit-oneshot","callSites":0},
@@ -59,7 +59,7 @@
     {"target":"//tools/build_and_test:playwright_deps_engines","calls":1},
     {"target":"//tools/build_and_test:playwright_version","calls":2},
     {"target":"//tools/build_and_test:turbo_summary","calls":4},
-    {"target":"//tools/build_and_test:xvfb","calls":1},
+    {"target":"//tools/build_and_test:xvfb","calls":2},
     {"target":"//tools/release:bump","calls":1},
     {"target":"//tools/release:check_tarball","calls":1},
     {"target":"//tools/release:git_user","calls":2},

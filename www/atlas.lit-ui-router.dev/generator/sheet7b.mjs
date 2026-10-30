@@ -5,7 +5,7 @@ import { assertPlots, depthSort, plotsOf, solidFaces } from './iso-hidden.mjs';
 import { DISTRICT_BOUNDS, PLACED } from './sheet7.mjs';
 
 const P = 's7b';
-const OX = 600, OY = 96;
+const OX = 600, OY = 98;
 
 // ---- plate 7B: sheet 7's city with every member drawn as a Working Plant --------
 // Massing follows sheet 7, never the sprite: side = 1.6·√sloc, height = 3 px per
@@ -353,11 +353,11 @@ ${districts}
 ${bodies}
 
 <!-- district lettering -->
-<!-- east off 772, then 786 at the b499e2a5 refresh: the server's cap reaches x 788 at the third line -->
-${txt(794, 74, 'packages/ — THE PRODUCT LINE', 'lblb')}
-${txt(794, 87, `all metered lamps lit (90–100% light) · ${dsteam('pkg')} commits/90d`, 'lblf')}
-${txt(794, 99, `the lint plugin stands at rust ${RUST_T[g(31).rust]}, fully metered — ${g(31).lamps} lamps (${g(31).eff}% lit)`, 'lblf')}
-${leader(788, 90, 742, 168)}
+<!-- east off 772, then 786 at the b499e2a5 refresh, then 794 at the 08ee3c27 refresh: the server's cap reaches x 798 at the third line -->
+${txt(802, 74, 'packages/ — THE PRODUCT LINE', 'lblb')}
+${txt(802, 87, `all metered lamps lit (90–100% light) · ${dsteam('pkg')} commits/90d`, 'lblf')}
+${txt(802, 99, `the lint plugin stands at rust ${RUST_T[g(31).rust]}, fully metered — ${g(31).lamps} lamps (${g(31).eff}% lit)`, 'lblf')}
+${leader(796, 90, 742, 168)}
 
 ${txt(1540, 388, 'apps/ — THE PROVING GROUND', 'lblb', 'end')}
 ${txt(1540, 401, `${dsteam('app')} commits/90d · accent lamps: real e2e light,`, 'lblf', 'end')}
@@ -378,9 +378,9 @@ ${leader(300, 552, 330, 522)}
 ${FLAG_LINES.map(([y, s, cls]) => txt(FLAG_X, y, s, cls)).join('\n')}
 ${leader(388, FLAG_Y + 9, 526, 132)}
 
-<!-- west of the plant row the caption passes under, whose bases reach y 646 -->
-${txt(356, 652, `@tools/typedoc-plugin — rust ${RUST_T[g(13).rust]}, ${PUFFS(g(13).steam)} puffs:`, 'lblr')}
-${txt(356, 664, TDP_SPLIT ? `${TDP.files} files: index.ts live, ${TDP.idlestFile.split('/').pop()} idle ${TDP.idlestDays}d` : `${TDP.files} files, each touched within ${TDP.idlestDays}d`, 'lblf')}
+<!-- west of the plant row the caption passes under, whose bases reach y 648 -->
+${txt(356, 655, `@tools/typedoc-plugin — rust ${RUST_T[g(13).rust]}, ${PUFFS(g(13).steam)} puffs:`, 'lblr')}
+${txt(356, 667, TDP_SPLIT ? `${TDP.files} files: index.ts live, ${TDP.idlestFile.split('/').pop()} idle ${TDP.idlestDays}d` : `${TDP.files} files, each touched within ${TDP.idlestDays}d`, 'lblf')}
 ${leader(372, 638, 440, 492)}
 
 ${txt(20, 620, '@tools/happy-dom — a spec annex lit by its own canary:', 'lbls')}

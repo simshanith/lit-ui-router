@@ -1,10 +1,10 @@
 {
   "ref": "origin/main",
-  "sha": "8dfa5311",
-  "commitDate": "2026-10-29T02:35:16Z",
-  "generatedAtTime": "2026-10-29T05:04:54.793Z",
+  "sha": "08ee3c27",
+  "commitDate": "2026-10-29T20:26:10-07:00",
+  "generatedAtTime": "2026-10-30T03:49:48.667Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-shipped.mjs",
-  "used": "git archive origin/main @ 8dfa5311 + pnpm install --frozen-lockfile --silent (mise-provisioned pnpm) + turbo run build -> www/lit-ui-router.dev/dist",
+  "used": "git archive origin/main @ 08ee3c27 + pnpm install --frozen-lockfile --silent (mise-provisioned pnpm) + turbo run build -> www/lit-ui-router.dev/dist",
   "wasAssociatedWith": [
     "pnpm (mise-provisioned)",
     "turbo",
@@ -24,26 +24,26 @@
     "release-pages.css"
   ],
   "totals": {
-    "files": 1539,
-    "rawBytes": 60154979,
-    "gzBytes": 7424760
+    "files": 1671,
+    "rawBytes": 69963726,
+    "gzBytes": 7971884
   },
   "rows": [
     {"district":"inter fonts","files":16,"gz":869033,"top":{"name":"assets/inter-italic-latin-ext.DvFXn_K6.woff2","gz":141152}},
-    {"district":"html pages","files":331,"gz":2974684,"top":{"name":"guides/server-route-matching.html","gz":42398}},
-    {"district":"markdown pages","files":320,"gz":465931,"top":{"name":"llms-full.txt","gz":178201}},
-    {"district":"examples","files":36,"gz":1557042,"top":{"name":"examples/hellogalaxy-effect/assets/model-viewer-DOuwK7AO.js","gz":282317}},
-    {"district":"page chunks","files":640,"gz":634011,"top":{"name":"assets/guides_server-route-matching.md.BUkWwkbt.js","gz":26596}},
-    {"district":"vp framework","files":15,"gz":255350,"top":{"name":"assets/chunks/@localSearchIndexroot.DETPRkBK.js","gz":132423}},
+    {"district":"html pages","files":364,"gz":3406286,"top":{"name":"guides/server-route-matching.html","gz":42781}},
+    {"district":"markdown pages","files":353,"gz":507079,"top":{"name":"llms-full.txt","gz":192838}},
+    {"district":"examples","files":36,"gz":1559165,"top":{"name":"examples/hellogalaxy-signals/assets/model-viewer-C953Kw6z.js","gz":282315}},
+    {"district":"page chunks","files":706,"gz":694121,"top":{"name":"assets/guides_server-route-matching.md.BUkWwkbt.js","gz":26596}},
+    {"district":"vp framework","files":15,"gz":266705,"top":{"name":"assets/chunks/@localSearchIndexroot.D1v8NuoJ.js","gz":142345}},
     {"district":"images","files":103,"gz":157545,"top":{"name":"images/lit-ui-router.png","gz":68708}},
     {"district":"diagrams","files":14,"gz":21423,"top":{"name":"diagrams/about-this-site-architecture.svg","gz":3495}},
-    {"district":"app: vanilla","files":19,"gz":132509,"top":{"name":"assets/api-docs-CDKq9JyV.js","gz":28854}},
-    {"district":"app: mobx","files":10,"gz":72980,"top":{"name":"assets/decorate-DEOEUt-w.js","gz":26915}},
-    {"district":"app: effect","files":10,"gz":86138,"top":{"name":"assets/index-DHYrlrO2.js","gz":30504}},
-    {"district":"app: hash","files":4,"gz":16863,"top":{"name":"assets/main-CZBFpJOo.js","gz":8462}},
-    {"district":"app: signals","files":13,"gz":100782,"top":{"name":"assets/api-docs-DAY78tpm.js","gz":28853}},
+    {"district":"app: vanilla","files":19,"gz":132598,"top":{"name":"assets/api-docs-CDKq9JyV.js","gz":28854}},
+    {"district":"app: mobx","files":10,"gz":73097,"top":{"name":"assets/decorate-Q6cTiZDo.js","gz":26910}},
+    {"district":"app: effect","files":10,"gz":86594,"top":{"name":"assets/index-DPkUBi7d.js","gz":30829}},
+    {"district":"app: hash","files":4,"gz":16857,"top":{"name":"assets/main-PqzwnBo7.js","gz":8457}},
+    {"district":"app: signals","files":13,"gz":100916,"top":{"name":"assets/api-docs-DAY78tpm.js","gz":28853}},
     {"district":"static data","files":4,"gz":50739,"top":{"name":"static/data/messages.json","gz":47757}},
-    {"district":"site css","files":4,"gz":29730,"top":{"name":"assets/style.C_zoz-Nk.css","gz":21855}}
+    {"district":"site css","files":4,"gz":29726,"top":{"name":"assets/style.GD0enUhl.css","gz":21851}}
   ],
   "orphans": [
 

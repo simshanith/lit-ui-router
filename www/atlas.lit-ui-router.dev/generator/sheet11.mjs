@@ -99,6 +99,7 @@ const ORDER = [
   ['ui-router-server', './url-config'],
   ['ui-router-server', './ssr'],
   ['ui-router-server', './ssr/client'],
+  ['ui-router-server', './prerender'],
   ['ui-router-effect', '.'],
   ['ui-router-signals', '.'],
   ['ui-router-mobx', '.'],
@@ -153,6 +154,8 @@ const PLAN = {
   // the renderer-free ssr pair on the quarter's east edge, between the url config and the location door
   'ui-router-server|./ssr': [690, 100],
   'ui-router-server|./ssr/client': [705, 140],
+  // the prerender loop in back, east of the redirects and north of the matcher
+  'ui-router-server|./prerender': [540, 4],
   // recentred in its quarter: the door grew 9.7 → 16.9 KB min at the 1.14.1 ref and
   // its old lot pushed the block's base through the quarter's south-east dashes
   'eslint-plugin-lit-ui-router|.': [320, 258],
@@ -193,7 +196,7 @@ ${txt(lx, ly, label, 'lblf', anchor)}`;
 }
 
 const fmt = (v) => v.toLocaleString('en-US');
-const WORD = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve'];
+const WORD = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen'];
 const word = (n) => { if (!WORD[n]) throw new Error(`sheet 11: no number word for ${n} — extend WORD`); return WORD[n]; };
 const Cap = (w) => w[0].toUpperCase() + w.slice(1);
 const listOf = (xs) => (xs.length < 2 ? xs.join('') : `${xs.slice(0, -1).join(', ')} and ${xs.at(-1)}`);
@@ -296,6 +299,7 @@ const NOTE = {
   'ui-router-server|./url-config': 'the mount\'s url config, shared with any router',
   'ui-router-server|./ssr': 'settle and dehydrate, for any renderer',
   'ui-router-server|./ssr/client': 'seed the boot transition, for any renderer',
+  'ui-router-server|./prerender': 'the prerender loop — a static site from a mount table, no renderer',
   'ui-router-registry|.': 'an empty emit, types only',
   'ui-router-registry|./effect': 'the effect adapter types, empty emit',
   'ui-router-registry|./mobx': 'the mobx adapter types, empty emit',
@@ -330,7 +334,7 @@ ${quarter(-170, 170, -90, 240, 'lit-ui-router-signals', 125, 288)}
 ${quarter(150, 470, 220, 530, 'ui-router-signals', 145, 540, 'end')}
 ${quarter(180, 570, 250, 630, 'ui-router-effect', 210, 614)}
 ${quarter(325, 500, 380, 550, 'ui-router-mobx', 384, 650)}
-${quarter(424, -272, 502, -194, 'ui-router-registry', 1016, 324, 'end')}
+${quarter(424, -272, 502, -194, 'ui-router-registry', 1083, 366, 'middle')}
 
 ${bodies}
 
@@ -341,9 +345,9 @@ ${leader(368, 102, 452, 128)}
 ${txt(1120, 108, `the two flagship doors: ${fmt(FLAG.gz)} · ${fmt(SRV.gz)} —`, 'lbl', 'end')}
 ${txt(1120, 122, `the client door leads the server by ${fmt(SRV_GAP)}`, 'lbl', 'end')}
 ${leader(960, 128, ...SRV_FACE)}
-${txt(628, 238, `the one-element doors sum to ${fmt(ELEM_SUM)} gz —`, 'lbls')}
-${txt(628, 252, '«./register» ships the shared core', 'lbls')}
-${txt(628, 266, `once, at ${fmt(UMB.gz)}`, 'lbls')}
+${txt(628, 238, 'the one-element doors sum to', 'lbls')}
+${txt(628, 252, `${fmt(ELEM_SUM)} gz — «./register» ships`, 'lbls')}
+${txt(628, 266, `the shared core once, at ${fmt(UMB.gz)}`, 'lbls')}
 ${leader(624, 240, ...UMB_FACE)}
 ${txt(250, 560, `the lint plugin's door, ${fmt(LINT.gz)} gz, and the`, 'lbls')}
 ${txt(250, 574, `registry's ${word(REG_DOORS.length)}: the ${word(COMPILED.length)} no browser ever opens`, 'lbls')}
@@ -359,7 +363,7 @@ ${PLATE.used.split(' + ').map((stage, i) => txt(1120, 40 + i * 14, i ? `+ ${stag
 </svg>`;
 
 export const sheet11 = {
-  num: 11, id: 'entries', rev: 'L',
+  num: 11, id: 'entries', rev: 'M',
   title: 'THE ENTRY QUARTERS',
   sub: `ALTITUDE 2⅞ — the same wire, cut by published package · every exported entry priced alone · ${DOOR_N} doors in ${PKG_N} package quarters, footprint from minified bytes and height from gzipped, dependencies external — ${BASIS}`,
   scale: `${word(PKG_N).toUpperCase()} PACKAGES`,

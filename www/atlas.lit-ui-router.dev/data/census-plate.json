@@ -1,10 +1,10 @@
 {
   "ref": "origin/main",
-  "sha": "8dfa5311",
-  "commitDate": "2026-10-29T02:35:16Z",
-  "generatedAtTime": "2026-10-29T05:00:38.153Z",
+  "sha": "08ee3c27",
+  "commitDate": "2026-10-29T20:26:10-07:00",
+  "generatedAtTime": "2026-10-30T03:45:24.090Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-plate.mjs",
-  "used": "git archive origin/main @ 8dfa5311 + pnpm install --frozen-lockfile --silent (mise-provisioned pnpm)",
+  "used": "git archive origin/main @ 08ee3c27 + pnpm install --frozen-lockfile --silent (mise-provisioned pnpm)",
   "wasAssociatedWith": [
     "turbo 2.11.10",
     "pnpm (mise-provisioned)"
@@ -12,9 +12,9 @@
   "pipelines": {
     "ci": {
       "nodes": 1251,
-      "real": 331,
-      "edges": 5203,
-      "realEdges": 235,
+      "real": 332,
+      "edges": 5250,
+      "realEdges": 283,
       "chain": 14,
       "realChain": 6,
       "cacheFalse": [],
@@ -82,7 +82,7 @@
         {
           "name": "test",
           "nodes": 52,
-          "real": 39,
+          "real": 40,
           "pkgs": 52
         },
         {
@@ -200,7 +200,7 @@
           "pkgs": 1
         },
         {
-          "name": "lint:elements",
+          "name": "lint:css",
           "nodes": 1,
           "real": 1,
           "pkgs": 1
@@ -416,7 +416,7 @@
           "format:check:toml": "r",
           "lint:actionlint": "r",
           "lint:complexity": "r",
-          "lint:elements": "r",
+          "lint:css": "r",
           "lint:markdown": "r",
           "lint:package-json": "r",
           "lint:root": "r",
@@ -814,7 +814,7 @@
           "format:check:oxfmt": "r",
           "lint": "p",
           "lint:oxlint": "r",
-          "test": "p",
+          "test": "r",
           "test:coverage": "p",
           "test:effect3-compat": "p",
           "test:lit2-compat": "p",
@@ -1772,9 +1772,9 @@
     },
     "ci:main": {
       "nodes": 1305,
-      "real": 336,
-      "edges": 5562,
-      "realEdges": 236,
+      "real": 337,
+      "edges": 5609,
+      "realEdges": 284,
       "chain": 14,
       "realChain": 6,
       "cacheFalse": [],
@@ -1842,7 +1842,7 @@
         {
           "name": "test",
           "nodes": 52,
-          "real": 39,
+          "real": 40,
           "pkgs": 52
         },
         {
@@ -1966,7 +1966,7 @@
           "pkgs": 1
         },
         {
-          "name": "lint:elements",
+          "name": "lint:css",
           "nodes": 1,
           "real": 1,
           "pkgs": 1
@@ -2194,7 +2194,7 @@
           "format:check:toml": "r",
           "lint:actionlint": "r",
           "lint:complexity": "r",
-          "lint:elements": "r",
+          "lint:css": "r",
           "lint:markdown": "r",
           "lint:package-json": "r",
           "lint:root": "r",
@@ -2608,7 +2608,7 @@
           "format:check:oxfmt": "r",
           "lint": "p",
           "lint:oxlint": "r",
-          "test": "p",
+          "test": "r",
           "test:coverage": "p",
           "test:effect3-compat": "p",
           "test:engines": "p",
@@ -3967,10 +3967,10 @@
       }
     },
     "lint": {
-      "nodes": 171,
-      "real": 89,
-      "edges": 1255,
-      "realEdges": 90,
+      "nodes": 176,
+      "real": 90,
+      "edges": 1309,
+      "realEdges": 138,
       "chain": 11,
       "realChain": 4,
       "cacheFalse": [],
@@ -4000,6 +4000,18 @@
           "pkgs": 3
         },
         {
+          "name": "build",
+          "nodes": 2,
+          "real": 0,
+          "pkgs": 2
+        },
+        {
+          "name": "build:js",
+          "nodes": 2,
+          "real": 0,
+          "pkgs": 2
+        },
+        {
           "name": "lint:actionlint",
           "nodes": 1,
           "real": 1,
@@ -4012,7 +4024,7 @@
           "pkgs": 1
         },
         {
-          "name": "lint:elements",
+          "name": "lint:css",
           "nodes": 1,
           "real": 1,
           "pkgs": 1
@@ -4061,6 +4073,12 @@
         },
         {
           "name": "lint:zizmor",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "test",
           "nodes": 1,
           "real": 1,
           "pkgs": 1
@@ -4142,7 +4160,7 @@
         "//": {
           "lint:actionlint": "r",
           "lint:complexity": "r",
-          "lint:elements": "r",
+          "lint:css": "r",
           "lint:markdown": "r",
           "lint:package-json": "r",
           "lint:root": "r",
@@ -4168,6 +4186,8 @@
           "lint:oxlint": "r"
         },
         "@tools/bootstrap": {
+          "build": "p",
+          "build:js": "p",
           "build:types": "p",
           "lint": "p",
           "lint:oxlint": "r"
@@ -4226,7 +4246,8 @@
         },
         "@tools/lint-elements": {
           "lint": "p",
-          "lint:oxlint": "r"
+          "lint:oxlint": "r",
+          "test": "r"
         },
         "@tools/lit-template-lint": {
           "lint": "p",
@@ -4274,6 +4295,8 @@
           "lint:oxlint": "r"
         },
         "@tools/shared": {
+          "build": "p",
+          "build:js": "p",
           "build:types": "p",
           "lint": "p",
           "lint:oxlint": "r"
@@ -4618,7 +4641,7 @@
     {"pkg":"//","task":"format:check:toml","real":true},
     {"pkg":"//","task":"lint:actionlint","real":true},
     {"pkg":"//","task":"lint:complexity","real":true},
-    {"pkg":"//","task":"lint:elements","real":true},
+    {"pkg":"//","task":"lint:css","real":true},
     {"pkg":"//","task":"lint:markdown","real":true},
     {"pkg":"//","task":"lint:package-json","real":true},
     {"pkg":"//","task":"lint:root","real":true},
@@ -4984,7 +5007,7 @@
     {"pkg":"@tools/lint-elements","task":"format:check:oxfmt","real":true},
     {"pkg":"@tools/lint-elements","task":"lint","real":false},
     {"pkg":"@tools/lint-elements","task":"lint:oxlint","real":true},
-    {"pkg":"@tools/lint-elements","task":"test","real":false},
+    {"pkg":"@tools/lint-elements","task":"test","real":true},
     {"pkg":"@tools/lint-elements","task":"test:coverage","real":false},
     {"pkg":"@tools/lint-elements","task":"test:effect3-compat","real":false},
     {"pkg":"@tools/lint-elements","task":"test:lit2-compat","real":false},
@@ -6054,8 +6077,6 @@
     [4,701],
     [4,728],
     [4,753],
-    [4,778],
-    [4,807],
     [4,833],
     [4,857],
     [4,881],
@@ -7677,7 +7698,56 @@
     [367,366],
     [368,365],
     [369,368],
+    [370,24],
+    [370,47],
+    [370,70],
+    [370,93],
+    [370,116],
+    [370,139],
+    [370,162],
+    [370,185],
+    [370,208],
+    [370,231],
+    [370,254],
+    [370,277],
+    [370,300],
+    [370,323],
+    [370,346],
     [370,365],
+    [370,369],
+    [370,392],
+    [370,415],
+    [370,438],
+    [370,461],
+    [370,486],
+    [370,510],
+    [370,533],
+    [370,564],
+    [370,587],
+    [370,610],
+    [370,633],
+    [370,656],
+    [370,679],
+    [370,780],
+    [370,809],
+    [370,834],
+    [370,858],
+    [370,882],
+    [370,906],
+    [370,930],
+    [370,952],
+    [370,975],
+    [370,998],
+    [370,1021],
+    [370,1046],
+    [370,1069],
+    [370,1092],
+    [370,1116],
+    [370,1140],
+    [370,1164],
+    [370,1188],
+    [370,1212],
+    [370,1238],
     [371,365],
     [372,365],
     [373,365],

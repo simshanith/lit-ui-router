@@ -22,7 +22,7 @@ const HOME = {
   modelViewer: 'https://modelviewer.dev',
 };
 // the origin keeps the tallest cap and its badge 24 px inside the frame's top; the frame guard below holds every district there
-const OX = 480, OY = 546;
+const OX = 480, OY = 647;
 const VB_W = 1160;
 // callout pitch: an 11 px lbla line's box is 13.1 px tall, so 12 px stacks touch
 const CP = 14;
@@ -55,8 +55,8 @@ const PLAN = {
   // the site, re-laid at the 85e0ce5c refresh: the html tower at the back, the Markdown mirror east of it, the chunks in front
   'html pages': [330, 10],
   // the mirror north off 20 at the b499e2a5 refresh, when its 304 pages reached the chunks' lot
-  'markdown pages': [520, 12],
-  'page chunks': [305, 194],
+  'markdown pages': [524, 10],
+  'page chunks': [290, 204],
   // the small towers in a row between the mirror and the apps' outline
   'inter fonts': [560, 200],
   'vp framework': [610, 200],
@@ -79,9 +79,9 @@ const LOT = { name: 'demo corpora', x: 60, y: 10, files: 15, gz: 899000 };
 export const ROLES = [
   { name: 'demo payload', role: 'demo payload — media · data', box: [20, 0, 230, 200], label: [40, OY - 55, 'start'],
     districts: ['examples', 'images', 'static data'] },
-  { name: 'the documentation site', role: 'the documentation site', box: [290, 0, 745, 285], label: [985, OY + 60, 'start'],
+  { name: 'the documentation site', role: 'the documentation site', box: [275, 0, 745, 285], label: [985, OY + 60, 'start'],
     districts: ['html pages', 'markdown pages', 'inter fonts', 'vp framework', 'page chunks', 'diagrams', 'site css'] },
-  { name: 'the routed apps', role: 'the routed apps', box: [540, 290, 720, 450], label: [540, OY + 495, 'end'],
+  { name: 'the routed apps', role: 'the routed apps', box: [540, 290, 720, 450], label: [540, OY + 515, 'end'],
     districts: ['app: vanilla', 'app: hash', 'app: mobx', 'app: effect', 'app: signals'] },
 ];
 

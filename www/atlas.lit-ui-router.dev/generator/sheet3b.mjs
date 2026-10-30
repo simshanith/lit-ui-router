@@ -128,7 +128,7 @@ const M = [
   [2,  '//#format:check:root',    0,    0, '//#format:check:root', `one oxfmt line · the ${fmt(SURFACE)}-file root glob`],
   [3,  '//#format:check:toml',   88,  110, '//#format:check:toml', `mise run + tasks/${cite('//#format:check:toml')} — plate 3A, seam C`],
   [4,  '//#lint:actionlint',    144,  110, '//#lint:actionlint', 'mise run + config.toml run line'],
-  [5,  '//#lint:elements',      132,    0, '//#lint:elements', `${cite('//#lint:elements')} — the custom-element lane`],
+  [5,  '//#lint:css',           132,    0, '//#lint:css', `one stylelint line · the same ${fmt(SURFACE)}-file surface`],
   [6,  '//#lint:markdown',       56,  110, '//#lint:markdown', `mise run + tasks/${cite('//#lint:markdown')}`],
   [7,  '//#lint:package-json',   60,   48, '//#lint:package-json', `one eslint line watching ${fmt(row('//#lint:package-json').inputs)} manifests`],
   [8,  '//#lint:root',           44,    0, '//#lint:root', `one oxlint line · the same ${fmt(SURFACE)}-file surface`],
@@ -142,7 +142,7 @@ const M = [
   // --- the package quarters — one block per packages/ member ----------------------
   [15, 'lit-ui-router',         250,   30, 'lit-ui-router', 'guards + oxc-emit + bundle-probe bins behind every task'],
   [16, 'lit-ui-router-mobx',    292,   30, 'lit-ui-router-mobx', `the lit2 and mobx6 guards ride ${numw(MOBX_GUARDED)} tasks`],
-  [17, 'nav-location-plugin',   353,   30, 'ui-router-navigation-location-plugin', NAV_SIZE_NOTE],
+  [17, 'nav-location-plugin',   355,   30, 'ui-router-navigation-location-plugin', NAV_SIZE_NOTE],
   [18, 'ui-router-server',      320,   30, 'ui-router-server', 'node:test + runtime-globals lanes'],
   [19, 'eslint-plugin',         373,   30, 'eslint-plugin-lit-ui-router', 'the fifth quarter — rules, docs and oxlint lanes'],
   // born 2026-09-12 (#833)
@@ -379,7 +379,7 @@ ${txt(560, 660, `the harbour (${NO('www — the harbour')}): the site's build wa
 </svg>`;
 
 export const sheet3b = {
-  num: '3B', id: 'graphcity', rev: 'L',
+  num: '3B', id: 'graphcity', rev: 'M',
   title: 'THE WATCHED CITY',
   sub: `ALTITUDE 3 · ALTERNATE PLATE B — the PR ci graph as a city: ${CI.real} real tasks in ${M.length} massed structures · footprint = watched files (${fmt(TOT_I)} task-file hashes) · height = command sloc (${fmt(TOT_M)}) · ${fmt(PHANTOM)} phantom plots · every number imported from www/atlas.lit-ui-router.dev/data/census-mass3b.json, ${BASIS}`,
   scale: 'THE CI TASK GRAPH',

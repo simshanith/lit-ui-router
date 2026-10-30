@@ -1,16 +1,16 @@
 {
   "ref": "origin/main",
-  "sha": "8dfa5311",
-  "commitDate": "2026-10-29T02:35:16Z",
-  "generatedAtTime": "2026-10-29T04:56:30.620Z",
+  "sha": "08ee3c27",
+  "commitDate": "2026-10-29T20:26:10-07:00",
+  "generatedAtTime": "2026-10-30T03:39:59.282Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-yard.mjs",
-  "used": "www/atlas.lit-ui-router.dev/data/census-files.json @ 8dfa5311",
+  "used": "www/atlas.lit-ui-router.dev/data/census-files.json @ 08ee3c27",
   "wasAssociatedWith": [],
   "orphans": [
 
   ],
   "rows": [
-    {"instrument":"src — packages/*/src","files":100,"sloc":9101},
+    {"instrument":"src — packages/*/src","files":106,"sloc":9998},
     {"instrument":"build — @tools/oxc-emit","files":6,"sloc":487},
     {"instrument":"pack — packPublishTarball","files":12,"sloc":441},
     {"instrument":"published-diff","files":5,"sloc":481},
@@ -23,7 +23,7 @@
     {"instrument":"dts-backtest","files":9,"sloc":619},
     {"instrument":"tests — vitest harness","files":6,"sloc":380},
     {"instrument":"anti-slop — vendored oxlint rules","files":35,"sloc":3665},
-    {"instrument":"lint & probe fleet","files":50,"sloc":5427},
+    {"instrument":"lint & probe fleet","files":47,"sloc":5313},
     {"instrument":"repo checks — graph edges, task inputs, knip, patches","files":15,"sloc":1536},
     {"instrument":"bootstrap — pre-install manifest reads","files":3,"sloc":58},
     {"instrument":"@tools/shared","files":11,"sloc":516},

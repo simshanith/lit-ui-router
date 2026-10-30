@@ -92,7 +92,7 @@ const TIER_TEXT = {
 const M = [
   // --- the conveyor (packages/), one straight lane at y = 71 --------------------
   // east off 25, then 33 at the b499e2a5 refresh
-  [1,  'src — packages/*/src',      'line',    55,    30.45, ...C('src — packages/*/src'), null, null, SRC_NOTE],
+  [1,  'src — packages/*/src',      'line',    50,    30.45, ...C('src — packages/*/src'), null, null, SRC_NOTE],
   // east off 201.1, then 222, with the src slab: the run between them needs 31.2 px of trims
   [2,  'build — @tools/oxc-emit',   'line',   244,    63,    ...C('build — @tools/oxc-emit'), null, null, 'JS pass + d.ts pass, one emitter'],
   [3,  'pack — packPublishTarball', 'line',   334,    55.9,  ...C('pack — packPublishTarball'), null, null, 'the one packer (#449), cached'],
@@ -110,14 +110,14 @@ const M = [
   [13, 'peer-floor tier-1',         'report', 205,   330,    ...C('peer-floor tier-1'), null, null, 'reports check runs, never gates'],
   // the two big reporters (14, 20) stand west of every gate's lot, so every gate stands in front of them;
   // the fleet south off 182 at the 8dfa5311 refresh, as the src slab grew to 100 files
-  [14, 'lint & probe fleet',        'report',  14,   184,    ...C('lint & probe fleet'), null, null, 'oxlint · elements · axe · CI gate'],
+  [14, 'lint & probe fleet',        'report',  14,   191,    ...C('lint & probe fleet'), null, null, 'oxlint · elements · axe · CI gate'],
   [15, '@tools/shared',             'report', 250,   320,    ...C('@tools/shared'), null, null, 'the library under every instrument'],
   [16, 'typedoc plugin',            'report', 352,   320,    ...C('typedoc plugin'), null, null, 'builds the API pages, gates nothing'],
   // --- proving ground & shopfront (apps/ + www/) --------------------------------
   [17, 'e2e — cypress',             'pr',     377.8, 420,    ...C('e2e — cypress'), null, null, 'drives the sample apps · stops the PR line'],
   [18, 'sample apps',               'line',   560,   390,    ...C('sample apps'), null, null, APP_NOTE],
   [19, 'docs deploy watch',         'late',   680,   400,    ...C('docs deploy watch'), null, null, 'workers-builds triggers · gates the deploy'],
-  [20, 'anti-slop rules',           'report',  14,   304,    ...C('anti-slop — vendored oxlint rules'), null, null, 'vendored upstream · loaded by every oxlint lane'],
+  [20, 'anti-slop rules',           'report',  14,   309,    ...C('anti-slop — vendored oxlint rules'), null, null, 'vendored upstream · loaded by every oxlint lane'],
 ];
 const F = (n) => M.find((r) => r[0] === n);      // [.., files, sloc, ..] by structure number
 const nf = (n) => F(n)[5];                       // authored files of structure n

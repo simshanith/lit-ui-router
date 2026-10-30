@@ -36,9 +36,6 @@ const CITES = {
   '@tools/repo-checks#check:package-coverage': { files: ['tools/repo-checks/check-package-coverage.ts'] },
   '//#format:check:toml': { mise: true, files: ['.config/mise/tasks/taplo'] },
   '//#lint:actionlint': { mise: true, files: [] },
-  '//#lint:elements': {
-    files: ['tools/lint-elements/src/lint-elements.ts'],
-  },
   '//#lint:markdown': { mise: true, files: ['.config/mise/tasks/rumdl'] },
   '//#lint:shellcheck': { mise: true, files: ['.config/mise/tasks/shellcheck'] },
   '//#lint:templates': {

@@ -174,9 +174,9 @@ const NAMED = new Map([
 // [plan x, plan y, hover z] of each brick; plan and courses come from the census.
 // Heights step so no brick hides another's drop line: the bridge lowest, over brick
 // 1's far end; brick 5 just clear of brick 1's front edge; brick 3 over both.
-// Brick 1 hovers six courses: its underside clears the plate's back edge by two
-// courses on screen, or the tower reads as standing on the ground behind the plate.
-const LIT = [160, 0, 144];     // 1 — its drop is the one at the back-right seat, clear of its own face
+// Brick 1 hovers five courses: its underside clears the plate's back edge on screen,
+// or the tower reads as standing on the ground behind the plate.
+const LIT = [160, 0, 120];     // 1 — its drop is the one at the back-right seat, clear of its own face
 const NAV = [0, 0, 128];       // 2 — over the LOCATION SEAT
 const MBX = [240, 40, 432];    // 3 — highest, over F '2,1': clear of the bridge's cap where it stands behind it
 const EFF = [160, 40, 380];    // 5 — overhangs brick 1's front edge by one stud, its flank clear of brick 7's fall
@@ -186,6 +186,7 @@ const USG = [280, 120, 100];   // 9 — over stud E itself, lowest, clear of bri
 const UMX = [240, 200, 120];   // 10 — the C rail's far seat, clear of every drop and leader
 const SSR = [280, -40, 340];   // 6 — its near end over brick 1, its far end over brick 4
 const litTop = LIT[2] + B(1).courses * CRS;
+for (const [n, z] of [[3, MBX[2]], [5, EFF[2]], [6, SSR[2]], [7, SIG[2]]]) if (!(z > litTop)) throw new Error(`sheet2: brick ${n} hovers at ${z}, at or under brick 1's cap at ${litTop} — lift the bricks on its cap together`);
 
 const clientPlate = plate(OX, OY, 8, 6, { named: NAMED });
 
@@ -312,7 +313,7 @@ ${Array.from({ length: ws * ds }, (_, k) => {
 const mouldOf = (b) => `${shapeName(b.shape)} · ${b.courses} course${b.courses > 1 ? 's' : ''}`;
 
 // [brick, row y] — shape and courses come from the brick itself
-const PARTS = [[1, 118], [2, 160], [3, 192], [4, 234], [5, 272], [6, 312], [7, 348], [8, 380], [9, 406], [10, 432]];
+const PARTS = [[1, 126], [2, 168], [3, 200], [4, 242], [5, 280], [6, 320], [7, 356], [8, 388], [9, 414], [10, 440]];
 if (PARTS.length !== BRICKS.length) throw new Error('sheet2: the parts callout lists a row per brick');
 const partsBox = `<rect x="30" y="34" width="246" height="${PARTS.at(-1)[1] + 32 - 34}" class="skf fnone"/>
 ${txt(44, 56, `PARTS — ${BRICKS.length} BRICKS, 2 PLATES`, 'lbls')}
