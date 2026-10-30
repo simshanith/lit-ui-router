@@ -52,15 +52,28 @@ Slow 4G profile (`harness/conditions.ts`), and checks:
 4. **Time to the first useful keystroke:** navigation start to the typed query showing in results,
    with time to the focused input beside it, over `DOMAIN_SEARCH_RUNS` runs (3 by default).
 
-The `measure-domain-search` bin runs it. The `domain-search` suite in
+Two more specs measure this repo's page against itself, under the same conditions:
+
+- `harness/boot-paths.e2e.ts`, **prerendered vs cold:** first contentful paint at `?q=`, time to the
+  focused input and time to the typed query in results, booted from the served document and from
+  the same response with `#root` emptied (`harness/boot.ts`), where `bootstrap()` has nothing to
+  adopt and renders. CDP pauses both documents after the throttled response and fulfills them, so
+  they pay the same.
+- `harness/lighthouse.e2e.ts`, **Lighthouse lab metrics** (FCP, LCP, TBT, CLS, TTI) for both paths,
+  run in the same Chrome with DevTools throttling at the same CPU and network numbers.
+
+Both write their tables to `$GITHUB_STEP_SUMMARY`, or print them locally. They record numbers only,
+with no thresholds.
+
+The `measure-domain-search` bin runs all three. The `domain-search` suite in
 [`sample-app-lit-e2e`](../sample-app-lit-e2e/README.md) points it at the local docs worker. It runs
-only when named, and no CI workflow names it yet:
+only when named, and in CI as an advisory step of the `acceptance (a11y)` job:
 
 ```bash
 mise run test_e2e domain-search
 ```
 
-`pnpm --filter domain-search measure:vercel` runs the same checks, read-only, against
+`pnpm --filter domain-search measure:vercel` runs the frame-0 checks, read-only, against
 `vercel.com/domains`. It is a manual script and never runs in CI.
 
 One check, that a boot at `?q=` moves the input to the bar, is marked `expectFailure`: `bootstrap`

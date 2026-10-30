@@ -87,6 +87,7 @@ catalog:
   jose: ^6.2.16
   jsonc-parser: ^3.3.1
   knip: ^6.44.2
+  lighthouse: ^13.6.0
   lit: ^3.3.3
   lit-dialog: ^2.0.1
   lodash-es: ^4.18.1
@@ -106,6 +107,7 @@ catalog:
   postcss-html: ^2.0.0
   postcss-lit: ^1.4.1
   publint: ^0.3.25
+  puppeteer-core: ^25.16.0
   release-it: ^21.1.2
   rimraf: ^6.1.4
   rolldown: ^1.2.16
@@ -326,6 +328,9 @@ minimumReleaseAgeExcludePrune: true
 minimumReleaseAgeStrict: true
 
 trustPolicy: no-downgrade
+
+trustPolicyExclude:
+  - chromium-bidi@157.0.8090-0
 
 trustPolicyExcludePrune: true
 
