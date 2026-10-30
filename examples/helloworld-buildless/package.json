@@ -4,24 +4,21 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "vite build",
-    "dev": "vite",
-    "preview": "vite preview"
+    "build": "node --eval \"fs.cpSync('public', 'dist', { recursive: true })\" --",
+    "dev": "serve --no-clipboard public",
+    "preview": "serve --no-clipboard dist"
   },
   "devDependencies": {
     "@uirouter/core": "^6.1.2",
     "lit": "^3.3.3",
     "lit-ui-router": "^1.19.0",
-    "typescript": "^7.0.2",
-    "vite": "^8.3.5"
+    "serve": "^14.2.6",
+    "typescript": "^7.0.2"
   },
   "devEngines": {
     "packageManager": {
       "name": "npm",
       "onFail": "warn"
     }
-  },
-  "allowScripts": {
-    "fsevents@2.3.3": true
   }
 }
