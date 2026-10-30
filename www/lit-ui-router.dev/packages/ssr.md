@@ -48,7 +48,7 @@ never both. `@lit-labs/ssr-client` is optional: install it when you import
   [`prerender`](/packages/server#emitting-a-static-site) from
   `ui-router-server/prerender`, which takes any render. This package's `prerender`
   supplies the lit one and takes the same options, plus `router`,
-  `renderShell`, `document`, `root` and `elementRenderers`. No SPA catch-all
+  `renderShell`, `document`, `root`, `elementRenderers` and `payload`. No SPA catch-all
   is ever written: one turns every 404 into a 200.
 
 Path enumeration, the html document, and `<title>` stay with the caller —
@@ -108,6 +108,44 @@ A page fails to land in four ways, and each rejects rather than hangs:
 `settle()` never calls `router.start()`, which runs once per router: it drives
 `urlService` directly, so a page loop calls it once per path on the same
 router, started or not.
+
+## Adopting the resolves on boot
+
+The [`payload`](/api/lit-ui-router-ssr/index/interfaces/PrerenderOptions#payload) option
+hands each rendered page's landed transition to a hook, which returns the
+resolve payload to write.
+[`dehydrate`](/api/ui-router-server/ssr/functions/dehydrate) from
+`ui-router-server/ssr` draws one, and the hook decides what to do with the
+resolves it leaves out:
+
+```ts
+import { prerender } from 'lit-ui-router-ssr';
+import { dehydrate } from 'ui-router-server/ssr';
+
+await prerender({
+  // mounts, router, paths, renderShell, …
+  payload: (transition, { path }) => {
+    const { payload, unserializable } = dehydrate(transition);
+
+    for (const { state, token } of unserializable)
+      console.warn(`${path}: ${state}.${token} re-runs on the client`);
+
+    return payload;
+  },
+});
+```
+
+The payload's `resolves` go into the page's
+[hydration signature](#the-hydration-model), beside `version`, `state` and
+`params`, so the one block is the payload. `bootstrap` seeds the boot
+transition from it before the router starts: each resolve the page was drawn
+with adopts its value in place of running its function. Every other resolve
+runs as it would without one: a value `dehydrate` left out, a `NOWAIT`
+resolve, every resolve of a boot that lands on another state or other
+parameters, and every resolve of a page whose block carries no `resolves`.
+Without the hook no page carries resolves. What `dehydrate` draws, and which
+values it leaves out, is in
+[Handing resolves to the client](/packages/server#handing-resolves-to-the-client).
 
 ## Verdict to artefact
 
@@ -442,8 +480,9 @@ once per view.
 
 `prerender()` opens every page it renders from a template on a hydration
 signature: a JSON data block ahead of the render, carrying this package's
-version, the name of the state the router stood on, and that state's url
-parameter values.
+version, the name of the state the router stood on, that state's url
+parameter values, and the resolved values the
+[`payload` hook](#adopting-the-resolves-on-boot) supplies.
 It never executes, `hydrate()` walks comments only and reads past it, and every
 `<` and `>` in it is written `\u003c` and `\u003e`, so no value can close it.
 
@@ -473,6 +512,11 @@ or `null` when the container holds none or one that does not parse to an
 object with a string `version`. Only `version` is typed, so a boot that compares
 the state the document was drawn for with the one it booted into narrows
 `state` and `params` first.
+
+[`readResolvePayload`](/api/lit-ui-router-ssr/client/functions/readResolvePayload)
+returns the block as a resolve payload, or `undefined` when it carries no
+`resolves` or comes from another release line. A boot that calls `hydrateRoot`
+itself hands it to `seed` before the router starts.
 
 Every [`uiViewSlot`](/api/lit-ui-router-ssr/client/variables/uiViewSlot) that walk
 reaches wakes the `<ui-view>` it sits in, and the waking view requests

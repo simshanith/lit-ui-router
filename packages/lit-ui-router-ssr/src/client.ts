@@ -607,6 +607,49 @@ export function readHydrationSignature(
   return block ? parseSignature(block.text) : null;
 }
 
+/**
+ * Reads the resolve payload `prerender()` wrote into the container's
+ * {@link readHydrationSignature | hydration signature}: the state and url
+ * parameters the document was drawn for, and the values its resolves settled
+ * on, keyed by state name, then by resolve token.
+ *
+ * {@link bootstrap} reads it on its own. A boot that calls {@link hydrateRoot}
+ * directly hands it to `seed` from `ui-router-server/ssr/client` before the
+ * router starts.
+ *
+ * @example
+ * ```ts
+ * import { readResolvePayload } from 'lit-ui-router-ssr/client';
+ * import { seed } from 'ui-router-server/ssr/client';
+ *
+ * seed(router, readResolvePayload(root));
+ * router.start();
+ * ```
+ *
+ * @param container - the element the server's markup was written into
+ * @returns the payload, or `undefined` when the container holds no signature,
+ * one from another release line of this package, or one without `resolves`
+ */
+export function readResolvePayload(
+  container: ParentNode,
+): ResolvePayload | undefined {
+  return payloadIn(readHydrationSignature(container));
+}
+
+/** The payload a signature from this release line carries, if it carries one. */
+const payloadIn = (
+  signature: HydrationSignature | null,
+): ResolvePayload | undefined => {
+  if (
+    signature?.resolves === undefined ||
+    releaseLine(signature.version) !== releaseLine(packageVersion)
+  )
+    return undefined;
+
+  // SAFETY: `prerender()` writes `resolves` from a `ResolvePayload`, beside the state and params it was drawn for; `seed` throws on a `null` one.
+  return signature as ResolvePayload;
+};
+
 /** The container's own signature block, if it holds one. */
 const signatureBlockIn = (
   container: ParentNode,
@@ -723,11 +766,11 @@ const makeCold = (container: HTMLElement): void => {
  * way. The caller renders into it.
  *
  * {@link bootstrap} runs the whole boot around this call. Called directly, the
- * boot is the router first: `router.start()`, await its first successful
- * transition, then this call. The walk commits `.uiRouter` onto `<ui-router>`
- * and each woken `<ui-view>` re-seeks the router before its own first render,
- * so the views find the settled router rather than the placeholder they
- * registered against. Nothing constrains when `lit-ui-router-ssr/register` is
+ * boot is the router first: `seed` the router with {@link readResolvePayload},
+ * `router.start()`, await its first successful transition, then this call.
+ * The walk commits `.uiRouter` onto `<ui-router>` and each woken `<ui-view>`
+ * re-seeks the router before its own first render, so the views find the
+ * settled router rather than the placeholder they registered against. Nothing constrains when `lit-ui-router-ssr/register` is
  * imported.
  *
  * @example
@@ -828,7 +871,8 @@ export interface BootstrapOptions extends HydrateRootOptions {
   /**
    * Resolved values the document was drawn with, handed to `seed` from
    * `ui-router-server/ssr/client` before the router starts, so the boot
-   * transition adopts them in place of running their resolve functions.
+   * transition adopts them in place of running their resolve functions. It
+   * takes the place of the payload the container's signature carries.
    */
   readonly payload?: ResolvePayload;
 }
@@ -942,9 +986,13 @@ const renderCold = (
  * Boots `router` into the page `container` holds, and resolves once that page
  * is live.
  *
- * It owns the whole client boot. `options.payload`, when given, seeds the boot
- * transition first. The container's {@link readHydrationSignature | signature}
- * is read before anything else touches the document; a container {@link
+ * It owns the whole client boot. The boot transition is seeded first, with
+ * `options.payload` when given, and otherwise with the resolves the
+ * container's signature carries ({@link readResolvePayload}): each resolve the
+ * document was drawn with adopts its value in place of running its function,
+ * and every other resolve runs as it would without a payload. The
+ * container's {@link readHydrationSignature | signature} is read before
+ * anything else touches the document; a container {@link
  * hydrateRoot} would not adopt — no signature, another release line, stripped
  * markers — is emptied and `value` rendered into it at once, and the router
  * then starts. Otherwise the router starts, the call waits for the boot
@@ -993,11 +1041,11 @@ export async function bootstrap(
   options: BootstrapOptions = {},
 ): Promise<BootstrapResult> {
   const { onAdopt, payload, ...renderOptions } = options;
-  const disarm = seed(router, payload);
+  const served = readHydrationSignature(container);
+  const disarm = seed(router, payload ?? payloadIn(served));
   const signature = readAdoptable(container);
 
   if (!signature) {
-    const served = readHydrationSignature(container);
     renderCold(container, value, renderOptions);
     const landing = await startBoot(router);
     disarm();

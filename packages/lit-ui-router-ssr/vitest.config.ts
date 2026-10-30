@@ -15,6 +15,7 @@ const clientSpecs = [
   'src/specs/client.spec.ts',
   'src/specs/light-dom.spec.ts',
   'src/specs/register.spec.ts',
+  'src/specs/resolve-payload.spec.ts',
   'src/specs/served-view.spec.ts',
 ];
 

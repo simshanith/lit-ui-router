@@ -15,7 +15,11 @@ export {
   type RenderContext,
 } from './prerender.js';
 
-export { settle, type SettleOptions } from 'ui-router-server/ssr';
+export {
+  type ResolvePayload,
+  settle,
+  type SettleOptions,
+} from 'ui-router-server/ssr';
 
 export { LightElementRenderer } from './light-element-renderer.js';
 
