@@ -333,6 +333,28 @@ describe('bootstrap', () => {
       expect(warn).not.toHaveBeenCalled();
     });
 
+    it('shows the booted path parameter, not the drawn one, in a view it adopts', async () => {
+      const { container } = serve(await drawShell('/shell/item/7'));
+
+      await bootAt(container, rootTemplate, '/shell/item/8');
+
+      expect(container.querySelector('.item')?.textContent).toBe('8');
+    });
+
+    it('shows the booted query, not the drawn one, in a view it adopts', async () => {
+      // A CDN-cached search page is drawn once, without a query, and served for every query.
+      const { container } = serve(await drawShell('/shell/search'));
+
+      const { signature } = await bootAt(
+        container,
+        rootTemplate,
+        '/shell/search?q=foo',
+      );
+
+      expect(signature).toBe('elsewhere');
+      expect(container.querySelector('.search')?.textContent).toBe('foo');
+    });
+
     it('tells a boot into other url parameter values from the drawn ones', async () => {
       const { container } = serve(await drawShell('/shell/item/7'));
 
